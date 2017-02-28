@@ -291,100 +291,111 @@
 
         <div>
           <div class="refinery-subheader m-t-1">
-            <h4>Advanced</h4>
-          </div>
-          <div class="row m-t-1-4 m-b-1-4">
-            <div class="col-sm-6 col-md-3 col-lg-2">
-              Auxiliary File Column
-            </div>
-            <div class="col-sm-6 col-md-3 col-lg-2">
-              <select
-                name="aux_file_column"
-                class="width-95"
-                ng-model="metadataTable.auxFileColumn"
-                ng-options="heading for heading in metadataTable.metadataHeader">
-                <option value=""></option>
-              </select>
-            </div>
-            <div class="col-sm-12 col-md-6 col-lg-8">
-              Column that contains the path to or URL of an auxiliary file
-              associated with the data file. For example, for visualization,
-              this could be a BigWig file for a WIG data file or a BAM index file
-              for a BAM data file. If URLs are provided, they have
-              to be publicly accessible.
+            <div
+              role="button"
+              ng-click="isAdvancedCollapsed = !isAdvancedCollapsed">
+              <i
+              ng-class="isAdvancedCollapsed ? 'fa fa-caret-right' : 'fa fa-caret-down'"
+              class="fa-pull-left"
+              id=""
+              aria-hidden="true"></i>
+              <h4>Advanced</h4>
             </div>
           </div>
-
-          <div class="row m-t-1-4 m-b-1-4">
-            <div class="col-sm-6 col-md-3 col-lg-2">
-              Base Path
+          <div uib-collapse="isAdvancedCollapsed">
+            <div class="row m-t-1-4 m-b-1-4">
+              <div class="col-sm-6 col-md-3 col-lg-2">
+                Auxiliary File Column
+              </div>
+              <div class="col-sm-6 col-md-3 col-lg-2">
+                <select
+                  name="aux_file_column"
+                  class="width-95"
+                  ng-model="metadataTable.auxFileColumn"
+                  ng-options="heading for heading in metadataTable.metadataHeader">
+                  <option value=""></option>
+                </select>
+              </div>
+              <div class="col-sm-12 col-md-6 col-lg-8">
+                Column that contains the path to or URL of an auxiliary file
+                associated with the data file. For example, for visualization,
+                this could be a BigWig file for a WIG data file or a BAM index file
+                for a BAM data file. If URLs are provided, they have
+                to be publicly accessible.
+              </div>
             </div>
-            <div class="col-sm-6 col-md-3 col-lg-2">
-              <input
-                type="text"
-                class="width-95"
-                name="base_path"
-                ng-model="metadataTable.basePath">
-            </div>
-            <div class="col-sm-12 col-md-6 col-lg-8">
-              Base path of your data file paths if using relative locations.
-            </div>
-          </div>
-
-          <div class="row m-t-1-4 m-b-1-4">
-            <div class="col-sm-6 col-md-3 col-lg-2">
-              Annotation Column
-            </div>
-            <div class="col-sm-6 col-md-3 col-lg-2">
-              <select
-                name="annotation_column"
-                class="width-95"
-                ng-model="metadataTable.annotationColumn"
-                ng-options="heading for heading in metadataTable.metadataHeader">
-                <option value=""></option>
-              </select>
-            </div>
-            <div class="col-sm-12 col-md-6 col-lg-8">
-              Column containing either "true" or "false" to indicate whether the data file in
-              this row should be treated as an annotation file rather than a data file.
-            </div>
-          </div>
-
-          <div class="row m-t-1-4 m-b-1-4">
-            <div class="col-sm-6 col-md-3 col-lg-2">
-              Genome Build Column
-            </div>
-            <div class="col-sm-6 col-md-3 col-lg-2">
-              <select
-                name="genome_build_column"
-                class="width-95"
-                ng-model="metadataTable.genomeBuildColumn"
-                ng-options="heading for heading in metadataTable.metadataHeader">
-                <option value=""></option>
-              </select>
-            </div>
-            <div class="col-sm-12 col-md-6 col-lg-8">
-              Column containing genome build identifiers such as "hg19" or "mm10".
-            </div>
-          </div>
 
             <div class="row m-t-1-4 m-b-1-4">
-            <div class="col-sm-6 col-md-3 col-lg-2">
-              Import Now
+              <div class="col-sm-6 col-md-3 col-lg-2">
+                Base Path
+              </div>
+              <div class="col-sm-6 col-md-3 col-lg-2">
+                <input
+                  type="text"
+                  class="width-95"
+                  name="base_path"
+                  ng-model="metadataTable.basePath">
+              </div>
+              <div class="col-sm-12 col-md-6 col-lg-8">
+                Base path of your data file paths if using relative locations.
+              </div>
             </div>
-            <div class="col-sm-6 col-md-3 col-lg-2">
-              <input
-                type="checkbox"
-                name="data_file_permanent"
-                ng-model="metadataTable.dataFilePermanent"/>
+
+            <div class="row m-t-1-4 m-b-1-4">
+              <div class="col-sm-6 col-md-3 col-lg-2">
+                Annotation Column
+              </div>
+              <div class="col-sm-6 col-md-3 col-lg-2">
+                <select
+                  name="annotation_column"
+                  class="width-95"
+                  ng-model="metadataTable.annotationColumn"
+                  ng-options="heading for heading in metadataTable.metadataHeader">
+                  <option value=""></option>
+                </select>
+              </div>
+              <div class="col-sm-12 col-md-6 col-lg-8">
+                Column containing either "true" or "false" to indicate whether the data file in
+                this row should be treated as an annotation file rather than a data file.
+              </div>
             </div>
-            <div class="col-sm-12 col-md-6 col-lg-8">
-              If selected, data files located on remote servers (referenced by
-              URL) or located on the file system of the server (referenced by
-              an absolute file system path) will be
-              imported into the system upon creation of the data set. If not
-              selected, such files will only be imported into the system if
-              selected for analysis.
+
+            <div class="row m-t-1-4 m-b-1-4">
+              <div class="col-sm-6 col-md-3 col-lg-2">
+                Genome Build Column
+              </div>
+              <div class="col-sm-6 col-md-3 col-lg-2">
+                <select
+                  name="genome_build_column"
+                  class="width-95"
+                  ng-model="metadataTable.genomeBuildColumn"
+                  ng-options="heading for heading in metadataTable.metadataHeader">
+                  <option value=""></option>
+                </select>
+              </div>
+              <div class="col-sm-12 col-md-6 col-lg-8">
+                Column containing genome build identifiers such as "hg19" or "mm10".
+              </div>
+            </div>
+
+              <div class="row m-t-1-4 m-b-1-4">
+              <div class="col-sm-6 col-md-3 col-lg-2">
+                Import Now
+              </div>
+              <div class="col-sm-6 col-md-3 col-lg-2">
+                <input
+                  type="checkbox"
+                  name="data_file_permanent"
+                  ng-model="metadataTable.dataFilePermanent"/>
+              </div>
+              <div class="col-sm-12 col-md-6 col-lg-8">
+                If selected, data files located on remote servers (referenced by
+                URL) or located on the file system of the server (referenced by
+                an absolute file system path) will be
+                imported into the system upon creation of the data set. If not
+                selected, such files will only be imported into the system if
+                selected for analysis.
+              </div>
             </div>
           </div>
         </div>
