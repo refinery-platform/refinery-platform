@@ -1305,17 +1305,15 @@ class DataSetDeletionTest(TestCase):
                           name="dataset_with_analysis")
 
     def test_isa_archive_deletion(self):
-        isa = self.dataset_without_analysis.get_isa_archive()
-        self.assertIsNotNone(isa)
-        isa.delete()
+        self.assertIsNotNone(self.dataset_without_analysis.get_isa_archive())
+        self.dataset_without_analysis.delete()
         self.assertIsNone(self.dataset_without_analysis.get_isa_archive())
 
     def test_pre_isa_archive_deletion(self):
-        pre_isa = self.dataset_without_analysis.get_pre_isa_archive()
-        self.assertIsNotNone(pre_isa)
-        pre_isa.delete()
-        self.assertIsNone(
+        self.assertIsNotNone(
             self.dataset_without_analysis.get_pre_isa_archive())
+        self.dataset_without_analysis.delete()
+        self.assertIsNone(self.dataset_without_analysis.get_pre_isa_archive())
 
 
 class AnalysisDeletionTest(TestCase):
