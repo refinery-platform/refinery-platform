@@ -53,8 +53,8 @@ class FileRelationship(models.Model):
                             null=False)
     value_type = models.CharField(
         max_length=100, choices=RELATIONSHIP_TYPES, blank=False, null=False)
-    nested_elements = models.ManyToManyField("self", symmetrical=False,
-                                             null=True, blank=True)
+    file_relationship = models.ManyToManyField("self", symmetrical=False,
+                                               null=True, blank=True)
     input_files = models.ManyToManyField("InputFile")
 
     def __str__(self):
