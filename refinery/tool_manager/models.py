@@ -4,8 +4,8 @@ from django_extensions.db.fields import UUIDField
 
 class Parameter(models.Model):
     """
-    A Parameter is a representation of Galaxy/Visualization/Other tool
-    parameters that will potentially be exposed and configurable upon a tool's
+    A Parameter is a representation of a tool parameter that will
+    potentially be exposed and configurable upon a tool's
     configuration/launching step.
     """
 
@@ -41,10 +41,16 @@ class Parameter(models.Model):
         max_length=100, blank=False, null=False)
 
     def __str__(self):
-        return "{}: {} - {} - {} {}".format(self.galaxy_tool_id,
-                                            self.galaxy_tool_parameter,
-                                            self.value_type, self.name,
-                                            self.uuid)
+        return "{}: {} - {}".format(self.value_type, self.name, self.uuid)
+
+
+class GalaxyParameter(Parameter):
+    """
+    Child of Parameter with fields specific to Galaxy tool parameter
+    """
+    # ID of Galaxy tool that the parameter belongs to
+    galaxy_tool_id = models.TextField(max_length=300)
+    galaxy_tool_parameter = models.TextField(max_length=100)
 
 
 class FileRelationship(models.Model):
