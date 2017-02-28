@@ -103,7 +103,7 @@ def make_sample_tool_definitions():
 
     list_relationship1 = FileRelationshipFactory(
         name="List of Paired Samples", value_type="LIST")
-    list_relationship1.nested_elements.add(pair_relationship1)
+    list_relationship1.file_relationship.add(pair_relationship1)
     tool_definition1 = ToolDefinitionFactory(
         name="Chip Seq <list:pair>", description="Chip Seq using MACS2",
         tool_type="WORKFLOW", file_relationship=list_relationship1)
@@ -143,11 +143,11 @@ def make_sample_tool_definitions():
 
     list_relationship2b = FileRelationshipFactory(
         name="List of Paired Samples", value_type="LIST")
-    list_relationship2b.nested_elements.add(pair_relationship2)
+    list_relationship2b.file_relationship.add(pair_relationship2)
 
     list_relationship2a = FileRelationshipFactory(
         name="List of Lists", value_type="LIST")
-    list_relationship2a.nested_elements.add(list_relationship2b)
+    list_relationship2a.file_relationship.add(list_relationship2b)
 
     tool_definition2 = ToolDefinitionFactory(
         name="Sample <list:list:pair> Tool",
