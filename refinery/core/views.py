@@ -12,7 +12,6 @@ from django.contrib.auth.models import User
 from django.contrib.sites.models import get_current_site, RequestSite, Site
 from django.core.exceptions import ImproperlyConfigured
 from django.core.urlresolvers import reverse
-from django.db import transaction, IntegrityError
 from django.http import (Http404, HttpResponse, HttpResponseBadRequest,
                          HttpResponseForbidden, HttpResponseNotFound,
                          HttpResponseRedirect, HttpResponseServerError)
@@ -1095,12 +1094,7 @@ class DataSetsViewSet(APIView):
                 content="User {} is not authenticated".format(request.user))
         else:
             try:
-                with transaction.atomic():
-                    dataset_deleted = DataSet.objects.get(uuid=uuid).delete()
-            except IntegrityError as e:
-                return HttpResponseServerError(
-                    content="Error while deleting Dataset: {}. The Dataset "
-                            "has not been removed due to the error.".format(e))
+                dataset_deleted = DataSet.objects.get(uuid=uuid).delete()
             except NameError as e:
                 logger.error(e)
                 return HttpResponseBadRequest(content="Bad Request")
@@ -1150,12 +1144,7 @@ class AnalysesViewSet(APIView):
                 content="User {} is not authenticated".format(request.user))
         else:
             try:
-                with transaction.atomic():
-                    analysis_deleted = Analysis.objects.get(uuid=uuid).delete()
-            except IntegrityError as e:
-                return HttpResponseServerError(
-                    content="Error while deleting Analysis: {}. The Analysis "
-                            "has not been removed due to the error.".format(e))
+                analysis_deleted = Analysis.objects.get(uuid=uuid).delete()
             except NameError as e:
                 logger.error(e)
                 return HttpResponseBadRequest(content="Bad Request")
