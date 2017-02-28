@@ -221,14 +221,6 @@ class AssaysAttributesAPITests(APITestCase):
         self.invalid_uuid = "0xxx000x-00xx-000x-xx00-x00x00x00x0x"
         self.invalid_format_uuid = "xxxxxxxx"
 
-    def tearDown(self):
-        User.objects.all().delete()
-        Assay.objects.all().delete()
-        Study.objects.all().delete()
-        Investigation.objects.all().delete()
-        DataSet.objects.all().delete()
-        AttributeOrder.objects.all().delete()
-
     def test_get_valid_uuid(self):
         # valid_uuid
         uuid = self.valid_uuid

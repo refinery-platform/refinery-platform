@@ -1305,17 +1305,15 @@ class DataSetDeletionTest(TestCase):
                           name="dataset_with_analysis")
 
     def test_isa_archive_deletion(self):
-        isa = self.dataset_without_analysis.get_isa_archive()
-        self.assertIsNotNone(isa)
-        isa.delete()
+        self.assertIsNotNone(self.dataset_without_analysis.get_isa_archive())
+        self.dataset_without_analysis.delete()
         self.assertIsNone(self.dataset_without_analysis.get_isa_archive())
 
     def test_pre_isa_archive_deletion(self):
-        pre_isa = self.dataset_without_analysis.get_pre_isa_archive()
-        self.assertIsNotNone(pre_isa)
-        pre_isa.delete()
-        self.assertIsNone(
+        self.assertIsNotNone(
             self.dataset_without_analysis.get_pre_isa_archive())
+        self.dataset_without_analysis.delete()
+        self.assertIsNone(self.dataset_without_analysis.get_pre_isa_archive())
 
 
 class AnalysisDeletionTest(TestCase):
@@ -1606,12 +1604,6 @@ class UtilitiesTest(TestCase):
             "32e977fc-b906-4315-b6ed-6a644d173492",
             "910117c5-fda2-4700-ae87-dc897f3a5d85"
             ]
-
-    def tearDown(self):
-        NodeGroup.objects.all().delete()
-        Assay.objects.all().delete()
-        Study.objects.all().delete()
-        Investigation.objects.all().delete()
 
     def test_get_aware_local_time(self):
         expected_time = timezone.localtime(timezone.now())
