@@ -1,6 +1,8 @@
 from django.db import models
 from django_extensions.db.fields import UUIDField
 
+from file_store.models import FileType
+
 
 class Parameter(models.Model):
     """
@@ -83,7 +85,7 @@ class InputFile(models.Model):
     uuid = UUIDField(unique=True, auto=True)
     name = models.TextField(max_length=100)
     description = models.TextField(max_length=500)
-    allowed_filetypes = models.ManyToManyField("file_store.FileType")
+    allowed_filetypes = models.ManyToManyField(FileType)
 
     def __str__(self):
         return "{}: {} {}".format(
@@ -99,7 +101,7 @@ class OutputFile(models.Model):
     uuid = UUIDField(unique=True, auto=True)
     name = models.TextField(max_length=100)
     description = models.TextField(max_length=500)
-    filetype = models.ForeignKey("file_store.FileType")
+    filetype = models.ForeignKey(FileType)
 
     def __str__(self):
         return "{}: {} {}".format(self.name, self.filetype, self.uuid)
@@ -126,9 +128,9 @@ class ToolDefinition(models.Model):
     name = models.TextField(unique=True, max_length=100)
     description = models.TextField(unique=True, max_length=500)
     tool_type = models.CharField(max_length=100, choices=TOOL_TYPES)
-    file_relationship = models.ForeignKey("FileRelationship")
-    output_files = models.ManyToManyField("OutputFile")
-    parameters = models.ManyToManyField("Parameter")
+    file_relationship = models.ForeignKey(FileRelationship)
+    output_files = models.ManyToManyField(OutputFile)
+    parameters = models.ManyToManyField(Parameter)
 
     def __str__(self):
         return "{}: {} {}".format(self.tool_type, self.name, self.uuid)
