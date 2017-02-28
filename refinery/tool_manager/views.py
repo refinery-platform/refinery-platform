@@ -1,7 +1,7 @@
 from rest_framework.viewsets import ModelViewSet
 
-from .serializers import ToolDefinitionSerializer
 from .models import ToolDefinition
+from .serializers import ToolDefinitionSerializer
 
 
 class ToolDefinitionsViewSet(ModelViewSet):
