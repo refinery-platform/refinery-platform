@@ -1,10 +1,7 @@
 from datetime import datetime
 import uuid as uuid_builtin
 
-import django
 import factory
-
-django.setup()
 
 
 class DataSetFactory(factory.django.DjangoModelFactory):
