@@ -5,7 +5,8 @@ from selenium import webdriver
 
 from core.management.commands.create_public_group import create_public_group
 from core.management.commands.create_user import init_user
-from core.models import DataSet, Analysis
+from core.models import Analysis, DataSet
+
 from factory_boy.utils import make_analyses_with_single_dataset, make_datasets
 from selenium_testing.utils import (
     assert_body_text, login, wait_until_id_clickable, DEFAULT_WAIT,
