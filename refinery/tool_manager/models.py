@@ -74,6 +74,11 @@ class FileRelationship(models.Model):
         max_length=100, choices=RELATIONSHIP_TYPES, blank=False, null=False)
     file_relationship = models.ManyToManyField("self", symmetrical=False,
                                                null=True, blank=True)
+    # NOTE: `symmetrical=False` is not very common. It's necessary for the
+    # self-referential M2M below. See: http://bit.ly/2mpPQfT
+    file_relationship = models.ManyToManyField(
+        "self", symmetrical=False, null=True, blank=True)
+
     input_files = models.ManyToManyField("InputFile")
 
     def __str__(self):
