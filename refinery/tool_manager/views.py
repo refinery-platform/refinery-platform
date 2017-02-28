@@ -1,3 +1,4 @@
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.viewsets import ModelViewSet
 
 from .models import ToolDefinition
@@ -11,3 +12,4 @@ class ToolDefinitionsViewSet(ModelViewSet):
     serializer_class = ToolDefinitionSerializer
     lookup_field = 'uuid'
     http_method_names = ['get']
+    permission_classes = [IsAuthenticated]
