@@ -77,6 +77,7 @@ def create_dataset_with_necessary_models():
     )
     return dataset
 
+
 def make_sample_tool_definitions():
     """Generate two sample ToolDefinitions. A LIST:LIST:PAIR and a LIST:PAIR"""
 
@@ -113,9 +114,7 @@ def make_sample_tool_definitions():
                     " Has to be installed in Galaxy workflow "
                     "engine.",
         value_type="GENOME_BUILD",
-        default_value="hg19",
-        galaxy_tool_id="CHIP SEQ XXX",
-        galaxy_tool_parameter="genome_build")
+        default_value="hg19")
     o1 = OutputFileFactory(
         name="broadpeaks.bed",
         description="Peaks called by MACS2",
@@ -156,9 +155,7 @@ def make_sample_tool_definitions():
     p2 = ParameterFactory(name="Generic Param",
                           description="Generic Param Desc",
                           value_type="BOOLEAN",
-                          default_value=True,
-                          galaxy_tool_id="Generic XXX",
-                          galaxy_tool_parameter="generic_param")
+                          default_value=True)
     o2 = OutputFileFactory(
         name="generic.bed",
         description="Generic output desc",
