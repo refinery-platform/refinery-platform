@@ -27,7 +27,6 @@ from file_store.models import FileStoreItem
 class AssaysAPITests(APITestCase):
 
     def setUp(self):
-        self.user = User.objects.create_user("ownerJane", '', 'test1234')
         self.factory = APIRequestFactory()
         investigation = Investigation.objects.create()
         self.study = Study.objects.create(
