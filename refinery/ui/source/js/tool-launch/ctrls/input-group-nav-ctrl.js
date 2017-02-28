@@ -21,7 +21,9 @@
         },
         function () {
           angular.copy(vm.displayCtrl.selectedTool, vm.tool);
-          if (vm.tool.name === 'Workflow 1') {
+          console.log('in input group nav ctrl');
+          console.log(vm.tool);
+          if (vm.tool.toolType === 'Workflow') {
             vm.toolType = 'singleInputWorkflow';
           }
         }

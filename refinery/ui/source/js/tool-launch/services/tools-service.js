@@ -86,7 +86,7 @@
         uuid: '333c1543-084a-420c-84a8-bd8b2bf6ef27',
         name: 'Chip Seq <list:pair>',
         description: 'Chip Seq using MACS2',
-        tool_type: 'WORKFLOW'
+        tool_type: 'Workflow'
       },
       {
         file_relationship: {
@@ -164,7 +164,7 @@
         uuid: '4b87a199-362f-4e60-a14f-12f9661d55c7',
         name: 'Sample <list:list:pair> Tool',
         description: '<list:list:pair> desc',
-        tool_type: 'WORKFLOW'
+        tool_type: 'Workflow'
       }
     ];
 

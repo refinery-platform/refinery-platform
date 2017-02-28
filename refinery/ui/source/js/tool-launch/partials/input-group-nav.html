@@ -29,17 +29,48 @@
       uib-collapse="$ctrl.isNavCollapsed"
       role="tabpanel"
       aria-labelledby="tool-body">
-      <div class="panel-body">
-        <div ng-if="$ctrl.toolType == 'singleInputWorkflow'">
-          <rp-single-input-group></rp-single-input-group>
+      <div class="panel-body" id="categoryTree">
+        <div ng-if="$ctrl.tool.file_relationship.input_files.length == 0">
+          <ul>
+            <li
+              ng-repeat="element in $ctrl.tool.file_relationship.nested_elements"
+              ng-include="'categoryTree'">
+              <div ng-if="$ctrl.tool.file_relationship.input_files.length > 0">
+                {{ $ctrl.tool.file_relationship.input_files }}
+              </div>
+            </li>
+          </ul>
         </div>
-        <div ng-if="$ctrl.toolType == 'pairedInputWorkflow'">
-           Add directive for the paired analysis work panel
-        </div>
-        <div ng-if="$ctrl.toolType == 'webIGV'">
-           Add directive for the web based IGV
+        <div ng-if="$ctrl.tool.file_relationship.input_files.length > 0">
+          {{ $ctrl.tool.file_relationship.input_files }}
         </div>
       </div>
     </div>
   </div>
 </div>
+
+
+<script type="text/ng-template" id="categoryTree">
+  <div ng-if="element.input_files.length > 0">
+    <ul>
+      <li ng-repeat="inputFile in element.input_files">
+        <ul>
+          <strong>{{ inputFile.name }}:</strong> {{ inputFile.description }}
+          <span class="p-l-1-2">
+            <br>
+            <strong> Allowed Filetypes:</strong>
+          </span>
+          <li ng-repeat="fileType in inputFile.allowed_filetypes">
+            {{ fileType.name }}
+          </li>
+        </ul>
+      </li>
+    </ul>
+  </div>
+    <ul ng-if="$ctrl.tool.file_relationship.nested_elements.length > 0">
+        <li
+          ng-repeat="element in element.nested_elements"
+          ng-include="'categoryTree'">
+        </li>
+    </ul>
+</script>
