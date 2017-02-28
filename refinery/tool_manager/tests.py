@@ -6,7 +6,7 @@ from rest_framework.test import (APITestCase, APIRequestFactory,
                                  force_authenticate)
 
 from core.models import ExtendedGroup
-from factory_boy.utils import make_tool_definitions
+from factory_boy.utils import make_sample_tool_definitions
 from .models import ToolDefinition
 from .views import ToolDefinitionsViewSet
 
@@ -26,7 +26,7 @@ class ToolDefinitionAPITests(APITestCase):
         self.url_root = '/api/v2/tools/definitions/'
 
         # Make some sample data
-        make_tool_definitions()
+        make_sample_tool_definitions()
 
         # Make reusable requests & responses
         self.get_request = self.factory.get(self.url_root)

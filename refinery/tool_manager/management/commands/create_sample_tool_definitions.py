@@ -2,7 +2,7 @@ import sys
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction, IntegrityError
 
-from factory_boy.utils import make_tool_definitions
+from factory_boy.utils import make_sample_tool_definitions
 
 
 class Command(BaseCommand):
@@ -14,11 +14,13 @@ class Command(BaseCommand):
     """
     def handle(self, **options):
         """Creates sample Tool Definitions utilizing
-        factory_boy.utils.make_tool_definitions()
+        factory_boy.utils.make_sample_tool_definitions()
         """
         sys.stdout.write("Generating sample ToolDefinitions...\n")
         try:
             with transaction.atomic():
-                make_tool_definitions()
+                make_sample_tool_definitions()
         except IntegrityError as e:
             raise CommandError(e)
+        else:
+            sys.stdout.write("ToolDefinitions were created sucessfully!\n")

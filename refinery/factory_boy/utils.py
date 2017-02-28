@@ -78,7 +78,9 @@ def create_dataset_with_necessary_models():
     return dataset
 
 
-def make_tool_definitions():
+def make_sample_tool_definitions():
+    """Generate two sample ToolDefinitions. A LIST:LIST:PAIR and a LIST:PAIR"""
+
     bam_filetype = FileType.objects.get(name="BAM")
     bed_filetype = FileType.objects.get(name="BED")
     fastq_filetype = FileType.objects.get(name="FASTQ")
