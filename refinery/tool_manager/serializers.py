@@ -49,7 +49,7 @@ class OutputFileSerializer(serializers.ModelSerializer):
 class ToolDefinitionSerializer(serializers.ModelSerializer):
     file_relationship = FileRelationshipSerializer()
     output_files = OutputFileSerializer(many=True)
-    parameters = ParameterSerializer(many=True)
+    parameters = ParameterSerializer(many=True, allow_null=True)
 
     class Meta:
         model = ToolDefinition
