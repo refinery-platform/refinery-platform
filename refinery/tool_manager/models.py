@@ -3,6 +3,12 @@ from django_extensions.db.fields import UUIDField
 
 
 class Parameter(models.Model):
+    """
+    A Parameter is a representation of Galaxy/Visualization/Other tool
+    parameters that will potentially be exposed and configurable upon a tool's
+    configuration/launching step.
+    """
+
     INTEGER = "INTEGER"
     STRING = "STRING"
     BOOLEAN = "BOOLEAN"
@@ -42,6 +48,13 @@ class Parameter(models.Model):
 
 
 class FileRelationship(models.Model):
+    """
+    A File Relationship describes the structuring of files that is expected
+    from a given tool.
+
+    Note that a FileRelationship has a self-referential M2M which
+    allows us to construct complex nestings. (useful for Galaxy WFs)
+    """
     PAIR = "PAIR"
     LIST = "LIST"
     RELATIONSHIP_TYPES = (
@@ -62,6 +75,10 @@ class FileRelationship(models.Model):
 
 
 class InputFile(models.Model):
+    """
+    An Input file describes a file and allowed Refinery FileType(s) that we
+    will associate with a tool as its expected input(s)
+    """
     uuid = UUIDField(unique=True, auto=True)
     name = models.TextField(max_length=100, blank=False, null=False)
     description = models.TextField(max_length=500, blank=False, null=False)
@@ -74,6 +91,10 @@ class InputFile(models.Model):
 
 
 class OutputFile(models.Model):
+    """
+    An Output file describes a file and allowed Refinery FileType(s) that we
+    will associate with a tool as its expected output(s)
+    """
     uuid = UUIDField(unique=True, auto=True)
     name = models.TextField(max_length=100, blank=False, null=False)
     description = models.TextField(max_length=500, blank=False, null=False)
@@ -84,6 +105,15 @@ class OutputFile(models.Model):
 
 
 class ToolDefinition(models.Model):
+    """
+    A ToolDefinition is a generic representation of a tool that the
+    RefineryPlatform can handle.
+
+    More generally, any tools that we introduce to Refinery (Workflows,
+    Visualizations, Other) will need to know about their expected inputs,
+    outputs, and input file structuring.
+    """
+
     WORKFLOW = 'WORKFLOW'
     VISUALIZATION = 'VISUALIZATION'
     TOOL_TYPES = (
