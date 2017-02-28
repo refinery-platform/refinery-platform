@@ -27,18 +27,11 @@ class Parameter(models.Model):
         (FILE, "file")
     )
     uuid = UUIDField(unique=True, auto=True)
-    name = models.TextField(max_length=100, blank=False,
-                            null=False)
-    description = models.TextField(max_length=500, blank=False,
-                                   null=False)
+    name = models.TextField(max_length=100)
+    description = models.TextField(max_length=500)
     is_editable = models.BooleanField(default=False)
-    value_type = models.CharField(choices=VALUE_TYPES, max_length=25,
-                                  blank=False, null=False)
-    default_value = models.TextField(max_length=100, blank=False, null=False)
-    # ID of Galaxy tool that the parameter belongs to
-    galaxy_tool_id = models.TextField(max_length=300, blank=False, null=False)
-    galaxy_tool_parameter = models.TextField(
-        max_length=100, blank=False, null=False)
+    value_type = models.CharField(choices=VALUE_TYPES, max_length=25)
+    default_value = models.TextField(max_length=100)
 
     def __str__(self):
         return "{}: {} - {}".format(self.value_type, self.name, self.uuid)
@@ -68,12 +61,9 @@ class FileRelationship(models.Model):
         (LIST, "list")
     )
     uuid = UUIDField(unique=True, auto=True)
-    name = models.TextField(max_length=100, blank=False,
-                            null=False)
-    value_type = models.CharField(
-        max_length=100, choices=RELATIONSHIP_TYPES, blank=False, null=False)
-    file_relationship = models.ManyToManyField("self", symmetrical=False,
-                                               null=True, blank=True)
+    name = models.TextField(max_length=100)
+    value_type = models.CharField(max_length=100, choices=RELATIONSHIP_TYPES)
+
     # NOTE: `symmetrical=False` is not very common. It's necessary for the
     # self-referential M2M below. See: http://bit.ly/2mpPQfT
     file_relationship = models.ManyToManyField(
@@ -82,7 +72,7 @@ class FileRelationship(models.Model):
     input_files = models.ManyToManyField("InputFile")
 
     def __str__(self):
-        return "{}: {} {}".format(self.value_type, self.name, self.uuid)
+        return "{}: {} - {}".format(self.value_type, self.name, self.uuid)
 
 
 class InputFile(models.Model):
@@ -91,14 +81,14 @@ class InputFile(models.Model):
     will associate with a tool as its expected input(s)
     """
     uuid = UUIDField(unique=True, auto=True)
-    name = models.TextField(max_length=100, blank=False, null=False)
-    description = models.TextField(max_length=500, blank=False, null=False)
+    name = models.TextField(max_length=100)
+    description = models.TextField(max_length=500)
     allowed_filetypes = models.ManyToManyField("file_store.FileType")
 
     def __str__(self):
-        return "{}: {} {}".format(self.name, [f.name for f in
-                                              self.allowed_filetypes.all()],
-                                  self.uuid)
+        return "{}: {} {}".format(
+            self.name, [f.name for f in self.allowed_filetypes.all()],
+            self.uuid)
 
 
 class OutputFile(models.Model):
@@ -107,8 +97,8 @@ class OutputFile(models.Model):
     will associate with a tool as its expected output(s)
     """
     uuid = UUIDField(unique=True, auto=True)
-    name = models.TextField(max_length=100, blank=False, null=False)
-    description = models.TextField(max_length=500, blank=False, null=False)
+    name = models.TextField(max_length=100)
+    description = models.TextField(max_length=500)
     filetype = models.ForeignKey("file_store.FileType")
 
     def __str__(self):
@@ -133,12 +123,9 @@ class ToolDefinition(models.Model):
     )
 
     uuid = UUIDField(unique=True, auto=True)
-    name = models.TextField(unique=True, max_length=100, blank=False,
-                            null=False)
-    description = models.TextField(unique=True, max_length=500, blank=False,
-                                   null=False)
-    tool_type = models.CharField(max_length=100, choices=TOOL_TYPES,
-                                 blank=False, null=False)
+    name = models.TextField(unique=True, max_length=100)
+    description = models.TextField(unique=True, max_length=500)
+    tool_type = models.CharField(max_length=100, choices=TOOL_TYPES)
     file_relationship = models.ForeignKey("FileRelationship")
     output_files = models.ManyToManyField("OutputFile")
     parameters = models.ManyToManyField("Parameter")
