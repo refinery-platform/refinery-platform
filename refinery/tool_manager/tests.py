@@ -1,11 +1,13 @@
 from urlparse import urljoin
 
 from django.contrib.auth.models import User
-from rest_framework.test import APITestCase, APIRequestFactory, APIClient, \
-    force_authenticate
+
+from rest_framework.test import (APIRequestFactory, APITestCase,
+                                 force_authenticate)
 
 from core.models import ExtendedGroup
 from factory_boy.utils import make_sample_tool_definitions
+
 from .models import ToolDefinition
 from .views import ToolDefinitionsViewSet
 
@@ -20,12 +22,9 @@ class ToolDefinitionAPITests(APITestCase):
                                              self.password)
 
         self.factory = APIRequestFactory()
-        self.client = APIClient()
         self.view = ToolDefinitionsViewSet.as_view({'get': 'list'})
 
         self.url_root = '/api/v2/tools/definitions/'
-
-        self.client.login(username=self.username, password=self.password)
 
         # Make some sample data
         make_sample_tool_definitions()
