@@ -1,9 +1,3 @@
-"""
-This file demonstrates writing tests using the unittest module. These will pass
-when you run "manage.py test".
-
-Replace this with more appropriate tests for your application.
-"""
 import json
 import re
 
@@ -60,11 +54,6 @@ class AssaysAPITests(APITestCase):
         self.invalid_uuid = "0xxx000x-00xx-000x-xx00-x00x00x00x0x"
         self.invalid_format_uuid = "xxxxxxxx"
 
-    def tearDown(self):
-        Assay.objects.all().delete()
-        Study.objects.all().delete()
-        Investigation.objects.all().delete()
-
     def test_get_valid_uuid(self):
         # valid_uuid
         request = self.factory.get('%s/?uuid=%s' % (
@@ -105,68 +94,6 @@ class AssaysAPITests(APITestCase):
         self.assertEqual(response.status_code, 404)
 
 
-# class AssaysFilesAPITests(APITestCase):
-#
-#     def setUp(self):
-#
-#         self.factory = APIRequestFactory()
-#         investigation = Investigation.objects.create()
-#         study = Study.objects.create(file_name='test_filename123.txt',
-#                                      title='Study Title Test',
-#                                      investigation=investigation)
-#
-#         assay = Assay.objects.create(
-#                 study=study,
-#                 measurement='transcription factor binding site',
-#                 measurement_accession='http://www.testurl.org/testID',
-#                 measurement_source='OBI',
-#                 technology='nucleotide sequencing',
-#                 technology_accession='test info',
-#                 technology_source='test source',
-#                 platform='Genome Analyzer II',
-#                 file_name='test_assay_filename.txt',
-#                 )
-#         self.valid_uuid = assay.uuid
-#         self.view = AssaysFiles.as_view()
-#         self.invalid_uuid = "0xxx000x-00xx-000x-xx00-x00x00x00x0x"
-#         self.invalid_format_uuid = "xxxxxxxx"
-#
-#     def tearDown(self):
-#         Assay.objects.all().delete()
-#         Study.objects.all().delete()
-#         Investigation.objects.all().delete()
-#
-#     def test_get(self):
-#         # valid_uuid, patch date in the module that uses it
-#         with patch(
-# 'data_set_manager.views.AssaysFiles.get') as mock_search_solr:
-#             mock_search_solr.search_solr = {
-#                 "facet_field_counts": {},
-#                 "attributes": 'cow',
-#                 "nodes": []}
-#
-#         uuid = self.valid_uuid
-#         request = self.factory.get('/api/v2/assays/%s/files' % uuid)
-#         response = self.view(request, uuid)
-#         response.render()
-#         self.assertEqual(response.status_code, 200)
-#         self.assertEqual(response.content,
-#                          '{"facet_field_counts":{},'
-#                          '"attributes":"cow",'
-#                          '"nodes":[]}')
-#
-#         # invalid_uuid
-#         uuid = self.invalid_uuid
-#         request = self.factory.get('/api/v2/assays/%s/files' % uuid)
-#         response = self.view(request, uuid)
-#         response.render()
-#         self.assertEqual(response.status_code, 200)
-#         self.assertEqual(response.content,
-#                          '{"facet_field_counts":{},'
-#                          '"attributes":cow,'
-#                          '"nodes":[]}')
-
-
 class AssaysAttributesAPITests(APITestCase):
 
     def setUp(self):
@@ -175,8 +102,6 @@ class AssaysAttributesAPITests(APITestCase):
         self.user1.save()
         self.user2.save()
         self.factory = APIRequestFactory()
-        self.client = APIClient()
-        self.client.login(username='ownerJane', password='test1234')
         investigation = Investigation.objects.create()
         self.data_set = DataSet.objects.create(
                 title="Test DataSet")
@@ -297,15 +222,6 @@ class AssaysAttributesAPITests(APITestCase):
         self.view = AssaysAttributes.as_view()
         self.invalid_uuid = "0xxx000x-00xx-000x-xx00-x00x00x00x0x"
         self.invalid_format_uuid = "xxxxxxxx"
-        self.client.logout()
-
-    def tearDown(self):
-        User.objects.all().delete()
-        Assay.objects.all().delete()
-        Study.objects.all().delete()
-        Investigation.objects.all().delete()
-        DataSet.objects.all().delete()
-        AttributeOrder.objects.all().delete()
 
     def test_get_valid_uuid(self):
         # valid_uuid
@@ -1415,15 +1331,6 @@ class NodeClassMethodTests(TestCase):
             study=self.study,
             file_uuid=self.filestore_item_1.uuid
         )
-
-    def tearDown(self):
-        FileStoreItem.objects.all().delete()
-        InvestigationLink.objects.all().delete()
-        Investigation.objects.all().delete()
-        Node.objects.all().delete()
-        Study.objects.all().delete()
-        Assay.objects.all().delete()
-        DataSet.objects.all().delete()
 
     def test_create_and_associate_auxiliary_node(self):
         self.assertEqual(self.node.get_children(), [])
