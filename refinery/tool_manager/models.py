@@ -34,11 +34,11 @@ class Parameter(models.Model):
     galaxy_tool_parameter = models.TextField(
         max_length=100, blank=False, null=False)
 
-    def __unicode__(self):
-        return "{}: {} - {} - {}".format(
-            self.galaxy_tool_id,
-            self.galaxy_tool_parameter,
-            self.value_type, self.name)
+    def __str__(self):
+        return "{}: {} - {} - {} {}".format(self.galaxy_tool_id,
+                                            self.galaxy_tool_parameter,
+                                            self.value_type, self.name,
+                                            self.uuid)
 
 
 class FileRelationship(models.Model):
@@ -57,10 +57,8 @@ class FileRelationship(models.Model):
                                              null=True, blank=True)
     input_files = models.ManyToManyField("InputFile")
 
-    def __unicode__(self):
-        return "{}: {}".format(
-            self.value_type,
-            self.name)
+    def __str__(self):
+        return "{}: {} {}".format(self.value_type, self.name, self.uuid)
 
 
 class InputFile(models.Model):
@@ -69,10 +67,10 @@ class InputFile(models.Model):
     description = models.TextField(max_length=500, blank=False, null=False)
     allowed_filetypes = models.ManyToManyField("file_store.FileType")
 
-    def __unicode__(self):
-        return "{}: {}".format(
-            self.name,
-            [f.name for f in self.allowed_filetypes.all()])
+    def __str__(self):
+        return "{}: {} {}".format(self.name, [f.name for f in
+                                              self.allowed_filetypes.all()],
+                                  self.uuid)
 
 
 class OutputFile(models.Model):
@@ -81,10 +79,8 @@ class OutputFile(models.Model):
     description = models.TextField(max_length=500, blank=False, null=False)
     filetype = models.ForeignKey("file_store.FileType")
 
-    def __unicode__(self):
-        return "{}: {}".format(
-            self.name,
-            self.filetype)
+    def __str__(self):
+        return "{}: {} {}".format(self.name, self.filetype, self.uuid)
 
 
 class ToolDefinition(models.Model):
@@ -106,5 +102,5 @@ class ToolDefinition(models.Model):
     output_files = models.ManyToManyField("OutputFile")
     parameters = models.ManyToManyField("Parameter")
 
-    def __unicode__(self):
+    def __str__(self):
         return "{}: {} {}".format(self.tool_type, self.name, self.uuid)
