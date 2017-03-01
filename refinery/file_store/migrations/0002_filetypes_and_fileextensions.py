@@ -300,7 +300,8 @@ def forwards(apps, schema_editor):
         # Attempt to save FileExtension objects. If an IntegrityError is raised
         # upon saving an object we continue as it already exists.
         try:
-            file_extension.save()
+            with transaction.atomic():
+                file_extension.save()
         except IntegrityError:
             continue
 

@@ -77,7 +77,8 @@ def forwards(apps, schema_editor):
         # Attempt to save Ontology objects. If an IntegrityError is raised
         # upon saving an object we continue as it already exists.
         try:
-            ontology.save()
+            with transaction.atomic():
+                ontology.save()
         except IntegrityError:
             continue
 
