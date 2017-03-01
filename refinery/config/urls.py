@@ -24,7 +24,7 @@ from core.forms import RegistrationFormWithCustomFields
 from core.models import DataSet, AuthenticationFormUsernameOrEmail
 from core.views import (AnalysesViewSet, CustomRegistrationView,
                         DataSetsViewSet, NodeGroups)
-from core.urls import router as core_router
+from core.urls import core_router
 from data_set_manager.api import (AssayResource, AttributeOrderResource,
                                   AttributeResource, InvestigationResource,
                                   ProtocolReferenceResource,
@@ -33,7 +33,7 @@ from data_set_manager.api import (AssayResource, AttributeOrderResource,
                                   StudyResource)
 from data_set_manager.views import Assays, AssaysAttributes, AssaysFiles
 from file_store.views import FileStoreItems
-from tool_manager.urls import router as tool_manager_router
+from tool_manager.urls import tool_manager_router
 
 
 logger = logging.getLogger(__name__)

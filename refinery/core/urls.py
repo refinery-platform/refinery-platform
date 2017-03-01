@@ -87,6 +87,6 @@ urlpatterns = patterns(
 )
 
 # DRF url routing
-router = DefaultRouter()
-router.register(r'nodes', NodeViewSet)
-router.register(r'workflows', WorkflowViewSet)
+core_router = DefaultRouter()
+core_router.register(r'nodes', NodeViewSet)
+core_router.register(r'workflows', WorkflowViewSet)
