@@ -9,9 +9,9 @@ from haystack.forms import FacetedSearchForm
 from haystack.query import SearchQuerySet
 from haystack.views import FacetedSearchView
 from registration.backends.default.views import ActivationView
-from rest_framework import routers
 from tastypie.api import Api
 
+from config.utils import RouterCombiner
 from core.api import (AnalysisResource, DataSetResource, ExtendedGroupResource,
                       FastQCResource, GroupManagementResource,
                       InvitationResource, NodePairResource,
@@ -23,8 +23,8 @@ from core.api import (AnalysisResource, DataSetResource, ExtendedGroupResource,
 from core.forms import RegistrationFormWithCustomFields
 from core.models import DataSet, AuthenticationFormUsernameOrEmail
 from core.views import (AnalysesViewSet, CustomRegistrationView,
-                        DataSetsViewSet, NodeGroups, NodeViewSet,
-                        WorkflowViewSet)
+                        DataSetsViewSet, NodeGroups)
+from core.urls import router as core_router
 from data_set_manager.api import (AssayResource, AttributeOrderResource,
                                   AttributeResource, InvestigationResource,
                                   ProtocolReferenceResource,
@@ -33,7 +33,7 @@ from data_set_manager.api import (AssayResource, AttributeOrderResource,
                                   StudyResource)
 from data_set_manager.views import Assays, AssaysAttributes, AssaysFiles
 from file_store.views import FileStoreItems
-from tool_manager.views import ToolDefinitionsViewSet
+from tool_manager.urls import router as tool_manager_router
 
 
 logger = logging.getLogger(__name__)
@@ -45,11 +45,13 @@ sqs = (SearchQuerySet().using("core")
                        .facet('technology')
                        .highlight())
 
-# Django REST Framework urls
-router = routers.DefaultRouter()
-router.register(r'workflows', WorkflowViewSet)
-router.register(r'nodes', NodeViewSet)
-router.register(r'tools/definitions', ToolDefinitionsViewSet)
+# Django REST Framework Url Routing
+# RouterCombiner.extend(<router instance>) to include DRF Routers defined in
+# other apps urls.py files
+router = RouterCombiner()
+router.extend(core_router)
+router.extend(tool_manager_router)
+
 
 # NG: added for tastypie URL
 v1_api = Api(api_name='v1')
