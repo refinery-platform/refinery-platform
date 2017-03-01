@@ -2046,14 +2046,6 @@ class DataSetApiV2Tests(APITestCase):
         )
         self.options_response = self.view(self.options_request)
 
-    def tearDown(self):
-        Node.objects.all().delete()
-        User.objects.all().delete()
-        Study.objects.all().delete()
-        Assay.objects.all().delete()
-        DataSet.objects.all().delete()
-        Investigation.objects.all().delete()
-
     def test_unallowed_http_verbs(self):
         self.assertEqual(
             self.put_response.data['detail'], 'Method "PUT" not allowed.')
