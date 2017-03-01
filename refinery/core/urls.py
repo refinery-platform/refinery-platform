@@ -7,7 +7,7 @@ Created on Feb 20, 2012
 from django.conf.urls import patterns, url
 from rest_framework.routers import DefaultRouter
 
-from core.views import WorkflowViewSet, NodeViewSet
+from .views import WorkflowViewSet, NodeViewSet
 
 urlpatterns = patterns(
     'core.views',
