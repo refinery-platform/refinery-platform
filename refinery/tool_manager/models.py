@@ -31,7 +31,7 @@ class Parameter(models.Model):
     uuid = UUIDField(unique=True, auto=True)
     name = models.TextField(max_length=100)
     description = models.TextField(max_length=500)
-    is_editable = models.BooleanField(default=False)
+    is_user_adjustable = models.BooleanField(default=False)
     value_type = models.CharField(choices=VALUE_TYPES, max_length=25)
     default_value = models.TextField(max_length=100)
 
@@ -45,6 +45,7 @@ class GalaxyParameter(Parameter):
     """
     # ID of Galaxy tool that the parameter belongs to
     galaxy_tool_id = models.TextField(max_length=300)
+    galaxy_workflow_step = models.IntegerField()
     galaxy_tool_parameter = models.TextField(max_length=100)
 
 

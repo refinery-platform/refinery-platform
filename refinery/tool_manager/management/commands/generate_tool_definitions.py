@@ -5,7 +5,8 @@ from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction, IntegrityError
 
 from core.models import WorkflowEngine
-from ...utils import create_tool_definition_from_workflow
+from ...utils import create_tool_definition_from_workflow, \
+    validate_workflow_annotation
 
 
 class Command(BaseCommand):
@@ -42,11 +43,11 @@ class Command(BaseCommand):
                 except ValueError as e:
                     raise CommandError(
                         "Workflow annotation is not valid JSON: {}".format(e))
-
                 try:
                     with transaction.atomic():
                         # Generate ToolDefinition from information obtained
                         # from Galaxy WorkflowEngine
+                        validate_workflow_annotation(wf_dict)
                         create_tool_definition_from_workflow(wf_dict)
                 except IntegrityError as e:
                     raise CommandError(

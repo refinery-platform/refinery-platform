@@ -1,9 +1,11 @@
 import logging
 from django.contrib import admin
+from django.core.management import CommandError
 
 from factory_boy.django_model_factories import (FileRelationshipFactory,
                                                 InputFileFactory,
-                                                ToolDefinitionFactory)
+                                                ToolDefinitionFactory,
+                                                OutputFileFactory)
 from file_store.models import FileType
 logger = logging.getLogger(__name__)
 
@@ -24,12 +26,25 @@ def create_tool_definition_from_workflow(workflow_data):
 
     file_relationship = create_nesting(workflow_data["annotation"])
 
-    ToolDefinitionFactory(
+    tool_definition = ToolDefinitionFactory(
         name=workflow_data["name"],
-        description="{} description".format(workflow_data["name"]),
+        description=workflow_data["annotation"]["description"],
         tool_type="WORKFLOW",
         file_relationship=file_relationship
     )
+
+    for output_file in workflow_data["annotation"]["output_files"]:
+        tool_definition.output_files.add(
+            OutputFileFactory(
+                name=output_file["name"],
+                description=output_file["description"],
+                filetype=FileType.objects.get(
+                    name=output_file["filetype"]["name"]
+                )
+            )
+        )
+
+    # TODO: figure out Parameter/GalaxyParameter stuff
 
 
 def create_nesting(d, fr_store=None):
@@ -38,7 +53,7 @@ def create_nesting(d, fr_store=None):
     FileRelationship structure
 
     :param fr_store: initially `None`, but becomes a populated list upon
-    recursive calls to create_nesting. Allows for temp
+    recursive calls to create_nesting. Allows for temp.
     storage of FileRelationship objs created in this method.
     Is necessary due to the fact that we cannot properly create the M2M
     relations between FileRelationships until we have created the
@@ -71,8 +86,7 @@ def create_nesting(d, fr_store=None):
                     value, fr_store=fr_store)
             else:
                 # If we reach here, we have reached the bottom-most nested
-                # file_relationship.
-                # Since we want to act upon the bottom-most
+                # file_relationship. Since we want to act upon the bottom-most
                 # file_relationship's input_files, we can safely grab the
                 # last element from our fr_store due to Python's nature or
                 # ordering lists.
@@ -109,3 +123,26 @@ def create_nesting(d, fr_store=None):
                     except IndexError:
                         # Return the top-most FileRelationship
                         return fr_store[0]
+
+
+def validate_workflow_annotation(wf_dict):
+    """
+    Validate incoming annotation data to ensure ToolDefinitions are created
+    properly.
+    :param annotation: dict containing Galaxy Workflow annotation data
+    :return: Boolean: True if validation passes.
+    """
+    keys_to_check = [
+        "file_relationship", "description", "output_files"]
+    keys_not_found = []
+
+    for key in keys_to_check:
+        if key not in wf_dict["annotation"]:
+            keys_not_found.append(key)
+
+    if keys_not_found:
+        raise CommandError(
+            "Workflow not properly Annotated. Keys: {} were not found in "
+            "workflow annotation data.".format(keys_not_found))
+    else:
+        return True
