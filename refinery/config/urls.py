@@ -22,8 +22,8 @@ from core.api import (AnalysisResource, DataSetResource, ExtendedGroupResource,
                       WorkflowInputRelationshipsResource, WorkflowResource)
 from core.forms import RegistrationFormWithCustomFields
 from core.models import DataSet, AuthenticationFormUsernameOrEmail
-from core.views import CustomRegistrationView
 from core.urls import core_router
+from core.views import CustomRegistrationView
 from data_set_manager.api import (AssayResource, AttributeOrderResource,
                                   AttributeResource, InvestigationResource,
                                   ProtocolReferenceResource,
