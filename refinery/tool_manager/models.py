@@ -31,7 +31,7 @@ class Parameter(models.Model):
     uuid = UUIDField(unique=True, auto=True)
     name = models.TextField(max_length=100)
     description = models.TextField(max_length=500)
-    is_editable = models.BooleanField(default=False)
+    is_user_adjustable = models.BooleanField(default=False)
     value_type = models.CharField(choices=VALUE_TYPES, max_length=25)
     default_value = models.TextField(max_length=100)
 
@@ -126,7 +126,7 @@ class ToolDefinition(models.Model):
 
     uuid = UUIDField(unique=True, auto=True)
     name = models.TextField(unique=True, max_length=100)
-    description = models.TextField(unique=True, max_length=500)
+    description = models.TextField(max_length=500)
     tool_type = models.CharField(max_length=100, choices=TOOL_TYPES)
     file_relationship = models.ForeignKey(FileRelationship)
     output_files = models.ManyToManyField(OutputFile)
