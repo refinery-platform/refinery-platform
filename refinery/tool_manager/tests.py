@@ -1,12 +1,17 @@
+import json
 from urlparse import urljoin
 
 from django.contrib.auth.models import User
+from django.core.management import CommandError
+from django.test import TestCase
 
 from rest_framework.test import (APIRequestFactory, APITestCase,
                                  force_authenticate)
 
 from core.models import ExtendedGroup
 from factory_boy.utils import make_sample_tool_definitions
+from tool_manager.utils import (create_tool_definition_from_workflow,
+                                validate_workflow_annotation)
 
 from .models import ToolDefinition
 from .views import ToolDefinitionsViewSet
@@ -84,3 +89,69 @@ class ToolDefinitionAPITests(APITestCase):
         self.assertEqual(
             self.delete_response.data['detail'], 'Method "DELETE" not '
                                                  'allowed.')
+
+
+class ToolDefinitionGenerationTests(TestCase):
+
+    def test_malformed_workflow_annotation(self):
+        pass
+
+    def test_workflow_improperly_annotated(self):
+        with open("tool_manager/test-data/workflow_bad_annot.json", "r") as f:
+            wf_data = json.loads(f.read())
+            self.assertRaises(
+                CommandError, validate_workflow_annotation, wf_data)
+
+    def test_list_workflow_tool_def_generation(self):
+        with open("tool_manager/test-data/workflow_LIST.json", "r") as f:
+            wf_data = json.loads(f.read())
+            self.assertTrue(validate_workflow_annotation(wf_data))
+            create_tool_definition_from_workflow(wf_data)
+
+            self.assertEqual(ToolDefinition.objects.count(), 1)
+            td = ToolDefinition.objects.get(name=wf_data["name"])
+            self.assertEqual(td.output_files.count(), 4)
+            self.assertEqual(td.parameters.count(), 0)
+            self.assertEqual(td.file_relationship.file_relationship.count(), 0)
+            self.assertEqual(td.file_relationship.input_files.count(), 1)
+
+    def test_list_pair_workflow_tool_def_generation(self):
+        with open("tool_manager/test-data/workflow_LIST:PAIR.json", "r") as f:
+            wf_data = json.loads(f.read())
+            self.assertTrue(validate_workflow_annotation(wf_data))
+            create_tool_definition_from_workflow(wf_data)
+
+            self.assertEqual(ToolDefinition.objects.count(), 1)
+            td = ToolDefinition.objects.get(name=wf_data["name"])
+            self.assertEqual(td.output_files.count(), 1)
+            self.assertEqual(td.parameters.count(), 0)
+            self.assertEqual(td.file_relationship.file_relationship.count(), 1)
+            second_nested_file_relationship = \
+                td.file_relationship.file_relationship.all()[0]
+            self.assertEqual(
+                second_nested_file_relationship.file_relationship.count(), 0)
+            self.assertEqual(
+                second_nested_file_relationship.input_files.count(), 2)
+
+    def test_list_list_pair_workflow_tool_def_generation(self):
+        with open("tool_manager/test-data/workflow_LIST:LIST:PAIR.json",
+                  "r") as f:
+            wf_data = json.loads(f.read())
+            self.assertTrue(validate_workflow_annotation(wf_data))
+            create_tool_definition_from_workflow(wf_data)
+
+            self.assertEqual(ToolDefinition.objects.count(), 1)
+            td = ToolDefinition.objects.get(name=wf_data["name"])
+            self.assertEqual(td.output_files.count(), 1)
+            self.assertEqual(td.parameters.count(), 0)
+            self.assertEqual(td.file_relationship.file_relationship.count(), 1)
+            second_nested_file_relationship = \
+                td.file_relationship.file_relationship.all()[0]
+            self.assertEqual(
+                second_nested_file_relationship.file_relationship.count(), 1)
+            third_nested_file_relationship = \
+                second_nested_file_relationship.file_relationship.all()[0]
+            self.assertEqual(
+                third_nested_file_relationship.file_relationship.count(), 0)
+            self.assertEqual(
+                third_nested_file_relationship.input_files.count(), 2)
