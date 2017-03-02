@@ -22,8 +22,7 @@ from core.api import (AnalysisResource, DataSetResource, ExtendedGroupResource,
                       WorkflowInputRelationshipsResource, WorkflowResource)
 from core.forms import RegistrationFormWithCustomFields
 from core.models import DataSet, AuthenticationFormUsernameOrEmail
-from core.views import (AnalysesViewSet, CustomRegistrationView,
-                        DataSetsViewSet, NodeGroups)
+from core.views import CustomRegistrationView
 from core.urls import core_router
 from data_set_manager.api import (AssayResource, AttributeOrderResource,
                                   AttributeResource, InvestigationResource,
@@ -31,8 +30,9 @@ from data_set_manager.api import (AssayResource, AttributeOrderResource,
                                   ProtocolReferenceParameterResource,
                                   ProtocolResource, PublicationResource,
                                   StudyResource)
-from data_set_manager.views import Assays, AssaysAttributes, AssaysFiles
-from file_store.views import FileStoreItems
+from data_set_manager.urls import data_set_manager_router
+from file_store.urls import file_store_router
+
 from tool_manager.urls import tool_manager_router
 
 
@@ -44,14 +44,6 @@ sqs = (SearchQuerySet().using("core")
                        .facet('measurement')
                        .facet('technology')
                        .highlight())
-
-# Django REST Framework Url Routing
-# RouterCombiner.extend(<router instance>) to include DRF Routers defined in
-# other apps urls.py files
-router = RouterCombiner()
-router.extend(core_router)
-router.extend(tool_manager_router)
-
 
 # NG: added for tastypie URL
 v1_api = Api(api_name='v1')
@@ -155,34 +147,6 @@ urlpatterns = patterns(
         ),
         name='search'
     ),
-    # Wire up our API using automatic URL routing.
-    url(r"^api/v2/", include(router.urls)),
-
-    url(r'^api/v2/node_groups/$', NodeGroups.as_view()),
-
-    url(r'^api/v2/assays/$', Assays.as_view()),
-
-    url(r'^api/v2/assays/(?P<uuid>'
-        r'[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{'
-        r''r'12})/files/$', AssaysFiles.as_view()),
-
-    url(r'^api/v2/assays/(?P<uuid>'
-        r'[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{'
-        r''r'12})/attributes/$', AssaysAttributes.as_view()),
-
-    url(r'^api/v2/file_store_items/(?P<uuid>'
-        r'[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{'
-        r''r'12})/$', FileStoreItems.as_view()),
-
-    url(r'^api/v2/data_sets/(?P<uuid>'
-        r'[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{'
-        r''r'12})/$',
-        DataSetsViewSet.as_view()),
-
-    url(r'^api/v2/analyses/(?P<uuid>'
-        r'[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{'
-        r''r'12})/$',
-        AnalysesViewSet.as_view()),
 
     # (r'^favicon\.ico$',
     # 'django.views.generic.simple.redirect_to',
@@ -205,3 +169,18 @@ if settings.DEBUG:
         urlpatterns += patterns(
             '', url(r'^__debug__/', include(debug_toolbar.urls)),
         )
+
+
+# Django REST Framework Url Routing
+# RouterCombiner.extend(<router instance>) to include DRF Routers defined in
+# other apps urls.py files
+router = RouterCombiner()
+router.extend(core_router)
+router.extend(data_set_manager_router)
+router.extend(file_store_router)
+router.extend(tool_manager_router)
+
+# Wire up our DRF APIs using automatic URL routing.
+urlpatterns += patterns(
+    '', url(r"^api/v2/", include(router.urls))
+)

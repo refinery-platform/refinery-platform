@@ -7,7 +7,9 @@ Created on Feb 20, 2012
 from django.conf.urls import patterns, url
 from rest_framework.routers import DefaultRouter
 
-from .views import NodeViewSet, WorkflowViewSet
+from .views import (AnalysesViewSet, DataSetsViewSet, NodeGroups,
+                    NodeViewSet, WorkflowViewSet)
+
 
 urlpatterns = patterns(
     'core.views',
@@ -90,3 +92,14 @@ urlpatterns = patterns(
 core_router = DefaultRouter()
 core_router.register(r'nodes', NodeViewSet)
 core_router.register(r'workflows', WorkflowViewSet)
+core_router.urls.extend([
+    url(r'^node_groups/$', NodeGroups.as_view()),
+    url(r'^data_sets/(?P<uuid>'
+        r'[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{'
+        r''r'12})/$',
+        DataSetsViewSet.as_view()),
+    url(r'^analyses/(?P<uuid>'
+        r'[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{'
+        r''r'12})/$',
+        AnalysesViewSet.as_view())
+])

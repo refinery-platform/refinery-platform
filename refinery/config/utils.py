@@ -14,4 +14,5 @@ class RouterCombiner(DefaultRouter):
 
         router: DRF Router instance containing route definitions.
         """
+        self.urls.extend(router.urls)
         self.registry.extend(router.registry)
