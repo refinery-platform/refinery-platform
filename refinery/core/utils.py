@@ -1,11 +1,11 @@
 from __future__ import absolute_import
-import logging
 
 import ast
+import logging
 import os
 import py2neo
+from urlparse import urlparse, urljoin
 
-import requests
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.sites.models import Site
@@ -14,12 +14,14 @@ from django.core.mail import send_mail
 from django.core.cache import cache
 from django.db import connection
 from django.utils import timezone
+
+import requests
 from rest_framework.response import Response
 from rest_framework import status
-from urlparse import urlparse, urljoin
 
 import core
 import data_set_manager
+
 
 logger = logging.getLogger(__name__)
 
@@ -45,8 +47,8 @@ def update_data_set_index(data_set):
 
     logger.info('Updated data set (uuid: %s) index', data_set.uuid)
     try:
-        core.search_indexes.DataSetIndex().update_object(data_set,
-                                                         using='core')
+        data_set_index = core.search_indexes.DataSetIndex()
+        data_set_index.update_object(data_set, using='core')
     except Exception as e:
         """ Solr is expected to fail and raise an exception when
         it is not running.
@@ -56,20 +58,21 @@ def update_data_set_index(data_set):
 
 
 @skip
-def add_data_set_to_neo4j(dataset_uuid, user_id):
+def add_data_set_to_neo4j(dataset, user_id):
+
     """Add a node in Neo4J for a dataset and give the owner read access.
     Note: Neo4J manages read access only.
     """
 
     logger.info(
         'Add dataset (uuid: %s) to Neo4J and give read access to user ' +
-        '(id: %s)', dataset_uuid, user_id
+        '(id: %s)', dataset.uuid, user_id
     )
 
     graph = py2neo.Graph(urljoin(settings.NEO4J_BASE_URL, 'db/data'))
 
     # Get annotations of the data_set
-    annotations = get_data_set_annotations(dataset_uuid)
+    annotations = get_data_set_annotations(dataset.uuid)
     annotations = normalize_annotation_ont_ids(annotations)
 
     try:
@@ -80,13 +83,13 @@ def add_data_set_to_neo4j(dataset_uuid, user_id):
 
         statement_name = (
             "MATCH (term:Class {name:{ont_id}}) "
-            "MERGE (ds:DataSet {uuid:{ds_uuid}}) "
+            "MERGE (ds:DataSet {id:{ds_id},uuid:{ds_uuid}}) "
             "MERGE ds-[:`annotated_with`]->term"
         )
 
         statement_uri = (
             "MATCH (term:Class {uri:{uri}}) "
-            "MERGE (ds:DataSet {uuid:{ds_uuid}}) "
+            "MERGE (ds:DataSet {id:{ds_id},uuid:{ds_uuid}}) "
             "MERGE ds-[:`annotated_with`]->term"
         )
 
@@ -96,7 +99,8 @@ def add_data_set_to_neo4j(dataset_uuid, user_id):
                     statement_uri,
                     {
                         'uri': annotation['value_uri'],
-                        'ds_uuid': annotation['data_set_uuid']
+                        'ds_id': dataset.id,
+                        'ds_uuid': dataset.uuid
                     }
                 )
             else:
@@ -108,7 +112,8 @@ def add_data_set_to_neo4j(dataset_uuid, user_id):
                             ':' +
                             annotation['value_accession']
                         ),
-                        'ds_uuid': annotation['data_set_uuid']
+                        'ds_id': dataset.id,
+                        'ds_uuid': dataset.uuid
                     }
                 )
 
@@ -129,7 +134,7 @@ def add_data_set_to_neo4j(dataset_uuid, user_id):
         tx.append(
             statement,
             {
-                'ds_uuid': dataset_uuid,
+                'ds_uuid': dataset.uuid,
                 'user_id': user_id
             }
         )
@@ -142,7 +147,7 @@ def add_data_set_to_neo4j(dataset_uuid, user_id):
         """
         logger.error(
             'Failed to add read access to data set (uuid: %s) for user '
-            '(uuid: %s) to Neo4J. Exception: %s', dataset_uuid, user_id, e
+            '(uuid: %s) to Neo4J. Exception: %s', dataset.uuid, user_id, e
         )
 
 
@@ -354,8 +359,8 @@ def delete_data_set_index(data_set):
 
     logger.debug('Deleted data set (uuid: %s) index', data_set.uuid)
     try:
-        core.search_indexes.DataSetIndex().remove_object(data_set,
-                                                         using='core')
+        data_set_index = core.search_indexes.DataSetIndex()
+        data_set_index.remove_object(data_set, using='core')
     except Exception as e:
         """ Solr is expected to fail and raise an exception when
         it is not running.
@@ -754,7 +759,8 @@ def delete_analysis_index(node_instance):
     """
     try:
         data_set_manager.search_indexes.NodeIndex().remove_object(
-            node_instance, using='data_set_manager')
+            node_instance, using='data_set_manager'
+        )
         logger.debug('Deleted Analysis\' NodeIndex with (uuid: %s)',
                      node_instance.uuid)
     except Exception as e:
@@ -917,7 +923,8 @@ def filter_nodes_uuids_in_solr(assay_uuid, filter_out_uuids=[],
             params['facets'] = ','.join(filter_attribute.keys())
 
     solr_params = data_set_manager.utils.generate_solr_params(
-        params, assay_uuid)
+        params, assay_uuid
+    )
     # Only require solr filters if exception uuids are passed
     if filter_out_uuids:
         # node_arr = str(filter_out_uuids).split(',')
@@ -925,9 +932,11 @@ def filter_nodes_uuids_in_solr(assay_uuid, filter_out_uuids=[],
         field_filter = "&fq=-uuid:({})".format(str_nodes)
         solr_params = ''.join([solr_params, field_filter])
     solr_response = data_set_manager.utils.search_solr(
-        solr_params, 'data_set_manager')
+        solr_params, 'data_set_manager'
+    )
     solr_reponse_json = data_set_manager.utils.format_solr_response(
-        solr_response)
+        solr_response
+    )
     uuid_list = []
     for node in solr_reponse_json.get('nodes'):
         uuid_list.append(node.get('uuid'))

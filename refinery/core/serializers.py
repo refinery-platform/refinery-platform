@@ -2,26 +2,61 @@ import logging
 
 import celery
 from rest_framework import serializers
+from rest_framework.validators import UniqueValidator
 
-import file_store
-import data_set_manager
-from .models import Workflow, NodeGroup
+from .models import DataSet, NodeGroup, Workflow
+from data_set_manager.models import Assay, Node, Study
+from file_store.models import FileStoreItem
 
 
 logger = logging.getLogger(__name__)
+
+
+class DataSetSerializer(serializers.ModelSerializer):
+    slug = serializers.CharField(
+            max_length=250,
+            trim_whitespace=True,
+            validators=[UniqueValidator(
+                queryset=DataSet.objects.all(),
+                message='Slugs must be unique.'
+            )]
+    )
+    description = serializers.CharField(max_length=5000)
+
+    class Meta:
+        model = DataSet
+        fields = ['title', 'accession', 'summary', 'description', 'slug']
+
+    def partial_update(self, instance, validated_data):
+        """
+        Update and return an existing `DataSet` instance, given the
+        validated data.
+        """
+        instance.title = validated_data.get('title', instance.title)
+        instance.accession = validated_data.get(
+            'accession', instance.accession
+        )
+        instance.summary = validated_data.get('summary', instance.summary)
+        instance.description = validated_data.get(
+            'description', instance.description
+        )
+        instance.slug = validated_data.get('slug', instance.slug)
+
+        instance.save()
+        return instance
 
 
 class NodeGroupSerializer(serializers.ModelSerializer):
     # Slug related field associated uuids with model
     nodes = serializers.SlugRelatedField(
         many=True, slug_field='uuid',
-        queryset=data_set_manager.models.Node.objects.all(),
+        queryset=Node.objects.all(),
         required=False, allow_null=True)
     assay = serializers.SlugRelatedField(
-        queryset=data_set_manager.models.Assay.objects.all(),
+        queryset=Assay.objects.all(),
         slug_field='uuid')
     study = serializers.SlugRelatedField(
-        queryset=data_set_manager.models.Study.objects.all(),
+        queryset=Study.objects.all(),
         slug_field='uuid')
 
     class Meta:
@@ -99,10 +134,10 @@ class NodeSerializer(serializers.HyperlinkedModelSerializer):
         urls = []
         for uuid in aux_nodes:
             try:
-                node = data_set_manager.models.Node.objects.get(uuid=uuid)
+                node = Node.objects.get(uuid=uuid)
                 urls.append(node.get_relative_file_store_item_url())
-            except (data_set_manager.models.Node.DoesNotExist,
-                    data_set_manager.models.Node.MultipleObjectsReturned) as e:
+            except (Node.DoesNotExist,
+                    Node.MultipleObjectsReturned) as e:
                 logger.debug(e)
         return urls
 
@@ -111,10 +146,10 @@ class NodeSerializer(serializers.HyperlinkedModelSerializer):
 
     def _get_file_extension(self, obj):
         try:
-            return file_store.models.FileStoreItem.objects.get(
+            return FileStoreItem.objects.get(
                     uuid=obj.file_uuid).get_file_extension()
-        except (file_store.models.FileStoreItem.DoesNotExist,
-                file_store.models.FileStoreItem.MultipleObjectsReturned) as e:
+        except (FileStoreItem.DoesNotExist,
+                FileStoreItem.MultipleObjectsReturned) as e:
             logger.debug(e)
             return None
 
@@ -126,9 +161,9 @@ class NodeSerializer(serializers.HyperlinkedModelSerializer):
             ready_for_igv_detail_view = True
             for item in obj.get_auxiliary_nodes():
                 try:
-                    node = data_set_manager.models.Node.objects.get(uuid=item)
-                except (data_set_manager.models.Node.DoesNotExist,
-                        data_set_manager.models.Node.MultipleObjectsReturned) \
+                    node = Node.objects.get(uuid=item)
+                except (Node.DoesNotExist,
+                        Node.MultipleObjectsReturned) \
                         as e:
                     logger.error(e)
                     return False
@@ -145,7 +180,7 @@ class NodeSerializer(serializers.HyperlinkedModelSerializer):
         return obj.is_auxiliary_node
 
     class Meta:
-        model = data_set_manager.models.Node
+        model = Node
         fields = [
             'uuid',
             'name',

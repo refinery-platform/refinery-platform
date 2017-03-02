@@ -6,13 +6,16 @@ describe('File Browser Factory', function () {
   var rootScope;
   var $q;
   var assayAttribute;
-  var fakeUuid = 'x508x83x-x9xx-4740-x9x7-x7x0x631280x';
+  var mocker;
+  var fakeUuid;
   var fakeToken = 'xxxx1';
 
   beforeEach(module('refineryApp'));
   beforeEach(module('refineryFileBrowser'));
-  beforeEach(inject(function (_fileBrowserFactory_, $window) {
+  beforeEach(inject(function (_fileBrowserFactory_, _mockParamsFactory_, $window) {
     factory = _fileBrowserFactory_;
+    mocker = _mockParamsFactory_;
+    fakeUuid = mocker.generateUuid();
     $window.csrf_token = fakeToken;
   }));
 
@@ -26,7 +29,6 @@ describe('File Browser Factory', function () {
     expect(factory.assayFilesTotalItems).toEqual({});
     expect(factory.nodeGroupList).toEqual([]);
     expect(factory.customColumnNames).toEqual([]);
-    expect(factory.filesParam).toBeDefined();
   });
 
   describe('getAssayFiles', function () {
@@ -117,7 +119,7 @@ describe('File Browser Factory', function () {
     it('getAssayFiles returns a promise', function () {
       var successData;
       var response = factory.getAssayFiles({
-        uuid: fakeUuid
+        uuid: mocker.generateUuid()
       }).then(function (responseData) {
         successData = responseData;
       });
@@ -188,21 +190,21 @@ describe('File Browser Factory', function () {
       $q = _$q_;
       nodeGroupList = [
         {
-          uuid: '7f9fdd26-187f-45d1-a87e-4d4e02d5aa1d',
+          uuid: mocker.generateUuid(),
           node_count: 0,
           is_implicit: false,
-          study: '8486046b-22f4-447f-9c81-41dbf6173c44',
-          assay: '2a3c4155-db7b-4138-afcb-67ad1cc04d51',
+          study: mocker.generateUuid(),
+          assay: mocker.generateUuid(),
           is_current: false,
           nodes: [],
           name: 'Node Group 1'
         },
         {
-          uuid: '7ac6196a-a710-4a51-9744-3466751366d8',
+          uuid: mocker.generateUuid(),
           node_count: 0,
           is_implicit: false,
-          study: '8486046b-22f4-447f-9c81-41dbf6173c44',
-          assay: '2a3c4155-db7b-4138-afcb-67ad1cc04d51',
+          study: mocker.generateUuid(),
+          assay: mocker.generateUuid(),
           is_current: false,
           nodes: [],
           name: 'Node Group 2'
@@ -246,11 +248,11 @@ describe('File Browser Factory', function () {
     ) {
       $q = _$q_;
       nodeGroup = {
-        uuid: '7f9fdd26-187f-45d1-a87e-4d4e02d5aa1d',
+        uuid: mocker.generateUuid(),
         node_count: 0,
         is_implicit: false,
-        study: '8486046b-22f4-447f-9c81-41dbf6173c44',
-        assay: '2a3c4155-db7b-4138-afcb-67ad1cc04d51',
+        study: mocker.generateUuid(),
+        assay: mocker.generateUuid(),
         is_current: false,
         nodes: [],
         name: 'Node Group 1'

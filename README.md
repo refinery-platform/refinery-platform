@@ -1,7 +1,7 @@
 # <img src="https://pbs.twimg.com/profile_images/519505652083748864/bG9itLTl_400x400.png" height=30px width=30px>&nbsp;Refinery Platform [![Build Status](https://travis-ci.org/refinery-platform/refinery-platform.svg?branch=develop)](https://travis-ci.org/refinery-platform/refinery-platform) [![Coverage Status](https://img.shields.io/codecov/c/github/refinery-platform/refinery-platform/develop.svg)](https://codecov.io/github/refinery-platform/refinery-platform?branch=develop)
 
 * Additional information about how to administer and develop Refinery can be found in the [wiki](http://github.com/refinery-platform/refinery-platform/wiki)
-* [Production deployments](https://github.com/refinery-platform/refinery-platform/wiki/AWS-installation) require access to Amazon Web Services
+* [Production deployments](https://github.com/refinery-platform/refinery-platform/wiki/AWS-deployment) require access to Amazon Web Services
 * Supported web browsers: Chrome 54 (Linux and OS X), Firefox 49 (Linux and OS X), Safari 9.0.0 (OS X)
 
 ## Installing and Launching for Development

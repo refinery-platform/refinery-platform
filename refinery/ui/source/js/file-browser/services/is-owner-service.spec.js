@@ -5,12 +5,13 @@ describe('Is Owner Service', function () {
   var deferred;
   var rootScope;
   var service;
-  var fakeUuid = 'x508x83x-x9xx-4740-x9x7-x7x0x631280x';
+  var fakeUuid;
 
   beforeEach(module('refineryApp'));
   beforeEach(module('refineryFileBrowser'));
-  beforeEach(inject(function (_isOwnerService_) {
+  beforeEach(inject(function (_isOwnerService_, _mockParamsFactory_) {
     service = _isOwnerService_;
+    fakeUuid = _mockParamsFactory_.generateUuid();
   }));
 
   it('service and variables should exist', function () {

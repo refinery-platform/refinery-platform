@@ -1,12 +1,9 @@
-'''
-Created on Jun 29, 2012
+from __future__ import absolute_import
 
-@author: nils
-'''
 from django.core.management.base import BaseCommand
 
+from ...tasks import get_workflows
 from core.models import WorkflowEngine
-from workflow_manager.tasks import get_workflows
 
 
 class Command(BaseCommand):

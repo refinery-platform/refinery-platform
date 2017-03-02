@@ -4,7 +4,6 @@ describe('Controller: FileBrowserCtrl', function () {
   var ctrl;
   var scope;
   var factory;
-  var $controller;
   var service;
 
   beforeEach(module('refineryApp'));
@@ -13,17 +12,18 @@ describe('Controller: FileBrowserCtrl', function () {
     $rootScope,
     _$controller_,
     _fileBrowserFactory_,
+    _mockParamsFactory_,
     _selectedFilterService_,
     $window
   ) {
     scope = $rootScope.$new();
-    $controller = _$controller_;
+    var $controller = _$controller_;
     ctrl = $controller('FileBrowserCtrl', {
       $scope: scope
     });
     factory = _fileBrowserFactory_;
     service = _selectedFilterService_;
-    $window.externalAssayUuid = 'x508x83x-x9xx-4740-x9x7-x7x0x631280x';
+    $window.externalAssayUuid = _mockParamsFactory_.generateUuid();
   }));
 
   it('FileBrowserCtrl ctrl should exist', function () {
