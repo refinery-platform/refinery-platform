@@ -45,6 +45,7 @@ class GalaxyParameter(Parameter):
     """
     # ID of Galaxy tool that the parameter belongs to
     galaxy_tool_id = models.TextField(max_length=300)
+    galaxy_workflow_step = models.IntegerField()
     galaxy_tool_parameter = models.TextField(max_length=100)
 
 

@@ -58,7 +58,7 @@ class Migration(migrations.Migration):
                 ('uuid', django_extensions.db.fields.UUIDField(unique=True, max_length=36, editable=False, blank=True)),
                 ('name', models.TextField(max_length=100)),
                 ('description', models.TextField(max_length=500)),
-                ('is_editable', models.BooleanField(default=False)),
+                ('is_user_adjustable', models.BooleanField(default=False)),
                 ('value_type', models.CharField(max_length=25, choices=[(b'INTEGER', b'int'), (b'STRING', b'str'), (b'BOOLEAN', b'bool'), (b'FLOAT', b'float'), (b'GENOME_BUILD', b'genome build'), (b'ATTRIBUTE', b'attribute'), (b'FILE', b'file')])),
                 ('default_value', models.TextField(max_length=100)),
             ],
@@ -71,6 +71,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('parameter_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='tool_manager.Parameter')),
                 ('galaxy_tool_id', models.TextField(max_length=300)),
+                ('galaxy_workflow_step', models.IntegerField()),
                 ('galaxy_tool_parameter', models.TextField(max_length=100)),
             ],
             options={
@@ -83,7 +84,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('uuid', django_extensions.db.fields.UUIDField(unique=True, max_length=36, editable=False, blank=True)),
                 ('name', models.TextField(unique=True, max_length=100)),
-                ('description', models.TextField(unique=True, max_length=500)),
+                ('description', models.TextField(max_length=500)),
                 ('tool_type', models.CharField(max_length=100, choices=[(b'WORKFLOW', b'Workflow'), (b'VISUALIZATION', b'Visualization')])),
                 ('file_relationship', models.ForeignKey(to='tool_manager.FileRelationship')),
                 ('output_files', models.ManyToManyField(to='tool_manager.OutputFile')),
