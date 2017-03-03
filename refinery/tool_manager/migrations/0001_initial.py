@@ -84,7 +84,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('uuid', django_extensions.db.fields.UUIDField(unique=True, max_length=36, editable=False, blank=True)),
                 ('name', models.TextField(unique=True, max_length=100)),
-                ('description', models.TextField(unique=True, max_length=500)),
+                ('description', models.TextField(max_length=500)),
                 ('tool_type', models.CharField(max_length=100, choices=[(b'WORKFLOW', b'Workflow'), (b'VISUALIZATION', b'Visualization')])),
                 ('file_relationship', models.ForeignKey(to='tool_manager.FileRelationship')),
                 ('output_files', models.ManyToManyField(to='tool_manager.OutputFile')),

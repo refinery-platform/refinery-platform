@@ -127,7 +127,7 @@ class ToolDefinition(models.Model):
 
     uuid = UUIDField(unique=True, auto=True)
     name = models.TextField(unique=True, max_length=100)
-    description = models.TextField(unique=True, max_length=500)
+    description = models.TextField(max_length=500)
     tool_type = models.CharField(max_length=100, choices=TOOL_TYPES)
     file_relationship = models.ForeignKey(FileRelationship)
     output_files = models.ManyToManyField(OutputFile)
