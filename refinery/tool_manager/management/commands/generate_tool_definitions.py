@@ -1,6 +1,7 @@
 import json
 import sys
 
+from bioblend.galaxy.client import ConnectionError
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction, IntegrityError
 
@@ -33,7 +34,14 @@ class Command(BaseCommand):
                 .format(engine.name))
 
             gc = engine.instance.galaxy_connection()
-            wf_list = gc.workflows.get_workflows()
+            try:
+                wf_list = gc.workflows.get_workflows()
+            except ConnectionError as e:
+                raise CommandError(
+                    "Unable to retrieve workflows from '{}'. "
+                    "Skipping ToolDefinition generation: {}".format(
+                        engine.instance.base_url, e)
+                )
 
             for workflow in wf_list:
                 wf_dict = gc.workflows.show_workflow(workflow["id"])
@@ -43,10 +51,11 @@ class Command(BaseCommand):
                 except ValueError as e:
                     raise CommandError(
                         "Workflow annotation is not valid JSON: {}".format(e))
+
+                # Validate workflow annotation data, and try to create a
+                # ToolDefinition if validation passes.
                 try:
                     with transaction.atomic():
-                        # Generate ToolDefinition from information obtained
-                        # from Galaxy WorkflowEngine
                         validate_workflow_annotation(wf_dict)
                         create_tool_definition_from_workflow(wf_dict)
                 except IntegrityError as e:
