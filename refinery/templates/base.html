@@ -36,13 +36,18 @@
       admins: '{{ ADMIN_EMAIL|safe }}',
       repositoryMode: {{ REFINERY_REPOSITORY_MODE|yesno:"true,false,undefined" }},
       solrSynonymSearch: {{ SOLR_SYNONYM_SEARCH|lower }},
-      refineryTutorialSteps: '{{  REFINERY_TUTORIAL_STEPS|escapejs }}'
+      refineryTutorialSteps: '{{  REFINERY_TUTORIAL_STEPS|escapejs }}',
+      staticURL: '{{ STATIC_URL|escapejs }}'
     };
 
     if (window.djangoApp.userId === 'None' || window.djangoApp.userName === 'None') {
       window.djangoApp.userId = undefined;
       window.djangoApp.userName = undefined;
     }
+
+   function staticURL(path) {
+      return window.djangoApp.staticURL + path;
+   }
   </script>
 
   {% block head_html %}
