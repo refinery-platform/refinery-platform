@@ -199,7 +199,15 @@
           </div>
           <div class="col-sm-12 col-md-6 col-lg-8">
             Update the title of the data set to be imported.
-            This will be shown in the data set browser.
+            <a
+              popover-placement="right"
+              uib-popover="This will be shown in the data set browser."
+              popover-title="Title"
+              popover-trigger="focus"
+              popover-append-to-body="true"
+              tabindex="0">
+                <i class="fa fa-question-circle info-icon"></i>
+            </a>
           </div>
         </div>
 
@@ -219,13 +227,14 @@
             </select>
           </div>
           <div class="col-sm-12 col-md-6 col-lg-8">
-            Columns to be used for source grouping.
+            Select a containing the sample identifier or multiple columns
+            that will concatenated to form an identifier.
             <a
               popover-placement="right"
-              uib-popover=" Values in the selected columns will be
+              uib-popover="Values in the selected columns will be
               concatenated to create an identifier for the 'source' of the
-              data. Each unique value will be treated as  a separate source
-              idenifier. If necessary, up to three columns can be selected
+              data. Each unique value will be treated as a separate source
+              identifier. If necessary, up to three columns can be selected
               and concatenated to create unique source names. At least one
               column needs to be selected."
               popover-title="Sample Identifier"
@@ -254,8 +263,8 @@
             Column that contains the path to or the URL of a data file.
             <a
               popover-placement="right"
-              uib-popover="If URLs are provided, they have to be publicly
-              accessible."
+              uib-popover="File names must not contain a path. If URLs are
+              provided, they have to be publicly accessible."
               popover-title="Data File Column"
               popover-trigger="focus"
               popover-append-to-body="true"
@@ -279,8 +288,18 @@
             </select>
           </div>
           <div class="col-sm-12 col-md-6 col-lg-8">
-            Column containing species names or identifiers,
-            e.g. "Human", "Homo sapiens", or "H. sapiens".
+            Column containing species names or identifiers.
+            <a
+              popover-placement="right"
+              uib-popover="Acceptable identifiers are defined by the NCBI
+              Taxonomy database. For example, for human samples 'Human',
+              'Homo sapiens', or 'H. sapiens' can be used."
+              popover-title="Species Column"
+              popover-trigger="focus"
+              popover-append-to-body="true"
+              tabindex="0">
+                <i class="fa fa-question-circle info-icon"></i>
+            </a>
           </div>
         </div>
 
@@ -423,7 +442,6 @@
                   tabindex="0">
                     <i class="fa fa-question-circle info-icon"></i>
                 </a>
-
               </div>
             </div>
 
