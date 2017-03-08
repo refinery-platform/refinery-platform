@@ -45,9 +45,9 @@
       window.djangoApp.userName = undefined;
     }
 
-   function staticURL(path) {
+    window.staticURL = function(path) {
       return window.djangoApp.staticURL + path;
-   }
+    }
   </script>
 
   {% block head_html %}
