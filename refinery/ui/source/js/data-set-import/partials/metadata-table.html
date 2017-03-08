@@ -200,12 +200,21 @@
             </select>
           </div>
           <div class="col-sm-12 col-md-6 col-lg-8">
-            Columns to be used for source grouping. Values in the
-            selected columns will be concatenated to create an identifier for
-            the "source" of the data. Each unique value will be treated as
-            a separate source idenifier. If necessary, up to three columns
-            can be selected and concatenated to create unique source names.
-            <br>At least one column needs to be selected.</br>
+            Columns to be used for source grouping.
+            <a
+              popover-placement="right"
+              uib-popover=" Values in the selected columns will be
+              concatenated to create an identifier for the 'source' of the
+              data. Each unique value will be treated as  a separate source
+              idenifier. If necessary, up to three columns can be selected
+              and concatenated to create unique source names. At least one
+              column needs to be selected."
+              popover-title="Sample Identifier"
+              popover-trigger="focus"
+              popover-append-to-body="true"
+              tabindex="0">
+                <i class="fa fa-question-circle info-icon"></i>
+            </a>
           </div>
         </div>
 
@@ -224,7 +233,16 @@
           </div>
           <div class="col-sm-12 col-md-6 col-lg-8">
             Column that contains the path to or the URL of a data file.
-            If URLs are provided, they have to be publicly accessible.
+            <a
+              popover-placement="right"
+              uib-popover="If URLs are provided, they have to be publicly
+              accessible."
+              popover-title="Data File Column"
+              popover-trigger="focus"
+              popover-append-to-body="true"
+              tabindex="0">
+                <i class="fa fa-question-circle info-icon"></i>
+            </a>
           </div>
         </div>
 
@@ -265,9 +283,18 @@
             </div>
             <div class="col-sm-12 col-md-6 col-lg-8">
               Shortcut name to access the data set via a direct URL.
-              Can only contain alphanumeric characters and "_". A data set
-              with the shortcut <em>my_experiment</em> would be accessible under
-              <em>http://example.com/data_sets/my_experiment</em>.
+              <a
+                popover-placement="right"
+                uib-popover="Can only contain alphanumeric characters and '_'.
+                A data set with the shortcut <em>my_experiment</em> would be
+                accessible under <em>http://example
+                .com/data_sets/my_experiment</em>."
+                popover-title="URL Shortcut"
+                popover-trigger="focus"
+                popover-append-to-body="true"
+                tabindex="0">
+                  <i class="fa fa-question-circle info-icon"></i>
+              </a>
             </div>
           </div>
 
@@ -318,10 +345,19 @@
               </div>
               <div class="col-sm-12 col-md-6 col-lg-8">
                 Column that contains the path to or URL of an auxiliary file
-                associated with the data file. For example, for visualization,
-                this could be a BigWig file for a WIG data file or a BAM index file
-                for a BAM data file. If URLs are provided, they have
-                to be publicly accessible.
+                associated with the data file.
+                <a
+                  popover-placement="right"
+                  uib-popover="For example, for visualization, this could be
+                  a BigWig file for a WIG data file or a BAM index file for a
+                   BAM data file. If URLs are provided, they have to be
+                   publicly accessible."
+                  popover-title="Auxiliary File Column"
+                  popover-trigger="focus"
+                  popover-append-to-body="true"
+                  tabindex="0">
+                    <i class="fa fa-question-circle info-icon"></i>
+                </a>
               </div>
             </div>
 
@@ -389,12 +425,22 @@
                   ng-model="metadataTable.dataFilePermanent"/>
               </div>
               <div class="col-sm-12 col-md-6 col-lg-8">
-                If selected, data files located on remote servers (referenced by
-                URL) or located on the file system of the server (referenced by
-                an absolute file system path) will be
-                imported into the system upon creation of the data set. If not
-                selected, such files will only be imported into the system if
-                selected for analysis.
+                Data files will be imported into the system upon creation
+                of the data set.
+                <a
+                  popover-placement="right"
+                  uib-popover="If selected, data files located on remote
+                  servers (referenced by URL) or located on the file system
+                  of the server (referenced by an absolute file system path)
+                  will be imported into the system upon creation of the data
+                  set. If not selected, such files will only be imported into
+                   the system if selected for analysis."
+                  popover-title="Import Now"
+                  popover-trigger="focus"
+                  popover-append-to-body="true"
+                  tabindex="0">
+                    <i class="fa fa-question-circle info-icon"></i>
+                </a>
               </div>
             </div>
           </div>
