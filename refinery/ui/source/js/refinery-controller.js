@@ -84,8 +84,7 @@ function AppCtrl ($, $sce, $scope, $rootScope, $timeout, $window, _, pubSub, set
   $scope.dynamicPopover = {
     title: 'Refinery Tutorials',
     content: 'These are some helpful tutorials to guide you through Refinery!',
-    templateUrl: '/static/partials/tutorials/partials/tutorialPopover.html'
-
+    templateUrl: $window.staticURL('partials/tutorials/partials/tutorialPopover.html')
   };
 }
 
