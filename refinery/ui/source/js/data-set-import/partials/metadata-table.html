@@ -4,18 +4,37 @@
   </div>
   <div id="dataUploadTutorialStep4">
   <p>
-    <a
-      href="/static/sample-files/refinery-sample-metadata.tsv"
-      target="_blank"
-      refinery-tooltip
-      refinery-tooltip-container="body"
-      refinery-tooltip-placement="right"
-      title="Download sample file, refinery-sample-metadata.tsv">
-      <i class="fa fa-download"> </i>
-      Download an example tabular metadata file.
-    </a>
-    The first row needs to contain column headers.
-  </p>
+    Before uploading a data set, you should follow these steps to prepare
+    your metadata and data files:
+    <ol>
+      <li>
+        Your metadata file needs to contain at least three columns: a sample
+        identifier, a file name, and a species name/species identifier.
+        Additional columns should be provided to characterize your data. The
+        first row of the table needs to contain column headers, which can be
+        chosen by the user. The order of the columns can be arbitrary.
+        <a
+          href="/static/sample-files/refinery-sample-metadata.tsv"
+          target="_blank"
+          refinery-tooltip
+          refinery-tooltip-container="body"
+          refinery-tooltip-placement="right"
+          title="Download sample file, refinery-sample-metadata.tsv">
+          <i class="fa fa-download"> </i>
+          Download an example tabular metadata file.
+        </a>
+      </li>
+      <li>
+        Data referenced in the file name column of the metadata file should
+        either be located on your computer for upload to this site through your
+        browser or located on a web server accessible through public URLs.
+      </li>
+    </ol>
+
+    The upload process is not designed to be iterative, it pays off to spend
+    some time to prepare both metadata and data files to avoid having to
+    repeat the process.
+   </p>
   <p>
     Choose delimiter and then select tabular metadata table.
   </p>
@@ -286,9 +305,9 @@
               <a
                 popover-placement="right"
                 uib-popover="Can only contain alphanumeric characters and '_'.
-                A data set with the shortcut <em>my_experiment</em> would be
-                accessible under <em>http://example
-                .com/data_sets/my_experiment</em>."
+                A data set with the shortcut my_experiment would be
+                accessible under http://stemcellcommons
+                .org/data_sets/my_experiment."
                 popover-title="URL Shortcut"
                 popover-trigger="focus"
                 popover-append-to-body="true"
