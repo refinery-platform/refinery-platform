@@ -1,9 +1,9 @@
 'use strict';
 
-function analysisMonitorAnalysesList ($rootScope, $location) {
+function analysisMonitorAnalysesList ($rootScope, $location, $window) {
   return {
     restrict: 'E',
-    templateUrl: '/static/partials/analysis-monitor/partials/analyses-list.html',
+    templateUrl: $window.staticURL('partials/analysis-monitor/partials/analyses-list.html'),
     controller: 'AnalysisMonitorCtrl',
     controllerAs: 'AMCtrl',
     bindToController: {
@@ -98,5 +98,6 @@ angular
   .directive('analysisMonitorAnalysesList', [
     '$rootScope',
     '$location',
+    '$window',
     analysisMonitorAnalysesList
   ]);
