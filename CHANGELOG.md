@@ -1,47 +1,180 @@
 # Change Log
 
-## [v1.5.3](https://github.com/refinery-platform/refinery-platform/tree/v1.5.3) (2017-01-09)
+## [v1.5.4](https://github.com/refinery-platform/refinery-platform/tree/v1.5.4) (2017-02-16)
+[Full Changelog](https://github.com/refinery-platform/refinery-platform/compare/v1.5.3.1...v1.5.4)
+
+**Implemented enhancements:**
+
+- Update Collaboration Page Styling [\#1597](https://github.com/refinery-platform/refinery-platform/issues/1597)
+- Data Set - Edit Capabilities [\#1591](https://github.com/refinery-platform/refinery-platform/issues/1591)
+- Data Set / share API Adjustment [\#1191](https://github.com/refinery-platform/refinery-platform/issues/1191)
+- Fix Layout for Minimize Window [\#818](https://github.com/refinery-platform/refinery-platform/issues/818)
+- Dataset page wastes space on small screens [\#786](https://github.com/refinery-platform/refinery-platform/issues/786)
+- Test `core.NodeSetListResourceTest.test\_get\_nodeset\_list` fails. [\#586](https://github.com/refinery-platform/refinery-platform/issues/586)
+- implement user authentication via API keys or tokens [\#359](https://github.com/refinery-platform/refinery-platform/issues/359)
+- Bring unit tests for file server up to date [\#322](https://github.com/refinery-platform/refinery-platform/issues/322)
+- Start using Modernizr [\#267](https://github.com/refinery-platform/refinery-platform/issues/267)
+- Update years in license  [\#1612](https://github.com/refinery-platform/refinery-platform/pull/1612) ([ngehlenborg](https://github.com/ngehlenborg))
+- Modify /sharing to return only owner and share\_list. [\#1611](https://github.com/refinery-platform/refinery-platform/pull/1611) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/colloration styling update [\#1598](https://github.com/refinery-platform/refinery-platform/pull/1598) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/edit data set [\#1595](https://github.com/refinery-platform/refinery-platform/pull/1595) ([jkmarx](https://github.com/jkmarx))
+
+**Fixed bugs:**
+
+- Url error [\#1608](https://github.com/refinery-platform/refinery-platform/issues/1608)
+- Data set sharing list in File Browser 2 too comprehensive [\#1600](https://github.com/refinery-platform/refinery-platform/issues/1600)
+- Empty last protocol step [\#1522](https://github.com/refinery-platform/refinery-platform/issues/1522)
+- Upload Raw Data - Overall Progress Bar Issue [\#1300](https://github.com/refinery-platform/refinery-platform/issues/1300)
+- Provenance graph breaks when analysis is lost [\#1098](https://github.com/refinery-platform/refinery-platform/issues/1098)
+- Add conditional to remove unnamed protocols. [\#1609](https://github.com/refinery-platform/refinery-platform/pull/1609) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/data set sharing api bug [\#1602](https://github.com/refinery-platform/refinery-platform/pull/1602) ([jkmarx](https://github.com/jkmarx))
+
+**Closed issues:**
+
+- Node Group API - is\_current field use [\#1329](https://github.com/refinery-platform/refinery-platform/issues/1329)
+- Unit Tests: Service to create uuids [\#1289](https://github.com/refinery-platform/refinery-platform/issues/1289)
+- Cleanup Python module imports [\#890](https://github.com/refinery-platform/refinery-platform/issues/890)
+- provenance graph timeline can be shifted [\#816](https://github.com/refinery-platform/refinery-platform/issues/816)
+- Set up search query logger [\#509](https://github.com/refinery-platform/refinery-platform/issues/509)
+- Rename add\_nodeset permission to something like own\_nodeset [\#312](https://github.com/refinery-platform/refinery-platform/issues/312)
+
+**Merged pull requests:**
+
+- Jkmarx/data set edit adjustments [\#1610](https://github.com/refinery-platform/refinery-platform/pull/1610) ([jkmarx](https://github.com/jkmarx))
+- Prevent console errors when in data set 2. [\#1607](https://github.com/refinery-platform/refinery-platform/pull/1607) ([jkmarx](https://github.com/jkmarx))
+- Fix relative imports in management commands [\#1601](https://github.com/refinery-platform/refinery-platform/pull/1601) ([hackdna](https://github.com/hackdna))
+- Jkmarx/mock uuid service [\#1596](https://github.com/refinery-platform/refinery-platform/pull/1596) ([jkmarx](https://github.com/jkmarx))
+- Improve AWS resource tags handling [\#1592](https://github.com/refinery-platform/refinery-platform/pull/1592) ([hackdna](https://github.com/hackdna))
+- Jkmarx/import module refactor [\#1590](https://github.com/refinery-platform/refinery-platform/pull/1590) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/jshint rule change [\#1584](https://github.com/refinery-platform/refinery-platform/pull/1584) ([jkmarx](https://github.com/jkmarx))
+
+## [v1.5.3.1](https://github.com/refinery-platform/refinery-platform/tree/v1.5.3.1) (2017-01-23)
+[Full Changelog](https://github.com/refinery-platform/refinery-platform/compare/v1.5.3...v1.5.3.1)
+
+## [v1.5.3](https://github.com/refinery-platform/refinery-platform/tree/v1.5.3) (2017-01-23)
 [Full Changelog](https://github.com/refinery-platform/refinery-platform/compare/v1.5.2.1...v1.5.3)
 
 **Implemented enhancements:**
 
 - move repo into refinery-platform organization [\#1504](https://github.com/refinery-platform/refinery-platform/issues/1504)
-- Collaboration UI - Membership Permissions  [\#1474](https://github.com/refinery-platform/refinery-platform/issues/1474)
+- Tutorial Enhancement [\#1459](https://github.com/refinery-platform/refinery-platform/issues/1459)
 - Refactor data-set-nav: don't use rootScope [\#943](https://github.com/refinery-platform/refinery-platform/issues/943)
+- Allow user to sort data set file browser based on node selection [\#892](https://github.com/refinery-platform/refinery-platform/issues/892)
+- create workflow groups [\#470](https://github.com/refinery-platform/refinery-platform/issues/470)
+- queue analyses in Refinery to allow launch while Galaxy is unavailable [\#406](https://github.com/refinery-platform/refinery-platform/issues/406)
+- add support for timeout test for updates from galaxy during analysis [\#353](https://github.com/refinery-platform/refinery-platform/issues/353)
+- start discussion about "stop/pause" job API extension with Galaxy team [\#330](https://github.com/refinery-platform/refinery-platform/issues/330)
+- deploy IGV WebStart directly from Refinery site  [\#325](https://github.com/refinery-platform/refinery-platform/issues/325)
+- prevent IGV from receiving non-genome-browser data [\#302](https://github.com/refinery-platform/refinery-platform/issues/302)
+- add compact mode to new workflow annotation [\#285](https://github.com/refinery-platform/refinery-platform/issues/285)
+- update TDF generation in SPP workflow  [\#264](https://github.com/refinery-platform/refinery-platform/issues/264)
+- more detailed progress indicator \(for power users?\) [\#255](https://github.com/refinery-platform/refinery-platform/issues/255)
+- Edit data sets [\#253](https://github.com/refinery-platform/refinery-platform/issues/253)
+- Workflow Page - Hide Edit Button Enhancement [\#1527](https://github.com/refinery-platform/refinery-platform/issues/1527)
+- Navbar - Global Analysis Popover [\#1525](https://github.com/refinery-platform/refinery-platform/issues/1525)
+- Collaboration UI - Membership Permissions  [\#1474](https://github.com/refinery-platform/refinery-platform/issues/1474)
+- Saved filter selector should be reset when "reset" is clicked [\#1314](https://github.com/refinery-platform/refinery-platform/issues/1314)
+- Avoid duplicating fields if they are annotated as both a characteristic and a factor [\#446](https://github.com/refinery-platform/refinery-platform/issues/446)
+- Update data set total file size after data set changes [\#309](https://github.com/refinery-platform/refinery-platform/issues/309)
 - Jkmarx/colloration modal update [\#1565](https://github.com/refinery-platform/refinery-platform/pull/1565) ([jkmarx](https://github.com/jkmarx))
 - Wrap delete model to check for user permissions. [\#1564](https://github.com/refinery-platform/refinery-platform/pull/1564) ([jkmarx](https://github.com/jkmarx))
+- Edit new line in sample file for command line view. [\#1558](https://github.com/refinery-platform/refinery-platform/pull/1558) ([jkmarx](https://github.com/jkmarx))
+- Add permissions conditional. [\#1555](https://github.com/refinery-platform/refinery-platform/pull/1555) ([jkmarx](https://github.com/jkmarx))
 
 **Fixed bugs:**
 
+- Data Set 2 Browser - Cont. Scroll Bug [\#1577](https://github.com/refinery-platform/refinery-platform/issues/1577)
+- Error entering duplicate group name when creating a new group [\#1477](https://github.com/refinery-platform/refinery-platform/issues/1477)
+- Analysis is reported as finished successfully while still running in Galaxy when AJAX call to analysis\_status view results in a server error [\#451](https://github.com/refinery-platform/refinery-platform/issues/451)
+- \*\[4+\]\* not all workflow outputs downloaded if output file is fed into multiple downstream tools [\#254](https://github.com/refinery-platform/refinery-platform/issues/254)
 - Data Set 2 Browser - Fix URL for Duplicate Attribute Fields [\#1567](https://github.com/refinery-platform/refinery-platform/issues/1567)
+- Data File Import: Uploading Bug [\#1542](https://github.com/refinery-platform/refinery-platform/issues/1542)
+- Data Import Error Handling [\#1538](https://github.com/refinery-platform/refinery-platform/issues/1538)
+- Data Set Preview - Missing Technology Field CSS [\#1526](https://github.com/refinery-platform/refinery-platform/issues/1526)
+- Data Set 1 - Launch Web Based IGV [\#1520](https://github.com/refinery-platform/refinery-platform/issues/1520)
+- Dashboard - Import into Own Space Bug [\#1519](https://github.com/refinery-platform/refinery-platform/issues/1519)
+- Dashboard - Sharing Modal Bug [\#1518](https://github.com/refinery-platform/refinery-platform/issues/1518)
 - API V1: Group Members can Delete Group [\#1426](https://github.com/refinery-platform/refinery-platform/issues/1426)
 - DataSet2 Browser - Fastqc Viewer Bug [\#1409](https://github.com/refinery-platform/refinery-platform/issues/1409)
+- DataSet2 - Attribute Filter Bug [\#1046](https://github.com/refinery-platform/refinery-platform/issues/1046)
+- allow same name for characteristic and factor value fields in study/assay file [\#849](https://github.com/refinery-platform/refinery-platform/issues/849)
+- Fix bug due to dependency order typo. [\#1585](https://github.com/refinery-platform/refinery-platform/pull/1585) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/data set2 cont scroll bug [\#1582](https://github.com/refinery-platform/refinery-platform/pull/1582) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/group name duplicate error [\#1573](https://github.com/refinery-platform/refinery-platform/pull/1573) ([jkmarx](https://github.com/jkmarx))
 - Jkmarx/data set 2 url bug [\#1568](https://github.com/refinery-platform/refinery-platform/pull/1568) ([jkmarx](https://github.com/jkmarx))
 - Adjust html so analysis's column can't be hidden. [\#1566](https://github.com/refinery-platform/refinery-platform/pull/1566) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/data set 2 attribute filter bugs [\#1562](https://github.com/refinery-platform/refinery-platform/pull/1562) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/data set ui size update [\#1557](https://github.com/refinery-platform/refinery-platform/pull/1557) ([jkmarx](https://github.com/jkmarx))
+- Add object to keep seperate preview items. [\#1556](https://github.com/refinery-platform/refinery-platform/pull/1556) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/data set import file order bug [\#1545](https://github.com/refinery-platform/refinery-platform/pull/1545) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/data set import delete files [\#1541](https://github.com/refinery-platform/refinery-platform/pull/1541) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/data set preview hide empty technology [\#1535](https://github.com/refinery-platform/refinery-platform/pull/1535) ([jkmarx](https://github.com/jkmarx))
+- Add pointer class to global analysis cog. [\#1533](https://github.com/refinery-platform/refinery-platform/pull/1533) ([jkmarx](https://github.com/jkmarx))
+- Prevent limiting solr data returned. [\#1532](https://github.com/refinery-platform/refinery-platform/pull/1532) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/sharing modal bug [\#1531](https://github.com/refinery-platform/refinery-platform/pull/1531) ([jkmarx](https://github.com/jkmarx))
 
 **Closed issues:**
 
+- "Add all to DataCart" star is broken [\#1579](https://github.com/refinery-platform/refinery-platform/issues/1579)
+- Update Deprecated Grunt-AutoPrefixer to Grunt-PostCSS [\#1528](https://github.com/refinery-platform/refinery-platform/issues/1528)
+- Find underlying issue behind needing to run specific app's migrations individually [\#1146](https://github.com/refinery-platform/refinery-platform/issues/1146)
 - Load third-party UI dependencies in static via bower  [\#1016](https://github.com/refinery-platform/refinery-platform/issues/1016)
-- Configure Apache using Puppet module [\#779](https://github.com/refinery-platform/refinery-platform/issues/779)
 - yvanlebras: new volunteer via Mozilla Science Lab Collaborate [\#666](https://github.com/refinery-platform/refinery-platform/issues/666)
+- create optimized packages for jquery UI [\#334](https://github.com/refinery-platform/refinery-platform/issues/334)
+-  Importing ontologies and annotations from a pre imported Neo4J database should be automated [\#1401](https://github.com/refinery-platform/refinery-platform/issues/1401)
+- Pin Javascript dependencies to exact versions [\#1288](https://github.com/refinery-platform/refinery-platform/issues/1288)
+- Dashboard Preview- Console Error 401 for unowned data-set [\#1061](https://github.com/refinery-platform/refinery-platform/issues/1061)
+- Update to AngularJS 1.5.x [\#986](https://github.com/refinery-platform/refinery-platform/issues/986)
+- Configure Apache using Puppet module [\#779](https://github.com/refinery-platform/refinery-platform/issues/779)
 - Upgrade to Django 1.7 [\#614](https://github.com/refinery-platform/refinery-platform/issues/614)
 
 **Merged pull requests:**
 
+- Fix issue with Exploration tool [\#1588](https://github.com/refinery-platform/refinery-platform/pull/1588) ([scottx611x](https://github.com/scottx611x))
+- Jkmarx/remove old igv button [\#1586](https://github.com/refinery-platform/refinery-platform/pull/1586) ([jkmarx](https://github.com/jkmarx))
+- Include ontology fixture content inside of a Data migration [\#1581](https://github.com/refinery-platform/refinery-platform/pull/1581) ([scottx611x](https://github.com/scottx611x))
+- Change default setting so modals can be esc. [\#1576](https://github.com/refinery-platform/refinery-platform/pull/1576) ([jkmarx](https://github.com/jkmarx))
 - Update references to current repo for new `refinery-platform` organiz… [\#1574](https://github.com/refinery-platform/refinery-platform/pull/1574) ([scottx611x](https://github.com/scottx611x))
 - Hackdna/large file upload config update [\#1572](https://github.com/refinery-platform/refinery-platform/pull/1572) ([hackdna](https://github.com/hackdna))
+- Jkmarx/dev autofixer upgrade [\#1571](https://github.com/refinery-platform/refinery-platform/pull/1571) ([jkmarx](https://github.com/jkmarx))
 - Scottx611x/anonymous user fix [\#1570](https://github.com/refinery-platform/refinery-platform/pull/1570) ([scottx611x](https://github.com/scottx611x))
 - Re-enable default Apache vhost [\#1569](https://github.com/refinery-platform/refinery-platform/pull/1569) ([hackdna](https://github.com/hackdna))
 - Scottx611x/django 1.7 upgrade [\#1511](https://github.com/refinery-platform/refinery-platform/pull/1511) ([scottx611x](https://github.com/scottx611x))
+- Flekschas/angular 1.5 [\#1559](https://github.com/refinery-platform/refinery-platform/pull/1559) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/tech debt update does not exist [\#1553](https://github.com/refinery-platform/refinery-platform/pull/1553) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/javascript dependency pin [\#1521](https://github.com/refinery-platform/refinery-platform/pull/1521) ([jkmarx](https://github.com/jkmarx))
 
-## [v1.5.2](https://github.com/refinery-platform/refinery-platform/tree/v1.5.2) (2016-11-10)
+## [v1.5.2.1](https://github.com/refinery-platform/refinery-platform/tree/v1.5.2.1) (2016-12-19)
+[Full Changelog](https://github.com/refinery-platform/refinery-platform/compare/v1.5.2...v1.5.2.1)
+
+**Implemented enhancements:**
+
+- Ontology hover style cause unnecessary redraws [\#1404](https://github.com/refinery-platform/refinery-platform/issues/1404)
+
+**Fixed bugs:**
+
+- Data set preview in repo mode doesn't work [\#1547](https://github.com/refinery-platform/refinery-platform/issues/1547)
+- Repo mode  [\#1546](https://github.com/refinery-platform/refinery-platform/issues/1546)
+- Analysis randomly failing because of authorization error [\#431](https://github.com/refinery-platform/refinery-platform/issues/431)
+- Fix data set preview + permanent expanded window in repo mode [\#1548](https://github.com/refinery-platform/refinery-platform/pull/1548) ([flekschas](https://github.com/flekschas))
+
+**Merged pull requests:**
+
+- Scottx611x/django 1.7 upgrade apache settings fix [\#1544](https://github.com/refinery-platform/refinery-platform/pull/1544) ([scottx611x](https://github.com/scottx611x))
+- Scottx611x/django 1.7 upgrade storage fix [\#1543](https://github.com/refinery-platform/refinery-platform/pull/1543) ([scottx611x](https://github.com/scottx611x))
+- Scottx611x/automate neo4 j installation [\#1536](https://github.com/refinery-platform/refinery-platform/pull/1536) ([scottx611x](https://github.com/scottx611x))
+- Use proper string formatting syntax [\#1529](https://github.com/refinery-platform/refinery-platform/pull/1529) ([scottx611x](https://github.com/scottx611x))
+- Scottx611x/error message fix [\#1502](https://github.com/refinery-platform/refinery-platform/pull/1502) ([scottx611x](https://github.com/scottx611x))
+
+## [v1.5.2](https://github.com/refinery-platform/refinery-platform/tree/v1.5.2) (2016-11-18)
 [Full Changelog](https://github.com/refinery-platform/refinery-platform/compare/v1.5.1...v1.5.2)
 
 **Implemented enhancements:**
 
+- Collaboration Modals [\#1473](https://github.com/refinery-platform/refinery-platform/issues/1473)
 - Data Set 2 - Deactivate Selected Filters [\#1508](https://github.com/refinery-platform/refinery-platform/issues/1508)
 - IGV should always include gene annotation track [\#1494](https://github.com/refinery-platform/refinery-platform/issues/1494)
-- Collaboration Modals [\#1473](https://github.com/refinery-platform/refinery-platform/issues/1473)
+- Remove running Analysis cog animation from LaunchPad filter [\#1476](https://github.com/refinery-platform/refinery-platform/issues/1476)
 - Data Set 2 - Persist UI-Grid Data [\#1446](https://github.com/refinery-platform/refinery-platform/issues/1446)
 - Validation of saved sets [\#1342](https://github.com/refinery-platform/refinery-platform/issues/1342)
 - Set selector should change on save [\#1341](https://github.com/refinery-platform/refinery-platform/issues/1341)
@@ -49,26 +182,34 @@
 - Safari Only: IGV Download Opens Blank Tab [\#847](https://github.com/refinery-platform/refinery-platform/issues/847)
 - Scrollbar madness after isatab import [\#730](https://github.com/refinery-platform/refinery-platform/issues/730)
 - On Dashboard, Analysis list does not update status [\#693](https://github.com/refinery-platform/refinery-platform/issues/693)
+- Success message is shown each time a successful analysis is visited. [\#619](https://github.com/refinery-platform/refinery-platform/issues/619)
 - Deleting analyses within the django admin interface should not delete them permanently. [\#480](https://github.com/refinery-platform/refinery-platform/issues/480)
 - Update node set sizes after data set update [\#308](https://github.com/refinery-platform/refinery-platform/issues/308)
 - create "node detail" view with file download option in sample selection interface [\#243](https://github.com/refinery-platform/refinery-platform/issues/243)
+- Remove analysis monitor alerts in html, ctrl, service, etc [\#1517](https://github.com/refinery-platform/refinery-platform/pull/1517) ([jkmarx](https://github.com/jkmarx))
 - Jkmarx/data set2 utility deactivate selected [\#1512](https://github.com/refinery-platform/refinery-platform/pull/1512) ([jkmarx](https://github.com/jkmarx))
 - Jkmarx/node group refactor [\#1499](https://github.com/refinery-platform/refinery-platform/pull/1499) ([jkmarx](https://github.com/jkmarx))
 - Jkmarx/data set2 persist ui grid data [\#1495](https://github.com/refinery-platform/refinery-platform/pull/1495) ([jkmarx](https://github.com/jkmarx))
 - Jkmarx/data set2 analyses about refactor [\#1492](https://github.com/refinery-platform/refinery-platform/pull/1492) ([jkmarx](https://github.com/jkmarx))
+- Remove unneccessary cog animation. [\#1488](https://github.com/refinery-platform/refinery-platform/pull/1488) ([jkmarx](https://github.com/jkmarx))
 
 **Fixed bugs:**
 
+- Problem loading remotely located bed file into web-based IGV [\#1487](https://github.com/refinery-platform/refinery-platform/issues/1487)
+- Tabular files with a single row don't show up properly in data\_sets 1  file browser [\#1463](https://github.com/refinery-platform/refinery-platform/issues/1463)
 - Data Set 2 Utility/Refresh Bug [\#1506](https://github.com/refinery-platform/refinery-platform/issues/1506)
 - Clicking IGV launch buttons is possible without selecting a species [\#1496](https://github.com/refinery-platform/refinery-platform/issues/1496)
 - Index files are not created for BAM files generated by RNA-seq workflows [\#1491](https://github.com/refinery-platform/refinery-platform/issues/1491)
-- Problem loading remotely located bed file into web-based IGV [\#1487](https://github.com/refinery-platform/refinery-platform/issues/1487)
 - Tabular Meta Data File - Cancelation  [\#1475](https://github.com/refinery-platform/refinery-platform/issues/1475)
+- Dashboard: Data Cart Selection Bug [\#1471](https://github.com/refinery-platform/refinery-platform/issues/1471)
 - Dashboard Filter & Sorting Bug [\#1469](https://github.com/refinery-platform/refinery-platform/issues/1469)
 - Dashboard Filter Bug  [\#1468](https://github.com/refinery-platform/refinery-platform/issues/1468)
-- Tabular files with a single row don't show up properly in data\_sets 1  file browser [\#1463](https://github.com/refinery-platform/refinery-platform/issues/1463)
+- tabular meta data file upload failing in Safari 10.0.0 [\#1465](https://github.com/refinery-platform/refinery-platform/issues/1465)
+- Tabular Meta Data - Bug when upload fails [\#1458](https://github.com/refinery-platform/refinery-platform/issues/1458)
+- Modification Date UI Bug - Test Site [\#1457](https://github.com/refinery-platform/refinery-platform/issues/1457)
 - DataSet2 - Analyze Persist Node Group Selection [\#1325](https://github.com/refinery-platform/refinery-platform/issues/1325)
 - Filter counts broken between digits [\#1310](https://github.com/refinery-platform/refinery-platform/issues/1310)
+- Firefox: "Search" placeholder positioned too low [\#1306](https://github.com/refinery-platform/refinery-platform/issues/1306)
 - Dashboard workflow loading animation seems to be linked to the data set loading. [\#934](https://github.com/refinery-platform/refinery-platform/issues/934)
 - Prov Vis: Button for change layering is not correct after Bootstrap 3 upgrade [\#806](https://github.com/refinery-platform/refinery-platform/issues/806)
 - Jkmarx/igv selection bug fix [\#1514](https://github.com/refinery-platform/refinery-platform/pull/1514) ([jkmarx](https://github.com/jkmarx))
@@ -79,9 +220,13 @@
 - Jkmarx/prov vis bug [\#1498](https://github.com/refinery-platform/refinery-platform/pull/1498) ([jkmarx](https://github.com/jkmarx))
 - Disable igv buttons until species selected. [\#1497](https://github.com/refinery-platform/refinery-platform/pull/1497) ([jkmarx](https://github.com/jkmarx))
 - Jkamrx/dashboard filter bug [\#1490](https://github.com/refinery-platform/refinery-platform/pull/1490) ([jkmarx](https://github.com/jkmarx))
+- Add helper method to exit error div.: [\#1486](https://github.com/refinery-platform/refinery-platform/pull/1486) ([jkmarx](https://github.com/jkmarx))
+- Remove add data set method. [\#1485](https://github.com/refinery-platform/refinery-platform/pull/1485) ([jkmarx](https://github.com/jkmarx))
+- Specifically set blob api for safari. [\#1482](https://github.com/refinery-platform/refinery-platform/pull/1482) ([jkmarx](https://github.com/jkmarx))
 
 **Closed issues:**
 
+- Remove all print statements from Python code [\#1195](https://github.com/refinery-platform/refinery-platform/issues/1195)
 - Upgrade Puppet apt module to the latest version [\#774](https://github.com/refinery-platform/refinery-platform/issues/774)
 - Update external Javascript packages to the latest stable versions [\#452](https://github.com/refinery-platform/refinery-platform/issues/452)
 
@@ -92,34 +237,20 @@
 - This helper script has been moved to its own repo [\#1513](https://github.com/refinery-platform/refinery-platform/pull/1513) ([mccalluc](https://github.com/mccalluc))
 - Jkmarx/higlass ui [\#1510](https://github.com/refinery-platform/refinery-platform/pull/1510) ([jkmarx](https://github.com/jkmarx))
 - Towards HiGlass UI [\#1509](https://github.com/refinery-platform/refinery-platform/pull/1509) ([mccalluc](https://github.com/mccalluc))
-- Hackdna/neo4j repo key error [\#1505](https://github.com/refinery-platform/refinery-platform/pull/1505) ([hackdna](https://github.com/hackdna))
 - Fix for tabular metadata uploads that only contain one row [\#1479](https://github.com/refinery-platform/refinery-platform/pull/1479) ([scottx611x](https://github.com/scottx611x))
+- Hackdna/neo4j repo key error [\#1505](https://github.com/refinery-platform/refinery-platform/pull/1505) ([hackdna](https://github.com/hackdna))
 
 ## [v1.5.1](https://github.com/refinery-platform/refinery-platform/tree/v1.5.1) (2016-10-20)
 [Full Changelog](https://github.com/refinery-platform/refinery-platform/compare/v1.5.0...v1.5.1)
 
-**Implemented enhancements:**
-
-- Remove running Analysis cog animation from LaunchPad filter [\#1476](https://github.com/refinery-platform/refinery-platform/issues/1476)
-- Remove unneccessary cog animation. [\#1488](https://github.com/refinery-platform/refinery-platform/pull/1488) ([jkmarx](https://github.com/jkmarx))
-
 **Fixed bugs:**
 
-- Dashboard: Data Cart Selection Bug [\#1471](https://github.com/refinery-platform/refinery-platform/issues/1471)
-- tabular meta data file upload failing in Safari 10.0.0 [\#1465](https://github.com/refinery-platform/refinery-platform/issues/1465)
-- Tabular Meta Data - Bug when upload fails [\#1458](https://github.com/refinery-platform/refinery-platform/issues/1458)
-- Modification Date UI Bug - Test Site [\#1457](https://github.com/refinery-platform/refinery-platform/issues/1457)
-- Firefox: "Search" placeholder positioned too low [\#1306](https://github.com/refinery-platform/refinery-platform/issues/1306)
 - "datafile" field in FileStoreItem cannot be documented automatically [\#328](https://github.com/refinery-platform/refinery-platform/issues/328)
-- Add helper method to exit error div.: [\#1486](https://github.com/refinery-platform/refinery-platform/pull/1486) ([jkmarx](https://github.com/jkmarx))
-- Remove add data set method. [\#1485](https://github.com/refinery-platform/refinery-platform/pull/1485) ([jkmarx](https://github.com/jkmarx))
-- Specifically set blob api for safari. [\#1482](https://github.com/refinery-platform/refinery-platform/pull/1482) ([jkmarx](https://github.com/jkmarx))
 
 **Closed issues:**
 
 - Adding User to neo4J produces too much travis output [\#1376](https://github.com/refinery-platform/refinery-platform/issues/1376)
 - Enable viewing BAM files in IGV [\#1264](https://github.com/refinery-platform/refinery-platform/issues/1264)
-- Remove all print statements from Python code [\#1195](https://github.com/refinery-platform/refinery-platform/issues/1195)
 
 **Merged pull requests:**
 
