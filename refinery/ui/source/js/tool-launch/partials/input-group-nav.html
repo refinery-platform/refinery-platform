@@ -29,18 +29,8 @@
       uib-collapse="$ctrl.isNavCollapsed"
       role="tabpanel"
       aria-labelledby="tool-body">
-      <div class="panel-body" id="categoryTree">
-        <div ng-if="$ctrl.tool.file_relationship.input_files.length == 0">
-          <ul>
-            <li
-              ng-repeat="element in $ctrl.tool.file_relationship.nested_elements"
-              ng-include="'categoryTree'">
-              <div ng-if="$ctrl.tool.file_relationship.input_files.length > 0">
-                {{ $ctrl.tool.file_relationship.input_files }}
-              </div>
-            </li>
-          </ul>
-        </div>
+      <div class="panel-body">
+         <input-group-cart collection='$ctrl.tool.file_relationship'></input-group-cart>
         <div ng-if="$ctrl.tool.file_relationship.input_files.length > 0">
           {{ $ctrl.tool.file_relationship.input_files }}
         </div>
@@ -48,29 +38,3 @@
     </div>
   </div>
 </div>
-
-
-<script type="text/ng-template" id="categoryTree">
-  <div ng-if="element.input_files.length > 0">
-    <ul>
-      <li ng-repeat="inputFile in element.input_files">
-        <ul>
-          <strong>{{ inputFile.name }}:</strong> {{ inputFile.description }}
-          <span class="p-l-1-2">
-            <br>
-            <strong> Allowed Filetypes:</strong>
-          </span>
-          <li ng-repeat="fileType in inputFile.allowed_filetypes">
-            {{ fileType.name }}
-          </li>
-        </ul>
-      </li>
-    </ul>
-  </div>
-    <ul ng-if="$ctrl.tool.file_relationship.nested_elements.length > 0">
-        <li
-          ng-repeat="element in element.nested_elements"
-          ng-include="'categoryTree'">
-        </li>
-    </ul>
-</script>

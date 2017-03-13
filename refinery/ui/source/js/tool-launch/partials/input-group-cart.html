@@ -1,9 +1,5 @@
-in the input group cart html
-
-<ul>
-  {{ file_relationship }}
-  <rp-input-group-cart-tree
-    ng-repeat="element in file_relationship.nested_elements">
-  </rp-input-group-cart-tree>
-</ul>
+<input-group-cart-tree
+  ng-repeat="member in collection.file_relationship"
+  member="member">
+</input-group-cart-tree>
 
