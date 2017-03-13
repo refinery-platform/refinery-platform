@@ -131,10 +131,6 @@ describe('RefineryApp.module: unit tests', function () {
       expect(hasModule('refineryIGV')).toEqual(true);
     });
 
-    it('should have "refineryTools" as a dependency', function () {
-      expect(hasModule('refineryTools')).toEqual(true);
-    });
-
     it('should have "refineryToolLaunch" as a dependency', function () {
       expect(hasModule('refineryToolLaunch')).toEqual(true);
     });
