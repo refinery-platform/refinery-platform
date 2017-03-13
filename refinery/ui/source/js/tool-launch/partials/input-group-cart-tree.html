@@ -1,0 +1,15 @@
+in the input group cart  TREE html
+<div ng-if="element.input_files.length > 0">
+    <li ng-repeat="inputFile in element.input_files">
+      <ul>
+        <strong>{{ inputFile.name }}:</strong> {{ inputFile.description }}
+        <span class="p-l-1-2">
+          <br>
+          <strong> Allowed Filetypes:</strong>
+        </span>
+        <li ng-repeat="fileType in inputFile.allowed_filetypes">
+          {{ fileType.name }}
+        </li>
+      </ul>
+    </li>
+</div>
