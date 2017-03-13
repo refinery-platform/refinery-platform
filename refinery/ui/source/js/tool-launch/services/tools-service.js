@@ -9,9 +9,9 @@
     var toolList = [
       {
         file_relationship: {
-          nested_elements: [
+          file_relationship: [
             {
-              nested_elements: [],
+              file_relationship: [],
               input_files: [
                 {
                   allowed_filetypes: [
@@ -90,11 +90,11 @@
       },
       {
         file_relationship: {
-          nested_elements: [
+          file_relationship: [
             {
-              nested_elements: [
+              file_relationship: [
                 {
-                  nested_elements: [],
+                  file_relationship: [],
                   input_files: [
                     {
                       allowed_filetypes: [
