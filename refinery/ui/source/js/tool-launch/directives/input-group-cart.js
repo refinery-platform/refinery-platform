@@ -7,8 +7,7 @@
       scope: {
         collection: '='
       },
-      template: '<ul><input-group-cart-tree ng-repeat="member in ' +
-      'collection.file_relationship" member="member"></input-group-cart-tree></ul>'
+      templateUrl: '/static/partials/tool-launch/partials/input-group-cart.html'
     };
   });
 })();
