@@ -1,5 +1,5 @@
 class refinery::selenium {
-  $geckodriver_version = 'v0.11.1'
+  $geckodriver_version = 'v0.14.0'
   $filename = "geckodriver-${geckodriver_version}-linux32.tar.gz"
   $install_path = "/opt/geckodriver"
 
