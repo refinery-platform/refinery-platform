@@ -39,9 +39,6 @@ class SeleniumTestBase(StaticLiveServerTestCase):
         if public_group_needed:
             create_public_group()
 
-    def tearDown(self):
-        self.browser.quit()
-
     class Meta:
         abstract = True
 
