@@ -122,6 +122,23 @@ def wait_until_class_visible(selenium, search_class, wait_duration):
             "wait period.".format(search_class, wait_duration))
 
 
+def wait_until_id_located(selenium, search_id, wait_duration):
+    """
+    Wait for a DOM element to be visible
+    :param selenium: selenium webdriver Instance
+    :param search_id: DOM element id to search for
+    :param wait_duration: time limit to be used in WebDriverWait()
+    """
+    try:
+        return WebDriverWait(selenium, wait_duration).until(
+            ec.presence_of_element_located((By.ID, search_id))
+        )
+    except TimeoutException:
+        raise AssertionError(
+            "Element with id: '{}' was not located within the {} second "
+            "wait period.".format(search_id, wait_duration))
+
+
 def delete_from_ui(selenium, object_name, total_objects):
     """
     Delete some objects by interacting with Refinery's ui
