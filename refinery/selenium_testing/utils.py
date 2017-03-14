@@ -3,7 +3,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.common.exceptions import TimeoutException
 
-DEFAULT_WAIT = 30
+MAX_WAIT = 30
 
 
 def login(selenium, live_server_url):
@@ -14,25 +14,15 @@ def login(selenium, live_server_url):
     instance
     """
     selenium.get(live_server_url)
-    wait_until_id_clickable(selenium, "refinery-login", DEFAULT_WAIT)
+    wait_until_id_clickable(selenium, "refinery-login", MAX_WAIT)
     selenium.find_element_by_link_text('Login').click()
-    wait_until_id_clickable(selenium, "id_username", DEFAULT_WAIT)
+    wait_until_id_clickable(selenium, "id_username", MAX_WAIT)
     selenium.find_element_by_id('id_username').send_keys('guest')
     selenium.find_element_by_id('id_password').send_keys('guest')
     selenium.find_element_by_xpath('//input[@type="submit"]').click()
-    wait_until_id_clickable(selenium, "refinery-logout", DEFAULT_WAIT)
+    wait_until_id_clickable(selenium, "refinery-logout", MAX_WAIT)
     assert_body_text(selenium, 'Guest', 'Logout')
     selenium.refresh()
-    selenium.implicitly_wait(DEFAULT_WAIT)
-
-
-def refresh(selenium):
-    """
-    Helper method to refresh the current page
-    :param selenium: selenium webdriver Instance
-    """
-    selenium.refresh()
-    selenium.implicitly_wait(DEFAULT_WAIT)
 
 
 def assert_body_text(selenium, search_array=None, *search_texts):
@@ -93,11 +83,9 @@ def wait_until_id_clickable(selenium, search_id, wait_duration):
         return WebDriverWait(selenium, wait_duration).until(
             ec.element_to_be_clickable((By.ID, search_id)))
     except TimeoutException:
-            raise AssertionError(
-                '"%s" not in: \n%s' % (
-                    search_id,
-                    selenium.find_element_by_id(search_id).text
-                ))
+        raise AssertionError(
+             "Element with id: {} was not clickable within the {} second "
+             "wait period.".format(search_id, wait_duration))
 
 
 def wait_until_id_visible(selenium, search_id, wait_duration):
@@ -109,13 +97,29 @@ def wait_until_id_visible(selenium, search_id, wait_duration):
     """
     try:
         return WebDriverWait(selenium, wait_duration).until(
-            ec.visibility_of(selenium.find_element_by_id(search_id)))
+            ec.visibility_of_element_located((By.ID, search_id)))
     except TimeoutException:
-            raise AssertionError(
-                '"%s" not in: \n%s' % (
-                    search_id,
-                    selenium.find_element_by_id(search_id).text
-                ))
+        raise AssertionError(
+                "Element with id: {} was not visible within the {} second "
+                "wait period.".format(search_id, wait_duration))
+
+
+def wait_until_class_visible(selenium, search_class, wait_duration):
+    """
+    Wait for a DOM element to be visible
+    :param selenium: selenium webdriver Instance
+    :param search_class: DOM element class to search for
+    :param wait_duration: time limit to be used in WebDriverWait()
+    """
+    try:
+        return WebDriverWait(selenium, wait_duration).until(
+            ec.visibility_of_element_located((By.CLASS_NAME,
+                                              search_class))
+        )
+    except TimeoutException:
+        raise AssertionError(
+            "Element with class: '{}' was not visible within the {} second "
+            "wait period.".format(search_class, wait_duration))
 
 
 def delete_from_ui(selenium, object_name, total_objects):
@@ -132,16 +136,16 @@ def delete_from_ui(selenium, object_name, total_objects):
 
     # Delete until there are none left
     while total_objects:
-        refresh(selenium)
+        wait_until_class_visible(selenium, '{}-delete'.format(object_name),
+                                 MAX_WAIT)
         selenium.find_elements_by_class_name('{}-delete'.format(object_name))[
             0].click()
-        selenium.implicitly_wait(DEFAULT_WAIT)
-        wait_until_id_clickable(selenium,
-                                '{}-delete-button'.format(object_name),
-                                DEFAULT_WAIT).click()
-        selenium.implicitly_wait(DEFAULT_WAIT)
+        wait_until_id_clickable(
+                    selenium, '{}-delete-button'.format(object_name),
+                    MAX_WAIT).click()
+        selenium.implicitly_wait(30)
         wait_until_id_clickable(selenium, '{}-delete-close-button'.format(
-            object_name), DEFAULT_WAIT).click()
+            object_name), MAX_WAIT).click()
 
         total_objects -= 1
 
@@ -151,19 +155,19 @@ def delete_from_ui(selenium, object_name, total_objects):
                 assert_text_within_id(
                     selenium,
                     "total-{}".format(object_name_plural),
-                    DEFAULT_WAIT,
+                    MAX_WAIT,
                     "{} {}".format(total_objects, object_name))
             else:
                 assert_text_within_id(
                     selenium,
                     "total-{}".format(object_name_plural),
-                    DEFAULT_WAIT,
+                    MAX_WAIT,
                     "{} {}".format(total_objects, object_name_plural)
                 )
         else:
             assert_text_within_id(
                 selenium,
                 "total-{}".format(object_name_plural),
-                DEFAULT_WAIT,
+                MAX_WAIT,
                 "{} data sets".format(total_objects)
             )
