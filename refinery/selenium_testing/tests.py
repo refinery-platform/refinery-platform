@@ -8,8 +8,9 @@ from core.management.commands.create_user import init_user
 from core.models import Analysis, DataSet
 from factory_boy.utils import make_analyses_with_single_dataset, make_datasets
 from selenium_testing.utils import (
-    assert_body_text, login, wait_until_id_clickable, DEFAULT_WAIT,
-    assert_text_within_id, refresh, delete_from_ui)
+    assert_body_text, login, wait_until_id_clickable, MAX_WAIT,
+    assert_text_within_id, delete_from_ui, wait_until_class_visible,
+    wait_until_id_visible)
 
 # Start a pyvirtualdisplay for geckodriver to interact with
 display = Display(visible=0, size=(1900, 1080))
@@ -23,7 +24,7 @@ class SeleniumTestBase(StaticLiveServerTestCase):
     serialized_rollback = True
 
     def setUp(self, site_login=True, initialize_guest=True,
-              public_group_needed=False):
+              public_group_needed=True):
         self.browser = webdriver.Firefox()
         self.browser.maximize_window()
 
@@ -37,9 +38,6 @@ class SeleniumTestBase(StaticLiveServerTestCase):
 
         if public_group_needed:
             create_public_group()
-
-    def tearDown(self):
-        self.browser.quit()
 
     class Meta:
         abstract = True
@@ -67,7 +65,6 @@ class NoLoginTestCase(SeleniumTestBase):
                           'Analyses', 'Workflows'])
 
         self.browser.find_element_by_link_text('Statistics').click()
-        self.browser.implicitly_wait(DEFAULT_WAIT)
         assert_body_text(
             self.browser,
             search_array=[
@@ -81,7 +78,6 @@ class NoLoginTestCase(SeleniumTestBase):
         )
 
         self.browser.find_element_by_link_text('About').click()
-        self.browser.implicitly_wait(DEFAULT_WAIT)
         assert_body_text(self.browser,
                          search_array=['Background', 'Contact', 'Funding',
                                        'Team',
@@ -100,8 +96,8 @@ class DataSetsPanelTestCase(SeleniumTestBase):
 
         # Create sample Data & refresh page
         make_analyses_with_single_dataset(5, self.user)
-        refresh(self.browser)
 
+        wait_until_class_visible(self.browser, "title", MAX_WAIT)
         self.browser.find_elements_by_class_name("title")[0].click()
 
         search_array = ["SUMMARY", "Description",
@@ -117,7 +113,7 @@ class DataSetsPanelTestCase(SeleniumTestBase):
         """Test Upload button"""
 
         wait_until_id_clickable(self.browser, "import-button",
-                                DEFAULT_WAIT).click()
+                                MAX_WAIT).click()
         assert_body_text(
             self.browser,
             search_array=[
@@ -133,27 +129,16 @@ class DataSetsPanelTestCase(SeleniumTestBase):
 class UiDeletionTestCase(SeleniumTestBase):
     """Ensure proper deletion of DataSets and Analyses from the UI"""
 
-    # SeleniumTestBase.setUp(): Due to a bug with TransactionTestCases (see:
-    # here http://bit.ly/2lD7dGU) we need to manually create the public group
-    # within this test suite. This issue has been addressed in Django 1.9 +
-    def setUp(self, site_login=True, initialize_guest=True,
-              public_group_needed=False):
-        super(UiDeletionTestCase, self).setUp(site_login=True,
-                                              initialize_guest=True,
-                                              public_group_needed=True)
-
     def test_dataset_deletion(self, total_datasets=2):
         """Delete some datasets and make sure the UI updates properly"""
 
         # Create sample Data & refresh page
         make_datasets(total_datasets, self.user)
-        refresh(self.browser)
-
-        wait_until_id_clickable(self.browser, "total-datasets", DEFAULT_WAIT)
+        wait_until_id_visible(self.browser, "total-datasets", MAX_WAIT)
         assert_text_within_id(
             self.browser,
             "total-datasets",
-            DEFAULT_WAIT,
+            MAX_WAIT,
             "{} data sets".format(total_datasets)
         )
 
@@ -164,10 +149,9 @@ class UiDeletionTestCase(SeleniumTestBase):
 
         # Create sample Data
         make_analyses_with_single_dataset(total_analyses, self.user)
-        refresh(self.browser)
 
-        wait_until_id_clickable(self.browser, "total-datasets", DEFAULT_WAIT)
-        assert_text_within_id(self.browser, "total-datasets", DEFAULT_WAIT,
+        wait_until_id_visible(self.browser, "total-datasets", MAX_WAIT)
+        assert_text_within_id(self.browser, "total-datasets", MAX_WAIT,
                               "{} data sets".format(1))
         assert_text_within_id(self.browser, "total-analyses",
                               "{} analyses".format(total_analyses))
@@ -180,37 +164,36 @@ class UiDeletionTestCase(SeleniumTestBase):
 
         # Create sample Data
         make_analyses_with_single_dataset(total_analyses, self.user)
-        refresh(self.browser)
 
-        wait_until_id_clickable(self.browser, "total-datasets", DEFAULT_WAIT)
+        wait_until_id_clickable(self.browser, "total-datasets", MAX_WAIT)
         assert_text_within_id(
             self.browser,
             "total-datasets",
-            DEFAULT_WAIT,
+            MAX_WAIT,
             "{} data sets".format(1))
-        wait_until_id_clickable(self.browser, "total-analyses", DEFAULT_WAIT)
+        wait_until_id_clickable(self.browser, "total-analyses", MAX_WAIT)
         assert_text_within_id(
-            self.browser, "total-analyses", DEFAULT_WAIT,
+            self.browser, "total-analyses", MAX_WAIT,
             "{} analyses".format(
                 total_analyses))
 
         self.browser.find_elements_by_class_name('dataset-delete')[0].click()
 
         wait_until_id_clickable(
-            self.browser, 'dataset-delete-button', DEFAULT_WAIT).click()
+            self.browser, 'dataset-delete-button', MAX_WAIT).click()
 
         # Make sure that there are no more Analyses left after the One
         # Dataset is deleted
-        wait_until_id_clickable(self.browser, "total-analyses", DEFAULT_WAIT)
+        wait_until_id_clickable(self.browser, "total-analyses", MAX_WAIT)
         assert_text_within_id(
-            self.browser, "total-analyses", DEFAULT_WAIT,
+            self.browser, "total-analyses", MAX_WAIT,
             "{} analysis".format(0))
         wait_until_id_clickable(
-            self.browser, "total-datasets", DEFAULT_WAIT)
+            self.browser, "total-datasets", MAX_WAIT)
         assert_text_within_id(
             self.browser,
             "total-datasets",
-            DEFAULT_WAIT,
+            MAX_WAIT,
             "{} data sets".format(0))
 
     def test_that_dataset_404s_are_handled(self, total_analyses=5):
@@ -221,17 +204,16 @@ class UiDeletionTestCase(SeleniumTestBase):
 
         # Create sample Data
         make_analyses_with_single_dataset(total_analyses, self.user)
-        refresh(self.browser)
 
-        wait_until_id_clickable(self.browser, "total-datasets", DEFAULT_WAIT)
+        wait_until_id_clickable(self.browser, "total-datasets", MAX_WAIT)
         assert_text_within_id(
             self.browser,
             "total-datasets",
-            DEFAULT_WAIT,
+            MAX_WAIT,
             "{} data sets".format(1))
-        wait_until_id_clickable(self.browser, "total-analyses", DEFAULT_WAIT)
+        wait_until_id_clickable(self.browser, "total-analyses", MAX_WAIT)
         assert_text_within_id(
-            self.browser, "total-analyses", DEFAULT_WAIT,
+            self.browser, "total-analyses", MAX_WAIT,
             "{} analyses".format(
                 total_analyses))
 
@@ -241,25 +223,25 @@ class UiDeletionTestCase(SeleniumTestBase):
         self.browser.find_elements_by_class_name('dataset-delete')[0].click()
 
         wait_until_id_clickable(
-            self.browser, 'dataset-delete-button', DEFAULT_WAIT).click()
+            self.browser, 'dataset-delete-button', MAX_WAIT).click()
 
         wait_until_id_clickable(
-            self.browser, "deletion-message-text", DEFAULT_WAIT)
+            self.browser, "deletion-message-text", MAX_WAIT)
         assert_text_within_id(
-            self.browser, "deletion-message-text", DEFAULT_WAIT, "not found.")
+            self.browser, "deletion-message-text", MAX_WAIT, "not found.")
         wait_until_id_clickable(
             self.browser, 'dataset-delete-close-button', 5).click()
 
         # Ensure that ui displays proper info
-        wait_until_id_clickable(self.browser, "total-analyses", DEFAULT_WAIT)
+        wait_until_id_clickable(self.browser, "total-analyses", MAX_WAIT)
         assert_text_within_id(
-            self.browser, "total-analyses", DEFAULT_WAIT,
+            self.browser, "total-analyses", MAX_WAIT,
             "{} analysis".format(0))
-        wait_until_id_clickable(self.browser, "total-datasets", DEFAULT_WAIT)
+        wait_until_id_clickable(self.browser, "total-datasets", MAX_WAIT)
         assert_text_within_id(
             self.browser,
             "total-datasets",
-            DEFAULT_WAIT,
+            MAX_WAIT,
             "{} data sets".format(0))
 
     def test_that_analysis_404s_are_handled(self, total_analyses=5):
@@ -270,17 +252,16 @@ class UiDeletionTestCase(SeleniumTestBase):
 
         # Create sample Data
         make_analyses_with_single_dataset(total_analyses, self.user)
-        refresh(self.browser)
 
-        wait_until_id_clickable(self.browser, "total-datasets", DEFAULT_WAIT)
+        wait_until_id_clickable(self.browser, "total-datasets", MAX_WAIT)
         assert_text_within_id(
             self.browser,
             "total-datasets",
-            DEFAULT_WAIT,
+            MAX_WAIT,
             "{} data sets".format(1))
-        wait_until_id_clickable(self.browser, "total-analyses", DEFAULT_WAIT)
+        wait_until_id_clickable(self.browser, "total-analyses", MAX_WAIT)
         assert_text_within_id(
-            self.browser, "total-analyses", DEFAULT_WAIT,
+            self.browser, "total-analyses", MAX_WAIT,
             "{} analyses".format(
                 total_analyses))
 
@@ -290,23 +271,23 @@ class UiDeletionTestCase(SeleniumTestBase):
         self.browser.find_elements_by_class_name('analysis-delete')[0].click()
 
         wait_until_id_clickable(
-            self.browser, 'analysis-delete-button', DEFAULT_WAIT).click()
+            self.browser, 'analysis-delete-button', MAX_WAIT).click()
 
         wait_until_id_clickable(
-            self.browser, "deletion-message-text", DEFAULT_WAIT)
+            self.browser, "deletion-message-text", MAX_WAIT)
         assert_text_within_id(
-            self.browser, "deletion-message-text", DEFAULT_WAIT, "not found.")
+            self.browser, "deletion-message-text", MAX_WAIT, "not found.")
         wait_until_id_clickable(
             self.browser, 'analysis-delete-close-button', 5).click()
 
         # Ensure that ui displays proper info
-        wait_until_id_clickable(self.browser, "total-analyses", DEFAULT_WAIT)
+        wait_until_id_clickable(self.browser, "total-analyses", MAX_WAIT)
         assert_text_within_id(
-            self.browser, "total-analyses", DEFAULT_WAIT,
+            self.browser, "total-analyses", MAX_WAIT,
             "{} analysis".format(0))
-        wait_until_id_clickable(self.browser, "total-datasets", DEFAULT_WAIT)
+        wait_until_id_clickable(self.browser, "total-datasets", MAX_WAIT)
         assert_text_within_id(
             self.browser,
             "total-datasets",
-            DEFAULT_WAIT,
+            MAX_WAIT,
             "{} data sets".format(1))

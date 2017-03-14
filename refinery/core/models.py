@@ -1248,7 +1248,7 @@ class Analysis(OwnableResource):
         try:
             solr.optimize()
         except Exception as e:
-            logger.error("Could not optimize Solr's index:", e)
+            logger.error("Could not optimize Solr's index: %s", e)
 
     def set_status(self, status, message=''):
         """Set analysis status and perform additional actions as required"""
