@@ -14,10 +14,11 @@ describe('rpAnalysisLaunch directive unit test', function () {
   beforeEach(inject(function (
     _$compile_,
     _$rootScope_,
+    settings,
     $templateCache
   ) {
     $templateCache.put(
-      '/static/partials/analysis-launch/partials/analysis-launch.html',
+      settings.djangoApp.staticURL + 'partials/analysis-launch/partials/analysis-launch.html',
       '<button id="rp-analysis-launch-modal"></button>'
     );
     compile = _$compile_;

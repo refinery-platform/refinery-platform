@@ -1,15 +1,16 @@
 'use strict';
 
-function rpAnalysisLaunch ($window) {
+function rpAnalysisLaunch (settings) {
   return {
     restrict: 'E',
     templateUrl: function () {
-      return $window.staticURL('partials/analysis-launch/partials/analysis-launch.html');
+      return settings.djangoApp.staticURL +
+        'partials/analysis-launch/partials/analysis-launch.html';
     }
   };
 }
 
 angular
   .module('refineryAnalysisLaunch')
-  .directive('rpAnalysisLaunch', ['$window', rpAnalysisLaunch]
+  .directive('rpAnalysisLaunch', ['settings', rpAnalysisLaunch]
 );
