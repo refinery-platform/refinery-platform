@@ -157,12 +157,12 @@ def delete_from_ui(selenium, object_name, total_objects):
                                  MAX_WAIT)
         selenium.find_elements_by_class_name('{}-delete'.format(object_name))[
             0].click()
+        wait_until_id_visible(selenium, '{}-delete-button'.format(
+            object_name), MAX_WAIT)
         wait_until_id_clickable(
                     selenium, '{}-delete-button'.format(object_name),
                     MAX_WAIT).click()
-        selenium.implicitly_wait(30)
-        wait_until_id_clickable(selenium, '{}-delete-close-button'.format(
-            object_name), MAX_WAIT).click()
+        selenium.refresh()
 
         total_objects -= 1
 
