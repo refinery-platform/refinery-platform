@@ -18,7 +18,7 @@ describe('rpAnalysisLaunch directive unit test', function () {
     $templateCache
   ) {
     $templateCache.put(
-      settings.djangoApp.staticURL + 'partials/analysis-launch/partials/analysis-launch.html',
+      settings.staticURL + 'partials/analysis-launch/partials/analysis-launch.html',
       '<button id="rp-analysis-launch-modal"></button>'
     );
     compile = _$compile_;
