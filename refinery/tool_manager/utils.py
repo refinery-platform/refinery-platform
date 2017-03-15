@@ -24,7 +24,8 @@ def create_tool_definition_from_workflow(workflow_data):
     :param workflow_data: dict of annotated data coming from a Galaxy workflow
     """
 
-    file_relationship = create_nesting(workflow_data["annotation"])
+    file_relationship = create_file_relationship_nesting(
+        workflow_data["annotation"])
 
     tool_definition = ToolDefinitionFactory(
         name=workflow_data["name"],
@@ -47,13 +48,13 @@ def create_tool_definition_from_workflow(workflow_data):
     # TODO: figure out Parameter/GalaxyParameter stuff
 
 
-def create_nesting(d, fr_store=None):
+def create_file_relationship_nesting(d, fr_store=None):
     """
     :param d: dict to act recursively upon to build the proper
     FileRelationship structure
 
     :param fr_store: initially `None`, but becomes a populated list upon
-    recursive calls to create_nesting. Allows for temp.
+    recursive calls to create_file_relationship_nesting. Allows for temp.
     storage of FileRelationship objs created in this method.
     Is necessary due to the fact that we cannot properly create the M2M
     relations between FileRelationships until we have created the
@@ -69,7 +70,7 @@ def create_nesting(d, fr_store=None):
         if key == "file_relationship":
             # If the file_relationship has a nested file_relationship,
             # create a FileRelationship object, and recursively call
-            # create_nesting() with said nested dict
+            # create_file_relationship_nesting() with said nested dict
             if isinstance(value, dict):
                 file_relationship = FileRelationshipFactory(
                     name=d[key]["name"],
@@ -82,7 +83,7 @@ def create_nesting(d, fr_store=None):
                 fr_store.append(file_relationship)
                 # NOTE: Recursive functions need to return themselves,
                 # otherwise Python returns `None`
-                return create_nesting(
+                return create_file_relationship_nesting(
                     value, fr_store=fr_store)
             else:
                 # If we reach here, we have reached the bottom-most nested
