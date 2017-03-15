@@ -8,6 +8,7 @@
   InputControlCtrl.$inject = [
     '$scope',
     'fileBrowserFactory',
+    'resetGridService',
     'selectedNodesService'
   ];
 
@@ -15,6 +16,7 @@
   function InputControlCtrl (
     $scope,
     fileBrowserFactory,
+    resetGridService,
     selectedNodesService
   ) {
     var vm = this;
@@ -51,7 +53,7 @@
     }
 
     function removeAllGroups () {
-      selectedNodesService.setSelectedAllFlags(false);
+      resetGridService.setRefreshGridFlag(true);
     }
 
     vm.$onInit = function () {
