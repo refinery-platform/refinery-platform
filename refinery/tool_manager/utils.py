@@ -1,6 +1,5 @@
 import logging
 from django.contrib import admin
-from django.core.management import CommandError
 
 from factory_boy.django_model_factories import (FileRelationshipFactory,
                                                 InputFileFactory,
@@ -132,11 +131,11 @@ def create_file_relationship_nesting(d, fr_store=None):
                         return fr_store[0]
 
 
-def validate_workflow_annotation(wf_dict):
+def validate_workflow_annotation(workflow_annotation):
     """
     Validate incoming annotation data to ensure ToolDefinitions are created
     properly.
-    :param annotation: dict containing Galaxy Workflow annotation data
+    :param workflow_annotation: dict containing Galaxy Workflow annotation data
     :return: Boolean: True if validation passes.
     """
     keys_to_check = [
@@ -144,11 +143,11 @@ def validate_workflow_annotation(wf_dict):
     keys_not_found = []
 
     for key in keys_to_check:
-        if key not in wf_dict["annotation"]:
+        if key not in workflow_annotation:
             keys_not_found.append(key)
 
     if keys_not_found:
-        raise CommandError(
+        raise ValidationError(
             "Workflow not properly Annotated. Keys: {} were not found in "
             "workflow annotation data.".format(keys_not_found))
     else:
