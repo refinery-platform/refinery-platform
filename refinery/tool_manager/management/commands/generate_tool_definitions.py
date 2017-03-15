@@ -7,7 +7,7 @@ from django.db import transaction, IntegrityError
 
 from core.models import WorkflowEngine
 from ...utils import create_tool_definition_from_workflow, \
-    validate_workflow_annotation
+    validate_workflow_annotation, ValidationError
 
 
 class Command(BaseCommand):
@@ -51,16 +51,21 @@ class Command(BaseCommand):
                 except ValueError as e:
                     raise CommandError(
                         "Workflow annotation is not valid JSON: {}".format(e))
-
-                # Validate workflow annotation data, and try to create a
-                # ToolDefinition if validation passes.
-                try:
-                    with transaction.atomic():
-                        validate_workflow_annotation(wf_dict)
-                        create_tool_definition_from_workflow(wf_dict)
-                except IntegrityError as e:
-                    raise CommandError(
-                        "Creation of ToolDefinition failed: {}".format(e))
-                except Exception as e:
-                    raise CommandError(
-                        "Something unexpected happened: {}".format(e))
+                else:
+                    # Validate workflow annotation data, and try to create a
+                    # ToolDefinition if validation passes.
+                    try:
+                        validate_workflow_annotation(wf_dict["annotation"])
+                    except ValidationError as e:
+                        raise CommandError(e)
+                    else:
+                        try:
+                            with transaction.atomic():
+                                create_tool_definition_from_workflow(wf_dict)
+                        except IntegrityError as e:
+                            raise CommandError(
+                                "Creation of ToolDefinition failed: {}".format(
+                                    e))
+                        except Exception as e:
+                            raise CommandError(
+                                "Something unexpected happened: {}".format(e))
