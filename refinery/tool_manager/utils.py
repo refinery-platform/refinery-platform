@@ -1,5 +1,7 @@
+import json
 import logging
 from django.contrib import admin
+from jsonschema import validate, ValidationError
 
 from factory_boy.django_model_factories import (FileRelationshipFactory,
                                                 InputFileFactory,
@@ -18,15 +20,15 @@ class AdminFieldPopulator(admin.ModelAdmin):
         self.list_display = [field.name for field in model._meta.fields]
 
 
-class ValidationError(Exception):
+class WorkflowAnnotationValidationError(Exception):
     """Custom exception class that accepts a `message` upon instantiation"""
     def __init__(self, message):
-        super(ValidationError, self).__init__(message)
+        super(WorkflowAnnotationValidationError, self).__init__(message)
 
 
 def create_tool_definition_from_workflow(workflow_data):
     """
-    :param workflow_data: dict of annotated data coming from a Galaxy workflow
+    :param workflow_data: dict of data that represents a Galaxy workflow
     """
 
     file_relationship = create_file_relationship_nesting(
@@ -138,17 +140,21 @@ def validate_workflow_annotation(workflow_annotation):
     :param workflow_annotation: dict containing Galaxy Workflow annotation data
     :return: Boolean: True if validation passes.
     """
-    keys_to_check = [
-        "file_relationship", "description", "output_files"]
-    keys_not_found = []
 
-    for key in keys_to_check:
-        if key not in workflow_annotation:
-            keys_not_found.append(key)
-
-    if keys_not_found:
-        raise ValidationError(
-            "Workflow not properly Annotated. Keys: {} were not found in "
-            "workflow annotation data.".format(keys_not_found))
-    else:
-        return True
+    with open("tool_manager/schemas/tool_definition.json", "r") as f:
+        schema = json.loads(f.read())
+        annotation_to_validate = workflow_annotation["annotation"]
+        annotation_to_validate["name"] = workflow_annotation["name"]
+        annotation_to_validate["tool_type"] = workflow_annotation["tool_type"]
+        try:
+            validate(annotation_to_validate, schema)
+        except ValidationError as e:
+            raise WorkflowAnnotationValidationError(
+                "Workflow not properly Annotated. Please read: "
+                "http://bit.ly/2mKczka for more information on how to "
+                "properly annotate your Galaxy-based workflows. {}".format(e))
+        except Exception as e:
+            raise WorkflowAnnotationValidationError("Something unexpected "
+                                                    "happend: {}".format(e))
+        else:
+            return True
