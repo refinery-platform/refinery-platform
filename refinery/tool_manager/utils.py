@@ -26,22 +26,22 @@ class WorkflowAnnotationValidationError(Exception):
         super(WorkflowAnnotationValidationError, self).__init__(message)
 
 
-def create_tool_definition_from_workflow(workflow_data):
+def create_tool_definition_from_workflow(workflow_dictionary):
     """
-    :param workflow_data: dict of data that represents a Galaxy workflow
+    :param workflow_dictionary: dict of data that represents a Galaxy workflow
     """
 
     file_relationship = create_file_relationship_nesting(
-        workflow_data["annotation"])
+        workflow_dictionary["annotation"])
 
     tool_definition = ToolDefinitionFactory(
-        name=workflow_data["name"],
-        description=workflow_data["annotation"]["description"],
+        name=workflow_dictionary["name"],
+        description=workflow_dictionary["annotation"]["description"],
         tool_type="WORKFLOW",
         file_relationship=file_relationship
     )
 
-    for output_file in workflow_data["annotation"]["output_files"]:
+    for output_file in workflow_dictionary["annotation"]["output_files"]:
         tool_definition.output_files.add(
             OutputFileFactory(
                 name=output_file["name"],
@@ -55,13 +55,14 @@ def create_tool_definition_from_workflow(workflow_data):
     # TODO: figure out Parameter/GalaxyParameter stuff
 
 
-def create_file_relationship_nesting(d, fr_store=None):
+def create_file_relationship_nesting(workflow_annotation,
+                                     file_relationships=None):
     """
-    :param d: dict to act recursively upon to build the proper
-    FileRelationship structure
+    :param workflow_annotation: dict to act recursively upon to build
+    the proper FileRelationship structure
 
-    :param fr_store: initially `None`, but becomes a populated list upon
-    recursive calls to create_file_relationship_nesting. Allows for temp.
+    :param file_relationships: initially `None`, but becomes a populated list
+    upon recursive calls to create_file_relationship_nesting. Allows for temp.
     storage of FileRelationship objs created in this method.
     Is necessary due to the fact that we cannot properly create the M2M
     relations between FileRelationships until we have created the
@@ -70,40 +71,40 @@ def create_file_relationship_nesting(d, fr_store=None):
     :return: The top-most FileRelationship object
     """
 
-    if not fr_store:
-        fr_store = []
+    if not file_relationships:
+        file_relationships = []
 
-    for key, value in d.iteritems():
+    for key, value in workflow_annotation.iteritems():
         if key == "file_relationship":
             # If the file_relationship has a nested file_relationship,
             # create a FileRelationship object, and recursively call
             # create_file_relationship_nesting() with said nested dict
             if isinstance(value, dict):
                 file_relationship = FileRelationshipFactory(
-                    name=d[key]["name"],
-                    value_type=d[key]["value_type"])
+                    name=workflow_annotation[key]["name"],
+                    value_type=workflow_annotation[key]["value_type"])
 
                 # Add FileRelationship obj to array that we'll pass to
                 # subsequent recursive calls. This is where we will
                 # temporarily store our FileRelationship objs until we reach
                 # the bottom-most nesting.
-                fr_store.append(file_relationship)
+                file_relationships.append(file_relationship)
                 # NOTE: Recursive functions need to return themselves,
                 # otherwise Python returns `None`
                 return create_file_relationship_nesting(
-                    value, fr_store=fr_store)
+                    value, file_relationships=file_relationships)
             else:
                 # If we reach here, we have reached the bottom-most nested
                 # file_relationship. Since we want to act upon the bottom-most
                 # file_relationship's input_files, we can safely grab the
-                # last element from our fr_store due to Python's nature or
+                # last element from our fr_store due to Python's nature of
                 # ordering lists.
-                bottom_file_relationship = fr_store[-1]
+                bottom_file_relationship = file_relationships[-1]
 
                 # Fetch, create, and associate InputFiles with the
                 # bottom-most file_relationship
-                if d["input_files"]:
-                    for input_file in d["input_files"]:
+                if workflow_annotation["input_files"]:
+                    for input_file in workflow_annotation["input_files"]:
 
                         input_file_instance = InputFileFactory(
                             name=input_file["name"],
@@ -125,12 +126,15 @@ def create_file_relationship_nesting(d, fr_store=None):
 
                 # Iterate through stored FileRelationship objects and
                 # associate their children
-                for idx, f in enumerate(fr_store):
+                for index, file_relationship in enumerate(file_relationships):
                     try:
-                        f.file_relationship.add(fr_store[idx + 1])
+                        file_relationship.file_relationship.add(
+                            file_relationships[index + 1]
+                        )
                     except IndexError:
-                        # Return the top-most FileRelationship
-                        return fr_store[0]
+                        # Return the top-most FileRelationship if we reach
+                        # the last element in the list
+                        return file_relationships[0]
 
 
 def validate_workflow_annotation(workflow_annotation):
