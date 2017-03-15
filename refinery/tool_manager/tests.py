@@ -2,7 +2,6 @@ import json
 from urlparse import urljoin
 
 from django.contrib.auth.models import User
-from django.core.management import CommandError
 from django.test import TestCase
 
 from rest_framework.test import (APIRequestFactory, APITestCase,
@@ -11,7 +10,7 @@ from rest_framework.test import (APIRequestFactory, APITestCase,
 from core.models import ExtendedGroup
 from factory_boy.utils import make_sample_tool_definitions
 from tool_manager.utils import (create_tool_definition_from_workflow,
-                                validate_workflow_annotation)
+                                validate_workflow_annotation, ValidationError)
 
 from .models import ToolDefinition
 from .views import ToolDefinitionsViewSet
@@ -100,12 +99,13 @@ class ToolDefinitionGenerationTests(TestCase):
         with open("tool_manager/test-data/workflow_bad_annot.json", "r") as f:
             wf_data = json.loads(f.read())
             self.assertRaises(
-                CommandError, validate_workflow_annotation, wf_data)
+                ValidationError, validate_workflow_annotation, wf_data)
 
     def test_list_workflow_tool_def_generation(self):
         with open("tool_manager/test-data/workflow_LIST.json", "r") as f:
             wf_data = json.loads(f.read())
-            self.assertTrue(validate_workflow_annotation(wf_data))
+            self.assertTrue(
+                validate_workflow_annotation(wf_data["annotation"]))
             create_tool_definition_from_workflow(wf_data)
 
             self.assertEqual(ToolDefinition.objects.count(), 1)
@@ -118,7 +118,8 @@ class ToolDefinitionGenerationTests(TestCase):
     def test_list_pair_workflow_tool_def_generation(self):
         with open("tool_manager/test-data/workflow_LIST:PAIR.json", "r") as f:
             wf_data = json.loads(f.read())
-            self.assertTrue(validate_workflow_annotation(wf_data))
+            self.assertTrue(
+                validate_workflow_annotation(wf_data["annotation"]))
             create_tool_definition_from_workflow(wf_data)
 
             self.assertEqual(ToolDefinition.objects.count(), 1)
@@ -137,7 +138,8 @@ class ToolDefinitionGenerationTests(TestCase):
         with open("tool_manager/test-data/workflow_LIST:LIST:PAIR.json",
                   "r") as f:
             wf_data = json.loads(f.read())
-            self.assertTrue(validate_workflow_annotation(wf_data))
+            self.assertTrue(
+                validate_workflow_annotation(wf_data["annotation"]))
             create_tool_definition_from_workflow(wf_data)
 
             self.assertEqual(ToolDefinition.objects.count(), 1)
