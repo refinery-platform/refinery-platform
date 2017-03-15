@@ -1,4 +1,5 @@
 { "name": "Test LIST:PAIR",
+  "tool_type": "WORKFLOW",
   "annotation": {
     "refinery_type": "analysis",
     "description": "This workflow does really cool things",
