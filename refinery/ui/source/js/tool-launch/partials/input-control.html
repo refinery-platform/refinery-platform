@@ -67,6 +67,14 @@
             Remove All
           </button>
         </div>
+
+        <hr>
+        <div
+          ng-if="$ctrl.groups.length != 0"
+          class="wrap-word">
+          {{ $ctrl.groups[$ctrl.groupIndex].entity[$ctrl.attributes.Name] }}
+          <{{ $ctrl.groups[$ctrl.groupIndex].entity[$ctrl.attributes['File Type']] }}>
+        </div>
       </div>
     </div>
   </div>
