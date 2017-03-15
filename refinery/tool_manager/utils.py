@@ -19,6 +19,12 @@ class AdminFieldPopulator(admin.ModelAdmin):
         self.list_display = [field.name for field in model._meta.fields]
 
 
+class ValidationError(Exception):
+    """Custom exception class that accepts a `message` upon instantiation"""
+    def __init__(self, message):
+        super(ValidationError, self).__init__(message)
+
+
 def create_tool_definition_from_workflow(workflow_data):
     """
     :param workflow_data: dict of annotated data coming from a Galaxy workflow
