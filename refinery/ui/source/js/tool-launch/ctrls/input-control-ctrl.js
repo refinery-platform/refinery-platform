@@ -53,6 +53,7 @@
     }
 
     function removeAllGroups () {
+      selectedNodesService.setSelectedAllFlags(false);
       resetGridService.setRefreshGridFlag(true);
     }
 
