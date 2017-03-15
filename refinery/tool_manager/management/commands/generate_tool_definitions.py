@@ -33,9 +33,9 @@ class Command(BaseCommand):
                 "Generating ToolDefinitions from workflow engine {} ...\n"
                 .format(engine.name))
 
-            gc = engine.instance.galaxy_connection()
+            galaxy_connection = engine.instance.galaxy_connection()
             try:
-                wf_list = gc.workflows.get_workflows()
+                wf_list = galaxy_connection.workflows.get_workflows()
             except ConnectionError as e:
                 raise CommandError(
                     "Unable to retrieve workflows from '{}'. "
@@ -43,29 +43,31 @@ class Command(BaseCommand):
                         engine.instance.base_url, e)
                 )
 
+            # Validate workflow annotation data, and try to create a
+            # ToolDefinition if validation passes.
             for workflow in wf_list:
-                wf_dict = gc.workflows.show_workflow(workflow["id"])
-
+                workflow_data = galaxy_connection.workflows.show_workflow(
+                    workflow["id"])
                 try:
-                    wf_dict["annotation"] = json.loads(wf_dict["annotation"])
+                    workflow_data["annotation"] = json.loads(
+                        workflow_data["annotation"]
+                    )
+                    validate_workflow_annotation(workflow_data["annotation"])
                 except ValueError as e:
                     raise CommandError(
                         "Workflow annotation is not valid JSON: {}".format(e))
+                except ValidationError as e:
+                    raise CommandError(e)
                 else:
-                    # Validate workflow annotation data, and try to create a
-                    # ToolDefinition if validation passes.
                     try:
-                        validate_workflow_annotation(wf_dict["annotation"])
-                    except ValidationError as e:
-                        raise CommandError(e)
-                    else:
-                        try:
-                            with transaction.atomic():
-                                create_tool_definition_from_workflow(wf_dict)
-                        except IntegrityError as e:
-                            raise CommandError(
-                                "Creation of ToolDefinition failed: {}".format(
-                                    e))
-                        except Exception as e:
-                            raise CommandError(
-                                "Something unexpected happened: {}".format(e))
+                        # Wrap operation in transaction. If any errors
+                        # occur in the generation process we'll rollback to
+                        # the db's prior state.
+                        with transaction.atomic():
+                            create_tool_definition_from_workflow(workflow_data)
+                    except IntegrityError as e:
+                        raise CommandError(
+                            "Creation of ToolDefinition failed: {}".format(e))
+                    except Exception as e:
+                        raise CommandError(
+                            "Something unexpected happened: {}".format(e))
