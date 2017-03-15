@@ -7,7 +7,7 @@ from django.db import transaction, IntegrityError
 
 from core.models import WorkflowEngine
 from ...utils import create_tool_definition_from_workflow, \
-    validate_workflow_annotation, ValidationError
+    validate_workflow_annotation, WorkflowAnnotationValidationError
 
 
 class Command(BaseCommand):
@@ -48,16 +48,21 @@ class Command(BaseCommand):
             for workflow in wf_list:
                 workflow_data = galaxy_connection.workflows.show_workflow(
                     workflow["id"])
+                workflow_data["tool_type"] = "WORKFLOW"
+
                 try:
                     workflow_data["annotation"] = json.loads(
                         workflow_data["annotation"]
                     )
-                    validate_workflow_annotation(workflow_data["annotation"])
+                    validate_workflow_annotation(workflow_data)
                 except ValueError as e:
                     raise CommandError(
                         "Workflow annotation is not valid JSON: {}".format(e))
-                except ValidationError as e:
+                except WorkflowAnnotationValidationError as e:
                     raise CommandError(e)
+                except Exception as e:
+                    raise CommandError(
+                        "Something unexpected happened: {}".format(e))
                 else:
                     try:
                         # Wrap operation in transaction. If any errors
