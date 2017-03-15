@@ -385,7 +385,7 @@ def load_tags():
         with open("aws-config/tags.yaml") as f:
             tags.update(yaml.load(f))
     except (IOError, yaml.YAMLError) as exc:
-        sys.stderr.write("Error reading AWS resource tags: {}".format(exc))
+        sys.stderr.write("Error reading AWS resource tags: {}\n".format(exc))
         raise ConfigError()
 
     if 'owner' not in tags:
