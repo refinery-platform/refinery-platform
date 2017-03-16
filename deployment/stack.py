@@ -373,12 +373,6 @@ def main():
                     "SourceSecurityGroupId": functions.get_att(
                         'ELBSecurityGroup', 'GroupId'),
                 },
-                {
-                    "IpProtocol": "tcp",
-                    "FromPort": "443",
-                    "ToPort": "443",
-                    "CidrIp": "0.0.0.0/0",
-                },
             ],
         })
     )
