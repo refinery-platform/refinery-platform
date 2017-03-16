@@ -317,7 +317,10 @@ def main():
         'ELBSecurityGroup', 'AWS::EC2::SecurityGroup',
         core.Properties({
             'GroupDescription': "Refinery ELB",
-            'SecurityGroupEgress':  [],
+            # Egress Rule defined via
+            # AWS::EC2::SecurityGroupEgress resource,
+            # to avoid circularity (below).
+            # See http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-ec2-security-group.html
             'SecurityGroupIngress': [
                 {
                     "IpProtocol": "tcp",
@@ -332,6 +335,19 @@ def main():
                     "CidrIp": "0.0.0.0/0",
                 },
             ],
+        })
+    )
+
+    cft.resources.elbegress = core.Resource(
+        'ELBEgress', 'AWS::EC2::SecurityGroupEgress',
+        core.Properties({
+            "GroupId": functions.get_att('ELBSecurityGroup',
+              'GroupId'),
+            "IpProtocol": "tcp",
+            "FromPort": "80",
+            "ToPort": "80",
+            "DestinationSecurityGroupId":
+              functions.get_att('InstanceSecurityGroup', 'GroupId'),
         })
     )
 
