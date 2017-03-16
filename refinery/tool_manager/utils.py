@@ -53,14 +53,12 @@ def create_tool_definition_from_workflow(workflow_dictionary):
     :param workflow_dictionary: dict of data that represents a Galaxy workflow
     """
 
-    file_relationship = create_file_relationship_nesting(
-        workflow_dictionary["annotation"])
-
     tool_definition = ToolDefinitionFactory(
         name=workflow_dictionary["name"],
         description=workflow_dictionary["annotation"]["description"],
-        tool_type="WORKFLOW",
-        file_relationship=file_relationship
+        tool_type=workflow_dictionary["tool_type"],
+        file_relationship=create_file_relationship_nesting(
+            workflow_dictionary["annotation"])
     )
 
     for output_file in workflow_dictionary["annotation"]["output_files"]:
@@ -121,6 +119,7 @@ def create_file_relationship_nesting(workflow_annotation,
                 # temporarily store our FileRelationship objs until we reach
                 # the bottom-most nesting.
                 file_relationships.append(file_relationship)
+
                 # NOTE: Recursive functions need to return themselves,
                 # otherwise Python returns `None`
                 return create_file_relationship_nesting(
@@ -144,31 +143,30 @@ def create_file_relationship_nesting(workflow_annotation,
 
                         allowed_filetypes = input_file["allowed_filetypes"]
 
-                        for key in allowed_filetypes:
+                        for allowed_filetype in allowed_filetypes:
                             try:
-                                file_type = FileType.objects.get(
-                                    name=key["name"]
+                                filetype_instance = FileType.objects.get(
+                                    name=allowed_filetype["name"]
                                 )
                             except(FileType.DoesNotExist,
                                    FileType.MultipleObjectsReturned) as e:
                                 raise FileTypeValidationError(key["name"], e)
                             else:
                                 input_file_instance.allowed_filetypes.add(
-                                    file_type)
+                                    filetype_instance)
                                 bottom_file_relationship.input_files.add(
                                     input_file_instance)
 
                 # Iterate through stored FileRelationship objects and
-                # associate their children
+                # associate children w/ parents
                 for index, file_relationship in enumerate(file_relationships):
-                    try:
-                        file_relationship.file_relationship.add(
-                            file_relationships[index + 1]
-                        )
-                    except IndexError:
-                        # Return the top-most FileRelationship if we reach
-                        # the last element in the list
+                    # Return the top-most FileRelationship if we reach
+                    # the last element in the list
+                    if index == len(file_relationships) - 1:
                         return file_relationships[0]
+
+                    file_relationship.file_relationship.add(
+                            file_relationships[index + 1])
 
 
 def validate_workflow_annotation(workflow_annotation):
