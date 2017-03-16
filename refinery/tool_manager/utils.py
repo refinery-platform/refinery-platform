@@ -36,7 +36,7 @@ class FileTypeValidationError(Exception):
     """
     def __init__(self, filetype, error):
         error_message = (
-            "Could'nt properly fetch FileType: {}.\n"
+            "Couldn't properly fetch FileType: {}.\n"
             "Valid FileTypes are {}.\n"
             " {}".format(
                 filetype,
