@@ -177,7 +177,7 @@ def main():
             'UserData': functions.base64(user_data_script),
             'KeyName': config['KEY_NAME'],
             'IamInstanceProfile': functions.ref('WebInstanceProfile'),
-            'SecurityGroups' : [
+            'SecurityGroups': [
                 functions.ref("InstanceSecurityGroup")],
             'Tags': instance_tags,
         }),
@@ -320,7 +320,7 @@ def main():
             # Egress Rule defined via
             # AWS::EC2::SecurityGroupEgress resource,
             # to avoid circularity (below).
-            # See http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-ec2-security-group.html
+            # See http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-ec2-security-group.html # noqa: E501
             'SecurityGroupIngress': [
                 {
                     "IpProtocol": "tcp",
@@ -342,12 +342,12 @@ def main():
         'ELBEgress', 'AWS::EC2::SecurityGroupEgress',
         core.Properties({
             "GroupId": functions.get_att('ELBSecurityGroup',
-              'GroupId'),
+                                         'GroupId'),
             "IpProtocol": "tcp",
             "FromPort": "80",
             "ToPort": "80",
-            "DestinationSecurityGroupId":
-              functions.get_att('InstanceSecurityGroup', 'GroupId'),
+            "DestinationSecurityGroupId": functions.get_att(
+                'InstanceSecurityGroup', 'GroupId'),
         })
     )
 
@@ -370,8 +370,8 @@ def main():
                     "ToPort": "80",
                     # "CidrIp": "0.0.0.0/0",
                     # Only accept connections from the ELB.
-                    "SourceSecurityGroupId":
-                      functions.get_att('ELBSecurityGroup', 'GroupId'),
+                    "SourceSecurityGroupId": functions.get_att(
+                        'ELBSecurityGroup', 'GroupId'),
                 },
                 {
                     "IpProtocol": "tcp",
@@ -396,8 +396,8 @@ def main():
                     "ToPort": "5432",
                     # Only accept connections from the
                     # Instance Security Group.
-                    "SourceSecurityGroupId":
-                      functions.get_att('InstanceSecurityGroup', 'GroupId'),
+                    "SourceSecurityGroupId": functions.get_att(
+                        'InstanceSecurityGroup', 'GroupId'),
                 },
             ],
         })
