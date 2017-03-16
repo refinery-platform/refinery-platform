@@ -1,4 +1,4 @@
-{ "name": "Test LIST:PAIR",
+{ "name": "Test LIST::LIST:PAIR",
   "tool_type": "WORKFLOW",
   "annotation": {
     "refinery_type": "analysis",
