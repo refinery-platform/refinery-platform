@@ -98,6 +98,11 @@ def create_file_relationship_nesting(workflow_annotation,
     :return: The top-most FileRelationship object
     """
 
+    # This if statement may seem unnecessary at first, but it is indeed needed.
+    # One may think: "why not just have `file_relationships=[]` in the
+    # method signature?" But this [utilizing mutable arguments] is a
+    # common Python "gotcha". Especially in the context of recursive methods.
+    # It's illustrated well here: http://bit.ly/21b5Axg
     if not file_relationships:
         file_relationships = []
 
