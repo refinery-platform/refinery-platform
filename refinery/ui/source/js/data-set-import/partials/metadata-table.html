@@ -1,21 +1,43 @@
 <div id="metadata-table-form">
+  <div class="refinery-subheader m-t-1">
+    <h3> Before You Get Started </h3>
+  </div>
+  <p>
+    Before uploading a data set, you should follow these steps to prepare
+    your metadata and data files:
+    <ol>
+      <li>
+        Your metadata file needs to contain at least three columns: a sample
+        identifier, a file name, and a species name/species identifier.
+        Additional columns should be provided to characterize your data. The
+        first row of the table needs to contain column headers, which can be
+        chosen by the user. The order of the columns can be arbitrary.
+        <a
+          href="/static/sample-files/refinery-sample-metadata.tsv"
+          target="_blank"
+          refinery-tooltip
+          refinery-tooltip-container="body"
+          refinery-tooltip-placement="right"
+          title="Download sample file, refinery-sample-metadata.tsv">
+          <i class="fa fa-download"> </i>
+          Download an example tabular metadata file.
+        </a>
+      </li>
+      <li>
+        Data referenced in the file name column of the metadata file should
+        either be located on your computer for upload to this site through your
+        browser or located on a web server accessible through public URLs.
+      </li>
+    </ol>
+
+    The upload process is not designed to be iterative, it pays off to spend
+    some time to prepare both metadata and data files to avoid having to
+    repeat the process.
+   </p>
   <div id="dataUploadTutorialStep3" class="refinery-subheader m-t-1">
     <h3>Provide Metadata File</h3>
   </div>
   <div id="dataUploadTutorialStep4">
-  <p>
-    <a
-      href="/static/sample-files/refinery-sample-metadata.tsv"
-      target="_blank"
-      refinery-tooltip
-      refinery-tooltip-container="body"
-      refinery-tooltip-placement="right"
-      title="Download sample file, refinery-sample-metadata.tsv">
-      <i class="fa fa-download"> </i>
-      Download an example tabular metadata file.
-    </a>
-    The first row needs to contain column headers.
-  </p>
   <p>
     Choose delimiter and then select tabular metadata table.
   </p>
@@ -180,7 +202,15 @@
           </div>
           <div class="col-sm-12 col-md-6 col-lg-8">
             Update the title of the data set to be imported.
-            This will be shown in the data set browser.
+            <a
+              popover-placement="right"
+              uib-popover="This will be shown in the data set browser."
+              popover-title="Title"
+              popover-trigger="focus"
+              popover-append-to-body="true"
+              tabindex="0">
+                <i class="fa fa-question-circle info-icon icon-only"></i>
+            </a>
           </div>
         </div>
 
@@ -200,12 +230,22 @@
             </select>
           </div>
           <div class="col-sm-12 col-md-6 col-lg-8">
-            Columns to be used for source grouping. Values in the
-            selected columns will be concatenated to create an identifier for
-            the "source" of the data. Each unique value will be treated as
-            a separate source idenifier. If necessary, up to three columns
-            can be selected and concatenated to create unique source names.
-            <br>At least one column needs to be selected.</br>
+            Select a column containing the sample identifier or multiple columns
+            that will concatenated to form an identifier.
+            <a
+              popover-placement="right"
+              uib-popover="Values in the selected columns will be
+              concatenated to create an identifier for the 'source' of the
+              data. Each unique value will be treated as a separate source
+              identifier. If necessary, up to three columns can be selected
+              and concatenated to create unique source names. At least one
+              column needs to be selected."
+              popover-title="Sample Identifier"
+              popover-trigger="focus"
+              popover-append-to-body="true"
+              tabindex="0">
+                <i class="fa fa-question-circle info-icon icon-only"></i>
+            </a>
           </div>
         </div>
 
@@ -224,7 +264,16 @@
           </div>
           <div class="col-sm-12 col-md-6 col-lg-8">
             Column that contains the path to or the URL of a data file.
-            If URLs are provided, they have to be publicly accessible.
+            <a
+              popover-placement="right"
+              uib-popover="File names must not contain a path. If URLs are
+              provided, they have to be publicly accessible."
+              popover-title="Data File Column"
+              popover-trigger="focus"
+              popover-append-to-body="true"
+              tabindex="0">
+                <i class="fa fa-question-circle info-icon icon-only"></i>
+            </a>
           </div>
         </div>
 
@@ -242,8 +291,18 @@
             </select>
           </div>
           <div class="col-sm-12 col-md-6 col-lg-8">
-            Column containing species names or identifiers,
-            e.g. "Human", "Homo sapiens", or "H. sapiens".
+            Column containing species names or identifiers.
+            <a
+              popover-placement="right"
+              uib-popover="Acceptable identifiers are defined by the NCBI
+              Taxonomy database. For example, for human samples 'Human',
+              'Homo sapiens', or 'H. sapiens' can be used."
+              popover-title="Species Column"
+              popover-trigger="focus"
+              popover-append-to-body="true"
+              tabindex="0">
+                <i class="fa fa-question-circle info-icon icon-only"></i>
+            </a>
           </div>
         </div>
 
@@ -265,42 +324,33 @@
             </div>
             <div class="col-sm-12 col-md-6 col-lg-8">
               Shortcut name to access the data set via a direct URL.
-              Can only contain alphanumeric characters and "_". A data set
-              with the shortcut <em>my_experiment</em> would be accessible under
-              <em>http://example.com/data_sets/my_experiment</em>.
+              <a
+                popover-placement="right"
+                uib-popover="Can only contain alphanumeric characters and '_'.
+                A data set with the shortcut my_experiment would be
+                accessible under http://stemcellcommons
+                .org/data_sets/my_experiment."
+                popover-title="URL Shortcut"
+                popover-trigger="focus"
+                popover-append-to-body="true"
+                tabindex="0">
+                  <i class="fa fa-question-circle info-icon icon-only"></i>
+              </a>
             </div>
           </div>
 
-          <div class="row m-t-1-4 m-b-1-4">
-          <div class="col-sm-6 col-md-3 col-lg-2">
-            Make Public
-          </div>
-          <div class="col-sm-6 col-md-3 col-lg-2">
-            <input
-              type="checkbox"
-              name="is_public"
-              ng-model="metadataTable.makePublic"/>
-          </div>
-          <div class="col-sm-12 col-md-6 col-lg-8">
-            If selected, the data set will be made publicly
-            viewable when the import has completed. 
-            <br>Use this feature with care.</br>
-          </div>
-        </div>
-        </div>
-
         <div>
-          <div class="refinery-subheader m-t-1">
-            <div
+          <div
+            class="refinery-subheader m-t-1">
+            <span
               role="button"
               ng-click="isAdvancedCollapsed = !isAdvancedCollapsed">
               <i
               ng-class="isAdvancedCollapsed ? 'fa fa-caret-right' : 'fa fa-caret-down'"
               class="fa-pull-left"
-              id=""
               aria-hidden="true"></i>
               <h4>Advanced</h4>
-            </div>
+            </span>
           </div>
           <div uib-collapse="isAdvancedCollapsed">
             <div class="row m-t-1-4 m-b-1-4">
@@ -318,26 +368,19 @@
               </div>
               <div class="col-sm-12 col-md-6 col-lg-8">
                 Column that contains the path to or URL of an auxiliary file
-                associated with the data file. For example, for visualization,
-                this could be a BigWig file for a WIG data file or a BAM index file
-                for a BAM data file. If URLs are provided, they have
-                to be publicly accessible.
-              </div>
-            </div>
-
-            <div class="row m-t-1-4 m-b-1-4">
-              <div class="col-sm-6 col-md-3 col-lg-2">
-                Base Path
-              </div>
-              <div class="col-sm-6 col-md-3 col-lg-2">
-                <input
-                  type="text"
-                  class="width-95"
-                  name="base_path"
-                  ng-model="metadataTable.basePath">
-              </div>
-              <div class="col-sm-12 col-md-6 col-lg-8">
-                Base path of your data file paths if using relative locations.
+                associated with the data file.
+                <a
+                  popover-placement="right"
+                  uib-popover="For example, for visualization, this could be
+                  a BigWig file for a WIG data file or a BAM index file for a
+                   BAM data file. If URLs are provided, they have to be
+                   publicly accessible."
+                  popover-title="Auxiliary File Column"
+                  popover-trigger="focus"
+                  popover-append-to-body="true"
+                  tabindex="0">
+                    <i class="fa fa-question-circle info-icon icon-only"></i>
+                </a>
               </div>
             </div>
 
@@ -355,8 +398,19 @@
                 </select>
               </div>
               <div class="col-sm-12 col-md-6 col-lg-8">
-                Column containing either "true" or "false" to indicate whether the data file in
-                this row should be treated as an annotation file rather than a data file.
+                Indicates the data file in this row should be
+                treated as an annotation file.
+                <a
+                  popover-placement="right"
+                  uib-popover="Column containing either 'true' or 'false' to
+                  indicate whether the data file in this row should be
+                  treated as an annotation file rather than a data file."
+                  popover-title="Annotation Column"
+                  popover-trigger="focus"
+                  popover-append-to-body="true"
+                  tabindex="0">
+                  <i class="fa fa-question-circle info-icon icon-only"></i>
+                </a>
               </div>
             </div>
 
@@ -389,12 +443,22 @@
                   ng-model="metadataTable.dataFilePermanent"/>
               </div>
               <div class="col-sm-12 col-md-6 col-lg-8">
-                If selected, data files located on remote servers (referenced by
-                URL) or located on the file system of the server (referenced by
-                an absolute file system path) will be
-                imported into the system upon creation of the data set. If not
-                selected, such files will only be imported into the system if
-                selected for analysis.
+                Data files will be imported into the system upon creation
+                of the data set.
+                <a
+                  popover-placement="right"
+                  uib-popover="If selected, data files located on remote
+                  servers (referenced by URL) or located on the file system
+                  of the server (referenced by an absolute file system path)
+                  will be imported into the system upon creation of the data
+                  set. If not selected, such files will only be imported into
+                   the system if selected for analysis."
+                  popover-title="Import Now"
+                  popover-trigger="focus"
+                  popover-append-to-body="true"
+                  tabindex="0">
+                    <i class="fa fa-question-circle info-icon icon-only"></i>
+                </a>
               </div>
             </div>
           </div>
