@@ -194,5 +194,3 @@ def validate_workflow_annotation(workflow_annotation):
         except Exception as e:
             raise WorkflowAnnotationValidationError("Something unexpected "
                                                     "happend: {}".format(e))
-        else:
-            return True

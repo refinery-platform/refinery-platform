@@ -108,7 +108,7 @@ class ToolDefinitionGenerationTests(TestCase):
                 "tool_manager/test-data/workflow_annotation_bad_filetype.json",
                 "r") as f:
             workflow_annotation = json.loads(f.read())
-            self.assertTrue(
+            self.assertIsNone(
                 validate_workflow_annotation(workflow_annotation))
             self.assertRaises(FileTypeValidationError,
                               create_tool_definition_from_workflow,
@@ -128,7 +128,7 @@ class ToolDefinitionGenerationTests(TestCase):
     def test_list_workflow_tool_def_generation(self):
         with open("tool_manager/test-data/workflow_LIST.json", "r") as f:
             workflow_annotation = json.loads(f.read())
-            self.assertTrue(
+            self.assertIsNone(
                 validate_workflow_annotation(workflow_annotation))
             create_tool_definition_from_workflow(workflow_annotation)
 
@@ -142,7 +142,7 @@ class ToolDefinitionGenerationTests(TestCase):
     def test_list_pair_workflow_tool_def_generation(self):
         with open("tool_manager/test-data/workflow_LIST:PAIR.json", "r") as f:
             workflow_annotation = json.loads(f.read())
-            self.assertTrue(
+            self.assertIsNone(
                 validate_workflow_annotation(workflow_annotation))
             create_tool_definition_from_workflow(workflow_annotation)
 
@@ -162,7 +162,7 @@ class ToolDefinitionGenerationTests(TestCase):
         with open("tool_manager/test-data/workflow_LIST:LIST:PAIR.json",
                   "r") as f:
             workflow_annotation = json.loads(f.read())
-            self.assertTrue(
+            self.assertIsNone(
                 validate_workflow_annotation(workflow_annotation))
             create_tool_definition_from_workflow(workflow_annotation)
 
