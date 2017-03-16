@@ -8,11 +8,10 @@ from rest_framework.test import (APIRequestFactory, APITestCase,
                                  force_authenticate)
 
 from core.models import ExtendedGroup
-from factory_boy.utils import make_sample_tool_definitions
 from tool_manager.utils import (create_tool_definition_from_workflow,
+                                FileTypeValidationError,
                                 validate_workflow_annotation,
-                                WorkflowAnnotationValidationError,
-                                FileTypeValidationError)
+                                WorkflowAnnotationValidationError)
 
 from .models import ToolDefinition
 from .views import ToolDefinitionsViewSet
@@ -33,7 +32,12 @@ class ToolDefinitionAPITests(APITestCase):
         self.url_root = '/api/v2/tools/definitions/'
 
         # Make some sample data
-        make_sample_tool_definitions()
+        with open("tool_manager/test-data/workflow_LIST.json") as f:
+            create_tool_definition_from_workflow(json.loads(f.read()))
+        with open("tool_manager/test-data/workflow_LIST:PAIR.json") as f:
+            create_tool_definition_from_workflow(json.loads(f.read()))
+        with open("tool_manager/test-data/workflow_LIST:LIST:PAIR.json") as f:
+            create_tool_definition_from_workflow(json.loads(f.read()))
 
         # Make reusable requests & responses
         self.get_request = self.factory.get(self.url_root)
@@ -69,7 +73,7 @@ class ToolDefinitionAPITests(APITestCase):
         self.options_response = self.view(self.options_request)
 
     def test_tool_definitions_exist(self):
-        self.assertEqual(ToolDefinition.objects.count(), 2)
+        self.assertEqual(ToolDefinition.objects.count(), 3)
 
     def test_get_request_authenticated(self):
         self.assertIsNotNone(self.get_response)
