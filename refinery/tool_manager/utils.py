@@ -174,7 +174,6 @@ def validate_workflow_annotation(workflow_annotation):
     Validate incoming annotation data to ensure ToolDefinitions are created
     properly.
     :param workflow_annotation: dict containing Galaxy Workflow annotation data
-    :return: Boolean: True if validation passes.
     """
 
     with open("tool_manager/schemas/tool_definition.json", "r") as f:
