@@ -11,7 +11,8 @@ from core.models import ExtendedGroup
 from factory_boy.utils import make_sample_tool_definitions
 from tool_manager.utils import (create_tool_definition_from_workflow,
                                 validate_workflow_annotation,
-                                WorkflowAnnotationValidationError)
+                                WorkflowAnnotationValidationError,
+                                FileTypeValidationError)
 
 from .models import ToolDefinition
 from .views import ToolDefinitionsViewSet
@@ -94,19 +95,35 @@ class ToolDefinitionAPITests(APITestCase):
 class ToolDefinitionGenerationTests(TestCase):
 
     def test_workflow_improperly_annotated(self):
-        with open("tool_manager/test-data/workflow_bad_annot.json", "r") as f:
-            workflow_annotation = json.loads(f.read())
-            self.assertRaises(
-                WorkflowAnnotationValidationError,
-                validate_workflow_annotation, workflow_annotation)
-
-    def test_workflow_with_bad_nesting(self):
-        with open("tool_manager/test-data/workflow_bad_nesting.json",
+        with open("tool_manager/test-data/workflow_annotation_invalid.json",
                   "r") as f:
             workflow_annotation = json.loads(f.read())
             self.assertRaises(
                 WorkflowAnnotationValidationError,
                 validate_workflow_annotation, workflow_annotation)
+            self.assertEqual(ToolDefinition.objects.count(), 0)
+
+    def test_workflow_invalid_filetype(self):
+        with open(
+                "tool_manager/test-data/workflow_annotation_bad_filetype.json",
+                "r") as f:
+            workflow_annotation = json.loads(f.read())
+            self.assertTrue(
+                validate_workflow_annotation(workflow_annotation))
+            self.assertRaises(FileTypeValidationError,
+                              create_tool_definition_from_workflow,
+                              workflow_annotation)
+            self.assertEqual(ToolDefinition.objects.count(), 0)
+
+    def test_workflow_with_bad_nesting(self):
+        with open(
+                "tool_manager/test-data/workflow_annotation_bad_nesting.json",
+                "r") as f:
+            workflow_annotation = json.loads(f.read())
+            self.assertRaises(
+                WorkflowAnnotationValidationError,
+                validate_workflow_annotation, workflow_annotation)
+            self.assertEqual(ToolDefinition.objects.count(), 0)
 
     def test_list_workflow_tool_def_generation(self):
         with open("tool_manager/test-data/workflow_LIST.json", "r") as f:

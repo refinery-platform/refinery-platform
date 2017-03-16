@@ -3,7 +3,7 @@ import sys
 
 from bioblend.galaxy.client import ConnectionError
 from django.core.management.base import BaseCommand, CommandError
-from django.db import transaction, IntegrityError
+from django.db import IntegrityError
 
 from core.models import WorkflowEngine
 from ...utils import create_tool_definition_from_workflow, \
@@ -65,14 +65,13 @@ class Command(BaseCommand):
                         "Something unexpected happened: {}".format(e))
                 else:
                     try:
-                        # Wrap operation in transaction. If any errors
-                        # occur in the generation process we'll rollback to
-                        # the db's prior state.
-                        with transaction.atomic():
-                            create_tool_definition_from_workflow(workflow_data)
+                        create_tool_definition_from_workflow(workflow_data)
                     except IntegrityError as e:
                         raise CommandError(
-                            "Creation of ToolDefinition failed: {}".format(e))
+                            "Creation of ToolDefinition failed. Database "
+                            "rolled back to its state before this "
+                            "ToolDefinition's attempted creation: {}".format(
+                                e))
                     except Exception as e:
                         raise CommandError(
                             "Something unexpected happened: {}".format(e))

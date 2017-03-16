@@ -1,6 +1,7 @@
 import json
 import logging
 from django.contrib import admin
+from django.db import transaction
 from jsonschema import validate, ValidationError
 
 from factory_boy.django_model_factories import (FileRelationshipFactory,
@@ -21,11 +22,32 @@ class AdminFieldPopulator(admin.ModelAdmin):
 
 
 class WorkflowAnnotationValidationError(Exception):
-    """Custom exception class that accepts a `message` upon instantiation"""
-    def __init__(self, message):
-        super(WorkflowAnnotationValidationError, self).__init__(message)
+    """
+    Custom exception class that accepts an `error_message` upon instantiation
+    """
+    def __init__(self, error_message):
+        super(WorkflowAnnotationValidationError, self).__init__(error_message)
 
 
+class FileTypeValidationError(Exception):
+    """
+    Custom exception class that accepts a `filetype` and `error` upon
+    instantiation and builds a relevant error message
+    """
+    def __init__(self, filetype, error):
+        error_message = (
+            "Could'nt properly fetch FileType: {}.\n"
+            "Valid FileTypes are {}.\n"
+            " {}".format(
+                filetype,
+                [f.name for f in FileType.objects.all()],
+                error)
+        )
+
+        super(FileTypeValidationError, self).__init__(error_message)
+
+
+@transaction.atomic
 def create_tool_definition_from_workflow(workflow_dictionary):
     """
     :param workflow_dictionary: dict of data that represents a Galaxy workflow
@@ -42,19 +64,24 @@ def create_tool_definition_from_workflow(workflow_dictionary):
     )
 
     for output_file in workflow_dictionary["annotation"]["output_files"]:
-        tool_definition.output_files.add(
-            OutputFileFactory(
-                name=output_file["name"],
-                description=output_file["description"],
-                filetype=FileType.objects.get(
-                    name=output_file["filetype"]["name"]
+        try:
+            filetype = FileType.objects.get(
+                name=output_file["filetype"]["name"])
+        except(FileType.DoesNotExist, FileType.MultipleObjectsReturned) as e:
+            raise FileTypeValidationError(output_file["filetype"]["name"], e)
+        else:
+            tool_definition.output_files.add(
+                OutputFileFactory(
+                    name=output_file["name"],
+                    description=output_file["description"],
+                    filetype=filetype
+                    )
                 )
-            )
-        )
 
     # TODO: figure out Parameter/GalaxyParameter stuff
 
 
+@transaction.atomic
 def create_file_relationship_nesting(workflow_annotation,
                                      file_relationships=None):
     """
@@ -113,16 +140,18 @@ def create_file_relationship_nesting(workflow_annotation,
                         allowed_filetypes = input_file["allowed_filetypes"]
 
                         for key in allowed_filetypes:
-                            # NOTE: we are not handling the usual .get()
-                            # exceptions here due to the transaction
-                            # management wrapping
-                            # create_tool_definition_from_workflow()
-                            file_type = FileType.objects.get(name=key["name"])
-
-                            input_file_instance.allowed_filetypes.add(
-                                file_type)
-                            bottom_file_relationship.input_files.add(
-                                input_file_instance)
+                            try:
+                                file_type = FileType.objects.get(
+                                    name=key["name"]
+                                )
+                            except(FileType.DoesNotExist,
+                                   FileType.MultipleObjectsReturned) as e:
+                                raise FileTypeValidationError(key["name"], e)
+                            else:
+                                input_file_instance.allowed_filetypes.add(
+                                    file_type)
+                                bottom_file_relationship.input_files.add(
+                                    input_file_instance)
 
                 # Iterate through stored FileRelationship objects and
                 # associate their children
