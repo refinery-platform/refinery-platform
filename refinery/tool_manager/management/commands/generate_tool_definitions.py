@@ -1,13 +1,14 @@
 import json
 import sys
 
-from bioblend.galaxy.client import ConnectionError
 from django.core.management.base import BaseCommand, CommandError
-from django.db import IntegrityError
+
+from bioblend.galaxy.client import ConnectionError
 
 from core.models import WorkflowEngine
-from ...utils import create_tool_definition_from_workflow, \
-    validate_workflow_annotation, WorkflowAnnotationValidationError
+from ...utils import (
+    create_tool_definition_from_workflow, validate_workflow_annotation,
+    WorkflowAnnotationValidationError)
 
 
 class Command(BaseCommand):
@@ -20,8 +21,8 @@ class Command(BaseCommand):
 
     def handle(self, **options):
         """
-        Creates ToolDefinitions based off of properly annotated galaxy
-        workflows
+        Creates ToolDefinitions based off of properly annotated Galaxy
+        Workflows.
         """
         sys.stdout.write("Generating ToolDefinitions...\n")
         workflow_engines = WorkflowEngine.objects.all()
@@ -35,7 +36,7 @@ class Command(BaseCommand):
 
             galaxy_connection = engine.instance.galaxy_connection()
             try:
-                wf_list = galaxy_connection.workflows.get_workflows()
+                workflow_list = galaxy_connection.workflows.get_workflows()
             except ConnectionError as e:
                 raise CommandError(
                     "Unable to retrieve workflows from '{}'. "
@@ -45,9 +46,10 @@ class Command(BaseCommand):
 
             # Validate workflow annotation data, and try to create a
             # ToolDefinition if validation passes.
-            for workflow in wf_list:
+            for workflow in workflow_list:
                 workflow_data = galaxy_connection.workflows.show_workflow(
                     workflow["id"])
+
                 workflow_data["tool_type"] = "WORKFLOW"
 
                 try:
@@ -66,12 +68,9 @@ class Command(BaseCommand):
                 else:
                     try:
                         create_tool_definition_from_workflow(workflow_data)
-                    except IntegrityError as e:
+                    except Exception as e:
                         raise CommandError(
                             "Creation of ToolDefinition failed. Database "
                             "rolled back to its state before this "
                             "ToolDefinition's attempted creation: {}".format(
                                 e))
-                    except Exception as e:
-                        raise CommandError(
-                            "Something unexpected happened: {}".format(e))
