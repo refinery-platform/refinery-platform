@@ -97,69 +97,73 @@ def create_file_relationship_nesting(workflow_annotation,
     if not file_relationships:
         file_relationships = []
 
-    for key, value in workflow_annotation.iteritems():
-        if key == "file_relationship":
-            # If the file_relationship has a nested file_relationship,
-            # create a FileRelationship object, and recursively call
-            # create_file_relationship_nesting() with said nested dict
-            if isinstance(value, dict):
-                file_relationship = FileRelationshipFactory(
-                    name=workflow_annotation[key]["name"],
-                    value_type=workflow_annotation[key]["value_type"])
+    # If the file_relationship has a nested file_relationship,
+    # create a FileRelationship object, and recursively call
+    # create_file_relationship_nesting() with said nested dict
+    if isinstance(workflow_annotation["file_relationship"], dict):
+        file_relationship = FileRelationshipFactory(
+            name=workflow_annotation["file_relationship"]["name"],
+            value_type=workflow_annotation["file_relationship"]["value_type"])
 
-                # Add FileRelationship obj to array that we'll pass to
-                # subsequent recursive calls. This is where we will
-                # temporarily store our FileRelationship objs until we reach
-                # the bottom-most nesting.
-                file_relationships.append(file_relationship)
+        # Add FileRelationship obj to array that we'll pass to
+        # subsequent recursive calls. This is where we will
+        # temporarily store our FileRelationship objs until we reach
+        # the bottom-most nesting.
+        file_relationships.append(file_relationship)
 
-                # NOTE: Recursive functions need to return themselves,
-                # otherwise Python returns `None`
-                return create_file_relationship_nesting(
-                    value, file_relationships=file_relationships)
-            else:
-                # If we reach here, we have reached the bottom-most nested
-                # file_relationship. Since we want to act upon the bottom-most
-                # file_relationship's input_files, we can safely grab the
-                # last element from our fr_store due to Python's nature of
-                # ordering lists.
-                bottom_file_relationship = file_relationships[-1]
+        # NOTE: Recursive functions need to return themselves,
+        # otherwise Python returns `None`
+        return create_file_relationship_nesting(
+            workflow_annotation["file_relationship"],
+            file_relationships=file_relationships
+        )
+    else:
+        # If we reach here, we have reached the bottom-most nested
+        # file_relationship. Since we want to act upon the bottom-most
+        # file_relationship's input_files, we can safely grab the
+        # last element from our fr_store due to Python's nature of
+        # ordering lists.
+        bottom_file_relationship = file_relationships[-1]
 
-                # Fetch, create, and associate InputFiles with the
-                # bottom-most file_relationship
-                if workflow_annotation["input_files"]:
-                    for input_file in workflow_annotation["input_files"]:
-                        input_file_instance = InputFileFactory(
-                            name=input_file["name"],
-                            description=input_file["description"]
+        # Fetch, create, and associate InputFiles with the
+        # bottom-most file_relationship
+        if workflow_annotation["input_files"]:
+            for input_file in workflow_annotation["input_files"]:
+                input_file_instance = InputFileFactory(
+                    name=input_file["name"],
+                    description=input_file["description"]
+                )
+                allowed_filetypes = input_file["allowed_filetypes"]
+                for allowed_filetype in allowed_filetypes:
+                    try:
+                        filetype_instance = FileType.objects.get(
+                            name=allowed_filetype["name"]
                         )
-                        allowed_filetypes = input_file["allowed_filetypes"]
-                        for allowed_filetype in allowed_filetypes:
-                            try:
-                                filetype_instance = FileType.objects.get(
-                                    name=allowed_filetype["name"]
-                                )
-                            except(FileType.DoesNotExist,
-                                   FileType.MultipleObjectsReturned) as e:
-                                raise FileTypeValidationError(key["name"], e)
-                            else:
-                                input_file_instance.allowed_filetypes.add(
-                                    filetype_instance)
-                                bottom_file_relationship.input_files.add(
-                                    input_file_instance)
+                    except(FileType.DoesNotExist,
+                           FileType.MultipleObjectsReturned) as e:
+                        raise FileTypeValidationError(
+                            allowed_filetype["name"], e
+                        )
+                    else:
+                        input_file_instance.allowed_filetypes.add(
+                            filetype_instance
+                        )
+                        bottom_file_relationship.input_files.add(
+                            input_file_instance
+                        )
 
-                # Iterate through stored FileRelationship objects and
-                # associate children w/ parents
-                for index, file_relationship in enumerate(file_relationships):
-                    # Return the top-most FileRelationship if we reach
-                    # the last element in the list
-                    if index == len(file_relationships) - 1:
-                        return file_relationships[0]
+        # Iterate through stored FileRelationship objects and
+        # associate children w/ parents
+        for index, file_relationship in enumerate(file_relationships):
+            # Return the top-most FileRelationship if we reach
+            # the last element in the list
+            if index == len(file_relationships) - 1:
+                return file_relationships[0]
 
-                    # Add FileRelationship's children using Django's M2M add()
-                    file_relationship.file_relationship.add(
-                        file_relationships[index + 1]
-                    )
+            # Add FileRelationship's children using Django's M2M add()
+            file_relationship.file_relationship.add(
+                file_relationships[index + 1]
+            )
 
 
 def validate_workflow_annotation(workflow_dictionary):
