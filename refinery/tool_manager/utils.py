@@ -176,16 +176,10 @@ def validate_workflow_annotation(workflow_dictionary):
     properly.
     :param workflow_dictionary: dict containing Galaxy Workflow data
     """
-    if os.getenv("TRAVIS"):
-        resolver = RefResolver(
-            "{}{}{}".format('file://', os.path.join(
-                os.environ["TRAVIS_BUILD_DIR"],
-                "/refinery/tool_manager/schemas"
-            ), '/'), None)
-    else:
-        resolver = RefResolver("{}{}{}".format(
-            'file://', os.path.abspath("tool_manager/schemas"), '/'
-        ), None)
+
+    resolver = RefResolver("{}{}{}".format(
+        'file://', os.path.join(os.getcwd(), "tool_manager/schemas"), '/'
+    ), None)
     with open("tool_manager/schemas/ToolDefinition.json", "r") as f:
         schema = json.loads(f.read())
         annotation_to_validate = workflow_dictionary["annotation"]
@@ -195,6 +189,6 @@ def validate_workflow_annotation(workflow_dictionary):
             validate(annotation_to_validate, schema, resolver=resolver)
         except ValidationError as e:
             raise RuntimeError(
-                "Workflow not properly Annotated. Please read: "
+                "Workflow not properly annotated. Please read: "
                 "http://bit.ly/2mKczka for more information on how to "
                 "properly annotate your Galaxy-based workflows. {}".format(e))
