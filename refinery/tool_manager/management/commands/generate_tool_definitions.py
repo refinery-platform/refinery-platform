@@ -24,7 +24,7 @@ class Command(BaseCommand):
         Creates ToolDefinitions based off of properly annotated Galaxy
         Workflows.
         """
-        sys.stdout.write("Generating ToolDefinitions...\n")
+        sys.stdout.write("Generating ToolDefinitions\n")
         workflow_engines = WorkflowEngine.objects.all()
         sys.stdout.write("{} workflow engines found.\n".format(
             workflow_engines.count()))
@@ -50,9 +50,7 @@ class Command(BaseCommand):
                 workflow_data = galaxy_connection.workflows.show_workflow(
                     workflow["id"]
                 )
-
                 workflow_data["tool_type"] = ToolDefinition.WORKFLOW
-
                 try:
                     workflow_data["annotation"] = json.loads(
                         workflow_data["annotation"]
