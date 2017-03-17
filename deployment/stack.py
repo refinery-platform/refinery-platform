@@ -382,7 +382,13 @@ def main():
         'RDSSecurityGroup', 'AWS::EC2::SecurityGroup',
         core.Properties({
             'GroupDescription': "Refinery RDS",
-            'SecurityGroupEgress':  [],
+            'SecurityGroupEgress':  [
+                # We would like to remove all egress rules here,
+                # but you can't do that with this version
+                # of CloudFormation.
+                # We decided that the hacky workarounds are
+                # not worth it.
+            ],
             'SecurityGroupIngress': [
                 {
                     "IpProtocol": "tcp",
