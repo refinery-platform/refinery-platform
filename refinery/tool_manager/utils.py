@@ -178,9 +178,9 @@ def validate_workflow_annotation(workflow_dictionary):
     """
 
     resolver = RefResolver("{}{}{}".format(
-        'file://', os.path.join(os.getcwd(), "tool_manager/schemas"), '/'
+        'file://', os.path.abspath("tool_manager/schemas"), '/'
     ), None)
-    with open("tool_manager/schemas/ToolDefinition.json", "r") as f:
+    with open("tool_manager/schemas/ToolDefinition.json", "rb") as f:
         schema = json.loads(f.read())
         annotation_to_validate = workflow_dictionary["annotation"]
         annotation_to_validate["name"] = workflow_dictionary["name"]
