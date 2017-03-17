@@ -98,10 +98,11 @@ def create_file_relationship_nesting(workflow_annotation,
     if not file_relationships:
         file_relationships = []
 
-    # If the file_relationship has a nested file_relationship,
+    # If the file_relationship has a populated nested file_relationship,
     # create a FileRelationship object, and recursively call
     # create_file_relationship_nesting() with said nested dict
-    if isinstance(workflow_annotation["file_relationship"], dict):
+    if (isinstance(workflow_annotation["file_relationship"], dict) and
+            workflow_annotation["file_relationship"]):
         file_relationship = FileRelationshipFactory(
             name=workflow_annotation["file_relationship"]["name"],
             value_type=workflow_annotation["file_relationship"]["value_type"])

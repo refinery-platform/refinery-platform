@@ -27,7 +27,7 @@
       }
     ],
     "file_relationship": {
-      "file_relationship": [],
+      "file_relationship": {},
       "value_type": "LIST",
       "name": "Flat list of N Samples",
       "input_files": [

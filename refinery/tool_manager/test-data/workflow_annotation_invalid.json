@@ -14,7 +14,7 @@
       }
     ],
     "relationship": {
-      "relationship": [],
+      "relationship": {},
       "value_type": "LIST",
       "name": "Flat list of N Samples",
       "inputs": [

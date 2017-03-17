@@ -26,14 +26,9 @@
     },
     "file_relationship": {
       "oneOf": [
-        {
-          "type": "array",
-          "maxItems": 0
-        },
-        {
-          "$ref": "FileRelationship.json#"
-        }
-      ]
+          {"$ref": "FileRelationship.json#"},
+          {"type": "object", "additionalProperties": false, "properties": {}}
+        ]
+      }
     }
   }
-}

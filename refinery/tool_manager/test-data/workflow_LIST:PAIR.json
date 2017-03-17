@@ -15,7 +15,7 @@
       "value_type": "LIST",
       "name": "List of Pairs",
       "file_relationship": {
-        "file_relationship": [],
+        "file_relationship": {},
         "value_type": "PAIR",
         "name": "Pairs",
         "input_files": [
