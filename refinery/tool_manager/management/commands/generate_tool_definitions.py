@@ -6,9 +6,9 @@ from django.core.management.base import BaseCommand, CommandError
 from bioblend.galaxy.client import ConnectionError
 
 from core.models import WorkflowEngine
-from ...utils import (
-    create_tool_definition_from_workflow, validate_workflow_annotation,
-    WorkflowAnnotationValidationError)
+from tool_manager.models import ToolDefinition
+from ...utils import (create_tool_definition_from_workflow,
+                      validate_workflow_annotation)
 
 
 class Command(BaseCommand):
@@ -31,7 +31,7 @@ class Command(BaseCommand):
 
         for engine in workflow_engines:
             sys.stdout.write(
-                "Generating ToolDefinitions from workflow engine {} ...\n"
+                "Generating ToolDefinitions from workflow engine {}\n"
                 .format(engine.name))
 
             galaxy_connection = engine.instance.galaxy_connection()
@@ -48,29 +48,31 @@ class Command(BaseCommand):
             # ToolDefinition if validation passes.
             for workflow in workflow_list:
                 workflow_data = galaxy_connection.workflows.show_workflow(
-                    workflow["id"])
+                    workflow["id"]
+                )
 
-                workflow_data["tool_type"] = "WORKFLOW"
+                workflow_data["tool_type"] = ToolDefinition.WORKFLOW
 
                 try:
                     workflow_data["annotation"] = json.loads(
                         workflow_data["annotation"]
                     )
-                    validate_workflow_annotation(workflow_data)
                 except ValueError as e:
                     raise CommandError(
-                        "Workflow annotation is not valid JSON: {}".format(e))
-                except WorkflowAnnotationValidationError as e:
+                        "Workflow annotation is not valid JSON: {}".format(e)
+                    )
+                try:
+                    validate_workflow_annotation(workflow_data)
+                except RuntimeError as e:
                     raise CommandError(e)
                 except Exception as e:
                     raise CommandError(
                         "Something unexpected happened: {}".format(e))
-                else:
-                    try:
-                        create_tool_definition_from_workflow(workflow_data)
-                    except Exception as e:
-                        raise CommandError(
-                            "Creation of ToolDefinition failed. Database "
-                            "rolled back to its state before this "
-                            "ToolDefinition's attempted creation: {}".format(
-                                e))
+                try:
+                    create_tool_definition_from_workflow(workflow_data)
+                except Exception as e:
+                    raise CommandError(
+                        "Creation of ToolDefinition failed. Database "
+                        "rolled back to its state before this "
+                        "ToolDefinition's attempted creation: {}".format(e)
+                    )

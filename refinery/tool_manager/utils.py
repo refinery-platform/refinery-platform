@@ -9,6 +9,7 @@ from factory_boy.django_model_factories import (FileRelationshipFactory,
                                                 ToolDefinitionFactory,
                                                 OutputFileFactory)
 from file_store.models import FileType
+
 logger = logging.getLogger(__name__)
 
 
@@ -21,15 +22,7 @@ class AdminFieldPopulator(admin.ModelAdmin):
         self.list_display = [field.name for field in model._meta.fields]
 
 
-class WorkflowAnnotationValidationError(Exception):
-    """
-    Custom exception class that accepts an `error_message` upon instantiation
-    """
-    def __init__(self, error_message):
-        super(WorkflowAnnotationValidationError, self).__init__(error_message)
-
-
-class FileTypeValidationError(Exception):
+class FileTypeValidationError(RuntimeError):
     """
     Custom exception class that accepts a `filetype` and `error` upon
     instantiation and builds a relevant error message
@@ -86,9 +79,9 @@ def create_file_relationship_nesting(workflow_annotation,
     :param workflow_annotation: dict to act recursively upon to build
     the proper FileRelationship structure
 
-    :param file_relationships: initially `None`, but becomes a populated list
-    upon recursive calls to create_file_relationship_nesting. Allows for temp.
-    storage of FileRelationship objs created in this method.
+    :param file_relationships: Used to construct a populated list of
+    fileRelationship objects upon recursive calls to
+    create_file_relationship_nesting.
     Is necessary due to the fact that we cannot properly create the M2M
     relations between FileRelationships until we have created the
     "bottom-most" one.
@@ -136,13 +129,11 @@ def create_file_relationship_nesting(workflow_annotation,
                 # bottom-most file_relationship
                 if workflow_annotation["input_files"]:
                     for input_file in workflow_annotation["input_files"]:
-
                         input_file_instance = InputFileFactory(
                             name=input_file["name"],
-                            description=input_file["description"])
-
+                            description=input_file["description"]
+                        )
                         allowed_filetypes = input_file["allowed_filetypes"]
-
                         for allowed_filetype in allowed_filetypes:
                             try:
                                 filetype_instance = FileType.objects.get(
@@ -165,29 +156,28 @@ def create_file_relationship_nesting(workflow_annotation,
                     if index == len(file_relationships) - 1:
                         return file_relationships[0]
 
+                    # Add FileRelationship's children using Django's M2M add()
                     file_relationship.file_relationship.add(
-                            file_relationships[index + 1])
+                        file_relationships[index + 1]
+                    )
 
 
-def validate_workflow_annotation(workflow_annotation):
+def validate_workflow_annotation(workflow_dictionary):
     """
     Validate incoming annotation data to ensure ToolDefinitions are created
     properly.
-    :param workflow_annotation: dict containing Galaxy Workflow annotation data
+    :param workflow_dictionary: dict containing Galaxy Workflow data
     """
 
     with open("tool_manager/schemas/tool_definition.json", "r") as f:
         schema = json.loads(f.read())
-        annotation_to_validate = workflow_annotation["annotation"]
-        annotation_to_validate["name"] = workflow_annotation["name"]
-        annotation_to_validate["tool_type"] = workflow_annotation["tool_type"]
+        annotation_to_validate = workflow_dictionary["annotation"]
+        annotation_to_validate["name"] = workflow_dictionary["name"]
+        annotation_to_validate["tool_type"] = workflow_dictionary["tool_type"]
         try:
             validate(annotation_to_validate, schema)
         except ValidationError as e:
-            raise WorkflowAnnotationValidationError(
+            raise RuntimeError(
                 "Workflow not properly Annotated. Please read: "
                 "http://bit.ly/2mKczka for more information on how to "
                 "properly annotate your Galaxy-based workflows. {}".format(e))
-        except Exception as e:
-            raise WorkflowAnnotationValidationError("Something unexpected "
-                                                    "happend: {}".format(e))

@@ -10,8 +10,7 @@ from rest_framework.test import (APIRequestFactory, APITestCase,
 from core.models import ExtendedGroup
 from tool_manager.utils import (create_tool_definition_from_workflow,
                                 FileTypeValidationError,
-                                validate_workflow_annotation,
-                                WorkflowAnnotationValidationError)
+                                validate_workflow_annotation)
 
 from .models import ToolDefinition
 from .views import ToolDefinitionsViewSet
@@ -103,7 +102,7 @@ class ToolDefinitionGenerationTests(TestCase):
                   "r") as f:
             workflow_annotation = json.loads(f.read())
             self.assertRaises(
-                WorkflowAnnotationValidationError,
+                RuntimeError,
                 validate_workflow_annotation, workflow_annotation)
             self.assertEqual(ToolDefinition.objects.count(), 0)
 
@@ -125,15 +124,20 @@ class ToolDefinitionGenerationTests(TestCase):
                 "r") as f:
             workflow_annotation = json.loads(f.read())
             self.assertRaises(
-                WorkflowAnnotationValidationError,
+                RuntimeError,
                 validate_workflow_annotation, workflow_annotation)
             self.assertEqual(ToolDefinition.objects.count(), 0)
+
+    def test_list_workflow_tool_def_validation(self):
+        with open("tool_manager/test-data/workflow_LIST.json", "r") as f:
+            workflow_annotation = json.loads(f.read())
+            self.assertIsNone(
+                validate_workflow_annotation(workflow_annotation)
+            )
 
     def test_list_workflow_tool_def_generation(self):
         with open("tool_manager/test-data/workflow_LIST.json", "r") as f:
             workflow_annotation = json.loads(f.read())
-            self.assertIsNone(
-                validate_workflow_annotation(workflow_annotation))
             create_tool_definition_from_workflow(workflow_annotation)
 
             self.assertEqual(ToolDefinition.objects.count(), 1)
@@ -143,11 +147,16 @@ class ToolDefinitionGenerationTests(TestCase):
             self.assertEqual(td.file_relationship.file_relationship.count(), 0)
             self.assertEqual(td.file_relationship.input_files.count(), 1)
 
-    def test_list_pair_workflow_tool_def_generation(self):
+    def test_list_pair_workflow_tool_def_validation(self):
         with open("tool_manager/test-data/workflow_LIST:PAIR.json", "r") as f:
             workflow_annotation = json.loads(f.read())
             self.assertIsNone(
-                validate_workflow_annotation(workflow_annotation))
+                validate_workflow_annotation(workflow_annotation)
+            )
+
+    def test_list_pair_workflow_tool_def_generation(self):
+        with open("tool_manager/test-data/workflow_LIST:PAIR.json", "r") as f:
+            workflow_annotation = json.loads(f.read())
             create_tool_definition_from_workflow(workflow_annotation)
 
             self.assertEqual(ToolDefinition.objects.count(), 1)
@@ -162,12 +171,18 @@ class ToolDefinitionGenerationTests(TestCase):
             self.assertEqual(
                 second_nested_file_relationship.input_files.count(), 2)
 
-    def test_list_list_pair_workflow_tool_def_generation(self):
+    def test_list_list_pair_workflow_tool_def_validation(self):
         with open("tool_manager/test-data/workflow_LIST:LIST:PAIR.json",
                   "r") as f:
             workflow_annotation = json.loads(f.read())
             self.assertIsNone(
-                validate_workflow_annotation(workflow_annotation))
+                validate_workflow_annotation(workflow_annotation)
+            )
+
+    def test_list_list_pair_workflow_tool_def_generation(self):
+        with open("tool_manager/test-data/workflow_LIST:LIST:PAIR.json",
+                  "r") as f:
+            workflow_annotation = json.loads(f.read())
             create_tool_definition_from_workflow(workflow_annotation)
 
             self.assertEqual(ToolDefinition.objects.count(), 1)
