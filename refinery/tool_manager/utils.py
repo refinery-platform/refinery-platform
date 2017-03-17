@@ -1,8 +1,9 @@
 import json
 import logging
+import os
 from django.contrib import admin
 from django.db import transaction
-from jsonschema import validate, ValidationError
+from jsonschema import RefResolver, validate, ValidationError
 
 from factory_boy.django_model_factories import (FileRelationshipFactory,
                                                 InputFileFactory,
@@ -173,13 +174,16 @@ def validate_workflow_annotation(workflow_dictionary):
     :param workflow_dictionary: dict containing Galaxy Workflow data
     """
 
-    with open("tool_manager/schemas/tool_definition.json", "r") as f:
+    resolver = RefResolver("{}{}{}".format(
+        'file://', os.path.abspath("tool_manager/schemas"), '/'
+    ), None)
+    with open("tool_manager/schemas/ToolDefinition.json", "r") as f:
         schema = json.loads(f.read())
         annotation_to_validate = workflow_dictionary["annotation"]
         annotation_to_validate["name"] = workflow_dictionary["name"]
         annotation_to_validate["tool_type"] = workflow_dictionary["tool_type"]
         try:
-            validate(annotation_to_validate, schema)
+            validate(annotation_to_validate, schema, resolver=resolver)
         except ValidationError as e:
             raise RuntimeError(
                 "Workflow not properly Annotated. Please read: "

@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-04/hyper-schema",
+  "type": "object",
+  "required": [
+    "name",
+    "description",
+    "value_type",
+    "default_value"
+  ],
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "value_type": {
+      "type": "string",
+      "enum": [
+        "INTEGER",
+        "STRING",
+        "BOOLEAN",
+        "FLOAT",
+        "GENOME_BUILD",
+        "ATTRIBUTE",
+        "FILE"
+      ]
+    },
+    "default_value": {
+      "type": "string"
+    }
+  }
+}

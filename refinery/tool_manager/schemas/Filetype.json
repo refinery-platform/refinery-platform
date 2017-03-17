@@ -1,0 +1,12 @@
+{
+  "$schema": "http://json-schema.org/draft-04/hyper-schema",
+  "type": "object",
+  "required": [
+    "name"
+  ],
+  "properties": {
+    "name": {
+      "type": "string"
+    }
+  }
+}

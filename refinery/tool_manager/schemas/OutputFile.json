@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-04/hyper-schema",
+  "type": "object",
+  "required": [
+    "name",
+    "description",
+    "filetype"
+  ],
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "file_type": {
+      "type": "object",
+      "$ref": "FileType.json#"
+    }
+  }
+}
