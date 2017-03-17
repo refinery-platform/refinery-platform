@@ -18,6 +18,7 @@ class AdminFieldPopulator(admin.ModelAdmin):
     """
     Wrapper around ModelAdmin that exposes all of a Model's fields in admin ui
     """
+
     def __init__(self, model, admin_site):
         super(AdminFieldPopulator, self).__init__(model, admin_site)
         self.list_display = [field.name for field in model._meta.fields]
@@ -28,6 +29,7 @@ class FileTypeValidationError(RuntimeError):
     Custom exception class that accepts a `filetype` and `error` upon
     instantiation and builds a relevant error message
     """
+
     def __init__(self, filetype, error):
         error_message = (
             "Couldn't properly fetch FileType: {}.\n"
@@ -67,10 +69,10 @@ def create_tool_definition_from_workflow(workflow_dictionary):
                     name=output_file["name"],
                     description=output_file["description"],
                     filetype=filetype
-                    )
                 )
+            )
 
-    # TODO: figure out Parameter/GalaxyParameter stuff
+            # TODO: figure out Parameter/GalaxyParameter stuff
 
 
 @transaction.atomic
@@ -174,10 +176,16 @@ def validate_workflow_annotation(workflow_dictionary):
     properly.
     :param workflow_dictionary: dict containing Galaxy Workflow data
     """
-
-    resolver = RefResolver("{}{}{}".format(
-        'file://', os.path.abspath("tool_manager/schemas"), '/'
-    ), None)
+    if os.getenv("TRAVIS"):
+        resolver = RefResolver(
+            "{}{}{}".format('file://', os.path.join(
+                os.environ["TRAVIS_BUILD_DIR"],
+                "/refinery/tool_manager/schemas"
+            ), '/'), None)
+    else:
+        resolver = RefResolver("{}{}{}".format(
+            'file://', os.path.abspath("tool_manager/schemas"), '/'
+        ), None)
     with open("tool_manager/schemas/ToolDefinition.json", "r") as f:
         schema = json.loads(f.read())
         annotation_to_validate = workflow_dictionary["annotation"]
