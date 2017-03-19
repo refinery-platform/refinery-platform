@@ -3,15 +3,10 @@
     <h3> Before You Get Started </h3>
   </div>
   <p>
-    Before uploading a data set, you should follow these steps to prepare
-    your metadata and data files:
+    Before uploading a data set, format the metadata and data files:
     <ol>
       <li>
-        Your metadata file needs to contain at least three columns: a sample
-        identifier, a file name, and a species name/species identifier.
-        Additional columns should be provided to characterize your data. The
-        first row of the table needs to contain column headers, which can be
-        chosen by the user. The order of the columns can be arbitrary.
+        Metadata file (
         <a
           href="/static/sample-files/refinery-sample-metadata.tsv"
           target="_blank"
@@ -22,17 +17,38 @@
           <i class="fa fa-download"> </i>
           Download an example tabular metadata file.
         </a>
+        ):
+        <ul class="nested-list">
+          <li>
+            Must contain at least three columns: <strong>sample
+            identifier</strong>, <strong>file name</strong>, and <strong>species
+            name/species identifier</strong>
+          </li>
+          <li>
+            Must contain column headers in the first row of the table
+          </li>
+          <li>
+            Can have additional columns used to characterize data
+          </li>
+          <li>
+            Can have the columns ordered arbitrary
+          </li>
+        </ul>
       </li>
       <li>
         Data referenced in the file name column of the metadata file should
-        either be located on your computer for upload to this site through your
-        browser or located on a web server accessible through public URLs.
+        either be located:
+        <ul class="nested-list">
+          <li>
+            on your computer for upload to this site through your
+        browser
+          </li>
+          <li>
+            on a web server accessible through public URLs
+          </li>
+        </ul>
       </li>
     </ol>
-
-    The upload process is not designed to be iterative, it pays off to spend
-    some time to prepare both metadata and data files to avoid having to
-    repeat the process.
    </p>
   <div id="dataUploadTutorialStep3" class="refinery-subheader m-t-1">
     <h3>Provide Metadata File</h3>
