@@ -20,7 +20,7 @@ __This tutorial can be completed using the Tutorial Data Set, which consists of 
     1. Click *__Login__* at the top right of the navigation bar
     2. Enter the *__Username or E-mail__* and *__Password__* provided during registration and click the *__Login__* button below
   
-  ![NavBar](https://github.com/refinery-platform/refinery-platform/blob/develop/docs/screenshots/NavBar_Ann.png)
+  ![NavBar](https://github.com/refinery-platform/refinery-platform/blob/develop/docs/screenshots/NavBar_skitch.png)
 
 ## 1. Creating a Metadata File
 1. Compile all the metadata to be associated with the data set and then organize these metadata into a delimited (e.g. tab-delimited) text file. A template metadata file can be found [here][refinery-sample-metadata.tsv] -- note the required attributes (sample name, data file, and organism). Additional attributes can be appended as needed.
@@ -33,7 +33,7 @@ __This tutorial can be completed using the Tutorial Data Set, which consists of 
 
 ## 2. Uploading a Data Set 
 1. From the *__Launch Pad__*, Click *__Upload__* from the *__Data Sets__* panel
-![PanelHeaders](https://github.com/refinery-platform/refinery-platform/blob/develop/docs/screenshots/PanelHeaders_Ann.png)
+![PanelHeaders](https://github.com/refinery-platform/refinery-platform/blob/develop/docs/screenshots/PanelHeaders_skitch.png)
 2. First choose delimiter used in the metadata file and then upload the file
   - __Tutorial Data Set: upload tab-delimited__ `tutorial.tsv`
 3. Check metadata *__Preview__* for accuracy (note: only first 5 samples are displayed)
@@ -45,24 +45,22 @@ __This tutorial can be completed using the Tutorial Data Set, which consists of 
 7. After all data files have uploaded, click *__Check Availability of Data Files__* to confirm all files are now on the Refinery server
 8. Click *__Upload Data Set__* to upload the new data set (metadata + data files)
 
-![UploadDataSet](https://github.com/refinery-platform/refinery-platform/blob/develop/docs/screenshots/UploadDataSet_Ann.png)
+![UploadDataSet](https://github.com/refinery-platform/refinery-platform/blob/develop/docs/screenshots/UploadDataSet_skitch.png)
 
 ## 3. Viewing a Data Set Summary in the Data Set Browser
 1. Return to the *__Launch Pad__* (Refinery homepage) and click on the newly uploaded data set title. The *__Data Set Browser__* will display a summary of the data set
-![DataSetBrowser](https://github.com/refinery-platform/refinery-platform/blob/develop/docs/screenshots/DataSetBrowser_Ann.png)
+![DataSetBrowser](https://github.com/refinery-platform/refinery-platform/blob/develop/docs/screenshots/DataSetBrowser_skitch.png)
 
 ## 4. Exploring Data Set Contents in the File Browser
-1. From the *__Data Set Browser__*, click *__View Content in File Browser__* to view the individual data files belonging to the data set:
+1. From the *__Data Set Browser__*, click *__View Content in File Browser__* (or the equivalent icon attached to the data set) to view the individual data files belonging to the data set:
   - Files can be filtered based on attributes using the *__Attribute Filter__* in the left-hand panel
   - Files can also be sorted according to attributes (both ascending and descending) by clicking the attribute names (i.e. column headers)
-  ![FileBrowser](https://github.com/refinery-platform/refinery-platform/blob/develop/docs/screenshots/FileBrowser_Ann.png)
-
-> __Direct Access of Dataset Content__: The file browser can be launched directly from the data set browser by clicking on the table icon to the right of the dataset name and summary. It is not required to open the preview first.
+  ![FileBrowser](https://github.com/refinery-platform/refinery-platform/blob/develop/docs/screenshots/FileBrowser_skitch.png)
 
 ## 5. Launching an Analysis
 1. From the *__File Browser__*, click the *__Analyze__* tab above the left-hand panel
-  - __Tutorial Data Set: follow this '5. Launching an Analysis' section twice, first launching the *FastQC* workflow and afterwards the *TF ChIP-seq analysis using MACS2: hg19* workflow (details below)__
-![Analyze](https://github.com/refinery-platform/refinery-platform/blob/develop/docs/screenshots/Analyze_Ann.png)
+  - __Tutorial Data Set: follow section 5 twice, first launching the *FastQC* workflow and afterwards the *TF ChIP-seq analysis using MACS2: hg19* workflow (details below)__
+![Analyze](https://github.com/refinery-platform/refinery-platform/blob/develop/docs/screenshots/Analyze_skitch.png)
 2. Select one of the analysis workflows below using the drop-down menu in the left-hand panel, follow their workflow-specific steps below, and then continue with step 3
   - *__FastQC__*
     1. Select the file(s) to analyze

@@ -1,8 +1,7 @@
 <div id="metadata-table-form">
-  <div id="dataUploadTutorialStep3" class="refinery-subheader m-t-1">
-    <h3>Provide Metadata File</h3>
+  <div class="refinery-subheader m-t-1">
+    <h3> Before You Get Started </h3>
   </div>
-  <div id="dataUploadTutorialStep4">
   <p>
     Before uploading a data set, you should follow these steps to prepare
     your metadata and data files:
@@ -35,6 +34,10 @@
     some time to prepare both metadata and data files to avoid having to
     repeat the process.
    </p>
+  <div id="dataUploadTutorialStep3" class="refinery-subheader m-t-1">
+    <h3>Provide Metadata File</h3>
+  </div>
+  <div id="dataUploadTutorialStep4">
   <p>
     Choose delimiter and then select tabular metadata table.
   </p>
@@ -206,7 +209,7 @@
               popover-trigger="focus"
               popover-append-to-body="true"
               tabindex="0">
-                <i class="fa fa-question-circle info-icon"></i>
+                <i class="fa fa-question-circle info-icon icon-only"></i>
             </a>
           </div>
         </div>
@@ -227,7 +230,7 @@
             </select>
           </div>
           <div class="col-sm-12 col-md-6 col-lg-8">
-            Select a containing the sample identifier or multiple columns
+            Select a column containing the sample identifier or multiple columns
             that will concatenated to form an identifier.
             <a
               popover-placement="right"
@@ -241,7 +244,7 @@
               popover-trigger="focus"
               popover-append-to-body="true"
               tabindex="0">
-                <i class="fa fa-question-circle info-icon"></i>
+                <i class="fa fa-question-circle info-icon icon-only"></i>
             </a>
           </div>
         </div>
@@ -269,7 +272,7 @@
               popover-trigger="focus"
               popover-append-to-body="true"
               tabindex="0">
-                <i class="fa fa-question-circle info-icon"></i>
+                <i class="fa fa-question-circle info-icon icon-only"></i>
             </a>
           </div>
         </div>
@@ -298,7 +301,7 @@
               popover-trigger="focus"
               popover-append-to-body="true"
               tabindex="0">
-                <i class="fa fa-question-circle info-icon"></i>
+                <i class="fa fa-question-circle info-icon icon-only"></i>
             </a>
           </div>
         </div>
@@ -331,41 +334,23 @@
                 popover-trigger="focus"
                 popover-append-to-body="true"
                 tabindex="0">
-                  <i class="fa fa-question-circle info-icon"></i>
+                  <i class="fa fa-question-circle info-icon icon-only"></i>
               </a>
             </div>
           </div>
 
-          <div class="row m-t-1-4 m-b-1-4">
-          <div class="col-sm-6 col-md-3 col-lg-2">
-            Make Public
-          </div>
-          <div class="col-sm-6 col-md-3 col-lg-2">
-            <input
-              type="checkbox"
-              name="is_public"
-              ng-model="metadataTable.makePublic"/>
-          </div>
-          <div class="col-sm-12 col-md-6 col-lg-8">
-            If selected, the data set will be made publicly
-            viewable when the import has completed. 
-            <br>Use this feature with care.</br>
-          </div>
-        </div>
-        </div>
-
         <div>
-          <div class="refinery-subheader m-t-1">
-            <div
+          <div
+            class="refinery-subheader m-t-1">
+            <span
               role="button"
               ng-click="isAdvancedCollapsed = !isAdvancedCollapsed">
               <i
               ng-class="isAdvancedCollapsed ? 'fa fa-caret-right' : 'fa fa-caret-down'"
               class="fa-pull-left"
-              id=""
               aria-hidden="true"></i>
               <h4>Advanced</h4>
-            </div>
+            </span>
           </div>
           <div uib-collapse="isAdvancedCollapsed">
             <div class="row m-t-1-4 m-b-1-4">
@@ -394,24 +379,8 @@
                   popover-trigger="focus"
                   popover-append-to-body="true"
                   tabindex="0">
-                    <i class="fa fa-question-circle info-icon"></i>
+                    <i class="fa fa-question-circle info-icon icon-only"></i>
                 </a>
-              </div>
-            </div>
-
-            <div class="row m-t-1-4 m-b-1-4">
-              <div class="col-sm-6 col-md-3 col-lg-2">
-                Base Path
-              </div>
-              <div class="col-sm-6 col-md-3 col-lg-2">
-                <input
-                  type="text"
-                  class="width-95"
-                  name="base_path"
-                  ng-model="metadataTable.basePath">
-              </div>
-              <div class="col-sm-12 col-md-6 col-lg-8">
-                Base path of your data file paths if using relative locations.
               </div>
             </div>
 
@@ -440,7 +409,7 @@
                   popover-trigger="focus"
                   popover-append-to-body="true"
                   tabindex="0">
-                    <i class="fa fa-question-circle info-icon"></i>
+                  <i class="fa fa-question-circle info-icon icon-only"></i>
                 </a>
               </div>
             </div>
@@ -488,7 +457,7 @@
                   popover-trigger="focus"
                   popover-append-to-body="true"
                   tabindex="0">
-                    <i class="fa fa-question-circle info-icon"></i>
+                    <i class="fa fa-question-circle info-icon icon-only"></i>
                 </a>
               </div>
             </div>
