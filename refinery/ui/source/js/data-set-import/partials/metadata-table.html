@@ -1,6 +1,6 @@
 <div id="metadata-table-form">
-  <div class="refinery-subheader m-t-1">
-    <h3> Before You Get Started </h3>
+  <div class="refinery-header m-t-1">
+    <h2> Before You Get Started </h2>
   </div>
   <p>
     Before uploading a data set, format the metadata and data files:
@@ -50,8 +50,8 @@
       </li>
     </ol>
    </p>
-  <div id="dataUploadTutorialStep3" class="refinery-subheader m-t-1">
-    <h3>Provide Metadata File</h3>
+  <div id="dataUploadTutorialStep3" class="refinery-header m-t-1">
+    <h2>Provide Metadata File</h2>
   </div>
   <div id="dataUploadTutorialStep4">
   <p>
@@ -63,9 +63,9 @@
       class="refinery-max z-1 refinery-spinner-bg"
       ng-if="metadataTable.isImporting">
       <div class="refinery-spinner-center">
-        <h3>
+        <h2>
           Data set is uploading.
-        </h3>
+        </h2>
         <div class="refinery-spinner"></div>
       </div>
     </div>
@@ -186,8 +186,8 @@
     </label>
 
     <div ng-if="metadataTable.file">
-      <div class="refinery-subheader">
-        <h4>Preview of Meta Data File(First 5 rows):</h4>
+      <div class="refinery-header m-t-1">
+        <h3>Preview of Meta Data File(First 5 rows):</h3>
       </div>
       <div
         class="gridStyle"
@@ -195,15 +195,15 @@
         ui-grid-resize-columns>
       </div>
 
-      <div class="refinery-subheader m-t-1">
-        <h3>Configure Metadata Import</h3>
+      <div class="refinery-header m-t-1">
+        <h2>Configure Metadata Import</h2>
       </div>
 
       <div ng-form="importMetadataTableForm">
-        <div class="refinery-subheader m-t-1">
-          <h4>
+        <div class="refinery-header m-t-1">
+          <h3>
             Required
-          </h4>
+          </h3>
         </div>
         <div class="row m-t-1-4 m-b-1-4">
           <div class="col-sm-6 col-md-3 col-lg-2">
@@ -327,8 +327,8 @@
         </div>
 
         <div>
-          <div class="refinery-subheader m-t-1">
-            <h4>Publishing</h4>
+          <div class="refinery-header m-t-1">
+            <h2>Publishing</h2>
           </div>
           <div class="row m-t-1-4 m-b-1-4">
             <div class="col-sm-6 col-md-3 col-lg-2">
@@ -361,7 +361,7 @@
 
         <div>
           <div
-            class="refinery-subheader m-t-1">
+            class="refinery-header m-t-1">
             <span
               role="button"
               ng-click="isAdvancedCollapsed = !isAdvancedCollapsed">
@@ -369,7 +369,7 @@
               ng-class="isAdvancedCollapsed ? 'fa fa-caret-right' : 'fa fa-caret-down'"
               class="fa-pull-left"
               aria-hidden="true"></i>
-              <h4>Advanced</h4>
+              <h2>Advanced</h2>
             </span>
           </div>
           <div uib-collapse="isAdvancedCollapsed">
@@ -490,8 +490,8 @@
       </div>
 
       <div>
-        <div class="refinery-subheader m-t-1">
-           <h3>Upload Data Set</h3>
+        <div class="refinery-header m-t-1">
+           <h2>Upload Data Set</h2>
         </div>
         <div class="row m-t-1-4 m-b-1-4">
           <div class="col-sm-12 col-md-6 col-lg-3">
