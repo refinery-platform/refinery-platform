@@ -114,6 +114,13 @@ class ParameterFactory(factory.django.DjangoModelFactory):
         model = "tool_manager.Parameter"
 
 
+class GalaxyParameterFactory(factory.django.DjangoModelFactory):
+    """Minimal representation of a GalaxyParameter for testing purposes"""
+
+    class Meta:
+        model = "tool_manager.GalaxyParameter"
+
+
 class OutputFileFactory(factory.django.DjangoModelFactory):
     """Minimal representation of an OutputFile for testing purposes"""
 
