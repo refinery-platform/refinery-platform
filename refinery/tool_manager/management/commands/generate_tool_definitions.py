@@ -27,12 +27,14 @@ class Command(BaseCommand):
         sys.stdout.write("Generating ToolDefinitions\n")
         workflow_engines = WorkflowEngine.objects.all()
         sys.stdout.write("{} workflow engines found.\n".format(
-            workflow_engines.count()))
+            workflow_engines.count())
+        )
 
         for engine in workflow_engines:
             sys.stdout.write(
                 "Generating ToolDefinitions from workflow engine {}\n"
-                .format(engine.name))
+                .format(engine.name)
+            )
 
             galaxy_connection = engine.instance.galaxy_connection()
             try:
@@ -65,7 +67,8 @@ class Command(BaseCommand):
                     raise CommandError(e)
                 except Exception as e:
                     raise CommandError(
-                        "Something unexpected happened: {}".format(e))
+                        "Something unexpected happened: {}".format(e)
+                    )
                 try:
                     create_tool_definition_from_workflow(workflow_data)
                 except Exception as e:

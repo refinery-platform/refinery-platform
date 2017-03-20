@@ -1,14 +1,17 @@
 import json
 import logging
 import os
+
 from django.contrib import admin
 from django.db import transaction
+
 from jsonschema import RefResolver, validate, ValidationError
 
 from factory_boy.django_model_factories import (FileRelationshipFactory,
                                                 InputFileFactory,
-                                                ToolDefinitionFactory,
-                                                OutputFileFactory)
+                                                OutputFileFactory,
+                                                ToolDefinitionFactory)
+
 from file_store.models import FileType
 
 logger = logging.getLogger(__name__)
@@ -54,13 +57,15 @@ def create_tool_definition_from_workflow(workflow_dictionary):
         description=workflow_dictionary["annotation"]["description"],
         tool_type=workflow_dictionary["tool_type"],
         file_relationship=create_file_relationship_nesting(
-            workflow_dictionary["annotation"])
+            workflow_dictionary["annotation"]
+        )
     )
 
     for output_file in workflow_dictionary["annotation"]["output_files"]:
         try:
             filetype = FileType.objects.get(
-                name=output_file["filetype"]["name"])
+                name=output_file["filetype"]["name"]
+            )
         except(FileType.DoesNotExist, FileType.MultipleObjectsReturned) as e:
             raise FileTypeValidationError(output_file["filetype"]["name"], e)
         else:
@@ -107,7 +112,8 @@ def create_file_relationship_nesting(workflow_annotation,
             workflow_annotation["file_relationship"]):
         file_relationship = FileRelationshipFactory(
             name=workflow_annotation["file_relationship"]["name"],
-            value_type=workflow_annotation["file_relationship"]["value_type"])
+            value_type=workflow_annotation["file_relationship"]["value_type"]
+        )
 
         # Add FileRelationship obj to array that we'll pass to
         # subsequent recursive calls. This is where we will
@@ -191,4 +197,5 @@ def validate_workflow_annotation(workflow_dictionary):
             raise RuntimeError(
                 "Workflow not properly annotated. Please read: "
                 "http://bit.ly/2mKczka for more information on how to "
-                "properly annotate your Galaxy-based workflows. {}".format(e))
+                "properly annotate your Galaxy-based workflows. {}".format(e)
+            )
