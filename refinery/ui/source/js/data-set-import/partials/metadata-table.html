@@ -494,7 +494,7 @@
            <h1>Upload Data Set</h1>
         </div>
         <div class="row m-t-1-4 m-b-1-4">
-          <div class="col-sm-12 col-md-6 col-lg-6">
+          <div class="col-sm-12 col-md-12 col-lg-12">
             <button
               class="refinery-base btn btn-default"
               ng-click="metadataTable.checkFiles()"
@@ -508,47 +508,47 @@
               metadataTable.areFilesUploading()">
               Upload Data Set
             </button>
-            </div>
-          <div class="col-sm-12 col-md-6 col-lg-4">
-            <span class="text-warning"
-              ng-if="metadataTable.areFilesInQueue()">
-              <i class="fa fa-warning" aria-hidden="true"></i>
-              All data files have not been uploaded.
-            </span>
-            <span
-              ng-messages="importMetadataTableForm.title.$error"
-              role="alert"
-              class="text-danger">
-              <div ng-message="required">
+            <span class="m-l-1">
+              <span class="text-warning"
+                ng-if="metadataTable.areFilesInQueue()">
                 <i class="fa fa-warning" aria-hidden="true"></i>
-                Required: Enter a title.
-              </div>
-              <div ng-message="minlength">
-                <i class="fa fa-warning" aria-hidden="true"></i>
-                Error: Title is too short.
-              </div>
-              <div ng-message="maxlength">
-                <i class="fa fa-warning" aria-hidden="true"></i>
-                Error: Title is too long.
-              </div>
-            </span>
-            <span
-              ng-messages="importMetadataTableForm.source_column_index.$error"
-              role="alert"
-              class="text-danger">
-              <div ng-message="required">
-                <i class="fa fa-warning" aria-hidden="true"></i>
-                Required: Select a Sample Identifier.
-              </div>
-            </span>
-            <span
-              ng-messages="importMetadataTableForm.slug.$error"
-              role="alert"
-              class="text-danger">
-              <div ng-message="pattern">
-                <i class="fa fa-warning" aria-hidden="true"></i>
-                Invalid URL shortcut, can only contain alphanumeric
-                characters and "_".
+                All data files have not been uploaded.
+              </span>
+              <span
+                ng-messages="importMetadataTableForm.title.$error"
+                role="alert"
+                class="text-danger">
+                <div ng-message="required">
+                  <i class="fa fa-warning" aria-hidden="true"></i>
+                  Required: Enter a title.
+                </div>
+                <div ng-message="minlength">
+                  <i class="fa fa-warning" aria-hidden="true"></i>
+                  Error: Title is too short.
+                </div>
+                <div ng-message="maxlength">
+                  <i class="fa fa-warning" aria-hidden="true"></i>
+                  Error: Title is too long.
+                </div>
+              </span>
+              <span
+                ng-messages="importMetadataTableForm.source_column_index.$error"
+                role="alert"
+                class="text-danger">
+                <div ng-message="required">
+                  <i class="fa fa-warning" aria-hidden="true"></i>
+                  Required: Select a Sample Identifier.
+                </div>
+              </span>
+              <span
+                ng-messages="importMetadataTableForm.slug.$error"
+                role="alert"
+                class="text-danger">
+                <div ng-message="pattern">
+                  <i class="fa fa-warning" aria-hidden="true"></i>
+                  Invalid URL shortcut, can only contain alphanumeric
+                  characters and "_".
+              </span>
             </span>
           </div>
         </div>
