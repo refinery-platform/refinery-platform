@@ -122,7 +122,7 @@ class DataSetsPanelTestCase(SeleniumTestBase):
                 "ISA-Tab Metadata",
                 "PROVIDE METADATA FILE",
                 "Download an example tabular metadata file.",
-                "The first row of the table needs to contain column headers"]
+                "Must contain column headers in the first row of the table"]
         )
 
 
