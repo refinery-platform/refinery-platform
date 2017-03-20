@@ -491,7 +491,7 @@
 
       <div>
         <div class="refinery-subheader m-t-1">
-           <h1>Upload Data Set</h1>
+           <h1>Complete Submission</h1>
         </div>
         <div class="row m-t-1-4 m-b-1-4">
           <div class="col-sm-12 col-md-12 col-lg-12">
@@ -499,14 +499,14 @@
               class="refinery-base btn btn-default"
               ng-click="metadataTable.checkFiles()"
               ng-disabled="!metadataTable.dataFileColumn">
-              Missing Data Files
+              Check Data Files
             </button>
             <button
               class="refinery-base btn btn-primary"
               ng-click="metadataTable.startImport()"
               ng-disabled="importMetadataTableForm.$invalid ||
               metadataTable.areFilesUploading()">
-              Upload Data Set
+              Submit
             </button>
             <span class="m-l-1">
               <span class="text-warning"
