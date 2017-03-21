@@ -12,7 +12,7 @@ To follow the steps of this tutorial, you will need a data set consisting of dat
 > - [control (FASTQ)][input.fastq]
 > - [experimental (FASTQ)][nanog.fastq]
 > - [metadata (TSV)][tutorial.tsv]
-
+>
 > __Follow all steps (except creating a metadata file as it already exists) and note the bullet points after some steps with expanded instructions specific to the Tutorial Data Set.__
 
 ## 0. Accessing Refinery
