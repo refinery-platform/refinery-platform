@@ -58,12 +58,6 @@ angular
     refineryApi: '/api/v1',
     refineryApiV2: '/api/v2',
     solrApi: '/solr',
-    staticUrl: function () {
-      if (window.djangoApp) {
-        return window.djangoApp.staticURL;
-      }
-      return '';
-    },
     treemap: {
       singleRequestLimit: 200
     },
