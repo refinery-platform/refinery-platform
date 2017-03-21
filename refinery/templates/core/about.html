@@ -15,9 +15,8 @@
 
 {% block content %}
 <div class="row">
-		<div class="col-md-8">
-			<div class="row">
-				<div class="refinery-panel refinery-panel-content scrollable jquery-full-height">
+  <div class="col-md-8">
+    <div class="refinery-panel refinery-panel-content scrollable jquery-full-height">
 					<div class="refinery-header">
 						<span class="refinery-header-left">
 							<h3>Background</h3>
@@ -56,23 +55,20 @@
                     <p class="CURRENT_COMMIT">{{ CURRENT_COMMIT }}</p>
 
 			</div>
-            </div>
-        </div>
-		<div class="col-md-4">
-			<div class="row">
-				<div class="refinery-panel refinery-panel-content scrollable jquery-full-height">
+  </div>
+  <div class="col-md-4">
+    <div class="refinery-panel refinery-panel-content scrollable jquery-full-height">
 
-					<div class="refinery-header">
-						<span class="refinery-header-left">
-							<h3>Team</h3>
-						</span>
-					</div>
+      <div class="refinery-header">
+        <span class="refinery-header-left">
+          <h3>Team</h3>
+        </span>
+      </div>
 
-					<p>
-						{% flatblock "about.website.team" evaluated %}
-					</p>
-				</div>
-			</div>
-		</div>
+      <p>
+        {% flatblock "about.website.team" evaluated %}
+      </p>
+    </div>
+  </div>
 </div>
 {% endblock %}

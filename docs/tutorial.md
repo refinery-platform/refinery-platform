@@ -8,10 +8,15 @@ __Preparation__
 
 To follow the steps of this tutorial, you will need a data set consisting of data files and a metadata file that is referencing your files.
 
-__This tutorial can be completed using the Tutorial Data Set, which consists of sample ChIP-seq data ([input control][input.fastq] and [experimental][nanog.fastq] FASTQ files -- download both) and their associated [metadata file][tutorial.tsv]. Follow all steps (except creating a metadata file as it already exists) and note the bullet points after some steps with expanded instructions specific to the Tutorial Data Set.__
+> __This tutorial can be followed using the Tutorial Data Set, which consists of sample ChIP-seq data and their associated metadata file -- download them here:__
+> - [control (FASTQ)][input.fastq]
+> - [experimental (FASTQ)][nanog.fastq]
+> - [metadata (TSV)][tutorial.tsv]
+>
+> __Follow all steps (except creating a metadata file as it already exists) and note the bullet points after some steps with expanded instructions specific to the Tutorial Data Set.__
 
 ## 0. Accessing Refinery
-1. Go to the [Refinery Launch Pad][scc-home]
+- Go to the [Refinery Launch Pad][scc-home]
   - __To create a new account__:
     1. Click *__Register__* at the top right of the navigation bar (top of page)
     2. Provide the required details and then click the *__Register__* button below
@@ -23,7 +28,13 @@ __This tutorial can be completed using the Tutorial Data Set, which consists of 
   ![NavBar](https://github.com/refinery-platform/refinery-platform/blob/develop/docs/screenshots/NavBar_skitch.png)
 
 ## 1. Creating a Metadata File
-1. Compile all the metadata to be associated with the data set and then organize these metadata into a delimited (e.g. tab-delimited) text file. A template metadata file can be found [here][refinery-sample-metadata.tsv] -- note the required attributes (sample name, data file, and organism). Additional attributes can be appended as needed.
+- Organize all the metadata to be associated with the data set into a delimited (e.g. tab-delimited) text file. This metadata table
+  - must have at least 3 columns to describe *(1) sample identifiers, (2) filenames, (3) species identifiers*
+  - must contain column names in the first row of the table
+  
+- A template metadata file can be found [here][refinery-sample-metadata.tsv].
+  - __Column names__ (called __attributes__ throughout Refinery) can be freely chosen but *must be unique*, *cannot contain special characters*, and *should be descriptive yet concise*
+  - __Column order__ 
   - __Tutorial Data Set: tab-delimited__ `tutorial.tsv` __metadata file already created__
 
 > __Column Order__: The attribute and file name columns in the metadata file can be provided in any order and the column headers can be chosen by the investigator. However, given that the data set importer (see next section below) will map column 1 to _sample name_, column 2 to _data file_, and column 3 to _organism_, it can save time during import if this information is provided in the first three columns in this order.
@@ -31,16 +42,16 @@ __This tutorial can be completed using the Tutorial Data Set, which consists of 
 
 > __Column Names__: The column names provided in the metadata file can be freely chosen by the analyst and will be used to identify attributes throughout the Refinery application. They _must be unique_, _must not contain any special characters_, and _should be descriptive yet concise_.
 
-## 2. Uploading a Data Set 
+## 2. Uploading a Data Set
 1. From the *__Launch Pad__*, Click *__Upload__* from the *__Data Sets__* panel
-![PanelHeaders](https://github.com/refinery-platform/refinery-platform/blob/develop/docs/screenshots/PanelHeaders_skitch.png)
+![PanelHeaders](screenshots/PanelHeaders_skitch.png)
 2. First choose delimiter used in the metadata file and then upload the file
-  - __Tutorial Data Set: upload tab-delimited__ `tutorial.tsv`
+    > __Tutorial Data Set:__ upload tab-delimited `tutorial.tsv`
 3. Check metadata *__Preview__* for accuracy (note: only first 5 samples are displayed)
 4. Review *__Configure Metadata Import__* and make changes as needed
-  - __Tutorial Data Set: no changes needed__
+    > __Tutorial Data Set:__ no changes needed
 5. Click *__Add files…__* button under *__Upload Data Files__* and select data files corresponding to the metadata (note: wait for MD5 calculations, which ensure successful data file uploads, to complete)
-  - __Tutorial Data Set: upload__ `input.fastq` __and__ `nanog.fastq` __data files__
+    > __Tutorial Data Set:__ upload `input.fastq` and `nanog.fastq` data files
 6. Click *__Start upload__* to begin uploading all selected data files
 7. After all data files have uploaded, click *__Check Availability of Data Files__* to confirm all files are now on the Refinery server
 8. Click *__Upload Data Set__* to upload the new data set (metadata + data files)
@@ -49,20 +60,18 @@ __This tutorial can be completed using the Tutorial Data Set, which consists of 
 
 ## 3. Viewing a Data Set Summary in the Data Set Browser
 1. Return to the *__Launch Pad__* (Refinery homepage) and click on the newly uploaded data set title. The *__Data Set Browser__* will display a summary of the data set
-![DataSetBrowser](https://github.com/refinery-platform/refinery-platform/blob/develop/docs/screenshots/DataSetBrowser_Ann.png)
+![DataSetBrowser](https://github.com/refinery-platform/refinery-platform/blob/develop/docs/screenshots/DataSetBrowser_skitch.png)
 
 ## 4. Exploring Data Set Contents in the File Browser
-1. From the *__Data Set Browser__*, click *__View Content in File Browser__* to view the individual data files belonging to the data set:
+1. From the *__Data Set Browser__*, click *__View Content in File Browser__* (or the equivalent icon attached to the data set) to view the individual data files belonging to the data set:
   - Files can be filtered based on attributes using the *__Attribute Filter__* in the left-hand panel
   - Files can also be sorted according to attributes (both ascending and descending) by clicking the attribute names (i.e. column headers)
-  ![FileBrowser](https://github.com/refinery-platform/refinery-platform/blob/develop/docs/screenshots/FileBrowser_Ann.png)
-
-> __Direct Access of Dataset Content__: The file browser can be launched directly from the data set browser by clicking on the table icon to the right of the dataset name and summary. It is not required to open the preview first.
+  ![FileBrowser](https://github.com/refinery-platform/refinery-platform/blob/develop/docs/screenshots/FileBrowser_skitch.png)
 
 ## 5. Launching an Analysis
 1. From the *__File Browser__*, click the *__Analyze__* tab above the left-hand panel
-  - __Tutorial Data Set: follow this '5. Launching an Analysis' section twice, first launching the *FastQC* workflow and afterwards the *TF ChIP-seq analysis using MACS2: hg19* workflow (details below)__
-![Analyze](https://github.com/refinery-platform/refinery-platform/blob/develop/docs/screenshots/Analyze_Ann.png)
+  - __Tutorial Data Set: follow section 5 twice, first launching the *FastQC* workflow and afterwards the *TF ChIP-seq analysis using MACS2: hg19* workflow (details below)__
+![Analyze](https://github.com/refinery-platform/refinery-platform/blob/develop/docs/screenshots/Analyze_skitch.png)
 2. Select one of the analysis workflows below using the drop-down menu in the left-hand panel, follow their workflow-specific steps below, and then continue with step 3
   - *__FastQC__*
     1. Select the file(s) to analyze
