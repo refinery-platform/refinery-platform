@@ -1,12 +1,7 @@
 from datetime import datetime
 import uuid as uuid_builtin
 
-import django
 import factory
-
-# Call to django.setup() needed due to the new handling of the AppRegistry in
-# Django 1.7
-django.setup()
 
 
 class DataSetFactory(factory.django.DjangoModelFactory):
@@ -89,3 +84,59 @@ class InvestigationFactory(NodeCollectionFactory):
     """Minimal representation of a Investigation for testing purposes"""
     class Meta:
         model = "data_set_manager.Investigation"
+
+
+class ToolDefinitionFactory(factory.django.DjangoModelFactory):
+    """Minimal representation of a ToolDefinition for testing purposes"""
+
+    class Meta:
+        model = "tool_manager.ToolDefinition"
+
+
+class FileRelationshipFactory(factory.django.DjangoModelFactory):
+    """Minimal representation of a FileRelationship for testing purposes"""
+
+    class Meta:
+        model = "tool_manager.FileRelationship"
+
+
+class InputFileFactory(factory.django.DjangoModelFactory):
+    """Minimal representation of an InputFile for testing purposes"""
+
+    class Meta:
+        model = "tool_manager.InputFile"
+
+
+class ParameterFactory(factory.django.DjangoModelFactory):
+    """Minimal representation of a Parameter for testing purposes"""
+
+    class Meta:
+        model = "tool_manager.Parameter"
+
+
+class GalaxyParameterFactory(factory.django.DjangoModelFactory):
+    """Minimal representation of a GalaxyParameter for testing purposes"""
+
+    class Meta:
+        model = "tool_manager.GalaxyParameter"
+
+
+class OutputFileFactory(factory.django.DjangoModelFactory):
+    """Minimal representation of an OutputFile for testing purposes"""
+
+    class Meta:
+        model = "tool_manager.OutputFile"
+
+
+class FileTypeFactory(factory.django.DjangoModelFactory):
+    """Minimal representation of a FileType for testing purposes"""
+
+    class Meta:
+        model = "file_store.FileType"
+
+
+class FileExtensionFactory(factory.django.DjangoModelFactory):
+    """Minimal representation of a FileExtension for testing purposes"""
+
+    class Meta:
+        model = "file_store.FileExtension"

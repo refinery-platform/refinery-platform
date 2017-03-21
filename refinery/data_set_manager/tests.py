@@ -19,7 +19,6 @@ from .utils import (create_facet_filter_query, customize_attribute_response,
                     insert_facet_field_filter, is_field_in_hidden_list,
                     objectify_facet_field_counts, update_attribute_order_ranks)
 from .views import Assays, AssaysAttributes
-from core.management.commands.create_public_group import create_public_group
 from core.models import DataSet, ExtendedGroup, InvestigationLink
 from core.views import NodeViewSet
 from file_store.models import FileStoreItem
@@ -99,8 +98,6 @@ class AssaysAttributesAPITests(APITestCase):
     def setUp(self):
         self.user1 = User.objects.create_user("ownerJane", '', 'test1234')
         self.user2 = User.objects.create_user("guestName", '', 'test1234')
-        self.user1.save()
-        self.user2.save()
         self.factory = APIRequestFactory()
         investigation = Investigation.objects.create()
         self.data_set = DataSet.objects.create(
@@ -608,15 +605,6 @@ class UtilitiesTest(TestCase):
         self.url_root = '/api/v2/assays'
         self.valid_uuid = self.assay.uuid
         self.invalid_uuid = 'xxxxxxxx'
-
-    def tearDown(self):
-        User.objects.all().delete()
-        Assay.objects.all().delete()
-        Study.objects.all().delete()
-        Investigation.objects.all().delete()
-        DataSet.objects.all().delete()
-        InvestigationLink.objects.all().delete()
-        AttributeOrder.objects.all().delete()
 
     def test_objectify_facet_field_counts(self):
         facet_field_array = {'WORKFLOW': ['1_test_04', 1,
@@ -1396,9 +1384,6 @@ class NodeClassMethodTests(TestCase):
 class NodeApiV2Tests(APITestCase):
 
     def setUp(self):
-
-        create_public_group()
-
         self.public_group_name = ExtendedGroup.objects.public_group().name
         self.username = 'coffee_lover'
         self.password = 'coffeecoffee'
@@ -1459,24 +1444,15 @@ class NodeApiV2Tests(APITestCase):
         )
         self.options_response = self.view(self.options_request)
 
-    def tearDown(self):
-        Node.objects.all().delete()
-        User.objects.all().delete()
-        Study.objects.all().delete()
-        Assay.objects.all().delete()
-        Investigation.objects.all().delete()
-
     def test_get_request(self):
         self.assertIsNotNone(self.get_response.data[0])
 
     def test_get_request_anonymous_user(self):
         self.client.logout()
-
         self.new_get_request = self.factory.get(self.url_root)
         self.new_get_response = self.view(self.new_get_request)
         self.assertIsNotNone(self.new_get_response.data[0])
-        self.assertEqual(self.new_get_request.user.id,
-                         None)
+        self.assertEqual(self.new_get_request.user.id, None)
 
     def test_unallowed_http_verbs(self):
         self.assertEqual(

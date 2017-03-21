@@ -1775,11 +1775,6 @@ class UserTutorialsTest(TestCase):
         )
         self.userprofile = UserProfile.objects.get(user=self.user)
 
-    def tearDown(self):
-        User.objects.all().delete()
-        UserProfile.objects.all().delete()
-        Tutorials.objects.all().delete()
-
     def test_tutorial_creation(self):
         self.assertIsNotNone(
             Tutorials.objects.get(user_profile=self.userprofile)
@@ -2050,14 +2045,6 @@ class DataSetApiV2Tests(APITestCase):
             format="json"
         )
         self.options_response = self.view(self.options_request)
-
-    def tearDown(self):
-        Node.objects.all().delete()
-        User.objects.all().delete()
-        Study.objects.all().delete()
-        Assay.objects.all().delete()
-        DataSet.objects.all().delete()
-        Investigation.objects.all().delete()
 
     def test_unallowed_http_verbs(self):
         self.assertEqual(

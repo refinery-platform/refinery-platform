@@ -1,0 +1,20 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema",
+  "type": "object",
+  "required": [
+    "galaxy_tool_id",
+    "galaxy_workflow_step",
+    "galaxy_tool_parameter"
+  ],
+  "properties": {
+    "galaxy_tool_id": {
+      "type": "string"
+    },
+    "galaxy_workflow_step": {
+      "type": "string"
+    },
+    "galaxy_tool_parameter": {
+      "type": "string"
+    }
+  }
+}

@@ -1,0 +1,33 @@
+{ "name": "Test LIST",
+  "tool_type": "WORKFLOW",
+  "annotation": {
+    "refinery_type": "analysis",
+    "outputs": [
+      {
+        "filetypes": [
+          {
+            "name": "FASTQ"
+          }
+        ],
+        "name": "Cool Input File",
+        "description": "Cool Input File Description"
+      }
+    ],
+    "relationship": {
+      "relationship": {},
+      "value_type": "LIST",
+      "name": "Flat list of N Samples",
+      "inputs": [
+        {
+          "filetypes": [
+          {
+            "name": "FASTQ"
+          }
+        ],
+          "name": "Cool Input File",
+          "description": "Cool Input File Description"
+        }
+      ]
+    }
+  }
+}
