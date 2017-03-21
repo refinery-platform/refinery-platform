@@ -10,8 +10,8 @@
 
   function InputGroupCtrl ($scope) {
     var vm = this;
-    vm.tool = {};
-    vm.toolType = '';
+    vm.tool = {}; // selected tool displayed in panel
+    vm.toolType = ''; // workflow vs visualization
     vm.isNavCollapsed = false;
 
     /*
@@ -19,7 +19,6 @@
    * Watchers
    * ---------------------------------------------------------
    */
-
     vm.$onInit = function () {
       $scope.$watchCollection(
         function () {
@@ -28,7 +27,7 @@
         function () {
           angular.copy(vm.displayCtrl.selectedTool, vm.tool);
           if (vm.tool.toolType === 'Workflow') {
-            vm.toolType = 'Workflow';
+            vm.toolType = vm.tool.toolType;
           }
         }
       );
