@@ -13,6 +13,13 @@
     vm.tool = {};
     vm.isToolInfoCollapsed = false;
 
+
+   /*
+   * ---------------------------------------------------------
+   * Watchers
+   * ---------------------------------------------------------
+   */
+
     vm.$onInit = function () {
       $scope.$watchCollection(
         function () {

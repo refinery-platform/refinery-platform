@@ -14,6 +14,12 @@
     vm.toolType = '';
     vm.isNavCollapsed = false;
 
+    /*
+   * ---------------------------------------------------------
+   * Watchers
+   * ---------------------------------------------------------
+   */
+
     vm.$onInit = function () {
       $scope.$watchCollection(
         function () {

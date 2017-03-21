@@ -56,6 +56,12 @@
       resetGridService.setRefreshGridFlag(true);
     }
 
+    /*
+   * ---------------------------------------------------------
+   * Watchers
+   * ---------------------------------------------------------
+   */
+
     vm.$onInit = function () {
       $scope.$watchCollection(
         function () {
