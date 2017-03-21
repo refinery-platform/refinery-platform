@@ -19,7 +19,6 @@
    * Watchers
    * ---------------------------------------------------------
    */
-
     vm.$onInit = function () {
       $scope.$watchCollection(
         function () {

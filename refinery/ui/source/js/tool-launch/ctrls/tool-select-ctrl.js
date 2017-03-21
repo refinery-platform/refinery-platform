@@ -9,6 +9,7 @@
 
   function ToolSelectCtrl (toolsService) {
     var vm = this;
+    vm.refreshToolList = refreshToolList;
     vm.selectedTool = { select: null };
     vm.tools = toolsService.toolList;
     vm.updateTool = updateTool;
