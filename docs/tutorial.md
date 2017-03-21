@@ -31,16 +31,16 @@ __This tutorial can be completed using the Tutorial Data Set, which consists of 
 
 > __Column Names__: The column names provided in the metadata file can be freely chosen by the analyst and will be used to identify attributes throughout the Refinery application. They _must be unique_, _must not contain any special characters_, and _should be descriptive yet concise_.
 
-## 2. Uploading a Data Set 
+## 2. Uploading a Data Set
 1. From the *__Launch Pad__*, Click *__Upload__* from the *__Data Sets__* panel
-![PanelHeaders](https://github.com/refinery-platform/refinery-platform/blob/develop/docs/screenshots/PanelHeaders_skitch.png)
+![PanelHeaders](screenshots/PanelHeaders_skitch.png)
 2. First choose delimiter used in the metadata file and then upload the file
-  - __Tutorial Data Set: upload tab-delimited__ `tutorial.tsv`
+    > __Tutorial Data Set: upload tab-delimited__ `tutorial.tsv`
 3. Check metadata *__Preview__* for accuracy (note: only first 5 samples are displayed)
 4. Review *__Configure Metadata Import__* and make changes as needed
-  - __Tutorial Data Set: no changes needed__
+	- __Tutorial Data Set: no changes needed__
 5. Click *__Add files…__* button under *__Upload Data Files__* and select data files corresponding to the metadata (note: wait for MD5 calculations, which ensure successful data file uploads, to complete)
-  - __Tutorial Data Set: upload__ `input.fastq` __and__ `nanog.fastq` __data files__
+	- __Tutorial Data Set: upload__ `input.fastq` __and__ `nanog.fastq` __data files__
 6. Click *__Start upload__* to begin uploading all selected data files
 7. After all data files have uploaded, click *__Check Availability of Data Files__* to confirm all files are now on the Refinery server
 8. Click *__Upload Data Set__* to upload the new data set (metadata + data files)
