@@ -3,6 +3,9 @@
 </div>
 <div id="check_availability_overflow" class="modal-body">
   <p>
+    The following files are listed in the “Data File” column of your metadata file,
+    but have not yet been uploaded to Refinery. In order to upload these files,
+    please refer to the “Upload Data Files" section in the upload form.
   	<ul>
   		<li ng-repeat="item in modal.config.items track by $index">{{ ::item }}</li>
 	</ul>
