@@ -41,12 +41,9 @@ class Parameter(models.Model):
 
 class GalaxyParameter(Parameter):
     """
-    Child of Parameter with fields specific to Galaxy tool parameter
+    Child of Parameter with fields specific to Galaxy tool parameters
     """
-    # ID of Galaxy tool that the parameter belongs to
-    galaxy_tool_id = models.TextField(max_length=300)
     galaxy_workflow_step = models.IntegerField()
-    galaxy_tool_parameter = models.TextField(max_length=100)
 
 
 class FileRelationship(models.Model):
