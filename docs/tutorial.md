@@ -8,10 +8,14 @@ __Preparation__
 
 To follow the steps of this tutorial, you will need a data set consisting of data files and a metadata file that is referencing your files.
 
-__This tutorial can be completed using the Tutorial Data Set, which consists of sample ChIP-seq data ([input control][input.fastq] and [experimental][nanog.fastq] FASTQ files -- download both) and their associated [metadata file][tutorial.tsv]. Follow all steps (except creating a metadata file as it already exists) and note the bullet points after some steps with expanded instructions specific to the Tutorial Data Set.__
+> __This tutorial can be followed using the Tutorial Data Set, which consists of sample ChIP-seq data and their associated metadata file -- download them here:__
+  - [control (FASTQ)][input.fastq]
+  - [experimental (FASTQ)][nanog.fastq]
+  - [metadata (TSV)][tutorial.tsv]
+> __Follow all steps (except creating a metadata file as it already exists) and note the bullet points after some steps with expanded instructions specific to the Tutorial Data Set.__
 
 ## 0. Accessing Refinery
-1. Go to the [Refinery Launch Pad][scc-home]
+- Go to the [Refinery Launch Pad][scc-home]
   - __To create a new account__:
     1. Click *__Register__* at the top right of the navigation bar (top of page)
     2. Provide the required details and then click the *__Register__* button below
@@ -23,7 +27,13 @@ __This tutorial can be completed using the Tutorial Data Set, which consists of 
   ![NavBar](https://github.com/refinery-platform/refinery-platform/blob/develop/docs/screenshots/NavBar_skitch.png)
 
 ## 1. Creating a Metadata File
-1. Compile all the metadata to be associated with the data set and then organize these metadata into a delimited (e.g. tab-delimited) text file. A template metadata file can be found [here][refinery-sample-metadata.tsv] -- note the required attributes (sample name, data file, and organism). Additional attributes can be appended as needed.
+- Organize all the metadata to be associated with the data set into a delimited (e.g. tab-delimited) text file. This metadata table
+  - must have at least 3 columns to describe *(1) sample identifiers, (2) filenames, (3) species identifiers*
+  - must contain column names in the first row of the table
+  
+- A template metadata file can be found [here][refinery-sample-metadata.tsv].
+  - __Column names__ (called __attributes__ throughout Refinery) can be freely chosen but *must be unique*, *cannot contain special characters*, and *should be descriptive yet concise*
+  - __Column order__ 
   - __Tutorial Data Set: tab-delimited__ `tutorial.tsv` __metadata file already created__
 
 > __Column Order__: The attribute and file name columns in the metadata file can be provided in any order and the column headers can be chosen by the investigator. However, given that the data set importer (see next section below) will map column 1 to _sample name_, column 2 to _data file_, and column 3 to _organism_, it can save time during import if this information is provided in the first three columns in this order.
@@ -35,12 +45,12 @@ __This tutorial can be completed using the Tutorial Data Set, which consists of 
 1. From the *__Launch Pad__*, Click *__Upload__* from the *__Data Sets__* panel
 ![PanelHeaders](screenshots/PanelHeaders_skitch.png)
 2. First choose delimiter used in the metadata file and then upload the file
-    > __Tutorial Data Set: upload tab-delimited__ `tutorial.tsv`
+    > __Tutorial Data Set: upload tab-delimited `tutorial.tsv`__
 3. Check metadata *__Preview__* for accuracy (note: only first 5 samples are displayed)
 4. Review *__Configure Metadata Import__* and make changes as needed
     > __Tutorial Data Set: no changes needed__
 5. Click *__Add files…__* button under *__Upload Data Files__* and select data files corresponding to the metadata (note: wait for MD5 calculations, which ensure successful data file uploads, to complete)
-    > __Tutorial Data Set: upload__ `input.fastq` __and__ `nanog.fastq` __data files__
+    > __Tutorial Data Set: upload `input.fastq` and `nanog.fastq` data files__
 6. Click *__Start upload__* to begin uploading all selected data files
 7. After all data files have uploaded, click *__Check Availability of Data Files__* to confirm all files are now on the Refinery server
 8. Click *__Upload Data Set__* to upload the new data set (metadata + data files)
