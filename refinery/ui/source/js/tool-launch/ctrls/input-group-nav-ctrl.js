@@ -22,7 +22,7 @@
         function () {
           angular.copy(vm.displayCtrl.selectedTool, vm.tool);
           if (vm.tool.toolType === 'Workflow') {
-            vm.toolType = 'singleInputWorkflow';
+            vm.toolType = 'Workflow';
           }
         }
       );
