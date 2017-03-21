@@ -9,9 +9,9 @@ __Preparation__
 To follow the steps of this tutorial, you will need a data set consisting of data files and a metadata file that is referencing your files.
 
 > __This tutorial can be followed using the Tutorial Data Set, which consists of sample ChIP-seq data and their associated metadata file -- download them here:__
-  - [control (FASTQ)][input.fastq]
-  - [experimental (FASTQ)][nanog.fastq]
-  - [metadata (TSV)][tutorial.tsv]
+> - [control (FASTQ)][input.fastq]
+> - [experimental (FASTQ)][nanog.fastq]
+> - [metadata (TSV)][tutorial.tsv]
 > __Follow all steps (except creating a metadata file as it already exists) and note the bullet points after some steps with expanded instructions specific to the Tutorial Data Set.__
 
 ## 0. Accessing Refinery
