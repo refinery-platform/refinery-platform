@@ -12,12 +12,21 @@
     vm.toolList = toolsService.toolList;
     vm.selectedTool = {};
     vm.isToolSelected = false;
+    getToolsDefinitions();
+
 
     /*
      * ---------------------------------------------------------
      * Methods Definitions
      * ---------------------------------------------------------
      */
+
+    function getToolsDefinitions () {
+      console.log('update get tools Definitions');
+      toolsService.getTools().then(function () {
+        vm.toolList = toolsService.toolList;
+      });
+    }
 
     /*
     * ---------------------------------------------------------

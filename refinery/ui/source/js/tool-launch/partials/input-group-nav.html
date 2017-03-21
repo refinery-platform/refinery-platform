@@ -30,10 +30,31 @@
       role="tabpanel"
       aria-labelledby="tool-body">
       <div class="panel-body">
+        <div ng-if="$ctrl.tool.file_relationship.file_relationship.length > 0">
          <input-group-cart collection='$ctrl.tool.file_relationship'></input-group-cart>
-        <div ng-if="$ctrl.tool.file_relationship.input_files.length > 0">
-          {{ $ctrl.tool.file_relationship.input_files }}
         </div>
+        <div ng-if="$ctrl.tool.file_relationship.file_relationship.length == 0">
+          <ul>
+            <li ng-repeat="inputFile in $ctrl.tool.file_relationship.input_files track by $index">
+              {{ inputFile.name }}:
+              <
+              <div
+                class='fileTypes'
+                ng-repeat="fileObj in inputFile.allowed_filetypes">
+                {{fileObj.name}}
+                <span ng-if="$index < inputFile.allowed_filetypes.length - 1">
+                  ,
+                </span>
+              </div>
+              >
+              <br>
+              <em>{{ inputFile.description }}</em>
+              <div ng-if="$index < $ctrl.tool.file_relationship.input_files.length - 1">
+                <hr>
+              </div>
+            </li>
+          </ul>
+          </div>
       </div>
     </div>
   </div>
