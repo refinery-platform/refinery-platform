@@ -3,12 +3,12 @@
 
   angular
     .module('refineryToolLaunch')
-    .controller('InputGroupNavCtrl', InputGroupNavCtrl);
+    .controller('InputGroupCtrl', InputGroupCtrl);
 
-  InputGroupNavCtrl.$inject = ['$scope'];
+  InputGroupCtrl.$inject = ['$scope'];
 
 
-  function InputGroupNavCtrl ($scope) {
+  function InputGroupCtrl ($scope) {
     var vm = this;
     vm.tool = {};
     vm.toolType = '';
