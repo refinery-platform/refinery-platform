@@ -30,19 +30,16 @@ To follow the steps of this tutorial, you will need a data set consisting of dat
   ![NavBar](screenshots/NavBar_skitch.png)
 
 ## 1. Creating a Metadata File
-- Organize all the metadata to be associated with the data set into a delimited (e.g. tab-delimited) text file. This metadata table
-  - must have at least 3 columns to describe *(1) sample identifiers, (2) filenames, (3) species identifiers*
-    - Tip: Column order can be arbitrary but assigning these attributes to the first 3 columns of the table (same order as listed above) will slightly simplify the data set upload
-  - must provide column names as its first row
-  - must use column names that are unique and do *not* contain special characters
-    - Tip: Column names can be arbitrary but those that are descriptive yet concise will be most effective
-    
-  
-- A template metadata file can be found [here][refinery-sample-metadata.tsv].
-  - __Column order__ 
-  - __Tutorial Data Set: tab-delimited__ `tutorial.tsv` __metadata file already created__
+- Create a metadata table within a delimited (e.g. tab-delimited) text file in which rows correspond to data files to be uploaded and columns provide metadata attributes, respectively (a template metadata file can be found [here][refinery-sample-metadata.tsv]). The naming and ordering of the columns can be arbitrary, but the metadata table 
+  - *must* have 3 columns to describe *(1) sample identifiers, (2) filenames, (3) species identifiers*
+    - Tip 1: Assigning these attributes to the first 3 columns of the table (same order as listed above) will slightly simplify the data set upload
+    - Tip 2: *Filenames* should point to data files either located on your local computer or on a web server accessible via public URLs
+  - can contain as many additional columns as desired
+  - *must* provide column names as its first row
+  - *must* use column names that are unique and do *not* contain special characters
+    - Tip: Descriptive yet concise names will be most effective
 
-> __Column Order__: The attribute and file name columns in the metadata file can be provided in any order and the column headers can be chosen by the investigator. However, given that the data set importer (see next section below) will map column 1 to _sample name_, column 2 to _data file_, and column 3 to _organism_, it can save time during import if this information is provided in the first three columns in this order.
+> __Tutorial Data Set:__ skip this step -- tab-delimited `tutorial.tsv` metadata file provided
 
 ## 2. Uploading a Data Set
 1. From the *__Launch Pad__*, Click *__Upload__* from the *__Data Sets__* panel
