@@ -9,27 +9,12 @@
 
   function ToolDisplayCtrl ($scope, _, toolsService) {
     var vm = this;
-    vm.toolList = toolsService.toolList;
     vm.selectedTool = {};
     vm.isToolSelected = false;
-    getToolsDefinitions();
-
-
-    /*
-     * ---------------------------------------------------------
-     * Methods Definitions
-     * ---------------------------------------------------------
-     */
-
-    function getToolsDefinitions () {
-      toolsService.getTools().then(function () {
-        vm.toolList = toolsService.toolList;
-      });
-    }
 
     /*
     * ---------------------------------------------------------
-    * Watchs
+    * Watchers
     * ---------------------------------------------------------
     */
     $scope.$watchCollection(

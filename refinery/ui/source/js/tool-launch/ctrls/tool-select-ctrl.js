@@ -25,7 +25,9 @@
     }
 
     function refreshToolList () {
-      vm.tools = toolsService.toolList;
+      toolsService.getTools().then(function () {
+        vm.tools = toolsService.toolList;
+      });
     }
 
     function updateTool (tool) {
