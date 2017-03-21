@@ -8,12 +8,14 @@ __Preparation__
 
 To follow the steps of this tutorial, you will need a data set consisting of data files and a metadata file that is referencing your files.
 
-> __This tutorial can be followed using the Tutorial Data Set, which consists of sample ChIP-seq data and their associated metadata file -- download them here:__
+> __Tutorial Data Set__
+>
+> This tutorial can be followed using the __Tutorial Data Set__, which consists of sample ChIP-seq data and their associated metadata file. Download the __Tutorial Data Set__ files here:
 > - [control (FASTQ)][input.fastq]
 > - [experimental (FASTQ)][nanog.fastq]
 > - [metadata (TSV)][tutorial.tsv]
 >
-> __Follow all steps (except creating a metadata file as it already exists) and note the bullet points after some steps with expanded instructions specific to the Tutorial Data Set.__
+> Note the expanded instructions associated with some steps of the tutorial that pertain specifically to the __Tutorial Data Set__. Also, skip section __1. Creating a Metadata File__ since a metadata file is provided within the __Tutorial Data Set__.
 
 ## 0. Accessing Refinery
 - Go to the [Refinery Launch Pad][scc-home]
@@ -25,22 +27,22 @@ To follow the steps of this tutorial, you will need a data set consisting of dat
     1. Click *__Login__* at the top right of the navigation bar
     2. Enter the *__Username or E-mail__* and *__Password__* provided during registration and click the *__Login__* button below
   
-  ![NavBar](https://github.com/refinery-platform/refinery-platform/blob/develop/docs/screenshots/NavBar_skitch.png)
+  ![NavBar](screenshots/NavBar_skitch.png)
 
 ## 1. Creating a Metadata File
 - Organize all the metadata to be associated with the data set into a delimited (e.g. tab-delimited) text file. This metadata table
   - must have at least 3 columns to describe *(1) sample identifiers, (2) filenames, (3) species identifiers*
-  - must contain column names in the first row of the table
+    - Tip: Column order can be arbitrary but assigning these attributes to the first 3 columns of the table (same order as listed above) will slightly simplify the data set upload
+  - must provide column names as its first row
+  - must use column names that are unique and do *not* contain special characters
+    - Tip: Column names can be arbitrary but those that are descriptive yet concise will be most effective
+    
   
 - A template metadata file can be found [here][refinery-sample-metadata.tsv].
-  - __Column names__ (called __attributes__ throughout Refinery) can be freely chosen but *must be unique*, *cannot contain special characters*, and *should be descriptive yet concise*
   - __Column order__ 
   - __Tutorial Data Set: tab-delimited__ `tutorial.tsv` __metadata file already created__
 
 > __Column Order__: The attribute and file name columns in the metadata file can be provided in any order and the column headers can be chosen by the investigator. However, given that the data set importer (see next section below) will map column 1 to _sample name_, column 2 to _data file_, and column 3 to _organism_, it can save time during import if this information is provided in the first three columns in this order.
-
-
-> __Column Names__: The column names provided in the metadata file can be freely chosen by the analyst and will be used to identify attributes throughout the Refinery application. They _must be unique_, _must not contain any special characters_, and _should be descriptive yet concise_.
 
 ## 2. Uploading a Data Set
 1. From the *__Launch Pad__*, Click *__Upload__* from the *__Data Sets__* panel
@@ -64,7 +66,7 @@ To follow the steps of this tutorial, you will need a data set consisting of dat
 
 ## 4. Exploring Data Set Contents in the File Browser
 1. From the *__Data Set Browser__*, click *__View Content in File Browser__* (or the equivalent icon attached to the data set) to view the individual data files belonging to the data set:
-  - Files can be filtered based on attributes using the *__Attribute Filter__* in the left-hand panel
+  - Files can be filtered based on attributes (e.g. column names of the related metadata file) using the *__Attribute Filter__* in the left-hand panel
   - Files can also be sorted according to attributes (both ascending and descending) by clicking the attribute names (i.e. column headers)
   ![FileBrowser](https://github.com/refinery-platform/refinery-platform/blob/develop/docs/screenshots/FileBrowser_skitch.png)
 
