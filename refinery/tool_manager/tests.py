@@ -128,6 +128,25 @@ class ToolDefinitionGenerationTests(TestCase):
                 validate_workflow_annotation, workflow_annotation)
             self.assertEqual(ToolDefinition.objects.count(), 0)
 
+    def test_workflow_with_good_parameters_validation(self):
+        with open(
+                "tool_manager/test-data/workflow_annotation_valid_parameters"
+                ".json", "r") as f:
+            workflow_annotation = json.loads(f.read())
+            self.assertIsNone(
+                validate_workflow_annotation(workflow_annotation)
+            )
+
+    def test_workflow_with_bad_parameters_validation(self):
+        with open(
+                "tool_manager/test-data/workflow_annotation_invalid_parameters"
+                ".json", "r") as f:
+            workflow_annotation = json.loads(f.read())
+            self.assertRaises(
+                RuntimeError,
+                validate_workflow_annotation, workflow_annotation)
+            self.assertEqual(ToolDefinition.objects.count(), 0)
+
     def test_list_workflow_tool_def_validation(self):
         with open("tool_manager/test-data/workflow_LIST.json", "r") as f:
             workflow_annotation = json.loads(f.read())
