@@ -38,9 +38,9 @@ __This tutorial can be completed using the Tutorial Data Set, which consists of 
     > __Tutorial Data Set: upload tab-delimited__ `tutorial.tsv`
 3. Check metadata *__Preview__* for accuracy (note: only first 5 samples are displayed)
 4. Review *__Configure Metadata Import__* and make changes as needed
-	- __Tutorial Data Set: no changes needed__
+    > __Tutorial Data Set: no changes needed__
 5. Click *__Add files…__* button under *__Upload Data Files__* and select data files corresponding to the metadata (note: wait for MD5 calculations, which ensure successful data file uploads, to complete)
-	- __Tutorial Data Set: upload__ `input.fastq` __and__ `nanog.fastq` __data files__
+    > __Tutorial Data Set: upload__ `input.fastq` __and__ `nanog.fastq` __data files__
 6. Click *__Start upload__* to begin uploading all selected data files
 7. After all data files have uploaded, click *__Check Availability of Data Files__* to confirm all files are now on the Refinery server
 8. Click *__Upload Data Set__* to upload the new data set (metadata + data files)
