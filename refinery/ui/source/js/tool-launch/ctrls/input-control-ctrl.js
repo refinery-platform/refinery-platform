@@ -20,7 +20,6 @@
     selectedNodesService
   ) {
     var vm = this;
-    vm.singleInputSelected = false;
     vm.groups = [];
     vm.groupIndex = 0;
     vm.navRight = navRight;
@@ -73,7 +72,6 @@
         },
         function () {
           vm.groups = selectedNodesService.selectedNodes;
-          console.log(vm.groups);
           if (vm.groups.length > 0) {
             var attributesArray = vm.groups[0].grid.appScope.assayAttributes;
             for (var ind = 0; ind < attributesArray.length; ind ++) {
