@@ -1,17 +1,12 @@
 <div id="metadata-table-form">
   <div class="refinery-subheader m-t-1">
-    <h3> Before You Get Started </h3>
+    <h1> Before You Get Started </h1>
   </div>
   <p>
-    Before uploading a data set, you should follow these steps to prepare
-    your metadata and data files:
+    Before uploading a data set, format the metadata file and data files:
     <ol>
       <li>
-        Your metadata file needs to contain at least three columns: a sample
-        identifier, a file name, and a species name/species identifier.
-        Additional columns should be provided to characterize your data. The
-        first row of the table needs to contain column headers, which can be
-        chosen by the user. The order of the columns can be arbitrary.
+        Metadata file (
         <a
           href="/static/sample-files/refinery-sample-metadata.tsv"
           target="_blank"
@@ -22,20 +17,41 @@
           <i class="fa fa-download"> </i>
           Download an example tabular metadata file.
         </a>
+        ):
+        <ul class="nested-list">
+          <li>
+            Must contain at least three columns: <strong>sample
+            identifier</strong>, <strong>file name</strong>, and <strong>species
+            name/species identifier</strong>
+          </li>
+          <li>
+            Must contain column headers in the first row of the table
+          </li>
+          <li>
+            Can have additional columns used to characterize data
+          </li>
+          <li>
+            Can have the columns ordered arbitrary
+          </li>
+        </ul>
       </li>
       <li>
         Data referenced in the file name column of the metadata file should
-        either be located on your computer for upload to this site through your
-        browser or located on a web server accessible through public URLs.
+        either be located:
+        <ul class="nested-list">
+          <li>
+            on your computer for upload to this site through your
+        browser
+          </li>
+          <li>
+            on a web server accessible through public URLs
+          </li>
+        </ul>
       </li>
     </ol>
-
-    The upload process is not designed to be iterative, it pays off to spend
-    some time to prepare both metadata and data files to avoid having to
-    repeat the process.
    </p>
   <div id="dataUploadTutorialStep3" class="refinery-subheader m-t-1">
-    <h3>Provide Metadata File</h3>
+    <h1>Provide Metadata File</h1>
   </div>
   <div id="dataUploadTutorialStep4">
   <p>
@@ -47,6 +63,9 @@
       class="refinery-max z-1 refinery-spinner-bg"
       ng-if="metadataTable.isImporting">
       <div class="refinery-spinner-center">
+        <h2>
+          Data set is uploading.
+        </h2>
         <div class="refinery-spinner"></div>
       </div>
     </div>
@@ -167,8 +186,8 @@
     </label>
 
     <div ng-if="metadataTable.file">
-      <div class="refinery-subheader">
-        <h4>Preview (5 rows):</h4>
+      <div class="refinery-subheader m-t-1">
+        <h2>Preview of Meta Data File(First 5 rows):</h2>
       </div>
       <div
         class="gridStyle"
@@ -177,14 +196,14 @@
       </div>
 
       <div class="refinery-subheader m-t-1">
-        <h3>Configure Metadata Import</h3>
+        <h1>Configure Metadata Import</h1>
       </div>
 
       <div ng-form="importMetadataTableForm">
         <div class="refinery-subheader m-t-1">
-          <h4>
+          <h2>
             Required
-          </h4>
+          </h2>
         </div>
         <div class="row m-t-1-4 m-b-1-4">
           <div class="col-sm-6 col-md-3 col-lg-2">
@@ -294,9 +313,10 @@
             Column containing species names or identifiers.
             <a
               popover-placement="right"
-              uib-popover="Acceptable identifiers are defined by the NCBI
-              Taxonomy database. For example, for human samples 'Human',
-              'Homo sapiens', or 'H. sapiens' can be used."
+              uib-popover-html="'Acceptable identifiers are defined by the
+              <a target=_blank href=https://www.ncbi.nlm.nih.gov/taxonomy>
+              NCBI Taxonomy database.</a> For example, for human samples Human,
+              Homo sapiens, or H. sapiens can be used.'"
               popover-title="Species Column"
               popover-trigger="focus"
               popover-append-to-body="true"
@@ -308,7 +328,7 @@
 
         <div>
           <div class="refinery-subheader m-t-1">
-            <h4>Publishing</h4>
+            <h1>Publishing</h1>
           </div>
           <div class="row m-t-1-4 m-b-1-4">
             <div class="col-sm-6 col-md-3 col-lg-2">
@@ -349,7 +369,7 @@
               ng-class="isAdvancedCollapsed ? 'fa fa-caret-right' : 'fa fa-caret-down'"
               class="fa-pull-left"
               aria-hidden="true"></i>
-              <h4>Advanced</h4>
+              <h1>Advanced</h1>
             </span>
           </div>
           <div uib-collapse="isAdvancedCollapsed">
@@ -451,8 +471,8 @@
                   servers (referenced by URL) or located on the file system
                   of the server (referenced by an absolute file system path)
                   will be imported into the system upon creation of the data
-                  set. If not selected, such files will only be imported into
-                   the system if selected for analysis."
+                  set. If not selected, such files will only be imported
+                  into the system when used for analysis."
                   popover-title="Import Now"
                   popover-trigger="focus"
                   popover-append-to-body="true"
@@ -471,64 +491,64 @@
 
       <div>
         <div class="refinery-subheader m-t-1">
-           <h3>Upload Data Set</h3>
+           <h1>Complete Submission</h1>
         </div>
         <div class="row m-t-1-4 m-b-1-4">
-          <div class="col-sm-12 col-md-6 col-lg-3">
+          <div class="col-sm-12 col-md-12 col-lg-12">
             <button
               class="refinery-base btn btn-default"
               ng-click="metadataTable.checkFiles()"
               ng-disabled="!metadataTable.dataFileColumn">
-              Check Availability of Data Files
+              Check Data Files
             </button>
             <button
               class="refinery-base btn btn-primary"
               ng-click="metadataTable.startImport()"
               ng-disabled="importMetadataTableForm.$invalid ||
               metadataTable.areFilesUploading()">
-              Upload Data Set
+              Submit
             </button>
-            </div>
-          <div class="col-sm-12 col-md-6 col-lg-4">
-            <span class="text-warning"
-              ng-if="metadataTable.areFilesInQueue()">
-              <i class="fa fa-warning" aria-hidden="true"></i>
-              All data files have not been uploaded.
-            </span>
-            <span
-              ng-messages="importMetadataTableForm.title.$error"
-              role="alert"
-              class="text-danger">
-              <div ng-message="required">
+            <span class="m-l-1">
+              <span class="text-warning"
+                ng-if="metadataTable.areFilesInQueue()">
                 <i class="fa fa-warning" aria-hidden="true"></i>
-                Required: Enter a title.
-              </div>
-              <div ng-message="minlength">
-                <i class="fa fa-warning" aria-hidden="true"></i>
-                Error: Title is too short.
-              </div>
-              <div ng-message="maxlength">
-                <i class="fa fa-warning" aria-hidden="true"></i>
-                Error: Title is too long.
-              </div>
-            </span>
-            <span
-              ng-messages="importMetadataTableForm.source_column_index.$error"
-              role="alert"
-              class="text-danger">
-              <div ng-message="required">
-                <i class="fa fa-warning" aria-hidden="true"></i>
-                Required: Select a Sample Identifier.
-              </div>
-            </span>
-            <span
-              ng-messages="importMetadataTableForm.slug.$error"
-              role="alert"
-              class="text-danger">
-              <div ng-message="pattern">
-                <i class="fa fa-warning" aria-hidden="true"></i>
-                Invalid URL shortcut, can only contain alphanumeric
-                characters and "_".
+                All data files have not been uploaded.
+              </span>
+              <span
+                ng-messages="importMetadataTableForm.title.$error"
+                role="alert"
+                class="text-danger">
+                <div ng-message="required">
+                  <i class="fa fa-warning" aria-hidden="true"></i>
+                  Required: Enter a title.
+                </div>
+                <div ng-message="minlength">
+                  <i class="fa fa-warning" aria-hidden="true"></i>
+                  Error: Title is too short.
+                </div>
+                <div ng-message="maxlength">
+                  <i class="fa fa-warning" aria-hidden="true"></i>
+                  Error: Title is too long.
+                </div>
+              </span>
+              <span
+                ng-messages="importMetadataTableForm.source_column_index.$error"
+                role="alert"
+                class="text-danger">
+                <div ng-message="required">
+                  <i class="fa fa-warning" aria-hidden="true"></i>
+                  Required: Select a Sample Identifier.
+                </div>
+              </span>
+              <span
+                ng-messages="importMetadataTableForm.slug.$error"
+                role="alert"
+                class="text-danger">
+                <div ng-message="pattern">
+                  <i class="fa fa-warning" aria-hidden="true"></i>
+                  Invalid URL shortcut, can only contain alphanumeric
+                  characters and "_".
+              </span>
             </span>
           </div>
         </div>

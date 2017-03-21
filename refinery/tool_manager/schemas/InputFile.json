@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema",
+  "type": "object",
+  "required": [
+    "name",
+    "description",
+    "allowed_filetypes"
+  ],
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "allowed_filetypes": {
+      "type": "array",
+      "items": {
+        "$ref": "FileType.json#"
+      }
+    }
+  }
+}

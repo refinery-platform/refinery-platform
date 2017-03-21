@@ -1,0 +1,42 @@
+{ "name": "Bad Filetype: LIST",
+  "tool_type": "WORKFLOW",
+  "annotation": {
+    "refinery_type": "analysis",
+    "description": "This workflow does really cool things",
+    "parameters": [],
+    "output_files": [
+      {
+        "filetype": {"name": "FASTQ"},
+        "name": "Cool Output File1",
+        "description": "Cool Output File1 Description"
+      },
+      {
+        "filetype": {"name": "BAM"},
+        "name": "Cool Output File2",
+        "description": "Cool Output File2 Description"
+      },
+      {
+        "filetype": {"name": "COFFEE"},
+        "name": "Cool COFFEE File3",
+        "description": "Cool COFFEE File3 COFFEE"
+      },
+      {
+        "filetype": {"name": "PDF"},
+        "name": "Cool Output File4",
+        "description": "Cool Output File4 Description"
+      }
+    ],
+    "file_relationship": {
+      "file_relationship": {},
+      "value_type": "LIST",
+      "name": "Flat list of N Samples",
+      "input_files": [
+        {
+          "allowed_filetypes": [{"name": "FASTQ"}],
+          "name": "Cool Input File",
+          "description": "Cool Input File Description"
+        }
+      ]
+    }
+  }
+}
