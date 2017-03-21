@@ -22,7 +22,6 @@
      */
 
     function getToolsDefinitions () {
-      console.log('update get tools Definitions');
       toolsService.getTools().then(function () {
         vm.toolList = toolsService.toolList;
       });

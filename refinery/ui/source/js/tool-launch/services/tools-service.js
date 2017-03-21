@@ -21,7 +21,6 @@
     function getTools () {
       var toolsDefs = toolsDefinitionsService.query();
       toolsDefs.$promise.then(function (response) {
-        console.log(response);
         angular.copy(response, toolList);
       });
       return toolsDefs.$promise;
