@@ -7,8 +7,17 @@
   toolsService.$inject = ['toolsDefinitionsService'];
 
   function toolsService (toolsDefinitionsService) {
+    var service = {
+      getTools: getTools,
+      selectedTool: selectedTool,
+      setSelectedTool: setSelectedTool,
+      toolList: toolList
+    };
     var selectedTool = {};
     var toolList = [];
+
+    return service;
+
     /*
     *-----------------------
     * Method Definitions
@@ -25,13 +34,5 @@
       });
       return toolsDefs.$promise;
     }
-
-    /* Return */
-    return {
-      getTools: getTools,
-      selectedTool: selectedTool,
-      setSelectedTool: setSelectedTool,
-      toolList: toolList
-    };
   }
 })();
