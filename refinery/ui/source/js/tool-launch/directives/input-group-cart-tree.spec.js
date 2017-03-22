@@ -2,7 +2,7 @@
   // Unit test for file display directive
   'use strict';
 
-  describe('rpInputGroup component unit test', function () {
+  describe('rpInputGroupCartTree directive unit test', function () {
     beforeEach(module('refineryApp'));
     beforeEach(module('refineryToolLaunch'));
 
@@ -18,19 +18,19 @@
       $templateCache
     ) {
       $templateCache.put(
-        '/static/partials/tool-launch/partials/input-group.html',
-        '<div id="input-group-nav"></div>'
+        '/static/partials/tool-launch/partials/input-group-cart-tree.html',
+        '<div id="input-group-cart-tree"></div>'
       );
       compile = _$compile_;
       rootScope = _$rootScope_;
       scope = rootScope.$new();
-      template = '<rp-input-group></rp-input-group>';
+      template = '<rp-input-group-cart-tree></rp-input-group-cart-tree>';
       directiveElement = compile(template)(scope);
       scope.$digest();
     }));
 
     it('generates the appropriate HTML', function () {
-      expect(directiveElement.html()).toContain('input-group-nav');
+      expect(directiveElement.html()).toContain('input-group-cart-tree');
       expect(directiveElement.html()).toContain('</div>');
     });
   });

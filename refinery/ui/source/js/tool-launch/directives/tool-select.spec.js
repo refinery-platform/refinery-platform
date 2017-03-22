@@ -2,7 +2,7 @@
   // Unit test for file display directive
   'use strict';
 
-  describe('rpInputGroup component unit test', function () {
+  describe('rpToolSelect directive unit test', function () {
     beforeEach(module('refineryApp'));
     beforeEach(module('refineryToolLaunch'));
 
@@ -18,19 +18,19 @@
       $templateCache
     ) {
       $templateCache.put(
-        '/static/partials/tool-launch/partials/input-group.html',
-        '<div id="input-group-nav"></div>'
+        '/static/partials/tool-launch/partials/tool-select.html',
+        '<div id="tool-select"></div>'
       );
       compile = _$compile_;
       rootScope = _$rootScope_;
       scope = rootScope.$new();
-      template = '<rp-input-group></rp-input-group>';
+      template = '<rp-tool-select></rp-tool-select>';
       directiveElement = compile(template)(scope);
       scope.$digest();
     }));
 
     it('generates the appropriate HTML', function () {
-      expect(directiveElement.html()).toContain('input-group-nav');
+      expect(directiveElement.html()).toContain('tool-select');
       expect(directiveElement.html()).toContain('</div>');
     });
   });

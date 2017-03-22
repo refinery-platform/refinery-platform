@@ -8,7 +8,6 @@
   function rpInputGroupCartTree () {
     return {
       restrict: 'E',
-      replace: true,
       scope: {
         member: '='
       },
