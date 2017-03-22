@@ -78,7 +78,7 @@ To follow the steps of this tutorial, you will need a data set consisting of dat
     1. Select the file(s) to analyze
         > __Tutorial Data Set:__ select both `input.fastq` and `nanog.fastq`
     2. Choose *__Current Selection__* in the *__Input Dataset__* drop-down menu in the left-hand panel
-  ![AnalyzeFastQC](https://github.com/refinery-platform/refinery-platform/blob/develop/docs/screenshots/AnalyzeFastQC_Ann.png)
+  ![AnalyzeFastQC](screenshots/AnalyzeFastQC_skitch.png)
   - *__TF ChIP-seq analysis using MACS2__*
     1. Under *__Inputs (1-1 File Mapping)__*, click *__New...__* to create a new file mapping
     2. Provide a name for the new file mapping in the pop-up
