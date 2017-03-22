@@ -3,9 +3,9 @@
 
   angular
     .module('refineryToolLaunch')
-    .directive('inputGroupCartTree', inputGroupCartTree);
+    .directive('rpInputGroupCartTree', rpInputGroupCartTree);
 
-  function inputGroupCartTree () {
+  function rpInputGroupCartTree () {
     return {
       restrict: 'E',
       replace: true,

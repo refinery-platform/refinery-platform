@@ -1,6 +1,7 @@
 (function () {
   'use strict';
-  angular.module('refineryToolLaunch').directive('inputGroupCart', function () {
+
+  angular.module('refineryToolLaunch').directive('rpInputGroupCart', function () {
     return {
       restrict: 'E',
       replace: true,
