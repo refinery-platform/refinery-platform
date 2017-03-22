@@ -76,7 +76,7 @@ To follow the steps of this tutorial, you will need a data set consisting of dat
     > __Tutorial Data Set:__ follow section __5. Launching an Analysis__ twice, first launching the *__FastQC__* workflow and afterwards the *__TF ChIP-seq analysis using MACS2: hg19__* workflow (details below)
   - *__FastQC__*
     1. Select the file(s) to analyze
-      - __Tutorial Data Set: select both `input.fastq` and `nanog.fastq`__
+        > __Tutorial Data Set:__ select both `input.fastq` and `nanog.fastq`
     2. Choose *__Current Selection__* in the *__Input Dataset__* drop-down menu in the left-hand panel
   ![AnalyzeFastQC](https://github.com/refinery-platform/refinery-platform/blob/develop/docs/screenshots/AnalyzeFastQC_Ann.png)
   - *__TF ChIP-seq analysis using MACS2__*
