@@ -15,19 +15,19 @@ To follow the steps of this tutorial, you will need a data set consisting of dat
 > - [experimental (FASTQ)][nanog.fastq]
 > - [metadata (TSV)][tutorial.tsv]
 >
-> Note the expanded instructions associated with some steps of the tutorial that pertain specifically to the __Tutorial Data Set__. Also, skip section __1. Creating a Metadata File__ since a metadata file is provided within the __Tutorial Data Set__.
+> Note the expanded instructions associated with some steps of the tutorial that pertain specifically to the __Tutorial Data Set__. Also, skip section __1. Creating a Metadata File__ since a metadata file is already provided within the __Tutorial Data Set__.
 
 ## 0. Accessing Refinery
-- Go to the [Refinery Launch Pad][scc-home]
-  - __To create a new account__:
+- Go to the [Refinery Launch Pad][scc-home] and either
+  - *create a new account*:
     1. Click *__Register__* at the top right of the navigation bar (top of page)
     2. Provide the required details and then click the *__Register__* button below
     3. Wait to receive an account activation e-mail at the address provided during registration
-  - __To log in to an account__:
+  - *log in to an account*:
     1. Click *__Login__* at the top right of the navigation bar
     2. Enter the *__Username or E-mail__* and *__Password__* provided during registration and click the *__Login__* button below
-  
-  ![NavBar](screenshots/NavBar_skitch.png)
+
+![NavBar](screenshots/NavBar_skitch.png)
 
 ## 1. Creating a Metadata File
 - Create a metadata table within a delimited (e.g. tab-delimited) text file in which rows correspond to data files to be uploaded and columns provide metadata attributes, respectively (a template metadata file can be found [here][refinery-sample-metadata.tsv]). The naming and ordering of the columns can be arbitrary, but the metadata table 
