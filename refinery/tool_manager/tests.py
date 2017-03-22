@@ -162,7 +162,7 @@ class ToolDefinitionGenerationTests(TestCase):
             self.assertEqual(ToolDefinition.objects.count(), 1)
             td = ToolDefinition.objects.get(name=workflow_annotation["name"])
             self.assertEqual(td.output_files.count(), 4)
-            self.assertEqual(td.parameters.count(), 0)
+            self.assertEqual(td.parameters.count(), 7)
             self.assertEqual(td.file_relationship.file_relationship.count(), 0)
             self.assertEqual(td.file_relationship.input_files.count(), 1)
 
@@ -181,7 +181,7 @@ class ToolDefinitionGenerationTests(TestCase):
             self.assertEqual(ToolDefinition.objects.count(), 1)
             td = ToolDefinition.objects.get(name=workflow_annotation["name"])
             self.assertEqual(td.output_files.count(), 1)
-            self.assertEqual(td.parameters.count(), 0)
+            self.assertEqual(td.parameters.count(), 5)
             self.assertEqual(td.file_relationship.file_relationship.count(), 1)
             second_nested_file_relationship = \
                 td.file_relationship.file_relationship.all()[0]
@@ -207,7 +207,7 @@ class ToolDefinitionGenerationTests(TestCase):
             self.assertEqual(ToolDefinition.objects.count(), 1)
             td = ToolDefinition.objects.get(name=workflow_annotation["name"])
             self.assertEqual(td.output_files.count(), 1)
-            self.assertEqual(td.parameters.count(), 0)
+            self.assertEqual(td.parameters.count(), 3)
             self.assertEqual(td.file_relationship.file_relationship.count(), 1)
             second_nested_file_relationship = \
                 td.file_relationship.file_relationship.all()[0]

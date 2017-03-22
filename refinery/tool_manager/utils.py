@@ -8,11 +8,14 @@ from django.db import transaction
 from jsonschema import RefResolver, validate, ValidationError
 
 from factory_boy.django_model_factories import (FileRelationshipFactory,
+                                                GalaxyParameterFactory,
                                                 InputFileFactory,
                                                 OutputFileFactory,
+                                                ParameterFactory,
                                                 ToolDefinitionFactory)
 
 from file_store.models import FileType
+from .models import ToolDefinition
 
 logger = logging.getLogger(__name__)
 
@@ -77,7 +80,26 @@ def create_tool_definition_from_workflow(workflow_dictionary):
                 )
             )
 
-            # TODO: figure out Parameter/GalaxyParameter stuff
+    for parameter in workflow_dictionary["annotation"]["parameters"]:
+        if workflow_dictionary["tool_type"] == ToolDefinition.WORKFLOW:
+            tool_definition.parameters.add(
+                GalaxyParameterFactory(
+                    name=parameter["name"],
+                    description=parameter["description"],
+                    value_type=parameter["value_type"],
+                    default_value=parameter["default_value"],
+                    galaxy_workflow_step=parameter["galaxy_workflow_step"]
+                )
+            )
+        if workflow_dictionary["tool_type"] == ToolDefinition.VISUALIZATION:
+            tool_definition.parameters.add(
+                ParameterFactory(
+                    name=parameter["name"],
+                    description=parameter["description"],
+                    value_type=parameter["value_type"],
+                    default_value=parameter["default_value"],
+                )
+            )
 
 
 @transaction.atomic
