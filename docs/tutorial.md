@@ -42,36 +42,38 @@ To follow the steps of this tutorial, you will need a data set consisting of dat
 > __Tutorial Data Set:__ skip this step since the tab-delimited `tutorial.tsv` metadata file is already provided
 
 ## 2. Uploading a Data Set
-1. From the *__Launch Pad__*, Click *__Upload__* from the *__Data Sets__* panel
+1. From the *__Launch Pad__* (Refinery homepage), Click *__Upload__* from the *__Data Sets__* panel
 ![PanelHeaders](screenshots/PanelHeaders_skitch.png)
 2. First choose delimiter used in the metadata file and then upload the file
-    > __Tutorial Data Set:__ upload tab-delimited `tutorial.tsv`
+    > __Tutorial Data Set:__ upload the tab-delimited `tutorial.tsv` metadata file
 3. Check metadata *__Preview__* for accuracy (note: only first 5 samples are displayed)
 4. Review *__Configure Metadata Import__* and make changes as needed
-    > __Tutorial Data Set:__ no changes needed
+    > __Tutorial Data Set:__ no changes are needed
 5. Click *__Add files…__* button under *__Upload Data Files__* and select data files corresponding to the metadata (note: wait for MD5 calculations, which ensure successful data file uploads, to complete)
-    > __Tutorial Data Set:__ upload `input.fastq` and `nanog.fastq` data files
+    > __Tutorial Data Set:__ upload the `input.fastq` and `nanog.fastq` data files
 6. Click *__Start upload__* to begin uploading all selected data files
 7. After all data files have uploaded, click *__Check Availability of Data Files__* to confirm all files are now on the Refinery server
 8. Click *__Upload Data Set__* to upload the new data set (metadata + data files)
 
-![UploadDataSet](https://github.com/refinery-platform/refinery-platform/blob/develop/docs/screenshots/UploadDataSet_skitch.png)
+![UploadDataSet](screenshots/UploadDataSet_skitch.png)
 
 ## 3. Viewing a Data Set Summary in the Data Set Browser
-1. Return to the *__Launch Pad__* (Refinery homepage) and click on the newly uploaded data set title. The *__Data Set Browser__* will display a summary of the data set
-![DataSetBrowser](https://github.com/refinery-platform/refinery-platform/blob/develop/docs/screenshots/DataSetBrowser_skitch.png)
+- Return to the *__Launch Pad__* and click on the newly uploaded data set title. The *__Data Set Browser__* will display a summary of the data set.
+
+![DataSetBrowser](screenshots/DataSetBrowser_skitch.png)
 
 ## 4. Exploring Data Set Contents in the File Browser
-1. From the *__Data Set Browser__*, click *__View Content in File Browser__* (or the equivalent icon attached to the data set) to view the individual data files belonging to the data set:
+- From the *__Data Set Browser__*, click *__View Content in File Browser__* (or the equivalent icon in the *__Data Sets__* panel) to view the individual data files belonging to the data set:
   - Files can be filtered based on attributes (e.g. column names of the related metadata file) using the *__Attribute Filter__* in the left-hand panel
   - Files can also be sorted according to attributes (both ascending and descending) by clicking the attribute names (i.e. column headers)
-  ![FileBrowser](https://github.com/refinery-platform/refinery-platform/blob/develop/docs/screenshots/FileBrowser_skitch.png)
+
+![FileBrowser](screenshots/FileBrowser_skitch.png)
 
 ## 5. Launching an Analysis
 1. From the *__File Browser__*, click the *__Analyze__* tab above the left-hand panel
-  - __Tutorial Data Set: follow section 5 twice, first launching the *FastQC* workflow and afterwards the *TF ChIP-seq analysis using MACS2: hg19* workflow (details below)__
-![Analyze](https://github.com/refinery-platform/refinery-platform/blob/develop/docs/screenshots/Analyze_skitch.png)
+![Analyze](screenshots/Analyze_skitch.png)
 2. Select one of the analysis workflows below using the drop-down menu in the left-hand panel, follow their workflow-specific steps below, and then continue with step 3
+    > __Tutorial Data Set:__ follow section __5. Launching an Analysis__ twice, first launching the *__FastQC__* workflow and afterwards the *__TF ChIP-seq analysis using MACS2: hg19__* workflow (details below)
   - *__FastQC__*
     1. Select the file(s) to analyze
       - __Tutorial Data Set: select both `input.fastq` and `nanog.fastq`__
