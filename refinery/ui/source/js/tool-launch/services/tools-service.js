@@ -7,15 +7,15 @@
   toolsService.$inject = ['toolsDefinitionsService'];
 
   function toolsService (toolsDefinitionsService) {
+    var selectedTool = {};
+    var toolList = [];
+
     var service = {
       getTools: getTools,
       selectedTool: selectedTool,
       setSelectedTool: setSelectedTool,
       toolList: toolList
     };
-    var selectedTool = {};
-    var toolList = [];
-
     return service;
 
     /*
