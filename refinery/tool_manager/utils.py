@@ -18,6 +18,11 @@ from file_store.models import FileType
 from .models import ToolDefinition
 
 logger = logging.getLogger(__name__)
+ANNOTATION_ERROR_MESSAGE = (
+    "Workflow not properly annotated.\n"
+    "Please read: http://bit.ly/2mKczka for more information on how to "
+    "properly annotate your Galaxy-based workflows.\n"
+)
 
 
 class AdminFieldPopulator(admin.ModelAdmin):
@@ -217,7 +222,5 @@ def validate_workflow_annotation(workflow_dictionary):
             validate(annotation_to_validate, schema, resolver=resolver)
         except ValidationError as e:
             raise RuntimeError(
-                "Workflow not properly annotated. Please read: "
-                "http://bit.ly/2mKczka for more information on how to "
-                "properly annotate your Galaxy-based workflows. {}".format(e)
+                "{}{}".format(ANNOTATION_ERROR_MESSAGE, e)
             )

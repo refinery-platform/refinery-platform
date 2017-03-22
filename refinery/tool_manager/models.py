@@ -1,4 +1,6 @@
 from django.db import models
+from django.db.models.signals import post_delete, pre_delete
+from django.dispatch import receiver
 from django_extensions.db.fields import UUIDField
 
 from file_store.models import FileType
@@ -31,7 +33,7 @@ class Parameter(models.Model):
     uuid = UUIDField(unique=True, auto=True)
     name = models.TextField(max_length=100)
     description = models.TextField(max_length=500)
-    is_user_adjustable = models.BooleanField(default=False)
+    is_user_adjustable = models.BooleanField(default=True)
     value_type = models.CharField(choices=VALUE_TYPES, max_length=25)
     default_value = models.TextField(max_length=100)
 
@@ -132,3 +134,46 @@ class ToolDefinition(models.Model):
 
     def __str__(self):
         return "{}: {} {}".format(self.tool_type, self.name, self.uuid)
+
+
+@receiver(pre_delete, sender=ToolDefinition)
+def _tooldefinition_pre_delete(sender, instance, *args, **kwargs):
+    """
+    Delete related parameter and output_file objects upon ToolDefinition
+    deletion
+    """
+    parameters = instance.parameters.all()
+    for parameter in parameters:
+        parameter.delete()
+    instance.parameters.clear()
+
+    output_files = instance.output_files.all()
+    for output_file in output_files:
+        output_file.delete()
+    instance.output_files.clear()
+
+
+@receiver(post_delete, sender=ToolDefinition)
+def _tooldefinition_post_delete(sender, instance, *args, **kwargs):
+    """
+    Delete related (topmost) FileRelationship object after ToolDefinition
+    deletion
+    """
+    instance.file_relationship.delete()
+
+
+@receiver(pre_delete, sender=FileRelationship)
+def _filerelationship_delete(sender, instance, *args, **kwargs):
+    """
+    Delete related (topmost) FileRelationship object after ToolDefinition
+    deletion
+    """
+    input_files = instance.input_files.all()
+    for input_file in input_files:
+        input_file.delete()
+    instance.input_files.clear()
+
+    file_relationships = instance.file_relationship.all()
+    for file_relationship in file_relationships:
+        file_relationship.delete()
+        instance.file_relationship.clear()

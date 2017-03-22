@@ -1,7 +1,7 @@
 from django.contrib import admin
 
-from .models import (FileRelationship, InputFile, OutputFile, Parameter,
-                     ToolDefinition)
+from .models import (FileRelationship, GalaxyParameter,  InputFile,
+                     OutputFile, Parameter, ToolDefinition)
 
 from .utils import AdminFieldPopulator
 
@@ -26,8 +26,12 @@ class ParameterAdmin(AdminFieldPopulator):
     pass
 
 
+class GalaxyParameterAdmin(AdminFieldPopulator):
+    pass
+
 admin.site.register(FileRelationship, FileRelationshipAdmin)
 admin.site.register(InputFile, InputFileAdmin)
 admin.site.register(ToolDefinition, ToolDefinitionAdmin)
 admin.site.register(OutputFile, OutputFileAdmin)
 admin.site.register(Parameter, ParameterAdmin)
+admin.site.register(GalaxyParameter, GalaxyParameterAdmin)

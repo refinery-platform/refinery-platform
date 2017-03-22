@@ -12,7 +12,8 @@ from tool_manager.utils import (create_tool_definition_from_workflow,
                                 FileTypeValidationError,
                                 validate_workflow_annotation)
 
-from .models import ToolDefinition
+from .models import (FileRelationship, GalaxyParameter, InputFile,
+                     OutputFile, Parameter, ToolDefinition)
 from .views import ToolDefinitionsViewSet
 
 
@@ -219,3 +220,96 @@ class ToolDefinitionGenerationTests(TestCase):
                 third_nested_file_relationship.file_relationship.count(), 0)
             self.assertEqual(
                 third_nested_file_relationship.input_files.count(), 2)
+
+    def test_list_workflow_related_object_deletion(self):
+        with open("tool_manager/test-data/workflow_LIST.json", "r") as f:
+            workflow_annotation = json.loads(f.read())
+            create_tool_definition_from_workflow(workflow_annotation)
+
+            td = ToolDefinition.objects.get(name=workflow_annotation["name"])
+            td.delete()
+
+            self.assertEqual(ToolDefinition.objects.count(), 0)
+            self.assertEqual(FileRelationship.objects.count(), 0)
+            self.assertEqual(GalaxyParameter.objects.count(), 0)
+            self.assertEqual(Parameter.objects.count(), 0)
+            self.assertEqual(InputFile.objects.count(), 0)
+            self.assertEqual(OutputFile.objects.count(), 0)
+
+    def test_ist_pair_workflow_related_object_deletion(self):
+        with open("tool_manager/test-data/workflow_LIST:PAIR.json", "r") as f:
+            workflow_annotation = json.loads(f.read())
+            create_tool_definition_from_workflow(workflow_annotation)
+
+            td = ToolDefinition.objects.get(name=workflow_annotation["name"])
+            td.delete()
+
+            self.assertEqual(ToolDefinition.objects.count(), 0)
+            self.assertEqual(FileRelationship.objects.count(), 0)
+            self.assertEqual(GalaxyParameter.objects.count(), 0)
+            self.assertEqual(Parameter.objects.count(), 0)
+            self.assertEqual(InputFile.objects.count(), 0)
+            self.assertEqual(OutputFile.objects.count(), 0)
+
+    def test_list_list_pair_workflow_related_object_deletion(self):
+        with open("tool_manager/test-data/workflow_LIST:LIST:PAIR.json",
+                  "r") as f:
+            workflow_annotation = json.loads(f.read())
+            create_tool_definition_from_workflow(workflow_annotation)
+
+            td = ToolDefinition.objects.get(name=workflow_annotation["name"])
+            td.delete()
+
+            self.assertEqual(ToolDefinition.objects.count(), 0)
+            self.assertEqual(FileRelationship.objects.count(), 0)
+            self.assertEqual(GalaxyParameter.objects.count(), 0)
+            self.assertEqual(Parameter.objects.count(), 0)
+            self.assertEqual(InputFile.objects.count(), 0)
+            self.assertEqual(OutputFile.objects.count(), 0)
+
+    def test_deletion_of_tooldefinitions_objects_only(self):
+        with open("tool_manager/test-data/workflow_LIST:LIST:PAIR.json",
+                  "r") as f:
+            workflow_annotation = json.loads(f.read())
+            create_tool_definition_from_workflow(workflow_annotation)
+
+            td1 = ToolDefinition.objects.get(name=workflow_annotation["name"])
+        with open("tool_manager/test-data/workflow_LIST:PAIR.json",
+                  "r") as f:
+            workflow_annotation = json.loads(f.read())
+            create_tool_definition_from_workflow(workflow_annotation)
+
+            td2 = ToolDefinition.objects.get(name=workflow_annotation["name"])
+        with open("tool_manager/test-data/workflow_LIST.json",
+                  "r") as f:
+            workflow_annotation = json.loads(f.read())
+            create_tool_definition_from_workflow(workflow_annotation)
+
+            td3 = ToolDefinition.objects.get(name=workflow_annotation["name"])
+
+        td1.delete()
+
+        self.assertEqual(ToolDefinition.objects.count(), 2)
+        self.assertEqual(FileRelationship.objects.count(), 3)
+        self.assertEqual(GalaxyParameter.objects.count(), 12)
+        self.assertEqual(Parameter.objects.count(), 12)
+        self.assertEqual(InputFile.objects.count(), 3)
+        self.assertEqual(OutputFile.objects.count(), 5)
+
+        td2.delete()
+
+        self.assertEqual(ToolDefinition.objects.count(), 1)
+        self.assertEqual(FileRelationship.objects.count(), 1)
+        self.assertEqual(GalaxyParameter.objects.count(), 7)
+        self.assertEqual(Parameter.objects.count(), 7)
+        self.assertEqual(InputFile.objects.count(), 1)
+        self.assertEqual(OutputFile.objects.count(), 4)
+
+        td3.delete()
+
+        self.assertEqual(ToolDefinition.objects.count(), 0)
+        self.assertEqual(FileRelationship.objects.count(), 0)
+        self.assertEqual(GalaxyParameter.objects.count(), 0)
+        self.assertEqual(Parameter.objects.count(), 0)
+        self.assertEqual(InputFile.objects.count(), 0)
+        self.assertEqual(OutputFile.objects.count(), 0)
