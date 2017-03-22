@@ -1,14 +1,14 @@
 <div>
   <div ng-if="collection.file_relationship.length > 0">
-   <input-group-cart-tree
+   <rp-input-group-cart-tree
     ng-repeat="member in collection.file_relationship"
     member="member">
-   </input-group-cart-tree>
+   </rp-input-group-cart-tree>
   </div>
 
  <div ng-if="collection.file_relationship.length == 0">
-   <input-group-cart-tree member="collection">
-   </input-group-cart-tree>
+   <rp-input-group-cart-tree member="collection">
+   </rp-input-group-cart-tree>
   </div>
 </div>
 

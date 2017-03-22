@@ -8,7 +8,6 @@
   function rpInputGroupCart () {
     return {
       restrict: 'E',
-      replace: true,
       scope: {
         collection: '='
       },
