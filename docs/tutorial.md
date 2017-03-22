@@ -83,7 +83,7 @@ To follow the steps of this tutorial, you will need a data set consisting of dat
     1. Under *__Inputs (1-1 File Mapping)__*, click *__New...__* to create a new file mapping
     2. Provide a name for the new file mapping in the pop-up
     3. Drag the leftmost icons (three horizontal bars) of the input control and experimental files onto the *__input_file__* and *__exp_file__* dropzones, respectively, to create the new file mapping
-      - __Tutorial Data Set: map__ `input.fastq` __to the *input_file* and__ `nanog.fastq` __to the *exp_file*__
+        > __Tutorial Data Set:__ map `input.fastq` to the *__input_file__* and `nanog.fastq` to the *__exp_file__*
     4. Review the attribute comparison between *__input_file__* and *__exp_file__* to confirm distinct and shared attributes are correct
   ![AnalyzeChIPseq](https://github.com/refinery-platform/refinery-platform/blob/develop/docs/screenshots/AnalyzeChIPseq_Ann.png)
 3. Click *__Launch Analysis__*
