@@ -203,24 +203,45 @@ def create_file_relationship_nesting(workflow_annotation,
             )
 
 
-def validate_workflow_annotation(workflow_dictionary):
+# `resolver` allows JSON Schema to find the JSON pointers we define in our
+# schemas
+resolver = RefResolver("{}{}{}".format(
+    'file://', os.path.abspath("tool_manager/schemas"), '/'
+), None)
+
+
+def validate_tool_annotation(annotation_dictionary):
     """
     Validate incoming annotation data to ensure ToolDefinitions are created
     properly.
-    :param workflow_dictionary: dict containing Galaxy Workflow data
+    :param annotation_dictionary: dict containing Tool annotation data
     """
 
-    resolver = RefResolver("{}{}{}".format(
-        'file://', os.path.abspath("tool_manager/schemas"), '/'
-    ), None)
-    with open("tool_manager/schemas/ToolDefinition.json", "rb") as f:
+    with open("tool_manager/schemas/ToolDefinition.json") as f:
         schema = json.loads(f.read())
-        annotation_to_validate = workflow_dictionary["annotation"]
-        annotation_to_validate["name"] = workflow_dictionary["name"]
-        annotation_to_validate["tool_type"] = workflow_dictionary["tool_type"]
-        try:
-            validate(annotation_to_validate, schema, resolver=resolver)
-        except ValidationError as e:
-            raise RuntimeError(
-                "{}{}".format(ANNOTATION_ERROR_MESSAGE, e)
-            )
+    annotation_to_validate = annotation_dictionary["annotation"]
+    annotation_to_validate["name"] = annotation_dictionary["name"]
+    annotation_to_validate["tool_type"] = annotation_dictionary["tool_type"]
+    try:
+        validate(annotation_to_validate, schema, resolver=resolver)
+    except ValidationError as e:
+        raise RuntimeError(
+            "{}{}".format(ANNOTATION_ERROR_MESSAGE, e)
+        )
+
+
+def validate_workflow_step_annotation(workflow_step_dictionary):
+    """
+    Validate incoming annotation data to ensure Workflow's Steps are annotated
+    properly.
+    :param workflow_step_dictionary: dict containing a Galaxy Workflow step's
+    data
+    """
+    with open("tool_manager/schemas/WorkflowStep.json") as f:
+        schema = json.loads(f.read())
+    try:
+        validate(workflow_step_dictionary, schema, resolver=resolver)
+    except ValidationError as e:
+        raise RuntimeError(
+            "{}{}".format(ANNOTATION_ERROR_MESSAGE, e)
+        )
