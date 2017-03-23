@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import (FileRelationship, GalaxyParameter,  InputFile,
+from .models import (FileRelationship, GalaxyParameter, InputFile,
                      OutputFile, Parameter, ToolDefinition)
 
 from .utils import AdminFieldPopulator
