@@ -88,57 +88,57 @@ To follow the steps of this tutorial, you will need a data set consisting of dat
   ![AnalyzeChIPseq](screenshots/AnalyzeChIPseq_skitch.png)
 3. Click *__Launch Analysis__*
 4. Modify *__Analysis Name__* as needed in pop-up and then click *__Launch Analysis__*
-5. Review *__Analysis Launch Status__* in pop-up and click *__View Analysis__* to monitor analysis progress within the *__File Browser__* (this *__Analyses__* tab within the *__File Browser__* can also be directly accessed by clicking the analysis name from the *__Analyses__* panel on the *__Launch Pad__*)
-![AnalysisStatus](https://github.com/refinery-platform/refinery-platform/blob/develop/docs/screenshots/AnalysisStatus.png)
+5. Review *__Analysis Launch Status__* in pop-up and click *__View Analysis__* to monitor analysis progress within the *__File Browser__*   - Tip: This *__Analyses__* tab within the *__File Browser__* can also be directly accessed by clicking the analysis name from the *__Analyses__* panel on the *__Launch Pad__*
+![AnalysisStatus](screenshots/AnalysisStatus_skitch.png)
 
 ## 6. Viewing Analysis Results
 1. Upon successful completion of an analysis, click its name from the *__Analyses__* tab within the *__File Browser__*
-![ViewAnalysisResults](https://github.com/refinery-platform/refinery-platform/blob/develop/docs/screenshots/ViewAnalysisResults.png)
+![ViewAnalysisResults](screenshots/ViewAnalysisResults_skitch.png)
 2. Follow the steps below corresponding to which analysis workflow was run:
   - *__FastQC__*
     1. To view *__FastQC__* results, click the bar graph icon associated with a `\#\_fastqc_results` text file
-    ![FastQCresults1](https://github.com/refinery-platform/refinery-platform/blob/develop/docs/screenshots/FastQCresults1.png)
+    ![FastQCresults1](screenshots/FastQCresults1_skitch.png)
     2. Use the drop-down menu to view the results of the various *__FastQC__* analysis modules
-    ![FastQCresults2](https://github.com/refinery-platform/refinery-platform/blob/develop/docs/screenshots/FastQCresults2.png)
+    ![FastQCresults2](screenshots/FastQCresults2_skitch.png)
   - *__TF ChIP-seq analysis using MACS2__*
     1. To visualize peak calling results, select files to be displayed as tracks in IGV: `\#\_MACS2_bigwig` and/or `\#\_MACS2_bed` files
     2. Click the *__Visualize__* tab above the left-hand panel
     3. Select *__Current Selection__* in the *__Select a file set__* drop-down menu in the left-hand panel
     4. Choose the appropriate species in the *__Select a species__* drop-down menu in the left-hand panel
-      - __Tutorial Data Set: select *H. Sapiens (hg19)*__
+        > __Tutorial Data Set:__ select *__H. Sapiens (hg19)__*
     5. Click *__Web-based IGV__* to launch a visualization of the peak calling results
-      - __Tutorial Data Set: search *chr12:1-35,000,000* in the IGV search box (top left) to see all the peaks__
-    ![ChIPseqResults1](https://github.com/refinery-platform/refinery-platform/blob/develop/docs/screenshots/ChIPseqResults1.png)
-    ![ChIPseqResults2](https://github.com/refinery-platform/refinery-platform/blob/develop/docs/screenshots/ChIPseqResults2.png)
+        > __Tutorial Data Set:__ search *__chr12:1-35,000,000__* in the IGV search box (top left) to see all the peaks__
+    ![ChIPseqResults1](screenshots/ChIPseqResults1_skitch.png)
+    ![ChIPseqResults2](screenshots/ChIPseqResults2_skitch.png)
 3. To download any results file, click the down-pointing arrow icon associated with that file
 
 ## 7. Reviewing Data Provenance
-1. Display a data set in the *__File Browser__* (see sections __3__ and __4__)
+1. Display a data set in the *__File Browser__* (see sections __3. Viewing a Data Set Summary in the Data Set Browser__ and __4. Exploring Data Set Contents in the File Browser__)
 2. Select *__Provenance__* in the *__Display__* drop-down menu located on the right-hand side of the page
 3. Review the displayed nodes to track the analysis history of the data set -- each new analysis will add a new node to the provenance graph
 
 ## 8. Creating and Modifying a Collaboration Group
-1. From the *__Launch Pad__*, click *__Collaboration__* within the navigation bar
-  - __Create a new group__
+- Click *__Collaboration__* within the navigation bar and then
+  - *create a new group*
     1. Click the *__+__* icon in the top right of the *__Groups__* panel
     2. Choose a unique *__Group name__* and click *__Create group__*
     3. Select the new group within the *__Groups__* panel to display current members of the group within the *__Members__* panel
-  - __Invite new group members__
+  - *invite new group members*
     1. Select a group within the *__Groups__* panel and click the *__+__* icon in the top right of the *__Members__* panel
     2. Provide a *__Recipient e-mail__* address belonging to the new group member and click *__Send Invite__*
       - The new group member will then receive an invitation e-mail with instructions on how to join the group
   
-  ![Collaboration](https://github.com/refinery-platform/refinery-platform/blob/develop/docs/screenshots/Collaboration.png)
+  ![Collaboration](screenshots/Collaboration_skitch.png)
 
 ## 9. Sharing a Data Set with a Collaboration Group
-1. Display a data set in the *__Data Set Browser__* (see section __3__)
+1. Display a data set in the *__Data Set Browser__* (see section __3. Viewing a Data Set Summary in the Data Set Browser__)
 2. Click *__Share__* above the data set summary
 3. Assign *__Read-only__* or *__Modify__* permissions for that data set to any groups to which you belong
-![Share](https://github.com/refinery-platform/refinery-platform/blob/develop/docs/screenshots/Share.png)
+![Share](screenshots/Share_skitch.png)
 
 ## 10. Deleting an Analysis or Data Set
 1. To delete an analysis only, click the trash can icon in the *__Analyses__* panel on the *__Launch Pad__*. To delete a data set and all its associated analyses, click the trash can icon in the *__Data Sets__* panel on the *__Launch Pad__*.
-![Delete](https://github.com/refinery-platform/refinery-platform/blob/develop/docs/screenshots/Delete.png)
+![Delete](screenshots/Delete.png)
 
 [refinery-sample-metadata.tsv]: https://beta.stemcellcommons.org/static/sample-files/refinery-sample-metadata.tsv
 [scc-home]: https://beta.stemcellcommons.org
