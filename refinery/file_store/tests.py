@@ -9,8 +9,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import SimpleTestCase, TestCase
 
 import mock
-from rest_framework.test import APIRequestFactory
-from rest_framework.test import APITestCase
+from rest_framework.test import APIRequestFactory, APITestCase
 
 from .models import (file_path, FILE_STORE_TEMP_DIR, FileExtension,
                      FileStoreItem, FileType,

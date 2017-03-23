@@ -36,11 +36,17 @@
     }
   }
 }
+
+.solid-opacity {
+  opacity: 1;
+}
+
 /*From data_set2.html*/
 
 /**
- * For the correct positioning of the placeholder element, the dnd-list and
- * it's children must have position: relative
+ * For the correct
+  positioning of the placeholder element, the dnd-list and
+ * its children must have position: relative
  */
 
 .fileUtilModal ul{
@@ -55,7 +61,7 @@
 
 /**
  * The dnd-list should always have a min-height,
- * otherwise you can't drop to it once it's empty
+ * otherwise you can't drop to it once its empty
  */
 .fileUtilModal ul[dnd-list] {
     min-height: 42px;
@@ -99,6 +105,15 @@
     display: block;
     padding: 10px 15px;
     margin-bottom: -1px;
+}
+
+.ui-grid-selection-row-header-buttons > .fa.fa-arrow-right {
+  display: inline-block;
+  width: 1em;
+  margin-right: .2em;
+  text-align: center;
+  line-height: 1em;
+  margin-left: .2em;
 }
 
 .vertical-align {
@@ -145,6 +160,53 @@
 
     .fa-question {
       vertical-align: top;
+    }
+  }
+}
+
+#tool-info-display {
+  width: 100%;
+}
+
+.wrap-word {
+  word-wrap: break-word;
+}
+
+#input-group-nav {
+  ul {
+    padding-left: 0px;
+    list-style-type: none;
+
+    li {
+      margin-bottom: 5px;
+      padding-left: 5px;
+
+      .fileTypes {
+        display: inline;
+      }
+    }
+
+    li:nth-of-type(6n-5) {
+      color: #009E73;
+    }
+    li:nth-of-type(6n-4) {
+      color: #CC79A7;
+    }
+
+    li:nth-of-type(6n-3) {
+      color: #56B4E9;
+    }
+
+    li:nth-of-type(6n-2) {
+      color: #E69F00;
+    }
+
+    li:nth-of-type(6n-1) {
+      color: #F0E442;
+    }
+
+    li:nth-of-type(6n-0) {
+      color: #D55E00;
     }
   }
 }

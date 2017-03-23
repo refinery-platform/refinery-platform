@@ -1,0 +1,18 @@
+<ui-select
+  append-to-body="true"
+  search-enabled="false"
+  ng-model="$ctrl.selectedTool.select"
+  on-select="$ctrl.updateTool($item)"
+  theme="select2"
+  class="ui-select-drop text-left">
+   <ui-select-match placeholder="Select a tool">
+     <span ng-bind="$select.selected.name"></span>
+   </ui-select-match>
+  <ui-select-choices
+    position="down"
+    repeat="tool in $ctrl.tools track by $index">
+    {{ tool.name }}
+  </ui-select-choices>
+</ui-select>
+
+

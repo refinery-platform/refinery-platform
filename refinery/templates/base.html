@@ -124,7 +124,7 @@
       <div class="navbar-text pull-right">
        {% if user.is_authenticated %}
          <a class="pointer" popover-placement="bottom" popover-trigger="click" uib-popover-template="dynamicPopover.templateUrl">
-            <i class="fa fa-question-circle"></i>
+            <i class="fa fa-question-circle icon-only"></i>
             Help
          </a>
          &nbsp;&nbsp;|&nbsp;&nbsp;
@@ -295,6 +295,7 @@
   <script src="{% static "js/data-set-about.js" %}"></script>
   <script src="{% static "js/visualization.js" %}"></script>
   <script src="{% static "js/igv.js" %}"></script>
+  <script src="{% static "js/tool-launch.js" %}"></script>
 
   <script src="{% static "vendor/ng-file-upload/angular-file-upload.min.js" %}"></script>
   <script src="{% static "vendor/angular-ui-grid/ui-grid.min.js" %}"></script>

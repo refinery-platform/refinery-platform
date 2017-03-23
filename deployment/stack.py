@@ -112,6 +112,7 @@ def main():
         "AutoMinorVersionUpgrade": False,
         "AvailabilityZone": config['AVAILABILITY_ZONE'],
         "BackupRetentionPeriod": "0",
+        "CopyTagsToSnapshot": True,
         "DBInstanceClass": "db.t2.small",       # todo:?
         "DBInstanceIdentifier": config['RDS_NAME'],
         "Engine": "postgres",
@@ -124,6 +125,8 @@ def main():
         "PubliclyAccessible": False,
         "StorageType": "gp2",
         "Tags": instance_tags,  # todo: Should be different?
+        "VPCSecurityGroups": [
+            functions.get_att('RDSSecurityGroup', 'GroupId')],
     }
 
     if 'RDS_SNAPSHOT' in config:
@@ -162,6 +165,8 @@ def main():
             'UserData': functions.base64(user_data_script),
             'KeyName': config['KEY_NAME'],
             'IamInstanceProfile': functions.ref('WebInstanceProfile'),
+            'SecurityGroups': [
+                functions.ref("InstanceSecurityGroup")],
             'Tags': instance_tags,
         }),
         core.DependsOn(['RDSInstance', 'StorageBucket']),
@@ -294,11 +299,16 @@ def main():
         })
     )
 
+    # Security Group for Elastic Load Balancer
+    # (public facing).
     cft.resources.elbsg = core.Resource(
         'ELBSecurityGroup', 'AWS::EC2::SecurityGroup',
         core.Properties({
             'GroupDescription': "Refinery ELB",
-            'SecurityGroupEgress':  [],
+            # Egress Rule defined via
+            # AWS::EC2::SecurityGroupEgress resource,
+            # to avoid circularity (below).
+            # See http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-ec2-security-group.html # noqa: E501
             'SecurityGroupIngress': [
                 {
                     "IpProtocol": "tcp",
@@ -311,6 +321,71 @@ def main():
                     "FromPort": "443",
                     "ToPort": "443",
                     "CidrIp": "0.0.0.0/0",
+                },
+            ],
+        })
+    )
+
+    cft.resources.elbegress = core.Resource(
+        'ELBEgress', 'AWS::EC2::SecurityGroupEgress',
+        core.Properties({
+            "GroupId": functions.get_att('ELBSecurityGroup',
+                                         'GroupId'),
+            "IpProtocol": "tcp",
+            "FromPort": "80",
+            "ToPort": "80",
+            "DestinationSecurityGroupId": functions.get_att(
+                'InstanceSecurityGroup', 'GroupId'),
+        })
+    )
+
+    # Security Group for EC2- instance.
+    cft.resources.instancesg = core.Resource(
+        'InstanceSecurityGroup', 'AWS::EC2::SecurityGroup',
+        core.Properties({
+            'GroupDescription': "Refinery EC2 Instance",
+            'SecurityGroupEgress':  [],
+            'SecurityGroupIngress': [
+                {
+                    "IpProtocol": "tcp",
+                    "FromPort": "22",
+                    "ToPort": "22",
+                    "CidrIp": "0.0.0.0/0",
+                },
+                {
+                    "IpProtocol": "tcp",
+                    "FromPort": "80",
+                    "ToPort": "80",
+                    # "CidrIp": "0.0.0.0/0",
+                    # Only accept connections from the ELB.
+                    "SourceSecurityGroupId": functions.get_att(
+                        'ELBSecurityGroup', 'GroupId'),
+                },
+            ],
+        })
+    )
+
+    # Security Group for RDS instance.
+    cft.resources.rdssg = core.Resource(
+        'RDSSecurityGroup', 'AWS::EC2::SecurityGroup',
+        core.Properties({
+            'GroupDescription': "Refinery RDS",
+            'SecurityGroupEgress':  [
+                # We would like to remove all egress rules here,
+                # but you can't do that with this version
+                # of CloudFormation.
+                # We decided that the hacky workarounds are
+                # not worth it.
+            ],
+            'SecurityGroupIngress': [
+                {
+                    "IpProtocol": "tcp",
+                    "FromPort": "5432",
+                    "ToPort": "5432",
+                    # Only accept connections from the
+                    # Instance Security Group.
+                    "SourceSecurityGroupId": functions.get_att(
+                        'InstanceSecurityGroup', 'GroupId'),
                 },
             ],
         })

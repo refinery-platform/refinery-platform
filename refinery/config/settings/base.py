@@ -205,6 +205,7 @@ INSTALLED_APPS = (
     'visualization_manager',
     'annotation_server',
     'selenium_testing',
+    'tool_manager',
     'flatblocks',
     'chunked_upload',
     'rest_framework',
@@ -580,5 +581,5 @@ TEST_RUNNER = "django.test.runner.DiscoverRunner"
 
 # Required for pre-Django 1.9 TransactionTestCases utilizing
 # `serialized_rollback` to function properly http://bit.ly/2l5gR30
-TEST_NON_SERIALIZED_APPS = ['django.contrib.contenttypes',
-                            'django.contrib.auth', 'core']
+TEST_NON_SERIALIZED_APPS = ['core', 'django.contrib.contenttypes',
+                            'django.contrib.auth']

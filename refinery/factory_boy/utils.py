@@ -1,18 +1,18 @@
 from datetime import datetime
 import uuid as uuid_builtin
 
-from core.models import DataSet, Analysis
+from core.models import Analysis, DataSet
 
-from factory_boy.django_model_factories import DataSetFactory, \
-    InvestigationFactory, StudyFactory, InvestigationLinkFactory, \
-    GalaxyInstanceFactory, WorkflowEngineFactory, WorkflowFactory, \
-    ProjectFactory, AnalysisFactory
+from factory_boy.django_model_factories import (
+    AnalysisFactory, DataSetFactory, GalaxyInstanceFactory,
+    InvestigationFactory, InvestigationLinkFactory, ProjectFactory,
+    StudyFactory, WorkflowEngineFactory, WorkflowFactory
+)
 
 
 def make_datasets(number_to_create, user_instance):
     """Create some minimal DataSets"""
     while number_to_create:
-
         create_dataset_with_necessary_models()
         number_to_create -= 1
 
