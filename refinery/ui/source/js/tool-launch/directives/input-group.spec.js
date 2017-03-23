@@ -14,6 +14,7 @@
 
     beforeEach(inject(function (
       _$compile_,
+      _$controller_,
       _$rootScope_,
       $templateCache
     ) {
