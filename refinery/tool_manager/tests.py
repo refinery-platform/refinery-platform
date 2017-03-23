@@ -8,7 +8,7 @@ from rest_framework.test import (APIRequestFactory, APITestCase,
                                  force_authenticate)
 
 from core.models import ExtendedGroup
-from tool_manager.utils import (create_tool_definition_from_workflow,
+from tool_manager.utils import (create_tool_definition,
                                 FileTypeValidationError,
                                 validate_tool_annotation,
                                 validate_workflow_step_annotation)
@@ -32,12 +32,14 @@ class ToolDefinitionAPITests(APITestCase):
         self.url_root = '/api/v2/tools/definitions/'
 
         # Make some sample data
+        with open("tool_manager/test-data/visualization_LIST.json") as f:
+            create_tool_definition(json.loads(f.read()))
         with open("tool_manager/test-data/workflow_LIST.json") as f:
-            create_tool_definition_from_workflow(json.loads(f.read()))
+            create_tool_definition(json.loads(f.read()))
         with open("tool_manager/test-data/workflow_LIST:PAIR.json") as f:
-            create_tool_definition_from_workflow(json.loads(f.read()))
+            create_tool_definition(json.loads(f.read()))
         with open("tool_manager/test-data/workflow_LIST:LIST:PAIR.json") as f:
-            create_tool_definition_from_workflow(json.loads(f.read()))
+            create_tool_definition(json.loads(f.read()))
 
         # Make reusable requests & responses
         self.get_request = self.factory.get(self.url_root)
@@ -73,7 +75,7 @@ class ToolDefinitionAPITests(APITestCase):
         self.options_response = self.view(self.options_request)
 
     def test_tool_definitions_exist(self):
-        self.assertEqual(ToolDefinition.objects.count(), 3)
+        self.assertEqual(ToolDefinition.objects.count(), 4)
 
     def test_get_request_authenticated(self):
         self.assertIsNotNone(self.get_response)
@@ -95,6 +97,17 @@ class ToolDefinitionAPITests(APITestCase):
             self.delete_response.data['detail'], 'Method "DELETE" not '
                                                  'allowed.')
 
+    def test_for_proper_parameters_response(self):
+        """ToolDefinitions for Workflows will have an extra field on their
+         parameter objects
+        """
+        for tool_definition in self.get_response.data:
+            for parameter in tool_definition["parameters"]:
+                if tool_definition["tool_type"] == ToolDefinition.WORKFLOW:
+                    self.assertIn("galaxy_workflow_step", parameter.keys())
+                elif tool_definition["tool_type"] == ToolDefinition.WORKFLOW:
+                    self.assertNotIn("galaxy_workflow_step", parameter.keys())
+
 
 class ToolDefinitionGenerationTests(TestCase):
     def test_workflow_improperly_annotated(self):
@@ -114,7 +127,7 @@ class ToolDefinitionGenerationTests(TestCase):
             self.assertIsNone(
                 validate_tool_annotation(workflow_annotation))
             self.assertRaises(FileTypeValidationError,
-                              create_tool_definition_from_workflow,
+                              create_tool_definition,
                               workflow_annotation)
             self.assertEqual(ToolDefinition.objects.count(), 0)
 
@@ -157,7 +170,7 @@ class ToolDefinitionGenerationTests(TestCase):
     def test_list_visualization_tool_def_generation(self):
         with open("tool_manager/test-data/workflow_LIST.json", "r") as f:
             visualization_annotation = json.loads(f.read())
-            create_tool_definition_from_workflow(visualization_annotation)
+            create_tool_definition(visualization_annotation)
 
             self.assertEqual(ToolDefinition.objects.count(), 1)
             td = ToolDefinition.objects.get(
@@ -178,7 +191,7 @@ class ToolDefinitionGenerationTests(TestCase):
     def test_list_workflow_tool_def_generation(self):
         with open("tool_manager/test-data/workflow_LIST.json", "r") as f:
             workflow_annotation = json.loads(f.read())
-            create_tool_definition_from_workflow(workflow_annotation)
+            create_tool_definition(workflow_annotation)
 
             self.assertEqual(ToolDefinition.objects.count(), 1)
             td = ToolDefinition.objects.get(name=workflow_annotation["name"])
@@ -197,7 +210,7 @@ class ToolDefinitionGenerationTests(TestCase):
     def test_list_pair_workflow_tool_def_generation(self):
         with open("tool_manager/test-data/workflow_LIST:PAIR.json", "r") as f:
             workflow_annotation = json.loads(f.read())
-            create_tool_definition_from_workflow(workflow_annotation)
+            create_tool_definition(workflow_annotation)
 
             self.assertEqual(ToolDefinition.objects.count(), 1)
             td = ToolDefinition.objects.get(name=workflow_annotation["name"])
@@ -223,7 +236,7 @@ class ToolDefinitionGenerationTests(TestCase):
         with open("tool_manager/test-data/workflow_LIST:LIST:PAIR.json",
                   "r") as f:
             workflow_annotation = json.loads(f.read())
-            create_tool_definition_from_workflow(workflow_annotation)
+            create_tool_definition(workflow_annotation)
 
             self.assertEqual(ToolDefinition.objects.count(), 1)
             td = ToolDefinition.objects.get(name=workflow_annotation["name"])
@@ -244,7 +257,7 @@ class ToolDefinitionGenerationTests(TestCase):
     def test_list_workflow_related_object_deletion(self):
         with open("tool_manager/test-data/workflow_LIST.json", "r") as f:
             workflow_annotation = json.loads(f.read())
-            create_tool_definition_from_workflow(workflow_annotation)
+            create_tool_definition(workflow_annotation)
 
             td = ToolDefinition.objects.get(name=workflow_annotation["name"])
             td.delete()
@@ -259,7 +272,7 @@ class ToolDefinitionGenerationTests(TestCase):
     def test_ist_pair_workflow_related_object_deletion(self):
         with open("tool_manager/test-data/workflow_LIST:PAIR.json", "r") as f:
             workflow_annotation = json.loads(f.read())
-            create_tool_definition_from_workflow(workflow_annotation)
+            create_tool_definition(workflow_annotation)
 
             td = ToolDefinition.objects.get(name=workflow_annotation["name"])
             td.delete()
@@ -275,7 +288,7 @@ class ToolDefinitionGenerationTests(TestCase):
         with open("tool_manager/test-data/workflow_LIST:LIST:PAIR.json",
                   "r") as f:
             workflow_annotation = json.loads(f.read())
-            create_tool_definition_from_workflow(workflow_annotation)
+            create_tool_definition(workflow_annotation)
 
             td = ToolDefinition.objects.get(name=workflow_annotation["name"])
             td.delete()
@@ -291,19 +304,19 @@ class ToolDefinitionGenerationTests(TestCase):
         with open("tool_manager/test-data/workflow_LIST:LIST:PAIR.json",
                   "r") as f:
             workflow_annotation = json.loads(f.read())
-            create_tool_definition_from_workflow(workflow_annotation)
+            create_tool_definition(workflow_annotation)
 
             td1 = ToolDefinition.objects.get(name=workflow_annotation["name"])
         with open("tool_manager/test-data/workflow_LIST:PAIR.json",
                   "r") as f:
             workflow_annotation = json.loads(f.read())
-            create_tool_definition_from_workflow(workflow_annotation)
+            create_tool_definition(workflow_annotation)
 
             td2 = ToolDefinition.objects.get(name=workflow_annotation["name"])
         with open("tool_manager/test-data/workflow_LIST.json",
                   "r") as f:
             workflow_annotation = json.loads(f.read())
-            create_tool_definition_from_workflow(workflow_annotation)
+            create_tool_definition(workflow_annotation)
 
             td3 = ToolDefinition.objects.get(name=workflow_annotation["name"])
 
