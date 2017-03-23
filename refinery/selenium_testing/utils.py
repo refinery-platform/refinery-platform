@@ -3,7 +3,9 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.common.exceptions import TimeoutException
 
-MAX_WAIT = 30
+# The maximum amount of time that we allow an ExpectedCondition to wait
+# before timing out.
+MAX_WAIT = 60
 
 
 def login(selenium, live_server_url):
