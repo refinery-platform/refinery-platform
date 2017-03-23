@@ -89,15 +89,14 @@ class Command(BaseCommand):
                                     workflow_data["name"], step_index, e
                                 )
                             )
-
                         try:
                             validate_workflow_step_annotation(
                                 step_annotation
                             )
                         except RuntimeError as e:
-                            raise CommandError("{} {}".format(
-                                ANNOTATION_ERROR_MESSAGE, e
-                                ))
+                            raise CommandError(
+                                "{} {}".format(ANNOTATION_ERROR_MESSAGE, e)
+                                )
                         try:
                             parameters = step_annotation["parameters"]
                         except KeyError:
@@ -109,18 +108,23 @@ class Command(BaseCommand):
                             pass
                         else:
                             for parameter in parameters:
+                                # Check User-defined parameters in
+                                # annotation data against the available
+                                # parameters of the Workflow step's
+                                # `tool_inputs`
                                 if (not parameter["name"] in
                                         step["tool_inputs"]):
                                     raise RuntimeError(
-                                        "{} is not a valid "
-                                        "parameter for {}".format(
+                                        "{} is not a valid parameter for {}".
+                                        format(
                                             parameter["name"],
                                             step["tool_id"]
                                         )
                                     )
                                 else:
-                                    # parameter["galaxy_workflow_step"] = \
-                                    #     int(step_index)
+                                    parameter["galaxy_workflow_step"] = int(
+                                        step_index
+                                    )
                                     workflow_data["annotation"]["parameters"]\
                                         .append(parameter)
                         try:
@@ -136,7 +140,6 @@ class Command(BaseCommand):
                             for output_file in output_files:
                                 workflow_data["annotation"]["output_files"]\
                                     .append(output_file)
-
                 try:
                     validate_tool_annotation(workflow_data)
                 except RuntimeError as e:
