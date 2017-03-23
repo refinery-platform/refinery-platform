@@ -1,0 +1,37 @@
+<div
+  class="panel-group"
+  id="input-group-nav"
+  role="tablist"
+  aria-multiselectable="true">
+
+  <div class="panel panel-default">
+    <div class="panel-heading" role="tab">
+      <h4 class="panel-title">
+        <div
+          role="button"
+          data-toggle="collapse"
+          data-parent="#input-group-nav"
+          ng-click="$ctrl.isNavCollapsed = !$ctrl.isNavCollapsed"
+          aria-expanded="true"
+          aria-controls="{{ $ctrl.tool.name }}">
+            <i
+              ng-class="$ctrl.isNavCollapsed ? 'fa fa-caret-right' : 'fa fa-caret-down'"
+              class="fa-pull-left"
+              aria-hidden="true"></i>
+           Tool Input Group
+        </div>
+      </h4>
+    </div>
+    <div
+      id="tool-launch-body"
+      class="panel-collapse"
+      uib-collapse="$ctrl.isNavCollapsed"
+      role="tabpanel"
+      aria-labelledby="tool-body">
+      <div class="panel-body">
+        <rp-input-group-cart collection='$ctrl.tool.file_relationship'>
+        </rp-input-group-cart>
+      </div>
+    </div>
+  </div>
+</div>

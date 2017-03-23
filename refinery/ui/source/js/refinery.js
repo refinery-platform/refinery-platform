@@ -48,6 +48,7 @@ angular
     'refineryChart',
     'refineryFileBrowser',
     'refineryDataSetAbout',
+    'refineryToolLaunch',
     'refineryVisualization',
     'refineryIGV'
   ])
