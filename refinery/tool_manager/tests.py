@@ -10,7 +10,8 @@ from rest_framework.test import (APIRequestFactory, APITestCase,
 from core.models import ExtendedGroup
 from tool_manager.utils import (create_tool_definition_from_workflow,
                                 FileTypeValidationError,
-                                validate_workflow_annotation)
+                                validate_workflow_annotation,
+                                validate_workflow_step_annotation)
 
 from .models import (FileRelationship, GalaxyParameter, InputFile,
                      OutputFile, Parameter, ToolDefinition)
@@ -313,3 +314,67 @@ class ToolDefinitionGenerationTests(TestCase):
         self.assertEqual(Parameter.objects.count(), 0)
         self.assertEqual(InputFile.objects.count(), 0)
         self.assertEqual(OutputFile.objects.count(), 0)
+
+    def test_valid_workflow_step_annotations_a(self):
+        with open("tool_manager/test-data/workflow_step_annotation_valid_a"
+                  ".json"
+                  ) as f:
+            workflow_step_annotation = json.loads(f.read())
+            self.assertIsNone(
+                validate_workflow_step_annotation(
+                    workflow_step_annotation
+                )
+            )
+
+    def test_valid_workflow_step_annotations_b(self):
+        with open("tool_manager/test-data/workflow_step_annotation_valid_b"
+                  ".json"
+                  ) as f:
+            workflow_step_annotation = json.loads(f.read())
+            self.assertIsNone(
+                validate_workflow_step_annotation(
+                   workflow_step_annotation
+                )
+            )
+
+    def test_valid_workflow_step_annotations_c(self):
+        with open("tool_manager/test-data/workflow_step_annotation_valid_c"
+                  ".json"
+                  ) as f:
+            workflow_step_annotation = json.loads(f.read())
+            self.assertIsNone(
+                validate_workflow_step_annotation(workflow_step_annotation)
+            )
+
+    def test_invalid_workflow_step_annotation_a(self):
+        with open("tool_manager/test-data/workflow_step_annotation_invalid_a"
+                  ".json"
+                  ) as f:
+            workflow_step_annotation = json.loads(f.read())
+            self.assertRaises(
+                RuntimeError,
+                validate_workflow_step_annotation,
+                workflow_step_annotation
+            )
+
+    def test_invalid_workflow_step_annotation_b(self):
+        with open("tool_manager/test-data/workflow_step_annotation_invalid_b"
+                  ".json"
+                  ) as f:
+            workflow_step_annotation = json.loads(f.read())
+            self.assertRaises(
+                RuntimeError,
+                validate_workflow_step_annotation,
+                workflow_step_annotation
+            )
+
+    def test_invalid_workflow_step_annotation_c(self):
+        with open("tool_manager/test-data/workflow_step_annotation_invalid_c"
+                  ".json"
+                  ) as f:
+            workflow_step_annotation = json.loads(f.read())
+            self.assertRaises(
+                RuntimeError,
+                validate_workflow_step_annotation,
+                workflow_step_annotation
+            )
