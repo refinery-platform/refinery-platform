@@ -164,7 +164,7 @@ def _tooldefinition_pre_delete(sender, instance, *args, **kwargs):
 def _tooldefinition_post_delete(sender, instance, *args, **kwargs):
     """
     Delete related (topmost) FileRelationship object after ToolDefinition
-    deletion
+    deletion.
     """
     instance.file_relationship.delete()
 
@@ -172,8 +172,10 @@ def _tooldefinition_post_delete(sender, instance, *args, **kwargs):
 @receiver(pre_delete, sender=FileRelationship)
 def _filerelationship_pre_delete(sender, instance, *args, **kwargs):
     """
-    Delete related (topmost) FileRelationship object after ToolDefinition
-    deletion
+    Delete all related nested file_relationships in a recursive manner.
+
+    Due to the nature of the `pre_delete` signal, this approach will delete
+    the bottom-most FileRelationship object first which is desired.
     """
     input_files = instance.input_files.all()
     for input_file in input_files:
