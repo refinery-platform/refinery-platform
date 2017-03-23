@@ -10,14 +10,14 @@
     beforeEach(module('refineryToolLaunch'));
     beforeEach(inject(function (
       $rootScope,
-      _$controller_,
-      _toolsService_
+      $controller,
+      toolsService
     ) {
       scope = $rootScope.$new();
-      ctrl = _$controller_('ToolSelectCtrl', {
+      ctrl = $controller('ToolSelectCtrl', {
         $scope: scope
       });
-      service = _toolsService_;
+      service = toolsService;
     }));
 
     it('Tool Select ctrl should exist', function () {

@@ -5,26 +5,20 @@
     beforeEach(module('refineryApp'));
     beforeEach(module('refineryToolLaunch'));
 
-    var compile;
-    var rootScope;
-    var scope;
-    var template;
     var directiveElement;
 
     beforeEach(inject(function (
-      _$compile_,
-      _$rootScope_,
+      $compile,
+      $rootScope,
       $templateCache
     ) {
       $templateCache.put(
         '/static/partials/tool-launch/partials/tool-launch-button.html',
         '<button id="tool-launch-button"></button>'
       );
-      compile = _$compile_;
-      rootScope = _$rootScope_;
-      scope = rootScope.$new();
-      template = '<rp-tool-launch-button></rp-tool-launch-button>';
-      directiveElement = compile(template)(scope);
+      var scope = $rootScope.$new();
+      var template = '<rp-tool-launch-button></rp-tool-launch-button>';
+      directiveElement = $compile(template)(scope);
       scope.$digest();
     }));
 

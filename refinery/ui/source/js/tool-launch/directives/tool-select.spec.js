@@ -5,16 +5,12 @@
     beforeEach(module('refineryApp'));
     beforeEach(module('refineryToolLaunch'));
 
-    var compile;
     var directiveElement;
-    var rootScope;
-    var scope;
-    var template;
 
     beforeEach(inject(function (
-      _$compile_,
+      $compile,
       $httpBackend,
-      _$rootScope_,
+      $rootScope,
       settings,
       $templateCache
     ) {
@@ -31,11 +27,9 @@
           '/tools/definitions'
         ).respond(200, []);
 
-      compile = _$compile_;
-      rootScope = _$rootScope_;
-      scope = rootScope.$new();
-      template = '<rp-tool-select></rp-tool-select>';
-      directiveElement = compile(template)(scope);
+      var scope = $rootScope.$new();
+      var template = '<rp-tool-select></rp-tool-select>';
+      directiveElement = $compile(template)(scope);
       scope.$digest();
     }));
 

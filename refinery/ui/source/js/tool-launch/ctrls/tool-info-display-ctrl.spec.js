@@ -9,10 +9,10 @@
     beforeEach(module('refineryToolLaunch'));
     beforeEach(inject(function (
       $rootScope,
-      _$controller_
+      $controller
     ) {
       scope = $rootScope.$new();
-      ctrl = _$controller_('ToolInfoDisplayCtrl', {
+      ctrl = $controller('ToolInfoDisplayCtrl', {
         $scope: scope
       });
     }));

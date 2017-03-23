@@ -5,15 +5,11 @@
     beforeEach(module('refineryApp'));
     beforeEach(module('refineryToolLaunch'));
 
-    var compile;
-    var rootScope;
-    var scope;
-    var template;
     var directiveElement;
 
     beforeEach(inject(function (
-      _$compile_,
-      _$rootScope_,
+      $compile,
+      $rootScope,
       $templateCache
     ) {
       // Parent component contains the input-group (child) component
@@ -26,12 +22,10 @@
         '/static/partials/tool-launch/partials/tool-info-display.html',
         '<div id="tool-info-display"></div>'
       );
-      compile = _$compile_;
-      rootScope = _$rootScope_;
-      scope = rootScope.$new();
+      var scope = $rootScope.$new();
       // Parent component
-      template = '<rp-tool-display></rp-tool-display>';
-      directiveElement = compile(template)(scope);
+      var template = '<rp-tool-display></rp-tool-display>';
+      directiveElement = $compile(template)(scope);
       scope.$digest();
     }));
 
