@@ -145,12 +145,10 @@ def _tooldefinition_pre_delete(sender, instance, *args, **kwargs):
     parameters = instance.parameters.all()
     for parameter in parameters:
         parameter.delete()
-    instance.parameters.clear()
 
     output_files = instance.output_files.all()
     for output_file in output_files:
         output_file.delete()
-    instance.output_files.clear()
 
 
 @receiver(post_delete, sender=ToolDefinition)
@@ -163,7 +161,7 @@ def _tooldefinition_post_delete(sender, instance, *args, **kwargs):
 
 
 @receiver(pre_delete, sender=FileRelationship)
-def _filerelationship_delete(sender, instance, *args, **kwargs):
+def _filerelationship_pre_delete(sender, instance, *args, **kwargs):
     """
     Delete related (topmost) FileRelationship object after ToolDefinition
     deletion
@@ -171,9 +169,7 @@ def _filerelationship_delete(sender, instance, *args, **kwargs):
     input_files = instance.input_files.all()
     for input_file in input_files:
         input_file.delete()
-    instance.input_files.clear()
 
     file_relationships = instance.file_relationship.all()
     for file_relationship in file_relationships:
         file_relationship.delete()
-        instance.file_relationship.clear()
