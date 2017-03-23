@@ -13,9 +13,29 @@ class FileTypeSerializer(serializers.ModelSerializer):
 
 
 class ParameterSerializer(serializers.ModelSerializer):
+    galaxy_workflow_step = serializers.SerializerMethodField(
+        method_name="_get_galaxy_workflow_step", required=False,
+        allow_null=False
+    )
+
     class Meta:
         model = Parameter
         exclude = ["id"]
+
+    def _get_galaxy_workflow_step(self, obj):
+        return obj.get_galaxy_workflow_step()
+
+    def to_representation(self, obj):
+        # get the original serialized objects representation
+        ret = super(ParameterSerializer, self).to_representation(obj)
+
+        # Remove the `galaxy_workflow_step` field from the api if ii isn't
+        # available (Parameter objects for Visualization tools won't have
+        # this field for example)
+        if obj.get_galaxy_workflow_step() is None:
+            ret.pop("galaxy_workflow_step")
+
+        return ret
 
 
 class InputFileSerializer(serializers.ModelSerializer):

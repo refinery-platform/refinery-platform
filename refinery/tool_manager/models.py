@@ -40,6 +40,15 @@ class Parameter(models.Model):
     def __str__(self):
         return "{}: {} - {}".format(self.value_type, self.name, self.uuid)
 
+    def get_galaxy_workflow_step(self):
+        try:
+            return GalaxyParameter.objects.get(
+                uuid=self.uuid
+            ).galaxy_workflow_step
+        except (GalaxyParameter.DoesNotExist,
+                GalaxyParameter.MultipleObjectsReturned):
+            return None
+
 
 class GalaxyParameter(Parameter):
     """
