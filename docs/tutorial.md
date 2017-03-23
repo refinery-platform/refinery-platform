@@ -85,7 +85,7 @@ To follow the steps of this tutorial, you will need a data set consisting of dat
     3. Drag the leftmost icons (three horizontal bars) of the input control and experimental files onto the *__input_file__* and *__exp_file__* dropzones, respectively, to create the new file mapping
         > __Tutorial Data Set:__ map `input.fastq` to the *__input_file__* and `nanog.fastq` to the *__exp_file__*
     4. Review the attribute comparison between *__input_file__* and *__exp_file__* to confirm distinct and shared attributes are correct
-  ![AnalyzeChIPseq](https://github.com/refinery-platform/refinery-platform/blob/develop/docs/screenshots/AnalyzeChIPseq_Ann.png)
+  ![AnalyzeChIPseq](screenshots/AnalyzeChIPseq_skitch.png)
 3. Click *__Launch Analysis__*
 4. Modify *__Analysis Name__* as needed in pop-up and then click *__Launch Analysis__*
 5. Review *__Analysis Launch Status__* in pop-up and click *__View Analysis__* to monitor analysis progress within the *__File Browser__* (this *__Analyses__* tab within the *__File Browser__* can also be directly accessed by clicking the analysis name from the *__Analyses__* panel on the *__Launch Pad__*)
