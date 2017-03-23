@@ -1,0 +1,27 @@
+<div>
+  <div ng-if="member.file_relationship.length == 0">
+    <ul>
+      <li ng-repeat="inputFile in member.input_files track by $index">
+        {{ inputFile.name }}:
+        <
+        <div
+          class='fileTypes'
+          ng-repeat="fileObj in inputFile.allowed_filetypes">
+          {{fileObj.name}}
+          <span ng-if="$index < inputFile.allowed_filetypes.length - 1">
+            ,
+          </span>
+        </div>
+        >
+        <br>
+        <em>{{ inputFile.description }}</em>
+        <div ng-if="$index < member.input_files.length - 1">
+          <hr>
+        </div>
+      </li>
+    </ul>
+  </div>
+  <div ng-if="member.file_relationship.length > 0">
+    <rp-input-group-cart collection="member"></rp-input-group-cart>
+  </div>
+</div>
