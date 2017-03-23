@@ -38,7 +38,8 @@ class refinery::python {
     virtualenv => $::virtualenv,
     owner      => $::app_user,
     group      => $::app_group,
-    require    => Python::Virtualenv[$::virtualenv],
+    # require metaparameter does not actually trigger the installation
+    subscribe  => Python::Virtualenv[$::virtualenv],
   }
 
   if $::deployment_platform == 'aws' {
@@ -46,7 +47,8 @@ class refinery::python {
       virtualenv => $::virtualenv,
       owner      => $::app_user,
       group      => $::app_group,
-      require    => Python::Virtualenv[$::virtualenv],
+      # require metaparameter does not actually trigger the installation
+      subscribe  => Python::Virtualenv[$::virtualenv],
     }
   }
 
