@@ -55,21 +55,21 @@ class FileTypeValidationError(RuntimeError):
 
 
 @transaction.atomic
-def create_tool_definition_from_workflow(workflow_dictionary):
+def create_tool_definition(annotation_data):
     """
-    :param workflow_dictionary: dict of data that represents a Galaxy workflow
+    :param annotation_data: dict of data that represents a ToolDefinition
     """
 
     tool_definition = ToolDefinitionFactory(
-        name=workflow_dictionary["name"],
-        description=workflow_dictionary["annotation"]["description"],
-        tool_type=workflow_dictionary["tool_type"],
+        name=annotation_data["name"],
+        description=annotation_data["annotation"]["description"],
+        tool_type=annotation_data["tool_type"],
         file_relationship=create_file_relationship_nesting(
-            workflow_dictionary["annotation"]
+            annotation_data["annotation"]
         )
     )
 
-    for output_file in workflow_dictionary["annotation"]["output_files"]:
+    for output_file in annotation_data["annotation"]["output_files"]:
         try:
             filetype = FileType.objects.get(
                 name=output_file["filetype"]["name"]
@@ -85,8 +85,8 @@ def create_tool_definition_from_workflow(workflow_dictionary):
                 )
             )
 
-    for parameter in workflow_dictionary["annotation"]["parameters"]:
-        if workflow_dictionary["tool_type"] == ToolDefinition.WORKFLOW:
+    for parameter in annotation_data["annotation"]["parameters"]:
+        if annotation_data["tool_type"] == ToolDefinition.WORKFLOW:
             tool_definition.parameters.add(
                 GalaxyParameterFactory(
                     name=parameter["name"],
@@ -96,7 +96,7 @@ def create_tool_definition_from_workflow(workflow_dictionary):
                     galaxy_workflow_step=parameter["galaxy_workflow_step"]
                 )
             )
-        if workflow_dictionary["tool_type"] == ToolDefinition.VISUALIZATION:
+        if annotation_data["tool_type"] == ToolDefinition.VISUALIZATION:
             tool_definition.parameters.add(
                 ParameterFactory(
                     name=parameter["name"],

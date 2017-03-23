@@ -8,7 +8,7 @@ from bioblend.galaxy.client import ConnectionError
 from core.models import WorkflowEngine
 from tool_manager.models import ToolDefinition
 from ...utils import (ANNOTATION_ERROR_MESSAGE,
-                      create_tool_definition_from_workflow,
+                      create_tool_definition,
                       validate_tool_annotation,
                       validate_workflow_step_annotation)
 
@@ -146,7 +146,7 @@ class Command(BaseCommand):
                         "Something unexpected happened: {}".format(e)
                     )
                 try:
-                    create_tool_definition_from_workflow(workflow_data)
+                    create_tool_definition(workflow_data)
                 except Exception as e:
                     raise CommandError(
                         "Creation of ToolDefinition failed. Database "
