@@ -1,9 +1,11 @@
 'use strict';
 
-function analysisMonitorAnalysesList ($rootScope, $location, $window) {
+function analysisMonitorAnalysesList ($rootScope, $location, urlService) {
   return {
     restrict: 'E',
-    templateUrl: $window.staticURL('partials/analysis-monitor/partials/analyses-list.html'),
+    templateUrl: function () {
+      return urlService.static('partials/analysis-monitor/partials/analyses-list.html');
+    },
     controller: 'AnalysisMonitorCtrl',
     controllerAs: 'AMCtrl',
     bindToController: {

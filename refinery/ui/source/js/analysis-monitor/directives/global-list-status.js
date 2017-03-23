@@ -1,9 +1,9 @@
 'use strict';
 
-function rpAnalysisMonitorGlobalListStatus (staticUrlService) {
+function rpAnalysisMonitorGlobalListStatus (urlService) {
   return {
     templateUrl: function () {
-      return staticUrlService.create('partials/analysis-monitor/partials/global-list-status.html');
+      return urlService.static('partials/analysis-monitor/partials/global-list-status.html');
     },
     restrict: 'AE',
     controller: 'AnalysisMonitorCtrl',
@@ -35,6 +35,6 @@ function rpAnalysisMonitorGlobalListStatus (staticUrlService) {
 angular
   .module('refineryAnalysisMonitor')
   .directive('rpAnalysisMonitorGlobalListStatus', [
-    'staticUrlService',
+    'urlService',
     rpAnalysisMonitorGlobalListStatus
   ]);

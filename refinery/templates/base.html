@@ -37,7 +37,7 @@
       repositoryMode: {{ REFINERY_REPOSITORY_MODE|yesno:"true,false,undefined" }},
       solrSynonymSearch: {{ SOLR_SYNONYM_SEARCH|lower }},
       refineryTutorialSteps: '{{  REFINERY_TUTORIAL_STEPS|escapejs }}',
-      staticURL: '{{ STATIC_URL|escapejs }}'
+      staticUrl: '{{ STATIC_URL|escapejs }}'
     };
 
     if (window.djangoApp.userId === 'None' || window.djangoApp.userName === 'None') {
@@ -275,6 +275,7 @@
   <script src="{% static "js/refinery-config.js" %}"></script>
   <script src="{% static "js/refinery-settings.js" %}"></script>
   <script src="{% static "js/refinery-libraries.js" %}"></script>
+  <script src="{% static "js/refinery-service.js" %}"></script>
   <script src="{% static "js/refinery-controller.js" %}"></script>
   <script src="{% static "js/globals.js" %}"></script>
   <script src="{% static "js/commons.js" %}"></script>

@@ -14,11 +14,11 @@ describe('rpAnalysisLaunch directive unit test', function () {
   beforeEach(inject(function (
     _$compile_,
     _$rootScope_,
-    settings,
+    urlService,
     $templateCache
   ) {
     $templateCache.put(
-      settings.staticURL + 'partials/analysis-launch/partials/analysis-launch.html',
+      urlService.static('partials/analysis-launch/partials/analysis-launch.html'),
       '<button id="rp-analysis-launch-modal"></button>'
     );
     compile = _$compile_;
