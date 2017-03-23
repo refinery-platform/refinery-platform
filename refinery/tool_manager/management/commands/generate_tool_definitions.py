@@ -4,12 +4,14 @@ import sys
 from django.core.management.base import BaseCommand, CommandError
 
 from bioblend.galaxy.client import ConnectionError
+from jsonschema import ValidationError
 
 from core.models import WorkflowEngine
 from tool_manager.models import ToolDefinition
 from ...utils import (ANNOTATION_ERROR_MESSAGE,
                       create_tool_definition_from_workflow,
-                      validate_workflow_annotation)
+                      validate_tool_annotation,
+                      validate_workflow_step_annotation)
 
 
 class Command(BaseCommand):
@@ -80,7 +82,7 @@ class Command(BaseCommand):
                     # to python dict if so
                     if step["annotation"]:
                         try:
-                            annotation = json.loads(step["annotation"])
+                            step_annotation = json.loads(step["annotation"])
                         except ValueError as e:
                             raise CommandError(
                                 "Workflow: {}'s Step: {}'s annotation data"
@@ -88,51 +90,56 @@ class Command(BaseCommand):
                                     workflow_data["name"], step_index, e
                                 )
                             )
+
                         try:
-                            parameters = annotation["parameters"]
-                        except KeyError as e:
-                            raise CommandError(
-                                "{}Workflow: {}'s Step: {}'s annotation data "
-                                "does not have the required `{}` key".format(
-                                    ANNOTATION_ERROR_MESSAGE,
-                                    workflow_data["name"],
-                                    step_index,
-                                    e)
+                            validate_workflow_step_annotation(
+                                step_annotation
                             )
-                        for parameter in parameters:
-                            if not parameter["name"] in step["tool_inputs"]:
-                                raise RuntimeError(
-                                    "{} is not a valid "
-                                    "parameter for {}".format(
-                                        parameter["name"],
-                                        step["tool_id"]
-                                    )
-                                )
-                            else:
-                                parameter["galaxy_workflow_step"] = \
-                                    int(step_index)
-                                workflow_data["annotation"]["parameters"]\
-                                    .append(
-                                        parameter
-                                    )
+                        except ValidationError as e:
+                            raise CommandError("{} {}".format(
+                                ANNOTATION_ERROR_MESSAGE, e
+                                ))
                         try:
-                            output_files = annotation["output_files"]
-                        except KeyError as e:
-                            raise CommandError(
-                                "{}Workflow: {}'s Step: {}'s annotation data "
-                                "does not have the required `{}` key".format(
-                                    ANNOTATION_ERROR_MESSAGE,
-                                    workflow_data["name"],
-                                    step,
-                                    e)
-                            )
-                        for output_file in output_files:
-                            workflow_data["annotation"]["output_files"].append(
-                                output_file
-                            )
+                            parameters = step_annotation["parameters"]
+                        except KeyError:
+                            # Since we've already validated the Workflow
+                            # step's annotation, and a Step Annotation
+                            # doesn't necessarily need to have
+                            # `parameters` we can pass here without
+                            # raising an exception
+                            pass
+                        else:
+                            for parameter in parameters:
+                                if (not parameter["name"] in
+                                        step["tool_inputs"]):
+                                    raise RuntimeError(
+                                        "{} is not a valid "
+                                        "parameter for {}".format(
+                                            parameter["name"],
+                                            step["tool_id"]
+                                        )
+                                    )
+                                else:
+                                    # parameter["galaxy_workflow_step"] = \
+                                    #     int(step_index)
+                                    workflow_data["annotation"]["parameters"]\
+                                        .append(parameter)
+                        try:
+                            output_files = step_annotation["output_files"]
+                        except KeyError:
+                            # Since we've already validated the Workflow
+                            # step's annotation, and a Step Annotation
+                            # doesn't necessarily need to have
+                            # `output_files` we can pass here without
+                            # raising an exception
+                            pass
+                        else:
+                            for output_file in output_files:
+                                workflow_data["annotation"]["output_files"]\
+                                    .append(output_file)
 
                 try:
-                    validate_workflow_annotation(workflow_data)
+                    validate_tool_annotation(workflow_data)
                 except RuntimeError as e:
                     raise CommandError(e)
                 except Exception as e:
