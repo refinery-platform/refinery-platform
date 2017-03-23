@@ -8,6 +8,5 @@
   },
   "required": [
     "galaxy_workflow_step"
-  ],
-  "additionalProperties": true
+  ]
 }
