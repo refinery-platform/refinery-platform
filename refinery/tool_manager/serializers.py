@@ -29,9 +29,9 @@ class ParameterSerializer(serializers.ModelSerializer):
         # get the original serialized objects representation
         ret = super(ParameterSerializer, self).to_representation(obj)
 
-        # Remove the `galaxy_workflow_step` field from the api if ii isn't
-        # available (Parameter objects for Visualization tools won't have
-        # this field for example)
+        # Remove the `galaxy_workflow_step` field from the api response if it
+        # isn't available (Parameter objects for Visualization-based
+        # ToolDefinitions won't have this field for example)
         if obj.get_galaxy_workflow_step() is None:
             ret.pop("galaxy_workflow_step")
 
