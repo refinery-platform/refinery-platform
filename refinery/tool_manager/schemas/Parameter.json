@@ -20,7 +20,8 @@
         "default_value": {
           "type": "number"
         }
-      }
+      },
+      "additionalProperties": false
     },
     {
       "type": "object",
@@ -40,7 +41,8 @@
         "default_value": {
           "type": "string"
         }
-      }
+      },
+      "additionalProperties": false
     },
     {
       "type": "object",
@@ -60,7 +62,8 @@
         "default_value": {
           "type": "boolean"
         }
-      }
+      },
+      "additionalProperties": false
     },
     {
       "type": "object",
@@ -82,7 +85,8 @@
         "default_value": {
           "type": "string"
         }
-      }
+      },
+      "additionalProperties": false
     }
   ],
   "required": [
@@ -90,6 +94,5 @@
       "description",
       "value_type",
       "default_value"
-  ],
-  "additionalProperties": false
+  ]
 }
