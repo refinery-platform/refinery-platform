@@ -52,7 +52,7 @@ class Parameter(models.Model):
 
 class GalaxyParameter(Parameter):
     """
-    Child of Parameter with fields specific to Galaxy tool parameters
+    Extension of Parameter model with fields specific to Galaxy tool parameters
     """
     galaxy_workflow_step = models.IntegerField()
 
