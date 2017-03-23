@@ -18,6 +18,11 @@
       _$rootScope_,
       $templateCache
     ) {
+      // Parent component contains the input-group (child) component
+      $templateCache.put(
+        '/static/partials/tool-launch/partials/tool-display.html',
+        '<div id="tool-display"><rp-input-group></rp-input-group></div>'
+      );
       $templateCache.put(
         '/static/partials/tool-launch/partials/input-group.html',
         '<div id="input-group-nav"></div>'
@@ -25,7 +30,8 @@
       compile = _$compile_;
       rootScope = _$rootScope_;
       scope = rootScope.$new();
-      template = '<rp-input-group></rp-input-group>';
+      // Parent component
+      template = '<rp-tool-display></rp-tool-display>';
       directiveElement = compile(template)(scope);
       scope.$digest();
     }));
