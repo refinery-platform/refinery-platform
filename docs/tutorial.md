@@ -138,7 +138,7 @@ To follow the steps of this tutorial, you will need a data set consisting of dat
 
 ## 10. Deleting an Analysis or Data Set
 1. To delete an analysis only, click the trash can icon in the *__Analyses__* panel on the *__Launch Pad__*. To delete a data set and all its associated analyses, click the trash can icon in the *__Data Sets__* panel on the *__Launch Pad__*.
-![Delete](screenshots/Delete.png)
+![Delete](screenshots/Delete_skitch.png)
 
 [refinery-sample-metadata.tsv]: https://beta.stemcellcommons.org/static/sample-files/refinery-sample-metadata.tsv
 [scc-home]: https://beta.stemcellcommons.org
