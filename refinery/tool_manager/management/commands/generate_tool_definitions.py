@@ -4,7 +4,6 @@ import sys
 from django.core.management.base import BaseCommand, CommandError
 
 from bioblend.galaxy.client import ConnectionError
-from jsonschema import ValidationError
 
 from core.models import WorkflowEngine
 from tool_manager.models import ToolDefinition
@@ -95,7 +94,7 @@ class Command(BaseCommand):
                             validate_workflow_step_annotation(
                                 step_annotation
                             )
-                        except ValidationError as e:
+                        except RuntimeError as e:
                             raise CommandError("{} {}".format(
                                 ANNOTATION_ERROR_MESSAGE, e
                                 ))
