@@ -47,7 +47,7 @@ class ToolDefinitionAPITests(APITestCase):
         self.tool_json = self.get_response.data[0]
 
         self.delete_request = self.factory.delete(
-            urljoin(self.url_root,  self.tool_json['uuid']))
+            urljoin(self.url_root, self.tool_json['uuid']))
         force_authenticate(self.delete_request, self.user)
         self.delete_response = self.view(self.delete_request)
         self.put_request = self.factory.put(
@@ -146,6 +146,27 @@ class ToolDefinitionGenerationTests(TestCase):
                 RuntimeError,
                 validate_tool_annotation, workflow_annotation)
             self.assertEqual(ToolDefinition.objects.count(), 0)
+
+    def test_list_visualization_tool_def_validation(self):
+        with open("tool_manager/test-data/visualization_LIST.json", "r") as f:
+            visualization_annotation = json.loads(f.read())
+            self.assertIsNone(
+                validate_tool_annotation(visualization_annotation)
+            )
+
+    def test_list_visualization_tool_def_generation(self):
+        with open("tool_manager/test-data/workflow_LIST.json", "r") as f:
+            visualization_annotation = json.loads(f.read())
+            create_tool_definition_from_workflow(visualization_annotation)
+
+            self.assertEqual(ToolDefinition.objects.count(), 1)
+            td = ToolDefinition.objects.get(
+                name=visualization_annotation["name"]
+            )
+            self.assertEqual(td.output_files.count(), 4)
+            self.assertEqual(td.parameters.count(), 7)
+            self.assertEqual(td.file_relationship.file_relationship.count(), 0)
+            self.assertEqual(td.file_relationship.input_files.count(), 1)
 
     def test_list_workflow_tool_def_validation(self):
         with open("tool_manager/test-data/workflow_LIST.json", "r") as f:
