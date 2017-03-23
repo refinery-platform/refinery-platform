@@ -1,5 +1,4 @@
 (function () {
-  // Unit test for file display directive
   'use strict';
 
   describe('rpToolInfoDisplay component unit test', function () {

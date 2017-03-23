@@ -1,5 +1,4 @@
 (function () {
-  // Unit test for file display directive
   'use strict';
 
   describe('rpToolSelect directive unit test', function () {
