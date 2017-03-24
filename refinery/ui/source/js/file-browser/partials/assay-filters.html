@@ -1,20 +1,9 @@
-<div ng-if="FBCtrl.attributeFilter">
+  <div ng-if="FBCtrl.attributeFilter">
   <div class="panel-group data-set-filters" id="attribute-filter"
     role="tablist"
     aria-multiselectable="true">
     <h4 class="m-t-0">
       Attribute Filter
-      <rp-file-browser-selection-reset></rp-file-browser-selection-reset>
-      <a
-        popover-placement="right"
-        uib-popover=" Use facet attribute filters to save a new node group.
-        Reset node filters."
-        popover-title="Current File Selection"
-        popover-trigger="focus"
-        popover-append-to-body="true"
-        tabindex="0">
-          <i class="fa fa-question-circle info-icon"></i>
-      </a>
     </h4>
     <div
       ng-repeat="(attribute, attributeObj) in FBCtrl.attributeFilter track by $index"
@@ -78,7 +67,7 @@
   </div>
 </div>
 
-<div ng-if="FBCtrl.analysisFilter">
+  <div ng-if="FBCtrl.analysisFilter">
   <div class="panel-group data-set-filters" id="analysis-filter" role="tablist"
     aria-multiselectable="true">
     <h4>Analysis Filter</h4>
