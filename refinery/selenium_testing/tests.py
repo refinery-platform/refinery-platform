@@ -1,5 +1,8 @@
+import os
+
 from django.contrib.auth.models import User
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
+
 from pyvirtualdisplay import Display
 from selenium import webdriver
 
@@ -9,9 +12,10 @@ from core.models import Analysis, DataSet
 
 from factory_boy.utils import make_analyses_with_single_dataset, make_datasets
 from selenium_testing.utils import (
-    assert_body_text, login, wait_until_id_clickable, MAX_WAIT,
-    assert_text_within_id, delete_from_ui, wait_until_class_visible,
-    wait_until_id_visible)
+    assert_body_text, assert_text_within_id, delete_from_ui, login,
+    MAX_WAIT, wait_until_class_visible, wait_until_id_clickable,
+    wait_until_id_visible
+)
 
 # Start a pyvirtualdisplay for geckodriver to interact with
 display = Display(visible=0, size=(1900, 1080))
@@ -24,8 +28,12 @@ class SeleniumTestBase(StaticLiveServerTestCase):
     # Don't delete data migration data after test runs: http://bit.ly/2lAYqVJ
     serialized_rollback = True
 
+    continuous_integration = os.getenv("CONTINUOUS_INTEGRATION")
+    skip_message = "Skipping Selenium-based test during local testing."
+
     def setUp(self, site_login=True, initialize_guest=True,
               public_group_needed=True):
+
         self.browser = webdriver.Firefox()
         self.browser.maximize_window()
 
@@ -52,13 +60,15 @@ class NoLoginTestCase(SeleniumTestBase):
     Ensure that Refinery looks like it should when there is no currently
     logged in user
     """
-
     # SeleniumTestBase.setUp(): We don't need to login or initialize the
     # guest user this time
     def setUp(self, site_login=True, initialize_guest=True,
               public_group_needed=False):
-        super(NoLoginTestCase, self).setUp(initialize_guest=False,
-                                           site_login=False)
+        if self.continuous_integration:
+            super(NoLoginTestCase, self).setUp(initialize_guest=False,
+                                               site_login=False)
+        else:
+            self.skipTest(self.skip_message)
 
     def test_login_not_required(self):
         self.browser.get(self.live_server_url)
@@ -94,6 +104,11 @@ class DataSetsPanelTestCase(SeleniumTestBase):
     Ensure that the DataSet upload button and DataSet Preview look like
     they're behaving normally
     """
+
+    def setUp(self, site_login=True, initialize_guest=True,
+              public_group_needed=True):
+        if not self.continuous_integration:
+            self.skipTest(self.skip_message)
 
     def test_data_set_preview(self):
         """Test DataSet Preview"""
@@ -132,6 +147,11 @@ class DataSetsPanelTestCase(SeleniumTestBase):
 
 class UiDeletionTestCase(SeleniumTestBase):
     """Ensure proper deletion of DataSets and Analyses from the UI"""
+
+    def setUp(self, site_login=True, initialize_guest=True,
+              public_group_needed=True):
+        if not self.continuous_integration:
+            self.skipTest(self.skip_message)
 
     def test_dataset_deletion(self, total_datasets=2):
         """Delete some datasets and make sure the UI updates properly"""
