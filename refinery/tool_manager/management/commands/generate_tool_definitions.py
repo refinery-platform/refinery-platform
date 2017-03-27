@@ -28,9 +28,6 @@ class Command(BaseCommand):
 
         workflow_list = get_workflow_list()
 
-        # Validate workflow annotation data, and try to create a
-        # ToolDefinition if validation passes.
-
         for workflow in workflow_list:
             workflow["tool_type"] = ToolDefinition.WORKFLOW
             try:
