@@ -146,7 +146,7 @@ class ToolDefinition(models.Model):
 
 
 @receiver(pre_delete, sender=ToolDefinition)
-def _tooldefinition_pre_delete(sender, instance, *args, **kwargs):
+def delete_parameters_and_output_files(sender, instance, *args, **kwargs):
     """
     Delete related parameter and output_file objects upon ToolDefinition
     deletion
@@ -161,7 +161,7 @@ def _tooldefinition_pre_delete(sender, instance, *args, **kwargs):
 
 
 @receiver(post_delete, sender=ToolDefinition)
-def _tooldefinition_post_delete(sender, instance, *args, **kwargs):
+def delete_file_relationship(sender, instance, *args, **kwargs):
     """
     Delete related (topmost) FileRelationship object after ToolDefinition
     deletion.
@@ -170,7 +170,8 @@ def _tooldefinition_post_delete(sender, instance, *args, **kwargs):
 
 
 @receiver(pre_delete, sender=FileRelationship)
-def _filerelationship_pre_delete(sender, instance, *args, **kwargs):
+def delete_input_files_and_file_relationships(sender, instance, *args,
+                                              **kwargs):
     """
     Delete all related nested file_relationships in a recursive manner.
 
