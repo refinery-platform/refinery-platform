@@ -1,4 +1,5 @@
-{ "name": "Test LIST Visualization",
+{
+  "name": "Test LIST Visualization",
   "tool_type": "VISUALIZATION",
   "annotation": {
     "description": "This visualization does really cool things",

@@ -26,7 +26,7 @@
     },
     "file_relationship": {
       "oneOf": [
-          {"$ref": "FileRelationship.json#"},
+          {"type": "object", "$ref": "FileRelationship.json#"},
           {"type": "object", "additionalProperties": false, "properties": {}}
         ]
       }
