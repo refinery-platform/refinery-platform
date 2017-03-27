@@ -1,12 +1,15 @@
 import json
 import logging
 import os
+import sys
 
+from bioblend.galaxy.client import ConnectionError
 from django.contrib import admin
 from django.db import transaction
 
 from jsonschema import RefResolver, validate, ValidationError
 
+from core.models import WorkflowEngine
 from factory_boy.django_model_factories import (FileRelationshipFactory,
                                                 GalaxyParameterFactory,
                                                 InputFileFactory,
@@ -245,3 +248,42 @@ def validate_workflow_step_annotation(workflow_step_dictionary):
         raise RuntimeError(
             "{}{}".format(ANNOTATION_ERROR_MESSAGE, e)
         )
+
+
+def get_workflow_list():
+    """
+    Generate a list of available workflows from all currently available
+    WorkflowEngines
+    :return: list of workflow dicts
+    """
+    workflow_list = []
+    workflow_engines = WorkflowEngine.objects.all()
+
+    sys.stdout.write(
+        "{} workflow engines found.\n".format(workflow_engines.count())
+    )
+
+    for engine in workflow_engines:
+        sys.stdout.write(
+            "Fetching workflows from workflow engine {}\n".format(
+                engine.name
+            )
+        )
+
+        galaxy_connection = engine.instance.galaxy_connection()
+        try:
+            workflows = galaxy_connection.workflows.get_workflows()
+        except ConnectionError as e:
+            raise RuntimeError(
+                "Unable to retrieve workflows from '{}' {}".format(
+                    engine.instance.base_url, e
+                )
+            )
+        else:
+            for workflow in workflows:
+                workflow_data = galaxy_connection.workflows.show_workflow(
+                    workflow["id"]
+                )
+                workflow_list.append(workflow_data)
+
+    return workflow_list
