@@ -1,7 +1,9 @@
 import json
+import mock
 from urlparse import urljoin
 
 from django.contrib.auth.models import User
+from django.core.management import call_command
 from django.test import TestCase
 
 from rest_framework.test import (APIRequestFactory, APITestCase,
@@ -10,6 +12,7 @@ from rest_framework.test import (APIRequestFactory, APITestCase,
 from core.models import ExtendedGroup
 from tool_manager.utils import (create_tool_definition,
                                 FileTypeValidationError,
+                                mock_get_workflow_list,
                                 validate_tool_annotation,
                                 validate_workflow_step_annotation)
 
@@ -408,3 +411,15 @@ class ToolDefinitionGenerationTests(TestCase):
                 validate_workflow_step_annotation,
                 workflow_step_annotation
             )
+
+    def test_generate_tool_definitions_management_command(self):
+        with mock.patch('tool_manager.utils.get_workflow_list',
+                        side_effect=mock_get_workflow_list):
+            call_command("generate_tool_definitions")
+
+        self.assertEqual(ToolDefinition.objects.count(), 3)
+        self.assertEqual(FileRelationship.objects.count(), 6)
+        self.assertEqual(GalaxyParameter.objects.count(), 9)
+        self.assertEqual(Parameter.objects.count(), 9)
+        self.assertEqual(InputFile.objects.count(), 5)
+        self.assertEqual(OutputFile.objects.count(), 3)

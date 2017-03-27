@@ -287,3 +287,13 @@ def get_workflow_list():
                 workflow_list.append(workflow_data)
 
     return workflow_list
+
+
+def mock_get_workflow_list():
+    """
+    Mock of `get_workflow_list()`
+    Unserializes galaxy workflow response data that was serialized prior.
+    :return: a list of Galaxy workflow data
+    """
+    with open("tool_manager/test-data/galaxy_workflows.json") as f:
+        return json.loads(f.read())
