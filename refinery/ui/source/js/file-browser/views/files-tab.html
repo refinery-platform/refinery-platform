@@ -1,38 +1,41 @@
 <div class="dataSetTabContent" id="files">
   <!-- filters and content  -->
   <div class="row y-scrollable m-t-1-2 p-t-1">
-    <div class="col-md-2 col-sm-3 well" id="tool-launch">
+    <div class="col-lg-2 col-md-2 col-sm-3 well" id="tool-launch">
       <div class="row">
         <rp-tool-display></rp-tool-display>
       </div>
 
     </div>
-    <div class="col-md-2 col-sm-1">
-      <rp-file-browser-assay-filters>
-      </rp-file-browser-assay-filters>
-
-      <rp-file-browser-node-group></rp-file-browser-node-group>
-
-      <rp-file-display></rp-file-display>
-
-      <span ng-if="FBCtrl.isOwner">
-        <i class="fa fa-wrench fa-border"
-          rp-assay-files-util-modal>
-        </i>
-        <a
-          id="help-view-selector"
-          popover-placement="right"
-          uib-popover="The collection of files in this data set can be displayed using different representations."
-          popover-title="Select File Display Mode"
-          popover-trigger="focus"
-          popover-append-to-body="true"
-          tabindex="0">
-          <i class="fa fa-question-circle info-icon icon-only"></i>
-        </a>
-      </span>
-
+    <div class="col-lg-2 col-md-2 col-sm-3">
+      <div id="table-filter">
+        <div id="filter-panel-body">
+          <rp-file-browser-assay-filters>
+          </rp-file-browser-assay-filters>
+        </div>
+        <hr>
+        <rp-file-browser-node-group></rp-file-browser-node-group>
+        <div class="sub-group-panel">
+          <rp-file-display></rp-file-display>
+          <span ng-if="FBCtrl.isOwner">
+            <i class="fa fa-wrench fa-border"
+              rp-assay-files-util-modal>
+            </i>
+            <a
+              id="help-view-selector"
+              popover-placement="right"
+              uib-popover="The collection of files in this data set can be displayed using different representations."
+              popover-title="Select File Display Mode"
+              popover-trigger="focus"
+              popover-append-to-body="true"
+              tabindex="0">
+              <i class="fa fa-question-circle info-icon icon-only"></i>
+            </a>
+          </span>
+        </div>
+      </div>
     </div>
-    <div class="col-md-8 col-sm-8" id="main-area">
+    <div class="col-lg-8 col-md-8 col-sm-6" id="main-area">
       <rp-file-browser-assay-files></rp-file-browser-assay-files>
     </div>
   </div>
