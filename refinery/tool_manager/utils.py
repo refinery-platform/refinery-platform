@@ -1,7 +1,6 @@
 import json
 import logging
 import os
-import sys
 
 from bioblend.galaxy.client import ConnectionError
 from django.contrib import admin
@@ -259,16 +258,10 @@ def get_workflow_list():
     workflow_list = []
     workflow_engines = WorkflowEngine.objects.all()
 
-    sys.stdout.write(
-        "{} workflow engines found.\n".format(workflow_engines.count())
-    )
+    logger.debug("%s workflow engines found.", workflow_engines.count())
 
     for engine in workflow_engines:
-        sys.stdout.write(
-            "Fetching workflows from workflow engine {}\n".format(
-                engine.name
-            )
-        )
+        logger.debug("Fetching workflows from workflow engine %s", engine.name)
 
         galaxy_connection = engine.instance.galaxy_connection()
         try:
