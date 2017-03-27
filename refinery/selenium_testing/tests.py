@@ -107,7 +107,13 @@ class DataSetsPanelTestCase(SeleniumTestBase):
 
     def setUp(self, site_login=True, initialize_guest=True,
               public_group_needed=True):
-        if not self.continuous_integration:
+        if self.continuous_integration:
+            super(DataSetsPanelTestCase, self).setUp(
+                site_login=True,
+                initialize_guest=True,
+                public_group_needed=True
+            )
+        else:
             self.skipTest(self.skip_message)
 
     def test_data_set_preview(self):
@@ -150,7 +156,13 @@ class UiDeletionTestCase(SeleniumTestBase):
 
     def setUp(self, site_login=True, initialize_guest=True,
               public_group_needed=True):
-        if not self.continuous_integration:
+        if self.continuous_integration:
+            super(UiDeletionTestCase, self).setUp(
+                site_login=True,
+                initialize_guest=True,
+                public_group_needed=True
+            )
+        else:
             self.skipTest(self.skip_message)
 
     def test_dataset_deletion(self, total_datasets=2):
