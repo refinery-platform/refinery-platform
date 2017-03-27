@@ -26,7 +26,10 @@ class Command(BaseCommand):
         """
         sys.stdout.write("Generating ToolDefinitions\n")
 
-        workflow_list = get_workflow_list()
+        try:
+            workflow_list = get_workflow_list()
+        except RuntimeError as e:
+            raise CommandError(e)
 
         # Validate workflow annotation data, and try to create a
         # ToolDefinition if validation passes.
