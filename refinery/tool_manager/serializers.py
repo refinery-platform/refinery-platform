@@ -14,7 +14,8 @@ class FileTypeSerializer(serializers.ModelSerializer):
 
 class ParameterSerializer(serializers.ModelSerializer):
     galaxy_workflow_step = serializers.SerializerMethodField(
-        method_name="_get_galaxy_workflow_step", required=False,
+        method_name="_get_galaxy_workflow_step",
+        required=False,
         allow_null=False
     )
 
@@ -49,8 +50,11 @@ class InputFileSerializer(serializers.ModelSerializer):
 class FileRelationshipSerializer(serializers.ModelSerializer):
     # RecursiveField allows for the exposure of all self-referential nested
     # ManyToMany relations in the serialized response data
-    file_relationship = RecursiveField(required=False, allow_null=True,
-                                       many=True)
+    file_relationship = RecursiveField(
+        required=False,
+        allow_null=True,
+        many=True
+    )
     input_files = InputFileSerializer(many=True)
 
     class Meta:
