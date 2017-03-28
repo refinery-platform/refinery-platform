@@ -2,19 +2,29 @@ import json
 import logging
 import os
 
+from bioblend.galaxy.client import ConnectionError
 from django.contrib import admin
 from django.db import transaction
 
 from jsonschema import RefResolver, validate, ValidationError
 
+from core.models import WorkflowEngine
 from factory_boy.django_model_factories import (FileRelationshipFactory,
+                                                GalaxyParameterFactory,
                                                 InputFileFactory,
                                                 OutputFileFactory,
+                                                ParameterFactory,
                                                 ToolDefinitionFactory)
 
 from file_store.models import FileType
+from .models import ToolDefinition
 
 logger = logging.getLogger(__name__)
+ANNOTATION_ERROR_MESSAGE = (
+    "Workflow not properly annotated. "
+    "Please read: http://bit.ly/2nalk6w for more information on how to "
+    "properly annotate your Galaxy-based workflows. "
+)
 
 
 class AdminFieldPopulator(admin.ModelAdmin):
@@ -47,21 +57,21 @@ class FileTypeValidationError(RuntimeError):
 
 
 @transaction.atomic
-def create_tool_definition_from_workflow(workflow_dictionary):
+def create_tool_definition(annotation_data):
     """
-    :param workflow_dictionary: dict of data that represents a Galaxy workflow
+    :param annotation_data: dict of data that represents a ToolDefinition
     """
 
     tool_definition = ToolDefinitionFactory(
-        name=workflow_dictionary["name"],
-        description=workflow_dictionary["annotation"]["description"],
-        tool_type=workflow_dictionary["tool_type"],
+        name=annotation_data["name"],
+        description=annotation_data["annotation"]["description"],
+        tool_type=annotation_data["tool_type"],
         file_relationship=create_file_relationship_nesting(
-            workflow_dictionary["annotation"]
+            annotation_data["annotation"]
         )
     )
 
-    for output_file in workflow_dictionary["annotation"]["output_files"]:
+    for output_file in annotation_data["annotation"]["output_files"]:
         try:
             filetype = FileType.objects.get(
                 name=output_file["filetype"]["name"]
@@ -77,7 +87,26 @@ def create_tool_definition_from_workflow(workflow_dictionary):
                 )
             )
 
-            # TODO: figure out Parameter/GalaxyParameter stuff
+    for parameter in annotation_data["annotation"]["parameters"]:
+        if annotation_data["tool_type"] == ToolDefinition.WORKFLOW:
+            tool_definition.parameters.add(
+                GalaxyParameterFactory(
+                    name=parameter["name"],
+                    description=parameter["description"],
+                    value_type=parameter["value_type"],
+                    default_value=parameter["default_value"],
+                    galaxy_workflow_step=parameter["galaxy_workflow_step"]
+                )
+            )
+        if annotation_data["tool_type"] == ToolDefinition.VISUALIZATION:
+            tool_definition.parameters.add(
+                ParameterFactory(
+                    name=parameter["name"],
+                    description=parameter["description"],
+                    value_type=parameter["value_type"],
+                    default_value=parameter["default_value"],
+                )
+            )
 
 
 @transaction.atomic
@@ -176,26 +205,88 @@ def create_file_relationship_nesting(workflow_annotation,
             )
 
 
-def validate_workflow_annotation(workflow_dictionary):
+# `resolver` allows JSON Schema to find the JSON pointers we define in our
+# schemas
+resolver = RefResolver("{}{}{}".format(
+    'file://', os.path.abspath("tool_manager/schemas"), '/'
+), None)
+
+
+def validate_tool_annotation(annotation_dictionary):
     """
     Validate incoming annotation data to ensure ToolDefinitions are created
     properly.
-    :param workflow_dictionary: dict containing Galaxy Workflow data
+    :param annotation_dictionary: dict containing Tool annotation data
     """
 
-    resolver = RefResolver("{}{}{}".format(
-        'file://', os.path.abspath("tool_manager/schemas"), '/'
-    ), None)
-    with open("tool_manager/schemas/ToolDefinition.json", "rb") as f:
+    with open("tool_manager/schemas/ToolDefinition.json") as f:
         schema = json.loads(f.read())
-        annotation_to_validate = workflow_dictionary["annotation"]
-        annotation_to_validate["name"] = workflow_dictionary["name"]
-        annotation_to_validate["tool_type"] = workflow_dictionary["tool_type"]
+    annotation_to_validate = annotation_dictionary["annotation"]
+    annotation_to_validate["name"] = annotation_dictionary["name"]
+    annotation_to_validate["tool_type"] = annotation_dictionary["tool_type"]
+    try:
+        validate(annotation_to_validate, schema, resolver=resolver)
+    except ValidationError as e:
+        raise RuntimeError(
+            "{}{}".format(ANNOTATION_ERROR_MESSAGE, e)
+        )
+
+
+def validate_workflow_step_annotation(workflow_step_dictionary):
+    """
+    Validate incoming annotation data to ensure Workflow's Steps are annotated
+    properly.
+    :param workflow_step_dictionary: dict containing a Galaxy Workflow step's
+    data
+    """
+    with open("tool_manager/schemas/WorkflowStep.json") as f:
+        schema = json.loads(f.read())
+    try:
+        validate(workflow_step_dictionary, schema, resolver=resolver)
+    except ValidationError as e:
+        raise RuntimeError(
+            "{}{}".format(ANNOTATION_ERROR_MESSAGE, e)
+        )
+
+
+def get_workflow_list():
+    """
+    Generate a list of available workflows from all currently available
+    WorkflowEngines
+    :return: list of workflow dicts
+    """
+    workflow_list = []
+    workflow_engines = WorkflowEngine.objects.all()
+
+    logger.debug("%s workflow engines found.", workflow_engines.count())
+
+    for engine in workflow_engines:
+        logger.debug("Fetching workflows from workflow engine %s", engine.name)
+
+        galaxy_connection = engine.instance.galaxy_connection()
         try:
-            validate(annotation_to_validate, schema, resolver=resolver)
-        except ValidationError as e:
+            workflows = galaxy_connection.workflows.get_workflows()
+        except ConnectionError as e:
             raise RuntimeError(
-                "Workflow not properly annotated. Please read: "
-                "http://bit.ly/2mKczka for more information on how to "
-                "properly annotate your Galaxy-based workflows. {}".format(e)
+                "Unable to retrieve workflows from '{}' {}".format(
+                    engine.instance.base_url, e
+                )
             )
+        else:
+            for workflow in workflows:
+                workflow_data = galaxy_connection.workflows.show_workflow(
+                    workflow["id"]
+                )
+                workflow_list.append(workflow_data)
+
+    return workflow_list
+
+
+def mock_get_workflow_list():
+    """
+    Mock of `get_workflow_list()`
+    Unserializes galaxy workflow response data that was serialized prior.
+    :return: a list of Galaxy workflow data
+    """
+    with open("tool_manager/test_data/galaxy_workflows.json") as f:
+        return json.loads(f.read())

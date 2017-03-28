@@ -1,4 +1,6 @@
 from django.db import models
+from django.db.models.signals import post_delete, pre_delete
+from django.dispatch import receiver
 from django_extensions.db.fields import UUIDField
 
 from file_store.models import FileType
@@ -31,22 +33,28 @@ class Parameter(models.Model):
     uuid = UUIDField(unique=True, auto=True)
     name = models.TextField(max_length=100)
     description = models.TextField(max_length=500)
-    is_user_adjustable = models.BooleanField(default=False)
+    is_user_adjustable = models.BooleanField(default=True)
     value_type = models.CharField(choices=VALUE_TYPES, max_length=25)
     default_value = models.TextField(max_length=100)
 
     def __str__(self):
         return "{}: {} - {}".format(self.value_type, self.name, self.uuid)
 
+    def get_galaxy_workflow_step(self):
+        try:
+            return GalaxyParameter.objects.get(
+                uuid=self.uuid
+            ).galaxy_workflow_step
+        except (GalaxyParameter.DoesNotExist,
+                GalaxyParameter.MultipleObjectsReturned):
+            return None
+
 
 class GalaxyParameter(Parameter):
     """
-    Child of Parameter with fields specific to Galaxy tool parameter
+    Extension of Parameter model with fields specific to Galaxy tool parameters
     """
-    # ID of Galaxy tool that the parameter belongs to
-    galaxy_tool_id = models.TextField(max_length=300)
     galaxy_workflow_step = models.IntegerField()
-    galaxy_tool_parameter = models.TextField(max_length=100)
 
 
 class FileRelationship(models.Model):
@@ -135,3 +143,45 @@ class ToolDefinition(models.Model):
 
     def __str__(self):
         return "{}: {} {}".format(self.tool_type, self.name, self.uuid)
+
+
+@receiver(pre_delete, sender=ToolDefinition)
+def delete_parameters_and_output_files(sender, instance, *args, **kwargs):
+    """
+    Delete related parameter and output_file objects upon ToolDefinition
+    deletion
+    """
+    parameters = instance.parameters.all()
+    for parameter in parameters:
+        parameter.delete()
+
+    output_files = instance.output_files.all()
+    for output_file in output_files:
+        output_file.delete()
+
+
+@receiver(post_delete, sender=ToolDefinition)
+def delete_file_relationship(sender, instance, *args, **kwargs):
+    """
+    Delete related (topmost) FileRelationship object after ToolDefinition
+    deletion.
+    """
+    instance.file_relationship.delete()
+
+
+@receiver(pre_delete, sender=FileRelationship)
+def delete_input_files_and_file_relationships(sender, instance, *args,
+                                              **kwargs):
+    """
+    Delete all related nested file_relationships in a recursive manner.
+
+    Due to the nature of the `pre_delete` signal, this approach will delete
+    the bottom-most FileRelationship object first which is desired.
+    """
+    input_files = instance.input_files.all()
+    for input_file in input_files:
+        input_file.delete()
+
+    file_relationships = instance.file_relationship.all()
+    for file_relationship in file_relationships:
+        file_relationship.delete()

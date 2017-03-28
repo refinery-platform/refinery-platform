@@ -34,7 +34,10 @@
     "parameters": {
       "type": "array",
       "items": {
-       "$ref": "Parameter.json#"
+        "oneOf": [
+          {"$ref": "Parameter.json#"},
+          {"$ref": "GalaxyParameter.json#"}
+        ]
       }
     }
   }
