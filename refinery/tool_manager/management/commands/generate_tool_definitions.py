@@ -106,7 +106,7 @@ class Command(BaseCommand):
                     try:
                         output_files = step_annotation["output_files"]
                     except KeyError:
-                        # `ouput_files` aren't required for each workflow step
+                        # `output_files` aren't required for each workflow step
                         pass
 
                     for output_file in output_files:
