@@ -38,7 +38,7 @@ function EmailInviteCtrl (
           $uibModalInstance.dismiss();
         }, 1500);
       }, function (error) {
-        vm.generateAlertMessage('danger', email);
+        generateAlertMessage('danger', email);
         $log.error(error);
       }
     );
