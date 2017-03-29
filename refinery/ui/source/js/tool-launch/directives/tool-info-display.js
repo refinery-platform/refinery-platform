@@ -5,6 +5,6 @@
     require: {
       displayCtrl: '^rpToolDisplay'
     },
-    templateUrl: '/static/partials/tool-launch/partia/tool-info-display.html'
+    templateUrl: '/static/partials/tool-launch/partials/tool-info-display.html'
   });
 })();
