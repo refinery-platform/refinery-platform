@@ -13,7 +13,7 @@
       $templateCache
     ) {
       $templateCache.put(
-        '/static/partials/tool-launch/partials/tool-display.html',
+        '/static/partials/tool-launch/views/tool-display.html',
         '<div id="tool-display"></div>'
       );
       var scope = $rootScope.$new();

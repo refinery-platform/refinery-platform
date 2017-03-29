@@ -14,7 +14,7 @@
     ) {
       // Parent component contains the input-group (child) component
       $templateCache.put(
-        '/static/partials/tool-launch/partials/tool-display.html',
+        '/static/partials/tool-launch/views/tool-display.html',
         '<div id="tool-display"><rp-input-group></rp-input-group></div>'
       );
       $templateCache.put(
