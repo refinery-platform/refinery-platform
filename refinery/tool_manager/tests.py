@@ -12,7 +12,6 @@ from rest_framework.test import (APIRequestFactory, APITestCase,
 from core.models import ExtendedGroup
 from tool_manager.utils import (create_tool_definition,
                                 FileTypeValidationError,
-                                mock_get_workflow_list,
                                 validate_tool_annotation,
                                 validate_workflow_step_annotation)
 
@@ -413,11 +412,18 @@ class ToolDefinitionGenerationTests(TestCase):
             )
 
     def test_generate_tool_definitions_management_command(self):
+        invalid_workflows = open(
+            "tool_manager/test_data/invalid_galaxy_workflows.json"
+        ).read()
+        valid_workflows = open(
+            "tool_manager/test_data/valid_galaxy_workflows.json"
+        ).read()
+
         with mock.patch(
             'tool_manager.utils.get_workflow_list',
             side_effect=[
-                mock_get_workflow_list("invalid_galaxy_workflows"),
-                mock_get_workflow_list("valid_galaxy_workflows")
+                json.loads(invalid_workflows),
+                json.loads(valid_workflows)
             ]
         ):
             self.assertRaises(

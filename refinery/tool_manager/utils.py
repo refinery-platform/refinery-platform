@@ -280,15 +280,3 @@ def get_workflow_list():
                 workflow_list.append(workflow_data)
 
     return workflow_list
-
-
-def mock_get_workflow_list(filename):
-    """
-    Mock of `get_workflow_list()`
-    Unserializes galaxy workflow response data that was serialized prior.
-    :filename: String containing filename of prior serialized Galaxy
-    workflow data
-    :return: a list of Galaxy workflow data
-    """
-    with open("tool_manager/test_data/{}.json".format(filename)) as f:
-        return json.loads(f.read())
