@@ -1881,8 +1881,8 @@ class DataSetResourceTest(ResourceTestCase):
             data['analyses'][0]['owner'],
             UserProfile.objects.get(user=self.user).uuid
         )
-        self.assertIsNotNone(data['analyses'][0]['status'])
-        self.assertEqual(data['analyses'][0]['name'], "a2")
+        self.assertEqual(data['analyses'][0]['status'], a2.status)
+        self.assertEqual(data['analyses'][0]['name'], a2.name)
         self.assertEqual(data['analyses'][0]['uuid'], a2.uuid)
 
     def test_get_dataset_expecting_no_analyses(self):
