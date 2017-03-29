@@ -1,10 +1,10 @@
 'use strict';
 
-function rpAnalysisMonitorRunningTabIcon (urlService) {
+function rpAnalysisMonitorRunningTabIcon ($window) {
   return {
     restrict: 'A',
     templateUrl: function () {
-      return urlService.static('partials/analysis-monitor/partials/running-tab-icon.html');
+      return $window.getStaticUrl('partials/analysis-monitor/partials/running-tab-icon.html');
     },
     controller: 'AnalysisMonitorCtrl',
     controllerAs: 'AMCtrl',

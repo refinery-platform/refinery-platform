@@ -1,10 +1,10 @@
 'use strict';
 
-function analysisMonitorAnalysesList ($rootScope, $location, urlService) {
+function analysisMonitorAnalysesList ($location, $window) {
   return {
     restrict: 'E',
     templateUrl: function () {
-      return urlService.static('partials/analysis-monitor/partials/analyses-list.html');
+      return $window.getStaticUrl('partials/analysis-monitor/partials/analyses-list.html');
     },
     controller: 'AnalysisMonitorCtrl',
     controllerAs: 'AMCtrl',
@@ -98,7 +98,6 @@ function analysisMonitorAnalysesList ($rootScope, $location, urlService) {
 angular
   .module('refineryAnalysisMonitor')
   .directive('analysisMonitorAnalysesList', [
-    '$rootScope',
     '$location',
     '$window',
     analysisMonitorAnalysesList

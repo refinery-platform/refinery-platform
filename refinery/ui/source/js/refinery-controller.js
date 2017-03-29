@@ -1,6 +1,6 @@
 'use strict';
 
-function AppCtrl ($, $scope, $rootScope, $timeout, $window, _, pubSub, settings, urlService) {
+function AppCtrl ($, $scope, $rootScope, $timeout, $window, _, pubSub, settings) {
   this.$window = $window;
   this.jqWindow = $($window);
   this.$ = $;
@@ -85,7 +85,7 @@ function AppCtrl ($, $scope, $rootScope, $timeout, $window, _, pubSub, settings,
     title: 'Refinery Tutorials',
     content: 'These are some helpful tutorials to guide you through Refinery!',
     templateUrl: function () {
-      return urlService.static('partials/tutorials/partials/tutorialPopover.html');
+      return $window.getStaticUrl('partials/tutorials/partials/tutorialPopover.html');
     }
   };
 }
@@ -105,6 +105,5 @@ angular
     '_',
     'pubSub',
     'settings',
-    'urlService',
     AppCtrl
   ]);

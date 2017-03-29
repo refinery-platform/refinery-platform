@@ -1,5 +1,15 @@
 'use strict';
 
+window.getStaticUrl = function (relativePath) {
+  // must be a global because used for config of 3rd party modules
+  try {
+    return window.djangoApp.staticUrl + relativePath;
+  } catch (e) {
+    // window.djangoApp is defined in base.html which is not loaded by the test runner
+    return '';
+  }
+};
+
 angular
   .module('refineryApp', [
     /*
