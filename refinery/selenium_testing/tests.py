@@ -1,7 +1,10 @@
+import os
+
 from django.contrib.auth.models import User
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from pyvirtualdisplay import Display
 from selenium import webdriver
+from unittest import skipIf
 
 from core.management.commands.create_public_group import create_public_group
 from core.management.commands.create_user import init_user
@@ -14,6 +17,8 @@ from selenium_testing.utils import (
     wait_until_id_visible)
 
 
+@skipIf("prod" not in os.getenv("DJANGO_SETTINGS_MODULE"),
+        "We don't run selenium tests if not in production mode")
 class SeleniumTestBase(StaticLiveServerTestCase):
     """Abstract base class to be used for all Selenium-based tests."""
 
