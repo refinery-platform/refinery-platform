@@ -273,7 +273,7 @@ class ToolDefinitionGenerationTests(TestCase):
             self.assertEqual(InputFile.objects.count(), 0)
             self.assertEqual(OutputFile.objects.count(), 0)
 
-    def test_ist_pair_workflow_related_object_deletion(self):
+    def test_list_pair_workflow_related_object_deletion(self):
         with open("tool_manager/test_data/workflow_LIST:PAIR.json") as f:
             workflow_annotation = json.loads(f.read())
             create_tool_definition(workflow_annotation)
