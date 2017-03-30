@@ -2,6 +2,7 @@ import os
 
 from django.contrib.auth.models import User
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
+
 from pyvirtualdisplay import Display
 from selenium import webdriver
 from unittest import skipIf
@@ -12,9 +13,10 @@ from core.models import Analysis, DataSet
 
 from factory_boy.utils import make_analyses_with_single_dataset, make_datasets
 from selenium_testing.utils import (
-    assert_body_text, login, wait_until_id_clickable, MAX_WAIT,
-    assert_text_within_id, delete_from_ui, wait_until_class_visible,
-    wait_until_id_visible)
+    assert_body_text, assert_text_within_id, delete_from_ui, login,
+    MAX_WAIT, wait_until_class_visible, wait_until_id_clickable,
+    wait_until_id_visible
+)
 
 
 @skipIf("prod" not in os.getenv("DJANGO_SETTINGS_MODULE"),
