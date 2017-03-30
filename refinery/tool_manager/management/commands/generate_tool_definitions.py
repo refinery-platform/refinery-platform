@@ -83,55 +83,55 @@ class Command(BaseCommand):
                     except KeyError:
                         # `parameters` aren't required for each workflow step
                         pass
-
-                    for parameter in parameters:
-                        # Check User-defined parameters in
-                        # annotation data against the available
-                        # parameters of the Workflow step's
-                        # `tool_inputs`
-                        if parameter["name"] not in step["tool_inputs"]:
-                            raise CommandError(
-                                "{} is not a valid parameter for {}".
-                                format(
-                                    parameter["name"],
-                                    step["tool_id"]
+                    else:
+                        for parameter in parameters:
+                            # Check User-defined parameters in
+                            # annotation data against the available
+                            # parameters of the Workflow step's
+                            # `tool_inputs`
+                            if parameter["name"] not in step["tool_inputs"]:
+                                raise CommandError(
+                                    "{} is not a valid parameter for {}".
+                                    format(
+                                        parameter["name"],
+                                        step["tool_id"]
+                                    )
                                 )
-                            )
-                        else:
-                            parameter["galaxy_workflow_step"] = int(
-                                step_index
-                            )
-                            workflow["annotation"]["parameters"]\
-                                .append(parameter)
+                            else:
+                                parameter["galaxy_workflow_step"] = int(
+                                    step_index
+                                )
+                                workflow["annotation"]["parameters"]\
+                                    .append(parameter)
                     try:
                         output_files = step_annotation["output_files"]
                     except KeyError:
                         # `output_files` aren't required for each workflow step
                         pass
-
-                    for output_file in output_files:
-                        # Check User-defined output_files in
-                        # annotation data against the available
-                        # output_file  of the Workflow step's
-                        # `tool_inputs`
-                        valid_output_names = []
-                        for key in step["input_steps"].iterkeys():
-                            valid_output_names.append(
-                                step["input_steps"][key]["step_output"]
-                            )
-                        if output_file["name"] not in valid_output_names:
-                            raise CommandError(
-                                "`{}` is not a valid output file for {}. "
-                                "Valid ouput_file names are: {}".format(
-                                    output_file["name"],
-                                    step["tool_id"],
-                                    valid_output_names
+                    else:
+                        for output_file in output_files:
+                            # Check User-defined output_files in
+                            # annotation data against the available
+                            # output_file  of the Workflow step's
+                            # `tool_inputs`
+                            valid_output_names = []
+                            for key in step["input_steps"].iterkeys():
+                                valid_output_names.append(
+                                    step["input_steps"][key]["step_output"]
                                 )
-                            )
-                        else:
-                            workflow["annotation"]["output_files"].append(
-                                output_file
-                            )
+                            if output_file["name"] not in valid_output_names:
+                                raise CommandError(
+                                    "`{}` is not a valid output file for {}. "
+                                    "Valid ouput_file names are: {}".format(
+                                        output_file["name"],
+                                        step["tool_id"],
+                                        valid_output_names
+                                    )
+                                )
+                            else:
+                                workflow["annotation"]["output_files"].append(
+                                    output_file
+                                )
             try:
                 validate_tool_annotation(workflow)
             except RuntimeError as e:
