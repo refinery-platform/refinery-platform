@@ -442,3 +442,27 @@ class ToolDefinitionGenerationTests(TestCase):
             self.assertEqual(Parameter.objects.count(), 9)
             self.assertEqual(InputFile.objects.count(), 5)
             self.assertEqual(OutputFile.objects.count(), 3)
+
+    def test_workflow_pair_too_many_inputs(self):
+        with open(
+            "tool_manager/test_data/workflow_PAIR_too_many_inputs.json"
+        ) as f:
+            workflow_annotation = json.loads(f.read())
+            self.assertRaises(
+                RuntimeError,
+                validate_tool_annotation,
+                workflow_annotation
+            )
+            self.assertEqual(ToolDefinition.objects.count(), 0)
+
+    def test_workflow_pair_not_enough_inputs(self):
+        with open(
+                "tool_manager/test_data/workflow_PAIR_not_enough_inputs.json"
+        ) as f:
+            workflow_annotation = json.loads(f.read())
+            self.assertRaises(
+                RuntimeError,
+                validate_tool_annotation,
+                workflow_annotation
+            )
+            self.assertEqual(ToolDefinition.objects.count(), 0)
