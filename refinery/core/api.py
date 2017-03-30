@@ -516,7 +516,10 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
 
         analyses = []
         for analysis in bundle.obj.get_analyses():
-            analysis_dict = analysis.__dict__
+            analysis_dict = {}
+            analysis_dict["uuid"] = analysis.uuid
+            analysis_dict["name"] = analysis.name
+            analysis_dict["status"] = analysis.status
             analysis_dict['is_owner'] = False
             owner = analysis.get_owner()
             if owner:
