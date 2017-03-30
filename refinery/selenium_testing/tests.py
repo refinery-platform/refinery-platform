@@ -13,10 +13,6 @@ from selenium_testing.utils import (
     assert_text_within_id, delete_from_ui, wait_until_class_visible,
     wait_until_id_visible)
 
-# Start a pyvirtualdisplay for geckodriver to interact with
-display = Display(visible=0, size=(1900, 1080))
-display.start()
-
 
 class SeleniumTestBase(StaticLiveServerTestCase):
     """Abstract base class to be used for all Selenium-based tests."""
@@ -26,6 +22,10 @@ class SeleniumTestBase(StaticLiveServerTestCase):
 
     def setUp(self, site_login=True, initialize_guest=True,
               public_group_needed=True):
+
+        # Start a pyvirtualdisplay for geckodriver to interact with
+        self.display = Display(visible=0, size=(1900, 1080))
+        self.display.start()
         self.browser = webdriver.Firefox()
         self.browser.maximize_window()
 
@@ -42,6 +42,7 @@ class SeleniumTestBase(StaticLiveServerTestCase):
 
     def tearDown(self):
         self.browser.quit()
+        self.display.stop()
 
     class Meta:
         abstract = True
