@@ -30,43 +30,8 @@
       role="tabpanel"
       aria-labelledby="tool-body">
       <div class="panel-body">
-        <h5>
-          <span ng-if="$ctrl.groups.length == 0">
-            <b>0</b> of
-          </span>
-          <span ng-if="$ctrl.groups.length > 0">
-            <b>{{ $ctrl.groupIndex + 1 }}</b> of
-          </span>
-          <b>{{ $ctrl.groups.length }} </b> groups
-        </h5>
-
-        <div>
-          <button
-            class="btn btn-default btn-xs outline"
-            ng-disabled="$ctrl.groupIndex == 0"
-            ng-click="$ctrl.navLeft()">
-            <i class="fa fa-backward"></i>
-          </button>
-          <button
-            class="btn btn-default btn-xs outline"
-            ng-disabled="$ctrl.groupIndex == $ctrl.groups.length - 1 || $ctrl.groups.length == 0"
-            ng-click="$ctrl.navRight()">
-            <i class="fa fa-forward"></i>
-          </button>
-          <button
-            class="btn btn-default btn-xs outline"
-            ng-disabled="$ctrl.groups.length == 0"
-            ng-click="$ctrl.removeGroup($ctrl.groupIndex)">
-            Remove
-          </button>
-          <button
-            class="btn btn-default btn-xs outline"
-            ng-disabled="$ctrl.groups.length == 0"
-            ng-click="$ctrl.removeAllGroups()">
-            Remove All
-          </button>
-        </div>
-
+        <rp-input-control-nav collection='$ctrl.tool.file_relationship'>
+        </rp-input-control-nav>
         <hr>
         <div
           ng-if="$ctrl.groups.length != 0"
