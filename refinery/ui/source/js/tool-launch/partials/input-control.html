@@ -32,13 +32,6 @@
       <div class="panel-body">
         <rp-input-control-nav collection='$ctrl.tool.file_relationship'>
         </rp-input-control-nav>
-        <hr>
-        <div
-          ng-if="$ctrl.groups.length != 0"
-          class="wrap-word">
-          {{ $ctrl.groups[$ctrl.groupIndex].entity[$ctrl.attributes.Name] }}
-          <{{ $ctrl.groups[$ctrl.groupIndex].entity[$ctrl.attributes['File Type']] }}>
-        </div>
       </div>
     </div>
   </div>
