@@ -6,7 +6,7 @@ window.getStaticUrl = function (relativePath) {
     return window.djangoApp.staticUrl + relativePath;
   } catch (e) {
     // window.djangoApp is defined in base.html which is not loaded by the test runner
-    return '';
+    return '/static/';
   }
 };
 
