@@ -31,7 +31,7 @@ class SeleniumTestBase(StaticLiveServerTestCase):
               public_group_needed=True):
 
         # Start a pyvirtualdisplay for geckodriver to interact with
-        self.display = Display(visible=0, size=(1900, 1080))
+        self.display = Display(visible=0, size=(1366, 768))
         self.display.start()
         self.browser = webdriver.Firefox()
         self.browser.maximize_window()
