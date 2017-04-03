@@ -29,7 +29,8 @@
       "type": "array",
       "items": {
        "$ref": "OutputFile.json#"
-      }
+      },
+      "minItems": 1
     },
     "parameters": {
       "type": "array",
