@@ -171,14 +171,14 @@ TEMPLATE_DIRS = (
     # Don't forget to use absolute paths, not relative paths.
 )
 
-# NOTE: the order of INSTALLED_APPS matters in some instances. For example:
-# `core` needs to proceed `django.contrib.auth` here due to an
-# auth.post_migrate signal depending on a core.post_migrate signal being
-# run prior
+# NOTE: the order of INSTALLED_APPS matters in some instances.
 INSTALLED_APPS = (
+    'registration',
     'core',
-    'django.contrib.auth',
+    'data_set_manager',
+    'guardian',
     'django.contrib.contenttypes',
+    'django.contrib.auth',
     'django.contrib.sessions',
     'django.contrib.sites',
     'django.contrib.messages',
@@ -196,7 +196,6 @@ INSTALLED_APPS = (
     'djcelery',  # django-celery
     # NG: added for API
     "tastypie",
-    'guardian',
     'djangular',
     'galaxy_connector',
     'analysis_manager',
@@ -204,9 +203,9 @@ INSTALLED_APPS = (
     'file_store',
     'file_server',
     'visualization_manager',
-    'data_set_manager',
     'annotation_server',
-    'registration',
+    'selenium_testing',
+    'tool_manager',
     'flatblocks',
     'chunked_upload',
     'rest_framework',
@@ -577,3 +576,10 @@ REFINERY_AUXILIARY_FILE_GENERATION = get_setting(
 REFINERY_TUTORIAL_STEPS = refinery_tutorial_settings
 
 ANONYMOUS_USER_ID = -1
+
+TEST_RUNNER = "django.test.runner.DiscoverRunner"
+
+# Required for pre-Django 1.9 TransactionTestCases utilizing
+# `serialized_rollback` to function properly http://bit.ly/2l5gR30
+TEST_NON_SERIALIZED_APPS = ['core', 'django.contrib.contenttypes',
+                            'django.contrib.auth']

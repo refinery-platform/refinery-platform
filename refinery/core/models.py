@@ -52,7 +52,8 @@ from .utils import (add_or_update_user_to_neo4j, add_read_access_in_neo4j,
                     delete_data_set_neo4j, delete_ontology_from_neo4j,
                     delete_user_in_neo4j, email_admin, get_aware_local_time,
                     invalidate_cached_object, remove_read_access_in_neo4j,
-                    update_annotation_sets_neo4j, update_data_set_index)
+                    update_annotation_sets_neo4j, update_data_set_index,
+                    skip_if_test_run)
 from data_set_manager.models import (Assay, Investigation, Node,
                                      NodeCollection, Study)
 from data_set_manager.utils import (add_annotated_nodes_selection,
@@ -549,16 +550,14 @@ class DataSet(SharableResource):
         try:
             self.get_isa_archive().delete()
 
-        except Exception as e:
-            logger.error(
-                "Couldn't delete DataSet's isa_archive: %s" % e)
+        except AttributeError as e:
+            logger.debug("DataSet has no isa_archive to delete: %s" % e)
 
         try:
             self.get_pre_isa_archive().delete()
 
-        except Exception as e:
-            logger.error(
-                "Couldn't delete DataSet's pre_isa_archive: %s" % e)
+        except AttributeError as e:
+            logger.debug("DataSet has no pre_isa_archive to delete: %s" % e)
 
         related_investigation_links = self.get_investigation_links()
 
@@ -733,34 +732,32 @@ class DataSet(SharableResource):
         Returns the isa_archive that was used to create the
         DataSet
         """
+        investigation = self.get_investigation()
+
         try:
             return FileStoreItem.objects.get(
-                uuid=InvestigationLink.objects.get(
-                    data_set__uuid=self.uuid).investigation.isarchive_file)
+                uuid=investigation.isarchive_file)
 
         except (FileStoreItem.DoesNotExist,
                 FileStoreItem.MultipleObjectsReturned,
-                InvestigationLink.DoesNotExist,
-                InvestigationLink.MultipleObjectsReturned) as e:
-            logger.error("Error while fetching FileStoreItem or "
-                         "InvestigationLink: %s" % e)
+                AttributeError) as e:
+            logger.debug("Couldn't fetch FileStoreItem: %s" % e)
 
     def get_pre_isa_archive(self):
         """
         Returns the pre_isa_archive that was used to create the
         DataSet
         """
+        investigation = self.get_investigation()
+
         try:
             return FileStoreItem.objects.get(
-                uuid=InvestigationLink.objects.get(
-                    data_set__uuid=self.uuid).investigation.pre_isarchive_file)
+                    uuid=investigation.pre_isarchive_file)
 
         except (FileStoreItem.DoesNotExist,
                 FileStoreItem.MultipleObjectsReturned,
-                InvestigationLink.DoesNotExist,
-                InvestigationLink.MultipleObjectsReturned) as e:
-            logger.error("Error while fetching FileStoreItem or "
-                         "InvestigationLink: %s" % e)
+                AttributeError) as e:
+            logger.debug("Couldn't fetch FileStoreItem: %s" % e)
 
     def share(self, group, readonly=True):
         super(DataSet, self).share(group, readonly)
@@ -1251,7 +1248,7 @@ class Analysis(OwnableResource):
         try:
             solr.optimize()
         except Exception as e:
-            logger.error("Could not optimize Solr's index:", e)
+            logger.error("Could not optimize Solr's index: %s", e)
 
     def set_status(self, status, message=''):
         """Set analysis status and perform additional actions as required"""
@@ -2254,6 +2251,7 @@ class FastQC(object):
 
 
 @receiver(post_save, sender=User)
+@skip_if_test_run
 def _add_user_to_neo4j(sender, **kwargs):
     user = kwargs['instance']
 

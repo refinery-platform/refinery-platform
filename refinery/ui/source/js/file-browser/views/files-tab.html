@@ -1,59 +1,41 @@
 <div class="dataSetTabContent" id="files">
-  <!-- function row includes view selection, utils,  node group, and launchers -->
-  <div class="row view-control p-t-1-2 p-b-1-2">
-    <div class="col-md-2">
-      <rp-file-display></rp-file-display>
-      <span ng-if="FBCtrl.isOwner">
-        <i class="fa fa-wrench fa-border"
-          rp-assay-files-util-modal>
-        </i>
-        <a
-          id="help-view-selector"
-          popover-placement="right"
-          uib-popover="The collection of files in this data set can be displayed using different representations."
-          popover-title="Select File Display Mode"
-          popover-trigger="focus"
-          popover-append-to-body="true"
-          tabindex="0">
-          <i class="fa fa-question-circle info-icon"></i>
-        </a>
-      </span>
-    </div>
-    <div class="col-md-4">
-      <span class="align-bottom p-r-1-3">
-        {{ FBCtrl.selectNodesCount }} of
-        {{ FBCtrl.assayFilesTotal }} files selected.
-      </span>
-      <rp-file-browser-selection-reset>
-      </rp-file-browser-selection-reset>
-      <a
-        popover-placement="right"
-        uib-popover=" The number of files currently selected. Use facet
-        attribute filters and individual file selection check boxes to modify
-        the current selection. Reset node selections and filters."
-        popover-title="Current File Selection"
-        popover-trigger="focus"
-        popover-append-to-body="true"
-        tabindex="0">
-          <i class="fa fa-question-circle info-icon"></i>
-      </a>
-      <rp-file-browser-node-group></rp-file-browser-node-group>
-    </div>
-    <div class="col-md-3 text-right">
-      <rp-visualization></rp-visualization>
-    </div>
-    <div class="col-md-3 text-right">
-      <rp-select-workflow></rp-select-workflow>
-      <rp-analysis-launch></rp-analysis-launch>
-    </div>
-  </div>
   <!-- filters and content  -->
   <div class="row y-scrollable m-t-1-2 p-t-1">
-    <div class="col-md-2">
-      <rp-file-browser-assay-filters>
-      </rp-file-browser-assay-filters>
+    <div class="col-lg-2 col-md-2 col-sm-3 well" id="tool-launch">
+      <div class="row">
+        <rp-tool-display></rp-tool-display>
+      </div>
+
     </div>
-    <div class="col-md-10" id="main-area">
+    <div class="col-lg-2 col-md-2 col-sm-3">
+      <div id="table-filter">
+        <div id="filter-panel-body">
+          <rp-file-browser-assay-filters>
+          </rp-file-browser-assay-filters>
+        </div>
+        <hr>
+        <rp-file-browser-node-group></rp-file-browser-node-group>
+        <div class="sub-group-panel">
+          <rp-file-display></rp-file-display>
+          <span ng-if="FBCtrl.isOwner">
+            <i class="fa fa-wrench fa-border"
+              rp-assay-files-util-modal>
+            </i>
+            <a
+              id="help-view-selector"
+              popover-placement="right"
+              uib-popover="The collection of files in this data set can be displayed using different representations."
+              popover-title="Select File Display Mode"
+              popover-trigger="focus"
+              popover-append-to-body="true"
+              tabindex="0">
+              <i class="fa fa-question-circle info-icon icon-only"></i>
+            </a>
+          </span>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-8 col-md-8 col-sm-6" id="main-area">
       <rp-file-browser-assay-files></rp-file-browser-assay-files>
     </div>
   </div>

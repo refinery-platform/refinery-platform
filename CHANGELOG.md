@@ -1,10 +1,53 @@
 # Change Log
 
-## [v1.5.4](https://github.com/refinery-platform/refinery-platform/tree/v1.5.4) (2017-02-16)
+## [v1.5.5](https://github.com/refinery-platform/refinery-platform/tree/v1.5.5) (2017-03-28)
+[Full Changelog](https://github.com/refinery-platform/refinery-platform/compare/v1.5.4...v1.5.5)
+
+**Implemented enhancements:**
+
+- Tabular Metadata File Upload Enhancement Con't [\#1638](https://github.com/refinery-platform/refinery-platform/issues/1638)
+- Meta Data Import - Fix "Optional Upload Data Files" Language [\#1637](https://github.com/refinery-platform/refinery-platform/issues/1637)
+- "?" help icon should be consistent across pages [\#1633](https://github.com/refinery-platform/refinery-platform/issues/1633)
+- create separate "Before You Get Started Section" [\#1632](https://github.com/refinery-platform/refinery-platform/issues/1632)
+- Remove "Make Public" field from data set upload page [\#1628](https://github.com/refinery-platform/refinery-platform/issues/1628)
+- remove base path field from file upload page [\#1627](https://github.com/refinery-platform/refinery-platform/issues/1627)
+- add screenshot annotations to tutorial [\#1625](https://github.com/refinery-platform/refinery-platform/issues/1625)
+- DataSet Enhancement - Add how-to intro [\#1616](https://github.com/refinery-platform/refinery-platform/issues/1616)
+- load data from non-Galaxy directories [\#367](https://github.com/refinery-platform/refinery-platform/issues/367)
+- change Galaxy settings to stop copying files into the system [\#366](https://github.com/refinery-platform/refinery-platform/issues/366)
+- Jkmarx metadata upload enhancements [\#1639](https://github.com/refinery-platform/refinery-platform/pull/1639) ([jkmarx](https://github.com/jkmarx))
+- Remove base path and make public. [\#1630](https://github.com/refinery-platform/refinery-platform/pull/1630) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/data upload enhancements [\#1626](https://github.com/refinery-platform/refinery-platform/pull/1626) ([jkmarx](https://github.com/jkmarx))
+
+**Fixed bugs:**
+
+- spacing in About page layout is broken [\#1640](https://github.com/refinery-platform/refinery-platform/issues/1640)
+- advanced section opens upon click anywhere on the row representing the collapsed section [\#1634](https://github.com/refinery-platform/refinery-platform/issues/1634)
+- Fix missing padding on about. [\#1641](https://github.com/refinery-platform/refinery-platform/pull/1641) ([jkmarx](https://github.com/jkmarx))
+- Fix styling. [\#1636](https://github.com/refinery-platform/refinery-platform/pull/1636) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/data set upload fixes [\#1635](https://github.com/refinery-platform/refinery-platform/pull/1635) ([jkmarx](https://github.com/jkmarx))
+
+**Closed issues:**
+
+- Attribute Filter UI Enhancement [\#1644](https://github.com/refinery-platform/refinery-platform/issues/1644)
+- Display will change depending on tool selected [\#1605](https://github.com/refinery-platform/refinery-platform/issues/1605)
+
+**Merged pull requests:**
+
+- Jkmarx/attribute filter updates [\#1647](https://github.com/refinery-platform/refinery-platform/pull/1647) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/tool launch module [\#1642](https://github.com/refinery-platform/refinery-platform/pull/1642) ([jkmarx](https://github.com/jkmarx))
+- Scottx611x/acceptance test bugfix [\#1631](https://github.com/refinery-platform/refinery-platform/pull/1631) ([scottx611x](https://github.com/scottx611x))
+- Add the ability to generate basic ToolDefinitons from properly annota… [\#1624](https://github.com/refinery-platform/refinery-platform/pull/1624) ([scottx611x](https://github.com/scottx611x))
+- Scottx611x/td api url routing [\#1622](https://github.com/refinery-platform/refinery-platform/pull/1622) ([scottx611x](https://github.com/scottx611x))
+- Scottx611x/td api [\#1620](https://github.com/refinery-platform/refinery-platform/pull/1620) ([scottx611x](https://github.com/scottx611x))
+- Add security group [\#1606](https://github.com/refinery-platform/refinery-platform/pull/1606) ([drj11](https://github.com/drj11))
+
+## [v1.5.4](https://github.com/refinery-platform/refinery-platform/tree/v1.5.4) (2017-03-02)
 [Full Changelog](https://github.com/refinery-platform/refinery-platform/compare/v1.5.3.1...v1.5.4)
 
 **Implemented enhancements:**
 
+- Data Upload Page Enhancement [\#1615](https://github.com/refinery-platform/refinery-platform/issues/1615)
 - Update Collaboration Page Styling [\#1597](https://github.com/refinery-platform/refinery-platform/issues/1597)
 - Data Set - Edit Capabilities [\#1591](https://github.com/refinery-platform/refinery-platform/issues/1591)
 - Data Set / share API Adjustment [\#1191](https://github.com/refinery-platform/refinery-platform/issues/1191)
@@ -14,6 +57,7 @@
 - implement user authentication via API keys or tokens [\#359](https://github.com/refinery-platform/refinery-platform/issues/359)
 - Bring unit tests for file server up to date [\#322](https://github.com/refinery-platform/refinery-platform/issues/322)
 - Start using Modernizr [\#267](https://github.com/refinery-platform/refinery-platform/issues/267)
+- Collapse advanced settings. [\#1617](https://github.com/refinery-platform/refinery-platform/pull/1617) ([jkmarx](https://github.com/jkmarx))
 - Update years in license  [\#1612](https://github.com/refinery-platform/refinery-platform/pull/1612) ([ngehlenborg](https://github.com/ngehlenborg))
 - Modify /sharing to return only owner and share\_list. [\#1611](https://github.com/refinery-platform/refinery-platform/pull/1611) ([jkmarx](https://github.com/jkmarx))
 - Jkmarx/colloration styling update [\#1598](https://github.com/refinery-platform/refinery-platform/pull/1598) ([jkmarx](https://github.com/jkmarx))
@@ -40,6 +84,7 @@
 
 **Merged pull requests:**
 
+- Utilize Transaction Management for case where Data already exists [\#1623](https://github.com/refinery-platform/refinery-platform/pull/1623) ([scottx611x](https://github.com/scottx611x))
 - Jkmarx/data set edit adjustments [\#1610](https://github.com/refinery-platform/refinery-platform/pull/1610) ([jkmarx](https://github.com/jkmarx))
 - Prevent console errors when in data set 2. [\#1607](https://github.com/refinery-platform/refinery-platform/pull/1607) ([jkmarx](https://github.com/jkmarx))
 - Fix relative imports in management commands [\#1601](https://github.com/refinery-platform/refinery-platform/pull/1601) ([hackdna](https://github.com/hackdna))
@@ -47,6 +92,7 @@
 - Improve AWS resource tags handling [\#1592](https://github.com/refinery-platform/refinery-platform/pull/1592) ([hackdna](https://github.com/hackdna))
 - Jkmarx/import module refactor [\#1590](https://github.com/refinery-platform/refinery-platform/pull/1590) ([jkmarx](https://github.com/jkmarx))
 - Jkmarx/jshint rule change [\#1584](https://github.com/refinery-platform/refinery-platform/pull/1584) ([jkmarx](https://github.com/jkmarx))
+- Scottx611x/acceptance testing [\#1534](https://github.com/refinery-platform/refinery-platform/pull/1534) ([scottx611x](https://github.com/scottx611x))
 
 ## [v1.5.3.1](https://github.com/refinery-platform/refinery-platform/tree/v1.5.3.1) (2017-01-23)
 [Full Changelog](https://github.com/refinery-platform/refinery-platform/compare/v1.5.3...v1.5.3.1)

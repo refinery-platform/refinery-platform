@@ -1,8 +1,13 @@
+
 <div ng-if="FBCtrl.attributeFilter">
   <div class="panel-group data-set-filters" id="attribute-filter"
     role="tablist"
     aria-multiselectable="true">
-    <h4 class="m-t-0">Attribute Filter</h4>
+     <div class="refinery-subheader m-t-1">
+      <h2>
+        Attribute Filter
+      </h2>
+    </div>
     <div
       ng-repeat="(attribute, attributeObj) in FBCtrl.attributeFilter track by $index"
       ng-init="attributeIndex = $index">
@@ -68,7 +73,11 @@
 <div ng-if="FBCtrl.analysisFilter">
   <div class="panel-group data-set-filters" id="analysis-filter" role="tablist"
     aria-multiselectable="true">
-    <h4>Analysis Filter</h4>
+    <div class="refinery-subheader m-t-1">
+      <h2>
+        Analysis Filter
+      </h2>
+    </div>
     <div ng-repeat="(analysis, attributeObj) in FBCtrl.analysisFilter">
       <div class="panel panel-default">
         <div class="panel-heading" role="tab">
@@ -128,3 +137,4 @@
     </div>
   </div>
 </div>
+
