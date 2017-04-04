@@ -1,10 +1,12 @@
 import json
 import mock
+import requests
 from urlparse import urljoin
 
 from django.contrib.auth.models import User
 from django.core.management import call_command, CommandError
-from django.test import TestCase
+from django.test import TestCase, LiveServerTestCase
+from django_docker_engine.docker_utils import DockerClientWrapper
 
 from rest_framework.test import (APIRequestFactory, APITestCase,
                                  force_authenticate)
@@ -16,8 +18,9 @@ from tool_manager.utils import (create_tool_definition,
                                 validate_workflow_step_annotation)
 
 from .models import (FileRelationship, GalaxyParameter, InputFile,
-                     OutputFile, Parameter, ToolDefinition)
-from .views import ToolDefinitionsViewSet
+                     OutputFile, Parameter, ToolDefinition,
+                     VisualizationContainer)
+from .views import (ToolDefinitionsViewSet, VisualizationContainerViewSet)
 
 TEST_DATA_PATH = "tool_manager/test_data"
 
@@ -485,3 +488,48 @@ class ToolDefinitionGenerationTests(TestCase):
                 workflow_annotation
             )
             self.assertEqual(ToolDefinition.objects.count(), 0)
+
+
+class VisualizationContainerAPITests(APITestCase, LiveServerTestCase):
+    def setUp(self):
+        self.username = 'coffee_lover'
+        self.password = 'coffeecoffee'
+        self.user = User.objects.create_user(self.username, '',
+                                             self.password)
+
+        self.factory = APIRequestFactory()
+        self.view = VisualizationContainerViewSet.as_view({'post': 'create'})
+        self.container_name = "nginx-test"
+
+        self.post_data = {
+                "image_name": "nginx:1.10.3-alpine",
+                "container_name": self.container_name,
+            }
+
+        self.url_root = '/api/v2/visualization_containers/'
+
+        self.post_request = self.factory.post(
+            self.url_root,
+            data=self.post_data,
+            format="json"
+        )
+        force_authenticate(self.post_request, self.user)
+        self.post_response = self.view(self.post_request, self.container_name)
+
+    def test_visualization_container_access(self):
+        response = requests.get(
+            urljoin(
+                self.live_server_url,
+                "api/v2/docker/{}/".format(
+                    self.container_name
+                )
+            )
+        )
+        self.assertIn("Welcome to nginx!", response.content)
+
+    def tearDown(self):
+        DockerClientWrapper().purge_by_label(
+            VisualizationContainer.objects.get(
+                container_name=self.container_name
+            ).uuid
+        )
