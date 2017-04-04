@@ -3,9 +3,6 @@ class refinery {
 # for better performance
 sysctl { 'vm.swappiness': value => '10' }
 
-# to avoid empty ident name not allowed error when using git
-user { $app_user: comment => $app_user }
-
 file { "/home/${app_user}/.ssh/config":
   ensure => file,
   source => "${deployment_root}/ssh-config",
