@@ -185,3 +185,25 @@ def delete_input_files_and_file_relationships(sender, instance, *args,
     file_relationships = instance.file_relationship.all()
     for file_relationship in file_relationships:
         file_relationship.delete()
+
+
+class VisualizationContainer(models.Model):
+    uuid = UUIDField(unique=True, auto=True)
+    image_name = models.CharField(max_length=255)
+    container_name = models.CharField(max_length=150)
+
+    class Meta:
+        verbose_name = "Visualization Containers"
+        permissions = (
+            ('read_%s' % verbose_name, 'Can read %s' % verbose_name),
+            ('share_%s' % verbose_name, 'Can share %s' % verbose_name),
+        )
+
+    def __str__(self):
+        return "{}:{}".format(
+            self.image_name,
+            self.container_name
+        )
+
+    def get_absolute_url(self):
+        return "/api/v2/docker/{}/".format(self.container_name)

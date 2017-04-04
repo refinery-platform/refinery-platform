@@ -3,7 +3,7 @@ from rest_framework_recursive.fields import RecursiveField
 
 from file_store.models import FileType
 from .models import (FileRelationship, InputFile, OutputFile, Parameter,
-                     ToolDefinition)
+                     ToolDefinition, VisualizationContainer)
 
 
 class FileTypeSerializer(serializers.ModelSerializer):
@@ -78,3 +78,9 @@ class ToolDefinitionSerializer(serializers.ModelSerializer):
     class Meta:
         model = ToolDefinition
         exclude = ["id"]
+
+
+class VisualizationContainerSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = VisualizationContainer
