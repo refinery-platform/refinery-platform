@@ -210,6 +210,8 @@ INSTALLED_APPS = (
     'chunked_upload',
     'rest_framework',
     'rest_framework_swagger',
+    'django_docker_engine',
+    'httpproxy'
 )
 
 # NG: added for django-guardian
