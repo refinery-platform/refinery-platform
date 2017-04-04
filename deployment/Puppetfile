@@ -1,5 +1,6 @@
 forge "https://forgeapi.puppetlabs.com"
 
+mod 'garethr-docker', '5.3.0'
 mod 'puppet/nodejs', '2.1.0'
 mod 'puppetlabs-apache', '1.11.0'
 mod 'puppetlabs/apt', '2.3.0'
