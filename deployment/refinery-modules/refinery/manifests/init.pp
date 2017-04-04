@@ -12,10 +12,10 @@ file { "/home/${app_user}/.ssh/config":
 
 class { 'python':
   version    => 'system',
-  pip        => true,
-  dev        => true,
-  virtualenv => true,
-  gunicorn   => false,
+  pip        => 'latest',
+  dev        => 'present',
+  virtualenv => 'present',
+  gunicorn   => 'absent',
 }
 
 class venvdeps {
