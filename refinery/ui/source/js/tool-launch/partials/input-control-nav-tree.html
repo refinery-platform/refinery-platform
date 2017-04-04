@@ -3,26 +3,21 @@
     class="tree-panel"
     ng-if="member.value_type=='LIST'">
     <h5>
-      <span ng-if="treeCtrl.groups.length == 0">
-        <b>0</b> of
-      </span>
-      <span ng-if="treeCtrl.groups.length > 0">
-        <b>{{ treeCtrl.groupIndex + 1 }}</b> of
-      </span>
+      <b>{{ treeCtrl.currentPosition[depth] + 1 }}</b> of
       <b>{{ treeCtrl.groups.length }} </b> groups in list
     </h5>
     <div>
       <button
         class="btn btn-default btn-xs outline"
         ng-disabled="treeCtrl.groupIndex == 0"
-        ng-click="treeCtrl.navLeft()">
+        ng-click="treeCtrl.navLeft(depth)">
         <i class="fa fa-backward"></i>
       </button>
       <button
         class="btn btn-default btn-xs outline"
         ng-disabled="treeCtrl.groupIndex == treeCtrl.groups.length - 1 ||
         treeCtrl.groups.length== 0"
-        ng-click="treeCtrl.navRight()">
+        ng-click="treeCtrl.navRight(depth)">
         <i class="fa fa-forward"></i>
       </button>
       <button
@@ -43,27 +38,22 @@
     class="tree-panel-pair"
     ng-if="member.value_type=='PAIR'">
     <h5>
-      <span ng-if="treeCtrl.groups.length == 0">
-        <b>0</b> of
-      </span>
-      <span ng-if="treeCtrl.groups.length > 0">
-        <b>{{ treeCtrl.groupIndex + 1 }}</b> of
-      </span>
-      <b> 2 </b> groups in pair
+      <b>{{ treeCtrl.currentPosition[depth] + 1 }}</b> of
+      <b>2</b> groups in pair
     </h5>
 
     <div>
       <button
         class="btn btn-default btn-xs outline"
         ng-disabled="treeCtrl.groupIndex == 0"
-        ng-click="treeCtrl.navLeft()">
+        ng-click="treeCtrl.navLeft(depth)">
         <i class="fa fa-backward"></i>
       </button>
       <button
         class="btn btn-default btn-xs outline"
         ng-disabled="treeCtrl.groupIndex == treeCtrl.groups.length - 1 ||
         treeCtrl.groups.length == 0"
-        ng-click="treeCtrl.navRight()">
+        ng-click="treeCtrl.navRight(depth)">
         <i class="fa fa-forward"></i>
       </button>
       <button
@@ -81,6 +71,9 @@
     </div>
   </div>
   <span ng-if="member.file_relationship[0].file_relationship.length > 0">
-    <rp-input-control-nav collection="member.file_relationship[0]"></rp-input-control-nav>
+    <rp-input-control-nav
+      collection="member.file_relationship[0]"
+      counter="counter+1">
+    </rp-input-control-nav>
   </span>
 </div>

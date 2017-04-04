@@ -9,7 +9,8 @@
     '$scope',
     'fileBrowserFactory',
     'resetGridService',
-    'selectedNodesService'
+    'selectedNodesService',
+    'fileRelationshipService'
   ];
 
 
@@ -17,7 +18,8 @@
     $scope,
     fileBrowserFactory,
     resetGridService,
-    selectedNodesService
+    selectedNodesService,
+    fileRelationshipService
   ) {
     var vm = this;
     vm.groups = [];
@@ -27,18 +29,32 @@
     vm.removeGroup = removeGroup;
     vm.removeAllGroups = removeAllGroups;
     vm.attributes = {};
+    vm.getFileMap = getFileMap;
+    vm.counter = 0;
+    vm.currentPosition = [];
+    vm.getFileMap();
   /*
    * ---------------------------------------------------------
    * Methods Definitions
    * ---------------------------------------------------------
    */
-    function navLeft () {
+
+    function getFileMap () {
+      if (vm.counter === 0) {
+        vm.currentPosition = fileRelationshipService.refreshFileMap();
+        console.log(vm.currentPosition);
+      }
+    }
+
+    function navLeft (depth) {
+      console.log(depth);
       if (vm.groupIndex > 0) {
         vm.groupIndex--;
       }
     }
 
-    function navRight () {
+    function navRight (depth) {
+      console.log(depth);
       if (vm.groupIndex < vm.groups.length) {
         vm.groupIndex++;
       }

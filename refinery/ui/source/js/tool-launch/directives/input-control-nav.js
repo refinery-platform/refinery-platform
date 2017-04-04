@@ -9,7 +9,8 @@
     return {
       restrict: 'E',
       scope: {
-        collection: '='
+        collection: '=',
+        counter: '='
       },
       templateUrl: '/static/partials/tool-launch/partials/input-control-nav.html'
     };
