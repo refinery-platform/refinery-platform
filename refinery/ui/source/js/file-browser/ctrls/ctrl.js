@@ -10,6 +10,7 @@
     '$log',
     '$q',
     '$scope',
+    '$templateCache',
     '$timeout',
     'uiGridConstants',
     '_',
@@ -28,6 +29,7 @@
     $log,
     $q,
     $scope,
+    $templateCache,
     $timeout,
     uiGridConstants,
     _,
@@ -61,6 +63,13 @@
       uuid: $window.externalAssayUuid
     };
     vm.firstPage = 0;
+    $templateCache.put('ui-grid/selectionRowHeaderButtons',
+      '<div class="ui-grid-selection-row-header-buttons "' +
+      ' ng-class="{\'ui-grid-row-selected\': row.isSelected}" ' +
+      'ng-click="selectButtonClick(row, $event)">' +
+      '<i class="fa fa-arrow-right" aria-hidden="true"></i></div>'
+    );
+
     //
     vm.gridApi = undefined; // avoids duplicate grid generation
     // Main ui-grid options
@@ -104,8 +113,7 @@
       angular.copy(selectedFilterService.attributeSelectedFields,
         vm.filesParam.filter_attribute
       );
-      // Resets selection
-      nodesService.setSelectedAllFlags(false);
+
       // resets grid
       vm.reset();
     };
@@ -252,8 +260,9 @@
           }
         });
 
-        // Event only occurs when checkbox is selected/deselected.
-        vm.gridApi.selection.on.rowSelectionChangedBatch(null, function (eventRows) {
+       //  Event only occurs when checkbox is selected/deselected.
+        vm.gridApi.selection.on.rowSelectionChangedBatch(null, function
+         (eventRows) {
           // When event all occurs, the node group should be current selection
           nodesService.resetNodeGroupSelection(true);
           // Checking the first row selected, ensures it's a true select all

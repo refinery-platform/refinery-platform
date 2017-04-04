@@ -1,0 +1,12 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema",
+  "extends": {"$ref": "Parameter.json#"},
+  "properties": {
+    "galaxy_workflow_step": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "galaxy_workflow_step"
+  ]
+}

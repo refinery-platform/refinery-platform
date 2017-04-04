@@ -34,6 +34,7 @@
       "node-mapping",
       "node-relationship",
       "statistics",
+      "tool-launch",
       "workflows",
       "visualization"
     ],
