@@ -226,6 +226,7 @@ exec { "supervisord":
     Class["ui"],
     Class["solr"],
     Class["neo4j"],
+    Class["docker"],
     Class["::rabbitmq"],
     Service["memcached"],
   ],
