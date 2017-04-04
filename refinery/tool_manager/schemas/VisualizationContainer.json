@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema",
+  "type": "object",
+
+  "required": [
+    "image_name",
+    "container_name"
+  ],
+  "properties": {
+    "image_name": {
+      "type": "string"
+    },
+    "container_name": {
+      "type": "string"
+    }
+  }
+}
+
