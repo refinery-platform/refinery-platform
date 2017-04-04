@@ -1,5 +1,5 @@
-class refinery::docker_ {
-  class { 'docker':
+class refinery::docker {
+  class { '::docker':
     docker_users => [$app_user]
   }
 }
