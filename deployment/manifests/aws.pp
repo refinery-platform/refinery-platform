@@ -30,7 +30,7 @@ $solr_core_data = "/data/solr/core"
 include refinery
 include refinery::apache2
 include refinery::aws
-include refinery::docker_
+include refinery::docker
 include refinery::neo4j
 include refinery::pg
 include refinery::solr
