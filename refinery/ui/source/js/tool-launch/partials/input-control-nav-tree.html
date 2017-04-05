@@ -9,14 +9,12 @@
     <div>
       <button
         class="btn btn-default btn-xs outline"
-        ng-disabled="treeCtrl.groupIndex == 0"
+        ng-disabled="treeCtrl.currentPosition[depth] == 0"
         ng-click="treeCtrl.navLeft(depth)">
         <i class="fa fa-backward"></i>
       </button>
       <button
         class="btn btn-default btn-xs outline"
-        ng-disabled="treeCtrl.groupIndex == treeCtrl.groups.length - 1 ||
-        treeCtrl.groups.length== 0"
         ng-click="treeCtrl.navRight(depth)">
         <i class="fa fa-forward"></i>
       </button>
@@ -45,14 +43,12 @@
     <div>
       <button
         class="btn btn-default btn-xs outline"
-        ng-disabled="treeCtrl.groupIndex == 0"
+        ng-disabled="treeCtrl.currentPosition[depth] == 0"
         ng-click="treeCtrl.navLeft(depth)">
         <i class="fa fa-backward"></i>
       </button>
       <button
         class="btn btn-default btn-xs outline"
-        ng-disabled="treeCtrl.groupIndex == treeCtrl.groups.length - 1 ||
-        treeCtrl.groups.length == 0"
         ng-click="treeCtrl.navRight(depth)">
         <i class="fa fa-forward"></i>
       </button>
@@ -73,7 +69,7 @@
   <span ng-if="member.file_relationship[0].file_relationship.length > 0">
     <rp-input-control-nav
       collection="member.file_relationship[0]"
-      counter="counter+1">
+      counter="depth+1">
     </rp-input-control-nav>
   </span>
 </div>

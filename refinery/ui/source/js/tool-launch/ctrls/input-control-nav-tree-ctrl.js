@@ -48,16 +48,14 @@
 
     function navLeft (depth) {
       console.log(depth);
-      if (vm.groupIndex > 0) {
-        vm.groupIndex--;
-      }
+      vm.currentPosition[depth]--;
+      console.log(vm.currentPosition);
     }
 
     function navRight (depth) {
       console.log(depth);
-      if (vm.groupIndex < vm.groups.length) {
-        vm.groupIndex++;
-      }
+      vm.currentPosition[depth]++;
+      console.log(vm.currentPosition);
     }
 
     function removeGroup (groupInd) {
