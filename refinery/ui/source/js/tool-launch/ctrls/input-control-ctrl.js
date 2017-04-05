@@ -29,7 +29,6 @@
           return vm.displayCtrl.selectedTool;
         },
         function () {
-          console.log(vm.displayCtrl.selectedTool);
           angular.copy(vm.displayCtrl.selectedTool, vm.tool);
         }
       );

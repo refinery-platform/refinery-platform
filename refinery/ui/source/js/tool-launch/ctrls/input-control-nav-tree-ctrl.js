@@ -30,7 +30,6 @@
     vm.removeAllGroups = removeAllGroups;
     vm.attributes = {};
     vm.getFileMap = getFileMap;
-    vm.counter = 0;
     vm.currentPosition = [];
     vm.getFileMap();
   /*
@@ -40,9 +39,8 @@
    */
 
     function getFileMap () {
-      if (vm.counter === 0) {
+      if (fileRelationshipService.currentTypes.length === 0) {
         vm.currentPosition = fileRelationshipService.refreshFileMap();
-        console.log(vm.currentPosition);
       }
     }
 
