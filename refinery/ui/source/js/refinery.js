@@ -1,12 +1,12 @@
 'use strict';
 
 window.getStaticUrl = function (relativePath) {
-  // must be a global because used for config of 3rd party modules
+  // must be a global because used for config of modules other than refineryApp
   try {
     return window.djangoApp.staticUrl + relativePath;
   } catch (e) {
-    // window.djangoApp is defined in base.html which is not loaded by the test runner
-    return '/static/';
+    // window.djangoApp is defined in base.html which is not loaded by Karma
+    return '/static/' + relativePath;
   }
 };
 

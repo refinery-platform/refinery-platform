@@ -282,7 +282,7 @@ TreemapCtrl.prototype.addChildren = function (parent, data, level, firstTime) {
     .append('use')
     .attr({
       class: 'icon icon-unlocked',
-      'xlink:href': '/static/images/icons.svg#unlocked'
+      'xlink:href': this.window.getStaticUrl('images/icons.svg#unlocked')
     })
     .call(this.setUpNodeCenterIcon.bind(this));
 
@@ -290,7 +290,7 @@ TreemapCtrl.prototype.addChildren = function (parent, data, level, firstTime) {
     .append('use')
     .attr({
       class: 'icon icon-locked',
-      'xlink:href': '/static/images/icons.svg#locked'
+      'xlink:href': this.window.getStaticUrl('images/icons.svg#locked')
     })
     .call(this.setUpNodeCenterIcon.bind(this));
 
@@ -770,7 +770,7 @@ TreemapCtrl.prototype.addInnerNodes = function (parents, level) {
     .append('use')
     .attr({
       class: 'icon icon-unlocked',
-      'xlink:href': '/static/images/icons.svg#unlocked'
+      'xlink:href': this.window.getStaticUrl('images/icons.svg#unlocked')
     })
     .call(this.setUpNodeCenterIcon.bind(this));
 
@@ -778,7 +778,7 @@ TreemapCtrl.prototype.addInnerNodes = function (parents, level) {
     .append('use')
     .attr({
       class: 'icon icon-locked',
-      'xlink:href': '/static/images/icons.svg#locked'
+      'xlink:href': this.window.getStaticUrl('images/icons.svg#locked')
     })
     .call(this.setUpNodeCenterIcon.bind(this));
 
@@ -1531,7 +1531,7 @@ TreemapCtrl.prototype.setBreadCrumb = function (node) {
       .append('svg')
       .attr('class', 'fa fa-arrow-left is-mirrored')
       .append('use')
-      .attr('xlink:href', '/static/images/icons.svg#arrow-left');
+      .attr('xlink:href', this.window.getStaticUrl('images/icons.svg#arrow-left'));
   }
 
   current
@@ -1552,7 +1552,7 @@ TreemapCtrl.prototype.setBreadCrumb = function (node) {
         .append('svg')
         .attr('class', 'icon-arrow-left is-mirrored')
         .append('use')
-        .attr('xlink:href', '/static/images/icons.svg#arrow-left');
+        .attr('xlink:href', this.window.getStaticUrl('images/icons.svg#arrow-left'));
     }
 
     crumb

@@ -8,9 +8,9 @@ describe('rpAssayFilesUtilModalDetail directive unit test', function () {
   var rootScope;
   var scope;
 
-  beforeEach(inject(function (_$compile_, _$rootScope_, $templateCache) {
+  beforeEach(inject(function (_$compile_, _$rootScope_, $templateCache, $window) {
     $templateCache.put(
-      '/static/partials/file-browser/partials/assay-files-util-modal-detail.html',
+      $window.getStaticUrl('partials/file-browser/partials/assay-files-util-modal-detail.html'),
       '<div class="modal-header">Data Set Table Configuration </div> ' +
       '<div class="modal-body fileUtilModal"> List of assay attributes </div>'
     );

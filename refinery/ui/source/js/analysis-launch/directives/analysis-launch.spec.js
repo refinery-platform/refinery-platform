@@ -24,7 +24,7 @@ describe('rpAnalysisLaunch directive unit test', function () {
     compile = _$compile_;
     rootScope = _$rootScope_;
     scope = rootScope.$new();
-    template = '<rp-analysis-launch></rp-analysis-launch>';
+    template = angular.element('<rp-analysis-launch></rp-analysis-launch>');
     directiveElement = compile(template)(scope);
     scope.$digest();
   }));

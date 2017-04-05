@@ -1,8 +1,9 @@
 'use strict';
 
 function metadataTableDirective (
-  fileUploadStatusService,
   $,
+  $window,
+  fileUploadStatusService,
   metadataStatusService
 ) {
   return {
@@ -13,7 +14,9 @@ function metadataTableDirective (
     controllerAs: 'metadataTable',
     restrict: 'E',
     replace: true,
-    templateUrl: '/static/partials/data-set-import/partials/metadata-table.html',
+    templateUrl: function () {
+      return $window.getStaticUrl('partials/data-set-import/partials/metadata-table.html');
+    },
     link: function (scope, element, attrs, ctrl) {
       scope.isAdvancedCollapsed = true;
       // use to check pattern of public shortcut name
@@ -64,8 +67,9 @@ function metadataTableDirective (
 angular
   .module('refineryDataSetImport')
   .directive('metadataTable', [
-    'fileUploadStatusService',
     '$',
+    '$window',
+    'fileUploadStatusService',
     'metadataStatusService',
     metadataTableDirective
   ]);

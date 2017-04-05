@@ -1,9 +1,11 @@
 'use strict';
 
-function rpFileBrowserNodeGroup () {
+function rpFileBrowserNodeGroup ($window) {
   return {
     restrict: 'AE',
-    templateUrl: '/static/partials/file-browser/partials/node-group.html',
+    templateUrl: function () {
+      return $window.getStaticUrl('partials/file-browser/partials/node-group.html');
+    },
     controller: 'NodeGroupCtrl',
     controllerAs: 'FBNGCtrl',
     bindToController: {
@@ -15,6 +17,7 @@ function rpFileBrowserNodeGroup () {
 angular
   .module('refineryFileBrowser')
   .directive('rpFileBrowserNodeGroup', [
+    '$window',
     rpFileBrowserNodeGroup
   ]
 );
