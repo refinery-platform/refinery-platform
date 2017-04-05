@@ -26,7 +26,6 @@
     */
     function refreshFileMap () {
       var scaledCopy = toolsService.selectedTool.file_relationship;
-      currentTypes.push(scaledCopy.value_type);
       // this is an array
       while (scaledCopy.file_relationship.length > 0 || fileDepth === 10) {
         fileDepth++;
@@ -34,6 +33,7 @@
         currentTypes.push(scaledCopy.value_type);
         scaledCopy = scaledCopy.file_relationship[0];
       }
+      currentTypes.push(scaledCopy.value_type);
       return currentPosition;
     }
   }
