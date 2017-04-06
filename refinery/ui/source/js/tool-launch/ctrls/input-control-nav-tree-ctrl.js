@@ -22,14 +22,13 @@
     fileRelationshipService
   ) {
     var vm = this;
-    vm.groups = [];
-    vm.groupIndex = 0;
+    vm.attributes = {};
+    vm.currentPosition = fileRelationshipService.currentPosition; // maintains nav position
+    vm.groups = []; // stores all the selected nodes for vm
     vm.navRight = navRight;
     vm.navLeft = navLeft;
-    vm.removeGroup = removeGroup;
     vm.removeAllGroups = removeAllGroups;
-    vm.currentPosition = fileRelationshipService.currentPosition; // maintains nav position
-    vm.attributes = {};
+    vm.removeGroup = removeGroup; // Refreshes all selection
   /*
    * ---------------------------------------------------------
    * Methods Definitions
@@ -37,15 +36,13 @@
    */
     function navLeft (depth) {
       vm.currentPosition[depth]--;
-      console.log(fileRelationshipService.currentPosition);
     }
 
     function navRight (depth) {
       vm.currentPosition[depth]++;
-      console.log(fileRelationshipService.currentPosition);
     }
 
-    // probably move remove groups to input group ctrl
+    // PROBABLY SHOULD move 'remove groups' to input group ctrl
     function removeGroup (groupInd) {
       vm.groups[groupInd].isSelected = false;
       selectedNodesService.setSelectedNodes(vm.groups[groupInd]);
@@ -62,6 +59,7 @@
    * ---------------------------------------------------------
    */
     vm.$onInit = function () {
+      // copies all selected nodes to the generic group
       $scope.$watchCollection(
         function () {
           return selectedNodesService.selectedNodes;
@@ -73,7 +71,6 @@
             for (var ind = 0; ind < attributesArray.length; ind ++) {
               vm.attributes[attributesArray[ind].display_name] = attributesArray[ind].internal_name;
             }
-            vm.groupIndex = vm.groups.length - 1;
           }
         }
       );
