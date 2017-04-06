@@ -22,6 +22,8 @@ function metadataTableDirective (
       // use to check pattern of public shortcut name
       scope.urlShortcutRegex = /^[a-zA-Z0-9_]*$/;
 
+      scope.sampleMetadataUrl = $window.getStaticUrl('sample-files/refinery-sample-metadata.tsv');
+
       // Helper method to disable data file upload if files are uploading
       ctrl.areFilesUploading = function () {
         if (fileUploadStatusService.fileUploadStatus === 'running') {
