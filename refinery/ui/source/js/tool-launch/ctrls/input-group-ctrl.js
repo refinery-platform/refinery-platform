@@ -5,10 +5,16 @@
     .module('refineryToolLaunch')
     .controller('InputGroupCtrl', InputGroupCtrl);
 
-  InputGroupCtrl.$inject = ['$scope', 'selectedNodesService'];
+  InputGroupCtrl.$inject = [
+    '$scope',
+    'selectedNodesService'
+  ];
 
 
-  function InputGroupCtrl ($scope, selectedNodesService) {
+  function InputGroupCtrl (
+    $scope,
+    selectedNodesService
+  ) {
     var vm = this;
     vm.tool = {}; // selected tool displayed in panel
     vm.toolType = ''; // workflow vs visualization

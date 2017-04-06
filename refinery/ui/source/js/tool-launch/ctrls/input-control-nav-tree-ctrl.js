@@ -29,31 +29,22 @@
     vm.removeGroup = removeGroup;
     vm.removeAllGroups = removeAllGroups;
     vm.attributes = {};
-    vm.getFileMap = getFileMap;
     vm.currentPosition = fileRelationshipService.currentPosition;
-    vm.currentTypes = fileRelationshipService.currentTypes;
-    vm.getFileMap();
   /*
    * ---------------------------------------------------------
    * Methods Definitions
    * ---------------------------------------------------------
    */
 
-    function getFileMap () {
-      if (fileRelationshipService.currentTypes.length === 0) {
-        vm.currentPosition = fileRelationshipService.refreshFileMap();
-        vm.currentTypes = fileRelationshipService.currentTypes;
-      }
-    }
-
     function navLeft (depth) {
-      vm.currentPosition[depth]--;
+      fileRelationshipService.currentPosition[depth]--;
     }
 
     function navRight (depth) {
-      vm.currentPosition[depth]++;
+      fileRelationshipService.currentPosition[depth]++;
     }
 
+    // probably move remove groups to input group ctrl
     function removeGroup (groupInd) {
       vm.groups[groupInd].isSelected = false;
       selectedNodesService.setSelectedNodes(vm.groups[groupInd]);

@@ -3,8 +3,7 @@
     class="tree-panel p-a-0"
     ng-if="member.value_type=='LIST'">
     <h5>
-      <b>{{ treeCtrl.currentPosition[depth] + 1 }}</b> of
-      <b>{{ treeCtrl.groups.length }} </b> groups in list
+      <b>{{ treeCtrl.currentPosition[depth] + 1 }}</b> of groups in list
     </h5>
     <div>
       <button
@@ -17,12 +16,6 @@
         class="btn btn-default btn-xs outline"
         ng-click="treeCtrl.navRight(depth)">
         <i class="fa fa-forward"></i>
-      </button>
-      <button
-        class="btn btn-default btn-xs outline"
-        ng-disabled="treeCtrl.groups.length == 0"
-        ng-click="treeCtrl.removeGroup(treeCtrl.groupIndex)">
-        Remove
       </button>
     </div>
   </div>
@@ -47,12 +40,6 @@
         ng-click="treeCtrl.navRight(depth)">
         <i class="fa fa-forward"></i>
       </button>
-      <button
-        class="btn btn-default btn-xs outline"
-        ng-disabled="treeCtrl.groups.length == 0"
-        ng-click="treeCtrl.removeGroup(treeCtrl.groupIndex)">
-        Remove
-      </button>
     </div>
   </div>
   <span ng-if="member.file_relationship[0].file_relationship.length > 0">
@@ -62,6 +49,20 @@
     </rp-input-control-nav>
   </span>
   <span ng-if="member.file_relationship[0].file_relationship.length == 0">
+    <br>
+    <button
+      class="btn btn-default btn-xs outline"
+      ng-disabled="treeCtrl.groups.length == 0"
+      ng-click="treeCtrl.removeGroup(treeCtrl.groupIndex)">
+      Remove
+    </button>
+    <button
+      class="btn btn-default btn-xs outline"
+      ng-disabled="treeCtrl.groups.length == 0"
+      ng-click="treeCtrl.removeAllGroups()">
+      Remove All
+    </button>
+
     <div
       class="tree-panel p-a-0"
       ng-if="member.file_relationship[0].value_type=='LIST'">
@@ -75,12 +76,5 @@
       <br>
         <rp-input-group></rp-input-group>
     </div>
-    <hr>
-    <button
-      class="btn btn-default btn-xs outline"
-      ng-disabled="treeCtrl.groups.length == 0"
-      ng-click="treeCtrl.removeAllGroups()">
-      Remove All
-    </button>
   </span>
 </div>
