@@ -24,12 +24,6 @@
         ng-click="treeCtrl.removeGroup(treeCtrl.groupIndex)">
         Remove
       </button>
-      <button
-        class="btn btn-default btn-xs outline"
-        ng-disabled="treeCtrl.groups.length == 0"
-        ng-click="treeCtrl.removeAllGroups()">
-        Remove All
-      </button>
     </div>
   </div>
   <div
@@ -49,6 +43,7 @@
       </button>
       <button
         class="btn btn-default btn-xs outline"
+        ng-disabled="treeCtrl.currentPosition[depth] == 1"
         ng-click="treeCtrl.navRight(depth)">
         <i class="fa fa-forward"></i>
       </button>
@@ -57,12 +52,6 @@
         ng-disabled="treeCtrl.groups.length == 0"
         ng-click="treeCtrl.removeGroup(treeCtrl.groupIndex)">
         Remove
-      </button>
-      <button
-        class="btn btn-default btn-xs outline"
-        ng-disabled="treeCtrl.groups.length == 0"
-        ng-click="treeCtrl.removeAllGroups()">
-        Remove All
       </button>
     </div>
   </div>
@@ -86,5 +75,12 @@
       <br>
         <rp-input-group></rp-input-group>
     </div>
+    <hr>
+    <button
+      class="btn btn-default btn-xs outline"
+      ng-disabled="treeCtrl.groups.length == 0"
+      ng-click="treeCtrl.removeAllGroups()">
+      Remove All
+    </button>
   </span>
 </div>
