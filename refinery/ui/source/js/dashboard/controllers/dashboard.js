@@ -1637,7 +1637,7 @@ DashboardCtrl.prototype.openDataSetDeleteModal = function (dataSet) {
   this.collapseDataSetPreview();
   this.collapseDatasetExploration();
   this.removeFromDataCart(dataSet);
-  var datasetDeleteDialogUrl = this.window.getStaticUrl(
+  var datasetDeleteDialogUrl = this.$window.getStaticUrl(
     'partials/dashboard/partials/dataset-delete-dialog.html'
   );
 
@@ -1669,7 +1669,7 @@ DashboardCtrl.prototype.openDataSetDeleteModal = function (dataSet) {
  * @date    2016-9-28
  */
 DashboardCtrl.prototype.openAnalysisDeleteModal = function (analysis) {
-  var analysisDeleteDialogUrl = this.window.getStaticUrl(
+  var analysisDeleteDialogUrl = this.$window.getStaticUrl(
     'partials/dashboard/partials/analysis-delete-dialog.html'
   );
   this.$uibModal.open({
