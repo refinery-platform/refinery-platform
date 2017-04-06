@@ -115,8 +115,9 @@
         '<div class="ui-grid-selection-row-header-buttons "' +
         ' ng-class="{\'ui-grid-row-selected\': row.isSelected}" ' +
         'ng-click="selectButtonClick(row, $event)">' +
-        '<a rp-node-selection-popover title="Selection">' +
-        '<i class="fa fa-arrow-right ui-grid-checks" aria-hidden="true"></i></a></div>'
+        '<a rp-node-selection-popover title="Selection" uuid="row.entity.uuid">' +
+        '<i class="fa fa-arrow-right ui-grid-checks" id="row.entity.uuid"' +
+        ' aria-hidden="true"></i></a></div>'
       );
       // Ensure data owner
       checkDataSetOwnership();

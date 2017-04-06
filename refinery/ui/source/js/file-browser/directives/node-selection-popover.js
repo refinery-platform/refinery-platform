@@ -20,6 +20,9 @@
     ) {
     return {
       restrict: 'AE',
+      scope: {
+        uuid: '='
+      },
       link: function (scope, element) {
         // The script is in the base.html template.
         var template = $templateCache.get('nodeselectionpopover.html');
@@ -33,12 +36,11 @@
           container: 'body'
         };
         $(element).popover(options);
-
         // catches all clicks, so popover will hide if you click anywhere other
         // than icon & popover
         $('body').on('click', function (e) {
           // starts api calls if icon is clicked
-          if (e.target.class !== 'ui-grid-checks' &&
+          if (e.target.id !== scope.uuid &&
             $(e.target).parents('.popover.in').length === 0) {
             $(element).popover('hide');
           }
