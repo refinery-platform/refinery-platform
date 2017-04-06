@@ -47,15 +47,11 @@
     }
 
     function navLeft (depth) {
-      console.log(depth);
       vm.currentPosition[depth]--;
-      console.log(vm.currentPosition);
     }
 
     function navRight (depth) {
-      console.log(depth);
       vm.currentPosition[depth]++;
-      console.log(vm.currentPosition);
     }
 
     function removeGroup (groupInd) {

@@ -41,8 +41,6 @@
         },
         function () {
           vm.currentFileInput = selectedNodesService.selectedNodes;
-          console.log('in the watcher');
-          console.log(vm.currentFileInput);
           if (vm.currentFileInput.length > 0) {
             var attributesArray = vm.currentFileInput[0].grid.appScope.assayAttributes;
             for (var ind = 0; ind < attributesArray.length; ind ++) {
