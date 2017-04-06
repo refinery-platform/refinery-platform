@@ -11,15 +11,19 @@ angular
   .controller('provvisCanvasController', ['$scope', function ($scope) {
     $scope.name = 'Canvas';
   }])
-  .directive('provvisNavBar', [function () {
+  .directive('provvisNavBar', ['$window', function ($window) {
     return {
-      templateUrl: '/static/partials/provvis/partials/provvis-navbar.html',
+      templateUrl: function () {
+        return $window.getStaticUrl('partials/provvis/partials/provvis-navbar.html');
+      },
       restrict: 'A'
     };
   }])
-  .directive('provvisCanvas', [function () {
+  .directive('provvisCanvas', ['$window', function ($window) {
     return {
-      templateUrl: '/static/partials/provvis/partials/provvis-canvas.html',
+      templateUrl: function () {
+        return $window.getStaticUrl('partials/provvis/partials/provvis-canvas.html');
+      },
       restrict: 'A'
     };
   }]);
