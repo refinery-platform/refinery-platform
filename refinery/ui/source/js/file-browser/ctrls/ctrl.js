@@ -63,13 +63,6 @@
       uuid: $window.externalAssayUuid
     };
     vm.firstPage = 0;
-    $templateCache.put('ui-grid/selectionRowHeaderButtons',
-      '<div class="ui-grid-selection-row-header-buttons "' +
-      ' ng-class="{\'ui-grid-row-selected\': row.isSelected}" ' +
-      'ng-click="selectButtonClick(row, $event)">' +
-      '<i class="fa fa-arrow-right" aria-hidden="true"></i></div>'
-    );
-
     //
     vm.gridApi = undefined; // avoids duplicate grid generation
     // Main ui-grid options
@@ -99,11 +92,26 @@
      * attributeInternalName: {fieldName: boolean, fieldName: boolean} */
     vm.uiSelectedFields = {};
 
+    activate();
     /*
      * -----------------------------------------------------------------------------
      * Methods
      * -----------------------------------------------------------------------------
      */
+    function activate () {
+      // custom icon for ui-grid selection
+      $templateCache.put('ui-grid/selectionRowHeaderButtons',
+        '<div class="ui-grid-selection-row-header-buttons "' +
+        ' ng-class="{\'ui-grid-row-selected\': row.isSelected}" ' +
+        'ng-click="selectButtonClick(row, $event)">' +
+        '<i class="fa fa-arrow-right" aria-hidden="true"></i></div>'
+      );
+      // Ensure data owner
+      vm.checkDataSetOwnership();
+      // initialize the dataset and updates ui-grid selection, filters, and url
+      initializeDataOnPageLoad();
+    }
+
     // Used by ui, updates which attribute filters are selected and ui-grid data
     vm.attributeSelectionUpdate = function (internalName, field) {
       selectedFilterService.updateSelectedFilters(
@@ -502,7 +510,7 @@
 
     /*
      * -----------------------------------------------------------------------------
-     * Watchers and Method Calls
+     * Watchers
      * -----------------------------------------------------------------------------
      */
     // Reset grid flag if set to true, grid, params, filters, and nodes resets
@@ -543,10 +551,5 @@
         }
       }
     );
-
-    // Ensure data owner
-    vm.checkDataSetOwnership();
-    // initialize the dataset and updates ui-grid selection, filters, and url
-    initializeDataOnPageLoad();
   }
 })();
