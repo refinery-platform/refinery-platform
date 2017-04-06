@@ -7,8 +7,12 @@ function refineryDataSetNavConfig (
     .state(
       'files', {
         url: '/files/',
-        templateUrl:
-          '/static/partials/data-set-nav/partials/data-set-ui-mode-browse.html',
+        templateUrl: function () {
+          // unit tests redefine $window and thus make it unusable here
+          return window.getStaticUrl(
+            'partials/data-set-nav/partials/data-set-ui-mode-browse.html'
+          );
+        },
         controller: 'refineryDataSetNavFilesCtrl'
       },
       '^\/data_sets\/.*\/$',
@@ -17,8 +21,12 @@ function refineryDataSetNavConfig (
     .state(
       'browse', {
         url: '/files/browse',
-        templateUrl:
-          '/static/partials/data-set-nav/partials/data-set-ui-mode-browse.html',
+        templateUrl: function () {
+          // unit tests redefine $window and thus make it unusable here
+          return window.getStaticUrl(
+            'partials/data-set-nav/partials/data-set-ui-mode-browse.html'
+          );
+        },
         controller: 'refineryDataSetNavFilesBrowseCtrl'
       },
       '^\/data_sets\/.*\/$',
@@ -27,8 +35,12 @@ function refineryDataSetNavConfig (
     .state(
       'analyze', {
         url: '/files/analyze/',
-        templateUrl:
-          '/static/partials/data-set-nav/partials/data-set-ui-mode-analyze.html',
+        templateUrl: function () {
+          // unit tests redefine $window and thus make it unusable here
+          return window.getStaticUrl(
+            'partials/data-set-nav/partials/data-set-ui-mode-analyze.html'
+          );
+        },
         controller: 'refineryDataSetNavAnalyzeCtrl'
       },
       '^\/data_sets\/.*\/$',
@@ -36,8 +48,12 @@ function refineryDataSetNavConfig (
     )
     .state(
       'visualize', {
-        templateUrl:
-          '/static/partials/data-set-nav/partials/data-set-ui-mode-visualize.html',
+        templateUrl: function () {
+          // unit tests redefine $window and thus make it unusable here
+          return window.getStaticUrl(
+            'partials/data-set-nav/partials/data-set-ui-mode-visualize.html'
+          );
+        },
         url: '/files/visualize/',
         controller: 'refineryDataSetNavVisualizeCtrl'
       },
@@ -47,8 +63,10 @@ function refineryDataSetNavConfig (
     .state(
       'analyses', {
         url: '/analyses/',
-        templateUrl:
-          '/static/partials/analysis-monitor/partials/analyses-list.html',
+        templateUrl: function () {
+          // unit tests redefine $window and thus make it unusable here
+          return window.getStaticUrl('partials/analysis-monitor/partials/analyses-list.html');
+        },
         controller: 'refineryDataSetNavBlueprintCtrl'
       },
       '^\/data_sets\/.*\/$',
@@ -81,8 +99,10 @@ function refineryDataSetNavConfig (
     .state(
       'files', {
         url: '/files/',
-        templateUrl:
-          '/static/partials/file-browser/views/files-tab.html',
+        templateUrl: function () {
+          // unit tests redefine $window and thus make it unusable here
+          return window.getStaticUrl('partials/file-browser/views/files-tab.html');
+        },
         controller: 'FileBrowserCtrl',
         controllerAs: 'FBCtrl'
       },
@@ -92,8 +112,10 @@ function refineryDataSetNavConfig (
     .state(
       'analyses', {
         url: '/analyses/',
-        templateUrl:
-          '/static/partials/analysis-monitor/views/analyses-tab.html',
+        templateUrl: function () {
+          // unit tests redefine $window and thus make it unusable here
+          return window.getStaticUrl('partials/analysis-monitor/views/analyses-tab.html');
+        },
         controller: 'AnalysisMonitorCtrl',
         controllerAs: 'AMCtrl'
       },
@@ -103,8 +125,10 @@ function refineryDataSetNavConfig (
     .state(
       'about', {
         url: '/about/',
-        templateUrl:
-          '/static/partials/data-set-about/views/details-tab.html',
+        templateUrl: function () {
+          // unit tests redefine $window and thus make it unusable here
+          return window.getStaticUrl('partials/data-set-about/views/details-tab.html');
+        },
         controller: 'AboutDetailsCtrl',
         controllerAs: 'ADCtrl'
       },
