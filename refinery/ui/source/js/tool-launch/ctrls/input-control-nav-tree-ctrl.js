@@ -28,20 +28,21 @@
     vm.navLeft = navLeft;
     vm.removeGroup = removeGroup;
     vm.removeAllGroups = removeAllGroups;
+    vm.currentPosition = fileRelationshipService.currentPosition; // maintains nav position
     vm.attributes = {};
-    vm.currentPosition = fileRelationshipService.currentPosition;
   /*
    * ---------------------------------------------------------
    * Methods Definitions
    * ---------------------------------------------------------
    */
-
     function navLeft (depth) {
-      fileRelationshipService.currentPosition[depth]--;
+      vm.currentPosition[depth]--;
+      console.log(fileRelationshipService.currentPosition);
     }
 
     function navRight (depth) {
-      fileRelationshipService.currentPosition[depth]++;
+      vm.currentPosition[depth]++;
+      console.log(fileRelationshipService.currentPosition);
     }
 
     // probably move remove groups to input group ctrl
