@@ -42,10 +42,9 @@
     selectedFilterService,
     selectedNodesService
   ) {
-    var vm = this;
-
     var maxFileRequest = fileBrowserSettings.maxFileRequest;
     var nodesService = selectedNodesService;
+    var vm = this;
 
     // flag to help with timing issues when selecting node group
     vm.afterNodeGroupUpdate = false;
@@ -63,7 +62,6 @@
       uuid: $window.externalAssayUuid
     };
     vm.firstPage = 0;
-    //
     vm.gridApi = undefined; // avoids duplicate grid generation
     // Main ui-grid options
     vm.gridOptions = {
