@@ -7,7 +7,6 @@
 
   InputControlNavTreeCtrl.$inject = [
     '$scope',
-    'fileBrowserFactory',
     'resetGridService',
     'selectedNodesService',
     'fileRelationshipService'
@@ -16,13 +15,12 @@
 
   function InputControlNavTreeCtrl (
     $scope,
-    fileBrowserFactory,
     resetGridService,
     selectedNodesService,
     fileRelationshipService
   ) {
     var vm = this;
-    vm.attributes = {};
+    vm.attributes = fileRelationshipService.attributesObj;
     vm.currentPosition = fileRelationshipService.currentPosition; // maintains nav position
     vm.groups = []; // stores all the selected nodes for vm
     vm.navRight = navRight;
@@ -66,12 +64,6 @@
         },
         function () {
           vm.groups = selectedNodesService.selectedNodes;
-          if (vm.groups.length > 0) {
-            var attributesArray = vm.groups[0].grid.appScope.assayAttributes;
-            for (var ind = 0; ind < attributesArray.length; ind ++) {
-              vm.attributes[attributesArray[ind].display_name] = attributesArray[ind].internal_name;
-            }
-          }
         }
       );
     };

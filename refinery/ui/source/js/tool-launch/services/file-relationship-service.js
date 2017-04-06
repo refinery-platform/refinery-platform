@@ -4,10 +4,11 @@
     .module('refineryToolLaunch')
     .service('fileRelationshipService', fileRelationshipService);
 
-  fileRelationshipService.$inject = ['_', 'toolsService'];
+  fileRelationshipService.$inject = ['_', 'fileBrowserFactory', 'toolsService'];
 
-  function fileRelationshipService (_, toolsService) {
+  function fileRelationshipService (_, fileBrowserFactory, toolsService) {
     var vm = this;
+    vm.attributesObj = {};
     vm.fileDepth = 0; // Roots are at depth 0
     vm.currentPosition = [0];
     vm.currentTypes = []; // tracks whether depths are pair or list
@@ -26,6 +27,13 @@
       vm.currentTypes = [];
       vm.inputFileTypes = [];
     }
+    // convert attributes array to attributes obj
+    function generateAttributeObj () {
+      var attributeArr = fileBrowserFactory.assayAttributes;
+      for (var i = 0; i < attributeArr.length; i ++) {
+        vm.attributesObj[attributeArr[i].display_name] = attributeArr[i].internal_name;
+      }
+    }
 
     // used to initialize the tool's data structure used by vm
     function refreshFileMap () {
@@ -39,6 +47,7 @@
       }
       angular.copy(vm.inputFileTypes, scaledCopy.input_files);
       vm.currentTypes.push(scaledCopy.value_type);
+      generateAttributeObj();
       return vm.currentPosition;
     }
   }
