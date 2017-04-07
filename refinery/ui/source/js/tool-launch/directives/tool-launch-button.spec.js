@@ -10,10 +10,11 @@
     beforeEach(inject(function (
       $compile,
       $rootScope,
-      $templateCache
+      $templateCache,
+      $window
     ) {
       $templateCache.put(
-        '/static/partials/tool-launch/partials/tool-launch-button.html',
+        $window.getStaticUrl('partials/tool-launch/partials/tool-launch-button.html'),
         '<button id="tool-launch-button"></button>'
       );
       var scope = $rootScope.$new();
