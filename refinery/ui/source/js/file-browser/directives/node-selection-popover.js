@@ -32,19 +32,15 @@
           content: popOverContent,
           placement: 'right',
           html: true,
-          toggle: 'popover',
+          trigger: 'manual',
           container: 'body'
         };
         $(element).popover(options);
-        // catches all clicks, so popover will hide if you click anywhere other
-        // than icon & popover
-        $('body').on('click', function (e) {
-          // starts api calls if icon is clicked
-          if (e.target.id !== scope.uuid &&
-            $(e.target).parents('.popover.in').length === 0) {
-            $(element).popover('hide');
-          }
-        });
+
+        scope.closeForm = function () {
+          $(element).popover('hide');
+          $('.ui-grid-selection-row-header-buttons').popover('enable');
+        };
       }
     };
   }

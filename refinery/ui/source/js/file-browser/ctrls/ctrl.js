@@ -6,6 +6,7 @@
     .controller('FileBrowserCtrl', FileBrowserCtrl);
 
   FileBrowserCtrl.$inject = [
+    '$',
     '$location',
     '$log',
     '$q',
@@ -25,6 +26,7 @@
   ];
 
   function FileBrowserCtrl (
+    $,
     $location,
     $log,
     $q,
@@ -88,6 +90,7 @@
     };
     vm.gridOptions.onRegisterApi = gridRegister;
     vm.lastPage = 0;  // variable supporting ui-grid dynamic scrolling
+    vm.openSelectionPopover = openSelectionPopover;
     vm.queryKeys = Object.keys($location.search()); // used for preset filters
     vm.refreshAssayFiles = refreshAssayFiles;
     vm.refreshSelectedFieldFromQuery = refreshSelectedFieldFromQuery;
@@ -112,11 +115,14 @@
     function activate () {
       // custom icon for ui-grid selection
       $templateCache.put('ui-grid/selectionRowHeaderButtons',
-        '<div class="ui-grid-selection-row-header-buttons "' +
-        ' ng-class="{\'ui-grid-row-selected\': row.isSelected}" ' +
-        'ng-click="selectButtonClick(row, $event)">' +
-        '<a rp-node-selection-popover title="Selection Hum" uuid="row.entity.uuid">' +
-        '<i class="fa fa-arrow-right ui-grid-checks" id="row.entity.uuid"' +
+        '<div>' +
+        '<a rp-node-selection-popover title="Selection Hum" uuid="row.entity.uuid" ' +
+        'ng-class="{\'ui-grid-row-selected\': row.isSelected}" ' +
+        'class="ui-grid-selection-row-header-buttons" ' +
+        'ng-click="selectButtonClick(row, $event); ' +
+        'grid.appScope.openSelectionPopover(row.entity.uuid);"' +
+        'id="{{row.entity.uuid}}">' +
+        '<i class="fa fa-arrow-right ui-grid-checks"' +
         ' aria-hidden="true"></i></a></div>'
       );
       // Ensure data owner
@@ -297,6 +303,15 @@
           }
         });
       }
+    }
+
+    /** vm method to open the selection popover and disable all popovers, so
+     * only one shows at a time. Needed in the ctrl due to ui-grid template.
+     * @param nodeUuid
+     */
+    function openSelectionPopover (nodeUuid) {
+      $('#' + nodeUuid).popover('show');
+      $('.ui-grid-selection-row-header-buttons').popover('disable');
     }
 
     /**
