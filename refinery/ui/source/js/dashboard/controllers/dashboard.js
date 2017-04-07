@@ -75,6 +75,8 @@ function DashboardCtrl (
   this.dataSetsPanelHeight = 1;
   this.dataCartPanelHeight = 0;
 
+  this.icons = this.$window.getStaticUrl('images/icons.svg');
+
   // Check authentication
   // This should ideally be moved to the global APP controller, which we don't
   // have right now.

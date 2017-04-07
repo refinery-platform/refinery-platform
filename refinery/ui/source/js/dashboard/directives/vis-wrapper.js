@@ -14,6 +14,9 @@ function refineryDashboardVisWrapper ($window) {
     },
     templateUrl: function () {
       return $window.getStaticUrl('partials/dashboard/directives/vis-wrapper.html');
+    },
+    link: function (scope) {
+      scope.icons = $window.getStaticUrl('images/icons.svg');
     }
   };
 }
