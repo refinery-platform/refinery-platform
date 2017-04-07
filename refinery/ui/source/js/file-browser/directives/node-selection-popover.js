@@ -37,7 +37,7 @@
         };
         $(element).popover(options);
 
-        scope.closeForm = function () {
+        scope.closeSelectionPopover = function () {
           $(element).popover('hide');
           $('.ui-grid-selection-row-header-buttons').popover('enable');
         };
