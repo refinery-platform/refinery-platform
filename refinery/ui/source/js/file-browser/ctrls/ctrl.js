@@ -6,7 +6,6 @@
     .controller('FileBrowserCtrl', FileBrowserCtrl);
 
   FileBrowserCtrl.$inject = [
-    '$',
     '$location',
     '$log',
     '$q',
@@ -26,7 +25,6 @@
   ];
 
   function FileBrowserCtrl (
-    $,
     $location,
     $log,
     $q,
@@ -310,8 +308,8 @@
      * @param nodeUuid
      */
     function openSelectionPopover (nodeUuid) {
-      $('#' + nodeUuid).popover('show');
-      $('.ui-grid-selection-row-header-buttons').popover('disable');
+      angular.element('#' + nodeUuid).popover('show');
+      angular.element('.ui-grid-selection-row-header-buttons').popover('disable');
     }
 
     /**

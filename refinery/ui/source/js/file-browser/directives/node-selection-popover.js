@@ -6,14 +6,12 @@
   .directive('rpNodeSelectionPopover', rpNodeSelectionPopover);
 
   rpNodeSelectionPopover.$inject = [
-    '$',
     '$compile',
     '$rootScope',
     '$templateCache'
   ];
 
   function rpNodeSelectionPopover (
-    $,
     $compile,
     $rootScope,
     $templateCache
@@ -35,11 +33,11 @@
           trigger: 'manual',
           container: 'body'
         };
-        $(element).popover(options);
+        angular.element(element).popover(options);
 
         scope.closeSelectionPopover = function () {
-          $(element).popover('hide');
-          $('.ui-grid-selection-row-header-buttons').popover('enable');
+          angular.element(element).popover('hide');
+          angular.element('.ui-grid-selection-row-header-buttons').popover('enable');
         };
       }
     };
