@@ -5,6 +5,7 @@ function refineryAppConfig (
   $httpProvider,
   $logProvider,
   $provide,
+  $sceDelegateProvider,
   $urlRouterProvider,
   settings,
   uiSelectConfig
@@ -60,6 +61,11 @@ function refineryAppConfig (
   // For ui-select, known bug. Should be fixed in the next release
   // https://github.com/angular-ui/ui-select/issues/1672
   uiSelectConfig.removeSelected = false;
+
+  $sceDelegateProvider.resourceUrlWhitelist([
+    'self',
+    settings.djangoApp.staticUrl + '**'  // allow loading assets from S3
+  ]);
 }
 
 angular
@@ -69,6 +75,7 @@ angular
     '$httpProvider',
     '$logProvider',
     '$provide',
+    '$sceDelegateProvider',
     '$urlRouterProvider',
     'settings',
     'uiSelectConfig',
