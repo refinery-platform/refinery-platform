@@ -1,5 +1,12 @@
-<div>
-  I am a popover. I pop---over. See.
+<div class="node-input-group">
+  <ul>
+    <li ng-repeat="fileSlot in NSPCtrl.inputFileTypes track by $index">
+      {{ fileSlot.name }}
+      <div ng-if="$index < NSPCtrl.inputFileTypes.length - 1">
+        <hr>
+      </div>
+    </li>
+  </ul>
   <hr>
   Controller panel
   <hr>

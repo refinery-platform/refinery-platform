@@ -38,6 +38,7 @@
     // used to initialize the tool's data structure used by vm
     function refreshFileMap () {
       var scaledCopy = toolsService.selectedTool.file_relationship;
+      console.log(toolsService.selectedTool.file_relationship);
       // this is an array
       while (scaledCopy.file_relationship.length > 0 || vm.fileDepth === 10) {
         vm.fileDepth++;
@@ -45,7 +46,7 @@
         vm.currentTypes.push(scaledCopy.value_type);
         scaledCopy = scaledCopy.file_relationship[0];
       }
-      angular.copy(vm.inputFileTypes, scaledCopy.input_files);
+      angular.copy(scaledCopy.input_files, vm.inputFileTypes);
       vm.currentTypes.push(scaledCopy.value_type);
       generateAttributeObj();
       return vm.currentPosition;
