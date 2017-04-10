@@ -3,6 +3,8 @@ class refinery {
 # for better performance
 sysctl { 'vm.swappiness': value => '10' }
 
+user { $::app_user: ensure => present, }
+
 file { "/home/${app_user}/.ssh/config":
   ensure => file,
   source => "${deployment_root}/ssh-config",
@@ -108,7 +110,7 @@ exec { "create_guest":
   user        => $app_user,
   group       => $app_group,
 }
-  ->
+->
 exec { "add_users_to_public_group":
   command     => "${virtualenv}/bin/python ${django_root}/manage.py add_users_to_public_group",
   environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
