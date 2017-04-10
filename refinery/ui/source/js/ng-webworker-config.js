@@ -4,6 +4,7 @@ angular
   .module('ngWebworker')
   .config(['WebworkerProvider', function (WebworkerProvider) {
     WebworkerProvider.setHelperPath(
+      // if this line is removed getStaticUrl can be converted to a service
       window.getStaticUrl('vendor/ng-webworker/src/worker_wrapper.min.js')
     );
 
