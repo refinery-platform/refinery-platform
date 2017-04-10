@@ -35,4 +35,5 @@ include refinery::python
 include refinery::neo4j
 include refinery::apache2
 include refinery::aws
+include refinery::docker
 include refinery::solr

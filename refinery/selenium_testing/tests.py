@@ -1,5 +1,6 @@
 from django.contrib.auth.models import User
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
+
 from pyvirtualdisplay import Display
 from selenium import webdriver
 
@@ -9,13 +10,10 @@ from core.models import Analysis, DataSet
 
 from factory_boy.utils import make_analyses_with_single_dataset, make_datasets
 from selenium_testing.utils import (
-    assert_body_text, login, wait_until_id_clickable, MAX_WAIT,
-    assert_text_within_id, delete_from_ui, wait_until_class_visible,
-    wait_until_id_visible)
-
-# Start a pyvirtualdisplay for geckodriver to interact with
-display = Display(visible=0, size=(1900, 1080))
-display.start()
+    assert_body_text, assert_text_within_id, delete_from_ui, login,
+    MAX_WAIT, wait_until_class_visible, wait_until_id_clickable,
+    wait_until_id_visible
+)
 
 
 class SeleniumTestBase(StaticLiveServerTestCase):
@@ -26,6 +24,10 @@ class SeleniumTestBase(StaticLiveServerTestCase):
 
     def setUp(self, site_login=True, initialize_guest=True,
               public_group_needed=True):
+
+        # Start a pyvirtualdisplay for geckodriver to interact with
+        self.display = Display(visible=0, size=(1366, 768))
+        self.display.start()
         self.browser = webdriver.Firefox()
         self.browser.maximize_window()
 
@@ -42,6 +44,7 @@ class SeleniumTestBase(StaticLiveServerTestCase):
 
     def tearDown(self):
         self.browser.quit()
+        self.display.stop()
 
     class Meta:
         abstract = True

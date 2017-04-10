@@ -3,8 +3,7 @@ class refinery {
 # for better performance
 sysctl { 'vm.swappiness': value => '10' }
 
-# to avoid empty ident name not allowed error when using git
-user { $app_user: comment => $app_user }
+user { $::app_user: ensure => present, }
 
 file { "/home/${app_user}/.ssh/config":
   ensure => file,
@@ -57,7 +56,7 @@ exec { "create_guest":
   user        => $app_user,
   group       => $app_group,
 }
-  ->
+->
 exec { "add_users_to_public_group":
   command     => "${virtualenv}/bin/python ${django_root}/manage.py add_users_to_public_group",
   environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],

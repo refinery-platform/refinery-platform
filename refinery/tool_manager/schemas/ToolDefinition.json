@@ -29,12 +29,16 @@
       "type": "array",
       "items": {
        "$ref": "OutputFile.json#"
-      }
+      },
+      "minItems": 1
     },
     "parameters": {
       "type": "array",
       "items": {
-       "$ref": "Parameter.json#"
+        "oneOf": [
+          {"$ref": "Parameter.json#"},
+          {"$ref": "GalaxyParameter.json#"}
+        ]
       }
     }
   }

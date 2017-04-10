@@ -1877,8 +1877,13 @@ class DataSetResourceTest(ResourceTestCase):
         self.assertIsNotNone(data['analyses'][0]['is_owner'])
         self.assertTrue(data['analyses'][0]['is_owner'])
         self.assertIsNotNone(data['analyses'][0]['owner'])
-        self.assertEqual(data['analyses'][0]['owner'],
-                         UserProfile.objects.get(user=self.user).uuid)
+        self.assertEqual(
+            data['analyses'][0]['owner'],
+            UserProfile.objects.get(user=self.user).uuid
+        )
+        self.assertEqual(data['analyses'][0]['status'], a2.status)
+        self.assertEqual(data['analyses'][0]['name'], a2.name)
+        self.assertEqual(data['analyses'][0]['uuid'], a2.uuid)
 
     def test_get_dataset_expecting_no_analyses(self):
         dataset_uri = make_api_uri("data_sets",
