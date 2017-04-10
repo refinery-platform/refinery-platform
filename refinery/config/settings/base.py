@@ -211,7 +211,7 @@ INSTALLED_APPS = (
     'rest_framework',
     'rest_framework_swagger',
     'django_docker_engine',
-    'httpproxy'
+    'httpproxy',
 )
 
 # NG: added for django-guardian
