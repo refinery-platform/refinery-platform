@@ -1,11 +1,10 @@
 class refinery::python {
 
   class { '::python':
-    version    => 'system',
-    pip        => true,
-    dev        => true,
-    virtualenv => true,
-    gunicorn   => false,
+    dev        => 'present',
+    gunicorn   => 'absent',
+    pip        => 'latest',
+    virtualenv => 'present',
   }
 
   $virtualenv_dependencies = [
