@@ -9,7 +9,14 @@ describe('rpDataSetAboutDetails directive unit test', function () {
   var scope;
   var fakeUuid = 'x508x83x-x9xx-4740-x9x7-x7x0x631280x';
 
-  beforeEach(inject(function (_$compile_, _$rootScope_, $templateCache, $httpBackend, settings) {
+  beforeEach(inject(function (
+    _$compile_,
+    _$rootScope_,
+    $templateCache,
+    $httpBackend,
+    $window,
+    settings
+  ) {
     $httpBackend
       .expectGET(
         settings.appRoot +
@@ -24,9 +31,8 @@ describe('rpDataSetAboutDetails directive unit test', function () {
         '/data_sets/' + fakeUuid + '/studies/'
      ).respond(200, '');
 
-
     $templateCache.put(
-      '/static/partials/data-set-about/partials/details.html',
+      $window.getStaticUrl('partials/data-set-about/partials/details.html'),
       '<div class="refinery-header"> ' +
       '<span class="refinery-header-left"> ' +
       '<h3>Details</h3> </span> </div>'

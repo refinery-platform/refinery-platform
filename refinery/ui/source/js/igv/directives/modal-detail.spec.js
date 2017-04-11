@@ -14,10 +14,11 @@ describe('rpIGVLaunchModalDetail directive unit test', function () {
   beforeEach(inject(function (
     _$compile_,
     _$rootScope_,
-    $templateCache
+    $templateCache,
+    $window
   ) {
     $templateCache.put(
-      '/static/partials/igv/partials/modal-detail.html',
+      $window.getStaticUrl('partials/igv/partials/modal-detail.html'),
       '<div id="modal-header">igv</div>'
     );
     compile = _$compile_;

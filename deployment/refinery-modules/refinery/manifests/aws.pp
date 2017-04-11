@@ -93,13 +93,6 @@ file { "$solr_core_data":
 }
 
 
-python::requirements { "/srv/refinery-platform/deployment/aws-requirements.txt":
-  require     => Python::Requirements[$requirements],
-  virtualenv => $virtualenv,
-  owner      => $app_user,
-  group      => $app_group,
-}
-
 exec { "generate_superuser_json":
   command     => "${virtualenv}/bin/python /srv/refinery-platform/deployment/bin/generate-superuser > /srv/refinery-platform/refinery/core/fixtures/superuser.json.new",
   environment => ["PYTHONPATH=/srv/refinery-platform/refinery",

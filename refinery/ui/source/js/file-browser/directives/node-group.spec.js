@@ -27,7 +27,7 @@ describe('rpNodeGroup directive unit test', function () {
         '/node_groups/?assay=' + $window.externalAssayUuid).respond(200, '');
 
     $templateCache.put(
-      '/static/partials/file-browser/partials/node-group.html',
+      $window.getStaticUrl('partials/file-browser/partials/node-group.html'),
       '<div id="node-group-select-menu"></div>'
     );
     compile = _$compile_;

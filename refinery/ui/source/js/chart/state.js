@@ -3,13 +3,16 @@
 angular
   .module('refineryChart')
   .config([
-    'refineryStateProvider',
-    function (refineryStateProvider) {
+    'refineryStateProvider', '$windowProvider',
+    function (refineryStateProvider, $windowProvider) {
+      var $window = $windowProvider.$get();
       refineryStateProvider
         .state(
           'none', {
             url: '/',
-            templateUrl: '/static/partials/chart/partials/charts-main.html',
+            templateUrl: function () {
+              return $window.getStaticUrl('partials/chart/partials/charts-main.html');
+            },
             controller: 'refineryChartCtrl as chart'
           },
           '/fastqc_viewer/'
@@ -17,7 +20,9 @@ angular
         .state(
           'default', {
             url: '/{uuid}/',
-            templateUrl: '/static/partials/chart/partials/charts-main.html',
+            templateUrl: function () {
+              return $window.getStaticUrl('partials/chart/partials/charts-main.html');
+            },
             controller: 'refineryChartCtrl as chart'
           },
           '/fastqc_viewer/'
@@ -25,7 +30,9 @@ angular
         .state(
           'full', {
             url: '/{uuid}/{mode}/',
-            templateUrl: '/static/partials/chart/partials/charts-main.html',
+            templateUrl: function () {
+              return $window.getStaticUrl('partials/chart/partials/charts-main.html');
+            },
             controller: 'refineryChartCtrl as chart'
           },
           '/fastqc_viewer/'
