@@ -17,4 +17,4 @@ function diffAttributeListDirective ($window) {
 
 angular
   .module('refineryNodeMapping')
-  .directive('diffAttributeList', '$window', diffAttributeListDirective);
+  .directive('diffAttributeList', ['$window', diffAttributeListDirective]);
