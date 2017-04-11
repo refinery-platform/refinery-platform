@@ -1,15 +1,14 @@
 <div class="node-input-group">
   <ul>
     <form name="myForm">
-      <li ng-repeat="fileSlot in NSPCtrl.inputFileTypes track by $index">
+      <li ng-repeat="inputType in NSPCtrl.inputFileTypes track by $index">
         <div class="checkbox">
           <label>
             <input
               type="checkbox"
-              value="{{fileSlot.uuid}}"
-              ng-click="NSPCtrl.selectNode(fileSlot.uuid, fileSlot.uuid)"
-              ng-model="NSPCtrl.selectionObj[fileSlot.uuid]">
-            {{ fileSlot.name }}
+              ng-click="NSPCtrl.selectNode(inputType.uuid)"
+              ng-model="NSPCtrl.selectionObj[inputType.uuid]">
+            {{ inputType.name }}
           </label>
         </div>
         <div ng-if="$index < NSPCtrl.inputFileTypes.length - 1">
