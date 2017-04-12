@@ -12,7 +12,9 @@
         collection: '=',
         counter: '='
       },
-      templateUrl: '/static/partials/tool-launch/partials/input-control-nav.html'
+      templateUrl: ['$window', function ($window) {
+        return $window.getStaticUrl('partials/tool-launch/partials/input-control-nav.html');
+      }]
     };
   }
 })();

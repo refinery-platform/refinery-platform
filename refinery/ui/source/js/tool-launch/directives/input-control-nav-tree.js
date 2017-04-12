@@ -14,7 +14,9 @@
         member: '=',
         depth: '='
       },
-      templateUrl: '/static/partials/tool-launch/partials/input-control-nav-tree.html'
+      templateUrl: ['$window', function ($window) {
+        return $window.getStaticUrl('partials/tool-launch/partials/input-control-nav-tree.html');
+      }]
     };
   }
 })();
