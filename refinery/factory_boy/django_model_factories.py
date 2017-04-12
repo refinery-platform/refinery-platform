@@ -93,6 +93,13 @@ class ToolDefinitionFactory(factory.django.DjangoModelFactory):
         model = "tool_manager.ToolDefinition"
 
 
+class VisualizationDefinitionFactory(ToolDefinitionFactory):
+    """Minimal representation of a VisualizationDefinition"""
+
+    class Meta:
+        model = "tool_manager.VisualizationDefinition"
+
+
 class FileRelationshipFactory(factory.django.DjangoModelFactory):
     """Minimal representation of a FileRelationship"""
 
