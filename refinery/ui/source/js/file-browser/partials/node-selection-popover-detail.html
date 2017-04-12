@@ -1,21 +1,34 @@
-<div class="node-input-group">
-  <ul>
-    <form name="myForm">
-      <li ng-repeat="inputType in NSPCtrl.inputFileTypes track by $index">
-        <div class="checkbox">
-          <label>
-            <input
-              type="checkbox"
-              ng-click="NSPCtrl.selectNode(inputType.uuid)"
-              ng-model="NSPCtrl.selectionObj[inputType.uuid]">
-            {{ inputType.name }}
-          </label>
-        </div>
-        <div ng-if="$index < NSPCtrl.inputFileTypes.length - 1">
-          <hr>
-        </div>
-      </li>
-    </form>
+<div id="node-selection-popover">
+  <div class="node-input-group">
+    <ul>
+      <form name="myForm">
+        <li ng-repeat="inputType in NSPCtrl.inputFileTypes track by $index">
+          <div class="checkbox">
+            <label>
+              <input
+                type="checkbox"
+                ng-click="NSPCtrl.selectNode(inputType.uuid)"
+                ng-model="NSPCtrl.selectionObj[inputType.uuid]">
+              {{ inputType.name }}
+            </label>
+          </div>
+          <div ng-if="$index < NSPCtrl.inputFileTypes.length - 1">
+            <hr>
+          </div>
+        </li>
+      </form>
+    </ul>
+  </div>
+  <div>
+  <div class="refinery-subheader">
+    <h4>
+      Group
+    </h4>
+  </div>
+  <ul class="paragraph">
+    <li ng-repeat="group in NSPCtrl.currentPosition track by $index">
+      {{ NSPCtrl.currentTypes[$index] }}: {{ group + 1 }}<span ng-if="$index < NSPCtrl.currentPosition.length - 1">,&nbsp</span>
+    </li>
   </ul>
   <hr>
   Controller panel

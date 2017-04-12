@@ -21,7 +21,7 @@
     var vm = this;
     vm.attributesObj = {};
     vm.fileDepth = 0; // Roots are at depth 0
-    vm.currentPosition = [0];
+    vm.currentPosition = [];
     vm.currentTypes = []; // tracks whether depths are pair or list
     vm.inputFileTypes = []; // maintains the required input types
     vm.resetCurrents = resetCurrents;
@@ -61,7 +61,7 @@
 
     function resetCurrents () {
       vm.fileDepth = 0;
-      vm.currentPosition = [0];
+      vm.currentPosition = [];
       vm.currentTypes = [];
       vm.inputFileTypes = [];
     }
@@ -76,9 +76,8 @@
     // used to initialize the tool's data structure used by vm
     function refreshFileMap () {
       var scaledCopy = toolsService.selectedTool.file_relationship;
-      console.log(toolsService.selectedTool.file_relationship);
       // this is an array
-      while (scaledCopy.file_relationship.length > 0 || vm.fileDepth === 10) {
+      while (scaledCopy.file_relationship.length > 0) {
         vm.fileDepth++;
         vm.currentPosition.push(0);
         vm.currentTypes.push(scaledCopy.value_type);

@@ -20,6 +20,8 @@
     var fileService = fileRelationshipService;
     var vm = this;
     vm.inputFileTypes = [];
+    vm.currentPosition = fileService.currentPosition;
+    vm.currentTypes = fileService.currentTypes;
     vm.selectNode = selectNode;
     vm.selectionObj = {};
     vm.toolInputGroups = fileService.toolInputGroups;
@@ -47,6 +49,16 @@
       },
       function () {
         vm.inputFileTypes = fileService.inputFileTypes;
+      }
+    );
+
+    $scope.$watchCollection(
+      function () {
+        return fileService.currentPosition;
+      },
+      function () {
+        vm.currentPosition = fileService.currentPosition;
+        vm.currentTypes = fileService.currentTypes;
       }
     );
   }
