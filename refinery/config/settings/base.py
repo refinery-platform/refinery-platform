@@ -285,6 +285,11 @@ LOGGING = {
             'handlers': ['console'],
             'propagate': False,
         },
+        'factory': {
+            'handlers': ['console'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
         'file_server': {
             'handlers': ['console'],
             'level': 'DEBUG',
@@ -298,6 +303,11 @@ LOGGING = {
         'galaxy_connector': {
             'handlers': ['console'],
             'level': 'DEBUG',
+            'propagate': False,
+        },
+        'httpproxy': {
+            'level': 'ERROR',
+            'handlers': ['console'],
             'propagate': False,
         },
         'isa_tab_parser': {
