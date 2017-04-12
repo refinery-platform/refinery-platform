@@ -3,12 +3,12 @@
     class="tree-panel p-a-0"
     ng-if="member.value_type=='LIST'">
     <h5>
-      <b>{{ treeCtrl.currentPosition[depth] + 1 }}</b> of groups in list
+      <b>{{ treeCtrl.currentGroup[depth] + 1 }}</b> of groups in list
     </h5>
     <div>
       <button
         class="btn btn-default btn-xs outline"
-        ng-disabled="treeCtrl.currentPosition[depth] == 0"
+        ng-disabled="treeCtrl.currentGroup[depth] == 0"
         ng-click="treeCtrl.navLeft(depth)">
         <i class="fa fa-backward"></i>
       </button>
@@ -23,20 +23,20 @@
     class="tree-panel-pair p-a-0"
     ng-if="member.value_type=='PAIR'">
     <h5>
-      <b>{{ treeCtrl.currentPosition[depth] + 1 }}</b> of
+      <b>{{ treeCtrl.currentGroup[depth] + 1 }}</b> of
       <b>2</b> groups in pair
     </h5>
 
     <div>
       <button
         class="btn btn-default btn-xs outline"
-        ng-disabled="treeCtrl.currentPosition[depth] == 0"
+        ng-disabled="treeCtrl.currentGroup[depth] == 0"
         ng-click="treeCtrl.navLeft(depth)">
         <i class="fa fa-backward"></i>
       </button>
       <button
         class="btn btn-default btn-xs outline"
-        ng-disabled="treeCtrl.currentPosition[depth] == 1"
+        ng-disabled="treeCtrl.currentGroup[depth] == 1"
         ng-click="treeCtrl.navRight(depth)">
         <i class="fa fa-forward"></i>
       </button>

@@ -8,7 +8,7 @@
   NodeSelectionPopoverCtrl.$inject = [
     '$scope',
     '_',
-    'fileRelationshipService',
+    'fileRelationshipService'
   ];
 
 
@@ -20,7 +20,7 @@
     var fileService = fileRelationshipService;
     var vm = this;
     vm.inputFileTypes = [];
-    vm.currentPosition = fileService.currentPosition;
+    vm.currentGroup = fileService.currentGroup;
     vm.currentTypes = fileService.currentTypes;
     vm.selectNode = selectNode;
     vm.selectionObj = {};
@@ -34,7 +34,6 @@
 
     function selectNode (inputUuid) {
       fileService.setToolInputGroup(inputUuid, vm.selectionObj);
-      console.log(vm.toolInputGroups);
     }
 
   /*
@@ -54,10 +53,10 @@
 
     $scope.$watchCollection(
       function () {
-        return fileService.currentPosition;
+        return fileService.currentGroup;
       },
       function () {
-        vm.currentPosition = fileService.currentPosition;
+        vm.currentGroup = fileService.currentGroup;
         vm.currentTypes = fileService.currentTypes;
       }
     );

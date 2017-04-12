@@ -26,8 +26,9 @@
     </h4>
   </div>
   <ul class="paragraph">
-    <li ng-repeat="group in NSPCtrl.currentPosition track by $index">
-      {{ NSPCtrl.currentTypes[$index] }}: {{ group + 1 }}<span ng-if="$index < NSPCtrl.currentPosition.length - 1">,&nbsp</span>
+    <li ng-repeat="group in NSPCtrl.currentGroup track by $index">
+      {{ NSPCtrl.currentTypes[$index] }}: {{ group + 1 }}<span ng-if="$index
+      < NSPCtrl.currentGroup.length - 1">,&nbsp</span>
     </li>
   </ul>
   <hr>
