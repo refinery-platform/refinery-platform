@@ -4,9 +4,20 @@
     .module('refineryToolLaunch')
     .service('fileRelationshipService', fileRelationshipService);
 
-  fileRelationshipService.$inject = ['_', 'fileBrowserFactory', 'toolsService'];
+  fileRelationshipService.$inject = [
+    '_',
+    'fileBrowserFactory',
+    'selectedNodesService',
+    'toolsService'
+  ];
 
-  function fileRelationshipService (_, fileBrowserFactory, toolsService) {
+  function fileRelationshipService (
+    _,
+    fileBrowserFactory,
+    selectedNodesService,
+    toolsService
+  ) {
+    var nodeService = selectedNodesService;
     var vm = this;
     vm.attributesObj = {};
     vm.fileDepth = 0; // Roots are at depth 0
@@ -15,12 +26,39 @@
     vm.inputFileTypes = []; // maintains the required input types
     vm.resetCurrents = resetCurrents;
     vm.refreshFileMap = refreshFileMap;
+    vm.setToolInputGroup = setToolInputGroup;
+    vm.toolInputGroups = {};
 
     /*
     *-----------------------
     * Method Definitions
     * ----------------------
     */
+
+    function setToolInputGroup (inputTypeUuid, selectionObj) {
+      var nodeUuid = nodeService.activeNode;
+      if (selectionObj[inputTypeUuid]) {
+        if (_.has(vm.toolInputGroups, nodeUuid) === true) {
+          vm.toolInputGroups[nodeUuid].inputTypeList.push(inputTypeUuid);
+          vm.toolInputGroups[nodeUuid].groupList.push(angular.copy(vm.currentPosition));
+        } else {
+          vm.toolInputGroups[nodeUuid] = {
+            inputTypeList: [inputTypeUuid],
+            groupList: [angular.copy(vm.currentPosition)]
+          };
+        }
+      } else {
+        // remove property
+        for (var i = 0; i < vm.toolInputGroups[nodeUuid].inputTypeList.length; i ++) {
+          if (vm.toolInputGroups[nodeUuid].groupList[i] === vm.currentPosition) {
+            vm.toolInputGroups[nodeUuid].groupList.splice(i, 1);
+            vm.toolInputGroups[nodeUuid].inputTypeList.splice(i, 1);
+            break;
+          }
+        }
+      }
+    }
+
     function resetCurrents () {
       vm.fileDepth = 0;
       vm.currentPosition = [0];
