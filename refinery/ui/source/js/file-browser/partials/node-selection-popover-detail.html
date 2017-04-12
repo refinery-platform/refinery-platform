@@ -9,7 +9,20 @@
                 type="checkbox"
                 ng-click="NSPCtrl.selectNode(inputType.uuid)"
                 ng-model="NSPCtrl.selectionObj[inputType.uuid]">
-              {{ inputType.name }}
+              <span
+                ng-if="NSPCtrl.groupCollection[NSPCtrl.currentGroup] &&
+                NSPCtrl.groupCollection[NSPCtrl.currentGroup][inputType.uuid].length > 0"
+                class="wrap-word">
+                  <span ng-repeat="selectedFile in NSPCtrl.groupCollection[NSPCtrl.currentGroup][inputType.uuid]">
+                     {{ selectedFile[NSPCtrl.attributes.Name] }}
+                  </span>
+              </span>
+              <span
+                ng-if="!NSPCtrl.groupCollection[NSPCtrl.currentGroup] ||
+                !NSPCtrl.groupCollection[NSPCtrl.currentGroup][inputType.uuid] ||
+                NSPCtrl.groupCollection[NSPCtrl.currentGroup][inputType.uuid].length == 0">
+                {{ inputType.name }}
+              </span>
             </label>
           </div>
           <div ng-if="$index < NSPCtrl.inputFileTypes.length - 1">
@@ -31,10 +44,23 @@
       < NSPCtrl.currentGroup.length - 1">,&nbsp</span>
     </li>
   </ul>
-  <hr>
-  Controller panel
-  <hr>
   <div>
-    <button class="btn btn-warning" ng-click="closeSelectionPopover()">Close</button>
+    <button
+      class="btn btn-default btn-xs outline"
+      ng-disabled="treeCtrl.currentGroup[depth] == 0"
+      ng-click="treeCtrl.navLeft(depth)">
+      <i class="fa fa-backward"></i>
+    </button>
+    <button
+      class="btn btn-default btn-xs outline"
+      ng-disabled="treeCtrl.currentGroup[depth] == 1"
+      ng-click="treeCtrl.navRight(depth)">
+      <i class="fa fa-forward"></i>
+    </button>
+    <button
+      class="btn btn-default btn-sm"
+      ng-click="closeSelectionPopover()">
+      Close
+    </button>
   </div>
 </div>

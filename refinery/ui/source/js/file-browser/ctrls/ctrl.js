@@ -255,8 +255,7 @@
 
         // Checkbox selection events
         vm.gridApi.selection.on.rowSelectionChanged(null, function (row) {
-          console.log(row.entity.uuid);
-          nodesService.activeNode = row.entity.uuid;
+          angular.copy(row.entity, nodesService.activeNodeRow);
           // When selected All, watching the deselect events for complement nodes
           if (nodesService.selectedNodeGroupUuid &&
             nodesService.selectedNodeGroupUuid !==

@@ -21,13 +21,15 @@
     var vm = this;
     vm.attributesObj = {};
     vm.fileDepth = 0; // Roots are at depth 0
-    vm.currentGroup = [];
+    vm.currentGroup = []; // index for the group coordinates
     vm.currentTypes = []; // tracks whether depths are pair or list
     vm.inputFileTypes = []; // maintains the required input types
     vm.resetCurrents = resetCurrents;
     vm.refreshFileMap = refreshFileMap;
+    vm.setGroupCollection = setGroupCollection;
     vm.setToolInputGroup = setToolInputGroup;
-    vm.toolInputGroups = {};
+    vm.toolInputGroups = {}; // contains rows and their group info
+    vm.groupCollection = {}; // contains groups with their selected row's info
 
     /*
     *-----------------------
@@ -35,8 +37,29 @@
     * ----------------------
     */
 
+    function setGroupCollection (inputTypeUuid, selectionObj) {
+      var nodeUuid = nodeService.activeNodeRow.uuid;
+      if (selectionObj[inputTypeUuid]) {
+        if (_.has(vm.groupCollection, vm.currentGroup) === false) {
+          vm.groupCollection[vm.currentGroup] = {};
+        }
+        if (_.has(vm.groupCollection[vm.currentGroup], inputTypeUuid) === false) {
+          vm.groupCollection[vm.currentGroup][inputTypeUuid] = [];
+        }
+        vm.groupCollection[vm.currentGroup][inputTypeUuid].push(nodeService.activeNodeRow);
+      } else {
+        // remove property
+        for (var i = 0; i < vm.groupCollection[vm.currentGroup][inputTypeUuid].length; i ++) {
+          if (vm.groupCollection[vm.currentGroup][inputTypeUuid][i].uuid === nodeUuid) {
+            vm.groupCollection[vm.currentGroup][inputTypeUuid].splice(i, 1);
+            break;
+          }
+        }
+      }
+    }
+
     function setToolInputGroup (inputTypeUuid, selectionObj) {
-      var nodeUuid = nodeService.activeNode;
+      var nodeUuid = nodeService.activeNodeRow.uuid;
       if (selectionObj[inputTypeUuid]) {
         if (_.has(vm.toolInputGroups, nodeUuid) === true) {
           vm.toolInputGroups[nodeUuid].inputTypeList.push(inputTypeUuid);

@@ -8,23 +8,30 @@
   NodeSelectionPopoverCtrl.$inject = [
     '$scope',
     '_',
-    'fileRelationshipService'
+    'fileRelationshipService',
+    'selectedNodesService'
   ];
 
 
   function NodeSelectionPopoverCtrl (
     $scope,
     _,
-    fileRelationshipService
+    fileRelationshipService,
+    selectedNodesService
   ) {
     var fileService = fileRelationshipService;
+    var nodeService = selectedNodesService;
     var vm = this;
     vm.inputFileTypes = [];
     vm.currentGroup = fileService.currentGroup;
     vm.currentTypes = fileService.currentTypes;
+    vm.currentRow = nodeService.activeNodeRow;
     vm.selectNode = selectNode;
     vm.selectionObj = {};
     vm.toolInputGroups = fileService.toolInputGroups;
+    vm.currentRow = fileService.currentRow;
+    vm.attributes = fileService.attributesObj;
+    vm.groupCollection = fileService.groupCollection;
 
   /*
    * ---------------------------------------------------------
@@ -33,7 +40,10 @@
    */
 
     function selectNode (inputUuid) {
+      vm.currentRow = nodeService.activeNodeRow;
       fileService.setToolInputGroup(inputUuid, vm.selectionObj);
+      fileService.setGroupCollection(inputUuid, vm.selectionObj);
+      vm.groupCollection = fileService.groupCollection;
     }
 
   /*
