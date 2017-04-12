@@ -10,10 +10,11 @@
     beforeEach(inject(function (
       $compile,
       $rootScope,
-      $templateCache
+      $templateCache,
+      $window
     ) {
       $templateCache.put(
-        '/static/partials/tool-launch/partials/input-group-cart-tree.html',
+        $window.getStaticUrl('partials/tool-launch/partials/input-group-cart-tree.html'),
         '<div id="input-group-cart-tree"></div>'
       );
 

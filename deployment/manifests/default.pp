@@ -33,9 +33,10 @@ exec { "activate_user":
 
 # See code in refinery-modules/refinery/...
 include refinery
-include refinery::apache2
-include refinery::neo4j
+include refinery::python
+include refinery::docker
 include refinery::pg
+include refinery::neo4j
+include refinery::apache2
 include refinery::selenium
 include refinery::solr
-

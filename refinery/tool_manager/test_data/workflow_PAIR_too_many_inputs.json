@@ -1,10 +1,10 @@
-{ "name": "Valid Params: LIST",
+{ "name": "Test PAIR too many inputs",
   "tool_type": "WORKFLOW",
   "annotation": {
     "refinery_type": "analysis",
     "description": "This workflow does really cool things",
     "parameters": [
-      {
+       {
         "name": "Integer Param",
         "description": "Integer Param description",
         "value_type": "INTEGER",
@@ -26,20 +26,6 @@
         "galaxy_workflow_step": 2
       },
       {
-        "name": "Float Param",
-        "description": "Float Param description",
-        "value_type": "FLOAT",
-        "default_value": 1234.56,
-        "galaxy_workflow_step": 2
-      },
-      {
-        "name": "Genome Build Param",
-        "description": "Genome Build Param description",
-        "value_type": "GENOME_BUILD",
-        "default_value": "hg19",
-        "galaxy_workflow_step": 700
-      },
-      {
         "name": "Attribute Param",
         "description": "Attribute Param description",
         "value_type": "ATTRIBUTE",
@@ -57,19 +43,38 @@
     "output_files": [
       {
         "filetype": {"name": "FASTQ"},
-        "name": "Cool Output File1",
-        "description": "Cool Output File1 Description"
+        "name": "Cool Input File",
+        "description": "Cool Input File Description"
       }
     ],
     "file_relationship": {
       "file_relationship": {},
-      "value_type": "LIST",
-      "name": "Flat list of N Samples",
+      "value_type": "PAIR",
+      "name": "Pair",
       "input_files": [
         {
-          "allowed_filetypes": [{"name": "FASTQ"}],
-          "name": "Cool Input File",
-          "description": "Cool Input File Description"
+          "allowed_filetypes": [
+            {"name": "FASTQ"},
+            {"name": "BAM"}
+          ],
+          "name": "Cool Input File A",
+          "description": "Cool Input File A Description"
+        },
+        {
+          "allowed_filetypes": [
+            {"name": "FASTQ"},
+            {"name": "BAM"}
+          ],
+          "name": "Cool Input File B",
+          "description": "Cool Input File B Description"
+        },
+        {
+          "allowed_filetypes": [
+            {"name": "FASTQ"},
+            {"name": "BAM"}
+          ],
+          "name": "Cool Input File C",
+          "description": "This input file breaks the 2 input requirement for a PAIR"
         }
       ]
     }

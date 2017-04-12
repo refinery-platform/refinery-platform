@@ -7,6 +7,8 @@
       require: {
         displayCtrl: '^rpToolDisplay'
       },
-      templateUrl: '/static/partials/tool-launch/partials/input-control.html'
+      templateUrl: ['$window', function ($window) {
+        return $window.getStaticUrl('partials/tool-launch/partials/input-control.html');
+      }]
     });
 })();

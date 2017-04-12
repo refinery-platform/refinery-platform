@@ -14,10 +14,11 @@ describe('rFileUpload directive unit test', function () {
   beforeEach(inject(function (
     _$compile_,
     _$rootScope_,
-    $templateCache
+    $templateCache,
+    $window
   ) {
     $templateCache.put(
-      '/static/partials/data-set-import/partials/file-upload.html',
+      $window.getStaticUrl('partials/data-set-import/partials/file-upload.html'),
       '<div id="file-upload-test-element"></div>'
     );
     compile = _$compile_;

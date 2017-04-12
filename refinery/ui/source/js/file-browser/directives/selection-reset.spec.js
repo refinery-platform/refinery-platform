@@ -14,10 +14,11 @@ describe('rpFileBrowserSelectionReset directive unit test', function () {
   beforeEach(inject(function (
     _$compile_,
     _$rootScope_,
-    $templateCache
+    $templateCache,
+    $window
   ) {
     $templateCache.put(
-      '/static/partials/file-browser/partials/selection-reset.html',
+      $window.getStaticUrl('partials/file-browser/partials/selection-reset.html'),
       '<button class="btn btn-default btn-xs" id="reset"></button>'
     );
     compile = _$compile_;

@@ -1,34 +1,83 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema",
-  "type": "object",
-  "required": [
-    "name",
-    "value_type",
-    "file_relationship"
-  ],
-  "properties": {
-    "name": {
-      "type": "string"
-    },
-    "value_type": {
-      "type": "string",
-      "enum": [
-        "PAIR",
-        "LIST"
-      ]
-    },
-    "input_files": {
-      "type": "array",
-      "minItems": 1,
-      "items": {
-        "$ref": "InputFile.json#"
+  "oneOf": [
+    {
+      "required": [
+        "name",
+        "value_type",
+        "file_relationship"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "value_type": {
+          "type": "string",
+          "enum": [
+            "PAIR"
+          ]
+        },
+        "input_files": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "$ref": "InputFile.json#"
+          }
+        },
+        "file_relationship": {
+          "oneOf": [
+            {
+              "type": "object",
+              "$ref": "FileRelationship.json#"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {}
+            }
+          ]
+        }
       }
     },
-    "file_relationship": {
-      "oneOf": [
-          {"type": "object", "$ref": "FileRelationship.json#"},
-          {"type": "object", "additionalProperties": false, "properties": {}}
-        ]
+    {
+      "required": [
+        "name",
+        "value_type",
+        "file_relationship"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "value_type": {
+          "type": "string",
+          "enum": [
+            "LIST"
+          ]
+        },
+        "input_files": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "InputFile.json#"
+          }
+        },
+        "file_relationship": {
+          "oneOf": [
+            {
+              "type": "object",
+              "$ref": "FileRelationship.json#"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {}
+            }
+          ]
+        }
       }
     }
-  }
+
+  ]
+}

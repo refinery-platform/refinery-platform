@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load static %}
+{% load static from staticfiles %}
 {% block head_html %}
     <script type="text/javascript" src="{% static "js/d3/d3.v3.min.js" %}"></script>
     <script type="text/javascript" src="{% static "js/refinery/viewers/profile-viewer.js" %}"></script>
@@ -18,7 +18,7 @@
     */
       .axis { font-size: 9pt; }
       .chart {
-        width: 1000px; 
+        width: 1000px;
         height: 200px; }
       circle, .line {
         fill: none;
@@ -64,15 +64,15 @@
       	  "base_url": "{{ hostname }}" + "/file_server/tdf",
       	  "start_location": {{ start_location  }},
       	  "end_location": {{ end_location  }},
-      	  "sequence_name": "{{ sequence_name }}",      	   
-      	  "uuid": "{{ uuid }}",      	   
+      	  "sequence_name": "{{ sequence_name }}",
+      	  "uuid": "{{ uuid }}",
           "xmin": {{ start_location }}, "xmax": {{ end_location }},
-          "ymax": 40, "ymin": 0, 
+          "ymax": 40, "ymin": 0,
           "title": "",
           "xlabel": "Coordinate",
-          "ylabel": "Signal"  
+          "ylabel": "Signal"
         });
-    
+
     // calls automatic resize of profile viewer
   	var chart = $("#viewer"),
 	    aspect = chart.width() / chart.height(),
@@ -80,7 +80,7 @@
 		$(window).on("resize", function() {
 			var targetWidth = container.width();
 			graph.browser_resize({
-				"width" : targetWidth,	
+				"width" : targetWidth,
 				"height": Math.round(targetWidth / aspect)
  			});
  		}).trigger("resize");

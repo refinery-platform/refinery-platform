@@ -2,7 +2,7 @@
 
 {% load humanize %}
 {% load markup %}
-{% load static %}
+{% load static from staticfiles %}
 
 
 {% block head_html %}
@@ -225,8 +225,7 @@
               {% endverbatim %}
 
                   <div class="row" ng-if="$root.mode==='analyze'">
-                    <div ng-include="'/static/partials/data-set-nav/partials/data-set-ui-node-mapping.html'">
-                    </div>
+                    <div ng-include="'{% static "partials/data-set-nav/partials/data-set-ui-node-mapping.html" %}'"></div>
                     <div ui-view="data-set-ui-mapping-controls"></div>
                     <!-- <div ui-view></div> -->
                   </div>

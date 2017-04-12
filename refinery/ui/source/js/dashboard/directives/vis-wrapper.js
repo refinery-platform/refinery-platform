@@ -1,6 +1,6 @@
 'use strict';
 
-function refineryDashboardVisWrapper () {
+function refineryDashboardVisWrapper ($window) {
   return {
     bindToController: {
       active: '='
@@ -12,12 +12,18 @@ function refineryDashboardVisWrapper () {
     scope: {
       active: '='
     },
-    templateUrl: '/static/partials/dashboard/directives/vis-wrapper.html'
+    templateUrl: function () {
+      return $window.getStaticUrl('partials/dashboard/directives/vis-wrapper.html');
+    },
+    link: function (scope) {
+      scope.icons = $window.getStaticUrl('images/icons.svg');
+    }
   };
 }
 
 angular
   .module('refineryDashboard')
   .directive('refineryDashboardVisWrapper', [
+    '$window',
     refineryDashboardVisWrapper
   ]);
