@@ -75,6 +75,8 @@ function DashboardCtrl (
   this.dataSetsPanelHeight = 1;
   this.dataCartPanelHeight = 0;
 
+  this.icons = this.$window.getStaticUrl('images/icons.svg');
+
   // Check authentication
   // This should ideally be moved to the global APP controller, which we don't
   // have right now.
@@ -1637,11 +1639,14 @@ DashboardCtrl.prototype.openDataSetDeleteModal = function (dataSet) {
   this.collapseDataSetPreview();
   this.collapseDatasetExploration();
   this.removeFromDataCart(dataSet);
+  var datasetDeleteDialogUrl = this.$window.getStaticUrl(
+    'partials/dashboard/partials/dataset-delete-dialog.html'
+  );
 
   this.$uibModal.open({
     backdrop: 'static',
     keyboard: false,
-    templateUrl: '/static/partials/dashboard/partials/dataset-delete-dialog.html',
+    templateUrl: datasetDeleteDialogUrl,
     controller: 'DataSetDeleteCtrl as modal',
     resolve: {
       config: function () {
@@ -1666,10 +1671,13 @@ DashboardCtrl.prototype.openDataSetDeleteModal = function (dataSet) {
  * @date    2016-9-28
  */
 DashboardCtrl.prototype.openAnalysisDeleteModal = function (analysis) {
+  var analysisDeleteDialogUrl = this.$window.getStaticUrl(
+    'partials/dashboard/partials/analysis-delete-dialog.html'
+  );
   this.$uibModal.open({
     backdrop: 'static',
     keyboard: false,
-    templateUrl: '/static/partials/dashboard/partials/analysis-delete-dialog.html',
+    templateUrl: analysisDeleteDialogUrl,
     controller: 'AnalysisDeleteCtrl as modal',
     resolve: {
       config: function () {

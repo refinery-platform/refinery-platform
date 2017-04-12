@@ -1,12 +1,14 @@
 'use strict';
 
-function refineryExpansionPanel () {
+function refineryExpansionPanel ($window) {
   return {
     controller: 'ExpansionPanelCtrl',
     controllerAs: 'expansionPanel',
     restrict: 'E',
     replace: true,
-    templateUrl: '/static/partials/dashboard/directives/expansion-panel.html',
+    templateUrl: function () {
+      return $window.getStaticUrl('partials/dashboard/directives/expansion-panel.html');
+    },
     transclude: true
   };
 }
@@ -14,5 +16,6 @@ function refineryExpansionPanel () {
 angular
   .module('refineryDashboard')
   .directive('refineryExpansionPanel', [
+    '$window',
     refineryExpansionPanel
   ]);

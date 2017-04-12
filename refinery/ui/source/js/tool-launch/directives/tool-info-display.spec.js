@@ -10,16 +10,17 @@
     beforeEach(inject(function (
       $compile,
       $rootScope,
-      $templateCache
+      $templateCache,
+      $window
     ) {
       // Parent component contains the input-group (child) component
       $templateCache.put(
-        '/static/partials/tool-launch/partials/tool-display.html',
+        $window.getStaticUrl('partials/tool-launch/partials/tool-display.html'),
         '<div id="tool-display"><rp-tool-info-display></rp-tool-info-display></div>'
       );
 
       $templateCache.put(
-        '/static/partials/tool-launch/partials/tool-info-display.html',
+        $window.getStaticUrl('partials/tool-launch/partials/tool-info-display.html'),
         '<div id="tool-info-display"></div>'
       );
       var scope = $rootScope.$new();

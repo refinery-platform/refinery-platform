@@ -1,9 +1,11 @@
 'use strict';
 
-function rpSelectWorkflow () {
+function rpSelectWorkflow ($window) {
   return {
     restrict: 'AE',
-    templateUrl: '/static/partials/workflows/partials/select-workflow.html',
+    templateUrl: function () {
+      return $window.getStaticUrl('partials/workflows/partials/select-workflow.html');
+    },
     controller: 'WorkflowListApiCtrl',
     controllerAs: 'WLACtrl',
     bindToController: {
@@ -19,6 +21,7 @@ function rpSelectWorkflow () {
 angular
   .module('refineryWorkflows')
   .directive('rpSelectWorkflow', [
+    '$window',
     rpSelectWorkflow
   ]
 );

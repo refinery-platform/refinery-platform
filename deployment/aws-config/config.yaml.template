@@ -33,16 +33,14 @@ SITE_NAME: Refinery
 SITE_URL: "192.168.50.50:8000"
 
 # the AWS ARN for the TLS certifcate that you wish to present.
-# TLS_CERTIFICATE: "arn:aws:acm:--region--:--acountnumber--:certificate/--id--"
+# TLS_CERTIFICATE: "arn:aws:acm:--region--:--accountnumber--:certificate/--id--"
 
 
-# Email addresses. It's usual to make these all the same.
-# The stack will launch correctly
-# even when these are set to nonsense values.
-# To successfully send email the email addresses here
-# must be verified for Amazon SES
-# (see http://docs.aws.amazon.com/ses/latest/DeveloperGuide/verify-addresses-and-domains.html?tag=duckduckgo-d-20)
-# and the AWS account should be out of the sandbox
+# Email addresses. It's usual to make these all the same. The stack will launch
+# correctly even when these are set to nonsense values. To successfully send
+# email the email addresses here must be verified for Amazon SES and the AWS
+# account should be out of the sandbox
+# http://docs.aws.amazon.com/ses/latest/DeveloperGuide/verify-addresses-and-domains.html
 #
 ADMIN: "refinery-registration@example.org"
 DEFAULT_FROM_EMAIL: "refinery-registration@example.org"
@@ -59,12 +57,13 @@ DATA_VOLUME_TYPE: "st1"
 KEY_NAME: "id_rsa"
 
 # The name of the RDS instance that is created.
-# (This is not required,
-# a random name of the form rds-refinery-XXXXXXX
-# will be generated and used,
-# and that is generally preferable,
-# as it avoids clashes in the same AWS account).
+# (This is not required, a random name of the form rds-refinery-XXXXXXX will be
+# generated and used, and that is generally preferable, as it avoids clashes in
+# the same AWS account).
 # RDS_NAME: rds-refinery-default
+
+# Name of the S3 bucket to be used for serving UI assets
+AWS_STORAGE_BUCKET_NAME: ""
 
 EMAIL_SUBJECT_PREFIX: "[Refinery] "
 REFINERY_URL_SCHEME: "http"

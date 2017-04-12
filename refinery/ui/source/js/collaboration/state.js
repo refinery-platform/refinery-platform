@@ -3,20 +3,25 @@
 angular
   .module('refineryCollaboration')
   .config([
-    'refineryStateProvider',
-    function (refineryStateProvider) {
+    'refineryStateProvider', '$windowProvider',
+    function (refineryStateProvider, $windowProvider) {
+      var $window = $windowProvider.$get();
       refineryStateProvider
         .state(
           'selectedGroup', {
             url: '/{uuid}/',
-            templateUrl: '/static/partials/collaboration/view/main.html',
+            templateUrl: function () {
+              return $window.getStaticUrl('partials/collaboration/view/main.html');
+            },
             controller: 'refineryCollaborationCtrl as collab'
           },
           '/collaboration/')
         .state(
           'defaultGroup', {
             url: '/',
-            templateUrl: '/static/partials/collaboration/view/main.html',
+            templateUrl: function () {
+              return $window.getStaticUrl('partials/collaboration/view/main.html');
+            },
             controller: 'refineryCollaborationCtrl as collab'
           },
           '/collaboration/'

@@ -1,33 +1,24 @@
 #!/usr/bin/env python
 
 """
-Script to generate CloudFormation JSON files via cfn-pyplates.
+Script to generate CloudFormation JSON files via cfn-pyplates
 
 Usage:
 python stack.py > web.json
 
-(Usually invoked via the Makefile:
- make web.json
- or
- make web-stack
-)
+Usually invoked via the Makefile: make web-stack
 """
 
-# This Python script is
-# a more explicit version of
-# a cfn-pyplates template file.
-# It generates one or more
-# CloudFormation JSON files.
+# This Python script is a more explicit version of a cfn-pyplates template file
+# It generates one or more CloudFormation JSON files
 #
 # See
 # https://github.com/refinery-platform/refinery-platform/wiki/AWS-installation
-# for notes on how to use this to deploy to Amazon AWS.
+# for notes on how to use this to deploy to Amazon AWS
 #
-# Instances are configured using CloudInit.
-#
+# Instances are configured using CloudInit
 #
 # REFERENCES
-#
 # cfn-pyplates:
 #   https://cfn-pyplates.readthedocs.org/en/latest/index.html
 # AWS Cloudformation
@@ -45,8 +36,7 @@ import sys
 import boto3
 # Simulate the environment that "cfn_generate" runs scripts in.
 # http://cfn-pyplates.readthedocs.org/en/latest/advanced.html#generating-templates-in-python
-from cfn_pyplates import core
-from cfn_pyplates import functions
+from cfn_pyplates import core, functions
 import yaml
 
 
@@ -61,9 +51,8 @@ def main():
 
     unique_suffix = datetime.datetime.utcnow().strftime("%Y%m%dT%H%M")
 
-    # We discover the current git branch/commit
-    # so that the deployment script can use it
-    # to clone the same commit.
+    # We discover the current git branch/commit so that the deployment script
+    # can use it to clone the same commit
     commit = os.popen("""git rev-parse HEAD""").read().rstrip()
     assert commit
 
@@ -71,7 +60,7 @@ def main():
 
     instance_tags = load_tags()
 
-    # Set the `Name` as it appears on the EC2 web UI.
+    # Set the `Name` as it appears on the EC2 web UI
     instance_tags.append({'Key': 'Name',
                          'Value': "refinery-web-" + unique_suffix})
 
@@ -84,10 +73,9 @@ def main():
     if 'TLS_CERTIFICATE' in config:
         tls_rewrite = "true"
 
-    # The userdata script is executed via CloudInit.
+    # The userdata script is executed via CloudInit
     # It's made by concatenating a block of parameter variables,
-    # with the bootstrap.sh script,
-    # and the aws.sh script.
+    # with the bootstrap.sh script, and the aws.sh script
     user_data_script = functions.join(
         "",
         "#!/bin/sh\n",
@@ -181,7 +169,7 @@ def main():
                 functions.ref("InstanceSecurityGroup")],
             'Tags': instance_tags,
         }),
-        core.DependsOn('RDSInstance'),
+        core.DependsOn(['RDSInstance', 'StorageBucket']),
     )
 
     cft.resources.instance_profile = core.Resource(
@@ -199,19 +187,19 @@ def main():
         core.Properties({
             # http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-iam-role.html#cfn-iam-role-templateexamples
             "AssumeRolePolicyDocument": {
-               "Version": "2012-10-17",
-               "Statement": [{
-                  "Effect": "Allow",
-                  "Principal": {
-                     "Service": ["ec2.amazonaws.com"]
-                  },
-                  "Action": ["sts:AssumeRole"]
-               }]
+                "Version": "2012-10-17",
+                "Statement": [{
+                    "Effect": "Allow",
+                    "Principal": {
+                        "Service": ["ec2.amazonaws.com"]
+                    },
+                    "Action": ["sts:AssumeRole"]
+                }]
             },
             'ManagedPolicyArns': [
                 'arn:aws:iam::aws:policy/AmazonEC2ReadOnlyAccess',
                 'arn:aws:iam::aws:policy/AmazonRDSReadOnlyAccess',
-                'arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess'
+                'arn:aws:iam::aws:policy/AmazonS3FullAccess'
             ],
             'Path': '/',
             'Policies': [
@@ -450,6 +438,24 @@ def main():
             }
         })
 
+    cft.resources.add(core.Resource(
+        'StorageBucket', 'AWS::S3::Bucket',
+        core.Properties({
+            'BucketName': config['AWS_STORAGE_BUCKET_NAME'],
+            'AccessControl': 'PublicRead',
+            'CorsConfiguration': {
+                'CorsRules': [
+                    {
+                        'AllowedOrigins': ['*'],
+                        'AllowedMethods': ['GET'],
+                        'AllowedHeaders': ['Authorization'],
+                        'MaxAge': 3000,
+                    }
+                ]
+            }
+        }),
+        core.DeletionPolicy('Retain')
+    ))
     sys.stdout.write(str(cft))
 
 
@@ -470,15 +476,13 @@ def load_tags():
 
 
 def load_config():
-    """
-    Configuration is loaded from `aws-config/config.yaml`
+    """Configuration is loaded from `aws-config/config.yaml`
 
-    An automatically generated section
-    (for a small number of keys) may be added to this file.
+    An automatically generated section (for a small number of keys) may be
+    added to this file
 
     A pair (dict, string) is returned:
-    the config as a dictionary;
-    and a string that is the contents of the file.
+    the config as a dictionary and a string that is the contents of the file
     """
 
     config = _load_config_file("config.yaml")
@@ -529,9 +533,7 @@ def load_config():
 
 
 def _load_config_file(filename):
-    """
-    Load a single file.
-    """
+    """Load a single file"""
 
     config_dir = "aws-config"
     full_path = os.path.join(config_dir, filename)
@@ -546,9 +548,7 @@ def _load_config_file(filename):
 
 
 def create_random_s3_bucket():
-    """
-    Choose a random bucket name and create the S3 bucket.
-    """
+    """Choose a random bucket name and create the S3 bucket"""
 
     # http://boto3.readthedocs.org/en/latest/guide/migrations3.html
     s3 = boto3.resource('s3')
@@ -559,13 +559,12 @@ def create_random_s3_bucket():
 
 
 def save_s3_config(config, suffix):
-    """
-    Save the config as an S3 object in an S3 bucket.
-    The config must have an 'S3_CONFIG_BUCKET' key,
-    which is used for the name of the S3 bucket;
+    """Save the config as an S3 object in an S3 bucket
+    The config must have an 'S3_CONFIG_BUCKET' key, which is used for the name
+    of the S3 bucket
 
-    A URI in the form s3://bucket/key is returned;
-    this URI refers to the S3 object that is created.
+    A URI in the form s3://bucket/key is returned
+    this URI refers to the S3 object that is created
     """
 
     # http://boto3.readthedocs.org/en/latest/guide/migrations3.html
@@ -588,8 +587,9 @@ def report_missing_keys(config):
     """Collect and report list of missing keys"""
 
     required = [
-        'KEY_NAME', 'RDS_SUPERUSER_PASSWORD',
-        'SITE_NAME', 'SITE_URL', 'ADMIN_PASSWORD']
+        'KEY_NAME', 'RDS_SUPERUSER_PASSWORD', 'SITE_NAME', 'SITE_URL',
+        'ADMIN_PASSWORD', 'AWS_STORAGE_BUCKET_NAME'
+    ]
     bad = []
     for key in required:
         if key not in config:
@@ -602,10 +602,7 @@ def report_missing_keys(config):
 
 
 def random_alnum(n):
-    """
-    Random alphanumeric (digits and lowercase) string
-    of length `n`.
-    """
+    """Random alphanumeric (digits and lowercase) string of length `n`"""
 
     import string
 
@@ -615,9 +612,7 @@ def random_alnum(n):
 
 
 def random_password(n):
-    """
-    Generate a random password using `n` bytes of randomness.
-    """
+    """Generate a random password using `n` bytes of randomness"""
 
     import binascii
 
@@ -626,14 +621,10 @@ def random_password(n):
 
 
 def derive_config(config):
-    """
-    Modify `config` so that extra, derived, configuration is
-    added to it.
+    """Modify `config` so that extra, derived, configuration is added to it
 
-    The only case at the moment is that
-    (unless already supplied)
-    an availability zone is selected
-    (at random).
+    The only case at the moment is that (unless already supplied)
+    an availability zone is selected (at random)
     """
 
     if 'AVAILABILITY_ZONE' not in config:
@@ -642,14 +633,9 @@ def derive_config(config):
 
 
 def choose_availability_zone():
+    """Choose, at random, an availability zone from amongst the zones available
+    to this AWS account (the list of zones varies from account to account)
     """
-    Choose, at random, an availability zone from amongst the
-    zones available to this AWS account
-    (the list of zones varies from account to account).
-    """
-
-    # http://boto3.readthedocs.org/en/latest/
-    import boto3
 
     ec2 = boto3.client('ec2')
 

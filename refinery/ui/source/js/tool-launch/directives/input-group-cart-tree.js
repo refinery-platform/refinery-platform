@@ -3,15 +3,17 @@
 
   angular
     .module('refineryToolLaunch')
-    .directive('rpInputGroupCartTree', rpInputGroupCartTree);
+    .directive('rpInputGroupCartTree', ['$window', rpInputGroupCartTree]);
 
-  function rpInputGroupCartTree () {
+  function rpInputGroupCartTree ($window) {
     return {
       restrict: 'E',
       scope: {
         member: '='
       },
-      templateUrl: '/static/partials/tool-launch/partials/input-group-cart-tree.html'
+      templateUrl: function () {
+        return $window.getStaticUrl('partials/tool-launch/partials/input-group-cart-tree.html');
+      }
     };
   }
 })();

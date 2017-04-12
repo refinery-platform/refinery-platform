@@ -1,9 +1,11 @@
 'use strict';
 
-function rpFileBrowserAssayFilters ($timeout, $location, selectedFilterService) {
+function rpFileBrowserAssayFilters ($timeout, $location, $window, selectedFilterService) {
   return {
     restrict: 'E',
-    templateUrl: '/static/partials/file-browser/partials/assay-filters.html',
+    templateUrl: function () {
+      return $window.getStaticUrl('partials/file-browser/partials/assay-filters.html');
+    },
     link: function (scope) {
       // ng-click event for attribute filter panels
       scope.dropAttributePanel = function (e, attributeName, attributeObj) {
@@ -125,6 +127,7 @@ angular
   .directive('rpFileBrowserAssayFilters', [
     '$timeout',
     '$location',
+    '$window',
     'selectedFilterService',
     rpFileBrowserAssayFilters
   ]

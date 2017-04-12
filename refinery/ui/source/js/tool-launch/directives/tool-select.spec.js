@@ -12,10 +12,11 @@
       $httpBackend,
       $rootScope,
       settings,
-      $templateCache
+      $templateCache,
+      $window
     ) {
       $templateCache.put(
-        '/static/partials/tool-launch/partials/tool-select.html',
+        $window.getStaticUrl('partials/tool-launch/partials/tool-select.html'),
         '<div id="tool-select"></div>'
       );
 

@@ -42,41 +42,33 @@ describe('RefineryDataSetNav.state: unit tests', function () {
   });
 
   beforeEach(function () {
+    // using window because $window is redefined above
     mockTemplate(
-      '/static/partials/data-set-nav/partials' +
-      '/data-set-ui-mode-analyze.html'
+      window.getStaticUrl('partials/data-set-nav/partials/data-set-ui-mode-analyze.html')
     );
     mockTemplate(
-      '/static/partials/data-set-nav/partials' +
-      '/data-set-ui-mode-browse.html'
+      window.getStaticUrl('partials/data-set-nav/partials/data-set-ui-mode-browse.html')
     );
     mockTemplate(
-      '/static/partials/data-set-nav/partials' +
-      '/data-set-ui-mode-visualize.html'
+      window.getStaticUrl('partials/data-set-nav/partials/data-set-ui-mode-visualize.html')
     );
     mockTemplate(
-      '/static/partials/data-set-nav/partials' +
-      '/data-set-ui-mode-mapping.html'
+      window.getStaticUrl('partials/data-set-nav/partials/data-set-ui-mode-mapping.html')
     );
     mockTemplate(
-      '/static/partials/analysis-monitor/partials' +
-      '/analyses-list.html'
+      window.getStaticUrl('partials/analysis-monitor/partials/analyses-list.html')
     );
     mockTemplate(
-      '/static/partials/file-browser/partials' +
-      '/assay-files.html'
+      window.getStaticUrl('partials/file-browser/partials/assay-files.html')
     );
     mockTemplate(
-      '/static/partials/data-set-nav/partials' +
-      '/analyses-tab.html'
+      window.getStaticUrl('partials/data-set-nav/partials/analyses-tab.html')
     );
     mockTemplate(
-      '/static/partials/data-set-nav/partials' +
-      '/details-tab.html'
+      window.getStaticUrl('partials/data-set-nav/partials/details-tab.html')
     );
     mockTemplate(
-      '/static/partials/data-set-nav/partials' +
-      '/files-tab.html'
+      window.getStaticUrl('partials/data-set-nav/partials/files-tab.html')
     );
   });
 

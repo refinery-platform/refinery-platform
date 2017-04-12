@@ -1,15 +1,18 @@
 'use strict';
 
-function rpFileBrowserSelectionReset () {
+function rpFileBrowserSelectionReset ($window) {
   return {
     restrict: 'AE',
-    templateUrl: '/static/partials/file-browser/partials/selection-reset.html'
+    templateUrl: function () {
+      return $window.getStaticUrl('partials/file-browser/partials/selection-reset.html');
+    }
   };
 }
 
 angular
   .module('refineryFileBrowser')
   .directive('rpFileBrowserSelectionReset', [
+    '$window',
     rpFileBrowserSelectionReset
   ]
 );

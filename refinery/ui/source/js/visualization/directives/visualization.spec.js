@@ -14,10 +14,11 @@ describe('rpVisualization directive unit test', function () {
   beforeEach(inject(function (
     _$compile_,
     _$rootScope_,
-    $templateCache
+    $templateCache,
+    $window
   ) {
     $templateCache.put(
-      '/static/partials/visualization/partials/visualization.html',
+      $window.getStaticUrl('partials/visualization/partials/visualization.html'),
       '<div id="visualization-select-menu"></div>'
     );
     compile = _$compile_;
