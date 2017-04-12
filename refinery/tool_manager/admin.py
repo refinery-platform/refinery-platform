@@ -2,7 +2,7 @@ from django.contrib import admin
 
 from .models import (FileRelationship, GalaxyParameter, InputFile,
                      OutputFile, Parameter, ToolDefinition,
-                     VisualizationContainer)
+                     VisualizationDefinition)
 
 
 from .utils import AdminFieldPopulator
@@ -32,7 +32,7 @@ class GalaxyParameterAdmin(AdminFieldPopulator):
     pass
 
 
-class VisualizationContainerAdmin(AdminFieldPopulator):
+class VisualizationDefinitionAdmin(AdminFieldPopulator):
     pass
 
 
@@ -42,4 +42,4 @@ admin.site.register(ToolDefinition, ToolDefinitionAdmin)
 admin.site.register(OutputFile, OutputFileAdmin)
 admin.site.register(Parameter, ParameterAdmin)
 admin.site.register(GalaxyParameter, GalaxyParameterAdmin)
-admin.site.register(VisualizationContainer, VisualizationContainerAdmin)
+admin.site.register(VisualizationDefinition, VisualizationDefinitionAdmin)
