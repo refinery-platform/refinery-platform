@@ -3,10 +3,9 @@
 # See https://github.com/refinery-platform/refinery-platform/wiki/AWS for
 # more details.
 
-import requests
-
 # Like prod, but overriding some things.
 from .prod import *  # NOQA
+
 
 EMAIL_BACKEND = 'django_smtp_ssl.SSLEmailBackend'
 EMAIL_HOST_USER = get_setting('EMAIL_HOST_USER')
