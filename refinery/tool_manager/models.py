@@ -1,9 +1,15 @@
+import logging
+from urlparse import urljoin
+
+from django.conf import settings
 from django.db import models
 from django.db.models.signals import post_delete, pre_delete
 from django.dispatch import receiver
 from django_extensions.db.fields import UUIDField
 
 from file_store.models import FileType
+
+logger = logging.getLogger(__name__)
 
 
 class Parameter(models.Model):
@@ -143,6 +149,61 @@ class ToolDefinition(models.Model):
 
     def __str__(self):
         return "{}: {} {}".format(self.tool_type, self.name, self.uuid)
+
+    def get_container_name(self):
+        """
+        Fetch the container_name of a VisualizationDefinition
+        :return: VisualizationDefinition.container_name if available,
+        otherwise `None`
+        """
+        try:
+            visualization_definition = self.get_visualization_definition()
+        except (VisualizationDefinition.DoesNotExist,
+                VisualizationDefinition.MultipleObjectsReturned):
+            return None
+        else:
+            return visualization_definition.container_name
+
+    def get_docker_image_name(self):
+        """
+        Fetch the docker_image_name of a VisualizationDefinition
+        :return: VisualizationDefinition.docker_image_name if available,
+        otherwise `None`
+        """
+        try:
+            visualization_definition = self.get_visualization_definition()
+        except (VisualizationDefinition.DoesNotExist,
+                VisualizationDefinition.MultipleObjectsReturned):
+            return None
+        else:
+            return visualization_definition.docker_image_name
+
+    def get_relative_container_url(self):
+        """
+        Construct & return the relative url of our VisualizationDefinition's
+        container
+        """
+        return urljoin(
+            settings.DJANGO_REST_FRAMEWORK_API_ROOT,
+            "docker/{}".format(
+                self.get_container_name()
+            )
+        )
+
+    def get_visualization_definition(self):
+        """
+        Fetch the VisualizationDefinition associated with a ToolDefinition
+        :return: <VisualizationDefinition> if available
+        """
+        try:
+            return VisualizationDefinition.objects.get(uuid=self.uuid)
+        except (VisualizationDefinition.DoesNotExist,
+                VisualizationDefinition.MultipleObjectsReturned) as e:
+            logger.info(
+                "Couldn't properly fetch VisualizationDefinition with UUID: "
+                "{} {}".format(self.uuid, e)
+            )
+            raise
 
 
 class VisualizationDefinition(ToolDefinition):
