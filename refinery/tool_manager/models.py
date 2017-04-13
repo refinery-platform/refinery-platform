@@ -145,6 +145,27 @@ class ToolDefinition(models.Model):
         return "{}: {} {}".format(self.tool_type, self.name, self.uuid)
 
 
+class VisualizationDefinition(ToolDefinition):
+    """
+    An Extension of the ToolDefinition model with fields particular to
+    Visualization tools
+    """
+    docker_image_name = models.CharField(max_length=255)
+    container_name = models.CharField(max_length=150)
+
+    class Meta:
+        verbose_name = "Visualization Definition"
+
+    def __str__(self):
+        return "{}: {} {} - {}:{}".format(
+            self.tool_type,
+            self.name,
+            self.uuid,
+            self.docker_image_name,
+            self.container_name
+        )
+
+
 @receiver(pre_delete, sender=ToolDefinition)
 def delete_parameters_and_output_files(sender, instance, *args, **kwargs):
     """
