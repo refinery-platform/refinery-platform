@@ -525,7 +525,8 @@ class ToolDefinitionGenerationTests(TestCase):
     def test_workflow_pair_not_enough_inputs(self):
         with open(
                 "{}/workflow_PAIR_not_enough_inputs.json".format(
-                    TEST_DATA_PATH)
+                    TEST_DATA_PATH
+                )
         ) as f:
             workflow_annotation = json.loads(f.read())
             self.assertRaises(
@@ -629,7 +630,7 @@ class ToolLaunchConfigurationTests(StaticLiveServerTestCase):
             self.td = ToolDefinition.objects.all()[0]
             self.container_name = self.td.get_container_name()
 
-            # mock TLC based on this: populate node uuids w/ urls
+            # Create mock ToolLaunchConfiguration
             self.post_data = {
                 "tool_definition_uuid": self.td.uuid,
                 "file_relationships": [
