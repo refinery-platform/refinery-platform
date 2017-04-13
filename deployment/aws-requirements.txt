@@ -1,1 +1,0 @@
-django-smtp-ssl==1.0

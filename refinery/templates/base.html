@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 
 {% load humanize %}
-{% load static %}
+{% load static from staticfiles %}
 
 <html lang="en">
 <head>
@@ -36,7 +36,8 @@
       admins: '{{ ADMIN_EMAIL|safe }}',
       repositoryMode: {{ REFINERY_REPOSITORY_MODE|yesno:"true,false,undefined" }},
       solrSynonymSearch: {{ SOLR_SYNONYM_SEARCH|lower }},
-      refineryTutorialSteps: '{{  REFINERY_TUTORIAL_STEPS|escapejs }}'
+      refineryTutorialSteps: '{{  REFINERY_TUTORIAL_STEPS|escapejs }}',
+      staticUrl: '{{ STATIC_URL|escapejs }}'
     };
 
     if (window.djangoApp.userId === 'None' || window.djangoApp.userName === 'None') {

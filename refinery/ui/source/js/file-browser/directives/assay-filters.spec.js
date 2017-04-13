@@ -18,10 +18,11 @@ describe('rpAssayFiles directive unit test', function () {
     _$rootScope_,
     $templateCache,
     _$_,
+    $window,
     _selectedFilterService_
   ) {
     $templateCache.put(
-      '/static/partials/file-browser/partials/assay-filters.html',
+      $window.getStaticUrl('partials/file-browser/partials/assay-filters.html'),
       '<div id="attribute-filter">' +
       '<div id="Analysis" class="collapse">' +
       '<div id="attribute-panel-Analysis" class="fa fa-caret-right"></div>' +

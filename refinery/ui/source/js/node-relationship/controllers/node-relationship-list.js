@@ -131,8 +131,11 @@ function NodeRelationshipListCtrl (
       val: 'New Mapping'
     };
 
+    var inputDialogUrl = $window.getStaticUrl(
+      'partials/node-relationship/dialogs/input-dialog.html'
+    );
     var modalInstance = $uibModal.open({
-      templateUrl: '/static/partials/node-relationship/dialogs/input-dialog.html',
+      templateUrl: inputDialogUrl,
       controller: 'InputDialogInstanceCtrl',
       resolve: {
         config: function () {
@@ -163,8 +166,11 @@ function NodeRelationshipListCtrl (
       val: nodeRelationship.name
     };
 
+    var inputDialogUrl = $window.getStaticUrl(
+      'partials/node-relationship/dialogs/input-dialog.html'
+    );
     var modalInstance = $uibModal.open({
-      templateUrl: '/static/partials/node-relationship/dialogs/input-dialog.html',
+      templateUrl: inputDialogUrl,
       controller: 'InputDialogInstanceCtrl',
       resolve: {
         config: function () {
@@ -195,8 +201,11 @@ function NodeRelationshipListCtrl (
         nodeRelationship.name + '?'
     };
 
+    var inputDialogUrl = $window.getStaticUrl(
+      'partials/node-relationship/dialogs/input-dialog.html'
+    );
     var modalInstance = $uibModal.open({
-      templateUrl: '/static/partials/node-relationship/dialogs/confirmation-dialog.html',
+      templateUrl: inputDialogUrl,
       controller: 'NRConfirmationDialogInstanceCtrl',
       resolve: {
         config: function () {

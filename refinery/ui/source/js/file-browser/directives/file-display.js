@@ -3,7 +3,9 @@
 function rpFileDisplay ($, $window) {
   return {
     restrict: 'E',
-    templateUrl: '/static/partials/file-browser/partials/file-display.html',
+    templateUrl: function () {
+      return $window.getStaticUrl('partials/file-browser/partials/file-display.html');
+    },
     link: function () {
       $('#view-selector').select2({ minimumResultsForSearch: -1 });
       $('#view-selector').on('change', function (event) {

@@ -29,13 +29,11 @@
     vm.setGroupCollection = setGroupCollection; // method
     vm.setNodeSelectCollection = setNodeSelectCollection; // method
     vm.nodeSelectCollection = {}; // contains rows and their group info
-
     /*
     *-----------------------
     * Method Definitions
     * ----------------------
     */
-
     // convert attributes array to attributes obj
     function generateAttributeObj () {
       var attributeArr = fileBrowserFactory.assayAttributes;
@@ -43,7 +41,6 @@
         vm.attributesObj[attributeArr[i].display_name] = attributeArr[i].internal_name;
       }
     }
-
 
     function setGroupCollection (inputTypeUuid, selectionObj, deselectedFileUuid) {
       var nodeUuid = deselectedFileUuid;
