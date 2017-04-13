@@ -21,9 +21,9 @@ from .models import ToolDefinition
 
 logger = logging.getLogger(__name__)
 ANNOTATION_ERROR_MESSAGE = (
-    "Workflow not properly annotated. "
+    "Tool not properly annotated. {}"
     "Please read: http://bit.ly/2nalk6w for more information on how to "
-    "properly annotate your Galaxy-based workflows. "
+    "properly annotate your tools. "
 )
 
 
