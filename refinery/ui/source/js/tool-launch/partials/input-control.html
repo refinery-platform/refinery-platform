@@ -25,55 +25,15 @@
     </div>
     <div
       id="tool-launch-body"
-      class="panel-collapse"
+      class="panel-collapse p-a-0"
       uib-collapse="$ctrl.isToolInputControlCollapsed"
       role="tabpanel"
       aria-labelledby="tool-body">
-      <div class="panel-body">
-        <h5>
-          <span ng-if="$ctrl.groups.length == 0">
-            <b>0</b> of
-          </span>
-          <span ng-if="$ctrl.groups.length > 0">
-            <b>{{ $ctrl.groupIndex + 1 }}</b> of
-          </span>
-          <b>{{ $ctrl.groups.length }} </b> groups
-        </h5>
-
-        <div>
-          <button
-            class="btn btn-default btn-xs outline"
-            ng-disabled="$ctrl.groupIndex == 0"
-            ng-click="$ctrl.navLeft()">
-            <i class="fa fa-backward"></i>
-          </button>
-          <button
-            class="btn btn-default btn-xs outline"
-            ng-disabled="$ctrl.groupIndex == $ctrl.groups.length - 1 || $ctrl.groups.length == 0"
-            ng-click="$ctrl.navRight()">
-            <i class="fa fa-forward"></i>
-          </button>
-          <button
-            class="btn btn-default btn-xs outline"
-            ng-disabled="$ctrl.groups.length == 0"
-            ng-click="$ctrl.removeGroup($ctrl.groupIndex)">
-            Remove
-          </button>
-          <button
-            class="btn btn-default btn-xs outline"
-            ng-disabled="$ctrl.groups.length == 0"
-            ng-click="$ctrl.removeAllGroups()">
-            Remove All
-          </button>
-        </div>
-
-        <hr>
-        <div
-          ng-if="$ctrl.groups.length != 0"
-          class="wrap-word">
-          {{ $ctrl.groups[$ctrl.groupIndex].entity[$ctrl.attributes.Name] }}
-          <{{ $ctrl.groups[$ctrl.groupIndex].entity[$ctrl.attributes['File Type']] }}>
-        </div>
+      <div class="panel-body p-a-0">
+        <div class="p-a-0">
+          <rp-input-control-nav collection='$ctrl.tool.file_relationship' counter='0'>
+          </rp-input-control-nav>
+         </div>
       </div>
     </div>
   </div>

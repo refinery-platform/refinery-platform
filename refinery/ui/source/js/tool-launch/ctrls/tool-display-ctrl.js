@@ -5,9 +5,18 @@
     .module('refineryToolLaunch')
     .controller('ToolDisplayCtrl', ToolDisplayCtrl);
 
-  ToolDisplayCtrl.$inject = ['$scope', '_', 'toolsService'];
+  ToolDisplayCtrl.$inject = [
+    '$scope',
+    '_',
+    'fileRelationshipService',
+    'toolsService'];
 
-  function ToolDisplayCtrl ($scope, _, toolsService) {
+  function ToolDisplayCtrl (
+    $scope,
+    _,
+    fileRelationshipService,
+    toolsService
+  ) {
     var vm = this;
     vm.selectedTool = {};
     vm.isToolSelected = false;
@@ -24,6 +33,10 @@
       function () {
         angular.copy(toolsService.selectedTool, vm.selectedTool);
         vm.isToolSelected = !(_.isEmpty(vm.selectedTool));
+        if (vm.isToolSelected) {
+          fileRelationshipService.resetCurrents();
+          fileRelationshipService.refreshFileMap();
+        }
       }
     );
   }

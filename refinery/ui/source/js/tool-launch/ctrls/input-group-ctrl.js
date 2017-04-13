@@ -5,14 +5,25 @@
     .module('refineryToolLaunch')
     .controller('InputGroupCtrl', InputGroupCtrl);
 
-  InputGroupCtrl.$inject = ['$scope'];
+  InputGroupCtrl.$inject = [
+    '$scope',
+    'fileRelationshipService',
+    'selectedNodesService'
+  ];
 
 
-  function InputGroupCtrl ($scope) {
+  function InputGroupCtrl (
+    $scope,
+    fileRelationshipService,
+    selectedNodesService
+  ) {
     var vm = this;
+    vm.attributes = fileRelationshipService.attributesObj;
+    vm.currentFileInput = [];
+    vm.isNavCollapsed = false;
     vm.tool = {}; // selected tool displayed in panel
     vm.toolType = ''; // workflow vs visualization
-    vm.isNavCollapsed = false;
+
 
     /*
    * ---------------------------------------------------------
@@ -29,6 +40,15 @@
           if (vm.tool.toolType === 'Workflow') {
             vm.toolType = vm.tool.toolType;
           }
+        }
+      );
+
+      $scope.$watchCollection(
+        function () {
+          return selectedNodesService.selectedNodes;
+        },
+        function () {
+          vm.currentFileInput = selectedNodesService.selectedNodes;
         }
       );
     };
