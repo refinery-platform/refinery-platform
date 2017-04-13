@@ -1,7 +1,5 @@
 import logging
-from urlparse import urljoin
 
-from django.conf import settings
 from django.db import models
 from django.db.models.signals import post_delete, pre_delete
 from django.dispatch import receiver
@@ -188,11 +186,8 @@ class ToolDefinition(models.Model):
         Construct & return the relative url of our VisualizationDefinition's
         container
         """
-        return urljoin(
-            settings.DJANGO_REST_FRAMEWORK_API_ROOT,
-            "docker/{}".format(
+        return "/api/v2/docker/{}".format(
                 self.get_container_name()
-            )
         )
 
     def get_visualization_definition(self):

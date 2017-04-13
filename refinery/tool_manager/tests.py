@@ -4,7 +4,6 @@ import mock
 import requests
 from urlparse import urljoin
 
-from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from django.core.management import call_command, CommandError
@@ -558,10 +557,7 @@ class ToolLaunchConfigurationTests(StaticLiveServerTestCase):
         self.container_name = ""
         self.factory = APIRequestFactory()
         self.view = ToolLaunchConfigurationViewSet.as_view({'post': 'launch'})
-        self.url_root = urljoin(
-            settings.DJANGO_REST_FRAMEWORK_API_ROOT,
-            'tools'
-        )
+        self.url_root = '/api/v2/tools'
 
     def tearDown(self):
         self.browser.close()
