@@ -1,45 +1,86 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema",
-  "type": "object",
-
-  "required": [
-    "name",
-    "description",
-    "tool_type",
-    "file_relationship"
-  ],
-  "properties": {
-    "name": {
-      "type": "string"
+  "oneOf":[
+    {
+      "required": [
+        "name",
+        "description",
+        "file_relationship",
+        "output_files",
+        "parameters"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "file_relationship": {
+          "$ref": "FileRelationship.json#"
+        },
+        "output_files": {
+          "type": "array",
+          "items": {
+            "$ref": "OutputFile.json#"
+          },
+          "minItems": 1
+        },
+        "parameters": {
+          "type": "array",
+          "items": {
+            "$ref": "GalaxyParameter.json#"
+          }
+        },
+        "tool_type":{
+          "type": "string",
+          "enum": ["WORKFLOW"]
+        }
+      }
     },
-    "description": {
-      "type": "string"
-    },
-    "tool_type": {
-      "type": "string",
-      "enum": [
-        "WORKFLOW",
-        "VISUALIZATION"
-      ]
-    },
-    "file_relationship": {
-      "$ref": "FileRelationship.json#"
-    },
-    "output_files": {
-      "type": "array",
-      "items": {
-       "$ref": "OutputFile.json#"
-      },
-      "minItems": 1
-    },
-    "parameters": {
-      "type": "array",
-      "items": {
-        "oneOf": [
-          {"$ref": "Parameter.json#"},
-          {"$ref": "GalaxyParameter.json#"}
-        ]
+    {
+      "required": [
+        "name",
+        "description",
+        "file_relationship",
+        "output_files",
+        "parameters",
+        "container_name",
+        "docker_image_name"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "file_relationship": {
+          "$ref": "FileRelationship.json#"
+        },
+        "parameters": {
+          "type": "array",
+          "items": {
+            "$ref": "Parameter.json#"
+          }
+        },
+        "output_files": {
+          "type": "array",
+          "items": {
+            "$ref": "OutputFile.json#"
+          }
+        },
+        "tool_type":{
+          "type": "string",
+          "enum": ["VISUALIZATION"]
+        },
+        "container_name": {
+          "type": "string"
+        },
+        "docker_image_name": {
+          "type": "string"
+        }
       }
     }
-  }
+  ]
 }
