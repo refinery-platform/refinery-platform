@@ -20,22 +20,30 @@
     var nodeService = selectedNodesService;
     var vm = this;
     vm.attributesObj = {};
-    vm.fileDepth = 0; // Roots are at depth 0
     vm.currentGroup = []; // index for the group coordinates
     vm.currentTypes = []; // tracks whether depths are pair or list
+    vm.groupCollection = {}; // contains groups with their selected row's info
     vm.inputFileTypes = []; // maintains the required input types
-    vm.resetCurrents = resetCurrents;
     vm.refreshFileMap = refreshFileMap;
+    vm.resetCurrents = resetCurrents;
     vm.setGroupCollection = setGroupCollection;
     vm.setToolInputGroup = setToolInputGroup;
     vm.toolInputGroups = {}; // contains rows and their group info
-    vm.groupCollection = {}; // contains groups with their selected row's info
 
     /*
     *-----------------------
     * Method Definitions
     * ----------------------
     */
+
+    // convert attributes array to attributes obj
+    function generateAttributeObj () {
+      var attributeArr = fileBrowserFactory.assayAttributes;
+      for (var i = 0; i < attributeArr.length; i ++) {
+        vm.attributesObj[attributeArr[i].display_name] = attributeArr[i].internal_name;
+      }
+    }
+
 
     function setGroupCollection (inputTypeUuid, selectionObj) {
       var nodeUuid = nodeService.activeNodeRow.uuid;
@@ -82,26 +90,11 @@
       }
     }
 
-    function resetCurrents () {
-      vm.fileDepth = 0;
-      vm.currentGroup = [];
-      vm.currentTypes = [];
-      vm.inputFileTypes = [];
-    }
-    // convert attributes array to attributes obj
-    function generateAttributeObj () {
-      var attributeArr = fileBrowserFactory.assayAttributes;
-      for (var i = 0; i < attributeArr.length; i ++) {
-        vm.attributesObj[attributeArr[i].display_name] = attributeArr[i].internal_name;
-      }
-    }
-
     // used to initialize the tool's data structure used by vm
     function refreshFileMap () {
       var scaledCopy = toolsService.selectedTool.file_relationship;
       // this is an array
       while (scaledCopy.file_relationship.length > 0) {
-        vm.fileDepth++;
         vm.currentGroup.push(0);
         vm.currentTypes.push(scaledCopy.value_type);
         scaledCopy = scaledCopy.file_relationship[0];
@@ -110,6 +103,12 @@
       vm.currentTypes.push(scaledCopy.value_type);
       generateAttributeObj();
       return vm.currentGroup;
+    }
+
+    function resetCurrents () {
+      vm.currentGroup = [];
+      vm.currentTypes = [];
+      vm.inputFileTypes = [];
     }
   }
 })();
