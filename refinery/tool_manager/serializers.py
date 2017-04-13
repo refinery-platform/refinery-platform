@@ -3,7 +3,7 @@ from rest_framework_recursive.fields import RecursiveField
 
 from file_store.models import FileType
 from .models import (FileRelationship, InputFile, OutputFile, Parameter,
-                     ToolDefinition, VisualizationContainer)
+                     ToolDefinition)
 
 
 class FileTypeSerializer(serializers.ModelSerializer):
@@ -31,7 +31,7 @@ class ParameterSerializer(serializers.ModelSerializer):
         ret = super(ParameterSerializer, self).to_representation(obj)
 
         # Remove the `galaxy_workflow_step` field from the api response if it
-        # isn't available (Parameter objects for Visualization-based
+        # isn't available (Parameter objects for VisualizationDefinition-based
         # ToolDefinitions won't have this field for example)
         if obj.get_galaxy_workflow_step() is None:
             ret.pop("galaxy_workflow_step")
@@ -73,14 +73,39 @@ class OutputFileSerializer(serializers.ModelSerializer):
 class ToolDefinitionSerializer(serializers.ModelSerializer):
     file_relationship = FileRelationshipSerializer()
     output_files = OutputFileSerializer(many=True)
+    container_name = serializers.SerializerMethodField(
+        method_name="_get_container_name",
+        required=False,
+        allow_null=False
+    )
+
+    docker_image_name = serializers.SerializerMethodField(
+        method_name="_get_docker_image_name",
+        required=False,
+        allow_null=False
+    )
+
     parameters = ParameterSerializer(many=True, allow_null=True)
+
+    def _get_container_name(self, obj):
+        return obj.get_container_name()
+
+    def _get_docker_image_name(self, obj):
+        return obj.get_docker_image_name()
+
+    def to_representation(self, obj):
+        # get the original serialized objects representation
+        ret = super(ToolDefinitionSerializer, self).to_representation(obj)
+
+        # Remove some fields if we aren't dealing with an Extension of the
+        # ToolDefinition model
+        if obj.get_container_name() is None:
+            ret.pop("container_name")
+
+        if obj.get_docker_image_name() is None:
+            ret.pop("docker_image_name")
+        return ret
 
     class Meta:
         model = ToolDefinition
         exclude = ["id"]
-
-
-class VisualizationContainerSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = VisualizationContainer

@@ -5,7 +5,12 @@ from django.conf import settings
 from django.db import models
 from django.db.models.signals import post_delete, pre_delete
 from django.dispatch import receiver
+from django.http import HttpResponseServerError
+from django.shortcuts import redirect
+
 from django_extensions.db.fields import UUIDField
+from django_docker_engine.docker_utils import DockerContainerSpec
+from docker.errors import APIError
 
 from file_store.models import FileType
 
@@ -268,23 +273,56 @@ def delete_input_files_and_file_relationships(sender, instance, *args,
         file_relationship.delete()
 
 
-class VisualizationContainer(models.Model):
-    uuid = UUIDField(unique=True, auto=True)
-    image_name = models.CharField(max_length=255)
-    container_name = models.CharField(max_length=150)
+class ToolLaunchConfiguration(models.Model):
+    """
+    A ToolLaunchConfiguration is an abstract representation of the
+    information it will take to launch a Refinery Tool
+    """
+    file_relationships = models.TextField()
+    parameters = models.TextField()
+    tool_definition = models.ForeignKey(ToolDefinition)
+    start_date = models.DateTimeField(auto_now_add=True)
+    # TODO: status. OwnableResource??? ????
 
     class Meta:
-        verbose_name = "Visualization Containers"
-        permissions = (
-            ('read_%s' % verbose_name, 'Can read %s' % verbose_name),
-            ('share_%s' % verbose_name, 'Can share %s' % verbose_name),
-        )
+        abstract = True
 
     def __str__(self):
-        return "{}:{}".format(
-            self.image_name,
-            self.container_name
+        return "Tool Launch: {} - {}".format(
+            self.tool_definition.name,
+            self.start_date
         )
 
-    def get_absolute_url(self):
-        return "/api/v2/docker/{}/".format(self.container_name)
+    def get_tool_type(self):
+        return self.tool_definition.tool_type
+
+    def parse_file_relationships_string(self):
+        pass
+
+    def populate_url_from_node_uuid(self):
+        pass
+
+
+class WorkflowToolLaunch(ToolLaunchConfiguration):
+    def launch(self):
+        pass
+
+
+class VisualizationToolLaunch(ToolLaunchConfiguration):
+    def launch(self):
+        container = DockerContainerSpec(
+            image_name=self.tool_definition.get_docker_image_name(),
+            container_name=self.tool_definition.get_container_name(),
+            labels={self.tool_definition.uuid: "visualization_uuid"},
+            container_input_path="/var/www/data/input.json",
+            input={"file_relationships": self.file_relationships}
+        )
+
+        try:
+            container.run()
+        except APIError as e:
+            return HttpResponseServerError(content=e)
+        else:
+            return redirect(
+                self.tool_definition.get_relative_container_url()
+            )

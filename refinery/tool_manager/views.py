@@ -1,19 +1,13 @@
-import json
 import logging
 
-from django.http import HttpResponseBadRequest, HttpResponseServerError
-from django.shortcuts import redirect
-from django_docker_engine.docker_utils import DockerContainerSpec
-from docker.errors import APIError
-
-from jsonschema import validate, ValidationError
+from django.http import HttpResponseServerError
 
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.viewsets import ModelViewSet
+from rest_framework.viewsets import ModelViewSet, GenericViewSet
 
-from .models import ToolDefinition, VisualizationContainer
-from .serializers import (ToolDefinitionSerializer,
-                          VisualizationContainerSerializer)
+from .models import (ToolDefinition,
+                     VisualizationToolLaunch)
+from .serializers import (ToolDefinitionSerializer)
 
 logger = logging.getLogger(__name__)
 
@@ -28,42 +22,45 @@ class ToolDefinitionsViewSet(ModelViewSet):
     permission_classes = [IsAuthenticated]
 
 
-class VisualizationContainerViewSet(ModelViewSet):
-    """API endpoint that allows for VisualizationContainers to be launched
-    and fetched"""
-
-    queryset = VisualizationContainer.objects.all()
-    serializer_class = VisualizationContainerSerializer
-    lookup_fields = ['uuid', 'container_name']
-    http_method_names = ['get', 'post']
+class ToolLaunchConfigurationViewSet(GenericViewSet):
+    """API endpoint that allows for Tools to be launched"""
+    http_method_names = ['post']
     permission_classes = [IsAuthenticated]
 
-    def create(self, request, *args, **kwargs):
-        # Validate incoming payload
-        with open("tool_manager/schemas/VisualizationContainer.json") as f:
-            schema = json.loads(f.read())
-            try:
-                validate(request.data, schema)
-            except ValidationError as e:
-                logger.error(e)
-                return HttpResponseBadRequest(content=e)
+    def launch(self, request, *args, **kwargs):
+        # try:
+        #     validate_tool_launch_configuration(request.data)
+        # except RuntimeError as e:
+        #     return HttpResponseServerError(e)
 
-            validated_data = request.data
-            visualization_container \
-                = VisualizationContainer.objects.create(
-                    image_name=validated_data["image_name"],
-                    container_name=validated_data["container_name"]
-                )
+        tool_launch_data = request.data
 
-            container = DockerContainerSpec(
-                image_name=visualization_container.image_name,
-                container_name=visualization_container.container_name,
-                labels={visualization_container.uuid: "cool"}
+        try:
+            tool_definition = ToolDefinition.objects.get(
+                uuid=tool_launch_data["tool_definition_uuid"]
             )
+        except(
+                ToolDefinition.DoesNotExist,
+                ToolDefinition.MultipleObjectsReturned
+        ) as e:
+            return HttpResponseServerError(
+                "Couldn't fetch ToolDefinition with UUID {}: {}".format(
+                    tool_launch_data["uuid"],
+                    e
+                )
+            )
+        else:
+            if tool_definition.tool_type == ToolDefinition.VISUALIZATION:
+                visualization_tool = VisualizationToolLaunch.objects.create(
+                    tool_definition=tool_definition,
+                    parameters=tool_launch_data[
+                        "parameters"
+                    ],
+                    file_relationships=tool_launch_data[
+                       "file_relationships"
+                    ]
 
-            try:
-                container.run()
-            except APIError as e:
-                return HttpResponseServerError(content=e)
-            else:
-                return redirect(visualization_container.get_absolute_url())
+                )
+                return visualization_tool.launch()
+            elif tool_definition.tool_type == ToolDefinition.WORKFLOW:
+                pass
