@@ -81,12 +81,11 @@ function AppCtrl ($, $scope, $rootScope, $timeout, $window, _, pubSub, settings)
 
   $scope.refineryTutorialSteps = JSON.parse(settings.djangoApp.refineryTutorialSteps);
 
+  var tutorialPopoverUrl = $window.getStaticUrl('partials/tutorials/partials/tutorialPopover.html');
   $scope.dynamicPopover = {
     title: 'Refinery Tutorials',
     content: 'These are some helpful tutorials to guide you through Refinery!',
-    templateUrl: function () {
-      return $window.getStaticUrl('partials/tutorials/partials/tutorialPopover.html');
-    }
+    templateUrl: tutorialPopoverUrl
   };
 }
 
