@@ -45,8 +45,12 @@
     }
 
 
-    function setGroupCollection (inputTypeUuid, selectionObj) {
-      var nodeUuid = nodeService.activeNodeRow.uuid;
+    function setGroupCollection (inputTypeUuid, selectionObj, deselectedFileUuid) {
+      var nodeUuid = deselectedFileUuid;
+      if (!nodeUuid) {
+        nodeUuid = nodeService.activeNodeRow.uuid;
+      }
+
       if (selectionObj[inputTypeUuid]) {
         if (_.has(vm.groupCollection, vm.currentGroup) === false) {
           vm.groupCollection[vm.currentGroup] = {};
@@ -54,7 +58,9 @@
         if (_.has(vm.groupCollection[vm.currentGroup], inputTypeUuid) === false) {
           vm.groupCollection[vm.currentGroup][inputTypeUuid] = [];
         }
-        vm.groupCollection[vm.currentGroup][inputTypeUuid].push(nodeService.activeNodeRow);
+        vm.groupCollection[vm.currentGroup][inputTypeUuid].push(
+          angular.copy(nodeService.activeNodeRow)
+        );
       } else {
         // remove property
         for (var i = 0; i < vm.groupCollection[vm.currentGroup][inputTypeUuid].length; i ++) {
@@ -66,8 +72,11 @@
       }
     }
 
-    function setNodeSelectCollection (inputTypeUuid, selectionObj) {
-      var nodeUuid = nodeService.activeNodeRow.uuid;
+    function setNodeSelectCollection (inputTypeUuid, selectionObj, deselectedFileUuid) {
+      var nodeUuid = deselectedFileUuid;
+      if (!nodeUuid) {
+        nodeUuid = nodeService.activeNodeRow.uuid;
+      }
       if (selectionObj[inputTypeUuid]) {
         if (_.has(vm.nodeSelectCollection, nodeUuid) === true) {
           vm.nodeSelectCollection[nodeUuid].inputTypeList.push(inputTypeUuid);
