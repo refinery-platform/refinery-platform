@@ -114,7 +114,7 @@
       // custom icon for ui-grid selection
       $templateCache.put('ui-grid/selectionRowHeaderButtons',
         '<div>' +
-        '<a rp-node-selection-popover title="Select Tool Input" uuid="row.entity.uuid" ' +
+        '<a rp-node-selection-popover title="Select Tool Input"' +
         'ng-class="{\'ui-grid-row-selected\': row.isSelected}" ' +
         'class="ui-grid-selection-row-header-buttons" ' +
         'ng-click="selectButtonClick(row, $event); ' +

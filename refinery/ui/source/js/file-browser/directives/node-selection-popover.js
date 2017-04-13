@@ -18,11 +18,8 @@
     ) {
     return {
       restrict: 'AE',
-      scope: {
-        uuid: '='
-      },
       link: function (scope, element) {
-        // The script is in the base.html template.
+        // The script is in the data_set2.html template.
         var template = $templateCache.get('nodeselectionpopover.html');
         var popOverContent = $compile(template)(scope);
         $rootScope.insidePopover = false;
@@ -34,7 +31,6 @@
           container: 'body'
         };
         angular.element(element).popover(options);
-
         scope.closeSelectionPopover = function () {
           angular.element(element).popover('hide');
           angular.element('.ui-grid-selection-row-header-buttons').popover('enable');
