@@ -597,3 +597,6 @@ TEST_NON_SERIALIZED_APPS = ['core', 'django.contrib.contenttypes',
                             'django.contrib.auth']
 
 VISUALIZATION_ANNOTATION_BASE_PATH = "tool_manager/visualization_annotations"
+
+# To avoid Port conflicts between LiveServerTestCases http://bit.ly/2pb64KN
+os.environ["DJANGO_LIVE_TEST_SERVER_ADDRESS"] = "localhost:10000-12000"
