@@ -24,11 +24,11 @@
     vm.currentTypes = []; // tracks whether depths are pair or list
     vm.groupCollection = {}; // contains groups with their selected row's info
     vm.inputFileTypes = []; // maintains the required input types
-    vm.refreshFileMap = refreshFileMap;
-    vm.resetCurrents = resetCurrents;
-    vm.setGroupCollection = setGroupCollection;
-    vm.setToolInputGroup = setToolInputGroup;
-    vm.toolInputGroups = {}; // contains rows and their group info
+    vm.refreshFileMap = refreshFileMap; // method
+    vm.resetCurrents = resetCurrents; // method
+    vm.setGroupCollection = setGroupCollection; // method
+    vm.setNodeSelectCollection = setNodeSelectCollection; // method
+    vm.nodeSelectCollection = {}; // contains rows and their group info
 
     /*
     *-----------------------
@@ -66,24 +66,24 @@
       }
     }
 
-    function setToolInputGroup (inputTypeUuid, selectionObj) {
+    function setNodeSelectCollection (inputTypeUuid, selectionObj) {
       var nodeUuid = nodeService.activeNodeRow.uuid;
       if (selectionObj[inputTypeUuid]) {
-        if (_.has(vm.toolInputGroups, nodeUuid) === true) {
-          vm.toolInputGroups[nodeUuid].inputTypeList.push(inputTypeUuid);
-          vm.toolInputGroups[nodeUuid].groupList.push(angular.copy(vm.currentGroup));
+        if (_.has(vm.nodeSelectCollection, nodeUuid) === true) {
+          vm.nodeSelectCollection[nodeUuid].inputTypeList.push(inputTypeUuid);
+          vm.nodeSelectCollection[nodeUuid].groupList.push(angular.copy(vm.currentGroup));
         } else {
-          vm.toolInputGroups[nodeUuid] = {
+          vm.nodeSelectCollection[nodeUuid] = {
             inputTypeList: [inputTypeUuid],
             groupList: [angular.copy(vm.currentGroup)]
           };
         }
       } else {
         // remove property
-        for (var i = 0; i < vm.toolInputGroups[nodeUuid].inputTypeList.length; i ++) {
-          if (vm.toolInputGroups[nodeUuid].groupList[i] === vm.currentGroup) {
-            vm.toolInputGroups[nodeUuid].groupList.splice(i, 1);
-            vm.toolInputGroups[nodeUuid].inputTypeList.splice(i, 1);
+        for (var i = 0; i < vm.nodeSelectCollection[nodeUuid].inputTypeList.length; i ++) {
+          if (vm.nodeSelectCollection[nodeUuid].groupList[i] === vm.currentGroup) {
+            vm.nodeSelectCollection[nodeUuid].groupList.splice(i, 1);
+            vm.nodeSelectCollection[nodeUuid].inputTypeList.splice(i, 1);
             break;
           }
         }

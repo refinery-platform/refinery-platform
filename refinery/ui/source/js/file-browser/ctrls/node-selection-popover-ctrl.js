@@ -28,7 +28,7 @@
     vm.currentRow = nodeService.activeNodeRow;
     vm.selectNode = selectNode;
     vm.selectionObj = {};
-    vm.toolInputGroups = fileService.toolInputGroups;
+    vm.nodeSelection = fileService.nodeSelectCollection;
     vm.currentRow = fileService.currentRow;
     vm.attributes = fileService.attributesObj;
     vm.groupCollection = fileService.groupCollection;
@@ -41,7 +41,7 @@
 
     function selectNode (inputUuid) {
       vm.currentRow = nodeService.activeNodeRow;
-      fileService.setToolInputGroup(inputUuid, vm.selectionObj);
+      fileService.setNodeSelectCollection(inputUuid, vm.selectionObj);
       fileService.setGroupCollection(inputUuid, vm.selectionObj);
       vm.groupCollection = fileService.groupCollection;
     }
