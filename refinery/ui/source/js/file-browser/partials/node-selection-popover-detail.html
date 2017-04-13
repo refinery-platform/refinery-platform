@@ -5,10 +5,12 @@
         <li ng-repeat="inputType in NSPCtrl.inputFileTypes track by $index">
           <div class="checkbox">
             <label>
+              <!-- If there's a group already started for the inputFileType; checkbox selected-->
               <span
                 ng-if="NSPCtrl.groupCollection[NSPCtrl.currentGroup] &&
                 NSPCtrl.groupCollection[NSPCtrl.currentGroup][inputType.uuid].length > 0"
                 class="wrap-word">
+                <!-- TODO: Need to handle pairs vs lists here -->
                   <span ng-repeat="selectedFile in NSPCtrl.groupCollection[NSPCtrl.currentGroup][inputType.uuid]">
                     <input
                       type="checkbox"
@@ -18,6 +20,7 @@
                      {{ selectedFile[NSPCtrl.attributes.Name] }}
                   </span>
               </span>
+              <!-- If there's NOT a group already started for the inputFileType; checkbox not selected-->
               <span
                 ng-if="!NSPCtrl.groupCollection[NSPCtrl.currentGroup] ||
                 !NSPCtrl.groupCollection[NSPCtrl.currentGroup][inputType.uuid] ||
@@ -48,6 +51,7 @@
       {{ NSPCtrl.currentTypes[$index] }}: {{ group + 1 }}<span ng-if="$index
       < NSPCtrl.currentGroup.length - 1">,&nbsp</span>
     </li>
+     <!-- TODO: Show groups associated with row, add controls for viewing -->
   </ul>
   <div>
     <button
