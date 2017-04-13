@@ -1,5 +1,6 @@
 (function () {
   'use strict';
+
   describe('rpNodeSelectionPopoverDetail directive unit test', function () {
     beforeEach(module('refineryApp'));
     beforeEach(module('refineryFileBrowser'));
