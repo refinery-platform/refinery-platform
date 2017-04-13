@@ -595,3 +595,5 @@ TEST_RUNNER = "django.test.runner.DiscoverRunner"
 # `serialized_rollback` to function properly http://bit.ly/2l5gR30
 TEST_NON_SERIALIZED_APPS = ['core', 'django.contrib.contenttypes',
                             'django.contrib.auth']
+
+VISUALIZATION_ANNOTATION_BASE_PATH = "tool_manager/visualization_annotations"
