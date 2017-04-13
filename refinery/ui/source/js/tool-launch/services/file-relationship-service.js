@@ -64,6 +64,7 @@
       } else {
         // remove property
         for (var i = 0; i < vm.groupCollection[vm.currentGroup][inputTypeUuid].length; i ++) {
+          console.log(vm.groupCollection[vm.currentGroup][inputTypeUuid][i]);
           if (vm.groupCollection[vm.currentGroup][inputTypeUuid][i].uuid === nodeUuid) {
             vm.groupCollection[vm.currentGroup][inputTypeUuid].splice(i, 1);
             break;
@@ -77,9 +78,10 @@
       if (!nodeUuid) {
         nodeUuid = nodeService.activeNodeRow.uuid;
       }
+
       if (selectionObj[inputTypeUuid]) {
         if (_.has(vm.nodeSelectCollection, nodeUuid) === true) {
-          vm.nodeSelectCollection[nodeUuid].inputTypeList.push(inputTypeUuid);
+          vm.nodeSelectCollection[nodeUuid].inputTypeList.push(angular.copy(inputTypeUuid));
           vm.nodeSelectCollection[nodeUuid].groupList.push(angular.copy(vm.currentGroup));
         } else {
           vm.nodeSelectCollection[nodeUuid] = {

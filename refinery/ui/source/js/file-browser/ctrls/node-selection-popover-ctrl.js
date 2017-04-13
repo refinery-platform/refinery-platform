@@ -27,7 +27,7 @@
     vm.currentTypes = fileService.currentTypes;
     vm.currentRow = nodeService.activeNodeRow;
     vm.selectNode = selectNode;
-    vm.selectionObj = {};
+    vm.selectionObj = nodeService.selectionObj;
     vm.nodeSelection = fileService.nodeSelectCollection;
     vm.currentRow = fileService.currentRow;
     vm.attributes = fileService.attributesObj;
@@ -39,11 +39,17 @@
    * ---------------------------------------------------------
    */
 
-    function selectNode (inputUuid) {
+    function selectNode (inputUuid, deselectFileUuid) {
       vm.currentRow = nodeService.activeNodeRow;
-      fileService.setNodeSelectCollection(inputUuid, vm.selectionObj);
-      fileService.setGroupCollection(inputUuid, vm.selectionObj);
-      vm.groupCollection = fileService.groupCollection;
+      if (deselectFileUuid) {
+        fileService.setNodeSelectCollection(inputUuid, vm.selectionObj, deselectFileUuid);
+        fileService.setGroupCollection(inputUuid, vm.selectionObj, deselectFileUuid);
+        vm.groupCollection = fileService.groupCollection;
+      } else {
+        fileService.setNodeSelectCollection(inputUuid, vm.selectionObj);
+        fileService.setGroupCollection(inputUuid, vm.selectionObj);
+        vm.groupCollection = fileService.groupCollection;
+      }
     }
 
   /*
