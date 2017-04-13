@@ -218,10 +218,9 @@ class VisualizationDefinition(ToolDefinition):
         verbose_name = "Visualization Definition"
 
     def __str__(self):
-        return "{}: {} {} - {}:{}".format(
+        return "{}: {} - {} {}".format(
             self.tool_type,
             self.name,
-            self.uuid,
             self.docker_image_name,
             self.container_name
         )
