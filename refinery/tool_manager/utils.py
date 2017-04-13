@@ -47,10 +47,11 @@ class FileTypeValidationError(RuntimeError):
         error_message = (
             "Couldn't properly fetch FileType: {}.\n"
             "Valid FileTypes are {}.\n"
-            " {}".format(
+            "{}".format(
                 filetype,
                 [f.name for f in FileType.objects.all()],
-                error)
+                error
+            )
         )
 
         super(FileTypeValidationError, self).__init__(error_message)
