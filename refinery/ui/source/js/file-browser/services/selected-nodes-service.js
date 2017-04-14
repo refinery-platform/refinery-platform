@@ -11,6 +11,8 @@ function selectedNodesService ($window, selectedFilterService) {
   vm.selectedNodeGroupUuid = '';
   vm.defaultCurrentSelectionUuid = '';
   vm.resetNodeGroup = false;
+  vm.activeNodeRow = {};
+  vm.selectionObj = {}; // ui-grid maintains checkboxes for popover selection
 
   /**
    * Manually keep track of selected nodes which is neccessary due to dynamic

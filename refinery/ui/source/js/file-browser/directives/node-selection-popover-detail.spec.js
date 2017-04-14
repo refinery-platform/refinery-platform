@@ -1,9 +1,9 @@
 (function () {
   'use strict';
 
-  describe('rpToolDisplay component unit test', function () {
+  describe('rpNodeSelectionPopoverDetail directive unit test', function () {
     beforeEach(module('refineryApp'));
-    beforeEach(module('refineryToolLaunch'));
+    beforeEach(module('refineryFileBrowser'));
 
     var directiveElement;
 
@@ -14,17 +14,17 @@
       $window
     ) {
       $templateCache.put(
-        $window.getStaticUrl('partials/tool-launch/views/tool-display.html'),
-        '<div id="tool-display"></div>'
+        $window.getStaticUrl('partials/file-browser/partials/node-selection-popover-detail.html'),
+        '<div id="node-selection-popover"></div>'
       );
       var scope = $rootScope.$new();
-      var template = '<rp-tool-display></rp-tool-display>';
+      var template = '<rp-node-selection-popover-detail></rp-node-selection-popover-detail>';
       directiveElement = $compile(template)(scope);
       scope.$digest();
     }));
 
     it('generates the appropriate HTML', function () {
-      expect(directiveElement.html()).toContain('tool-display');
+      expect(directiveElement.html()).toContain('node-selection-popover');
       expect(directiveElement.html()).toContain('</div>');
     });
   });

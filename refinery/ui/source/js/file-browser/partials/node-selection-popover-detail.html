@@ -1,0 +1,64 @@
+<div id="node-selection-popover">
+  <div class="node-input-group">
+    <ul>
+      <form name="myForm">
+        <li ng-repeat="inputType in NSPCtrl.inputFileTypes track by $index">
+          <div class="checkbox">
+            <label>
+              <!-- If there's a group already started for the inputFileType; checkbox selected-->
+              <span
+                ng-if="NSPCtrl.groupCollection[NSPCtrl.currentGroup] &&
+                NSPCtrl.groupCollection[NSPCtrl.currentGroup][inputType.uuid].length > 0"
+                class="wrap-word">
+                <!-- TODO: Need to handle pairs vs lists here -->
+                  <span ng-repeat="selectedFile in NSPCtrl.groupCollection[NSPCtrl.currentGroup][inputType.uuid]">
+                    <input
+                      type="checkbox"
+                      ng-click="NSPCtrl.selectNode(inputType.uuid, selectedFile.uuid)"
+                      ng-model="NSPCtrl.selectionObj[inputType.uuid]"
+                    >
+                     {{ selectedFile[NSPCtrl.attributes.Name] }}
+                  </span>
+              </span>
+              <!-- If there's NOT a group already started for the inputFileType; checkbox not selected-->
+              <span
+                ng-if="!NSPCtrl.groupCollection[NSPCtrl.currentGroup] ||
+                !NSPCtrl.groupCollection[NSPCtrl.currentGroup][inputType.uuid] ||
+                NSPCtrl.groupCollection[NSPCtrl.currentGroup][inputType.uuid].length == 0">
+                <input
+                  type="checkbox"
+                  ng-click="NSPCtrl.selectNode(inputType.uuid)"
+                  ng-model="NSPCtrl.selectionObj[inputType.uuid]">
+                {{ inputType.name }}
+              </span>
+            </label>
+          </div>
+          <div ng-if="$index < NSPCtrl.inputFileTypes.length - 1">
+            <hr>
+          </div>
+        </li>
+      </form>
+    </ul>
+  </div>
+  <div>
+  <div class="refinery-subheader">
+    <h4>
+      Group
+    </h4>
+  </div>
+  <ul class="paragraph">
+    <li ng-repeat="group in NSPCtrl.currentGroup track by $index">
+      {{ NSPCtrl.currentTypes[$index] }}: {{ group + 1 }}<span ng-if="$index
+      < NSPCtrl.currentGroup.length - 1">,&nbsp</span>
+    </li>
+     <!-- TODO: Show groups associated with row, add controls for viewing -->
+  </ul>
+  <div>
+    <br>
+    <button
+      class="refinery-base btn btn-default btn-xs"
+      ng-click="closeSelectionPopover()">
+      Close
+    </button>
+  </div>
+</div>

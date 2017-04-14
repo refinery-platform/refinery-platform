@@ -21,7 +21,8 @@
   ) {
     var vm = this;
     vm.attributes = fileRelationshipService.attributesObj;
-    vm.currentPosition = fileRelationshipService.currentPosition; // maintains nav position
+    vm.currentGroup = fileRelationshipService.currentGroup; // maintains nav
+    // position
     vm.groups = []; // stores all the selected nodes for vm
     vm.navRight = navRight;
     vm.navLeft = navLeft;
@@ -33,11 +34,11 @@
    * ---------------------------------------------------------
    */
     function navLeft (depth) {
-      vm.currentPosition[depth]--;
+      vm.currentGroup[depth]--;
     }
 
     function navRight (depth) {
-      vm.currentPosition[depth]++;
+      vm.currentGroup[depth]++;
     }
 
     // PROBABLY SHOULD move 'remove groups' to input group ctrl

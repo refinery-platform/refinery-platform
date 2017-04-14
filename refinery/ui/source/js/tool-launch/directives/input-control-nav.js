@@ -5,16 +5,18 @@
     .module('refineryToolLaunch')
     .directive('rpInputControlNav', rpInputControlNav);
 
-  function rpInputControlNav () {
+  rpInputControlNav.$inject = ['$window'];
+
+  function rpInputControlNav ($window) {
     return {
       restrict: 'E',
       scope: {
         collection: '=',
         counter: '='
       },
-      templateUrl: ['$window', function ($window) {
+      templateUrl: function () {
         return $window.getStaticUrl('partials/tool-launch/partials/input-control-nav.html');
-      }]
+      }
     };
   }
 })();
