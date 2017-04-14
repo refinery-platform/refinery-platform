@@ -14,7 +14,7 @@
       $window
     ) {
       $templateCache.put(
-        $window.getStaticUrl('partials/tool-launch/partials/tool-display.html'),
+        $window.getStaticUrl('partials/tool-launch/views/tool-display.html'),
         '<div id="tool-display"></div>'
       );
       var scope = $rootScope.$new();
