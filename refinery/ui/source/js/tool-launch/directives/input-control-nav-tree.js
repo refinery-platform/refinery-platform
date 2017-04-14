@@ -5,7 +5,9 @@
     .module('refineryToolLaunch')
     .directive('rpInputControlNavTree', rpInputControlNavTree);
 
-  function rpInputControlNavTree () {
+  rpInputControlNavTree.$inject = ['$window'];
+
+  function rpInputControlNavTree ($window) {
     return {
       restrict: 'E',
       controller: 'InputControlNavTreeCtrl',
@@ -14,9 +16,9 @@
         member: '=',
         depth: '='
       },
-      templateUrl: ['$window', function ($window) {
+      templateUrl: function () {
         return $window.getStaticUrl('partials/tool-launch/partials/input-control-nav-tree.html');
-      }]
+      }
     };
   }
 })();
