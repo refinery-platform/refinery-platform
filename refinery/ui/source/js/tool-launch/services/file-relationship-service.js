@@ -126,7 +126,7 @@
      */
     function refreshFileMap () {
       var scaledCopy = toolsService.selectedTool.file_relationship;
-
+      // initialize groups and types
       while (scaledCopy.file_relationship.length > 0) {
         vm.currentGroup.push(0);
         vm.currentTypes.push(scaledCopy.value_type);
