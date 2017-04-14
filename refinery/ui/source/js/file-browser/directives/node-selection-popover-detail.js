@@ -5,12 +5,18 @@
     .module('refineryFileBrowser')
     .directive('rpNodeSelectionPopoverDetail', rpNodeSelectionPopoverDetail);
 
-  function rpNodeSelectionPopoverDetail () {
+  rpNodeSelectionPopoverDetail.$inject = ['$window'];
+
+  function rpNodeSelectionPopoverDetail ($window) {
     return {
       restrict: 'E',
       controller: 'NodeSelectionPopoverCtrl',
       controllerAs: 'NSPCtrl',
-      templateUrl: '/static/partials/file-browser/partials/node-selection-popover-detail.html'
+      templateUrl: function () {
+        return $window.getStaticUrl(
+          'partials/file-browser/partials/node-selection-popover-detail.html'
+        );
+      }
     };
   }
 })();

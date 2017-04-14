@@ -10,10 +10,11 @@
     beforeEach(inject(function (
       $compile,
       $rootScope,
-      $templateCache
+      $templateCache,
+      $window
     ) {
       $templateCache.put(
-        '/static/partials/file-browser/partials/node-selection-popover-detail.html',
+        $window.getStaticUrl('partials/file-browser/partials/node-selection-popover-detail.html'),
         '<div id="node-selection-popover"></div>'
       );
       var scope = $rootScope.$new();
