@@ -492,20 +492,27 @@
         <div class="row m-t-1-4 m-b-1-4">
           <div class="col-sm-12 col-md-12 col-lg-12">
             <div class="m-t-1 m-b-1">
-              Does the <strong>Data File Column</strong> reference any urls?
-                <span class="btn-group" data-toggle="buttons">
-                  <label class="refinery-base btn btn-default btn-sm active">
-                    <input type="radio" name="options" id="option1"
-                      autocomplete="off" checked> Yes
-                  </label>
-                  <label class="refinery-base btn btn-default btn-sm">
-                    <input type="radio" name="options" id="option2"
-                      autocomplete="off"> No
-                  </label>
-                </span>
+              Does the <strong>Data File Column</strong> reference any local
+              files?
+              <label class="p-l-1-2">
+                <input
+                  type="radio"
+                  name="options"
+                  ng-value="true"
+                  ng-model="metadataTable.showFileUpload">
+                Yes
+              </label>
+              <label class="p-l-1-2">
+                <input
+                  type="radio"
+                  name="options"
+                  ng-value="false"
+                  ng-model="metadataTable.showFileUpload"
+                  checked>
+                No
+              </label>
             </div>
-
-            <div class="m-t-1 m-b-1">
+            <div class="m-t-1 m-b-1" ng-if="metadataTable.showFileUpload">
               <rp-file-upload></rp-file-upload>
             </div>
           </div>
