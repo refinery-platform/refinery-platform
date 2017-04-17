@@ -485,22 +485,33 @@
         </div>
       </div>
 
-      <div class="m-t-1 m-b-1">
-        <rp-file-upload></rp-file-upload>
-      </div>
-
       <div>
         <div class="refinery-subheader m-t-1">
            <h1>Complete Submission</h1>
         </div>
         <div class="row m-t-1-4 m-b-1-4">
           <div class="col-sm-12 col-md-12 col-lg-12">
-            <button
-              class="refinery-base btn btn-default"
-              ng-click="metadataTable.checkFiles()"
-              ng-disabled="!metadataTable.dataFileColumn">
-              Check Data Files
-            </button>
+            <div class="m-t-1 m-b-1">
+              Does the <strong>Data File Column</strong> reference any urls?
+                <span class="btn-group" data-toggle="buttons">
+                  <label class="refinery-base btn btn-default btn-sm active">
+                    <input type="radio" name="options" id="option1"
+                      autocomplete="off" checked> Yes
+                  </label>
+                  <label class="refinery-base btn btn-default btn-sm">
+                    <input type="radio" name="options" id="option2"
+                      autocomplete="off"> No
+                  </label>
+                </span>
+            </div>
+
+            <div class="m-t-1 m-b-1">
+              <rp-file-upload></rp-file-upload>
+            </div>
+          </div>
+        </div>
+        <div class="row m-t-1-4 m-b-1-4">
+          <div class="col-sm-12 col-md-12 col-lg-12">
             <button
               class="refinery-base btn btn-primary"
               ng-click="metadataTable.startImport()"
