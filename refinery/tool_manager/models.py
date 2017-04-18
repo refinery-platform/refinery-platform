@@ -154,6 +154,20 @@ class ToolDefinition(models.Model):
     def __str__(self):
         return "{}: {} {}".format(self.tool_type, self.name, self.uuid)
 
+    def get_container_input_path(self):
+        """
+        Fetch the container_input_path of a VisualizationDefinition
+        :return: VisualizationDefinition.container_input_path if available,
+        otherwise `None`
+        """
+        try:
+            visualization_definition = self.get_visualization_definition()
+        except (VisualizationDefinition.DoesNotExist,
+                VisualizationDefinition.MultipleObjectsReturned):
+            return None
+        else:
+            return visualization_definition.container_input_path
+
     def get_container_name(self):
         """
         Fetch the container_name of a VisualizationDefinition
@@ -182,6 +196,20 @@ class ToolDefinition(models.Model):
         else:
             return visualization_definition.docker_image_name
 
+    def get_galaxy_workflow_id(self):
+        """
+        Fetch the galaxy_workflow_id of a WorkflowDefinition
+        :return: WorkflowDefinition.galaxy_workflow_id if available,
+        otherwise `None`
+        """
+        try:
+            workflow_definition = self.get_workflow_definition()
+        except (WorkflowDefinition.DoesNotExist,
+                WorkflowDefinition.MultipleObjectsReturned):
+            return None
+        else:
+            return workflow_definition.galaxy_workflow_id
+
     def get_relative_container_url(self):
         """
         Construct & return the relative url of our VisualizationDefinition's
@@ -200,6 +228,21 @@ class ToolDefinition(models.Model):
                 VisualizationDefinition.MultipleObjectsReturned) as e:
             logger.info(
                 "Couldn't properly fetch VisualizationDefinition with UUID: "
+                "{} {}".format(self.uuid, e)
+            )
+            raise
+
+    def get_workflow_definition(self):
+        """
+        Fetch the WorkflowDefinition associated with a ToolDefinition
+        :return: <WorkflowDefinition> if available
+        """
+        try:
+            return WorkflowDefinition.objects.get(uuid=self.uuid)
+        except (WorkflowDefinition.DoesNotExist,
+                WorkflowDefinition.MultipleObjectsReturned) as e:
+            logger.info(
+                "Couldn't properly fetch WorkflowDefinition with UUID: "
                 "{} {}".format(self.uuid, e)
             )
             raise
@@ -227,6 +270,24 @@ class VisualizationDefinition(ToolDefinition):
             self.name,
             self.docker_image_name,
             self.container_name
+        )
+
+
+class WorkflowDefinition(ToolDefinition):
+    """
+    An Extension of the ToolDefinition model with fields particular to
+    Galaxy Workflows
+    """
+    galaxy_workflow_id = models.CharField(max_length=250)
+
+    class Meta:
+        verbose_name = "Workflow Definition"
+
+    def __str__(self):
+        return "{}: {} - {}".format(
+            self.tool_type,
+            self.name,
+            self.galaxy_workflow_id,
         )
 
 
