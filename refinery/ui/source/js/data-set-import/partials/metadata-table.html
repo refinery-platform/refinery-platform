@@ -511,6 +511,16 @@
                   checked>
                 No
               </label>
+              <a
+                popover-placement="right"
+                uib-popover="If Data File Column contains the path to
+                 local data files, they will need to need to be uploaded."
+                popover-title="Import Now"
+                popover-trigger="focus"
+                popover-append-to-body="true"
+                tabindex="0">
+                    <i class="fa fa-question-circle info-icon icon-only"></i>
+                </a>
             </div>
             <div class="m-t-1 m-b-1" ng-if="metadataTable.showFileUpload">
               <rp-file-upload></rp-file-upload>
