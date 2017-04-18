@@ -88,6 +88,11 @@ class ToolDefinitionSerializer(serializers.ModelSerializer):
         required=False,
         allow_null=False
     )
+    galaxy_workflow_id = serializers.SerializerMethodField(
+        method_name="_get_galaxy_workflow_id",
+        required=False,
+        allow_null=False
+    )
 
     parameters = ParameterSerializer(many=True, allow_null=True)
 
@@ -118,7 +123,7 @@ class ToolDefinitionSerializer(serializers.ModelSerializer):
         if obj.get_docker_image_name() is None:
             ret.pop("docker_image_name")
 
-        if obj.get_docker_image_name() is None:
+        if obj.get_galaxy_workflow_id() is None:
             ret.pop("galaxy_workflow_id")
 
         return ret
