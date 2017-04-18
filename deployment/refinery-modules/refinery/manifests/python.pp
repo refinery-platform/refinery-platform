@@ -1,6 +1,6 @@
 class refinery::python {
 
-  class { '::postgresql::lib::devel':
+  class { '::postgresql::lib::python':
   }
 
   class { '::python':
@@ -32,7 +32,7 @@ class refinery::python {
     group   => $::app_group,
     require => [
       Package[$virtualenv_dependencies],
-      Class['::postgresql::lib::devel'],
+      Class['::postgresql::lib::python'],
     ]
   }
 

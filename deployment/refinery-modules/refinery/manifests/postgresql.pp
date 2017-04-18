@@ -14,7 +14,7 @@ class refinery::postgresql {
     ->
     class { '::postgresql::server':
       # to make remote connections via SSH tunnel easier
-      ipv4acls => ["host all $::app_user 127.0.0.1/32 trust"],
+      ipv4acls => ["host all ${::app_user} 127.0.0.1/32 trust"],
     }
 
     ::postgresql::server::role { $::app_user:
