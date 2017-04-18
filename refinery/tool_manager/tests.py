@@ -633,6 +633,10 @@ class ToolLaunchTests(StaticLiveServerTestCase):
 
             tool_launch_instance = VisualizationToolLaunch.objects.all()[0]
             self.assertEqual(tool_launch_instance.get_owner(), self.user)
+            self.assertEqual(
+                tool_launch_instance.get_tool_type(),
+                ToolDefinition.VISUALIZATION
+            )
 
             response = requests.get(
                 urljoin(
@@ -682,7 +686,10 @@ class ToolLaunchTests(StaticLiveServerTestCase):
 
             tool_launch_instance = VisualizationToolLaunch.objects.all()[0]
             self.assertEqual(tool_launch_instance.get_owner(), self.user)
-
+            self.assertEqual(
+                tool_launch_instance.get_tool_type(),
+                ToolDefinition.VISUALIZATION
+            )
             # Check to see if IGV shows what we want
             igv_url = urljoin(
                 self.live_server_url,
