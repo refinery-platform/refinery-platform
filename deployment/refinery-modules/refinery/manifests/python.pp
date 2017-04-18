@@ -1,5 +1,8 @@
 class refinery::python {
 
+  class { '::postgresql::lib::devel':
+  }
+
   class { '::python':
     dev        => 'present',
     gunicorn   => 'absent',

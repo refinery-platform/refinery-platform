@@ -12,9 +12,6 @@ class refinery::postgresql {
       ipv4acls => ["host all $::app_user 127.0.0.1/32 trust"],
     }
 
-    class { '::postgresql::lib::devel':
-    }
-
     ::postgresql::server::role { $::app_user:
       createdb => true,
     }
