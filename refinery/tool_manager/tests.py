@@ -561,7 +561,7 @@ class ToolLaunchConfigurationTests(StaticLiveServerTestCase):
         self.url_root = '/api/v2/tools'
 
     def tearDown(self):
-        self.browser.close()
+        self.browser.quit()
         self.display.stop()
         try:
             visualization_definition = VisualizationDefinition.objects.get(

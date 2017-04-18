@@ -43,7 +43,7 @@ class SeleniumTestBase(StaticLiveServerTestCase):
             create_public_group()
 
     def tearDown(self):
-        self.browser.close()
+        self.browser.quit()
         self.display.stop()
 
     class Meta:
