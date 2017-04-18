@@ -56,7 +56,8 @@ class ToolLaunchViewSet(GenericViewSet):
             if tool_definition.tool_type == ToolDefinition.VISUALIZATION:
                 # TODO: Talk to Node API and get urls from node UUIDs in the
                 # `file_relationships` data structure
-                # get_urls_from_node_uuids()
+                # ToolLaunch.parse_file_relationships_string()
+                # ToolLaunch.populate_url_from_node_uuid()
 
                 visualization_tool = VisualizationToolLaunch.objects.create(
                     tool_definition=tool_definition,
