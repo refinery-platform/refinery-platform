@@ -10,6 +10,7 @@ from django_extensions.db.fields import UUIDField
 from django_docker_engine.docker_utils import DockerContainerSpec
 from docker.errors import APIError
 
+from core.models import Analysis, OwnableResource
 from file_store.models import FileType
 
 logger = logging.getLogger(__name__)
@@ -211,6 +212,11 @@ class VisualizationDefinition(ToolDefinition):
     """
     docker_image_name = models.CharField(max_length=255)
     container_name = models.CharField(max_length=150)
+    container_input_path = models.CharField(
+        max_length=500,
+        blank=True,
+        null=True
+    )
 
     class Meta:
         verbose_name = "Visualization Definition"
@@ -266,24 +272,19 @@ def delete_input_files_and_file_relationships(sender, instance, *args,
         file_relationship.delete()
 
 
-class ToolLaunchConfiguration(models.Model):
+class ToolLaunch(models.Model):
     """
-    A ToolLaunchConfiguration is an abstract representation of the
+    A ToolLaunch is an abstract representation of the
     information it will take to launch a Refinery Tool
     """
     file_relationships = models.TextField()
     parameters = models.TextField()
     tool_definition = models.ForeignKey(ToolDefinition)
-    start_date = models.DateTimeField(auto_now_add=True)
-    # TODO: status. OwnableResource??? ????
-
-    class Meta:
-        abstract = True
 
     def __str__(self):
-        return "Tool Launch: {} - {}".format(
-            self.tool_definition.name,
-            self.start_date
+        return "Tool Launch: {} {}".format(
+            self.get_tool_type(),
+            self.tool_definition.name
         )
 
     def get_tool_type(self):
@@ -296,18 +297,35 @@ class ToolLaunchConfiguration(models.Model):
         pass
 
 
-class WorkflowToolLaunch(ToolLaunchConfiguration):
+class WorkflowToolLaunch(ToolLaunch):
+    analysis = models.OneToOneField(Analysis)
+
+    def __str__(self):
+        return "Tool Launch: {} {} - Analysis: {}".format(
+            self.get_tool_type(),
+            self.tool_definition.name,
+            self.analysis.uuid
+        )
+
     def launch(self):
         pass
 
 
-class VisualizationToolLaunch(ToolLaunchConfiguration):
+class VisualizationToolLaunch(OwnableResource, ToolLaunch):
+    class Meta:
+        verbose_name = "visualizationtoollaunch"
+        permissions = (
+            ('read_%s' % verbose_name, 'Can read %s' % verbose_name),
+        )
+
     def launch(self):
         container = DockerContainerSpec(
             image_name=self.tool_definition.get_docker_image_name(),
             container_name=self.tool_definition.get_container_name(),
             labels={self.tool_definition.uuid: "visualization_uuid"},
-            container_input_path="/var/www/data/input.json",
+            container_input_path=(
+                self.tool_definition.get_container_input_path()
+            ),
             input={"file_relationships": self.file_relationships}
         )
 
