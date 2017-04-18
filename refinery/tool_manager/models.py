@@ -333,7 +333,7 @@ def delete_input_files_and_file_relationships(sender, instance, *args,
         file_relationship.delete()
 
 
-class ToolLaunch(models.Model):
+class ToolLaunch(OwnableResource):
     """
     A ToolLaunch is an abstract representation of the
     information it will take to launch a Refinery Tool
@@ -372,7 +372,7 @@ class WorkflowToolLaunch(ToolLaunch):
         pass
 
 
-class VisualizationToolLaunch(OwnableResource, ToolLaunch):
+class VisualizationToolLaunch(ToolLaunch):
     class Meta:
         verbose_name = "visualizationtoollaunch"
         permissions = (
