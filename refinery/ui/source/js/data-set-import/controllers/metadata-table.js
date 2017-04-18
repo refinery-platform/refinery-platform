@@ -18,6 +18,7 @@ function MetadataTableImportCtrl (
   this.d3 = d3;
   this.$uibModal = $uibModal;
   this.fileSources = fileSources;
+  this.showFileUpload = false;
   this.tabularFileImportApi = tabularFileImportApi;
   this.metadataStatusService = metadataStatusService;
   this.whiteSpaceStripFlag = false;
