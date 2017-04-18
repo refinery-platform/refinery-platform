@@ -3,7 +3,7 @@ from rest_framework_recursive.fields import RecursiveField
 
 from file_store.models import FileType
 from .models import (FileRelationship, InputFile, OutputFile, Parameter,
-                     ToolDefinition)
+                     ToolDefinition, ToolLaunch)
 
 
 class FileTypeSerializer(serializers.ModelSerializer):
@@ -73,11 +73,7 @@ class OutputFileSerializer(serializers.ModelSerializer):
 class ToolDefinitionSerializer(serializers.ModelSerializer):
     file_relationship = FileRelationshipSerializer()
     output_files = OutputFileSerializer(many=True)
-    container_name = serializers.SerializerMethodField(
-        method_name="_get_container_name",
-        required=False,
-        allow_null=False
-    )
+
     container_input_path = serializers.SerializerMethodField(
         method_name="_get_container_input_path",
         required=False,
@@ -96,9 +92,6 @@ class ToolDefinitionSerializer(serializers.ModelSerializer):
 
     parameters = ParameterSerializer(many=True, allow_null=True)
 
-    def _get_container_name(self, obj):
-        return obj.get_container_name()
-
     def _get_container_input_path(self, obj):
         return obj.get_container_input_path()
 
@@ -110,24 +103,69 @@ class ToolDefinitionSerializer(serializers.ModelSerializer):
 
     def to_representation(self, obj):
         # get the original serialized objects representation
-        ret = super(ToolDefinitionSerializer, self).to_representation(obj)
+        serialized_representation = super(
+            ToolDefinitionSerializer,
+            self
+        ).to_representation(obj)
 
-        # Remove some fields if we aren't dealing with an Extension of the
-        # ToolDefinition model
-        if obj.get_container_name() is None:
-            ret.pop("container_name")
+        # Remove some fields dependant on the Type of ToolDefinition we're
+        # dealing with
+        if obj.tool_type == ToolDefinition.VISUALIZATION:
+            serialized_representation.pop("galaxy_workflow_id")
 
-        if obj.get_container_input_path() is None:
-            ret.pop("container_input_path")
+        if obj.tool_type == ToolDefinition.WORKFLOW:
+            serialized_representation.pop("container_input_path")
+            serialized_representation.pop("docker_image_name")
 
-        if obj.get_docker_image_name() is None:
-            ret.pop("docker_image_name")
-
-        if obj.get_galaxy_workflow_id() is None:
-            ret.pop("galaxy_workflow_id")
-
-        return ret
+        return serialized_representation
 
     class Meta:
         model = ToolDefinition
         exclude = ["id"]
+
+
+class ToolLaunchSerializer(serializers.ModelSerializer):
+    analysis = serializers.SerializerMethodField(
+        method_name="_get_analysis",
+        required=False,
+        allow_null=False
+    )
+    container_name = serializers.SerializerMethodField(
+        method_name="_get_container_name",
+        required=False,
+        allow_null=False
+    )
+    relative_container_url = serializers.SerializerMethodField(
+        method_name="_get_relative_container_url",
+        required=False,
+        allow_null=False
+    )
+
+    class Meta:
+        model = ToolLaunch
+
+    def _get_analysis(self, obj):
+        return obj.get_analysis()
+
+    def _get_container_name(self, obj):
+        return obj.get_container_name()
+
+    def _get_relative_container_url(self, obj):
+        return obj.get_relative_container_url()
+
+    def to_representation(self, obj):
+        # get the original serialized objects representation
+        serialized_representation = super(
+            ToolLaunchSerializer,
+            self
+        ).to_representation(obj)
+
+        # Remove some fields dependant on the Type of ToolDefinition we're
+        # dealing with
+        if obj.get_tool_type() == ToolDefinition.VISUALIZATION:
+            serialized_representation.pop("analysis")
+        if obj.get_tool_type() == ToolDefinition.WORKFLOW:
+            serialized_representation.pop("container_name")
+            serialized_representation.pop("relative_container_url")
+
+        return serialized_representation

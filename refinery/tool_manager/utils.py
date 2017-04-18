@@ -86,12 +86,6 @@ def create_tool_definition(annotation_data):
             container_input_path=annotation["container_input_path"]
         )
 
-        # Docker doesn't like hyphens in container names
-        tool_definition.container_name = (
-            tool_definition.uuid.replace("-", "")
-        )
-        tool_definition.save()
-
     create_and_associate_output_files(
         tool_definition,
         annotation["output_files"]

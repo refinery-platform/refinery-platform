@@ -20,7 +20,8 @@ from selenium_testing.utils import (MAX_WAIT, wait_until_class_visible)
 
 from .models import (FileRelationship, GalaxyParameter, InputFile,
                      OutputFile, Parameter, ToolDefinition,
-                     VisualizationDefinition, VisualizationToolLaunch)
+                     VisualizationDefinition, VisualizationToolLaunch,
+                     ToolLaunch)
 from .utils import (create_tool_definition,
                     FileTypeValidationError,
                     validate_tool_annotation,
@@ -142,9 +143,6 @@ class ToolDefinitionAPITests(APITestCase):
         """ToolDefinitions for Visualizations will have extra fields"""
         for tool_definition in self.get_response.data:
             if tool_definition["tool_type"] == ToolDefinition.VISUALIZATION:
-                self.assertIn(
-                    "container_name", tool_definition.keys()
-                )
                 self.assertIn(
                     "container_input_path", tool_definition.keys()
                 )
@@ -583,21 +581,23 @@ class ToolLaunchTests(StaticLiveServerTestCase):
         self.user = User.objects.create_user(self.username, '', self.password)
         self.container_name = ""
         self.factory = APIRequestFactory()
-        self.view = ToolLaunchViewSet.as_view({'post': 'launch'})
+        self.view = ToolLaunchViewSet.as_view({'post': 'create'})
         self.url_root = '/api/v2/tools'
 
     def tearDown(self):
         self.browser.quit()
         self.display.stop()
         try:
-            visualization_definition = VisualizationDefinition.objects.get(
+            visualization_tool_launch = VisualizationToolLaunch.objects.get(
                 container_name=self.container_name
             )
         except VisualizationDefinition.DoesNotExist:
             pass
         else:
             # Purge Docker Containers that we've spun up
-            DockerClientWrapper().purge_by_label(visualization_definition.uuid)
+            DockerClientWrapper().purge_by_label(
+                visualization_tool_launch.uuid
+            )
 
     def test_visualization_container_launch_and_access_hello_world(self):
         with open(
@@ -615,8 +615,6 @@ class ToolLaunchTests(StaticLiveServerTestCase):
             self.assertTrue(mocked_method.called)
             self.assertEqual(ToolDefinition.objects.count(), 1)
             self.td = ToolDefinition.objects.all()[0]
-            self.container_name = self.td.get_container_name()
-
             self.post_data = {
                 "tool_definition_uuid": self.td.uuid,
                 "file_relationships": "",
@@ -631,17 +629,19 @@ class ToolLaunchTests(StaticLiveServerTestCase):
             force_authenticate(self.post_request, self.user)
             self.post_response = self.view(self.post_request)
 
-            tool_launch_instance = VisualizationToolLaunch.objects.all()[0]
-            self.assertEqual(tool_launch_instance.get_owner(), self.user)
+            tool_launch = ToolLaunch.objects.all()[0]
+            self.container_name = tool_launch.get_container_name()
+            self.assertEqual(tool_launch.get_owner(), self.user)
             self.assertEqual(
-                tool_launch_instance.get_tool_type(),
+                tool_launch.get_tool_type(),
                 ToolDefinition.VISUALIZATION
             )
 
             response = requests.get(
                 urljoin(
                     self.live_server_url,
-                    self.td.get_relative_container_url()
+                    tool_launch.get_visualization_tool_launch(
+                    ).get_relative_container_url()
                 )
             )
             self.assertIn("Welcome to nginx!", response.content)
@@ -662,7 +662,6 @@ class ToolLaunchTests(StaticLiveServerTestCase):
             self.assertTrue(mocked_method.called)
             self.assertEqual(ToolDefinition.objects.count(), 1)
             self.td = ToolDefinition.objects.all()[0]
-            self.container_name = self.td.get_container_name()
 
             # Create mock ToolLaunchConfiguration
             self.post_data = {
@@ -684,16 +683,18 @@ class ToolLaunchTests(StaticLiveServerTestCase):
             force_authenticate(self.post_request, self.user)
             self.post_response = self.view(self.post_request)
 
-            tool_launch_instance = VisualizationToolLaunch.objects.all()[0]
-            self.assertEqual(tool_launch_instance.get_owner(), self.user)
+            tool_launch = ToolLaunch.objects.all()[0]
+            self.container_name = tool_launch.get_container_name()
+            self.assertEqual(tool_launch.get_owner(), self.user)
             self.assertEqual(
-                tool_launch_instance.get_tool_type(),
+                tool_launch.get_tool_type(),
                 ToolDefinition.VISUALIZATION
             )
             # Check to see if IGV shows what we want
             igv_url = urljoin(
                 self.live_server_url,
-                self.td.get_relative_container_url()
+                tool_launch.get_visualization_tool_launch(
+                ).get_relative_container_url()
             )
 
             self.browser.get(igv_url)

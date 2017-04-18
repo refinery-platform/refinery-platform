@@ -1,5 +1,6 @@
 import logging
 
+from django.core.validators import RegexValidator
 from django.db import models
 from django.db.models.signals import post_delete, pre_delete
 from django.dispatch import receiver
@@ -168,20 +169,6 @@ class ToolDefinition(models.Model):
         else:
             return visualization_definition.container_input_path
 
-    def get_container_name(self):
-        """
-        Fetch the container_name of a VisualizationDefinition
-        :return: VisualizationDefinition.container_name if available,
-        otherwise `None`
-        """
-        try:
-            visualization_definition = self.get_visualization_definition()
-        except (VisualizationDefinition.DoesNotExist,
-                VisualizationDefinition.MultipleObjectsReturned):
-            return None
-        else:
-            return visualization_definition.container_name
-
     def get_docker_image_name(self):
         """
         Fetch the docker_image_name of a VisualizationDefinition
@@ -209,13 +196,6 @@ class ToolDefinition(models.Model):
             return None
         else:
             return workflow_definition.galaxy_workflow_id
-
-    def get_relative_container_url(self):
-        """
-        Construct & return the relative url of our VisualizationDefinition's
-        container
-        """
-        return "/api/v2/docker/{}".format(self.get_container_name())
 
     def get_visualization_definition(self):
         """
@@ -254,7 +234,6 @@ class VisualizationDefinition(ToolDefinition):
     Visualization tools
     """
     docker_image_name = models.CharField(max_length=255)
-    container_name = models.CharField(max_length=150)
     container_input_path = models.CharField(
         max_length=500,
         blank=True,
@@ -269,7 +248,6 @@ class VisualizationDefinition(ToolDefinition):
             self.tool_type,
             self.name,
             self.docker_image_name,
-            self.container_name
         )
 
 
@@ -342,14 +320,73 @@ class ToolLaunch(OwnableResource):
     parameters = models.TextField()
     tool_definition = models.ForeignKey(ToolDefinition)
 
+    class Meta:
+        verbose_name = "toollaunch"
+        permissions = (
+            ('read_%s' % verbose_name, 'Can read %s' % verbose_name),
+        )
+
     def __str__(self):
         return "Tool Launch: {} {}".format(
             self.get_tool_type(),
             self.tool_definition.name
         )
 
+    def get_analysis(self):
+        try:
+            workflow_tool_launch = self.get_workflow_tool_launch()
+        except (WorkflowToolLaunch.DoesNotExist,
+                WorkflowToolLaunch.MultipleObjectsReturned):
+            return None
+        else:
+            return workflow_tool_launch.analysis
+
+    def get_container_name(self):
+        """
+        Fetch the container_name of a VisualizationDefinition
+        :return: VisualizationDefinition.container_name if available,
+        otherwise `None`
+        """
+        try:
+            visualization_tool_launch = self.get_visualization_tool_launch()
+        except (VisualizationDefinition.DoesNotExist,
+                VisualizationDefinition.MultipleObjectsReturned):
+            return None
+        else:
+            return visualization_tool_launch.container_name
+
     def get_tool_type(self):
         return self.tool_definition.tool_type
+
+    def get_workflow_tool_launch(self):
+        """
+        Fetch the WorkflowToolLaunch associated with a ToolDefinition
+        :return: <WorkflowToolLaunch> if available
+        """
+        try:
+            return WorkflowToolLaunch.objects.get(uuid=self.uuid)
+        except (WorkflowToolLaunch.DoesNotExist,
+                WorkflowToolLaunch.MultipleObjectsReturned) as e:
+            logger.info(
+                "Couldn't properly fetch WorkflowToolLaunch with UUID: "
+                "{} {}".format(self.uuid, e)
+            )
+            raise
+
+    def get_visualization_tool_launch(self):
+        """
+        Fetch the VisualizationToolLaunch associated with a ToolDefinition
+        :return: <VisualizationToolLaunch> if available
+        """
+        try:
+            return VisualizationToolLaunch.objects.get(uuid=self.uuid)
+        except (VisualizationToolLaunch.DoesNotExist,
+                VisualizationToolLaunch.MultipleObjectsReturned) as e:
+            logger.info(
+                "Couldn't properly fetch VisualizationToolLaunch with UUID: "
+                "{} {}".format(self.uuid, e)
+            )
+            raise
 
     def parse_file_relationships_string(self):
         pass
@@ -361,11 +398,14 @@ class ToolLaunch(OwnableResource):
 class WorkflowToolLaunch(ToolLaunch):
     analysis = models.OneToOneField(Analysis)
 
+    class Meta:
+        verbose_name = "workflow tool launch"
+
     def __str__(self):
         return "Tool Launch: {} {} - Analysis: {}".format(
             self.get_tool_type(),
             self.tool_definition.name,
-            self.analysis.uuid
+            self.get_analysis()
         )
 
     def launch(self):
@@ -373,17 +413,35 @@ class WorkflowToolLaunch(ToolLaunch):
 
 
 class VisualizationToolLaunch(ToolLaunch):
+    container_name = models.CharField(
+        max_length=250,
+        unique=True,
+        validators=[
+            RegexValidator(
+                regex=r'^[a-zA-Z0-9][a-zA-Z0-9_.-]$',
+                message=(
+                    '`container_name` must adhere to Docker specs. '
+                    'See here: http://bit.ly/2pPCuXM'
+                ),
+            ),
+        ]
+                                      )
+
     class Meta:
-        verbose_name = "visualizationtoollaunch"
-        permissions = (
-            ('read_%s' % verbose_name, 'Can read %s' % verbose_name),
-        )
+        verbose_name = "visualization tool launch"
+
+    def get_relative_container_url(self):
+        """
+        Construct & return the relative url of our VisualizationDefinition's
+        container
+        """
+        return "/api/v2/docker/{}".format(self.container_name)
 
     def launch(self):
         container = DockerContainerSpec(
             image_name=self.tool_definition.get_docker_image_name(),
-            container_name=self.tool_definition.get_container_name(),
-            labels={self.tool_definition.uuid: "visualization_uuid"},
+            container_name=self.container_name,
+            labels={self.uuid: "visualization_uuid"},
             container_input_path=(
                 self.tool_definition.get_container_input_path()
             ),
@@ -395,6 +453,7 @@ class VisualizationToolLaunch(ToolLaunch):
         except APIError as e:
             return HttpResponseServerError(content=e)
         else:
+            # TODO: probably need something better than a redirect
             return redirect(
-                self.tool_definition.get_relative_container_url()
+                self.get_relative_container_url()
             )
