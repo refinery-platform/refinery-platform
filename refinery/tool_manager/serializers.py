@@ -31,7 +31,7 @@ class ParameterSerializer(serializers.ModelSerializer):
         ret = super(ParameterSerializer, self).to_representation(obj)
 
         # Remove the `galaxy_workflow_step` field from the api response if it
-        # isn't available (Parameter objects for VisualizationDefinition-based
+        # isn't available (Parameter objects for Visualization-based
         # ToolDefinitions won't have this field for example)
         if obj.get_galaxy_workflow_step() is None:
             ret.pop("galaxy_workflow_step")
@@ -78,7 +78,11 @@ class ToolDefinitionSerializer(serializers.ModelSerializer):
         required=False,
         allow_null=False
     )
-
+    container_input_path = serializers.SerializerMethodField(
+        method_name="_get_container_input_path",
+        required=False,
+        allow_null=False
+    )
     docker_image_name = serializers.SerializerMethodField(
         method_name="_get_docker_image_name",
         required=False,
@@ -90,8 +94,14 @@ class ToolDefinitionSerializer(serializers.ModelSerializer):
     def _get_container_name(self, obj):
         return obj.get_container_name()
 
+    def _get_container_input_path(self, obj):
+        return obj.get_container_input_path()
+
     def _get_docker_image_name(self, obj):
         return obj.get_docker_image_name()
+
+    def _get_galaxy_workflow_id(self, obj):
+        return obj.get_galaxy_workflow_id()
 
     def to_representation(self, obj):
         # get the original serialized objects representation
@@ -102,8 +112,15 @@ class ToolDefinitionSerializer(serializers.ModelSerializer):
         if obj.get_container_name() is None:
             ret.pop("container_name")
 
+        if obj.get_container_input_path() is None:
+            ret.pop("container_input_path")
+
         if obj.get_docker_image_name() is None:
             ret.pop("docker_image_name")
+
+        if obj.get_docker_image_name() is None:
+            ret.pop("galaxy_workflow_id")
+
         return ret
 
     class Meta:
