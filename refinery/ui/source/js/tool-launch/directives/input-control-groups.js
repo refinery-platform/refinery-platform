@@ -5,16 +5,12 @@
     .module('refineryToolLaunch')
     .component('rpInputControlGroups', {
       restrict: 'E',
-      controller: 'InputControlNavTreeCtrl',
+      controller: 'InputControlGroupsCtrl',
       require: {
         inputCtrl: '^rpInputControl'
       },
-      scope: {
-        member: '=',
-        depth: '='
-      },
       templateUrl: ['$window', function ($window) {
-        return $window.getStaticUrl('partials/tool-launch/partials/input-control-nav-tree.html');
+        return $window.getStaticUrl('partials/tool-launch/partials/input-control-groups.html');
       }]
     });
 })();
