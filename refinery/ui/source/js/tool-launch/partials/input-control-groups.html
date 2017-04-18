@@ -1,5 +1,7 @@
-<div ng-repeat="groupType in $ctrl.currentTypes|orderBy:-$index track by $index">
-  <div ng-if="$index == 0">
+<div
+  ng-repeat="groupType in $ctrl.currentTypes|orderBy:-$index track by $index"
+  id="control-panel-list">
+  <div ng-if="$index == 0" class="p-a-1-2">
     <rp-input-group></rp-input-group>
     <button
       class="btn btn-default btn-xs outline"
@@ -15,9 +17,12 @@
     </button>
   </div>
 
-  <div ng-if="$index > 0">
-    <div
-      class="tree-panel p-a-0">
+  <div
+    ng-if="$index > 0"
+    class="tree-panel"
+    ng-style="{'margin-left': 10*$index+'px'}">
+    <hr>
+    <div>
       <h5>
         <b>{{ $ctrl.currentGroup[$ctrl.currentGroup.length-$index] }}</b>
         of groups in {{ groupType }}
