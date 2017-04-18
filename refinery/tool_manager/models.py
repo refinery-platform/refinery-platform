@@ -186,9 +186,7 @@ class ToolDefinition(models.Model):
         Construct & return the relative url of our VisualizationDefinition's
         container
         """
-        return "/api/v2/docker/{}".format(
-                self.get_container_name()
-        )
+        return "/api/v2/docker/{}".format(self.get_container_name())
 
     def get_visualization_definition(self):
         """
