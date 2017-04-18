@@ -77,6 +77,7 @@
           return vm.inputCtrl.tool;
         },
         function () {
+          vm.currentGroup = fileService.currentGroup;
           vm.currentTypes = fileService.currentTypes;
           vm.inputFileTypes = fileService.inputFileTypes;
         }

@@ -1,5 +1,4 @@
-<div ng-repeat="group in $ctrl.currentTypes|orderBy:-$index track by $index">
-
+<div ng-repeat="groupType in $ctrl.currentTypes|orderBy:-$index track by $index">
   <div ng-if="$index == 0">
     <rp-input-group></rp-input-group>
     <button
@@ -18,32 +17,23 @@
 
   <div ng-if="$index > 0">
     <div
-    class="tree-panel p-a-0"
-    ng-if="group=='LIST'">
-    <h5>
-      <b>{{ $ctrl.currentGroup[$ctrl.currentTypes.length-$index] + 1 }}</b>
-      of groups in list
-    </h5>
-    </div>
-    <div
-      class="tree-panel-pair p-a-0"
-      ng-if="group=='PAIR'">
+      class="tree-panel p-a-0">
       <h5>
-        <b>{{ $ctrl.currentGroup[$ctrl.currentTypes.length-$index] + 1 }}</b> of
-        <b>2</b> groups in pair
+        <b>{{ $ctrl.currentGroup[$ctrl.currentGroup.length-$index] }}</b>
+        of groups in {{ groupType }}
       </h5>
     </div>
     <div>
       <button
         class="btn btn-default btn-xs outline"
-        ng-disabled="$ctrl.currentGroup[$ctrl.currentTypes.length-$index] == 0"
-        ng-click="$ctrl.navLeft($ctrl.currentTypes.length-$index)">
+        ng-disabled="$ctrl.currentGroup[$ctrl.currentGroup.length-$index] == 0"
+        ng-click="$ctrl.navLeft($ctrl.currentGroup.length-$index)">
         <i class="fa fa-backward"></i>
       </button>
       <button
         class="btn btn-default btn-xs outline"
-        ng-disabled="$ctrl.currentGroup[$ctrl.currentTypes.length-$index] == 1"
-        ng-click="$ctrl.navRight($ctrl.currentTypes.length-$index)">
+        ng-disabled="$ctrl.currentGroup[$ctrl.currentGroup.length-$index] == 1"
+        ng-click="$ctrl.navRight($ctrl.currentGroup.length-$index)">
         <i class="fa fa-forward"></i>
       </button>
     </div>
