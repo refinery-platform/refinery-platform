@@ -513,9 +513,12 @@
               </label>
               <a
                 popover-placement="right"
-                uib-popover="If Data File Column contains the path to
-                 local data files, they will need to need to be uploaded."
-                popover-title="Import Now"
+                uib-popover-html="'Select yes, if the <strong>Data File
+                Column</strong> contains paths to local data files. The files
+                will need to need to be uploaded. Select no, if the
+                <strong>Data File Column</strong> only contains URLs because
+                files do not need to be uploaded.'"
+                popover-title="Upload Local Data Files"
                 popover-trigger="focus"
                 popover-append-to-body="true"
                 tabindex="0">
@@ -523,6 +526,14 @@
                 </a>
             </div>
             <div class="m-t-1 m-b-1" ng-if="metadataTable.showFileUpload">
+              <div class="p-b-1">
+                 <button
+                    class="refinery-base btn btn-default btn-sm"
+                    ng-click="metadataTable.checkFiles()"
+                    ng-disabled="!metadataTable.dataFileColumn">
+                    Check Data Files
+                  </button>
+                </div>
               <rp-file-upload></rp-file-upload>
             </div>
           </div>
@@ -533,7 +544,8 @@
               class="refinery-base btn btn-primary"
               ng-click="metadataTable.startImport()"
               ng-disabled="importMetadataTableForm.$invalid ||
-              metadataTable.areFilesUploading()">
+              metadataTable.areFilesUploading() ||
+              metadataTable.areFilesInQueue()">
               Submit
             </button>
             <span class="m-l-1">
