@@ -1,8 +1,8 @@
 class refinery::postgresql {
 
   if $::deployment_platform == 'aws' {
-    class { '::postgresql::server':
-      package_ensure => 'absent',
+    package { 'postgresql-9.3':
+      ensure => 'absent',
     }
   }
   else {
