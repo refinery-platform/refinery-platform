@@ -1,4 +1,5 @@
 from django.contrib import admin
+from guardian.admin import GuardedModelAdmin
 
 from .models import (FileRelationship, GalaxyParameter, InputFile,
                      OutputFile, Parameter, ToolDefinition, ToolLaunch,
@@ -51,7 +52,7 @@ class WorkflowToolLaunchInline(admin.StackedInline):
     model = WorkflowToolLaunch
 
 
-class ToolLaunchAdmin(AdminFieldPopulator):
+class ToolLaunchAdmin(AdminFieldPopulator, GuardedModelAdmin):
     inlines = [
         VisualizationToolLaunchInline,
         WorkflowToolLaunchInline
