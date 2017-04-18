@@ -20,12 +20,12 @@ from selenium_testing.utils import (MAX_WAIT, wait_until_class_visible)
 
 from .models import (FileRelationship, GalaxyParameter, InputFile,
                      OutputFile, Parameter, ToolDefinition,
-                     VisualizationDefinition)
+                     VisualizationDefinition, VisualizationToolLaunch)
 from .utils import (create_tool_definition,
                     FileTypeValidationError,
                     validate_tool_annotation,
                     validate_workflow_step_annotation)
-from .views import (ToolDefinitionsViewSet, ToolLaunchConfigurationViewSet)
+from .views import (ToolDefinitionsViewSet, ToolLaunchViewSet)
 
 logger = logging.getLogger(__name__)
 TEST_DATA_PATH = "tool_manager/test_data"
@@ -537,7 +537,7 @@ class ToolDefinitionGenerationTests(TestCase):
             self.assertEqual(ToolDefinition.objects.count(), 0)
 
 
-class ToolLaunchConfigurationTests(StaticLiveServerTestCase):
+class ToolLaunchTests(StaticLiveServerTestCase):
     # Don't delete data migration data after test runs: http://bit.ly/2lAYqVJ
     serialized_rollback = True
 
@@ -557,7 +557,7 @@ class ToolLaunchConfigurationTests(StaticLiveServerTestCase):
         self.user = User.objects.create_user(self.username, '', self.password)
         self.container_name = ""
         self.factory = APIRequestFactory()
-        self.view = ToolLaunchConfigurationViewSet.as_view({'post': 'launch'})
+        self.view = ToolLaunchViewSet.as_view({'post': 'launch'})
         self.url_root = '/api/v2/tools'
 
     def tearDown(self):
@@ -604,6 +604,10 @@ class ToolLaunchConfigurationTests(StaticLiveServerTestCase):
             )
             force_authenticate(self.post_request, self.user)
             self.post_response = self.view(self.post_request)
+
+            tool_launch_instance = VisualizationToolLaunch.objects.all()[0]
+            self.assertEqual(tool_launch_instance.get_owner(), self.user)
+
             response = requests.get(
                 urljoin(
                     self.live_server_url,
@@ -650,7 +654,10 @@ class ToolLaunchConfigurationTests(StaticLiveServerTestCase):
             force_authenticate(self.post_request, self.user)
             self.post_response = self.view(self.post_request)
 
-            # Test to see if igv shows what we want!!!!
+            tool_launch_instance = VisualizationToolLaunch.objects.all()[0]
+            self.assertEqual(tool_launch_instance.get_owner(), self.user)
+
+            # Check to see if IGV shows what we want
             igv_url = urljoin(
                 self.live_server_url,
                 self.td.get_relative_container_url()
