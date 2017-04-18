@@ -3,11 +3,11 @@ import logging
 from django.http import HttpResponseServerError
 
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.viewsets import ModelViewSet, GenericViewSet
+from rest_framework.viewsets import GenericViewSet, ModelViewSet
 
 from .models import (ToolDefinition,
                      VisualizationToolLaunch)
-from .serializers import (ToolDefinitionSerializer)
+from .serializers import ToolDefinitionSerializer
 
 logger = logging.getLogger(__name__)
 
