@@ -45,7 +45,7 @@
         "file_relationship",
         "output_files",
         "parameters",
-        "container_name",
+        "container_input_path",
         "docker_image_name"
       ],
       "properties": {
@@ -74,7 +74,7 @@
           "type": "string",
           "enum": ["VISUALIZATION"]
         },
-        "container_name": {
+        "container_input_path": {
           "type": "string"
         },
         "docker_image_name": {
