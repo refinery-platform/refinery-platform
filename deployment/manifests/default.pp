@@ -35,7 +35,7 @@ exec { "activate_user":
 include refinery
 include refinery::python
 include refinery::docker
-include refinery::pg
+include refinery::postgresql
 include refinery::neo4j
 include refinery::apache2
 include refinery::selenium

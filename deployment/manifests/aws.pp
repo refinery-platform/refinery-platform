@@ -30,7 +30,6 @@ $deployment_platform = 'aws'
 
 # See code in refinery-modules/refinery/...
 include refinery
-include refinery::pg
 include refinery::python
 include refinery::neo4j
 include refinery::apache2
