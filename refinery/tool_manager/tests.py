@@ -162,6 +162,12 @@ class ToolDefinitionAPITests(APITestCase):
 
 
 class ToolDefinitionGenerationTests(TestCase):
+    def setUp(self):
+        self.mock_vis_annotations_reference = (
+            "tool_manager.management.commands.generate_tool_definitions"
+            ".get_visualization_annotations_list"
+        )
+
     def test_workflow_improperly_annotated(self):
         with open(
                 "{}/workflow_annotation_invalid.json".format(TEST_DATA_PATH)
@@ -500,7 +506,7 @@ class ToolDefinitionGenerationTests(TestCase):
                     json.loads(invalid_workflows),
                     json.loads(valid_workflows)
                 ]
-        ) as mocked_method:
+        ) as get_wf_mock:
 
             self.assertRaises(
                 CommandError,
@@ -510,16 +516,25 @@ class ToolDefinitionGenerationTests(TestCase):
             )
 
             self.assertEqual(ToolDefinition.objects.count(), 0)
+            with open(
+                    "{}/visualization_LIST_igv.json".format(TEST_DATA_PATH)
+            ) as f:
+                tool_annotation = [json.loads(f.read())]
 
-            call_command("generate_tool_definitions", workflows=True)
+            with mock.patch(
+                    self.mock_vis_annotations_reference,
+                    return_value=tool_annotation
+            ) as get_vis_list_mock:
+                call_command("generate_tool_definitions")
 
-            self.assertEqual(mocked_method.call_count, 2)
-            self.assertEqual(ToolDefinition.objects.count(), 3)
-            self.assertEqual(FileRelationship.objects.count(), 6)
-            self.assertEqual(GalaxyParameter.objects.count(), 9)
-            self.assertEqual(Parameter.objects.count(), 9)
-            self.assertEqual(InputFile.objects.count(), 5)
-            self.assertEqual(OutputFile.objects.count(), 3)
+                self.assertEqual(get_wf_mock.call_count, 2)
+                self.assertEqual(get_vis_list_mock.call_count, 1)
+                self.assertEqual(ToolDefinition.objects.count(), 4)
+                self.assertEqual(FileRelationship.objects.count(), 7)
+                self.assertEqual(GalaxyParameter.objects.count(), 9)
+                self.assertEqual(Parameter.objects.count(), 12)
+                self.assertEqual(InputFile.objects.count(), 6)
+                self.assertEqual(OutputFile.objects.count(), 3)
 
     def test_workflow_pair_too_many_inputs(self):
         with open(
