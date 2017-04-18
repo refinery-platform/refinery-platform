@@ -30,9 +30,10 @@ $deployment_platform = 'aws'
 
 # See code in refinery-modules/refinery/...
 include refinery
-include refinery::python
-include refinery::neo4j
 include refinery::apache2
 include refinery::aws
 include refinery::docker
+include refinery::neo4j
+include refinery::postgresql
+include refinery::python
 include refinery::solr
