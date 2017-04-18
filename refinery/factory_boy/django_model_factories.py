@@ -100,6 +100,13 @@ class VisualizationDefinitionFactory(ToolDefinitionFactory):
         model = "tool_manager.VisualizationDefinition"
 
 
+class WorkflowDefinitionFactory(ToolDefinitionFactory):
+    """Minimal representation of a WorkflowDefinition"""
+
+    class Meta:
+        model = "tool_manager.WorkflowDefinition"
+
+
 class FileRelationshipFactory(factory.django.DjangoModelFactory):
     """Minimal representation of a FileRelationship"""
 
