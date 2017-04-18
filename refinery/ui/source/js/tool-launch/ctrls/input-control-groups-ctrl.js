@@ -3,9 +3,9 @@
 
   angular
     .module('refineryToolLaunch')
-    .controller('InputControlNavTreeCtrl', InputControlNavTreeCtrl);
+    .controller('InputControlGroupsCtrl', InputControlGroupsCtrl);
 
-  InputControlNavTreeCtrl.$inject = [
+  InputControlGroupsCtrl.$inject = [
     '$scope',
     'resetGridService',
     'selectedNodesService',
@@ -13,7 +13,7 @@
   ];
 
 
-  function InputControlNavTreeCtrl (
+  function InputControlGroupsCtrl (
     $scope,
     resetGridService,
     selectedNodesService,

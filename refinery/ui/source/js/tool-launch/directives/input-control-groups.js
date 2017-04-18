@@ -3,22 +3,18 @@
 
   angular
     .module('refineryToolLaunch')
-    .directive('rpInputControlNavTree', rpInputControlNavTree);
-
-  rpInputControlNavTree.$inject = ['$window'];
-
-  function rpInputControlNavTree ($window) {
-    return {
+    .component('rpInputControlGroups', {
       restrict: 'E',
       controller: 'InputControlNavTreeCtrl',
-      controllerAs: 'treeCtrl',
+      require: {
+        inputCtrl: '^rpInputControl'
+      },
       scope: {
         member: '=',
         depth: '='
       },
-      templateUrl: function () {
+      templateUrl: ['$window', function ($window) {
         return $window.getStaticUrl('partials/tool-launch/partials/input-control-nav-tree.html');
-      }
-    };
-  }
+      }]
+    });
 })();
