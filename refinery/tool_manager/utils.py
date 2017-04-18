@@ -15,8 +15,8 @@ from factory_boy.django_model_factories import (FileRelationshipFactory,
                                                 InputFileFactory,
                                                 OutputFileFactory,
                                                 ParameterFactory,
-                                                ToolDefinitionFactory,
-                                                VisualizationDefinitionFactory)
+                                                VisualizationDefinitionFactory,
+                                                WorkflowDefinitionFactory)
 
 from file_store.models import FileType
 from .models import ToolDefinition
@@ -67,11 +67,12 @@ def create_tool_definition(annotation_data):
     annotation = annotation_data["annotation"]
 
     if tool_type == ToolDefinition.WORKFLOW:
-        tool_definition = ToolDefinitionFactory(
+        tool_definition = WorkflowDefinitionFactory(
             name=annotation_data["name"],
             description=annotation["description"],
             tool_type=tool_type,
-            file_relationship=create_file_relationship_nesting(annotation)
+            file_relationship=create_file_relationship_nesting(annotation),
+            galaxy_workflow_id=annotation_data["galaxy_workflow_id"]
         )
     elif tool_type == ToolDefinition.VISUALIZATION:
         tool_definition = VisualizationDefinitionFactory(
@@ -81,9 +82,15 @@ def create_tool_definition(annotation_data):
             file_relationship=create_file_relationship_nesting(
                 annotation
             ),
-            container_name=annotation["container_name"],
-            docker_image_name=annotation["docker_image_name"]
+            docker_image_name=annotation["docker_image_name"],
+            container_input_path=annotation["container_input_path"]
         )
+
+        # Docker doesn't like hyphens in container names
+        tool_definition.container_name = (
+            tool_definition.uuid.replace("-", "")
+        )
+        tool_definition.save()
 
     create_and_associate_output_files(
         tool_definition,
