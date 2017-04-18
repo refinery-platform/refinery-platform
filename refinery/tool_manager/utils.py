@@ -23,9 +23,8 @@ from .models import ToolDefinition
 
 logger = logging.getLogger(__name__)
 ANNOTATION_ERROR_MESSAGE = (
-    "Tool not properly annotated. {}"
-    "Please read: http://bit.ly/2nalk6w for more information on how to "
-    "properly annotate your tools. "
+    "Tool not properly annotated. Please read: http://bit.ly/2nalk6w for "
+    "examples and more information on how to properly annotate your tools."
 )
 
 
