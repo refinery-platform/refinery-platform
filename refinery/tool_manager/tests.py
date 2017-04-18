@@ -146,7 +146,18 @@ class ToolDefinitionAPITests(APITestCase):
                     "container_name", tool_definition.keys()
                 )
                 self.assertIn(
+                    "container_input_path", tool_definition.keys()
+                )
+                self.assertIn(
                     "docker_image_name", tool_definition.keys()
+                )
+
+    def test_for_proper_workflow_fields_in_response(self):
+        """ToolDefinitions for Workflows will have extra fields"""
+        for tool_definition in self.get_response.data:
+            if tool_definition["tool_type"] == ToolDefinition.WORKFLOW:
+                self.assertIn(
+                    "galaxy_workflow_id", tool_definition.keys()
                 )
 
 
