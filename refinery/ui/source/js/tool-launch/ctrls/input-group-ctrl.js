@@ -8,16 +8,21 @@
   InputGroupCtrl.$inject = [
     '$scope',
     '_',
-    'fileRelationshipService'
+    'fileRelationshipService',
+    'resetGridService',
+    'selectedNodesService'
   ];
 
 
   function InputGroupCtrl (
     $scope,
     _,
-    fileRelationshipService
+    fileRelationshipService,
+    resetGridService,
+    selectedNodesService
   ) {
     var fileService = fileRelationshipService;
+    var nodeService = selectedNodesService;
     var vm = this;
     vm.attributes = fileService.attributesObj;
     vm.currentFileInput = [];
@@ -26,6 +31,8 @@
     vm.inputFilesTypes = fileService.inputFileTypes;
     vm.groupCollection = fileService.groupCollection;
     vm.currentGroup = fileService.currentGroup;
+    vm.removeAllGroups = removeAllGroups;
+    vm.removeGroup = removeGroup; // Refreshes all selection
     vm.tool = {}; // selected tool displayed in panel
     vm.toolType = ''; // workflow vs visualization
 
@@ -43,6 +50,23 @@
       return false;
     }
 
+    /**
+     * Method clears all selected nodes and empties group. Required for
+     * emptying cart or a new tool selection
+     */
+    function removeAllGroups () {
+      fileService.resetCurrentCollections();
+      nodeService.setSelectedAllFlags(false);
+      resetGridService.setRefreshGridFlag(true);
+    }
+
+    /**
+     * * Method clears the current input group
+    * */
+    function removeGroup () {
+      fileService.removeGroupFromCollections();
+      vm.groupCollection = fileService.groupCollection;
+    }
    /*
    * ---------------------------------------------------------
    * Watchers

@@ -1,23 +1,8 @@
-{{ $ctrl.currentTypes }}
-here I am
 <div
   ng-repeat="groupType in $ctrl.currentTypes|orderBy:'$index':true track by $index"
   id="control-panel-list">
-  {{ groupType }}
   <div ng-if="$index == 0" class="p-a-1-2">
     <rp-input-group></rp-input-group>
-    <button
-      class="btn btn-default btn-xs outline"
-      ng-disabled="$ctrl.groups.length == 0"
-      ng-click="$ctrl.removeGroup($ctrl.groupIndex)">
-      Remove
-    </button>
-    <button
-      class="btn btn-default btn-xs outline"
-      ng-disabled="$ctrl.groups.length == 0"
-      ng-click="$ctrl.removeAllGroups()">
-      Remove All
-    </button>
   </div>
 
   <div
