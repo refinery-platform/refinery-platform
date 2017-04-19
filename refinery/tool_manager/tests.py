@@ -19,7 +19,7 @@ from core.models import ExtendedGroup
 from selenium_testing.utils import (MAX_WAIT, wait_until_class_visible)
 
 from .models import (FileRelationship, GalaxyParameter, InputFile,
-                     OutputFile, Parameter, ToolDefinition, Tool)
+                     OutputFile, Parameter, Tool, ToolDefinition)
 from .utils import (create_tool_definition,
                     FileTypeValidationError,
                     validate_tool_annotation,
