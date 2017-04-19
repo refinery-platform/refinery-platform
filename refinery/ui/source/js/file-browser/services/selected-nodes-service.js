@@ -76,6 +76,7 @@ function selectedNodesService ($window, selectedFilterService) {
       vm.complementSelectedNodes = [];
       vm.complementSelectedNodesUuids = [];
       vm.selectedNodes = [];
+      vm.selectionObj = {};
       vm.selectedNodesUuids = [];
       vm.selectedNodesUuidsFromNodeGroup = [];
       vm.selectedNodeGroupUuid = vm.defaultCurrentSelectionUuid;

@@ -26,6 +26,7 @@
     vm.inputFileTypes = []; // maintains the required input types
     vm.refreshFileMap = refreshFileMap;
     vm.resetCurrents = resetCurrents;
+    vm.resetCurrentCollections = resetCurrentCollections;
     vm.setGroupCollection = setGroupCollection;
     vm.setNodeSelectCollection = setNodeSelectCollection;
     vm.nodeSelectCollection = {}; // contains rows and their group info
@@ -145,6 +146,19 @@
       vm.currentGroup = [];
       vm.currentTypes = [];
       vm.inputFileTypes = [];
+      vm.groupCollection = {};
+      vm.nodeSelectCollection = {};
+    }
+
+    /**
+    * Resets the variables needed for clearing cart completely
+    */
+    function resetCurrentCollections () {
+      for (var i = 0; i < vm.currentGroup.length; i++) {
+        vm.currentGroup[i] = 0;
+      }
+      vm.groupCollection = {};
+      vm.nodeSelectCollection = {};
     }
   }
 })();

@@ -52,6 +52,7 @@
     }
 
     function removeAllGroups () {
+      fileService.resetCurrentCollections();
       nodeService.setSelectedAllFlags(false);
       resetGridService.setRefreshGridFlag(true);
     }
