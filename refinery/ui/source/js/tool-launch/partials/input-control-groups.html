@@ -1,6 +1,9 @@
+{{ $ctrl.currentTypes }}
+here I am
 <div
-  ng-repeat="groupType in $ctrl.currentTypes|orderBy:-$index track by $index"
+  ng-repeat="groupType in $ctrl.currentTypes|orderBy:'$index':true track by $index"
   id="control-panel-list">
+  {{ groupType }}
   <div ng-if="$index == 0" class="p-a-1-2">
     <rp-input-group></rp-input-group>
     <button
