@@ -7,7 +7,7 @@
       restrict: 'E',
       controller: 'InputControlGroupsCtrl',
       require: {
-        inputCtrl: '^rpInputControl'
+        displayCtrl: '^rpToolDisplay'
       },
       templateUrl: ['$window', function ($window) {
         return $window.getStaticUrl('partials/tool-launch/partials/input-control-groups.html');

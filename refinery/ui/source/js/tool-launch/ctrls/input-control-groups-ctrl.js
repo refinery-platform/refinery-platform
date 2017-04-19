@@ -46,7 +46,7 @@
     vm.$onInit = function () {
       $scope.$watchCollection(
         function () {
-          return vm.inputCtrl.tool;
+          return vm.displayCtrl.selectedTool;
         },
         function () {
           vm.currentGroup = fileService.currentGroup;

@@ -65,7 +65,6 @@
     * */
     function removeGroup () {
       fileService.removeGroupFromCollections();
-      vm.groupCollection = fileService.groupCollection;
     }
    /*
    * ---------------------------------------------------------
