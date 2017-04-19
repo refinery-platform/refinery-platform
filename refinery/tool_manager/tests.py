@@ -139,25 +139,6 @@ class ToolDefinitionAPITests(APITestCase):
                         ToolDefinition.VISUALIZATION:
                     self.assertNotIn("galaxy_workflow_step", parameter.keys())
 
-    def test_for_proper_visualization_fields_in_response(self):
-        """ToolDefinitions for Visualizations will have extra fields"""
-        for tool_definition in self.get_response.data:
-            if tool_definition["tool_type"] == ToolDefinition.VISUALIZATION:
-                self.assertIn(
-                    "container_input_path", tool_definition.keys()
-                )
-                self.assertIn(
-                    "docker_image_name", tool_definition.keys()
-                )
-
-    def test_for_proper_workflow_fields_in_response(self):
-        """ToolDefinitions for Workflows will have extra fields"""
-        for tool_definition in self.get_response.data:
-            if tool_definition["tool_type"] == ToolDefinition.WORKFLOW:
-                self.assertIn(
-                    "galaxy_workflow_id", tool_definition.keys()
-                )
-
 
 class ToolDefinitionGenerationTests(TestCase):
     def setUp(self):
