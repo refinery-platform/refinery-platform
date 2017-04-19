@@ -167,7 +167,8 @@
       angular.forEach(vm.groupCollection[vm.currentGroup], function (nodeArr, inputTypeUuid) {
         removeGroupFromNodeSelectCollection(nodeArr, inputTypeUuid);
       });
-      vm.groupCollection[vm.currentGroup] = {};
+      // Delete groupID property from obj since it is empty
+      delete vm.groupCollection[vm.currentGroup];
     }
 
     // Helper method which finds index of currentGroupId and slices it from
@@ -178,6 +179,10 @@
         if (groupInd > -1) {
           vm.nodeSelectCollection[nodeList[i].uuid].groupList.splice(groupInd, 1);
           vm.nodeSelectCollection[nodeList[i].uuid].TypeUuid.splice(groupInd, 1);
+        }
+       // Delete node property from obj if empty
+        if (vm.nodeSelectCollection[nodeList[i].uuid].groupList === 0) {
+          delete vm.nodeSelectCollection[nodeList[i].uuid];
         }
       }
     }
