@@ -19,14 +19,12 @@ from core.models import ExtendedGroup
 from selenium_testing.utils import (MAX_WAIT, wait_until_class_visible)
 
 from .models import (FileRelationship, GalaxyParameter, InputFile,
-                     OutputFile, Parameter, ToolDefinition,
-                     VisualizationDefinition, VisualizationToolLaunch,
-                     ToolLaunch)
+                     OutputFile, Parameter, ToolDefinition, Tool)
 from .utils import (create_tool_definition,
                     FileTypeValidationError,
                     validate_tool_annotation,
                     validate_workflow_step_annotation)
-from .views import (ToolDefinitionsViewSet, ToolLaunchViewSet)
+from .views import (ToolDefinitionsViewSet, ToolViewSet)
 
 logger = logging.getLogger(__name__)
 TEST_DATA_PATH = "tool_manager/test_data"
@@ -135,8 +133,8 @@ class ToolDefinitionAPITests(APITestCase):
             for parameter in tool_definition["parameters"]:
                 if tool_definition["tool_type"] == ToolDefinition.WORKFLOW:
                     self.assertIn("galaxy_workflow_step", parameter.keys())
-                elif tool_definition["tool_type"] == \
-                        ToolDefinition.VISUALIZATION:
+                elif (tool_definition["tool_type"] ==
+                      ToolDefinition.VISUALIZATION):
                     self.assertNotIn("galaxy_workflow_step", parameter.keys())
 
 
@@ -542,6 +540,99 @@ class ToolDefinitionGenerationTests(TestCase):
             self.assertEqual(ToolDefinition.objects.count(), 0)
 
 
+class ToolAPITests(APITestCase):
+    def setUp(self):
+        self.public_group_name = ExtendedGroup.objects.public_group().name
+        self.username = 'coffee_lover'
+        self.password = 'coffeecoffee'
+        self.user = User.objects.create_user(self.username, '',
+                                             self.password)
+
+        self.factory = APIRequestFactory()
+        self.view = ToolViewSet.as_view(
+            {
+                'get': 'list',
+                'post': 'create'
+            }
+        )
+
+        self.url_root = '/api/v2/tools/'
+
+        # Make some sample data
+        with open(
+                "{}/visualization_LIST_igv.json".format(TEST_DATA_PATH)
+        ) as f:
+            self.td = create_tool_definition(json.loads(f.read()))
+
+        # Create mock ToolLaunchConfiguration
+        self.post_data = {
+            "tool_definition_uuid": self.td.uuid,
+            "file_relationships": [
+                "http://www.example.com/tool_manager/test_data/sample.seg"
+            ],
+            "parameters": ""
+        }
+        self.post_request = self.factory.post(
+            self.url_root,
+            data=self.post_data,
+            format="json"
+        )
+        force_authenticate(self.post_request, self.user)
+        self.post_response = self.view(self.post_request)
+
+        self.get_request = self.factory.get(self.url_root)
+        force_authenticate(self.get_request, self.user)
+        self.get_response = self.view(self.get_request)
+
+        self.tool_json = self.get_response.data[0]
+
+        self.delete_request = self.factory.delete(
+            urljoin(self.url_root, self.tool_json['uuid']))
+        force_authenticate(self.delete_request, self.user)
+        self.delete_response = self.view(self.delete_request)
+        self.put_request = self.factory.put(
+            self.url_root,
+            data=self.tool_json,
+            format="json"
+        )
+        force_authenticate(self.put_request, self.user)
+        self.put_response = self.view(self.put_request)
+        self.options_request = self.factory.options(
+            self.url_root,
+            data=self.tool_json,
+            format="json"
+        )
+        force_authenticate(self.options_request, self.user)
+        self.options_response = self.view(self.options_request)
+
+    def test_tool_launches_exist(self):
+        self.assertEqual(Tool.objects.count(), 1)
+        self.assertEqual(
+            Tool.objects.filter(
+                tool_definition__tool_type=ToolDefinition.VISUALIZATION
+            ).count(),
+            1
+        )
+
+    def test_get_request_authenticated(self):
+        self.assertIsNotNone(self.get_response)
+
+    def test_get_request_no_auth(self):
+        self.get_request = self.factory.get(self.url_root)
+        self.get_response = self.view(self.get_request)
+        self.assertEqual(self.get_response.status_code, 403)
+
+    def test_unallowed_http_verbs(self):
+        self.assertEqual(
+            self.put_response.data['detail'], 'Method "PUT" not allowed.')
+        self.assertEqual(
+            self.options_response.data['detail'], 'Method "OPTIONS" not '
+                                                  'allowed.')
+        self.assertEqual(
+            self.delete_response.data['detail'], 'Method "DELETE" not '
+                                                 'allowed.')
+
+
 class ToolLaunchTests(StaticLiveServerTestCase):
     # Don't delete data migration data after test runs: http://bit.ly/2lAYqVJ
     serialized_rollback = True
@@ -562,23 +653,21 @@ class ToolLaunchTests(StaticLiveServerTestCase):
         self.user = User.objects.create_user(self.username, '', self.password)
         self.container_name = ""
         self.factory = APIRequestFactory()
-        self.view = ToolLaunchViewSet.as_view({'post': 'create'})
+        self.view = ToolViewSet.as_view({'post': 'create'})
         self.url_root = '/api/v2/tools'
 
     def tearDown(self):
         self.browser.quit()
         self.display.stop()
         try:
-            visualization_tool_launch = VisualizationToolLaunch.objects.get(
+            tool_launch = Tool.objects.get(
                 container_name=self.container_name
             )
-        except VisualizationDefinition.DoesNotExist:
+        except Tool.DoesNotExist:
             pass
         else:
             # Purge Docker Containers that we've spun up
-            DockerClientWrapper().purge_by_label(
-                visualization_tool_launch.uuid
-            )
+            DockerClientWrapper().purge_by_label(tool_launch.uuid)
 
     def test_visualization_container_launch_and_access_hello_world(self):
         with open(
@@ -610,8 +699,8 @@ class ToolLaunchTests(StaticLiveServerTestCase):
             force_authenticate(self.post_request, self.user)
             self.post_response = self.view(self.post_request)
 
-            tool_launch = ToolLaunch.objects.all()[0]
-            self.container_name = tool_launch.get_container_name()
+            tool_launch = Tool.objects.all()[0]
+            self.container_name = tool_launch.container_name
             self.assertEqual(tool_launch.get_owner(), self.user)
             self.assertEqual(
                 tool_launch.get_tool_type(),
@@ -621,8 +710,7 @@ class ToolLaunchTests(StaticLiveServerTestCase):
             response = requests.get(
                 urljoin(
                     self.live_server_url,
-                    tool_launch.get_visualization_tool_launch(
-                    ).get_relative_container_url()
+                    tool_launch.get_relative_container_url()
                 )
             )
             self.assertIn("Welcome to nginx!", response.content)
@@ -664,8 +752,8 @@ class ToolLaunchTests(StaticLiveServerTestCase):
             force_authenticate(self.post_request, self.user)
             self.post_response = self.view(self.post_request)
 
-            tool_launch = ToolLaunch.objects.all()[0]
-            self.container_name = tool_launch.get_container_name()
+            tool_launch = Tool.objects.all()[0]
+            self.container_name = tool_launch.container_name
             self.assertEqual(tool_launch.get_owner(), self.user)
             self.assertEqual(
                 tool_launch.get_tool_type(),
@@ -674,8 +762,7 @@ class ToolLaunchTests(StaticLiveServerTestCase):
             # Check to see if IGV shows what we want
             igv_url = urljoin(
                 self.live_server_url,
-                tool_launch.get_visualization_tool_launch(
-                ).get_relative_container_url()
+                tool_launch.get_relative_container_url()
             )
 
             self.browser.get(igv_url)
