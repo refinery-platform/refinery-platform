@@ -38,7 +38,7 @@ exec { "migrate":
   group       => $app_group,
   require     => [
     Class['::refinery::python'],
-    Postgresql::Server::Db["refinery"]
+    Class['::refinery::postgresql']
   ],
 }
 ->
