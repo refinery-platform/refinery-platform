@@ -7,7 +7,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.viewsets import ModelViewSet
 
 from factory_boy.django_model_factories import ToolFactory
-from .models import (ToolDefinition, Tool)
+from .models import Tool, ToolDefinition
 from .serializers import ToolDefinitionSerializer, ToolSerializer
 
 logger = logging.getLogger(__name__)
