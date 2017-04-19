@@ -1,8 +1,5 @@
 class refinery::python {
 
-  class { '::postgresql::lib::python':
-  }
-
   class { '::python':
     dev        => 'present',
     gunicorn   => 'absent',
@@ -16,6 +13,7 @@ class refinery::python {
     'libldap2-dev',
     'libsasl2-dev',
     'libffi-dev',  # for SSL modules
+    'libpq-dev',  # for PostgreSQL
   ]
   package { $virtualenv_dependencies: }
 
@@ -30,10 +28,7 @@ class refinery::python {
     ensure  => present,
     owner   => $::app_user,
     group   => $::app_group,
-    require => [
-      Package[$virtualenv_dependencies],
-      Class['::postgresql::lib::python'],
-    ]
+    require => Package[$virtualenv_dependencies],
   }
 
   python::requirements { $::requirements:
