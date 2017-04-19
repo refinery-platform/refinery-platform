@@ -78,24 +78,10 @@ class ToolViewSet(ModelViewSet):
                     visualization_tool.name.replace(" ", ""),
                     visualization_tool.uuid
                 )
+
+                visualization_tool.set_owner(request.user)
                 visualization_tool.save()
 
-                try:
-                    Tool.objects.get(
-                        uuid=visualization_tool.uuid
-                    ).set_owner(request.user)
-                except (
-                        Tool.DoesNotExist,
-                        Tool.MultipleObjectsReturned
-                ) as e:
-                    return HttpResponseServerError(
-                        "Couldn't fetch Tool with UUID {}: {}".format(
-                            visualization_tool.uuid,
-                            e
-                        )
-                    )
-
-                visualization_tool.save()
                 return visualization_tool.launch()
 
             elif tool_definition.tool_type == ToolDefinition.WORKFLOW:
