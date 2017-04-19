@@ -31,8 +31,40 @@
       aria-labelledby="tool-body">
       <div class="panel-body p-a-0">
         <div class="p-a-0">
-          <rp-input-control-groups>
-          </<rp-input-control-groups>
+          <div
+            ng-repeat="groupType in $ctrl.currentTypes|orderBy:'$index':true track by $index"
+            id="control-panel-list">
+            <div ng-if="$index == 0" class="p-a-1-2">
+              <rp-input-group></rp-input-group>
+            </div>
+
+            <div
+              ng-if="$index > 0"
+              class="tree-panel"
+              ng-style="{'margin-left': 10*$index+'px'}">
+              <hr>
+              <div>
+                <h5>
+                  <b>{{ $ctrl.currentGroup[$ctrl.currentGroup.length-$index] }}</b>
+                  of groups in {{ groupType }}
+                </h5>
+              </div>
+              <div>
+                <button
+                  class="btn btn-default btn-xs outline"
+                  ng-disabled="$ctrl.currentGroup[$ctrl.currentGroup.length-$index] == 0"
+                  ng-click="$ctrl.navLeft($ctrl.currentGroup.length-$index)">
+                  <i class="fa fa-backward"></i>
+                </button>
+                <button
+                  class="btn btn-default btn-xs outline"
+                  ng-disabled="$ctrl.currentGroup[$ctrl.currentGroup.length-$index] == 1"
+                  ng-click="$ctrl.navRight($ctrl.currentGroup.length-$index)">
+                  <i class="fa fa-forward"></i>
+                </button>
+              </div>
+            </div>
+          </div>
          </div>
       </div>
     </div>
