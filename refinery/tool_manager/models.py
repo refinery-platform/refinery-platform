@@ -261,8 +261,7 @@ class Tool(OwnableResource):
 
     def get_relative_container_url(self):
         """
-        Construct & return the relative url of our ToolLaunches's
-        container
+        Construct & return the relative url of our Tool's container
         """
         return "/api/v2/docker/{}".format(self.container_name)
 
