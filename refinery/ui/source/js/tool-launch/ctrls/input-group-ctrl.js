@@ -26,12 +26,12 @@
     var vm = this;
     vm.attributes = fileService.attributesObj;
     vm.currentFileInput = [];
-    vm.isNavCollapsed = false;
-    vm.isGroupPopulated = isGroupPopulated;
-    vm.inputFilesTypes = fileService.inputFileTypes;
-    vm.isObjEmpty = isObjEmpty;
-    vm.groupCollection = fileService.groupCollection;
     vm.currentGroup = fileService.currentGroup;
+    vm.groupCollection = fileService.groupCollection;
+    vm.inputFilesTypes = fileService.inputFileTypes;
+    vm.isGroupPopulated = isGroupPopulated;
+    vm.isNavCollapsed = false;
+    vm.isObjEmpty = isObjEmpty;
     vm.removeAllGroups = removeAllGroups;
     vm.removeGroup = removeGroup; // Refreshes all selection
     vm.tool = {}; // selected tool displayed in panel
