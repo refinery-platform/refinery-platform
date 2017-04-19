@@ -240,7 +240,7 @@ class Tool(OwnableResource):
             container = DockerContainerSpec(
                 image_name=self.tool_definition.docker_image_name,
                 container_name=self.container_name,
-                labels={self.uuid: "visualization_uuid"},
+                labels={self.uuid: ToolDefinition.VISUALIZATION},
                 container_input_path=(
                     self.tool_definition.container_input_path
                 ),
