@@ -93,7 +93,7 @@ class ToolDefinitionFactory(factory.django.DjangoModelFactory):
 
 
 class ToolFactory(factory.django.DjangoModelFactory):
-    """Minimal representation of a ToolDefinition"""
+    """Minimal representation of a Tool"""
     class Meta:
         model = "tool_manager.Tool"
 
