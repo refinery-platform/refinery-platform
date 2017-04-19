@@ -18,10 +18,8 @@
     var fileService = fileRelationshipService;
     var vm = this;
     vm.attributes = fileService.attributesObj;
-    vm.currentGroup = fileService.currentGroup; // maintains nav
-    // position
+    vm.currentGroup = fileService.currentGroup; // maintains nav position
     vm.currentTypes = fileService.currentTypes;
-    vm.groups = []; // stores all the selected nodes for vm
     vm.inputFileTypes = fileService.inputFileTypes;
     vm.navRight = navRight;
     vm.navLeft = navLeft;

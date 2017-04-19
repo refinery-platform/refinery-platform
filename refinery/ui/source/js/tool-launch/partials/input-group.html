@@ -29,13 +29,13 @@
   </ul>
   <button
     class="btn btn-default btn-xs outline"
-    ng-disabled="$ctrl.groups.length == 0"
+    ng-disabled="$ctrl.isObjEmpty($ctrl.groupCollection[$ctrl.currentGroup])"
     ng-click="$ctrl.removeGroup()">
     Remove
   </button>
   <button
     class="btn btn-default btn-xs outline"
-    ng-disabled="$ctrl.groups.length == 0"
+    ng-disabled="$ctrl.isObjEmpty($ctrl.groupCollection)"
     ng-click="$ctrl.removeAllGroups()">
     Remove All
   </button>
