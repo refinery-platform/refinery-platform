@@ -5,11 +5,7 @@ from .views import ToolDefinitionsViewSet, ToolViewSet
 # DRF url routing
 tool_manager_router = DefaultRouter()
 tool_manager_router.register(r'tools/definitions', ToolDefinitionsViewSet)
-tool_manager_router.register(
-    r'tools',
-    ToolViewSet,
-    "Tool"
-)
+tool_manager_router.register(r'tools', ToolViewSet)
 
 # Django docker engine urls
 tool_manager_router.urls.extend(
