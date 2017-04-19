@@ -485,27 +485,65 @@
         </div>
       </div>
 
-      <div class="m-t-1 m-b-1">
-        <rp-file-upload></rp-file-upload>
-      </div>
-
       <div>
         <div class="refinery-subheader m-t-1">
            <h1>Complete Submission</h1>
         </div>
         <div class="row m-t-1-4 m-b-1-4">
           <div class="col-sm-12 col-md-12 col-lg-12">
-            <button
-              class="refinery-base btn btn-default"
-              ng-click="metadataTable.checkFiles()"
-              ng-disabled="!metadataTable.dataFileColumn">
-              Check Data Files
-            </button>
+            <div class="m-t-1 m-b-1">
+              Does the <strong>Data File Column</strong> reference any local
+              files?
+              <label class="p-l-1-2">
+                <input
+                  type="radio"
+                  ng-value="false"
+                  ng-model="metadataTable.showFileUpload"
+                  checked>
+                No
+              </label>
+              <label class="p-l-1-2">
+                <input
+                  type="radio"
+                  ng-value="true"
+                  ng-model="metadataTable.showFileUpload">
+                Yes
+              </label>
+              <a
+                popover-placement="right"
+                uib-popover-html="'Select yes, if the <strong>Data File
+                Column</strong> contains paths to local data files. The files
+                will need to need to be uploaded. Select no, if the
+                <strong>Data File Column</strong> only contains URLs because
+                files do not need to be uploaded.'"
+                popover-title="Upload Local Data Files"
+                popover-trigger="focus"
+                popover-append-to-body="true"
+                tabindex="0">
+                    <i class="fa fa-question-circle info-icon icon-only"></i>
+                </a>
+            </div>
+            <div class="m-t-1 m-b-1" ng-if="metadataTable.showFileUpload">
+              <div class="p-b-1">
+                 <button
+                    class="refinery-base btn btn-default btn-sm"
+                    ng-click="metadataTable.checkFiles()"
+                    ng-disabled="!metadataTable.dataFileColumn">
+                    Check Data Files
+                  </button>
+                </div>
+              <rp-file-upload></rp-file-upload>
+            </div>
+          </div>
+        </div>
+        <div class="row m-t-1-4 m-b-1-4">
+          <div class="col-sm-12 col-md-12 col-lg-12">
             <button
               class="refinery-base btn btn-primary"
               ng-click="metadataTable.startImport()"
               ng-disabled="importMetadataTableForm.$invalid ||
-              metadataTable.areFilesUploading()">
+              metadataTable.areFilesUploading() ||
+              metadataTable.areFilesInQueue()">
               Submit
             </button>
             <span class="m-l-1">
