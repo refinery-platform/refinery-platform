@@ -24,7 +24,7 @@ class ToolDefinitionsViewSet(ModelViewSet):
 
 
 class ToolViewSet(ModelViewSet):
-    """API endpoint that allows for Tools to be launched"""
+    """API endpoint that allows for Tools to be fetched and launched"""
 
     queryset = Tool.objects.all()
     serializer_class = ToolSerializer
