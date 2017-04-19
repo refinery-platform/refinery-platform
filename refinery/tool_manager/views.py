@@ -6,10 +6,9 @@ from django.http import HttpResponseServerError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.viewsets import ModelViewSet
 
-from .models import (ToolDefinition,
-                     ToolLaunch,
-                     VisualizationToolLaunch)
-from .serializers import ToolDefinitionSerializer, ToolLaunchSerializer
+from factory_boy.django_model_factories import ToolFactory
+from .models import (ToolDefinition, Tool)
+from .serializers import ToolDefinitionSerializer, ToolSerializer
 
 logger = logging.getLogger(__name__)
 
@@ -24,11 +23,11 @@ class ToolDefinitionsViewSet(ModelViewSet):
     permission_classes = [IsAuthenticated]
 
 
-class ToolLaunchViewSet(ModelViewSet):
+class ToolViewSet(ModelViewSet):
     """API endpoint that allows for Tools to be launched"""
 
-    queryset = ToolLaunch.objects.all()
-    serializer_class = ToolLaunchSerializer
+    queryset = Tool.objects.all()
+    serializer_class = ToolSerializer
     lookup_field = 'uuid'
     http_method_names = ['get', 'post']
     permission_classes = [IsAuthenticated]
@@ -63,10 +62,10 @@ class ToolLaunchViewSet(ModelViewSet):
             if tool_definition.tool_type == ToolDefinition.VISUALIZATION:
                 # TODO: Talk to Node API and get urls from node UUIDs in the
                 # `file_relationships` data structure
-                # ToolLaunch.parse_file_relationships_string()
-                # ToolLaunch.populate_url_from_node_uuid()
+                # Tool.parse_file_relationships_string()
+                # Tool.populate_url_from_node_uuid()
 
-                visualization_tool = VisualizationToolLaunch.objects.create(
+                visualization_tool = ToolFactory(
                     name="{}-launch".format(tool_definition.name),
                     tool_definition=tool_definition,
                     parameters=tool_launch_data["parameters"],
@@ -82,15 +81,15 @@ class ToolLaunchViewSet(ModelViewSet):
                 visualization_tool.save()
 
                 try:
-                    ToolLaunch.objects.get(
+                    Tool.objects.get(
                         uuid=visualization_tool.uuid
                     ).set_owner(request.user)
                 except (
-                    ToolLaunch.DoesNotExist,
-                    ToolLaunch.MultipleObjectsReturned
+                        Tool.DoesNotExist,
+                        Tool.MultipleObjectsReturned
                 ) as e:
                     return HttpResponseServerError(
-                        "Couldn't fetch ToolLaunch with UUID {}: {}".format(
+                        "Couldn't fetch Tool with UUID {}: {}".format(
                             visualization_tool.uuid,
                             e
                         )

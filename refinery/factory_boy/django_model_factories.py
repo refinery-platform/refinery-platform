@@ -88,69 +88,53 @@ class InvestigationFactory(NodeCollectionFactory):
 
 class ToolDefinitionFactory(factory.django.DjangoModelFactory):
     """Minimal representation of a ToolDefinition"""
-
     class Meta:
         model = "tool_manager.ToolDefinition"
 
 
-class VisualizationDefinitionFactory(ToolDefinitionFactory):
-    """Minimal representation of a VisualizationDefinition"""
-
+class ToolFactory(factory.django.DjangoModelFactory):
+    """Minimal representation of a ToolDefinition"""
     class Meta:
-        model = "tool_manager.VisualizationDefinition"
-
-
-class WorkflowDefinitionFactory(ToolDefinitionFactory):
-    """Minimal representation of a WorkflowDefinition"""
-
-    class Meta:
-        model = "tool_manager.WorkflowDefinition"
+        model = "tool_manager.Tool"
 
 
 class FileRelationshipFactory(factory.django.DjangoModelFactory):
     """Minimal representation of a FileRelationship"""
-
     class Meta:
         model = "tool_manager.FileRelationship"
 
 
 class InputFileFactory(factory.django.DjangoModelFactory):
     """Minimal representation of an InputFile"""
-
     class Meta:
         model = "tool_manager.InputFile"
 
 
 class ParameterFactory(factory.django.DjangoModelFactory):
     """Minimal representation of a Parameter"""
-
     class Meta:
         model = "tool_manager.Parameter"
 
 
 class GalaxyParameterFactory(factory.django.DjangoModelFactory):
     """Minimal representation of a GalaxyParameter"""
-
     class Meta:
         model = "tool_manager.GalaxyParameter"
 
 
 class OutputFileFactory(factory.django.DjangoModelFactory):
     """Minimal representation of an OutputFile"""
-
     class Meta:
         model = "tool_manager.OutputFile"
 
 
 class FileTypeFactory(factory.django.DjangoModelFactory):
     """Minimal representation of a FileType"""
-
     class Meta:
         model = "file_store.FileType"
 
 
 class FileExtensionFactory(factory.django.DjangoModelFactory):
     """Minimal representation of a FileExtension"""
-
     class Meta:
         model = "file_store.FileExtension"

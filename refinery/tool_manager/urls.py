@@ -1,14 +1,14 @@
 from django.conf.urls import url, include
 from rest_framework.routers import DefaultRouter
-from .views import ToolDefinitionsViewSet, ToolLaunchViewSet
+from .views import ToolDefinitionsViewSet, ToolViewSet
 
 # DRF url routing
 tool_manager_router = DefaultRouter()
 tool_manager_router.register(r'tools/definitions', ToolDefinitionsViewSet)
 tool_manager_router.register(
     r'tools',
-    ToolLaunchViewSet,
-    "ToolLaunch"
+    ToolViewSet,
+    "Tool"
 )
 
 # Django docker engine urls

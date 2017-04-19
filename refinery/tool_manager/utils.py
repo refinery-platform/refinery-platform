@@ -15,8 +15,7 @@ from factory_boy.django_model_factories import (FileRelationshipFactory,
                                                 InputFileFactory,
                                                 OutputFileFactory,
                                                 ParameterFactory,
-                                                VisualizationDefinitionFactory,
-                                                WorkflowDefinitionFactory)
+                                                ToolDefinitionFactory)
 
 from file_store.models import FileType
 from .models import ToolDefinition
@@ -62,12 +61,13 @@ class FileTypeValidationError(RuntimeError):
 def create_tool_definition(annotation_data):
     """
     :param annotation_data: dict of data that represents a ToolDefinition
+    :returns: The created ToolDefinition object
     """
     tool_type = annotation_data["tool_type"]
     annotation = annotation_data["annotation"]
 
     if tool_type == ToolDefinition.WORKFLOW:
-        tool_definition = WorkflowDefinitionFactory(
+        tool_definition = ToolDefinitionFactory(
             name=annotation_data["name"],
             description=annotation["description"],
             tool_type=tool_type,
@@ -75,7 +75,7 @@ def create_tool_definition(annotation_data):
             galaxy_workflow_id=annotation_data["galaxy_workflow_id"]
         )
     elif tool_type == ToolDefinition.VISUALIZATION:
-        tool_definition = VisualizationDefinitionFactory(
+        tool_definition = ToolDefinitionFactory(
             name=annotation_data["name"],
             description=annotation["description"],
             tool_type=tool_type,
@@ -94,6 +94,8 @@ def create_tool_definition(annotation_data):
         tool_definition,
         annotation["parameters"]
     )
+
+    return tool_definition
 
 
 @transaction.atomic
