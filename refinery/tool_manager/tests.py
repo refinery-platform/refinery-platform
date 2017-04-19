@@ -624,13 +624,17 @@ class ToolAPITests(APITestCase):
 
     def test_unallowed_http_verbs(self):
         self.assertEqual(
-            self.put_response.data['detail'], 'Method "PUT" not allowed.')
+            self.put_response.data['detail'],
+            'Method "PUT" not allowed.'
+        )
         self.assertEqual(
-            self.options_response.data['detail'], 'Method "OPTIONS" not '
-                                                  'allowed.')
+            self.options_response.data['detail'],
+            'Method "OPTIONS" not allowed.'
+        )
         self.assertEqual(
-            self.delete_response.data['detail'], 'Method "DELETE" not '
-                                                 'allowed.')
+            self.delete_response.data['detail'],
+            'Method "DELETE" not allowed.'
+        )
 
 
 class ToolLaunchTests(StaticLiveServerTestCase):
