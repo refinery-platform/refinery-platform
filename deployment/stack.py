@@ -44,12 +44,22 @@ class ConfigError(Exception):
     pass
 
 
-def main():
+def main(argv=None):
+    if argv is None:
+        argv = sys.argv
+
     config, config_yaml = load_config()
 
     derive_config(config)
 
-    unique_suffix = datetime.datetime.utcnow().strftime("%Y%m%dT%H%M")
+    stack_name = config['STACK_NAME']
+
+    # :todo: expand this into a proper command parser.
+    # For now, just the "name" command,
+    # which we plan to remove, when the Makefile goes.
+    if len(argv) > 1 and argv[1] == "name":
+        sys.stdout.write("{}\n".format(stack_name))
+        return 0
 
     # We discover the current git branch/commit so that the deployment script
     # can use it to clone the same commit
@@ -60,13 +70,13 @@ def main():
 
     instance_tags = load_tags()
 
-    # Set the `Name` as it appears on the EC2 web UI
+    # Stack Name is also used for instances.
     instance_tags.append({'Key': 'Name',
-                         'Value': "refinery-web-" + unique_suffix})
+                         'Value': stack_name})
 
     config['tags'] = instance_tags
 
-    config_uri = save_s3_config(config, unique_suffix)
+    config_uri = save_s3_config(config, stack_name)
     sys.stderr.write("Configuration saved to {}\n".format(config_uri))
 
     tls_rewrite = "false"
@@ -587,6 +597,7 @@ def report_missing_keys(config):
     """Collect and report list of missing keys"""
 
     required = [
+        'STACK_NAME',
         'KEY_NAME', 'RDS_SUPERUSER_PASSWORD', 'SITE_NAME', 'SITE_URL',
         'ADMIN_PASSWORD', 'AWS_STORAGE_BUCKET_NAME'
     ]
