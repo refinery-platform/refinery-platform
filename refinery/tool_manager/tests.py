@@ -637,6 +637,8 @@ class ToolAPITests(APITestCase):
         force_authenticate(self.post_request, self.user)
         self.post_response = self.view(self.post_request)
 
+        self.tool_launch = Tool.objects.all()[0]
+
         self.get_request = self.factory.get(self.url_root)
         force_authenticate(self.get_request, self.user)
         self.get_response = self.view(self.get_request)
@@ -661,6 +663,10 @@ class ToolAPITests(APITestCase):
         )
         force_authenticate(self.options_request, self.user)
         self.options_response = self.view(self.options_request)
+
+    def tearDown(self):
+        # Purge Docker Containers that we've spun up
+        DockerClientWrapper().purge_by_label(self.tool_launch.uuid)
 
     def test_tool_launches_exist(self):
         self.assertEqual(Tool.objects.count(), 1)
