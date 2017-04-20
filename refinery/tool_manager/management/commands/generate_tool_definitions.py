@@ -8,7 +8,7 @@ from ...utils import (
     ANNOTATION_ERROR_MESSAGE,
     create_tool_definition,
     get_visualization_annotations_list,
-    get_workflow_list,
+    get_workflows,
     validate_tool_annotation,
     validate_workflow_step_annotation
 )
@@ -121,66 +121,71 @@ class Command(BaseCommand):
         )
 
         try:
-            workflow_list = get_workflow_list()
+            workflows = get_workflows()
         except RuntimeError as e:
             raise CommandError(e)
 
-        for workflow in workflow_list:
-            if workflow["name"] in [
-                t.name for t in ToolDefinition.objects.all()
-            ]:
-                self.stdout.write(
-                    self.style.NOTICE(
-                        "Skipping creation of `{0}` since ToolDefinition with "
-                        "name: `{0}` already exists.".format(
-                            workflow["name"]
+        for workflow_engine_uuid in workflows:
+            for workflow in workflows[workflow_engine_uuid]:
+                if workflow["name"] in [
+                    t.name for t in ToolDefinition.objects.all()
+                ]:
+                    self.stdout.write(
+                        self.style.NOTICE(
+                            "Skipping creation of `{0}` since "
+                            "ToolDefinition with name: `{0}` already exists."
+                            .format(workflow["name"])
                         )
                     )
-                )
-                pass
-            else:
-                workflow["galaxy_workflow_id"] = workflow["id"]
-                workflow["tool_type"] = ToolDefinition.WORKFLOW
-                try:
-                    workflow["annotation"] = json.loads(
-                        workflow["annotation"]
-                    )
-                except ValueError as e:
-                    raise CommandError(
-                        "Workflow: `{}`'s annotation is not "
-                        "valid JSON: {}".format(workflow["name"], e)
-                    )
+                    pass
+                else:
+                    workflow["galaxy_workflow_id"] = workflow["id"]
+                    workflow["tool_type"] = ToolDefinition.WORKFLOW
+                    try:
+                        workflow["annotation"] = json.loads(
+                            workflow["annotation"]
+                        )
+                    except ValueError as e:
+                        raise CommandError(
+                            "Workflow: `{}`'s annotation is not "
+                            "valid JSON: {}".format(workflow["name"], e)
+                        )
 
-                # Include `parameters` and `output_files` as keys in our
-                # workflow annotation
-                workflow["annotation"]["parameters"] = []
-                workflow["annotation"]["output_files"] = []
+                    # Include `parameters` and `output_files` as keys in our
+                    # workflow annotation
+                    workflow["annotation"]["parameters"] = []
+                    workflow["annotation"]["output_files"] = []
 
-                workflow = self.parse_workflow_step_annotations(workflow)
-                try:
-                    validate_tool_annotation(workflow)
-                except RuntimeError as e:
-                    raise CommandError(e)
-                except Exception as e:
-                    raise CommandError(
-                        "Something unexpected happened: {}".format(e)
-                    )
-                try:
-                    create_tool_definition(workflow)
-                except Exception as e:
-                    raise CommandError(
-                        "Creation of ToolDefinition failed. Database "
-                        "rolled back to its state before this "
-                        "ToolDefinition's attempted creation: {}".format(e)
-                    )
+                    # Workflows need to know about their associated
+                    # WorkflowEngines
+                    workflow["workflow_engine_uuid"] = workflow_engine_uuid
 
-                self.stdout.write(
-                    self.style.WARNING(
-                        "Generated ToolDefinition for Workflow: `{}`".format(
-                            workflow["name"]
+                    workflow = self.parse_workflow_step_annotations(workflow)
+                    try:
+                        validate_tool_annotation(workflow)
+                    except RuntimeError as e:
+                        raise CommandError(e)
+                    except Exception as e:
+                        raise CommandError(
+                            "Something unexpected happened: {}".format(e)
+                        )
+                    try:
+                        create_tool_definition(workflow)
+                    except Exception as e:
+                        raise CommandError(
+                            "Creation of ToolDefinition failed. Database "
+                            "rolled back to its state before this "
+                            "ToolDefinition's attempted creation: {}".format(e)
+                        )
+
+                    self.stdout.write(
+                        self.style.WARNING(
+                            "Generated ToolDefinition for Workflow: `{}`"
+                            .format(
+                                workflow["name"]
+                            )
                         )
                     )
-                )
 
     def parse_workflow_step_annotations(self, workflow):
         """

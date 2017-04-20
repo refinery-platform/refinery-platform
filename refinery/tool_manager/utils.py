@@ -67,12 +67,21 @@ def create_tool_definition(annotation_data):
     annotation = annotation_data["annotation"]
 
     if tool_type == ToolDefinition.WORKFLOW:
+
+        # NOTE: Since we are within a `transaction` we aren't handline the
+        # usual `DoesNotExist` & `MultipleObjectsReturned` exceptions because
+        # we want them to propagate up the stack
+        workflow_engine = WorkflowEngine.objects.get(
+            uuid=annotation_data["workflow_engine_uuid"]
+        )
+
         tool_definition = ToolDefinitionFactory(
             name=annotation_data["name"],
             description=annotation["description"],
             tool_type=tool_type,
             file_relationship=create_file_relationship_nesting(annotation),
-            galaxy_workflow_id=annotation_data["galaxy_workflow_id"]
+            galaxy_workflow_id=annotation_data["galaxy_workflow_id"],
+            workflow_engine=workflow_engine
         )
     elif tool_type == ToolDefinition.VISUALIZATION:
         tool_definition = ToolDefinitionFactory(
@@ -311,27 +320,34 @@ def validate_tool_launch_configuration(tool_launch_config):
         )
 
 
-def get_workflow_list():
+def get_workflows():
     """
     Generate a list of available workflows from all currently available
     WorkflowEngines
-    :return: list of workflow dicts
+    :return: dict with keys == WorkflowEngine.uuid's and values == list of
+    workflows available to said engine
     """
-    workflow_list = []
+    workflow_data = {}
     workflow_engines = WorkflowEngine.objects.all()
 
     logger.debug("%s workflow engines found.", workflow_engines.count())
 
-    for engine in workflow_engines:
-        logger.debug("Fetching workflows from workflow engine %s", engine.name)
+    for workflow_engine in workflow_engines:
+        # Set keys of `workflow_data` to WorkflowEngine UUIDs to denote
+        # where workflows came from.
+        workflow_data[workflow_engine.uuid] = []
+        logger.debug(
+            "Fetching workflows from workflow engine %s",
+            workflow_engine.name
+        )
 
-        galaxy_connection = engine.instance.galaxy_connection()
+        galaxy_connection = workflow_engine.instance.galaxy_connection()
         try:
             workflows = galaxy_connection.workflows.get_workflows()
         except ConnectionError as e:
             raise RuntimeError(
                 "Unable to retrieve workflows from '{}' {}".format(
-                    engine.instance.base_url, e
+                    workflow_engine.instance.base_url, e
                 )
             )
         else:
@@ -339,9 +355,9 @@ def get_workflow_list():
                 workflow_data = galaxy_connection.workflows.show_workflow(
                     workflow["id"]
                 )
-                workflow_list.append(workflow_data)
+                workflow_data[workflow_engine.uuid].append(workflow_data)
 
-    return workflow_list
+    return workflow_data
 
 
 def get_visualization_annotations_list():

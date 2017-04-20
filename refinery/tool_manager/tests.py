@@ -15,7 +15,8 @@ from rest_framework.test import (APIRequestFactory, APITestCase,
                                  force_authenticate)
 from selenium import webdriver
 
-from core.models import ExtendedGroup
+from core.models import ExtendedGroup, WorkflowEngine
+from galaxy_connector.models import Instance
 from selenium_testing.utils import (MAX_WAIT, wait_until_class_visible)
 
 from .models import (FileRelationship, GalaxyParameter, InputFile,
@@ -43,19 +44,31 @@ class ToolDefinitionAPITests(APITestCase):
 
         self.url_root = '/api/v2/tools/definitions/'
 
+        self.galaxy_instance = Instance.objects.create()
+        self.workflow_engine = WorkflowEngine.objects.create(
+            instance=self.galaxy_instance
+        )
+
         # Make some sample data
         with open(
                 "{}/visualization_LIST_hello_world.json".format(TEST_DATA_PATH)
         ) as f:
-            create_tool_definition(json.loads(f.read()))
+            tool_annotation = json.loads(f.read())
+            create_tool_definition(tool_annotation)
         with open("{}/workflow_LIST.json".format(TEST_DATA_PATH)) as f:
-            create_tool_definition(json.loads(f.read()))
+            tool_annotation = json.loads(f.read())
+            tool_annotation["workflow_engine_uuid"] = self.workflow_engine.uuid
+            create_tool_definition(tool_annotation)
         with open("{}/workflow_LIST:PAIR.json".format(TEST_DATA_PATH)) as f:
-            create_tool_definition(json.loads(f.read()))
+            tool_annotation = json.loads(f.read())
+            tool_annotation["workflow_engine_uuid"] = self.workflow_engine.uuid
+            create_tool_definition(tool_annotation)
         with open(
                 "{}/workflow_LIST:LIST:PAIR.json".format(TEST_DATA_PATH)
         ) as f:
-            create_tool_definition(json.loads(f.read()))
+            tool_annotation = json.loads(f.read())
+            tool_annotation["workflow_engine_uuid"] = self.workflow_engine.uuid
+            create_tool_definition(tool_annotation)
 
         # Make reusable requests & responses
         self.get_request = self.factory.get(self.url_root)
@@ -144,6 +157,10 @@ class ToolDefinitionGenerationTests(TestCase):
             "tool_manager.management.commands.generate_tool_definitions"
             ".get_visualization_annotations_list"
         )
+        self.galaxy_instance = Instance.objects.create()
+        self.workflow_engine = WorkflowEngine.objects.create(
+            instance=self.galaxy_instance
+        )
 
     def test_workflow_improperly_annotated(self):
         with open(
@@ -163,6 +180,10 @@ class ToolDefinitionGenerationTests(TestCase):
                     TEST_DATA_PATH)
         ) as f:
             workflow_annotation = json.loads(f.read())
+            workflow_annotation[
+                "workflow_engine_uuid"
+            ] = self.workflow_engine.uuid
+
             self.assertIsNone(
                 validate_tool_annotation(workflow_annotation))
             self.assertRaises(
@@ -218,7 +239,9 @@ class ToolDefinitionGenerationTests(TestCase):
             )
 
     def test_list_visualization_tool_def_generation(self):
-        with open("{}/workflow_LIST.json".format(TEST_DATA_PATH)) as f:
+        with open(
+            "{}/visualization_LIST_igv.json".format(TEST_DATA_PATH)
+        ) as f:
             visualization_annotation = json.loads(f.read())
             create_tool_definition(visualization_annotation)
 
@@ -226,8 +249,8 @@ class ToolDefinitionGenerationTests(TestCase):
             td = ToolDefinition.objects.get(
                 name=visualization_annotation["name"]
             )
-            self.assertEqual(td.output_files.count(), 4)
-            self.assertEqual(td.parameters.count(), 7)
+            self.assertEqual(td.output_files.count(), 0)
+            self.assertEqual(td.parameters.count(), 3)
             self.assertEqual(td.file_relationship.file_relationship.count(), 0)
             self.assertEqual(td.file_relationship.input_files.count(), 1)
 
@@ -241,6 +264,9 @@ class ToolDefinitionGenerationTests(TestCase):
     def test_list_workflow_tool_def_generation(self):
         with open("{}/workflow_LIST.json".format(TEST_DATA_PATH)) as f:
             workflow_annotation = json.loads(f.read())
+            workflow_annotation[
+                "workflow_engine_uuid"
+            ] = self.workflow_engine.uuid
             create_tool_definition(workflow_annotation)
 
             self.assertEqual(ToolDefinition.objects.count(), 1)
@@ -249,6 +275,7 @@ class ToolDefinitionGenerationTests(TestCase):
             self.assertEqual(td.parameters.count(), 7)
             self.assertEqual(td.file_relationship.file_relationship.count(), 0)
             self.assertEqual(td.file_relationship.input_files.count(), 1)
+            self.assertIsNotNone(td.workflow_engine)
 
     def test_list_pair_workflow_tool_def_validation(self):
         with open("{}/workflow_LIST:PAIR.json".format(TEST_DATA_PATH)) as f:
@@ -260,6 +287,9 @@ class ToolDefinitionGenerationTests(TestCase):
     def test_list_pair_workflow_tool_def_generation(self):
         with open("{}/workflow_LIST:PAIR.json".format(TEST_DATA_PATH)) as f:
             workflow_annotation = json.loads(f.read())
+            workflow_annotation[
+                "workflow_engine_uuid"
+            ] = self.workflow_engine.uuid
             create_tool_definition(workflow_annotation)
 
             self.assertEqual(ToolDefinition.objects.count(), 1)
@@ -273,6 +303,7 @@ class ToolDefinitionGenerationTests(TestCase):
                 second_nested_file_relationship.file_relationship.count(), 0)
             self.assertEqual(
                 second_nested_file_relationship.input_files.count(), 2)
+            self.assertIsNotNone(td.workflow_engine)
 
     def test_list_list_pair_workflow_tool_def_validation(self):
         with open(
@@ -288,6 +319,9 @@ class ToolDefinitionGenerationTests(TestCase):
                 "{}/workflow_LIST:LIST:PAIR.json".format(TEST_DATA_PATH)
         ) as f:
             workflow_annotation = json.loads(f.read())
+            workflow_annotation[
+                "workflow_engine_uuid"
+            ] = self.workflow_engine.uuid
             create_tool_definition(workflow_annotation)
 
             self.assertEqual(ToolDefinition.objects.count(), 1)
@@ -305,10 +339,14 @@ class ToolDefinitionGenerationTests(TestCase):
                 third_nested_file_relationship.file_relationship.count(), 0)
             self.assertEqual(
                 third_nested_file_relationship.input_files.count(), 2)
+            self.assertIsNotNone(td.workflow_engine)
 
     def test_list_workflow_related_object_deletion(self):
         with open("{}/workflow_LIST.json".format(TEST_DATA_PATH)) as f:
             workflow_annotation = json.loads(f.read())
+            workflow_annotation[
+                "workflow_engine_uuid"
+            ] = self.workflow_engine.uuid
             create_tool_definition(workflow_annotation)
 
             td = ToolDefinition.objects.get(name=workflow_annotation["name"])
@@ -324,6 +362,9 @@ class ToolDefinitionGenerationTests(TestCase):
     def test_list_pair_workflow_related_object_deletion(self):
         with open("{}/workflow_LIST:PAIR.json".format(TEST_DATA_PATH)) as f:
             workflow_annotation = json.loads(f.read())
+            workflow_annotation[
+                "workflow_engine_uuid"
+            ] = self.workflow_engine.uuid
             create_tool_definition(workflow_annotation)
 
             td = ToolDefinition.objects.get(name=workflow_annotation["name"])
@@ -341,6 +382,9 @@ class ToolDefinitionGenerationTests(TestCase):
                 "{}/workflow_LIST:LIST:PAIR.json".format(TEST_DATA_PATH)
         ) as f:
             workflow_annotation = json.loads(f.read())
+            workflow_annotation[
+                "workflow_engine_uuid"
+            ] = self.workflow_engine.uuid
             create_tool_definition(workflow_annotation)
 
             td = ToolDefinition.objects.get(name=workflow_annotation["name"])
@@ -358,16 +402,25 @@ class ToolDefinitionGenerationTests(TestCase):
                 "{}/workflow_LIST:LIST:PAIR.json".format(TEST_DATA_PATH)
         ) as f:
             workflow_annotation = json.loads(f.read())
+            workflow_annotation[
+                "workflow_engine_uuid"
+            ] = self.workflow_engine.uuid
             create_tool_definition(workflow_annotation)
 
             td1 = ToolDefinition.objects.get(name=workflow_annotation["name"])
         with open("{}/workflow_LIST:PAIR.json".format(TEST_DATA_PATH)) as f:
             workflow_annotation = json.loads(f.read())
+            workflow_annotation[
+                "workflow_engine_uuid"
+            ] = self.workflow_engine.uuid
             create_tool_definition(workflow_annotation)
 
             td2 = ToolDefinition.objects.get(name=workflow_annotation["name"])
         with open("{}/workflow_LIST.json".format(TEST_DATA_PATH)) as f:
             workflow_annotation = json.loads(f.read())
+            workflow_annotation[
+                "workflow_engine_uuid"
+            ] = self.workflow_engine.uuid
             create_tool_definition(workflow_annotation)
 
             td3 = ToolDefinition.objects.get(name=workflow_annotation["name"])
@@ -470,18 +523,22 @@ class ToolDefinitionGenerationTests(TestCase):
             )
 
     def test_generate_tool_definitions_management_command(self):
-        invalid_workflows = open(
-            "{}/invalid_galaxy_workflows.json".format(TEST_DATA_PATH)
-        ).read()
-        valid_workflows = open(
-            "{}/valid_galaxy_workflows.json".format(TEST_DATA_PATH)
-        ).read()
+        invalid_workflows = json.loads(
+            open(
+                "{}/invalid_galaxy_workflows.json".format(TEST_DATA_PATH)
+            ).read()
+        )
+        valid_workflows = json.loads(
+            open(
+                "{}/valid_galaxy_workflows.json".format(TEST_DATA_PATH)
+            ).read()
+        )
 
         with mock.patch(
-                "tool_manager.utils.get_workflow_list",
+                "tool_manager.utils.get_workflows",
                 side_effect=[
-                    json.loads(invalid_workflows),
-                    json.loads(valid_workflows)
+                    {self.workflow_engine.uuid: invalid_workflows},
+                    {self.workflow_engine.uuid: valid_workflows}
                 ]
         ) as get_wf_mock:
 
