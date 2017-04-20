@@ -61,7 +61,7 @@ class Command(BaseCommand):
         ToolDefinition if our validation rules pass.
         """
         self.stdout.write(
-            self.style.WARNING(
+            self.style.NOTICE(
                 "Generating Visualization-based ToolDefinitions"
             )
         )
@@ -100,7 +100,7 @@ class Command(BaseCommand):
                     )
 
                 self.stdout.write(
-                    self.style.WARNING(
+                    self.style.NOTICE(
                         "Generated ToolDefinition for: "
                         "Visualization: `{}`".format(
                             visualization["name"]
@@ -114,7 +114,7 @@ class Command(BaseCommand):
         and try to create ToolDefinitions if our validation rules pass.
         """
         self.stdout.write(
-            self.style.WARNING(
+            self.style.NOTICE(
                 "Generating Galaxy Workflow-based ToolDefinitions"
             )
         )
@@ -177,7 +177,7 @@ class Command(BaseCommand):
                         )
 
                     self.stdout.write(
-                        self.style.WARNING(
+                        self.style.NOTICE(
                             "Generated ToolDefinition for Workflow: `{}`"
                             .format(
                                 workflow["name"]
