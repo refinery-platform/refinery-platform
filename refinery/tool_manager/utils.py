@@ -327,7 +327,7 @@ def get_workflows():
     :return: dict with keys == WorkflowEngine.uuid's and values == list of
     workflows available to said engine
     """
-    workflow_data = {}
+    workflow_dict = {}
     workflow_engines = WorkflowEngine.objects.all()
 
     logger.debug("%s workflow engines found.", workflow_engines.count())
@@ -335,12 +335,12 @@ def get_workflows():
     for workflow_engine in workflow_engines:
         # Set keys of `workflow_data` to WorkflowEngine UUIDs to denote
         # where workflows came from.
-        workflow_data[workflow_engine.uuid] = []
+        workflow_dict[workflow_engine.uuid] = []
+
         logger.debug(
             "Fetching workflows from workflow engine %s",
             workflow_engine.name
         )
-
         galaxy_connection = workflow_engine.instance.galaxy_connection()
         try:
             workflows = galaxy_connection.workflows.get_workflows()
@@ -355,9 +355,9 @@ def get_workflows():
                 workflow_data = galaxy_connection.workflows.show_workflow(
                     workflow["id"]
                 )
-                workflow_data[workflow_engine.uuid].append(workflow_data)
+                workflow_dict[workflow_engine.uuid].append(workflow_data)
 
-    return workflow_data
+    return workflow_dict
 
 
 def get_visualization_annotations_list():
