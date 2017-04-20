@@ -26,19 +26,21 @@
     vm.inputFileTypes = []; // maintains the required input types
     vm.refreshFileMap = refreshFileMap;
     vm.resetCurrents = resetCurrents;
+    vm.resetCurrentCollections = resetCurrentCollections;
     vm.setGroupCollection = setGroupCollection;
     vm.setNodeSelectCollection = setNodeSelectCollection;
     vm.nodeSelectCollection = {}; // contains rows and their group info
+    vm.removeGroupFromCollections = removeGroupFromCollections;
     /*
-    *-----------------------
-    * Method Definitions
-    * ----------------------
-    */
+     *-----------------------
+     * Method Definitions
+     * ----------------------
+     */
     // helper method: convert attributes name array to attributes name obj,
     // displayName: internalName
     function generateAttributeObj () {
       var attributeArr = fileBrowserFactory.assayAttributes;
-      for (var i = 0; i < attributeArr.length; i ++) {
+      for (var i = 0; i < attributeArr.length; i++) {
         vm.attributesObj[attributeArr[i].display_name] = attributeArr[i].internal_name;
       }
     }
@@ -72,7 +74,7 @@
         );
       } else {
         // remove property when checkbox deselected
-        for (var i = 0; i < vm.groupCollection[vm.currentGroup][inputTypeUuid].length; i ++) {
+        for (var i = 0; i < vm.groupCollection[vm.currentGroup][inputTypeUuid].length; i++) {
           if (vm.groupCollection[vm.currentGroup][inputTypeUuid][i].uuid === nodeUuid) {
             vm.groupCollection[vm.currentGroup][inputTypeUuid].splice(i, 1);
             break;
@@ -81,7 +83,7 @@
       }
     }
 
-   /**
+    /**
      * Generates obj with node uuids and their associated input file
      * types and groups.
      * @param {string} inputTypeUuid - uuid of the input file type from tool
@@ -108,8 +110,8 @@
           };
         }
       } else {
-            // remove property when checkbox deselected
-        for (var i = 0; i < vm.nodeSelectCollection[nodeUuid].inputTypeList.length; i ++) {
+        // remove property when checkbox deselected
+        for (var i = 0; i < vm.nodeSelectCollection[nodeUuid].inputTypeList.length; i++) {
           if (vm.nodeSelectCollection[nodeUuid].groupList[i] === vm.currentGroup) {
             vm.nodeSelectCollection[nodeUuid].groupList.splice(i, 1);
             vm.nodeSelectCollection[nodeUuid].inputTypeList.splice(i, 1);
@@ -145,6 +147,44 @@
       vm.currentGroup = [];
       vm.currentTypes = [];
       vm.inputFileTypes = [];
+      vm.groupCollection = {};
+      vm.nodeSelectCollection = {};
+    }
+
+    /**
+     * Resets the variables needed for clearing cart completely
+     */
+    function resetCurrentCollections () {
+      for (var i = 0; i < vm.currentGroup.length; i++) {
+        vm.currentGroup[i] = 0;
+      }
+      vm.groupCollection = {};
+      vm.nodeSelectCollection = {};
+    }
+
+    // To-do fix the Selection Obj in UI to deselect!
+    function removeGroupFromCollections () {
+      angular.forEach(vm.groupCollection[vm.currentGroup], function (nodeArr, inputTypeUuid) {
+        removeGroupFromNodeSelectCollection(nodeArr, inputTypeUuid);
+      });
+      // Delete groupID property from obj since it is empty
+      delete vm.groupCollection[vm.currentGroup];
+    }
+
+    // Helper method which finds index of currentGroupId and slices it from
+    // groupId and it's associated inputFileType
+    function removeGroupFromNodeSelectCollection (nodeList, TypeUuid) {
+      for (var i = 0; i < nodeList.length; i++) {
+        var groupInd = vm.nodeSelectCollection[nodeList[i].uuid].groupList.indexOf(TypeUuid);
+        if (groupInd > -1) {
+          vm.nodeSelectCollection[nodeList[i].uuid].groupList.splice(groupInd, 1);
+          vm.nodeSelectCollection[nodeList[i].uuid].TypeUuid.splice(groupInd, 1);
+        }
+       // Delete node property from obj if empty
+        if (vm.nodeSelectCollection[nodeList[i].uuid].groupList === 0) {
+          delete vm.nodeSelectCollection[nodeList[i].uuid];
+        }
+      }
     }
   }
 })();

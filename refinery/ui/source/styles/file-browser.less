@@ -178,6 +178,7 @@
     li {
       margin-bottom: 5px;
       padding-left: 5px;
+      border-radius: 3px;
 
       .fileTypes {
         display: inline;
@@ -186,25 +187,31 @@
 
     li:nth-of-type(6n-5) {
       color: #009E73;
+      border: 1px dashed #009E73;
     }
     li:nth-of-type(6n-4) {
       color: #CC79A7;
+      border: 1px dashed #CC79A7;
     }
 
     li:nth-of-type(6n-3) {
       color: #56B4E9;
+      border: 1px dashed #56B4E9;
     }
 
     li:nth-of-type(6n-2) {
       color: #E69F00;
+      border: 1px dashed #E69F00;
     }
 
     li:nth-of-type(6n-1) {
       color: #F0E442;
+      border: 1px dashed #F0E442;
     }
 
     li:nth-of-type(6n-0) {
       color: #D55E00;
+      border: 1px dashed #D55E00;
     }
   }
 }
@@ -250,14 +257,7 @@
 }
 
 #control-panel-list {
-  border: 2px solid @gray-lighter;
-  margin: .25em;
-
   .tree-panel {
-    padding-top: 1em;
-  }
-  .tree-panel-pair {
-    padding-top: 1em;
-    background-color: @gray-lightest;
+    padding: .25em;
   }
 }

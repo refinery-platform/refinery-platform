@@ -2,17 +2,41 @@
   class="node-input-group"
   role="tablist"
   aria-multiselectable="true">
-  <div ng-if="$ctrl.currentFileInput.length == 0">
-     <rp-input-group-cart collection='$ctrl.tool.file_relationship'>
-     </rp-input-group-cart>
-  </div>
-  <div ng-if="$ctrl.currentFileInput.length > 0">
-     <ul>
-       <li
-         class="wrap-word"
-         ng-repeat="file in $ctrl.currentFileInput">
-         {{ file.entity[$ctrl.attributes.Name]}}
-       </li>
-     </ul>
-  </div>
+
+  <ul>
+    <li ng-repeat="inputFile in $ctrl.inputFilesTypes track by $index">
+      <span class="wrap-word" ng-if="$ctrl.isGroupPopulated(inputFile.uuid)">
+        <span ng-repeat="node in $ctrl.groupCollection[$ctrl.currentGroup][inputFile.uuid]">
+          {{ node[$ctrl.attributes.Name] }}
+        </span>
+      </span>
+      <span ng-if="!$ctrl.isGroupPopulated(inputFile.uuid)">
+        {{ inputFile.name }}:
+        <
+        <div
+          class='fileTypes'
+          ng-repeat="fileObj in inputFile.allowed_filetypes">
+          {{fileObj.name}}
+          <span ng-if="$index < inputFile.allowed_filetypes.length - 1">
+            ,
+          </span>
+        </div>
+        >
+        <br>
+        <em>{{ inputFile.description }}</em>
+      </span>
+    </li>
+  </ul>
+  <button
+    class="btn btn-default btn-xs outline"
+    ng-disabled="$ctrl.isObjEmpty($ctrl.groupCollection[$ctrl.currentGroup])"
+    ng-click="$ctrl.removeGroup()">
+    Remove
+  </button>
+  <button
+    class="btn btn-default btn-xs outline"
+    ng-disabled="$ctrl.isObjEmpty($ctrl.groupCollection)"
+    ng-click="$ctrl.removeAllGroups()">
+    Remove All
+  </button>
 </div>
