@@ -32,6 +32,10 @@
 SITE_NAME: Refinery
 SITE_URL: "192.168.50.50:8000"
 
+# STACK_NAME is used to name the stack
+# (in the Web UI and other places), and to name instances.
+STACK_NAME: "I forgot to set the stack name"
+
 # the AWS ARN for the TLS certifcate that you wish to present.
 # TLS_CERTIFICATE: "arn:aws:acm:--region--:--accountnumber--:certificate/--id--"
 
