@@ -48,20 +48,23 @@
                   {{ NSPCtrl.inputFileTypes[0].name }}
                 </label>
             </span>
-           </li>
            <!-- If there's a group already started for the inputFileType; checkbox selected-->
-          <span
-            ng-if="NSPCtrl.groupCollection[NSPCtrl.currentGroup] &&
-            NSPCtrl.groupCollection[NSPCtrl.currentGroup][inputType.uuid].length > 0"
-            class="wrap-word">
-            <div ng-repeat="selectedFile in NSPCtrl.groupCollection[NSPCtrl.currentGroup][inputType.uuid]">
-              <input
-                type="checkbox"
-                ng-click="NSPCtrl.selectNode(inputType.uuid, selectedFile.uuid)"
-                ng-model="NSPCtrl.selectionObj[inputType.uuid][selectedFile.uuid]">
-               {{ selectedFile[NSPCtrl.attributes.Name] }}
-            </div>
-          </span>
+            <span
+              ng-if="NSPCtrl.groupCollection[NSPCtrl.currentGroup] &&
+              NSPCtrl.groupCollection[NSPCtrl.currentGroup][inputType.uuid].length > 0">
+              <div ng-repeat="selectedFile in NSPCtrl.groupCollection[NSPCtrl.currentGroup][inputType.uuid]">
+                <div class="checkbox">
+                  <label class="wrap-word">
+                    <input
+                      type="checkbox"
+                      ng-click="NSPCtrl.selectNode(inputType.uuid, selectedFile.uuid)"
+                      ng-model="NSPCtrl.selectionObj[inputType.uuid][selectedFile.uuid]">
+                   {{ selectedFile[NSPCtrl.attributes.Name] }}
+                  </label>
+                </div>
+              </div>
+            </span>
+          </li>
         </div>
       </form>
     </ul>
