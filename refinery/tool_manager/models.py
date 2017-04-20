@@ -150,8 +150,7 @@ class ToolDefinition(models.Model):
     file_relationship = models.ForeignKey(FileRelationship)
     output_files = models.ManyToManyField(OutputFile)
     parameters = models.ManyToManyField(Parameter)
-
-    docker_image_name = models.CharField(max_length=255, blank=True, null=True)
+    docker_image_name = models.CharField(max_length=255, blank=True)
     container_input_path = models.CharField(
         max_length=500,
         blank=True
