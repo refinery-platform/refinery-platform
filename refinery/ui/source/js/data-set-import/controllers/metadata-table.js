@@ -322,7 +322,7 @@ MetadataTableImportCtrl.prototype.startImport = function () {
       self.metadataStatusService.setMetadataPreviewStatus(false);
       self.$timeout(function () {
         self.$window.location.href = '/data_sets/' + self.importedDataSetUuid;
-      }, 2500);
+      }, 5000);
     })
     .catch(function (error) {
       self.isErrored = true;
