@@ -10,7 +10,7 @@ from django_extensions.db.fields import UUIDField
 from django_docker_engine.docker_utils import DockerContainerSpec
 from docker.errors import APIError
 
-from core.models import Analysis, OwnableResource
+from core.models import Analysis, OwnableResource, WorkflowEngine
 from file_store.models import FileType
 
 logger = logging.getLogger(__name__)
@@ -159,6 +159,7 @@ class ToolDefinition(models.Model):
         max_length=250,
         blank=True
     )
+    workflow_engine = models.ForeignKey(WorkflowEngine, blank=True, null=True)
 
     def __str__(self):
         return "{}: {} {}".format(self.tool_type, self.name, self.uuid)
