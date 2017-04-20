@@ -322,8 +322,8 @@ def validate_tool_launch_configuration(tool_launch_config):
 
 def get_workflows():
     """
-    Generate a list of available workflows from all currently available
-    WorkflowEngines
+    Generate a dict mapping available WorkflowEngine UUIDs to a list
+    of their available workflows.
     :return: dict with keys == WorkflowEngine.uuid's and values == list of
     workflows available to said engine
     """
