@@ -80,7 +80,6 @@ class Command(BaseCommand):
                         )
                     )
                 )
-                pass
             else:
                 visualization["tool_type"] = ToolDefinition.VISUALIZATION
                 try:
@@ -137,7 +136,6 @@ class Command(BaseCommand):
                             .format(workflow["name"])
                         )
                     )
-                    pass
                 else:
                     workflow["galaxy_workflow_id"] = workflow["id"]
                     workflow["tool_type"] = ToolDefinition.WORKFLOW
