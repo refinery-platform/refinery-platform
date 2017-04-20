@@ -492,8 +492,7 @@
         <div class="row m-t-1-4 m-b-1-4">
           <div class="col-sm-12 col-md-12 col-lg-12">
             <div class="m-t-1 m-b-1">
-              Does the <strong>Data File Column</strong> reference any local
-              files?
+              Does the <strong>Data File Column</strong> refer to local files?
               <label class="p-l-1-2">
                 <input
                   type="radio"
@@ -531,6 +530,16 @@
                     ng-disabled="!metadataTable.dataFileColumn">
                     Check Data Files
                   </button>
+                  <a
+                  popover-placement="right"
+                  uib-popover="Use this button to check that you have
+                  successfully uploaded all of your data files."
+                  popover-title="Check Data Files"
+                  popover-trigger="focus"
+                  popover-append-to-body="true"
+                  tabindex="0">
+                      <i class="fa fa-question-circle info-icon icon-only"></i>
+                  </a>
                 </div>
               <rp-file-upload></rp-file-upload>
             </div>
