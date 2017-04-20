@@ -60,7 +60,7 @@
         nodeUuid = nodeService.activeNodeRow.uuid;
       }
       // checkbox selected
-      if (selectionObj[inputTypeUuid]) {
+      if (selectionObj[inputTypeUuid][nodeUuid]) {
         if (_.has(vm.groupCollection, vm.currentGroup) === false) {
           // intialize groupCollection[groupId]
           vm.groupCollection[vm.currentGroup] = {};
@@ -98,7 +98,7 @@
         nodeUuid = nodeService.activeNodeRow.uuid;
       }
       // checkbox selected
-      if (selectionObj[inputTypeUuid]) {
+      if (selectionObj[inputTypeUuid][nodeUuid]) {
         if (_.has(vm.nodeSelectCollection, nodeUuid) === true) {
           vm.nodeSelectCollection[nodeUuid].inputTypeList.push(angular.copy(inputTypeUuid));
           vm.nodeSelectCollection[nodeUuid].groupList.push(angular.copy(vm.currentGroup));

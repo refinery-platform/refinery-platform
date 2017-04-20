@@ -1,7 +1,7 @@
 <div id="node-selection-popover">
   <div class="node-input-group">
     <ul>
-      <form name="myForm">
+      <form name="inputNodeForm">
         <div ng-if="NSPCtrl.currentTypes[NSPCtrl.currentTypes.length-1]=='PAIR'">
           <li ng-repeat="inputType in NSPCtrl.inputFileTypes track by $index">
             <div class="checkbox">
@@ -11,7 +11,6 @@
                   ng-if="NSPCtrl.groupCollection[NSPCtrl.currentGroup] &&
                   NSPCtrl.groupCollection[NSPCtrl.currentGroup][inputType.uuid].length > 0"
                   class="wrap-word">
-                  <!-- TODO: Need to handle pairs vs lists here -->
                     <span ng-repeat="selectedFile in NSPCtrl.groupCollection[NSPCtrl.currentGroup][inputType.uuid]">
                       <input
                         type="checkbox"
@@ -19,7 +18,7 @@
                         ng-model="NSPCtrl.selectionObj[inputType.uuid][selectedFile.uuid]">
                        {{ selectedFile[NSPCtrl.attributes.Name] }}
                     </span>
-                </span>
+                  </span>
                 <!-- If there's NOT a group already started for the inputFileType; checkbox not selected-->
                 <span
                   ng-if="!NSPCtrl.groupCollection[NSPCtrl.currentGroup] ||
@@ -55,10 +54,7 @@
             ng-if="NSPCtrl.groupCollection[NSPCtrl.currentGroup] &&
             NSPCtrl.groupCollection[NSPCtrl.currentGroup][inputType.uuid].length > 0"
             class="wrap-word">
-            <!-- TODO: Need to handle pairs vs lists here -->
-
-            <div ng-repeat="selectedFile in NSPCtrl.groupCollection[NSPCtrl
-            .currentGroup][inputType.uuid]">
+            <div ng-repeat="selectedFile in NSPCtrl.groupCollection[NSPCtrl.currentGroup][inputType.uuid]">
               <input
                 type="checkbox"
                 ng-click="NSPCtrl.selectNode(inputType.uuid, selectedFile.uuid)"
