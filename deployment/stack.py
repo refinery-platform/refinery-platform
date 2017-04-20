@@ -26,8 +26,6 @@ Usually invoked via the Makefile: make web-stack
 # CloudInit
 #   https://help.ubuntu.com/community/CloudInit
 
-from __future__ import print_function
-
 import base64
 import datetime
 import json
@@ -60,7 +58,7 @@ def main(argv=None):
     # For now, just the "name" command,
     # which we plan to remove, when the Makefile goes.
     if len(argv) > 1 and argv[1] == "name":
-        print(stack_name)
+        sys.stdout.write("{}\n".format(stack_name))
         return 0
 
     # We discover the current git branch/commit so that the deployment script
