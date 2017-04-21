@@ -32,7 +32,6 @@ class ToolsViewSet(ModelViewSet):
     http_method_names = ['get', 'post']
     permission_classes = [IsAuthenticated]
 
-    @transaction.atomic
     def create(self, request, *args, **kwargs):
         # TODO: Validate incoming Tool Launch Configurations against our schema
         # try:
@@ -65,22 +64,25 @@ class ToolsViewSet(ModelViewSet):
                 # Tool.parse_file_relationships_string()
                 # Tool.populate_url_from_node_uuid()
 
-                visualization_tool = ToolFactory(
-                    name="{}-launch".format(tool_definition.name),
-                    tool_definition=tool_definition,
-                    parameters=tool_launch_data["parameters"],
-                    file_relationships=tool_launch_data["file_relationships"]
-                )
+                with transaction.atomic():
+                    visualization_tool = ToolFactory(
+                        name="{}-launch".format(tool_definition.name),
+                        tool_definition=tool_definition,
+                        parameters=tool_launch_data["parameters"],
+                        file_relationships=tool_launch_data[
+                            "file_relationships"
+                        ]
+                    )
 
-                # Create a unique container name that adheres to dockers
-                # specifications
-                visualization_tool.container_name = "{}-{}".format(
-                    visualization_tool.name.replace(" ", ""),
-                    visualization_tool.uuid
-                )
+                    # Create a unique container name that adheres to docker's
+                    # specifications
+                    visualization_tool.container_name = "{}-{}".format(
+                        visualization_tool.name.replace(" ", ""),
+                        visualization_tool.uuid
+                    )
 
-                visualization_tool.set_owner(request.user)
-                visualization_tool.save()
+                    visualization_tool.set_owner(request.user)
+                    visualization_tool.save()
 
                 return visualization_tool.launch()
 
