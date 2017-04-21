@@ -218,15 +218,13 @@ class Command(BaseCommand):
                 try:
                     parameters = step_annotation["parameters"]
                 except KeyError:
-                    # `parameters` aren't required
-                    # for each workflow step
+                    # `parameters` aren't required for each workflow step
                     pass
                 else:
                     for parameter in parameters:
                         # Check User-defined parameters in
                         # annotation data against the available
-                        # parameters of the Workflow step's
-                        # `tool_inputs`
+                        # parameters of the Workflow step's `tool_inputs`
                         if parameter["name"] not in step["tool_inputs"]:
                             raise CommandError(
                                 "{} is not a valid parameter for {}".format(
@@ -242,15 +240,13 @@ class Command(BaseCommand):
                 try:
                     output_files = step_annotation["output_files"]
                 except KeyError:
-                    # `output_files` aren't required
-                    # for each workflow step
+                    # `output_files` aren't required for each workflow step
                     pass
                 else:
                     for output_file in output_files:
                         # Check User-defined output_files in
                         # annotation data against the available
-                        # output_file  of the Workflow step's
-                        # `tool_inputs`
+                        # output_file  of the Workflow step's `tool_inputs`
                         valid_output_names = []
                         for key in step["input_steps"].iterkeys():
                             valid_output_names.append(
