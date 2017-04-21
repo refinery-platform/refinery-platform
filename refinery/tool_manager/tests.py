@@ -637,7 +637,12 @@ class ToolAPITests(APITestCase):
         force_authenticate(self.post_request, self.user)
         self.post_response = self.view(self.post_request)
 
-        self.tool_launch = Tool.objects.all()[0]
+        try:
+            self.tool_launch = Tool.objects.get(
+                tool_definition__uuid=self.td.uuid
+            )
+        except(Tool.DoesNotExist, Tool.MultipleObjectsReturned) as e:
+            raise RuntimeError("Couldn't properly fetch Tool: {}".format(e))
 
         self.get_request = self.factory.get(self.url_root)
         force_authenticate(self.get_request, self.user)
@@ -766,7 +771,14 @@ class ToolLaunchTests(StaticLiveServerTestCase):
             force_authenticate(self.post_request, self.user)
             self.post_response = self.view(self.post_request)
 
-            tool_launch = Tool.objects.all()[0]
+            try:
+                tool_launch = Tool.objects.get(
+                    tool_definition__uuid=self.td.uuid
+                )
+            except(Tool.DoesNotExist, Tool.MultipleObjectsReturned) as e:
+                raise RuntimeError(
+                    "Couldn't properly fetch Tool: {}".format(e))
+
             self.container_name = tool_launch.container_name
             self.assertEqual(tool_launch.get_owner(), self.user)
             self.assertEqual(
@@ -819,7 +831,14 @@ class ToolLaunchTests(StaticLiveServerTestCase):
             force_authenticate(self.post_request, self.user)
             self.post_response = self.view(self.post_request)
 
-            tool_launch = Tool.objects.all()[0]
+            try:
+                tool_launch = Tool.objects.get(
+                    tool_definition__uuid=self.td.uuid
+                )
+            except(Tool.DoesNotExist, Tool.MultipleObjectsReturned) as e:
+                raise RuntimeError(
+                    "Couldn't properly fetch Tool: {}".format(e))
+
             self.container_name = tool_launch.container_name
             self.assertEqual(tool_launch.get_owner(), self.user)
             self.assertEqual(
