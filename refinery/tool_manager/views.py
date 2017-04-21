@@ -23,7 +23,7 @@ class ToolDefinitionsViewSet(ModelViewSet):
     permission_classes = [IsAuthenticated]
 
 
-class ToolViewSet(ModelViewSet):
+class ToolsViewSet(ModelViewSet):
     """API endpoint that allows for Tools to be fetched and launched"""
 
     queryset = Tool.objects.all()

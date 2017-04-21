@@ -25,7 +25,7 @@ from .utils import (create_tool_definition,
                     FileTypeValidationError,
                     validate_tool_annotation,
                     validate_workflow_step_annotation)
-from .views import (ToolDefinitionsViewSet, ToolViewSet)
+from .views import (ToolDefinitionsViewSet, ToolsViewSet)
 
 logger = logging.getLogger(__name__)
 TEST_DATA_PATH = "tool_manager/test_data"
@@ -606,7 +606,7 @@ class ToolAPITests(APITestCase):
                                              self.password)
 
         self.factory = APIRequestFactory()
-        self.view = ToolViewSet.as_view(
+        self.view = ToolsViewSet.as_view(
             {
                 'get': 'list',
                 'post': 'create'
@@ -720,7 +720,7 @@ class ToolLaunchTests(StaticLiveServerTestCase):
         self.user = User.objects.create_user(self.username, '', self.password)
         self.container_name = ""
         self.factory = APIRequestFactory()
-        self.view = ToolViewSet.as_view({'post': 'create'})
+        self.view = ToolsViewSet.as_view({'post': 'create'})
         self.url_root = '/api/v2/tools'
 
     def tearDown(self):
