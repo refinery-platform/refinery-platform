@@ -27,8 +27,9 @@
     vm.attributes = fileService.attributesObj;
     vm.currentFileInput = [];
     vm.currentGroup = fileService.currentGroup;
+    vm.currentTypes = fileService.currentTypes;
     vm.groupCollection = fileService.groupCollection;
-    vm.inputFilesTypes = fileService.inputFileTypes;
+    vm.inputFileTypes = fileService.inputFileTypes;
     vm.isGroupPopulated = isGroupPopulated;
     vm.isNavCollapsed = false;
     vm.isObjEmpty = isObjEmpty;
@@ -93,6 +94,7 @@
           angular.copy(vm.displayCtrl.selectedTool, vm.tool);
           vm.inputFilesTypes = fileService.inputFileTypes;
           vm.currentGroup = fileService.currentGroup;
+          vm.currentTypes = fileService.currentTypes;
 
           if (vm.tool.toolType === 'Workflow') {
             vm.toolType = vm.tool.toolType;
@@ -106,7 +108,6 @@
         },
         function () {
           vm.groupCollection = fileService.groupCollection;
-          vm.inputFilesTypes = fileService.inputFileTypes;
           vm.currentGroup = fileService.currentGroup;
         }
       );

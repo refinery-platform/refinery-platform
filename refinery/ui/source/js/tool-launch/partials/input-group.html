@@ -4,28 +4,58 @@
   aria-multiselectable="true">
 
   <ul>
-    <li ng-repeat="inputFile in $ctrl.inputFilesTypes track by $index">
-      <span class="wrap-word" ng-if="$ctrl.isGroupPopulated(inputFile.uuid)">
-        <span ng-repeat="node in $ctrl.groupCollection[$ctrl.currentGroup][inputFile.uuid]">
-          {{ node[$ctrl.attributes.Name] }}
-        </span>
-      </span>
-      <span ng-if="!$ctrl.isGroupPopulated(inputFile.uuid)">
-        {{ inputFile.name }}:
-        <
-        <div
-          class='fileTypes'
-          ng-repeat="fileObj in inputFile.allowed_filetypes">
-          {{fileObj.name}}
-          <span ng-if="$index < inputFile.allowed_filetypes.length - 1">
-            ,
+     <div ng-if="$ctrl.currentTypes[$ctrl.currentTypes.length-1]=='PAIR'">
+      <li ng-repeat="inputFile in $ctrl.inputFilesTypes track by $index">
+        <span class="wrap-word" ng-if="$ctrl.isGroupPopulated(inputFile.uuid)">
+          <span ng-repeat="node in $ctrl.groupCollection[$ctrl.currentGroup][inputFile.uuid]">
+            {{ node[$ctrl.attributes.Name] }}
           </span>
+        </span>
+        <span ng-if="!$ctrl.isGroupPopulated(inputFile.uuid)">
+          {{ inputFile.name }}:
+          <
+          <div
+            class='fileTypes'
+            ng-repeat="fileObj in inputFile.allowed_filetypes">
+            {{fileObj.name}}
+            <span ng-if="$index < inputFile.allowed_filetypes.length - 1">
+              ,
+            </span>
+          </div>
+          >
+          <br>
+          <em>{{ inputFile.description }}</em>
+        </span>
+      </li>
+     </div>
+
+    <div ng-if="$ctrl.currentTypes[$ctrl.currentTypes.length-1]=='LIST'">
+      <li class="wrap-word">
+        <div ng-if="!$ctrl.isGroupPopulated($ctrl.inputFileTypes[0].uuid)">
+          {{ $ctrl.inputFileTypes[0].name }}:
+          <
+          <div
+            class='fileTypes'
+            ng-repeat="fileObj in $ctrl.inputFileTypes[0].allowed_filetypes">
+            {{fileObj.name}}
+            <span ng-if="$index < $ctrl.inputFileTypes[0].allowed_filetypes.length - 1">
+              ,
+            </span>
+          </div>
+          >
+          <br>
+          <em>{{ inputFile.description }}</em>
         </div>
-        >
-        <br>
-        <em>{{ inputFile.description }}</em>
-      </span>
-    </li>
+        <div ng-if="$ctrl.isGroupPopulated($ctrl.inputFileTypes[0].uuid)">
+          <div
+            ng-repeat="node in $ctrl.groupCollection[$ctrl.currentGroup][$ctrl.inputFileTypes[0].uuid]"
+            class="p-t-1">
+            {{ node[$ctrl.attributes.Name] }}
+          </div>
+        </div>
+      </li>
+     </div>
+
   </ul>
   <button
     class="btn btn-default btn-xs outline"
