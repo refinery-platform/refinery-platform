@@ -210,6 +210,8 @@ INSTALLED_APPS = (
     'chunked_upload',
     'rest_framework',
     'rest_framework_swagger',
+    'django_docker_engine',
+    'httpproxy',
 )
 
 # NG: added for django-guardian
@@ -283,6 +285,11 @@ LOGGING = {
             'handlers': ['console'],
             'propagate': False,
         },
+        'factory': {
+            'handlers': ['console'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
         'file_server': {
             'handlers': ['console'],
             'level': 'DEBUG',
@@ -296,6 +303,11 @@ LOGGING = {
         'galaxy_connector': {
             'handlers': ['console'],
             'level': 'DEBUG',
+            'propagate': False,
+        },
+        'httpproxy': {
+            'level': 'ERROR',
+            'handlers': ['console'],
             'propagate': False,
         },
         'isa_tab_parser': {
@@ -583,3 +595,8 @@ TEST_RUNNER = "django.test.runner.DiscoverRunner"
 # `serialized_rollback` to function properly http://bit.ly/2l5gR30
 TEST_NON_SERIALIZED_APPS = ['core', 'django.contrib.contenttypes',
                             'django.contrib.auth']
+
+VISUALIZATION_ANNOTATION_BASE_PATH = "tool_manager/visualization_annotations"
+
+# To avoid Port conflicts between LiveServerTestCases http://bit.ly/2pb64KN
+os.environ["DJANGO_LIVE_TEST_SERVER_ADDRESS"] = "localhost:10000-12000"

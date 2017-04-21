@@ -43,6 +43,8 @@ class SeleniumTestBase(StaticLiveServerTestCase):
             create_public_group()
 
     def tearDown(self):
+        # NOTE: quit() destroys ANY currently running webdriver instances.
+        # This could become an issue if tests are ever run in parallel.
         self.browser.quit()
         self.display.stop()
 

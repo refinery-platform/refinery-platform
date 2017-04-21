@@ -1,0 +1,42 @@
+{
+  "name": "Test LIST Visualization Hello World",
+  "tool_type": "VISUALIZATION",
+  "annotation": {
+    "container_input_path": "/var/www/html/input.json",
+    "docker_image_name": "nginx:1.10.3-alpine",
+    "description": "This visualization does really cool things",
+    "parameters": [
+      {
+        "name": "Genome Build Param",
+        "description": "Genome Build Param description",
+        "value_type": "GENOME_BUILD",
+        "default_value": "hg19"
+      },
+      {
+        "name": "Attribute Param",
+        "description": "Attribute Param description",
+        "value_type": "ATTRIBUTE",
+        "default_value": "Species"
+      },
+      {
+        "name": "File Param",
+        "description": "File Param description",
+        "value_type": "FILE",
+        "default_value": "/media/file_store/file.cool"
+      }
+    ],
+    "output_files":[],
+    "file_relationship": {
+      "file_relationship": {},
+      "value_type": "LIST",
+      "name": "Flat list of N Samples",
+      "input_files": [
+        {
+          "allowed_filetypes": [{"name": "GFF"}],
+          "name": "Cool Input File",
+          "description": "Cool Input File Description"
+        }
+      ]
+    }
+  }
+}

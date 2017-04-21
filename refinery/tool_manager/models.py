@@ -1,9 +1,18 @@
+import logging
+
 from django.db import models
 from django.db.models.signals import post_delete, pre_delete
 from django.dispatch import receiver
-from django_extensions.db.fields import UUIDField
+from django.http import HttpResponseServerError, HttpResponse
 
+from django_extensions.db.fields import UUIDField
+from django_docker_engine.docker_utils import DockerContainerSpec
+from docker.errors import APIError
+
+from core.models import Analysis, OwnableResource, WorkflowEngine
 from file_store.models import FileType
+
+logger = logging.getLogger(__name__)
 
 
 class Parameter(models.Model):
@@ -140,6 +149,16 @@ class ToolDefinition(models.Model):
     file_relationship = models.ForeignKey(FileRelationship)
     output_files = models.ManyToManyField(OutputFile)
     parameters = models.ManyToManyField(Parameter)
+    docker_image_name = models.CharField(max_length=255, blank=True)
+    container_input_path = models.CharField(
+        max_length=500,
+        blank=True
+    )
+    galaxy_workflow_id = models.CharField(
+        max_length=250,
+        blank=True
+    )
+    workflow_engine = models.ForeignKey(WorkflowEngine, blank=True, null=True)
 
     def __str__(self):
         return "{}: {} {}".format(self.tool_type, self.name, self.uuid)
@@ -185,3 +204,71 @@ def delete_input_files_and_file_relationships(sender, instance, *args,
     file_relationships = instance.file_relationship.all()
     for file_relationship in file_relationships:
         file_relationship.delete()
+
+
+class Tool(OwnableResource):
+    """
+    A Tool is a representation of the information it will take to launch a
+    Refinery-based Tool
+    """
+    analysis = models.OneToOneField(Analysis, blank=True, null=True)
+    container_name = models.CharField(
+        max_length=250,
+        unique=True,
+        blank=True
+    )
+    file_relationships = models.TextField()
+    parameters = models.TextField()
+    tool_definition = models.ForeignKey(ToolDefinition)
+
+    class Meta:
+        verbose_name = "tool"
+        permissions = (
+            ('read_%s' % verbose_name, 'Can read %s' % verbose_name),
+        )
+
+    def __str__(self):
+        return "Tool: {} {} {}".format(
+            self.get_tool_type(),
+            self.get_tool_name(),
+            self.uuid
+        )
+
+    def launch(self):
+        if self.get_tool_type() == ToolDefinition.VISUALIZATION:
+            container = DockerContainerSpec(
+                image_name=self.tool_definition.docker_image_name,
+                container_name=self.container_name,
+                labels={self.uuid: ToolDefinition.VISUALIZATION},
+                container_input_path=(
+                    self.tool_definition.container_input_path
+                ),
+                input={"file_relationships": self.file_relationships}
+            )
+            try:
+                container.run()
+            except APIError as e:
+                return HttpResponseServerError(content=e)
+            else:
+                return HttpResponse(self.get_relative_container_url())
+
+        if self.get_tool_type() == ToolDefinition.WORKFLOW:
+            raise NotImplementedError
+
+    def get_relative_container_url(self):
+        """
+        Construct & return the relative url of our Tool's container
+        """
+        return "/visualizations/{}".format(self.container_name)
+
+    def get_tool_name(self):
+        return self.tool_definition.name
+
+    def get_tool_type(self):
+        return self.tool_definition.tool_type
+
+    def parse_file_relationships_string(self):
+        raise NotImplementedError
+
+    def populate_url_from_node_uuid(self):
+        raise NotImplementedError

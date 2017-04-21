@@ -1,11 +1,12 @@
+import glob
 import json
 import logging
 import os
 
 from bioblend.galaxy.client import ConnectionError
+from django.conf import settings
 from django.contrib import admin
 from django.db import transaction
-
 from jsonschema import RefResolver, validate, ValidationError
 
 from core.models import WorkflowEngine
@@ -21,9 +22,8 @@ from .models import ToolDefinition
 
 logger = logging.getLogger(__name__)
 ANNOTATION_ERROR_MESSAGE = (
-    "Workflow not properly annotated. "
-    "Please read: http://bit.ly/2nalk6w for more information on how to "
-    "properly annotate your Galaxy-based workflows. "
+    "Tool not properly annotated. Please read: http://bit.ly/2nalk6w for "
+    "examples and more information on how to properly annotate your tools."
 )
 
 
@@ -47,10 +47,11 @@ class FileTypeValidationError(RuntimeError):
         error_message = (
             "Couldn't properly fetch FileType: {}.\n"
             "Valid FileTypes are {}.\n"
-            " {}".format(
+            "{}".format(
                 filetype,
                 [f.name for f in FileType.objects.all()],
-                error)
+                error
+            )
         )
 
         super(FileTypeValidationError, self).__init__(error_message)
@@ -60,53 +61,50 @@ class FileTypeValidationError(RuntimeError):
 def create_tool_definition(annotation_data):
     """
     :param annotation_data: dict of data that represents a ToolDefinition
+    :returns: The created ToolDefinition object
     """
+    tool_type = annotation_data["tool_type"]
+    annotation = annotation_data["annotation"]
 
-    tool_definition = ToolDefinitionFactory(
-        name=annotation_data["name"],
-        description=annotation_data["annotation"]["description"],
-        tool_type=annotation_data["tool_type"],
-        file_relationship=create_file_relationship_nesting(
-            annotation_data["annotation"]
+    if tool_type == ToolDefinition.WORKFLOW:
+
+        # NOTE: Since we are within a `transaction` we aren't handline the
+        # usual `DoesNotExist` & `MultipleObjectsReturned` exceptions because
+        # we want them to propagate up the stack
+        workflow_engine = WorkflowEngine.objects.get(
+            uuid=annotation_data["workflow_engine_uuid"]
         )
+
+        tool_definition = ToolDefinitionFactory(
+            name=annotation_data["name"],
+            description=annotation["description"],
+            tool_type=tool_type,
+            file_relationship=create_file_relationship_nesting(annotation),
+            galaxy_workflow_id=annotation_data["galaxy_workflow_id"],
+            workflow_engine=workflow_engine
+        )
+    elif tool_type == ToolDefinition.VISUALIZATION:
+        tool_definition = ToolDefinitionFactory(
+            name=annotation_data["name"],
+            description=annotation["description"],
+            tool_type=tool_type,
+            file_relationship=create_file_relationship_nesting(
+                annotation
+            ),
+            docker_image_name=annotation["docker_image_name"],
+            container_input_path=annotation["container_input_path"]
+        )
+
+    create_and_associate_output_files(
+        tool_definition,
+        annotation["output_files"]
+    )
+    create_and_associate_parameters(
+        tool_definition,
+        annotation["parameters"]
     )
 
-    for output_file in annotation_data["annotation"]["output_files"]:
-        try:
-            filetype = FileType.objects.get(
-                name=output_file["filetype"]["name"]
-            )
-        except(FileType.DoesNotExist, FileType.MultipleObjectsReturned) as e:
-            raise FileTypeValidationError(output_file["filetype"]["name"], e)
-        else:
-            tool_definition.output_files.add(
-                OutputFileFactory(
-                    name=output_file["name"],
-                    description=output_file["description"],
-                    filetype=filetype
-                )
-            )
-
-    for parameter in annotation_data["annotation"]["parameters"]:
-        if annotation_data["tool_type"] == ToolDefinition.WORKFLOW:
-            tool_definition.parameters.add(
-                GalaxyParameterFactory(
-                    name=parameter["name"],
-                    description=parameter["description"],
-                    value_type=parameter["value_type"],
-                    default_value=parameter["default_value"],
-                    galaxy_workflow_step=parameter["galaxy_workflow_step"]
-                )
-            )
-        if annotation_data["tool_type"] == ToolDefinition.VISUALIZATION:
-            tool_definition.parameters.add(
-                ParameterFactory(
-                    name=parameter["name"],
-                    description=parameter["description"],
-                    value_type=parameter["value_type"],
-                    default_value=parameter["default_value"],
-                )
-            )
+    return tool_definition
 
 
 @transaction.atomic
@@ -212,6 +210,51 @@ resolver = RefResolver("{}{}{}".format(
 ), None)
 
 
+def create_and_associate_output_files(tool_definition, output_files):
+    for output_file in output_files:
+        try:
+            filetype = FileType.objects.get(
+                name=output_file["filetype"]["name"]
+            )
+        except (FileType.DoesNotExist,
+                FileType.MultipleObjectsReturned) as e:
+            raise FileTypeValidationError(
+                output_file["filetype"]["name"],
+                e
+            )
+        else:
+            tool_definition.output_files.add(
+                OutputFileFactory(
+                    name=output_file["name"],
+                    description=output_file["description"],
+                    filetype=filetype
+                )
+            )
+
+
+def create_and_associate_parameters(tool_definition, parameters):
+    for parameter in parameters:
+        if tool_definition.tool_type == ToolDefinition.WORKFLOW:
+            tool_definition.parameters.add(
+                GalaxyParameterFactory(
+                    name=parameter["name"],
+                    description=parameter["description"],
+                    value_type=parameter["value_type"],
+                    default_value=parameter["default_value"],
+                    galaxy_workflow_step=parameter["galaxy_workflow_step"]
+                )
+            )
+        if tool_definition.tool_type == ToolDefinition.VISUALIZATION:
+            tool_definition.parameters.add(
+                ParameterFactory(
+                    name=parameter["name"],
+                    description=parameter["description"],
+                    value_type=parameter["value_type"],
+                    default_value=parameter["default_value"],
+                )
+            )
+
+
 def validate_tool_annotation(annotation_dictionary):
     """
     Validate incoming annotation data to ensure ToolDefinitions are created
@@ -249,27 +292,62 @@ def validate_workflow_step_annotation(workflow_step_dictionary):
         )
 
 
-def get_workflow_list():
+def validate_tool_launch_configuration(tool_launch_config):
     """
-    Generate a list of available workflows from all currently available
-    WorkflowEngines
-    :return: list of workflow dicts
+    Validate incoming Tool Launch Configurations
+    :param tool_launch_config: json data containing a ToolLaunchConfiguration
     """
-    workflow_list = []
+    with open("tool_manager/schemas/ToolLaunchConfig.json") as f:
+        schema = json.loads(f.read())
+    try:
+        validate(
+            json.loads(tool_launch_config),
+            schema,
+            resolver=resolver
+        )
+    except ValueError as e:
+        raise RuntimeError(
+            "Tool launch configuration: {} is not valid JSON: {}".format(
+                tool_launch_config,
+                e
+            )
+        )
+    except ValidationError as e:
+        raise RuntimeError(
+            "Tool launch configuration is not properly configured: {}".format(
+                e
+            )
+        )
+
+
+def get_workflows():
+    """
+    Generate a dict mapping available WorkflowEngine UUIDs to a list
+    of their available workflows.
+    :return: dict with keys == WorkflowEngine.uuid's and values == list of
+    workflows available to said engine
+    """
+    workflow_dict = {}
     workflow_engines = WorkflowEngine.objects.all()
 
     logger.debug("%s workflow engines found.", workflow_engines.count())
 
-    for engine in workflow_engines:
-        logger.debug("Fetching workflows from workflow engine %s", engine.name)
+    for workflow_engine in workflow_engines:
+        # Set keys of `workflow_data` to WorkflowEngine UUIDs to denote
+        # where workflows came from.
+        workflow_dict[workflow_engine.uuid] = []
 
-        galaxy_connection = engine.instance.galaxy_connection()
+        logger.debug(
+            "Fetching workflows from workflow engine %s",
+            workflow_engine.name
+        )
+        galaxy_connection = workflow_engine.instance.galaxy_connection()
         try:
             workflows = galaxy_connection.workflows.get_workflows()
         except ConnectionError as e:
             raise RuntimeError(
                 "Unable to retrieve workflows from '{}' {}".format(
-                    engine.instance.base_url, e
+                    workflow_engine.instance.base_url, e
                 )
             )
         else:
@@ -277,6 +355,23 @@ def get_workflow_list():
                 workflow_data = galaxy_connection.workflows.show_workflow(
                     workflow["id"]
                 )
-                workflow_list.append(workflow_data)
+                workflow_dict[workflow_engine.uuid].append(workflow_data)
 
-    return workflow_list
+    return workflow_dict
+
+
+def get_visualization_annotations_list():
+    """
+    Generate a list of available visualization annotations from all currently
+    available JSON representations of Vis Tools underneath the
+    Refinery VISUALIZATION_ANNOTATION_BASE_PATH
+    :return: list of visualization dicts
+    """
+    visualization_annotations = []
+    for annotation_file in glob.glob(
+        "{}/*.json".format(settings.VISUALIZATION_ANNOTATION_BASE_PATH)
+    ):
+        with open(annotation_file) as f:
+            visualization_annotations.append(json.loads(f.read()))
+
+    return visualization_annotations

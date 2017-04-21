@@ -5,7 +5,7 @@ import factory
 
 
 class DataSetFactory(factory.django.DjangoModelFactory):
-    """Minimal representation of a DataSet for testing purposes"""
+    """Minimal representation of a DataSet"""
     class Meta:
         model = "core.DataSet"
 
@@ -17,7 +17,7 @@ class DataSetFactory(factory.django.DjangoModelFactory):
 
 
 class StudyFactory(factory.django.DjangoModelFactory):
-    """Minimal representation of a Study for testing purposes"""
+    """Minimal representation of a Study"""
     class Meta:
         model = "data_set_manager.Study"
 
@@ -25,7 +25,7 @@ class StudyFactory(factory.django.DjangoModelFactory):
 
 
 class InvestigationLinkFactory(factory.django.DjangoModelFactory):
-    """Minimal representation of an InvestigationLink for testing purposes"""
+    """Minimal representation of an InvestigationLink"""
     class Meta:
         model = "core.InvestigationLink"
 
@@ -34,7 +34,7 @@ class InvestigationLinkFactory(factory.django.DjangoModelFactory):
 
 
 class AnalysisFactory(factory.django.DjangoModelFactory):
-    """Minimal representation of an Analysis for testing purposes"""
+    """Minimal representation of an Analysis"""
     class Meta:
         model = "core.Analysis"
         django_get_or_create = ('uuid',)
@@ -47,25 +47,25 @@ class AnalysisFactory(factory.django.DjangoModelFactory):
 
 
 class ProjectFactory(factory.django.DjangoModelFactory):
-    """Minimal representation of a Project for testing purposes"""
+    """Minimal representation of a Project"""
     class Meta:
         model = "core.Project"
 
 
 class GalaxyInstanceFactory(factory.django.DjangoModelFactory):
-    """Minimal representation of a GalaxyInstance for testing purposes"""
+    """Minimal representation of a GalaxyInstance"""
     class Meta:
         model = "galaxy_connector.Instance"
 
 
 class WorkflowEngineFactory(factory.django.DjangoModelFactory):
-    """Minimal representation of a WorkflowEngine for testing purposes"""
+    """Minimal representation of a WorkflowEngine"""
     class Meta:
         model = "core.WorkflowEngine"
 
 
 class WorkflowFactory(factory.django.DjangoModelFactory):
-    """Minimal representation of a Workflow for testing purposes"""
+    """Minimal representation of a Workflow"""
     class Meta:
         model = "core.Workflow"
 
@@ -74,69 +74,67 @@ class WorkflowFactory(factory.django.DjangoModelFactory):
 
 
 class NodeCollectionFactory(factory.django.DjangoModelFactory):
-    """Minimal representation of a NodeCollection for testing purposes"""
+    """Minimal representation of a NodeCollection"""
     class Meta:
         model = "data_set_manager.NodeCollection"
     uuid = uuid_builtin.uuid4()
 
 
 class InvestigationFactory(NodeCollectionFactory):
-    """Minimal representation of a Investigation for testing purposes"""
+    """Minimal representation of a Investigation"""
     class Meta:
         model = "data_set_manager.Investigation"
 
 
 class ToolDefinitionFactory(factory.django.DjangoModelFactory):
-    """Minimal representation of a ToolDefinition for testing purposes"""
-
+    """Minimal representation of a ToolDefinition"""
     class Meta:
         model = "tool_manager.ToolDefinition"
 
 
-class FileRelationshipFactory(factory.django.DjangoModelFactory):
-    """Minimal representation of a FileRelationship for testing purposes"""
+class ToolFactory(factory.django.DjangoModelFactory):
+    """Minimal representation of a Tool"""
+    class Meta:
+        model = "tool_manager.Tool"
 
+
+class FileRelationshipFactory(factory.django.DjangoModelFactory):
+    """Minimal representation of a FileRelationship"""
     class Meta:
         model = "tool_manager.FileRelationship"
 
 
 class InputFileFactory(factory.django.DjangoModelFactory):
-    """Minimal representation of an InputFile for testing purposes"""
-
+    """Minimal representation of an InputFile"""
     class Meta:
         model = "tool_manager.InputFile"
 
 
 class ParameterFactory(factory.django.DjangoModelFactory):
-    """Minimal representation of a Parameter for testing purposes"""
-
+    """Minimal representation of a Parameter"""
     class Meta:
         model = "tool_manager.Parameter"
 
 
 class GalaxyParameterFactory(factory.django.DjangoModelFactory):
-    """Minimal representation of a GalaxyParameter for testing purposes"""
-
+    """Minimal representation of a GalaxyParameter"""
     class Meta:
         model = "tool_manager.GalaxyParameter"
 
 
 class OutputFileFactory(factory.django.DjangoModelFactory):
-    """Minimal representation of an OutputFile for testing purposes"""
-
+    """Minimal representation of an OutputFile"""
     class Meta:
         model = "tool_manager.OutputFile"
 
 
 class FileTypeFactory(factory.django.DjangoModelFactory):
-    """Minimal representation of a FileType for testing purposes"""
-
+    """Minimal representation of a FileType"""
     class Meta:
         model = "file_store.FileType"
 
 
 class FileExtensionFactory(factory.django.DjangoModelFactory):
-    """Minimal representation of a FileExtension for testing purposes"""
-
+    """Minimal representation of a FileExtension"""
     class Meta:
         model = "file_store.FileExtension"
