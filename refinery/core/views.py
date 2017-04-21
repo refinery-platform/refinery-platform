@@ -604,7 +604,7 @@ def visualize_genome(request):
     genome = re.search(r'\(([^)]*)\)', species).group(1)
     # TODO: Better to pass genome id instead of parsing?
     url_base = "https://s3.amazonaws.com/data.cloud.refinery-platform.org" \
-        + "/data/igv-reference/" + genome + "/"
+        + "/data/igv-reference/v2/" + genome + "/"
     node_ids_json = json.dumps(node_ids)
 
     return render_to_response(
