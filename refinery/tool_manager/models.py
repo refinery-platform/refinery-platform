@@ -263,7 +263,7 @@ class Tool(OwnableResource):
         """
         Construct & return the relative url of our Tool's container
         """
-        return "/api/v2/docker/{}".format(self.container_name)
+        return "/visualizations/{}".format(self.container_name)
 
     def get_tool_name(self):
         return self.tool_definition.name

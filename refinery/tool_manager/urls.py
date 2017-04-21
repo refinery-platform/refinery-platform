@@ -8,6 +8,6 @@ tool_manager_router.register(r'tools/definitions', ToolDefinitionsViewSet)
 tool_manager_router.register(r'tools', ToolViewSet)
 
 # Django docker engine urls
-tool_manager_router.urls.extend(
-    [url(r'^docker/', include('django_docker_engine.urls'))]
+django_docker_engine_url = url(
+    r'^visualizations/', include('django_docker_engine.urls')
 )
