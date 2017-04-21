@@ -164,6 +164,7 @@
 
     // To-do fix the Selection Obj in UI to deselect!
     function removeGroupFromCollections () {
+      console.log('remove group from collection');
       angular.forEach(vm.groupCollection[vm.currentGroup], function (nodeArr, inputTypeUuid) {
         removeGroupFromNodeSelectCollection(nodeArr, inputTypeUuid);
       });

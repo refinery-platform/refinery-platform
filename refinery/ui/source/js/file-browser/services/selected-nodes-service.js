@@ -14,6 +14,14 @@ function selectedNodesService ($window, selectedFilterService) {
   vm.activeNodeRow = {};
   vm.selectionObj = {}; // ui-grid maintains checkboxes for popover selection
 
+  vm.deselectGroupFromSelectionObj = function (groupId) {
+    angular.forEach(vm.selectionObj[groupId], function (inputFileType) {
+      for (var i = 0; i < inputFileType.length; i ++) {
+        inputFileType[i] = false;
+      }
+    });
+  };
+
   /**
    * Manually keep track of selected nodes which is neccessary due to dynamic
    * scrolling in the ui-grid

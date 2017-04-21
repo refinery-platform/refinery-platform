@@ -75,7 +75,9 @@
      ** Method clears the current input group
     * */
     function removeGroup () {
+      nodeService.deselectGroupFromSelectionObj(vm.currentGroup);
       fileService.removeGroupFromCollections();
+      vm.selectionObj = nodeService.selectionObj;
     }
    /*
    * ---------------------------------------------------------
