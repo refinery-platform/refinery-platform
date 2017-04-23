@@ -5,7 +5,7 @@
 
   <ul>
      <div ng-if="$ctrl.currentTypes[$ctrl.currentTypes.length-1]=='PAIR'">
-      <li ng-repeat="inputFile in $ctrl.inputFilesTypes track by $index">
+      <li ng-repeat="inputFile in $ctrl.inputFileTypes track by $index">
         <span class="wrap-word" ng-if="$ctrl.isGroupPopulated(inputFile.uuid)">
           <span ng-repeat="node in $ctrl.groupCollection[$ctrl.currentGroup][inputFile.uuid]">
             {{ node[$ctrl.attributes.Name] }}

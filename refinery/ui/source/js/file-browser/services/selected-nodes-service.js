@@ -15,10 +15,10 @@ function selectedNodesService ($window, selectedFilterService) {
   vm.selectionObj = {}; // ui-grid maintains checkboxes for popover selection
 
   vm.deselectGroupFromSelectionObj = function (groupId) {
-    angular.forEach(vm.selectionObj[groupId], function (inputFileType) {
-      for (var i = 0; i < inputFileType.length; i ++) {
-        inputFileType[i] = false;
-      }
+    angular.forEach(vm.selectionObj[groupId], function (inputObj, inputUuid) {
+      angular.forEach(inputObj, function (selectionValue, nodeUuid) {
+        vm.selectionObj[groupId][inputUuid][nodeUuid] = false;
+      });
     });
   };
 

@@ -61,7 +61,7 @@
         nodeUuid = nodeService.activeNodeRow.uuid;
       }
       // checkbox selected
-      if (selectionObj[inputTypeUuid][nodeUuid]) {
+      if (selectionObj[vm.currentGroup][inputTypeUuid][nodeUuid]) {
         if (_.has(vm.groupCollection, vm.currentGroup) === false) {
           // intialize groupCollection[groupId]
           vm.groupCollection[vm.currentGroup] = {};
@@ -98,8 +98,10 @@
       if (!nodeUuid) {
         nodeUuid = nodeService.activeNodeRow.uuid;
       }
+      console.log('argh');
+      console.log(selectionObj);
       // checkbox selected
-      if (selectionObj[inputTypeUuid][nodeUuid]) {
+      if (selectionObj[vm.currentGroup][inputTypeUuid][nodeUuid]) {
         if (_.has(vm.nodeSelectCollection, nodeUuid) === true) {
           vm.nodeSelectCollection[nodeUuid].inputTypeList.push(angular.copy(inputTypeUuid));
           vm.nodeSelectCollection[nodeUuid].groupList.push(angular.copy(vm.currentGroup));
@@ -137,8 +139,10 @@
       }
       angular.copy(scaledCopy.input_files, vm.inputFileTypes);
       vm.currentTypes.push(scaledCopy.value_type);
+      vm.currentGroup.push(0);
+      console.log('in the refresh file map');
+      console.log(vm.currentGroup);
       generateAttributeObj();
-      return vm.currentGroup;
     }
 
     /**
@@ -150,6 +154,7 @@
       vm.inputFileTypes = [];
       vm.groupCollection = {};
       vm.nodeSelectCollection = {};
+      vm.hideNodePopover = false;
     }
 
     /**
@@ -165,7 +170,6 @@
 
     // To-do fix the Selection Obj in UI to deselect!
     function removeGroupFromCollections () {
-      console.log('remove group from collection');
       angular.forEach(vm.groupCollection[vm.currentGroup], function (nodeArr, inputTypeUuid) {
         removeGroupFromNodeSelectCollection(nodeArr, inputTypeUuid);
       });

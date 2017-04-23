@@ -34,6 +34,7 @@
           container: 'body'
         };
         angular.element(element).popover(options);
+
         scope.closeSelectionPopover = function () {
           angular.element('.popover').popover('hide');
           angular.element('.ui-grid-selection-row-header-buttons').popover('enable');

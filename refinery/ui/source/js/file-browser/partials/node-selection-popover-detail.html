@@ -15,7 +15,7 @@
                       <input
                         type="checkbox"
                         ng-click="NSPCtrl.selectNode(inputType.uuid, selectedFile.uuid)"
-                        ng-model="NSPCtrl.selectionObj[inputType.uuid][selectedFile.uuid]">
+                        ng-model="NSPCtrl.selectionObj[NSPCtrl.currentGroup][inputType.uuid][selectedFile.uuid]">
                        {{ selectedFile[NSPCtrl.attributes.Name] }}
                     </span>
                   </span>
@@ -27,7 +27,7 @@
                   <input
                     type="checkbox"
                     ng-click="NSPCtrl.selectNode(inputType.uuid)"
-                    ng-model="NSPCtrl.selectionObj[inputType.uuid][NSPCtrl.activeNode.uuid]">
+                    ng-model="NSPCtrl.selectionObj[NSPCtrl.currentGroup][inputType.uuid][NSPCtrl.activeNode.uuid]">
                   {{ inputType.name }}
                 </span>
               </label>
@@ -44,7 +44,7 @@
                   <input
                     type="checkbox"
                     ng-click="NSPCtrl.selectNode(NSPCtrl.inputFileTypes[0].uuid)"
-                    ng-model="NSPCtrl.selectionObj[NSPCtrl.inputFileTypes[0].uuid][NSPCtrl.activeNode.uuid]">
+                    ng-model="NSPCtrl.selectionObj[NSPCtrl.currentGroup][NSPCtrl.inputFileTypes[0].uuid][NSPCtrl.activeNode.uuid]">
                   {{ NSPCtrl.inputFileTypes[0].name }}
                 </label>
             </span>
@@ -59,7 +59,7 @@
                     <input
                       type="checkbox"
                       ng-click="NSPCtrl.selectNode(NSPCtrl.inputFileTypes[0].uuid, selectedFile.uuid)"
-                      ng-model="NSPCtrl.selectionObj[NSPCtrl.inputFileTypes[0].uuid][selectedFile.uuid]">
+                      ng-model="NSPCtrl.selectionObj[NSPCtrl.currentGroup][NSPCtrl.inputFileTypes[0].uuid][selectedFile.uuid]">
                    {{ selectedFile[NSPCtrl.attributes.Name] }}
                   </label>
                 </div>

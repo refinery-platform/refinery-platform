@@ -25,7 +25,6 @@
     var nodeService = selectedNodesService;
     var vm = this;
     vm.attributes = fileService.attributesObj;
-    vm.currentFileInput = [];
     vm.currentGroup = fileService.currentGroup;
     vm.currentTypes = fileService.currentTypes;
     vm.groupCollection = fileService.groupCollection;
@@ -94,10 +93,10 @@
         },
         function () {
           angular.copy(vm.displayCtrl.selectedTool, vm.tool);
-          vm.inputFilesTypes = fileService.inputFileTypes;
+          vm.inputFileTypes = fileService.inputFileTypes;
           vm.currentGroup = fileService.currentGroup;
           vm.currentTypes = fileService.currentTypes;
-
+          vm.groupCollection = fileService.groupCollection;
           if (vm.tool.toolType === 'Workflow') {
             vm.toolType = vm.tool.toolType;
           }
