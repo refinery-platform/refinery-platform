@@ -31,6 +31,7 @@
     vm.setNodeSelectCollection = setNodeSelectCollection;
     vm.nodeSelectCollection = {}; // contains rows and their group info
     vm.removeGroupFromCollections = removeGroupFromCollections;
+    vm.hideNodePopover = false;
     /*
      *-----------------------
      * Method Definitions

@@ -67,6 +67,7 @@
      * emptying cart or a new tool selection
      */
     function removeAllGroups () {
+      fileService.hideNodePopover = true;
       fileService.resetCurrentCollections();
       nodeService.setSelectedAllFlags(false);
       resetGridService.setRefreshGridFlag(true);
@@ -76,6 +77,7 @@
      ** Method clears the current input group
     * */
     function removeGroup () {
+      fileService.hideNodePopover = true;
       nodeService.deselectGroupFromSelectionObj(vm.currentGroup);
       fileService.removeGroupFromCollections();
       vm.selectionObj = nodeService.selectionObj;
