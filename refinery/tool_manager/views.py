@@ -5,9 +5,9 @@ from django.http import HttpResponseServerError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.viewsets import ModelViewSet
 
-from tool_manager.utils import create_tool, validate_tool_launch_configuration
 from .models import Tool, ToolDefinition
 from .serializers import ToolDefinitionSerializer, ToolSerializer
+from .utils import create_tool, validate_tool_launch_configuration
 
 logger = logging.getLogger(__name__)
 
