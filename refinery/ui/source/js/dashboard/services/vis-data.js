@@ -46,10 +46,9 @@ function DashboardVisData ($q, neo4jToGraph, dataSet, graph, settings) {
           return;
         }
 
+        // Check existance of remix roots
+        var checkedRemixRoots = [];
         if (remixRoots) {
-          // Check existance of remix roots
-          var checkedRemixRoots = [];
-
           for (var i = remixRoots.length; i--;) {
             if (data[remixRoots[i]]) {
               checkedRemixRoots.push(remixRoots[i]);
@@ -57,7 +56,7 @@ function DashboardVisData ($q, neo4jToGraph, dataSet, graph, settings) {
           }
 
           // Replace original root nodes with the existing remix roots
-          data[_root].children = checkedRemixRoots;
+          data[_root].children = checkedRemixRoots.slice();
         }
 
         // Prune graph and accumulate the dataset annotations
@@ -76,6 +75,44 @@ function DashboardVisData ($q, neo4jToGraph, dataSet, graph, settings) {
               data[rename[ii].uri].label = rename[ii].label
             );
           }
+        }
+
+        // Make sure no custom root node is a child or grand-child of another
+        // root node.
+        if (remixRoots) {
+          var checkedRemixRootsChilds = {};
+
+          for (var l = data[_root].children.length; l--;) {
+            if (data[data[_root].children[l]]) {
+              for (
+                var j = data[data[_root].children[l]].children.length; j--;
+              ) {
+                checkedRemixRootsChilds[
+                  data[data[_root].children[l]].children[j]
+                ] = true;
+                // Second level children
+                for (
+                  var m = data[
+                    data[data[_root].children[l]].children[j]
+                  ].children.length;
+                  m--;
+                ) {
+                  checkedRemixRootsChilds[
+                    data[data[data[_root].children[l]].children[j]].children[m]
+                  ] = true;
+                }
+              }
+            }
+          }
+
+          // Check that the custom root nodes are no child of another root node
+          for (var k = data[_root].children.length; k--;) {
+            if (checkedRemixRootsChilds[data[_root].children[k]]) {
+              data[_root].children.splice(k, 1);
+            }
+          }
+
+          checkedRemixRootsChilds = undefined;
         }
 
         // Init precision and recall
