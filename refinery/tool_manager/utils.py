@@ -15,7 +15,8 @@ from factory_boy.django_model_factories import (FileRelationshipFactory,
                                                 InputFileFactory,
                                                 OutputFileFactory,
                                                 ParameterFactory,
-                                                ToolDefinitionFactory)
+                                                ToolDefinitionFactory,
+                                                ToolFactory)
 
 from file_store.models import FileType
 from .models import ToolDefinition
@@ -105,6 +106,52 @@ def create_tool_definition(annotation_data):
     )
 
     return tool_definition
+
+
+@transaction.atomic
+def create_tool(tool_launch_configuration, user_instance):
+    """
+   :param tool_launch_configuration: dict of data that represents a Tool
+   :param user_instance: User object that made the request to create said Tool
+   :returns: The created Tool object
+   """
+    tool_definition = ToolDefinition.objects.get(
+        uuid=tool_launch_configuration["tool_definition_uuid"]
+    )
+    tool = ToolFactory(
+        name="{}-launch".format(tool_definition.name),
+        tool_definition=tool_definition,
+        file_relationships=tool_launch_configuration["file_relationships"]
+    )
+    try:
+        tool.parameters = tool_launch_configuration["parameters"]
+    except KeyError:
+        # parameters are not required for Tools to launch properly
+        pass
+
+    if tool.get_tool_type() == ToolDefinition.VISUALIZATION:
+        try:
+            tool.output_files = tool_launch_configuration["output_files"]
+        except KeyError:
+            # output_files aren't required for Vis Tools
+            pass
+
+        # Create a unique container name
+        # that adheres to docker's specifications
+        tool.container_name = "{}-{}".format(
+            tool.name.replace(" ", ""),
+            tool.uuid
+        )
+    if tool.get_tool_type() == ToolDefinition.WORKFLOW:
+        try:
+            tool.output_files = tool_launch_configuration["output_files"]
+        except KeyError:
+            # output_files ARE required for Workflow Tools
+            raise
+
+    tool.set_owner(user_instance)
+    tool.update_file_relationships_string()
+    return tool
 
 
 @transaction.atomic
