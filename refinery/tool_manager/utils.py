@@ -300,18 +300,7 @@ def validate_tool_launch_configuration(tool_launch_config):
     with open("tool_manager/schemas/ToolLaunchConfig.json") as f:
         schema = json.loads(f.read())
     try:
-        validate(
-            json.loads(tool_launch_config),
-            schema,
-            resolver=resolver
-        )
-    except ValueError as e:
-        raise RuntimeError(
-            "Tool launch configuration: {} is not valid JSON: {}".format(
-                tool_launch_config,
-                e
-            )
-        )
+        validate(tool_launch_config, schema, resolver=resolver)
     except ValidationError as e:
         raise RuntimeError(
             "Tool launch configuration is not properly configured: {}".format(
