@@ -52,14 +52,22 @@ def main(argv=None):
 
     derive_config(config)
 
-    stack_name = config['STACK_NAME']
-
     # :todo: expand this into a proper command parser.
     # For now, just the "name" command,
     # which we plan to remove, when the Makefile goes.
     if len(argv) > 1 and argv[1] == "name":
+        stack_name = config['STACK_NAME']
         sys.stdout.write("{}\n".format(stack_name))
         return 0
+
+    template = make_template(config, config_yaml)
+    return(sys.stdout.write(str(template)))
+
+def make_template(config, config_yaml):
+    """Make a fresh CloudFormation template object and return it.
+    """
+
+    stack_name = config['STACK_NAME']
 
     # We discover the current git branch/commit so that the deployment script
     # can use it to clone the same commit
@@ -466,7 +474,7 @@ def main(argv=None):
         }),
         core.DeletionPolicy('Retain')
     ))
-    sys.stdout.write(str(cft))
+    return cft
 
 
 def load_tags():
