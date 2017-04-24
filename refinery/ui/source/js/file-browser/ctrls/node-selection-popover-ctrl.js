@@ -21,7 +21,7 @@
     var fileService = fileRelationshipService;
     var nodeService = selectedNodesService;
     var vm = this;
-    vm.activeNode = nodeService.activeNodeRow;
+    vm.activeNode = nodeService.activeNodeRow; // ui-grid row which is engaged
     vm.attributes = fileService.attributesObj; // contains the data attributes
     vm.currentGroup = fileService.currentGroup; // group indices ex: [0, 0]
     /** current group's data structure for each level ex:[ 'Pair','List'] **/
@@ -46,13 +46,9 @@
      * deselects a checkbox
      */
     function selectNode (inputUuid, deselectFileUuid) {
-      console.log('in select node');
-      console.log(vm.selectionObj);
       fileService.setNodeSelectCollection(inputUuid, vm.selectionObj, deselectFileUuid);
       fileService.setGroupCollection(inputUuid, vm.selectionObj, deselectFileUuid);
       vm.groupCollection = fileService.groupCollection;
-      console.log('selectNode');
-      console.log(vm.groupCollection);
     }
   /*
    * ---------------------------------------------------------

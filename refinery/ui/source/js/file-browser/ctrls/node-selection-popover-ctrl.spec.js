@@ -30,6 +30,7 @@
     });
 
     it('Data & UI displays variables should exist for views', function () {
+      expect(ctrl.activeNode).toEqual({});
       expect(ctrl.attributes).toEqual({});
       expect(ctrl.currentGroup).toEqual([]);
       expect(ctrl.currentTypes).toEqual([]);

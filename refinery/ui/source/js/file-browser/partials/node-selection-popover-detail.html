@@ -6,7 +6,7 @@
           <li ng-repeat="inputType in NSPCtrl.inputFileTypes track by $index">
             <div class="checkbox">
               <label>
-                <!-- If there's a group already started for the inputFileType; checkbox selected-->
+                <!-- Deselect: user can currently deselect any node in the current group-->
                 <span
                   ng-if="NSPCtrl.groupCollection[NSPCtrl.currentGroup] &&
                   NSPCtrl.groupCollection[NSPCtrl.currentGroup][inputType.uuid].length > 0"
@@ -19,7 +19,7 @@
                        {{ selectedFile[NSPCtrl.attributes.Name] }}
                     </span>
                   </span>
-                <!-- If there's NOT a group already started for the inputFileType; checkbox not selected-->
+                <!-- Select: If there's NOT a group already started for the inputFileType than checkbox not selected-->
                 <span
                   ng-if="!NSPCtrl.groupCollection[NSPCtrl.currentGroup] ||
                   !NSPCtrl.groupCollection[NSPCtrl.currentGroup][inputType.uuid] ||
@@ -38,7 +38,7 @@
         <div ng-if="NSPCtrl.currentTypes[NSPCtrl.currentTypes.length-1]=='LIST'">
            <li>
             <span>
-              <!-- active row selection -->
+              <!-- active row selection, for list is always showing -->
               <div class="checkbox">
                 <label>
                   <input
@@ -48,7 +48,7 @@
                   {{ NSPCtrl.inputFileTypes[0].name }}
                 </label>
             </span>
-           <!-- If there's a group already started for the inputFileType; checkbox selected-->
+           <!-- Select/Deselect nodes in the list -->
             <span
               ng-if="NSPCtrl.groupCollection[NSPCtrl.currentGroup] &&
               NSPCtrl.groupCollection[NSPCtrl.currentGroup][NSPCtrl.inputFileTypes[0].uuid].length > 0">
