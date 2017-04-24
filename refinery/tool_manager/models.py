@@ -246,7 +246,7 @@ class Tool(OwnableResource):
                 container_input_path=(
                     self.tool_definition.container_input_path
                 ),
-                input={"file_relationships": self.file_relationships}
+                input={"file_relationships": eval(self.file_relationships)}
             )
             try:
                 container.run()
