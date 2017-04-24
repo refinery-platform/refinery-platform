@@ -80,7 +80,7 @@
       selectionRowHeaderWidth: 35,
       rowHeight: 35,
       showGridFooter: true,
-      enableSelectionBatchEvent: true,
+      enableSelectionBatchEvent: false,
       multiSelect: true,
       columnDefs: fileBrowserFactory.customColumnNames,
       data: fileBrowserFactory.assayFiles,
