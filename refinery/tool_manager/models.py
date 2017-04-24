@@ -14,6 +14,7 @@ from core.models import Analysis, OwnableResource, WorkflowEngine
 from core.utils import get_full_url
 from data_set_manager.models import Node
 from file_store.models import FileType
+from .urls import DJANGO_DOCKER_ENGINE_URL_ROOT
 
 logger = logging.getLogger(__name__)
 
@@ -262,7 +263,10 @@ class Tool(OwnableResource):
         """
         Construct & return the relative url of our Tool's container
         """
-        return "/visualizations/{}".format(self.container_name)
+        return "/{}/{}".format(
+            DJANGO_DOCKER_ENGINE_URL_ROOT,
+            self.container_name
+        )
 
     def get_tool_name(self):
         return self.tool_definition.name
