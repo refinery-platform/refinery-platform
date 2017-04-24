@@ -76,7 +76,7 @@
       infiniteScrollDown: true,
       useExternalSorting: true,
       enableRowSelection: true,
-      enableSelectAll: true,
+      enableSelectAll: false,
       selectionRowHeaderWidth: 35,
       rowHeight: 35,
       showGridFooter: true,
