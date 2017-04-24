@@ -1,15 +1,18 @@
 import logging
+import re
 
 from django.db import models
 from django.db.models.signals import post_delete, pre_delete
 from django.dispatch import receiver
-from django.http import HttpResponseServerError, HttpResponse
+from django.http import HttpResponse, HttpResponseServerError
 
 from django_extensions.db.fields import UUIDField
 from django_docker_engine.docker_utils import DockerContainerSpec
 from docker.errors import APIError
 
 from core.models import Analysis, OwnableResource, WorkflowEngine
+from core.utils import get_full_url
+from data_set_manager.models import Node
 from file_store.models import FileType
 
 logger = logging.getLogger(__name__)
@@ -267,8 +270,41 @@ class Tool(OwnableResource):
     def get_tool_type(self):
         return self.tool_definition.tool_type
 
-    def parse_file_relationships_string(self):
-        raise NotImplementedError
+    def update_file_relationships_string(self):
+        """
+        Replace a Tool's Node uuids in its `file_relationships` string with
+        their respective FileStoreItem's urls. No error handling here since
+        this method is only called in an atomic transaction.
+        """
+        populated_file_relationships = re.sub(
+            r'[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}',
+            self.populate_url_from_node_uuid,
+            self.file_relationships
+        )
+        self.file_relationships = populated_file_relationships
+        self.save()
 
-    def populate_url_from_node_uuid(self):
-        raise NotImplementedError
+    @staticmethod
+    def populate_url_from_node_uuid(matched_object):
+        """
+        :param matched_object: re.sub() MatchedObject instance
+        :return: Full url pointing to a Node's respective FileStoreItem's
+        datafile's location
+        """
+        try:
+            node = Node.objects.get(uuid=matched_object.group(0))
+        except (Node.DoesNotExist, Node.MultipleObjectsReturned):
+            # Raise these errors so that they propagate up the stack and
+            # properly nullify the current database transaction
+            raise
+        else:
+            url = node.get_relative_file_store_item_url()
+            if url is None:
+                raise RuntimeError(
+                    "Node with uuid: {} has no associated file url".format(
+                        node.uuid
+                    )
+                )
+            else:
+                # format() here to preserve the single quotes downstream
+                return "'{}'".format(get_full_url(url))
