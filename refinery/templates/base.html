@@ -38,7 +38,8 @@
       repositoryModeHomePageHtml: '{{ REFINERY_REPOSITORY_MODE_HOME_PAGE_HTML.strip|safe }}',
       solrSynonymSearch: {{ SOLR_SYNONYM_SEARCH|lower }},
       refineryTutorialSteps: '{{  REFINERY_TUTORIAL_STEPS|escapejs }}',
-      refineryInstanceName: '{{ REFINERY_INSTANCE_NAME }}'
+      refineryInstanceName: '{{ REFINERY_INSTANCE_NAME }}',
+      satoriDemo: {{ SATORI_DEMO|yesno:"true,false,false" }}
     };
 
     if (window.djangoApp.userId === 'None' || window.djangoApp.userName === 'None') {

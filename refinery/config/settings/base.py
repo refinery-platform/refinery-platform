@@ -53,12 +53,15 @@ except IOError:
     pass
 
 
-def get_setting(name, settings=local_settings):
+def get_setting(name, settings=local_settings, default=None):
     """Get the local settings variable or return explicit exception"""
     try:
         return settings[name]
     except KeyError:
-        raise ImproperlyConfigured("Missing setting '{0}'".format(name))
+        if default is not None:
+            return default
+        else:
+            raise ImproperlyConfigured("Missing setting '{0}'".format(name))
 
 
 # TODO: remove after switching to the new Celery API
@@ -577,3 +580,5 @@ REFINERY_AUXILIARY_FILE_GENERATION = get_setting(
 REFINERY_TUTORIAL_STEPS = refinery_tutorial_settings
 
 ANONYMOUS_USER_ID = -1
+
+SATORI_DEMO = get_setting("SATORI_DEMO", local_settings, False)
