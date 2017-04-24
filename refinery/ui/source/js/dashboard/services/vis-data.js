@@ -108,6 +108,11 @@ function DashboardVisData ($q, neo4jToGraph, dataSet, graph, settings) {
           // Check that the custom root nodes are no child of another root node
           for (var k = data[_root].children.length; k--;) {
             if (checkedRemixRootsChilds[data[_root].children[k]]) {
+              // Do not directly link to OWL:Thing when not being at the root
+              // level.
+              data[data[_root].children[k]].parents[_root] = undefined;
+              delete data[data[_root].children[k]].parents[_root];
+
               data[_root].children.splice(k, 1);
             }
           }
