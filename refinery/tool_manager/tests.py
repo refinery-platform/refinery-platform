@@ -1,6 +1,7 @@
 import json
 import logging
 import mock
+import re
 import requests
 from urlparse import urljoin
 
@@ -826,7 +827,7 @@ class ToolLaunchTests(StaticLiveServerTestCase):
             )
 
         file_relationships = eval(tool_launch.file_relationships)
-        regex = r'media\/file_store\/[\d\w]+\/[\d\w]+\/test_file_[ab]_.*.txt'
+        regex = re.compile("[\d\w]+\/[\d\w]+\/test_file_[ab]_.*.txt")
         for url in file_relationships:
             self.assertRegexpMatches(url, regex)
 
