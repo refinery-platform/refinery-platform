@@ -630,11 +630,10 @@ class ToolAPITests(APITestCase):
         # Create mock ToolLaunchConfiguration
         self.post_data = {
             "tool_definition_uuid": self.td.uuid,
-            "file_relationships": [
-                "http://www.example.com/tool_manager/test_data/sample.seg"
-            ],
-            "parameters": ""
+            "file_relationships":
+                "['http://www.example.com/tool_manager/test_data/sample.seg']",
         }
+
         self.post_request = self.factory.post(
             self.url_root,
             data=self.post_data,
@@ -709,6 +708,12 @@ class ToolAPITests(APITestCase):
             self.delete_response.data['detail'],
             'Method "DELETE" not allowed.'
         )
+
+    def test_valid_tool_launch_configuration(self):
+        pass
+
+    def test_invalid_tool_launch_configuration(self):
+        pass
 
 
 class ToolLaunchTests(StaticLiveServerTestCase):
@@ -845,52 +850,53 @@ class ToolLaunchTests(StaticLiveServerTestCase):
             self.assertTrue(mocked_method.called)
             self.assertEqual(ToolDefinition.objects.count(), 1)
             self.td = ToolDefinition.objects.all()[0]
-            self.post_data = {
-                "tool_definition_uuid": self.td.uuid,
-                "file_relationships": "",
-                "parameters": ""
-            }
+        self.post_data = {
+            "tool_definition_uuid": self.td.uuid,
+            "file_relationships":
+                "['http://www.example.com/tool_manager/test_data/sample.seg']",
 
-            self.post_request = self.factory.post(
-                self.url_root,
-                data=self.post_data,
-                format="json"
+        }
+
+        self.post_request = self.factory.post(
+            self.url_root,
+            data=self.post_data,
+            format="json"
+        )
+        force_authenticate(self.post_request, self.user)
+        self.post_response = self.view(self.post_request)
+
+        try:
+            tool_launch = Tool.objects.get(
+                tool_definition__uuid=self.td.uuid
             )
-            force_authenticate(self.post_request, self.user)
-            self.post_response = self.view(self.post_request)
+        except(Tool.DoesNotExist, Tool.MultipleObjectsReturned) as e:
+            raise RuntimeError(
+                "Couldn't properly fetch Tool: {}".format(e))
 
-            try:
-                tool_launch = Tool.objects.get(
-                    tool_definition__uuid=self.td.uuid
-                )
-            except(Tool.DoesNotExist, Tool.MultipleObjectsReturned) as e:
-                raise RuntimeError(
-                    "Couldn't properly fetch Tool: {}".format(e))
+        self.container_name = tool_launch.container_name
+        self.assertEqual(tool_launch.get_owner(), self.user)
+        self.assertEqual(
+            tool_launch.get_tool_type(),
+            ToolDefinition.VISUALIZATION
+        )
 
-            self.container_name = tool_launch.container_name
-            self.assertEqual(tool_launch.get_owner(), self.user)
-            self.assertEqual(
-                tool_launch.get_tool_type(),
-                ToolDefinition.VISUALIZATION
+        response = requests.get(
+            urljoin(
+                self.live_server_url,
+                tool_launch.get_relative_container_url()
             )
-
-            response = requests.get(
-                urljoin(
-                    self.live_server_url,
-                    tool_launch.get_relative_container_url()
-                )
-            )
-            self.assertIn("Welcome to nginx!", response.content)
+        )
+        self.assertIn("Welcome to nginx!", response.content)
 
     def test_visualization_container_launch_IGV(self):
         with open(
-            "{}/visualization_LIST_igv.json".format(TEST_DATA_PATH)
+                "{}/visualization_LIST_igv.json".format(TEST_DATA_PATH)
         ) as f:
             tool_annotation = [json.loads(f.read())]
 
         with mock.patch(
-            self.mock_vis_annotations_reference,
-            return_value=tool_annotation
+                self.mock_vis_annotations_reference,
+                return_value=tool_annotation
         ) as mocked_method:
 
             call_command("generate_tool_definitions", visualizations=True)
@@ -902,13 +908,12 @@ class ToolLaunchTests(StaticLiveServerTestCase):
             # Create mock ToolLaunchConfiguration
             self.post_data = {
                 "tool_definition_uuid": self.td.uuid,
-                "file_relationships": [
+                "file_relationships": "['{}']".format(
                     urljoin(
                         self.live_server_url,
                         "tool_manager/test_data/sample.seg"
                     )
-                ],
-                "parameters": ""
+                )
             }
 
             self.post_request = self.factory.post(
