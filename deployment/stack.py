@@ -68,7 +68,7 @@ def main(argv=None):
     template = make_template(config, config_yaml)
 
     if command == 'dump':
-        return(sys.stdout.write(str(template)))
+        return sys.stdout.write(str(template))
 
     if command == 'create':
         cloudformation = boto3.client("cloudformation")
@@ -365,8 +365,7 @@ def make_template(config, config_yaml):
     cft.resources.elbegress = core.Resource(
         'ELBEgress', 'AWS::EC2::SecurityGroupEgress',
         core.Properties({
-            "GroupId": functions.get_att('ELBSecurityGroup',
-                                         'GroupId'),
+            "GroupId": functions.get_att('ELBSecurityGroup', 'GroupId'),
             "IpProtocol": "tcp",
             "FromPort": "80",
             "ToPort": "80",
