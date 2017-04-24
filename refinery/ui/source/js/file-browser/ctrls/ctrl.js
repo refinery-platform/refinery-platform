@@ -241,9 +241,9 @@
      * only one shows at a time. Needed in the ctrl due to ui-grid template.
      * @param nodeUuid
      */
-    function openSelectionPopover (nodeDomObj) {
-      angular.copy(nodeDomObj, nodesService.activeNodeRow);
-      angular.element('#' + nodeDomObj.uuid).popover('show');
+    function openSelectionPopover (nodeRow) {
+      angular.copy(nodeRow, nodesService.activeNodeRow);
+      angular.element('#' + nodeRow.uuid).popover('show');
       angular.element('.ui-grid-selection-row-header-buttons').popover('disable');
     }
 
