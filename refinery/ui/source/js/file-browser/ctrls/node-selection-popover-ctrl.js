@@ -46,11 +46,6 @@
      * deselects a checkbox
      */
     function selectNode (inputUuid, deselectFileUuid) {
-      console.log('selectNode');
-      console.log(inputUuid);
-      console.log('selectionObj');
-      console.log(vm.selectionObj);
-      console.log(deselectFileUuid);
       fileService.setNodeSelectCollection(inputUuid, vm.selectionObj, deselectFileUuid);
       fileService.setGroupCollection(inputUuid, vm.selectionObj, deselectFileUuid);
       vm.groupCollection = fileService.groupCollection;
