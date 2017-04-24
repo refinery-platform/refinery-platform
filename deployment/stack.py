@@ -52,16 +52,32 @@ def main(argv=None):
 
     derive_config(config)
 
+    command = ''
+
     # :todo: expand this into a proper command parser.
     # For now, just the "name" command,
     # which we plan to remove, when the Makefile goes.
-    if len(argv) > 1 and argv[1] == "name":
+    if len(argv) > 1:
+        command = argv[1]
+
+    if command == 'name':
         stack_name = config['STACK_NAME']
         sys.stdout.write("{}\n".format(stack_name))
         return 0
 
     template = make_template(config, config_yaml)
-    return(sys.stdout.write(str(template)))
+
+    if command == 'dump':
+        return(sys.stdout.write(str(template)))
+
+    if command == 'create':
+        cloudformation = boto3.client("cloudformation")
+        response = cloudformation.create_stack(StackName=config['STACK_NAME'],
+            TemplateBody=str(template),
+            Capabilities=['CAPABILITY_IAM'],
+        )
+        sys.stdout.write(json.dumps(response, indent=2) + '\n')
+        return 0
 
 def make_template(config, config_yaml):
     """Make a fresh CloudFormation template object and return it.
