@@ -1280,6 +1280,14 @@
           background: rgba(0, 0, 0, 0);
           transition: all @fast-transition-speed @ease-in-out-cubic;
           text-decoration: none;
+
+          &.is-not-allowed {
+            cursor: not-allowed;
+
+            i {
+              color: @gray-lighter-rgba;
+            }
+          }
         }
 
         .preview:hover {
@@ -1781,4 +1789,8 @@ body.repo-mode .refinery-dashboard {
   padding-left: 0.25rem;
   padding-right: 0.25rem;
   color: @gray-lighter;
+}
+
+.is-not-allowed {
+  cursor: not-allowed;
 }

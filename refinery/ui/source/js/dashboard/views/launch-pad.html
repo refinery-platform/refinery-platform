@@ -383,9 +383,21 @@
                 ng-mouseleave="dashboard.dataSetMouseLeave(dataSet)">
 
                 <a
+                  class="preview is-not-allowed"
+                  title="View content in File Browser"
+                  ng-if="dashboard.settings.djangoApp.satoriDemo"
+                  ng-click="dashboard.openFileBrowserDisabled()"
+                  refinery-tooltip
+                  refinery-tooltip-container="body"
+                  refinery-tooltip-placement="right"
+                  refinery-tooltip-hide-on-click="true">
+                  <i class="primary-text-color fa fa-table"></i>
+                </a>
+                <a
                   class="preview"
                   title="View content in File Browser"
                   ng-href="data_sets/{{ dataSet.uuid }}"
+                  ng-if="!dashboard.settings.djangoApp.satoriDemo"
                   refinery-tooltip
                   refinery-tooltip-container="body"
                   refinery-tooltip-placement="right"
@@ -533,9 +545,23 @@
               ng-mouseenter="dashboard.dataSetMouseEnter(dataSet)"
               ng-mouseleave="dashboard.dataSetMouseLeave(dataSet)">
               <a
+                class="preview is-not-allowed"
+                title="View content in File Browser"
+                ng-if="dashboard.settings.djangoApp.satoriDemo"
+                ng-click="dashboard.openFileBrowserDisabled()"
+                refinery-tooltip
+                refinery-tooltip-container="body"
+                refinery-tooltip-placement="right"
+                refinery-tooltip-delay-show="750"
+                refinery-tooltip-delay-hide="150"
+                refinery-tooltip-hide-on-click="true">
+                <i class="primary-text-color fa fa-table"></i>
+              </a>
+              <a
                 class="preview"
                 title="View content in File Browser"
                 ng-href="data_sets/{{ dataSet.uuid }}"
+                ng-if="!dashboard.settings.djangoApp.satoriDemo"
                 refinery-tooltip
                 refinery-tooltip-container="body"
                 refinery-tooltip-placement="right"

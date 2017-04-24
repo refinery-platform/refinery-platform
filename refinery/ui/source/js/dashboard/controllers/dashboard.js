@@ -1743,6 +1743,14 @@ DashboardCtrl.prototype.openAnalysisDeleteModal = function (analysis) {
   });
 };
 
+DashboardCtrl.prototype.openFileBrowserDisabled = function () {
+  this.$uibModal.open({
+    templateUrl:
+      '/static/partials/dashboard/partials/file-browser-disabled.html',
+    controller: 'IntroSatoriEasterEggCtrl as modal'
+  });
+};
+
 angular
   .module('refineryDashboard')
   .controller('DashboardCtrl', [
