@@ -19,7 +19,7 @@ from django.http import (Http404, HttpResponse, HttpResponseForbidden,
                          HttpResponseRedirect, HttpResponseBadRequest,
                          HttpResponseNotFound, HttpResponseServerError)
 
-from django.shortcuts import render_to_response, get_object_or_404
+from django.shortcuts import render_to_response, get_object_or_404, redirect
 from django.template import RequestContext, loader
 from django.views.decorators.gzip import gzip_page
 
@@ -34,7 +34,7 @@ from rest_framework import status
 from xml.parsers.expat import ExpatError
 
 from core.forms import (ProjectForm, UserForm, UserProfileForm,
-                        WorkflowForm,  DataSetForm)
+                        WorkflowForm, DataSetForm)
 from annotation_server.models import GenomeBuild
 from core.models import (ExtendedGroup, Project, DataSet, Workflow,
                          UserProfile, WorkflowEngine, Analysis, Invitation,
@@ -48,6 +48,8 @@ from data_set_manager.models import Node
 from data_set_manager.utils import generate_solr_params
 from file_store.models import FileStoreItem
 from visualization_manager.views import igv_multi_species
+from django.contrib.auth import login, logout
+
 
 logger = logging.getLogger(__name__)
 
@@ -78,6 +80,38 @@ def contact(request):
 def statistics(request):
     return render_to_response('core/statistics.html', {},
                               context_instance=RequestContext(request))
+
+
+def login_scc(request):
+    if settings.SATORI_DEMO:
+        if request.user.is_authenticated():
+            logout(request)
+
+        try:
+            user = User.objects.get(id=settings.SATORI_DEMO_SCC_USER_ID)
+            user.backend = settings.AUTHENTICATION_BACKENDS[0]
+        except Exception:
+            return home(request)
+
+        login(request, user)
+
+        return redirect('{}#/exploration'.format(reverse('home')))
+
+
+def login_ml(request):
+    if settings.SATORI_DEMO:
+        if request.user.is_authenticated():
+            logout(request)
+
+        try:
+            user = User.objects.get(id=settings.SATORI_DEMO_ML_USER_ID)
+            user.backend = settings.AUTHENTICATION_BACKENDS[0]
+        except Exception:
+            return home(request)
+
+        login(request, user)
+
+        return redirect('{}#/exploration'.format(reverse('home')))
 
 
 @login_required

@@ -4,7 +4,15 @@ Created on Feb 20, 2012
 @author: nils
 '''
 
+from django.conf import settings
 from django.conf.urls import patterns, url
+
+
+def if_cond(condition, url_pattern, *args, **kwargs):
+    if condition:
+        return url_pattern
+
+    return url(r'^$', 'home', name="home")
 
 
 urlpatterns = patterns(
@@ -81,5 +89,13 @@ urlpatterns = patterns(
     url(r'^pubmed/summary/(?P<id>.+)/', 'pubmed_summary',
         name="pubmed_summary"),
     url(r'^neo4j/annotations/$', 'neo4j_dataset_annotations',
-        name="neo4j_dataset_annotations")
+        name="neo4j_dataset_annotations"),
+    if_cond(
+        settings.SATORI_DEMO,
+        url(r'^login_scc/$', 'login_scc', name="login_scc")
+    ),
+    if_cond(
+        settings.SATORI_DEMO,
+        url(r'^login_ml/$', 'login_ml', name="login_ml")
+    )
 )
