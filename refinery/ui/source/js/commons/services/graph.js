@@ -558,7 +558,7 @@ function GraphFactory (_) {
   };
 
   /**
-   * [toTree description]
+   * Transform graph into a tree.
    *
    * @method  toTree
    * @author  Fritz Lekschas
