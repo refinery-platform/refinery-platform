@@ -1,5 +1,6 @@
 import logging
 import re
+from django.conf import settings
 
 from django.db import models
 from django.db.models.signals import post_delete, pre_delete
@@ -14,7 +15,6 @@ from core.models import Analysis, OwnableResource, WorkflowEngine
 from core.utils import get_full_url
 from data_set_manager.models import Node
 from file_store.models import FileType
-from .urls import DJANGO_DOCKER_ENGINE_URL_ROOT
 
 logger = logging.getLogger(__name__)
 
@@ -264,7 +264,7 @@ class Tool(OwnableResource):
         Construct & return the relative url of our Tool's container
         """
         return "/{}/{}".format(
-            DJANGO_DOCKER_ENGINE_URL_ROOT,
+            settings.DJANGO_DOCKER_ENGINE_URL_ROOT,
             self.container_name
         )
 
