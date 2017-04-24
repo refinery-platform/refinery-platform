@@ -11,9 +11,16 @@ function selectedNodesService ($window, selectedFilterService) {
   vm.selectedNodeGroupUuid = '';
   vm.defaultCurrentSelectionUuid = '';
   vm.resetNodeGroup = false;
-  vm.activeNodeRow = {};
-  vm.selectionObj = {}; // ui-grid maintains checkboxes for popover selection
+  vm.activeNodeRow = {}; // ui-grid node which is selected, shared btwn modules
+  // ui-grid maintains checkboxes for popover selection,
+  // {groupId: {inputFileTypeUuid_1: { nodeUuid: booleanValue }}}
+  vm.selectionObj = {};
 
+  /**
+   * When a group is removed/clear, this will deselect all associated nodes
+   * from the ui-grid selection obj
+   * @param {str} groupId - string with group Id ex, '[0,0,0]'
+   * */
   vm.deselectGroupFromSelectionObj = function (groupId) {
     angular.forEach(vm.selectionObj[groupId], function (inputObj, inputUuid) {
       angular.forEach(inputObj, function (selectionValue, nodeUuid) {

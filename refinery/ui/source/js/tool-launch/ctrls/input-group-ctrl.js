@@ -34,8 +34,6 @@
     vm.isObjEmpty = isObjEmpty;
     vm.removeAllGroups = removeAllGroups;
     vm.removeGroup = removeGroup; // Refreshes all selection
-    vm.tool = {}; // selected tool displayed in panel
-    vm.toolType = ''; // workflow vs visualization
 
 
    /*
@@ -92,14 +90,10 @@
           return vm.displayCtrl.selectedTool;
         },
         function () {
-          angular.copy(vm.displayCtrl.selectedTool, vm.tool);
           vm.inputFileTypes = fileService.inputFileTypes;
           vm.currentGroup = fileService.currentGroup;
           vm.currentTypes = fileService.currentTypes;
           vm.groupCollection = fileService.groupCollection;
-          if (vm.tool.toolType === 'Workflow') {
-            vm.toolType = vm.tool.toolType;
-          }
         }
       );
 

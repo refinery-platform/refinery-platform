@@ -98,8 +98,6 @@
       if (!nodeUuid) {
         nodeUuid = nodeService.activeNodeRow.uuid;
       }
-      console.log('argh');
-      console.log(selectionObj);
       // checkbox selected
       if (selectionObj[vm.currentGroup][inputTypeUuid][nodeUuid]) {
         if (_.has(vm.nodeSelectCollection, nodeUuid) === true) {
@@ -140,8 +138,6 @@
       angular.copy(scaledCopy.input_files, vm.inputFileTypes);
       vm.currentTypes.push(scaledCopy.value_type);
       vm.currentGroup.push(0);
-      console.log('in the refresh file map');
-      console.log(vm.currentGroup);
       generateAttributeObj();
     }
 
