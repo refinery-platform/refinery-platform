@@ -1,11 +1,13 @@
 import json
 import logging
 import mock
+import re
 import requests
 from urlparse import urljoin
 
 from django.contrib.auth.models import User
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command, CommandError
 from django.test import TestCase
 
@@ -15,9 +17,13 @@ from rest_framework.test import (APIRequestFactory, APITestCase,
                                  force_authenticate)
 from selenium import webdriver
 
-from core.models import ExtendedGroup, WorkflowEngine
+from core.models import (DataSet, ExtendedGroup, InvestigationLink,
+                         WorkflowEngine)
+
+from data_set_manager.models import Assay, Investigation, Node, Study
+from file_store.models import FileStoreItem
 from galaxy_connector.models import Instance
-from selenium_testing.utils import (MAX_WAIT, wait_until_class_visible)
+from selenium_testing.utils import MAX_WAIT, wait_until_class_visible
 
 from .models import (FileRelationship, GalaxyParameter, InputFile,
                      OutputFile, Parameter, Tool, ToolDefinition)
@@ -742,6 +748,86 @@ class ToolLaunchTests(StaticLiveServerTestCase):
         else:
             # Purge Docker Containers that we've spun up
             DockerClientWrapper().purge_by_label(tool_launch.uuid)
+
+    def test_node_uuids_get_populated_with_urls(self):
+        with open(
+                "{}/visualization_LIST_igv.json".format(TEST_DATA_PATH)
+        ) as f:
+            tool_annotation = [json.loads(f.read())]
+
+        with mock.patch(
+                self.mock_vis_annotations_reference,
+                return_value=tool_annotation
+        ) as mocked_method:
+            call_command("generate_tool_definitions", visualizations=True)
+
+            self.assertTrue(mocked_method.called)
+            self.assertEqual(ToolDefinition.objects.count(), 1)
+
+        td = ToolDefinition.objects.all()[0]
+
+        dataset = DataSet.objects.create(name="coffee dataset")
+        investigation = Investigation.objects.create()
+        study = Study.objects.create(investigation=investigation)
+        assay = Assay.objects.create(study=study)
+        InvestigationLink.objects.create(
+            investigation=investigation,
+            data_set=dataset,
+            version=1
+        )
+        file_store_item_a = FileStoreItem.objects.create(
+            datafile=SimpleUploadedFile(
+                'test_file_a.txt',
+                'Coffee is delicious!')
+
+        )
+        file_store_item_b = FileStoreItem.objects.create(
+            datafile=SimpleUploadedFile(
+                'test_file_b.txt',
+                'Coffee is delicious!')
+
+        )
+        node_a = Node.objects.create(
+            name="n0",
+            assay=assay,
+            study=study,
+            file_uuid=file_store_item_a.uuid
+        )
+        node_b = Node.objects.create(
+            name="n0",
+            assay=assay,
+            study=study,
+            file_uuid=file_store_item_b.uuid
+        )
+
+        post_data = {
+            "tool_definition_uuid": td.uuid,
+            "file_relationships": "[{}, {}]".format(node_a.uuid, node_b.uuid)
+        }
+        post_request = self.factory.post(
+            self.url_root,
+            data=post_data,
+            format="json"
+        )
+        force_authenticate(post_request, self.user)
+        self.post_response = self.view(post_request)
+
+        try:
+            tool_launch = Tool.objects.get(
+                tool_definition__uuid=td.uuid
+            )
+        except(Tool.DoesNotExist, Tool.MultipleObjectsReturned) as e:
+            raise RuntimeError(
+                "Couldn't properly fetch Tool: {}".format(e)
+            )
+
+        file_relationships = eval(tool_launch.file_relationships)
+        regex = re.compile(
+            "http://example.com/media/file_store/"
+            "[\d\w]+/[\d\w]+/test_file_[ab]_.*.txt"
+        )
+        for url in file_relationships:
+            self.assertRegexpMatches(url, regex)
 
     def test_visualization_container_launch_and_access_hello_world(self):
         with open(
