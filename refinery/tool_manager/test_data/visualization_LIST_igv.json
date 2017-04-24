@@ -1,0 +1,42 @@
+{
+  "name": "Test LIST Visualization IGV",
+  "tool_type": "VISUALIZATION",
+  "annotation": {
+    "container_input_path": "/var/www/data/input.json",
+    "docker_image_name": "gehlenborglab/docker_igv_js:refinery_integration",
+    "description": "This visualization does really cool things... with IGV",
+    "parameters": [
+      {
+        "name": "Genome Build Param",
+        "description": "Genome Build Param description",
+        "value_type": "GENOME_BUILD",
+        "default_value": "hg19"
+      },
+      {
+        "name": "Attribute Param",
+        "description": "Attribute Param description",
+        "value_type": "ATTRIBUTE",
+        "default_value": "Species"
+      },
+      {
+        "name": "File Param",
+        "description": "File Param description",
+        "value_type": "FILE",
+        "default_value": "/media/file_store/file.cool"
+      }
+    ],
+    "output_files":[],
+    "file_relationship": {
+      "file_relationship": {},
+      "value_type": "LIST",
+      "name": "Flat list of N Samples",
+      "input_files": [
+        {
+          "allowed_filetypes": [{"name": "SEG"}],
+          "name": "Cool Input File",
+          "description": "Cool Input File Description"
+        }
+      ]
+    }
+  }
+}
