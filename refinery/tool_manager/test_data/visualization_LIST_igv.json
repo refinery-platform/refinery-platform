@@ -3,7 +3,7 @@
   "tool_type": "VISUALIZATION",
   "annotation": {
     "container_input_path": "/var/www/data/input.json",
-    "docker_image_name": "gehlenborglab/docker_igv_js:refinery_integration",
+    "image_name": "gehlenborglab/docker_igv_js:refinery_integration",
     "description": "This visualization does really cool things... with IGV",
     "parameters": [
       {
