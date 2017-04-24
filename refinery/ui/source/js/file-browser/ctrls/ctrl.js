@@ -75,12 +75,12 @@
       infiniteScrollUp: true,
       infiniteScrollDown: true,
       useExternalSorting: true,
-      enableRowSelection: true,
+      enableRowSelection: false,
       enableSelectAll: false,
       selectionRowHeaderWidth: 35,
       rowHeight: 35,
       showGridFooter: true,
-      enableSelectionBatchEvent: true,
+      enableSelectionBatchEvent: false,
       multiSelect: true,
       columnDefs: fileBrowserFactory.customColumnNames,
       data: fileBrowserFactory.assayFiles,
@@ -114,7 +114,8 @@
       // custom icon for ui-grid selection
       $templateCache.put('ui-grid/selectionRowHeaderButtons',
         '<div>' +
-        '<a rp-node-selection-popover title="Select Tool Input" ' +
+        '<a rp-node-selection-popover title="Select Tool Input"' +
+        'ng-class="{\'ui-grid-row-selected\': row.isSelected}" ' +
         'class="ui-grid-selection-row-header-buttons" ' +
         'ng-click="selectButtonClick(row, $event); ' +
         'grid.appScope.openSelectionPopover(row.entity.uuid);"' +
@@ -251,55 +252,6 @@
         // Sort events
         vm.gridApi.core.on.sortChanged(null, vm.sortChanged);
         vm.sortChanged(vm.gridApi.grid, [vm.gridOptions.columnDefs[1]]);
-
-        // Checkbox selection events
-        vm.gridApi.selection.on.rowSelectionChanged(null, function (row) {
-          angular.copy(row.entity, nodesService.activeNodeRow);
-          // When selected All, watching the deselect events for complement nodes
-          if (nodesService.selectedNodeGroupUuid &&
-            nodesService.selectedNodeGroupUuid !==
-            nodesService.defaultCurrentSelectionUuid) {
-            if (vm.afterNodeGroupUpdate) {
-              vm.afterNodeGroupUpdate = false;
-              nodesService.resetNodeGroupSelection(true);
-            }
-          }
-
-          if (nodesService.selectedAllFlag) {
-            nodesService.setComplementSeletedNodes(row);
-            vm.selectNodesCount = vm.assayFilesTotal -
-              nodesService.complementSelectedNodes.length;
-          } else {
-            // add or remove row to list
-            nodesService.setSelectedNodes(row);
-            vm.selectNodesCount = nodesService.selectedNodes.length;
-          }
-
-          // when not current selection, check if a new row was deselect/selected
-          if (nodesService.selectedNodeGroupUuid !==
-            nodesService.defaultCurrentSelectionUuid &&
-            nodesService.selectedNodesUuidsFromNodeGroup.length !==
-            nodesService.selectedNodes.length) {
-            // Reset the node group selection to current selection
-            nodesService.resetNodeGroupSelection(true);
-          }
-        });
-
-       //  Event only occurs when checkbox is selected/deselected.
-        vm.gridApi.selection.on.rowSelectionChangedBatch(null, function
-         (eventRows) {
-          // When event all occurs, the node group should be current selection
-          nodesService.resetNodeGroupSelection(true);
-          // Checking the first row selected, ensures it's a true select all
-          if (eventRows[0].isSelected) {
-            nodesService.setSelectedAllFlags(true);
-            // Need to manually set vm.selectNodesCount to count of all list
-            vm.selectNodesCount = vm.assayFilesTotal;
-          } else {
-            nodesService.setSelectedAllFlags(false);
-            vm.selectNodesCount = 0;
-          }
-        });
       }
     }
 
@@ -307,8 +259,9 @@
      * only one shows at a time. Needed in the ctrl due to ui-grid template.
      * @param nodeUuid
      */
-    function openSelectionPopover (nodeUuid) {
-      angular.element('#' + nodeUuid).popover('show');
+    function openSelectionPopover (nodeDomObj) {
+      angular.copy(nodeDomObj, nodesService.activeNodeRow);
+      angular.element('#' + nodeDomObj.uuid).popover('show');
       angular.element('.ui-grid-selection-row-header-buttons').popover('disable');
     }
 

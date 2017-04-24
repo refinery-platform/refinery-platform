@@ -156,6 +156,7 @@ function fileBrowserFactory (
       angular.copy(culledAttributes, assayAttributes);
       // Add file_download column first
       assayAttributes.unshift({ display_name: 'Url', internal_name: 'Url' });
+      assayAttributes.unshift({ display_name: 'Selection', internal_name: 'Selection' });
       // some attributes will be duplicate in different fields, duplicate
       // column names will throw an error. This prevents duplicates
       for (var ind = 0; ind < assayAttributes.length; ind++) {
@@ -239,6 +240,30 @@ function fileBrowserFactory (
     return internalName;
   };
 
+  var setCustomSelectColumn = function (columnName) {
+    var cellTemplate = '<div class="ngCellText text-align-center">' +
+        '<a rp-node-selection-popover title="Select Tool Input"' +
+        'class="ui-grid-selection-row-header-buttons" ' +
+        'ng-click="selectButtonClick(row, $event); ' +
+        'grid.appScope.openSelectionPopover(row.entity);"' +
+        'id="{{row.entity.uuid}}">' +
+        '<i class="fa fa-arrow-right ui-grid-checks"' +
+        ' aria-hidden="true"></i></a></div>';
+
+    return {
+      name: columnName,
+      field: columnName,
+      cellTooltip: true,
+      width: 4 + '%',
+      displayName: '',
+      enableFiltering: false,
+      enableSorting: false,
+      enableColumnMenu: false,
+      enableColumnResizing: true,
+      cellTemplate: cellTemplate
+    };
+  };
+
    /**
    * Helper method for file download column, requires unique template & fields.
    * @param {string} _columnName - column name
@@ -300,6 +325,8 @@ function fileBrowserFactory (
       if (columnName === 'Url') {
         // Url requires a custom template for downloading links
         tempCustomColumnNames.push(setCustomUrlColumnDef(columnName));
+      } else if (columnName === 'Selection') {
+        tempCustomColumnNames.push(setCustomSelectColumn(columnName));
       } else if (columnName === 'Analysis Group') {
         // Analysis requires a custom template for filtering -1 entries
         var _cellTemplate = '<div class="ngCellText text-align-center"' +
