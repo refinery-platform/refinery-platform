@@ -315,6 +315,11 @@ LOGGING = {
             'handlers': ['console'],
             'propagate': False,
         },
+        'selenium': {
+            'handlers': ['console'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
         'visualization_manager': {
             'handlers': ['console'],
             'level': 'DEBUG',
