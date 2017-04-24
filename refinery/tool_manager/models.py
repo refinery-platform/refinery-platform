@@ -153,7 +153,7 @@ class ToolDefinition(models.Model):
     file_relationship = models.ForeignKey(FileRelationship)
     output_files = models.ManyToManyField(OutputFile)
     parameters = models.ManyToManyField(Parameter)
-    docker_image_name = models.CharField(max_length=255, blank=True)
+    image_name = models.CharField(max_length=255, blank=True)
     container_input_path = models.CharField(
         max_length=500,
         blank=True
@@ -241,7 +241,7 @@ class Tool(OwnableResource):
     def launch(self):
         if self.get_tool_type() == ToolDefinition.VISUALIZATION:
             container = DockerContainerSpec(
-                image_name=self.tool_definition.docker_image_name,
+                image_name=self.tool_definition.image_name,
                 container_name=self.container_name,
                 labels={self.uuid: ToolDefinition.VISUALIZATION},
                 container_input_path=(

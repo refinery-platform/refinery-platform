@@ -92,7 +92,7 @@ def create_tool_definition(annotation_data):
             file_relationship=create_file_relationship_nesting(
                 annotation
             ),
-            docker_image_name=annotation["docker_image_name"],
+            image_name=annotation["image_name"],
             container_input_path=annotation["container_input_path"]
         )
 
@@ -411,3 +411,14 @@ def get_visualization_annotations_list():
             visualization_annotations.append(json.loads(f.read()))
 
     return visualization_annotations
+
+
+def parse_file_relationship_nesting(object, structure=""):
+    try:
+        if isinstance(object, list):
+            structure += "LIST:"
+        if isinstance(object, tuple):
+            structure += "PAIR:"
+        return parse_file_relationship_nesting(object[0], structure=structure)
+    except RuntimeError:
+        print structure[:-1]
