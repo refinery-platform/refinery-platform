@@ -91,9 +91,6 @@
     vm.refreshSelectedFieldFromQuery = refreshSelectedFieldFromQuery;
     vm.reset = reset;
     vm.rowCount = maxFileRequest;
-    vm.selectNodesCount = 0;
-    vm.setGridSelectedRows = setGridSelectedRows;
-    vm.setGridUnselectedRows = setGridUnselectedRows;
     vm.sortChanged = sortChanged;
     vm.totalPages = 1;  // variable supporting ui-grid dynamic scrolling
     /** Used by ui to select/deselect, attributes have an object of filter fields
@@ -108,18 +105,6 @@
      * -----------------------------------------------------------------------------
      */
     function activate () {
-      // custom icon for ui-grid selection
-      $templateCache.put('ui-grid/selectionRowHeaderButtons',
-        '<div>' +
-        '<a rp-node-selection-popover title="Select Tool Input"' +
-        'ng-class="{\'ui-grid-row-selected\': row.isSelected}" ' +
-        'class="ui-grid-selection-row-header-buttons" ' +
-        'ng-click="selectButtonClick(row, $event); ' +
-        'grid.appScope.openSelectionPopover(row.entity.uuid);"' +
-        'id="{{row.entity.uuid}}">' +
-        '<i class="fa fa-arrow-right ui-grid-checks"' +
-        ' aria-hidden="true"></i></a></div>'
-      );
       // Ensure data owner
       checkDataSetOwnership();
       // initialize the dataset and updates ui-grid selection, filters, and url
@@ -332,46 +317,9 @@
             // timeout needed allows digest cycle to complete,and grid to ingest the data
             vm.gridApi.infiniteScroll.resetScroll(vm.firstPage > 0, vm.lastPage < vm.totalPages);
             resetGridService.setResetGridFlag(false);
-            // Select rows either from node group lists or previously selected
-            if (nodesService.selectedNodesUuidsFromNodeGroup.length > 0) {
-              nodesService.setSelectedNodesFromNodeGroup(
-                nodesService.selectedNodesUuidsFromNodeGroup
-              );
-              nodesService.selectNodesCount = nodesService
-                .selectedNodesUuidsFromNodeGroup.length;
-              correctRowSelectionInUI();
-              vm.afterNodeGroupUpdate = true;
-            } else if (nodesService.selectedNodes.length > 0) {
-              nodesService.selectNodesCount = nodesService.selectedNodesUuids.length;
-              correctRowSelectionInUI();
-            } else {
-              vm.gridApi.selection.clearSelectedRows();
-              nodesService.selectNodesCount = 0;
-            }
           });
         });
       }
-    }
-
-    // Helper function: select rows on the ui-grid
-    function setGridSelectedRows (uuidsList) {
-      // If user scrolls quickly, there could be a delay for selected items
-      angular.forEach(vm.gridApi.grid.rows, function (gridRow) {
-        if (uuidsList.indexOf(gridRow.entity.uuid) > -1) {
-          vm.gridApi.selection.selectRow(gridRow.entity);
-        }
-      });
-    }
-
-    // Helper function: unselect rows on the ui-grid
-    function setGridUnselectedRows (uuidsList) {
-      // If user scrolls quickly, there could be a delay for selected items
-      angular.forEach(vm.gridApi.grid.rows, function (gridRow) {
-        // select rows if not in complement list
-        if (uuidsList.indexOf(gridRow.entity.uuid) === -1) {
-          vm.gridApi.selection.selectRow(gridRow.entity);
-        }
-      });
     }
 
     /**
@@ -430,6 +378,7 @@
         });
     };
 
+    // TODO: Update with the new selected rows and the indicator column.
     // Method to select/deselect rows programmically after dynamic
     // scroll adds more data, at reset and per 300 rows
     var correctRowSelectionInUI = function () {
@@ -503,7 +452,6 @@
             });
             selectedFilterService.resetAttributeFilter(fieldsObj);
           });
-          vm.selectNodesCount = 0;
           vm.filesParam.filter_attribute = {};
           vm.reset();
         }

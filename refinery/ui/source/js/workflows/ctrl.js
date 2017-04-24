@@ -38,10 +38,6 @@ function WorkflowListApiCtrl (
     }
   };
 
-  $scope.isLaunchNodesSelectionEmpty = function () {
-    return selectedNodesService.isNodeSelectionEmpty();
-  };
-
   $scope.whichFileBrowserBrowser();
 
   // Watches for a new workflow selection and updates service

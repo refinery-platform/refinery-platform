@@ -2,12 +2,7 @@
 
 function selectedNodesService ($window, selectedFilterService) {
   var vm = this;
-  vm.selectedNodes = [];
-  vm.selectedNodesUuids = [];
-  vm.selectedNodesUuidsFromNodeGroup = [];
   vm.selectedAllFlag = false;
-  vm.complementSelectedNodes = [];
-  vm.complementSelectedNodesUuids = [];
   vm.selectedNodeGroupUuid = '';
   vm.defaultCurrentSelectionUuid = '';
   vm.resetNodeGroup = false;
@@ -27,29 +22,6 @@ function selectedNodesService ($window, selectedFilterService) {
         vm.selectionObj[groupId][inputUuid][nodeUuid] = false;
       });
     });
-  };
-
-  /**
-   * Manually keep track of selected nodes which is neccessary due to dynamic
-   * scrolling in the ui-grid
-   * @param {obj} nodeRow - ui-grid row obj
-   * */
-  vm.setSelectedNodes = function (nodeRow) {
-    var ind = vm.selectedNodesUuids.indexOf(nodeRow.entity.uuid);
-    if (nodeRow.isSelected) {
-      if (ind === -1) {
-        vm.selectedNodes.push(nodeRow);
-        vm.selectedNodesUuids.push(nodeRow.entity.uuid);
-      }
-      // Have to set explictly to keep deleted rows from infinite scrolling
-    } else if (nodeRow.isSelected === false) {
-      if (ind > -1) {
-        vm.selectedNodesUuids.splice(ind, 1);
-        vm.selectedNodes.splice(ind, 1);
-      }
-    }
-    // else nothing because it is not in current block of data
-    return vm.selectedNodes;
   };
 
    /**
@@ -99,28 +71,6 @@ function selectedNodesService ($window, selectedFilterService) {
     }
   };
 
-  /**
-   * These are non-selected nodes uuid, when the select all flag is true
-   * @param {obj} nodeRow - ui-grid row object or ui-grid structured row objects
-   */
-  vm.setComplementSeletedNodes = function (nodeRow) {
-    var ind = vm.complementSelectedNodesUuids.indexOf(nodeRow.entity.uuid);
-    if (nodeRow.isSelected === false) {
-      if (ind === -1) {
-        vm.complementSelectedNodes.push(nodeRow);
-        vm.complementSelectedNodesUuids.push(nodeRow.entity.uuid);
-      }
-      // Have to set explictly to keep deleted rows from infinite scrolling
-    } else if (nodeRow.isSelected === true) {
-      if (ind > -1) {
-        vm.complementSelectedNodes.splice(ind, 1);
-        vm.complementSelectedNodesUuids.splice(ind, 1);
-      }
-    }
-    // else nothing should occur to nodeRow because it is not in assayFiles
-    return vm.complementSelectedNodes;
-  };
-
    /**
    * Resets Node Group UI-Select menu to default Current Selection
    * @param {boolean} flag - resets boolean
@@ -151,17 +101,6 @@ function selectedNodesService ($window, selectedFilterService) {
       params.use_complement_nodes = false;
     }
     return params;
-  };
-
-
-  // Used by ctrls for node-group and launch-analysis partials to designate
-  // whether any nodes are selected.
-  vm.isNodeSelectionEmpty = function () {
-    var params = vm.getNodeGroupParams();
-    if (params.nodes.length === 0 && !params.use_complement_nodes) {
-      return true;
-    }
-    return false;
   };
 }
 

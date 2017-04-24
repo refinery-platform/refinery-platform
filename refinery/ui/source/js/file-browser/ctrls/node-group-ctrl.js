@@ -56,10 +56,6 @@ function NodeGroupCtrl (
     resetGridService.setResetGridFlag(true);
   };
 
-  // helper method checking if any nodes are selected
-  vm.isNodeGroupSelectionEmpty = function () {
-    return selectedNodesService.isNodeSelectionEmpty();
-  };
 /*
  * -----------------------------------------------------------------------------
  * Watchers and Method Calls
