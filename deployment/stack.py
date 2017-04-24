@@ -72,12 +72,14 @@ def main(argv=None):
 
     if command == 'create':
         cloudformation = boto3.client("cloudformation")
-        response = cloudformation.create_stack(StackName=config['STACK_NAME'],
+        response = cloudformation.create_stack(
+            StackName=config['STACK_NAME'],
             TemplateBody=str(template),
             Capabilities=['CAPABILITY_IAM'],
         )
         sys.stdout.write(json.dumps(response, indent=2) + '\n')
         return 0
+
 
 def make_template(config, config_yaml):
     """Make a fresh CloudFormation template object and return it.
