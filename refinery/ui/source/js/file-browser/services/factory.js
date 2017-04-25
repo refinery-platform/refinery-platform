@@ -157,6 +157,7 @@ function fileBrowserFactory (
       // Add file_download column first
       assayAttributes.unshift({ display_name: 'Url', internal_name: 'Url' });
       assayAttributes.unshift({ display_name: 'Selection', internal_name: 'Selection' });
+      assayAttributes.unshift({ display_name: 'Input Groups', internal_name: 'InputGroups' });
       // some attributes will be duplicate in different fields, duplicate
       // column names will throw an error. This prevents duplicates
       for (var ind = 0; ind < assayAttributes.length; ind++) {
@@ -240,6 +241,32 @@ function fileBrowserFactory (
     return internalName;
   };
 
+  /**
+   * Helper method for file download column, requires unique template & fields.
+   * @param {string} _columnName - column name
+   */
+  var setCustomInputGroupsColumn = function (_columnName) {
+    var _cellTemplate = '<div class="ngCellText text-align-center grid-input-groups">' +
+      '<div ng-if="grid.appScope.nodeSelectCollection[row.entity.uuid].groupList.length > 0" ' +
+      'class="selected-node">' +
+      '<div ng-if="grid.appScope.nodeSelectCollection[row.entity.uuid].groupList[0].length > 1"> ' +
+      '<span ng-repeat="group in grid.appScope.nodeSelectCollection[row.entity.uuid].groupList' +
+      'track by $index"> {{group}} &nbsp </span></div></div></div>';
+
+    return {
+      name: _columnName,
+      field: _columnName,
+      cellTooltip: false,
+      width: 11 + '%',
+      displayName: 'Input Groups',
+      enableFiltering: false,
+      enableSorting: false,
+      enableColumnMenu: false,
+      enableColumnResizing: true,
+      cellTemplate: _cellTemplate
+    };
+  };
+
   var setCustomSelectColumn = function (columnName) {
     var cellTemplate = '<div class="ngCellText text-align-center">' +
         '<a rp-node-selection-popover title="Select Tool Input"' +
@@ -268,7 +295,7 @@ function fileBrowserFactory (
    * Helper method for file download column, requires unique template & fields.
    * @param {string} _columnName - column name
    */
-  var setCustomUrlColumnDef = function (_columnName) {
+  var setCustomUrlColumn = function (_columnName) {
     var internalName = grabAnalysisInternalName(assayAttributes);
     var _cellTemplate = '<div class="ngCellText text-align-center"' +
           'ng-class="col.colIndex()">' +
@@ -324,8 +351,10 @@ function fileBrowserFactory (
       };
       if (columnName === 'Url') {
         // Url requires a custom template for downloading links
-        tempCustomColumnNames.push(setCustomUrlColumnDef(columnName));
+        tempCustomColumnNames.push(setCustomUrlColumn(columnName));
       } else if (columnName === 'Selection') {
+        tempCustomColumnNames.push(setCustomInputGroupsColumn(columnName));
+      } else if (columnName === 'Input Groups') {
         tempCustomColumnNames.push(setCustomSelectColumn(columnName));
       } else if (columnName === 'Analysis Group') {
         // Analysis requires a custom template for filtering -1 entries

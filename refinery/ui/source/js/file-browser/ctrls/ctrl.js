@@ -18,6 +18,7 @@
     'fileBrowserFactory',
     'fileBrowserSettings',
     'filesLoadingService',
+    'fileRelationshipService',
     'isOwnerService',
     'resetGridService',
     'selectedFilterService',
@@ -37,6 +38,7 @@
     fileBrowserFactory,
     fileBrowserSettings,
     filesLoadingService,
+    fileRelationshipService,
     isOwnerService,
     resetGridService,
     selectedFilterService,
@@ -44,6 +46,7 @@
   ) {
     var maxFileRequest = fileBrowserSettings.maxFileRequest;
     var nodesService = selectedNodesService;
+    var fileService = fileRelationshipService;
     var vm = this;
 
     // flag to help with timing issues when selecting node group
@@ -85,6 +88,7 @@
     };
     vm.gridOptions.onRegisterApi = gridRegister;
     vm.lastPage = 0;  // variable supporting ui-grid dynamic scrolling
+    vm.nodeSelectCollection = fileService.nodeSelectCollection;
     vm.openSelectionPopover = openSelectionPopover;
     vm.queryKeys = Object.keys($location.search()); // used for preset filters
     vm.refreshAssayFiles = refreshAssayFiles;
@@ -473,6 +477,15 @@
           initializeDataOnPageLoad();
           resetGridService.setRefreshGridFlag(false);
         }
+      }
+    );
+    $scope.$watchCollection(
+      function () {
+        return fileService.nodeSelectCollection;
+      },
+      function () {
+        console.log('node set is updated');
+        vm.nodeSelectCollection = fileService.nodeSelectCollection;
       }
     );
   }
