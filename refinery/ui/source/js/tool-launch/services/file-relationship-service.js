@@ -178,10 +178,10 @@
     // groupId and it's associated inputFileType
     function removeGroupFromNodeSelectCollection (nodeList, TypeUuid) {
       for (var i = 0; i < nodeList.length; i++) {
-        var groupInd = vm.nodeSelectCollection[nodeList[i].uuid].groupList.indexOf(TypeUuid);
+        var groupInd = vm.nodeSelectCollection[nodeList[i].uuid].inputTypeList.indexOf(TypeUuid);
         if (groupInd > -1) {
           vm.nodeSelectCollection[nodeList[i].uuid].groupList.splice(groupInd, 1);
-          vm.nodeSelectCollection[nodeList[i].uuid].TypeUuid.splice(groupInd, 1);
+          vm.nodeSelectCollection[nodeList[i].uuid].inputTypeList.splice(groupInd, 1);
         }
        // Delete node property from obj if empty
         if (vm.nodeSelectCollection[nodeList[i].uuid].groupList === 0) {

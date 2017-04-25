@@ -494,8 +494,9 @@
         return fileService.nodeSelectCollection;
       },
       function () {
-        console.log('node set is updated');
         vm.nodeSelectCollection = fileService.nodeSelectCollection;
+        console.log('watcher');
+        console.log(vm.nodeSelectCollection);
       }
     );
   }
