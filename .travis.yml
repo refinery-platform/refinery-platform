@@ -8,9 +8,7 @@ addons:
       - xvfb
 
 python:
-  # Vagrant enviornments have 2.7.6 by default
-  - 2.7.6
-  - 2.7.12
+  - 2.7
 services:
   - postgresql
   - neo4j
