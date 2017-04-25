@@ -285,6 +285,11 @@ LOGGING = {
             'handlers': ['console'],
             'propagate': False,
         },
+        'docker': {
+            'level': 'ERROR',
+            'handlers': ['console'],
+            'propagate': False,
+        },
         'easyprocess': {
             'handlers': ['console'],
             'level': 'ERROR',
@@ -318,6 +323,11 @@ LOGGING = {
         'isa_tab_parser': {
             'level': 'DEBUG',
             'handlers': ['console'],
+            'propagate': False,
+        },
+        'requests': {
+            'handlers': ['console'],
+            'level': 'ERROR',
             'propagate': False,
         },
         'selenium': {
