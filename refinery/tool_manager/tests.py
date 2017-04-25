@@ -807,7 +807,10 @@ class ToolLaunchTests(StaticLiveServerTestCase):
 
         post_data = {
             "tool_definition_uuid": td.uuid,
-            "file_relationships": "[{}, {}]".format(node_a.uuid, node_b.uuid)
+            "file_relationships": "[{}, {}]".format(
+                node_a.uuid,
+                node_b.uuid
+            )
         }
         post_request = self.factory.post(
             self.url_root,
