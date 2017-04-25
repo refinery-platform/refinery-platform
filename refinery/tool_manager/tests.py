@@ -42,7 +42,7 @@ class ToolDefinitionAPITests(APITestCase):
         self.factory = APIRequestFactory()
         self.view = ToolDefinitionsViewSet.as_view({'get': 'list'})
 
-        self.url_root = '/api/v2/tools/definitions/'
+        self.url_root = '/api/v2/tool_definitions/'
 
         self.galaxy_instance = Instance.objects.create()
         self.workflow_engine = WorkflowEngine.objects.create(
