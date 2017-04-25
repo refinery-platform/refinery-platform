@@ -51,6 +51,7 @@
 
     // flag to help with timing issues when selecting node group
     vm.afterNodeGroupUpdate = false;
+    vm.activeNodeRow = nodesService.activeNodeRow;
     vm.analysisFilter = fileBrowserFactory.analysisFilter;
     // attribute list from api
     vm.assayAttributes = fileBrowserFactory.assayAttributes;
@@ -247,6 +248,7 @@
      */
     function openSelectionPopover (nodeRow) {
       angular.copy(nodeRow, nodesService.activeNodeRow);
+      vm.activeNodeRow = nodesService.activeNodeRow;
       angular.element('#' + nodeRow.uuid).popover('show');
       angular.element('.ui-grid-selection-row-header-buttons').popover('disable');
     }
@@ -477,6 +479,14 @@
           initializeDataOnPageLoad();
           resetGridService.setRefreshGridFlag(false);
         }
+      }
+    );
+    $scope.$watch(
+      function () {
+        return nodesService.activeNodeRow;
+      },
+      function () {
+        vm.activeNodeRow = nodesService.activeNodeRow;
       }
     );
     $scope.$watchCollection(

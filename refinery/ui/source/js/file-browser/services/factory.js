@@ -272,7 +272,8 @@ function fileBrowserFactory (
         '<a rp-node-selection-popover title="Select Tool Input"' +
         'class="ui-grid-selection-row-header-buttons" ' +
         'ng-class="{\'solidText\': grid.appScope.nodeSelectCollection[' +
-        'row.entity.uuid].groupList.length > 0}" ' +
+        'row.entity.uuid].groupList.length > 0 || row.entity.uuid ==' +
+        ' grid.appScope.activeNodeRow.uuid}" ' +
         'ng-click="grid.appScope.openSelectionPopover(row.entity)"' +
         'id="{{row.entity.uuid}}">' +
         '<i class="fa fa-arrow-right" aria-hidden="true"></i></a></div>';
