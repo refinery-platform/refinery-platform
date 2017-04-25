@@ -834,8 +834,9 @@ class ToolLaunchTests(StaticLiveServerTestCase):
         # Build regex and assert that the file_relationships structure is
         # populated from the FileStoreItem's datafiles that we've associated
         # with the Nodes above
-        regex = re.compile(r"test_file_[ab]_.*.txt")
+        regex = re.compile(r"test_file_[ab]_.*\.txt")
         for url in file_relationships:
+            logger.critical("URL is: {}".format(url))
             self.assertIsNotNone(regex.search(url))
 
     def test_visualization_container_launch_and_access_hello_world(self):
