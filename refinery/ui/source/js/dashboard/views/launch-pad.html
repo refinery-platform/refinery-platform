@@ -92,7 +92,8 @@
                 ng-class="{'active': dashboard.dataSetExploration}"
                 ng-click="dashboard.toggleDataSetsExploration()"
                 ng-if="dashboard.explorationEnabled">
-                <i class="fa fa-compass" title="Explore data sets"></i> Explore
+                <i class="fa fa-compass" title="Explore data sets"></i>
+                Explor{{ dashboard.dataSetExploration ? 'ing' : 'e' }}
               </button>
               <span id="dataUploadTutorialStep0">
                <a
