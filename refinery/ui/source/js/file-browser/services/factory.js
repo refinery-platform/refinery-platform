@@ -250,7 +250,7 @@ function fileBrowserFactory (
       '<div ng-if="grid.appScope.nodeSelectCollection[row.entity.uuid].groupList.length > 0" ' +
       'class="selected-node">' +
       '<div ng-if="grid.appScope.nodeSelectCollection[row.entity.uuid].groupList[0].length > 1"> ' +
-      '<span ng-repeat="group in grid.appScope.nodeSelectCollection[row.entity.uuid].groupList' +
+      '<span ng-repeat="group in grid.appScope.nodeSelectCollection[row.entity.uuid].groupList ' +
       'track by $index"> {{group}} &nbsp </span></div></div></div>';
 
     return {

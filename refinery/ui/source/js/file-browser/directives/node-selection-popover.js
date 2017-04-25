@@ -39,7 +39,7 @@
         angular.element(element).popover(options);
 
         scope.closeSelectionPopover = function () {
-          nodesService.activeNodeRow = {};
+          angular.copy({}, nodesService.activeNodeRow);
           angular.element('.popover').popover('hide');
           angular.element('.ui-grid-selection-row-header-buttons').popover('enable');
         };
