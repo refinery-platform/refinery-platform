@@ -271,11 +271,11 @@ function fileBrowserFactory (
     var cellTemplate = '<div class="ngCellText text-align-center">' +
         '<a rp-node-selection-popover title="Select Tool Input"' +
         'class="ui-grid-selection-row-header-buttons" ' +
-        'ng-click="selectButtonClick(row, $event); ' +
-        'grid.appScope.openSelectionPopover(row.entity);"' +
+        'ng-class="{\'solidText\': grid.appScope.nodeSelectCollection[' +
+        'row.entity.uuid].groupList.length > 0}" ' +
+        'ng-click="grid.appScope.openSelectionPopover(row.entity)"' +
         'id="{{row.entity.uuid}}">' +
-        '<i class="fa fa-arrow-right ui-grid-checks"' +
-        ' aria-hidden="true"></i></a></div>';
+        '<i class="fa fa-arrow-right" aria-hidden="true"></i></a></div>';
 
     return {
       name: columnName,
