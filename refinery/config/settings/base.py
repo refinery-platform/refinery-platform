@@ -285,6 +285,11 @@ LOGGING = {
             'handlers': ['console'],
             'propagate': False,
         },
+        'easyprocess': {
+            'handlers': ['console'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
         'factory': {
             'handlers': ['console'],
             'level': 'ERROR',
