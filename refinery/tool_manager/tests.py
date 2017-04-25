@@ -735,7 +735,6 @@ class ToolLaunchTests(StaticLiveServerTestCase):
         self.username = 'coffee_lover'
         self.password = 'coffeecoffee'
         self.user = User.objects.create_user(self.username, '', self.password)
-        self.container_name = ""
         self.factory = APIRequestFactory()
         self.view = ToolsViewSet.as_view({'post': 'create'})
         self.url_root = '/api/v2/tools'
@@ -745,15 +744,9 @@ class ToolLaunchTests(StaticLiveServerTestCase):
         # This could become an issue if tests are ever run in parallel.
         self.browser.quit()
         self.display.stop()
-        try:
-            tool_launch = Tool.objects.get(
-                container_name=self.container_name
-            )
-        except Tool.DoesNotExist:
-            pass
-        else:
+        for tool in Tool.objects.all():
             # Purge Docker Containers that we've spun up
-            DockerClientWrapper().purge_by_label(tool_launch.uuid)
+            DockerClientWrapper().purge_by_label(tool.uuid)
 
         # Trigger the pre_delete signal so that datafiles are purged
         FileStoreItem.objects.all().delete()
@@ -894,7 +887,6 @@ class ToolLaunchTests(StaticLiveServerTestCase):
             raise RuntimeError(
                 "Couldn't properly fetch Tool: {}".format(e))
 
-        self.container_name = tool_launch.container_name
         self.assertEqual(tool_launch.get_owner(), self.user)
         self.assertEqual(
             tool_launch.get_tool_type(),
@@ -953,7 +945,6 @@ class ToolLaunchTests(StaticLiveServerTestCase):
                 raise RuntimeError(
                     "Couldn't properly fetch Tool: {}".format(e))
 
-            self.container_name = tool_launch.container_name
             self.assertEqual(tool_launch.get_owner(), self.user)
             self.assertEqual(
                 tool_launch.get_tool_type(),
