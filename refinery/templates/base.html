@@ -70,9 +70,10 @@
 </head>
 
 <body
+  class="{{ SATORI_DEMO|yesno:"is-screenshot-ready,," }}"
   ng-app="{% block ng_app %}refineryApp{% endblock %}"
   ng-controller="AppCtrl as app"
-  ng-class="{ 'repo-mode': app.repoMode, 'is-screenshot-ready': app.satoriDemo }"
+  ng-class="{ 'repo-mode': app.repoMode }"
   ng-click="app.globalClick($event)"
   ng-strict-di>
   <!-- header navigation bar -->
