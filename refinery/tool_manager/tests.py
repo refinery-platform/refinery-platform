@@ -1,3 +1,4 @@
+import StringIO
 import json
 import logging
 import mock
@@ -7,7 +8,7 @@ from urlparse import urljoin
 
 from django.contrib.auth.models import User
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
-from django.core.files.uploadedfile import SimpleUploadedFile
+from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.core.management import call_command, CommandError
 from django.test import TestCase
 
@@ -754,6 +755,9 @@ class ToolLaunchTests(StaticLiveServerTestCase):
             # Purge Docker Containers that we've spun up
             DockerClientWrapper().purge_by_label(tool_launch.uuid)
 
+        # Trigger the pre_delete signal so that datafiles are purged
+        FileStoreItem.objects.all().delete()
+
     def test_node_uuids_get_populated_with_urls(self):
         with open(
                 "{}/visualization_LIST_igv.json".format(TEST_DATA_PATH)
@@ -780,17 +784,30 @@ class ToolLaunchTests(StaticLiveServerTestCase):
             data_set=dataset,
             version=1
         )
+
+        test_file_a = StringIO.StringIO()
+        test_file_a.write('Coffee is great.\n')
         file_store_item_a = FileStoreItem.objects.create(
-            datafile=SimpleUploadedFile(
-                'test_file_a.txt',
-                'Coffee is delicious!')
-
+            datafile=InMemoryUploadedFile(
+                test_file_a,
+                field_name='tempfile',
+                name='test_file_a.txt',
+                content_type='text/plain',
+                size=len(test_file_a.getvalue()),
+                charset='utf-8'
+            )
         )
+        test_file_b = StringIO.StringIO()
+        test_file_b.write('Coffee is really great.\n')
         file_store_item_b = FileStoreItem.objects.create(
-            datafile=SimpleUploadedFile(
-                'test_file_b.txt',
-                'Coffee is delicious!')
-
+            datafile=InMemoryUploadedFile(
+                test_file_b,
+                field_name='tempfile',
+                name='test_file_b.txt',
+                content_type='text/plain',
+                size=len(test_file_b.getvalue()),
+                charset='utf-8'
+            )
         )
         node_a = Node.objects.create(
             name="n0",
@@ -834,9 +851,8 @@ class ToolLaunchTests(StaticLiveServerTestCase):
         # Build regex and assert that the file_relationships structure is
         # populated from the FileStoreItem's datafiles that we've associated
         # with the Nodes above
-        regex = re.compile(r"test_file_[ab]_.*\.txt")
+        regex = re.compile(r"test_file_[ab]\.txt")
         for url in file_relationships:
-            logger.critical("URL is: {}".format(url))
             self.assertIsNotNone(regex.search(url))
 
     def test_visualization_container_launch_and_access_hello_world(self):

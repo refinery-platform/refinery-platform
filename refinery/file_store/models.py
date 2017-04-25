@@ -556,6 +556,14 @@ class FileStoreItem(models.Model):
                          self.import_task_id, e)
 
 
+@receiver(pre_delete, sender=FileStoreItem)
+def _remove_datafile(sender, instance, *args, **kwargs):
+    """
+    Remove the associated file on disk when deleting a FileStoreItem instance
+    """
+    instance.delete_datafile()
+
+
 def is_local(uuid):
     """Check if this FileStoreItem can be used as a file object
     :param uuid: UUID of a FileStoreItem
