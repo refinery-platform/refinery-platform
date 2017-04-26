@@ -48,10 +48,9 @@
     var nodesService = selectedNodesService;
     var fileService = fileRelationshipService;
     var vm = this;
-
+    vm.activeNodeRow = nodesService.activeNodeRow;
     // flag to help with timing issues when selecting node group
     vm.afterNodeGroupUpdate = false;
-    vm.activeNodeRow = nodesService.activeNodeRow;
     vm.analysisFilter = fileBrowserFactory.analysisFilter;
     // attribute list from api
     vm.assayAttributes = fileBrowserFactory.assayAttributes;
@@ -481,6 +480,7 @@
         }
       }
     );
+    // when a new row is selected/deselected
     $scope.$watch(
       function () {
         return nodesService.activeNodeRow;
@@ -489,14 +489,14 @@
         vm.activeNodeRow = nodesService.activeNodeRow;
       }
     );
+
+    // when a node is added/removed from a tool input group
     $scope.$watchCollection(
       function () {
         return fileService.nodeSelectCollection;
       },
       function () {
         vm.nodeSelectCollection = fileService.nodeSelectCollection;
-        console.log('watcher');
-        console.log(vm.nodeSelectCollection);
       }
     );
   }
