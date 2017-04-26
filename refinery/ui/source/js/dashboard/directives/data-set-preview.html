@@ -37,7 +37,16 @@
         <a
           id="view-in-file-browser"
           class="btn btn-important"
+          ng-show="!preview.settings.djangoApp.satoriDemo"
           ng-href="data_sets/{{ preview.dataSetUuid }}">
+          <i class="fa fa-table"></i>
+          View content in File Browser
+        </a>
+        <a
+          id="view-in-file-browser"
+          class="btn btn-important is-not-allowed"
+          ng-show="preview.settings.djangoApp.satoriDemo"
+          ng-click="dashboard.openFileBrowserDisabled()">
           <i class="fa fa-table"></i>
           View content in File Browser
         </a>
