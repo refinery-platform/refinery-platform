@@ -4,7 +4,6 @@ import logging
 import mock
 import re
 import requests
-import time
 from urlparse import urljoin
 
 from django.contrib.auth.models import User
@@ -1021,11 +1020,10 @@ class ToolLaunchTests(StaticLiveServerTestCase):
                 self.live_server_url,
                 tool_launch.get_relative_container_url()
             )
-            tilesets_url = higlass_url + "/api/v1/tilesets/"
 
-            # Higlass container takes a couple of seconds to spin up
-            time.sleep(5)
-            response = requests.get(tilesets_url)
+            response = requests.get(higlass_url + "/api/v1/tilesets/")
+            while response.status_code is not 200:
+                response = requests.get(higlass_url + "/api/v1/tilesets/")
 
             data = json.loads(response.content)
             self.assertEqual(
