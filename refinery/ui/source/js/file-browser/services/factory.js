@@ -247,17 +247,19 @@ function fileBrowserFactory (
    * @param {string} _columnName - column name
    */
   var setCustomInputGroupsColumn = function (_columnName) {
-    var _cellTemplate = '<div class="ngCellText text-align-center grid-input-groups">' +
+    var _cellTemplate = '<div class="ngCellText grid-input-groups">' +
       '<div ng-if="grid.appScope.nodeSelectCollection[row.entity.uuid].groupList.length > 0" ' +
-      'class="selected-node">' +
-      '<div ng-if="grid.appScope.nodeSelectCollection[row.entity.uuid].groupList[0].length > 1"> ' +
+      'class="selected-node" ' +
+      'title="{{grid.appScope.nodeSelectCollection[row.entity.uuid].groupList}}">' +
+      '<div class="paragraph ui-grid-cell-contents" ' +
+      'ng-if="grid.appScope.nodeSelectCollection[row.entity.uuid].groupList[0].length > 1"> ' +
       '<span ng-repeat="group in grid.appScope.nodeSelectCollection[row.entity.uuid].groupList ' +
-      'track by $index"> {{group}} &nbsp </span></div></div></div>';
+      'track by $index">{{group}} &nbsp </span></div></div></div>';
 
     return {
       name: _columnName,
       field: _columnName,
-      cellTooltip: false,
+      cellTooltip: true,
       width: 11 + '%',
       displayName: 'Input Groups',
       enableFiltering: false,
@@ -269,7 +271,7 @@ function fileBrowserFactory (
   };
 
   var setCustomSelectColumn = function (columnName) {
-    var cellTemplate = '<div class="ngCellText text-align-center">' +
+    var cellTemplate = '<div class="ngCellText text-align-center ui-grid-cell-contents">' +
         '<a rp-node-selection-popover title="Select Tool Input"' +
         'class="ui-grid-selection-row-header-buttons" ' +
         'ng-class="{\'solidText\': grid.appScope.nodeSelectCollection[' +
@@ -282,7 +284,7 @@ function fileBrowserFactory (
     return {
       name: columnName,
       field: columnName,
-      cellTooltip: true,
+      cellTooltip: false,
       width: 4 + '%',
       displayName: '',
       enableFiltering: false,
@@ -299,7 +301,7 @@ function fileBrowserFactory (
    */
   var setCustomUrlColumn = function (_columnName) {
     var internalName = grabAnalysisInternalName(assayAttributes);
-    var _cellTemplate = '<div class="ngCellText text-align-center"' +
+    var _cellTemplate = '<div class="ngCellText text-align-center ui-grid-cell-contents"' +
           'ng-class="col.colIndex()">' +
           '<div ng-if="COL_FIELD" title="Download File \{{COL_FIELD}}\">' +
           '<a href="{{COL_FIELD}}" target="_blank">' +
