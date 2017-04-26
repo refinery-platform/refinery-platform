@@ -548,7 +548,6 @@ class ToolDefinitionGenerationTests(TestCase):
                     {self.workflow_engine.uuid: valid_workflows}
                 ]
         ) as get_wf_mock:
-
             self.assertRaises(
                 CommandError,
                 call_command,
@@ -817,7 +816,7 @@ class ToolLaunchTests(StaticLiveServerTestCase):
 
         post_data = {
             "tool_definition_uuid": td.uuid,
-            "file_relationships": "[{}, {}]".format(
+            "file_relationships": "['{}', '{}']".format(
                 node_a.uuid,
                 node_b.uuid
             )
@@ -964,4 +963,69 @@ class ToolLaunchTests(StaticLiveServerTestCase):
                 self.browser.find_elements_by_class_name(
                     "igv-track-label"
                 )[0].text
+            )
+
+    def test_visualization_container_launch_HiGlass(self):
+        with open(
+                "{}/visualization_LIST_higlass.json".format(TEST_DATA_PATH)
+        ) as f:
+            tool_annotation = [json.loads(f.read())]
+
+        with mock.patch(
+                self.mock_vis_annotations_reference,
+                return_value=tool_annotation
+        ) as mocked_method:
+
+            call_command("generate_tool_definitions", visualizations=True)
+
+            self.assertTrue(mocked_method.called)
+            self.assertEqual(ToolDefinition.objects.count(), 1)
+            self.td = ToolDefinition.objects.all()[0]
+
+            # Create mock ToolLaunchConfiguration
+            self.post_data = {
+                "tool_definition_uuid": self.td.uuid,
+                "file_relationships": str(
+                    [
+                        "https://s3.amazonaws.com/pkerp/public/"
+                        "dixon2012-h1hesc-hindiii-allreps-filtered."
+                        "1000kb.multires.cool"
+                    ]
+                )
+            }
+
+            self.post_request = self.factory.post(
+                self.url_root,
+                data=self.post_data,
+                format="json"
+            )
+            force_authenticate(self.post_request, self.user)
+            self.post_response = self.view(self.post_request)
+
+            try:
+                tool_launch = Tool.objects.get(
+                    tool_definition__uuid=self.td.uuid
+                )
+            except(Tool.DoesNotExist, Tool.MultipleObjectsReturned) as e:
+                raise RuntimeError(
+                    "Couldn't properly fetch Tool: {}".format(e))
+
+            self.assertEqual(tool_launch.get_owner(), self.user)
+            self.assertEqual(
+                tool_launch.get_tool_type(),
+                ToolDefinition.VISUALIZATION
+            )
+            # Check to see if HiGlass shows what we want
+            higlass_url = urljoin(
+                self.live_server_url,
+                tool_launch.get_relative_container_url()
+            )
+
+            response = requests.get(higlass_url + "/api/v1/tilesets/")
+
+            data = json.loads(response.content)
+            self.assertEqual(
+                data["results"][0]["name"],
+                "dixon2012-h1hesc-hindiii-allreps-filtered."
+                "1000kb.multires.cool"
             )
