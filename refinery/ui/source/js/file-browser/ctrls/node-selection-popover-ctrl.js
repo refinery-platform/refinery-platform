@@ -46,12 +46,9 @@
      * deselects a checkbox
      */
     function selectNode (inputUuid, deselectFileUuid) {
-      console.log(inputUuid);
       fileService.setNodeSelectCollection(inputUuid, vm.selectionObj, deselectFileUuid);
       fileService.setGroupCollection(inputUuid, vm.selectionObj, deselectFileUuid);
       vm.groupCollection = fileService.groupCollection;
-      console.log('end of selectNode');
-      console.log(vm.groupCollection);
     }
   /*
    * ---------------------------------------------------------
@@ -71,13 +68,12 @@
         vm.nodeSelection = fileService.nodeSelectCollection;
       }
     );
-
+    // When user selects/deselects row
     $scope.$watch(
       function () {
         return nodeService.activeNodeRow;
       },
       function () {
-        console.log('in the popover ctrl');
         vm.activeRow = nodeService.activeNodeRow;
       }
     );

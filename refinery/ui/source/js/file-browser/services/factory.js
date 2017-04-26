@@ -243,7 +243,7 @@ function fileBrowserFactory (
   };
 
   /**
-   * Helper method for file download column, requires unique template & fields.
+   * Helper method for input groups column, requires unique template & fields.
    * @param {string} _columnName - column name
    */
   var setCustomInputGroupsColumn = function (_columnName) {
@@ -270,6 +270,10 @@ function fileBrowserFactory (
     };
   };
 
+   /**
+   * Helper method for select column, requires unique template & fields.
+   * @param {string} _columnName - column name
+   */
   var setCustomSelectColumn = function (columnName) {
     var cellTemplate = '<div class="ngCellText text-align-center ui-grid-cell-contents">' +
         '<a rp-node-selection-popover title="Select Tool Input"' +
@@ -357,8 +361,10 @@ function fileBrowserFactory (
         // Url requires a custom template for downloading links
         tempCustomColumnNames.push(setCustomUrlColumn(columnName));
       } else if (columnName === 'Input Groups') {
+        // Input Groups requires a custom template for downloading links
         tempCustomColumnNames.push(setCustomInputGroupsColumn(columnName));
       } else if (columnName === 'Selection') {
+        // Selection requires a custom template for downloading links
         tempCustomColumnNames.push(setCustomSelectColumn(columnName));
       } else if (columnName === 'Analysis Group') {
         // Analysis requires a custom template for filtering -1 entries

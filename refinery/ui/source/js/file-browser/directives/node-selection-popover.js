@@ -38,6 +38,7 @@
         };
         angular.element(element).popover(options);
 
+        // Method for resetting the selected now and hiding the popover
         scope.closeSelectionPopover = function () {
           angular.copy({}, nodesService.activeNodeRow);
           angular.element('.popover').popover('hide');
