@@ -32,7 +32,16 @@
       "name": "Flat list of N Samples",
       "input_files": [
         {
-          "allowed_filetypes": [{"name": "SEG"}],
+          "allowed_filetypes": [
+            {"name": "BED"},
+            {"name": "GFF"},
+            {"name": "WIG"},
+            {"name": "BIGWIG"},
+            {"name": "BEDGRAPH"},
+            {"name": "BAM"},
+            {"name": "VCF"},
+            {"name": "SEG"}
+          ],
           "name": "Cool Input File",
           "description": "Cool Input File Description"
         }
