@@ -16,7 +16,7 @@ import yaml
 import boto3
 from cfn_pyplates.core import (CloudFormationTemplate, DeletionPolicy,
                                Parameter, Properties, Resource)
-from cfn_pyplates.functions import get_att, ref
+from cfn_pyplates.functions import ref
 
 REFINERY_CONFIG_FILE = 'aws-config/config.yaml'
 
