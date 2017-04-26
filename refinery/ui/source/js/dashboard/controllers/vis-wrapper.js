@@ -91,7 +91,7 @@ function VisWrapperCtrl (
     'http://purl.obolibrary.org/obo/FIX_0000268',
     'http://purl.obolibrary.org/obo/FYPO_0000001',
     'http://purl.obolibrary.org/obo/GO_0003674',
-    'http://purl.obolibrary.org/obo/GO_0005575',
+    // 'http://purl.obolibrary.org/obo/GO_0005575',
     'http://purl.obolibrary.org/obo/GO_0008150',
     'http://purl.obolibrary.org/obo/IEV_0000003',
     'http://purl.obolibrary.org/obo/MA_0000003',
