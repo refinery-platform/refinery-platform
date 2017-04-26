@@ -182,8 +182,6 @@
             .dataLoaded(vm.firstPage > 0, vm.lastPage < vm.totalPages)
             .then(function () {
               vm.checkDataLength('up');
-              // programmically select/deselect due to new rows
-              correctRowSelectionInUI();
             })
             .then(function () {
               promise.resolve();
@@ -214,8 +212,6 @@
             .dataLoaded(vm.firstPage > 0, vm.lastPage < vm.totalPages)
             .then(function () {
               vm.checkDataLength('down');
-              // programmically select/deselect due to new rows
-              correctRowSelectionInUI();
             })
             .then(function () {
               promise.resolve();
@@ -321,6 +317,7 @@
           $timeout(function () {
             // timeout needed allows digest cycle to complete,and grid to ingest the data
             vm.gridApi.infiniteScroll.resetScroll(vm.firstPage > 0, vm.lastPage < vm.totalPages);
+            vm.nodeSelectCollection = fileService.nodeSelectCollection;
             resetGridService.setResetGridFlag(false);
           });
         });
@@ -371,7 +368,7 @@
     }
 
     // Helper method which check for any data updates during soft loads (tabbing)
-    var checkAndUpdateGridData = function () {
+    function checkAndUpdateGridData () {
       fileBrowserFactory.getAssayFiles(vm.filesParam)
         .then(function () {
           if (vm.assayFilesTotal !== fileBrowserFactory.assayFilesTotalItems.count) {
@@ -381,21 +378,7 @@
             vm.assayFilesTotal = fileBrowserFactory.assayFilesTotalItems.count;
           }
         });
-    };
-
-    // TODO: Update with the new selected rows and the indicator column.
-    // Method to select/deselect rows programmically after dynamic
-    // scroll adds more data, at reset and per 300 rows
-    var correctRowSelectionInUI = function () {
-      // select all event, track complements
-      if (nodesService.selectedAllFlag) {
-        // ensure complement nodes are deselected
-        vm.setGridUnselectedRows(nodesService.complementSelectedNodesUuids);
-        // previous selected nodes maintained during infinite scrolling
-      } else if (nodesService.selectedNodes.length > 0) {
-        vm.setGridSelectedRows(nodesService.selectedNodesUuids);
-      }
-    };
+    }
 
     /**
      * Checks whether the page requires data (hard/soft page load) and
@@ -433,7 +416,6 @@
           // for attribute filter directive, drop panels in query
           $scope.$broadcast('rf/attributeFilter-ready');
           // update selected rows in ui and set selected nodes count
-          correctRowSelectionInUI();
         }, 0);
       }
     }
