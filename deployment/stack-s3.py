@@ -60,22 +60,20 @@ def make_storage_template():
     cft.resources.add(Resource(
         'StorageBucket',
         'AWS::S3::Bucket',
-        Properties(
-            {
-                'BucketName': ref('BucketName'),
-                'AccessControl': 'PublicRead',
-                'CorsConfiguration': {
-                    'CorsRules': [
-                        {
-                            'AllowedOrigins': ['*'],
-                            'AllowedMethods': ['GET'],
-                            'AllowedHeaders': ['Authorization'],
-                            'MaxAge': 3000,
-                        }
-                    ]
-                }
+        Properties({
+            'BucketName': ref('BucketName'),
+            'AccessControl': 'PublicRead',
+            'CorsConfiguration': {
+                'CorsRules': [
+                    {
+                        'AllowedOrigins': ['*'],
+                        'AllowedMethods': ['GET'],
+                        'AllowedHeaders': ['Authorization'],
+                        'MaxAge': 3000,
+                    }
+                ]
             }
-        ),
+        }),
         DeletionPolicy('Retain'),
     ))
     return str(cft)
