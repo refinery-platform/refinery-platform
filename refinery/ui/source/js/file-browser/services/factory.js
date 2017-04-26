@@ -156,8 +156,9 @@ function fileBrowserFactory (
       angular.copy(culledAttributes, assayAttributes);
       // Add file_download column first
       assayAttributes.unshift({ display_name: 'Url', internal_name: 'Url' });
-      assayAttributes.unshift({ display_name: 'Selection', internal_name: 'Selection' });
       assayAttributes.unshift({ display_name: 'Input Groups', internal_name: 'InputGroups' });
+      assayAttributes.unshift({ display_name: 'Selection', internal_name: 'Selection' });
+
       // some attributes will be duplicate in different fields, duplicate
       // column names will throw an error. This prevents duplicates
       for (var ind = 0; ind < assayAttributes.length; ind++) {
@@ -353,9 +354,9 @@ function fileBrowserFactory (
       if (columnName === 'Url') {
         // Url requires a custom template for downloading links
         tempCustomColumnNames.push(setCustomUrlColumn(columnName));
-      } else if (columnName === 'Selection') {
-        tempCustomColumnNames.push(setCustomInputGroupsColumn(columnName));
       } else if (columnName === 'Input Groups') {
+        tempCustomColumnNames.push(setCustomInputGroupsColumn(columnName));
+      } else if (columnName === 'Selection') {
         tempCustomColumnNames.push(setCustomSelectColumn(columnName));
       } else if (columnName === 'Analysis Group') {
         // Analysis requires a custom template for filtering -1 entries
