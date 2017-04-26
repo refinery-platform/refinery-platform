@@ -1022,6 +1022,8 @@ class ToolLaunchTests(StaticLiveServerTestCase):
             )
 
             response = requests.get(higlass_url + "/api/v1/tilesets/")
+            while response.status_code is not 200:
+                response = requests.get(higlass_url + "/api/v1/tilesets/")
 
             data = json.loads(response.content)
             self.assertEqual(
