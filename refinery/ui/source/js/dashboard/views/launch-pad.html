@@ -26,7 +26,7 @@
             title="Hover with mouse"
             refinery-tooltip
             refinery-tooltip-container="body"
-            refinery-tooltip-placement="top">
+            refinery-tooltip-placement="{{ dashboard.settings.djangoApp.satoriDemo ? 'bottom' : 'top' }}">
             <svg class="svg-icon icon-cursor-default">
               <use
                 xmlns:xlink="http://www.w3.org/1999/xlink"
@@ -41,7 +41,7 @@
             title="Click with mouse"
             refinery-tooltip
             refinery-tooltip-container="body"
-            refinery-tooltip-placement="top">
+            refinery-tooltip-placement="{{ dashboard.settings.djangoApp.satoriDemo ? 'bottom' : 'top' }}">
             <svg class="svg-icon icon-cursor-click">
               <use
                 xmlns:xlink="http://www.w3.org/1999/xlink"
@@ -56,7 +56,7 @@
             title="Hold Command Key and click with mouse"
             refinery-tooltip
             refinery-tooltip-container="body"
-            refinery-tooltip-placement="top">
+            refinery-tooltip-placement="{{ dashboard.settings.djangoApp.satoriDemo ? 'bottom' : 'top' }}">
             <span class="f-box m-l-1-4">&#8984; + </span>
             <svg class="svg-icon icon-cursor-click">
               <use
@@ -70,7 +70,7 @@
             title="Double click with mouse"
             refinery-tooltip
             refinery-tooltip-container="body"
-            refinery-tooltip-placement="top">
+            refinery-tooltip-placement="{{ dashboard.settings.djangoApp.satoriDemo ? 'bottom' : 'top' }}">
             <svg class="svg-icon icon-cursor-dblclick">
               <use
                 xmlns:xlink="http://www.w3.org/1999/xlink"
