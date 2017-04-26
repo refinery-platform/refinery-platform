@@ -13,8 +13,13 @@ def forwards(apps, schema_editor):
             used_for_visualization=True
         ),
         Filetype(
-            description="HiTile file",
+            description="HITILE file",
             name="HITILE",
+            used_for_visualization=True
+        ),
+        Filetype(
+            description="BEDGRAPH file",
+            name="BEDGRAPH",
             used_for_visualization=True
         )
     ]
@@ -40,6 +45,14 @@ def forwards(apps, schema_editor):
         FileExtension(
             name="cool",
             filetype=Filetype.objects.get(name="COOLER")
+        ),
+        FileExtension(
+            name="cool",
+            filetype=Filetype.objects.get(name="COOLER")
+        ),
+        FileExtension(
+            name="bedgraph",
+            filetype=Filetype.objects.get(name="BEDGRAPH")
         )
     ]
 
@@ -56,8 +69,10 @@ def forwards(apps, schema_editor):
 def backwards(apps, schema_editor):
     Filetype = apps.get_model("file_store", "Filetype")
     FileExtension = apps.get_model("file_store", "FileExtension")
-    Filetype.objects.filter(name__in=["COOLER", "HITILE"]).delete()
-    FileExtension.objects.filter(name__in=["bw", "hitile", "cool"]).delete()
+    Filetype.objects.filter(name__in=["COOLER", "HITILE", "BEDGRAPH"]).delete()
+    FileExtension.objects.filter(name__in=[
+        "bw", "hitile", "cool", "bedgraph"
+    ]).delete()
 
 
 class Migration(migrations.Migration):
