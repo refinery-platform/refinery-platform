@@ -5,7 +5,7 @@ from django.conf import settings
 from django.db import models
 from django.db.models.signals import post_delete, pre_delete
 from django.dispatch import receiver
-from django.http import HttpResponse, HttpResponseServerError
+from django.http import HttpResponseServerError, JsonResponse
 
 from django_extensions.db.fields import UUIDField
 from django_docker_engine.docker_utils import DockerContainerSpec
@@ -254,7 +254,11 @@ class Tool(OwnableResource):
             except APIError as e:
                 return HttpResponseServerError(content=e)
             else:
-                return HttpResponse(self.get_relative_container_url())
+                return JsonResponse(
+                    {
+                        "tool_url": self.get_relative_container_url()
+                    }
+                )
 
         if self.get_tool_type() == ToolDefinition.WORKFLOW:
             raise NotImplementedError
@@ -310,5 +314,4 @@ class Tool(OwnableResource):
                     )
                 )
             else:
-                # format() here to preserve the single quotes downstream
-                return "'{}'".format(get_full_url(url))
+                return get_full_url(url)
