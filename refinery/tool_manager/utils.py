@@ -2,6 +2,7 @@ import glob
 import json
 import logging
 import os
+import re
 
 from bioblend.galaxy.client import ConnectionError
 from django.conf import settings
@@ -354,6 +355,17 @@ def validate_tool_launch_configuration(tool_launch_config):
                 e
             )
         )
+    # Assert that the data structure being sent over is able to be evaluated
+    #  as a Pythonic Data structure
+    try:
+        nesting = eval(tool_launch_config["file_relationships"])
+    except SyntaxError as e:
+        raise RuntimeError(
+            "ToolLaunchConfiguration's `file_relationships` could not be "
+            "evaluated as a Pythonic Data Structure: {}".format(e)
+        )
+    else:
+        parse_file_relationship_nesting(nesting)
 
 
 def get_workflows():
@@ -413,12 +425,28 @@ def get_visualization_annotations_list():
     return visualization_annotations
 
 
-def parse_file_relationship_nesting(object, structure=""):
+def parse_file_relationship_nesting(file_relationship_nesting,
+                                    nested_representation=""):
+    """
+    Helper method to determine wheter or not the nested `file_relationships`
+    structure is in a form that we are expecting.
+    """
     try:
-        if isinstance(object, list):
-            structure += "LIST:"
-        if isinstance(object, tuple):
-            structure += "PAIR:"
-        return parse_file_relationship_nesting(object[0], structure=structure)
+        if isinstance(file_relationship_nesting, list):
+            nested_representation += "LIST:"
+        if isinstance(file_relationship_nesting, tuple):
+            nested_representation += "PAIR:"
+        return parse_file_relationship_nesting(
+            file_relationship_nesting[0],
+            nested_representation=nested_representation
+        )
     except RuntimeError:
-        print structure[:-1]
+        # RuntimeError in this case denotes that we have reached the
+        # bottom-most nesting so we can safely `pass`
+        pass
+    finally:
+        if re.match(r'^((LIST|PAIR):*)$', nested_representation[:-1]) is None:
+            raise RuntimeError(
+                "The `file_relationships` defined didn't yield a valid "
+                "LIST/PAIR nesting."
+            )
