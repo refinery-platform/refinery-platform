@@ -25,7 +25,8 @@ def main():
     with open(REFINERY_CONFIG_FILE) as config_file:
         config = yaml.load(config_file)
     stack_name = config['STACK_NAME'] + '-storage'
-    bucket_name = config['AWS_STORAGE_BUCKET_NAME']
+    static_bucket_name = config['STACK_NAME'] + '-static'
+    media_bucket_name = config['STACK_NAME'] + '-media'
     template = make_storage_template()
 
     cloudformation = boto3.client('cloudformation')
@@ -34,8 +35,12 @@ def main():
         TemplateBody=template,
         Parameters=[
             {
-                'ParameterKey': 'BucketName',
-                'ParameterValue': bucket_name,
+                'ParameterKey': 'StaticBucketName',
+                'ParameterValue': static_bucket_name,
+            },
+            {
+                'ParameterKey': 'MediaBucketName',
+                'ParameterValue': media_bucket_name,
             },
         ],
     )
@@ -43,13 +48,19 @@ def main():
 
 
 def make_storage_template():
-    """Build a storage template"""
     cft = CloudFormationTemplate(description="Refinery Platform storage")
     cft.parameters.add(Parameter(
-        'BucketName',
+        'StaticBucketName',
         'String',
         {
-            'Description': 'Name of S3 bucket',
+            'Description': 'Name of S3 bucket for Django static files',
+        }
+    ))
+    cft.parameters.add(Parameter(
+        'MediaBucketName',
+        'String',
+        {
+            'Description': 'Name of S3 bucket for Django media files',
             # make names DNS-compliant without periods (".") for compatibility
             # with virtual-hosted-style access and S3 Transfer Acceleration
             'AllowedPattern': '[a-z0-9\-]+',
@@ -58,10 +69,10 @@ def make_storage_template():
         }
     ))
     cft.resources.add(Resource(
-        'StorageBucket',
+        'StaticStorageBucket',
         'AWS::S3::Bucket',
         Properties({
-            'BucketName': ref('BucketName'),
+            'BucketName': ref('StaticBucketName'),
             'AccessControl': 'PublicRead',
             'CorsConfiguration': {
                 'CorsRules': [
@@ -73,6 +84,15 @@ def make_storage_template():
                     }
                 ]
             }
+        }),
+        DeletionPolicy('Retain'),
+    ))
+    cft.resources.add(Resource(
+        'MediaStorageBucket',
+        'AWS::S3::Bucket',
+        Properties({
+            'BucketName': ref('MediaBucketName'),
+            'AccessControl': 'PublicRead',
         }),
         DeletionPolicy('Retain'),
     ))

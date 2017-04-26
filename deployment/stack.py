@@ -577,11 +577,8 @@ def save_s3_config(config, suffix):
 def report_missing_keys(config):
     """Collect and report list of missing keys"""
 
-    required = [
-        'STACK_NAME',
-        'KEY_NAME', 'RDS_SUPERUSER_PASSWORD', 'SITE_NAME', 'SITE_URL',
-        'ADMIN_PASSWORD', 'AWS_STORAGE_BUCKET_NAME'
-    ]
+    required = ['ADMIN_PASSWORD', 'KEY_NAME', 'RDS_SUPERUSER_PASSWORD',
+                'SITE_NAME', 'SITE_URL', 'STACK_NAME']
     bad = []
     for key in required:
         if key not in config:
