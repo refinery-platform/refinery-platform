@@ -143,6 +143,7 @@ def create_tool(tool_launch_configuration, user_instance):
             tool.name.replace(" ", ""),
             tool.uuid
         )
+
     if tool.get_tool_type() == ToolDefinition.WORKFLOW:
         try:
             tool.output_files = tool_launch_configuration["output_files"]
@@ -152,6 +153,7 @@ def create_tool(tool_launch_configuration, user_instance):
 
     tool.set_owner(user_instance)
     tool.update_file_relationships_string()
+
     return tool
 
 
