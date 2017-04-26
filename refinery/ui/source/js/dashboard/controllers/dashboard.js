@@ -806,6 +806,8 @@ DashboardCtrl.prototype.collapseDatasetExploration = function () {
     if (!this.repoMode) {
       this.expandDataSetPanel = false;
       this.dashboardExpandablePanelService.trigger('collapser');
+    } else {
+      this.pubSub.trigger('vis.hide');
     }
 
     this.dataSet.highlight(
