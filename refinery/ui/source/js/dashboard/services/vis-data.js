@@ -62,6 +62,15 @@ function DashboardVisData ($q, neo4jToGraph, dataSet, graph, settings) {
         // Prune graph and accumulate the dataset annotations
         var prunedData = graph.accumulateAndPrune(data, _root, valueProperty);
 
+        // Brute-force remove links to abs root node
+        // Note: in very rare cases there is a bug when a non-custom root node
+        // links directly to OWL:Thing as its parent.
+        var uris = Object.keys(data);
+        for (var x = uris.length; x--;) {
+          data[uris[x]].parents[_root] = undefined;
+          delete data[uris[x]].parents[_root];
+        }
+
         // Add pseudo-parent and pseudo-sibling for data sets without any
         // annotation.
         graph.addPseudoSiblingToRoot(
