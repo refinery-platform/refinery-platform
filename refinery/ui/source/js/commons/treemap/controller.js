@@ -204,8 +204,6 @@ function TreemapCtrl (
     self.pubSub.trigger('treemap.noData');
   }
 
-  self.introJs.addContext(self);
-
   self.introStart = function () {
     dashboardIntroStarter.start('satori-treemap', self);
   };
