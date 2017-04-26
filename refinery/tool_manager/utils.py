@@ -438,6 +438,8 @@ def parse_file_relationship_nesting(file_relationship_nesting,
             nested_representation += "LIST:"
         if isinstance(file_relationship_nesting, tuple):
             nested_representation += "PAIR:"
+        if isinstance(file_relationship_nesting, str):
+            raise RuntimeError
         return parse_file_relationship_nesting(
             file_relationship_nesting[0],
             nested_representation=nested_representation
@@ -445,8 +447,6 @@ def parse_file_relationship_nesting(file_relationship_nesting,
     except RuntimeError:
         # RuntimeError in this case denotes that we have reached the
         # bottom-most nesting so we can safely `pass`
-        pass
-    finally:
         if re.match(r'^((LIST|PAIR):*)$', nested_representation[:-1]) is None:
             raise RuntimeError(
                 "The `file_relationships` defined didn't yield a valid "
