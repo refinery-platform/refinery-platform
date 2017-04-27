@@ -18,6 +18,7 @@
     'fileBrowserFactory',
     'fileBrowserSettings',
     'filesLoadingService',
+    'fileRelationshipService',
     'isOwnerService',
     'resetGridService',
     'selectedFilterService',
@@ -37,6 +38,7 @@
     fileBrowserFactory,
     fileBrowserSettings,
     filesLoadingService,
+    fileRelationshipService,
     isOwnerService,
     resetGridService,
     selectedFilterService,
@@ -44,8 +46,9 @@
   ) {
     var maxFileRequest = fileBrowserSettings.maxFileRequest;
     var nodesService = selectedNodesService;
+    var fileService = fileRelationshipService;
     var vm = this;
-
+    vm.activeNodeRow = nodesService.activeNodeRow;
     // flag to help with timing issues when selecting node group
     vm.afterNodeGroupUpdate = false;
     vm.analysisFilter = fileBrowserFactory.analysisFilter;
@@ -85,6 +88,7 @@
     };
     vm.gridOptions.onRegisterApi = gridRegister;
     vm.lastPage = 0;  // variable supporting ui-grid dynamic scrolling
+    vm.nodeSelectCollection = fileService.nodeSelectCollection;
     vm.openSelectionPopover = openSelectionPopover;
     vm.queryKeys = Object.keys($location.search()); // used for preset filters
     vm.refreshAssayFiles = refreshAssayFiles;
@@ -243,6 +247,7 @@
      */
     function openSelectionPopover (nodeRow) {
       angular.copy(nodeRow, nodesService.activeNodeRow);
+      vm.activeNodeRow = nodesService.activeNodeRow;
       angular.element('#' + nodeRow.uuid).popover('show');
       angular.element('.ui-grid-selection-row-header-buttons').popover('disable');
     }
@@ -473,6 +478,25 @@
           initializeDataOnPageLoad();
           resetGridService.setRefreshGridFlag(false);
         }
+      }
+    );
+    // when a new row is selected/deselected
+    $scope.$watch(
+      function () {
+        return nodesService.activeNodeRow;
+      },
+      function () {
+        vm.activeNodeRow = nodesService.activeNodeRow;
+      }
+    );
+
+    // when a node is added/removed from a tool input group
+    $scope.$watchCollection(
+      function () {
+        return fileService.nodeSelectCollection;
+      },
+      function () {
+        vm.nodeSelectCollection = fileService.nodeSelectCollection;
       }
     );
   }

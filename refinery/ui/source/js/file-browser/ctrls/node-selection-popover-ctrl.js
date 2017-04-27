@@ -68,6 +68,15 @@
         vm.nodeSelection = fileService.nodeSelectCollection;
       }
     );
+    // When user selects/deselects row
+    $scope.$watch(
+      function () {
+        return nodeService.activeNodeRow;
+      },
+      function () {
+        vm.activeRow = nodeService.activeNodeRow;
+      }
+    );
     // When user changes the group selection from the control panel
     $scope.$watchCollection(
       function () {

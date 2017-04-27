@@ -170,6 +170,24 @@
   word-wrap: break-word;
 }
 
+
+.grid-input-groups {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  .selected-node {
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    float: left;
+    div {
+      background-color: rgba(0, 158, 115, 0.4);
+      text-overflow: ellipsis;
+      white-space: no-wrap;
+    }
+  }
+}
+
 .node-input-group {
   ul {
     padding-left: 0px;
@@ -254,6 +272,10 @@
  .sub-group-panel {
    padding: 0px 10px 5px 10px;
   }
+}
+
+.solidText {
+  opacity: 1 !important;
 }
 
 #control-panel-list {

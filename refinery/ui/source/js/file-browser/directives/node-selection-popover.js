@@ -9,19 +9,22 @@
     '$compile',
     '$rootScope',
     '$templateCache',
-    'fileRelationshipService'
+    'fileRelationshipService',
+    'selectedNodesService'
   ];
 
   function rpNodeSelectionPopover (
     $compile,
     $rootScope,
     $templateCache,
-    fileRelationshipService
+    fileRelationshipService,
+    selectedNodesService
     ) {
     return {
       restrict: 'AE',
       link: function (scope, element) {
         var fileService = fileRelationshipService;
+        var nodesService = selectedNodesService;
         // The script is in the data_set2.html template.
         var template = $templateCache.get('nodeselectionpopover.html');
         var popOverContent = $compile(template)(scope);
@@ -35,7 +38,9 @@
         };
         angular.element(element).popover(options);
 
+        // Method for resetting the selected now and hiding the popover
         scope.closeSelectionPopover = function () {
+          angular.copy({}, nodesService.activeNodeRow);
           angular.element('.popover').popover('hide');
           angular.element('.ui-grid-selection-row-header-buttons').popover('enable');
         };
