@@ -370,19 +370,14 @@
 
     // Helper method which check for any data updates during soft loads (tabbing)
     function checkAndUpdateGridData () {
-      console.log('check and update grid data');
       fileBrowserFactory.getAssayFiles(vm.filesParam)
         .then(function () {
-          console.log(vm.assayFilesTotal);
-          console.log(fileBrowserFactory.assayFilesTotalItems.count);
           if (vm.assayFilesTotal !== fileBrowserFactory.assayFilesTotalItems.count) {
-            console.log('in the next if');
             if (vm.assayFilesTotal < maxFileRequest) {
               vm.gridOptions.data = fileBrowserFactory.assayFiles;
             }
             vm.assayFilesTotal = fileBrowserFactory.assayFilesTotalItems.count;
           }
-          console.log('where the concat happening');
         });
     }
 
@@ -403,7 +398,6 @@
         });
         // Tabbing does not require api response wait and update query in URL
       } else {
-        console.log('in the else');
         checkAndUpdateGridData();
         // updates view model's selected attribute filters
         angular.forEach(
