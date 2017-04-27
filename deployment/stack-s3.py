@@ -22,8 +22,15 @@ REFINERY_CONFIG_FILE = 'aws-config/config.yaml'
 
 
 def main():
-    with open(REFINERY_CONFIG_FILE) as config_file:
-        config = yaml.load(config_file)
+    try:
+        with open(REFINERY_CONFIG_FILE) as config_file:
+            config = yaml.load(config_file)
+    except (IOError, yaml.YAMLError) as exc:
+        sys.stderr.write(
+            "Error reading {}: {}\n".format(REFINERY_CONFIG_FILE, exc)
+        )
+        raise RuntimeError
+
     stack_name = config['STACK_NAME'] + '-storage'
     static_bucket_name = config['STACK_NAME'] + '-static'
     media_bucket_name = config['STACK_NAME'] + '-media'
