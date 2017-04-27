@@ -65,7 +65,8 @@
     vm.counter = 0;
     // params for the assays api
     vm.filesParam = {
-      uuid: $window.externalAssayUuid
+      uuid: $window.externalAssayUuid,
+      offset: 0
     };
     vm.firstPage = 0;
     vm.getDataDown = getDataDown;
@@ -369,14 +370,19 @@
 
     // Helper method which check for any data updates during soft loads (tabbing)
     function checkAndUpdateGridData () {
+      console.log('check and update grid data');
       fileBrowserFactory.getAssayFiles(vm.filesParam)
         .then(function () {
+          console.log(vm.assayFilesTotal);
+          console.log(fileBrowserFactory.assayFilesTotalItems.count);
           if (vm.assayFilesTotal !== fileBrowserFactory.assayFilesTotalItems.count) {
+            console.log('in the next if');
             if (vm.assayFilesTotal < maxFileRequest) {
               vm.gridOptions.data = fileBrowserFactory.assayFiles;
             }
             vm.assayFilesTotal = fileBrowserFactory.assayFilesTotalItems.count;
           }
+          console.log('where the concat happening');
         });
     }
 
@@ -397,6 +403,7 @@
         });
         // Tabbing does not require api response wait and update query in URL
       } else {
+        console.log('in the else');
         checkAndUpdateGridData();
         // updates view model's selected attribute filters
         angular.forEach(
