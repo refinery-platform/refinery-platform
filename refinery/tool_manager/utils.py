@@ -116,6 +116,8 @@ def create_tool(tool_launch_configuration, user_instance):
    :param user_instance: User object that made the request to create said Tool
    :returns: The created Tool object
    """
+    # NOTE: that the usual exceptions for the get() aren't handled because
+    # we're in the scope of an atomic transaction
     tool_definition = ToolDefinition.objects.get(
         uuid=tool_launch_configuration["tool_definition_uuid"]
     )
@@ -137,8 +139,7 @@ def create_tool(tool_launch_configuration, user_instance):
             # output_files aren't required for Vis Tools
             pass
 
-        # Create a unique container name
-        # that adheres to docker's specifications
+        # Create a unique container name that adheres to docker's specs
         tool.container_name = "{}-{}".format(
             tool.name.replace(" ", ""),
             tool.uuid
