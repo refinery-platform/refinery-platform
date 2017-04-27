@@ -149,8 +149,9 @@ def create_tool(tool_launch_configuration, user_instance):
         try:
             tool.output_files = tool_launch_configuration["output_files"]
         except KeyError:
-            # output_files ARE required for Workflow Tools
-            raise
+            raise RuntimeError(
+                "`output_files` are required for Workflow Tools"
+            )
 
     tool.set_owner(user_instance)
     tool.update_file_relationships_string()
