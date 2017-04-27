@@ -128,6 +128,9 @@
      * ex: file_relationship: [{file_relationship: []}]
      */
     function refreshFileMap () {
+      if (_.isEmpty(toolsService.selectedTool.file_relationship)) {
+        return;
+      }
       var scaledCopy = toolsService.selectedTool.file_relationship;
       // initialize groups and types
       while (scaledCopy.file_relationship.length > 0) {
@@ -145,6 +148,7 @@
      * Resets the variables needed for new tool selection
      */
     function resetCurrents () {
+      console.log('in the reset currents');
       vm.currentGroup = [];
       vm.currentTypes = [];
       vm.inputFileTypes = [];
@@ -157,6 +161,7 @@
      * Resets the variables needed for clearing cart completely
      */
     function resetCurrentCollections () {
+      console.log('in the resetCurrentCollections');
       for (var i = 0; i < vm.currentGroup.length; i++) {
         vm.currentGroup[i] = 0;
       }

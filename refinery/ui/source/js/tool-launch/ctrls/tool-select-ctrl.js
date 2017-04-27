@@ -5,9 +5,10 @@
     .module('refineryToolLaunch')
     .controller('ToolSelectCtrl', ToolSelectCtrl);
 
-  ToolSelectCtrl.$inject = ['_', 'toolsService'];
+  ToolSelectCtrl.$inject = ['_', 'fileRelationshipService', 'toolsService'];
 
-  function ToolSelectCtrl (_, toolsService) {
+  function ToolSelectCtrl (_, fileRelationshipService, toolsService) {
+    var fileService = fileRelationshipService;
     var vm = this;
     vm.refreshToolList = refreshToolList;
     vm.selectedTool = { select: null };
@@ -29,13 +30,18 @@
     }
 
     function refreshToolList () {
-      toolsService.getTools().then(function () {
-        vm.tools = toolsService.toolList;
-      });
+      if (toolsService.toolList.length === 0) {
+        toolsService.getTools().then(function () {
+          vm.tools = toolsService.toolList;
+        });
+      }
     }
 
+    // user selects a new tool, so tool info needs updating
     function updateTool (tool) {
       toolsService.setSelectedTool(tool);
+      fileService.resetCurrents();
+      fileService.refreshFileMap();
     }
   }
 })();

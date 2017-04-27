@@ -8,13 +8,11 @@
   ToolDisplayCtrl.$inject = [
     '$scope',
     '_',
-    'fileRelationshipService',
     'toolsService'];
 
   function ToolDisplayCtrl (
     $scope,
     _,
-    fileRelationshipService,
     toolsService
   ) {
     var vm = this;
@@ -33,10 +31,6 @@
       function () {
         angular.copy(toolsService.selectedTool, vm.selectedTool);
         vm.isToolSelected = !(_.isEmpty(vm.selectedTool));
-        if (vm.isToolSelected) {
-          fileRelationshipService.resetCurrents();
-          fileRelationshipService.refreshFileMap();
-        }
       }
     );
   }
