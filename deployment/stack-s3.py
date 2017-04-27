@@ -90,7 +90,7 @@ def make_storage_template():
                         'MaxAge': 3000,
                     }
                 ]
-            }
+            },
         }),
         DeletionPolicy('Retain'),
     ))
@@ -100,6 +100,17 @@ def make_storage_template():
         Properties({
             'BucketName': ref('MediaBucketName'),
             'AccessControl': 'PublicRead',
+            'LifecycleConfiguration': {
+                'Rules': [
+                    {
+                        'Id': 'IncompleteMultipartUploadCleanup',
+                        'Status': 'Enabled',
+                        'AbortIncompleteMultipartUpload': {
+                            'DaysAfterInitiation': 3,
+                        },
+                    }
+                ]
+            }
         }),
         DeletionPolicy('Retain'),
     ))
