@@ -16,5 +16,3 @@ class RouterCombiner(DefaultRouter):
         """
         self.urls.extend(router.urls)
         self.registry.extend(router.registry)
-
-
