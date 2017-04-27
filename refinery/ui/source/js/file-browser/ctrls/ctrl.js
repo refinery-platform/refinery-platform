@@ -118,9 +118,11 @@
 
     // Used by ui, updates which attribute filters are selected and ui-grid data
     function attributeSelectionUpdate (internalName, field) {
+      console.log('attributeSelectionUpdate');
       selectedFilterService.updateSelectedFilters(
         vm.uiSelectedFields[internalName], internalName, field
       );
+      console.log(vm.uiSelectedFields);
       vm.filesParam.filter_attribute = {};
       angular.copy(selectedFilterService.attributeSelectedFields,
         vm.filesParam.filter_attribute
@@ -282,6 +284,7 @@
 
     // helper method, upon refresh/load add fields to select data objs from query
     function refreshSelectedFieldFromQuery (_attributeObj) {
+      console.log('in the refreshSelectedField');
       // stringify/encode attributeInternalName:fieldName for url query comparison
       angular.forEach(_attributeObj.facetObj, function (fieldObj) {
         var encodedField = selectedFilterService.stringifyAndEncodeAttributeObj(
@@ -372,6 +375,8 @@
     function checkAndUpdateGridData () {
       fileBrowserFactory.getAssayFiles(vm.filesParam)
         .then(function () {
+          console.log('argh check for filtered stuff');
+          console.log(vm.filesParam);
           if (vm.assayFilesTotal !== fileBrowserFactory.assayFilesTotalItems.count) {
             if (vm.assayFilesTotal < maxFileRequest) {
               vm.gridOptions.data = fileBrowserFactory.assayFiles;
@@ -398,13 +403,15 @@
         });
         // Tabbing does not require api response wait and update query in URL
       } else {
-        checkAndUpdateGridData();
         // updates view model's selected attribute filters
         angular.forEach(
           selectedFilterService.attributeSelectedFields,
           function (fieldArr, attributeInternalName
           ) {
             for (var i = 0; i < fieldArr.length; i++) {
+              if (_.isEmpty(vm.uiSelectedFields)) {
+                vm.uiSelectedFields[attributeInternalName] = {};
+              }
               vm.uiSelectedFields[attributeInternalName][fieldArr[i]] = true;
               // update url with selected fields(filters)
               var encodedAttribute = selectedFilterService
@@ -418,6 +425,10 @@
           $scope.$broadcast('rf/attributeFilter-ready');
           // update selected rows in ui and set selected nodes count
         }, 0);
+        if (Object.keys($location.search()).length > 0) {
+          vm.updateFiltersFromUrlQuery();
+        }
+        checkAndUpdateGridData();
       }
     }
 
@@ -433,6 +444,7 @@
       },
       function () {
         if (resetGridService.resetGridFlag) {
+          console.log('in the watcher reset grid flag');
           // Have to set selected Fields in control due to service scope
           angular.forEach(vm.uiSelectedFields, function (fieldsObj, attributeInternalName) {
             angular.forEach(fieldsObj, function (value, fieldName) {
