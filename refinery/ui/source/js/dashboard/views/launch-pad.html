@@ -91,9 +91,16 @@
                 class="no-underline btn"
                 ng-class="{'active': dashboard.dataSetExploration}"
                 ng-click="dashboard.toggleDataSetsExploration()"
-                ng-if="dashboard.explorationEnabled">
+                ng-if="dashboard.explorationEnabled && !dashboard.settings.djangoApp.satoriDemo">
                 <i class="fa fa-compass" title="Explore data sets"></i>
                 Explor{{ dashboard.dataSetExploration ? 'ing' : 'e' }}
+              </button>
+              <button
+                class="no-underline btn"
+                ng-click="dashboard.toggleDataSetsExploration()"
+                ng-if="dashboard.explorationEnabled && dashboard.settings.djangoApp.satoriDemo">
+                <i class="fa fa-{{ dashboard.dataSetExploration ? 'arrow-circle-left' : 'compass' }}" title="Explore data sets"></i>
+                {{ dashboard.dataSetExploration ? 'Back Home' : 'Start Exploring' }}
               </button>
               <span id="dataUploadTutorialStep0">
                <a
