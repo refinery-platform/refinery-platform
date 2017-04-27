@@ -1,7 +1,7 @@
-# Django settings specialised for the AWS environment.
+# Django settings specialised for the AWS environment
 #
 # See https://github.com/refinery-platform/refinery-platform/wiki/AWS for
-# more details.
+# more details
 
 # Like prod, but overriding some things.
 from .prod import *  # NOQA
@@ -21,4 +21,4 @@ INSTALLED_APPS += (
 )
 STATIC_BUCKET = get_setting('STACK_NAME') + '-static'
 STATIC_URL = 'https://{}.s3.amazonaws.com/'.format(STATIC_BUCKET)
-STATICFILES_STORAGE = 'config.utils.S3StaticStorage'
+STATICFILES_STORAGE = 'config.utils_aws.S3StaticStorage'

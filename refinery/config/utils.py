@@ -1,7 +1,4 @@
-from django.conf import settings
-
 from rest_framework.routers import DefaultRouter
-from storages.backends.s3boto3 import S3Boto3Storage
 
 
 class RouterCombiner(DefaultRouter):
@@ -21,6 +18,3 @@ class RouterCombiner(DefaultRouter):
         self.registry.extend(router.registry)
 
 
-class S3StaticStorage(S3Boto3Storage):
-    def __init__(self):
-        super(S3StaticStorage, self).__init__(bucket=settings.STATIC_BUCKET)
