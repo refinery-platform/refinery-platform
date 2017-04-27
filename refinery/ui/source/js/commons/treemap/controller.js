@@ -1376,6 +1376,9 @@ TreemapCtrl.prototype.fadeIn = function (selection, firstTime) {
 TreemapCtrl.prototype.storeEmitHighlightDataSets = function (
   data, multiple, hover, reset, noNotification
 ) {
+  // Check if data is available
+  if (!data) { return; }
+
   var dataSetIds = getAssociatedDataSets(data);
   var eventName;
   var mode = hover ? 'hover' : 'lock';
