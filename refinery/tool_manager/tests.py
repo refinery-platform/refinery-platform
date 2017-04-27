@@ -1003,7 +1003,7 @@ class ToolLaunchTests(StaticLiveServerTestCase):
             )
 
             response = requests.get(higlass_url + "/api/v1/tilesets/")
-            while response.status_code is not 200:
+            while response.status_code != 200:
                 time.sleep(5)
                 response = requests.get(higlass_url + "/api/v1/tilesets/")
 
