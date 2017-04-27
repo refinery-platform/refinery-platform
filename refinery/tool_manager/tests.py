@@ -642,12 +642,9 @@ class ToolAPITests(APITestCase):
         force_authenticate(self.post_request, self.user)
         self.post_response = self.view(self.post_request)
 
-        try:
-            self.tool_launch = Tool.objects.get(
-                tool_definition__uuid=self.td.uuid
-            )
-        except(Tool.DoesNotExist, Tool.MultipleObjectsReturned) as e:
-            raise RuntimeError("Couldn't properly fetch Tool: {}".format(e))
+        self.tool_launch = Tool.objects.get(
+            tool_definition__uuid=self.td.uuid
+        )
 
         self.get_request = self.factory.get(self.url_root)
         force_authenticate(self.get_request, self.user)
@@ -829,14 +826,9 @@ class ToolLaunchTests(StaticLiveServerTestCase):
         force_authenticate(post_request, self.user)
         self.post_response = self.view(post_request)
 
-        try:
-            tool_launch = Tool.objects.get(
-                tool_definition__uuid=td.uuid
-            )
-        except(Tool.DoesNotExist, Tool.MultipleObjectsReturned) as e:
-            raise RuntimeError(
-                "Couldn't properly fetch Tool: {}".format(e)
-            )
+        tool_launch = Tool.objects.get(
+            tool_definition__uuid=td.uuid
+        )
 
         file_relationships = eval(tool_launch.file_relationships)
 
@@ -878,13 +870,9 @@ class ToolLaunchTests(StaticLiveServerTestCase):
         force_authenticate(self.post_request, self.user)
         self.post_response = self.view(self.post_request)
 
-        try:
-            tool_launch = Tool.objects.get(
-                tool_definition__uuid=self.td.uuid
-            )
-        except(Tool.DoesNotExist, Tool.MultipleObjectsReturned) as e:
-            raise RuntimeError(
-                "Couldn't properly fetch Tool: {}".format(e))
+        tool_launch = Tool.objects.get(
+            tool_definition__uuid=self.td.uuid
+        )
 
         self.assertEqual(tool_launch.get_owner(), self.user)
         self.assertEqual(
@@ -936,13 +924,9 @@ class ToolLaunchTests(StaticLiveServerTestCase):
             force_authenticate(self.post_request, self.user)
             self.post_response = self.view(self.post_request)
 
-            try:
-                tool_launch = Tool.objects.get(
-                    tool_definition__uuid=self.td.uuid
-                )
-            except(Tool.DoesNotExist, Tool.MultipleObjectsReturned) as e:
-                raise RuntimeError(
-                    "Couldn't properly fetch Tool: {}".format(e))
+            tool_launch = Tool.objects.get(
+                tool_definition__uuid=self.td.uuid
+            )
 
             self.assertEqual(tool_launch.get_owner(), self.user)
             self.assertEqual(
@@ -1002,13 +986,9 @@ class ToolLaunchTests(StaticLiveServerTestCase):
             force_authenticate(self.post_request, self.user)
             self.post_response = self.view(self.post_request)
 
-            try:
-                tool_launch = Tool.objects.get(
-                    tool_definition__uuid=self.td.uuid
-                )
-            except(Tool.DoesNotExist, Tool.MultipleObjectsReturned) as e:
-                raise RuntimeError(
-                    "Couldn't properly fetch Tool: {}".format(e))
+            tool_launch = Tool.objects.get(
+                tool_definition__uuid=self.td.uuid
+            )
 
             self.assertEqual(tool_launch.get_owner(), self.user)
             self.assertEqual(
