@@ -47,10 +47,6 @@ def forwards(apps, schema_editor):
             filetype=Filetype.objects.get(name="COOLER")
         ),
         FileExtension(
-            name="cool",
-            filetype=Filetype.objects.get(name="COOLER")
-        ),
-        FileExtension(
             name="bedgraph",
             filetype=Filetype.objects.get(name="BEDGRAPH")
         )
