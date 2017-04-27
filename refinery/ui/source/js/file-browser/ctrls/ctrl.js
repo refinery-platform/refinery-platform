@@ -375,8 +375,6 @@
     function checkAndUpdateGridData () {
       fileBrowserFactory.getAssayFiles(vm.filesParam)
         .then(function () {
-          console.log('argh check for filtered stuff');
-          console.log(vm.filesParam);
           if (vm.assayFilesTotal !== fileBrowserFactory.assayFilesTotalItems.count) {
             if (vm.assayFilesTotal < maxFileRequest) {
               vm.gridOptions.data = fileBrowserFactory.assayFiles;
