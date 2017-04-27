@@ -1,6 +1,6 @@
 {
 	"additional_object_property": {
-		"this_can_be_anything": "COFFEE"
+		"this_can_be_anything": "COFFEE is great"
 	},
 	"output_files": [{
 		"name": "test tool out",
