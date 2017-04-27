@@ -1,9 +1,9 @@
-import StringIO
 import json
 import logging
 import mock
 import re
 import requests
+import StringIO
 from urlparse import urljoin
 
 from django.contrib.auth.models import User
