@@ -4,6 +4,7 @@ import mock
 import re
 import requests
 import StringIO
+import time
 from urlparse import urljoin
 
 from django.contrib.auth.models import User
@@ -1003,6 +1004,7 @@ class ToolLaunchTests(StaticLiveServerTestCase):
 
             response = requests.get(higlass_url + "/api/v1/tilesets/")
             while response.status_code is not 200:
+                time.sleep(5)
                 response = requests.get(higlass_url + "/api/v1/tilesets/")
 
             data = json.loads(response.content)
