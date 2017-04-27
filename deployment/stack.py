@@ -76,6 +76,7 @@ def main(argv=None):
             StackName=config['STACK_NAME'],
             TemplateBody=str(template),
             Capabilities=['CAPABILITY_IAM'],
+            Tags=load_tags(),
         )
         sys.stdout.write(json.dumps(response, indent=2) + '\n')
         return 0
