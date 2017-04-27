@@ -91,6 +91,7 @@ function DashboardVisData ($q, neo4jToGraph, dataSet, graph, settings) {
         if (remixRoots) {
           var checkedRemixRootsChilds = {};
 
+          // Collect children and grand-children of the abs root (OWL:Thing)
           for (var l = data[_root].children.length; l--;) {
             if (data[data[_root].children[l]]) {
               for (
