@@ -25,8 +25,6 @@
           return vm.displayCtrl.selectedTool;
         },
         function () {
-          console.log('in the info display ctrl');
-          console.log(vm.displayCtrl.selectedTool);
           angular.copy(vm.displayCtrl.selectedTool, vm.tool);
         }
       );

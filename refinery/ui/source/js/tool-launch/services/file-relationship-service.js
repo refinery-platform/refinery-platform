@@ -148,7 +148,6 @@
      * Resets the variables needed for new tool selection
      */
     function resetCurrents () {
-      console.log('in the reset currents');
       vm.currentGroup = [];
       vm.currentTypes = [];
       vm.inputFileTypes = [];
@@ -161,7 +160,6 @@
      * Resets the variables needed for clearing cart completely
      */
     function resetCurrentCollections () {
-      console.log('in the resetCurrentCollections');
       for (var i = 0; i < vm.currentGroup.length; i++) {
         vm.currentGroup[i] = 0;
       }
