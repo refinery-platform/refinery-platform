@@ -5,9 +5,9 @@
     .module('refineryToolLaunch')
     .controller('ToolSelectCtrl', ToolSelectCtrl);
 
-  ToolSelectCtrl.$inject = ['toolsService'];
+  ToolSelectCtrl.$inject = ['_', 'toolsService'];
 
-  function ToolSelectCtrl (toolsService) {
+  function ToolSelectCtrl (_, toolsService) {
     var vm = this;
     vm.refreshToolList = refreshToolList;
     vm.selectedTool = { select: null };
@@ -23,6 +23,9 @@
  */
     function activate () {
       refreshToolList();
+      if (!_.isEmpty(toolsService.selectedTool)) {
+        vm.selectedTool.select = toolsService.selectedTool;
+      }
     }
 
     function refreshToolList () {
