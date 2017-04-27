@@ -120,6 +120,9 @@ def make_template(config, config_yaml):
 
     cft = core.CloudFormationTemplate(description="Refinery Platform main")
 
+    # This parameter tags the EC2 instances, and is intended to be used
+    # with the AWS Reference Implementation EBS Snapshot Scheduler:
+    # http://docs.aws.amazon.com/solutions/latest/ebs-snapshot-scheduler/welcome.html
     cft.parameters.add(
         core.Parameter('SnapshotSchedulerTag', 'String', {
                 'Default': 'scheduler:ebs-snapshot',
