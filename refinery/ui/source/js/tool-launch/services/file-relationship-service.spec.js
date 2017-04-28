@@ -115,10 +115,6 @@
       expect(service.nodeSelectCollection).toEqual({});
     });
 
-    it('setNodeSelectCollection is a method', function () {
-      expect(angular.isFunction(service.setNodeSelectCollection)).toBe(true);
-    });
-
     describe('refreshFileMap', function () {
       beforeEach(function () {
         angular.copy(mockWorkflow, toolsFactory.selectedTool);
@@ -147,11 +143,11 @@
     });
 
     describe('resetMethods', function () {
-      it('resetCurrents is a method', function () {
-        expect(angular.isFunction(service.resetCurrents)).toBe(true);
+      it('resetToolRelated is a method', function () {
+        expect(angular.isFunction(service.resetToolRelated)).toBe(true);
       });
 
-      it('resetCurrents resets variables', function () {
+      it('resetToolRelated resets variables', function () {
         service.currentGroup = [0, 0, 1];
         service.currentTypes = ['PAIR', 'LIST', 'LIST'];
         service.inputFileTypes = [
@@ -162,13 +158,18 @@
             allowed_filetypes: [{ name: 'BAM' }]
           }
         ];
-        service.resetCurrents();
+        service.resetToolRelated();
         expect(service.currentGroup).toEqual([]);
         expect(service.currentTypes).toEqual([]);
         expect(service.inputFileTypes).toEqual([]);
       });
     });
 
+    describe('setNodeSelectCollection', function () {
+      it('setNodeSelectCollection is a method', function () {
+        expect(angular.isFunction(service.setNodeSelectCollection)).toBe(true);
+      });
+    });
 
     describe('Set Group Collection', function () {
       it('setGroupCollection is a method', function () {

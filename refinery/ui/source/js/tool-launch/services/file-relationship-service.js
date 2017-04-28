@@ -23,12 +23,13 @@
     vm.currentGroup = []; // index for the group coordinates
     vm.currentTypes = []; // tracks whether depths are pair or list
     vm.groupCollection = {}; // contains groups with their selected row's info
+    vm.hideNodePopover = false;
     vm.inputFileTypes = []; // maintains the required input types
     vm.nodeSelectCollection = {}; // contains rows and their group info
     vm.refreshFileMap = refreshFileMap;
     vm.removeGroupFromCollections = removeGroupFromCollections;
-    vm.resetCurrents = resetCurrents;
-    vm.resetCurrentCollections = resetCurrentCollections;
+    vm.resetInputGroup = resetInputGroup;
+    vm.resetToolRelated = resetToolRelated;
     vm.setGroupCollection = setGroupCollection;
     vm.setNodeSelectCollection = setNodeSelectCollection;
     /*
@@ -68,25 +69,26 @@
     }
 
     /**
-     * Resets the variables needed for new tool selection
-     */
-    function resetCurrents () {
-      vm.currentGroup = [];
-      vm.currentTypes = [];
-      vm.inputFileTypes = [];
-      vm.groupCollection = {};
-      vm.nodeSelectCollection = {};
-      vm.hideNodePopover = false;
-    }
-
-    /**
      * Resets the variables needed for clearing cart completely
      */
-    function resetCurrentCollections () {
+    function resetInputGroup () {
+      // resets group coordinates
       for (var i = 0; i < vm.currentGroup.length; i++) {
         vm.currentGroup[i] = 0;
       }
       vm.groupCollection = {};
+      vm.nodeSelectCollection = {};
+    }
+
+    /**
+     * Resets the variables needed for new tool selection
+     */
+    function resetToolRelated () {
+      vm.currentGroup = [];
+      vm.currentTypes = [];
+      vm.groupCollection = {};
+      vm.hideNodePopover = false;
+      vm.inputFileTypes = [];
       vm.nodeSelectCollection = {};
     }
 
