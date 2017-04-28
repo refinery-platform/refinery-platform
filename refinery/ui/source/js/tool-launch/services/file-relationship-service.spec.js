@@ -6,10 +6,12 @@
     var service;
     var toolsFactory;
     var mockWorkflow;
+    var underscroll;
 
     beforeEach(module('refineryApp'));
     beforeEach(module('refineryToolLaunch'));
     beforeEach(inject(function (
+      _,
       fileRelationshipService,
       mockParamsFactory,
       toolsService
@@ -17,6 +19,7 @@
       service = fileRelationshipService;
       mocker = mockParamsFactory;
       toolsFactory = toolsService;
+      underscroll = _;
 
       mockWorkflow = {
         file_relationship: {
@@ -142,6 +145,47 @@
       });
     });
 
+    describe('removeGroupFromCollections', function () {
+      var currentGroupMock = [0, 0, 1];
+      var groupCollectionMock = {};
+      groupCollectionMock[currentGroupMock] = {};
+      var nodeSelectCollectionMock = {};
+      var nodeUuid1;
+
+      beforeEach(function () {
+        var inputType1 = mocker.generateUuid();
+        nodeUuid1 = mocker.generateUuid();
+        var inputType2 = mocker.generateUuid();
+
+        groupCollectionMock[[0, 0, 0]] = {};
+        groupCollectionMock[[0, 0, 0]][inputType1] = [{ uuid: nodeUuid1 }];
+        groupCollectionMock[currentGroupMock][inputType2] = [{ uuid: nodeUuid1 }];
+        nodeSelectCollectionMock[nodeUuid1] = {
+          inputTypeList: [inputType1, inputType2],
+          groupList: [[0, 0, 0], currentGroupMock]
+        };
+        angular.copy(currentGroupMock, service.currentGroup);
+        angular.copy(groupCollectionMock, service.groupCollection);
+        angular.copy(nodeSelectCollectionMock, service.nodeSelectCollection);
+      });
+
+      it('removeGroupFromCollections is a method', function () {
+        expect(angular.isFunction(service.removeGroupFromCollections)).toBe(true);
+      });
+
+      it('removes a group', function () {
+        expect(service.groupCollection).toEqual(groupCollectionMock);
+        service.removeGroupFromCollections();
+        expect(underscroll.has(service.groupCollection, currentGroupMock)).toBe(false);
+      });
+
+      it('updates node select collection', function () {
+        expect(service.nodeSelectCollection).toEqual(nodeSelectCollectionMock);
+        service.removeGroupFromCollections();
+        expect(service.nodeSelectCollection[nodeUuid1].groupList.length).toEqual(1);
+      });
+    });
+
     describe('resetInputGroup', function () {
       var currentGroupMock = [0, 0, 1];
       var groupCollectionMock = {};
@@ -149,9 +193,11 @@
       var nodeSelectCollectionMock = {};
 
       beforeEach(function () {
-        groupCollectionMock[currentGroupMock][mocker.generateUuid()] = [mocker.generateUuid()];
-        nodeSelectCollectionMock[mocker.generateUuid()] = {
-          inputTypeUuid: [mocker.generateUuid()],
+        var inputType1 = mocker.generateUuid();
+        var nodeUuid1 = mocker.generateUuid();
+        groupCollectionMock[currentGroupMock][inputType1] = [{ uuid: nodeUuid1 }];
+        nodeSelectCollectionMock[nodeUuid1] = {
+          inputTypeList: [inputType1],
           groupList: [currentGroupMock]
         };
         angular.copy(currentGroupMock, service.currentGroup);
@@ -191,15 +237,17 @@
       var nodeSelectCollectionMock = {};
 
       beforeEach(function () {
-        groupCollectionMock[currentGroupMock][mocker.generateUuid()] = [mocker.generateUuid()];
+        var inputType1 = mocker.generateUuid();
+        var nodeUuid1 = mocker.generateUuid();
+        groupCollectionMock[currentGroupMock][inputType1] = [{ uuid: nodeUuid1 }];
         inputFileTypesMock[0] = {
           name: 'Input File Mock Name',
           uuid: mocker.generateUuid(),
           description: 'Big WIG',
           allowed_filetypes: [{ name: 'BAM' }]
         };
-        nodeSelectCollectionMock[mocker.generateUuid()] = {
-          inputTypeUuid: [mocker.generateUuid()],
+        nodeSelectCollectionMock[nodeUuid1] = {
+          inputTypeList: [inputType1],
           groupList: [currentGroupMock]
         };
         angular.copy(currentGroupMock, service.currentGroup);
@@ -251,15 +299,15 @@
       });
     });
 
-    describe('setNodeSelectCollection', function () {
-      it('setNodeSelectCollection is a method', function () {
-        expect(angular.isFunction(service.setNodeSelectCollection)).toBe(true);
-      });
-    });
-
     describe('Set Group Collection', function () {
       it('setGroupCollection is a method', function () {
         expect(angular.isFunction(service.setGroupCollection)).toBe(true);
+      });
+    });
+
+    describe('setNodeSelectCollection', function () {
+      it('setNodeSelectCollection is a method', function () {
+        expect(angular.isFunction(service.setNodeSelectCollection)).toBe(true);
       });
     });
   });

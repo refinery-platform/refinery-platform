@@ -68,29 +68,6 @@
       generateAttributeObj();
     }
 
-    /**
-     * Resets the variables needed for clearing cart completely
-     */
-    function resetInputGroup () {
-      // resets group coordinates
-      for (var i = 0; i < vm.currentGroup.length; i++) {
-        vm.currentGroup[i] = 0;
-      }
-      vm.groupCollection = {};
-      vm.nodeSelectCollection = {};
-    }
-
-    /**
-     * Resets the variables needed for new tool selection
-     */
-    function resetToolRelated () {
-      vm.currentGroup = [];
-      vm.currentTypes = [];
-      vm.groupCollection = {};
-      vm.hideNodePopover = false;
-      vm.inputFileTypes = [];
-      vm.nodeSelectCollection = {};
-    }
 
     // Main method to remove a group from the groupCollection and
     // nodeSelectCollections
@@ -116,6 +93,30 @@
           delete vm.nodeSelectCollection[nodeList[i].uuid];
         }
       }
+    }
+
+    /**
+     * Resets the variables needed for clearing cart completely
+     */
+    function resetInputGroup () {
+      // resets group coordinates
+      for (var i = 0; i < vm.currentGroup.length; i++) {
+        vm.currentGroup[i] = 0;
+      }
+      vm.groupCollection = {};
+      vm.nodeSelectCollection = {};
+    }
+
+    /**
+     * Resets the variables needed for new tool selection
+     */
+    function resetToolRelated () {
+      vm.currentGroup = [];
+      vm.currentTypes = [];
+      vm.groupCollection = {};
+      vm.hideNodePopover = false;
+      vm.inputFileTypes = [];
+      vm.nodeSelectCollection = {};
     }
 
     /**
