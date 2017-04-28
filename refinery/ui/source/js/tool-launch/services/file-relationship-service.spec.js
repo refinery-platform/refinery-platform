@@ -56,24 +56,24 @@
                           used_for_visualization: false
                         }
                       ],
-                      uuid: '233986c5-d4f2-4d04-9be5-323eddcc85ba',
+                      uuid: mocker.generateUuid(),
                       name: 'Cool Input File B',
                       description: 'Cool Input File B Description'
                     }
                   ],
-                  uuid: 'c6af0093-52fa-48b9-92fc-3b41b382a43f',
+                  uuid: mocker.generateUuid(),
                   name: 'Pair of input files',
                   value_type: 'PAIR'
                 }
               ],
               input_files: [],
-              uuid: '283a97a6-a676-40ce-b6d9-5f5aa5cea28f',
+              uuid: mocker.generateUuid(),
               name: 'List of Pairs',
               value_type: 'LIST'
             }
           ],
           input_files: [],
-          uuid: 'd8342a83-60fa-4619-a924-06e5a0711232',
+          uuid: mocker.generateUuid(),
           name: 'List of Lists',
           value_type: 'LIST'
         },
@@ -84,13 +84,13 @@
               description: 'Big WIG',
               used_for_visualization: true
             },
-            uuid: '566b9d6c-0b90-4dcc-8444-3013eb1ec05e',
+            uuid: mocker.generateUuid(),
             name: 'output_file',
             description: 'cool'
           }
         ],
         parameters: [],
-        uuid: 'e655ecec-4833-434d-9244-d5d53445cf8e',
+        uuid: mocker.generateUuid(),
         name: 'Test workflow: LIST:LIST:PAIR',
         description: 'Test LIST:LIST:PAIR description',
         tool_type: 'WORKFLOW',
@@ -142,26 +142,112 @@
       });
     });
 
-    describe('resetMethods', function () {
+    describe('resetInputGroup', function () {
+      var currentGroupMock = [0, 0, 1];
+      var groupCollectionMock = {};
+      groupCollectionMock[currentGroupMock] = {};
+      var nodeSelectCollectionMock = {};
+
+      beforeEach(function () {
+        groupCollectionMock[currentGroupMock][mocker.generateUuid()] = [mocker.generateUuid()];
+        nodeSelectCollectionMock[mocker.generateUuid()] = {
+          inputTypeUuid: [mocker.generateUuid()],
+          groupList: [currentGroupMock]
+        };
+        angular.copy(currentGroupMock, service.currentGroup);
+        angular.copy(groupCollectionMock, service.groupCollection);
+        angular.copy(nodeSelectCollectionMock, service.nodeSelectCollection);
+      });
+
+      it('resetInputGroup is a method', function () {
+        expect(angular.isFunction(service.resetInputGroup)).toBe(true);
+      });
+
+      it('it resets currentGroupMock', function () {
+        expect(service.currentGroup).toEqual(currentGroupMock);
+        service.resetInputGroup();
+        expect(service.currentGroup).toEqual([0, 0, 0]);
+      });
+
+      it('resetToolRelated resets groupCollectionMock', function () {
+        expect(service.groupCollection).toEqual(groupCollectionMock);
+        service.resetInputGroup();
+        expect(service.groupCollection).toEqual({});
+      });
+
+      it('resetToolRelated resets nodeSelectCollectionMock', function () {
+        expect(service.nodeSelectCollection).toEqual(nodeSelectCollectionMock);
+        service.resetInputGroup();
+        expect(service.nodeSelectCollection).toEqual({});
+      });
+    });
+
+    describe('resetToolRelated', function () {
+      var currentGroupMock = [0, 0, 0];
+      var currentTypeMock = ['PAIR', 'LIST', 'LIST'];
+      var groupCollectionMock = {};
+      groupCollectionMock[currentGroupMock] = {};
+      var inputFileTypesMock = [];
+      var nodeSelectCollectionMock = {};
+
+      beforeEach(function () {
+        groupCollectionMock[currentGroupMock][mocker.generateUuid()] = [mocker.generateUuid()];
+        inputFileTypesMock[0] = {
+          name: 'Input File Mock Name',
+          uuid: mocker.generateUuid(),
+          description: 'Big WIG',
+          allowed_filetypes: [{ name: 'BAM' }]
+        };
+        nodeSelectCollectionMock[mocker.generateUuid()] = {
+          inputTypeUuid: [mocker.generateUuid()],
+          groupList: [currentGroupMock]
+        };
+        angular.copy(currentGroupMock, service.currentGroup);
+        angular.copy(currentTypeMock, service.currentTypes);
+        angular.copy(inputFileTypesMock, service.inputFileTypes);
+        angular.copy(groupCollectionMock, service.groupCollection);
+        angular.copy(nodeSelectCollectionMock, service.nodeSelectCollection);
+        service.hideNodePopover = true;
+      });
+
       it('resetToolRelated is a method', function () {
         expect(angular.isFunction(service.resetToolRelated)).toBe(true);
       });
 
-      it('resetToolRelated resets variables', function () {
-        service.currentGroup = [0, 0, 1];
-        service.currentTypes = ['PAIR', 'LIST', 'LIST'];
-        service.inputFileTypes = [
-          {
-            name: 'Input File Mock Name',
-            uuid: mocker.generateUuid(),
-            description: 'Big WIG',
-            allowed_filetypes: [{ name: 'BAM' }]
-          }
-        ];
+      it('resetToolRelated resets currentGroupMock', function () {
+        expect(service.currentGroup).toEqual(currentGroupMock);
         service.resetToolRelated();
         expect(service.currentGroup).toEqual([]);
+      });
+
+      it('resetToolRelated resets currentTypeMock', function () {
+        expect(service.currentTypes).toEqual(currentTypeMock);
+        service.resetToolRelated();
         expect(service.currentTypes).toEqual([]);
+      });
+
+      it('resetToolRelated resets inputFileTYpes', function () {
+        expect(service.inputFileTypes).toEqual(inputFileTypesMock);
+        service.resetToolRelated();
         expect(service.inputFileTypes).toEqual([]);
+      });
+
+      it('resetToolRelated resets groupCollectionMock', function () {
+        expect(service.groupCollection).toEqual(groupCollectionMock);
+        service.resetToolRelated();
+        expect(service.groupCollection).toEqual({});
+      });
+
+      it('resetToolRelated resets nodeSelectCollectionMock', function () {
+        expect(service.nodeSelectCollection).toEqual(nodeSelectCollectionMock);
+        service.resetToolRelated();
+        expect(service.nodeSelectCollection).toEqual({});
+      });
+
+      it('resets hideNodePopover', function () {
+        expect(service.hideNodePopover).toEqual(true);
+        service.resetToolRelated();
+        expect(service.hideNodePopover).toEqual(false);
       });
     });
 
