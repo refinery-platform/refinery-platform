@@ -211,7 +211,7 @@ def create_file_relationship_nesting(workflow_annotation,
         # If we reach here, we have reached the bottom-most nested
         # file_relationship. Since we want to act upon the bottom-most
         # file_relationship's input_files, we can safely grab the
-        # last element from our fr_store due to Python's nature of
+        # last element from our `file_relationships` due to Python's nature of
         # ordering lists.
         bottom_file_relationship = file_relationships[-1]
 
