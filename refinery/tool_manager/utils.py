@@ -2,7 +2,6 @@ import glob
 import json
 import logging
 import os
-import re
 
 from django.conf import settings
 from django.contrib import admin
@@ -430,28 +429,54 @@ def get_visualization_annotations_list():
     return visualization_annotations
 
 
-def parse_file_relationship_nesting(file_relationship_nesting,
-                                    nested_representation=""):
+def parse_file_relationship_nesting(nested_structure, nesting_dict=None,
+                                    nesting_level=0):
     """
-    Helper method to determine wheter or not the nested `file_relationships`
-    structure is in a form that we are expecting.
+    Recursive method to ensure that a ToolLaunchConfiguration's
+    `file_relationships` string is a proper representation of a LIST/PAIR
+    structure
+    :raises: RuntimeError if an inappropriately configured `file_relationships`
+     string is detected
     """
+
+    if nesting_dict is None:
+        nesting_dict = {
+            nesting_level: {
+                "types": set(),
+                "contents": []
+            }
+        }
     try:
-        if isinstance(file_relationship_nesting, list):
-            nested_representation += "LIST:"
-        if isinstance(file_relationship_nesting, tuple):
-            nested_representation += "PAIR:"
-        if isinstance(file_relationship_nesting, str):
-            raise RuntimeError
-        return parse_file_relationship_nesting(
-            file_relationship_nesting[0],
-            nested_representation=nested_representation
+        nesting_dict[nesting_level]
+    except KeyError:
+        nesting_dict[nesting_level] = {
+            "types": set(),
+            "contents": []
+        }
+
+    nesting_types = nesting_dict[nesting_level]["types"]
+    nesting_contents = nesting_dict[nesting_level]["contents"]
+
+    for item in nested_structure:
+        nesting_types.add(type(item))
+        nesting_contents.append(item)
+
+    if len(nesting_types) != 1:
+        raise RuntimeError(
+            "LIST/PAIR structure is not balanced! {}".format(nesting_contents)
         )
-    except RuntimeError:
-        # RuntimeError in this case denotes that we have reached the
-        # bottom-most nesting so we can safely `pass`
-        if re.match(r'^((LIST|PAIR):*)$', nested_representation[:-1]) is None:
-            raise RuntimeError(
-                "The `file_relationships` defined didn't yield a valid "
-                "LIST/PAIR nesting."
-            )
+    if nesting_types == {str}:
+        # If we reach a nesting level with all `str` we can return
+        return
+
+    if nesting_types not in [{list}, {tuple}]:
+        raise RuntimeError(
+            "The `file_relationships` defined didn't yield a valid "
+            "LIST/PAIR nesting. {}".format(nesting_contents)
+        )
+
+    nesting_level += 1
+    for item in nested_structure:
+        parse_file_relationship_nesting(
+            item, nesting_dict=nesting_dict, nesting_level=nesting_level
+        )
