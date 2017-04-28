@@ -6,6 +6,7 @@
     var service;
     var toolsFactory;
     var mockWorkflow;
+    var nodeService;
     var underscroll;
 
     beforeEach(module('refineryApp'));
@@ -14,10 +15,12 @@
       _,
       fileRelationshipService,
       mockParamsFactory,
+      selectedNodesService,
       toolsService
     ) {
       service = fileRelationshipService;
       mocker = mockParamsFactory;
+      nodeService = selectedNodesService;
       toolsFactory = toolsService;
       underscroll = _;
 
@@ -300,8 +303,61 @@
     });
 
     describe('Set Group Collection', function () {
+      var currentGroupMock = [0, 0, 0];
+      var inputTypeUuid1;
+      var inputTypeUuid2;
+      var nodeUuid1;
+      var nodeUuid2;
+      var selectionObj = {};
+
+      beforeEach(function () {
+        inputTypeUuid1 = mocker.generateUuid();
+        inputTypeUuid2 = mocker.generateUuid();
+        nodeUuid1 = mocker.generateUuid();
+        nodeUuid2 = mocker.generateUuid();
+        selectionObj[currentGroupMock] = {};
+        selectionObj[currentGroupMock][inputTypeUuid1] = {};
+        selectionObj[currentGroupMock][inputTypeUuid1][nodeUuid1] = true;
+        selectionObj[currentGroupMock][inputTypeUuid1][nodeUuid2] = true;
+        selectionObj[currentGroupMock][inputTypeUuid2] = {};
+        selectionObj[currentGroupMock][inputTypeUuid2][nodeUuid2] = true;
+
+        angular.copy({ uuid: nodeUuid1 }, nodeService.activeNodeRow);
+        angular.copy(currentGroupMock, service.currentGroup);
+      });
+
       it('setGroupCollection is a method', function () {
         expect(angular.isFunction(service.setGroupCollection)).toBe(true);
+      });
+
+      it('adds a node to an empty group', function () {
+        service.setGroupCollection(inputTypeUuid1, selectionObj);
+        expect(service.groupCollection[currentGroupMock][inputTypeUuid1][0].uuid)
+          .toEqual(nodeUuid1);
+      });
+
+      it('adds additional node to the same group/input type (list)', function () {
+        service.setGroupCollection(inputTypeUuid1, selectionObj);
+        angular.copy({ uuid: nodeUuid2 }, nodeService.activeNodeRow);
+        service.setGroupCollection(inputTypeUuid1, selectionObj);
+        expect(service.groupCollection[currentGroupMock][inputTypeUuid1][1].uuid)
+          .toEqual(nodeUuid2);
+      });
+
+      it('adds additional input type/node to a group', function () {
+        service.setGroupCollection(inputTypeUuid1, selectionObj);
+        angular.copy({ uuid: nodeUuid2 }, nodeService.activeNodeRow);
+        service.setGroupCollection(inputTypeUuid2, selectionObj);
+        expect(service.groupCollection[currentGroupMock][inputTypeUuid2][0].uuid)
+          .toEqual(nodeUuid2);
+      });
+
+      it('removes a node', function () {
+        service.setGroupCollection(inputTypeUuid1, selectionObj);
+        selectionObj[currentGroupMock][inputTypeUuid1][nodeUuid1] = false;
+        service.setGroupCollection(inputTypeUuid1, selectionObj, nodeUuid1);
+        expect(service.groupCollection[currentGroupMock][inputTypeUuid1].length)
+          .toEqual(0);
       });
     });
 
