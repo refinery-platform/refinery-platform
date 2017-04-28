@@ -1,4 +1,5 @@
 import logging
+import os
 import re
 
 from django.conf import settings
@@ -8,6 +9,7 @@ from django.dispatch import receiver
 from django.http import HttpResponseServerError, JsonResponse
 
 from django_extensions.db.fields import UUIDField
+from django_docker_engine.container_managers.local import LocalManager
 from django_docker_engine.docker_utils import DockerContainerSpec
 from docker.errors import APIError
 
@@ -247,7 +249,8 @@ class Tool(OwnableResource):
                 container_input_path=(
                     self.tool_definition.container_input_path
                 ),
-                input={"file_relationships": eval(self.file_relationships)}
+                input={"file_relationships": eval(self.file_relationships)},
+                manager=self.get_django_docker_engine_manager()
             )
             try:
                 container.run()
@@ -262,6 +265,16 @@ class Tool(OwnableResource):
 
         if self.get_tool_type() == ToolDefinition.WORKFLOW:
             raise NotImplementedError
+
+    def get_django_docker_engine_manager(self):
+        """
+        Helper method to return the proper managerial class for
+        django_docker_engine
+        """
+        if "aws" in os.getenv("DJANGO_SETTINGS_MODULE"):
+            raise NotImplementedError
+        else:
+            return LocalManager()
 
     def get_relative_container_url(self):
         """
