@@ -186,7 +186,7 @@
       } else {
         // remove property when checkbox deselected
         for (var i = 0; i < vm.nodeSelectCollection[nodeUuid].inputTypeList.length; i++) {
-          if (vm.nodeSelectCollection[nodeUuid].groupList[i] === vm.currentGroup) {
+          if (_.isEqual(vm.nodeSelectCollection[nodeUuid].groupList[i], vm.currentGroup)) {
             vm.nodeSelectCollection[nodeUuid].groupList.splice(i, 1);
             vm.nodeSelectCollection[nodeUuid].inputTypeList.splice(i, 1);
             break;

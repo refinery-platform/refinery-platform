@@ -362,8 +362,60 @@
     });
 
     describe('setNodeSelectCollection', function () {
+      var currentGroupMock = [0, 0, 0];
+      var inputTypeUuid1;
+      var inputTypeUuid2;
+      var nodeUuid1;
+      var nodeUuid2;
+      var selectionObj = {};
+
+      beforeEach(function () {
+        inputTypeUuid1 = mocker.generateUuid();
+        inputTypeUuid2 = mocker.generateUuid();
+        nodeUuid1 = mocker.generateUuid();
+        nodeUuid2 = mocker.generateUuid();
+        selectionObj[currentGroupMock] = {};
+        selectionObj[currentGroupMock][inputTypeUuid1] = {};
+        selectionObj[currentGroupMock][inputTypeUuid1][nodeUuid1] = true;
+        selectionObj[currentGroupMock][inputTypeUuid1][nodeUuid2] = true;
+        selectionObj[currentGroupMock][inputTypeUuid2] = {};
+        selectionObj[currentGroupMock][inputTypeUuid2][nodeUuid1] = true;
+        selectionObj[currentGroupMock][inputTypeUuid2][nodeUuid2] = true;
+
+        angular.copy({ uuid: nodeUuid1 }, nodeService.activeNodeRow);
+        angular.copy(currentGroupMock, service.currentGroup);
+      });
+
       it('setNodeSelectCollection is a method', function () {
         expect(angular.isFunction(service.setNodeSelectCollection)).toBe(true);
+      });
+
+      it('adds a node to an empty node collection', function () {
+        service.setNodeSelectCollection(inputTypeUuid1, selectionObj);
+        expect(service.nodeSelectCollection[nodeUuid1].inputTypeList[0]).toEqual(inputTypeUuid1);
+        expect(service.nodeSelectCollection[nodeUuid1].groupList[0]).toEqual(currentGroupMock);
+      });
+
+      it('adds additional inputType to same node/group', function () {
+        service.setNodeSelectCollection(inputTypeUuid1, selectionObj);
+        service.setNodeSelectCollection(inputTypeUuid2, selectionObj);
+        expect(service.nodeSelectCollection[nodeUuid1].inputTypeList[1]).toEqual(inputTypeUuid2);
+        expect(service.nodeSelectCollection[nodeUuid1].groupList[1]).toEqual(currentGroupMock);
+      });
+
+      it('adds additional node', function () {
+        service.setNodeSelectCollection(inputTypeUuid1, selectionObj);
+        angular.copy({ uuid: nodeUuid2 }, nodeService.activeNodeRow);
+        service.setNodeSelectCollection(inputTypeUuid2, selectionObj);
+        expect(service.nodeSelectCollection[nodeUuid2].inputTypeList[0]).toEqual(inputTypeUuid2);
+        expect(service.nodeSelectCollection[nodeUuid2].groupList[0]).toEqual(currentGroupMock);
+      });
+
+      it('removes a node', function () {
+        service.setNodeSelectCollection(inputTypeUuid1, selectionObj);
+        selectionObj[currentGroupMock][inputTypeUuid1][nodeUuid1] = false;
+        service.setNodeSelectCollection(inputTypeUuid1, selectionObj, nodeUuid1);
+        expect(service.nodeSelectCollection[nodeUuid1].inputTypeList.length).toEqual(0);
       });
     });
   });
