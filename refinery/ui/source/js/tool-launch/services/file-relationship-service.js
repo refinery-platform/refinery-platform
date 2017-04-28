@@ -24,14 +24,13 @@
     vm.currentTypes = []; // tracks whether depths are pair or list
     vm.groupCollection = {}; // contains groups with their selected row's info
     vm.inputFileTypes = []; // maintains the required input types
+    vm.nodeSelectCollection = {}; // contains rows and their group info
     vm.refreshFileMap = refreshFileMap;
+    vm.removeGroupFromCollections = removeGroupFromCollections;
     vm.resetCurrents = resetCurrents;
     vm.resetCurrentCollections = resetCurrentCollections;
     vm.setGroupCollection = setGroupCollection;
     vm.setNodeSelectCollection = setNodeSelectCollection;
-    vm.nodeSelectCollection = {}; // contains rows and their group info
-    vm.removeGroupFromCollections = removeGroupFromCollections;
-    vm.hideNodePopover = false;
     /*
      *-----------------------
      * Method Definitions
@@ -43,6 +42,77 @@
       var attributeArr = fileBrowserFactory.assayAttributes;
       for (var i = 0; i < attributeArr.length; i++) {
         vm.attributesObj[attributeArr[i].display_name] = attributeArr[i].internal_name;
+      }
+    }
+
+    /**
+     * Parses the tool definition api response into usable data structure by
+     * views. File_relationship is a self-reference nested structure.
+     * ex: file_relationship: [{file_relationship: []}]
+     */
+    function refreshFileMap () {
+      if (_.isEmpty(toolsService.selectedTool.file_relationship)) {
+        return;
+      }
+      var scaledCopy = toolsService.selectedTool.file_relationship;
+      // initialize groups and types
+      while (scaledCopy.file_relationship.length > 0) {
+        vm.currentGroup.push(0);
+        vm.currentTypes.push(scaledCopy.value_type);
+        scaledCopy = scaledCopy.file_relationship[0];
+      }
+      angular.copy(scaledCopy.input_files, vm.inputFileTypes);
+      vm.currentTypes.push(scaledCopy.value_type);
+      vm.currentGroup.push(0);
+      generateAttributeObj();
+    }
+
+    /**
+     * Resets the variables needed for new tool selection
+     */
+    function resetCurrents () {
+      vm.currentGroup = [];
+      vm.currentTypes = [];
+      vm.inputFileTypes = [];
+      vm.groupCollection = {};
+      vm.nodeSelectCollection = {};
+      vm.hideNodePopover = false;
+    }
+
+    /**
+     * Resets the variables needed for clearing cart completely
+     */
+    function resetCurrentCollections () {
+      for (var i = 0; i < vm.currentGroup.length; i++) {
+        vm.currentGroup[i] = 0;
+      }
+      vm.groupCollection = {};
+      vm.nodeSelectCollection = {};
+    }
+
+    // Main method to remove a group from the groupCollection and
+    // nodeSelectCollections
+    function removeGroupFromCollections () {
+      angular.forEach(vm.groupCollection[vm.currentGroup], function (nodeArr, inputTypeUuid) {
+        removeGroupFromNodeSelectCollection(nodeArr, inputTypeUuid);
+      });
+      // Delete groupID property from obj since it is empty
+      delete vm.groupCollection[vm.currentGroup];
+    }
+
+    // Helper method which finds index of currentGroupId and slices it from
+    // groupId and it's associated inputFileType
+    function removeGroupFromNodeSelectCollection (nodeList, TypeUuid) {
+      for (var i = 0; i < nodeList.length; i++) {
+        var groupInd = vm.nodeSelectCollection[nodeList[i].uuid].inputTypeList.indexOf(TypeUuid);
+        if (groupInd > -1) {
+          vm.nodeSelectCollection[nodeList[i].uuid].groupList.splice(groupInd, 1);
+          vm.nodeSelectCollection[nodeList[i].uuid].inputTypeList.splice(groupInd, 1);
+        }
+       // Delete node property from obj if empty
+        if (vm.nodeSelectCollection[nodeList[i].uuid].groupList === 0) {
+          delete vm.nodeSelectCollection[nodeList[i].uuid];
+        }
       }
     }
 
@@ -118,77 +188,6 @@
             vm.nodeSelectCollection[nodeUuid].inputTypeList.splice(i, 1);
             break;
           }
-        }
-      }
-    }
-
-    /**
-     * Parses the tool definition api response into usable data structure by
-     * views. File_relationship is a self-reference nested structure.
-     * ex: file_relationship: [{file_relationship: []}]
-     */
-    function refreshFileMap () {
-      if (_.isEmpty(toolsService.selectedTool.file_relationship)) {
-        return;
-      }
-      var scaledCopy = toolsService.selectedTool.file_relationship;
-      // initialize groups and types
-      while (scaledCopy.file_relationship.length > 0) {
-        vm.currentGroup.push(0);
-        vm.currentTypes.push(scaledCopy.value_type);
-        scaledCopy = scaledCopy.file_relationship[0];
-      }
-      angular.copy(scaledCopy.input_files, vm.inputFileTypes);
-      vm.currentTypes.push(scaledCopy.value_type);
-      vm.currentGroup.push(0);
-      generateAttributeObj();
-    }
-
-    /**
-     * Resets the variables needed for new tool selection
-     */
-    function resetCurrents () {
-      vm.currentGroup = [];
-      vm.currentTypes = [];
-      vm.inputFileTypes = [];
-      vm.groupCollection = {};
-      vm.nodeSelectCollection = {};
-      vm.hideNodePopover = false;
-    }
-
-    /**
-     * Resets the variables needed for clearing cart completely
-     */
-    function resetCurrentCollections () {
-      for (var i = 0; i < vm.currentGroup.length; i++) {
-        vm.currentGroup[i] = 0;
-      }
-      vm.groupCollection = {};
-      vm.nodeSelectCollection = {};
-    }
-
-    // Main method to remove a group from the groupCollection and
-    // nodeSelectCollections
-    function removeGroupFromCollections () {
-      angular.forEach(vm.groupCollection[vm.currentGroup], function (nodeArr, inputTypeUuid) {
-        removeGroupFromNodeSelectCollection(nodeArr, inputTypeUuid);
-      });
-      // Delete groupID property from obj since it is empty
-      delete vm.groupCollection[vm.currentGroup];
-    }
-
-    // Helper method which finds index of currentGroupId and slices it from
-    // groupId and it's associated inputFileType
-    function removeGroupFromNodeSelectCollection (nodeList, TypeUuid) {
-      for (var i = 0; i < nodeList.length; i++) {
-        var groupInd = vm.nodeSelectCollection[nodeList[i].uuid].inputTypeList.indexOf(TypeUuid);
-        if (groupInd > -1) {
-          vm.nodeSelectCollection[nodeList[i].uuid].groupList.splice(groupInd, 1);
-          vm.nodeSelectCollection[nodeList[i].uuid].inputTypeList.splice(groupInd, 1);
-        }
-       // Delete node property from obj if empty
-        if (vm.nodeSelectCollection[nodeList[i].uuid].groupList === 0) {
-          delete vm.nodeSelectCollection[nodeList[i].uuid];
         }
       }
     }
