@@ -118,11 +118,9 @@
 
     // Used by ui, updates which attribute filters are selected and ui-grid data
     function attributeSelectionUpdate (internalName, field) {
-      console.log('attributeSelectionUpdate');
       selectedFilterService.updateSelectedFilters(
         vm.uiSelectedFields[internalName], internalName, field
       );
-      console.log(vm.uiSelectedFields);
       vm.filesParam.filter_attribute = {};
       angular.copy(selectedFilterService.attributeSelectedFields,
         vm.filesParam.filter_attribute
@@ -284,7 +282,6 @@
 
     // helper method, upon refresh/load add fields to select data objs from query
     function refreshSelectedFieldFromQuery (_attributeObj) {
-      console.log('in the refreshSelectedField');
       // stringify/encode attributeInternalName:fieldName for url query comparison
       angular.forEach(_attributeObj.facetObj, function (fieldObj) {
         var encodedField = selectedFilterService.stringifyAndEncodeAttributeObj(
@@ -423,6 +420,7 @@
           $scope.$broadcast('rf/attributeFilter-ready');
           // update selected rows in ui and set selected nodes count
         }, 0);
+        // updates params object
         if (Object.keys($location.search()).length > 0) {
           vm.updateFiltersFromUrlQuery();
         }
@@ -442,7 +440,6 @@
       },
       function () {
         if (resetGridService.resetGridFlag) {
-          console.log('in the watcher reset grid flag');
           // Have to set selected Fields in control due to service scope
           angular.forEach(vm.uiSelectedFields, function (fieldsObj, attributeInternalName) {
             angular.forEach(fieldsObj, function (value, fieldName) {
