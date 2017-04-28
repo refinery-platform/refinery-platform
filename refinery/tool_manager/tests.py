@@ -1,5 +1,7 @@
 import json
 import logging
+import uuid
+
 import mock
 import re
 import requests
@@ -11,6 +13,7 @@ from django.contrib.auth.models import User
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.core.management import call_command, CommandError
+from django.http import HttpResponseServerError
 from django.test import TestCase
 
 from django_docker_engine.docker_utils import DockerClientWrapper
@@ -32,7 +35,8 @@ from .models import (FileRelationship, GalaxyParameter, InputFile,
 from .utils import (create_tool_definition,
                     FileTypeValidationError,
                     validate_tool_annotation,
-                    validate_workflow_step_annotation)
+                    validate_workflow_step_annotation,
+                    validate_tool_launch_configuration)
 from .views import (ToolDefinitionsViewSet, ToolsViewSet)
 
 logger = logging.getLogger(__name__)
@@ -714,7 +718,7 @@ class ToolAPITests(APITestCase):
         pass
 
 
-class ToolLaunchTests(StaticLiveServerTestCase):
+class ToolTests(StaticLiveServerTestCase):
     # Don't delete data migration data after test runs: http://bit.ly/2lAYqVJ
     serialized_rollback = True
 
@@ -934,6 +938,7 @@ class ToolLaunchTests(StaticLiveServerTestCase):
                 tool_launch.get_tool_type(),
                 ToolDefinition.VISUALIZATION
             )
+            time.sleep(5)
             # Check to see if IGV shows what we want
             igv_url = urljoin(
                 self.live_server_url,
@@ -1013,3 +1018,205 @@ class ToolLaunchTests(StaticLiveServerTestCase):
                 "dixon2012-h1hesc-hindiii-allreps-filtered."
                 "1000kb.multires.cool"
             )
+
+    def test_bad_POST_transaction_rollback(self):
+        post_data = {
+            "tool_definition_uuid": uuid.uuid4(),
+            "file_relationships": str(
+                [
+                    "https://s3.amazonaws.com/pkerp/public/"
+                    "dixon2012-h1hesc-hindiii-allreps-filtered."
+                    "1000kb.multires.cool"
+                ]
+            )
+        }
+
+        post_request = self.factory.post(
+            self.url_root,
+            data=post_data,
+            format="json"
+        )
+        force_authenticate(post_request, self.user)
+        self.post_response = self.view(post_request)
+
+        self.assertIsInstance(self.post_response, HttpResponseServerError)
+        self.assertEqual(Tool.objects.count(), 0)
+        self.assertIn("ToolDefinition matching query does not exist.",
+                      self.post_response.content)
+
+
+class ToolLaunchConfigurationTests(TestCase):
+
+    def setUp(self):
+        self.mock_vis_annotations_reference = (
+            "tool_manager.management.commands.generate_tool_definitions"
+            ".get_visualization_annotations_list"
+        )
+
+        with open(
+            "{}/visualization_LIST_higlass.json".format(TEST_DATA_PATH)
+        ) as f:
+            tool_annotation = [json.loads(f.read())]
+
+        with mock.patch(
+            self.mock_vis_annotations_reference, return_value=tool_annotation
+        ) as mocked_method:
+            call_command("generate_tool_definitions", visualizations=True)
+
+            self.assertTrue(mocked_method.called)
+            self.assertEqual(ToolDefinition.objects.count(), 1)
+            self.td = ToolDefinition.objects.all()[0]
+
+    def test_invalid_TLC_bad_json(self):
+        tool_launch_configuration = "This isn't valid JSON"
+        with self.assertRaises(RuntimeError) as context:
+            validate_tool_launch_configuration(tool_launch_configuration)
+        self.assertIn(
+            "Tool launch configuration is not properly configured",
+            context.exception.message
+        )
+
+    def test_invalid_TLC_schema(self):
+        tool_launch_configuration = {
+            "valid": "JSON",
+        }
+        with self.assertRaises(RuntimeError) as context:
+            validate_tool_launch_configuration(tool_launch_configuration)
+        self.assertIn(
+            "Tool launch configuration is not properly configured",
+            context.exception.message
+        )
+
+    def test_invalid_TLC_non_pythonic_file_relationships(self):
+        tool_launch_configuration = {
+            "tool_definition_uuid": self.td.uuid,
+            "file_relationships": "!!{}!!".format(
+                str(
+                    [
+                        "https://s3.amazonaws.com/pkerp/public/"
+                        "dixon2012-h1hesc-hindiii-allreps-filtered."
+                        "1000kb.multires.cool"
+                    ]
+                )
+            )
+        }
+        with self.assertRaises(RuntimeError) as context:
+            validate_tool_launch_configuration(tool_launch_configuration)
+        self.assertIn(
+            "ToolLaunchConfiguration's `file_relationships` could not be "
+            "evaluated as a Pythonic Data Structure",
+            context.exception.message
+        )
+
+    def test_invalid_TLC_non_LIST_PAIR_file_relationships(self):
+        tool_launch_configuration = {
+            "tool_definition_uuid": self.td.uuid,
+            "file_relationships": str(
+                [
+                    (
+                        {"Dicts aren't": "LIST/PAIR-like"},
+                        {"Dicts aren't": "LIST/PAIR-like"}
+                    ),
+                    (
+                        {"Dicts aren't": "LIST/PAIR-like"},
+                        {"Dicts aren't": "LIST/PAIR-like"}
+                    )
+                ]
+            )
+        }
+        with self.assertRaises(RuntimeError) as context:
+            validate_tool_launch_configuration(tool_launch_configuration)
+        self.assertIn(
+            "The `file_relationships` defined didn't yield a valid "
+            "LIST/PAIR nesting.",
+            context.exception.message
+        )
+
+    def test_invalid_TLC_non_file_relationships_unbalanced(self):
+        tool_launch_configuration = {
+            "tool_definition_uuid": self.td.uuid,
+            "file_relationships": str(
+                [
+                    ("a", "b"),
+                    ["c", "d"]
+                ]
+            )
+        }
+        with self.assertRaises(RuntimeError) as context:
+            validate_tool_launch_configuration(tool_launch_configuration)
+        self.assertIn(
+            "LIST/PAIR structure is not balanced!",
+            context.exception.message
+        )
+
+    def test_invalid_TLC_bad_tooldefinition_uuid(self):
+        tool_launch_configuration = {
+            "tool_definition_uuid": "This is an invalid ToolDef UUID",
+            "file_relationships": str(
+                [
+                    "https://s3.amazonaws.com/pkerp/public/"
+                    "dixon2012-h1hesc-hindiii-allreps-filtered."
+                    "1000kb.multires.cool"
+                ]
+            )
+        }
+        with self.assertRaises(RuntimeError) as context:
+            validate_tool_launch_configuration(tool_launch_configuration)
+        self.assertIn(
+            "Tool launch configuration is not properly configured",
+            context.exception.message
+        )
+
+    def test_valid_tool_launch_config_LIST(self):
+        tool_launch_configuration = {
+            "tool_definition_uuid": str(uuid.uuid4()),
+            "file_relationships": str(
+                ["coffee"]
+            )
+        }
+        validate_tool_launch_configuration(tool_launch_configuration)
+
+    def test_valid_tool_launch_config_LIST_PAIR(self):
+        tool_launch_configuration = {
+            "tool_definition_uuid": str(uuid.uuid4()),
+            "file_relationships": str(
+                [
+                    ("coffee", "coffee")
+                ]
+            )
+        }
+        validate_tool_launch_configuration(tool_launch_configuration)
+
+    def test_valid_tool_launch_config_LIST_LIST_PAIR(self):
+        tool_launch_configuration = {
+            "tool_definition_uuid": str(uuid.uuid4()),
+            "file_relationships": str(
+                [
+                    [
+                        ("coffee", "coffee"),
+                        ("coffee", "coffee"),
+                        ("coffee", "coffee"),
+                        ("coffee", "coffee")
+                    ]
+                ]
+            )
+        }
+        validate_tool_launch_configuration(tool_launch_configuration)
+
+    def test_valid_tool_launch_config_PAIR(self):
+        tool_launch_configuration = {
+            "tool_definition_uuid": str(uuid.uuid4()),
+            "file_relationships": str(
+                ("coffee", "coffee")
+            )
+        }
+        validate_tool_launch_configuration(tool_launch_configuration)
+
+    def test_valid_tool_launch_config_PAIR_LIST(self):
+        tool_launch_configuration = {
+            "tool_definition_uuid": str(uuid.uuid4()),
+            "file_relationships": str(
+                (["coffee", "coffee"], ["coffee", "coffee"])
+            )
+        }
+        validate_tool_launch_configuration(tool_launch_configuration)
