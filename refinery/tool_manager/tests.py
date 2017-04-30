@@ -1058,7 +1058,7 @@ class ToolLaunchConfigurationTests(TestCase):
         )
 
         with open(
-            "{}/visualization_LIST_higlass.json".format(TEST_DATA_PATH)
+            "{}/visualizations/higlass.json".format(TEST_DATA_PATH)
         ) as f:
             tool_annotation = [json.loads(f.read())]
 
