@@ -147,7 +147,8 @@ function VisWrapperCtrl (
     'http://www.mygrid.org.uk/ontology/JERMOntology#Assay_type',
     'http://www.mygrid.org.uk/ontology/JERMOntology#Technology_type',
     'http://www.owl-ontologies.com/unnamed.owl#Sex',
-    'http://www.owl-ontologies.com/unnamed.owl#Taxon_account_section'
+    'http://www.owl-ontologies.com/unnamed.owl#Taxon_account_section',
+    'http://purl.obolibrary.org/obo/MS_0000000'
   ];
 
   // Currently OWL2NEO4J doesn't extract the preferred label and even then we
