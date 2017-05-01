@@ -463,7 +463,7 @@ def parse_file_relationship_nesting(nested_structure, nesting_dict=None,
 
     if len(nesting_types) != 1:
         raise RuntimeError(
-            "LIST/PAIR structure is not balanced! {}".format(nesting_contents)
+            "LIST/PAIR structure is not balanced {}".format(nesting_contents)
         )
     if nesting_types == {str}:
         # If we reach a nesting level with all `str` we can return

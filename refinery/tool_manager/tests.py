@@ -936,7 +936,7 @@ class ToolTests(StaticLiveServerTestCase):
                 tool_launch.get_tool_type(),
                 ToolDefinition.VISUALIZATION
             )
-            time.sleep(5)
+
             # Check to see if IGV shows what we want
             igv_url = urljoin(
                 self.live_server_url,
@@ -944,6 +944,7 @@ class ToolTests(StaticLiveServerTestCase):
             )
 
             self.browser.get(igv_url)
+            time.sleep(5)
 
             wait_until_class_visible(self.browser, "igv-track-label", MAX_WAIT)
             self.assertEqual(
@@ -1143,7 +1144,7 @@ class ToolLaunchConfigurationTests(TestCase):
         with self.assertRaises(RuntimeError) as context:
             validate_tool_launch_configuration(tool_launch_configuration)
         self.assertIn(
-            "LIST/PAIR structure is not balanced!",
+            "LIST/PAIR structure is not balanced",
             context.exception.message
         )
 
