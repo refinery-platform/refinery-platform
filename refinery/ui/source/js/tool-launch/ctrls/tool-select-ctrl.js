@@ -40,7 +40,7 @@
     // user selects a new tool, so tool info needs updating
     function updateTool (tool) {
       toolsService.setSelectedTool(tool);
-      fileService.resetCurrents();
+      fileService.resetToolRelated();
       fileService.refreshFileMap();
     }
   }
