@@ -280,8 +280,8 @@ class Tool(OwnableResource):
         """
         Construct & return the relative url of our Tool's container
         """
-        return "/{}/{}".format(
-            settings.DJANGO_DOCKER_ENGINE_URL_ROOT,
+        return "{}/{}".format(
+            settings.DJANGO_DOCKER_ENGINE_BASE_URL,
             self.container_name
         )
 

@@ -10,6 +10,6 @@ tool_manager_router.register(r'tool_definitions', ToolDefinitionsViewSet)
 
 
 django_docker_engine_url = url(
-    r'^{}/'.format(settings.DJANGO_DOCKER_ENGINE_URL_ROOT),
+    r'^{}/'.format(settings.DJANGO_DOCKER_ENGINE_BASE_URL),
     include('django_docker_engine.urls')
 )
