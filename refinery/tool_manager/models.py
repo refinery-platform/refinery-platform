@@ -1,6 +1,6 @@
 import logging
-import os
 import re
+import subprocess
 
 from django.conf import settings
 from django.db import models
@@ -250,7 +250,7 @@ class Tool(OwnableResource):
                     self.tool_definition.container_input_path
                 ),
                 input={"file_relationships": eval(self.file_relationships)},
-                manager=self.get_django_docker_engine_manager()
+                manager=get_django_docker_engine_manager()
             )
             try:
                 container.run()
@@ -265,17 +265,6 @@ class Tool(OwnableResource):
 
         if self.get_tool_type() == ToolDefinition.WORKFLOW:
             raise NotImplementedError
-
-    @staticmethod
-    def get_django_docker_engine_manager():
-        """
-        Helper method to return the proper managerial class for
-        django_docker_engine
-        """
-        if "aws" in os.getenv("DJANGO_SETTINGS_MODULE"):
-            raise NotImplementedError
-        else:
-            return LocalManager()
 
     def get_relative_container_url(self):
         """
@@ -325,3 +314,16 @@ class Tool(OwnableResource):
             )
         else:
             return get_full_url(url)
+
+
+def get_django_docker_engine_manager():
+    """
+    Helper method to return the proper managerial class for
+    django_docker_engine
+    """
+
+    # `hostname -d` reliably yields "ec2.internal" if running on AWS
+    if "ec2" in subprocess.call(["hostname", "-d"]):
+        raise NotImplementedError
+    else:
+        return LocalManager()
