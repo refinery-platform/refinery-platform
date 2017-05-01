@@ -719,12 +719,6 @@ class ToolAPITests(APITestCase):
             'Method "DELETE" not allowed.'
         )
 
-    def test_valid_tool_launch_configuration(self):
-        pass
-
-    def test_invalid_tool_launch_configuration(self):
-        pass
-
 
 class ToolTests(StaticLiveServerTestCase):
     # Don't delete data migration data after test runs: http://bit.ly/2lAYqVJ
