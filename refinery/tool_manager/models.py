@@ -266,7 +266,8 @@ class Tool(OwnableResource):
         if self.get_tool_type() == ToolDefinition.WORKFLOW:
             raise NotImplementedError
 
-    def get_django_docker_engine_manager(self):
+    @staticmethod
+    def get_django_docker_engine_manager():
         """
         Helper method to return the proper managerial class for
         django_docker_engine
@@ -312,19 +313,15 @@ class Tool(OwnableResource):
         :return: Full url pointing to a Node's respective FileStoreItem's
         datafile's location
         """
-        try:
-            node = Node.objects.get(uuid=matched_object.group(0))
-        except (Node.DoesNotExist, Node.MultipleObjectsReturned):
-            # Raise these errors so that they propagate up the stack and
-            # properly nullify the current database transaction
-            raise
-        else:
-            url = node.get_relative_file_store_item_url()
-            if url is None:
-                raise RuntimeError(
-                    "Node with uuid: {} has no associated file url".format(
-                        node.uuid
-                    )
+
+        node = Node.objects.get(uuid=matched_object.group(0))
+
+        url = node.get_relative_file_store_item_url()
+        if url is None:
+            raise RuntimeError(
+                "Node with uuid: {} has no associated file url".format(
+                    node.uuid
                 )
-            else:
-                return get_full_url(url)
+            )
+        else:
+            return get_full_url(url)
