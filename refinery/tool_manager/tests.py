@@ -1091,7 +1091,7 @@ class ToolTests(StaticLiveServerTestCase):
                 tool_launch.get_relative_container_url()
             )
             # TODO: Add selenium-based test once higlass relative paths fixed
-            time.sleep(5)
+            time.sleep(10)
             response = requests.get(higlass_url + "/api/v1/tilesets/")
             while response.status_code != 200:
                 time.sleep(5)
