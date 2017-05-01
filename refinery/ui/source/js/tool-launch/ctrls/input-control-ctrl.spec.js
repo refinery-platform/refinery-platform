@@ -22,7 +22,10 @@
     });
 
     it('Data & UI displays variables should exist for views', function () {
-      expect(ctrl.tool).toEqual({});
+      expect(ctrl.attributes).toEqual({});
+      expect(ctrl.currentGroup).toEqual([]);
+      expect(ctrl.currentTypes).toEqual([]);
+      expect(ctrl.inputFileTypes).toEqual([]);
     });
   });
 })();

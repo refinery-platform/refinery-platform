@@ -65,7 +65,7 @@
      */
     function removeAllGroups () {
       fileService.hideNodePopover = true;
-      fileService.resetCurrentCollections();
+      fileService.resetInputGroup();
       nodeService.setSelectedAllFlags(false);
       resetGridService.setRefreshGridFlag(true);
     }
@@ -79,6 +79,7 @@
       fileService.removeGroupFromCollections();
       vm.selectionObj = nodeService.selectionObj;
     }
+
    /*
    * ---------------------------------------------------------
    * Watchers
