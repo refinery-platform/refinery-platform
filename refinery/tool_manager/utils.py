@@ -438,21 +438,19 @@ def parse_file_relationship_nesting(nested_structure, nesting_dict=None,
     :raises: RuntimeError if an inappropriately configured `file_relationships`
      string is detected
     """
+    nesting_info = {
+        "types": set(),
+        "contents": []
+    }
 
     if nesting_dict is None:
         nesting_dict = {
-            nesting_level: {
-                "types": set(),
-                "contents": []
-            }
+            nesting_level: nesting_info
         }
     try:
         nesting_dict[nesting_level]
     except KeyError:
-        nesting_dict[nesting_level] = {
-            "types": set(),
-            "contents": []
-        }
+        nesting_dict[nesting_level] = nesting_info
 
     nesting_types = nesting_dict[nesting_level]["types"]
     nesting_contents = nesting_dict[nesting_level]["contents"]
