@@ -13,7 +13,7 @@ from django.contrib.auth.models import User
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.core.management import call_command, CommandError
-from django.http import HttpResponseServerError
+from django.http import HttpResponseBadRequest
 from django.test import TestCase
 
 from django_docker_engine.docker_utils import DockerClientWrapper
@@ -688,7 +688,7 @@ class ToolAPITests(APITestCase):
         # Purge Docker Containers that we've spun up
         DockerClientWrapper().purge_by_label(self.tool_launch.uuid)
 
-    def test_tool_launches_exist(self):
+    def test_tools_exist(self):
         self.assertEqual(Tool.objects.count(), 1)
         self.assertEqual(
             Tool.objects.filter(
@@ -718,6 +718,93 @@ class ToolAPITests(APITestCase):
             self.delete_response.data['detail'],
             'Method "DELETE" not allowed.'
         )
+
+    def test_TLC_workflow_no_output_files(self):
+        self.td.delete()
+        galaxy_instance = Instance.objects.create()
+        workflow_engine = WorkflowEngine.objects.create(
+            instance=galaxy_instance
+        )
+        with open("{}/workflows/LIST.json".format(TEST_DATA_PATH)) as f:
+            workflow_annotation = json.loads(f.read())
+            workflow_annotation[
+                "workflow_engine_uuid"
+            ] = workflow_engine.uuid
+            create_tool_definition(workflow_annotation)
+
+            td = ToolDefinition.objects.get(name=workflow_annotation["name"])
+
+        tool_launch_configuration = {
+            "tool_definition_uuid": td.uuid,
+            "file_relationships": str(
+                [
+                    [
+                        ("coffee", "coffee"),
+                        ("coffee", "coffee"),
+                        ("coffee", "coffee"),
+                        ("coffee", "coffee")
+                    ]
+                ]
+            )
+        }
+        self.post_request = self.factory.post(
+            self.url_root,
+            data=tool_launch_configuration,
+            format="json"
+        )
+        force_authenticate(self.post_request, self.user)
+        self.post_response = self.view(self.post_request)
+
+        self.assertIsInstance(self.post_response, HttpResponseBadRequest)
+        self.assertEqual(
+            self.post_response.content,
+            '`output_files` are required for Workflow Tools'
+        )
+        self.assertEqual(Tool.objects.count(), 0)
+
+    def test_invalid_TLC_against_schema(self):
+        self.td.delete()
+        galaxy_instance = Instance.objects.create()
+        workflow_engine = WorkflowEngine.objects.create(
+            instance=galaxy_instance
+        )
+        with open("{}/workflows/LIST.json".format(TEST_DATA_PATH)) as f:
+            workflow_annotation = json.loads(f.read())
+            workflow_annotation[
+                "workflow_engine_uuid"
+            ] = workflow_engine.uuid
+            create_tool_definition(workflow_annotation)
+
+            td = ToolDefinition.objects.get(name=workflow_annotation["name"])
+
+        tool_launch_configuration = {
+            "tool_definition_uuid": td.uuid,
+            "file_relationships": {
+                "invalid":
+                    [
+                        [
+                            ("coffee", "coffee"),
+                            ("coffee", "coffee"),
+                            ("coffee", "coffee"),
+                            ("coffee", "coffee")
+                        ]
+                    ]
+            }
+        }
+        self.post_request = self.factory.post(
+            self.url_root,
+            data=tool_launch_configuration,
+            format="json"
+        )
+        force_authenticate(self.post_request, self.user)
+        self.post_response = self.view(self.post_request)
+
+        self.assertIsInstance(self.post_response, HttpResponseBadRequest)
+        self.assertIn(
+            'Tool launch configuration is not properly configured',
+            self.post_response.content
+        )
+        self.assertEqual(Tool.objects.count(), 0)
 
 
 class ToolTests(StaticLiveServerTestCase):
@@ -1038,7 +1125,7 @@ class ToolTests(StaticLiveServerTestCase):
         force_authenticate(post_request, self.user)
         self.post_response = self.view(post_request)
 
-        self.assertIsInstance(self.post_response, HttpResponseServerError)
+        self.assertIsInstance(self.post_response, HttpResponseBadRequest)
         self.assertEqual(Tool.objects.count(), 0)
         self.assertIn("ToolDefinition matching query does not exist.",
                       self.post_response.content)
