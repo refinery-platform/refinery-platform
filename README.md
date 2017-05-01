@@ -2,7 +2,7 @@
 
 * Additional information about how to administer and develop Refinery can be found in the [wiki](http://github.com/refinery-platform/refinery-platform/wiki)
 * [Production deployments](https://github.com/refinery-platform/refinery-platform/wiki/AWS-deployment) require access to Amazon Web Services
-* Supported web browsers: Chrome 54 (Linux and OS X), Firefox 49 (Linux and OS X), Safari 9.0.0 (OS X)
+* Refinery supports the latest version of Chrome (Linux and OS X), Firefox (Linux and OS X), and Safari (OS X)
 
 ## Installing and Launching for Development
 
