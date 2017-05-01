@@ -79,6 +79,7 @@
       fileService.removeGroupFromCollections();
       vm.selectionObj = nodeService.selectionObj;
     }
+
    /*
    * ---------------------------------------------------------
    * Watchers

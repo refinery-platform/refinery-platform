@@ -128,6 +128,9 @@
      * ex: file_relationship: [{file_relationship: []}]
      */
     function refreshFileMap () {
+      if (_.isEmpty(toolsService.selectedTool.file_relationship)) {
+        return;
+      }
       var scaledCopy = toolsService.selectedTool.file_relationship;
       // initialize groups and types
       while (scaledCopy.file_relationship.length > 0) {
