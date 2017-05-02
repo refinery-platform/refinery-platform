@@ -1,6 +1,5 @@
 import logging
 import re
-import subprocess
 
 from django.conf import settings
 from django.db import models
@@ -321,9 +320,7 @@ def get_django_docker_engine_manager():
     Helper method to return the proper managerial class for
     django_docker_engine
     """
-
-    # `hostname -d` reliably yields "ec2.internal" if running on AWS
-    if "ec2" in subprocess.call(["hostname", "-d"]):
+    if settings.ON_AWS:
         raise NotImplementedError
     else:
         return LocalManager()
