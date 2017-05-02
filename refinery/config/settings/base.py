@@ -622,4 +622,4 @@ os.environ["DJANGO_LIVE_TEST_SERVER_ADDRESS"] = "localhost:10000-12000"
 
 DJANGO_DOCKER_ENGINE_BASE_URL = "visualizations"
 
-ON_AWS = False
+DEPLOYMENT_PLATFORM = "vagrant"

@@ -315,7 +315,7 @@ def get_django_docker_engine_manager():
     """
     # Travis CI runs on EC2, but we want our tests running against a local
     # docker engine there
-    if settings.ON_AWS:
+    if settings.DEPLOYMENT_PLATFORM == "aws":
         raise NotImplementedError
     else:
         return LocalManager()

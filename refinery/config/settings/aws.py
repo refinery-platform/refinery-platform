@@ -20,4 +20,4 @@ AWS_STORAGE_BUCKET_NAME = get_setting('AWS_STORAGE_BUCKET_NAME')
 AWS_S3_CUSTOM_DOMAIN = '{}.s3.amazonaws.com'.format(AWS_STORAGE_BUCKET_NAME)
 STATIC_URL = 'https://{}/'.format(AWS_S3_CUSTOM_DOMAIN)
 STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-ON_AWS = True
+DEPLOYMENT_PLATFORM = "aws"
