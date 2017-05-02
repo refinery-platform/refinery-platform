@@ -4,14 +4,6 @@ class refinery::aws {
 
 # See https://puppet.com/blog/automating-puppet-cron-jobs-and-scheduled-tasks
 # for cron.
-cron { 'cron-backup':
-  ensure => present,
-  command => 'sh /srv/refinery-platform/deployment/bin/backup-data-volume',
-  hour => ['0'],
-  minute => ['13'],     # arbitrary, but we need to pick one.
-  target => 'root',
-  user => 'root',
-}
 
 cron { 'cron-backup-rds':
   ensure => present,
