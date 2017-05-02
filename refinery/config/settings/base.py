@@ -1,8 +1,6 @@
 import json
 import logging
 import os
-import requests
-from requests.exceptions import RequestException
 import yaml
 
 import djcelery
@@ -61,22 +59,6 @@ def get_setting(name, settings=local_settings):
         return settings[name]
     except KeyError:
         raise ImproperlyConfigured("Missing setting '{0}'".format(name))
-
-
-def check_if_aws():
-    """
-    Check if we are currently on an EC2 instance. For more info See:
-    docs.aws.amazon.com/AWSEC2/latest/UserGuide/identify_ec2_instances.html
-    """
-    try:
-        requests.get(
-            "http://169.254.169.254/latest/dynamic/instance-identity",
-            timeout=5
-        )
-    except RequestException:
-        return False
-    else:
-        return True
 
 # TODO: remove after switching to the new Celery API
 djcelery.setup_loader()
@@ -640,4 +622,4 @@ os.environ["DJANGO_LIVE_TEST_SERVER_ADDRESS"] = "localhost:10000-12000"
 
 DJANGO_DOCKER_ENGINE_BASE_URL = "visualizations"
 
-ON_AWS = check_if_aws()
+ON_AWS = False

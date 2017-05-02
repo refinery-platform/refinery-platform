@@ -1,5 +1,4 @@
 import logging
-import os
 import re
 
 from django.conf import settings
@@ -316,7 +315,7 @@ def get_django_docker_engine_manager():
     """
     # Travis CI runs on EC2, but we want our tests running against a local
     # docker engine there
-    if os.getenv("CONTINUOUS_INTEGRATION") or not settings.ON_AWS:
-        return LocalManager()
-    else:
+    if settings.ON_AWS:
         raise NotImplementedError
+    else:
+        return LocalManager()
