@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import requests
+from requests.exceptions import RequestException
 import yaml
 
 import djcelery
@@ -72,7 +73,7 @@ def check_if_aws():
             "http://169.254.169.254/latest/dynamic/instance-identity",
             timeout=5
         )
-    except Exception:
+    except RequestException:
         return False
     else:
         return True
