@@ -13,8 +13,7 @@ from django_docker_engine.docker_utils import DockerContainerSpec
 from docker.errors import APIError
 
 from core.models import Analysis, OwnableResource, WorkflowEngine
-from core.utils import get_full_url
-from data_set_manager.models import Node
+from data_set_manager.utils import get_file_url_from_node_uuid
 from file_store.models import FileType
 
 logger = logging.getLogger(__name__)
@@ -292,19 +291,12 @@ class Tool(OwnableResource):
         )
 
         for uuid in node_uuids:
-            node = Node.objects.get(uuid=uuid)
-            url = node.get_relative_file_store_item_url()
-            if url is None:
-                raise RuntimeError(
-                    "Node with uuid: {} has no associated file url".format(
-                        node.uuid
-                    )
-                )
-            else:
-                self.file_relationships = self.file_relationships.replace(
-                    uuid,
-                    get_full_url(url)
-                )
+            file_url = get_file_url_from_node_uuid(uuid)
+            self.file_relationships = self.file_relationships.replace(
+                uuid,
+                file_url
+            )
+
         self.save()
 
 
