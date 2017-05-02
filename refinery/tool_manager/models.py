@@ -286,33 +286,26 @@ class Tool(OwnableResource):
         their respective FileStoreItem's urls. No error handling here since
         this method is only called in an atomic transaction.
         """
-        populated_file_relationships = re.sub(
+        node_uuids = re.findall(
             r'[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}',
-            self.populate_url_from_node_uuid,
             self.file_relationships
         )
-        self.file_relationships = populated_file_relationships
-        self.save()
 
-    @staticmethod
-    def populate_url_from_node_uuid(matched_object):
-        """
-        :param matched_object: re.sub() MatchedObject instance
-        :return: Full url pointing to a Node's respective FileStoreItem's
-        datafile's location
-        """
-
-        node = Node.objects.get(uuid=matched_object.group(0))
-
-        url = node.get_relative_file_store_item_url()
-        if url is None:
-            raise RuntimeError(
-                "Node with uuid: {} has no associated file url".format(
-                    node.uuid
+        for uuid in node_uuids:
+            node = Node.objects.get(uuid=uuid)
+            url = node.get_relative_file_store_item_url()
+            if url is None:
+                raise RuntimeError(
+                    "Node with uuid: {} has no associated file url".format(
+                        node.uuid
+                    )
                 )
-            )
-        else:
-            return get_full_url(url)
+            else:
+                self.file_relationships = self.file_relationships.replace(
+                    uuid,
+                    get_full_url(url)
+                )
+        self.save()
 
 
 def get_django_docker_engine_manager():
