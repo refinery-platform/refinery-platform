@@ -21,6 +21,7 @@
     var fileService = fileRelationshipService;
     var nodeService = selectedNodesService;
     var vm = this;
+    vm.activeNode = nodeService.activeNodeRow; // ui-grid row which is engaged
     vm.attributes = fileService.attributesObj; // contains the data attributes
     vm.currentGroup = fileService.currentGroup; // group indices ex: [0, 0]
     /** current group's data structure for each level ex:[ 'Pair','List'] **/
@@ -61,6 +62,19 @@
       },
       function () {
         vm.inputFileTypes = fileService.inputFileTypes;
+        vm.currentGroup = fileService.currentGroup;
+        vm.currentTypes = fileService.currentTypes;
+        vm.groupCollection = fileService.groupCollection;
+        vm.nodeSelection = fileService.nodeSelectCollection;
+      }
+    );
+    // When user selects/deselects row
+    $scope.$watch(
+      function () {
+        return nodeService.activeNodeRow;
+      },
+      function () {
+        vm.activeRow = nodeService.activeNodeRow;
       }
     );
     // When user changes the group selection from the control panel

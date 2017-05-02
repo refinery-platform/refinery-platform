@@ -23,7 +23,6 @@
     vm.inputFileTypes = fileService.inputFileTypes;
     vm.navRight = navRight;
     vm.navLeft = navLeft;
-    vm.tool = {};
    /*
    * ---------------------------------------------------------
    * Methods Definitions
@@ -48,9 +47,9 @@
           return vm.displayCtrl.selectedTool;
         },
         function () {
-          angular.copy(vm.displayCtrl.selectedTool, vm.tool);
           vm.currentGroup = fileService.currentGroup;
           vm.currentTypes = fileService.currentTypes;
+
           vm.inputFileTypes = fileService.inputFileTypes;
         }
       );

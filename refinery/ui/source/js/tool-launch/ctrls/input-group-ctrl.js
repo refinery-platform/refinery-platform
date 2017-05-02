@@ -25,17 +25,15 @@
     var nodeService = selectedNodesService;
     var vm = this;
     vm.attributes = fileService.attributesObj;
-    vm.currentFileInput = [];
     vm.currentGroup = fileService.currentGroup;
+    vm.currentTypes = fileService.currentTypes;
     vm.groupCollection = fileService.groupCollection;
-    vm.inputFilesTypes = fileService.inputFileTypes;
+    vm.inputFileTypes = fileService.inputFileTypes;
     vm.isGroupPopulated = isGroupPopulated;
     vm.isNavCollapsed = false;
     vm.isObjEmpty = isObjEmpty;
     vm.removeAllGroups = removeAllGroups;
     vm.removeGroup = removeGroup; // Refreshes all selection
-    vm.tool = {}; // selected tool displayed in panel
-    vm.toolType = ''; // workflow vs visualization
 
 
    /*
@@ -66,7 +64,8 @@
      * emptying cart or a new tool selection
      */
     function removeAllGroups () {
-      fileService.resetCurrentCollections();
+      fileService.hideNodePopover = true;
+      fileService.resetInputGroup();
       nodeService.setSelectedAllFlags(false);
       resetGridService.setRefreshGridFlag(true);
     }
@@ -75,8 +74,12 @@
      ** Method clears the current input group
     * */
     function removeGroup () {
+      fileService.hideNodePopover = true;
+      nodeService.deselectGroupFromSelectionObj(vm.currentGroup);
       fileService.removeGroupFromCollections();
+      vm.selectionObj = nodeService.selectionObj;
     }
+
    /*
    * ---------------------------------------------------------
    * Watchers
@@ -88,13 +91,10 @@
           return vm.displayCtrl.selectedTool;
         },
         function () {
-          angular.copy(vm.displayCtrl.selectedTool, vm.tool);
-          vm.inputFilesTypes = fileService.inputFileTypes;
+          vm.inputFileTypes = fileService.inputFileTypes;
           vm.currentGroup = fileService.currentGroup;
-
-          if (vm.tool.toolType === 'Workflow') {
-            vm.toolType = vm.tool.toolType;
-          }
+          vm.currentTypes = fileService.currentTypes;
+          vm.groupCollection = fileService.groupCollection;
         }
       );
 
@@ -104,7 +104,6 @@
         },
         function () {
           vm.groupCollection = fileService.groupCollection;
-          vm.inputFilesTypes = fileService.inputFileTypes;
           vm.currentGroup = fileService.currentGroup;
         }
       );

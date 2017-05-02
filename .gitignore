@@ -51,11 +51,8 @@ codekit-config.json
 /deployment/.librarian/
 /deployment/.tmp/
 /deployment/Puppetfile.lock
-/deployment/aws-config/auto-config.yaml
 /deployment/aws-config/config.yaml
-/deployment/aws-config/stack-name
 /deployment/aws-config/tags.yaml
-/deployment/web.json
 /refinery/celerybeat-schedule*
 /refinery/config/config.json
 /refinery/static/production/

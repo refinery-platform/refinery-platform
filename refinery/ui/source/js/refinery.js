@@ -58,9 +58,7 @@ angular
     'refineryChart',
     'refineryFileBrowser',
     'refineryDataSetAbout',
-    'refineryToolLaunch',
-    'refineryVisualization',
-    'refineryIGV'
+    'refineryToolLaunch'
   ])
   .run(['$', '$rootScope', function ($, $rootScope) {
     //  trigger from the contents.js when the node selection list has been

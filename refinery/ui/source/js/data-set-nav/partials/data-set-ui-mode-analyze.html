@@ -30,19 +30,6 @@
       </span>
     </div>
 
-    <div ng-if="dataSet2Flag && currentWorkflow.isSingleInput()">
-      <rp-file-browser-node-group></rp-file-browser-node-group>
-      <div class="p-a-1">
-        <button
-          class="btn btn-warning"
-          rp-analysis-launch-modal
-          ng-click="open()"
-          ng-disabled="isLaunchNodesSelectionEmpty()">
-          Launch Analysis
-        </button>
-      </div>
-    </div>
-
     <div ng-if="!dataSet2Flag">
       <div ng-controller="NodeSetListApiCtrl" ng-if="currentWorkflow.isSingleInput()">
       <ui-select

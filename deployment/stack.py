@@ -1,31 +1,15 @@
 #!/usr/bin/env python
 
-"""
-Script to generate CloudFormation JSON files via cfn-pyplates
-
-Usage:
-python stack.py > web.json
-
-Usually invoked via the Makefile: make web-stack
-"""
-
-# This Python script is a more explicit version of a cfn-pyplates template file
-# It generates one or more CloudFormation JSON files
-#
 # See
 # https://github.com/refinery-platform/refinery-platform/wiki/AWS-installation
 # for notes on how to use this to deploy to Amazon AWS
 #
-# Instances are configured using CloudInit
-#
-# REFERENCES
-# cfn-pyplates:
-#   https://cfn-pyplates.readthedocs.org/en/latest/index.html
-# AWS Cloudformation
-#   https://aws.amazon.com/cloudformation/
-# CloudInit
-#   https://help.ubuntu.com/community/CloudInit
+# References
+# cfn-pyplates: https://cfn-pyplates.readthedocs.org/
+# AWS Cloudformation: https://aws.amazon.com/cloudformation/
+# CloudInit: https://help.ubuntu.com/community/CloudInit
 
+import argparse
 import base64
 import datetime
 import json
@@ -34,32 +18,46 @@ import random
 import sys
 
 import boto3
-# Simulate the environment that "cfn_generate" runs scripts in.
-# http://cfn-pyplates.readthedocs.org/en/latest/advanced.html#generating-templates-in-python
 from cfn_pyplates import core, functions
 import yaml
 
-
-class ConfigError(Exception):
-    pass
+VERSION = '1.0'
 
 
-def main(argv=None):
-    if argv is None:
-        argv = sys.argv
+def main():
+    parser = argparse.ArgumentParser(
+        version=VERSION,
+        description="""Script to generate AWS CloudFormation JSON templates
+        used to create Refinery Platform stacks"""
+    )
+    parser.add_argument(
+        'command', choices=('name', 'dump', 'create')
+    )
+    args = parser.parse_args()
 
     config, config_yaml = load_config()
 
-    derive_config(config)
+    if args.command == 'name':
+        sys.stdout.write("{}\n".format(config['STACK_NAME']))
+    elif args.command == 'dump':
+        template = make_template(config, config_yaml)
+        sys.stdout.write("{}\n".format(template))
+    elif args.command == 'create':
+        template = make_template(config, config_yaml)
+        cloudformation = boto3.client('cloudformation')
+        response = cloudformation.create_stack(
+            StackName=config['STACK_NAME'],
+            TemplateBody=str(template),
+            Capabilities=['CAPABILITY_IAM'],
+            Tags=load_tags(),
+        )
+        sys.stdout.write("{}\n".format(json.dumps(response, indent=2)))
+
+
+def make_template(config, config_yaml):
+    """Make a fresh CloudFormation template object and return it"""
 
     stack_name = config['STACK_NAME']
-
-    # :todo: expand this into a proper command parser.
-    # For now, just the "name" command,
-    # which we plan to remove, when the Makefile goes.
-    if len(argv) > 1 and argv[1] == "name":
-        sys.stdout.write("{}\n".format(stack_name))
-        return 0
 
     # We discover the current git branch/commit so that the deployment script
     # can use it to clone the same commit
@@ -77,7 +75,7 @@ def main(argv=None):
     config['tags'] = instance_tags
 
     config_uri = save_s3_config(config, stack_name)
-    sys.stderr.write("Configuration saved to {}\n".format(config_uri))
+    sys.stdout.write("Configuration saved to {}\n".format(config_uri))
 
     tls_rewrite = "false"
     if 'TLS_CERTIFICATE' in config:
@@ -115,7 +113,7 @@ def main(argv=None):
         open('bootstrap.sh').read(),
         open('aws.sh').read())
 
-    cft = core.CloudFormationTemplate(description="refinery platform.")
+    cft = core.CloudFormationTemplate(description="Refinery Platform main")
 
     rds_properties = {
         "AllocatedStorage": "5",
@@ -175,11 +173,10 @@ def main(argv=None):
             'UserData': functions.base64(user_data_script),
             'KeyName': config['KEY_NAME'],
             'IamInstanceProfile': functions.ref('WebInstanceProfile'),
-            'SecurityGroups': [
-                functions.ref("InstanceSecurityGroup")],
+            'SecurityGroups': [functions.ref("InstanceSecurityGroup")],
             'Tags': instance_tags,
         }),
-        core.DependsOn(['RDSInstance', 'StorageBucket']),
+        core.DependsOn(['RDSInstance']),
     )
 
     cft.resources.instance_profile = core.Resource(
@@ -339,8 +336,7 @@ def main(argv=None):
     cft.resources.elbegress = core.Resource(
         'ELBEgress', 'AWS::EC2::SecurityGroupEgress',
         core.Properties({
-            "GroupId": functions.get_att('ELBSecurityGroup',
-                                         'GroupId'),
+            "GroupId": functions.get_att('ELBSecurityGroup', 'GroupId'),
             "IpProtocol": "tcp",
             "FromPort": "80",
             "ToPort": "80",
@@ -448,25 +444,7 @@ def main(argv=None):
             }
         })
 
-    cft.resources.add(core.Resource(
-        'StorageBucket', 'AWS::S3::Bucket',
-        core.Properties({
-            'BucketName': config['AWS_STORAGE_BUCKET_NAME'],
-            'AccessControl': 'PublicRead',
-            'CorsConfiguration': {
-                'CorsRules': [
-                    {
-                        'AllowedOrigins': ['*'],
-                        'AllowedMethods': ['GET'],
-                        'AllowedHeaders': ['Authorization'],
-                        'MaxAge': 3000,
-                    }
-                ]
-            }
-        }),
-        core.DeletionPolicy('Retain')
-    ))
-    sys.stdout.write(str(cft))
+    return cft
 
 
 def load_tags():
@@ -477,7 +455,7 @@ def load_tags():
             tags.update(yaml.load(f))
     except (IOError, yaml.YAMLError) as exc:
         sys.stderr.write("Error reading AWS resource tags: {}\n".format(exc))
-        raise ConfigError()
+        raise RuntimeError
 
     if 'owner' not in tags:
         tags['owner'] = os.popen("git config --get user.email").read().rstrip()
@@ -535,6 +513,10 @@ def load_config():
     # want or need to use the same name again.
     if 'RDS_NAME' not in config:
         config['RDS_NAME'] = "rds-refinery-" + random_alnum(7)
+
+    if 'AVAILABILITY_ZONE' not in config:
+        az = choose_availability_zone()
+        config['AVAILABILITY_ZONE'] = az
 
     with open("aws-config/config.yaml", 'r') as f:
         config_string = f.read()
@@ -596,11 +578,8 @@ def save_s3_config(config, suffix):
 def report_missing_keys(config):
     """Collect and report list of missing keys"""
 
-    required = [
-        'STACK_NAME',
-        'KEY_NAME', 'RDS_SUPERUSER_PASSWORD', 'SITE_NAME', 'SITE_URL',
-        'ADMIN_PASSWORD', 'AWS_STORAGE_BUCKET_NAME'
-    ]
+    required = ['ADMIN_PASSWORD', 'KEY_NAME', 'RDS_SUPERUSER_PASSWORD',
+                'SITE_NAME', 'SITE_URL', 'STACK_NAME']
     bad = []
     for key in required:
         if key not in config:
@@ -608,7 +587,7 @@ def report_missing_keys(config):
     if bad:
         sys.stderr.write("aws-config\ must have values for:\n{!r}\n".format(
             bad))
-        raise ConfigError()
+        raise RuntimeError
     return True
 
 
@@ -631,18 +610,6 @@ def random_password(n):
     return password
 
 
-def derive_config(config):
-    """Modify `config` so that extra, derived, configuration is added to it
-
-    The only case at the moment is that (unless already supplied)
-    an availability zone is selected (at random)
-    """
-
-    if 'AVAILABILITY_ZONE' not in config:
-        az = choose_availability_zone()
-        config['AVAILABILITY_ZONE'] = az
-
-
 def choose_availability_zone():
     """Choose, at random, an availability zone from amongst the zones available
     to this AWS account (the list of zones varies from account to account)
@@ -659,4 +626,4 @@ def choose_availability_zone():
 
 
 if __name__ == '__main__':
-    sys.exit(main())
+    main()

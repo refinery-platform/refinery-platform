@@ -8,7 +8,7 @@
 
   function toolsDefinitionsService ($resource, settings) {
     var toolsDefinitions = $resource(
-      settings.appRoot + settings.refineryApiV2 + '/tools/definitions',
+      settings.appRoot + settings.refineryApiV2 + '/tool_definitions',
       {},
       {
         query: {
