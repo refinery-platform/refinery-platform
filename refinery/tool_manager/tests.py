@@ -174,6 +174,26 @@ class ToolDefinitionGenerationTests(TestCase):
             instance=self.galaxy_instance
         )
 
+    def test_tool_definition_model_str(self):
+        with open("{}/visualizations/igv.json".format(TEST_DATA_PATH)) as f:
+            tool_annotation = [json.loads(f.read())]
+
+        with mock.patch(
+                self.mock_vis_annotations_reference,
+                return_value=tool_annotation
+        ) as mocked_method:
+            call_command("generate_tool_definitions", visualizations=True)
+
+            self.assertTrue(mocked_method.called)
+
+        td = ToolDefinition.objects.all()[0]
+        self.assertEqual(
+            td.__str__(),
+            "VISUALIZATION: Test LIST Visualization IGV {}".format(
+                td.uuid
+            )
+        )
+
     def test_workflow_improperly_annotated(self):
         with open(
                 "{}/workflows/annotation_invalid.json".format(TEST_DATA_PATH)
@@ -840,6 +860,41 @@ class ToolTests(StaticLiveServerTestCase):
 
         # Trigger the pre_delete signal so that datafiles are purged
         FileStoreItem.objects.all().delete()
+
+    def test_tool_model_str(self):
+        with open("{}/visualizations/igv.json".format(TEST_DATA_PATH)) as f:
+            tool_annotation = [json.loads(f.read())]
+
+        with mock.patch(
+                self.mock_vis_annotations_reference,
+                return_value=tool_annotation
+        ) as mocked_method:
+            call_command("generate_tool_definitions", visualizations=True)
+
+            self.assertTrue(mocked_method.called)
+
+        td = ToolDefinition.objects.all()[0]
+        post_data = {
+            "tool_definition_uuid": td.uuid,
+            "file_relationships": "['www.coffee.com/cool_file.txt']"
+        }
+        post_request = self.factory.post(
+            self.url_root,
+            data=post_data,
+            format="json"
+        )
+        force_authenticate(post_request, self.user)
+        self.post_response = self.view(post_request)
+
+        tool = Tool.objects.get(
+            tool_definition__uuid=td.uuid
+        )
+        self.assertEqual(
+            tool.__str__(),
+            "Tool: VISUALIZATION Test LIST Visualization IGV {}".format(
+                tool.uuid
+            )
+        )
 
     def test_node_uuids_get_populated_with_urls(self):
         with open("{}/visualizations/igv.json".format(TEST_DATA_PATH)) as f:
