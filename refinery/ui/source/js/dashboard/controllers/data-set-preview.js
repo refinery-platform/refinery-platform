@@ -355,7 +355,7 @@ DataSetPreviewCtrl.prototype.openPermissionEditor = function () {
   var that = this;
   this.$uibModal.open({
     templateUrl: function () {
-      return this.$window.getStaticUrl('partials/dashboard/partials/permission-dialog.html');
+      return that.$window.getStaticUrl('partials/dashboard/partials/permission-dialog.html');
     },
     controller: 'PermissionEditorCtrl as modal',
     resolve: {
