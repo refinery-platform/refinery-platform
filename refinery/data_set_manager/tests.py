@@ -610,6 +610,31 @@ class UtilitiesTest(TestCase):
         self.valid_uuid = self.assay.uuid
         self.invalid_uuid = 'xxxxxxxx'
 
+        test_file_a = StringIO()
+        test_file_a.write('Coffee is great.\n')
+        file_store_item_a = FileStoreItem.objects.create(
+            datafile=InMemoryUploadedFile(
+                test_file_a,
+                field_name='tempfile',
+                name='test_file_a.txt',
+                content_type='text/plain',
+                size=len(test_file_a.getvalue()),
+                charset='utf-8'
+            )
+        )
+        self.node_a = Node.objects.create(
+            name="n0",
+            assay=self.assay,
+            study=self.study,
+            file_uuid=file_store_item_a.uuid
+        )
+
+        self.node_b = Node.objects.create(
+            name="n1",
+            assay=self.assay,
+            study=self.study
+        )
+
     def tearDown(self):
         # Trigger the pre_delete signal so that datafiles are purged
         FileStoreItem.objects.all().delete()
@@ -1289,37 +1314,13 @@ class UtilitiesTest(TestCase):
         attribute_list = AttributeOrder.objects.filter(assay=self.assay)
         self.assertItemsEqual(old_attribute_list, attribute_list)
 
-    def test_get_file_url_from_node_uuid(self):
-        test_file_a = StringIO()
-        test_file_a.write('Coffee is great.\n')
-        file_store_item_a = FileStoreItem.objects.create(
-            datafile=InMemoryUploadedFile(
-                test_file_a,
-                field_name='tempfile',
-                name='test_file_a.txt',
-                content_type='text/plain',
-                size=len(test_file_a.getvalue()),
-                charset='utf-8'
-            )
-        )
-        node_a = Node.objects.create(
-            name="n0",
-            assay=self.assay,
-            study=self.study,
-            file_uuid=file_store_item_a.uuid
-        )
-
-        node_b = Node.objects.create(
-            name="n0",
-            assay=self.assay,
-            study=self.study
-        )
-
+    def test_get_file_url_from_node_uuid_good_uuid(self):
         self.assertIn(
             "test_file_a.txt",
-            get_file_url_from_node_uuid(node_a.uuid),
+            get_file_url_from_node_uuid(self.node_a.uuid),
         )
 
+    def test_get_file_url_from_node_uuid_bad_uuid(self):
         with self.assertRaises(RuntimeError) as context:
             get_file_url_from_node_uuid("coffee")
             self.assertEqual(
@@ -1327,11 +1328,12 @@ class UtilitiesTest(TestCase):
                 context.exception.message
             )
 
+    def test_get_file_url_from_node_uuid_node_with_no_file(self):
         with self.assertRaises(RuntimeError) as context:
-            get_file_url_from_node_uuid(node_b.uuid)
+            get_file_url_from_node_uuid(self.node_b.uuid)
             self.assertEqual(
                 "Node with uuid: {} has no associated file url".format(
-                    node_b.uuid
+                    self.node_b.uuid
                 ),
                 context.exception.message
             )
