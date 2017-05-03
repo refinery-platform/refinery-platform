@@ -136,7 +136,7 @@ def make_template(config, config_yaml):
     rds_properties = {
         "AllocatedStorage": "5",
         "AutoMinorVersionUpgrade": False,
-        "BackupRetentionPeriod": "0",
+        "BackupRetentionPeriod": "15",
         "CopyTagsToSnapshot": True,
         "DBInstanceClass": "db.t2.small",       # todo:?
         "DBInstanceIdentifier": config['RDS_NAME'],
