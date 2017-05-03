@@ -150,7 +150,8 @@ def make_template(config, config_yaml):
         'Size': config['DATA_VOLUME_SIZE'],
         'Tags': load_tags(),
         'AvailabilityZone': functions.get_att(
-            'WebInstance', 'AvailabilityZone'),
+            'WebInstance', 'AvailabilityZone'
+        ),
         'VolumeType': config['DATA_VOLUME_TYPE'],
     }
 
@@ -438,7 +439,8 @@ def make_template(config, config_yaml):
                 functions.get_att('ELBSecurityGroup', 'GroupId')],
             "Tags": instance_tags,  # todo: Should be different?
             'AvailabilityZones': [
-                functions.get_att('WebInstance', 'AvailabilityZone')],
+                functions.get_att('WebInstance', 'AvailabilityZone')
+            ],
             'ConnectionSettings': {
                 'IdleTimeout': 1800  # seconds
             }
