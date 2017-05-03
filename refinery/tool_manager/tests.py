@@ -1141,24 +1141,7 @@ class ToolTests(StaticLiveServerTestCase):
                 tool_launch.get_tool_type(),
                 ToolDefinition.VISUALIZATION
             )
-            higlass_url = urljoin(
-                self.live_server_url,
-                tool_launch.get_relative_container_url()
-            )
             # TODO: Add selenium-based test once higlass relative paths fixed
-            time.sleep(10)
-            response = requests.get(higlass_url + "/api/v1/tilesets/")
-            while response.status_code != 200:
-                time.sleep(5)
-                response = requests.get(higlass_url + "/api/v1/tilesets/")
-
-            # Check to see if HiGlass shows what we want
-            data = json.loads(response.content)
-            self.assertEqual(
-                data["results"][0]["name"],
-                "dixon2012-h1hesc-hindiii-allreps-filtered."
-                "1000kb.multires.cool"
-            )
 
     def test_bad_POST_transaction_rollback(self):
         post_data = {
