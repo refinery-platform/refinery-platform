@@ -2,11 +2,11 @@
   'use strict';
   angular
     .module('refineryToolLaunch')
-    .factory('toolListService', toolListService);
+    .factory('toolLaunchService', toolLaunchService);
 
-  toolListService.$inject = ['toolDefinitionsService'];
+  toolLaunchService.$inject = ['toolDefinitionsService'];
 
-  function toolListService (toolDefinitionsService) {
+  function toolLaunchService (toolDefinitionsService) {
     var selectedTool = {};
     var toolList = [];
 

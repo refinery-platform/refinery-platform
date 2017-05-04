@@ -11,13 +11,13 @@
     beforeEach(inject(function (
       $rootScope,
       $controller,
-      toolListService
+      toolLaunchService
     ) {
       scope = $rootScope.$new();
       ctrl = $controller('ToolSelectCtrl', {
         $scope: scope
       });
-      service = toolListService;
+      service = toolLaunchService;
     }));
 
     it('Tool Select ctrl should exist', function () {
