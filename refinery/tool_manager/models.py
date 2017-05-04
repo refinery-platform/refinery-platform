@@ -1,3 +1,4 @@
+import ast
 import logging
 import re
 
@@ -247,7 +248,11 @@ class Tool(OwnableResource):
                 container_input_path=(
                     self.tool_definition.container_input_path
                 ),
-                input={"file_relationships": eval(self.file_relationships)},
+                input={
+                    "file_relationships": ast.literal_eval(
+                        self.file_relationships
+                    )
+                },
                 manager=get_django_docker_engine_manager()
             )
             try:

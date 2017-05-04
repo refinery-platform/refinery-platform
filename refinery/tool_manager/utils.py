@@ -1,3 +1,4 @@
+import ast
 import glob
 import json
 import logging
@@ -362,8 +363,8 @@ def validate_tool_launch_configuration(tool_launch_config):
     # Assert that the data structure being sent over is able to be evaluated
     #  as a Pythonic Data structure
     try:
-        nesting = eval(tool_launch_config["file_relationships"])
-    except SyntaxError as e:
+        nesting = ast.literal_eval(tool_launch_config["file_relationships"])
+    except (SyntaxError, ValueError) as e:
         raise RuntimeError(
             "ToolLaunchConfiguration's `file_relationships` could not be "
             "evaluated as a Pythonic Data Structure: {}".format(e)
