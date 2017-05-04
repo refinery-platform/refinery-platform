@@ -476,6 +476,23 @@ def normalize_annotation_ont_ids(annotations):
     return new_annotations
 
 
+def normalize_annotation_uris(annotations):
+    """Normalize ontology uris across annotations. Some ontologies defined
+    ambiguous URIs which is...  Anyway, harmonizing them increases the mapping
+    quality.
+    """
+
+    for annotation in annotations:
+        if (annotation['value_accession'].startswith(
+            'http://purl.bioontology.org/ontology/NCBITAXON/'
+        )):
+            annotation['value_accession'] =\
+                'http://purl.obolibrary.org/obo/NCBITaxon_{}'.format(
+                    annotation['value_accession'][47:])
+
+    return annotations
+
+
 def get_data_set_annotations(dataset_uuid):
     """Extract ontology annotations from the database for all or a specific
     datasets.
