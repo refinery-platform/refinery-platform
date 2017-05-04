@@ -8,14 +8,14 @@
     '_',
     'fileBrowserFactory',
     'selectedNodesService',
-    'toolsService'
+    'toolListService'
   ];
 
   function fileRelationshipService (
     _,
     fileBrowserFactory,
     selectedNodesService,
-    toolsService
+    toolListService
   ) {
     var nodeService = selectedNodesService;
     var vm = this;
@@ -52,10 +52,10 @@
      * ex: file_relationship: [{file_relationship: []}]
      */
     function refreshFileMap () {
-      if (_.isEmpty(toolsService.selectedTool.file_relationship)) {
+      if (_.isEmpty(toolListService.selectedTool.file_relationship)) {
         return;
       }
-      var scaledCopy = toolsService.selectedTool.file_relationship;
+      var scaledCopy = toolListService.selectedTool.file_relationship;
       // initialize groups and types
       while (scaledCopy.file_relationship.length > 0) {
         vm.currentGroup.push(0);

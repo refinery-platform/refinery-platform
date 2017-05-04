@@ -1,7 +1,7 @@
 (function () {
   'use strict';
 
-  describe('Controller: Tool Select Ctrl Ctrl', function () {
+  describe('Controller: Tool Select Ctrl', function () {
     var ctrl;
     var scope;
     var service;
@@ -11,13 +11,13 @@
     beforeEach(inject(function (
       $rootScope,
       $controller,
-      toolsService
+      toolListService
     ) {
       scope = $rootScope.$new();
       ctrl = $controller('ToolSelectCtrl', {
         $scope: scope
       });
-      service = toolsService;
+      service = toolListService;
     }));
 
     it('Tool Select ctrl should exist', function () {

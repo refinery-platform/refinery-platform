@@ -8,8 +8,8 @@
 
     beforeEach(module('refineryApp'));
     beforeEach(module('refineryToolLaunch'));
-    beforeEach(inject(function (toolsService) {
-      service = toolsService;
+    beforeEach(inject(function (toolListService) {
+      service = toolListService;
     }));
 
     it('service and variables should exist', function () {

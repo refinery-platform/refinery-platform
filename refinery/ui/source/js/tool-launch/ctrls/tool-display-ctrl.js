@@ -8,12 +8,12 @@
   ToolDisplayCtrl.$inject = [
     '$scope',
     '_',
-    'toolsService'];
+    'toolListService'];
 
   function ToolDisplayCtrl (
     $scope,
     _,
-    toolsService
+    toolListService
   ) {
     var vm = this;
     vm.selectedTool = {};
@@ -26,10 +26,10 @@
     */
     $scope.$watchCollection(
       function () {
-        return toolsService.selectedTool;
+        return toolListService.selectedTool;
       },
       function () {
-        angular.copy(toolsService.selectedTool, vm.selectedTool);
+        angular.copy(toolListService.selectedTool, vm.selectedTool);
         vm.isToolSelected = !(_.isEmpty(vm.selectedTool));
       }
     );
