@@ -5,11 +5,11 @@
     .module('refineryToolLaunch')
     .controller('ToolSelectCtrl', ToolSelectCtrl);
 
-  ToolSelectCtrl.$inject = ['_', 'fileRelationshipService', 'toolLaunchService'];
+  ToolSelectCtrl.$inject = ['_', 'fileRelationshipService', 'toolSelectService'];
 
-  function ToolSelectCtrl (_, fileRelationshipService, toolLaunchService) {
+  function ToolSelectCtrl (_, fileRelationshipService, toolSelectService) {
     var fileService = fileRelationshipService;
-    var toolService = toolLaunchService;
+    var toolService = toolSelectService;
     var vm = this;
     vm.refreshToolList = refreshToolList;
     vm.selectedTool = { select: null };
@@ -43,6 +43,7 @@
       toolService.setSelectedTool(tool);
       fileService.resetToolRelated();
       fileService.refreshFileMap();
+      toolService.generateLaunchConfig();
     }
   }
 })();

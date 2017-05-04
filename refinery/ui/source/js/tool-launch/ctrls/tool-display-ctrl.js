@@ -8,14 +8,14 @@
   ToolDisplayCtrl.$inject = [
     '$scope',
     '_',
-    'toolLaunchService'];
+    'toolSelectService'];
 
   function ToolDisplayCtrl (
     $scope,
     _,
-    toolLaunchService
+    toolSelectService
   ) {
-    var toolService = toolLaunchService;
+    var toolService = toolSelectService;
     var vm = this;
     vm.selectedTool = {};
     vm.isToolSelected = false;
