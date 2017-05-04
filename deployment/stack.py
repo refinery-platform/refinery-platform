@@ -72,6 +72,11 @@ def make_template(config, config_yaml):
     instance_tags.append({'Key': 'Name',
                          'Value': stack_name})
 
+    # This tag is variable and can be specified by
+    # template Parameter.
+    instance_tags.append({'Key': functions.ref('SnapshotSchedulerTag'),
+                         'Value': 'default'})
+
     config['tags'] = instance_tags
 
     config_uri = save_s3_config(config, stack_name)
@@ -115,10 +120,22 @@ def make_template(config, config_yaml):
 
     cft = core.CloudFormationTemplate(description="Refinery Platform main")
 
+    # This parameter tags the EC2 instances, and is intended to be used
+    # with the AWS Reference Implementation EBS Snapshot Scheduler:
+    # http://docs.aws.amazon.com/solutions/latest/ebs-snapshot-scheduler/welcome.html
+    cft.parameters.add(
+        core.Parameter('SnapshotSchedulerTag', 'String', {
+                'Default': 'scheduler:ebs-snapshot',
+                'Description':
+                "Tag added to EC2 Instances so that "
+                "the EBS Snapshot Scheduler will recognise them.",
+            }
+        )
+    )
+
     rds_properties = {
         "AllocatedStorage": "5",
         "AutoMinorVersionUpgrade": False,
-        "AvailabilityZone": config['AVAILABILITY_ZONE'],
         "BackupRetentionPeriod": "0",
         "CopyTagsToSnapshot": True,
         "DBInstanceClass": "db.t2.small",       # todo:?
@@ -147,10 +164,12 @@ def make_template(config, config_yaml):
         )
 
     volume_properties = {
-        'AvailabilityZone': config['AVAILABILITY_ZONE'],
         'Encrypted': True,
         'Size': config['DATA_VOLUME_SIZE'],
         'Tags': load_tags(),
+        'AvailabilityZone': functions.get_att(
+            'WebInstance', 'AvailabilityZone'
+        ),
         'VolumeType': config['DATA_VOLUME_TYPE'],
     }
 
@@ -167,7 +186,6 @@ def make_template(config, config_yaml):
     cft.resources.ec2_instance = core.Resource(
         'WebInstance', 'AWS::EC2::Instance',
         core.Properties({
-            'AvailabilityZone': config['AVAILABILITY_ZONE'],
             'ImageId': 'ami-d05e75b8',
             'InstanceType': 'm3.medium',
             'UserData': functions.base64(user_data_script),
@@ -425,7 +443,6 @@ def make_template(config, config_yaml):
     cft.resources.elb = core.Resource(
         'LoadBalancer', 'AWS::ElasticLoadBalancing::LoadBalancer',
         {
-            'AvailabilityZones': [config['AVAILABILITY_ZONE']],
             'HealthCheck': {
                 'HealthyThreshold': '2',
                 'Interval': '30',
@@ -439,6 +456,9 @@ def make_template(config, config_yaml):
             'SecurityGroups': [
                 functions.get_att('ELBSecurityGroup', 'GroupId')],
             "Tags": instance_tags,  # todo: Should be different?
+            'AvailabilityZones': [
+                functions.get_att('WebInstance', 'AvailabilityZone')
+            ],
             'ConnectionSettings': {
                 'IdleTimeout': 1800  # seconds
             }
@@ -513,10 +533,6 @@ def load_config():
     # want or need to use the same name again.
     if 'RDS_NAME' not in config:
         config['RDS_NAME'] = "rds-refinery-" + random_alnum(7)
-
-    if 'AVAILABILITY_ZONE' not in config:
-        az = choose_availability_zone()
-        config['AVAILABILITY_ZONE'] = az
 
     with open("aws-config/config.yaml", 'r') as f:
         config_string = f.read()
@@ -608,21 +624,6 @@ def random_password(n):
 
     password = binascii.b2a_hex(os.urandom(n))
     return password
-
-
-def choose_availability_zone():
-    """Choose, at random, an availability zone from amongst the zones available
-    to this AWS account (the list of zones varies from account to account)
-    """
-
-    ec2 = boto3.client('ec2')
-
-    # http://boto3.readthedocs.org/en/latest/reference/services/ec2.html#EC2.Client.describe_availability_zones
-    res = ec2.describe_availability_zones()
-
-    zones = res['AvailabilityZones']
-    zoneids = [z['ZoneName'] for z in zones]
-    return random.choice(zoneids)
 
 
 if __name__ == '__main__':
