@@ -48,9 +48,6 @@ class SeleniumTestBase(StaticLiveServerTestCase):
         self.browser.quit()
         self.display.stop()
 
-    class Meta:
-        abstract = True
-
 
 class NoLoginTestCase(SeleniumTestBase):
     """

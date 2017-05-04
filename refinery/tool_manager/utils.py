@@ -2,6 +2,7 @@ import glob
 import json
 import logging
 import os
+import re
 
 from bioblend.galaxy.client import ConnectionError
 from django.conf import settings
@@ -15,7 +16,8 @@ from factory_boy.django_model_factories import (FileRelationshipFactory,
                                                 InputFileFactory,
                                                 OutputFileFactory,
                                                 ParameterFactory,
-                                                ToolDefinitionFactory)
+                                                ToolDefinitionFactory,
+                                                ToolFactory)
 
 from file_store.models import FileType
 from .models import ToolDefinition
@@ -91,7 +93,7 @@ def create_tool_definition(annotation_data):
             file_relationship=create_file_relationship_nesting(
                 annotation
             ),
-            docker_image_name=annotation["docker_image_name"],
+            image_name=annotation["image_name"],
             container_input_path=annotation["container_input_path"]
         )
 
@@ -105,6 +107,56 @@ def create_tool_definition(annotation_data):
     )
 
     return tool_definition
+
+
+@transaction.atomic
+def create_tool(tool_launch_configuration, user_instance):
+    """
+   :param tool_launch_configuration: dict of data that represents a Tool
+   :param user_instance: User object that made the request to create said Tool
+   :returns: The created Tool object
+   """
+    # NOTE: that the usual exceptions for the get() aren't handled because
+    # we're in the scope of an atomic transaction
+    tool_definition = ToolDefinition.objects.get(
+        uuid=tool_launch_configuration["tool_definition_uuid"]
+    )
+    tool = ToolFactory(
+        name="{}-launch".format(tool_definition.name),
+        tool_definition=tool_definition,
+        file_relationships=tool_launch_configuration["file_relationships"]
+    )
+    try:
+        tool.parameters = tool_launch_configuration["parameters"]
+    except KeyError:
+        # parameters are not required for Tools to launch properly
+        pass
+
+    if tool.get_tool_type() == ToolDefinition.VISUALIZATION:
+        try:
+            tool.output_files = tool_launch_configuration["output_files"]
+        except KeyError:
+            # output_files aren't required for Vis Tools
+            pass
+
+        # Create a unique container name that adheres to docker's specs
+        tool.container_name = "{}-{}".format(
+            tool.name.replace(" ", ""),
+            tool.uuid
+        )
+
+    if tool.get_tool_type() == ToolDefinition.WORKFLOW:
+        try:
+            tool.output_files = tool_launch_configuration["output_files"]
+        except KeyError:
+            raise RuntimeError(
+                "`output_files` are required for Workflow Tools"
+            )
+
+    tool.set_owner(user_instance)
+    tool.update_file_relationships_string()
+
+    return tool
 
 
 @transaction.atomic
@@ -300,24 +352,24 @@ def validate_tool_launch_configuration(tool_launch_config):
     with open("tool_manager/schemas/ToolLaunchConfig.json") as f:
         schema = json.loads(f.read())
     try:
-        validate(
-            json.loads(tool_launch_config),
-            schema,
-            resolver=resolver
-        )
-    except ValueError as e:
-        raise RuntimeError(
-            "Tool launch configuration: {} is not valid JSON: {}".format(
-                tool_launch_config,
-                e
-            )
-        )
+        validate(tool_launch_config, schema, resolver=resolver)
     except ValidationError as e:
         raise RuntimeError(
             "Tool launch configuration is not properly configured: {}".format(
                 e
             )
         )
+    # Assert that the data structure being sent over is able to be evaluated
+    #  as a Pythonic Data structure
+    try:
+        nesting = eval(tool_launch_config["file_relationships"])
+    except SyntaxError as e:
+        raise RuntimeError(
+            "ToolLaunchConfiguration's `file_relationships` could not be "
+            "evaluated as a Pythonic Data Structure: {}".format(e)
+        )
+    else:
+        parse_file_relationship_nesting(nesting)
 
 
 def get_workflows():
@@ -375,3 +427,30 @@ def get_visualization_annotations_list():
             visualization_annotations.append(json.loads(f.read()))
 
     return visualization_annotations
+
+
+def parse_file_relationship_nesting(file_relationship_nesting,
+                                    nested_representation=""):
+    """
+    Helper method to determine wheter or not the nested `file_relationships`
+    structure is in a form that we are expecting.
+    """
+    try:
+        if isinstance(file_relationship_nesting, list):
+            nested_representation += "LIST:"
+        if isinstance(file_relationship_nesting, tuple):
+            nested_representation += "PAIR:"
+        if isinstance(file_relationship_nesting, str):
+            raise RuntimeError
+        return parse_file_relationship_nesting(
+            file_relationship_nesting[0],
+            nested_representation=nested_representation
+        )
+    except RuntimeError:
+        # RuntimeError in this case denotes that we have reached the
+        # bottom-most nesting so we can safely `pass`
+        if re.match(r'^((LIST|PAIR):*)$', nested_representation[:-1]) is None:
+            raise RuntimeError(
+                "The `file_relationships` defined didn't yield a valid "
+                "LIST/PAIR nesting."
+            )

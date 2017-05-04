@@ -1,15 +1,19 @@
 import logging
+import re
 
+from django.conf import settings
 from django.db import models
 from django.db.models.signals import post_delete, pre_delete
 from django.dispatch import receiver
-from django.http import HttpResponseServerError, HttpResponse
+from django.http import HttpResponseServerError, JsonResponse
 
 from django_extensions.db.fields import UUIDField
 from django_docker_engine.docker_utils import DockerContainerSpec
 from docker.errors import APIError
 
 from core.models import Analysis, OwnableResource, WorkflowEngine
+from core.utils import get_full_url
+from data_set_manager.models import Node
 from file_store.models import FileType
 
 logger = logging.getLogger(__name__)
@@ -149,7 +153,7 @@ class ToolDefinition(models.Model):
     file_relationship = models.ForeignKey(FileRelationship)
     output_files = models.ManyToManyField(OutputFile)
     parameters = models.ManyToManyField(Parameter)
-    docker_image_name = models.CharField(max_length=255, blank=True)
+    image_name = models.CharField(max_length=255, blank=True)
     container_input_path = models.CharField(
         max_length=500,
         blank=True
@@ -237,20 +241,24 @@ class Tool(OwnableResource):
     def launch(self):
         if self.get_tool_type() == ToolDefinition.VISUALIZATION:
             container = DockerContainerSpec(
-                image_name=self.tool_definition.docker_image_name,
+                image_name=self.tool_definition.image_name,
                 container_name=self.container_name,
                 labels={self.uuid: ToolDefinition.VISUALIZATION},
                 container_input_path=(
                     self.tool_definition.container_input_path
                 ),
-                input={"file_relationships": self.file_relationships}
+                input={"file_relationships": eval(self.file_relationships)}
             )
             try:
                 container.run()
             except APIError as e:
                 return HttpResponseServerError(content=e)
             else:
-                return HttpResponse(self.get_relative_container_url())
+                return JsonResponse(
+                    {
+                        "tool_url": self.get_relative_container_url()
+                    }
+                )
 
         if self.get_tool_type() == ToolDefinition.WORKFLOW:
             raise NotImplementedError
@@ -259,7 +267,10 @@ class Tool(OwnableResource):
         """
         Construct & return the relative url of our Tool's container
         """
-        return "/visualizations/{}".format(self.container_name)
+        return "/{}/{}".format(
+            settings.DJANGO_DOCKER_ENGINE_URL_ROOT,
+            self.container_name
+        )
 
     def get_tool_name(self):
         return self.tool_definition.name
@@ -267,8 +278,40 @@ class Tool(OwnableResource):
     def get_tool_type(self):
         return self.tool_definition.tool_type
 
-    def parse_file_relationships_string(self):
-        raise NotImplementedError
+    def update_file_relationships_string(self):
+        """
+        Replace a Tool's Node uuids in its `file_relationships` string with
+        their respective FileStoreItem's urls. No error handling here since
+        this method is only called in an atomic transaction.
+        """
+        populated_file_relationships = re.sub(
+            r'[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}',
+            self.populate_url_from_node_uuid,
+            self.file_relationships
+        )
+        self.file_relationships = populated_file_relationships
+        self.save()
 
-    def populate_url_from_node_uuid(self):
-        raise NotImplementedError
+    @staticmethod
+    def populate_url_from_node_uuid(matched_object):
+        """
+        :param matched_object: re.sub() MatchedObject instance
+        :return: Full url pointing to a Node's respective FileStoreItem's
+        datafile's location
+        """
+        try:
+            node = Node.objects.get(uuid=matched_object.group(0))
+        except (Node.DoesNotExist, Node.MultipleObjectsReturned):
+            # Raise these errors so that they propagate up the stack and
+            # properly nullify the current database transaction
+            raise
+        else:
+            url = node.get_relative_file_store_item_url()
+            if url is None:
+                raise RuntimeError(
+                    "Node with uuid: {} has no associated file url".format(
+                        node.uuid
+                    )
+                )
+            else:
+                return get_full_url(url)
