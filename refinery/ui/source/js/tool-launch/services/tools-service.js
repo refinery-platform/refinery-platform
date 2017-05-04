@@ -4,9 +4,9 @@
     .module('refineryToolLaunch')
     .factory('toolListService', toolListService);
 
-  toolListService.$inject = ['toolsDefinitionsService'];
+  toolListService.$inject = ['toolDefinitionsService'];
 
-  function toolListService (toolsDefinitionsService) {
+  function toolListService (toolDefinitionsService) {
     var selectedTool = {};
     var toolList = [];
 
@@ -28,11 +28,11 @@
     }
 
     function getTools () {
-      var toolsDefs = toolsDefinitionsService.query();
-      toolsDefs.$promise.then(function (response) {
+      var toolDefs = toolDefinitionsService.query();
+      toolDefs.$promise.then(function (response) {
         angular.copy(response, toolList);
       });
-      return toolsDefs.$promise;
+      return toolDefs.$promise;
     }
   }
 })();
