@@ -72,6 +72,11 @@ def make_template(config, config_yaml):
     instance_tags.append({'Key': 'Name',
                          'Value': stack_name})
 
+    # This tag is variable and can be specified by
+    # template Parameter.
+    instance_tags.append({'Key': functions.ref('SnapshotSchedulerTag'),
+                         'Value': 'default'})
+
     config['tags'] = instance_tags
 
     config_uri = save_s3_config(config, stack_name)
@@ -114,6 +119,19 @@ def make_template(config, config_yaml):
         open('aws.sh').read())
 
     cft = core.CloudFormationTemplate(description="Refinery Platform main")
+
+    # This parameter tags the EC2 instances, and is intended to be used
+    # with the AWS Reference Implementation EBS Snapshot Scheduler:
+    # http://docs.aws.amazon.com/solutions/latest/ebs-snapshot-scheduler/welcome.html
+    cft.parameters.add(
+        core.Parameter('SnapshotSchedulerTag', 'String', {
+                'Default': 'scheduler:ebs-snapshot',
+                'Description':
+                "Tag added to EC2 Instances so that "
+                "the EBS Snapshot Scheduler will recognise them.",
+            }
+        )
+    )
 
     rds_properties = {
         "AllocatedStorage": "5",
