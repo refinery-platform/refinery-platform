@@ -168,7 +168,7 @@
 
     <field name="name" type="text_en" indexed="true" stored="true" multiValued="false" />
 
-    <field name="description" type="text_en" indexed="true" stored="true" multiValued="false" />
+    <field name="description" type="edge_ngram" indexed="true" stored="true" multiValued="false" />
 
     <field name="content_auto" type="edge_ngram" indexed="true" stored="true" multiValued="false" />
 

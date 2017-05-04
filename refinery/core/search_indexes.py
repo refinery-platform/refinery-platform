@@ -26,7 +26,7 @@ class DataSetIndex(indexes.SearchIndex, indexes.Indexable):
     dbid = indexes.IntegerField(model_attr='id')
     uuid = indexes.CharField(model_attr='uuid')
     summary = indexes.CharField(model_attr='summary', null=True)
-    description = indexes.CharField(null=True)
+    description = indexes.EdgeNgramField(null=True)
     creation_date = indexes.DateTimeField(model_attr='creation_date')
     modification_date = indexes.DateTimeField(model_attr='modification_date')
     submitter = indexes.MultiValueField(null=True)
