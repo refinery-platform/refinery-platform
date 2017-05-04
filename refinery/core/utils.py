@@ -21,6 +21,9 @@ from urlparse import urlparse, urljoin
 import core
 import data_set_manager
 
+from core.search_indexes import DataSetIndex
+from data_set_manager.search_indexes import NodeIndex
+
 logger = logging.getLogger(__name__)
 
 
@@ -44,8 +47,7 @@ def update_data_set_index(data_set):
 
     logger.info('Updated data set (uuid: %s) index', data_set.uuid)
     try:
-        core.search_indexes.DataSetIndex().update_object(data_set,
-                                                         using='core')
+        DataSetIndex().update_object(data_set, using='core')
     except Exception as e:
         """ Solr is expected to fail and raise an exception when
         it is not running.
@@ -355,8 +357,7 @@ def delete_data_set_index(data_set):
 
     logger.debug('Deleted data set (uuid: %s) index', data_set.uuid)
     try:
-        core.search_indexes.DataSetIndex().remove_object(data_set,
-                                                         using='core')
+        DataSetIndex().remove_object(data_set, using='core')
     except Exception as e:
         """ Solr is expected to fail and raise an exception when
         it is not running.
@@ -754,8 +755,7 @@ def delete_analysis_index(node_instance):
     """Remove a Analysis' related document from Solr's index.
     """
     try:
-        data_set_manager.search_indexes.NodeIndex().remove_object(
-            node_instance, using='data_set_manager')
+        NodeIndex().remove_object(node_instance, using='data_set_manager')
         logger.debug('Deleted Analysis\' NodeIndex with (uuid: %s)',
                      node_instance.uuid)
     except Exception as e:
@@ -763,7 +763,7 @@ def delete_analysis_index(node_instance):
         it is not running.
         (e.g. Travis CI doesn't support solr yet)
         """
-        logger.error("Could not delete from NodeIndex:", e)
+        logger.error("Could not delete from NodeIndex: %s", e)
 
 
 def invalidate_cached_object(instance, is_test=False):
