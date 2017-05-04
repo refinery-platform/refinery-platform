@@ -21,6 +21,8 @@ from urlparse import urlparse, urljoin
 import core
 import data_set_manager
 
+# These imports go against our coding style guide, but are necessary for the
+#  time being due to mutual import issues
 from core.search_indexes import DataSetIndex
 from data_set_manager.search_indexes import NodeIndex
 
