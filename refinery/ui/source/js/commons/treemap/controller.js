@@ -199,6 +199,7 @@ function TreemapCtrl (
       self.data = data;
       self.pubSub.trigger('treemap.loaded');
       self.draw();
+      self.addEventListeners();
     });
   } else {
     self.pubSub.trigger('treemap.noData');
@@ -1306,8 +1307,6 @@ TreemapCtrl.prototype.draw = function () {
     this._noVisibleDepthNotification = true;
     this.visibleDepth = this.rootNode.visibleDepth;
   }
-
-  this.addEventListeners();
 };
 
 /**
