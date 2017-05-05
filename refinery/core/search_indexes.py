@@ -65,13 +65,16 @@ class DataSetIndex(indexes.SearchIndex, indexes.Indexable):
         submitters = []
 
         for contact in investigation.contact_set.all():
-            submitters.append(contact.last_name + ", " + contact.first_name)
+            submitters.append(
+                "{}, {}".format(contact.last_name, contact.first_name)
+            )
 
         studies = investigation.study_set.all()
         for study in studies:
             for contact in study.contact_set.all():
                 submitters.append(
-                    contact.last_name + ", " + contact.first_name)
+                    "{}, {}".format(contact.last_name, contact.first_name)
+                )
 
         return set(submitters)
 
