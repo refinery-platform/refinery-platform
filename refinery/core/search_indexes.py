@@ -76,7 +76,7 @@ class DataSetIndex(indexes.SearchIndex, indexes.Indexable):
                     "{}, {}".format(contact.last_name, contact.first_name)
                 )
 
-        return set(submitters)
+        return list(set(submitters))
 
     def prepare_measurement(self, object):
         investigation = object.get_investigation()
@@ -91,7 +91,7 @@ class DataSetIndex(indexes.SearchIndex, indexes.Indexable):
             for assay in study.assay_set.all():
                 measurements.append(assay.measurement)
 
-        return set(measurements)
+        return list(set(measurements))
 
     def prepare_technology(self, object):
         investigation = object.get_investigation()
@@ -106,7 +106,7 @@ class DataSetIndex(indexes.SearchIndex, indexes.Indexable):
             for assay in study.assay_set.all():
                 technologies.append(assay.technology)
 
-        return set(technologies)
+        return list(set(technologies))
 
     # from:
     # http://django-haystack.readthedocs.org/en/latest/rich_content_extraction.html
