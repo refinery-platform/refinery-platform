@@ -1,8 +1,12 @@
 import json
+from StringIO import StringIO
+
 import re
 
 from django.contrib.auth.models import User
-from django.core.files.uploadedfile import SimpleUploadedFile
+from django.core.files.uploadedfile import (InMemoryUploadedFile,
+                                            SimpleUploadedFile)
+
 from django.http import QueryDict
 from django.test import TestCase
 
@@ -14,8 +18,8 @@ from .utils import (create_facet_filter_query, customize_attribute_response,
                     escape_character_solr, format_solr_response,
                     generate_facet_fields_query,
                     generate_filtered_facet_fields, generate_solr_params,
-                    get_owner_from_assay, hide_fields_from_list,
-                    initialize_attribute_order_ranks,
+                    get_file_url_from_node_uuid, get_owner_from_assay,
+                    hide_fields_from_list, initialize_attribute_order_ranks,
                     insert_facet_field_filter, is_field_in_hidden_list,
                     objectify_facet_field_counts, update_attribute_order_ranks)
 from .views import Assays, AssaysAttributes
@@ -605,6 +609,35 @@ class UtilitiesTest(TestCase):
         self.url_root = '/api/v2/assays'
         self.valid_uuid = self.assay.uuid
         self.invalid_uuid = 'xxxxxxxx'
+
+        test_file_a = StringIO()
+        test_file_a.write('Coffee is great.\n')
+        file_store_item_a = FileStoreItem.objects.create(
+            datafile=InMemoryUploadedFile(
+                test_file_a,
+                field_name='tempfile',
+                name='test_file_a.txt',
+                content_type='text/plain',
+                size=len(test_file_a.getvalue()),
+                charset='utf-8'
+            )
+        )
+        self.node_a = Node.objects.create(
+            name="n0",
+            assay=self.assay,
+            study=self.study,
+            file_uuid=file_store_item_a.uuid
+        )
+
+        self.node_b = Node.objects.create(
+            name="n1",
+            assay=self.assay,
+            study=self.study
+        )
+
+    def tearDown(self):
+        # Trigger the pre_delete signal so that datafiles are purged
+        FileStoreItem.objects.all().delete()
 
     def test_objectify_facet_field_counts(self):
         facet_field_array = {'WORKFLOW': ['1_test_04', 1,
@@ -1280,6 +1313,30 @@ class UtilitiesTest(TestCase):
                          'Error: New rank == old rank')
         attribute_list = AttributeOrder.objects.filter(assay=self.assay)
         self.assertItemsEqual(old_attribute_list, attribute_list)
+
+    def test_get_file_url_from_node_uuid_good_uuid(self):
+        self.assertIn(
+            "test_file_a.txt",
+            get_file_url_from_node_uuid(self.node_a.uuid),
+        )
+
+    def test_get_file_url_from_node_uuid_bad_uuid(self):
+        with self.assertRaises(RuntimeError) as context:
+            get_file_url_from_node_uuid("coffee")
+            self.assertEqual(
+                "Couldn't fetch Node by UUID from: coffee",
+                context.exception.message
+            )
+
+    def test_get_file_url_from_node_uuid_node_with_no_file(self):
+        with self.assertRaises(RuntimeError) as context:
+            get_file_url_from_node_uuid(self.node_b.uuid)
+            self.assertEqual(
+                "Node with uuid: {} has no associated file url".format(
+                    self.node_b.uuid
+                ),
+                context.exception.message
+            )
 
 
 class NodeClassMethodTests(TestCase):

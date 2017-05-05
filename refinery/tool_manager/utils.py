@@ -1,12 +1,14 @@
+import ast
 import glob
 import json
 import logging
 import os
 
-from bioblend.galaxy.client import ConnectionError
 from django.conf import settings
 from django.contrib import admin
 from django.db import transaction
+
+from bioblend.galaxy.client import ConnectionError
 from jsonschema import RefResolver, validate, ValidationError
 
 from core.models import WorkflowEngine
@@ -15,7 +17,8 @@ from factory_boy.django_model_factories import (FileRelationshipFactory,
                                                 InputFileFactory,
                                                 OutputFileFactory,
                                                 ParameterFactory,
-                                                ToolDefinitionFactory)
+                                                ToolDefinitionFactory,
+                                                ToolFactory)
 
 from file_store.models import FileType
 from .models import ToolDefinition
@@ -91,7 +94,7 @@ def create_tool_definition(annotation_data):
             file_relationship=create_file_relationship_nesting(
                 annotation
             ),
-            docker_image_name=annotation["docker_image_name"],
+            image_name=annotation["image_name"],
             container_input_path=annotation["container_input_path"]
         )
 
@@ -105,6 +108,56 @@ def create_tool_definition(annotation_data):
     )
 
     return tool_definition
+
+
+@transaction.atomic
+def create_tool(tool_launch_configuration, user_instance):
+    """
+   :param tool_launch_configuration: dict of data that represents a Tool
+   :param user_instance: User object that made the request to create said Tool
+   :returns: The created Tool object
+   """
+    # NOTE: that the usual exceptions for the get() aren't handled because
+    # we're in the scope of an atomic transaction
+    tool_definition = ToolDefinition.objects.get(
+        uuid=tool_launch_configuration["tool_definition_uuid"]
+    )
+    tool = ToolFactory(
+        name="{}-launch".format(tool_definition.name),
+        tool_definition=tool_definition,
+        file_relationships=tool_launch_configuration["file_relationships"]
+    )
+    try:
+        tool.parameters = tool_launch_configuration["parameters"]
+    except KeyError:
+        # parameters are not required for Tools to launch properly
+        pass
+
+    if tool.get_tool_type() == ToolDefinition.VISUALIZATION:
+        try:
+            tool.output_files = tool_launch_configuration["output_files"]
+        except KeyError:
+            # output_files aren't required for Vis Tools
+            pass
+
+        # Create a unique container name that adheres to docker's specs
+        tool.container_name = "{}-{}".format(
+            tool.name.replace(" ", ""),
+            tool.uuid
+        )
+
+    if tool.get_tool_type() == ToolDefinition.WORKFLOW:
+        try:
+            tool.output_files = tool_launch_configuration["output_files"]
+        except KeyError:
+            raise RuntimeError(
+                "`output_files` are required for Workflow Tools"
+            )
+
+    tool.set_owner(user_instance)
+    tool.update_file_relationships_string()
+
+    return tool
 
 
 @transaction.atomic
@@ -158,7 +211,7 @@ def create_file_relationship_nesting(workflow_annotation,
         # If we reach here, we have reached the bottom-most nested
         # file_relationship. Since we want to act upon the bottom-most
         # file_relationship's input_files, we can safely grab the
-        # last element from our fr_store due to Python's nature of
+        # last element from our `file_relationships` due to Python's nature of
         # ordering lists.
         bottom_file_relationship = file_relationships[-1]
 
@@ -300,24 +353,24 @@ def validate_tool_launch_configuration(tool_launch_config):
     with open("tool_manager/schemas/ToolLaunchConfig.json") as f:
         schema = json.loads(f.read())
     try:
-        validate(
-            json.loads(tool_launch_config),
-            schema,
-            resolver=resolver
-        )
-    except ValueError as e:
-        raise RuntimeError(
-            "Tool launch configuration: {} is not valid JSON: {}".format(
-                tool_launch_config,
-                e
-            )
-        )
+        validate(tool_launch_config, schema, resolver=resolver)
     except ValidationError as e:
         raise RuntimeError(
             "Tool launch configuration is not properly configured: {}".format(
                 e
             )
         )
+    # Assert that the data structure being sent over is able to be evaluated
+    #  as a Pythonic Data structure
+    try:
+        nesting = ast.literal_eval(tool_launch_config["file_relationships"])
+    except (SyntaxError, ValueError) as e:
+        raise RuntimeError(
+            "ToolLaunchConfiguration's `file_relationships` could not be "
+            "evaluated as a Pythonic Data Structure: {}".format(e)
+        )
+    else:
+        parse_file_relationship_nesting(nesting)
 
 
 def get_workflows():
@@ -375,3 +428,54 @@ def get_visualization_annotations_list():
             visualization_annotations.append(json.loads(f.read()))
 
     return visualization_annotations
+
+
+def parse_file_relationship_nesting(nested_structure, nesting_dict=None,
+                                    nesting_level=0):
+    """
+    Recursive method to ensure that a ToolLaunchConfiguration's
+    `file_relationships` string is a proper representation of a LIST/PAIR
+    structure
+    :raises: RuntimeError if an inappropriately configured `file_relationships`
+     string is detected
+    """
+    nesting_info = {
+        "types": set(),
+        "contents": []
+    }
+
+    if nesting_dict is None:
+        nesting_dict = {
+            nesting_level: nesting_info
+        }
+    try:
+        nesting_dict[nesting_level]
+    except KeyError:
+        nesting_dict[nesting_level] = nesting_info
+
+    nesting_types = nesting_dict[nesting_level]["types"]
+    nesting_contents = nesting_dict[nesting_level]["contents"]
+
+    for item in nested_structure:
+        nesting_types.add(type(item))
+        nesting_contents.append(item)
+
+    if len(nesting_types) != 1:
+        raise RuntimeError(
+            "LIST/PAIR structure is not balanced {}".format(nesting_contents)
+        )
+    if nesting_types == {str}:
+        # If we reach a nesting level with all `str` we can return
+        return
+
+    if nesting_types not in [{list}, {tuple}]:
+        raise RuntimeError(
+            "The `file_relationships` defined didn't yield a valid "
+            "LIST/PAIR nesting. {}".format(nesting_contents)
+        )
+
+    nesting_level += 1
+    for item in nested_structure:
+        parse_file_relationship_nesting(
+            item, nesting_dict=nesting_dict, nesting_level=nesting_level
+        )

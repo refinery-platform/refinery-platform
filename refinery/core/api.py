@@ -999,7 +999,10 @@ class AnalysisResource(ModelResource):
             allowed_datasets = get_objects_for_user(user, perm, DataSet)
         else:
             allowed_datasets = get_objects_for_group(
-                ExtendedGroup.objects.public_group(), perm, DataSet)
+                ExtendedGroup.objects.public_group(),
+                perm,
+                DataSet
+            )
 
         return Analysis.objects.filter(
             data_set__in=allowed_datasets.values_list("id", flat=True)
