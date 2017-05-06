@@ -1864,8 +1864,6 @@ TreemapCtrl.prototype.setRootNode = function (root, noNotification) {
     });
   }
 
-  console.log('treemap', root);
-
   this.treemapContext.set('root', {
     ontId: root.ontId,
     uri: root.uri,
