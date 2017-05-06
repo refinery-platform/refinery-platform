@@ -1537,11 +1537,12 @@ TreemapCtrl.prototype.unlockHighlightEl = function (element) {
  * @param   {Object}  data  D3 data object.
  */
 TreemapCtrl.prototype.layout = function (parent, depth, reRender) {
-  // Initialize a cache object used later
-  parent.cache = {};
   parent.meta.depth = depth;
 
   if (!reRender) {
+    // Initialize a cache object used later
+    parent.cache = {};
+
     // Cache the the branch id for each node, which is needed to uniquely
     // identify the position of a selected term.
     if (parent.ontId in this.cacheTerms) {
