@@ -1283,6 +1283,7 @@ TreemapCtrl.prototype.draw = function (reRender) {
     this.data.ready = true;
   } else {
     this.updateSize();
+    this.layout(this.data, 0, true);
   }
 
   this.absRootNode = this.data;
@@ -1535,17 +1536,20 @@ TreemapCtrl.prototype.unlockHighlightEl = function (element) {
  * @date    2015-08-03
  * @param   {Object}  data  D3 data object.
  */
-TreemapCtrl.prototype.layout = function (parent, depth) {
+TreemapCtrl.prototype.layout = function (parent, depth, reRender) {
   // Initialize a cache object used later
   parent.cache = {};
   parent.meta.depth = depth;
-  // Cache the the branch id for each node, which is needed to uniquely identify
-  // the position of a selected term.
-  if (parent.ontId in this.cacheTerms) {
-    parent.cache.branchId = this.cacheTerms[parent.ontId].push(parent) - 1;
-  } else {
-    this.cacheTerms[parent.ontId] = [parent];
-    parent.cache.branchId = 0;
+
+  if (!reRender) {
+    // Cache the the branch id for each node, which is needed to uniquely
+    // identify the position of a selected term.
+    if (parent.ontId in this.cacheTerms) {
+      parent.cache.branchId = this.cacheTerms[parent.ontId].push(parent) - 1;
+    } else {
+      this.cacheTerms[parent.ontId] = [parent];
+      parent.cache.branchId = 0;
+    }
   }
 
   // Store a reference to the node by it's URI. Since nodes can be duplicated
