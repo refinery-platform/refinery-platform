@@ -1297,7 +1297,7 @@ TreemapCtrl.prototype.draw = function (reRender) {
   }
 
   if (rootNodeData) {
-    this.transition(rootNodeData, reRender);
+    this.transition(rootNodeData, reRender, true);
   } else {
     this.setRootNode(
       {
@@ -1870,7 +1870,7 @@ TreemapCtrl.prototype.setRootNode = function (root, noNotification) {
     branchId: root.branchId || 0
   });
 
-  this.transition(this.cacheTerms[root.ontId][root.branchId], true);
+  this.transition(this.cacheTerms[root.ontId][root.branchId], true, true);
 };
 
 /**
@@ -1932,9 +1932,14 @@ TreemapCtrl.prototype.setUpNodeCenterIcon = function (selection) {
  * @param   {Object}  noNotification  If `true` doesn't set the tree map context
  *   since the method was called by `setRootNode` already.
  */
-TreemapCtrl.prototype.transition = function (data, noNotification) {
+TreemapCtrl.prototype.transition = function (data, noNotification, auto) {
   if (this.treemap.transitioning || !data) {
     return;
+  }
+
+  if (!auto) {
+    this.transVis = true;
+    this.visibleDepth = 1;
   }
 
   this.currentLevel = data.meta.depth;
@@ -2205,12 +2210,15 @@ Object.defineProperty(
         adjustedLabels.finally(function () {
           this.loadingVisibleDepth = false;
           // Wait one digestion cycle.
-          this.$timeout(function () {
-            // Focus the input element again because it lost the focus when the
-            // input was disabled during the time the new nodes have been
-            // loaded.
-            this.$rootScope.$broadcast('focusOn', 'visibleDepthInput');
-          }.bind(this), 0);
+          if (!this.transVis) {
+            this.$timeout(function () {
+              // Focus the input element again because it lost the focus when the
+              // input was disabled during the time the new nodes have been
+              // loaded.
+              this.$rootScope.$broadcast('focusOn', 'visibleDepthInput');
+            }.bind(this), 0);
+          }
+          this.transVis = false;
         }.bind(this));
       }.bind(this), 0);
     }
