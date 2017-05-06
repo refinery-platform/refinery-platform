@@ -1264,9 +1264,10 @@ TreemapCtrl.prototype.display = function (node, firstTime) {
  *
  * @method  draw
  * @author  Fritz Lekschas
- * @date    2015-08-03
+ * @date    2017-05-05
+ * @param   {Boolean}  reRender  If `true` drawn is called by the rerenderer.
  */
-TreemapCtrl.prototype.draw = function () {
+TreemapCtrl.prototype.draw = function (reRender) {
   if (this.data === null) {
     return;
   }
@@ -1282,7 +1283,6 @@ TreemapCtrl.prototype.draw = function () {
     this.data.ready = true;
   } else {
     this.updateSize();
-    this.layout(this.data, 0);
   }
 
   this.absRootNode = this.data;
@@ -1296,7 +1296,7 @@ TreemapCtrl.prototype.draw = function () {
   }
 
   if (rootNodeData) {
-    this.transition(rootNodeData);
+    this.transition(rootNodeData, reRender);
   } else {
     this.setRootNode(
       {
@@ -1705,7 +1705,7 @@ TreemapCtrl.prototype.removeLevelsOfNodes = function (oldVisibleDepth) {
  * @date    2017-01-16
  */
 TreemapCtrl.prototype.reRender = function () {
-  this.draw();
+  this.draw(true);
   this.checkLabelReadbility(this.visibleDepth);
 };
 
@@ -1859,6 +1859,8 @@ TreemapCtrl.prototype.setRootNode = function (root, noNotification) {
       source: 'treeMap'
     });
   }
+
+  console.log('treemap', root);
 
   this.treemapContext.set('root', {
     ontId: root.ontId,
