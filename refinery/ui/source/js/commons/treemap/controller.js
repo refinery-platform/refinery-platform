@@ -1240,8 +1240,14 @@ TreemapCtrl.prototype.display = function (node, firstTime) {
   // For completeness we store the children of level zero.
   this.children[0] = [this.treemap.groupWrapper];
 
+  var _node = node;
+
+  if (!node._children.length) {
+    _node = { _children: [node] };
+  }
+
   var children = this.addChildren(
-    this.treemap.groupWrapper, node, 1, firstTime);
+    this.treemap.groupWrapper, _node, 1, firstTime);
 
   // We have to cache the children to dynamically adjust the level depth.
   this.children[1] = [children[0]];
@@ -1838,7 +1844,7 @@ TreemapCtrl.prototype.setRootNode = function (root, noNotification) {
     }
   ];
 
-  if (prevRoot) {
+  if (prevRoot && prevRoot.ontId !== root.ontId) {
     terms.push({
       nodeUri: prevRootUri,
       dataSetIds: getAssociatedDataSets(
