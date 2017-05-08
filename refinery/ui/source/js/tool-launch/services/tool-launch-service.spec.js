@@ -8,8 +8,8 @@
 
     beforeEach(module('refineryApp'));
     beforeEach(module('refineryToolLaunch'));
-    beforeEach(inject(function (toolsService) {
-      service = toolsService;
+    beforeEach(inject(function (toolLaunchService) {
+      service = toolLaunchService;
     }));
 
     it('service and variables should exist', function () {
@@ -23,9 +23,9 @@
     });
 
     describe('getTools', function () {
-      beforeEach(inject(function (toolsDefinitionsService, $q, $rootScope) {
+      beforeEach(inject(function (toolDefinitionsService, $q, $rootScope) {
         var responseData = [{ name: 'Test Workflow' }];
-        spyOn(toolsDefinitionsService, 'query').and.callFake(function () {
+        spyOn(toolDefinitionsService, 'query').and.callFake(function () {
           deferred = $q.defer();
           deferred.resolve(responseData);
           return { $promise: deferred.promise };

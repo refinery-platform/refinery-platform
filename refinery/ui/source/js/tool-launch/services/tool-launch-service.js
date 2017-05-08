@@ -2,11 +2,11 @@
   'use strict';
   angular
     .module('refineryToolLaunch')
-    .factory('toolsService', toolsService);
+    .factory('toolLaunchService', toolLaunchService);
 
-  toolsService.$inject = ['toolsDefinitionsService'];
+  toolLaunchService.$inject = ['toolDefinitionsService'];
 
-  function toolsService (toolsDefinitionsService) {
+  function toolLaunchService (toolDefinitionsService) {
     var selectedTool = {};
     var toolList = [];
 
@@ -28,11 +28,11 @@
     }
 
     function getTools () {
-      var toolsDefs = toolsDefinitionsService.query();
-      toolsDefs.$promise.then(function (response) {
+      var toolDefs = toolDefinitionsService.query();
+      toolDefs.$promise.then(function (response) {
         angular.copy(response, toolList);
       });
-      return toolsDefs.$promise;
+      return toolDefs.$promise;
     }
   }
 })();
