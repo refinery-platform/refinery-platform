@@ -76,6 +76,8 @@ class DataSetIndex(indexes.SearchIndex, indexes.Indexable):
                     "{}, {}".format(contact.last_name, contact.first_name)
                 )
 
+        # Cast to `list` looks redundant, but MultiValueField stores sets
+        # improperly, introducing a search bug. See: http://bit.ly/2pZLE5c
         return list(set(submitters))
 
     def prepare_measurement(self, object):
@@ -91,6 +93,8 @@ class DataSetIndex(indexes.SearchIndex, indexes.Indexable):
             for assay in study.assay_set.all():
                 measurements.append(assay.measurement)
 
+        # Cast to `list` looks redundant, but MultiValueField stores sets
+        # improperly, introducing a search bug. See: http://bit.ly/2pZLE5c
         return list(set(measurements))
 
     def prepare_technology(self, object):
@@ -106,6 +110,8 @@ class DataSetIndex(indexes.SearchIndex, indexes.Indexable):
             for assay in study.assay_set.all():
                 technologies.append(assay.technology)
 
+        # Cast to `list` looks redundant, but MultiValueField stores sets
+        # improperly, introducing a search bug. See: http://bit.ly/2pZLE5c
         return list(set(technologies))
 
     # from:
