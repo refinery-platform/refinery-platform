@@ -5,9 +5,21 @@
     .module('refineryToolLaunch')
     .controller('ToolLaunchButtonCtrl', ToolLaunchButtonCtrl);
 
-  function ToolLaunchButtonCtrl () {
+  ToolLaunchButtonCtrl.$inject = ['toolLaunchService'];
+
+  function ToolLaunchButtonCtrl (toolLaunchService) {
     var vm = this;
+    vm.launchTool = launchTool;
     vm.tool = {};
-    vm.toolType = '';
+
+    /*
+   * -----------------------------------------------------------------------------
+   * Methods Definitions
+   * -----------------------------------------------------------------------------
+   */
+
+    function launchTool () {
+      toolLaunchService.generateLaunchConfig();
+    }
   }
 })();
