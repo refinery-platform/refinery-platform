@@ -491,12 +491,16 @@ function DataSetFactory (
    * @return  {Object}          Promise resolving to the data set.
    */
   function _get (id) {
-    if (_dataStore.get(id)) {
+    var ds = _dataStore.get(id);
+
+    if (ds && ds.id === parseInt(id, 10)) {
       return $q.when(_dataStore.get(id));
     }
-    return _sourceDetails(id).then(function (dataSet) {
-      _initHtmlTitleDesc(dataSet);
-      _dataStore.add(dataSet.id, dataSet, true);
+    return _sourceDetails(id).then(function (dataSets) {
+      _initHtmlTitleDesc(dataSets[id]);
+      _dataStore.add(id, dataSets[id], true);
+
+      return _dataStore.get(id);
     });
   }
 
@@ -699,6 +703,9 @@ function DataSetFactory (
     {
       enumerable: true,
       get: function () {
+        if (_selectionLen()) {
+          return $q.when(_objListToArray(_selection));
+        }
         return _allDsIds.promise;
       }
     }

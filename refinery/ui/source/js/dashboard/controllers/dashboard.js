@@ -668,10 +668,10 @@ DashboardCtrl.prototype.addToDataCart = function (dataSet) {
  * @date    2016-05-09
  */
 DashboardCtrl.prototype.addAllCurrentToDataCart = function () {
-  this.dataSet.allIds.then(function (allIds) {
+  this.dataSet.ids.then(function (ids) {
     var promisedDataSets = [];
-    for (var i = allIds.length; i--;) {
-      promisedDataSets.push(this.dataSet.get(allIds[i]));
+    for (var i = ids.length; i--;) {
+      promisedDataSets.push(this.dataSet.get(ids[i]));
     }
     this.$q.all(promisedDataSets).then(function (dataSets) {
       this.dataCart.add(dataSets);
