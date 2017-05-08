@@ -95,7 +95,6 @@ def make_template(config, config_yaml):
         "CONFIG_YAML=", base64.b64encode(config_yaml), "\n",
         "CONFIG_JSON=", base64.b64encode(json.dumps(config)), "\n",
         "AWS_DEFAULT_REGION=", functions.ref("AWS::Region"), "\n",
-        "RDS_ID=", functions.ref('RDSInstance'), "\n",
         "RDS_ENDPOINT_ADDRESS=",
         functions.get_att('RDSInstance', 'Endpoint.Address'),
         "\n",
@@ -136,7 +135,7 @@ def make_template(config, config_yaml):
     rds_properties = {
         "AllocatedStorage": "5",
         "AutoMinorVersionUpgrade": False,
-        "BackupRetentionPeriod": "0",
+        "BackupRetentionPeriod": "15",
         "CopyTagsToSnapshot": True,
         "DBInstanceClass": "db.t2.small",       # todo:?
         "DBInstanceIdentifier": config['RDS_NAME'],
