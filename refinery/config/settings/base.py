@@ -60,7 +60,6 @@ def get_setting(name, settings=local_settings):
     except KeyError:
         raise ImproperlyConfigured("Missing setting '{0}'".format(name))
 
-
 # TODO: remove after switching to the new Celery API
 djcelery.setup_loader()
 
@@ -285,6 +284,16 @@ LOGGING = {
             'handlers': ['console'],
             'propagate': False,
         },
+        'docker': {
+            'level': 'ERROR',
+            'handlers': ['console'],
+            'propagate': False,
+        },
+        'easyprocess': {
+            'handlers': ['console'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
         'factory': {
             'handlers': ['console'],
             'level': 'ERROR',
@@ -313,6 +322,16 @@ LOGGING = {
         'isa_tab_parser': {
             'level': 'DEBUG',
             'handlers': ['console'],
+            'propagate': False,
+        },
+        'requests': {
+            'handlers': ['console'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+        'selenium': {
+            'handlers': ['console'],
+            'level': 'ERROR',
             'propagate': False,
         },
         'visualization_manager': {
@@ -600,3 +619,7 @@ VISUALIZATION_ANNOTATION_BASE_PATH = "tool_manager/visualization_annotations"
 
 # To avoid Port conflicts between LiveServerTestCases http://bit.ly/2pb64KN
 os.environ["DJANGO_LIVE_TEST_SERVER_ADDRESS"] = "localhost:10000-12000"
+
+DJANGO_DOCKER_ENGINE_BASE_URL = "visualizations"
+
+DEPLOYMENT_PLATFORM = "vagrant"

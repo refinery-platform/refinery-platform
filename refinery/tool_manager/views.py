@@ -1,14 +1,13 @@
 import logging
 
-from django.db import transaction
-from django.http import HttpResponseServerError
+from django.http import HttpResponseBadRequest
 
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.viewsets import ModelViewSet
 
-from factory_boy.django_model_factories import ToolFactory
 from .models import Tool, ToolDefinition
 from .serializers import ToolDefinitionSerializer, ToolSerializer
+from .utils import create_tool, validate_tool_launch_configuration
 
 logger = logging.getLogger(__name__)
 
@@ -33,58 +32,19 @@ class ToolsViewSet(ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def create(self, request, *args, **kwargs):
-        # TODO: Validate incoming Tool Launch Configurations against our schema
-        # try:
-        #     validate_tool_launch_configuration(request.data)
-        # except RuntimeError as e:
-        #     return HttpResponseServerError(e)
-        # else:
-        #     tool_launch_data = request.data
-
-        tool_launch_data = request.data
-
         try:
-            tool_definition = ToolDefinition.objects.get(
-                uuid=tool_launch_data["tool_definition_uuid"]
-            )
-        except(
-                ToolDefinition.DoesNotExist,
-                ToolDefinition.MultipleObjectsReturned
-        ) as e:
-            return HttpResponseServerError(
-                "Couldn't fetch ToolDefinition with UUID {}: {}".format(
-                    tool_launch_data["tool_definition_uuid"],
-                    e
-                )
-            )
+            validate_tool_launch_configuration(request.data)
+        except RuntimeError as e:
+            return HttpResponseBadRequest(e)
         else:
-            if tool_definition.tool_type == ToolDefinition.VISUALIZATION:
-                # TODO: Talk to Node API and get urls from node UUIDs in the
-                # `file_relationships` data structure
-                # Tool.parse_file_relationships_string()
-                # Tool.populate_url_from_node_uuid()
+            tool_launch_configuration = request.data
+            try:
+                tool = create_tool(tool_launch_configuration, request.user)
+            except Exception as e:
+                return HttpResponseBadRequest(e)
 
-                with transaction.atomic():
-                    visualization_tool = ToolFactory(
-                        name="{}-launch".format(tool_definition.name),
-                        tool_definition=tool_definition,
-                        parameters=tool_launch_data["parameters"],
-                        file_relationships=tool_launch_data[
-                            "file_relationships"
-                        ]
-                    )
+        if tool.get_tool_type() == ToolDefinition.VISUALIZATION:
+            return tool.launch()
 
-                    # Create a unique container name that adheres to docker's
-                    # specifications
-                    visualization_tool.container_name = "{}-{}".format(
-                        visualization_tool.name.replace(" ", ""),
-                        visualization_tool.uuid
-                    )
-
-                    visualization_tool.set_owner(request.user)
-                    visualization_tool.save()
-
-                return visualization_tool.launch()
-
-            elif tool_definition.tool_type == ToolDefinition.WORKFLOW:
-                pass
+        elif tool.get_tool_type() == ToolDefinition.WORKFLOW:
+            raise NotImplementedError

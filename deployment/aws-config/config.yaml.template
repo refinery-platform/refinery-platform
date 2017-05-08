@@ -61,9 +61,7 @@ DATA_VOLUME_TYPE: "st1"
 KEY_NAME: "id_rsa"
 
 # The name of the RDS instance that is created.
-# (This is not required, a random name of the form rds-refinery-XXXXXXX will be
-# generated and used, and that is generally preferable, as it avoids clashes in
-# the same AWS account).
+# This is optional, the stack name will be used by default.
 # RDS_NAME: rds-refinery-default
 
 EMAIL_SUBJECT_PREFIX: "[Refinery] "

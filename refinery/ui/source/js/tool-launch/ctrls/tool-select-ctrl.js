@@ -8,14 +8,12 @@
   ToolSelectCtrl.$inject = [
     '_',
     'fileRelationshipService',
-    'toolLaunchService',
     'toolSelectService'
   ];
 
   function ToolSelectCtrl (
     _,
     fileRelationshipService,
-    toolLaunchService,
     toolSelectService
   ) {
     var fileService = fileRelationshipService;

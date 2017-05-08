@@ -1,15 +1,20 @@
+import ast
 import logging
+import re
 
+from django.conf import settings
 from django.db import models
 from django.db.models.signals import post_delete, pre_delete
 from django.dispatch import receiver
-from django.http import HttpResponseServerError, HttpResponse
+from django.http import HttpResponseServerError, JsonResponse
 
 from django_extensions.db.fields import UUIDField
+from django_docker_engine.container_managers.local import LocalManager
 from django_docker_engine.docker_utils import DockerContainerSpec
 from docker.errors import APIError
 
 from core.models import Analysis, OwnableResource, WorkflowEngine
+from data_set_manager.utils import get_file_url_from_node_uuid
 from file_store.models import FileType
 
 logger = logging.getLogger(__name__)
@@ -149,7 +154,7 @@ class ToolDefinition(models.Model):
     file_relationship = models.ForeignKey(FileRelationship)
     output_files = models.ManyToManyField(OutputFile)
     parameters = models.ManyToManyField(Parameter)
-    docker_image_name = models.CharField(max_length=255, blank=True)
+    image_name = models.CharField(max_length=255, blank=True)
     container_input_path = models.CharField(
         max_length=500,
         blank=True
@@ -237,20 +242,29 @@ class Tool(OwnableResource):
     def launch(self):
         if self.get_tool_type() == ToolDefinition.VISUALIZATION:
             container = DockerContainerSpec(
-                image_name=self.tool_definition.docker_image_name,
+                image_name=self.tool_definition.image_name,
                 container_name=self.container_name,
                 labels={self.uuid: ToolDefinition.VISUALIZATION},
                 container_input_path=(
                     self.tool_definition.container_input_path
                 ),
-                input={"file_relationships": self.file_relationships}
+                input={
+                    "file_relationships": ast.literal_eval(
+                        self.file_relationships
+                    )
+                },
+                manager=get_django_docker_engine_manager()
             )
             try:
                 container.run()
             except APIError as e:
                 return HttpResponseServerError(content=e)
             else:
-                return HttpResponse(self.get_relative_container_url())
+                return JsonResponse(
+                    {
+                        "tool_url": self.get_relative_container_url()
+                    }
+                )
 
         if self.get_tool_type() == ToolDefinition.WORKFLOW:
             raise NotImplementedError
@@ -259,7 +273,10 @@ class Tool(OwnableResource):
         """
         Construct & return the relative url of our Tool's container
         """
-        return "/visualizations/{}".format(self.container_name)
+        return "/{}/{}".format(
+            settings.DJANGO_DOCKER_ENGINE_BASE_URL,
+            self.container_name
+        )
 
     def get_tool_name(self):
         return self.tool_definition.name
@@ -267,8 +284,35 @@ class Tool(OwnableResource):
     def get_tool_type(self):
         return self.tool_definition.tool_type
 
-    def parse_file_relationships_string(self):
-        raise NotImplementedError
+    def update_file_relationships_string(self):
+        """
+        Replace a Tool's Node uuids in its `file_relationships` string with
+        their respective FileStoreItem's urls. No error handling here since
+        this method is only called in an atomic transaction.
+        """
+        node_uuids = re.findall(
+            r'[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}',
+            self.file_relationships
+        )
 
-    def populate_url_from_node_uuid(self):
+        for uuid in node_uuids:
+            file_url = get_file_url_from_node_uuid(uuid)
+            self.file_relationships = self.file_relationships.replace(
+                uuid,
+                file_url
+            )
+
+        self.save()
+
+
+def get_django_docker_engine_manager():
+    """
+    Helper method to return the proper managerial class for
+    django_docker_engine
+    """
+    # Travis CI runs on EC2, but we want our tests running against a local
+    # docker engine there
+    if settings.DEPLOYMENT_PLATFORM == "aws":
         raise NotImplementedError
+    else:
+        return LocalManager()
