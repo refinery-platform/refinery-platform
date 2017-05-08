@@ -1,0 +1,38 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema",
+  "type": "object",
+  "required": [
+    "tool_definition_uuid",
+    "file_relationships"
+  ],
+  "properties": {
+    "tool_definition_uuid": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    },
+    "file_relationships": {
+      "oneOf": [
+        {"type": "string"},
+        {"type": "null"}
+      ]
+
+    },
+    "parameters": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {"$ref": "Parameter.json#"},
+          {"$ref": "GalaxyParameter.json#"}
+        ]
+      }
+    },
+    "output_files": {
+      "type": "array",
+      "items": {
+       "oneOf": [
+         {"$ref": "OutputFile.json#"}
+       ]
+      }
+    }
+  }
+}

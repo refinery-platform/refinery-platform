@@ -95,7 +95,6 @@ def make_template(config, config_yaml):
         "CONFIG_YAML=", base64.b64encode(config_yaml), "\n",
         "CONFIG_JSON=", base64.b64encode(json.dumps(config)), "\n",
         "AWS_DEFAULT_REGION=", functions.ref("AWS::Region"), "\n",
-        "RDS_ID=", functions.ref('RDSInstance'), "\n",
         "RDS_ENDPOINT_ADDRESS=",
         functions.get_att('RDSInstance', 'Endpoint.Address'),
         "\n",
@@ -136,7 +135,7 @@ def make_template(config, config_yaml):
     rds_properties = {
         "AllocatedStorage": "5",
         "AutoMinorVersionUpgrade": False,
-        "BackupRetentionPeriod": "0",
+        "BackupRetentionPeriod": "15",
         "CopyTagsToSnapshot": True,
         "DBInstanceClass": "db.t2.small",       # todo:?
         "DBInstanceIdentifier": config['RDS_NAME'],
@@ -529,10 +528,9 @@ def load_config():
 
     report_missing_keys(config)
 
-    # Not stored in `config.yaml` because we don't
-    # want or need to use the same name again.
+    # Optional in `config.yaml`
     if 'RDS_NAME' not in config:
-        config['RDS_NAME'] = "rds-refinery-" + random_alnum(7)
+        config['RDS_NAME'] = config['STACK_NAME']
 
     with open("aws-config/config.yaml", 'r') as f:
         config_string = f.read()

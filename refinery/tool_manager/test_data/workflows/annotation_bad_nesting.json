@@ -3,7 +3,7 @@
   "galaxy_workflow_id": "66b2fe95-9250-425d-86ae-5953c1d6e5b6",
   "annotation": {
     "refinery_type": "analysis",
-    "description": "This workflow does really cool things",
+    "description": "This has bad `file_relationship` nesting!",
     "parameters": [],
     "output_files": [
       {

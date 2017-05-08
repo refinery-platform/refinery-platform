@@ -8,16 +8,17 @@
     '_',
     'fileBrowserFactory',
     'selectedNodesService',
-    'toolsService'
+    'toolLaunchService'
   ];
 
   function fileRelationshipService (
     _,
     fileBrowserFactory,
     selectedNodesService,
-    toolsService
+    toolLaunchService
   ) {
     var nodeService = selectedNodesService;
+    var toolService = toolLaunchService;
     var vm = this;
     vm.attributesObj = {}; // displayName: internalName, ex Name:
     vm.currentGroup = []; // index for the group coordinates
@@ -52,10 +53,10 @@
      * ex: file_relationship: [{file_relationship: []}]
      */
     function refreshFileMap () {
-      if (_.isEmpty(toolsService.selectedTool.file_relationship)) {
+      if (_.isEmpty(toolService.selectedTool.file_relationship)) {
         return;
       }
-      var scaledCopy = toolsService.selectedTool.file_relationship;
+      var scaledCopy = toolService.selectedTool.file_relationship;
       // initialize groups and types
       while (scaledCopy.file_relationship.length > 0) {
         vm.currentGroup.push(0);
