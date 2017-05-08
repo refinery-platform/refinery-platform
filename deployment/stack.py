@@ -529,10 +529,9 @@ def load_config():
 
     report_missing_keys(config)
 
-    # Not stored in `config.yaml` because we don't
-    # want or need to use the same name again.
+    # Optional in `config.yaml`
     if 'RDS_NAME' not in config:
-        config['RDS_NAME'] = "rds-refinery-" + random_alnum(7)
+        config['RDS_NAME'] = config['STACK_NAME']
 
     with open("aws-config/config.yaml", 'r') as f:
         config_string = f.read()
