@@ -29,10 +29,14 @@
    * ---------------------------------------------------------
    */
     function navLeft (depth) {
+      console.log('navLeft');
+      console.log(depth);
       vm.currentGroup[depth]--;
     }
 
     function navRight (depth) {
+      console.log('navRight');
+      console.log(depth);
       vm.currentGroup[depth]++;
     }
     /*
