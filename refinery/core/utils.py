@@ -476,19 +476,26 @@ def normalize_annotation_ont_ids(annotations):
     return new_annotations
 
 
-def normalize_annotation_uris(annotations):
-    """Normalize ontology uris across annotations. Some ontologies defined
+def normalize_annotation_uri(uri):
+    """Normalize an ontology URI. Some ontologies defined
     ambiguous URIs which is...  Anyway, harmonizing them increases the mapping
     quality.
     """
 
+    if (uri.startswith('http://purl.bioontology.org/ontology/NCBITAXON/')):
+        return 'http://purl.obolibrary.org/obo/NCBITaxon_{}'.format(uri[47:])
+
+    return uri
+
+
+def normalize_annotation_uris(annotations):
+    """Normalize multiple annotation ontology uris.
+    """
+
     for annotation in annotations:
-        if (annotation['value_accession'].startswith(
-            'http://purl.bioontology.org/ontology/NCBITAXON/'
-        )):
-            annotation['value_accession'] =\
-                'http://purl.obolibrary.org/obo/NCBITaxon_{}'.format(
-                    annotation['value_accession'][47:])
+        annotation['value_accession'] = normalize_annotation_uri(
+            annotation['value_accession']
+        )
 
     return annotations
 
@@ -726,7 +733,7 @@ def get_data_sets_annotations(dataset_ids=[]):
             response[row[0]] = []
 
         response[row[0]].append({
-            'term': row[1],
+            'term': normalize_annotation_uri(row[1]),
             'count': row[2]
         })
 
