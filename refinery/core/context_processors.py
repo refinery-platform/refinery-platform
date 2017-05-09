@@ -49,4 +49,5 @@ def extra_context(context):
         "REFINERY_TUTORIAL_STEPS": settings.REFINERY_TUTORIAL_STEPS,
         "SOLR_SYNONYM_SEARCH": settings.SOLR_SYNONYMS,
         "STATIC_URL": settings.STATIC_URL,
+        "DEPLOYMENT_PLATFORM": settings.DEPLOYMENT_PLATFORM,
     }

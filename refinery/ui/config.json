@@ -103,7 +103,8 @@
         "angular-ui-grid/ui-grid.min.js",
         "spark-md5/spark-md5.min.js",
         "spectrum/spectrum.js",
-        "tipsy/src/javascripts/jquery.tipsy.js"
+        "tipsy/src/javascripts/jquery.tipsy.js",
+        "aws-sdk-js/dist/aws-sdk.min.js"
       ],
       "maps": [
         "angular/angular.min.js.map",

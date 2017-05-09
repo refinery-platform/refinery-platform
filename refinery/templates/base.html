@@ -37,7 +37,8 @@
       repositoryMode: {{ REFINERY_REPOSITORY_MODE|yesno:"true,false,undefined" }},
       solrSynonymSearch: {{ SOLR_SYNONYM_SEARCH|lower }},
       refineryTutorialSteps: '{{  REFINERY_TUTORIAL_STEPS|escapejs }}',
-      staticUrl: '{{ STATIC_URL|escapejs }}'
+      staticUrl: '{{ STATIC_URL|escapejs }}',
+      deploymentPlatform: '{{ DEPLOYMENT_PLATFORM }}'
     };
 
     if (window.djangoApp.userId === 'None' || window.djangoApp.userName === 'None') {
@@ -265,7 +266,7 @@
   </script>
   <script src="{% static "vendor/d3/d3.min.js" %}"></script>
   <script src="{% static "vendor/humanize/humanize.js" %}"></script>
-
+  <script src="{% static "vendor/aws-sdk-js/dist/aws-sdk.min.js" %}"></script>
   {% block vendor_scripts %}
   {% endblock %}
 

@@ -1,0 +1,31 @@
+<div id="dataUploadTutorialStep7" class="tab-pane" id="data">
+
+  <form id="fileupload" method="POST">
+
+    <!-- Redirect browsers with JavaScript disabled to the origin page -->
+    <noscript>
+      <input type="hidden" name="redirect" value="/">
+    </noscript>
+
+    <!-- The fileupload-buttonbar contains buttons to add/delete files and start/cancel the upload -->
+    <div class="row fileupload-buttonbar v-centered-row">
+      <div class="col-lg-4">
+        <!-- The fileinput-button span is used to style the file input field as button -->
+        <span
+          class="refinery-base btn btn-default btn-sm fileinput-button"
+          ng-class="{ 'disabled': disabled }">
+          <i class="fa fa-plus"></i>
+          <span>Add files &hellip;</span>
+          <input
+            type="file"
+            class="refinery-base"
+            name="files[]"
+            multiple
+            ng-disabled="disabled">
+        </span>
+      </div>
+    </div>
+
+  </form>
+
+</div>
