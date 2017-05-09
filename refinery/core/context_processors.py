@@ -27,6 +27,8 @@ def extra_context(context):
         "ADMIN_EMAIL": settings.ADMINS[0][1],
         "CURRENT_COMMIT": settings.CURRENT_COMMIT,
         "DEBUG": settings.DEBUG,
+        "REFINERY_CONFIGURABLE_NAVBAR_ITEM":
+            settings.REFINERY_CONFIGURABLE_NAVBAR_ITEM,
         "REFINERY_CSS": settings.REFINERY_CSS,
         "REFINERY_MAIN_LOGO": settings.REFINERY_MAIN_LOGO,
         "REFINERY_INNER_NAVBAR_HEIGHT": settings.REFINERY_INNER_NAVBAR_HEIGHT,

@@ -189,6 +189,11 @@
           <li class="{{ navbar_class_about }}">
             <a href="{% url "about" %}" tabindex=4>About</a>
           </li>
+          {% if REFINERY_CONFIGURABLE_NAVBAR_ITEM %}
+             <li>
+               {{ REFINERY_CONFIGURABLE_NAVBAR_ITEM|safe }}
+             </li>
+          {% endif %}
         </ul>
       </div>
       </div>
