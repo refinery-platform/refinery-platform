@@ -8,7 +8,7 @@
 
   function toolsService ($resource, settings) {
     var tools = $resource(
-      settings.appRoot + settings.refineryApiV2 + '/tools',
+      settings.appRoot + settings.refineryApiV2 + '/tools/',
       {},
       {
        /* save: Create a new node group:

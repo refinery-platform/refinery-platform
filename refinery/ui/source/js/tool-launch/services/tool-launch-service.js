@@ -6,19 +6,21 @@
 
   toolLaunchService.$inject = [
     'fileRelationshipService',
-    'toolSelectService'
+    'toolSelectService',
+    'toolsService'
   ];
 
   function toolLaunchService (
     fileRelationshipService,
-    toolSelectService
+    toolSelectService,
+    toolsService
   ) {
     var fileService = fileRelationshipService;
     var toolService = toolSelectService;
     var launchConfig = {};
 
     var service = {
-      generateLaunchConfig: generateLaunchConfig,
+      postToolLaunch: postToolLaunch,
     };
     return service;
 
@@ -28,27 +30,24 @@
     * ----------------------
     */
 
+    function postToolLaunch () {
+      generateLaunchConfig();
+      var tool = toolsService.save(launchConfig);
+      return tool.$promise;
+    }
+
     function generateLaunchConfig () {
-      // "file_relationship": {"file_relationship":
-      // ['5c079f44-537a-478c-b358-553945a0ec18',
-      // '8f3018dd-7ace-468e-bf0f-ca2e2932f0b0']},
-      // "tool_definition_uuid": "bb88dab4-3f0b-48e2-bcd8-aef74d921c93"
       launchConfig.tool_definition_uuid = toolService.selectedTool.uuid;
-      launchConfig.file_relationship = generateFileJson();
+      launchConfig.file_relationships = JSON.stringify(generateFileJson());
     }
 
     function generateFileJson () {
       var fileRelationshipJson = '';
       // currently only handles with innermost relationship
-      var counter = 0;
-      angular.forEach(fileService.groupCollection, function (inputFileObj, groupId) {
-        console.log(groupId);
-        var groupArr = groupId.split(',');
-        // To Do: FIX GROUP IDs!!! ARGH!
 
+      angular.forEach(fileService.groupCollection, function (inputFileObj) {
+      //  var groupArr = groupId.split(',');
         var uuidStr = '';
-        // & for list
-        // : for pairs
         for (var m = 0; m < fileService.inputFileTypes.length; m++) {
           var nodeArr = inputFileObj[fileService.inputFileTypes[m].uuid];
           for (var j = 0; j < nodeArr.length; j++) {
@@ -59,70 +58,61 @@
             }
           }
         }
-        console.log('uuidStr');
-        console.log(uuidStr);
-        console.log(groupId);
-        // handles the inner most pair
+        // handles the inner most object
         if (fileService.currentTypes[fileService.currentTypes.length - 1] === 'PAIR') {
           if (fileRelationshipJson === '') {
             fileRelationshipJson = '(' + uuidStr + ')';
           } else {
-            uuidStr = ', (' + uuidStr + ')';
+            uuidStr = '(' + uuidStr + ')';
           }
         } else {
           if (fileRelationshipJson === '') {
             fileRelationshipJson = '[' + uuidStr + ']';
           } else {
-            uuidStr = ', [' + uuidStr + ']';
+            uuidStr = '[' + uuidStr + ']';
           }
         }
 
-        if (counter === 0) {
-          // initialize the final json object
-          for (var g = groupArr.length - 2; g >= 0; g--) {
-            if (fileService.currentTypes[g] === 'PAIR') {
-              fileRelationshipJson = '(' + fileRelationshipJson + ')';
-            } else {
-              fileRelationshipJson = '[' + fileRelationshipJson + ']';
-            }
-          }
-        } else {
-          console.log(fileRelationshipJson);
-          // filter and place the other node strings
-          var placeInd = 0;
-          var pairCount = 0;
-          var listCount = 0;
-          for (var h = 0; h < fileService.currentTypes.length; h++) {
-            if (fileService.currentTypes[h] === 'PAIR') {
-              pairCount++;
-              if (h === fileService.currentTypes.length - 1) {
-                placeInd = fileRelationshipJson.indexOf('(', pairCount + parseInt(groupArr[h], 10));
-              }
-            } else {
-              listCount++;
-              if (h === fileService.currentTypes.length - 1) {
-                placeInd = fileRelationshipJson.indexOf('[', listCount + parseInt(groupArr[h], 10));
-              }
-            }
-          }
+        // if (counter === 0) {
+        //  // initialize the final json object
+        //  for (var g = groupArr.length - 2; g >= 0; g--) {
+        //    if (fileService.currentTypes[g] === 'PAIR') {
+        //      fileRelationshipJson = '(' + fileRelationshipJson + ')';
+        //    } else {
+        //      fileRelationshipJson = '[' + fileRelationshipJson + ']';
+        //    }
+        //  }
+        // } else {
+        //  // filter and place the other node strings
+        //  var placeInd = 0;
+        //  var pairCount = 0;
+        //  var listCount = 0;
+        //  for (var h = 0; h < fileService.currentTypes.length; h++) {
+        //    if (fileService.currentTypes[h] === 'PAIR') {
+        //      if (fileService.currentTypes[h] > 0) {
+        //        var total = pairCount + parseInt(groupArr[h - 1], 10);
+        //        for (var pl = 0; pl < total; pl++) {
+        //          placeInd = fileRelationshipJson.indexOf(')', placeInd + 1);
+        //        }
+        //      }
+        //      pairCount++;
+        //    } else {
+        //      if (fileService.currentTypes[h] > 0) {
+        //        var total2 = listCount + parseInt(groupArr[h - 1], 10);
+        //        for (var pl2 = 0; pl2 < total2; pl2++) {
+        //          placeInd = fileRelationshipJson.indexOf(')', placeInd + 1);
+        //        }
+        //      }
+        //      listCount++;
+        //    }
+        //  }
 
-          console.log('placeInd: ', placeInd);
-          console.log('part one: ' + fileRelationshipJson.slice(0, placeInd + 1));
-          console.log('part uuid: ' + uuidStr);
-          console.log('part three: ' + fileRelationshipJson.slice(placeInd + uuidStr.length));
-          fileRelationshipJson = fileRelationshipJson.slice(0, placeInd + 1) +
-            uuidStr + fileRelationshipJson.slice(placeInd + uuidStr.length);
-        }
-        counter++;
+          // var endPart = fileRelationshipJson.slice(placeInd);
+          // fileRelationshipJson = fileRelationshipJson.slice(0, placeInd) +
+          //  uuidStr + fileRelationshipJson.slice(placeInd + uuidStr.length) + endPart;
+      //  }
+      //  counter++;
       });
-
-      for (var n = 0; n < fileService.currentTypes.length - 1; n ++) {
-        if (fileService.currentTypes[n] === 'PAIR') {
-          fileRelationshipJson = '(' + fileRelationshipJson + ')';
-        } else {
-          fileRelationshipJson = '[' + fileRelationshipJson + ']';
-        }
-      }
       console.log(fileRelationshipJson);
       return fileRelationshipJson;
     }

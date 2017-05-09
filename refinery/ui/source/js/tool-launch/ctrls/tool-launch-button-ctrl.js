@@ -5,12 +5,21 @@
     .module('refineryToolLaunch')
     .controller('ToolLaunchButtonCtrl', ToolLaunchButtonCtrl);
 
-  ToolLaunchButtonCtrl.$inject = ['toolLaunchService'];
+  ToolLaunchButtonCtrl.$inject = [
+    '$log',
+    'toolLaunchService',
+    'toolSelectService',
+    '$window'
+  ];
 
-  function ToolLaunchButtonCtrl (toolLaunchService) {
+  function ToolLaunchButtonCtrl (
+    $log,
+    toolLaunchService,
+    toolSelectService,
+    $window
+  ) {
     var vm = this;
     vm.launchTool = launchTool;
-    vm.tool = {};
 
     /*
    * -----------------------------------------------------------------------------
@@ -19,7 +28,13 @@
    */
 
     function launchTool () {
-      toolLaunchService.generateLaunchConfig();
+      toolLaunchService.postToolLaunch().then(function (response) {
+        if (toolSelectService.selectedTool.tool_type === 'VISUALIZATION') {
+          $window.open(response.tool_url);
+        }
+      }, function (error) {
+        $log.error(error);
+      });
     }
   }
 })();
