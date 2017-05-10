@@ -8,7 +8,7 @@ import django_extensions.db.fields
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('file_store', '0003_filetypes_and_fileextensions'),
+        ('file_store', '0002_filetypes_and_fileextensions'),
     ]
 
     operations = [
