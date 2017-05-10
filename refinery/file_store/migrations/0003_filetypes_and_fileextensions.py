@@ -1,6 +1,7 @@
 # encoding: utf8
 
 from django.db import migrations, connection
+from django.db.models import Max
 
 def forwards(apps, schema_editor):
     Filetype = apps.get_model("file_store", "Filetype")
@@ -10,7 +11,7 @@ def forwards(apps, schema_editor):
         # Workaround for old-fixture based FileType data messing up
         # Postgres' id sequence. See article here: http://bit.ly/2qsevm2 for similar issue
         with connection.cursor() as cursor:
-            highest_id = cursor.execute('select id from file_store_filetype order by id desc limit 1;')[0][0]
+            highest_id = Filetype.objects.all().aggregate(Max('id'))["id__max"]
             cursor.execute('alter sequence file_store_filetype_id_seq restart with {};'.format(highest_id + 1))
 
     filetypes = [
@@ -167,7 +168,7 @@ def forwards(apps, schema_editor):
         # Workaround for old-fixture based FileExtension data messing up Postgres' id sequence.
         # See article here: http://bit.ly/2qsevm2 for similar issue
         with connection.cursor() as cursor:
-            highest_id = cursor.execute('select id from file_store_fileextension order by id desc limit 1;')[0][0]
+            highest_id = FileExtension.objects.all().aggregate(Max('id'))["id__max"]
             cursor.execute('alter sequence file_store_fileextension_id_seq restart with {};'.format(highest_id + 1))
 
     file_extensions = [
