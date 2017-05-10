@@ -20,6 +20,7 @@
     var launchConfig = {};
 
     var service = {
+      generateFileTemplate: generateFileTemplate,
       postToolLaunch: postToolLaunch,
     };
     return service;
@@ -36,6 +37,60 @@
       return tool.$promise;
     }
 
+    function generateFileTemplate () {
+      var footprint = '';
+      // initialize the string object
+      if (fileService.currentTypes[0] === 'PAIR') {
+        footprint = '()()';
+      } else {
+        footprint = '[]';
+      }
+      // create fileRelationshipJson footprint
+      for (var w = 1; w < fileService.currentTypes.length - 1; w++) {
+        var searchLength = footprint.length;
+        var pairIndex = 0;
+        if (fileService.currentTypes[w - 1] === 'PAIR' &&
+          fileService.currentTypes[w] === 'PAIR') {
+          for (var f = 0; f < searchLength / 2; f++) {
+            pairIndex = footprint.indexOf('()', pairIndex);
+            if (pairIndex > -1) {
+              footprint = footprint.slice(0, pairIndex + 1) + '()()' +
+                footprint.slice(pairIndex + 1);
+              pairIndex = pairIndex + 4;
+            }
+          }
+        } else if (fileService.currentTypes[w - 1] === 'PAIR' &&
+          fileService.currentTypes[w] === 'LIST') {
+          for (var q = 0; q < searchLength / 2; q++) {
+            pairIndex = footprint.indexOf('()', pairIndex);
+            if (pairIndex > -1) {
+              footprint = footprint.slice(0, pairIndex + 1) + '[]' +
+                footprint.slice(pairIndex + 1);
+            }
+          }
+        } else if (fileService.currentTypes[w - 1] === 'LIST' &&
+          fileService.currentTypes[w] === 'LIST') {
+          for (var p = 0; p < searchLength / 2; p++) {
+            pairIndex = footprint.indexOf('[]', pairIndex);
+            if (pairIndex > -1) {
+              footprint = footprint.slice(0, pairIndex + 1) + '[]' +
+                footprint.slice(pairIndex + 1);
+            }
+          }
+        } else {
+          for (var n = 0; n < searchLength / 2; n++) {
+            pairIndex = footprint.indexOf('[]', pairIndex);
+            if (pairIndex > -1) {
+              footprint = footprint.slice(0, pairIndex + 1) + '()()' +
+                footprint.slice(pairIndex + 1);
+              pairIndex = pairIndex + 4;
+            }
+          }
+        }
+      }
+      return footprint;
+    }
+
     function generateLaunchConfig () {
       launchConfig.tool_definition_uuid = toolService.selectedTool.uuid;
       launchConfig.file_relationships = JSON.stringify(generateFileJson());
@@ -43,10 +98,12 @@
 
     function generateFileJson () {
       var fileRelationshipJson = '';
-      // currently only handles with innermost relationship
+      var fileRelationshipTemplate = generateFileTemplate();
+      console.log('footprint:' + fileRelationshipTemplate);
 
+      // currently only handles with innermost relationship
       angular.forEach(fileService.groupCollection, function (inputFileObj) {
-      //  var groupArr = groupId.split(',');
+       // var groupArr = groupId.split(',');
         var uuidStr = '';
         for (var m = 0; m < fileService.inputFileTypes.length; m++) {
           var nodeArr = inputFileObj[fileService.inputFileTypes[m].uuid];
@@ -72,6 +129,8 @@
             uuidStr = '[' + uuidStr + ']';
           }
         }
+
+        console.log('uuidStr: ' + uuidStr);
 
         // if (counter === 0) {
         //  // initialize the final json object
