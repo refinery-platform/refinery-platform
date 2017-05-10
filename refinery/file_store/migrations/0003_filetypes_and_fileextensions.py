@@ -1,10 +1,17 @@
 # encoding: utf8
-from django.db import migrations, transaction, IntegrityError
 
+from django.db import migrations, connection
 
 def forwards(apps, schema_editor):
     Filetype = apps.get_model("file_store", "Filetype")
     FileExtension = apps.get_model("file_store", "FileExtension")
+
+    if Filetype.objects.count():
+        # Workaround for old-fixture based FileType data messing up
+        # Postgres' id sequence. See article here: http://bit.ly/2qsevm2 for similar issue
+        with connection.cursor() as cursor:
+            highest_id = cursor.execute('select id from file_store_filetype order by id desc limit 1;')[0][0]
+            cursor.execute('alter sequence file_store_filetype_id_seq restart with {};'.format(highest_id + 1))
 
     filetypes = [
         Filetype(
@@ -154,11 +161,14 @@ def forwards(apps, schema_editor):
             # so we don't want to save duplicate objects here
             continue
         else:
-            # Workaround for old-fixture based FileType data messing up
-            # Postgres' id sequence. See article here: http://bit.ly/2qsevm2
-            # for similar issue
-            filetype.id = Filetype.objects.latest('id').id + 1
             filetype.save()
+
+    if FileExtension.objects.count():
+        # Workaround for old-fixture based FileExtension data messing up Postgres' id sequence.
+        # See article here: http://bit.ly/2qsevm2 for similar issue
+        with connection.cursor() as cursor:
+            highest_id = cursor.execute('select id from file_store_fileextension order by id desc limit 1;')[0][0]
+            cursor.execute('alter sequence file_store_fileextension_id_seq restart with {};'.format(highest_id + 1))
 
     file_extensions = [
         FileExtension(
@@ -346,10 +356,6 @@ def forwards(apps, schema_editor):
             # so we don't want to save duplicate objects here
             continue
         else:
-            # Workaround for old-fixture based FileExtension data messing up
-            # Postgres' id sequence. See article here: http://bit.ly/2qsevm2
-            # for similar issue
-            file_extension.id = FileExtension.objects.latest('id').id + 1
             file_extension.save()
 
 
