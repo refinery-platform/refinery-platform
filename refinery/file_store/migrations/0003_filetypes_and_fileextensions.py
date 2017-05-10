@@ -144,14 +144,17 @@ def forwards(apps, schema_editor):
         )
     ]
 
+    existing_filetypes = [filetype.name for filetype in Filetype.objects.all()]
+
     for filetype in filetypes:
-        # Attempt to save FileType objects. If an IntegrityError is raised
-        # upon saving an object we continue as it already exists.
-        try:
-            with transaction.atomic():
-                filetype.save()
-        except IntegrityError:
+        if filetype.name in existing_filetypes:
+            # The unique constraint on the name field is not
+            # enforced when prior migrations have been "faked"
+            # (like when bringing up a stack referencing prior backups on AWS)
+            # so we don't want to save duplicate objects here
             continue
+        else:
+            filetype.save()
 
     file_extensions = [
         FileExtension(
@@ -328,14 +331,18 @@ def forwards(apps, schema_editor):
         )
     ]
 
+    existing_file_extensions = [file_extension.name for file_extension in
+                                FileExtension.objects.all()]
+
     for file_extension in file_extensions:
-        # Attempt to save FileExtension objects. If an IntegrityError is raised
-        # upon saving an object we continue as it already exists.
-        try:
-            with transaction.atomic():
-                file_extension.save()
-        except IntegrityError:
+        if file_extension.name in existing_file_extensions:
+            # The unique constraint on the name field is not
+            # enforced when prior migrations have been "faked"
+            # (like when bringing up a stack referencing prior backups on AWS)
+            # so we don't want to save duplicate objects here
             continue
+        else:
+            file_extension.save()
 
 
 def backwards(apps, schema_editor):
