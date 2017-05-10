@@ -154,6 +154,10 @@ def forwards(apps, schema_editor):
             # so we don't want to save duplicate objects here
             continue
         else:
+            # Workaround for old-fixture based FileType data messing up
+            # Postgres' id sequence. See article here: http://bit.ly/2qsevm2
+            # for similar issue
+            filetype.id = Filetype.objects.latest('id').id + 1
             filetype.save()
 
     file_extensions = [
@@ -342,6 +346,10 @@ def forwards(apps, schema_editor):
             # so we don't want to save duplicate objects here
             continue
         else:
+            # Workaround for old-fixture based FileExtension data messing up
+            # Postgres' id sequence. See article here: http://bit.ly/2qsevm2
+            # for similar issue
+            file_extension.id = FileExtension.objects.latest('id').id + 1
             file_extension.save()
 
 
