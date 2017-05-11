@@ -21,7 +21,7 @@
 
     var service = {
       generateFileTemplate: generateFileTemplate,
-      postToolLaunch: postToolLaunch,
+      postToolLaunch: postToolLaunch
     };
     return service;
 
@@ -47,7 +47,10 @@
       }
 
       // masterGroupArr tracks the # of objs needed in the template to fill
-      var masterGroupArr = new Array(fileService.currentTypes.length - 1).fill(0);
+      // generate a zero array
+      var masterGroupArr = Array.apply(null, { length: fileService.currentTypes.length - 1 })
+        .map(function () { return 0; });
+
       angular.forEach(fileService.groupCollection, function (inputFileObj, groupId) {
         var groupList = groupId.split(',');
         for (var id = 0; id < groupList.length - 1; id++) {
@@ -60,7 +63,6 @@
 
       // create fileRelationshipJson footprint
       for (var w = 1; w < fileService.currentTypes.length; w++) {
-        console.log('footPrint:' + footprint);
         var searchLength = footprint.length;
         var pairIndex = 0;
         if (fileService.currentTypes[w - 1] === 'PAIR' &&
@@ -104,7 +106,6 @@
           }
         }
       }
-      console.log('final footprint: ' + footprint);
       return footprint;
     }
 
