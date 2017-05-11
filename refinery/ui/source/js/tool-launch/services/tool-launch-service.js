@@ -60,6 +60,7 @@
 
       // create fileRelationshipJson footprint
       for (var w = 1; w < fileService.currentTypes.length; w++) {
+        console.log('footPrint:' + footprint);
         var searchLength = footprint.length;
         var pairIndex = 0;
         if (fileService.currentTypes[w - 1] === 'PAIR' &&
@@ -103,6 +104,7 @@
           }
         }
       }
+      console.log('final footprint: ' + footprint);
       return footprint;
     }
 
@@ -145,7 +147,24 @@
         var endPart = fileRelationshipJson.slice(placeInd + 1);
         fileRelationshipJson = fileRelationshipJson.slice(0, placeInd + 1) + uuidStr + endPart;
       });
+
+      // remove empty pairs and lists
+      fileRelationshipJson = removeEmptySets(fileRelationshipJson);
+      console.log('fileRelationship: ' + fileRelationshipJson);
       return fileRelationshipJson;
+    }
+
+    function removeEmptySets (setStr) {
+      var cleanSetStr = setStr;
+      while (cleanSetStr.indexOf('()') > -1) {
+        var pairInd = cleanSetStr.indexOf('()');
+        cleanSetStr = cleanSetStr.slice(0, pairInd) + cleanSetStr.slice(pairInd + 2);
+      }
+      while (cleanSetStr.indexOf('[]') > -1) {
+        var listInd = cleanSetStr.indexOf('[]');
+        cleanSetStr = cleanSetStr.slice(0, listInd) + cleanSetStr.slice(listInd + 2);
+      }
+      return cleanSetStr;
     }
   }
 })();
