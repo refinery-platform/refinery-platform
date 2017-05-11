@@ -87,7 +87,7 @@
           .expectPOST(
             refinerySettings.appRoot +
             refinerySettings.refineryApiV2 +
-            '/tools',
+            '/tools/',
           postParams
         ).respond(400, fakeResponse);
 
