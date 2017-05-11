@@ -4,155 +4,155 @@ from django.db import migrations, connection
 from django.db.models import Max
 
 def forwards(apps, schema_editor):
-    Filetype = apps.get_model("file_store", "Filetype")
+    FileType = apps.get_model("file_store", "FileType")
     FileExtension = apps.get_model("file_store", "FileExtension")
 
-    if Filetype.objects.count():
+    if FileType.objects.count():
         # Workaround for old-fixture based FileType data messing up
         # Postgres' id sequence. See article here: http://bit.ly/2qsevm2 for similar issue
+        highest_id = FileType.objects.all().aggregate(Max('id'))["id__max"]
         with connection.cursor() as cursor:
-            highest_id = Filetype.objects.all().aggregate(Max('id'))["id__max"]
             cursor.execute('alter sequence file_store_filetype_id_seq restart with {};'.format(highest_id + 1))
 
     filetypes = [
-        Filetype(
+        FileType(
             description="Binary compressed SAM",
             name="BAM",
             used_for_visualization=True),
-        Filetype(
+        FileType(
             description="BED file",
             name="BED",
             used_for_visualization=True),
-        Filetype(
+        FileType(
             description="Big BED",
             name="BIGBED"),
-        Filetype(
+        FileType(
             description="Big WIG",
             name="BIGWIG",
             used_for_visualization=True),
-        Filetype(
+        FileType(
             description="Circular Binary Segmentation File",
             name="CBS"),
-        Filetype(
+        FileType(
             description="Affymetrix Probe Results File",
             name="CEL"),
-        Filetype(
+        FileType(
             description="Comma Separated Values",
             name="CSV"),
-        Filetype(
+        FileType(
             description="Eland file",
             name="ELAND"),
-        Filetype(
+        FileType(
             description="GFF file",
             name="GFF",
             used_for_visualization=True),
-        Filetype(
+        FileType(
             description="GTF file",
             name="GTF"),
-        Filetype(
+        FileType(
             description="Gzip compressed archive",
             name="GZ"),
-        Filetype(
+        FileType(
             description="Hypertext Markup Language",
             name="HTML"),
-        Filetype(
+        FileType(
             description="IDF file",
             name="IDF"),
-        Filetype(
+        FileType(
             description="FASTA file",
             name="FASTA"),
-        Filetype(
+        FileType(
             description="FASTQ file",
             name="FASTQ"),
-        Filetype(
+        FileType(
             description="FASTQC Sanger",
             name="FASTQCSANGER"),
-        Filetype(
+        FileType(
             description="FASTQ Illumina",
             name="FASTQILLUMINA"),
-        Filetype(
+        FileType(
             description="FASTQ Sanger",
             name="FASTQSANGER"),
-        Filetype(
+        FileType(
             description="FASTQ Solexa",
             name="FASTQSOLEXA"),
-        Filetype(
+        FileType(
             description="Portable Document Format",
             name="PDF"),
-        Filetype(
+        FileType(
             description="Sequence Alignment/Map",
             name="SAM"),
-        Filetype(
+        FileType(
             description="Segmented Data File",
             name="SEG",
             used_for_visualization=True),
-        Filetype(
+        FileType(
             description="Tabular file",
             name="TABULAR"),
-        Filetype(
+        FileType(
             description="TDF file",
             name="TDF",
             used_for_visualization=True),
-        Filetype(
+        FileType(
             description="Gzip compressed tar archive",
             name="TGZ"),
-        Filetype(
+        FileType(
             description="Text file",
             name="TXT"),
-        Filetype(
+        FileType(
             description="Variant Call Format",
             name="VCF",
             used_for_visualization=True),
-        Filetype(
+        FileType(
             description="Wiggle Track Format",
             name="WIG",
             used_for_visualization=True),
-        Filetype(
+        FileType(
             description="XML file",
             name="XML"),
-        Filetype(
+        FileType(
             description="Zip compressed archive",
             name="ZIP"),
-        Filetype(
+        FileType(
             description="FASTQ.GZ file",
             name="FASTQ.GZ"),
-        Filetype(
+        FileType(
             description="GCT file",
             name="GCT"),
-        Filetype(
+        FileType(
             description="DAT file",
             name="DAT"),
-        Filetype(
+        FileType(
             description="Illumina basecall file",
             name="BCL"),
-        Filetype(
+        FileType(
             description="Illumina basecall file gzipped",
             name="BCL GZip file"),
-        Filetype(
+        FileType(
             description="Illumina basecall file tarred + gzipped",
             name="BCL TGZ file"),
-        Filetype(
+        FileType(
             description="BAM index file",
             name="BAI file",
             used_for_visualization=True),
-        Filetype(
+        FileType(
             description="Cooler file",
             name="COOLER",
             used_for_visualization=True
         ),
-        Filetype(
+        FileType(
             description="HITILE file",
             name="HITILE",
             used_for_visualization=True
         ),
-        Filetype(
+        FileType(
             description="BEDGRAPH file",
             name="BEDGRAPH",
             used_for_visualization=True
         )
     ]
 
-    existing_filetypes = [filetype.name for filetype in Filetype.objects.all()]
+    existing_filetypes = [filetype.name for filetype in FileType.objects.all()]
 
     for filetype in filetypes:
         if filetype.name in existing_filetypes:
@@ -167,182 +167,182 @@ def forwards(apps, schema_editor):
     if FileExtension.objects.count():
         # Workaround for old-fixture based FileExtension data messing up Postgres' id sequence.
         # See article here: http://bit.ly/2qsevm2 for similar issue
+        highest_id = FileExtension.objects.all().aggregate(Max('id'))["id__max"]
         with connection.cursor() as cursor:
-            highest_id = FileExtension.objects.all().aggregate(Max('id'))["id__max"]
             cursor.execute('alter sequence file_store_fileextension_id_seq restart with {};'.format(highest_id + 1))
 
     file_extensions = [
         FileExtension(
             name="bam",
-            filetype=Filetype.objects.get(name="BAM")
+            filetype=FileType.objects.get(name="BAM")
         ),
         FileExtension(
             name="bed",
-            filetype=Filetype.objects.get(name="BED")
+            filetype=FileType.objects.get(name="BED")
         ),
         FileExtension(
             name="bigbed",
-            filetype=Filetype.objects.get(name="BIGBED")
+            filetype=FileType.objects.get(name="BIGBED")
         ),
         FileExtension(
             name="bigwig",
-            filetype=Filetype.objects.get(name="BIGWIG")
+            filetype=FileType.objects.get(name="BIGWIG")
         ),
         FileExtension(
             name="cbs",
-            filetype=Filetype.objects.get(name="CBS")
+            filetype=FileType.objects.get(name="CBS")
         ),
         FileExtension(
             name="cel",
-            filetype=Filetype.objects.get(name="CEL")
+            filetype=FileType.objects.get(name="CEL")
         ),
         FileExtension(
             name="csv",
-            filetype=Filetype.objects.get(name="CSV")
+            filetype=FileType.objects.get(name="CSV")
         ),
         FileExtension(
             name="eland",
-            filetype=Filetype.objects.get(name="ELAND")
+            filetype=FileType.objects.get(name="ELAND")
         ),
         FileExtension(
             name="gff",
-            filetype=Filetype.objects.get(name="GFF")
+            filetype=FileType.objects.get(name="GFF")
         ),
         FileExtension(
             name="gtf",
-            filetype=Filetype.objects.get(name="GTF")
+            filetype=FileType.objects.get(name="GTF")
         ),
         FileExtension(
             name="gz",
-            filetype=Filetype.objects.get(name="GZ")
+            filetype=FileType.objects.get(name="GZ")
         ),
         FileExtension(
             name="html",
-            filetype=Filetype.objects.get(name="HTML")
+            filetype=FileType.objects.get(name="HTML")
         ),
         FileExtension(
             name="idf",
-            filetype=Filetype.objects.get(name="IDF")
+            filetype=FileType.objects.get(name="IDF")
         ),
         FileExtension(
             name="fasta",
-            filetype=Filetype.objects.get(name="FASTA")
+            filetype=FileType.objects.get(name="FASTA")
         ),
         FileExtension(
             name="fastq",
-            filetype=Filetype.objects.get(name="FASTQ")
+            filetype=FileType.objects.get(name="FASTQ")
         ),
         FileExtension(
             name="fastqcsanger",
-            filetype=Filetype.objects.get(name="FASTQCSANGER")
+            filetype=FileType.objects.get(name="FASTQCSANGER")
         ),
         FileExtension(
             name="fastqillumina",
-            filetype=Filetype.objects.get(name="FASTQILLUMINA")
+            filetype=FileType.objects.get(name="FASTQILLUMINA")
         ),
         FileExtension(
             name="fastqsanger",
-            filetype=Filetype.objects.get(name="FASTQSANGER")
+            filetype=FileType.objects.get(name="FASTQSANGER")
         ),
         FileExtension(
             name="fastqsolexa",
-            filetype=Filetype.objects.get(name="FASTQSOLEXA")
+            filetype=FileType.objects.get(name="FASTQSOLEXA")
         ),
         FileExtension(
             name="pdf",
-            filetype=Filetype.objects.get(name="PDF")
+            filetype=FileType.objects.get(name="PDF")
         ),
         FileExtension(
             name="sam",
-            filetype=Filetype.objects.get(name="SAM")
+            filetype=FileType.objects.get(name="SAM")
         ),
         FileExtension(
             name="seg",
-            filetype=Filetype.objects.get(name="SEG")
+            filetype=FileType.objects.get(name="SEG")
         ),
         FileExtension(
             name="tabular",
-            filetype=Filetype.objects.get(name="TABULAR")
+            filetype=FileType.objects.get(name="TABULAR")
         ),
         FileExtension(
             name="tdf",
-            filetype=Filetype.objects.get(name="TDF")
+            filetype=FileType.objects.get(name="TDF")
         ),
         FileExtension(
             name="tgz",
-            filetype=Filetype.objects.get(name="TGZ")
+            filetype=FileType.objects.get(name="TGZ")
         ),
         FileExtension(
             name="txt",
-            filetype=Filetype.objects.get(name="TXT")
+            filetype=FileType.objects.get(name="TXT")
         ),
         FileExtension(
             name="vcf",
-            filetype=Filetype.objects.get(name="VCF")
+            filetype=FileType.objects.get(name="VCF")
         ),
         FileExtension(
             name="wig",
-            filetype=Filetype.objects.get(name="WIG")
+            filetype=FileType.objects.get(name="WIG")
         ),
         FileExtension(
             name="xml",
-            filetype=Filetype.objects.get(name="XML")
+            filetype=FileType.objects.get(name="XML")
         ),
         FileExtension(
             name="bb",
-            filetype=Filetype.objects.get(name="BIGBED")
+            filetype=FileType.objects.get(name="BIGBED")
         ),
         FileExtension(
             name="igv.tdf",
-            filetype=Filetype.objects.get(name="TDF")
+            filetype=FileType.objects.get(name="TDF")
         ),
         FileExtension(
             name="zip",
-            filetype=Filetype.objects.get(name="ZIP")
+            filetype=FileType.objects.get(name="ZIP")
         ),
         FileExtension(
             name="fastq.gz",
-            filetype=Filetype.objects.get(name="FASTQ.GZ")
+            filetype=FileType.objects.get(name="FASTQ.GZ")
         ),
         FileExtension(
             name="gct",
-            filetype=Filetype.objects.get(name="GCT")
+            filetype=FileType.objects.get(name="GCT")
         ),
         FileExtension(
             name="fq",
-            filetype=Filetype.objects.get(name="FASTQ")
+            filetype=FileType.objects.get(name="FASTQ")
         ),
         FileExtension(
             name="bcl",
-            filetype=Filetype.objects.get(name="BCL")
+            filetype=FileType.objects.get(name="BCL")
         ),
         FileExtension(
             name="bcl.gz",
-            filetype=Filetype.objects.get(name="BCL GZip file")
+            filetype=FileType.objects.get(name="BCL GZip file")
         ),
         FileExtension(
             name="bcl.tgz",
-            filetype=Filetype.objects.get(name="BCL TGZ file")
+            filetype=FileType.objects.get(name="BCL TGZ file")
         ),
         FileExtension(
             name="bai",
-            filetype=Filetype.objects.get(name="BAI file")
+            filetype=FileType.objects.get(name="BAI file")
         ),
         FileExtension(
             name="bw",
-            filetype=Filetype.objects.get(name="BIGWIG")
+            filetype=FileType.objects.get(name="BIGWIG")
         ),
         FileExtension(
             name="hitile",
-            filetype=Filetype.objects.get(name="HITILE")
+            filetype=FileType.objects.get(name="HITILE")
         ),
         FileExtension(
             name="cool",
-            filetype=Filetype.objects.get(name="COOLER")
+            filetype=FileType.objects.get(name="COOLER")
         ),
         FileExtension(
             name="bedgraph",
-            filetype=Filetype.objects.get(name="BEDGRAPH")
+            filetype=FileType.objects.get(name="BEDGRAPH")
         )
     ]
 
@@ -361,10 +361,10 @@ def forwards(apps, schema_editor):
 
 
 def backwards(apps, schema_editor):
-    Filetype = apps.get_model("file_store", "Filetype")
+    FileType = apps.get_model("file_store", "FileType")
     FileExtension = apps.get_model("file_store", "FileExtension")
     FileExtension.objects.all().delete()
-    Filetype.objects.all().delete()
+    FileType.objects.all().delete()
 
 
 class Migration(migrations.Migration):
