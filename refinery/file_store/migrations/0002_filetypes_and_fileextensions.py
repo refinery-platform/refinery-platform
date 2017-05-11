@@ -1,13 +1,5 @@
 # encoding: utf8
-from django.db import migrations, transaction, IntegrityError
-
-
-def forwards(apps, schema_editor):
-    pass
-
-
-def backwards(apps, schema_editor):
-    pass
+from django.db import migrations
 
 
 class Migration(migrations.Migration):
@@ -16,6 +8,4 @@ class Migration(migrations.Migration):
         ('file_store', '0001_initial'),
     ]
 
-    operations = [
-        migrations.RunPython(forwards, backwards)
-    ]
+    operations = []
