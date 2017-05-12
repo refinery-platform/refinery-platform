@@ -7,19 +7,22 @@
   toolLaunchService.$inject = [
     'fileRelationshipService',
     'toolSelectService',
-    'toolsService'
+    'toolsService',
+    '_'
   ];
 
   function toolLaunchService (
     fileRelationshipService,
     toolSelectService,
-    toolsService
+    toolsService,
+    _
   ) {
     var fileService = fileRelationshipService;
     var toolService = toolSelectService;
     var launchConfig = {};
 
     var service = {
+      generateFileStr: generateFileStr,
       generateFileTemplate: generateFileTemplate,
       postToolLaunch: postToolLaunch
     };
@@ -31,91 +34,7 @@
     * ----------------------
     */
 
-    function postToolLaunch () {
-      generateLaunchConfig();
-      var tool = toolsService.save(launchConfig);
-      return tool.$promise;
-    }
-
-    function generateFileTemplate () {
-      var footprint = '';
-      // initialize the string object
-      if (fileService.currentTypes[0] === 'PAIR') {
-        footprint = '()';
-      } else {
-        footprint = '[]';
-      }
-
-      // masterGroupArr tracks the # of objs needed in the template to fill
-      // generate a zero array
-      var masterGroupArr = Array.apply(null, { length: fileService.currentTypes.length - 1 })
-        .map(function () { return 0; });
-
-      angular.forEach(fileService.groupCollection, function (inputFileObj, groupId) {
-        var groupList = groupId.split(',');
-        for (var id = 0; id < groupList.length - 1; id++) {
-          var groupInt = parseInt(groupList[id], 10);
-          if (masterGroupArr[id] < groupInt) {
-            masterGroupArr[id] = groupInt;
-          }
-        }
-      });
-
-      // create fileRelationshipJson footprint
-      for (var w = 1; w < fileService.currentTypes.length; w++) {
-        var searchLength = footprint.length;
-        var pairIndex = 0;
-        if (fileService.currentTypes[w - 1] === 'PAIR' &&
-          fileService.currentTypes[w] === 'PAIR') {
-          for (var f = 0; f < searchLength / 2; f++) {
-            pairIndex = footprint.indexOf('()', pairIndex);
-            if (pairIndex > -1) {
-              footprint = footprint.slice(0, pairIndex + 1) + '()()' +
-                footprint.slice(pairIndex + 1);
-              pairIndex = pairIndex + 4;
-            }
-          }
-        } else if (fileService.currentTypes[w - 1] === 'PAIR' &&
-          fileService.currentTypes[w] === 'LIST') {
-          for (var q = 0; q < searchLength / 2; q++) {
-            pairIndex = footprint.indexOf('()', pairIndex);
-            if (pairIndex > -1) {
-              footprint = footprint.slice(0, pairIndex + 1) + '[][]' +
-                footprint.slice(pairIndex + 1);
-              pairIndex = pairIndex + 4;
-            }
-          }
-        } else if (fileService.currentTypes[w - 1] === 'LIST' &&
-          fileService.currentTypes[w] === 'LIST') {
-          for (var p = 0; p < searchLength / 2; p++) {
-            pairIndex = footprint.indexOf('[]', pairIndex);
-            if (pairIndex > -1) {
-              var listStr = Array(masterGroupArr[w - 1] + 1 * 2).join('[]');
-              footprint = footprint.slice(0, pairIndex + 1) + listStr +
-                footprint.slice(pairIndex + 1);
-            }
-          }
-        } else {
-          for (var n = 0; n < searchLength / 2; n++) {
-            pairIndex = footprint.indexOf('[]', pairIndex);
-            if (pairIndex > -1) {
-              var pairStr = Array(masterGroupArr[w - 1] + 1 * 2).join('()');
-              footprint = footprint.slice(0, pairIndex + 1) + pairStr +
-                footprint.slice(pairIndex + 1);
-            }
-          }
-        }
-      }
-      return footprint;
-    }
-
-    // Main method to generate launch config
-    function generateLaunchConfig () {
-      launchConfig.tool_definition_uuid = toolService.selectedTool.uuid;
-      launchConfig.file_relationships = JSON.stringify(generateFileJson());
-    }
-
-    function generateFileJson () {
+    function generateFileStr () {
       var fileRelationshipJson = generateFileTemplate();
 
       // creates inner most string
@@ -151,8 +70,102 @@
 
       // remove empty pairs and lists
       fileRelationshipJson = removeEmptySets(fileRelationshipJson);
-      console.log('fileRelationship: ' + fileRelationshipJson);
       return fileRelationshipJson;
+    }
+
+    /**
+     * Returns a str combination of () and []. It creates the max footprint
+     * size based on the currentTypes and groupCollection.
+     * Ex: currentTypes: ['PAIR', 'LIST', 'LIST'] groupCollection: {0,0,0:
+      * {xx: [node1, node2, node3]}, 1,1,0: {xx2: node1}}
+     * Returns ([[][][]], [[][][]])
+     */
+    function generateFileTemplate () {
+      var footprint = '';
+      // initialize the string object
+      if (fileService.currentTypes[0] === 'PAIR') {
+        footprint = '()';
+      } else {
+        footprint = '[]';
+      }
+
+      /** masterGroupArr tracks the max number of objs needed in the template.
+       *  It is initialized to a zero array **/
+      var masterGroupArr = _.fill(Array(fileService.currentTypes.length - 1), 0);
+      angular.forEach(fileService.groupCollection, function (inputFileObj, groupId) {
+        var groupList = groupId.split(',');
+        for (var id = 0; id < groupList.length - 1; id++) {
+          var groupInt = parseInt(groupList[id], 10);
+          if (masterGroupArr[id] < groupInt) {
+            masterGroupArr[id] = groupInt;
+          }
+        }
+      });
+
+      // create footprint based on the neighboring tool types structure
+      for (var w = 1; w < fileService.currentTypes.length; w++) {
+        if (fileService.currentTypes[w - 1] === 'PAIR' &&
+          fileService.currentTypes[w] === 'PAIR') {
+          footprint = insertSet(footprint, ['()', '()'], -1);
+        } else if (fileService.currentTypes[w - 1] === 'PAIR' &&
+          fileService.currentTypes[w] === 'LIST') {
+          footprint = insertSet(footprint, ['()', '[]'], -1);
+        } else if (fileService.currentTypes[w - 1] === 'LIST' &&
+          fileService.currentTypes[w] === 'LIST') {
+          footprint = insertSet(footprint, ['[]', '[]'], masterGroupArr[w - 1]);
+        } else {
+          footprint = insertSet(footprint, ['[]', '()'], masterGroupArr[w - 1]);
+        }
+      }
+      return footprint;
+    }
+
+    // Main method to generate launch config
+    function generateLaunchConfig () {
+      launchConfig.tool_definition_uuid = toolService.selectedTool.uuid;
+      launchConfig.file_relationships = JSON.stringify(generateFileStr());
+    }
+
+    /**
+     * Custom helper method which inserts multiples of (), []
+     * @param {string} fileTemplate - current footprint
+     * @param {array} setType - contains neighboring type notation ex ['()','[]']
+     * @param {maxNum} max number required for inserting sets
+     */
+    function insertSet (fileTemplate, setType, maxNum) {
+      var searchLength = fileTemplate.length / 2;
+      var pairIndex = 0;
+      var tempFileTemplate = fileTemplate;
+
+      for (var f = 0; f < searchLength; f++) {
+        // grabs the index of the first holder set, ie LIST:PAIR, grabs
+        // first empty list to insert the correct pair
+        pairIndex = tempFileTemplate.indexOf(setType[0], pairIndex);
+        // Used for pair:pair or pair:list -> 2 sets
+        var insertStr = Array(3).join(setType[1]);
+        if (maxNum > -1) {
+          // For list:list or list:pair -> list of sets
+          insertStr = Array(maxNum + 1 * 2).join(setType[1]);
+        }
+        // matches found then place insertStr into current tempFileTemplate
+        if (pairIndex > -1) {
+          tempFileTemplate = tempFileTemplate.slice(0, pairIndex + 1) + insertStr +
+            tempFileTemplate.slice(pairIndex + 1);
+        } else {
+          break;
+        }
+        // increases the pair index for pair:pair or list:list
+        if (setType[0] === setType[1]) {
+          pairIndex = pairIndex + 4;
+        }
+      }
+      return tempFileTemplate;
+    }
+
+    function postToolLaunch () {
+      generateLaunchConfig();
+      var tool = toolsService.save(launchConfig);
+      return tool.$promise;
     }
 
     function removeEmptySets (setStr) {

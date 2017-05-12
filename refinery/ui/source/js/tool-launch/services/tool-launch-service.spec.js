@@ -73,6 +73,35 @@
         expect(responseTemplate).toEqual('[()()()]');
       });
 
+      it('returns the correct pair:list template with multiple pairs', function () {
+        var workflow = ['PAIR', 'LIST'];
+        var inputFileObj = {};
+        inputFileObj[mocker.generateUuid()] = [mocker.generateUuid()];
+        inputFileObj[mocker.generateUuid()] = [mocker.generateUuid()];
+        var groupCollection = {};
+        groupCollection['0,0'] = angular.copy(inputFileObj);
+        groupCollection['1,0'] = angular.copy(inputFileObj);
+        angular.copy(workflow, fileService.currentTypes);
+        angular.copy(groupCollection, fileService.groupCollection);
+        var responseTemplate = service.generateFileTemplate();
+        expect(responseTemplate).toEqual('([][])');
+      });
+
+      it('returns the correct pair:pair:list:pair template with multiple' +
+        ' pairs', function () {
+        var workflow = ['PAIR', 'LIST'];
+        var inputFileObj = {};
+        inputFileObj[mocker.generateUuid()] = [mocker.generateUuid()];
+        inputFileObj[mocker.generateUuid()] = [mocker.generateUuid()];
+        var groupCollection = {};
+        groupCollection['0,0'] = angular.copy(inputFileObj);
+        groupCollection['1,0'] = angular.copy(inputFileObj);
+        angular.copy(workflow, fileService.currentTypes);
+        angular.copy(groupCollection, fileService.groupCollection);
+        var responseTemplate = service.generateFileTemplate();
+        expect(responseTemplate).toEqual('([][])');
+      });
+
       it('returns the correct list list template with multiple lists', function () {
         var workflow = ['LIST', 'LIST'];
         var inputFileObj = {};
@@ -86,6 +115,72 @@
         angular.copy(groupCollection, fileService.groupCollection);
         var responseTemplate = service.generateFileTemplate();
         expect(responseTemplate).toEqual('[[][][][]]');
+      });
+
+      it('returns the correct list:list:list template with multiple lists', function () {
+        var workflow = ['LIST', 'LIST', 'LIST'];
+        var inputFileObj = {};
+        inputFileObj[mocker.generateUuid()] = [mocker.generateUuid()];
+        var groupCollection = {};
+        groupCollection['0, 0, 0'] = angular.copy(inputFileObj);
+        groupCollection['1, 0, 0'] = angular.copy(inputFileObj);
+        groupCollection['2, 0, 0'] = angular.copy(inputFileObj);
+        groupCollection['3, 0, 0'] = angular.copy(inputFileObj);
+        angular.copy(workflow, fileService.currentTypes);
+        angular.copy(groupCollection, fileService.groupCollection);
+        var responseTemplate = service.generateFileTemplate();
+        expect(responseTemplate).toEqual('[[[]][[]][[]][[]]]');
+      });
+
+      it('returns the correct pair:pair:pair template with multiple lists', function () {
+        var workflow = ['PAIR', 'PAIR', 'PAIR'];
+        var inputFileObj = {};
+        inputFileObj[mocker.generateUuid()] = [mocker.generateUuid()];
+        var groupCollection = {};
+        groupCollection['0, 0, 0'] = angular.copy(inputFileObj);
+        angular.copy(workflow, fileService.currentTypes);
+        angular.copy(groupCollection, fileService.groupCollection);
+        var responseTemplate = service.generateFileTemplate();
+        expect(responseTemplate).toEqual('((()())(()()))');
+      });
+
+      it('returns the correct complicated template', function () {
+        var workflow = ['PAIR', 'PAIR', 'LIST', 'PAIR'];
+        var inputFileObj = {};
+        inputFileObj[mocker.generateUuid()] = [mocker.generateUuid()];
+        var groupCollection = {};
+        groupCollection['0, 0, 0, 0'] = angular.copy(inputFileObj);
+        groupCollection['1, 0, 0, 0'] = angular.copy(inputFileObj);
+        groupCollection['1, 1, 0, 0'] = angular.copy(inputFileObj);
+        groupCollection['1, 1, 1, 0'] = angular.copy(inputFileObj);
+        angular.copy(workflow, fileService.currentTypes);
+        angular.copy(groupCollection, fileService.groupCollection);
+        var responseTemplate = service.generateFileTemplate();
+        // empty sets are removed in another method
+        expect(responseTemplate)
+          .toEqual('(([()()][()()])([()()][()()]))');
+      });
+
+      it('returns the correct complicated template, for many groups', function () {
+        var workflow = ['PAIR', 'PAIR', 'LIST', 'LIST', 'PAIR'];
+        var inputFileObj = {};
+        inputFileObj[mocker.generateUuid()] = [mocker.generateUuid()];
+        var groupCollection = {};
+        groupCollection['0, 0, 0, 0, 0'] = angular.copy(inputFileObj);
+        groupCollection['1, 0, 0, 0, 0'] = angular.copy(inputFileObj);
+        groupCollection['1, 1, 0, 0, 0'] = angular.copy(inputFileObj);
+        groupCollection['1, 1, 1, 0, 0'] = angular.copy(inputFileObj);
+        groupCollection['1, 1, 1, 1, 0'] = angular.copy(inputFileObj);
+        groupCollection['1, 1, 1, 2, 0'] = angular.copy(inputFileObj);
+        angular.copy(workflow, fileService.currentTypes);
+        angular.copy(groupCollection, fileService.groupCollection);
+        var responseTemplate = service.generateFileTemplate();
+        // empty sets are removed in another method
+        expect(responseTemplate)
+          .toEqual('(' +
+            '([[()()()][()()()]][[()()()][()()()]])' +
+            '([[()()()][()()()]][[()()()][()()()]])' +
+            ')');
       });
 
       it('returns the correct complicated template', function () {
@@ -110,7 +205,7 @@
       });
     });
 
-    // describe('getTools', function () {
+    // describe('generateLaunchConfig', function () {
     //  beforeEach(inject(function (toolDefinitionsService, $q, $rootScope) {
     //    var responseData = [{ name: 'Test Workflow' }];
     //    spyOn(toolDefinitionsService, 'query').and.callFake(function () {
@@ -139,3 +234,4 @@
     // });
   });
 })();
+
