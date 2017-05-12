@@ -35,7 +35,7 @@
     */
 
     function generateFileStr () {
-      var fileRelationshipJson = generateFileTemplate();
+      var fileTemplateStr = generateFileTemplate();
 
       // creates inner most string
       // sort and generate through by ordered keys
@@ -60,17 +60,19 @@
         // initialize the final json object
         var placeInd = 0;
         if (fileService.currentTypes[fileService.currentTypes.length - 1] === 'PAIR') {
-          placeInd = fileRelationshipJson.indexOf('()');
+          placeInd = fileTemplateStr.indexOf('()');
         } else if (fileService.currentTypes[fileService.currentTypes.length - 1] === 'LIST') {
-          placeInd = fileRelationshipJson.indexOf('[]');
+          placeInd = fileTemplateStr.indexOf('[]');
         }
-        var endPart = fileRelationshipJson.slice(placeInd + 1);
-        fileRelationshipJson = fileRelationshipJson.slice(0, placeInd + 1) + uuidStr + endPart;
+        var endPart = fileTemplateStr.slice(placeInd + 1);
+        fileTemplateStr = fileTemplateStr.slice(0, placeInd + 1) + uuidStr + endPart;
       });
 
       // remove empty pairs and lists
-      fileRelationshipJson = removeEmptySets(fileRelationshipJson);
-      return fileRelationshipJson;
+      fileTemplateStr = removeEmptySets(fileTemplateStr, '()');
+      fileTemplateStr = removeEmptySets(fileTemplateStr, '[]');
+
+      return fileTemplateStr;
     }
 
     /**
@@ -123,6 +125,7 @@
     // Main method to generate launch config
     function generateLaunchConfig () {
       launchConfig.tool_definition_uuid = toolService.selectedTool.uuid;
+      // avoids an minimum array error
       launchConfig.file_relationships = JSON.stringify(generateFileStr());
     }
 
@@ -133,11 +136,10 @@
      * @param {maxNum} max number required for inserting sets
      */
     function insertSet (fileTemplate, setType, maxNum) {
-      var searchLength = fileTemplate.length / 2;
       var pairIndex = 0;
       var tempFileTemplate = fileTemplate;
 
-      for (var f = 0; f < searchLength; f++) {
+      for (var f = 0; f < fileTemplate.length / 2; f++) {
         // grabs the index of the first holder set, ie LIST:PAIR, grabs
         // first empty list to insert the correct pair
         pairIndex = tempFileTemplate.indexOf(setType[0], pairIndex);
@@ -162,21 +164,26 @@
       return tempFileTemplate;
     }
 
+    /**
+     * Main method to post a new tool job, calls on helper to generate
+     * launch config.
+     */
     function postToolLaunch () {
       generateLaunchConfig();
       var tool = toolsService.save(launchConfig);
       return tool.$promise;
     }
 
-    function removeEmptySets (setStr) {
+      /**
+     * Helper method which removes empty set notations
+     * @param {string} setStr - current footprint
+     * @param {string} setType - [] or {} or ()
+     */
+    function removeEmptySets (setStr, setType) {
       var cleanSetStr = setStr;
-      while (cleanSetStr.indexOf('()') > -1) {
-        var pairInd = cleanSetStr.indexOf('()');
+      while (cleanSetStr.indexOf(setType) > -1) {
+        var pairInd = cleanSetStr.indexOf(setType);
         cleanSetStr = cleanSetStr.slice(0, pairInd) + cleanSetStr.slice(pairInd + 2);
-      }
-      while (cleanSetStr.indexOf('[]') > -1) {
-        var listInd = cleanSetStr.indexOf('[]');
-        cleanSetStr = cleanSetStr.slice(0, listInd) + cleanSetStr.slice(listInd + 2);
       }
       return cleanSetStr;
     }

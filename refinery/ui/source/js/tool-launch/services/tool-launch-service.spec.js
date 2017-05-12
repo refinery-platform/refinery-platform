@@ -2,8 +2,6 @@
   'use strict';
 
   describe('Tool Launch Service', function () {
-    // var deferred;
-    // var rootScope;
     var fileService;
     var mocker;
     var service;
@@ -205,33 +203,37 @@
       });
     });
 
-    // describe('generateLaunchConfig', function () {
-    //  beforeEach(inject(function (toolDefinitionsService, $q, $rootScope) {
-    //    var responseData = [{ name: 'Test Workflow' }];
-    //    spyOn(toolDefinitionsService, 'query').and.callFake(function () {
-    //      deferred = $q.defer();
-    //      deferred.resolve(responseData);
-    //      return { $promise: deferred.promise };
-    //    });
-    //    rootScope = $rootScope;
-    //  }));
-    //
-    //  it('getTools is a method', function () {
-    //    expect(angular.isFunction(service.getTools)).toBe(true);
-    //  });
-    //
-    //  it('getTools returns a promise', function () {
-    //    var successData;
-    //    var response = service
-    //      .getTools()
-    //      .then(function (responseData) {
-    //        successData = responseData[0].name;
-    //      });
-    //    rootScope.$apply();
-    //    expect(typeof response.then).toEqual('function');
-    //    expect(successData).toEqual('Test Workflow');
-    //  });
-    // });
+    describe('postToolLaunch', function () {
+      var deferred;
+      var rootScope;
+
+      beforeEach(inject(function (toolsService, $q, $rootScope) {
+        var responseData = { status: 'success' };
+        spyOn(toolsService, 'save').and.callFake(function () {
+          deferred = $q.defer();
+          deferred.resolve(responseData);
+          return { $promise: deferred.promise };
+        });
+        rootScope = $rootScope;
+      }));
+
+      it('postToolLaunch is a method', function () {
+        expect(angular.isFunction(service.postToolLaunch)).toBe(true);
+      });
+
+      it('postToolLaunch returns a promise', function () {
+        angular.copy(['LIST'], fileService.currentTypes);
+        var responseStatus;
+        var response = service
+          .postToolLaunch()
+          .then(function (responseData) {
+            responseStatus = responseData.status;
+          });
+        rootScope.$apply();
+        expect(typeof response.then).toEqual('function');
+        expect(responseStatus).toEqual('success');
+      });
+    });
   });
 })();
 
