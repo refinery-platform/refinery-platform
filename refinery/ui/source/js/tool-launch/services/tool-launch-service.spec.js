@@ -94,8 +94,8 @@
         );
 
         var responseStr = service.generateFileStr();
-        var expectStr = '[' + '(' + mockUuid0 + ',' + mockUuid1 + ')' +
-          '(' + mockUuid2 + ',' + mockUuid3 + ')' +
+        var expectStr = '[' + '(' + mockUuid0 + ',' + mockUuid1 + '),' +
+          '(' + mockUuid2 + ',' + mockUuid3 + '),' +
           '(' + mockUuid1 + ',' + mockUuid2 + ')' + ']';
 
         expect(responseStr).toEqual(expectStr);
@@ -121,7 +121,7 @@
         );
 
         var responseStr = service.generateFileStr();
-        var expectStr = '(' + '[' + mockUuid0 + ']' + '[' + mockUuid1 + ']' + ')';
+        var expectStr = '(' + '[' + mockUuid0 + '],' + '[' + mockUuid1 + ']' + ')';
 
         expect(responseStr).toEqual(expectStr);
       });
@@ -146,7 +146,7 @@
         );
 
         var responseStr = service.generateFileStr();
-        var expectStr = '[' + '[' + mockUuid0 + ',' + mockUuid1 + ']' +
+        var expectStr = '[' + '[' + mockUuid0 + ',' + mockUuid1 + '],' +
           '[' + mockUuid2 + ',' + mockUuid3 + ']' + ']';
 
         expect(responseStr).toEqual(expectStr);

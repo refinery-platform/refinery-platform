@@ -78,6 +78,7 @@
       // remove empty pairs and lists
       fileTemplateStr = removeEmptySets(fileTemplateStr, '()');
       fileTemplateStr = removeEmptySets(fileTemplateStr, '[]');
+      fileTemplateStr = insertCommaBtwnSets(fileTemplateStr);
 
       return fileTemplateStr;
     }
@@ -133,6 +134,21 @@
     function generateLaunchConfig () {
       launchConfig.tool_definition_uuid = toolService.selectedTool.uuid;
       launchConfig.file_relationships = generateFileStr();
+    }
+
+    // helper method which inserts commas between sets )(,][,)[,](
+    function insertCommaBtwnSets (setStr) {
+      var endSetList = [')(', '][', ')[', ']('];
+      var finalSetStr = setStr;
+
+      for (var setInd = 0; setInd < endSetList.length; setInd++) {
+        while (finalSetStr.indexOf(endSetList[setInd]) > -1) {
+          var pairInd = finalSetStr.indexOf(endSetList[setInd]);
+          finalSetStr = finalSetStr.slice(0, pairInd + 1) + ',' +
+            finalSetStr.slice(pairInd + 1);
+        }
+      }
+      return finalSetStr;
     }
 
     /**
