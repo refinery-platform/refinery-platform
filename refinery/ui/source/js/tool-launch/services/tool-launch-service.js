@@ -48,22 +48,17 @@
       // sort and generate through by ordered keys
       angular.forEach(fileService.groupCollection, function (inputFileObj) {
         var uuidStr = '';
-        var tempUuid = '';
         for (var fileInd = 0; fileInd < fileService.inputFileTypes.length; fileInd++) {
           var nodeArr = inputFileObj[fileService.inputFileTypes[fileInd].uuid];
           for (var nodeInd = 0; nodeInd < nodeArr.length; nodeInd++) {
-            if (tempUuid.length === 0) {
-              tempUuid = nodeArr[nodeInd].uuid;
+            if (uuidStr.length === 0) {
+              uuidStr = nodeArr[nodeInd].uuid;
             } else {
-              tempUuid = tempUuid + ',' + nodeArr[nodeInd].uuid;
+              uuidStr = uuidStr + ',' + nodeArr[nodeInd].uuid;
             }
           }
         }
-        if (uuidStr.length > 0) {
-          uuidStr = uuidStr + ',' + tempUuid;
-        } else {
-          uuidStr = tempUuid;
-        }
+
         // inserts the uuidStrs into the templates
         var placeInd = 0;
         if (fileService.currentTypes[fileService.currentTypes.length - 1] === 'PAIR') {
