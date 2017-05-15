@@ -44,12 +44,15 @@
       // return the max template which is populated
       var fileTemplateStr = generateFileTemplate();
 
-      // creates inner most string
-      // sort and generate through by ordered keys
+      // creates the uuid strs for each group
+      // loops through each group
       angular.forEach(fileService.groupCollection, function (inputFileObj) {
         var uuidStr = '';
+        // loops through each input file type (ex reverse vs forward), order
+        // matters for back end so much use fileService.inputFileTypes array
         for (var fileInd = 0; fileInd < fileService.inputFileTypes.length; fileInd++) {
           var nodeArr = inputFileObj[fileService.inputFileTypes[fileInd].uuid];
+          // loops through each node uuid and concats each string
           for (var nodeInd = 0; nodeInd < nodeArr.length; nodeInd++) {
             if (uuidStr.length === 0) {
               uuidStr = nodeArr[nodeInd].uuid;
@@ -73,6 +76,7 @@
       // remove empty pairs and lists
       fileTemplateStr = removeEmptySets(fileTemplateStr, '()');
       fileTemplateStr = removeEmptySets(fileTemplateStr, '[]');
+      // inserts commas between the ending sets, ex [(),(),()]
       fileTemplateStr = insertCommaBtwnSets(fileTemplateStr);
 
       return fileTemplateStr;
