@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 
 {% load humanize %}
-{% load static %}
+{% load static from staticfiles %}
 
 <html lang="en">
 <head>
@@ -36,7 +36,8 @@
       admins: '{{ ADMIN_EMAIL|safe }}',
       repositoryMode: {{ REFINERY_REPOSITORY_MODE|yesno:"true,false,undefined" }},
       solrSynonymSearch: {{ SOLR_SYNONYM_SEARCH|lower }},
-      refineryTutorialSteps: '{{  REFINERY_TUTORIAL_STEPS|escapejs }}'
+      refineryTutorialSteps: '{{  REFINERY_TUTORIAL_STEPS|escapejs }}',
+      staticUrl: '{{ STATIC_URL|escapejs }}'
     };
 
     if (window.djangoApp.userId === 'None' || window.djangoApp.userName === 'None') {
@@ -188,6 +189,11 @@
           <li class="{{ navbar_class_about }}">
             <a href="{% url "about" %}" tabindex=4>About</a>
           </li>
+          {% if REFINERY_CUSTOM_NAVBAR_ITEM %}
+             <li>
+               {{ REFINERY_CUSTOM_NAVBAR_ITEM|safe }}
+             </li>
+          {% endif %}
         </ul>
       </div>
       </div>
@@ -291,8 +297,6 @@
   <script src="{% static "js/collaboration.js" %}"></script>
   <script src="{% static "js/chart.js"%}"></script>
   <script src="{% static "js/data-set-about.js" %}"></script>
-  <script src="{% static "js/visualization.js" %}"></script>
-  <script src="{% static "js/igv.js" %}"></script>
   <script src="{% static "js/tool-launch.js" %}"></script>
 
   <script src="{% static "vendor/ng-file-upload/angular-file-upload.min.js" %}"></script>

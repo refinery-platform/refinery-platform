@@ -7,55 +7,34 @@
 
   InputControlCtrl.$inject = [
     '$scope',
-    'fileBrowserFactory',
-    'resetGridService',
-    'selectedNodesService'
+    'fileRelationshipService'
   ];
 
 
   function InputControlCtrl (
     $scope,
-    fileBrowserFactory,
-    resetGridService,
-    selectedNodesService
+    fileRelationshipService
   ) {
+    var fileService = fileRelationshipService;
     var vm = this;
-    vm.groups = [];
-    vm.groupIndex = 0;
+    vm.attributes = fileService.attributesObj;
+    vm.currentGroup = fileService.currentGroup; // maintains nav position
+    vm.currentTypes = fileService.currentTypes;
+    vm.inputFileTypes = fileService.inputFileTypes;
     vm.navRight = navRight;
     vm.navLeft = navLeft;
-    vm.removeGroup = removeGroup;
-    vm.removeAllGroups = removeAllGroups;
-    vm.tool = {};
-    vm.attributes = {};
-
-  /*
+   /*
    * ---------------------------------------------------------
    * Methods Definitions
    * ---------------------------------------------------------
    */
-    function navLeft () {
-      if (vm.groupIndex > 0) {
-        vm.groupIndex--;
-      }
+    function navLeft (depth) {
+      vm.currentGroup[depth]--;
     }
 
-    function navRight () {
-      if (vm.groupIndex < vm.groups.length) {
-        vm.groupIndex++;
-      }
+    function navRight (depth) {
+      vm.currentGroup[depth]++;
     }
-
-    function removeGroup (groupInd) {
-      vm.groups[groupInd].isSelected = false;
-      selectedNodesService.setSelectedNodes(vm.groups[groupInd]);
-    }
-
-    function removeAllGroups () {
-      selectedNodesService.setSelectedAllFlags(false);
-      resetGridService.setRefreshGridFlag(true);
-    }
-
     /*
    * ---------------------------------------------------------
    * Watchers
@@ -68,23 +47,10 @@
           return vm.displayCtrl.selectedTool;
         },
         function () {
-          angular.copy(vm.displayCtrl.selectedTool, vm.tool);
-        }
-      );
+          vm.currentGroup = fileService.currentGroup;
+          vm.currentTypes = fileService.currentTypes;
 
-      $scope.$watchCollection(
-        function () {
-          return selectedNodesService.selectedNodes;
-        },
-        function () {
-          vm.groups = selectedNodesService.selectedNodes;
-          if (vm.groups.length > 0) {
-            var attributesArray = vm.groups[0].grid.appScope.assayAttributes;
-            for (var ind = 0; ind < attributesArray.length; ind ++) {
-              vm.attributes[attributesArray[ind].display_name] = attributesArray[ind].internal_name;
-            }
-            vm.groupIndex = vm.groups.length - 1;
-          }
+          vm.inputFileTypes = fileService.inputFileTypes;
         }
       );
     };

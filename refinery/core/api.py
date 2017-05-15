@@ -516,7 +516,10 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
 
         analyses = []
         for analysis in bundle.obj.get_analyses():
-            analysis_dict = analysis.__dict__
+            analysis_dict = {}
+            analysis_dict["uuid"] = analysis.uuid
+            analysis_dict["name"] = analysis.name
+            analysis_dict["status"] = analysis.status
             analysis_dict['is_owner'] = False
             owner = analysis.get_owner()
             if owner:
@@ -996,7 +999,10 @@ class AnalysisResource(ModelResource):
             allowed_datasets = get_objects_for_user(user, perm, DataSet)
         else:
             allowed_datasets = get_objects_for_group(
-                ExtendedGroup.objects.public_group(), perm, DataSet)
+                ExtendedGroup.objects.public_group(),
+                perm,
+                DataSet
+            )
 
         return Analysis.objects.filter(
             data_set__in=allowed_datasets.values_list("id", flat=True)

@@ -1,9 +1,10 @@
 'use strict';
 
-function rpAnalysisMonitorGlobalListStatusPopoverDetails () {
+function rpAnalysisMonitorGlobalListStatusPopoverDetails ($window) {
   return {
     restrict: 'E',
-    templateUrl: '/static/partials/analysis-monitor/partials/global-list-status-popover.html',
+    templateUrl:
+      $window.getStaticUrl('partials/analysis-monitor/partials/global-list-status-popover.html'),
     controller: 'AnalysisMonitorCtrl',
     controllerAs: 'PopAMCtrl',
     bindToController: {
@@ -15,5 +16,6 @@ function rpAnalysisMonitorGlobalListStatusPopoverDetails () {
 angular
   .module('refineryAnalysisMonitor')
   .directive('rpAnalysisMonitorGlobalListStatusPopoverDetails', [
+    '$window',
     rpAnalysisMonitorGlobalListStatusPopoverDetails
   ]);

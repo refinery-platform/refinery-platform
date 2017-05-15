@@ -9,7 +9,8 @@ function CollaborationCtrl (
   $uibModal,
   activeMemberService,
   groupInviteService,
-  groupDataService
+  groupDataService,
+  $window
 ) {
   this.$state = $state;
   this.$stateParams = $stateParams;
@@ -19,6 +20,7 @@ function CollaborationCtrl (
   this.groupInviteService = groupInviteService;
   this.groupDataService = groupDataService;
   this.activeService = activeMemberService;
+  this.$window = $window;
 
   this.groupDataService.update(this.$stateParams);
 
@@ -102,17 +104,21 @@ CollaborationCtrl.prototype.revokeInvitation = function (invite) {
 // Opening modals:
 
 CollaborationCtrl.prototype.openAddGroup = function () {
+  var addGroupsDialogUrl = this.$window.getStaticUrl(
+    'partials/collaboration/partials/collaboration-addgroups-dialog.html'
+  );
   this.$uibModal.open({
-    templateUrl:
-      '/static/partials/collaboration/partials/collaboration-addgroups-dialog.html',
+    templateUrl: addGroupsDialogUrl,
     controller: 'AddGroupCtrl as modal'
   });
 };
 
 CollaborationCtrl.prototype.openGroupEditor = function (group) {
+  var groupsDialogUrl = this.$window.getStaticUrl(
+    'partials/collaboration/partials/collaboration-groups-dialog.html'
+  );
   this.$uibModal.open({
-    templateUrl:
-      '/static/partials/collaboration/partials/collaboration-groups-dialog.html',
+    templateUrl: groupsDialogUrl,
     controller: 'GroupEditorCtrl as modal',
     resolve: {
       group: function () {
@@ -125,18 +131,21 @@ CollaborationCtrl.prototype.openGroupEditor = function (group) {
 CollaborationCtrl.prototype.openMemberEditor = function (member, totalMembers) {
   this.activeService.setActiveMember(member);
   this.activeService.setTotalMembers(totalMembers);
-
+  var membersDialogUrl = this.$window.getStaticUrl(
+    'partials/collaboration/partials/collaboration-members-dialog.html'
+  );
   this.$uibModal.open({
-    templateUrl:
-      '/static/partials/collaboration/partials/collaboration-members-dialog.html',
+    templateUrl: membersDialogUrl,
     controller: 'MemberEditorCtrl as modal'
   });
 };
 
 CollaborationCtrl.prototype.openEmailInvite = function () {
+  var addMembersDialogUrl = this.$window.getStaticUrl(
+    'partials/collaboration/partials/collaboration-addmembers-dialog.html'
+  );
   this.$uibModal.open({
-    templateUrl:
-      '/static/partials/collaboration/partials/collaboration-addmembers-dialog.html',
+    templateUrl: addMembersDialogUrl,
     controller: 'EmailInviteCtrl as modal'
   });
 };
@@ -153,5 +162,6 @@ angular
     'activeMemberService',
     'groupInviteService',
     'groupDataService',
+    '$window',
     CollaborationCtrl
   ]);

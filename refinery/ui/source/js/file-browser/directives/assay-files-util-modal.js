@@ -1,18 +1,20 @@
 'use strict';
 
 function rpAssayFilesUtilModal (
-  $compile,
   resetGridService,
-  $templateCache,
+  $window,
   $uibModal
 ) {
   return {
     restrict: 'AE',
     link: function (scope, element) {
       var modalInstance;
+      var modalDetailUrl = $window.getStaticUrl(
+        'partials/file-browser/partials/assay-files-util-modal-detail.html'
+      );
       element.bind('click', function () {
         modalInstance = $uibModal.open({
-          templateUrl: '/static/partials/file-browser/partials/assay-files-util-modal-detail.html',
+          templateUrl: modalDetailUrl,
           controller: 'AssayFilesUtilModalCtrl',
           controllerAs: 'AFUMCtrl'
         });
@@ -32,10 +34,8 @@ angular
   .directive(
   'rpAssayFilesUtilModal',
   [
-    '$compile',
     'resetGridService',
-    '$templateCache',
+    '$window',
     '$uibModal',
     rpAssayFilesUtilModal
-  ]
-  );
+  ]);

@@ -109,13 +109,13 @@
         var settings = $injector.get('settings');
         $httpBackend = $injector.get('$httpBackend');
         $rootScope = $injector.get('$rootScope');
-        service = $injector.get('toolsDefinitionsService');
+        service = $injector.get('toolDefinitionsService');
 
         $httpBackend
           .expectGET(
             settings.appRoot +
             settings.refineryApiV2 +
-            '/tools/definitions'
+            '/tool_definitions'
         ).respond(200, fakeResponse);
       });
     });

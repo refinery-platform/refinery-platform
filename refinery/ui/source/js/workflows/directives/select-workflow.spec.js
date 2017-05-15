@@ -14,13 +14,14 @@ describe('rpSelectWorkflow directive unit test', function () {
     _$compile_,
     _$rootScope_,
     $templateCache,
-    $httpBackend
+    $httpBackend,
+    $window
   ) {
     $httpBackend
       .expectGET('/api/v1/workflow/?format=json').respond(200, '');
 
     $templateCache.put(
-      '/static/partials/workflows/partials/select-workflow.html',
+      $window.getStaticUrl('partials/workflows/partials/select-workflow.html'),
       '<div id="select-workflow-dropdown"></div>'
     );
     compile = _$compile_;

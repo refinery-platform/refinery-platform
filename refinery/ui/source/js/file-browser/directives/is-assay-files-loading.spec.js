@@ -14,10 +14,11 @@ describe('rpIsAssayFilesLoading directive unit test', function () {
   beforeEach(inject(function (
     _$compile_,
     _$rootScope_,
-    $templateCache
+    $templateCache,
+    $window
   ) {
     $templateCache.put(
-      '/static/partials/file-browser/partials/is-assay-files-loading.html',
+      $window.getStaticUrl('partials/file-browser/partials/is-assay-files-loading.html'),
       '<span><h4>Additional rows loading....</h4></span>'
     );
     compile = _$compile_;

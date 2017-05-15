@@ -1,5 +1,15 @@
 'use strict';
 
+window.getStaticUrl = function (relativePath) {
+  // must be a global because used for config of modules other than refineryApp
+  try {
+    return window.djangoApp.staticUrl + relativePath;
+  } catch (e) {
+    // window.djangoApp is defined in base.html which is not loaded by Karma
+    return '/static/' + relativePath;
+  }
+};
+
 angular
   .module('refineryApp', [
     /*
@@ -48,9 +58,7 @@ angular
     'refineryChart',
     'refineryFileBrowser',
     'refineryDataSetAbout',
-    'refineryToolLaunch',
-    'refineryVisualization',
-    'refineryIGV'
+    'refineryToolLaunch'
   ])
   .run(['$', '$rootScope', function ($, $rootScope) {
     //  trigger from the contents.js when the node selection list has been

@@ -5,9 +5,17 @@
     .module('refineryToolLaunch')
     .controller('ToolDisplayCtrl', ToolDisplayCtrl);
 
-  ToolDisplayCtrl.$inject = ['$scope', '_', 'toolsService'];
+  ToolDisplayCtrl.$inject = [
+    '$scope',
+    '_',
+    'toolLaunchService'];
 
-  function ToolDisplayCtrl ($scope, _, toolsService) {
+  function ToolDisplayCtrl (
+    $scope,
+    _,
+    toolLaunchService
+  ) {
+    var toolService = toolLaunchService;
     var vm = this;
     vm.selectedTool = {};
     vm.isToolSelected = false;
@@ -19,10 +27,10 @@
     */
     $scope.$watchCollection(
       function () {
-        return toolsService.selectedTool;
+        return toolService.selectedTool;
       },
       function () {
-        angular.copy(toolsService.selectedTool, vm.selectedTool);
+        angular.copy(toolService.selectedTool, vm.selectedTool);
         vm.isToolSelected = !(_.isEmpty(vm.selectedTool));
       }
     );

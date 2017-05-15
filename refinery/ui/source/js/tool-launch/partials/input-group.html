@@ -1,37 +1,72 @@
 <div
-  class="panel-group"
-  id="input-group-nav"
+  class="node-input-group"
   role="tablist"
   aria-multiselectable="true">
 
-  <div class="panel panel-default">
-    <div class="panel-heading" role="tab">
-      <h4 class="panel-title">
-        <div
-          role="button"
-          data-toggle="collapse"
-          data-parent="#input-group-nav"
-          ng-click="$ctrl.isNavCollapsed = !$ctrl.isNavCollapsed"
-          aria-expanded="true"
-          aria-controls="{{ $ctrl.tool.name }}">
-            <i
-              ng-class="$ctrl.isNavCollapsed ? 'fa fa-caret-right' : 'fa fa-caret-down'"
-              class="fa-pull-left"
-              aria-hidden="true"></i>
-           Tool Input Group
+  <ul>
+     <div ng-if="$ctrl.currentTypes[$ctrl.currentTypes.length-1]=='PAIR'">
+      <li ng-repeat="inputFile in $ctrl.inputFileTypes track by $index">
+        <span class="wrap-word" ng-if="$ctrl.isGroupPopulated(inputFile.uuid)">
+          <span ng-repeat="node in $ctrl.groupCollection[$ctrl.currentGroup][inputFile.uuid]">
+            {{ node[$ctrl.attributes.Name] }}
+          </span>
+        </span>
+        <span ng-if="!$ctrl.isGroupPopulated(inputFile.uuid)">
+          {{ inputFile.name }}:
+          <
+          <div
+            class='fileTypes'
+            ng-repeat="fileObj in inputFile.allowed_filetypes">
+            {{fileObj.name}}
+            <span ng-if="$index < inputFile.allowed_filetypes.length - 1">
+              ,
+            </span>
+          </div>
+          >
+          <br>
+          <em>{{ inputFile.description }}</em>
+        </span>
+      </li>
+     </div>
+
+    <div ng-if="$ctrl.currentTypes[$ctrl.currentTypes.length-1]=='LIST'">
+      <li class="wrap-word">
+        <div ng-if="!$ctrl.isGroupPopulated($ctrl.inputFileTypes[0].uuid)">
+          {{ $ctrl.inputFileTypes[0].name }}:
+          <
+          <div
+            class='fileTypes'
+            ng-repeat="fileObj in $ctrl.inputFileTypes[0].allowed_filetypes">
+            {{fileObj.name}}
+            <span ng-if="$index < $ctrl.inputFileTypes[0].allowed_filetypes.length - 1">
+              ,
+            </span>
+          </div>
+          >
+          <br>
+          <em>{{ inputFile.description }}</em>
         </div>
-      </h4>
-    </div>
-    <div
-      id="tool-launch-body"
-      class="panel-collapse"
-      uib-collapse="$ctrl.isNavCollapsed"
-      role="tabpanel"
-      aria-labelledby="tool-body">
-      <div class="panel-body">
-        <rp-input-group-cart collection='$ctrl.tool.file_relationship'>
-        </rp-input-group-cart>
-      </div>
-    </div>
-  </div>
+        <div ng-if="$ctrl.isGroupPopulated($ctrl.inputFileTypes[0].uuid)">
+          <div
+            ng-repeat="node in $ctrl.groupCollection[$ctrl.currentGroup][$ctrl.inputFileTypes[0].uuid]"
+            class="p-t-1">
+            {{ node[$ctrl.attributes.Name] }}
+          </div>
+        </div>
+      </li>
+     </div>
+
+  </ul>
+  <button
+    class="btn btn-default btn-xs outline"
+    ng-disabled="$ctrl.isObjEmpty($ctrl.groupCollection[$ctrl.currentGroup])"
+    ng-click="$ctrl.removeGroup()">
+    Remove
+  </button>
+  <button
+    class="btn btn-default btn-xs outline"
+    ng-disabled="$ctrl.isObjEmpty($ctrl.groupCollection)"
+    ng-click="$ctrl.removeAllGroups()">
+    Remove All
+  </button>
 </div>

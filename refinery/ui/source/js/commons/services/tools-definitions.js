@@ -2,13 +2,13 @@
   'use strict';
   angular
     .module('refineryApp')
-    .factory('toolsDefinitionsService', toolsDefinitionsService);
+    .factory('toolDefinitionsService', toolDefinitionsService);
 
-  toolsDefinitionsService.$inject = ['$resource', 'settings'];
+  toolDefinitionsService.$inject = ['$resource', 'settings'];
 
-  function toolsDefinitionsService ($resource, settings) {
-    var toolsDefinitions = $resource(
-      settings.appRoot + settings.refineryApiV2 + '/tools/definitions',
+  function toolDefinitionsService ($resource, settings) {
+    var toolDefinitions = $resource(
+      settings.appRoot + settings.refineryApiV2 + '/tool_definitions',
       {},
       {
         query: {
@@ -18,6 +18,6 @@
       }
     );
 
-    return toolsDefinitions;
+    return toolDefinitions;
   }
 })();

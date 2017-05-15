@@ -14,10 +14,11 @@ describe('rpFileDisplay directive unit test', function () {
   beforeEach(inject(function (
     _$compile_,
     _$rootScope_,
-    $templateCache
+    $templateCache,
+    $window
   ) {
     $templateCache.put(
-      '/static/partials/file-browser/partials/file-display.html',
+      $window.getStaticUrl('partials/file-browser/partials/file-display.html'),
       '<div id="display-select-menu"></div>'
     );
     compile = _$compile_;

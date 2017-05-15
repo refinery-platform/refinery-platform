@@ -2,7 +2,7 @@
 
 {% load humanize %}
 {% load markup %}
-{% load static %}
+{% load static from staticfiles %}
 
 
 {% block head_html %}
@@ -144,6 +144,12 @@
     {% endif %}
 
     var csrf_token = "{{ csrf_token }}";
+  </script>
+
+  <!-- Script for popup content in the tool status and analyses icon-->
+  <script type="text/ng-template" id="nodeselectionpopover.html">
+    <rp-node-selection-popover-detail>
+    </rp-node-selection-popover-detail>
   </script>
 
   <script type="text/javascript" src="{% static "js/refinery/solr/solr_utilities.js" %}"></script>

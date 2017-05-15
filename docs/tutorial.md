@@ -36,7 +36,7 @@ To follow the steps of this tutorial, you will need a data set consisting of dat
     - Tip 2: *Filenames* should refer to data files either located on your local computer (do *not* include the file path) or on a web server accessible via public URLs (provide the full URL)
   - can contain as many additional columns as desired
   - *must* provide column names as its first row
-  - *must* use column names that are unique and do *not* contain special characters
+  - *must* use column names that are unique, do *not* contain special characters, and are *not* the same as the following internally reserved metadata attribute names: *Assay_uuid, Django_ct, Django_id, File_uuid, Genome_build, Id, Is_annotation, Name, Species, Study_uuid, Type*
     - Tip: Descriptive yet concise names will be most effective
 
 > __Tutorial Data Set:__ skip this step since the tab-delimited `tutorial.tsv` metadata file is already provided

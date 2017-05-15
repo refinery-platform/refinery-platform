@@ -12,9 +12,7 @@
           data-toggle="collapse"
           data-parent="#tool-input-control"
           ng-click="$ctrl.isToolInputControlCollapsed = !$ctrl
-          .isToolInputControlCollapsed"
-          aria-expanded="true"
-          aria-controls="{{ $ctrl.tool.name }}">
+          .isToolInputControlCollapsed">
             <i
               ng-class="$ctrl.isToolInputControlCollapsed ? 'fa fa-caret-right' : 'fa fa-caret-down'"
               class="fa-pull-left"
@@ -25,55 +23,47 @@
     </div>
     <div
       id="tool-launch-body"
-      class="panel-collapse"
+      class="panel-collapse p-a-0"
       uib-collapse="$ctrl.isToolInputControlCollapsed"
       role="tabpanel"
       aria-labelledby="tool-body">
-      <div class="panel-body">
-        <h5>
-          <span ng-if="$ctrl.groups.length == 0">
-            <b>0</b> of
-          </span>
-          <span ng-if="$ctrl.groups.length > 0">
-            <b>{{ $ctrl.groupIndex + 1 }}</b> of
-          </span>
-          <b>{{ $ctrl.groups.length }} </b> groups
-        </h5>
+      <div class="panel-body p-a-0">
+        <div class="p-a-0">
+          <div
+            ng-repeat="groupType in $ctrl.currentTypes|orderBy:'$index':true track by $index"
+            id="control-panel-list">
+            <div ng-if="$index == 0" class="p-a-1-2">
+              <rp-input-group></rp-input-group>
+            </div>
 
-        <div>
-          <button
-            class="btn btn-default btn-xs outline"
-            ng-disabled="$ctrl.groupIndex == 0"
-            ng-click="$ctrl.navLeft()">
-            <i class="fa fa-backward"></i>
-          </button>
-          <button
-            class="btn btn-default btn-xs outline"
-            ng-disabled="$ctrl.groupIndex == $ctrl.groups.length - 1 || $ctrl.groups.length == 0"
-            ng-click="$ctrl.navRight()">
-            <i class="fa fa-forward"></i>
-          </button>
-          <button
-            class="btn btn-default btn-xs outline"
-            ng-disabled="$ctrl.groups.length == 0"
-            ng-click="$ctrl.removeGroup($ctrl.groupIndex)">
-            Remove
-          </button>
-          <button
-            class="btn btn-default btn-xs outline"
-            ng-disabled="$ctrl.groups.length == 0"
-            ng-click="$ctrl.removeAllGroups()">
-            Remove All
-          </button>
-        </div>
-
-        <hr>
-        <div
-          ng-if="$ctrl.groups.length != 0"
-          class="wrap-word">
-          {{ $ctrl.groups[$ctrl.groupIndex].entity[$ctrl.attributes.Name] }}
-          <{{ $ctrl.groups[$ctrl.groupIndex].entity[$ctrl.attributes['File Type']] }}>
-        </div>
+            <div
+              ng-if="$index > 0"
+              class="tree-panel"
+              ng-style="{'margin-left': 10*$index+'px'}">
+              <hr>
+              <div>
+                <h5>
+                  <b>{{ $ctrl.currentGroup[$ctrl.currentGroup.length-$index] }}</b>
+                  of groups in {{ groupType }}
+                </h5>
+              </div>
+              <div>
+                <button
+                  class="btn btn-default btn-xs outline"
+                  ng-disabled="$ctrl.currentGroup[$ctrl.currentGroup.length-$index] == 0"
+                  ng-click="$ctrl.navLeft($ctrl.currentGroup.length-$index)">
+                  <i class="fa fa-backward"></i>
+                </button>
+                <button
+                  class="btn btn-default btn-xs outline"
+                  ng-disabled="$ctrl.currentGroup[$ctrl.currentGroup.length-$index] == 1"
+                  ng-click="$ctrl.navRight($ctrl.currentGroup.length-$index)">
+                  <i class="fa fa-forward"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+         </div>
       </div>
     </div>
   </div>

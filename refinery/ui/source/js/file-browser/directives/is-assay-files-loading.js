@@ -1,9 +1,11 @@
 'use strict';
 
-function rpIsAssayFilesLoading (filesLoadingService) {
+function rpIsAssayFilesLoading ($window, filesLoadingService) {
   return {
     restrict: 'E',
-    templateUrl: '/static/partials/file-browser/partials/is-assay-files-loading.html',
+    templateUrl: function () {
+      return $window.getStaticUrl('partials/file-browser/partials/is-assay-files-loading.html');
+    },
     link: function (scope) {
       scope.$watch(
         function () {
@@ -19,5 +21,5 @@ function rpIsAssayFilesLoading (filesLoadingService) {
 
 angular
   .module('refineryFileBrowser')
-  .directive('rpIsAssayFilesLoading', ['filesLoadingService', rpIsAssayFilesLoading]
+  .directive('rpIsAssayFilesLoading', ['$window', 'filesLoadingService', rpIsAssayFilesLoading]
 );

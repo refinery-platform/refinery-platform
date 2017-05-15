@@ -29,14 +29,12 @@
       "file-browser",
       "data-set-about",
       "globals",
-      "igv",
       "metadata-table-import",
       "node-mapping",
       "node-relationship",
       "statistics",
       "tool-launch",
-      "workflows",
-      "visualization"
+      "workflows"
     ],
     "vendor": {
       "css": [

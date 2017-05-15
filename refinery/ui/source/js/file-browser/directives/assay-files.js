@@ -1,15 +1,18 @@
 'use strict';
 
-function rpFileBrowserAssayFiles () {
+function rpFileBrowserAssayFiles ($window) {
   return {
     restrict: 'E',
-    templateUrl: '/static/partials/file-browser/partials/assay-files.html',
+    templateUrl: function () {
+      return $window.getStaticUrl('partials/file-browser/partials/assay-files.html');
+    }
   };
 }
 
 angular
   .module('refineryFileBrowser')
   .directive('rpFileBrowserAssayFiles', [
+    '$window',
     rpFileBrowserAssayFiles
   ]
 );

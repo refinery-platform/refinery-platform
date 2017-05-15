@@ -13,7 +13,7 @@
     "description": {
       "type": "string"
     },
-    "file_type": {
+    "filetype": {
       "type": "object",
       "$ref": "FileType.json#"
     }

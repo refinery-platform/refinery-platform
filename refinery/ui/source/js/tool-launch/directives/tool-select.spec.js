@@ -12,10 +12,11 @@
       $httpBackend,
       $rootScope,
       settings,
-      $templateCache
+      $templateCache,
+      $window
     ) {
       $templateCache.put(
-        '/static/partials/tool-launch/partials/tool-select.html',
+        $window.getStaticUrl('partials/tool-launch/partials/tool-select.html'),
         '<div id="tool-select"></div>'
       );
 
@@ -24,7 +25,7 @@
         .expectGET(
           settings.appRoot +
           settings.refineryApiV2 +
-          '/tools/definitions'
+          '/tool_definitions'
         ).respond(200, []);
 
       var scope = $rootScope.$new();

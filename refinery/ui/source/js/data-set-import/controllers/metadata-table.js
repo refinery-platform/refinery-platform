@@ -18,6 +18,7 @@ function MetadataTableImportCtrl (
   this.d3 = d3;
   this.$uibModal = $uibModal;
   this.fileSources = fileSources;
+  this.showFileUpload = false;
   this.tabularFileImportApi = tabularFileImportApi;
   this.metadataStatusService = metadataStatusService;
   this.whiteSpaceStripFlag = false;
@@ -235,8 +236,11 @@ MetadataTableImportCtrl.prototype.checkFiles = function () {
       }
 
       self.$uibModal.open({
-        templateUrl:
-          '/static/partials/data-set-import/partials/dialog-list-confirmation.html',
+        templateUrl: function () {
+          return self.$window.getStaticUrl(
+            'partials/data-set-import/partials/dialog-list-confirmation.html'
+          );
+        },
         controller: 'ConfirmationDialogInstanceCtrl as modal',
         size: 'lg',
         resolve: {

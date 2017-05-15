@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load static %}
+{% load static from staticfiles %}
 {% block head_html %}
 {% endblock %}
 
@@ -23,17 +23,17 @@
 		  {% csrf_token %}
 
 			<p>{{ form.non_field_errors }}</p>
-			<p>{{ error }}</p>	
+			<p>{{ error }}</p>
 
 	<div class="refinery-subheader">
 		<h4>From Disk</h4>
 	</div>
-			
+
 				<p>
 					{{ form.isa_tab_file.errors}}
 					{{ form.isa_tab_file }}
 				</p>
-				
+
 	<div class="refinery-subheader">
 		<h4>From URL</h4>
 	</div>
@@ -44,7 +44,7 @@
 			<input style="float: left;" class="refinery-base btn btn-default"
         id="import-button"
         type="submit" value="Import"/>
-			<div style="margin-left: 15px; padding: 15px; float: left; display: block; height: 22px; width: 22px;" id="spinner"></div>	
+			<div style="margin-left: 15px; padding: 15px; float: left; display: block; height: 22px; width: 22px;" id="spinner"></div>
 		</form>
 	</div>
 </div>
@@ -72,14 +72,14 @@
 	    left: 'auto' // Left position relative to parent in px
 	    };
 
-	    	
+
     	$("#import-button").on( "click", function() {
     		$("#import-errors").html( "")
-    		var target = document.getElementById('spinner');    
+    		var target = document.getElementById('spinner');
     		//var spinner = new Spinner(opts).spin(target);
-    		
+
 			var spinner = new Spinner(opts).spin();
-			target.appendChild(spinner.el);    		
+			target.appendChild(spinner.el);
     		$("#import-message").html( "Running ...")
     	});
 	</script>

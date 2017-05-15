@@ -16,12 +16,13 @@ describe('rpAssayFiles directive unit test', function () {
     _$compile_,
     _$rootScope_,
     _$httpBackend_,
-    _settings_,
     $templateCache,
+    $window,
+    _settings_,
     _mockParamsFactory_
   ) {
     $templateCache.put(
-      '/static/partials/file-browser/partials/assay-files.html',
+      $window.getStaticUrl('partials/file-browser/partials/assay-files.html'),
       '<div id="grid1"></div>'
     );
     compile = _$compile_;

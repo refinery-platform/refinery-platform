@@ -55,7 +55,7 @@ a.spinnable {
   }
 }
 
-@background-image-url: '/static/images/bgnoise.png';
+@background-image-url: '../images/bgnoise.png';
 @background-gradient: rgba( 255, 0, 0, 0.5 );
 @background-gradient-highlight: lighter(red, 10%);
 
@@ -202,6 +202,7 @@ border: none;
 .popover {
   color: #000000;
   text-align: left;
+  z-index: 1060;
 }
 
 .popover-title {
@@ -1096,7 +1097,7 @@ a.analysis-header {
 }
 
 .no-animation .refinery-spinner {
-  background: url(/static/images/spinner.gif) center center no-repeat;
+  background: url("../images/spinner.gif") center center no-repeat;
   animation: none;
   -webkit-animation: none;
 }
@@ -1826,5 +1827,14 @@ body.is-screenshot-ready {
 #metadata-table-form {
   .nested-list {
     margin-left: 20px;
+  }
+}
+
+ul.paragraph {
+  list-style: none;
+  padding-left: 0;
+
+  li {
+    float: left;
   }
 }
