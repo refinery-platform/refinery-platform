@@ -33,8 +33,15 @@
     * Method Definitions
     * ----------------------
     */
-
+    /**
+     * Returns the file relationship str, where the template includes
+     * the node uuids and removes empty sets.
+     * Ex: currentTypes: ['PAIR', 'LIST', 'LIST'] groupCollection: {0,0,0:
+      * {xx: [node1, node2, node3]}, 1,1,0: {xx2: node1}}
+     * Returns ([[node1][node2][node3]], [[node1]])
+     */
     function generateFileStr () {
+      // return the max template which is populated
       var fileTemplateStr = generateFileTemplate();
 
       // creates inner most string
@@ -57,7 +64,7 @@
         } else {
           uuidStr = tempUuid;
         }
-        // initialize the final json object
+        // inserts the uuidStrs into the templates
         var placeInd = 0;
         if (fileService.currentTypes[fileService.currentTypes.length - 1] === 'PAIR') {
           placeInd = fileTemplateStr.indexOf('()');
@@ -122,11 +129,10 @@
       return footprint;
     }
 
-    // Main method to generate launch config
+    // Method to generate launch config
     function generateLaunchConfig () {
       launchConfig.tool_definition_uuid = toolService.selectedTool.uuid;
-      // avoids an minimum array error
-      launchConfig.file_relationships = JSON.stringify(generateFileStr());
+      launchConfig.file_relationships = generateFileStr();
     }
 
     /**
