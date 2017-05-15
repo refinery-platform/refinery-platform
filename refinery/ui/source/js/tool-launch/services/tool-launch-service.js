@@ -49,13 +49,13 @@
       angular.forEach(fileService.groupCollection, function (inputFileObj) {
         var uuidStr = '';
         var tempUuid = '';
-        for (var m = 0; m < fileService.inputFileTypes.length; m++) {
-          var nodeArr = inputFileObj[fileService.inputFileTypes[m].uuid];
-          for (var j = 0; j < nodeArr.length; j++) {
+        for (var fileInd = 0; fileInd < fileService.inputFileTypes.length; fileInd++) {
+          var nodeArr = inputFileObj[fileService.inputFileTypes[fileInd].uuid];
+          for (var nodeInd = 0; nodeInd < nodeArr.length; nodeInd++) {
             if (tempUuid.length === 0) {
-              tempUuid = nodeArr[j].uuid;
+              tempUuid = nodeArr[nodeInd].uuid;
             } else {
-              tempUuid = tempUuid + ',' + nodeArr[j].uuid;
+              tempUuid = tempUuid + ',' + nodeArr[nodeInd].uuid;
             }
           }
         }
@@ -104,27 +104,27 @@
       var masterGroupArr = _.fill(Array(fileService.currentTypes.length - 1), 0);
       angular.forEach(fileService.groupCollection, function (inputFileObj, groupId) {
         var groupList = groupId.split(',');
-        for (var id = 0; id < groupList.length - 1; id++) {
-          var groupInt = parseInt(groupList[id], 10);
-          if (masterGroupArr[id] < groupInt) {
-            masterGroupArr[id] = groupInt;
+        for (var idInd = 0; idInd < groupList.length - 1; idInd++) {
+          var groupInt = parseInt(groupList[idInd], 10);
+          if (masterGroupArr[idInd] < groupInt) {
+            masterGroupArr[idInd] = groupInt;
           }
         }
       });
 
       // create footprint based on the neighboring tool types structure
-      for (var w = 1; w < fileService.currentTypes.length; w++) {
-        if (fileService.currentTypes[w - 1] === 'PAIR' &&
-          fileService.currentTypes[w] === 'PAIR') {
+      for (var typeInd = 1; typeInd < fileService.currentTypes.length; typeInd++) {
+        if (fileService.currentTypes[typeInd - 1] === 'PAIR' &&
+          fileService.currentTypes[typeInd] === 'PAIR') {
           footprint = insertSet(footprint, ['()', '()'], -1);
-        } else if (fileService.currentTypes[w - 1] === 'PAIR' &&
-          fileService.currentTypes[w] === 'LIST') {
+        } else if (fileService.currentTypes[typeInd - 1] === 'PAIR' &&
+          fileService.currentTypes[typeInd] === 'LIST') {
           footprint = insertSet(footprint, ['()', '[]'], -1);
-        } else if (fileService.currentTypes[w - 1] === 'LIST' &&
-          fileService.currentTypes[w] === 'LIST') {
-          footprint = insertSet(footprint, ['[]', '[]'], masterGroupArr[w - 1]);
+        } else if (fileService.currentTypes[typeInd - 1] === 'LIST' &&
+          fileService.currentTypes[typeInd] === 'LIST') {
+          footprint = insertSet(footprint, ['[]', '[]'], masterGroupArr[typeInd - 1]);
         } else {
-          footprint = insertSet(footprint, ['[]', '()'], masterGroupArr[w - 1]);
+          footprint = insertSet(footprint, ['[]', '()'], masterGroupArr[typeInd - 1]);
         }
       }
       return footprint;
@@ -161,7 +161,7 @@
       var pairIndex = 0;
       var tempFileTemplate = fileTemplate;
 
-      for (var f = 0; f < fileTemplate.length / 2; f++) {
+      for (var tempInd = 0; tempInd < fileTemplate.length / 2; tempInd++) {
         // grabs the index of the first holder set, ie LIST:PAIR, grabs
         // first empty list to insert the correct pair
         pairIndex = tempFileTemplate.indexOf(setType[0], pairIndex);
