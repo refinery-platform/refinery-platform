@@ -125,6 +125,7 @@
           footprint = insertSet(footprint, ['[]', '()'], masterGroupArr);
         }
       }
+
       return footprint;
     }
 
@@ -153,9 +154,9 @@
      * Custom helper method which inserts multiples of (), []
      * @param {string} fileTemplate - current footprint
      * @param {array} setType - contains neighboring type notation ex ['()','[]']
-     * @param {maxNum} max number required for inserting sets
+     * @param {array} maxNumList - max number required for inserting sets
      */
-    function insertSet (fileTemplate, setType, maxNum) {
+    function insertSet (fileTemplate, setType, maxNumList) {
       var pairIndex = 0;
       var tempFileTemplate = fileTemplate;
 
@@ -163,23 +164,16 @@
         // grabs the index of the first holder set, ie LIST:PAIR, grabs
         // first empty list to insert the correct pair
         pairIndex = tempFileTemplate.indexOf(setType[0], pairIndex);
-        // Used for pair:pair or pair:list -> 2 sets
-
         // matches found then place insertStr into current tempFileTemplate
         if (pairIndex > -1) {
+          // Used for pair:pair or pair:list -> 2 sets
           var insertStr = Array(3).join(setType[1]);
-          if (maxNum.length > 0 && fileTemplate.length > 2 && tempInd < maxNum.length) {
             // For list:list or list:pair -> list of sets
-            insertStr = Array(maxNum[tempInd] + 1 * 2).join(setType[1]);
-          } else if (maxNum.length !== 0) {
-            // grab largest group number
-            var multNum = 0;
-            for (var i = 0; i < maxNum.length; i++) {
-              if (maxNum[i] > multNum) {
-                multNum = maxNum[i];
-              }
-            }
-            // For list:list or list:pair -> list of sets
+          if (maxNumList.length > 0 && fileTemplate.length > 2 && tempInd < maxNumList.length) {
+            insertStr = Array(maxNumList[tempInd] + 1 * 2).join(setType[1]);
+          } else if (maxNumList.length !== 0) {
+            // initializes or when groups don't branch
+            var multNum = _.max(maxNumList);  // grab largest set num
             insertStr = Array(multNum + 1 * 2).join(setType[1]);
           }
 
