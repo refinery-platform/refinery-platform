@@ -95,14 +95,13 @@
         footprint = '[]';
       }
 
-
       // create footprint based on the neighboring tool types structure
       var groupIdList = _.keys(fileService.groupCollection);
       for (var f = 0; f < groupIdList.length; f++) {
         groupIdList[f] = angular.copy(groupIdList[f].split(','));
       }
       for (var typeInd = 1; typeInd < fileService.currentTypes.length; typeInd++) {
-        var masterGroupArr = [];
+        var masterGroupArr = []; // generates # of sets to include for branches
         for (var groupInd = 0; groupInd < groupIdList.length; groupInd++) {
           if (typeInd === 1 || groupInd === groupIdList.length - 1) {
             // handles first pair group or last set of group Ids
@@ -112,12 +111,13 @@
           }
         }
 
+        // creates the correct str based on neighbor types and masterGroupArray
         if (fileService.currentTypes[typeInd - 1] === 'PAIR' &&
           fileService.currentTypes[typeInd] === 'PAIR') {
-          footprint = insertSet(footprint, ['()', '()'], -1);
+          footprint = insertSet(footprint, ['()', '()'], []);
         } else if (fileService.currentTypes[typeInd - 1] === 'PAIR' &&
           fileService.currentTypes[typeInd] === 'LIST') {
-          footprint = insertSet(footprint, ['()', '[]'], -1);
+          footprint = insertSet(footprint, ['()', '[]'], []);
         } else if (fileService.currentTypes[typeInd - 1] === 'LIST' &&
           fileService.currentTypes[typeInd] === 'LIST') {
           footprint = insertSet(footprint, ['[]', '[]'], masterGroupArr);
@@ -168,10 +168,10 @@
         // matches found then place insertStr into current tempFileTemplate
         if (pairIndex > -1) {
           var insertStr = Array(3).join(setType[1]);
-          if (maxNum !== -1 && fileTemplate.length > 2 && tempInd < maxNum.length) {
+          if (maxNum.length > 0 && fileTemplate.length > 2 && tempInd < maxNum.length) {
             // For list:list or list:pair -> list of sets
             insertStr = Array(maxNum[tempInd] + 1 * 2).join(setType[1]);
-          } else if (maxNum !== -1) {
+          } else if (maxNum.length !== 0) {
             // grab largest group number
             var multNum = 0;
             for (var i = 0; i < maxNum.length; i++) {
