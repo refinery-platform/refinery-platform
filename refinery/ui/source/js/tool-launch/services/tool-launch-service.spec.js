@@ -151,6 +151,35 @@
 
         expect(responseStr).toEqual(expectStr);
       });
+
+      it('returns the correct basic LIST:LIST:LIST str with uuids', function () {
+        spyOn(service, 'generateFileTemplate').and.returnValue('[[[][]][[][]]]');
+        var mockerInputTypeUuid0 = mocker.generateUuid();
+        var mockUuid0 = mocker.generateUuid();
+        var mockUuid1 = mocker.generateUuid();
+        var mockUuid2 = mocker.generateUuid();
+        var workflow = ['LIST', 'LIST', 'LIST'];
+        angular.copy(workflow, fileService.currentTypes);
+        fileService.inputFileTypes[0] = angular.copy({ uuid: mockerInputTypeUuid0 });
+        fileService.groupCollection['0,0,0'] = {};
+        fileService.groupCollection['0,0,0'][mockerInputTypeUuid0] = angular.copy(
+          [{ uuid: mockUuid0 }]
+        );
+        fileService.groupCollection['1,0,0'] = {};
+        fileService.groupCollection['1,0,0'][mockerInputTypeUuid0] = angular.copy(
+          [{ uuid: mockUuid1 }]
+        );
+        fileService.groupCollection['1,1,0'] = {};
+        fileService.groupCollection['1,1,0'][mockerInputTypeUuid0] = angular.copy(
+          [{ uuid: mockUuid1 }, { uuid: mockUuid2 }]
+        );
+
+        var responseStr = service.generateFileStr();
+        var expectStr = '[[[' + mockUuid0 + ']]' + ',[[' + mockUuid1 + '],' +
+          '[' + mockUuid1 + ',' + mockUuid2 + ']]]';
+
+        expect(responseStr).toEqual(expectStr);
+      });
     });
 
     describe('generateFileTemplate', function () {
@@ -236,10 +265,11 @@
         groupCollection['1, 0, 0'] = angular.copy(inputFileObj);
         groupCollection['2, 0, 0'] = angular.copy(inputFileObj);
         groupCollection['3, 0, 0'] = angular.copy(inputFileObj);
+        groupCollection['3, 1, 0'] = angular.copy(inputFileObj);
         angular.copy(workflow, fileService.currentTypes);
         angular.copy(groupCollection, fileService.groupCollection);
         var responseTemplate = service.generateFileTemplate();
-        expect(responseTemplate).toEqual('[[[]][[]][[]][[]]]');
+        expect(responseTemplate).toEqual('[[[]][[]][[]][[][]]]');
       });
 
       it('returns the correct pair:pair:pair template with multiple lists', function () {
@@ -260,15 +290,15 @@
         inputFileObj[mocker.generateUuid()] = [mocker.generateUuid()];
         var groupCollection = {};
         groupCollection['0, 0, 0, 0'] = angular.copy(inputFileObj);
+        groupCollection['0, 1, 0, 0'] = angular.copy(inputFileObj);
         groupCollection['1, 0, 0, 0'] = angular.copy(inputFileObj);
         groupCollection['1, 1, 0, 0'] = angular.copy(inputFileObj);
         groupCollection['1, 1, 1, 0'] = angular.copy(inputFileObj);
         angular.copy(workflow, fileService.currentTypes);
         angular.copy(groupCollection, fileService.groupCollection);
         var responseTemplate = service.generateFileTemplate();
-        // empty sets are removed in another method
         expect(responseTemplate)
-          .toEqual('(([()()][()()])([()()][()()]))');
+          .toEqual('(([()][()])([()][()()]))');
       });
 
       it('returns the correct complicated template, for many groups', function () {
@@ -277,6 +307,7 @@
         inputFileObj[mocker.generateUuid()] = [mocker.generateUuid()];
         var groupCollection = {};
         groupCollection['0, 0, 0, 0, 0'] = angular.copy(inputFileObj);
+        groupCollection['0, 1, 0, 0, 0'] = angular.copy(inputFileObj);
         groupCollection['1, 0, 0, 0, 0'] = angular.copy(inputFileObj);
         groupCollection['1, 1, 0, 0, 0'] = angular.copy(inputFileObj);
         groupCollection['1, 1, 1, 0, 0'] = angular.copy(inputFileObj);
@@ -285,11 +316,9 @@
         angular.copy(workflow, fileService.currentTypes);
         angular.copy(groupCollection, fileService.groupCollection);
         var responseTemplate = service.generateFileTemplate();
-        // empty sets are removed in another method
         expect(responseTemplate)
           .toEqual('(' +
-            '([[()()()][()()()]][[()()()][()()()]])' +
-            '([[()()()][()()()]][[()()()][()()()]])' +
+            '([[()]][[()]])([[()]][[()][()()()]])' +
             ')');
       });
 
@@ -301,11 +330,13 @@
         groupCollection['0, 0, 0, 0, 0, 0'] = angular.copy(inputFileObj);
         groupCollection['0, 1, 0, 0, 0, 0'] = angular.copy(inputFileObj);
         groupCollection['1, 0, 0, 0, 0, 0'] = angular.copy(inputFileObj);
+        groupCollection['1, 1, 0, 0, 0, 0'] = angular.copy(inputFileObj);
         groupCollection['2, 0, 0, 0, 0, 0'] = angular.copy(inputFileObj);
+        groupCollection['2, 1, 0, 0, 0, 0'] = angular.copy(inputFileObj);
+        groupCollection['2, 1, 0, 0, 0, 0'] = angular.copy(inputFileObj);
         angular.copy(workflow, fileService.currentTypes);
         angular.copy(groupCollection, fileService.groupCollection);
         var responseTemplate = service.generateFileTemplate();
-        // empty sets are removed in another method
         expect(responseTemplate)
           .toEqual('[' +
             '[([([][])][([][])])([([][])][([][])])]' +

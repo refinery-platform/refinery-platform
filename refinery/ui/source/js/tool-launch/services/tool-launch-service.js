@@ -73,13 +73,23 @@
         fileTemplateStr = fileTemplateStr.slice(0, placeInd + 1) + uuidStr + endPart;
       });
 
-      // remove empty pairs and lists
-      fileTemplateStr = removeEmptySets(fileTemplateStr, '()');
-      fileTemplateStr = removeEmptySets(fileTemplateStr, '[]');
       // inserts commas between the ending sets, ex [(),(),()]
       fileTemplateStr = insertCommaBtwnSets(fileTemplateStr);
 
       return fileTemplateStr;
+    }
+
+    // groupIdList[groupInd][typeInd - 2] !== groupIdList[groupInd + 1][typeInd - 2]
+    function isGroupBranched (groupList, groupInd, topInd) {
+      var branchFlag = false;
+      // want to see if the current group veers from previous group
+      for (var j = 0; j <= topInd; j++) {
+        if (groupList[groupInd][j] !== groupList[groupInd + 1][j]) {
+          branchFlag = true;
+          break;
+        }
+      }
+      return branchFlag;
     }
 
     /**
@@ -98,21 +108,25 @@
         footprint = '[]';
       }
 
-      /** masterGroupArr tracks the max number of objs needed in the template.
-       *  It is initialized to a zero array **/
-      var masterGroupArr = _.fill(Array(fileService.currentTypes.length - 1), 0);
-      angular.forEach(fileService.groupCollection, function (inputFileObj, groupId) {
-        var groupList = groupId.split(',');
-        for (var idInd = 0; idInd < groupList.length - 1; idInd++) {
-          var groupInt = parseInt(groupList[idInd], 10);
-          if (masterGroupArr[idInd] < groupInt) {
-            masterGroupArr[idInd] = groupInt;
-          }
-        }
-      });
 
       // create footprint based on the neighboring tool types structure
+      var groupIdList = _.keys(fileService.groupCollection);
+      for (var f = 0; f < groupIdList.length; f++) {
+        groupIdList[f] = angular.copy(groupIdList[f].split(','));
+      }
       for (var typeInd = 1; typeInd < fileService.currentTypes.length; typeInd++) {
+        var masterGroupArr = [];
+        // the difference flag bah bah bah
+        for (var groupInd = 0; groupInd < groupIdList.length; groupInd++) {
+          if (typeInd === 1) {
+            masterGroupArr.push(parseInt(groupIdList[groupInd][typeInd - 1], 10));
+          } else if (groupInd === groupIdList.length - 1) {
+            masterGroupArr.push(parseInt(groupIdList[groupInd][typeInd - 1], 10));
+          } else if (isGroupBranched(groupIdList, groupInd, typeInd - 2)) {
+            masterGroupArr.push(parseInt(groupIdList[groupInd][typeInd - 1], 10));
+          }
+        }
+
         if (fileService.currentTypes[typeInd - 1] === 'PAIR' &&
           fileService.currentTypes[typeInd] === 'PAIR') {
           footprint = insertSet(footprint, ['()', '()'], -1);
@@ -121,9 +135,9 @@
           footprint = insertSet(footprint, ['()', '[]'], -1);
         } else if (fileService.currentTypes[typeInd - 1] === 'LIST' &&
           fileService.currentTypes[typeInd] === 'LIST') {
-          footprint = insertSet(footprint, ['[]', '[]'], masterGroupArr[typeInd - 1]);
+          footprint = insertSet(footprint, ['[]', '[]'], masterGroupArr);
         } else {
-          footprint = insertSet(footprint, ['[]', '()'], masterGroupArr[typeInd - 1]);
+          footprint = insertSet(footprint, ['[]', '()'], masterGroupArr);
         }
       }
       return footprint;
@@ -165,13 +179,25 @@
         // first empty list to insert the correct pair
         pairIndex = tempFileTemplate.indexOf(setType[0], pairIndex);
         // Used for pair:pair or pair:list -> 2 sets
-        var insertStr = Array(3).join(setType[1]);
-        if (maxNum > -1) {
-          // For list:list or list:pair -> list of sets
-          insertStr = Array(maxNum + 1 * 2).join(setType[1]);
-        }
+
         // matches found then place insertStr into current tempFileTemplate
         if (pairIndex > -1) {
+          var insertStr = Array(3).join(setType[1]);
+          if (maxNum !== -1 && fileTemplate.length > 2 && tempInd < maxNum.length) {
+            // For list:list or list:pair -> list of sets
+            insertStr = Array(maxNum[tempInd] + 1 * 2).join(setType[1]);
+          } else if (maxNum !== -1) {
+            // grab largest group number
+            var multNum = 0;
+            for (var i = 0; i < maxNum.length; i++) {
+              if (maxNum[i] > multNum) {
+                multNum = maxNum[i];
+              }
+            }
+            // For list:list or list:pair -> list of sets
+            insertStr = Array(multNum + 1 * 2).join(setType[1]);
+          }
+
           tempFileTemplate = tempFileTemplate.slice(0, pairIndex + 1) + insertStr +
             tempFileTemplate.slice(pairIndex + 1);
         } else {
@@ -193,20 +219,6 @@
       generateLaunchConfig();
       var tool = toolsService.save(launchConfig);
       return tool.$promise;
-    }
-
-      /**
-     * Helper method which removes empty set notations
-     * @param {string} setStr - current footprint
-     * @param {string} setType - [] or {} or ()
-     */
-    function removeEmptySets (setStr, setType) {
-      var cleanSetStr = setStr;
-      while (cleanSetStr.indexOf(setType) > -1) {
-        var pairInd = cleanSetStr.indexOf(setType);
-        cleanSetStr = cleanSetStr.slice(0, pairInd) + cleanSetStr.slice(pairInd + 2);
-      }
-      return cleanSetStr;
     }
   }
 })();
