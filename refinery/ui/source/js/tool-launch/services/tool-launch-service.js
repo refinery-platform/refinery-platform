@@ -79,19 +79,6 @@
       return fileTemplateStr;
     }
 
-    // groupIdList[groupInd][typeInd - 2] !== groupIdList[groupInd + 1][typeInd - 2]
-    function isGroupBranched (groupList, groupInd, topInd) {
-      var branchFlag = false;
-      // want to see if the current group veers from previous group
-      for (var j = 0; j <= topInd; j++) {
-        if (groupList[groupInd][j] !== groupList[groupInd + 1][j]) {
-          branchFlag = true;
-          break;
-        }
-      }
-      return branchFlag;
-    }
-
     /**
      * Returns a str combination of () and []. It creates the max footprint
      * size based on the currentTypes and groupCollection.
@@ -209,6 +196,19 @@
         }
       }
       return tempFileTemplate;
+    }
+
+    // helper method which distiguishes if groups are branched, ex [1,1,0,0]
+    // branched from [1,2,0,0]
+    function isGroupBranched (groupList, groupInd, maxIndex) {
+      var branchFlag = false;
+      for (var j = 0; j <= maxIndex; j++) {
+        if (groupList[groupInd][j] !== groupList[groupInd + 1][j]) {
+          branchFlag = true;
+          break;
+        }
+      }
+      return branchFlag;
     }
 
     /**
