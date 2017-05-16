@@ -202,8 +202,8 @@
     // branched from [1,2,0,0]
     function isGroupBranched (groupList, groupInd, maxIndex) {
       var branchFlag = false;
-      for (var j = 0; j <= maxIndex; j++) {
-        if (groupList[groupInd][j] !== groupList[groupInd + 1][j]) {
+      for (var branchInd = 0; branchInd <= maxIndex; branchInd++) {
+        if (groupList[groupInd][branchInd] !== groupList[groupInd + 1][branchInd]) {
           branchFlag = true;
           break;
         }
