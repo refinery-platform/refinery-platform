@@ -49,7 +49,7 @@
       angular.forEach(fileService.groupCollection, function (inputFileObj) {
         var uuidStr = '';
         // loops through each input file type (ex reverse vs forward), order
-        // matters for back end so much use fileService.inputFileTypes array
+        // matters for back end so  used fileService.inputFileTypes array
         for (var fileInd = 0; fileInd < fileService.inputFileTypes.length; fileInd++) {
           var nodeArr = inputFileObj[fileService.inputFileTypes[fileInd].uuid];
           // loops through each node uuid and concats each string
@@ -80,11 +80,11 @@
     }
 
     /**
-     * Returns a str combination of () and []. It creates the max footprint
+     * Returns a str combination of () and []. It creates the footprint
      * size based on the currentTypes and groupCollection.
      * Ex: currentTypes: ['PAIR', 'LIST', 'LIST'] groupCollection: {0,0,0:
       * {xx: [node1, node2, node3]}, 1,1,0: {xx2: node1}}
-     * Returns ([[][][]], [[][][]])
+     * Returns ([[][][]], [[]])
      */
     function generateFileTemplate () {
       var footprint = '';
@@ -103,11 +103,9 @@
       }
       for (var typeInd = 1; typeInd < fileService.currentTypes.length; typeInd++) {
         var masterGroupArr = [];
-        // the difference flag bah bah bah
         for (var groupInd = 0; groupInd < groupIdList.length; groupInd++) {
-          if (typeInd === 1) {
-            masterGroupArr.push(parseInt(groupIdList[groupInd][typeInd - 1], 10));
-          } else if (groupInd === groupIdList.length - 1) {
+          if (typeInd === 1 || groupInd === groupIdList.length - 1) {
+            // handles first pair group or last set of group Ids
             masterGroupArr.push(parseInt(groupIdList[groupInd][typeInd - 1], 10));
           } else if (isGroupBranched(groupIdList, groupInd, typeInd - 2)) {
             masterGroupArr.push(parseInt(groupIdList[groupInd][typeInd - 1], 10));
