@@ -301,7 +301,7 @@
           .toEqual('(([()][()])([()][()()]))');
       });
 
-      it('returns the correct complicated template, for many groups', function () {
+      it('returns the correct complicated template, starting w/ pair', function () {
         var workflow = ['PAIR', 'PAIR', 'LIST', 'LIST', 'PAIR'];
         var inputFileObj = {};
         inputFileObj[mocker.generateUuid()] = [mocker.generateUuid()];
@@ -322,7 +322,7 @@
             ')');
       });
 
-      it('returns the correct complicated template', function () {
+      it('returns the correct complicated template starting w/ list', function () {
         var workflow = ['LIST', 'LIST', 'PAIR', 'LIST', 'PAIR', 'LIST'];
         var inputFileObj = {};
         inputFileObj[mocker.generateUuid()] = [mocker.generateUuid()];
