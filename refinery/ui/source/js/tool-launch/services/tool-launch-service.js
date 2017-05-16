@@ -173,8 +173,8 @@
             insertStr = Array(maxNumList[tempInd] + 1 * 2).join(setType[1]);
           } else if (maxNumList.length !== 0) {
             // initializes or when groups don't branch
-            var multNum = _.max(maxNumList);  // grab largest set num
-            insertStr = Array(multNum + 1 * 2).join(setType[1]);
+            var maxNum = _.max(maxNumList);  // grab largest set num
+            insertStr = Array(maxNum + 1 * 2).join(setType[1]);
           }
 
           tempFileTemplate = tempFileTemplate.slice(0, pairIndex + 1) + insertStr +
