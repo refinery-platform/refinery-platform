@@ -8,7 +8,8 @@
   <span ng-if="$ctrl.currentTypes[$ctrl.currentTypes.length - 2] == 'PAIR'">
     <button
       class="btn btn-default btn-xs outline"
-      ng-disabled="$ctrl.currentGroup[$ctrl.currentGroup.length-2] == 1"
+      ng-disabled="$ctrl.currentGroup[$ctrl.currentGroup.length-2] == 1 ||
+      $ctrl.needMoreNodes()"
       ng-click="$ctrl.navRight($ctrl.currentGroup.length-2)">
       <i class="fa fa-forward"></i>
     </button>
@@ -16,6 +17,7 @@
   <span ng-if="$ctrl.currentTypes[$ctrl.currentTypes.length - 2]  == 'LIST'">
     <button
       class="btn btn-default btn-xs outline"
+      ng-disabled="$ctrl.needMoreNodes()"
       ng-click="$ctrl.navRight($ctrl.currentGroup.length-2)">
       <i class="fa fa-forward"></i>
     </button>
