@@ -17,7 +17,6 @@
   ) {
     var fileService = fileRelationshipService;
     var vm = this;
-    vm.attributes = fileService.attributesObj;
     vm.currentGroup = fileService.currentGroup; // maintains nav position
     vm.currentTypes = fileService.currentTypes;
     vm.inputFileTypes = fileService.inputFileTypes;
