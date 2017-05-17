@@ -1,0 +1,25 @@
+ <div>
+  <button
+    class="btn btn-default btn-xs outline"
+    ng-disabled="$ctrl.currentGroup[$ctrl.currentGroup.length-2] == 0"
+    ng-click="$ctrl.navLeft($ctrl.currentGroup.length-2)">
+    <i class="fa fa-backward"></i>
+  </button>
+  <span ng-if="$ctrl.currentTypes[$ctrl.currentTypes.length - 2] == 'PAIR'">
+    <button
+      class="btn btn-default btn-xs outline"
+      ng-disabled="$ctrl.currentGroup[$ctrl.currentGroup.length-2] == 1"
+      ng-click="$ctrl.navRight($ctrl.currentGroup.length-2)">
+      <i class="fa fa-forward"></i>
+    </button>
+  </span>
+  <span ng-if="$ctrl.currentTypes[$ctrl.currentTypes.length - 2]  == 'LIST'">
+    <button
+      class="btn btn-default btn-xs outline"
+      ng-click="$ctrl.navRight($ctrl.currentGroup.length-2)">
+      <i class="fa fa-forward"></i>
+    </button>
+  </span>
+</div>
+
+
