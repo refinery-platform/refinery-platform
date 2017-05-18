@@ -30,15 +30,18 @@
    * Methods Definitions
    * ---------------------------------------------------------
    */
-    function navLeft (depth) {
-      vm.currentGroup[depth]--;
+    // helper method to check if each group-inputType are empty
+    function areInputFileTypesEmpty () {
+      var isEmpty = false;
+      angular.forEach(fileService.groupCollection[vm.currentGroup], function (inputList) {
+        if (inputList.length === 0) {
+          isEmpty = true;
+        }
+      });
+      return isEmpty;
     }
 
-    function navRight (depth) {
-      vm.currentGroup[depth]++;
-    }
-
-    // Main method to check if the group has minimum nodes
+    // View method to check if the group has minimum nodes
     function needMoreNodes () {
       var moreFlag = false;
       var groupType = fileService.currentTypes[fileService.currentTypes.length - 1];
@@ -59,16 +62,18 @@
       return moreFlag;
     }
 
-    // helper method to check if each group-inputType are empty
-    function areInputFileTypesEmpty () {
-      var isEmpty = false;
-      angular.forEach(fileService.groupCollection[vm.currentGroup], function (inputList) {
-        if (inputList.length === 0) {
-          isEmpty = true;
-        }
-      });
-      return isEmpty;
+    //  View method to decrease the inner group
+    function navLeft (depth) {
+      fileService.currentGroup[depth]--;
+      vm.currentGroup = fileService.currentGroup;
     }
+
+    // View method to increase the inner group
+    function navRight (depth) {
+      fileService.currentGroup[depth]++;
+      vm.currentGroup = fileService.currentGroup;
+    }
+
     /*
    * ---------------------------------------------------------
    * Watchers
