@@ -21,9 +21,8 @@
       expect(ctrl).toBeDefined();
     });
 
-    it('Data & UI displays variables should exist for views', function () {
-      expect(ctrl.tool).toEqual({});
-      expect(ctrl.toolType).toEqual('');
+    it('Expect method should exist for views', function () {
+      expect(angular.isFunction(ctrl.launchTool)).toBe(true);
     });
   });
 })();

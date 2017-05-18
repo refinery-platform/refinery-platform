@@ -16,12 +16,12 @@
       fileRelationshipService,
       mockParamsFactory,
       selectedNodesService,
-      toolLaunchService
+      toolSelectService
     ) {
       service = fileRelationshipService;
       mocker = mockParamsFactory;
       nodeService = selectedNodesService;
-      toolsFactory = toolLaunchService;
+      toolsFactory = toolSelectService;
       underscroll = _;
 
       mockWorkflow = {
