@@ -71,24 +71,21 @@
     </ul>
   </div>
   <div>
-  <div class="refinery-subheader">
-    <h4>
-      Group
-    </h4>
-  </div>
-  <ul class="paragraph">
-    <li ng-repeat="group in NSPCtrl.currentGroup track by $index">
-      {{ NSPCtrl.currentTypes[$index] }}: {{ group + 1 }}<span ng-if="$index
-      < NSPCtrl.currentGroup.length - 1">,&nbsp</span>
-    </li>
-     <!-- TODO: Show groups associated with row, add controls for viewing -->
-  </ul>
-  <div>
-    <br>
-    <button
-      class="refinery-base btn btn-default btn-xs"
-      ng-click="closeSelectionPopover()">
-      Close
-    </button>
+    <span ng-if="NSPCtrl.currentTypes.length > 1">
+      <div class="refinery-subheader">
+        <h4>
+          {{ NSPCtrl.currentTypes[NSPCtrl.currentTypes.length - 2] }} Nav:
+          Group {{ NSPCtrl.currentGroup[NSPCtrl.currentGroup.length - 2] + 1 }}
+        </h4>
+      </div>
+      <rp-input-control-inner-nav></rp-input-control-inner-nav>
+    </span>
+    <div class="p-t-1 text-right">
+      <button
+        class="refinery-base btn btn-default btn-xs"
+        ng-click="closeSelectionPopover()">
+        Close
+      </button>
+    </div>
   </div>
 </div>
