@@ -36,8 +36,12 @@
               <rp-input-group></rp-input-group>
             </div>
 
+            <div ng-if="$index == 1" class="p-a-1-2">
+              <rp-input-control-inner-nav></rp-input-control-inner-nav>
+            </div>
+
             <div
-              ng-if="$index > 0"
+              ng-if="$index > 1"
               class="tree-panel"
               ng-style="{'margin-left': 10*$index+'px'}">
               <hr>
