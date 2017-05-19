@@ -43,29 +43,29 @@
               <hr>
               <div>
                 <h5>
-                  {{ $ctrl.currentGroup[$ctrl.currentGroup.length-$index-1] }}
+                  {{ $ctrl.currentGroup[$ctrl.currentGroup.length-$index] + 1 }}
                   of groups in {{ groupType }}
                 </h5>
               </div>
               <div>
                 <button
                   class="btn btn-default btn-xs outline"
-                  ng-disabled="$ctrl.currentGroup[$ctrl.currentGroup.length-$index-1] == 0"
-                  ng-click="$ctrl.navLeft($ctrl.currentGroup.length-$index-1)">
+                  ng-disabled="$ctrl.currentGroup[$ctrl.currentGroup.length-$index] == 0"
+                  ng-click="$ctrl.navLeft($ctrl.currentGroup.length-$index)">
                   <i class="fa fa-backward"></i>
                 </button>
                 <span ng-if="groupType == 'PAIR'">
                   <button
                     class="btn btn-default btn-xs outline"
-                    ng-disabled="$ctrl.currentGroup[$ctrl.currentGroup.length-$index-1] == 1"
-                    ng-click="$ctrl.navRight($ctrl.currentGroup.length-$index-1)">
+                    ng-disabled="$ctrl.currentGroup[$ctrl.currentGroup.length-$index] == 1"
+                    ng-click="$ctrl.navRight($ctrl.currentGroup.length-$index)">
                     <i class="fa fa-forward"></i>
                   </button>
                 </span>
                 <span ng-if="groupType == 'LIST'">
                   <button
                     class="btn btn-default btn-xs outline"
-                    ng-click="$ctrl.navRight($ctrl.currentGroup.length-$index-1)">
+                    ng-click="$ctrl.navRight($ctrl.currentGroup.length-$index)">
                     <i class="fa fa-forward"></i>
                   </button>
                 </span>

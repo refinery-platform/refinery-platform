@@ -65,7 +65,6 @@
       }
       angular.copy(scaledCopy.input_files, vm.inputFileTypes);
       vm.currentTypes.push(scaledCopy.value_type);
-      vm.currentGroup.push(0);
       generateAttributeObj();
     }
 
