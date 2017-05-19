@@ -82,6 +82,10 @@
       angular.copy(scaledCopy.input_files, vm.inputFileTypes);
       associateColorToInputFileType();
       vm.currentTypes.push(scaledCopy.value_type);
+      // avoids having an empty string as a key
+      if (vm.currentGroup.length === 0) {
+        vm.currentGroup.push(0);
+      }
       generateAttributeObj();
     }
 
