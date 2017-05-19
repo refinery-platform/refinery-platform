@@ -538,8 +538,19 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
             analyses.append(analysis_dict)
 
         bundle.data["analyses"] = analyses
-        bundle.data["version"] = bundle.obj.get_version_details().version
-        bundle.data["date"] = bundle.obj.get_version_details().date
+
+        try:
+            version = bundle.obj.get_version_details().version
+        except AttributeError as e:
+            logger.error(
+                "DataSet: %s has no `version`. %s", bundle.obj.name, e
+            )
+            bundle.data["version"] = None
+            bundle.data["date"] = None
+        else:
+            bundle.data["version"] = version
+            bundle.data["date"] = bundle.obj.get_version_details().date
+
         bundle.data["creation_date"] = bundle.obj.creation_date
         bundle.data["modification_date"] = bundle.obj.modification_date
 
