@@ -17,6 +17,8 @@
     selectedNodesService,
     toolSelectService
   ) {
+    // each input file type will have a color associated with it
+    var colorSelectionArray = ['#009E73', '#CC79A7', '#56B4E9', '#E69F00', '#F0E442', '#D55E00'];
     var nodeService = selectedNodesService;
     var toolService = toolSelectService;
     var vm = this;
@@ -26,6 +28,7 @@
     vm.groupCollection = {}; // contains groups with their selected row's info
     vm.hideNodePopover = false;
     vm.inputFileTypes = []; // maintains the required input types
+    vm.inputFileTypeColor = {}; // inputFileTypeUuids: hex color
     vm.nodeSelectCollection = {}; // contains rows and their group info
     vm.refreshFileMap = refreshFileMap;
     vm.removeGroupFromCollections = removeGroupFromCollections;
@@ -33,14 +36,24 @@
     vm.resetToolRelated = resetToolRelated;
     vm.setGroupCollection = setGroupCollection;
     vm.setNodeSelectCollection = setNodeSelectCollection;
-    // each input file type will have a color associated with it
-    var colorSelectionArray = ['#009E73', '#CC79A7', '#56B4E9', '#E69F00', '#F0E442', '#D55E00'];
-    vm.inputFileTypeColor = {};
     /*
      *-----------------------
      * Method Definitions
      * ----------------------
      */
+    // helper method which generates the vm.inputFileTypeColor by assigning a
+    // pre-defined color to a list of inputFileTypes
+    function associateColorToInputFileType () {
+      var colorInd = 0;
+      for (var fileInd = 0; fileInd < vm.inputFileTypes.length; fileInd++) {
+        if (colorInd > colorSelectionArray.length) {
+          colorInd = 0;
+        }
+        vm.inputFileTypeColor[vm.inputFileTypes[fileInd].uuid] = colorSelectionArray[colorInd];
+        colorInd++;
+      }
+    }
+
     // helper method: convert attributes name array to attributes name obj,
     // displayName: internalName
     function generateAttributeObj () {
@@ -70,17 +83,6 @@
       associateColorToInputFileType();
       vm.currentTypes.push(scaledCopy.value_type);
       generateAttributeObj();
-    }
-
-    function associateColorToInputFileType () {
-      var colorInd = 0;
-      for (var fileInd = 0; fileInd < vm.inputFileTypes.length; fileInd++) {
-        if (colorInd > colorSelectionArray.length) {
-          colorInd = 0;
-        }
-        vm.inputFileTypeColor[vm.inputFileTypes[fileInd].uuid] = colorSelectionArray[colorInd];
-        colorInd++;
-      }
     }
 
     // Main method to remove a group from the groupCollection and

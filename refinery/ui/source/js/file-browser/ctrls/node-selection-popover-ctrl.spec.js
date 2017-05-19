@@ -36,6 +36,7 @@
       expect(ctrl.currentTypes).toEqual([]);
       expect(ctrl.groupCollection).toEqual({});
       expect(ctrl.inputFileTypes).toEqual([]);
+      expect(ctrl.inputFileTypeColor).toEqual({});
       expect(ctrl.nodeSelection).toEqual({});
       expect(ctrl.selectionObj).toEqual({});
     });

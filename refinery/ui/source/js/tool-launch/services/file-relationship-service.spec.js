@@ -118,6 +118,7 @@
       expect(service.groupCollection).toEqual({});
       expect(service.hideNodePopover).toEqual(false);
       expect(service.inputFileTypes).toEqual([]);
+      expect(service.inputFileTypeColor).toEqual({});
       expect(service.nodeSelectCollection).toEqual({});
     });
 
