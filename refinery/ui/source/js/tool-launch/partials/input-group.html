@@ -32,7 +32,10 @@
      </div>
 
     <div ng-if="$ctrl.currentTypes[$ctrl.currentTypes.length-1]=='LIST'">
-      <li class="wrap-word">
+      <li
+        class="wrap-word"
+         ng-style="{'color': $ctrl.inputFileTypeColor[$ctrl.inputFileTypes[0].uuid],
+        'border-color': $ctrl.inputFileTypeColor[$ctrl.inputFileTypes[0].uuid]}">
         <div ng-if="!$ctrl.isGroupPopulated($ctrl.inputFileTypes[0].uuid)">
           {{ $ctrl.inputFileTypes[0].name }}:
           <
