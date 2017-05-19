@@ -157,6 +157,21 @@ def create_tool(tool_launch_configuration, user_instance):
     tool.set_owner(user_instance)
     tool.update_file_relationships_string()
 
+    # Assert that the data structure being sent over is able to be evaluated
+    #  as a Pythonic Data structure
+    try:
+        nesting = ast.literal_eval(tool.file_relationships)
+    except (SyntaxError, ValueError):
+        raise RuntimeError(
+            "ToolLaunchConfiguration's `file_relationships` could not be "
+            "evaluated as a Pythonic Data Structure: {}".format(
+                tool.file_relationships
+            )
+        )
+    else:
+        parse_file_relationship_nesting(nesting)
+
+    tool.save()
     return tool
 
 
@@ -360,17 +375,6 @@ def validate_tool_launch_configuration(tool_launch_config):
                 e
             )
         )
-    # Assert that the data structure being sent over is able to be evaluated
-    #  as a Pythonic Data structure
-    try:
-        nesting = ast.literal_eval(tool_launch_config["file_relationships"])
-    except (SyntaxError, ValueError) as e:
-        raise RuntimeError(
-            "ToolLaunchConfiguration's `file_relationships` could not be "
-            "evaluated as a Pythonic Data Structure: {}".format(e)
-        )
-    else:
-        parse_file_relationship_nesting(nesting)
 
 
 def get_workflows():

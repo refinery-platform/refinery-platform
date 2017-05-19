@@ -32,7 +32,8 @@ from selenium_testing.utils import MAX_WAIT, wait_until_class_visible
 
 from .models import (FileRelationship, GalaxyParameter, InputFile,
                      OutputFile, Parameter, Tool, ToolDefinition)
-from .utils import (create_tool_definition,
+from .utils import (create_tool,
+                    create_tool_definition,
                     FileTypeValidationError,
                     validate_tool_annotation,
                     validate_workflow_step_annotation,
@@ -960,7 +961,7 @@ class ToolTests(StaticLiveServerTestCase):
 
         post_data = {
             "tool_definition_uuid": td.uuid,
-            "file_relationships": "['{}', '{}']".format(
+            "file_relationships": "[{}, {}]".format(
                 node_a.uuid,
                 node_b.uuid
             )
@@ -1172,6 +1173,10 @@ class ToolTests(StaticLiveServerTestCase):
 class ToolLaunchConfigurationTests(TestCase):
 
     def setUp(self):
+        self.username = 'coffee_lover'
+        self.password = 'coffeecoffee'
+        self.user = User.objects.create_user(self.username, '',
+                                             self.password)
         self.mock_vis_annotations_reference = (
             "tool_manager.management.commands.generate_tool_definitions"
             ".get_visualization_annotations_list"
@@ -1225,7 +1230,7 @@ class ToolLaunchConfigurationTests(TestCase):
             )
         }
         with self.assertRaises(RuntimeError) as context:
-            validate_tool_launch_configuration(tool_launch_configuration)
+            create_tool(tool_launch_configuration, self.user)
         self.assertIn(
             "ToolLaunchConfiguration's `file_relationships` could not be "
             "evaluated as a Pythonic Data Structure",
@@ -1249,7 +1254,7 @@ class ToolLaunchConfigurationTests(TestCase):
             )
         }
         with self.assertRaises(RuntimeError) as context:
-            validate_tool_launch_configuration(tool_launch_configuration)
+            create_tool(tool_launch_configuration, self.user)
         self.assertIn(
             "The `file_relationships` defined didn't yield a valid "
             "LIST/PAIR nesting.",
@@ -1267,7 +1272,7 @@ class ToolLaunchConfigurationTests(TestCase):
             )
         }
         with self.assertRaises(RuntimeError) as context:
-            validate_tool_launch_configuration(tool_launch_configuration)
+            create_tool(tool_launch_configuration, self.user)
         self.assertIn(
             "LIST/PAIR structure is not balanced",
             context.exception.message

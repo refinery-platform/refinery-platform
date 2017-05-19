@@ -31,14 +31,14 @@
             Can have additional columns used to characterize data
           </li>
           <li>
-            Can have the columns ordered arbitrary
+            Can have the columns ordered arbitrarily
           </li>
           <li>
             Can not have column headers named the following reserved words:
             <br>
-            <em>id, django_id, file_uuid, study_uuid, assay_uuid,
-            type, is_annotation, species, genome_build, name,
-            or django_ct</em>
+            <em>assay_uuid, django_ct, django_id, file_uuid, genome_build,
+              id, is_annotation, name, species, study_uuid, or type
+            </em>
           </li>
         </ul>
       </li>
@@ -517,11 +517,11 @@
               </label>
               <a
                 popover-placement="right"
-                uib-popover-html="'Select yes, if the <strong>Data File
-                Column</strong> contains paths to local data files. The files
-                will need to need to be uploaded. Select no, if the
-                <strong>Data File Column</strong> only contains URLs because
-                files do not need to be uploaded.'"
+                uib-popover-html="'Select <strong>Yes</strong> if the
+                <strong>Data File Column</strong> contains paths to local
+                files which now need to be uploaded. Select
+                <strong>No</strong> if the <strong>Data File Column</strong>
+                contains URLs of remote files already uploaded elsewhere.'"
                 popover-title="Upload Local Data Files"
                 popover-trigger="focus"
                 popover-append-to-body="true"

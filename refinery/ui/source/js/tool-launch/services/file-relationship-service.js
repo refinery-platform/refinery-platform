@@ -8,17 +8,17 @@
     '_',
     'fileBrowserFactory',
     'selectedNodesService',
-    'toolLaunchService'
+    'toolSelectService'
   ];
 
   function fileRelationshipService (
     _,
     fileBrowserFactory,
     selectedNodesService,
-    toolLaunchService
+    toolSelectService
   ) {
     var nodeService = selectedNodesService;
-    var toolService = toolLaunchService;
+    var toolService = toolSelectService;
     var vm = this;
     vm.attributesObj = {}; // displayName: internalName, ex Name:
     vm.currentGroup = []; // index for the group coordinates
