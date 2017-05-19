@@ -23,6 +23,8 @@ The above step should take about 15 minutes depending on the speed of your machi
 $ vagrant provision
 ```
 
+(If you are updating an older checkout, `refinery/config/config.json` will not be regenerated automatically: Either clear it, or add the missing keys from the error message.)
+
 Open <http://192.168.50.50:8000/> in your web browser.
 
 ### Configure Deployment Environment on the Host
@@ -40,6 +42,12 @@ $ pip install -r deployment/requirements.txt
 Use `fabricrc.sample` to update or initialize Fabric configuration, for example:
 ```bash
 $ cp fabricrc.sample ~/.fabricrc
+```
+
+You may need to start ssh-agent:
+``` bash
+$ eval `ssh-agent`
+$ ssh-add ~/.ssh/id_rsa
 ```
 
 To pull the latest code and update Refinery installation:
