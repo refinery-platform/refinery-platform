@@ -2,7 +2,7 @@
   <div class="node-input-group">
     <ul>
       <form name="inputNodeForm">
-        <div ng-if="NSPCtrl.currentTypes[NSPCtrl.currentTypes.length-1]=='PAIR'">
+        <div ng-if="NSPCtrl.currentTypes[NSPCtrl.currentTypes.length - 1]=='PAIR'">
           <li
             ng-repeat="inputType in NSPCtrl.inputFileTypes track by $index"
             ng-style="{'color': NSPCtrl.inputFileTypeColor[inputType.uuid],
@@ -38,7 +38,7 @@
           </li>
         </div>
 
-        <div ng-if="NSPCtrl.currentTypes[NSPCtrl.currentTypes.length-1]=='LIST'">
+        <div ng-if="NSPCtrl.currentTypes[NSPCtrl.currentTypes.length - 1]=='LIST'">
            <li
              ng-style="{'color': NSPCtrl.inputFileTypeColor[NSPCtrl.inputFileTypes[0].uuid],
             'border-color': NSPCtrl.inputFileTypeColor[NSPCtrl.inputFileTypes[0].uuid]}">
@@ -79,6 +79,7 @@
     <span ng-if="NSPCtrl.currentTypes.length > 1">
       <div class="refinery-subheader">
         <h4>
+           <!-- Checking the type containing the inner most, ['PAIR', 'LIST] -->
           {{ NSPCtrl.currentTypes[NSPCtrl.currentTypes.length - 2] }} Nav:
           Group {{ NSPCtrl.currentGroup[NSPCtrl.currentGroup.length - 1] + 1 }}
         </h4>
