@@ -5,15 +5,17 @@
 
   <ul>
      <div ng-if="$ctrl.currentTypes[$ctrl.currentTypes.length-1]=='PAIR'">
-      <li ng-repeat="inputFile in $ctrl.inputFileTypes track by $index">
-        <span class="wrap-word" ng-if="$ctrl.isGroupPopulated(inputFile.uuid)">
+      <li
+        ng-repeat="inputFile in $ctrl.inputFileTypes track by $index"
+        ng-style="{'color': $ctrl.inputFileTypeColor[inputFile.uuid],
+        'border-color': $ctrl.inputFileTypeColor[inputFile.uuid]}">
+          <span class="wrap-word" ng-if="$ctrl.isGroupPopulated(inputFile.uuid)">
           <span ng-repeat="node in $ctrl.groupCollection[$ctrl.currentGroup][inputFile.uuid]">
             {{ node[$ctrl.attributes.Name] }}
           </span>
         </span>
-        <span ng-if="!$ctrl.isGroupPopulated(inputFile.uuid)">
+          <span ng-if="!$ctrl.isGroupPopulated(inputFile.uuid)">
           {{ inputFile.name }}:
-          <
           <div
             class='fileTypes'
             ng-repeat="fileObj in inputFile.allowed_filetypes">

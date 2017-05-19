@@ -29,6 +29,7 @@
     vm.currentTypes = fileService.currentTypes;
     vm.groupCollection = fileService.groupCollection;
     vm.inputFileTypes = fileService.inputFileTypes;
+    vm.inputFileTypeColor = fileService.inputFileTypeColor;
     vm.isGroupPopulated = isGroupPopulated;
     vm.isNavCollapsed = false;
     vm.isObjEmpty = isObjEmpty;
@@ -105,6 +106,7 @@
         function () {
           vm.groupCollection = fileService.groupCollection;
           vm.currentGroup = fileService.currentGroup;
+          vm.inputFileTypeColor = fileService.inputFileTypeColor;
         }
       );
     };
