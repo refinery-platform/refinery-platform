@@ -1897,6 +1897,37 @@ class DataSetResourceTest(ResourceTestCase):
         self.assertEqual(data['uuid'], self.dataset.uuid)
         self.assertEqual(data['analyses'], [])
 
+    def test_dataset_version_good(self):
+        # Properly created DatSets will have version information
+        self.dataset.set_owner(self.user)
+
+        dataset_uri = make_api_uri(
+            "data_sets",
+            self.dataset.uuid
+        )
+        response = self.api_client.get(
+            dataset_uri,
+            format='json'
+        )
+        data = self.deserialize(response)
+        self.assertEqual(data["version"], 1)
+        self.assertIsNotNone(data["date"])
+
+    def test_dataset_version_missing(self):
+        self.dataset2.set_owner(self.user)
+
+        dataset_uri = make_api_uri(
+            "data_sets",
+            self.dataset2.uuid
+        )
+        response = self.api_client.get(
+            dataset_uri,
+            format='json'
+        )
+        data = self.deserialize(response)
+        self.assertEqual(data["date"], None)
+        self.assertEqual(data["version"], None)
+
 
 class DataSetClassMethodsTest(TestCase):
     """ Testing of methods specific to the DataSet model
