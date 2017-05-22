@@ -245,11 +245,13 @@
      */
     function openSelectionPopover (nodeRow) {
       if (_.isEmpty(nodesService.activeNodeRow)) {
+        // active nodes are cleared after popovers are closed
         angular.copy(nodeRow, nodesService.activeNodeRow);
         vm.activeNodeRow = nodesService.activeNodeRow;
         angular.element('#' + nodeRow.uuid).popover('show');
         angular.element('.ui-grid-selection-row-header-buttons').popover('disable');
       } else {
+        // user selects a different row, triggers closing all open popovers
         fileService.hideNodePopover = true;
       }
     }
