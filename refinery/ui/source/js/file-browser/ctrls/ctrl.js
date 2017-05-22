@@ -244,10 +244,14 @@
      * @param nodeUuid
      */
     function openSelectionPopover (nodeRow) {
-      angular.copy(nodeRow, nodesService.activeNodeRow);
-      vm.activeNodeRow = nodesService.activeNodeRow;
-      angular.element('#' + nodeRow.uuid).popover('show');
-      angular.element('.ui-grid-selection-row-header-buttons').popover('disable');
+      if (_.isEmpty(nodesService.activeNodeRow)) {
+        angular.copy(nodeRow, nodesService.activeNodeRow);
+        vm.activeNodeRow = nodesService.activeNodeRow;
+        angular.element('#' + nodeRow.uuid).popover('show');
+        angular.element('.ui-grid-selection-row-header-buttons').popover('disable');
+      } else {
+        fileService.hideNodePopover = true;
+      }
     }
 
     /**
