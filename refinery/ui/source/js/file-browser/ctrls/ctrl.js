@@ -360,6 +360,8 @@
       }
     }
 
+    // View method which toggles the collapsedToolPanel variable.
+    // Needed to resize UI-Grid and alternate text in button.
     function toggleToolPanel () {
       if (vm.collapsedToolPanel) {
         vm.collapsedToolPanel = false;
