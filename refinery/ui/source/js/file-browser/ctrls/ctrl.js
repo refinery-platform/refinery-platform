@@ -22,7 +22,8 @@
     'isOwnerService',
     'resetGridService',
     'selectedFilterService',
-    'selectedNodesService'
+    'selectedNodesService',
+    'toolSelectService'
   ];
 
   function FileBrowserCtrl (
@@ -42,11 +43,13 @@
     isOwnerService,
     resetGridService,
     selectedFilterService,
-    selectedNodesService
+    selectedNodesService,
+    toolSelectService
   ) {
     var maxFileRequest = fileBrowserSettings.maxFileRequest;
     var nodesService = selectedNodesService;
     var fileService = fileRelationshipService;
+    var toolService = toolSelectService;
     var vm = this;
     vm.activeNodeRow = nodesService.activeNodeRow;
     // flag to help with timing issues when selecting node group
@@ -86,9 +89,9 @@
       multiSelect: true,
       columnDefs: fileBrowserFactory.customColumnNames,
       data: fileBrowserFactory.assayFiles,
-      gridFooterTemplate: '<rp-is-assay-files-loading></rp-is-assay-files-loading>'
+     // gridFooterTemplate: '<rp-is-assay-files-loading></rp-is-assay-files-loading>',
+      onRegisterApi: gridRegister
     };
-    vm.gridOptions.onRegisterApi = gridRegister;
     vm.inputFileTypeColor = fileService.inputFileTypeColor;
     vm.lastPage = 0;  // variable supporting ui-grid dynamic scrolling
     vm.nodeSelectCollection = fileService.nodeSelectCollection;
@@ -507,6 +510,27 @@
       function () {
         vm.nodeSelectCollection = fileService.nodeSelectCollection;
         vm.inputFileTypeColor = fileService.inputFileTypeColor;
+      }
+    );
+
+    // only show the selection and input group column when a tool is selected
+    $scope.$watchCollection(
+      function () {
+        return toolService.selectedTool;
+      },
+      function () {
+        if (fileBrowserFactory.customColumnNames.length > 0) {
+          if (_.isEmpty(toolService.selectedTool)) {
+            fileBrowserFactory.customColumnNames[0].visible = false;
+            fileBrowserFactory.customColumnNames[1].visible = false;
+            vm.gridOptions.columnDefs = fileBrowserFactory.customColumnNames;
+            vm.gridApi.core.notifyDataChange(uiGridConstants.dataChange.COLUMN);
+          } else {
+            fileBrowserFactory.customColumnNames[0].visible = true;
+            fileBrowserFactory.customColumnNames[1].visible = true;
+            vm.gridApi.core.notifyDataChange(uiGridConstants.dataChange.COLUMN);
+          }
+        }
       }
     );
   }

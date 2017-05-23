@@ -51,15 +51,11 @@
         </div>
       </div>
     </div>
-    <span ng-if="FBCtrl.collapsedToolPanel">
-      <div class="col-lg-10 col-md-10 col-sm-8" id="main-area">
-        <rp-file-browser-assay-files></rp-file-browser-assay-files>
-      </div>
-    </span>
-    <span ng-if="!FBCtrl.collapsedToolPanel">
-      <div class="col-lg-8 col-md-8 col-sm-6" id="main-area">
-        <rp-file-browser-assay-files></rp-file-browser-assay-files>
-      </div>
-    </span>
+    <div
+      ng-class="{'col-lg-8 col-md-8 col-sm-6': !FBCtrl.collapsedToolPanel,
+      'col-lg-10 col-md-10 col-sm-8': FBCtrl.collapsedToolPanel}"
+      id="main-area">
+      <rp-file-browser-assay-files></rp-file-browser-assay-files>
+    </div>
   </div>
 </div>
