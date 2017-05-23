@@ -62,6 +62,7 @@
     vm.cachePages = 2;
     vm.checkDataLength = checkDataLength;
     vm.checkDataSetOwnership = checkDataSetOwnership;
+    vm.collapsedToolPanel = true;
     vm.counter = 0;
     // params for the assays api
     vm.filesParam = {
@@ -88,6 +89,7 @@
       gridFooterTemplate: '<rp-is-assay-files-loading></rp-is-assay-files-loading>'
     };
     vm.gridOptions.onRegisterApi = gridRegister;
+    vm.inputFileTypeColor = fileService.inputFileTypeColor;
     vm.lastPage = 0;  // variable supporting ui-grid dynamic scrolling
     vm.nodeSelectCollection = fileService.nodeSelectCollection;
     vm.openSelectionPopover = openSelectionPopover;
@@ -97,6 +99,7 @@
     vm.reset = reset;
     vm.rowCount = maxFileRequest;
     vm.sortChanged = sortChanged;
+    vm.toggleToolPanel = toggleToolPanel;
     vm.totalPages = 1;  // variable supporting ui-grid dynamic scrolling
     /** Used by ui to select/deselect, attributes have an object of filter fields
      * attributeInternalName: {fieldName: boolean, fieldName: boolean} */
@@ -243,10 +246,16 @@
      * @param nodeUuid
      */
     function openSelectionPopover (nodeRow) {
-      angular.copy(nodeRow, nodesService.activeNodeRow);
-      vm.activeNodeRow = nodesService.activeNodeRow;
-      angular.element('#' + nodeRow.uuid).popover('show');
-      angular.element('.ui-grid-selection-row-header-buttons').popover('disable');
+      if (_.isEmpty(nodesService.activeNodeRow)) {
+        // active nodes are cleared after popovers are closed
+        angular.copy(nodeRow, nodesService.activeNodeRow);
+        vm.activeNodeRow = nodesService.activeNodeRow;
+        angular.element('#' + nodeRow.uuid).popover('show');
+        angular.element('.ui-grid-selection-row-header-buttons').popover('disable');
+      } else {
+        // user selects a different row, triggers closing all open popovers
+        fileService.hideNodePopover = true;
+      }
     }
 
     /**
@@ -348,6 +357,16 @@
             vm.reset();
             break;
         }
+      }
+    }
+
+    // View method which toggles the collapsedToolPanel variable.
+    // Needed to resize UI-Grid and alternate text in button.
+    function toggleToolPanel () {
+      if (vm.collapsedToolPanel) {
+        vm.collapsedToolPanel = false;
+      } else {
+        vm.collapsedToolPanel = true;
       }
     }
 
@@ -487,6 +506,7 @@
       },
       function () {
         vm.nodeSelectCollection = fileService.nodeSelectCollection;
+        vm.inputFileTypeColor = fileService.inputFileTypeColor;
       }
     );
   }
