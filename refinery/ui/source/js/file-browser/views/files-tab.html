@@ -13,9 +13,15 @@
           id="tool-panel-show-button">
           <button
             class="btn btn-primary btn-sm"
+            data-target="#tool-launch-panel"
             data-toggle="collapse"
-            data-target="#tool-launch-panel">
-            Toggle Tool Panel
+            ng-click="FBCtrl.toggleToolPanel()">
+            <span ng-show="FBCtrl.collapsedToolPanel">
+               Show Tool Panel
+            </span>
+            <span ng-show="!FBCtrl.collapsedToolPanel">
+               Hide Tool Panel
+            </span>
           </button>
         </div>
       <div id="table-filter">
@@ -45,8 +51,15 @@
         </div>
       </div>
     </div>
-    <div class="col-lg-8 col-md-8 col-sm-6" id="main-area">
-      <rp-file-browser-assay-files></rp-file-browser-assay-files>
-    </div>
+    <span ng-if="FBCtrl.collapsedToolPanel">
+      <div class="col-lg-10 col-md-10 col-sm-8" id="main-area">
+        <rp-file-browser-assay-files></rp-file-browser-assay-files>
+      </div>
+    </span>
+    <span ng-if="!FBCtrl.collapsedToolPanel">
+      <div class="col-lg-8 col-md-8 col-sm-6" id="main-area">
+        <rp-file-browser-assay-files></rp-file-browser-assay-files>
+      </div>
+    </span>
   </div>
 </div>
