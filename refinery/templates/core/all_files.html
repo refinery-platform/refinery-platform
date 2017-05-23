@@ -23,7 +23,6 @@
     <!-- DIFF: Title -->
     <h1>All Files</h1>
   </div>
-
 {% endblock %}
 
 {% block content %}
@@ -32,21 +31,7 @@
 <div ng-controller="DataSetNavCtrl" ng-cloak>
   <div ng-controller="DataSetUiModeCtrl">
 
-    <div class="refinery-panel-tabs">
-      <div class="row">
-        <div class="col-md-9 col-md-offset-3">
-          <ul class="nav nav-tabs float-right" id="tabs">
-            <li ui-sref-active="active" id="filesTab">
-              <a ui-sref="files" class="dataSetTabs">
-                Files
-              </a>
-            </li>
-            <!-- DIFF: No other tabs -->
-          </ul>
-        </div>
-      </div>
-    </div>
-
+    <!-- DIFF: Only one tab, so remove -->
 
     <div class="refinery-panel refinery-panel-content jquery-full-height
     handle-overflow" id="data-set-view">
