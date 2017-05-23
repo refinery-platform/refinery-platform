@@ -32,6 +32,7 @@
       expect(ctrl.assayAttributes).toEqual([]);
       expect(ctrl.attributeFilter).toEqual({});
       expect(ctrl.analysisFilter).toEqual({});
+      expect(ctrl.collapsedToolPanel).toEqual(true);
     });
 
     it('Test updateFiltersFromUrlQuery', function () {
@@ -104,6 +105,24 @@
 
         ctrl.refreshAssayFiles();
         expect(mockAssayFiles).toEqual(true);
+      });
+    });
+
+    describe('Toggle Tool Panel', function () {
+      it('toggleToolPanel is method', function () {
+        expect(angular.isFunction(ctrl.toggleToolPanel)).toBe(true);
+      });
+
+      it('toggleToolPanel sets collapsedToolPanel to true', function () {
+        ctrl.collapsedToolPanel = false;
+        ctrl.toggleToolPanel();
+        expect(ctrl.collapsedToolPanel).toEqual(true);
+      });
+
+      it('toggleToolPanel sets collapsedToolPanel to false', function () {
+        ctrl.collapsedToolPanel = true;
+        ctrl.toggleToolPanel();
+        expect(ctrl.collapsedToolPanel).toEqual(false);
       });
     });
   });
