@@ -252,9 +252,14 @@ function fileBrowserFactory (
       'class="selected-node" ' +
       'title="{{grid.appScope.nodeSelectCollection[row.entity.uuid].groupList}}">' +
       '<div class="paragraph ui-grid-cell-contents" ' +
-      'ng-if="grid.appScope.nodeSelectCollection[row.entity.uuid].groupList[0].length > 1"> ' +
+      'ng-if="grid.appScope.nodeSelectCollection[row.entity.uuid].groupList[0].length > 0"> ' +
       '<span ng-repeat="group in grid.appScope.nodeSelectCollection[row.entity.uuid].groupList ' +
-      'track by $index">{{group}} &nbsp </span></div></div></div>';
+      'track by $index">' +
+      '<span ng-style="{\'color\':grid.appScope.inputFileTypeColor[' +
+      'grid.appScope.nodeSelectCollection[row.entity.uuid].inputTypeList[$index]]}">' +
+      '{{group[group.length - 1]}}</span>' +
+      '<span ng-if="$index < grid.appScope.nodeSelectCollection[row.entity.uuid]' +
+      '.groupList.length - 1">, &nbsp</span> </span></div></div></div>';
 
     return {
       name: _columnName,

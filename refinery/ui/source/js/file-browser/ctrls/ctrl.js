@@ -88,6 +88,7 @@
       gridFooterTemplate: '<rp-is-assay-files-loading></rp-is-assay-files-loading>'
     };
     vm.gridOptions.onRegisterApi = gridRegister;
+    vm.inputFileTypeColor = fileService.inputFileTypeColor;
     vm.lastPage = 0;  // variable supporting ui-grid dynamic scrolling
     vm.nodeSelectCollection = fileService.nodeSelectCollection;
     vm.openSelectionPopover = openSelectionPopover;
@@ -487,6 +488,7 @@
       },
       function () {
         vm.nodeSelectCollection = fileService.nodeSelectCollection;
+        vm.inputFileTypeColor = fileService.inputFileTypeColor;
       }
     );
   }

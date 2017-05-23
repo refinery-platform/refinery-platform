@@ -2,8 +2,11 @@
   <div class="node-input-group">
     <ul>
       <form name="inputNodeForm">
-        <div ng-if="NSPCtrl.currentTypes[NSPCtrl.currentTypes.length-1]=='PAIR'">
-          <li ng-repeat="inputType in NSPCtrl.inputFileTypes track by $index">
+        <div ng-if="NSPCtrl.currentTypes[NSPCtrl.currentTypes.length - 1]=='PAIR'">
+          <li
+            ng-repeat="inputType in NSPCtrl.inputFileTypes track by $index"
+            ng-style="{'color': NSPCtrl.inputFileTypeColor[inputType.uuid],
+            'border-color': NSPCtrl.inputFileTypeColor[inputType.uuid]}">
             <div class="checkbox">
               <label>
                 <!-- Deselect: user can currently deselect any node in the current group-->
@@ -35,8 +38,10 @@
           </li>
         </div>
 
-        <div ng-if="NSPCtrl.currentTypes[NSPCtrl.currentTypes.length-1]=='LIST'">
-           <li>
+        <div ng-if="NSPCtrl.currentTypes[NSPCtrl.currentTypes.length - 1]=='LIST'">
+           <li
+             ng-style="{'color': NSPCtrl.inputFileTypeColor[NSPCtrl.inputFileTypes[0].uuid],
+            'border-color': NSPCtrl.inputFileTypeColor[NSPCtrl.inputFileTypes[0].uuid]}">
             <span>
               <!-- active row selection, for list is always showing -->
               <div class="checkbox">
@@ -74,8 +79,9 @@
     <span ng-if="NSPCtrl.currentTypes.length > 1">
       <div class="refinery-subheader">
         <h4>
+           <!-- Checking the type containing the inner most, ['PAIR', 'LIST] -->
           {{ NSPCtrl.currentTypes[NSPCtrl.currentTypes.length - 2] }} Nav:
-          Group {{ NSPCtrl.currentGroup[NSPCtrl.currentGroup.length - 2] + 1 }}
+          Group {{ NSPCtrl.currentGroup[NSPCtrl.currentGroup.length - 1] + 1 }}
         </h4>
       </div>
       <rp-input-control-inner-nav></rp-input-control-inner-nav>
