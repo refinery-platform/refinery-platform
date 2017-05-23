@@ -1,31 +1,50 @@
 <div id="dataUploadTutorialStep7" class="tab-pane" id="data">
 
-  <form id="fileupload" method="POST">
+  <form ng-controller="RefineryFileUploadS3Ctrl as FileCtrl">
 
     <!-- Redirect browsers with JavaScript disabled to the origin page -->
     <noscript>
       <input type="hidden" name="redirect" value="/">
     </noscript>
 
-    <!-- The fileupload-buttonbar contains buttons to add/delete files and start/cancel the upload -->
-    <div class="row fileupload-buttonbar v-centered-row">
-      <div class="col-lg-4">
-        <!-- The fileinput-button span is used to style the file input field as button -->
-        <span
-          class="refinery-base btn btn-default btn-sm fileinput-button"
-          ng-class="{ 'disabled': disabled }">
-          <i class="fa fa-plus"></i>
-          <span>Add files &hellip;</span>
-          <input
-            type="file"
-            class="refinery-base"
-            name="files[]"
-            multiple
-            ng-disabled="disabled">
-        </span>
+    <p>
+      <button type="file" ngf-select="uploadFiles($files)" ngf-multiple="true">
+        Select file
+      </button>
+    </p>
+
+    <div ng-show="files.length > 0">
+      <div ng-repeat="file in files">
+        File:
+        <div>
+          {{file.name}} {{file.$error}} {{file.$errorParam}}
+        </div>
+        <div class="progress">
+          <div class="progress-bar"
+               role="progressbar"
+               aria-valuenow="60"
+               aria-valuemin="0"
+               aria-valuemax="100"
+               style="width: {{file.progress}}%;">
+            {{file.progress | number:0}}%
+          </div>
+        </div>
+        <div class="alert alert-info"
+             role="alert"
+             ng-show="file.progress == 100 && !file.success">
+          Processing, please wait...
+        </div>
+        <div class="alert alert-success" role="alert" ng-show="file.success">
+          Upload Complete!
+        </div>
+        <div class="alert alert-danger" role="alert" ng-show="errorMsg.length > 0">
+          Oooops we had trouble uploading the file. Please refresh the page and try again.
+          <p>If the problem persits please supply us with the following details</p>
+          <p>{{errorMsg}}</p>
+        </div>
+        <div>{{Error}}</div>
       </div>
     </div>
-
   </form>
 
 </div>
