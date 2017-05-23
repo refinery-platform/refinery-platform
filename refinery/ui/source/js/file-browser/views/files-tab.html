@@ -1,7 +1,9 @@
 <div class="dataSetTabContent" id="files">
   <!-- filters and content  -->
   <div class="row y-scrollable m-t-1-2 p-t-1">
-    <div class="col-lg-2 col-md-2 col-sm-3 well" id="tool-launch">
+    <div
+      class="col-lg-2 col-md-2 col-sm-3 well collapse"
+      id="tool-launch-panel">
       <div class="row">
         <rp-tool-display></rp-tool-display>
       </div>
@@ -9,6 +11,15 @@
     </div>
     <div class="col-lg-2 col-md-2 col-sm-3">
       <div id="table-filter">
+        <div
+          id="tool-display-button">
+          <button
+            class="btn btn-primary btn-sm"
+            data-toggle="collapse"
+            data-target="#tool-launch-panel">
+            Toggle Tool Panel
+          </button>
+        </div>
         <div id="filter-panel-body">
           <rp-file-browser-assay-filters>
           </rp-file-browser-assay-filters>
