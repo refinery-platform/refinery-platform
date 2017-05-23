@@ -41,6 +41,7 @@ urlpatterns = patterns(
     url(r'^projects/(?P<uuid>'
         r'[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/edit/'
         r'$', 'project_edit', name="project_edit"),
+    url(r'^all_files/$', 'all_files', name="all_files"),
     url(r'^analyses/$', 'analyses', name="analyses"),
     url(r'^analyses/(?P<analysis_uuid>'
         r'[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/$',
