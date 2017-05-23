@@ -62,6 +62,7 @@
     vm.cachePages = 2;
     vm.checkDataLength = checkDataLength;
     vm.checkDataSetOwnership = checkDataSetOwnership;
+    vm.collapsedToolPanel = true;
     vm.counter = 0;
     // params for the assays api
     vm.filesParam = {
@@ -98,6 +99,7 @@
     vm.reset = reset;
     vm.rowCount = maxFileRequest;
     vm.sortChanged = sortChanged;
+    vm.toggleToolPanel = toggleToolPanel;
     vm.totalPages = 1;  // variable supporting ui-grid dynamic scrolling
     /** Used by ui to select/deselect, attributes have an object of filter fields
      * attributeInternalName: {fieldName: boolean, fieldName: boolean} */
@@ -355,6 +357,16 @@
             vm.reset();
             break;
         }
+      }
+    }
+
+    // View method which toggles the collapsedToolPanel variable.
+    // Needed to resize UI-Grid and alternate text in button.
+    function toggleToolPanel () {
+      if (vm.collapsedToolPanel) {
+        vm.collapsedToolPanel = false;
+      } else {
+        vm.collapsedToolPanel = true;
       }
     }
 
