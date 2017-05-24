@@ -19,14 +19,13 @@ from .api import AnalysisResource
 from .management.commands.create_user import init_user
 from .models import (Analysis, AnalysisNodeConnection, create_nodeset, DataSet,
                      delete_nodeset, ExtendedGroup, get_nodeset,
-                     invalidate_cached_object, InvestigationLink, NodeGroup,
+                     invalidate_cached_object, InvestigationLink,
                      NodeSet, Project, Tutorials, update_nodeset,
                      UserProfile, Workflow, WorkflowEngine)
 from .utils import (create_current_selection_node_group,
                     filter_nodes_uuids_in_solr, get_aware_local_time,
                     move_obj_to_front)
-from .views import AnalysesViewSet, DataSetsViewSet, NodeGroups
-from .serializers import NodeGroupSerializer
+from .views import AnalysesViewSet, DataSetsViewSet
 from data_set_manager.models import Assay, Investigation, Node, Study
 from file_store.models import FileStoreItem
 from galaxy_connector.models import Instance
@@ -1423,159 +1422,6 @@ class AnalysisDeletionTest(TestCase):
         self.analysis_with_node_analyzed_further.delete()
         self.assertIsNotNone(Analysis.objects.get(
             name='analysis_with_node_analyzed_further'))
-
-
-class NodeGroupAPITests(APITestCase):
-
-    def setUp(self):
-        self.factory = APIRequestFactory()
-        investigation = Investigation.objects.create()
-        self.study = Study.objects.create(
-                file_name='test_filename123.txt',
-                title='Study Title Test',
-                investigation=investigation)
-        assay = {
-            'study': self.study,
-            'measurement': 'transcription factor binding site',
-            'measurement_accession': 'http://www.testurl.org/testID',
-            'measurement_source': 'OBI',
-            'technology': 'nucleotide sequencing',
-            'technology_accession': 'test info',
-            'technology_source': 'test source',
-            'platform': 'Genome Analyzer II',
-            'file_name': 'test_assay_filename.txt'
-        }
-        self.assay = Assay.objects.create(**assay)
-        self.node_1 = Node.objects.create(assay=self.assay,
-                                          study=self.study,
-                                          name='Node1')
-
-        self.node_2 = Node.objects.create(assay=self.assay,
-                                          study=self.study,
-                                          name='Node2')
-        self.node_group = NodeGroup.objects.create(
-            assay=self.assay,
-            study=self.study,
-            name='Test Node Group 1'
-        )
-        self.nodes_list = [self.node_1, self.node_2]
-        self.nodes_list_uuid = [self.node_1.uuid, self.node_2.uuid]
-        self.node_group.nodes.add(*self.nodes_list)
-        self.node_group.node_count = len(self.nodes_list)
-        self.node_group.save()
-
-        self.node_group_2 = NodeGroup.objects.create(
-            assay=self.assay,
-            study=self.study,
-            name='Test Node Group 2'
-        )
-        self.node_group_list = [self.node_group, self.node_group_2]
-        self.valid_uuid = self.node_group.uuid
-        self.url_root = '/api/v2/node_groups/'
-        self.view = NodeGroups.as_view()
-        self.invalid_uuid = "03b5f681-35d5-4bdd-bc7d-8552fa777ebc"
-        self.invalid_format_uuid = "xxxxxxxx"
-
-    def test_get_valid_uuid(self):
-        # valid_uuid
-        request = self.factory.get('%s/?uuid=%s' % (
-            self.url_root, self.valid_uuid))
-        response = self.view(request, self.valid_uuid)
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data,
-                         NodeGroupSerializer(self.node_group).data)
-
-    def test_get_valid_assay_uuid(self):
-        # valid_assay_uuid
-        request = self.factory.get('%s/?assay=%s' % (
-            self.url_root, self.assay.uuid))
-        response = self.view(request, self.assay.uuid)
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(response.data), len(self.node_group_list))
-        self.assertItemsEqual(response.data, NodeGroupSerializer(
-            self.node_group_list, many=True).data)
-
-    def test_get_invalid_uuid(self):
-        # invalid_uuid
-        request = self.factory.get('%s/?uuid=%s' % (self.url_root,
-                                                    self.invalid_uuid))
-        response = self.view(request, self.invalid_uuid)
-        self.assertEqual(response.status_code, 404)
-
-    def test_get_invalid_assay_uuid(self):
-        # invalid_assay_uuid
-        request = self.factory.get('%s/?assay=%s' % (self.url_root,
-                                                     self.invalid_uuid))
-        response = self.view(request, self.invalid_uuid)
-        self.assertEqual(response.status_code, 404)
-
-    def test_get_invalid_format_uuid(self):
-        # invalid_format_uuid
-        request = self.factory.get('%s/?uuid=%s'
-                                   % (self.url_root,
-                                      self.invalid_format_uuid))
-        response = self.view(request, self.invalid_format_uuid)
-        self.assertEqual(response.status_code, 404)
-
-    def test_post_valid_form(self):
-        # valid form
-        new_node_group = {'name': 'Test Group3',
-                          'assay': self.assay.uuid,
-                          'study': self.study.uuid,
-                          'nodes': self.nodes_list_uuid
-                          }
-        request = self.factory.post('%s/' % self.url_root, new_node_group)
-        response = self.view(request)
-        self.assertEqual(response.status_code, 201)
-        self.assertEqual(response.data.get('name'), new_node_group.get('name'))
-        self.assertEqual(response.data.get('node_count'),
-                         len(self.nodes_list_uuid))
-        self.assertItemsEqual(response.data.get('nodes'), self.nodes_list_uuid)
-
-    def test_post_invalid_form(self):
-        # invalid form
-        new_node_group = {'name': 'Test Group3',
-                          'assay': self.assay.uuid,
-                          'study': self.study.uuid,
-                          'nodes': '%s' % self.invalid_uuid}
-        request = self.factory.post('%s/' % self.url_root, new_node_group)
-        response = self.view(request)
-        self.assertEqual(response.status_code, 400)
-
-    def test_put_valid_uuid_and_valid_input(self):
-        # valid uuid and valid input
-        request = self.factory.put('%s/' % self.url_root,
-                                   {'uuid': self.node_group_2.uuid,
-                                    'nodes': self.nodes_list_uuid,
-                                    'is_current': True})
-        response = self.view(request)
-        self.assertEqual(response.status_code, 202)
-        self.assertItemsEqual(response.data.get('nodes'), self.nodes_list_uuid)
-
-    def test_put_valid_uuid_and_invalid_node(self):
-        # valid uuid but node invalid uuid
-        request = self.factory.put('%s/' % self.url_root,
-                                   {'uuid': self.node_group_2.uuid,
-                                    'nodes': self.invalid_uuid,
-                                    'is_current': True})
-        response = self.view(request)
-        self.assertEqual(response.status_code, 400)
-
-    def test_put_invalid_uuid(self):
-        # invalid_uuid
-        request = self.factory.put('%s/' % self.url_root,
-                                   {'uuid': self.invalid_uuid}
-                                   )
-        response = self.view(request)
-        self.assertEqual(response.status_code, 404)
-
-    def test_put_invalid_format_uuid(self):
-        # invalid_format_uuid
-        request = self.factory.put('%s/' % self.url_root,
-                                   {'uuid': self.invalid_format_uuid}
-                                   )
-        response = self.view(request)
-        self.assertEqual(response.status_code, 404)
 
 
 class UtilitiesTest(TestCase):
