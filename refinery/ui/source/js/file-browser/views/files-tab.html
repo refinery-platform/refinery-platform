@@ -2,7 +2,8 @@
   <!-- filters and content  -->
   <div class="row y-scrollable m-t-1-2 p-t-1">
     <div
-      class="col-lg-2 col-md-2 col-sm-3 well collapse"
+      class="col-lg-2 col-md-2 col-sm-3 well"
+      ng-class="{'collapse': FBCtrl.collapsedToolPanel}"
       id="tool-launch-panel">
       <div class="row">
         <rp-tool-display></rp-tool-display>
@@ -14,7 +15,6 @@
           <button
             class="btn btn-primary btn-sm"
             data-target="#tool-launch-panel"
-            data-toggle="collapse"
             ng-click="FBCtrl.toggleToolPanel()">
             <span ng-show="FBCtrl.collapsedToolPanel">
                Show Tool Panel
@@ -51,15 +51,11 @@
         </div>
       </div>
     </div>
-    <span ng-if="FBCtrl.collapsedToolPanel">
-      <div class="col-lg-10 col-md-10 col-sm-8" id="main-area">
-        <rp-file-browser-assay-files></rp-file-browser-assay-files>
-      </div>
-    </span>
-    <span ng-if="!FBCtrl.collapsedToolPanel">
-      <div class="col-lg-8 col-md-8 col-sm-6" id="main-area">
-        <rp-file-browser-assay-files></rp-file-browser-assay-files>
-      </div>
-    </span>
+    <div
+      ng-class="{'col-lg-8 col-md-8 col-sm-6': !FBCtrl.collapsedToolPanel,
+      'col-lg-10 col-md-10 col-sm-8': FBCtrl.collapsedToolPanel}"
+      id="main-area">
+      <rp-file-browser-assay-files></rp-file-browser-assay-files>
+    </div>
   </div>
 </div>

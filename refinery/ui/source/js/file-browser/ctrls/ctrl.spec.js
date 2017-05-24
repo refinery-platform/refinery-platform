@@ -6,6 +6,7 @@
     var scope;
     var factory;
     var service;
+    var toolService;
 
     beforeEach(module('refineryApp'));
     beforeEach(module('refineryFileBrowser'));
@@ -14,6 +15,7 @@
                                 fileBrowserFactory,
                                 mockParamsFactory,
                                 selectedFilterService,
+                                toolSelectService,
                                 $window) {
       scope = $rootScope.$new();
       ctrl = $controller('FileBrowserCtrl', {
@@ -21,6 +23,7 @@
       });
       factory = fileBrowserFactory;
       service = selectedFilterService;
+      toolService = toolSelectService;
       $window.externalAssayUuid = mockParamsFactory.generateUuid();
     }));
 
@@ -114,13 +117,12 @@
       });
 
       it('toggleToolPanel sets collapsedToolPanel to true', function () {
-        ctrl.collapsedToolPanel = false;
+        toolService.isToolPanelCollapsed = false;
         ctrl.toggleToolPanel();
         expect(ctrl.collapsedToolPanel).toEqual(true);
       });
 
       it('toggleToolPanel sets collapsedToolPanel to false', function () {
-        ctrl.collapsedToolPanel = true;
         ctrl.toggleToolPanel();
         expect(ctrl.collapsedToolPanel).toEqual(false);
       });

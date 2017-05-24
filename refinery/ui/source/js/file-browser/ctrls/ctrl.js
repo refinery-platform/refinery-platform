@@ -22,7 +22,8 @@
     'isOwnerService',
     'resetGridService',
     'selectedFilterService',
-    'selectedNodesService'
+    'selectedNodesService',
+    'toolSelectService'
   ];
 
   function FileBrowserCtrl (
@@ -42,11 +43,13 @@
     isOwnerService,
     resetGridService,
     selectedFilterService,
-    selectedNodesService
+    selectedNodesService,
+    toolSelectService
   ) {
     var maxFileRequest = fileBrowserSettings.maxFileRequest;
     var nodesService = selectedNodesService;
     var fileService = fileRelationshipService;
+    var toolService = toolSelectService;
     var vm = this;
     vm.activeNodeRow = nodesService.activeNodeRow;
     // flag to help with timing issues when selecting node group
@@ -62,7 +65,7 @@
     vm.cachePages = 2;
     vm.checkDataLength = checkDataLength;
     vm.checkDataSetOwnership = checkDataSetOwnership;
-    vm.collapsedToolPanel = true;
+    vm.collapsedToolPanel = toolService.isToolPanelCollapsed;
     vm.counter = 0;
     // params for the assays api
     vm.filesParam = {
@@ -86,9 +89,9 @@
       multiSelect: true,
       columnDefs: fileBrowserFactory.customColumnNames,
       data: fileBrowserFactory.assayFiles,
-      gridFooterTemplate: '<rp-is-assay-files-loading></rp-is-assay-files-loading>'
+      gridFooterTemplate: '<rp-is-assay-files-loading></rp-is-assay-files-loading>',
+      onRegisterApi: gridRegister
     };
-    vm.gridOptions.onRegisterApi = gridRegister;
     vm.inputFileTypeColor = fileService.inputFileTypeColor;
     vm.lastPage = 0;  // variable supporting ui-grid dynamic scrolling
     vm.nodeSelectCollection = fileService.nodeSelectCollection;
@@ -360,13 +363,31 @@
       }
     }
 
+    // Helper method: toggles the tool related columns, selection & input groups
+    function toggleToolColumn () {
+      if (_.isEmpty(toolService.selectedTool) &&
+        fileBrowserFactory.customColumnNames[0].visible) {
+        // Explicitly toggle to avoid a bug when data doesn't show on tabbing
+        fileBrowserFactory.customColumnNames[0].visible = false;
+        fileBrowserFactory.customColumnNames[1].visible = false;
+        vm.gridApi.core.notifyDataChange(uiGridConstants.dataChange.COLUMN);
+      } else if (!_.isEmpty(toolService.selectedTool) &&
+        !fileBrowserFactory.customColumnNames[0].visible) {
+        fileBrowserFactory.customColumnNames[0].visible = true;
+        fileBrowserFactory.customColumnNames[1].visible = true;
+        vm.gridApi.core.notifyDataChange(uiGridConstants.dataChange.COLUMN);
+      }
+    }
+
     // View method which toggles the collapsedToolPanel variable.
     // Needed to resize UI-Grid and alternate text in button.
     function toggleToolPanel () {
-      if (vm.collapsedToolPanel) {
-        vm.collapsedToolPanel = false;
+      if (toolService.isToolPanelCollapsed) {
+        toolService.isToolPanelCollapsed = false;
+        vm.collapsedToolPanel = toolService.isToolPanelCollapsed;
       } else {
-        vm.collapsedToolPanel = true;
+        toolService.isToolPanelCollapsed = true;
+        vm.collapsedToolPanel = toolService.isToolPanelCollapsed;
       }
     }
 
@@ -420,8 +441,7 @@
         // updates view model's selected attribute filters
         angular.forEach(
           selectedFilterService.attributeSelectedFields,
-          function (fieldArr, attributeInternalName
-          ) {
+          function (fieldArr, attributeInternalName) {
             for (var i = 0; i < fieldArr.length; i++) {
               if (_.isEmpty(vm.uiSelectedFields)) {
                 vm.uiSelectedFields[attributeInternalName] = {};
@@ -489,6 +509,7 @@
         }
       }
     );
+
     // when a new row is selected/deselected
     $scope.$watch(
       function () {
@@ -507,6 +528,18 @@
       function () {
         vm.nodeSelectCollection = fileService.nodeSelectCollection;
         vm.inputFileTypeColor = fileService.inputFileTypeColor;
+      }
+    );
+
+    // only show the selection and input group column when a tool is selected
+    $scope.$watchCollection(
+      function () {
+        return toolService.selectedTool;
+      },
+      function () {
+        if (fileBrowserFactory.customColumnNames.length > 0) {
+          toggleToolColumn();
+        }
       }
     );
   }

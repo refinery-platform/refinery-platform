@@ -271,7 +271,8 @@ function fileBrowserFactory (
       enableSorting: false,
       enableColumnMenu: false,
       enableColumnResizing: true,
-      cellTemplate: _cellTemplate
+      cellTemplate: _cellTemplate,
+      visible: false
     };
   };
 
@@ -300,7 +301,8 @@ function fileBrowserFactory (
       enableSorting: false,
       enableColumnMenu: false,
       enableColumnResizing: true,
-      cellTemplate: cellTemplate
+      cellTemplate: cellTemplate,
+      visible: false
     };
   };
 
