@@ -13,6 +13,7 @@ import mock
 import mockcache as memcache
 from rest_framework.test import (APIRequestFactory, APIClient, APITestCase,
                                  force_authenticate)
+from tastypie.exceptions import NotFound
 from tastypie.test import ResourceTestCase
 
 from .api import AnalysisResource
@@ -1799,8 +1800,8 @@ class DataSetResourceTest(ResourceTestCase):
         self.user_catch_all_project = UserProfile.objects.get(
             user=self.user
         ).catch_all_project
-        self.dataset = DataSet.objects.create()
-        self.dataset2 = DataSet.objects.create()
+        self.dataset = DataSet.objects.create(name="Dataset 1")
+        self.dataset2 = DataSet.objects.create(name="Dataset 2")
         self.galaxy_instance = Instance.objects.create()
         self.workflow_engine = WorkflowEngine.objects.create(
             instance=self.galaxy_instance
@@ -1897,8 +1898,8 @@ class DataSetResourceTest(ResourceTestCase):
         self.assertEqual(data['uuid'], self.dataset.uuid)
         self.assertEqual(data['analyses'], [])
 
-    def test_dataset_version_good(self):
-        # Properly created DatSets will have version information
+    def test_detail_response_with_complete_dataset(self):
+        # Properly created DataSets will have version information
         self.dataset.set_owner(self.user)
 
         dataset_uri = make_api_uri(
@@ -1913,20 +1914,28 @@ class DataSetResourceTest(ResourceTestCase):
         self.assertEqual(data["version"], 1)
         self.assertIsNotNone(data["date"])
 
-    def test_dataset_version_missing(self):
+    def test_detail_response_yields_error_if_incomplete_dataset(self):
+        # DataSets that aren't fully created will yield informative errors
         self.dataset2.set_owner(self.user)
 
         dataset_uri = make_api_uri(
             "data_sets",
             self.dataset2.uuid
         )
-        response = self.api_client.get(
-            dataset_uri,
-            format='json'
-        )
-        data = self.deserialize(response)
-        self.assertEqual(data["date"], None)
-        self.assertEqual(data["version"], None)
+        with self.assertRaises(NotFound):
+            self.api_client.get(dataset_uri, format='json')
+
+    def test_list_response_yields_complete_datasets_only(self):
+        # DataSets that aren't fully created will not be displayed in the
+        # list api response
+        self.dataset.set_owner(self.user)
+        self.dataset2.set_owner(self.user)
+
+        resp = self.api_client.get('/api/v1/data_sets/', format='json')
+        self.assertValidJSONResponse(resp)
+        data = json.loads(resp.content)
+        self.assertEqual(data["meta"]["total_count"], 1)
+        self.assertEqual(data["objects"][0]["name"], self.dataset.name)
 
 
 class DataSetClassMethodsTest(TestCase):
