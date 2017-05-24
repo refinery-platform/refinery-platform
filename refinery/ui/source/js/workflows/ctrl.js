@@ -6,7 +6,6 @@ function WorkflowListApiCtrl (
   workflowService,
   workflow,
   $location,
-  selectedNodesService,
   selectedWorkflowService
 ) {
   var vm = this;
@@ -59,7 +58,6 @@ angular
     'workflowService',
     'workflow',
     '$location',
-    'selectedNodesService',
     'selectedWorkflowService',
     WorkflowListApiCtrl
   ]);

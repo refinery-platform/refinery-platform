@@ -22,7 +22,7 @@
     'isOwnerService',
     'resetGridService',
     'selectedFilterService',
-    'selectedNodesService',
+    'activeNodeService',
     'toolSelectService'
   ];
 
@@ -43,11 +43,11 @@
     isOwnerService,
     resetGridService,
     selectedFilterService,
-    selectedNodesService,
+    activeNodeService,
     toolSelectService
   ) {
     var maxFileRequest = fileBrowserSettings.maxFileRequest;
-    var nodesService = selectedNodesService;
+    var nodesService = activeNodeService;
     var fileService = fileRelationshipService;
     var toolService = toolSelectService;
     var vm = this;
