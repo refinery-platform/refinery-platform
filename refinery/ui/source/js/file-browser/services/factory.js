@@ -7,7 +7,6 @@ function fileBrowserFactory (
   assayAttributeService,
   assayFileService,
   fileBrowserSettings,
-  nodeGroupService,
   nodeService,
   selectedFilterService
   ) {
@@ -20,7 +19,6 @@ function fileBrowserFactory (
   var assayFilesTotalItems = {};
   var customColumnNames = [];
   var nodeUrl = {};
-  var nodeGroupList = [];
   var csrfToken = $window.csrf_token;
   var maxFileRequest = fileBrowserSettings.maxFileRequest;
 
@@ -79,23 +77,6 @@ function fileBrowserFactory (
       nodeUrl = response.file_url;
     });
     return nodeFile.$promise;
-  };
-
-  var getNodeGroupList = function (assayUuid) {
-    var params = {
-      assay: assayUuid
-    };
-
-    var nodeGroups = nodeGroupService.query(params);
-    nodeGroups.$promise.then(function (response) {
-      angular.copy(response, nodeGroupList);
-    });
-    return nodeGroups.$promise;
-  };
-
-  var createNodeGroup = function (params) {
-    var nodeGroup = nodeGroupService.save(params);
-    return nodeGroup.$promise;
   };
 
   // Adds the file_url to the assay files array
@@ -405,12 +386,9 @@ function fileBrowserFactory (
     assayFilesTotalItems: assayFilesTotalItems,
     attributeFilter: attributeFilter,
     customColumnNames: customColumnNames,
-    nodeGroupList: nodeGroupList,
     createColumnDefs: createColumnDefs,
-    createNodeGroup: createNodeGroup,
     getAssayFiles: getAssayFiles,
     getAssayAttributeOrder: getAssayAttributeOrder,
-    getNodeGroupList: getNodeGroupList,
     postAssayAttributeOrder: postAssayAttributeOrder,
     resetAssayFiles: resetAssayFiles,
     trimAssayFiles: trimAssayFiles
@@ -426,7 +404,6 @@ angular
     'assayAttributeService',
     'assayFileService',
     'fileBrowserSettings',
-    'nodeGroupService',
     'nodeService',
     'selectedFilterService',
     fileBrowserFactory

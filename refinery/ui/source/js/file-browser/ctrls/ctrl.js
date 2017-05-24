@@ -52,8 +52,6 @@
     var toolService = toolSelectService;
     var vm = this;
     vm.activeNodeRow = nodesService.activeNodeRow;
-    // flag to help with timing issues when selecting node group
-    vm.afterNodeGroupUpdate = false;
     vm.analysisFilter = fileBrowserFactory.analysisFilter;
     // attribute list from api
     vm.assayAttributes = fileBrowserFactory.assayAttributes;

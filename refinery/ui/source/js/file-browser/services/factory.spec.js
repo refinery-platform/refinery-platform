@@ -27,7 +27,6 @@ describe('File Browser Factory', function () {
     expect(factory.attributeFilter).toEqual({});
     expect(factory.analysisFilter).toEqual({});
     expect(factory.assayFilesTotalItems).toEqual({});
-    expect(factory.nodeGroupList).toEqual([]);
     expect(factory.customColumnNames).toEqual([]);
   });
 
@@ -176,112 +175,6 @@ describe('File Browser Factory', function () {
       rootScope.$apply();
       expect(typeof _response.then).toEqual('function');
       expect(data.solr_field).toEqual(assayAttribute.solr_field);
-    });
-  });
-
-  describe('getNodeGroupList', function () {
-    var nodeGroupList;
-
-    beforeEach(inject(function (
-      nodeGroupService,
-      _$q_,
-      _$rootScope_
-    ) {
-      $q = _$q_;
-      nodeGroupList = [
-        {
-          uuid: mocker.generateUuid(),
-          node_count: 0,
-          is_implicit: false,
-          study: mocker.generateUuid(),
-          assay: mocker.generateUuid(),
-          is_current: false,
-          nodes: [],
-          name: 'Node Group 1'
-        },
-        {
-          uuid: mocker.generateUuid(),
-          node_count: 0,
-          is_implicit: false,
-          study: mocker.generateUuid(),
-          assay: mocker.generateUuid(),
-          is_current: false,
-          nodes: [],
-          name: 'Node Group 2'
-        }
-      ];
-
-      spyOn(nodeGroupService, 'query').and.callFake(function () {
-        deferred = $q.defer();
-        deferred.resolve(nodeGroupList);
-        return {
-          $promise: deferred.promise
-        };
-      });
-      rootScope = _$rootScope_;
-    }));
-
-    it('getNodeGroupList is a method', function () {
-      expect(angular.isFunction(factory.getNodeGroupList)).toBe(true);
-    });
-
-    it('getNodeGroupList returns a promise', function () {
-      var successData;
-      var response = factory.getNodeGroupList({
-        uuid: fakeUuid
-      }).then(function (responseData) {
-        successData = responseData;
-      });
-      rootScope.$apply();
-      expect(typeof response.then).toEqual('function');
-      expect(successData).toEqual(nodeGroupList);
-    });
-  });
-
-  describe('createNodeGroup', function () {
-    var nodeGroup;
-
-    beforeEach(inject(function (
-      nodeGroupService,
-      _$q_,
-      _$rootScope_
-    ) {
-      $q = _$q_;
-      nodeGroup = {
-        uuid: mocker.generateUuid(),
-        node_count: 0,
-        is_implicit: false,
-        study: mocker.generateUuid(),
-        assay: mocker.generateUuid(),
-        is_current: false,
-        nodes: [],
-        name: 'Node Group 1'
-      };
-
-      spyOn(nodeGroupService, 'save').and.callFake(function () {
-        deferred = $q.defer();
-        deferred.resolve(nodeGroup);
-        return {
-          $promise: deferred.promise
-        };
-      });
-      rootScope = _$rootScope_;
-    }));
-
-    it('createNodeGroup is a method', function () {
-      expect(angular.isFunction(factory.createNodeGroup)).toBe(true);
-    });
-
-    it('createNodeGroup returns a promise', function () {
-      var successData;
-      var response = factory.createNodeGroup({
-        uuid: fakeUuid
-      }).then(function (responseData) {
-        successData = responseData;
-      });
-      rootScope.$apply();
-      expect(typeof response.then).toEqual('function');
-      expect(successData).toEqual(nodeGroup);
     });
   });
 
