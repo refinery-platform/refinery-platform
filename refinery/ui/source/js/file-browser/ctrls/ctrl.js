@@ -89,7 +89,7 @@
       multiSelect: true,
       columnDefs: fileBrowserFactory.customColumnNames,
       data: fileBrowserFactory.assayFiles,
-      // gridFooterTemplate: '<rp-is-assay-files-loading></rp-is-assay-files-loading>',
+      gridFooterTemplate: '<rp-is-assay-files-loading></rp-is-assay-files-loading>',
       onRegisterApi: gridRegister
     };
     vm.inputFileTypeColor = fileService.inputFileTypeColor;
