@@ -64,7 +64,6 @@
     vm.checkDataLength = checkDataLength;
     vm.checkDataSetOwnership = checkDataSetOwnership;
     vm.collapsedToolPanel = toolService.isToolPanelCollapsed;
-    vm.counter = 0;
     // params for the assays api
     vm.filesParam = {
       uuid: $window.externalAssayUuid,
