@@ -65,7 +65,7 @@
     vm.cachePages = 2;
     vm.checkDataLength = checkDataLength;
     vm.checkDataSetOwnership = checkDataSetOwnership;
-    vm.collapsedToolPanel = true;
+    vm.collapsedToolPanel = toolService.isToolPanelCollapsed;
     vm.counter = 0;
     // params for the assays api
     vm.filesParam = {
@@ -366,10 +366,12 @@
     // View method which toggles the collapsedToolPanel variable.
     // Needed to resize UI-Grid and alternate text in button.
     function toggleToolPanel () {
-      if (vm.collapsedToolPanel) {
-        vm.collapsedToolPanel = false;
+      if (toolService.isToolPanelCollapsed) {
+        toolService.isToolPanelCollapsed = false;
+        vm.collapsedToolPanel = toolService.isToolPanelCollapsed;
       } else {
-        vm.collapsedToolPanel = true;
+        toolService.isToolPanelCollapsed = true;
+        vm.collapsedToolPanel = toolService.isToolPanelCollapsed;
       }
     }
 
