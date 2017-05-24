@@ -22,4 +22,6 @@ INSTALLED_APPS += (
 STATIC_BUCKET = get_setting('STACK_NAME') + '-static'
 STATIC_URL = 'https://{}.s3.amazonaws.com/'.format(STATIC_BUCKET)
 STATICFILES_STORAGE = 'config.utils_aws.S3StaticStorage'
-DEPLOYMENT_PLATFORM = "aws"
+
+# TODO: uncomment this once data file upload to S3 is fully implemented
+# DEPLOYMENT_PLATFORM = "aws"
