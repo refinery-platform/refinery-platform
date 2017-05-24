@@ -538,12 +538,10 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
             analyses.append(analysis_dict)
 
         bundle.data["analyses"] = analyses
-
-        bundle.data["version"] = bundle.obj.get_version_details().version
-        bundle.data["date"] = bundle.obj.get_version_details().date
-
         bundle.data["creation_date"] = bundle.obj.creation_date
+        bundle.data["date"] = bundle.obj.get_version_details().date
         bundle.data["modification_date"] = bundle.obj.modification_date
+        bundle.data["version"] = bundle.obj.get_version_details().version
 
         return bundle
 
@@ -676,7 +674,10 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
 
     def obj_get_list(self, bundle, **kwargs):
         datasets = SharableResourceAPIInterface.obj_get_list(
-            self, bundle, **kwargs)
+            self,
+            bundle,
+            **kwargs
+        )
         return self.handle_incomplete_datasets(datasets)
 
     def get_object_list(self, request):
@@ -841,7 +842,7 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
         accessed.
         :param dataset: a DataSet object
         :return: a DataSet object
-        :raises: A TastyPie NotFound Exception if we said DataSet
+        :raises: A TastyPie NotFound Exception if said DataSet
         doesn't have the proper information associated yet.
         """
         if dataset.get_version_details() is not None:
@@ -857,14 +858,14 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
 
     def handle_incomplete_datasets(self, datasets):
         """
-        Remove incomplete DataSet instances when a list view is accessed.
+        Handle incomplete DataSet instances when a list view is accessed.
         :param datasets: a list of DataSet objects
         :return: a list of DataSet objects sans ones that don't have the
         proper information associated yet.
         """
         complete_datasets = []
 
-        for index, dataset in enumerate(datasets):
+        for dataset in datasets:
             if dataset.get_version_details() is None:
                 logger.error(
                     self.make_incomplete_dataset_error_message(dataset.uuid)
