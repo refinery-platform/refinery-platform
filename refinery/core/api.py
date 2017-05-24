@@ -498,6 +498,13 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
         }
 
     def dehydrate(self, bundle):
+        version_details = bundle.obj.get_version_details()
+
+        if version_details is None:
+            # Dataset has not been associated with its Investigation,
+            # InvestigationLink etc.
+            return bundle
+
         if not bundle.data['owner']:
             owner = bundle.obj.get_owner()
             try:
@@ -539,9 +546,9 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
 
         bundle.data["analyses"] = analyses
         bundle.data["creation_date"] = bundle.obj.creation_date
-        bundle.data["date"] = bundle.obj.get_version_details().date
+        bundle.data["date"] = version_details.date
         bundle.data["modification_date"] = bundle.obj.modification_date
-        bundle.data["version"] = bundle.obj.get_version_details().version
+        bundle.data["version"] = version_details.version
 
         return bundle
 
