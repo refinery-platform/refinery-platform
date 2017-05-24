@@ -15,6 +15,7 @@
     it('service variables should exist', function () {
       expect(service).toBeDefined();
       expect(service.activeNodeRow).toEqual({});
+      expect(service.selectionObj).toEqual({});
     });
   });
 })();
