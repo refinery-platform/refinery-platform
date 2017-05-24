@@ -89,7 +89,7 @@
       multiSelect: true,
       columnDefs: fileBrowserFactory.customColumnNames,
       data: fileBrowserFactory.assayFiles,
-     // gridFooterTemplate: '<rp-is-assay-files-loading></rp-is-assay-files-loading>',
+      // gridFooterTemplate: '<rp-is-assay-files-loading></rp-is-assay-files-loading>',
       onRegisterApi: gridRegister
     };
     vm.inputFileTypeColor = fileService.inputFileTypeColor;
@@ -425,8 +425,7 @@
         // updates view model's selected attribute filters
         angular.forEach(
           selectedFilterService.attributeSelectedFields,
-          function (fieldArr, attributeInternalName
-          ) {
+          function (fieldArr, attributeInternalName) {
             for (var i = 0; i < fieldArr.length; i++) {
               if (_.isEmpty(vm.uiSelectedFields)) {
                 vm.uiSelectedFields[attributeInternalName] = {};
@@ -449,6 +448,22 @@
           vm.updateFiltersFromUrlQuery();
         }
         checkAndUpdateGridData();
+      }
+    }
+
+    // Helper method: toggles the tool related columns, selection & input groups
+    function toggleToolColumn () {
+      if (_.isEmpty(toolService.selectedTool) &&
+        fileBrowserFactory.customColumnNames[0].visible) {
+        // Explicitly toggle to avoid a bug when data doesn't show on tabbing
+        fileBrowserFactory.customColumnNames[0].visible = false;
+        fileBrowserFactory.customColumnNames[1].visible = false;
+        vm.gridApi.core.notifyDataChange(uiGridConstants.dataChange.COLUMN);
+      } else if (!_.isEmpty(toolService.selectedTool) &&
+        !fileBrowserFactory.customColumnNames[0].visible) {
+        fileBrowserFactory.customColumnNames[0].visible = true;
+        fileBrowserFactory.customColumnNames[1].visible = true;
+        vm.gridApi.core.notifyDataChange(uiGridConstants.dataChange.COLUMN);
       }
     }
 
@@ -494,6 +509,7 @@
         }
       }
     );
+
     // when a new row is selected/deselected
     $scope.$watch(
       function () {
@@ -522,16 +538,7 @@
       },
       function () {
         if (fileBrowserFactory.customColumnNames.length > 0) {
-          if (_.isEmpty(toolService.selectedTool)) {
-            fileBrowserFactory.customColumnNames[0].visible = false;
-            fileBrowserFactory.customColumnNames[1].visible = false;
-            vm.gridOptions.columnDefs = fileBrowserFactory.customColumnNames;
-            vm.gridApi.core.notifyDataChange(uiGridConstants.dataChange.COLUMN);
-          } else {
-            fileBrowserFactory.customColumnNames[0].visible = true;
-            fileBrowserFactory.customColumnNames[1].visible = true;
-            vm.gridApi.core.notifyDataChange(uiGridConstants.dataChange.COLUMN);
-          }
+          toggleToolColumn();
         }
       }
     );
