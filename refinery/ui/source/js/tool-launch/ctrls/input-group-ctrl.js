@@ -96,6 +96,7 @@
           vm.currentGroup = fileService.currentGroup;
           vm.currentTypes = fileService.currentTypes;
           vm.groupCollection = fileService.groupCollection;
+          vm.inputFileTypeColor = fileService.inputFileTypeColor;
         }
       );
 
