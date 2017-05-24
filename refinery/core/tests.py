@@ -22,8 +22,7 @@ from .models import (Analysis, AnalysisNodeConnection, create_nodeset, DataSet,
                      invalidate_cached_object, InvestigationLink,
                      NodeSet, Project, Tutorials, update_nodeset,
                      UserProfile, Workflow, WorkflowEngine)
-from .utils import (create_current_selection_node_group,
-                    filter_nodes_uuids_in_solr, get_aware_local_time,
+from .utils import (filter_nodes_uuids_in_solr, get_aware_local_time,
                     move_obj_to_front)
 from .views import AnalysesViewSet, DataSetsViewSet
 from data_set_manager.models import Assay, Investigation, Node, Study
@@ -1457,14 +1456,6 @@ class UtilitiesTest(TestCase):
         difference_time = response_time - expected_time
 
         self.assertLessEqual(difference_time.total_seconds(), .99)
-
-    def test_create_current_selection_node_group_valid(self):
-        response = create_current_selection_node_group(self.valid_uuid)
-        self.assertEqual(response.status_code, 201)
-
-    def test_create_current_selection_node_group_invalid(self):
-        response = create_current_selection_node_group(self.invalid_uuid)
-        self.assertEqual(response.status_code, 404)
 
     # Mock methods used in filter_nodes_uuids_in_solr
     def fake_generate_solr_params(params, assay_uuid):
