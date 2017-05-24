@@ -30,7 +30,7 @@ from tastypie.authentication import SessionAuthentication, Authentication
 from tastypie.authorization import Authorization
 from tastypie.bundle import Bundle
 from tastypie.constants import ALL_WITH_RELATIONS, ALL
-from tastypie.exceptions import Unauthorized, ImmediateHttpResponse
+from tastypie.exceptions import ImmediateHttpResponse, NotFound, Unauthorized
 from tastypie.http import HttpNotFound, HttpForbidden, HttpBadRequest, \
     HttpUnauthorized, HttpMethodNotAllowed, HttpAccepted, HttpCreated, \
     HttpNoContent, HttpGone
@@ -680,11 +680,13 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
         return obj_list
 
     def obj_get(self, bundle, **kwargs):
-        return SharableResourceAPIInterface.obj_get(self, bundle, **kwargs)
+        dataset = SharableResourceAPIInterface.obj_get(self, bundle, **kwargs)
+        return self.handle_incomplete_dataset(dataset)
 
     def obj_get_list(self, bundle, **kwargs):
-        return SharableResourceAPIInterface.obj_get_list(
+        datasets = SharableResourceAPIInterface.obj_get_list(
             self, bundle, **kwargs)
+        return self.handle_incomplete_datasets(datasets)
 
     def get_object_list(self, request):
         obj_list = SharableResourceAPIInterface.get_object_list(self, request)
@@ -841,6 +843,54 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
             request=request,
             study_uuid=kwargs['study_uuid']
         )
+
+    def handle_incomplete_dataset(self, dataset):
+        """
+        Handle an incomplete DataSet instance when a detail view is
+        accessed.
+        :param dataset: a DataSet object
+        :return: a DataSet object
+        :raises: A TastyPie NotFound Exception if we said DataSet
+        doesn't have the proper information associated yet.
+        """
+        if dataset.get_version_details() is not None:
+            return dataset
+
+        else:
+            logger.error(
+                self.make_incomplete_dataset_error_message(dataset.uuid)
+            )
+            raise NotFound(
+                self.make_incomplete_dataset_error_message(dataset.uuid)
+            )
+
+    def handle_incomplete_datasets(self, datasets):
+        """
+        Remove incomplete DataSet instances when a list view is accessed.
+        :param datasets: a list of DataSet objects
+        :return: a list of DataSet objects sans ones that don't have the
+        proper information associated yet.
+        """
+        complete_datasets = []
+
+        for index, dataset in enumerate(datasets):
+            if dataset.get_version_details() is None:
+                logger.error(
+                    self.make_incomplete_dataset_error_message(dataset.uuid)
+                )
+            else:
+                complete_datasets.append(dataset)
+        return complete_datasets
+
+    def make_incomplete_dataset_error_message(self, dataset_uuid):
+        """
+        Helper method to generate the error message when DataSets are
+        completely created.
+        :param dataset_uuid: A DataSet's UUID
+        :return: properly formatted error message string
+        """
+        return "DataSet with UUID: {} is incomplete, and most likely is " \
+               "still uploading".format(dataset_uuid)
 
 
 class WorkflowResource(ModelResource, SharableResourceAPIInterface):
