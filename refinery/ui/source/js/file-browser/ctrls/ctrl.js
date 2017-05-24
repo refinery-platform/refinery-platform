@@ -363,6 +363,22 @@
       }
     }
 
+    // Helper method: toggles the tool related columns, selection & input groups
+    function toggleToolColumn () {
+      if (_.isEmpty(toolService.selectedTool) &&
+        fileBrowserFactory.customColumnNames[0].visible) {
+        // Explicitly toggle to avoid a bug when data doesn't show on tabbing
+        fileBrowserFactory.customColumnNames[0].visible = false;
+        fileBrowserFactory.customColumnNames[1].visible = false;
+        vm.gridApi.core.notifyDataChange(uiGridConstants.dataChange.COLUMN);
+      } else if (!_.isEmpty(toolService.selectedTool) &&
+        !fileBrowserFactory.customColumnNames[0].visible) {
+        fileBrowserFactory.customColumnNames[0].visible = true;
+        fileBrowserFactory.customColumnNames[1].visible = true;
+        vm.gridApi.core.notifyDataChange(uiGridConstants.dataChange.COLUMN);
+      }
+    }
+
     // View method which toggles the collapsedToolPanel variable.
     // Needed to resize UI-Grid and alternate text in button.
     function toggleToolPanel () {
@@ -448,22 +464,6 @@
           vm.updateFiltersFromUrlQuery();
         }
         checkAndUpdateGridData();
-      }
-    }
-
-    // Helper method: toggles the tool related columns, selection & input groups
-    function toggleToolColumn () {
-      if (_.isEmpty(toolService.selectedTool) &&
-        fileBrowserFactory.customColumnNames[0].visible) {
-        // Explicitly toggle to avoid a bug when data doesn't show on tabbing
-        fileBrowserFactory.customColumnNames[0].visible = false;
-        fileBrowserFactory.customColumnNames[1].visible = false;
-        vm.gridApi.core.notifyDataChange(uiGridConstants.dataChange.COLUMN);
-      } else if (!_.isEmpty(toolService.selectedTool) &&
-        !fileBrowserFactory.customColumnNames[0].visible) {
-        fileBrowserFactory.customColumnNames[0].visible = true;
-        fileBrowserFactory.customColumnNames[1].visible = true;
-        vm.gridApi.core.notifyDataChange(uiGridConstants.dataChange.COLUMN);
       }
     }
 
