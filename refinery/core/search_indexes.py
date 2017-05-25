@@ -45,16 +45,16 @@ class DataSetIndex(indexes.SearchIndex, indexes.Indexable):
         """Used when the entire index for model is updated"""
         return self.get_model().objects.all()
 
-    def prepare_description(self, object, description=""):
+    def prepare_description(self, object):
         try:
-            description = object.get_investigation().get_description()
+            return object.get_investigation().get_description()
         except AttributeError as e:
             logger.error(
                 "Could not fetch Investigation for DataSet with UUID: %s %s",
                 object.uuid,
                 e
             )
-        return description
+        return ""
 
     def prepare_access(self, object):
         access_list = []
