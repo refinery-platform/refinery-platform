@@ -854,16 +854,15 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
         :raises: A TastyPie NotFound Exception if said DataSet
         doesn't have the proper information associated yet.
         """
-        if dataset.get_version_details() is not None:
-            return dataset
-
-        else:
+        if dataset.get_version_details() is None:
             logger.error(
                 self.make_incomplete_dataset_error_message(dataset.uuid)
             )
             raise NotFound(
                 self.make_incomplete_dataset_error_message(dataset.uuid)
             )
+        else:
+            return dataset
 
     def handle_incomplete_datasets(self, datasets):
         """
