@@ -1317,8 +1317,6 @@ class DataSetDeletionTest(TestCase):
 
 
 class AnalysisTests(TestCase):
-    """Testing for the deletion of Analyses"""
-
     def setUp(self):
         # Create a user
         self.username = self.password = 'user'
