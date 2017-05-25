@@ -1,23 +1,41 @@
 <div
+  ng-if="$ctrl.isGroupPopulated($ctrl.inputFileTypes[0].uuid) ||
+         $ctrl.isGroupPopulated($ctrl.inputFileTypes[1].uuid)"
   role="tablist"
   aria-multiselectable="true">
-  <ul>
-    <div ng-if="$ctrl.currentTypes[$ctrl.currentTypes.length-1]=='PAIR'">
-      timing issue?
-     <li
-       ng-repeat="inputFile in $ctrl.inputFileTypes track by $index"
-       ng-style="{'color': $ctrl.inputFileTypeColor[inputFile.uuid]}">
-       <span class="wrap-word" ng-if="$ctrl.isGroupPopulated(inputFile.uuid)">
-         <span ng-repeat="node in $ctrl.groupCollection[$ctrl
-         .currentGroup][inputFile.uuid]">
-           <span ng-repeat="(attributeName, attribute) in node">
-             {{ attribute }}: {{ attributeName }}
-             <br>
-           </span>
-         </span>
-       </span>
-     </li>
-   </div>
+  <div ng-if="$ctrl.currentTypes[$ctrl.currentTypes.length-1]=='PAIR'">
+    <span
+      class="wrap-word"
+      ng-repeat="(displayName, internalName) in $ctrl.attributes">
+      <span
+        ng-if="$ctrl.groupCollection[$ctrl.currentGroup]
+        [$ctrl.inputFileTypes[0].uuid][0][internalName] !=
+        $ctrl.groupCollection[$ctrl.currentGroup]
+        [$ctrl.inputFileTypes[1].uuid][0][internalName]">
+        {{ displayName }}:
+        <span ng-style="{'color': $ctrl.inputFileTypeColor[$ctrl.inputFileTypes[0].uuid]}">
+          {{ $ctrl.groupCollection[$ctrl.currentGroup][$ctrl.inputFileTypes[0].uuid][0][internalName] }}
+        </span>
+        <span ng-style="{'color': $ctrl.inputFileTypeColor[$ctrl.inputFileTypes[1].uuid]}">
+         {{ $ctrl.groupCollection[$ctrl.currentGroup][$ctrl.inputFileTypes[1].uuid][0][internalName] }}
+        </span>
+      </span>
+    </span>
+
+    <span ng-style="{'color': $ctrl.inputFileTypeColor[inputFile.uuid]}">
+      <span ng-repeat="(displayName, internalName) in $ctrl.attributes">
+        <span
+          ng-if="$ctrl.groupCollection[$ctrl.currentGroup]
+          [$ctrl.inputFileTypes[0].uuid][0][internalName] == $ctrl
+          .groupCollection[$ctrl.currentGroup]
+          [$ctrl.inputFileTypes[1].uuid][0][internalName]">
+          {{ displayName }}:
+          {{ $ctrl.groupCollection[$ctrl.currentGroup][$ctrl
+            .inputFileTypes[0].uuid][0][internalName] }}
+        </span>
+      </span>
+    </span>
+ </div>
 
  <!--   <div ng-if="$ctrl.currentTypes[$ctrl.currentTypes.length-1]=='LIST'">
       <li
