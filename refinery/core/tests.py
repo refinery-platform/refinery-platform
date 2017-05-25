@@ -1931,7 +1931,7 @@ class DataSetResourceTest(ResourceTestCase):
         self.dataset.set_owner(self.user)
         self.dataset2.set_owner(self.user)
 
-        resp = self.api_client.get('/api/v1/data_sets/', format='json')
+        resp = self.api_client.get(make_api_uri('data_sets'), format='json')
         self.assertValidJSONResponse(resp)
         data = json.loads(resp.content)
         self.assertEqual(data["meta"]["total_count"], 1)
