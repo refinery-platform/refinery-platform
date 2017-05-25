@@ -45,8 +45,16 @@ class DataSetIndex(indexes.SearchIndex, indexes.Indexable):
         """Used when the entire index for model is updated"""
         return self.get_model().objects.all()
 
-    def prepare_description(self, object):
-        return object.get_investigation().get_description()
+    def prepare_description(self, object, description=""):
+        try:
+            description = object.get_investigation().get_description()
+        except AttributeError as e:
+            logger.error(
+                "Could not fetch Investigation for DataSet with UUID: %s %s",
+                object.uuid,
+                e
+            )
+        return description
 
     def prepare_access(self, object):
         access_list = []
@@ -66,14 +74,20 @@ class DataSetIndex(indexes.SearchIndex, indexes.Indexable):
 
         for contact in investigation.contact_set.all():
             submitters.append(
-                "{}, {}".format(contact.last_name, contact.first_name)
+                unicode("{}, {}").format(
+                    contact.last_name,
+                    contact.first_name
+                )
             )
 
         studies = investigation.study_set.all()
         for study in studies:
             for contact in study.contact_set.all():
                 submitters.append(
-                    "{}, {}".format(contact.last_name, contact.first_name)
+                    unicode("{}, {}").format(
+                        contact.last_name,
+                        contact.first_name
+                    )
                 )
 
         # Cast to `list` looks redundant, but MultiValueField stores sets
