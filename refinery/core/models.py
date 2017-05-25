@@ -666,32 +666,25 @@ class DataSet(SharableResource):
             if version is None:
                 version = (
                     InvestigationLink.objects.filter(
-                        data_set=self).aggregate(
-                        Max("version"))["version__max"]
+                        data_set=self
+                    ).aggregate(Max("version"))["version__max"]
                 )
 
-            return (
-                InvestigationLink.objects.filter(
-                    data_set=self, version=version).get()
-            )
+            return InvestigationLink.objects.filter(
+                data_set=self,
+                version=version
+            ).get()
+
         except:
             return None
 
     def get_investigation(self, version=None):
-        if version is None:
-            try:
-                max_version = InvestigationLink.objects.filter(
-                    data_set=self).aggregate(Max("version"))["version__max"]
-            except:
-                return None
+        investigation_link = self.get_latest_investigation_link(version)
+
+        if investigation_link:
+            return investigation_link.investigation
         else:
-            max_version = version
-        try:
-            il = InvestigationLink.objects.filter(
-                data_set=self, version=max_version).get()
-        except:
             return None
-        return il.investigation
 
     def get_studies(self, version=None):
         return Study.objects.filter(
