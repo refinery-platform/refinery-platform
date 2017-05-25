@@ -3,68 +3,78 @@
          $ctrl.isGroupPopulated($ctrl.inputFileTypes[1].uuid)"
   role="tablist"
   aria-multiselectable="true">
-  <div ng-if="$ctrl.currentTypes[$ctrl.currentTypes.length-1]=='PAIR'">
-    <span
-      class="wrap-word"
-      ng-repeat="(displayName, internalName) in $ctrl.attributes">
+  <div
+    role="button"
+    ng-click="$ctrl.toggleCollapseDetails()">
+    <i
+      ng-class="$ctrl.collapseDetails ? 'fa fa-caret-right' : 'fa fa-caret-down'"
+      class="fa-pull-left"
+      aria-hidden="true"></i>
+      Details
+  </div>
+  <div uib-collapse="$ctrl.collapseDetails">
+    <div ng-if="$ctrl.currentTypes[$ctrl.currentTypes.length-1]=='PAIR'">
       <span
-        ng-if="$ctrl.groupCollection[$ctrl.currentGroup]
-        [$ctrl.inputFileTypes[0].uuid][0][internalName] !=
-        $ctrl.groupCollection[$ctrl.currentGroup]
-        [$ctrl.inputFileTypes[1].uuid][0][internalName]">
-        {{ displayName }}:
-        <span ng-style="{'color': $ctrl.inputFileTypeColor[$ctrl.inputFileTypes[0].uuid]}">
-          {{ $ctrl.groupCollection[$ctrl.currentGroup][$ctrl.inputFileTypes[0].uuid][0][internalName] }}
-        </span>
-        <span ng-style="{'color': $ctrl.inputFileTypeColor[$ctrl.inputFileTypes[1].uuid]}">
-         {{ $ctrl.groupCollection[$ctrl.currentGroup][$ctrl.inputFileTypes[1].uuid][0][internalName] }}
-        </span>
-      </span>
-    </span>
-
-    <span ng-style="{'color': $ctrl.inputFileTypeColor[inputFile.uuid]}">
-      <span ng-repeat="(displayName, internalName) in $ctrl.attributes">
+        class="wrap-word"
+        ng-repeat="(displayName, internalName) in $ctrl.attributes">
         <span
           ng-if="$ctrl.groupCollection[$ctrl.currentGroup]
-          [$ctrl.inputFileTypes[0].uuid][0][internalName] == $ctrl
-          .groupCollection[$ctrl.currentGroup]
+          [$ctrl.inputFileTypes[0].uuid][0][internalName] !=
+          $ctrl.groupCollection[$ctrl.currentGroup]
           [$ctrl.inputFileTypes[1].uuid][0][internalName]">
           {{ displayName }}:
-          {{ $ctrl.groupCollection[$ctrl.currentGroup][$ctrl
-            .inputFileTypes[0].uuid][0][internalName] }}
+          <span ng-style="{'color': $ctrl.inputFileTypeColor[$ctrl.inputFileTypes[0].uuid]}">
+            {{ $ctrl.groupCollection[$ctrl.currentGroup][$ctrl.inputFileTypes[0].uuid][0][internalName] }}
+          </span>
+          <span ng-style="{'color': $ctrl.inputFileTypeColor[$ctrl.inputFileTypes[1].uuid]}">
+           {{ $ctrl.groupCollection[$ctrl.currentGroup][$ctrl.inputFileTypes[1].uuid][0][internalName] }}
+          </span>
         </span>
       </span>
-    </span>
- </div>
 
- <!--   <div ng-if="$ctrl.currentTypes[$ctrl.currentTypes.length-1]=='LIST'">
-      <li
-        class="wrap-word"
-         ng-style="{'color': $ctrl.inputFileTypeColor[$ctrl.inputFileTypes[0].uuid],
-        'border-color': $ctrl.inputFileTypeColor[$ctrl.inputFileTypes[0].uuid]}">
-        <div ng-if="!$ctrl.isGroupPopulated($ctrl.inputFileTypes[0].uuid)">
-          {{ $ctrl.inputFileTypes[0].name }}:
-          <
-          <div
-            class='fileTypes'
-            ng-repeat="fileObj in $ctrl.inputFileTypes[0].allowed_filetypes">
-            {{fileObj.name}}
-            <span ng-if="$index < $ctrl.inputFileTypes[0].allowed_filetypes.length - 1">
-              ,
-            </span>
+      <span ng-style="{'color': $ctrl.inputFileTypeColor[inputFile.uuid]}">
+        <span ng-repeat="(displayName, internalName) in $ctrl.attributes">
+          <span
+            ng-if="$ctrl.groupCollection[$ctrl.currentGroup]
+            [$ctrl.inputFileTypes[0].uuid][0][internalName] == $ctrl
+            .groupCollection[$ctrl.currentGroup]
+            [$ctrl.inputFileTypes[1].uuid][0][internalName]">
+            {{ displayName }}:
+            {{ $ctrl.groupCollection[$ctrl.currentGroup][$ctrl
+              .inputFileTypes[0].uuid][0][internalName] }}
+          </span>
+        </span>
+      </span>
+   </div>
+
+   <!--   <div ng-if="$ctrl.currentTypes[$ctrl.currentTypes.length-1]=='LIST'">
+        <li
+          class="wrap-word"
+           ng-style="{'color': $ctrl.inputFileTypeColor[$ctrl.inputFileTypes[0].uuid],
+          'border-color': $ctrl.inputFileTypeColor[$ctrl.inputFileTypes[0].uuid]}">
+          <div ng-if="!$ctrl.isGroupPopulated($ctrl.inputFileTypes[0].uuid)">
+            {{ $ctrl.inputFileTypes[0].name }}:
+            <
+            <div
+              class='fileTypes'
+              ng-repeat="fileObj in $ctrl.inputFileTypes[0].allowed_filetypes">
+              {{fileObj.name}}
+              <span ng-if="$index < $ctrl.inputFileTypes[0].allowed_filetypes.length - 1">
+                ,
+              </span>
+            </div>
+            >
+            <br>
+            <em>{{ inputFile.description }}</em>
           </div>
-          >
-          <br>
-          <em>{{ inputFile.description }}</em>
-        </div>
-        <div ng-if="$ctrl.isGroupPopulated($ctrl.inputFileTypes[0].uuid)">
-          <div
-            ng-repeat="node in $ctrl.groupCollection[$ctrl.currentGroup][$ctrl.inputFileTypes[0].uuid]"
-            class="p-t-1">
-            {{ node[$ctrl.attributes.Name] }}
+          <div ng-if="$ctrl.isGroupPopulated($ctrl.inputFileTypes[0].uuid)">
+            <div
+              ng-repeat="node in $ctrl.groupCollection[$ctrl.currentGroup][$ctrl.inputFileTypes[0].uuid]"
+              class="p-t-1">
+              {{ node[$ctrl.attributes.Name] }}
+            </div>
           </div>
-        </div>
-      </li>
-     </div> -->
-  </ul>
+        </li>
+       </div> -->
+  </div>
 </div>

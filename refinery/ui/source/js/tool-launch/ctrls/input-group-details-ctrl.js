@@ -15,19 +15,28 @@
   ) {
     var vm = this;
     vm.attributes = {};
+    vm.collapseDetails = false;
     vm.currentGroup = [];
     vm.currentTypes = [];
     vm.groupCollection = {};
     vm.inputFileTypes = [];
     vm.inputFileTypeColor = {};
+    vm.toggleCollapseDetails = toggleCollapseDetails;
 
    /*
    * ---------------------------------------------------------
    * Methods
    * ---------------------------------------------------------
    */
-  /**
-    /**
+
+    function toggleCollapseDetails () {
+      console.log('in the toggleCollapseDetails');
+      if (vm.collapseDetails) {
+        vm.collapseDetails = false;
+      } else {
+        vm.collapseDetails = true;
+      }
+    }
 
    /*
    * ---------------------------------------------------------
