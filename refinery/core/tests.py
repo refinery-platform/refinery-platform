@@ -1316,7 +1316,7 @@ class DataSetDeletionTest(TestCase):
         self.assertIsNone(self.dataset_without_analysis.get_pre_isa_archive())
 
 
-class AnalysisDeletionTest(TestCase):
+class AnalysisTests(TestCase):
     """Testing for the deletion of Analyses"""
 
     def setUp(self):
@@ -1423,6 +1423,13 @@ class AnalysisDeletionTest(TestCase):
         self.analysis_with_node_analyzed_further.delete()
         self.assertIsNotNone(Analysis.objects.get(
             name='analysis_with_node_analyzed_further'))
+
+    def test_file_import_task_termination(self):
+        with mock.patch(
+            "core.models.Analysis.terminate_file_import_tasks"
+        ) as terminate_mock:
+            self.analysis.cancel()
+            self.assertTrue(terminate_mock.called)
 
 
 class NodeGroupAPITests(APITestCase):
