@@ -74,7 +74,7 @@ class DataSetIndex(indexes.SearchIndex, indexes.Indexable):
 
         for contact in investigation.contact_set.all():
             submitters.append(
-                unicode("{}, {}").format(
+                u"{}, {}".format(
                     contact.last_name,
                     contact.first_name
                 )
@@ -84,7 +84,7 @@ class DataSetIndex(indexes.SearchIndex, indexes.Indexable):
         for study in studies:
             for contact in study.contact_set.all():
                 submitters.append(
-                    unicode("{}, {}").format(
+                    u"{}, {}".format(
                         contact.last_name,
                         contact.first_name
                     )
