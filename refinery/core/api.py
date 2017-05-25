@@ -498,11 +498,13 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
         }
 
     def dehydrate(self, bundle):
-        version_details = bundle.obj.get_version_details()
+        investigation_link = bundle.obj.get_version_details()
 
-        if version_details is None:
-            # Dataset has not been associated with its Investigation,
-            # InvestigationLink etc.
+        if investigation_link is None:
+            # Dataset has not been associated with its InvestigationLink so
+            # we are not able to provide a fully created bundle. Returning
+            # the bundle in this state will properly exclude it from the api
+            # response
             return bundle
 
         if not bundle.data['owner']:
@@ -546,9 +548,9 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
 
         bundle.data["analyses"] = analyses
         bundle.data["creation_date"] = bundle.obj.creation_date
-        bundle.data["date"] = version_details.date
+        bundle.data["date"] = investigation_link.date
         bundle.data["modification_date"] = bundle.obj.modification_date
-        bundle.data["version"] = version_details.version
+        bundle.data["version"] = investigation_link.version
 
         return bundle
 
