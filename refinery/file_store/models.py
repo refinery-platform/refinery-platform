@@ -29,7 +29,6 @@ from django.utils import timezone
 from django.utils.deconstruct import deconstructible
 
 from celery.result import AsyncResult
-from celery.task.control import revoke
 
 import core
 
@@ -537,23 +536,6 @@ class FileStoreItem(models.Model):
     def get_import_status(self):
         """Return file import task state"""
         return AsyncResult(self.import_task_id).state
-
-    def terminate_file_import_task(self):
-        """ Trys to terminate a celery file_import task based on the
-        FileStoreItem's import_task_id field.
-
-        NOTE: That if you simply revoke() a task without the `terminate` ==
-        True, said task will try to restart upon a Worker restart.
-
-        See: http://bit.ly/2di038U or http://bit.ly/1qb8763
-        """
-        try:
-            revoke(self.import_task_id, terminate=True)
-        except Exception as e:
-            logger.debug("Something went wrong while trying to terminate "
-                         "Task with id %s.This is most likely due to there "
-                         "being no current file_import task associated. %s",
-                         self.import_task_id, e)
 
 
 def is_local(uuid):

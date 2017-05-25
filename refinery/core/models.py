@@ -60,6 +60,7 @@ from data_set_manager.utils import (add_annotated_nodes_selection,
                                     index_annotated_nodes_selection)
 from file_store.models import FileStoreItem, FileType, get_file_size
 from file_store.tasks import rename
+from file_store.utils import terminate_file_import_task
 from galaxy_connector.galaxy_workflow import (configure_workflow,
                                               countWorkflowSteps,
                                               create_expanded_workflow_graph)
@@ -575,7 +576,7 @@ class DataSet(SharableResource):
         file_store_items = self.get_file_store_items()
         if file_store_items is not None:
             for file_store_item in file_store_items:
-                file_store_item.terminate_file_import_task()
+                terminate_file_import_task(file_store_item.import_task_id)
         try:
             super(DataSet, self).delete()
         except Exception as e:
@@ -1180,7 +1181,9 @@ class Analysis(OwnableResource):
                     delete = False
 
         if delete:
-            # Cancel Analysis (galaxy cleanup also happens here)
+            # Cancel Analysis:
+            #   - galaxy cleanup
+            #   - terminate any file_import tasks
             self.cancel()
 
             # Delete associated AnalysisResults
@@ -1431,6 +1434,7 @@ class Analysis(OwnableResource):
         self.set_status(Analysis.FAILURE_STATUS, "Cancelled at user's request")
         # jobs in a running workflow are stopped by deleting its history
         self.galaxy_cleanup()
+        self.terminate_file_import_tasks()
 
     def get_input_file_uuid_list(self):
         """Return a list of all input file UUIDs"""
@@ -1739,6 +1743,26 @@ class Analysis(OwnableResource):
                 logger.warning(
                     "No file found for '%s' in download '%s' ('%s')",
                     analysis_result.file_store_uuid, self.name, self.uuid)
+
+    def terminate_file_import_tasks(self):
+        """
+        Gathers all UUIDs of FileStoreItems used as inputs for the Analysis,
+        and trys to terminate their import_file tasks if possible
+        """
+        file_store_item_uuids = self.get_input_file_uuid_list()
+
+        for uuid in file_store_item_uuids:
+            try:
+                file_store_item = FileStoreItem.objects.get(uuid=uuid)
+            except (FileStoreItem.DoesNotExist,
+                    FileStoreItem.MultipleObjectsReturned) as e:
+                logger.error(
+                    "Couldn't properly fetch FileStoreItem with UUID: %s %s",
+                    uuid,
+                    e
+                )
+            else:
+                terminate_file_import_task(file_store_item.import_task_id)
 
 
 #: Defining available relationship types
