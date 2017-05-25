@@ -883,13 +883,13 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
 
     def make_incomplete_dataset_error_message(self, dataset_uuid):
         """
-        Helper method to generate the error message when DataSets are
+        Helper method to generate the error message when DataSets aren't
         completely created.
         :param dataset_uuid: A DataSet's UUID
         :return: properly formatted error message string
         """
         return "DataSet with UUID: {} is incomplete, and most likely is " \
-               "still uploading".format(dataset_uuid)
+               "still being created".format(dataset_uuid)
 
 
 class WorkflowResource(ModelResource, SharableResourceAPIInterface):
