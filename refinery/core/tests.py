@@ -2014,6 +2014,12 @@ class DataSetClassMethodsTest(TestCase):
         self.assertIn(self.file_store_item1, file_store_items)
         self.assertIn(self.file_store_item2, file_store_items)
 
+    def test_dataset_complete(self):
+        self.assertTrue(self.dataset.is_complete())
+
+    def test_dataset_incomplete(self):
+        self.assertFalse(self.dataset2.is_complete())
+
 
 class DataSetApiV2Tests(APITestCase):
 
