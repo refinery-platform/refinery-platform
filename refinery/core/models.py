@@ -654,7 +654,14 @@ class DataSet(SharableResource):
         except:
             return None
 
-    def get_version_details(self, version=None):
+    def get_latest_investigation_link(self, version=None):
+        """
+        Try to fetch the latest InvestigationLink related to the DataSet
+        instance. If a version is provided, try to fetch the latest
+        InvestigationLink for said version.
+        :param version: integer
+        :returns: an InvestigationLink Instance or None if Exception occurs
+        """
         try:
             if version is None:
                 version = (
@@ -817,6 +824,18 @@ class DataSet(SharableResource):
                     logger.error("Error while fetching FileStoreItem: %s", e)
 
             return file_store_items
+
+    def is_complete(self):
+        """
+        Helper method to determine if a DataSet is "complete".
+        A DataSet is not "complete" if we can't fetch its latest
+        InvestigationLink
+        :return: boolean
+        """
+        if self.get_latest_investigation_link():
+            return True
+        else:
+            return False
 
 
 @receiver(pre_delete, sender=DataSet)

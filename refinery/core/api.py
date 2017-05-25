@@ -498,9 +498,7 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
         }
 
     def dehydrate(self, bundle):
-        investigation_link = bundle.obj.get_version_details()
-
-        if investigation_link is None:
+        if not bundle.obj.is_complete():
             # Dataset has not been associated with its InvestigationLink so
             # we are not able to provide a fully created bundle. Returning
             # the bundle in this state will properly exclude it from the api
@@ -545,6 +543,8 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
                 analysis_dict['owner'] = None
 
             analyses.append(analysis_dict)
+
+        investigation_link = bundle.obj.get_latest_investigation_link()
 
         bundle.data["analyses"] = analyses
         bundle.data["creation_date"] = bundle.obj.creation_date
@@ -687,7 +687,15 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
             bundle,
             **kwargs
         )
-        return self.handle_incomplete_datasets(datasets)
+        complete_datasets = []
+        for dataset in datasets:
+            try:
+                complete_datasets.append(
+                    self.handle_incomplete_dataset(dataset)
+                )
+            except NotFound:
+                pass
+        return complete_datasets
 
     def get_object_list(self, request):
         obj_list = SharableResourceAPIInterface.get_object_list(self, request)
@@ -847,50 +855,22 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
 
     def handle_incomplete_dataset(self, dataset):
         """
-        Handle an incomplete DataSet instance when a detail view is
-        accessed.
+        Handle an incomplete DataSet instance in api responses
         :param dataset: a DataSet object
         :return: a DataSet object
         :raises: A TastyPie NotFound Exception if said DataSet
         doesn't have the proper information associated yet.
         """
-        if dataset.get_version_details() is None:
-            logger.error(
-                self.make_incomplete_dataset_error_message(dataset.uuid)
-            )
-            raise NotFound(
-                self.make_incomplete_dataset_error_message(dataset.uuid)
-            )
-        else:
+        error_message = (
+            "DataSet with UUID: {} is incomplete, and most likely is still "
+            "being created".format(dataset.uuid)
+        )
+
+        if dataset.is_complete():
             return dataset
-
-    def handle_incomplete_datasets(self, datasets):
-        """
-        Handle incomplete DataSet instances when a list view is accessed.
-        :param datasets: a list of DataSet objects
-        :return: a list of DataSet objects sans ones that don't have the
-        proper information associated yet.
-        """
-        complete_datasets = []
-
-        for dataset in datasets:
-            if dataset.get_version_details() is None:
-                logger.error(
-                    self.make_incomplete_dataset_error_message(dataset.uuid)
-                )
-            else:
-                complete_datasets.append(dataset)
-        return complete_datasets
-
-    def make_incomplete_dataset_error_message(self, dataset_uuid):
-        """
-        Helper method to generate the error message when DataSets aren't
-        completely created.
-        :param dataset_uuid: A DataSet's UUID
-        :return: properly formatted error message string
-        """
-        return "DataSet with UUID: {} is incomplete, and most likely is " \
-               "still being created".format(dataset_uuid)
+        else:
+            logger.error(error_message)
+            raise NotFound(error_message)
 
 
 class WorkflowResource(ModelResource, SharableResourceAPIInterface):
