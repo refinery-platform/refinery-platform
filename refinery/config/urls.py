@@ -34,6 +34,7 @@ from data_set_manager.urls import data_set_manager_router
 from file_store.urls import file_store_router
 
 from tool_manager.urls import tool_manager_router, django_docker_engine_url
+from all_files_manager.urls import all_files_manager_router
 
 logger = logging.getLogger(__name__)
 
@@ -178,6 +179,7 @@ router.extend(core_router)
 router.extend(data_set_manager_router)
 router.extend(file_store_router)
 router.extend(tool_manager_router)
+router.extend(all_files_manager_router)
 
 # Wire up our DRF APIs using automatic URL routing.
 urlpatterns += patterns(
