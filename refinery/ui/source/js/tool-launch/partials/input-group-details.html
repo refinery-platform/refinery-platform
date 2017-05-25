@@ -1,0 +1,52 @@
+<div
+  role="tablist"
+  aria-multiselectable="true">
+  <ul>
+    <div ng-if="$ctrl.currentTypes[$ctrl.currentTypes.length-1]=='PAIR'">
+      timing issue?
+     <li
+       ng-repeat="inputFile in $ctrl.inputFileTypes track by $index"
+       ng-style="{'color': $ctrl.inputFileTypeColor[inputFile.uuid]}">
+       <span class="wrap-word" ng-if="$ctrl.isGroupPopulated(inputFile.uuid)">
+         <span ng-repeat="node in $ctrl.groupCollection[$ctrl
+         .currentGroup][inputFile.uuid]">
+           <span ng-repeat="(attributeName, attribute) in node">
+             {{ attribute }}: {{ attributeName }}
+             <br>
+           </span>
+         </span>
+       </span>
+     </li>
+   </div>
+
+ <!--   <div ng-if="$ctrl.currentTypes[$ctrl.currentTypes.length-1]=='LIST'">
+      <li
+        class="wrap-word"
+         ng-style="{'color': $ctrl.inputFileTypeColor[$ctrl.inputFileTypes[0].uuid],
+        'border-color': $ctrl.inputFileTypeColor[$ctrl.inputFileTypes[0].uuid]}">
+        <div ng-if="!$ctrl.isGroupPopulated($ctrl.inputFileTypes[0].uuid)">
+          {{ $ctrl.inputFileTypes[0].name }}:
+          <
+          <div
+            class='fileTypes'
+            ng-repeat="fileObj in $ctrl.inputFileTypes[0].allowed_filetypes">
+            {{fileObj.name}}
+            <span ng-if="$index < $ctrl.inputFileTypes[0].allowed_filetypes.length - 1">
+              ,
+            </span>
+          </div>
+          >
+          <br>
+          <em>{{ inputFile.description }}</em>
+        </div>
+        <div ng-if="$ctrl.isGroupPopulated($ctrl.inputFileTypes[0].uuid)">
+          <div
+            ng-repeat="node in $ctrl.groupCollection[$ctrl.currentGroup][$ctrl.inputFileTypes[0].uuid]"
+            class="p-t-1">
+            {{ node[$ctrl.attributes.Name] }}
+          </div>
+        </div>
+      </li>
+     </div> -->
+  </ul>
+</div>
