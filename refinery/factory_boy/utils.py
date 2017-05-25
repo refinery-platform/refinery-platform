@@ -65,7 +65,11 @@ def create_dataset_with_necessary_models():
     investigation = InvestigationFactory(uuid=investigation_uuid)
 
     study_uuid = uuid_builtin.uuid4()
-    StudyFactory(uuid=study_uuid, investigation=investigation)
+    StudyFactory(
+        uuid=study_uuid,
+        investigation=investigation,
+        description="This is a great DataSet"
+    )
 
     InvestigationLinkFactory(
         data_set=dataset,
