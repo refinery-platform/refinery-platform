@@ -498,7 +498,7 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
         }
 
     def dehydrate(self, bundle):
-        if not bundle.obj.is_complete():
+        if not bundle.obj.is_valid():
             # Dataset has not been associated with its InvestigationLink so
             # we are not able to provide a fully created bundle. Returning
             # the bundle in this state will properly exclude it from the api
@@ -866,7 +866,7 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
             "being created".format(dataset.uuid)
         )
 
-        if dataset.is_complete():
+        if dataset.is_valid():
             return dataset
         else:
             logger.error(error_message)

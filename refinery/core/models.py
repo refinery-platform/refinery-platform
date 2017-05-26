@@ -818,7 +818,7 @@ class DataSet(SharableResource):
 
             return file_store_items
 
-    def is_complete(self):
+    def is_valid(self):
         """
         Helper method to determine if a DataSet is "complete".
         A DataSet is not "complete" if we can't fetch its latest

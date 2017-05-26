@@ -1856,10 +1856,10 @@ class DataSetTests(TestCase):
         self.assertIn(self.file_store_item2, file_store_items)
 
     def test_dataset_complete(self):
-        self.assertTrue(self.dataset.is_complete())
+        self.assertTrue(self.dataset.is_valid())
 
     def test_dataset_incomplete(self):
-        self.assertFalse(self.dataset2.is_complete())
+        self.assertFalse(self.dataset2.is_valid())
 
     def test_neo4j_called_on_post_save(self):
         with mock.patch(
