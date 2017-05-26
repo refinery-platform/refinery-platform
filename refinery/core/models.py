@@ -820,9 +820,8 @@ class DataSet(SharableResource):
 
     def is_valid(self):
         """
-        Helper method to determine if a DataSet is "complete".
-        A DataSet is not "complete" if we can't fetch its latest
-        InvestigationLink
+        Helper method to determine if a DataSet is valid.
+        A DataSet is not valid if we can't fetch its latest InvestigationLink
         :return: boolean
         """
         if self.get_latest_investigation_link():
