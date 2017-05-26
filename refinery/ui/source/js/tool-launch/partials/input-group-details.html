@@ -3,23 +3,23 @@
          $ctrl.isGroupPopulated($ctrl.inputFileTypes[1].uuid)"
   role="tablist"
   aria-multiselectable="true"
-  id="input-group-details">
+  id="input-group-details"
+  class="p-a-1-2">
   <div
     role="button"
     ng-click="$ctrl.toggleCollapseDetails()"
-    class="p-a-1-2">
-    <div class="refinery-subheader">
-      <h3>
-        <i
-          ng-class="$ctrl.collapseDetails ? 'fa fa-caret-right' : 'fa fa-caret-down'"
-          class="fa-pull-left"
-          aria-hidden="true"></i>
-        Details
-      </h3>
-    </div>
+    class="p-t-1-2 refinery-subheader">
+    <h3>
+      <i
+        ng-class="$ctrl.collapseDetails ? 'fa fa-caret-right' : 'fa fa-caret-down'"
+        class="fa-pull-left"
+        aria-hidden="true"></i>
+      Input Details
+    </h3>
   </div>
-  <div class="p-a-1-2" uib-collapse="$ctrl.collapseDetails">
-    <div ng-if="$ctrl.currentTypes[$ctrl.currentTypes.length-1]=='PAIR'">
+  <div
+    uib-collapse="$ctrl.collapseDetails"
+    ng-if="$ctrl.currentTypes[$ctrl.currentTypes.length-1]=='PAIR'">
       <ul
         class="wrap-word"
         ng-repeat="(displayName, internalName) in $ctrl.attributes">
@@ -27,7 +27,8 @@
           ng-if="$ctrl.groupCollection[$ctrl.currentGroup]
           [$ctrl.inputFileTypes[0].uuid][0][internalName] !=
           $ctrl.groupCollection[$ctrl.currentGroup]
-          [$ctrl.inputFileTypes[1].uuid][0][internalName]">
+          [$ctrl.inputFileTypes[1].uuid][0][internalName] &&
+           displayName != 'Name'">
           <div class="refinery-subheader">
             <h4>
               {{ displayName }}
@@ -51,7 +52,8 @@
           ng-if="$ctrl.groupCollection[$ctrl.currentGroup]
           [$ctrl.inputFileTypes[0].uuid][0][internalName] == $ctrl
           .groupCollection[$ctrl.currentGroup]
-          [$ctrl.inputFileTypes[1].uuid][0][internalName]"
+          [$ctrl.inputFileTypes[1].uuid][0][internalName] &&
+          displayName != 'Name'"
           ng-style="{'color': $ctrl.inputFileTypeColor[inputFile.uuid]}">
           <div class="refinery-subheader">
             <h4>
@@ -63,34 +65,30 @@
       </ul>
    </div>
 
-   <!--   <div ng-if="$ctrl.currentTypes[$ctrl.currentTypes.length-1]=='LIST'">
-        <li
-          class="wrap-word"
-           ng-style="{'color': $ctrl.inputFileTypeColor[$ctrl.inputFileTypes[0].uuid],
-          'border-color': $ctrl.inputFileTypeColor[$ctrl.inputFileTypes[0].uuid]}">
-          <div ng-if="!$ctrl.isGroupPopulated($ctrl.inputFileTypes[0].uuid)">
-            {{ $ctrl.inputFileTypes[0].name }}:
-            <
-            <div
-              class='fileTypes'
-              ng-repeat="fileObj in $ctrl.inputFileTypes[0].allowed_filetypes">
-              {{fileObj.name}}
-              <span ng-if="$index < $ctrl.inputFileTypes[0].allowed_filetypes.length - 1">
-                ,
-              </span>
-            </div>
-            >
-            <br>
-            <em>{{ inputFile.description }}</em>
+  <div
+    uib-collapse="$ctrl.collapseDetails"
+    ng-if="$ctrl.currentTypes[$ctrl.currentTypes.length-1]=='LIST'"
+    id="list-input-group-details">
+      <ul
+        class="wrap-word"
+        id="list-group-collection"
+        ng-repeat="node in $ctrl.groupCollection[$ctrl.currentGroup][$ctrl
+          .inputFileTypes[0].uuid]">
+        <ul
+           ng-repeat="(displayName, internalName) in $ctrl.attributes">
+        <li>
+          <div class="refinery-subheader">
+            <h4>
+              {{ displayName }}
+            </h4>
           </div>
-          <div ng-if="$ctrl.isGroupPopulated($ctrl.inputFileTypes[0].uuid)">
-            <div
-              ng-repeat="node in $ctrl.groupCollection[$ctrl.currentGroup][$ctrl.inputFileTypes[0].uuid]"
-              class="p-t-1">
-              {{ node[$ctrl.attributes.Name] }}
-            </div>
+          <div ng-style="{'color': $ctrl.inputFileTypeColor[$ctrl
+          .inputFileTypes[0].uuid]}">
+            {{ node[internalName] }}
           </div>
         </li>
-       </div> -->
-  </div>
+        </ul>
+      </ul>
+   </div>
+
 </div>

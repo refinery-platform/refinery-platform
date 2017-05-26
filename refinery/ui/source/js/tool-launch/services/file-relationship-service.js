@@ -59,7 +59,10 @@
     function generateAttributeObj () {
       var attributeArr = fileBrowserFactory.assayAttributes;
       for (var i = 0; i < attributeArr.length; i++) {
-        vm.attributesObj[attributeArr[i].display_name] = attributeArr[i].internal_name;
+        if (attributeArr[i].internal_name !== 'Selection' &&
+          attributeArr[i].display_name !== 'Input Groups') {
+          vm.attributesObj[attributeArr[i].display_name] = attributeArr[i].internal_name;
+        }
       }
     }
 

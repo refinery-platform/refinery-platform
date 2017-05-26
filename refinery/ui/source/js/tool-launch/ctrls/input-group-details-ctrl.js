@@ -15,7 +15,7 @@
   ) {
     var vm = this;
     vm.attributes = {};
-    vm.collapseDetails = false;
+    vm.collapseDetails = true;
     vm.currentGroup = [];
     vm.currentTypes = [];
     vm.groupCollection = {};
@@ -28,9 +28,8 @@
    * Methods
    * ---------------------------------------------------------
    */
-
+    // view method which sets to hide input detail panel
     function toggleCollapseDetails () {
-      console.log('in the toggleCollapseDetails');
       if (vm.collapseDetails) {
         vm.collapseDetails = false;
       } else {
@@ -52,7 +51,6 @@
         },
         function () {
           vm.inputFileTypes = vm.inputCtrl.inputFileTypes;
-          console.log(vm.inputFileTypes);
           vm.currentGroup = vm.inputCtrl.currentGroup;
           vm.currentTypes = vm.inputCtrl.currentTypes;
           vm.groupCollection = vm.inputCtrl.groupCollection;
