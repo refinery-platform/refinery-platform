@@ -2,19 +2,25 @@
   ng-if="$ctrl.isGroupPopulated($ctrl.inputFileTypes[0].uuid) ||
          $ctrl.isGroupPopulated($ctrl.inputFileTypes[1].uuid)"
   role="tablist"
-  aria-multiselectable="true">
+  aria-multiselectable="true"
+  id="input-group-details">
   <div
     role="button"
-    ng-click="$ctrl.toggleCollapseDetails()">
-    <i
-      ng-class="$ctrl.collapseDetails ? 'fa fa-caret-right' : 'fa fa-caret-down'"
-      class="fa-pull-left"
-      aria-hidden="true"></i>
-      Details
+    ng-click="$ctrl.toggleCollapseDetails()"
+    class="p-a-1-2">
+    <div class="refinery-subheader">
+      <h3>
+        <i
+          ng-class="$ctrl.collapseDetails ? 'fa fa-caret-right' : 'fa fa-caret-down'"
+          class="fa-pull-left"
+          aria-hidden="true"></i>
+        Details
+      </h3>
+    </div>
   </div>
-  <div uib-collapse="$ctrl.collapseDetails">
+  <div class="p-a-1-2" uib-collapse="$ctrl.collapseDetails">
     <div ng-if="$ctrl.currentTypes[$ctrl.currentTypes.length-1]=='PAIR'">
-      <span
+      <ul
         class="wrap-word"
         ng-repeat="(displayName, internalName) in $ctrl.attributes">
         <span
@@ -22,15 +28,21 @@
           [$ctrl.inputFileTypes[0].uuid][0][internalName] !=
           $ctrl.groupCollection[$ctrl.currentGroup]
           [$ctrl.inputFileTypes[1].uuid][0][internalName]">
-          {{ displayName }}:
-          <span ng-style="{'color': $ctrl.inputFileTypeColor[$ctrl.inputFileTypes[0].uuid]}">
-            {{ $ctrl.groupCollection[$ctrl.currentGroup][$ctrl.inputFileTypes[0].uuid][0][internalName] }}
-          </span>
-          <span ng-style="{'color': $ctrl.inputFileTypeColor[$ctrl.inputFileTypes[1].uuid]}">
-           {{ $ctrl.groupCollection[$ctrl.currentGroup][$ctrl.inputFileTypes[1].uuid][0][internalName] }}
-          </span>
+          <li>
+            <div class="refinery-subheader">
+              <h4>
+                {{ displayName }}
+              </h4>
+            </div>
+            <span ng-style="{'color': $ctrl.inputFileTypeColor[$ctrl.inputFileTypes[0].uuid]}">
+              {{ $ctrl.groupCollection[$ctrl.currentGroup][$ctrl.inputFileTypes[0].uuid][0][internalName] }}
+            </span>
+            <span ng-style="{'color': $ctrl.inputFileTypeColor[$ctrl.inputFileTypes[1].uuid]}">
+             {{ $ctrl.groupCollection[$ctrl.currentGroup][$ctrl.inputFileTypes[1].uuid][0][internalName] }}
+            </span>
+          </li>
         </span>
-      </span>
+      </ul>
 
       <span ng-style="{'color': $ctrl.inputFileTypeColor[inputFile.uuid]}">
         <span ng-repeat="(displayName, internalName) in $ctrl.attributes">
@@ -39,9 +51,14 @@
             [$ctrl.inputFileTypes[0].uuid][0][internalName] == $ctrl
             .groupCollection[$ctrl.currentGroup]
             [$ctrl.inputFileTypes[1].uuid][0][internalName]">
-            {{ displayName }}:
-            {{ $ctrl.groupCollection[$ctrl.currentGroup][$ctrl
-              .inputFileTypes[0].uuid][0][internalName] }}
+            <li>
+              <div class="refinery-subheader">
+                <h4>
+                  {{ displayName }}
+                </h4>
+              </div>
+              {{ $ctrl.groupCollection[$ctrl.currentGroup][$ctrl.inputFileTypes[0].uuid][0][internalName] }}
+            </li>
           </span>
         </span>
       </span>
