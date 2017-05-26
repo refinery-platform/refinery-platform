@@ -26,21 +26,13 @@
 {% endblock %}
 
 {% block content %}
-  <!-- tab headers -->
+  <!-- DIFF: Remove surrounding divs and tabs -->
 
-<div ng-controller="DataSetNavCtrl" ng-cloak>
-  <div ng-controller="DataSetUiModeCtrl">
-
-    <!-- DIFF: Only one tab, so remove -->
-
-    <div class="refinery-panel refinery-panel-content jquery-full-height
-    handle-overflow" id="data-set-view">
-      <!-- DIFF: Remove "if data_set" -->
-      <div ui-view>TODO</div>
-    </div>
+  <div class="refinery-panel refinery-panel-content jquery-full-height handle-overflow"
+       id="data-set-view"
+       ng-controller="AllSetsCtrl">
+    <all-sets/>
   </div>
-</div>
-
 {% endblock %}
 
 {% block vendor_scripts %}
@@ -105,12 +97,7 @@
     var csrf_token = "{{ csrf_token }}";
   </script>
 
-  <!-- Script for popup content in the tool status and analyses icon-->
-  <script type="text/ng-template" id="nodeselectionpopover.html">
-    <rp-node-selection-popover-detail>
-    </rp-node-selection-popover-detail>
-  </script>
-
+  <!-- TODO: Jennifer will review to see which of these are still needed. -->
   <script type="text/javascript" src="{% static "js/refinery/solr/solr_utilities.js" %}"></script>
   <script type="text/javascript" src="{% static "js/refinery/solr/solr_client.js" %}"></script>
   <script type="text/javascript" src="{% static "js/refinery/solr/solr_query.js" %}"></script>
