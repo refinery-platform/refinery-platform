@@ -24,5 +24,9 @@
     it('Expect method should exist for views', function () {
       expect(angular.isFunction(ctrl.launchTool)).toBe(true);
     });
+
+    it('Validation method should exist for views', function () {
+      expect(angular.isFunction(ctrl.needMoreNodes)).toBe(true);
+    });
   });
 })();

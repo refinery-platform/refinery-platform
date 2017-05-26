@@ -346,6 +346,66 @@
       });
     });
 
+    describe('checkNeedMoreNodes from Ctrl', function () {
+      it('checkNeedMoreNodes is method', function () {
+        expect(angular.isFunction(service.checkNeedMoreNodes)).toBe(true);
+      });
+
+      it('checkNeedMoreNodes returns false for filled pairs', function () {
+        fileService.currentGroup = angular.copy([0, 0]);
+        fileService.currentTypes = angular.copy(['LIST', 'PAIR']);
+        fileService.groupCollection[fileService.currentGroup] = angular.copy({});
+        fileService.groupCollection[fileService.currentGroup][mocker.generateUuid()] =
+          angular.copy([mocker.generateUuid()]);
+        fileService.groupCollection[fileService.currentGroup][mocker.generateUuid()] =
+          angular.copy([mocker.generateUuid()]);
+        expect(service.checkNeedMoreNodes()).toEqual(false);
+      });
+
+      it('checkNeedMoreNodes returns false for filled list', function () {
+        fileService.currentGroup = angular.copy([0, 0]);
+        fileService.currentTypes = angular.copy(['LIST', 'LIST']);
+        fileService.groupCollection[fileService.currentGroup] = angular.copy({});
+        fileService.groupCollection[fileService.currentGroup][mocker.generateUuid()] =
+          angular.copy([mocker.generateUuid()]);
+        expect(service.checkNeedMoreNodes()).toEqual(false);
+      });
+
+      it('checkNeedMoreNodes returns true if currentGroup is empty', function () {
+        // default is empty
+        expect(service.checkNeedMoreNodes()).toEqual(true);
+      });
+
+      it('checkNeedMoreNodes returns true for partial filled pair - input type', function () {
+        fileService.currentGroup = angular.copy([0, 0]);
+        fileService.currentTypes = angular.copy(['LIST', 'PAIR']);
+        fileService.groupCollection[fileService.currentGroup] = angular.copy({});
+        fileService.groupCollection[fileService.currentGroup][mocker.generateUuid()] =
+          angular.copy([mocker.generateUuid()]);
+        expect(service.checkNeedMoreNodes()).toEqual(true);
+      });
+
+      it('checkNeedMoreNodes returns true for partial filled pair - missing node', function () {
+        fileService.currentGroup = angular.copy([0, 0]);
+        fileService.currentTypes = angular.copy(['LIST', 'PAIR']);
+        fileService.groupCollection[fileService.currentGroup] = angular.copy({});
+        fileService.groupCollection[fileService.currentGroup][mocker.generateUuid()] =
+          angular.copy([mocker.generateUuid()]);
+        fileService.groupCollection[fileService.currentGroup]
+          [mocker.generateUuid()] = angular.copy([]);
+        expect(service.checkNeedMoreNodes()).toEqual(true);
+      });
+
+      it('checkNeedMoreNodes returns true for partial filled list - missing node', function () {
+        fileService.currentGroup = angular.copy([0, 0]);
+        fileService.currentTypes = angular.copy(['LIST', 'LIST']);
+        fileService.groupCollection[fileService.currentGroup] = angular.copy({});
+        fileService.groupCollection[fileService.currentGroup]
+          [mocker.generateUuid()] = angular.copy([]);
+        expect(service.checkNeedMoreNodes()).toEqual(true);
+      });
+    });
+
     describe('postToolLaunch', function () {
       var deferred;
       var rootScope;
