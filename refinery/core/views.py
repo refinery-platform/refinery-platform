@@ -12,6 +12,7 @@ from django.contrib.auth.models import User
 from django.contrib.sites.models import get_current_site, RequestSite, Site
 from django.core.exceptions import ImproperlyConfigured
 from django.core.urlresolvers import reverse
+from django.db import transaction, IntegrityError
 from django.http import (Http404, HttpResponse, HttpResponseBadRequest,
                          HttpResponseForbidden, HttpResponseNotFound,
                          HttpResponseRedirect, HttpResponseServerError)
@@ -1094,10 +1095,7 @@ class DataSetsViewSet(APIView):
                 content="User {} is not authenticated".format(request.user))
         else:
             try:
-                dataset_deleted = DataSet.objects.get(uuid=uuid).delete()
-            except NameError as e:
-                logger.error(e)
-                return HttpResponseBadRequest(content="Bad Request")
+                dataset_instance = DataSet.objects.get(uuid=uuid)
             except DataSet.DoesNotExist as e:
                 logger.error(e)
                 return HttpResponseNotFound(content="DataSet with UUID: {} "
@@ -1106,6 +1104,16 @@ class DataSetsViewSet(APIView):
                 logger.error(e)
                 return HttpResponseServerError(
                     content="Multiple DataSets returned for this request")
+            try:
+                # Utilizing a transaction-based approach here to avoid
+                # potential "half-way" deletions
+                with transaction.atomic():
+                    dataset_deleted = dataset_instance.delete()
+            except IntegrityError as e:
+                return HttpResponseServerError(
+                    content="Error while deleting Dataset: {}. Itself and "
+                            "it's related objects have not been removed due to"
+                            " the error.".format(e))
             else:
                 if dataset_deleted[0]:
                     return Response({"data": dataset_deleted[1]})
@@ -1144,10 +1152,7 @@ class AnalysesViewSet(APIView):
                 content="User {} is not authenticated".format(request.user))
         else:
             try:
-                analysis_deleted = Analysis.objects.get(uuid=uuid).delete()
-            except NameError as e:
-                logger.error(e)
-                return HttpResponseBadRequest(content="Bad Request")
+                analysis_instance = Analysis.objects.get(uuid=uuid)
             except Analysis.DoesNotExist as e:
                 logger.error(e)
                 return HttpResponseNotFound(content="Analysis with UUID: {} "
@@ -1156,6 +1161,17 @@ class AnalysesViewSet(APIView):
                 logger.error(e)
                 return HttpResponseServerError(
                     content="Multiple Analyses returned for this request")
+
+            try:
+                # Utilizing a transaction-based approach here to avoid
+                # potential "half-way" deletions
+                with transaction.atomic():
+                    analysis_deleted = analysis_instance.delete()
+            except IntegrityError as e:
+                return HttpResponseServerError(
+                    content="Error while deleting Analysis: {}. Itself and "
+                            "it's related objects have not been removed due to"
+                            " the error.".format(e))
             else:
                 if analysis_deleted[0]:
                     return Response({"data": analysis_deleted[1]})
