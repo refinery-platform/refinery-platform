@@ -827,8 +827,9 @@ def _dataset_delete(sender, instance, *args, **kwargs):
 
 
 @receiver(post_save, sender=DataSet)
-def _dataset_saved(**kwargs):
+def _dataset_saved(sender, instance, *args, **kwargs):
     update_annotation_sets_neo4j()
+    update_data_set_index(instance)
 
 
 class InvestigationLink(models.Model):

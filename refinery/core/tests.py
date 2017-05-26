@@ -1735,8 +1735,8 @@ class DataSetResourceTest(ResourceTestCase):
         self.assertEqual(data['analyses'], [])
 
 
-class DataSetClassMethodsTest(TestCase):
-    """ Testing of methods specific to the DataSet model
+class DataSetTests(TestCase):
+    """ Testing of the DataSet model
     """
 
     def setUp(self):
@@ -1810,6 +1810,20 @@ class DataSetClassMethodsTest(TestCase):
         self.assertIn(self.file_store_item, file_store_items)
         self.assertIn(self.file_store_item1, file_store_items)
         self.assertIn(self.file_store_item2, file_store_items)
+
+    def test_neo4j_called_on_post_save(self):
+        with mock.patch(
+            "core.models.update_annotation_sets_neo4j"
+        ) as neo4j_mock:
+            self.dataset.save()
+            self.assertTrue(neo4j_mock.called)
+
+    def test_solr_called_on_post_save(self):
+        with mock.patch(
+            "core.models.update_data_set_index"
+        ) as solr_mock:
+            self.dataset.save()
+            self.assertTrue(solr_mock.called)
 
 
 class DataSetApiV2Tests(APITestCase):
