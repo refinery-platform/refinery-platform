@@ -23,45 +23,44 @@
       <ul
         class="wrap-word"
         ng-repeat="(displayName, internalName) in $ctrl.attributes">
-        <span
+        <li
           ng-if="$ctrl.groupCollection[$ctrl.currentGroup]
           [$ctrl.inputFileTypes[0].uuid][0][internalName] !=
           $ctrl.groupCollection[$ctrl.currentGroup]
           [$ctrl.inputFileTypes[1].uuid][0][internalName]">
-          <li>
-            <div class="refinery-subheader">
-              <h4>
-                {{ displayName }}
-              </h4>
-            </div>
-            <span ng-style="{'color': $ctrl.inputFileTypeColor[$ctrl.inputFileTypes[0].uuid]}">
-              {{ $ctrl.groupCollection[$ctrl.currentGroup][$ctrl.inputFileTypes[0].uuid][0][internalName] }}
-            </span>
-            <span ng-style="{'color': $ctrl.inputFileTypeColor[$ctrl.inputFileTypes[1].uuid]}">
-             {{ $ctrl.groupCollection[$ctrl.currentGroup][$ctrl.inputFileTypes[1].uuid][0][internalName] }}
-            </span>
-          </li>
-        </span>
+          <div class="refinery-subheader">
+            <h4>
+              {{ displayName }}
+            </h4>
+          </div>
+          <div ng-style="{'color': $ctrl.inputFileTypeColor[$ctrl
+          .inputFileTypes[0].uuid]}">
+            {{ $ctrl.groupCollection[$ctrl.currentGroup][$ctrl.inputFileTypes[0].uuid][0][internalName] }}
+          </div>
+          <div ng-style="{'color': $ctrl.inputFileTypeColor[$ctrl
+          .inputFileTypes[1].uuid]}">
+           {{ $ctrl.groupCollection[$ctrl.currentGroup][$ctrl.inputFileTypes[1].uuid][0][internalName] }}
+          </div>
+        </li>
       </ul>
 
-      <span ng-style="{'color': $ctrl.inputFileTypeColor[inputFile.uuid]}">
-        <span ng-repeat="(displayName, internalName) in $ctrl.attributes">
-          <span
-            ng-if="$ctrl.groupCollection[$ctrl.currentGroup]
-            [$ctrl.inputFileTypes[0].uuid][0][internalName] == $ctrl
-            .groupCollection[$ctrl.currentGroup]
-            [$ctrl.inputFileTypes[1].uuid][0][internalName]">
-            <li>
-              <div class="refinery-subheader">
-                <h4>
-                  {{ displayName }}
-                </h4>
-              </div>
-              {{ $ctrl.groupCollection[$ctrl.currentGroup][$ctrl.inputFileTypes[0].uuid][0][internalName] }}
-            </li>
-          </span>
-        </span>
-      </span>
+      <ul
+        class="wrap-word"
+        ng-repeat="(displayName, internalName) in $ctrl.attributes">
+        <li
+          ng-if="$ctrl.groupCollection[$ctrl.currentGroup]
+          [$ctrl.inputFileTypes[0].uuid][0][internalName] == $ctrl
+          .groupCollection[$ctrl.currentGroup]
+          [$ctrl.inputFileTypes[1].uuid][0][internalName]"
+          ng-style="{'color': $ctrl.inputFileTypeColor[inputFile.uuid]}">
+          <div class="refinery-subheader">
+            <h4>
+              {{ displayName }}
+            </h4>
+          </div>
+          {{ $ctrl.groupCollection[$ctrl.currentGroup][$ctrl.inputFileTypes[0].uuid][0][internalName] }}
+        </li>
+      </ul>
    </div>
 
    <!--   <div ng-if="$ctrl.currentTypes[$ctrl.currentTypes.length-1]=='LIST'">
