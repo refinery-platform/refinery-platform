@@ -93,7 +93,6 @@
           return vm.displayCtrl.selectedTool;
         },
         function () {
-          console.log('in group ctrl, new tool');
           vm.inputFileTypes = fileService.inputFileTypes;
           vm.currentGroup = fileService.currentGroup;
           vm.currentTypes = fileService.currentTypes;

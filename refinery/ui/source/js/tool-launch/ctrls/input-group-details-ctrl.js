@@ -35,6 +35,7 @@
       } else {
         vm.collapseDetails = true;
       }
+      return vm.collapseDetails;
     }
 
    /*
@@ -51,7 +52,6 @@
         },
         function () {
           vm.inputFileTypes = vm.inputCtrl.inputFileTypes;
-          console.log(vm.inputFileTypes);
           vm.currentGroup = vm.inputCtrl.currentGroup;
           vm.currentTypes = vm.inputCtrl.currentTypes;
           vm.groupCollection = vm.inputCtrl.groupCollection;
