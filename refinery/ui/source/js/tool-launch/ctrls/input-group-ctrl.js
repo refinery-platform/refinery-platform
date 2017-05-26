@@ -35,6 +35,7 @@
     vm.isObjEmpty = isObjEmpty;
     vm.removeAllGroups = removeAllGroups;
     vm.removeGroup = removeGroup; // Refreshes all selection
+    vm.selectedTool = {};
 
 
    /*
@@ -92,11 +93,13 @@
           return vm.displayCtrl.selectedTool;
         },
         function () {
+          console.log('in group ctrl, new tool');
           vm.inputFileTypes = fileService.inputFileTypes;
           vm.currentGroup = fileService.currentGroup;
           vm.currentTypes = fileService.currentTypes;
           vm.groupCollection = fileService.groupCollection;
           vm.inputFileTypeColor = fileService.inputFileTypeColor;
+          vm.selectedTool = vm.displayCtrl.selectedTool;
         }
       );
 
