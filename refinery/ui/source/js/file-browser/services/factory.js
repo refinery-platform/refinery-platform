@@ -7,7 +7,6 @@ function fileBrowserFactory (
   assayAttributeService,
   assayFileService,
   fileBrowserSettings,
-  nodeGroupService,
   nodeService,
   selectedFilterService
   ) {
@@ -20,7 +19,6 @@ function fileBrowserFactory (
   var assayFilesTotalItems = {};
   var customColumnNames = [];
   var nodeUrl = {};
-  var nodeGroupList = [];
   var csrfToken = $window.csrf_token;
   var maxFileRequest = fileBrowserSettings.maxFileRequest;
 
@@ -79,23 +77,6 @@ function fileBrowserFactory (
       nodeUrl = response.file_url;
     });
     return nodeFile.$promise;
-  };
-
-  var getNodeGroupList = function (assayUuid) {
-    var params = {
-      assay: assayUuid
-    };
-
-    var nodeGroups = nodeGroupService.query(params);
-    nodeGroups.$promise.then(function (response) {
-      angular.copy(response, nodeGroupList);
-    });
-    return nodeGroups.$promise;
-  };
-
-  var createNodeGroup = function (params) {
-    var nodeGroup = nodeGroupService.save(params);
-    return nodeGroup.$promise;
   };
 
   // Adds the file_url to the assay files array
@@ -252,9 +233,14 @@ function fileBrowserFactory (
       'class="selected-node" ' +
       'title="{{grid.appScope.nodeSelectCollection[row.entity.uuid].groupList}}">' +
       '<div class="paragraph ui-grid-cell-contents" ' +
-      'ng-if="grid.appScope.nodeSelectCollection[row.entity.uuid].groupList[0].length > 1"> ' +
+      'ng-if="grid.appScope.nodeSelectCollection[row.entity.uuid].groupList[0].length > 0"> ' +
       '<span ng-repeat="group in grid.appScope.nodeSelectCollection[row.entity.uuid].groupList ' +
-      'track by $index">{{group}} &nbsp </span></div></div></div>';
+      'track by $index">' +
+      '<span ng-style="{\'color\':grid.appScope.inputFileTypeColor[' +
+      'grid.appScope.nodeSelectCollection[row.entity.uuid].inputTypeList[$index]]}">' +
+      '{{group[group.length - 1]}}</span>' +
+      '<span ng-if="$index < grid.appScope.nodeSelectCollection[row.entity.uuid]' +
+      '.groupList.length - 1">, &nbsp</span> </span></div></div></div>';
 
     return {
       name: _columnName,
@@ -266,7 +252,8 @@ function fileBrowserFactory (
       enableSorting: false,
       enableColumnMenu: false,
       enableColumnResizing: true,
-      cellTemplate: _cellTemplate
+      cellTemplate: _cellTemplate,
+      visible: false
     };
   };
 
@@ -295,7 +282,8 @@ function fileBrowserFactory (
       enableSorting: false,
       enableColumnMenu: false,
       enableColumnResizing: true,
-      cellTemplate: cellTemplate
+      cellTemplate: cellTemplate,
+      visible: false
     };
   };
 
@@ -398,12 +386,9 @@ function fileBrowserFactory (
     assayFilesTotalItems: assayFilesTotalItems,
     attributeFilter: attributeFilter,
     customColumnNames: customColumnNames,
-    nodeGroupList: nodeGroupList,
     createColumnDefs: createColumnDefs,
-    createNodeGroup: createNodeGroup,
     getAssayFiles: getAssayFiles,
     getAssayAttributeOrder: getAssayAttributeOrder,
-    getNodeGroupList: getNodeGroupList,
     postAssayAttributeOrder: postAssayAttributeOrder,
     resetAssayFiles: resetAssayFiles,
     trimAssayFiles: trimAssayFiles
@@ -419,7 +404,6 @@ angular
     'assayAttributeService',
     'assayFileService',
     'fileBrowserSettings',
-    'nodeGroupService',
     'nodeService',
     'selectedFilterService',
     fileBrowserFactory

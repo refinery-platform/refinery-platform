@@ -10,7 +10,7 @@
     '_',
     'fileRelationshipService',
     'resetGridService',
-    'selectedNodesService'
+    'activeNodeService'
   ];
 
 
@@ -19,16 +19,17 @@
     _,
     fileRelationshipService,
     resetGridService,
-    selectedNodesService
+    activeNodeService
   ) {
     var fileService = fileRelationshipService;
-    var nodeService = selectedNodesService;
+    var nodeService = activeNodeService;
     var vm = this;
     vm.attributes = fileService.attributesObj;
     vm.currentGroup = fileService.currentGroup;
     vm.currentTypes = fileService.currentTypes;
     vm.groupCollection = fileService.groupCollection;
     vm.inputFileTypes = fileService.inputFileTypes;
+    vm.inputFileTypeColor = fileService.inputFileTypeColor;
     vm.isGroupPopulated = isGroupPopulated;
     vm.isNavCollapsed = false;
     vm.isObjEmpty = isObjEmpty;
@@ -95,6 +96,7 @@
           vm.currentGroup = fileService.currentGroup;
           vm.currentTypes = fileService.currentTypes;
           vm.groupCollection = fileService.groupCollection;
+          vm.inputFileTypeColor = fileService.inputFileTypeColor;
         }
       );
 
@@ -105,6 +107,7 @@
         function () {
           vm.groupCollection = fileService.groupCollection;
           vm.currentGroup = fileService.currentGroup;
+          vm.inputFileTypeColor = fileService.inputFileTypeColor;
         }
       );
     };

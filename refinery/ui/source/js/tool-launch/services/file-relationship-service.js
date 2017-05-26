@@ -7,17 +7,19 @@
   fileRelationshipService.$inject = [
     '_',
     'fileBrowserFactory',
-    'selectedNodesService',
+    'activeNodeService',
     'toolSelectService'
   ];
 
   function fileRelationshipService (
     _,
     fileBrowserFactory,
-    selectedNodesService,
+    activeNodeService,
     toolSelectService
   ) {
-    var nodeService = selectedNodesService;
+    // each input file type will have a color associated with it
+    var colorSelectionArray = ['#009E73', '#CC79A7', '#56B4E9', '#E69F00', '#F0E442', '#D55E00'];
+    var nodeService = activeNodeService;
     var toolService = toolSelectService;
     var vm = this;
     vm.attributesObj = {}; // displayName: internalName, ex Name:
@@ -26,6 +28,7 @@
     vm.groupCollection = {}; // contains groups with their selected row's info
     vm.hideNodePopover = false;
     vm.inputFileTypes = []; // maintains the required input types
+    vm.inputFileTypeColor = {}; // inputFileTypeUuids: hex color
     vm.nodeSelectCollection = {}; // contains rows and their group info
     vm.refreshFileMap = refreshFileMap;
     vm.removeGroupFromCollections = removeGroupFromCollections;
@@ -38,6 +41,19 @@
      * Method Definitions
      * ----------------------
      */
+    // helper method which generates the vm.inputFileTypeColor by assigning a
+    // pre-defined color to a list of inputFileTypes
+    function associateColorToInputFileType () {
+      var colorInd = 0;
+      for (var fileInd = 0; fileInd < vm.inputFileTypes.length; fileInd++) {
+        if (colorInd > colorSelectionArray.length) {
+          colorInd = 0;
+        }
+        vm.inputFileTypeColor[vm.inputFileTypes[fileInd].uuid] = colorSelectionArray[colorInd];
+        colorInd++;
+      }
+    }
+
     // helper method: convert attributes name array to attributes name obj,
     // displayName: internalName
     function generateAttributeObj () {
@@ -64,11 +80,14 @@
         scaledCopy = scaledCopy.file_relationship[0];
       }
       angular.copy(scaledCopy.input_files, vm.inputFileTypes);
+      associateColorToInputFileType();
       vm.currentTypes.push(scaledCopy.value_type);
-      vm.currentGroup.push(0);
+      // avoids having an empty string as a key
+      if (vm.currentGroup.length === 0) {
+        vm.currentGroup.push(0);
+      }
       generateAttributeObj();
     }
-
 
     // Main method to remove a group from the groupCollection and
     // nodeSelectCollections
@@ -117,6 +136,7 @@
       vm.groupCollection = {};
       vm.hideNodePopover = false;
       vm.inputFileTypes = [];
+      vm.inputFileTypeColor = {};
       vm.nodeSelectCollection = {};
     }
 

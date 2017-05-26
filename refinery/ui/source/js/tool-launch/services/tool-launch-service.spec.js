@@ -218,9 +218,9 @@
         inputFileObj[mocker.generateUuid()] = [mocker.generateUuid()];
         inputFileObj[mocker.generateUuid()] = [mocker.generateUuid()];
         var groupCollection = {};
-        groupCollection['0,0'] = angular.copy(inputFileObj);
-        groupCollection['1,0'] = angular.copy(inputFileObj);
-        groupCollection['2,0'] = angular.copy(inputFileObj);
+        groupCollection['0'] = angular.copy(inputFileObj);
+        groupCollection['1'] = angular.copy(inputFileObj);
+        groupCollection['2'] = angular.copy(inputFileObj);
         angular.copy(workflow, fileService.currentTypes);
         angular.copy(groupCollection, fileService.groupCollection);
         var responseTemplate = service.generateFileTemplate();
@@ -233,8 +233,8 @@
         inputFileObj[mocker.generateUuid()] = [mocker.generateUuid()];
         inputFileObj[mocker.generateUuid()] = [mocker.generateUuid()];
         var groupCollection = {};
-        groupCollection['0,0'] = angular.copy(inputFileObj);
-        groupCollection['1,0'] = angular.copy(inputFileObj);
+        groupCollection['0'] = angular.copy(inputFileObj);
+        groupCollection['1'] = angular.copy(inputFileObj);
         angular.copy(workflow, fileService.currentTypes);
         angular.copy(groupCollection, fileService.groupCollection);
         var responseTemplate = service.generateFileTemplate();
@@ -246,10 +246,10 @@
         var inputFileObj = {};
         inputFileObj[mocker.generateUuid()] = [mocker.generateUuid()];
         var groupCollection = {};
-        groupCollection['0, 0'] = angular.copy(inputFileObj);
-        groupCollection['1, 0'] = angular.copy(inputFileObj);
-        groupCollection['2, 0'] = angular.copy(inputFileObj);
-        groupCollection['3, 0'] = angular.copy(inputFileObj);
+        groupCollection['0'] = angular.copy(inputFileObj);
+        groupCollection['1'] = angular.copy(inputFileObj);
+        groupCollection['2'] = angular.copy(inputFileObj);
+        groupCollection['3'] = angular.copy(inputFileObj);
         angular.copy(workflow, fileService.currentTypes);
         angular.copy(groupCollection, fileService.groupCollection);
         var responseTemplate = service.generateFileTemplate();
@@ -261,11 +261,11 @@
         var inputFileObj = {};
         inputFileObj[mocker.generateUuid()] = [mocker.generateUuid()];
         var groupCollection = {};
-        groupCollection['0, 0, 0'] = angular.copy(inputFileObj);
-        groupCollection['1, 0, 0'] = angular.copy(inputFileObj);
-        groupCollection['2, 0, 0'] = angular.copy(inputFileObj);
-        groupCollection['3, 0, 0'] = angular.copy(inputFileObj);
-        groupCollection['3, 1, 0'] = angular.copy(inputFileObj);
+        groupCollection['0, 0'] = angular.copy(inputFileObj);
+        groupCollection['1, 0'] = angular.copy(inputFileObj);
+        groupCollection['2, 0'] = angular.copy(inputFileObj);
+        groupCollection['3, 0'] = angular.copy(inputFileObj);
+        groupCollection['3, 1'] = angular.copy(inputFileObj);
         angular.copy(workflow, fileService.currentTypes);
         angular.copy(groupCollection, fileService.groupCollection);
         var responseTemplate = service.generateFileTemplate();
@@ -277,7 +277,7 @@
         var inputFileObj = {};
         inputFileObj[mocker.generateUuid()] = [mocker.generateUuid()];
         var groupCollection = {};
-        groupCollection['0, 0, 0'] = angular.copy(inputFileObj);
+        groupCollection['0, 0'] = angular.copy(inputFileObj);
         angular.copy(workflow, fileService.currentTypes);
         angular.copy(groupCollection, fileService.groupCollection);
         var responseTemplate = service.generateFileTemplate();
@@ -289,11 +289,11 @@
         var inputFileObj = {};
         inputFileObj[mocker.generateUuid()] = [mocker.generateUuid()];
         var groupCollection = {};
-        groupCollection['0, 0, 0, 0'] = angular.copy(inputFileObj);
-        groupCollection['0, 1, 0, 0'] = angular.copy(inputFileObj);
-        groupCollection['1, 0, 0, 0'] = angular.copy(inputFileObj);
-        groupCollection['1, 1, 0, 0'] = angular.copy(inputFileObj);
-        groupCollection['1, 1, 1, 0'] = angular.copy(inputFileObj);
+        groupCollection['0, 0, 0'] = angular.copy(inputFileObj);
+        groupCollection['0, 1, 0'] = angular.copy(inputFileObj);
+        groupCollection['1, 0, 0'] = angular.copy(inputFileObj);
+        groupCollection['1, 1, 0'] = angular.copy(inputFileObj);
+        groupCollection['1, 1, 1'] = angular.copy(inputFileObj);
         angular.copy(workflow, fileService.currentTypes);
         angular.copy(groupCollection, fileService.groupCollection);
         var responseTemplate = service.generateFileTemplate();
@@ -306,13 +306,13 @@
         var inputFileObj = {};
         inputFileObj[mocker.generateUuid()] = [mocker.generateUuid()];
         var groupCollection = {};
-        groupCollection['0, 0, 0, 0, 0'] = angular.copy(inputFileObj);
-        groupCollection['0, 1, 0, 0, 0'] = angular.copy(inputFileObj);
-        groupCollection['1, 0, 0, 0, 0'] = angular.copy(inputFileObj);
-        groupCollection['1, 1, 0, 0, 0'] = angular.copy(inputFileObj);
-        groupCollection['1, 1, 1, 0, 0'] = angular.copy(inputFileObj);
-        groupCollection['1, 1, 1, 1, 0'] = angular.copy(inputFileObj);
-        groupCollection['1, 1, 1, 2, 0'] = angular.copy(inputFileObj);
+        groupCollection['0, 0, 0, 0'] = angular.copy(inputFileObj);
+        groupCollection['0, 1, 0, 0'] = angular.copy(inputFileObj);
+        groupCollection['1, 0, 0, 0'] = angular.copy(inputFileObj);
+        groupCollection['1, 1, 0, 0'] = angular.copy(inputFileObj);
+        groupCollection['1, 1, 1, 0'] = angular.copy(inputFileObj);
+        groupCollection['1, 1, 1, 1'] = angular.copy(inputFileObj);
+        groupCollection['1, 1, 1, 2'] = angular.copy(inputFileObj);
         angular.copy(workflow, fileService.currentTypes);
         angular.copy(groupCollection, fileService.groupCollection);
         var responseTemplate = service.generateFileTemplate();
@@ -327,13 +327,13 @@
         var inputFileObj = {};
         inputFileObj[mocker.generateUuid()] = [mocker.generateUuid()];
         var groupCollection = {};
-        groupCollection['0, 0, 0, 0, 0, 0'] = angular.copy(inputFileObj);
-        groupCollection['0, 1, 0, 0, 0, 0'] = angular.copy(inputFileObj);
-        groupCollection['1, 0, 0, 0, 0, 0'] = angular.copy(inputFileObj);
-        groupCollection['1, 1, 0, 0, 0, 0'] = angular.copy(inputFileObj);
-        groupCollection['2, 0, 0, 0, 0, 0'] = angular.copy(inputFileObj);
-        groupCollection['2, 1, 0, 0, 0, 0'] = angular.copy(inputFileObj);
-        groupCollection['2, 1, 0, 0, 0, 0'] = angular.copy(inputFileObj);
+        groupCollection['0, 0, 0, 0, 0'] = angular.copy(inputFileObj);
+        groupCollection['0, 1, 0, 0, 0'] = angular.copy(inputFileObj);
+        groupCollection['1, 0, 0, 0, 0'] = angular.copy(inputFileObj);
+        groupCollection['1, 1, 0, 0, 0'] = angular.copy(inputFileObj);
+        groupCollection['2, 0, 0, 0, 0'] = angular.copy(inputFileObj);
+        groupCollection['2, 1, 0, 0, 0'] = angular.copy(inputFileObj);
+        groupCollection['2, 1, 0, 0, 0'] = angular.copy(inputFileObj);
         angular.copy(workflow, fileService.currentTypes);
         angular.copy(groupCollection, fileService.groupCollection);
         var responseTemplate = service.generateFileTemplate();
@@ -343,6 +343,66 @@
             '[([([][])][([][])])([([][])][([][])])]' +
             '[([([][])][([][])])([([][])][([][])])]' +
             ']');
+      });
+    });
+
+    describe('checkNeedMoreNodes from Ctrl', function () {
+      it('checkNeedMoreNodes is method', function () {
+        expect(angular.isFunction(service.checkNeedMoreNodes)).toBe(true);
+      });
+
+      it('checkNeedMoreNodes returns false for filled pairs', function () {
+        fileService.currentGroup = angular.copy([0, 0]);
+        fileService.currentTypes = angular.copy(['LIST', 'PAIR']);
+        fileService.groupCollection[fileService.currentGroup] = angular.copy({});
+        fileService.groupCollection[fileService.currentGroup][mocker.generateUuid()] =
+          angular.copy([mocker.generateUuid()]);
+        fileService.groupCollection[fileService.currentGroup][mocker.generateUuid()] =
+          angular.copy([mocker.generateUuid()]);
+        expect(service.checkNeedMoreNodes()).toEqual(false);
+      });
+
+      it('checkNeedMoreNodes returns false for filled list', function () {
+        fileService.currentGroup = angular.copy([0, 0]);
+        fileService.currentTypes = angular.copy(['LIST', 'LIST']);
+        fileService.groupCollection[fileService.currentGroup] = angular.copy({});
+        fileService.groupCollection[fileService.currentGroup][mocker.generateUuid()] =
+          angular.copy([mocker.generateUuid()]);
+        expect(service.checkNeedMoreNodes()).toEqual(false);
+      });
+
+      it('checkNeedMoreNodes returns true if currentGroup is empty', function () {
+        // default is empty
+        expect(service.checkNeedMoreNodes()).toEqual(true);
+      });
+
+      it('checkNeedMoreNodes returns true for partial filled pair - input type', function () {
+        fileService.currentGroup = angular.copy([0, 0]);
+        fileService.currentTypes = angular.copy(['LIST', 'PAIR']);
+        fileService.groupCollection[fileService.currentGroup] = angular.copy({});
+        fileService.groupCollection[fileService.currentGroup][mocker.generateUuid()] =
+          angular.copy([mocker.generateUuid()]);
+        expect(service.checkNeedMoreNodes()).toEqual(true);
+      });
+
+      it('checkNeedMoreNodes returns true for partial filled pair - missing node', function () {
+        fileService.currentGroup = angular.copy([0, 0]);
+        fileService.currentTypes = angular.copy(['LIST', 'PAIR']);
+        fileService.groupCollection[fileService.currentGroup] = angular.copy({});
+        fileService.groupCollection[fileService.currentGroup][mocker.generateUuid()] =
+          angular.copy([mocker.generateUuid()]);
+        fileService.groupCollection[fileService.currentGroup]
+          [mocker.generateUuid()] = angular.copy([]);
+        expect(service.checkNeedMoreNodes()).toEqual(true);
+      });
+
+      it('checkNeedMoreNodes returns true for partial filled list - missing node', function () {
+        fileService.currentGroup = angular.copy([0, 0]);
+        fileService.currentTypes = angular.copy(['LIST', 'LIST']);
+        fileService.groupCollection[fileService.currentGroup] = angular.copy({});
+        fileService.groupCollection[fileService.currentGroup]
+          [mocker.generateUuid()] = angular.copy([]);
+        expect(service.checkNeedMoreNodes()).toEqual(true);
       });
     });
 

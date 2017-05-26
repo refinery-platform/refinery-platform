@@ -15,12 +15,12 @@
       _,
       fileRelationshipService,
       mockParamsFactory,
-      selectedNodesService,
+      activeNodeService,
       toolSelectService
     ) {
       service = fileRelationshipService;
       mocker = mockParamsFactory;
-      nodeService = selectedNodesService;
+      nodeService = activeNodeService;
       toolsFactory = toolSelectService;
       underscroll = _;
 
@@ -118,6 +118,7 @@
       expect(service.groupCollection).toEqual({});
       expect(service.hideNodePopover).toEqual(false);
       expect(service.inputFileTypes).toEqual([]);
+      expect(service.inputFileTypeColor).toEqual({});
       expect(service.nodeSelectCollection).toEqual({});
     });
 
@@ -144,12 +145,12 @@
 
       it('generates correct currentGroups', function () {
         service.refreshFileMap();
-        expect(service.currentGroup).toEqual([0, 0, 0]);
+        expect(service.currentGroup).toEqual([0, 0]);
       });
     });
 
     describe('removeGroupFromCollections', function () {
-      var currentGroupMock = [0, 0, 1];
+      var currentGroupMock = [0, 1];
       var groupCollectionMock = {};
       groupCollectionMock[currentGroupMock] = {};
       var nodeSelectCollectionMock = {};
@@ -160,12 +161,12 @@
         nodeUuid1 = mocker.generateUuid();
         var inputType2 = mocker.generateUuid();
 
-        groupCollectionMock[[0, 0, 0]] = {};
-        groupCollectionMock[[0, 0, 0]][inputType1] = [{ uuid: nodeUuid1 }];
+        groupCollectionMock[[0, 0]] = {};
+        groupCollectionMock[[0, 0]][inputType1] = [{ uuid: nodeUuid1 }];
         groupCollectionMock[currentGroupMock][inputType2] = [{ uuid: nodeUuid1 }];
         nodeSelectCollectionMock[nodeUuid1] = {
           inputTypeList: [inputType1, inputType2],
-          groupList: [[0, 0, 0], currentGroupMock]
+          groupList: [[0, 0], currentGroupMock]
         };
         angular.copy(currentGroupMock, service.currentGroup);
         angular.copy(groupCollectionMock, service.groupCollection);
@@ -190,7 +191,7 @@
     });
 
     describe('resetInputGroup', function () {
-      var currentGroupMock = [0, 0, 1];
+      var currentGroupMock = [0, 1];
       var groupCollectionMock = {};
       groupCollectionMock[currentGroupMock] = {};
       var nodeSelectCollectionMock = {};
@@ -215,7 +216,7 @@
       it('it resets currentGroupMock', function () {
         expect(service.currentGroup).toEqual(currentGroupMock);
         service.resetInputGroup();
-        expect(service.currentGroup).toEqual([0, 0, 0]);
+        expect(service.currentGroup).toEqual([0, 0]);
       });
 
       it('resetToolRelated resets groupCollectionMock', function () {
@@ -232,7 +233,7 @@
     });
 
     describe('resetToolRelated', function () {
-      var currentGroupMock = [0, 0, 0];
+      var currentGroupMock = [0, 0];
       var currentTypeMock = ['PAIR', 'LIST', 'LIST'];
       var groupCollectionMock = {};
       groupCollectionMock[currentGroupMock] = {};
@@ -303,7 +304,7 @@
     });
 
     describe('Set Group Collection', function () {
-      var currentGroupMock = [0, 0, 0];
+      var currentGroupMock = [0, 0];
       var inputTypeUuid1;
       var inputTypeUuid2;
       var nodeUuid1;
@@ -362,7 +363,7 @@
     });
 
     describe('setNodeSelectCollection', function () {
-      var currentGroupMock = [0, 0, 0];
+      var currentGroupMock = [0, 0];
       var inputTypeUuid1;
       var inputTypeUuid2;
       var nodeUuid1;

@@ -20,6 +20,7 @@
   ) {
     var vm = this;
     vm.launchTool = launchTool;
+    vm.needMoreNodes = needMoreNodes;
 
     /*
    * -----------------------------------------------------------------------------
@@ -35,6 +36,12 @@
       }, function (error) {
         $log.error(error);
       });
+    }
+
+
+    // View method to check if the group has minimum nodes
+    function needMoreNodes () {
+      return toolLaunchService.checkNeedMoreNodes();
     }
   }
 })();
