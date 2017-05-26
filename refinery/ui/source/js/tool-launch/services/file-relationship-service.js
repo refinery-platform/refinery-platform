@@ -7,19 +7,19 @@
   fileRelationshipService.$inject = [
     '_',
     'fileBrowserFactory',
-    'selectedNodesService',
+    'activeNodeService',
     'toolSelectService'
   ];
 
   function fileRelationshipService (
     _,
     fileBrowserFactory,
-    selectedNodesService,
+    activeNodeService,
     toolSelectService
   ) {
     // each input file type will have a color associated with it
     var colorSelectionArray = ['#009E73', '#CC79A7', '#56B4E9', '#E69F00', '#F0E442', '#D55E00'];
-    var nodeService = selectedNodesService;
+    var nodeService = activeNodeService;
     var toolService = toolSelectService;
     var vm = this;
     vm.attributesObj = {}; // displayName: internalName, ex Name:

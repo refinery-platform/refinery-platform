@@ -22,7 +22,7 @@
     'isOwnerService',
     'resetGridService',
     'selectedFilterService',
-    'selectedNodesService',
+    'activeNodeService',
     'toolSelectService'
   ];
 
@@ -43,17 +43,15 @@
     isOwnerService,
     resetGridService,
     selectedFilterService,
-    selectedNodesService,
+    activeNodeService,
     toolSelectService
   ) {
     var maxFileRequest = fileBrowserSettings.maxFileRequest;
-    var nodesService = selectedNodesService;
+    var nodesService = activeNodeService;
     var fileService = fileRelationshipService;
     var toolService = toolSelectService;
     var vm = this;
     vm.activeNodeRow = nodesService.activeNodeRow;
-    // flag to help with timing issues when selecting node group
-    vm.afterNodeGroupUpdate = false;
     vm.analysisFilter = fileBrowserFactory.analysisFilter;
     // attribute list from api
     vm.assayAttributes = fileBrowserFactory.assayAttributes;
@@ -66,7 +64,6 @@
     vm.checkDataLength = checkDataLength;
     vm.checkDataSetOwnership = checkDataSetOwnership;
     vm.collapsedToolPanel = toolService.isToolPanelCollapsed;
-    vm.counter = 0;
     // params for the assays api
     vm.filesParam = {
       uuid: $window.externalAssayUuid,
