@@ -1180,9 +1180,6 @@ class Analysis(OwnableResource):
                     delete = False
 
         if delete:
-            # Cancel Analysis:
-            #   - galaxy cleanup
-            #   - terminate any file_import tasks
             self.cancel()
 
             # Delete associated AnalysisResults
@@ -1433,7 +1430,6 @@ class Analysis(OwnableResource):
         self.set_status(Analysis.FAILURE_STATUS, "Cancelled at user's request")
         # jobs in a running workflow are stopped by deleting its history
         self.galaxy_cleanup()
-        self.terminate_file_import_tasks()
 
     def get_input_file_uuid_list(self):
         """Return a list of all input file UUIDs"""
