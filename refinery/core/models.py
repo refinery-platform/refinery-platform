@@ -60,7 +60,6 @@ from data_set_manager.utils import (add_annotated_nodes_selection,
                                     index_annotated_nodes_selection)
 from file_store.models import FileStoreItem, FileType, get_file_size
 from file_store.tasks import rename
-from file_store.utils import terminate_file_import_task
 from galaxy_connector.galaxy_workflow import (configure_workflow,
                                               countWorkflowSteps,
                                               create_expanded_workflow_graph)
@@ -576,7 +575,7 @@ class DataSet(SharableResource):
         file_store_items = self.get_file_store_items()
         if file_store_items is not None:
             for file_store_item in file_store_items:
-                terminate_file_import_task(file_store_item.import_task_id)
+                file_store_item.terminate_file_import_task()
         try:
             super(DataSet, self).delete()
         except Exception as e:
@@ -1762,7 +1761,7 @@ class Analysis(OwnableResource):
                     e
                 )
             else:
-                terminate_file_import_task(file_store_item.import_task_id)
+                file_store_item.terminate_file_import_task()
 
 
 #: Defining available relationship types
