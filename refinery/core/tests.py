@@ -22,10 +22,14 @@ from .models import (Analysis, AnalysisNodeConnection, create_nodeset, DataSet,
                      invalidate_cached_object, InvestigationLink,
                      NodeSet, Project, Tutorials, update_nodeset,
                      UserProfile, Workflow, WorkflowEngine)
+from .search_indexes import DataSetIndex
+
 from .utils import (filter_nodes_uuids_in_solr, get_aware_local_time,
                     move_obj_to_front)
 from .views import AnalysesViewSet, DataSetsViewSet
-from data_set_manager.models import Assay, Investigation, Node, Study
+from data_set_manager.models import Assay, Contact, Investigation, Node, Study
+from factory_boy.utils import create_dataset_with_necessary_models
+
 from file_store.models import FileStoreItem
 from galaxy_connector.models import Instance
 
@@ -2320,3 +2324,62 @@ class AnalysisApiV2Tests(APITestCase):
         self.assertEqual(self.delete_response.status_code, 404)
 
         self.assertEqual(Analysis.objects.all().count(), 1)
+
+
+class CoreIndexTests(TestCase):
+    def setUp(self):
+        self.dataset_index = DataSetIndex()
+        self.good_dataset = create_dataset_with_necessary_models()
+        self.bad_dataset = DataSet.objects.create()
+
+    def test_prepare_submitter(self):
+        contact = Contact.objects.create(
+            collection=self.good_dataset.get_investigation(),
+            first_name="Scott",
+            last_name="Ouellette"
+        )
+        # Create an identical contact to ensure we prepare a unique list of
+        # submitters
+        Contact.objects.create(
+            collection=self.good_dataset.get_investigation(),
+            first_name="Scott",
+            last_name="Ouellette"
+        )
+        self.good_dataset.save()
+
+        prepared_submitters = self.dataset_index.prepare_submitter(
+            self.good_dataset
+        )
+
+        self.assertEqual(
+            prepared_submitters,
+            [u"{}, {}".format(contact.last_name, contact.first_name)]
+        )
+
+    def test_prepare_submitter_funky_contact(self):
+        contact = Contact.objects.create(
+            collection=self.good_dataset.get_investigation(),
+            first_name=u'Sc\xd6tt',
+            last_name=u'\xd6uellette'
+        )
+        self.good_dataset.save()
+
+        prepared_submitters = self.dataset_index.prepare_submitter(
+            self.good_dataset
+        )
+        self.assertEqual(
+            prepared_submitters,
+            [u"{}, {}".format(contact.last_name, contact.first_name)]
+        )
+
+    def test_prepare_description_bad_dataset(self):
+        prepared_description = self.dataset_index.prepare_description(
+            self.bad_dataset
+        )
+        self.assertEqual(prepared_description, "")
+
+    def test_prepare_description_good_dataset(self):
+        prepared_description = self.dataset_index.prepare_description(
+            self.good_dataset
+        )
+        self.assertEqual(prepared_description, "This is a great DataSet")
