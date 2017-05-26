@@ -16,7 +16,7 @@ from django.utils import timezone
 
 from .models import AnalysisStatus
 from .tasks import run_analysis
-from core.models import (Analysis, InvestigationLink, NodeGroup, NodePair,
+from core.models import (Analysis, InvestigationLink, NodePair,
                          NodeRelationship, NodeSet, Workflow,
                          WorkflowDataInputMap, WorkflowEngine)
 from core.utils import get_aware_local_time
@@ -177,7 +177,6 @@ def run(request):
         workflow_uuid = analysis_config['workflowUuid']
         study_uuid = analysis_config['studyUuid']
         node_set_uuid = analysis_config['nodeSetUuid']
-        node_group_uuid = analysis_config['nodeGroupUuid']
         node_relationship_uuid = analysis_config['nodeRelationshipUuid']
         custom_name = analysis_config['name']
     except KeyError:
@@ -185,94 +184,8 @@ def run(request):
     # must provide workflow and study UUIDs,
     # and either node set UUID or node relationship UUID
     if not (workflow_uuid and study_uuid and
-            (node_set_uuid or node_relationship_uuid or node_group_uuid)):
+            (node_set_uuid or node_relationship_uuid)):
         return HttpResponseBadRequest()  # 400
-
-    # single-input workflow based node group
-    if node_group_uuid:
-        try:
-            curr_node_group = NodeGroup.objects.get(uuid=node_group_uuid)
-        except NodeGroup.DoesNotExist:
-            logger.error("Node Group with UUID '{}' does not exist".format(
-                node_group_uuid))
-            return HttpResponse(status='404')
-        except NodeGroup.MultipleObjectsReturned:
-            logger.error("Node Group with UUID '{}' returned multiple "
-                         "objects".format(node_group_uuid))
-            return HttpResponse(status='500')
-
-        try:
-            curr_workflow = Workflow.objects.get(uuid=workflow_uuid)
-        except Workflow.DoesNotExist:
-            logger.error("WorkFlow with UUID '{}' does not exist".format(
-                workflow_uuid))
-            return HttpResponse(status='404')
-        except Workflow.MultipleObjectsReturned:
-            logger.error("WorkFlow with UUID '{}' returns multiple objects"
-                         .format(workflow_uuid))
-            return HttpResponse(status='500')
-
-        try:
-            study = Study.objects.get(uuid=study_uuid)
-        except Study.DoesNotExist:
-            logger.error("Study with UUID '{}' does not exist".format(
-                study_uuid))
-            return HttpResponse(status='404')
-        except Study.MultipleObjectsReturned:
-            logger.error("Study with UUID '{}' returns multiple objects"
-                         .format(study_uuid))
-            return HttpResponse(status='500')
-
-        investigation_links = InvestigationLink.objects.filter(
-            investigation__uuid=study.investigation.uuid).order_by(
-                "version")
-        if not investigation_links:
-            logger.error("InvestigationLink with UUID '{}' with does not "
-                         "exist".format(study.investigation.uuid))
-            return HttpResponse(status='404')
-
-        data_set = investigation_links.reverse()[0].data_set
-        logger.info("Associating analysis with data set %s (%s)",
-                    data_set, data_set.uuid)
-
-        # ANALYSIS MODEL
-        # How to create a simple analysis object
-        if not custom_name:
-            temp_name = curr_workflow.name + " " + get_aware_local_time()\
-                .strftime("%Y-%m-%d @ %H:%M:%S")
-        else:
-            temp_name = custom_name
-
-        summary_name = "None provided."
-        analysis = Analysis.objects.create(
-            summary=summary_name,
-            name=temp_name,
-            project=request.user.profile.catch_all_project,
-            data_set=data_set,
-            workflow=curr_workflow,
-            time_start=timezone.now()
-        )
-        analysis.set_owner(request.user)
-
-        # getting distinct workflow inputs
-        try:
-            workflow_data_inputs = curr_workflow.data_inputs.all()[0]
-        except IndexError:
-            logger.error("Workflow with UUID '{}' has an index "
-                         "error with inputs".format(workflow_uuid.uuid))
-            return HttpResponse(status='500')
-
-        # NEED TO GET LIST OF FILE_UUIDS from node_group_uuid fields
-        count = 0
-        for node_file in curr_node_group.nodes.all():
-            count += 1
-            temp_input = WorkflowDataInputMap.objects.create(
-                workflow_data_input_name=workflow_data_inputs.name,
-                data_uuid=node_file.uuid,
-                pair_id=count
-            )
-            analysis.workflow_data_input_maps.add(temp_input)
-            analysis.save()
 
     # single-input workflow
     if node_set_uuid:

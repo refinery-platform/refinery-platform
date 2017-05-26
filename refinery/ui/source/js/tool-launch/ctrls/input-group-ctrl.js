@@ -10,7 +10,7 @@
     '_',
     'fileRelationshipService',
     'resetGridService',
-    'selectedNodesService'
+    'activeNodeService'
   ];
 
 
@@ -19,10 +19,10 @@
     _,
     fileRelationshipService,
     resetGridService,
-    selectedNodesService
+    activeNodeService
   ) {
     var fileService = fileRelationshipService;
-    var nodeService = selectedNodesService;
+    var nodeService = activeNodeService;
     var vm = this;
     vm.attributes = fileService.attributesObj;
     vm.currentGroup = fileService.currentGroup;

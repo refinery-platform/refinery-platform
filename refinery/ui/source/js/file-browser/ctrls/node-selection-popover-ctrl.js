@@ -9,17 +9,17 @@
     '$scope',
     '_',
     'fileRelationshipService',
-    'selectedNodesService'
+    'activeNodeService'
   ];
 
   function NodeSelectionPopoverCtrl (
     $scope,
     _,
     fileRelationshipService,
-    selectedNodesService
+    activeNodeService
   ) {
     var fileService = fileRelationshipService;
-    var nodeService = selectedNodesService;
+    var nodeService = activeNodeService;
     var vm = this;
     vm.activeNode = nodeService.activeNodeRow; // ui-grid row which is engaged
     vm.attributes = fileService.attributesObj; // contains the data attributes

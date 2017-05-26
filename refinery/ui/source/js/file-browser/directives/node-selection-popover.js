@@ -10,7 +10,7 @@
     '$rootScope',
     '$templateCache',
     'fileRelationshipService',
-    'selectedNodesService'
+    'activeNodeService'
   ];
 
   function rpNodeSelectionPopover (
@@ -18,13 +18,13 @@
     $rootScope,
     $templateCache,
     fileRelationshipService,
-    selectedNodesService
+    activeNodeService
     ) {
     return {
       restrict: 'AE',
       link: function (scope, element) {
         var fileService = fileRelationshipService;
-        var nodesService = selectedNodesService;
+        var nodesService = activeNodeService;
         // The script is in the data_set2.html template.
         var template = $templateCache.get('nodeselectionpopover.html');
         var popOverContent = $compile(template)(scope);
