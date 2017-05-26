@@ -1893,7 +1893,7 @@ class DataSetTests(TestCase):
     def test_get_latest_investigation(self):
         self.assertEqual(
             self.dataset.get_latest_investigation_link().investigation,
-            self.test_get_latest_investigation()
+            self.latest_investigation
         )
 
 
