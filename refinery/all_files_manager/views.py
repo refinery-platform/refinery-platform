@@ -1,18 +1,14 @@
 import logging
 
-from rest_framework.response import Response
-from rest_framework.viewsets import ModelViewSet
-
-# from .models import AllFiles
-from .serializers import AllFilesSerializer
+from django.core import serializers
+from django.http import (HttpResponse, HttpResponseNotAllowed)
 
 logger = logging.getLogger(__name__)
 
 
-class AllFilesViewSet(ModelViewSet):
-    """API endpoint that allows for all files to be listed"""
-
-    def list(self, request):
-        queryset = 'TODO: From solr?'
-        serializer = AllFilesSerializer(queryset, many=True)
-        return Response(serializer.data)
+def all_files(request):
+    if request.method == 'GET':
+        data = serializers.serialize('json', {})
+        return HttpResponse(data, content_type='application/json')
+    else:
+        return HttpResponseNotAllowed(['GET'])
