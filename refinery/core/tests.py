@@ -1806,34 +1806,43 @@ class DataSetTests(TestCase):
             workflow_engine=self.workflow_engine
         )
         self.investigation = Investigation.objects.create()
-        self.study = Study.objects.create(investigation=self.investigation)
-        self.assay = Assay.objects.create(
-            study=self.study)
-        self.investigation_link = \
-            InvestigationLink.objects.create(
-                investigation=self.investigation,
-                data_set=self.dataset,
-                version=1
-            )
+        self.latest_investigation = Investigation.objects.create()
 
-        self.file_store_item = \
-            FileStoreItem.objects.create(
-                datafile=SimpleUploadedFile(
-                    'test_file.txt',
-                    'Coffee is delicious!')
+        self.study = Study.objects.create(
+            investigation=self.latest_investigation
+        )
+        self.assay = Assay.objects.create(
+            study=self.study
+        )
+        self.investigation_link = InvestigationLink.objects.create(
+            investigation=self.investigation,
+            data_set=self.dataset,
+            version=1
+        )
+        self.latest_investigation_link = InvestigationLink.objects.create(
+            investigation=self.latest_investigation,
+            data_set=self.dataset,
+            version=2
+        )
+
+        self.file_store_item = FileStoreItem.objects.create(
+            datafile=SimpleUploadedFile(
+                'test_file.txt',
+                'Coffee is delicious!'
             )
-        self.file_store_item1 = \
-            FileStoreItem.objects.create(
-                datafile=SimpleUploadedFile(
-                    'test_file.txt',
-                    'Coffee is delicious!')
+        )
+        self.file_store_item1 = FileStoreItem.objects.create(
+            datafile=SimpleUploadedFile(
+                'test_file.txt',
+                'Coffee is delicious!'
             )
-        self.file_store_item2 = \
-            FileStoreItem.objects.create(
-                datafile=SimpleUploadedFile(
-                    'test_file.txt',
-                    'Coffee is delicious!')
+        )
+        self.file_store_item2 = FileStoreItem.objects.create(
+            datafile=SimpleUploadedFile(
+                'test_file.txt',
+                'Coffee is delicious!'
             )
+        )
         self.node = Node.objects.create(
             name="n0", assay=self.assay, study=self.study,
             file_uuid=self.file_store_item.uuid)
@@ -1874,6 +1883,18 @@ class DataSetTests(TestCase):
         ) as solr_mock:
             self.dataset.save()
             self.assertTrue(solr_mock.called)
+
+    def test_get_latest_investigation_link(self):
+        self.assertEqual(
+            self.dataset.get_latest_investigation_link(),
+            self.latest_investigation_link
+        )
+
+    def test_get_latest_investigation(self):
+        self.assertEqual(
+            self.dataset.get_latest_investigation_link().investigation,
+            self.test_get_latest_investigation()
+        )
 
 
 class DataSetApiV2Tests(APITestCase):
