@@ -671,24 +671,34 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
         return obj_list
 
     def obj_get(self, bundle, **kwargs):
-        dataset = SharableResourceAPIInterface.obj_get(self, bundle, **kwargs)
-        return self.handle_incomplete_dataset(dataset)
+        try:
+            dataset = DataSet.objects.get(uuid=kwargs["uuid"])
+        except (DataSet.DoesNotExist, DataSet.MultipleObjectsReturned) as e:
+            logger.error("Couldn't properly fetch DataSet with UUID: %s %s",
+                         kwargs["uuid"], e)
+            raise NotFound(e)
+
+        if not dataset.is_valid():
+            raise NotFound(
+                "DataSet with UUID: {} is invalid, and most likely is "
+                "still being created".format(dataset.uuid)
+            )
+        return SharableResourceAPIInterface.obj_get(self, bundle, **kwargs)
 
     def obj_get_list(self, bundle, **kwargs):
-        datasets = SharableResourceAPIInterface.obj_get_list(
-            self,
-            bundle,
-            **kwargs
-        )
-        complete_datasets = []
+        datasets = SharableResourceAPIInterface.obj_get_list(self, bundle,
+                                                             **kwargs)
+        valid_datasets = []
         for dataset in datasets:
-            try:
-                complete_datasets.append(
-                    self.handle_incomplete_dataset(dataset)
+            if dataset.is_valid():
+                valid_datasets.append(dataset)
+            else:
+                logger.error(
+                    "DataSet with UUID: {} is invalid, and most likely is "
+                    "still being created".format(dataset.uuid)
                 )
-            except NotFound:
                 pass
-        return complete_datasets
+        return valid_datasets
 
     def get_object_list(self, request):
         obj_list = SharableResourceAPIInterface.get_object_list(self, request)
@@ -845,25 +855,6 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
             request=request,
             study_uuid=kwargs['study_uuid']
         )
-
-    def handle_incomplete_dataset(self, dataset):
-        """
-        Handle an incomplete DataSet instance in api responses
-        :param dataset: a DataSet object
-        :return: a DataSet object
-        :raises: A TastyPie NotFound Exception if said DataSet
-        doesn't have the proper information associated yet.
-        """
-        error_message = (
-            "DataSet with UUID: {} is incomplete, and most likely is still "
-            "being created".format(dataset.uuid)
-        )
-
-        if dataset.is_valid():
-            return dataset
-        else:
-            logger.error(error_message)
-            raise NotFound(error_message)
 
 
 class WorkflowResource(ModelResource, SharableResourceAPIInterface):
