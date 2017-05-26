@@ -61,6 +61,7 @@ def run_analysis(analysis_uuid):
 
     # if cancelled by user
     if analysis.failed():
+        analysis.terminate_file_import_tasks()
         return
 
     try:
@@ -100,6 +101,7 @@ def run_analysis(analysis_uuid):
         logger.error(error_msg)
         analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
         analysis.send_email()
+        analysis.terminate_file_import_tasks()
         refinery_import.delete()
         return
 
