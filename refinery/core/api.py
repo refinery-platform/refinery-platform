@@ -498,13 +498,6 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
         }
 
     def dehydrate(self, bundle):
-        if not bundle.obj.is_valid():
-            # Dataset has not been associated with its InvestigationLink so
-            # we are not able to provide a fully created bundle. Returning
-            # the bundle in this state will properly exclude it from the api
-            # response
-            return bundle
-
         if not bundle.data['owner']:
             owner = bundle.obj.get_owner()
             try:
