@@ -5,7 +5,9 @@
     .component('rpUserFileBrowserFiles', {
       controller: 'UserFileBrowserCtrl',
       templateUrl: ['$window', function ($window) {
-        return $window.getStaticUrl('partials/user-file-browser/partials/files.html');
+        return $window.getStaticUrl(
+            'partials/user-file-browser/partials/user-file-browser-files.html'
+        );
       }]
     });
 })();
