@@ -25,6 +25,17 @@
         ]
       },
     };
+    this.gridOptions = {
+      appScopeProvider: this,
+      useExternalSorting: true,
+      selectionRowHeaderWidth: 35,
+      rowHeight: 35,
+      // columnDefs: [],
+      data: [
+          { type: 'DNA', organism: 'human' },
+          { type: 'RNA', organism: 'mouse' }
+      ]
+    };
   }
 })();
 
