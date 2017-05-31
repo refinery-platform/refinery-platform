@@ -39,7 +39,15 @@
 
 
       <div ng-if="NSPCtrl.currentTypes[NSPCtrl.currentTypes.length-1]=='LIST'">
-         <li
+        <!-- Select/Deselect nodes in the list -->
+        <div class="refinery-subheader">
+          <h4>
+            {{ NSPCtrl.groupCollection[NSPCtrl.currentGroup][NSPCtrl.inputFileTypes[0].uuid].length }}
+            node<span ng-if="NSPCtrl.groupCollection[NSPCtrl.currentGroup][NSPCtrl.inputFileTypes[0].uuid].length != 1">s</span>
+            in Group {{ NSPCtrl.currentGroup[NSPCtrl.currentGroup.length] }}
+          </h4>
+        </div>
+        <li
            ng-style="{'color': NSPCtrl.inputFileTypeColor[NSPCtrl.inputFileTypes[0].uuid],
           'border-color': NSPCtrl.inputFileTypeColor[NSPCtrl.inputFileTypes[0].uuid]}">
           <span>
@@ -54,14 +62,6 @@
               </label>
           </span>
         </li>
-         <!-- Select/Deselect nodes in the list -->
-        <span
-          ng-if="NSPCtrl.groupCollection[NSPCtrl.currentGroup] &&
-          NSPCtrl.groupCollection[NSPCtrl.currentGroup][NSPCtrl.inputFileTypes[0].uuid].length > 0">
-          {{ NSPCtrl.groupCollection[NSPCtrl.currentGroup][NSPCtrl.inputFileTypes[0].uuid].length }}
-          node<span ng-if="NSPCtrl.groupCollection[NSPCtrl.currentGroup][NSPCtrl.inputFileTypes[0].uuid].length > 1">s</span>
-          in Group {{ NSPCtrl.currentGroup[NSPCtrl.currentGroup.length] }}
-        </span>
       </div>
     </form>
   </ul>

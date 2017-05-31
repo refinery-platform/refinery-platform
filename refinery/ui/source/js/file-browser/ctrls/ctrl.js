@@ -76,19 +76,19 @@
     // Main ui-grid options
     vm.gridOptions = {
       appScopeProvider: vm,
-      infiniteScrollRowsFromEnd: 40,
-      infiniteScrollUp: true,
-      infiniteScrollDown: true,
-      useExternalSorting: true,
-      selectionRowHeaderWidth: 35,
-      rowHeight: 35,
-      showGridFooter: true,
-      multiSelect: true,
       columnDefs: fileBrowserFactory.customColumnNames,
       data: fileBrowserFactory.assayFiles,
       gridFooterTemplate: '<rp-is-assay-files-loading></rp-is-assay-files-loading>',
+      infiniteScrollRowsFromEnd: 40,
+      infiniteScrollUp: true,
+      infiniteScrollDown: true,
+      multiSelect: true,
       onRegisterApi: gridRegister,
-      rowTemplate: '<rp-ui-grid-row-template></rp-ui-grid-row-template>'
+      rowHeight: 35,
+      rowTemplate: '<rp-ui-grid-row-template></rp-ui-grid-row-template>',
+      selectionRowHeaderWidth: 35,
+      showGridFooter: true,
+      useExternalSorting: true
     };
     vm.inputFileTypeColor = fileService.inputFileTypeColor;
     vm.lastPage = 0;  // variable supporting ui-grid dynamic scrolling
