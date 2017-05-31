@@ -67,6 +67,7 @@
         vm.currentTypes = fileService.currentTypes;
         vm.groupCollection = fileService.groupCollection;
         vm.nodeSelection = fileService.nodeSelectCollection;
+        vm.inputFileTypeColor = fileService.inputFileTypeColor;
       }
     );
     // When user selects/deselects row
@@ -86,7 +87,6 @@
       function () {
         vm.currentGroup = fileService.currentGroup;
         vm.currentTypes = fileService.currentTypes;
-        vm.inputFileTypeColor = fileService.inputFileTypeColor;
       }
     );
   }

@@ -9,7 +9,12 @@
         ng-repeat="inputFile in $ctrl.inputFileTypes track by $index"
         ng-style="{'color': $ctrl.inputFileTypeColor[inputFile.uuid],
         'border-color': $ctrl.inputFileTypeColor[inputFile.uuid]}">
-          <span class="wrap-word" ng-if="$ctrl.isGroupPopulated(inputFile.uuid)">
+        <span class="wrap-word" ng-if="$ctrl.isGroupPopulated(inputFile.uuid)">
+          <div class="refinery-subheader">
+            <h4>
+              Name
+            </h4>
+          </div>
           <span ng-repeat="node in $ctrl.groupCollection[$ctrl.currentGroup][inputFile.uuid]">
             {{ node[$ctrl.attributes.Name] }}
           </span>
@@ -52,6 +57,11 @@
           <em>{{ inputFile.description }}</em>
         </div>
         <div ng-if="$ctrl.isGroupPopulated($ctrl.inputFileTypes[0].uuid)">
+           <div class="refinery-subheader">
+            <h4>
+              Name
+            </h4>
+          </div>
           <div
             ng-repeat="node in $ctrl.groupCollection[$ctrl.currentGroup][$ctrl.inputFileTypes[0].uuid]"
             class="p-t-1">
@@ -60,9 +70,10 @@
         </div>
       </li>
      </div>
-
   </ul>
-  <button
+  <rp-input-group-details></rp-input-group-details>
+  <div>
+    <button
     class="btn btn-default btn-xs outline"
     ng-disabled="$ctrl.isObjEmpty($ctrl.groupCollection[$ctrl.currentGroup])"
     ng-click="$ctrl.removeGroup()">
@@ -74,4 +85,5 @@
     ng-click="$ctrl.removeAllGroups()">
     Remove All
   </button>
+  </div>
 </div>
