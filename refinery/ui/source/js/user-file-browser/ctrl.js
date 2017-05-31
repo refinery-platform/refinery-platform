@@ -9,7 +9,14 @@
   ];
 
   function UserFileBrowserCtrl () {
-    this.attributeFilters = { attribute: 'attributeObj' };
+    this.attributeFilters = {
+      type: {
+        internal_name: 'foo',
+        facetObj: [
+          { name: 'DNA', count: 4 },
+          { name: 'RNA', count: 7 }
+        ]
+      } };
   }
 })();
 

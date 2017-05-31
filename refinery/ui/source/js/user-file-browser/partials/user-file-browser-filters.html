@@ -4,11 +4,11 @@
     aria-multiselectable="true">
      <div class="refinery-subheader m-t-1">
       <h2>
-        Attribute Filter
+        Attribute Filters
       </h2>
     </div>
     <div
-      ng-repeat="(attribute, attributeObj) in FBCtrl.attributeFilter track by $index"
+      ng-repeat="(attribute, attributeObj) in $ctrl.attributeFilters track by $index"
       ng-init="attributeIndex = $index">
       <div class="panel panel-default">
         <div class="panel-heading" role="tab">
