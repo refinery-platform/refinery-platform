@@ -44,7 +44,7 @@
           'border-color': NSPCtrl.inputFileTypeColor[NSPCtrl.inputFileTypes[0].uuid]}">
           <span>
             <!-- active row selection, for list is always showing -->
-            <div class="checkbox">
+            <div class="checkbox p-a-1-3">
               <label>
                 <input
                   type="checkbox"
@@ -52,23 +52,6 @@
                   ng-model="NSPCtrl.selectionObj[NSPCtrl.currentGroup][NSPCtrl.inputFileTypes[0].uuid][NSPCtrl.activeNode.uuid]">
                 {{ NSPCtrl.inputFileTypes[0].name }}
               </label>
-          </span>
-         <!-- Select/Deselect nodes in the list -->
-          <span
-            ng-if="NSPCtrl.groupCollection[NSPCtrl.currentGroup] &&
-            NSPCtrl.groupCollection[NSPCtrl.currentGroup][NSPCtrl.inputFileTypes[0].uuid].length > 0">
-            {{ inputType.uuid }}
-            <div ng-repeat="selectedFile in NSPCtrl.groupCollection[NSPCtrl.currentGroup][NSPCtrl.inputFileTypes[0].uuid]">
-              <div class="checkbox">
-                <label class="wrap-word">
-                  <input
-                    type="checkbox"
-                    ng-click="NSPCtrl.selectNode(NSPCtrl.inputFileTypes[0].uuid, selectedFile.uuid)"
-                    ng-model="NSPCtrl.selectionObj[NSPCtrl.currentGroup][NSPCtrl.inputFileTypes[0].uuid][selectedFile.uuid]">
-                 {{ selectedFile[NSPCtrl.attributes.Name] }}
-                </label>
-              </div>
-            </div>
           </span>
         </li>
       </div>
