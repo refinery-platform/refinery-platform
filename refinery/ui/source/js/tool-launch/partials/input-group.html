@@ -71,7 +71,9 @@
       </li>
      </div>
   </ul>
-  <rp-input-group-details></rp-input-group-details>
+  <div ng-if="$ctrl.currentTypes[$ctrl.currentTypes.length-1]=='PAIR'">
+      <rp-input-group-details></rp-input-group-details>
+  </div>
   <div>
     <button
     class="btn btn-default btn-xs outline"

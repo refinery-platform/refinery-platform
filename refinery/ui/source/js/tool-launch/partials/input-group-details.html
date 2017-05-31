@@ -64,31 +64,4 @@
         </li>
       </ul>
    </div>
-
-  <div
-    uib-collapse="$ctrl.collapseDetails"
-    ng-if="$ctrl.currentTypes[$ctrl.currentTypes.length-1]=='LIST'"
-    id="list-input-group-details">
-      <ul
-        class="wrap-word"
-        id="list-group-collection"
-        ng-repeat="node in $ctrl.groupCollection[$ctrl.currentGroup][$ctrl
-          .inputFileTypes[0].uuid]">
-        <ul
-           ng-repeat="(displayName, internalName) in $ctrl.attributes">
-        <li>
-          <div class="refinery-subheader">
-            <h4>
-              {{ displayName }}
-            </h4>
-          </div>
-          <div ng-style="{'color': $ctrl.inputFileTypeColor[$ctrl
-          .inputFileTypes[0].uuid]}">
-            {{ node[internalName] }}
-          </div>
-        </li>
-        </ul>
-      </ul>
-   </div>
-
 </div>
