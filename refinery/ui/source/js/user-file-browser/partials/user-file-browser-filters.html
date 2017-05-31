@@ -13,6 +13,9 @@
       <div class="panel panel-default">
         <div class="panel-heading" role="tab">
           <h4 class="panel-title">
+          <div><i class="fa fa-caret-down fa-pull-left"></i>{{ attribute }} &nbsp; ({{ attributeObj.facetObj.length }})</div>
+          <!--
+          TODO: Enable click-to-expand
           <div
             role="button"
             data-toggle="collapse"
@@ -25,16 +28,20 @@
               aria-hidden="true"></i>
              {{ attribute }} &nbsp; ({{ attributeObj.facetObj.length }})
           </div>
+          -->
           </h4>
         </div>
       <div id="{{attribute | replaceWhiteSpaceWithHyphen}}"
-        class="panel-collapse collapse"
+        class="panel-collapse collapse in"
         role="tabpanel"
         aria-labelledby="{{ attribute }}">
         <div class="panel-body">
           <div ng-repeat="field in attributeObj.facetObj track by $index">
-            <div class="checkbox container"
-                ng-show="showField(field.name, attributeObj.internal_name, attribute)">
+            <div class="checkbox container">
+                <!--
+                TODO: Add this back in:
+                ng-show="showField(field.name, attributeObj.internal_name, attribute)"
+                -->
                 <div class="row">
                   <div class="col-xs-1">
                     <input
