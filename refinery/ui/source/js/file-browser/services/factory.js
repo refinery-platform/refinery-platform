@@ -238,7 +238,7 @@ function fileBrowserFactory (
       'track by $index">' +
       '<span ng-style="{\'color\':grid.appScope.inputFileTypeColor[' +
       'grid.appScope.nodeSelectCollection[row.entity.uuid].inputTypeList[$index]]}">' +
-      '{{group[group.length - 1]}}</span>' +
+      '{{group[group.length - 1] + 1}}</span>' +
       '<span ng-if="$index < grid.appScope.nodeSelectCollection[row.entity.uuid]' +
       '.groupList.length - 1">, &nbsp</span> </span></div></div></div>';
 

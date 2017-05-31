@@ -87,7 +87,8 @@
       columnDefs: fileBrowserFactory.customColumnNames,
       data: fileBrowserFactory.assayFiles,
       gridFooterTemplate: '<rp-is-assay-files-loading></rp-is-assay-files-loading>',
-      onRegisterApi: gridRegister
+      onRegisterApi: gridRegister,
+      rowTemplate: '<rp-ui-grid-row-template></rp-ui-grid-row-template>'
     };
     vm.inputFileTypeColor = fileService.inputFileTypeColor;
     vm.lastPage = 0;  // variable supporting ui-grid dynamic scrolling
