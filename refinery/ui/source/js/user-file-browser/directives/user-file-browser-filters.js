@@ -9,37 +9,37 @@
             'partials/user-file-browser/partials/user-file-browser-filters.html'
         );
       }],
-      link: function (scope) {
-        // ng-click event for attribute filter panels
-        scope.dropAttributePanel = function (e, attributeName, attributeObj) {
-          console.log('drop?');
-          e.preventDefault();
-          var escapeAttributeName = attributeName.replace(' ', '-');
-          var attributeTitle = angular.element(
-            document.querySelector('#attribute-panel-' + escapeAttributeName)
-          );
-          var attribute = angular.element(
-            document.querySelector('#' + escapeAttributeName)
-          );
-          var selectedKeys = []; // Object.keys(selectedFilterService.attributeSelectedFields);
-          var selectedAttributeIndex = selectedKeys.indexOf(attributeObj.internal_name);
-          if (attributeTitle.hasClass('fa-caret-right')) {
-            // open panel
-            attributeTitle.removeClass('fa-caret-right');
-            attributeTitle.addClass('fa-caret-down');
-            attribute.addClass('in');
-          } else if (selectedAttributeIndex > -1) {
-            // keep panel open when some fields are selected showFields method
-            // will hide any non-selected fields
-            attributeTitle.removeClass('fa-caret-down');
-            attributeTitle.addClass('fa-caret-right');
-          } else {
-            // collapse entire panel when none are selected
-            attributeTitle.removeClass('fa-caret-down');
-            attributeTitle.addClass('fa-caret-right');
-            attribute.removeClass('in');
-          }
-        };
+      link: function (/* scope */) {
+        // // ng-click event for attribute filter panels
+        // scope.dropAttributePanel = function (e, attributeName, attributeObj) {
+        //   console.log('drop?');
+        //   e.preventDefault();
+        //   var escapeAttributeName = attributeName.replace(' ', '-');
+        //   var attributeTitle = angular.element(
+        //     document.querySelector('#attribute-panel-' + escapeAttributeName)
+        //   );
+        //   var attribute = angular.element(
+        //     document.querySelector('#' + escapeAttributeName)
+        //   );
+        //   var selectedKeys = []; // Object.keys(selectedFilterService.attributeSelectedFields);
+        //   var selectedAttributeIndex = selectedKeys.indexOf(attributeObj.internal_name);
+        //   if (attributeTitle.hasClass('fa-caret-right')) {
+        //     // open panel
+        //     attributeTitle.removeClass('fa-caret-right');
+        //     attributeTitle.addClass('fa-caret-down');
+        //     attribute.addClass('in');
+        //   } else if (selectedAttributeIndex > -1) {
+        //     // keep panel open when some fields are selected showFields method
+        //     // will hide any non-selected fields
+        //     attributeTitle.removeClass('fa-caret-down');
+        //     attributeTitle.addClass('fa-caret-right');
+        //   } else {
+        //     // collapse entire panel when none are selected
+        //     attributeTitle.removeClass('fa-caret-down');
+        //     attributeTitle.addClass('fa-caret-right');
+        //     attribute.removeClass('in');
+        //   }
+        // };
         //
         // // Helper method Checks to see if panel is minimized based on caret
         // var isMinimized = function (index) {
