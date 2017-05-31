@@ -9,7 +9,7 @@
   ];
 
   function UserFileBrowserCtrl () {
-
+    this.attributeFilters = { attribute: 'attributeObj' };
   }
 })();
 

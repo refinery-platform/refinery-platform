@@ -1,0 +1,70 @@
+<div ng-if="$ctrl.attributeFilters">
+  <div class="panel-group data-set-filters" id="attribute-filter"
+    role="tablist"
+    aria-multiselectable="true">
+     <div class="refinery-subheader m-t-1">
+      <h2>
+        Attribute Filter
+      </h2>
+    </div>
+    <div
+      ng-repeat="(attribute, attributeObj) in FBCtrl.attributeFilter track by $index"
+      ng-init="attributeIndex = $index">
+      <div class="panel panel-default">
+        <div class="panel-heading" role="tab">
+          <h4 class="panel-title">
+          <div
+            role="button"
+            data-toggle="collapse"
+            data-parent="#attribute-filter"
+            ng-click="dropAttributePanel($event, attribute, attributeObj)"
+            aria-expanded="true"
+            aria-controls="{{ attribute }}">
+             <i class="fa fa-caret-right fa-pull-left"
+              id="attribute-panel-{{attribute | replaceWhiteSpaceWithHyphen}}"
+              aria-hidden="true"></i>
+             {{ attribute }} &nbsp; ({{ attributeObj.facetObj.length }})
+          </div>
+          </h4>
+        </div>
+      <div id="{{attribute | replaceWhiteSpaceWithHyphen}}"
+        class="panel-collapse collapse"
+        role="tabpanel"
+        aria-labelledby="{{ attribute }}">
+        <div class="panel-body">
+          <div ng-repeat="field in attributeObj.facetObj track by $index">
+            <div class="checkbox container"
+                ng-show="showField(field.name, attributeObj.internal_name, attribute)">
+                <div class="row">
+                  <div class="col-xs-1">
+                    <input
+                      type="checkbox"
+                      name="optionsCheckboxes"
+                      ng-model="FBCtrl.uiSelectedFields[attributeObj.internal_name][field.name]"
+                      ng-change="FBCtrl.attributeSelectionUpdate(attributeObj.internal_name, field.name)"
+                      id="{{ field.name | replaceWhiteSpaceWithHyphen }}-{{ $index }}">
+                  </div>
+                  <div class="col-xs-8">
+                    <label for="{{ field.name | replaceWhiteSpaceWithHyphen
+                      }}-{{ $index }}">
+                      <span>
+                        {{ field.name }}
+                      </span>
+                    </label>
+                  </div>
+                  <div class="col-xs-3">
+                    <label for="{{ field.name | replaceWhiteSpaceWithHyphen }}-{{ $index }}">
+                      <span class="text-right pull-right">
+                        {{ field.count }}
+                      </span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

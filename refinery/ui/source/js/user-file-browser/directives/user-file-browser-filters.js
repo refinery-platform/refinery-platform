@@ -2,11 +2,11 @@
   'use strict';
   angular
     .module('refineryUserFileBrowser')
-    .component('rpUserFileBrowserFacets', {
+    .component('rpUserFileBrowserFilters', {
       controller: 'UserFileBrowserCtrl',
       templateUrl: ['$window', function ($window) {
         return $window.getStaticUrl(
-            'partials/user-file-browser/partials/user-file-browser-facets.html'
+            'partials/user-file-browser/partials/user-file-browser-filters.html'
         );
       }]
     });
