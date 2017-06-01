@@ -8,16 +8,18 @@ from data_set_manager.models import (Study, Assay)
 logger = logging.getLogger(__name__)
 
 
-def all_files(request):
+def user_files(request):
     if request.method == 'GET':
         data = []
         datasets = get_objects_for_user(request.user, "core.read_dataset")
         for dataset in datasets:
-            investigation_link = dataset.get_version_details()
+            version_details = dataset.get_version_details()
             study = Study.objects.get(
-                investigation=investigation_link.investigation
+                investigation=version_details.investigation
             )
-            assay = Assay.objects.get(study=study)
+            assay = Assay.objects.get(
+                study=study
+            )
             response = requests.get(
                 "http://192.168.50.50:8000/api/v2/assays/{}/files/".format(
                     assay.uuid
