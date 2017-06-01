@@ -1,7 +1,9 @@
 import logging
-from django.http import (HttpResponseNotAllowed, Response)
-from .utils import (search_solr, format_solr_response,
-                    generate_solr_params_for_user)
+from django.http import HttpResponseNotAllowed
+from rest_framework.response import Response
+from data_set_manager.utils import (
+    search_solr, format_solr_response,
+    generate_solr_params_for_user)
 
 logger = logging.getLogger(__name__)
 
