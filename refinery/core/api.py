@@ -470,7 +470,7 @@ class UserProfileResource(ModelResource):
         return HttpAccepted
 
 
-class DataSetResource(ModelResource, SharableResourceAPIInterface):
+class DataSetResource(SharableResourceAPIInterface, ModelResource):
     id_regex = '[0-9]+'
     uuid_regex = '[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}'
     share_list = fields.ListField(attribute='share_list', null=True)
