@@ -514,7 +514,6 @@ def load_config():
 
     bucket_name = "{}-config".format(config['STACK_NAME'])
     generated_config['S3_CONFIG_BUCKET'] = bucket_name
-    ensure_s3_bucket(bucket_name)
 
     # Update the config, by adding the automatically generated keys.
     config.update(generated_config)
@@ -577,6 +576,7 @@ def save_s3_config(config, suffix):
     s3 = boto3.resource('s3')
 
     bucket_name = config['S3_CONFIG_BUCKET']
+    ensure_s3_bucket(bucket_name)
 
     object_name = "refinery-config-{}.json".format(suffix)
 
