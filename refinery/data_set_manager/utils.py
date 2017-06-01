@@ -610,7 +610,8 @@ def _generate_solr_params(params, assay_uuids=[]):
         facet_field_query = generate_facet_fields_query(facet_field)
         solr_params = ''.join([solr_params, facet_field_query])
     else:
-        raise NotImplementedError  # TODO
+        # TODO?
+        pass
 
     if field_limit:
         solr_params = ''.join([solr_params, '&fl=', field_limit])
