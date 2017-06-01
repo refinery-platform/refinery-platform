@@ -520,10 +520,9 @@ def load_config():
     if 'ADMIN_PASSWORD' not in config:
         generated_config['ADMIN_PASSWORD'] = random_password(8)
 
-    if 'S3_CONFIG_BUCKET' not in config:
-        bucket_name = "{}-config".format(config['STACK_NAME'])
-        ensure_s3_bucket(bucket_name)
-        generated_config['S3_CONFIG_BUCKET'] = bucket_name
+    bucket_name = "{}-config".format(config['STACK_NAME'])
+    generated_config['S3_CONFIG_BUCKET'] = bucket_name
+    ensure_s3_bucket(bucket_name)
 
     # Update the config, by adding the automatically generated keys.
     config.update(generated_config)
