@@ -505,15 +505,7 @@ def load_config():
     config = _load_config_file("config.yaml")
 
     # Generate warning for old keys that we no longer use.
-
-    ignored = ['VOLUME']
-    bad = []
-    for key in ignored:
-        if key in config:
-            bad.append(key)
-    if bad:
-        sys.stderr.write("{:s} no longer used, ignoring\n".format(
-            bad))
+    report_obsolete_keys(config)
 
     # Generate some special keys that are optional to specify.
     generated_config = {}
@@ -597,8 +589,27 @@ def save_s3_config(config, suffix):
     return s3_uri
 
 
+def report_obsolete_keys(config):
+    """
+    Report obsolete keys that are no longer used.
+    Just a warning; carries on anyway.
+    """
+
+    ignored = ['VOLUME', 'S3_CONFIG_BUCKET']
+    bad = []
+    for key in ignored:
+        if key in config:
+            bad.append(key)
+    if bad:
+        sys.stderr.write("{:s} no longer used, ignoring\n".format(
+            bad))
+
+
 def report_missing_keys(config):
-    """Collect and report list of missing keys"""
+    """
+    Collect and report list of missing keys.
+    Prints to stderr, then raises exception if there are missing keys.
+    """
 
     required = ['ADMIN_PASSWORD', 'KEY_NAME', 'RDS_SUPERUSER_PASSWORD',
                 'SITE_NAME', 'SITE_URL', 'STACK_NAME']
