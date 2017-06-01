@@ -64,6 +64,7 @@
     vm.checkDataLength = checkDataLength;
     vm.checkDataSetOwnership = checkDataSetOwnership;
     vm.collapsedToolPanel = toolService.isToolPanelCollapsed;
+    vm.currentTypes = fileService.currentTypes;
     // params for the assays api
     vm.filesParam = {
       uuid: $window.externalAssayUuid,
@@ -535,6 +536,7 @@
         return toolService.selectedTool;
       },
       function () {
+        vm.currentTypes = fileService.currentTypes;
         if (fileBrowserFactory.customColumnNames.length > 0) {
           toggleToolColumn();
         }

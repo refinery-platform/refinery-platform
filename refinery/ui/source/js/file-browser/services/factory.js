@@ -237,10 +237,21 @@ function fileBrowserFactory (
       '<span ng-repeat="group in grid.appScope.nodeSelectCollection[row.entity.uuid].groupList ' +
       'track by $index">' +
       '<span ng-style="{\'color\':grid.appScope.inputFileTypeColor[' +
+      'grid.appScope.nodeSelectCollection[row.entity.uuid].inputTypeList[$index]],' +
+      '\'border-color\':grid.appScope.inputFileTypeColor[' +
       'grid.appScope.nodeSelectCollection[row.entity.uuid].inputTypeList[$index]]}">' +
-      '{{group[group.length - 1] + 1}}</span>' +
-      '<span ng-if="$index < grid.appScope.nodeSelectCollection[row.entity.uuid]' +
-      '.groupList.length - 1">, &nbsp</span> </span></div></div></div>';
+      '<span class="p-r-1-3"' +
+      'ng-if="grid.appScope.currentTypes[grid.appScope.currentTypes.length-1]==\'PAIR\'">' +
+      '<i class="fa fa-link current-type-border" aria-hidden="true">' +
+      '&nbsp {{group[group.length - 1] + 1}}' +
+      '</i>' +
+      '</span>' +
+      '<span class="p-r-1-3"' +
+      'ng-if="grid.appScope.currentTypes[grid.appScope.currentTypes.length-1]==\'LIST\'">' +
+      '<i class="fa fa-list current-type-border" aria-hidden="true">' +
+      '&nbsp {{group[group.length - 1] + 1}}' +
+      '</i>' +
+      '</span></span></span></div></div></div>';
 
     return {
       name: _columnName,
