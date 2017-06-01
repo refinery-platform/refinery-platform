@@ -503,6 +503,25 @@ def _index_annotated_nodes(node_type, study_uuid, assay_uuid=None,
     logger.info("%s nodes indexed in %s", str(counter), str(end - start))
 
 
+def generate_solr_params_for_user(params, user):
+    """Creates the encoded solr params limiting results to one user.
+    Keyword Argument
+        params -- python dict or QueryDict
+    Params/Solr Params
+        is_annotation - metadata
+        facet_count/facet - enables facet counts in query response, true/false
+        offset - paginate, offset response
+        limit/row - maximum number of documents
+        field_limit - set of fields to return
+        facet_field - specify a field which should be treated as a facet
+        facet_filter - adds params to facet fields&fqs for filtering on fields
+        facet_pivot - list of fields to pivot
+        sort - Ordering include field name, whitespace, & asc or desc.
+        fq - filter query
+     """
+    return _generate_solr_params(params, user=user)
+
+
 def generate_solr_params_for_assay(params, assay_uuid):
     """Creates the encoded solr params requiring only an assay.
     Keyword Argument
@@ -519,6 +538,11 @@ def generate_solr_params_for_assay(params, assay_uuid):
         sort - Ordering include field name, whitespace, & asc or desc.
         fq - filter query
      """
+    return _generate_solr_params(params, assay_uuid=assay_uuid)
+
+
+def _generate_solr_params(params, assay_uuid=None, user=None):
+    # TODO: Actually do something with "user"
 
     file_types = 'fq=type:("Raw Data File" OR ' \
                  '"Derived Data File" OR ' \
@@ -548,14 +572,16 @@ def generate_solr_params_for_assay(params, assay_uuid):
                   'facet.limit=-1'
                   ])
 
-    solr_params = ''.join(['fq=assay_uuid:', assay_uuid])
+    solr_params = ''
+    if assay_uuid:
+        solr_params += 'fq=assay_uuid:' + assay_uuid
 
     if facet_field:
         facet_field = facet_field.split(',')
         facet_field = insert_facet_field_filter(facet_filter, facet_field)
         split_facet_fields = generate_facet_fields_query(facet_field)
         solr_params = ''.join([solr_params, split_facet_fields])
-    else:
+    elif assay_uuid:
         # Missing facet_fields, it is generated from Attribute Order Model.
         attributes_str = AttributeOrder.objects.filter(assay__uuid=assay_uuid)
         attributes = AttributeOrderSerializer(attributes_str, many=True)
@@ -565,6 +591,8 @@ def generate_solr_params_for_assay(params, assay_uuid):
         field_limit = ','.join(facet_field_obj.get('field_limit'))
         facet_field_query = generate_facet_fields_query(facet_field)
         solr_params = ''.join([solr_params, facet_field_query])
+    else:
+        raise NotImplementedError  # TODO: Handle user
 
     if field_limit:
         solr_params = ''.join([solr_params, '&fl=', field_limit])
