@@ -587,7 +587,7 @@ def save_s3_config(config, suffix):
 
     bucket_name = config['S3_CONFIG_BUCKET']
 
-    object_name = ("refinery-config-" + suffix)
+    object_name = "refinery-config-{}.json".format(suffix)
 
     s3_uri = "s3://{}/{}".format(bucket_name, object_name)
     config['S3_CONFIG_URI'] = s3_uri
