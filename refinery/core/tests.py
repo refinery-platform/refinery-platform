@@ -1661,7 +1661,7 @@ class UtilitiesTest(TestCase):
             ]
         return {'nodes': response_node_uuids}
 
-    @mock.patch("data_set_manager.utils.generate_solr_params",
+    @mock.patch("data_set_manager.utils.generate_solr_params_for_assay",
                 fake_generate_solr_params)
     @mock.patch("data_set_manager.utils.search_solr", fake_search_solr)
     @mock.patch("data_set_manager.utils.format_solr_response",
@@ -1680,7 +1680,7 @@ class UtilitiesTest(TestCase):
         response = filter_nodes_uuids_in_solr(self.valid_uuid, self.node_uuids)
         self.assertItemsEqual(response, response_node_uuids)
 
-    @mock.patch("data_set_manager.utils.generate_solr_params",
+    @mock.patch("data_set_manager.utils.generate_solr_params_for_assay",
                 fake_generate_solr_params)
     @mock.patch("data_set_manager.utils.search_solr", fake_search_solr)
     @mock.patch("data_set_manager.utils.format_solr_response",

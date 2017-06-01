@@ -43,7 +43,7 @@ from .utils import (create_current_selection_node_group,
                     get_data_sets_annotations, move_obj_to_front)
 from annotation_server.models import GenomeBuild
 from data_set_manager.models import Node
-from data_set_manager.utils import generate_solr_params
+from data_set_manager.utils import generate_solr_params_for_assay
 from file_store.models import FileStoreItem
 from visualization_manager.views import igv_multi_species
 
@@ -759,7 +759,10 @@ def solr_igv(request):
         if igv_config['query'] is None:
             # generate solr_query method
             # assay uuid
-            solr_query = generate_solr_params({}, igv_config['assay_uuid'])
+            solr_query = generate_solr_params_for_assay(
+                {},
+                igv_config['assay_uuid']
+            )
             url_path = '/'.join(["data_set_manager", "select"])
             url = urljoin(settings.REFINERY_SOLR_BASE_URL, url_path)
             igv_config['query'] = ''.join([url, '/?', solr_query])
