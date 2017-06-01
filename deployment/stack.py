@@ -466,7 +466,18 @@ def make_template(config, config_yaml):
 
 
 def load_tags():
-    """Load AWS resource tags from aws-config/tags.yaml"""
+    """
+    Load AWS resource tags from aws-config/tags.yaml.
+    Tags are returned as a list of dict:
+
+    [
+      {
+        'Key': 'project',
+        'Value': 'refinery',
+      },
+    ]
+    """
+
     tags = {}
     try:
         with open("aws-config/tags.yaml") as f:
@@ -553,7 +564,12 @@ def ensure_s3_bucket(bucket_name):
     # http://boto3.readthedocs.org/en/latest/guide/migrations3.html
     s3 = boto3.resource('s3')
 
+    # Does nothing if already created, which is what we want.
     s3.create_bucket(Bucket=bucket_name)
+
+    bucket_tags = s3.BucketTagging(bucket_name)
+    bucket_tags.put(Tagging={'TagSet': load_tags()})
+
     return bucket_name
 
 
