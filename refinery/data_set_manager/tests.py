@@ -748,7 +748,7 @@ class UtilitiesTest(TestCase):
         # empty params
         query = generate_solr_params_for_assay(QueryDict({}), self.valid_uuid)
         self.assertEqual(str(query),
-                         'fq=assay_uuid%3A{}'
+                         'fq=%28assay_uuid%3A{}%29'
                          '&facet.field=Cell Type&'
                          'facet.field=Analysis&facet.field=Organism&'
                          'facet.field=Cell Line&facet.field=Type&'

@@ -585,7 +585,7 @@ def _generate_solr_params(params, assay_uuids=[]):
                   'facet.limit=-1'
                   ])
 
-    solr_params = 'fq:({})'.format(
+    solr_params = 'fq=({})'.format(
         ' OR '.join(map(
             lambda id: 'assay_uuid:{}'.format(id),
             assay_uuids
