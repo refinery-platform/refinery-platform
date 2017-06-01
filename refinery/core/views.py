@@ -78,9 +78,8 @@ def statistics(request):
                               context_instance=RequestContext(request))
 
 
-@login_required
-def all_files(request):
-    return render_to_response('core/all_files.html', {},
+def user_files(request):
+    return render_to_response('core/user_files.html', {},
                               context_instance=RequestContext(request))
 
 
