@@ -13,6 +13,8 @@ from django.conf import settings
 from django.db.models import Q
 from django.utils.http import urlquote, urlunquote
 
+from guardian.shortcuts import get_objects_for_user
+
 import requests
 from requests.exceptions import HTTPError
 
@@ -519,7 +521,19 @@ def generate_solr_params_for_user(params, user):
         sort - Ordering include field name, whitespace, & asc or desc.
         fq - filter query
      """
-    return _generate_solr_params(params, user=user)
+
+    assay_uuids = []
+    datasets = get_objects_for_user(user, "core.read_dataset")
+    for dataset in datasets:
+        version_details = dataset.get_version_details()
+        study = Study.objects.get(
+            investigation=version_details.investigation
+        )
+        assay = Assay.objects.get(
+            study=study
+        )
+        assay_uuids.append(assay.uuid)
+    return _generate_solr_params(params, assay_uuids=assay_uuids)
 
 
 def generate_solr_params_for_assay(params, assay_uuid):
@@ -538,11 +552,10 @@ def generate_solr_params_for_assay(params, assay_uuid):
         sort - Ordering include field name, whitespace, & asc or desc.
         fq - filter query
      """
-    return _generate_solr_params(params, assay_uuid=assay_uuid)
+    return _generate_solr_params(params, assay_uuids=[assay_uuid])
 
 
-def _generate_solr_params(params, assay_uuid=None, user=None):
-    # TODO: Actually do something with "user"
+def _generate_solr_params(params, assay_uuids=[]):
 
     file_types = 'fq=type:("Raw Data File" OR ' \
                  '"Derived Data File" OR ' \
@@ -572,18 +585,23 @@ def _generate_solr_params(params, assay_uuid=None, user=None):
                   'facet.limit=-1'
                   ])
 
-    solr_params = ''
-    if assay_uuid:
-        solr_params += 'fq=assay_uuid:' + assay_uuid
+    solr_params = 'fq:({})'.format(
+        ' OR '.join(map(
+            lambda id: 'assay_uuid:{}'.format(id),
+            assay_uuids
+        ))
+    )
 
     if facet_field:
         facet_field = facet_field.split(',')
         facet_field = insert_facet_field_filter(facet_filter, facet_field)
         split_facet_fields = generate_facet_fields_query(facet_field)
         solr_params = ''.join([solr_params, split_facet_fields])
-    elif assay_uuid:
+    elif len(assay_uuids) == 1:
         # Missing facet_fields, it is generated from Attribute Order Model.
-        attributes_str = AttributeOrder.objects.filter(assay__uuid=assay_uuid)
+        attributes_str = AttributeOrder.objects.filter(
+            assay__uuid=assay_uuids[0]
+        )
         attributes = AttributeOrderSerializer(attributes_str, many=True)
         facet_field_obj = generate_filtered_facet_fields(attributes.data)
         facet_field = facet_field_obj.get('facet_field')
@@ -592,7 +610,7 @@ def _generate_solr_params(params, assay_uuid=None, user=None):
         facet_field_query = generate_facet_fields_query(facet_field)
         solr_params = ''.join([solr_params, facet_field_query])
     else:
-        raise NotImplementedError  # TODO: Handle user
+        raise NotImplementedError  # TODO
 
     if field_limit:
         solr_params = ''.join([solr_params, '&fl=', field_limit])
