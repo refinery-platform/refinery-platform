@@ -777,7 +777,7 @@ class UtilitiesTest(TestCase):
             parameter_qdict, self.valid_uuid
         )
         self.assertEqual(str(query),
-                         'fq=assay_uuid%3A{}'
+                         'fq=%28assay_uuid%3A{}%29'
                          '&facet.field=cats&'
                          'facet.field=mouse&facet.field=dog&'
                          'facet.field=horse&fl=cats%2C'
