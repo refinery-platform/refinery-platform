@@ -282,6 +282,12 @@ class SharableResourceAPIInterface(object):
         if not user.is_authenticated() and res and not res.is_public():
             return HttpUnauthorized()
 
+        if not res.is_valid():
+            raise NotFound(
+                "DataSet with UUID: {} is invalid, and most likely is "
+                "still being created".format(kwargs['uuid'])
+            )
+
         mod_res_list = self.transform_res_list(user, [res], request, **kwargs)
         bundle = self.build_bundle_list(request, mod_res_list)[0]
         return bundle.obj
@@ -671,18 +677,6 @@ class DataSetResource(SharableResourceAPIInterface, ModelResource):
         return obj_list
 
     def obj_get(self, bundle, **kwargs):
-        try:
-            dataset = DataSet.objects.get(uuid=kwargs["uuid"])
-        except (DataSet.DoesNotExist, DataSet.MultipleObjectsReturned) as e:
-            logger.error("Couldn't properly fetch DataSet with UUID: %s %s",
-                         kwargs["uuid"], e)
-            raise NotFound(e)
-
-        if not dataset.is_valid():
-            raise NotFound(
-                "DataSet with UUID: {} is invalid, and most likely is "
-                "still being created".format(dataset.uuid)
-            )
         return SharableResourceAPIInterface.obj_get(self, bundle, **kwargs)
 
     def obj_get_list(self, bundle, **kwargs):
