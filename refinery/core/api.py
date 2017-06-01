@@ -691,7 +691,6 @@ class DataSetResource(SharableResourceAPIInterface, ModelResource):
                     "DataSet with UUID: {} is invalid, and most likely is "
                     "still being created".format(dataset.uuid)
                 )
-                pass
         return valid_datasets
 
     def get_object_list(self, request):
