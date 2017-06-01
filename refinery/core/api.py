@@ -677,11 +677,11 @@ class DataSetResource(SharableResourceAPIInterface, ModelResource):
         return obj_list
 
     def obj_get(self, bundle, **kwargs):
-        return SharableResourceAPIInterface.obj_get(self, bundle, **kwargs)
+        return super(DataSetResource, self).obj_get(bundle, **kwargs)
 
     def obj_get_list(self, bundle, **kwargs):
-        datasets = SharableResourceAPIInterface.obj_get_list(self, bundle,
-                                                             **kwargs)
+        datasets = super(DataSetResource, self).obj_get_list(bundle, **kwargs)
+
         valid_datasets = []
         for dataset in datasets:
             if dataset.is_valid():
