@@ -2,11 +2,16 @@
   'use strict';
   angular
   .module('refineryFileBrowser')
-  .component('rpUiGridRowTemplate', {
-    templateUrl: ['$window', function ($window) {
-      return $window.getStaticUrl(
-        'partials/file-browser/partials/ui-grid-row-template.html'
-      );
-    }]
-  });
+  .directive('rpUiGridRowTemplate', rpUiGridRowTemplate);
+
+  rpUiGridRowTemplate.$inject = ['$window'];
+
+  function rpUiGridRowTemplate ($window) {
+    return {
+      restrict: 'E',
+      templateUrl: function () {
+        return $window.getStaticUrl('partials/file-browser/partials/ui-grid-row-template.html');
+      }
+    };
+  }
 })();
