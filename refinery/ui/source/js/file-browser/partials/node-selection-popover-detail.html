@@ -70,6 +70,14 @@
   <span ng-if="NSPCtrl.currentTypes.length > 1">
     <div class="refinery-subheader">
       <h4>
+        <span
+          ng-if="NSPCtrl.currentTypes[NSPCtrl.currentTypes.length - 2] == 'LIST'">
+           <i class="fa fa-list" aria-hidden="true"></i>
+        </span>
+        <span
+          ng-if="NSPCtrl.currentTypes[NSPCtrl.currentTypes.length - 2] == 'PAIR'">
+           <i class="fa fa-link" aria-hidden="true"></i>
+        </span>
         {{ NSPCtrl.currentTypes[NSPCtrl.currentTypes.length - 2] }} Nav:
         Group {{ NSPCtrl.currentGroup[NSPCtrl.currentGroup.length - 1] + 1 }}
       </h4>

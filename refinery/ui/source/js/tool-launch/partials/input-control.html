@@ -28,7 +28,7 @@
       role="tabpanel"
       aria-labelledby="tool-body">
       <div class="panel-body p-a-0">
-        <div class="p-a-0">
+        <div class="p-a-1-2">
           <div
             ng-repeat="groupType in $ctrl.currentTypes|orderBy:'$index':true track by $index"
             id="control-panel-list">
@@ -36,44 +36,57 @@
               <rp-input-group></rp-input-group>
             </div>
 
-            <div ng-if="$index == 1" class="p-a-1-2">
+            <div
+              ng-if="$index > 0"
+              class="tree-panel"
+              ng-style="{'margin-left': 10*$index+'px'}">
+              <div class="refinery-subheader">
+                <h4>
+                  <span
+                    ng-if="groupType == 'LIST'">
+                     <i class="fa fa-list" aria-hidden="true"></i>
+                  </span>
+                  <span
+                    ng-if="groupType== 'PAIR'">
+                     <i class="fa fa-link" aria-hidden="true"></i>
+                  </span>
+                  {{ groupType }} Nav:
+                  Index {{ $ctrl.currentGroup[$ctrl.currentGroup.length-$index] + 1 }}
+                </h4>
+              </div>
+            </div>
+
+            <div
+              ng-if="$index == 1"
+              class="p-a-1-2"
+              ng-style="{'margin-left': 10*$index+'px'}">
               <rp-input-control-inner-nav></rp-input-control-inner-nav>
             </div>
 
             <div
               ng-if="$index > 1"
-              class="tree-panel"
               ng-style="{'margin-left': 10*$index+'px'}">
-              <hr>
-              <div>
-                <h5>
-                  {{ $ctrl.currentGroup[$ctrl.currentGroup.length-$index] + 1 }}
-                  of groups in {{ groupType }}
-                </h5>
-              </div>
-              <div>
+              <button
+                class="btn btn-default btn-xs outline"
+                ng-disabled="$ctrl.currentGroup[$ctrl.currentGroup.length-$index] == 0"
+                ng-click="$ctrl.navLeft($ctrl.currentGroup.length-$index)">
+                <i class="fa fa-backward"></i>
+              </button>
+              <span ng-if="groupType == 'PAIR'">
                 <button
                   class="btn btn-default btn-xs outline"
-                  ng-disabled="$ctrl.currentGroup[$ctrl.currentGroup.length-$index] == 0"
-                  ng-click="$ctrl.navLeft($ctrl.currentGroup.length-$index)">
-                  <i class="fa fa-backward"></i>
+                  ng-disabled="$ctrl.currentGroup[$ctrl.currentGroup.length-$index] == 1"
+                  ng-click="$ctrl.navRight($ctrl.currentGroup.length-$index)">
+                  <i class="fa fa-forward"></i>
                 </button>
-                <span ng-if="groupType == 'PAIR'">
-                  <button
-                    class="btn btn-default btn-xs outline"
-                    ng-disabled="$ctrl.currentGroup[$ctrl.currentGroup.length-$index] == 1"
-                    ng-click="$ctrl.navRight($ctrl.currentGroup.length-$index)">
-                    <i class="fa fa-forward"></i>
-                  </button>
-                </span>
-                <span ng-if="groupType == 'LIST'">
-                  <button
-                    class="btn btn-default btn-xs outline"
-                    ng-click="$ctrl.navRight($ctrl.currentGroup.length-$index)">
-                    <i class="fa fa-forward"></i>
-                  </button>
-                </span>
-              </div>
+              </span>
+              <span ng-if="groupType == 'LIST'">
+                <button
+                  class="btn btn-default btn-xs outline"
+                  ng-click="$ctrl.navRight($ctrl.currentGroup.length-$index)">
+                  <i class="fa fa-forward"></i>
+                </button>
+              </span>
             </div>
           </div>
          </div>
