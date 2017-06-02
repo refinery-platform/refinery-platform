@@ -585,11 +585,8 @@ def _generate_solr_params(params, assay_uuids=[]):
                   'facet.limit=-1'
                   ])
 
-    solr_params = 'fq=({})'.format(
-        ' OR '.join(map(
-            lambda id: 'assay_uuid:{}'.format(id),
-            assay_uuids
-        ))
+    solr_params = 'fq=assay_uuid:({})'.format(
+        ' OR '.join(assay_uuids)
     )
 
     if facet_field:
@@ -776,6 +773,8 @@ def format_solr_response(solr_response):
         solr_response_json = json.loads(solr_response)
     except TypeError:
         return "Error loading json."
+    assert solr_response_json['responseHeader']['status'] == 200,\
+        solr_response_json['error']['msg']
 
     # Reorganizes solr response into easier to digest objects.
     order_facet_fields = solr_response_json.get('responseHeader').get(
