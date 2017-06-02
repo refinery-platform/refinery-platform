@@ -1,6 +1,6 @@
 'use strict';
 
-function AppCtrl ($, $sce, $scope, $rootScope, $timeout, $window, _, pubSub, settings) {
+function AppCtrl ($, $scope, $rootScope, $timeout, $window, _, pubSub, settings) {
   this.$window = $window;
   this.jqWindow = $($window);
   this.$ = $;
@@ -79,11 +79,11 @@ function AppCtrl ($, $sce, $scope, $rootScope, $timeout, $window, _, pubSub, set
 
   $scope.refineryTutorialSteps = JSON.parse(settings.djangoApp.refineryTutorialSteps);
 
+  var tutorialPopoverUrl = $window.getStaticUrl('partials/tutorials/partials/tutorialPopover.html');
   $scope.dynamicPopover = {
     title: 'Refinery Tutorials',
     content: 'These are some helpful tutorials to guide you through Refinery!',
-    templateUrl: '/static/partials/tutorials/partials/tutorialPopover.html'
-
+    templateUrl: tutorialPopoverUrl
   };
 }
 
@@ -95,7 +95,6 @@ angular
   .module('refineryApp')
   .controller('AppCtrl', [
     '$',
-    '$sce',
     '$scope',
     '$rootScope',
     '$timeout',

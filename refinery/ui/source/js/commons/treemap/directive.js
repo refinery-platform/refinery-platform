@@ -1,6 +1,6 @@
 'use strict';
 
-function treemapDirective () {
+function treemapDirective ($window) {
   return {
     bindToController: {
       graph: '=',
@@ -14,12 +14,15 @@ function treemapDirective () {
       graph: '=',
       introJs: '='
     },
-    templateUrl: '/static/partials/commons/treemap/template.html'
+    templateUrl: function () {
+      return $window.getStaticUrl('partials/commons/treemap/template.html');
+    }
   };
 }
 
 angular
   .module('treemap')
   .directive('treemap', [
+    '$window',
     treemapDirective
   ]);

@@ -10,8 +10,8 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 
+from .tasks import get_workflows
 from core.models import Workflow, WorkflowEngine
-from workflow_manager.tasks import get_workflows
 
 
 logger = logging.getLogger(__name__)

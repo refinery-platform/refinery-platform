@@ -21,8 +21,10 @@ from django.core.mail import EmailMessage
 from django.template import loader, Context
 from django.core.cache import cache
 from django.core.signing import Signer
+from django.forms import ValidationError
 from guardian.shortcuts import get_objects_for_user, get_objects_for_group
 from guardian.models import GroupObjectPermission
+from guardian.utils import get_anonymous_user
 from tastypie import fields
 from tastypie.authentication import SessionAuthentication, Authentication
 from tastypie.authorization import Authorization
@@ -82,6 +84,12 @@ class SharableResourceAPIInterface(object):
         return perms
 
     def get_share_list(self, user, res):
+        # Handle anonymousUsers seperatly due to request.users
+        # SimpleLazyObjects loading Users vs AnonymousUsers. Can't compare
+        # SLO-AnonymousUsers directly with user models
+        if user.is_anonymous():
+            user = get_anonymous_user()
+
         groups_in = filter(
             lambda g:
             not self.is_manager_group(g) and user in g.user_set.all(),
@@ -133,7 +141,8 @@ class SharableResourceAPIInterface(object):
         try:
             user_uuid = user.profile.uuid
         except AttributeError:
-            logger.error('User\'s UUID not available.')
+            logger.error("User: %s's profile or UUID not available.",
+                         user.username)
             user_uuid = None
 
         # Try and retrieve a cached resource based on model name
@@ -307,18 +316,25 @@ class SharableResourceAPIInterface(object):
 
         if not res:
             return HttpBadRequest()
-
-        if user.is_authenticated and user != res.get_owner():
-            return HttpUnauthorized()
-
-        # User not authenticated, res is not public.
-        if not user.is_authenticated() and res and not res.is_public():
+        # if user is not logged in then data set must be public
+        if not user.is_authenticated() and not res.is_public():
             return HttpUnauthorized()
 
         if request.method == 'GET':
+            # user has read permissions
+            if not user.has_perm('core.read_dataset', res):
+                return HttpUnauthorized()
             kwargs['sharing'] = True
-            return self.process_get(request, res, **kwargs)
+            mod_res = self.transform_res_list(user, [res], request, **kwargs)
+            perm_obj = {
+                'owner': mod_res[0].owner,
+                'share_list': mod_res[0].share_list
+            }
+            return self.build_response(request, perm_obj, **kwargs)
         elif request.method == 'PUT':
+            # user must be admin or owner
+            if not user.is_superuser and user != res.get_owner():
+                return HttpUnauthorized()
             data = json.loads(request.body)
             new_share_list = data['share_list']
 
@@ -500,7 +516,10 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
 
         analyses = []
         for analysis in bundle.obj.get_analyses():
-            analysis_dict = analysis.__dict__
+            analysis_dict = {}
+            analysis_dict["uuid"] = analysis.uuid
+            analysis_dict["name"] = analysis.name
+            analysis_dict["status"] = analysis.status
             analysis_dict['is_owner'] = False
             owner = analysis.get_owner()
             if owner:
@@ -980,7 +999,10 @@ class AnalysisResource(ModelResource):
             allowed_datasets = get_objects_for_user(user, perm, DataSet)
         else:
             allowed_datasets = get_objects_for_group(
-                ExtendedGroup.objects.public_group(), perm, DataSet)
+                ExtendedGroup.objects.public_group(),
+                perm,
+                DataSet
+            )
 
         return Analysis.objects.filter(
             data_set__in=allowed_datasets.values_list("id", flat=True)
@@ -2018,6 +2040,14 @@ class ExtendedGroupResource(ModelResource):
         user = bundle.request.user
         data = json.loads(bundle.request.body)
         new_ext_group = ExtendedGroup(name=data['name'])
+
+        new_ext_group.name = new_ext_group.name.strip()
+        try:
+            new_ext_group.full_clean()
+        except ValidationError as e:
+            raise ImmediateHttpResponse(HttpBadRequest(
+                'Invalid group creation request: %s.' % e
+            ))
         new_ext_group.save()
         new_ext_group.user_set.add(user)
         new_ext_group.manager_group.user_set.add(user)

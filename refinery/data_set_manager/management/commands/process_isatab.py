@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 from collections import OrderedDict
 import logging
 from optparse import make_option
@@ -9,7 +10,8 @@ from django.core.management.base import BaseCommand, CommandError
 
 from celery.task.sets import TaskSet
 
-from data_set_manager.tasks import parse_isatab
+from ...tasks import parse_isatab
+
 
 logger = logging.getLogger(__name__)
 

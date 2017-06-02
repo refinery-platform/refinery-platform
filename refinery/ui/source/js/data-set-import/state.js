@@ -9,7 +9,10 @@ function DataSetImportStates (
       'import', {
         url: '/',
         reloadOnSearch: false,
-        templateUrl: '/static/partials/data-set-import/views/import.html',
+        templateUrl: function () {
+          // unit tests redefine $window and thus make it unusable here
+          return window.getStaticUrl('partials/data-set-import/views/import.html');
+        }
       },
       '/data_set_manager/import/'
     )
@@ -17,7 +20,10 @@ function DataSetImportStates (
       'isaTabImport', {
         url: '/isa-tab-import',
         reloadOnSearch: false,
-        templateUrl: '/static/partials/data-set-import/views/isa-tab-import.html',
+        templateUrl: function () {
+          // unit tests redefine $window and thus make it unusable here
+          return window.getStaticUrl('partials/data-set-import/views/isa-tab-import.html');
+        }
       },
       '/data_set_manager/import/'
     );

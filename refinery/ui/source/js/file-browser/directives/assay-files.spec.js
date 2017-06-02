@@ -9,21 +9,26 @@ describe('rpAssayFiles directive unit test', function () {
   var scope;
   var settings;
   var $httpBackend;
-  var fakeUuid = 'x508x83x-x9xx-4740-x9x7-x7x0x631280x';
+  var mocker;
+  var fakeUuid;
 
   beforeEach(inject(function (
     _$compile_,
     _$rootScope_,
     _$httpBackend_,
+    $templateCache,
+    $window,
     _settings_,
-    $templateCache
+    _mockParamsFactory_
   ) {
     $templateCache.put(
-      '/static/partials/file-browser/partials/assay-files.html',
+      $window.getStaticUrl('partials/file-browser/partials/assay-files.html'),
       '<div id="grid1"></div>'
     );
     compile = _$compile_;
     settings = _settings_;
+    mocker = _mockParamsFactory_;
+    fakeUuid = mocker.generateUuid();
     rootScope = _$rootScope_;
     $httpBackend = _$httpBackend_;
     scope = rootScope.$new();

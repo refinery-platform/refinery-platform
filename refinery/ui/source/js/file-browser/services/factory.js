@@ -7,7 +7,6 @@ function fileBrowserFactory (
   assayAttributeService,
   assayFileService,
   fileBrowserSettings,
-  nodeGroupService,
   nodeService,
   selectedFilterService
   ) {
@@ -20,11 +19,6 @@ function fileBrowserFactory (
   var assayFilesTotalItems = {};
   var customColumnNames = [];
   var nodeUrl = {};
-  var nodeGroupList = [];
-  // params for the assays api
-  var filesParam = {
-    uuid: $window.externalAssayUuid
-  };
   var csrfToken = $window.csrf_token;
   var maxFileRequest = fileBrowserSettings.maxFileRequest;
 
@@ -85,23 +79,6 @@ function fileBrowserFactory (
     return nodeFile.$promise;
   };
 
-  var getNodeGroupList = function (assayUuid) {
-    var params = {
-      assay: assayUuid
-    };
-
-    var nodeGroups = nodeGroupService.query(params);
-    nodeGroups.$promise.then(function (response) {
-      angular.copy(response, nodeGroupList);
-    });
-    return nodeGroups.$promise;
-  };
-
-  var createNodeGroup = function (params) {
-    var nodeGroup = nodeGroupService.save(params);
-    return nodeGroup.$promise;
-  };
-
   // Adds the file_url to the assay files array
   var addNodeDetailtoAssayFiles = function () {
     angular.forEach(assayFiles, function (facetObj) {
@@ -140,7 +117,7 @@ function fileBrowserFactory (
     assayFiles = [];
   };
 
-  var getAssayFiles = function (unencodeParams) {
+  var getAssayFiles = function (unencodeParams, scrollDirection) {
     var params = {};
     var additionalAssayFiles = [];
     angular.copy(unencodeParams, params);
@@ -160,6 +137,9 @@ function fileBrowserFactory (
       angular.copy(culledAttributes, assayAttributes);
       // Add file_download column first
       assayAttributes.unshift({ display_name: 'Url', internal_name: 'Url' });
+      assayAttributes.unshift({ display_name: 'Input Groups', internal_name: 'InputGroups' });
+      assayAttributes.unshift({ display_name: 'Selection', internal_name: 'Selection' });
+
       // some attributes will be duplicate in different fields, duplicate
       // column names will throw an error. This prevents duplicates
       for (var ind = 0; ind < assayAttributes.length; ind++) {
@@ -171,6 +151,8 @@ function fileBrowserFactory (
       // Not concat data when under minimun file order, replace assay files
       if (assayFilesTotalItems.count < maxFileRequest && params.offset === 0) {
         angular.copy(additionalAssayFiles, assayFiles);
+      } else if (scrollDirection === 'up') {
+        angular.copy(additionalAssayFiles.concat(assayFiles), assayFiles);
       } else {
         angular.copy(assayFiles.concat(additionalAssayFiles), assayFiles);
       }
@@ -241,13 +223,77 @@ function fileBrowserFactory (
     return internalName;
   };
 
+  /**
+   * Helper method for input groups column, requires unique template & fields.
+   * @param {string} _columnName - column name
+   */
+  var setCustomInputGroupsColumn = function (_columnName) {
+    var _cellTemplate = '<div class="ngCellText grid-input-groups">' +
+      '<div ng-if="grid.appScope.nodeSelectCollection[row.entity.uuid].groupList.length > 0" ' +
+      'class="selected-node" ' +
+      'title="{{grid.appScope.nodeSelectCollection[row.entity.uuid].groupList}}">' +
+      '<div class="paragraph ui-grid-cell-contents" ' +
+      'ng-if="grid.appScope.nodeSelectCollection[row.entity.uuid].groupList[0].length > 0"> ' +
+      '<span ng-repeat="group in grid.appScope.nodeSelectCollection[row.entity.uuid].groupList ' +
+      'track by $index">' +
+      '<span ng-style="{\'color\':grid.appScope.inputFileTypeColor[' +
+      'grid.appScope.nodeSelectCollection[row.entity.uuid].inputTypeList[$index]]}">' +
+      '{{group[group.length - 1]}}</span>' +
+      '<span ng-if="$index < grid.appScope.nodeSelectCollection[row.entity.uuid]' +
+      '.groupList.length - 1">, &nbsp</span> </span></div></div></div>';
+
+    return {
+      name: _columnName,
+      field: _columnName,
+      cellTooltip: true,
+      width: 11 + '%',
+      displayName: 'Input Groups',
+      enableFiltering: false,
+      enableSorting: false,
+      enableColumnMenu: false,
+      enableColumnResizing: true,
+      cellTemplate: _cellTemplate,
+      visible: false
+    };
+  };
+
+   /**
+   * Helper method for select column, requires unique template & fields.
+   * @param {string} _columnName - column name
+   */
+  var setCustomSelectColumn = function (columnName) {
+    var cellTemplate = '<div class="ngCellText text-align-center ui-grid-cell-contents">' +
+        '<a rp-node-selection-popover title="Select Tool Input"' +
+        'class="ui-grid-selection-row-header-buttons" ' +
+        'ng-class="{\'solidText\': grid.appScope.nodeSelectCollection[' +
+        'row.entity.uuid].groupList.length > 0 || row.entity.uuid ==' +
+        ' grid.appScope.activeNodeRow.uuid}" ' +
+        'ng-click="grid.appScope.openSelectionPopover(row.entity)"' +
+        'id="{{row.entity.uuid}}">' +
+        '<i class="fa fa-arrow-right" aria-hidden="true"></i></a></div>';
+
+    return {
+      name: columnName,
+      field: columnName,
+      cellTooltip: false,
+      width: 4 + '%',
+      displayName: '',
+      enableFiltering: false,
+      enableSorting: false,
+      enableColumnMenu: false,
+      enableColumnResizing: true,
+      cellTemplate: cellTemplate,
+      visible: false
+    };
+  };
+
    /**
    * Helper method for file download column, requires unique template & fields.
    * @param {string} _columnName - column name
    */
-  var setCustomUrlColumnDef = function (_columnName) {
+  var setCustomUrlColumn = function (_columnName) {
     var internalName = grabAnalysisInternalName(assayAttributes);
-    var _cellTemplate = '<div class="ngCellText text-align-center"' +
+    var _cellTemplate = '<div class="ngCellText text-align-center ui-grid-cell-contents"' +
           'ng-class="col.colIndex()">' +
           '<div ng-if="COL_FIELD" title="Download File \{{COL_FIELD}}\">' +
           '<a href="{{COL_FIELD}}" target="_blank">' +
@@ -301,7 +347,13 @@ function fileBrowserFactory (
       };
       if (columnName === 'Url') {
         // Url requires a custom template for downloading links
-        tempCustomColumnNames.push(setCustomUrlColumnDef(columnName));
+        tempCustomColumnNames.push(setCustomUrlColumn(columnName));
+      } else if (columnName === 'Input Groups') {
+        // Input Groups requires a custom template for downloading links
+        tempCustomColumnNames.push(setCustomInputGroupsColumn(columnName));
+      } else if (columnName === 'Selection') {
+        // Selection requires a custom template for downloading links
+        tempCustomColumnNames.push(setCustomSelectColumn(columnName));
       } else if (columnName === 'Analysis Group') {
         // Analysis requires a custom template for filtering -1 entries
         var _cellTemplate = '<div class="ngCellText text-align-center"' +
@@ -334,13 +386,9 @@ function fileBrowserFactory (
     assayFilesTotalItems: assayFilesTotalItems,
     attributeFilter: attributeFilter,
     customColumnNames: customColumnNames,
-    filesParam: filesParam,
-    nodeGroupList: nodeGroupList,
     createColumnDefs: createColumnDefs,
-    createNodeGroup: createNodeGroup,
     getAssayFiles: getAssayFiles,
     getAssayAttributeOrder: getAssayAttributeOrder,
-    getNodeGroupList: getNodeGroupList,
     postAssayAttributeOrder: postAssayAttributeOrder,
     resetAssayFiles: resetAssayFiles,
     trimAssayFiles: trimAssayFiles
@@ -356,7 +404,6 @@ angular
     'assayAttributeService',
     'assayFileService',
     'fileBrowserSettings',
-    'nodeGroupService',
     'nodeService',
     'selectedFilterService',
     fileBrowserFactory

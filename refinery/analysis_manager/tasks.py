@@ -3,7 +3,6 @@ Created on Apr 5, 2012
 
 @author: nils
 '''
-
 import logging
 import urlparse
 
@@ -14,12 +13,12 @@ from celery.task import task, Task
 from celery.task.sets import TaskSet
 import requests
 
-from analysis_manager.models import AnalysisStatus
+from .models import AnalysisStatus
 from core.models import Analysis, AnalysisResult, Workflow
 from core.utils import get_full_url
 from data_set_manager.models import Node
 from file_store.models import FileStoreItem
-from file_store.tasks import import_file, create
+from file_store.tasks import create, import_file
 
 
 logger = logging.getLogger(__name__)

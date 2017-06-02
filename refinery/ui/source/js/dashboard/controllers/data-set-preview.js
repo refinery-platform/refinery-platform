@@ -3,6 +3,7 @@
 function DataSetPreviewCtrl (
   $log,
   $q,
+  $window,
   _,
   $uibModal,
   pubSub,
@@ -25,6 +26,7 @@ function DataSetPreviewCtrl (
 ) {
   this.$log = $log;
   this.$q = $q;
+  this.$window = $window;
   this._ = _;
   this.$uibModal = $uibModal;
   this.pubSub = pubSub;
@@ -205,6 +207,14 @@ DataSetPreviewCtrl.prototype.getStudies = function (uuid) {
       } else {
         this.studies = data.objects;
       }
+      // remove unnamed protocols
+      var filteredProtocols = [];
+      for (var i = 0; i < this.studies.protocols.length; i++) {
+        if (this.studies.protocols[i].name) {
+          filteredProtocols.push(this.studies.protocols[i]);
+        }
+      }
+      angular.copy(filteredProtocols, this.studies.protocols);
     }.bind(this));
 };
 
@@ -346,7 +356,9 @@ DataSetPreviewCtrl.prototype.loadData = function (dataSetUuid) {
 DataSetPreviewCtrl.prototype.openPermissionEditor = function () {
   var that = this;
   this.$uibModal.open({
-    templateUrl: '/static/partials/dashboard/partials/permission-dialog.html',
+    templateUrl: function () {
+      return that.$window.getStaticUrl('partials/dashboard/partials/permission-dialog.html');
+    },
     controller: 'PermissionEditorCtrl as modal',
     resolve: {
       config: function () {
@@ -414,6 +426,7 @@ angular
   .controller('DataSetPreviewCtrl', [
     '$log',
     '$q',
+    '$window',
     '_',
     '$uibModal',
     'pubSub',

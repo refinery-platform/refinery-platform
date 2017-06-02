@@ -18,6 +18,7 @@ function MetadataTableImportCtrl (
   this.d3 = d3;
   this.$uibModal = $uibModal;
   this.fileSources = fileSources;
+  this.showFileUpload = false;
   this.tabularFileImportApi = tabularFileImportApi;
   this.metadataStatusService = metadataStatusService;
   this.whiteSpaceStripFlag = false;
@@ -235,8 +236,11 @@ MetadataTableImportCtrl.prototype.checkFiles = function () {
       }
 
       self.$uibModal.open({
-        templateUrl:
-          '/static/partials/data-set-import/partials/dialog-list-confirmation.html',
+        templateUrl: function () {
+          return self.$window.getStaticUrl(
+            'partials/data-set-import/partials/dialog-list-confirmation.html'
+          );
+        },
         controller: 'ConfirmationDialogInstanceCtrl as modal',
         size: 'lg',
         resolve: {
@@ -295,9 +299,6 @@ MetadataTableImportCtrl.prototype.startImport = function () {
   if (self.speciesColumn) {
     formData.append('species_column', self.speciesColumn);
   }
-  if (self.basePath) {
-    formData.append('base_path', self.basePath);
-  }
   if (self.annotationColumn) {
     formData.append('annotation_column', self.annotationColumn);
   }
@@ -309,9 +310,6 @@ MetadataTableImportCtrl.prototype.startImport = function () {
   }
   if (self.dataFilePermanent) {
     formData.append('data_file_permanent', self.dataFilePermanent);
-  }
-  if (self.makePublic) {
-    formData.append('is_public', self.makePublic);
   }
 
   return this.tabularFileImportApi

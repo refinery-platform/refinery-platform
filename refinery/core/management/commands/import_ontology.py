@@ -1,13 +1,18 @@
-import logging
-import sys
-import subprocess
-import py2neo
-import urlparse
+from __future__ import absolute_import
 import json
+import logging
 from optparse import make_option
+import subprocess
+import sys
+import urlparse
+
 from django.conf import settings
 from django.core.management.base import BaseCommand
-from core.utils import create_update_ontology
+
+import py2neo
+
+from ...utils import create_update_ontology
+
 
 logger = logging.getLogger(__name__)
 root_logger = logging.getLogger()

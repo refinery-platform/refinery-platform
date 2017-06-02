@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import AttributeOrder, Assay
+from .models import Assay, AttributeOrder
 
 
 class AssaySerializer(serializers.ModelSerializer):

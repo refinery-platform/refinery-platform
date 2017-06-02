@@ -21,7 +21,7 @@
     "angular-mocks": "1.5.9",
     "angular-resource": "1.5.9",
     "angular-sanitize": "1.5.9",
-    "angular-ui-grid": "3.2.1",
+    "angular-ui-grid": "4.0.3",
     "angular-ui-router": "0.2.18",
     "angular-ui-scroll": "flekschas/ui-scroll#visible-items",
     "bootstrap": "3.3.6",
@@ -51,7 +51,9 @@
     "ui-select": "angular-ui-select#0.18.0",
     "select2": "3.4.5",
     "filesize": "3.3.0",
-    "angular-local-storage": "0.5.2"
+    "angular-local-storage": "0.5.2",
+    "intro.js": "2.4.0",
+    "angular-intro.js": "2.1.2"
   },
   "resolutions": {
     "d3": "3.5.16",

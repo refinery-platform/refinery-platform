@@ -2,7 +2,7 @@
 
 {% load humanize %}
 {% load markup %}
-{% load static %}
+{% load static from staticfiles %}
 
 
 {% block head_html %}
@@ -15,11 +15,17 @@
   <link rel="stylesheet" href="{% static "vendor/ui-select/dist/select.min.css" %}" />
 {% endblock head_html %}
 
-{% block title %} - Data Set {{ data_set.name }}{% endblock %}
+{% block title %} - Data Set
+  {{ data_set.accession }}:
+  {{ data_set.title }} {% endblock %}
 
 {% block subheader %}
   <div class="page-header">
-    <h1>Data Set <small>{{ data_set.name }}</small></h1>
+    <h1>Data Set
+      <small>
+        {{ data_set.accession }}: {{ data_set.title }}
+      </small>
+    </h1>
   </div>
 
 {% endblock %}
@@ -138,6 +144,12 @@
     {% endif %}
 
     var csrf_token = "{{ csrf_token }}";
+  </script>
+
+  <!-- Script for popup content in the tool status and analyses icon-->
+  <script type="text/ng-template" id="nodeselectionpopover.html">
+    <rp-node-selection-popover-detail>
+    </rp-node-selection-popover-detail>
   </script>
 
   <script type="text/javascript" src="{% static "js/refinery/solr/solr_utilities.js" %}"></script>

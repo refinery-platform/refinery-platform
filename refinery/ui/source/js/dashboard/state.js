@@ -11,7 +11,11 @@ angular
           'launchPad', {
             url: '/?q',
             reloadOnSearch: false,
-            templateUrl: '/static/partials/dashboard/views/launch-pad.html'
+            templateUrl: function () {
+              // unit tests redefine $window and thus make it unusable here
+              return window.getStaticUrl('partials/dashboard/views/launch-pad.html');
+            },
+            controller: 'LaunchPadCtrl as launchPad'
           },
           '/'
         )

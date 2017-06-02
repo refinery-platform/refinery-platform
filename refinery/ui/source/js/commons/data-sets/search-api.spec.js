@@ -69,7 +69,7 @@ describe('DataSet.search-api: unit tests', function () {
       'hl.simple.post': '%3C%2Fem%3E',
       'hl.simple.pre': '%3Cem%3E',
       q: _query,
-      qf: 'title%5E0.5+accession+submitter+text',
+      qf: 'title%5E0.5+accession+submitter+text+description',
       rows: _limit,
       start: _offset,
       synonyms: '' + !!_synonyms + '',

@@ -2,8 +2,6 @@ import json
 import logging
 import os
 import re
-import requests
-from requests.exceptions import HTTPError
 import urllib
 from urlparse import urljoin
 import xmltodict
@@ -11,39 +9,39 @@ import xmltodict
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from django.contrib.sites.models import get_current_site, Site
-from django.contrib.sites.models import RequestSite
+from django.contrib.sites.models import get_current_site, RequestSite, Site
 from django.core.exceptions import ImproperlyConfigured
 from django.core.urlresolvers import reverse
-from django.http import (Http404, HttpResponse, HttpResponseForbidden,
-                         HttpResponseRedirect, HttpResponseBadRequest,
-                         HttpResponseNotFound, HttpResponseServerError)
+from django.http import (HttpResponse, HttpResponseBadRequest,
+                         HttpResponseForbidden, HttpResponseNotFound,
+                         HttpResponseRedirect, HttpResponseServerError)
 
-from django.shortcuts import render_to_response, get_object_or_404, redirect
-from django.template import RequestContext, loader
+
+from django.shortcuts import get_object_or_404, render_to_response, redirect
+from django.template import loader, RequestContext
 from django.views.decorators.gzip import gzip_page
 
-from guardian.utils import get_anonymous_user
 from guardian.shortcuts import get_perms
-from registration.views import RegistrationView
+from guardian.utils import get_anonymous_user
 from registration import signals
-from rest_framework import viewsets
-from rest_framework.views import APIView
+from registration.views import RegistrationView
+import requests
+from requests.exceptions import HTTPError
+from rest_framework import status, viewsets
 from rest_framework.response import Response
-from rest_framework import status
+from rest_framework.views import APIView
 from xml.parsers.expat import ExpatError
 
-from core.forms import (ProjectForm, UserForm, UserProfileForm,
-                        WorkflowForm, DataSetForm)
+
+from .forms import (DataSetForm, ProjectForm, UserForm, UserProfileForm,
+                    WorkflowForm)
+from .models import (Analysis, CustomRegistrationProfile, DataSet,
+                     ExtendedGroup, Invitation, Ontology, Project,
+                     UserProfile, Workflow, WorkflowEngine)
+from .serializers import (DataSetSerializer, NodeSerializer,
+                          WorkflowSerializer)
+from .utils import get_data_sets_annotations
 from annotation_server.models import GenomeBuild
-from core.models import (ExtendedGroup, Project, DataSet, Workflow,
-                         UserProfile, WorkflowEngine, Analysis, Invitation,
-                         Ontology, NodeGroup, CustomRegistrationProfile)
-from core.serializers import (WorkflowSerializer, NodeGroupSerializer,
-                              NodeSerializer)
-from core.utils import (get_data_sets_annotations,
-                        create_current_selection_node_group,
-                        filter_nodes_uuids_in_solr, move_obj_to_front)
 from data_set_manager.models import Node
 from data_set_manager.utils import generate_solr_params
 from file_store.models import FileStoreItem
@@ -344,13 +342,13 @@ def data_set(request, data_set_uuid, analysis_uuid=None):
         if investigation.isarchive_file is not None:
             isatab_archive = FileStoreItem.objects.get(
                 uuid=investigation.isarchive_file)
-    except:
+    except FileStoreItem.DoesNotExist:
         pass
     try:
         if investigation.pre_isarchive_file is not None:
             pre_isatab_archive = FileStoreItem.objects.get(
                 uuid=investigation.pre_isarchive_file)
-    except:
+    except FileStoreItem.DoesNotExist:
         pass
     return render_to_response(
         'core/data_set.html',
@@ -409,13 +407,13 @@ def data_set2(request, data_set_uuid, analysis_uuid=None):
         if investigation.isarchive_file is not None:
             isatab_archive = FileStoreItem.objects.get(
                 uuid=investigation.isarchive_file)
-    except:
+    except FileStoreItem.DoesNotExist:
         pass
     try:
         if investigation.pre_isarchive_file is not None:
             pre_isatab_archive = FileStoreItem.objects.get(
                 uuid=investigation.pre_isarchive_file)
-    except:
+    except FileStoreItem.DoesNotExist:
         pass
     return render_to_response(
         'core/data_set2.html',
@@ -466,13 +464,13 @@ def data_set_edit(request, uuid):
             isatab_archive = FileStoreItem.objects.get(
                 uuid=investigation.isarchive_file
             )
-    except:
+    except FileStoreItem.DoesNotExist:
         pass
     try:
         if investigation.pre_isarchive_file is not None:
             pre_isatab_archive = FileStoreItem.objects.get(
                 uuid=investigation.pre_isarchive_file)
-    except:
+    except FileStoreItem.DoesNotExist:
         pass
 
     if request.method == "POST":  # If the form has been submitted
@@ -644,16 +642,16 @@ def visualize_genome(request):
     node_ids_json = json.dumps(node_ids)
 
     return render_to_response(
-          'core/visualize/genome.html',
-          {
-              "fasta_url": url_base + genome + ".fa",
-              "index_url": url_base + genome + ".fa.fai",
-              "cytoband_url": url_base + "cytoBand.txt",
-              "bed_url": url_base + "refGene.bed",
-              "tbi_url": url_base + "refGene.bed.tbi",
-              "node_ids_json": node_ids_json
-          },
-          context_instance=RequestContext(request))
+        'core/visualize/genome.html',
+        {
+            "fasta_url": url_base + genome + ".fa",
+            "index_url": url_base + genome + ".fa.fai",
+            "cytoband_url": url_base + "cytoBand.txt",
+            "bed_url": url_base + "refGene.bed",
+            "tbi_url": url_base + "refGene.bed.tbi",
+            "node_ids_json": node_ids_json
+        },
+        context_instance=RequestContext(request))
 
 
 def solr_core_search(request):
@@ -1103,7 +1101,26 @@ class NodeViewSet(viewsets.ModelViewSet):
 
 class DataSetsViewSet(APIView):
     """API endpoint that allows for DataSets to be deleted"""
-    http_method_names = ['delete']
+    http_method_names = ['delete', 'patch']
+
+    def get_object(self, uuid):
+        try:
+            return DataSet.objects.get(uuid=uuid)
+        except DataSet.DoesNotExist as e:
+            logger.error(e)
+            return Response(uuid, status=status.HTTP_404_NOT_FOUND)
+        except DataSet.MultipleObjectsReturned as e:
+            logger.error(e)
+            return Response(
+                uuid, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    def is_user_authorized(self, user, data_set):
+        if (not user.is_authenticated() or
+                not user.has_perm('core.change_dataset', data_set)):
+            return False
+        else:
+            return True
 
     def delete(self, request, uuid):
         if not request.user.is_authenticated():
@@ -1128,6 +1145,27 @@ class DataSetsViewSet(APIView):
                     return Response({"data": dataset_deleted[1]})
                 else:
                     return HttpResponseBadRequest(content=dataset_deleted[1])
+
+    def patch(self, request, uuid, format=None):
+        data_set = self.get_object(uuid)
+
+        # check edit permission for user
+        if self.is_user_authorized(request.user, data_set):
+            serializer = DataSetSerializer(
+                data_set, data=request.data, partial=True
+            )
+            if serializer.is_valid():
+                serializer.save()
+                return Response(
+                    serializer.data, status=status.HTTP_202_ACCEPTED
+                )
+            return Response(
+                serializer.errors, status=status.HTTP_400_BAD_REQUEST
+            )
+        else:
+            return Response(
+                data_set, status=status.HTTP_401_UNAUTHORIZED
+            )
 
 
 class AnalysesViewSet(APIView):
@@ -1216,217 +1254,3 @@ class CustomRegistrationView(RegistrationView):
 
         """
         return ('registration_complete', (), {})
-
-
-class NodeGroups(APIView):
-    """
-    Return NodeGroups object
-
-    ---
-    #YAML
-
-    GET:
-        serializer: NodeGroupSerializer
-        omit_serializer: false
-
-        parameters:
-            - name: uuid
-              description: NodeGroup uuid
-              paramType: query
-              type: string
-              required: false
-
-            - name: assay
-              description: Assay uuid or ids
-              paramType: query
-              type: string
-
-    POST:
-        consumes:
-            - application/json
-        produces:
-            - application/json
-        parameters:
-            - name: name
-              description: Name of node group
-              paramType: form
-              type: string
-              required: true
-
-            - name: study
-              description: Study uuid or ids
-              paramType: form
-              type: string
-              required: true
-
-            - name: assay
-              description: Assay uuid or ids
-              paramType: form
-              type: string
-              required: true
-
-            - name: is_current
-              description: The "current selection" node set for the study/assay
-              paramType: form
-              type: boolean
-              required: false
-
-            - name: nodes
-              description: uuids of nodes in group expect format uuid,uuid,uuid
-              paramType: form
-              type: array
-              required: false
-
-            - name: use_complement_nodes
-              description: True will subtract nodes from all assay file nodes
-              paramType: form
-              type: boolean
-              require: false
-
-            - name: filter_attribute
-              description: Filters for attributes fields {solr_name:[field]}
-              paramType: form
-              type: string
-              required: false
-
-
-    PUT:
-        parameters_strategy:
-        form: replace
-        query: merge
-
-        parameters:
-            - name: uuid
-              description: Node Group Uuid
-              paramType: form
-              type: string
-              required: true
-
-            - name: is_current
-              description: The "current selection" node set for the study/assay
-              paramType: form
-              type: boolean
-              required: false
-
-            - name: nodes
-              description: Uuids of nodes in group expect format uuid,uuid,uuid
-              paramType: form
-              type: array
-              required: false
-
-            - name: use_complement_nodes
-              description: True will subtract nodes from all assay file nodes
-              paramType: form
-              type: boolean
-              require: false
-
-            - name: filter_attribute
-              description: Filters for attributes fields {solr_name:[field]}
-              paramType: form
-              type: string
-              required: false
-    ...
-    """
-
-    def get_object(self, uuid):
-        try:
-            return NodeGroup.objects.get(uuid=uuid)
-        except (NodeGroup.DoesNotExist,
-                NodeGroup.MultipleObjectsReturned) as e:
-            raise Http404(e)
-
-    def get(self, request, format=None):
-        # Expects a uuid or assay uuid.
-        if request.query_params.get('uuid'):
-            node_group = self.get_object(request.query_params.get('uuid'))
-            serializer = NodeGroupSerializer(node_group)
-        elif request.query_params.get('assay'):
-            assay_uuid = request.query_params.get('assay')
-            node_groups = NodeGroup.objects.filter(assay__uuid=assay_uuid)
-            # If filter returns empty response
-            if not node_groups:
-                # Returns Response: created current_selection group or errors
-                return create_current_selection_node_group(assay_uuid)
-            # Serialize list of node_groups
-            serializer = NodeGroupSerializer(node_groups, many=True)
-            # Move current_selection to front of the list, if not already
-            if serializer.data[0].get('name') != 'Current Selection':
-                # Helper method returns array with current selection node first
-                return Response(move_obj_to_front(serializer.data, 'name',
-                                                  'Current Selection'))
-        else:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-
-        # Return node_group or list of assay's node_groups
-        return Response(serializer.data)
-
-    def post(self, request, format=None):
-        # Swagger issue: put/post queryDict, make data mutable to update nodes
-        # Convert to dict for ease
-        if 'form-urlencoded' in request.content_type:
-            param_dict = {}
-            for key in request.data:
-                if key == 'nodes':
-                    param_dict[key] = request.data.get(
-                        key).replace(' ', '').split(',')
-                elif key == 'use_complement_nodes':
-                    # correct type to boolean, used in conditional below
-                    param_dict[key] = json.loads(request.data.get(key))
-                else:
-                    param_dict[key] = request.data.get(key)
-        else:
-            param_dict = request.data
-
-        # Nodes list updated with remaining nodes after subtraction
-        if param_dict.get('use_complement_nodes'):
-            filtered_uuid_list = filter_nodes_uuids_in_solr(
-                param_dict.get('assay'),
-                param_dict.get('nodes'),
-                param_dict.get('filter_attribute')
-            )
-            param_dict['nodes'] = filtered_uuid_list
-
-        serializer = NodeGroupSerializer(data=param_dict)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def put(self, request, format=None):
-        try:
-            uuid = request.data.get('uuid')
-        except:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-
-        # Swagger issue: put/post queryDict, make data mutable to update nodes
-        # Convert to dict for ease
-        if 'form-urlencoded' in request.content_type:
-            param_dict = {}
-            for key in request.data:
-
-                if key == 'nodes':
-                    param_dict[key] = request.data.get(
-                        key).replace(' ', '').split(',')
-                elif key == 'use_complement_nodes':
-                    # correct type to boolean, used in conditional below
-                    param_dict[key] = json.loads(request.data.get(key))
-                else:
-                    param_dict[key] = request.data.get(key)
-        else:
-            param_dict = request.data
-
-        # Nodes list updated with remaining nodes after subtraction
-        if param_dict.get('use_complement_nodes'):
-            filtered_uuid_list = filter_nodes_uuids_in_solr(
-                param_dict.get('assay'),
-                param_dict.get('nodes'),
-                param_dict.get('filter_attribute')
-            )
-            param_dict['nodes'] = filtered_uuid_list
-        node_group = self.get_object(uuid)
-        serializer = NodeGroupSerializer(node_group, data=param_dict,
-                                         partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

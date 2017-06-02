@@ -6,7 +6,6 @@ function WorkflowListApiCtrl (
   workflowService,
   workflow,
   $location,
-  selectedNodesService,
   selectedWorkflowService
 ) {
   var vm = this;
@@ -30,20 +29,6 @@ function WorkflowListApiCtrl (
     }
   };
 
-  // Temp method for setting which file browser is being uses
-  $scope.whichFileBrowserBrowser = function () {
-    $scope.dataSet2Flag = false;
-    if ($location.absUrl().indexOf('data_sets2') > -1) {
-      $scope.dataSet2Flag = true;
-    }
-  };
-
-  $scope.isLaunchNodesSelectionEmpty = function () {
-    return selectedNodesService.isNodeSelectionEmpty();
-  };
-
-  $scope.whichFileBrowserBrowser();
-
   // Watches for a new workflow selection and updates service
   $scope.$watch(
     function () {
@@ -63,7 +48,6 @@ angular
     'workflowService',
     'workflow',
     '$location',
-    'selectedNodesService',
     'selectedWorkflowService',
     WorkflowListApiCtrl
   ]);

@@ -1,9 +1,10 @@
 'use strict';
 
-function rpAnalysisMonitorGlobalListStatus () {
+function rpAnalysisMonitorGlobalListStatus ($window) {
   return {
-    templateUrl:
-      '/static/partials/analysis-monitor/partials/global-list-status.html',
+    templateUrl: function () {
+      return $window.getStaticUrl('partials/analysis-monitor/partials/global-list-status.html');
+    },
     restrict: 'AE',
     controller: 'AnalysisMonitorCtrl',
     controllerAs: 'AMCtrl',
@@ -34,5 +35,6 @@ function rpAnalysisMonitorGlobalListStatus () {
 angular
   .module('refineryAnalysisMonitor')
   .directive('rpAnalysisMonitorGlobalListStatus', [
+    '$window',
     rpAnalysisMonitorGlobalListStatus
   ]);

@@ -2,8 +2,8 @@ from __future__ import absolute_import
 import logging
 
 import ast
-import os
 import py2neo
+import sys
 
 import requests
 from django.conf import settings
@@ -14,39 +14,40 @@ from django.core.mail import send_mail
 from django.core.cache import cache
 from django.db import connection
 from django.utils import timezone
-from rest_framework.response import Response
-from rest_framework import status
 from urlparse import urlparse, urljoin
 
 import core
 import data_set_manager
 
+# These imports go against our coding style guide, but are necessary for the
+#  time being due to mutual import issues
+from core.search_indexes import DataSetIndex
+from data_set_manager.search_indexes import NodeIndex
+
 logger = logging.getLogger(__name__)
 
 
-def skip(func):
-    """Decorator to be used on function calls that don't necessarily need to
-    be run on CI i.e. Neo4J and Solr stuff tend to pollute log output
+def skip_if_test_run(func):
+    """Decorator to be used on functions that don't necessarily need to
+    be run during tests or CI i.e. Neo4J and Solr stuff tend to pollute
+    log output
     """
     def func_wrapper(*args, **kwargs):
-        try:
-            if os.environ['REDUCE_TEST_OUTPUT'] == "true":
+        if "test" in sys.argv:
                 return
-        except KeyError:
-            logger.error('REDUCE_TEST_OUTPUT .env var not set.')
-        return func(*args, **kwargs)
+        else:
+            return func(*args, **kwargs)
     return func_wrapper
 
 
-@skip
+@skip_if_test_run
 def update_data_set_index(data_set):
     """Update a dataset's corresponding document in Solr.
     """
 
     logger.info('Updated data set (uuid: %s) index', data_set.uuid)
     try:
-        core.search_indexes.DataSetIndex().update_object(data_set,
-                                                         using='core')
+        DataSetIndex().update_object(data_set, using='core')
     except Exception as e:
         """ Solr is expected to fail and raise an exception when
         it is not running.
@@ -55,21 +56,21 @@ def update_data_set_index(data_set):
         logger.error("Could not update DataSetIndex: %s", e)
 
 
-@skip
-def add_data_set_to_neo4j(dataset_uuid, user_id):
+@skip_if_test_run
+def add_data_set_to_neo4j(dataset, user_id):
     """Add a node in Neo4J for a dataset and give the owner read access.
     Note: Neo4J manages read access only.
     """
 
     logger.info(
         'Add dataset (uuid: %s) to Neo4J and give read access to user ' +
-        '(id: %s)', dataset_uuid, user_id
+        '(id: %s)', dataset.uuid, user_id
     )
 
     graph = py2neo.Graph(urljoin(settings.NEO4J_BASE_URL, 'db/data'))
 
     # Get annotations of the data_set
-    annotations = get_data_set_annotations(dataset_uuid)
+    annotations = get_data_set_annotations(dataset.uuid)
     annotations = normalize_annotation_ont_ids(annotations)
 
     try:
@@ -80,13 +81,13 @@ def add_data_set_to_neo4j(dataset_uuid, user_id):
 
         statement_name = (
             "MATCH (term:Class {name:{ont_id}}) "
-            "MERGE (ds:DataSet {uuid:{ds_uuid}}) "
+            "MERGE (ds:DataSet {id:{ds_id},uuid:{ds_uuid}}) "
             "MERGE ds-[:`annotated_with`]->term"
         )
 
         statement_uri = (
             "MATCH (term:Class {uri:{uri}}) "
-            "MERGE (ds:DataSet {uuid:{ds_uuid}}) "
+            "MERGE (ds:DataSet {id:{ds_id},uuid:{ds_uuid}}) "
             "MERGE ds-[:`annotated_with`]->term"
         )
 
@@ -96,7 +97,8 @@ def add_data_set_to_neo4j(dataset_uuid, user_id):
                     statement_uri,
                     {
                         'uri': annotation['value_uri'],
-                        'ds_uuid': annotation['data_set_uuid']
+                        'ds_id': dataset.id,
+                        'ds_uuid': dataset.uuid
                     }
                 )
             else:
@@ -108,7 +110,8 @@ def add_data_set_to_neo4j(dataset_uuid, user_id):
                             ':' +
                             annotation['value_accession']
                         ),
-                        'ds_uuid': annotation['data_set_uuid']
+                        'ds_id': dataset.id,
+                        'ds_uuid': dataset.uuid
                     }
                 )
 
@@ -129,7 +132,7 @@ def add_data_set_to_neo4j(dataset_uuid, user_id):
         tx.append(
             statement,
             {
-                'ds_uuid': dataset_uuid,
+                'ds_uuid': dataset.uuid,
                 'user_id': user_id
             }
         )
@@ -142,11 +145,11 @@ def add_data_set_to_neo4j(dataset_uuid, user_id):
         """
         logger.error(
             'Failed to add read access to data set (uuid: %s) for user '
-            '(uuid: %s) to Neo4J. Exception: %s', dataset_uuid, user_id, e
+            '(uuid: %s) to Neo4J. Exception: %s', dataset.uuid, user_id, e
         )
 
 
-@skip
+@skip_if_test_run
 def add_read_access_in_neo4j(dataset_uuids, user_ids):
     """Give one or more user read access to one or more datasets.
     """
@@ -190,7 +193,7 @@ def add_read_access_in_neo4j(dataset_uuids, user_ids):
         )
 
 
-@skip
+@skip_if_test_run
 def update_annotation_sets_neo4j(username=''):
     """
     Update annotation sets in Neo4J
@@ -219,7 +222,7 @@ def update_annotation_sets_neo4j(username=''):
         )
 
 
-@skip
+@skip_if_test_run
 def add_or_update_user_to_neo4j(user_id, username):
     """
     Add or update a user in Neo4J
@@ -257,7 +260,7 @@ def add_or_update_user_to_neo4j(user_id, username):
         )
 
 
-@skip
+@skip_if_test_run
 def delete_user_in_neo4j(user_id, user_name):
     """
     Delete a user and its annotation set in Neo4J
@@ -304,7 +307,7 @@ def delete_user_in_neo4j(user_id, user_name):
         )
 
 
-@skip
+@skip_if_test_run
 def remove_read_access_in_neo4j(dataset_uuids, user_ids):
     """Remove read access for one or multiple users to one or more datasets.
     """
@@ -347,15 +350,14 @@ def remove_read_access_in_neo4j(dataset_uuids, user_ids):
         )
 
 
-@skip
+@skip_if_test_run
 def delete_data_set_index(data_set):
     """Remove a dataset's related document from Solr's index.
     """
 
     logger.debug('Deleted data set (uuid: %s) index', data_set.uuid)
     try:
-        core.search_indexes.DataSetIndex().remove_object(data_set,
-                                                         using='core')
+        DataSetIndex().remove_object(data_set, using='core')
     except Exception as e:
         """ Solr is expected to fail and raise an exception when
         it is not running.
@@ -364,7 +366,7 @@ def delete_data_set_index(data_set):
         logger.error("Could not delete from DataSetIndex: %s", e)
 
 
-@skip
+@skip_if_test_run
 def delete_data_set_neo4j(dataset_uuid):
     """Remove a dataset's related node in Neo4J.
     """
@@ -397,7 +399,7 @@ def delete_data_set_neo4j(dataset_uuid):
         )
 
 
-@skip
+@skip_if_test_run
 def delete_ontology_from_neo4j(acronym):
     """Remove ontology and all class nodes that belong exclusively to an
     ontology.
@@ -770,13 +772,12 @@ def create_update_ontology(name, acronym, uri, version, owl2neo4j_version):
         logger.info('Updated %s', ontology)
 
 
-@skip
+@skip_if_test_run
 def delete_analysis_index(node_instance):
     """Remove a Analysis' related document from Solr's index.
     """
     try:
-        data_set_manager.search_indexes.NodeIndex().remove_object(
-            node_instance, using='data_set_manager')
+        NodeIndex().remove_object(node_instance, using='data_set_manager')
         logger.debug('Deleted Analysis\' NodeIndex with (uuid: %s)',
                      node_instance.uuid)
     except Exception as e:
@@ -784,7 +785,7 @@ def delete_analysis_index(node_instance):
         it is not running.
         (e.g. Travis CI doesn't support solr yet)
         """
-        logger.error("Could not delete from NodeIndex:", e)
+        logger.error("Could not delete from NodeIndex: %s", e)
 
 
 def invalidate_cached_object(instance, is_test=False):
@@ -868,43 +869,6 @@ def email_admin(subject, message):
     """
     send_mail(subject, message, settings.SERVER_EMAIL,
               [settings.ADMINS[0][1]])
-
-
-def create_current_selection_node_group(assay_uuid):
-    """
-    Helper method to create a current selection group which
-    is default for all node_group list
-
-    :param assay_uuid: string of uuid
-    :return: Response obj
-    """
-    # confirm an assay exists
-    try:
-        assay = data_set_manager.models.Assay.objects.get(uuid=assay_uuid)
-    except data_set_manager.models.Assay.DoesNotExist as e:
-        return Response(e, status=status.HTTP_404_NOT_FOUND)
-    except data_set_manager.models.Assay.MultipleObjectsReturned as e:
-        return Response(status=status.HTTP_400_BAD_REQUEST)
-
-    study_uuid = assay.study.uuid
-    # initialize node_group with a current_selection
-    serializer = core.serializers.NodeGroupSerializer(data={
-        'assay': assay_uuid,
-        'study': study_uuid,
-        'name': 'Current Selection'
-    })
-
-    # creating a default current_selection, therefore returning 201
-    if serializer.is_valid():
-        serializer.save()
-        # UI expects a list from assay query
-        return Response(
-            [serializer.data],
-            status=status.HTTP_201_CREATED)
-    else:
-        return Response(
-            serializer.errors,
-            status=status.HTTP_400_BAD_REQUEST)
 
 
 def filter_nodes_uuids_in_solr(assay_uuid, filter_out_uuids=[],

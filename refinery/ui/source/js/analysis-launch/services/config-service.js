@@ -7,7 +7,6 @@ function analysisLaunchConfigService ($window) {
     studyUuid: $window.externalStudyUuid,
     workflowUuid: null,
     nodeSetUuid: null,
-    nodeGroupUuid: null,
     nodeRelationshipUuid: null,
     name: null
   };

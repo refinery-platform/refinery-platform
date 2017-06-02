@@ -1,44 +1,43 @@
 import json
+import random
+import string
 from urlparse import urljoin
-
-import mock
 
 from django.contrib.auth.models import User, Group
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.utils import unittest, timezone
+from django.utils import timezone
 from django.test import TestCase
 
-from rest_framework.test import APIRequestFactory, APIClient, \
-    force_authenticate
-from rest_framework.test import APITestCase
 from guardian.shortcuts import assign_perm
+import mock
 import mockcache as memcache
+from rest_framework.test import (APIRequestFactory, APIClient, APITestCase,
+                                 force_authenticate)
 from tastypie.test import ResourceTestCase
 
-from core.api import AnalysisResource
+from .api import AnalysisResource
+from .management.commands.create_user import init_user
+from .models import (Analysis, AnalysisNodeConnection, create_nodeset, DataSet,
+                     delete_nodeset, ExtendedGroup, get_nodeset,
+                     invalidate_cached_object, InvestigationLink,
+                     NodeSet, Project, Tutorials, update_nodeset,
+                     UserProfile, Workflow, WorkflowEngine)
+from .search_indexes import DataSetIndex
 
-from core.management.commands.create_user import init_user
+from .utils import (filter_nodes_uuids_in_solr, get_aware_local_time,
+                    move_obj_to_front)
+from .views import AnalysesViewSet, DataSetsViewSet
+from data_set_manager.models import Assay, Contact, Investigation, Node, Study
+from factory_boy.utils import create_dataset_with_necessary_models
 
-from core.models import (
-    NodeSet, create_nodeset, get_nodeset, delete_nodeset, update_nodeset,
-    ExtendedGroup, DataSet, InvestigationLink, Project,
-    Analysis, Workflow, WorkflowEngine, UserProfile, invalidate_cached_object,
-    AnalysisNodeConnection, NodeGroup, Tutorials)
-from core.utils import (get_aware_local_time,
-                        create_current_selection_node_group,
-                        filter_nodes_uuids_in_solr, move_obj_to_front)
-from core.views import NodeGroups, DataSetsViewSet, AnalysesViewSet
-from .serializers import NodeGroupSerializer
 from file_store.models import FileStoreItem
-from file_store.models import FileExtension
-
-from data_set_manager.models import (Study, Assay, Node, Investigation)
 from galaxy_connector.models import Instance
+
 
 cache = memcache.Client(["127.0.0.1:11211"])
 
 
-class UserCreateTest(unittest.TestCase):
+class UserCreateTest(TestCase):
     """Test User instance creation"""
 
     def setUp(self):
@@ -49,9 +48,6 @@ class UserCreateTest(unittest.TestCase):
         self.last_name = "Sample"
         self.affiliation = "University"
         self.public_group_name = ExtendedGroup.objects.public_group().name
-
-    def tearDown(self):
-        User.objects.all().delete()
 
     def test_add_new_user_to_public_group(self):
         """Test if User accounts are added to Public group"""
@@ -70,7 +66,7 @@ class UserCreateTest(unittest.TestCase):
             new_user.groups.filter(name=self.public_group_name).count(), 1)
 
 
-class NodeSetTest(unittest.TestCase):
+class NodeSetTest(TestCase):
     """Test all NodeSet operations"""
 
     def setUp(self):
@@ -781,9 +777,6 @@ class AnalysisResourceTest(ResourceTestCase):
             workflow_engine=self.workflow_engine
         )
 
-    def tearDown(self):
-        FileExtension.objects.all().delete()
-
     def get_credentials(self):
         """Authenticate as self.user"""
         # workaround required to use SessionAuthentication
@@ -1013,7 +1006,7 @@ class AnalysisResourceTest(ResourceTestCase):
         self.assertEqual(Analysis.objects.count(), 1)
 
 
-class BaseResourceSlugTest(unittest.TestCase):
+class BaseResourceSlugTest(TestCase):
     """Tests for BaseResource Slugs"""
 
     def setUp(self):
@@ -1029,10 +1022,6 @@ class BaseResourceSlugTest(unittest.TestCase):
             name="project3",
             slug=None
         )
-
-    def tearDown(self):
-        DataSet.objects.all().delete()
-        Project.objects.all().delete()
 
     def test_duplicate_slugs(self):
         # Try to create DS with existing slug
@@ -1114,7 +1103,7 @@ class BaseResourceSlugTest(unittest.TestCase):
             name="project_no_slug_duplicate3"))
 
 
-class CachingTest(unittest.TestCase):
+class CachingTest(TestCase):
     """Testing the addition and deletion of cached objects"""
 
     def setUp(self):
@@ -1139,8 +1128,6 @@ class CachingTest(unittest.TestCase):
     def tearDown(self):
         self.cache = invalidate_cached_object(DataSet.objects.get(
             slug="TestSlug1"), True)
-        DataSet.objects.all().delete()
-        User.objects.all().delete()
 
     def test_verify_cache_invalidation(self):
         # Grab a DataSet and see if we can invalidate the cache
@@ -1206,7 +1193,7 @@ class CachingTest(unittest.TestCase):
         self.assertNotEqual(self.initial_cache, new_cache)
 
 
-class WorkflowDeletionTest(unittest.TestCase):
+class WorkflowDeletionTest(TestCase):
     """Testing for the deletion of Workflows"""
 
     def setUp(self):
@@ -1236,15 +1223,6 @@ class WorkflowDeletionTest(unittest.TestCase):
         )
         self.analysis.set_owner(self.user)
 
-    def tearDown(self):
-        User.objects.all().delete()
-        Project.objects.all().delete()
-        WorkflowEngine.objects.all().delete()
-        Workflow.objects.all().delete()
-        DataSet.objects.all().delete()
-        Instance.objects.all().delete()
-        Analysis.objects.all().delete()
-
     def test_verify_workflow_used_by_analysis(self):
         self.assertEqual(self.analysis.workflow.name,
                          "workflow_used_by_analyses")
@@ -1263,7 +1241,7 @@ class WorkflowDeletionTest(unittest.TestCase):
                           name="workflow_not_used_by_analyses")
 
 
-class DataSetDeletionTest(unittest.TestCase):
+class DataSetDeletionTest(TestCase):
     """Testing for the deletion of Datasets"""
 
     def setUp(self):
@@ -1312,23 +1290,6 @@ class DataSetDeletionTest(unittest.TestCase):
         )
         self.analysis.set_owner(self.user)
 
-    def tearDown(self):
-        User.objects.all().delete()
-        Project.objects.all().delete()
-        WorkflowEngine.objects.all().delete()
-        Workflow.objects.all().delete()
-        Instance.objects.all().delete()
-        Analysis.objects.all().delete()
-        DataSet.objects.all().delete()
-        UserProfile.objects.all().delete()
-        Node.objects.all().delete()
-        FileStoreItem.objects.all().delete()
-        Study.objects.all().delete()
-        Assay.objects.all().delete()
-        Investigation.objects.all().delete()
-        AnalysisNodeConnection.objects.all().delete()
-        InvestigationLink.objects.all().delete()
-
     def test_verify_dataset_deletion_if_no_analysis_run_upon_it(self):
         self.assertIsNotNone(
             DataSet.objects.get(name="dataset_without_analysis"))
@@ -1357,7 +1318,7 @@ class DataSetDeletionTest(unittest.TestCase):
         self.assertIsNone(self.dataset_without_analysis.get_pre_isa_archive())
 
 
-class AnalysisDeletionTest(unittest.TestCase):
+class AnalysisDeletionTest(TestCase):
     """Testing for the deletion of Analyses"""
 
     def setUp(self):
@@ -1448,22 +1409,6 @@ class AnalysisDeletionTest(unittest.TestCase):
                 node=self.node2, step=2,
                 direction="in")
 
-    def tearDown(self):
-        User.objects.all().delete()
-        Project.objects.all().delete()
-        WorkflowEngine.objects.all().delete()
-        Workflow.objects.all().delete()
-        DataSet.objects.all().delete()
-        Instance.objects.all().delete()
-        Analysis.objects.all().delete()
-        UserProfile.objects.all().delete()
-        Node.objects.all().delete()
-        Study.objects.all().delete()
-        Assay.objects.all().delete()
-        Investigation.objects.all().delete()
-        AnalysisNodeConnection.objects.all().delete()
-        InvestigationLink.objects.all().delete()
-
     def test_verify_analysis_deletion_if_nodes_not_analyzed_further(self):
         # Try to delete Analysis with a Node that has an
         # AnalysisNodeConnection with direction == 'out'
@@ -1480,166 +1425,6 @@ class AnalysisDeletionTest(unittest.TestCase):
         self.analysis_with_node_analyzed_further.delete()
         self.assertIsNotNone(Analysis.objects.get(
             name='analysis_with_node_analyzed_further'))
-
-
-class NodeGroupAPITests(APITestCase):
-
-    def setUp(self):
-        self.factory = APIRequestFactory()
-        investigation = Investigation.objects.create()
-        self.study = Study.objects.create(
-                file_name='test_filename123.txt',
-                title='Study Title Test',
-                investigation=investigation)
-        assay = {
-            'study': self.study,
-            'measurement': 'transcription factor binding site',
-            'measurement_accession': 'http://www.testurl.org/testID',
-            'measurement_source': 'OBI',
-            'technology': 'nucleotide sequencing',
-            'technology_accession': 'test info',
-            'technology_source': 'test source',
-            'platform': 'Genome Analyzer II',
-            'file_name': 'test_assay_filename.txt'
-        }
-        self.assay = Assay.objects.create(**assay)
-        self.node_1 = Node.objects.create(assay=self.assay,
-                                          study=self.study,
-                                          name='Node1')
-
-        self.node_2 = Node.objects.create(assay=self.assay,
-                                          study=self.study,
-                                          name='Node2')
-        self.node_group = NodeGroup.objects.create(
-            assay=self.assay,
-            study=self.study,
-            name='Test Node Group 1'
-        )
-        self.nodes_list = [self.node_1, self.node_2]
-        self.nodes_list_uuid = [self.node_1.uuid, self.node_2.uuid]
-        self.node_group.nodes.add(*self.nodes_list)
-        self.node_group.node_count = len(self.nodes_list)
-        self.node_group.save()
-
-        self.node_group_2 = NodeGroup.objects.create(
-            assay=self.assay,
-            study=self.study,
-            name='Test Node Group 2'
-        )
-        self.node_group_list = [self.node_group, self.node_group_2]
-        self.valid_uuid = self.node_group.uuid
-        self.url_root = '/api/v2/node_groups/'
-        self.view = NodeGroups.as_view()
-        self.invalid_uuid = "03b5f681-35d5-4bdd-bc7d-8552fa777ebc"
-        self.invalid_format_uuid = "xxxxxxxx"
-
-    def tearDown(self):
-        NodeGroup.objects.all().delete()
-        Node.objects.all().delete()
-        Assay.objects.all().delete()
-        Study.objects.all().delete()
-        Investigation.objects.all().delete()
-
-    def test_get_valid_uuid(self):
-        # valid_uuid
-        request = self.factory.get('%s/?uuid=%s' % (
-            self.url_root, self.valid_uuid))
-        response = self.view(request, self.valid_uuid)
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data,
-                         NodeGroupSerializer(self.node_group).data)
-
-    def test_get_valid_assay_uuid(self):
-        # valid_assay_uuid
-        request = self.factory.get('%s/?assay=%s' % (
-            self.url_root, self.assay.uuid))
-        response = self.view(request, self.assay.uuid)
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(response.data), len(self.node_group_list))
-        self.assertItemsEqual(response.data, NodeGroupSerializer(
-            self.node_group_list, many=True).data)
-
-    def test_get_invalid_uuid(self):
-        # invalid_uuid
-        request = self.factory.get('%s/?uuid=%s' % (self.url_root,
-                                                    self.invalid_uuid))
-        response = self.view(request, self.invalid_uuid)
-        self.assertEqual(response.status_code, 404)
-
-    def test_get_invalid_assay_uuid(self):
-        # invalid_assay_uuid
-        request = self.factory.get('%s/?assay=%s' % (self.url_root,
-                                                     self.invalid_uuid))
-        response = self.view(request, self.invalid_uuid)
-        self.assertEqual(response.status_code, 404)
-
-    def test_get_invalid_format_uuid(self):
-        # invalid_format_uuid
-        request = self.factory.get('%s/?uuid=%s'
-                                   % (self.url_root,
-                                      self.invalid_format_uuid))
-        response = self.view(request, self.invalid_format_uuid)
-        self.assertEqual(response.status_code, 404)
-
-    def test_post_valid_form(self):
-        # valid form
-        new_node_group = {'name': 'Test Group3',
-                          'assay': self.assay.uuid,
-                          'study': self.study.uuid,
-                          'nodes': self.nodes_list_uuid
-                          }
-        request = self.factory.post('%s/' % self.url_root, new_node_group)
-        response = self.view(request)
-        self.assertEqual(response.status_code, 201)
-        self.assertEqual(response.data.get('name'), new_node_group.get('name'))
-        self.assertEqual(response.data.get('node_count'),
-                         len(self.nodes_list_uuid))
-        self.assertItemsEqual(response.data.get('nodes'), self.nodes_list_uuid)
-
-    def test_post_invalid_form(self):
-        # invalid form
-        new_node_group = {'name': 'Test Group3',
-                          'assay': self.assay.uuid,
-                          'study': self.study.uuid,
-                          'nodes': '%s' % self.invalid_uuid}
-        request = self.factory.post('%s/' % self.url_root, new_node_group)
-        response = self.view(request)
-        self.assertEqual(response.status_code, 400)
-
-    def test_put_valid_uuid_and_valid_input(self):
-        # valid uuid and valid input
-        request = self.factory.put('%s/' % self.url_root,
-                                   {'uuid': self.node_group_2.uuid,
-                                    'nodes': self.nodes_list_uuid,
-                                    'is_current': True})
-        response = self.view(request)
-        self.assertEqual(response.status_code, 202)
-        self.assertItemsEqual(response.data.get('nodes'), self.nodes_list_uuid)
-
-    def test_put_valid_uuid_and_invalid_node(self):
-        # valid uuid but node invalid uuid
-        request = self.factory.put('%s/' % self.url_root,
-                                   {'uuid': self.node_group_2.uuid,
-                                    'nodes': self.invalid_uuid,
-                                    'is_current': True})
-        response = self.view(request)
-        self.assertEqual(response.status_code, 400)
-
-    def test_put_invalid_uuid(self):
-        # invalid_uuid
-        request = self.factory.put('%s/' % self.url_root,
-                                   {'uuid': self.invalid_uuid}
-                                   )
-        response = self.view(request)
-        self.assertEqual(response.status_code, 404)
-
-    def test_put_invalid_format_uuid(self):
-        # invalid_format_uuid
-        request = self.factory.put('%s/' % self.url_root,
-                                   {'uuid': self.invalid_format_uuid}
-                                   )
-        response = self.view(request)
-        self.assertEqual(response.status_code, 404)
 
 
 class UtilitiesTest(TestCase):
@@ -1669,26 +1454,12 @@ class UtilitiesTest(TestCase):
             "910117c5-fda2-4700-ae87-dc897f3a5d85"
             ]
 
-    def tearDown(self):
-        NodeGroup.objects.all().delete()
-        Assay.objects.all().delete()
-        Study.objects.all().delete()
-        Investigation.objects.all().delete()
-
     def test_get_aware_local_time(self):
         expected_time = timezone.localtime(timezone.now())
         response_time = get_aware_local_time()
         difference_time = response_time - expected_time
 
         self.assertLessEqual(difference_time.total_seconds(), .99)
-
-    def test_create_current_selection_node_group_valid(self):
-        response = create_current_selection_node_group(self.valid_uuid)
-        self.assertEqual(response.status_code, 201)
-
-    def test_create_current_selection_node_group_invalid(self):
-        response = create_current_selection_node_group(self.invalid_uuid)
-        self.assertEqual(response.status_code, 404)
 
     # Mock methods used in filter_nodes_uuids_in_solr
     def fake_generate_solr_params(params, assay_uuid):
@@ -1845,11 +1616,6 @@ class UserTutorialsTest(TestCase):
         )
         self.userprofile = UserProfile.objects.get(user=self.user)
 
-    def tearDown(self):
-        User.objects.all().delete()
-        UserProfile.objects.all().delete()
-        Tutorials.objects.all().delete()
-
     def test_tutorial_creation(self):
         self.assertIsNotNone(
             Tutorials.objects.get(user_profile=self.userprofile)
@@ -1893,22 +1659,6 @@ class DataSetResourceTest(ResourceTestCase):
                 data_set=self.dataset,
                 version=1
             )
-
-    def tearDown(self):
-        User.objects.all().delete()
-        Project.objects.all().delete()
-        WorkflowEngine.objects.all().delete()
-        Workflow.objects.all().delete()
-        DataSet.objects.all().delete()
-        Instance.objects.all().delete()
-        Analysis.objects.all().delete()
-        UserProfile.objects.all().delete()
-        Node.objects.all().delete()
-        Study.objects.all().delete()
-        Assay.objects.all().delete()
-        Investigation.objects.all().delete()
-        AnalysisNodeConnection.objects.all().delete()
-        InvestigationLink.objects.all().delete()
 
     def get_credentials(self):
         """Authenticate as self.user"""
@@ -1968,8 +1718,13 @@ class DataSetResourceTest(ResourceTestCase):
         self.assertIsNotNone(data['analyses'][0]['is_owner'])
         self.assertTrue(data['analyses'][0]['is_owner'])
         self.assertIsNotNone(data['analyses'][0]['owner'])
-        self.assertEqual(data['analyses'][0]['owner'],
-                         UserProfile.objects.get(user=self.user).uuid)
+        self.assertEqual(
+            data['analyses'][0]['owner'],
+            UserProfile.objects.get(user=self.user).uuid
+        )
+        self.assertEqual(data['analyses'][0]['status'], a2.status)
+        self.assertEqual(data['analyses'][0]['name'], a2.name)
+        self.assertEqual(data['analyses'][0]['uuid'], a2.uuid)
 
     def test_get_dataset_expecting_no_analyses(self):
         dataset_uri = make_api_uri("data_sets",
@@ -1984,8 +1739,8 @@ class DataSetResourceTest(ResourceTestCase):
         self.assertEqual(data['analyses'], [])
 
 
-class DataSetClassMethodsTest(unittest.TestCase):
-    """ Testing of methods specific to the DataSet model
+class DataSetTests(TestCase):
+    """ Testing of the DataSet model
     """
 
     def setUp(self):
@@ -2053,23 +1808,6 @@ class DataSetClassMethodsTest(unittest.TestCase):
         self.node4 = Node.objects.create(
             name="n4", assay=self.assay, study=self.study)
 
-    def tearDown(self):
-        User.objects.all().delete()
-        Project.objects.all().delete()
-        WorkflowEngine.objects.all().delete()
-        Workflow.objects.all().delete()
-        DataSet.objects.all().delete()
-        Instance.objects.all().delete()
-        Analysis.objects.all().delete()
-        UserProfile.objects.all().delete()
-        Node.objects.all().delete()
-        Study.objects.all().delete()
-        Assay.objects.all().delete()
-        Investigation.objects.all().delete()
-        AnalysisNodeConnection.objects.all().delete()
-        InvestigationLink.objects.all().delete()
-        FileStoreItem.objects.all().delete()
-
     def test_get_file_store_items(self):
         file_store_items = self.dataset.get_file_store_items()
         self.assertEqual(len(file_store_items), 3)
@@ -2077,8 +1815,27 @@ class DataSetClassMethodsTest(unittest.TestCase):
         self.assertIn(self.file_store_item1, file_store_items)
         self.assertIn(self.file_store_item2, file_store_items)
 
+    def test_neo4j_called_on_post_save(self):
+        with mock.patch(
+            "core.models.update_annotation_sets_neo4j"
+        ) as neo4j_mock:
+            self.dataset.save()
+            self.assertTrue(neo4j_mock.called)
+
+    def test_solr_called_on_post_save(self):
+        with mock.patch(
+            "core.models.update_data_set_index"
+        ) as solr_mock:
+            self.dataset.save()
+            self.assertTrue(solr_mock.called)
+
 
 class DataSetApiV2Tests(APITestCase):
+
+    def create_rand_str(self, count):
+        return ''.join(
+            random.choice(string.ascii_lowercase) for _ in xrange(count)
+        )
 
     def setUp(self):
         self.public_group_name = ExtendedGroup.objects.public_group().name
@@ -2094,8 +1851,18 @@ class DataSetApiV2Tests(APITestCase):
         self.url_root = '/api/v2/data_sets/'
 
         # Create Datasets
-        self.dataset = DataSet.objects.create(name="coffee dataset")
-        self.dataset2 = DataSet.objects.create(name="cool dataset")
+        self.dataset = DataSet.objects.create(
+            name="coffee dataset",
+            title="coffee dataset"
+        )
+        self.dataset2 = DataSet.objects.create(
+            name="cool dataset",
+            title="cool dataset"
+        )
+
+        # Set Data Sets Owner
+        self.dataset.set_owner(self.user)
+        self.dataset2.set_owner(self.user)
 
         # Create Investigation/InvestigationLinks for the DataSets
         self.investigation = Investigation.objects.create()
@@ -2132,12 +1899,6 @@ class DataSetApiV2Tests(APITestCase):
             format="json"
         )
         self.put_response = self.view(self.put_request)
-        self.patch_request = self.factory.patch(
-            self.url_root,
-            data=self.node_json,
-            format="json"
-        )
-        self.patch_response = self.view(self.patch_request)
         self.options_request = self.factory.options(
             self.url_root,
             data=self.node_json,
@@ -2145,19 +1906,9 @@ class DataSetApiV2Tests(APITestCase):
         )
         self.options_response = self.view(self.options_request)
 
-    def tearDown(self):
-        Node.objects.all().delete()
-        User.objects.all().delete()
-        Study.objects.all().delete()
-        Assay.objects.all().delete()
-        DataSet.objects.all().delete()
-        Investigation.objects.all().delete()
-
     def test_unallowed_http_verbs(self):
         self.assertEqual(
             self.put_response.data['detail'], 'Method "PUT" not allowed.')
-        self.assertEqual(
-            self.patch_response.data['detail'], 'Method "PATCH" not allowed.')
         self.assertEqual(
             self.options_response.data['detail'], 'Method "OPTIONS" not '
                                                   'allowed.')
@@ -2227,6 +1978,182 @@ class DataSetApiV2Tests(APITestCase):
         self.assertEqual(self.delete_response.status_code, 404)
 
         self.assertEqual(DataSet.objects.all().count(), 1)
+
+    # Accession too long
+    def test_dataset_patch_accession_fails(self):
+        new_accession = self.create_rand_str(33)
+        patch_request = self.factory.patch(
+            urljoin(self.url_root, self.dataset.uuid),
+            {"accession": new_accession}
+        )
+        force_authenticate(patch_request, user=self.user)
+        patch_response = self.view(patch_request, self.dataset.uuid)
+        self.assertEqual(patch_response.status_code, 400)
+        self.assertEqual(
+            patch_response.data.get('accession')[0],
+            'Ensure this field has no more than 32 characters.'
+        )
+
+    def test_dataset_patch_accession_successful(self):
+        new_accession = self.create_rand_str(10)
+        patch_request = self.factory.patch(
+            urljoin(self.url_root, self.dataset.uuid),
+            {"accession": new_accession},
+        )
+        force_authenticate(patch_request, user=self.user)
+        patch_response = self.view(patch_request, self.dataset.uuid)
+        self.assertEqual(patch_response.status_code, 202)
+        self.assertEqual(patch_response.data.get('accession'), new_accession)
+
+    def test_dataset_patch_auth_fails(self):
+        new_description = self.create_rand_str(50)
+        patch_request = self.factory.patch(
+            urljoin(self.url_root, self.dataset.uuid),
+            {"description": new_description},
+        )
+        patch_response = self.view(patch_request, self.dataset.uuid)
+        self.assertEqual(patch_response.status_code, 401)
+
+    def test_dataset_patch_description_fails(self):
+        new_description = self.create_rand_str(5001)
+        patch_request = self.factory.patch(
+            urljoin(self.url_root, self.dataset.uuid),
+            {"description": new_description},
+        )
+        force_authenticate(patch_request, user=self.user)
+        patch_response = self.view(patch_request, self.dataset.uuid)
+        self.assertEqual(patch_response.status_code, 400)
+        self.assertEqual(
+            patch_response.data.get('description')[0],
+            'Ensure this field has no more than 5000 characters.'
+        )
+
+    def test_dataset_patch_description_successful(self):
+        new_description = self.create_rand_str(500)
+        patch_request = self.factory.patch(
+            urljoin(self.url_root, self.dataset.uuid),
+            {"description": new_description},
+        )
+        force_authenticate(patch_request, user=self.user)
+        patch_response = self.view(patch_request, self.dataset.uuid)
+        self.assertEqual(patch_response.status_code, 202)
+        self.assertEqual(
+            patch_response.data.get('description'), new_description
+        )
+
+    # Slug too long
+    def test_dataset_patch_slug_fails(self):
+        new_slug = self.create_rand_str(251)
+        patch_request = self.factory.patch(
+            urljoin(self.url_root, self.dataset.uuid),
+            {"slug": new_slug}
+        )
+        force_authenticate(patch_request, user=self.user)
+        patch_response = self.view(patch_request, self.dataset.uuid)
+        self.assertEqual(patch_response.status_code, 400)
+        self.assertEqual(
+            patch_response.data.get('slug')[0],
+            'Ensure this field has no more than 250 characters.'
+        )
+
+    # Slugs must be unique
+    def test_dataset_patch_slug_fails_unique(self):
+        new_slug = self.create_rand_str(10)
+        patch_request = self.factory.patch(
+            urljoin(self.url_root, self.dataset.uuid),
+            {"slug": new_slug}
+        )
+        force_authenticate(patch_request, user=self.user)
+        patch_response = self.view(patch_request, self.dataset.uuid)
+        self.assertEqual(patch_response.status_code, 202)
+        self.assertEqual(patch_response.data.get('slug'), new_slug)
+
+        # Duplicate request
+        patch_request = self.factory.patch(
+            urljoin(self.url_root, self.dataset2.uuid),
+            {"slug": new_slug}
+        )
+        force_authenticate(patch_request, user=self.user)
+        patch_response = self.view(patch_request, self.dataset2.uuid)
+        self.assertEqual(patch_response.status_code, 400)
+        self.assertEqual(
+            patch_response.data.get('slug')[0],
+            'Slugs must be unique.'
+        )
+
+    def test_dataset_patch_slug_successful(self):
+        new_slug = self.create_rand_str(10)
+        patch_request = self.factory.patch(
+            urljoin(self.url_root, self.dataset.uuid),
+            {"slug": new_slug},
+        )
+        force_authenticate(patch_request, user=self.user)
+        patch_response = self.view(patch_request, self.dataset.uuid)
+        self.assertEqual(patch_response.status_code, 202)
+        self.assertEqual(patch_response.data.get('slug'), new_slug)
+
+    def test_dataset_patch_slug_trim_whitespace(self):
+        new_slug = '  Test Slug Name  '
+        patch_request = self.factory.patch(
+            urljoin(self.url_root, self.dataset.uuid),
+            {"slug": new_slug},
+        )
+        force_authenticate(patch_request, user=self.user)
+        patch_response = self.view(patch_request, self.dataset.uuid)
+        self.assertEqual(patch_response.status_code, 202)
+        self.assertEqual(patch_response.data.get('slug'), new_slug.strip())
+
+    # Summary too long
+    def test_dataset_patch_summary_fails(self):
+        new_summary = self.create_rand_str(1001)
+        patch_request = self.factory.patch(
+            urljoin(self.url_root, self.dataset.uuid),
+            {"summary": new_summary}
+        )
+        force_authenticate(patch_request, user=self.user)
+        patch_response = self.view(patch_request, self.dataset.uuid)
+        self.assertEqual(patch_response.status_code, 400)
+        self.assertEqual(
+            patch_response.data.get('summary')[0],
+            'Ensure this field has no more than 1000 characters.'
+        )
+
+    def test_dataset_patch_summary_successful(self):
+        new_summary = self.create_rand_str(500)
+        patch_request = self.factory.patch(
+            urljoin(self.url_root, self.dataset.uuid),
+            {"summary": new_summary},
+        )
+        force_authenticate(patch_request, user=self.user)
+        patch_response = self.view(patch_request, self.dataset.uuid)
+        self.assertEqual(patch_response.status_code, 202)
+        self.assertEqual(patch_response.data.get('summary'), new_summary)
+
+    # Title too long
+    def test_dataset_patch_title_fails(self):
+        new_title = self.create_rand_str(251)
+        patch_request = self.factory.patch(
+            urljoin(self.url_root, self.dataset.uuid),
+            {"title": new_title}
+        )
+        force_authenticate(patch_request, user=self.user)
+        patch_response = self.view(patch_request, self.dataset.uuid)
+        self.assertEqual(patch_response.status_code, 400)
+        self.assertEqual(
+            patch_response.data.get('title')[0],
+            'Ensure this field has no more than 250 characters.'
+            )
+
+    def test_dataset_patch_title_successful(self):
+        new_title = "decaf coffee dataset"
+        patch_request = self.factory.patch(
+            urljoin(self.url_root, self.dataset.uuid),
+            {"title": new_title},
+        )
+        force_authenticate(patch_request, user=self.user)
+        patch_response = self.view(patch_request, self.dataset.uuid)
+        self.assertEqual(patch_response.status_code, 202)
+        self.assertEqual(patch_response.data.get('title'), new_title)
 
 
 class AnalysisApiV2Tests(APITestCase):
@@ -2323,15 +2250,6 @@ class AnalysisApiV2Tests(APITestCase):
         )
         self.options_response = self.view(self.options_request)
 
-    def tearDown(self):
-        Node.objects.all().delete()
-        User.objects.all().delete()
-        Study.objects.all().delete()
-        Assay.objects.all().delete()
-        DataSet.objects.all().delete()
-        Investigation.objects.all().delete()
-        Analysis.objects.all().delete()
-
     def test_unallowed_http_verbs(self):
         self.assertEqual(
             self.put_response.data['detail'], 'Method "PUT" not allowed.')
@@ -2406,3 +2324,62 @@ class AnalysisApiV2Tests(APITestCase):
         self.assertEqual(self.delete_response.status_code, 404)
 
         self.assertEqual(Analysis.objects.all().count(), 1)
+
+
+class CoreIndexTests(TestCase):
+    def setUp(self):
+        self.dataset_index = DataSetIndex()
+        self.good_dataset = create_dataset_with_necessary_models()
+        self.bad_dataset = DataSet.objects.create()
+
+    def test_prepare_submitter(self):
+        contact = Contact.objects.create(
+            collection=self.good_dataset.get_investigation(),
+            first_name="Scott",
+            last_name="Ouellette"
+        )
+        # Create an identical contact to ensure we prepare a unique list of
+        # submitters
+        Contact.objects.create(
+            collection=self.good_dataset.get_investigation(),
+            first_name="Scott",
+            last_name="Ouellette"
+        )
+        self.good_dataset.save()
+
+        prepared_submitters = self.dataset_index.prepare_submitter(
+            self.good_dataset
+        )
+
+        self.assertEqual(
+            prepared_submitters,
+            [u"{}, {}".format(contact.last_name, contact.first_name)]
+        )
+
+    def test_prepare_submitter_funky_contact(self):
+        contact = Contact.objects.create(
+            collection=self.good_dataset.get_investigation(),
+            first_name=u'Sc\xd6tt',
+            last_name=u'\xd6uellette'
+        )
+        self.good_dataset.save()
+
+        prepared_submitters = self.dataset_index.prepare_submitter(
+            self.good_dataset
+        )
+        self.assertEqual(
+            prepared_submitters,
+            [u"{}, {}".format(contact.last_name, contact.first_name)]
+        )
+
+    def test_prepare_description_bad_dataset(self):
+        prepared_description = self.dataset_index.prepare_description(
+            self.bad_dataset
+        )
+        self.assertEqual(prepared_description, "")
+
+    def test_prepare_description_good_dataset(self):
+        prepared_description = self.dataset_index.prepare_description(
+            self.good_dataset
+        )
+        self.assertEqual(prepared_description, "This is a great DataSet")

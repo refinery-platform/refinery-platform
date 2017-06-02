@@ -19,6 +19,7 @@ from core.utils import (
     normalize_annotation_uris
 )
 
+
 logger = logging.getLogger(__name__)
 root_logger = logging.getLogger()
 

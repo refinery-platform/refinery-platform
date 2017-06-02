@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 
 {% load humanize %}
-{% load static %}
+{% load static from staticfiles %}
 
 <html lang="en">
 <head>
@@ -39,7 +39,8 @@
       solrSynonymSearch: {{ SOLR_SYNONYM_SEARCH|lower }},
       refineryTutorialSteps: '{{  REFINERY_TUTORIAL_STEPS|escapejs }}',
       refineryInstanceName: '{{ REFINERY_INSTANCE_NAME }}',
-      satoriDemo: {{ SATORI_DEMO|yesno:"true,false,false" }}
+      satoriDemo: {{ SATORI_DEMO|yesno:"true,false,false" }},
+      staticUrl: '{{ STATIC_URL|escapejs }}'
     };
 
     if (window.djangoApp.userId === 'None' || window.djangoApp.userName === 'None') {
@@ -127,7 +128,7 @@
       <div class="navbar-text pull-right">
        {% if user.is_authenticated %}
          <a class="pointer" popover-placement="bottom" popover-trigger="click" uib-popover-template="dynamicPopover.templateUrl">
-            <i class="fa fa-question-circle"></i>
+            <i class="fa fa-question-circle icon-only"></i>
             Help
          </a>
          &nbsp;&nbsp;|&nbsp;&nbsp;
@@ -135,14 +136,17 @@
 
         {% if user.is_authenticated %}
           <i class="fa fa-user"></i>
-          <a href="{% url "user" user.profile.uuid %}" tabindex=5>
+
+          <a id="refinery-user" href="{% url "user" user.profile.uuid %}"
+             tabindex=5>
+
           {% if user.first_name != "" or user.last_name != "" %}
             {{ user.first_name }} {{ user.last_name }}
           {% else %}
             {{ user.username }}
           {% endif %}
           </a>&nbsp;&nbsp;|&nbsp;&nbsp;
-          <i class="fa fa-sign-out"></i>&nbsp;
+          <i id="refinery-logout" class="fa fa-sign-out"></i>&nbsp;
           <a href="
            {% url "django.contrib.auth.views.logout" %}?next={% url "home" %}"
           tabindex=6>
@@ -158,7 +162,7 @@
             </a>&nbsp;&nbsp;
           &nbsp;&nbsp;|&nbsp;&nbsp;
           {% endif %}
-          <i class="fa fa-sign-in"></i>&nbsp;<a rel="tooltip"
+          <i id="refinery-login" class="fa fa-sign-in"></i>&nbsp;<a rel="tooltip"
           data-placement="left" title="Log In" href="{{login_url}}?next={% if request.path %}{% ifnotequal registration_url request.path %}{% ifnotequal login_url request.path %}{{ request.path|safe }}{% else %}{% url "home" %}{% endifnotequal %}{% else %}{% url "home" %}{% endifnotequal %}{% else %}{% url "home" %}{% endif %}">Login</a>
         {% endif %}
         &nbsp;&nbsp;|&nbsp;&nbsp;
@@ -189,6 +193,11 @@
           <li class="{{ navbar_class_about }}">
             <a href="{% url "about" %}" tabindex=4>About</a>
           </li>
+          {% if REFINERY_CUSTOM_NAVBAR_ITEM %}
+             <li>
+               {{ REFINERY_CUSTOM_NAVBAR_ITEM|safe }}
+             </li>
+          {% endif %}
         </ul>
       </div>
       </div>
@@ -299,8 +308,7 @@
   <script src="{% static "js/collaboration.js" %}"></script>
   <script src="{% static "js/chart.js"%}"></script>
   <script src="{% static "js/data-set-about.js" %}"></script>
-  <script src="{% static "js/visualization.js" %}"></script>
-  <script src="{% static "js/igv.js" %}"></script>
+  <script src="{% static "js/tool-launch.js" %}"></script>
 
   <script src="{% static "vendor/ng-file-upload/angular-file-upload.min.js" %}"></script>
   <script src="{% static "vendor/angular-ui-grid/ui-grid.min.js" %}"></script>

@@ -39,7 +39,7 @@ function DataSetSearchApiFactory ($sce, settings, solrService, sessionService) {
           // Query
           q: searchQuery,
           // Query fields
-          qf: 'title^0.5 accession submitter text',
+          qf: 'title^0.5 accession submitter text description',
           // # results returned
           rows: limit,
           // Start of return

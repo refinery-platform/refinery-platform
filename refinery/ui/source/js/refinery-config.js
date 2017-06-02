@@ -5,6 +5,7 @@ function refineryAppConfig (
   $httpProvider,
   $logProvider,
   $provide,
+  $sceDelegateProvider,
   $urlRouterProvider,
   settings,
   uiSelectConfig,
@@ -66,6 +67,11 @@ function refineryAppConfig (
   localStorageServiceProvider.setPrefix(
     'refinery' + settings.djangoApp.refineryInstanceName
   );
+
+  $sceDelegateProvider.resourceUrlWhitelist([
+    'self',
+    settings.djangoApp.staticUrl + '**'  // allow loading assets from S3
+  ]);
 }
 
 angular
@@ -75,6 +81,7 @@ angular
     '$httpProvider',
     '$logProvider',
     '$provide',
+    '$sceDelegateProvider',
     '$urlRouterProvider',
     'settings',
     'uiSelectConfig',

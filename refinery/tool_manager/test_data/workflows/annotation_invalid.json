@@ -1,0 +1,34 @@
+{ "name": "Test LIST",
+  "tool_type": "WORKFLOW",
+  "galaxy_workflow_id": "66b2fe95-9250-425d-86ae-5953c1d6e5b6",
+  "annotation": {
+    "refinery_type": "analysis",
+    "outputs": [
+      {
+        "filetypes": [
+          {
+            "name": "FASTQ"
+          }
+        ],
+        "name": "Cool Input File",
+        "description": "Cool Input File Description"
+      }
+    ],
+    "relationship": {
+      "relationship": {},
+      "value_type": "LIST",
+      "name": "Flat list of N Samples",
+      "inputs": [
+        {
+          "filetypes": [
+          {
+            "name": "FASTQ"
+          }
+        ],
+          "name": "Cool Input File",
+          "description": "Cool Input File Description"
+        }
+      ]
+    }
+  }
+}

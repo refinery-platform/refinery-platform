@@ -12,7 +12,7 @@ from django.template.context import Context
 
 from haystack import indexes
 
-from data_set_manager.models import Node, AnnotatedNode
+from data_set_manager.models import AnnotatedNode, Node
 
 
 logger = logging.getLogger(__name__)
@@ -26,7 +26,7 @@ class DataSetIndex(indexes.SearchIndex, indexes.Indexable):
     dbid = indexes.IntegerField(model_attr='id')
     uuid = indexes.CharField(model_attr='uuid')
     summary = indexes.CharField(model_attr='summary', null=True)
-    description = indexes.CharField(null=True)
+    description = indexes.EdgeNgramField(null=True)
     creation_date = indexes.DateTimeField(model_attr='creation_date')
     modification_date = indexes.DateTimeField(model_attr='modification_date')
     submitter = indexes.MultiValueField(null=True)
@@ -46,7 +46,15 @@ class DataSetIndex(indexes.SearchIndex, indexes.Indexable):
         return self.get_model().objects.all()
 
     def prepare_description(self, object):
-        return object.get_investigation().get_description()
+        try:
+            return object.get_investigation().get_description()
+        except AttributeError as e:
+            logger.error(
+                "Could not fetch Investigation for DataSet with UUID: %s %s",
+                object.uuid,
+                e
+            )
+        return ""
 
     def prepare_access(self, object):
         access_list = []
@@ -65,15 +73,26 @@ class DataSetIndex(indexes.SearchIndex, indexes.Indexable):
         submitters = []
 
         for contact in investigation.contact_set.all():
-            submitters.append(contact.last_name + ", " + contact.first_name)
+            submitters.append(
+                u"{}, {}".format(
+                    contact.last_name,
+                    contact.first_name
+                )
+            )
 
         studies = investigation.study_set.all()
         for study in studies:
             for contact in study.contact_set.all():
                 submitters.append(
-                    contact.last_name + ", " + contact.first_name)
+                    u"{}, {}".format(
+                        contact.last_name,
+                        contact.first_name
+                    )
+                )
 
-        return set(submitters)
+        # Cast to `list` looks redundant, but MultiValueField stores sets
+        # improperly, introducing a search bug. See: http://bit.ly/2pZLE5c
+        return list(set(submitters))
 
     def prepare_measurement(self, object):
         investigation = object.get_investigation()
@@ -88,7 +107,9 @@ class DataSetIndex(indexes.SearchIndex, indexes.Indexable):
             for assay in study.assay_set.all():
                 measurements.append(assay.measurement)
 
-        return set(measurements)
+        # Cast to `list` looks redundant, but MultiValueField stores sets
+        # improperly, introducing a search bug. See: http://bit.ly/2pZLE5c
+        return list(set(measurements))
 
     def prepare_technology(self, object):
         investigation = object.get_investigation()
@@ -103,7 +124,9 @@ class DataSetIndex(indexes.SearchIndex, indexes.Indexable):
             for assay in study.assay_set.all():
                 technologies.append(assay.technology)
 
-        return set(technologies)
+        # Cast to `list` looks redundant, but MultiValueField stores sets
+        # improperly, introducing a search bug. See: http://bit.ly/2pZLE5c
+        return list(set(technologies))
 
     # from:
     # http://django-haystack.readthedocs.org/en/latest/rich_content_extraction.html
