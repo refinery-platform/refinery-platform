@@ -597,10 +597,10 @@ def _generate_solr_params(params, assay_uuids=[]):
         facet_field = insert_facet_field_filter(facet_filter, facet_field)
         split_facet_fields = generate_facet_fields_query(facet_field)
         solr_params = ''.join([solr_params, split_facet_fields])
-    elif len(assay_uuids) == 1:
+    else:
         # Missing facet_fields, it is generated from Attribute Order Model.
         attributes_str = AttributeOrder.objects.filter(
-            assay__uuid=assay_uuids[0]
+            assay__uuid__in=assay_uuids  # TODO: Confirm this syntax
         )
         attributes = AttributeOrderSerializer(attributes_str, many=True)
         facet_field_obj = generate_filtered_facet_fields(attributes.data)
@@ -609,9 +609,6 @@ def _generate_solr_params(params, assay_uuids=[]):
         field_limit = ','.join(facet_field_obj.get('field_limit'))
         facet_field_query = generate_facet_fields_query(facet_field)
         solr_params = ''.join([solr_params, facet_field_query])
-    else:
-        # TODO?
-        pass
 
     if field_limit:
         solr_params = ''.join([solr_params, '&fl=', field_limit])
