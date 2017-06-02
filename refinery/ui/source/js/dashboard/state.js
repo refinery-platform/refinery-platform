@@ -3,13 +3,9 @@
 angular
   .module('refineryDashboard')
   .config([
-    '$windowProvider',
     'refineryStateProvider',
     'refineryUrlRouterProvider',
-    function (
-      $windowProvider, refineryStateProvider, refineryUrlRouterProvider
-    ) {
-      var $window = $windowProvider.$get();
+    function (refineryStateProvider, refineryUrlRouterProvider) {
       refineryStateProvider
         .state(
           'launchPad', {
@@ -17,7 +13,7 @@ angular
             reloadOnSearch: false,
             templateUrl: function () {
               // unit tests redefine $window and thus make it unusable here
-              return $window.getStaticUrl(
+              return window.getStaticUrl(
                 'partials/dashboard/views/launch-pad.html'
               );
             }
@@ -45,3 +41,4 @@ angular
     }
   ]
 );
+
