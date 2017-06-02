@@ -234,7 +234,6 @@ function fileBrowserFactory (
     return {
       name: _columnName,
       field: _columnName,
-      cellTooltip: true,
       width: 11 + '%',
       displayName: 'Input Groups',
       enableFiltering: false,
