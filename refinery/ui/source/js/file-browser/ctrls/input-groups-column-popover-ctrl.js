@@ -22,12 +22,6 @@
     var nodeService = activeNodeService;
     var vm = this;
     vm.activeNode = nodeService.activeNodeRow; // ui-grid row which is engaged
-    vm.attributes = fileService.attributesObj; // contains the data attributes
-    vm.currentGroup = fileService.currentGroup; // group indices ex: [0, 0]
-    /** current group's data structure for each level ex:[ 'Pair','List'] **/
-    vm.currentTypes = fileService.currentTypes;
-    // selectedNodes ordered by group indicies
-    vm.groupCollection = fileService.groupCollection;
     vm.inputFileTypes = fileService.inputFileTypes; // current tool's inputFileTypes
     vm.inputFileTypeColor = fileService.inputFileTypeColor;
     // selectedNodes ordered by group indicies
@@ -49,9 +43,6 @@
       },
       function () {
         vm.inputFileTypes = fileService.inputFileTypes;
-        vm.currentGroup = fileService.currentGroup;
-        vm.currentTypes = fileService.currentTypes;
-        vm.groupCollection = fileService.groupCollection;
         vm.inputFileTypeColor = fileService.inputFileTypeColor;
       }
     );
@@ -67,11 +58,9 @@
     // When user changes the group selection from the control panel
     $scope.$watchCollection(
       function () {
-        return fileService.currentGroup;
+        return fileService.nodeSelectCollection;
       },
       function () {
-        vm.currentGroup = fileService.currentGroup;
-        vm.currentTypes = fileService.currentTypes;
         vm.nodeSelection = fileService.nodeSelectCollection;
       }
     );
