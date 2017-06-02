@@ -80,36 +80,26 @@ def statistics(request):
                               context_instance=RequestContext(request))
 
 
-def login_scc(request):
-    if settings.SATORI_DEMO:
+def auto_login(request):
+    user = request.GET.get('user', False)
+    exploration = request.GET.get('exploration', False)
+
+    if user and user in settings.AUTO_LOGIN:
         if request.user.is_authenticated():
             logout(request)
 
         try:
-            user = User.objects.get(id=settings.SATORI_DEMO_SCC_USER_ID)
+            user = User.objects.get(id=settings.AUTO_LOGIN[user])
             user.backend = settings.AUTHENTICATION_BACKENDS[0]
         except Exception:
-            return home(request)
+            return redirect('{}'.format(reverse('home')))
 
         login(request, user)
 
-        return redirect('{}#/exploration'.format(reverse('home')))
+        if exploration:
+            return redirect('{}#/exploration'.format(reverse('home')))
 
-
-def login_ml(request):
-    if settings.SATORI_DEMO:
-        if request.user.is_authenticated():
-            logout(request)
-
-        try:
-            user = User.objects.get(id=settings.SATORI_DEMO_ML_USER_ID)
-            user.backend = settings.AUTHENTICATION_BACKENDS[0]
-        except Exception:
-            return home(request)
-
-        login(request, user)
-
-        return redirect('{}#/exploration'.format(reverse('home')))
+    return redirect('{}'.format(reverse('home')))
 
 
 @login_required

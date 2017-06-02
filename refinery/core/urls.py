@@ -4,7 +4,6 @@ Created on Feb 20, 2012
 @author: nils
 '''
 
-from django.conf import settings
 from django.conf.urls import patterns, url
 from rest_framework.routers import DefaultRouter
 
@@ -94,14 +93,7 @@ urlpatterns = patterns(
         name="pubmed_summary"),
     url(r'^neo4j/annotations/$', 'neo4j_dataset_annotations',
         name="neo4j_dataset_annotations"),
-    if_cond(
-        settings.SATORI_DEMO,
-        url(r'^login_scc/$', 'login_scc', name="login_scc")
-    ),
-    if_cond(
-        settings.SATORI_DEMO,
-        url(r'^login_ml/$', 'login_ml', name="login_ml")
-    )
+    url(r'^auto_login/$', 'auto_login', name='auto_login')
 )
 
 # DRF url routing
