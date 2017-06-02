@@ -5,15 +5,16 @@ from xml.dom.minidom import Document
 
 from django.shortcuts import redirect
 
-from annotation_server.models import taxon_id_to_genome_build, \
-    genome_build_to_species
+from annotation_server.models import (genome_build_to_species,
+                                      taxon_id_to_genome_build)
 from annotation_server.utils import SUPPORTED_GENOMES
 from core.utils import get_full_url
 from data_set_manager.models import Node
-from file_server.views import profile_viewer
 from file_server.models import get_aux_file_item
 from file_store.models import FileStoreItem
-from file_store.tasks import import_file, create, rename
+from file_store.tasks import create, import_file, rename
+from file_server.views import profile_viewer
+
 
 logger = logging.getLogger(__name__)
 
@@ -116,20 +117,28 @@ def create_igv_session(genome, uuids, is_file_uuid=False):
     tempfilename.close()
     # getting file_store_uuid
     filestore_uuid = create(tempfilename.name, filetype="xml")
-    filestore_item = import_file(filestore_uuid, refresh=True)
-    # file to rename
-    temp_name = filestore_item.datafile.name.split('/')
-    temp_name = temp_name[len(temp_name) - 1] + '.xml'
-    # rename file by way of file_store
-    filestore_item = rename(filestore_uuid, temp_name)
-    # delete temp file
-    os.unlink(tempfilename.name)
-    # Url for session file
-    fs_url = get_full_url(filestore_item.get_datafile_url())
-    # IGV url for automatic launch of Java Webstart
-    igv_url = "http://www.broadinstitute.org/igv/projects/current/igv.php" \
-              "?sessionURL=" + fs_url
-    return igv_url
+    filestore_item_uuid = import_file(filestore_uuid, refresh=True)
+
+    try:
+        filestore_item = FileStoreItem.objects.get(uuid=filestore_item_uuid)
+    except (FileStoreItem.DoesNotExist,
+            FileStoreItem.MultipleObjectsReturned) as e:
+        logger.error("Couldn't properly fetch FileStoreItem: %s", e)
+    else:
+        # file to rename
+        temp_name = filestore_item.datafile.name.split('/')
+        temp_name = temp_name[len(temp_name) - 1] + '.xml'
+        # rename file by way of file_store
+        rename(filestore_uuid, temp_name)
+
+        # delete temp file
+        os.unlink(tempfilename.name)
+        # Url for session file
+        fs_url = get_full_url(filestore_item.get_datafile_url())
+        # IGV url for automatic launch of Java Webstart
+        igv_url = "http://www.broadinstitute.org/igv/projects/current/igv" \
+                  ".php?sessionURL=" + fs_url
+        return igv_url
 
 
 def results_igv(request):
@@ -361,26 +370,39 @@ def create_igv_session_annot(genome, uuids, annot_uuids=None, samp_file=None):
 
     # getting file_store_uuid
     filestore_uuid = create(tempfilename.name, filetype="xml")
-    filestore_item = import_file(filestore_uuid, refresh=True)
+    filestore_item_uuid = import_file(filestore_uuid, refresh=True)
 
-    # file to rename
-    temp_name = filestore_item.datafile.name.split('/')
-    temp_name = temp_name[len(temp_name) - 1] + '.xml'
+    try:
+        filestore_item = FileStoreItem.objects.get(uuid=filestore_item_uuid)
+    except (FileStoreItem.DoesNotExist,
+            FileStoreItem.MultipleObjectsReturned) as e:
+        logger.error("Couldn't properly fetch FileStoreItem: %s", e)
+    else:
+        # file to rename
+        temp_name = filestore_item.datafile.name.split('/')
+        temp_name = temp_name[len(temp_name) - 1] + '.xml'
 
-    # rename file by way of file_store
-    filestore_item = rename(filestore_uuid, temp_name)
+        # rename file by way of file_store
+        filestore_item_uuid = rename(filestore_uuid, temp_name)
 
-    # delete temp file
-    os.unlink(tempfilename.name)
+        # delete temp file
+        os.unlink(tempfilename.name)
+        try:
+            filestore_item = FileStoreItem.objects.get(
+                uuid=filestore_item_uuid)
+        except (FileStoreItem.DoesNotExist,
+                FileStoreItem.MultipleObjectsReturned) as e:
+            logger.error("Couldn't properly fetch FileStoreItem: %s", e)
+        else:
+            # Url for session file
+            sessionfile_url = get_full_url(filestore_item.get_datafile_url())
 
-    # Url for session file
-    sessionfile_url = get_full_url(filestore_item.get_datafile_url())
+            # IGV url for automatic launch of Java Webstart
+            igv_url = \
+                "http://www.broadinstitute.org/igv/projects/current/igv.php" \
+                "?sessionURL=" + sessionfile_url
 
-    # IGV url for automatic launch of Java Webstart
-    igv_url = "http://www.broadinstitute.org/igv/projects/current/igv.php" \
-              "?sessionURL=" + sessionfile_url
-
-    return igv_url
+            return igv_url
 
 
 def add_igv_resource(uuidlist, xml_res, xml_doc):
@@ -464,25 +486,35 @@ def add_igv_samples(fields, results_samp, annot_samples=None):
 
     # getting file_store_uuid
     filestore_uuid = create(temp_sample_name.name, filetype="txt")
-    filestore_item = import_file(filestore_uuid, refresh=True)
+    import_file(filestore_uuid, refresh=True)
 
-    # file to rename
-    temp_file = filestore_item.datafile.name.split('/')
-    temp_file = temp_file[len(temp_file) - 1] + '.txt'
+    try:
+        filestore_item = FileStoreItem.objects.get(uuid=filestore_uuid)
+    except (FileStoreItem.DoesNotExist,
+            FileStoreItem.MultipleObjectsReturned) as e:
+        logger.error("Couldn't properly fetch FileStoreItem: %s", e)
+    else:
+        # file to rename
+        temp_file = filestore_item.datafile.name.split('/')
+        temp_file = temp_file[len(temp_file) - 1] + '.txt'
 
-    # rename file by way of file_store
-    filestore_item = rename(filestore_uuid, temp_file)
+        # rename file by way of file_store
+        filestore_item_uuid = rename(filestore_uuid, temp_file)
 
-    # getting file information based on file_uuids
-    curr_fs = FileStoreItem.objects.get(uuid=filestore_uuid)
+        try:
+            # getting file information based on file_uuids
+            curr_fs = FileStoreItem.objects.get(uuid=filestore_item_uuid)
+        except(FileStoreItem.DoesNotExist,
+               FileStoreItem.MultipleObjectsReturned) as e:
+            logger.error("Couldn't properly fetch FileStoreItem: %s", e)
+        else:
+            # full path to selected UUID File
+            curr_url = get_full_url(curr_fs.get_datafile_url())
 
-    # full path to selected UUID File
-    curr_url = get_full_url(curr_fs.get_datafile_url())
+            # delete temp file
+            os.unlink(temp_sample_name.name)
 
-    # delete temp file
-    os.unlink(temp_sample_name.name)
-
-    return curr_url
+            return curr_url
 
 
 def get_file_name(nodeuuid, samp_file=None, is_file_uuid=False):

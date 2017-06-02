@@ -11,9 +11,10 @@ from django.http import HttpResponse
 from django.shortcuts import render_to_response
 from django.template.context import RequestContext
 
-import file_store.tasks
 import file_server.tdf_file as tdf_module
 import file_server.models as models
+from file_store.models import FileStoreItem
+import file_store
 
 logger = logging.getLogger(__name__)
 
@@ -27,10 +28,10 @@ def index(request):
     tdf_file.cache()
 
     for track_name in tdf_file.get_track_names():
-        print(track_name)
+        logger.info(track_name)
 
     for data_set_name in tdf_file.get_data_set_names():
-        print(data_set_name)
+        logger.info(data_set_name)
         window_function = ""
         if len(data_set_name.split("/")) == 4:
             window_function = data_set_name.split("/")[3]
@@ -38,34 +39,34 @@ def index(request):
                                          data_set_name.split("/")[2],
                                          window_function)
         data_set.read()
-        print("Tile Count: " + str(len(data_set.tile_index)))
-        print("Tile Width: " + str(data_set.tile_width))
+        logger.info("Tile Count: " + str(len(data_set.tile_index)))
+        logger.info("Tile Width: " + str(data_set.tile_width))
 
-    print(data_set)
+    logger.info(data_set)
 
     tile = data_set.get_tile(0)
-    print(tile)
+    logger.info(tile)
 
     tile = data_set.get_tile(1)
-    print(tile)
+    logger.info(tile)
 
     tile = data_set.get_tile(2)
-    print(tile)
+    logger.info(tile)
 
     tile = data_set.get_tile(3)
-    print(tile)
+    logger.info(tile)
 
     tile = data_set.get_tile(4)
-    print(tile)
+    logger.info(tile)
 
     tile = data_set.get_tile(5)
-    print(tile)
+    logger.info(tile)
 
     tile = data_set.get_tile(6)
-    print(tile)
+    logger.info(tile)
 
     tile = data_set.get_tile(7)
-    print(tile)
+    logger.info(tile)
 
     profile = tdf_file.get_profile("chr21", "z0", ["mean"],
                                    start_location=13591070,
@@ -73,7 +74,7 @@ def index(request):
 
     file_object.close()
 
-    return HttpResponse(json.dumps(profile), mimetype='application/json')
+    return HttpResponse(json.dumps(profile), content_type='application/json')
 
 
 def _get_cache(session, uuid):
@@ -165,43 +166,45 @@ def _get_tdf_file_from_cache(session, uuid):
 
 
 def cache_tdf(request, uuid, refresh=False):
-    # TODO: call asynchronously
-    file_store_item = file_store.tasks.read(uuid)
-
-    if not _is_cached_tdf_file(request.session, uuid):
-        print("Caching file " + str(uuid) + " ...")
-        tdf = tdf_module.TDFFile(file_store_item.get_file_object())
-        tdf.cache()
-        _cache_tdf_file(request.session, uuid, tdf)
+    try:
+        file_store_item = FileStoreItem.objects.get(uuid=uuid)
+    except (FileStoreItem.DoesNotExist,
+            FileStoreItem.MultipleObjectsReturned) as e:
+        logger.error("Couldn't properly fetch FileStoreItem: %s", e)
     else:
-        print("Retrieved file " + str(uuid) + " ...")
-        tdf = _get_tdf_file_from_cache(request.session, uuid)
+        if not _is_cached_tdf_file(request.session, uuid):
+            logger.debug("Caching file: %s ...", uuid)
+            tdf = tdf_module.TDFFile(file_store_item.get_file_object())
+            tdf.cache()
+            _cache_tdf_file(request.session, uuid, tdf)
+        else:
+            logger.debug("Retrieved file: %s ...", uuid)
+            tdf = _get_tdf_file_from_cache(request.session, uuid)
 
-    if not _is_cached_tdf_data_set_information(request.session,
-                                               uuid) or refresh:
-        print("Caching data set information " + str(uuid) + " ...")
+        if not _is_cached_tdf_data_set_information(request.session,
+                                                   uuid) or refresh:
+            logger.debug("Caching data set information: %s ...", uuid)
 
-        for data_set_name in tdf.get_data_set_names():
-            # decompose data set name
-            components = tdf.decompose_data_set_name(data_set_name)
-            data_set = tdf.get_data_set(components["sequence_name"],
-                                        components["zoom_level"],
-                                        components["window_function"])
-            data_set_information = {"data_set_name": data_set_name,
-                                    "tile_width": data_set.tile_width,
-                                    "tile_count": str(
-                                        len(data_set.tile_index))}
+            for data_set_name in tdf.get_data_set_names():
+                # decompose data set name
+                components = tdf.decompose_data_set_name(data_set_name)
+                data_set = tdf.get_data_set(components["sequence_name"],
+                                            components["zoom_level"],
+                                            components["window_function"])
+                data_set_information = {"data_set_name": data_set_name,
+                                        "tile_width": data_set.tile_width,
+                                        "tile_count": str(
+                                            len(data_set.tile_index))}
 
-            _cache_tdf_data_set_information(request.session, uuid, components,
-                                            data_set_information)
-    else:
-        print(
-            str(uuid) +
-            " data set information is cached and refresh not requested")
+                _cache_tdf_data_set_information(
+                    request.session, uuid, components, data_set_information)
+        else:
+            logger.debug("%s data set information is cached and refresh not "
+                         "requested", uuid)
 
-    return HttpResponse(json.dumps(
-        _get_tdf_data_set_information_from_cache(request.session, uuid),
-        sort_keys=True, indent=4), mimetype='application/json')
+        return HttpResponse(json.dumps(
+            _get_tdf_data_set_information_from_cache(request.session, uuid),
+            sort_keys=True, indent=4), content_type='application/json')
 
 
 def get_tdf_profile(request, uuid, sequence_name, zoom_level, start_location,
@@ -214,33 +217,38 @@ def get_tdf_profile(request, uuid, sequence_name, zoom_level, start_location,
     if start_location < 1:
         start_location = 1
 
-    file_store_item = file_store.tasks.read(uuid)
-    # TODO: test for failure
-
-    data_set_name = _get_tdf_data_set_information_from_cache(
-        request.session, uuid
-    )[sequence_name][zoom_level][window_function]["data_set_name"]
-
-    if _is_cached_tdf_data_set(request.session, uuid, data_set_name):
-        print("Retrieving TDF data set " + data_set_name + "...")
-        data_set = _get_tdf_data_set_from_cache(request.session, uuid,
-                                                data_set_name)
+    try:
+        file_store_item = FileStoreItem.objects.get(uuid=uuid)
+    except(FileStoreItem.DoesNotExist,
+           FileStoreItem.MultipleObjectsReturned) as e:
+        logger.error("Couldn't properly fetch FileStoreItem: %s", e)
     else:
-        print("Caching TDF data set " + data_set_name + "...")
-        tdf_file = _get_tdf_file_from_cache(request.session, uuid)
-        data_set = tdf_file.get_data_set(sequence_name, zoom_level, "mean")
-        data_set.read()
-        _cache_tdf_data_set(request.session, uuid, data_set_name, data_set)
 
-    with file_store_item.get_file_object() as file_object:
-        profile = tdf_module.get_profile_from_file(data_set,
-                                                   int(start_location),
-                                                   int(end_location),
-                                                   file_object)
+        data_set_name = _get_tdf_data_set_information_from_cache(
+            request.session, uuid
+        )[sequence_name][zoom_level][window_function]["data_set_name"]
 
-    print("Profile Length: " + str(len(profile)))
+        if _is_cached_tdf_data_set(request.session, uuid, data_set_name):
+            logger.debug("Retrieving TDF data set %s ...", data_set_name)
+            data_set = _get_tdf_data_set_from_cache(request.session, uuid,
+                                                    data_set_name)
+        else:
+            logger.debug("Caching TDF data set %s ...", data_set_name)
+            tdf_file = _get_tdf_file_from_cache(request.session, uuid)
+            data_set = tdf_file.get_data_set(sequence_name, zoom_level, "mean")
+            data_set.read()
+            _cache_tdf_data_set(request.session, uuid, data_set_name, data_set)
 
-    return HttpResponse(json.dumps(profile), mimetype='application/json')
+        with file_store_item.get_file_object() as file_object:
+            profile = tdf_module.get_profile_from_file(data_set,
+                                                       int(start_location),
+                                                       int(end_location),
+                                                       file_object)
+
+        print("Profile Length: " + str(len(profile)))
+
+        return HttpResponse(
+            json.dumps(profile), content_type='application/json')
 
 
 def get_zoom_levels(request, uuid, sequence_name):
@@ -276,7 +284,7 @@ def get_zoom_levels(request, uuid, sequence_name):
 
     return HttpResponse(
         json.dumps(zoom_level_ranges, sort_keys=True, indent=4),
-        mimetype='application/json')
+        content_type='application/json')
 
 
 def profile_viewer(request, uuid, sequence_name, start_location, end_location):
@@ -356,4 +364,4 @@ def profile(request):
     except AttributeError as e:
         return HttpResponse(e.message)
 
-    return HttpResponse(profile, mimetype='application/json')
+    return HttpResponse(profile, content_type='application/json')

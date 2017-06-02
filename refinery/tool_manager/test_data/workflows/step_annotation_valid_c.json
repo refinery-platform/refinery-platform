@@ -1,0 +1,9 @@
+{
+	"output_files": [{
+		"name": "test tool out",
+		"description": "test tool out description",
+		"filetype": {
+			"name": "TXT"
+		}
+	}]
+}

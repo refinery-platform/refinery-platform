@@ -19,53 +19,51 @@ from django import forms
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.forms import AuthenticationForm
-from django.contrib.auth.models import User, Group, Permission
+from django.contrib.auth.models import Group, Permission, User
 from django.contrib.auth.signals import user_logged_in
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.messages import get_messages
 from django.contrib.messages import info
 from django.contrib.sites.models import Site
-from django.core.exceptions import MultipleObjectsReturned, ObjectDoesNotExist
 from django.core.mail import send_mail
 from django.db import models, transaction
 from django.db.models import Max
 from django.db.models.fields import IntegerField
-from django.db.models.signals import post_save, pre_delete, post_delete
+from django.db.models.signals import post_delete, post_save, pre_delete
 from django.db.utils import IntegrityError
 from django.dispatch import receiver
 from django.forms import ValidationError
-from django.template import loader, Context
+from django.template import Context, loader
 from django.utils import timezone
 
 from bioblend import galaxy
 from django.template.loader import render_to_string
-from django_extensions.db.fields import UUIDField
 from django_auth_ldap.backend import LDAPBackend
+from django_extensions.db.fields import UUIDField
 from guardian.models import UserObjectPermission
-from guardian.shortcuts import (get_users_with_perms,
-                                get_groups_with_perms, assign_perm,
-                                remove_perm, get_objects_for_group)
-from registration.models import RegistrationProfile, RegistrationManager
-from registration.signals import user_registered, user_activated
+from guardian.shortcuts import (assign_perm, get_groups_with_perms,
+                                get_objects_for_group, get_users_with_perms,
+                                remove_perm)
+from registration.models import RegistrationManager, RegistrationProfile
+from registration.signals import user_activated, user_registered
 
-
-from file_store.models import get_file_size, FileStoreItem, FileType
-from file_store.tasks import rename
-from data_set_manager.models import (Node, Study, Assay, Investigation,
-                                     NodeCollection)
+from .utils import (add_or_update_user_to_neo4j, add_read_access_in_neo4j,
+                    delete_analysis_index, delete_data_set_index,
+                    delete_data_set_neo4j, delete_ontology_from_neo4j,
+                    delete_user_in_neo4j, email_admin, get_aware_local_time,
+                    invalidate_cached_object, remove_read_access_in_neo4j,
+                    update_annotation_sets_neo4j, update_data_set_index,
+                    skip_if_test_run)
+from data_set_manager.models import (Assay, Investigation, Node,
+                                     NodeCollection, Study)
 from data_set_manager.utils import (add_annotated_nodes_selection,
                                     index_annotated_nodes_selection)
-from galaxy_connector.galaxy_workflow import (create_expanded_workflow_graph,
+from file_store.models import FileStoreItem, FileType, get_file_size
+from file_store.tasks import rename
+from galaxy_connector.galaxy_workflow import (configure_workflow,
                                               countWorkflowSteps,
-                                              configure_workflow)
+                                              create_expanded_workflow_graph)
 from galaxy_connector.models import Instance
-from .utils import (update_data_set_index, delete_data_set_index,
-                    add_read_access_in_neo4j, remove_read_access_in_neo4j,
-                    delete_data_set_neo4j, delete_ontology_from_neo4j,
-                    delete_analysis_index, invalidate_cached_object,
-                    get_aware_local_time, email_admin,
-                    add_or_update_user_to_neo4j, update_annotation_sets_neo4j,
-                    delete_user_in_neo4j)
 
 logger = logging.getLogger(__name__)
 
@@ -88,7 +86,7 @@ class UserProfile(models.Model):
 
     """
     uuid = UUIDField(unique=True, auto=True)
-    user = models.OneToOneField(User)
+    user = models.OneToOneField(User, related_name='profile')
     affiliation = models.CharField(max_length=100, blank=True)
     catch_all_project = models.ForeignKey('Project', blank=True, null=True)
     login_count = models.IntegerField(default=0)
@@ -128,29 +126,28 @@ def create_user_profile(sender, instance, created, **kwargs):
     """
     if created:
         UserProfile.objects.get_or_create(user=instance)
-        Tutorials.objects.get_or_create(user_profile=instance.userprofile)
+        Tutorials.objects.get_or_create(user_profile=instance.profile)
 
 
 post_save.connect(create_user_profile, sender=User)
 
 
 @receiver(post_save, sender=User)
-def add_new_user_to_public_group(sender, instance, created, **kwargs):
-    """Add new users to Public group automatically
+def add_user_to_public_group(sender, instance, created, **kwargs):
+    """Add users to Public group automatically
 
     """
-    if created:
-        public_group = ExtendedGroup.objects.public_group()
-        # need to check if Public group exists to avoid errors when creating
-        # user accounts (like superuser and AnonymousUser) before the group
-        # is created by init_refinery command
-        if public_group:
-            instance.groups.add(public_group)
+    public_group = ExtendedGroup.objects.public_group()
+    # need to check if Public group exists to avoid errors when creating
+    # user accounts (like superuser and AnonymousUser) before the group
+    # is created by init_refinery command
+    if public_group:
+        instance.groups.add(public_group)
 
 
 def create_user_profile_registered(sender, user, request, **kwargs):
     UserProfile.objects.get_or_create(user=user)
-    Tutorials.objects.get_or_create(user_profile=user.userprofile)
+    Tutorials.objects.get_or_create(user_profile=user.profile)
 
     logger.info(
         "user profile for user %s has been created after registration",
@@ -183,14 +180,14 @@ user_activated.connect(register_handler, dispatch_uid='activated')
 
 # check if user has a catch all project and create one if not
 def create_catch_all_project(sender, user, request, **kwargs):
-    if user.get_profile().catch_all_project is None:
+    if user.profile.catch_all_project is None:
         project = Project.objects.create(
             name="Catch-All Project",
             is_catch_all=True
         )
         project.set_owner(user)
-        user.get_profile().catch_all_project = project
-        user.get_profile().save()
+        user.profile.catch_all_project = project
+        user.profile.save()
         messages.success(
             request,
             "If you don't want to fill your profile out now, you can go to "
@@ -201,8 +198,8 @@ def create_catch_all_project(sender, user, request, **kwargs):
 
 
 def iterate_user_login_count(sender, user, request, **kwargs):
-    user.userprofile.login_count += 1
-    user.userprofile.save()
+    user.profile.login_count += 1
+    user.profile.save()
 
 
 # create catch all project for user if none exists
@@ -440,10 +437,10 @@ class SharableResource(OwnableResource):
         abstract = True
 
 
-class TemporaryResource:
+class TemporaryResource(models.Model):
     """Mix-in class for temporary resources like NodeSet instances"""
     # Expiration time and date of the instance
-    expiration = models.DateTimeField()
+    expiration = models.DateTimeField(null=True, blank=True)
 
     def __unicode__(self):
         return self.name + " (" + self.uuid + ")"
@@ -452,7 +449,7 @@ class TemporaryResource:
         abstract = True
 
 
-class ManageableResource:
+class ManageableResource(models.Model):
     """Abstract base class for manageable resources such as disk space and
     workflow engines
     """
@@ -553,16 +550,14 @@ class DataSet(SharableResource):
         try:
             self.get_isa_archive().delete()
 
-        except Exception as e:
-            logger.error(
-                "Couldn't delete DataSet's isa_archive: %s" % e)
+        except AttributeError as e:
+            logger.debug("DataSet has no isa_archive to delete: %s" % e)
 
         try:
             self.get_pre_isa_archive().delete()
 
-        except Exception as e:
-            logger.error(
-                "Couldn't delete DataSet's pre_isa_archive: %s" % e)
+        except AttributeError as e:
+            logger.debug("DataSet has no pre_isa_archive to delete: %s" % e)
 
         related_investigation_links = self.get_investigation_links()
 
@@ -737,34 +732,32 @@ class DataSet(SharableResource):
         Returns the isa_archive that was used to create the
         DataSet
         """
+        investigation = self.get_investigation()
+
         try:
             return FileStoreItem.objects.get(
-                uuid=InvestigationLink.objects.get(
-                    data_set__uuid=self.uuid).investigation.isarchive_file)
+                uuid=investigation.isarchive_file)
 
         except (FileStoreItem.DoesNotExist,
                 FileStoreItem.MultipleObjectsReturned,
-                InvestigationLink.DoesNotExist,
-                InvestigationLink.MultipleObjectsReturned) as e:
-            logger.error("Error while fetching FileStoreItem or "
-                         "InvestigationLink: %s" % e)
+                AttributeError) as e:
+            logger.debug("Couldn't fetch FileStoreItem: %s" % e)
 
     def get_pre_isa_archive(self):
         """
         Returns the pre_isa_archive that was used to create the
         DataSet
         """
+        investigation = self.get_investigation()
+
         try:
             return FileStoreItem.objects.get(
-                uuid=InvestigationLink.objects.get(
-                    data_set__uuid=self.uuid).investigation.pre_isarchive_file)
+                    uuid=investigation.pre_isarchive_file)
 
         except (FileStoreItem.DoesNotExist,
                 FileStoreItem.MultipleObjectsReturned,
-                InvestigationLink.DoesNotExist,
-                InvestigationLink.MultipleObjectsReturned) as e:
-            logger.error("Error while fetching FileStoreItem or "
-                         "InvestigationLink: %s" % e)
+                AttributeError) as e:
+            logger.debug("Couldn't fetch FileStoreItem: %s" % e)
 
     def share(self, group, readonly=True):
         super(DataSet, self).share(group, readonly)
@@ -834,8 +827,9 @@ def _dataset_delete(sender, instance, *args, **kwargs):
 
 
 @receiver(post_save, sender=DataSet)
-def _dataset_saved(**kwargs):
+def _dataset_saved(sender, instance, *args, **kwargs):
     update_annotation_sets_neo4j()
+    update_data_set_index(instance)
 
 
 class InvestigationLink(models.Model):
@@ -859,7 +853,8 @@ class InvestigationLink(models.Model):
         try:
             return NodeCollection.objects.get(
                 uuid=self.investigation.uuid)
-        except (ObjectDoesNotExist, MultipleObjectsReturned) as e:
+        except (NodeCollection.DoesNotExist,
+                NodeCollection.MultipleObjectsReturned) as e:
             logger.error(("Could not fetch NodeCollection: " % e))
 
 
@@ -1243,6 +1238,7 @@ class Analysis(OwnableResource):
     def get_analysis_results(self):
         return AnalysisResult.objects.filter(analysis_uuid=self.uuid)
 
+    @skip_if_test_run
     def optimize_solr_index(self):
         solr = pysolr.Solr(urljoin(settings.REFINERY_SOLR_BASE_URL,
                                    "data_set_manager"), timeout=10)
@@ -1254,7 +1250,7 @@ class Analysis(OwnableResource):
         try:
             solr.optimize()
         except Exception as e:
-            logger.error("Could not optimize Solr's index:", e)
+            logger.error("Could not optimize Solr's index: %s", e)
 
     def set_status(self, status, message=''):
         """Set analysis status and perform additional actions as required"""
@@ -1557,7 +1553,21 @@ class Analysis(OwnableResource):
                 else:
                     if item.get_filetype() == zipfile:
                         new_file_name = ''.join([root, '.zip'])
-            rename(result.file_store_uuid, new_file_name)
+            renamed_file_store_item_uuid = rename(
+                result.file_store_uuid, new_file_name)
+
+            # Try to generate an auxiliary node for visualization purposes
+            # NOTE: We have to do this after renaming happens because before
+            #  renaming, said FileStoreItems's datafile field does not point
+            #  to an actual file
+            try:
+                node = Node.objects.get(
+                    file_uuid=renamed_file_store_item_uuid)
+            except (Node.DoesNotExist, Node.MultipleObjectsReturned) as e:
+                logger.error("Error Fetching Node: %s", e)
+            else:
+                if node.is_derived():
+                    node.run_generate_auxiliary_node_task()
 
     def get_config(self):
         # TEST RECREATING RET_LIST DICTIONARY FROM ANALYSIS MODEL
@@ -1659,6 +1669,7 @@ class Analysis(OwnableResource):
                     analysis_results[0].file_store_uuid,
                     derived_data_file_node.name,
                     derived_data_file_node.uuid)
+
             if analysis_results.count() > 1:
                 logger.warning("Multiple output files returned for '%s.%s'." +
                                "No assignment to output node was made.",
@@ -1858,13 +1869,6 @@ class ExtendedGroup(Group):
         except:
             return None
 
-    def save(self, *args, **kwargs):
-        if len(self.name) == 0:
-            logger.error("Group name cannot be empty.")
-            return
-        else:
-            super(ExtendedGroup, self).save(*args, **kwargs)
-
 
 # automatic creation of a managed group when an extended group is created:
 def create_manager_group(sender, instance, created, **kwargs):
@@ -1882,40 +1886,6 @@ def create_manager_group(sender, instance, created, **kwargs):
 
 
 post_save.connect(create_manager_group, sender=ExtendedGroup)
-
-
-class NodeGroup(SharableResource, TemporaryResource):
-    """A collection of Nodes representing data files.
-    Used to save selection state between sessions and to map data files to
-    workflow inputs.
-    """
-
-    #: Number of nodes in the NodeSet (provided in POST/PUT/PATCH requests)
-    node_count = models.IntegerField(default=0)
-    #: Implicit node is created "on the fly" to support an analysis while
-    #: explicit node is created by the user to store a particular selection
-    is_implicit = models.BooleanField(default=False)
-    study = models.ForeignKey(Study)
-    assay = models.ForeignKey(Assay)
-    # The "current selection" node set for the associated study/assay
-    is_current = models.BooleanField(default=False)
-    # Nodes in the group, using uuids are foreign-key
-    nodes = models.ManyToManyField(Node, blank=True,
-                                   null=True)
-
-    class Meta:
-        unique_together = ["assay", "name"]
-        verbose_name = "node group"
-        permissions = (
-            ('read_%s' % verbose_name, 'Can read %s' % verbose_name),
-            ('share_%s' % verbose_name, 'Can share %s' % verbose_name),
-        )
-
-    def __unicode__(self):
-        return (
-            self.name + ("*" if self.is_current else "") + " - " +
-            self.get_owner_username()
-        )
 
 
 class NodeSet(SharableResource, TemporaryResource):
@@ -1963,11 +1933,8 @@ def get_current_node_set(study_uuid, assay_uuid):
             is_implicit=True,
             is_current=True
         )
-    except MultipleObjectsReturned:
-        logger.error(
-            "Multiple current node sets for study " + study_uuid + "/assay " +
-            assay_uuid + "."
-        )
+    except NodeSet.MultipleObjectsReturned as e:
+        logger.error("%s for %s/assay/%s", e, study_uuid, assay_uuid)
     finally:
         return node_set
 
@@ -2126,11 +2093,8 @@ def get_current_node_relationship(study_uuid, assay_uuid):
             assay__uuid=assay_uuid,
             is_current=True
         )
-    except MultipleObjectsReturned:
-        logger.error(
-            "Multiple current node relationships for study " + study_uuid +
-            "/assay " + assay_uuid + "."
-        )
+    except NodeSet.MultipleObjectsReturned as e:
+        logger.error("%s for %s/assay/%s", e, study_uuid, assay_uuid)
     finally:
         return relationship
 
@@ -2255,6 +2219,7 @@ class FastQC(object):
 
 
 @receiver(post_save, sender=User)
+@skip_if_test_run
 def _add_user_to_neo4j(sender, **kwargs):
     user = kwargs['instance']
 
@@ -2463,7 +2428,7 @@ class CustomRegistrationManager(RegistrationManager):
         if new_user_profile:
             new_user_profile.affiliation = affiliation
             new_user_profile.save()
-            new_user.userprofile = new_user_profile
+            new_user.profile = new_user_profile
 
         registration_profile = self.create_profile(new_user)
 
@@ -2532,7 +2497,7 @@ class CustomRegistrationProfile(RegistrationProfile):
                     'registered_user_full_name': "{} {}".format(
                         self.user.first_name, self.user.last_name),
                     'registered_user_affiliation':
-                        self.user.userprofile.affiliation
+                        self.user.profile.affiliation
 
                     }
         subject = render_to_string('registration/activation_email_subject.txt',

@@ -27,6 +27,7 @@ def extra_context(context):
         "ADMIN_EMAIL": settings.ADMINS[0][1],
         "CURRENT_COMMIT": settings.CURRENT_COMMIT,
         "DEBUG": settings.DEBUG,
+        "REFINERY_CUSTOM_NAVBAR_ITEM": settings.REFINERY_CUSTOM_NAVBAR_ITEM,
         "REFINERY_CSS": settings.REFINERY_CSS,
         "REFINERY_MAIN_LOGO": settings.REFINERY_MAIN_LOGO,
         "REFINERY_INNER_NAVBAR_HEIGHT": settings.REFINERY_INNER_NAVBAR_HEIGHT,
@@ -47,5 +48,6 @@ def extra_context(context):
         "REFINERY_EXTERNAL_AUTH_MESSAGE":
             settings.REFINERY_EXTERNAL_AUTH_MESSAGE,
         "REFINERY_TUTORIAL_STEPS": settings.REFINERY_TUTORIAL_STEPS,
-        "SOLR_SYNONYM_SEARCH": settings.SOLR_SYNONYMS
+        "SOLR_SYNONYM_SEARCH": settings.SOLR_SYNONYMS,
+        "STATIC_URL": settings.STATIC_URL,
     }

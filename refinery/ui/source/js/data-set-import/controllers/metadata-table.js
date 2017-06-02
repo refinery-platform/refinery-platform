@@ -18,6 +18,7 @@ function MetadataTableImportCtrl (
   this.d3 = d3;
   this.$uibModal = $uibModal;
   this.fileSources = fileSources;
+  this.showFileUpload = false;
   this.tabularFileImportApi = tabularFileImportApi;
   this.metadataStatusService = metadataStatusService;
   this.whiteSpaceStripFlag = false;
@@ -34,6 +35,11 @@ function MetadataTableImportCtrl (
   // `this.customSeparator` is an empty String.
   this.isSeparatorOk = true;
   this.setParser();
+
+  // Helper method to exit out of error alert
+  this.closeError = function () {
+    this.isErrored = false;
+  };
 }
 
 Object.defineProperty(
@@ -126,9 +132,13 @@ MetadataTableImportCtrl.prototype.renderTable = function () {
       // rejoin rows with new line
       var fileStr = dataArr.join('\r\n');
       /* Create a new file with the modified data and the originial file props.
-      * Safari does not support the File API Constructor.
+      * Safari supports File API Constructor but has issues with appending the
+      * file. Symptoms show up with content-type errors and file size 0 on
+      * back end. userAgent contains browser info
       * */
-      if (typeof self.$window.File === 'function') {
+      if (self.$window.navigator.userAgent.indexOf('Safari') > -1) {
+        self.strippedFile = new Blob([fileStr], { type: 'application/json' });
+      } else if (typeof self.$window.File === 'function') {
         self.strippedFile = new File([fileStr], self.file.name, self.file);
       } else {
         self.strippedFile = new Blob([fileStr], { type: 'application/json' });
@@ -226,8 +236,11 @@ MetadataTableImportCtrl.prototype.checkFiles = function () {
       }
 
       self.$uibModal.open({
-        templateUrl:
-          '/static/partials/data-set-import/partials/dialog-list-confirmation.html',
+        templateUrl: function () {
+          return self.$window.getStaticUrl(
+            'partials/data-set-import/partials/dialog-list-confirmation.html'
+          );
+        },
         controller: 'ConfirmationDialogInstanceCtrl as modal',
         size: 'lg',
         resolve: {
@@ -286,9 +299,6 @@ MetadataTableImportCtrl.prototype.startImport = function () {
   if (self.speciesColumn) {
     formData.append('species_column', self.speciesColumn);
   }
-  if (self.basePath) {
-    formData.append('base_path', self.basePath);
-  }
   if (self.annotationColumn) {
     formData.append('annotation_column', self.annotationColumn);
   }
@@ -300,9 +310,6 @@ MetadataTableImportCtrl.prototype.startImport = function () {
   }
   if (self.dataFilePermanent) {
     formData.append('data_file_permanent', self.dataFilePermanent);
-  }
-  if (self.makePublic) {
-    formData.append('is_public', self.makePublic);
   }
 
   return this.tabularFileImportApi

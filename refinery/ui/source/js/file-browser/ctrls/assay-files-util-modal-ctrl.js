@@ -1,26 +1,25 @@
 'use strict';
 
 function AssayFilesUtilModalCtrl (
-  $scope,
-  $uibModalInstance,
-  $window,
-  $q,
-  $log,
   fileBrowserFactory,
-  resetGridService) {
+  $log,
+  $q,
+  $scope,
+  selectedFilterService,
+  $uibModalInstance,
+  $window
+) {
   var vm = this;
   vm.assayAttributeOrder = [];
 
   // modal close button
-  $scope.close = function () {
-    resetGridService.setResetGridFlag(true);
+  vm.close = function () {
     $uibModalInstance.close('close');
   };
 
   // Refresh attribute lists when modal opens
   vm.refreshAssayAttributes = function () {
     var assayUuid = $window.externalAssayUuid;
-
     fileBrowserFactory.getAssayAttributeOrder(assayUuid).then(function () {
       vm.assayAttributeOrder = fileBrowserFactory.assayAttributeOrder;
     }, function (error) {
@@ -49,6 +48,13 @@ function AssayFilesUtilModalCtrl (
     }
   };
 
+  vm.isAttributeSelected = function (internalName) {
+    if (selectedFilterService.attributeSelectedFields.hasOwnProperty(internalName)) {
+      return true;
+    }
+    return false;
+  };
+
   vm.refreshAssayAttributes();
 }
 
@@ -57,13 +63,13 @@ angular
   .controller(
   'AssayFilesUtilModalCtrl',
   [
+    'fileBrowserFactory',
+    '$log',
+    '$q',
     '$scope',
+    'selectedFilterService',
     '$uibModalInstance',
     '$window',
-    '$q',
-    '$log',
-    'fileBrowserFactory',
-    'resetGridService',
     AssayFilesUtilModalCtrl
   ]
   );

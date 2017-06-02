@@ -2,7 +2,7 @@
 
 {% load humanize %}
 {% load markup %}
-{% load static %}
+{% load static from staticfiles %}
 
 
 {% block head_html %}
@@ -15,33 +15,23 @@
   <link rel="stylesheet" href="{% static "vendor/ui-select/dist/select.min.css" %}" />
 {% endblock head_html %}
 
-{% block title %} - Data Set {{ data_set.name }}{% endblock %}
+{% block title %} - Data Set
+  {{ data_set.accession }}:
+  {{ data_set.title }} {% endblock %}
 
 {% block subheader %}
   <div class="page-header">
-    <h1>Data Set <small>{{ data_set.name }}</small></h1>
+    <h1>Data Set
+      <small>
+        {{ data_set.accession }}: {{ data_set.title }}
+      </small>
+    </h1>
   </div>
 
 {% endblock %}
 
 {% block content %}
   <!-- tab headers -->
-
-  <!-- analysis status messages -->
-  {% if analysis_uuid and messages %}
-    {% for message in messages %}
-      <p {% if message.tags %} class="alert alert-{{ message.tags }} text-center"{% endif %}>
-        {{ message }}
-      </p>
-    {% endfor %}
-  {% endif %}
-
-
-  <span ng-controller="AnalysisMonitorCtrl">
-    <div ng-if="checkAnalysesViewFlag()">
-      <span rp-analysis-monitor-alert-msg></span>
-    </div>
-  </span>
 
 <div ng-controller="DataSetNavCtrl" ng-cloak>
   <div ng-controller="DataSetUiModeCtrl">
@@ -156,6 +146,12 @@
     var csrf_token = "{{ csrf_token }}";
   </script>
 
+  <!-- Script for popup content in the tool status and analyses icon-->
+  <script type="text/ng-template" id="nodeselectionpopover.html">
+    <rp-node-selection-popover-detail>
+    </rp-node-selection-popover-detail>
+  </script>
+
   <script type="text/javascript" src="{% static "js/refinery/solr/solr_utilities.js" %}"></script>
   <script type="text/javascript" src="{% static "js/refinery/solr/solr_client.js" %}"></script>
   <script type="text/javascript" src="{% static "js/refinery/solr/solr_query.js" %}"></script>
@@ -188,10 +184,6 @@
   <script type="text/javascript" src="{% static "js/provvis/provvis-motifs.js" %}"></script>
   <script type="text/javascript" src="{% static "js/provvis/provvis-render.js" %}"></script>
   <script type="text/javascript" src="{% static "js/provvis/provvis.js" %}"></script>
-
-  <script type="text/ng-template" id='assayfilesutilmodal.html'>
-    <rp-assay-files-util-modal-detail></rp-assay-files-util-modal-detail>
-   </script>
 
   <script type="application/javascript">
     setTimeout(function() {

@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load markup %}
 
-{% load static %}
+{% load static from staticfiles %}
 {% block head_html %}
 	<!-- Le styles -->
     {% for css_file in REFINERY_CSS %}
@@ -131,8 +131,10 @@
 			</span>
 		</div>
 		<p>Created: {{ workflow.creation_date }} | Last Modified: {{ workflow.modification_date }}</p>
-		<a class="refinery-base btn btn-default"
-      href="{% url 'workflow_edit' workflow.uuid %}">Edit</a>
+    {% if perm.change %}
+      <a class="refinery-base btn btn-default"
+        href="{% url 'workflow_edit' workflow.uuid %}">Edit</a>
+    {% endif %}
 	{% else %}
 	    <p>No valid workflow.</p>
 	{% endif %}

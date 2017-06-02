@@ -60,7 +60,6 @@ def get_setting(name, settings=local_settings):
     except KeyError:
         raise ImproperlyConfigured("Missing setting '{0}'".format(name))
 
-
 # TODO: remove after switching to the new Celery API
 djcelery.setup_loader()
 
@@ -156,6 +155,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'core.middleware.DatabaseFailureMiddleware',
 )
@@ -170,9 +170,14 @@ TEMPLATE_DIRS = (
     # Don't forget to use absolute paths, not relative paths.
 )
 
+# NOTE: the order of INSTALLED_APPS matters in some instances.
 INSTALLED_APPS = (
-    'django.contrib.auth',
+    'registration',
+    'core',
+    'data_set_manager',
+    'guardian',
     'django.contrib.contenttypes',
+    'django.contrib.auth',
     'django.contrib.sessions',
     'django.contrib.sites',
     'django.contrib.messages',
@@ -190,24 +195,22 @@ INSTALLED_APPS = (
     'djcelery',  # django-celery
     # NG: added for API
     "tastypie",
-    'guardian',
     'djangular',
     'galaxy_connector',
-    'core',
     'analysis_manager',
     'workflow_manager',
     'file_store',
     'file_server',
     'visualization_manager',
-    'data_set_manager',
     'annotation_server',
-    'registration',
+    'selenium_testing',
+    'tool_manager',
     'flatblocks',
-    # RP: added for database migration between builds
-    'south',
     'chunked_upload',
     'rest_framework',
     'rest_framework_swagger',
+    'django_docker_engine',
+    'httpproxy',
 )
 
 # NG: added for django-guardian
@@ -218,14 +221,6 @@ AUTHENTICATION_BACKENDS = (
 
 # NG: added to support sessions
 SESSION_ENGINE = "django.contrib.sessions.backends.cached_db"
-
-# NG: added to support anonymous users through django-guardian
-# (id can be set to any value apparently)
-ANONYMOUS_USER_ID = -1
-
-# NG: added to enable user profiles
-# (recommended way to extend Django user model)
-AUTH_PROFILE_MODULE = 'core.UserProfile'
 
 LOGGING = {
     'version': 1,
@@ -289,6 +284,21 @@ LOGGING = {
             'handlers': ['console'],
             'propagate': False,
         },
+        'docker': {
+            'level': 'ERROR',
+            'handlers': ['console'],
+            'propagate': False,
+        },
+        'easyprocess': {
+            'handlers': ['console'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+        'factory': {
+            'handlers': ['console'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
         'file_server': {
             'handlers': ['console'],
             'level': 'DEBUG',
@@ -304,9 +314,24 @@ LOGGING = {
             'level': 'DEBUG',
             'propagate': False,
         },
+        'httpproxy': {
+            'level': 'ERROR',
+            'handlers': ['console'],
+            'propagate': False,
+        },
         'isa_tab_parser': {
             'level': 'DEBUG',
             'handlers': ['console'],
+            'propagate': False,
+        },
+        'requests': {
+            'handlers': ['console'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+        'selenium': {
+            'handlers': ['console'],
+            'level': 'ERROR',
             'propagate': False,
         },
         'visualization_manager': {
@@ -342,10 +367,6 @@ CELERYD_MAX_TASKS_PER_CHILD = get_setting("CELERYD_MAX_TASKS_PER_CHILD")
 CELERY_ROUTES = {"file_store.tasks.import_file": {"queue": "file_import"}}
 
 CHUNKED_UPLOAD_ABSTRACT_MODEL = False
-
-SOUTH_MIGRATION_MODULES = {
-    'djcelery': 'djcelery.south_migrations',
-}
 
 # === Refinery Settings ===
 
@@ -584,3 +605,24 @@ REFINERY_AUXILIARY_FILE_GENERATION = get_setting(
     "REFINERY_AUXILIARY_FILE_GENERATION")
 
 REFINERY_TUTORIAL_STEPS = refinery_tutorial_settings
+
+ANONYMOUS_USER_ID = -1
+
+TEST_RUNNER = "django.test.runner.DiscoverRunner"
+
+# Required for pre-Django 1.9 TransactionTestCases utilizing
+# `serialized_rollback` to function properly http://bit.ly/2l5gR30
+TEST_NON_SERIALIZED_APPS = ['core', 'django.contrib.contenttypes',
+                            'django.contrib.auth']
+
+VISUALIZATION_ANNOTATION_BASE_PATH = "tool_manager/visualization_annotations"
+
+# To avoid Port conflicts between LiveServerTestCases http://bit.ly/2pb64KN
+os.environ["DJANGO_LIVE_TEST_SERVER_ADDRESS"] = "localhost:10000-12000"
+
+DJANGO_DOCKER_ENGINE_BASE_URL = "visualizations"
+
+DEPLOYMENT_PLATFORM = "vagrant"
+
+# HTML-safe item to be displayed to the right of the `About` link in the navbar
+REFINERY_CUSTOM_NAVBAR_ITEM = get_setting("REFINERY_CUSTOM_NAVBAR_ITEM")

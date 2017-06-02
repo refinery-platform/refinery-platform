@@ -5,6 +5,10 @@ Created on Feb 20, 2012
 '''
 
 from django.conf.urls import patterns, url
+from rest_framework.routers import DefaultRouter
+
+from .views import (AnalysesViewSet, DataSetsViewSet,
+                    NodeViewSet, WorkflowViewSet)
 
 
 urlpatterns = patterns(
@@ -83,3 +87,18 @@ urlpatterns = patterns(
     url(r'^neo4j/annotations/$', 'neo4j_dataset_annotations',
         name="neo4j_dataset_annotations")
 )
+
+# DRF url routing
+core_router = DefaultRouter()
+core_router.register(r'nodes', NodeViewSet)
+core_router.register(r'workflows', WorkflowViewSet)
+core_router.urls.extend([
+    url(r'^data_sets/(?P<uuid>'
+        r'[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{'
+        r''r'12})/$',
+        DataSetsViewSet.as_view()),
+    url(r'^analyses/(?P<uuid>'
+        r'[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{'
+        r''r'12})/$',
+        AnalysesViewSet.as_view())
+])

@@ -1,29 +1,37 @@
 'use strict';
 
 function fileBrowserFactory (
-  assayFileService,
-  nodeGroupService,
-  nodeService,
-  assayAttributeService,
+  $log,
+  _,
   $window,
-  $log) {
+  assayAttributeService,
+  assayFileService,
+  fileBrowserSettings,
+  nodeService,
+  selectedFilterService
+  ) {
+  // assayfiles has max 300 rows, ctrl adds/subtracts rows to maintain count
   var assayFiles = [];
   var assayAttributes = [];
   var assayAttributeOrder = [];
   var attributeFilter = {};
   var analysisFilter = {};
   var assayFilesTotalItems = {};
+  var customColumnNames = [];
   var nodeUrl = {};
-  var nodeGroupList = [];
   var csrfToken = $window.csrf_token;
-  // Helper function encodes field array in an obj
-  var encodeAttributeFields = function (attributeObj) {
-    angular.forEach(attributeObj, function (fieldArray) {
-      for (var ind = 0; ind < fieldArray.length; ind++) {
-        fieldArray[ind] = $window.encodeURIComponent(fieldArray[ind]);
+  var maxFileRequest = fileBrowserSettings.maxFileRequest;
+
+  // Helper method which makes display_names uniquey by adding attribute_type
+  var createUniqueDisplayNames = function (outInd) {
+    for (var inInd = outInd + 1; inInd < assayAttributes.length; inInd++) {
+      if (assayAttributes[outInd].display_name === assayAttributes[inInd].display_name) {
+        assayAttributes[outInd].display_name = assayAttributes[outInd]
+            .display_name + '-' + assayAttributes[outInd].attribute_type;
+        assayAttributes[inInd].display_name = assayAttributes[inInd]
+            .display_name + '-' + assayAttributes[inInd].attribute_type;
       }
-    });
-    return (attributeObj);
+    }
   };
 
   /** Configures the attribute and analysis filter data by adding the display
@@ -71,23 +79,6 @@ function fileBrowserFactory (
     return nodeFile.$promise;
   };
 
-  var getNodeGroupList = function (assayUuid) {
-    var params = {
-      assay: assayUuid
-    };
-
-    var nodeGroups = nodeGroupService.query(params);
-    nodeGroups.$promise.then(function (response) {
-      angular.copy(response, nodeGroupList);
-    });
-    return nodeGroups.$promise;
-  };
-
-  var createNodeGroup = function (params) {
-    var nodeGroup = nodeGroupService.save(params);
-    return nodeGroup.$promise;
-  };
-
   // Adds the file_url to the assay files array
   var addNodeDetailtoAssayFiles = function () {
     angular.forEach(assayFiles, function (facetObj) {
@@ -122,13 +113,19 @@ function fileBrowserFactory (
     return _arrayOfObjs;
   };
 
-  var getAssayFiles = function (unencodeParams) {
+  var resetAssayFiles = function () {
+    assayFiles = [];
+  };
+
+  var getAssayFiles = function (unencodeParams, scrollDirection) {
     var params = {};
+    var additionalAssayFiles = [];
     angular.copy(unencodeParams, params);
 
     // encodes all field names to avoid issues with escape characters.
     if (typeof params.filter_attribute !== 'undefined') {
-      params.filter_attribute = encodeAttributeFields(params.filter_attribute);
+      params.filter_attribute = selectedFilterService
+        .encodeAttributeFields(params.filter_attribute);
     }
 
     var assayFile = assayFileService.query(params);
@@ -140,9 +137,26 @@ function fileBrowserFactory (
       angular.copy(culledAttributes, assayAttributes);
       // Add file_download column first
       assayAttributes.unshift({ display_name: 'Url', internal_name: 'Url' });
-      angular.copy(response.nodes, assayFiles);
-      addNodeDetailtoAssayFiles();
+      assayAttributes.unshift({ display_name: 'Input Groups', internal_name: 'InputGroups' });
+      assayAttributes.unshift({ display_name: 'Selection', internal_name: 'Selection' });
+
+      // some attributes will be duplicate in different fields, duplicate
+      // column names will throw an error. This prevents duplicates
+      for (var ind = 0; ind < assayAttributes.length; ind++) {
+        createUniqueDisplayNames(ind);
+      }
+      angular.copy(response.nodes, additionalAssayFiles);
       assayFilesTotalItems.count = response.nodes_count;
+
+      // Not concat data when under minimun file order, replace assay files
+      if (assayFilesTotalItems.count < maxFileRequest && params.offset === 0) {
+        angular.copy(additionalAssayFiles, assayFiles);
+      } else if (scrollDirection === 'up') {
+        angular.copy(additionalAssayFiles.concat(assayFiles), assayFiles);
+      } else {
+        angular.copy(assayFiles.concat(additionalAssayFiles), assayFiles);
+      }
+      addNodeDetailtoAssayFiles();
       var filterObj = generateFilters(response.attributes, response.facet_field_counts);
       angular.copy(filterObj.attributeFilter, attributeFilter);
       angular.copy(filterObj.analysisFilter, analysisFilter);
@@ -194,32 +208,204 @@ function fileBrowserFactory (
     return assayAttributeUpdate.$promise;
   };
 
+  /**
+   * Helper method for grabbing the internal name, in fastqc viewer template
+   * @param {obj} arrayOfObj - ui-grid data obj
+   */
+  var grabAnalysisInternalName = function (arrayOfObj) {
+    var internalName = '';
+    for (var i = 0; i < arrayOfObj.length; i ++) {
+      if (arrayOfObj[i].display_name === 'Analysis') {
+        internalName = arrayOfObj[i].internal_name;
+        break;
+      }
+    }
+    return internalName;
+  };
+
+  /**
+   * Helper method for input groups column, requires unique template & fields.
+   * @param {string} _columnName - column name
+   */
+  var setCustomInputGroupsColumn = function (_columnName) {
+    var _cellTemplate = '<div class="ngCellText grid-input-groups">' +
+      '<div ng-if="grid.appScope.nodeSelectCollection[row.entity.uuid].groupList.length > 0" ' +
+      'class="selected-node" ' +
+      'title="{{grid.appScope.nodeSelectCollection[row.entity.uuid].groupList}}">' +
+      '<div class="paragraph ui-grid-cell-contents" ' +
+      'ng-if="grid.appScope.nodeSelectCollection[row.entity.uuid].groupList[0].length > 0"> ' +
+      '<span ng-repeat="group in grid.appScope.nodeSelectCollection[row.entity.uuid].groupList ' +
+      'track by $index">' +
+      '<span ng-style="{\'color\':grid.appScope.inputFileTypeColor[' +
+      'grid.appScope.nodeSelectCollection[row.entity.uuid].inputTypeList[$index]]}">' +
+      '{{group[group.length - 1]}}</span>' +
+      '<span ng-if="$index < grid.appScope.nodeSelectCollection[row.entity.uuid]' +
+      '.groupList.length - 1">, &nbsp</span> </span></div></div></div>';
+
+    return {
+      name: _columnName,
+      field: _columnName,
+      cellTooltip: true,
+      width: 11 + '%',
+      displayName: 'Input Groups',
+      enableFiltering: false,
+      enableSorting: false,
+      enableColumnMenu: false,
+      enableColumnResizing: true,
+      cellTemplate: _cellTemplate,
+      visible: false
+    };
+  };
+
+   /**
+   * Helper method for select column, requires unique template & fields.
+   * @param {string} _columnName - column name
+   */
+  var setCustomSelectColumn = function (columnName) {
+    var cellTemplate = '<div class="ngCellText text-align-center ui-grid-cell-contents">' +
+        '<a rp-node-selection-popover title="Select Tool Input"' +
+        'class="ui-grid-selection-row-header-buttons" ' +
+        'ng-class="{\'solidText\': grid.appScope.nodeSelectCollection[' +
+        'row.entity.uuid].groupList.length > 0 || row.entity.uuid ==' +
+        ' grid.appScope.activeNodeRow.uuid}" ' +
+        'ng-click="grid.appScope.openSelectionPopover(row.entity)"' +
+        'id="{{row.entity.uuid}}">' +
+        '<i class="fa fa-arrow-right" aria-hidden="true"></i></a></div>';
+
+    return {
+      name: columnName,
+      field: columnName,
+      cellTooltip: false,
+      width: 4 + '%',
+      displayName: '',
+      enableFiltering: false,
+      enableSorting: false,
+      enableColumnMenu: false,
+      enableColumnResizing: true,
+      cellTemplate: cellTemplate,
+      visible: false
+    };
+  };
+
+   /**
+   * Helper method for file download column, requires unique template & fields.
+   * @param {string} _columnName - column name
+   */
+  var setCustomUrlColumn = function (_columnName) {
+    var internalName = grabAnalysisInternalName(assayAttributes);
+    var _cellTemplate = '<div class="ngCellText text-align-center ui-grid-cell-contents"' +
+          'ng-class="col.colIndex()">' +
+          '<div ng-if="COL_FIELD" title="Download File \{{COL_FIELD}}\">' +
+          '<a href="{{COL_FIELD}}" target="_blank">' +
+          '<i class="fa fa-arrow-circle-o-down"></i></a>' +
+          '<span class="fastqc-viewer" ' +
+          'ng-if="row.entity.Url.indexOf(' + "'fastqc_results'" + ') >= 0">' +
+          '&nbsp;<a title="View FastQC Result"' +
+          ' href="/fastqc_viewer/#/\{{row.entity.' + internalName + '}}\">' +
+          '<i class="fa fa-bar-chart-o"></i></a>' +
+          '</span></div>' +
+          '<div ng-if="!COL_FIELD"' +
+            'title="File not available for download">' +
+          '<i class="fa fa-bolt"></i>' +
+          '</div>' +
+          '</div>';
+
+    return {
+      name: _columnName,
+      field: _columnName,
+      cellTooltip: true,
+      width: 4 + '%',
+      displayName: '',
+      enableFiltering: false,
+      enableSorting: false,
+      enableColumnMenu: false,
+      enableColumnResizing: false,
+      cellTemplate: _cellTemplate
+    };
+  };
+
+  // populates the ui-grid columns variable
+  var createColumnDefs = function () {
+    var tempCustomColumnNames = [];
+
+    var totalChars = assayAttributes.reduce(function (previousValue, facetObj) {
+      return previousValue + String(facetObj.display_name).length;
+    }, 0);
+
+    assayAttributes.forEach(function (attribute) {
+      var columnName = attribute.display_name;
+      var columnWidth = columnName.length / totalChars * 100;
+      if (columnWidth < 10) {  // make sure columns are wide enough
+        columnWidth = Math.round(columnWidth * 2);
+      }
+      var colProperty = {
+        name: columnName,
+        width: columnWidth + '%',
+        field: attribute.internal_name,
+        cellTooltip: true,
+        enableHiding: false
+      };
+      if (columnName === 'Url') {
+        // Url requires a custom template for downloading links
+        tempCustomColumnNames.push(setCustomUrlColumn(columnName));
+      } else if (columnName === 'Input Groups') {
+        // Input Groups requires a custom template for downloading links
+        tempCustomColumnNames.push(setCustomInputGroupsColumn(columnName));
+      } else if (columnName === 'Selection') {
+        // Selection requires a custom template for downloading links
+        tempCustomColumnNames.push(setCustomSelectColumn(columnName));
+      } else if (columnName === 'Analysis Group') {
+        // Analysis requires a custom template for filtering -1 entries
+        var _cellTemplate = '<div class="ngCellText text-align-center"' +
+        'ng-class="col.colIndex()">{{COL_FIELD |' +
+          ' analysisGroupNegativeOneWithNA: "Analysis Group"}}</div>';
+        colProperty.cellTemplate = _cellTemplate;
+        tempCustomColumnNames.push(colProperty);
+      } else {
+        tempCustomColumnNames.push(colProperty);
+      }
+    });
+    angular.copy(tempCustomColumnNames, customColumnNames);
+    return customColumnNames;
+  };
+
+  // helper method to trim assayFiles data for caching purposes
+  var trimAssayFiles = function (sliceCount, startInd) {
+    if (startInd === undefined) {
+      angular.copy(assayFiles.slice(sliceCount), assayFiles);
+    } else {
+      angular.copy(assayFiles.slice(startInd, sliceCount), assayFiles);
+    }
+  };
+
   return {
-    assayFiles: assayFiles,
+    analysisFilter: analysisFilter,
     assayAttributes: assayAttributes,
     assayAttributeOrder: assayAttributeOrder,
-    attributeFilter: attributeFilter,
-    analysisFilter: analysisFilter,
+    assayFiles: assayFiles,
     assayFilesTotalItems: assayFilesTotalItems,
-    nodeGroupList: nodeGroupList,
-    createNodeGroup: createNodeGroup,
+    attributeFilter: attributeFilter,
+    customColumnNames: customColumnNames,
+    createColumnDefs: createColumnDefs,
     getAssayFiles: getAssayFiles,
     getAssayAttributeOrder: getAssayAttributeOrder,
     postAssayAttributeOrder: postAssayAttributeOrder,
-    getNodeGroupList: getNodeGroupList,
-    encodeAttributeFields: encodeAttributeFields
+    resetAssayFiles: resetAssayFiles,
+    trimAssayFiles: trimAssayFiles
   };
 }
 
 angular
   .module('refineryFileBrowser')
   .factory('fileBrowserFactory', [
-    'assayFileService',
-    'nodeGroupService',
-    'nodeService',
-    'assayAttributeService',
-    '$window',
     '$log',
+    '_',
+    '$window',
+    'assayAttributeService',
+    'assayFileService',
+    'fileBrowserSettings',
+    'nodeService',
+    'selectedFilterService',
     fileBrowserFactory
   ]
 );

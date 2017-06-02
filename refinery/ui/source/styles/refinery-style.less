@@ -55,7 +55,7 @@ a.spinnable {
   }
 }
 
-@background-image-url: '/static/images/bgnoise.png';
+@background-image-url: '../images/bgnoise.png';
 @background-gradient: rgba( 255, 0, 0, 0.5 );
 @background-gradient-highlight: lighter(red, 10%);
 
@@ -202,6 +202,7 @@ border: none;
 .popover {
   color: #000000;
   text-align: left;
+  z-index: 1060;
 }
 
 .popover-title {
@@ -821,6 +822,64 @@ a.analysis-header {
   }
 }
 
+// Generic panel set, similar to dashboard
+.refinery-panel-set {
+  position: relative;
+  width: auto;
+  overflow-x: hidden;
+
+  .refinery-panel {
+    position: relative;
+    margin: 0 0 5px 0;
+    padding: 0;
+
+    .refinery-panel-content {
+      position: relative;
+      margin: 0 10px;
+      padding: 5px 0;
+    }
+  }
+
+  .refinery-header {
+    position: relative;
+    margin: 0;
+    padding: 5px 5px 5px 10px;
+    border-bottom: 1px solid darken(@gray-lighter, 10%);
+    background-color: @gray-lighter;
+
+    h3 a {
+      color: inherit;
+    }
+
+    h3 a i,
+    h3 a .link-hint {
+      text-decoration: none;
+    }
+
+    .link-hint {
+      font-weight: normal;
+      font-size: 0.8em;
+      color: @gray-light;
+    }
+  }
+
+  .btn {
+    position: relative;
+    padding: 2px 10px 3px;
+    white-space: nowrap;
+    overflow: hidden;
+    color: @text-color;
+    text-overflow: ellipsis;
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1);
+  }
+
+  .priority-button {
+    background-color: #286090;
+    border-color: #204d74;
+    color: #fff;
+  }
+}
+
 .refinery-header {
   display: block;
   border-bottom: 1px solid @gray-lighter;
@@ -866,6 +925,14 @@ a.analysis-header {
   padding-bottom: -10px;
   margin-bottom: 5px;
   text-transform: uppercase;
+}
+
+.refinery-subheader h1 {
+  display: inline;
+  font-size: @base-font-size * 1.5;
+  color: @gray-light;
+  font-weight: 700;
+  line-height: 1;
 }
 
 .refinery-subheader h2 {
@@ -1003,7 +1070,7 @@ a.analysis-header {
   right: 0;
 
   &.refinery-spinner-bg {
-    background: rgba(0, 0, 0, 0.1);
+    background: rgba(211,211,211, 0.8);
   }
 
   .refinery-spinner-center {
@@ -1030,7 +1097,7 @@ a.analysis-header {
 }
 
 .no-animation .refinery-spinner {
-  background: url(/static/images/spinner.gif) center center no-repeat;
+  background: url("../images/spinner.gif") center center no-repeat;
   animation: none;
   -webkit-animation: none;
 }
@@ -1737,7 +1804,7 @@ body.is-screenshot-ready {
 }
 
 .info-icon {
-  color: #009CDE;
+  color: @gray-light;
 }
 
 .igv_button{
@@ -1755,4 +1822,19 @@ body.is-screenshot-ready {
 
 .modal-description {
   border-top: 1px solid #ddd
+}
+
+#metadata-table-form {
+  .nested-list {
+    margin-left: 20px;
+  }
+}
+
+ul.paragraph {
+  list-style: none;
+  padding-left: 0;
+
+  li {
+    float: left;
+  }
 }

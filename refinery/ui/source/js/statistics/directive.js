@@ -1,12 +1,14 @@
 'use strict';
 
-function statisticsData () {
+function statisticsData ($window) {
   return {
-    templateUrl: '/static/partials/statistics/template.html',
+    templateUrl: function () {
+      return $window.getStaticUrl('partials/statistics/template.html');
+    },
     restrict: 'A'
   };
 }
 
 angular
   .module('refineryStatistics')
-  .directive('statisticsData', [statisticsData]);
+  .directive('statisticsData', ['$window', statisticsData]);

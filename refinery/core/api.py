@@ -17,13 +17,14 @@ from django.utils import timezone
 from django.contrib.auth.models import User, Group
 from django.contrib.sites.models import get_current_site
 from django.contrib.contenttypes.models import ContentType
-from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import EmailMessage
 from django.template import loader, Context
 from django.core.cache import cache
 from django.core.signing import Signer
+from django.forms import ValidationError
 from guardian.shortcuts import get_objects_for_user, get_objects_for_group
 from guardian.models import GroupObjectPermission
+from guardian.utils import get_anonymous_user
 from tastypie import fields
 from tastypie.authentication import SessionAuthentication, Authentication
 from tastypie.authorization import Authorization
@@ -83,6 +84,12 @@ class SharableResourceAPIInterface(object):
         return perms
 
     def get_share_list(self, user, res):
+        # Handle anonymousUsers seperatly due to request.users
+        # SimpleLazyObjects loading Users vs AnonymousUsers. Can't compare
+        # SLO-AnonymousUsers directly with user models
+        if user.is_anonymous():
+            user = get_anonymous_user()
+
         groups_in = filter(
             lambda g:
             not self.is_manager_group(g) and user in g.user_set.all(),
@@ -132,9 +139,10 @@ class SharableResourceAPIInterface(object):
     def transform_res_list(self, user, res_list, request, **kwargs):
 
         try:
-            user_uuid = user.userprofile.uuid
+            user_uuid = user.profile.uuid
         except AttributeError:
-            logger.error('User\'s UUID not available.')
+            logger.error("User: %s's profile or UUID not available.",
+                         user.username)
             user_uuid = None
 
         # Try and retrieve a cached resource based on model name
@@ -308,18 +316,25 @@ class SharableResourceAPIInterface(object):
 
         if not res:
             return HttpBadRequest()
-
-        if user.is_authenticated and user != res.get_owner():
-            return HttpUnauthorized()
-
-        # User not authenticated, res is not public.
-        if not user.is_authenticated() and res and not res.is_public():
+        # if user is not logged in then data set must be public
+        if not user.is_authenticated() and not res.is_public():
             return HttpUnauthorized()
 
         if request.method == 'GET':
+            # user has read permissions
+            if not user.has_perm('core.read_dataset', res):
+                return HttpUnauthorized()
             kwargs['sharing'] = True
-            return self.process_get(request, res, **kwargs)
+            mod_res = self.transform_res_list(user, [res], request, **kwargs)
+            perm_obj = {
+                'owner': mod_res[0].owner,
+                'share_list': mod_res[0].share_list
+            }
+            return self.build_response(request, perm_obj, **kwargs)
         elif request.method == 'PUT':
+            # user must be admin or owner
+            if not user.is_superuser and user != res.get_owner():
+                return HttpUnauthorized()
             data = json.loads(request.body)
             new_share_list = data['share_list']
 
@@ -486,7 +501,7 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
         if not bundle.data['owner']:
             owner = bundle.obj.get_owner()
             try:
-                bundle.data['owner'] = owner.userprofile.uuid
+                bundle.data['owner'] = owner.profile.uuid
             except:
                 pass
 
@@ -501,15 +516,18 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
 
         analyses = []
         for analysis in bundle.obj.get_analyses():
-            analysis_dict = analysis.__dict__
+            analysis_dict = {}
+            analysis_dict["uuid"] = analysis.uuid
+            analysis_dict["name"] = analysis.name
+            analysis_dict["status"] = analysis.status
             analysis_dict['is_owner'] = False
             owner = analysis.get_owner()
             if owner:
                 try:
-                    analysis_dict['owner'] = owner.userprofile.uuid
+                    analysis_dict['owner'] = owner.profile.uuid
                     user = bundle.request.user
-                    if (hasattr(user, 'userprofile') and
-                       user.userprofile.uuid == analysis_dict['owner']):
+                    if (hasattr(user, 'profile') and
+                       user.profile.uuid == analysis_dict['owner']):
                         analysis_dict['is_owner'] = True
                 except:
                     analysis_dict['owner'] = None
@@ -519,9 +537,7 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
 
             analyses.append(analysis_dict)
 
-        if analyses:
-            bundle.data["analyses"] = analyses
-
+        bundle.data["analyses"] = analyses
         bundle.data["version"] = bundle.obj.get_version_details().version
         bundle.data["date"] = bundle.obj.get_version_details().date
         bundle.data["creation_date"] = bundle.obj.creation_date
@@ -696,7 +712,7 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
         )
 
         try:
-            user_uuid = request.user.userprofile.uuid
+            user_uuid = request.user.profile.uuid
         except:
             user_uuid = None
 
@@ -730,7 +746,9 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
     def get_investigation(self, request, **kwargs):
         try:
             data_set = DataSet.objects.get(uuid=kwargs['uuid'])
-        except ObjectDoesNotExist:
+        except (DataSet.DoesNotExist,
+                DataSet.MultipleObjectsReturned) as e:
+            logger.error(e)
             return HttpGone()
 
         # Assuming 1 to 1 relationship between DataSet and Investigation
@@ -742,7 +760,9 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
     def get_studies(self, request, **kwargs):
         try:
             data_set = DataSet.objects.get(uuid=kwargs['uuid'])
-        except ObjectDoesNotExist:
+        except (DataSet.DoesNotExist,
+                DataSet.MultipleObjectsReturned) as e:
+            logger.error(e)
             return HttpGone()
 
         return StudyResource().get_list(
@@ -754,7 +774,9 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
         try:
             data_set = DataSet.objects.get(uuid=kwargs['uuid'])
             assays = data_set.get_assays()
-        except ObjectDoesNotExist:
+        except (DataSet.DoesNotExist,
+                DataSet.MultipleObjectsReturned) as e:
+            logger.error(e)
             return HttpGone()
 
         # Unfortunately Tastypie doesn't allow `get_list` to run on a list of
@@ -779,7 +801,9 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
     def get_analyses(self, request, **kwargs):
         try:
             DataSet.objects.get(uuid=kwargs['uuid'])
-        except ObjectDoesNotExist:
+        except (DataSet.DoesNotExist,
+                DataSet.MultipleObjectsReturned) as e:
+            logger.error(e)
             return HttpGone()
 
         return AnalysisResource().get_list(
@@ -790,8 +814,16 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
     def get_study_assays(self, request, **kwargs):
         try:
             DataSet.objects.get(uuid=kwargs['uuid'])
+        except (DataSet.DoesNotExist,
+                DataSet.MultipleObjectsReturned) as e:
+            logger.error(e)
+            return HttpGone()
+
+        try:
             Study.objects.get(uuid=kwargs['study_uuid'])
-        except ObjectDoesNotExist:
+        except (Study.DoesNotExist,
+                Study.MultipleObjectsReturned) as e:
+            logger.error(e)
             return HttpGone()
 
         return AssayResource().get_list(
@@ -947,10 +979,10 @@ class AnalysisResource(ModelResource):
         owner = bundle.obj.get_owner()
         if owner:
             try:
-                bundle.data['owner'] = owner.userprofile.uuid
+                bundle.data['owner'] = owner.profile.uuid
                 user = bundle.request.user
-                if (hasattr(user, 'userprofile') and
-                        user.userprofile.uuid == bundle.data['owner']):
+                if (hasattr(user, 'profile') and
+                        user.profile.uuid == bundle.data['owner']):
                     bundle.data['is_owner'] = True
             except:
                 bundle.data['owner'] = None
@@ -967,7 +999,10 @@ class AnalysisResource(ModelResource):
             allowed_datasets = get_objects_for_user(user, perm, DataSet)
         else:
             allowed_datasets = get_objects_for_group(
-                ExtendedGroup.objects.public_group(), perm, DataSet)
+                ExtendedGroup.objects.public_group(),
+                perm,
+                DataSet
+            )
 
         return Analysis.objects.filter(
             data_set__in=allowed_datasets.values_list("id", flat=True)
@@ -1961,7 +1996,7 @@ class ExtendedGroupResource(ModelResource):
         return map(
             lambda u: {
                 'user_id': u.id,
-                'uuid': u.userprofile.uuid,
+                'uuid': u.profile.uuid,
                 'username': u.username,
                 'first_name': u.first_name,
                 'last_name': u.last_name,
@@ -2005,10 +2040,29 @@ class ExtendedGroupResource(ModelResource):
         user = bundle.request.user
         data = json.loads(bundle.request.body)
         new_ext_group = ExtendedGroup(name=data['name'])
+
+        new_ext_group.name = new_ext_group.name.strip()
+        try:
+            new_ext_group.full_clean()
+        except ValidationError as e:
+            raise ImmediateHttpResponse(HttpBadRequest(
+                'Invalid group creation request: %s.' % e
+            ))
         new_ext_group.save()
         new_ext_group.user_set.add(user)
         new_ext_group.manager_group.user_set.add(user)
         return bundle
+
+    def obj_delete(self, bundle, **kwargs):
+        user = bundle.request.user
+        ext_group = super(ExtendedGroupResource, self).obj_get(
+            bundle, **kwargs)
+        if not self.user_authorized(user, ext_group):
+            raise ImmediateHttpResponse(HttpForbidden(
+                'Only managers may delete groups.'
+            ))
+        ext_group.delete()
+        return HttpAccepted('Group deleted.')
 
     # Extra things
     def prepend_urls(self):

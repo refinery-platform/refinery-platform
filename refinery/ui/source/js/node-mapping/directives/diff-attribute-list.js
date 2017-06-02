@@ -1,6 +1,6 @@
 'use strict';
 
-function diffAttributeListDirective () {
+function diffAttributeListDirective ($window) {
   return {
     bindToController: {
       setA: '=',
@@ -9,10 +9,12 @@ function diffAttributeListDirective () {
     controller: 'DiffAttributeListCtrl',
     controllerAs: 'diffAttributeList',
     restrict: 'A',
-    templateUrl: '/static/partials/node-mapping/directives/diff-attribute-list.html'
+    templateUrl: function () {
+      return $window.getStaticUrl('partials/node-mapping/directives/diff-attribute-list.html');
+    }
   };
 }
 
 angular
   .module('refineryNodeMapping')
-  .directive('diffAttributeList', diffAttributeListDirective);
+  .directive('diffAttributeList', ['$window', diffAttributeListDirective]);

@@ -1,18 +1,30 @@
 'use strict';
 
 function AboutDetailsCtrl (
-  dataSetAboutFactory,
-  $scope,
   $location,
+  $log,
+  $scope,
   $window,
-  $log
+  dataSetAboutFactory
   ) {
   var vm = this;
-  vm.dataSet = {};
-  vm.studies = [];
-  vm.assays = {};
+  vm.assays = dataSetAboutFactory.assays;
+  vm.dataSet = dataSetAboutFactory.dataSet;
   vm.dataSetUuid = $window.dataSetUuid;
-  vm.fileStoreItem = {};
+  vm.fileStoreItem = dataSetAboutFactory.fileStoreItem;
+  vm.isCollapsed = {
+    title: true,
+    summary: true,
+    description: true,
+    slug: true
+  };
+  vm.studies = dataSetAboutFactory.studies;
+  vm.updatedField = {};
+
+  vm.cancel = function (fieldName) {
+    vm.updatedField[fieldName] = '';
+    vm.isCollapsed[fieldName] = true;
+  };
 
   vm.refreshDataSetStats = function () {
     dataSetAboutFactory
@@ -63,6 +75,21 @@ function AboutDetailsCtrl (
       });
   };
 
+  vm.updateDataSet = function (fieldName, formInput) {
+    var params = { uuid: vm.dataSetUuid };
+    params[fieldName] = formInput;
+    dataSetAboutFactory.updateDataSet(params).then(function () {
+      vm.dataSet[fieldName] = formInput;
+      if (fieldName === 'accession') {
+        vm.isCollapsed.title = true;
+      } else {
+        vm.isCollapsed[fieldName] = true;
+      }
+    }, function (error) {
+      $log.error(error);
+    });
+  };
+
   vm.refreshDataSetStats();
   vm.refreshStudies();
 }
@@ -71,11 +98,10 @@ angular
   .module('refineryDataSetAbout')
   .controller('AboutDetailsCtrl',
   [
-    'dataSetAboutFactory',
-    '$scope',
     '$location',
-    '$window',
     '$log',
+    '$scope',
+    '$window',
+    'dataSetAboutFactory',
     AboutDetailsCtrl
   ]);
-

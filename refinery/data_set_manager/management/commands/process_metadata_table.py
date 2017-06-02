@@ -1,6 +1,9 @@
+from __future__ import absolute_import
 from optparse import make_option
+
 from django.core.management.base import BaseCommand, CommandError
-from data_set_manager.single_file_column_parser import process_metadata_table
+
+from ...single_file_column_parser import process_metadata_table
 
 
 class Command(BaseCommand):

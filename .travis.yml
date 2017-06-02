@@ -1,29 +1,43 @@
+sudo: required
 language: python
+cache: pip
+addons:
+  firefox: "49.0.1"
+  apt:
+    packages:
+      - xvfb
+
 python:
   - 2.7
-addons:
-  sauce_connect: true
-  # username and access_key provided as environment variables in travis config
 services:
   - postgresql
   - neo4j
+  - docker
+
 install:
   - pip install -r requirements.txt --quiet
+  # Install geckodriver required for selenium testing
+  - GECKODRIVER_VERSION=v0.15.0
+  - TAR=geckodriver-$GECKODRIVER_VERSION-linux64.tar
+  - wget https://github.com/mozilla/geckodriver/releases/download/$GECKODRIVER_VERSION/$TAR.gz
+  - gunzip $TAR.gz
+  - tar -xvf $TAR
+  - chmod a+x geckodriver
+  - export PATH=$PATH:`pwd`
 env:
-  - DJANGO_SETTINGS_MODULE=config.settings.dev REDUCE_TEST_OUTPUT=true PYTHONPATH=$PYTHONPATH:../refinery:../refinery/config
+  global:
+    # These env vars are available to every build
+    - REDUCE_TEST_OUTPUT=true
+    - PYTHONPATH=$PYTHONPATH:../refinery:../refinery/config
+    - DJANGO_SETTINGS_MODULE=config.settings.prod
+
 before_script:
   - createuser --createdb --no-superuser --no-createrole vagrant
   - createdb -O vagrant refinery
   - cd refinery
 # See http://www.stuartellis.eu/articles/erb/#running-erb-from-the-command-line
   - erb config/config.json.erb > config/config.json
-  - python manage.py syncdb --noinput
-  - python manage.py migrate registration
-  - python manage.py migrate core
-  - python manage.py migrate guardian
-  - python manage.py create_public_group
-  - python manage.py syncdb --migrate --noinput
-  - python manage.py create_user 'guest' 'guest' 'guest@example.com' 'GuestFirst' 'GuestLast' 'GuestAffiliation' 'active'
+  - python manage.py migrate --noinput
   - npm install -g grunt-cli@0.1.13 bower@1.7.7 --progress false --quiet
   - cd ui
   - npm install --progress false --quiet
@@ -35,37 +49,20 @@ script:
   - flake8 --exclude=migrations,ui ..
 
   - echo 'travis_fold:start:grunt'
-  - pushd ui
-  - grunt
-  - popd
+  - pushd ui && grunt && popd
   - echo 'travis_fold:end:grunt'
 
-  - echo 'travis_fold:start:selenium'
-  # NOTE: Redirect runserver output since it's polluting logs
-  - python manage.py runserver > /dev/null 2>&1 &
-  - pushd ../selenium
-  # NOTE: Sauce Connect needs SAUCE_USERNAME and SAUCE_ACCESS_KEY
-  # (https://docs.travis-ci.com/user/sauce-connect/),
-  # while Pytest looks for SAUCELABS_USERNAME and SAUCELABS_API_KEY
-  # (http://pytest-selenium.readthedocs.io/en/latest/user_guide.html#sauce-labs).
-  # This has been recognized as a point of confusion, but there is no plan to change anything.
-  # https://github.com/pytest-dev/pytest-selenium/issues/53
-  - export SAUCELABS_USERNAME=$SAUCE_USERNAME SAUCELABS_API_KEY=$SAUCE_ACCESS_KEY
-  - printenv | sort | grep SAUCE | perl -pne 's/=(...).+/=$1.../' # Debug helper
-  - export BASE_URL=http://localhost:8000 CREDS_YML=guest_creds.yml UPLOAD=gff3.csv
-  - pytest --driver SauceLabs --capability browserName Firefox --capability tunnelIdentifier $TRAVIS_JOB_NUMBER -r fE
-  - popd
-  - echo 'travis_fold:end:selenium'
-
-  # If Django tests run first, the selenium test is truncated from the Travis log.
   - echo 'travis_fold:start:django-tests'
   - coverage run manage.py test
   - echo 'travis_fold:end:django-tests'
 
   - set +e # Currently, codecov does not always exit with 0, but that should not cause travis to fail.
+
 after_success:
+  - echo 'travis_fold:start:codecov'
   - codecov
   - npm run codecov
+  - echo 'travis_fold:end:codecov'
 notifications:
   slack:
     secure: nDs9Oj08nRizuD0edl6WcrSgaTPMyITQjZc4qPZpt+yOxUehWbrAmVhqYypfyvdj4qSi1E72rPTXftuBB1E1IZBgX4CCkrCkWGLgIxHaaValTd64oOX66eC3BbSehQxuJB7w1DWw54xBUkTy6+ufjAqiwhLpoEUeE296urAWYHU=

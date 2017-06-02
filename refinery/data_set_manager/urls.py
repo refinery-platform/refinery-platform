@@ -7,11 +7,13 @@ Created on May 11, 2012
 from django.conf.urls import patterns, url
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
+from rest_framework.routers import DefaultRouter
 
-from data_set_manager.views import (
-    DataSetImportView, ImportISATabView, ProcessISATabView,
-    ProcessMetadataTableView, CheckDataFilesView, ChunkedFileUploadView,
-    ChunkedFileUploadCompleteView, TakeOwnershipOfPublicDatasetView)
+from .views import (Assays, AssaysAttributes, AssaysFiles, CheckDataFilesView,
+                    ChunkedFileUploadCompleteView,
+                    ChunkedFileUploadView, DataSetImportView, ImportISATabView,
+                    ProcessISATabView, ProcessMetadataTableView,
+                    TakeOwnershipOfPublicDatasetView)
 
 
 urlpatterns = patterns(
@@ -43,3 +45,15 @@ urlpatterns = patterns(
         name='take_ownership_of_public_dataset'),
 
 )
+
+# DRF url routing
+data_set_manager_router = DefaultRouter()
+data_set_manager_router.urls.extend([
+    url(r'^assays/$', Assays.as_view()),
+    url(r'^assays/(?P<uuid>'
+        r'[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{'
+        r''r'12})/files/$', AssaysFiles.as_view()),
+    url(r'^assays/(?P<uuid>'
+        r'[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{'
+        r''r'12})/attributes/$', AssaysAttributes.as_view()),
+])

@@ -14,7 +14,7 @@ describe('Selected-Filter-Service', function () {
 
   it('service variables should exist', function () {
     expect(service).toBeDefined();
-    expect(service.selectedFieldList).toEqual({});
+    expect(service.attributeSelectedFields).toEqual({});
   });
 
   it('all methods exist', function () {
@@ -30,13 +30,14 @@ describe('Selected-Filter-Service', function () {
     var selectedField = { February: true };
     var name = 'Month_Characteristics_10_5_s';
     var field = 'February';
+    var encodeAttribute = '{"Month_Characteristics_10_5_s":"February"}';
     var response = service.updateSelectedFilters(selectedField, name, field);
     expect(response).toEqual({ Month_Characteristics_10_5_s: [field] });
-    expect(location.search).toHaveBeenCalledWith(field, selectedField[field]);
+    expect(location.search).toHaveBeenCalledWith(encodeAttribute, selectedField[field]);
   });
 
   it('updateSelectedFilters handles adding new field', function () {
-    service.selectedFieldList = {
+    service.attributeSelectedFields = {
       Month_Characteristics_10_5_s: ['January', 'March', 'April'],
       REFINERY_WORKFLOW_OUTPUT_10_5_s: ['1', '2']
     };
@@ -47,16 +48,17 @@ describe('Selected-Filter-Service', function () {
       February: true };
     var name = 'Month_Characteristics_10_5_s';
     var field = 'February';
+    var encodeAttribute = '{"Month_Characteristics_10_5_s":"February"}';
     var response = service.updateSelectedFilters(selectedField, name, field);
     expect(response).toEqual({
       Month_Characteristics_10_5_s: ['January', 'March', 'April', 'February'],
       REFINERY_WORKFLOW_OUTPUT_10_5_s: ['1', '2']
     });
-    expect(location.search).toHaveBeenCalledWith(field, selectedField[field]);
+    expect(location.search).toHaveBeenCalledWith(encodeAttribute, selectedField[field]);
   });
 
   it('updateSelectedFilters deletes field', function () {
-    service.selectedFieldList = {
+    service.attributeSelectedFields = {
       Month_Characteristics_10_5_s: ['January', 'March', 'April'],
       REFINERY_WORKFLOW_OUTPUT_10_5_s: ['1', '2']
     };
@@ -66,17 +68,18 @@ describe('Selected-Filter-Service', function () {
       April: true,
       February: false };
     var name = 'Month_Characteristics_10_5_s';
+    var encodeAttribute = '{"Month_Characteristics_10_5_s":"February"}';
     var field = 'February';
     var response = service.updateSelectedFilters(selectedField, name, field);
     expect(response).toEqual({
       Month_Characteristics_10_5_s: ['January', 'March', 'April'],
       REFINERY_WORKFLOW_OUTPUT_10_5_s: ['1', '2']
     });
-    expect(location.search).toHaveBeenCalledWith(field, null);
+    expect(location.search).toHaveBeenCalledWith(encodeAttribute, null);
   });
 
   it('resetAttributeFilter calls updateSelectedFilters', function () {
-    service.selectedFieldList = {
+    service.attributeSelectedFields = {
       Month_Characteristics_10_5_s: ['January', 'March', 'April'],
       REFINERY_WORKFLOW_OUTPUT_10_5_s: ['1', '2']
     };
@@ -94,11 +97,12 @@ describe('Selected-Filter-Service', function () {
     );
   });
 
-  it('resetAttributeFilter integration test, updates selectedFieldList', function () {
-    service.selectedFieldList = {
+  it('resetAttributeFilter integration test, updates attributeSelectedFields', function () {
+    service.attributeSelectedFields = {
       Month_Characteristics_10_5_s: ['January', 'March', 'April'],
       REFINERY_WORKFLOW_OUTPUT_10_5_s: ['1', '2']
     };
+
     var selectedField = {
       January: false,
       March: false,
@@ -107,7 +111,7 @@ describe('Selected-Filter-Service', function () {
       2: false };
 
     service.resetAttributeFilter(selectedField);
-    expect(service.selectedFieldList).toEqual({});
+    expect(service.attributeSelectedFields).toEqual({});
     expect(location.search.calls.count()).toEqual(Object.keys(selectedField).length);
   });
 });

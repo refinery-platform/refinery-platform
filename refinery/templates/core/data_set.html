@@ -2,7 +2,7 @@
 
 {% load humanize %}
 {% load markup %}
-{% load static %}
+{% load static from staticfiles %}
 
 
 {% block head_html %}
@@ -110,23 +110,23 @@
   </style>
 {% endblock head_html %}
 
-{% block title %} - Data Set {{ data_set.name }}{% endblock %}
+{% block title %} - Data Set
+  {{ data_set.accession }}:
+  {{ data_set.title }} {% endblock %}
 
 {% block subheader %}
   <div class="page-header">
-    <h1>Data Set <small>{{ data_set.name }}</small></h1>
+    <h1>Data Set
+      <small>
+        {{ data_set.accession }}: {{ data_set.title }}
+      </small>
+    </h1>
   </div>
 
 {% endblock %}
 
 {% block content %}
   <!-- tab headers -->
-
-  <span ng-controller="AnalysisMonitorCtrl">
-    <div ng-if="checkAnalysesViewFlag()">
-      <span rp-analysis-monitor-alert-msg></span>
-    </div>
-  </span>
 
 <div ng-controller="DataSetNavCtrl" ng-cloak>
   <div ng-controller="DataSetUiModeCtrl">
@@ -225,8 +225,7 @@
               {% endverbatim %}
 
                   <div class="row" ng-if="$root.mode==='analyze'">
-                    <div ng-include="'/static/partials/data-set-nav/partials/data-set-ui-node-mapping.html'">
-                    </div>
+                    <div ng-include="'{% static "partials/data-set-nav/partials/data-set-ui-node-mapping.html" %}'"></div>
                     <div ui-view="data-set-ui-mapping-controls"></div>
                     <!-- <div ui-view></div> -->
                   </div>
@@ -294,7 +293,9 @@
                           id="solr-document-count-view" style="float: left;
                           margin-top: 3px;"></span>
                         <a href="#" id="help-selection-button" style="height:
-                         20px; width: 20px;"><i class="fa fa-question-circle"
+                         20px; width: 20px;">
+                          <i
+                            class="fa fa-question-circle info-icon icon-only"
                           style="font-size: 20px; margin-left: 5px; margin-right: 5px; position: relative; top: 5px;"></i></a>
                       </div>
 
@@ -316,7 +317,7 @@
                               Archive</a>
                             <a href="#" id="help-download-button"
                               style="height: 20px; width: 20px;"><i
-                              class="fa fa-question-circle" style="font-size:
+                              class="fa fa-question-circle info-icon icon-only" style="font-size:
                               20px; margin-left: 5px; margin-right: 5px; position: relative; top: 5px;"></i></a>
                           {% endfor %}
                         {% endif %}
@@ -330,7 +331,7 @@
                             </option>
                           </select>
                           <a href="#" id="help-view-selector-button">
-                            <i class="fa fa-question-circle"></i>
+                            <i class="fa fa-question-circle info-icon icon-only"></i>
                           </a>
                         </div>
 
@@ -601,6 +602,15 @@
               <span class="refinery-header-left">
                   <h3>Sharing</h3>
               </span>
+              <div class="p-t-1">
+                <p> To share this data set with an existing group, click on
+                  the sharing button in the
+                  <a href="/#/preview/{{ data_set.uuid }}">
+                    data set preview.
+                  </a>
+                  <rp-sharing-help-popover></rp-sharing-help-popover>
+                </p>
+              </div>
             </div>
             <div class="refinery-subheader">
               <h4>Owner</h4>
@@ -608,7 +618,7 @@
             <p>
               <span class="fa fa-user"></span>&nbsp;
               {% if data_set.get_owner %}
-                <a href="{% url "user" data_set.get_owner.get_profile.uuid %}">
+                <a href="{% url "user" data_set.get_owner.profile.uuid %}">
                   {{ data_set.get_owner_full_name }}
                 </a>
               {% else %}

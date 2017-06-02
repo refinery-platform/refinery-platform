@@ -135,8 +135,7 @@ class DownloadAdmin(GuardedModelAdmin, ForeignKeyAutocompleteAdmin):
 
 class ExtendedGroupAdmin(GuardedModelAdmin, ForeignKeyAutocompleteAdmin):
     list_display = ['__unicode__', 'id', 'manager_group', 'uuid', 'is_public',
-                    'member_list', 'perm_list', 'can_edit',
-                    'manager_group_uuid']
+                    'member_list', 'perm_list', 'can_edit']
 
 
 class NodePairAdmin(GuardedModelAdmin, ForeignKeyAutocompleteAdmin):

@@ -3,13 +3,13 @@ import logging
 from django.db.models.deletion import Collector
 from django.db.models.fields.related import ForeignKey
 
-from core.models import DataSet, InvestigationLink
+from celery.task import task
+
+from .models import DataSet, InvestigationLink
 from data_set_manager.models import Investigation, Study
 from data_set_manager.tasks import annotate_nodes
-from file_store.models import is_permanent
-from file_store.tasks import create, read, import_file
-
-from celery.task import task
+from file_store.models import FileStoreItem, is_permanent
+from file_store.tasks import create, import_file
 
 
 logger = logging.getLogger(__name__)
@@ -21,16 +21,21 @@ def copy_file(orig_uuid):
     :type orig_uuid: str.
     :returns: UUID of newly copied file.
     """
-    orig_fsi = read(orig_uuid)
     newfile_uuid = None
     try:
-        newfile_uuid = create(
-            orig_fsi.source, orig_fsi.sharename, orig_fsi.filetype,
-            permanent=is_permanent(orig_uuid)
-        )
-        import_file(newfile_uuid, refresh=True)
-    except AttributeError:
-        pass
+        orig_fsi = FileStoreItem.objects.get(uuid=orig_uuid)
+    except(FileStoreItem.DoesNotExist,
+           FileStoreItem.MultipleObjectsReturned)as e:
+        logger.error("Couldn't properly fetch FileStoreItem: %s", e)
+    else:
+        try:
+            newfile_uuid = create(
+                orig_fsi.source, orig_fsi.sharename, orig_fsi.filetype,
+                permanent=is_permanent(orig_uuid)
+            )
+            import_file(newfile_uuid, refresh=True)
+        except AttributeError:
+            pass
 
     return newfile_uuid
 
@@ -178,7 +183,7 @@ def copy_dataset(dataset, owner, versions=None, copy_files=False):
     dataset_copy = None
     data_sets = DataSet.objects.filter(name="%s (copy)" % dataset.name)
     for data_set in data_sets:
-        print data_set
+        logger.debug("DataSet: %s", data_set)
         if data_set.get_owner() == owner:
             dataset_copy = data_set
     # if after checking all datasets there one with this name owned by the

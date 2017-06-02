@@ -4,46 +4,40 @@ Created on May 11, 2012
 @author: nils
 '''
 
+import json
 import logging
+import os
 import shutil
 import urlparse
-import json
-import os
 
 from django import forms
-from django.core.exceptions import MultipleObjectsReturned
 from django.core.urlresolvers import reverse
-from django.http import (
-    HttpResponseRedirect,
-    HttpResponse,
-    HttpResponseBadRequest,
-    HttpResponseServerError
-)
+from django.http import (Http404, HttpResponse, HttpResponseBadRequest,
+                         HttpResponseRedirect, HttpResponseServerError)
 from django.shortcuts import render, render_to_response
 from django.template import RequestContext
 from django.views.generic import View
 
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-from django.http import Http404
-
 from chunked_upload.models import ChunkedUpload
-from chunked_upload.views import ChunkedUploadView, ChunkedUploadCompleteView
+from chunked_upload.views import ChunkedUploadCompleteView, ChunkedUploadView
+from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
-import data_set_manager
-from core.models import get_user_import_dir, DataSet
-from core.utils import get_full_url
+from .models import Assay, AttributeOrder, Study
+from .serializers import AssaySerializer, AttributeOrderSerializer
 from .single_file_column_parser import process_metadata_table
 from .tasks import parse_isatab
+from .utils import (customize_attribute_response, format_solr_response,
+                    generate_solr_params, get_owner_from_assay,
+                    initialize_attribute_order_ranks,
+                    is_field_in_hidden_list, search_solr,
+                    update_attribute_order_ranks)
+from core.models import DataSet, get_user_import_dir
+from core.utils import get_full_url
+from file_store.models import generate_file_source_translator, get_temp_dir
 from file_store.tasks import download_file, DownloadError
-from file_store.models import get_temp_dir, generate_file_source_translator
-from .models import AttributeOrder, Assay
-from .serializers import AttributeOrderSerializer, AssaySerializer
-from .utils import (generate_solr_params, search_solr, format_solr_response,
-                    get_owner_from_assay, update_attribute_order_ranks,
-                    is_field_in_hidden_list, customize_attribute_response,
-                    initialize_attribute_order_ranks)
+
 
 logger = logging.getLogger(__name__)
 
@@ -243,7 +237,7 @@ class ProcessISATabView(View):
                             json.dumps({
                                 'error': response.message
                             }),
-                            'application/json'
+                            content_type='application/json'
                         )
 
                     return render_to_response(
@@ -264,7 +258,7 @@ class ProcessISATabView(View):
                             json.dumps({
                                 'error': response.message
                             }),
-                            'application/json'
+                            content_type='application/json'
                         )
 
                     return render_to_response(
@@ -299,7 +293,7 @@ class ProcessISATabView(View):
                                 'new_data_set_uuid': dataset_uuid
                             }
                         }),
-                        'application/json'
+                        content_type='application/json'
                     )
 
                 return HttpResponseRedirect(
@@ -312,7 +306,7 @@ class ProcessISATabView(View):
                         json.dumps({
                             'error': error
                         }),
-                        'application/json'
+                        content_type='application/json'
                     )
 
                 context = RequestContext(
@@ -429,6 +423,9 @@ class ProcessMetadataTableView(View):
             error = {'error_message': error_msg}
             if request.is_ajax():
                 return HttpResponseBadRequest(
+                    # TODO: make sure error_msg is JSON serializable, e.g.:
+                    # TypeError: IndexError('list index out of range',)
+                    # is not JSON serializable
                     json.dumps({'error': error_msg}), 'application/json'
                 )
             else:
@@ -476,6 +473,9 @@ class ProcessMetadataTableView(View):
             error = {'error_message': error_msg}
             if request.is_ajax():
                 return HttpResponseServerError(
+                    # TODO: make sure error_msg is JSON serializable, e.g.:
+                    # TypeError: IndexError('list index out of range',)
+                    # is not JSON serializable
                     json.dumps({'error': error_msg}), 'application/json'
                 )
             else:
@@ -484,7 +484,7 @@ class ProcessMetadataTableView(View):
         if request.is_ajax():
             return HttpResponse(
                 json.dumps({'new_data_set_uuid': dataset_uuid}),
-                'application/json'
+                content_type='application/json'
             )
         else:
             return HttpResponseRedirect(
@@ -537,6 +537,29 @@ class ChunkedFileUploadCompleteView(ChunkedUploadCompleteView):
 
     model = ChunkedUpload
 
+    def delete(self, request):
+        try:
+            upload_id = request.GET['upload_id']
+        except KeyError:
+            logger.error("Upload ID is missing from deletion request")
+            return HttpResponseBadRequest(json.dumps({'error': 'KeyError'}),
+                                          'application/json')
+
+        try:
+            chunked = ChunkedUpload.objects.get(upload_id=upload_id)
+        except (ChunkedUpload.DoesNotExist,
+                ChunkedUpload.MultipleObjectsReturned) as e:
+            logger.error(
+                "Error retrieving file upload instance with ID '%s': '%s'",
+                upload_id, e)
+            return HttpResponseBadRequest(json.dumps({'error': e}),
+                                          'application/json')
+
+        chunked.delete()
+        return HttpResponse(json.dumps({'status': 'Successfully deleted.',
+                                        'upload_id': upload_id}),
+                            'application/json')
+
     def on_completion(self, uploaded_file, request):
         """Move file to the user's import directory"""
         try:
@@ -546,7 +569,8 @@ class ChunkedFileUploadCompleteView(ChunkedUploadCompleteView):
             return
         try:
             chunked_upload = ChunkedUpload.objects.get(upload_id=upload_id)
-        except (ChunkedUpload.DoesNotExist, MultipleObjectsReturned) as exc:
+        except (ChunkedUpload.DoesNotExist,
+                ChunkedUpload.MultipleObjectsReturned) as exc:
             logger.error(
                 "Error retrieving file upload instance with ID '%s': '%s'",
                 upload_id, exc)
@@ -605,16 +629,16 @@ class Assays(APIView):
     def get_object(self, uuid):
         try:
             return Assay.objects.get(uuid=uuid)
-        except (Assay.DoesNotExist, MultipleObjectsReturned):
+        except (Assay.DoesNotExist, Assay.MultipleObjectsReturned):
             raise Http404
 
     def get_query_set(self, study_uuid):
         try:
-            study_obj = data_set_manager.models.Study.objects.get(
+            study_obj = Study.objects.get(
                 uuid=study_uuid)
             return Assay.objects.filter(study=study_obj)
-        except (data_set_manager.models.Study.DoesNotExist,
-                data_set_manager.models.Study.MultipleObjectsReturned):
+        except (Study.DoesNotExist,
+                Study.MultipleObjectsReturned):
             raise Http404
 
     def get(self, request, format=None):

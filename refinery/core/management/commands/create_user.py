@@ -3,15 +3,11 @@ Created on Oct 3, 2012
 
 @author: nils
 '''
-
-import logging
+import sys
 
 from django.contrib.auth.models import User
 from django.contrib.sites.models import Site
 from django.core.management.base import BaseCommand
-
-
-logger = logging.getLogger(__name__)
 
 
 class Command(BaseCommand):
@@ -32,8 +28,7 @@ class Command(BaseCommand):
             error_msg = "User {} already exists. " \
                         "Please delete the account and try again."\
                         .format(username)
-            print error_msg
-            logger.error(error_msg)
+            sys.stderr.write(error_msg)
             return
 
         init_user(
@@ -49,11 +44,10 @@ def init_user(username, password, email, first_name, last_name, affiliation,
         username, email=email, password=password)
     user_object.first_name = first_name
     user_object.last_name = last_name
-    user_object.get_profile().affiliation = affiliation
+    user_object.profile.affiliation = affiliation
     user_object.is_active = is_active
     user_object.save()
-    user_object.get_profile().save()
+    user_object.profile.save()
 
     success_msg = "User {} created.".format(username)
-    print(success_msg)
-    logger.info(success_msg)
+    sys.stdout.write(success_msg)

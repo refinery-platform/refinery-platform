@@ -4,17 +4,15 @@ Created on Jul 2, 2012
 @author: nils
 '''
 
-
-import string
 import logging
+import string
 
 from django.conf import settings
 
 from haystack import indexes
 
-from data_set_manager.models import Node, AnnotatedNode
-import file_store
-
+from .models import AnnotatedNode, Node
+from file_store.models import FileStoreItem
 
 logger = logging.getLogger(__name__)
 
@@ -131,14 +129,20 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
         else:
             data[NodeIndex.WORKFLOW_OUTPUT_PREFIX + "_" + uuid + "_s"] = "N/A"
         # add file type as facet value
-        file_store_item = file_store.tasks.read(object.file_uuid)
-        if file_store_item:
-            data[NodeIndex.FILETYPE_PREFIX + "_" + uuid + "_s"] =\
-                file_store_item.get_filetype()
+        try:
+            file_store_item = FileStoreItem.objects.get(
+                uuid=object.file_uuid)
+        except(FileStoreItem.DoesNotExist,
+               FileStoreItem.MultipleObjectsReturned) as e:
+            logger.error("Couldn't properly fetch FileStoreItem: %s", e)
         else:
-            logger.warning(
-                "Unable to get file store item " + str(object.file_uuid) +
-                ". No file type available.")
-            data[NodeIndex.FILETYPE_PREFIX + "_" + uuid + "_s"] = ""
+            if file_store_item:
+                data[NodeIndex.FILETYPE_PREFIX + "_" + uuid + "_s"] =\
+                    file_store_item.get_filetype()
+            else:
+                logger.warning(
+                    "Unable to get file store item " + str(object.file_uuid) +
+                    ". No file type available.")
+                data[NodeIndex.FILETYPE_PREFIX + "_" + uuid + "_s"] = ""
 
-        return data
+            return data

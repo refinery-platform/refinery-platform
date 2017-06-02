@@ -16,8 +16,8 @@ function EmailInviteCtrl (
     if (infoType === 'success') {
       vm.alertType = 'success';
       vm.responseMessage = 'Successfully sent invitation to ' + email;
-    } else if (infoType === 'error') {
-      vm.alertType = 'error';
+    } else if (infoType === 'danger') {
+      vm.alertType = 'danger';
       vm.responseMessage = 'Error, invitiation could not be sent to' + email;
     }
   };
@@ -38,7 +38,7 @@ function EmailInviteCtrl (
           $uibModalInstance.dismiss();
         }, 1500);
       }, function (error) {
-        vm.generateAlertMessage('error', email);
+        generateAlertMessage('danger', email);
         $log.error(error);
       }
     );

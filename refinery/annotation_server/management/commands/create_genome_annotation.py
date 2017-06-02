@@ -1,14 +1,15 @@
+from __future__ import absolute_import
 import gzip
 import logging
 import os
 import tarfile
 import zipfile
 
-from django.core.management.base import LabelCommand, CommandError
 from django.conf import settings
+from django.core.management.base import CommandError, LabelCommand
 
-from annotation_server import models
-from annotation_server import utils
+from ...models import ChromInfo, CytoBand, Gene, GenomeBuild
+from ...utils import SUPPORTED_GENOMES
 from data_set_manager.tasks import download_http_file
 from file_store.models import _mkdir
 
@@ -75,8 +76,8 @@ class Command(LabelCommand):
         for a specific genome build: dm3, ce10, hg19
         """
         if label:
-            if label in utils.UPPORTED_GENOMES:
-                self.GENOME_BUILD = models.GenomeBuild.objects.get(name=label)
+            if label in SUPPORTED_GENOMES:
+                self.GENOME_BUILD = GenomeBuild.objects.get(name=label)
                 self.GENOME_BUILD_NAME = self.GENOME_BUILD.name
                 self.BASE_DOWNLOAD_URL = self.BASE_DOWNLOAD_URL % label
                 # temp dir should be located on the same file system as the
@@ -103,7 +104,7 @@ class Command(LabelCommand):
         url, file_name = self.getUrlFile('chromInfo.txt.gz')
         download_http_file(url, '', self.ANNOTATION_TEMP_DIR, as_task=False)
         # deletes objects from ChromInfo table for that genome build
-        models.ChromInfo.objects.filter(
+        ChromInfo.objects.filter(
             genomebuild__name__exact=self.GENOME_BUILD_NAME).delete()
         # reading gz file
         handle = gzip.open(file_name)
@@ -113,7 +114,7 @@ class Command(LabelCommand):
             # Not including extraneous sequences i.e. chr6_ssto_hap7,
             # chr6_random
             if str(t1[0]).find('_') == -1:
-                item = models.ChromInfo(
+                item = ChromInfo(
                     genomebuild=self.GENOME_BUILD,
                     chrom=t1[0],
                     size=t1[1],
@@ -129,7 +130,7 @@ class Command(LabelCommand):
         url, file_name = self.getUrlFile('cytoBand.txt.gz')
         download_http_file(url, '', self.ANNOTATION_TEMP_DIR, as_task=False)
         # deletes all objects from table
-        models.CytoBand.objects.filter(
+        CytoBand.objects.filter(
             genomebuild__name__exact=self.GENOME_BUILD_NAME).delete()
         # reading gz file
         # handle = gzip.open(file_name)
@@ -152,13 +153,13 @@ class Command(LabelCommand):
         url, file_name = self.getUrlFile('ensGene.txt.gz')
         download_http_file(url, '', self.ANNOTATION_TEMP_DIR, as_task=False)
         # deletes all objects of that genome build from table
-        models.Gene.objects.filter(
+        Gene.objects.filter(
             genomebuild__name__exact=self.GENOME_BUILD_NAME).delete()
         # reading gz file
         handle = gzip.open(file_name)
         for line in handle:
             t1 = line.strip().split('\t')
-            item = models.Gene(
+            item = Gene(
                 genomebuild=self.GENOME_BUILD, bin=t1[0], name=t1[1],
                 chrom=t1[2], strand=t1[3], txStart=t1[4], txEnd=t1[5],
                 cdsStart=t1[6], cdsEnd=t1[7], exonCount=t1[8],
