@@ -4,10 +4,12 @@ from rest_framework.response import Response
 from data_set_manager.utils import (
     search_solr, format_solr_response,
     generate_solr_params_for_user)
+from rest_framework.decorators import api_view
 
 logger = logging.getLogger(__name__)
 
 
+@api_view()
 def user_files(request):
     if request.method == 'GET':
         params = request.GET
