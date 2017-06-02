@@ -20,13 +20,17 @@ from django.shortcuts import get_object_or_404, render_to_response
 from django.template import loader, RequestContext
 from django.views.decorators.gzip import gzip_page
 
+import boto3
+import botocore
 from guardian.shortcuts import get_perms
 from guardian.utils import get_anonymous_user
 from registration import signals
 from registration.views import RegistrationView
 import requests
 from requests.exceptions import HTTPError
-from rest_framework import status, viewsets
+from rest_framework import authentication, status, viewsets
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from xml.parsers.expat import ExpatError
@@ -34,11 +38,11 @@ from xml.parsers.expat import ExpatError
 from .forms import (DataSetForm, ProjectForm, UserForm, UserProfileForm,
                     WorkflowForm)
 from .models import (Analysis, CustomRegistrationProfile, DataSet,
-                     ExtendedGroup, Invitation, Ontology, Project,
-                     UserProfile, Workflow, WorkflowEngine)
-from .serializers import (DataSetSerializer, NodeSerializer,
-                          WorkflowSerializer)
-from .utils import get_data_sets_annotations
+                     ExtendedGroup, Invitation, Ontology, Project, UserProfile,
+                     Workflow, WorkflowEngine)
+from .serializers import (DataSetSerializer,
+                          NodeSerializer, WorkflowSerializer)
+from .utils import get_data_sets_annotations, api_error_response
 from annotation_server.models import GenomeBuild
 from data_set_manager.models import Node
 from data_set_manager.utils import generate_solr_params
@@ -1218,3 +1222,40 @@ class CustomRegistrationView(RegistrationView):
 
         """
         return ('registration_complete', (), {})
+
+
+class OpenIDToken(APIView):
+    """Registers (or retrieves) a Cognito IdentityId and an OpenID Connect
+    token for a user authenticated by Django authentication process
+
+    Requires:
+    * server must have access to AWS Cognito API
+    * Cognito identity pool with Refinery configured as a custom auth provider
+    """
+    authentication_classes = (authentication.SessionAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    renderer_classes = (JSONRenderer,)
+
+    def post(self, request):
+        try:
+            client = boto3.client('cognito-identity')
+        except botocore.exceptions.NoRegionError as exc:
+            # AWS region is not configured
+            return api_error_response(
+                "Server AWS configuration is incorrect: {}".format(exc),
+                status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+        try:
+            token = client.get_open_id_token_for_developer_identity(
+                IdentityPoolId=
+                'us-east-1:18d47236-7898-4c2a-9a0a-a150d49d76be',
+                Logins={'login.scc': request.user.username}
+            )
+        except (botocore.exceptions.NoCredentialsError,
+                botocore.exceptions.ClientError) as exc:
+            # missing or wrong AWS credentials
+            return api_error_response(
+                "Server AWS configuration is incorrect: {}".format(exc),
+                status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+        return Response(token)
