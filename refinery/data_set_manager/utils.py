@@ -587,7 +587,7 @@ def _generate_solr_params(params, assay_uuids=[]):
 
     solr_params = 'fq=assay_uuid:({})'.format(
         ' OR '.join(assay_uuids)
-    )
+    ) if assay_uuids else ''
 
     if facet_field:
         facet_field = facet_field.split(',')
@@ -773,12 +773,13 @@ def format_solr_response(solr_response):
         solr_response_json = json.loads(solr_response)
     except TypeError:
         return "Error loading json."
-    assert solr_response_json['responseHeader']['status'] == 200,\
-        solr_response_json['error']['msg']
+    assert solr_response_json['responseHeader']['status'] == 0,\
+        solr_response_json.get('error', {}).get('msg', solr_response_json)
+    # Try to get just the error message; failing that, get everything.
 
     # Reorganizes solr response into easier to digest objects.
     order_facet_fields = solr_response_json.get('responseHeader').get(
-            'params').get('fl').split(',')
+            'params').get('fl', '').split(',')
     if solr_response_json.get('facet_counts'):
         facet_field_counts = solr_response_json.get('facet_counts').get(
             'facet_fields')
