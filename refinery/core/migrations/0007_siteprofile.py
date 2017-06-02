@@ -8,7 +8,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('sites', '0001_initial'),
-        ('core', '0004_auto_add_expiration'),
+        ('core', '0006_auto_20170524_1554'),
     ]
 
     operations = [
