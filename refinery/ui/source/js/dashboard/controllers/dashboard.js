@@ -61,6 +61,8 @@ function DashboardCtrl (
   this.treemapContext = treemapContext;
   this.dashboardVisData = dashboardVisData;
   this.dataCart = dataCart;
+  // variable to track filters and sorting selected in ui for data set api query
+  this.dataSetParams = {};
 
   this.searchQueryDataSets = '';
 
@@ -72,6 +74,8 @@ function DashboardCtrl (
 
   this.dataSetsPanelHeight = 1;
   this.dataCartPanelHeight = 0;
+
+  this.icons = this.$window.getStaticUrl('images/icons.svg');
 
   // Check authentication
   // This should ideally be moved to the global APP controller, which we don't
@@ -228,9 +232,9 @@ function DashboardCtrl (
   this.workflowsSorting = settings.dashboard.workflowsSorting;
 
   pubSub.on('resize', function () {
-    this.dataSetsAdapter.reload();
-    this.analysesAdapter.reload();
-    this.workflowsAdapter.reload();
+    if (this.dataSetsAdapter) this.dataSetsAdapter.reload();
+    if (this.analysesAdapter) this.analysesAdapter.reload();
+    if (this.workflowsAdapter) this.workflowsAdapter.reload();
   }.bind(this));
 
   this.treemapContext.on('root', function (root) {
@@ -364,8 +368,18 @@ function DashboardCtrl (
     if (this.repoMode) {
       this.expandDataSetPanel = true;
       this.expandedDataSetPanelBorder = true;
-      this.dashboardWidthFixerService.fixWidth();
-      this.dashboardExpandablePanelService.trigger('lockFullWith');
+      this.dashboardWidthFixerService
+        .fixWidth()
+        .then(function () {
+          this.dashboardExpandablePanelService.trigger('lockFullWith');
+        }.bind(this))
+        .catch(function () {
+          // This is weird. We should never run into here unless the whole app
+          // initialization failed even after 75ms.
+          // See `services/width-fixer.js` for details.
+          this.$log.error('Dashboard expand dataset exploration error,' +
+            ' possibly due to the Refinery App failing to initialized.');
+        });
     }
   }.bind(this), 0);
 
@@ -442,11 +456,12 @@ Object.defineProperty(
 
       this._dataSetsFilterGroup = value;
       if (typeof groupId === 'number') {
-        this.dataSet.filter({
-          group: groupId
-        });
+        this.dataSetParams.group = groupId;
+        this.dataSet.filter(this.dataSetParams);
       } else {
-        this.dataSet.all();
+        // remove group property
+        delete this.dataSetParams.group;
+        this.dataSet.filter(this.dataSetParams);
       }
       this.dataSets.newOrCachedCache(undefined, true);
       this.dashboardDataSetsReloadService.reload();
@@ -465,11 +480,12 @@ Object.defineProperty(
     set: function (value) {
       this._dataSetsFilterOwner = value;
       if (value) {
-        this.dataSet.filter({
-          is_owner: 'True'
-        });
+        this.dataSetParams.is_owner = 'True';
+        this.dataSet.filter(this.dataSetParams);
       } else {
-        this.dataSet.all();
+        // remove is_owner property, avoids searching for non-owned data sets
+        delete this.dataSetParams.is_owner;
+        this.dataSet.filter(this.dataSetParams);
       }
       this.dataSets.newOrCachedCache(undefined, true);
       this.dashboardDataSetsReloadService.reload();
@@ -488,11 +504,12 @@ Object.defineProperty(
     set: function (value) {
       this._dataSetsFilterPublic = value;
       if (value) {
-        this.dataSet.filter({
-          public: 'True'
-        });
+        this.dataSetParams.public = 'True';
+        this.dataSet.filter(this.dataSetParams);
       } else {
-        this.dataSet.all();
+         // remove is_owner property, avoids searching for non-public data sets
+        delete this.dataSetParams.public;
+        this.dataSet.filter(this.dataSetParams);
       }
       this.dataSets.newOrCachedCache(undefined, true);
       this.dashboardDataSetsReloadService.reload();
@@ -993,7 +1010,8 @@ DashboardCtrl.prototype.expandDatasetExploration = function (fromStateEvent) {
   this.dataSetExploration = true;
 
   if (!this.expandDataSetPanel) {
-    this.dashboardWidthFixerService.fixWidth()
+    this.dashboardWidthFixerService
+      .fixWidth()
       .then(function () {
         self.expandDataSetPanel = true;
         self.expandedDataSetPanelBorder = true;
@@ -1047,7 +1065,8 @@ DashboardCtrl.prototype.expandDataSetPreview = function (
 
   function startExpansion () {
     if (!this.expandDataSetPanel) {
-      this.dashboardWidthFixerService.fixWidth()
+      this.dashboardWidthFixerService
+        .fixWidth()
         .then(function () {
           self.expandDataSetPanel = true;
           self.expandedDataSetPanelBorder = true;
@@ -1141,7 +1160,7 @@ DashboardCtrl.prototype.getOriginalUri = function (eventData) {
  * @method  readableDate
  * @author  Fritz Lekschas & Scott Ouellette
  * @date    2016-09-30
- * @param   {Object}  object   DataSet or Analysis object of interest.
+ * @param   {Object}  dataObj  DataSet or Analysis object of interest.
  * @param   {String}  property  Name of the date property to be made readable.
  * @return  {String}            Readable date string.
  */
@@ -1149,18 +1168,18 @@ DashboardCtrl.prototype.readableDate = function (dataObj, property) {
   var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug',
     'Sep', 'Oct', 'Nov', 'Dec'];
 
-
-  // Analyes' modification_date field is not an actual Javascript Date so we
-  // need to convert it
-  dataObj[property] = new Date(dataObj[property]);
-
+  if (property === 'modification_date') {
+    // Analyses' modification_date field is not a date string that Safari
+    // can handle so we need to convert it. See: http://bit.ly/2dXs5Ho
+    var dateParts = dataObj[property].toString().split(/[^0-9]/);
+    dataObj[property] = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
+  }
   if (dataObj[property] && !dataObj[property + 'Readable']) {
     dataObj[property + 'Readable'] =
       months[dataObj[property].getMonth()] + ' ' +
       dataObj[property].getDate() + ', ' +
       dataObj[property].getFullYear();
   }
-
   return dataObj[property + 'Readable'];
 };
 
@@ -1589,13 +1608,17 @@ DashboardCtrl.prototype.triggerSorting = function (source) {
     // Todo: Unify data sources. Currently datasets are handled nicely and
     // more generic than others e.g. analyses and workflows.
     if (source === 'dataSets') {
-      this.dataSet.order(params);
+      // Use api request params to tie in sorting & filtering
+      this.dataSetParams.order_by = params;
+      this.dataSet.filter(this.dataSetParams);
     } else {
       this[source].extraParameters.order_by = params;
     }
   } else {
     if (source === 'dataSets') {
-      this.dataSet.all();
+      // Remove order_by param from api request params
+      delete this.dataSetParams.order_by;
+      this.dataSet.filter(this.dataSetParams);
     } else {
       delete this[source].extraParameters.order_by;
     }
@@ -1616,11 +1639,14 @@ DashboardCtrl.prototype.openDataSetDeleteModal = function (dataSet) {
   this.collapseDataSetPreview();
   this.collapseDatasetExploration();
   this.removeFromDataCart(dataSet);
+  var datasetDeleteDialogUrl = this.$window.getStaticUrl(
+    'partials/dashboard/partials/dataset-delete-dialog.html'
+  );
 
   this.$uibModal.open({
     backdrop: 'static',
     keyboard: false,
-    templateUrl: '/static/partials/dashboard/partials/dataset-delete-dialog.html',
+    templateUrl: datasetDeleteDialogUrl,
     controller: 'DataSetDeleteCtrl as modal',
     resolve: {
       config: function () {
@@ -1645,10 +1671,13 @@ DashboardCtrl.prototype.openDataSetDeleteModal = function (dataSet) {
  * @date    2016-9-28
  */
 DashboardCtrl.prototype.openAnalysisDeleteModal = function (analysis) {
+  var analysisDeleteDialogUrl = this.$window.getStaticUrl(
+    'partials/dashboard/partials/analysis-delete-dialog.html'
+  );
   this.$uibModal.open({
     backdrop: 'static',
     keyboard: false,
-    templateUrl: '/static/partials/dashboard/partials/analysis-delete-dialog.html',
+    templateUrl: analysisDeleteDialogUrl,
     controller: 'AnalysisDeleteCtrl as modal',
     resolve: {
       config: function () {
@@ -1659,6 +1688,7 @@ DashboardCtrl.prototype.openAnalysisDeleteModal = function (analysis) {
       },
       analysis: analysis,
       analyses: this.analyses,
+      dataSets: this.dataSets,
       analysesReloadService: this.dashboardAnalysesReloadService,
       isOwner: analysis.is_owner
     }

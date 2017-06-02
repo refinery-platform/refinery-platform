@@ -7,15 +7,16 @@ function PermissionEditorCtrl (
   sharingService,
   dashboardDataSetsReloadService,
   config,
-  permissions
+  permissionService
 ) {
   this.$log = $log;
   this._ = _;
   this.config = config;
-  this.permissions = permissions;
+  this.permissions = permissionService.permissions;
   this.$uibModalInstance = $uibModalInstance;
   this.sharingService = sharingService;
   this.dashboardDataSetsReloadService = dashboardDataSetsReloadService;
+  this.permissionService = permissionService;
 
   // Used as a shorthand to avoid complicated permission checking in `ngRepeat`
   this.permissionLevel = {
@@ -39,6 +40,7 @@ function PermissionEditorCtrl (
  * @type  {function}
  */
 PermissionEditorCtrl.prototype.cancel = function () {
+  this.permissionService.getPermissions(this.config.uuid);
   this.$uibModalInstance.dismiss('cancel');
 };
 
@@ -70,11 +72,10 @@ PermissionEditorCtrl.prototype.save = function () {
     .then(function () {
       that.dashboardDataSetsReloadService.reload(true);
       that.$uibModalInstance.dismiss('saved');
-    })
-    .catch(function (error) {
+    }, function (error) {
+      this.permissionService.getPermissions(that._currentUuid);
       that.$log.error(error);
-    })
-    .finally(function () {
+    }, function () {
       that.isSaving = false;
     });
 };
@@ -88,6 +89,6 @@ angular
     'sharingService',
     'dashboardDataSetsReloadService',
     'config',
-    'permissions',
+    'permissionService',
     PermissionEditorCtrl
   ]);

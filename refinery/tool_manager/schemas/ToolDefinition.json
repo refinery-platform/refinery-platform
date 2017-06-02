@@ -1,0 +1,86 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema",
+  "oneOf":[
+    {
+      "required": [
+        "name",
+        "description",
+        "file_relationship",
+        "output_files",
+        "parameters"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "file_relationship": {
+          "$ref": "FileRelationship.json#"
+        },
+        "output_files": {
+          "type": "array",
+          "items": {
+            "$ref": "OutputFile.json#"
+          },
+          "minItems": 1
+        },
+        "parameters": {
+          "type": "array",
+          "items": {
+            "$ref": "GalaxyParameter.json#"
+          }
+        },
+        "tool_type":{
+          "type": "string",
+          "enum": ["WORKFLOW"]
+        }
+      }
+    },
+    {
+      "required": [
+        "name",
+        "description",
+        "file_relationship",
+        "output_files",
+        "parameters",
+        "container_input_path",
+        "image_name"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "file_relationship": {
+          "$ref": "FileRelationship.json#"
+        },
+        "parameters": {
+          "type": "array",
+          "items": {
+            "$ref": "Parameter.json#"
+          }
+        },
+        "output_files": {
+          "type": "array",
+          "items": {
+            "$ref": "OutputFile.json#"
+          }
+        },
+        "tool_type":{
+          "type": "string",
+          "enum": ["VISUALIZATION"]
+        },
+        "container_input_path": {
+          "type": "string"
+        },
+        "image_name": {
+          "type": "string"
+        }
+      }
+    }
+  ]
+}

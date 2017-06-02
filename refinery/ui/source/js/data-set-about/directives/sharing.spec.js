@@ -9,7 +9,14 @@ describe('rpDataSetAboutSharing directive unit test', function () {
   var scope;
   var fakeUuid = 'x508x83x-x9xx-4740-x9x7-x7x0x631280x';
 
-  beforeEach(inject(function (_$compile_, _$rootScope_, $templateCache, $httpBackend, settings) {
+  beforeEach(inject(function (
+    _$compile_,
+    _$rootScope_,
+    $templateCache,
+    $httpBackend,
+    $window,
+    settings
+  ) {
     $httpBackend
       .expectGET(
         settings.appRoot +
@@ -18,7 +25,7 @@ describe('rpDataSetAboutSharing directive unit test', function () {
      ).respond(200, '');
 
     $templateCache.put(
-      '/static/partials/data-set-about/partials/sharing.html',
+      $window.getStaticUrl('partials/data-set-about/partials/sharing.html'),
       '<div class="refinery-header"> ' +
       '<span class="refinery-header-left"> ' +
       '<h3>Sharing</h3> </span> </div>'

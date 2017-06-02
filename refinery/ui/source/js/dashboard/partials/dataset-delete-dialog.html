@@ -37,7 +37,7 @@
       <b>There have been 0 Analyses run on this Dataset.</b>
     </p>
   </div>
-  <div ng-if="modal.dataSet.analyses">
+  <div ng-if="modal.dataSet.analyses.length > 0">
     <p ng-if="modal.deletionMessage == null" class="deletion-message">
       <b>The following {{ modal.dataSet.analyses.length }} {{ modal.dataSet
       .analyses.length > 1 ? 'Analyses' : 'Analysis' }} will be
@@ -79,13 +79,13 @@
           <span ng-switch on="analysis.status">
               <span ng-if="SUCCESS">
                 <a
-                ng-href="/data_sets/{{analysis.data_set__uuid}}/analysis/{{analysis.uuid}}">
+                ng-href="/data_sets/{{modal.dataSet.uuid}}/analysis/{{analysis.uuid}}">
                 {{ analysis.name }}
               </a>
               </span>
               <span ng-if="!SUCCESS">
                 <a
-                ng-href="/data_sets/{{analysis.data_set__uuid}}/#/analyses">
+                ng-href="/data_sets/{{modal.dataSet.uuid}}/#/analyses">
                 {{ analysis.name }}
               </a>
               </span>

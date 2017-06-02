@@ -49,8 +49,11 @@
         <i class="fa fa-times-circle"
           ng-if="dashboard.searchQueryDataSets"
           ng-click="dashboard.resetDataSetSearch()"></i>
-        <input
 
+        <!--The 'metadata-search' id below is used to define custom
+          styling to address a padding issue observed in Firefox-->
+        <input
+          id="metadata-search"
           type="text"
           class="search-query form-control"
           placeholder="Search"
@@ -373,12 +376,11 @@
                       refinery-tooltip
                       refinery-tooltip-container="body"
                       refinery-tooltip-placement="top">
-                      <i class="fa fa-calendar-o"
-                        ng-click="dashboard.dataCart.add(dataSet)"></i>
+                      <i class="fa fa-calendar-o"></i>
                       {{ dashboard.readableDate(dataSet, 'modificationDate') }}
                     </li>
                     <li class="separator">&middot;</li>
-                    <li class="indicator" ng-if="dataSet.analyses">
+                    <li class="indicator" ng-if="dataSet.analyses.length > 0">
                       <a id="analyses-indicator" class="pointer"
                       ng-href="/data_sets/{{ dataSet.uuid }}/#/analyses"
                       title="{{ dataSet.analyses.length }} {{ dataSet.analyses.length > 1 ? 'Analyses
@@ -528,12 +530,11 @@
                     refinery-tooltip
                     refinery-tooltip-container="body"
                     refinery-tooltip-placement="top">
-                    <i class="fa fa-calendar-o"
-                      ng-click="dashboard.dataCart.add(dataSet)"></i>
+                    <i class="fa fa-calendar-o"></i>
                     {{ dashboard.readableDate(dataSet, 'modificationDate') }}
                   </li>
                   <li class="separator">&middot;</li>
-                  <li class="indicator" ng-if="dataSet.analyses">
+                  <li class="indicator" ng-if="dataSet.analyses.length > 0">
                       <a id="analyses-indicator" class="pointer"
                       ng-href="/data_sets/{{ dataSet.uuid }}/#/analyses"
                       title="{{ dataSet.analyses.length }} {{
@@ -613,7 +614,7 @@
                 <svg class="icon-refinery">
                   <use
                     xmlns:xlink="http://www.w3.org/1999/xlink"
-                    xlink:href="/static/images/icons.svg#refinery"></use>
+                    ng-attr-xlink:href="{{ dashboard.icons + '#refinery' }}"></use>
                 </svg><br/>
                 Repository Mode
               </div>
@@ -723,7 +724,7 @@
               ng-click="dashboard.toogleRadio()"
               ng-model="dashboard.analysesFilterStatus">
               Running
-              <i class="info-icon analyses-status fa fa-cog fa-spin"></i>
+              <i class="info-icon analyses-status fa fa-cog"></i>
           </label>
         </div>
         <div class="entry">
@@ -833,7 +834,6 @@
                       refinery-tooltip-placement="top"></i>
                   </li>
                   <li class="indicator"
-                    ng-if="dashboard.readableDate(analysis, 'modification_date')"
                     title="Modification Date"
                     refinery-tooltip
                     refinery-tooltip-container="body"

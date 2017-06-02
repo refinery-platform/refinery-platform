@@ -10,7 +10,8 @@ import logging
 import math
 import struct
 import zlib
-import file_store.models
+
+from file_store.models import get_file_object
 
 logger = logging.getLogger(__name__)
 
@@ -195,7 +196,7 @@ class TDFFile(object):
         # reopen file byte stream
         # TODO: replace get_file_object() with open(), make sure file object
         # is closed after use
-        file_object = file_store.models.get_file_object(dictionary['filename'])
+        file_object = get_file_object(dictionary['filename'])
         bytestream = TDFByteStream(file_object)
         self.__dict__.update(dictionary)  # reload attributes
         self.bytestream = bytestream  # re-attach the byte stream
@@ -322,7 +323,7 @@ class TDFFile(object):
 
         # assumes that the number of tiles is equal across all window functions
         for tile_index in range(len(tiles[window_functions[0]])):
-            print "Tile: " + str(tile_index)
+            logger.info("Tile: %s", tile_index)
             # TODO: compute correct start position
             # (first tile_index is usually > 0)
             location = {}

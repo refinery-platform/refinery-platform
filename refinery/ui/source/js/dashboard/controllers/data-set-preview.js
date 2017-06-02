@@ -3,6 +3,7 @@
 function DataSetPreviewCtrl (
   $log,
   $q,
+  $window,
   _,
   $uibModal,
   pubSub,
@@ -19,10 +20,12 @@ function DataSetPreviewCtrl (
   dashboardExpandablePanelService,
   dataSetTakeOwnershipService,
   dashboardDataSetsReloadService,
-  filesize
+  filesize,
+  permissionService
 ) {
   this.$log = $log;
   this.$q = $q;
+  this.$window = $window;
   this._ = _;
   this.$uibModal = $uibModal;
   this.pubSub = pubSub;
@@ -39,7 +42,9 @@ function DataSetPreviewCtrl (
   this.dashboardExpandablePanelService = dashboardExpandablePanelService;
   this.dataSetTakeOwnershipService = dataSetTakeOwnershipService;
   this.dashboardDataSetsReloadService = dashboardDataSetsReloadService;
+  this.permissionService = permissionService;
   this.filesize = filesize;
+  this.importStatus = {};
 
   this.maxBadges = this.settings.dashboard.preview.maxBadges;
   this.infinity = Number.POSITIVE_INFINITY;
@@ -200,6 +205,14 @@ DataSetPreviewCtrl.prototype.getStudies = function (uuid) {
       } else {
         this.studies = data.objects;
       }
+      // remove unnamed protocols
+      var filteredProtocols = [];
+      for (var i = 0; i < this.studies.protocols.length; i++) {
+        if (this.studies.protocols[i].name) {
+          filteredProtocols.push(this.studies.protocols[i]);
+        }
+      }
+      angular.copy(filteredProtocols, this.studies.protocols);
     }.bind(this));
 };
 
@@ -227,58 +240,6 @@ DataSetPreviewCtrl.prototype.getDataSetDetails = function (uuid) {
 };
 
 /**
- * Load permissions for this dataset.
- *
- * @method  getPermissions
- * @author  Fritz Lekschas
- * @date    2015-08-21
- *
- * @param   {String}  uuid   UUID of the exact model entity.
- * @return  {Object}         Angular promise.
- */
-DataSetPreviewCtrl.prototype.getPermissions = function (uuid) {
-  return this.sharingService.get({
-    model: 'data_sets',
-    uuid: uuid
-  }).$promise
-    .then(function (data) {
-      var groups = [];
-      for (var i = 0, len = data.share_list.length; i < len; i++) {
-        groups.push({
-          id: data.share_list[i].group_id,
-          name: data.share_list[i].group_name,
-          uuid: data.share_list[i].group_uuid,
-          permission: this.getPermissionLevel(data.share_list[i].perms)
-        });
-      }
-      this.permissions = {
-        isOwner: data.is_owner,
-        groups: groups
-      };
-    }.bind(this));
-};
-
-/**
- * Turns permission object into a simple string.
- *
- * @method  getPermissions
- * @author  Fritz Lekschas
- * @date    2015-08-21
- *
- * @param   {Object}  perms  Object of the precise permissions.
- * @return  {String}         Permission's name.
- */
-DataSetPreviewCtrl.prototype.getPermissionLevel = function (perms) {
-  if (perms.read === false) {
-    return 'none';
-  }
-  if (perms.change === true) {
-    return 'edit';
-  }
-  return 'read';
-};
-
-/**
  * Import data set from public into private space.
  *
  * @method  importDataSet
@@ -287,28 +248,30 @@ DataSetPreviewCtrl.prototype.getPermissionLevel = function (perms) {
  */
 DataSetPreviewCtrl.prototype.importDataSet = function () {
   var self = this;
+  var dataSetUuid = this.dataSetDetails.uuid;
 
   // Only allow the user to click on the button once per page load.
   this.importDataSetStarted = true;
 
-  if (!this.isDataSetReImporting) {
+  if (!(this.importStatus.hasOwnProperty(dataSetUuid))) {
     this.isDataSetReImporting = true;
+    self.importStatus[dataSetUuid] = { isDataSetReImporting: true };
     this.dataSetTakeOwnershipService
       .save({
-        data_set_uuid: this.dataSetDetails.uuid
+        data_set_uuid: dataSetUuid
       })
       .$promise
       .then(function (data) {
-        self.isDataSetReImportSuccess = true;
+        self.importStatus[dataSetUuid] = { isDataSetReImportSuccess: true };
         self.dashboardDataSetsReloadService.reload(true);
         self.dashboardDataSetPreviewService.preview(data.new_data_set_uuid);
       })
       .catch(function (error) {
-        self.isDataSetReImportFail = true;
+        self.importStatus[this.dataSetDetails.uuid] = { isDataSetReImportFail: true };
         self.$log.error(error);
       })
       .finally(function () {
-        self.isDataSetReImporting = false;
+        self.importStatus[dataSetUuid].isDataSetReImporting = false;
       });
   }
 };
@@ -359,7 +322,7 @@ DataSetPreviewCtrl.prototype.loadData = function (dataSetUuid) {
   permissions = this.user.isAuthenticated()
     .then(function (authenticated) {
       if (authenticated) {
-        return this.getPermissions(dataSetUuid);
+        return this.permissionService.getPermissions(dataSetUuid);
       }
       return false;
     }.bind(this));
@@ -390,24 +353,23 @@ DataSetPreviewCtrl.prototype.loadData = function (dataSetUuid) {
  */
 DataSetPreviewCtrl.prototype.openPermissionEditor = function () {
   var that = this;
-
-  if (this.permissions) {
-    this.$uibModal.open({
-      templateUrl: '/static/partials/dashboard/partials/permission-dialog.html',
-      controller: 'PermissionEditorCtrl as modal',
-      resolve: {
-        config: function () {
-          return {
-            model: 'data_sets',
-            uuid: that._currentUuid
-          };
-        },
-        permissions: function () {
-          return that.permissions;
-        }
+  this.$uibModal.open({
+    templateUrl: function () {
+      return that.$window.getStaticUrl('partials/dashboard/partials/permission-dialog.html');
+    },
+    controller: 'PermissionEditorCtrl as modal',
+    resolve: {
+      config: function () {
+        return {
+          model: 'data_sets',
+          uuid: that._currentUuid
+        };
       }
-    });
-  }
+    }
+  }).result.catch(function () {
+    // refresh data when user dismisses by clicking on the background
+    that.permissionService.getPermissions(that._currentUuid);
+  });
 };
 
 /**
@@ -462,6 +424,7 @@ angular
   .controller('DataSetPreviewCtrl', [
     '$log',
     '$q',
+    '$window',
     '_',
     '$uibModal',
     'pubSub',
@@ -479,5 +442,6 @@ angular
     'dataSetTakeOwnershipService',
     'dashboardDataSetsReloadService',
     'filesize',
+    'permissionService',
     DataSetPreviewCtrl
   ]);

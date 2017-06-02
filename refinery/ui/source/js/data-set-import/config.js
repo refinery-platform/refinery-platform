@@ -13,7 +13,7 @@ angular
         autoUpload: false,
         processQueue: [
           {
-            action: 'calculate_checksum',
+            action: 'initializeChunkIndex',
             acceptFileTypes: '@',
             chunkSize: '@maxChunkSize'
           }

@@ -4,23 +4,23 @@ Created on May 29, 2012
 @author: nils
 '''
 import hashlib
+import json
 import logging
 import time
 import urlparse
+
+from django.conf import settings
+from django.db.models import Q
+from django.utils.http import urlquote, urlunquote
+
 import requests
 from requests.exceptions import HTTPError
-import json
 
-from django.db.models import Q
-from django.utils.http import (urlquote, urlunquote)
-from django.conf import settings
-from django.core.exceptions import ObjectDoesNotExist
-
-import core
-from data_set_manager.search_indexes import NodeIndex
-from .models import (AttributeOrder, Study, Node, Attribute, AnnotatedNode,
-                     Assay, AnnotatedNodeRegistry)
+from .models import (AnnotatedNode, AnnotatedNodeRegistry, Assay, Attribute,
+                     AttributeOrder, Node, Study)
+from .search_indexes import NodeIndex
 from .serializers import AttributeOrderSerializer
+import core
 
 
 logger = logging.getLogger(__name__)
@@ -635,7 +635,8 @@ def generate_solr_params(params, assay_uuid):
     is_annotation = params.get('is_annotation', 'false')
     facet_count = params.get('include_facet_count', 'true')
     start = params.get('offset', '0')
-    row = params.get('limit', '20')
+    # row number suggested by solr docs, since there's no unlimited option
+    row = params.get('limit', '10000000')
     field_limit = params.get('attributes', None)
     facet_field = params.get('facets', None)
     facet_pivot = params.get('pivots', None)
@@ -817,7 +818,9 @@ def get_owner_from_assay(uuid):
 
     try:
         investigation_key = Study.objects.get(assay__uuid=uuid).investigation
-    except ObjectDoesNotExist:
+    except (Study.DoesNotExist,
+            Study.MultipleObjectsReturned) as e:
+        logger.error(e)
         return "Error: Invalid uuid"
 
     investigation_link = core.models.InvestigationLink.objects.get(
@@ -1018,3 +1021,33 @@ def update_attribute_order_ranks(old_attribute, new_rank):
             return serializer.error
 
     return
+
+
+def get_file_url_from_node_uuid(node_uuid):
+    """
+    Fetch the full url pointing to a Node's datafile by passing in a Node UUID.
+    NOTE: Since this method is called within the context of a db transaction,
+    we are raising exceptions within to nullify said transaction.
+
+    :param node_uuid: Node.uuid
+    :return: a full url pointing to the fetched Node's datafile
+    :raises: RuntimeError if a Node can't be fetched or if a Fetched Node
+    has no file associated with it to build a url from
+    """
+    try:
+        node = Node.objects.get(uuid=node_uuid)
+    except (Node.DoesNotExist, Node.MultipleObjectsReturned):
+        raise RuntimeError(
+            "Couldn't fetch Node by UUID from: {}".format(node_uuid)
+        )
+    else:
+        url = node.get_relative_file_store_item_url()
+
+        if url is None:
+            raise RuntimeError(
+                "Node with uuid: {} has no associated file url".format(
+                    node.uuid
+                )
+            )
+        else:
+            return core.utils.get_full_url(url)

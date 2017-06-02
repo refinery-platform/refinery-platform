@@ -42,7 +42,17 @@ SolrAnalysisView = function( parentElementId, idPrefix, solrQuery, configurator,
   	
   	self._expandedFacets = [];
   	
-  	self._hiddenFieldNames = [ "uuid", "file_uuid", "study_uuid", "assay_uuid", "type", "is_annotation", "species", "genome_build", "name" ]; // TODO: make these regexes;  	  	
+  	self._hiddenFieldNames = [
+			"uuid",
+			"file_uuid",
+			"study_uuid",
+			"assay_uuid",
+			"type",
+			"is_annotation",
+			"species",
+			"genome_build",
+			"name"
+		]; // TODO: make these regexes;
 };	
 	
 	
@@ -97,7 +107,14 @@ SolrAnalysisView.prototype._renderTree = function( solrResponse ) {
    		
 		self._query.clearDocumentSelection();
    		
-   		self._commands.execute( SOLR_ANALYSIS_SELECTION_UPDATED_COMMAND, { 'facet': facet, 'facet_value': facetValue, 'isSelected': self._query._facetSelection[facet][facetValue].isSelected } );   		
+   		self._commands.execute(
+				SOLR_ANALYSIS_SELECTION_UPDATED_COMMAND,
+				{
+					'facet': facet,
+					'facet_value': facetValue,
+					'isSelected': self._query._facetSelection[facet][facetValue].isSelected
+				}
+			);
    	} );	
 }
 	
@@ -122,14 +139,24 @@ SolrAnalysisView.prototype._generateTree = function( solrResponse ) {
 				//'data-parent': self._parentElementId,
 				'data-target': "#" + self._composeFacetId( attribute.solr_field + "___inactive" ),
 				'id': self._composeFacetId( attribute.solr_field ),
-				'html': '<span class="refinery-facet-label" id="' + self._composeFacetId( attribute.solr_field + '___label' ) + '">' + self._getFacetLabel( attribute.solr_field ) + '</span>'
+				'html': '<span class="refinery-facet-label" ' +
+								'id="' + self._composeFacetId( attribute.solr_field + '___label' ) + '">' +
+								self._getFacetLabel( attribute.solr_field ) + '</span>'
 				}).appendTo('#' + self._parentElementId);
 			
 			// only show active facet values when facet is collapsed
-			$('<div/>', { 'class': 'facet-value-list selected ' + ( self._isFacetExpanded( attribute.solr_field ) ? 'hidden' : '' ), "id": self._composeFacetId( attribute.solr_field + "___active" ), html: "" }).appendTo('#' + self._parentElementId);											
+			$('<div/>',
+				{
+					'class': 'facet-value-list selected ' + ( self._isFacetExpanded( attribute.solr_field ) ? 'hidden' : '' ),
+					"id": self._composeFacetId( attribute.solr_field + "___active" ), html: ""
+				}).appendTo('#' + self._parentElementId);
 			
 			// if facet is marked as expanded display it that way
-			$('<div/>', { 'class': 'facet-value-list collapse ' + ( self._isFacetExpanded( attribute.solr_field ) ? 'in' : '' ), "id": self._composeFacetId( attribute.solr_field + "___inactive" ), html: "" }).appendTo('#' + self._parentElementId);
+			$('<div/>',
+				{
+					'class': 'facet-value-list collapse ' + ( self._isFacetExpanded( attribute.solr_field ) ? 'in' : '' ),
+					"id": self._composeFacetId( attribute.solr_field + "___inactive" ), html: ""
+				}).appendTo('#' + self._parentElementId);
 	
 			// user chooses to open collapsed facet
 		   	$("#" + self._composeFacetId( attribute.solr_field + "___inactive" ) ).on( "shown.bs.collapse.in", function() {
@@ -193,21 +220,48 @@ SolrAnalysisView.prototype._generateTree = function( solrResponse ) {
 					}
 
 					if ( self._query._facetSelection[facet][facetValue].isSelected ) {						
-						self._query._facetSelection[facet][facetValue] = { count: facetValueCount, isSelected: self._query._facetSelection[facet][facetValue].isSelected };
+						self._query._facetSelection[facet][facetValue] = {
+							count: facetValueCount,
+							isSelected: self._query._facetSelection[facet][facetValue].isSelected
+						};
 						
-			    		selectedItems.push("<tr class=\"facet-value\" id=\"" + self._composeFacetValueId( facet, facetValue ) + "\"><td>" + '<input type="checkbox" checked>' + "</td><td width=100%>" + analysisName + "</td><td align=right>" + facetValueCount + "</td>"  + "</tr>" );
-		    			unselectedItems.push("<tr class=\"facet-value\" id=\"" + self._composeFacetValueId( facet, facetValue ) + "\"><td>" + '<input type="checkbox" checked>' + "</td><td width=100%>" + analysisName + "</td><td align=right>" + facetValueCount + "</td>"  + "</tr>" );
+			    		selectedItems.push(
+								"<tr class=\"facet-value\" " +
+								"id=\"" + self._composeFacetValueId( facet, facetValue ) + "\">" +
+								"<td>" + '<input type="checkbox" checked>' + "</td>" +
+								"<td width=100%>" + analysisName + "</td>" +
+								"<td class='facet-value-count' align='right'>" + facetValueCount + "</td>"  + "</tr>"
+							);
+		    			unselectedItems.push(
+								"<tr class=\"facet-value\" " +
+								"id=\"" + self._composeFacetValueId( facet, facetValue ) + "\">" +
+								"<td>" + '<input type="checkbox" checked>' + "</td>" +
+								"<td width=100%>" + analysisName + "</td>" +
+								"<td class='facet-value-count' align='right'>" + facetValueCount + "</td>"  + "</tr>"
+							);
 					}
 					else {
-						self._query._facetSelection[facet][facetValue] = { count: facetValueCount, isSelected: self._query._facetSelection[facet][facetValue].isSelected };
+						self._query._facetSelection[facet][facetValue] = {
+							count: facetValueCount,
+							isSelected: self._query._facetSelection[facet][facetValue].isSelected
+						};
 						
-						unselectedItems.push("<tr class=\"facet-value\" id=\"" + self._composeFacetValueId( facet, facetValue ) + "\"><td>" + '<input type="checkbox">' + "</td><td>" + analysisName + "</td><td align=right>" + facetValueCount + "</td><td></td>"  + "</tr>" );
+						unselectedItems.push(
+							"<tr class=\"facet-value\" " +
+							"id=\"" + self._composeFacetValueId( facet, facetValue ) + "\">" +
+							"<td>" + '<input type="checkbox">' + "</td>" +
+							"<td>" + analysisName + "</td>" +
+							"<td class='facet-value-count' align='right'>" + facetValueCount + "</td>" +
+							"<td></td>"  + "</tr>"
+						);
 					}										
 				}			
 			}
 			
-			$( "#" + self._composeFacetId( facet + "___active" ) ).html( "<table class=\"\"><tbody>" + selectedItems.join('') + "</tbody></table>" ); 
-			$( "#" + self._composeFacetId( facet + "___inactive" ) ).html( "<table class=\"\"><tbody>" + unselectedItems.join('') + "</tbody></table>" );
+			$( "#" + self._composeFacetId( facet + "___active" ) )
+				.html( "<table class=\"\"><tbody>" + selectedItems.join('') + "</tbody></table>" );
+			$( "#" + self._composeFacetId( facet + "___inactive" ) )
+				.html( "<table class=\"\"><tbody>" + unselectedItems.join('') + "</tbody></table>" );
 		}		
     }
 }
@@ -225,7 +279,8 @@ SolrAnalysisView.prototype._getFacetLabel = function( facet ) {
 		indicator = "fa fa-caret-right";
 	}
 	
-	return ( '<span style="width: 10px; text-align: center; display: inline-block;"><i class="' + indicator + '"></i></span>&nbsp;' + prettifySolrFieldName( facet, true ) );	
+	return ('<span style="width: 10px; text-align: center; display: inline-block;">' +
+	        '<i class="' + indicator + '"></i></span>&nbsp;' + prettifySolrFieldName( facet, true ) );
 }
 
 SolrAnalysisView.prototype._toggleExpandedFacet = function( facet ) {	

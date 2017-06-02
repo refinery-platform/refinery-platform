@@ -52,7 +52,7 @@ function WidthFixerFactory ($q, $timeout, _) {
       // Try 5 more times and increase the waiting time.
       if (_counter <= 5) {
         $timeout(function () {
-          fixWidth(++_counter)
+          fixWidth(_counter)
             .then(deferred.resolve)
             .catch(deferred.reject);
         }, 5 * _counter, true, ++_counter);

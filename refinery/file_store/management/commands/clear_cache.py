@@ -3,11 +3,10 @@ Created on Nov 10, 2015
 
 @author: scott
 '''
-import logging
+import sys
+
 from django.core.management.base import BaseCommand
 from django.core.cache import cache
-
-logger = logging.getLogger(__name__)
 
 
 class Command(BaseCommand):
@@ -22,6 +21,6 @@ class Command(BaseCommand):
     def handle(self, *args, **kwargs):
         try:
             cache.clear()
-            print "Cache successfully cleared"
+            sys.stdout.write("Cache successfully cleared")
         except Exception as e:
-            logger.debug(e)
+            sys.stderr.write(e)

@@ -1,10 +1,11 @@
-import celery
-from celery.result import TaskSetResult
 import logging
 
 from django.db import models
 from django.db.models.fields import CharField, PositiveSmallIntegerField
 from django_extensions.db.fields import UUIDField
+
+import celery
+from celery.result import TaskSetResult
 
 
 logger = logging.getLogger(__name__)

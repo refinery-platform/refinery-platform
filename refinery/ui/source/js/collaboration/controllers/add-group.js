@@ -16,8 +16,8 @@ function AddGroupCtrl (
     if (infoType === 'success') {
       vm.alertType = 'success';
       vm.responseMessage = 'Successfully created group ' + groupName;
-    } else if (infoType === 'error') {
-      vm.alertType = 'error';
+    } else if (infoType === 'danger') {
+      vm.alertType = 'danger';
       vm.responseMessage = 'Error creating group. Check for group name' +
         ' duplication.';
     }
@@ -36,7 +36,7 @@ function AddGroupCtrl (
           $uibModalInstance.dismiss();
         }, 1500);
       }, function (error) {
-        generateAlertMessage('error', vm.groupName);
+        generateAlertMessage('danger', vm.groupName);
         $log.error(error);
       });
   };

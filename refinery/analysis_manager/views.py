@@ -7,23 +7,21 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core import serializers
 from django.core.urlresolvers import reverse
-from django.http import (
-    HttpResponse, HttpResponseServerError,
-    HttpResponseBadRequest, HttpResponseNotAllowed, HttpResponseForbidden
-)
-from django.utils import timezone
+from django.http import (HttpResponse, HttpResponseBadRequest,
+                         HttpResponseForbidden, HttpResponseNotAllowed,
+                         HttpResponseServerError)
 from django.shortcuts import render_to_response
 from django.template import RequestContext
+from django.utils import timezone
 
-from analysis_manager.models import AnalysisStatus
-from analysis_manager.tasks import run_analysis
-from core.models import (
-    Analysis, Workflow, WorkflowEngine, WorkflowDataInputMap,
-    InvestigationLink, NodeSet, NodeRelationship, NodePair, NodeGroup
-)
-from core.views import get_solr_results, custom_error_page
+from .models import AnalysisStatus
+from .tasks import run_analysis
+from core.models import (Analysis, InvestigationLink, NodePair,
+                         NodeRelationship, NodeSet, Workflow,
+                         WorkflowDataInputMap, WorkflowEngine)
 from core.utils import get_aware_local_time
-from data_set_manager.models import Study, Assay, Node
+from core.views import custom_error_page, get_solr_results
+from data_set_manager.models import Assay, Node, Study
 from workflow_manager.tasks import get_workflows
 
 
@@ -83,7 +81,7 @@ def analysis_status(request, uuid):
         logger.debug("Analysis status for '%s': %s",
                      analysis.name, json.dumps(ret_json))
         return HttpResponse(json.dumps(ret_json, indent=4),
-                            mimetype='application/javascript')
+                            content_type='application/javascript')
     else:
         return render_to_response(
             'analysis_manager/analysis_status.html',
@@ -146,7 +144,7 @@ def update_workflows(request):
         json_serializer = serializers.get_serializer("json")()
         return HttpResponse(
             json_serializer.serialize(workflows, ensure_ascii=False),
-            mimetype='application/javascript')
+            content_type='application/javascript')
     else:
         return HttpResponse(status=400)
 
@@ -158,9 +156,9 @@ def getWorkflowDataInputMap(request, workflow_uuid):
     curr_workflow = Workflow.objects.filter(uuid=workflow_uuid)[0]
     data = serializers.serialize('json', curr_workflow.data_inputs.all())
     if request.is_ajax():
-        return HttpResponse(data, mimetype='application/javascript')
+        return HttpResponse(data, content_type='application/javascript')
     else:
-        return HttpResponse(data, mimetype='application/json')
+        return HttpResponse(data, content_type='application/json')
 
 
 def run(request):
@@ -179,7 +177,6 @@ def run(request):
         workflow_uuid = analysis_config['workflowUuid']
         study_uuid = analysis_config['studyUuid']
         node_set_uuid = analysis_config['nodeSetUuid']
-        node_group_uuid = analysis_config['nodeGroupUuid']
         node_relationship_uuid = analysis_config['nodeRelationshipUuid']
         custom_name = analysis_config['name']
     except KeyError:
@@ -187,96 +184,8 @@ def run(request):
     # must provide workflow and study UUIDs,
     # and either node set UUID or node relationship UUID
     if not (workflow_uuid and study_uuid and
-            (node_set_uuid or node_relationship_uuid or node_group_uuid)):
+            (node_set_uuid or node_relationship_uuid)):
         return HttpResponseBadRequest()  # 400
-
-    # single-input workflow based node group
-    if node_group_uuid:
-        try:
-            curr_node_group = NodeGroup.objects.get(uuid=node_group_uuid)
-        except NodeGroup.DoesNotExist:
-            logger.error("Node Group with UUID '{}' does not exist".format(
-                node_group_uuid))
-            return HttpResponse(status='404')
-        except NodeGroup.MultipleObjectsReturned:
-            logger.error("Node Group with UUID '{}' returned multiple "
-                         "objects".format(node_group_uuid))
-            return HttpResponse(status='500')
-
-        try:
-            curr_workflow = Workflow.objects.get(uuid=workflow_uuid)
-        except Workflow.DoesNotExist:
-            logger.error("WorkFlow with UUID '{}' does not exist".format(
-                workflow_uuid))
-            return HttpResponse(status='404')
-        except Workflow.MultipleObjectsReturned:
-            logger.error("WorkFlow with UUID '{}' returns multiple objects"
-                         .format(workflow_uuid))
-            return HttpResponse(status='500')
-
-        try:
-            study = Study.objects.get(uuid=study_uuid)
-        except Study.DoesNotExist:
-            logger.error("Study with UUID '{}' does not exist".format(
-                study_uuid))
-            return HttpResponse(status='404')
-        except (Study.MultipleObjectsReturned):
-            logger.error("Study with UUID '{}' returns multiple objects"
-                         .format(study_uuid))
-            return HttpResponse(status='500')
-
-        investigation_links = InvestigationLink.objects.filter(
-            investigation__uuid=study.investigation.uuid).order_by(
-                "version")
-        if not investigation_links:
-            logger.error("InvestigationLink with UUID '{}' with does not "
-                         "exist".format(study.investigation.uuid))
-            return HttpResponse(status='404')
-
-        data_set = investigation_links.reverse()[0].data_set
-        logger.info("Associating analysis with data set %s (%s)",
-                    data_set, data_set.uuid)
-
-        # ANALYSIS MODEL
-        # How to create a simple analysis object
-        if not custom_name:
-            temp_name = curr_workflow.name + " " + get_aware_local_time()\
-                .strftime("%Y-%m-%d @ %H:%M:%S")
-        else:
-            temp_name = custom_name
-
-        summary_name = "None provided."
-        analysis = Analysis(
-            summary=summary_name,
-            name=temp_name,
-            project=request.user.get_profile().catch_all_project,
-            data_set=data_set,
-            workflow=curr_workflow,
-            time_start=timezone.now()
-        )
-        analysis.set_owner(request.user)
-        analysis.save()
-
-        # getting distinct workflow inputs
-        try:
-            workflow_data_inputs = curr_workflow.data_inputs.all()[0]
-        except IndexError:
-            logger.error("Workflow with UUID '{}' has an index "
-                         "error with inputs".format(workflow_uuid.uuid))
-            return HttpResponse(status='500')
-
-        # NEED TO GET LIST OF FILE_UUIDS from node_group_uuid fields
-        count = 0
-        for node_file in curr_node_group.nodes.all():
-            count += 1
-            temp_input = WorkflowDataInputMap(
-                workflow_data_input_name=workflow_data_inputs.name,
-                data_uuid=node_file.uuid,
-                pair_id=count
-            )
-            temp_input.save()
-            analysis.workflow_data_input_maps.add(temp_input)
-            analysis.save()
 
     # single-input workflow
     if node_set_uuid:
@@ -313,15 +222,14 @@ def run(request):
             temp_name = custom_name
 
         summary_name = "None provided."
-        analysis = Analysis(
+        analysis = Analysis.objects.create(
             summary=summary_name,
             name=temp_name,
-            project=request.user.get_profile().catch_all_project,
+            project=request.user.profile.catch_all_project,
             data_set=data_set,
             workflow=curr_workflow,
             time_start=timezone.now()
         )
-        analysis.save()
         analysis.set_owner(request.user)
 
         # getting distinct workflow inputs
@@ -331,12 +239,11 @@ def run(request):
         count = 0
         for file_uuid in solr_uuids:
             count += 1
-            temp_input = WorkflowDataInputMap(
+            temp_input = WorkflowDataInputMap.objects.create(
                 workflow_data_input_name=workflow_data_inputs.name,
                 data_uuid=file_uuid,
                 pair_id=count
             )
-            temp_input.save()
             analysis.workflow_data_input_maps.add(temp_input)
             analysis.save()
 
@@ -375,16 +282,15 @@ def run(request):
         count = 1
         for curr_pair in curr_relationship.node_pairs.all():
             temp_pair = copy.deepcopy(base_input)
-            print "curr_pair"
-            print temp_pair
-            print curr_pair
+            logger.debug("Temp Pair: %s", temp_pair)
+            logger.debug("Current Pair: %s", curr_pair)
             if curr_pair.node2:
                 temp_pair[input_keys[0]]['node_uuid'] = curr_pair.node1.uuid
                 temp_pair[input_keys[0]]['pair_id'] = count
                 temp_pair[input_keys[1]]['node_uuid'] = curr_pair.node2.uuid
                 temp_pair[input_keys[1]]['pair_id'] = count
                 ret_list.append(temp_pair)
-                print temp_pair
+                logger.debug("Temp Pair: %s", temp_pair)
                 count += 1
 
         logger.info("Associating analysis with data set %s (%s)",
@@ -400,16 +306,15 @@ def run(request):
 
         summary_name = "None provided."
 
-        analysis = Analysis(
+        analysis = Analysis.objects.create(
             summary=summary_name,
             name=temp_name,
-            project=request.user.get_profile().catch_all_project,
+            project=request.user.profile.catch_all_project,
             data_set=data_set,
             workflow=curr_workflow,
             time_start=timezone.now()
         )
         analysis.set_owner(request.user)
-        analysis.save()
 
         # getting distinct workflow inputs
         workflow_data_inputs = curr_workflow.data_inputs.all()
@@ -424,11 +329,10 @@ def run(request):
         for samp in ret_list:
             count += 1
             for k, v in samp.items():
-                temp_input = WorkflowDataInputMap(
+                temp_input = WorkflowDataInputMap.objects.create(
                     workflow_data_input_name=k,
                     data_uuid=samp[k]["node_uuid"],
                     pair_id=count)
-                temp_input.save()
                 analysis.workflow_data_input_maps.add(temp_input)
                 analysis.save()
 
@@ -524,38 +428,7 @@ def create_noderelationship(request):
             new_relationship.node_pairs.add(new_pair)
 
         return HttpResponse(json.dumps(match_info, indent=4),
-                            mimetype='application/json')
-
-
-class DictDiffer(object):
-    """A dictionary difference calculator
-    Originally posted as: http://stackoverflow.com/a/1165552
-    Calculate the difference between two dictionaries as:
-    (1) items added
-    (2) items removed
-    (3) keys same in both but changed values
-    (4) keys same in both and unchanged values
-    """
-    def __init__(self, current_dict, past_dict):
-        self.current_dict, self.past_dict = current_dict, past_dict
-        self.current_keys, self.past_keys = [
-            set(d.keys()) for d in (current_dict, past_dict)
-            ]
-        self.intersect = self.current_keys.intersection(self.past_keys)
-
-    def added(self):
-        return self.current_keys - self.intersect
-
-    def removed(self):
-        return self.past_keys - self.intersect
-
-    def changed(self):
-        return set(o for o in self.intersect
-                   if self.past_dict[o] != self.current_dict[o])
-
-    def unchanged(self):
-        return set(o for o in self.intersect
-                   if self.past_dict[o] == self.current_dict[o])
+                            content_type='application/json')
 
 
 def match_nodesets(ns1, ns2, diff_f, all_f, rel_type=None):

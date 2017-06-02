@@ -5,11 +5,16 @@ describe('Controller: AboutSharingCtrl', function () {
   var scope;
   var factory;
   var $controller;
+  var fakeUuid;
+  var mocker;
 
   beforeEach(module('refineryApp'));
   beforeEach(module('refineryDataSetAbout'));
   beforeEach(inject(function (
-    $rootScope, _$controller_, _dataSetAboutFactory_
+    $rootScope,
+    _$controller_,
+    _dataSetAboutFactory_,
+    _mockParamsFactory_
   ) {
     scope = $rootScope.$new();
     $controller = _$controller_;
@@ -17,6 +22,8 @@ describe('Controller: AboutSharingCtrl', function () {
       $scope: scope
     });
     factory = _dataSetAboutFactory_;
+    mocker = _mockParamsFactory_;
+    fakeUuid = mocker.generateUuid();
   }));
 
   it('AboutSharingCtrl ctrl should exist', function () {
@@ -26,7 +33,6 @@ describe('Controller: AboutSharingCtrl', function () {
   it('Data & UI displays variables should exist for views', function () {
     expect(ctrl.dataSetSharing).toEqual({});
     expect(ctrl.ownerName).toEqual('');
-    expect(ctrl.groupList).toEqual([]);
   });
 
   describe('RefreshDataSetSharing', function () {
@@ -49,43 +55,40 @@ describe('Controller: AboutSharingCtrl', function () {
     });
   });
 
-  describe('refreshGroup', function () {
-    it('refreshGroup is method', function () {
-      expect(angular.isFunction(ctrl.refreshGroup)).toBe(true);
-    });
+  describe('getOwnerName', function () {
+    var ownerResult;
+    var userService;
 
-    it('RefreshGroup returns calls Factory and updates mock item', function () {
-      var mockGroup = false;
-      spyOn(factory, 'getGroup').and.callFake(function () {
-        return {
-          then: function () {
-            mockGroup = true;
-          }
-        };
-      });
-      expect(mockGroup).toEqual(false);
-      ctrl.refreshGroup();
-      expect(mockGroup).toEqual(true);
-    });
-  });
+    beforeEach(inject(function (_userService_) {
+      userService = _userService_;
+      ownerResult = {
+        affiliation: '',
+        email: 'guest@example.com',
+        firstName: 'Guest',
+        fullName: 'Guest',
+        lastName: '',
+        userId: 2,
+        userName: 'guest',
+        userProfileUuid: mocker.generateUuid()
+      };
+    }));
 
-  describe('refreshOwnerName', function () {
-    it('refreshOwnerName is method', function () {
+    it('refreshOwnerName is a method', function () {
       expect(angular.isFunction(ctrl.refreshOwnerName)).toBe(true);
     });
 
-    it('refreshOwnerName returns calls Factory and updates mock item', function () {
-      var mockOwnerName = '';
-      spyOn(factory, 'getOwnerName').and.callFake(function () {
+    it('refreshOwnerName returns a promise', function () {
+      var response = {};
+      spyOn(userService, 'get').and.callFake(function () {
         return {
           then: function () {
-            mockOwnerName = 'Paul Stevens';
+            response = ownerResult;
           }
         };
       });
-      expect(mockOwnerName).toEqual('');
-      ctrl.refreshOwnerName();
-      expect(mockOwnerName).toEqual('Paul Stevens');
+      expect(response).toEqual({});
+      ctrl.refreshOwnerName({ uuid: fakeUuid });
+      expect(response).toEqual(ownerResult);
     });
   });
 });

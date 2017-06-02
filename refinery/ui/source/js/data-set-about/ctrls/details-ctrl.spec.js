@@ -27,8 +27,12 @@ describe('Controller: DetailsCtrl', function () {
   it('Data & UI displays variables should exist for views', function () {
     expect(ctrl.dataSet).toEqual({});
     expect(ctrl.studies).toEqual([]);
-    expect(ctrl.assays).toEqual({});
+    expect(ctrl.assays).toEqual([]);
     expect(ctrl.fileStoreItem).toEqual({});
+    expect(ctrl.isCollapsed).toEqual({
+      title: true, summary: true, description: true, slug: true
+    });
+    expect(ctrl.updatedField).toEqual({});
   });
 
   describe('RefreshDataSetStats', function () {
@@ -108,6 +112,26 @@ describe('Controller: DetailsCtrl', function () {
       expect(mockFileStoreItem).toEqual(false);
       ctrl.refreshFileStoreItem();
       expect(mockFileStoreItem).toEqual(true);
+    });
+  });
+
+  describe('updateDataSet', function () {
+    it('updateDataSet is method', function () {
+      expect(angular.isFunction(ctrl.updateDataSet)).toBe(true);
+    });
+
+    it('updateDataSet returns calls Factory and updates mock item', function () {
+      var mockUpdate = false;
+      spyOn(factory, 'updateDataSet').and.callFake(function () {
+        return {
+          then: function () {
+            mockUpdate = true;
+          }
+        };
+      });
+      expect(mockUpdate).toEqual(false);
+      ctrl.updateDataSet('fakeFieldName', 'fakeFormInput');
+      expect(mockUpdate).toEqual(true);
     });
   });
 });

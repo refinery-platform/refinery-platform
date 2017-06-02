@@ -11,15 +11,19 @@ angular
   .controller('provvisCanvasController', ['$scope', function ($scope) {
     $scope.name = 'Canvas';
   }])
-  .directive('provvisNavBar', [function () {
+  .directive('provvisNavBar', ['$window', function ($window) {
     return {
-      templateUrl: '/static/partials/provvis/partials/provvis-navbar.html',
+      templateUrl: function () {
+        return $window.getStaticUrl('partials/provvis/partials/provvis-navbar.html');
+      },
       restrict: 'A'
     };
   }])
-  .directive('provvisCanvas', [function () {
+  .directive('provvisCanvas', ['$window', function ($window) {
     return {
-      templateUrl: '/static/partials/provvis/partials/provvis-canvas.html',
+      templateUrl: function () {
+        return $window.getStaticUrl('partials/provvis/partials/provvis-canvas.html');
+      },
       restrict: 'A'
     };
   }]);
@@ -157,24 +161,20 @@ var provvis = (function (  // eslint-disable-line no-unused-vars
     $('<div/>', {
       id: 'prov-layering-method',
       class: 'btn-group',
-      'data-toggle': 'buttons-radio'
+      'data-toggle': 'buttons'
     }).appendTo(layerContainer);
 
-    $('<button/>', {
-      id: 'prov-layering-strict',
-      class: 'btn btn-primary',
-      type: 'button',
-      value: 'strict',
-      html: 'Hard'
-    }).appendTo('#prov-layering-method');
+    var buttonHard = '<label class="btn btn-primary"> ' +
+      '<input type="radio" value="strict" id="prov-layering-strict" name="Hard">' +
+      'Hard </label>';
 
-    $('<button/>', {
-      id: 'prov-layering-weak',
-      class: 'active btn btn-primary',
-      type: 'button',
-      value: 'weak',
-      html: 'Soft'
-    }).appendTo('#prov-layering-method');
+    var buttonSoft = '<label class="active btn btn-primary"> ' +
+      '<input type="radio" value="weak" id="prov-layering-weak" name="Soft">' +
+      'Soft </label>';
+
+    // Append layering buttons to tools panel - changing layers
+    $(buttonHard).appendTo('#prov-layering-method');
+    $(buttonSoft).appendTo('#prov-layering-method');
   };
 
   /**
@@ -433,8 +433,8 @@ var provvis = (function (  // eslint-disable-line no-unused-vars
         try {
           /* TODO: Refine to only redraw affected canvas components. */
           /* Switch filter action. */
-          $('#prov-layering-method > button').click(function () {
-            layerMethod = $(this).prop('value');
+          $('#prov-layering-method').on('click', '.btn', function () {
+            layerMethod = $(this).children().prop('value');
 
             showProvvisLoaderIcon();
 

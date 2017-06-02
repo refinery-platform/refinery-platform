@@ -26,11 +26,11 @@
   </div>
   <p>
   <div ng-repeat="group in ASCtrl.groupList track by $index">
-     <a href="/groups/{{group.uuid}}">{{ group.name }}</a>&nbsp;
-    <span ng-if="group.canRead">
+     <a href="/groups/{{group.group_uuid}}">{{ group.group_name }}</a>&nbsp;
+    <span ng-if="group.perms.read">
        <i class="fa fa-eye"></i>
     </span>
-    <span ng-if="group.canEdit">
+    <span ng-if="group.perms.change">
        <i class="fa fa-pencil"></i>
     </span>
   </div>

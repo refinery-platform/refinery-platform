@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% load static %}
+{% load static from staticfiles %}
 
 {% block title %}
 {{ block.super }} - Home
@@ -44,7 +44,7 @@
   <h2>Users ({{ users|length}})</h2>
     <ul>
     {% for user in users %}
-        <li><a href="users/{{ user.username }}">{{ user.username }}</a>: {{ user.first_name }} {{ user.last_name }} ({{ user.get_profile.affiliation }}): {{ user.email }}</li>
+        <li><a href="users/{{ user.username }}">{{ user.username }}</a>: {{ user.first_name }} {{ user.last_name }} ({{ user.profile.affiliation }}): {{ user.email }}</li>
     {% endfor %}
     </ul>
    -->

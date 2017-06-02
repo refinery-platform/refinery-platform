@@ -3,20 +3,19 @@
 function dataSetAboutFactory (
   assayService,
   dataSetService,
+  dataSetV2Service,
   fileStoreItemService,
   groupMemberService,
   sharingService,
-  studyService,
-  userService
+  studyService
 ) {
   var assays = [];
   var dataSet = {};
   var dataSetSharing = {};
   var fileStoreItem = {};
-  var group = {};
+  var groupList = [];
   var investigation = {};
   var isaTab = {};
-  var ownerProfile = {};
   var studies = [];
 
   var getDataSet = function (dataSetUuid) {
@@ -27,6 +26,11 @@ function dataSetAboutFactory (
     dataSetRequest.$promise.then(function (response) {
       angular.copy(response.objects[0], dataSet);
     });
+    return dataSetRequest.$promise;
+  };
+
+  var updateDataSet = function (params) {
+    var dataSetRequest = dataSetV2Service.partial_update(params);
     return dataSetRequest.$promise;
   };
 
@@ -42,6 +46,17 @@ function dataSetAboutFactory (
     return fileStore.$promise;
   };
 
+  // helper method returns only groups associated with data set
+  var filterDataSetGroups = function (allGroups) {
+    var filteredGroupList = [];
+    for (var i = 0; i < allGroups.length; i++) {
+      if (allGroups[i].perms.read || allGroups[i].perms.write) {
+        filteredGroupList.push(allGroups[i]);
+      }
+    }
+    return filteredGroupList;
+  };
+
   var getDataSetSharing = function (dataSetUuid) {
     var params = {
       uuid: dataSetUuid,
@@ -50,37 +65,10 @@ function dataSetAboutFactory (
     var dataSetRequest = sharingService.query(params);
     dataSetRequest.$promise.then(function (response) {
       angular.copy(response, dataSetSharing);
+      var filteredGroups = filterDataSetGroups(response.share_list);
+      angular.copy(filteredGroups, groupList);
     });
     return dataSetRequest.$promise;
-  };
-
-  var generateGroupObj = function (dataObj, permissions) {
-    return {
-      name: dataObj.name,
-      id: dataObj.id,
-      uuid: dataObj.uuid,
-      canEdit: permissions.change,
-      canRead: permissions.read
-    };
-  };
-
-  var getGroup = function (shareObj) {
-    var params = {
-      id: shareObj.groupId
-    };
-    var groupRequest = groupMemberService.query(params);
-    groupRequest.$promise.then(function (response) {
-      angular.copy(generateGroupObj(response.objects[0], shareObj.perms), group);
-    });
-    return groupRequest.$promise;
-  };
-
-  var getOwnerName = function (userUuid) {
-    var ownerService = userService.get(userUuid);
-    ownerService.then(function (response) {
-      angular.copy(response, ownerProfile);
-    });
-    return ownerService;
   };
 
   // Get Studies associated with a data set
@@ -112,18 +100,16 @@ function dataSetAboutFactory (
     dataSet: dataSet,
     dataSetSharing: dataSetSharing,
     fileStoreItem: fileStoreItem,
-    group: group,
+    groupList: groupList,
     investigation: investigation,
     isaTab: isaTab,
-    ownerProfile: ownerProfile,
     studies: studies,
     getDataSet: getDataSet,
     getDataSetSharing: getDataSetSharing,
     getFileStoreItem: getFileStoreItem,
-    getGroup: getGroup,
-    getOwnerName: getOwnerName,
     getStudies: getStudies,
-    getStudysAssays: getStudysAssays
+    getStudysAssays: getStudysAssays,
+    updateDataSet: updateDataSet
   };
 }
 
@@ -132,11 +118,11 @@ angular
   .factory('dataSetAboutFactory', [
     'assayService',
     'dataSetService',
+    'dataSetV2Service',
     'fileStoreItemService',
     'groupMemberService',
     'sharingService',
     'studyService',
-    'userService',
     dataSetAboutFactory
   ]
 );

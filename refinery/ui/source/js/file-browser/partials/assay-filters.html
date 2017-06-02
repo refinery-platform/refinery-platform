@@ -1,25 +1,30 @@
+
 <div ng-if="FBCtrl.attributeFilter">
   <div class="panel-group data-set-filters" id="attribute-filter"
     role="tablist"
     aria-multiselectable="true">
-    <h4 class="m-t-0">Attribute Filter</h4>
+     <div class="refinery-subheader m-t-1">
+      <h2>
+        Attribute Filter
+      </h2>
+    </div>
     <div
-      ng-repeat="(attribute, fields) in FBCtrl.attributeFilter track by $index"
+      ng-repeat="(attribute, attributeObj) in FBCtrl.attributeFilter track by $index"
       ng-init="attributeIndex = $index">
       <div class="panel panel-default">
         <div class="panel-heading" role="tab">
           <h4 class="panel-title">
-            <i class="fa fa-caret-right fa-pull-left"
-              id="attribute-panel-{{attribute | replaceWhiteSpaceWithHyphen}}"
-              aria-hidden="true"></i>
           <div
             role="button"
             data-toggle="collapse"
             data-parent="#attribute-filter"
-            ng-click="dropAttributePanel($event, attribute, fields)"
+            ng-click="dropAttributePanel($event, attribute, attributeObj)"
             aria-expanded="true"
             aria-controls="{{ attribute }}">
-             {{ attribute }} &nbsp; ({{ fields.facetObj.length }})
+             <i class="fa fa-caret-right fa-pull-left"
+              id="attribute-panel-{{attribute | replaceWhiteSpaceWithHyphen}}"
+              aria-hidden="true"></i>
+             {{ attribute }} &nbsp; ({{ attributeObj.facetObj.length }})
           </div>
           </h4>
         </div>
@@ -28,18 +33,16 @@
         role="tabpanel"
         aria-labelledby="{{ attribute }}">
         <div class="panel-body">
-          <div ng-repeat="field in fields.facetObj track by $index">
+          <div ng-repeat="field in attributeObj.facetObj track by $index">
             <div class="checkbox container"
-                ng-show="showField(field.name, fields.internal_name,
-                attribute)">
+                ng-show="showField(field.name, attributeObj.internal_name, attribute)">
                 <div class="row">
                   <div class="col-xs-1">
                     <input
                       type="checkbox"
                       name="optionsCheckboxes"
-                      ng-model="FBCtrl.selectedField[field.name]"
-                      ng-change="FBCtrl.attributeSelectionUpdate(
-                      fields.internal_name, field.name)"
+                      ng-model="FBCtrl.uiSelectedFields[attributeObj.internal_name][field.name]"
+                      ng-change="FBCtrl.attributeSelectionUpdate(attributeObj.internal_name, field.name)"
                       id="{{ field.name | replaceWhiteSpaceWithHyphen }}-{{ $index }}">
                   </div>
                   <div class="col-xs-8">
@@ -70,21 +73,25 @@
 <div ng-if="FBCtrl.analysisFilter">
   <div class="panel-group data-set-filters" id="analysis-filter" role="tablist"
     aria-multiselectable="true">
-    <h4>Analysis Filter</h4>
-    <div ng-repeat="(analysis, fields) in FBCtrl.analysisFilter">
+    <div class="refinery-subheader m-t-1">
+      <h2>
+        Analysis Filter
+      </h2>
+    </div>
+    <div ng-repeat="(analysis, attributeObj) in FBCtrl.analysisFilter">
       <div class="panel panel-default">
         <div class="panel-heading" role="tab">
           <h4 class="panel-title">
-            <i class="fa fa-caret-right fa-pull-left"
-              id="attribute-panel-Analysis"
-              aria-hidden="true"></i>
           <div
             role="button"
             data-toggle="collapse"
             data-parent="#analysis-filter"
-            ng-click="dropAttributePanel($event, 'Analysis', fields)"
+            ng-click="dropAttributePanel($event, 'Analysis', attributeObj)"
             aria-expanded="true"
             aria-controls="Analysis">
+             <i class="fa fa-caret-right fa-pull-left"
+              id="attribute-panel-Analysis"
+              aria-hidden="true"></i>
             {{ analysis }}
           </div>
           </h4>
@@ -95,17 +102,17 @@
           role="tabpanel"
           aria-labelledby="{{ analysis }}">
           <div class="panel-body">
-            <div ng-repeat="fieldObj in fields.facetObj track by $index">
+            <div ng-repeat="fieldObj in attributeObj.facetObj track by $index">
               <div class="checkbox container"
-                ng-show="showField(fieldObj, fields.internal_name, 'Analysis')">
+                ng-show="showField(fieldObj, attributeObj.internal_name, 'Analysis')">
                 <div class="row">
                   <div class="col-xs-1">
                     <input
                       type="checkbox"
                       name="optionsCheckboxes"
-                      ng-model="FBCtrl.selectedField[fieldObj.name]"
+                      ng-model="FBCtrl.uiSelectedFields[attributeObj.internal_name][fieldObj.name]"
                       ng-change="FBCtrl.attributeSelectionUpdate(
-                      fields.internal_name, fieldObj.name)"
+                      attributeObj.internal_name, fieldObj.name)"
                       id="analysis-filter-{{ $index }}">
                   </div>
                   <div class="col-xs-8">
@@ -130,3 +137,4 @@
     </div>
   </div>
 </div>
+

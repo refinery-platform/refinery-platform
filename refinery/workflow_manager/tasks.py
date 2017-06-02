@@ -11,8 +11,9 @@ import logging
 from bioblend import galaxy
 from celery.task import task
 
-from core.models import Workflow, WorkflowDataInput, \
-    WorkflowInputRelationships, TYPE_1_1, TYPE_REPLICATE, NR_TYPES
+from core.models import (Workflow, WorkflowDataInput,
+                         WorkflowInputRelationships, TYPE_1_1,
+                         TYPE_REPLICATE, NR_TYPES)
 
 
 logger = logging.getLogger(__name__)

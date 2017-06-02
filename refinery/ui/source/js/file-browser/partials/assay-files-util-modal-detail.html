@@ -1,5 +1,8 @@
 <div class="modal-header">
    <h3> Data Set Table Configuration </h3>
+   <p>
+     Edit expose and facet parameters for nonselected attribute filters only.
+   </p>
 </div>
 <div class="modal-body fileUtilModal">
 
@@ -56,29 +59,34 @@
           </h4>
         </div>
         <div class="col-xs-2">
-          <h4>
-            <div class="checkbox" id="util-{{solr_field}}-expose">
-            <label>
-              <input
-                type="checkbox"
-                name="utilsCheckboxes"
-                ng-model= "attributeObj.is_exposed"
-                ng-change="AFUMCtrl.updateAssayAttributes
-                (attributeObj)"
-                value="{{ attributeObj.is_exposed }}">
-            </label>
+          <h4 ng-if="attributeObj.display_name != 'Analysis'">
+          <div
+            class="checkbox"
+            id="util-{{attributeObj.solr_field}}-expose">
+              <label>
+                <input
+                  type="checkbox"
+                  name="utilsCheckboxes"
+                  ng-model= "attributeObj.is_exposed"
+                  ng-change="AFUMCtrl.updateAssayAttributes(attributeObj)"
+                  value="{{ attributeObj.is_exposed }}"
+                  ng-disabled="AFUMCtrl.isAttributeSelected(attributeObj.solr_field)">
+              </label>
             </div>
           </h4>
           </div>
-          <div class="col-xs-2" id="util-{{solr_field}}-facet">
-            <h4>
-              <div class="check">
+          <div class="col-xs-2">
+            <h4 ng-if="attributeObj.display_name != 'Analysis'">
+              <div
+                class="checkbox"
+                id="util-{{attributeObj.solr_field}}-facet">
                 <label>
-                  <input type="checkbox"
+                  <input
+                    type="checkbox"
                     ng-model="attributeObj.is_facet"
-                    ng-change="AFUMCtrl.updateAssayAttributes
-                    (attributeObj)"
-                    value={{ attributeObj.is_facet }}>
+                    ng-change="AFUMCtrl.updateAssayAttributes(attributeObj)"
+                    value="{{ attributeObj.is_facet }}"
+                    ng-disabled="AFUMCtrl.isAttributeSelected(attributeObj.solr_field)">
                 </label>
               </div>
              </h4>
@@ -86,7 +94,7 @@
           <div class="col-xs-2">
             <h4>
               <div class="checkbox"
-                 id="util-{{solr_field}}-default">
+                 id="util-{{AFUMCtrl.solr_field}}-default">
                 <label>
                   <input
                     type="checkbox"
@@ -104,6 +112,6 @@
 
 </div>
 <div class="modal-footer">
-  <button class="btn btn-default" ng-click="close()">Close</button>
+  <button class="btn btn-default" ng-click="AFUMCtrl.close()">Close</button>
 </div>
 

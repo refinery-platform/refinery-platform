@@ -3,82 +3,31 @@ Created on Apr 21, 2012
 
 """
 
-import struct
 import cStringIO
+import struct
 
-from django.db import IntegrityError
-from django.utils import unittest
+from django.test import TestCase
 
 from file_server import tdf_file, models
 from file_store import models as fs_models
 
 
-class TDFItemTest(unittest.TestCase):
+class TDFItemTest(TestCase):
     """Test all operations on TDFItem instances"""
 
     # TODO: add missing tests
     def setUp(self):
-        try:
-            self.tdf_filetype = fs_models.FileType.objects.create(
-                name="TDF", description="TDF file")
-            self.tdf_fileextension = fs_models.FileExtension.objects.create(
-                    name="tdf", filetype=self.tdf_filetype)
-            self.bigbed_filetype = fs_models.FileType.objects.create(
-                name="BIGBED", description="BIGBED File")
-            self.bigbed_fileextension = fs_models.FileExtension.objects.create(
-                name="bb", filetype=self.bigbed_filetype)
-            self.bam_filetype = fs_models.FileType.objects.create(
-                name="BAM", description="BAM file")
-            self.bam_fileextension = fs_models.FileExtension.objects.create(
-                name="bam", filetype=self.bam_filetype)
-            self.wig_filetype = fs_models.FileType.objects.create(
-                name="WIG", description="WIG File")
-            self.wig_fileextension = fs_models.FileExtension.objects.create(
-                name="wig", filetype=self.wig_filetype)
-        except IntegrityError:
-            # Data Already exists in Refinery
-            pass
         self.tdf_file = fs_models.FileStoreItem.objects.create_item("tdf")
-
-    def tearDown(self):
-        fs_models.FileType.objects.all().delete()
-        fs_models.FileExtension.objects.all().delete()
-        self.tdf_file.delete()
 
     def test_add_tdfitem(self):
         self.assertIsNotNone(models.add(self.tdf_file.uuid))
 
 
-class BigBEDItemTest(unittest.TestCase):
+class BigBEDItemTest(TestCase):
     """Test all operations on BigBEDItem instances"""
 
     def setUp(self):
-        try:
-            self.tdf_filetype = fs_models.FileType.objects.create(
-                name="TDF", description="TDF file")
-            self.tdf_fileextension = fs_models.FileExtension.objects.create(
-                    name="tdf", filetype=self.tdf_filetype)
-            self.bigbed_filetype = fs_models.FileType.objects.create(
-                name="BIGBED", description="BIGBED File")
-            self.bigbed_fileextension = fs_models.FileExtension.objects.create(
-                name="bb", filetype=self.bigbed_filetype)
-            self.bam_filetype = fs_models.FileType.objects.create(
-                name="BAM", description="BAM file")
-            self.bam_fileextension = fs_models.FileExtension.objects.create(
-                name="bam", filetype=self.bam_filetype)
-            self.wig_filetype = fs_models.FileType.objects.create(
-                name="WIG", description="WIG File")
-            self.wig_fileextension = fs_models.FileExtension.objects.create(
-                name="wig", filetype=self.wig_filetype)
-        except IntegrityError:
-            # Data Already exists in Refinery
-            pass
         self.bigbed_file = fs_models.FileStoreItem.objects.create_item("bb")
-
-    def tearDown(self):
-        fs_models.FileType.objects.all().delete()
-        fs_models.FileExtension.objects.all().delete()
-        self.bigbed_file.delete()
 
     def test_add_bigbeditem(self):
         self.assertIsNotNone(models.add(self.bigbed_file.uuid))
@@ -97,116 +46,41 @@ class BigBEDItemTest(unittest.TestCase):
                           data_file__uuid=bigbed_item.data_file.uuid)
 
 
-class BAMItemTest(unittest.TestCase):
+class BAMItemTest(TestCase):
     """Test all operations on BAMItem instances"""
 
     # TODO: add missing tests
     def setUp(self):
-        try:
-            self.tdf_filetype = fs_models.FileType.objects.create(
-                name="TDF", description="TDF file")
-            self.tdf_fileextension = fs_models.FileExtension.objects.create(
-                    name="tdf", filetype=self.tdf_filetype)
-            self.bigbed_filetype = fs_models.FileType.objects.create(
-                name="BIGBED", description="BIGBED File")
-            self.bigbed_fileextension = fs_models.FileExtension.objects.create(
-                name="bb", filetype=self.bigbed_filetype)
-            self.bam_filetype = fs_models.FileType.objects.create(
-                name="BAM", description="BAM file")
-            self.bam_fileextension = fs_models.FileExtension.objects.create(
-                name="bam", filetype=self.bam_filetype)
-            self.wig_filetype = fs_models.FileType.objects.create(
-                name="WIG", description="WIG File")
-            self.wig_fileextension = fs_models.FileExtension.objects.create(
-                name="wig", filetype=self.wig_filetype)
-        except IntegrityError:
-            # Data Already exists in Refinery
-            pass
         self.bam_file = fs_models.FileStoreItem.objects.create_item("bam")
-
-    def tearDown(self):
-        fs_models.FileType.objects.all().delete()
-        fs_models.FileExtension.objects.all().delete()
-        self.bam_file.delete()
 
     def test_add_bamitem(self):
         self.assertIsNotNone(models.add(self.bam_file.uuid))
 
 
-class WIGItemTest(unittest.TestCase):
+class WIGItemTest(TestCase):
     """Test all operations on WIGItem instances"""
 
     # TODO: add missing tests
     def setUp(self):
-        try:
-            self.tdf_filetype = fs_models.FileType.objects.create(
-                name="TDF", description="TDF file")
-            self.tdf_fileextension = fs_models.FileExtension.objects.create(
-                    name="tdf", filetype=self.tdf_filetype)
-            self.bigbed_filetype = fs_models.FileType.objects.create(
-                name="BIGBED", description="BIGBED File")
-            self.bigbed_fileextension = fs_models.FileExtension.objects.create(
-                name="bb", filetype=self.bigbed_filetype)
-            self.bam_filetype = fs_models.FileType.objects.create(
-                name="BAM", description="BAM file")
-            self.bam_fileextension = fs_models.FileExtension.objects.create(
-                name="bam", filetype=self.bam_filetype)
-            self.wig_filetype = fs_models.FileType.objects.create(
-                name="WIG", description="WIG File")
-            self.wig_fileextension = fs_models.FileExtension.objects.create(
-                name="wig", filetype=self.wig_filetype)
-        except IntegrityError:
-            # Data Already exists in Refinery
-            pass
         self.wig_file = fs_models.FileStoreItem.objects.create_item("wig")
-
-    def tearDown(self):
-        fs_models.FileType.objects.all().delete()
-        fs_models.FileExtension.objects.all().delete()
-        self.wig_file.delete()
 
     def test_add_wigitem(self):
         self.assertIsNotNone(models.add(self.wig_file.uuid))
 
 
-class InvalidItemTest(unittest.TestCase):
+class InvalidItemTest(TestCase):
     """Test operations on invalid instances"""
 
     def setUp(self):
-        try:
-            self.tdf_filetype = fs_models.FileType.objects.create(
-                name="TDF", description="TDF file")
-            self.tdf_fileextension = fs_models.FileExtension.objects.create(
-                    name="tdf", filetype=self.tdf_filetype)
-            self.bigbed_filetype = fs_models.FileType.objects.create(
-                name="BIGBED", description="BIGBED File")
-            self.bigbed_fileextension = fs_models.FileExtension.objects.create(
-                name="bb", filetype=self.bigbed_filetype)
-            self.bam_filetype = fs_models.FileType.objects.create(
-                name="BAM", description="BAM file")
-            self.bam_fileextension = fs_models.FileExtension.objects.create(
-                name="bam", filetype=self.bam_filetype)
-            self.wig_filetype = fs_models.FileType.objects.create(
-                name="WIG", description="WIG File")
-            self.wig_fileextension = fs_models.FileExtension.objects.create(
-                name="wig", filetype=self.wig_filetype)
-        except IntegrityError:
-            # Data Already exists in Refinery
-            pass
         self.undefined_file = fs_models.FileStoreItem.objects.create_item(
             "testfile")
-
-    def tearDown(self):
-        fs_models.FileType.objects.all().delete()
-        fs_models.FileExtension.objects.all().delete()
-        self.undefined_file.delete()
 
     def test_add_unknown_file_type(self):
         # create a FileStoreItem without a file type
         self.assertIsNone(models.add(self.undefined_file.uuid))
 
 
-class TDFByteStreamTest(unittest.TestCase):
+class TDFByteStreamTest(TestCase):
     """TDFByteStream unit test base class"""
     endianness = '<'  # should match endianness of TDFByteStream
 
@@ -258,9 +132,7 @@ class TDFByteStreamTestReadInteger(TDFByteStreamTest):
 
 
 class TDFByteStreamTestReadLong(TDFByteStreamTest):
-    """Test reading eight byte integer values.
-
-    """
+    """Test reading eight byte integer values."""
 
     def setUp(self):
         self.data = [1, 2, 3]
@@ -276,9 +148,7 @@ class TDFByteStreamTestReadLong(TDFByteStreamTest):
 
 
 class TDFByteStreamTestReadFloat(TDFByteStreamTest):
-    """Test reading four byte floating point numbers.
-
-    """
+    """Test reading four byte floating point numbers."""
 
     def setUp(self):
         self.data = [1.1, 2.2, 3.3]
@@ -294,9 +164,7 @@ class TDFByteStreamTestReadFloat(TDFByteStreamTest):
 
 
 class TDFByteStreamTestReadBytes(TDFByteStreamTest):
-    """Test reading a number of bytes.
-
-    """
+    """Test reading a number of bytes."""
 
     def setUp(self):
         self.data = ['a', 'b', 'c']
@@ -346,9 +214,7 @@ class TDFByteStreamTestReadBytes(TDFByteStreamTest):
 
 
 class TDFByteTestInvalidValues(TDFByteStreamTest):
-    """Test reading invalid values.
-
-    """
+    """Test reading invalid values."""
 
     def setUp(self):
         self.data = 'a'
@@ -368,18 +234,14 @@ class TDFByteTestInvalidValues(TDFByteStreamTest):
         self.assertRaises(tdf_file.InsufficientBytesError, self.tdf.read_float)
 
 
-class TDFByteStreamRegressionTest(unittest.TestCase):
-    """Regression test against TDFBitStream class.
-
-    """
+class TDFByteStreamRegressionTest(TestCase):
+    """Regression test against TDFBitStream class."""
 
     def setUp(self):
         self.endianness = '<'  # should match endianness of TDFByteStream
 
     def test_update_offset(self):
-        """Test moving around the file.
-
-        """
+        """Test moving around the file."""
         data = [1, 2, 3]
         fmt = self.endianness + 'iii'
         binary_data = struct.pack(fmt, *data)
