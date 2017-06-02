@@ -703,9 +703,14 @@ function DataSetFactory (
     {
       enumerable: true,
       get: function () {
+        if (_search) {
+          return _currentDsIds.promise;
+        }
+
         if (_selectionLen()) {
           return $q.when(_objListToArray(_selection));
         }
+
         return _allDsIds.promise;
       }
     }
