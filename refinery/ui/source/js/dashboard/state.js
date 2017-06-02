@@ -3,10 +3,13 @@
 angular
   .module('refineryDashboard')
   .config([
-    '$window',
+    '$windowProvider',
     'refineryStateProvider',
     'refineryUrlRouterProvider',
-    function ($window, refineryStateProvider, refineryUrlRouterProvider) {
+    function (
+      $windowProvider, refineryStateProvider, refineryUrlRouterProvider
+    ) {
+      var $window = $windowProvider.$get();
       refineryStateProvider
         .state(
           'launchPad', {
@@ -17,8 +20,7 @@ angular
               return $window.getStaticUrl(
                 'partials/dashboard/views/launch-pad.html'
               );
-            },
-            controller: 'LaunchPadCtrl as launchPad'
+            }
           },
           '/'
         )
