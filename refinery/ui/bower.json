@@ -57,6 +57,7 @@
   },
   "resolutions": {
     "d3": "3.5.16",
-    "angular": "1.5.9"
+    "angular": "1.5.9",
+    "intro.js": "2.4.0"
   }
 }
