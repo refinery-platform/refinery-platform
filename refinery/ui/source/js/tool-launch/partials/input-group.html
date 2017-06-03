@@ -12,7 +12,7 @@
         <span class="wrap-word" ng-if="$ctrl.isGroupPopulated(inputFile.uuid)">
           <div class="refinery-subheader">
             <h4>
-              Name
+              {{ inputFile.name }}
             </h4>
           </div>
           <span ng-repeat="node in $ctrl.groupCollection[$ctrl.currentGroup][inputFile.uuid]">
@@ -59,7 +59,7 @@
         <div ng-if="$ctrl.isGroupPopulated($ctrl.inputFileTypes[0].uuid)">
            <div class="refinery-subheader">
             <h4>
-              Name
+              {{ inputFile.name }}
             </h4>
           </div>
           <div

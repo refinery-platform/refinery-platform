@@ -22,6 +22,8 @@
     var nodeService = activeNodeService;
     var vm = this;
     vm.activeNode = nodeService.activeNodeRow; // ui-grid row which is engaged
+    vm.currentGroup = fileService.currentGroup;
+    vm.groupCollection = fileService.groupCollection;
     vm.inputFileTypes = fileService.inputFileTypes; // current tool's inputFileTypes
     vm.inputFileTypeColor = fileService.inputFileTypeColor;
     // selectedNodes ordered by group indicies
@@ -62,6 +64,8 @@
       },
       function () {
         vm.nodeSelection = fileService.nodeSelectCollection;
+        vm.groupCollection = fileService.groupCollection;
+        vm.currentGroup = fileService.currentGroup;
       }
     );
   }
