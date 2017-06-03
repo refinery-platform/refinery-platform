@@ -42,16 +42,14 @@
               ng-style="{'margin-left': 10*$index+'px'}">
               <div class="refinery-subheader">
                 <h4>
-                  <span
-                    ng-if="groupType == 'LIST'">
-                     <i class="fa fa-list" aria-hidden="true"></i>
-                  </span>
-                  <span
-                    ng-if="groupType== 'PAIR'">
-                     <i class="fa fa-link" aria-hidden="true"></i>
-                  </span>
+                  <i class="{{groupType|groupTypeIcon}}" aria-hidden="true"></i>
                   {{ groupType }} Nav:
-                  Index {{ $ctrl.currentGroup[$ctrl.currentGroup.length-$index] + 1 }}
+                  <i
+                    class="{{$ctrl.currentTypes[$ctrl.currentGroup.length-$index + 1] |groupTypeIcon}}"
+                    aria-hidden="true">
+                  </i>
+                  {{ $ctrl.currentTypes[$ctrl.currentGroup.length-$index + 1] }}
+                  {{ $ctrl.currentGroup[$ctrl.currentGroup.length-$index] + 1 }}
                 </h4>
               </div>
             </div>
