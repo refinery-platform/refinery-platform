@@ -10,7 +10,7 @@
   function rpInputGroupsColumnPopoverDetail ($window) {
     return {
       restrict: 'E',
-      controller: 'NodeSelectionPopoverCtrl',
+      controller: 'InputGroupsColumnPopoverCtrl',
       controllerAs: 'IGCCtrl',
       templateUrl: function () {
         return $window.getStaticUrl(
