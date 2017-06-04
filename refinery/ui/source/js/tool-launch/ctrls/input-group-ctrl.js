@@ -36,6 +36,7 @@
     vm.removeAllGroups = removeAllGroups;
     vm.removeGroup = removeGroup; // Refreshes all selection
     vm.selectedTool = {};
+    vm.setDisplayInputFile = setDisplayInputFile;
 
 
    /*
@@ -80,6 +81,11 @@
       nodeService.deselectGroupFromSelectionObj(vm.currentGroup);
       fileService.removeGroupFromCollections();
       vm.selectionObj = nodeService.selectionObj;
+    }
+
+    function setDisplayInputFile (inputObj) {
+      console.log(inputObj);
+      angular.copy(inputObj, fileService.displayInputFile);
     }
 
    /*

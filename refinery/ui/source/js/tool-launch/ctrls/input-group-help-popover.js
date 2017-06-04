@@ -38,6 +38,15 @@
           vm.inputFileTypeColor = fileService.inputFileTypeColor;
         }
       );
+
+      $scope.$watchCollection(
+        function () {
+          return fileService.displayInputFile;
+        },
+        function () {
+          vm.displayInputFile = fileService.displayInputFile;
+        }
+      );
     };
   }
 })();
