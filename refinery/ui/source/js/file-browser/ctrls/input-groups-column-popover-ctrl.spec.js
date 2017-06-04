@@ -23,6 +23,8 @@
 
     it('Data & UI displays variables should exist for views', function () {
       expect(ctrl.activeNode).toEqual({});
+      expect(ctrl.currentGroup).toEqual([]);
+      expect(ctrl.groupCollection).toEqual({});
       expect(ctrl.inputFileTypes).toEqual([]);
       expect(ctrl.inputFileTypeColor).toEqual({});
       expect(ctrl.nodeSelection).toEqual({});

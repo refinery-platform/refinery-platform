@@ -1,0 +1,25 @@
+<div
+  class="node-input-group"
+  role="tablist"
+  aria-multiselectable="true">
+  <ul>
+    <li
+      ng-repeat="inputFile in $ctrl.inputFileTypes track by $index"
+      ng-style="{'color': $ctrl.inputFileTypeColor[inputFile.uuid],
+      'border-color': $ctrl.inputFileTypeColor[inputFile.uuid]}">
+        {{ inputFile.name }}:
+        <
+        <div
+          class='fileTypes'
+          ng-repeat="fileObj in inputFile.allowed_filetypes">
+          {{fileObj.name}}
+          <span ng-if="$index < inputFile.allowed_filetypes.length - 1">
+            ,
+          </span>
+        </div>
+        >
+        <br>
+        <em>{{ inputFile.description }}</em>
+    </li>
+  </ul>
+</div>
