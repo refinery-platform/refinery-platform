@@ -83,8 +83,8 @@
       vm.selectionObj = nodeService.selectionObj;
     }
 
+    // Vm method which sets which input file type to display in popover help.//
     function setDisplayInputFile (inputObj) {
-      console.log(inputObj);
       angular.copy(inputObj, fileService.displayInputFile);
     }
 

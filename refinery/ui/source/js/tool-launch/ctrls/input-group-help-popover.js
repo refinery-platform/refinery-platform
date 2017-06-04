@@ -16,8 +16,7 @@
   ) {
     var fileService = fileRelationshipService;
     var vm = this;
-    vm.currentTypes = [];
-    vm.groupCollection = {};
+    vm.displayInputFile = {};
     vm.inputFileTypes = [];
     vm.inputFileTypeColor = {};
 
@@ -33,8 +32,6 @@
         },
         function () {
           vm.inputFileTypes = fileService.inputFileTypes;
-          vm.currentTypes = fileService.currentTypes;
-          vm.groupCollection = fileService.groupCollection;
           vm.inputFileTypeColor = fileService.inputFileTypeColor;
         }
       );
