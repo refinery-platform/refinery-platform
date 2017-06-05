@@ -6,7 +6,8 @@
   .controller('UserFileBrowserCtrl', UserFileBrowserCtrl);
 
   function UserFileBrowserCtrl () {
-    this.attributeFilters = {
+    var vm = this;
+    vm.attributeFilters = {
       type: {
         internal_name: 'foo',
         facetObj: [
@@ -22,8 +23,8 @@
         ]
       }
     };
-    this.gridOptions = {
-      appScopeProvider: this,
+    vm.gridOptions = {
+      appScopeProvider: vm,
       useExternalSorting: true,
       selectionRowHeaderWidth: 35,
       rowHeight: 35,
