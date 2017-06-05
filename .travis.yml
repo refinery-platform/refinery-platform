@@ -38,9 +38,9 @@ before_script:
 # See http://www.stuartellis.eu/articles/erb/#running-erb-from-the-command-line
   - erb config/config.json.erb > config/config.json
   - python manage.py migrate --noinput
-  - npm install -g grunt-cli@0.1.13 bower@1.7.7 --progress false --quiet || ( cat npm-debug.log && false )
+  - npm install -g grunt-cli@0.1.13 bower@1.7.7 --progress false --quiet
   - cd ui
-  - npm install --progress false --quiet || ( cat npm-debug.log && false )
+  - npm install --progress false --quiet
   - bower install --config.interactive=false --quiet
   - cd ../
 script:
