@@ -38,7 +38,6 @@ class SeleniumTestBase(StaticLiveServerTestCase):
 
         if site_login:
             login(self.browser, self.live_server_url)
-            # TODO: Expected [object Undefined] undefined to be a string
 
         if public_group_needed:
             create_public_group()
@@ -70,7 +69,6 @@ class NoLoginTestCase(SeleniumTestBase):
             search_array=['Collaboration', 'Statistics', 'About',
                           'Register', 'Login', 'Launch Pad', 'Data Sets',
                           'Analyses', 'Workflows']
-            # TODO: Test fails? BadStatusLine
         )
 
         self.browser.find_element_by_link_text('Statistics').click()
