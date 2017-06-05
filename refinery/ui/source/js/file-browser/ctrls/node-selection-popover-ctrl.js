@@ -71,7 +71,7 @@
       }
     );
 
-     // When node selected are updated, so are their inputFileTypes
+     // When node select collections are updated
     $scope.$watchCollection(
       function () {
         return fileService.nodeSelectCollection;
