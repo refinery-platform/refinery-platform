@@ -522,6 +522,12 @@ def make_template(config, config_yaml):
     cft.resources.elb = core.Resource(
         'LoadBalancer', 'AWS::ElasticLoadBalancing::LoadBalancer',
         {
+            'AccessLoggingPolicy': {
+                'EmitInterval': 5,
+                'Enabled': True,
+                'S3BucketName': config['S3_LOG_BUCKET'],
+                # 'S3BucketPrefix' unused
+            },
             'AvailabilityZones': [
                 functions.get_att('WebInstance', 'AvailabilityZone')
             ],
@@ -542,7 +548,6 @@ def make_template(config, config_yaml):
                 functions.get_att('ELBSecurityGroup', 'GroupId')],
             'Tags': load_tags(),
         })
-
 
     # Cognito Identity Pool for Developer Authenticated Identities Authflow
     # http://docs.aws.amazon.com/cognito/latest/developerguide/authentication-flow.html
