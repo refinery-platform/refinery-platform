@@ -529,9 +529,7 @@ def generate_solr_params_for_user(params, user):
         study = Study.objects.get(
             investigation=version_details.investigation
         )
-        assay = Assay.objects.get(
-            study=study
-        )
+        assay = Assay.objects.get(study=study)
         assay_uuids.append(assay.uuid)
     return _generate_solr_params(params, assay_uuids=assay_uuids)
 
