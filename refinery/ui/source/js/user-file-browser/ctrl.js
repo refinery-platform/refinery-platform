@@ -5,9 +5,6 @@
   .module('refineryUserFileBrowser')
   .controller('UserFileBrowserCtrl', UserFileBrowserCtrl);
 
-  UserFileBrowserCtrl.$inject = [
-  ];
-
   function UserFileBrowserCtrl () {
     this.attributeFilters = {
       type: {
