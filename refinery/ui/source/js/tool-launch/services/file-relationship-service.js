@@ -96,7 +96,6 @@
     // Main method to remove a group from the groupCollection and
     // nodeSelectCollections
     function removeGroupFromCollections () {
-      console.log('removing group from collection');
       angular.forEach(vm.groupCollection[vm.currentGroup], function (nodeArr, inputTypeUuid) {
         removeGroupFromNodeSelectCollection(nodeArr, inputTypeUuid);
       });
@@ -142,11 +141,13 @@
     function resetToolRelated () {
       vm.currentGroup = [];
       vm.currentTypes = [];
+      vm.displayInputFile = {};
       vm.groupCollection = {};
       vm.hideNodePopover = false;
       vm.inputFileTypes = [];
       vm.inputFileTypeColor = {};
       vm.nodeSelectCollection = {};
+      angular.copy({}, nodeService.selectionObj);
     }
 
     /**
