@@ -64,6 +64,7 @@
       },
       function () {
         vm.nodeSelection = fileService.nodeSelectCollection;
+        console.log(vm.nodeSelection);
         vm.groupCollection = fileService.groupCollection;
         vm.currentGroup = fileService.currentGroup;
       }

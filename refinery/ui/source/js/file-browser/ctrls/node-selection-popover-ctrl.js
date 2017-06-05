@@ -70,6 +70,19 @@
         vm.inputFileTypeColor = fileService.inputFileTypeColor;
       }
     );
+
+     // When node selected are updated, so are their inputFileTypes
+    $scope.$watchCollection(
+      function () {
+        return fileService.nodeSelectCollection;
+      },
+      function () {
+        vm.groupCollection = fileService.groupCollection;
+        vm.nodeSelection = fileService.nodeSelectCollection;
+      }
+    );
+
+
     // When user selects/deselects row
     $scope.$watch(
       function () {

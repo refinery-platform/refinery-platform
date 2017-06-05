@@ -69,7 +69,10 @@
     function removeAllGroups () {
       fileService.hideNodePopover = true;
       fileService.resetInputGroup();
-      resetGridService.setRefreshGridFlag(true);
+      angular.copy({}, vm.selectionObj);
+      angular.copy({}, vm.displayInputFile);
+      angular.copy({}, vm.groupCollection);
+      angular.copy({}, vm.nodeSelectCollection);
     }
 
     /**
@@ -77,6 +80,7 @@
     * */
     function removeGroup () {
       fileService.hideNodePopover = true;
+      nodeService.deselectGroupFromSelectionObj(vm.currentGroup);
       fileService.removeGroupFromCollections();
       vm.selectionObj = nodeService.selectionObj;
     }
