@@ -11,13 +11,6 @@ from .views import (AnalysesViewSet, DataSetsViewSet,
                     NodeViewSet, WorkflowViewSet)
 
 
-def if_cond(condition, url_pattern, *args, **kwargs):
-    if condition:
-        return url_pattern
-
-    return url(r'^$', 'home', name="home")
-
-
 urlpatterns = patterns(
     'core.views',
     url(r'^$', 'home', name="home"),
