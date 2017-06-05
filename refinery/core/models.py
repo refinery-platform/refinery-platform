@@ -668,10 +668,10 @@ class DataSet(SharableResource):
                         data_set=self
                     ).aggregate(Max("version"))["version__max"]
 
-            return InvestigationLink.objects.filter(
+            return InvestigationLink.objects.get(
                 data_set=self,
                 version=version
-            ).get()
+            )
 
         except:
             return None
