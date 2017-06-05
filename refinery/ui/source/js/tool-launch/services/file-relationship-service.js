@@ -133,6 +133,8 @@
       }
       vm.groupCollection = {};
       vm.nodeSelectCollection = {};
+      vm.displayInputFile = {};
+      angular.copy({}, nodeService.selectionObj);
     }
 
     /**
