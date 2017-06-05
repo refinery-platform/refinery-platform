@@ -664,11 +664,9 @@ class DataSet(SharableResource):
         """
         try:
             if version is None:
-                version = (
-                    InvestigationLink.objects.filter(
+                version = InvestigationLink.objects.filter(
                         data_set=self
                     ).aggregate(Max("version"))["version__max"]
-                )
 
             return InvestigationLink.objects.filter(
                 data_set=self,
