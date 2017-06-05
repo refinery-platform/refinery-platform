@@ -672,7 +672,6 @@ class DataSet(SharableResource):
                 data_set=self,
                 version=version
             )
-
         except:
             return None
 
