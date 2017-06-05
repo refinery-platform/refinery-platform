@@ -30,7 +30,7 @@ from tastypie.authentication import SessionAuthentication, Authentication
 from tastypie.authorization import Authorization
 from tastypie.bundle import Bundle
 from tastypie.constants import ALL_WITH_RELATIONS, ALL
-from tastypie.exceptions import Unauthorized, ImmediateHttpResponse
+from tastypie.exceptions import ImmediateHttpResponse, NotFound, Unauthorized
 from tastypie.http import HttpNotFound, HttpForbidden, HttpBadRequest, \
     HttpUnauthorized, HttpMethodNotAllowed, HttpAccepted, HttpCreated, \
     HttpNoContent, HttpGone
@@ -470,7 +470,7 @@ class UserProfileResource(ModelResource):
         return HttpAccepted
 
 
-class DataSetResource(ModelResource, SharableResourceAPIInterface):
+class DataSetResource(SharableResourceAPIInterface, ModelResource):
     id_regex = '[0-9]+'
     uuid_regex = '[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}'
     share_list = fields.ListField(attribute='share_list', null=True)
@@ -537,11 +537,13 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
 
             analyses.append(analysis_dict)
 
+        investigation_link = bundle.obj.get_latest_investigation_link()
+
         bundle.data["analyses"] = analyses
-        bundle.data["version"] = bundle.obj.get_version_details().version
-        bundle.data["date"] = bundle.obj.get_version_details().date
         bundle.data["creation_date"] = bundle.obj.creation_date
+        bundle.data["date"] = investigation_link.date
         bundle.data["modification_date"] = bundle.obj.modification_date
+        bundle.data["version"] = investigation_link.version
 
         return bundle
 
@@ -669,11 +671,33 @@ class DataSetResource(ModelResource, SharableResourceAPIInterface):
         return obj_list
 
     def obj_get(self, bundle, **kwargs):
-        return SharableResourceAPIInterface.obj_get(self, bundle, **kwargs)
+        try:
+            dataset = DataSet.objects.get(uuid=kwargs["uuid"])
+        except (DataSet.DoesNotExist, DataSet.MultipleObjectsReturned) as e:
+            logger.error("Couldn't properly fetch DataSet with UUID: %s %s",
+                         kwargs["uuid"], e)
+            raise NotFound(e)
+
+        if not dataset.is_valid():
+            raise NotFound(
+                "DataSet with UUID: {} is invalid, and most likely is "
+                "still being created".format(dataset.uuid)
+            )
+        return super(DataSetResource, self).obj_get(bundle, **kwargs)
 
     def obj_get_list(self, bundle, **kwargs):
-        return SharableResourceAPIInterface.obj_get_list(
-            self, bundle, **kwargs)
+        datasets = super(DataSetResource, self).obj_get_list(bundle, **kwargs)
+
+        valid_datasets = []
+        for dataset in datasets:
+            if dataset.is_valid():
+                valid_datasets.append(dataset)
+            else:
+                logger.error(
+                    "DataSet with UUID: {} is invalid, and most likely is "
+                    "still being created".format(dataset.uuid)
+                )
+        return valid_datasets
 
     def get_object_list(self, request):
         obj_list = SharableResourceAPIInterface.get_object_list(self, request)
