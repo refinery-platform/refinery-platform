@@ -8,7 +8,8 @@ function fileBrowserFactory (
   assayFileService,
   fileBrowserSettings,
   nodeService,
-  selectedFilterService
+  selectedFilterService,
+  toolSelectService
   ) {
   // assayfiles has max 300 rows, ctrl adds/subtracts rows to maintain count
   var assayFiles = [];
@@ -231,6 +232,8 @@ function fileBrowserFactory (
     var _cellTemplate = '<rp-input-groups-column-template>' +
       '</rp-input-groups-column-template>';
 
+    var isToolSelected = !_.isEmpty(toolSelectService.selectedTool);
+
     return {
       name: _columnName,
       field: _columnName,
@@ -241,7 +244,7 @@ function fileBrowserFactory (
       enableColumnMenu: false,
       enableColumnResizing: true,
       cellTemplate: _cellTemplate,
-      visible: false
+      visible: isToolSelected
     };
   };
 
@@ -260,6 +263,8 @@ function fileBrowserFactory (
         'id="{{row.entity.uuid}}">' +
         '<i class="fa fa-arrow-right" aria-hidden="true"></i></a></div>';
 
+    var isToolSelected = !_.isEmpty(toolSelectService.selectedTool);
+
     return {
       name: columnName,
       field: columnName,
@@ -271,7 +276,7 @@ function fileBrowserFactory (
       enableColumnMenu: false,
       enableColumnResizing: true,
       cellTemplate: cellTemplate,
-      visible: false
+      visible: isToolSelected
     };
   };
 
@@ -394,6 +399,7 @@ angular
     'fileBrowserSettings',
     'nodeService',
     'selectedFilterService',
+    'toolSelectService',
     fileBrowserFactory
   ]
 );
