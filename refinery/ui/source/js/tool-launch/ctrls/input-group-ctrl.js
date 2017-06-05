@@ -69,10 +69,6 @@
     function removeAllGroups () {
       fileService.hideNodePopover = true;
       fileService.resetInputGroup();
-      angular.copy({}, vm.selectionObj);
-      angular.copy({}, vm.displayInputFile);
-      angular.copy({}, vm.groupCollection);
-      angular.copy({}, vm.nodeSelectCollection);
     }
 
     /**
