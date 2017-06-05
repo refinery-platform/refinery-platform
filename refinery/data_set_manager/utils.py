@@ -526,11 +526,19 @@ def generate_solr_params_for_user(params, user):
     datasets = get_objects_for_user(user, "core.read_dataset")
     for dataset in datasets:
         version_details = dataset.get_version_details()
-        study = Study.objects.get(
-            investigation=version_details.investigation
-        )
-        assay = Assay.objects.get(study=study)
-        assay_uuids.append(assay.uuid)
+        try:
+            study = Study.objects.get(
+                investigation=version_details.investigation
+            )
+            assay = Assay.objects.get(study=study)
+            assay_uuids.append(assay.uuid)
+        except (Study.DoesNotExist,
+                Assay.DoesNotExist):
+            pass  # It's not an error not to have data.
+        except:
+            logger.error('Failed to get assays for dataset %s', dataset)
+            raise
+
     return _generate_solr_params(params, assay_uuids=assay_uuids)
 
 
