@@ -9,17 +9,17 @@
     '$scope',
     '_',
     'fileRelationshipService',
-    'selectedNodesService'
+    'activeNodeService'
   ];
 
   function NodeSelectionPopoverCtrl (
     $scope,
     _,
     fileRelationshipService,
-    selectedNodesService
+    activeNodeService
   ) {
     var fileService = fileRelationshipService;
-    var nodeService = selectedNodesService;
+    var nodeService = activeNodeService;
     var vm = this;
     vm.activeNode = nodeService.activeNodeRow; // ui-grid row which is engaged
     vm.attributes = fileService.attributesObj; // contains the data attributes
@@ -29,6 +29,7 @@
     // selectedNodes ordered by group indicies
     vm.groupCollection = fileService.groupCollection;
     vm.inputFileTypes = fileService.inputFileTypes; // current tool's inputFileTypes
+    vm.inputFileTypeColor = fileService.inputFileTypeColor;
     // selectedNodes ordered by group indicies
     vm.nodeSelection = fileService.nodeSelectCollection;
     vm.selectNode = selectNode; // method
@@ -66,8 +67,22 @@
         vm.currentTypes = fileService.currentTypes;
         vm.groupCollection = fileService.groupCollection;
         vm.nodeSelection = fileService.nodeSelectCollection;
+        vm.inputFileTypeColor = fileService.inputFileTypeColor;
       }
     );
+
+     // When node select collections are updated
+    $scope.$watchCollection(
+      function () {
+        return fileService.nodeSelectCollection;
+      },
+      function () {
+        vm.groupCollection = fileService.groupCollection;
+        vm.nodeSelection = fileService.nodeSelectCollection;
+      }
+    );
+
+
     // When user selects/deselects row
     $scope.$watch(
       function () {

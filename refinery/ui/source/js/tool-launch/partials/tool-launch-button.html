@@ -1,7 +1,8 @@
 <span class="p-l-1-3">
   <button
     class="btn btn-primary btn-xs"
-    ng-disabled="!$ctrl.toolType">
+    ng-disabled="$ctrl.needMoreNodes()"
+    ng-click="$ctrl.launchTool()">
   Launch
   </button>
 </span>

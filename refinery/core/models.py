@@ -654,37 +654,34 @@ class DataSet(SharableResource):
         except:
             return None
 
-    def get_version_details(self, version=None):
+    def get_latest_investigation_link(self, version=None):
+        """
+        Try to fetch the latest InvestigationLink related to the DataSet
+        instance. If a version is provided, try to fetch the latest
+        InvestigationLink for said version.
+        :param version: integer
+        :returns: an InvestigationLink Instance or None if Exception occurs
+        """
         try:
             if version is None:
-                version = (
-                    InvestigationLink.objects.filter(
-                        data_set=self).aggregate(
-                        Max("version"))["version__max"]
-                )
+                version = InvestigationLink.objects.filter(
+                        data_set=self
+                    ).aggregate(Max("version"))["version__max"]
 
-            return (
-                InvestigationLink.objects.filter(
-                    data_set=self, version=version).get()
+            return InvestigationLink.objects.get(
+                data_set=self,
+                version=version
             )
         except:
             return None
 
     def get_investigation(self, version=None):
-        if version is None:
-            try:
-                max_version = InvestigationLink.objects.filter(
-                    data_set=self).aggregate(Max("version"))["version__max"]
-            except:
-                return None
+        investigation_link = self.get_latest_investigation_link(version)
+
+        if investigation_link:
+            return investigation_link.investigation
         else:
-            max_version = version
-        try:
-            il = InvestigationLink.objects.filter(
-                data_set=self, version=max_version).get()
-        except:
             return None
-        return il.investigation
 
     def get_studies(self, version=None):
         return Study.objects.filter(
@@ -818,6 +815,17 @@ class DataSet(SharableResource):
 
             return file_store_items
 
+    def is_valid(self):
+        """
+        Helper method to determine if a DataSet is valid.
+        A DataSet is not valid if we can't fetch its latest InvestigationLink
+        :return: boolean
+        """
+        if self.get_latest_investigation_link():
+            return True
+        else:
+            return False
+
 
 @receiver(pre_delete, sender=DataSet)
 def _dataset_delete(sender, instance, *args, **kwargs):
@@ -827,8 +835,9 @@ def _dataset_delete(sender, instance, *args, **kwargs):
 
 
 @receiver(post_save, sender=DataSet)
-def _dataset_saved(**kwargs):
+def _dataset_saved(sender, instance, *args, **kwargs):
     update_annotation_sets_neo4j()
+    update_data_set_index(instance)
 
 
 class InvestigationLink(models.Model):
@@ -1885,40 +1894,6 @@ def create_manager_group(sender, instance, created, **kwargs):
 
 
 post_save.connect(create_manager_group, sender=ExtendedGroup)
-
-
-class NodeGroup(SharableResource, TemporaryResource):
-    """A collection of Nodes representing data files.
-    Used to save selection state between sessions and to map data files to
-    workflow inputs.
-    """
-
-    #: Number of nodes in the NodeSet (provided in POST/PUT/PATCH requests)
-    node_count = models.IntegerField(default=0)
-    #: Implicit node is created "on the fly" to support an analysis while
-    #: explicit node is created by the user to store a particular selection
-    is_implicit = models.BooleanField(default=False)
-    study = models.ForeignKey(Study)
-    assay = models.ForeignKey(Assay)
-    # The "current selection" node set for the associated study/assay
-    is_current = models.BooleanField(default=False)
-    # Nodes in the group, using uuids are foreign-key
-    nodes = models.ManyToManyField(Node, blank=True,
-                                   null=True)
-
-    class Meta:
-        unique_together = ["assay", "name"]
-        verbose_name = "node group"
-        permissions = (
-            ('read_%s' % verbose_name, 'Can read %s' % verbose_name),
-            ('share_%s' % verbose_name, 'Can share %s' % verbose_name),
-        )
-
-    def __unicode__(self):
-        return (
-            self.name + ("*" if self.is_current else "") + " - " +
-            self.get_owner_username()
-        )
 
 
 class NodeSet(SharableResource, TemporaryResource):

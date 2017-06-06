@@ -11,7 +11,7 @@
 
 .grid {
   width: 100%;
-  height: 75vh;
+  height: 84vh;
 }
 
 .fa.fa-wrench {
@@ -176,14 +176,31 @@
   height: 100%;
   overflow: hidden;
   .selected-node {
+    font-size: 1.2 em;
     padding: 0;
     width: 100%;
     height: 100%;
     float: left;
-    background-color: rgba(0, 158, 115, 0.4);
     div {
       text-overflow: ellipsis;
       white-space: no-wrap;
+    }
+  }
+}
+
+#input-group-details {
+ border:  1px dashed @gray-darker;
+  ul {
+    list-style-type: none;
+
+    li {
+      border: none;
+    }
+  }
+
+  #list-input-group-details {
+     ul#list-group-collection {
+      border:  1px dashed @gray-darker;
     }
   }
 }
@@ -197,40 +214,29 @@
       margin-bottom: 5px;
       padding-left: 5px;
       border-radius: 3px;
+      border: 1px dashed;
 
       .fileTypes {
         display: inline;
       }
     }
+  }
+}
 
-    li:nth-of-type(6n-5) {
-      color: #009E73;
-      border: 1px dashed #009E73;
-    }
-    li:nth-of-type(6n-4) {
-      color: #CC79A7;
-      border: 1px dashed #CC79A7;
-    }
+#tool-panel-show-button {
+  margin: 0 0 0 10px;
+  padding-bottom: 10px;
+}
 
-    li:nth-of-type(6n-3) {
-      color: #56B4E9;
-      border: 1px dashed #56B4E9;
-    }
-
-    li:nth-of-type(6n-2) {
-      color: #E69F00;
-      border: 1px dashed #E69F00;
-    }
-
-    li:nth-of-type(6n-1) {
-      color: #F0E442;
-      border: 1px dashed #F0E442;
-    }
-
-    li:nth-of-type(6n-0) {
-      color: #D55E00;
-      border: 1px dashed #D55E00;
-    }
+#tool-launch-panel {
+  border: 1px solid #d4d4d4;
+  border-radius: 5px;
+  -webkit-box-shadow: inset 0 0 14px rgba(0, 0, 0, 0.2);
+  -moz-box-shadow: inset 0 0 14px rgba(0, 0, 0, 0.2);
+  box-shadow: inset 0 0 14px rgba(0, 0, 0, 0.2);
+  background-color: #f3f3f3;
+  h3 {
+    font-weight: bold;
   }
 }
 
@@ -239,7 +245,7 @@
   margin: 0 0 0 10px;
   padding: 0;
   border: 1px solid #d4d4d4;
-  border-radius: 10px;
+  border-radius: 5px;
   -webkit-box-shadow: inset 0 0 14px rgba(0, 0, 0, 0.2);
   -moz-box-shadow: inset 0 0 14px rgba(0, 0, 0, 0.2);
   box-shadow: inset 0 0 14px rgba(0, 0, 0, 0.2);
@@ -282,4 +288,15 @@
   .tree-panel {
     padding: .25em;
   }
+}
+
+.selectRowBorder {
+  border-top: 1px solid @blue-active !important;
+  border-bottom: 1px solid @blue-active !important;
+}
+
+.current-type-border {
+  border: .08em solid;
+  padding: .2em .25em .15em;
+  border-radius: .1em;
 }

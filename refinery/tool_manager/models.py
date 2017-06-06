@@ -299,7 +299,7 @@ class Tool(OwnableResource):
             file_url = get_file_url_from_node_uuid(uuid)
             self.file_relationships = self.file_relationships.replace(
                 uuid,
-                file_url
+                "'{}'".format(file_url)
             )
 
         self.save()

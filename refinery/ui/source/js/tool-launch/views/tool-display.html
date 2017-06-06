@@ -1,14 +1,23 @@
-<div>
-   <rp-tool-select></rp-tool-select>
-   <rp-tool-launch-button></rp-tool-launch-button>
-</div>
+<div class="p-a-1-2" id="tool-launch-panel">
+  <div class="refinery-subheader m-t-1">
+    <h2>
+      Tool Panel
+    </h2>
+  </div>
 
-<br>
+  <div>
+     <rp-tool-select></rp-tool-select>
+     <rp-tool-launch-button></rp-tool-launch-button>
+  </div>
 
-<div ng-if="$ctrl.isToolSelected">
-  <rp-tool-info-display></rp-tool-info-display>
-</div>
+  <br>
 
-<div ng-if="$ctrl.isToolSelected">
-  <rp-input-control></rp-input-control>
+  <div ng-if="$ctrl.isToolSelected">
+    <rp-tool-info-display></rp-tool-info-display>
+  </div>
+
+  <div ng-if="$ctrl.isToolSelected">
+    <rp-input-control></rp-input-control>
+  </div>
+
 </div>

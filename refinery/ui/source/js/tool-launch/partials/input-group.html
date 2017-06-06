@@ -5,13 +5,32 @@
 
   <ul>
      <div ng-if="$ctrl.currentTypes[$ctrl.currentTypes.length-1]=='PAIR'">
-      <li ng-repeat="inputFile in $ctrl.inputFileTypes track by $index">
+      <li
+        ng-repeat="inputFile in $ctrl.inputFileTypes track by $index"
+        ng-style="{'color': $ctrl.inputFileTypeColor[inputFile.uuid],
+        'border-color': $ctrl.inputFileTypeColor[inputFile.uuid]}">
         <span class="wrap-word" ng-if="$ctrl.isGroupPopulated(inputFile.uuid)">
+          <div class="refinery-subheader">
+            <h4>
+              {{ inputFile.name }}
+              &nbsp
+              <a
+                popover-placement="right"
+                uib-popover-template="'inputgrouphelppopover.html'"
+                popover-title="Input Group File Types"
+                popover-trigger="focus"
+                popover-append-to-body="true"
+                ng-click="$ctrl.setDisplayInputFile(inputFile)"
+                tabindex="0">
+                <i class="fa fa-question-circle info-icon icon-only"></i>
+              </a>
+            </h4>
+          </div>
           <span ng-repeat="node in $ctrl.groupCollection[$ctrl.currentGroup][inputFile.uuid]">
             {{ node[$ctrl.attributes.Name] }}
           </span>
         </span>
-        <span ng-if="!$ctrl.isGroupPopulated(inputFile.uuid)">
+          <span ng-if="!$ctrl.isGroupPopulated(inputFile.uuid)">
           {{ inputFile.name }}:
           <
           <div
@@ -30,7 +49,10 @@
      </div>
 
     <div ng-if="$ctrl.currentTypes[$ctrl.currentTypes.length-1]=='LIST'">
-      <li class="wrap-word">
+      <li
+        class="wrap-word"
+         ng-style="{'color': $ctrl.inputFileTypeColor[$ctrl.inputFileTypes[0].uuid],
+        'border-color': $ctrl.inputFileTypeColor[$ctrl.inputFileTypes[0].uuid]}">
         <div ng-if="!$ctrl.isGroupPopulated($ctrl.inputFileTypes[0].uuid)">
           {{ $ctrl.inputFileTypes[0].name }}:
           <
@@ -47,6 +69,11 @@
           <em>{{ inputFile.description }}</em>
         </div>
         <div ng-if="$ctrl.isGroupPopulated($ctrl.inputFileTypes[0].uuid)">
+           <div class="refinery-subheader">
+            <h4>
+              {{ inputFile.name }}
+            </h4>
+          </div>
           <div
             ng-repeat="node in $ctrl.groupCollection[$ctrl.currentGroup][$ctrl.inputFileTypes[0].uuid]"
             class="p-t-1">
@@ -55,9 +82,13 @@
         </div>
       </li>
      </div>
-
   </ul>
-  <button
+  <div
+    ng-if="$ctrl.currentTypes[$ctrl.currentTypes.length-1]=='PAIR'">
+      <rp-input-group-details></rp-input-group-details>
+  </div>
+  <div>
+    <button
     class="btn btn-default btn-xs outline"
     ng-disabled="$ctrl.isObjEmpty($ctrl.groupCollection[$ctrl.currentGroup])"
     ng-click="$ctrl.removeGroup()">
@@ -69,4 +100,12 @@
     ng-click="$ctrl.removeAllGroups()">
     Remove All
   </button>
+  </div>
 </div>
+
+<script type="text/ng-template" id="inputgrouphelppopover.html">
+  <div>
+  <rp-input-group-help-popover>
+  </rp-input-group-help-popover>
+  </div>
+</script>

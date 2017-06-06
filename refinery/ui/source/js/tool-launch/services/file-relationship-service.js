@@ -7,25 +7,29 @@
   fileRelationshipService.$inject = [
     '_',
     'fileBrowserFactory',
-    'selectedNodesService',
-    'toolLaunchService'
+    'activeNodeService',
+    'toolSelectService'
   ];
 
   function fileRelationshipService (
     _,
     fileBrowserFactory,
-    selectedNodesService,
-    toolLaunchService
+    activeNodeService,
+    toolSelectService
   ) {
-    var nodeService = selectedNodesService;
-    var toolService = toolLaunchService;
+    // each input file type will have a color associated with it
+    var colorSelectionArray = ['#009E73', '#CC79A7', '#56B4E9', '#E69F00', '#F0E442', '#D55E00'];
+    var nodeService = activeNodeService;
+    var toolService = toolSelectService;
     var vm = this;
     vm.attributesObj = {}; // displayName: internalName, ex Name:
     vm.currentGroup = []; // index for the group coordinates
     vm.currentTypes = []; // tracks whether depths are pair or list
+    vm.displayInputFile = {}; // for input-group-help-popover, tracks selected
     vm.groupCollection = {}; // contains groups with their selected row's info
     vm.hideNodePopover = false;
     vm.inputFileTypes = []; // maintains the required input types
+    vm.inputFileTypeColor = {}; // inputFileTypeUuids: hex color
     vm.nodeSelectCollection = {}; // contains rows and their group info
     vm.refreshFileMap = refreshFileMap;
     vm.removeGroupFromCollections = removeGroupFromCollections;
@@ -38,12 +42,28 @@
      * Method Definitions
      * ----------------------
      */
+    // helper method which generates the vm.inputFileTypeColor by assigning a
+    // pre-defined color to a list of inputFileTypes
+    function associateColorToInputFileType () {
+      var colorInd = 0;
+      for (var fileInd = 0; fileInd < vm.inputFileTypes.length; fileInd++) {
+        if (colorInd > colorSelectionArray.length) {
+          colorInd = 0;
+        }
+        vm.inputFileTypeColor[vm.inputFileTypes[fileInd].uuid] = colorSelectionArray[colorInd];
+        colorInd++;
+      }
+    }
+
     // helper method: convert attributes name array to attributes name obj,
     // displayName: internalName
     function generateAttributeObj () {
       var attributeArr = fileBrowserFactory.assayAttributes;
       for (var i = 0; i < attributeArr.length; i++) {
-        vm.attributesObj[attributeArr[i].display_name] = attributeArr[i].internal_name;
+        if (attributeArr[i].internal_name !== 'Selection' &&
+          attributeArr[i].display_name !== 'Input Groups') {
+          vm.attributesObj[attributeArr[i].display_name] = attributeArr[i].internal_name;
+        }
       }
     }
 
@@ -64,11 +84,14 @@
         scaledCopy = scaledCopy.file_relationship[0];
       }
       angular.copy(scaledCopy.input_files, vm.inputFileTypes);
+      associateColorToInputFileType();
       vm.currentTypes.push(scaledCopy.value_type);
-      vm.currentGroup.push(0);
+      // avoids having an empty string as a key
+      if (vm.currentGroup.length === 0) {
+        vm.currentGroup.push(0);
+      }
       generateAttributeObj();
     }
-
 
     // Main method to remove a group from the groupCollection and
     // nodeSelectCollections
@@ -84,14 +107,18 @@
     // groupId and it's associated inputFileType
     function removeGroupFromNodeSelectCollection (nodeList, TypeUuid) {
       for (var i = 0; i < nodeList.length; i++) {
-        var groupInd = vm.nodeSelectCollection[nodeList[i].uuid].inputTypeList.indexOf(TypeUuid);
-        if (groupInd > -1) {
-          vm.nodeSelectCollection[nodeList[i].uuid].groupList.splice(groupInd, 1);
-          vm.nodeSelectCollection[nodeList[i].uuid].inputTypeList.splice(groupInd, 1);
+        var nodeUuid = nodeList[i].uuid;
+        for (var j = 0; j < vm.nodeSelectCollection[nodeUuid].inputTypeList.length; j++) {
+          if (vm.nodeSelectCollection[nodeUuid].inputTypeList[j] === TypeUuid &&
+            vm.nodeSelectCollection[nodeUuid].groupList[j].join(',') ===
+            vm.currentGroup.join(',')) {
+            vm.nodeSelectCollection[nodeUuid].groupList.splice(j, 1);
+            vm.nodeSelectCollection[nodeUuid].inputTypeList.splice(j, 1);
+          }
         }
-       // Delete node property from obj if empty
-        if (vm.nodeSelectCollection[nodeList[i].uuid].groupList === 0) {
-          delete vm.nodeSelectCollection[nodeList[i].uuid];
+        // Delete node property from obj if empty
+        if (vm.nodeSelectCollection[nodeUuid].groupList === 0) {
+          delete vm.nodeSelectCollection[nodeUuid];
         }
       }
     }
@@ -106,6 +133,8 @@
       }
       vm.groupCollection = {};
       vm.nodeSelectCollection = {};
+      vm.displayInputFile = {};
+      angular.copy({}, nodeService.selectionObj);
     }
 
     /**
@@ -114,10 +143,13 @@
     function resetToolRelated () {
       vm.currentGroup = [];
       vm.currentTypes = [];
+      vm.displayInputFile = {};
       vm.groupCollection = {};
       vm.hideNodePopover = false;
       vm.inputFileTypes = [];
+      vm.inputFileTypeColor = {};
       vm.nodeSelectCollection = {};
+      angular.copy({}, nodeService.selectionObj);
     }
 
     /**

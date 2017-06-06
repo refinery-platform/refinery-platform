@@ -1,20 +1,34 @@
 <div class="dataSetTabContent" id="files">
   <!-- filters and content  -->
   <div class="row y-scrollable m-t-1-2 p-t-1">
-    <div class="col-lg-2 col-md-2 col-sm-3 well" id="tool-launch">
-      <div class="row">
+    <div
+      class="col-lg-2 col-md-2 col-sm-3"
+      ng-class="{'collapse': FBCtrl.collapsedToolPanel}">
         <rp-tool-display></rp-tool-display>
-      </div>
-
     </div>
     <div class="col-lg-2 col-md-2 col-sm-3">
+      <div
+          id="tool-panel-show-button">
+          <button
+            class="btn btn-primary btn-sm"
+            data-target="#tool-launch-panel"
+            ng-click="FBCtrl.toggleToolPanel()">
+            <span ng-show="FBCtrl.collapsedToolPanel">
+              <i class="fa fa-angle-double-right" aria-hidden="true"></i>
+               Show Tool Panel
+            </span>
+            <span ng-show="!FBCtrl.collapsedToolPanel">
+              <i class="fa fa-angle-double-left" aria-hidden="true"></i>
+               Hide Tool Panel
+            </span>
+          </button>
+        </div>
       <div id="table-filter">
         <div id="filter-panel-body">
           <rp-file-browser-assay-filters>
           </rp-file-browser-assay-filters>
         </div>
         <hr>
-        <rp-file-browser-node-group></rp-file-browser-node-group>
         <div class="sub-group-panel">
           <rp-file-display></rp-file-display>
           <span ng-if="FBCtrl.isOwner">
@@ -35,7 +49,10 @@
         </div>
       </div>
     </div>
-    <div class="col-lg-8 col-md-8 col-sm-6" id="main-area">
+    <div
+      ng-class="{'col-lg-8 col-md-8 col-sm-6': !FBCtrl.collapsedToolPanel,
+      'col-lg-10 col-md-10 col-sm-8': FBCtrl.collapsedToolPanel}"
+      id="main-area">
       <rp-file-browser-assay-files></rp-file-browser-assay-files>
     </div>
   </div>

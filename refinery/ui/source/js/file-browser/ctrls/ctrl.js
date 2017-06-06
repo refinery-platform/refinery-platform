@@ -22,7 +22,8 @@
     'isOwnerService',
     'resetGridService',
     'selectedFilterService',
-    'selectedNodesService'
+    'activeNodeService',
+    'toolSelectService'
   ];
 
   function FileBrowserCtrl (
@@ -42,15 +43,15 @@
     isOwnerService,
     resetGridService,
     selectedFilterService,
-    selectedNodesService
+    activeNodeService,
+    toolSelectService
   ) {
     var maxFileRequest = fileBrowserSettings.maxFileRequest;
-    var nodesService = selectedNodesService;
+    var nodesService = activeNodeService;
     var fileService = fileRelationshipService;
+    var toolService = toolSelectService;
     var vm = this;
     vm.activeNodeRow = nodesService.activeNodeRow;
-    // flag to help with timing issues when selecting node group
-    vm.afterNodeGroupUpdate = false;
     vm.analysisFilter = fileBrowserFactory.analysisFilter;
     // attribute list from api
     vm.assayAttributes = fileBrowserFactory.assayAttributes;
@@ -62,7 +63,8 @@
     vm.cachePages = 2;
     vm.checkDataLength = checkDataLength;
     vm.checkDataSetOwnership = checkDataSetOwnership;
-    vm.counter = 0;
+    vm.collapsedToolPanel = toolService.isToolPanelCollapsed;
+    vm.currentTypes = fileService.currentTypes;
     // params for the assays api
     vm.filesParam = {
       uuid: $window.externalAssayUuid,
@@ -75,19 +77,21 @@
     // Main ui-grid options
     vm.gridOptions = {
       appScopeProvider: vm,
+      columnDefs: fileBrowserFactory.customColumnNames,
+      data: fileBrowserFactory.assayFiles,
+      gridFooterTemplate: '<rp-is-assay-files-loading></rp-is-assay-files-loading>',
       infiniteScrollRowsFromEnd: 40,
       infiniteScrollUp: true,
       infiniteScrollDown: true,
-      useExternalSorting: true,
-      selectionRowHeaderWidth: 35,
-      rowHeight: 35,
-      showGridFooter: true,
       multiSelect: true,
-      columnDefs: fileBrowserFactory.customColumnNames,
-      data: fileBrowserFactory.assayFiles,
-      gridFooterTemplate: '<rp-is-assay-files-loading></rp-is-assay-files-loading>'
+      onRegisterApi: gridRegister,
+      rowHeight: 35,
+      rowTemplate: '<rp-ui-grid-row-template></rp-ui-grid-row-template>',
+      selectionRowHeaderWidth: 35,
+      showGridFooter: true,
+      useExternalSorting: true
     };
-    vm.gridOptions.onRegisterApi = gridRegister;
+    vm.inputFileTypeColor = fileService.inputFileTypeColor;
     vm.lastPage = 0;  // variable supporting ui-grid dynamic scrolling
     vm.nodeSelectCollection = fileService.nodeSelectCollection;
     vm.openSelectionPopover = openSelectionPopover;
@@ -97,6 +101,7 @@
     vm.reset = reset;
     vm.rowCount = maxFileRequest;
     vm.sortChanged = sortChanged;
+    vm.toggleToolPanel = toggleToolPanel;
     vm.totalPages = 1;  // variable supporting ui-grid dynamic scrolling
     /** Used by ui to select/deselect, attributes have an object of filter fields
      * attributeInternalName: {fieldName: boolean, fieldName: boolean} */
@@ -243,10 +248,16 @@
      * @param nodeUuid
      */
     function openSelectionPopover (nodeRow) {
-      angular.copy(nodeRow, nodesService.activeNodeRow);
-      vm.activeNodeRow = nodesService.activeNodeRow;
-      angular.element('#' + nodeRow.uuid).popover('show');
-      angular.element('.ui-grid-selection-row-header-buttons').popover('disable');
+      if (_.isEmpty(nodesService.activeNodeRow)) {
+        // active nodes are cleared after popovers are closed
+        angular.copy(nodeRow, nodesService.activeNodeRow);
+        vm.activeNodeRow = nodesService.activeNodeRow;
+        angular.element('#' + nodeRow.uuid).popover('show');
+        angular.element('.ui-grid-selection-row-header-buttons').popover('disable');
+      } else {
+        // user selects a different row, triggers closing all open popovers
+        fileService.hideNodePopover = true;
+      }
     }
 
     /**
@@ -351,6 +362,34 @@
       }
     }
 
+    // Helper method: toggles the tool related columns, selection & input groups
+    function toggleToolColumn () {
+      if (_.isEmpty(toolService.selectedTool) &&
+        fileBrowserFactory.customColumnNames[0].visible) {
+        // Explicitly toggle to avoid a bug when data doesn't show on tabbing
+        fileBrowserFactory.customColumnNames[0].visible = false;
+        fileBrowserFactory.customColumnNames[1].visible = false;
+        vm.gridApi.core.notifyDataChange(uiGridConstants.dataChange.COLUMN);
+      } else if (!_.isEmpty(toolService.selectedTool) &&
+        !fileBrowserFactory.customColumnNames[0].visible) {
+        fileBrowserFactory.customColumnNames[0].visible = true;
+        fileBrowserFactory.customColumnNames[1].visible = true;
+        vm.gridApi.core.notifyDataChange(uiGridConstants.dataChange.COLUMN);
+      }
+    }
+
+    // View method which toggles the collapsedToolPanel variable.
+    // Needed to resize UI-Grid and alternate text in button.
+    function toggleToolPanel () {
+      if (toolService.isToolPanelCollapsed) {
+        toolService.isToolPanelCollapsed = false;
+        vm.collapsedToolPanel = toolService.isToolPanelCollapsed;
+      } else {
+        toolService.isToolPanelCollapsed = true;
+        vm.collapsedToolPanel = toolService.isToolPanelCollapsed;
+      }
+    }
+
     // checks url for params to update the filter
     function updateFiltersFromUrlQuery () {
       var allFilters = {};
@@ -401,8 +440,7 @@
         // updates view model's selected attribute filters
         angular.forEach(
           selectedFilterService.attributeSelectedFields,
-          function (fieldArr, attributeInternalName
-          ) {
+          function (fieldArr, attributeInternalName) {
             for (var i = 0; i < fieldArr.length; i++) {
               if (_.isEmpty(vm.uiSelectedFields)) {
                 vm.uiSelectedFields[attributeInternalName] = {};
@@ -470,6 +508,7 @@
         }
       }
     );
+
     // when a new row is selected/deselected
     $scope.$watch(
       function () {
@@ -487,6 +526,20 @@
       },
       function () {
         vm.nodeSelectCollection = fileService.nodeSelectCollection;
+        vm.inputFileTypeColor = fileService.inputFileTypeColor;
+      }
+    );
+
+    // only show the selection and input group column when a tool is selected
+    $scope.$watchCollection(
+      function () {
+        return toolService.selectedTool;
+      },
+      function () {
+        vm.currentTypes = fileService.currentTypes;
+        if (fileBrowserFactory.customColumnNames.length > 0) {
+          toggleToolColumn();
+        }
       }
     );
   }

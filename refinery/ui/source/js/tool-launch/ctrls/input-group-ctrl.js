@@ -10,7 +10,7 @@
     '_',
     'fileRelationshipService',
     'resetGridService',
-    'selectedNodesService'
+    'activeNodeService'
   ];
 
 
@@ -19,21 +19,24 @@
     _,
     fileRelationshipService,
     resetGridService,
-    selectedNodesService
+    activeNodeService
   ) {
     var fileService = fileRelationshipService;
-    var nodeService = selectedNodesService;
+    var nodeService = activeNodeService;
     var vm = this;
     vm.attributes = fileService.attributesObj;
     vm.currentGroup = fileService.currentGroup;
     vm.currentTypes = fileService.currentTypes;
     vm.groupCollection = fileService.groupCollection;
     vm.inputFileTypes = fileService.inputFileTypes;
+    vm.inputFileTypeColor = fileService.inputFileTypeColor;
     vm.isGroupPopulated = isGroupPopulated;
     vm.isNavCollapsed = false;
     vm.isObjEmpty = isObjEmpty;
     vm.removeAllGroups = removeAllGroups;
     vm.removeGroup = removeGroup; // Refreshes all selection
+    vm.selectedTool = {};
+    vm.setDisplayInputFile = setDisplayInputFile;
 
 
    /*
@@ -66,8 +69,6 @@
     function removeAllGroups () {
       fileService.hideNodePopover = true;
       fileService.resetInputGroup();
-      nodeService.setSelectedAllFlags(false);
-      resetGridService.setRefreshGridFlag(true);
     }
 
     /**
@@ -78,6 +79,11 @@
       nodeService.deselectGroupFromSelectionObj(vm.currentGroup);
       fileService.removeGroupFromCollections();
       vm.selectionObj = nodeService.selectionObj;
+    }
+
+    // Vm method which sets which input file type to display in popover help.//
+    function setDisplayInputFile (inputObj) {
+      angular.copy(inputObj, fileService.displayInputFile);
     }
 
    /*
@@ -95,6 +101,8 @@
           vm.currentGroup = fileService.currentGroup;
           vm.currentTypes = fileService.currentTypes;
           vm.groupCollection = fileService.groupCollection;
+          vm.inputFileTypeColor = fileService.inputFileTypeColor;
+          vm.selectedTool = vm.displayCtrl.selectedTool;
         }
       );
 
@@ -105,6 +113,7 @@
         function () {
           vm.groupCollection = fileService.groupCollection;
           vm.currentGroup = fileService.currentGroup;
+          vm.inputFileTypeColor = fileService.inputFileTypeColor;
         }
       );
     };
