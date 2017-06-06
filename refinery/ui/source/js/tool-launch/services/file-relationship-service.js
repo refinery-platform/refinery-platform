@@ -107,14 +107,18 @@
     // groupId and it's associated inputFileType
     function removeGroupFromNodeSelectCollection (nodeList, TypeUuid) {
       for (var i = 0; i < nodeList.length; i++) {
-        var groupInd = vm.nodeSelectCollection[nodeList[i].uuid].inputTypeList.indexOf(TypeUuid);
-        if (groupInd > -1) {
-          vm.nodeSelectCollection[nodeList[i].uuid].groupList.splice(groupInd, 1);
-          vm.nodeSelectCollection[nodeList[i].uuid].inputTypeList.splice(groupInd, 1);
+        var nodeUuid = nodeList[i].uuid;
+        for (var j = 0; j < vm.nodeSelectCollection[nodeUuid].inputTypeList.length; j++) {
+          if (vm.nodeSelectCollection[nodeUuid].inputTypeList[j] === TypeUuid &&
+            vm.nodeSelectCollection[nodeUuid].groupList[j].join(',') ===
+            vm.currentGroup.join(',')) {
+            vm.nodeSelectCollection[nodeUuid].groupList.splice(j, 1);
+            vm.nodeSelectCollection[nodeUuid].inputTypeList.splice(j, 1);
+          }
         }
-       // Delete node property from obj if empty
-        if (vm.nodeSelectCollection[nodeList[i].uuid].groupList === 0) {
-          delete vm.nodeSelectCollection[nodeList[i].uuid];
+        // Delete node property from obj if empty
+        if (vm.nodeSelectCollection[nodeUuid].groupList === 0) {
+          delete vm.nodeSelectCollection[nodeUuid];
         }
       }
     }
@@ -129,6 +133,8 @@
       }
       vm.groupCollection = {};
       vm.nodeSelectCollection = {};
+      vm.displayInputFile = {};
+      angular.copy({}, nodeService.selectionObj);
     }
 
     /**
@@ -137,11 +143,13 @@
     function resetToolRelated () {
       vm.currentGroup = [];
       vm.currentTypes = [];
+      vm.displayInputFile = {};
       vm.groupCollection = {};
       vm.hideNodePopover = false;
       vm.inputFileTypes = [];
       vm.inputFileTypeColor = {};
       vm.nodeSelectCollection = {};
+      angular.copy({}, nodeService.selectionObj);
     }
 
     /**

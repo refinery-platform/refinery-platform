@@ -69,8 +69,6 @@
     function removeAllGroups () {
       fileService.hideNodePopover = true;
       fileService.resetInputGroup();
-      nodeService.setSelectedAllFlags(false);
-      resetGridService.setRefreshGridFlag(true);
     }
 
     /**
