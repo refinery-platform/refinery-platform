@@ -855,9 +855,10 @@ class ToolTests(StaticLiveServerTestCase):
         # This could become an issue if tests are ever run in parallel.
         self.browser.quit()
         self.display.stop()
-        for tool in Tool.objects.all():
-            # Purge Docker Containers that we've spun up
-            DockerClientWrapper().purge_by_label(tool.uuid)
+
+        # Explicitly delete Tool's so that the post_delete signal is
+        # triggered and their Docker containers are purged
+        Tool.objects.all().delete()
 
         # Trigger the pre_delete signal so that datafiles are purged
         FileStoreItem.objects.all().delete()
@@ -1168,6 +1169,35 @@ class ToolTests(StaticLiveServerTestCase):
         self.assertEqual(Tool.objects.count(), 0)
         self.assertIn("ToolDefinition matching query does not exist.",
                       self.post_response.content)
+
+    def test_tool_container_removed_on_deletion(self):
+        with open("{}/visualizations/igv.json".format(TEST_DATA_PATH)) as f:
+            tool_annotation = [json.loads(f.read())]
+
+        with mock.patch(self.mock_vis_annotations_reference,
+                        return_value=tool_annotation):
+            call_command("generate_tool_definitions", visualizations=True)
+
+        td = ToolDefinition.objects.all()[0]
+        post_data = {
+            "tool_definition_uuid": td.uuid,
+            "file_relationships": "['www.coffee.com/cool_file.txt']"
+        }
+        post_request = self.factory.post(
+            self.url_root,
+            data=post_data,
+            format="json"
+        )
+        force_authenticate(post_request, self.user)
+        self.view(post_request)
+
+        tool = Tool.objects.get(tool_definition__uuid=td.uuid)
+
+        with mock.patch(
+         "django_docker_engine.docker_utils.DockerClientWrapper.purge_by_label"
+        ) as purge_mock:
+            tool.delete()
+            self.assertTrue(purge_mock.called)
 
 
 class ToolLaunchConfigurationTests(TestCase):
