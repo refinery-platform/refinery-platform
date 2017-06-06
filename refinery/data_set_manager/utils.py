@@ -10,6 +10,7 @@ import time
 import urlparse
 
 from django.conf import settings
+from django.contrib.auth.models import User
 from django.db.models import Q
 from django.utils.http import urlquote, urlunquote
 
@@ -19,7 +20,7 @@ import requests
 from requests.exceptions import HTTPError
 
 from .models import (AnnotatedNode, AnnotatedNodeRegistry, Assay, Attribute,
-                     AttributeOrder, Node, Study, User)
+                     AttributeOrder, Node, Study)
 from .search_indexes import NodeIndex
 from .serializers import AttributeOrderSerializer
 import core
