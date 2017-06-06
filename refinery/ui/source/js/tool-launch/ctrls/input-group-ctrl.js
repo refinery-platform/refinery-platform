@@ -36,6 +36,7 @@
     vm.removeAllGroups = removeAllGroups;
     vm.removeGroup = removeGroup; // Refreshes all selection
     vm.selectedTool = {};
+    vm.setDisplayInputFile = setDisplayInputFile;
 
 
    /*
@@ -68,8 +69,6 @@
     function removeAllGroups () {
       fileService.hideNodePopover = true;
       fileService.resetInputGroup();
-      nodeService.setSelectedAllFlags(false);
-      resetGridService.setRefreshGridFlag(true);
     }
 
     /**
@@ -80,6 +79,11 @@
       nodeService.deselectGroupFromSelectionObj(vm.currentGroup);
       fileService.removeGroupFromCollections();
       vm.selectionObj = nodeService.selectionObj;
+    }
+
+    // Vm method which sets which input file type to display in popover help.//
+    function setDisplayInputFile (inputObj) {
+      angular.copy(inputObj, fileService.displayInputFile);
     }
 
    /*

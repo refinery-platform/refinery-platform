@@ -64,6 +64,7 @@
     vm.checkDataLength = checkDataLength;
     vm.checkDataSetOwnership = checkDataSetOwnership;
     vm.collapsedToolPanel = toolService.isToolPanelCollapsed;
+    vm.currentTypes = fileService.currentTypes;
     // params for the assays api
     vm.filesParam = {
       uuid: $window.externalAssayUuid,
@@ -76,18 +77,19 @@
     // Main ui-grid options
     vm.gridOptions = {
       appScopeProvider: vm,
-      infiniteScrollRowsFromEnd: 40,
-      infiniteScrollUp: true,
-      infiniteScrollDown: true,
-      useExternalSorting: true,
-      selectionRowHeaderWidth: 35,
-      rowHeight: 35,
-      showGridFooter: true,
-      multiSelect: true,
       columnDefs: fileBrowserFactory.customColumnNames,
       data: fileBrowserFactory.assayFiles,
       gridFooterTemplate: '<rp-is-assay-files-loading></rp-is-assay-files-loading>',
-      onRegisterApi: gridRegister
+      infiniteScrollRowsFromEnd: 40,
+      infiniteScrollUp: true,
+      infiniteScrollDown: true,
+      multiSelect: true,
+      onRegisterApi: gridRegister,
+      rowHeight: 35,
+      rowTemplate: '<rp-ui-grid-row-template></rp-ui-grid-row-template>',
+      selectionRowHeaderWidth: 35,
+      showGridFooter: true,
+      useExternalSorting: true
     };
     vm.inputFileTypeColor = fileService.inputFileTypeColor;
     vm.lastPage = 0;  // variable supporting ui-grid dynamic scrolling
@@ -534,6 +536,7 @@
         return toolService.selectedTool;
       },
       function () {
+        vm.currentTypes = fileService.currentTypes;
         if (fileBrowserFactory.customColumnNames.length > 0) {
           toggleToolColumn();
         }
