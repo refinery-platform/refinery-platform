@@ -6,3 +6,4 @@ user_files_router = DefaultRouter()
 user_files_router.urls.extend([
     url(r'^user/files/$', UserFiles.as_view())
 ])
+url(r'^user_files/$', 'user_files', name="user_files")

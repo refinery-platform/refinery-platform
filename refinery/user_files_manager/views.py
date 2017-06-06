@@ -6,8 +6,16 @@ from rest_framework.response import Response
 from data_set_manager.utils import (search_solr, format_solr_response,
                                     generate_solr_params_for_user)
 
+from django.shortcuts import render_to_response
+from django.template import RequestContext
+
 
 logger = logging.getLogger(__name__)
+
+
+def user_files(request):
+    return render_to_response('core/user_files.html', {},
+                              context_instance=RequestContext(request))
 
 
 class UserFiles(APIView):

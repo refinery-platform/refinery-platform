@@ -78,11 +78,6 @@ def statistics(request):
                               context_instance=RequestContext(request))
 
 
-def user_files(request):
-    return render_to_response('core/user_files.html', {},
-                              context_instance=RequestContext(request))
-
-
 @login_required
 def collaboration(request):
     return render_to_response('core/collaboration.html', {},
