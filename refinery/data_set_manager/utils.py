@@ -19,7 +19,7 @@ import requests
 from requests.exceptions import HTTPError
 
 from .models import (AnnotatedNode, AnnotatedNodeRegistry, Assay, Attribute,
-                     AttributeOrder, Node, Study)
+                     AttributeOrder, Node, Study, User)
 from .search_indexes import NodeIndex
 from .serializers import AttributeOrderSerializer
 import core
@@ -505,7 +505,7 @@ def _index_annotated_nodes(node_type, study_uuid, assay_uuid=None,
     logger.info("%s nodes indexed in %s", str(counter), str(end - start))
 
 
-def generate_solr_params_for_user(params, user):
+def generate_solr_params_for_user(params, user_uuid):
     """Creates the encoded solr params limiting results to one user.
     Keyword Argument
         params -- python dict or QueryDict
@@ -522,8 +522,18 @@ def generate_solr_params_for_user(params, user):
         fq - filter query
      """
 
+    user = None
+    try:
+        user = User.objects.get(uuid=user_uuid)
+    except User.DoesNotExist:
+        pass
+
+    if user:
+        datasets = get_objects_for_user(user, "core.read_dataset")
+    else:
+        datasets = []
+
     assay_uuids = []
-    datasets = get_objects_for_user(user, "core.read_dataset")
     for dataset in datasets:
         investigation_links = dataset.get_investigation_links()
 

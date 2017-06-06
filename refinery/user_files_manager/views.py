@@ -22,7 +22,9 @@ class UserFiles(APIView):
     def get(self, request):
         params = request.query_params
 
-        solr_params = generate_solr_params_for_user(params, user=request.user)
+        solr_params = generate_solr_params_for_user(
+            params,
+            user_uuid=request.user.uuid)
         solr_response = search_solr(solr_params, 'data_set_manager')
         solr_response_json = format_solr_response(solr_response)
 
