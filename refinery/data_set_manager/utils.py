@@ -525,9 +525,9 @@ def generate_solr_params_for_user(params, user):
     assay_uuids = []
     datasets = get_objects_for_user(user, "core.read_dataset")
     for dataset in datasets:
-        version_details = dataset.get_version_details()
+        investigation_links = dataset.get_investigation_links()
 
-        investigation = version_details.investigation
+        investigation = investigation_links.investigation
         try:
             study = Study.objects.get(
                 investigation=investigation
