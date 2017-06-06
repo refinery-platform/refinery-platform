@@ -526,18 +526,31 @@ def generate_solr_params_for_user(params, user):
     datasets = get_objects_for_user(user, "core.read_dataset")
     for dataset in datasets:
         version_details = dataset.get_version_details()
+
+        investigation = version_details.investigation
         try:
             study = Study.objects.get(
-                investigation=version_details.investigation
+                investigation=investigation
             )
-            assay = Assay.objects.get(study=study)
-            assay_uuids.append(assay.uuid)
-        except (Study.DoesNotExist,
-                Assay.DoesNotExist):
-            pass  # It's not an error not to have data.
-        except:
-            logger.error('Failed to get assays for dataset %s', dataset)
+        except Study.DoesNotExist:
+            continue
+            # It's not an error not to have data,
+            # but there's nothing more to do here.
+        except Study.MultipleObjectsReturned:
+            logger.error('Expected only one study for %s', investigation)
             raise
+
+        try:
+            assay = Assay.objects.get(study=study)
+        except Assay.DoesNotExist:
+            continue
+            # Again, it's not an error not to have data,
+            # but there's nothing more to do here.
+        except:
+            logger.error('Expected only one assay for %s', study)
+            raise
+
+        assay_uuids.append(assay.uuid)
 
     return _generate_solr_params(params, assay_uuids=assay_uuids)
 
