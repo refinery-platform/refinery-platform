@@ -1192,12 +1192,10 @@ class ToolTests(StaticLiveServerTestCase):
         self.view(post_request)
 
         tool = Tool.objects.get(tool_definition__uuid=td.uuid)
+        tool_uuid = tool.uuid
+        tool.delete()
 
-        with mock.patch(
-         "django_docker_engine.docker_utils.DockerClientWrapper.purge_by_label"
-        ) as purge_mock:
-            tool.delete()
-            self.assertTrue(purge_mock.called)
+        self.assertEqual(DockerClientWrapper().list({'label': tool_uuid}), [])
 
 
 class ToolLaunchConfigurationTests(TestCase):
