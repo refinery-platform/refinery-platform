@@ -3,11 +3,12 @@
 __Should I provide a tabular or ISA-Tab metadata file?__
 
 __How do I create an ISA-Tab metadata file?__
+  Download the latest version of [ISAcreator][isa-creator] and follow along with the [video tutorial][isa-creator-video] to create an ISA Tab archive.
 
 ## Data Set Upload
 
 __How do I get my data into Refinery?__
-  Following the [__Uploading a Data Set__][upload] section in the __Refinery Tutorial__
+  Follow the [__Uploading a Data Set__][data-set-upload] section in the Refinery tutorial.
 
 ## Collaboration
 
@@ -19,5 +20,8 @@ __How do I share my data with another user?__
 
 ## Known Issues
 
-[upload]: tutorial.md#2-uploading-a-data-set
+[isa-creator-releases]: https://github.com/ISA-tools/ISAcreator/releases
+[isa-creator-video]: https://www.youtube.com/watch?v=abIEtSUrJNY
+[data-set-upload]: tutorial.md#2-uploading-a-data-set
+
 
