@@ -68,7 +68,8 @@ class NoLoginTestCase(SeleniumTestBase):
             self.browser,
             search_array=['Collaboration', 'Statistics', 'About',
                           'Register', 'Login', 'Launch Pad', 'Data Sets',
-                          'Analyses', 'Workflows'])
+                          'Analyses', 'Workflows']
+        )
 
         self.browser.find_element_by_link_text('Statistics').click()
         assert_body_text(
