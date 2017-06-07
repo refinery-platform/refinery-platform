@@ -1,14 +1,13 @@
 import logging
 
-from rest_framework.views import APIView
-from rest_framework.response import Response
-
-from data_set_manager.utils import (search_solr, format_solr_response,
-                                    generate_solr_params_for_user)
+from data_set_manager.utils import (format_solr_response,
+                                    generate_solr_params_for_user, search_solr)
 
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
 logger = logging.getLogger(__name__)
 
