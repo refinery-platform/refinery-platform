@@ -42,6 +42,7 @@ def main():
         sys.stdout.write("{}\n".format(template))
     elif args.command == 'create':
         template = make_template(config, config_yaml)
+        ensure_s3_bucket(config['S3_LOG_BUCKET'])
         cloudformation = boto3.client('cloudformation')
         response = cloudformation.create_stack(
             StackName=config['STACK_NAME'],
