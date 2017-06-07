@@ -1037,7 +1037,7 @@ DashboardCtrl.prototype.deselectDataSets = function () {
  * @param   {Object}  fromStateEvent  UI-router previous state object.
  */
 DashboardCtrl.prototype.expandDatasetExploration = function (fromStateEvent) {
-  var self = this;
+  var that = this;
 
   if (!fromStateEvent) {
     this.$state.transitionTo(
@@ -1056,9 +1056,9 @@ DashboardCtrl.prototype.expandDatasetExploration = function (fromStateEvent) {
     this.dashboardWidthFixerService
       .fixWidth()
       .then(function () {
-        self.expandDataSetPanel = true;
-        self.expandedDataSetPanelBorder = true;
-        self.dashboardExpandablePanelService.trigger('expander');
+        that.expandDataSetPanel = true;
+        that.expandedDataSetPanelBorder = true;
+        that.dashboardExpandablePanelService.trigger('expander');
       })
       .catch(function () {
         // This is weird. We should never run into here unless the whole app
@@ -1086,7 +1086,7 @@ DashboardCtrl.prototype.expandDatasetExploration = function (fromStateEvent) {
 DashboardCtrl.prototype.expandDataSetPreview = function (
   dataSetUuid, fromStateEvent
 ) {
-  var self = this;
+  var that = this;
 
   if (this.dataSetExploration) {
     this.dataSetExplorationTempHidden = true;
@@ -1111,9 +1111,9 @@ DashboardCtrl.prototype.expandDataSetPreview = function (
       this.dashboardWidthFixerService
         .fixWidth()
         .then(function () {
-          self.expandDataSetPanel = true;
-          self.expandedDataSetPanelBorder = true;
-          self.dashboardExpandablePanelService.trigger('expander');
+          that.expandDataSetPanel = true;
+          that.expandedDataSetPanelBorder = true;
+          that.dashboardExpandablePanelService.trigger('expander');
         })
         .catch(function () {
           // This is weird. We should never run into here unless the whole app
