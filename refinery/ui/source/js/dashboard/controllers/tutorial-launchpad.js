@@ -99,7 +99,7 @@ function launchpadTutorialCtrl ($scope, updateUserTutorials, tutorialPageNavigat
         position: 'left'
       },
       {
-        element: document.querySelector('#launchpadStep5'),
+        element: document.querySelector('#workflows-panel'),
         intro: '<div>' + stepText.STEP6 + '</div>',
         position: 'left'
       }
