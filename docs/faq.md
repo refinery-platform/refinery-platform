@@ -7,6 +7,7 @@ __How do I create an ISA-Tab metadata file?__
 ## Data Set Upload
 
 __How do I get my data into Refinery?__
+  Following the [Uploading a Data Set][upload] section
 
 ## Collaboration
 
@@ -18,5 +19,5 @@ __How do I share my data with another user?__
 
 ## Known Issues
 
-
+[upload]: tutorial.md#2-uploading-a-data-set
 
