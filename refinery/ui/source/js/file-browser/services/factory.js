@@ -228,24 +228,12 @@ function fileBrowserFactory (
    * @param {string} _columnName - column name
    */
   var setCustomInputGroupsColumn = function (_columnName) {
-    var _cellTemplate = '<div class="ngCellText grid-input-groups">' +
-      '<div ng-if="grid.appScope.nodeSelectCollection[row.entity.uuid].groupList.length > 0" ' +
-      'class="selected-node" ' +
-      'title="{{grid.appScope.nodeSelectCollection[row.entity.uuid].groupList}}">' +
-      '<div class="paragraph ui-grid-cell-contents" ' +
-      'ng-if="grid.appScope.nodeSelectCollection[row.entity.uuid].groupList[0].length > 0"> ' +
-      '<span ng-repeat="group in grid.appScope.nodeSelectCollection[row.entity.uuid].groupList ' +
-      'track by $index">' +
-      '<span ng-style="{\'color\':grid.appScope.inputFileTypeColor[' +
-      'grid.appScope.nodeSelectCollection[row.entity.uuid].inputTypeList[$index]]}">' +
-      '{{group[group.length - 1]}}</span>' +
-      '<span ng-if="$index < grid.appScope.nodeSelectCollection[row.entity.uuid]' +
-      '.groupList.length - 1">, &nbsp</span> </span></div></div></div>';
+    var _cellTemplate = '<rp-input-groups-column-template>' +
+      '</rp-input-groups-column-template>';
 
     return {
       name: _columnName,
       field: _columnName,
-      cellTooltip: true,
       width: 11 + '%',
       displayName: 'Input Groups',
       enableFiltering: false,
