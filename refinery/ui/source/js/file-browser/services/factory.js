@@ -261,7 +261,8 @@ function fileBrowserFactory (
         ' grid.appScope.activeNodeRow.uuid}" ' +
         'ng-click="grid.appScope.openSelectionPopover(row.entity)"' +
         'id="{{row.entity.uuid}}">' +
-        '<i class="fa fa-arrow-right" aria-hidden="true"></i></a></div>';
+        '<div class="full-size"><i class="fa fa-arrow-right" aria-hidden="true">' +
+        '</i></div></a></div>';
 
     var isToolSelected = !_.isEmpty(toolSelectService.selectedTool);
 
