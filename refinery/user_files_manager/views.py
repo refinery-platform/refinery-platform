@@ -9,7 +9,7 @@ from django.template import RequestContext
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import (Assay, Study)
+from core.models import (Assay, Study)
 
 
 logger = logging.getLogger(__name__)
