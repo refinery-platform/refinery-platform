@@ -85,7 +85,8 @@ urlpatterns = patterns(
     url(r'^pubmed/summary/(?P<id>.+)/', 'pubmed_summary',
         name="pubmed_summary"),
     url(r'^neo4j/annotations/$', 'neo4j_dataset_annotations',
-        name="neo4j_dataset_annotations")
+        name="neo4j_dataset_annotations"),
+    url(r'^auto_login/$', 'auto_login', name='auto_login')
 )
 
 # DRF url routing

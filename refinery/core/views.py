@@ -16,7 +16,8 @@ from django.http import (HttpResponse, HttpResponseBadRequest,
                          HttpResponseForbidden, HttpResponseNotFound,
                          HttpResponseRedirect, HttpResponseServerError)
 
-from django.shortcuts import get_object_or_404, render_to_response
+
+from django.shortcuts import get_object_or_404, render_to_response, redirect
 from django.template import loader, RequestContext
 from django.views.decorators.gzip import gzip_page
 
@@ -31,6 +32,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from xml.parsers.expat import ExpatError
 
+
 from .forms import (DataSetForm, ProjectForm, UserForm, UserProfileForm,
                     WorkflowForm)
 from .models import (Analysis, CustomRegistrationProfile, DataSet,
@@ -44,6 +46,8 @@ from data_set_manager.models import Node
 from data_set_manager.utils import generate_solr_params_for_assay
 from file_store.models import FileStoreItem
 from visualization_manager.views import igv_multi_species
+from django.contrib.auth import login, logout
+
 
 logger = logging.getLogger(__name__)
 
@@ -74,6 +78,33 @@ def contact(request):
 def statistics(request):
     return render_to_response('core/statistics.html', {},
                               context_instance=RequestContext(request))
+
+
+def auto_login(request):
+    try:
+        user = int(request.GET.get('user', -1))
+    except ValueError:
+        user = -1
+
+    exploration = request.GET.get('exploration', False)
+
+    if user >= 0 and user in settings.AUTO_LOGIN:
+        if request.user.is_authenticated():
+            logout(request)
+
+        try:
+            user = User.objects.get(id=user)
+            user.backend = settings.AUTHENTICATION_BACKENDS[0]
+        except Exception:
+            logger.error('Auto login for user ID {} failed.'.format(user))
+            return redirect('{}'.format(reverse('home')))
+
+        login(request, user)
+
+        if exploration:
+            return redirect('{}#/exploration'.format(reverse('home')))
+
+    return redirect('{}'.format(reverse('home')))
 
 
 @login_required
@@ -306,13 +337,13 @@ def data_set(request, data_set_uuid, analysis_uuid=None):
         if investigation.isarchive_file is not None:
             isatab_archive = FileStoreItem.objects.get(
                 uuid=investigation.isarchive_file)
-    except:
+    except FileStoreItem.DoesNotExist:
         pass
     try:
         if investigation.pre_isarchive_file is not None:
             pre_isatab_archive = FileStoreItem.objects.get(
                 uuid=investigation.pre_isarchive_file)
-    except:
+    except FileStoreItem.DoesNotExist:
         pass
     return render_to_response(
         'core/data_set.html',
@@ -371,13 +402,13 @@ def data_set2(request, data_set_uuid, analysis_uuid=None):
         if investigation.isarchive_file is not None:
             isatab_archive = FileStoreItem.objects.get(
                 uuid=investigation.isarchive_file)
-    except:
+    except FileStoreItem.DoesNotExist:
         pass
     try:
         if investigation.pre_isarchive_file is not None:
             pre_isatab_archive = FileStoreItem.objects.get(
                 uuid=investigation.pre_isarchive_file)
-    except:
+    except FileStoreItem.DoesNotExist:
         pass
     return render_to_response(
         'core/data_set2.html',
@@ -428,13 +459,13 @@ def data_set_edit(request, uuid):
             isatab_archive = FileStoreItem.objects.get(
                 uuid=investigation.isarchive_file
             )
-    except:
+    except FileStoreItem.DoesNotExist:
         pass
     try:
         if investigation.pre_isarchive_file is not None:
             pre_isatab_archive = FileStoreItem.objects.get(
                 uuid=investigation.pre_isarchive_file)
-    except:
+    except FileStoreItem.DoesNotExist:
         pass
 
     if request.method == "POST":  # If the form has been submitted
@@ -606,16 +637,16 @@ def visualize_genome(request):
     node_ids_json = json.dumps(node_ids)
 
     return render_to_response(
-          'core/visualize/genome.html',
-          {
-              "fasta_url": url_base + genome + ".fa",
-              "index_url": url_base + genome + ".fa.fai",
-              "cytoband_url": url_base + "cytoBand.txt",
-              "bed_url": url_base + "refGene.bed",
-              "tbi_url": url_base + "refGene.bed.tbi",
-              "node_ids_json": node_ids_json
-          },
-          context_instance=RequestContext(request))
+        'core/visualize/genome.html',
+        {
+            "fasta_url": url_base + genome + ".fa",
+            "index_url": url_base + genome + ".fa.fai",
+            "cytoband_url": url_base + "cytoBand.txt",
+            "bed_url": url_base + "refGene.bed",
+            "tbi_url": url_base + "refGene.bed.tbi",
+            "node_ids_json": node_ids_json
+        },
+        context_instance=RequestContext(request))
 
 
 def solr_core_search(request):
@@ -1119,7 +1150,7 @@ class DataSetsViewSet(APIView):
         # check edit permission for user
         if self.is_user_authorized(request.user, data_set):
             serializer = DataSetSerializer(
-               data_set, data=request.data, partial=True
+                data_set, data=request.data, partial=True
             )
             if serializer.is_valid():
                 serializer.save()

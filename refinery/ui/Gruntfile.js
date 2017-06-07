@@ -703,8 +703,34 @@ module.exports = function (grunt) {
           {
             expand: true,
             cwd: '<%= cfg.basePath.ui.src %>/js',
-            src: ['**/*.js'],
+            src: ['**/*.js', '!**/*.spec.js'],
             dest: '<%= cfg.basePath.ui.tmp %>/js'
+          }
+        ]
+      }
+    },
+
+    /*
+     * Optimize ALL JavaScript files as this generally has a huge impact on the
+     * loading time of most JS libraries.
+     */
+    'optimize-js': {
+      options: {
+        sourceMap: true
+      },
+      dist: {
+        files: [
+          {
+            expand: true,
+            cwd: '<%= cfg.basePath.ui.tmp %>/js/',
+            src: '**/*.js',
+            dest: '<%= cfg.basePath.ui.compile %>/js/'
+          },
+          {
+            expand: true,
+            cwd: '<%= cfg.basePath.ui.compile %>/vendor/',
+            src: '**/*.js',
+            dest: '<%= cfg.basePath.ui.compile %>/vendor/'
           }
         ]
       }
@@ -730,7 +756,7 @@ module.exports = function (grunt) {
             expand: true,
             cwd: '<%= cfg.basePath.ui.tmp %>/js',
             src: '**/*.js',
-            dest: '<%= cfg.basePath.ui.compile %>/js'
+            dest: '<%= cfg.basePath.ui.tmp %>/js'
           }
         ]
       },
@@ -870,6 +896,11 @@ module.exports = function (grunt) {
     'copy:uiCompileTemplates',
     'copy:uiCompileVendor',
     'copy:staticCompile',
+    // IMPORTANT:
+    // optimize-js needs to be called AFTER uglify and copy:uiCompileVendor as
+    // uglify would revert all the changes and we want to optimize vendor files
+    // as well.
+    'optimize-js',
     'clean:uiTmp',
     'jsdoc'
   ]);

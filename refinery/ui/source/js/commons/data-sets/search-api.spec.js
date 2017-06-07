@@ -60,6 +60,7 @@ describe('DataSet.search-api: unit tests', function () {
       defType: _synonyms ? 'synonym_edismax' : 'edismax',
       'f.description.hl.alternateField': 'description',
       'f.title.hl.alternateField': 'title',
+      'f.title.hl.fragsize': '0',
       fl: 'dbid,uuid,access',
       fq: 'django_ct:core.dataset',
       hl: 'true',

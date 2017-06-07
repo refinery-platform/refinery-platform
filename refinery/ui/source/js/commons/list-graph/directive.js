@@ -4,7 +4,9 @@ function listGraphDirective ($window) {
   return {
     bindToController: {
       graphData: '=graph',
-      valuePropertyName: '=valuePropertyName'
+      valuePropertyName: '=valuePropertyName',
+      customTopbarButtons: '=customTopbarButtons',
+      initVis: '=initVis'
     },
     controller: 'ListGraphCtrl',
     controllerAs: 'listGraph',

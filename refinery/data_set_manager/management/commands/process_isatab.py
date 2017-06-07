@@ -21,7 +21,8 @@ class Command(BaseCommand):
     Takes the directory of an ISA-Tab file as input, parses, and inputs it into
     the database\n\nUsage: python manage.py process_isatab <username> <isatab
     directory or file> [--base_pre_isa_dir <base pre-isatab directory or file>
-    --public --file_base_path <base path if file locations are relative>]\n
+    --public --file_base_path <base path if file locations are relative>
+    --overwrite]\n
     """
     option_list = BaseCommand.option_list + (
         make_option(
@@ -37,6 +38,11 @@ class Command(BaseCommand):
         ),
         make_option(
             '--public',
+            action='store_true',
+            default=False
+        ),
+        make_option(
+            '--overwrite',
             action='store_true',
             default=False
         )
@@ -105,8 +111,10 @@ class Command(BaseCommand):
                     options['public'],
                     isa_file,
                     self._additional_raw_data_file_extension,
-                    isa_file, pre_file,
-                    options['file_base_path']
+                    isa_file,
+                    pre_file,
+                    options['file_base_path'],
+                    options['overwrite']
                 )
             )
             s_tasks.append(sub_task)

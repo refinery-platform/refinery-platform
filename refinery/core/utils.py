@@ -457,27 +457,50 @@ def normalize_annotation_ont_ids(annotations):
     some only provide the ID.
     """
 
-    new_annotations = []
-    for annotation in annotations:
+    # Copy annotation list
+    new_annotations = list(annotations)
+
+    # Update new annotations in place
+    for annotation in new_annotations:
         underscore_pos = annotation['value_accession'].rfind('_')
         if underscore_pos >= 0:
             annotation['value_accession'] = \
                 annotation['value_accession'][(underscore_pos + 1):]
-            new_annotations.append(annotation)
-            continue
 
         hash_pos = annotation['value_accession'].rfind('#')
         if hash_pos >= 0:
             annotation['value_accession'] = \
                 annotation['value_accession'][(hash_pos + 1):]
-            new_annotations.append(annotation)
-            continue
 
         if annotation['value_source'] == 'CL':
             annotation['value_accession'] = \
                 annotation['value_accession'].zfill(7)
-            continue
+
     return new_annotations
+
+
+def normalize_annotation_uri(uri):
+    """Normalize an ontology URI. Some ontologies defined
+    ambiguous URIs which is...  Anyway, harmonizing them increases the mapping
+    quality.
+    """
+
+    if (uri.startswith('http://purl.bioontology.org/ontology/NCBITAXON/')):
+        return 'http://purl.obolibrary.org/obo/NCBITaxon_{}'.format(uri[47:])
+
+    return uri
+
+
+def normalize_annotation_uris(annotations):
+    """Normalize multiple annotation ontology uris.
+    """
+
+    for annotation in annotations:
+        annotation['value_accession'] = normalize_annotation_uri(
+            annotation['value_accession']
+        )
+
+    return annotations
 
 
 def get_data_set_annotations(dataset_uuid):
@@ -713,7 +736,7 @@ def get_data_sets_annotations(dataset_ids=[]):
             response[row[0]] = []
 
         response[row[0]].append({
-            'term': row[1],
+            'term': normalize_annotation_uri(row[1]),
             'count': row[2]
         })
 

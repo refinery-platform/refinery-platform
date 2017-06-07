@@ -2523,3 +2523,14 @@ class CustomRegistrationProfile(RegistrationProfile):
             "An email has been sent to admins informing of registration of  "
             "user %s", self.user
         )
+
+
+class SiteProfile(models.Model):
+    """Extension to the `Site` class to customize the Refinery instance further
+    """
+
+    site = models.OneToOneField(Site, related_name='profile')
+    repo_mode_home_page_html = models.TextField(blank=True)
+
+    def __unicode__(self):
+        return self.site.name
