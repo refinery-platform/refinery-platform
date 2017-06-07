@@ -711,32 +711,6 @@ module.exports = function (grunt) {
     },
 
     /*
-     * Optimize ALL JavaScript files as this generally has a huge impact on the
-     * loading time of most JS libraries.
-     */
-    'optimize-js': {
-      options: {
-        sourceMap: true
-      },
-      dist: {
-        files: [
-          {
-            expand: true,
-            cwd: '<%= cfg.basePath.ui.tmp %>/js/',
-            src: '**/*.js',
-            dest: '<%= cfg.basePath.ui.compile %>/js/'
-          },
-          {
-            expand: true,
-            cwd: '<%= cfg.basePath.ui.compile %>/vendor/',
-            src: '**/*.js',
-            dest: '<%= cfg.basePath.ui.compile %>/vendor/'
-          }
-        ]
-      }
-    },
-
-    /*
      * Load `package.json` for meta data.
      */
     pkg: grunt.file.readJSON('package.json'),
@@ -896,11 +870,6 @@ module.exports = function (grunt) {
     'copy:uiCompileTemplates',
     'copy:uiCompileVendor',
     'copy:staticCompile',
-    // IMPORTANT:
-    // optimize-js needs to be called AFTER uglify and copy:uiCompileVendor as
-    // uglify would revert all the changes and we want to optimize vendor files
-    // as well.
-    'optimize-js',
     'clean:uiTmp',
     'jsdoc'
   ]);
