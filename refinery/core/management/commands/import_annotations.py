@@ -187,7 +187,7 @@ class Command(BaseCommand):
             root_logger.setLevel(logging.DEBUG)
 
         if options['clear']:
-            print('Clear existing annotations and users...')
+            self.stdout.write('Clear existing annotations and users...')
             start = time.time()
 
             graph = py2neo.Graph(
@@ -205,12 +205,12 @@ class Command(BaseCommand):
             end = time.time()
             minutes = int(round((end - start) // 60))
             seconds = int(round((end - start) % 60))
-            print(
+            self.stdout.write(
                 'Clear existing annotations and users... {} min and {} sec'
                 .format(minutes, seconds)
             )
 
-        print('Import annotations...')
+        self.stdout.write('Import annotations...')
 
         start = time.time()
 
@@ -235,7 +235,7 @@ class Command(BaseCommand):
         minutes = int(round((end - start) // 60))
         seconds = int(round((end - start) % 60))
 
-        print(
+        self.stdout.write(
             'Import annotations... {} min and {} sec'.format(
                 minutes, seconds
             )
