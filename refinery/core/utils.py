@@ -457,8 +457,11 @@ def normalize_annotation_ont_ids(annotations):
     some only provide the ID.
     """
 
-    new_annotations = []
-    for annotation in annotations:
+    # Copy annotation list
+    new_annotations = list(annotations)
+
+    # Update new annotations in place
+    for annotation in new_annotations:
         underscore_pos = annotation['value_accession'].rfind('_')
         if underscore_pos >= 0:
             annotation['value_accession'] = \
@@ -472,8 +475,6 @@ def normalize_annotation_ont_ids(annotations):
         if annotation['value_source'] == 'CL':
             annotation['value_accession'] = \
                 annotation['value_accession'].zfill(7)
-
-        new_annotations.append(annotation)
 
     return new_annotations
 
