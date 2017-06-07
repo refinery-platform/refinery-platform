@@ -81,17 +81,22 @@ def statistics(request):
 
 
 def auto_login(request):
-    user = request.GET.get('user', False)
+    try:
+        user = int(request.GET.get('user', -1))
+    except ValueError:
+        user = -1
+
     exploration = request.GET.get('exploration', False)
 
-    if user and user in settings.AUTO_LOGIN:
+    if user >= 0 and user in settings.AUTO_LOGIN:
         if request.user.is_authenticated():
             logout(request)
 
         try:
-            user = User.objects.get(id=settings.AUTO_LOGIN[user])
+            user = User.objects.get(id=user)
             user.backend = settings.AUTHENTICATION_BACKENDS[0]
         except Exception:
+            logger.error('Auto login for user ID {} failed.'.format(user))
             return redirect('{}'.format(reverse('home')))
 
         login(request, user)

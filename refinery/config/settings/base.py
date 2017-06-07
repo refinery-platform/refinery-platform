@@ -614,8 +614,7 @@ ANONYMOUS_USER_ID = -1
 
 SATORI_DEMO = get_setting("SATORI_DEMO", local_settings, False)
 
-AUTO_LOGIN = get_setting(
-    "AUTO_LOGIN", local_settings, {})
+AUTO_LOGIN = get_setting("AUTO_LOGIN", local_settings, [])
 
 TEST_RUNNER = "django.test.runner.DiscoverRunner"
 
