@@ -7,7 +7,7 @@ __How do I create an ISA-Tab metadata file?__
 ## Data Set Upload
 
 __How do I get my data into Refinery?__
-  Following the [Uploading a Data Set][upload] section
+  Following the [__Uploading a Data Set__][upload] section in the __Refinery Tutorial__
 
 ## Collaboration
 
