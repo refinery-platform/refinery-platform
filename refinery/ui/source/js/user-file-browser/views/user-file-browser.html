@@ -1,0 +1,18 @@
+<div class="row y-scrollable m-t-1-2 p-t-1">
+    <div class="col-lg-2 col-md-2 col-sm-3">
+      <div id="table-filter" style="height: initial;"><!-- TODO: Why is the default CSS the way it is? -->
+        <div id="filter-panel-body" style="height: initial; overflow-y: initial;">
+            <rp-user-file-browser-filters></rp-user-file-browser-filters>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-10 col-md-10 col-sm-9" id="main-area">
+      <div style="margin-right: 10px">
+        <!-- Bootstrap col classes are using the window width, not our inner div.
+             #table-filter has a margin-left, so do something similar on this side...
+             TODO: but this still doesn't feel right. -->
+        <!-- TODO: Why isn't it full height? -->
+        <rp-user-file-browser-files></rp-user-file-browser-files>
+      </div>
+    </div>
+</div>
