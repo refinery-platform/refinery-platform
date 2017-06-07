@@ -804,8 +804,13 @@ def format_solr_response(solr_response):
         solr_response_json['error']['msg']
 
     # Reorganizes solr response into easier to digest objects.
-    order_facet_fields = solr_response_json.get('responseHeader').get(
-            'params').get('fl').split(',')
+    order_facet_fields_joined = solr_response_json.get('responseHeader')\
+        .get('params').get('fl')
+    if order_facet_fields_joined:
+        order_facet_fields = order_facet_fields_joined.split(',')
+    else:
+        order_facet_fields = []
+
     if solr_response_json.get('facet_counts'):
         facet_field_counts = solr_response_json.get('facet_counts').get(
             'facet_fields')
