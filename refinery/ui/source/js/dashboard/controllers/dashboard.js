@@ -1680,7 +1680,9 @@ DashboardCtrl.prototype.triggerSorting = function (source) {
  */
 DashboardCtrl.prototype.openSatoriIntroEasterEgg = function () {
   this.$uibModal.open({
-    templateUrl: '/static/partials/dashboard/partials/intro-satori-easteregg.html',
+    templateUrl: this.$window.getStaticUrl(
+      '/static/partials/dashboard/partials/intro-satori-easteregg.html'
+    ),
     controller: 'IntroSatoriEasterEggCtrl as modal'
   });
 };
@@ -1754,8 +1756,9 @@ DashboardCtrl.prototype.openAnalysisDeleteModal = function (analysis) {
 
 DashboardCtrl.prototype.openFileBrowserDisabled = function () {
   this.$uibModal.open({
-    templateUrl:
-      '/static/partials/dashboard/partials/file-browser-disabled.html',
+    templateUrl: this.$window.getStaticUrl(
+      '/static/partials/dashboard/partials/file-browser-disabled.html'
+    ),
     controller: 'IntroSatoriEasterEggCtrl as modal'
   });
 };
