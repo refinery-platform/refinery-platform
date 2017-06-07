@@ -10,8 +10,11 @@ import time
 import urlparse
 
 from django.conf import settings
+from django.contrib.auth.models import User
 from django.db.models import Q
 from django.utils.http import urlquote, urlunquote
+
+from guardian.shortcuts import get_objects_for_user
 
 import requests
 from requests.exceptions import HTTPError
@@ -503,7 +506,67 @@ def _index_annotated_nodes(node_type, study_uuid, assay_uuid=None,
     logger.info("%s nodes indexed in %s", str(counter), str(end - start))
 
 
-def generate_solr_params(params, assay_uuid):
+def generate_solr_params_for_user(params, user_uuid):
+    """Creates the encoded solr params limiting results to one user.
+    Keyword Argument
+        params -- python dict or QueryDict
+    Params/Solr Params
+        is_annotation - metadata
+        facet_count/facet - enables facet counts in query response, true/false
+        offset - paginate, offset response
+        limit/row - maximum number of documents
+        field_limit - set of fields to return
+        facet_field - specify a field which should be treated as a facet
+        facet_filter - adds params to facet fields&fqs for filtering on fields
+        facet_pivot - list of fields to pivot
+        sort - Ordering include field name, whitespace, & asc or desc.
+        fq - filter query
+     """
+
+    user = None
+    try:
+        user = User.objects.get(uuid=user_uuid)
+    except User.DoesNotExist:
+        pass
+
+    if user:
+        datasets = get_objects_for_user(user, "core.read_dataset")
+    else:
+        datasets = []
+
+    assay_uuids = []
+    for dataset in datasets:
+        investigation_links = dataset.get_investigation_links()
+
+        investigation = investigation_links.investigation
+        try:
+            study = Study.objects.get(
+                investigation=investigation
+            )
+        except Study.DoesNotExist:
+            continue
+            # It's not an error not to have data,
+            # but there's nothing more to do here.
+        except Study.MultipleObjectsReturned:
+            logger.error('Expected only one study for %s', investigation)
+            raise
+
+        try:
+            assay = Assay.objects.get(study=study)
+        except Assay.DoesNotExist:
+            continue
+            # Again, it's not an error not to have data,
+            # but there's nothing more to do here.
+        except:
+            logger.error('Expected only one assay for %s', study)
+            raise
+
+        assay_uuids.append(assay.uuid)
+
+    return _generate_solr_params(params, assay_uuids=assay_uuids)
+
+
+def generate_solr_params_for_assay(params, assay_uuid):
     """Creates the encoded solr params requiring only an assay.
     Keyword Argument
         params -- python dict or QueryDict
@@ -519,6 +582,10 @@ def generate_solr_params(params, assay_uuid):
         sort - Ordering include field name, whitespace, & asc or desc.
         fq - filter query
      """
+    return _generate_solr_params(params, assay_uuids=[assay_uuid])
+
+
+def _generate_solr_params(params, assay_uuids=[]):
 
     file_types = 'fq=type:("Raw Data File" OR ' \
                  '"Derived Data File" OR ' \
@@ -548,7 +615,12 @@ def generate_solr_params(params, assay_uuid):
                   'facet.limit=-1'
                   ])
 
-    solr_params = ''.join(['fq=assay_uuid:', assay_uuid])
+    solr_params = 'fq=({})'.format(
+        ' OR '.join(map(
+            lambda id: 'assay_uuid:{}'.format(id),
+            assay_uuids
+        ))
+    )
 
     if facet_field:
         facet_field = facet_field.split(',')
@@ -557,7 +629,9 @@ def generate_solr_params(params, assay_uuid):
         solr_params = ''.join([solr_params, split_facet_fields])
     else:
         # Missing facet_fields, it is generated from Attribute Order Model.
-        attributes_str = AttributeOrder.objects.filter(assay__uuid=assay_uuid)
+        attributes_str = AttributeOrder.objects.filter(
+            assay__uuid__in=assay_uuids  # TODO: Confirm this syntax
+        )
         attributes = AttributeOrderSerializer(attributes_str, many=True)
         facet_field_obj = generate_filtered_facet_fields(attributes.data)
         facet_field = facet_field_obj.get('facet_field')
