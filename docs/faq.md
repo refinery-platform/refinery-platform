@@ -3,7 +3,7 @@
 __Should I provide a tabular or ISA-Tab metadata file?__
 
 __How do I create an ISA-Tab metadata file?__
-  Download the latest version of [ISAcreator][isa-creator] and follow along with the [video tutorial][isa-creator-video] to create an ISA Tab archive.
+  Download the latest version of [ISAcreator][isa-creator-releases] and follow along with the [video tutorial][isa-creator-video] to create an ISA Tab archive.
 
 ## Data Set Upload
 
