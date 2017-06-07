@@ -9,6 +9,9 @@ from django.template import RequestContext
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from .models import (Assay, Study)
+
+
 logger = logging.getLogger(__name__)
 
 
@@ -21,9 +24,14 @@ class UserFiles(APIView):
     def get(self, request):
         params = request.query_params
 
-        solr_params = generate_solr_params_for_user(
-            params,
-            user_uuid=request.user.uuid)
+        try:
+            solr_params = generate_solr_params_for_user(
+                params,
+                user_uuid=request.user.uuid)
+        except (Assay.DoesNotExist, Study.DoesNotExist):
+            return Response({})
+            # TODO: Make this look like an empty solr response
+
         solr_response = search_solr(solr_params, 'data_set_manager')
         solr_response_json = format_solr_response(solr_response)
 
