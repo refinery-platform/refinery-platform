@@ -1248,13 +1248,7 @@ class ToolLaunchConfigurationTests(TestCase):
         tool_launch_configuration = {
             "tool_definition_uuid": self.td.uuid,
             "file_relationships": "!!{}!!".format(
-                str(
-                    [
-                        "https://s3.amazonaws.com/pkerp/public/"
-                        "dixon2012-h1hesc-hindiii-allreps-filtered."
-                        "1000kb.multires.cool"
-                    ]
-                )
+                str(["www.example.com/cool_file.txt"])
             )
         }
         with self.assertRaises(RuntimeError) as context:
@@ -1309,13 +1303,7 @@ class ToolLaunchConfigurationTests(TestCase):
     def test_invalid_TLC_bad_tooldefinition_uuid(self):
         tool_launch_configuration = {
             "tool_definition_uuid": "This is an invalid ToolDef UUID",
-            "file_relationships": str(
-                [
-                    "https://s3.amazonaws.com/pkerp/public/"
-                    "dixon2012-h1hesc-hindiii-allreps-filtered."
-                    "1000kb.multires.cool"
-                ]
-            )
+            "file_relationships": str(["www.example.com/cool_file.txt"])
         }
         with self.assertRaises(RuntimeError) as context:
             validate_tool_launch_configuration(tool_launch_configuration)
