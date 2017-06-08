@@ -10,7 +10,9 @@ from django.http import HttpResponseServerError, JsonResponse
 
 from django_extensions.db.fields import UUIDField
 from django_docker_engine.container_managers.local import LocalManager
-from django_docker_engine.docker_utils import DockerContainerSpec
+from django_docker_engine.docker_utils import (DockerClientWrapper,
+                                               DockerContainerSpec)
+
 from docker.errors import APIError
 
 from core.models import Analysis, OwnableResource, WorkflowEngine
@@ -303,6 +305,19 @@ class Tool(OwnableResource):
             )
 
         self.save()
+
+
+@receiver(pre_delete, sender=Tool)
+def remove_tool_container(sender, instance, *args, **kwargs):
+    """
+    Remove the Docker container instance corresponding to a Tool's launch.
+    """
+    if instance.get_tool_type() == ToolDefinition.VISUALIZATION:
+        try:
+            DockerClientWrapper().purge_by_label(instance.uuid)
+        except APIError as e:
+            logger.error("Couldn't purge container for Tool with UUID: %s %s",
+                         instance.uuid, e)
 
 
 def get_django_docker_engine_manager():
