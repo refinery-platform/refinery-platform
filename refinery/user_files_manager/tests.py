@@ -2,24 +2,39 @@ import logging
 import requests
 
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
-from django.test import TestCase
+from rest_framework.test import (APIRequestFactory,
+                                 APITestCase, force_authenticate)
 from urlparse import urljoin
+
+from core.models import User
+from views import UserFiles
 
 logger = logging.getLogger(__name__)
 
 
-class UserFilesAPITests(TestCase):
-    pass
-    # TODO: Fails, because solr isn't running.
-    # Should I mock it, or make this an integration test?
+# def fake_search_solr():
+#     return {}
+#
+# @mock.patch("user_files_manager.utils.search_solr",
+#                 fake_search_solr)
+class UserFilesAPITests(APITestCase):
+    def setUp(self):
+        self.factory = APIRequestFactory()
+        self.view = UserFiles.as_view()
+        self.url_root = '/api/v2/user/files/'
+        self.user = User.objects.get(pk=-1)
+        # TODO: Or User.objects.create_user('fake_user')?
 
-    # def test_get(self):
-    #     response = self.client.get('/api/v2/user/files/')
-    #     self.assertEqual(response.status_code, 200)
+    def test_get(self):
+        request = self.factory.get(self.url_root)
+        force_authenticate(request, user=self.user)
+        response = self.view(request)
+        self.assertEqual(response.status_code, 200)
+        self.assertItemsEqual(response.data.keys(), [])
 
 
 class UserFilesUITests(StaticLiveServerTestCase):
-    def test_ui_loads(self):
+    def test_get(self):
         response = requests.get(
             urljoin(
                 self.live_server_url,

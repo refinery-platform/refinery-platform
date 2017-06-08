@@ -506,7 +506,7 @@ def _index_annotated_nodes(node_type, study_uuid, assay_uuid=None,
     logger.info("%s nodes indexed in %s", str(counter), str(end - start))
 
 
-def generate_solr_params_for_user(params, user_uuid):
+def generate_solr_params_for_user(params, user_id):
     """Creates the encoded solr params limiting results to one user.
     Keyword Argument
         params -- python dict or QueryDict
@@ -525,7 +525,7 @@ def generate_solr_params_for_user(params, user_uuid):
 
     user = None
     try:
-        user = User.objects.get(uuid=user_uuid)
+        user = User.objects.get(id=user_id)
     except User.DoesNotExist:
         pass
 
