@@ -18,7 +18,7 @@
               ng-class="$ctrl.isToolInfoCollapsed ? 'fa fa-caret-right' : 'fa fa-caret-down'"
               class="fa-pull-left"
               aria-hidden="true"></i>
-           {{ $ctrl.tool.tool_type }} Description
+           Description
         </div>
       </h4>
     </div>
@@ -29,7 +29,7 @@
       role="tabpanel"
       aria-labelledby="tool-body">
       <div class="panel-body">
-        {{ $ctrl.tool.description }}
+        {{ $ctrl.tool.tool_type }} :{{ $ctrl.tool.description }}
       </div>
     </div>
   </div>
