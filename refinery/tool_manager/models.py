@@ -307,7 +307,7 @@ class Tool(OwnableResource):
         self.save()
 
 
-@receiver(post_delete, sender=Tool)
+@receiver(pre_delete, sender=Tool)
 def remove_tool_container(sender, instance, *args, **kwargs):
     """
     Remove the Docker container instance corresponding to a Tool's launch.
