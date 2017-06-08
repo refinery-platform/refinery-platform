@@ -5,13 +5,13 @@
     .module('refineryToolLaunch')
     .controller('ToolInfoDisplayCtrl', ToolInfoDisplayCtrl);
 
-  ToolInfoDisplayCtrl.$inject = ['$scope'];
+  ToolInfoDisplayCtrl.$inject = ['$scope', 'toolSelectService'];
 
 
-  function ToolInfoDisplayCtrl ($scope) {
+  function ToolInfoDisplayCtrl ($scope, toolSelectService) {
     var vm = this;
     vm.tool = {};
-    vm.isToolInfoCollapsed = true;
+    vm.isToolInfoCollapsed = toolSelectService.isToolInfoCollapsed;
 
 
    /*
