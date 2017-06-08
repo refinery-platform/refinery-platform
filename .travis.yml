@@ -14,6 +14,9 @@ services:
   - neo4j
   - docker
 
+before_install:
+  - npm --version
+  - npm install -g npm@5.0.3
 install:
   - pip install -r requirements.txt --quiet
   # Install geckodriver required for selenium testing
