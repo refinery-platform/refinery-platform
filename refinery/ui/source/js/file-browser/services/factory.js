@@ -255,13 +255,13 @@ function fileBrowserFactory (
   var setCustomSelectColumn = function (columnName) {
     var cellTemplate = '<div class="ngCellText text-align-center ui-grid-cell-contents">' +
         '<a rp-node-selection-popover title="Select Tool Input"' +
-        'class="ui-grid-selection-row-header-buttons" ' +
-        'ng-class="{\'solidText\': grid.appScope.nodeSelectCollection[' +
-        'row.entity.uuid].groupList.length > 0 || row.entity.uuid ==' +
-        ' grid.appScope.activeNodeRow.uuid}" ' +
         'ng-click="grid.appScope.openSelectionPopover(row.entity)"' +
         'id="{{row.entity.uuid}}">' +
-        '<div class="full-size"><i class="fa fa-arrow-right" aria-hidden="true">' +
+        '<div class="full-size ui-grid-selection-row-header-buttons" ' +
+        'ng-class="{\'solidText\': grid.appScope.nodeSelectCollection[' +
+        'row.entity.uuid].groupList.length > 0 || row.entity.uuid == ' +
+        'grid.appScope.activeNodeRow.uuid}">' +
+        '<i class="fa fa-arrow-right" aria-hidden="true">' +
         '</i></div></a></div>';
 
     var isToolSelected = !_.isEmpty(toolSelectService.selectedTool);
