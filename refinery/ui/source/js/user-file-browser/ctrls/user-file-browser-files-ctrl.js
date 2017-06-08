@@ -24,11 +24,27 @@
                 '</div>',
             width: 30 },
           { field: 'type' },
-          { field: 'organism' }
+          { field: 'organism' },
+          { field: 'filetype' },
+          { field: 'date' },
+          { field: 'owner' },
+          { field: 'antibody' },
+          { field: 'cell_type' },
+          { field: 'published' },
+          { field: 'geo_accession' },
+          { field: 'genotype' }
       ],
       data: [
-          { url: 'foo.txt', type: 'DNA', organism: 'human' },
-          { url: 'bar.txt', type: 'RNA', organism: 'mouse' }
+          { url: 'foo.txt', type: 'DNA', organism: 'human',
+            filetype: 'sample', date: 'sample', owner: 'sample',
+            antibody: 'sample', cell_type: 'sample', published: 'sample',
+            geo_accession: 'sample', genotype: 'sample'
+          },
+          { url: 'bar.txt', type: 'RNA', organism: 'mouse',
+            filetype: 'sample', date: 'sample', owner: 'sample',
+            antibody: 'sample', cell_type: 'sample', published: 'sample',
+            geo_accession: 'sample', genotype: 'sample'
+          }
       ]
     };
   }
