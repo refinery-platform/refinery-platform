@@ -91,16 +91,6 @@ class NoLoginTestCase(SeleniumTestBase):
                                        'Most Recent Code for this Instance'])
         # TODO: All sections are empty right now
 
-    def test_user_files(self):
-        self.browser.get(self.live_server_url + '/user_files/')
-        assert_body_text(
-            self.browser,
-            search_array=[
-                'All Files',
-                'Download as CSV'
-            ]
-        )
-
 
 class DataSetsPanelTestCase(SeleniumTestBase):
     """

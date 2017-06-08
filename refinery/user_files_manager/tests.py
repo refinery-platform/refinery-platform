@@ -1,7 +1,7 @@
 import logging
 
+from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from django.test import TestCase
-
 
 logger = logging.getLogger(__name__)
 
@@ -14,3 +14,8 @@ class UserFilesAPITests(TestCase):
     # def test_get(self):
     #     response = self.client.get('/api/v2/user/files/')
     #     self.assertEqual(response.status_code, 200)
+
+
+class UserFilesUITests(StaticLiveServerTestCase):
+    pass
+    # TODO: requests.get(self.live_server_url)
