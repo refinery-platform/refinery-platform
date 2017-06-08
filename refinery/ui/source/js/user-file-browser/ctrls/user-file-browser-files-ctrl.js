@@ -23,27 +23,45 @@
                 '</a>' +
                 '</div>',
             width: 30 },
-          { field: 'type' },
+          { field: 'dataset',
+            enableSorting: false,
+            displayName: '',
+            cellTemplate:
+                '<div class="ui-grid-cell-contents" >' +
+                '<a href="{{grid.getCellValue(row, col)}}" target="_blank">' +
+                '<i class="fa fa-file"></i>' +
+                '</a>' +
+                '</div>',
+            width: 30 },
+          { field: 'filename' },
+          { field: 'technology' },
           { field: 'organism' },
-          { field: 'filetype' },
           { field: 'date' },
           { field: 'owner' },
           { field: 'antibody' },
           { field: 'cell_type' },
           { field: 'published' },
-          { field: 'geo_accession' },
+          { field: 'accession',
+            cellTemplate:
+                '<div class="ui-grid-cell-contents" >' +
+                '<a href="{{grid.getCellValue(row, col)}}" target="_blank">' +
+                '<i class="fa fa-external-link"></i> {{grid.getCellValue(row, col)}}' +
+                '</a>' +
+                '</div>' },
           { field: 'genotype' }
       ],
       data: [
-          { url: 'foo.txt', type: 'DNA', organism: 'human',
-            filetype: 'sample', date: 'sample', owner: 'sample',
-            antibody: 'sample', cell_type: 'sample', published: 'sample',
-            geo_accession: 'sample', genotype: 'sample'
+          { url: 'foo.txt', technology: 'ChIP-seq',
+            filename: 'SRR064951.fastq.gz', organism: 'Homo sapiens',
+            date: '2017-06-01', owner: 'Chuck McCallum',
+            antibody: 'HNF4A', cell_type: 'Caco-2', published: 'yes',
+            accession: 'GDS6248', genotype: 'N/A'
           },
-          { url: 'bar.txt', type: 'RNA', organism: 'mouse',
-            filetype: 'sample', date: 'sample', owner: 'sample',
-            antibody: 'sample', cell_type: 'sample', published: 'sample',
-            geo_accession: 'sample', genotype: 'sample'
+          { url: 'bar.txt', technology: 'RNA-seq',
+            filename: '5678.cel', organism: 'Mus musculus',
+            date: '2017-05-01', owner: 'Chuck McCallum',
+            antibody: '', cell_type: 'mesenteric white adipose tissues', published: 'no',
+            accession: 'GDS6249', genotype: 'C57BL/6J'
           }
       ]
     };

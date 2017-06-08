@@ -8,41 +8,45 @@
   function UserFileBrowserFiltersCtrl () {
     var vm = this;
     vm.attributeFilters = {
-      type: {
+      Technology: {
         facetObj: [
-          { name: 'DNA', count: 4 },
-          { name: 'RNA', count: 7 }
+          { name: 'ChIP-seq', count: 4 },
+          { name: 'RNA-seq', count: 7 }
         ]
       },
-      organism: {
+      Organism: {
         facetObj: [
-          { name: 'mouse', count: 3 },
-          { name: 'human', count: 8 }
+          { name: 'Homo sapiens', count: 3 },
+          { name: 'Mus musculus', count: 8 }
         ]
       },
-      filetype: {
+      Filetype: {
         facetObj: [
-          { name: 'sample', count: 42 }
+          { name: 'GCT file', count: 42 },
+          { name: 'Affymetrix Probe Results', count: 42 }
         ]
       },
-      owner: {
+      Owner: {
         facetObj: [
-          { name: 'sample', count: 42 }
+          { name: 'Chuck McCallum', count: 42 },
+          { name: 'Geoff Nelson', count: 42 }
         ]
       },
-      antibody: {
+      Antibody: {
         facetObj: [
-          { name: 'sample', count: 42 }
+          { name: 'HNF4A', count: 42 },
+          { name: 'FRTS4', count: 42 }
         ]
       },
-      cell_type: {
+      Celltype: {
         facetObj: [
-          { name: 'sample', count: 42 }
+          { name: 'Caco-2', count: 42 },
+          { name: 'HeLa', count: 42 }
         ]
       },
-      genotype: {
+      Genotype: {
         facetObj: [
-          { name: 'sample', count: 42 }
+          { name: 'C57BL/6J', count: 42 }
         ]
       }
     };
