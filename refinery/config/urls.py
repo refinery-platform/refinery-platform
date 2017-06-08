@@ -31,7 +31,7 @@ from data_set_manager.api import (AssayResource, AttributeOrderResource,
                                   ProtocolResource, PublicationResource,
                                   StudyResource)
 from data_set_manager.urls import data_set_manager_router
-from user_files_manager.urls import user_files_router
+from user_files_manager.urls import user_files_router, user_files_url
 from file_store.urls import file_store_router
 
 from tool_manager.urls import tool_manager_router, django_docker_engine_url
@@ -147,6 +147,7 @@ urlpatterns = patterns(
         ),
         name='search'
     ),
+    user_files_url
 
     # (r'^favicon\.ico$',
     # 'django.views.generic.simple.redirect_to',
