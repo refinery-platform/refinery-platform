@@ -58,7 +58,7 @@
             accession: 'GDS6248', genotype: 'N/A'
           },
           { url: 'bar.txt', technology: 'RNA-seq',
-            filename: '5678.cel', organism: 'Mus musculus',
+            filename: 'SRR064952.fastq.gz', organism: 'Mus musculus',
             date: '2017-05-01', owner: 'Chuck McCallum',
             antibody: '', cell_type: 'mesenteric white adipose tissues', published: 'no',
             accession: 'GDS6249', genotype: 'C57BL/6J'

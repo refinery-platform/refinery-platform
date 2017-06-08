@@ -23,30 +23,30 @@
       Filetype: {
         facetObj: [
           { name: 'GCT file', count: 42 },
-          { name: 'Affymetrix Probe Results', count: 42 }
+          { name: 'Affymetrix Probe Results', count: 8 }
         ]
       },
       Owner: {
         facetObj: [
-          { name: 'Chuck McCallum', count: 42 },
-          { name: 'Geoff Nelson', count: 42 }
+          { name: 'Chuck McCallum', count: 6 },
+          { name: 'Geoff Nelson', count: 6 }
         ]
       },
       Antibody: {
         facetObj: [
-          { name: 'HNF4A', count: 42 },
-          { name: 'FRTS4', count: 42 }
+          { name: 'HNF4A', count: 5 },
+          { name: 'FRTS4', count: 46 }
         ]
       },
       Celltype: {
         facetObj: [
           { name: 'Caco-2', count: 42 },
-          { name: 'HeLa', count: 42 }
+          { name: 'HeLa', count: 1 }
         ]
       },
       Genotype: {
         facetObj: [
-          { name: 'C57BL/6J', count: 42 }
+          { name: 'C57BL/6J', count: 12 }
         ]
       }
     };
