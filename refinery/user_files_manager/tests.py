@@ -1,7 +1,9 @@
 import logging
+import requests
 
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from django.test import TestCase
+from urlparse import urljoin
 
 logger = logging.getLogger(__name__)
 
@@ -17,5 +19,11 @@ class UserFilesAPITests(TestCase):
 
 
 class UserFilesUITests(StaticLiveServerTestCase):
-    pass
-    # TODO: requests.get(self.live_server_url)
+    def test_ui_loads(self):
+        response = requests.get(
+            urljoin(
+                self.live_server_url,
+                'user_files/'
+            )
+        )
+        self.assertIn("All Files", response.content)
