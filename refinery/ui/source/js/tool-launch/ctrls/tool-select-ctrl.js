@@ -1,3 +1,10 @@
+/**
+ * Tool Select Ctrl
+ * @namespace ToolSelectCtrl
+ * @desc Controller for componet, rpToolSelect. Displays and allows user
+  * selection of a tool.
+ * @memberOf refineryApp.refineryToolLaunch
+ */
 (function () {
   'use strict';
 
@@ -32,12 +39,19 @@
  * -----------------------------------------------------------------------------
  */
     function activate () {
-      refreshToolList();
+      refreshToolList(); // intialize tool list
+      // for tabbing, previous value exists in selectedTool
       if (!_.isEmpty(toolService.selectedTool)) {
         vm.selectedTool.select = toolService.selectedTool;
       }
     }
 
+
+  /**
+   * @name refreshToolList
+   * @desc Initializes the tool list from toolService
+   * @memberOf refineryToolLaunch.ToolSelectCtrl
+  **/
     function refreshToolList () {
       if (toolService.toolList.length === 0) {
         toolService.getTools().then(function () {
@@ -46,7 +60,13 @@
       }
     }
 
-    // user selects a new tool, so tool info needs updating
+
+   /**
+    * @name refreshToolList
+    * @desc VM method when user selects a new tool, updates service and
+    * calls on methods to reset any tool related data.
+    * @memberOf refineryToolLaunch.ToolSelectCtrl
+    **/
     function updateTool (tool) {
       toolService.setSelectedTool(tool);
       fileService.resetToolRelated();

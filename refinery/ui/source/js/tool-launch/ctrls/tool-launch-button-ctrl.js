@@ -1,3 +1,9 @@
+/**
+ * Tool Launch Button Ctrl
+ * @namespace ToolLaunchButtonCtrl
+ * @desc Controller for componet, rpToolLaunchButton.
+ * @memberOf refineryApp.refineryToolLaunch
+ */
 (function () {
   'use strict';
 

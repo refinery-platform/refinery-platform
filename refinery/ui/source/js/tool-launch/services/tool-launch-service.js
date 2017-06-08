@@ -1,3 +1,9 @@
+/**
+ * Tool Launch Service
+ * @namespace toolLaunchService
+ * @desc Service which preps and validates the parameters to launch a tool
+ * @memberOf refineryApp.refineryToolLaunch
+ */
 (function () {
   'use strict';
   angular

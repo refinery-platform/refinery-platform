@@ -1,3 +1,11 @@
+/**
+ * File Relationship Service
+ * @namespace fileRelationshipService
+ * @desc Service which maintains processes the tool's fileRelationship
+ * structure and creates and updates the digestable data structures. Also
+ * tracks display colors for input files
+ * @memberOf refineryApp.refineryToolLaunch
+ */
 (function () {
   'use strict';
   angular
