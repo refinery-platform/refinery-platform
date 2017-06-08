@@ -247,7 +247,6 @@ function fileBrowserFactory (
       visible: isToolSelected
     };
   };
-
    /**
    * Helper method for select column, requires unique template & fields.
    * @param {string} _columnName - column name
