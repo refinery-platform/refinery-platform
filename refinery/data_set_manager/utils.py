@@ -543,20 +543,24 @@ def generate_solr_params_for_user(params, user_uuid):
             study = Study.objects.get(
                 investigation=investigation
             )
-        except Study.DoesNotExist:
-            logger.error('Expected at least one Study for %s', investigation)
+        except Study.DoesNotExist as e:
+            logger.error('Expected at least one Study for %s: %s',
+                         investigation, e)
             raise
-        except Study.MultipleObjectsReturned:
-            logger.error('Expected only one Study for %s', investigation)
+        except Study.MultipleObjectsReturned as e:
+            logger.error('Expected only one Study for %s: $s',
+                         investigation, e)
             raise
 
         try:
             assay = Assay.objects.get(study=study)
-        except Assay.DoesNotExist:
-            logger.error('Expected at least one Assay for %s', study)
+        except Assay.DoesNotExist as e:
+            logger.error('Expected at least one Assay for %s: %s',
+                         study, e)
             raise
-        except Assay.MultipleObjectsReturned:
-            logger.error('Expected only one Assay for %s', study)
+        except Assay.MultipleObjectsReturned as e:
+            logger.error('Expected only one Assay for %s: %s',
+                         study, e)
             raise
 
         assay_uuids.append(assay.uuid)
