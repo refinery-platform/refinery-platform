@@ -1,7 +1,7 @@
 /**
  * Tool Select Ctrl
  * @namespace ToolSelectCtrl
- * @desc Controller for componet, rpToolSelect. Displays and allows user
+ * @desc Controller for component, rpToolSelect. Displays and allows user
   * selection of a tool.
  * @memberOf refineryApp.refineryToolLaunch
  */

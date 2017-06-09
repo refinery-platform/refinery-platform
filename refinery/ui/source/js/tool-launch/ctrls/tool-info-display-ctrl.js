@@ -1,7 +1,7 @@
 /**
  * Tool Info Display Ctrl
  * @namespace ToolInfoDisplayCtrl
- * @desc Controller for the child componet, rpToolInfoDisplay. Outer panel
+ * @desc Controller for the child component, rpToolInfoDisplay. Outer panel
   * for displaying tool description.
  * @memberOf refineryApp.refineryToolLaunch
  */
