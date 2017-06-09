@@ -26,7 +26,7 @@ class UserFiles(APIView):
                 params,
                 user_uuid=request.user.uuid
         )
-        if not solr_params:
+        if solr_params is None:
             return Response({})
             # TODO: Make this look like an empty solr response
 
