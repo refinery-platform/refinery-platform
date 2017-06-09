@@ -548,7 +548,7 @@ def generate_solr_params_for_user(params, user_uuid):
                          investigation, e)
             raise
         except Study.MultipleObjectsReturned as e:
-            logger.error('Expected only one Study for %s: $s',
+            logger.error('Expected only one Study for %s: %s',
                          investigation, e)
             raise
 
