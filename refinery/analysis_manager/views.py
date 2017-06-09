@@ -41,7 +41,7 @@ def analysis_status(request, uuid):
     try:
         analysis = Analysis.objects.get(uuid=uuid)
     except Analysis.DoesNotExist:
-        logger.error("Analysis with UUID '{}' does not exist".format(uuid))
+        logger.error("Analysis with UUID '%s' does not exist", uuid)
         return HttpResponse(custom_error_page(request, '404.html', {}),
                             status='404')
 
@@ -49,8 +49,8 @@ def analysis_status(request, uuid):
     try:
         status = AnalysisStatus.objects.get(analysis=analysis)
     except AnalysisStatus.DoesNotExist:
-        logger.error("AnalysisStatus object does not exist for Analysis '{}'"
-                     .format(analysis.name))
+        logger.error("AnalysisStatus object does not exist for Analysis '%s'",
+                     analysis.name)
         return HttpResponse(custom_error_page(request, '500.html', {}),
                             status='500')
 
@@ -95,10 +95,9 @@ def analysis_cancel(request):
     Returns HTTP status codes 200, 400, 403, 405, 500 or 503
     """
     # $http Angular service returns json format
-    dict = json.loads(request.body)
     if request.method == 'POST':
         try:
-            uuid = dict['uuid']
+            uuid = json.loads(request.body)['uuid']
         except KeyError:
             return HttpResponseBadRequest()  # 400
         error_msg = "Cancellation failed for analysis '{}'".format(uuid)
@@ -118,7 +117,7 @@ def analysis_cancel(request):
                 logger.error(error_msg)
                 return HttpResponse(status=503)  # service unavailable
             else:
-                logger.info("Analysis '{}' was cancelled".format(uuid))
+                logger.info("Analysis '%s' was cancelled", uuid)
                 return HttpResponse()  # 200
         else:
             return HttpResponseForbidden()  # 403
