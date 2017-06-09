@@ -546,7 +546,8 @@ def generate_solr_params_for_user(params, user_uuid):
         except Study.DoesNotExist as e:
             logger.error('Expected at least one Study for %s: %s',
                          investigation, e)
-            raise
+            # Do not need to re-raise this one.
+            continue
         except Study.MultipleObjectsReturned as e:
             logger.error('Expected only one Study for %s: %s',
                          investigation, e)
@@ -557,7 +558,8 @@ def generate_solr_params_for_user(params, user_uuid):
         except Assay.DoesNotExist as e:
             logger.error('Expected at least one Assay for %s: %s',
                          study, e)
-            raise
+            # Do not need to re-raise this one.
+            continue
         except Assay.MultipleObjectsReturned as e:
             logger.error('Expected only one Assay for %s: %s',
                          study, e)
@@ -588,6 +590,10 @@ def generate_solr_params_for_assay(params, assay_uuid):
 
 
 def _generate_solr_params(params, assay_uuids):
+    """
+    Either returns a solr url parameter string,
+    or None if assay_uuids is empty.
+    """
 
     file_types = 'fq=type:("Raw Data File" OR ' \
                  '"Derived Data File" OR ' \
@@ -617,7 +623,8 @@ def _generate_solr_params(params, assay_uuids):
                   'facet.limit=-1'
                   ])
 
-    assert len(assay_uuids) > 0, 'At least one assay must be accessible'
+    if len(assay_uuids) == 0:
+        return None
     solr_params = 'fq=assay_uuid:({})'.format(' OR '.join(assay_uuids))
 
     if facet_field:
