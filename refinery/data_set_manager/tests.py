@@ -748,7 +748,7 @@ class UtilitiesTest(TestCase):
         # empty params
         query = generate_solr_params_for_assay(QueryDict({}), self.valid_uuid)
         self.assertEqual(str(query),
-                         'fq=%28assay_uuid%3A{}%29'
+                         'fq=assay_uuid%3A%28{}%29'
                          '&facet.field=Cell Type&'
                          'facet.field=Analysis&facet.field=Organism&'
                          'facet.field=Cell Line&facet.field=Type&'
@@ -777,7 +777,7 @@ class UtilitiesTest(TestCase):
             parameter_qdict, self.valid_uuid
         )
         self.assertEqual(str(query),
-                         'fq=%28assay_uuid%3A{}%29'
+                         'fq=assay_uuid%3A%28{}%29'
                          '&facet.field=cats&'
                          'facet.field=mouse&facet.field=dog&'
                          'facet.field=horse&fl=cats%2C'
