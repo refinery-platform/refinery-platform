@@ -7,12 +7,11 @@
     beforeEach(module('refineryFileBrowser'));
 
     var compile;
-    var rootScope;
-    var scope;
-    var template;
     var directiveElement;
     var jQuery;
+    var scope;
     var service;
+    var template;
 
     beforeEach(inject(function (
       $,
@@ -31,8 +30,7 @@
         '</div>'
       );
       compile = $compile;
-      rootScope = $rootScope;
-      scope = rootScope.$new();
+      scope = $rootScope.$new();
       service = selectedFilterService;
       jQuery = $;
       template = '<rp-file-browser-assay-filters></rp-file-browser-assay-filters>';

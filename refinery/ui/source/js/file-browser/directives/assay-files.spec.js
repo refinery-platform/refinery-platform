@@ -6,12 +6,11 @@
     beforeEach(module('refineryFileBrowser'));
 
     var compile;
-    var rootScope;
-    var scope;
-    var setting;
+    var fakeUuid;
     var httpBackend;
     var mocker;
-    var fakeUuid;
+    var scope;
+    var setting;
 
     beforeEach(inject(function (
       $compile,
@@ -30,9 +29,8 @@
       setting = settings;
       mocker = mockParamsFactory;
       fakeUuid = mocker.generateUuid();
-      rootScope = $rootScope;
       httpBackend = $httpBackend;
-      scope = rootScope.$new();
+      scope = $rootScope.$new();
     }));
 
     it('generates the appropriate HTML', function () {
