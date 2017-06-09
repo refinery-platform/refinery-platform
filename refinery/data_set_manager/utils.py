@@ -537,7 +537,7 @@ def generate_solr_params_for_user(params, user_id):
     assay_uuids = []
     for dataset in datasets:
         investigation_link = dataset.get_latest_investigation_link()
-        if not investigation_link:
+        if investigation_link is None:
             continue
             # It's not an error not to have data,
             # but there's nothing more to do here.
