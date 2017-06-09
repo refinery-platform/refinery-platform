@@ -6,7 +6,6 @@
     beforeEach(module('refineryFileBrowser'));
 
     var compile;
-    var rootScope;
     var scope;
 
     beforeEach(inject(function ($compile, $rootScope, $templateCache, $window) {
@@ -16,8 +15,7 @@
         '<div class="modal-body fileUtilModal"> List of assay attributes </div>'
       );
       compile = $compile;
-      rootScope = $rootScope;
-      scope = rootScope.$new();
+      scope = $rootScope.$new();
     }));
     it('generates the appropriate HTML', function () {
       var template = '<rp-assay-files-util-modal-detail></rp-assay-files-util-modal-detail>';
