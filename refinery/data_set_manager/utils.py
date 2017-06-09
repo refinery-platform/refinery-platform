@@ -818,9 +818,10 @@ def format_solr_response(solr_response):
     try:
         order_facet_fields_joined = (solr_response_json
                                      ['responseHeader']['params']['fl'])
-        order_facet_fields = order_facet_fields_joined.split(',')
     except KeyError:
         order_facet_fields = []
+    else:
+        order_facet_fields = order_facet_fields_joined.split(',')
 
     if solr_response_json.get('facet_counts'):
         facet_field_counts = solr_response_json.get('facet_counts').get(
