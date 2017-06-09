@@ -536,17 +536,20 @@ def generate_solr_params_for_user(params, user_id):
 
     assay_uuids = []
     for dataset in datasets:
-        investigation_links = dataset.get_investigation_links()
+        investigation_link = dataset.get_latest_investigation_link()
+        if not investigation_link:
+            continue
+            # It's not an error not to have data,
+            # but there's nothing more to do here.
+        investigation = investigation_link.investigation
 
-        investigation = investigation_links.investigation
         try:
             study = Study.objects.get(
                 investigation=investigation
             )
         except Study.DoesNotExist:
             continue
-            # It's not an error not to have data,
-            # but there's nothing more to do here.
+            # Again, nothing more to do here.
         except Study.MultipleObjectsReturned:
             logger.error('Expected only one study for %s', investigation)
             raise
@@ -555,8 +558,7 @@ def generate_solr_params_for_user(params, user_id):
             assay = Assay.objects.get(study=study)
         except Assay.DoesNotExist:
             continue
-            # Again, it's not an error not to have data,
-            # but there's nothing more to do here.
+            # Again, nothing more to do here.
         except:
             logger.error('Expected only one assay for %s', study)
             raise
