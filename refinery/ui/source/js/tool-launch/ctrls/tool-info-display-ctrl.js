@@ -1,3 +1,10 @@
+/**
+ * Tool Info Display Ctrl
+ * @namespace ToolInfoDisplayCtrl
+ * @desc Controller for the child component, rpToolInfoDisplay. Outer panel
+  * for displaying tool description.
+ * @memberOf refineryApp.refineryToolLaunch
+ */
 (function () {
   'use strict';
 
@@ -5,14 +12,12 @@
     .module('refineryToolLaunch')
     .controller('ToolInfoDisplayCtrl', ToolInfoDisplayCtrl);
 
-  ToolInfoDisplayCtrl.$inject = ['$scope'];
+  ToolInfoDisplayCtrl.$inject = ['$scope', 'toolSelectService'];
 
-
-  function ToolInfoDisplayCtrl ($scope) {
+  function ToolInfoDisplayCtrl ($scope, toolSelectService) {
     var vm = this;
     vm.tool = {};
-    vm.isToolInfoCollapsed = true;
-
+    vm.isToolInfoCollapsed = toolSelectService.isToolInfoCollapsed;
 
    /*
    * ---------------------------------------------------------

@@ -1,3 +1,10 @@
+/**
+ * Tool Select Service
+ * @namespace toolSelectService
+ * @desc Service tracks the selected tool, grabs the tool definition
+ * list from service, and tracks if the panels are collapsed
+ * @memberOf refineryApp.refineryToolLaunch
+ */
 (function () {
   'use strict';
   angular
@@ -9,10 +16,12 @@
   function toolSelectService (toolDefinitionsService) {
     var selectedTool = {};
     var toolList = [];
+    var isToolInfoCollapsed = true;
     var isToolPanelCollapsed = true;
 
     var service = {
       getTools: getTools,
+      isToolInfoCollapsed: isToolInfoCollapsed,
       isToolPanelCollapsed: isToolPanelCollapsed,
       selectedTool: selectedTool,
       setSelectedTool: setSelectedTool,

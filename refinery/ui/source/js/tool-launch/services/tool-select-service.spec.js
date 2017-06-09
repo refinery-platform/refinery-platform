@@ -16,6 +16,8 @@
       expect(service).toBeDefined();
       expect(service.selectedTool).toEqual({});
       expect(service.toolList).toEqual([]);
+      expect(service.isToolInfoCollapsed).toEqual(true);
+      expect(service.isToolPanelCollapsed).toEqual(true);
     });
 
     it('setSelectedTool is a method', function () {

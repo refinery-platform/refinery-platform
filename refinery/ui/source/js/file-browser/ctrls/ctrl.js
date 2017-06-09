@@ -387,6 +387,7 @@
       } else {
         toolService.isToolPanelCollapsed = true;
         vm.collapsedToolPanel = toolService.isToolPanelCollapsed;
+        resetGridService.setRefreshGridFlag(true);
       }
     }
 
