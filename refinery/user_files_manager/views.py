@@ -24,7 +24,8 @@ class UserFiles(APIView):
 
         solr_params = generate_solr_params_for_user(
                 params,
-                user_uuid=request.user.uuid)
+                user_uuid=request.user.uuid
+        )
         if not solr_params:
             return Response({})
             # TODO: Make this look like an empty solr response
