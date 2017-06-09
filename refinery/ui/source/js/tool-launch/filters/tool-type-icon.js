@@ -1,3 +1,10 @@
+/**
+ * Tool Type Icon Filter
+ * @namespace toolTypeIcon
+ * @desc Used by tool description and tool select to display correct icon
+ * for workflow vs visualization
+ * @memberOf refineryApp.refineryToolLaunch
+ */
 (function () {
   'use strict';
 
