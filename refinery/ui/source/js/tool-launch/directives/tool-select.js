@@ -1,5 +1,5 @@
 /**
- * Tool Select Componenet
+ * Tool Select Component
  * @namespace rpToolSelect
  * @desc Component which displays and allows selection of tools from
  * tools_definition API

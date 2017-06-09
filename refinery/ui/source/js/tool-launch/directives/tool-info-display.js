@@ -1,5 +1,5 @@
 /**
- * Tool Info Display Componenet
+ * Tool Info Display Component
  * @namespace rpToolInfoDisplay
  * @desc Child component of the main view, tool display. View
  * consist of the tool info panel.

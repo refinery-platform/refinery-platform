@@ -1,5 +1,5 @@
 /**
- * Tool Display Componenet
+ * Tool Display Component
  * @namespace rpToolDisplay
  * @desc Main parent component for the main view, tool display. View consist
  * of the entire tool launch panel.

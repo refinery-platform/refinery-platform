@@ -1,5 +1,5 @@
 /**
- * Tool Launch Button Componenet
+ * Tool Launch Button Component
  * @namespace rpToolLaunchButton
  * @desc Component for a button which launches a tool
  * @memberOf refineryApp.refineryToolLaunch
