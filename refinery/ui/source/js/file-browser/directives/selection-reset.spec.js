@@ -8,10 +8,12 @@
 
     var directiveElement;
 
-    beforeEach(inject(function ($compile,
-                                $rootScope,
-                                $templateCache,
-                                $window) {
+    beforeEach(inject(function (
+      $compile,
+      $rootScope,
+      $templateCache,
+      $window
+    ) {
       $templateCache.put(
         $window.getStaticUrl('partials/file-browser/partials/selection-reset.html'),
         '<button class="btn btn-default btn-xs" id="reset"></button>'
