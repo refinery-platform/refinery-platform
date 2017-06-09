@@ -9,16 +9,16 @@
     '$compile',
     '$rootScope',
     '$templateCache',
-    'fileRelationshipService',
-    'activeNodeService'
+    'activeNodeService',
+    'fileRelationshipService'
   ];
 
   function rpNodeSelectionPopover (
     $compile,
     $rootScope,
     $templateCache,
-    fileRelationshipService,
-    activeNodeService
+    activeNodeService,
+    fileRelationshipService
     ) {
     return {
       restrict: 'AE',
