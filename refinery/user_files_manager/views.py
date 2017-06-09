@@ -25,6 +25,8 @@ class UserFiles(APIView):
             params,
             user_id=request.user.id)
         solr_response = search_solr(solr_params, 'data_set_manager')
+        # import pdb
+        # pdb.set_trace()
         solr_response_json = format_solr_response(solr_response)
 
         return Response(solr_response_json)

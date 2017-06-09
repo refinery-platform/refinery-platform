@@ -22,8 +22,7 @@ class UserFilesAPITests(APITestCase):
         self.factory = APIRequestFactory()
         self.view = UserFiles.as_view()
         self.url_root = '/api/v2/user/files/'
-        self.user = User.objects.get(pk=-1)
-        # TODO: Or User.objects.create_user('fake_user')?
+        self.user = User.objects.get(pk=-1)  # anonymous user
 
     def test_get(self):
         request = self.factory.get(self.url_root)
