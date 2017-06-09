@@ -10,13 +10,15 @@
 
     beforeEach(module('refineryApp'));
     beforeEach(module('refineryFileBrowser'));
-    beforeEach(inject(function ($rootScope,
-                                $controller,
-                                fileBrowserFactory,
-                                mockParamsFactory,
-                                selectedFilterService,
-                                toolSelectService,
-                                $window) {
+    beforeEach(inject(function (
+      $controller,
+      $rootScope,
+      $window,
+      fileBrowserFactory,
+      mockParamsFactory,
+      selectedFilterService,
+      toolSelectService
+    ) {
       scope = $rootScope.$new();
       ctrl = $controller('FileBrowserCtrl', {
         $scope: scope
