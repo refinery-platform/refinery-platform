@@ -815,11 +815,11 @@ def format_solr_response(solr_response):
         solr_response_json['error']['msg']
 
     # Reorganizes solr response into easier to digest objects.
-    order_facet_fields_joined = solr_response_json.get('responseHeader')\
-        .get('params').get('fl')
-    if order_facet_fields_joined:
+    try:
+        order_facet_fields_joined = (solr_response_json
+                                     ['responseHeader']['params']['fl'])
         order_facet_fields = order_facet_fields_joined.split(',')
-    else:
+    except KeyError:
         order_facet_fields = []
 
     if solr_response_json.get('facet_counts'):
