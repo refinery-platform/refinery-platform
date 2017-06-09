@@ -2,11 +2,11 @@ import logging
 import requests
 
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
+from guardian.utils import get_anonymous_user
 from rest_framework.test import (APIRequestFactory,
                                  APITestCase, force_authenticate)
 from urlparse import urljoin
 
-from core.models import User
 from views import UserFiles
 
 logger = logging.getLogger(__name__)
@@ -22,7 +22,7 @@ class UserFilesAPITests(APITestCase):
         self.factory = APIRequestFactory()
         self.view = UserFiles.as_view()
         self.url_root = '/api/v2/user/files/'
-        self.user = User.objects.get(pk=-1)  # anonymous user
+        self.user = get_anonymous_user()
 
     def test_get(self):
         request = self.factory.get(self.url_root)
