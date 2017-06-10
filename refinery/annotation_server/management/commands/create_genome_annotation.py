@@ -21,7 +21,7 @@ def extract_file(path, to_directory='.'):
     """Extracts file from *.tar.gz files
     http://code.activestate.com/recipes/576714-extract-a-compressed-file/
     """
-    logger.info("Extracting File %s to directory %s" % (path, to_directory))
+    logger.info("Extracting File %s to directory %s", path, to_directory)
 
     if path.endswith('.zip'):
         opener, mode = zipfile.ZipFile, 'r'
