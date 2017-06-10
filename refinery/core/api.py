@@ -443,7 +443,7 @@ class UserProfileResource(ModelResource):
             user = userprofile.user
         except (UserProfile.DoesNotExist,
                 UserProfile.MultipleObjectsReturned) as e:
-            logger.error("Could not fetch UserProfile: %s" % e)
+            logger.error("Could not fetch UserProfile: %s", e)
             return HttpNoContent
 
         # User not authenticated
@@ -454,7 +454,7 @@ class UserProfileResource(ModelResource):
             t = Tutorials.objects.get(user_profile=userprofile)
         except (Tutorials.DoesNotExist,
                 Tutorials.MultipleObjectsReturned) as e:
-            logger.error("Could not fetch Tutorial: %s" % e)
+            logger.error("Could not fetch Tutorial: %s", e)
             return HttpNoContent
 
         # Update User's Tutorials based on payload received
