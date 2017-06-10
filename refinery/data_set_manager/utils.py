@@ -811,8 +811,6 @@ def format_solr_response(solr_response):
         solr_response_json = json.loads(solr_response)
     except TypeError:
         return "Error loading json."
-    assert solr_response_json['responseHeader']['status'] == 0, \
-        solr_response_json['error']['msg']
 
     # Reorganizes solr response into easier to digest objects.
     try:
