@@ -37,12 +37,12 @@ def extract_file(path, to_directory='.'):
     cwd = os.getcwd()
     os.chdir(to_directory)
     try:
-        file = opener(path, mode)
-        logger.debug(file.getmembers())
+        compressed_file = opener(path, mode)
+        logger.debug(compressed_file.getmembers())
         try:
-            file.extractall()
+            compressed_file.extractall()
         finally:
-            file.close()
+            compressed_file.close()
     finally:
         os.chdir(cwd)
 
