@@ -15,6 +15,7 @@
     'uiGridConstants',
     '_',
     '$window',
+    'assayFiltersService',
     'fileBrowserFactory',
     'fileBrowserSettings',
     'filesLoadingService',
@@ -36,6 +37,7 @@
     uiGridConstants,
     _,
     $window,
+    assayFiltersService,
     fileBrowserFactory,
     fileBrowserSettings,
     filesLoadingService,
@@ -52,12 +54,12 @@
     var toolService = toolSelectService;
     var vm = this;
     vm.activeNodeRow = nodesService.activeNodeRow;
-    vm.analysisFilter = fileBrowserFactory.analysisFilter;
+    vm.analysisFilter = assayFiltersService.analysisFilter;
     // attribute list from api
     vm.assayAttributes = fileBrowserFactory.assayAttributes;
     vm.assayFilesTotal = fileBrowserFactory.assayFilesTotalItems.count;
     // objs used by ui to generate filters
-    vm.attributeFilter = fileBrowserFactory.attributeFilter;
+    vm.attributeFilter = assayFiltersService.attributeFilter;
     vm.attributeSelectionUpdate = attributeSelectionUpdate;
     // variable supporting ui-grid dynamic scrolling
     vm.cachePages = 2;
@@ -105,7 +107,7 @@
     vm.totalPages = 1;  // variable supporting ui-grid dynamic scrolling
     /** Used by ui to select/deselect, attributes have an object of filter fields
      * attributeInternalName: {fieldName: boolean, fieldName: boolean} */
-    vm.uiSelectedFields = {};
+    vm.uiSelectedFields = selectedFilterService.uiSelectedFields;
     vm.updateFiltersFromUrlQuery = updateFiltersFromUrlQuery;
 
     activate();
@@ -283,8 +285,8 @@
         }
         vm.totalPages = Math.floor(vm.assayFilesTotal / vm.rowCount);
         vm.assayAttributes = fileBrowserFactory.assayAttributes;
-        vm.attributeFilter = fileBrowserFactory.attributeFilter;
-        vm.analysisFilter = fileBrowserFactory.analysisFilter;
+        vm.attributeFilter = assayFiltersService.attributeFilter;
+        vm.analysisFilter = assayFiltersService.analysisFilter;
         promise.resolve();
       }, function (error) {
         $log.error(error);

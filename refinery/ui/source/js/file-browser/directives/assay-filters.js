@@ -9,6 +9,7 @@
     '$location',
     '$timeout',
     '$window',
+    'assayFiltersService',
     'selectedFilterService',
   ];
 
@@ -16,6 +17,7 @@
     $location,
     $timeout,
     $window,
+    assayFiltersService,
     selectedFilterService
   ) {
     return {
@@ -114,10 +116,10 @@
         // On the initial page load, consolidates filters obj & updates dom
         scope.generateFilterDropSelection = function () {
           var allFilters = {};
-          angular.copy(scope.FBCtrl.attributeFilter, allFilters);
+          angular.copy(assayFiltersService.attributeFilter, allFilters);
 
-          if (typeof scope.FBCtrl.analysisFilter.Analysis !== 'undefined') {
-            allFilters.Analysis = scope.FBCtrl.analysisFilter.Analysis;
+          if (typeof assayFiltersService.analysisFilter.Analysis !== 'undefined') {
+            allFilters.Analysis = assayFiltersService.analysisFilter.Analysis;
           }
           angular.forEach(allFilters, function (attributeObj, attributeName) {
             var allFields = [];
