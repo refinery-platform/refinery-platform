@@ -126,6 +126,7 @@
       selectedFilterService.updateSelectedFilters(
         vm.uiSelectedFields[internalName], internalName, field
       );
+      angular.copy(vm.uiSelectedFields, selectedFilterService.selectedFilterService);
       vm.filesParam.filter_attribute = {};
       angular.copy(selectedFilterService.attributeSelectedFields,
         vm.filesParam.filter_attribute
@@ -312,6 +313,7 @@
           );
         }
       });
+      angular.copy(vm.uiSelectedFields, selectedFilterService.selectedFilterService);
     }
 
     // Reset the data, selected rows, and scroll position in the grid
@@ -453,6 +455,7 @@
               selectedFilterService.updateUrlQuery(encodedAttribute, true);
             }
           });
+        angular.copy(vm.uiSelectedFields, selectedFilterService.selectedFilterService);
         // $timeout required to allow grid generation
         $timeout(function () {
           // for attribute filter directive, drop panels in query
@@ -489,6 +492,7 @@
           vm.filesParam.filter_attribute = {};
           vm.reset();
         }
+        angular.copy(vm.uiSelectedFields, selectedFilterService.selectedFilterService);
       }
     );
 

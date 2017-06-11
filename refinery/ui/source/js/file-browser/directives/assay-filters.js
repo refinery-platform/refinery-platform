@@ -94,10 +94,10 @@
               );
 
               // mark checkbox for selected item
-              if (!scope.FBCtrl.uiSelectedFields.hasOwnProperty(attributeInternalName)) {
-                scope.FBCtrl.uiSelectedFields[attributeInternalName] = {};
+              if (!selectedFilterService.uiSelectedFields.hasOwnProperty(attributeInternalName)) {
+                selectedFilterService.uiSelectedFields[attributeInternalName] = {};
               }
-              scope.FBCtrl.uiSelectedFields[attributeInternalName][allFields[ind]] = true;
+              selectedFilterService.uiSelectedFields[attributeInternalName][allFields[ind]] = true;
               if (attributeTitle.hasClass('fa-caret-right')) {
                 angular.element(
                 document.querySelector('#' + escapeAttributeName)).addClass('in');
