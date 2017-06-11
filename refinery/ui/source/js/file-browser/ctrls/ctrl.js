@@ -18,6 +18,7 @@
     'assayFiltersService',
     'fileBrowserFactory',
     'fileBrowserSettings',
+    'fileParamService',
     'filesLoadingService',
     'fileRelationshipService',
     'isOwnerService',
@@ -40,6 +41,7 @@
     assayFiltersService,
     fileBrowserFactory,
     fileBrowserSettings,
+    fileParamService,
     filesLoadingService,
     fileRelationshipService,
     isOwnerService,
@@ -48,9 +50,10 @@
     activeNodeService,
     toolSelectService
   ) {
+    var fileService = fileRelationshipService;
     var maxFileRequest = fileBrowserSettings.maxFileRequest;
     var nodesService = activeNodeService;
-    var fileService = fileRelationshipService;
+    var paramService = fileParamService;
     var toolService = toolSelectService;
     var vm = this;
     vm.activeNodeRow = nodesService.activeNodeRow;
@@ -60,18 +63,12 @@
     vm.assayFilesTotal = fileBrowserFactory.assayFilesTotalItems.count;
     // objs used by ui to generate filters
     vm.attributeFilter = assayFiltersService.attributeFilter;
-    vm.attributeSelectionUpdate = attributeSelectionUpdate;
     // variable supporting ui-grid dynamic scrolling
     vm.cachePages = 2;
     vm.checkDataLength = checkDataLength;
     vm.checkDataSetOwnership = checkDataSetOwnership;
     vm.collapsedToolPanel = toolService.isToolPanelCollapsed;
     vm.currentTypes = fileService.currentTypes;
-    // params for the assays api
-    vm.filesParam = {
-      uuid: $window.externalAssayUuid,
-      offset: 0
-    };
     vm.firstPage = 0;
     vm.getDataDown = getDataDown;
     vm.getDataUp = getDataUp;
@@ -99,16 +96,11 @@
     vm.openSelectionPopover = openSelectionPopover;
     vm.queryKeys = Object.keys($location.search()); // used for preset filters
     vm.refreshAssayFiles = refreshAssayFiles;
-    vm.refreshSelectedFieldFromQuery = refreshSelectedFieldFromQuery;
     vm.reset = reset;
     vm.rowCount = maxFileRequest;
     vm.sortChanged = sortChanged;
     vm.toggleToolPanel = toggleToolPanel;
     vm.totalPages = 1;  // variable supporting ui-grid dynamic scrolling
-    /** Used by ui to select/deselect, attributes have an object of filter fields
-     * attributeInternalName: {fieldName: boolean, fieldName: boolean} */
-    vm.uiSelectedFields = selectedFilterService.uiSelectedFields;
-    vm.updateFiltersFromUrlQuery = updateFiltersFromUrlQuery;
 
     activate();
     /*
@@ -121,21 +113,6 @@
       checkDataSetOwnership();
       // initialize the dataset and updates ui-grid selection, filters, and url
       initializeDataOnPageLoad();
-    }
-
-    // Used by ui, updates which attribute filters are selected and ui-grid data
-    function attributeSelectionUpdate (internalName, field) {
-      selectedFilterService.updateSelectedFilters(
-        vm.uiSelectedFields[internalName], internalName, field
-      );
-      angular.copy(vm.uiSelectedFields, selectedFilterService.selectedFilterService);
-      vm.filesParam.filter_attribute = {};
-      angular.copy(selectedFilterService.attributeSelectedFields,
-        vm.filesParam.filter_attribute
-      );
-
-      // resets grid
-      vm.reset();
     }
 
     // Helper method to keep track when data should be discard or added
@@ -178,11 +155,11 @@
     // Helper method for dynamic scrolling, grabs data when scrolling down
     function getDataDown () {
       vm.lastPage++;
-      vm.filesParam.offset = vm.lastPage * vm.rowCount;
-      vm.filesParam.limit = vm.rowCount;
+      paramService.fileParam.offset = vm.lastPage * vm.rowCount;
+      paramService.fileParam.limit = vm.rowCount;
       var promise = $q.defer();
       filesLoadingService.setIsAssayFilesLoading(true);
-      fileBrowserFactory.getAssayFiles(vm.filesParam)
+      fileBrowserFactory.getAssayFiles(paramService.fileParam)
         .then(function () {
           vm.gridApi.infiniteScroll.saveScrollPercentage();
           vm.gridOptions.data = fileBrowserFactory.assayFiles;
@@ -208,11 +185,11 @@
         vm.firstPage--;
       }
 
-      vm.filesParam.offset = vm.firstPage * vm.rowCount;
-      vm.filesParam.limit = vm.rowCount;
+      paramService.fileParam.offset = vm.firstPage * vm.rowCount;
+      paramService.fileParam.limit = vm.rowCount;
       var promise = $q.defer();
       filesLoadingService.setIsAssayFilesLoading(true);
-      fileBrowserFactory.getAssayFiles(vm.filesParam)
+      fileBrowserFactory.getAssayFiles(paramService.fileParam)
         .then(function () {
           vm.gridApi.infiniteScroll.saveScrollPercentage();
           vm.gridOptions.data = fileBrowserFactory.assayFiles;
@@ -268,11 +245,11 @@
      * ui-grid params.
      */
     function refreshAssayFiles () {
-      vm.filesParam.offset = vm.lastPage * vm.rowCount;
-      vm.filesParam.limit = vm.rowCount;
+      paramService.fileParam.offset = vm.lastPage * vm.rowCount;
+      paramService.fileParam.limit = vm.rowCount;
 
       var promise = $q.defer();
-      fileBrowserFactory.getAssayFiles(vm.filesParam).then(function () {
+      fileBrowserFactory.getAssayFiles(paramService.fileParam).then(function () {
         // create column names
         vm.gridOptions.columnDefs = fileBrowserFactory.createColumnDefs();
         // Grabbing 100 files per request, keeping max of 300 at a time
@@ -294,30 +271,6 @@
       return promise.promise;
     }
 
-    // helper method, upon refresh/load add fields to select data objs from query
-    function refreshSelectedFieldFromQuery (_attributeObj) {
-      // stringify/encode attributeInternalName:fieldName for url query comparison
-      angular.forEach(_attributeObj.facetObj, function (fieldObj) {
-        var encodedField = selectedFilterService.stringifyAndEncodeAttributeObj(
-          _attributeObj.internal_name,
-          fieldObj.name
-        );
-
-        if (vm.queryKeys.indexOf(encodedField) > -1) {
-          if (!vm.uiSelectedFields.hasOwnProperty(_attributeObj.internal_name)) {
-            vm.uiSelectedFields[_attributeObj.internal_name] = {};
-          }
-          vm.uiSelectedFields[_attributeObj.internal_name][fieldObj.name] = true;
-          selectedFilterService.updateSelectedFilters(
-            vm.uiSelectedFields[_attributeObj.internal_name],
-            _attributeObj.internal_name,
-            fieldObj.name
-          );
-        }
-      });
-      angular.copy(vm.uiSelectedFields, selectedFilterService.selectedFilterService);
-    }
-
     // Reset the data, selected rows, and scroll position in the grid
     function reset () {
       vm.firstPage = 0;
@@ -329,7 +282,7 @@
       if (typeof vm.gridApi !== 'undefined') {
         vm.gridApi.infiniteScroll.setScrollDirections(false, false);
 
-        vm.refreshAssayFiles(vm.filesParam).then(function () {
+        vm.refreshAssayFiles(paramService.fileParam).then(function () {
           $timeout(function () {
             // timeout needed allows digest cycle to complete,and grid to ingest the data
             vm.gridApi.infiniteScroll.resetScroll(vm.firstPage > 0, vm.lastPage < vm.totalPages);
@@ -352,11 +305,11 @@
         typeof sortColumns[0].sort !== 'undefined') {
         switch (sortColumns[0].sort.direction) {
           case uiGridConstants.ASC:
-            vm.filesParam.sort = sortColumns[0].field + ' asc';
+            paramService.fileParam.sort = sortColumns[0].field + ' asc';
             vm.reset();
             break;
           case uiGridConstants.DESC:
-            vm.filesParam.sort = sortColumns[0].field + ' desc';
+            paramService.fileParam.sort = sortColumns[0].field + ' desc';
             vm.reset();
             break;
           default:
@@ -395,26 +348,9 @@
       }
     }
 
-    // checks url for params to update the filter
-    function updateFiltersFromUrlQuery () {
-      var allFilters = {};
-      // Merge attribute and analysis filter data obj
-      angular.copy(vm.attributeFilter, allFilters);
-      if (typeof vm.analysisFilter.Analysis !== 'undefined') {
-        allFilters.Analysis = vm.analysisFilter.Analysis;
-      }
-
-      angular.forEach(allFilters, function (attributeObj) {
-        vm.refreshSelectedFieldFromQuery(attributeObj);
-      });
-      vm.filesParam.filter_attribute = {};
-      angular.copy(selectedFilterService.attributeSelectedFields,
-        vm.filesParam.filter_attribute);
-    }
-
     // Helper method which check for any data updates during soft loads (tabbing)
     function checkAndUpdateGridData () {
-      fileBrowserFactory.getAssayFiles(vm.filesParam)
+      fileBrowserFactory.getAssayFiles(paramService.fileParam)
         .then(function () {
           if (vm.assayFilesTotal !== fileBrowserFactory.assayFilesTotalItems.count) {
             if (vm.assayFilesTotal < maxFileRequest) {
@@ -432,42 +368,9 @@
     function initializeDataOnPageLoad () {
       // Hard reset / url with query requires waiting for api response
       if (fileBrowserFactory.assayFiles.length === 0) {
-        vm.refreshAssayFiles().then(function () {
-          if (Object.keys($location.search()).length > 0) {
-            vm.updateFiltersFromUrlQuery();
-            // drop panels in ui from query
-            $scope.$broadcast('rf/attributeFilter-ready');
-            vm.reset();
-          }
-        });
+        vm.refreshAssayFiles();
         // Tabbing does not require api response wait and update query in URL
       } else {
-        // updates view model's selected attribute filters
-        angular.forEach(
-          selectedFilterService.attributeSelectedFields,
-          function (fieldArr, attributeInternalName) {
-            for (var i = 0; i < fieldArr.length; i++) {
-              if (_.isEmpty(vm.uiSelectedFields)) {
-                vm.uiSelectedFields[attributeInternalName] = {};
-              }
-              vm.uiSelectedFields[attributeInternalName][fieldArr[i]] = true;
-              // update url with selected fields(filters)
-              var encodedAttribute = selectedFilterService
-                .stringifyAndEncodeAttributeObj(attributeInternalName, fieldArr[i]);
-              selectedFilterService.updateUrlQuery(encodedAttribute, true);
-            }
-          });
-        angular.copy(vm.uiSelectedFields, selectedFilterService.selectedFilterService);
-        // $timeout required to allow grid generation
-        $timeout(function () {
-          // for attribute filter directive, drop panels in query
-          $scope.$broadcast('rf/attributeFilter-ready');
-          // update selected rows in ui and set selected nodes count
-        }, 0);
-        // updates params object
-        if (Object.keys($location.search()).length > 0) {
-          vm.updateFiltersFromUrlQuery();
-        }
         checkAndUpdateGridData();
       }
     }
@@ -477,26 +380,6 @@
      * Watchers
      * -----------------------------------------------------------------------------
      */
-    // Reset grid flag if set to true, grid, params, filters, and nodes resets
-    $scope.$watch(
-      function () {
-        return resetGridService.resetGridFlag;
-      },
-      function () {
-        if (resetGridService.resetGridFlag) {
-          // Have to set selected Fields in control due to service scope
-          angular.forEach(vm.uiSelectedFields, function (fieldsObj, attributeInternalName) {
-            angular.forEach(fieldsObj, function (value, fieldName) {
-              vm.uiSelectedFields[attributeInternalName][fieldName] = false;
-            });
-            selectedFilterService.resetAttributeFilter(fieldsObj);
-          });
-          vm.filesParam.filter_attribute = {};
-          vm.reset();
-        }
-        angular.copy(vm.uiSelectedFields, selectedFilterService.selectedFilterService);
-      }
-    );
 
     /**
      *  Refresh grid flag if set to true, grid, but keep params, filters, & nodes

@@ -25,6 +25,8 @@
       templateUrl: function () {
         return $window.getStaticUrl('partials/file-browser/partials/assay-filters.html');
       },
+      controller: 'AssayFiltersCtrl',
+      controllerAs: 'ASCtrl',
       link: function (scope) {
         // ng-click event for attribute filter panels
         // Event is custom because when a filter is selected, it continues to

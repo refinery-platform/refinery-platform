@@ -3,86 +3,180 @@
 
   angular
     .module('refineryFileBrowser')
-    .controller('AssayFilterCtrl', AssayFilterCtrl);
+    .controller('AssayFiltersCtrl', AssayFiltersCtrl);
 
-  AssayFilterCtrl.$inject = [
-    '$log',
-    '$q',
+  AssayFiltersCtrl.$inject = [
+    '$location',
     '$scope',
-    '$uibModalInstance',
-    '$window',
-    'fileBrowserFactory',
+    '$timeout',
+    '_',
+    'assayFiltersService',
+    'fileParamService',
+    'resetGridService',
     'selectedFilterService'
   ];
 
-  function AssayFilterCtrl (
-    $log,
-    $q,
+  function AssayFiltersCtrl (
+    $location,
     $scope,
-    $uibModalInstance,
-    $window,
-    fileBrowserFactory,
+    $timeout,
+    _,
+    assayFiltersService,
+    fileParamService,
+    resetGridService,
     selectedFilterService
   ) {
     var vm = this;
-    vm.assayAttributeOrder = [];
-    vm.close = close;
-    vm.isAttributeSelected = isAttributeSelected;
-    vm.refreshAssayAttributes = refreshAssayAttributes;
-    vm.updateAssayAttributes = updateAssayAttributes;
-    vm.updateAttributeRank = updateAttributeRank;
+    vm.attributeFilter = assayFiltersService.attributeFilter;
+    vm.analysisFilter = assayFiltersService.analysisFilter;
+    vm.attributeSelectionUpdate = attributeSelectionUpdate;
+    vm.refreshSelectedFieldFromQuery = refreshSelectedFieldFromQuery;
+    /** Used by ui to select/deselect, attributes have an object of filter fields
+     * attributeInternalName: {fieldName: boolean, fieldName: boolean} */
+    vm.uiSelectedFields = selectedFilterService.uiSelectedFields;
+    vm.updateFiltersFromUrlQuery = updateFiltersFromUrlQuery;
 
     activate();
-    /*
-     * -----------------------------------------------------------------------------
-     * Methods
-     * -----------------------------------------------------------------------------
-     */
+   /*
+   * ---------------------------------------------------------
+   * Methods
+   * ---------------------------------------------------------
+   */
     function activate () {
-      refreshAssayAttributes();
-    }
-
-    // modal close button
-    function close () {
-      $uibModalInstance.close('close');
-    }
-
-    function isAttributeSelected (internalName) {
-      if (selectedFilterService.attributeSelectedFields.hasOwnProperty(internalName)) {
-        return true;
+      if (assayFiltersService.attributeFilter.length === 0) {
+         // When the filters are updated (ex when a new analysis runs)
+        $scope.$watchCollection(
+          function () {
+            return assayFiltersService.attributeFilter;
+          },
+          function () {
+            if (Object.keys($location.search()).length > 0) {
+              assayFiltersService.updateFiltersFromUrlQuery();
+              // drop panels in ui from query
+              $scope.$broadcast('rf/attributeFilter-ready');
+              resetGridService.setResetGridFlag(true);
+            } else {
+              // updates view model's selected attribute filters
+              angular.forEach(
+                selectedFilterService.attributeSelectedFields,
+                function (fieldArr, attributeInternalName) {
+                  for (var i = 0; i < fieldArr.length; i++) {
+                    if (_.isEmpty(selectedFilterService.uiSelectedFields)) {
+                      selectedFilterService.uiSelectedFields[attributeInternalName] = {};
+                    }
+                    selectedFilterService
+                      .uiSelectedFields[attributeInternalName][fieldArr[i]] = true;
+                    // update url with selected fields(filters)
+                    var encodedAttribute = selectedFilterService
+                      .stringifyAndEncodeAttributeObj(attributeInternalName, fieldArr[i]);
+                    selectedFilterService.updateUrlQuery(encodedAttribute, true);
+                  }
+                });
+              // $timeout required to allow grid generation
+              $timeout(function () {
+                // for attribute filter directive, drop panels in query
+                $scope.$broadcast('rf/attributeFilter-ready');
+                // update selected rows in ui and set selected nodes count
+              }, 0);
+              // updates params object
+              if (Object.keys($location.search()).length > 0) {
+                assayFiltersService.updateFiltersFromUrlQuery();
+              }
+            }
+          });
       }
-      return false;
     }
 
-    // Refresh attribute lists when modal opens
-    function refreshAssayAttributes () {
-      var assayUuid = $window.externalAssayUuid;
-      fileBrowserFactory.getAssayAttributeOrder(assayUuid).then(function () {
-        vm.assayAttributeOrder = fileBrowserFactory.assayAttributeOrder;
-      }, function (error) {
-        $log.error(error);
-      });
+    // Used by ui, updates which attribute filters are selected and ui-grid data
+    function attributeSelectionUpdate (internalName, field) {
+      selectedFilterService.updateSelectedFilters(
+        vm.uiSelectedFields[internalName], internalName, field
+      );
+      angular.copy(vm.uiSelectedFields, selectedFilterService.selectedFilterService);
+      fileParamService.fileParam.filter_attribute = {};
+      angular.copy(selectedFilterService.attributeSelectedFields,
+        fileParamService.fileParam.filter_attribute
+      );
+      // resets grid
+      resetGridService.setRefreshGridFlag(true);
     }
 
-    // Update ranks and attributes for owners
-    function updateAssayAttributes (attributeParam) {
-      fileBrowserFactory.postAssayAttributeOrder(attributeParam).then(function () {
-      });
-    }
+     // helper method, upon refresh/load add fields to select data objs from query
+    function refreshSelectedFieldFromQuery (_attributeObj) {
+      // stringify/encode attributeInternalName:fieldName for url query comparison
+      angular.forEach(_attributeObj.facetObj, function (fieldObj) {
+        var encodedField = selectedFilterService.stringifyAndEncodeAttributeObj(
+          _attributeObj.internal_name,
+          fieldObj.name
+        );
 
-    // update rank of item moved
-    function updateAttributeRank (attributeObj, index) {
-      // when item is moved, it's duplication is removed
-      vm.assayAttributeOrder.splice(index, 1);
-
-      for (var i = 0; i < vm.assayAttributeOrder.length; i++) {
-        // locally update all ranks
-        vm.assayAttributeOrder[i].rank = i + 1;
-        if (vm.assayAttributeOrder[i].solr_field === attributeObj.solr_field) {
-          // post rank update for attribute moved
-          vm.updateAssayAttributes(vm.assayAttributeOrder[i]);
+        if (vm.queryKeys.indexOf(encodedField) > -1) {
+          if (!vm.uiSelectedFields.hasOwnProperty(_attributeObj.internal_name)) {
+            vm.uiSelectedFields[_attributeObj.internal_name] = {};
+          }
+          vm.uiSelectedFields[_attributeObj.internal_name][fieldObj.name] = true;
+          selectedFilterService.updateSelectedFilters(
+            vm.uiSelectedFields[_attributeObj.internal_name],
+            _attributeObj.internal_name,
+            fieldObj.name
+          );
         }
-      }
+      });
+      angular.copy(vm.uiSelectedFields, selectedFilterService.selectedFilterService);
     }
+
+    // checks url for params to update the filter
+    function updateFiltersFromUrlQuery () {
+      var allFilters = {};
+      // Merge attribute and analysis filter data obj
+      angular.copy(vm.attributeFilter, allFilters);
+      if (typeof vm.analysisFilter.Analysis !== 'undefined') {
+        allFilters.Analysis = vm.analysisFilter.Analysis;
+      }
+
+      angular.forEach(allFilters, function (attributeObj) {
+        vm.refreshSelectedFieldFromQuery(attributeObj);
+      });
+      fileParamService.fileParam.filter_attribute = {};
+      angular.copy(selectedFilterService.attributeSelectedFields,
+        fileParamService.fileParam.filter_attribute);
+    }
+
+   /*
+   * ---------------------------------------------------------
+   * Watchers
+   * ---------------------------------------------------------
+   */
+    // When the filters are updated (ex when a new analysis runs)
+    $scope.$watchCollection(
+      function () {
+        return assayFiltersService.analysisFilter;
+      },
+      function () {
+        vm.attributeFilter = assayFiltersService.attributeFilter;
+        vm.analysisFilter = assayFiltersService.analysisFilter;
+      }
+    );
+
+     // Reset grid flag if set to true, grid, params, filters, and nodes resets
+    $scope.$watch(
+      function () {
+        return resetGridService.resetGridFlag;
+      },
+      function () {
+        if (resetGridService.resetGridFlag) {
+          // Have to set selected Fields in control due to service scope
+          angular.forEach(vm.uiSelectedFields, function (fieldsObj, attributeInternalName) {
+            angular.forEach(fieldsObj, function (value, fieldName) {
+              vm.uiSelectedFields[attributeInternalName][fieldName] = false;
+            });
+            selectedFilterService.resetAttributeFilter(fieldsObj);
+          });
+          fileParamService.fileParam.filter_attribute = {};
+          resetGridService.setResetGridFlag(true);
+        }
+        angular.copy(vm.uiSelectedFields, selectedFilterService.selectedFilterService);
+      }
+    );
   }
 })();
