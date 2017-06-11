@@ -30,6 +30,7 @@
     vm.attributeFilter = assayFiltersService.attributeFilter;
     vm.analysisFilter = assayFiltersService.analysisFilter;
     vm.attributeSelectionUpdate = attributeSelectionUpdate;
+    vm.queryKeys = Object.keys($location.search()); // used for preset filters
     vm.refreshSelectedFieldFromQuery = refreshSelectedFieldFromQuery;
     /** Used by ui to select/deselect, attributes have an object of filter fields
      * attributeInternalName: {fieldName: boolean, fieldName: boolean} */
@@ -50,40 +51,41 @@
             return assayFiltersService.attributeFilter;
           },
           function () {
+            console.log('in the watcher attribute Filter');
             if (Object.keys($location.search()).length > 0) {
-              assayFiltersService.updateFiltersFromUrlQuery();
+              updateFiltersFromUrlQuery();
               // drop panels in ui from query
               $scope.$broadcast('rf/attributeFilter-ready');
               resetGridService.setResetGridFlag(true);
-            } else {
-              // updates view model's selected attribute filters
-              angular.forEach(
-                selectedFilterService.attributeSelectedFields,
-                function (fieldArr, attributeInternalName) {
-                  for (var i = 0; i < fieldArr.length; i++) {
-                    if (_.isEmpty(selectedFilterService.uiSelectedFields)) {
-                      selectedFilterService.uiSelectedFields[attributeInternalName] = {};
-                    }
-                    selectedFilterService
-                      .uiSelectedFields[attributeInternalName][fieldArr[i]] = true;
-                    // update url with selected fields(filters)
-                    var encodedAttribute = selectedFilterService
-                      .stringifyAndEncodeAttributeObj(attributeInternalName, fieldArr[i]);
-                    selectedFilterService.updateUrlQuery(encodedAttribute, true);
-                  }
-                });
-              // $timeout required to allow grid generation
-              $timeout(function () {
-                // for attribute filter directive, drop panels in query
-                $scope.$broadcast('rf/attributeFilter-ready');
-                // update selected rows in ui and set selected nodes count
-              }, 0);
-              // updates params object
-              if (Object.keys($location.search()).length > 0) {
-                assayFiltersService.updateFiltersFromUrlQuery();
-              }
             }
           });
+      } else {
+        // updates view model's selected attribute filters
+        angular.forEach(
+          selectedFilterService.attributeSelectedFields,
+          function (fieldArr, attributeInternalName) {
+            for (var i = 0; i < fieldArr.length; i++) {
+              if (_.isEmpty(selectedFilterService.uiSelectedFields)) {
+                selectedFilterService.uiSelectedFields[attributeInternalName] = {};
+              }
+              selectedFilterService
+                .uiSelectedFields[attributeInternalName][fieldArr[i]] = true;
+              // update url with selected fields(filters)
+              var encodedAttribute = selectedFilterService
+                .stringifyAndEncodeAttributeObj(attributeInternalName, fieldArr[i]);
+              selectedFilterService.updateUrlQuery(encodedAttribute, true);
+            }
+          });
+        // $timeout required to allow grid generation
+        $timeout(function () {
+          // for attribute filter directive, drop panels in query
+          $scope.$broadcast('rf/attributeFilter-ready');
+          // update selected rows in ui and set selected nodes count
+        }, 0);
+        // updates params object
+        if (Object.keys($location.search()).length > 0) {
+          updateFiltersFromUrlQuery();
+        }
       }
     }
 

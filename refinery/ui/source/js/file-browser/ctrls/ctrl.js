@@ -94,7 +94,6 @@
     vm.lastPage = 0;  // variable supporting ui-grid dynamic scrolling
     vm.nodeSelectCollection = fileService.nodeSelectCollection;
     vm.openSelectionPopover = openSelectionPopover;
-    vm.queryKeys = Object.keys($location.search()); // used for preset filters
     vm.refreshAssayFiles = refreshAssayFiles;
     vm.reset = reset;
     vm.rowCount = maxFileRequest;
