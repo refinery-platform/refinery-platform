@@ -23,8 +23,6 @@
       expect(factory.assayFiles).toEqual([]);
       expect(factory.assayAttributes).toEqual([]);
       expect(factory.assayAttributeOrder).toEqual([]);
-      expect(factory.attributeFilter).toEqual({});
-      expect(factory.analysisFilter).toEqual({});
       expect(factory.assayFilesTotalItems).toEqual({});
       expect(factory.customColumnNames).toEqual([]);
     });
