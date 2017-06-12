@@ -11,7 +11,6 @@ class refinery::selenium {
     source     => "https://github.com/mozilla/geckodriver/releases/download/$geckodriver_version/$filename",
     extract       => true,
     extract_path  => '/opt/',
-    creates       => $install_path,
     user        => 'root',
     group       => 'root',
   }
