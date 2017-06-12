@@ -11,6 +11,7 @@
     '$timeout',
     '_',
     'assayFiltersService',
+    'filesLoadingService',
     'fileParamService',
     'resetGridService',
     'selectedFilterService'
@@ -22,6 +23,7 @@
     $timeout,
     _,
     assayFiltersService,
+    filesLoadingService,
     fileParamService,
     resetGridService,
     selectedFilterService
@@ -44,23 +46,29 @@
    * ---------------------------------------------------------
    */
     function activate () {
-      if (assayFiltersService.attributeFilter.length === 0) {
-         // When the filters are updated (ex when a new analysis runs)
-        $scope.$watchCollection(
+      if (_.isEmpty(assayFiltersService.attributeFilter)) {
+        console.log('in the activate');
+            // When the filters are updated (ex when a new analysis runs)
+
+        var watchOnce = $scope.$watchCollection(
           function () {
             return assayFiltersService.attributeFilter;
           },
           function () {
-            console.log('in the watcher attribute Filter');
-            if (Object.keys($location.search()).length > 0) {
+            if (Object.keys($location.search()).length > 0 &&
+            !_.isEmpty(assayFiltersService.attributeFilter)) {
               updateFiltersFromUrlQuery();
-              // drop panels in ui from query
+                // drop panels in ui from query
               $scope.$broadcast('rf/attributeFilter-ready');
-              resetGridService.setResetGridFlag(true);
+              resetGridService.setRefreshGridFlag(true);
+              watchOnce();
             }
-          });
+            // unbind watcher
+          }
+        );
       } else {
         // updates view model's selected attribute filters
+        console.log('in the else');
         angular.forEach(
           selectedFilterService.attributeSelectedFields,
           function (fieldArr, attributeInternalName) {
@@ -124,19 +132,27 @@
           );
         }
       });
-      angular.copy(vm.uiSelectedFields, selectedFilterService.selectedFilterService);
+    //  angular.copy(vm.uiSelectedFields,
+      // selectedFilterService.uiSelectedFields);
     }
 
     // checks url for params to update the filter
     function updateFiltersFromUrlQuery () {
       var allFilters = {};
+      console.log('in the update filters' + vm.attributeFilter);
+      console.log(assayFiltersService.attributeFilter);
       // Merge attribute and analysis filter data obj
       angular.copy(vm.attributeFilter, allFilters);
+      console.log('issues with attribute filters?');
+      console.log(allFilters);
       if (typeof vm.analysisFilter.Analysis !== 'undefined') {
-        allFilters.Analysis = vm.analysisFilter.Analysis;
+        angular.copy(vm.analysisFilter, allFilters.Analysis);
       }
+      console.log('here are all filters');
 
+      console.log(allFilters);
       angular.forEach(allFilters, function (attributeObj) {
+        console.log('in the for each');
         vm.refreshSelectedFieldFromQuery(attributeObj);
       });
       fileParamService.fileParam.filter_attribute = {};
@@ -155,8 +171,8 @@
         return assayFiltersService.analysisFilter;
       },
       function () {
-        vm.attributeFilter = assayFiltersService.attributeFilter;
         vm.analysisFilter = assayFiltersService.analysisFilter;
+        vm.attributeFilter = assayFiltersService.attributeFilter;
       }
     );
 
