@@ -27,7 +27,7 @@
       },
       controller: 'AssayFiltersCtrl',
       controllerAs: 'ASCtrl',
-      link: function (scope) {
+      link: function (scope, element, attrs, ctrl) {
         // ng-click event for attribute filter panels
         // Event is custom because when a filter is selected, it continues to
         // show even though the panel is collapsed
@@ -138,8 +138,13 @@
         };
 
         // Drop down windows when they are in the URL query
-        scope.$on('rf/attributeFilter-ready', function () {
-          scope.generateFilterDropSelection();
+        scope.$watch(function () {
+          return ctrl.updateFilterDOM;
+        }, function () {
+          if (ctrl.updateFilterDOM) {
+            scope.generateFilterDropSelection();
+            ctrl.updateFilterDOM = false;
+          }
         });
       }
     };

@@ -38,6 +38,7 @@
      * attributeInternalName: {fieldName: boolean, fieldName: boolean} */
     vm.uiSelectedFields = selectedFilterService.uiSelectedFields;
     vm.updateFiltersFromUrlQuery = updateFiltersFromUrlQuery;
+    vm.updateFilterDOM = false;
 
     activate();
    /*
@@ -47,9 +48,6 @@
    */
     function activate () {
       if (_.isEmpty(assayFiltersService.attributeFilter)) {
-        console.log('in the activate');
-            // When the filters are updated (ex when a new analysis runs)
-
         var watchOnce = $scope.$watchCollection(
           function () {
             return assayFiltersService.attributeFilter;
@@ -59,7 +57,7 @@
             !_.isEmpty(assayFiltersService.attributeFilter)) {
               updateFiltersFromUrlQuery();
                 // drop panels in ui from query
-              $scope.$broadcast('rf/attributeFilter-ready');
+              vm.updateFilterDOM = true;
               resetGridService.setRefreshGridFlag(true);
               watchOnce();
             }
@@ -68,7 +66,6 @@
         );
       } else {
         // updates view model's selected attribute filters
-        console.log('in the else');
         angular.forEach(
           selectedFilterService.attributeSelectedFields,
           function (fieldArr, attributeInternalName) {
@@ -87,7 +84,7 @@
         // $timeout required to allow grid generation
         $timeout(function () {
           // for attribute filter directive, drop panels in query
-          $scope.$broadcast('rf/attributeFilter-ready');
+          vm.updateFilterDOM = true;
           // update selected rows in ui and set selected nodes count
         }, 0);
         // updates params object
