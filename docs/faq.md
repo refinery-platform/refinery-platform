@@ -1,6 +1,7 @@
 ## Metadata
 
 __Should I provide a tabular or ISA-Tab metadata file?__
+  ISA-Tab is the preferred format for Refinery as it allows tracking of relationships between raw and derived data files. Refinery also supports tabular metadata files, but file relationship information is not supported in this case.
 
 __How do I create an ISA-Tab metadata file?__
   Download the latest version of [ISAcreator][isa-creator-releases] and follow along with the [video tutorial][isa-creator-video] to create an ISA Tab archive.
