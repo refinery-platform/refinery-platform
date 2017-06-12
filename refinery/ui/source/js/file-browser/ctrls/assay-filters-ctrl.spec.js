@@ -30,6 +30,11 @@
     it('Data & UI displays variables should exist for views', function () {
       expect(ctrl.attributeFilter).toEqual({});
       expect(ctrl.analysisFilter).toEqual({});
+      expect(ctrl.updateFilterDOM).toEqual(false);
+    });
+
+    it('QueryKeys to be set should exist for views', function () {
+      expect(ctrl.queryKeys).toEqual([]);
     });
 
     it('Test updateFiltersFromUrlQuery', function () {

@@ -134,8 +134,6 @@
     // checks url for params to update the filter
     function updateFiltersFromUrlQuery () {
       var allFilters = {};
-      console.log('in the update filters' + vm.attributeFilter);
-      console.log(assayFiltersService.attributeFilter);
       // Merge attribute and analysis filter data obj
       angular.copy(vm.attributeFilter, allFilters);
       if (typeof vm.analysisFilter.Analysis !== 'undefined') {
