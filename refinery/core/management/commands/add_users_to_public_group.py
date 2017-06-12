@@ -23,4 +23,5 @@ def add_users_to_public_group():
     model's save() method.
     """
 
-    [user.save() for user in User.objects.all()]
+    for user in User.objects.all():
+        user.save()
