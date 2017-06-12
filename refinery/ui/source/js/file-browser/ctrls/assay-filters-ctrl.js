@@ -83,10 +83,14 @@
         // Else is for soft loads (example tabbing)
         // updates view model's selected attribute filters
         angular.forEach(
-          selectedFilterService.uiSelectedFields,
+          selectedFilterService.attributeSelectedFields,
           function (fieldArr, attributeInternalName) {
             for (var i = 0; i < fieldArr.length; i++) {
-              vm.uiSelectedFields = selectedFilterService.uiSelectedFields;
+              if (_.isEmpty(vm.uiSelectedFields) ||
+                !vm.uiSelectedFields.hasOwnProperty(attributeInternalName)) {
+                vm.uiSelectedFields[attributeInternalName] = {};
+              }
+              vm.uiSelectedFields[attributeInternalName][fieldArr[i]] = true;
               // update url with selected fields(filters)
               var encodedAttribute = selectedFilterService
                 .stringifyAndEncodeAttributeObj(attributeInternalName, fieldArr[i]);
@@ -113,7 +117,7 @@
       selectedFilterService.updateSelectedFilters(
         vm.uiSelectedFields[internalName], internalName, field
       );
-      fileParamService.setParamFilterAttribute(selectedFilterService.uiSelectedFields);
+      fileParamService.setParamFilterAttribute(selectedFilterService.attributeSelectedFields);
       // refresh grid
       resetGridService.setRefreshGridFlag(true);
     }
@@ -163,9 +167,9 @@
       angular.forEach(allFilters, function (attributeObj) {
         vm.refreshSelectedFieldFromQuery(attributeObj);
       });
-      fileParamService.fileParam.filter_attribute = {};
-      angular.copy(selectedFilterService.uiSelectedFields,
-        fileParamService.fileParam.filter_attribute);
+      fileParamService.setParamFilterAttribute(
+        selectedFilterService.attributeSelectedFields
+      );
     }
 
    /*
