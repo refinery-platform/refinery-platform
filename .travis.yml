@@ -2,9 +2,9 @@ sudo: required
 language: python
 cache: pip
 addons:
-  firefox: "53.0.3"
   apt:
     packages:
+      - firefox
       - xvfb
 
 python:
