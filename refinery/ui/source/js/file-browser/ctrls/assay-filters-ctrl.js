@@ -40,7 +40,7 @@
     vm.attributeFilter = assayFiltersService.attributeFilter;
     vm.analysisFilter = assayFiltersService.analysisFilter;
     vm.attributeSelectionUpdate = attributeSelectionUpdate;
-    vm.queryKeys = Object.keys($location.search()); // used for preset filters
+    vm.queryKeys = Object.keys($location.search()); // used for pre-set filters in url query
     vm.refreshSelectedFieldFromQuery = refreshSelectedFieldFromQuery;
     /** Used by ui to select/deselect, attributes have an object of filter fields
      * attributeInternalName: {fieldName: boolean, fieldName: boolean} */

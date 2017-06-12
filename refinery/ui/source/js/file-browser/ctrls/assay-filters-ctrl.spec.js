@@ -31,6 +31,7 @@
       expect(ctrl.attributeFilter).toEqual({});
       expect(ctrl.analysisFilter).toEqual({});
       expect(ctrl.updateFilterDOM).toEqual(false);
+      expect(ctrl.uiSelectedFields).toEqual({});
     });
 
     it('QueryKeys to be set should exist for views', function () {

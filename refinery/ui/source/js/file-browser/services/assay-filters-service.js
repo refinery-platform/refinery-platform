@@ -1,3 +1,10 @@
+/**
+ * Assay Filters Service
+ * @namespace assayFiltersService
+ * @desc Service variables need to be set by api solr response in order to
+ * generate the ui attribute/analysis filter for UI Grid table
+ * @memberOf refineryFileBrowser
+ */
 (function () {
   'use strict';
 
@@ -5,6 +12,8 @@
     .factory('assayFiltersService', assayFiltersService);
 
   function assayFiltersService () {
+    // ex of the filter data structure: {Author: {
+    // facetObj: {author1: 4}, internal_name: Author_Characteristics_6_3_s}
     var analysisFilter = {};
     var attributeFilter = {};
 
@@ -22,9 +31,16 @@
      * ----------------------
      */
 
-    /** Configures the attribute and analysis filter data by adding the display
+    /**
+     * @name generateFilters
+     * @desc  Configures the attribute and analysis filter data by adding the display
      * name from the assay files attributes display_name. The attributes returns
-     * all fields, while the counts will return only the faceted fields. **/
+     * all fields, while the counts will return only the faceted fields.
+     * @memberOf refineryFileBrowser.AssayFiltersCtrl
+     * @param {obj} attributes - attribute obj from solr response
+     * @param {obj} facetCounts - facetCount obj from solr response which
+     * maintains # of fields count
+    **/
     function generateFilters (attributes, facetCounts) {
       // resets the attribute filters, which can be changed by owners
       var outAttributeFilter = {};
