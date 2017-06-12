@@ -649,6 +649,34 @@ def make_template(config, config_yaml):
         )
     )
 
+    cft.resources.logging_policy = core.Resource(
+        'LogBucketPolicy', 'AWS::S3::BucketPolicy',
+        core.Properties({
+            'Bucket': config['S3_LOG_BUCKET'],
+            'PolicyDocument': {
+                'Statement': [{
+                    "Sid": "Stmt1497274464902",
+                    "Action": [
+                      "s3:PutObject"
+                    ],
+                    "Effect": "Allow",
+                    "Resource":
+                    functions.join(
+                        "",
+                        "arn:aws:s3:::",
+                        config['S3_LOG_BUCKET'],
+                        "/AWSLogs/",
+                        functions.ref("AWS::AccountId"), "/*"),
+                    "Principal": {
+                      "AWS": [
+                        "127311923021"
+                      ]
+                    }
+                }]
+            }
+        })
+    )
+
     return cft
 
 
