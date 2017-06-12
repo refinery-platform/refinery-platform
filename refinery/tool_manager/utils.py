@@ -365,7 +365,12 @@ def validate_tool_launch_configuration(tool_launch_config):
     Validate incoming Tool Launch Configurations
     :param tool_launch_config: json data containing a ToolLaunchConfiguration
     """
-    with open("tool_manager/schemas/ToolLaunchConfig.json") as f:
+    with open(
+        os.path.join(
+            settings.BASE_DIR,
+            "refinery/tool_manager/schemas/ToolLaunchConfig.json"
+        )
+    ) as f:
         schema = json.loads(f.read())
     try:
         validate(tool_launch_config, schema, resolver=resolver)
