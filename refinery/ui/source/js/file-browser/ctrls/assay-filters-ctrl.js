@@ -44,7 +44,7 @@
     vm.refreshSelectedFieldFromQuery = refreshSelectedFieldFromQuery;
     /** Used by ui to select/deselect, attributes have an object of filter fields
      * attributeInternalName: {fieldName: boolean, fieldName: boolean} */
-    vm.uiSelectedFields = selectedFilterService.uiSelectedFields;
+    vm.uiSelectedFields = {};
     vm.updateFiltersFromUrlQuery = updateFiltersFromUrlQuery;
     vm.updateFilterDOM = false;
 
@@ -55,46 +55,47 @@
    * ---------------------------------------------------------
    */
     function activate () {
+      // Only on a new page load/new data set do we expect the attribute filters
+      // to be empty
       if (_.isEmpty(assayFiltersService.attributeFilter)) {
+        // Requires waiting for the api response which should update the
+        // service's attribute filter and unbind.
         var watchOnce = $scope.$watchCollection(
           function () {
             return assayFiltersService.attributeFilter;
           },
           function () {
-            if (Object.keys($location.search()).length > 0 &&
-            !_.isEmpty(assayFiltersService.attributeFilter)) {
+            // no need to update filters if there are no url queries
+            if (Object.keys($location.search()).length === 0) {
+              watchOnce();   // unbind watcher
+            }
+            if (!_.isEmpty(assayFiltersService.attributeFilter)) {
               updateFiltersFromUrlQuery();
                 // drop panels in ui from query
               vm.updateFilterDOM = true;
+              // update data in grid
               resetGridService.setRefreshGridFlag(true);
               watchOnce();   // unbind watcher
             }
           }
         );
       } else {
+        // Else is for soft loads (example tabbing)
         // updates view model's selected attribute filters
         angular.forEach(
-          selectedFilterService.attributeSelectedFields,
+          selectedFilterService.uiSelectedFields,
           function (fieldArr, attributeInternalName) {
             for (var i = 0; i < fieldArr.length; i++) {
-              if (_.isEmpty(selectedFilterService.uiSelectedFields)) {
-                selectedFilterService.uiSelectedFields[attributeInternalName] = {};
-              }
-              selectedFilterService
-                .uiSelectedFields[attributeInternalName][fieldArr[i]] = true;
+              vm.uiSelectedFields = selectedFilterService.uiSelectedFields;
               // update url with selected fields(filters)
               var encodedAttribute = selectedFilterService
                 .stringifyAndEncodeAttributeObj(attributeInternalName, fieldArr[i]);
               selectedFilterService.updateUrlQuery(encodedAttribute, true);
             }
           });
-        // $timeout required to allow grid generation
-        $timeout(function () {
           // for attribute filter directive, drop panels in query
-          vm.updateFilterDOM = true;
-          // update selected rows in ui and set selected nodes count
-        }, 0);
-        // updates params object
+        vm.updateFilterDOM = true;
+          // updates url with the selected filters (ex: tabbing)
         if (Object.keys($location.search()).length > 0) {
           updateFiltersFromUrlQuery();
         }
@@ -112,12 +113,8 @@
       selectedFilterService.updateSelectedFilters(
         vm.uiSelectedFields[internalName], internalName, field
       );
-      angular.copy(vm.uiSelectedFields, selectedFilterService.selectedFilterService);
-      fileParamService.fileParam.filter_attribute = {};
-      angular.copy(selectedFilterService.attributeSelectedFields,
-        fileParamService.fileParam.filter_attribute
-      );
-      // resets grid
+      fileParamService.setParamFilterAttribute(selectedFilterService.uiSelectedFields);
+      // refresh grid
       resetGridService.setRefreshGridFlag(true);
     }
 
@@ -167,7 +164,7 @@
         vm.refreshSelectedFieldFromQuery(attributeObj);
       });
       fileParamService.fileParam.filter_attribute = {};
-      angular.copy(selectedFilterService.attributeSelectedFields,
+      angular.copy(selectedFilterService.uiSelectedFields,
         fileParamService.fileParam.filter_attribute);
     }
 
@@ -197,14 +194,14 @@
           // Have to set selected Fields in control due to service scope
           angular.forEach(vm.uiSelectedFields, function (fieldsObj, attributeInternalName) {
             angular.forEach(fieldsObj, function (value, fieldName) {
+              // initialize the uiSelectObj for easier indexing
               vm.uiSelectedFields[attributeInternalName][fieldName] = false;
             });
             selectedFilterService.resetAttributeFilter(fieldsObj);
           });
-          fileParamService.fileParam.filter_attribute = {};
-          resetGridService.setResetGridFlag(true);
+          fileParamService.resetParamFilterAttribute = {};
+          resetGridService.setResetGridFlag(false);
         }
-        angular.copy(vm.uiSelectedFields, selectedFilterService.selectedFilterService);
       }
     );
   }

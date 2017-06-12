@@ -15,7 +15,9 @@
     };
 
     var service = {
-      fileParam: fileParam
+      fileParam: fileParam,
+      resetParamFilterAttribute: resetParamFilterAttribute,
+      setParamFilterAttribute: setParamFilterAttribute
     };
 
     return service;
@@ -24,5 +26,13 @@
      * Methods
      * ---------------------------------------------------------
      */
+    function resetParamFilterAttribute () {
+      fileParam.filter_attribute = {};
+    }
+
+    function setParamFilterAttribute (attributeObj) {
+      resetParamFilterAttribute();
+      angular.copy(attributeObj, fileParam.filter_attribute);
+    }
   }
 })();

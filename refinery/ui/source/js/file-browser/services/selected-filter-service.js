@@ -8,12 +8,11 @@
 
   function selectedFilterService ($location, $window) {
     var vm = this;
-    vm.attributeSelectedFields = {};
+    vm.attributeSelectedFields = {}; // generates field params
     vm.addSelectedField = addSelectedField;
     vm.encodeAttributeFields = encodeAttributeFields;
     vm.resetAttributeFilter = resetAttributeFilter;
     vm.stringifyAndEncodeAttributeObj = stringifyAndEncodeAttributeObj;
-    vm.uiSelectedFields = {};
     vm.updateUrlQuery = updateUrlQuery;
     vm.updateSelectedFilters = updateSelectedFilters;
 
