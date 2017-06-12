@@ -1,22 +1,16 @@
 import logging
-import requests
-
-from django.contrib.staticfiles.testing import StaticLiveServerTestCase
-from guardian.utils import get_anonymous_user
-from rest_framework.test import (APIRequestFactory,
-                                 APITestCase, force_authenticate)
 from urlparse import urljoin
 
+import requests
+from django.contrib.staticfiles.testing import StaticLiveServerTestCase
+from guardian.utils import get_anonymous_user
+from rest_framework.test import (APIRequestFactory, APITestCase,
+                                 force_authenticate)
 from views import UserFiles
 
 logger = logging.getLogger(__name__)
 
 
-# def fake_search_solr():
-#     return {}
-#
-# @mock.patch("user_files_manager.utils.search_solr",
-#                 fake_search_solr)
 class UserFilesAPITests(APITestCase):
     def setUp(self):
         self.factory = APIRequestFactory()
