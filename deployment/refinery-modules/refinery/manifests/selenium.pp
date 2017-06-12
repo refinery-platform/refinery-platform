@@ -14,7 +14,6 @@ class refinery::selenium {
     creates       => $install_path,
     user        => 'root',
     group       => 'root',
-    cleanup       => 'true',
   }
   ->
   file { '/usr/bin/geckodriver':
