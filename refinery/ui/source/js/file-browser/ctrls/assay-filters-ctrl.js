@@ -1,3 +1,11 @@
+/**
+ * Assay Filters Ctrl
+ * @namespace AssayFiltersCtrl
+ * @desc Main ctrl for the assay filters, which can be used for a ui-grid
+ * displaying data from solr. Updates a files param to display data
+ * when user select filters or when in url query.
+ * @memberOf refineryFileBrowser
+ */
 (function () {
   'use strict';
 
@@ -59,9 +67,8 @@
                 // drop panels in ui from query
               vm.updateFilterDOM = true;
               resetGridService.setRefreshGridFlag(true);
-              watchOnce();
+              watchOnce();   // unbind watcher
             }
-            // unbind watcher
           }
         );
       } else {
@@ -94,7 +101,13 @@
       }
     }
 
-    // Used by ui, updates which attribute filters are selected and ui-grid data
+    /**
+     * @name attributeSelectionUpdate
+     * @desc Used by ui, updates which attribute filters are selected and ui-grid data
+     * @memberOf refineryFileBrowser.AssayFiltersCtrl
+     * @param {string} internalName - solr name for attribute
+     * @param {string} field - value for the attributes
+    **/
     function attributeSelectionUpdate (internalName, field) {
       selectedFilterService.updateSelectedFilters(
         vm.uiSelectedFields[internalName], internalName, field
@@ -108,30 +121,40 @@
       resetGridService.setRefreshGridFlag(true);
     }
 
-     // helper method, upon refresh/load add fields to select data objs from query
-    function refreshSelectedFieldFromQuery (_attributeObj) {
+    /**
+     * @name refreshSelectedFieldFromQuery
+     * @desc helper method, upon refresh/load add fields to select data objs from query
+     * @memberOf refineryFileBrowser.AssayFiltersCtrl
+     * @param {object} attributeObj - combination of attribute and analysis
+     * object from solr
+    **/
+    function refreshSelectedFieldFromQuery (attributeObj) {
       // stringify/encode attributeInternalName:fieldName for url query comparison
-      angular.forEach(_attributeObj.facetObj, function (fieldObj) {
+      angular.forEach(attributeObj.facetObj, function (fieldObj) {
         var encodedField = selectedFilterService.stringifyAndEncodeAttributeObj(
-          _attributeObj.internal_name,
+          attributeObj.internal_name,
           fieldObj.name
         );
 
         if (vm.queryKeys.indexOf(encodedField) > -1) {
-          if (!vm.uiSelectedFields.hasOwnProperty(_attributeObj.internal_name)) {
-            vm.uiSelectedFields[_attributeObj.internal_name] = {};
+          if (!vm.uiSelectedFields.hasOwnProperty(attributeObj.internal_name)) {
+            vm.uiSelectedFields[attributeObj.internal_name] = {};
           }
-          vm.uiSelectedFields[_attributeObj.internal_name][fieldObj.name] = true;
+          vm.uiSelectedFields[attributeObj.internal_name][fieldObj.name] = true;
           selectedFilterService.updateSelectedFilters(
-            vm.uiSelectedFields[_attributeObj.internal_name],
-            _attributeObj.internal_name,
+            vm.uiSelectedFields[attributeObj.internal_name],
+            attributeObj.internal_name,
             fieldObj.name
           );
         }
       });
     }
 
-    // checks url for params to update the filter
+    /**
+     * @name updateFiltersFromUrlQuery
+     * @desc checks url for params to update the filter
+     * @memberOf refineryFileBrowser.AssayFiltersCtrl
+    **/
     function updateFiltersFromUrlQuery () {
       var allFilters = {};
       // Merge attribute and analysis filter data obj
