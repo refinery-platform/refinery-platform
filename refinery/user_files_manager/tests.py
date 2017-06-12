@@ -31,7 +31,7 @@ class UserFilesUITests(StaticLiveServerTestCase):
         response = requests.get(
             urljoin(
                 self.live_server_url,
-                'user_files/'
+                'user/files/'
             )
         )
         self.assertIn("All Files", response.content)
