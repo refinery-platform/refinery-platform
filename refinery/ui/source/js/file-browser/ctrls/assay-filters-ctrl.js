@@ -129,8 +129,6 @@
           );
         }
       });
-    //  angular.copy(vm.uiSelectedFields,
-      // selectedFilterService.uiSelectedFields);
     }
 
     // checks url for params to update the filter
@@ -140,16 +138,11 @@
       console.log(assayFiltersService.attributeFilter);
       // Merge attribute and analysis filter data obj
       angular.copy(vm.attributeFilter, allFilters);
-      console.log('issues with attribute filters?');
-      console.log(allFilters);
       if (typeof vm.analysisFilter.Analysis !== 'undefined') {
         angular.copy(vm.analysisFilter, allFilters.Analysis);
       }
-      console.log('here are all filters');
 
-      console.log(allFilters);
       angular.forEach(allFilters, function (attributeObj) {
-        console.log('in the for each');
         vm.refreshSelectedFieldFromQuery(attributeObj);
       });
       fileParamService.fileParam.filter_attribute = {};
