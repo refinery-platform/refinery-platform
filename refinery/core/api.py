@@ -443,7 +443,7 @@ class UserProfileResource(ModelResource):
             user = userprofile.user
         except (UserProfile.DoesNotExist,
                 UserProfile.MultipleObjectsReturned) as e:
-            logger.error("Could not fetch UserProfile: %s" % e)
+            logger.error("Could not fetch UserProfile: %s", e)
             return HttpNoContent
 
         # User not authenticated
@@ -454,7 +454,7 @@ class UserProfileResource(ModelResource):
             t = Tutorials.objects.get(user_profile=userprofile)
         except (Tutorials.DoesNotExist,
                 Tutorials.MultipleObjectsReturned) as e:
-            logger.error("Could not fetch Tutorial: %s" % e)
+            logger.error("Could not fetch Tutorial: %s", e)
             return HttpNoContent
 
         # Update User's Tutorials based on payload received
@@ -1200,7 +1200,7 @@ class NodeSetResource(ModelResource):
         try:
             study = Study.objects.get(uuid=study_uuid)
         except Study.DoesNotExist:
-            logger.error("Study '{}' does not exist".format(study_uuid))
+            logger.error("Study '%s' does not exist", study_uuid)
             self.unauthorized_result(
                 Unauthorized("You are not allowed to create a new NodeSet."))
         # look up the dataset via InvestigationLink relationship
@@ -1210,7 +1210,7 @@ class NodeSetResource(ModelResource):
             dataset = \
                 study.investigation.investigationlink_set.all()[0].data_set
         except IndexError:
-            logger.error("Data set not found in study '{}'".format(study.uuid))
+            logger.error("Data set not found in study '%s'", study.uuid)
             self.unauthorized_result(
                 Unauthorized("You are not allowed to create a new NodeSet."))
         permission = "read_%s" % dataset._meta.module_name

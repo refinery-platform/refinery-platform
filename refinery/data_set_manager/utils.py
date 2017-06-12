@@ -9,22 +9,19 @@ import logging
 import time
 import urlparse
 
+import core
+import requests
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.db.models import Q
 from django.utils.http import urlquote, urlunquote
-
 from guardian.shortcuts import get_objects_for_user
-
-import requests
 from requests.exceptions import HTTPError
 
 from .models import (AnnotatedNode, AnnotatedNodeRegistry, Assay, Attribute,
                      AttributeOrder, Node, Study)
 from .search_indexes import NodeIndex
 from .serializers import AttributeOrderSerializer
-import core
-
 
 logger = logging.getLogger(__name__)
 
@@ -547,20 +544,26 @@ def generate_solr_params_for_user(params, user_id):
             study = Study.objects.get(
                 investigation=investigation
             )
-        except Study.DoesNotExist:
+        except Study.DoesNotExist as e:
+            logger.error('Expected at least one Study for %s: %s',
+                         investigation, e)
             continue
             # Again, nothing more to do here.
-        except Study.MultipleObjectsReturned:
-            logger.error('Expected only one study for %s', investigation)
+        except Study.MultipleObjectsReturned as e:
+            logger.error('Expected only one Study for %s: %s',
+                         investigation, e)
             raise
 
         try:
             assay = Assay.objects.get(study=study)
-        except Assay.DoesNotExist:
+        except Assay.DoesNotExist as e:
+            logger.error('Expected at least one Assay for %s: %s',
+                         study, e)
             continue
             # Again, nothing more to do here.
-        except:
-            logger.error('Expected only one assay for %s', study)
+        except Assay.MultipleObjectsReturned as e:
+            logger.error('Expected only one Assay for %s: %s',
+                         study, e)
             raise
 
         assay_uuids.append(assay.uuid)
@@ -587,7 +590,11 @@ def generate_solr_params_for_assay(params, assay_uuid):
     return _generate_solr_params(params, assay_uuids=[assay_uuid])
 
 
-def _generate_solr_params(params, assay_uuids=[]):
+def _generate_solr_params(params, assay_uuids):
+    """
+    Either returns a solr url parameter string,
+    or None if assay_uuids is empty.
+    """
 
     file_types = 'fq=type:("Raw Data File" OR ' \
                  '"Derived Data File" OR ' \
@@ -617,12 +624,9 @@ def _generate_solr_params(params, assay_uuids=[]):
                   'facet.limit=-1'
                   ])
 
-    solr_params = 'fq=({})'.format(
-        ' OR '.join(map(
-            lambda id: 'assay_uuid:{}'.format(id),
-            assay_uuids
-        ))
-    )
+    if len(assay_uuids) == 0:
+        return None
+    solr_params = 'fq=assay_uuid:({})'.format(' OR '.join(assay_uuids))
 
     if facet_field:
         facet_field = facet_field.split(',')
@@ -810,8 +814,14 @@ def format_solr_response(solr_response):
         return "Error loading json."
 
     # Reorganizes solr response into easier to digest objects.
-    order_facet_fields = solr_response_json.get('responseHeader').get(
-            'params').get('fl').split(',')
+    try:
+        order_facet_fields_joined = (solr_response_json
+                                     ['responseHeader']['params']['fl'])
+    except KeyError:
+        order_facet_fields = []
+    else:
+        order_facet_fields = order_facet_fields_joined.split(',')
+
     if solr_response_json.get('facet_counts'):
         facet_field_counts = solr_response_json.get('facet_counts').get(
             'facet_fields')

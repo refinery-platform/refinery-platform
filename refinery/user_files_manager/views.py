@@ -20,11 +20,14 @@ class UserFiles(APIView):
         params = request.query_params
 
         solr_params = generate_solr_params_for_user(
-            params,
-            user_id=request.user.id)
+                params,
+                user_uuid=request.user.uuid
+        )
+        if solr_params is None:
+            return Response({})
+            # TODO: Make this look like an empty solr response
+
         solr_response = search_solr(solr_params, 'data_set_manager')
-        # import pdb
-        # pdb.set_trace()
         solr_response_json = format_solr_response(solr_response)
 
         return Response(solr_response_json)
