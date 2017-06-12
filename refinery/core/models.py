@@ -276,23 +276,22 @@ class BaseResource(models.Model):
         # duplicated elsewhere.
 
         if self.duplicate_slug_exists():
-            raise forms.ValidationError("%s with slug: %s "
-                                        "already exists"
-                                        % (self.__class__.__name__,
-                                           self.slug))
+            raise forms.ValidationError(
+                "%s with slug: %s already exists",
+                self.__class__.__name__, self.slug)
 
     # Overriding save() method to disallow saving objects with duplicate slugs
     def save(self, *args, **kwargs):
 
         if self.duplicate_slug_exists():
-            logger.error("%s with slug: %s already exists" % (
-                self.__class__.__name__, self.slug))
+            logger.error("%s with slug: %s already exists",
+                         self.__class__.__name__, self.slug)
         else:
             try:
                 super(BaseResource, self).save(*args, **kwargs)
             except Exception as e:
-                logger.error("Could not save %s: %s" % (
-                    self.__class__.__name__, e))
+                logger.error("Could not save %s: %s",
+                             self.__class__.__name__, e)
 
     # Overriding delete() method For models that Inherit from BaseResource
     def delete(self, using=None, *args, **kwargs):
@@ -551,13 +550,13 @@ class DataSet(SharableResource):
             self.get_isa_archive().delete()
 
         except AttributeError as e:
-            logger.debug("DataSet has no isa_archive to delete: %s" % e)
+            logger.debug("DataSet has no isa_archive to delete: %s", e)
 
         try:
             self.get_pre_isa_archive().delete()
 
         except AttributeError as e:
-            logger.debug("DataSet has no pre_isa_archive to delete: %s" % e)
+            logger.debug("DataSet has no pre_isa_archive to delete: %s", e)
 
         related_investigation_links = self.get_investigation_links()
 
@@ -568,7 +567,7 @@ class DataSet(SharableResource):
             try:
                 node_collection.delete()
             except Exception as e:
-                logger.error("Couldn't delete NodeCollection:", e)
+                logger.error("Couldn't delete NodeCollection: %s", e)
 
         # Try to terminate any currently running FileImport tasks just to be
         # safe
@@ -738,7 +737,7 @@ class DataSet(SharableResource):
         except (FileStoreItem.DoesNotExist,
                 FileStoreItem.MultipleObjectsReturned,
                 AttributeError) as e:
-            logger.debug("Couldn't fetch FileStoreItem: %s" % e)
+            logger.debug("Couldn't fetch FileStoreItem: %s", e)
 
     def get_pre_isa_archive(self):
         """
@@ -754,7 +753,7 @@ class DataSet(SharableResource):
         except (FileStoreItem.DoesNotExist,
                 FileStoreItem.MultipleObjectsReturned,
                 AttributeError) as e:
-            logger.debug("Couldn't fetch FileStoreItem: %s" % e)
+            logger.debug("Couldn't fetch FileStoreItem: %s", e)
 
     def share(self, group, readonly=True):
         super(DataSet, self).share(group, readonly)
@@ -863,7 +862,7 @@ class InvestigationLink(models.Model):
                 uuid=self.investigation.uuid)
         except (NodeCollection.DoesNotExist,
                 NodeCollection.MultipleObjectsReturned) as e:
-            logger.error(("Could not fetch NodeCollection: " % e))
+            logger.error("Could not fetch NodeCollection: ", e)
 
 
 class WorkflowDataInput(models.Model):
@@ -1011,10 +1010,8 @@ class Workflow(SharableResource, ManageableResource):
             return False, deletion_error_message
 
         else:
-            '''
-                If an Analysis hasn't been run on said Workflow delete
-                WorkflowDataInputs and WorkflowInputRelationships if they exist
-            '''
+            # If an Analysis hasn't been run on said Workflow delete
+            # WorkflowDataInputs and WorkflowInputRelationships if they exist
             try:
                 self.data_inputs.remove()
             except Exception as e:
@@ -1250,11 +1247,10 @@ class Analysis(OwnableResource):
     def optimize_solr_index(self):
         solr = pysolr.Solr(urljoin(settings.REFINERY_SOLR_BASE_URL,
                                    "data_set_manager"), timeout=10)
-        '''
-            solr.optimize() Tells Solr to streamline the number of segments
-            used, essentially a defragmentation/ garbage collection
-            operation.
-        '''
+
+        # solr.optimize() Tells Solr to streamline the number of segments
+        # used, essentially a defragmentation/ garbage collection
+        # operation.
         try:
             solr.optimize()
         except Exception as e:
@@ -1978,10 +1974,10 @@ def create_nodeset(name, study, assay, summary='', solr_query='',
         )
     except (IntegrityError, ValueError) as e:
         transaction.rollback()
-        logger.error("Failed to create NodeSet: {}".format(e.message))
+        logger.error("Failed to create NodeSet: %s", e.message)
         raise
     transaction.commit()
-    logger.info("NodeSet created with UUID '{}'".format(nodeset.uuid))
+    logger.info("NodeSet created with UUID '%s'", nodeset.uuid)
     return nodeset
 
 
@@ -1996,7 +1992,7 @@ def get_nodeset(uuid):
         return NodeSet.objects.get(uuid=uuid)
     except NodeSet.DoesNotExist:
         logger.error(
-            "Failed to retrieve NodeSet: UUID '{}' does not exist".format(uuid)
+            "Failed to retrieve NodeSet: UUID '%s' does not exist", uuid
         )
         raise
 
@@ -2022,7 +2018,7 @@ def update_nodeset(uuid, name=None, summary=None, study=None, assay=None,
         nodeset = get_nodeset(uuid=uuid)
     except NodeSet.DoesNotExist:
         logger.error(
-            "Failed to update NodeSet: UUID '{}' does not exist".format(uuid)
+            "Failed to update NodeSet: UUID '%s' does not exist", uuid
         )
         raise
     if name is not None:
