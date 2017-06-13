@@ -4,7 +4,6 @@ from django.conf import settings
 from django.conf.urls import include, patterns, url
 from django.conf.urls.static import static
 from django.contrib import admin
-
 from haystack.forms import FacetedSearchForm
 from haystack.query import SearchQuerySet
 from haystack.views import FacetedSearchView
@@ -18,23 +17,21 @@ from core.api import (AnalysisResource, DataSetResource, ExtendedGroupResource,
                       NodeRelationshipResource, NodeResource,
                       NodeSetListResource, NodeSetResource, ProjectResource,
                       StatisticsResource, UserAuthenticationResource,
-                      UserProfileResource,
-                      WorkflowInputRelationshipsResource, WorkflowResource)
+                      UserProfileResource, WorkflowInputRelationshipsResource,
+                      WorkflowResource)
 from core.forms import RegistrationFormWithCustomFields
-from core.models import DataSet, AuthenticationFormUsernameOrEmail
+from core.models import AuthenticationFormUsernameOrEmail, DataSet
 from core.urls import core_router
 from core.views import CustomRegistrationView
 from data_set_manager.api import (AssayResource, AttributeOrderResource,
                                   AttributeResource, InvestigationResource,
-                                  ProtocolReferenceResource,
                                   ProtocolReferenceParameterResource,
-                                  ProtocolResource, PublicationResource,
-                                  StudyResource)
+                                  ProtocolReferenceResource, ProtocolResource,
+                                  PublicationResource, StudyResource)
 from data_set_manager.urls import data_set_manager_router
-from user_files_manager.urls import user_files_router, user_files_url
 from file_store.urls import file_store_router
-
-from tool_manager.urls import tool_manager_router, django_docker_engine_url
+from tool_manager.urls import django_docker_engine_url, tool_manager_router
+from user_files_manager.urls import user_files_router, user_files_url
 
 logger = logging.getLogger(__name__)
 
