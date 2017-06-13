@@ -104,11 +104,5 @@
         'notSelectedAnalysis', 'REFINERY_ANALYSIS_UUID_92_46_s', 'Analysis');
       expect(response).toEqual(true);
     });
-
-    it('test broadcast triggers watcher', function () {
-      spyOn(scope, 'generateFilterDropSelection');
-      scope.$broadcast('rf/attributeFilter-ready');
-      expect(scope.generateFilterDropSelection).toHaveBeenCalled();
-    });
   });
 })();

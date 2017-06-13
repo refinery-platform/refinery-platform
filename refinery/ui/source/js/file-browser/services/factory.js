@@ -11,6 +11,7 @@
     '$window',
     'assayAttributeService',
     'assayFileService',
+    'assayFiltersService',
     'fileBrowserSettings',
     'nodeService',
     'selectedFilterService',
@@ -23,6 +24,7 @@
     $window,
     assayAttributeService,
     assayFileService,
+    assayFiltersService,
     fileBrowserSettings,
     nodeService,
     selectedFilterService,
@@ -32,8 +34,6 @@
     var assayFiles = [];
     var assayAttributes = [];
     var assayAttributeOrder = [];
-    var attributeFilter = {};
-    var analysisFilter = {};
     var assayFilesTotalItems = {};
     var customColumnNames = [];
     var nodeUrl = {};
@@ -41,12 +41,10 @@
     var maxFileRequest = fileBrowserSettings.maxFileRequest;
 
     var service = {
-      analysisFilter: analysisFilter,
       assayAttributes: assayAttributes,
       assayAttributeOrder: assayAttributeOrder,
       assayFiles: assayFiles,
       assayFilesTotalItems: assayFilesTotalItems,
-      attributeFilter: attributeFilter,
       customColumnNames: customColumnNames,
       createColumnDefs: createColumnDefs,
       getAssayFiles: getAssayFiles,
@@ -129,39 +127,6 @@
       }
     }
 
-    /** Configures the attribute and analysis filter data by adding the display
-     * name from the assay files attributes display_name. The attributes returns
-     * all fields, while the counts will return only the faceted fields. **/
-    function generateFilters (attributes, facetCounts) {
-      // resets the attribute filters, which can be changed by owners
-      var outAttributeFilter = {};
-      var outAnalysisFilter = {};
-      attributes.forEach(function (facetObj) {
-        if (facetCounts[facetObj.internal_name] !== undefined) {
-          var facetObjCount = facetCounts[facetObj.internal_name];
-          // for filtering out (only) attributes with only 1 field
-          var facetObjCountMinLen = Object.keys(facetObjCount).length > 1;
-
-          if (facetObjCountMinLen && facetObj.display_name !== 'Analysis') {
-            outAttributeFilter[facetObj.display_name] = {
-              facetObj: facetObjCount,
-              internal_name: facetObj.internal_name
-            };
-          } else if (facetObjCount && facetObj.display_name === 'Analysis') {
-            outAnalysisFilter[facetObj.display_name] = {
-              facetObj: facetObjCount,
-              internal_name: facetObj.internal_name
-            };
-          }
-        }
-      });
-
-      return {
-        attributeFilter: outAttributeFilter,
-        analysisFilter: outAnalysisFilter
-      };
-    }
-
     function getNodeDetails (nodeUuid) {
       var params = {
         uuid: nodeUuid
@@ -240,9 +205,7 @@
           angular.copy(assayFiles.concat(additionalAssayFiles), assayFiles);
         }
         addNodeDetailtoAssayFiles();
-        var filterObj = generateFilters(response.attributes, response.facet_field_counts);
-        angular.copy(filterObj.attributeFilter, attributeFilter);
-        angular.copy(filterObj.analysisFilter, analysisFilter);
+        assayFiltersService.generateFilters(response.attributes, response.facet_field_counts);
       }, function (error) {
         $log.error(error);
       });
