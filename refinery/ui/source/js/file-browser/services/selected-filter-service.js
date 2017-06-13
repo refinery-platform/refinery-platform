@@ -8,7 +8,8 @@
 
   function selectedFilterService ($location, $window) {
     var vm = this;
-    vm.attributeSelectedFields = {};
+    vm.attributeSelectedFields = {}; // generates field params,
+    // {internalFileName: [{fieldName: true}, fieldName2: true]}
     vm.addSelectedField = addSelectedField;
     vm.encodeAttributeFields = encodeAttributeFields;
     vm.resetAttributeFilter = resetAttributeFilter;
