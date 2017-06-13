@@ -16,7 +16,7 @@ import yaml
 
 import boto3
 from cfn_pyplates.core import (CloudFormationTemplate, DeletionPolicy,
-                               Output, Parameter, Properties, Resource)
+                               Parameter, Properties, Resource)
 from cfn_pyplates.functions import ref
 
 REFINERY_CONFIG_FILE = 'aws-config/config.yaml'
@@ -99,11 +99,7 @@ def make_storage_template():
         }),
         DeletionPolicy('Retain'),
     ))
-    cft.outputs.add(Output(
-        'MediaBucketName',
-        ref('MediaStorageBucket'),
-        'Name of S3 bucket for Django media files',
-    ))
+
     return cft
 
 

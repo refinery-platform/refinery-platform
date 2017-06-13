@@ -543,7 +543,7 @@ def make_template(config, config_yaml):
             }
         ]
     }
-    s3_upload_policy = {
+    s3_upload_access_policy = {
         "Version": "2012-10-17",
         "Statement": [
             {
@@ -553,18 +553,13 @@ def make_template(config, config_yaml):
                     "cognito-sync:*",
                     "cognito-identity:*"
                 ],
-                "Resource": [
-                    "*"
-                ]
+                "Resource": "*"
             },
             {
-                "Action": [
-                    "s3:PutObject"
-                ],
+                "Action": "s3:PutObject",
                 "Effect": "Allow",
-                "Resource": [
+                "Resource":
                     "arn:aws:s3:::scc-dev-media/uploads/${cognito-identity.amazonaws.com:sub}/*"
-                ]
             }
         ]
     }
@@ -578,7 +573,7 @@ def make_template(config, config_yaml):
                     'Policies': [
                         {
                             'PolicyName': 'AuthenticatedS3UploadPolicy',
-                            'PolicyDocument': s3_upload_policy,
+                            'PolicyDocument': s3_upload_access_policy,
                         }
                     ]
                 }
