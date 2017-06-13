@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 
 """
-Script to generate AWS CloudFormation template and create Refinery Platform
-storage stacks
+Script to generate AWS CloudFormation template for Refinery Platform storage
+stacks
 
-See
+Requires STACK_NAME to be defined in aws-config/config.yaml
+
+For details:
 https://github.com/refinery-platform/refinery-platform/wiki/AWS-installation
-for notes on how to use this to deploy to Amazon AWS
 """
 
 import json
@@ -15,7 +16,7 @@ import yaml
 
 import boto3
 from cfn_pyplates.core import (CloudFormationTemplate, DeletionPolicy,
-                               Parameter, Properties, Resource)
+                               Output, Parameter, Properties, Resource)
 from cfn_pyplates.functions import ref
 
 REFINERY_CONFIG_FILE = 'aws-config/config.yaml'
@@ -49,6 +50,7 @@ def main():
 
 def make_storage_template():
     cft = CloudFormationTemplate(description="Refinery Platform storage")
+    # Parameters
     cft.parameters.add(Parameter(
         'StaticBucketName',
         'String',
@@ -65,9 +67,10 @@ def make_storage_template():
             # with virtual-hosted-style access and S3 Transfer Acceleration
             'AllowedPattern': '[a-z0-9\-]+',
             'ConstraintDescription':
-                'must only contain lower case letters, numbers, and hyphens',
+                'must only contain lower case letters, numbers, and dashes',
         }
     ))
+    # Resources
     cft.resources.add(Resource(
         'StaticStorageBucket',
         'AWS::S3::Bucket',
@@ -95,6 +98,11 @@ def make_storage_template():
             'AccessControl': 'PublicRead',
         }),
         DeletionPolicy('Retain'),
+    ))
+    cft.outputs.add(Output(
+        'MediaBucketName',
+        ref('MediaBucketName'),
+        'Name of S3 bucket for Django media files',
     ))
     return str(cft)
 
