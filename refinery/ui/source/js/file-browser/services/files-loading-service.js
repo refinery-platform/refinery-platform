@@ -1,21 +1,27 @@
-'use strict';
+(function () {
+  'use strict';
 
-function filesLoadingService () {
-  var vm = this;
-  vm.isAssayFilesLoading = false;
+  angular
+    .module('refineryFileBrowser')
+    .service('filesLoadingService', filesLoadingService);
 
-  vm.setIsAssayFilesLoading = function (status) {
-    if (status === true) {
-      vm.isAssayFilesLoading = status;
-    } else if (status === false) {
-      vm.isAssayFilesLoading = status;
+  function filesLoadingService () {
+    var vm = this;
+    vm.isAssayFilesLoading = false;
+    vm.setIsAssayFilesLoading = setIsAssayFilesLoading;
+
+      /*
+     *-----------------------
+     * Method Definitions
+     * ----------------------
+     */
+    function setIsAssayFilesLoading (status) {
+      if (status === true) {
+        vm.isAssayFilesLoading = status;
+      } else if (status === false) {
+        vm.isAssayFilesLoading = status;
+      }
+      return vm.isAssayFilesLoading;
     }
-    return vm.isAssayFilesLoading;
-  };
-}
-
-angular.module('refineryFileBrowser')
-  .service('filesLoadingService', [
-    filesLoadingService
-  ]
-);
+  }
+})();
