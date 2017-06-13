@@ -1,1 +1,46 @@
-Tool Params
+<div
+  class="panel-group"
+  id="tool-info-display"
+  role="tablist"
+  aria-multiselectable="true">
+
+  <div class="panel panel-default">
+    <div class="panel-heading" role="tab">
+      <h4 class="panel-title">
+        <div
+          role="button"
+          data-toggle="collapse"
+          data-parent="#tool-info-display"
+          ng-click="$ctrl.isToolParamsCollapsed = !$ctrl.isToolParamsCollapsed"
+          aria-expanded="true">
+            <i
+              ng-class="$ctrl.isToolParamsCollapsed ? 'fa fa-caret-right' : 'fa fa-caret-down'"
+              class="fa-pull-left"
+              aria-hidden="true"></i>
+            Parameters
+        </div>
+      </h4>
+    </div>
+    <div
+      id="tool-launch-body"
+      class="panel-collapse"
+      uib-collapse="$ctrl.isToolParamsCollapsed"
+      role="tabpanel"
+      aria-labelledby="tool-body">
+      <div class="panel-body">
+       <ul>
+         <li ng-repeat="param in $ctrl.params">
+           {{ param.name}}: {{ param.description }}
+           <br>
+           {{ param.galaxy_workflow_step }}
+
+           <div ng-if="param.is_user_adjustable">
+             Form goes here
+             {{ param.default_value }}
+           </div>
+         </li>
+       </ul>
+      </div>
+    </div>
+  </div>
+</div>

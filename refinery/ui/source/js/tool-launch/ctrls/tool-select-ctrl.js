@@ -15,15 +15,18 @@
   ToolSelectCtrl.$inject = [
     '_',
     'fileRelationshipService',
+    'toolParamsService',
     'toolSelectService'
   ];
 
   function ToolSelectCtrl (
     _,
     fileRelationshipService,
+    toolParamsService,
     toolSelectService
   ) {
     var fileService = fileRelationshipService;
+    var paramsService = toolParamsService;
     var toolService = toolSelectService;
     var vm = this;
     vm.refreshToolList = refreshToolList;
@@ -71,6 +74,7 @@
       toolService.setSelectedTool(tool);
       fileService.resetToolRelated();
       fileService.refreshFileMap();
+      paramsService.refreshToolParams(tool);
     }
   }
 })();

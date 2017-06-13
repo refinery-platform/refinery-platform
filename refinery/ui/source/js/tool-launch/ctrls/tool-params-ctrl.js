@@ -7,17 +7,18 @@
 
   ToolParamsCtrl.$inject = [
     '$scope',
-    'fileRelationshipService'
+    'toolParamsService'
   ];
 
 
   function ToolParamsCtrl (
     $scope,
-    fileRelationshipService
+    toolParamsService
   ) {
-    var fileService = fileRelationshipService;
+    var paramsService = toolParamsService;
     var vm = this;
-    vm.params = fileService.attributesObj;
+    vm.isToolParamsCollapsed = false;
+    vm.params = paramsService.toolParams;
    /*
    * ---------------------------------------------------------
    * Methods Definitions
@@ -36,7 +37,7 @@
           return vm.displayCtrl.selectedTool;
         },
         function () {
-          vm.params = fileService.params;
+          vm.params = paramsService.toolParams;
         }
       );
     };
