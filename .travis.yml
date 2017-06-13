@@ -2,7 +2,7 @@ sudo: required
 language: python
 cache: pip
 addons:
-  firefox: "49.0.1"
+  firefox: "53.0.3"
   apt:
     packages:
       - xvfb
@@ -17,7 +17,7 @@ services:
 install:
   - pip install -r requirements.txt --quiet
   # Install geckodriver required for selenium testing
-  - GECKODRIVER_VERSION=v0.15.0
+  - GECKODRIVER_VERSION=v0.17.0
   - TAR=geckodriver-$GECKODRIVER_VERSION-linux64.tar
   - wget https://github.com/mozilla/geckodriver/releases/download/$GECKODRIVER_VERSION/$TAR.gz
   - gunzip $TAR.gz
