@@ -33,7 +33,7 @@ def main():
     cloudformation = boto3.client('cloudformation')
     response = cloudformation.create_stack(
         StackName=stack_name,
-        TemplateBody=template,
+        TemplateBody=str(template),
         Parameters=[
             {
                 'ParameterKey': 'StaticBucketName',
@@ -101,10 +101,10 @@ def make_storage_template():
     ))
     cft.outputs.add(Output(
         'MediaBucketName',
-        ref('MediaBucketName'),
+        ref('MediaStorageBucket'),
         'Name of S3 bucket for Django media files',
     ))
-    return str(cft)
+    return cft
 
 
 if __name__ == '__main__':

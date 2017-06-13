@@ -50,6 +50,16 @@ def main():
             TemplateBody=str(template),
             Capabilities=['CAPABILITY_IAM'],
             Tags=load_tags(),
+            Parameters=[
+                {
+                    'ParameterKey': 'IdentityPoolName',
+                    'ParameterValue': ''
+                },
+                {
+                    'ParameterKey': 'DeveloperProviderName',
+                    'ParameterValue': ''
+                },
+            ]
         )
         sys.stdout.write("{}\n".format(json.dumps(response, indent=2)))
 
@@ -128,6 +138,28 @@ def make_template(config, config_yaml):
                 'Description':
                 "Tag added to EC2 Instances so that "
                 "the EBS Snapshot Scheduler will recognise them.",
+            }
+        )
+    )
+    cft.parameters.add(
+        core.Parameter(
+            'IdentityPoolName',
+            'String',
+            {
+                'Description': 'Name of Cognito identity pool for S3 uploads',
+            }
+        )
+    )
+    cft.parameters.add(
+        core.Parameter(
+            'DeveloperProviderName',
+            'String',
+            {
+                'Description': '"domain" by which Cognito will refer to users',
+                'AllowedPattern': '[a-z\-\.]+',
+                'ConstraintDescription':
+                    'must only contain lower case letters, periods, '
+                    'underscores, and dashes'
             }
         )
     )
@@ -461,7 +493,98 @@ def make_template(config, config_yaml):
             'ConnectionSettings': {
                 'IdleTimeout': 1800  # seconds
             }
-        })
+        }
+    )
+
+    cft.resources.add(
+        core.Resource(
+            'IdentityPool',
+            'AWS::Cognito::IdentityPool',
+            core.Properties(
+                {
+                    'IdentityPoolName': functions.ref('IdentityPoolName'),
+                    'AllowUnauthenticatedIdentities': False,
+                    'DeveloperProviderName':
+                        functions.ref('DeveloperProviderName'),
+                }
+            )
+        )
+    )
+    cft.resources.add(
+        core.Resource(
+            'IdentityPoolAuthenticatedRole',
+            'AWS::Cognito::IdentityPoolRoleAttachment',
+            core.Properties(
+                {
+                    'IdentityPoolId': functions.ref('IdentityPool'),
+
+                }
+            )
+        )
+    )
+    s3_upload_role_trust_policy = {
+        "Version": "2012-10-17",
+        "Statement": [
+            {
+                "Effect": "Allow",
+                "Principal": {
+                    "Federated": "cognito-identity.amazonaws.com"
+                },
+                "Action": "sts:AssumeRoleWithWebIdentity",
+                "Condition": {
+                    "StringEquals": {
+                        "cognito-identity.amazonaws.com:aud":
+                            functions.ref('IdentityPool')
+                    },
+                    "ForAnyValue:StringLike": {
+                        "cognito-identity.amazonaws.com:amr": "authenticated"
+                    }
+                }
+            }
+        ]
+    }
+    s3_upload_policy = {
+        "Version": "2012-10-17",
+        "Statement": [
+            {
+                "Effect": "Allow",
+                "Action": [
+                    "mobileanalytics:PutEvents",
+                    "cognito-sync:*",
+                    "cognito-identity:*"
+                ],
+                "Resource": [
+                    "*"
+                ]
+            },
+            {
+                "Action": [
+                    "s3:PutObject"
+                ],
+                "Effect": "Allow",
+                "Resource": [
+                    "arn:aws:s3:::scc-dev-media/uploads/${cognito-identity.amazonaws.com:sub}/*"
+                ]
+            }
+        ]
+    }
+    cft.resources.add(
+        core.Resource(
+            'CognitoS3UploadRole',
+            'AWS::IAM::Role',
+            core.Properties(
+                {
+                    'AssumeRolePolicyDocument': s3_upload_role_trust_policy,
+                    'Policies': [
+                        {
+                            'PolicyName': 'AuthenticatedS3UploadPolicy',
+                            'PolicyDocument': s3_upload_policy,
+                        }
+                    ]
+                }
+            )
+        )
+    )
 
     return cft
 
