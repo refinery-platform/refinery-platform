@@ -8,15 +8,15 @@
   NodeSelectionPopoverCtrl.$inject = [
     '$scope',
     '_',
-    'fileRelationshipService',
-    'activeNodeService'
+    'activeNodeService',
+    'fileRelationshipService'
   ];
 
   function NodeSelectionPopoverCtrl (
     $scope,
     _,
-    fileRelationshipService,
-    activeNodeService
+    activeNodeService,
+    fileRelationshipService
   ) {
     var fileService = fileRelationshipService;
     var nodeService = activeNodeService;

@@ -8,8 +8,8 @@
     beforeEach(module('refineryApp'));
     beforeEach(module('refineryFileBrowser'));
     beforeEach(inject(function (
-      $rootScope,
-      $controller
+      $controller,
+      $rootScope
     ) {
       scope = $rootScope.$new();
       ctrl = $controller('InputGroupsColumnPopoverCtrl', {
