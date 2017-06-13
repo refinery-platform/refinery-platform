@@ -9,6 +9,7 @@
     '$location',
     '$timeout',
     '$window',
+    'assayFiltersService',
     'selectedFilterService',
   ];
 
@@ -16,6 +17,7 @@
     $location,
     $timeout,
     $window,
+    assayFiltersService,
     selectedFilterService
   ) {
     return {
@@ -23,7 +25,9 @@
       templateUrl: function () {
         return $window.getStaticUrl('partials/file-browser/partials/assay-filters.html');
       },
-      link: function (scope) {
+      controller: 'AssayFiltersCtrl',
+      controllerAs: 'ASCtrl',
+      link: function (scope, element, attrs, ctrl) {
         // ng-click event for attribute filter panels
         // Event is custom because when a filter is selected, it continues to
         // show even though the panel is collapsed
@@ -94,10 +98,12 @@
               );
 
               // mark checkbox for selected item
-              if (!scope.FBCtrl.uiSelectedFields.hasOwnProperty(attributeInternalName)) {
-                scope.FBCtrl.uiSelectedFields[attributeInternalName] = {};
+              if (!selectedFilterService.attributeSelectedFields
+                  .hasOwnProperty(attributeInternalName)) {
+                selectedFilterService.attributeSelectedFields[attributeInternalName] = {};
               }
-              scope.FBCtrl.uiSelectedFields[attributeInternalName][allFields[ind]] = true;
+              selectedFilterService
+                .attributeSelectedFields[attributeInternalName][allFields[ind]] = true;
               if (attributeTitle.hasClass('fa-caret-right')) {
                 angular.element(
                 document.querySelector('#' + escapeAttributeName)).addClass('in');
@@ -114,10 +120,10 @@
         // On the initial page load, consolidates filters obj & updates dom
         scope.generateFilterDropSelection = function () {
           var allFilters = {};
-          angular.copy(scope.FBCtrl.attributeFilter, allFilters);
+          angular.copy(assayFiltersService.attributeFilter, allFilters);
 
-          if (typeof scope.FBCtrl.analysisFilter.Analysis !== 'undefined') {
-            allFilters.Analysis = scope.FBCtrl.analysisFilter.Analysis;
+          if (typeof assayFiltersService.analysisFilter.Analysis !== 'undefined') {
+            allFilters.Analysis = assayFiltersService.analysisFilter.Analysis;
           }
           angular.forEach(allFilters, function (attributeObj, attributeName) {
             var allFields = [];
@@ -134,8 +140,13 @@
         };
 
         // Drop down windows when they are in the URL query
-        scope.$on('rf/attributeFilter-ready', function () {
-          scope.generateFilterDropSelection();
+        scope.$watch(function () {
+          return ctrl.updateFilterDOM;
+        }, function () {
+          if (ctrl.updateFilterDOM) {
+            scope.generateFilterDropSelection();
+            ctrl.updateFilterDOM = false;
+          }
         });
       }
     };
