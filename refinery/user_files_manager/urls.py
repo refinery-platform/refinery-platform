@@ -5,6 +5,8 @@ from .views import UserFiles
 
 user_files_router = DefaultRouter()
 user_files_router.urls.extend([
-    url(r'^user/files/$', UserFiles.as_view())
+    url(r'^user/files/$', UserFiles.as_view())  # Rooted under /api/v2
 ])
-url(r'^user_files/$', 'user_files', name="user_files")
+user_files_url = url(r'^user/files/$',
+                     'user_files_manager.views.user_files',
+                     name="user_files")
