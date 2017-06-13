@@ -9,7 +9,6 @@ import logging
 import time
 import urlparse
 
-import core
 import requests
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -17,6 +16,8 @@ from django.db.models import Q
 from django.utils.http import urlquote, urlunquote
 from guardian.shortcuts import get_objects_for_user
 from requests.exceptions import HTTPError
+
+import core
 
 from .models import (AnnotatedNode, AnnotatedNodeRegistry, Assay, Attribute,
                      AttributeOrder, Node, Study)
