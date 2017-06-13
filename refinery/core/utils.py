@@ -882,7 +882,7 @@ def filter_nodes_uuids_in_solr(assay_uuid, filter_out_uuids=[],
         else:
             params['facets'] = ','.join(filter_attribute.keys())
 
-    solr_params = data_set_manager.utils.generate_solr_params(
+    solr_params = data_set_manager.utils.generate_solr_params_for_assay(
         params, assay_uuid)
     # Only require solr filters if exception uuids are passed
     if filter_out_uuids:

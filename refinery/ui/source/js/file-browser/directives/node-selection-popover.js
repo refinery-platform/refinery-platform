@@ -28,10 +28,9 @@
         // The script is in the data_set2.html template.
         var template = $templateCache.get('nodeselectionpopover.html');
         var popOverContent = $compile(template)(scope);
-        $rootScope.insidePopover = false;
         var options = {
           content: popOverContent,
-          placement: 'right',
+          placement: 'right-top',
           html: true,
           trigger: 'manual',
           container: 'body'

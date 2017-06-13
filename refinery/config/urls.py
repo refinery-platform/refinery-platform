@@ -31,6 +31,7 @@ from data_set_manager.api import (AssayResource, AttributeOrderResource,
                                   ProtocolResource, PublicationResource,
                                   StudyResource)
 from data_set_manager.urls import data_set_manager_router
+from user_files_manager.urls import user_files_router
 from file_store.urls import file_store_router
 
 from tool_manager.urls import tool_manager_router, django_docker_engine_url
@@ -178,6 +179,7 @@ router.extend(core_router)
 router.extend(data_set_manager_router)
 router.extend(file_store_router)
 router.extend(tool_manager_router)
+router.extend(user_files_router)
 
 # Wire up our DRF APIs using automatic URL routing.
 urlpatterns += patterns(

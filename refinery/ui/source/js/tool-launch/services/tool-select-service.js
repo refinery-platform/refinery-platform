@@ -9,10 +9,12 @@
   function toolSelectService (toolDefinitionsService) {
     var selectedTool = {};
     var toolList = [];
+    var isToolInfoCollapsed = true;
     var isToolPanelCollapsed = true;
 
     var service = {
       getTools: getTools,
+      isToolInfoCollapsed: isToolInfoCollapsed,
       isToolPanelCollapsed: isToolPanelCollapsed,
       selectedTool: selectedTool,
       setSelectedTool: setSelectedTool,

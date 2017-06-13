@@ -295,9 +295,8 @@ class IsaTabParser:
                 self.additional_raw_data_file_extension is not None and
                 len(node_name) > 0):
             if not re.search(
-                        r'%s$' % self.additional_raw_data_file_extension,
-                        node_name
-                    ):
+                    r'%s$' % self.additional_raw_data_file_extension,
+                    node_name):
                 node_name += self.additional_raw_data_file_extension
 
         if (header_components[0] in Node.ASSAYS |
@@ -376,8 +375,9 @@ class IsaTabParser:
 
         # remove the node from the row
         row.popleft()
+
         # read until we hit the next node
-        while not self.is_node(headers[-len(row)]):
+        while len(row) > 0 and not self.is_node(headers[-len(row)]):
             if self._current_node is not None:
                 if self.is_attribute(headers[-len(row)]):
                     self._parse_attribute(headers, row)
@@ -464,7 +464,7 @@ class IsaTabParser:
             else:
                 row.popleft()
                 if (len(row) > 1 and
-                        self.is_term_information(headers[-len(row)+1])):
+                        self.is_term_information(headers[-len(row) + 1])):
                     row.popleft()
                     row.popleft()
 
@@ -680,7 +680,7 @@ class IsaTabParser:
         # in many cases all fields will have the same length, but only if the
         # author put in enough tabs in all columns
         for key in fields:
-            fields[key] += [""] * (columns-len(fields[key]))
+            fields[key] += [""] * (columns - len(fields[key]))
 
         # 3. get the model
         model_class = section["model"]

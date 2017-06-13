@@ -13,6 +13,7 @@ import mock
 import mockcache as memcache
 from rest_framework.test import (APIRequestFactory, APIClient, APITestCase,
                                  force_authenticate)
+from tastypie.exceptions import NotFound
 from tastypie.test import ResourceTestCase
 
 from .api import AnalysisResource
@@ -1502,7 +1503,7 @@ class UtilitiesTest(TestCase):
             ]
         return {'nodes': response_node_uuids}
 
-    @mock.patch("data_set_manager.utils.generate_solr_params",
+    @mock.patch("data_set_manager.utils.generate_solr_params_for_assay",
                 fake_generate_solr_params)
     @mock.patch("data_set_manager.utils.search_solr", fake_search_solr)
     @mock.patch("data_set_manager.utils.format_solr_response",
@@ -1521,7 +1522,7 @@ class UtilitiesTest(TestCase):
         response = filter_nodes_uuids_in_solr(self.valid_uuid, self.node_uuids)
         self.assertItemsEqual(response, response_node_uuids)
 
-    @mock.patch("data_set_manager.utils.generate_solr_params",
+    @mock.patch("data_set_manager.utils.generate_solr_params_for_assay",
                 fake_generate_solr_params)
     @mock.patch("data_set_manager.utils.search_solr", fake_search_solr)
     @mock.patch("data_set_manager.utils.format_solr_response",
@@ -1640,8 +1641,8 @@ class DataSetResourceTest(ResourceTestCase):
         self.user_catch_all_project = UserProfile.objects.get(
             user=self.user
         ).catch_all_project
-        self.dataset = DataSet.objects.create()
-        self.dataset2 = DataSet.objects.create()
+        self.dataset = DataSet.objects.create(name="Dataset 1")
+        self.dataset2 = DataSet.objects.create(name="Dataset 2")
         self.galaxy_instance = Instance.objects.create()
         self.workflow_engine = WorkflowEngine.objects.create(
             instance=self.galaxy_instance
@@ -1738,6 +1739,45 @@ class DataSetResourceTest(ResourceTestCase):
         self.assertEqual(data['uuid'], self.dataset.uuid)
         self.assertEqual(data['analyses'], [])
 
+    def test_detail_response_with_complete_dataset(self):
+        # Properly created DataSets will have version information
+        self.dataset.set_owner(self.user)
+
+        dataset_uri = make_api_uri(
+            "data_sets",
+            self.dataset.uuid
+        )
+        response = self.api_client.get(
+            dataset_uri,
+            format='json'
+        )
+        data = self.deserialize(response)
+        self.assertEqual(data["version"], 1)
+        self.assertIsNotNone(data["date"])
+
+    def test_detail_response_yields_error_if_incomplete_dataset(self):
+        # DataSets that aren't fully created will yield informative errors
+        self.dataset2.set_owner(self.user)
+
+        dataset_uri = make_api_uri(
+            "data_sets",
+            self.dataset2.uuid
+        )
+        with self.assertRaises(NotFound):
+            self.api_client.get(dataset_uri, format='json')
+
+    def test_list_response_yields_complete_datasets_only(self):
+        # DataSets that aren't fully created will not be displayed in the
+        # list api response
+        self.dataset.set_owner(self.user)
+        self.dataset2.set_owner(self.user)
+
+        resp = self.api_client.get(make_api_uri('data_sets'), format='json')
+        self.assertValidJSONResponse(resp)
+        data = json.loads(resp.content)
+        self.assertEqual(data["meta"]["total_count"], 1)
+        self.assertEqual(data["objects"][0]["name"], self.dataset.name)
+
 
 class DataSetTests(TestCase):
     """ Testing of the DataSet model
@@ -1766,34 +1806,43 @@ class DataSetTests(TestCase):
             workflow_engine=self.workflow_engine
         )
         self.investigation = Investigation.objects.create()
-        self.study = Study.objects.create(investigation=self.investigation)
-        self.assay = Assay.objects.create(
-            study=self.study)
-        self.investigation_link = \
-            InvestigationLink.objects.create(
-                investigation=self.investigation,
-                data_set=self.dataset,
-                version=1
-            )
+        self.latest_investigation = Investigation.objects.create()
 
-        self.file_store_item = \
-            FileStoreItem.objects.create(
-                datafile=SimpleUploadedFile(
-                    'test_file.txt',
-                    'Coffee is delicious!')
+        self.study = Study.objects.create(
+            investigation=self.latest_investigation
+        )
+        self.assay = Assay.objects.create(
+            study=self.study
+        )
+        self.investigation_link = InvestigationLink.objects.create(
+            investigation=self.investigation,
+            data_set=self.dataset,
+            version=1
+        )
+        self.latest_investigation_link = InvestigationLink.objects.create(
+            investigation=self.latest_investigation,
+            data_set=self.dataset,
+            version=2
+        )
+
+        self.file_store_item = FileStoreItem.objects.create(
+            datafile=SimpleUploadedFile(
+                'test_file.txt',
+                'Coffee is delicious!'
             )
-        self.file_store_item1 = \
-            FileStoreItem.objects.create(
-                datafile=SimpleUploadedFile(
-                    'test_file.txt',
-                    'Coffee is delicious!')
+        )
+        self.file_store_item1 = FileStoreItem.objects.create(
+            datafile=SimpleUploadedFile(
+                'test_file.txt',
+                'Coffee is delicious!'
             )
-        self.file_store_item2 = \
-            FileStoreItem.objects.create(
-                datafile=SimpleUploadedFile(
-                    'test_file.txt',
-                    'Coffee is delicious!')
+        )
+        self.file_store_item2 = FileStoreItem.objects.create(
+            datafile=SimpleUploadedFile(
+                'test_file.txt',
+                'Coffee is delicious!'
             )
+        )
         self.node = Node.objects.create(
             name="n0", assay=self.assay, study=self.study,
             file_uuid=self.file_store_item.uuid)
@@ -1815,6 +1864,12 @@ class DataSetTests(TestCase):
         self.assertIn(self.file_store_item1, file_store_items)
         self.assertIn(self.file_store_item2, file_store_items)
 
+    def test_dataset_complete(self):
+        self.assertTrue(self.dataset.is_valid())
+
+    def test_dataset_incomplete(self):
+        self.assertFalse(self.dataset2.is_valid())
+
     def test_neo4j_called_on_post_save(self):
         with mock.patch(
             "core.models.update_annotation_sets_neo4j"
@@ -1828,6 +1883,18 @@ class DataSetTests(TestCase):
         ) as solr_mock:
             self.dataset.save()
             self.assertTrue(solr_mock.called)
+
+    def test_get_latest_investigation_link(self):
+        self.assertEqual(
+            self.dataset.get_latest_investigation_link(),
+            self.latest_investigation_link
+        )
+
+    def test_get_latest_investigation(self):
+        self.assertEqual(
+            self.dataset.get_latest_investigation_link().investigation,
+            self.latest_investigation
+        )
 
 
 class DataSetApiV2Tests(APITestCase):

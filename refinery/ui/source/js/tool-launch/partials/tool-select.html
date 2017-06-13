@@ -11,7 +11,7 @@
   <ui-select-choices
     position="down"
     repeat="tool in $ctrl.tools track by $index">
-    {{ tool.name }}
+     <i class="{{tool.tool_type|toolTypeIcon}}" aria-hidden="true"></i>{{ tool.name }}
   </ui-select-choices>
 </ui-select>
 

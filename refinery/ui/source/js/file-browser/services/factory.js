@@ -8,7 +8,8 @@ function fileBrowserFactory (
   assayFileService,
   fileBrowserSettings,
   nodeService,
-  selectedFilterService
+  selectedFilterService,
+  toolSelectService
   ) {
   // assayfiles has max 300 rows, ctrl adds/subtracts rows to maintain count
   var assayFiles = [];
@@ -228,24 +229,14 @@ function fileBrowserFactory (
    * @param {string} _columnName - column name
    */
   var setCustomInputGroupsColumn = function (_columnName) {
-    var _cellTemplate = '<div class="ngCellText grid-input-groups">' +
-      '<div ng-if="grid.appScope.nodeSelectCollection[row.entity.uuid].groupList.length > 0" ' +
-      'class="selected-node" ' +
-      'title="{{grid.appScope.nodeSelectCollection[row.entity.uuid].groupList}}">' +
-      '<div class="paragraph ui-grid-cell-contents" ' +
-      'ng-if="grid.appScope.nodeSelectCollection[row.entity.uuid].groupList[0].length > 0"> ' +
-      '<span ng-repeat="group in grid.appScope.nodeSelectCollection[row.entity.uuid].groupList ' +
-      'track by $index">' +
-      '<span ng-style="{\'color\':grid.appScope.inputFileTypeColor[' +
-      'grid.appScope.nodeSelectCollection[row.entity.uuid].inputTypeList[$index]]}">' +
-      '{{group[group.length - 1]}}</span>' +
-      '<span ng-if="$index < grid.appScope.nodeSelectCollection[row.entity.uuid]' +
-      '.groupList.length - 1">, &nbsp</span> </span></div></div></div>';
+    var _cellTemplate = '<rp-input-groups-column-template>' +
+      '</rp-input-groups-column-template>';
+
+    var isToolSelected = !_.isEmpty(toolSelectService.selectedTool);
 
     return {
       name: _columnName,
       field: _columnName,
-      cellTooltip: true,
       width: 11 + '%',
       displayName: 'Input Groups',
       enableFiltering: false,
@@ -253,10 +244,9 @@ function fileBrowserFactory (
       enableColumnMenu: false,
       enableColumnResizing: true,
       cellTemplate: _cellTemplate,
-      visible: false
+      visible: isToolSelected
     };
   };
-
    /**
    * Helper method for select column, requires unique template & fields.
    * @param {string} _columnName - column name
@@ -264,13 +254,16 @@ function fileBrowserFactory (
   var setCustomSelectColumn = function (columnName) {
     var cellTemplate = '<div class="ngCellText text-align-center ui-grid-cell-contents">' +
         '<a rp-node-selection-popover title="Select Tool Input"' +
-        'class="ui-grid-selection-row-header-buttons" ' +
-        'ng-class="{\'solidText\': grid.appScope.nodeSelectCollection[' +
-        'row.entity.uuid].groupList.length > 0 || row.entity.uuid ==' +
-        ' grid.appScope.activeNodeRow.uuid}" ' +
         'ng-click="grid.appScope.openSelectionPopover(row.entity)"' +
         'id="{{row.entity.uuid}}">' +
-        '<i class="fa fa-arrow-right" aria-hidden="true"></i></a></div>';
+        '<div class="full-size ui-grid-selection-row-header-buttons" ' +
+        'ng-class="{\'solidText\': grid.appScope.nodeSelectCollection[' +
+        'row.entity.uuid].groupList.length > 0 || row.entity.uuid == ' +
+        'grid.appScope.activeNodeRow.uuid}">' +
+        '<i class="fa fa-arrow-right" aria-hidden="true">' +
+        '</i></div></a></div>';
+
+    var isToolSelected = !_.isEmpty(toolSelectService.selectedTool);
 
     return {
       name: columnName,
@@ -283,7 +276,7 @@ function fileBrowserFactory (
       enableColumnMenu: false,
       enableColumnResizing: true,
       cellTemplate: cellTemplate,
-      visible: false
+      visible: isToolSelected
     };
   };
 
@@ -406,6 +399,7 @@ angular
     'fileBrowserSettings',
     'nodeService',
     'selectedFilterService',
+    'toolSelectService',
     fileBrowserFactory
   ]
 );

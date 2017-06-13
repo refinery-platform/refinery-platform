@@ -16,7 +16,6 @@ from django.core.management import call_command, CommandError
 from django.http import HttpResponseBadRequest
 from django.test import TestCase
 
-from django_docker_engine.docker_utils import DockerClientWrapper
 from pyvirtualdisplay import Display
 from rest_framework.test import (APIRequestFactory, APITestCase,
                                  force_authenticate)
@@ -639,6 +638,196 @@ class ToolDefinitionGenerationTests(TestCase):
             self.assertEqual(ToolDefinition.objects.count(), 0)
 
 
+class ToolTests(TestCase):
+    def setUp(self):
+        self.mock_vis_annotations_reference = (
+            "tool_manager.management.commands.generate_tool_definitions"
+            ".get_visualization_annotations_list"
+        )
+
+        self.username = 'coffee_lover'
+        self.password = 'coffeecoffee'
+        self.user = User.objects.create_user(self.username, '', self.password)
+        self.factory = APIRequestFactory()
+        self.view = ToolsViewSet.as_view({'post': 'create'})
+        self.url_root = '/api/v2/tools'
+
+    def tearDown(self):
+        # Trigger the pre_delete signal so that datafiles are purged
+        FileStoreItem.objects.all().delete()
+
+    def test_tool_model_str(self):
+        with open("{}/visualizations/igv.json".format(TEST_DATA_PATH)) as f:
+            tool_annotation = [json.loads(f.read())]
+
+        with mock.patch(
+                self.mock_vis_annotations_reference,
+                return_value=tool_annotation
+        ) as mocked_method:
+            call_command("generate_tool_definitions", visualizations=True)
+
+            self.assertTrue(mocked_method.called)
+
+        td = ToolDefinition.objects.all()[0]
+        post_data = {
+            "tool_definition_uuid": td.uuid,
+            "file_relationships": "['www.example.com/cool_file.txt']"
+        }
+        post_request = self.factory.post(
+            self.url_root,
+            data=post_data,
+            format="json"
+        )
+        force_authenticate(post_request, self.user)
+
+        # We don't want to spin up containers for unit testing
+        with mock.patch(
+                "django_docker_engine.docker_utils.DockerClientWrapper.run"
+        ) as run_mock:
+            self.post_response = self.view(post_request)
+            self.assertTrue(run_mock.called)
+
+        tool = Tool.objects.get(
+            tool_definition__uuid=td.uuid
+        )
+        self.assertEqual(
+            tool.__str__(),
+            "Tool: VISUALIZATION Test LIST Visualization IGV {}".format(
+                tool.uuid
+            )
+        )
+
+    def test_tool_container_removed_on_deletion(self):
+        with open("{}/visualizations/igv.json".format(TEST_DATA_PATH)) as f:
+            tool_annotation = [json.loads(f.read())]
+
+        with mock.patch(self.mock_vis_annotations_reference,
+                        return_value=tool_annotation):
+            call_command("generate_tool_definitions", visualizations=True)
+
+        td = ToolDefinition.objects.all()[0]
+        post_data = {
+            "tool_definition_uuid": td.uuid,
+            "file_relationships": "['www.example.com/cool_file.txt']"
+        }
+        post_request = self.factory.post(
+            self.url_root,
+            data=post_data,
+            format="json"
+        )
+        force_authenticate(post_request, self.user)
+
+        # We don't want to spin up containers for unit testing
+        with mock.patch(
+                "django_docker_engine.docker_utils.DockerClientWrapper.run"
+        ) as run_mock:
+            self.view(post_request)
+            self.assertTrue(run_mock.called)
+
+        with mock.patch(
+                "django_docker_engine.docker_utils.DockerClientWrapper"
+                ".purge_by_label"
+        ) as purge_mock:
+            Tool.objects.get(tool_definition__uuid=td.uuid).delete()
+            self.assertTrue(purge_mock.called)
+
+    def test_node_uuids_get_populated_with_urls(self):
+        with open("{}/visualizations/igv.json".format(TEST_DATA_PATH)) as f:
+            tool_annotation = [json.loads(f.read())]
+
+        with mock.patch(
+                self.mock_vis_annotations_reference,
+                return_value=tool_annotation
+        ) as mocked_method:
+            call_command("generate_tool_definitions", visualizations=True)
+
+            self.assertTrue(mocked_method.called)
+            self.assertEqual(ToolDefinition.objects.count(), 1)
+
+        td = ToolDefinition.objects.all()[0]
+
+        dataset = DataSet.objects.create(name="coffee dataset")
+        investigation = Investigation.objects.create()
+        study = Study.objects.create(investigation=investigation)
+        assay = Assay.objects.create(study=study)
+        InvestigationLink.objects.create(
+            investigation=investigation,
+            data_set=dataset,
+            version=1
+        )
+
+        test_file_a = StringIO.StringIO()
+        test_file_a.write('Coffee is great.\n')
+        file_store_item_a = FileStoreItem.objects.create(
+            datafile=InMemoryUploadedFile(
+                test_file_a,
+                field_name='tempfile',
+                name='test_file_a.txt',
+                content_type='text/plain',
+                size=len(test_file_a.getvalue()),
+                charset='utf-8'
+            )
+        )
+        test_file_b = StringIO.StringIO()
+        test_file_b.write('Coffee is really great.\n')
+        file_store_item_b = FileStoreItem.objects.create(
+            datafile=InMemoryUploadedFile(
+                test_file_b,
+                field_name='tempfile',
+                name='test_file_b.txt',
+                content_type='text/plain',
+                size=len(test_file_b.getvalue()),
+                charset='utf-8'
+            )
+        )
+        node_a = Node.objects.create(
+            name="n0",
+            assay=assay,
+            study=study,
+            file_uuid=file_store_item_a.uuid
+        )
+        node_b = Node.objects.create(
+            name="n0",
+            assay=assay,
+            study=study,
+            file_uuid=file_store_item_b.uuid
+        )
+
+        post_data = {
+            "tool_definition_uuid": td.uuid,
+            "file_relationships": "[{}, {}]".format(
+                node_a.uuid,
+                node_b.uuid
+            )
+        }
+        post_request = self.factory.post(
+            self.url_root,
+            data=post_data,
+            format="json"
+        )
+        force_authenticate(post_request, self.user)
+
+        # We don't want to spin up containers for unit testing
+        with mock.patch(
+                "django_docker_engine.docker_utils.DockerClientWrapper.run"
+        ) as run_mock:
+            self.post_response = self.view(post_request)
+            self.assertTrue(run_mock.called)
+
+        tool_launch = Tool.objects.get(
+            tool_definition__uuid=td.uuid
+        )
+
+        file_relationships = eval(tool_launch.file_relationships)
+
+        # Build regex and assert that the file_relationships structure is
+        # populated from the FileStoreItem's datafiles that we've associated
+        # with the Nodes above
+        regex = re.compile(r"test_file_[ab]\.txt")
+        for url in file_relationships:
+            self.assertIsNotNone(regex.search(url))
+
+
 class ToolAPITests(APITestCase):
     def setUp(self):
         self.public_group_name = ExtendedGroup.objects.public_group().name
@@ -674,7 +863,12 @@ class ToolAPITests(APITestCase):
             format="json"
         )
         force_authenticate(self.post_request, self.user)
-        self.post_response = self.view(self.post_request)
+
+        with mock.patch(
+                "django_docker_engine.docker_utils.DockerClientWrapper.run"
+        ) as run_mock:
+            self.post_response = self.view(self.post_request)
+            self.assertTrue(run_mock.called)
 
         self.tool_launch = Tool.objects.get(
             tool_definition__uuid=self.td.uuid
@@ -704,10 +898,6 @@ class ToolAPITests(APITestCase):
         )
         force_authenticate(self.options_request, self.user)
         self.options_response = self.view(self.options_request)
-
-    def tearDown(self):
-        # Purge Docker Containers that we've spun up
-        DockerClientWrapper().purge_by_label(self.tool_launch.uuid)
 
     def test_tools_exist(self):
         self.assertEqual(Tool.objects.count(), 1)
@@ -827,8 +1017,37 @@ class ToolAPITests(APITestCase):
         )
         self.assertEqual(Tool.objects.count(), 0)
 
+    def test_bad_POST_transaction_rollback(self):
+        Tool.objects.all().delete()
 
-class ToolTests(StaticLiveServerTestCase):
+        post_data = {
+            "tool_definition_uuid": self.td.uuid,
+            "file_relationships": str(
+                [
+                    "www.example.com/cool_file.txt",
+                    (
+                        "www.example.com/cool_file.txt",
+                        "www.example.com/cool_file.txt"
+                    )
+                ]
+            )
+        }
+
+        post_request = self.factory.post(
+            self.url_root,
+            data=post_data,
+            format="json"
+        )
+        force_authenticate(post_request, self.user)
+        self.post_response = self.view(post_request)
+
+        self.assertIsInstance(self.post_response, HttpResponseBadRequest)
+        self.assertEqual(Tool.objects.count(), 0)
+        self.assertIn("LIST/PAIR structure is not balanced",
+                      self.post_response.content)
+
+
+class ToolIntegrationTests(StaticLiveServerTestCase):
     # Don't delete data migration data after test runs: http://bit.ly/2lAYqVJ
     serialized_rollback = True
 
@@ -855,137 +1074,10 @@ class ToolTests(StaticLiveServerTestCase):
         # This could become an issue if tests are ever run in parallel.
         self.browser.quit()
         self.display.stop()
-        for tool in Tool.objects.all():
-            # Purge Docker Containers that we've spun up
-            DockerClientWrapper().purge_by_label(tool.uuid)
 
-        # Trigger the pre_delete signal so that datafiles are purged
-        FileStoreItem.objects.all().delete()
-
-    def test_tool_model_str(self):
-        with open("{}/visualizations/igv.json".format(TEST_DATA_PATH)) as f:
-            tool_annotation = [json.loads(f.read())]
-
-        with mock.patch(
-                self.mock_vis_annotations_reference,
-                return_value=tool_annotation
-        ) as mocked_method:
-            call_command("generate_tool_definitions", visualizations=True)
-
-            self.assertTrue(mocked_method.called)
-
-        td = ToolDefinition.objects.all()[0]
-        post_data = {
-            "tool_definition_uuid": td.uuid,
-            "file_relationships": "['www.coffee.com/cool_file.txt']"
-        }
-        post_request = self.factory.post(
-            self.url_root,
-            data=post_data,
-            format="json"
-        )
-        force_authenticate(post_request, self.user)
-        self.post_response = self.view(post_request)
-
-        tool = Tool.objects.get(
-            tool_definition__uuid=td.uuid
-        )
-        self.assertEqual(
-            tool.__str__(),
-            "Tool: VISUALIZATION Test LIST Visualization IGV {}".format(
-                tool.uuid
-            )
-        )
-
-    def test_node_uuids_get_populated_with_urls(self):
-        with open("{}/visualizations/igv.json".format(TEST_DATA_PATH)) as f:
-            tool_annotation = [json.loads(f.read())]
-
-        with mock.patch(
-                self.mock_vis_annotations_reference,
-                return_value=tool_annotation
-        ) as mocked_method:
-            call_command("generate_tool_definitions", visualizations=True)
-
-            self.assertTrue(mocked_method.called)
-            self.assertEqual(ToolDefinition.objects.count(), 1)
-
-        td = ToolDefinition.objects.all()[0]
-
-        dataset = DataSet.objects.create(name="coffee dataset")
-        investigation = Investigation.objects.create()
-        study = Study.objects.create(investigation=investigation)
-        assay = Assay.objects.create(study=study)
-        InvestigationLink.objects.create(
-            investigation=investigation,
-            data_set=dataset,
-            version=1
-        )
-
-        test_file_a = StringIO.StringIO()
-        test_file_a.write('Coffee is great.\n')
-        file_store_item_a = FileStoreItem.objects.create(
-            datafile=InMemoryUploadedFile(
-                test_file_a,
-                field_name='tempfile',
-                name='test_file_a.txt',
-                content_type='text/plain',
-                size=len(test_file_a.getvalue()),
-                charset='utf-8'
-            )
-        )
-        test_file_b = StringIO.StringIO()
-        test_file_b.write('Coffee is really great.\n')
-        file_store_item_b = FileStoreItem.objects.create(
-            datafile=InMemoryUploadedFile(
-                test_file_b,
-                field_name='tempfile',
-                name='test_file_b.txt',
-                content_type='text/plain',
-                size=len(test_file_b.getvalue()),
-                charset='utf-8'
-            )
-        )
-        node_a = Node.objects.create(
-            name="n0",
-            assay=assay,
-            study=study,
-            file_uuid=file_store_item_a.uuid
-        )
-        node_b = Node.objects.create(
-            name="n0",
-            assay=assay,
-            study=study,
-            file_uuid=file_store_item_b.uuid
-        )
-
-        post_data = {
-            "tool_definition_uuid": td.uuid,
-            "file_relationships": "[{}, {}]".format(
-                node_a.uuid,
-                node_b.uuid
-            )
-        }
-        post_request = self.factory.post(
-            self.url_root,
-            data=post_data,
-            format="json"
-        )
-        force_authenticate(post_request, self.user)
-        self.post_response = self.view(post_request)
-
-        tool_launch = Tool.objects.get(
-            tool_definition__uuid=td.uuid
-        )
-
-        file_relationships = eval(tool_launch.file_relationships)
-
-        # Build regex and assert that the file_relationships structure is
-        # populated from the FileStoreItem's datafiles that we've associated
-        # with the Nodes above
-        regex = re.compile(r"test_file_[ab]\.txt")
-        for url in file_relationships:
-            self.assertIsNotNone(regex.search(url))
+        # Explicitly delete Tool's so that the post_delete signal is
+        # triggered and their Docker containers are purged
+        Tool.objects.all().delete()
 
     def test_visualization_container_launch_and_access_hello_world(self):
         with open(
@@ -1144,31 +1236,6 @@ class ToolTests(StaticLiveServerTestCase):
             )
             # TODO: Add selenium-based test once higlass relative paths fixed
 
-    def test_bad_POST_transaction_rollback(self):
-        post_data = {
-            "tool_definition_uuid": uuid.uuid4(),
-            "file_relationships": str(
-                [
-                    "https://s3.amazonaws.com/pkerp/public/"
-                    "dixon2012-h1hesc-hindiii-allreps-filtered."
-                    "1000kb.multires.cool"
-                ]
-            )
-        }
-
-        post_request = self.factory.post(
-            self.url_root,
-            data=post_data,
-            format="json"
-        )
-        force_authenticate(post_request, self.user)
-        self.post_response = self.view(post_request)
-
-        self.assertIsInstance(self.post_response, HttpResponseBadRequest)
-        self.assertEqual(Tool.objects.count(), 0)
-        self.assertIn("ToolDefinition matching query does not exist.",
-                      self.post_response.content)
-
 
 class ToolLaunchConfigurationTests(TestCase):
 
@@ -1220,13 +1287,7 @@ class ToolLaunchConfigurationTests(TestCase):
         tool_launch_configuration = {
             "tool_definition_uuid": self.td.uuid,
             "file_relationships": "!!{}!!".format(
-                str(
-                    [
-                        "https://s3.amazonaws.com/pkerp/public/"
-                        "dixon2012-h1hesc-hindiii-allreps-filtered."
-                        "1000kb.multires.cool"
-                    ]
-                )
+                str(["www.example.com/cool_file.txt"])
             )
         }
         with self.assertRaises(RuntimeError) as context:
@@ -1281,13 +1342,7 @@ class ToolLaunchConfigurationTests(TestCase):
     def test_invalid_TLC_bad_tooldefinition_uuid(self):
         tool_launch_configuration = {
             "tool_definition_uuid": "This is an invalid ToolDef UUID",
-            "file_relationships": str(
-                [
-                    "https://s3.amazonaws.com/pkerp/public/"
-                    "dixon2012-h1hesc-hindiii-allreps-filtered."
-                    "1000kb.multires.cool"
-                ]
-            )
+            "file_relationships": str(["www.example.com/cool_file.txt"])
         }
         with self.assertRaises(RuntimeError) as context:
             validate_tool_launch_configuration(tool_launch_configuration)
