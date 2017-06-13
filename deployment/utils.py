@@ -4,7 +4,19 @@ import random
 import sys
 
 import boto3
+from cfn_pyplates.core import JSONableDict
 import yaml
+
+
+class Output(JSONableDict):
+    """Builds on cfn_pyplates.core.Output to include export dictionary"""
+    def __init__(self, name, value, export=None, description=None):
+        update_dict = {'Value': value}
+        if description is not None:
+            update_dict['Description'] = description
+        if export is not None:
+            update_dict['Export'] = {'Name': export}
+        super(Output, self).__init__(update_dict, name)
 
 
 def load_tags():

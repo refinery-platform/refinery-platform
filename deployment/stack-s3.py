@@ -9,7 +9,6 @@ Requires STACK_NAME to be defined in aws-config/config.yaml
 For details:
 https://github.com/refinery-platform/refinery-platform/wiki/AWS-installation
 """
-
 import json
 import sys
 import yaml
@@ -18,6 +17,8 @@ import boto3
 from cfn_pyplates.core import (CloudFormationTemplate, DeletionPolicy,
                                Parameter, Properties, Resource)
 from cfn_pyplates.functions import ref
+
+from utils import Output
 
 REFINERY_CONFIG_FILE = 'aws-config/config.yaml'
 
@@ -98,6 +99,12 @@ def make_storage_template():
             'AccessControl': 'PublicRead',
         }),
         DeletionPolicy('Retain'),
+    ))
+    cft.outputs.add(Output(
+        'MediaBucketName',
+        ref('MediaStorageBucket'),
+        {'Fn::Sub': '${AWS::StackName}-media'},
+        'Name of S3 bucket for Django media files'
     ))
 
     return cft
