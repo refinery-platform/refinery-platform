@@ -14,6 +14,7 @@
 
     it('service and variables should exist', function () {
       expect(service).toBeDefined();
+      expect(service.paramsForm).toEqual({});
       expect(service.toolParams).toEqual([]);
     });
 

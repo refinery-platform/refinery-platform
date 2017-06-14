@@ -14,9 +14,11 @@
 
   function toolParamsService (
   ) {
+    var paramsForm = {};
     var toolParams = [];
 
     var service = {
+      paramsForm: paramsForm,
       refreshToolParams: refreshToolParams,
       toolParams: toolParams
     };

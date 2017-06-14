@@ -19,7 +19,7 @@
     var vm = this;
     vm.isToolParamsCollapsed = false;
     vm.params = paramsService.toolParams;
-    vm.paramsForm = {};
+    vm.paramsForm = paramsService.paramsForm;
    /*
    * ---------------------------------------------------------
    * Methods Definitions
