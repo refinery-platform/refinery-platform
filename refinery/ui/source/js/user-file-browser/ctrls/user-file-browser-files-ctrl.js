@@ -5,6 +5,10 @@
   .module('refineryUserFileBrowser')
   .controller('UserFileBrowserFilesCtrl', UserFileBrowserFilesCtrl);
 
+  UserFileBrowserFilesCtrl.$inject = [
+    'userFileBrowserFactory'
+  ];
+
   function UserFileBrowserFilesCtrl () {
     var vm = this;
     vm.gridOptions = {
