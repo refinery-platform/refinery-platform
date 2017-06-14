@@ -27,11 +27,6 @@
     vm.isToolParamsCollapsed = false; // tracks the parameters panel
     vm.params = paramsService.toolParams;
     vm.paramsForm = paramsService.paramsForm;
-   /*
-   * ---------------------------------------------------------
-   * Methods Definitions
-   * ---------------------------------------------------------
-   */
 
     /*
    * ---------------------------------------------------------

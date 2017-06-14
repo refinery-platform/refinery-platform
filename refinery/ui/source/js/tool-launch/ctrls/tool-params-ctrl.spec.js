@@ -3,7 +3,6 @@
 
   describe('Controller: Tool Params Ctrl', function () {
     var ctrl;
-    var scope;
 
     beforeEach(module('refineryApp'));
     beforeEach(module('refineryToolLaunch'));
@@ -11,7 +10,7 @@
       $rootScope,
       $controller
     ) {
-      scope = $rootScope.$new();
+      var scope = $rootScope.$new();
       ctrl = $controller('ToolParamsCtrl', {
         $scope: scope
       });
