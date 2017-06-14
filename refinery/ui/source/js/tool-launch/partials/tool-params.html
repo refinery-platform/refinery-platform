@@ -57,21 +57,87 @@
                 {{ param.default_value }}
                </div>
              <div ng-if="param.is_user_adjustable">
-                <div class="vertical-align">
-                  <h4>
-                    Update Value:
-                  </h4>
-                  <input
-                    autofocus
-                    type="text"
-                    name="toolParamsForm"
-                    class="form-control"
-                    placeholder="{{ param.default_value }}"
-                    ng-model="$ctrl.paramsForm[param.uuid]"
-                    ng-minlength="1"
-                    ng-maxlength="32"
-                    required>
-                </div>
+               <div ng-switch="param.value_type">
+                 <div ng-switch-when="INTEGER">
+                   <h4>
+                     Update Value:
+                   </h4>
+                   <input
+                     autofocus
+                     type="text"
+                     name="{{param.uuid}}"
+                     class="form-control"
+                     placeholder="{{ param.default_value }}"
+                     ng-model="$ctrl.paramsForm[param.uuid]"
+                     ng-maxlength="32"
+                     ng-pattern="/^-?[0-9][^\.]*$/">
+                   <div
+                      ng-messages="toolParamForm[param.uuid].$error"
+                      role="alert"
+                      class="text-danger">
+                      <div ng-message="pattern">
+                        <i class="fa fa-warning" aria-hidden="true"></i>
+                        Must be an integer.
+                      </div>
+                   </div>
+                 </div>
+                 <div ng-switch-when="FLOAT">
+                   <h4>
+                     Update Value:
+                   </h4>
+                   <input
+                     autofocus
+                     type="text"
+                     name="{{param.uuid}}"
+                     class="form-control"
+                     placeholder="{{ param.default_value }}"
+                     ng-model="$ctrl.paramsForm[param.uuid]"
+                     ng-maxlength="32"
+                     ng-pattern="/^[0-9]+(\.[0-9]{1,2})?$/">
+                    <div
+                      ng-messages="toolParamForm[param.uuid].$error"
+                      role="alert"
+                      class="text-danger">
+                      <div ng-message="pattern">
+                        <i class="fa fa-warning" aria-hidden="true"></i>
+                        Must be a float.
+                      </div>
+                   </div>
+                 </div>
+                 <div ng-switch-when="BOOLEAN">
+                   <h4>
+                     Update Value:
+                   </h4>
+                   <label class="p-l-1-2">
+                      <input
+                        type="radio"
+                        ng-value="true"
+                        ng-model="$ctrl.paramsForm[param.uuid]">
+                      True
+                   </label>
+                   <label class="p-l-1-2">
+                     <input
+                      type="radio"
+                      ng-value="false"
+                      ng-model="$ctrl.paramsForm[param.uuid]">
+                      False
+                    </label>
+                  </div>
+                  <div ng-switch-default>
+                   <h4>
+                     Update Value:
+                   </h4>
+                   <input
+                     autofocus
+                     type="text"
+                     name="{{param.uuid}}"
+                     class="form-control"
+                     placeholder="{{ param.default_value }}"
+                     ng-model="$ctrl.paramsForm[param.uuid]"
+                     ng-maxlength="32"
+                     ng-pattern="STRING">
+                 </div>
+               </div>
              </div>
            </li>
          </form>
