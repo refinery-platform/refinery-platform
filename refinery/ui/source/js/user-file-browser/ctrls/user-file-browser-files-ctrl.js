@@ -14,8 +14,7 @@
     var vm = this;
     var promise = $q.defer();
     var getUserFiles = userFileBrowserFactory.getUserFiles;
-    getUserFiles().then(function () {
-      // TODO: actually pull data from response.
+    getUserFiles().then(function (solr) {
       vm.gridOptions.data = [
           { url: 'foo.txt', technology: 'ChIP-seq',
             filename: 'YES.fastq.gz', organism: 'Homo sapiens',
@@ -29,7 +28,21 @@
             antibody: '', cell_type: 'mesenteric white adipose tissues', published: 'no',
             accession: 'GDS6249', genotype: 'C57BL/6J'
           }
-      ];
+      ]; // TODO: Remove this mock data.
+      for (var i = 0; i < solr.nodes.length; i++) {
+        vm.gridOptions.data.push({
+          url: 'TODO',
+          technology: 'TODO',
+          filename: 'TODO',
+          organism: 'TODO',
+          date: 'TODO',
+          antibody: 'TODO',
+          cell_type: 'TODO',
+          published: 'TODO',
+          accession: 'TODO',
+          genotype: 'TODO'
+        });
+      }
       promise.resolve();
     }, function () {
       promise.reject();
