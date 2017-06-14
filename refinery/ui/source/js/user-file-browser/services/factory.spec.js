@@ -25,8 +25,7 @@
       beforeEach(inject(function (
         $q,
         $rootScope,
-        userFileService,
-        nodeService
+        userFileService
       ) {
         userFiles = {
           nodes: [
@@ -81,14 +80,6 @@
           }
         };
         spyOn(userFileService, 'query').and.callFake(function () {
-          var deferred = $q.defer();
-          deferred.resolve(userFiles);
-          return {
-            $promise: deferred.promise
-          };
-        });
-
-        spyOn(nodeService, 'query').and.callFake(function () {
           var deferred = $q.defer();
           deferred.resolve(userFiles);
           return {
