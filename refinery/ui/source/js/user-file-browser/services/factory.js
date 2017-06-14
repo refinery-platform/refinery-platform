@@ -3,7 +3,7 @@
 
   angular
   .module('refineryUserFileBrowser')
-  .factory('UserFileBrowserFactory', userFileBrowserFactory);
+  .factory('userFileBrowserFactory', userFileBrowserFactory);
 
   userFileBrowserFactory.$inject = [
     '$log',
