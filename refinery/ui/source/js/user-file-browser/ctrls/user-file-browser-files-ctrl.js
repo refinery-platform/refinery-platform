@@ -6,13 +6,34 @@
   .controller('UserFileBrowserFilesCtrl', UserFileBrowserFilesCtrl);
 
   UserFileBrowserFilesCtrl.$inject = [
+    '$q',
     'userFileBrowserFactory'
   ];
 
-  function UserFileBrowserFilesCtrl (userFileBrowserFactory) {
+  function UserFileBrowserFilesCtrl ($q, userFileBrowserFactory) {
     var vm = this;
+    var promise = $q.defer();
     var getUserFiles = userFileBrowserFactory.getUserFiles;
-    console.log(getUserFiles());  // TODO: How do I use this?
+    getUserFiles().then(function () {
+      // TODO: actually pull data from response.
+      vm.gridOptions.data = [
+          { url: 'foo.txt', technology: 'ChIP-seq',
+            filename: 'YES.fastq.gz', organism: 'Homo sapiens',
+            date: '2017-06-01', owner: 'Chuck McCallum',
+            antibody: 'HNF4A', cell_type: 'Caco-2', published: 'yes',
+            accession: 'GDS6248', genotype: 'N/A'
+          },
+          { url: 'bar.txt', technology: 'RNA-seq',
+            filename: 'YES.fastq.gz', organism: 'Mus musculus',
+            date: '2017-05-01', owner: 'Chuck McCallum',
+            antibody: '', cell_type: 'mesenteric white adipose tissues', published: 'no',
+            accession: 'GDS6249', genotype: 'C57BL/6J'
+          }
+      ];
+      promise.resolve();
+    }, function () {
+      promise.reject();
+    });
 
     vm.gridOptions = {
       appScopeProvider: vm,
@@ -56,20 +77,6 @@
                 '</a>' +
                 '</div>' },
           { field: 'genotype' }
-      ],
-      data: [
-          { url: 'foo.txt', technology: 'ChIP-seq',
-            filename: 'SRR064951.fastq.gz', organism: 'Homo sapiens',
-            date: '2017-06-01', owner: 'Chuck McCallum',
-            antibody: 'HNF4A', cell_type: 'Caco-2', published: 'yes',
-            accession: 'GDS6248', genotype: 'N/A'
-          },
-          { url: 'bar.txt', technology: 'RNA-seq',
-            filename: 'SRR064952.fastq.gz', organism: 'Mus musculus',
-            date: '2017-05-01', owner: 'Chuck McCallum',
-            antibody: '', cell_type: 'mesenteric white adipose tissues', published: 'no',
-            accession: 'GDS6249', genotype: 'C57BL/6J'
-          }
       ]
     };
   }
