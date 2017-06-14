@@ -1,3 +1,9 @@
+/**
+ * Tool Params Component
+ * @namespace rpToolParams
+ * @desc Component for the parameter's panel.
+ * @memberOf refineryApp.refineryToolLaunch
+ */
 (function () {
   'use strict';
   angular

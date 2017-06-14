@@ -1,3 +1,10 @@
+/**
+ * Tool Params Ctrl
+ * @namespace ToolParamsCtrl
+ * @desc Ctrl for rpToolParams directive, which is the parameter's panel.
+ * Include collapsing, displaying parameters, and form for parameters.
+ * @memberOf refineryApp.refineryToolLaunch
+ */
 (function () {
   'use strict';
 
@@ -17,7 +24,7 @@
   ) {
     var paramsService = toolParamsService;
     var vm = this;
-    vm.isToolParamsCollapsed = false;
+    vm.isToolParamsCollapsed = false; // tracks the parameters panel
     vm.params = paramsService.toolParams;
     vm.paramsForm = paramsService.paramsForm;
    /*
