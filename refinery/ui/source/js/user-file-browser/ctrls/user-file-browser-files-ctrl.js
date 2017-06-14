@@ -9,8 +9,11 @@
     'userFileBrowserFactory'
   ];
 
-  function UserFileBrowserFilesCtrl () {
+  function UserFileBrowserFilesCtrl (userFileBrowserFactory) {
     var vm = this;
+    var getUserFiles = userFileBrowserFactory.getUserFiles;
+    console.log(getUserFiles());  // TODO: How do I use this?
+
     vm.gridOptions = {
       appScopeProvider: vm,
       useExternalSorting: true,
