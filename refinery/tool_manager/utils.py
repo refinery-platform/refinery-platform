@@ -95,7 +95,8 @@ def create_tool_definition(annotation_data):
                 annotation
             ),
             image_name=annotation["image_name"],
-            container_input_path=annotation["container_input_path"]
+            container_input_path=annotation["container_input_path"],
+            extra_directories=annotation["extra_directories"]
         )
 
     create_and_associate_output_files(
