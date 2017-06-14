@@ -7,7 +7,6 @@ from django.template import RequestContext
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -22,7 +21,7 @@ class UserFiles(APIView):
 
         solr_params = generate_solr_params_for_user(
                 params,
-                user_uuid=request.user.uuid
+                user_id=request.user.id
         )
         if solr_params is None:
             return Response({})

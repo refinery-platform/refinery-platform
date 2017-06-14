@@ -9,22 +9,20 @@ import logging
 import time
 import urlparse
 
+import requests
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.db.models import Q
 from django.utils.http import urlquote, urlunquote
-
 from guardian.shortcuts import get_objects_for_user
-
-import requests
 from requests.exceptions import HTTPError
+
+import core
 
 from .models import (AnnotatedNode, AnnotatedNodeRegistry, Assay, Attribute,
                      AttributeOrder, Node, Study)
 from .search_indexes import NodeIndex
 from .serializers import AttributeOrderSerializer
-import core
-
 
 logger = logging.getLogger(__name__)
 
@@ -506,7 +504,7 @@ def _index_annotated_nodes(node_type, study_uuid, assay_uuid=None,
     logger.info("%s nodes indexed in %s", str(counter), str(end - start))
 
 
-def generate_solr_params_for_user(params, user_uuid):
+def generate_solr_params_for_user(params, user_id):
     """Creates the encoded solr params limiting results to one user.
     Keyword Argument
         params -- python dict or QueryDict
@@ -525,7 +523,7 @@ def generate_solr_params_for_user(params, user_uuid):
 
     user = None
     try:
-        user = User.objects.get(uuid=user_uuid)
+        user = User.objects.get(id=user_id)
     except User.DoesNotExist:
         pass
 
@@ -536,9 +534,13 @@ def generate_solr_params_for_user(params, user_uuid):
 
     assay_uuids = []
     for dataset in datasets:
-        investigation_links = dataset.get_investigation_links()
+        investigation_link = dataset.get_latest_investigation_link()
+        if investigation_link is None:
+            continue
+            # It's not an error not to have data,
+            # but there's nothing more to do here.
+        investigation = investigation_link.investigation
 
-        investigation = investigation_links.investigation
         try:
             study = Study.objects.get(
                 investigation=investigation
@@ -546,8 +548,8 @@ def generate_solr_params_for_user(params, user_uuid):
         except Study.DoesNotExist as e:
             logger.error('Expected at least one Study for %s: %s',
                          investigation, e)
-            # Do not need to re-raise this one.
             continue
+            # Again, nothing more to do here.
         except Study.MultipleObjectsReturned as e:
             logger.error('Expected only one Study for %s: %s',
                          investigation, e)
@@ -558,8 +560,8 @@ def generate_solr_params_for_user(params, user_uuid):
         except Assay.DoesNotExist as e:
             logger.error('Expected at least one Assay for %s: %s',
                          study, e)
-            # Do not need to re-raise this one.
             continue
+            # Again, nothing more to do here.
         except Assay.MultipleObjectsReturned as e:
             logger.error('Expected only one Assay for %s: %s',
                          study, e)
