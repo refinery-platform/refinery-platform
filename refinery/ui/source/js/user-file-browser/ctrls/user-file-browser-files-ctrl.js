@@ -22,7 +22,7 @@
         vm.gridOptions.data.push({
           url: url,
           technology: 'TODO',
-          filename: url ? url.replace(/.*\//, '') : '',
+          filename: url ? decodeURIComponent(url.replace(/.*\//, '')) : '',
           organism: node.organism_Characteristics_6_3_s,
           date: 'TODO',
           antibody: node.antibody_Factor_Value_6_3_s,
