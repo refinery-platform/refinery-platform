@@ -1,7 +1,8 @@
 from django.conf import settings
-from django.conf.urls import url, include
-from django_docker_engine.proxy import Proxy, FileLogger
+from django.conf.urls import include, url
+from django_docker_engine.proxy import FileLogger, Proxy
 from rest_framework.routers import DefaultRouter
+
 from .views import ToolDefinitionsViewSet, ToolsViewSet
 
 # DRF url routing
