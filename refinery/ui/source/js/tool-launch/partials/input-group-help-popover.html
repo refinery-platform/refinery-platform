@@ -4,21 +4,22 @@
   aria-multiselectable="true">
   <ul>
     <li
-      ng-style="{'color': $ctrl.inputFileTypeColor[$ctrl.displayInputFile.uuid],
-      'border-color': $ctrl.inputFileTypeColor[$ctrl.displayInputFile.uuid]}">
-        {{ $ctrl.displayInputFile.name }}:
+      ng-style="{'color': $ctrl.displayFileColor,
+      'border-color': $ctrl.displayFileColor}">
+        {{ $ctrl.displayFile.name }}:
         <
         <div
           class='fileTypes'
-          ng-repeat="fileObj in $ctrl.displayInputFile.allowed_filetypes">
+          ng-repeat="fileObj in $ctrl.displayFile.allowed_filetypes">
           {{fileObj.name}}
-          <span ng-if="$index < $ctrl.displayInputFile.allowed_filetypes.length - 1">
+          <span ng-if="$index < $ctrl.displayFile.allowed_filetypes.length - 1">
             ,
           </span>
         </div>
         >
         <br>
-        <em>{{ $ctrl.displayInputFile.description }}</em>
+        <em>{{ $ctrl.displayFile.description }}</em>
     </li>
   </ul>
 </div>
+
