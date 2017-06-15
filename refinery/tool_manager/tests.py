@@ -424,7 +424,7 @@ class ToolDefinitionGenerationTests(TestCase):
             self.assertEqual(InputFile.objects.count(), 0)
             self.assertEqual(OutputFile.objects.count(), 0)
 
-    def test_deletion_of_a_respective_tooldefinitions_objects_only(self):
+    def test_deletion_of_a_respective_tooldefinitions_objects(self):
         with open(
             "{}/workflows/LIST:LIST:PAIR.json".format(TEST_DATA_PATH)
         ) as f:
