@@ -5,8 +5,39 @@
   .module('refineryUserFileBrowser')
   .controller('UserFileBrowserFilesCtrl', UserFileBrowserFilesCtrl);
 
-  function UserFileBrowserFilesCtrl () {
+  UserFileBrowserFilesCtrl.$inject = [
+    '$q',
+    'userFileBrowserFactory'
+  ];
+
+  function UserFileBrowserFilesCtrl ($q, userFileBrowserFactory) {
     var vm = this;
+    var promise = $q.defer();
+    var getUserFiles = userFileBrowserFactory.getUserFiles;
+    getUserFiles().then(function (solr) {
+      vm.gridOptions.data = [];
+      for (var i = 0; i < solr.nodes.length; i++) {
+        var node = solr.nodes[i];
+        var url = node.REFINERY_NAME_6_3_s;
+        vm.gridOptions.data.push({
+          url: url,
+          technology: 'TODO',
+          filename: url ? decodeURIComponent(url.replace(/.*\//, '')) : '',
+          organism: node.organism_Characteristics_6_3_s,
+          date: 'TODO',
+          antibody: node.antibody_Factor_Value_6_3_s,
+          cell_type: node.cell_line_Characteristics_6_3_s,
+          published: 'TODO',
+          accession: 'TODO',
+          genotype: 'TODO',
+          owner: 'TODO'
+        });
+      }
+      promise.resolve();
+    }, function () {
+      promise.reject();
+    });
+
     vm.gridOptions = {
       appScopeProvider: vm,
       useExternalSorting: true,
@@ -49,20 +80,6 @@
                 '</a>' +
                 '</div>' },
           { field: 'genotype' }
-      ],
-      data: [
-          { url: 'foo.txt', technology: 'ChIP-seq',
-            filename: 'SRR064951.fastq.gz', organism: 'Homo sapiens',
-            date: '2017-06-01', owner: 'Chuck McCallum',
-            antibody: 'HNF4A', cell_type: 'Caco-2', published: 'yes',
-            accession: 'GDS6248', genotype: 'N/A'
-          },
-          { url: 'bar.txt', technology: 'RNA-seq',
-            filename: 'SRR064952.fastq.gz', organism: 'Mus musculus',
-            date: '2017-05-01', owner: 'Chuck McCallum',
-            antibody: '', cell_type: 'mesenteric white adipose tissues', published: 'no',
-            accession: 'GDS6249', genotype: 'C57BL/6J'
-          }
       ]
     };
   }
