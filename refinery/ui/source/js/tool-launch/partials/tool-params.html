@@ -28,49 +28,30 @@
       role="tabpanel"
       aria-labelledby="tool-body">
       <div class="panel-body">
-       <ul class="paragraph">
+       <ul class="plain">
          <form name="toolParamForm">
            <li ng-repeat="param in $ctrl.params">
              <div class="refinery-subheader">
                <div>
-                 <h4>
-                   Name:
-                 </h4>
-                 {{ param.name}}
-               </div>
-               <div>
-                 <h4>
-                   Description:
-                 </h4>
-                 {{ param.description }}
-               </div>
-               <div>
-                 <h4>
-                   Galaxy Workflow Step:
-                 </h4>
-                 {{ param.galaxy_workflow_step }}
-               </div>
-               <div>
-                 <h4>
-                   Default Value:
-                 </h4>
-                {{ param.default_value }}
+                 <h3>
+                   {{ param.name}}
+                 </h3>
                </div>
              <div ng-if="param.is_user_adjustable">
                <div ng-switch="param.value_type">
                  <div ng-switch-when="INTEGER">
                    <h4>
-                     Update Value:
+                     Value:
                    </h4>
                    <input
                      autofocus
                      type="text"
                      name="{{param.uuid}}"
-                     class="form-control"
+                     ng-class="{'form-validation-error': toolParamForm[param.uuid].$error.pattern}"
                      placeholder="{{ param.default_value }}"
                      ng-model="$ctrl.paramsForm[param.uuid]"
                      ng-maxlength="32"
-                     ng-pattern="/^-?[0-9][^\.]*$/">
+                     ng-pattern="/^\d+$/">
                    <div
                       ng-messages="toolParamForm[param.uuid].$error"
                       role="alert"
@@ -83,13 +64,13 @@
                  </div>
                  <div ng-switch-when="FLOAT">
                    <h4>
-                     Update Value:
+                     Value:
                    </h4>
                    <input
                      autofocus
                      type="text"
                      name="{{param.uuid}}"
-                     class="form-control"
+                     ng-class="{'form-validation-error': toolParamForm[param.uuid].$error.pattern}"
                      placeholder="{{ param.default_value }}"
                      ng-model="$ctrl.paramsForm[param.uuid]"
                      ng-maxlength="32"
@@ -106,7 +87,7 @@
                  </div>
                  <div ng-switch-when="BOOLEAN">
                    <h4>
-                     Update Value:
+                     Value:
                    </h4>
                    <label class="p-l-1-2">
                       <input
@@ -123,9 +104,9 @@
                       False
                     </label>
                   </div>
-                  <div ng-switch-default>
+                 <div ng-switch-default>
                    <h4>
-                     Update Value:
+                     Value:
                    </h4>
                    <input
                      autofocus
