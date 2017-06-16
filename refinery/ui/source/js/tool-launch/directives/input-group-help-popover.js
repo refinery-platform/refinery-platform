@@ -3,7 +3,10 @@
 
   angular.module('refineryToolLaunch')
     .component('rpInputGroupHelpPopover', {
-      controller: 'InputGroupHelpPopoverCtrl',
+      bindings: {
+        displayFile: '<',
+        displayFileColor: '<'
+      },
       templateUrl: ['$window', function ($window) {
         return $window.getStaticUrl('partials/tool-launch/partials/input-group-help-popover.html');
       }]

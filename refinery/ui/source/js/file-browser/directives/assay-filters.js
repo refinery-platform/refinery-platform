@@ -33,7 +33,7 @@
         // show even though the panel is collapsed
         scope.dropAttributePanel = function (e, attributeName, attributeObj) {
           e.preventDefault();
-          var escapeAttributeName = attributeName.replace(' ', '-');
+          var escapeAttributeName = attributeName.replace(/ /g, '-');
           var attributeTitle = angular.element(
             document.querySelector('#attribute-panel-' + escapeAttributeName)
           );
@@ -70,7 +70,8 @@
 
         // When panel is minimized, selected fields continue to show
         scope.showField = function (field, internalName, attributeName) {
-          var escapedAttributeName = attributeName.replace(' ', '-');
+          var escapedAttributeName = attributeName.replace(/ /g, '-');
+
           var selectedIndex = -1;
           if (selectedFilterService.attributeSelectedFields[internalName] !== undefined) {
             selectedIndex = selectedFilterService
@@ -92,7 +93,7 @@
             var encodedAttribute = selectedFilterService
               .stringifyAndEncodeAttributeObj(attributeInternalName, allFields[ind]);
             if (queryFields.indexOf(encodedAttribute) > -1) {
-              var escapeAttributeName = attributeName.replace(' ', '-');
+              var escapeAttributeName = attributeName.replace(/ /g, '-');
               var attributeTitle = angular.element(
               document.querySelector('#attribute-panel-' + escapeAttributeName)
               );

@@ -125,10 +125,6 @@
     padding-left: 5px;
     padding-right: 5px;
 
-    .ui-select-drop {
-      width: 150px;
-    }
-
     .ui-select-placeholder {
       display: inline;
     }
@@ -253,6 +249,20 @@
       -webkit-border-radius: 10px;
       border-radius: 10px;
   }
+
+  #tool-select-panel {
+    width: 100%;
+    #tool-select-drop-down {
+      width: 70%;
+    }
+    #tool-select-button {
+      margin-left: .1em;
+      margin-right: .5em;
+      float: right;
+      width: 25%;
+    }
+  }
+
 }
 
 #tool-panel-show-button {
@@ -319,4 +329,9 @@
   border: .08em solid;
   padding: .2em .25em .15em;
   border-radius: .1em;
+}
+
+ul.plain {
+  list-style: none;
+  padding-left: 0;
 }

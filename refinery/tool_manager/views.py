@@ -1,7 +1,6 @@
 import logging
 
 from django.http import HttpResponseBadRequest
-
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.viewsets import ModelViewSet
 
@@ -42,9 +41,5 @@ class ToolsViewSet(ModelViewSet):
                 tool = create_tool(tool_launch_configuration, request.user)
             except Exception as e:
                 return HttpResponseBadRequest(e)
-
-        if tool.get_tool_type() == ToolDefinition.VISUALIZATION:
-            return tool.launch()
-
-        elif tool.get_tool_type() == ToolDefinition.WORKFLOW:
-            raise NotImplementedError
+            else:
+                return tool.launch()

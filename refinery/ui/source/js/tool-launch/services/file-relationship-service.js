@@ -33,7 +33,6 @@
     vm.attributesObj = {}; // displayName: internalName, ex Name:
     vm.currentGroup = []; // index for the group coordinates
     vm.currentTypes = []; // tracks whether depths are pair or list
-    vm.displayInputFile = {}; // for input-group-help-popover, tracks selected
     vm.groupCollection = {}; // contains groups with their selected row's info
     vm.hideNodePopover = false;
     vm.inputFileTypes = []; // maintains the required input types
@@ -141,7 +140,6 @@
       }
       vm.groupCollection = {};
       vm.nodeSelectCollection = {};
-      vm.displayInputFile = {};
       angular.copy({}, nodeService.selectionObj);
     }
 
@@ -151,7 +149,6 @@
     function resetToolRelated () {
       vm.currentGroup = [];
       vm.currentTypes = [];
-      vm.displayInputFile = {};
       vm.groupCollection = {};
       vm.hideNodePopover = false;
       vm.inputFileTypes = [];

@@ -1,35 +1,24 @@
 from django.contrib.auth.models import User
-from django.contrib.staticfiles.testing import StaticLiveServerTestCase
-
-from pyvirtualdisplay import Display
-from selenium import webdriver
 
 from core.management.commands.create_public_group import create_public_group
 from core.management.commands.create_user import init_user
 from core.models import Analysis, DataSet
-
 from factory_boy.utils import make_analyses_with_single_dataset, make_datasets
-from selenium_testing.utils import (
-    assert_body_text, assert_text_within_id, delete_from_ui, login,
-    MAX_WAIT, wait_until_class_visible, wait_until_id_clickable,
-    wait_until_id_visible
-)
+
+from .utils import (MAX_WAIT, SeleniumTestBaseGeneric, assert_body_text,
+                    assert_text_within_id, delete_from_ui, login,
+                    wait_until_class_visible, wait_until_id_clickable,
+                    wait_until_id_visible)
 
 
-class SeleniumTestBase(StaticLiveServerTestCase):
-    """Abstract base class to be used for all Selenium-based tests."""
-
-    # Don't delete data migration data after test runs: http://bit.ly/2lAYqVJ
-    serialized_rollback = True
-
+class RefinerySeleniumTestBase(SeleniumTestBaseGeneric):
+    """
+    Base class for selenium tests specifically testing Refinery UI components
+    """
     def setUp(self, site_login=True, initialize_guest=True,
               public_group_needed=True):
 
-        # Start a pyvirtualdisplay for geckodriver to interact with
-        self.display = Display(visible=0, size=(1366, 768))
-        self.display.start()
-        self.browser = webdriver.Firefox()
-        self.browser.maximize_window()
+        super(RefinerySeleniumTestBase, self).setUp()
 
         if initialize_guest:
             init_user("guest", "guest", "guest@coffee.com", "Guest", "Guest",
@@ -42,21 +31,15 @@ class SeleniumTestBase(StaticLiveServerTestCase):
         if public_group_needed:
             create_public_group()
 
-    def tearDown(self):
-        # NOTE: quit() destroys ANY currently running webdriver instances.
-        # This could become an issue if tests are ever run in parallel.
-        self.browser.quit()
-        self.display.stop()
 
-
-class NoLoginTestCase(SeleniumTestBase):
+class NoLoginTestCase(RefinerySeleniumTestBase):
     """
     Ensure that Refinery looks like it should when there is no currently
     logged in user
     """
 
-    # SeleniumTestBase.setUp(): We don't need to login or initialize the
-    # guest user this time
+    # RefinerySeleniumTestBase.setUp(): We don't need to login or
+    # initialize the guest user this time
     def setUp(self, site_login=True, initialize_guest=True,
               public_group_needed=False):
         super(NoLoginTestCase, self).setUp(initialize_guest=False,
@@ -92,7 +75,7 @@ class NoLoginTestCase(SeleniumTestBase):
         # TODO: All sections are empty right now
 
 
-class DataSetsPanelTestCase(SeleniumTestBase):
+class DataSetsPanelTestCase(RefinerySeleniumTestBase):
     """
     Ensure that the DataSet upload button and DataSet Preview look like
     they're behaving normally
@@ -133,7 +116,7 @@ class DataSetsPanelTestCase(SeleniumTestBase):
         )
 
 
-class UiDeletionTestCase(SeleniumTestBase):
+class UiDeletionTestCase(RefinerySeleniumTestBase):
     """Ensure proper deletion of DataSets and Analyses from the UI"""
 
     def test_dataset_deletion(self, total_datasets=2):
