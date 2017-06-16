@@ -14,14 +14,14 @@ from django.http import HttpResponseBadRequest, JsonResponse
 from django.test import TestCase
 from rest_framework.test import (APIRequestFactory, APITestCase,
                                  force_authenticate)
-from selenium_testing.utils import (MAX_WAIT, SeleniumTestBaseGeneric,
-                                    wait_until_class_visible)
 
 from core.models import (DataSet, ExtendedGroup, InvestigationLink,
                          WorkflowEngine)
 from data_set_manager.models import Assay, Investigation, Node, Study
 from file_store.models import FileStoreItem
 from galaxy_connector.models import Instance
+from selenium_testing.utils import (MAX_WAIT, SeleniumTestBaseGeneric,
+                                    wait_until_class_visible)
 
 from .models import (FileRelationship, GalaxyParameter, InputFile, OutputFile,
                      Parameter, Tool, ToolDefinition)
@@ -82,7 +82,7 @@ class ToolManagerTestBase(TestCase):
         self.post_data = {
             "tool_definition_uuid": self.td.uuid,
             "file_relationships":
-                "['http://www.example.com/tool_manager/test_data/sample.seg']",
+                "['http://www.example.com/sample.seg']",
         }
 
         self.post_request = self.factory.post(
@@ -98,34 +98,9 @@ class ToolManagerTestBase(TestCase):
             self.post_response = self.tools_view(self.post_request)
             self.assertTrue(run_mock.called)
 
-        self.tool_launch = Tool.objects.get(
+        self.tool = Tool.objects.get(
             tool_definition__uuid=self.td.uuid
         )
-
-        self.get_request = self.factory.get(self.tools_url_root)
-        force_authenticate(self.get_request, self.user)
-        self.get_response = self.tools_view(self.get_request)
-
-        self.tool_json = self.get_response.data[0]
-
-        self.delete_request = self.factory.delete(
-            urljoin(self.tools_url_root, self.tool_json['uuid']))
-        force_authenticate(self.delete_request, self.user)
-        self.delete_response = self.tools_view(self.delete_request)
-        self.put_request = self.factory.put(
-            self.tools_url_root,
-            data=self.tool_json,
-            format="json"
-        )
-        force_authenticate(self.put_request, self.user)
-        self.put_response = self.tools_view(self.put_request)
-        self.options_request = self.factory.options(
-            self.tools_url_root,
-            data=self.tool_json,
-            format="json"
-        )
-        force_authenticate(self.options_request, self.user)
-        self.options_response = self.tools_view(self.options_request)
 
     def create_vis_tool_definition(self):
         self.tool_annotation = "{}/visualizations/igv.json".format(
@@ -946,6 +921,20 @@ class ToolTests(ToolManagerTestBase):
 
     def test_get_tool_launch_config(self):
         self.create_valid_tool()
+        self.assertEqual(
+            self.tool.get_tool_launch_config(),
+            {
+                "tool_definition_uuid": self.td.uuid,
+                "file_relationships": "['http://www.example.com/sample.seg']",
+            }
+        )
+
+    def test_get_file_relationships(self):
+        self.create_valid_tool()
+        self.assertEqual(
+            self.tool.get_file_relationships(),
+            ['http://www.example.com/sample.seg']
+        )
 
 
 class ToolAPITests(APITestCase, ToolManagerTestBase):
