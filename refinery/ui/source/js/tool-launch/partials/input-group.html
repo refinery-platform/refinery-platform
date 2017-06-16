@@ -20,7 +20,6 @@
                 popover-title="Input Group File Types"
                 popover-trigger="focus"
                 popover-append-to-body="true"
-                ng-click="$ctrl.setDisplayInputFile(inputFile)"
                 tabindex="0">
                 <i class="fa fa-question-circle info-icon icon-only"></i>
               </a>
@@ -105,7 +104,9 @@
 
 <script type="text/ng-template" id="inputgrouphelppopover.html">
   <div>
-  <rp-input-group-help-popover>
-  </rp-input-group-help-popover>
+    <rp-input-group-help-popover
+      display-file='inputFile'
+      display-file-color='$ctrl.inputFileTypeColor[inputFile.uuid]'>
+    </rp-input-group-help-popover>
   </div>
 </script>

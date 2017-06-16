@@ -35,6 +35,15 @@
     });
 
     describe('Toggle Tool Panel', function () {
+      beforeEach(inject(function () {
+        var mockGridApi = {
+          handleWindowResize: function () { return; }
+        };
+        ctrl.gridApi = angular.copy({
+          core: {}
+        });
+        angular.copy(mockGridApi, ctrl.gridApi.core);
+      }));
       it('toggleToolPanel is method', function () {
         expect(angular.isFunction(ctrl.toggleToolPanel)).toBe(true);
       });
