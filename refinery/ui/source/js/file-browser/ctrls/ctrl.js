@@ -20,6 +20,7 @@
     'fileParamService',
     'filesLoadingService',
     'fileRelationshipService',
+    'groupPermService',
     'isOwnerService',
     'resetGridService',
     'selectedFilterService',
@@ -42,6 +43,7 @@
     fileParamService,
     filesLoadingService,
     fileRelationshipService,
+    groupPermService,
     isOwnerService,
     resetGridService,
     selectedFilterService,
@@ -108,6 +110,7 @@
     function activate () {
       // Ensure data owner
       checkDataSetOwnership();
+      checkUsersGroupEdit();
       // initialize the dataset and updates ui-grid selection, filters, and url
       initializeDataOnPageLoad();
     }
@@ -146,6 +149,13 @@
     function checkDataSetOwnership () {
       isOwnerService.refreshDataSetOwner().then(function () {
         vm.isOwner = isOwnerService.isOwner;
+      });
+    }
+
+     // Sets boolean for data set ownership
+    function checkUsersGroupEdit () {
+      groupPermService.refreshUsersGroupEdit().then(function () {
+        vm.canEdit = groupPermService.canUsersGroupEdit;
       });
     }
 
