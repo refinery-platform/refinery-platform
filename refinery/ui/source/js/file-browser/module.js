@@ -11,11 +11,10 @@
 
   angular
     .module('refineryFileBrowser', [
-      'dndLists',
       'ui.grid',
-      'ui.grid.selection',
+      'ui.grid.autoResize',
       'ui.grid.infiniteScroll',
       'ui.grid.resizeColumns',
-      'ui.select'
+      'ui.select',
     ]);
 })();
