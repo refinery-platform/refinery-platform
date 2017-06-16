@@ -6,10 +6,10 @@ from django.conf import settings
 from django.db import models
 from django.db.models.signals import post_delete, pre_delete
 from django.dispatch import receiver
-from django.http import HttpResponseServerError, JsonResponse
+from django.http import (HttpResponseBadRequest, HttpResponseServerError,
+                         JsonResponse)
 
 from django_extensions.db.fields import UUIDField
-from django_docker_engine.container_managers.local import LocalManager
 from django_docker_engine.docker_utils import (DockerClientWrapper,
                                                DockerContainerSpec)
 
@@ -161,6 +161,10 @@ class ToolDefinition(models.Model):
         max_length=500,
         blank=True
     )
+    extra_directories = models.CharField(
+        max_length=500,
+        blank=True
+    )
     galaxy_workflow_id = models.CharField(
         max_length=250,
         blank=True
@@ -255,12 +259,16 @@ class Tool(OwnableResource):
                         self.file_relationships
                     )
                 },
-                manager=get_django_docker_engine_manager()
+                extra_directories=ast.literal_eval(
+                    self.tool_definition.extra_directories
+                )
             )
             try:
-                container.run()
+                DockerClientWrapper().run(container)
             except APIError as e:
                 return HttpResponseServerError(content=e)
+            except AssertionError as e:
+                return HttpResponseBadRequest(content=e)
             else:
                 return JsonResponse(
                     {
@@ -318,16 +326,3 @@ def remove_tool_container(sender, instance, *args, **kwargs):
         except APIError as e:
             logger.error("Couldn't purge container for Tool with UUID: %s %s",
                          instance.uuid, e)
-
-
-def get_django_docker_engine_manager():
-    """
-    Helper method to return the proper managerial class for
-    django_docker_engine
-    """
-    # Travis CI runs on EC2, but we want our tests running against a local
-    # docker engine there
-    if settings.DEPLOYMENT_PLATFORM == "aws":
-        raise NotImplementedError
-    else:
-        return LocalManager()

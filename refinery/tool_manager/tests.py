@@ -4,7 +4,6 @@ import uuid
 
 import mock
 import re
-import requests
 import StringIO
 import time
 from urlparse import urljoin
@@ -425,7 +424,7 @@ class ToolDefinitionGenerationTests(TestCase):
             self.assertEqual(InputFile.objects.count(), 0)
             self.assertEqual(OutputFile.objects.count(), 0)
 
-    def test_deletion_of_tooldefinitions_objects_only(self):
+    def test_deletion_of_a_respective_tooldefinitions_objects_only(self):
         with open(
             "{}/workflows/LIST:LIST:PAIR.json".format(TEST_DATA_PATH)
         ) as f:
@@ -634,6 +633,39 @@ class ToolDefinitionGenerationTests(TestCase):
                 RuntimeError,
                 validate_tool_annotation,
                 workflow_annotation
+            )
+            self.assertEqual(ToolDefinition.objects.count(), 0)
+
+    def test_visualization_annotation_extra_dirs_valid(self):
+        with open(
+            "{}/visualizations/LIST_visualization_good_extra_directories.json"
+            .format(TEST_DATA_PATH)
+        ) as f:
+            visualization_annotation = json.loads(f.read())
+            create_tool_definition(visualization_annotation)
+            self.assertEqual(ToolDefinition.objects.count(), 1)
+
+    def test_visualization_annotation_extra_dirs_invalid(self):
+        with open("{}/visualizations/"
+                  "LIST_visualization_bad_extra_directories_structure.json"
+                  .format(TEST_DATA_PATH)) as f:
+            visualization_annotation = json.loads(f.read())
+            self.assertRaises(
+                RuntimeError,
+                validate_tool_annotation,
+                visualization_annotation
+            )
+            self.assertEqual(ToolDefinition.objects.count(), 0)
+
+    def test_visualization_annotation_extra_dirs_missing(self):
+        with open("{}/visualizations/"
+                  "LIST_visualization_missing_extra_directories.json"
+                  .format(TEST_DATA_PATH)) as f:
+            visualization_annotation = json.loads(f.read())
+            self.assertRaises(
+                RuntimeError,
+                validate_tool_annotation,
+                visualization_annotation
             )
             self.assertEqual(ToolDefinition.objects.count(), 0)
 
@@ -1046,6 +1078,69 @@ class ToolAPITests(APITestCase):
         self.assertIn("LIST/PAIR structure is not balanced",
                       self.post_response.content)
 
+    def test_bad_extra_directories_path(self):
+        Tool.objects.all().delete()
+        with open("{}/visualizations/"
+                  "LIST_visualization_bad_extra_directories_path.json"
+                  .format(TEST_DATA_PATH)) as f:
+            visualization_annotation = json.loads(f.read())
+            create_tool_definition(visualization_annotation)
+
+        td = ToolDefinition.objects.get(
+            name=visualization_annotation["name"]
+        )
+
+        tool_launch_configuration = {
+            "tool_definition_uuid": td.uuid,
+            "file_relationships": str(["www.example.com"])
+        }
+        self.post_request = self.factory.post(
+            self.url_root,
+            data=tool_launch_configuration,
+            format="json"
+        )
+        force_authenticate(self.post_request, self.user)
+        self.post_response = self.view(self.post_request)
+
+        self.assertIsInstance(self.post_response, HttpResponseBadRequest)
+        self.assertEqual(
+            self.post_response.content,
+            'Specified path: `not_an_absolute_path` is not absolute'
+        )
+        self.assertEqual(Tool.objects.count(), 1)
+
+    def test_good_extra_directories_path(self):
+        Tool.objects.all().delete()
+        with open("{}/visualizations/"
+                  "LIST_visualization_good_extra_directories.json"
+                  .format(TEST_DATA_PATH)) as f:
+            visualization_annotation = json.loads(f.read())
+            create_tool_definition(visualization_annotation)
+
+        td = ToolDefinition.objects.get(
+            name=visualization_annotation["name"]
+        )
+
+        tool_launch_configuration = {
+            "tool_definition_uuid": td.uuid,
+            "file_relationships": str(["www.example.com"])
+        }
+        self.post_request = self.factory.post(
+            self.url_root,
+            data=tool_launch_configuration,
+            format="json"
+        )
+        force_authenticate(self.post_request, self.user)
+        # We don't want to spin up containers for unit testing
+        with mock.patch(
+                "django_docker_engine.docker_utils.DockerClientWrapper.run"
+        ) as run_mock:
+            self.post_response = self.view(self.post_request)
+            self.assertTrue(run_mock.called)
+
+        self.assertEqual(self.post_response.status_code, 200)
+        self.assertEqual(Tool.objects.count(), 1)
+
 
 class ToolIntegrationTests(StaticLiveServerTestCase):
     # Don't delete data migration data after test runs: http://bit.ly/2lAYqVJ
@@ -1078,55 +1173,6 @@ class ToolIntegrationTests(StaticLiveServerTestCase):
         # Explicitly delete Tool's so that the post_delete signal is
         # triggered and their Docker containers are purged
         Tool.objects.all().delete()
-
-    def test_visualization_container_launch_and_access_hello_world(self):
-        with open(
-            "{}/visualizations/hello_world.json".format(TEST_DATA_PATH)
-        ) as f:
-            tool_annotation = [json.loads(f.read())]
-
-        with mock.patch(
-            self.mock_vis_annotations_reference,
-            return_value=tool_annotation
-        ) as mocked_method:
-
-            call_command("generate_tool_definitions", visualizations=True)
-
-            self.assertTrue(mocked_method.called)
-            self.assertEqual(ToolDefinition.objects.count(), 1)
-            self.td = ToolDefinition.objects.all()[0]
-        self.post_data = {
-            "tool_definition_uuid": self.td.uuid,
-            "file_relationships":
-                "['http://www.example.com/tool_manager/test_data/sample.seg']",
-
-        }
-
-        self.post_request = self.factory.post(
-            self.url_root,
-            data=self.post_data,
-            format="json"
-        )
-        force_authenticate(self.post_request, self.user)
-        self.post_response = self.view(self.post_request)
-
-        tool_launch = Tool.objects.get(
-            tool_definition__uuid=self.td.uuid
-        )
-
-        self.assertEqual(tool_launch.get_owner(), self.user)
-        self.assertEqual(
-            tool_launch.get_tool_type(),
-            ToolDefinition.VISUALIZATION
-        )
-
-        response = requests.get(
-            urljoin(
-                self.live_server_url,
-                tool_launch.get_relative_container_url()
-            )
-        )
-        self.assertIn("Welcome to nginx!", response.content)
 
     def test_visualization_container_launch_IGV(self):
         with open("{}/visualizations/igv.json".format(TEST_DATA_PATH)) as f:
