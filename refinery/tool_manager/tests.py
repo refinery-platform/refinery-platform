@@ -65,7 +65,7 @@ class ToolManagerTestBase(TestCase):
             }
         )
 
-        self.tools_url_root = '/api/v2/tools'
+        self.tools_url_root = '/api/v2/tools/'
         self.tool_defs_url_root = '/api/v2/tool_definitions/'
 
     def tearDown(self):
