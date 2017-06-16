@@ -101,6 +101,28 @@ class ToolManagerTestBase(TestCase):
         self.tool = Tool.objects.get(
             tool_definition__uuid=self.td.uuid
         )
+        self.get_request = self.factory.get(self.tools_url_root)
+        force_authenticate(self.get_request, self.user)
+        self.get_response = self.tools_view(self.get_request)
+        self.tool_json = self.get_response.data[0]
+        self.delete_request = self.factory.delete(
+                urljoin(self.tools_url_root, self.tool_json['uuid']))
+        force_authenticate(self.delete_request, self.user)
+        self.delete_response = self.tools_view(self.delete_request)
+        self.put_request = self.factory.put(
+                self.tools_url_root,
+                data=self.tool_json,
+                format="json"
+        )
+        force_authenticate(self.put_request, self.user)
+        self.put_response = self.tools_view(self.put_request)
+        self.options_request = self.factory.options(
+                self.tools_url_root,
+                data=self.tool_json,
+                format="json"
+        )
+        force_authenticate(self.options_request, self.user)
+        self.options_response = self.tools_view(self.options_request)
 
     def create_vis_tool_definition(self):
         self.tool_annotation = "{}/visualizations/igv.json".format(
@@ -422,6 +444,54 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
                 third_nested_file_relationship.input_files.count(), 2)
             self.assertIsNotNone(td.workflow_engine)
 
+    def test_list_pair_list_workflow_tool_def_validation(self):
+        with open(
+                "{}/workflows/LIST:PAIR:LIST.json".format(TEST_DATA_PATH)
+        ) as f:
+            workflow_annotation = json.loads(f.read())
+            self.assertIsNone(
+                validate_tool_annotation(workflow_annotation)
+            )
+
+    def test_list_pair_list_workflow_tool_def_generation(self):
+        with open(
+                "{}/workflows/LIST:PAIR:LIST.json".format(TEST_DATA_PATH)
+        ) as f:
+            workflow_annotation = json.loads(f.read())
+            workflow_annotation[
+                "workflow_engine_uuid"
+            ] = self.workflow_engine.uuid
+            create_tool_definition(workflow_annotation)
+
+            self.assertEqual(ToolDefinition.objects.count(), 1)
+            td = ToolDefinition.objects.get(name=workflow_annotation["name"])
+            self.assertEqual(td.output_files.count(), 1)
+            self.assertEqual(td.parameters.count(), 3)
+            self.assertEqual(td.file_relationship.file_relationship.count(), 1)
+            self.assertEqual(
+                td.file_relationship.value_type,
+                FileRelationship.LIST
+            )
+            second_nested_file_relationship = \
+                td.file_relationship.file_relationship.all()[0]
+            self.assertEqual(
+                second_nested_file_relationship.value_type,
+                FileRelationship.PAIR
+            )
+            self.assertEqual(
+                second_nested_file_relationship.file_relationship.count(), 1)
+            third_nested_file_relationship = \
+                second_nested_file_relationship.file_relationship.all()[0]
+            self.assertEqual(
+                third_nested_file_relationship.value_type,
+                FileRelationship.LIST
+            )
+            self.assertEqual(
+                third_nested_file_relationship.file_relationship.count(), 0)
+            self.assertEqual(
+                third_nested_file_relationship.input_files.count(), 1)
+            self.assertIsNotNone(td.workflow_engine)
+
     def test_list_workflow_related_object_deletion(self):
         with open("{}/workflows/LIST.json".format(TEST_DATA_PATH)) as f:
             workflow_annotation = json.loads(f.read())
@@ -461,6 +531,26 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
     def test_list_list_pair_workflow_related_object_deletion(self):
         with open(
             "{}/workflows/LIST:LIST:PAIR.json".format(TEST_DATA_PATH)
+        ) as f:
+            workflow_annotation = json.loads(f.read())
+            workflow_annotation[
+                "workflow_engine_uuid"
+            ] = self.workflow_engine.uuid
+            create_tool_definition(workflow_annotation)
+
+            td = ToolDefinition.objects.get(name=workflow_annotation["name"])
+            td.delete()
+
+            self.assertEqual(ToolDefinition.objects.count(), 0)
+            self.assertEqual(FileRelationship.objects.count(), 0)
+            self.assertEqual(GalaxyParameter.objects.count(), 0)
+            self.assertEqual(Parameter.objects.count(), 0)
+            self.assertEqual(InputFile.objects.count(), 0)
+            self.assertEqual(OutputFile.objects.count(), 0)
+
+    def test_list_pair_list_workflow_related_object_deletion(self):
+        with open(
+                "{}/workflows/LIST:PAIR:LIST.json".format(TEST_DATA_PATH)
         ) as f:
             workflow_annotation = json.loads(f.read())
             workflow_annotation[
