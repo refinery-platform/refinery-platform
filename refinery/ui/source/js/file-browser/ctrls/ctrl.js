@@ -6,7 +6,6 @@
     .controller('FileBrowserCtrl', FileBrowserCtrl);
 
   FileBrowserCtrl.$inject = [
-    '$interval',
     '$location',
     '$log',
     '$q',
@@ -30,7 +29,6 @@
   ];
 
   function FileBrowserCtrl (
-    $interval,
     $location,
     $log,
     $q,
