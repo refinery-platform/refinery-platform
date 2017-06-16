@@ -6,6 +6,7 @@
     .controller('FileBrowserCtrl', FileBrowserCtrl);
 
   FileBrowserCtrl.$inject = [
+    '$interval',
     '$location',
     '$log',
     '$q',
@@ -29,6 +30,7 @@
   ];
 
   function FileBrowserCtrl (
+    $interval,
     $location,
     $log,
     $q,
@@ -339,12 +341,12 @@
     function toggleToolPanel () {
       if (toolService.isToolPanelCollapsed) {
         toolService.isToolPanelCollapsed = false;
-        vm.collapsedToolPanel = toolService.isToolPanelCollapsed;
       } else {
         toolService.isToolPanelCollapsed = true;
-        vm.collapsedToolPanel = toolService.isToolPanelCollapsed;
-        resetGridService.setRefreshGridFlag(true);
       }
+      // resize window with toggling
+      vm.collapsedToolPanel = toolService.isToolPanelCollapsed;
+      vm.gridApi.core.handleWindowResize();
     }
 
     // Helper method which check for any data updates during soft loads (tabbing)

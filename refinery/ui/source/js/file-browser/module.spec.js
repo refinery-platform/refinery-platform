@@ -27,8 +27,8 @@
           expect(hasModule('ui.grid')).toEqual(true);
         });
 
-        it('should have "ui.grid.selection" as a dependency', function () {
-          expect(hasModule('ui.grid.selection')).toEqual(true);
+        it('should have "ui.grid.autoResize" as a dependency', function () {
+          expect(hasModule('ui.grid.autoResize')).toEqual(true);
         });
 
         it('should have "ui.grid.infiniteScroll" as a dependency', function () {
@@ -39,8 +39,8 @@
           expect(hasModule('ui.grid.resizeColumns')).toEqual(true);
         });
 
-        it('should have "dndLists" as a dependency', function () {
-          expect(hasModule('dndLists')).toEqual(true);
+        it('should have "ui.select" as a dependency', function () {
+          expect(hasModule('ui.select')).toEqual(true);
         });
       });
     });
