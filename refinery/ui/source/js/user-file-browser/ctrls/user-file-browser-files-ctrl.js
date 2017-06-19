@@ -16,25 +16,7 @@
     var getUserFiles = userFileBrowserFactory.getUserFiles;
     getUserFiles().then(function (solr) {
       vm.gridOptions.columnDefs = userFileBrowserFactory.createColumnDefs(solr.attributes);
-
-      vm.gridOptions.data = [];
-      for (var i = 0; i < solr.nodes.length; i++) {
-        var node = solr.nodes[i];
-        var url = node.REFINERY_NAME_6_3_s;
-        vm.gridOptions.data.push({
-          url: url,
-          technology: 'TODO',
-          filename: url ? decodeURIComponent(url.replace(/.*\//, '')) : '',
-          organism: node.organism_Characteristics_6_3_s,
-          date: 'TODO',
-          antibody: node.antibody_Factor_Value_6_3_s,
-          cell_type: node.cell_line_Characteristics_6_3_s,
-          published: 'TODO',
-          accession: 'TODO',
-          genotype: 'TODO',
-          owner: 'TODO'
-        });
-      }
+      vm.gridOptions.data = userFileBrowserFactory.createData(solr.nodes);
       promise.resolve();
     }, function () {
       promise.reject();
