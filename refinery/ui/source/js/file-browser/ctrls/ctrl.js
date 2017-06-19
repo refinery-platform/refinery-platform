@@ -6,11 +6,9 @@
     .controller('FileBrowserCtrl', FileBrowserCtrl);
 
   FileBrowserCtrl.$inject = [
-    '$location',
     '$log',
     '$q',
     '$scope',
-    '$templateCache',
     '$timeout',
     'uiGridConstants',
     '_',
@@ -29,11 +27,9 @@
   ];
 
   function FileBrowserCtrl (
-    $location,
     $log,
     $q,
     $scope,
-    $templateCache,
     $timeout,
     uiGridConstants,
     _,
@@ -108,6 +104,7 @@
      * -----------------------------------------------------------------------------
      */
     function activate () {
+      console.log('in activate');
       // Ensure data owner
       checkDataSetOwnership();
       checkUsersGroupEdit();

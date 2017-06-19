@@ -3,7 +3,7 @@
   <div class="row y-scrollable m-t-1-2 p-t-1">
     <div
       class="col-lg-3 col-md-3 col-sm-4"
-      ng-class="{'collapse': FBCtrl.collapsedToolPanel}">
+      ng-if="!FBCtrl.collapsedToolPanel">
         <rp-tool-display></rp-tool-display>
     </div>
     <div class="col-lg-2 col-md-2 col-sm-3">
@@ -14,11 +14,11 @@
           class="btn btn-primary btn-sm"
           data-target="#tool-launch-panel"
           ng-click="FBCtrl.toggleToolPanel()">
-        <span ng-show="FBCtrl.collapsedToolPanel">
+        <span ng-if="FBCtrl.collapsedToolPanel">
           <i class="fa fa-angle-double-right" aria-hidden="true"></i>
            Show Tool Panel
         </span>
-        <span ng-show="!FBCtrl.collapsedToolPanel">
+        <span ng-if="!FBCtrl.collapsedToolPanel">
           <i class="fa fa-angle-double-left" aria-hidden="true"></i>
            Hide Tool Panel
         </span>
