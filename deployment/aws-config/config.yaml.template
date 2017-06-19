@@ -33,12 +33,14 @@ SITE_NAME: Refinery
 SITE_URL: "192.168.50.50:8000"
 
 # STACK_NAME is used to name the stack
-# (in the Web UI and other places), and to name instances.
-STACK_NAME: "I forgot to set the stack name"
+# (in the Web UI and other places), and to name instances
+# Constraint: alphanumeric
+STACK_NAME: "RefineryStack"
+# Prefix for all S3 bucket names
+S3_BUCKET_NAME_BASE: "refinery-dev"
 
 # the AWS ARN for the TLS certifcate that you wish to present.
 # TLS_CERTIFICATE: "arn:aws:acm:--region--:--accountnumber--:certificate/--id--"
-
 
 # Email addresses. It's usual to make these all the same. The stack will launch
 # correctly even when these are set to nonsense values. To successfully send
@@ -72,6 +74,10 @@ REFINERY_URL_SCHEME: "http"
 REFINERY_WELCOME_EMAIL_MESSAGE: "Please fill out your user profile"
 REFINERY_WELCOME_EMAIL_SUBJECT: "Welcome to Refinery"
 REFINERY_GOOGLE_ANALYTICS_ID: ""
+
+# Constraint: [\w]+
+COGNITO_IDENTITY_POOL_NAME: "Refinery Platform"
+COGNITO_DEVELOPER_PROVIDER_NAME: "login.refinery"
 
 # == Rarely changed ==
 

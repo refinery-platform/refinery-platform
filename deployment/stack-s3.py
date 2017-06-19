@@ -18,7 +18,7 @@ from cfn_pyplates.core import (CloudFormationTemplate, DeletionPolicy,
                                Parameter, Properties, Resource)
 from cfn_pyplates.functions import ref
 
-from utils import Output
+from utils import Output, load_tags
 
 REFINERY_CONFIG_FILE = 'aws-config/config.yaml'
 
@@ -26,15 +26,16 @@ REFINERY_CONFIG_FILE = 'aws-config/config.yaml'
 def main():
     with open(REFINERY_CONFIG_FILE) as config_file:
         config = yaml.load(config_file)
-    stack_name = config['STACK_NAME'] + '-storage'
-    static_bucket_name = config['STACK_NAME'] + '-static'
-    media_bucket_name = config['STACK_NAME'] + '-media'
+    stack_name = config['STACK_NAME'] + 'Storage'
+    static_bucket_name = config['S3_BUCKET_NAME_BASE'] + '-static'
+    media_bucket_name = config['S3_BUCKET_NAME_BASE'] + '-media'
     template = make_storage_template()
 
     cloudformation = boto3.client('cloudformation')
     response = cloudformation.create_stack(
         StackName=stack_name,
         TemplateBody=str(template),
+        Tags=load_tags(),
         Parameters=[
             {
                 'ParameterKey': 'StaticBucketName',
@@ -103,7 +104,7 @@ def make_storage_template():
     cft.outputs.add(Output(
         'MediaBucketName',
         ref('MediaStorageBucket'),
-        {'Fn::Sub': '${AWS::StackName}-media'},
+        {'Fn::Sub': '${AWS::StackName}Media'},
         'Name of S3 bucket for Django media files'
     ))
 

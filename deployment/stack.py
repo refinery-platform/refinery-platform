@@ -51,11 +51,15 @@ def main():
             Parameters=[
                 {
                     'ParameterKey': 'IdentityPoolName',
-                    'ParameterValue': ''
+                    'ParameterValue': config['COGNITO_IDENTITY_POOL_NAME']
                 },
                 {
                     'ParameterKey': 'DeveloperProviderName',
-                    'ParameterValue': ''
+                    'ParameterValue': config['COGNITO_DEVELOPER_PROVIDER_NAME']
+                },
+                {
+                    'ParameterKey': 'StorageStackName',
+                    'ParameterValue': config['STACK_NAME'] + 'Storage'
                 },
             ]
         )
@@ -87,7 +91,7 @@ def make_template(config, config_yaml):
 
     config['tags'] = instance_tags
 
-    config_uri = save_s3_config(config, stack_name)
+    config_uri = save_s3_config(config)
     sys.stdout.write("Configuration saved to {}\n".format(config_uri))
 
     tls_rewrite = "false"
@@ -144,6 +148,7 @@ def make_template(config, config_yaml):
             'IdentityPoolName',
             'String',
             {
+                'Default': 'Refinery Platform',
                 'Description': 'Name of Cognito identity pool for S3 uploads',
             }
         )
@@ -153,11 +158,23 @@ def make_template(config, config_yaml):
             'DeveloperProviderName',
             'String',
             {
+                'Default': 'login.refinery',
                 'Description': '"domain" by which Cognito will refer to users',
                 'AllowedPattern': '[a-z\-\.]+',
                 'ConstraintDescription':
                     'must only contain lower case letters, periods, '
                     'underscores, and dashes'
+            }
+        )
+    )
+    cft.parameters.add(
+        core.Parameter(
+            'StorageStackName',
+            'String',
+            {
+                'Default': '${AWS::StackName}-storage',
+                'Description': 'Name of the S3 storage stack for Django '
+                               'static and media files',
             }
         )
     )
@@ -515,7 +532,10 @@ def make_template(config, config_yaml):
             core.Properties(
                 {
                     'IdentityPoolId': functions.ref('IdentityPool'),
-
+                    'Roles': {
+                        'authenticated':
+                            functions.get_att('CognitoS3UploadRole', 'Arn'),
+                    }
                 }
             )
         )
@@ -556,8 +576,19 @@ def make_template(config, config_yaml):
             {
                 "Action": "s3:PutObject",
                 "Effect": "Allow",
-                "Resource":
-                    "arn:aws:s3:::scc-dev-media/uploads/${cognito-identity.amazonaws.com:sub}/*"
+                "Resource": {
+                    "Fn::Sub": [
+                        "arn:aws:s3:::${MediaBucket}/uploads/"
+                        "${!cognito-identity.amazonaws.com:sub}/*",
+                        {
+                            "MediaBucket": {
+                                "Fn::ImportValue": {
+                                    "Fn::Sub": "${StorageStackName}Media"
+                                }
+                            }
+                        }
+                    ]
+                }
             }
         ]
     }
