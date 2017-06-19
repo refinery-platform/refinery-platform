@@ -1,3 +1,10 @@
+/**
+ * File Browser Ctrl
+ * @namespace FileBrowserCtrl
+ * @desc Main ctrl which handles the files tab (main) view and also
+ * generates the ui-grid table.
+ * @memberOf refineryFileBrowser
+ */
 (function () {
   'use strict';
 
@@ -104,8 +111,7 @@
      * -----------------------------------------------------------------------------
      */
     function activate () {
-      console.log('in activate');
-      // Ensure data owner
+      // Ensure data owner or group permission to modify (run tools)
       checkDataSetOwnership();
       checkUsersGroupEdit();
       // initialize the dataset and updates ui-grid selection, filters, and url
