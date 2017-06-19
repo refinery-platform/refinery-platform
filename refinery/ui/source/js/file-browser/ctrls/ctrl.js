@@ -69,7 +69,7 @@
     // variable supporting ui-grid dynamic scrolling
     vm.cachePages = 2;
     vm.checkDataLength = checkDataLength;
-    vm.checkDataSetOwnership = checkDataSetOwnership;
+    vm.checkUsersGroupEdit = checkUsersGroupEdit;
     vm.collapsedToolPanel = toolService.isToolPanelCollapsed;
     vm.currentTypes = fileService.currentTypes;
     vm.firstPage = 0;
