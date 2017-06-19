@@ -15,36 +15,7 @@
     var promise = $q.defer();
     var getUserFiles = userFileBrowserFactory.getUserFiles;
     getUserFiles().then(function (solr) {
-      vm.gridOptions.columnDefs = [
-           { field: 'url',
-            enableSorting: false,
-            displayName: '',
-            cellTemplate:
-                '<div class="ui-grid-cell-contents" >' +
-                '<a href="{{grid.getCellValue(row, col)}}" target="_blank">' +
-                '<i class="fa fa-arrow-circle-o-down"></i>' +
-                '</a>' +
-                '</div>',
-            width: 30 },
-          { field: 'dataset',
-            enableSorting: false,
-            displayName: '',
-            cellTemplate:
-                '<div class="ui-grid-cell-contents" >' +
-                '<a href="{{grid.getCellValue(row, col)}}" target="_blank">' +
-                '<i class="fa fa-file"></i>' +
-                '</a>' +
-                '</div>',
-            width: 30 },
-          { field: 'filename' },
-          { field: 'technology' },
-          { field: 'organism' },
-          { field: 'date' },
-          { field: 'owner' },
-          { field: 'antibody' },
-          { field: 'cell_type' },
-          { field: 'genotype' }
-      ];
+      vm.gridOptions.columnDefs = userFileBrowserFactory.createColumnDefs(solr.attributes);
 
       vm.gridOptions.data = [];
       for (var i = 0; i < solr.nodes.length; i++) {
