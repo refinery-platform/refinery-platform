@@ -68,6 +68,7 @@
     vm.attributeFilter = assayFiltersService.attributeFilter;
     // variable supporting ui-grid dynamic scrolling
     vm.cachePages = 2;
+    vm.canEdit = false;
     vm.checkDataLength = checkDataLength;
     vm.checkUsersGroupEdit = checkUsersGroupEdit;
     vm.collapsedToolPanel = toolService.isToolPanelCollapsed;
@@ -93,6 +94,7 @@
       showGridFooter: true,
       useExternalSorting: true
     };
+    vm.isOwner = false;
     vm.inputFileTypeColor = fileService.inputFileTypeColor;
     vm.lastPage = 0;  // variable supporting ui-grid dynamic scrolling
     vm.nodeSelectCollection = fileService.nodeSelectCollection;

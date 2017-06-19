@@ -1,6 +1,6 @@
 /**
- * Assay File Perms Service
- * @namespace assayFilePermsService
+ * Group Perm Service
+ * @namespace groupPermService
  * @desc Service used to check if user has edit permission
  * @memberOf refineryFileBrowser
  */
@@ -37,8 +37,8 @@
         uuid: $window.dataSetUuid,
         model: 'data_sets'
       };
-      var dataSetRequest = sharingService.query(params);
-      dataSetRequest.$promise.then(function (response) {
+      var permRequest = sharingService.query(params);
+      permRequest.$promise.then(function (response) {
         var allGroups = response.share_list;
         for (var i = 0; i < allGroups.length; i++) {
           if (allGroups[i].perms.write) {
@@ -47,7 +47,7 @@
           }
         }
       });
-      return dataSetRequest.$promise;
+      return permRequest.$promise;
     }
   }
 })();
