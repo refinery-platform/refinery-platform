@@ -35,7 +35,7 @@
              <div class="refinery-subheader">
                <div>
                  <h3>
-                   {{ param.name}}
+                   {{ param.name }}
                    &nbsp
                   <a
                     popover-placement="right"
@@ -102,18 +102,10 @@
                    </h4>
                    <label class="p-l-1-2">
                       <input
-                        type="radio"
-                        ng-value="true"
+                        type="checkbox"
+                        ng-checked="param.default_value"
                         ng-model="$ctrl.paramsForm[param.uuid]">
-                      True
                    </label>
-                   <label class="p-l-1-2">
-                     <input
-                      type="radio"
-                      ng-value="false"
-                      ng-model="$ctrl.paramsForm[param.uuid]">
-                      False
-                    </label>
                   </div>
                  <div ng-switch-default>
                    <h4>
@@ -140,26 +132,28 @@
 </div>
 
 <script type="text/ng-template" id="paramhelppopover.html">
-  <div class="refinery-subheader">
-     <h3>
-       Description
-     </h3>
-     <p class="wrap-word">
-       {{ param.description}}
-     </p>
-
-    <h3>
-       Type
-     </h3>
-     <p class="wrap-word">
-       {{ param.value_type}}
-     </p>
-
-    <h3>
-       Value
-     </h3>
-     <p class="wrap-word">
-       {{ param.default_value}}
-     </p>
+  <div>
+    <div class="refinery-subheader">
+      <h4> Description </h4>
+    <div>
+    <div class="wrap-word">
+      {{ param.description}}
+    </div>
+    <div class="refinery-subheader">
+      <h4>
+        Type
+      </h4>
+    </div>
+    <div class="wrap-word">
+      {{ param.value_type}}
+    </div>
+    <div class="refinery-subheader">
+    <h4>
+      Value
+    </h4>
+    </div>
+    <div class="wrap-word">
+      {{ param.default_value}}
+    </div>
   </div>
 </script>
