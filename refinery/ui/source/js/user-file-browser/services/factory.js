@@ -71,6 +71,7 @@
             || attribute.attribute_type === 'Factor Value') {
           var name = attribute.display_name.toLowerCase();
           if (requestedColumns[name]) {
+            requestedColumns[name] = false; // TODO: Better strategy to avoid duplicates?
             defs.push({ field: name });
           }
         }
