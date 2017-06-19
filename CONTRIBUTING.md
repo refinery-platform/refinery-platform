@@ -19,7 +19,7 @@ All changes must be submitted by pull requests to this repository.
 * With new code, provide unit tests. 
     * [Server-side Testing](https://github.com/refinery-platform/refinery-platform/wiki/Server-side-testing) 
     * [Client-side Testing](https://github.com/refinery-platform/refinery-platform/wiki/Client-side-testing)
-* Pull requests should be small and reviewed as you make progress on the feature (submit them often, so the team can give continuous feedback). 
+* Pull requests should be small and reviewed as you make progress on the feature. Submit them often, so the team can give continuous feedback. 
 * Each pull request should include a description of the changes and pass all the continuous integration tests which are automatically run by GitHub using Travis CI.
 * Pull requests can either be merged back to the develop branch or to the feature branch. 
 * Before merging into develop, all pull requests must be approved by a core team member.
