@@ -66,8 +66,8 @@ def load_config():
     if 'ADMIN_PASSWORD' not in config:
         generated_config['ADMIN_PASSWORD'] = random_password(8)
 
-    bucket_name = "{}-config".format(config['STACK_NAME'])
-    generated_config['S3_CONFIG_BUCKET'] = bucket_name
+    config_bucket_name = config['S3_BUCKET_NAME_BASE'] + "-config"
+    generated_config['S3_CONFIG_BUCKET'] = config_bucket_name
 
     # Update the config, by adding the automatically generated keys.
     config.update(generated_config)
@@ -114,7 +114,7 @@ def ensure_s3_bucket(bucket_name):
     return bucket_name
 
 
-def save_s3_config(config, suffix):
+def save_s3_config(config):
     """Save the config as an S3 object in an S3 bucket
     The config must have an 'S3_CONFIG_BUCKET' key, which is used for the name
     of the S3 bucket
@@ -129,7 +129,7 @@ def save_s3_config(config, suffix):
     bucket_name = config['S3_CONFIG_BUCKET']
     ensure_s3_bucket(bucket_name)
 
-    object_name = "refinery-config-{}.json".format(suffix)
+    object_name = "refinery-config.json"
 
     s3_uri = "s3://{}/{}".format(bucket_name, object_name)
     config['S3_CONFIG_URI'] = s3_uri
