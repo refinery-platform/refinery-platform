@@ -16,7 +16,7 @@ Review and adhere to the team's style guide.
 #### Pull Request Guidelines
 All changes must be submitted by pull requests to this repository. 
 * New features or bug fixes should branch off the develop branch.
-* With new code, at minimum, provide unit test. 
+* With new code, provide unit tests. 
     * [Server-side Testing](https://github.com/refinery-platform/refinery-platform/wiki/Server-side-testing) 
     * [Client-side Testing](https://github.com/refinery-platform/refinery-platform/wiki/Client-side-testing)
 * Pull requests should be small and reviewed as you make progress on the feature (submit them often, so the team can give continuous feedback). 
