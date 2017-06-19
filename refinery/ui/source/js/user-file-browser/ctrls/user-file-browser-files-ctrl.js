@@ -71,14 +71,6 @@
           { field: 'owner' },
           { field: 'antibody' },
           { field: 'cell_type' },
-          { field: 'published' },
-          { field: 'accession',
-            cellTemplate:
-                '<div class="ui-grid-cell-contents" >' +
-                '<a href="{{grid.getCellValue(row, col)}}" target="_blank">' +
-                '<i class="fa fa-external-link"></i> {{grid.getCellValue(row, col)}}' +
-                '</a>' +
-                '</div>' },
           { field: 'genotype' }
       ]
     };
