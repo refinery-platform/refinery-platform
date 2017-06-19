@@ -9,7 +9,7 @@
     '$log',
     '_',
     '$window',
-    'userFileService'
+    'userFileService',
   ];
 
   function userFileBrowserFactory (
@@ -62,10 +62,17 @@
                 '</a>' +
                 '</div>',
             width: 30 }];
+      var requestedColumns = {};
+      $window.djangoApp.userFilesColumns.forEach(function (column) {
+        requestedColumns[column] = true;
+      });
       solrAttributes.forEach(function (attribute) {
         if (attribute.attribute_type === 'Characteristics'
             || attribute.attribute_type === 'Factor Value') {
-          defs.push({ field: attribute.display_name.toLowerCase() });
+          var name = attribute.display_name.toLowerCase();
+          if (requestedColumns[name]) {
+            defs.push({ field: name });
+          }
         }
       });
       return defs;

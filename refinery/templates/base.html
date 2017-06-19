@@ -38,7 +38,7 @@
       solrSynonymSearch: {{ SOLR_SYNONYM_SEARCH|lower }},
       refineryTutorialSteps: '{{  REFINERY_TUTORIAL_STEPS|escapejs }}',
       staticUrl: '{{ STATIC_URL|escapejs }}',
-      userFilesColumns: '{{ USER_FILES_COLUMNS }}'
+      userFilesColumns: '{{ USER_FILES_COLUMNS }}'.split(',')
     };
 
     if (window.djangoApp.userId === 'None' || window.djangoApp.userName === 'None') {
