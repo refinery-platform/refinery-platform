@@ -649,6 +649,10 @@ def make_template(config, config_yaml):
         )
     )
 
+    cft.mappings.region = core.Mapping(
+        'Region',
+        {'us-east-1': {'ELBPrincipal': '127311923021'}})
+
     cft.resources.logging_policy = core.Resource(
         'LogBucketPolicy', 'AWS::S3::BucketPolicy',
         core.Properties({
@@ -669,7 +673,7 @@ def make_template(config, config_yaml):
                         functions.ref("AWS::AccountId"), "/*"),
                     "Principal": {
                       "AWS": [
-                        "127311923021"
+                        functions.find_in_map('Region', functions.ref("AWS::Region"), 'ELBPrincipal'),
                       ]
                     }
                 }]
