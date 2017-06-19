@@ -31,29 +31,27 @@
       <div class="panel-body">
        <ul class="plain">
          <form name="toolParamForm">
-           <li ng-repeat="param in $ctrl.params">
+           <li
+             ng-repeat="param in $ctrl.params"
+             class="p-b-1-2">
              <div class="refinery-subheader">
-               <div>
-                 <h3>
-                   {{ param.name }}
-                   &nbsp
-                  <a
-                    popover-placement="right"
-                    uib-popover-template="'paramhelppopover.html'"
-                    popover-title="{{ param.name}}"
-                    popover-trigger="focus"
-                    popover-append-to-body="true"
-                    tabindex="0">
-                    <i class="fa fa-question-circle info-icon icon-only"></i>
-                  </a>
-                 </h3>
-               </div>
-             <div ng-if="param.is_user_adjustable">
-               <div ng-switch="param.value_type">
+               <h3>
+                 {{ param.name }}
+                 &nbsp
+                <a
+                  popover-placement="right"
+                  uib-popover-template="'paramhelppopover.html'"
+                  popover-title="{{ param.name}}"
+                  popover-trigger="focus"
+                  popover-append-to-body="true"
+                  tabindex="0">
+                  <i class="fa fa-question-circle info-icon icon-only"></i>
+                </a>
+                <div ng-if="param.is_user_adjustable">
+               <div
+                 ng-switch="param.value_type"
+                 class="p-a-1-2">
                  <div ng-switch-when="INTEGER">
-                   <h4>
-                     Value:
-                   </h4>
                    <input
                      autofocus
                      type="text"
@@ -74,9 +72,6 @@
                    </div>
                  </div>
                  <div ng-switch-when="FLOAT">
-                   <h4>
-                     Value:
-                   </h4>
                    <input
                      autofocus
                      type="text"
@@ -97,9 +92,6 @@
                    </div>
                  </div>
                  <div ng-switch-when="BOOLEAN">
-                   <h4>
-                     Value:
-                   </h4>
                    <label class="p-l-1-2">
                       <input
                         type="checkbox"
@@ -108,9 +100,6 @@
                    </label>
                   </div>
                  <div ng-switch-default>
-                   <h4>
-                     Value:
-                   </h4>
                    <input
                      autofocus
                      type="text"
@@ -123,6 +112,8 @@
                  </div>
                </div>
              </div>
+               </h3>
+             </div>
            </li>
          </form>
        </ul>
@@ -133,27 +124,7 @@
 
 <script type="text/ng-template" id="paramhelppopover.html">
   <div>
-    <div class="refinery-subheader">
-      <h4> Description </h4>
-    <div>
-    <div class="wrap-word">
-      {{ param.description}}
-    </div>
-    <div class="refinery-subheader">
-      <h4>
-        Type
-      </h4>
-    </div>
-    <div class="wrap-word">
-      {{ param.value_type}}
-    </div>
-    <div class="refinery-subheader">
-    <h4>
-      Value
-    </h4>
-    </div>
-    <div class="wrap-word">
-      {{ param.default_value}}
-    </div>
+    <rp-tool-params-help-popover tool-param='param'>
+    </rp-tool-params-help-popover>
   </div>
 </script>
