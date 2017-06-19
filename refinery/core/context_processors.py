@@ -50,4 +50,5 @@ def extra_context(context):
         "REFINERY_TUTORIAL_STEPS": settings.REFINERY_TUTORIAL_STEPS,
         "SOLR_SYNONYM_SEARCH": settings.SOLR_SYNONYMS,
         "STATIC_URL": settings.STATIC_URL,
+        "USER_FILES_COLUMNS": settings.USER_FILES_COLUMNS
     }

@@ -1,11 +1,10 @@
 import json
 import logging
 import os
-import yaml
-
-import djcelery
 import subprocess
 
+import djcelery
+import yaml
 from django.core.exceptions import ImproperlyConfigured
 
 logger = logging.getLogger(__name__)
@@ -629,3 +628,5 @@ REFINERY_CUSTOM_NAVBAR_ITEM = get_setting("REFINERY_CUSTOM_NAVBAR_ITEM")
 
 # Location of DjangoDockerEngine proxy logging
 PROXY_LOG = '/tmp/django_docker_engine.log'
+
+USER_FILES_COLUMNS = get_setting("USER_FILES_COLUMNS")
