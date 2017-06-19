@@ -37,7 +37,8 @@
       repositoryMode: {{ REFINERY_REPOSITORY_MODE|yesno:"true,false,undefined" }},
       solrSynonymSearch: {{ SOLR_SYNONYM_SEARCH|lower }},
       refineryTutorialSteps: '{{  REFINERY_TUTORIAL_STEPS|escapejs }}',
-      staticUrl: '{{ STATIC_URL|escapejs }}'
+      staticUrl: '{{ STATIC_URL|escapejs }}',
+      userFilesColumns: '{{ USER_FILES_COLUMNS }}'
     };
 
     if (window.djangoApp.userId === 'None' || window.djangoApp.userName === 'None') {

@@ -41,7 +41,6 @@
     }
 
     function createColumnDefs (solrAttributes) {
-      console.log(solrAttributes);
       var defs = [
            { field: 'url',
             enableSorting: false,
@@ -66,7 +65,6 @@
       solrAttributes.forEach(function (attribute) {
         if (attribute.attribute_type === 'Characteristics'
             || attribute.attribute_type === 'Factor Value') {
-          console.log(attribute);
           defs.push({ field: attribute.display_name.toLowerCase() });
         }
       });
