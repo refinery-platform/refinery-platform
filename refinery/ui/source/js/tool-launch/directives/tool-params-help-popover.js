@@ -1,3 +1,9 @@
+/**
+ * Tool Params Help Popover
+ * @namespace rpToolParamsHelpPopover
+ * @desc Component for the tool parameter's help popover
+ * @memberOf refineryApp.refineryToolLaunch
+ */
 (function () {
   'use strict';
 
