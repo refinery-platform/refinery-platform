@@ -40,8 +40,9 @@
       return userFile.$promise;
     }
 
-    function createColumnDefs (/* solrAttributes */) {
-      return [
+    function createColumnDefs (solrAttributes) {
+      console.log(solrAttributes);
+      var defs = [
            { field: 'url',
             enableSorting: false,
             displayName: '',
@@ -61,16 +62,15 @@
                 '<i class="fa fa-file"></i>' +
                 '</a>' +
                 '</div>',
-            width: 30 },
-          { field: 'filename' },
-          { field: 'technology' },
-          { field: 'organism' },
-          { field: 'date' },
-          { field: 'owner' },
-          { field: 'antibody' },
-          { field: 'cell_type' },
-          { field: 'genotype' }
-      ];
+            width: 30 }];
+      solrAttributes.forEach(function (attribute) {
+        if (attribute.attribute_type === 'Characteristics'
+            || attribute.attribute_type === 'Factor Value') {
+          console.log(attribute);
+          defs.push({ field: attribute.display_name.toLowerCase() });
+        }
+      });
+      return defs;
     }
 
     function createData (solrNodes) {
