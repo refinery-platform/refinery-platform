@@ -108,6 +108,7 @@
     }
 
     function createFilters (solrAttributes, solrFacetCounts) {
+      console.log(solrFacetCounts); // TODO: These have only one suffix ...
       var mapDisplayToInternal = {}; // May be one-to-many
       solrAttributes.forEach(function (attribute) {
         var display = normalizeName(attribute);
@@ -123,9 +124,15 @@
       var filters = {};
       requestedFilters.forEach(function (filterName) {
         var internals = mapDisplayToInternal[filterName];
+        if (filterName === 'organism') {
+          console.log(internals); // TODO: ... but there are multiple name matches here ...
+        }
         var facetCounts = [];
         internals.forEach(function (internal) {
           var counts = solrFacetCounts[internal];
+          if (filterName === 'organism') {
+            console.log(counts); // TODO: ... but all but one come out undefined.
+          }
           if (counts) {
             counts.forEach(function (facetCount) {
               facetCounts.push(facetCount);
