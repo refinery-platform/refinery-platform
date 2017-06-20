@@ -1,6 +1,9 @@
 import logging
 
+from django.db import transaction
 from django.http import HttpResponseBadRequest
+from guardian.exceptions import GuardianError
+from guardian.shortcuts import get_objects_for_user
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.viewsets import ModelViewSet
 
@@ -30,7 +33,26 @@ class ToolsViewSet(ModelViewSet):
     http_method_names = ['get', 'post']
     permission_classes = [IsAuthenticated]
 
+    def get_queryset(self):
+        """
+        This view returns a list of all the Tools that the currently
+        authenticated user has read permissions on.
+        """
+        try:
+            user_tools = get_objects_for_user(
+                self.request.user,
+                "tool_manager.read_tool"
+            )
+        except GuardianError as e:
+            return HttpResponseBadRequest(e)
+
+        return user_tools
+
+    @transaction.atomic
     def create(self, request, *args, **kwargs):
+        """
+        Create and launch a Tool upon successful validation checks
+        """
         try:
             validate_tool_launch_configuration(request.data)
         except RuntimeError as e:
