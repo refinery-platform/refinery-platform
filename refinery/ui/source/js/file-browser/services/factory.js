@@ -277,6 +277,7 @@
         enableSorting: false,
         enableColumnMenu: false,
         enableColumnResizing: true,
+        pinnedLeft: true,
         cellTemplate: _cellTemplate,
         visible: isToolSelected
       };
@@ -309,6 +310,7 @@
         enableSorting: false,
         enableColumnMenu: false,
         enableColumnResizing: true,
+        pinnedLeft: true,
         cellTemplate: cellTemplate,
         visible: isToolSelected
       };
