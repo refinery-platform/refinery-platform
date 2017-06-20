@@ -1249,14 +1249,32 @@ class OpenIDToken(APIView):
                 status.HTTP_500_INTERNAL_SERVER_ERROR
             )
         try:
-            token = client.get_open_id_token_for_developer_identity(
-                IdentityPoolId=
-                'us-east-1:18d47236-7898-4c2a-9a0a-a150d49d76be',
-                Logins={'login.scc': request.user.username}
+            # 60 results is the highest allowed value
+            response = client.list_identity_pools(MaxResults=60)
+        except botocore.exceptions.NoCredentialsError as exc:
+            return api_error_response(
+                "Server AWS configuration is incorrect: {}".format(exc),
+                status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-        except (botocore.exceptions.NoCredentialsError,
-                botocore.exceptions.ClientError) as exc:
-            # missing or wrong AWS credentials
+        except botocore.exceptions.ClientError as exc:
+            return api_error_response(
+                "Error retrieving Cognito identity pools: {}".format(exc),
+                status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+        # get Cognito identity pool ID
+        identity_pool_name = settings.COGNITO_IDENTITY_POOL_NAME
+        identity_pool_id = ''
+        for identity_pool in response['IdentityPools']:
+            if identity_pool['IdentityPoolName'] == identity_pool_name:
+                identity_pool_id = identity_pool['IdentityPoolId']
+
+        try:
+            token = client.get_open_id_token_for_developer_identity(
+                IdentityPoolId=identity_pool_id,
+                Logins={settings.COGNITO_DEVELOPER_PROVIDER_NAME:
+                            request.user.username}
+            )
+        except botocore.exceptions.ClientError as exc:
             return api_error_response(
                 "Server AWS configuration is incorrect: {}".format(exc),
                 status.HTTP_500_INTERNAL_SERVER_ERROR
