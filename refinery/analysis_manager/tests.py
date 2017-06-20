@@ -120,7 +120,7 @@ class AnalysisConfigTests(TestCase):
             {
                 "custom_name": "Valid Tool Analysis Config",
                 "studyUuid": str(uuid.uuid4()),
-                "tool_uuid": str(uuid.uuid4()),
+                "toolUuid": str(uuid.uuid4()),
                 "user_id": 1,
                 "workflowUuid": str(uuid.uuid4())
             }
@@ -132,7 +132,7 @@ class AnalysisConfigTests(TestCase):
                 {
                     "custom_name": "Missing a field",
                     "studyUuid": str(uuid.uuid4()),
-                    "tool_uuid": str(uuid.uuid4()),
+                    "toolUuid": str(uuid.uuid4()),
                     "workflowUuid": str(uuid.uuid4())
                 }
             )
@@ -143,7 +143,7 @@ class AnalysisConfigTests(TestCase):
                 {
                     "custom_name": "Non-uuid field",
                     "studyUuid": str(uuid.uuid4()),
-                    "tool_uuid": str(uuid.uuid4()),
+                    "toolUuid": str(uuid.uuid4()),
                     "user_id": 1,
                     "workflowUuid": "Coffee"
                 }
@@ -155,7 +155,7 @@ class AnalysisConfigTests(TestCase):
                 {
                     "custom_name": "Non int field",
                     "studyUuid": str(uuid.uuid4()),
-                    "tool_uuid": str(uuid.uuid4()),
+                    "toolUuid": str(uuid.uuid4()),
                     "user_id": str(uuid.uuid4()),
                     "workflowUuid": str(uuid.uuid4())
                 }
@@ -219,7 +219,7 @@ class AnalysisUtilsTests(TestCase):
                 {
                     "custom_name": "Valid Tool Analysis Config",
                     "studyUuid": self.study.uuid,
-                    "tool_uuid": str(uuid.uuid4()),
+                    "toolUuid": str(uuid.uuid4()),
                     "user_id": self.user.id,
                     "workflowUuid": self.workflow.uuid
                 }
@@ -324,7 +324,7 @@ class AnalysisRunViewTests(TestCase):
             data={
                 "custom_name": "Valid Tool Analysis Config",
                 "studyUuid": str(uuid.uuid4()),
-                "tool_uuid": str(uuid.uuid4()),
+                "toolUuid": str(uuid.uuid4()),
                 "user_id": 1,
                 "workflowUuid": str(uuid.uuid4())
             },
@@ -337,7 +337,7 @@ class AnalysisRunViewTests(TestCase):
             data={
                 "custom_name": "Valid Tool Analysis Config",
                 "studyUuid": str(uuid.uuid4()),
-                "tool_uuid": str(uuid.uuid4()),
+                "toolUuid": str(uuid.uuid4()),
                 "workflowUuid": str(uuid.uuid4())
             },
             HTTP_X_REQUESTED_WITH='XMLHttpRequest'
@@ -355,7 +355,7 @@ class AnalysisRunViewTests(TestCase):
                 json.dumps({
                     "custom_name": "Valid Tool Analysis Config",
                     "studyUuid": str(uuid.uuid4()),
-                    "tool_uuid": str(uuid.uuid4()),
+                    "toolUuid": str(uuid.uuid4()),
                     "workflowUuid": str(uuid.uuid4())
                 }),
                 content_type="application/json",
@@ -376,7 +376,7 @@ class AnalysisRunViewTests(TestCase):
             data=json.dumps({
                 "custom_name": "Valid Tool Analysis Config",
                 "studyUuid": str(uuid.uuid4()),
-                "tool_uuid": str(uuid.uuid4()),
+                "toolUuid": str(uuid.uuid4()),
                 "workflowUuid": str(uuid.uuid4())
             }),
             content_type="application/json",
@@ -390,7 +390,7 @@ class AnalysisRunViewTests(TestCase):
             data={
                 "custom_name": "Valid Tool Analysis Config",
                 "studyUuid": str(uuid.uuid4()),
-                "tool_uuid": str(uuid.uuid4()),
+                "toolUuid": str(uuid.uuid4()),
                 "workflowUuid": str(uuid.uuid4())
             }
         )

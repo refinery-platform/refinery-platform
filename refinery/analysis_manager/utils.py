@@ -41,7 +41,7 @@ def create_analysis(analysis_config):
         return create_noderelationship_analysis(analysis_config)
 
     # Create an analysis for new-type Workflow-based Tools
-    if analysis_config.get("tool_uuid"):
+    if analysis_config.get("toolUuid"):
         return create_tool_analysis(analysis_config)
 
 
@@ -249,7 +249,7 @@ def create_tool_analysis(validated_analysis_config):
 
     try:
         tool = tool_manager.models.Tool.objects.get(
-            uuid=validated_analysis_config["tool_uuid"]
+            uuid=validated_analysis_config["toolUuid"]
         )
     except (tool_manager.models.Tool.DoesNotExist,
             tool_manager.models.Tool.MultipleObjectsReturned) as e:
