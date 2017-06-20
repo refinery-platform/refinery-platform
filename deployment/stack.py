@@ -339,6 +339,23 @@ def make_template(config, config_yaml):
                             }
                         ]
                     }
+                },
+                {
+                    "PolicyName": "CognitoAccess",
+                    "PolicyDocument": {
+                        "Version": "2012-10-17",
+                        "Statement": [
+                            {
+                                "Effect": "Allow",
+                                "Action": [
+                                    "cognito-identity:ListIdentityPools",
+                                    "cognito-identity:"
+                                    "GetOpenIdTokenForDeveloperIdentity"
+                                ],
+                                "Resource": "*"
+                            }
+                        ]
+                    }
                 }
             ]
         })
@@ -540,7 +557,7 @@ def make_template(config, config_yaml):
             )
         )
     )
-    s3_upload_role_trust_policy = {
+    upload_role_trust_policy = {
         "Version": "2012-10-17",
         "Statement": [
             {
@@ -561,7 +578,7 @@ def make_template(config, config_yaml):
             }
         ]
     }
-    s3_upload_access_policy = {
+    upload_access_policy = {
         "Version": "2012-10-17",
         "Statement": [
             {
@@ -571,7 +588,7 @@ def make_template(config, config_yaml):
                     "cognito-sync:*",
                     "cognito-identity:*"
                 ],
-                "Resource": "*"
+                "Resource": functions.ref('IdentityPool')
             },
             {
                 "Action": "s3:PutObject",
@@ -598,11 +615,11 @@ def make_template(config, config_yaml):
             'AWS::IAM::Role',
             core.Properties(
                 {
-                    'AssumeRolePolicyDocument': s3_upload_role_trust_policy,
+                    'AssumeRolePolicyDocument': upload_role_trust_policy,
                     'Policies': [
                         {
                             'PolicyName': 'AuthenticatedS3UploadPolicy',
-                            'PolicyDocument': s3_upload_access_policy,
+                            'PolicyDocument': upload_access_policy,
                         }
                     ]
                 }
