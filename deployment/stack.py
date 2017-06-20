@@ -172,7 +172,7 @@ def make_template(config, config_yaml):
             'StorageStackName',
             'String',
             {
-                'Default': '${AWS::StackName}-storage',
+                'Default': '${AWS::StackName}Storage',
                 'Description': 'Name of the S3 storage stack for Django '
                                'static and media files',
             }

@@ -19,7 +19,7 @@ EMAIL_PORT = 465
 INSTALLED_APPS += (
     'storages',
 )
-STATIC_BUCKET = get_setting('STACK_NAME') + '-static'
+STATIC_BUCKET = get_setting('S3_BUCKET_NAME_BASE') + '-static'
 STATIC_URL = 'https://{}.s3.amazonaws.com/'.format(STATIC_BUCKET)
 STATICFILES_STORAGE = 'config.utils_aws.S3StaticStorage'
 DEPLOYMENT_PLATFORM = "aws"
