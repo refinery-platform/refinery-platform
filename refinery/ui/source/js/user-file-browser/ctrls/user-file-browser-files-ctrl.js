@@ -16,7 +16,7 @@
     var getUserFiles = userFileBrowserFactory.getUserFiles;
     getUserFiles().then(function (solr) {
       vm.gridOptions.columnDefs = userFileBrowserFactory.createColumnDefs(solr.attributes);
-      vm.gridOptions.data = userFileBrowserFactory.createData(solr.nodes);
+      vm.gridOptions.data = userFileBrowserFactory.createData(solr.attributes, solr.nodes);
       promise.resolve();
     }, function () {
       promise.reject();

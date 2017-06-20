@@ -9,7 +9,7 @@
     '$log',
     '_',
     '$window',
-    'userFileService',
+    'userFileService'
   ];
 
   function userFileBrowserFactory (
@@ -79,25 +79,36 @@
       return defs;
     }
 
-    function createData (solrNodes) {
+    function createData (solrAttributes, solrNodes) {
+      var mapInternalToDisplay = {};
+      solrAttributes.forEach(function (attribute) {
+        mapInternalToDisplay[attribute.internal_name] = attribute.display_name.toLowerCase();
+      });
       var data = [];
-      for (var i = 0; i < solrNodes.length; i++) {
-        var node = solrNodes[i];
-        var url = node.REFINERY_NAME_6_3_s;
-        data.push({
-          url: url,
-          technology: 'TODO',
-          filename: url ? decodeURIComponent(url.replace(/.*\//, '')) : '',
-          organism: node.organism_Characteristics_6_3_s,
-          date: 'TODO',
-          antibody: node.antibody_Factor_Value_6_3_s,
-          cell_type: node.cell_line_Characteristics_6_3_s,
-          published: 'TODO',
-          accession: 'TODO',
-          genotype: 'TODO',
-          owner: 'TODO'
+      solrNodes.forEach(function (node) {
+        var row = {};
+        var internalNames = Object.keys(node);
+        internalNames.forEach(function (internalName) {
+          var display = mapInternalToDisplay[internalName];
+          row[display] = node[internalName];
         });
-      }
+        data.push(row);
+
+        // var url = node.REFINERY_NAME_6_3_s;
+        // data.push({
+        //   url: url,
+        //   technology: 'TODO',
+        //   filename: url ? decodeURIComponent(url.replace(/.*\//, '')) : '',
+        //   organism: node.organism_Characteristics_6_3_s,
+        //   date: 'TODO',
+        //   antibody: node.antibody_Factor_Value_6_3_s,
+        //   cell_type: node.cell_line_Characteristics_6_3_s,
+        //   published: 'TODO',
+        //   accession: 'TODO',
+        //   genotype: 'TODO',
+        //   owner: 'TODO'
+        // });
+      });
       return data;
     }
   }
