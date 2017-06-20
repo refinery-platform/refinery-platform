@@ -70,7 +70,7 @@
       solrAttributes.forEach(function (attribute) {
         if (attribute.attribute_type === 'Characteristics'
             || attribute.attribute_type === 'Factor Value') {
-          var name = attribute.display_name.toLowerCase();
+          var name = normalizeName(attribute);
           if (requestedColumns[name]) {
             requestedColumns[name] = false; // TODO: Better strategy to avoid duplicates?
             defs.push({ field: name });
@@ -80,11 +80,15 @@
       return defs;
     }
 
+    function normalizeName (attribute) {
+      return attribute.display_name.toLowerCase();
+    }
+
     function createData (solrAttributes, solrNodes) {
       var mapInternalToDisplay = {};
       solrAttributes.forEach(function (attribute) {
         mapInternalToDisplay[attribute.internal_name] =
-            attribute.display_name.toLowerCase();
+            normalizeName(attribute);
       });
 
       var data = [];
