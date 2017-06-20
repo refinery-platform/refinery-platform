@@ -5,7 +5,7 @@
       "required": [
         "custom_name",
         "studyUuid",
-        "tool_uuid",
+        "toolUuid",
         "user_id",
         "workflowUuid"
       ],
