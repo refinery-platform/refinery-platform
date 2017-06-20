@@ -1,0 +1,92 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema",
+  "oneOf": [
+    {
+      "required": [
+        "custom_name",
+        "studyUuid",
+        "tool_uuid",
+        "user_id",
+        "workflowUuid"
+      ],
+      "properties": {
+        "custom_name": {
+          "type": "string"
+        },
+        "studyUuid": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "tool_uuid": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "user_id": {
+          "type": "number"
+        },
+        "workflowUuid": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        }
+      }
+    },
+    {
+      "required": [
+        "custom_name",
+        "nodeSetUuid",
+        "studyUuid",
+        "user_id",
+        "workflowUuid"
+      ],
+      "properties": {
+        "custom_name": {
+          "type": "string"
+        },
+        "nodeSetUuid": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "studyUuid": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "user_id": {
+          "type": "number"
+        },
+        "workflowUuid": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        }
+      }
+    },
+    {
+      "required": [
+        "custom_name",
+        "nodeRelationshipUuid",
+        "studyUuid",
+        "user_id",
+        "workflowUuid"
+      ],
+      "properties": {
+         "custom_name": {
+          "type": "string"
+        },
+        "nodeSetUuid": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "studyUuid": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "user_id": {
+          "type": "number"
+        },
+        "workflowUuid": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        }
+      }
+    }
+  ]
+}
