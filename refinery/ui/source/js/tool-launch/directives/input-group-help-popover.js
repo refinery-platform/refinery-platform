@@ -1,3 +1,9 @@
+/**
+ * Input Group Help Popover
+ * @namespace rpInputGroupHelpPopover
+ * @desc Component for the input group's help popover (template)
+ * @memberOf refineryApp.refineryToolLaunch
+ */
 (function () {
   'use strict';
 
