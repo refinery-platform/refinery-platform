@@ -27,7 +27,6 @@ install:
 env:
   global:
     # These env vars are available to every build
-    - REDUCE_TEST_OUTPUT=true
     - PYTHONPATH=$PYTHONPATH:../refinery:../refinery/config
     - DJANGO_SETTINGS_MODULE=config.settings.prod
 
