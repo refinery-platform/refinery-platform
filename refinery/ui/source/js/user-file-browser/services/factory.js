@@ -108,19 +108,32 @@
     }
 
     function createFilters (solrAttributes, solrFacetCounts) {
-      console.log(solrAttributes);
-      console.log(solrFacetCounts);
+      var mapDisplayToInternal = {}; // May be one-to-many
+      solrAttributes.forEach(function (attribute) {
+        var display = normalizeName(attribute);
+        if (! mapDisplayToInternal.hasOwnProperty(display)) {
+          mapDisplayToInternal[display] = [];
+        }
+        mapDisplayToInternal[display].push(attribute.internal_name);
+      });
 
       var requestedFilters = $window.djangoApp.userFilesColumns;
       // TODO: Should there be a separate config for the filters?
 
       var filters = {};
       requestedFilters.forEach(function (filterName) {
+        var internals = mapDisplayToInternal[filterName];
+        var facetCounts = [];
+        internals.forEach(function (internal) {
+          var counts = solrFacetCounts[internal];
+          if (counts) {
+            counts.forEach(function (facetCount) {
+              facetCounts.push(facetCount);
+            });
+          }
+        });
         filters[filterName] = {
-          facetObj: [
-            { name: 'A', count: 7 },
-            { name: 'B', count: 77 }
-          ]
+          facetObj: facetCounts
         };
       });
 
