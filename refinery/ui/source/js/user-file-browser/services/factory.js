@@ -110,49 +110,21 @@
     function createFilters (solrAttributes, solrFacetCounts) {
       console.log(solrAttributes);
       console.log(solrFacetCounts);
-      return {
-        Technology: {
+
+      var requestedFilters = $window.djangoApp.userFilesColumns;
+      // TODO: Should there be a separate config for the filters?
+
+      var filters = {};
+      requestedFilters.forEach(function (filterName) {
+        filters[filterName] = {
           facetObj: [
-            { name: 'ChIP-seq', count: 4 },
-            { name: 'RNA-seq', count: 7 }
+            { name: 'A', count: 7 },
+            { name: 'B', count: 77 }
           ]
-        },
-        Organism: {
-          facetObj: [
-            { name: 'Homo sapiens', count: 3 },
-            { name: 'Mus musculus', count: 8 }
-          ]
-        },
-        Filetype: {
-          facetObj: [
-            { name: 'GCT file', count: 42 },
-            { name: 'Affymetrix Probe Results', count: 8 }
-          ]
-        },
-        Owner: {
-          facetObj: [
-            { name: 'Chuck McCallum', count: 6 },
-            { name: 'Geoff Nelson', count: 6 }
-          ]
-        },
-        Antibody: {
-          facetObj: [
-            { name: 'HNF4A', count: 5 },
-            { name: 'FRTS4', count: 46 }
-          ]
-        },
-        Celltype: {
-          facetObj: [
-            { name: 'Caco-2', count: 42 },
-            { name: 'HeLa', count: 1 }
-          ]
-        },
-        Genotype: {
-          facetObj: [
-            { name: 'C57BL/6J', count: 12 }
-          ]
-        }
-      };
+        };
+      });
+
+      return filters;
     }
   }
 })();
