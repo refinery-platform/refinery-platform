@@ -211,6 +211,9 @@
       .fileTypes {
         display: inline;
       }
+      .selected-node-name {
+        border-top: 1px dashed;
+      }
     }
   }
 }
@@ -326,9 +329,8 @@
   }
 }
 
-.selectRowBorder {
-  border-top: 1px solid @blue-active !important;
-  border-bottom: 1px solid @blue-active !important;
+.activeRowHighlight {
+  background-color: #c9dde1 !important;
 }
 
 .current-type-border {

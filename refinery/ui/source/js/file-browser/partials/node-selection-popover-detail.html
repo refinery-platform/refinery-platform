@@ -8,30 +8,24 @@
           'border-color': NSPCtrl.inputFileTypeColor[inputType.uuid]}">
           <div class="checkbox">
             <label>
-              <!-- Deselect: user can currently deselect any node in the current group-->
-              <span
-                ng-if="NSPCtrl.groupCollection[NSPCtrl.currentGroup] &&
-                NSPCtrl.groupCollection[NSPCtrl.currentGroup][inputType.uuid].length > 0"
-                class="wrap-word">
-                  <span ng-repeat="selectedFile in NSPCtrl.groupCollection[NSPCtrl.currentGroup][inputType.uuid]">
-                    <input
-                      type="checkbox"
-                      ng-click="NSPCtrl.selectNode(inputType.uuid, selectedFile.uuid)"
-                      ng-model="NSPCtrl.selectionObj[NSPCtrl.currentGroup][inputType.uuid][selectedFile.uuid]">
-                     {{ selectedFile[NSPCtrl.attributes.Name] }}
-                  </span>
-                </span>
               <!-- Select: If there's NOT a group already started for the inputFileType than checkbox not selected-->
-              <span
-                ng-if="!NSPCtrl.groupCollection[NSPCtrl.currentGroup] ||
-                !NSPCtrl.groupCollection[NSPCtrl.currentGroup][inputType.uuid] ||
-                NSPCtrl.groupCollection[NSPCtrl.currentGroup][inputType.uuid].length == 0">
+              <span>
                 <input
                   type="checkbox"
                   ng-click="NSPCtrl.selectNode(inputType.uuid)"
                   ng-model="NSPCtrl.selectionObj[NSPCtrl.currentGroup][inputType.uuid][NSPCtrl.activeNode.uuid]">
                 {{ inputType.name }}
               </span>
+               <!-- Deselect: user can currently deselect any node in the current group-->
+              <div
+                class="wrap-word"
+                ng-class='{"selected-node-name": NSPCtrl.groupCollection[NSPCtrl
+              .currentGroup][inputType.uuid].length > 0}'>
+                <span
+                  ng-repeat="selectedFile in NSPCtrl.groupCollection[NSPCtrl.currentGroup][inputType.uuid]">
+                   {{ selectedFile[NSPCtrl.attributes.Name] }}
+                </span>
+              </div>
             </label>
           </div>
         </li>
@@ -59,7 +53,14 @@
                   ng-click="NSPCtrl.selectNode(NSPCtrl.inputFileTypes[0].uuid)"
                   ng-model="NSPCtrl.selectionObj[NSPCtrl.currentGroup][NSPCtrl.inputFileTypes[0].uuid][NSPCtrl.activeNode.uuid]">
                 {{ NSPCtrl.inputFileTypes[0].name }}
-              </label>
+
+                <div
+                  ng-if="NSPCtrl.selectionObj[NSPCtrl.currentGroup][NSPCtrl.inputFileTypes[0].uuid][NSPCtrl.activeNode.uuid]"
+                  class="wrap-word selected-node-name">
+                  {{ NSPCtrl.groupCollection[NSPCtrl.currentGroup][NSPCtrl.inputFileTypes[0].uuid]
+                  [NSPCtrl.groupCollection[NSPCtrl.currentGroup][NSPCtrl.inputFileTypes[0].uuid].length - 1]
+                  [NSPCtrl.attributes.Name] }}
+                </div>
           </span>
         </li>
       </div>
