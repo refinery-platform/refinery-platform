@@ -1261,7 +1261,7 @@ class OpenIDToken(APIView):
                 "Error retrieving Cognito identity pools: {}".format(exc),
                 status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-        # get Cognito identity pool ID
+        # retrieve Cognito identity pool ID using pool name
         identity_pool_name = settings.COGNITO_IDENTITY_POOL_NAME
         identity_pool_id = ''
         for identity_pool in response['IdentityPools']:
@@ -1272,7 +1272,7 @@ class OpenIDToken(APIView):
             token = client.get_open_id_token_for_developer_identity(
                 IdentityPoolId=identity_pool_id,
                 Logins={settings.COGNITO_DEVELOPER_PROVIDER_NAME:
-                            request.user.username}
+                        request.user.username}
             )
         except botocore.exceptions.ClientError as exc:
             return api_error_response(
