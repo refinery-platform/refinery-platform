@@ -22,4 +22,4 @@ INSTALLED_APPS += (
 STATIC_BUCKET = get_setting('S3_BUCKET_NAME_BASE') + '-static'
 STATIC_URL = 'https://{}.s3.amazonaws.com/'.format(STATIC_BUCKET)
 STATICFILES_STORAGE = 'config.utils_aws.S3StaticStorage'
-DEPLOYMENT_PLATFORM = "aws"
+DEPLOYMENT_PLATFORM = 'aws'
