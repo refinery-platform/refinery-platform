@@ -15,8 +15,8 @@
     var promise = $q.defer();
     var getUserFiles = userFileBrowserFactory.getUserFiles;
     getUserFiles().then(function (solr) {
-      console.log(solr);
-      vm.attributeFilters = userFileBrowserFactory.createFilters(solr);
+      vm.attributeFilters =
+          userFileBrowserFactory.createFilters(solr.attributes, solr.facet_field_counts);
       promise.resolve();
     }, function () {
       promise.reject();

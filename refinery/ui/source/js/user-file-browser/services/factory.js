@@ -107,7 +107,9 @@
       return data;
     }
 
-    function createFilters (/* solr */) {
+    function createFilters (solrAttributes, solrFacetCounts) {
+      console.log(solrAttributes);
+      console.log(solrFacetCounts);
       return {
         Technology: {
           facetObj: [
