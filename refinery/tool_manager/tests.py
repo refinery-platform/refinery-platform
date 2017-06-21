@@ -177,7 +177,8 @@ class ToolManagerTestBase(TestCase):
             )
         else:
             self.tool_annotation = "{}/workflows/LIST.json".format(
-                TEST_DATA_PATH)
+                TEST_DATA_PATH
+            )
 
         with open(self.tool_annotation) as f:
             self.tool_annotation_data = json.loads(f.read())
