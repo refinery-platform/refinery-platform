@@ -7,6 +7,7 @@ from django.http import HttpResponseBadRequest, HttpResponseNotAllowed
 from django.test import RequestFactory, TestCase
 from guardian.utils import get_anonymous_user
 
+from analysis_manager.tasks import run_analysis
 from analysis_manager.utils import (create_analysis,
                                     fetch_objects_required_for_analysis,
                                     validate_analysis_config)
@@ -344,8 +345,7 @@ class AnalysisRunViewTests(TestCase):
         )
         self.assertEqual(type(response), HttpResponseNotAllowed)
 
-    @mock.patch("analysis_manager.tasks.run_analysis")
-    def test_analysis_run_view_valid_data(self, run_mock):
+    def test_analysis_run_view_valid_data(self):
         with mock.patch(
             "analysis_manager.views.create_analysis",
             return_value=self.analysis
@@ -362,7 +362,11 @@ class AnalysisRunViewTests(TestCase):
                 HTTP_X_REQUESTED_WITH='XMLHttpRequest'
             )
             request.user = self.user
-            response = run(request)
+            with mock.patch.object(
+                run_analysis, 'delay', side_effect=None
+            ) as task_mock:
+                response = run(request)
+                self.assertTrue(task_mock.called)
 
             self.assertEqual(
                 response.content,
