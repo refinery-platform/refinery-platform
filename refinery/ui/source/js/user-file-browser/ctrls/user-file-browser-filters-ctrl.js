@@ -6,11 +6,12 @@
   .controller('UserFileBrowserFiltersCtrl', UserFileBrowserFiltersCtrl);
 
   UserFileBrowserFiltersCtrl.$inject = [
+    '$log',
     '$q',
     'userFileBrowserFactory'
   ];
 
-  function UserFileBrowserFiltersCtrl ($q, userFileBrowserFactory) {
+  function UserFileBrowserFiltersCtrl ($log, $q, userFileBrowserFactory) {
     var vm = this;
     var promise = $q.defer();
     var getUserFiles = userFileBrowserFactory.getUserFiles;
@@ -19,6 +20,7 @@
           userFileBrowserFactory.createFilters(solr.attributes, solr.facet_field_counts);
       promise.resolve();
     }, function () {
+      $log.error('/user/files/ request failed');
       promise.reject();
     });
   }
