@@ -1,4 +1,8 @@
 sudo: required
+
+# Temporary workaround until we fix our builds on new Travis env
+group: deprecated-2017Q2
+
 language: python
 cache: pip
 addons:
