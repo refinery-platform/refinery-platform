@@ -14,6 +14,7 @@ from django.test import TestCase
 from rest_framework.test import (APIRequestFactory, APITestCase,
                                  force_authenticate)
 
+from analysis_manager.tasks import run_analysis
 from core.models import (DataSet, ExtendedGroup, InvestigationLink, Project,
                          Workflow, WorkflowEngine)
 from data_set_manager.models import Assay, Investigation, Node, Study
@@ -124,10 +125,11 @@ class ToolManagerTestBase(TestCase):
 
         # Mock the run_analysis task
         elif tool_type == ToolDefinition.WORKFLOW:
-            with mock.patch(
-                "analysis_manager.tasks.run_analysis"
-            ):
+            with mock.patch.object(
+                run_analysis, 'delay', side_effect=None
+            ) as task_mock:
                 self.post_response = self.tools_view(self.post_request)
+                self.assertTrue(task_mock.called)
 
         self.tool = Tool.objects.get(tool_definition__uuid=self.td.uuid)
         self.get_request = self.factory.get(self.tools_url_root)
@@ -1177,13 +1179,12 @@ class ToolLaunchTests(ToolManagerTestBase):
             format="json"
         )
         force_authenticate(self.post_request, self.user)
-        with mock.patch("analysis_manager.tasks.run_analysis"):
-            self.post_response = self.tools_view(self.post_request)
-            self.assertEqual(type(self.post_response), HttpResponseBadRequest)
-            self.assertIn(
-                "Couldn't fetch Workflow",
-                self.post_response.content
-            )
+        self.post_response = self.tools_view(self.post_request)
+        self.assertEqual(type(self.post_response), HttpResponseBadRequest)
+        self.assertIn(
+            "Couldn't fetch Workflow",
+            self.post_response.content
+        )
 
     def test_workflow_tool_launch_valid_workflow_object(self):
         self.create_valid_tool(ToolDefinition.WORKFLOW)
