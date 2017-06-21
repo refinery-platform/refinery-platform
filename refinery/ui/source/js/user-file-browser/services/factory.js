@@ -7,13 +7,13 @@
 
   userFileBrowserFactory.$inject = [
     '$log',
-    '$window',
+    'settings',
     'userFileService'
   ];
 
   function userFileBrowserFactory (
     $log,
-    $window,
+    settings,
     userFileService
     ) {
     return {
@@ -53,7 +53,7 @@
             width: 30 },
           { field: 'filename' }];
       var requestedColumns = {};
-      $window.djangoApp.userFilesColumns.forEach(function (column) {
+      settings.djangoApp.userFilesColumns.forEach(function (column) {
         requestedColumns[column] = true;
       });
       solrAttributes.forEach(function (attribute) {
@@ -102,7 +102,7 @@
         mapDisplayToInternal[display].push(attribute.internal_name);
       });
 
-      var requestedFilters = $window.djangoApp.userFilesColumns;
+      var requestedFilters = settings.djangoApp.userFilesColumns;
       // TODO: Should there be a separate config for the filters?
 
       var filters = {};
