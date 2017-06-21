@@ -7,14 +7,12 @@
 
   userFileBrowserFactory.$inject = [
     '$log',
-    '_',
     '$window',
     'userFileService'
   ];
 
   function userFileBrowserFactory (
     $log,
-    _,
     $window,
     userFileService
     ) {
