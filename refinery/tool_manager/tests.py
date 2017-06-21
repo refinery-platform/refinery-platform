@@ -125,11 +125,8 @@ class ToolManagerTestBase(TestCase):
 
         # Mock the run_analysis task
         elif tool_type == ToolDefinition.WORKFLOW:
-            with mock.patch.object(
-                run_analysis, 'delay', side_effect=None
-            ) as task_mock:
+            with mock.patch.object(run_analysis, 'delay', side_effect=None):
                 self.post_response = self.tools_view(self.post_request)
-                self.assertTrue(task_mock.called)
 
         self.tool = Tool.objects.get(tool_definition__uuid=self.td.uuid)
         self.get_request = self.factory.get(self.tools_url_root)
