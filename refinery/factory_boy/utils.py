@@ -56,7 +56,7 @@ def make_analyses_with_single_dataset(number_to_create, user_instance):
 
 def create_dataset_with_necessary_models():
     """Create Dataset with Investigation, Study, and Investigation Link"""
-    dataset_uuid = str(str(uuid_builtin.uuid4()))
+    dataset_uuid = str(uuid_builtin.uuid4())
     dataset = DataSetFactory(
         uuid=dataset_uuid,
         title="Test DataSet - {}".format(dataset_uuid),
