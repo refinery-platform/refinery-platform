@@ -180,7 +180,10 @@ def run(request):
     except RuntimeError as e:
         return HttpResponseBadRequest(e)
     else:
-        analysis = create_analysis(analysis_config)
+        try:
+            analysis = create_analysis(analysis_config)
+        except RuntimeError as e:
+            return HttpResponseBadRequest(e)
 
     analysis_status = AnalysisStatus.objects.create(analysis=analysis)
     analysis_status.save()
