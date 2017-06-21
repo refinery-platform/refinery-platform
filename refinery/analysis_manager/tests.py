@@ -24,142 +24,161 @@ class AnalysisConfigTests(TestCase):
     using NodeSets and NodeRelationships) as well as for the new Tool-based
     approach
     """
+
+    def generate_analysis_config(self,
+                                 analysis_type,
+                                 missing_a_field=False,
+                                 valid_analysis_type_uuid=True,
+                                 valid_custom_name=True,
+                                 valid_study_uuid=True,
+                                 valid_user_id=True,
+                                 valid_workflow_uuid=True):
+        analysis_config = {}
+        valid_analysis_types = ["NodeSet", "NodeRelationship", "Tool"]
+
+        assert analysis_type in valid_analysis_types, \
+            "Not a valid analysis_type. {} not in {}".format(
+                analysis_type,
+                valid_analysis_types
+            )
+
+        analysis_type_uuid = (
+            str(uuid.uuid4()) if valid_analysis_type_uuid else ""
+        )
+
+        if analysis_type == "NodeSet":
+            analysis_config["nodeSetUuid"] = analysis_type_uuid
+
+        if analysis_type == "NodeRelationship":
+            analysis_config["nodeRelationshipUuid"] = analysis_type_uuid
+
+        if analysis_type == "Tool":
+            analysis_config["toolUuid"] = analysis_type_uuid
+
+        analysis_config["custom_name"] = (
+            "Valid Custom Name" if valid_custom_name else []
+        )
+
+        analysis_config["studyUuid"] = (
+            str(uuid.uuid4()) if valid_study_uuid else ""
+        )
+
+        analysis_config["user_id"] = 1 if valid_user_id else ""
+
+        analysis_config["workflowUuid"] = (
+            str(uuid.uuid4()) if valid_workflow_uuid else ""
+        )
+
+        if missing_a_field:
+            del analysis_config["user_id"]
+
+        return analysis_config
+
     def test_valid_nodeset_analysis_config(self):
+        # Not asserting anything here because if later down the line
+        # `validate_analysis_config()` changes and raises some new Exception
+        # it could fall through the cracks
         validate_analysis_config(
-            {
-                "custom_name": "Valid NodeSet Analysis Config",
-                "studyUuid": str(uuid.uuid4()),
-                "nodeSetUuid": str(uuid.uuid4()),
-                "user_id": 1,
-                "workflowUuid": str(uuid.uuid4())
-            }
+            self.generate_analysis_config(analysis_type="NodeSet")
         )
 
     def test_invalid_nodeset_analysis_config_missing_field(self):
         with self.assertRaises(RuntimeError):
             validate_analysis_config(
-                {
-                    "custom_name": "Missing a field",
-                    "studyUuid": str(uuid.uuid4()),
-                    "nodeSetUuid": str(uuid.uuid4()),
-                    "workflowUuid": str(uuid.uuid4())
-                }
+                self.generate_analysis_config(
+                    analysis_type="NodeSet",
+                    missing_a_field=True
+                )
             )
 
     def test_invalid_nodeset_analysis_config_non_uuid_field(self):
         with self.assertRaises(RuntimeError):
             validate_analysis_config(
-                {
-                    "custom_name": "Non-uuid field",
-                    "studyUuid": str(uuid.uuid4()),
-                    "nodeSetUuid": str(uuid.uuid4()),
-                    "user_id": 1,
-                    "workflowUuid": "Coffee"
-                }
+                self.generate_analysis_config(
+                    analysis_type="NodeSet",
+                    valid_study_uuid=False
+                )
             )
 
     def test_invalid_nodeset_analysis_config_non_int_field(self):
         with self.assertRaises(RuntimeError):
             validate_analysis_config(
-                {
-                    "custom_name": "Non int field",
-                    "studyUuid": str(uuid.uuid4()),
-                    "nodeSetUuid": str(uuid.uuid4()),
-                    "user_id": str(uuid.uuid4()),
-                    "workflowUuid": str(uuid.uuid4())
-                }
+                self.generate_analysis_config(
+                    analysis_type="NodeSet",
+                    valid_user_id=False
+                )
             )
 
     def test_valid_noderelationship_analysis_config(self):
+        # Not asserting anything here because if later down the line
+        # `validate_analysis_config()` changes and raises some new Exception
+        # it could fall through the cracks
         validate_analysis_config(
-            {
-                "custom_name": "Valid NodeRelationship Analysis Config",
-                "studyUuid": str(uuid.uuid4()),
-                "nodeSetUuid": str(uuid.uuid4()),
-                "user_id": 1,
-                "workflowUuid": str(uuid.uuid4())
-            }
+            self.generate_analysis_config(
+                analysis_type="NodeRelationship"
+            )
         )
 
     def test_invalid_noderelationship_analysis_config_missing_field(self):
         with self.assertRaises(RuntimeError):
             validate_analysis_config(
-                {
-                    "custom_name": "Missing a field",
-                    "studyUuid": str(uuid.uuid4()),
-                    "nodeRelationshipUuid": str(uuid.uuid4()),
-                    "workflowUuid": str(uuid.uuid4())
-                }
+                self.generate_analysis_config(
+                    analysis_type="NodeRelationship",
+                    missing_a_field=True
+                )
             )
 
     def test_invalid_noderelationship_analysis_config_non_uuid_field(self):
         with self.assertRaises(RuntimeError):
             validate_analysis_config(
-                {
-                    "custom_name": "Non-uuid field",
-                    "studyUuid": str(uuid.uuid4()),
-                    "nodeRelationshipUuid": str(uuid.uuid4()),
-                    "user_id": 1,
-                    "workflowUuid": "Coffee"
-                }
+                self.generate_analysis_config(
+                    analysis_type="NodeRelationship",
+                    valid_workflow_uuid=False
+                )
             )
 
     def test_invalid_noderelationship_analysis_config_non_int_field(self):
         with self.assertRaises(RuntimeError):
             validate_analysis_config(
-                {
-                    "custom_name": "Non int field",
-                    "studyUuid": str(uuid.uuid4()),
-                    "nodeRelationshipUuid": str(uuid.uuid4()),
-                    "user_id": str(uuid.uuid4()),
-                    "workflowUuid": str(uuid.uuid4())
-                }
+                self.generate_analysis_config(
+                    analysis_type="NodeRelationship",
+                    valid_user_id=False
+                )
             )
 
     def test_valid_tool_analysis_config(self):
+        # Not asserting anything here because if later down the line
+        # `validate_analysis_config()` changes and raises some new Exception
+        # it could fall through the cracks
         validate_analysis_config(
-            {
-                "custom_name": "Valid Tool Analysis Config",
-                "studyUuid": str(uuid.uuid4()),
-                "toolUuid": str(uuid.uuid4()),
-                "user_id": 1,
-                "workflowUuid": str(uuid.uuid4())
-            }
+            self.generate_analysis_config(analysis_type="Tool")
         )
 
     def test_invalid_tool_analysis_config_missing_field(self):
         with self.assertRaises(RuntimeError):
             validate_analysis_config(
-                {
-                    "custom_name": "Missing a field",
-                    "studyUuid": str(uuid.uuid4()),
-                    "toolUuid": str(uuid.uuid4()),
-                    "workflowUuid": str(uuid.uuid4())
-                }
+                self.generate_analysis_config(
+                    analysis_type="Tool",
+                    missing_a_field=True
+                )
             )
 
     def test_invalid_tool_analysis_config_non_uuid_field(self):
         with self.assertRaises(RuntimeError):
             validate_analysis_config(
-                {
-                    "custom_name": "Non-uuid field",
-                    "studyUuid": str(uuid.uuid4()),
-                    "toolUuid": str(uuid.uuid4()),
-                    "user_id": 1,
-                    "workflowUuid": "Coffee"
-                }
+                self.generate_analysis_config(
+                    analysis_type="Tool",
+                    valid_analysis_type_uuid=False
+                )
             )
 
     def test_invalid_tool_analysis_config_non_int_field(self):
         with self.assertRaises(RuntimeError):
             validate_analysis_config(
-                {
-                    "custom_name": "Non int field",
-                    "studyUuid": str(uuid.uuid4()),
-                    "toolUuid": str(uuid.uuid4()),
-                    "user_id": str(uuid.uuid4()),
-                    "workflowUuid": str(uuid.uuid4())
-                }
+                self.generate_analysis_config(
+                    analysis_type="Tool",
+                    valid_user_id=False
+                )
             )
 
 
