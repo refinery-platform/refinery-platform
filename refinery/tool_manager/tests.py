@@ -15,6 +15,7 @@ from django.test import TestCase
 from rest_framework.test import (APIRequestFactory, APITestCase,
                                  force_authenticate)
 
+from analysis_manager.tasks import run_analysis
 from core.models import (DataSet, ExtendedGroup, InvestigationLink,
                          WorkflowEngine)
 from data_set_manager.models import Assay, Investigation, Node, Study
@@ -92,11 +93,21 @@ class ToolManagerTestBase(TestCase):
         )
         force_authenticate(self.post_request, self.user)
 
-        with mock.patch(
+        # Don't spin up containers for Vis-based Tools
+        if self.td.tool_type == ToolDefinition.VISUALIZATION:
+            with mock.patch(
                 "django_docker_engine.docker_utils.DockerClientWrapper.run"
-        ) as run_mock:
-            self.post_response = self.tools_view(self.post_request)
-            self.assertTrue(run_mock.called)
+            ) as run_mock:
+                self.post_response = self.tools_view(self.post_request)
+                self.assertTrue(run_mock.called)
+
+        # Don't run celery tasks for Workflow-based Tools
+        if self.td.tool_type == ToolDefinition.WORKFLOW:
+            with mock.patch.object(
+                run_analysis, 'delay', side_effect=None
+            ) as task_mock:
+                self.post_response = self.tools_view(self.post_request)
+                self.assertTrue(task_mock.called)
 
         self.tool = Tool.objects.get(
             tool_definition__uuid=self.td.uuid
