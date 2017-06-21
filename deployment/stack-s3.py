@@ -98,6 +98,17 @@ def make_storage_template():
         Properties({
             'BucketName': ref('MediaBucketName'),
             'AccessControl': 'PublicRead',
+            'CorsConfiguration': {
+                'CorsRules': [
+                    {
+                        'AllowedOrigins': ['*'],
+                        'AllowedMethods': ['POST', 'PUT'],
+                        'AllowedHeaders': ['*'],
+                        'ExposedHeaders': ['ETag'],
+                        'MaxAge': 3000,
+                    }
+                ]
+            }
         }),
         DeletionPolicy('Retain'),
     ))
