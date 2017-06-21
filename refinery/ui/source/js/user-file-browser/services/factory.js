@@ -16,12 +16,13 @@
     settings,
     userFileService
     ) {
-    return {
+    var service = {
       createColumnDefs: createColumnDefs,
       createData: createData,
       createFilters: createFilters,
       getUserFiles: getUserFiles
     };
+    return service;
 
     /*
     *-----------------------
