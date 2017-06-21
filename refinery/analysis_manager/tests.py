@@ -303,9 +303,6 @@ class AnalysisRunViewTests(TestCase):
         self.analysis = Analysis.objects.all()[0]
         self.view_root = "/analysis_manager/run/"
 
-    def tearDown(self):
-        User.objects.all().delete()
-
     def test_analysis_run_view_invalid_http_verbs(self):
         # GET PUT PATCH DELETE etc.
         response = self.client.get(
