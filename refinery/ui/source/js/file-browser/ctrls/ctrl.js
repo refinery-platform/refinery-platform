@@ -428,6 +428,8 @@
       },
       function () {
         vm.nodeSelectCollection = fileService.nodeSelectCollection;
+        console.log('in the node select');
+        console.log(vm.nodeSelectCollection);
         vm.inputFileTypeColor = fileService.inputFileTypeColor;
       }
     );

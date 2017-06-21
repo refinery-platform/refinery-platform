@@ -78,6 +78,9 @@
       nodeService.deselectGroupFromSelectionObj(vm.currentGroup);
       fileService.removeGroupFromCollections();
       vm.selectionObj = nodeService.selectionObj;
+      console.log('removeGroup');
+      console.log(vm.groupCollection);
+      console.log(fileService.nodeSelectCollection);
     }
 
    /*

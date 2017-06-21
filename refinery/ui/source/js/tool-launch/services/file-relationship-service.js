@@ -106,8 +106,36 @@
       angular.forEach(vm.groupCollection[vm.currentGroup], function (nodeArr, inputTypeUuid) {
         removeGroupFromNodeSelectCollection(nodeArr, inputTypeUuid);
       });
+
+      var reindexCount = _.keys(vm.groupCollection).length;
+      var aheadGroup = angular.copy(vm.currentGroup);
+      aheadGroup[0]++;
+      var replaceGroup = angular.copy(vm.currentGroup);
+      angular.forEach(vm.groupCollection, function (inputObj, groupId) {
+        for (var i = 0; i < reindexCount; i++) {
+          // copying the next index to the previous and deleting the next index
+          if (groupId === aheadGroup.join(',')) {
+            angular.forEach(inputObj, function (selectArr, inputUuid) {
+              if (!_.has(replaceGroup.join(','), vm.groupCollection)) {
+                vm.groupCollection[replaceGroup.join(',')] = {};
+              }
+              vm.groupCollection[replaceGroup.join(',')][inputUuid] = [];
+              for (var k = 0; k < selectArr.length; k++) {
+                vm.groupCollection[replaceGroup.join(',')][inputUuid][k] = {};
+                angular.copy(
+                  selectArr[k],
+                  vm.groupCollection[replaceGroup.join(',')][inputUuid][k]
+                );
+              }
+            });
+            replaceGroup[0]++;
+            aheadGroup[0]++;
+            delete vm.groupCollection[groupId];
+          }
+        }
+      });
       // Delete groupID property from obj since it is empty
-      delete vm.groupCollection[vm.currentGroup];
+     // delete vm.groupCollection[vm.currentGroup];
     }
 
     // Helper method which finds index of currentGroupId and slices it from
@@ -124,7 +152,7 @@
           }
         }
         // Delete node property from obj if empty
-        if (vm.nodeSelectCollection[nodeUuid].groupList === 0) {
+        if (vm.nodeSelectCollection[nodeUuid].groupList.length === 0) {
           delete vm.nodeSelectCollection[nodeUuid];
         }
       }

@@ -60,7 +60,7 @@
     // When user changes the group selection from the control panel
     $scope.$watchCollection(
       function () {
-        return fileService.nodeSelectCollection;
+        return fileService.groupCollection;
       },
       function () {
         vm.nodeSelection = fileService.nodeSelectCollection;
