@@ -1,91 +1,23 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema",
-  "oneOf": [
+  "allOf": [{"$ref": "BaseAnalysisConfig.json#"}],
+  "oneOf":[
     {
-      "required": [
-        "custom_name",
-        "studyUuid",
-        "toolUuid",
-        "user_id",
-        "workflowUuid"
-      ],
+      "required": ["nodeSetUuid"],
       "properties": {
-        "custom_name": {
-          "type": "string"
-        },
-        "studyUuid": {
-          "type": "string",
-          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-        },
-        "toolUuid": {
-          "type": "string",
-          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-        },
-        "user_id": {
-          "type": "number"
-        },
-        "workflowUuid": {
-          "type": "string",
-          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-        }
+        "nodeSetUuid": {"$ref": "BaseAnalysisConfig.json#patterns/uuid"}
       }
     },
     {
-      "required": [
-        "custom_name",
-        "nodeSetUuid",
-        "studyUuid",
-        "user_id",
-        "workflowUuid"
-      ],
+      "required": ["nodeRelationshipUuid"],
       "properties": {
-        "custom_name": {
-          "type": "string"
-        },
-        "nodeSetUuid": {
-          "type": "string",
-          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-        },
-        "studyUuid": {
-          "type": "string",
-          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-        },
-        "user_id": {
-          "type": "number"
-        },
-        "workflowUuid": {
-          "type": "string",
-          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-        }
+        "nodeRelationshipUuid": {"$ref": "BaseAnalysisConfig.json#patterns/uuid"}
       }
     },
     {
-      "required": [
-        "custom_name",
-        "nodeRelationshipUuid",
-        "studyUuid",
-        "user_id",
-        "workflowUuid"
-      ],
+      "required": ["toolUuid"],
       "properties": {
-         "custom_name": {
-          "type": "string"
-        },
-        "nodeSetUuid": {
-          "type": "string",
-          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-        },
-        "studyUuid": {
-          "type": "string",
-          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-        },
-        "user_id": {
-          "type": "number"
-        },
-        "workflowUuid": {
-          "type": "string",
-          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-        }
+        "toolUuid": {"$ref": "BaseAnalysisConfig.json#patterns/uuid"}
       }
     }
   ]

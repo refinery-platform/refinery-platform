@@ -211,6 +211,9 @@
       .fileTypes {
         display: inline;
       }
+      .selected-node-name {
+        border-top: 1px dashed;
+      }
     }
   }
 }
@@ -262,7 +265,13 @@
       width: 25%;
     }
   }
+}
 
+#param-help-popover {
+  p.param-field {
+    text-transform: none;
+    word-wrap: break-word;
+  }
 }
 
 #tool-panel-show-button {
@@ -320,9 +329,8 @@
   }
 }
 
-.selectRowBorder {
-  border-top: 1px solid @blue-active !important;
-  border-bottom: 1px solid @blue-active !important;
+.activeRowHighlight {
+  background-color: #c9dde1 !important;
 }
 
 .current-type-border {

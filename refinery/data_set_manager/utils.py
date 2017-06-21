@@ -644,8 +644,8 @@ def _generate_solr_params(params, assay_uuids):
         facet_field = facet_field_obj.get('facet_field')
         facet_field = insert_facet_field_filter(facet_filter, facet_field)
         field_limit = ','.join(facet_field_obj.get('field_limit'))
-        facet_field_query = generate_facet_fields_query(facet_field)
-        solr_params = ''.join([solr_params, facet_field_query])
+        facet_fields_query = generate_facet_fields_query(facet_field)
+        solr_params = ''.join([solr_params, facet_fields_query])
 
     if field_limit:
         solr_params = ''.join([solr_params, '&fl=', field_limit])

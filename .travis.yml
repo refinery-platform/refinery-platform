@@ -1,4 +1,6 @@
 sudo: required
+
+group: deprecated-2017Q2 # TODO: Remove this before Sept. 1, 2017
 language: python
 cache: pip
 addons:

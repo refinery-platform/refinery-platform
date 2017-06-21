@@ -6,35 +6,21 @@
   .controller('UserFileBrowserFilesCtrl', UserFileBrowserFilesCtrl);
 
   UserFileBrowserFilesCtrl.$inject = [
+    '$log',
     '$q',
     'userFileBrowserFactory'
   ];
 
-  function UserFileBrowserFilesCtrl ($q, userFileBrowserFactory) {
+  function UserFileBrowserFilesCtrl ($log, $q, userFileBrowserFactory) {
     var vm = this;
     var promise = $q.defer();
     var getUserFiles = userFileBrowserFactory.getUserFiles;
     getUserFiles().then(function (solr) {
-      vm.gridOptions.data = [];
-      for (var i = 0; i < solr.nodes.length; i++) {
-        var node = solr.nodes[i];
-        var url = node.REFINERY_NAME_6_3_s;
-        vm.gridOptions.data.push({
-          url: url,
-          technology: 'TODO',
-          filename: url ? decodeURIComponent(url.replace(/.*\//, '')) : '',
-          organism: node.organism_Characteristics_6_3_s,
-          date: 'TODO',
-          antibody: node.antibody_Factor_Value_6_3_s,
-          cell_type: node.cell_line_Characteristics_6_3_s,
-          published: 'TODO',
-          accession: 'TODO',
-          genotype: 'TODO',
-          owner: 'TODO'
-        });
-      }
+      vm.gridOptions.columnDefs = userFileBrowserFactory.createColumnDefs(solr.attributes);
+      vm.gridOptions.data = userFileBrowserFactory.createData(solr.attributes, solr.nodes);
       promise.resolve();
     }, function () {
+      $log.error('/user/files/ request failed');
       promise.reject();
     });
 
@@ -42,45 +28,7 @@
       appScopeProvider: vm,
       useExternalSorting: true,
       selectionRowHeaderWidth: 35,
-      rowHeight: 35,
-      columnDefs: [
-          { field: 'url',
-            enableSorting: false,
-            displayName: '',
-            cellTemplate:
-                '<div class="ui-grid-cell-contents" >' +
-                '<a href="{{grid.getCellValue(row, col)}}" target="_blank">' +
-                '<i class="fa fa-arrow-circle-o-down"></i>' +
-                '</a>' +
-                '</div>',
-            width: 30 },
-          { field: 'dataset',
-            enableSorting: false,
-            displayName: '',
-            cellTemplate:
-                '<div class="ui-grid-cell-contents" >' +
-                '<a href="{{grid.getCellValue(row, col)}}" target="_blank">' +
-                '<i class="fa fa-file"></i>' +
-                '</a>' +
-                '</div>',
-            width: 30 },
-          { field: 'filename' },
-          { field: 'technology' },
-          { field: 'organism' },
-          { field: 'date' },
-          { field: 'owner' },
-          { field: 'antibody' },
-          { field: 'cell_type' },
-          { field: 'published' },
-          { field: 'accession',
-            cellTemplate:
-                '<div class="ui-grid-cell-contents" >' +
-                '<a href="{{grid.getCellValue(row, col)}}" target="_blank">' +
-                '<i class="fa fa-external-link"></i> {{grid.getCellValue(row, col)}}' +
-                '</a>' +
-                '</div>' },
-          { field: 'genotype' }
-      ]
+      rowHeight: 35
     };
   }
 })();

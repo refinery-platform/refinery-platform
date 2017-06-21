@@ -1,3 +1,10 @@
+/**
+ * File Browser Ctrl
+ * @namespace FileBrowserCtrl
+ * @desc Main ctrl which handles the files tab (main) view and also
+ * generates the ui-grid table.
+ * @memberOf refineryFileBrowser
+ */
 (function () {
   'use strict';
 
@@ -6,21 +13,19 @@
     .controller('FileBrowserCtrl', FileBrowserCtrl);
 
   FileBrowserCtrl.$inject = [
-    '$location',
     '$log',
     '$q',
     '$scope',
-    '$templateCache',
     '$timeout',
     'uiGridConstants',
     '_',
-    '$window',
     'assayFiltersService',
     'fileBrowserFactory',
     'fileBrowserSettings',
     'fileParamService',
     'filesLoadingService',
     'fileRelationshipService',
+    'groupPermService',
     'isOwnerService',
     'resetGridService',
     'selectedFilterService',
@@ -29,21 +34,19 @@
   ];
 
   function FileBrowserCtrl (
-    $location,
     $log,
     $q,
     $scope,
-    $templateCache,
     $timeout,
     uiGridConstants,
     _,
-    $window,
     assayFiltersService,
     fileBrowserFactory,
     fileBrowserSettings,
     fileParamService,
     filesLoadingService,
     fileRelationshipService,
+    groupPermService,
     isOwnerService,
     resetGridService,
     selectedFilterService,
@@ -65,8 +68,9 @@
     vm.attributeFilter = assayFiltersService.attributeFilter;
     // variable supporting ui-grid dynamic scrolling
     vm.cachePages = 2;
+    vm.canEdit = false;
     vm.checkDataLength = checkDataLength;
-    vm.checkDataSetOwnership = checkDataSetOwnership;
+    vm.checkUsersGroupEdit = checkUsersGroupEdit;
     vm.collapsedToolPanel = toolService.isToolPanelCollapsed;
     vm.currentTypes = fileService.currentTypes;
     vm.firstPage = 0;
@@ -90,6 +94,7 @@
       showGridFooter: true,
       useExternalSorting: true
     };
+    vm.isOwner = false;
     vm.inputFileTypeColor = fileService.inputFileTypeColor;
     vm.lastPage = 0;  // variable supporting ui-grid dynamic scrolling
     vm.nodeSelectCollection = fileService.nodeSelectCollection;
@@ -108,8 +113,9 @@
      * -----------------------------------------------------------------------------
      */
     function activate () {
-      // Ensure data owner
+      // Ensure data owner or group permission to modify (run tools)
       checkDataSetOwnership();
+      checkUsersGroupEdit();
       // initialize the dataset and updates ui-grid selection, filters, and url
       initializeDataOnPageLoad();
     }
@@ -148,6 +154,13 @@
     function checkDataSetOwnership () {
       isOwnerService.refreshDataSetOwner().then(function () {
         vm.isOwner = isOwnerService.isOwner;
+      });
+    }
+
+     // Sets boolean for data set ownership
+    function checkUsersGroupEdit () {
+      groupPermService.refreshUsersGroupEdit().then(function () {
+        vm.canEdit = groupPermService.canUsersGroupEdit;
       });
     }
 
