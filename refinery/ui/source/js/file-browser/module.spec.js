@@ -35,6 +35,10 @@
           expect(hasModule('ui.grid.infiniteScroll')).toEqual(true);
         });
 
+        it('should have "ui.grid.pinning" as a dependency', function () {
+          expect(hasModule('ui.grid.pinning')).toEqual(true);
+        });
+
         it('should have "ui.grid.resizeColumns" as a dependency', function () {
           expect(hasModule('ui.grid.resizeColumns')).toEqual(true);
         });

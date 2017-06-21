@@ -277,6 +277,7 @@
         enableSorting: false,
         enableColumnMenu: false,
         enableColumnResizing: true,
+        pinnedLeft: true,
         cellTemplate: _cellTemplate,
         visible: isToolSelected
       };
@@ -290,10 +291,7 @@
           '<a rp-node-selection-popover title="Select Tool Input"' +
           'ng-click="grid.appScope.openSelectionPopover(row.entity)"' +
           'id="{{row.entity.uuid}}">' +
-          '<div class="full-size ui-grid-selection-row-header-buttons" ' +
-          'ng-class="{\'solidText\': grid.appScope.nodeSelectCollection[' +
-          'row.entity.uuid].groupList.length > 0 || row.entity.uuid == ' +
-          'grid.appScope.activeNodeRow.uuid}">' +
+          '<div class="full-size ui-grid-selection-row-header-buttons solidText">' +
           '<i class="fa fa-arrow-right" aria-hidden="true">' +
           '</i></div></a></div>';
 
@@ -309,6 +307,7 @@
         enableSorting: false,
         enableColumnMenu: false,
         enableColumnResizing: true,
+        pinnedLeft: true,
         cellTemplate: cellTemplate,
         visible: isToolSelected
       };
