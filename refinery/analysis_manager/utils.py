@@ -29,20 +29,24 @@ JSON_SCHEMA_FILE_RESOLVER = RefResolver(
 )
 
 
-def create_analysis(analysis_config):
+def create_analysis(validated_analysis_config):
     """
-    :param analysis_config:
-    :return:
-    """
+       Create an Analysis instance from any properly validated analysis_config
+       :param validated_analysis_config: a dict including the necessary
+       information to create an Analysis that has been validated prior by
+       `analysis_manager.utils.validate_analysis_config`
+       :return: an Analysis instance
+       :raises: RuntimeError
+       """
     # Keeping support for legacy way of launching analyses
-    if analysis_config.get("nodeSetUuid"):
-        return create_nodeset_analysis(analysis_config)
-    if analysis_config.get("nodeRelationshipUuid"):
-        return create_noderelationship_analysis(analysis_config)
+    if validated_analysis_config.get("nodeSetUuid"):
+        return create_nodeset_analysis(validated_analysis_config)
+    if validated_analysis_config.get("nodeRelationshipUuid"):
+        return create_noderelationship_analysis(validated_analysis_config)
 
     # Create an analysis for new-type Workflow-based Tools
-    if analysis_config.get("toolUuid"):
-        return create_tool_analysis(analysis_config)
+    if validated_analysis_config.get("toolUuid"):
+        return create_tool_analysis(validated_analysis_config)
 
 
 def create_nodeset_analysis(validated_analysis_config):
