@@ -296,6 +296,29 @@ class Tool(OwnableResource):
             self.uuid
         )
 
+    def get_relative_container_url(self):
+        """
+        Construct & return the relative url of our Tool's container
+        """
+        return "/{}/{}".format(
+            settings.DJANGO_DOCKER_ENGINE_BASE_URL,
+            self.container_name
+        )
+
+    def get_tool_launch_config(self):
+        return json.loads(self.tool_launch_configuration)
+
+    def get_file_relationships(self):
+        return ast.literal_eval(
+            self.get_tool_launch_config()["file_relationships"]
+        )
+
+    def get_tool_name(self):
+        return self.tool_definition.name
+
+    def get_tool_type(self):
+        return self.tool_definition.tool_type
+
     def launch(self):
         if self.get_tool_type() == ToolDefinition.VISUALIZATION:
             return self._launch_visualization()
@@ -345,7 +368,7 @@ class Tool(OwnableResource):
         """
         try:
             analysis_config = {
-                "custom_name": "{}-{}".format(self.name, self.uuid),
+                "custom_name": "Analysis: {}".format(self.__str__()),
                 "studyUuid": self.dataset.get_latest_study().uuid,
                 "toolUuid": self.uuid,
                 "user_id": self.get_owner().id,
@@ -354,34 +377,41 @@ class Tool(OwnableResource):
         except(AttributeError, RuntimeError, NotImplementedError) as e:
             return HttpResponseBadRequest(e)
         try:
-            analysis_url = run_analysis_for_workflow_tool(analysis_config)
+            analysis_url = self.run_analysis(analysis_config)
         except RuntimeError as e:
             return HttpResponseBadRequest(e)
 
         return JsonResponse({"tool_url": analysis_url})
 
-    def get_relative_container_url(self):
+    def run_analysis(self, analysis_config):
         """
-        Construct & return the relative url of our Tool's container
+        "Run an analysis for a workflow-based Tool
+        :param analysis_config: a dict containing:
+            {
+                "custom_name": <str>,
+                "studyUuid": <uuid string>,
+                "toolUuid": <uuid string>,
+                "user_id": <int>,
+                "workflowUuid": <uuid string>
+            }
+
+        :returns:
+            String: relative url like: `/analysis_manager/<analysis.uuid>/`
+        :raises: RuntimeError, NotImplementedError
         """
-        return "/{}/{}".format(
-            settings.DJANGO_DOCKER_ENGINE_BASE_URL,
-            self.container_name
-        )
 
-    def get_tool_launch_config(self):
-        return json.loads(self.tool_launch_configuration)
+        if self.get_tool_type() == ToolDefinition.VISUALIZATION:
+            raise NotImplementedError(
+                "Visualization-based Tools don't utilize Analyses")
 
-    def get_file_relationships(self):
-        return ast.literal_eval(
-            self.get_tool_launch_config()["file_relationships"]
-        )
+        validate_analysis_config(analysis_config)
+        analysis = create_analysis(analysis_config)
+        AnalysisStatus.objects.create(analysis=analysis)
 
-    def get_tool_name(self):
-        return self.tool_definition.name
+        # Run the analysis task
+        run_analysis.delay(analysis.uuid)
 
-    def get_tool_type(self):
-        return self.tool_definition.tool_type
+        return reverse('analysis-status', args=(analysis.uuid,))
 
     def set_tool_launch_config(self, tool_launch_config):
         self.tool_launch_configuration = json.dumps(tool_launch_config)
@@ -426,30 +456,3 @@ def remove_tool_container(sender, instance, *args, **kwargs):
         except APIError as e:
             logger.error("Couldn't purge container for Tool with UUID: %s %s",
                          instance.uuid, e)
-
-
-def run_analysis_for_workflow_tool(analysis_config):
-    """
-    "Run an analysis for a workflow-based tool
-    :param analysis_config: a dict containing:
-        {
-            "custom_name": <str>,
-            "studyUuid": <uuid string>,
-            "toolUuid": <uuid string>,
-            "user_id": <int>,
-            "workflowUuid": <uuid string>
-        }
-
-    :return: String: relative url like: `/analysis_manager/<analysis.uuid>/`
-    :raises: RuntimeError
-    """
-    validate_analysis_config(analysis_config)
-
-    analysis = create_analysis(analysis_config)
-
-    AnalysisStatus.objects.create(analysis=analysis)
-
-    # Run the analysis task
-    run_analysis.delay(analysis.uuid)
-
-    return reverse('analysis-status', args=(analysis.uuid,))
