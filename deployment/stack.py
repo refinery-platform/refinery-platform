@@ -349,10 +349,26 @@ def make_template(config, config_yaml):
                                 "Effect": "Allow",
                                 "Action": [
                                     "cognito-identity:ListIdentityPools",
+                                ],
+                                "Resource": "arn:aws:cognito-identity:*"
+                            },
+                            {
+                                "Effect": "Allow",
+                                "Action": [
                                     "cognito-identity:"
                                     "GetOpenIdTokenForDeveloperIdentity"
                                 ],
-                                "Resource": "*"
+                                "Resource": {
+                                    "Fn::Sub": [
+                                        "arn:aws:cognito-identity:"
+                                        "${AWS::Region}:${AWS::AccountId}:"
+                                        "identitypool/${Pool}",
+                                        {
+                                            "Pool":
+                                                functions.ref('IdentityPool')
+                                        }
+                                    ]
+                                }
                             }
                         ]
                     }
@@ -584,11 +600,9 @@ def make_template(config, config_yaml):
             {
                 "Effect": "Allow",
                 "Action": [
-                    "mobileanalytics:PutEvents",
-                    "cognito-sync:*",
                     "cognito-identity:*"
                 ],
-                "Resource": functions.ref('IdentityPool')
+                "Resource": "*"
             },
             {
                 "Action": "s3:PutObject",

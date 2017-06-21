@@ -37,7 +37,7 @@ SITE_URL: "192.168.50.50:8000"
 # Constraint: alphanumeric
 STACK_NAME: "RefineryStack"
 # Prefix for all S3 bucket names
-S3_BUCKET_NAME_BASE: "refinery-dev"
+S3_BUCKET_NAME_BASE: "refinery"
 
 # the AWS ARN for the TLS certifcate that you wish to present.
 # TLS_CERTIFICATE: "arn:aws:acm:--region--:--accountnumber--:certificate/--id--"
