@@ -6,7 +6,7 @@
   "private": true,
   "scripts": {
     "test": "grunt test",
-    "report-coverage": "codecov"
+    "codecov": "codecov &lt; coverage/cobertura.xml"
   },
   "repository": {
     "type": "git",

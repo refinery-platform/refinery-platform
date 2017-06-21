@@ -56,13 +56,9 @@ module.exports = function(config) {
         // reporters not supporting the `file` property
         { type: 'html', subdir: 'html' },
         { type: 'lcov', subdir: 'lcov' },
-        // generates ./coverage/lcov.info
-        {type:'lcovonly', subdir: '.'},
-        // generates ./coverage/coverage-final.json
-        {type:'json', subdir: '.'},
         // reporters supporting the `file` property, use `subdir` to directly
         // output them in the `dir` directory
-        { type: 'cobertura', subdir: '.', file: 'cobertura.xml' }
+        { type: 'cobertura', subdir: '.', file: 'cobertura.xml' },
       ]
     },
 
