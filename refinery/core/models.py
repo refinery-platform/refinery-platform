@@ -7,14 +7,15 @@ from __future__ import absolute_import
 
 import ast
 import copy
-from datetime import datetime
 import logging
 import os
 import smtplib
 import socket
-import pysolr
+from datetime import datetime
 from urlparse import urljoin
 
+import pysolr
+from bioblend import galaxy
 from django import forms
 from django.conf import settings
 from django.contrib import messages
@@ -22,8 +23,7 @@ from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.models import Group, Permission, User
 from django.contrib.auth.signals import user_logged_in
 from django.contrib.contenttypes.models import ContentType
-from django.contrib.messages import get_messages
-from django.contrib.messages import info
+from django.contrib.messages import get_messages, info
 from django.contrib.sites.models import Site
 from django.core.mail import send_mail
 from django.db import models, transaction
@@ -34,10 +34,8 @@ from django.db.utils import IntegrityError
 from django.dispatch import receiver
 from django.forms import ValidationError
 from django.template import Context, loader
-from django.utils import timezone
-
-from bioblend import galaxy
 from django.template.loader import render_to_string
+from django.utils import timezone
 from django_auth_ldap.backend import LDAPBackend
 from django_extensions.db.fields import UUIDField
 from guardian.models import UserObjectPermission
@@ -47,13 +45,6 @@ from guardian.shortcuts import (assign_perm, get_groups_with_perms,
 from registration.models import RegistrationManager, RegistrationProfile
 from registration.signals import user_activated, user_registered
 
-from .utils import (add_or_update_user_to_neo4j, add_read_access_in_neo4j,
-                    delete_analysis_index, delete_data_set_index,
-                    delete_data_set_neo4j, delete_ontology_from_neo4j,
-                    delete_user_in_neo4j, email_admin, get_aware_local_time,
-                    invalidate_cached_object, remove_read_access_in_neo4j,
-                    update_annotation_sets_neo4j, update_data_set_index,
-                    skip_if_test_run)
 from data_set_manager.models import (Assay, Investigation, Node,
                                      NodeCollection, Study)
 from data_set_manager.utils import (add_annotated_nodes_selection,
@@ -64,6 +55,14 @@ from galaxy_connector.galaxy_workflow import (configure_workflow,
                                               countWorkflowSteps,
                                               create_expanded_workflow_graph)
 from galaxy_connector.models import Instance
+
+from .utils import (add_or_update_user_to_neo4j, add_read_access_in_neo4j,
+                    delete_analysis_index, delete_data_set_index,
+                    delete_data_set_neo4j, delete_ontology_from_neo4j,
+                    delete_user_in_neo4j, email_admin, get_aware_local_time,
+                    invalidate_cached_object, remove_read_access_in_neo4j,
+                    skip_if_test_run, update_annotation_sets_neo4j,
+                    update_data_set_index)
 
 logger = logging.getLogger(__name__)
 
@@ -673,6 +672,16 @@ class DataSet(SharableResource):
             )
         except:
             return None
+
+    def get_latest_study(self, version=None):
+        try:
+            return Study.objects.get(
+                investigation=(
+                    self.get_latest_investigation_link(version).investigation
+                )
+            )
+        except(Study.DoesNotExist, Study.MultipleObjectsReturned) as e:
+            raise RuntimeError("Couldn't properly fetch Study: {}".format(e))
 
     def get_investigation(self, version=None):
         investigation_link = self.get_latest_investigation_link(version)
