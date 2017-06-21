@@ -17,10 +17,10 @@
     userFileService
     ) {
     return {
-      getUserFiles: getUserFiles,
       createColumnDefs: createColumnDefs,
       createData: createData,
-      createFilters: createFilters
+      createFilters: createFilters,
+      getUserFiles: getUserFiles
     };
 
     /*
@@ -28,16 +28,6 @@
     * Method Definitions
     * ----------------------
     */
-
-    function getUserFiles () {
-      var userFile = userFileService.query();
-      userFile.$promise.then(function (/* response */) {
-        // TODO: addNodeDetailtoUserFiles();
-      }, function (error) {
-        $log.error(error);
-      });
-      return userFile.$promise;
-    }
 
     function createColumnDefs (solrAttributes) {
       var defs = [
@@ -77,10 +67,6 @@
         }
       });
       return defs;
-    }
-
-    function normalizeName (attribute) {
-      return attribute.display_name.toLowerCase();
     }
 
     function createData (solrAttributes, solrNodes) {
@@ -143,6 +129,20 @@
       });
 
       return filters;
+    }
+
+    function getUserFiles () {
+      var userFile = userFileService.query();
+      userFile.$promise.then(function (/* response */) {
+        // TODO: addNodeDetailtoUserFiles();
+      }, function (error) {
+        $log.error(error);
+      });
+      return userFile.$promise;
+    }
+
+    function normalizeName (attribute) {
+      return attribute.display_name.toLowerCase();
     }
   }
 })();
