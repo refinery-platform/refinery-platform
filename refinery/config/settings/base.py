@@ -413,13 +413,6 @@ REFINERY_SOLR_SPACE_DYNAMIC_FIELDS = get_setting(
     "REFINERY_SOLR_SPACE_DYNAMIC_FIELDS")
 
 HAYSTACK_CONNECTIONS = {
-    'default': {
-        'ENGINE': 'haystack.backends.solr_backend.SolrEngine',
-        'URL': REFINERY_SOLR_BASE_URL + 'default',
-        'EXCLUDED_INDEXES': ['data_set_manager.search_indexes.NodeIndex',
-                             'core.search_indexes.DataSetIndex',
-                             'core.search_indexes.ProjectIndex'],
-    },
     'core': {
         'ENGINE': 'haystack.backends.solr_backend.SolrEngine',
         'URL': REFINERY_SOLR_BASE_URL + 'core',
