@@ -193,11 +193,6 @@ def create_tool(tool_launch_configuration, user_instance):
             tool.uuid
         )
 
-    if tool.get_tool_type() == ToolDefinition.WORKFLOW:
-        # `output_files` are required to exist when creating Workflow-based
-        # Tools
-        tool.output_files = tool_definition.output_files
-
     tool.set_owner(user_instance)
     tool.update_file_relationships_string()
 
