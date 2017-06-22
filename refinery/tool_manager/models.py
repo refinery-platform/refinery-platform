@@ -273,12 +273,13 @@ class Tool(OwnableResource):
     A Tool is a representation of the information it will take to launch a
     Refinery-based Tool
     """
-    dataset = models.OneToOneField(DataSet, blank=True, null=True)
+    dataset = models.ForeignKey(DataSet, blank=True, null=True)
     analysis = models.OneToOneField(Analysis, blank=True, null=True)
     container_name = models.CharField(
         max_length=250,
         unique=True,
-        blank=True
+        blank=True,
+        null=True
     )
     tool_launch_configuration = models.TextField()
     tool_definition = models.ForeignKey(ToolDefinition)
