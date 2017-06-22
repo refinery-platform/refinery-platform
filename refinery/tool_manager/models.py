@@ -355,7 +355,7 @@ class Tool(OwnableResource):
         :returns:
             - <JsonResponse> w/ `tool_url` key corresponding to the url
             pointing to the Analysis' status page
-            - <HttpResponseBadRequest>
+        :raises: RuntimeError
         """
 
         analysis_config = {
@@ -365,32 +365,16 @@ class Tool(OwnableResource):
             "user_id": self.get_owner().id,
             "workflowUuid": self.tool_definition.get_workflow().uuid
         }
-
-        analysis_url = self.run_analysis(analysis_config)
-
-        return JsonResponse({"tool_url": analysis_url})
-
-    def run_analysis(self, analysis_config):
-        """
-        "Run an analysis for a workflow-based Tool
-        :param analysis_config: a dict containing an analysis configuration.
-
-        :returns: String: relative url like:
-            `"/data_sets2/<tool.dataset.uuid/#/analyses/`
-        :raises: RuntimeError, NotImplementedError
-        """
-
-        if self.get_tool_type() == ToolDefinition.VISUALIZATION:
-            raise NotImplementedError(
-                "Visualization-based Tools don't utilize Analyses")
-
         validate_analysis_config(analysis_config)
+
         analysis = create_analysis(analysis_config)
         AnalysisStatus.objects.create(analysis=analysis)
 
         # Run the analysis task
         run_analysis.delay(analysis.uuid)
-        return "/data_sets2/{}/#/analyses/".format(self.dataset.uuid)
+
+        analysis_url = "/data_sets2/{}/#/analyses/".format(self.dataset.uuid)
+        return JsonResponse({"tool_url": analysis_url})
 
     def set_tool_launch_config(self, tool_launch_config):
         self.tool_launch_configuration = json.dumps(tool_launch_config)
