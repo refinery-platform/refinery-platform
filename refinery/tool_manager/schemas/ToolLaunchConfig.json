@@ -6,10 +6,7 @@
     "file_relationships"
   ],
   "properties": {
-    "tool_definition_uuid": {
-      "type": "string",
-      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-    },
+    "tool_definition_uuid": {"$ref": "Base.json#patterns/uuid"},
     "file_relationships": {
       "oneOf": [
         {"type": "string"},
