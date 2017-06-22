@@ -404,9 +404,18 @@ class Tool(OwnableResource):
         self.tool_launch_configuration = json.dumps(tool_launch_config)
         self.save()
 
-    def set_analysis(self, analysis):
-        self.analysis = analysis
-        self.save()
+    def set_analysis(self, analysis_uuid):
+        """
+        :param analysis_uuid: UUID of Analysis instance to associate with
+        the Tool
+        :raises: RuntimeError
+        """
+        try:
+            self.analysis = Analysis.objects.get(uuid=analysis_uuid)
+        except(Analysis.DoesNotExist, Analysis.MultipleObjectsReturned) as e:
+            raise RuntimeError(e)
+        else:
+            self.save()
 
     def update_file_relationships_string(self):
         """
