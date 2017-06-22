@@ -209,19 +209,18 @@ class ToolDefinition(models.Model):
         :return: <Workflow>
         :raises: RuntimeError, NotImplementedError
         """
-        if self.tool_type == ToolDefinition.WORKFLOW:
-            try:
-                return Workflow.objects.get(
-                    internal_id=self.galaxy_workflow_id,
-                    workflow_engine=self.workflow_engine
-                )
-            except(Workflow.DoesNotExist,
-                   Workflow.MultipleObjectsReturned) as e:
-                raise RuntimeError("Couldn't fetch Workflow: {}".format(e))
-        else:
+        if self.tool_type == ToolDefinition.VISUALIZATION:
             raise NotImplementedError(
                 "Visualization-based Tools don't utilize Workflows"
             )
+        try:
+            return Workflow.objects.get(
+                internal_id=self.galaxy_workflow_id,
+                workflow_engine=self.workflow_engine
+            )
+        except(Workflow.DoesNotExist,
+               Workflow.MultipleObjectsReturned) as e:
+            raise RuntimeError("Couldn't fetch Workflow: {}".format(e))
 
 
 @receiver(pre_delete, sender=ToolDefinition)
