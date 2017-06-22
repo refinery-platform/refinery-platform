@@ -6,7 +6,14 @@
     "extra_directories": ["/refinery-data"],
     "image_name": "gehlenborglab/docker_igv_js:igv-1-0-8",
     "description": "This visualization does really cool things... with IGV",
-    "parameters": [],
+    "parameters": [
+      {
+        "name": "Genome Build Param",
+        "description": "Genome Build Param description",
+        "value_type": "GENOME_BUILD",
+        "default_value": "hg19"
+      }
+    ],
     "output_files":[],
     "file_relationship": {
       "file_relationship": {},
