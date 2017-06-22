@@ -60,17 +60,14 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
             uuid += "_" + str(object.assay.id)
         # create dynamic fields for each attribute
         for annotation in annotations:
-            if annotation.attribute_subtype is None:
-                name = annotation.attribute_type
-            else:
-                name = annotation.attribute_subtype + "_" + \
-                       annotation.attribute_type
-            if annotation.attribute_value_unit is None:
-                value = annotation.attribute_value
-            else:
-                value = annotation.attribute_value + " " + \
-                        annotation.attribute_value_unit
-            # replace problematic characters in field names
+            name = annotation.attribute_type
+            if annotation.attribute_subtype is not None:
+                name = annotation.attribute_subtype + "_" + name
+
+            value = annotation.attribute_value
+            if annotation.attribute_value_unit is not None:
+                value += " " + annotation.attribute_value_unit
+
             name = re.sub(r'\W',
                           settings.REFINERY_SOLR_SPACE_DYNAMIC_FIELDS,
                           name)
