@@ -163,7 +163,7 @@ def make_template(config, config_yaml):
                 'AllowedPattern': '[a-z\-\.]+',
                 'ConstraintDescription':
                     'must only contain lower case letters, periods, '
-                    'underscores, and dashes'
+                    'underscores, and hyphens'
             }
         )
     )
@@ -544,6 +544,8 @@ def make_template(config, config_yaml):
         }
     )
 
+    # Cognito Identity Pool for Developer Authenticated Identities Authflow
+    # http://docs.aws.amazon.com/cognito/latest/developerguide/authentication-flow.html
     cft.resources.add(
         core.Resource(
             'IdentityPool',

@@ -34,9 +34,10 @@ SITE_URL: "192.168.50.50:8000"
 
 # STACK_NAME is used to name the stack
 # (in the Web UI and other places), and to name instances
-# Constraint: alphanumeric
+# Constraint: alphanumeric characters, underscores, periods, and colons
 STACK_NAME: "RefineryStack"
 # Prefix for all S3 bucket names
+# Constraint: DNS-compliant without periods (".")
 S3_BUCKET_NAME_BASE: "refinery"
 
 # the AWS ARN for the TLS certifcate that you wish to present.
@@ -77,6 +78,7 @@ REFINERY_GOOGLE_ANALYTICS_ID: ""
 
 # Constraint: [\w]+
 COGNITO_IDENTITY_POOL_NAME: "Refinery Platform"
+# Constraint: [\w._-]+
 COGNITO_DEVELOPER_PROVIDER_NAME: "login.refinery"
 
 # == Rarely changed ==
