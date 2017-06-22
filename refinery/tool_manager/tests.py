@@ -3,6 +3,7 @@ import logging
 import re
 import StringIO
 import time
+import uuid
 from urlparse import urljoin
 
 import mock
@@ -152,6 +153,8 @@ class ToolManagerTestBase(TestCase):
         force_authenticate(self.options_request, self.user)
         self.options_response = self.tools_view(self.options_request)
 
+        return self.tool
+
     def create_vis_tool_definition(self, annotation_file_name=None):
         if annotation_file_name:
             self.tool_annotation = "{}/visualizations/{}".format(
@@ -185,6 +188,8 @@ class ToolManagerTestBase(TestCase):
             self.td = create_tool_definition(self.tool_annotation_data)
 
         self.workflow = Workflow.objects.create(
+            name=self.td.name,
+            summary="Workflow for: {}".format(self.td.__str__()),
             is_active=True,
             workflow_engine=self.td.workflow_engine,
             internal_id=self.td.galaxy_workflow_id
@@ -987,6 +992,20 @@ class ToolTests(ToolManagerTestBase):
             ['http://www.example.com/sample.seg']
         )
 
+    def test_run_analysis_wrong_tool_type(self):
+        self.create_valid_tool(ToolDefinition.VISUALIZATION)
+        with self.assertRaises(NotImplementedError):
+            self.tool.run_analysis({})
+
+    def test_set_analysis_wrong_type(self):
+        self.create_valid_tool(ToolDefinition.WORKFLOW)
+        with self.assertRaises(RuntimeError) as context:
+            self.tool.set_analysis(str(uuid.uuid4()))
+            self.assertIn(
+                "Analysis matching query does not exist.",
+                context.exception.message
+            )
+
 
 class ToolAPITests(APITestCase, ToolManagerTestBase):
     def test_tools_exist(self):
@@ -1013,8 +1032,8 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
         # Creates a valid Tool for self.user
         self.create_valid_tool(ToolDefinition.VISUALIZATION)
 
-        # Try to GET afforementioned Tool, nd assert that another user can't
-        #  do so
+        # Try to GET the aforementioned Tool, and assert that another user
+        # can't do so
         force_authenticate(self.get_request, self.user2)
         self.get_response = self.tools_view(self.get_request)
         self.assertEqual(len(self.get_response.data), 0)
@@ -1095,7 +1114,7 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
         self.assertIn("LIST/PAIR structure is not balanced",
                       self.post_response.content)
 
-    def test_bad_extra_directories_path(self):
+    def test_bad_extra_directories_path_with_rollback(self):
         with open("{}/visualizations/"
                   "LIST_visualization_bad_extra_directories_path.json"
                   .format(TEST_DATA_PATH)) as f:
@@ -1124,7 +1143,7 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
             self.post_response.content,
             'Specified path: `not_an_absolute_path` is not absolute'
         )
-        self.assertEqual(Tool.objects.count(), 1)
+        self.assertEqual(Tool.objects.count(), 0)
 
     def test_good_extra_directories_path(self):
         with open("{}/visualizations/"
@@ -1160,6 +1179,29 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
 
 
 class ToolLaunchTests(ToolManagerTestBase):
+    def test_transaction_rollback_bad_dataset_uuid(self):
+        self.create_vis_tool_definition()
+
+        self.post_data = {
+            "dataset_uuid": self.dataset.uuid,
+            "tool_definition_uuid": self.td.uuid,
+            "file_relationships": str(["www.example.com/cool_file.txt"])
+        }
+
+        self.dataset.delete()
+
+        self.post_request = self.factory.post(
+            self.tools_url_root,
+            data=self.post_data,
+            format="json"
+        )
+        force_authenticate(self.post_request, self.user)
+        self.post_response = self.tools_view(self.post_request)
+        self.assertEqual(type(self.post_response), HttpResponseBadRequest)
+        self.assertEqual(Tool.objects.count(), 0)
+        self.assertIn("DataSet matching query does not exist.",
+                      self.post_response.content)
+
     def test_workflow_tool_launch_invalid_no_workflow_object(self):
         self.create_workflow_tool_definition()
         self.workflow.delete()
@@ -1183,6 +1225,7 @@ class ToolLaunchTests(ToolManagerTestBase):
             "Couldn't fetch Workflow",
             self.post_response.content
         )
+        self.assertEqual(Tool.objects.count(), 0)
 
     def test_workflow_tool_launch_valid_workflow_object(self):
         self.create_valid_tool(ToolDefinition.WORKFLOW)
@@ -1191,8 +1234,15 @@ class ToolLaunchTests(ToolManagerTestBase):
         self.assertEqual(self.tool.get_tool_type(), ToolDefinition.WORKFLOW)
         self.assertEqual(
             json.loads(self.post_response.content)["tool_url"],
-            "/analysis_manager/{}/".format(self.tool.analysis.uuid)
+            '/data_sets2/{}/#/analyses/'.format(self.tool.dataset.uuid)
         )
+
+    def test_many_tools_can_be_launched_from_same_dataset(self):
+        self.dataset = create_dataset_with_necessary_models()
+        tool_a = self.create_valid_tool(ToolDefinition.VISUALIZATION)
+        tool_b = self.create_valid_tool(ToolDefinition.WORKFLOW)
+
+        self.assertEqual(tool_a.dataset, tool_b.dataset)
 
 
 class ToolLaunchSeleniumTests(ToolManagerTestBase, SeleniumTestBaseGeneric):
