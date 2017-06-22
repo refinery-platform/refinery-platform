@@ -48,7 +48,6 @@ class ToolsViewSet(ModelViewSet):
 
         return user_tools
 
-    @transaction.atomic
     def create(self, request, *args, **kwargs):
         """
         Create and launch a Tool upon successful validation checks
@@ -60,8 +59,9 @@ class ToolsViewSet(ModelViewSet):
         else:
             tool_launch_configuration = request.data
             try:
-                tool = create_tool(tool_launch_configuration, request.user)
+                with transaction.atomic():
+                    tool = create_tool(tool_launch_configuration, request.user)
+                    tool.set_owner(request.user)
+                    return tool.launch()
             except Exception as e:
                 return HttpResponseBadRequest(e)
-            else:
-                return tool.launch()
