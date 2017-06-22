@@ -1607,13 +1607,14 @@ class NodeIndexTests(APITestCase):
 
     def test_prepare(self):
         data = NodeIndex().prepare(self.node)
+        data = dict((re.sub(r'\d+', '#', k), v) for (k, v) in data.items())
         self.assertEqual(data,
-                         {'REFINERY_ANALYSIS_UUID_2_1_s': 'N/A',
-                          'REFINERY_FILETYPE_2_1_s': None,
-                          'REFINERY_NAME_2_1_s': u'',
-                          'REFINERY_SUBANALYSIS_2_1_s': -1,
-                          'REFINERY_TYPE_2_1_s': u'',
-                          'REFINERY_WORKFLOW_OUTPUT_2_1_s': 'N/A',
+                         {'REFINERY_ANALYSIS_UUID_#_#_s': 'N/A',
+                          'REFINERY_FILETYPE_#_#_s': None,
+                          'REFINERY_NAME_#_#_s': u'',
+                          'REFINERY_SUBANALYSIS_#_#_s': -1,
+                          'REFINERY_TYPE_#_#_s': u'',
+                          'REFINERY_WORKFLOW_OUTPUT_#_#_s': 'N/A',
                           'analysis_uuid': None,
                           'assay_uuid': self.assay_uuid,
                           u'django_ct': u'data_set_manager.node',
