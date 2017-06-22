@@ -1605,9 +1605,17 @@ class NodeIndexTests(APITestCase):
 
         self.maxDiff = None
 
+    def tearDown(self):
+        FileStoreItem.objects.all().delete()
+
     def test_prepare(self):
         data = NodeIndex().prepare(self.node)
-        data = dict((re.sub(r'\d+', '#', k), v) for (k, v) in data.items())
+        data = dict(
+            (
+                re.sub(r'\d+', '#', k),
+                re.sub(r'\d+', '#', v) if type(v) == str else v
+            )
+            for (k, v) in data.items())
         self.assertEqual(data,
                          {'REFINERY_ANALYSIS_UUID_#_#_s': 'N/A',
                           'REFINERY_FILETYPE_#_#_s': None,
@@ -1618,10 +1626,10 @@ class NodeIndexTests(APITestCase):
                           'analysis_uuid': None,
                           'assay_uuid': self.assay_uuid,
                           u'django_ct': u'data_set_manager.node',
-                          u'django_id': u'1',
+                          u'django_id': u'#',
                           'file_uuid': self.file_uuid,
                           'genome_build': None,
-                          u'id': u'data_set_manager.node.1',
+                          u'id': u'data_set_manager.node.#',
                           'is_annotation': False,
                           'name': u'',
                           'species': None,
