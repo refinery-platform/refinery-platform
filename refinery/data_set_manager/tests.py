@@ -1579,8 +1579,54 @@ class NodeIndexTests(APITestCase):
         investigation = Investigation.objects.create()
         study = Study.objects.create(investigation=investigation)
         assay = Assay.objects.create(study=study)
-        self.node = Node.objects.create(assay=assay, study=study)
+
+        test_file = StringIO()
+        test_file.write('Coffee is great.\n')
+        file_store_item = FileStoreItem.objects.create(
+            datafile=InMemoryUploadedFile(
+                test_file,
+                field_name='tempfile',
+                name='test_file.txt',
+                content_type='text/plain',
+                size=len(test_file.getvalue()),
+                charset='utf-8'
+            )
+        )
+
+        self.node = Node.objects.create(
+            assay=assay,
+            study=study,
+            file_uuid=file_store_item.uuid)
+
+        self.assay_uuid = assay.uuid
+        self.study_uuid = study.uuid
+        self.file_uuid = file_store_item.uuid
+        self.node_uuid = self.node.uuid
+
+        self.maxDiff = None
 
     def test_prepare(self):
         data = NodeIndex().prepare(self.node)
-        self.assertEqual(data, {'foo': 'bar'})
+        self.assertEqual(data,
+                         {'REFINERY_ANALYSIS_UUID_2_1_s': 'N/A',
+                          'REFINERY_FILETYPE_2_1_s': None,
+                          'REFINERY_NAME_2_1_s': u'',
+                          'REFINERY_SUBANALYSIS_2_1_s': -1,
+                          'REFINERY_TYPE_2_1_s': u'',
+                          'REFINERY_WORKFLOW_OUTPUT_2_1_s': 'N/A',
+                          'analysis_uuid': None,
+                          'assay_uuid': self.assay_uuid,
+                          u'django_ct': u'data_set_manager.node',
+                          u'django_id': u'1',
+                          'file_uuid': self.file_uuid,
+                          'genome_build': None,
+                          u'id': u'data_set_manager.node.1',
+                          'is_annotation': False,
+                          'name': u'',
+                          'species': None,
+                          'study_uuid': self.study_uuid,
+                          'subanalysis': None,
+                          'text': u'',
+                          'type': u'',
+                          'uuid': self.node_uuid,
+                          'workflow_output': None})
