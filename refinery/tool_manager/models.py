@@ -294,6 +294,11 @@ class Tool(OwnableResource):
             self.uuid
         )
 
+    def get_file_relationships(self):
+        return ast.literal_eval(
+            self.get_tool_launch_config()["file_relationships"]
+        )
+
     def get_relative_container_url(self):
         """
         Construct & return the relative url of our Tool's container
@@ -305,11 +310,6 @@ class Tool(OwnableResource):
 
     def get_tool_launch_config(self):
         return json.loads(self.tool_launch_configuration)
-
-    def get_file_relationships(self):
-        return ast.literal_eval(
-            self.get_tool_launch_config()["file_relationships"]
-        )
 
     def get_tool_name(self):
         return self.tool_definition.name
