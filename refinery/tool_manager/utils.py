@@ -7,10 +7,13 @@ from bioblend.galaxy.client import ConnectionError
 from django.conf import settings
 from django.contrib import admin
 from django.db import transaction
+from django.utils import timezone
 from jsonschema import RefResolver, ValidationError, validate
 
+from analysis_manager.utils import fetch_objects_required_for_analysis
 from core.models import DataSet, WorkflowEngine
-from factory_boy.django_model_factories import (FileRelationshipFactory,
+from factory_boy.django_model_factories import (AnalysisFactory,
+                                                FileRelationshipFactory,
                                                 GalaxyParameterFactory,
                                                 InputFileFactory,
                                                 OutputFileFactory,
@@ -19,7 +22,7 @@ from factory_boy.django_model_factories import (FileRelationshipFactory,
                                                 ToolFactory)
 from file_store.models import FileType
 
-from .models import ToolDefinition
+from .models import Tool, ToolDefinition
 
 logger = logging.getLogger(__name__)
 ANNOTATION_ERROR_MESSAGE = (
@@ -210,6 +213,49 @@ def create_tool(tool_launch_configuration, user_instance):
 
     tool.save()
     return tool
+
+
+def create_tool_analysis(validated_analysis_config):
+    """
+    Create an Analysis instance from a validated analysis config with
+    Tool information
+    :param validated_analysis_config: a dict including the necessary
+    information to create an Analysis that has been validated prior by
+    `analysis_manager.utils.validate_analysis_config`
+    :return: an Analysis instance
+    :raises: RuntimeError
+    """
+
+    # Input list for running analysis
+    common_analysis_objects = (
+        fetch_objects_required_for_analysis(
+            validated_analysis_config
+        )
+    )
+    custom_name = validated_analysis_config["custom_name"]
+    current_workflow = common_analysis_objects["current_workflow"]
+    data_set = common_analysis_objects["data_set"]
+    user = common_analysis_objects["user"]
+
+    try:
+        tool = Tool.objects.get(
+            uuid=validated_analysis_config["toolUuid"]
+        )
+    except (Tool.DoesNotExist, Tool.MultipleObjectsReturned) as e:
+        raise RuntimeError("Couldn't fetch Tool from UUID: {}".format(e))
+
+    analysis = AnalysisFactory(
+        summary="Analysis run for: {}".format(tool.__str__()),
+        name=custom_name,
+        project=user.profile.catch_all_project,
+        data_set=data_set,
+        workflow=current_workflow,
+        time_start=timezone.now()
+    )
+    analysis.set_owner(user)
+    tool.set_analysis(analysis.uuid)
+
+    return analysis
 
 
 @transaction.atomic
