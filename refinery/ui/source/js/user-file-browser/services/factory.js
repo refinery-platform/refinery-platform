@@ -7,38 +7,28 @@
 
   userFileBrowserFactory.$inject = [
     '$log',
-    '_',
-    '$window',
-    'userFileService',
+    'settings',
+    'userFileService'
   ];
 
   function userFileBrowserFactory (
     $log,
-    _,
-    $window,
+    settings,
     userFileService
     ) {
-    return {
-      getUserFiles: getUserFiles,
+    var service = {
       createColumnDefs: createColumnDefs,
-      createData: createData
+      createData: createData,
+      createFilters: createFilters,
+      getUserFiles: getUserFiles
     };
+    return service;
 
     /*
     *-----------------------
     * Method Definitions
     * ----------------------
     */
-
-    function getUserFiles () {
-      var userFile = userFileService.query();
-      userFile.$promise.then(function (/* response */) {
-        // TODO: addNodeDetailtoUserFiles();
-      }, function (error) {
-        $log.error(error);
-      });
-      return userFile.$promise;
-    }
 
     function createColumnDefs (solrAttributes) {
       var defs = [
@@ -61,15 +51,16 @@
                 '<i class="fa fa-file"></i>' +
                 '</a>' +
                 '</div>',
-            width: 30 }];
+            width: 30 },
+          { field: 'filename' }];
       var requestedColumns = {};
-      $window.djangoApp.userFilesColumns.forEach(function (column) {
+      settings.djangoApp.userFilesColumns.forEach(function (column) {
         requestedColumns[column] = true;
       });
       solrAttributes.forEach(function (attribute) {
         if (attribute.attribute_type === 'Characteristics'
             || attribute.attribute_type === 'Factor Value') {
-          var name = attribute.display_name.toLowerCase();
+          var name = normalizeName(attribute);
           if (requestedColumns[name]) {
             requestedColumns[name] = false; // TODO: Better strategy to avoid duplicates?
             defs.push({ field: name });
@@ -79,26 +70,80 @@
       return defs;
     }
 
-    function createData (solrNodes) {
+    function createData (solrAttributes, solrNodes) {
+      var mapInternalToDisplay = {};
+      solrAttributes.forEach(function (attribute) {
+        mapInternalToDisplay[attribute.internal_name] =
+            normalizeName(attribute);
+      });
+
       var data = [];
-      for (var i = 0; i < solrNodes.length; i++) {
-        var node = solrNodes[i];
-        var url = node.REFINERY_NAME_6_3_s;
-        data.push({
-          url: url,
-          technology: 'TODO',
-          filename: url ? decodeURIComponent(url.replace(/.*\//, '')) : '',
-          organism: node.organism_Characteristics_6_3_s,
-          date: 'TODO',
-          antibody: node.antibody_Factor_Value_6_3_s,
-          cell_type: node.cell_line_Characteristics_6_3_s,
-          published: 'TODO',
-          accession: 'TODO',
-          genotype: 'TODO',
-          owner: 'TODO'
+      solrNodes.forEach(function (node) {
+        var row = {};
+        var internalNames = Object.keys(node);
+        internalNames.forEach(function (internalName) {
+          var display = mapInternalToDisplay[internalName];
+          row[display] = node[internalName];
         });
-      }
+        row.url = row.name;
+        row.filename = decodeURIComponent(row.name.replace(/.*\//, ''));
+        data.push(row);
+      });
       return data;
+    }
+
+    function createFilters (solrAttributes, solrFacetCounts) {
+      console.log(solrFacetCounts); // TODO: These have only one suffix ...
+      var mapDisplayToInternal = {}; // May be one-to-many
+      solrAttributes.forEach(function (attribute) {
+        var display = normalizeName(attribute);
+        if (! mapDisplayToInternal.hasOwnProperty(display)) {
+          mapDisplayToInternal[display] = [];
+        }
+        mapDisplayToInternal[display].push(attribute.internal_name);
+      });
+
+      var requestedFilters = settings.djangoApp.userFilesColumns;
+      // TODO: Should there be a separate config for the filters?
+
+      var filters = {};
+      requestedFilters.forEach(function (filterName) {
+        var internals = mapDisplayToInternal[filterName];
+        if (filterName === 'organism') {
+          console.log(internals); // TODO: ... but there are multiple name matches here ...
+        }
+        var facetCounts = [];
+        internals.forEach(function (internal) {
+          var counts = solrFacetCounts[internal];
+          if (filterName === 'organism') {
+            console.log(counts); // TODO: ... but all but one come out undefined.
+          }
+          if (counts) {
+            counts.forEach(function (facetCount) {
+              facetCounts.push(facetCount);
+            });
+          }
+        });
+        filters[filterName] = {
+          facetObj: facetCounts
+        };
+      });
+
+      return filters;
+    }
+
+    function getUserFiles () {
+      var userFile = userFileService.query();
+      userFile.$promise.then(function (/* response */) {
+        // TODO: addNodeDetailtoUserFiles();
+      }, function (error) {
+        $log.error(error);
+      });
+      return userFile.$promise;
+    }
+
+    function normalizeName (attribute) {
+      return attribute.display_name.toLowerCase();
     }
   }
 })();

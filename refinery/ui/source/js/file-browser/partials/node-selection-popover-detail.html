@@ -68,18 +68,18 @@
   </ul>
 </div>
 <div>
-  <span ng-if="NSPCtrl.currentTypes.length > 1">
+  <span ng-if="NSPCtrl.depthNames.length > 1">
     <div class="refinery-subheader">
       <h4>
         <i
           class="{{NSPCtrl.currentTypes[NSPCtrl.currentTypes.length - 2]|groupTypeIcon}}"
           aria-hidden="true"></i>
-        {{ NSPCtrl.currentTypes[NSPCtrl.currentTypes.length - 2] }} Nav:
+        {{ NSPCtrl.depthNames[NSPCtrl.depthNames.length - 2] }}:
         <i
           class="{{NSPCtrl.currentTypes[NSPCtrl.currentTypes.length - 1]|groupTypeIcon}}"
           aria-hidden="true"></i>
-        {{ NSPCtrl.currentTypes[NSPCtrl.currentTypes.length - 1] }}
-        {{ NSPCtrl.currentGroup[NSPCtrl.currentGroup.length - 1] + 1 }}
+        {{ NSPCtrl.depthNames[NSPCtrl.currentTypes.length - 1] }},
+        Index {{ NSPCtrl.currentGroup[NSPCtrl.currentGroup.length - 1] + 1 }}
       </h4>
     </div>
     <rp-input-control-inner-nav></rp-input-control-inner-nav>
