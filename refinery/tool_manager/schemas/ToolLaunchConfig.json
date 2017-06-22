@@ -7,17 +7,13 @@
     "file_relationships"
   ],
   "properties": {
-    "dataset_uuid": {
-      "type": "string",
-      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-    },
+    "dataset_uuid": {"$ref": "Base.json#patterns/uuid"},
     "tool_definition_uuid": {"$ref": "Base.json#patterns/uuid"},
     "file_relationships": {
       "oneOf": [
         {"type": "string"},
         {"type": "null"}
       ]
-
     },
     "parameters": {
       "type": "object"
