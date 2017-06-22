@@ -373,17 +373,10 @@ class Tool(OwnableResource):
     def run_analysis(self, analysis_config):
         """
         "Run an analysis for a workflow-based Tool
-        :param analysis_config: a dict containing:
-            {
-                "custom_name": <str>,
-                "studyUuid": <uuid string>,
-                "toolUuid": <uuid string>,
-                "user_id": <int>,
-                "workflowUuid": <uuid string>
-            }
+        :param analysis_config: a dict containing a validated
+        analysis_configuration.
 
-        :returns:
-            String: relative url like:
+        :returns: String: relative url like:
             `"/data_sets2/<tool.dataset.uuid/#/analyses/`
         :raises: RuntimeError, NotImplementedError
         """
