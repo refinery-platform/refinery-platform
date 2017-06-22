@@ -8,15 +8,15 @@
   InputGroupsColumnPopoverCtrl.$inject = [
     '$scope',
     '_',
-    'fileRelationshipService',
-    'activeNodeService'
+    'activeNodeService',
+    'fileRelationshipService'
   ];
 
   function InputGroupsColumnPopoverCtrl (
     $scope,
     _,
-    fileRelationshipService,
-    activeNodeService
+    activeNodeService,
+    fileRelationshipService
   ) {
     var fileService = fileRelationshipService;
     var nodeService = activeNodeService;

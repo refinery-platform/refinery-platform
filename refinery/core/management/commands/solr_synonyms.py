@@ -48,7 +48,7 @@ class Command(BaseCommand):
             sys.stderr.write('Identifier file not given')
             exit()
 
-        id = options['identifier'].lower()
+        identifier = options['identifier'].lower()
         update = False
         removal = False if options['synonyms'] else True
 
@@ -68,7 +68,7 @@ class Command(BaseCommand):
                 for line in f:
                     if line[:1] == '#':
                         # Do not carry over existing synonyms of the same ID
-                        if line.rstrip() == '# ID: ' + id:
+                        if line.rstrip() == '# ID: ' + identifier:
                             rewrite = False
                             update = True
                         else:
@@ -82,7 +82,7 @@ class Command(BaseCommand):
             # Add new or updated synonyms
             if options['synonyms']:
                 with open(options['synonyms'], 'r') as f:
-                    tmp.write('# ID: ' + id + '\n')
+                    tmp.write('# ID: ' + identifier + '\n')
                     for line in f:
                         tmp.write(line)
 

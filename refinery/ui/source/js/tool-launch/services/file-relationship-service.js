@@ -1,3 +1,11 @@
+/**
+ * File Relationship Service
+ * @namespace fileRelationshipService
+ * @desc Service which maintains processes the tool's fileRelationship
+ * structure and creates and updates the digestable data structures. Also
+ * tracks display colors for input files
+ * @memberOf refineryApp.refineryToolLaunch
+ */
 (function () {
   'use strict';
   angular
@@ -25,7 +33,7 @@
     vm.attributesObj = {}; // displayName: internalName, ex Name:
     vm.currentGroup = []; // index for the group coordinates
     vm.currentTypes = []; // tracks whether depths are pair or list
-    vm.displayInputFile = {}; // for input-group-help-popover, tracks selected
+    vm.depthNames = []; // tracks whether depth names
     vm.groupCollection = {}; // contains groups with their selected row's info
     vm.hideNodePopover = false;
     vm.inputFileTypes = []; // maintains the required input types
@@ -81,11 +89,13 @@
       while (scaledCopy.file_relationship.length > 0) {
         vm.currentGroup.push(0);
         vm.currentTypes.push(scaledCopy.value_type);
+        vm.depthNames.push(scaledCopy.name);
         scaledCopy = scaledCopy.file_relationship[0];
       }
       angular.copy(scaledCopy.input_files, vm.inputFileTypes);
       associateColorToInputFileType();
       vm.currentTypes.push(scaledCopy.value_type);
+      vm.depthNames.push(scaledCopy.name);
       // avoids having an empty string as a key
       if (vm.currentGroup.length === 0) {
         vm.currentGroup.push(0);
@@ -133,7 +143,6 @@
       }
       vm.groupCollection = {};
       vm.nodeSelectCollection = {};
-      vm.displayInputFile = {};
       angular.copy({}, nodeService.selectionObj);
     }
 
@@ -143,7 +152,6 @@
     function resetToolRelated () {
       vm.currentGroup = [];
       vm.currentTypes = [];
-      vm.displayInputFile = {};
       vm.groupCollection = {};
       vm.hideNodePopover = false;
       vm.inputFileTypes = [];

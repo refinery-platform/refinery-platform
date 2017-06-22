@@ -1,3 +1,10 @@
+/**
+ * Tool Display Ctrl
+ * @namespace ToolDisplayCtrl
+ * @desc Main controller for the main view, tool display. Ctrl for parent
+  * component and updates the selected tool
+ * @memberOf refineryApp.refineryToolLaunch
+ */
 (function () {
   'use strict';
 

@@ -9,16 +9,16 @@
     '$compile',
     '$rootScope',
     '$templateCache',
-    'fileRelationshipService',
-    'activeNodeService'
+    'activeNodeService',
+    'fileRelationshipService'
   ];
 
   function rpNodeSelectionPopover (
     $compile,
     $rootScope,
     $templateCache,
-    fileRelationshipService,
-    activeNodeService
+    activeNodeService,
+    fileRelationshipService
     ) {
     return {
       restrict: 'AE',
@@ -30,10 +30,10 @@
         var popOverContent = $compile(template)(scope);
         var options = {
           content: popOverContent,
-          placement: 'right-top',
+          placement: 'bottom',
           html: true,
           trigger: 'manual',
-          container: 'body'
+          container: '#assay-files-table'
         };
         angular.element(element).popover(options);
 

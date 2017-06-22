@@ -8,15 +8,15 @@
   NodeSelectionPopoverCtrl.$inject = [
     '$scope',
     '_',
-    'fileRelationshipService',
-    'activeNodeService'
+    'activeNodeService',
+    'fileRelationshipService'
   ];
 
   function NodeSelectionPopoverCtrl (
     $scope,
     _,
-    fileRelationshipService,
-    activeNodeService
+    activeNodeService,
+    fileRelationshipService
   ) {
     var fileService = fileRelationshipService;
     var nodeService = activeNodeService;
@@ -26,6 +26,7 @@
     vm.currentGroup = fileService.currentGroup; // group indices ex: [0, 0]
     /** current group's data structure for each level ex:[ 'Pair','List'] **/
     vm.currentTypes = fileService.currentTypes;
+    vm.depthNames = fileService.depthNames;
     // selectedNodes ordered by group indicies
     vm.groupCollection = fileService.groupCollection;
     vm.inputFileTypes = fileService.inputFileTypes; // current tool's inputFileTypes
@@ -100,6 +101,7 @@
       function () {
         vm.currentGroup = fileService.currentGroup;
         vm.currentTypes = fileService.currentTypes;
+        vm.depthNames = fileService.depthNames;
       }
     );
   }
