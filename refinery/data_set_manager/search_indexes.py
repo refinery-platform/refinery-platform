@@ -8,11 +8,11 @@ import logging
 import string
 
 from django.conf import settings
-
 from haystack import indexes
 
-from .models import AnnotatedNode, Node
 from file_store.models import FileStoreItem
+
+from .models import AnnotatedNode, Node
 
 logger = logging.getLogger(__name__)
 
@@ -86,7 +86,8 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
             name = string.replace(name, "'",
                                   settings.REFINERY_SOLR_SPACE_DYNAMIC_FIELDS)
 
-            key = name + "_" + uuid + "_s"
+            uniq_key = name + "_" + uuid + "_s"
+            generic_key = name + "_generic_s"
             # a node might have multiple parents with different attribute
             # values for a given attribute
             # e.g. parentA Characteristic[cell type] = K562 and
@@ -95,13 +96,15 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
             # concatenation of the unique list
             # old version (only one attribute kept):
             # data[key] = value
-            if key not in data:
-                data[key] = set()
-            if value != "":
-                data[key].add(value)
-            else:
-                data[key].add("N/A")
+            for key in (uniq_key, generic_key):
+                if key not in data:
+                    data[key] = set()
+                if value != "":
+                    data[key].add(value)
+                else:
+                    data[key].add("N/A")
         # iterate over all keys in data and join sets into strings
+        # TODO: This doesn't feel right: facet each separately?
         for key, value in data.iteritems():
             if type(value) is set:
                 data[key] = " + ".join(value)
