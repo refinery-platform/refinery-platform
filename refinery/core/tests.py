@@ -3,37 +3,34 @@ import random
 import string
 from urlparse import urljoin
 
-from django.contrib.auth.models import User, Group
-from django.core.files.uploadedfile import SimpleUploadedFile
-from django.utils import timezone
-from django.test import TestCase
-
-from guardian.shortcuts import assign_perm
 import mock
 import mockcache as memcache
-from rest_framework.test import (APIRequestFactory, APIClient, APITestCase,
+from django.contrib.auth.models import Group, User
+from django.core.files.uploadedfile import SimpleUploadedFile
+from django.test import TestCase
+from django.utils import timezone
+from guardian.shortcuts import assign_perm
+from rest_framework.test import (APIClient, APIRequestFactory, APITestCase,
                                  force_authenticate)
 from tastypie.exceptions import NotFound
 from tastypie.test import ResourceTestCase
 
-from .api import AnalysisResource
-from .management.commands.create_user import init_user
-from .models import (Analysis, AnalysisNodeConnection, create_nodeset, DataSet,
-                     delete_nodeset, ExtendedGroup, get_nodeset,
-                     invalidate_cached_object, InvestigationLink,
-                     NodeSet, Project, Tutorials, update_nodeset,
-                     UserProfile, Workflow, WorkflowEngine)
-from .search_indexes import DataSetIndex
-
-from .utils import (filter_nodes_uuids_in_solr, get_aware_local_time,
-                    move_obj_to_front)
-from .views import AnalysesViewSet, DataSetsViewSet
 from data_set_manager.models import Assay, Contact, Investigation, Node, Study
 from factory_boy.utils import create_dataset_with_necessary_models
-
 from file_store.models import FileStoreItem
 from galaxy_connector.models import Instance
 
+from .api import AnalysisResource
+from .management.commands.create_user import init_user
+from .models import (Analysis, AnalysisNodeConnection, DataSet, ExtendedGroup,
+                     InvestigationLink, NodeSet, Project, Tutorials,
+                     UserProfile, Workflow, WorkflowEngine, create_nodeset,
+                     delete_nodeset, get_nodeset, invalidate_cached_object,
+                     update_nodeset)
+from .search_indexes import DataSetIndex
+from .utils import (filter_nodes_uuids_in_solr, get_aware_local_time,
+                    move_obj_to_front)
+from .views import AnalysesViewSet, DataSetsViewSet
 
 cache = memcache.Client(["127.0.0.1:11211"])
 
@@ -1780,8 +1777,7 @@ class DataSetResourceTest(ResourceTestCase):
 
 
 class DataSetTests(TestCase):
-    """ Testing of the DataSet model
-    """
+    """ Testing of the DataSet model"""
 
     def setUp(self):
         self.username = self.password = 'user'
@@ -1895,6 +1891,24 @@ class DataSetTests(TestCase):
             self.dataset.get_latest_investigation_link().investigation,
             self.latest_investigation
         )
+
+    def test_get_latest_study(self):
+        dataset = create_dataset_with_necessary_models()
+        self.assertEqual(
+            dataset.get_latest_study(),
+            Study.objects.get(
+                investigation=(
+                    dataset.get_latest_investigation_link().investigation
+                )
+            )
+        )
+
+    def test_get_latest_study_no_studies(self):
+        dataset = create_dataset_with_necessary_models()
+        dataset.get_latest_study().delete()
+        with self.assertRaises(RuntimeError) as context:
+            dataset.get_latest_study()
+            self.assertIn("Couldn't fetch Study", context.exception.message)
 
 
 class DataSetApiV2Tests(APITestCase):

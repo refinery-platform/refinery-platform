@@ -4,46 +4,45 @@ import os
 import re
 import urllib
 from urlparse import urljoin
-import xmltodict
+from xml.parsers.expat import ExpatError
 
+import requests
+import xmltodict
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from django.contrib.sites.models import get_current_site, RequestSite, Site
+from django.contrib.sites.models import RequestSite, Site, get_current_site
 from django.core.exceptions import ImproperlyConfigured
 from django.core.urlresolvers import reverse
 from django.http import (HttpResponse, HttpResponseBadRequest,
                          HttpResponseForbidden, HttpResponseNotFound,
                          HttpResponseRedirect, HttpResponseServerError)
-
 from django.shortcuts import get_object_or_404, render_to_response
-from django.template import loader, RequestContext
+from django.template import RequestContext, loader
 from django.views.decorators.gzip import gzip_page
-
 from guardian.shortcuts import get_perms
 from guardian.utils import get_anonymous_user
 from registration import signals
 from registration.views import RegistrationView
-import requests
 from requests.exceptions import HTTPError
 from rest_framework import status, viewsets
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from xml.parsers.expat import ExpatError
 
-from .forms import (DataSetForm, ProjectForm, UserForm, UserProfileForm,
-                    WorkflowForm)
-from .models import (Analysis, CustomRegistrationProfile, DataSet,
-                     ExtendedGroup, Invitation, Ontology, Project,
-                     UserProfile, Workflow, WorkflowEngine)
-from .serializers import (DataSetSerializer, NodeSerializer,
-                          WorkflowSerializer)
-from .utils import get_data_sets_annotations
+from analysis_manager.utils import get_solr_results
 from annotation_server.models import GenomeBuild
 from data_set_manager.models import Node
 from data_set_manager.utils import generate_solr_params_for_assay
 from file_store.models import FileStoreItem
 from visualization_manager.views import igv_multi_species
+
+from .forms import (DataSetForm, ProjectForm, UserForm, UserProfileForm,
+                    WorkflowForm)
+from .models import (Analysis, CustomRegistrationProfile, DataSet,
+                     ExtendedGroup, Invitation, Ontology, Project, UserProfile,
+                     Workflow, WorkflowEngine)
+from .serializers import DataSetSerializer, NodeSerializer, WorkflowSerializer
+from .utils import get_data_sets_annotations
 
 logger = logging.getLogger(__name__)
 
@@ -787,85 +786,6 @@ def solr_igv(request):
 
         return HttpResponse(json.dumps(session_urls),
                             content_type='application/json')
-
-
-def get_solr_results(query, facets=False, jsonp=False, annotation=False,
-                     only_uuids=False, selected_mode=True,
-                     selected_nodes=None):
-    """Helper function for taking solr request url.
-    Removes facet requests, converts to json, from input solr query
-    :param query: solr http query string
-    :type query: string
-    :param facets: Removes facet query from solr query string
-    :type facets: boolean
-    :param jsonp: Removes JSONP query from solr query string
-    :type jsonp: boolean
-    :param only_uuids: Returns list of file_uuids from all solr results
-    :type only_uuids: boolean
-    :param selected_mode: UI selection mode (blacklist or whitelist)
-    :type selected_mode: boolean
-    :param selected_nodes: List of UUIDS to remove from the solr query
-    :type selected_nodes: array
-    :returns: dictionary of current solr results
-    """
-    logger.debug("core.views: get_solr_results")
-    if not facets:
-        # replacing facets w/ false
-        query = query.replace('facet=true', 'facet=false')
-    if not jsonp:
-        # ensuring json not jsonp response
-        query = query.replace('&json.wrf=?', '')
-    if annotation:
-        # changing annotation
-        query = query.replace('is_annotation:false', 'is_annotation:true')
-    # Checks for limit on solr query
-    # replaces i.e. '&rows=20' to '&rows=10000'
-    m_obj = re.search(r"&rows=(\d+)", query)
-    if m_obj:
-        # TODO: replace 10000 with settings parameter for max solr results
-        replace_rows_str = '&rows=' + str(10000)
-        query = query.replace(m_obj.group(), replace_rows_str)
-
-    try:
-        # opening solr query results
-        results = requests.get(query, stream=True)
-        results.raise_for_status()
-    except HTTPError as e:
-        logger.error(e)
-        return HttpResponseServerError(e)
-
-    # converting results into json for python
-    results = json.loads(results.content)
-
-    # IF list of nodes to remove from query exists
-    if selected_nodes:
-        # need to iterate over list backwards to properly delete from a list
-        for i in xrange(len(results["response"]["docs"]) - 1, -1, -1):
-            node = results["response"]["docs"][i]
-
-            # blacklist mode (remove uuid's from solr query)
-            if selected_mode:
-                if 'uuid' in node:
-                    # if the current node should be removed from the results
-                    if node['uuid'] in selected_nodes:
-                        del results["response"]["docs"][i]
-                        # num_found -= 1
-            # whitelist mode (add's uuids from solr query)
-            else:
-                if 'uuid' in node:
-                    # if the current node should be removed from the results
-                    if node['uuid'] not in selected_nodes:
-                        del results["response"]["docs"][i]
-                        # num_found += 1
-    # Will return only list of file_uuids
-    if only_uuids:
-        ret_file_uuids = []
-        solr_results = results["response"]["docs"]
-        for res in solr_results:
-            ret_file_uuids.append(res["uuid"])
-        return ret_file_uuids
-
-    return results
 
 
 def samples_solr(request, ds_uuid, study_uuid, assay_uuid):
