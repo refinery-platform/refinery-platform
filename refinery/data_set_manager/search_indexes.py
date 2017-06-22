@@ -5,7 +5,7 @@ Created on Jul 2, 2012
 '''
 
 import logging
-import string
+import re
 
 from django.conf import settings
 from haystack import indexes
@@ -71,20 +71,9 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
                 value = annotation.attribute_value + " " + \
                         annotation.attribute_value_unit
             # replace problematic characters in field names
-            name = string.replace(name, "/",
-                                  settings.REFINERY_SOLR_SPACE_DYNAMIC_FIELDS)
-            name = string.replace(name, "(",
-                                  settings.REFINERY_SOLR_SPACE_DYNAMIC_FIELDS)
-            name = string.replace(name, ")",
-                                  settings.REFINERY_SOLR_SPACE_DYNAMIC_FIELDS)
-            name = string.replace(name, "#",
-                                  settings.REFINERY_SOLR_SPACE_DYNAMIC_FIELDS)
-            name = string.replace(name, ",",
-                                  settings.REFINERY_SOLR_SPACE_DYNAMIC_FIELDS)
-            name = string.replace(name, " ",
-                                  settings.REFINERY_SOLR_SPACE_DYNAMIC_FIELDS)
-            name = string.replace(name, "'",
-                                  settings.REFINERY_SOLR_SPACE_DYNAMIC_FIELDS)
+            name = re.sub(r'\W',
+                          settings.REFINERY_SOLR_SPACE_DYNAMIC_FIELDS,
+                          name)
 
             uniq_key = name + "_" + uuid + "_s"
             generic_key = name + "_generic_s"
