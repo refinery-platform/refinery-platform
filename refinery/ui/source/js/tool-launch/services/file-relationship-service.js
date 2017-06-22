@@ -129,6 +129,15 @@
                   selectArr[k],
                   vm.groupCollection[replaceGroup.join(',')][inputUuid][k]
                 );
+                var groupListLen = vm.nodeSelectCollection[vm.groupCollection[aheadGroup
+                  .join(',')][inputUuid][k].uuid].groupList.length;
+                for (var l = 0; l < groupListLen; l++) {
+                  if (vm.nodeSelectCollection[vm.groupCollection[aheadGroup
+                  .join(',')][inputUuid][k].uuid].groupList[l].join(',') === aheadGroup.join(',')) {
+                    vm.nodeSelectCollection[vm.groupCollection[aheadGroup.join(',')]
+                      [inputUuid][k].uuid].groupList[l] = angular.copy(replaceGroup);
+                  }
+                }
               }
             });
             replaceGroup[0]++;
@@ -180,6 +189,7 @@
     function resetToolRelated () {
       vm.currentGroup = [];
       vm.currentTypes = [];
+      vm.depthNames = [];
       vm.groupCollection = {};
       vm.hideNodePopover = false;
       vm.inputFileTypes = [];
