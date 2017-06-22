@@ -23,6 +23,10 @@
           deps = module.value('refineryApp').requires;
         });
 
+        it('should have "dndLists" as a dependency', function () {
+          expect(hasModule('dndLists')).toEqual(true);
+        });
+
         it('should have "ui.grid" as a dependency', function () {
           expect(hasModule('ui.grid')).toEqual(true);
         });

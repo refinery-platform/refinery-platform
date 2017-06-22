@@ -11,6 +11,7 @@
 
   angular
     .module('refineryFileBrowser', [
+      'dndLists',
       'ui.grid',
       'ui.grid.autoResize',
       'ui.grid.infiniteScroll',
