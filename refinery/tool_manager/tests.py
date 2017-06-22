@@ -195,6 +195,10 @@ class ToolManagerTestBase(TestCase):
             internal_id=self.td.galaxy_workflow_id
         )
 
+    def test_create_valid_tool(self):
+        with self.assertRaises(RuntimeError):
+            self.create_valid_tool("Coffee is not a valid tool type")
+
 
 class ToolDefinitionAPITests(ToolManagerTestBase, APITestCase):
     def setUp(self):
@@ -403,7 +407,7 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
         self.assertEqual(ToolDefinition.objects.count(), 1)
 
         self.assertEqual(self.td.output_files.count(), 0)
-        self.assertEqual(self.td.parameters.count(), 0)
+        self.assertEqual(self.td.parameters.count(), 1)
         self.assertEqual(
             self.td.file_relationship.file_relationship.count(),
             0
@@ -769,7 +773,7 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
                 self.assertEqual(ToolDefinition.objects.count(), 4)
                 self.assertEqual(FileRelationship.objects.count(), 7)
                 self.assertEqual(GalaxyParameter.objects.count(), 9)
-                self.assertEqual(Parameter.objects.count(), 9)
+                self.assertEqual(Parameter.objects.count(), 10)
                 self.assertEqual(InputFile.objects.count(), 6)
                 self.assertEqual(OutputFile.objects.count(), 3)
 
@@ -849,7 +853,7 @@ class ToolDefinitionTests(ToolManagerTestBase):
     maxDiff = None
 
     def test_get_annotation(self):
-        self.create_vis_tool_definition()
+        self.create_vis_tool_definition(annotation_file_name="igv.json")
         self.assertEqual(self.td.get_annotation(),
                          self.tool_annotation_json["annotation"])
 
@@ -992,19 +996,20 @@ class ToolTests(ToolManagerTestBase):
             ['http://www.example.com/sample.seg']
         )
 
-    def test_run_analysis_wrong_tool_type(self):
+    def test_launch_workflow_wrong_tool_type(self):
         self.create_valid_tool(ToolDefinition.VISUALIZATION)
         with self.assertRaises(NotImplementedError):
-            self.tool.run_analysis({})
+            self.tool._launch_workflow({})
 
     def test_set_analysis_wrong_type(self):
         self.create_valid_tool(ToolDefinition.WORKFLOW)
-        with self.assertRaises(RuntimeError) as context:
+        with self.assertRaises(RuntimeError):
             self.tool.set_analysis(str(uuid.uuid4()))
-            self.assertIn(
-                "Analysis matching query does not exist.",
-                context.exception.message
-            )
+
+    def test_get_workflows_wrong_tool_type(self):
+        self.create_valid_tool(ToolDefinition.VISUALIZATION)
+        with self.assertRaises(NotImplementedError):
+            self.tool.get_workflow()
 
 
 class ToolAPITests(APITestCase, ToolManagerTestBase):
@@ -1229,6 +1234,14 @@ class ToolLaunchTests(ToolManagerTestBase):
 
     def test_workflow_tool_launch_valid_workflow_object(self):
         self.create_valid_tool(ToolDefinition.WORKFLOW)
+
+        self.assertEqual(
+            self.workflow.__str__(),
+            "{} - {}".format(
+                self.td.name,
+                "Workflow for: {}".format(self.td.__str__()),
+            )
+        )
 
         self.assertEqual(self.tool.get_owner(), self.user)
         self.assertEqual(self.tool.get_tool_type(), ToolDefinition.WORKFLOW)
