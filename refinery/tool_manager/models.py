@@ -4,7 +4,6 @@ import logging
 import re
 
 from django.conf import settings
-from django.core.urlresolvers import reverse
 from django.db import models
 from django.db.models.signals import post_delete, pre_delete
 from django.dispatch import receiver
@@ -399,8 +398,7 @@ class Tool(OwnableResource):
 
         # Run the analysis task
         run_analysis.delay(analysis.uuid)
-
-        return reverse('analysis-status', args=(analysis.uuid,))
+        return "/data_sets2/{}/#/analyses/".format(self.dataset.uuid)
 
     def set_tool_launch_config(self, tool_launch_config):
         self.tool_launch_configuration = json.dumps(tool_launch_config)
