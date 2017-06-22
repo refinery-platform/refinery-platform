@@ -999,7 +999,7 @@ class ToolTests(ToolManagerTestBase):
     def test_launch_workflow_wrong_tool_type(self):
         self.create_valid_tool(ToolDefinition.VISUALIZATION)
         with self.assertRaises(NotImplementedError):
-            self.tool._launch_workflow({})
+            self.tool._launch_workflow()
 
     def test_set_analysis_wrong_type(self):
         self.create_valid_tool(ToolDefinition.WORKFLOW)
@@ -1009,7 +1009,7 @@ class ToolTests(ToolManagerTestBase):
     def test_get_workflows_wrong_tool_type(self):
         self.create_valid_tool(ToolDefinition.VISUALIZATION)
         with self.assertRaises(NotImplementedError):
-            self.tool.get_workflow()
+            self.td.get_workflow()
 
 
 class ToolAPITests(APITestCase, ToolManagerTestBase):
