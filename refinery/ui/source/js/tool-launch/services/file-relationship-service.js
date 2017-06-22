@@ -35,10 +35,12 @@
     vm.currentTypes = []; // tracks whether depths are pair or list
     vm.depthNames = []; // tracks whether depth names
     vm.groupCollection = {}; // contains groups with their selected row's info
+    // {groupId: {'0,0': {'inputTypeUuid: [{nodeDOM1}, {nodeDOM2}]}}
     vm.hideNodePopover = false;
     vm.inputFileTypes = []; // maintains the required input types
     vm.inputFileTypeColor = {}; // inputFileTypeUuids: hex color
-    vm.nodeSelectCollection = {}; // contains rows and their group info
+    vm.nodeSelectCollection = {}; // contains rows and their group info, ex:
+    // {nodeUuid: {'groupList': [[0,0], [1,0]], 'inputTypeList': [uuid1, uuid2]}
     vm.refreshFileMap = refreshFileMap;
     vm.removeGroupFromCollections = removeGroupFromCollections;
     vm.resetInputGroup = resetInputGroup;
@@ -103,6 +105,58 @@
       generateAttributeObj();
     }
 
+    function reindexNodeSelectCollection (nodeUuid, replaceGroup, aheadGroup) {
+      var groupListLen = vm.nodeSelectCollection[nodeUuid].groupList.length;
+      for (var groupInd = 0; groupInd < groupListLen; groupInd++) {
+        if (vm.nodeSelectCollection[nodeUuid]
+            .groupList[groupInd].join(',') === aheadGroup.join(',')) {
+          vm.nodeSelectCollection[nodeUuid].groupList[groupInd] = angular.copy(replaceGroup);
+        }
+      }
+    }
+
+    function reindexGroupCollection () {
+      // var reindexCount = _.keys(vm.groupCollection).length;
+      var aheadGroup = angular.copy(vm.currentGroup);
+      aheadGroup[0]++;
+      var replaceGroup = angular.copy(vm.currentGroup);
+      // find the next group which will replace the previous group
+      angular.forEach(vm.groupCollection, function (inputObj, groupId) {
+        // copying the next index to the previous and deleting the next index
+        if (groupId === aheadGroup.join(',')) {
+          // need to update each inputObj (can be 1 or 2 items if list or pair)
+          angular.forEach(inputObj, function (selectArr, inputUuid) {
+            // initialize the group when missing
+            if (!_.has(replaceGroup.join(','), vm.groupCollection)) {
+              vm.groupCollection[replaceGroup.join(',')] = {};
+            }
+            vm.groupCollection[replaceGroup.join(',')][inputUuid] = [];
+            // have to deep copy each dom Object in the arr
+            for (var domInd = 0; domInd < selectArr.length; domInd++) {
+              // initialize the dom object
+              vm.groupCollection[replaceGroup.join(',')][inputUuid][domInd] = {};
+              angular.copy(
+                selectArr[domInd],
+                vm.groupCollection[replaceGroup.join(',')][inputUuid][domInd]
+              );
+              var nodeUuid = vm.groupCollection[aheadGroup.join(',')][inputUuid][domInd].uuid;
+              reindexNodeSelectCollection(nodeUuid, replaceGroup, aheadGroup);
+
+              // update selectionObj for UI
+              angular.copy(
+                nodeService.selectionObj[aheadGroup.join(',')][inputUuid],
+                nodeService.selectionObj[replaceGroup.join(',')][inputUuid]
+              );
+            }
+          });
+          replaceGroup[0]++;
+          aheadGroup[0]++;
+          delete nodeService.selectionObj[groupId];
+          delete vm.groupCollection[groupId];
+        }
+      });
+    }
+
     // Main method to remove a group from the groupCollection and
     // nodeSelectCollections
     function removeGroupFromCollections () {
@@ -110,50 +164,9 @@
         removeGroupFromNodeSelectCollection(nodeArr, inputTypeUuid);
       });
 
-      var reindexCount = _.keys(vm.groupCollection).length;
-      var aheadGroup = angular.copy(vm.currentGroup);
-      aheadGroup[0]++;
-      var replaceGroup = angular.copy(vm.currentGroup);
-      angular.forEach(vm.groupCollection, function (inputObj, groupId) {
-        for (var i = 0; i < reindexCount; i++) {
-          // copying the next index to the previous and deleting the next index
-          if (groupId === aheadGroup.join(',')) {
-            angular.forEach(inputObj, function (selectArr, inputUuid) {
-              if (!_.has(replaceGroup.join(','), vm.groupCollection)) {
-                vm.groupCollection[replaceGroup.join(',')] = {};
-              }
-              vm.groupCollection[replaceGroup.join(',')][inputUuid] = [];
-              for (var k = 0; k < selectArr.length; k++) {
-                vm.groupCollection[replaceGroup.join(',')][inputUuid][k] = {};
-                angular.copy(
-                  selectArr[k],
-                  vm.groupCollection[replaceGroup.join(',')][inputUuid][k]
-                );
-                var groupListLen = vm.nodeSelectCollection[vm.groupCollection[aheadGroup
-                  .join(',')][inputUuid][k].uuid].groupList.length;
-                for (var l = 0; l < groupListLen; l++) {
-                  if (vm.nodeSelectCollection[vm.groupCollection[aheadGroup
-                  .join(',')][inputUuid][k].uuid].groupList[l].join(',') === aheadGroup.join(',')) {
-                    vm.nodeSelectCollection[vm.groupCollection[aheadGroup.join(',')]
-                      [inputUuid][k].uuid].groupList[l] = angular.copy(replaceGroup);
-                  }
-                }
-                // update selectionObj for UI
-                angular.copy(
-                  nodeService.selectionObj[aheadGroup.join(',')][inputUuid],
-                  nodeService.selectionObj[replaceGroup.join(',')][inputUuid]
-                );
-              }
-            });
-            replaceGroup[0]++;
-            aheadGroup[0]++;
-            delete nodeService.selectionObj[groupId];
-            delete vm.groupCollection[groupId];
-          }
-        }
-      });
       // Delete groupID property from obj since it is empty
-     // delete vm.groupCollection[vm.currentGroup];
+      delete vm.groupCollection[vm.currentGroup];
+      reindexGroupCollection();
     }
 
     // Helper method which finds index of currentGroupId and slices it from
