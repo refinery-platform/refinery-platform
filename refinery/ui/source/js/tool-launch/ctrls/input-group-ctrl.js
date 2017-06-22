@@ -75,7 +75,7 @@
     * */
     function removeGroup () {
       fileService.hideNodePopover = true;
-      nodeService.deselectGroupFromSelectionObj(vm.currentGroup);
+    //  nodeService.deselectGroupFromSelectionObj(vm.currentGroup);
       fileService.removeGroupFromCollections();
       vm.selectionObj = nodeService.selectionObj;
       console.log('removeGroup');

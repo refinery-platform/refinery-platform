@@ -138,10 +138,16 @@
                       [inputUuid][k].uuid].groupList[l] = angular.copy(replaceGroup);
                   }
                 }
+                // update selectionObj for UI
+                angular.copy(
+                  nodeService.selectionObj[aheadGroup.join(',')][inputUuid],
+                  nodeService.selectionObj[replaceGroup.join(',')][inputUuid]
+                );
               }
             });
             replaceGroup[0]++;
             aheadGroup[0]++;
+            delete nodeService.selectionObj[groupId];
             delete vm.groupCollection[groupId];
           }
         }
