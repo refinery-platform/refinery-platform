@@ -1613,7 +1613,9 @@ class NodeIndexTests(APITestCase):
         data = dict(
             (
                 re.sub(r'\d+', '#', k),
-                re.sub(r'\d+', '#', v) if type(v) == str else v
+                re.sub(r'\d+', '#', v) if
+                type(v) in (unicode, str) and not('uuid' in k)
+                else v
             )
             for (k, v) in data.items())
         self.assertEqual(data,
