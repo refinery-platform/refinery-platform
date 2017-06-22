@@ -5,7 +5,6 @@ import ast
 import py2neo
 import sys
 
-import requests
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.sites.models import Site
@@ -14,8 +13,9 @@ from django.core.mail import send_mail
 from django.core.cache import cache
 from django.db import connection
 from django.utils import timezone
+
+import requests
 from rest_framework.response import Response
-from rest_framework import status
 from urlparse import urlparse, urljoin
 
 import core
@@ -851,43 +851,6 @@ def email_admin(subject, message):
               [settings.ADMINS[0][1]])
 
 
-def create_current_selection_node_group(assay_uuid):
-    """
-    Helper method to create a current selection group which
-    is default for all node_group list
-
-    :param assay_uuid: string of uuid
-    :return: Response obj
-    """
-    # confirm an assay exists
-    try:
-        assay = data_set_manager.models.Assay.objects.get(uuid=assay_uuid)
-    except data_set_manager.models.Assay.DoesNotExist as e:
-        return Response(e, status=status.HTTP_404_NOT_FOUND)
-    except data_set_manager.models.Assay.MultipleObjectsReturned as e:
-        return Response(status=status.HTTP_400_BAD_REQUEST)
-
-    study_uuid = assay.study.uuid
-    # initialize node_group with a current_selection
-    serializer = core.serializers.NodeGroupSerializer(data={
-        'assay': assay_uuid,
-        'study': study_uuid,
-        'name': 'Current Selection'
-    })
-
-    # creating a default current_selection, therefore returning 201
-    if serializer.is_valid():
-        serializer.save()
-        # UI expects a list from assay query
-        return Response(
-            [serializer.data],
-            status=status.HTTP_201_CREATED)
-    else:
-        return Response(
-            serializer.errors,
-            status=status.HTTP_400_BAD_REQUEST)
-
-
 def filter_nodes_uuids_in_solr(assay_uuid, filter_out_uuids=[],
                                filter_attribute={}):
     """
@@ -919,7 +882,7 @@ def filter_nodes_uuids_in_solr(assay_uuid, filter_out_uuids=[],
         else:
             params['facets'] = ','.join(filter_attribute.keys())
 
-    solr_params = data_set_manager.utils.generate_solr_params(
+    solr_params = data_set_manager.utils.generate_solr_params_for_assay(
         params, assay_uuid)
     # Only require solr filters if exception uuids are passed
     if filter_out_uuids:
@@ -992,3 +955,9 @@ def move_obj_to_front(obj_arr, match_key, match_value):
             break
 
     return modified_obj_arr
+
+
+def api_error_response(error_message, http_status_code):
+    """Return and log error for Django Rest Framework API calls"""
+    logger.error(error_message)
+    return Response({'Error': error_message}, status=http_status_code)

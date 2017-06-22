@@ -1,15 +1,13 @@
-import ast
 import glob
 import json
 import logging
 import os
 
+from bioblend.galaxy.client import ConnectionError
 from django.conf import settings
 from django.contrib import admin
 from django.db import transaction
-
-from bioblend.galaxy.client import ConnectionError
-from jsonschema import RefResolver, validate, ValidationError
+from jsonschema import RefResolver, ValidationError, validate
 
 from core.models import WorkflowEngine
 from factory_boy.django_model_factories import (FileRelationshipFactory,
@@ -19,8 +17,8 @@ from factory_boy.django_model_factories import (FileRelationshipFactory,
                                                 ParameterFactory,
                                                 ToolDefinitionFactory,
                                                 ToolFactory)
-
 from file_store.models import FileType
+
 from .models import ToolDefinition
 
 logger = logging.getLogger(__name__)
@@ -95,8 +93,11 @@ def create_tool_definition(annotation_data):
                 annotation
             ),
             image_name=annotation["image_name"],
-            container_input_path=annotation["container_input_path"]
+            container_input_path=annotation["container_input_path"],
         )
+
+    tool_definition.annotation = json.dumps(annotation)
+    tool_definition.save()
 
     create_and_associate_output_files(
         tool_definition,
@@ -125,48 +126,25 @@ def create_tool(tool_launch_configuration, user_instance):
     tool = ToolFactory(
         name="{}-launch".format(tool_definition.name),
         tool_definition=tool_definition,
-        file_relationships=tool_launch_configuration["file_relationships"]
+        tool_launch_configuration=json.dumps(tool_launch_configuration)
     )
-    try:
-        tool.parameters = tool_launch_configuration["parameters"]
-    except KeyError:
-        # parameters are not required for Tools to launch properly
-        pass
 
     if tool.get_tool_type() == ToolDefinition.VISUALIZATION:
-        try:
-            tool.output_files = tool_launch_configuration["output_files"]
-        except KeyError:
-            # output_files aren't required for Vis Tools
-            pass
-
         # Create a unique container name that adheres to docker's specs
         tool.container_name = "{}-{}".format(
             tool.name.replace(" ", ""),
             tool.uuid
         )
 
-    if tool.get_tool_type() == ToolDefinition.WORKFLOW:
-        try:
-            tool.output_files = tool_launch_configuration["output_files"]
-        except KeyError:
-            raise RuntimeError(
-                "`output_files` are required for Workflow Tools"
-            )
-
     tool.set_owner(user_instance)
     tool.update_file_relationships_string()
 
-    # Assert that the data structure being sent over is able to be evaluated
-    #  as a Pythonic Data structure
     try:
-        nesting = ast.literal_eval(tool.file_relationships)
-    except (SyntaxError, ValueError):
+        nesting = tool.get_file_relationships()
+    except (SyntaxError, ValueError) as e:
         raise RuntimeError(
             "ToolLaunchConfiguration's `file_relationships` could not be "
-            "evaluated as a Pythonic Data Structure: {}".format(
-                tool.file_relationships
-            )
+            "evaluated as a Pythonic Data Structure: {}".format(e)
         )
     else:
         parse_file_relationship_nesting(nesting)
@@ -365,7 +343,12 @@ def validate_tool_launch_configuration(tool_launch_config):
     Validate incoming Tool Launch Configurations
     :param tool_launch_config: json data containing a ToolLaunchConfiguration
     """
-    with open("tool_manager/schemas/ToolLaunchConfig.json") as f:
+    with open(
+        os.path.join(
+            settings.BASE_DIR,
+            "refinery/tool_manager/schemas/ToolLaunchConfig.json"
+        )
+    ) as f:
         schema = json.loads(f.read())
     try:
         validate(tool_launch_config, schema, resolver=resolver)

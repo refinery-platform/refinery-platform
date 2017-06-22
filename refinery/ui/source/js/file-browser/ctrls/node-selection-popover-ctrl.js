@@ -8,24 +8,25 @@
   NodeSelectionPopoverCtrl.$inject = [
     '$scope',
     '_',
-    'fileRelationshipService',
-    'selectedNodesService'
+    'activeNodeService',
+    'fileRelationshipService'
   ];
 
   function NodeSelectionPopoverCtrl (
     $scope,
     _,
-    fileRelationshipService,
-    selectedNodesService
+    activeNodeService,
+    fileRelationshipService
   ) {
     var fileService = fileRelationshipService;
-    var nodeService = selectedNodesService;
+    var nodeService = activeNodeService;
     var vm = this;
     vm.activeNode = nodeService.activeNodeRow; // ui-grid row which is engaged
     vm.attributes = fileService.attributesObj; // contains the data attributes
     vm.currentGroup = fileService.currentGroup; // group indices ex: [0, 0]
     /** current group's data structure for each level ex:[ 'Pair','List'] **/
     vm.currentTypes = fileService.currentTypes;
+    vm.depthNames = fileService.depthNames;
     // selectedNodes ordered by group indicies
     vm.groupCollection = fileService.groupCollection;
     vm.inputFileTypes = fileService.inputFileTypes; // current tool's inputFileTypes
@@ -67,8 +68,22 @@
         vm.currentTypes = fileService.currentTypes;
         vm.groupCollection = fileService.groupCollection;
         vm.nodeSelection = fileService.nodeSelectCollection;
+        vm.inputFileTypeColor = fileService.inputFileTypeColor;
       }
     );
+
+     // When node select collections are updated
+    $scope.$watchCollection(
+      function () {
+        return fileService.nodeSelectCollection;
+      },
+      function () {
+        vm.groupCollection = fileService.groupCollection;
+        vm.nodeSelection = fileService.nodeSelectCollection;
+      }
+    );
+
+
     // When user selects/deselects row
     $scope.$watch(
       function () {
@@ -86,7 +101,7 @@
       function () {
         vm.currentGroup = fileService.currentGroup;
         vm.currentTypes = fileService.currentTypes;
-        vm.inputFileTypeColor = fileService.inputFileTypeColor;
+        vm.depthNames = fileService.depthNames;
       }
     );
   }

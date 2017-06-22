@@ -1,8 +1,10 @@
 sudo: required
+
+group: deprecated-2017Q2 # TODO: Remove this before Sept. 1, 2017
 language: python
 cache: pip
 addons:
-  firefox: "49.0.1"
+  firefox: "53.0.3"
   apt:
     packages:
       - xvfb
@@ -17,7 +19,7 @@ services:
 install:
   - pip install -r requirements.txt --quiet
   # Install geckodriver required for selenium testing
-  - GECKODRIVER_VERSION=v0.15.0
+  - GECKODRIVER_VERSION=v0.17.0
   - TAR=geckodriver-$GECKODRIVER_VERSION-linux64.tar
   - wget https://github.com/mozilla/geckodriver/releases/download/$GECKODRIVER_VERSION/$TAR.gz
   - gunzip $TAR.gz
@@ -27,7 +29,6 @@ install:
 env:
   global:
     # These env vars are available to every build
-    - REDUCE_TEST_OUTPUT=true
     - PYTHONPATH=$PYTHONPATH:../refinery:../refinery/config
     - DJANGO_SETTINGS_MODULE=config.settings.prod
 
@@ -38,9 +39,9 @@ before_script:
 # See http://www.stuartellis.eu/articles/erb/#running-erb-from-the-command-line
   - erb config/config.json.erb > config/config.json
   - python manage.py migrate --noinput
-  - npm install -g grunt-cli@0.1.13 bower@1.7.7 --progress false --quiet
+  - npm install -g grunt-cli@0.1.13 bower@1.7.7 --progress false --quiet || ( cat npm-debug.log && false )
   - cd ui
-  - npm install --progress false --quiet
+  - npm install --progress false --quiet || ( cat npm-debug.log && false )
   - bower install --config.interactive=false --quiet
   - cd ../
 script:

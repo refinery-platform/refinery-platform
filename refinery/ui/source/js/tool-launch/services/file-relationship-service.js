@@ -1,3 +1,11 @@
+/**
+ * File Relationship Service
+ * @namespace fileRelationshipService
+ * @desc Service which maintains processes the tool's fileRelationship
+ * structure and creates and updates the digestable data structures. Also
+ * tracks display colors for input files
+ * @memberOf refineryApp.refineryToolLaunch
+ */
 (function () {
   'use strict';
   angular
@@ -7,24 +15,25 @@
   fileRelationshipService.$inject = [
     '_',
     'fileBrowserFactory',
-    'selectedNodesService',
+    'activeNodeService',
     'toolSelectService'
   ];
 
   function fileRelationshipService (
     _,
     fileBrowserFactory,
-    selectedNodesService,
+    activeNodeService,
     toolSelectService
   ) {
     // each input file type will have a color associated with it
     var colorSelectionArray = ['#009E73', '#CC79A7', '#56B4E9', '#E69F00', '#F0E442', '#D55E00'];
-    var nodeService = selectedNodesService;
+    var nodeService = activeNodeService;
     var toolService = toolSelectService;
     var vm = this;
     vm.attributesObj = {}; // displayName: internalName, ex Name:
     vm.currentGroup = []; // index for the group coordinates
     vm.currentTypes = []; // tracks whether depths are pair or list
+    vm.depthNames = []; // tracks whether depth names
     vm.groupCollection = {}; // contains groups with their selected row's info
     vm.hideNodePopover = false;
     vm.inputFileTypes = []; // maintains the required input types
@@ -59,7 +68,10 @@
     function generateAttributeObj () {
       var attributeArr = fileBrowserFactory.assayAttributes;
       for (var i = 0; i < attributeArr.length; i++) {
-        vm.attributesObj[attributeArr[i].display_name] = attributeArr[i].internal_name;
+        if (attributeArr[i].internal_name !== 'Selection' &&
+          attributeArr[i].display_name !== 'Input Groups') {
+          vm.attributesObj[attributeArr[i].display_name] = attributeArr[i].internal_name;
+        }
       }
     }
 
@@ -77,11 +89,13 @@
       while (scaledCopy.file_relationship.length > 0) {
         vm.currentGroup.push(0);
         vm.currentTypes.push(scaledCopy.value_type);
+        vm.depthNames.push(scaledCopy.name);
         scaledCopy = scaledCopy.file_relationship[0];
       }
       angular.copy(scaledCopy.input_files, vm.inputFileTypes);
       associateColorToInputFileType();
       vm.currentTypes.push(scaledCopy.value_type);
+      vm.depthNames.push(scaledCopy.name);
       // avoids having an empty string as a key
       if (vm.currentGroup.length === 0) {
         vm.currentGroup.push(0);
@@ -103,14 +117,18 @@
     // groupId and it's associated inputFileType
     function removeGroupFromNodeSelectCollection (nodeList, TypeUuid) {
       for (var i = 0; i < nodeList.length; i++) {
-        var groupInd = vm.nodeSelectCollection[nodeList[i].uuid].inputTypeList.indexOf(TypeUuid);
-        if (groupInd > -1) {
-          vm.nodeSelectCollection[nodeList[i].uuid].groupList.splice(groupInd, 1);
-          vm.nodeSelectCollection[nodeList[i].uuid].inputTypeList.splice(groupInd, 1);
+        var nodeUuid = nodeList[i].uuid;
+        for (var j = 0; j < vm.nodeSelectCollection[nodeUuid].inputTypeList.length; j++) {
+          if (vm.nodeSelectCollection[nodeUuid].inputTypeList[j] === TypeUuid &&
+            vm.nodeSelectCollection[nodeUuid].groupList[j].join(',') ===
+            vm.currentGroup.join(',')) {
+            vm.nodeSelectCollection[nodeUuid].groupList.splice(j, 1);
+            vm.nodeSelectCollection[nodeUuid].inputTypeList.splice(j, 1);
+          }
         }
-       // Delete node property from obj if empty
-        if (vm.nodeSelectCollection[nodeList[i].uuid].groupList === 0) {
-          delete vm.nodeSelectCollection[nodeList[i].uuid];
+        // Delete node property from obj if empty
+        if (vm.nodeSelectCollection[nodeUuid].groupList === 0) {
+          delete vm.nodeSelectCollection[nodeUuid];
         }
       }
     }
@@ -125,6 +143,7 @@
       }
       vm.groupCollection = {};
       vm.nodeSelectCollection = {};
+      angular.copy({}, nodeService.selectionObj);
     }
 
     /**
@@ -138,6 +157,7 @@
       vm.inputFileTypes = [];
       vm.inputFileTypeColor = {};
       vm.nodeSelectCollection = {};
+      angular.copy({}, nodeService.selectionObj);
     }
 
     /**

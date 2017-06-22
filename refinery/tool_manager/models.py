@@ -1,4 +1,5 @@
 import ast
+import json
 import logging
 import re
 
@@ -6,11 +7,11 @@ from django.conf import settings
 from django.db import models
 from django.db.models.signals import post_delete, pre_delete
 from django.dispatch import receiver
-from django.http import HttpResponseServerError, JsonResponse
-
+from django.http import (HttpResponseBadRequest, HttpResponseServerError,
+                         JsonResponse)
+from django_docker_engine.docker_utils import (DockerClientWrapper,
+                                               DockerContainerSpec)
 from django_extensions.db.fields import UUIDField
-from django_docker_engine.container_managers.local import LocalManager
-from django_docker_engine.docker_utils import DockerContainerSpec
 from docker.errors import APIError
 
 from core.models import Analysis, OwnableResource, WorkflowEngine
@@ -159,6 +160,7 @@ class ToolDefinition(models.Model):
         max_length=500,
         blank=True
     )
+    annotation = models.TextField()
     galaxy_workflow_id = models.CharField(
         max_length=250,
         blank=True
@@ -167,6 +169,20 @@ class ToolDefinition(models.Model):
 
     def __str__(self):
         return "{}: {} {}".format(self.tool_type, self.name, self.uuid)
+
+    def get_annotation(self):
+        return json.loads(self.annotation)
+
+    def get_extra_directories(self):
+        if self.tool_type == ToolDefinition.VISUALIZATION:
+            try:
+                return self.get_annotation()["extra_directories"]
+            except KeyError:
+                logger.error("ToolDefinition: %s's annotation is missing its "
+                             "`extra_directories` key.", self.name)
+                raise
+        else:
+            raise NotImplementedError
 
 
 @receiver(pre_delete, sender=ToolDefinition)
@@ -222,8 +238,7 @@ class Tool(OwnableResource):
         unique=True,
         blank=True
     )
-    file_relationships = models.TextField()
-    parameters = models.TextField()
+    tool_launch_configuration = models.TextField()
     tool_definition = models.ForeignKey(ToolDefinition)
 
     class Meta:
@@ -248,17 +263,17 @@ class Tool(OwnableResource):
                 container_input_path=(
                     self.tool_definition.container_input_path
                 ),
-                input={
-                    "file_relationships": ast.literal_eval(
-                        self.file_relationships
-                    )
-                },
-                manager=get_django_docker_engine_manager()
+                input={"file_relationships": self.get_file_relationships()},
+                extra_directories=(
+                    self.tool_definition.get_extra_directories()
+                )
             )
             try:
-                container.run()
+                DockerClientWrapper().run(container)
             except APIError as e:
                 return HttpResponseServerError(content=e)
+            except AssertionError as e:
+                return HttpResponseBadRequest(content=e)
             else:
                 return JsonResponse(
                     {
@@ -278,11 +293,23 @@ class Tool(OwnableResource):
             self.container_name
         )
 
+    def get_tool_launch_config(self):
+        return json.loads(self.tool_launch_configuration)
+
+    def get_file_relationships(self):
+        return ast.literal_eval(
+            self.get_tool_launch_config()["file_relationships"]
+        )
+
     def get_tool_name(self):
         return self.tool_definition.name
 
     def get_tool_type(self):
         return self.tool_definition.tool_type
+
+    def set_tool_launch_config(self, tool_launch_config):
+        self.tool_launch_configuration = json.dumps(tool_launch_config)
+        self.save()
 
     def update_file_relationships_string(self):
         """
@@ -290,29 +317,32 @@ class Tool(OwnableResource):
         their respective FileStoreItem's urls. No error handling here since
         this method is only called in an atomic transaction.
         """
+
+        tool_launch_config = self.get_tool_launch_config()
+
         node_uuids = re.findall(
             r'[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}',
-            self.file_relationships
+            tool_launch_config["file_relationships"]
         )
 
         for uuid in node_uuids:
             file_url = get_file_url_from_node_uuid(uuid)
-            self.file_relationships = self.file_relationships.replace(
-                uuid,
-                "'{}'".format(file_url)
+            tool_launch_config["file_relationships"] = (
+                tool_launch_config["file_relationships"].replace(
+                    uuid, "'{}'".format(file_url)
+                )
             )
+        self.set_tool_launch_config(tool_launch_config)
 
-        self.save()
 
-
-def get_django_docker_engine_manager():
+@receiver(pre_delete, sender=Tool)
+def remove_tool_container(sender, instance, *args, **kwargs):
     """
-    Helper method to return the proper managerial class for
-    django_docker_engine
+    Remove the Docker container instance corresponding to a Tool's launch.
     """
-    # Travis CI runs on EC2, but we want our tests running against a local
-    # docker engine there
-    if settings.DEPLOYMENT_PLATFORM == "aws":
-        raise NotImplementedError
-    else:
-        return LocalManager()
+    if instance.get_tool_type() == ToolDefinition.VISUALIZATION:
+        try:
+            DockerClientWrapper().purge_by_label(instance.uuid)
+        except APIError as e:
+            logger.error("Couldn't purge container for Tool with UUID: %s %s",
+                         instance.uuid, e)

@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema",
+  "allOf": [{"$ref": "BaseAnalysisConfig.json#"}],
+  "oneOf":[
+    {
+      "required": ["nodeSetUuid"],
+      "properties": {
+        "nodeSetUuid": {"$ref": "BaseAnalysisConfig.json#patterns/uuid"}
+      }
+    },
+    {
+      "required": ["nodeRelationshipUuid"],
+      "properties": {
+        "nodeRelationshipUuid": {"$ref": "BaseAnalysisConfig.json#patterns/uuid"}
+      }
+    },
+    {
+      "required": ["toolUuid"],
+      "properties": {
+        "toolUuid": {"$ref": "BaseAnalysisConfig.json#patterns/uuid"}
+      }
+    }
+  ]
+}

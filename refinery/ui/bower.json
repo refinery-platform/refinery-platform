@@ -20,7 +20,7 @@
     "angular-mocks": "1.5.9",
     "angular-resource": "1.5.9",
     "angular-sanitize": "1.5.9",
-    "angular-ui-grid": "3.2.1",
+    "angular-ui-grid": "4.0.3",
     "angular-ui-router": "0.2.18",
     "angular-ui-scroll": "flekschas/ui-scroll#visible-items",
     "aws-sdk-js": "2.49.0",

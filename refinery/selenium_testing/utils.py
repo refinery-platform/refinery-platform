@@ -1,11 +1,33 @@
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as ec
+from django.contrib.staticfiles.testing import StaticLiveServerTestCase
+from pyvirtualdisplay import Display
+from selenium import webdriver
 from selenium.common.exceptions import TimeoutException
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as ec
+from selenium.webdriver.support.ui import WebDriverWait
 
 # The maximum amount of time that we allow an ExpectedCondition to wait
 # before timing out.
 MAX_WAIT = 60
+
+
+class SeleniumTestBaseGeneric(StaticLiveServerTestCase):
+    """Base class to be used for all selenium-based tests"""
+
+    # Don't delete data migration data after test runs: http://bit.ly/2lAYqVJ
+    serialized_rollback = True
+
+    def setUp(self):
+        self.display = Display(visible=0, size=(1366, 768))
+        self.display.start()
+        self.browser = webdriver.Firefox()
+        self.browser.maximize_window()
+
+    def tearDown(self):
+        # NOTE: quit() destroys ANY currently running webdriver instances.
+        # This could become an issue if tests are ever run in parallel.
+        self.browser.quit()
+        self.display.stop()
 
 
 def login(selenium, live_server_url):

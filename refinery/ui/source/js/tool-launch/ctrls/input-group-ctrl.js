@@ -10,7 +10,7 @@
     '_',
     'fileRelationshipService',
     'resetGridService',
-    'selectedNodesService'
+    'activeNodeService'
   ];
 
 
@@ -19,10 +19,10 @@
     _,
     fileRelationshipService,
     resetGridService,
-    selectedNodesService
+    activeNodeService
   ) {
     var fileService = fileRelationshipService;
-    var nodeService = selectedNodesService;
+    var nodeService = activeNodeService;
     var vm = this;
     vm.attributes = fileService.attributesObj;
     vm.currentGroup = fileService.currentGroup;
@@ -35,6 +35,7 @@
     vm.isObjEmpty = isObjEmpty;
     vm.removeAllGroups = removeAllGroups;
     vm.removeGroup = removeGroup; // Refreshes all selection
+    vm.selectedTool = {};
 
 
    /*
@@ -67,8 +68,6 @@
     function removeAllGroups () {
       fileService.hideNodePopover = true;
       fileService.resetInputGroup();
-      nodeService.setSelectedAllFlags(false);
-      resetGridService.setRefreshGridFlag(true);
     }
 
     /**
@@ -96,6 +95,8 @@
           vm.currentGroup = fileService.currentGroup;
           vm.currentTypes = fileService.currentTypes;
           vm.groupCollection = fileService.groupCollection;
+          vm.inputFileTypeColor = fileService.inputFileTypeColor;
+          vm.selectedTool = vm.displayCtrl.selectedTool;
         }
       );
 

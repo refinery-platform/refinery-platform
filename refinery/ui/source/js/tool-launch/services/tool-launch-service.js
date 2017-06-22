@@ -1,3 +1,9 @@
+/**
+ * Tool Launch Service
+ * @namespace toolLaunchService
+ * @desc Service which preps and validates the parameters to launch a tool
+ * @memberOf refineryApp.refineryToolLaunch
+ */
 (function () {
   'use strict';
   angular
@@ -6,6 +12,7 @@
 
   toolLaunchService.$inject = [
     'fileRelationshipService',
+    'toolParamsService',
     'toolSelectService',
     'toolsService',
     '_'
@@ -13,17 +20,20 @@
 
   function toolLaunchService (
     fileRelationshipService,
+    toolParamsService,
     toolSelectService,
     toolsService,
     _
   ) {
     var fileService = fileRelationshipService;
+    var paramsService = toolParamsService;
     var toolService = toolSelectService;
     var launchConfig = {};
 
     var service = {
       generateFileStr: generateFileStr,
       generateFileTemplate: generateFileTemplate,
+      checkNeedMoreNodes: checkNeedMoreNodes,
       postToolLaunch: postToolLaunch
     };
     return service;
@@ -133,6 +143,7 @@
     function generateLaunchConfig () {
       launchConfig.tool_definition_uuid = toolService.selectedTool.uuid;
       launchConfig.file_relationships = generateFileStr();
+      launchConfig.parameters = paramsService.paramsForm;
     }
 
     // helper method which inserts commas between sets )(,][,)[,](
@@ -148,6 +159,17 @@
         }
       }
       return finalSetStr;
+    }
+
+    // helper method to check if each group-inputType are empty
+    function areInputFileTypesEmpty () {
+      var isEmpty = false;
+      angular.forEach(fileService.groupCollection[fileService.currentGroup], function (inputList) {
+        if (inputList.length === 0) {
+          isEmpty = true;
+        }
+      });
+      return isEmpty;
     }
 
     /**
@@ -201,6 +223,27 @@
         }
       }
       return branchFlag;
+    }
+
+    // View method to check if the group has minimum nodes
+    function checkNeedMoreNodes () {
+      var moreFlag = false;
+      var groupType = fileService.currentTypes[fileService.currentTypes.length - 1];
+      if (!_.property(fileService.currentGroup)(fileService.groupCollection)) {
+        moreFlag = true;
+      } else if (groupType === 'PAIR') {
+        // pair, requires 2 inputTypes
+        var inputLength = _.keys(fileService.groupCollection[fileService.currentGroup]).length;
+        if (inputLength > 1) {
+          moreFlag = areInputFileTypesEmpty();
+        } else {
+          moreFlag = true;
+        }
+      } else {
+        // list
+        moreFlag = areInputFileTypesEmpty();
+      }
+      return moreFlag;
     }
 
     /**

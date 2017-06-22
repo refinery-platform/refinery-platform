@@ -51,4 +51,5 @@ def extra_context(context):
         "SOLR_SYNONYM_SEARCH": settings.SOLR_SYNONYMS,
         "STATIC_URL": settings.STATIC_URL,
         "DEPLOYMENT_PLATFORM": settings.DEPLOYMENT_PLATFORM,
+        "USER_FILES_COLUMNS": settings.USER_FILES_COLUMNS
     }

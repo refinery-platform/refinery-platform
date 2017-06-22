@@ -17,7 +17,8 @@ from .serializers import AttributeOrderSerializer
 from .utils import (create_facet_filter_query, customize_attribute_response,
                     escape_character_solr, format_solr_response,
                     generate_facet_fields_query,
-                    generate_filtered_facet_fields, generate_solr_params,
+                    generate_filtered_facet_fields,
+                    generate_solr_params_for_assay,
                     get_file_url_from_node_uuid, get_owner_from_assay,
                     hide_fields_from_list, initialize_attribute_order_ranks,
                     insert_facet_field_filter, is_field_in_hidden_list,
@@ -745,9 +746,9 @@ class UtilitiesTest(TestCase):
 
     def test_generate_solr_params(self):
         # empty params
-        query = generate_solr_params(QueryDict({}), self.valid_uuid)
+        query = generate_solr_params_for_assay(QueryDict({}), self.valid_uuid)
         self.assertEqual(str(query),
-                         'fq=assay_uuid%3A{}'
+                         'fq=assay_uuid%3A%28{}%29'
                          '&facet.field=Cell Type&'
                          'facet.field=Analysis&facet.field=Organism&'
                          'facet.field=Cell Line&facet.field=Type&'
@@ -772,9 +773,11 @@ class UtilitiesTest(TestCase):
                           'is_annotation': 'true'}
         parameter_qdict = QueryDict('', mutable=True)
         parameter_qdict.update(parameter_dict)
-        query = generate_solr_params(parameter_qdict, self.valid_uuid)
+        query = generate_solr_params_for_assay(
+            parameter_qdict, self.valid_uuid
+        )
         self.assertEqual(str(query),
-                         'fq=assay_uuid%3A{}'
+                         'fq=assay_uuid%3A%28{}%29'
                          '&facet.field=cats&'
                          'facet.field=mouse&facet.field=dog&'
                          'facet.field=horse&fl=cats%2C'
