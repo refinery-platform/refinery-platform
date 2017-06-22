@@ -383,7 +383,8 @@ class Tool(OwnableResource):
             }
 
         :returns:
-            String: relative url like: `/analysis_manager/<analysis.uuid>/`
+            String: relative url like:
+            `"/data_sets2/<tool.dataset.uuid/#/analyses/`
         :raises: RuntimeError, NotImplementedError
         """
 
