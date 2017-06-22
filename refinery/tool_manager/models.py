@@ -8,8 +8,7 @@ from django.core.urlresolvers import reverse
 from django.db import models
 from django.db.models.signals import post_delete, pre_delete
 from django.dispatch import receiver
-from django.http import (HttpResponseBadRequest, HttpResponseServerError,
-                         JsonResponse)
+from django.http import JsonResponse
 from django_docker_engine.docker_utils import (DockerClientWrapper,
                                                DockerContainerSpec)
 from django_extensions.db.fields import UUIDField
@@ -335,29 +334,22 @@ class Tool(OwnableResource):
         launched container's url
             - <HttpResponseBadRequest>, <HttpServerError>
         """
-        try:
-            container = DockerContainerSpec(
-                image_name=self.tool_definition.image_name,
-                container_name=self.container_name,
-                labels={self.uuid: ToolDefinition.VISUALIZATION},
-                container_input_path=(
-                    self.tool_definition.container_input_path
-                ),
-                input={"file_relationships": self.get_file_relationships()},
-                extra_directories=self.tool_definition.get_extra_directories()
-            )
-        except KeyError as e:
-            return HttpResponseBadRequest(content=e)
-        try:
-            DockerClientWrapper().run(container)
-        except APIError as e:
-            return HttpResponseServerError(content=e)
-        except AssertionError as e:
-            return HttpResponseBadRequest(content=e)
-        else:
-            return JsonResponse(
-                {"tool_url": self.get_relative_container_url()}
-            )
+        container = DockerContainerSpec(
+            image_name=self.tool_definition.image_name,
+            container_name=self.container_name,
+            labels={self.uuid: ToolDefinition.VISUALIZATION},
+            container_input_path=(
+                self.tool_definition.container_input_path
+            ),
+            input={"file_relationships": self.get_file_relationships()},
+            extra_directories=self.tool_definition.get_extra_directories()
+        )
+
+        DockerClientWrapper().run(container)
+
+        return JsonResponse(
+            {"tool_url": self.get_relative_container_url()}
+        )
 
     def _launch_workflow(self):
         """
@@ -367,20 +359,16 @@ class Tool(OwnableResource):
             pointing to the Analysis' status page
             - <HttpResponseBadRequest>
         """
-        try:
-            analysis_config = {
-                "custom_name": "Analysis: {}".format(self.__str__()),
-                "studyUuid": self.dataset.get_latest_study().uuid,
-                "toolUuid": self.uuid,
-                "user_id": self.get_owner().id,
-                "workflowUuid": self.tool_definition.get_workflow().uuid
-            }
-        except(AttributeError, RuntimeError, NotImplementedError) as e:
-            return HttpResponseBadRequest(e)
-        try:
-            analysis_url = self.run_analysis(analysis_config)
-        except RuntimeError as e:
-            return HttpResponseBadRequest(e)
+
+        analysis_config = {
+            "custom_name": "Analysis: {}".format(self.__str__()),
+            "studyUuid": self.dataset.get_latest_study().uuid,
+            "toolUuid": self.uuid,
+            "user_id": self.get_owner().id,
+            "workflowUuid": self.tool_definition.get_workflow().uuid
+        }
+
+        analysis_url = self.run_analysis(analysis_config)
 
         return JsonResponse({"tool_url": analysis_url})
 
