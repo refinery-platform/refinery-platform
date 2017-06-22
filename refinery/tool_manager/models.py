@@ -373,8 +373,7 @@ class Tool(OwnableResource):
     def run_analysis(self, analysis_config):
         """
         "Run an analysis for a workflow-based Tool
-        :param analysis_config: a dict containing a validated
-        analysis_configuration.
+        :param analysis_config: a dict containing an analysis configuration.
 
         :returns: String: relative url like:
             `"/data_sets2/<tool.dataset.uuid/#/analyses/`
