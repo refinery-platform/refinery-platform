@@ -13,7 +13,8 @@ from core.models import DataSet, ExtendedGroup, InvestigationLink
 from core.views import NodeViewSet
 from file_store.models import FileStoreItem
 
-from .models import Assay, AttributeOrder, Investigation, Node, Study
+from .models import (Assay, Attribute, AttributeOrder, Investigation, Node,
+                     Study)
 from .search_indexes import NodeIndex
 from .serializers import AttributeOrderSerializer
 from .utils import (create_facet_filter_query, customize_attribute_response,
@@ -1602,6 +1603,13 @@ class NodeIndexTests(APITestCase):
         self.study_uuid = study.uuid
         self.file_uuid = file_store_item.uuid
         self.node_uuid = self.node.uuid
+
+        Attribute.objects.create(
+            node=self.node,
+            type=Attribute.CHARACTERISTICS,
+            subtype='fake subtype',
+            value='fake value'
+        )
 
         self.maxDiff = None
 
