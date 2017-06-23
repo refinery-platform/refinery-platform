@@ -115,7 +115,7 @@
       }
     }
 
-    function reindexGroupCollection () {
+    function reindexCollections () {
       // var reindexCount = _.keys(vm.groupCollection).length;
       var aheadGroup = angular.copy(vm.currentGroup);
       aheadGroup[0]++;
@@ -127,7 +127,7 @@
           // need to update each inputObj (can be 1 or 2 items if list or pair)
           angular.forEach(inputObj, function (selectArr, inputUuid) {
             // initialize the group when missing
-            if (!_.has(replaceGroup.join(','), vm.groupCollection)) {
+            if (!_.has(vm.groupCollection, replaceGroup.join(','))) {
               vm.groupCollection[replaceGroup.join(',')] = {};
             }
             vm.groupCollection[replaceGroup.join(',')][inputUuid] = [];
@@ -141,13 +141,18 @@
               );
               var nodeUuid = vm.groupCollection[aheadGroup.join(',')][inputUuid][domInd].uuid;
               reindexNodeSelectCollection(nodeUuid, replaceGroup, aheadGroup);
-
-              // update selectionObj for UI
-              angular.copy(
-                nodeService.selectionObj[aheadGroup.join(',')][inputUuid],
-                nodeService.selectionObj[replaceGroup.join(',')][inputUuid]
-              );
             }
+
+             // update selectionObj for UI
+            console.log(nodeService.selectionObj);
+            if (!_.has(nodeService.selectionObj, replaceGroup.join(','))) {
+              nodeService.selectionObj[replaceGroup.join(',')] = {};
+            }
+            nodeService.selectionObj[replaceGroup.join(',')][inputUuid] = {};
+            angular.copy(
+              nodeService.selectionObj[aheadGroup.join(',')][inputUuid],
+              nodeService.selectionObj[replaceGroup.join(',')][inputUuid]
+            );
           });
           replaceGroup[0]++;
           aheadGroup[0]++;
@@ -166,7 +171,7 @@
 
       // Delete groupID property from obj since it is empty
       delete vm.groupCollection[vm.currentGroup];
-      reindexGroupCollection();
+      reindexCollections();
     }
 
     // Helper method which finds index of currentGroupId and slices it from

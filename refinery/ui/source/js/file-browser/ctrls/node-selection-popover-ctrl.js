@@ -51,6 +51,8 @@
       fileService.setNodeSelectCollection(inputUuid, vm.selectionObj, deselectFileUuid);
       fileService.setGroupCollection(inputUuid, vm.selectionObj, deselectFileUuid);
       vm.groupCollection = fileService.groupCollection;
+      console.log('in the selectNode');
+      console.log(nodeService.selectionObj);
     }
   /*
    * ---------------------------------------------------------
