@@ -1398,7 +1398,7 @@ class NodeClassMethodTests(TestCase):
         self.assertEqual(parent_uuid, self.node.uuid)
 
         # Check inverse relationship:
-        self.assertEqual(self.node.uuid, self.another_node.get_children()[0])
+        self.assertEqual(self.another_node.uuid, self.node.get_children()[0])
 
     # Auxilary nodes:
 
@@ -1424,6 +1424,7 @@ class NodeClassMethodTests(TestCase):
             self.node._create_and_associate_auxiliary_node(
                 self.filestore_item.uuid)
             self.assertEqual(len(self.node.get_children()), 1)
+            # Still just one child even on second time.
             self.assertEqual(Node.objects.get(
                 file_uuid=self.filestore_item.uuid
             ).get_relative_file_store_item_url(),
