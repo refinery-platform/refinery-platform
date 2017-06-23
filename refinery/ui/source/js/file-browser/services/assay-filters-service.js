@@ -36,7 +36,7 @@
      * @desc  Configures the attribute and analysis filter data by adding the display
      * name from the assay files attributes display_name. The attributes returns
      * all fields, while the counts will return only the faceted fields.
-     * @memberOf refineryFileBrowser.AssayFiltersCtrl
+     * @memberOf refineryFileBrowser.assayFiltersService
      * @param {obj} attributes - attribute obj from solr response
      * @param {obj} facetCounts - facetCount obj from solr response which
      * maintains # of fields count

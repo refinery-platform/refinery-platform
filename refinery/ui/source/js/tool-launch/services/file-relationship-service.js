@@ -42,6 +42,7 @@
     vm.nodeSelectCollection = {}; // contains rows and their group info, ex:
     // {nodeUuid: {'groupList': [[0,0], [1,0]], 'inputTypeList': [uuid1, uuid2]}
     vm.refreshFileMap = refreshFileMap;
+    vm.reindexCollections = reindexCollections;
     vm.removeGroupFromCollections = removeGroupFromCollections;
     vm.resetInputGroup = resetInputGroup;
     vm.resetToolRelated = resetToolRelated;
@@ -52,8 +53,12 @@
      * Method Definitions
      * ----------------------
      */
-    // helper method which generates the vm.inputFileTypeColor by assigning a
-    // pre-defined color to a list of inputFileTypes
+    /**
+     * @name associateColorToInputFileType
+     * @desc helper method which generates the vm.inputFileTypeColor by
+     * assigning a pre-defined color to a list of inputFileTypes
+     * @memberOf refineryToolLaunch.fileRelationshipService
+    **/
     function associateColorToInputFileType () {
       var colorInd = 0;
       for (var fileInd = 0; fileInd < vm.inputFileTypes.length; fileInd++) {
@@ -65,8 +70,12 @@
       }
     }
 
-    // helper method: convert attributes name array to attributes name obj,
-    // displayName: internalName
+    /**
+     * @name generateAttributeObj
+     * @desc helper method: convert attributes name array to attributes name
+     * obj, displayName: internalName
+     * @memberOf refineryToolLaunch.fileRelationshipService
+    **/
     function generateAttributeObj () {
       var attributeArr = fileBrowserFactory.assayAttributes;
       for (var i = 0; i < attributeArr.length; i++) {
@@ -78,10 +87,12 @@
     }
 
     /**
-     * Parses the tool definition api response into usable data structure by
+     * @name refreshFileMap
+     * @desc  Parses the tool definition api response into usable data structure by
      * views. File_relationship is a self-reference nested structure.
      * ex: file_relationship: [{file_relationship: []}]
-     */
+     * @memberOf refineryToolLaunch.fileRelationshipService
+    **/
     function refreshFileMap () {
       if (_.isEmpty(toolService.selectedTool.file_relationship)) {
         return;
@@ -105,16 +116,12 @@
       generateAttributeObj();
     }
 
-    function reindexNodeSelectCollection (nodeUuid, replaceGroup, aheadGroup) {
-      var groupListLen = vm.nodeSelectCollection[nodeUuid].groupList.length;
-      for (var groupInd = 0; groupInd < groupListLen; groupInd++) {
-        if (vm.nodeSelectCollection[nodeUuid]
-            .groupList[groupInd].join(',') === aheadGroup.join(',')) {
-          vm.nodeSelectCollection[nodeUuid].groupList[groupInd] = angular.copy(replaceGroup);
-        }
-      }
-    }
-
+        /**
+     * @name reindexCollections
+     * @desc  Main method reindexs the groupCollections,
+      * nodeSelectCollections, and selectionObj
+     * @memberOf refineryToolLaunch.fileRelationshipService
+    **/
     function reindexCollections () {
       // var reindexCount = _.keys(vm.groupCollection).length;
       var aheadGroup = angular.copy(vm.currentGroup);
@@ -143,15 +150,7 @@
               reindexNodeSelectCollection(nodeUuid, replaceGroup, aheadGroup);
             }
 
-             // update selectionObj for UI
-            if (!_.has(nodeService.selectionObj, replaceGroup.join(','))) {
-              nodeService.selectionObj[replaceGroup.join(',')] = {};
-            }
-            nodeService.selectionObj[replaceGroup.join(',')][inputUuid] = {};
-            angular.copy(
-              nodeService.selectionObj[aheadGroup.join(',')][inputUuid],
-              nodeService.selectionObj[replaceGroup.join(',')][inputUuid]
-            );
+            reindexSelectionObj(inputUuid, replaceGroup, aheadGroup);
           });
           replaceGroup[0]++;
           aheadGroup[0]++;
@@ -161,8 +160,51 @@
       });
     }
 
-    // Main method to remove a group from the groupCollection and
-    // nodeSelectCollections
+    /**
+     * @name reindexNodeSelectCollection
+     * @desc  Helper method reindexes nodeSelectCollection for UI, ex if group
+     * 1 was deleted, group 2 would become group 1
+     * @memberOf refineryToolLaunch.fileRelationshipService
+     * @param {str} nodeUuid - a node uuid
+     * @param {array} replaceGroup - array of group ID, current position
+     * @param {array} aheadGroup - array of group ID, next position
+    **/
+    function reindexNodeSelectCollection (nodeUuid, replaceGroup, aheadGroup) {
+      var groupListLen = vm.nodeSelectCollection[nodeUuid].groupList.length;
+      for (var groupInd = 0; groupInd < groupListLen; groupInd++) {
+        if (vm.nodeSelectCollection[nodeUuid]
+            .groupList[groupInd].join(',') === aheadGroup.join(',')) {
+          vm.nodeSelectCollection[nodeUuid].groupList[groupInd] = angular.copy(replaceGroup);
+        }
+      }
+    }
+
+    /**
+     * @name reindexSelectionObj
+     * @desc  Helper method reindexes selectionObj for UI, ex if group 1 was
+     * deleted, group 2 would become group 1
+     * @memberOf refineryToolLaunch.fileRelationshipService
+     * @param {str} inputUuid - input type uuid
+     * @param {array} replaceGroup - array of group ID, current position
+     * @param {array} aheadGroup - array of group ID, next position
+    **/
+    function reindexSelectionObj (inputUuid, replaceGroup, aheadGroup) {
+      if (!_.has(nodeService.selectionObj, replaceGroup.join(','))) {
+        nodeService.selectionObj[replaceGroup.join(',')] = {};
+      }
+      nodeService.selectionObj[replaceGroup.join(',')][inputUuid] = {};
+      angular.copy(
+        nodeService.selectionObj[aheadGroup.join(',')][inputUuid],
+        nodeService.selectionObj[replaceGroup.join(',')][inputUuid]
+      );
+    }
+
+    /**
+     * @name removeGroupFromCollections
+     * @desc  Main method to remove a group from the
+        * groupCollection and nodeSelectCollections
+     * @memberOf refineryToolLaunch.fileRelationshipService
+    **/
     function removeGroupFromCollections () {
       angular.forEach(vm.groupCollection[vm.currentGroup], function (nodeArr, inputTypeUuid) {
         removeGroupFromNodeSelectCollection(nodeArr, inputTypeUuid);
@@ -170,16 +212,21 @@
 
       // Delete groupID property from obj since it is empty
       delete vm.groupCollection[vm.currentGroup];
-      reindexCollections();
     }
 
-    // Helper method which finds index of currentGroupId and slices it from
-    // groupId and it's associated inputFileType
-    function removeGroupFromNodeSelectCollection (nodeList, TypeUuid) {
+    /**
+     * @name removeGroupFromNodeSelectCollection
+     * @desc  Helper method which finds index of currentGroupId and slices
+     * it from groupId and it's associated inputFileType
+     * @memberOf refineryToolLaunch.fileRelationshipService
+     * @param {array} nodeList - list of selected nodes
+     * @param {str} typeUuid - input Type Uuid
+    **/
+    function removeGroupFromNodeSelectCollection (nodeList, typeUuid) {
       for (var i = 0; i < nodeList.length; i++) {
         var nodeUuid = nodeList[i].uuid;
         for (var j = 0; j < vm.nodeSelectCollection[nodeUuid].inputTypeList.length; j++) {
-          if (vm.nodeSelectCollection[nodeUuid].inputTypeList[j] === TypeUuid &&
+          if (vm.nodeSelectCollection[nodeUuid].inputTypeList[j] === typeUuid &&
             vm.nodeSelectCollection[nodeUuid].groupList[j].join(',') ===
             vm.currentGroup.join(',')) {
             vm.nodeSelectCollection[nodeUuid].groupList.splice(j, 1);
@@ -194,8 +241,10 @@
     }
 
     /**
-     * Resets the variables needed for clearing cart completely
-     */
+     * @name resetInputGroup
+     * @desc  Resets the variables needed for clearing cart completely
+     * @memberOf refineryToolLaunch.fileRelationshipService
+    **/
     function resetInputGroup () {
       // resets group coordinates
       for (var i = 0; i < vm.currentGroup.length; i++) {
@@ -207,8 +256,10 @@
     }
 
     /**
-     * Resets the variables needed for new tool selection
-     */
+     * @name resetToolRelated
+     * @desc  Resets the variables needed for new tool selection
+     * @memberOf refineryToolLaunch.fileRelationshipService
+    **/
     function resetToolRelated () {
       vm.currentGroup = [];
       vm.currentTypes = [];
@@ -221,9 +272,12 @@
       angular.copy({}, nodeService.selectionObj);
     }
 
-    /**
-     * Generates obj with groups with input file types and their selected
+
+     /**
+     * @name setGroupCollection
+     * @desc  Generates obj with groups with input file types and their selected
      * node uuid
+     * @memberOf refineryToolLaunch.fileRelationshipService
      * @param {string} inputTypeUuid - uuid of the input file type from tool
      * definitions api
      * @param {obj} selectionObj - ui-select model tracks checkboxes
@@ -260,8 +314,10 @@
     }
 
     /**
-     * Generates obj with node uuids and their associated input file
+     * @name setNodeSelectCollection
+     * @desc Generates obj with node uuids and their associated input file
      * types and groups.
+     * @memberOf refineryToolLaunch.fileRelationshipService
      * @param {string} inputTypeUuid - uuid of the input file type from tool
      * definitions api
      * @param {obj} selectionObj - ui-select model tracks checkboxes
