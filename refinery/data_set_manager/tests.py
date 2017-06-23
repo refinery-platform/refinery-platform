@@ -1404,7 +1404,8 @@ class NodeClassMethodTests(TestCase):
 
     def test_create_and_associate_auxiliary_node(self):
         self.assertEqual(self.node.get_children(), [])
-        self.node.create_and_associate_auxiliary_node(self.filestore_item.uuid)
+        self.node._create_and_associate_auxiliary_node(
+            self.filestore_item.uuid)
         self.assertIsNotNone(self.node.get_children())
         self.assertIsNotNone(Node.objects.get(
             file_uuid=self.filestore_item.uuid))
@@ -1418,7 +1419,9 @@ class NodeClassMethodTests(TestCase):
 
     def test_get_auxiliary_nodes(self):
         self.assertEqual(self.node.get_children(), [])
-        self.node.create_and_associate_auxiliary_node(self.filestore_item.uuid)
+
+        self.node._create_and_associate_auxiliary_node(
+            self.filestore_item.uuid)
         self.assertNotEqual(self.node.get_children(), [])
         self.assertEqual(Node.objects.get(
             file_uuid=self.filestore_item.uuid
@@ -1427,7 +1430,11 @@ class NodeClassMethodTests(TestCase):
                              uuid=Node.objects.get(
                                  file_uuid=self.filestore_item.uuid).file_uuid
                          ).get_datafile_url())
-        self.node.create_and_associate_auxiliary_node(self.filestore_item.uuid)
+
+        # TODO: This is copy-and-paste from above:
+        # Should there be two auxilaries now?
+        self.node._create_and_associate_auxiliary_node(
+            self.filestore_item.uuid)
         self.assertEqual(Node.objects.get(
             file_uuid=self.filestore_item.uuid
         ).get_relative_file_store_item_url(),
@@ -1441,7 +1448,8 @@ class NodeClassMethodTests(TestCase):
         self.assertIsNone(self.node.get_auxiliary_file_generation_task_state())
 
         # Auxiliary nodes will have a task state
-        self.node.create_and_associate_auxiliary_node(self.filestore_item.uuid)
+        self.node._create_and_associate_auxiliary_node(
+            self.filestore_item.uuid)
         auxiliary = Node.objects.get(uuid=self.node.get_children()[0])
         state = auxiliary.get_auxiliary_file_generation_task_state()
         self.assertIn(state, ['PENDING', 'STARTING', 'SUCCESS'])

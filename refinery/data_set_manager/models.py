@@ -467,7 +467,7 @@ class Node(models.Model):
             logger.error(e)
             return None
 
-    def create_and_associate_auxiliary_node(self, filestore_item_uuid):
+    def _create_and_associate_auxiliary_node(self, filestore_item_uuid):
             """
             Tries to create and associate an auxiliary Node with a parent
             node.
@@ -573,7 +573,7 @@ class Node(models.Model):
             auxiliary_file_store_item = FileStoreItem.objects.create(
                 source='auxiliary_file')
 
-            auxiliary_node = self.create_and_associate_auxiliary_node(
+            auxiliary_node = self._create_and_associate_auxiliary_node(
                 auxiliary_file_store_item.uuid)
 
             result = data_set_manager.tasks.generate_auxiliary_file.delay(
