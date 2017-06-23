@@ -1,18 +1,19 @@
 import json
-from StringIO import StringIO
-
 import re
+from StringIO import StringIO
 
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import (InMemoryUploadedFile,
                                             SimpleUploadedFile)
-
 from django.http import QueryDict
 from django.test import TestCase
-
 from rest_framework.test import APIClient, APIRequestFactory, APITestCase
 
-from .models import Assay, AttributeOrder, Study, Investigation, Node
+from core.models import DataSet, ExtendedGroup, InvestigationLink
+from core.views import NodeViewSet
+from file_store.models import FileStoreItem
+
+from .models import Assay, AttributeOrder, Investigation, Node, Study
 from .serializers import AttributeOrderSerializer
 from .utils import (create_facet_filter_query, customize_attribute_response,
                     escape_character_solr, format_solr_response,
@@ -24,9 +25,6 @@ from .utils import (create_facet_filter_query, customize_attribute_response,
                     insert_facet_field_filter, is_field_in_hidden_list,
                     objectify_facet_field_counts, update_attribute_order_ranks)
 from .views import Assays, AssaysAttributes
-from core.models import DataSet, ExtendedGroup, InvestigationLink
-from core.views import NodeViewSet
-from file_store.models import FileStoreItem
 
 
 class AssaysAPITests(APITestCase):
@@ -1438,7 +1436,16 @@ class NodeClassMethodTests(TestCase):
             ).get_datafile_url())
 
     def test_get_auxiliary_file_generation_task_state(self):
+        # Normal nodes will always return None
         self.assertIsNone(self.node.get_auxiliary_file_generation_task_state())
+
+        # Auxiliary nodes will have a task state
+        self.node.create_and_associate_auxiliary_node(self.filestore_item.uuid)
+        auxiliary = Node.objects.get(uuid=self.node.get_children()[0])
+        state = auxiliary.get_auxiliary_file_generation_task_state()
+        self.assertEqual(state, 'PENDING')
+        # TODO: Where does this come from?
+        # TODO: Will it be a race condition?
 
 
 class NodeApiV2Tests(APITestCase):
