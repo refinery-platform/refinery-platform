@@ -760,7 +760,7 @@ def _is_internal_attribute(attribute):
 
 
 def _is_active_attribute(attribute):
-    return (not _is_internal_attribute(attribute) and attribute not in [])
+    return not _is_internal_attribute(attribute)
 
 
 def _is_exposed_attribute(attribute):
