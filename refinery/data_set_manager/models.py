@@ -450,8 +450,7 @@ class Node(models.Model):
         Node types which are "derived"
         """
 
-        if self.type in self.get_derived_node_types():
-            return True
+        return self.type in self.get_derived_node_types()
 
     def get_analysis_node_connections(self):
         return core.models.AnalysisNodeConnection.objects.filter(node=self)
@@ -764,7 +763,7 @@ def _is_active_attribute(attribute):
 
 
 def _is_exposed_attribute(attribute):
-    return True
+    return True  # TODO: Could we get rid of this?
 
 
 def _is_ignored_attribute(attribute):
