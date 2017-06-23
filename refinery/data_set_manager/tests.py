@@ -1395,14 +1395,22 @@ class NodeClassMethodTests(TestCase):
     def test_get_children(self):
         self.assertEqual(self.node.get_children(), [])
         self.node.add_child(self.another_node)
-        self.assertIsNotNone(self.node.get_children()[0])
-        self.assertEqual(self.node.get_children()[0], self.another_node.uuid)
+        child_uuid = self.node.get_children()[0]
+        self.assertIsNotNone(child_uuid)
+        self.assertEqual(child_uuid, self.another_node.uuid)
+
+        # Check inverse relationship:
+        self.assertEqual(self.node.uuid, self.another_node.get_parents()[0])
 
     def test_get_parents(self):
         self.assertEqual(self.another_node.get_parents(), [])
         self.node.add_child(self.another_node)
-        self.assertIsNotNone(self.another_node.get_parents()[0])
-        self.assertEqual(self.another_node.get_parents()[0], self.node.uuid)
+        parent_uuid = self.another_node.get_parents()[0]
+        self.assertIsNotNone(parent_uuid)
+        self.assertEqual(parent_uuid, self.node.uuid)
+
+        # Check inverse relationship:
+        self.assertEqual(self.node.uuid, self.another_node.get_children()[0])
 
     def test_get_auxiliary_nodes(self):
         self.assertEqual(self.node.get_children(), [])
