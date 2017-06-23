@@ -770,16 +770,7 @@ def _is_ignored_attribute(attribute):
     return attribute in ["django_ct", "django_id", "id"]
 
 
-def _is_facet_attribute(attribute, study, assay):
-    """Tests if a an attribute should be used as a facet by default.
-    :param attribute: The name of the attribute.
-    :type attribute: string
-    :returns: True if the ratio between items in the data set and the number of
-    facet attribute values is smaller than
-    settings.DEFAULT_FACET_ATTRIBUTE_VALUES_RATIO, false otherwise.
-    """
-    ratio = 0.5
-
+def _query_solr(study, assay, attribute=None):
     types = ' OR '.join(
         '"{0}"'.format(type) for type in Node.FILES
     )
@@ -789,10 +780,6 @@ def _is_facet_attribute(attribute, study, assay):
     )
 
     params = {
-        'facet': 'true',
-        'facet.field': attribute,
-        'facet.sort': 'count',
-        'facet.limit': '-1',
         'fq': 'study_uuid:{study_uuid} AND '
               'assay_uuid: {assay_uuid} AND '
               'is_annotation:false AND '
@@ -807,6 +794,14 @@ def _is_facet_attribute(attribute, study, assay):
         'wt': 'json'
     }
 
+    if attribute is not None:
+        params.update({
+            'facet': 'true',
+            'facet.field': attribute,
+            'facet.sort': 'count',
+            'facet.limit': '-1'
+        })
+
     logger.debug('Query parameters: %s', params)
 
     headers = {'Accept': 'application/json'}
@@ -815,14 +810,28 @@ def _is_facet_attribute(attribute, study, assay):
         response.raise_for_status()
     except HTTPError as e:
         logger.error(e)
+        raise
 
     results = response.json()
 
     logger.debug('Query results: %s', results)
 
     if results['response']['numFound'] == 0:
-        raise ValueError('No facets found.')
+        raise ValueError('No results.')
 
+    return results
+
+
+def _is_facet_attribute(attribute, study, assay):
+    """Tests if a an attribute should be used as a facet by default.
+    :param attribute: The name of the attribute.
+    :type attribute: string
+    :returns: True if the ratio between items in the data set and the number of
+    facet attribute values is smaller than
+    settings.DEFAULT_FACET_ATTRIBUTE_VALUES_RATIO, false otherwise.
+    """
+    ratio = 0.5
+    results = _query_solr(attribute=attribute, study=study, assay=assay)
     items = results['response']['numFound']
     attribute_values = len(
         results['facet_counts']['facet_fields'][attribute]
@@ -840,49 +849,7 @@ def initialize_attribute_order(study, assay):
     :type assay: Assay
     :returns: Number of attributes that were indexed.
     """
-
-    types = ' OR '.join(
-        '"{0}"'.format(type) for type in Node.FILES
-    )
-
-    url = '{base_url}data_set_manager/select'.format(
-        base_url=settings.REFINERY_SOLR_BASE_URL
-    )
-
-    params = {
-        'fq': 'study_uuid:{study_uuid} AND '
-              'assay_uuid: {assay_uuid} AND '
-              'is_annotation:false AND '
-              'type:({types})'.format(
-                  study_uuid=study.uuid,
-                  assay_uuid=assay.uuid,
-                  types=types
-              ),
-        'q': 'django_ct:data_set_manager.node',
-        'rows': 1,
-        'start': 0,
-        'wt': 'json'
-    }
-
-    logger.debug('Query parameters: %s', params)
-
-    headers = {'Accept': 'application/json'}
-
-    try:
-        response = requests.get(url, params=params, headers=headers)
-        response.raise_for_status()
-    except HTTPError as e:
-        logger.error(e)
-
-    results = response.json()
-
-    logger.debug('Query results: %s', results)
-
-    if results['response']['numFound'] == 0:
-        raise ValueError(
-            'Assay node type is not supported. Please consult the official '
-            'release candidate.'
-        )
+    results = _query_solr(study=study, assay=assay)
 
     attribute_order_objects = []
     rank = 0
