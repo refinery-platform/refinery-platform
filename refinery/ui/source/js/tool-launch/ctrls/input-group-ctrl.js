@@ -1,3 +1,10 @@
+/**
+ * Input Group Ctrl
+ * @namespace InputGroupCtrl
+ * @desc Controller for the input groups portion of the tool input control
+ * panel
+ * @memberOf refineryApp.refineryToolLaunch
+ */
 (function () {
   'use strict';
 
@@ -75,8 +82,8 @@
     * */
     function removeGroup () {
       fileService.hideNodePopover = true;
-      nodeService.deselectGroupFromSelectionObj(vm.currentGroup);
       fileService.removeGroupFromCollections();
+      fileService.reindexCollections();
       vm.selectionObj = nodeService.selectionObj;
     }
 

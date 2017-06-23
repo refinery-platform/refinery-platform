@@ -75,7 +75,7 @@
      // When node select collections are updated
     $scope.$watchCollection(
       function () {
-        return fileService.nodeSelectCollection;
+        return fileService.groupCollection;
       },
       function () {
         vm.groupCollection = fileService.groupCollection;

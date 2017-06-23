@@ -9,28 +9,37 @@
           <div class="checkbox">
             <label>
               <!-- Select: If there's NOT a group already started for the inputFileType than checkbox not selected-->
-              <span>
+              <span
+                ng-if="!(NSPCtrl.groupCollection[NSPCtrl.currentGroup] &&
+                NSPCtrl.groupCollection[NSPCtrl.currentGroup][inputType.uuid]
+                .length > 0)">
                 <input
                   type="checkbox"
                   ng-click="NSPCtrl.selectNode(inputType.uuid)"
-                  ng-model="NSPCtrl.selectionObj[NSPCtrl.currentGroup][inputType.uuid][NSPCtrl.activeNode.uuid]">
-                {{ inputType.name }}
+                  ng-model="NSPCtrl.selectionObj[NSPCtrl.currentGroup][inputType.uuid][NSPCtrl.activeNode.uuid]"
+                   ng-class='{"selected-node-name": NSPCtrl.groupCollection[NSPCtrl
+                  .currentGroup][inputType.uuid].length > 0}'>
+                 {{ inputType.name }}
               </span>
                <!-- Deselect: user can currently deselect any node in the current group-->
-              <div
-                class="wrap-word"
-                ng-class='{"selected-node-name": NSPCtrl.groupCollection[NSPCtrl
-              .currentGroup][inputType.uuid].length > 0}'>
+              <span
+                ng-if="NSPCtrl.groupCollection[NSPCtrl.currentGroup] &&
+                NSPCtrl.groupCollection[NSPCtrl.currentGroup][inputType.uuid].length > 0"
+                class="wrap-word">
                 <span
                   ng-repeat="selectedFile in NSPCtrl.groupCollection[NSPCtrl.currentGroup][inputType.uuid]">
-                   {{ selectedFile[NSPCtrl.attributes.Name] }}
+                   <input
+                    type="checkbox"
+                    ng-click="NSPCtrl.selectNode(inputType.uuid, selectedFile.uuid)"
+                    ng-model="NSPCtrl.selectionObj[NSPCtrl.currentGroup][inputType.uuid][selectedFile.uuid]">
+                  {{ inputType.name }}
+                  {{ selectedFile[NSPCtrl.attributes.Name] }}
                 </span>
-              </div>
+              </span>
             </label>
           </div>
         </li>
       </div>
-
 
       <div ng-if="NSPCtrl.currentTypes[NSPCtrl.currentTypes.length-1]=='LIST'">
         <!-- Select/Deselect nodes in the list -->
