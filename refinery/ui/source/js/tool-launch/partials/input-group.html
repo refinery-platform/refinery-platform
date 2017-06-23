@@ -87,12 +87,14 @@
       <rp-input-group-details></rp-input-group-details>
   </div>
   <div>
-    <button
-    class="btn btn-default btn-xs outline"
-    ng-disabled="$ctrl.isObjEmpty($ctrl.groupCollection[$ctrl.currentGroup])"
-    ng-click="$ctrl.removeGroup()">
-    Remove
-  </button>
+    <span ng-if="$ctrl.currentTypes.length > 1">
+      <button
+        class="btn btn-default btn-xs outline"
+        ng-disabled="$ctrl.isObjEmpty($ctrl.groupCollection[$ctrl.currentGroup])"
+        ng-click="$ctrl.removeGroup()">
+        Remove
+      </button>
+    </span>
   <button
     class="btn btn-default btn-xs outline"
     ng-disabled="$ctrl.isObjEmpty($ctrl.groupCollection)"
