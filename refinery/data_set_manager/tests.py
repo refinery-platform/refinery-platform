@@ -1443,9 +1443,9 @@ class NodeClassMethodTests(TestCase):
         self.node.create_and_associate_auxiliary_node(self.filestore_item.uuid)
         auxiliary = Node.objects.get(uuid=self.node.get_children()[0])
         state = auxiliary.get_auxiliary_file_generation_task_state()
-        self.assertEqual(state, 'PENDING')
-        # TODO: Where does this come from?
-        # TODO: Will it be a race condition?
+        self.assertIn(state, ['PENDING', 'STARTING', 'SUCCESS'])
+        # Values from:
+        # http://docs.celeryproject.org/en/latest/_modules/celery/result.html#AsyncResult
 
 
 class NodeApiV2Tests(APITestCase):
