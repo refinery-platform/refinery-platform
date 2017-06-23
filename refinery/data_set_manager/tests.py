@@ -1400,7 +1400,7 @@ class NodeClassMethodTests(TestCase):
         # Check inverse relationship:
         self.assertEqual(self.another_node.uuid, self.node.get_children()[0])
 
-    # Auxilary nodes:
+    # Auxiliary nodes:
 
     def test_create_and_associate_auxiliary_node(self):
         self.assertEqual(self.node.get_children(), [])
