@@ -10,7 +10,11 @@
   function s3UploadService ($q) {
     AWS.config.region = 'us-east-1';
     AWS.config.credentials = new AWS.CognitoIdentityCredentials({
-      IdentityPoolId: 'us-east-1:18d47236-7898-4c2a-9a0a-a150d49d76be'
+      IdentityId: '',
+      Logins: {
+        // eslint-disable-next-line max-len
+        'cognito-identity.amazonaws.com': ''
+      }
     });
 
     var bucket = new AWS.S3({
@@ -22,7 +26,11 @@
     this.upload = function (file) {
       var deferred = $q.defer();
       var params = {
-        Bucket: 'scc-dev-media', Key: file.name, ContentType: file.type, Body: file
+        Bucket: 'scc-dev-media',
+        Key: 'uploads' + '/' + AWS.config.credentials.identityId + '/' + file.name,
+        // Key: file.name,
+        ContentType: file.type,
+        Body: file
       };
       var options = {
         partSize: 50 * 1024 * 1024,  // bytes
@@ -32,6 +40,7 @@
       };
       var uploader = bucket.upload(params, options, function (err) {
         if (err) {
+          console.error('Error uploading file: ' + err);
           deferred.reject(err);
         }
         deferred.resolve();
