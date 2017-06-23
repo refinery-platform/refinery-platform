@@ -429,7 +429,7 @@ class Node(models.Model):
         node.save()
         return self
 
-    def get_derived_node_types(self):
+    def _get_derived_node_types(self):
         """
         This finds all node types which are "derived"
         :returns: a list of all node types which are "derived"
@@ -449,8 +449,7 @@ class Node(models.Model):
         :returns True if the node in question's type exists in the list of
         Node types which are "derived"
         """
-
-        return self.type in self.get_derived_node_types()
+        return self.type in self._get_derived_node_types()
 
     def get_analysis_node_connections(self):
         return core.models.AnalysisNodeConnection.objects.filter(node=self)
