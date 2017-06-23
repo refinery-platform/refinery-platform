@@ -144,7 +144,6 @@
             }
 
              // update selectionObj for UI
-            console.log(nodeService.selectionObj);
             if (!_.has(nodeService.selectionObj, replaceGroup.join(','))) {
               nodeService.selectionObj[replaceGroup.join(',')] = {};
             }
