@@ -1378,19 +1378,7 @@ class NodeClassMethodTests(TestCase):
             file_uuid=self.filestore_item_1.uuid
         )
 
-    def test_create_and_associate_auxiliary_node(self):
-        self.assertEqual(self.node.get_children(), [])
-        self.node.create_and_associate_auxiliary_node(self.filestore_item.uuid)
-        self.assertIsNotNone(self.node.get_children())
-        self.assertIsNotNone(Node.objects.get(
-            file_uuid=self.filestore_item.uuid))
-        self.assertEqual(self.node.get_children()[0], Node.objects.get(
-            file_uuid=self.filestore_item.uuid).uuid)
-        self.assertEqual(Node.objects.get(
-            file_uuid=self.filestore_item.uuid).get_parents()[0],
-                         self.node.uuid)
-        self.assertEqual(Node.objects.get(uuid=self.node.get_children()[
-            0]).is_auxiliary_node, True)
+    # Parents and Children:
 
     def test_get_children(self):
         self.assertEqual(self.node.get_children(), [])
@@ -1412,6 +1400,22 @@ class NodeClassMethodTests(TestCase):
         # Check inverse relationship:
         self.assertEqual(self.node.uuid, self.another_node.get_children()[0])
 
+    # Auxilary nodes:
+
+    def test_create_and_associate_auxiliary_node(self):
+        self.assertEqual(self.node.get_children(), [])
+        self.node.create_and_associate_auxiliary_node(self.filestore_item.uuid)
+        self.assertIsNotNone(self.node.get_children())
+        self.assertIsNotNone(Node.objects.get(
+            file_uuid=self.filestore_item.uuid))
+        self.assertEqual(self.node.get_children()[0], Node.objects.get(
+            file_uuid=self.filestore_item.uuid).uuid)
+        self.assertEqual(Node.objects.get(
+            file_uuid=self.filestore_item.uuid).get_parents()[0],
+                         self.node.uuid)
+        self.assertEqual(Node.objects.get(uuid=self.node.get_children()[
+            0]).is_auxiliary_node, True)
+
     def test_get_auxiliary_nodes(self):
         self.assertEqual(self.node.get_children(), [])
         self.node.create_and_associate_auxiliary_node(self.filestore_item.uuid)
@@ -1432,17 +1436,6 @@ class NodeClassMethodTests(TestCase):
                                  file_uuid=self.filestore_item.uuid).file_uuid
                          ).get_datafile_url())
 
-    def test_get_file_store_item(self):
-        self.assertEqual(self.file_node.get_file_store_item(),
-                         self.filestore_item_1)
-        self.assertEqual(self.node.get_file_store_item(),
-                         None)
-
-    def test_get_relative_file_store_item_url(self):
-        relative_url = self.file_node.get_relative_file_store_item_url()
-        self.assertEqual(relative_url, self.file_node.get_file_store_item(
-            ).get_datafile_url())
-
     def test_get_auxiliary_file_generation_task_state(self):
         # Normal nodes will always return None
         self.assertIsNone(self.node.get_auxiliary_file_generation_task_state())
@@ -1454,6 +1447,19 @@ class NodeClassMethodTests(TestCase):
         self.assertIn(state, ['PENDING', 'STARTING', 'SUCCESS'])
         # Values from:
         # http://docs.celeryproject.org/en/latest/_modules/celery/result.html#AsyncResult
+
+    # File store:
+
+    def test_get_file_store_item(self):
+        self.assertEqual(self.file_node.get_file_store_item(),
+                         self.filestore_item_1)
+        self.assertEqual(self.node.get_file_store_item(),
+                         None)
+
+    def test_get_relative_file_store_item_url(self):
+        relative_url = self.file_node.get_relative_file_store_item_url()
+        self.assertEqual(relative_url, self.file_node.get_file_store_item(
+        ).get_datafile_url())
 
 
 class NodeApiV2Tests(APITestCase):
