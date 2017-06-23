@@ -116,14 +116,14 @@
       generateAttributeObj();
     }
 
-        /**
+    /**
      * @name reindexCollections
      * @desc  Main method reindexs the groupCollections,
       * nodeSelectCollections, and selectionObj
      * @memberOf refineryToolLaunch.fileRelationshipService
     **/
     function reindexCollections () {
-      // var reindexCount = _.keys(vm.groupCollection).length;
+      // only need to reindex groups post deleted group
       var aheadGroup = angular.copy(vm.currentGroup);
       aheadGroup[0]++;
       var replaceGroup = angular.copy(vm.currentGroup);
