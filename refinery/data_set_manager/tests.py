@@ -1420,28 +1420,17 @@ class NodeClassMethodTests(TestCase):
     def test_get_auxiliary_nodes(self):
         self.assertEqual(self.node.get_children(), [])
 
-        self.node._create_and_associate_auxiliary_node(
-            self.filestore_item.uuid)
-        self.assertNotEqual(self.node.get_children(), [])
-        self.assertEqual(Node.objects.get(
-            file_uuid=self.filestore_item.uuid
-        ).get_relative_file_store_item_url(),
-                         FileStoreItem.objects.get(
-                             uuid=Node.objects.get(
-                                 file_uuid=self.filestore_item.uuid).file_uuid
-                         ).get_datafile_url())
-
-        # TODO: This is copy-and-paste from above:
-        # Should there be two auxilaries now?
-        self.node._create_and_associate_auxiliary_node(
-            self.filestore_item.uuid)
-        self.assertEqual(Node.objects.get(
-            file_uuid=self.filestore_item.uuid
-        ).get_relative_file_store_item_url(),
-                         FileStoreItem.objects.get(
-                             uuid=Node.objects.get(
-                                 file_uuid=self.filestore_item.uuid).file_uuid
-                         ).get_datafile_url())
+        for i in xrange(2):
+            self.node._create_and_associate_auxiliary_node(
+                self.filestore_item.uuid)
+            self.assertEqual(len(self.node.get_children()), 1)
+            self.assertEqual(Node.objects.get(
+                file_uuid=self.filestore_item.uuid
+            ).get_relative_file_store_item_url(),
+                 FileStoreItem.objects.get(
+                     uuid=Node.objects.get(
+                         file_uuid=self.filestore_item.uuid).file_uuid
+                 ).get_datafile_url())
 
     def test_get_auxiliary_file_generation_task_state(self):
         # Normal nodes will always return None
