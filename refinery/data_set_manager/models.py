@@ -626,9 +626,6 @@ class Attribute(models.Model):
         "node"
     ]
 
-    def is_attribute(self, string):
-        return string.split("[")[0].strip() in self.TYPES
-
     node = models.ForeignKey(Node, db_index=True)
     type = models.TextField(db_index=True)
     # subtype further qualifies the attribute type, e.g. type = factor value
