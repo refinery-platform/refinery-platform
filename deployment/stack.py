@@ -8,7 +8,6 @@
 # cfn-pyplates: https://cfn-pyplates.readthedocs.org/
 # AWS Cloudformation: https://aws.amazon.com/cloudformation/
 # CloudInit: https://help.ubuntu.com/community/CloudInit
-
 import argparse
 import base64
 import json
@@ -49,6 +48,20 @@ def main():
             TemplateBody=str(template),
             Capabilities=['CAPABILITY_IAM'],
             Tags=load_tags(),
+            Parameters=[
+                {
+                    'ParameterKey': 'IdentityPoolName',
+                    'ParameterValue': config['COGNITO_IDENTITY_POOL_NAME']
+                },
+                {
+                    'ParameterKey': 'DeveloperProviderName',
+                    'ParameterValue': config['COGNITO_DEVELOPER_PROVIDER_NAME']
+                },
+                {
+                    'ParameterKey': 'StorageStackName',
+                    'ParameterValue': config['STACK_NAME'] + 'Storage'
+                },
+            ]
         )
         sys.stdout.write("{}\n".format(json.dumps(response, indent=2)))
 
@@ -78,7 +91,7 @@ def make_template(config, config_yaml):
 
     config['tags'] = instance_tags
 
-    config_uri = save_s3_config(config, stack_name)
+    config_uri = save_s3_config(config)
     sys.stdout.write("Configuration saved to {}\n".format(config_uri))
 
     tls_rewrite = "false"
@@ -127,6 +140,41 @@ def make_template(config, config_yaml):
                 'Description':
                 "Tag added to EC2 Instances so that "
                 "the EBS Snapshot Scheduler will recognise them.",
+            }
+        )
+    )
+    cft.parameters.add(
+        core.Parameter(
+            'IdentityPoolName',
+            'String',
+            {
+                'Default': 'Refinery Platform',
+                'Description': 'Name of Cognito identity pool for S3 uploads',
+            }
+        )
+    )
+    cft.parameters.add(
+        core.Parameter(
+            'DeveloperProviderName',
+            'String',
+            {
+                'Default': 'login.refinery',
+                'Description': '"domain" by which Cognito will refer to users',
+                'AllowedPattern': '[a-z\-\.]+',
+                'ConstraintDescription':
+                    'must only contain lower case letters, periods, '
+                    'underscores, and hyphens'
+            }
+        )
+    )
+    cft.parameters.add(
+        core.Parameter(
+            'StorageStackName',
+            'String',
+            {
+                'Default': '${AWS::StackName}Storage',
+                'Description': 'Name of the S3 storage stack for Django '
+                               'static and media files',
             }
         )
     )
@@ -288,6 +336,39 @@ def make_template(config, config_yaml):
                                     "ec2:CreateTags"
                                 ],
                                 "Resource": "*"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "PolicyName": "CognitoAccess",
+                    "PolicyDocument": {
+                        "Version": "2012-10-17",
+                        "Statement": [
+                            {
+                                "Effect": "Allow",
+                                "Action": [
+                                    "cognito-identity:ListIdentityPools",
+                                ],
+                                "Resource": "arn:aws:cognito-identity:*"
+                            },
+                            {
+                                "Effect": "Allow",
+                                "Action": [
+                                    "cognito-identity:"
+                                    "GetOpenIdTokenForDeveloperIdentity"
+                                ],
+                                "Resource": {
+                                    "Fn::Sub": [
+                                        "arn:aws:cognito-identity:"
+                                        "${AWS::Region}:${AWS::AccountId}:"
+                                        "identitypool/${Pool}",
+                                        {
+                                            "Pool":
+                                                functions.ref('IdentityPool')
+                                        }
+                                    ]
+                                }
                             }
                         ]
                     }
@@ -460,7 +541,107 @@ def make_template(config, config_yaml):
             'ConnectionSettings': {
                 'IdleTimeout': 1800  # seconds
             }
-        })
+        }
+    )
+
+    # Cognito Identity Pool for Developer Authenticated Identities Authflow
+    # http://docs.aws.amazon.com/cognito/latest/developerguide/authentication-flow.html
+    cft.resources.add(
+        core.Resource(
+            'IdentityPool',
+            'AWS::Cognito::IdentityPool',
+            core.Properties(
+                {
+                    'IdentityPoolName': functions.ref('IdentityPoolName'),
+                    'AllowUnauthenticatedIdentities': False,
+                    'DeveloperProviderName':
+                        functions.ref('DeveloperProviderName'),
+                }
+            )
+        )
+    )
+    cft.resources.add(
+        core.Resource(
+            'IdentityPoolAuthenticatedRole',
+            'AWS::Cognito::IdentityPoolRoleAttachment',
+            core.Properties(
+                {
+                    'IdentityPoolId': functions.ref('IdentityPool'),
+                    'Roles': {
+                        'authenticated':
+                            functions.get_att('CognitoS3UploadRole', 'Arn'),
+                    }
+                }
+            )
+        )
+    )
+    upload_role_trust_policy = {
+        "Version": "2012-10-17",
+        "Statement": [
+            {
+                "Effect": "Allow",
+                "Principal": {
+                    "Federated": "cognito-identity.amazonaws.com"
+                },
+                "Action": "sts:AssumeRoleWithWebIdentity",
+                "Condition": {
+                    "StringEquals": {
+                        "cognito-identity.amazonaws.com:aud":
+                            functions.ref('IdentityPool')
+                    },
+                    "ForAnyValue:StringLike": {
+                        "cognito-identity.amazonaws.com:amr": "authenticated"
+                    }
+                }
+            }
+        ]
+    }
+    upload_access_policy = {
+        "Version": "2012-10-17",
+        "Statement": [
+            {
+                "Effect": "Allow",
+                "Action": [
+                    "cognito-identity:*"
+                ],
+                "Resource": "*"
+            },
+            {
+                "Action": "s3:PutObject",
+                "Effect": "Allow",
+                "Resource": {
+                    "Fn::Sub": [
+                        "arn:aws:s3:::${MediaBucket}/uploads/"
+                        "${!cognito-identity.amazonaws.com:sub}/*",
+                        {
+                            "MediaBucket": {
+                                "Fn::ImportValue": {
+                                    "Fn::Sub": "${StorageStackName}Media"
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        ]
+    }
+    cft.resources.add(
+        core.Resource(
+            'CognitoS3UploadRole',
+            'AWS::IAM::Role',
+            core.Properties(
+                {
+                    'AssumeRolePolicyDocument': upload_role_trust_policy,
+                    'Policies': [
+                        {
+                            'PolicyName': 'AuthenticatedS3UploadPolicy',
+                            'PolicyDocument': upload_access_policy,
+                        }
+                    ]
+                }
+            )
+        )
+    )
 
     return cft
 

@@ -7,8 +7,8 @@ Created on Feb 20, 2012
 from django.conf.urls import patterns, url
 from rest_framework.routers import DefaultRouter
 
-from .views import (AnalysesViewSet, DataSetsViewSet,
-                    NodeViewSet, WorkflowViewSet)
+from .views import (AnalysesViewSet, DataSetsViewSet, NodeViewSet, OpenIDToken,
+                    WorkflowViewSet)
 
 
 urlpatterns = patterns(
@@ -100,5 +100,7 @@ core_router.urls.extend([
     url(r'^analyses/(?P<uuid>'
         r'[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{'
         r''r'12})/$',
-        AnalysesViewSet.as_view())
+        AnalysesViewSet.as_view()),
+    url(r'^openid_token/$', OpenIDToken.as_view(),
+        name="openid-token")
 ])
