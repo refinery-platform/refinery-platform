@@ -31,7 +31,13 @@ ANNOTATION_ERROR_MESSAGE = (
 )
 # Allow JSON Schema to find the JSON pointers we define in our schemas
 JSON_SCHEMA_FILE_RESOLVER = RefResolver(
-    "{}{}{}".format('file://', os.path.abspath("tool_manager/schemas"), '/'),
+    "{}{}{}".format(
+        'file://',
+        os.path.join(
+            settings.BASE_DIR,
+            "refinery/tool_manager/schemas"
+        ),
+        '/'),
     None
 )
 
