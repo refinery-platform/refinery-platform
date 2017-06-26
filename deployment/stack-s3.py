@@ -1,14 +1,14 @@
 #!/usr/bin/env python
 
 """
-Script to generate AWS CloudFormation template and create Refinery Platform
-storage stacks
+Script to generate AWS CloudFormation template for Refinery Platform storage
+stacks
 
-See
+Requires STACK_NAME to be defined in aws-config/config.yaml
+
+For details:
 https://github.com/refinery-platform/refinery-platform/wiki/AWS-installation
-for notes on how to use this to deploy to Amazon AWS
 """
-
 import json
 import sys
 import yaml
@@ -18,21 +18,24 @@ from cfn_pyplates.core import (CloudFormationTemplate, DeletionPolicy,
                                Parameter, Properties, Resource)
 from cfn_pyplates.functions import ref
 
+from utils import Output, load_tags
+
 REFINERY_CONFIG_FILE = 'aws-config/config.yaml'
 
 
 def main():
     with open(REFINERY_CONFIG_FILE) as config_file:
         config = yaml.load(config_file)
-    stack_name = config['STACK_NAME'] + '-storage'
-    static_bucket_name = config['STACK_NAME'] + '-static'
-    media_bucket_name = config['STACK_NAME'] + '-media'
+    stack_name = config['STACK_NAME'] + 'Storage'
+    static_bucket_name = config['S3_BUCKET_NAME_BASE'] + '-static'
+    media_bucket_name = config['S3_BUCKET_NAME_BASE'] + '-media'
     template = make_storage_template()
 
     cloudformation = boto3.client('cloudformation')
     response = cloudformation.create_stack(
         StackName=stack_name,
-        TemplateBody=template,
+        TemplateBody=str(template),
+        Tags=load_tags(),
         Parameters=[
             {
                 'ParameterKey': 'StaticBucketName',
@@ -49,6 +52,7 @@ def main():
 
 def make_storage_template():
     cft = CloudFormationTemplate(description="Refinery Platform storage")
+    # Parameters
     cft.parameters.add(Parameter(
         'StaticBucketName',
         'String',
@@ -65,9 +69,10 @@ def make_storage_template():
             # with virtual-hosted-style access and S3 Transfer Acceleration
             'AllowedPattern': '[a-z0-9\-]+',
             'ConstraintDescription':
-                'must only contain lower case letters, numbers, and hyphens',
+                'must only contain lower case letters, numbers, and dashes',
         }
     ))
+    # Resources
     cft.resources.add(Resource(
         'StaticStorageBucket',
         'AWS::S3::Bucket',
@@ -93,10 +98,28 @@ def make_storage_template():
         Properties({
             'BucketName': ref('MediaBucketName'),
             'AccessControl': 'PublicRead',
+            'CorsConfiguration': {
+                'CorsRules': [
+                    {
+                        'AllowedOrigins': ['*'],
+                        'AllowedMethods': ['POST', 'PUT'],
+                        'AllowedHeaders': ['*'],
+                        'ExposedHeaders': ['ETag'],
+                        'MaxAge': 3000,
+                    }
+                ]
+            }
         }),
         DeletionPolicy('Retain'),
     ))
-    return str(cft)
+    cft.outputs.add(Output(
+        'MediaBucketName',
+        ref('MediaStorageBucket'),
+        {'Fn::Sub': '${AWS::StackName}Media'},
+        'Name of S3 bucket for Django media files'
+    ))
+
+    return cft
 
 
 if __name__ == '__main__':
