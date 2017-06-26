@@ -17,7 +17,8 @@ import sys
 import boto3
 from cfn_pyplates import core, functions
 
-from utils import load_config, load_tags, save_s3_config
+from utils import (load_config, load_tags,
+                   save_s3_config, ensure_s3_bucket)
 
 VERSION = '1.1'
 
@@ -673,7 +674,9 @@ def make_template(config, config_yaml):
                         functions.ref("AWS::AccountId"), "/*"),
                     "Principal": {
                       "AWS": [
-                        functions.find_in_map('Region', functions.ref("AWS::Region"), 'ELBPrincipal'),
+                        functions.find_in_map(
+                            'Region',
+                            functions.ref("AWS::Region"), 'ELBPrincipal'),
                       ]
                     }
                 }]
