@@ -197,32 +197,14 @@ class ToolDefinition(models.Model):
                 "Workflow-based tools don't utilize `extra_directories`"
             )
 
-    def get_workflow(self):
-        """
-        Fetch Workflow object for a Workflow-based ToolDefinition
-
-        :return: <Workflow>
-        :raises: RuntimeError, NotImplementedError
-        """
-        if self.tool_type == ToolDefinition.VISUALIZATION:
-            raise NotImplementedError(
-                "Visualization-based Tools don't utilize Workflows"
-            )
-        try:
-            return Workflow.objects.get(
-                internal_id=self.galaxy_workflow_id,
-                workflow_engine=self.workflow_engine
-            )
-        except(Workflow.DoesNotExist,
-               Workflow.MultipleObjectsReturned) as e:
-            raise RuntimeError("Couldn't fetch Workflow: {}".format(e))
-
 
 @receiver(pre_delete, sender=ToolDefinition)
-def delete_parameters_and_output_files(sender, instance, *args, **kwargs):
+def remove_associated_objects(sender, instance, *args, **kwargs):
     """
     Delete related parameter and output_file objects upon ToolDefinition
-    deletion
+    deletion.
+
+    Set any associated Workflows to an inactive state
     """
     parameters = instance.parameters.all()
     for parameter in parameters:
@@ -357,7 +339,7 @@ class Tool(OwnableResource):
             "studyUuid": self.dataset.get_latest_study().uuid,
             "toolUuid": self.uuid,
             "user_id": self.get_owner().id,
-            "workflowUuid": self.tool_definition.get_workflow().uuid
+            "workflowUuid": self.tool_definition.workflow.uuid
         }
         validate_analysis_config(analysis_config)
 
