@@ -24,8 +24,10 @@
       promise.reject();
     });
 
-    vm.togglePanel = function () {
-      $log.warn('TODO');
+    vm.togglePanel = function (attribute) {
+      vm.hidden[attribute] = ! vm.hidden[attribute];
     };
+
+    vm.hidden = {};
   }
 })();

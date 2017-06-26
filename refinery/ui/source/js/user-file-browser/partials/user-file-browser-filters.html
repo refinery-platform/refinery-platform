@@ -12,26 +12,14 @@
       ng-init="attributeIndex = $index">
       <div class="panel panel-default">
         <div class="panel-heading" role="tab">
-          <h4 class="panel-title" ng-click="$ctrl.togglePanel()">
-          <i class="fa fa-caret-down fa-pull-left"></i>{{ attribute }} &nbsp; ({{ attributeObj.facetObj.length }})
-          <!--
-          TODO: Enable click-to-expand
-          <div
-            role="button"
-            data-toggle="collapse"
-            data-parent="#attribute-filter"
-            ng-click="dropAttributePanel($event, attribute, attributeObj)"
-            aria-expanded="true"
-            aria-controls="{{ attribute }}">
-             <i class="fa fa-caret-right fa-pull-left"
-              id="attribute-panel-{{attribute | replaceWhiteSpaceWithHyphen}}"
-              aria-hidden="true"></i>
-             {{ attribute }} &nbsp; ({{ attributeObj.facetObj.length }})
-          </div>
-          -->
+          <h4 class="panel-title" ng-click="$ctrl.togglePanel(attribute)">
+            <i class="fa fa-caret-down fa-pull-left" ng-hide="$ctrl.hidden[attribute]"></i>
+            <i class="fa fa-caret-right fa-pull-left" ng-hide="!$ctrl.hidden[attribute]"></i>
+            {{ attribute }} &nbsp; ({{ attributeObj.facetObj.length }})
           </h4>
         </div>
       <div id="{{attribute | replaceWhiteSpaceWithHyphen}}"
+        ng-hide="$ctrl.hidden[attribute]"
         class="panel-collapse collapse in"
         role="tabpanel"
         aria-labelledby="{{ attribute }}">
