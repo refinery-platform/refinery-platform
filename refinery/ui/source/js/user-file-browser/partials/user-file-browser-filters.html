@@ -31,12 +31,8 @@
                     <input
                       type="checkbox"
                       name="optionsCheckboxes"
-                      ng-click="$ctrl.filterUpdate(attributeObj, field.name)"
+                      ng-click="$ctrl.filterUpdate(attribute, field.name)"
                       id="{{ field.name | replaceWhiteSpaceWithHyphen }}-{{ $index }}">
-                    <!--
-                      ng-model="$ctrl.filters[attributeObj.internal_name][field.name]"
-                      ng-change="$ctrl.filterUpdate(attributeObj.internal_name, field.name)"
-                    -->
                   </div>
                   <div class="col-xs-8">
                     <label for="{{ field.name | replaceWhiteSpaceWithHyphen

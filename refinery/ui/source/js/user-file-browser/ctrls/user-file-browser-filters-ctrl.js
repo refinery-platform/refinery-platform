@@ -33,7 +33,10 @@
     vm.filters = {};
 
     vm.filterUpdate = function (attribute, value) {
-      $log.warn(attribute, value);
+      if (typeof vm.filters[attribute] === 'undefined') {
+        vm.filters[attribute] = {};
+      }
+      vm.filters[attribute][value] = !vm.filters[attribute][value];
     };
   }
 })();
