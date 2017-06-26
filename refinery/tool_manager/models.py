@@ -214,6 +214,14 @@ def remove_associated_objects(sender, instance, *args, **kwargs):
     for output_file in output_files:
         output_file.delete()
 
+    # Set any associated Workflows to be inactive
+    # this will remove the Workflow entries from the UI, but won't delete
+    # any Analyses that were run from said Workflows
+    workflow = instance.workflow
+    if workflow:
+        workflow.is_active = False
+        workflow.save()
+
 
 @receiver(post_delete, sender=ToolDefinition)
 def delete_file_relationship(sender, instance, *args, **kwargs):
