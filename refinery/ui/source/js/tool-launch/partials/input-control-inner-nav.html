@@ -2,9 +2,12 @@
   <button
     class="btn btn-default btn-xs outline"
     ng-disabled="$ctrl.currentGroup[$ctrl.currentGroup.length - 1] == 0"
-    ng-click="$ctrl.navLeft($ctrl.currentGroup.length-1)">
+    ng-click="$ctrl.navLeft($ctrl.currentGroup.length - 1)">
     <i class="fa fa-backward"></i>
   </button>
+  <span class="badge">
+    {{ $ctrl.currentGroup[$ctrl.currentGroup.length - 1] + 1}}
+  </span>
    <!-- Checking the type containing the inner most, ['PAIR', 'LIST] -->
   <span ng-if="$ctrl.currentTypes[$ctrl.currentTypes.length - 2] == 'PAIR'">
     <button

@@ -34,7 +34,8 @@
           html: true,
           trigger: 'manual',
           container: '#assay-files-table',
-          id: 'node-selection-popover'
+          class: 'node-selection-popover'
+
         };
         angular.element(element).popover(options);
 

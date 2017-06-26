@@ -45,6 +45,11 @@
         <!-- Select/Deselect nodes in the list -->
         <div class="refinery-subheader">
           <h4>
+            <i
+              class="{{NSPCtrl.currentTypes[NSPCtrl.currentTypes.length - 1]|groupTypeIcon}}"
+              aria-hidden="true"></i>
+            {{ NSPCtrl.depthNames[NSPCtrl.currentTypes.length - 1] }}:
+            <span ng-if="!NSPCtrl.groupCollection[NSPCtrl.currentGroup][NSPCtrl.inputFileTypes[0].uuid]">0</span>
             {{ NSPCtrl.groupCollection[NSPCtrl.currentGroup][NSPCtrl.inputFileTypes[0].uuid].length }}
             file<span ng-if="NSPCtrl.groupCollection[NSPCtrl.currentGroup][NSPCtrl.inputFileTypes[0].uuid].length != 1">s</span>
             in Group {{ NSPCtrl.currentGroup[NSPCtrl.currentGroup.length] }}
@@ -77,18 +82,13 @@
   </ul>
 </div>
 <div>
-  <span ng-if="NSPCtrl.depthNames.length > 1">
+  <span ng-if="NSPCtrl.currentTypes.length > 1">
     <div class="refinery-subheader">
       <h4>
         <i
           class="{{NSPCtrl.currentTypes[NSPCtrl.currentTypes.length - 2]|groupTypeIcon}}"
           aria-hidden="true"></i>
-        {{ NSPCtrl.depthNames[NSPCtrl.depthNames.length - 2] }}:
-        <i
-          class="{{NSPCtrl.currentTypes[NSPCtrl.currentTypes.length - 1]|groupTypeIcon}}"
-          aria-hidden="true"></i>
-        {{ NSPCtrl.depthNames[NSPCtrl.currentTypes.length - 1] }},
-        Index {{ NSPCtrl.currentGroup[NSPCtrl.currentGroup.length - 1] + 1 }}
+        {{ NSPCtrl.depthNames[NSPCtrl.depthNames.length - 2] }}
       </h4>
     </div>
     <rp-input-control-inner-nav></rp-input-control-inner-nav>
