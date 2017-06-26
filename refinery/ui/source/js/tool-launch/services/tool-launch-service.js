@@ -15,6 +15,7 @@
     'toolParamsService',
     'toolSelectService',
     'toolsService',
+    '$window',
     '_'
   ];
 
@@ -23,6 +24,7 @@
     toolParamsService,
     toolSelectService,
     toolsService,
+    $window,
     _
   ) {
     var fileService = fileRelationshipService;
@@ -141,6 +143,7 @@
 
     // Method to generate launch config
     function generateLaunchConfig () {
+      launchConfig.dataset_uuid = $window.dataSetUuid;
       launchConfig.tool_definition_uuid = toolService.selectedTool.uuid;
       launchConfig.file_relationships = generateFileStr();
       launchConfig.parameters = paramsService.paramsForm;

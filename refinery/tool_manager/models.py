@@ -7,14 +7,17 @@ from django.conf import settings
 from django.db import models
 from django.db.models.signals import post_delete, pre_delete
 from django.dispatch import receiver
-from django.http import (HttpResponseBadRequest, HttpResponseServerError,
-                         JsonResponse)
+from django.http import JsonResponse
 from django_docker_engine.docker_utils import (DockerClientWrapper,
                                                DockerContainerSpec)
 from django_extensions.db.fields import UUIDField
 from docker.errors import APIError
 
-from core.models import Analysis, OwnableResource, WorkflowEngine
+from analysis_manager.models import AnalysisStatus
+from analysis_manager.tasks import run_analysis
+from analysis_manager.utils import create_analysis, validate_analysis_config
+from core.models import (Analysis, DataSet, OwnableResource, Workflow,
+                         WorkflowEngine)
 from data_set_manager.utils import get_file_url_from_node_uuid
 from file_store.models import FileType
 
@@ -171,9 +174,22 @@ class ToolDefinition(models.Model):
         return "{}: {} {}".format(self.tool_type, self.name, self.uuid)
 
     def get_annotation(self):
+        """
+        Deserialize and fetch a ToolDefinition's annotation data that was
+        used to create it.
+        :return: a dict containing ToolDefinition annotation data
+        """
         return json.loads(self.annotation)
 
     def get_extra_directories(self):
+        """
+        Fetch `extra_directories` from Visualization-based ToolDefinitions's
+        annotation data.
+
+        :return: a Visualization-based ToolDefinitions's `extra_directories`
+        information
+        :raises: KeyError, NotImplementedError
+        """
         if self.tool_type == ToolDefinition.VISUALIZATION:
             try:
                 return self.get_annotation()["extra_directories"]
@@ -182,7 +198,29 @@ class ToolDefinition(models.Model):
                              "`extra_directories` key.", self.name)
                 raise
         else:
-            raise NotImplementedError
+            raise NotImplementedError(
+                "Workflow-based tools don't utilize `extra_directories`"
+            )
+
+    def get_workflow(self):
+        """
+        Fetch Workflow object for a Workflow-based ToolDefinition
+
+        :return: <Workflow>
+        :raises: RuntimeError, NotImplementedError
+        """
+        if self.tool_type == ToolDefinition.VISUALIZATION:
+            raise NotImplementedError(
+                "Visualization-based Tools don't utilize Workflows"
+            )
+        try:
+            return Workflow.objects.get(
+                internal_id=self.galaxy_workflow_id,
+                workflow_engine=self.workflow_engine
+            )
+        except(Workflow.DoesNotExist,
+               Workflow.MultipleObjectsReturned) as e:
+            raise RuntimeError("Couldn't fetch Workflow: {}".format(e))
 
 
 @receiver(pre_delete, sender=ToolDefinition)
@@ -232,11 +270,12 @@ class Tool(OwnableResource):
     A Tool is a representation of the information it will take to launch a
     Refinery-based Tool
     """
+    dataset = models.ForeignKey(DataSet)
     analysis = models.OneToOneField(Analysis, blank=True, null=True)
     container_name = models.CharField(
         max_length=250,
         unique=True,
-        blank=True
+        null=True
     )
     tool_launch_configuration = models.TextField()
     tool_definition = models.ForeignKey(ToolDefinition)
@@ -254,35 +293,10 @@ class Tool(OwnableResource):
             self.uuid
         )
 
-    def launch(self):
-        if self.get_tool_type() == ToolDefinition.VISUALIZATION:
-            container = DockerContainerSpec(
-                image_name=self.tool_definition.image_name,
-                container_name=self.container_name,
-                labels={self.uuid: ToolDefinition.VISUALIZATION},
-                container_input_path=(
-                    self.tool_definition.container_input_path
-                ),
-                input={"file_relationships": self.get_file_relationships()},
-                extra_directories=(
-                    self.tool_definition.get_extra_directories()
-                )
-            )
-            try:
-                DockerClientWrapper().run(container)
-            except APIError as e:
-                return HttpResponseServerError(content=e)
-            except AssertionError as e:
-                return HttpResponseBadRequest(content=e)
-            else:
-                return JsonResponse(
-                    {
-                        "tool_url": self.get_relative_container_url()
-                    }
-                )
-
-        if self.get_tool_type() == ToolDefinition.WORKFLOW:
-            raise NotImplementedError
+    def get_file_relationships(self):
+        return ast.literal_eval(
+            self.get_tool_launch_config()["file_relationships"]
+        )
 
     def get_relative_container_url(self):
         """
@@ -296,20 +310,88 @@ class Tool(OwnableResource):
     def get_tool_launch_config(self):
         return json.loads(self.tool_launch_configuration)
 
-    def get_file_relationships(self):
-        return ast.literal_eval(
-            self.get_tool_launch_config()["file_relationships"]
-        )
-
     def get_tool_name(self):
         return self.tool_definition.name
 
     def get_tool_type(self):
         return self.tool_definition.tool_type
 
+    def launch(self):
+        if self.get_tool_type() == ToolDefinition.VISUALIZATION:
+            return self._launch_visualization()
+
+        if self.get_tool_type() == ToolDefinition.WORKFLOW:
+            return self._launch_workflow()
+
+    def _launch_visualization(self):
+        """
+        Launch a visualization-based Tool
+        :returns:
+            - <JsonResponse> w/ `tool_url` key corresponding to the
+        launched container's url
+            - <HttpResponseBadRequest>, <HttpServerError>
+        """
+        container = DockerContainerSpec(
+            image_name=self.tool_definition.image_name,
+            container_name=self.container_name,
+            labels={self.uuid: ToolDefinition.VISUALIZATION},
+            container_input_path=(
+                self.tool_definition.container_input_path
+            ),
+            input={"file_relationships": self.get_file_relationships()},
+            extra_directories=self.tool_definition.get_extra_directories()
+        )
+
+        DockerClientWrapper().run(container)
+
+        return JsonResponse(
+            {"tool_url": self.get_relative_container_url()}
+        )
+
+    def _launch_workflow(self):
+        """
+        Launch a workflow-based Tool
+        :returns:
+            - <JsonResponse> w/ `tool_url` key corresponding to the url
+            pointing to the Analysis' status page
+        :raises: RuntimeError
+        """
+
+        analysis_config = {
+            "custom_name": "Analysis: {}".format(self),
+            "studyUuid": self.dataset.get_latest_study().uuid,
+            "toolUuid": self.uuid,
+            "user_id": self.get_owner().id,
+            "workflowUuid": self.tool_definition.get_workflow().uuid
+        }
+        validate_analysis_config(analysis_config)
+
+        analysis = create_analysis(analysis_config)
+        self.set_analysis(analysis.uuid)
+        AnalysisStatus.objects.create(analysis=analysis)
+
+        # Run the analysis task
+        run_analysis.delay(analysis.uuid)
+
+        analysis_url = "/data_sets2/{}/#/analyses/".format(self.dataset.uuid)
+        return JsonResponse({"tool_url": analysis_url})
+
     def set_tool_launch_config(self, tool_launch_config):
         self.tool_launch_configuration = json.dumps(tool_launch_config)
         self.save()
+
+    def set_analysis(self, analysis_uuid):
+        """
+        :param analysis_uuid: UUID of Analysis instance to associate with
+        the Tool
+        :raises: RuntimeError
+        """
+        try:
+            self.analysis = Analysis.objects.get(uuid=analysis_uuid)
+        except(Analysis.DoesNotExist, Analysis.MultipleObjectsReturned) as e:
+            raise RuntimeError(e)
+        else:
+            self.save()
 
     def update_file_relationships_string(self):
         """
