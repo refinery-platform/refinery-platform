@@ -333,6 +333,12 @@ class Tool(OwnableResource):
             pointing to the Analysis' status page
         :raises: RuntimeError
         """
+        if self.get_tool_type() != ToolDefinition.WORKFLOW:
+            raise NotImplementedError(
+                "Tool must be of type: {} to launcha workflow".format(
+                    ToolDefinition.WORKFLOW
+                )
+            )
 
         analysis_config = {
             "custom_name": "Analysis: {}".format(self),
