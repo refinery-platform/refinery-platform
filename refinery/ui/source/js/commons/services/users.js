@@ -45,7 +45,6 @@ function userFactory ($q, $resource, _, settings) {
   userService.get = function (uuid) {
     if (store[uuid] === undefined) {
       return getUserData(uuid).then(function (data) {
-        console.log(data);
         if (_.has(data, 'user')) {
           store[uuid] = {
             affiliation: data.affiliation,
