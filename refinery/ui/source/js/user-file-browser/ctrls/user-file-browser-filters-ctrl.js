@@ -29,5 +29,11 @@
     };
 
     vm.hidden = {};
+
+    vm.filters = {};
+
+    vm.filterUpdate = function (attribute, value) {
+      $log.warn(attribute, value);
+    };
   }
 })();

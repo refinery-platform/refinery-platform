@@ -26,18 +26,17 @@
         <div class="panel-body">
           <div ng-repeat="field in attributeObj.facetObj track by $index">
             <div class="checkbox container">
-                <!--
-                TODO: Add this back in:
-                ng-show="showField(field.name, attributeObj.internal_name, attribute)"
-                -->
                 <div class="row">
                   <div class="col-xs-1">
                     <input
                       type="checkbox"
                       name="optionsCheckboxes"
-                      ng-model="FBCtrl.uiSelectedFields[attributeObj.internal_name][field.name]"
-                      ng-change="FBCtrl.attributeSelectionUpdate(attributeObj.internal_name, field.name)"
+                      ng-click="$ctrl.filterUpdate(attributeObj, field.name)"
                       id="{{ field.name | replaceWhiteSpaceWithHyphen }}-{{ $index }}">
+                    <!--
+                      ng-model="$ctrl.filters[attributeObj.internal_name][field.name]"
+                      ng-change="$ctrl.filterUpdate(attributeObj.internal_name, field.name)"
+                    -->
                   </div>
                   <div class="col-xs-8">
                     <label for="{{ field.name | replaceWhiteSpaceWithHyphen
