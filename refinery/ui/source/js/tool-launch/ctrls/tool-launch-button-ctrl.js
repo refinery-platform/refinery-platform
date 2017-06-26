@@ -36,9 +36,7 @@
 
     function launchTool () {
       toolLaunchService.postToolLaunch().then(function (response) {
-        if (toolSelectService.selectedTool.tool_type === 'VISUALIZATION') {
-          $window.open(response.tool_url);
-        }
+        $window.open(response.tool_url);
       }, function (error) {
         $log.error(error);
       });
