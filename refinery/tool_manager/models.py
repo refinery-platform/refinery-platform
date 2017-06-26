@@ -16,8 +16,7 @@ from docker.errors import APIError
 from analysis_manager.models import AnalysisStatus
 from analysis_manager.tasks import run_analysis
 from analysis_manager.utils import create_analysis, validate_analysis_config
-from core.models import (Analysis, DataSet, OwnableResource, Workflow,
-                         WorkflowEngine)
+from core.models import Analysis, DataSet, OwnableResource, Workflow
 from data_set_manager.utils import get_file_url_from_node_uuid
 from file_store.models import FileType
 
@@ -164,11 +163,7 @@ class ToolDefinition(models.Model):
         blank=True
     )
     annotation = models.TextField()
-    galaxy_workflow_id = models.CharField(
-        max_length=250,
-        blank=True
-    )
-    workflow_engine = models.ForeignKey(WorkflowEngine, blank=True, null=True)
+    workflow = models.ForeignKey(Workflow, null=True)
 
     def __str__(self):
         return "{}: {} {}".format(self.tool_type, self.name, self.uuid)
