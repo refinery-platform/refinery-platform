@@ -12,8 +12,8 @@
       ng-init="attributeIndex = $index">
       <div class="panel panel-default">
         <div class="panel-heading" role="tab">
-          <h4 class="panel-title">
-          <div><i class="fa fa-caret-down fa-pull-left"></i>{{ attribute }} &nbsp; ({{ attributeObj.facetObj.length }})</div>
+          <h4 class="panel-title" ng-click="$ctrl.togglePanel()">
+          <i class="fa fa-caret-down fa-pull-left"></i>{{ attribute }} &nbsp; ({{ attributeObj.facetObj.length }})
           <!--
           TODO: Enable click-to-expand
           <div

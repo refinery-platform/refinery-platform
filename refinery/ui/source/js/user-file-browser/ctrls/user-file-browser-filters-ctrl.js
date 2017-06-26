@@ -23,6 +23,9 @@
       $log.error('/user/files/ request failed');
       promise.reject();
     });
+
+    vm.togglePanel = function () {
+      $log.warn('TODO');
+    };
   }
 })();
-
