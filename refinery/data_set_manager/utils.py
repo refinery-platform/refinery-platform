@@ -6,6 +6,7 @@ Created on May 29, 2012
 import hashlib
 import json
 import logging
+import re
 import time
 import urlparse
 
@@ -569,7 +570,9 @@ def generate_solr_params_for_user(params, user_id):
 
         assay_uuids.append(assay.uuid)
 
-    return _generate_solr_params(params, assay_uuids=assay_uuids)
+    return _generate_solr_params(params,
+                                 assay_uuids=assay_uuids,
+                                 facets_from_config=True)
 
 
 def generate_solr_params_for_assay(params, assay_uuid):
@@ -591,7 +594,7 @@ def generate_solr_params_for_assay(params, assay_uuid):
     return _generate_solr_params(params, assay_uuids=[assay_uuid])
 
 
-def _generate_solr_params(params, assay_uuids):
+def _generate_solr_params(params, assay_uuids, facets_from_config=False):
     """
     Either returns a solr url parameter string,
     or None if assay_uuids is empty.
@@ -629,7 +632,14 @@ def _generate_solr_params(params, assay_uuids):
         return None
     solr_params = 'fq=assay_uuid:({})'.format(' OR '.join(assay_uuids))
 
-    if facet_field:
+    if facets_from_config:
+        # Twice as many facets as necessary, but easier than the alternative.
+        template = '&facet.field={}_Characteristics_generic_s' + \
+                   '&facet.field={}_Factor_Value_generic_s'
+        solr_params += ''.join(
+            map(lambda s: template.format(s, s),
+                re.split(r'\s*,\s*', settings.USER_FILES_FACETS)))
+    elif facet_field:
         facet_field = facet_field.split(',')
         facet_field = insert_facet_field_filter(facet_filter, facet_field)
         split_facet_fields = generate_facet_fields_query(facet_field)
