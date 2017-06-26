@@ -9,6 +9,7 @@ from django.conf import settings
 from django.contrib import admin
 from django.db import transaction
 from django.utils import timezone
+from django_docker_engine.docker_utils import DockerClientWrapper
 from jsonschema import RefResolver, ValidationError, validate
 
 from analysis_manager.utils import fetch_objects_required_for_analysis
@@ -164,6 +165,23 @@ def create_tool_definition(annotation_data):
             image_name=annotation["image_name"],
             container_input_path=annotation["container_input_path"],
         )
+
+        # If we've successfully created the ToolDefinition lets
+        #  pull down its docker image
+        try:
+            image_name, version = tool_definition.image_name.split(":")
+        except ValueError:
+            logger.debug(
+                "`image_name` has no specified version, and the `latest` "
+                "version of %s will be pulled",
+                tool_definition.image_name
+            )
+            DockerClientWrapper().pull(tool_definition.image_name)
+        else:
+            logger.debug(
+                "Pulling Docker image: %s", tool_definition.image_name
+            )
+            DockerClientWrapper().pull(image_name, version=version)
 
     tool_definition.annotation = json.dumps(annotation)
     tool_definition.save()
