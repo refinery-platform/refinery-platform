@@ -12,7 +12,7 @@ from django.utils import timezone
 from jsonschema import RefResolver, ValidationError, validate
 from requests.packages.urllib3.exceptions import HTTPError
 
-import tool_manager.models
+import tool_manager
 from core.models import (Analysis, InvestigationLink, NodeRelationship,
                          NodeSet, Workflow, WorkflowDataInputMap)
 from core.utils import get_aware_local_time
@@ -46,7 +46,9 @@ def create_analysis(validated_analysis_config):
 
     # Create an analysis for new-type Workflow-based Tools
     if validated_analysis_config.get("toolUuid"):
-        return create_tool_analysis(validated_analysis_config)
+        return tool_manager.utils.create_tool_analysis(
+            validated_analysis_config
+        )
 
 
 def create_nodeset_analysis(validated_analysis_config):
@@ -228,48 +230,6 @@ def create_noderelationship_analysis(validated_analysis_config):
                 pair_id=count)
             analysis.workflow_data_input_maps.add(temp_input)
             analysis.save()
-    return analysis
-
-
-def create_tool_analysis(validated_analysis_config):
-    """
-    Create an Analysis instance from a validated analysis config with
-    Tool information
-    :param validated_analysis_config: a dict including the necessary
-    information to create an Analysis that has been validated prior by
-    `analysis_manager.utils.validate_analysis_config`
-    :return: an Analysis instance
-    :raises: RuntimeError
-    """
-
-    # Input list for running analysis
-    common_analysis_objects = fetch_objects_required_for_analysis(
-        validated_analysis_config
-    )
-    custom_name = validated_analysis_config["custom_name"]
-    current_workflow = common_analysis_objects["current_workflow"]
-    data_set = common_analysis_objects["data_set"]
-    user = common_analysis_objects["user"]
-
-    try:
-        tool = tool_manager.models.Tool.objects.get(
-            uuid=validated_analysis_config["toolUuid"]
-        )
-    except (tool_manager.models.Tool.DoesNotExist,
-            tool_manager.models.Tool.MultipleObjectsReturned) as e:
-        raise RuntimeError("Couldn't fetch Tool from UUID: {}".format(e))
-
-    analysis = Analysis.objects.create(
-        summary="blah",
-        name=custom_name,
-        project=user.profile.catch_all_project,
-        data_set=data_set,
-        workflow=current_workflow,
-        time_start=timezone.now()
-    )
-    analysis.set_owner(user)
-    tool.set_analysis(analysis)
-
     return analysis
 
 

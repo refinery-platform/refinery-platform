@@ -6,8 +6,6 @@ import urllib
 from urlparse import urljoin
 from xml.parsers.expat import ExpatError
 
-import requests
-import xmltodict
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
@@ -20,14 +18,21 @@ from django.http import (HttpResponse, HttpResponseBadRequest,
 from django.shortcuts import get_object_or_404, render_to_response
 from django.template import RequestContext, loader
 from django.views.decorators.gzip import gzip_page
+
+import boto3
+import botocore
 from guardian.shortcuts import get_perms
 from guardian.utils import get_anonymous_user
 from registration import signals
 from registration.views import RegistrationView
+import requests
 from requests.exceptions import HTTPError
-from rest_framework import status, viewsets
+from rest_framework import authentication, status, viewsets
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework.views import APIView
+import xmltodict
 
 from analysis_manager.utils import get_solr_results
 from annotation_server.models import GenomeBuild
@@ -42,7 +47,7 @@ from .models import (Analysis, CustomRegistrationProfile, DataSet,
                      ExtendedGroup, Invitation, Ontology, Project, UserProfile,
                      Workflow, WorkflowEngine)
 from .serializers import DataSetSerializer, NodeSerializer, WorkflowSerializer
-from .utils import get_data_sets_annotations
+from .utils import api_error_response, get_data_sets_annotations
 
 logger = logging.getLogger(__name__)
 
@@ -1141,3 +1146,77 @@ class CustomRegistrationView(RegistrationView):
 
         """
         return ('registration_complete', (), {})
+
+
+class OpenIDToken(APIView):
+    """Registers (or retrieves) a Cognito IdentityId and an OpenID Connect
+    token for a user authenticated by Django authentication process
+
+    Requires:
+    * server must have access to AWS Cognito API
+    * Cognito identity pool with Refinery configured as a custom auth provider
+    """
+    authentication_classes = (authentication.SessionAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    renderer_classes = (JSONRenderer,)
+
+    def post(self, request):
+        # retrieve current AWS region
+        with open('/home/ubuntu/region') as f:
+            try:
+                region = f.read().rstrip()
+            except IOError as exc:
+                return api_error_response(
+                    "Error retrieving current AWS region: {}".format(exc),
+                    status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
+        try:
+            client = boto3.client('cognito-identity', region_name=region)
+        except botocore.exceptions.NoRegionError as exc:
+            # AWS region is not configured
+            return api_error_response(
+                "Server AWS configuration is incorrect: {}".format(exc),
+                status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+        try:
+            # 60 results is the highest allowed value
+            response = client.list_identity_pools(MaxResults=60)
+        except botocore.exceptions.NoCredentialsError as exc:
+            return api_error_response(
+                "Server AWS configuration is incorrect: {}".format(exc),
+                status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+        except botocore.exceptions.ClientError as exc:
+            return api_error_response(
+                "Error retrieving Cognito identity pools: {}".format(exc),
+                status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+        # retrieve Cognito settings
+        try:
+            identity_pool_name = settings.COGNITO_IDENTITY_POOL_NAME
+            developer_provider_name = settings.COGNITO_DEVELOPER_PROVIDER_NAME
+        except AttributeError as exc:
+            return api_error_response(
+                "Server AWS configuration is incorrect: {}".format(exc),
+                status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+        # retrieve Cognito identity pool ID using pool name
+        identity_pool_id = ''
+        for identity_pool in response['IdentityPools']:
+            if identity_pool['IdentityPoolName'] == identity_pool_name:
+                identity_pool_id = identity_pool['IdentityPoolId']
+
+        try:
+            token = client.get_open_id_token_for_developer_identity(
+                IdentityPoolId=identity_pool_id,
+                Logins={developer_provider_name: request.user.username}
+            )
+        except botocore.exceptions.ClientError as exc:
+            return api_error_response(
+                "Server AWS configuration is incorrect: {}".format(exc),
+                status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+        return Response(token)
