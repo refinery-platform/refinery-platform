@@ -189,7 +189,7 @@ class ToolManagerTestBase(TestCase):
 
         self.workflow = Workflow.objects.create(
             name=self.td.name,
-            summary="Workflow for: {}".format(self.td.__str__()),
+            summary="Workflow for: {}".format(self.td),
             is_active=True,
             workflow_engine=self.td.workflow_engine,
             internal_id=self.td.galaxy_workflow_id

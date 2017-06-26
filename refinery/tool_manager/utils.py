@@ -240,7 +240,7 @@ def create_tool_analysis(validated_analysis_config):
         raise RuntimeError("Couldn't fetch Tool from UUID: {}".format(e))
 
     analysis = AnalysisFactory(
-        summary="Analysis run for: {}".format(tool.__str__()),
+        summary="Analysis run for: {}".format(tool),
         name=custom_name,
         project=user.profile.catch_all_project,
         data_set=data_set,
@@ -248,8 +248,6 @@ def create_tool_analysis(validated_analysis_config):
         time_start=timezone.now()
     )
     analysis.set_owner(user)
-    tool.set_analysis(analysis.uuid)
-
     return analysis
 
 
