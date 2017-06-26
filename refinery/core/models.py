@@ -1151,7 +1151,7 @@ class Analysis(OwnableResource):
 
     objects = AnalysisManager()
 
-    def __unicode__(self):
+    def __str__(self):
         return "{} - {} - {}".format(
             self.name,
             self.get_owner_username(),

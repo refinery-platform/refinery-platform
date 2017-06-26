@@ -270,12 +270,11 @@ class Tool(OwnableResource):
     A Tool is a representation of the information it will take to launch a
     Refinery-based Tool
     """
-    dataset = models.ForeignKey(DataSet, blank=True, null=True)
+    dataset = models.ForeignKey(DataSet)
     analysis = models.OneToOneField(Analysis, blank=True, null=True)
     container_name = models.CharField(
         max_length=250,
         unique=True,
-        blank=True,
         null=True
     )
     tool_launch_configuration = models.TextField()
@@ -359,7 +358,7 @@ class Tool(OwnableResource):
         """
 
         analysis_config = {
-            "custom_name": "Analysis: {}".format(self.__str__()),
+            "custom_name": "Analysis: {}".format(self),
             "studyUuid": self.dataset.get_latest_study().uuid,
             "toolUuid": self.uuid,
             "user_id": self.get_owner().id,
@@ -368,6 +367,7 @@ class Tool(OwnableResource):
         validate_analysis_config(analysis_config)
 
         analysis = create_analysis(analysis_config)
+        self.set_analysis(analysis.uuid)
         AnalysisStatus.objects.create(analysis=analysis)
 
         # Run the analysis task
