@@ -124,14 +124,11 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
         except(FileStoreItem.DoesNotExist,
                FileStoreItem.MultipleObjectsReturned) as e:
             logger.error("Couldn't properly fetch FileStoreItem: %s", e)
+            file_store_item = None
+        if file_store_item:
+            data[NodeIndex.FILETYPE_PREFIX + "_" + uuid + "_s"] =\
+                file_store_item.get_filetype()
         else:
-            if file_store_item:
-                data[NodeIndex.FILETYPE_PREFIX + "_" + uuid + "_s"] =\
-                    file_store_item.get_filetype()
-            else:
-                logger.warning(
-                    "Unable to get file store item " + str(object.file_uuid) +
-                    ". No file type available.")
-                data[NodeIndex.FILETYPE_PREFIX + "_" + uuid + "_s"] = ""
+            data[NodeIndex.FILETYPE_PREFIX + "_" + uuid + "_s"] = ""
 
-            return data
+        return data
