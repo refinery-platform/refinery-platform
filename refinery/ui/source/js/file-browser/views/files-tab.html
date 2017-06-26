@@ -23,6 +23,21 @@
            Hide Tool Panel
         </span>
         </button>
+        <span ng-if="FBCtrl.isOwner" class="float-right">
+          <i class="fa fa-wrench fa-3x fa-border" rp-assay-files-util-modal>
+            Config
+          </i>
+          <a
+            id="help-view-selector"
+            popover-placement="right"
+            uib-popover="The collection of files in this data set can be displayed using different representations."
+            popover-title="Select File Display Mode"
+            popover-trigger="focus"
+            popover-append-to-body="true"
+            tabindex="0">
+            <i class="fa fa-question-circle info-icon icon-only"></i>
+          </a>
+        </span>
       </div>
       <div id="table-filter">
         <div id="filter-panel-body">
@@ -32,21 +47,6 @@
         <hr>
         <div class="sub-group-panel">
           <rp-file-display></rp-file-display>
-          <span ng-if="FBCtrl.isOwner">
-            <i class="fa fa-wrench fa-border"
-              rp-assay-files-util-modal>
-            </i>
-            <a
-              id="help-view-selector"
-              popover-placement="right"
-              uib-popover="The collection of files in this data set can be displayed using different representations."
-              popover-title="Select File Display Mode"
-              popover-trigger="focus"
-              popover-append-to-body="true"
-              tabindex="0">
-              <i class="fa fa-question-circle info-icon icon-only"></i>
-            </a>
-          </span>
         </div>
       </div>
     </div>
