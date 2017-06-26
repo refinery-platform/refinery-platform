@@ -2,6 +2,7 @@ import glob
 import json
 import logging
 import os
+import uuid
 
 from bioblend.galaxy.client import ConnectionError
 from django.conf import settings
@@ -11,7 +12,7 @@ from django.utils import timezone
 from jsonschema import RefResolver, ValidationError, validate
 
 from analysis_manager.utils import fetch_objects_required_for_analysis
-from core.models import DataSet, WorkflowEngine
+from core.models import DataSet, Workflow, WorkflowEngine
 from factory_boy.django_model_factories import (AnalysisFactory,
                                                 FileRelationshipFactory,
                                                 GalaxyParameterFactory,
@@ -19,7 +20,7 @@ from factory_boy.django_model_factories import (AnalysisFactory,
                                                 OutputFileFactory,
                                                 ParameterFactory,
                                                 ToolDefinitionFactory,
-                                                ToolFactory)
+                                                ToolFactory, WorkflowFactory)
 from file_store.models import FileType
 
 from .models import Tool, ToolDefinition
@@ -134,23 +135,32 @@ def create_tool_definition(annotation_data):
         workflow_engine = WorkflowEngine.objects.get(
             uuid=annotation_data["workflow_engine_uuid"]
         )
+        workflow = WorkflowFactory(
+            uuid=str(uuid.uuid4()),
+            name=annotation_data["name"],
+            summary="Workflow for: {}".format(annotation_data["name"]),
+            internal_id=annotation_data["galaxy_workflow_id"],
+            workflow_engine=workflow_engine,
+            is_active=True,
+            type=Workflow.ANALYSIS_TYPE,
+            graph=json.dumps(annotation_data["graph"])
+        )
+        workflow.set_manager_group(workflow_engine.get_manager_group())
+        workflow.share(workflow_engine.get_manager_group().get_managed_group())
 
         tool_definition = ToolDefinitionFactory(
             name=annotation_data["name"],
             description=annotation["description"],
             tool_type=tool_type,
             file_relationship=create_file_relationship_nesting(annotation),
-            galaxy_workflow_id=annotation_data["galaxy_workflow_id"],
-            workflow_engine=workflow_engine
+            workflow=workflow
         )
     elif tool_type == ToolDefinition.VISUALIZATION:
         tool_definition = ToolDefinitionFactory(
             name=annotation_data["name"],
             description=annotation["description"],
             tool_type=tool_type,
-            file_relationship=create_file_relationship_nesting(
-                annotation
-            ),
+            file_relationship=create_file_relationship_nesting(annotation),
             image_name=annotation["image_name"],
             container_input_path=annotation["container_input_path"],
         )
@@ -405,6 +415,12 @@ def get_workflows():
                 workflow_data = galaxy_connection.workflows.show_workflow(
                     workflow["id"]
                 )
+                workflow_data["graph"] = (
+                    galaxy_connection.workflows.export_workflow_json(
+                        workflow["id"]
+                    )
+                )
+
                 workflow_dict[workflow_engine.uuid].append(workflow_data)
 
     return workflow_dict
