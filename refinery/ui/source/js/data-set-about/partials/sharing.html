@@ -10,6 +10,7 @@
     <span class="fa fa-user"></span>&nbsp;
     <span ng-if="ASCtrl.dataSetSharing.is_owner">
       <a href="/users/{{ ASCtrl.dataSetSharing.owner }}">
+        Cat
        You
       </a>
     </span>
@@ -17,6 +18,9 @@
       <a href="/users/{{ ASCtrl.dataSetSharing.owner }}">
       {{ ASCtrl.ownerName }}
       </a>
+    </span>
+     <span ng-if="!ASCtrl.dataSetSharing.is_owner && !ASCtrl.ownerName">
+      <em>Owner's information not available.</em>
     </span>
   </p>
 
