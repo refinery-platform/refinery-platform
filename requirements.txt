@@ -76,4 +76,4 @@ watchdog==0.6.0
 xmltodict==0.9.2
 yolk==0.4.1
 
-git+https://github.com/refinery-platform/django_docker_engine.git@v0.0.7
+git+https://github.com/refinery-platform/django_docker_engine.git@v0.0.9
