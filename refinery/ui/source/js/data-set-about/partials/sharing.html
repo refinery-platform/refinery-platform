@@ -18,6 +18,9 @@
       {{ ASCtrl.ownerName }}
       </a>
     </span>
+     <span ng-if="!ASCtrl.dataSetSharing.is_owner && !ASCtrl.ownerName">
+      <em>Owner's information not available.</em>
+    </span>
   </p>
 
 <div ng-if="ASCtrl.groupList.length > 0">
