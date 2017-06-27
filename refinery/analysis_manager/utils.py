@@ -22,10 +22,8 @@ logger = logging.getLogger(__name__)
 
 # Allow JSON Schema to find the JSON pointers we define in our schemas
 JSON_SCHEMA_FILE_RESOLVER = RefResolver(
-    "{}{}{}".format(
-        'file://',
-        os.path.join(settings.BASE_DIR, "refinery/analysis_manager/schemas"),
-        '/'
+    "file://{}/".format(
+        os.path.join(settings.BASE_DIR, "refinery/analysis_manager/schemas")
     ),
     None
 )

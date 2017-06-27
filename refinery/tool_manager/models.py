@@ -199,7 +199,7 @@ class ToolDefinition(models.Model):
 
 
 @receiver(pre_delete, sender=ToolDefinition)
-def remove_associated_objects(sender, instance, *args, **kwargs):
+def delete_associated_objects(sender, instance, *args, **kwargs):
     """
     Delete related parameter and output_file objects upon ToolDefinition
     deletion.
@@ -343,8 +343,8 @@ class Tool(OwnableResource):
         """
         if self.get_tool_type() != ToolDefinition.WORKFLOW:
             raise NotImplementedError(
-                "Tool must be of type: {} to launch a workflow".format(
-                    ToolDefinition.WORKFLOW
+                "Tool: {} is not of type: {}".format(
+                    self, ToolDefinition.WORKFLOW
                 )
             )
 
