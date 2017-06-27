@@ -16,8 +16,7 @@ from docker.errors import APIError
 from analysis_manager.models import AnalysisStatus
 from analysis_manager.tasks import run_analysis
 from analysis_manager.utils import create_analysis, validate_analysis_config
-from core.models import (Analysis, DataSet, OwnableResource, Workflow,
-                         WorkflowEngine)
+from core.models import Analysis, DataSet, OwnableResource, Workflow
 from data_set_manager.utils import get_file_url_from_node_uuid
 from file_store.models import FileType
 
@@ -164,11 +163,7 @@ class ToolDefinition(models.Model):
         blank=True
     )
     annotation = models.TextField()
-    galaxy_workflow_id = models.CharField(
-        max_length=250,
-        blank=True
-    )
-    workflow_engine = models.ForeignKey(WorkflowEngine, blank=True, null=True)
+    workflow = models.ForeignKey(Workflow, null=True)
 
     def __str__(self):
         return "{}: {} {}".format(self.tool_type, self.name, self.uuid)
@@ -202,32 +197,14 @@ class ToolDefinition(models.Model):
                 "Workflow-based tools don't utilize `extra_directories`"
             )
 
-    def get_workflow(self):
-        """
-        Fetch Workflow object for a Workflow-based ToolDefinition
-
-        :return: <Workflow>
-        :raises: RuntimeError, NotImplementedError
-        """
-        if self.tool_type == ToolDefinition.VISUALIZATION:
-            raise NotImplementedError(
-                "Visualization-based Tools don't utilize Workflows"
-            )
-        try:
-            return Workflow.objects.get(
-                internal_id=self.galaxy_workflow_id,
-                workflow_engine=self.workflow_engine
-            )
-        except(Workflow.DoesNotExist,
-               Workflow.MultipleObjectsReturned) as e:
-            raise RuntimeError("Couldn't fetch Workflow: {}".format(e))
-
 
 @receiver(pre_delete, sender=ToolDefinition)
-def delete_parameters_and_output_files(sender, instance, *args, **kwargs):
+def delete_associated_objects(sender, instance, *args, **kwargs):
     """
     Delete related parameter and output_file objects upon ToolDefinition
-    deletion
+    deletion.
+
+    Set any associated Workflows to an inactive state
     """
     parameters = instance.parameters.all()
     for parameter in parameters:
@@ -236,6 +213,14 @@ def delete_parameters_and_output_files(sender, instance, *args, **kwargs):
     output_files = instance.output_files.all()
     for output_file in output_files:
         output_file.delete()
+
+    # Set any associated Workflows to be inactive
+    # this will remove the Workflow entries from the UI, but won't delete
+    # any Analyses that were run from said Workflows
+    workflow = instance.workflow
+    if workflow:
+        workflow.is_active = False
+        workflow.save()
 
 
 @receiver(post_delete, sender=ToolDefinition)
@@ -356,13 +341,19 @@ class Tool(OwnableResource):
             pointing to the Analysis' status page
         :raises: RuntimeError
         """
+        if self.get_tool_type() != ToolDefinition.WORKFLOW:
+            raise NotImplementedError(
+                "Tool: {} is not of type: {}".format(
+                    self, ToolDefinition.WORKFLOW
+                )
+            )
 
         analysis_config = {
             "custom_name": "Analysis: {}".format(self),
             "studyUuid": self.dataset.get_latest_study().uuid,
             "toolUuid": self.uuid,
             "user_id": self.get_owner().id,
-            "workflowUuid": self.tool_definition.get_workflow().uuid
+            "workflowUuid": self.tool_definition.workflow.uuid
         }
         validate_analysis_config(analysis_config)
 
