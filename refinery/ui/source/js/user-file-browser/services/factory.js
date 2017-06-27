@@ -124,9 +124,11 @@
             });
           }
         });
-        filters[filterName] = {
-          facetObj: facetCounts
-        };
+        if (facetCounts.length > 0) {
+          filters[filterName] = {
+            facetObj: facetCounts
+          };
+        }
       });
 
       return filters;
