@@ -33,13 +33,9 @@ ANNOTATION_ERROR_MESSAGE = (
 )
 # Allow JSON Schema to find the JSON pointers we define in our schemas
 JSON_SCHEMA_FILE_RESOLVER = RefResolver(
-    "{}{}{}".format(
-        'file://',
-        os.path.join(
-            settings.BASE_DIR,
-            "refinery/tool_manager/schemas"
-        ),
-        '/'),
+    "file://{}/".format(
+        os.path.join(settings.BASE_DIR, "refinery/tool_manager/schemas")
+    ),
     None
 )
 
@@ -171,12 +167,11 @@ def create_tool_definition(annotation_data):
         try:
             image_name, version = tool_definition.image_name.split(":")
         except ValueError:
-            logger.debug(
-                "`image_name` has no specified version, and the `latest` "
-                "version of %s will be pulled",
-                tool_definition.image_name
+            raise RuntimeError(
+                "Tool's Docker image: `{}` has no specified version".format(
+                    tool_definition.image_name
+                )
             )
-            DockerClientWrapper().pull(tool_definition.image_name)
         else:
             logger.debug(
                 "Pulling Docker image: %s", tool_definition.image_name
