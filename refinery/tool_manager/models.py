@@ -343,7 +343,7 @@ class Tool(OwnableResource):
         """
         if self.get_tool_type() != ToolDefinition.WORKFLOW:
             raise NotImplementedError(
-                "Tool must be of type: {} to launcha workflow".format(
+                "Tool must be of type: {} to launch a workflow".format(
                     ToolDefinition.WORKFLOW
                 )
             )
