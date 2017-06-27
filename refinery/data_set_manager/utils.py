@@ -633,8 +633,8 @@ def _generate_solr_params(params, assay_uuids, facets_from_config=False):
 
     if facets_from_config:
         # Twice as many facets as necessary, but easier than the alternative.
-        template = '&facet.field={}_Characteristics_generic_s' + \
-                   '&facet.field={}_Factor_Value_generic_s'
+        template = '&facet.field={0}_Characteristics_generic_s' + \
+                   '&facet.field={0}_Factor_Value_generic_s'
         solr_params += ''.join([template.format(s) for s
                                 in settings.USER_FILES_FACETS.split(",")])
     elif facet_field:

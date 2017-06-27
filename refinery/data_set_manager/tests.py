@@ -744,7 +744,7 @@ class UtilitiesTest(TestCase):
         for field in list_not_hidden_field:
             self.assertEqual(is_field_in_hidden_list(field), False)
 
-    def test_generate_solr_params(self):
+    def test_generate_solr_params_no_params(self):
         # empty params
         query = generate_solr_params_for_assay(QueryDict({}), self.valid_uuid)
         self.assertEqual(str(query),
@@ -764,7 +764,9 @@ class UtilitiesTest(TestCase):
                          'data_set_manager.node&wt=json&facet=true&'
                          'facet.limit=-1'.format(
                                  self.valid_uuid))
-        # added parameter
+
+    def test_generate_solr_params_for_assay_with_params(self):
+        query = generate_solr_params_for_assay(QueryDict({}), self.valid_uuid)
         parameter_dict = {'limit': 7, 'offset': 2,
                           'include_facet_count': 'true',
                           'attributes': 'cats,mouse,dog,horse',
@@ -791,6 +793,10 @@ class UtilitiesTest(TestCase):
                          'data_set_manager.node&wt=json&facet=true&'
                          'facet.limit=-1'.format(
                                  self.valid_uuid))
+
+    def test_generate_solr_params_for_user(self):
+        # TODO
+        pass
 
     def test_generate_filtered_facet_fields(self):
         attribute_orders = AttributeOrder.objects.filter(
