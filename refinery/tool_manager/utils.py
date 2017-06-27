@@ -9,6 +9,7 @@ from django.contrib import admin
 from django.db import transaction
 from django.utils import timezone
 
+from bioblend.galaxy.client import ConnectionError
 from django_docker_engine.docker_utils import DockerClientWrapper
 from jsonschema import RefResolver, ValidationError, validate
 
