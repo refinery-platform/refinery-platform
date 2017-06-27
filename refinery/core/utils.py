@@ -1,26 +1,25 @@
 from __future__ import absolute_import
-import logging
 
 import ast
-import py2neo
+import logging
 import sys
+from urlparse import urljoin, urlparse
 
 from django.conf import settings
 from django.contrib import messages
-from django.contrib.sites.models import Site
 from django.contrib.auth.models import User
-from django.core.mail import send_mail
+from django.contrib.sites.models import Site
 from django.core.cache import cache
+from django.core.mail import send_mail
 from django.db import connection
 from django.utils import timezone
 
+import py2neo
 import requests
 from rest_framework.response import Response
-from urlparse import urlparse, urljoin
 
 import core
 import data_set_manager
-
 # These imports go against our coding style guide, but are necessary for the
 #  time being due to mutual import issues
 from core.search_indexes import DataSetIndex

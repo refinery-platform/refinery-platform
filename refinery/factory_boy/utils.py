@@ -1,13 +1,15 @@
-from datetime import datetime
 import uuid as uuid_builtin
+from datetime import datetime
 
 from core.models import Analysis, DataSet
-
-from factory_boy.django_model_factories import (
-    AnalysisFactory, DataSetFactory, GalaxyInstanceFactory,
-    InvestigationFactory, InvestigationLinkFactory, ProjectFactory,
-    StudyFactory, WorkflowEngineFactory, WorkflowFactory
-)
+from factory_boy.django_model_factories import (AnalysisFactory,
+                                                DataSetFactory,
+                                                GalaxyInstanceFactory,
+                                                InvestigationFactory,
+                                                InvestigationLinkFactory,
+                                                ProjectFactory, StudyFactory,
+                                                WorkflowEngineFactory,
+                                                WorkflowFactory)
 
 
 def make_datasets(number_to_create, user_instance):

@@ -4,18 +4,18 @@ Created on Jun 20, 2012
 @author: nils
 '''
 import csv
-import file_server
 import logging
 import operator
 
 from django.conf import settings
 
-from .models import Assay, Attribute, Investigation, Node, Study
-from .tasks import create_dataset
-from annotation_server.models import species_to_taxon_id, Taxon
+import file_server
+from annotation_server.models import Taxon, species_to_taxon_id
 from file_store.models import FileStoreItem, generate_file_source_translator
 from file_store.tasks import create, import_file
 
+from .models import Assay, Attribute, Investigation, Node, Study
+from .tasks import create_dataset
 
 logger = logging.getLogger(__name__)
 

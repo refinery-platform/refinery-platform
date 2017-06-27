@@ -1,10 +1,11 @@
 import json
 import uuid
 
-import mock
 from django.contrib.auth.models import User
 from django.http import HttpResponseBadRequest, HttpResponseNotAllowed
 from django.test import RequestFactory, TestCase
+
+import mock
 from guardian.utils import get_anonymous_user
 
 from analysis_manager.tasks import run_analysis

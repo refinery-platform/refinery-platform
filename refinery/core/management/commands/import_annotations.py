@@ -1,21 +1,20 @@
 import logging
-from optparse import make_option
-import py2neo
-import requests
 import sys
 import time
 import urlparse
+from optparse import make_option
 
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.exceptions import ImproperlyConfigured
 from django.core.management.base import BaseCommand, CommandError
 
+import py2neo
+import requests
 from guardian.utils import get_anonymous_user
 
 from core.models import DataSet, ExtendedGroup
-from core.utils import (normalize_annotation_ont_ids, get_data_set_annotations)
-
+from core.utils import get_data_set_annotations, normalize_annotation_ont_ids
 
 logger = logging.getLogger(__name__)
 root_logger = logging.getLogger()

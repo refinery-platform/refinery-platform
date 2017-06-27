@@ -21,18 +21,18 @@ from django.views.decorators.gzip import gzip_page
 
 import boto3
 import botocore
+import requests
+import xmltodict
 from guardian.shortcuts import get_perms
 from guardian.utils import get_anonymous_user
 from registration import signals
 from registration.views import RegistrationView
-import requests
 from requests.exceptions import HTTPError
 from rest_framework import authentication, status, viewsets
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework.views import APIView
-import xmltodict
 
 from analysis_manager.utils import get_solr_results
 from annotation_server.models import GenomeBuild

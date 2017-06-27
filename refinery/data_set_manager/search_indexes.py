@@ -11,8 +11,9 @@ from django.conf import settings
 
 from haystack import indexes
 
-from .models import AnnotatedNode, Node
 from file_store.models import FileStoreItem
+
+from .models import AnnotatedNode, Node
 
 logger = logging.getLogger(__name__)
 

@@ -4,49 +4,51 @@ Created on May 4, 2012
 @author: nils
 '''
 
-from datetime import timedelta
 import json
 import logging
 import re
-from sets import Set
 import uuid
+from datetime import timedelta
+from sets import Set
 
 from django.conf import settings
 from django.conf.urls import url
-from django.utils import timezone
-from django.contrib.auth.models import User, Group
-from django.contrib.sites.models import get_current_site
+from django.contrib.auth.models import Group, User
 from django.contrib.contenttypes.models import ContentType
-from django.core.mail import EmailMessage
-from django.template import loader, Context
+from django.contrib.sites.models import get_current_site
 from django.core.cache import cache
+from django.core.mail import EmailMessage
 from django.core.signing import Signer
 from django.forms import ValidationError
-from guardian.shortcuts import get_objects_for_user, get_objects_for_group
+from django.template import Context, loader
+from django.utils import timezone
+
+from fadapa import Fadapa
 from guardian.models import GroupObjectPermission
+from guardian.shortcuts import get_objects_for_group, get_objects_for_user
 from guardian.utils import get_anonymous_user
 from tastypie import fields
-from tastypie.authentication import SessionAuthentication, Authentication
+from tastypie.authentication import Authentication, SessionAuthentication
 from tastypie.authorization import Authorization
 from tastypie.bundle import Bundle
-from tastypie.constants import ALL_WITH_RELATIONS, ALL
+from tastypie.constants import ALL, ALL_WITH_RELATIONS
 from tastypie.exceptions import ImmediateHttpResponse, NotFound, Unauthorized
-from tastypie.http import HttpNotFound, HttpForbidden, HttpBadRequest, \
-    HttpUnauthorized, HttpMethodNotAllowed, HttpAccepted, HttpCreated, \
-    HttpNoContent, HttpGone
+from tastypie.http import (HttpAccepted, HttpBadRequest, HttpCreated,
+                           HttpForbidden, HttpGone, HttpMethodNotAllowed,
+                           HttpNoContent, HttpNotFound, HttpUnauthorized)
 from tastypie.resources import ModelResource, Resource
 from tastypie.utils import trailing_slash
 
-from core.models import Project, NodeSet, NodeRelationship, NodePair, \
-    Workflow, WorkflowInputRelationships, Analysis, DataSet, \
-    ResourceStatistics, GroupManagement, ExtendedGroup, \
-    UserAuthentication, Invitation, UserProfile, FastQC, Tutorials
-from data_set_manager.api import StudyResource, AssayResource, \
-    InvestigationResource
-from data_set_manager.models import Node, Study, Attribute
-from file_store.models import FileStoreItem
-from fadapa import Fadapa
+from core.models import (Analysis, DataSet, ExtendedGroup, FastQC,
+                         GroupManagement, Invitation, NodePair,
+                         NodeRelationship, NodeSet, Project,
+                         ResourceStatistics, Tutorials, UserAuthentication,
+                         UserProfile, Workflow, WorkflowInputRelationships)
 from core.utils import get_data_sets_annotations
+from data_set_manager.api import (AssayResource, InvestigationResource,
+                                  StudyResource)
+from data_set_manager.models import Attribute, Node, Study
+from file_store.models import FileStoreItem
 
 logger = logging.getLogger(__name__)
 signer = Signer()

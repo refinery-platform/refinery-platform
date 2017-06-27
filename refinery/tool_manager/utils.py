@@ -3,10 +3,11 @@ import json
 import logging
 import os
 
-from bioblend.galaxy.client import ConnectionError
 from django.conf import settings
 from django.contrib import admin
 from django.db import transaction
+
+from bioblend.galaxy.client import ConnectionError
 from jsonschema import RefResolver, ValidationError, validate
 
 from core.models import WorkflowEngine

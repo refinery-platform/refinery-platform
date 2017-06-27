@@ -3,22 +3,23 @@ Created on May 10, 2012
 
 @author: nils
 '''
-from datetime import datetime
 import logging
+from datetime import datetime
 
 from django.conf import settings
 from django.db import models
-from django_extensions.db.fields import UUIDField
 
-
-from celery.result import AsyncResult
 import requests
+from celery.result import AsyncResult
+from django_extensions.db.fields import UUIDField
 from requests.exceptions import HTTPError
 
-from .genomes import map_species_id_to_default_genome_build
-import data_set_manager
 import core
+import data_set_manager
 from file_store.models import FileStoreItem
+
+from .genomes import map_species_id_to_default_genome_build
+
 """
 TODO: Refactor import data_set_manager. Importing
 data_set_manager.tasks.generate_auxiliary_file()

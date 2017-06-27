@@ -9,11 +9,12 @@ import logging
 import time
 import urlparse
 
-import requests
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.db.models import Q
 from django.utils.http import urlquote, urlunquote
+
+import requests
 from guardian.shortcuts import get_objects_for_user
 from requests.exceptions import HTTPError
 

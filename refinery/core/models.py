@@ -14,8 +14,6 @@ import socket
 from datetime import datetime
 from urlparse import urljoin
 
-import pysolr
-from bioblend import galaxy
 from django import forms
 from django.conf import settings
 from django.contrib import messages
@@ -36,6 +34,9 @@ from django.forms import ValidationError
 from django.template import Context, loader
 from django.template.loader import render_to_string
 from django.utils import timezone
+
+import pysolr
+from bioblend import galaxy
 from django_auth_ldap.backend import LDAPBackend
 from django_extensions.db.fields import UUIDField
 from guardian.models import UserObjectPermission

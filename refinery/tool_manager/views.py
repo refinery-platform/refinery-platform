@@ -1,6 +1,7 @@
 import logging
 
 from django.http import HttpResponseBadRequest
+
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.viewsets import ModelViewSet
 

@@ -4,11 +4,12 @@ import logging
 import os
 import re
 
-import requests
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.http import HttpResponseServerError
 from django.utils import timezone
+
+import requests
 from jsonschema import RefResolver, ValidationError, validate
 from requests.packages.urllib3.exceptions import HTTPError
 

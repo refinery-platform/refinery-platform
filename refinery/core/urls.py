@@ -5,11 +5,11 @@ Created on Feb 20, 2012
 '''
 
 from django.conf.urls import patterns, url
+
 from rest_framework.routers import DefaultRouter
 
 from .views import (AnalysesViewSet, DataSetsViewSet, NodeViewSet, OpenIDToken,
                     WorkflowViewSet)
-
 
 urlpatterns = patterns(
     'core.views',

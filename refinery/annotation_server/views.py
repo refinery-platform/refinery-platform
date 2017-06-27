@@ -1,13 +1,12 @@
-from decimal import Decimal
 import json
 import logging
+from decimal import Decimal
 
 from django.db import connection
 from django.db.models import Q
 from django.http import HttpResponse
 
 from .utils import GAP_REGIONS, MAPPABILITY_THEORETICAL, SUPPORTED_GENOMES
-
 
 logger = logging.getLogger(__name__)
 

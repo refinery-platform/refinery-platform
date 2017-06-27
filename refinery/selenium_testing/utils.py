@@ -1,4 +1,5 @@
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
+
 from pyvirtualdisplay import Display
 from selenium import webdriver
 from selenium.common.exceptions import TimeoutException

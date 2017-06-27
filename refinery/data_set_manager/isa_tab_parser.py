@@ -4,7 +4,6 @@ Created on May 11, 2012
 @author: nils
 '''
 
-from collections import deque
 import csv
 import glob
 import itertools
@@ -13,16 +12,16 @@ import os
 import re
 import string
 import tempfile
+from collections import deque
 from urlparse import urlparse
 from zipfile import ZipFile
 
-from .models import (Assay, Attribute, Contact, Design, Factor,
-                     Investigation, Node, Ontology, Protocol,
-                     ProtocolReference, ProtocolReferenceParameter,
-                     Publication, Study)
 import data_set_manager.tasks
 from file_store.tasks import create, import_file
 
+from .models import (Assay, Attribute, Contact, Design, Factor, Investigation,
+                     Node, Ontology, Protocol, ProtocolReference,
+                     ProtocolReferenceParameter, Publication, Study)
 
 logger = logging.getLogger(__name__)
 

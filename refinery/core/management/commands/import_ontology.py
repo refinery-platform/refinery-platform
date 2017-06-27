@@ -1,10 +1,11 @@
 from __future__ import absolute_import
+
 import json
 import logging
-from optparse import make_option
 import subprocess
 import sys
 import urlparse
+from optparse import make_option
 
 from django.conf import settings
 from django.core.management.base import BaseCommand
@@ -12,7 +13,6 @@ from django.core.management.base import BaseCommand
 import py2neo
 
 from ...utils import create_update_ontology
-
 
 logger = logging.getLogger(__name__)
 root_logger = logging.getLogger()

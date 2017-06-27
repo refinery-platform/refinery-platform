@@ -5,7 +5,6 @@ from django import template
 
 from file_store.models import FileStoreItem
 
-
 logger = logging.getLogger(__name__)
 register = template.Library()
 

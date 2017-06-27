@@ -6,12 +6,13 @@ import time
 import uuid
 from urlparse import urljoin
 
-import mock
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.core.management import CommandError, call_command
 from django.http import HttpResponseBadRequest, JsonResponse
 from django.test import TestCase
+
+import mock
 from rest_framework.test import (APIRequestFactory, APITestCase,
                                  force_authenticate)
 

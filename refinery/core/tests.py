@@ -3,12 +3,13 @@ import random
 import string
 from urlparse import urljoin
 
-import mock
-import mockcache as memcache
 from django.contrib.auth.models import Group, User
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.utils import timezone
+
+import mock
+import mockcache as memcache
 from guardian.shortcuts import assign_perm
 from rest_framework.test import (APIClient, APIRequestFactory, APITestCase,
                                  force_authenticate)

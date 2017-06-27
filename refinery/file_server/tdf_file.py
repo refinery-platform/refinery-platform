@@ -4,12 +4,13 @@ Created on Apr 21, 2012
 @author: nils
 """
 
-from bitstring import ConstBitStream
 import cStringIO
 import logging
 import math
 import struct
 import zlib
+
+from bitstring import ConstBitStream
 
 from file_store.models import get_file_object
 

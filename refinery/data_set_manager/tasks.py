@@ -1,5 +1,4 @@
 import csv
-from datetime import date
 import errno
 import glob
 import logging
@@ -12,26 +11,27 @@ import sys
 import tempfile
 import time
 import traceback
+from datetime import date
 
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.management import call_command
 
 import celery
-from celery.task import task
 import pysam
 import requests
+from celery.task import task
 from requests.exceptions import HTTPError
 
-from .isa_tab_parser import IsaTabParser
-from .models import initialize_attribute_order, Investigation, Node
-from .utils import (calculate_checksum, get_node_types,
-                    index_annotated_nodes, update_annotated_nodes)
 from core.models import DataSet, ExtendedGroup, FileStoreItem
 from core.utils import (add_data_set_to_neo4j, update_annotation_sets_neo4j,
                         update_data_set_index)
 from file_store.models import FileExtension
 
+from .isa_tab_parser import IsaTabParser
+from .models import Investigation, Node, initialize_attribute_order
+from .utils import (calculate_checksum, get_node_types, index_annotated_nodes,
+                    update_annotated_nodes)
 
 logger = logging.getLogger(__name__)
 
