@@ -541,33 +541,13 @@ def generate_solr_params_for_user(params, user_id):
             # but there's nothing more to do here.
         investigation = investigation_link.investigation
 
-        try:
-            study = Study.objects.get(
-                investigation=investigation
-            )
-        except Study.DoesNotExist as e:
-            logger.error('Expected at least one Study for %s: %s',
-                         investigation, e)
-            continue
-            # Again, nothing more to do here.
-        except Study.MultipleObjectsReturned as e:
-            logger.error('Expected only one Study for %s: %s',
-                         investigation, e)
-            raise
+        study_ids = Study.objects.filter(
+            investigation=investigation
+        ).values_list('id', flat=True)
 
-        try:
-            assay = Assay.objects.get(study=study)
-        except Assay.DoesNotExist as e:
-            logger.error('Expected at least one Assay for %s: %s',
-                         study, e)
-            continue
-            # Again, nothing more to do here.
-        except Assay.MultipleObjectsReturned as e:
-            logger.error('Expected only one Assay for %s: %s',
-                         study, e)
-            raise
-
-        assay_uuids.append(assay.uuid)
+        assay_uuids += Assay.objects.filter(
+            study_id__in=study_ids
+        ).values_list('uuid', flat=True)
 
     return _generate_solr_params(params,
                                  assay_uuids=assay_uuids,
