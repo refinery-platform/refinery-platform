@@ -40,14 +40,15 @@ TEST_DATA_PATH = "tool_manager/test_data"
 
 class ToolManagerTestBase(TestCase):
     def setUp(self):
+        self.public_group = ExtendedGroup.objects.public_group()
         self.galaxy_instance = Instance.objects.create()
         self.workflow_engine = WorkflowEngine.objects.create(
             instance=self.galaxy_instance
         )
+        self.workflow_engine.set_manager_group(self.public_group.manager_group)
 
         self.dataset = create_dataset_with_necessary_models()
 
-        self.public_group_name = ExtendedGroup.objects.public_group().name
         self.mock_vis_annotations_reference = (
             "tool_manager.management.commands.generate_tool_definitions"
             ".get_visualization_annotations_list"
@@ -168,7 +169,13 @@ class ToolManagerTestBase(TestCase):
             )
         with open(self.tool_annotation) as f:
             self.tool_annotation_json = json.loads(f.read())
+
+        # Don't pull down images in tests
+        with mock.patch(
+            "django_docker_engine.docker_utils.DockerClientWrapper.pull"
+        ) as pull_mock:
             self.td = create_tool_definition(self.tool_annotation_json)
+            self.assertTrue(pull_mock.called)
 
     def create_workflow_tool_definition(self, annotation_file_name=None):
         if annotation_file_name:
@@ -187,14 +194,6 @@ class ToolManagerTestBase(TestCase):
                 self.workflow_engine.uuid
             )
             self.td = create_tool_definition(self.tool_annotation_data)
-
-        self.workflow = Workflow.objects.create(
-            name=self.td.name,
-            summary="Workflow for: {}".format(self.td),
-            is_active=True,
-            workflow_engine=self.td.workflow_engine,
-            internal_id=self.td.galaxy_workflow_id
-        )
 
     def test_create_valid_tool(self):
         with self.assertRaises(RuntimeError):
@@ -434,7 +433,7 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
             0
         )
         self.assertEqual(self.td.file_relationship.input_files.count(), 1)
-        self.assertIsNotNone(self.td.workflow_engine)
+        self.assertIsNotNone(self.td.workflow)
 
     def test_list_pair_workflow_tool_def_validation(self):
         with open("{}/workflows/LIST:PAIR.json".format(TEST_DATA_PATH)) as f:
@@ -463,7 +462,7 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
             second_nested_file_relationship.input_files.count(),
             2
         )
-        self.assertIsNotNone(self.td.workflow_engine)
+        self.assertIsNotNone(self.td.workflow)
 
     def test_list_list_pair_workflow_tool_def_validation(self):
         with open(
@@ -501,7 +500,7 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
             third_nested_file_relationship.input_files.count(),
             2
         )
-        self.assertIsNotNone(self.td.workflow_engine)
+        self.assertIsNotNone(self.td.workflow)
 
     def test_list_pair_list_workflow_tool_def_validation(self):
         with open(
@@ -550,7 +549,7 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
             third_nested_file_relationship.input_files.count(),
             1
         )
-        self.assertIsNotNone(self.td.workflow_engine)
+        self.assertIsNotNone(self.td.workflow)
 
     def test_list_workflow_related_object_deletion(self):
         self.create_workflow_tool_definition()
@@ -870,6 +869,14 @@ class ToolDefinitionTests(ToolManagerTestBase):
         with self.assertRaises(NotImplementedError):
             self.td.get_extra_directories()
 
+    def test_related_workflow_inactive_after_deletion(self):
+        self.create_workflow_tool_definition()
+        self.assertTrue(self.td.workflow.is_active)
+        self.td.delete()
+        self.assertFalse(
+            Workflow.objects.all()[0].is_active
+        )
+
 
 class ToolTests(ToolManagerTestBase):
     def test_tool_model_str(self):
@@ -1006,11 +1013,6 @@ class ToolTests(ToolManagerTestBase):
         self.create_valid_tool(ToolDefinition.WORKFLOW)
         with self.assertRaises(RuntimeError):
             self.tool.set_analysis(str(uuid.uuid4()))
-
-    def test_get_workflows_wrong_tool_type(self):
-        self.create_valid_tool(ToolDefinition.VISUALIZATION)
-        with self.assertRaises(NotImplementedError):
-            self.td.get_workflow()
 
 
 class ToolAPITests(APITestCase, ToolManagerTestBase):
@@ -1208,41 +1210,8 @@ class ToolLaunchTests(ToolManagerTestBase):
         self.assertIn("DataSet matching query does not exist.",
                       self.post_response.content)
 
-    def test_workflow_tool_launch_invalid_no_workflow_object(self):
-        self.create_workflow_tool_definition()
-        self.workflow.delete()
-
-        # Create mock ToolLaunchConfiguration
-        self.post_data = {
-            "dataset_uuid": self.dataset.uuid,
-            "tool_definition_uuid": self.td.uuid,
-            "file_relationships": str(["www.example.com/cool_file.txt"])
-        }
-
-        self.post_request = self.factory.post(
-            self.tools_url_root,
-            data=self.post_data,
-            format="json"
-        )
-        force_authenticate(self.post_request, self.user)
-        self.post_response = self.tools_view(self.post_request)
-        self.assertEqual(type(self.post_response), HttpResponseBadRequest)
-        self.assertIn(
-            "Couldn't fetch Workflow",
-            self.post_response.content
-        )
-        self.assertEqual(Tool.objects.count(), 0)
-
     def test_workflow_tool_launch_valid_workflow_object(self):
         self.create_valid_tool(ToolDefinition.WORKFLOW)
-
-        self.assertEqual(
-            self.workflow.__str__(),
-            "{} - {}".format(
-                self.td.name,
-                "Workflow for: {}".format(self.td.__str__()),
-            )
-        )
 
         self.assertEqual(self.tool.get_owner(), self.user)
         self.assertEqual(self.tool.get_tool_type(), ToolDefinition.WORKFLOW)
