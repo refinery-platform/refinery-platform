@@ -22,8 +22,9 @@ from .utils import (create_facet_filter_query, customize_attribute_response,
                     generate_facet_fields_query,
                     generate_filtered_facet_fields,
                     generate_solr_params_for_assay,
-                    get_file_url_from_node_uuid, get_owner_from_assay,
-                    hide_fields_from_list, initialize_attribute_order_ranks,
+                    generate_solr_params_for_user, get_file_url_from_node_uuid,
+                    get_owner_from_assay, hide_fields_from_list,
+                    initialize_attribute_order_ranks,
                     insert_facet_field_filter, is_field_in_hidden_list,
                     objectify_facet_field_counts, update_attribute_order_ranks)
 from .views import Assays, AssaysAttributes
@@ -744,27 +745,42 @@ class UtilitiesTest(TestCase):
         for field in list_not_hidden_field:
             self.assertEqual(is_field_in_hidden_list(field), False)
 
-    def test_generate_solr_params(self):
+    def test_generate_solr_params_no_params(self):
         # empty params
         query = generate_solr_params_for_assay(QueryDict({}), self.valid_uuid)
         self.assertEqual(str(query),
                          'fq=assay_uuid%3A%28{}%29'
-                         '&facet.field=Cell Type&'
-                         'facet.field=Analysis&facet.field=Organism&'
-                         'facet.field=Cell Line&facet.field=Type&'
-                         'facet.field=Group Name&fl=Character_Title%2C'
-                         'Specimen%2CCell Type%2CAnalysis%2COrganism%2C'
-                         'Cell Line%2CType%2CGroup Name&'
-                         'fq=type%3A%28%22Raw Data File%22 OR %22'
-                         'Derived Data File%22 OR %22Array Data File'
-                         '%22 OR %22Derived Array Data File%22 OR %22'
-                         'Array Data Matrix File%22 OR%22Derived Array '
-                         'Data Matrix File%22%29&fq=is_annotation%3A'
-                         'false&start=0&rows=10000000&q=django_ct%3A'
-                         'data_set_manager.node&wt=json&facet=true&'
-                         'facet.limit=-1'.format(
+                         '&facet.field=Cell Type'
+                         '&facet.field=Analysis'
+                         '&facet.field=Organism'
+                         '&facet.field=Cell Line'
+                         '&facet.field=Type'
+                         '&facet.field=Group Name'
+                         '&fl=Character_Title%2C'
+                         'Specimen%2C'
+                         'Cell Type%2C'
+                         'Analysis%2C'
+                         'Organism%2C'
+                         'Cell Line%2C'
+                         'Type%2C'
+                         'Group Name'
+                         '&fq=type%3A%28%22Raw Data File%22 '
+                         'OR %22Derived Data File%22 '
+                         'OR %22Array Data File%22 '
+                         'OR %22Derived Array Data File%22 '
+                         'OR %22Array Data Matrix File%22 '
+                         'OR%22Derived Array Data Matrix File%22%29'
+                         '&fq=is_annotation%3Afalse'
+                         '&start=0'
+                         '&rows=10000000'
+                         '&q=django_ct%3Adata_set_manager.node'
+                         '&wt=json'
+                         '&facet=true'
+                         '&facet.limit=-1'.format(
                                  self.valid_uuid))
-        # added parameter
+
+    def test_generate_solr_params_for_assay_with_params(self):
+        query = generate_solr_params_for_assay(QueryDict({}), self.valid_uuid)
         parameter_dict = {'limit': 7, 'offset': 2,
                           'include_facet_count': 'true',
                           'attributes': 'cats,mouse,dog,horse',
@@ -778,19 +794,55 @@ class UtilitiesTest(TestCase):
         )
         self.assertEqual(str(query),
                          'fq=assay_uuid%3A%28{}%29'
-                         '&facet.field=cats&'
-                         'facet.field=mouse&facet.field=dog&'
-                         'facet.field=horse&fl=cats%2C'
-                         'mouse%2Cdog%2Chorse&facet.pivot=cats%2Cmouse&'
-                         'fq=type%3A%28%22Raw Data File%22 OR %22'
-                         'Derived Data File%22 OR %22Array Data File'
-                         '%22 OR %22Derived Array Data File%22 OR %22'
-                         'Array Data Matrix File%22 OR%22Derived Array '
-                         'Data Matrix File%22%29&fq=is_annotation%3A'
-                         'true&start=2&rows=7&q=django_ct%3A'
-                         'data_set_manager.node&wt=json&facet=true&'
-                         'facet.limit=-1'.format(
+                         '&facet.field=cats'
+                         '&facet.field=mouse'
+                         '&facet.field=dog'
+                         '&facet.field=horse'
+                         '&fl=cats%2Cmouse%2Cdog%2Chorse'
+                         '&facet.pivot=cats%2Cmouse'
+                         '&fq=type%3A%28%22Raw Data File%22 '
+                         'OR %22Derived Data File%22 '
+                         'OR %22Array Data File%22 '
+                         'OR %22Derived Array Data File%22 '
+                         'OR %22Array Data Matrix File%22 '
+                         'OR%22Derived Array Data Matrix File%22%29'
+                         '&fq=is_annotation%3Atrue'
+                         '&start=2'
+                         '&rows=7'
+                         '&q=django_ct%3Adata_set_manager.node'
+                         '&wt=json'
+                         '&facet=true'
+                         '&facet.limit=-1'.format(
                                  self.valid_uuid))
+
+    def test_generate_solr_params_for_user(self):
+        query = generate_solr_params_for_user(QueryDict({}), self.user1.id)
+        self.assertEqual(str(query),
+                         'fq=assay_uuid%3A%28{} OR {}%29'
+                         '&facet.field=organism_Characteristics_generic_s'
+                         '&facet.field=organism_Factor_Value_generic_s'
+                         '&facet.field=technology_Characteristics_generic_s'
+                         '&facet.field=technology_Factor_Value_generic_s'
+                         '&facet.field=antibody_Characteristics_generic_s'
+                         '&facet.field=antibody_Factor_Value_generic_s'
+                         '&facet.field=genotype_Characteristics_generic_s'
+                         '&facet.field=genotype_Factor_Value_generic_s'
+                         '&facet.field=experimenter_Characteristics_generic_s'
+                         '&facet.field=experimenter_Factor_Value_generic_s'
+                         '&fq=type%3A%28%22Raw Data File%22 '
+                         'OR %22Derived Data File%22 '
+                         'OR %22Array Data File%22 '
+                         'OR %22Derived Array Data File%22 '
+                         'OR %22Array Data Matrix File%22 '
+                         'OR%22Derived Array Data Matrix File%22%29'
+                         '&fq=is_annotation%3Afalse'
+                         '&start=0'
+                         '&rows=10000000'
+                         '&q=django_ct%3Adata_set_manager.node'
+                         '&wt=json'
+                         '&facet=true'
+                         '&facet.limit=-1'.format(
+                             self.assay.uuid, self.new_assay.uuid))
 
     def test_generate_filtered_facet_fields(self):
         attribute_orders = AttributeOrder.objects.filter(
