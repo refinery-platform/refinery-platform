@@ -1,4 +1,5 @@
 import csv
+from datetime import date
 import errno
 import glob
 import logging
@@ -11,16 +12,15 @@ import sys
 import tempfile
 import time
 import traceback
-from datetime import date
 
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.management import call_command
 
 import celery
+from celery.task import task
 import pysam
 import requests
-from celery.task import task
 from requests.exceptions import HTTPError
 
 from core.models import DataSet, ExtendedGroup, FileStoreItem

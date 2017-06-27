@@ -1,10 +1,10 @@
+import StringIO
 import json
 import logging
 import re
-import StringIO
 import time
-import uuid
 from urlparse import urljoin
+import uuid
 
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import InMemoryUploadedFile

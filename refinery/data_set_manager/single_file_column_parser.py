@@ -9,8 +9,8 @@ import operator
 
 from django.conf import settings
 
-import file_server
 from annotation_server.models import Taxon, species_to_taxon_id
+import file_server
 from file_store.models import FileStoreItem, generate_file_source_translator
 from file_store.tasks import create, import_file
 

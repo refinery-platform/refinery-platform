@@ -2,8 +2,8 @@ from __future__ import absolute_import
 
 import gzip
 import logging
-import os
 from optparse import make_option
+import os
 
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError

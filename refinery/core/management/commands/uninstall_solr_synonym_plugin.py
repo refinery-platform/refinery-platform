@@ -1,8 +1,8 @@
 import logging
+from optparse import make_option
 import os
 import sys
 import time
-from optparse import make_option
 
 from django.conf import settings
 from django.core.management.base import BaseCommand

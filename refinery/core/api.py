@@ -4,12 +4,12 @@ Created on May 4, 2012
 @author: nils
 '''
 
+from datetime import timedelta
 import json
 import logging
 import re
-import uuid
-from datetime import timedelta
 from sets import Set
+import uuid
 
 from django.conf import settings
 from django.conf.urls import url

@@ -4,6 +4,7 @@ Created on May 11, 2012
 @author: nils
 '''
 
+from collections import deque
 import csv
 import glob
 import itertools
@@ -12,7 +13,6 @@ import os
 import re
 import string
 import tempfile
-from collections import deque
 from urlparse import urlparse
 from zipfile import ZipFile
 

@@ -13,11 +13,11 @@ import json
 import sys
 
 import boto3
-import yaml
 from cfn_pyplates.core import (CloudFormationTemplate, DeletionPolicy,
                                Parameter, Properties, Resource)
 from cfn_pyplates.functions import ref
 from utils import Output, load_tags
+import yaml
 
 REFINERY_CONFIG_FILE = 'aws-config/config.yaml'
 

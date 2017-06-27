@@ -3,8 +3,8 @@ from urlparse import urljoin
 
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 
-import requests
 from guardian.utils import get_anonymous_user
+import requests
 from rest_framework.test import (APIRequestFactory, APITestCase,
                                  force_authenticate)
 

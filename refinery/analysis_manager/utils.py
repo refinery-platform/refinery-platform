@@ -9,15 +9,15 @@ from django.contrib.auth.models import User
 from django.http import HttpResponseServerError
 from django.utils import timezone
 
-import requests
 from jsonschema import RefResolver, ValidationError, validate
+import requests
 from requests.packages.urllib3.exceptions import HTTPError
 
-import tool_manager.models
 from core.models import (Analysis, InvestigationLink, NodeRelationship,
                          NodeSet, Workflow, WorkflowDataInputMap)
 from core.utils import get_aware_local_time
 from data_set_manager.models import Study
+import tool_manager.models
 
 logger = logging.getLogger(__name__)
 

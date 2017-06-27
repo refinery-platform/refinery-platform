@@ -1,5 +1,5 @@
-import uuid as uuid_builtin
 from datetime import datetime
+import uuid as uuid_builtin
 
 import factory
 

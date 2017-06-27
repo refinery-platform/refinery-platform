@@ -1,6 +1,6 @@
+from StringIO import StringIO
 import json
 import re
-from StringIO import StringIO
 
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import (InMemoryUploadedFile,

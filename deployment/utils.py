@@ -4,8 +4,8 @@ import random
 import sys
 
 import boto3
-import yaml
 from cfn_pyplates.core import JSONableDict
+import yaml
 
 
 class Output(JSONableDict):

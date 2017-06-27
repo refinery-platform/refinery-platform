@@ -3,15 +3,15 @@ Created on May 10, 2012
 
 @author: nils
 '''
-import logging
 from datetime import datetime
+import logging
 
 from django.conf import settings
 from django.db import models
 
-import requests
 from celery.result import AsyncResult
 from django_extensions.db.fields import UUIDField
+import requests
 from requests.exceptions import HTTPError
 
 import core
