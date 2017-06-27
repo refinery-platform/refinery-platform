@@ -13,16 +13,6 @@
 
   function UserFileBrowserFiltersCtrl ($log, $q, userFileBrowserFactory) {
     var vm = this;
-    var promise = $q.defer();
-    var getUserFiles = userFileBrowserFactory.getUserFiles;
-    getUserFiles().then(function (solr) {
-      vm.attributeFilters =
-          userFileBrowserFactory.createFilters(solr.attributes, solr.facet_field_counts);
-      promise.resolve();
-    }, function () {
-      $log.error('/user/files/ request failed');
-      promise.reject();
-    });
 
     vm.togglePanel = function (attribute) {
       vm.hidden[attribute] = ! vm.hidden[attribute];
@@ -38,5 +28,16 @@
       }
       vm.filters[attribute][value] = !vm.filters[attribute][value];
     };
+
+    var promise = $q.defer();
+    var getUserFiles = userFileBrowserFactory.getUserFiles;
+    getUserFiles().then(function (solr) {
+      vm.attributeFilters =
+          userFileBrowserFactory.createFilters(solr.attributes, solr.facet_field_counts);
+      promise.resolve();
+    }, function () {
+      $log.error('/user/files/ request failed');
+      promise.reject();
+    });
   }
 })();
