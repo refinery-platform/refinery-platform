@@ -83,6 +83,8 @@
     function removeGroup () {
       fileService.hideNodePopover = true;
       fileService.removeGroupFromCollections();
+      nodeService.deselectGroupFromSelectionObj(fileService.currentGroup.join(','));
+      // If there's more than one group, the collection will be reindexed
       fileService.reindexCollections();
       vm.selectionObj = nodeService.selectionObj;
     }

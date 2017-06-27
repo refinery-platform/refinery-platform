@@ -14,7 +14,9 @@ from core.models import DataSet, ExtendedGroup, InvestigationLink
 from core.views import NodeViewSet
 from file_store.models import FileStoreItem
 
-from .models import Assay, AttributeOrder, Investigation, Node, Study
+from .models import (Assay, Attribute, AttributeOrder, Investigation, Node,
+                     Study)
+from .search_indexes import NodeIndex
 from .serializers import AttributeOrderSerializer
 from .utils import (create_facet_filter_query, customize_attribute_response,
                     escape_character_solr, format_solr_response,
@@ -1571,3 +1573,80 @@ class NodeApiV2Tests(APITestCase):
         self.assertTrue('subanalysis' in self.get_response.data[0])
         self.assertTrue('type' in self.get_response.data[0])
         self.assertTrue('uuid' in self.get_response.data[0])
+
+
+class NodeIndexTests(APITestCase):
+
+    def setUp(self):
+        investigation = Investigation.objects.create()
+        study = Study.objects.create(investigation=investigation)
+        assay = Assay.objects.create(study=study)
+
+        test_file = StringIO()
+        test_file.write('Coffee is great.\n')
+        file_store_item = FileStoreItem.objects.create(
+            datafile=InMemoryUploadedFile(
+                test_file,
+                field_name='tempfile',
+                name='test_file.txt',
+                content_type='text/plain',
+                size=len(test_file.getvalue()),
+                charset='utf-8'
+            )
+        )
+
+        self.node = Node.objects.create(
+            assay=assay,
+            study=study,
+            file_uuid=file_store_item.uuid)
+
+        self.assay_uuid = assay.uuid
+        self.study_uuid = study.uuid
+        self.file_uuid = file_store_item.uuid
+        self.node_uuid = self.node.uuid
+
+        Attribute.objects.create(
+            node=self.node,
+            type=Attribute.CHARACTERISTICS,
+            subtype='fake subtype',
+            value='fake value'
+        )
+
+        self.maxDiff = None
+
+    def tearDown(self):
+        FileStoreItem.objects.all().delete()
+
+    def test_prepare(self):
+        data = NodeIndex().prepare(self.node)
+        data = dict(
+            (
+                re.sub(r'\d+', '#', k),
+                re.sub(r'\d+', '#', v) if
+                type(v) in (unicode, str) and not('uuid' in k)
+                else v
+            )
+            for (k, v) in data.items())
+        self.assertEqual(data,
+                         {'REFINERY_ANALYSIS_UUID_#_#_s': 'N/A',
+                          'REFINERY_FILETYPE_#_#_s': None,
+                          'REFINERY_NAME_#_#_s': u'',
+                          'REFINERY_SUBANALYSIS_#_#_s': -1,
+                          'REFINERY_TYPE_#_#_s': u'',
+                          'REFINERY_WORKFLOW_OUTPUT_#_#_s': 'N/A',
+                          'analysis_uuid': None,
+                          'assay_uuid': self.assay_uuid,
+                          u'django_ct': u'data_set_manager.node',
+                          u'django_id': u'#',
+                          'file_uuid': self.file_uuid,
+                          'genome_build': None,
+                          u'id': u'data_set_manager.node.#',
+                          'is_annotation': False,
+                          'name': u'',
+                          'species': None,
+                          'study_uuid': self.study_uuid,
+                          'subanalysis': None,
+                          'text': u'',
+                          'type': u'',
+                          'uuid': self.node_uuid,
+                          'workflow_output': None})

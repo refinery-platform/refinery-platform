@@ -28,13 +28,13 @@ def make_analyses_with_single_dataset(number_to_create, user_instance):
 
     instance = GalaxyInstanceFactory()
     workflow_engine = WorkflowEngineFactory(instance=instance)
-    workflow = WorkflowFactory(uuid=uuid_builtin.uuid4(),
+    workflow = WorkflowFactory(uuid=str(uuid_builtin.uuid4()),
                                workflow_engine=workflow_engine)
     project = ProjectFactory(is_catch_all=True)
     dataset = create_dataset_with_necessary_models()
 
     while number_to_create:
-        analysis_uuid = uuid_builtin.uuid4()
+        analysis_uuid = str(uuid_builtin.uuid4())
         AnalysisFactory(
             uuid=analysis_uuid,
             name="Test Analysis - {}".format(analysis_uuid),
@@ -56,17 +56,17 @@ def make_analyses_with_single_dataset(number_to_create, user_instance):
 
 def create_dataset_with_necessary_models():
     """Create Dataset with Investigation, Study, and Investigation Link"""
-    dataset_uuid = uuid_builtin.uuid4()
+    dataset_uuid = str(uuid_builtin.uuid4())
     dataset = DataSetFactory(
         uuid=dataset_uuid,
         title="Test DataSet - {}".format(dataset_uuid),
         name="Test DataSet - {}".format(dataset_uuid)
     )
 
-    investigation_uuid = uuid_builtin.uuid4()
+    investigation_uuid = str(uuid_builtin.uuid4())
     investigation = InvestigationFactory(uuid=investigation_uuid)
 
-    study_uuid = uuid_builtin.uuid4()
+    study_uuid = str(uuid_builtin.uuid4())
     StudyFactory(
         uuid=study_uuid,
         investigation=investigation,
