@@ -6,7 +6,6 @@ Created on May 29, 2012
 import hashlib
 import json
 import logging
-import re
 import time
 import urlparse
 
@@ -636,9 +635,8 @@ def _generate_solr_params(params, assay_uuids, facets_from_config=False):
         # Twice as many facets as necessary, but easier than the alternative.
         template = '&facet.field={}_Characteristics_generic_s' + \
                    '&facet.field={}_Factor_Value_generic_s'
-        solr_params += ''.join(
-            map(lambda s: template.format(s, s),
-                re.split(r'\s*,\s*', settings.USER_FILES_FACETS)))
+        solr_params += ''.join([template.format(s) for s
+                                in settings.USER_FILES_FACETS.split(",")])
     elif facet_field:
         facet_field = facet_field.split(',')
         facet_field = insert_facet_field_filter(facet_filter, facet_field)
