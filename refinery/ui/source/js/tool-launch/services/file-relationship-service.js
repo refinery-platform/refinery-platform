@@ -128,6 +128,8 @@
       aheadGroup[0]++;
       var replaceGroup = angular.copy(vm.currentGroup);
       // find the next group which will replace the previous group
+      console.log('fix remove bug');
+      console.log(vm.groupCollection);
       angular.forEach(vm.groupCollection, function (inputObj, groupId) {
         // copying the next index to the previous and deleting the next index
         if (groupId === aheadGroup.join(',')) {
