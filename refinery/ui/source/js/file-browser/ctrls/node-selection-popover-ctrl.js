@@ -66,6 +66,7 @@
         vm.inputFileTypes = fileService.inputFileTypes;
         vm.currentGroup = fileService.currentGroup;
         vm.currentTypes = fileService.currentTypes;
+        vm.depthNames = fileService.depthNames;
         vm.groupCollection = fileService.groupCollection;
         vm.nodeSelection = fileService.nodeSelectCollection;
         vm.inputFileTypeColor = fileService.inputFileTypeColor;

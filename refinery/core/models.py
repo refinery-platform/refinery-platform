@@ -979,8 +979,8 @@ class Workflow(SharableResource, ManageableResource):
 
     objects = WorkflowManager()
 
-    def __unicode__(self):
-        return self.name + " - " + self.summary
+    def __str__(self):
+        return "{} - {}".format(self.name, self.summary)
 
     class Meta:
         # unique_together = ('internal_id', 'workflow_engine')
@@ -1152,10 +1152,10 @@ class Analysis(OwnableResource):
 
     objects = AnalysisManager()
 
-    def __unicode__(self):
-        return (
-            self.name + " - " +
-            self.get_owner_username() + " - " +
+    def __str__(self):
+        return "{} - {} - {}".format(
+            self.name,
+            self.get_owner_username(),
             self.summary
         )
 

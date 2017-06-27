@@ -5,10 +5,9 @@ Created on Jul 2, 2012
 '''
 
 import logging
-import string
+import re
 
 from django.conf import settings
-
 from haystack import indexes
 
 from file_store.models import FileStoreItem
@@ -61,33 +60,20 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
             uuid += "_" + str(object.assay.id)
         # create dynamic fields for each attribute
         for annotation in annotations:
-            if annotation.attribute_subtype is None:
-                name = annotation.attribute_type
-            else:
-                name = annotation.attribute_subtype + "_" + \
-                       annotation.attribute_type
-            if annotation.attribute_value_unit is None:
-                value = annotation.attribute_value
-            else:
-                value = annotation.attribute_value + " " + \
-                        annotation.attribute_value_unit
-            # replace problematic characters in field names
-            name = string.replace(name, "/",
-                                  settings.REFINERY_SOLR_SPACE_DYNAMIC_FIELDS)
-            name = string.replace(name, "(",
-                                  settings.REFINERY_SOLR_SPACE_DYNAMIC_FIELDS)
-            name = string.replace(name, ")",
-                                  settings.REFINERY_SOLR_SPACE_DYNAMIC_FIELDS)
-            name = string.replace(name, "#",
-                                  settings.REFINERY_SOLR_SPACE_DYNAMIC_FIELDS)
-            name = string.replace(name, ",",
-                                  settings.REFINERY_SOLR_SPACE_DYNAMIC_FIELDS)
-            name = string.replace(name, " ",
-                                  settings.REFINERY_SOLR_SPACE_DYNAMIC_FIELDS)
-            name = string.replace(name, "'",
-                                  settings.REFINERY_SOLR_SPACE_DYNAMIC_FIELDS)
+            name = annotation.attribute_type
+            if annotation.attribute_subtype is not None:
+                name = annotation.attribute_subtype + "_" + name
 
-            key = name + "_" + uuid + "_s"
+            value = annotation.attribute_value
+            if annotation.attribute_value_unit is not None:
+                value += " " + annotation.attribute_value_unit
+
+            name = re.sub(r'\W',
+                          settings.REFINERY_SOLR_SPACE_DYNAMIC_FIELDS,
+                          name)
+
+            uniq_key = name + "_" + uuid + "_s"
+            generic_key = name + "_generic_s"
             # a node might have multiple parents with different attribute
             # values for a given attribute
             # e.g. parentA Characteristic[cell type] = K562 and
@@ -96,13 +82,15 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
             # concatenation of the unique list
             # old version (only one attribute kept):
             # data[key] = value
-            if key not in data:
-                data[key] = set()
-            if value != "":
-                data[key].add(value)
-            else:
-                data[key].add("N/A")
+            for key in (uniq_key, generic_key):
+                if key not in data:
+                    data[key] = set()
+                if value != "":
+                    data[key].add(value)
+                else:
+                    data[key].add("N/A")
         # iterate over all keys in data and join sets into strings
+        # TODO: This doesn't feel right: facet each separately?
         for key, value in data.iteritems():
             if type(value) is set:
                 data[key] = " + ".join(value)

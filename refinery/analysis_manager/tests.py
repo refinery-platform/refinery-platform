@@ -234,7 +234,7 @@ class AnalysisUtilsTests(TestCase):
 
     def test_create_tool_analysis(self):
         with mock.patch(
-                "analysis_manager.utils.create_tool_analysis"
+            "tool_manager.utils.create_tool_analysis"
         ) as create_tool_analysis_mock:
             create_analysis(
                 {

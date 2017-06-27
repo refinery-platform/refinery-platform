@@ -24,7 +24,7 @@
   ) {
     var paramsService = toolParamsService;
     var vm = this;
-    vm.isToolParamsCollapsed = false; // tracks the parameters panel
+    vm.isToolParamsCollapsed = true; // tracks the parameters panel
     vm.params = paramsService.toolParams;
     vm.paramsForm = paramsService.paramsForm;
 
