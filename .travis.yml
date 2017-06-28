@@ -47,7 +47,9 @@ before_script:
 script:
   - set -e # Any error will cause travis to exit early and report a failure.
 
-  - flake8 --exclude=migrations,ui ..
+  # TODO: Not the same behavior as pre-commit hook.
+  # https://github.com/refinery-platform/refinery-platform/issues/1851
+  - flake8 --ignore=W503 --exclude=migrations,ui ..
 
   - echo 'travis_fold:start:grunt'
   - pushd ui && grunt && popd
