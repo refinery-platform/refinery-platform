@@ -45,6 +45,7 @@ from guardian.shortcuts import (assign_perm, get_groups_with_perms,
 from registration.models import RegistrationManager, RegistrationProfile
 from registration.signals import user_activated, user_registered
 
+import tool_manager
 from data_set_manager.models import (Assay, Investigation, Node,
                                      NodeCollection, Study)
 from data_set_manager.utils import (add_annotated_nodes_selection,
@@ -1285,6 +1286,13 @@ class Analysis(OwnableResource):
     def galaxy_connection(self):
         return self.workflow.workflow_engine.instance.galaxy_connection()
 
+    def get_tool(self):
+        try:
+            return tool_manager.models.Tool.objects.get(analysis=self)
+        except(tool_manager.models.Tool.DoesNotExist,
+               tool_manager.models.Tool.MultipleObjectsReturned) as e:
+            logger.error("Couldn't fetch Tool: %s", e)
+
     def prepare_galaxy(self):
         """Prepare for analysis execution in Galaxy"""
         error_msg = "Preparing Galaxy analysis failed: "
@@ -1305,7 +1313,7 @@ class Analysis(OwnableResource):
         # generates same ret_list purely based on analysis object
         ret_list = self.get_config()
         try:
-            workflow_dict = connection.workflows.export_workflow_json(
+            workflow_dict = connection.workflows.export_workflow_dict(
                 self.workflow.internal_id)
         except galaxy.client.ConnectionError as exc:
             logger.error(error_msg +
@@ -1336,6 +1344,7 @@ class Analysis(OwnableResource):
                 direction=analysis_node_connection['direction'],
                 is_refinery_file=analysis_node_connection['is_refinery_file']
             )
+
         # saving outputs of workflow to download
         for file_dl in history_download:
             temp_dl = WorkflowFilesDL(step_id=file_dl['step_id'],
