@@ -6,12 +6,12 @@ Created on Apr 5, 2012
 import logging
 import urlparse
 
-import celery
-import requests
 from bioblend import galaxy
+import celery
 from celery.result import TaskSetResult
 from celery.task import Task, task
 from celery.task.sets import TaskSet
+import requests
 
 from core.models import Analysis, AnalysisResult, Workflow
 from core.utils import get_full_url
@@ -252,15 +252,10 @@ class AnalysisRunner(object):
             return
 
         self._check_analysis_status()
-
         self._refinery_file_import()
-
         self._run_galaxy_workflow()
-
         self._galaxy_file_import()
-
         self._galaxy_file_export()
-
         self._attach_workflow_outputs()
 
     def _run_galaxy_workflow(self):
