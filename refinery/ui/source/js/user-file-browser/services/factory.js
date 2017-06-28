@@ -93,12 +93,14 @@
     }
 
     function createFilters (solrAttributes, solrFacetCounts) {
-      var filters = { todo_name: { facetObj: [{ name: 'foo', count: 42 }] } };
+      var filters = {};
       Object.keys(solrFacetCounts).forEach(function (key) {
-        console.log(key, solrFacetCounts[key]);
+        if (solrFacetCounts[key].length > 0) {
+          // TODO: can't use AttributeOrder (it's per dataset), but this is bad.
+          filters[key.replace(/_(Characteristics|Factor_Value)_generic_s/, '')] =
+            { facetObj: solrFacetCounts[key] };
+        }
       });
-      // TODO
-
       return filters;
     }
 
