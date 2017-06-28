@@ -13,6 +13,7 @@
     .controller('ToolSelectCtrl', ToolSelectCtrl);
 
   ToolSelectCtrl.$inject = [
+    'bootbox',
     '_',
     'fileRelationshipService',
     'toolParamsService',
@@ -20,6 +21,7 @@
   ];
 
   function ToolSelectCtrl (
+    bootbox,
     _,
     fileRelationshipService,
     toolParamsService,
@@ -71,10 +73,37 @@
     * @memberOf refineryToolLaunch.ToolSelectCtrl
     **/
     function updateTool (tool) {
-      toolService.setSelectedTool(tool);
-      fileService.resetToolRelated();
-      fileService.refreshFileMap();
-      paramsService.refreshToolParams(tool);
+      if (_.isEmpty(fileService.groupCollection)) {
+        toolService.setSelectedTool(tool);
+        fileService.resetToolRelated();
+        fileService.refreshFileMap();
+        paramsService.refreshToolParams(tool);
+      } else {
+        console.log('launch a modal to confirm');
+        bootbox.confirm({
+          title: 'Reset tool launch configuration',
+          message: 'Do you want to select a new tool, which will reset all' +
+          ' your selected files and parameters.',
+          buttons: {
+            cancel: {
+              label: '<i class="fa fa-times"></i> Cancel'
+            },
+            confirm: {
+              label: '<i class="fa fa-check"></i> Confirm'
+            }
+          },
+          callback: function (result) {
+            if (result) {
+              toolService.setSelectedTool(tool);
+              fileService.resetToolRelated();
+              fileService.refreshFileMap();
+              paramsService.refreshToolParams(tool);
+            } else {
+              vm.selectedTool.select = toolService.selectedTool;
+            }
+          }
+        });
+      }
     }
   }
 })();
