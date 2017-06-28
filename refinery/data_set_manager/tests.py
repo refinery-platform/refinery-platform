@@ -1,12 +1,13 @@
+from StringIO import StringIO
 import json
 import re
-from StringIO import StringIO
 
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import (InMemoryUploadedFile,
                                             SimpleUploadedFile)
 from django.http import QueryDict
 from django.test import TestCase
+
 from rest_framework.test import APIClient, APIRequestFactory, APITestCase
 
 from core.models import DataSet, ExtendedGroup, InvestigationLink
@@ -980,6 +981,21 @@ class UtilitiesTest(TestCase):
         solr_response = {"test_object": "not a string"}
         error = format_solr_response(solr_response)
         self.assertEqual(error, "Error loading json.")
+
+    def test_customize_attribute_response_for_generics(self):
+        attributes = ['technology_Characteristics_generic_s',
+                      'antibody_Factor_Value_generic_s']
+        prettified_attributes = customize_attribute_response(attributes)
+        self.assertListEqual(
+            prettified_attributes,
+            [{'attribute_type': 'Characteristics',
+              'display_name': 'Technology',
+              'file_ext': 's',
+              'internal_name': 'technology_Characteristics_generic_s'},
+             {'attribute_type': 'Factor Value',
+              'display_name': 'Antibody',
+              'file_ext': 's',
+              'internal_name': 'antibody_Factor_Value_generic_s'}])
 
     def test_customize_attribute_response(self):
         # valid input
