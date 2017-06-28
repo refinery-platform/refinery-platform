@@ -4,7 +4,7 @@
   "annotation": {
     "container_input_path": "/data/input.json",
     "extra_directories": ["/refinery-data"],
-    "image_name": "scottx611x/refinery-higlass-docker:v0.1.0",
+    "image_name": "scottx611x/refinery-higlass-docker:v0.1.2",
     "description": "This visualization does really cool things... with Higlass",
     "parameters": [],
     "output_files":[],
