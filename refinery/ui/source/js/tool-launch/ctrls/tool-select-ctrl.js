@@ -13,8 +13,6 @@
     .controller('ToolSelectCtrl', ToolSelectCtrl);
 
   ToolSelectCtrl.$inject = [
-    '$log',
-    '$scope',
     '$uibModal',
     '_',
     '$window',
@@ -25,8 +23,6 @@
   ];
 
   function ToolSelectCtrl (
-    $log,
-    $scope,
     $uibModal,
     _,
     $window,
