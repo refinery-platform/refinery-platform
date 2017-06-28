@@ -1293,8 +1293,8 @@ class Analysis(OwnableResource):
                tool_manager.models.Tool.MultipleObjectsReturned) as e:
             logger.debug(
                 "Couldn't fetch Tool for Analysis with UUID: %s %s",
-                e,
-                self.uuid
+                self.uuid,
+                e
             )
 
     def prepare_galaxy(self):
@@ -1317,7 +1317,7 @@ class Analysis(OwnableResource):
         # generates same ret_list purely based on analysis object
         ret_list = self.get_config()
         try:
-            workflow_dict = connection.workflows.export_workflow_dict(
+            workflow_dict = connection.workflows.export_workflow_json(
                 self.workflow.internal_id)
         except galaxy.client.ConnectionError as exc:
             logger.error(error_msg +
