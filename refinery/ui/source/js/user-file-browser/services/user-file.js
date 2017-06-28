@@ -15,7 +15,7 @@
           method: 'GET',
           params: {
             fq: '(technology_Characteristics_generic_s:ChIP-seq OR '
-               + 'technology_FOOO_generic_s%3AChIP-seq)'
+               + 'technology_FOOO_generic_s:ChIP-seq)'
           }
         }
 
