@@ -17,7 +17,7 @@
               ng-class="$ctrl.isToolInputControlCollapsed ? 'fa fa-caret-right' : 'fa fa-caret-down'"
               class="fa-pull-left"
               aria-hidden="true"></i>
-            Tool Input Control
+            Input Files
         </div>
       </h4>
     </div>
@@ -36,7 +36,7 @@
               <div class="refinery-subheader">
                 <h4>
                   <i
-                    class="{{$ctrl.currentTypes[$ctrl.currentGroup.length-$index + 1] |groupTypeIcon}}"
+                    class="{{$ctrl.currentTypes[$ctrl.currentTypes.length-1]|groupTypeIcon}}"
                     aria-hidden="true"></i>
                   {{ $ctrl.depthNames[$ctrl.depthNames.length-1] }}
                 </h4>

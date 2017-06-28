@@ -541,35 +541,17 @@ def generate_solr_params_for_user(params, user_id):
             # but there's nothing more to do here.
         investigation = investigation_link.investigation
 
-        try:
-            study = Study.objects.get(
-                investigation=investigation
-            )
-        except Study.DoesNotExist as e:
-            logger.error('Expected at least one Study for %s: %s',
-                         investigation, e)
-            continue
-            # Again, nothing more to do here.
-        except Study.MultipleObjectsReturned as e:
-            logger.error('Expected only one Study for %s: %s',
-                         investigation, e)
-            raise
+        study_ids = Study.objects.filter(
+            investigation=investigation
+        ).values_list('id', flat=True)
 
-        try:
-            assay = Assay.objects.get(study=study)
-        except Assay.DoesNotExist as e:
-            logger.error('Expected at least one Assay for %s: %s',
-                         study, e)
-            continue
-            # Again, nothing more to do here.
-        except Assay.MultipleObjectsReturned as e:
-            logger.error('Expected only one Assay for %s: %s',
-                         study, e)
-            raise
+        assay_uuids += Assay.objects.filter(
+            study_id__in=study_ids
+        ).values_list('uuid', flat=True)
 
-        assay_uuids.append(assay.uuid)
-
-    return _generate_solr_params(params, assay_uuids=assay_uuids)
+    return _generate_solr_params(params,
+                                 assay_uuids=assay_uuids,
+                                 facets_from_config=True)
 
 
 def generate_solr_params_for_assay(params, assay_uuid):
@@ -591,7 +573,7 @@ def generate_solr_params_for_assay(params, assay_uuid):
     return _generate_solr_params(params, assay_uuids=[assay_uuid])
 
 
-def _generate_solr_params(params, assay_uuids):
+def _generate_solr_params(params, assay_uuids, facets_from_config=False):
     """
     Either returns a solr url parameter string,
     or None if assay_uuids is empty.
@@ -629,7 +611,13 @@ def _generate_solr_params(params, assay_uuids):
         return None
     solr_params = 'fq=assay_uuid:({})'.format(' OR '.join(assay_uuids))
 
-    if facet_field:
+    if facets_from_config:
+        # Twice as many facets as necessary, but easier than the alternative.
+        template = '&facet.field={0}_Characteristics_generic_s' + \
+                   '&facet.field={0}_Factor_Value_generic_s'
+        solr_params += ''.join([template.format(s) for s
+                                in settings.USER_FILES_FACETS.split(",")])
+    elif facet_field:
         facet_field = facet_field.split(',')
         facet_field = insert_facet_field_filter(facet_filter, facet_field)
         split_facet_fields = generate_facet_fields_query(facet_field)
