@@ -104,23 +104,17 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
         # add name as dynamic field to get proper facet values
         data[NodeIndex.NAME_PREFIX + suffix] = object.name
         # add analysis_uuid as dynamic field to get proper facet values
-        if object.analysis_uuid is not None:
-            data[NodeIndex.ANALYSIS_UUID_PREFIX + suffix] = \
-                object.analysis_uuid
-        else:
-            data[NodeIndex.ANALYSIS_UUID_PREFIX + suffix] = "N/A"
+        data[NodeIndex.ANALYSIS_UUID_PREFIX + suffix] = \
+            "N/A" if object.analysis_uuid is None else object.analysis_uuid
+
         # add subanalysis as dynamic field to get proper facet values
-        if object.subanalysis is not None:
-            data[NodeIndex.SUBANALYSIS_PREFIX + suffix] = \
-                object.subanalysis
-        else:
-            data[NodeIndex.SUBANALYSIS_PREFIX + suffix] = -1
+        data[NodeIndex.SUBANALYSIS_PREFIX + suffix] = \
+            -1 if object.subanalysis is None else object.subanalysis
+
         # add workflow_output as dynamic field to get proper facet values
-        if object.workflow_output is not None:
-            data[NodeIndex.WORKFLOW_OUTPUT_PREFIX + suffix] = \
-                object.workflow_output
-        else:
-            data[NodeIndex.WORKFLOW_OUTPUT_PREFIX + suffix] = "N/A"
+        data[NodeIndex.WORKFLOW_OUTPUT_PREFIX + suffix] = \
+            "N/A" if object.workflow_output is None else object.workflow_output
+
         # add file type as facet value
         try:
             file_store_item = FileStoreItem.objects.get(
@@ -129,10 +123,8 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
                FileStoreItem.MultipleObjectsReturned) as e:
             logger.error("Couldn't properly fetch FileStoreItem: %s", e)
             file_store_item = None
-        if file_store_item:
-            data[NodeIndex.FILETYPE_PREFIX + suffix] =\
-                file_store_item.get_filetype()
-        else:
-            data[NodeIndex.FILETYPE_PREFIX + suffix] = ""
+
+        data[NodeIndex.FILETYPE_PREFIX + suffix] = \
+            "" if file_store_item is None else file_store_item.get_filetype()
 
         return data
