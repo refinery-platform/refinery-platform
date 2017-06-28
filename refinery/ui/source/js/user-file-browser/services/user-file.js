@@ -8,7 +8,9 @@
 
   function userFileService ($resource, settings) {
     var userFile = $resource(
-      settings.appRoot + settings.refineryApiV2 + '/user/files/',
+      settings.appRoot + settings.refineryApiV2 +
+        '/user/files/?fq=technology_Characteristics_generic_s:ChIP-seq',
+        // TODO: Hardcoded to debug API
       {},
       {
         query: {

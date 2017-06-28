@@ -592,6 +592,7 @@ def _generate_solr_params(params, assay_uuids, facets_from_config=False):
     start = params.get('offset', '0')
     # row number suggested by solr docs, since there's no unlimited option
     row = params.get('limit', '10000000')
+    # TODO: Is there a reason for the explicit Nones below?
     field_limit = params.get('attributes', None)
     facet_field = params.get('facets', None)
     facet_pivot = params.get('pivots', None)
@@ -611,6 +612,10 @@ def _generate_solr_params(params, assay_uuids, facets_from_config=False):
     if len(assay_uuids) == 0:
         return None
     solr_params = 'fq=assay_uuid:({})'.format(' OR '.join(assay_uuids))
+
+    fq = params.get('fq')
+    if fq is not None:
+        solr_params += '&fq=' + fq
 
     if facets_from_config:
         # Twice as many facets as necessary, but easier than the alternative.
