@@ -93,43 +93,11 @@
     }
 
     function createFilters (solrAttributes, solrFacetCounts) {
-      console.log(solrFacetCounts); // TODO: These have only one suffix ...
-      var mapDisplayToInternal = {}; // May be one-to-many
-      solrAttributes.forEach(function (attribute) {
-        var display = normalizeName(attribute);
-        if (! mapDisplayToInternal.hasOwnProperty(display)) {
-          mapDisplayToInternal[display] = [];
-        }
-        mapDisplayToInternal[display].push(attribute.internal_name);
+      var filters = { todo_name: { facetObj: [{ name: 'foo', count: 42 }] } };
+      Object.keys(solrFacetCounts).forEach(function (key) {
+        console.log(key, solrFacetCounts[key]);
       });
-
-      var requestedFilters = settings.djangoApp.userFilesColumns;
-      // TODO: Should there be a separate config for the filters?
-
-      var filters = {};
-      requestedFilters.forEach(function (filterName) {
-        var internals = mapDisplayToInternal[filterName];
-        if (filterName === 'organism') {
-          console.log(internals); // TODO: ... but there are multiple name matches here ...
-        }
-        var facetCounts = [];
-        internals.forEach(function (internal) {
-          var counts = solrFacetCounts[internal];
-          if (filterName === 'organism') {
-            console.log(counts); // TODO: ... but all but one come out undefined.
-          }
-          if (counts) {
-            counts.forEach(function (facetCount) {
-              facetCounts.push(facetCount);
-            });
-          }
-        });
-        if (facetCounts.length > 0) {
-          filters[filterName] = {
-            facetObj: facetCounts
-          };
-        }
-      });
+      // TODO
 
       return filters;
     }
