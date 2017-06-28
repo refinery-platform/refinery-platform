@@ -8,14 +8,17 @@
 
   function userFileService ($resource, settings) {
     var userFile = $resource(
-      settings.appRoot + settings.refineryApiV2 +
-        '/user/files/?fq=technology_Characteristics_generic_s%3AChIP-seq',
-        // TODO: Hardcoded to debug API
+      settings.appRoot + settings.refineryApiV2 + '/user/files/',
       {},
       {
         query: {
-          method: 'GET'
+          method: 'GET',
+          params: {
+            fq: '(technology_Characteristics_generic_s:ChIP-seq OR '
+               + 'technology_FOOO_generic_s%3AChIP-seq)'
+          }
         }
+
       }
     );
     return userFile;
