@@ -15,7 +15,7 @@ from django.test import TestCase
 from rest_framework.test import (APIRequestFactory, APITestCase,
                                  force_authenticate)
 
-from analysis_manager.tasks import run_analysis
+from analysis_manager.tasks import AnalysisRunner
 from core.models import (DataSet, ExtendedGroup, InvestigationLink, Project,
                          Workflow, WorkflowEngine)
 from data_set_manager.models import Assay, Investigation, Node, Study
@@ -127,7 +127,8 @@ class ToolManagerTestBase(TestCase):
 
         # Mock the run_analysis task
         elif tool_type == ToolDefinition.WORKFLOW:
-            with mock.patch.object(run_analysis, 'delay', side_effect=None):
+            with mock.patch.object(AnalysisRunner.run_analysis, 'delay',
+                                   side_effect=None):
                 self.post_response = self.tools_view(self.post_request)
 
         self.tool = Tool.objects.get(tool_definition__uuid=self.td.uuid)
