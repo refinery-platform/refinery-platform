@@ -5,30 +5,31 @@
     .module('refineryDataSetImport')
     .service('s3UploadService', s3UploadService);
 
-  s3UploadService.$inject = ['$q'];
+  s3UploadService.$inject = ['$log', '$q', 'openIdTokenService', 'settings'];
 
-  function s3UploadService ($q) {
-    AWS.config.region = 'us-east-1';
-    AWS.config.credentials = new AWS.CognitoIdentityCredentials({
-      IdentityId: '',
-      Logins: {
-        // eslint-disable-next-line max-len
-        'cognito-identity.amazonaws.com': ''
-      }
-    });
+  function s3UploadService ($log, $q, openIdTokenService, settings) {
+    var vm = this;
 
-    var bucket = new AWS.S3({
-      params: { Bucket: 'scc-dev-media', maxRetries: 10 },
-      httpOptions: { timeout: 360000 }
+    openIdTokenService.query(function (response) {
+      AWS.config.region = response.Region;
+      AWS.config.credentials = new AWS.CognitoIdentityCredentials({
+        IdentityId: response.IdentityId,
+        Logins: { 'cognito-identity.amazonaws.com': response.Token }
+      });
+      vm.bucket = new AWS.S3({
+        params: { Bucket: settings.djangoApp.mediaBucket, maxRetries: 10 },
+        httpOptions: { timeout: 360000 }
+      });
+    }, function (reason) {
+      $log.error('Failed to obtain AWS OpenID Connect token: ' + reason);
     });
 
     this.progress = 0;
     this.upload = function (file) {
       var deferred = $q.defer();
       var params = {
-        Bucket: 'scc-dev-media',
+        Bucket: settings.djangoApp.mediaBucket,
         Key: 'uploads' + '/' + AWS.config.credentials.identityId + '/' + file.name,
-        // Key: file.name,
         ContentType: file.type,
         Body: file
       };
@@ -38,9 +39,9 @@
         // Give the owner of the bucket full control
         ACL: 'bucket-owner-full-control'
       };
-      var uploader = bucket.upload(params, options, function (err) {
+      var uploader = vm.bucket.upload(params, options, function (err) {
         if (err) {
-          console.error('Error uploading file: ' + err);
+          $log.error('Error uploading file: ' + err);
           deferred.reject(err);
         }
         deferred.resolve();

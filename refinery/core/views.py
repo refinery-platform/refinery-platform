@@ -1218,5 +1218,6 @@ class OpenIDToken(APIView):
                 "Server AWS configuration is incorrect: {}".format(exc),
                 status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+        token["Region"] = region
 
         return Response(token)
