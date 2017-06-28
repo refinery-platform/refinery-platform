@@ -1291,7 +1291,11 @@ class Analysis(OwnableResource):
             return tool_manager.models.Tool.objects.get(analysis=self)
         except(tool_manager.models.Tool.DoesNotExist,
                tool_manager.models.Tool.MultipleObjectsReturned) as e:
-            logger.error("Couldn't fetch Tool: %s", e)
+            logger.debug(
+                "Couldn't fetch Tool for Analysis with UUID: %s %s",
+                e,
+                self.uuid
+            )
 
     def prepare_galaxy(self):
         """Prepare for analysis execution in Galaxy"""

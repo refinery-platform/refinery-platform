@@ -6,20 +6,20 @@ Created on Apr 5, 2012
 import logging
 import urlparse
 
-from bioblend import galaxy
 import celery
-from celery.result import TaskSetResult
-from celery.task import task, Task
-from celery.task.sets import TaskSet
 import requests
+from bioblend import galaxy
+from celery.result import TaskSetResult
+from celery.task import Task, task
+from celery.task.sets import TaskSet
 
-from .models import AnalysisStatus
 from core.models import Analysis, AnalysisResult, Workflow
 from core.utils import get_full_url
 from data_set_manager.models import Node
 from file_store.models import FileStoreItem
 from file_store.tasks import create, import_file
 
+from .models import AnalysisStatus
 
 logger = logging.getLogger(__name__)
 
@@ -33,194 +33,266 @@ class AnalysisHandlerTask(Task):
         """
         error_msg = "Monitoring task for analysis with UUID '{}' failed due " \
                     "to unexpected error: '{}: {}'".format(
-                         args[0], einfo.type, einfo.exception)
+                         args[1], einfo.type, einfo.exception)
 
         logger.error(error_msg)
         try:
-            analysis = Analysis.objects.get(uuid=args[0])
+            analysis = Analysis.objects.get(uuid=args[1])
         except (Analysis.DoesNotExist, Analysis.MultipleObjectsReturned) as e:
             logger.error("Can not retrieve analysis with UUID '%s': '%s'",
-                         args[0], e)
+                         args[1], e)
             return
         logger.error("Setting status of analysis '%s' to failure", analysis)
         analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
 
 
-@task(base=AnalysisHandlerTask, max_retries=None)
-def run_analysis(analysis_uuid):
-    """Manage analysis execution"""
-    RETRY_INTERVAL = 5  # seconds
+class AnalysisRunner(object):
+    """
+    Class that manages the file importing/exporting, execution, and Galaxy
+    operations for an Analysis
+    """
+    def __init__(self, analysis_uuid):
+        self.RETRY_INTERVAL = 5  # seconds
 
-    try:
-        analysis = Analysis.objects.get(uuid=analysis_uuid)
-    except (Analysis.DoesNotExist, Analysis.MultipleObjectsReturned) as exc:
-        logger.error("Can not retrieve analysis with UUID '%s': '%s'",
-                     analysis_uuid, exc)
-        run_analysis.update_state(state=celery.states.FAILURE)
-        return
+        self.analysis = None
+        self.analysis_uuid = analysis_uuid
+        self.analysis_status = None
+        self.galaxy_export_taskset = None
+        self.galaxy_import_taskset = None
+        self.refinery_import_taskset = None
+        self.tool = None
 
-    # if cancelled by user
-    if analysis.failed():
-        return
-
-    try:
-        analysis_status = AnalysisStatus.objects.get(analysis=analysis)
-    except (AnalysisStatus.DoesNotExist,
-            AnalysisStatus.MultipleObjectsReturned) as exc:
-        logger.error("Can not retrieve status for analysis '%s': '%s'",
-                     analysis, exc)
-        run_analysis.update_state(state=celery.states.FAILURE)
-        return
-
-    if not analysis_status.refinery_import_task_group_id:
-        logger.info("Starting analysis '%s'", analysis)
-        analysis.set_status(Analysis.RUNNING_STATUS)
-        logger.info("Starting input file import tasks for analysis '%s'",
-                    analysis)
-        refinery_import_tasks = []
-        for input_file_uuid in analysis.get_input_file_uuid_list():
-            refinery_import_task = import_file.subtask(
-                    (input_file_uuid,))
-            refinery_import_tasks.append(refinery_import_task)
-        refinery_import = TaskSet(tasks=refinery_import_tasks).apply_async()
-        refinery_import.save()
-        analysis_status.refinery_import_task_group_id = \
-            refinery_import.taskset_id
-        analysis_status.save()
-        run_analysis.retry(countdown=RETRY_INTERVAL)
-
-    # check if all files were successfully imported into Refinery
-    refinery_import = TaskSetResult.restore(
-            analysis_status.refinery_import_task_group_id)
-    if not refinery_import.ready():
-        logger.debug("Input file import pending for analysis '%s'", analysis)
-        run_analysis.retry(countdown=RETRY_INTERVAL)
-    elif not refinery_import.successful():
-        error_msg = "Analysis '{}' failed during file import".format(analysis)
-        logger.error(error_msg)
-        analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
-        analysis.send_email()
-        refinery_import.delete()
-        return
-
-    # import files into Galaxy and start analysis
-    if not analysis_status.galaxy_import_task_group_id:
-        logger.debug("Starting analysis execution in Galaxy")
         try:
-            analysis.prepare_galaxy()
-        except (requests.exceptions.ConnectionError,
-                galaxy.client.ConnectionError):
-            error_msg = "Analysis '{}' failed during preparation in " \
-                        "Galaxy".format(analysis)
-            logger.error(error_msg)
-            analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
-            analysis.send_email()
-            refinery_import.delete()
+            self.analysis = Analysis.objects.get(uuid=self.analysis_uuid)
+        except (Analysis.DoesNotExist,
+                Analysis.MultipleObjectsReturned) as e:
+            logger.error("Can not retrieve analysis with UUID '%s': '%s'",
+                         self.analysis_uuid, e)
+            self.run_analysis.update_state(state=celery.states.FAILURE)
             return
-        galaxy_import_tasks = [
-            start_galaxy_analysis.subtask((analysis_uuid, )),
-        ]
-        galaxy_import = TaskSet(tasks=galaxy_import_tasks).apply_async()
-        galaxy_import.save()
-        analysis_status.galaxy_import_task_group_id = \
-            galaxy_import.taskset_id
-        analysis_status.set_galaxy_history_state(AnalysisStatus.PROGRESS)
-        run_analysis.retry(countdown=RETRY_INTERVAL)
-
-    # check if data files were successfully imported into Galaxy
-    galaxy_import = TaskSetResult.restore(
-            analysis_status.galaxy_import_task_group_id)
-    if not galaxy_import.ready():
-        logger.debug("Analysis '%s' pending in Galaxy", analysis)
-        run_analysis.retry(countdown=RETRY_INTERVAL)
-    elif not galaxy_import.successful():
-        error_msg = "Analysis '{}' failed in Galaxy".format(analysis)
-        logger.error(error_msg)
-        analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
-        analysis_status.set_galaxy_history_state(AnalysisStatus.ERROR)
-        analysis.send_email()
-        refinery_import.delete()
-        galaxy_import.delete()
-        analysis.galaxy_cleanup()
-        return
-
-    # check if analysis has finished running in Galaxy
-    try:
-        percent_complete = analysis.galaxy_progress()
-    except RuntimeError:
-        analysis_status.set_galaxy_history_state(AnalysisStatus.ERROR)
-        analysis.send_email()
-        refinery_import.delete()
-        galaxy_import.delete()
-        analysis.galaxy_cleanup()
-        return
-    except galaxy.client.ConnectionError:
-        analysis_status.set_galaxy_history_state(AnalysisStatus.UNKNOWN)
-        run_analysis.retry(countdown=RETRY_INTERVAL)
-    else:
-        # workaround to avoid moving the progress bar backward
-        if analysis_status.galaxy_history_progress < percent_complete:
-            analysis_status.galaxy_history_progress = percent_complete
-            analysis_status.save()
-        if percent_complete < 100:
-            analysis_status.set_galaxy_history_state(AnalysisStatus.PROGRESS)
-            run_analysis.retry(countdown=RETRY_INTERVAL)
         else:
-            analysis_status.set_galaxy_history_state(AnalysisStatus.OK)
+            self.tool = self.analysis.get_tool()
 
-    # retrieve analysis results from Galaxy
-    if not analysis_status.galaxy_export_task_group_id:
-        galaxy_export_tasks = get_galaxy_download_tasks(analysis)
-        logger.info("Starting downloading of results from Galaxy for analysis "
-                    "'%s'", analysis)
-        galaxy_export = TaskSet(tasks=galaxy_export_tasks).apply_async()
-        galaxy_export.save()
-        analysis_status.galaxy_export_task_group_id = galaxy_export.taskset_id
-        analysis_status.save()
-        run_analysis.retry(countdown=RETRY_INTERVAL)
+        logger.debug("Starting `run_analysis` task for Analysis with UUID: "
+                     "%s", self.analysis.uuid)
 
-    # check if analysis results have finished downloading from Galaxy
-    galaxy_export = TaskSetResult.restore(
-            analysis_status.galaxy_export_task_group_id)
-    if not galaxy_export.ready():
-        logger.debug("Results download pending for analysis '%s'", analysis)
-        run_analysis.retry(countdown=RETRY_INTERVAL)
-    # all tasks must have succeeded or failed
-    elif not galaxy_export.successful():
-        error_msg = "Analysis '{}' failed while downloading results from " \
-                    "Galaxy".format(analysis)
-        logger.error(error_msg)
-        analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
-        analysis.send_email()
-        refinery_import.delete()
-        galaxy_import.delete()
-        galaxy_export.delete()
-        analysis.galaxy_cleanup()
-        return
+        self.run_analysis.delay(self, self.analysis.uuid)
 
-    # attach workflow outputs back to dataset isatab graph
-    if analysis.workflow.type == Workflow.ANALYSIS_TYPE:
-        analysis.attach_outputs_dataset()
-    elif analysis.workflow.type == Workflow.DOWNLOAD_TYPE:
-        analysis.attach_outputs_downloads()
-    else:
-        logger.warning("Unknown workflow type '%s' in analysis '%s'",
-                       analysis.workflow.type, analysis.name)
+    def _attach_workflow_outputs(self):
+        # attach workflow outputs back to dataset isatab graph
+        if self.analysis.workflow.type == Workflow.ANALYSIS_TYPE:
+            self.analysis.attach_outputs_dataset()
+        elif self.analysis.workflow.type == Workflow.DOWNLOAD_TYPE:
+            self.analysis.attach_outputs_downloads()
+        else:
+            logger.warning("Unknown workflow type '%s' in analysis '%s'",
+                           self.analysis.workflow.type, self.analysis.name)
 
-    analysis.set_status(Analysis.SUCCESS_STATUS)
-    analysis.rename_results()
-    analysis.send_email()
-    logger.info("Analysis '%s' finished successfully", analysis)
-    analysis.galaxy_cleanup()
-    refinery_import.delete()
-    galaxy_import.delete()
-    galaxy_export.delete()
+        self.analysis.set_status(Analysis.SUCCESS_STATUS)
+        self.analysis.rename_results()
+        self.analysis.send_email()
+        logger.info("Analysis '%s' finished successfully", self.analysis)
+        self.analysis.galaxy_cleanup()
+        self.refinery_import_taskset.delete()
+        self.galaxy_import_taskset.delete()
+        self.galaxy_export_taskset.delete()
 
-    # Update file count and file size of the corresponding data set
-    analysis.data_set.file_count = analysis.data_set.get_file_count()
-    # FIXME: line below is causing analyses to be marked as failed
-    # analysis.data_set.file_size = analysis.data_set.get_file_size()
-    analysis.data_set.save()
+        # Update file count and file size of the corresponding data set
+        self.analysis.data_set.file_count = (
+            self.analysis.data_set.get_file_count()
+        )
+        # FIXME: line below is causing analyses to be marked as failed
+        # analysis.data_set.file_size = analysis.data_set.get_file_size()
+        self.analysis.data_set.save()
+
+    def _get_galaxy_status(self):
+        # check if analysis has finished running in Galaxy
+        try:
+            percent_complete = self.analysis.galaxy_progress()
+        except RuntimeError:
+            self.analysis_status.set_galaxy_history_state(AnalysisStatus.ERROR)
+            self.analysis.send_email()
+            self.refinery_import_taskset.delete()
+            self.galaxy_import_taskset.delete()
+            self.analysis.galaxy_cleanup()
+            return
+        except galaxy.client.ConnectionError:
+            self.analysis_status.set_galaxy_history_state(
+                AnalysisStatus.UNKNOWN
+            )
+            self.run_analysis.retry(countdown=self.RETRY_INTERVAL)
+        else:
+            # workaround to avoid moving the progress bar backward
+            if self.analysis_status.galaxy_history_progress < percent_complete:
+                self.analysis_status.galaxy_history_progress = percent_complete
+                self.analysis_status.save()
+            if percent_complete < 100:
+                self.analysis_status.set_galaxy_history_state(
+                    AnalysisStatus.PROGRESS)
+                self.run_analysis.retry(countdown=self.RETRY_INTERVAL)
+            else:
+                self.analysis_status.set_galaxy_history_state(
+                    AnalysisStatus.OK
+                )
+
+        # retrieve analysis results from Galaxy
+        if not self.analysis_status.galaxy_export_task_group_id:
+            galaxy_export_tasks = get_galaxy_download_tasks(self.analysis)
+            logger.info(
+                "Starting downloading of results from Galaxy for analysis "
+                "'%s'", self.analysis)
+            self.galaxy_export_taskset = TaskSet(
+                tasks=galaxy_export_tasks
+            ).apply_async()
+            self.galaxy_export_taskset.save()
+            self.analysis_status.galaxy_export_task_group_id = (
+                self.galaxy_export_taskset.taskset_id
+            )
+            self.analysis_status.save()
+            self.run_analysis.retry(countdown=self.RETRY_INTERVAL)
+
+        # check if analysis results have finished downloading from Galaxy
+        self.galaxy_export_taskset = TaskSetResult.restore(
+            self.analysis_status.galaxy_export_task_group_id)
+        if not self.galaxy_export_taskset.ready():
+            logger.debug("Results download pending for analysis '%s'",
+                         self.analysis)
+            self.run_analysis.retry(countdown=self.RETRY_INTERVAL)
+        # all tasks must have succeeded or failed
+        elif not self.galaxy_export_taskset.successful():
+            error_msg = ("Analysis '{}' failed while downloading results "
+                         "from Galaxy".format(self.analysis))
+            logger.error(error_msg)
+            self.analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
+            self.analysis.send_email()
+            self.refinery_import_taskset.delete()
+            self.galaxy_import_taskset.delete()
+            self.galaxy_export_taskset.delete()
+            self.analysis.galaxy_cleanup()
+            return
+
+    def _get_analysis_status(self):
+        try:
+            self.analysis_status = AnalysisStatus.objects.get(
+                analysis=self.analysis)
+        except (AnalysisStatus.DoesNotExist,
+                AnalysisStatus.MultipleObjectsReturned) as exc:
+            logger.error("Can not retrieve status for analysis '%s': '%s'",
+                         self.analysis, exc)
+            self.run_analysis.update_state(state=celery.states.FAILURE)
+            return
+
+    def _import_files_to_refinery(self):
+        """
+        Handle the importing of files into the Refinery file store
+        """
+        if not self.analysis_status.refinery_import_task_group_id:
+            logger.info("Starting analysis '%s'", self.analysis)
+            self.analysis.set_status(Analysis.RUNNING_STATUS)
+            logger.info("Starting input file import tasks for analysis '%s'",
+                        self.analysis)
+            refinery_import_tasks = []
+
+            if self.tool:
+                input_file_uuid_list = self.tool.get_input_file_uuid_list()
+            else:
+                input_file_uuid_list = self.analysis.get_input_file_uuid_list()
+            for input_file_uuid in input_file_uuid_list:
+                refinery_import_task = import_file.subtask((input_file_uuid,))
+                refinery_import_tasks.append(refinery_import_task)
+            self.refinery_import_taskset = TaskSet(
+                tasks=refinery_import_tasks).apply_async()
+            self.refinery_import_taskset.save()
+            self.analysis_status.refinery_import_task_group_id = \
+                self.refinery_import_taskset.taskset_id
+            self.analysis_status.save()
+            self.run_analysis.retry(countdown=self.RETRY_INTERVAL)
+
+        # check if all files were successfully imported into Refinery
+        self.refinery_import_taskset = TaskSetResult.restore(
+            self.analysis_status.refinery_import_task_group_id
+        )
+        if not self.refinery_import_taskset.ready():
+            logger.debug("Input file import pending for analysis '%s'",
+                         self.analysis)
+            self.run_analysis.retry(countdown=self.RETRY_INTERVAL)
+
+        elif not self.refinery_import_taskset.successful():
+            error_msg = "Analysis '{}' failed during file import".format(
+                self.analysis)
+            logger.error(error_msg)
+            self.analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
+            self.analysis.send_email()
+            self.refinery_import_taskset.delete()
+            return
+
+    @task(base=AnalysisHandlerTask, max_retries=None)
+    def run_analysis(self, analysis_uuid):
+        """
+        Manage file importing/exporting, execution, and Galaxy operations for
+        an Analysis
+        """
+
+        # if cancelled by user
+        if self.analysis.failed():
+            return
+
+        self._get_analysis_status()
+
+        self._import_files_to_refinery()
+
+        self._run_galaxy_workflow()
+
+        self._get_galaxy_status()
+
+        self._attach_workflow_outputs()
+
+    def _run_galaxy_workflow(self):
+        # import files into Galaxy and start analysis
+        if not self.analysis_status.galaxy_import_task_group_id:
+            logger.debug("Starting analysis execution in Galaxy")
+            try:
+                self.analysis.prepare_galaxy()
+            except (requests.exceptions.ConnectionError,
+                    galaxy.client.ConnectionError):
+                error_msg = "Analysis '{}' failed during preparation in " \
+                            "Galaxy".format(self.analysis)
+                logger.error(error_msg)
+                self.analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
+                self.analysis.send_email()
+                self.refinery_import_taskset.delete()
+                return
+            galaxy_import_tasks = [
+                start_galaxy_analysis.subtask((self.analysis.uuid,)),
+            ]
+            self.galaxy_import_taskset = TaskSet(
+                tasks=galaxy_import_tasks
+            ).apply_async()
+            self.galaxy_import_taskset.save()
+            self.analysis_status.galaxy_import_task_group_id = \
+                self.galaxy_import_taskset.taskset_id
+            self.analysis_status.set_galaxy_history_state(
+                AnalysisStatus.PROGRESS
+            )
+            self.run_analysis.retry(countdown=self.RETRY_INTERVAL)
+
+        # check if data files were successfully imported into Galaxy
+        self.galaxy_import_taskset = TaskSetResult.restore(
+            self.analysis_status.galaxy_import_task_group_id
+        )
+        if not self.galaxy_import_taskset.ready():
+            logger.debug("Analysis '%s' pending in Galaxy", self.analysis)
+            self.run_analysis.retry(countdown=self.RETRY_INTERVAL)
+        elif not self.galaxy_import_taskset.successful():
+            error_msg = "Analysis '{}' failed in Galaxy".format(self.analysis)
+            logger.error(error_msg)
+            self.analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
+            self.analysis_status.set_galaxy_history_state(AnalysisStatus.ERROR)
+            self.analysis.send_email()
+            self.refinery_import_taskset.delete()
+            self.galaxy_import_taskset.delete()
+            self.analysis.galaxy_cleanup()
+            return
 
 
 def import_analysis_in_galaxy(ret_list, library_id, connection):
