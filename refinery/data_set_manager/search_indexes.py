@@ -99,12 +99,9 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
             if type(value) is set:
                 data[key] = " + ".join(value)
 
-        # add type as dynamic field to get proper facet values
         data[NodeIndex.TYPE_PREFIX + suffix] = object.type
-        # add name as dynamic field to get proper facet values
         data[NodeIndex.NAME_PREFIX + suffix] = object.name
 
-        # add file type as facet value
         try:
             file_store_item = FileStoreItem.objects.get(
                 uuid=object.file_uuid)
@@ -115,16 +112,10 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
 
         data[NodeIndex.FILETYPE_PREFIX + suffix] = \
             "" if file_store_item is None else file_store_item.get_filetype()
-
-        # add analysis_uuid as dynamic field to get proper facet values
         data[NodeIndex.ANALYSIS_UUID_PREFIX + suffix] = \
             "N/A" if object.analysis_uuid is None else object.analysis_uuid
-
-        # add subanalysis as dynamic field to get proper facet values
         data[NodeIndex.SUBANALYSIS_PREFIX + suffix] = \
             -1 if object.subanalysis is None else object.subanalysis
-
-        # add workflow_output as dynamic field to get proper facet values
         data[NodeIndex.WORKFLOW_OUTPUT_PREFIX + suffix] = \
             "N/A" if object.workflow_output is None else object.workflow_output
 
