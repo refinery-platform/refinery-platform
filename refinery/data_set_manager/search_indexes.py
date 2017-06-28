@@ -99,9 +99,6 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
             if type(value) is set:
                 data[key] = " + ".join(value)
 
-        data[NodeIndex.TYPE_PREFIX + suffix] = object.type
-        data[NodeIndex.NAME_PREFIX + suffix] = object.name
-
         try:
             file_store_item = FileStoreItem.objects.get(
                 uuid=object.file_uuid)
@@ -110,13 +107,23 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
             logger.error("Couldn't properly fetch FileStoreItem: %s", e)
             file_store_item = None
 
-        data[NodeIndex.FILETYPE_PREFIX + suffix] = \
-            "" if file_store_item is None else file_store_item.get_filetype()
-        data[NodeIndex.ANALYSIS_UUID_PREFIX + suffix] = \
-            "N/A" if object.analysis_uuid is None else object.analysis_uuid
-        data[NodeIndex.SUBANALYSIS_PREFIX + suffix] = \
-            -1 if object.subanalysis is None else object.subanalysis
-        data[NodeIndex.WORKFLOW_OUTPUT_PREFIX + suffix] = \
-            "N/A" if object.workflow_output is None else object.workflow_output
+        data.update({
+            NodeIndex.TYPE_PREFIX + suffix:
+                object.type,
+            NodeIndex.NAME_PREFIX + suffix:
+                object.name,
+            NodeIndex.FILETYPE_PREFIX + suffix:
+                "" if file_store_item is None
+                else file_store_item.get_filetype(),
+            NodeIndex.ANALYSIS_UUID_PREFIX + suffix:
+                "N/A" if object.analysis_uuid is None
+                else object.analysis_uuid,
+            NodeIndex.SUBANALYSIS_PREFIX + suffix:
+                -1 if object.subanalysis is None
+                else object.subanalysis,
+            NodeIndex.WORKFLOW_OUTPUT_PREFIX + suffix:
+                "N/A" if object.workflow_output is None
+                else object.workflow_output
+        })
 
         return data
