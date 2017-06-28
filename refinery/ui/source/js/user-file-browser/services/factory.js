@@ -30,7 +30,7 @@
     * ----------------------
     */
 
-    function createColumnDefs (solrAttributes) {
+    function createColumnDefs () {
       var defs = [
            { field: 'url',
             enableSorting: false,
@@ -53,36 +53,23 @@
                 '</div>',
             width: 30 },
           { field: 'filename' }];
-      var requestedColumns = {};
       settings.djangoApp.userFilesColumns.forEach(function (column) {
-        requestedColumns[column] = true;
-      });
-      solrAttributes.forEach(function (attribute) {
-        if (attribute.attribute_type === 'Characteristics'
-            || attribute.attribute_type === 'Factor Value') {
-          var name = normalizeName(attribute);
-          if (requestedColumns[name]) {
-            requestedColumns[name] = false; // TODO: Better strategy to avoid duplicates?
-            defs.push({ field: name });
-          }
-        }
+        defs.push({ field: column });
       });
       return defs;
     }
 
-    function createData (solrAttributes, solrNodes) {
-      var mapInternalToDisplay = {};
-      solrAttributes.forEach(function (attribute) {
-        mapInternalToDisplay[attribute.internal_name] =
-            normalizeName(attribute);
-      });
+    function mapInternalToDisplay (internal) {
+      return internal.replace(/_(Characteristics|Factor_Value)_generic_s/, '');
+    }
 
+    function createData (solrNodes) {
       var data = [];
       solrNodes.forEach(function (node) {
         var row = {};
         var internalNames = Object.keys(node);
         internalNames.forEach(function (internalName) {
-          var display = mapInternalToDisplay[internalName];
+          var display = mapInternalToDisplay(internalName);
           row[display] = node[internalName];
         });
         row.url = row.name;
@@ -92,12 +79,12 @@
       return data;
     }
 
-    function createFilters (solrAttributes, solrFacetCounts) {
+    function createFilters (solrFacetCounts) {
       var filters = {};
       Object.keys(solrFacetCounts).forEach(function (key) {
         if (solrFacetCounts[key].length > 0) {
           // TODO: can't use AttributeOrder (it's per dataset), but this is bad.
-          filters[key.replace(/_(Characteristics|Factor_Value)_generic_s/, '')] =
+          filters[mapInternalToDisplay(key)] =
             { facetObj: solrFacetCounts[key] };
         }
       });
@@ -112,10 +99,6 @@
         $log.error(error);
       });
       return userFile.$promise;
-    }
-
-    function normalizeName (attribute) {
-      return attribute.display_name.toLowerCase();
     }
   }
 })();
