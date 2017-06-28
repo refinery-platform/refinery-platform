@@ -13,17 +13,21 @@
     .controller('ToolSelectCtrl', ToolSelectCtrl);
 
   ToolSelectCtrl.$inject = [
-    'bootbox',
+    '$uibModal',
     '_',
+    '$window',
     'fileRelationshipService',
+    'resetGridService',
     'toolParamsService',
     'toolSelectService'
   ];
 
   function ToolSelectCtrl (
-    bootbox,
+    $uibModal,
     _,
+    $window,
     fileRelationshipService,
+    resetGridService,
     toolParamsService,
     toolSelectService
   ) {
@@ -73,35 +77,19 @@
     * @memberOf refineryToolLaunch.ToolSelectCtrl
     **/
     function updateTool (tool) {
-      if (_.isEmpty(fileService.groupCollection)) {
+      if (_.isEmpty(fileService.groupCollection) &&
+          _.isEmpty(paramsService.paramsForm)) {
         toolService.setSelectedTool(tool);
         fileService.resetToolRelated();
         fileService.refreshFileMap();
         paramsService.refreshToolParams(tool);
       } else {
-        console.log('launch a modal to confirm');
-        bootbox.confirm({
-          title: 'Reset tool launch configuration',
-          message: 'Do you want to select a new tool, which will reset all' +
-          ' your selected files and parameters.',
-          buttons: {
-            cancel: {
-              label: '<i class="fa fa-times"></i> Cancel'
-            },
-            confirm: {
-              label: '<i class="fa fa-check"></i> Confirm'
-            }
-          },
-          callback: function (result) {
-            if (result) {
-              toolService.setSelectedTool(tool);
-              fileService.resetToolRelated();
-              fileService.refreshFileMap();
-              paramsService.refreshToolParams(tool);
-            } else {
-              vm.selectedTool.select = toolService.selectedTool;
-            }
-          }
+        angular.copy(tool, toolService.tempSelectTool);
+        $uibModal.open({
+          templateUrl: $window.getStaticUrl(
+            'partials/tool-launch/partials/tool-reset-selection-modal.html'
+          ),
+          controller: 'ToolResetSelectionModalCtrl'
         });
       }
     }

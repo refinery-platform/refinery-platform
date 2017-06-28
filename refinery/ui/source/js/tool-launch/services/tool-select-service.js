@@ -15,6 +15,7 @@
 
   function toolSelectService (toolDefinitionsService) {
     var selectedTool = {};
+    var tempSelectTool = {};
     var toolList = [];
     var isToolInfoCollapsed = true;
     var isToolPanelCollapsed = true;
@@ -25,6 +26,7 @@
       isToolPanelCollapsed: isToolPanelCollapsed,
       selectedTool: selectedTool,
       setSelectedTool: setSelectedTool,
+      tempSelectTool: tempSelectTool,
       toolList: toolList
     };
     return service;
