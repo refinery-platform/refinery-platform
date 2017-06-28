@@ -13,6 +13,8 @@
     .controller('ToolSelectCtrl', ToolSelectCtrl);
 
   ToolSelectCtrl.$inject = [
+    '$log',
+    '$scope',
     '$uibModal',
     '_',
     '$window',
@@ -23,6 +25,8 @@
   ];
 
   function ToolSelectCtrl (
+    $log,
+    $scope,
     $uibModal,
     _,
     $window,
@@ -55,7 +59,6 @@
       }
     }
 
-
   /**
    * @name refreshToolList
    * @desc Initializes the tool list from toolService
@@ -69,9 +72,8 @@
       }
     }
 
-
    /**
-    * @name refreshToolList
+    * @name updateTool
     * @desc VM method when user selects a new tool, updates service and
     * calls on methods to reset any tool related data.
     * @memberOf refineryToolLaunch.ToolSelectCtrl
@@ -84,12 +86,26 @@
         fileService.refreshFileMap();
         paramsService.refreshToolParams(tool);
       } else {
-        angular.copy(tool, toolService.tempSelectTool);
-        $uibModal.open({
+        var modalInstance = $uibModal.open({
+          animation: true,
           templateUrl: $window.getStaticUrl(
             'partials/tool-launch/partials/tool-reset-selection-modal.html'
           ),
-          controller: 'ToolResetSelectionModalCtrl'
+          controller: 'ToolResetSelectionModalCtrl',
+          controllerAs: '$ctrl',
+          resolve: {
+            selectedTool: function () {
+              return tool;
+            }
+          }
+        });
+
+        modalInstance.result.then(function () {
+          // user confirmed
+          vm.selectedTool.select = toolService.selectedTool;
+        }, function () {
+          // user canceled
+          vm.selectedTool.select = toolService.selectedTool;
         });
       }
     }

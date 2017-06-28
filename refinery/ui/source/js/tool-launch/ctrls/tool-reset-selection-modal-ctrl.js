@@ -1,44 +1,49 @@
+/**
+ * Tool Reset Selection Modal Ctrl
+ * @namespace ToolResetSelectionModalCtrl
+ * @desc Modal controller when user selects a different tool but already has
+ * started configurations.
+ * @memberOf refineryApp.refineryToolLaunch
+ */
 (function () {
   'use strict';
 
   angular
-    .module('refineryAnalysisLaunch')
+    .module('refineryToolLaunch')
     .controller('ToolResetSelectionModalCtrl', ToolResetSelectionModalCtrl);
 
   ToolResetSelectionModalCtrl.$inject = [
-    '$log',
-    '$scope',
-    '$window',
     '$uibModalInstance',
     'fileRelationshipService',
+    'selectedTool',
     'toolParamsService',
     'toolSelectService'
   ];
 
   function ToolResetSelectionModalCtrl (
-    $log,
-    $scope,
-    $window,
     $uibModalInstance,
     fileRelationshipService,
+    selectedTool,
     toolParamsService,
     toolSelectService
   ) {
     var fileService = fileRelationshipService;
     var paramsService = toolParamsService;
     var toolService = toolSelectService;
+    var vm = this;
+    vm.cancel = cancel;
+    vm.confirm = confirm;
 
-    $scope.cancel = function () {
+    function cancel () {
       $uibModalInstance.dismiss('cancel');
-    };
+    }
 
-    $scope.confirm = function () {
-      toolService.setSelectedTool(toolService.tempSelectTool);
+    function confirm () {
+      toolService.setSelectedTool(selectedTool);
       fileService.resetToolRelated();
       fileService.refreshFileMap();
-      console.log(toolService.tempSelectTool);
-      paramsService.refreshToolParams(toolService.tempSelectTool);
+      paramsService.refreshToolParams(toolService.selectedTool);
       $uibModalInstance.close('close');
-    };
+    }
   }
 })();
