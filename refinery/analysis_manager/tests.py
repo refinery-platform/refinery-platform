@@ -434,7 +434,6 @@ class AnalysisRunnerTests(TestCase):
     @mock.patch.object(AnalysisRunner.run_analysis, 'delay', side_effect=None)
     def test_analysis_runner_instantiation(self, task_mock):
         a = AnalysisRunner(self.analysis.uuid)
-
         self.assertEqual(self.analysis, a.analysis)
         self.assertTrue(task_mock.called)
 
@@ -453,8 +452,9 @@ class AnalysisRunnerTests(TestCase):
                           attach_outputs_mock):
         # Run an Analysis and ensure that the methods to check the state of
         # the tsk get called properly
-        with mock.patch.object(
-                AnalysisRunner.run_analysis, 'delay', side_effect=None):
+        with mock.patch.object(AnalysisRunner.run_analysis,
+                               'delay',
+                               side_effect=None):
 
             AnalysisRunner.run_analysis(
                 AnalysisRunner(self.analysis.uuid),
