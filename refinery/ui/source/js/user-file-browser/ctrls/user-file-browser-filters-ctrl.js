@@ -26,7 +26,6 @@
     vm.hidden = {};
 
     vm.filterUpdate = function (attribute, value) {
-      console.log('attr/val:', attribute, value);
       if (typeof userFileFiltersService[attribute] === 'undefined') {
         userFileFiltersService[attribute] = []; // Init empty set
       }
@@ -36,7 +35,6 @@
       } else {
         userFileFiltersService[attribute].push(value);
       }
-      console.log('updated to:', userFileFiltersService);
 
       getUserFiles().then(function (solr) {
         // TODO: Should there be something that wraps up this "then"? It is repeated.
