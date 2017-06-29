@@ -414,6 +414,9 @@ REFINERY_SOLR_SPACE_DYNAMIC_FIELDS = get_setting(
 
 HAYSTACK_CONNECTIONS = {
     'default': {
+        # Haystack requires a default, but there's less risk of confusion
+        # for us if the core is explicit on each call.
+        # So: Leave this in, but it's just a placeholder.
         'ENGINE': 'haystack.backends.solr_backend.SolrEngine',
         'URL': REFINERY_SOLR_BASE_URL + 'default',
         'EXCLUDED_INDEXES': ['data_set_manager.search_indexes.NodeIndex',
@@ -630,3 +633,4 @@ REFINERY_CUSTOM_NAVBAR_ITEM = get_setting("REFINERY_CUSTOM_NAVBAR_ITEM")
 PROXY_LOG = '/tmp/django_docker_engine.log'
 
 USER_FILES_COLUMNS = get_setting("USER_FILES_COLUMNS")
+USER_FILES_FACETS = get_setting("USER_FILES_FACETS")

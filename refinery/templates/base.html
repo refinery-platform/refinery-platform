@@ -38,9 +38,10 @@
       solrSynonymSearch: {{ SOLR_SYNONYM_SEARCH|lower }},
       refineryTutorialSteps: '{{  REFINERY_TUTORIAL_STEPS|escapejs }}',
       staticUrl: '{{ STATIC_URL|escapejs }}',
+      userFilesColumns: '{{ USER_FILES_COLUMNS }}'.split(','),
+      userFilesFilters: '{{ USER_FILES_FILTERS }}'.split(','),
       mediaBucket: '{{ MEDIA_BUCKET }}',
-      deploymentPlatform: '{{ DEPLOYMENT_PLATFORM }}',
-      userFilesColumns: '{{ USER_FILES_COLUMNS }}'.split(',')
+      deploymentPlatform: '{{ DEPLOYMENT_PLATFORM }}'
     };
 
     if (window.djangoApp.userId === 'None' || window.djangoApp.userName === 'None') {

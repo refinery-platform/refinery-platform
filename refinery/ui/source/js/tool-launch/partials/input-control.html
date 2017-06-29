@@ -17,7 +17,7 @@
               ng-class="$ctrl.isToolInputControlCollapsed ? 'fa fa-caret-right' : 'fa fa-caret-down'"
               class="fa-pull-left"
               aria-hidden="true"></i>
-            Tool Input Control
+            Input Files
         </div>
       </h4>
     </div>
@@ -33,6 +33,14 @@
             ng-repeat="depthName in $ctrl.depthNames|orderBy:'$index':true track by $index"
             id="control-panel-list">
             <div ng-if="$index == 0" class="p-a-1-2">
+              <div class="refinery-subheader">
+                <h4>
+                  <i
+                    class="{{$ctrl.currentTypes[$ctrl.currentTypes.length-1]|groupTypeIcon}}"
+                    aria-hidden="true"></i>
+                  {{ $ctrl.depthNames[$ctrl.depthNames.length-1] }}
+                </h4>
+              </div>
               <rp-input-group></rp-input-group>
             </div>
 
@@ -43,13 +51,7 @@
               <div class="refinery-subheader">
                 <h4>
                   <i class="{{$ctrl.currentTypes[$ctrl.currentGroup.length-$index]|groupTypeIcon}}" aria-hidden="true"></i>
-                  {{ depthName }}:
-                  <i
-                    class="{{$ctrl.currentTypes[$ctrl.currentGroup.length-$index + 1] |groupTypeIcon}}"
-                    aria-hidden="true">
-                  </i>
-                  {{ $ctrl.depthNames[$ctrl.currentGroup.length-$index + 1] }},
-                  Index {{ $ctrl.currentGroup[$ctrl.currentGroup.length-$index] + 1 }}
+                  {{ depthName }}
                 </h4>
               </div>
             </div>
@@ -69,6 +71,9 @@
                 ng-click="$ctrl.navLeft($ctrl.currentGroup.length-$index)">
                 <i class="fa fa-backward"></i>
               </button>
+              <span class="badge">
+                {{ $ctrl.currentGroup[$ctrl.currentGroup.length-$index] + 1 }}
+              </span>
               <span ng-if="$ctrl.currentTypes[$ctrl.currentGroup.length-$index] == 'PAIR'">
                 <button
                   class="btn btn-default btn-xs outline"

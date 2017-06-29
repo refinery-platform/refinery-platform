@@ -21,7 +21,7 @@
     });
 
     it('Data & UI displays variables should exist for views', function () {
-      expect(ctrl.isToolParamsCollapsed).toEqual(false);
+      expect(ctrl.isToolParamsCollapsed).toEqual(true);
       expect(ctrl.paramsForm).toEqual({});
     });
   });
