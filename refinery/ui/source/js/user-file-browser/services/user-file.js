@@ -16,10 +16,14 @@
           method: 'GET',
           params: {
             fq: function () {
-              // TODO: Get the data the right way, and use it to construct the solr query
-              console.log(userFileFiltersService);
-              return '(technology_Characteristics_generic_s:ChIP-seq OR '
-                     + 'technology_FOOO_generic_s:ChIP-seq)';
+              var filters = Object.keys(userFileFiltersService).map(function (key) {
+                var value = userFileFiltersService[key];
+                // TODO: escaping!
+                return '(' + key + '_Characteristics_generic_s:' + value +
+                       ' OR ' + key + '__Factor_Value_s:' + value + ')';
+              });
+              // TODO: Repeated fq params may be more efficient, but not a big deal
+              return filters.join(' AND ');
             }
           }
         }
