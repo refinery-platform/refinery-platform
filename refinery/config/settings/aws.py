@@ -28,4 +28,5 @@ COGNITO_DEVELOPER_PROVIDER_NAME = get_setting(
 )
 
 # Refinery
-DEPLOYMENT_PLATFORM = 'aws'
+# TODO: uncomment after file upload to S3 is fully implemented
+# DEPLOYMENT_PLATFORM = 'aws'
