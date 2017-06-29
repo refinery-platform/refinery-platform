@@ -17,10 +17,12 @@
           params: {
             fq: function () {
               var filters = Object.keys(userFileFiltersService).map(function (key) {
-                var value = userFileFiltersService[key];
+                var values = userFileFiltersService[key];
                 // TODO: escaping!
-                return '(' + key + '_Characteristics_generic_s:' + value +
-                       ' OR ' + key + '__Factor_Value_s:' + value + ')';
+                return values.map(function (value) {
+                  return '(' + key + '_Characteristics_generic_s:' + value +
+                  ' OR ' + key + '_Factor_Value_s:' + value + ')';
+                }).join(' AND ');
               });
               // TODO: Repeated fq params may be more efficient, but not a big deal
               return filters.join(' AND ');
