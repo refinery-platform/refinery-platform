@@ -8,11 +8,14 @@
   UserFileBrowserFiltersCtrl.$inject = [
     '$log',
     '$q',
+    'gridOptionsService',
     'userFileBrowserFactory',
     'userFileFiltersService'
   ];
 
-  function UserFileBrowserFiltersCtrl ($log, $q, userFileBrowserFactory,
+  function UserFileBrowserFiltersCtrl ($log, $q,
+                                       gridOptionsService,
+                                       userFileBrowserFactory,
                                        userFileFiltersService) {
     var vm = this;
 
@@ -34,6 +37,16 @@
         userFileFiltersService[attribute].push(value);
       }
       console.log('updated to:', userFileFiltersService);
+
+      getUserFiles().then(function (solr) {
+        // TODO: Should there be something that wraps up this "then"? It is repeated.
+        // gridOptionsService.columnDefs = userFileBrowserFactory.createColumnDefs();
+        gridOptionsService.data = userFileBrowserFactory.createData(solr.nodes);
+        promise.resolve();
+      }, function () {
+        $log.error('/user/files/ request failed');
+        promise.reject();
+      });
     };
 
     var promise = $q.defer();
