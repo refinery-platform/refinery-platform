@@ -16,8 +16,8 @@
     var promise = $q.defer();
     var getUserFiles = userFileBrowserFactory.getUserFiles;
     getUserFiles().then(function (solr) {
-      vm.gridOptions.columnDefs = userFileBrowserFactory.createColumnDefs(solr.attributes);
-      vm.gridOptions.data = userFileBrowserFactory.createData(solr.attributes, solr.nodes);
+      vm.gridOptions.columnDefs = userFileBrowserFactory.createColumnDefs();
+      vm.gridOptions.data = userFileBrowserFactory.createData(solr.nodes);
       promise.resolve();
     }, function () {
       $log.error('/user/files/ request failed');

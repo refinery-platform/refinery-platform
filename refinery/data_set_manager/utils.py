@@ -9,12 +9,13 @@ import logging
 import time
 import urlparse
 
-import requests
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.db.models import Q
 from django.utils.http import urlquote, urlunquote
+
 from guardian.shortcuts import get_objects_for_user
+import requests
 from requests.exceptions import HTTPError
 
 import core
@@ -613,10 +614,12 @@ def _generate_solr_params(params, assay_uuids, facets_from_config=False):
 
     if facets_from_config:
         # Twice as many facets as necessary, but easier than the alternative.
-        template = '&facet.field={0}_Characteristics_generic_s' + \
+        facet_template = '&facet.field={0}_Characteristics_generic_s' + \
                    '&facet.field={0}_Factor_Value_generic_s'
-        solr_params += ''.join([template.format(s) for s
-                                in settings.USER_FILES_FACETS.split(",")])
+        solr_params += ''.join(
+            [facet_template.format(s) for s
+             in settings.USER_FILES_FACETS.split(",")])
+        solr_params += '&fl=*_generic_s,name,file_uuid,type,django_id'
     elif facet_field:
         facet_field = facet_field.split(',')
         facet_field = insert_facet_field_filter(facet_filter, facet_field)

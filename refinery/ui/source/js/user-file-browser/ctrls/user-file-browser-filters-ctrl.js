@@ -33,7 +33,7 @@
     var getUserFiles = userFileBrowserFactory.getUserFiles;
     getUserFiles().then(function (solr) {
       vm.attributeFilters =
-          userFileBrowserFactory.createFilters(solr.attributes, solr.facet_field_counts);
+          userFileBrowserFactory.createFilters(solr.facet_field_counts);
       promise.resolve();
     }, function () {
       $log.error('/user/files/ request failed');
