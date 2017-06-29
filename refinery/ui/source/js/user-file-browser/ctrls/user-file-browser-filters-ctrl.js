@@ -28,7 +28,7 @@
         userFileFiltersService[attribute] = []; // Init empty set
       }
       var index = userFileFiltersService[attribute].indexOf(value);
-      if (index > 0) {
+      if (index >= 0) {
         userFileFiltersService[attribute].splice(index, 1);
       } else {
         userFileFiltersService[attribute].push(value);

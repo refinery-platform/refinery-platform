@@ -7,7 +7,7 @@
   userFileFiltersService.$inject = [];
 
   function userFileFiltersService () {
-    var userFileFilters = { technology: ['ChIP-seq'] }; // TODO
+    var userFileFilters = {};
     return userFileFilters;
   }
 })();
