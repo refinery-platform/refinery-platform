@@ -1,3 +1,10 @@
+/**
+ * Input Group Details Component
+ * @namespace rpInputGroupDetails
+ * @desc Component for the input files panel. Controls the input
+ * group details which are displayed for pairs only
+ * @memberOf refineryApp.refineryToolLaunch
+ */
 (function () {
   'use strict';
 

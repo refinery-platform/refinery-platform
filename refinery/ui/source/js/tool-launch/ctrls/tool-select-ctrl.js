@@ -13,15 +13,21 @@
     .controller('ToolSelectCtrl', ToolSelectCtrl);
 
   ToolSelectCtrl.$inject = [
+    '$uibModal',
     '_',
+    '$window',
     'fileRelationshipService',
+    'resetGridService',
     'toolParamsService',
     'toolSelectService'
   ];
 
   function ToolSelectCtrl (
+    $uibModal,
     _,
+    $window,
     fileRelationshipService,
+    resetGridService,
     toolParamsService,
     toolSelectService
   ) {
@@ -49,7 +55,6 @@
       }
     }
 
-
   /**
    * @name refreshToolList
    * @desc Initializes the tool list from toolService
@@ -63,18 +68,42 @@
       }
     }
 
-
    /**
-    * @name refreshToolList
+    * @name updateTool
     * @desc VM method when user selects a new tool, updates service and
     * calls on methods to reset any tool related data.
     * @memberOf refineryToolLaunch.ToolSelectCtrl
     **/
     function updateTool (tool) {
-      toolService.setSelectedTool(tool);
-      fileService.resetToolRelated();
-      fileService.refreshFileMap();
-      paramsService.refreshToolParams(tool);
+      if (_.isEmpty(fileService.groupCollection) &&
+          _.isEmpty(paramsService.paramsForm)) {
+        toolService.setSelectedTool(tool);
+        fileService.resetToolRelated();
+        fileService.refreshFileMap();
+        paramsService.refreshToolParams(tool);
+      } else {
+        var modalInstance = $uibModal.open({
+          animation: true,
+          templateUrl: $window.getStaticUrl(
+            'partials/tool-launch/partials/tool-reset-selection-modal.html'
+          ),
+          controller: 'ToolResetSelectionModalCtrl',
+          controllerAs: '$ctrl',
+          resolve: {
+            selectedTool: function () {
+              return tool;
+            }
+          }
+        });
+
+        modalInstance.result.then(function () {
+          // user confirmed
+          vm.selectedTool.select = toolService.selectedTool;
+        }, function () {
+          // user canceled
+          vm.selectedTool.select = toolService.selectedTool;
+        });
+      }
     }
   }
 })();
