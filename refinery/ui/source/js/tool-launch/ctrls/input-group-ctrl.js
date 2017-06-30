@@ -67,14 +67,10 @@
 
     /**
    * @name isObjEmpty
-   * @desc Checks if the group has a inputFile template filled, used by vm to show
-   * template vs the node
+   * @desc Method check if an obj is empty, used to disable remove/removeall button
    * @memberOf refineryToolLaunch.InputGroupCtrl
-   * @param {obj} testObj - uuid for the input file type
+   * @param {obj} testObj - any object
    */
-    /**
-     ** Method check if an obj is empty, used to disable remove/removeall button
-    * */
     function isObjEmpty (testObj) {
       return _.isEmpty(testObj);
     }
