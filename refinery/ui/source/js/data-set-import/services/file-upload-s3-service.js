@@ -24,8 +24,8 @@
       $log.error('Failed to obtain AWS OpenID Connect token: ' + reason);
     });
 
-    this.progress = 0;
-    this.upload = function (file) {
+    vm.progress = 0;
+    vm.upload = function (file) {
       var deferred = $q.defer();
       var params = {
         Bucket: settings.djangoApp.mediaBucket,
