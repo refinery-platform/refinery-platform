@@ -39,7 +39,7 @@
     /**
      * @name navLeft
      * @desc  Updates the current group when user navigates
-     * @memberOf refineryFileBrowser.InputControlCtrl
+     * @memberOf refineryToolLaunch.InputControlCtrl
      * @param {int} depth - group nav index
     **/
     function navLeft (depth) {
@@ -49,7 +49,7 @@
     /**
      * @name navRight
      * @desc  Updates the current group when user navigates
-     * @memberOf refineryFileBrowser.InputControlCtrl
+     * @memberOf refineryToolLaunch.InputControlCtrl
      * @param {int} depth - group nav index
     **/
     function navRight (depth) {

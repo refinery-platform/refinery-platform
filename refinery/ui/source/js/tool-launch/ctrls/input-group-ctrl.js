@@ -54,7 +54,7 @@
    * @name isGroupPopulated
    * @desc Checks if the group has a inputFile template filled, used by vm to show
    * template vs the node
-   * @memberOf refineryFileBrowser.InputGroupCtrl
+   * @memberOf refineryToolLaunch.InputGroupCtrl
    * @param {string} inputFileUuid - uuid for the input file type
    */
     function isGroupPopulated (inputFileUuid) {
@@ -69,7 +69,7 @@
    * @name isObjEmpty
    * @desc Checks if the group has a inputFile template filled, used by vm to show
    * template vs the node
-   * @memberOf refineryFileBrowser.InputGroupCtrl
+   * @memberOf refineryToolLaunch.InputGroupCtrl
    * @param {obj} testObj - uuid for the input file type
    */
     /**
@@ -83,7 +83,7 @@
    * @name removeAllGroups
    * @desc Method clears all selected nodes and empties group. Required for
      * emptying cart or a new tool selection
-   * @memberOf refineryFileBrowser.InputGroupCtrl
+   * @memberOf refineryToolLaunch.InputGroupCtrl
    */
     function removeAllGroups () {
       fileService.hideNodePopover = true;
@@ -93,7 +93,7 @@
     /**
    * @name removeGroup
    * @desc Method clears the current input group
-   * @memberOf refineryFileBrowser.InputGroupCtrl
+   * @memberOf refineryToolLaunch.InputGroupCtrl
    */
     function removeGroup () {
       fileService.hideNodePopover = true;

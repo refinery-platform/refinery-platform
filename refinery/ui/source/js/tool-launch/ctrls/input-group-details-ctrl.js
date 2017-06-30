@@ -38,7 +38,7 @@
     /**
      * @name toggleCollapseDetails
      * @desc  view method which sets to hide input detail panel
-     * @memberOf refineryFileBrowser.InputGroupDetailsCtrl
+     * @memberOf refineryToolLaunch.InputGroupDetailsCtrl
     **/
     function toggleCollapseDetails () {
       if (vm.collapseDetails) {
