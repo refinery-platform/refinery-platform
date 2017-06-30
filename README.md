@@ -40,6 +40,8 @@ Install deployment tools (assumes header files for Python are installed):
 $ pip install -r deployment/requirements.txt
 ```
 
+Install [Pre-Commit Hooks](https://github.com/refinery-platform/refinery-platform/wiki/Development-Environment#pre-commit-hook)
+
 Use `fabricrc.sample` to update or initialize Fabric configuration, for example:
 ```bash
 $ cp fabricrc.sample ~/.fabricrc
