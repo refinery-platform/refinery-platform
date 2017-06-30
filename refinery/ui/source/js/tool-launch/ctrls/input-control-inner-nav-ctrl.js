@@ -1,8 +1,7 @@
 /**
  * Input Control Inner Nav Ctrl
  * @namespace InputControlInnerNavCtrl
- * @desc Main controller for the input files panel. Child component of the
- * display component.
+ * @desc Controller for the inner group's navigation.
  * @memberOf refineryApp.refineryToolLaunch
  */
 (function () {
