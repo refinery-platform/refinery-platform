@@ -37,8 +37,10 @@ describe('refineryDataSetImport.settings: unit tests', function () {
         .toEqual('/data_set_manager/import/chunked-upload-complete/');
     });
 
-    it('should have chunkSize constant', function () {
+    it('should have chunkSize constant set to a positive integer', function () {
       expect(settings.chunkSize).toBeDefined();
+      expect(typeof settings.chunkSize).toEqual('number');
+      expect(settings.chunkSize).toBeGreaterThan(0);
     });
   });
 });
