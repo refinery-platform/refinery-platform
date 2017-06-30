@@ -525,7 +525,7 @@ def make_template(config, config_yaml):
         'LoadBalancer', 'AWS::ElasticLoadBalancing::LoadBalancer',
         {
             'AccessLoggingPolicy': {
-                'EmitInterval': 5,
+                'EmitInterval': functions.ref('LoggingInterval'),
                 'Enabled': True,
                 'S3BucketName': config['S3_LOG_BUCKET'],
                 # 'S3BucketPrefix' unused
@@ -550,6 +550,16 @@ def make_template(config, config_yaml):
                 functions.get_att('ELBSecurityGroup', 'GroupId')],
             'Tags': load_tags(),
         })
+    cft.parameters.add(
+        core.Parameter('LoggingInterval', 'Number', {
+                'Default': 60,
+                'Description':
+                "How often, in minutes, the ELB emits its logs to the "
+                "configured S3 bucket. The ELB logging facility restricts "
+                "this to be 5 or 60.",
+            }
+        )
+    )
 
     # Cognito Identity Pool for Developer Authenticated Identities Authflow
     # http://docs.aws.amazon.com/cognito/latest/developerguide/authentication-flow.html
