@@ -660,6 +660,8 @@ def make_template(config, config_yaml):
         )
     )
 
+    # See http://docs.aws.amazon.com/elasticloadbalancing/latest/classic/enable-access-logs.html#attach-bucket-policy # noqa: E501
+    # for full list of region--principal identifiers.
     cft.mappings.region = core.Mapping(
         'Region',
         {'us-east-1': {'ELBPrincipal': '127311923021'}})
