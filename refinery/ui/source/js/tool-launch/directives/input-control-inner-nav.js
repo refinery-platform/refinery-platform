@@ -1,3 +1,10 @@
+/**
+ * Input Control Inner Nav Component
+ * @namespace rpInputControlInnerNav
+ * @desc Component for the input files panel. Child component of the
+ * display component.
+ * @memberOf refineryApp.refineryToolLaunch
+ */
 (function () {
   'use strict';
   angular

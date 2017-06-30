@@ -34,10 +34,21 @@
     * Method Definitions
     * ----------------------
     */
+    /**
+     * @name setSelectedTool
+     * @desc  Deep copy of tool
+     * @memberOf refineryToolLaunch.toolSelectService
+     * @param {obj} tool - api response tool
+    **/
     function setSelectedTool (tool) {
       angular.copy(tool, selectedTool);
     }
 
+    /**
+     * @name getTools
+     * @desc  Copies the list of tools from tool definition service
+     * @memberOf refineryToolLaunch.toolSelectService
+    **/
     function getTools () {
       var toolDefs = toolDefinitionsService.query();
       toolDefs.$promise.then(function (response) {
