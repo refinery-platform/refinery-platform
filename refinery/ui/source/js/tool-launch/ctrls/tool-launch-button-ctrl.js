@@ -33,7 +33,12 @@
    * Methods Definitions
    * -----------------------------------------------------------------------------
    */
-
+    /**
+     * @name launchTool
+     * @desc  VM methods associated with button to launch a tool by sending
+     * configs to the tool launch api
+     * @memberOf refineryToolLaunch.ToolLaunchButtonCtrl
+    **/
     function launchTool () {
       toolLaunchService.postToolLaunch().then(function (response) {
         $window.open(response.tool_url);
@@ -42,8 +47,11 @@
       });
     }
 
-
-    // View method to check if the group has minimum nodes
+   /**
+     * @name needMoreNodes
+     * @desc View method uses a service to check if the group has minimum nodes
+     * @memberOf refineryToolLaunch.ToolLaunchButtonCtrl
+    **/
     function needMoreNodes () {
       return toolLaunchService.checkNeedMoreNodes();
     }

@@ -30,7 +30,6 @@
      * Method Definitions
      * ----------------------
      */
-
     /**
      * @name generateFilters
      * @desc  Configures the attribute and analysis filter data by adding the display

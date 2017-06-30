@@ -51,8 +51,10 @@
    * ---------------------------------------------------------
    */
   /**
-   * Checks if the group has a inputFile template filled, used by vm to show
+   * @name isGroupPopulated
+   * @desc Checks if the group has a inputFile template filled, used by vm to show
    * template vs the node
+   * @memberOf refineryToolLaunch.InputGroupCtrl
    * @param {string} inputFileUuid - uuid for the input file type
    */
     function isGroupPopulated (inputFileUuid) {
@@ -62,24 +64,33 @@
       }
       return false;
     }
+
     /**
-     ** Method check if an obj is empty, used to disable remove/removeall button
-    * */
+   * @name isObjEmpty
+   * @desc Method check if an obj is empty, used to disable remove/removeall button
+   * @memberOf refineryToolLaunch.InputGroupCtrl
+   * @param {obj} testObj - any object
+   */
     function isObjEmpty (testObj) {
       return _.isEmpty(testObj);
     }
+
     /**
-     * Method clears all selected nodes and empties group. Required for
+   * @name removeAllGroups
+   * @desc Method clears all selected nodes and empties group. Required for
      * emptying cart or a new tool selection
-     */
+   * @memberOf refineryToolLaunch.InputGroupCtrl
+   */
     function removeAllGroups () {
       fileService.hideNodePopover = true;
       fileService.resetInputGroup();
     }
 
     /**
-     ** Method clears the current input group
-    * */
+   * @name removeGroup
+   * @desc Method clears the current input group
+   * @memberOf refineryToolLaunch.InputGroupCtrl
+   */
     function removeGroup () {
       fileService.hideNodePopover = true;
       fileService.removeGroupFromCollections();

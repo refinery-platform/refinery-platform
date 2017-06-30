@@ -1,3 +1,10 @@
+/**
+ * Input Control Ctrl
+ * @namespace InputControlCtrl
+ * @desc Main controller for the input files panel. Child component of the
+ * display component.
+ * @memberOf refineryApp.refineryToolLaunch
+ */
 (function () {
   'use strict';
 
@@ -29,10 +36,22 @@
    * Methods Definitions
    * ---------------------------------------------------------
    */
+    /**
+     * @name navLeft
+     * @desc  Updates the current group when user navigates
+     * @memberOf refineryToolLaunch.InputControlCtrl
+     * @param {int} depth - group nav index
+    **/
     function navLeft (depth) {
       vm.currentGroup[depth]--;
     }
 
+    /**
+     * @name navRight
+     * @desc  Updates the current group when user navigates
+     * @memberOf refineryToolLaunch.InputControlCtrl
+     * @param {int} depth - group nav index
+    **/
     function navRight (depth) {
       vm.currentGroup[depth]++;
     }
