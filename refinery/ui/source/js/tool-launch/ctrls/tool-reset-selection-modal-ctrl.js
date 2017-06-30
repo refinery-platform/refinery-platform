@@ -34,10 +34,22 @@
     vm.cancel = cancel;
     vm.confirm = confirm;
 
+    /**
+     * @name cancel
+     * @desc  vm modal methods used to cancel selecting a new tool to maintain
+     * current launch configs
+     * @memberOf refineryFileBrowser.ToolResetSelectionModalCtrl
+    **/
     function cancel () {
       $uibModalInstance.dismiss('cancel');
     }
 
+    /**
+     * @name confirm
+     * @desc  vm modal method used to confirm a reset of the tool params and
+     * select a new tool
+     * @memberOf refineryFileBrowser.ToolResetSelectionModalCtrl
+    **/
     function confirm () {
       toolService.setSelectedTool(selectedTool);
       fileService.resetToolRelated();
