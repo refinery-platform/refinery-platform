@@ -119,8 +119,8 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
                 "N/A" if object.analysis_uuid is None
                 else object.analysis_uuid,
             NodeIndex.SUBANALYSIS_PREFIX + suffix:
-                -1 if object.subanalysis is None
-                else object.subanalysis,
+                (-1 if object.subanalysis is None  # TODO: upgrade flake8
+                 else object.subanalysis),         # and remove parentheses
             NodeIndex.WORKFLOW_OUTPUT_PREFIX + suffix:
                 "N/A" if object.workflow_output is None
                 else object.workflow_output
