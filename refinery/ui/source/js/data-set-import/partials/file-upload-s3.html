@@ -8,13 +8,13 @@
     </noscript>
 
     <p>
-      <button type="file" ngf-select="uploadFiles($files)" ngf-multiple="true">
+      <button type="file" ngf-select="FileCtrl.uploadFiles($files)" ngf-multiple="true">
         Select file
       </button>
     </p>
 
-    <div ng-show="files.length > 0">
-      <div ng-repeat="file in files">
+    <div ng-show="FileCtrl.files.length > 0">
+      <div ng-repeat="file in FileCtrl.files">
         File:
         <div>
           {{file.name}} {{file.$error}} {{file.$errorParam}}
