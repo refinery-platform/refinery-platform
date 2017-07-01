@@ -24,15 +24,14 @@ from django.core.files.storage import FileSystemStorage
 from django.db import models
 from django.db.models.signals import pre_delete
 from django.dispatch import receiver
-from django_extensions.db.fields import UUIDField
 from django.utils import timezone
 from django.utils.deconstruct import deconstructible
 
 from celery.result import AsyncResult
 from celery.task.control import revoke
+from django_extensions.db.fields import UUIDField
 
 import core
-
 
 logger = logging.getLogger(__name__)
 

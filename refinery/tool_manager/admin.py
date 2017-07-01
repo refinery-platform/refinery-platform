@@ -1,9 +1,9 @@
 from django.contrib import admin
+
 from guardian.admin import GuardedModelAdmin
 
-from .models import (FileRelationship, GalaxyParameter, InputFile,
-                     OutputFile, Parameter, Tool, ToolDefinition)
-
+from .models import (FileRelationship, GalaxyParameter, InputFile, OutputFile,
+                     Parameter, Tool, ToolDefinition)
 from .utils import AdminFieldPopulator
 
 

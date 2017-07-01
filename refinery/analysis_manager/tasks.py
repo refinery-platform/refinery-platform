@@ -9,17 +9,17 @@ import urlparse
 from bioblend import galaxy
 import celery
 from celery.result import TaskSetResult
-from celery.task import task, Task
+from celery.task import Task, task
 from celery.task.sets import TaskSet
 import requests
 
-from .models import AnalysisStatus
 from core.models import Analysis, AnalysisResult, Workflow
 from core.utils import get_full_url
 from data_set_manager.models import Node
 from file_store.models import FileStoreItem
 from file_store.tasks import create, import_file
 
+from .models import AnalysisStatus
 
 logger = logging.getLogger(__name__)
 

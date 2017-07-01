@@ -7,14 +7,13 @@ Created on May 11, 2012
 from django.conf.urls import patterns, url
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
+
 from rest_framework.routers import DefaultRouter
 
 from .views import (Assays, AssaysAttributes, AssaysFiles, CheckDataFilesView,
-                    ChunkedFileUploadCompleteView,
-                    ChunkedFileUploadView, DataSetImportView, ImportISATabView,
-                    ProcessISATabView, ProcessMetadataTableView,
-                    TakeOwnershipOfPublicDatasetView)
-
+                    ChunkedFileUploadCompleteView, ChunkedFileUploadView,
+                    DataSetImportView, ImportISATabView, ProcessISATabView,
+                    ProcessMetadataTableView, TakeOwnershipOfPublicDatasetView)
 
 urlpatterns = patterns(
     'data_set_manager.views',

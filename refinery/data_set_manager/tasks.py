@@ -23,15 +23,15 @@ import pysam
 import requests
 from requests.exceptions import HTTPError
 
-from .isa_tab_parser import IsaTabParser
-from .models import initialize_attribute_order, Investigation, Node
-from .utils import (calculate_checksum, get_node_types,
-                    index_annotated_nodes, update_annotated_nodes)
 from core.models import DataSet, ExtendedGroup, FileStoreItem
 from core.utils import (add_data_set_to_neo4j, update_annotation_sets_neo4j,
                         update_data_set_index)
 from file_store.models import FileExtension
 
+from .isa_tab_parser import IsaTabParser
+from .models import Investigation, Node, initialize_attribute_order
+from .utils import (calculate_checksum, get_node_types, index_annotated_nodes,
+                    update_annotated_nodes)
 
 logger = logging.getLogger(__name__)
 

@@ -3,9 +3,10 @@ import logging
 import os
 import subprocess
 
+from django.core.exceptions import ImproperlyConfigured
+
 import djcelery
 import yaml
-from django.core.exceptions import ImproperlyConfigured
 
 logger = logging.getLogger(__name__)
 

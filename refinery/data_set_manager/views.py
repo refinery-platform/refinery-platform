@@ -24,20 +24,19 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from core.models import DataSet, get_user_import_dir
+from core.utils import get_full_url
+from file_store.models import generate_file_source_translator, get_temp_dir
+from file_store.tasks import DownloadError, download_file
+
 from .models import Assay, AttributeOrder, Study
 from .serializers import AssaySerializer, AttributeOrderSerializer
 from .single_file_column_parser import process_metadata_table
 from .tasks import parse_isatab
 from .utils import (customize_attribute_response, format_solr_response,
                     generate_solr_params_for_assay, get_owner_from_assay,
-                    initialize_attribute_order_ranks,
-                    is_field_in_hidden_list, search_solr,
-                    update_attribute_order_ranks)
-from core.models import DataSet, get_user_import_dir
-from core.utils import get_full_url
-from file_store.models import generate_file_source_translator, get_temp_dir
-from file_store.tasks import download_file, DownloadError
-
+                    initialize_attribute_order_ranks, is_field_in_hidden_list,
+                    search_solr, update_attribute_order_ranks)
 
 logger = logging.getLogger(__name__)
 

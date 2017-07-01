@@ -16,7 +16,6 @@ import sys
 
 import boto3
 from cfn_pyplates import core, functions
-
 from utils import load_config, load_tags, save_s3_config
 
 VERSION = '1.1'

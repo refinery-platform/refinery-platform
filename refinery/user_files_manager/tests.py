@@ -1,9 +1,10 @@
 import logging
 from urlparse import urljoin
 
-import requests
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
+
 from guardian.utils import get_anonymous_user
+import requests
 from rest_framework.test import (APIRequestFactory, APITestCase,
                                  force_authenticate)
 
