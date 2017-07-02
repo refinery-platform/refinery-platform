@@ -18,25 +18,6 @@
   cursor: pointer;
 }
 
-.panel-group.data-set-filters {
-  label {
-    padding-left: 0;
-  }
-  .checkbox.container{
-    width: 100%;
-  }
-  .row{
-    display: flex;
-    input{
-      margin-left: 0;
-      position: relative;
-    }
-    .col-xs-8 > span {
-      width: 100%;
-    }
-  }
-}
-
 /*From data_set2.html*/
 
 /**
@@ -286,9 +267,29 @@
   }
 }
 
-#tool-panel-show-button {
-  margin: 0 0 0 10px;
-  padding-bottom: 10px;
+
+// Attribute Table
+.panel-group.data-set-filters {
+  label {
+    padding-left: 0;
+  }
+  .checkbox.container{
+    width: 100%;
+    padding-top: 0;
+    padding-bottom: 0px;
+    margin: 0px;
+    margin-botton: 5px !important;
+  }
+  .row{
+    display: flex;
+    input{
+      margin-left: 0;
+      position: relative;
+    }
+    .col-xs-8 > span {
+      width: 100%;
+    }
+  }
 }
 
 #table-filter {
@@ -329,8 +330,19 @@
   .panel-heading {
     background: none;
   }
+
+  .panel-body {
+    border-top: none;
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+
 }
 
+#tool-panel-show-button {
+  margin: 0 0 0 10px;
+  padding-bottom: 10px;
+}
 .solidText {
   opacity: 1 !important;
 }
