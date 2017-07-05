@@ -8,10 +8,15 @@
   UserFileBrowserFiltersCtrl.$inject = [
     '$log',
     '$q',
-    'userFileBrowserFactory'
+    'gridOptionsService',
+    'userFileBrowserFactory',
+    'userFileFiltersService'
   ];
 
-  function UserFileBrowserFiltersCtrl ($log, $q, userFileBrowserFactory) {
+  function UserFileBrowserFiltersCtrl ($log, $q,
+                                       gridOptionsService,
+                                       userFileBrowserFactory,
+                                       userFileFiltersService) {
     var vm = this;
 
     vm.togglePanel = function (attribute) {
@@ -20,13 +25,26 @@
 
     vm.hidden = {};
 
-    vm.filters = {};
-
     vm.filterUpdate = function (attribute, value) {
-      if (typeof vm.filters[attribute] === 'undefined') {
-        vm.filters[attribute] = {};
+      if (typeof userFileFiltersService[attribute] === 'undefined') {
+        userFileFiltersService[attribute] = []; // Init empty set
       }
-      vm.filters[attribute][value] = !vm.filters[attribute][value];
+      var index = userFileFiltersService[attribute].indexOf(value);
+      if (index >= 0) {
+        userFileFiltersService[attribute].splice(index, 1);
+      } else {
+        userFileFiltersService[attribute].push(value);
+      }
+
+      getUserFiles().then(function (solr) {
+        // TODO: Should there be something that wraps up this "then"? It is repeated.
+        // gridOptionsService.columnDefs = userFileBrowserFactory.createColumnDefs();
+        gridOptionsService.data = userFileBrowserFactory.createData(solr.nodes);
+        promise.resolve();
+      }, function () {
+        $log.error('/user/files/ request failed');
+        promise.reject();
+      });
     };
 
     var promise = $q.defer();
