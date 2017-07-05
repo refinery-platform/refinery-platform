@@ -45,9 +45,7 @@
             class='fileTypes'
             ng-repeat="fileObj in inputFile.allowed_filetypes">
             {{fileObj.name}}
-            <span ng-if="$index < inputFile.allowed_filetypes.length - 1">
-              ,
-            </span>
+            <span ng-if="$index < inputFile.allowed_filetypes.length - 1">,</span>
           </div>
           >
           <br>
@@ -68,9 +66,7 @@
             class='fileTypes'
             ng-repeat="fileObj in $ctrl.inputFileTypes[0].allowed_filetypes">
             {{fileObj.name}}
-            <span ng-if="$index < $ctrl.inputFileTypes[0].allowed_filetypes.length - 1">
-              ,
-            </span>
+            <span ng-if="$index < $ctrl.inputFileTypes[0].allowed_filetypes.length - 1">,</span>
           </div>
           >
           <br>
