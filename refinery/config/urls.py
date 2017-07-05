@@ -4,6 +4,7 @@ from django.conf import settings
 from django.conf.urls import include, patterns, url
 from django.conf.urls.static import static
 from django.contrib import admin
+
 from haystack.forms import FacetedSearchForm
 from haystack.query import SearchQuerySet
 from haystack.views import FacetedSearchView
@@ -31,7 +32,8 @@ from data_set_manager.api import (AssayResource, AttributeOrderResource,
 from data_set_manager.urls import data_set_manager_router
 from file_store.urls import file_store_router
 from tool_manager.urls import django_docker_engine_url, tool_manager_router
-from user_files_manager.urls import user_files_router, user_files_url
+from user_files_manager.urls import (user_files_csv_url, user_files_router,
+                                     user_files_url)
 
 logger = logging.getLogger(__name__)
 
@@ -144,7 +146,8 @@ urlpatterns = patterns(
         ),
         name='search'
     ),
-    user_files_url
+    user_files_url,
+    user_files_csv_url
 
     # (r'^favicon\.ico$',
     # 'django.views.generic.simple.redirect_to',

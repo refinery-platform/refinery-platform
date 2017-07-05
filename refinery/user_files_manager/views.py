@@ -1,11 +1,15 @@
+import csv
 import logging
+
+from django.http import HttpResponse
+from django.shortcuts import render_to_response
+from django.template import RequestContext
+
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from data_set_manager.utils import (format_solr_response,
                                     generate_solr_params_for_user, search_solr)
-from django.shortcuts import render_to_response
-from django.template import RequestContext
-from rest_framework.response import Response
-from rest_framework.views import APIView
 
 logger = logging.getLogger(__name__)
 
@@ -13,6 +17,17 @@ logger = logging.getLogger(__name__)
 def user_files(request):
     return render_to_response('core/user_files.html', {},
                               context_instance=RequestContext(request))
+
+
+def user_files_csv(request):
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="user-files.csv"'
+
+    writer = csv.writer(response)
+    writer.writerow(['First row', 'Foo', 'Bar', 'Baz'])
+    writer.writerow(['Second row', 'A', 'B', 'C', '"Testing"', "It's working"])
+
+    return response
 
 
 class UserFiles(APIView):
