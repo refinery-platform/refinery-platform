@@ -16,9 +16,7 @@
                 <input
                   type="checkbox"
                   ng-click="NSPCtrl.selectNode(inputType.uuid)"
-                  ng-model="NSPCtrl.selectionObj[NSPCtrl.currentGroup][inputType.uuid][NSPCtrl.activeNode.uuid]"
-                   ng-class='{"selected-node-name": NSPCtrl.groupCollection[NSPCtrl
-                  .currentGroup][inputType.uuid].length > 0}'>
+                  ng-model="NSPCtrl.selectionObj[NSPCtrl.currentGroup][inputType.uuid][NSPCtrl.activeNode.uuid]">
                  {{ inputType.name }}
               </span>
                <!-- Deselect: user can currently deselect any node in the current group-->
@@ -70,7 +68,7 @@
 
                 <div
                   ng-if="NSPCtrl.selectionObj[NSPCtrl.currentGroup][NSPCtrl.inputFileTypes[0].uuid][NSPCtrl.activeNode.uuid]"
-                  class="wrap-word selected-node-name">
+                  class="wrap-word">
                   {{ NSPCtrl.groupCollection[NSPCtrl.currentGroup][NSPCtrl.inputFileTypes[0].uuid]
                   [NSPCtrl.groupCollection[NSPCtrl.currentGroup][NSPCtrl.inputFileTypes[0].uuid].length - 1]
                   [NSPCtrl.attributes.Name] }}
