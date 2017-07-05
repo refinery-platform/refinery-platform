@@ -805,10 +805,7 @@ def get_owner_from_assay(uuid):
 
 def format_solr_response(solr_response):
     # Returns a reformatted solr response
-    try:
-        solr_response_json = json.loads(solr_response)
-    except TypeError:
-        return "Error loading json."
+    solr_response_json = json.loads(solr_response)
 
     # Reorganizes solr response into easier to digest objects.
     try:

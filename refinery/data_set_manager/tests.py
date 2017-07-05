@@ -979,10 +979,10 @@ class UtilitiesTest(TestCase):
         )
 
     def test_format_solr_response_invalid(self):
-        # invalid input, error checking
+        # invalid input, do not mask error
         solr_response = {"test_object": "not a string"}
-        error = format_solr_response(solr_response)
-        self.assertEqual(error, "Error loading json.")
+        with self.assertRaises(TypeError):
+            format_solr_response(solr_response)
 
     def test_customize_attribute_response_for_generics(self):
         attributes = ['technology_Characteristics_generic_s',
