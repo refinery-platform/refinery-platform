@@ -56,6 +56,7 @@ def _get_solr(params, user_id):
         params,
         user_id=user_id)
     if solr_params is None:
-        return {}
+        # TODO: This doesn't feel right...
+        return '{"responseHeader": {}, "response": {"docs": []}}'
 
     return search_solr(solr_params, 'data_set_manager')
