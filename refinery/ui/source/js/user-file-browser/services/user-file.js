@@ -15,6 +15,7 @@
         query: {
           method: 'GET',
           params: {
+            limit: 100, // Default is 100,000. Immutability make it hard in python.
             fq: function () {
               var filters = Object.keys(userFileFiltersService).map(function (key) {
                 var values = userFileFiltersService[key];
