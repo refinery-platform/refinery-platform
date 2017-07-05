@@ -34,12 +34,10 @@
               {{ displayName }}
             </h4>
           </div>
-          <div ng-style="{'color': 'rgb(' + $ctrl.inputFileTypeColor[$ctrl
-          .inputFileTypes[0].uuid] + ')'}">
+          <div ng-style="{'color': 'rgb(' + $ctrl.inputFileTypeColor[$ctrl.inputFileTypes[0].uuid] + ')'}">
             {{ $ctrl.groupCollection[$ctrl.currentGroup][$ctrl.inputFileTypes[0].uuid][0][internalName] }}
           </div>
-          <div ng-style="{'color': 'rgb(' + $ctrl.inputFileTypeColor[$ctrl
-          .inputFileTypes[1].uuid] + ')'}">
+          <div ng-style="{'color': 'rgb(' + $ctrl.inputFileTypeColor[$ctrl.inputFileTypes[1].uuid] + ')'}">
            {{ $ctrl.groupCollection[$ctrl.currentGroup][$ctrl.inputFileTypes[1].uuid][0][internalName] }}
           </div>
         </li>

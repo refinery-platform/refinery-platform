@@ -17,7 +17,7 @@
                   type="checkbox"
                   ng-click="NSPCtrl.selectNode(inputType.uuid)"
                   ng-model="NSPCtrl.selectionObj[NSPCtrl.currentGroup][inputType.uuid][NSPCtrl.activeNode.uuid]">
-                 {{ inputType.name }}
+                 <strong>{{ inputType.name }}</strong>
               </span>
                <!-- Deselect: user can currently deselect any node in the current group-->
               <span
@@ -30,7 +30,7 @@
                     type="checkbox"
                     ng-click="NSPCtrl.selectNode(inputType.uuid, selectedFile.uuid)"
                     ng-model="NSPCtrl.selectionObj[NSPCtrl.currentGroup][inputType.uuid][selectedFile.uuid]">
-                  {{ inputType.name }}
+                  <strong>{{ inputType.name }}</strong>
                   {{ selectedFile[NSPCtrl.attributes.Name] }}
                 </span>
               </span>
@@ -54,8 +54,8 @@
           </h4>
         </div>
         <li
-           ng-style="{'color': NSPCtrl.inputFileTypeColor[NSPCtrl.inputFileTypes[0].uuid],
-          'background-color': NSPCtrl.inputFileTypeColor[NSPCtrl.inputFileTypes[0].uuid]}">
+           ng-style="{'color': 'rgb(' + NSPCtrl.inputFileTypeColor[NSPCtrl.inputFileTypes[0].uuid] + ')',
+          'background-color': 'rgba(' + NSPCtrl.inputFileTypeColor[NSPCtrl.inputFileTypes[0].uuid] + ', 0.1)'}">
           <span>
             <!-- active row selection, for list is always showing -->
             <div class="checkbox p-a-1-3">
@@ -64,7 +64,7 @@
                   type="checkbox"
                   ng-click="NSPCtrl.selectNode(NSPCtrl.inputFileTypes[0].uuid)"
                   ng-model="NSPCtrl.selectionObj[NSPCtrl.currentGroup][NSPCtrl.inputFileTypes[0].uuid][NSPCtrl.activeNode.uuid]">
-                {{ NSPCtrl.inputFileTypes[0].name }}
+                <strong>{{ NSPCtrl.inputFileTypes[0].name }}</strong>
 
                 <div
                   ng-if="NSPCtrl.selectionObj[NSPCtrl.currentGroup][NSPCtrl.inputFileTypes[0].uuid][NSPCtrl.activeNode.uuid]"

@@ -11,9 +11,7 @@
         'background-color': 'rgba(' + $ctrl.inputFileTypeColor[inputFile.uuid] + ', 0.1)'}">
         <span
           class="wrap-word" ng-if="$ctrl.isGroupPopulated(inputFile.uuid)">
-          <div class="refinery-subheader">
-            <h4>
-              {{ inputFile.name }}
+            <strong>{{ inputFile.name }}</strong>
               &nbsp
               <a
                 popover-placement="right"
@@ -24,14 +22,13 @@
                 tabindex="0">
                 <i class="fa fa-question-circle info-icon icon-only"></i>
               </a>
-            </h4>
-          </div>
+          <br>
           <span ng-repeat="node in $ctrl.groupCollection[$ctrl.currentGroup][inputFile.uuid]">
             {{ node[$ctrl.attributes.Name] }}
           </span>
         </span>
           <span ng-if="!$ctrl.isGroupPopulated(inputFile.uuid)">
-          {{ inputFile.name }}:
+          <strong>{{ inputFile.name }}</strong>:
           <
           <div
             class='fileTypes'
@@ -54,7 +51,7 @@
         ng-style="{'color': 'rgb(' + $ctrl.inputFileTypeColor[$ctrl.inputFileTypes[0].uuid] + ')',
         'background-color': 'rgba(' + $ctrl.inputFileTypeColor[$ctrl.inputFileTypes[0].uuid] + ', 0.1)'}">
         <div ng-if="!$ctrl.isGroupPopulated($ctrl.inputFileTypes[0].uuid)">
-          {{ $ctrl.inputFileTypes[0].name }}:
+          <strong>{{ $ctrl.inputFileTypes[0].name }}</strong>:
           <
           <div
             class='fileTypes'
@@ -69,14 +66,8 @@
           <em>{{ inputFile.description }}</em>
         </div>
         <div ng-if="$ctrl.isGroupPopulated($ctrl.inputFileTypes[0].uuid)">
-           <div class="refinery-subheader">
-            <h4>
-              {{ inputFile.name }}
-            </h4>
-          </div>
           <div
-            ng-repeat="node in $ctrl.groupCollection[$ctrl.currentGroup][$ctrl.inputFileTypes[0].uuid]"
-            class="p-t-1">
+            ng-repeat="node in $ctrl.groupCollection[$ctrl.currentGroup][$ctrl.inputFileTypes[0].uuid]">
             {{ node[$ctrl.attributes.Name] }}
           </div>
         </div>
