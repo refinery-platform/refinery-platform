@@ -28,7 +28,18 @@
           </span>
         </span>
           <span ng-if="!$ctrl.isGroupPopulated(inputFile.uuid)">
-          <strong>{{ inputFile.name }}</strong>:
+          <strong>{{ inputFile.name }}</strong>
+          &nbsp
+            <a
+              popover-placement="right"
+              uib-popover-template="'inputgrouphelppopover.html'"
+              popover-title="Input Group File Types"
+              popover-trigger="focus"
+              popover-append-to-body="true"
+              tabindex="0">
+              <i class="fa fa-question-circle info-icon icon-only"></i>
+            </a>
+          <br>
           <
           <div
             class='fileTypes'
