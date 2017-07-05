@@ -7,9 +7,10 @@
      <div ng-if="$ctrl.currentTypes[$ctrl.currentTypes.length-1]=='PAIR'">
       <li
         ng-repeat="inputFile in $ctrl.inputFileTypes track by $index"
-        ng-style="{'color': $ctrl.inputFileTypeColor[inputFile.uuid],
-        'border-color': $ctrl.inputFileTypeColor[inputFile.uuid]}">
-        <span class="wrap-word" ng-if="$ctrl.isGroupPopulated(inputFile.uuid)">
+        ng-style="{'color': 'rgb(' + $ctrl.inputFileTypeColor[inputFile.uuid] + ')',
+        'background-color': 'rgba(' + $ctrl.inputFileTypeColor[inputFile.uuid] + ', 0.1)'}">
+        <span
+          class="wrap-word" ng-if="$ctrl.isGroupPopulated(inputFile.uuid)">
           <div class="refinery-subheader">
             <h4>
               {{ inputFile.name }}
@@ -50,8 +51,8 @@
     <div ng-if="$ctrl.currentTypes[$ctrl.currentTypes.length-1]=='LIST'">
       <li
         class="wrap-word"
-         ng-style="{'color': $ctrl.inputFileTypeColor[$ctrl.inputFileTypes[0].uuid],
-        'border-color': $ctrl.inputFileTypeColor[$ctrl.inputFileTypes[0].uuid]}">
+        ng-style="{'color': 'rgb(' + $ctrl.inputFileTypeColor[$ctrl.inputFileTypes[0].uuid] + ')',
+        'background-color': 'rgba(' + $ctrl.inputFileTypeColor[$ctrl.inputFileTypes[0].uuid] + ', 0.1)'}">
         <div ng-if="!$ctrl.isGroupPopulated($ctrl.inputFileTypes[0].uuid)">
           {{ $ctrl.inputFileTypes[0].name }}:
           <

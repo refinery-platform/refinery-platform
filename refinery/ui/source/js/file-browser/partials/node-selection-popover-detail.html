@@ -4,8 +4,8 @@
       <div ng-if="NSPCtrl.currentTypes[NSPCtrl.currentTypes.length-1]=='PAIR'">
         <li
           ng-repeat="inputType in NSPCtrl.inputFileTypes track by $index"
-          ng-style="{'color': NSPCtrl.inputFileTypeColor[inputType.uuid],
-          'border-color': NSPCtrl.inputFileTypeColor[inputType.uuid]}">
+          ng-style="{'color': 'rgb(' + NSPCtrl.inputFileTypeColor[inputType.uuid] + ')',
+          'background-color': 'rgba(' + NSPCtrl.inputFileTypeColor[inputType.uuid] + ', 0.1)'}">
           <div class="checkbox">
             <label>
               <!-- Select: If there's NOT a group already started for the inputFileType than checkbox not selected-->
@@ -57,7 +57,7 @@
         </div>
         <li
            ng-style="{'color': NSPCtrl.inputFileTypeColor[NSPCtrl.inputFileTypes[0].uuid],
-          'border-color': NSPCtrl.inputFileTypeColor[NSPCtrl.inputFileTypes[0].uuid]}">
+          'background-color': NSPCtrl.inputFileTypeColor[NSPCtrl.inputFileTypes[0].uuid]}">
           <span>
             <!-- active row selection, for list is always showing -->
             <div class="checkbox p-a-1-3">
