@@ -27,12 +27,15 @@ def user_files_csv(request):
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="user-files.csv"'
 
+    cols = settings.USER_FILES_COLUMNS.split(',')
+
     writer = csv.writer(response)
+    writer.writerow(cols)
 
     docs = loads(solr_response)['response']['docs']
     for doc in docs:
         row = []
-        for col in settings.USER_FILES_COLUMNS.split(','):
+        for col in cols:
             row.append(doc.get(col + '_Characteristics_generic_s') or
                        doc.get(col + '_Factor_Value_generic_s') or '')
         writer.writerow(row)
