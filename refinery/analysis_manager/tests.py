@@ -1,14 +1,15 @@
 import json
 import uuid
 
-import mock
 from django.contrib.auth.models import User
 from django.http import HttpResponseBadRequest, HttpResponseNotAllowed
 from django.test import RequestFactory, TestCase
+
 from guardian.utils import get_anonymous_user
+import mock
 
 from analysis_manager.models import AnalysisStatus
-from analysis_manager.tasks import AnalysisRunner
+from analysis_manager.tasks import run_analysis
 from analysis_manager.utils import (create_analysis,
                                     fetch_objects_required_for_analysis,
                                     validate_analysis_config)
@@ -380,7 +381,7 @@ class AnalysisRunViewTests(TestCase):
             )
             request.user = self.user
             with mock.patch.object(
-                    AnalysisRunner.run_analysis, 'delay', side_effect=None
+                    run_analysis, 'delay', side_effect=None
             ) as task_mock:
                 response = run(request)
                 self.assertTrue(task_mock.called)
@@ -419,6 +420,8 @@ class AnalysisRunViewTests(TestCase):
 
 
 class AnalysisRunnerTests(TestCase):
+    tasks_mock = "analysis_manager.tasks"
+
     def setUp(self):
         self.username = 'coffee_lover'
         self.password = 'coffeecoffee'
@@ -427,23 +430,17 @@ class AnalysisRunnerTests(TestCase):
         make_analyses_with_single_dataset(1, self.user)
 
         self.analysis = Analysis.objects.all()[0]
-        AnalysisStatus.objects.create(analysis=self.analysis)
+        self.analysis_status = AnalysisStatus.objects.create(
+            analysis=self.analysis
+        )
 
         self.dataset = DataSet.objects.all()[0]
 
-    @mock.patch.object(AnalysisRunner.run_analysis, 'delay', side_effect=None)
-    def test_analysis_runner_instantiation(self, task_mock):
-        a = AnalysisRunner(self.analysis.uuid)
-        self.assertEqual(self.analysis, a.analysis)
-        self.assertTrue(task_mock.called)
-
-    @mock.patch("analysis_manager.tasks.AnalysisRunner._refinery_file_import")
-    @mock.patch("analysis_manager.tasks.AnalysisRunner._run_galaxy_workflow")
-    @mock.patch("analysis_manager.tasks.AnalysisRunner._galaxy_file_import")
-    @mock.patch("analysis_manager.tasks.AnalysisRunner._galaxy_file_export")
-    @mock.patch(
-        "analysis_manager.tasks.AnalysisRunner._attach_workflow_outputs"
-    )
+    @mock.patch("{}.refinery_file_import".format(tasks_mock))
+    @mock.patch("{}.run_galaxy_workflow".format(tasks_mock))
+    @mock.patch("{}.galaxy_file_import".format(tasks_mock))
+    @mock.patch("{}.galaxy_file_export".format(tasks_mock))
+    @mock.patch("{}.attach_workflow_outputs".format(tasks_mock))
     def test_run_analysis(self,
                           refinery_import_mock,
                           run_galaxy_mock,
@@ -452,16 +449,9 @@ class AnalysisRunnerTests(TestCase):
                           attach_outputs_mock):
         # Run an Analysis and ensure that the methods to check the state of
         # the tsk get called properly
-        with mock.patch.object(AnalysisRunner.run_analysis,
-                               'delay',
-                               side_effect=None):
-
-            AnalysisRunner.run_analysis(
-                AnalysisRunner(self.analysis.uuid),
-                self.analysis.uuid
-            )
-            self.assertTrue(refinery_import_mock.called)
-            self.assertTrue(run_galaxy_mock.called)
-            self.assertTrue(galaxy_import_mock.called)
-            self.assertTrue(galaxy_export_mock.called)
-            self.assertTrue(attach_outputs_mock.called)
+        run_analysis(self.analysis.uuid)
+        self.assertTrue(refinery_import_mock.called)
+        self.assertTrue(run_galaxy_mock.called)
+        self.assertTrue(galaxy_import_mock.called)
+        self.assertTrue(galaxy_export_mock.called)
+        self.assertTrue(attach_outputs_mock.called)

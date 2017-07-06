@@ -20,7 +20,7 @@ from data_set_manager.models import Assay, Node, Study
 from workflow_manager.tasks import get_workflows
 
 from .models import AnalysisStatus
-from .tasks import AnalysisRunner
+from .tasks import run_analysis
 from .utils import (create_analysis, get_solr_results, match_nodesets,
                     validate_analysis_config)
 
@@ -189,7 +189,7 @@ def run(request):
     analysis_status.save()
 
     # call function via analysis_manager
-    AnalysisRunner(analysis.uuid)
+    run_analysis.delay(analysis.uuid)
 
     return HttpResponse(reverse('analysis-status', args=(analysis.uuid,)))
 
