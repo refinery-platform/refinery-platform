@@ -436,11 +436,11 @@ class AnalysisRunTests(TestCase):
 
         self.dataset = DataSet.objects.all()[0]
 
-    @mock.patch("{}.refinery_file_import".format(tasks_mock))
-    @mock.patch("{}.run_galaxy_workflow".format(tasks_mock))
-    @mock.patch("{}.galaxy_file_import".format(tasks_mock))
-    @mock.patch("{}.galaxy_file_export".format(tasks_mock))
-    @mock.patch("{}.attach_workflow_outputs".format(tasks_mock))
+    @mock.patch("{}._refinery_file_import".format(tasks_mock))
+    @mock.patch("{}._run_galaxy_workflow".format(tasks_mock))
+    @mock.patch("{}._galaxy_file_import".format(tasks_mock))
+    @mock.patch("{}._galaxy_file_export".format(tasks_mock))
+    @mock.patch("{}._attach_workflow_outputs".format(tasks_mock))
     def test_run_analysis(self,
                           refinery_import_mock,
                           run_galaxy_mock,
