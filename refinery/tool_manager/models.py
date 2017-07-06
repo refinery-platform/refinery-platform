@@ -8,13 +8,14 @@ from django.db import models
 from django.db.models.signals import post_delete, pre_delete
 from django.dispatch import receiver
 from django.http import JsonResponse
+
 from django_docker_engine.docker_utils import (DockerClientWrapper,
                                                DockerContainerSpec)
 from django_extensions.db.fields import UUIDField
 from docker.errors import APIError
 
 from analysis_manager.models import AnalysisStatus
-from analysis_manager.tasks import AnalysisRunner
+from analysis_manager.tasks import run_analysis
 from analysis_manager.utils import create_analysis, validate_analysis_config
 from core.models import Analysis, DataSet, OwnableResource, Workflow
 from data_set_manager.utils import get_file_url_from_node_uuid
@@ -367,7 +368,7 @@ class Tool(OwnableResource):
         AnalysisStatus.objects.create(analysis=analysis)
 
         # Run the analysis task
-        AnalysisRunner(analysis.uuid)
+        run_analysis.delay(analysis.uuid)
 
         analysis_url = "/data_sets2/{}/#/analyses/".format(self.dataset.uuid)
         return JsonResponse({"tool_url": analysis_url})
