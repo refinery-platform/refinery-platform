@@ -826,6 +826,8 @@ def format_solr_response(solr_response):
             facet_field_counts)
         solr_response_json['facet_field_counts'] = facet_field_counts_obj
         del solr_response_json['facet_counts']
+    else:
+        solr_response_json['facet_field_counts'] = {}
 
     facet_field_docs = solr_response_json.get('response').get('docs')
     facet_field_docs_count = solr_response_json.get('response').get('numFound')

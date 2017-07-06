@@ -8,6 +8,7 @@ from django.db import models
 from django.db.models.signals import post_delete, pre_delete
 from django.dispatch import receiver
 from django.http import JsonResponse
+
 from django_docker_engine.docker_utils import (DockerClientWrapper,
                                                DockerContainerSpec)
 from django_extensions.db.fields import UUIDField
@@ -278,6 +279,11 @@ class Tool(OwnableResource):
             self.uuid
         )
 
+    def get_input_file_uuid_list(self):
+        # Tools can't be created without the `node_uuid_list` existing so no
+        # KeyError is being caught
+        return self.get_tool_launch_config()["node_uuid_list"]
+
     def get_file_relationships(self):
         return ast.literal_eval(
             self.get_tool_launch_config()["file_relationships"]
@@ -397,6 +403,9 @@ class Tool(OwnableResource):
             r'[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}',
             tool_launch_config["file_relationships"]
         )
+
+        # Add list of Node UUIDs to our ToolLaunchConfig for later use
+        tool_launch_config["node_uuid_list"] = node_uuids
 
         for uuid in node_uuids:
             file_url = get_file_url_from_node_uuid(uuid)

@@ -25,8 +25,9 @@ class UserFilesAPITests(APITestCase):
         force_authenticate(request, user=self.user)
         response = self.view(request)
         self.assertEqual(response.status_code, 200)
-        self.assertItemsEqual(response.data.keys(), [
+        self.assertItemsEqual(sorted(response.data.keys()), [
             'attributes',
+            'facet_field_counts',
             'nodes',
             'nodes_count'
         ])

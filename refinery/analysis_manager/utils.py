@@ -61,7 +61,7 @@ def create_nodeset_analysis(validated_analysis_config):
     :return: an Analysis instance
     :raises: RuntimeError
     """
-    custom_name = validated_analysis_config["custom_name"]
+    custom_name = validated_analysis_config.get("custom_name")
     node_set_uuid = validated_analysis_config["nodeSetUuid"]
 
     common_analysis_objects = fetch_objects_required_for_analysis(
@@ -138,7 +138,7 @@ def create_noderelationship_analysis(validated_analysis_config):
     # Input list for running analysis
     ret_list = []
 
-    custom_name = validated_analysis_config["custom_name"]
+    custom_name = validated_analysis_config.get("custom_name")
     node_relationship_uuid = validated_analysis_config["nodeRelationshipUuid"]
 
     common_analysis_objects = fetch_objects_required_for_analysis(

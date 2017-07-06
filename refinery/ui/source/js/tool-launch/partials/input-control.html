@@ -28,11 +28,11 @@
       role="tabpanel"
       aria-labelledby="tool-body">
       <div class="panel-body p-a-0">
-        <div class="p-a-1-2">
+        <div class="input-template">
           <div
             ng-repeat="depthName in $ctrl.depthNames|orderBy:'$index':true track by $index"
             id="control-panel-list">
-            <div ng-if="$index == 0" class="p-a-1-2">
+            <div ng-if="$index == 0" class="p-l-1-2">
               <div class="refinery-subheader">
                 <h4>
                   <i
@@ -66,7 +66,7 @@
               ng-if="$index > 1"
               ng-style="{'margin-left': 10*$index+'px'}">
               <button
-                class="btn btn-default btn-xs outline"
+                class="refinery-base btn btn-default btn-xs outline"
                 ng-disabled="$ctrl.currentGroup[$ctrl.currentGroup.length-$index] == 0"
                 ng-click="$ctrl.navLeft($ctrl.currentGroup.length-$index)">
                 <i class="fa fa-backward"></i>
@@ -76,7 +76,7 @@
               </span>
               <span ng-if="$ctrl.currentTypes[$ctrl.currentGroup.length-$index] == 'PAIR'">
                 <button
-                  class="btn btn-default btn-xs outline"
+                  class="refinery-base btn btn-default btn-xs outline"
                   ng-disabled="$ctrl.currentGroup[$ctrl.currentGroup.length-$index] == 1"
                   ng-click="$ctrl.navRight($ctrl.currentGroup.length-$index)">
                   <i class="fa fa-forward"></i>
@@ -84,7 +84,7 @@
               </span>
               <span ng-if="$ctrl.currentTypes[$ctrl.currentGroup.length-$index] == 'LIST'">
                 <button
-                  class="btn btn-default btn-xs outline"
+                  class="refinery-base btn btn-default btn-xs outline"
                   ng-click="$ctrl.navRight($ctrl.currentGroup.length-$index)">
                   <i class="fa fa-forward"></i>
                 </button>
