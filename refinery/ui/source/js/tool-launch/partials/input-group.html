@@ -88,14 +88,14 @@
   <div>
     <span ng-if="$ctrl.currentTypes.length > 1">
       <button
-        class="btn btn-default btn-xs outline"
+        class="refinery-base btn btn-default btn-xs outline"
         ng-disabled="$ctrl.isObjEmpty($ctrl.groupCollection[$ctrl.currentGroup])"
         ng-click="$ctrl.removeGroup()">
         Remove
       </button>
     </span>
   <button
-    class="btn btn-default btn-xs outline"
+    class="refinery-base btn btn-default btn-xs outline"
     ng-disabled="$ctrl.isObjEmpty($ctrl.groupCollection)"
     ng-click="$ctrl.removeAllGroups()">
     Remove All
