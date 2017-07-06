@@ -70,8 +70,8 @@ def load_config():
 
     config_bucket_name = config['S3_BUCKET_NAME_BASE'] + "-config"
     generated_config['S3_CONFIG_BUCKET'] = config_bucket_name
-    logging_bucket = config['S3_BUCKET_NAME_BASE'] + "-log"
-    generated_config['S3_LOG_BUCKET'] = logging_bucket
+    log_bucket_name = config['S3_BUCKET_NAME_BASE'] + "-log"
+    generated_config['S3_LOG_BUCKET'] = log_bucket_name
 
     # Update the config, by adding the automatically generated keys.
     config.update(generated_config)
