@@ -672,7 +672,6 @@ def make_template(config, config_yaml):
             'Bucket': config['S3_LOG_BUCKET'],
             'PolicyDocument': {
                 'Statement': [{
-                    "Sid": "Stmt1497274464902",
                     "Action": [
                       "s3:PutObject"
                     ],
