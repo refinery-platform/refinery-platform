@@ -22,6 +22,7 @@
       });
     }, function (reason) {
       $log.error('Failed to obtain AWS OpenID Connect token: ' + reason);
+      // TODO: provide information about the error to the user (block import?)
     });
 
     vm.progress = 0;
