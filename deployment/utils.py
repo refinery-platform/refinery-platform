@@ -61,6 +61,8 @@ def load_config():
     # Generate warning for old keys that we no longer use.
     report_obsolete_keys(config)
 
+    report_missing_keys(config)
+
     # Generate some special keys that are optional to specify.
     generated_config = {}
     if 'ADMIN_PASSWORD' not in config:
@@ -68,11 +70,11 @@ def load_config():
 
     config_bucket_name = config['S3_BUCKET_NAME_BASE'] + "-config"
     generated_config['S3_CONFIG_BUCKET'] = config_bucket_name
+    log_bucket_name = config['S3_BUCKET_NAME_BASE'] + "-log"
+    generated_config['S3_LOG_BUCKET'] = log_bucket_name
 
     # Update the config, by adding the automatically generated keys.
     config.update(generated_config)
-
-    report_missing_keys(config)
 
     # Optional in `config.yaml`
     if 'RDS_NAME' not in config:
@@ -162,14 +164,15 @@ def report_missing_keys(config):
     Prints to stderr, then raises exception if there are missing keys.
     """
 
-    required = ['ADMIN_PASSWORD', 'KEY_NAME', 'RDS_SUPERUSER_PASSWORD',
+    required = ['KEY_NAME', 'RDS_SUPERUSER_PASSWORD',
+                'S3_BUCKET_NAME_BASE',
                 'SITE_NAME', 'SITE_URL', 'STACK_NAME']
     bad = []
     for key in required:
         if key not in config:
             bad.append(key)
     if bad:
-        sys.stderr.write("aws-config\ must have values for:\n{!r}\n".format(
+        sys.stderr.write("aws-config/ must have values for:\n{!r}\n".format(
             bad))
         raise RuntimeError
     return True

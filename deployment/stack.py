@@ -17,7 +17,8 @@ import sys
 import boto3
 from cfn_pyplates import core, functions
 
-from utils import load_config, load_tags, save_s3_config
+from utils import (load_config, load_tags,
+                   save_s3_config, ensure_s3_bucket)
 
 VERSION = '1.1'
 
@@ -42,6 +43,7 @@ def main():
         sys.stdout.write("{}\n".format(template))
     elif args.command == 'create':
         template = make_template(config, config_yaml)
+        ensure_s3_bucket(config['S3_LOG_BUCKET'])
         cloudformation = boto3.client('cloudformation')
         response = cloudformation.create_stack(
             StackName=config['STACK_NAME'],
@@ -522,6 +524,18 @@ def make_template(config, config_yaml):
     cft.resources.elb = core.Resource(
         'LoadBalancer', 'AWS::ElasticLoadBalancing::LoadBalancer',
         {
+            'AccessLoggingPolicy': {
+                'EmitInterval': functions.ref('LogInterval'),
+                'Enabled': True,
+                'S3BucketName': config['S3_LOG_BUCKET'],
+                # 'S3BucketPrefix' unused
+            },
+            'AvailabilityZones': [
+                functions.get_att('WebInstance', 'AvailabilityZone')
+            ],
+            'ConnectionSettings': {
+                'IdleTimeout': 1800  # seconds
+            },
             'HealthCheck': {
                 'HealthyThreshold': '2',
                 'Interval': '30',
@@ -530,18 +544,21 @@ def make_template(config, config_yaml):
                 'UnhealthyThreshold': '4'
             },
             'Instances': [functions.ref('WebInstance')],
-
+            'LoadBalancerName': config['STACK_NAME'],
             'Listeners': listeners,
             'SecurityGroups': [
                 functions.get_att('ELBSecurityGroup', 'GroupId')],
-            "Tags": instance_tags,  # todo: Should be different?
-            'AvailabilityZones': [
-                functions.get_att('WebInstance', 'AvailabilityZone')
-            ],
-            'ConnectionSettings': {
-                'IdleTimeout': 1800  # seconds
+            'Tags': load_tags(),
+        })
+    cft.parameters.add(
+        core.Parameter('LogInterval', 'Number', {
+                'Default': 60,
+                'Description':
+                "How often, in minutes, the ELB emits its logs to the "
+                "configured S3 bucket. The ELB log facility restricts "
+                "this to be 5 or 60.",
             }
-        }
+        )
     )
 
     # Cognito Identity Pool for Developer Authenticated Identities Authflow
@@ -641,6 +658,41 @@ def make_template(config, config_yaml):
                 }
             )
         )
+    )
+
+    # See http://docs.aws.amazon.com/elasticloadbalancing/latest/classic/enable-access-logs.html#attach-bucket-policy # noqa: E501
+    # for full list of region--principal identifiers.
+    cft.mappings.region = core.Mapping(
+        'Region',
+        {'us-east-1': {'ELBPrincipal': '127311923021'}})
+
+    cft.resources.log_policy = core.Resource(
+        'LogBucketPolicy', 'AWS::S3::BucketPolicy',
+        core.Properties({
+            'Bucket': config['S3_LOG_BUCKET'],
+            'PolicyDocument': {
+                'Statement': [{
+                    "Action": [
+                      "s3:PutObject"
+                    ],
+                    "Effect": "Allow",
+                    "Resource":
+                    functions.join(
+                        "",
+                        "arn:aws:s3:::",
+                        config['S3_LOG_BUCKET'],
+                        "/AWSLogs/",
+                        functions.ref("AWS::AccountId"), "/*"),
+                    "Principal": {
+                      "AWS": [
+                        functions.find_in_map(
+                            'Region',
+                            functions.ref("AWS::Region"), 'ELBPrincipal'),
+                      ]
+                    }
+                }]
+            }
+        })
     )
 
     return cft
