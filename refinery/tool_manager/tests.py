@@ -1,17 +1,18 @@
+import StringIO
 import json
 import logging
 import re
-import StringIO
 import time
-import uuid
 from urlparse import urljoin
+import uuid
 
-import mock
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.core.management import CommandError, call_command
 from django.http import HttpResponseBadRequest
 from django.test import TestCase
+
+import mock
 from rest_framework.test import (APIRequestFactory, APITestCase,
                                  force_authenticate)
 
@@ -990,6 +991,7 @@ class ToolTests(ToolManagerTestBase):
         self.assertEqual(
             self.tool.get_tool_launch_config(),
             {
+                'node_uuid_list': [],
                 "dataset_uuid": self.dataset.uuid,
                 "tool_definition_uuid": self.td.uuid,
                 "file_relationships": "['http://www.example.com/sample.seg']",
