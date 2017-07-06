@@ -1,17 +1,21 @@
-'use strict';
+(function () {
+  'use strict';
 
-function rpFileUpload ($window) {
-  return {
-    restrict: 'E',
-    templateUrl: function () {
-      return $window.getStaticUrl('partials/data-set-import/partials/file-upload.html');
-    }
-  };
-}
+  angular
+    .module('refineryDataSetImport')
+    .directive('rpFileUpload', rpFileUpload);
 
-angular
-  .module('refineryDataSetImport')
-  .directive('rpFileUpload', [
-    '$window',
-    rpFileUpload
-  ]);
+  rpFileUpload.$inject = ['$window', 'settings'];
+
+  function rpFileUpload ($window, settings) {
+    return {
+      restrict: 'E',
+      templateUrl: function () {
+        if (settings.djangoApp.deploymentPlatform === 'aws') {
+          return $window.getStaticUrl('partials/data-set-import/partials/file-upload-s3.html');
+        }
+        return $window.getStaticUrl('partials/data-set-import/partials/file-upload.html');
+      }
+    };
+  }
+})();

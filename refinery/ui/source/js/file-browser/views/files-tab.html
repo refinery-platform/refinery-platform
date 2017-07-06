@@ -7,7 +7,7 @@
         <rp-tool-display></rp-tool-display>
     </div>
     <div class="col-lg-2 col-md-2 col-sm-3">
-      <div
+      <div class="row"
         ng-if="FBCtrl.isOwner || FBCtrl.canEdit"
         id="tool-panel-show-button">
         <button
@@ -24,8 +24,8 @@
         </span>
         </button>
         <span ng-if="FBCtrl.isOwner" class="float-right">
-          <i class="fa fa-wrench fa-3x fa-border" rp-assay-files-util-modal>
-            Config
+          <i class="fa fa-wrench fa-border" rp-assay-files-util-modal>
+           <span class="font-awesome-text">Config</span>
           </i>
           <a
             id="help-view-selector"
@@ -35,11 +35,13 @@
             popover-trigger="focus"
             popover-append-to-body="true"
             tabindex="0">
-            <i class="fa fa-question-circle info-icon icon-only"></i>
+            <i
+              class="fa fa-question-circle info-icon icon-only"
+              id="config-question-icon"></i>
           </a>
         </span>
       </div>
-      <div id="table-filter">
+      <div class="row" id="table-filter">
         <div id="filter-panel-body">
           <rp-file-browser-assay-filters>
           </rp-file-browser-assay-filters>

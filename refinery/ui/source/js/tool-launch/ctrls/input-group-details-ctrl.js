@@ -1,3 +1,10 @@
+/**
+ * Input Group Details Ctrl
+ * @namespace InputGroupDetailsCtrl
+ * @desc Controller for the input files panel. Controls the input
+ * group details which are displayed for pairs only
+ * @memberOf refineryApp.refineryToolLaunch
+ */
 (function () {
   'use strict';
 
@@ -28,7 +35,11 @@
    * Methods
    * ---------------------------------------------------------
    */
-    // view method which sets to hide input detail panel
+    /**
+     * @name toggleCollapseDetails
+     * @desc  view method which sets to hide input detail panel
+     * @memberOf refineryToolLaunch.InputGroupDetailsCtrl
+    **/
     function toggleCollapseDetails () {
       if (vm.collapseDetails) {
         vm.collapseDetails = false;

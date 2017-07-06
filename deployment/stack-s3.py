@@ -9,6 +9,7 @@ Requires STACK_NAME to be defined in aws-config/config.yaml
 For details:
 https://github.com/refinery-platform/refinery-platform/wiki/AWS-installation
 """
+
 import json
 import sys
 import yaml
@@ -24,8 +25,15 @@ REFINERY_CONFIG_FILE = 'aws-config/config.yaml'
 
 
 def main():
-    with open(REFINERY_CONFIG_FILE) as config_file:
-        config = yaml.load(config_file)
+    try:
+        with open(REFINERY_CONFIG_FILE) as config_file:
+            config = yaml.load(config_file)
+    except (IOError, yaml.YAMLError) as exc:
+        sys.stderr.write(
+            "Error reading {}: {}\n".format(REFINERY_CONFIG_FILE, exc)
+        )
+        raise RuntimeError
+
     stack_name = config['STACK_NAME'] + 'Storage'
     static_bucket_name = config['S3_BUCKET_NAME_BASE'] + '-static'
     media_bucket_name = config['S3_BUCKET_NAME_BASE'] + '-media'
@@ -69,7 +77,7 @@ def make_storage_template():
             # with virtual-hosted-style access and S3 Transfer Acceleration
             'AllowedPattern': '[a-z0-9\-]+',
             'ConstraintDescription':
-                'must only contain lower case letters, numbers, and dashes',
+                'must only contain lower case letters, numbers, and hyphens',
         }
     ))
     # Resources
@@ -88,7 +96,7 @@ def make_storage_template():
                         'MaxAge': 3000,
                     }
                 ]
-            }
+            },
         }),
         DeletionPolicy('Retain'),
     ))

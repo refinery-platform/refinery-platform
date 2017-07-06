@@ -1,3 +1,9 @@
+/**
+ * Input Control Inner Nav Ctrl
+ * @namespace InputControlInnerNavCtrl
+ * @desc Controller for the inner group's navigation.
+ * @memberOf refineryApp.refineryToolLaunch
+ */
 (function () {
   'use strict';
 
@@ -32,19 +38,31 @@
    * Methods Definitions
    * ---------------------------------------------------------
    */
-
-    // View method to check if the group has minimum nodes
+    /**
+     * @name needMoreNodes
+     * @desc View method  uses a service to check if the group has minimum nodes
+     * @memberOf refineryToolLaunch.InputControlInnerNavCtrl
+    **/
     function needMoreNodes () {
       return toolLaunchService.checkNeedMoreNodes();
     }
-
+    /**
+     * @name navLeft
+     * @desc  Updates the current group when user navigates the inner group
+     * @memberOf refineryToolLaunch.InputControlInnerNavCtrl
+     * @param {int} depth - group nav index
+    **/
     //  View method to decrease the inner group
     function navLeft (depth) {
       fileService.currentGroup[depth]--;
       vm.currentGroup = fileService.currentGroup;
     }
-
-    // View method to increase the inner group
+    /**
+     * @name navRight
+     * @desc  Updates the current group when user navigates the inner group
+     * @memberOf refineryToolLaunch.InputControlInnerNavCtrl
+     * @param {int} depth - group nav index
+    **/
     function navRight (depth) {
       fileService.currentGroup[depth]++;
       vm.currentGroup = fileService.currentGroup;

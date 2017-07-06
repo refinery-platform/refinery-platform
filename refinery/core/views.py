@@ -1162,14 +1162,14 @@ class OpenIDToken(APIView):
 
     def post(self, request):
         # retrieve current AWS region
-        with open('/home/ubuntu/region') as f:
-            try:
+        try:
+            with open('/home/ubuntu/region') as f:
                 region = f.read().rstrip()
-            except IOError as exc:
-                return api_error_response(
-                    "Error retrieving current AWS region: {}".format(exc),
-                    status.HTTP_500_INTERNAL_SERVER_ERROR
-                )
+        except IOError as exc:
+            return api_error_response(
+                "Error retrieving current AWS region: {}".format(exc),
+                status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
         try:
             client = boto3.client('cognito-identity', region_name=region)
         except botocore.exceptions.NoRegionError as exc:
@@ -1218,5 +1218,6 @@ class OpenIDToken(APIView):
                 "Server AWS configuration is incorrect: {}".format(exc),
                 status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+        token["Region"] = region
 
         return Response(token)

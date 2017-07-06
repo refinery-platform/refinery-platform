@@ -197,7 +197,7 @@
         assayFilesTotalItems.count = response.nodes_count;
 
         // Not concat data when under minimun file order, replace assay files
-        if (assayFilesTotalItems.count < maxFileRequest && params.offset === 0) {
+        if (assayFilesTotalItems.count < maxFileRequest || params.offset === 0) {
           angular.copy(additionalAssayFiles, assayFiles);
         } else if (scrollDirection === 'up') {
           angular.copy(additionalAssayFiles.concat(assayFiles), assayFiles);
