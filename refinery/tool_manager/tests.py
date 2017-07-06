@@ -1,21 +1,22 @@
+import StringIO
 import json
 import logging
 import re
-import StringIO
 import time
-import uuid
 from urlparse import urljoin
+import uuid
 
-import mock
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.core.management import CommandError, call_command
 from django.http import HttpResponseBadRequest
 from django.test import TestCase
+
+import mock
 from rest_framework.test import (APIRequestFactory, APITestCase,
                                  force_authenticate)
 
-from analysis_manager.tasks import AnalysisRunner
+from analysis_manager.tasks import run_analysis
 from core.models import (DataSet, ExtendedGroup, InvestigationLink, Project,
                          Workflow, WorkflowEngine)
 from data_set_manager.models import Assay, Investigation, Node, Study
@@ -127,8 +128,7 @@ class ToolManagerTestBase(TestCase):
 
         # Mock the run_analysis task
         elif tool_type == ToolDefinition.WORKFLOW:
-            with mock.patch.object(AnalysisRunner.run_analysis, 'delay',
-                                   side_effect=None):
+            with mock.patch.object(run_analysis, 'delay', side_effect=None):
                 self.post_response = self.tools_view(self.post_request)
 
         self.tool = Tool.objects.get(tool_definition__uuid=self.td.uuid)

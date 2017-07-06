@@ -419,7 +419,7 @@ class AnalysisRunViewTests(TestCase):
         self.assertEqual(type(response), HttpResponseBadRequest)
 
 
-class AnalysisRunnerTests(TestCase):
+class AnalysisRunTests(TestCase):
     tasks_mock = "analysis_manager.tasks"
 
     def setUp(self):
