@@ -35,14 +35,14 @@ class AnalysisHandlerTask(Task):
         """
         error_msg = "Monitoring task for analysis with UUID '{}' failed due " \
                     "to unexpected error: '{}: {}'".format(
-                         args[1], einfo.type, einfo.exception)
+                         args[0], einfo.type, einfo.exception)
 
         logger.error(error_msg)
         try:
-            analysis = Analysis.objects.get(uuid=args[1])
+            analysis = Analysis.objects.get(uuid=args[0])
         except (Analysis.DoesNotExist, Analysis.MultipleObjectsReturned) as e:
             logger.error("Can not retrieve analysis with UUID '%s': '%s'",
-                         args[1], e)
+                         args[0], e)
             return
         logger.error("Setting status of analysis '%s' to failure", analysis)
         analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
