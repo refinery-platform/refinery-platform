@@ -1,5 +1,5 @@
 import csv
-from json import loads
+from json import dumps, loads
 import logging
 
 from django.conf import settings
@@ -56,7 +56,11 @@ def _get_solr(params, user_id):
         params,
         user_id=user_id)
     if solr_params is None:
-        # TODO: This doesn't feel right...
-        return '{"responseHeader": {}, "response": {"docs": []}}'
+        return dumps({
+            'responseHeader': {},
+            'response': {
+                'docs': []
+            }
+        })
 
     return search_solr(solr_params, 'data_set_manager')
