@@ -21,6 +21,7 @@ import celery
 from celery.task import task
 import pysam
 import requests
+from django.db import transaction
 from requests.exceptions import HTTPError
 
 from .isa_tab_parser import IsaTabParser
@@ -503,10 +504,16 @@ def parse_isatab(username, public, path,
                     os.path.basename(path),
                     True)
     try:
-        investigation = p.run(path, isa_archive=isa_archive,
-                              preisa_archive=pre_isa_archive)
-        data_uuid = create_dataset(investigation.uuid, username, public=public)
-        return (data_uuid, os.path.basename(path), False)
+        with transaction.atomic():
+            investigation = p.run(
+                path,
+                isa_archive=isa_archive,
+                preisa_archive=pre_isa_archive
+            )
+            data_uuid = create_dataset(
+                investigation.uuid, username, public=public
+            )
+            return (data_uuid, os.path.basename(path), False)
     except:  # prints the error message without breaking things
         logger.error("*** print_tb:")
         exc_type, exc_value, exc_traceback = sys.exc_info()
