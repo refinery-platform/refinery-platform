@@ -515,7 +515,7 @@ def parse_isatab(username, public, path,
                 username,
                 public=public
             )
-            return (data_uuid, os.path.basename(path), False)
+            return data_uuid, os.path.basename(path), False
     except:  # prints the error message without breaking things
         logger.error("*** print_tb:")
         exc_type, exc_value, exc_traceback = sys.exc_info()
