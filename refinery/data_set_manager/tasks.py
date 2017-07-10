@@ -16,23 +16,23 @@ import traceback
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.management import call_command
+from django.db import transaction
 
 import celery
 from celery.task import task
 import pysam
 import requests
-from django.db import transaction
 from requests.exceptions import HTTPError
 
-from .isa_tab_parser import IsaTabParser
-from .models import initialize_attribute_order, Investigation, Node
-from .utils import (calculate_checksum, get_node_types,
-                    index_annotated_nodes, update_annotated_nodes)
 from core.models import DataSet, ExtendedGroup, FileStoreItem
 from core.utils import (add_data_set_to_neo4j, update_annotation_sets_neo4j,
                         update_data_set_index)
 from file_store.models import FileExtension
 
+from .isa_tab_parser import IsaTabParser
+from .models import Investigation, Node, initialize_attribute_order
+from .utils import (calculate_checksum, get_node_types, index_annotated_nodes,
+                    update_annotated_nodes)
 
 logger = logging.getLogger(__name__)
 
@@ -511,7 +511,9 @@ def parse_isatab(username, public, path,
                 preisa_archive=pre_isa_archive
             )
             data_uuid = create_dataset(
-                investigation.uuid, username, public=public
+                investigation.uuid,
+                username,
+                public=public
             )
             return (data_uuid, os.path.basename(path), False)
     except:  # prints the error message without breaking things
