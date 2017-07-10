@@ -119,10 +119,16 @@ class Command(BaseCommand):
         for (uuid, filename, skipped) in result.iterate():
             try:
                 if not skipped:
-                    logger.info(
-                        "%s / %s: Successfully parsed %s into "
-                        "DataSet with UUID %s",
-                        task_num, total, filename, uuid)
+                    if uuid is not None:
+                        logger.info(
+                            "%s / %s: Successfully parsed %s into "
+                            "DataSet with UUID %s",
+                            task_num, total, filename, uuid)
+                    else:
+                        logger.info(
+                            "%s / %s: Import of %s failed. Please check "
+                            "Celery log files.",
+                            task_num, total, filename, uuid)
                 else:
                     logger.info(
                         "%s / %s: Skipped %s as it has been "
