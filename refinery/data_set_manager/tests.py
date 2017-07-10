@@ -2,6 +2,7 @@ import json
 from StringIO import StringIO
 
 import re
+from django.conf import settings
 
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import (InMemoryUploadedFile,
@@ -12,7 +13,9 @@ from django.test import TestCase
 
 from rest_framework.test import APIClient, APIRequestFactory, APITestCase
 
-from .models import Assay, AttributeOrder, Study, Investigation, Node
+from data_set_manager.tasks import parse_isatab
+from .models import Assay, AttributeOrder, Study, Investigation, Node, \
+    AnnotatedNode
 from .serializers import AttributeOrderSerializer
 from .utils import (create_facet_filter_query, customize_attribute_response,
                     escape_character_solr, format_solr_response,
@@ -1569,3 +1572,45 @@ class NodeApiV2Tests(APITestCase):
         self.assertTrue('subanalysis' in self.get_response.data[0])
         self.assertTrue('type' in self.get_response.data[0])
         self.assertTrue('uuid' in self.get_response.data[0])
+
+
+class AnnotatedNodeExplosionTestCase(TestCase):
+    def setUp(self):
+        self.username = 'coffee_lover'
+        self.password = 'coffeecoffee'
+        self.user = User.objects.create_user(
+            self.username,
+            '',
+            self.password
+        )
+        settings.CELERY_ALWAYS_EAGER = True
+
+    def test_metabolights_isatab_wont_import_with_rollback_a(self):
+        parse_isatab(
+            self.user.username,
+            True,
+            "data_set_manager/test-data/MTBLS1.zip"
+        )
+        self.assertEqual(DataSet.objects.count(), 0)
+        self.assertEqual(AnnotatedNode.objects.count(), 0)
+        self.assertEqual(Node.objects.count(), 0)
+        self.assertEqual(FileStoreItem.objects.count(), 0)
+
+    def test_metabolights_isatab_wont_import_with_rollback_b(self):
+        # Fritz, this one seems to import fine?
+        parse_isatab(
+            self.user.username,
+            True,
+            "data_set_manager/test-data/MTBLS30.zip"
+        )
+
+    def test_metabolights_isatab_wont_import_with_rollback_c(self):
+        parse_isatab(
+            self.user.username,
+            True,
+            "data_set_manager/test-data/MTBLS112.zip"
+        )
+        self.assertEqual(DataSet.objects.count(), 0)
+        self.assertEqual(AnnotatedNode.objects.count(), 0)
+        self.assertEqual(Node.objects.count(), 0)
+        self.assertEqual(FileStoreItem.objects.count(), 0)
