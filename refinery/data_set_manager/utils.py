@@ -462,14 +462,13 @@ def update_annotated_nodes(
             total_attrs += u_len
 
     if total_attrs / num_nodes_of_type == total_unique_attrs:
-        logger.error(
-            "Exponential explosion! Creation of %s annotated nodes for %s "
-            "nodes of type %s is stopped!",
-            str(total_attrs),
-            str(num_nodes_of_type),
-            str(node_type)
-        )
-        return
+        error_message = (
+            "Exponential explosion! Creation of {} annotated nodes for {} "
+            "nodes of type {} is stopped!"
+        ).format(total_attrs, num_nodes_of_type, node_type)
+
+        logger.error(error_message)
+        raise RuntimeError(error_message)
 
     for node_id, node in nodes.iteritems():
         if node["type"] == node_type:
