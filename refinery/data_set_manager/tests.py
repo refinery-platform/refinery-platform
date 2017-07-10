@@ -2,7 +2,6 @@ from StringIO import StringIO
 import json
 import re
 
-from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import (InMemoryUploadedFile,
                                             SimpleUploadedFile)
@@ -1732,7 +1731,6 @@ class AnnotatedNodeExplosionTestCase(TestCase):
             '',
             self.password
         )
-        settings.CELERY_ALWAYS_EAGER = True
 
     def test_metabolights_isatab_wont_import_with_rollback_a(self):
         parse_isatab(
@@ -1746,14 +1744,6 @@ class AnnotatedNodeExplosionTestCase(TestCase):
         self.assertEqual(FileStoreItem.objects.count(), 0)
 
     def test_metabolights_isatab_wont_import_with_rollback_b(self):
-        # Fritz, this one seems to import fine?
-        parse_isatab(
-            self.user.username,
-            True,
-            "data_set_manager/test-data/MTBLS30.zip"
-        )
-
-    def test_metabolights_isatab_wont_import_with_rollback_c(self):
         parse_isatab(
             self.user.username,
             True,
