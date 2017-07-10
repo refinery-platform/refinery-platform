@@ -1,11 +1,10 @@
 import json
 import logging
 import os
-import yaml
-
-import djcelery
 import subprocess
 
+import djcelery
+import yaml
 from django.core.exceptions import ImproperlyConfigured
 
 logger = logging.getLogger(__name__)
@@ -65,7 +64,7 @@ djcelery.setup_loader()
 
 # a tuple that lists people who get code error notifications
 # (convert JSON list of lists to tuple of tuples)
-ADMINS = tuple(map(lambda x: tuple(x), get_setting("ADMINS")))
+ADMINS = tuple(map(tuple, get_setting("ADMINS")))
 
 # A tuple in the same format as ADMINS that specifies who should get broken
 # link notifications when BrokenLinkEmailsMiddleware is enabled
@@ -415,6 +414,9 @@ REFINERY_SOLR_SPACE_DYNAMIC_FIELDS = get_setting(
 
 HAYSTACK_CONNECTIONS = {
     'default': {
+        # Haystack requires a default, but there's less risk of confusion
+        # for us if the core is explicit on each call.
+        # So: Leave this in, but it's just a placeholder.
         'ENGINE': 'haystack.backends.solr_backend.SolrEngine',
         'URL': REFINERY_SOLR_BASE_URL + 'default',
         'EXCLUDED_INDEXES': ['data_set_manager.search_indexes.NodeIndex',
@@ -626,3 +628,11 @@ DEPLOYMENT_PLATFORM = "vagrant"
 
 # HTML-safe item to be displayed to the right of the `About` link in the navbar
 REFINERY_CUSTOM_NAVBAR_ITEM = get_setting("REFINERY_CUSTOM_NAVBAR_ITEM")
+
+# Location of DjangoDockerEngine proxy logging
+PROXY_LOG = '/tmp/django_docker_engine.log'
+
+USER_FILES_COLUMNS = get_setting("USER_FILES_COLUMNS")
+USER_FILES_FACETS = get_setting("USER_FILES_FACETS")
+
+MEDIA_BUCKET = ''  # a placeholder for use in context processor

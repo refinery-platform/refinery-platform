@@ -18,22 +18,22 @@ from core.api import (AnalysisResource, DataSetResource, ExtendedGroupResource,
                       NodeRelationshipResource, NodeResource,
                       NodeSetListResource, NodeSetResource, ProjectResource,
                       StatisticsResource, UserAuthenticationResource,
-                      UserProfileResource,
-                      WorkflowInputRelationshipsResource, WorkflowResource)
+                      UserProfileResource, WorkflowInputRelationshipsResource,
+                      WorkflowResource)
 from core.forms import RegistrationFormWithCustomFields
-from core.models import DataSet, AuthenticationFormUsernameOrEmail
+from core.models import AuthenticationFormUsernameOrEmail, DataSet
 from core.urls import core_router
 from core.views import CustomRegistrationView
 from data_set_manager.api import (AssayResource, AttributeOrderResource,
                                   AttributeResource, InvestigationResource,
-                                  ProtocolReferenceResource,
                                   ProtocolReferenceParameterResource,
-                                  ProtocolResource, PublicationResource,
-                                  StudyResource)
+                                  ProtocolReferenceResource, ProtocolResource,
+                                  PublicationResource, StudyResource)
 from data_set_manager.urls import data_set_manager_router
 from file_store.urls import file_store_router
-
-from tool_manager.urls import tool_manager_router, django_docker_engine_url
+from tool_manager.urls import django_docker_engine_url, tool_manager_router
+from user_files_manager.urls import (user_files_csv_url, user_files_router,
+                                     user_files_url)
 
 logger = logging.getLogger(__name__)
 
@@ -146,6 +146,8 @@ urlpatterns = patterns(
         ),
         name='search'
     ),
+    user_files_url,
+    user_files_csv_url
 
     # (r'^favicon\.ico$',
     # 'django.views.generic.simple.redirect_to',
@@ -178,6 +180,7 @@ router.extend(core_router)
 router.extend(data_set_manager_router)
 router.extend(file_store_router)
 router.extend(tool_manager_router)
+router.extend(user_files_router)
 
 # Wire up our DRF APIs using automatic URL routing.
 urlpatterns += patterns(

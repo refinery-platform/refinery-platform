@@ -5,7 +5,8 @@ function AboutDetailsCtrl (
   $log,
   $scope,
   $window,
-  dataSetAboutFactory
+  dataSetAboutFactory,
+  fileRelationshipService
   ) {
   var vm = this;
   vm.assays = dataSetAboutFactory.assays;
@@ -92,6 +93,8 @@ function AboutDetailsCtrl (
 
   vm.refreshDataSetStats();
   vm.refreshStudies();
+    // Close ui-grid popover when tabbing
+  fileRelationshipService.hideNodePopover = true;
 }
 
 angular
@@ -103,5 +106,6 @@ angular
     '$scope',
     '$window',
     'dataSetAboutFactory',
+    'fileRelationshipService',
     AboutDetailsCtrl
   ]);

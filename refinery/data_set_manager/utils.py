@@ -10,18 +10,20 @@ import time
 import urlparse
 
 from django.conf import settings
+from django.contrib.auth.models import User
 from django.db.models import Q
 from django.utils.http import urlquote, urlunquote
 
+from guardian.shortcuts import get_objects_for_user
 import requests
 from requests.exceptions import HTTPError
+
+import core
 
 from .models import (AnnotatedNode, AnnotatedNodeRegistry, Assay, Attribute,
                      AttributeOrder, Node, Study)
 from .search_indexes import NodeIndex
 from .serializers import AttributeOrderSerializer
-import core
-
 
 logger = logging.getLogger(__name__)
 
@@ -607,8 +609,8 @@ def _index_annotated_nodes(node_type, study_uuid, assay_uuid=None,
     logger.info("%s nodes indexed in %s", str(counter), str(end - start))
 
 
-def generate_solr_params(params, assay_uuid):
-    """Creates the encoded solr params requiring only an assay.
+def generate_solr_params_for_user(params, user_id):
+    """Creates the encoded solr params limiting results to one user.
     Keyword Argument
         params -- python dict or QueryDict
     Params/Solr Params
@@ -624,6 +626,64 @@ def generate_solr_params(params, assay_uuid):
         fq - filter query
      """
 
+    user = None
+    try:
+        user = User.objects.get(id=user_id)
+    except User.DoesNotExist:
+        pass
+
+    if user:
+        datasets = get_objects_for_user(user, "core.read_dataset")
+    else:
+        datasets = []
+
+    assay_uuids = []
+    for dataset in datasets:
+        investigation_link = dataset.get_latest_investigation_link()
+        if investigation_link is None:
+            continue
+            # It's not an error not to have data,
+            # but there's nothing more to do here.
+        investigation = investigation_link.investigation
+
+        study_ids = Study.objects.filter(
+            investigation=investigation
+        ).values_list('id', flat=True)
+
+        assay_uuids += Assay.objects.filter(
+            study_id__in=study_ids
+        ).values_list('uuid', flat=True)
+
+    return _generate_solr_params(params,
+                                 assay_uuids=assay_uuids,
+                                 facets_from_config=True)
+
+
+def generate_solr_params_for_assay(params, assay_uuid):
+    """Creates the encoded solr params requiring only an assay.
+    Keyword Argument
+        params -- python dict or QueryDict
+    Params/Solr Params
+        is_annotation - metadata
+        facet_count/facet - enables facet counts in query response, true/false
+        offset - paginate, offset response
+        limit/row - maximum number of documents
+        field_limit - set of fields to return
+        facet_field - specify a field which should be treated as a facet
+        facet_filter - adds params to facet fields&fqs for filtering on fields
+        facet_pivot - list of fields to pivot
+        sort - Ordering include field name, whitespace, & asc or desc.
+        fq - filter query
+     """
+    return _generate_solr_params(params, assay_uuids=[assay_uuid])
+
+
+def _generate_solr_params(params, assay_uuids, facets_from_config=False):
+    """
+    Either returns a solr url parameter string,
+    or None if assay_uuids is empty.
+    """
+
     file_types = 'fq=type:("Raw Data File" OR ' \
                  '"Derived Data File" OR ' \
                  '"Array Data File" OR ' \
@@ -636,6 +696,7 @@ def generate_solr_params(params, assay_uuid):
     start = params.get('offset', '0')
     # row number suggested by solr docs, since there's no unlimited option
     row = params.get('limit', '10000000')
+    # TODO: Is there a reason for the explicit Nones below?
     field_limit = params.get('attributes', None)
     facet_field = params.get('facets', None)
     facet_pivot = params.get('pivots', None)
@@ -652,23 +713,39 @@ def generate_solr_params(params, assay_uuid):
                   'facet.limit=-1'
                   ])
 
-    solr_params = ''.join(['fq=assay_uuid:', assay_uuid])
+    if len(assay_uuids) == 0:
+        return None
+    solr_params = 'fq=assay_uuid:({})'.format(' OR '.join(assay_uuids))
 
-    if facet_field:
+    fq = params.get('fq')
+    if fq is not None:
+        solr_params += '&fq=' + fq
+
+    if facets_from_config:
+        # Twice as many facets as necessary, but easier than the alternative.
+        facet_template = '&facet.field={0}_Characteristics_generic_s' + \
+                   '&facet.field={0}_Factor_Value_generic_s'
+        solr_params += ''.join(
+            [facet_template.format(s) for s
+             in settings.USER_FILES_FACETS.split(",")])
+        solr_params += '&fl=*_generic_s,name,file_uuid,type,django_id'
+    elif facet_field:
         facet_field = facet_field.split(',')
         facet_field = insert_facet_field_filter(facet_filter, facet_field)
         split_facet_fields = generate_facet_fields_query(facet_field)
         solr_params = ''.join([solr_params, split_facet_fields])
     else:
         # Missing facet_fields, it is generated from Attribute Order Model.
-        attributes_str = AttributeOrder.objects.filter(assay__uuid=assay_uuid)
+        attributes_str = AttributeOrder.objects.filter(
+            assay__uuid__in=assay_uuids  # TODO: Confirm this syntax
+        )
         attributes = AttributeOrderSerializer(attributes_str, many=True)
         facet_field_obj = generate_filtered_facet_fields(attributes.data)
         facet_field = facet_field_obj.get('facet_field')
         facet_field = insert_facet_field_filter(facet_filter, facet_field)
         field_limit = ','.join(facet_field_obj.get('field_limit'))
-        facet_field_query = generate_facet_fields_query(facet_field)
-        solr_params = ''.join([solr_params, facet_field_query])
+        facet_fields_query = generate_facet_fields_query(facet_field)
+        solr_params = ''.join([solr_params, facet_fields_query])
 
     if field_limit:
         solr_params = ''.join([solr_params, '&fl=', field_limit])
@@ -838,8 +915,14 @@ def format_solr_response(solr_response):
         return "Error loading json."
 
     # Reorganizes solr response into easier to digest objects.
-    order_facet_fields = solr_response_json.get('responseHeader').get(
-            'params').get('fl').split(',')
+    try:
+        order_facet_fields_joined = (solr_response_json
+                                     ['responseHeader']['params']['fl'])
+    except KeyError:
+        order_facet_fields = []
+    else:
+        order_facet_fields = order_facet_fields_joined.split(',')
+
     if solr_response_json.get('facet_counts'):
         facet_field_counts = solr_response_json.get('facet_counts').get(
             'facet_fields')
@@ -847,6 +930,8 @@ def format_solr_response(solr_response):
             facet_field_counts)
         solr_response_json['facet_field_counts'] = facet_field_counts_obj
         del solr_response_json['facet_counts']
+    else:
+        solr_response_json['facet_field_counts'] = {}
 
     facet_field_docs = solr_response_json.get('response').get('docs')
     facet_field_docs_count = solr_response_json.get('response').get('numFound')

@@ -5,7 +5,6 @@ import ast
 import py2neo
 import sys
 
-import requests
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.sites.models import Site
@@ -14,6 +13,9 @@ from django.core.mail import send_mail
 from django.core.cache import cache
 from django.db import connection
 from django.utils import timezone
+
+import requests
+from rest_framework.response import Response
 from urlparse import urlparse, urljoin
 
 import core
@@ -880,7 +882,7 @@ def filter_nodes_uuids_in_solr(assay_uuid, filter_out_uuids=[],
         else:
             params['facets'] = ','.join(filter_attribute.keys())
 
-    solr_params = data_set_manager.utils.generate_solr_params(
+    solr_params = data_set_manager.utils.generate_solr_params_for_assay(
         params, assay_uuid)
     # Only require solr filters if exception uuids are passed
     if filter_out_uuids:
@@ -953,3 +955,9 @@ def move_obj_to_front(obj_arr, match_key, match_value):
             break
 
     return modified_obj_arr
+
+
+def api_error_response(error_message, http_status_code):
+    """Return and log error for Django Rest Framework API calls"""
+    logger.error(error_message)
+    return Response({'Error': error_message}, status=http_status_code)
