@@ -4,7 +4,7 @@
   role="tablist"
   aria-multiselectable="true"
   id="input-group-details"
-  class="p-a-1-2">
+  class="m-b-1-2 p-a-1-2">
   <div
     role="button"
     ng-click="$ctrl.toggleCollapseDetails()"
@@ -14,7 +14,7 @@
         ng-class="$ctrl.collapseDetails ? 'fa fa-caret-right' : 'fa fa-caret-down'"
         class="fa-pull-left"
         aria-hidden="true"></i>
-      Input Details
+      Pair Details
     </h3>
   </div>
   <div
@@ -34,12 +34,10 @@
               {{ displayName }}
             </h4>
           </div>
-          <div ng-style="{'color': $ctrl.inputFileTypeColor[$ctrl
-          .inputFileTypes[0].uuid]}">
+          <div ng-style="{'color': 'rgb(' + $ctrl.inputFileTypeColor[$ctrl.inputFileTypes[0].uuid] + ')'}">
             {{ $ctrl.groupCollection[$ctrl.currentGroup][$ctrl.inputFileTypes[0].uuid][0][internalName] }}
           </div>
-          <div ng-style="{'color': $ctrl.inputFileTypeColor[$ctrl
-          .inputFileTypes[1].uuid]}">
+          <div ng-style="{'color': 'rgb(' + $ctrl.inputFileTypeColor[$ctrl.inputFileTypes[1].uuid] + ')'}">
            {{ $ctrl.groupCollection[$ctrl.currentGroup][$ctrl.inputFileTypes[1].uuid][0][internalName] }}
           </div>
         </li>
@@ -54,7 +52,7 @@
           .groupCollection[$ctrl.currentGroup]
           [$ctrl.inputFileTypes[1].uuid][0][internalName] &&
           displayName != 'Name'"
-          ng-style="{'color': $ctrl.inputFileTypeColor[inputFile.uuid]}">
+          ng-style="{'color': 'rgb(' + $ctrl.inputFileTypeColor[inputFile.uuid] + ')'}">
           <div class="refinery-subheader">
             <h4>
               {{ displayName }}
@@ -64,31 +62,4 @@
         </li>
       </ul>
    </div>
-
-  <div
-    uib-collapse="$ctrl.collapseDetails"
-    ng-if="$ctrl.currentTypes[$ctrl.currentTypes.length-1]=='LIST'"
-    id="list-input-group-details">
-      <ul
-        class="wrap-word"
-        id="list-group-collection"
-        ng-repeat="node in $ctrl.groupCollection[$ctrl.currentGroup][$ctrl
-          .inputFileTypes[0].uuid]">
-        <ul
-           ng-repeat="(displayName, internalName) in $ctrl.attributes">
-        <li>
-          <div class="refinery-subheader">
-            <h4>
-              {{ displayName }}
-            </h4>
-          </div>
-          <div ng-style="{'color': $ctrl.inputFileTypeColor[$ctrl
-          .inputFileTypes[0].uuid]}">
-            {{ node[internalName] }}
-          </div>
-        </li>
-        </ul>
-      </ul>
-   </div>
-
 </div>

@@ -2,7 +2,7 @@
 
 angular
   .module('refineryDataSetImport', [
-    'angularFileUpload',
+    'ngFileUpload',
     'blueimp.fileupload',
     'ui.grid',
     'ui.grid.edit',

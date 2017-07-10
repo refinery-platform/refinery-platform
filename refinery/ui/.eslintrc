@@ -13,7 +13,8 @@
     afterEach: false,
     beforeEach: false,
     expect: false,
-    spyOn: false
+    spyOn: false,
+    AWS: false
   },
   rules: {
     comma-dangle: [1, "never"],

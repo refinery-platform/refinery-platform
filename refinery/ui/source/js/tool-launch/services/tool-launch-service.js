@@ -1,3 +1,9 @@
+/**
+ * Tool Launch Service
+ * @namespace toolLaunchService
+ * @desc Service which preps and validates the parameters to launch a tool
+ * @memberOf refineryApp.refineryToolLaunch
+ */
 (function () {
   'use strict';
   angular
@@ -6,18 +12,23 @@
 
   toolLaunchService.$inject = [
     'fileRelationshipService',
+    'toolParamsService',
     'toolSelectService',
     'toolsService',
+    '$window',
     '_'
   ];
 
   function toolLaunchService (
     fileRelationshipService,
+    toolParamsService,
     toolSelectService,
     toolsService,
+    $window,
     _
   ) {
     var fileService = fileRelationshipService;
+    var paramsService = toolParamsService;
     var toolService = toolSelectService;
     var launchConfig = {};
 
@@ -132,8 +143,10 @@
 
     // Method to generate launch config
     function generateLaunchConfig () {
+      launchConfig.dataset_uuid = $window.dataSetUuid;
       launchConfig.tool_definition_uuid = toolService.selectedTool.uuid;
       launchConfig.file_relationships = generateFileStr();
+      launchConfig.parameters = paramsService.paramsForm;
     }
 
     // helper method which inserts commas between sets )(,][,)[,](
