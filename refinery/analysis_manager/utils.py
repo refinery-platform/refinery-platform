@@ -440,10 +440,9 @@ def _fetch_node_set(node_set_uuid):
 
 def _fetch_solr_uuids(nodeset_instance):
     """
-    Fetches a NodeSet instance from a given UUID
-    :param node_set_uuid: UUID String
-    :return: <NodeSet>
-    :raises: RuntimeError
+    Fetches solr_uuids from a given NodeSet instance
+    :param nodeset_instance: <NodeSet> instance
+    :return: list of UUIDs corresponding to Nodes indexed in Solr
     """
     curr_node_dict = json.loads(nodeset_instance.solr_query_components)
     return get_solr_results(
