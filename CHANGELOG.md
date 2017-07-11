@@ -1,6 +1,18 @@
 # Change Log
 
-## [v1.5.7](https://github.com/refinery-platform/refinery-platform/tree/v1.5.7) (2017-07-06)
+## [v1.5.8](https://github.com/refinery-platform/refinery-platform/tree/v1.5.8) (2017-07-11)
+[Full Changelog](https://github.com/refinery-platform/refinery-platform/compare/v1.5.7...v1.5.8)
+
+**Implemented enhancements:**
+
+- Flekschas/satori v1.5 [\#1776](https://github.com/refinery-platform/refinery-platform/pull/1776) ([flekschas](https://github.com/flekschas))
+
+**Fixed bugs:**
+
+- Search keywords are still highlighted after clearing the search [\#1583](https://github.com/refinery-platform/refinery-platform/issues/1583)
+- Flekschas/satori v1.5 [\#1776](https://github.com/refinery-platform/refinery-platform/pull/1776) ([flekschas](https://github.com/flekschas))
+
+## [v1.5.7](https://github.com/refinery-platform/refinery-platform/tree/v1.5.7) (2017-07-11)
 [Full Changelog](https://github.com/refinery-platform/refinery-platform/compare/v1.5.6...v1.5.7)
 
 **Implemented enhancements:**
@@ -8,6 +20,7 @@
 - IntroJs tutorials are not checked until user refreshes page [\#1774](https://github.com/refinery-platform/refinery-platform/issues/1774)
 - Tool Panel Collapse [\#1645](https://github.com/refinery-platform/refinery-platform/issues/1645)
 - Add description of backup and recovery on AWS to wiki [\#901](https://github.com/refinery-platform/refinery-platform/issues/901)
+- Flekschas/isa tab import no annotated node explosion [\#1763](https://github.com/refinery-platform/refinery-platform/pull/1763) ([flekschas](https://github.com/flekschas))
 
 **Fixed bugs:**
 
@@ -34,6 +47,8 @@
 
 **Merged pull requests:**
 
+- Scottx611x/analysis custom name bugfix [\#1897](https://github.com/refinery-platform/refinery-platform/pull/1897) ([scottx611x](https://github.com/scottx611x))
+- Annotated node explosion with tests [\#1887](https://github.com/refinery-platform/refinery-platform/pull/1887) ([scottx611x](https://github.com/scottx611x))
 - Add refinery-base styling to buttons. [\#1870](https://github.com/refinery-platform/refinery-platform/pull/1870) ([jkmarx](https://github.com/jkmarx))
 - Jkmarx/data set2 css update [\#1866](https://github.com/refinery-platform/refinery-platform/pull/1866) ([jkmarx](https://github.com/jkmarx))
 - Data structure rather than string is more robust [\#1865](https://github.com/refinery-platform/refinery-platform/pull/1865) ([mccalluc](https://github.com/mccalluc))
