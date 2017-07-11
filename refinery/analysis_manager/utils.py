@@ -91,15 +91,15 @@ def create_nodeset_analysis(validated_analysis_config):
                 data_set, data_set.uuid)
 
     if not name:
-        temp_name = current_workflow.name + " " + get_aware_local_time() \
-            .strftime("%Y-%m-%d @ %H:%M:%S")
-    else:
-        temp_name = name
+        name = "{} {}".format(
+            current_workflow.name,
+            get_aware_local_time().strftime("%Y-%m-%d @ %H:%M:%S")
+        )
 
     summary_name = "None provided."
     analysis = Analysis.objects.create(
         summary=summary_name,
-        name=temp_name,
+        name=name,
         project=user.profile.catch_all_project,
         data_set=data_set,
         workflow=current_workflow,
@@ -196,18 +196,16 @@ def create_noderelationship_analysis(validated_analysis_config):
     # ANALYSIS MODEL
     # How to create a simple analysis object
     if not name:
-        temp_name = "{} {}".format(
+        name = "{} {}".format(
             current_workflow.name,
             get_aware_local_time().strftime("%Y-%m-%d @ %H:%M:%S")
         )
-    else:
-        temp_name = name
 
     summary_name = "None provided."
 
     analysis = Analysis.objects.create(
         summary=summary_name,
-        name=temp_name,
+        name=name,
         project=user.profile.catch_all_project,
         data_set=data_set,
         workflow=current_workflow,
