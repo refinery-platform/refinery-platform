@@ -1,18 +1,18 @@
-'use strict';
+(function () {
+  'use strict';
 
-function rpFileBrowserAssayFiles ($window) {
-  return {
-    restrict: 'E',
-    templateUrl: function () {
-      return $window.getStaticUrl('partials/file-browser/partials/assay-files.html');
-    }
-  };
-}
+  angular
+    .module('refineryFileBrowser')
+    .directive('rpFileBrowserAssayFiles', rpFileBrowserAssayFiles);
 
-angular
-  .module('refineryFileBrowser')
-  .directive('rpFileBrowserAssayFiles', [
-    '$window',
-    rpFileBrowserAssayFiles
-  ]
-);
+  rpFileBrowserAssayFiles.$inject = ['$window'];
+
+  function rpFileBrowserAssayFiles ($window) {
+    return {
+      restrict: 'E',
+      templateUrl: function () {
+        return $window.getStaticUrl('partials/file-browser/partials/assay-files.html');
+      }
+    };
+  }
+})();

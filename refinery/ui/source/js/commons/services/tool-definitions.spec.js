@@ -115,7 +115,7 @@
           .expectGET(
             settings.appRoot +
             settings.refineryApiV2 +
-            '/tool_definitions'
+            '/tool_definitions/'
         ).respond(200, fakeResponse);
       });
     });

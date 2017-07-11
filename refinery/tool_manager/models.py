@@ -1,4 +1,5 @@
 import ast
+import json
 import logging
 import re
 
@@ -6,14 +7,17 @@ from django.conf import settings
 from django.db import models
 from django.db.models.signals import post_delete, pre_delete
 from django.dispatch import receiver
-from django.http import HttpResponseServerError, JsonResponse
+from django.http import JsonResponse
 
+from django_docker_engine.docker_utils import (DockerClientWrapper,
+                                               DockerContainerSpec)
 from django_extensions.db.fields import UUIDField
-from django_docker_engine.container_managers.local import LocalManager
-from django_docker_engine.docker_utils import DockerContainerSpec
 from docker.errors import APIError
 
-from core.models import Analysis, OwnableResource, WorkflowEngine
+from analysis_manager.models import AnalysisStatus
+from analysis_manager.tasks import run_analysis
+from analysis_manager.utils import create_analysis, validate_analysis_config
+from core.models import Analysis, DataSet, OwnableResource, Workflow
 from data_set_manager.utils import get_file_url_from_node_uuid
 from file_store.models import FileType
 
@@ -159,21 +163,49 @@ class ToolDefinition(models.Model):
         max_length=500,
         blank=True
     )
-    galaxy_workflow_id = models.CharField(
-        max_length=250,
-        blank=True
-    )
-    workflow_engine = models.ForeignKey(WorkflowEngine, blank=True, null=True)
+    annotation = models.TextField()
+    workflow = models.ForeignKey(Workflow, null=True)
 
     def __str__(self):
         return "{}: {} {}".format(self.tool_type, self.name, self.uuid)
 
+    def get_annotation(self):
+        """
+        Deserialize and fetch a ToolDefinition's annotation data that was
+        used to create it.
+        :return: a dict containing ToolDefinition annotation data
+        """
+        return json.loads(self.annotation)
+
+    def get_extra_directories(self):
+        """
+        Fetch `extra_directories` from Visualization-based ToolDefinitions's
+        annotation data.
+
+        :return: a Visualization-based ToolDefinitions's `extra_directories`
+        information
+        :raises: KeyError, NotImplementedError
+        """
+        if self.tool_type == ToolDefinition.VISUALIZATION:
+            try:
+                return self.get_annotation()["extra_directories"]
+            except KeyError:
+                logger.error("ToolDefinition: %s's annotation is missing its "
+                             "`extra_directories` key.", self.name)
+                raise
+        else:
+            raise NotImplementedError(
+                "Workflow-based tools don't utilize `extra_directories`"
+            )
+
 
 @receiver(pre_delete, sender=ToolDefinition)
-def delete_parameters_and_output_files(sender, instance, *args, **kwargs):
+def delete_associated_objects(sender, instance, *args, **kwargs):
     """
     Delete related parameter and output_file objects upon ToolDefinition
-    deletion
+    deletion.
+
+    Set any associated Workflows to an inactive state
     """
     parameters = instance.parameters.all()
     for parameter in parameters:
@@ -182,6 +214,14 @@ def delete_parameters_and_output_files(sender, instance, *args, **kwargs):
     output_files = instance.output_files.all()
     for output_file in output_files:
         output_file.delete()
+
+    # Set any associated Workflows to be inactive
+    # this will remove the Workflow entries from the UI, but won't delete
+    # any Analyses that were run from said Workflows
+    workflow = instance.workflow
+    if workflow:
+        workflow.is_active = False
+        workflow.save()
 
 
 @receiver(post_delete, sender=ToolDefinition)
@@ -216,14 +256,14 @@ class Tool(OwnableResource):
     A Tool is a representation of the information it will take to launch a
     Refinery-based Tool
     """
+    dataset = models.ForeignKey(DataSet)
     analysis = models.OneToOneField(Analysis, blank=True, null=True)
     container_name = models.CharField(
         max_length=250,
         unique=True,
-        blank=True
+        null=True
     )
-    file_relationships = models.TextField()
-    parameters = models.TextField()
+    tool_launch_configuration = models.TextField()
     tool_definition = models.ForeignKey(ToolDefinition)
 
     class Meta:
@@ -239,35 +279,15 @@ class Tool(OwnableResource):
             self.uuid
         )
 
-    def launch(self):
-        if self.get_tool_type() == ToolDefinition.VISUALIZATION:
-            container = DockerContainerSpec(
-                image_name=self.tool_definition.image_name,
-                container_name=self.container_name,
-                labels={self.uuid: ToolDefinition.VISUALIZATION},
-                container_input_path=(
-                    self.tool_definition.container_input_path
-                ),
-                input={
-                    "file_relationships": ast.literal_eval(
-                        self.file_relationships
-                    )
-                },
-                manager=get_django_docker_engine_manager()
-            )
-            try:
-                container.run()
-            except APIError as e:
-                return HttpResponseServerError(content=e)
-            else:
-                return JsonResponse(
-                    {
-                        "tool_url": self.get_relative_container_url()
-                    }
-                )
+    def get_input_file_uuid_list(self):
+        # Tools can't be created without the `node_uuid_list` existing so no
+        # KeyError is being caught
+        return self.get_tool_launch_config()["node_uuid_list"]
 
-        if self.get_tool_type() == ToolDefinition.WORKFLOW:
-            raise NotImplementedError
+    def get_file_relationships(self):
+        return ast.literal_eval(
+            self.get_tool_launch_config()["file_relationships"]
+        )
 
     def get_relative_container_url(self):
         """
@@ -278,11 +298,97 @@ class Tool(OwnableResource):
             self.container_name
         )
 
+    def get_tool_launch_config(self):
+        return json.loads(self.tool_launch_configuration)
+
     def get_tool_name(self):
         return self.tool_definition.name
 
     def get_tool_type(self):
         return self.tool_definition.tool_type
+
+    def launch(self):
+        if self.get_tool_type() == ToolDefinition.VISUALIZATION:
+            return self._launch_visualization()
+
+        if self.get_tool_type() == ToolDefinition.WORKFLOW:
+            return self._launch_workflow()
+
+    def _launch_visualization(self):
+        """
+        Launch a visualization-based Tool
+        :returns:
+            - <JsonResponse> w/ `tool_url` key corresponding to the
+        launched container's url
+            - <HttpResponseBadRequest>, <HttpServerError>
+        """
+        container = DockerContainerSpec(
+            image_name=self.tool_definition.image_name,
+            container_name=self.container_name,
+            labels={self.uuid: ToolDefinition.VISUALIZATION},
+            container_input_path=(
+                self.tool_definition.container_input_path
+            ),
+            input={"file_relationships": self.get_file_relationships()},
+            extra_directories=self.tool_definition.get_extra_directories()
+        )
+
+        DockerClientWrapper().run(container)
+
+        return JsonResponse(
+            {"tool_url": self.get_relative_container_url()}
+        )
+
+    def _launch_workflow(self):
+        """
+        Launch a workflow-based Tool
+        :returns:
+            - <JsonResponse> w/ `tool_url` key corresponding to the url
+            pointing to the Analysis' status page
+        :raises: RuntimeError
+        """
+        if self.get_tool_type() != ToolDefinition.WORKFLOW:
+            raise NotImplementedError(
+                "Tool: {} is not of type: {}".format(
+                    self, ToolDefinition.WORKFLOW
+                )
+            )
+
+        analysis_config = {
+            "custom_name": "Analysis: {}".format(self),
+            "studyUuid": self.dataset.get_latest_study().uuid,
+            "toolUuid": self.uuid,
+            "user_id": self.get_owner().id,
+            "workflowUuid": self.tool_definition.workflow.uuid
+        }
+        validate_analysis_config(analysis_config)
+
+        analysis = create_analysis(analysis_config)
+        self.set_analysis(analysis.uuid)
+        AnalysisStatus.objects.create(analysis=analysis)
+
+        # Run the analysis task
+        run_analysis.delay(analysis.uuid)
+
+        analysis_url = "/data_sets2/{}/#/analyses/".format(self.dataset.uuid)
+        return JsonResponse({"tool_url": analysis_url})
+
+    def set_tool_launch_config(self, tool_launch_config):
+        self.tool_launch_configuration = json.dumps(tool_launch_config)
+        self.save()
+
+    def set_analysis(self, analysis_uuid):
+        """
+        :param analysis_uuid: UUID of Analysis instance to associate with
+        the Tool
+        :raises: RuntimeError
+        """
+        try:
+            self.analysis = Analysis.objects.get(uuid=analysis_uuid)
+        except(Analysis.DoesNotExist, Analysis.MultipleObjectsReturned) as e:
+            raise RuntimeError(e)
+        else:
+            self.save()
 
     def update_file_relationships_string(self):
         """
@@ -290,29 +396,35 @@ class Tool(OwnableResource):
         their respective FileStoreItem's urls. No error handling here since
         this method is only called in an atomic transaction.
         """
+
+        tool_launch_config = self.get_tool_launch_config()
+
         node_uuids = re.findall(
             r'[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}',
-            self.file_relationships
+            tool_launch_config["file_relationships"]
         )
+
+        # Add list of Node UUIDs to our ToolLaunchConfig for later use
+        tool_launch_config["node_uuid_list"] = node_uuids
 
         for uuid in node_uuids:
             file_url = get_file_url_from_node_uuid(uuid)
-            self.file_relationships = self.file_relationships.replace(
-                uuid,
-                "'{}'".format(file_url)
+            tool_launch_config["file_relationships"] = (
+                tool_launch_config["file_relationships"].replace(
+                    uuid, "'{}'".format(file_url)
+                )
             )
+        self.set_tool_launch_config(tool_launch_config)
 
-        self.save()
 
-
-def get_django_docker_engine_manager():
+@receiver(pre_delete, sender=Tool)
+def remove_tool_container(sender, instance, *args, **kwargs):
     """
-    Helper method to return the proper managerial class for
-    django_docker_engine
+    Remove the Docker container instance corresponding to a Tool's launch.
     """
-    # Travis CI runs on EC2, but we want our tests running against a local
-    # docker engine there
-    if settings.DEPLOYMENT_PLATFORM == "aws":
-        raise NotImplementedError
-    else:
-        return LocalManager()
+    if instance.get_tool_type() == ToolDefinition.VISUALIZATION:
+        try:
+            DockerClientWrapper().purge_by_label(instance.uuid)
+        except APIError as e:
+            logger.error("Couldn't purge container for Tool with UUID: %s %s",
+                         instance.uuid, e)

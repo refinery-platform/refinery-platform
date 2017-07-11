@@ -1,27 +1,28 @@
 from __future__ import absolute_import
-import logging
 
 import ast
-import py2neo
+import logging
 import sys
+from urlparse import urljoin, urlparse
 
-import requests
 from django.conf import settings
 from django.contrib import messages
-from django.contrib.sites.models import Site
 from django.contrib.auth.models import User
-from django.core.mail import send_mail
+from django.contrib.sites.models import Site
 from django.core.cache import cache
+from django.core.mail import send_mail
 from django.db import connection
 from django.utils import timezone
-from urlparse import urlparse, urljoin
 
-import core
-import data_set_manager
+import py2neo
+import requests
+from rest_framework.response import Response
 
 # These imports go against our coding style guide, but are necessary for the
 #  time being due to mutual import issues
+import core
 from core.search_indexes import DataSetIndex
+import data_set_manager
 from data_set_manager.search_indexes import NodeIndex
 
 logger = logging.getLogger(__name__)
@@ -976,3 +977,9 @@ def move_obj_to_front(obj_arr, match_key, match_value):
             break
 
     return modified_obj_arr
+
+
+def api_error_response(error_message, http_status_code):
+    """Return and log error for Django Rest Framework API calls"""
+    logger.error(error_message)
+    return Response({'Error': error_message}, status=http_status_code)

@@ -1,3 +1,10 @@
+/**
+ * Active Node Service
+ * @namespace Active Node Service
+ * @desc Service which tracks the dom ui selection nodes and which row is
+ * currently selected
+ * @memberOf refineryApp.refineryFileBrowser
+ */
 (function () {
   'use strict';
 
@@ -11,8 +18,10 @@
     // selection {groupId: {inputFileTypeUuid_1: { nodeUuid: booleanValue }}}
 
     /**
-     * When a group is removed/clear, this will deselect all associated nodes
+     * @name deselectGroupFromSelectionObj
+     * @desc When a group is removed/clear, this will deselect all associated nodes
      * from the ui-grid selection obj
+     * @memberOf refineryFileBrowser.activeNodeService
      * @param {str} groupId - string with group Id ex, '[0,0,0]'
      * */
     vm.deselectGroupFromSelectionObj = function (groupId) {

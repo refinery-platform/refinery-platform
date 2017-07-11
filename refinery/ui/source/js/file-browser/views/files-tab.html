@@ -2,28 +2,46 @@
   <!-- filters and content  -->
   <div class="row y-scrollable m-t-1-2 p-t-1">
     <div
-      class="col-lg-2 col-md-2 col-sm-3"
-      ng-class="{'collapse': FBCtrl.collapsedToolPanel}">
+      class="col-lg-3 col-md-3 col-sm-4"
+      ng-if="!FBCtrl.collapsedToolPanel">
         <rp-tool-display></rp-tool-display>
     </div>
     <div class="col-lg-2 col-md-2 col-sm-3">
-      <div
-          id="tool-panel-show-button">
-          <button
-            class="btn btn-primary btn-sm"
-            data-target="#tool-launch-panel"
-            ng-click="FBCtrl.toggleToolPanel()">
-            <span ng-show="FBCtrl.collapsedToolPanel">
-              <i class="fa fa-angle-double-right" aria-hidden="true"></i>
-               Show Tool Panel
-            </span>
-            <span ng-show="!FBCtrl.collapsedToolPanel">
-              <i class="fa fa-angle-double-left" aria-hidden="true"></i>
-               Hide Tool Panel
-            </span>
-          </button>
-        </div>
-      <div id="table-filter">
+      <div class="row"
+        ng-if="FBCtrl.isOwner || FBCtrl.canEdit"
+        id="tool-panel-show-button">
+        <button
+          class="btn btn-primary btn-sm"
+          data-target="#tool-launch-panel"
+          ng-click="FBCtrl.toggleToolPanel()">
+        <span ng-if="FBCtrl.collapsedToolPanel">
+          <i class="fa fa-angle-double-right" aria-hidden="true"></i>
+           Show Tool Panel
+        </span>
+        <span ng-if="!FBCtrl.collapsedToolPanel">
+          <i class="fa fa-angle-double-left" aria-hidden="true"></i>
+           Hide Tool Panel
+        </span>
+        </button>
+        <span ng-if="FBCtrl.isOwner" class="float-right">
+          <i class="fa fa-wrench fa-border" rp-assay-files-util-modal>
+           <span class="font-awesome-text">Config</span>
+          </i>
+          <a
+            id="help-view-selector"
+            popover-placement="right"
+            uib-popover="The collection of files in this data set can be displayed using different representations."
+            popover-title="Select File Display Mode"
+            popover-trigger="focus"
+            popover-append-to-body="true"
+            tabindex="0">
+            <i
+              class="fa fa-question-circle info-icon icon-only"
+              id="config-question-icon"></i>
+          </a>
+        </span>
+      </div>
+      <div class="row" id="table-filter">
         <div id="filter-panel-body">
           <rp-file-browser-assay-filters>
           </rp-file-browser-assay-filters>
@@ -31,27 +49,12 @@
         <hr>
         <div class="sub-group-panel">
           <rp-file-display></rp-file-display>
-          <span ng-if="FBCtrl.isOwner">
-            <i class="fa fa-wrench fa-border"
-              rp-assay-files-util-modal>
-            </i>
-            <a
-              id="help-view-selector"
-              popover-placement="right"
-              uib-popover="The collection of files in this data set can be displayed using different representations."
-              popover-title="Select File Display Mode"
-              popover-trigger="focus"
-              popover-append-to-body="true"
-              tabindex="0">
-              <i class="fa fa-question-circle info-icon icon-only"></i>
-            </a>
-          </span>
         </div>
       </div>
     </div>
     <div
-      ng-class="{'col-lg-8 col-md-8 col-sm-6': !FBCtrl.collapsedToolPanel,
-      'col-lg-10 col-md-10 col-sm-8': FBCtrl.collapsedToolPanel}"
+      ng-class="{'col-lg-7 col-md-7 col-sm-5': !FBCtrl.collapsedToolPanel,
+      'col-lg-10 col-md-10 col-sm-9': FBCtrl.collapsedToolPanel}"
       id="main-area">
       <rp-file-browser-assay-files></rp-file-browser-assay-files>
     </div>

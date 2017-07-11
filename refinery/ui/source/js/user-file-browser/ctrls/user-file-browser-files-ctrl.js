@@ -5,32 +5,28 @@
   .module('refineryUserFileBrowser')
   .controller('UserFileBrowserFilesCtrl', UserFileBrowserFilesCtrl);
 
-  function UserFileBrowserFilesCtrl () {
+  UserFileBrowserFilesCtrl.$inject = [
+    '$log',
+    '$q',
+    'userFileBrowserFactory',
+    'gridOptionsService'
+  ];
+
+  function UserFileBrowserFilesCtrl ($log, $q, userFileBrowserFactory, gridOptionsService) {
     var vm = this;
-    vm.gridOptions = {
-      appScopeProvider: vm,
-      useExternalSorting: true,
-      selectionRowHeaderWidth: 35,
-      rowHeight: 35,
-      columnDefs: [
-          { field: 'url',
-            enableSorting: false,
-            displayName: '',
-            cellTemplate:
-                '<div class="ui-grid-cell-contents" >' +
-                '<a href="{{grid.getCellValue(row, col)}}" target="_blank">' +
-                '<i class="fa fa-arrow-circle-o-down"></i>' +
-                '</a>' +
-                '</div>',
-            width: 30 },
-          { field: 'type' },
-          { field: 'organism' }
-      ],
-      data: [
-          { url: 'foo.txt', type: 'DNA', organism: 'human' },
-          { url: 'bar.txt', type: 'RNA', organism: 'mouse' }
-      ]
-    };
+    var promise = $q.defer();
+    var getUserFiles = userFileBrowserFactory.getUserFiles;
+    getUserFiles().then(function (solr) {
+      gridOptionsService.columnDefs = userFileBrowserFactory.createColumnDefs();
+      gridOptionsService.data = userFileBrowserFactory.createData(solr.nodes);
+      promise.resolve();
+    }, function () {
+      $log.error('/user/files/ request failed');
+      promise.reject();
+    });
+
+    gridOptionsService.appScopeProvider = vm;
+    vm.gridOptions = gridOptionsService;
   }
 })();
 

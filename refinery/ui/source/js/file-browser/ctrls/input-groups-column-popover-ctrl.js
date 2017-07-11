@@ -8,15 +8,15 @@
   InputGroupsColumnPopoverCtrl.$inject = [
     '$scope',
     '_',
-    'fileRelationshipService',
-    'activeNodeService'
+    'activeNodeService',
+    'fileRelationshipService'
   ];
 
   function InputGroupsColumnPopoverCtrl (
     $scope,
     _,
-    fileRelationshipService,
-    activeNodeService
+    activeNodeService,
+    fileRelationshipService
   ) {
     var fileService = fileRelationshipService;
     var nodeService = activeNodeService;
@@ -60,7 +60,7 @@
     // When user changes the group selection from the control panel
     $scope.$watchCollection(
       function () {
-        return fileService.nodeSelectCollection;
+        return fileService.groupCollection;
       },
       function () {
         vm.nodeSelection = fileService.nodeSelectCollection;

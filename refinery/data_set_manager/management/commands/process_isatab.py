@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+
 from collections import OrderedDict
 import logging
 from optparse import make_option
@@ -11,7 +12,6 @@ from django.core.management.base import BaseCommand, CommandError
 from celery.task.sets import TaskSet
 
 from ...tasks import parse_isatab
-
 
 logger = logging.getLogger(__name__)
 
@@ -127,10 +127,16 @@ class Command(BaseCommand):
         for (uuid, filename, skipped) in result.iterate():
             try:
                 if not skipped:
-                    logger.info(
-                        "%s / %s: Successfully parsed %s into "
-                        "DataSet with UUID %s",
-                        task_num, total, filename, uuid)
+                    if uuid is not None:
+                        logger.info(
+                            "%s / %s: Successfully parsed %s into "
+                            "DataSet with UUID %s",
+                            task_num, total, filename, uuid)
+                    else:
+                        logger.info(
+                            "%s / %s: Import of %s failed. Please check "
+                            "Celery log files.",
+                            task_num, total, filename, uuid)
                 else:
                     logger.info(
                         "%s / %s: Skipped %s as it has been "

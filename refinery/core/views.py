@@ -4,50 +4,51 @@ import os
 import re
 import urllib
 from urlparse import urljoin
-import xmltodict
+from xml.parsers.expat import ExpatError
 
 from django.conf import settings
+from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from django.contrib.sites.models import get_current_site, RequestSite, Site
+from django.contrib.sites.models import RequestSite, Site, get_current_site
 from django.core.exceptions import ImproperlyConfigured
 from django.core.urlresolvers import reverse
 from django.http import (HttpResponse, HttpResponseBadRequest,
                          HttpResponseForbidden, HttpResponseNotFound,
                          HttpResponseRedirect, HttpResponseServerError)
-
-
-from django.shortcuts import get_object_or_404, render_to_response, redirect
-from django.template import loader, RequestContext
+from django.shortcuts import get_object_or_404, redirect, render_to_response
+from django.template import RequestContext, loader
 from django.views.decorators.gzip import gzip_page
 
+import boto3
+import botocore
 from guardian.shortcuts import get_perms
 from guardian.utils import get_anonymous_user
 from registration import signals
 from registration.views import RegistrationView
 import requests
 from requests.exceptions import HTTPError
-from rest_framework import status, viewsets
+from rest_framework import authentication, status, viewsets
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from xml.parsers.expat import ExpatError
+import xmltodict
 
-
-from .forms import (DataSetForm, ProjectForm, UserForm, UserProfileForm,
-                    WorkflowForm)
-from .models import (Analysis, CustomRegistrationProfile, DataSet,
-                     ExtendedGroup, Invitation, Ontology, Project,
-                     UserProfile, Workflow, WorkflowEngine)
-from .serializers import (DataSetSerializer, NodeSerializer,
-                          WorkflowSerializer)
-from .utils import get_data_sets_annotations
+from analysis_manager.utils import get_solr_results
 from annotation_server.models import GenomeBuild
 from data_set_manager.models import Node
 from data_set_manager.utils import generate_solr_params_for_assay
 from file_store.models import FileStoreItem
 from visualization_manager.views import igv_multi_species
-from django.contrib.auth import login, logout
 
+from .forms import (DataSetForm, ProjectForm, UserForm, UserProfileForm,
+                    WorkflowForm)
+from .models import (Analysis, CustomRegistrationProfile, DataSet,
+                     ExtendedGroup, Invitation, Ontology, Project, UserProfile,
+                     Workflow, WorkflowEngine)
+from .serializers import DataSetSerializer, NodeSerializer, WorkflowSerializer
+from .utils import api_error_response, get_data_sets_annotations
 
 logger = logging.getLogger(__name__)
 
@@ -820,85 +821,6 @@ def solr_igv(request):
                             content_type='application/json')
 
 
-def get_solr_results(query, facets=False, jsonp=False, annotation=False,
-                     only_uuids=False, selected_mode=True,
-                     selected_nodes=None):
-    """Helper function for taking solr request url.
-    Removes facet requests, converts to json, from input solr query
-    :param query: solr http query string
-    :type query: string
-    :param facets: Removes facet query from solr query string
-    :type facets: boolean
-    :param jsonp: Removes JSONP query from solr query string
-    :type jsonp: boolean
-    :param only_uuids: Returns list of file_uuids from all solr results
-    :type only_uuids: boolean
-    :param selected_mode: UI selection mode (blacklist or whitelist)
-    :type selected_mode: boolean
-    :param selected_nodes: List of UUIDS to remove from the solr query
-    :type selected_nodes: array
-    :returns: dictionary of current solr results
-    """
-    logger.debug("core.views: get_solr_results")
-    if not facets:
-        # replacing facets w/ false
-        query = query.replace('facet=true', 'facet=false')
-    if not jsonp:
-        # ensuring json not jsonp response
-        query = query.replace('&json.wrf=?', '')
-    if annotation:
-        # changing annotation
-        query = query.replace('is_annotation:false', 'is_annotation:true')
-    # Checks for limit on solr query
-    # replaces i.e. '&rows=20' to '&rows=10000'
-    m_obj = re.search(r"&rows=(\d+)", query)
-    if m_obj:
-        # TODO: replace 10000 with settings parameter for max solr results
-        replace_rows_str = '&rows=' + str(10000)
-        query = query.replace(m_obj.group(), replace_rows_str)
-
-    try:
-        # opening solr query results
-        results = requests.get(query, stream=True)
-        results.raise_for_status()
-    except HTTPError as e:
-        logger.error(e)
-        return HttpResponseServerError(e)
-
-    # converting results into json for python
-    results = json.loads(results.content)
-
-    # IF list of nodes to remove from query exists
-    if selected_nodes:
-        # need to iterate over list backwards to properly delete from a list
-        for i in xrange(len(results["response"]["docs"]) - 1, -1, -1):
-            node = results["response"]["docs"][i]
-
-            # blacklist mode (remove uuid's from solr query)
-            if selected_mode:
-                if 'uuid' in node:
-                    # if the current node should be removed from the results
-                    if node['uuid'] in selected_nodes:
-                        del results["response"]["docs"][i]
-                        # num_found -= 1
-            # whitelist mode (add's uuids from solr query)
-            else:
-                if 'uuid' in node:
-                    # if the current node should be removed from the results
-                    if node['uuid'] not in selected_nodes:
-                        del results["response"]["docs"][i]
-                        # num_found += 1
-    # Will return only list of file_uuids
-    if only_uuids:
-        ret_file_uuids = []
-        solr_results = results["response"]["docs"]
-        for res in solr_results:
-            ret_file_uuids.append(res["uuid"])
-        return ret_file_uuids
-
-    return results
-
-
 def samples_solr(request, ds_uuid, study_uuid, assay_uuid):
     logger.debug("core.views.samples_solr called")
     data_set = get_object_or_404(DataSet, uuid=ds_uuid)
@@ -1252,3 +1174,78 @@ class CustomRegistrationView(RegistrationView):
 
         """
         return ('registration_complete', (), {})
+
+
+class OpenIDToken(APIView):
+    """Registers (or retrieves) a Cognito IdentityId and an OpenID Connect
+    token for a user authenticated by Django authentication process
+
+    Requires:
+    * server must have access to AWS Cognito API
+    * Cognito identity pool with Refinery configured as a custom auth provider
+    """
+    authentication_classes = (authentication.SessionAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    renderer_classes = (JSONRenderer,)
+
+    def post(self, request):
+        # retrieve current AWS region
+        try:
+            with open('/home/ubuntu/region') as f:
+                region = f.read().rstrip()
+        except IOError as exc:
+            return api_error_response(
+                "Error retrieving current AWS region: {}".format(exc),
+                status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+        try:
+            client = boto3.client('cognito-identity', region_name=region)
+        except botocore.exceptions.NoRegionError as exc:
+            # AWS region is not configured
+            return api_error_response(
+                "Server AWS configuration is incorrect: {}".format(exc),
+                status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+        try:
+            # 60 results is the highest allowed value
+            response = client.list_identity_pools(MaxResults=60)
+        except botocore.exceptions.NoCredentialsError as exc:
+            return api_error_response(
+                "Server AWS configuration is incorrect: {}".format(exc),
+                status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+        except botocore.exceptions.ClientError as exc:
+            return api_error_response(
+                "Error retrieving Cognito identity pools: {}".format(exc),
+                status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+        # retrieve Cognito settings
+        try:
+            identity_pool_name = settings.COGNITO_IDENTITY_POOL_NAME
+            developer_provider_name = settings.COGNITO_DEVELOPER_PROVIDER_NAME
+        except AttributeError as exc:
+            return api_error_response(
+                "Server AWS configuration is incorrect: {}".format(exc),
+                status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+        # retrieve Cognito identity pool ID using pool name
+        identity_pool_id = ''
+        for identity_pool in response['IdentityPools']:
+            if identity_pool['IdentityPoolName'] == identity_pool_name:
+                identity_pool_id = identity_pool['IdentityPoolId']
+
+        try:
+            token = client.get_open_id_token_for_developer_identity(
+                IdentityPoolId=identity_pool_id,
+                Logins={developer_provider_name: request.user.username}
+            )
+        except botocore.exceptions.ClientError as exc:
+            return api_error_response(
+                "Server AWS configuration is incorrect: {}".format(exc),
+                status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+        token["Region"] = region
+
+        return Response(token)

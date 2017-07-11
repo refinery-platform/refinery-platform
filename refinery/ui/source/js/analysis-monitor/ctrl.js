@@ -5,7 +5,8 @@ function AnalysisMonitorCtrl (
   $scope,
   $timeout,
   $window,
-  analysisMonitorFactory
+  analysisMonitorFactory,
+  fileRelationshipService
 ) {
   var vm = this;
   // Long list of analysis
@@ -259,6 +260,9 @@ function AnalysisMonitorCtrl (
     }
     return false;
   };
+
+  // Close ui-grid popover when tabbing
+  fileRelationshipService.hideNodePopover = true;
 }
 
 angular
@@ -269,5 +273,6 @@ angular
     '$timeout',
     '$window',
     'analysisMonitorFactory',
+    'fileRelationshipService',
     AnalysisMonitorCtrl
   ]);
