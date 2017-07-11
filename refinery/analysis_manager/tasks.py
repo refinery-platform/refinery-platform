@@ -9,19 +9,21 @@ import urlparse
 from bioblend import galaxy
 import celery
 from celery.result import TaskSetResult
-from celery.task import task, Task
+from celery.task import Task, task
 from celery.task.sets import TaskSet
 import requests
 
-from .models import AnalysisStatus
 from core.models import Analysis, AnalysisResult, Workflow
 from core.utils import get_full_url
 from data_set_manager.models import Node
 from file_store.models import FileStoreItem
 from file_store.tasks import create, import_file
 
+from .models import AnalysisStatus
 
 logger = logging.getLogger(__name__)
+
+RETRY_INTERVAL = 5  # seconds
 
 
 class AnalysisHandlerTask(Task):
@@ -46,25 +48,29 @@ class AnalysisHandlerTask(Task):
         analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
 
 
-@task(base=AnalysisHandlerTask, max_retries=None)
-def run_analysis(analysis_uuid):
-    """Manage analysis execution"""
-    RETRY_INTERVAL = 5  # seconds
-
+def _get_analysis(analysis_uuid):
+    """
+    Try to fetch the Analysis from the given analysis_uuid. Fail the
+    `run_analysis` task if we cannot properly fetch it.
+    """
     try:
-        analysis = Analysis.objects.get(uuid=analysis_uuid)
-    except (Analysis.DoesNotExist, Analysis.MultipleObjectsReturned) as exc:
+        return Analysis.objects.get(uuid=analysis_uuid)
+    except (Analysis.DoesNotExist,
+            Analysis.MultipleObjectsReturned) as e:
         logger.error("Can not retrieve analysis with UUID '%s': '%s'",
-                     analysis_uuid, exc)
+                     analysis_uuid, e)
         run_analysis.update_state(state=celery.states.FAILURE)
         return
 
-    # if cancelled by user
-    if analysis.failed():
-        return
 
+def _get_analysis_status(analysis_uuid):
+    """
+    Fetch the AnalysisStatus instance associated with the Analysis.
+    Fail the `run_analysis` task appropriately if we cannot fetch it.
+    """
+    analysis = _get_analysis(analysis_uuid)
     try:
-        analysis_status = AnalysisStatus.objects.get(analysis=analysis)
+        return AnalysisStatus.objects.get(analysis=analysis)
     except (AnalysisStatus.DoesNotExist,
             AnalysisStatus.MultipleObjectsReturned) as exc:
         logger.error("Can not retrieve status for analysis '%s': '%s'",
@@ -72,133 +78,19 @@ def run_analysis(analysis_uuid):
         run_analysis.update_state(state=celery.states.FAILURE)
         return
 
-    if not analysis_status.refinery_import_task_group_id:
-        logger.info("Starting analysis '%s'", analysis)
-        analysis.set_status(Analysis.RUNNING_STATUS)
-        logger.info("Starting input file import tasks for analysis '%s'",
-                    analysis)
-        refinery_import_tasks = []
-        for input_file_uuid in analysis.get_input_file_uuid_list():
-            refinery_import_task = import_file.subtask(
-                    (input_file_uuid,))
-            refinery_import_tasks.append(refinery_import_task)
-        refinery_import = TaskSet(tasks=refinery_import_tasks).apply_async()
-        refinery_import.save()
-        analysis_status.refinery_import_task_group_id = \
-            refinery_import.taskset_id
-        analysis_status.save()
-        run_analysis.retry(countdown=RETRY_INTERVAL)
 
-    # check if all files were successfully imported into Refinery
-    refinery_import = TaskSetResult.restore(
-            analysis_status.refinery_import_task_group_id)
-    if not refinery_import.ready():
-        logger.debug("Input file import pending for analysis '%s'", analysis)
-        run_analysis.retry(countdown=RETRY_INTERVAL)
-    elif not refinery_import.successful():
-        error_msg = "Analysis '{}' failed during file import".format(analysis)
-        logger.error(error_msg)
-        analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
-        analysis.send_email()
-        refinery_import.delete()
-        return
+def get_taskset_result(task_group_id):
+    return TaskSetResult.restore(task_group_id)
 
-    # import files into Galaxy and start analysis
-    if not analysis_status.galaxy_import_task_group_id:
-        logger.debug("Starting analysis execution in Galaxy")
-        try:
-            analysis.prepare_galaxy()
-        except (requests.exceptions.ConnectionError,
-                galaxy.client.ConnectionError):
-            error_msg = "Analysis '{}' failed during preparation in " \
-                        "Galaxy".format(analysis)
-            logger.error(error_msg)
-            analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
-            analysis.send_email()
-            refinery_import.delete()
-            return
-        galaxy_import_tasks = [
-            start_galaxy_analysis.subtask((analysis_uuid, )),
-        ]
-        galaxy_import = TaskSet(tasks=galaxy_import_tasks).apply_async()
-        galaxy_import.save()
-        analysis_status.galaxy_import_task_group_id = \
-            galaxy_import.taskset_id
-        analysis_status.set_galaxy_history_state(AnalysisStatus.PROGRESS)
-        run_analysis.retry(countdown=RETRY_INTERVAL)
 
-    # check if data files were successfully imported into Galaxy
-    galaxy_import = TaskSetResult.restore(
-            analysis_status.galaxy_import_task_group_id)
-    if not galaxy_import.ready():
-        logger.debug("Analysis '%s' pending in Galaxy", analysis)
-        run_analysis.retry(countdown=RETRY_INTERVAL)
-    elif not galaxy_import.successful():
-        error_msg = "Analysis '{}' failed in Galaxy".format(analysis)
-        logger.error(error_msg)
-        analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
-        analysis_status.set_galaxy_history_state(AnalysisStatus.ERROR)
-        analysis.send_email()
-        refinery_import.delete()
-        galaxy_import.delete()
-        analysis.galaxy_cleanup()
-        return
+def _attach_workflow_outputs(analysis_uuid):
+    """
+    Attach the resulting files from the Galaxy workflow execution to
+    our Analysis
+    """
+    analysis = _get_analysis(analysis_uuid)
+    analysis_status = _get_analysis_status(analysis_uuid)
 
-    # check if analysis has finished running in Galaxy
-    try:
-        percent_complete = analysis.galaxy_progress()
-    except RuntimeError:
-        analysis_status.set_galaxy_history_state(AnalysisStatus.ERROR)
-        analysis.send_email()
-        refinery_import.delete()
-        galaxy_import.delete()
-        analysis.galaxy_cleanup()
-        return
-    except galaxy.client.ConnectionError:
-        analysis_status.set_galaxy_history_state(AnalysisStatus.UNKNOWN)
-        run_analysis.retry(countdown=RETRY_INTERVAL)
-    else:
-        # workaround to avoid moving the progress bar backward
-        if analysis_status.galaxy_history_progress < percent_complete:
-            analysis_status.galaxy_history_progress = percent_complete
-            analysis_status.save()
-        if percent_complete < 100:
-            analysis_status.set_galaxy_history_state(AnalysisStatus.PROGRESS)
-            run_analysis.retry(countdown=RETRY_INTERVAL)
-        else:
-            analysis_status.set_galaxy_history_state(AnalysisStatus.OK)
-
-    # retrieve analysis results from Galaxy
-    if not analysis_status.galaxy_export_task_group_id:
-        galaxy_export_tasks = get_galaxy_download_tasks(analysis)
-        logger.info("Starting downloading of results from Galaxy for analysis "
-                    "'%s'", analysis)
-        galaxy_export = TaskSet(tasks=galaxy_export_tasks).apply_async()
-        galaxy_export.save()
-        analysis_status.galaxy_export_task_group_id = galaxy_export.taskset_id
-        analysis_status.save()
-        run_analysis.retry(countdown=RETRY_INTERVAL)
-
-    # check if analysis results have finished downloading from Galaxy
-    galaxy_export = TaskSetResult.restore(
-            analysis_status.galaxy_export_task_group_id)
-    if not galaxy_export.ready():
-        logger.debug("Results download pending for analysis '%s'", analysis)
-        run_analysis.retry(countdown=RETRY_INTERVAL)
-    # all tasks must have succeeded or failed
-    elif not galaxy_export.successful():
-        error_msg = "Analysis '{}' failed while downloading results from " \
-                    "Galaxy".format(analysis)
-        logger.error(error_msg)
-        analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
-        analysis.send_email()
-        refinery_import.delete()
-        galaxy_import.delete()
-        galaxy_export.delete()
-        analysis.galaxy_cleanup()
-        return
-
-    # attach workflow outputs back to dataset isatab graph
     if analysis.workflow.type == Workflow.ANALYSIS_TYPE:
         analysis.attach_outputs_dataset()
     elif analysis.workflow.type == Workflow.DOWNLOAD_TYPE:
@@ -212,18 +104,235 @@ def run_analysis(analysis_uuid):
     analysis.send_email()
     logger.info("Analysis '%s' finished successfully", analysis)
     analysis.galaxy_cleanup()
-    refinery_import.delete()
-    galaxy_import.delete()
-    galaxy_export.delete()
+
+    get_taskset_result(analysis_status.refinery_import_task_group_id).delete()
+    get_taskset_result(analysis_status.galaxy_import_task_group_id).delete()
+    get_taskset_result(analysis_status.galaxy_export_task_group_id).delete()
 
     # Update file count and file size of the corresponding data set
     analysis.data_set.file_count = analysis.data_set.get_file_count()
+
     # FIXME: line below is causing analyses to be marked as failed
     # analysis.data_set.file_size = analysis.data_set.get_file_size()
     analysis.data_set.save()
 
 
-def import_analysis_in_galaxy(ret_list, library_id, connection):
+def _galaxy_file_export(analysis_uuid):
+    """
+    Check on the status of the files being exported from Galaxy.
+    Fail the task appropriately if we cannot retrieve the status.
+    """
+    analysis = _get_analysis(analysis_uuid)
+    analysis_status = _get_analysis_status(analysis_uuid)
+
+    if not analysis_status.galaxy_export_task_group_id:
+        galaxy_export_tasks = _get_galaxy_download_tasks(analysis)
+        logger.info(
+            "Starting downloading of results from Galaxy for analysis "
+            "'%s'", analysis)
+        galaxy_export_taskset = TaskSet(
+            tasks=galaxy_export_tasks
+        ).apply_async()
+        galaxy_export_taskset.save()
+        analysis_status.galaxy_export_task_group_id = (
+            galaxy_export_taskset.taskset_id
+        )
+        analysis_status.save()
+        run_analysis.retry(countdown=RETRY_INTERVAL)
+
+    # check if analysis results have finished downloading from Galaxy
+    galaxy_export_taskset = get_taskset_result(
+        analysis_status.galaxy_export_task_group_id
+    )
+    if not galaxy_export_taskset.ready():
+        logger.debug("Results download pending for analysis '%s'", analysis)
+        run_analysis.retry(countdown=RETRY_INTERVAL)
+    # all tasks must have succeeded or failed
+    elif not galaxy_export_taskset.successful():
+        error_msg = ("Analysis '{}' failed while downloading results "
+                     "from Galaxy".format(analysis))
+        logger.error(error_msg)
+        analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
+        analysis.send_email()
+
+        get_taskset_result(
+            analysis_status.refinery_import_task_group_id
+        ).delete()
+        get_taskset_result(
+            analysis_status.galaxy_import_task_group_id
+        ).delete()
+        galaxy_export_taskset.delete()
+        analysis.galaxy_cleanup()
+        return
+
+
+def _galaxy_file_import(analysis_uuid):
+    """
+    Check on the status of the files being imported into Galaxy.
+    Fail the task appropriately if we cannot retrieve the status.
+    """
+    analysis = _get_analysis(analysis_uuid)
+    analysis_status = _get_analysis_status(analysis_uuid)
+
+    try:
+        percent_complete = analysis.galaxy_progress()
+    except RuntimeError:
+        analysis_status.set_galaxy_history_state(AnalysisStatus.ERROR)
+        analysis.send_email()
+        get_taskset_result(
+            analysis_status.refinery_import_task_group_id
+        ).delete()
+        get_taskset_result(
+            analysis_status.galaxy_import_task_group_id
+        ).delete()
+        analysis.galaxy_cleanup()
+        return
+    except galaxy.client.ConnectionError:
+        analysis_status.set_galaxy_history_state(
+            AnalysisStatus.UNKNOWN
+        )
+        run_analysis.retry(countdown=RETRY_INTERVAL)
+    else:
+        # workaround to avoid moving the progress bar backward
+        if analysis_status.galaxy_history_progress < percent_complete:
+            analysis_status.galaxy_history_progress = percent_complete
+            analysis_status.save()
+        if percent_complete < 100:
+            analysis_status.set_galaxy_history_state(
+                AnalysisStatus.PROGRESS)
+            run_analysis.retry(countdown=RETRY_INTERVAL)
+        else:
+            analysis_status.set_galaxy_history_state(
+                AnalysisStatus.OK
+            )
+
+
+def _refinery_file_import(analysis_uuid):
+    """
+    Check on the status of the files being imported into Refinery.
+    Fail the task appropriately if we cannot retrieve the status.
+    """
+    analysis = _get_analysis(analysis_uuid)
+    analysis_status = _get_analysis_status(analysis_uuid)
+
+    if not analysis_status.refinery_import_task_group_id:
+        logger.info("Starting analysis '%s'", analysis)
+        analysis.set_status(Analysis.RUNNING_STATUS)
+        logger.info("Starting input file import tasks for analysis '%s'",
+                    analysis)
+        refinery_import_tasks = []
+
+        input_file_uuid_list = analysis.get_input_file_uuid_list()
+        for input_file_uuid in input_file_uuid_list:
+            refinery_import_task = import_file.subtask((input_file_uuid,))
+            refinery_import_tasks.append(refinery_import_task)
+        refinery_import_taskset = TaskSet(
+            tasks=refinery_import_tasks).apply_async()
+        refinery_import_taskset.save()
+        analysis_status.refinery_import_task_group_id = \
+            refinery_import_taskset.taskset_id
+        analysis_status.save()
+        run_analysis.retry(countdown=RETRY_INTERVAL)
+
+    # check if all files were successfully imported into Refinery
+    refinery_import_taskset = get_taskset_result(
+        analysis_status.refinery_import_task_group_id
+    )
+    if not refinery_import_taskset.ready():
+        logger.debug("Input file import pending for analysis '%s'",
+                     analysis)
+        run_analysis.retry(countdown=RETRY_INTERVAL)
+
+    elif not refinery_import_taskset.successful():
+        error_msg = "Analysis '{}' failed during file import".format(
+            analysis)
+        logger.error(error_msg)
+        analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
+        analysis.send_email()
+        refinery_import_taskset.delete()
+        return
+
+
+@task(base=AnalysisHandlerTask, max_retries=None)
+def run_analysis(analysis_uuid):
+    """
+    Manage file importing/exporting, execution, and Galaxy operations for
+    an Analysis
+    """
+    logger.info("Executing Analysis with UUID: ""%s", analysis_uuid)
+
+    analysis = _get_analysis(analysis_uuid)
+
+    # if cancelled by user
+    if analysis.failed():
+        return
+
+    _get_analysis_status(analysis_uuid)
+    _refinery_file_import(analysis_uuid)
+    _run_galaxy_workflow(analysis_uuid)
+    _galaxy_file_import(analysis_uuid)
+    _galaxy_file_export(analysis_uuid)
+    _attach_workflow_outputs(analysis_uuid)
+
+
+def _run_galaxy_workflow(analysis_uuid):
+    """
+    Import files into Galaxy and execute Galaxy Workflow
+    """
+    analysis = _get_analysis(analysis_uuid)
+    analysis_status = _get_analysis_status(analysis_uuid)
+
+    if not analysis_status.galaxy_import_task_group_id:
+        logger.debug("Starting analysis execution in Galaxy")
+        try:
+            analysis.prepare_galaxy()
+        except (requests.exceptions.ConnectionError,
+                galaxy.client.ConnectionError):
+            error_msg = "Analysis '{}' failed during preparation in " \
+                        "Galaxy".format(analysis)
+            logger.error(error_msg)
+            analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
+            analysis.send_email()
+            get_taskset_result(
+                analysis_status.refinery_import_task_group_id
+            ).delete()
+            return
+        galaxy_import_tasks = [
+            _start_galaxy_analysis.subtask((analysis.uuid,)),
+        ]
+        galaxy_import_taskset = TaskSet(
+            tasks=galaxy_import_tasks
+        ).apply_async()
+        galaxy_import_taskset.save()
+        analysis_status.galaxy_import_task_group_id = \
+            galaxy_import_taskset.taskset_id
+        analysis_status.set_galaxy_history_state(
+            AnalysisStatus.PROGRESS
+        )
+        run_analysis.retry(countdown=RETRY_INTERVAL)
+
+    # check if data files were successfully imported into Galaxy
+    galaxy_import_taskset = get_taskset_result(
+        analysis_status.galaxy_import_task_group_id
+    )
+    if not galaxy_import_taskset.ready():
+        logger.debug("Analysis '%s' pending in Galaxy", analysis)
+        run_analysis.retry(countdown=RETRY_INTERVAL)
+    elif not galaxy_import_taskset.successful():
+        error_msg = "Analysis '{}' failed in Galaxy".format(analysis)
+        logger.error(error_msg)
+        analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
+        analysis_status.set_galaxy_history_state(AnalysisStatus.ERROR)
+        analysis.send_email()
+        get_taskset_result(
+            analysis_status.refinery_import_task_group_id
+        ).delete()
+        galaxy_import_taskset.delete()
+        analysis.galaxy_cleanup()
+        return
+
+
+def _import_analysis_in_galaxy(ret_list, library_id, connection):
     """Take workflow configuration and import files into galaxy
     assign galaxy_ids to ret_list
 
@@ -268,7 +377,7 @@ def import_analysis_in_galaxy(ret_list, library_id, connection):
 
 
 @task()
-def start_galaxy_analysis(analysis_uuid):
+def _start_galaxy_analysis(analysis_uuid):
     """Import data files into Galaxy and run workflow"""
     error_msg = "Analysis execution in Galaxy failed: "
     try:
@@ -285,14 +394,14 @@ def start_galaxy_analysis(analysis_uuid):
     ret_list = analysis.get_config()
     # NEED TO IMPORT TO GALAXY TO GET GALAXY_IDS
     try:
-        ret_list = import_analysis_in_galaxy(
+        ret_list = _import_analysis_in_galaxy(
             ret_list, analysis.library_id, connection)
     except (RuntimeError, galaxy.client.ConnectionError) as exc:
         error_msg += "error importing analysis '%s' into Galaxy: %s"
         logger.error(error_msg, analysis.name, exc.message)
         analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
         analysis.galaxy_cleanup()
-        start_galaxy_analysis.update_state(state=celery.states.FAILURE)
+        _start_galaxy_analysis.update_state(state=celery.states.FAILURE)
         return
 
     try:
@@ -303,7 +412,7 @@ def start_galaxy_analysis(analysis_uuid):
         logger.error(error_msg, analysis.workflow_galaxy_id)
         analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
         analysis.galaxy_cleanup()
-        start_galaxy_analysis.update_state(state=celery.states.FAILURE)
+        _start_galaxy_analysis.update_state(state=celery.states.FAILURE)
         return
 
     ds_map = {}
@@ -322,7 +431,7 @@ def start_galaxy_analysis(analysis_uuid):
             winput_id = ret_list[temp_count][inType]['id']
             annot_counts[inType] = temp_count + 1
         ds_map[in_key] = {"id": winput_id, "src": "ld"}
-    # Running workflow
+
     try:
         connection.workflows.run_workflow(
             workflow_id=analysis.workflow_galaxy_id,
@@ -332,12 +441,13 @@ def start_galaxy_analysis(analysis_uuid):
     except galaxy.client.ConnectionError as exc:
         error_msg += "error running Galaxy workflow for analysis '%s': %s"
         logger.error(error_msg, analysis.name, exc.message)
-        start_galaxy_analysis.update_state(state=celery.states.FAILURE)
+        _start_galaxy_analysis.update_state(state=celery.states.FAILURE)
 
 
-def get_galaxy_download_tasks(analysis):
+def _get_galaxy_download_tasks(analysis):
     """Get file import tasks for Galaxy analysis results"""
     logger.debug("Preparing to download analysis results from Galaxy")
+    task_list = []
 
     # retrieving list of files to download for workflow
     dl_files = analysis.workflow_dl_files
@@ -349,14 +459,15 @@ def get_galaxy_download_tasks(analysis):
         temp_dict['filename'] = dl.filename
         temp_dict['pair_id'] = dl.pair_id
         dl_dict[str(dl.step_id)] = temp_dict
-    task_list = []
     galaxy_instance = analysis.workflow.workflow_engine.instance
+
     try:
         download_list = galaxy_instance.get_history_file_list(
             analysis.history_id)
     except galaxy.client.ConnectionError as exc:
-        error_msg = "Error downloading Galaxy history files for analysis " \
-                    "'%s': %s"
+        error_msg = (
+            "Error downloading Galaxy history files for analysis '%s': %s"
+        )
         logger.error(error_msg, analysis.name, exc.message)
         analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
         analysis.galaxy_cleanup()

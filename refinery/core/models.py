@@ -12,7 +12,6 @@ import logging
 import os
 import smtplib
 import socket
-import pysolr
 from urlparse import urljoin
 
 from django import forms
@@ -22,8 +21,7 @@ from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.models import Group, Permission, User
 from django.contrib.auth.signals import user_logged_in
 from django.contrib.contenttypes.models import ContentType
-from django.contrib.messages import get_messages
-from django.contrib.messages import info
+from django.contrib.messages import get_messages, info
 from django.contrib.sites.models import Site
 from django.core.mail import send_mail
 from django.db import models, transaction
@@ -34,26 +32,20 @@ from django.db.utils import IntegrityError
 from django.dispatch import receiver
 from django.forms import ValidationError
 from django.template import Context, loader
+from django.template.loader import render_to_string
 from django.utils import timezone
 
 from bioblend import galaxy
-from django.template.loader import render_to_string
 from django_auth_ldap.backend import LDAPBackend
 from django_extensions.db.fields import UUIDField
 from guardian.models import UserObjectPermission
 from guardian.shortcuts import (assign_perm, get_groups_with_perms,
                                 get_objects_for_group, get_users_with_perms,
                                 remove_perm)
+import pysolr
 from registration.models import RegistrationManager, RegistrationProfile
 from registration.signals import user_activated, user_registered
 
-from .utils import (add_or_update_user_to_neo4j, add_read_access_in_neo4j,
-                    delete_analysis_index, delete_data_set_index,
-                    delete_data_set_neo4j, delete_ontology_from_neo4j,
-                    delete_user_in_neo4j, email_admin, get_aware_local_time,
-                    invalidate_cached_object, remove_read_access_in_neo4j,
-                    update_annotation_sets_neo4j, update_data_set_index,
-                    skip_if_test_run)
 from data_set_manager.models import (Assay, Investigation, Node,
                                      NodeCollection, Study)
 from data_set_manager.utils import (add_annotated_nodes_selection,
@@ -64,6 +56,14 @@ from galaxy_connector.galaxy_workflow import (configure_workflow,
                                               countWorkflowSteps,
                                               create_expanded_workflow_graph)
 from galaxy_connector.models import Instance
+
+from .utils import (add_or_update_user_to_neo4j, add_read_access_in_neo4j,
+                    delete_analysis_index, delete_data_set_index,
+                    delete_data_set_neo4j, delete_ontology_from_neo4j,
+                    delete_user_in_neo4j, email_admin, get_aware_local_time,
+                    invalidate_cached_object, remove_read_access_in_neo4j,
+                    skip_if_test_run, update_annotation_sets_neo4j,
+                    update_data_set_index)
 
 logger = logging.getLogger(__name__)
 
@@ -276,23 +276,22 @@ class BaseResource(models.Model):
         # duplicated elsewhere.
 
         if self.duplicate_slug_exists():
-            raise forms.ValidationError("%s with slug: %s "
-                                        "already exists"
-                                        % (self.__class__.__name__,
-                                           self.slug))
+            raise forms.ValidationError(
+                "%s with slug: %s already exists",
+                self.__class__.__name__, self.slug)
 
     # Overriding save() method to disallow saving objects with duplicate slugs
     def save(self, *args, **kwargs):
 
         if self.duplicate_slug_exists():
-            logger.error("%s with slug: %s already exists" % (
-                self.__class__.__name__, self.slug))
+            logger.error("%s with slug: %s already exists",
+                         self.__class__.__name__, self.slug)
         else:
             try:
                 super(BaseResource, self).save(*args, **kwargs)
             except Exception as e:
-                logger.error("Could not save %s: %s" % (
-                    self.__class__.__name__, e))
+                logger.error("Could not save %s: %s",
+                             self.__class__.__name__, e)
 
     # Overriding delete() method For models that Inherit from BaseResource
     def delete(self, using=None, *args, **kwargs):
@@ -551,13 +550,13 @@ class DataSet(SharableResource):
             self.get_isa_archive().delete()
 
         except AttributeError as e:
-            logger.debug("DataSet has no isa_archive to delete: %s" % e)
+            logger.debug("DataSet has no isa_archive to delete: %s", e)
 
         try:
             self.get_pre_isa_archive().delete()
 
         except AttributeError as e:
-            logger.debug("DataSet has no pre_isa_archive to delete: %s" % e)
+            logger.debug("DataSet has no pre_isa_archive to delete: %s", e)
 
         related_investigation_links = self.get_investigation_links()
 
@@ -568,7 +567,7 @@ class DataSet(SharableResource):
             try:
                 node_collection.delete()
             except Exception as e:
-                logger.error("Couldn't delete NodeCollection:", e)
+                logger.error("Couldn't delete NodeCollection: %s", e)
 
         # Try to terminate any currently running FileImport tasks just to be
         # safe
@@ -654,37 +653,44 @@ class DataSet(SharableResource):
         except:
             return None
 
-    def get_version_details(self, version=None):
+    def get_latest_investigation_link(self, version=None):
+        """
+        Try to fetch the latest InvestigationLink related to the DataSet
+        instance. If a version is provided, try to fetch the latest
+        InvestigationLink for said version.
+        :param version: integer
+        :returns: an InvestigationLink Instance or None if Exception occurs
+        """
         try:
             if version is None:
-                version = (
-                    InvestigationLink.objects.filter(
-                        data_set=self).aggregate(
-                        Max("version"))["version__max"]
-                )
+                version = InvestigationLink.objects.filter(
+                        data_set=self
+                    ).aggregate(Max("version"))["version__max"]
 
-            return (
-                InvestigationLink.objects.filter(
-                    data_set=self, version=version).get()
+            return InvestigationLink.objects.get(
+                data_set=self,
+                version=version
             )
         except:
             return None
 
-    def get_investigation(self, version=None):
-        if version is None:
-            try:
-                max_version = InvestigationLink.objects.filter(
-                    data_set=self).aggregate(Max("version"))["version__max"]
-            except:
-                return None
-        else:
-            max_version = version
+    def get_latest_study(self, version=None):
         try:
-            il = InvestigationLink.objects.filter(
-                data_set=self, version=max_version).get()
-        except:
+            return Study.objects.get(
+                investigation=(
+                    self.get_latest_investigation_link(version).investigation
+                )
+            )
+        except(Study.DoesNotExist, Study.MultipleObjectsReturned) as e:
+            raise RuntimeError("Couldn't properly fetch Study: {}".format(e))
+
+    def get_investigation(self, version=None):
+        investigation_link = self.get_latest_investigation_link(version)
+
+        if investigation_link:
+            return investigation_link.investigation
+        else:
             return None
-        return il.investigation
 
     def get_studies(self, version=None):
         return Study.objects.filter(
@@ -741,7 +747,7 @@ class DataSet(SharableResource):
         except (FileStoreItem.DoesNotExist,
                 FileStoreItem.MultipleObjectsReturned,
                 AttributeError) as e:
-            logger.debug("Couldn't fetch FileStoreItem: %s" % e)
+            logger.debug("Couldn't fetch FileStoreItem: %s", e)
 
     def get_pre_isa_archive(self):
         """
@@ -757,7 +763,7 @@ class DataSet(SharableResource):
         except (FileStoreItem.DoesNotExist,
                 FileStoreItem.MultipleObjectsReturned,
                 AttributeError) as e:
-            logger.debug("Couldn't fetch FileStoreItem: %s" % e)
+            logger.debug("Couldn't fetch FileStoreItem: %s", e)
 
     def share(self, group, readonly=True):
         super(DataSet, self).share(group, readonly)
@@ -818,6 +824,17 @@ class DataSet(SharableResource):
 
             return file_store_items
 
+    def is_valid(self):
+        """
+        Helper method to determine if a DataSet is valid.
+        A DataSet is not valid if we can't fetch its latest InvestigationLink
+        :return: boolean
+        """
+        if self.get_latest_investigation_link():
+            return True
+        else:
+            return False
+
 
 @receiver(pre_delete, sender=DataSet)
 def _dataset_delete(sender, instance, *args, **kwargs):
@@ -827,8 +844,9 @@ def _dataset_delete(sender, instance, *args, **kwargs):
 
 
 @receiver(post_save, sender=DataSet)
-def _dataset_saved(**kwargs):
+def _dataset_saved(sender, instance, *args, **kwargs):
     update_annotation_sets_neo4j()
+    update_data_set_index(instance)
 
 
 class InvestigationLink(models.Model):
@@ -854,7 +872,7 @@ class InvestigationLink(models.Model):
                 uuid=self.investigation.uuid)
         except (NodeCollection.DoesNotExist,
                 NodeCollection.MultipleObjectsReturned) as e:
-            logger.error(("Could not fetch NodeCollection: " % e))
+            logger.error("Could not fetch NodeCollection: ", e)
 
 
 class WorkflowDataInput(models.Model):
@@ -961,8 +979,8 @@ class Workflow(SharableResource, ManageableResource):
 
     objects = WorkflowManager()
 
-    def __unicode__(self):
-        return self.name + " - " + self.summary
+    def __str__(self):
+        return "{} - {}".format(self.name, self.summary)
 
     class Meta:
         # unique_together = ('internal_id', 'workflow_engine')
@@ -1002,10 +1020,8 @@ class Workflow(SharableResource, ManageableResource):
             return False, deletion_error_message
 
         else:
-            '''
-                If an Analysis hasn't been run on said Workflow delete
-                WorkflowDataInputs and WorkflowInputRelationships if they exist
-            '''
+            # If an Analysis hasn't been run on said Workflow delete
+            # WorkflowDataInputs and WorkflowInputRelationships if they exist
             try:
                 self.data_inputs.remove()
             except Exception as e:
@@ -1136,10 +1152,10 @@ class Analysis(OwnableResource):
 
     objects = AnalysisManager()
 
-    def __unicode__(self):
-        return (
-            self.name + " - " +
-            self.get_owner_username() + " - " +
+    def __str__(self):
+        return "{} - {} - {}".format(
+            self.name,
+            self.get_owner_username(),
             self.summary
         )
 
@@ -1241,11 +1257,10 @@ class Analysis(OwnableResource):
     def optimize_solr_index(self):
         solr = pysolr.Solr(urljoin(settings.REFINERY_SOLR_BASE_URL,
                                    "data_set_manager"), timeout=10)
-        '''
-            solr.optimize() Tells Solr to streamline the number of segments
-            used, essentially a defragmentation/ garbage collection
-            operation.
-        '''
+
+        # solr.optimize() Tells Solr to streamline the number of segments
+        # used, essentially a defragmentation/ garbage collection
+        # operation.
         try:
             solr.optimize()
         except Exception as e:
@@ -1322,6 +1337,7 @@ class Analysis(OwnableResource):
                 direction=analysis_node_connection['direction'],
                 is_refinery_file=analysis_node_connection['is_refinery_file']
             )
+
         # saving outputs of workflow to download
         for file_dl in history_download:
             temp_dl = WorkflowFilesDL(step_id=file_dl['step_id'],
@@ -1887,40 +1903,6 @@ def create_manager_group(sender, instance, created, **kwargs):
 post_save.connect(create_manager_group, sender=ExtendedGroup)
 
 
-class NodeGroup(SharableResource, TemporaryResource):
-    """A collection of Nodes representing data files.
-    Used to save selection state between sessions and to map data files to
-    workflow inputs.
-    """
-
-    #: Number of nodes in the NodeSet (provided in POST/PUT/PATCH requests)
-    node_count = models.IntegerField(default=0)
-    #: Implicit node is created "on the fly" to support an analysis while
-    #: explicit node is created by the user to store a particular selection
-    is_implicit = models.BooleanField(default=False)
-    study = models.ForeignKey(Study)
-    assay = models.ForeignKey(Assay)
-    # The "current selection" node set for the associated study/assay
-    is_current = models.BooleanField(default=False)
-    # Nodes in the group, using uuids are foreign-key
-    nodes = models.ManyToManyField(Node, blank=True,
-                                   null=True)
-
-    class Meta:
-        unique_together = ["assay", "name"]
-        verbose_name = "node group"
-        permissions = (
-            ('read_%s' % verbose_name, 'Can read %s' % verbose_name),
-            ('share_%s' % verbose_name, 'Can share %s' % verbose_name),
-        )
-
-    def __unicode__(self):
-        return (
-            self.name + ("*" if self.is_current else "") + " - " +
-            self.get_owner_username()
-        )
-
-
 class NodeSet(SharableResource, TemporaryResource):
     """A collection of Nodes representing data files.
     Used to save selection state between sessions and to map data files to
@@ -2003,10 +1985,10 @@ def create_nodeset(name, study, assay, summary='', solr_query='',
         )
     except (IntegrityError, ValueError) as e:
         transaction.rollback()
-        logger.error("Failed to create NodeSet: {}".format(e.message))
+        logger.error("Failed to create NodeSet: %s", e.message)
         raise
     transaction.commit()
-    logger.info("NodeSet created with UUID '{}'".format(nodeset.uuid))
+    logger.info("NodeSet created with UUID '%s'", nodeset.uuid)
     return nodeset
 
 
@@ -2021,7 +2003,7 @@ def get_nodeset(uuid):
         return NodeSet.objects.get(uuid=uuid)
     except NodeSet.DoesNotExist:
         logger.error(
-            "Failed to retrieve NodeSet: UUID '{}' does not exist".format(uuid)
+            "Failed to retrieve NodeSet: UUID '%s' does not exist", uuid
         )
         raise
 
@@ -2047,7 +2029,7 @@ def update_nodeset(uuid, name=None, summary=None, study=None, assay=None,
         nodeset = get_nodeset(uuid=uuid)
     except NodeSet.DoesNotExist:
         logger.error(
-            "Failed to update NodeSet: UUID '{}' does not exist".format(uuid)
+            "Failed to update NodeSet: UUID '%s' does not exist", uuid
         )
         raise
     if name is not None:

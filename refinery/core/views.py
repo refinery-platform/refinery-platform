@@ -4,48 +4,50 @@ import os
 import re
 import urllib
 from urlparse import urljoin
-import xmltodict
+from xml.parsers.expat import ExpatError
 
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from django.contrib.sites.models import get_current_site, RequestSite, Site
+from django.contrib.sites.models import RequestSite, Site, get_current_site
 from django.core.exceptions import ImproperlyConfigured
 from django.core.urlresolvers import reverse
-from django.http import (Http404, HttpResponse, HttpResponseBadRequest,
+from django.http import (HttpResponse, HttpResponseBadRequest,
                          HttpResponseForbidden, HttpResponseNotFound,
                          HttpResponseRedirect, HttpResponseServerError)
-
 from django.shortcuts import get_object_or_404, render_to_response
-from django.template import loader, RequestContext
+from django.template import RequestContext, loader
 from django.views.decorators.gzip import gzip_page
 
+import boto3
+import botocore
 from guardian.shortcuts import get_perms
 from guardian.utils import get_anonymous_user
 from registration import signals
 from registration.views import RegistrationView
 import requests
 from requests.exceptions import HTTPError
-from rest_framework import status, viewsets
+from rest_framework import authentication, status, viewsets
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from xml.parsers.expat import ExpatError
+import xmltodict
+
+from analysis_manager.utils import get_solr_results
+from annotation_server.models import GenomeBuild
+from data_set_manager.models import Node
+from data_set_manager.utils import generate_solr_params_for_assay
+from file_store.models import FileStoreItem
+from visualization_manager.views import igv_multi_species
 
 from .forms import (DataSetForm, ProjectForm, UserForm, UserProfileForm,
                     WorkflowForm)
 from .models import (Analysis, CustomRegistrationProfile, DataSet,
-                     ExtendedGroup, Invitation, NodeGroup, Ontology, Project,
-                     UserProfile, Workflow, WorkflowEngine)
-from .serializers import (DataSetSerializer, NodeGroupSerializer,
-                          NodeSerializer, WorkflowSerializer)
-from .utils import (create_current_selection_node_group,
-                    filter_nodes_uuids_in_solr,
-                    get_data_sets_annotations, move_obj_to_front)
-from annotation_server.models import GenomeBuild
-from data_set_manager.models import Node
-from data_set_manager.utils import generate_solr_params
-from file_store.models import FileStoreItem
-from visualization_manager.views import igv_multi_species
+                     ExtendedGroup, Invitation, Ontology, Project, UserProfile,
+                     Workflow, WorkflowEngine)
+from .serializers import DataSetSerializer, NodeSerializer, WorkflowSerializer
+from .utils import api_error_response, get_data_sets_annotations
 
 logger = logging.getLogger(__name__)
 
@@ -754,7 +756,10 @@ def solr_igv(request):
         if igv_config['query'] is None:
             # generate solr_query method
             # assay uuid
-            solr_query = generate_solr_params({}, igv_config['assay_uuid'])
+            solr_query = generate_solr_params_for_assay(
+                {},
+                igv_config['assay_uuid']
+            )
             url_path = '/'.join(["data_set_manager", "select"])
             url = urljoin(settings.REFINERY_SOLR_BASE_URL, url_path)
             igv_config['query'] = ''.join([url, '/?', solr_query])
@@ -786,85 +791,6 @@ def solr_igv(request):
 
         return HttpResponse(json.dumps(session_urls),
                             content_type='application/json')
-
-
-def get_solr_results(query, facets=False, jsonp=False, annotation=False,
-                     only_uuids=False, selected_mode=True,
-                     selected_nodes=None):
-    """Helper function for taking solr request url.
-    Removes facet requests, converts to json, from input solr query
-    :param query: solr http query string
-    :type query: string
-    :param facets: Removes facet query from solr query string
-    :type facets: boolean
-    :param jsonp: Removes JSONP query from solr query string
-    :type jsonp: boolean
-    :param only_uuids: Returns list of file_uuids from all solr results
-    :type only_uuids: boolean
-    :param selected_mode: UI selection mode (blacklist or whitelist)
-    :type selected_mode: boolean
-    :param selected_nodes: List of UUIDS to remove from the solr query
-    :type selected_nodes: array
-    :returns: dictionary of current solr results
-    """
-    logger.debug("core.views: get_solr_results")
-    if not facets:
-        # replacing facets w/ false
-        query = query.replace('facet=true', 'facet=false')
-    if not jsonp:
-        # ensuring json not jsonp response
-        query = query.replace('&json.wrf=?', '')
-    if annotation:
-        # changing annotation
-        query = query.replace('is_annotation:false', 'is_annotation:true')
-    # Checks for limit on solr query
-    # replaces i.e. '&rows=20' to '&rows=10000'
-    m_obj = re.search(r"&rows=(\d+)", query)
-    if m_obj:
-        # TODO: replace 10000 with settings parameter for max solr results
-        replace_rows_str = '&rows=' + str(10000)
-        query = query.replace(m_obj.group(), replace_rows_str)
-
-    try:
-        # opening solr query results
-        results = requests.get(query, stream=True)
-        results.raise_for_status()
-    except HTTPError as e:
-        logger.error(e)
-        return HttpResponseServerError(e)
-
-    # converting results into json for python
-    results = json.loads(results.content)
-
-    # IF list of nodes to remove from query exists
-    if selected_nodes:
-        # need to iterate over list backwards to properly delete from a list
-        for i in xrange(len(results["response"]["docs"]) - 1, -1, -1):
-            node = results["response"]["docs"][i]
-
-            # blacklist mode (remove uuid's from solr query)
-            if selected_mode:
-                if 'uuid' in node:
-                    # if the current node should be removed from the results
-                    if node['uuid'] in selected_nodes:
-                        del results["response"]["docs"][i]
-                        # num_found -= 1
-            # whitelist mode (add's uuids from solr query)
-            else:
-                if 'uuid' in node:
-                    # if the current node should be removed from the results
-                    if node['uuid'] not in selected_nodes:
-                        del results["response"]["docs"][i]
-                        # num_found += 1
-    # Will return only list of file_uuids
-    if only_uuids:
-        ret_file_uuids = []
-        solr_results = results["response"]["docs"]
-        for res in solr_results:
-            ret_file_uuids.append(res["uuid"])
-        return ret_file_uuids
-
-    return results
 
 
 def samples_solr(request, ds_uuid, study_uuid, assay_uuid):
@@ -1222,215 +1148,76 @@ class CustomRegistrationView(RegistrationView):
         return ('registration_complete', (), {})
 
 
-class NodeGroups(APIView):
+class OpenIDToken(APIView):
+    """Registers (or retrieves) a Cognito IdentityId and an OpenID Connect
+    token for a user authenticated by Django authentication process
+
+    Requires:
+    * server must have access to AWS Cognito API
+    * Cognito identity pool with Refinery configured as a custom auth provider
     """
-    Return NodeGroups object
+    authentication_classes = (authentication.SessionAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    renderer_classes = (JSONRenderer,)
 
-    ---
-    #YAML
-
-    GET:
-        serializer: NodeGroupSerializer
-        omit_serializer: false
-
-        parameters:
-            - name: uuid
-              description: NodeGroup uuid
-              paramType: query
-              type: string
-              required: false
-
-            - name: assay
-              description: Assay uuid or ids
-              paramType: query
-              type: string
-
-    POST:
-        consumes:
-            - application/json
-        produces:
-            - application/json
-        parameters:
-            - name: name
-              description: Name of node group
-              paramType: form
-              type: string
-              required: true
-
-            - name: study
-              description: Study uuid or ids
-              paramType: form
-              type: string
-              required: true
-
-            - name: assay
-              description: Assay uuid or ids
-              paramType: form
-              type: string
-              required: true
-
-            - name: is_current
-              description: The "current selection" node set for the study/assay
-              paramType: form
-              type: boolean
-              required: false
-
-            - name: nodes
-              description: uuids of nodes in group expect format uuid,uuid,uuid
-              paramType: form
-              type: array
-              required: false
-
-            - name: use_complement_nodes
-              description: True will subtract nodes from all assay file nodes
-              paramType: form
-              type: boolean
-              require: false
-
-            - name: filter_attribute
-              description: Filters for attributes fields {solr_name:[field]}
-              paramType: form
-              type: string
-              required: false
-
-
-    PUT:
-        parameters_strategy:
-        form: replace
-        query: merge
-
-        parameters:
-            - name: uuid
-              description: Node Group Uuid
-              paramType: form
-              type: string
-              required: true
-
-            - name: is_current
-              description: The "current selection" node set for the study/assay
-              paramType: form
-              type: boolean
-              required: false
-
-            - name: nodes
-              description: Uuids of nodes in group expect format uuid,uuid,uuid
-              paramType: form
-              type: array
-              required: false
-
-            - name: use_complement_nodes
-              description: True will subtract nodes from all assay file nodes
-              paramType: form
-              type: boolean
-              require: false
-
-            - name: filter_attribute
-              description: Filters for attributes fields {solr_name:[field]}
-              paramType: form
-              type: string
-              required: false
-    ...
-    """
-
-    def get_object(self, uuid):
+    def post(self, request):
+        # retrieve current AWS region
         try:
-            return NodeGroup.objects.get(uuid=uuid)
-        except (NodeGroup.DoesNotExist,
-                NodeGroup.MultipleObjectsReturned) as e:
-            raise Http404(e)
-
-    def get(self, request, format=None):
-        # Expects a uuid or assay uuid.
-        if request.query_params.get('uuid'):
-            node_group = self.get_object(request.query_params.get('uuid'))
-            serializer = NodeGroupSerializer(node_group)
-        elif request.query_params.get('assay'):
-            assay_uuid = request.query_params.get('assay')
-            node_groups = NodeGroup.objects.filter(assay__uuid=assay_uuid)
-            # If filter returns empty response
-            if not node_groups:
-                # Returns Response: created current_selection group or errors
-                return create_current_selection_node_group(assay_uuid)
-            # Serialize list of node_groups
-            serializer = NodeGroupSerializer(node_groups, many=True)
-            # Move current_selection to front of the list, if not already
-            if serializer.data[0].get('name') != 'Current Selection':
-                # Helper method returns array with current selection node first
-                return Response(move_obj_to_front(serializer.data, 'name',
-                                                  'Current Selection'))
-        else:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-
-        # Return node_group or list of assay's node_groups
-        return Response(serializer.data)
-
-    def post(self, request, format=None):
-        # Swagger issue: put/post queryDict, make data mutable to update nodes
-        # Convert to dict for ease
-        if 'form-urlencoded' in request.content_type:
-            param_dict = {}
-            for key in request.data:
-                if key == 'nodes':
-                    param_dict[key] = request.data.get(
-                        key).replace(' ', '').split(',')
-                elif key == 'use_complement_nodes':
-                    # correct type to boolean, used in conditional below
-                    param_dict[key] = json.loads(request.data.get(key))
-                else:
-                    param_dict[key] = request.data.get(key)
-        else:
-            param_dict = request.data
-
-        # Nodes list updated with remaining nodes after subtraction
-        if param_dict.get('use_complement_nodes'):
-            filtered_uuid_list = filter_nodes_uuids_in_solr(
-                param_dict.get('assay'),
-                param_dict.get('nodes'),
-                param_dict.get('filter_attribute')
+            with open('/home/ubuntu/region') as f:
+                region = f.read().rstrip()
+        except IOError as exc:
+            return api_error_response(
+                "Error retrieving current AWS region: {}".format(exc),
+                status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-            param_dict['nodes'] = filtered_uuid_list
-
-        serializer = NodeGroupSerializer(data=param_dict)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def put(self, request, format=None):
         try:
-            uuid = request.data.get('uuid')
-        except:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-
-        # Swagger issue: put/post queryDict, make data mutable to update nodes
-        # Convert to dict for ease
-        if 'form-urlencoded' in request.content_type:
-            param_dict = {}
-            for key in request.data:
-
-                if key == 'nodes':
-                    param_dict[key] = request.data.get(
-                        key).replace(' ', '').split(',')
-                elif key == 'use_complement_nodes':
-                    # correct type to boolean, used in conditional below
-                    param_dict[key] = json.loads(request.data.get(key))
-                else:
-                    param_dict[key] = request.data.get(key)
-        else:
-            param_dict = request.data
-
-        # Nodes list updated with remaining nodes after subtraction
-        if param_dict.get('use_complement_nodes'):
-            filtered_uuid_list = filter_nodes_uuids_in_solr(
-                param_dict.get('assay'),
-                param_dict.get('nodes'),
-                param_dict.get('filter_attribute')
+            client = boto3.client('cognito-identity', region_name=region)
+        except botocore.exceptions.NoRegionError as exc:
+            # AWS region is not configured
+            return api_error_response(
+                "Server AWS configuration is incorrect: {}".format(exc),
+                status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-            param_dict['nodes'] = filtered_uuid_list
-        node_group = self.get_object(uuid)
-        serializer = NodeGroupSerializer(node_group, data=param_dict,
-                                         partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            # 60 results is the highest allowed value
+            response = client.list_identity_pools(MaxResults=60)
+        except botocore.exceptions.NoCredentialsError as exc:
+            return api_error_response(
+                "Server AWS configuration is incorrect: {}".format(exc),
+                status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+        except botocore.exceptions.ClientError as exc:
+            return api_error_response(
+                "Error retrieving Cognito identity pools: {}".format(exc),
+                status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+        # retrieve Cognito settings
+        try:
+            identity_pool_name = settings.COGNITO_IDENTITY_POOL_NAME
+            developer_provider_name = settings.COGNITO_DEVELOPER_PROVIDER_NAME
+        except AttributeError as exc:
+            return api_error_response(
+                "Server AWS configuration is incorrect: {}".format(exc),
+                status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+        # retrieve Cognito identity pool ID using pool name
+        identity_pool_id = ''
+        for identity_pool in response['IdentityPools']:
+            if identity_pool['IdentityPoolName'] == identity_pool_name:
+                identity_pool_id = identity_pool['IdentityPoolId']
+
+        try:
+            token = client.get_open_id_token_for_developer_identity(
+                IdentityPoolId=identity_pool_id,
+                Logins={developer_provider_name: request.user.username}
+            )
+        except botocore.exceptions.ClientError as exc:
+            return api_error_response(
+                "Server AWS configuration is incorrect: {}".format(exc),
+                status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+        token["Region"] = region
+
+        return Response(token)

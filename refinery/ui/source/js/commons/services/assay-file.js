@@ -13,7 +13,7 @@ angular
           query: {
             method: 'GET'
           },
-          params: {
+          params: { // TODO: I believe params should be inside query?
             limit: 'limit',
             offset: 'offset'
           }

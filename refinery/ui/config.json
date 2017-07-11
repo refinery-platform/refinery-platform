@@ -34,6 +34,7 @@
       "node-relationship",
       "statistics",
       "tool-launch",
+      "user-file-browser",
       "workflows"
     ],
     "vendor": {
@@ -91,7 +92,7 @@
         "filesize/lib/filesize.min.js",
         "floatThead/dist/jquery.floatThead.min.js",
         "humanize/humanize.js",
-        "ng-file-upload/angular-file-upload.min.js",
+        "ng-file-upload/ng-file-upload.min.js",
         "jquery-file-upload/js/jquery.fileupload-angular.js",
         "jquery-file-upload/js/jquery.iframe-transport.js",
         "jquery-file-upload/js/vendor/jquery.ui.widget.js",
@@ -103,7 +104,8 @@
         "angular-ui-grid/ui-grid.min.js",
         "spark-md5/spark-md5.min.js",
         "spectrum/spectrum.js",
-        "tipsy/src/javascripts/jquery.tipsy.js"
+        "tipsy/src/javascripts/jquery.tipsy.js",
+        "aws-sdk-js/dist/aws-sdk.min.js"
       ],
       "maps": [
         "angular/angular.min.js.map",

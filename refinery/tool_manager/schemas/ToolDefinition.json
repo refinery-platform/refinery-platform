@@ -45,6 +45,7 @@
         "file_relationship",
         "output_files",
         "parameters",
+        "extra_directories",
         "container_input_path",
         "image_name"
       ],
@@ -76,6 +77,12 @@
         },
         "container_input_path": {
           "type": "string"
+        },
+        "extra_directories": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         },
         "image_name": {
           "type": "string"

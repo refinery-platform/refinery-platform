@@ -9,32 +9,33 @@
     '$compile',
     '$rootScope',
     '$templateCache',
-    'fileRelationshipService',
-    'selectedNodesService'
+    'activeNodeService',
+    'fileRelationshipService'
   ];
 
   function rpNodeSelectionPopover (
     $compile,
     $rootScope,
     $templateCache,
-    fileRelationshipService,
-    selectedNodesService
+    activeNodeService,
+    fileRelationshipService
     ) {
     return {
       restrict: 'AE',
       link: function (scope, element) {
         var fileService = fileRelationshipService;
-        var nodesService = selectedNodesService;
+        var nodesService = activeNodeService;
         // The script is in the data_set2.html template.
         var template = $templateCache.get('nodeselectionpopover.html');
         var popOverContent = $compile(template)(scope);
-        $rootScope.insidePopover = false;
         var options = {
           content: popOverContent,
-          placement: 'right',
+          placement: 'bottom',
           html: true,
           trigger: 'manual',
-          container: 'body'
+          container: '#assay-files-table',
+          class: 'node-selection-popover'
+
         };
         angular.element(element).popover(options);
 

@@ -1,65 +1,208 @@
+import StringIO
 import json
 import logging
-import uuid
-
-import mock
 import re
-import requests
-import StringIO
 import time
 from urlparse import urljoin
+import uuid
 
 from django.contrib.auth.models import User
-from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from django.core.files.uploadedfile import InMemoryUploadedFile
-from django.core.management import call_command, CommandError
+from django.core.management import CommandError, call_command
 from django.http import HttpResponseBadRequest
 from django.test import TestCase
 
-from django_docker_engine.docker_utils import DockerClientWrapper
-from pyvirtualdisplay import Display
+import mock
 from rest_framework.test import (APIRequestFactory, APITestCase,
                                  force_authenticate)
-from selenium import webdriver
 
-from core.models import (DataSet, ExtendedGroup, InvestigationLink,
-                         WorkflowEngine)
-
+from analysis_manager.tasks import run_analysis
+from core.models import (DataSet, ExtendedGroup, InvestigationLink, Project,
+                         Workflow, WorkflowEngine)
 from data_set_manager.models import Assay, Investigation, Node, Study
+from factory_boy.utils import create_dataset_with_necessary_models
 from file_store.models import FileStoreItem
 from galaxy_connector.models import Instance
-from selenium_testing.utils import MAX_WAIT, wait_until_class_visible
+from selenium_testing.utils import (MAX_WAIT, SeleniumTestBaseGeneric,
+                                    wait_until_class_visible)
 
-from .models import (FileRelationship, GalaxyParameter, InputFile,
-                     OutputFile, Parameter, Tool, ToolDefinition)
-from .utils import (create_tool_definition,
-                    FileTypeValidationError,
-                    validate_tool_annotation,
-                    validate_workflow_step_annotation,
-                    validate_tool_launch_configuration)
-from .views import (ToolDefinitionsViewSet, ToolsViewSet)
+from .models import (FileRelationship, GalaxyParameter, InputFile, OutputFile,
+                     Parameter, Tool, ToolDefinition)
+from .utils import (FileTypeValidationError, create_tool,
+                    create_tool_definition, validate_tool_annotation,
+                    validate_tool_launch_configuration,
+                    validate_workflow_step_annotation)
+from .views import ToolDefinitionsViewSet, ToolsViewSet
 
 logger = logging.getLogger(__name__)
 TEST_DATA_PATH = "tool_manager/test_data"
 
 
-class ToolDefinitionAPITests(APITestCase):
+class ToolManagerTestBase(TestCase):
     def setUp(self):
-        self.public_group_name = ExtendedGroup.objects.public_group().name
-        self.username = 'coffee_lover'
-        self.password = 'coffeecoffee'
-        self.user = User.objects.create_user(self.username, '',
-                                             self.password)
-
-        self.factory = APIRequestFactory()
-        self.view = ToolDefinitionsViewSet.as_view({'get': 'list'})
-
-        self.url_root = '/api/v2/tool_definitions/'
-
+        self.public_group = ExtendedGroup.objects.public_group()
         self.galaxy_instance = Instance.objects.create()
         self.workflow_engine = WorkflowEngine.objects.create(
             instance=self.galaxy_instance
         )
+        self.workflow_engine.set_manager_group(self.public_group.manager_group)
+
+        self.dataset = create_dataset_with_necessary_models()
+
+        self.mock_vis_annotations_reference = (
+            "tool_manager.management.commands.generate_tool_definitions"
+            ".get_visualization_annotations_list"
+        )
+
+        self.username = 'coffee_lover'
+        self.password = 'coffeecoffee'
+        self.user = User.objects.create_user(self.username, '', self.password)
+        self.user.save()
+        self.user2 = User.objects.create_user("coffee_enjoyer", '',
+                                              "coffeecoffee")
+        self.user2.save()
+
+        self.project = Project.objects.create(
+            name="Catch-All Project",
+            is_catch_all=True
+        )
+        self.project.set_owner(self.user)
+        self.user.profile.catch_all_project = self.project
+        self.user.profile.save()
+
+        self.factory = APIRequestFactory()
+        self.tools_view = ToolsViewSet.as_view(
+            {
+                'get': 'list',
+                'post': 'create'
+            }
+        )
+        self.tool_defs_view = ToolDefinitionsViewSet.as_view(
+            {
+                'get': 'list',
+                'post': 'create'
+            }
+        )
+
+        self.tools_url_root = '/api/v2/tools/'
+        self.tool_defs_url_root = '/api/v2/tool_definitions/'
+
+    def tearDown(self):
+        # Trigger the pre_delete signal so that datafiles are purged
+        FileStoreItem.objects.all().delete()
+
+    def create_valid_tool(self, tool_type, annotation_file_name=None):
+        if tool_type == ToolDefinition.WORKFLOW:
+            self.create_workflow_tool_definition(
+                annotation_file_name=annotation_file_name
+            )
+        elif tool_type == ToolDefinition.VISUALIZATION:
+            self.create_vis_tool_definition(
+                annotation_file_name=annotation_file_name
+            )
+        else:
+            raise RuntimeError("Please provide a valid tool_type")
+
+        # Create mock ToolLaunchConfiguration
+        self.post_data = {
+            "dataset_uuid": self.dataset.uuid,
+            "tool_definition_uuid": self.td.uuid,
+            "file_relationships":
+                "['http://www.example.com/sample.seg']",
+        }
+
+        self.post_request = self.factory.post(
+            self.tools_url_root,
+            data=self.post_data,
+            format="json"
+        )
+        force_authenticate(self.post_request, self.user)
+
+        # Mock the spinning up of containers
+        if tool_type == ToolDefinition.VISUALIZATION:
+            with mock.patch(
+                "django_docker_engine.docker_utils.DockerClientWrapper.run"
+            ) as run_mock:
+                self.post_response = self.tools_view(self.post_request)
+                self.assertTrue(run_mock.called)
+
+        # Mock the run_analysis task
+        elif tool_type == ToolDefinition.WORKFLOW:
+            with mock.patch.object(run_analysis, 'delay', side_effect=None):
+                self.post_response = self.tools_view(self.post_request)
+
+        self.tool = Tool.objects.get(tool_definition__uuid=self.td.uuid)
+        self.get_request = self.factory.get(self.tools_url_root)
+        force_authenticate(self.get_request, self.user)
+        self.get_response = self.tools_view(self.get_request)
+        self.tool_json = self.get_response.data[0]
+        self.delete_request = self.factory.delete(
+                urljoin(self.tools_url_root, self.tool_json['uuid']))
+        force_authenticate(self.delete_request, self.user)
+        self.delete_response = self.tools_view(self.delete_request)
+        self.put_request = self.factory.put(
+                self.tools_url_root,
+                data=self.tool_json,
+                format="json"
+        )
+        force_authenticate(self.put_request, self.user)
+        self.put_response = self.tools_view(self.put_request)
+        self.options_request = self.factory.options(
+                self.tools_url_root,
+                data=self.tool_json,
+                format="json"
+        )
+        force_authenticate(self.options_request, self.user)
+        self.options_response = self.tools_view(self.options_request)
+
+        return self.tool
+
+    def create_vis_tool_definition(self, annotation_file_name=None):
+        if annotation_file_name:
+            self.tool_annotation = "{}/visualizations/{}".format(
+                TEST_DATA_PATH,
+                annotation_file_name
+            )
+        else:
+            self.tool_annotation = "{}/visualizations/igv.json".format(
+                TEST_DATA_PATH
+            )
+        with open(self.tool_annotation) as f:
+            self.tool_annotation_json = json.loads(f.read())
+
+        # Don't pull down images in tests
+        with mock.patch(
+            "django_docker_engine.docker_utils.DockerClientWrapper.pull"
+        ) as pull_mock:
+            self.td = create_tool_definition(self.tool_annotation_json)
+            self.assertTrue(pull_mock.called)
+
+    def create_workflow_tool_definition(self, annotation_file_name=None):
+        if annotation_file_name:
+            self.tool_annotation = "{}/workflows/{}".format(
+                TEST_DATA_PATH,
+                annotation_file_name
+            )
+        else:
+            self.tool_annotation = "{}/workflows/LIST.json".format(
+                TEST_DATA_PATH
+            )
+
+        with open(self.tool_annotation) as f:
+            self.tool_annotation_data = json.loads(f.read())
+            self.tool_annotation_data["workflow_engine_uuid"] = (
+                self.workflow_engine.uuid
+            )
+            self.td = create_tool_definition(self.tool_annotation_data)
+
+    def test_create_valid_tool(self):
+        with self.assertRaises(RuntimeError):
+            self.create_valid_tool("Coffee is not a valid tool type")
+
+
+class ToolDefinitionAPITests(ToolManagerTestBase, APITestCase):
+    def setUp(self):
+        super(ToolDefinitionAPITests, self).setUp()
 
         # Make some sample data
         with open(
@@ -83,37 +226,37 @@ class ToolDefinitionAPITests(APITestCase):
             create_tool_definition(tool_annotation)
 
         # Make reusable requests & responses
-        self.get_request = self.factory.get(self.url_root)
+        self.get_request = self.factory.get(self.tool_defs_url_root)
         force_authenticate(self.get_request, self.user)
-        self.get_response = self.view(self.get_request)
+        self.get_response = self.tool_defs_view(self.get_request)
 
         self.tool_json = self.get_response.data[0]
 
         self.delete_request = self.factory.delete(
-            urljoin(self.url_root, self.tool_json['uuid']))
+            urljoin(self.tool_defs_url_root, self.tool_json['uuid']))
         force_authenticate(self.delete_request, self.user)
-        self.delete_response = self.view(self.delete_request)
+        self.delete_response = self.tool_defs_view(self.delete_request)
         self.put_request = self.factory.put(
-            self.url_root,
+            self.tool_defs_url_root,
             data=self.tool_json,
             format="json"
         )
         force_authenticate(self.put_request, self.user)
-        self.put_response = self.view(self.put_request)
+        self.put_response = self.tool_defs_view(self.put_request)
         self.post_request = self.factory.post(
-            self.url_root,
+            self.tool_defs_url_root,
             data=self.tool_json,
             format="json"
         )
         force_authenticate(self.post_request, self.user)
-        self.post_response = self.view(self.post_request)
+        self.post_response = self.tool_defs_view(self.post_request)
         self.options_request = self.factory.options(
-            self.url_root,
+            self.tool_defs_url_root,
             data=self.tool_json,
             format="json"
         )
         force_authenticate(self.options_request, self.user)
-        self.options_response = self.view(self.options_request)
+        self.options_response = self.tool_defs_view(self.options_request)
 
     def test_tool_definitions_exist(self):
         self.assertEqual(ToolDefinition.objects.count(), 4)
@@ -134,8 +277,8 @@ class ToolDefinitionAPITests(APITestCase):
         self.assertIsNotNone(self.get_response)
 
     def test_get_request_no_auth(self):
-        self.get_request = self.factory.get(self.url_root)
-        self.get_response = self.view(self.get_request)
+        self.get_request = self.factory.get(self.tool_defs_url_root)
+        self.get_response = self.tool_defs_view(self.get_request)
         self.assertEqual(self.get_response.status_code, 403)
 
     def test_unallowed_http_verbs(self):
@@ -163,17 +306,7 @@ class ToolDefinitionAPITests(APITestCase):
                     self.assertNotIn("galaxy_workflow_step", parameter.keys())
 
 
-class ToolDefinitionGenerationTests(TestCase):
-    def setUp(self):
-        self.mock_vis_annotations_reference = (
-            "tool_manager.management.commands.generate_tool_definitions"
-            ".get_visualization_annotations_list"
-        )
-        self.galaxy_instance = Instance.objects.create()
-        self.workflow_engine = WorkflowEngine.objects.create(
-            instance=self.galaxy_instance
-        )
-
+class ToolDefinitionGenerationTests(ToolManagerTestBase):
     def test_tool_definition_model_str(self):
         with open("{}/visualizations/igv.json".format(TEST_DATA_PATH)) as f:
             tool_annotation = [json.loads(f.read())]
@@ -269,18 +402,17 @@ class ToolDefinitionGenerationTests(TestCase):
             )
 
     def test_list_visualization_tool_def_generation(self):
-        with open("{}/visualizations/igv.json".format(TEST_DATA_PATH)) as f:
-            visualization_annotation = json.loads(f.read())
-            create_tool_definition(visualization_annotation)
+        self.create_vis_tool_definition()
 
-            self.assertEqual(ToolDefinition.objects.count(), 1)
-            td = ToolDefinition.objects.get(
-                name=visualization_annotation["name"]
-            )
-            self.assertEqual(td.output_files.count(), 0)
-            self.assertEqual(td.parameters.count(), 0)
-            self.assertEqual(td.file_relationship.file_relationship.count(), 0)
-            self.assertEqual(td.file_relationship.input_files.count(), 1)
+        self.assertEqual(ToolDefinition.objects.count(), 1)
+
+        self.assertEqual(self.td.output_files.count(), 0)
+        self.assertEqual(self.td.parameters.count(), 1)
+        self.assertEqual(
+            self.td.file_relationship.file_relationship.count(),
+            0
+        )
+        self.assertEqual(self.td.file_relationship.input_files.count(), 1)
 
     def test_list_workflow_tool_def_validation(self):
         with open("{}/workflows/LIST.json".format(TEST_DATA_PATH)) as f:
@@ -290,48 +422,47 @@ class ToolDefinitionGenerationTests(TestCase):
             )
 
     def test_list_workflow_tool_def_generation(self):
-        with open("{}/workflows/LIST.json".format(TEST_DATA_PATH)) as f:
-            workflow_annotation = json.loads(f.read())
-            workflow_annotation[
-                "workflow_engine_uuid"
-            ] = self.workflow_engine.uuid
-            create_tool_definition(workflow_annotation)
+        self.create_workflow_tool_definition()
 
-            self.assertEqual(ToolDefinition.objects.count(), 1)
-            td = ToolDefinition.objects.get(name=workflow_annotation["name"])
-            self.assertEqual(td.output_files.count(), 4)
-            self.assertEqual(td.parameters.count(), 7)
-            self.assertEqual(td.file_relationship.file_relationship.count(), 0)
-            self.assertEqual(td.file_relationship.input_files.count(), 1)
-            self.assertIsNotNone(td.workflow_engine)
+        self.assertEqual(ToolDefinition.objects.count(), 1)
+
+        self.assertEqual(self.td.output_files.count(), 4)
+        self.assertEqual(self.td.parameters.count(), 7)
+        self.assertEqual(
+            self.td.file_relationship.file_relationship.count(),
+            0
+        )
+        self.assertEqual(self.td.file_relationship.input_files.count(), 1)
+        self.assertIsNotNone(self.td.workflow)
 
     def test_list_pair_workflow_tool_def_validation(self):
         with open("{}/workflows/LIST:PAIR.json".format(TEST_DATA_PATH)) as f:
             workflow_annotation = json.loads(f.read())
-            self.assertIsNone(
-                validate_tool_annotation(workflow_annotation)
-            )
+            self.assertIsNone(validate_tool_annotation(workflow_annotation))
 
     def test_list_pair_workflow_tool_def_generation(self):
-        with open("{}/workflows/LIST:PAIR.json".format(TEST_DATA_PATH)) as f:
-            workflow_annotation = json.loads(f.read())
-            workflow_annotation[
-                "workflow_engine_uuid"
-            ] = self.workflow_engine.uuid
-            create_tool_definition(workflow_annotation)
+        self.create_workflow_tool_definition(
+            annotation_file_name="LIST:PAIR.json"
+        )
 
-            self.assertEqual(ToolDefinition.objects.count(), 1)
-            td = ToolDefinition.objects.get(name=workflow_annotation["name"])
-            self.assertEqual(td.output_files.count(), 1)
-            self.assertEqual(td.parameters.count(), 5)
-            self.assertEqual(td.file_relationship.file_relationship.count(), 1)
-            second_nested_file_relationship = \
-                td.file_relationship.file_relationship.all()[0]
-            self.assertEqual(
-                second_nested_file_relationship.file_relationship.count(), 0)
-            self.assertEqual(
-                second_nested_file_relationship.input_files.count(), 2)
-            self.assertIsNotNone(td.workflow_engine)
+        self.assertEqual(ToolDefinition.objects.count(), 1)
+        self.assertEqual(self.td.output_files.count(), 1)
+        self.assertEqual(self.td.parameters.count(), 5)
+        self.assertEqual(
+            self.td.file_relationship.file_relationship.count(),
+            1
+        )
+        second_nested_file_relationship = \
+            self.td.file_relationship.file_relationship.all()[0]
+        self.assertEqual(
+            second_nested_file_relationship.file_relationship.count(),
+            0
+        )
+        self.assertEqual(
+            second_nested_file_relationship.input_files.count(),
+            2
+        )
+        self.assertIsNotNone(self.td.workflow)
 
     def test_list_list_pair_workflow_tool_def_validation(self):
         with open(
@@ -343,89 +474,134 @@ class ToolDefinitionGenerationTests(TestCase):
             )
 
     def test_list_list_pair_workflow_tool_def_generation(self):
+        self.create_workflow_tool_definition(
+            annotation_file_name="LIST:LIST:PAIR.json"
+        )
+        self.assertEqual(ToolDefinition.objects.count(), 1)
+        self.assertEqual(self.td.output_files.count(), 1)
+        self.assertEqual(self.td.parameters.count(), 3)
+        self.assertEqual(
+            self.td.file_relationship.file_relationship.count(),
+            1
+        )
+        second_nested_file_relationship = \
+            self.td.file_relationship.file_relationship.all()[0]
+        self.assertEqual(
+            second_nested_file_relationship.file_relationship.count(),
+            1
+        )
+        third_nested_file_relationship = \
+            second_nested_file_relationship.file_relationship.all()[0]
+        self.assertEqual(
+            third_nested_file_relationship.file_relationship.count(),
+            0
+        )
+        self.assertEqual(
+            third_nested_file_relationship.input_files.count(),
+            2
+        )
+        self.assertIsNotNone(self.td.workflow)
+
+    def test_list_pair_list_workflow_tool_def_validation(self):
         with open(
-            "{}/workflows/LIST:LIST:PAIR.json".format(TEST_DATA_PATH)
+                "{}/workflows/LIST:PAIR:LIST.json".format(TEST_DATA_PATH)
         ) as f:
             workflow_annotation = json.loads(f.read())
-            workflow_annotation[
-                "workflow_engine_uuid"
-            ] = self.workflow_engine.uuid
-            create_tool_definition(workflow_annotation)
+            self.assertIsNone(
+                validate_tool_annotation(workflow_annotation)
+            )
 
-            self.assertEqual(ToolDefinition.objects.count(), 1)
-            td = ToolDefinition.objects.get(name=workflow_annotation["name"])
-            self.assertEqual(td.output_files.count(), 1)
-            self.assertEqual(td.parameters.count(), 3)
-            self.assertEqual(td.file_relationship.file_relationship.count(), 1)
-            second_nested_file_relationship = \
-                td.file_relationship.file_relationship.all()[0]
-            self.assertEqual(
-                second_nested_file_relationship.file_relationship.count(), 1)
-            third_nested_file_relationship = \
-                second_nested_file_relationship.file_relationship.all()[0]
-            self.assertEqual(
-                third_nested_file_relationship.file_relationship.count(), 0)
-            self.assertEqual(
-                third_nested_file_relationship.input_files.count(), 2)
-            self.assertIsNotNone(td.workflow_engine)
+    def test_list_pair_list_workflow_tool_def_generation(self):
+        self.create_workflow_tool_definition(
+            annotation_file_name="LIST:PAIR:LIST.json"
+        )
+
+        self.assertEqual(ToolDefinition.objects.count(), 1)
+        self.assertEqual(self.td.output_files.count(), 1)
+        self.assertEqual(self.td.parameters.count(), 3)
+        self.assertEqual(
+            self.td.file_relationship.file_relationship.count(),
+            1
+        )
+        self.assertEqual(
+            self.td.file_relationship.value_type,
+            FileRelationship.LIST
+        )
+        second_nested_file_relationship = \
+            self.td.file_relationship.file_relationship.all()[0]
+        self.assertEqual(
+            second_nested_file_relationship.value_type,
+            FileRelationship.PAIR
+        )
+        self.assertEqual(
+            second_nested_file_relationship.file_relationship.count(), 1)
+        third_nested_file_relationship = \
+            second_nested_file_relationship.file_relationship.all()[0]
+        self.assertEqual(
+            third_nested_file_relationship.value_type,
+            FileRelationship.LIST
+        )
+        self.assertEqual(
+            third_nested_file_relationship.file_relationship.count(),
+            0
+        )
+        self.assertEqual(
+            third_nested_file_relationship.input_files.count(),
+            1
+        )
+        self.assertIsNotNone(self.td.workflow)
 
     def test_list_workflow_related_object_deletion(self):
-        with open("{}/workflows/LIST.json".format(TEST_DATA_PATH)) as f:
-            workflow_annotation = json.loads(f.read())
-            workflow_annotation[
-                "workflow_engine_uuid"
-            ] = self.workflow_engine.uuid
-            create_tool_definition(workflow_annotation)
+        self.create_workflow_tool_definition()
+        self.td.delete()
 
-            td = ToolDefinition.objects.get(name=workflow_annotation["name"])
-            td.delete()
-
-            self.assertEqual(ToolDefinition.objects.count(), 0)
-            self.assertEqual(FileRelationship.objects.count(), 0)
-            self.assertEqual(GalaxyParameter.objects.count(), 0)
-            self.assertEqual(Parameter.objects.count(), 0)
-            self.assertEqual(InputFile.objects.count(), 0)
-            self.assertEqual(OutputFile.objects.count(), 0)
+        self.assertEqual(ToolDefinition.objects.count(), 0)
+        self.assertEqual(FileRelationship.objects.count(), 0)
+        self.assertEqual(GalaxyParameter.objects.count(), 0)
+        self.assertEqual(Parameter.objects.count(), 0)
+        self.assertEqual(InputFile.objects.count(), 0)
+        self.assertEqual(OutputFile.objects.count(), 0)
 
     def test_list_pair_workflow_related_object_deletion(self):
-        with open("{}/workflows/LIST:PAIR.json".format(TEST_DATA_PATH)) as f:
-            workflow_annotation = json.loads(f.read())
-            workflow_annotation[
-                "workflow_engine_uuid"
-            ] = self.workflow_engine.uuid
-            create_tool_definition(workflow_annotation)
+        self.create_workflow_tool_definition(
+            annotation_file_name="LIST:PAIR.json"
+        )
+        self.td.delete()
 
-            td = ToolDefinition.objects.get(name=workflow_annotation["name"])
-            td.delete()
-
-            self.assertEqual(ToolDefinition.objects.count(), 0)
-            self.assertEqual(FileRelationship.objects.count(), 0)
-            self.assertEqual(GalaxyParameter.objects.count(), 0)
-            self.assertEqual(Parameter.objects.count(), 0)
-            self.assertEqual(InputFile.objects.count(), 0)
-            self.assertEqual(OutputFile.objects.count(), 0)
+        self.assertEqual(ToolDefinition.objects.count(), 0)
+        self.assertEqual(FileRelationship.objects.count(), 0)
+        self.assertEqual(GalaxyParameter.objects.count(), 0)
+        self.assertEqual(Parameter.objects.count(), 0)
+        self.assertEqual(InputFile.objects.count(), 0)
+        self.assertEqual(OutputFile.objects.count(), 0)
 
     def test_list_list_pair_workflow_related_object_deletion(self):
-        with open(
-            "{}/workflows/LIST:LIST:PAIR.json".format(TEST_DATA_PATH)
-        ) as f:
-            workflow_annotation = json.loads(f.read())
-            workflow_annotation[
-                "workflow_engine_uuid"
-            ] = self.workflow_engine.uuid
-            create_tool_definition(workflow_annotation)
+        self.create_workflow_tool_definition(
+            annotation_file_name="LIST:LIST:PAIR.json"
+        )
+        self.td.delete()
 
-            td = ToolDefinition.objects.get(name=workflow_annotation["name"])
-            td.delete()
+        self.assertEqual(ToolDefinition.objects.count(), 0)
+        self.assertEqual(FileRelationship.objects.count(), 0)
+        self.assertEqual(GalaxyParameter.objects.count(), 0)
+        self.assertEqual(Parameter.objects.count(), 0)
+        self.assertEqual(InputFile.objects.count(), 0)
+        self.assertEqual(OutputFile.objects.count(), 0)
 
-            self.assertEqual(ToolDefinition.objects.count(), 0)
-            self.assertEqual(FileRelationship.objects.count(), 0)
-            self.assertEqual(GalaxyParameter.objects.count(), 0)
-            self.assertEqual(Parameter.objects.count(), 0)
-            self.assertEqual(InputFile.objects.count(), 0)
-            self.assertEqual(OutputFile.objects.count(), 0)
+    def test_list_pair_list_workflow_related_object_deletion(self):
+        self.create_workflow_tool_definition(
+            annotation_file_name="LIST:PAIR:LIST.json"
+        )
+        self.td.delete()
 
-    def test_deletion_of_tooldefinitions_objects_only(self):
+        self.assertEqual(ToolDefinition.objects.count(), 0)
+        self.assertEqual(FileRelationship.objects.count(), 0)
+        self.assertEqual(GalaxyParameter.objects.count(), 0)
+        self.assertEqual(Parameter.objects.count(), 0)
+        self.assertEqual(InputFile.objects.count(), 0)
+        self.assertEqual(OutputFile.objects.count(), 0)
+
+    def test_deletion_of_a_respective_tooldefinitions_objects_only(self):
         with open(
             "{}/workflows/LIST:LIST:PAIR.json".format(TEST_DATA_PATH)
         ) as f:
@@ -597,7 +773,7 @@ class ToolDefinitionGenerationTests(TestCase):
                 self.assertEqual(ToolDefinition.objects.count(), 4)
                 self.assertEqual(FileRelationship.objects.count(), 7)
                 self.assertEqual(GalaxyParameter.objects.count(), 9)
-                self.assertEqual(Parameter.objects.count(), 9)
+                self.assertEqual(Parameter.objects.count(), 10)
                 self.assertEqual(InputFile.objects.count(), 6)
                 self.assertEqual(OutputFile.objects.count(), 3)
 
@@ -637,257 +813,77 @@ class ToolDefinitionGenerationTests(TestCase):
             )
             self.assertEqual(ToolDefinition.objects.count(), 0)
 
+    def test_visualization_annotation_extra_dirs_valid(self):
+        with open(
+            "{}/visualizations/LIST_visualization_good_extra_directories.json"
+            .format(TEST_DATA_PATH)
+        ) as f:
+            visualization_annotation = json.loads(f.read())
+            create_tool_definition(visualization_annotation)
+            self.assertEqual(ToolDefinition.objects.count(), 1)
 
-class ToolAPITests(APITestCase):
-    def setUp(self):
-        self.public_group_name = ExtendedGroup.objects.public_group().name
-        self.username = 'coffee_lover'
-        self.password = 'coffeecoffee'
-        self.user = User.objects.create_user(self.username, '',
-                                             self.password)
-
-        self.factory = APIRequestFactory()
-        self.view = ToolsViewSet.as_view(
-            {
-                'get': 'list',
-                'post': 'create'
-            }
-        )
-
-        self.url_root = '/api/v2/tools/'
-
-        # Make some sample data
-        with open("{}/visualizations/igv.json".format(TEST_DATA_PATH)) as f:
-            self.td = create_tool_definition(json.loads(f.read()))
-
-        # Create mock ToolLaunchConfiguration
-        self.post_data = {
-            "tool_definition_uuid": self.td.uuid,
-            "file_relationships":
-                "['http://www.example.com/tool_manager/test_data/sample.seg']",
-        }
-
-        self.post_request = self.factory.post(
-            self.url_root,
-            data=self.post_data,
-            format="json"
-        )
-        force_authenticate(self.post_request, self.user)
-        self.post_response = self.view(self.post_request)
-
-        self.tool_launch = Tool.objects.get(
-            tool_definition__uuid=self.td.uuid
-        )
-
-        self.get_request = self.factory.get(self.url_root)
-        force_authenticate(self.get_request, self.user)
-        self.get_response = self.view(self.get_request)
-
-        self.tool_json = self.get_response.data[0]
-
-        self.delete_request = self.factory.delete(
-            urljoin(self.url_root, self.tool_json['uuid']))
-        force_authenticate(self.delete_request, self.user)
-        self.delete_response = self.view(self.delete_request)
-        self.put_request = self.factory.put(
-            self.url_root,
-            data=self.tool_json,
-            format="json"
-        )
-        force_authenticate(self.put_request, self.user)
-        self.put_response = self.view(self.put_request)
-        self.options_request = self.factory.options(
-            self.url_root,
-            data=self.tool_json,
-            format="json"
-        )
-        force_authenticate(self.options_request, self.user)
-        self.options_response = self.view(self.options_request)
-
-    def tearDown(self):
-        # Purge Docker Containers that we've spun up
-        DockerClientWrapper().purge_by_label(self.tool_launch.uuid)
-
-    def test_tools_exist(self):
-        self.assertEqual(Tool.objects.count(), 1)
-        self.assertEqual(
-            Tool.objects.filter(
-                tool_definition__tool_type=ToolDefinition.VISUALIZATION
-            ).count(),
-            1
-        )
-
-    def test_get_request_authenticated(self):
-        self.assertIsNotNone(self.get_response)
-
-    def test_get_request_no_auth(self):
-        self.get_request = self.factory.get(self.url_root)
-        self.get_response = self.view(self.get_request)
-        self.assertEqual(self.get_response.status_code, 403)
-
-    def test_unallowed_http_verbs(self):
-        self.assertEqual(
-            self.put_response.data['detail'],
-            'Method "PUT" not allowed.'
-        )
-        self.assertEqual(
-            self.options_response.data['detail'],
-            'Method "OPTIONS" not allowed.'
-        )
-        self.assertEqual(
-            self.delete_response.data['detail'],
-            'Method "DELETE" not allowed.'
-        )
-
-    def test_TLC_workflow_no_output_files(self):
-        self.td.delete()
-        galaxy_instance = Instance.objects.create()
-        workflow_engine = WorkflowEngine.objects.create(
-            instance=galaxy_instance
-        )
-        with open("{}/workflows/LIST.json".format(TEST_DATA_PATH)) as f:
-            workflow_annotation = json.loads(f.read())
-            workflow_annotation[
-                "workflow_engine_uuid"
-            ] = workflow_engine.uuid
-            create_tool_definition(workflow_annotation)
-
-            td = ToolDefinition.objects.get(name=workflow_annotation["name"])
-
-        tool_launch_configuration = {
-            "tool_definition_uuid": td.uuid,
-            "file_relationships": str(
-                [
-                    [
-                        ("coffee", "coffee"),
-                        ("coffee", "coffee"),
-                        ("coffee", "coffee"),
-                        ("coffee", "coffee")
-                    ]
-                ]
+    def test_visualization_annotation_extra_dirs_invalid(self):
+        with open("{}/visualizations/"
+                  "LIST_visualization_bad_extra_directories_structure.json"
+                  .format(TEST_DATA_PATH)) as f:
+            visualization_annotation = json.loads(f.read())
+            self.assertRaises(
+                RuntimeError,
+                validate_tool_annotation,
+                visualization_annotation
             )
-        }
-        self.post_request = self.factory.post(
-            self.url_root,
-            data=tool_launch_configuration,
-            format="json"
-        )
-        force_authenticate(self.post_request, self.user)
-        self.post_response = self.view(self.post_request)
+            self.assertEqual(ToolDefinition.objects.count(), 0)
 
-        self.assertIsInstance(self.post_response, HttpResponseBadRequest)
+    def test_visualization_annotation_extra_dirs_missing(self):
+        with open("{}/visualizations/"
+                  "LIST_visualization_missing_extra_directories.json"
+                  .format(TEST_DATA_PATH)) as f:
+            visualization_annotation = json.loads(f.read())
+            self.assertRaises(
+                RuntimeError,
+                validate_tool_annotation,
+                visualization_annotation
+            )
+            self.assertEqual(ToolDefinition.objects.count(), 0)
+
+
+class ToolDefinitionTests(ToolManagerTestBase):
+    # Some members in assertions are truncated if they are too long, but we
+    # want to test them in their entirety
+    maxDiff = None
+
+    def test_get_annotation(self):
+        self.create_vis_tool_definition(annotation_file_name="igv.json")
+        self.assertEqual(self.td.get_annotation(),
+                         self.tool_annotation_json["annotation"])
+
+    def test_get_extra_directories_vis_tool_def(self):
+        self.create_vis_tool_definition()
         self.assertEqual(
-            self.post_response.content,
-            '`output_files` are required for Workflow Tools'
+            self.td.get_extra_directories(),
+            ["/refinery-data"]
         )
-        self.assertEqual(Tool.objects.count(), 0)
 
-    def test_invalid_TLC_against_schema(self):
+    def test_get_extra_directories_workflow_tool_def(self):
+        self.create_workflow_tool_definition()
+        with self.assertRaises(NotImplementedError):
+            self.td.get_extra_directories()
+
+    def test_related_workflow_inactive_after_deletion(self):
+        self.create_workflow_tool_definition()
+        self.assertTrue(self.td.workflow.is_active)
         self.td.delete()
-        galaxy_instance = Instance.objects.create()
-        workflow_engine = WorkflowEngine.objects.create(
-            instance=galaxy_instance
-        )
-        with open("{}/workflows/LIST.json".format(TEST_DATA_PATH)) as f:
-            workflow_annotation = json.loads(f.read())
-            workflow_annotation[
-                "workflow_engine_uuid"
-            ] = workflow_engine.uuid
-            create_tool_definition(workflow_annotation)
-
-            td = ToolDefinition.objects.get(name=workflow_annotation["name"])
-
-        tool_launch_configuration = {
-            "tool_definition_uuid": td.uuid,
-            "file_relationships": {
-                "invalid":
-                    [
-                        [
-                            ("coffee", "coffee"),
-                            ("coffee", "coffee"),
-                            ("coffee", "coffee"),
-                            ("coffee", "coffee")
-                        ]
-                    ]
-            }
-        }
-        self.post_request = self.factory.post(
-            self.url_root,
-            data=tool_launch_configuration,
-            format="json"
-        )
-        force_authenticate(self.post_request, self.user)
-        self.post_response = self.view(self.post_request)
-
-        self.assertIsInstance(self.post_response, HttpResponseBadRequest)
-        self.assertIn(
-            'Tool launch configuration is not properly configured',
-            self.post_response.content
-        )
-        self.assertEqual(Tool.objects.count(), 0)
-
-
-class ToolTests(StaticLiveServerTestCase):
-    # Don't delete data migration data after test runs: http://bit.ly/2lAYqVJ
-    serialized_rollback = True
-
-    def setUp(self):
-        self.display = Display(visible=0, size=(1366, 768))
-        self.display.start()
-        self.browser = webdriver.Firefox()
-        self.browser.maximize_window()
-
-        self.mock_vis_annotations_reference = (
-            "tool_manager.management.commands.generate_tool_definitions"
-            ".get_visualization_annotations_list"
+        self.assertFalse(
+            Workflow.objects.all()[0].is_active
         )
 
-        self.username = 'coffee_lover'
-        self.password = 'coffeecoffee'
-        self.user = User.objects.create_user(self.username, '', self.password)
-        self.factory = APIRequestFactory()
-        self.view = ToolsViewSet.as_view({'post': 'create'})
-        self.url_root = '/api/v2/tools'
 
-    def tearDown(self):
-        # NOTE: quit() destroys ANY currently running webdriver instances.
-        # This could become an issue if tests are ever run in parallel.
-        self.browser.quit()
-        self.display.stop()
-        for tool in Tool.objects.all():
-            # Purge Docker Containers that we've spun up
-            DockerClientWrapper().purge_by_label(tool.uuid)
-
-        # Trigger the pre_delete signal so that datafiles are purged
-        FileStoreItem.objects.all().delete()
-
+class ToolTests(ToolManagerTestBase):
     def test_tool_model_str(self):
-        with open("{}/visualizations/igv.json".format(TEST_DATA_PATH)) as f:
-            tool_annotation = [json.loads(f.read())]
-
-        with mock.patch(
-                self.mock_vis_annotations_reference,
-                return_value=tool_annotation
-        ) as mocked_method:
-            call_command("generate_tool_definitions", visualizations=True)
-
-            self.assertTrue(mocked_method.called)
-
-        td = ToolDefinition.objects.all()[0]
-        post_data = {
-            "tool_definition_uuid": td.uuid,
-            "file_relationships": "['www.coffee.com/cool_file.txt']"
-        }
-        post_request = self.factory.post(
-            self.url_root,
-            data=post_data,
-            format="json"
-        )
-        force_authenticate(post_request, self.user)
-        self.post_response = self.view(post_request)
+        self.create_valid_tool(ToolDefinition.VISUALIZATION)
 
         tool = Tool.objects.get(
-            tool_definition__uuid=td.uuid
+            tool_definition__uuid=self.td.uuid
         )
         self.assertEqual(
             tool.__str__(),
@@ -896,20 +892,17 @@ class ToolTests(StaticLiveServerTestCase):
             )
         )
 
-    def test_node_uuids_get_populated_with_urls(self):
-        with open("{}/visualizations/igv.json".format(TEST_DATA_PATH)) as f:
-            tool_annotation = [json.loads(f.read())]
-
+    def test_tool_container_removed_on_deletion(self):
+        self.create_valid_tool(ToolDefinition.VISUALIZATION)
         with mock.patch(
-                self.mock_vis_annotations_reference,
-                return_value=tool_annotation
-        ) as mocked_method:
-            call_command("generate_tool_definitions", visualizations=True)
+            "django_docker_engine.docker_utils.DockerClientWrapper"
+            ".purge_by_label"
+        ) as purge_mock:
+            Tool.objects.get(tool_definition__uuid=self.td.uuid).delete()
+            self.assertTrue(purge_mock.called)
 
-            self.assertTrue(mocked_method.called)
-            self.assertEqual(ToolDefinition.objects.count(), 1)
-
-        td = ToolDefinition.objects.all()[0]
+    def test_node_uuids_get_populated_with_urls(self):
+        self.create_vis_tool_definition()
 
         dataset = DataSet.objects.create(name="coffee dataset")
         investigation = Investigation.objects.create()
@@ -959,25 +952,32 @@ class ToolTests(StaticLiveServerTestCase):
         )
 
         post_data = {
-            "tool_definition_uuid": td.uuid,
-            "file_relationships": "['{}', '{}']".format(
+            "dataset_uuid": dataset.uuid,
+            "tool_definition_uuid": self.td.uuid,
+            "file_relationships": "[{}, {}]".format(
                 node_a.uuid,
                 node_b.uuid
             )
         }
         post_request = self.factory.post(
-            self.url_root,
+            self.tools_url_root,
             data=post_data,
             format="json"
         )
         force_authenticate(post_request, self.user)
-        self.post_response = self.view(post_request)
+
+        # We don't want to spin up containers for unit testing
+        with mock.patch(
+                "django_docker_engine.docker_utils.DockerClientWrapper.run"
+        ) as run_mock:
+            self.post_response = self.tools_view(post_request)
+            self.assertTrue(run_mock.called)
 
         tool_launch = Tool.objects.get(
-            tool_definition__uuid=td.uuid
+            tool_definition__uuid=self.td.uuid
         )
 
-        file_relationships = eval(tool_launch.file_relationships)
+        file_relationships = tool_launch.get_file_relationships()
 
         # Build regex and assert that the file_relationships structure is
         # populated from the FileStoreItem's datafiles that we've associated
@@ -986,54 +986,262 @@ class ToolTests(StaticLiveServerTestCase):
         for url in file_relationships:
             self.assertIsNotNone(regex.search(url))
 
-    def test_visualization_container_launch_and_access_hello_world(self):
-        with open(
-            "{}/visualizations/hello_world.json".format(TEST_DATA_PATH)
-        ) as f:
-            tool_annotation = [json.loads(f.read())]
+    def test_get_tool_launch_config(self):
+        self.create_valid_tool(ToolDefinition.VISUALIZATION)
+        self.assertEqual(
+            self.tool.get_tool_launch_config(),
+            {
+                'node_uuid_list': [],
+                "dataset_uuid": self.dataset.uuid,
+                "tool_definition_uuid": self.td.uuid,
+                "file_relationships": "['http://www.example.com/sample.seg']",
+            }
+        )
 
-        with mock.patch(
-            self.mock_vis_annotations_reference,
-            return_value=tool_annotation
-        ) as mocked_method:
+    def test_get_file_relationships(self):
+        self.create_valid_tool(ToolDefinition.WORKFLOW)
+        self.assertEqual(
+            self.tool.get_file_relationships(),
+            ['http://www.example.com/sample.seg']
+        )
 
-            call_command("generate_tool_definitions", visualizations=True)
+    def test_launch_workflow_wrong_tool_type(self):
+        self.create_valid_tool(ToolDefinition.VISUALIZATION)
+        with self.assertRaises(NotImplementedError):
+            self.tool._launch_workflow()
 
-            self.assertTrue(mocked_method.called)
-            self.assertEqual(ToolDefinition.objects.count(), 1)
-            self.td = ToolDefinition.objects.all()[0]
-        self.post_data = {
+    def test_set_analysis_wrong_type(self):
+        self.create_valid_tool(ToolDefinition.WORKFLOW)
+        with self.assertRaises(RuntimeError):
+            self.tool.set_analysis(str(uuid.uuid4()))
+
+
+class ToolAPITests(APITestCase, ToolManagerTestBase):
+    def test_tools_exist(self):
+        self.create_valid_tool(ToolDefinition.VISUALIZATION)
+        self.assertEqual(Tool.objects.count(), 1)
+        self.assertEqual(
+            Tool.objects.filter(
+                tool_definition__tool_type=ToolDefinition.VISUALIZATION
+            ).count(),
+            1
+        )
+
+    def test_get_request_authenticated(self):
+        self.create_valid_tool(ToolDefinition.VISUALIZATION)
+        self.assertIsNotNone(self.get_response)
+
+    def test_get_request_no_auth(self):
+        self.create_valid_tool(ToolDefinition.WORKFLOW)
+        self.get_request = self.factory.get(self.tools_url_root)
+        self.get_response = self.tools_view(self.get_request)
+        self.assertEqual(self.get_response.status_code, 403)
+
+    def test_get_request_tools_owned_by_user(self):
+        # Creates a valid Tool for self.user
+        self.create_valid_tool(ToolDefinition.VISUALIZATION)
+
+        # Try to GET the aforementioned Tool, and assert that another user
+        # can't do so
+        force_authenticate(self.get_request, self.user2)
+        self.get_response = self.tools_view(self.get_request)
+        self.assertEqual(len(self.get_response.data), 0)
+
+    def test_unallowed_http_verbs(self):
+        self.create_valid_tool(ToolDefinition.WORKFLOW)
+        self.assertEqual(
+            self.put_response.data['detail'],
+            'Method "PUT" not allowed.'
+        )
+        self.assertEqual(
+            self.options_response.data['detail'],
+            'Method "OPTIONS" not allowed.'
+        )
+        self.assertEqual(
+            self.delete_response.data['detail'],
+            'Method "DELETE" not allowed.'
+        )
+
+    def test_invalid_TLC_against_schema(self):
+        self.create_vis_tool_definition()
+
+        tool_launch_configuration = {
             "tool_definition_uuid": self.td.uuid,
-            "file_relationships":
-                "['http://www.example.com/tool_manager/test_data/sample.seg']",
+            "file_relationships": {
+                "invalid":
+                    [
+                        [
+                            ("coffee", "coffee"),
+                            ("coffee", "coffee"),
+                            ("coffee", "coffee"),
+                            ("coffee", "coffee")
+                        ]
+                    ]
+            }
+        }
+        self.post_request = self.factory.post(
+            self.tools_url_root,
+            data=tool_launch_configuration,
+            format="json"
+        )
+        force_authenticate(self.post_request, self.user)
+        self.post_response = self.tools_view(self.post_request)
 
+        self.assertIsInstance(self.post_response, HttpResponseBadRequest)
+        self.assertIn(
+            'Tool launch configuration is not properly configured',
+            self.post_response.content
+        )
+        self.assertEqual(Tool.objects.count(), 0)
+
+    def test_bad_POST_transaction_rollback(self):
+        self.create_workflow_tool_definition()
+        post_data = {
+            "dataset_uuid": self.dataset.uuid,
+            "tool_definition_uuid": self.td.uuid,
+            "file_relationships": str(
+                [
+                    "www.example.com/cool_file.txt",
+                    (
+                        "www.example.com/cool_file.txt",
+                        "www.example.com/cool_file.txt"
+                    )
+                ]
+            )
         }
 
+        post_request = self.factory.post(
+            self.tools_url_root,
+            data=post_data,
+            format="json"
+        )
+        force_authenticate(post_request, self.user)
+        self.post_response = self.tools_view(post_request)
+
+        self.assertIsInstance(self.post_response, HttpResponseBadRequest)
+        self.assertEqual(Tool.objects.count(), 0)
+        self.assertIn("LIST/PAIR structure is not balanced",
+                      self.post_response.content)
+
+    def test_bad_extra_directories_path_with_rollback(self):
+        with open("{}/visualizations/"
+                  "LIST_visualization_bad_extra_directories_path.json"
+                  .format(TEST_DATA_PATH)) as f:
+            visualization_annotation = json.loads(f.read())
+            create_tool_definition(visualization_annotation)
+
+        td = ToolDefinition.objects.get(
+            name=visualization_annotation["name"]
+        )
+
+        tool_launch_configuration = {
+            "dataset_uuid": self.dataset.uuid,
+            "tool_definition_uuid": td.uuid,
+            "file_relationships": str(["www.example.com"])
+        }
         self.post_request = self.factory.post(
-            self.url_root,
+            self.tools_url_root,
+            data=tool_launch_configuration,
+            format="json"
+        )
+        force_authenticate(self.post_request, self.user)
+        self.post_response = self.tools_view(self.post_request)
+
+        self.assertIsInstance(self.post_response, HttpResponseBadRequest)
+        self.assertEqual(
+            self.post_response.content,
+            'Specified path: `not_an_absolute_path` is not absolute'
+        )
+        self.assertEqual(Tool.objects.count(), 0)
+
+    def test_good_extra_directories_path(self):
+        with open("{}/visualizations/"
+                  "LIST_visualization_good_extra_directories.json"
+                  .format(TEST_DATA_PATH)) as f:
+            visualization_annotation = json.loads(f.read())
+            create_tool_definition(visualization_annotation)
+
+        td = ToolDefinition.objects.get(
+            name=visualization_annotation["name"]
+        )
+
+        tool_launch_configuration = {
+            "dataset_uuid": self.dataset.uuid,
+            "tool_definition_uuid": td.uuid,
+            "file_relationships": str(["www.example.com"])
+        }
+        self.post_request = self.factory.post(
+            self.tools_url_root,
+            data=tool_launch_configuration,
+            format="json"
+        )
+        force_authenticate(self.post_request, self.user)
+        # We don't want to spin up containers for unit testing
+        with mock.patch(
+            "django_docker_engine.docker_utils.DockerClientWrapper.run"
+        ) as run_mock:
+            self.post_response = self.tools_view(self.post_request)
+            self.assertTrue(run_mock.called)
+
+        self.assertEqual(self.post_response.status_code, 200)
+        self.assertEqual(Tool.objects.count(), 1)
+
+
+class ToolLaunchTests(ToolManagerTestBase):
+    def test_transaction_rollback_bad_dataset_uuid(self):
+        self.create_vis_tool_definition()
+
+        self.post_data = {
+            "dataset_uuid": self.dataset.uuid,
+            "tool_definition_uuid": self.td.uuid,
+            "file_relationships": str(["www.example.com/cool_file.txt"])
+        }
+
+        self.dataset.delete()
+
+        self.post_request = self.factory.post(
+            self.tools_url_root,
             data=self.post_data,
             format="json"
         )
         force_authenticate(self.post_request, self.user)
-        self.post_response = self.view(self.post_request)
+        self.post_response = self.tools_view(self.post_request)
+        self.assertEqual(type(self.post_response), HttpResponseBadRequest)
+        self.assertEqual(Tool.objects.count(), 0)
+        self.assertIn("DataSet matching query does not exist.",
+                      self.post_response.content)
 
-        tool_launch = Tool.objects.get(
-            tool_definition__uuid=self.td.uuid
-        )
+    def test_workflow_tool_launch_valid_workflow_object(self):
+        self.create_valid_tool(ToolDefinition.WORKFLOW)
 
-        self.assertEqual(tool_launch.get_owner(), self.user)
+        self.assertEqual(self.tool.get_owner(), self.user)
+        self.assertEqual(self.tool.get_tool_type(), ToolDefinition.WORKFLOW)
         self.assertEqual(
-            tool_launch.get_tool_type(),
-            ToolDefinition.VISUALIZATION
+            json.loads(self.post_response.content)["tool_url"],
+            '/data_sets2/{}/#/analyses/'.format(self.tool.dataset.uuid)
         )
 
-        response = requests.get(
-            urljoin(
-                self.live_server_url,
-                tool_launch.get_relative_container_url()
-            )
-        )
-        self.assertIn("Welcome to nginx!", response.content)
+    def test_many_tools_can_be_launched_from_same_dataset(self):
+        self.dataset = create_dataset_with_necessary_models()
+        tool_a = self.create_valid_tool(ToolDefinition.VISUALIZATION)
+        tool_b = self.create_valid_tool(ToolDefinition.WORKFLOW)
+
+        self.assertEqual(tool_a.dataset, tool_b.dataset)
+
+
+class ToolLaunchSeleniumTests(ToolManagerTestBase, SeleniumTestBaseGeneric):
+    def setUp(self):
+        # super() will only ever resolve a single class type for a given method
+        ToolManagerTestBase.setUp(self)
+        SeleniumTestBaseGeneric.setUp(self)
+
+    def tearDown(self):
+        # super() will only ever resolve a single class type for a given method
+        ToolManagerTestBase.tearDown(self)
+        SeleniumTestBaseGeneric.tearDown(self)
+
+        # Explicitly call delete() to purge any containers we spun up
+        Tool.objects.all().delete()
 
     def test_visualization_container_launch_IGV(self):
         with open("{}/visualizations/igv.json".format(TEST_DATA_PATH)) as f:
@@ -1052,6 +1260,7 @@ class ToolTests(StaticLiveServerTestCase):
 
             # Create mock ToolLaunchConfiguration
             self.post_data = {
+                "dataset_uuid": self.dataset.uuid,
                 "tool_definition_uuid": self.td.uuid,
                 "file_relationships": "['{}']".format(
                     urljoin(
@@ -1062,12 +1271,12 @@ class ToolTests(StaticLiveServerTestCase):
             }
 
             self.post_request = self.factory.post(
-                self.url_root,
+                self.tools_url_root,
                 data=self.post_data,
                 format="json"
             )
             force_authenticate(self.post_request, self.user)
-            self.post_response = self.view(self.post_request)
+            self.post_response = self.tools_view(self.post_request)
 
             tool_launch = Tool.objects.get(
                 tool_definition__uuid=self.td.uuid
@@ -1115,6 +1324,7 @@ class ToolTests(StaticLiveServerTestCase):
 
             # Create mock ToolLaunchConfiguration
             self.post_data = {
+                "dataset_uuid": self.dataset.uuid,
                 "tool_definition_uuid": self.td.uuid,
                 "file_relationships": str(
                     [
@@ -1126,12 +1336,12 @@ class ToolTests(StaticLiveServerTestCase):
             }
 
             self.post_request = self.factory.post(
-                self.url_root,
+                self.tools_url_root,
                 data=self.post_data,
                 format="json"
             )
             force_authenticate(self.post_request, self.user)
-            self.post_response = self.view(self.post_request)
+            self.post_response = self.tools_view(self.post_request)
 
             tool_launch = Tool.objects.get(
                 tool_definition__uuid=self.td.uuid
@@ -1143,39 +1353,10 @@ class ToolTests(StaticLiveServerTestCase):
             )
             # TODO: Add selenium-based test once higlass relative paths fixed
 
-    def test_bad_POST_transaction_rollback(self):
-        post_data = {
-            "tool_definition_uuid": uuid.uuid4(),
-            "file_relationships": str(
-                [
-                    "https://s3.amazonaws.com/pkerp/public/"
-                    "dixon2012-h1hesc-hindiii-allreps-filtered."
-                    "1000kb.multires.cool"
-                ]
-            )
-        }
 
-        post_request = self.factory.post(
-            self.url_root,
-            data=post_data,
-            format="json"
-        )
-        force_authenticate(post_request, self.user)
-        self.post_response = self.view(post_request)
-
-        self.assertIsInstance(self.post_response, HttpResponseBadRequest)
-        self.assertEqual(Tool.objects.count(), 0)
-        self.assertIn("ToolDefinition matching query does not exist.",
-                      self.post_response.content)
-
-
-class ToolLaunchConfigurationTests(TestCase):
-
+class ToolLaunchConfigurationTests(ToolManagerTestBase):
     def setUp(self):
-        self.mock_vis_annotations_reference = (
-            "tool_manager.management.commands.generate_tool_definitions"
-            ".get_visualization_annotations_list"
-        )
+        super(ToolLaunchConfigurationTests, self).setUp()
 
         with open(
             "{}/visualizations/higlass.json".format(TEST_DATA_PATH)
@@ -1213,19 +1394,14 @@ class ToolLaunchConfigurationTests(TestCase):
 
     def test_invalid_TLC_non_pythonic_file_relationships(self):
         tool_launch_configuration = {
+            "dataset_uuid": self.dataset.uuid,
             "tool_definition_uuid": self.td.uuid,
             "file_relationships": "!!{}!!".format(
-                str(
-                    [
-                        "https://s3.amazonaws.com/pkerp/public/"
-                        "dixon2012-h1hesc-hindiii-allreps-filtered."
-                        "1000kb.multires.cool"
-                    ]
-                )
+                str(["www.example.com/cool_file.txt"])
             )
         }
         with self.assertRaises(RuntimeError) as context:
-            validate_tool_launch_configuration(tool_launch_configuration)
+            create_tool(tool_launch_configuration, self.user)
         self.assertIn(
             "ToolLaunchConfiguration's `file_relationships` could not be "
             "evaluated as a Pythonic Data Structure",
@@ -1234,6 +1410,7 @@ class ToolLaunchConfigurationTests(TestCase):
 
     def test_invalid_TLC_non_LIST_PAIR_file_relationships(self):
         tool_launch_configuration = {
+            "dataset_uuid": self.dataset.uuid,
             "tool_definition_uuid": self.td.uuid,
             "file_relationships": str(
                 [
@@ -1249,7 +1426,7 @@ class ToolLaunchConfigurationTests(TestCase):
             )
         }
         with self.assertRaises(RuntimeError) as context:
-            validate_tool_launch_configuration(tool_launch_configuration)
+            create_tool(tool_launch_configuration, self.user)
         self.assertIn(
             "The `file_relationships` defined didn't yield a valid "
             "LIST/PAIR nesting.",
@@ -1258,6 +1435,7 @@ class ToolLaunchConfigurationTests(TestCase):
 
     def test_invalid_TLC_non_file_relationships_unbalanced(self):
         tool_launch_configuration = {
+            "dataset_uuid": self.dataset.uuid,
             "tool_definition_uuid": self.td.uuid,
             "file_relationships": str(
                 [
@@ -1267,7 +1445,7 @@ class ToolLaunchConfigurationTests(TestCase):
             )
         }
         with self.assertRaises(RuntimeError) as context:
-            validate_tool_launch_configuration(tool_launch_configuration)
+            create_tool(tool_launch_configuration, self.user)
         self.assertIn(
             "LIST/PAIR structure is not balanced",
             context.exception.message
@@ -1276,13 +1454,7 @@ class ToolLaunchConfigurationTests(TestCase):
     def test_invalid_TLC_bad_tooldefinition_uuid(self):
         tool_launch_configuration = {
             "tool_definition_uuid": "This is an invalid ToolDef UUID",
-            "file_relationships": str(
-                [
-                    "https://s3.amazonaws.com/pkerp/public/"
-                    "dixon2012-h1hesc-hindiii-allreps-filtered."
-                    "1000kb.multires.cool"
-                ]
-            )
+            "file_relationships": str(["www.example.com/cool_file.txt"])
         }
         with self.assertRaises(RuntimeError) as context:
             validate_tool_launch_configuration(tool_launch_configuration)
@@ -1293,7 +1465,8 @@ class ToolLaunchConfigurationTests(TestCase):
 
     def test_valid_tool_launch_config_LIST(self):
         tool_launch_configuration = {
-            "tool_definition_uuid": str(uuid.uuid4()),
+            "dataset_uuid": self.dataset.uuid,
+            "tool_definition_uuid": self.td.uuid,
             "file_relationships": str(
                 ["coffee"]
             )
@@ -1302,7 +1475,8 @@ class ToolLaunchConfigurationTests(TestCase):
 
     def test_valid_tool_launch_config_LIST_PAIR(self):
         tool_launch_configuration = {
-            "tool_definition_uuid": str(uuid.uuid4()),
+            "dataset_uuid": self.dataset.uuid,
+            "tool_definition_uuid": self.td.uuid,
             "file_relationships": str(
                 [
                     ("coffee", "coffee")
@@ -1313,7 +1487,8 @@ class ToolLaunchConfigurationTests(TestCase):
 
     def test_valid_tool_launch_config_LIST_LIST_PAIR(self):
         tool_launch_configuration = {
-            "tool_definition_uuid": str(uuid.uuid4()),
+            "dataset_uuid": self.dataset.uuid,
+            "tool_definition_uuid": self.td.uuid,
             "file_relationships": str(
                 [
                     [
@@ -1329,7 +1504,8 @@ class ToolLaunchConfigurationTests(TestCase):
 
     def test_valid_tool_launch_config_PAIR(self):
         tool_launch_configuration = {
-            "tool_definition_uuid": str(uuid.uuid4()),
+            "dataset_uuid": self.dataset.uuid,
+            "tool_definition_uuid": self.td.uuid,
             "file_relationships": str(
                 ("coffee", "coffee")
             )
@@ -1338,7 +1514,8 @@ class ToolLaunchConfigurationTests(TestCase):
 
     def test_valid_tool_launch_config_PAIR_LIST(self):
         tool_launch_configuration = {
-            "tool_definition_uuid": str(uuid.uuid4()),
+            "dataset_uuid": self.dataset.uuid,
+            "tool_definition_uuid": self.td.uuid,
             "file_relationships": str(
                 (["coffee", "coffee"], ["coffee", "coffee"])
             )

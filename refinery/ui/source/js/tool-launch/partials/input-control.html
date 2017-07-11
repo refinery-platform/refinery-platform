@@ -17,7 +17,7 @@
               ng-class="$ctrl.isToolInputControlCollapsed ? 'fa fa-caret-right' : 'fa fa-caret-down'"
               class="fa-pull-left"
               aria-hidden="true"></i>
-            Tool Input Control
+            Input Files
         </div>
       </h4>
     </div>
@@ -28,11 +28,19 @@
       role="tabpanel"
       aria-labelledby="tool-body">
       <div class="panel-body p-a-0">
-        <div class="p-a-0">
+        <div class="input-template">
           <div
-            ng-repeat="groupType in $ctrl.currentTypes|orderBy:'$index':true track by $index"
+            ng-repeat="depthName in $ctrl.depthNames|orderBy:'$index':true track by $index"
             id="control-panel-list">
-            <div ng-if="$index == 0" class="p-a-1-2">
+            <div ng-if="$index == 0" class="p-l-1-2">
+              <div class="refinery-subheader">
+                <h4>
+                  <i
+                    class="{{$ctrl.currentTypes[$ctrl.currentTypes.length-1]|groupTypeIcon}}"
+                    aria-hidden="true"></i>
+                  {{ $ctrl.depthNames[$ctrl.depthNames.length-1] }}
+                </h4>
+              </div>
               <rp-input-group></rp-input-group>
             </div>
 
@@ -40,27 +48,47 @@
               ng-if="$index > 0"
               class="tree-panel"
               ng-style="{'margin-left': 10*$index+'px'}">
-              <hr>
-              <div>
-                <h5>
-                  <b>{{ $ctrl.currentGroup[$ctrl.currentGroup.length-$index] }}</b>
-                  of groups in {{ groupType }}
-                </h5>
+              <div class="refinery-subheader">
+                <h4>
+                  <i class="{{$ctrl.currentTypes[$ctrl.currentGroup.length-$index]|groupTypeIcon}}" aria-hidden="true"></i>
+                  {{ depthName }}
+                </h4>
               </div>
-              <div>
+            </div>
+
+            <div
+              ng-if="$index == 1"
+              class="p-a-1-2"
+              ng-style="{'margin-left': 10*$index+'px'}">
+              <rp-input-control-inner-nav></rp-input-control-inner-nav>
+            </div>
+            <div
+              ng-if="$index > 1"
+              ng-style="{'margin-left': 10*$index+'px'}">
+              <button
+                class="refinery-base btn btn-default btn-xs outline"
+                ng-disabled="$ctrl.currentGroup[$ctrl.currentGroup.length-$index] == 0"
+                ng-click="$ctrl.navLeft($ctrl.currentGroup.length-$index)">
+                <i class="fa fa-backward"></i>
+              </button>
+              <span class="badge">
+                {{ $ctrl.currentGroup[$ctrl.currentGroup.length-$index] + 1 }}
+              </span>
+              <span ng-if="$ctrl.currentTypes[$ctrl.currentGroup.length-$index] == 'PAIR'">
                 <button
-                  class="btn btn-default btn-xs outline"
-                  ng-disabled="$ctrl.currentGroup[$ctrl.currentGroup.length-$index] == 0"
-                  ng-click="$ctrl.navLeft($ctrl.currentGroup.length-$index)">
-                  <i class="fa fa-backward"></i>
-                </button>
-                <button
-                  class="btn btn-default btn-xs outline"
+                  class="refinery-base btn btn-default btn-xs outline"
                   ng-disabled="$ctrl.currentGroup[$ctrl.currentGroup.length-$index] == 1"
                   ng-click="$ctrl.navRight($ctrl.currentGroup.length-$index)">
                   <i class="fa fa-forward"></i>
                 </button>
-              </div>
+              </span>
+              <span ng-if="$ctrl.currentTypes[$ctrl.currentGroup.length-$index] == 'LIST'">
+                <button
+                  class="refinery-base btn btn-default btn-xs outline"
+                  ng-click="$ctrl.navRight($ctrl.currentGroup.length-$index)">
+                  <i class="fa fa-forward"></i>
+                </button>
+              </span>
             </div>
           </div>
          </div>

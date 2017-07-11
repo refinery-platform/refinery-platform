@@ -1,3 +1,10 @@
+/**
+ * Tool Display Ctrl
+ * @namespace ToolDisplayCtrl
+ * @desc Main controller for the main view, tool display. Ctrl for parent
+  * component and updates the selected tool
+ * @memberOf refineryApp.refineryToolLaunch
+ */
 (function () {
   'use strict';
 
@@ -8,14 +15,14 @@
   ToolDisplayCtrl.$inject = [
     '$scope',
     '_',
-    'toolLaunchService'];
+    'toolSelectService'];
 
   function ToolDisplayCtrl (
     $scope,
     _,
-    toolLaunchService
+    toolSelectService
   ) {
-    var toolService = toolLaunchService;
+    var toolService = toolSelectService;
     var vm = this;
     vm.selectedTool = {};
     vm.isToolSelected = false;
