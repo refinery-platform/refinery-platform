@@ -13,9 +13,10 @@ angular
             reloadOnSearch: false,
             templateUrl: function () {
               // unit tests redefine $window and thus make it unusable here
-              return window.getStaticUrl('partials/dashboard/views/launch-pad.html');
-            },
-            controller: 'LaunchPadCtrl as launchPad'
+              return window.getStaticUrl(
+                'partials/dashboard/views/launch-pad.html'
+              );
+            }
           },
           '/'
         )
@@ -40,3 +41,4 @@ angular
     }
   ]
 );
+

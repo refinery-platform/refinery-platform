@@ -48,11 +48,19 @@ function DataSetStoreFactory () {
     return this;
   };
 
+  /**
+   * Run a callback function on every data set
+   *
+   * @method  each
+   * @author  Fritz Lekschas
+   * @date    2017-01-13
+   * @param   {Function}  callback  Function to be called on every data set
+   */
   DataSetStore.prototype.each = function (callback) {
     var keys = Object.keys(_store);
 
     for (var i = keys.length; i--;) {
-      callback(_store);
+      callback(_store[keys[i]]);
     }
   };
 

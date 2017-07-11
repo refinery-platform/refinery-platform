@@ -8,9 +8,7 @@ function AppCtrl ($, $scope, $rootScope, $timeout, $window, _, pubSub, settings)
   this.pubSub = pubSub;
   this.settings = settings;
 
-  if (settings.djangoApp.repositoryMode) {
-    this.repoMode = true;
-  }
+  this.repoMode = settings.djangoApp.repositoryMode;
 
   this.jqWindow.on(
     'resize orientationchange',

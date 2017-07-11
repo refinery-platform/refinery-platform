@@ -53,6 +53,19 @@ angular
           });
       }
 
+      function getSession () {
+        var now = new Date().getTime();
+        var session;
+
+        if (now - sessionService.get('date') > settings.authThrottling) {
+          session = createSession();
+        } else {
+          session = $q.when();
+        }
+
+        return session;
+      }
+
       /**
        * Checks whether the current user is an adminitrator.
        *
@@ -63,16 +76,7 @@ angular
        * @return  {Boolean}  `true` if the current user is an adminitrator.
        */
       auth.isAdmin = function () {
-        var now = new Date().getTime();
-        var session;
-
-        if (now - sessionService.get('date') > settings.authThrottling) {
-          session = createSession();
-        } else {
-          session = $q.when();
-        }
-
-        return session.then(function () {
+        return getSession().then(function () {
           return sessionService.get('isAdmin');
         });
       };
@@ -88,17 +92,22 @@ angular
        *   is authenticaed.
        */
       auth.isAuthenticated = function () {
-        var now = new Date().getTime();
-        var session;
-
-        if (now - sessionService.get('date') > settings.authThrottling) {
-          session = createSession();
-        } else {
-          session = $q.when();
-        }
-
-        return session.then(function () {
+        return getSession().then(function () {
           return sessionService.get('userId') >= 0;
+        });
+      };
+
+      /**
+       * Return the user ID
+       *
+       * @method  getUserId
+       * @author  Fritz Lekschas
+       * @date    2017-01-07
+       * @return  {Number}  User ID.
+       */
+      auth.getUserId = function () {
+        return getSession().then(function () {
+          return sessionService.get('userId');
         });
       };
 

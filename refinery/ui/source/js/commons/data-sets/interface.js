@@ -3,7 +3,7 @@
 /* eslint no-use-before-define:0 */
 
 function DataSetFactory (
-  $q, _, settings, DataSetDataApi, DataSetDataDetailsApi, DataSetSearchApi,
+  $q, $sce, _, settings, DataSetDataApi, DataSetDataDetailsApi, DataSetSearchApi,
   DataSetStore, DataSetAnnotations) {
   /*
    * ------------------------------- Private -----------------------------------
@@ -407,6 +407,7 @@ function DataSetFactory (
   function _fetchDataFromSource (limit, offset) {
     return _source(limit, offset).then(function (response) {
       for (var i = response.data.length; i--;) {
+        _initHtmlTitleDesc(response.data[i]);
         _dataStore.add(response.data[i].id, response.data[i], true);
         _cacheOrder(offset + i, _dataStore.get(response.data[i].id));
       }
@@ -490,11 +491,16 @@ function DataSetFactory (
    * @return  {Object}          Promise resolving to the data set.
    */
   function _get (id) {
-    if (_dataStore.get(id)) {
+    var ds = _dataStore.get(id);
+
+    if (ds && ds.id === parseInt(id, 10)) {
       return $q.when(_dataStore.get(id));
     }
-    return _sourceDetails(id).then(function (dataSet) {
-      _dataStore.add(dataSet.id, dataSet, true);
+    return _sourceDetails(id).then(function (dataSets) {
+      _initHtmlTitleDesc(dataSets[id]);
+      _dataStore.add(id, dataSets[id], true);
+
+      return _dataStore.get(id);
     });
   }
 
@@ -585,6 +591,15 @@ function DataSetFactory (
     _total = _totalSelection;
   }
 
+  /**
+   * Convert an object-based list into an array
+   *
+   * @method  _objListToArray
+   * @author  Fritz Lekschas
+   * @date    2017-01-13
+   * @param   {Object}  objList  Object-based list
+   * @return  {Array}            Array
+   */
   function _objListToArray (objList) {
     var arr = [];
     var ids = Object.keys(objList);
@@ -592,6 +607,40 @@ function DataSetFactory (
       arr.push(ids[i]);
     }
     return arr;
+  }
+
+  /**
+   * Reset the title and description HTML.
+   *
+   * @description
+   * The HTML version of the title and description might change depending on the
+   * search as different parts can be highlighted. For that reason we need to
+   * explicitely update it everytime a search as been cleared.
+   *
+   * @method  _resetHtmlTitleDesc
+   * @author  Fritz Lekschas
+   * @date    2017-01-13
+   */
+  function _resetHtmlTitleDesc () {
+    _dataStore.each(function (ds) {
+      ds.titleHtml = $sce.trustAsHtml(ds.title);
+      ds.descriptionHtml = $sce.trustAsHtml(ds.description);
+    });
+  }
+
+  /**
+   * Initialize the title and description HTML.
+   *
+   * @method  _initHtmlTitleDesc
+   * @author  Fritz Lekschas
+   * @date    2017-01-13
+   * @param   {Object}  dataSet  Object to be initialized.
+   */
+  function _initHtmlTitleDesc (dataSet) {
+    dataSet.titleHtml = dataSet.titleHtml ?
+      dataSet.titleHtml : $sce.trustAsHtml(dataSet.title);
+    dataSet.descriptionHtml = dataSet.descriptionHtml ?
+      dataSet.descriptionHtml : $sce.trustAsHtml(dataSet.description);
   }
 
   /*
@@ -619,7 +668,7 @@ function DataSetFactory (
    * @author  Fritz Lekschas
    * @date    2016-02-11
    *
-   * @type    {Object}
+   * @type    {Array}
    */
   Object.defineProperty(
     DataSet.prototype,
@@ -627,9 +676,6 @@ function DataSetFactory (
     {
       enumerable: true,
       get: function () {
-        if (_selectionLen()) {
-          return $q.when(_objListToArray(_selection));
-        }
         if (_search) {
           return _currentDsIds.promise;
         }
@@ -639,7 +685,7 @@ function DataSetFactory (
   );
 
   /**
-   * Promise resolving to all currently selected data set IDs.
+   * Promise resolving to all currently available data set IDs.
    *
    * @description
    * In contrast to `allIds` this can either be all IDs when `DataSet.all()` has
@@ -657,7 +703,38 @@ function DataSetFactory (
     {
       enumerable: true,
       get: function () {
+        if (_search) {
+          return _currentDsIds.promise;
+        }
+
+        if (_selectionLen()) {
+          return $q.when(_objListToArray(_selection));
+        }
+
         return _allDsIds.promise;
+      }
+    }
+  );
+
+  /**
+   * Promise resolving to all selected IDs.
+   *
+   * @author  Fritz Lekschas
+   * @date    2017-01-29
+   *
+   * @type    {Array}
+   */
+  Object.defineProperty(
+    DataSet.prototype,
+    'selectedIds',
+    {
+      enumerable: true,
+      get: function () {
+        if (_selectionLen()) {
+          return $q.when(_objListToArray(_selection));
+        }
+
+        return $q.when([]);
       }
     }
   );
@@ -757,6 +834,7 @@ function DataSetFactory (
     if (_browsePath.length &&
       _browsePath[_browsePath.length - 1].type === 'search') {
       _browsePath.pop();
+      _resetHtmlTitleDesc();
     }
 
     _clearOrderCache();
@@ -981,11 +1059,11 @@ function DataSetFactory (
    * method is still the same. E.g., after a search for 'cancen' and deletion of
    * one of the data sets returned.
    *
-   * @method  reload
+   * @method  clearCache
    * @author  Fritz Lekschas
    * @date    2016-09-23
    */
-  DataSet.prototype.reload = function () {
+  DataSet.prototype.clearCache = function () {
     _clearOrderCache();
   };
 
@@ -1052,6 +1130,7 @@ angular
   .module('dataSet')
   .factory('dataSet', [
     '$q',
+    '$sce',
     '_',
     'settings',
     'DataSetDataApi',
