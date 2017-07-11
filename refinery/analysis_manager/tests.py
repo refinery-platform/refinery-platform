@@ -31,7 +31,7 @@ class AnalysisConfigTests(TestCase):
                                  analysis_type,
                                  missing_a_field=False,
                                  valid_analysis_type_uuid=True,
-                                 valid_custom_name=True,
+                                 valid_name=True,
                                  valid_study_uuid=True,
                                  valid_user_id=True,
                                  valid_workflow_uuid=True):
@@ -57,8 +57,8 @@ class AnalysisConfigTests(TestCase):
         if analysis_type == "Tool":
             analysis_config["toolUuid"] = analysis_type_uuid
 
-        analysis_config["custom_name"] = (
-            "Valid Custom Name" if valid_custom_name else []
+        analysis_config["name"] = (
+            "Valid Custom Name" if valid_name else []
         )
 
         analysis_config["studyUuid"] = (
@@ -209,7 +209,7 @@ class AnalysisUtilsTests(TestCase):
         ) as create_nodeset_analysis_mock:
             create_analysis(
                 {
-                    "custom_name": "Valid NodeSet Analysis Config",
+                    "name": "Valid NodeSet Analysis Config",
                     "studyUuid": self.study.uuid,
                     "nodeSetUuid": str(uuid.uuid4()),
                     "user_id": self.user.id,
@@ -224,7 +224,7 @@ class AnalysisUtilsTests(TestCase):
         ) as create_noderelationship_analysis_mock:
             create_analysis(
                 {
-                    "custom_name": "Valid NodeRelationship Analysis Config",
+                    "name": "Valid NodeRelationship Analysis Config",
                     "studyUuid": self.study.uuid,
                     "nodeRelationshipUuid": str(uuid.uuid4()),
                     "user_id": self.user.id,
@@ -239,7 +239,7 @@ class AnalysisUtilsTests(TestCase):
         ) as create_tool_analysis_mock:
             create_analysis(
                 {
-                    "custom_name": "Valid Tool Analysis Config",
+                    "name": "Valid Tool Analysis Config",
                     "studyUuid": self.study.uuid,
                     "toolUuid": str(uuid.uuid4()),
                     "user_id": self.user.id,
@@ -341,7 +341,7 @@ class AnalysisRunViewTests(TestCase):
         response = self.client.put(
             self.view_root,
             data={
-                "custom_name": "Valid Tool Analysis Config",
+                "name": "Valid Tool Analysis Config",
                 "studyUuid": str(uuid.uuid4()),
                 "toolUuid": str(uuid.uuid4()),
                 "user_id": 1,
@@ -354,7 +354,7 @@ class AnalysisRunViewTests(TestCase):
         response = self.client.patch(
             self.view_root,
             data={
-                "custom_name": "Valid Tool Analysis Config",
+                "name": "Valid Tool Analysis Config",
                 "studyUuid": str(uuid.uuid4()),
                 "toolUuid": str(uuid.uuid4()),
                 "workflowUuid": str(uuid.uuid4())
@@ -371,7 +371,7 @@ class AnalysisRunViewTests(TestCase):
             request = self.request_factory.post(
                 self.view_root,
                 json.dumps({
-                    "custom_name": "Valid Tool Analysis Config",
+                    "name": "Valid Tool Analysis Config",
                     "studyUuid": str(uuid.uuid4()),
                     "toolUuid": str(uuid.uuid4()),
                     "workflowUuid": str(uuid.uuid4())
@@ -396,7 +396,7 @@ class AnalysisRunViewTests(TestCase):
         response = self.client.post(
             self.view_root,
             data=json.dumps({
-                "custom_name": "Valid Tool Analysis Config",
+                "name": "Valid Tool Analysis Config",
                 "studyUuid": str(uuid.uuid4()),
                 "toolUuid": str(uuid.uuid4()),
                 "workflowUuid": str(uuid.uuid4())
@@ -410,7 +410,7 @@ class AnalysisRunViewTests(TestCase):
         response = self.client.post(
             self.view_root,
             data={
-                "custom_name": "Valid Tool Analysis Config",
+                "name": "Valid Tool Analysis Config",
                 "studyUuid": str(uuid.uuid4()),
                 "toolUuid": str(uuid.uuid4()),
                 "workflowUuid": str(uuid.uuid4())

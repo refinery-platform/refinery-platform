@@ -4,19 +4,20 @@ import logging
 import os
 import re
 
-import requests
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.http import HttpResponseServerError
 from django.utils import timezone
+
 from jsonschema import RefResolver, ValidationError, validate
+import requests
 from requests.packages.urllib3.exceptions import HTTPError
 
-import tool_manager
 from core.models import (Analysis, InvestigationLink, NodeRelationship,
                          NodeSet, Workflow, WorkflowDataInputMap)
 from core.utils import get_aware_local_time
 from data_set_manager.models import Study
+import tool_manager
 
 logger = logging.getLogger(__name__)
 
@@ -61,7 +62,7 @@ def create_nodeset_analysis(validated_analysis_config):
     :return: an Analysis instance
     :raises: RuntimeError
     """
-    custom_name = validated_analysis_config.get("custom_name")
+    name = validated_analysis_config.get("name")
     node_set_uuid = validated_analysis_config["nodeSetUuid"]
 
     common_analysis_objects = fetch_objects_required_for_analysis(
@@ -89,11 +90,11 @@ def create_nodeset_analysis(validated_analysis_config):
     logger.info("Associating analysis with data set %s (%s)",
                 data_set, data_set.uuid)
 
-    if not custom_name:
+    if not name:
         temp_name = current_workflow.name + " " + get_aware_local_time() \
             .strftime("%Y-%m-%d @ %H:%M:%S")
     else:
-        temp_name = custom_name
+        temp_name = name
 
     summary_name = "None provided."
     analysis = Analysis.objects.create(
@@ -138,7 +139,7 @@ def create_noderelationship_analysis(validated_analysis_config):
     # Input list for running analysis
     ret_list = []
 
-    custom_name = validated_analysis_config.get("custom_name")
+    name = validated_analysis_config.get("name")
     node_relationship_uuid = validated_analysis_config["nodeRelationshipUuid"]
 
     common_analysis_objects = fetch_objects_required_for_analysis(
@@ -194,13 +195,13 @@ def create_noderelationship_analysis(validated_analysis_config):
 
     # ANALYSIS MODEL
     # How to create a simple analysis object
-    if not custom_name:
+    if not name:
         temp_name = "{} {}".format(
             current_workflow.name,
             get_aware_local_time().strftime("%Y-%m-%d @ %H:%M:%S")
         )
     else:
-        temp_name = custom_name
+        temp_name = name
 
     summary_name = "None provided."
 
