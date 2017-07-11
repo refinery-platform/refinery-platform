@@ -72,20 +72,8 @@ def create_nodeset_analysis(validated_analysis_config):
     data_set = common_analysis_objects["data_set"]
     user = common_analysis_objects["user"]
 
-    try:
-        curr_node_set = NodeSet.objects.get(uuid=node_set_uuid)
-    except(NodeSet.DoesNotExist, NodeSet.MultipleObjectsReturned) as e:
-        raise RuntimeError(
-            "Couldn't fetch NodeSet from UUID: {} {}".format(node_set_uuid, e)
-        )
-    else:
-        curr_node_dict = json.loads(curr_node_set.solr_query_components)
-        solr_uuids = get_solr_results(
-            curr_node_set.solr_query,
-            only_uuids=True,
-            selected_mode=curr_node_dict['documentSelectionBlacklistMode'],
-            selected_nodes=curr_node_dict['documentSelection']
-        )
+    curr_node_set = _fetch_node_set(node_set_uuid)
+    solr_uuids = _fetch_solr_uuids(curr_node_set)
 
     logger.info("Associating analysis with data set %s (%s)",
                 data_set, data_set.uuid)
@@ -107,20 +95,7 @@ def create_nodeset_analysis(validated_analysis_config):
     )
     analysis.set_owner(user)
 
-    # getting distinct workflow inputs
-    workflow_data_inputs = current_workflow.data_inputs.all()[0]
-
-    # NEED TO GET LIST OF FILE_UUIDS from solr query
-    count = 0
-    for file_uuid in solr_uuids:
-        count += 1
-        temp_input = WorkflowDataInputMap.objects.create(
-            workflow_data_input_name=workflow_data_inputs.name,
-            data_uuid=file_uuid,
-            pair_id=count
-        )
-        analysis.workflow_data_input_maps.add(temp_input)
-        analysis.save()
+    _associate_workflow_data_inputs(analysis, current_workflow, solr_uuids)
 
     return analysis
 
@@ -149,16 +124,9 @@ def create_noderelationship_analysis(validated_analysis_config):
     data_set = common_analysis_objects["data_set"]
     user = common_analysis_objects["user"]
 
-    try:
-        current_node_relationship = NodeRelationship.objects.get(
-            uuid=node_relationship_uuid
-        )
-    except(NodeRelationship.DoesNotExist,
-           NodeRelationship.MultipleObjectsReturned) as e:
-        raise RuntimeError(
-            "Couldn't fetch NodeRelationship from UUID: {} {}"
-            .format(node_relationship_uuid, e)
-        )
+    current_node_relationship = _fetch_node_relationship(
+        node_relationship_uuid
+    )
 
     # Iterating over node pairs
     input_keys = []
@@ -412,3 +380,75 @@ def validate_analysis_config(analysis_config):
         raise RuntimeError(
             "Analysis Configuration is invalid: {}".format(e)
         )
+
+
+def _associate_workflow_data_inputs(analysis, current_workflow, solr_uuids):
+    """
+    Associate data inputs with the Analysis through the WorkflowDatainputMap
+    model
+    :param analysis: an Analysis instance
+    :param current_workflow: <Workflow> instance
+    :param solr_uuids: List of UUIDs corresponding to Node's file_uuids
+    """
+    # getting distinct workflow inputs
+    workflow_data_inputs = current_workflow.data_inputs.all()[0]
+
+    # NEED TO GET LIST OF FILE_UUIDS from solr query
+    count = 0
+    for file_uuid in solr_uuids:
+        count += 1
+        temp_input = WorkflowDataInputMap.objects.create(
+            workflow_data_input_name=workflow_data_inputs.name,
+            data_uuid=file_uuid,
+            pair_id=count
+        )
+        analysis.workflow_data_input_maps.add(temp_input)
+        analysis.save()
+
+
+def _fetch_node_relationship(node_relationship_uuid):
+    """
+    Fetches a NodeRelationship instance from a given UUID
+    :param node_relationship_uuid: UUID String
+    :return: <NodeRelationship>
+    :raises: RuntimeError
+    """
+    try:
+        return NodeRelationship.objects.get(uuid=node_relationship_uuid)
+    except(NodeRelationship.DoesNotExist,
+           NodeRelationship.MultipleObjectsReturned) as e:
+        raise RuntimeError(
+            "Couldn't fetch NodeRelationship from UUID: {} {}"
+            .format(node_relationship_uuid, e)
+        )
+
+
+def _fetch_node_set(node_set_uuid):
+    """
+    Fetches a NodeSet instance from a given UUID
+    :param node_set_uuid: UUID String
+    :return: <NodeSet>
+    :raises: RuntimeError
+    """
+    try:
+        return NodeSet.objects.get(uuid=node_set_uuid)
+    except(NodeSet.DoesNotExist, NodeSet.MultipleObjectsReturned) as e:
+        raise RuntimeError(
+            "Couldn't fetch NodeSet from UUID: {} {}".format(node_set_uuid, e)
+        )
+
+
+def _fetch_solr_uuids(nodeset_instance):
+    """
+    Fetches a NodeSet instance from a given UUID
+    :param node_set_uuid: UUID String
+    :return: <NodeSet>
+    :raises: RuntimeError
+    """
+    curr_node_dict = json.loads(nodeset_instance.solr_query_components)
+    return get_solr_results(
+        nodeset_instance.solr_query,
+        only_uuids=True,
+        selected_mode=curr_node_dict['documentSelectionBlacklistMode'],
+        selected_nodes=curr_node_dict['documentSelection']
+    )
