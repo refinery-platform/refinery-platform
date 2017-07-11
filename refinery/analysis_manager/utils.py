@@ -79,10 +79,7 @@ def create_nodeset_analysis(validated_analysis_config):
                 data_set, data_set.uuid)
 
     if not name:
-        name = "{} {}".format(
-            current_workflow.name,
-            get_aware_local_time().strftime("%Y-%m-%d @ %H:%M:%S")
-        )
+        name = _create_analysis_name(current_workflow)
 
     summary_name = "None provided."
     analysis = Analysis.objects.create(
@@ -164,10 +161,7 @@ def create_noderelationship_analysis(validated_analysis_config):
     # ANALYSIS MODEL
     # How to create a simple analysis object
     if not name:
-        name = "{} {}".format(
-            current_workflow.name,
-            get_aware_local_time().strftime("%Y-%m-%d @ %H:%M:%S")
-        )
+        name = _create_analysis_name(current_workflow)
 
     summary_name = "None provided."
 
@@ -404,6 +398,18 @@ def _associate_workflow_data_inputs(analysis, current_workflow, solr_uuids):
         )
         analysis.workflow_data_input_maps.add(temp_input)
         analysis.save()
+
+
+def _create_analysis_name(current_workflow):
+    """
+    Create an string representative of an Analysis
+    :param current_workflow: The <Workflow> associated with said Analysis
+    :return: String comprised of the workflow's name and a timestamp
+    """
+    return "{} {}".format(
+        current_workflow.name,
+        get_aware_local_time().strftime("%Y-%m-%d @ %H:%M:%S")
+    )
 
 
 def _fetch_node_relationship(node_relationship_uuid):
