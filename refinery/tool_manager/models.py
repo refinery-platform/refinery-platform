@@ -355,7 +355,7 @@ class Tool(OwnableResource):
             )
 
         analysis_config = {
-            "custom_name": "Analysis: {}".format(self),
+            "name": "Analysis: {}".format(self),
             "studyUuid": self.dataset.get_latest_study().uuid,
             "toolUuid": self.uuid,
             "user_id": self.get_owner().id,
