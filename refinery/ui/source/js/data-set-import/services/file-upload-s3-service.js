@@ -16,7 +16,7 @@
         IdentityId: response.IdentityId,
         Logins: { 'cognito-identity.amazonaws.com': response.Token }
       });
-      vm.bucket = new AWS.S3({
+      vm.s3 = new AWS.S3({
         params: { Bucket: settings.djangoApp.mediaBucket, maxRetries: 10 },
         httpOptions: { timeout: 360000 }
       });
@@ -25,7 +25,7 @@
       // TODO: provide information about the error to the user (block import?)
     });
 
-    vm.progress = 0;
+    // vm.progress = 0;
     vm.upload = function (file) {
       var deferred = $q.defer();
       var params = {
@@ -40,7 +40,7 @@
         // Give the owner of the bucket full control
         ACL: 'bucket-owner-full-control'
       };
-      var uploader = vm.bucket.upload(params, options, function (err) {
+      var uploader = vm.s3.upload(params, options, function (err) {
         if (err) {
           $log.error('Error uploading file: ' + err);
           deferred.reject(err);

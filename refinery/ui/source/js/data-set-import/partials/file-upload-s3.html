@@ -7,42 +7,69 @@
       <input type="hidden" name="redirect" value="/">
     </noscript>
 
-    <p>
-      <button type="file" ngf-select="FileCtrl.uploadFiles($files)" ngf-multiple="true">
-        Select file
-      </button>
-    </p>
+    <!-- The fileupload-buttonbar contains buttons to add/delete files and start/cancel the upload -->
+    <div class="row fileupload-buttonbar v-centered-row">
+      <div class="col-lg-4">
+        <!-- The fileinput-button span is used to style the file input field as button -->
+        <span
+          class="refinery-base btn btn-default btn-sm fileinput-button"
+          ng-class="{ 'disabled': disabled }">
+          Add files &hellip;
+          <input
+            type="file"
+            class="refinery-base"
+            ngf-select="FileCtrl.addFiles($files)"
+            ngf-multiple="true"
+          >
+        </span>
 
-    <div ng-show="FileCtrl.files.length > 0">
-      <div ng-repeat="file in FileCtrl.files">
-        File:
-        <div>
-          {{file.name}} {{file.$error}} {{file.$errorParam}}
-        </div>
-        <div class="progress">
-          <div class="progress-bar"
-               role="progressbar"
-               aria-valuenow="60"
-               aria-valuemin="0"
-               aria-valuemax="100"
-               style="width: {{file.progress}}%;">
-            {{file.progress | number:0}}%
+        <button
+          class="active-group refinery-base btn btn-default btn-sm start"
+          ng-click="FileCtrl.uploadFiles()"
+          ng-disabled="!FileCtrl.isUploadEnabled()">
+            <i class="fa fa-upload"></i>
+            <span>Start upload</span>
+        </button>
+        <button
+          class="refinery-base btn btn-default btn-sm cancel"
+          ng-click="FileCtrl.cancelUploads()"
+          ng-disabled="!FileCtrl.areFileUploadsInProgress()">
+          <i class="fa fa-ban"></i>
+          <span>Cancel upload</span>
+        </button>
+
+        <div ng-show="FileCtrl.files.length > 0">
+          <div ng-repeat="file in FileCtrl.files">
+            File:
+            <div>
+              {{file.name}} {{file.$error}} {{file.$errorParam}}
+            </div>
+            <div class="progress">
+              <div class="progress-bar"
+                   role="progressbar"
+                   aria-valuenow="60"
+                   aria-valuemin="0"
+                   aria-valuemax="100"
+                   style="width: {{file.progress}}%;">
+                {{file.progress | number:0}}%
+              </div>
+            </div>
+            <div class="alert alert-info"
+                 role="alert"
+                 ng-show="file.progress == 100 && !file.success">
+              Processing, please wait...
+            </div>
+            <div class="alert alert-success" role="alert" ng-show="file.success">
+              Upload Complete!
+            </div>
+            <div class="alert alert-danger" role="alert" ng-show="errorMsg.length > 0">
+              Error uploading the file. Refresh the page and try again.
+              <p>If the problem persists contact us with the following details:</p>
+              <p>{{errorMsg}}</p>
+            </div>
+            <div>{{Error}}</div>
           </div>
         </div>
-        <div class="alert alert-info"
-             role="alert"
-             ng-show="file.progress == 100 && !file.success">
-          Processing, please wait...
-        </div>
-        <div class="alert alert-success" role="alert" ng-show="file.success">
-          Upload Complete!
-        </div>
-        <div class="alert alert-danger" role="alert" ng-show="errorMsg.length > 0">
-          Error uploading the file. Refresh the page and try again.
-          <p>If the problem persists contact us with the following details:</p>
-          <p>{{errorMsg}}</p>
-        </div>
-        <div>{{Error}}</div>
       </div>
     </div>
   </form>
