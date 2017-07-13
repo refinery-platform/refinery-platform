@@ -282,8 +282,6 @@ function VisWrapperCtrl (
     },
     iconSpan: 'fa fa-info-circle introjs-starter'
   }];
-
-  this.ready = true;
 }
 
 Object.defineProperty(
