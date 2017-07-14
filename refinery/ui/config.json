@@ -106,7 +106,7 @@
         "angular-ui-grid/ui-grid.min.js",
         "spark-md5/spark-md5.min.js",
         "spectrum/spectrum.js",
-        "svgxuse/svgxuse.js",
+        "svgxuse/svgxuse.min.js",
         "tipsy/src/javascripts/jquery.tipsy.js",
         "aws-sdk-js/dist/aws-sdk.min.js"
       ],
