@@ -1196,7 +1196,6 @@ class Analysis(OwnableResource):
                     delete = False
 
         if delete:
-            # Cancel Analysis (galaxy cleanup also happens here)
             self.cancel()
 
             # Delete associated AnalysisResults
@@ -1755,6 +1754,26 @@ class Analysis(OwnableResource):
                 logger.warning(
                     "No file found for '%s' in download '%s' ('%s')",
                     analysis_result.file_store_uuid, self.name, self.uuid)
+
+    def terminate_file_import_tasks(self):
+        """
+        Gathers all UUIDs of FileStoreItems used as inputs for the Analysis,
+        and trys to terminate their import_file tasks if possible
+        """
+        file_store_item_uuids = self.get_input_file_uuid_list()
+
+        for uuid in file_store_item_uuids:
+            try:
+                file_store_item = FileStoreItem.objects.get(uuid=uuid)
+            except (FileStoreItem.DoesNotExist,
+                    FileStoreItem.MultipleObjectsReturned) as e:
+                logger.error(
+                    "Couldn't properly fetch FileStoreItem with UUID: %s %s",
+                    uuid,
+                    e
+                )
+            else:
+                file_store_item.terminate_file_import_task()
 
 
 #: Defining available relationship types

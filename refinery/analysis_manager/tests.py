@@ -574,3 +574,11 @@ class AnalysisRunTests(TestCase):
         self.assertTrue(galaxy_import_mock.called)
         self.assertTrue(galaxy_export_mock.called)
         self.assertTrue(attach_outputs_mock.called)
+
+    def test_file_import_task_termination_on_analysis_failure(self):
+        with mock.patch(
+            "core.models.Analysis.terminate_file_import_tasks"
+        ) as terminate_mock:
+            self.analysis.set_status(Analysis.FAILURE_STATUS)
+            run_analysis(self.analysis.uuid)
+            self.assertTrue(terminate_mock.called)

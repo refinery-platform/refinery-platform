@@ -44,6 +44,9 @@ class AnalysisHandlerTask(Task):
             logger.error("Can not retrieve analysis with UUID '%s': '%s'",
                          args[0], e)
             return
+        else:
+            analysis.terminate_file_import_tasks()
+
         logger.error("Setting status of analysis '%s' to failure", analysis)
         analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
 
@@ -265,6 +268,7 @@ def run_analysis(analysis_uuid):
 
     # if cancelled by user
     if analysis.failed():
+        analysis.terminate_file_import_tasks()
         return
 
     _get_analysis_status(analysis_uuid)
