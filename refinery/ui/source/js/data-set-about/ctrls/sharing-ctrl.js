@@ -6,7 +6,8 @@ function AboutSharingCtrl (
   $scope,
   $location,
   $window,
-  $log
+  $log,
+  _
   ) {
   var vm = this;
   vm.dataSetSharing = dataSetAboutFactory.dataSetSharing;
@@ -29,9 +30,9 @@ function AboutSharingCtrl (
 
   vm.refreshOwnerName = function (userUuid) {
     userService.get(userUuid).then(function (response) {
-      if (response.fullName) {
+      if (_.has(response, 'fullName') && response.fullName) {
         vm.ownerName = response.fullName;
-      } else {
+      } else if (_.has(response, 'userName') && response.userName) {
         vm.ownerName = response.userName;
       }
     });
@@ -51,6 +52,7 @@ angular
     '$location',
     '$window',
     '$log',
+    '_',
     AboutSharingCtrl
   ]);
 

@@ -29,7 +29,7 @@ from .serializers import AssaySerializer, AttributeOrderSerializer
 from .single_file_column_parser import process_metadata_table
 from .tasks import parse_isatab
 from .utils import (customize_attribute_response, format_solr_response,
-                    generate_solr_params, get_owner_from_assay,
+                    generate_solr_params_for_assay, get_owner_from_assay,
                     initialize_attribute_order_ranks,
                     is_field_in_hidden_list, search_solr,
                     update_attribute_order_ranks)
@@ -716,7 +716,7 @@ class AssaysFiles(APIView):
 
         params = request.query_params
 
-        solr_params = generate_solr_params(params, uuid)
+        solr_params = generate_solr_params_for_assay(params, uuid)
         solr_response = search_solr(solr_params, 'data_set_manager')
         solr_response_json = format_solr_response(solr_response)
 

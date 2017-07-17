@@ -8,20 +8,19 @@
 # cfn-pyplates: https://cfn-pyplates.readthedocs.org/
 # AWS Cloudformation: https://aws.amazon.com/cloudformation/
 # CloudInit: https://help.ubuntu.com/community/CloudInit
-
 import argparse
 import base64
-import datetime
 import json
 import os
-import random
 import sys
 
 import boto3
 from cfn_pyplates import core, functions
-import yaml
 
-VERSION = '1.0'
+from utils import (load_config, load_tags,
+                   save_s3_config, ensure_s3_bucket)
+
+VERSION = '1.1'
 
 
 def main():
@@ -44,12 +43,27 @@ def main():
         sys.stdout.write("{}\n".format(template))
     elif args.command == 'create':
         template = make_template(config, config_yaml)
+        ensure_s3_bucket(config['S3_LOG_BUCKET'])
         cloudformation = boto3.client('cloudformation')
         response = cloudformation.create_stack(
             StackName=config['STACK_NAME'],
             TemplateBody=str(template),
             Capabilities=['CAPABILITY_IAM'],
             Tags=load_tags(),
+            Parameters=[
+                {
+                    'ParameterKey': 'IdentityPoolName',
+                    'ParameterValue': config['COGNITO_IDENTITY_POOL_NAME']
+                },
+                {
+                    'ParameterKey': 'DeveloperProviderName',
+                    'ParameterValue': config['COGNITO_DEVELOPER_PROVIDER_NAME']
+                },
+                {
+                    'ParameterKey': 'StorageStackName',
+                    'ParameterValue': config['STACK_NAME'] + 'Storage'
+                },
+            ]
         )
         sys.stdout.write("{}\n".format(json.dumps(response, indent=2)))
 
@@ -79,7 +93,7 @@ def make_template(config, config_yaml):
 
     config['tags'] = instance_tags
 
-    config_uri = save_s3_config(config, stack_name)
+    config_uri = save_s3_config(config)
     sys.stdout.write("Configuration saved to {}\n".format(config_uri))
 
     tls_rewrite = "false"
@@ -128,6 +142,41 @@ def make_template(config, config_yaml):
                 'Description':
                 "Tag added to EC2 Instances so that "
                 "the EBS Snapshot Scheduler will recognise them.",
+            }
+        )
+    )
+    cft.parameters.add(
+        core.Parameter(
+            'IdentityPoolName',
+            'String',
+            {
+                'Default': 'Refinery Platform',
+                'Description': 'Name of Cognito identity pool for S3 uploads',
+            }
+        )
+    )
+    cft.parameters.add(
+        core.Parameter(
+            'DeveloperProviderName',
+            'String',
+            {
+                'Default': 'login.refinery',
+                'Description': '"domain" by which Cognito will refer to users',
+                'AllowedPattern': '[a-z\-\.]+',
+                'ConstraintDescription':
+                    'must only contain lower case letters, periods, '
+                    'underscores, and hyphens'
+            }
+        )
+    )
+    cft.parameters.add(
+        core.Parameter(
+            'StorageStackName',
+            'String',
+            {
+                'Default': '${AWS::StackName}Storage',
+                'Description': 'Name of the S3 storage stack for Django '
+                               'static and media files',
             }
         )
     )
@@ -292,6 +341,39 @@ def make_template(config, config_yaml):
                             }
                         ]
                     }
+                },
+                {
+                    "PolicyName": "CognitoAccess",
+                    "PolicyDocument": {
+                        "Version": "2012-10-17",
+                        "Statement": [
+                            {
+                                "Effect": "Allow",
+                                "Action": [
+                                    "cognito-identity:ListIdentityPools",
+                                ],
+                                "Resource": "arn:aws:cognito-identity:*"
+                            },
+                            {
+                                "Effect": "Allow",
+                                "Action": [
+                                    "cognito-identity:"
+                                    "GetOpenIdTokenForDeveloperIdentity"
+                                ],
+                                "Resource": {
+                                    "Fn::Sub": [
+                                        "arn:aws:cognito-identity:"
+                                        "${AWS::Region}:${AWS::AccountId}:"
+                                        "identitypool/${Pool}",
+                                        {
+                                            "Pool":
+                                                functions.ref('IdentityPool')
+                                        }
+                                    ]
+                                }
+                            }
+                        ]
+                    }
                 }
             ]
         })
@@ -442,6 +524,18 @@ def make_template(config, config_yaml):
     cft.resources.elb = core.Resource(
         'LoadBalancer', 'AWS::ElasticLoadBalancing::LoadBalancer',
         {
+            'AccessLoggingPolicy': {
+                'EmitInterval': functions.ref('LogInterval'),
+                'Enabled': True,
+                'S3BucketName': config['S3_LOG_BUCKET'],
+                # 'S3BucketPrefix' unused
+            },
+            'AvailabilityZones': [
+                functions.get_att('WebInstance', 'AvailabilityZone')
+            ],
+            'ConnectionSettings': {
+                'IdleTimeout': 1800  # seconds
+            },
             'HealthCheck': {
                 'HealthyThreshold': '2',
                 'Interval': '30',
@@ -450,178 +544,158 @@ def make_template(config, config_yaml):
                 'UnhealthyThreshold': '4'
             },
             'Instances': [functions.ref('WebInstance')],
-
+            'LoadBalancerName': config['STACK_NAME'],
             'Listeners': listeners,
             'SecurityGroups': [
                 functions.get_att('ELBSecurityGroup', 'GroupId')],
-            "Tags": instance_tags,  # todo: Should be different?
-            'AvailabilityZones': [
-                functions.get_att('WebInstance', 'AvailabilityZone')
-            ],
-            'ConnectionSettings': {
-                'IdleTimeout': 1800  # seconds
+            'Tags': load_tags(),
+        })
+    cft.parameters.add(
+        core.Parameter('LogInterval', 'Number', {
+                'Default': 60,
+                'Description':
+                "How often, in minutes, the ELB emits its logs to the "
+                "configured S3 bucket. The ELB log facility restricts "
+                "this to be 5 or 60.",
+            }
+        )
+    )
+
+    # Cognito Identity Pool for Developer Authenticated Identities Authflow
+    # http://docs.aws.amazon.com/cognito/latest/developerguide/authentication-flow.html
+    cft.resources.add(
+        core.Resource(
+            'IdentityPool',
+            'AWS::Cognito::IdentityPool',
+            core.Properties(
+                {
+                    'IdentityPoolName': functions.ref('IdentityPoolName'),
+                    'AllowUnauthenticatedIdentities': False,
+                    'DeveloperProviderName':
+                        functions.ref('DeveloperProviderName'),
+                }
+            )
+        )
+    )
+    cft.resources.add(
+        core.Resource(
+            'IdentityPoolAuthenticatedRole',
+            'AWS::Cognito::IdentityPoolRoleAttachment',
+            core.Properties(
+                {
+                    'IdentityPoolId': functions.ref('IdentityPool'),
+                    'Roles': {
+                        'authenticated':
+                            functions.get_att('CognitoS3UploadRole', 'Arn'),
+                    }
+                }
+            )
+        )
+    )
+    upload_role_trust_policy = {
+        "Version": "2012-10-17",
+        "Statement": [
+            {
+                "Effect": "Allow",
+                "Principal": {
+                    "Federated": "cognito-identity.amazonaws.com"
+                },
+                "Action": "sts:AssumeRoleWithWebIdentity",
+                "Condition": {
+                    "StringEquals": {
+                        "cognito-identity.amazonaws.com:aud":
+                            functions.ref('IdentityPool')
+                    },
+                    "ForAnyValue:StringLike": {
+                        "cognito-identity.amazonaws.com:amr": "authenticated"
+                    }
+                }
+            }
+        ]
+    }
+    upload_access_policy = {
+        "Version": "2012-10-17",
+        "Statement": [
+            {
+                "Effect": "Allow",
+                "Action": [
+                    "cognito-identity:*"
+                ],
+                "Resource": "*"
+            },
+            {
+                "Action": "s3:PutObject",
+                "Effect": "Allow",
+                "Resource": {
+                    "Fn::Sub": [
+                        "arn:aws:s3:::${MediaBucket}/uploads/"
+                        "${!cognito-identity.amazonaws.com:sub}/*",
+                        {
+                            "MediaBucket": {
+                                "Fn::ImportValue": {
+                                    "Fn::Sub": "${StorageStackName}Media"
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        ]
+    }
+    cft.resources.add(
+        core.Resource(
+            'CognitoS3UploadRole',
+            'AWS::IAM::Role',
+            core.Properties(
+                {
+                    'AssumeRolePolicyDocument': upload_role_trust_policy,
+                    'Policies': [
+                        {
+                            'PolicyName': 'AuthenticatedS3UploadPolicy',
+                            'PolicyDocument': upload_access_policy,
+                        }
+                    ]
+                }
+            )
+        )
+    )
+
+    # See http://docs.aws.amazon.com/elasticloadbalancing/latest/classic/enable-access-logs.html#attach-bucket-policy # noqa: E501
+    # for full list of region--principal identifiers.
+    cft.mappings.region = core.Mapping(
+        'Region',
+        {'us-east-1': {'ELBPrincipal': '127311923021'}})
+
+    cft.resources.log_policy = core.Resource(
+        'LogBucketPolicy', 'AWS::S3::BucketPolicy',
+        core.Properties({
+            'Bucket': config['S3_LOG_BUCKET'],
+            'PolicyDocument': {
+                'Statement': [{
+                    "Action": [
+                      "s3:PutObject"
+                    ],
+                    "Effect": "Allow",
+                    "Resource":
+                    functions.join(
+                        "",
+                        "arn:aws:s3:::",
+                        config['S3_LOG_BUCKET'],
+                        "/AWSLogs/",
+                        functions.ref("AWS::AccountId"), "/*"),
+                    "Principal": {
+                      "AWS": [
+                        functions.find_in_map(
+                            'Region',
+                            functions.ref("AWS::Region"), 'ELBPrincipal'),
+                      ]
+                    }
+                }]
             }
         })
+    )
 
     return cft
-
-
-def load_tags():
-    """Load AWS resource tags from aws-config/tags.yaml"""
-    tags = {}
-    try:
-        with open("aws-config/tags.yaml") as f:
-            tags.update(yaml.load(f))
-    except (IOError, yaml.YAMLError) as exc:
-        sys.stderr.write("Error reading AWS resource tags: {}\n".format(exc))
-        raise RuntimeError
-
-    if 'owner' not in tags:
-        tags['owner'] = os.popen("git config --get user.email").read().rstrip()
-
-    return [{'Key': k, 'Value': v} for k, v in tags.items()]
-
-
-def load_config():
-    """Configuration is loaded from `aws-config/config.yaml`
-
-    An automatically generated section (for a small number of keys) may be
-    added to this file
-
-    A pair (dict, string) is returned:
-    the config as a dictionary and a string that is the contents of the file
-    """
-
-    config = _load_config_file("config.yaml")
-
-    # Generate warning for old keys that we no longer use.
-
-    ignored = ['VOLUME']
-    bad = []
-    for key in ignored:
-        if key in config:
-            bad.append(key)
-    if bad:
-        sys.stderr.write("{:s} no longer used, ignoring\n".format(
-            bad))
-
-    # Generate some special keys that are optional to specify.
-    generated_config = {}
-    if 'ADMIN_PASSWORD' not in config:
-        generated_config['ADMIN_PASSWORD'] = random_password(8)
-
-    if 'S3_CONFIG_BUCKET' not in config:
-        bucket_name = create_random_s3_bucket()
-        generated_config['S3_CONFIG_BUCKET'] = bucket_name
-
-    # Append the automatically generated config to config.yaml
-    if generated_config:
-        with open("aws-config/config.yaml", 'a') as o:
-            o.write("# Automatically generated by stack.py\n")
-            o.write("# on {} UTC\n".format(datetime.datetime.utcnow()))
-            yaml.dump(generated_config,
-                      stream=o,
-                      default_flow_style=False)
-
-    # Update the config, by adding the automatically generated keys.
-    config.update(generated_config)
-
-    report_missing_keys(config)
-
-    # Optional in `config.yaml`
-    if 'RDS_NAME' not in config:
-        config['RDS_NAME'] = config['STACK_NAME']
-
-    with open("aws-config/config.yaml", 'r') as f:
-        config_string = f.read()
-
-    return config, config_string
-
-
-def _load_config_file(filename):
-    """Load a single file"""
-
-    config_dir = "aws-config"
-    full_path = os.path.join(config_dir, filename)
-
-    with open(full_path) as f:
-        y = yaml.load(f)
-        if y:
-            return y
-
-    # Convert "null" to empty dict()
-    return {}
-
-
-def create_random_s3_bucket():
-    """Choose a random bucket name and create the S3 bucket"""
-
-    # http://boto3.readthedocs.org/en/latest/guide/migrations3.html
-    s3 = boto3.resource('s3')
-
-    bucket_name = 'refinery-' + random_alnum(13)
-    s3.create_bucket(Bucket=bucket_name)
-    return bucket_name
-
-
-def save_s3_config(config, suffix):
-    """Save the config as an S3 object in an S3 bucket
-    The config must have an 'S3_CONFIG_BUCKET' key, which is used for the name
-    of the S3 bucket
-
-    A URI in the form s3://bucket/key is returned
-    this URI refers to the S3 object that is created
-    """
-
-    # http://boto3.readthedocs.org/en/latest/guide/migrations3.html
-    s3 = boto3.resource('s3')
-
-    bucket_name = config['S3_CONFIG_BUCKET']
-
-    object_name = ("refinery-config-" + suffix)
-
-    s3_uri = "s3://{}/{}".format(bucket_name, object_name)
-    config['S3_CONFIG_URI'] = s3_uri
-
-    # Store config as JSON in S3 object.
-    s3_object = s3.Object(bucket_name, object_name)
-    s3_object.put(Body=json.dumps(config, indent=2))
-    return s3_uri
-
-
-def report_missing_keys(config):
-    """Collect and report list of missing keys"""
-
-    required = ['ADMIN_PASSWORD', 'KEY_NAME', 'RDS_SUPERUSER_PASSWORD',
-                'SITE_NAME', 'SITE_URL', 'STACK_NAME']
-    bad = []
-    for key in required:
-        if key not in config:
-            bad.append(key)
-    if bad:
-        sys.stderr.write("aws-config\ must have values for:\n{!r}\n".format(
-            bad))
-        raise RuntimeError
-    return True
-
-
-def random_alnum(n):
-    """Random alphanumeric (digits and lowercase) string of length `n`"""
-
-    import string
-
-    return ''.join(
-        random.choice(string.ascii_lowercase + string.digits)
-        for _ in range(n))
-
-
-def random_password(n):
-    """Generate a random password using `n` bytes of randomness"""
-
-    import binascii
-
-    password = binascii.b2a_hex(os.urandom(n))
-    return password
 
 
 if __name__ == '__main__':

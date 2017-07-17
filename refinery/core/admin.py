@@ -14,8 +14,7 @@ from core.models import (
     ExtendedGroup, InvestigationLink, NodePair, NodeRelationship, NodeSet,
     Project, UserProfile, Workflow, WorkflowDataInput, WorkflowDataInputMap,
     WorkflowEngine, WorkflowFilesDL, WorkflowInputRelationships, Download,
-    Invitation, Ontology,
-    Tutorials)
+    Invitation, Ontology, Tutorials, SiteProfile)
 from core.utils import admin_ui_deletion
 
 
@@ -182,6 +181,10 @@ class OntologyAdmin(GuardedModelAdmin):
                     'owl2neo4j_version', 'import_date', 'update_date']
 
 
+class SiteProfileAdmin(GuardedModelAdmin):
+    list_display = ['__unicode__', 'site']
+
+
 admin.site.register(ExtendedGroup, ExtendedGroupAdmin)
 admin.site.register(Project, ProjectAdmin)
 admin.site.register(DataSet, DataSetAdmin)
@@ -205,3 +208,4 @@ admin.site.register(Tutorials, TutorialsAdmin)
 admin.site.register(WorkflowInputRelationships,
                     WorkflowInputRelationshipsAdmin)
 admin.site.register(Ontology, OntologyAdmin)
+admin.site.register(SiteProfile, SiteProfileAdmin)

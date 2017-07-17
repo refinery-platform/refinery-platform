@@ -1,29 +1,28 @@
 from __future__ import absolute_import
-import logging
 
 import ast
-import py2neo
+import logging
 import sys
+from urlparse import urljoin, urlparse
 
-import requests
 from django.conf import settings
 from django.contrib import messages
-from django.contrib.sites.models import Site
 from django.contrib.auth.models import User
-from django.core.mail import send_mail
+from django.contrib.sites.models import Site
 from django.core.cache import cache
+from django.core.mail import send_mail
 from django.db import connection
 from django.utils import timezone
-from rest_framework.response import Response
-from rest_framework import status
-from urlparse import urlparse, urljoin
 
-import core
-import data_set_manager
+import py2neo
+import requests
+from rest_framework.response import Response
 
 # These imports go against our coding style guide, but are necessary for the
 #  time being due to mutual import issues
+import core
 from core.search_indexes import DataSetIndex
+import data_set_manager
 from data_set_manager.search_indexes import NodeIndex
 
 logger = logging.getLogger(__name__)
@@ -459,27 +458,50 @@ def normalize_annotation_ont_ids(annotations):
     some only provide the ID.
     """
 
-    new_annotations = []
-    for annotation in annotations:
+    # Copy annotation list
+    new_annotations = list(annotations)
+
+    # Update new annotations in place
+    for annotation in new_annotations:
         underscore_pos = annotation['value_accession'].rfind('_')
         if underscore_pos >= 0:
             annotation['value_accession'] = \
                 annotation['value_accession'][(underscore_pos + 1):]
-            new_annotations.append(annotation)
-            continue
 
         hash_pos = annotation['value_accession'].rfind('#')
         if hash_pos >= 0:
             annotation['value_accession'] = \
                 annotation['value_accession'][(hash_pos + 1):]
-            new_annotations.append(annotation)
-            continue
 
         if annotation['value_source'] == 'CL':
             annotation['value_accession'] = \
                 annotation['value_accession'].zfill(7)
-            continue
+
     return new_annotations
+
+
+def normalize_annotation_uri(uri):
+    """Normalize an ontology URI. Some ontologies defined
+    ambiguous URIs which is...  Anyway, harmonizing them increases the mapping
+    quality.
+    """
+
+    if (uri.startswith('http://purl.bioontology.org/ontology/NCBITAXON/')):
+        return 'http://purl.obolibrary.org/obo/NCBITaxon_{}'.format(uri[47:])
+
+    return uri
+
+
+def normalize_annotation_uris(annotations):
+    """Normalize multiple annotation ontology uris.
+    """
+
+    for annotation in annotations:
+        annotation['value_accession'] = normalize_annotation_uri(
+            annotation['value_accession']
+        )
+
+    return annotations
 
 
 def get_data_set_annotations(dataset_uuid):
@@ -715,7 +737,7 @@ def get_data_sets_annotations(dataset_ids=[]):
             response[row[0]] = []
 
         response[row[0]].append({
-            'term': row[1],
+            'term': normalize_annotation_uri(row[1]),
             'count': row[2]
         })
 
@@ -851,43 +873,6 @@ def email_admin(subject, message):
               [settings.ADMINS[0][1]])
 
 
-def create_current_selection_node_group(assay_uuid):
-    """
-    Helper method to create a current selection group which
-    is default for all node_group list
-
-    :param assay_uuid: string of uuid
-    :return: Response obj
-    """
-    # confirm an assay exists
-    try:
-        assay = data_set_manager.models.Assay.objects.get(uuid=assay_uuid)
-    except data_set_manager.models.Assay.DoesNotExist as e:
-        return Response(e, status=status.HTTP_404_NOT_FOUND)
-    except data_set_manager.models.Assay.MultipleObjectsReturned as e:
-        return Response(status=status.HTTP_400_BAD_REQUEST)
-
-    study_uuid = assay.study.uuid
-    # initialize node_group with a current_selection
-    serializer = core.serializers.NodeGroupSerializer(data={
-        'assay': assay_uuid,
-        'study': study_uuid,
-        'name': 'Current Selection'
-    })
-
-    # creating a default current_selection, therefore returning 201
-    if serializer.is_valid():
-        serializer.save()
-        # UI expects a list from assay query
-        return Response(
-            [serializer.data],
-            status=status.HTTP_201_CREATED)
-    else:
-        return Response(
-            serializer.errors,
-            status=status.HTTP_400_BAD_REQUEST)
-
-
 def filter_nodes_uuids_in_solr(assay_uuid, filter_out_uuids=[],
                                filter_attribute={}):
     """
@@ -919,7 +904,7 @@ def filter_nodes_uuids_in_solr(assay_uuid, filter_out_uuids=[],
         else:
             params['facets'] = ','.join(filter_attribute.keys())
 
-    solr_params = data_set_manager.utils.generate_solr_params(
+    solr_params = data_set_manager.utils.generate_solr_params_for_assay(
         params, assay_uuid)
     # Only require solr filters if exception uuids are passed
     if filter_out_uuids:
@@ -992,3 +977,9 @@ def move_obj_to_front(obj_arr, match_key, match_value):
             break
 
     return modified_obj_arr
+
+
+def api_error_response(error_message, http_status_code):
+    """Return and log error for Django Rest Framework API calls"""
+    logger.error(error_message)
+    return Response({'Error': error_message}, status=http_status_code)

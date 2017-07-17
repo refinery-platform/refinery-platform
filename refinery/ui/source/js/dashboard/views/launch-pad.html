@@ -1,14 +1,85 @@
-<div id="launchpadStep0"
+<div id="launch-pad"
   class="col-md-4"
   refinery-expandable-panel>
   <div class="refinery-panel">
-    <div class="refinery-header">
-      <span class="refinery-header-left">
+    <div class="refinery-header flex-c flex-ac flex-sb">
+      <div>
         <h3>
           <i class="m-r-1-4 fa fa-file"></i>Data Sets
         </h3>
-      </span>
-      <span class="refinery-header-right">
+      </div>
+      <div
+        class="flex-g-1 flex-c flex-jc"
+        ng-if="dashboard.dataSetExploration">
+        <span
+          id="intro-js-satori-overview-start"
+          class="btn"
+          ng-click="dashboard.introsSatoriOverview.start()">
+          <span class="fa fa-info-circle"></span>
+          Intro Tour
+        </span>
+        <span class="separator">&middot;</span>
+        <span class="help-item">
+          <span class="f-box">Highlight:</span>
+          <span
+            class="f-box"
+            title="Hover with mouse"
+            refinery-tooltip
+            refinery-tooltip-container="body"
+            refinery-tooltip-placement="{{ dashboard.settings.djangoApp.satoriDemo ? 'bottom' : 'top' }}">
+            <svg class="svg-icon icon-cursor-default">
+              <use
+                xmlns:xlink="http://www.w3.org/1999/xlink"
+                xlink:href="/static/images/icons.svg#cursor-default"></use>
+            </svg>
+          </span>
+        </span>
+        <span class="help-item">
+          <span class="f-box">Lock:</span>
+          <span
+            class="f-box"
+            title="Click with mouse"
+            refinery-tooltip
+            refinery-tooltip-container="body"
+            refinery-tooltip-placement="{{ dashboard.settings.djangoApp.satoriDemo ? 'bottom' : 'top' }}">
+            <svg class="svg-icon icon-cursor-click">
+              <use
+                xmlns:xlink="http://www.w3.org/1999/xlink"
+                xlink:href="/static/images/icons.svg#cursor-click"></use>
+            </svg>
+          </span>
+        </span>
+        <span class="help-item">
+          <span class="f-box">Query:</span>
+          <span
+            class="f-box"
+            title="Hold Command Key and click with mouse"
+            refinery-tooltip
+            refinery-tooltip-container="body"
+            refinery-tooltip-placement="{{ dashboard.settings.djangoApp.satoriDemo ? 'bottom' : 'top' }}">
+            <span class="f-box m-l-1-4">&#8984; + </span>
+            <svg class="svg-icon icon-cursor-click">
+              <use
+                xmlns:xlink="http://www.w3.org/1999/xlink"
+                xlink:href="/static/images/icons.svg#cursor-click"></use>
+            </svg>
+          </span>
+          <span class="f-box">or</span>
+          <span
+            class="f-box"
+            title="Double click with mouse"
+            refinery-tooltip
+            refinery-tooltip-container="body"
+            refinery-tooltip-placement="{{ dashboard.settings.djangoApp.satoriDemo ? 'bottom' : 'top' }}">
+            <svg class="svg-icon icon-cursor-dblclick">
+              <use
+                xmlns:xlink="http://www.w3.org/1999/xlink"
+                xlink:href="/static/images/icons.svg#cursor-dblclick"></use>
+            </svg>
+          </span>
+        </span>
+      </div>
+      <div>
         <div ng-controller="dataUploadTutorialCtrl">
           <div ng-intro-options="dataUploadIntroOptions"
                ng-intro-method="dataUploadStart"
@@ -16,12 +87,29 @@
                ng-intro-onchange="dataUploadChangeEvent" ng-intro-onbeforechange="dataUploadBeforeChangeEvent"
                ng-intro-onafterchange="dataUploadAfterChangeEvent">
             <div>
+              <!-- TODO:
+              <span>
+                <a
+                  href="./user_files/"
+                  class="no-underline btn">
+                  <i class="fa fa-list"></i> List
+                </a>
+              </span>
+              -->
               <button
                 class="no-underline btn"
                 ng-class="{'active': dashboard.dataSetExploration}"
                 ng-click="dashboard.toggleDataSetsExploration()"
-                ng-if="dashboard.explorationEnabled">
-                <i class="fa fa-compass" title="Explore data sets"></i> Explore
+                ng-if="dashboard.explorationEnabled && !dashboard.settings.djangoApp.satoriDemo">
+                <i class="fa fa-compass" title="Explore data sets"></i>
+                Explor{{ dashboard.dataSetExploration ? 'ing' : 'e' }}
+              </button>
+              <button
+                class="no-underline btn"
+                ng-click="dashboard.toggleDataSetsExploration()"
+                ng-if="dashboard.explorationEnabled && dashboard.settings.djangoApp.satoriDemo">
+                <i class="fa fa-{{ dashboard.dataSetExploration ? 'arrow-circle-left' : 'compass' }}" title="Explore data sets"></i>
+                {{ dashboard.dataSetExploration ? 'Back Home' : 'Start Exploring' }}
               </button>
               <span id="dataUploadTutorialStep0">
                <a
@@ -35,21 +123,21 @@
             </div>
           </div>
         </div>
-      </span>
+      </div>
     </div>
 
-    <div id="launchpadStep1Fix"
+    <div
+      id="data-set-panel"
       class="refinery-sub-panel"
       ng-class="{'border': dashboard.expandedDataSetPanelBorder}"
       refinery-width-fixer>
-
-      <form class="navbar-search form-group">
-        <div id="launchpadStep1">
+      <form
+        id="search-interface"
+        class="navbar-search form-group">
         <i class="fa fa-search"></i>
         <i class="fa fa-times-circle"
           ng-if="dashboard.searchQueryDataSets"
           ng-click="dashboard.resetDataSetSearch()"></i>
-
         <!--The 'metadata-search' id below is used to define custom
           styling to address a padding issue observed in Firefox-->
         <input
@@ -59,10 +147,11 @@
           placeholder="Search"
           ng-model="dashboard.searchQueryDataSets"
           ng-change="dashboard.searchDataSets(dashboard.searchQueryDataSets)">
-          </div>
       </form>
 
-      <div class="refinery-panel-header">
+      <div
+        id="data-set-panel-header"
+        class="refinery-panel-header">
         <div
           class="refinery-notification"
           ng-class="{'active': dashboard.showNotification() }">
@@ -92,7 +181,21 @@
           </div>
         </div>
         <div class="floatbox">
-          <div id="launchpadStep2" class="floatbox-min-right">
+          <div
+            id="data-cart-filter-sort"
+            class="floatbox-min-right">
+            <button
+              class="fa fa-info-circle icon-only"
+              title="Introduction to the Data Set View"
+              ng-click="dashboard.introsSatoriDataSetView.start()"
+              ng-if="dashboard.dataSetExploration"
+              refinery-tooltip
+              refinery-tooltip-container="body"
+              refinery-tooltip-placement="left"
+              refinery-tooltip-delay-show="750"
+              refinery-tooltip-delay-hide="150"
+              refinery-tooltip-hide-on-click="true">
+            </button>
             <button
               class="fa fa-shopping-cart is-mirrored icon-only disabled-default"
               title="Data Cart"
@@ -100,7 +203,7 @@
               ng-click="dashboard.toggleDataCart()"
               refinery-tooltip
               refinery-tooltip-container="body"
-              refinery-tooltip-placement="left"
+              refinery-tooltip-placement="top"
               refinery-tooltip-delay-show="750"
               refinery-tooltip-delay-hide="150"
               refinery-tooltip-hide-on-click="true">
@@ -144,7 +247,9 @@
               <span ng-if="dashboard.searchQueryDataSets.length">
                 Found
               </span>
-              <span ng-if="dashboard.dataSets.totalUpperBound">
+              <span
+                id="total-datasets"
+                ng-if="dashboard.dataSets.totalUpperBound">
                 {{ dashboard.dataSets.totalReadable }} of
                 <abbr title="approximately">~</abbr>
                 {{ dashboard.dataSets.totalUpperBound }}
@@ -246,7 +351,9 @@
           </label>
         </div>
       </div>
-      <div id="launchpadStep3" refinery-panel-ref-offset>
+      <div
+        id="data-set-list"
+        refinery-panel-ref-offset>
         <div
           class="data-cart"
           ng-class="{ 'active': dashboard.showDataCart }"
@@ -293,9 +400,21 @@
                 ng-mouseleave="dashboard.dataSetMouseLeave(dataSet)">
 
                 <a
+                  class="preview is-not-allowed"
+                  title="View content in File Browser"
+                  ng-if="dashboard.settings.djangoApp.satoriDemo"
+                  ng-click="dashboard.openFileBrowserDisabled()"
+                  refinery-tooltip
+                  refinery-tooltip-container="body"
+                  refinery-tooltip-placement="right"
+                  refinery-tooltip-hide-on-click="true">
+                  <i class="primary-text-color fa fa-table"></i>
+                </a>
+                <a
                   class="preview"
                   title="View content in File Browser"
                   ng-href="data_sets/{{ dataSet.uuid }}"
+                  ng-if="!dashboard.settings.djangoApp.satoriDemo"
                   refinery-tooltip
                   refinery-tooltip-container="body"
                   refinery-tooltip-placement="right"
@@ -331,11 +450,8 @@
                 <a
                   class="title one-line"
                   title="Expand data set preview"
-                  refinery-tooltip
-                  refinery-tooltip-container="body"
-                  refinery-tooltip-placement="top"
                   ng-click="dashboard.expandDataSetPreview(dataSet.uuid)"
-                  ng-bind-html="dataSet.title"></a>
+                  ng-bind-html="dataSet.titleHtml"></a>
                 <div class="flex-box indicators">
                   <ul class="flex-item-two flex-left no-list-style">
                     <li class="indicator"
@@ -438,6 +554,7 @@
             class="results no-list-style infinite-scrolling"
             ng-class="{'search': dashboard.searchDataSet}">
             <li
+              class="data-set-surrogate"
               ui-scroll="dataSet in dashboard.dataSets"
               buffer-size="50"
               adapter="dashboard.dataSetsAdapter"
@@ -445,9 +562,23 @@
               ng-mouseenter="dashboard.dataSetMouseEnter(dataSet)"
               ng-mouseleave="dashboard.dataSetMouseLeave(dataSet)">
               <a
+                class="preview is-not-allowed"
+                title="View content in File Browser"
+                ng-if="dashboard.settings.djangoApp.satoriDemo"
+                ng-click="dashboard.openFileBrowserDisabled()"
+                refinery-tooltip
+                refinery-tooltip-container="body"
+                refinery-tooltip-placement="right"
+                refinery-tooltip-delay-show="750"
+                refinery-tooltip-delay-hide="150"
+                refinery-tooltip-hide-on-click="true">
+                <i class="primary-text-color fa fa-table"></i>
+              </a>
+              <a
                 class="preview"
                 title="View content in File Browser"
                 ng-href="data_sets/{{ dataSet.uuid }}"
+                ng-if="!dashboard.settings.djangoApp.satoriDemo"
                 refinery-tooltip
                 refinery-tooltip-container="body"
                 refinery-tooltip-placement="right"
@@ -485,11 +616,8 @@
               <a
                 class="title"
                 title="Expand data set preview"
-                refinery-tooltip
-                refinery-tooltip-container="body"
-                refinery-tooltip-placement="top"
                 ng-click="dashboard.expandDataSetPreview(dataSet.uuid)"
-                ng-bind-html="dataSet.title"></a>
+                ng-bind-html="dataSet.titleHtml"></a>
               <div class="flex-box indicators">
                 <ul class="flex-item-two flex-left no-list-style">
                   <li class="indicator"
@@ -582,8 +710,8 @@
               </div>
               <p
                 class="snippet"
-                ng-if="dataSet.description && dashboard.searchDataSet"
-                ng-bind-html="dataSet.description"></p>
+                ng-if="dataSet.descriptionHtml && dashboard.searchDataSet"
+                ng-bind-html="dataSet.descriptionHtml"></p>
             </li>
             <li ng-if="dashboard.dataSetsAdapter.isLoading">
               <div class="refinery-request-loading">
@@ -596,8 +724,9 @@
     </div>
     <refinery-expansion-panel>
       <refinery-data-set-preview
+        active="dashboard.dataSetPreview"
         close="dashboard.collapseDataSetPreview()"
-        active="dashboard.dataSetPreview">
+        exploration="dashboard.dataSetExploration">
       </refinery-data-set-preview>
       <refinery-dashboard-vis-wrapper
         active="dashboard.dataSetExploration"
@@ -608,8 +737,8 @@
         ng-if="dashboard.repoMode">
         <div class="content-container">
           <div class="refinery-panel-topbar"></div>
-          <div class="full-without-topbar">
-            <div class="refinery-global-notifier">
+          <div class="full-without-topbar" ng-class="{ 'custom-repo-mode-html': dashboard.customRepoModeHtml }">
+            <div class="refinery-global-notifier" ng-if="!dashboard.customRepoModeHtml">
               <div class="refinery-repo-mode">
                 <svg class="icon-refinery">
                   <use
@@ -618,6 +747,11 @@
                 </svg><br/>
                 Repository Mode
               </div>
+            </div>
+            <div
+              id="custom-repo-mode-html"
+              ng-if="dashboard.customRepoModeHtml"
+              ng-bind-html="dashboard.customRepoModeHtml">
             </div>
           </div>
         </div>
@@ -631,7 +765,7 @@
   ng-if="dashboard.expandedDataSetPanelBorder">
 </div>
 
-<div id="launchpadStep4"
+<div id="analyses-panel"
   class="col-md-4 pushable"
   ng-class="{'pushed': dashboard.expandDataSetPanel}"
   ng-if="!dashboard.repoMode">
@@ -866,7 +1000,7 @@
   </div>
 </div>
 
-<div id="launchpadStep5"
+<div id="workflows-panel"
   class="col-md-4 pushable"
   ng-class="{'pushed': dashboard.expandDataSetPanel}"
   ng-if="!dashboard.repoMode">
@@ -960,3 +1094,23 @@
     </div>
   </div>
 </div>
+
+<!-- Intro.js Overview of SATORI -->
+<div
+  ng-intro-options="dashboard.introsSatoriOverview.options"
+  ng-intro-method="dashboard.introsSatoriOverview._start"
+  ng-intro-exit-method="dashboard.introsSatoriOverview._exit"
+  ng-intro-onbeforechange="dashboard.introsSatoriOverview.beforeChangeEvent"
+  ng-intro-autostart="dashboard.introsSatoriOverview.autoStart"
+  ng-intro-oncomplete="dashboard.introsSatoriOverview.complete"
+  ng-intro-onexit="dashboard.introsSatoriOverview.exit"></div>
+
+<!-- Intro.js Details of the Data Set View -->
+<div
+  ng-intro-options="dashboard.introsSatoriDataSetView.options"
+  ng-intro-method="dashboard.introsSatoriDataSetView._start"
+  ng-intro-exit-method="dashboard.introsSatoriDataSetView._exit"
+  ng-intro-onbeforechange="dashboard.introsSatoriDataSetView.beforeChangeEvent"
+  ng-intro-autostart="dashboard.introsSatoriDataSetView.autoStart"
+  ng-intro-oncomplete="dashboard.introsSatoriDataSetView.complete"
+  ng-intro-onexit="dashboard.introsSatoriDataSetView.exit">

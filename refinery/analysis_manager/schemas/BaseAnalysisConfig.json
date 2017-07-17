@@ -1,0 +1,29 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema",
+  "type": "object",
+  "required": [
+    "studyUuid",
+    "user_id",
+    "workflowUuid"
+  ],
+  "patterns": {
+    "uuid": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    }
+  },
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "studyUuid": {
+      "$ref": "#/patterns/uuid"
+    },
+    "user_id": {
+      "type": "number"
+    },
+    "workflowUuid": {
+      "$ref": "#/patterns/uuid"
+    }
+  }
+}

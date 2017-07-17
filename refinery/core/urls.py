@@ -5,11 +5,11 @@ Created on Feb 20, 2012
 '''
 
 from django.conf.urls import patterns, url
+
 from rest_framework.routers import DefaultRouter
 
-from .views import (AnalysesViewSet, DataSetsViewSet, NodeGroups,
-                    NodeViewSet, WorkflowViewSet)
-
+from .views import (AnalysesViewSet, DataSetsViewSet, NodeViewSet, OpenIDToken,
+                    WorkflowViewSet)
 
 urlpatterns = patterns(
     'core.views',
@@ -85,7 +85,8 @@ urlpatterns = patterns(
     url(r'^pubmed/summary/(?P<id>.+)/', 'pubmed_summary',
         name="pubmed_summary"),
     url(r'^neo4j/annotations/$', 'neo4j_dataset_annotations',
-        name="neo4j_dataset_annotations")
+        name="neo4j_dataset_annotations"),
+    url(r'^auto_login/$', 'auto_login', name='auto_login')
 )
 
 # DRF url routing
@@ -93,7 +94,6 @@ core_router = DefaultRouter()
 core_router.register(r'nodes', NodeViewSet)
 core_router.register(r'workflows', WorkflowViewSet)
 core_router.urls.extend([
-    url(r'^node_groups/$', NodeGroups.as_view()),
     url(r'^data_sets/(?P<uuid>'
         r'[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{'
         r''r'12})/$',
@@ -101,5 +101,7 @@ core_router.urls.extend([
     url(r'^analyses/(?P<uuid>'
         r'[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{'
         r''r'12})/$',
-        AnalysesViewSet.as_view())
+        AnalysesViewSet.as_view()),
+    url(r'^openid_token/$', OpenIDToken.as_view(),
+        name="openid-token")
 ])

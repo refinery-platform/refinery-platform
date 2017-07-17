@@ -25,6 +25,7 @@ angular
     'ngWebworker',
     'file-model',
     'angular-intro',
+    'LocalStorageModule',
 
     /*
      * Angular App globals
@@ -38,6 +39,7 @@ angular
     'clearFileInput',
     'mockParams',
     'replaceWhiteSpaceWithHyphen',
+    'triggerSvgEvent',
 
     /*
      * Refinery modules
@@ -58,7 +60,8 @@ angular
     'refineryChart',
     'refineryFileBrowser',
     'refineryDataSetAbout',
-    'refineryToolLaunch'
+    'refineryToolLaunch',
+    'refineryUserFileBrowser'
   ])
   .run(['$', '$rootScope', function ($, $rootScope) {
     //  trigger from the contents.js when the node selection list has been

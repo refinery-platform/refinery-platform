@@ -1,3 +1,9 @@
+/**
+ * Tool Launch Button Ctrl
+ * @namespace ToolLaunchButtonCtrl
+ * @desc Controller for component, rpToolLaunchButton.
+ * @memberOf refineryApp.refineryToolLaunch
+ */
 (function () {
   'use strict';
 
@@ -20,21 +26,34 @@
   ) {
     var vm = this;
     vm.launchTool = launchTool;
+    vm.needMoreNodes = needMoreNodes;
 
     /*
    * -----------------------------------------------------------------------------
    * Methods Definitions
    * -----------------------------------------------------------------------------
    */
-
+    /**
+     * @name launchTool
+     * @desc  VM methods associated with button to launch a tool by sending
+     * configs to the tool launch api
+     * @memberOf refineryToolLaunch.ToolLaunchButtonCtrl
+    **/
     function launchTool () {
       toolLaunchService.postToolLaunch().then(function (response) {
-        if (toolSelectService.selectedTool.tool_type === 'VISUALIZATION') {
-          $window.open(response.tool_url);
-        }
+        $window.open(response.tool_url);
       }, function (error) {
         $log.error(error);
       });
+    }
+
+   /**
+     * @name needMoreNodes
+     * @desc View method uses a service to check if the group has minimum nodes
+     * @memberOf refineryToolLaunch.ToolLaunchButtonCtrl
+    **/
+    function needMoreNodes () {
+      return toolLaunchService.checkNeedMoreNodes();
     }
   }
 })();

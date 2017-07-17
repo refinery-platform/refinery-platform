@@ -1,3 +1,9 @@
+/**
+ * Input Control Inner Nav Ctrl
+ * @namespace InputControlInnerNavCtrl
+ * @desc Controller for the inner group's navigation.
+ * @memberOf refineryApp.refineryToolLaunch
+ */
 (function () {
   'use strict';
 
@@ -8,14 +14,16 @@
   InputControlInnerNavCtrl.$inject = [
     '$scope',
     '_',
-    'fileRelationshipService'
+    'fileRelationshipService',
+    'toolLaunchService'
   ];
 
 
   function InputControlInnerNavCtrl (
     $scope,
     _,
-    fileRelationshipService
+    fileRelationshipService,
+    toolLaunchService
   ) {
     var fileService = fileRelationshipService;
     var vm = this;
@@ -30,45 +38,31 @@
    * Methods Definitions
    * ---------------------------------------------------------
    */
-    // helper method to check if each group-inputType are empty
-    function areInputFileTypesEmpty () {
-      var isEmpty = false;
-      angular.forEach(fileService.groupCollection[vm.currentGroup], function (inputList) {
-        if (inputList.length === 0) {
-          isEmpty = true;
-        }
-      });
-      return isEmpty;
-    }
-
-    // View method to check if the group has minimum nodes
+    /**
+     * @name needMoreNodes
+     * @desc View method  uses a service to check if the group has minimum nodes
+     * @memberOf refineryToolLaunch.InputControlInnerNavCtrl
+    **/
     function needMoreNodes () {
-      var moreFlag = false;
-      var groupType = fileService.currentTypes[fileService.currentTypes.length - 1];
-      if (!_.property(vm.currentGroup)(fileService.groupCollection)) {
-        moreFlag = true;
-      } else if (groupType === 'PAIR') {
-        // pair, requires 2 inputTypes
-        var inputLength = _.keys(fileService.groupCollection[vm.currentGroup]).length;
-        if (inputLength > 1) {
-          moreFlag = areInputFileTypesEmpty();
-        } else {
-          moreFlag = true;
-        }
-      } else {
-        // list
-        moreFlag = areInputFileTypesEmpty();
-      }
-      return moreFlag;
+      return toolLaunchService.checkNeedMoreNodes();
     }
-
+    /**
+     * @name navLeft
+     * @desc  Updates the current group when user navigates the inner group
+     * @memberOf refineryToolLaunch.InputControlInnerNavCtrl
+     * @param {int} depth - group nav index
+    **/
     //  View method to decrease the inner group
     function navLeft (depth) {
       fileService.currentGroup[depth]--;
       vm.currentGroup = fileService.currentGroup;
     }
-
-    // View method to increase the inner group
+    /**
+     * @name navRight
+     * @desc  Updates the current group when user navigates the inner group
+     * @memberOf refineryToolLaunch.InputControlInnerNavCtrl
+     * @param {int} depth - group nav index
+    **/
     function navRight (depth) {
       fileService.currentGroup[depth]++;
       vm.currentGroup = fileService.currentGroup;

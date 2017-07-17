@@ -51,7 +51,7 @@
         expect(typeof promise.then).toEqual('function');
       });
 
-      it('should return a succes status', function () {
+      it('should return a success status', function () {
         var postParams = {
           tool_definition_uuid: mocker.generateUuid(),
           file_relationships: '[' + mocker.generateUuid() + mocker.generateUuid() + ']'

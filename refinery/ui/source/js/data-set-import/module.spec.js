@@ -23,8 +23,8 @@ describe('DataSetImport.module: unit tests', function () {
       deps = module.value('refineryDataSetImport').requires;
     });
 
-    it('should have "angularFileUpload" as a dependency', function () {
-      expect(hasModule('angularFileUpload')).toEqual(true);
+    it('should have "ngFileUpload" as a dependency', function () {
+      expect(hasModule('ngFileUpload')).toEqual(true);
     });
 
     it('should have "blueimp.fileupload" as a dependency', function () {
