@@ -25,9 +25,9 @@ from .api import AnalysisResource
 from .management.commands.create_user import init_user
 from .models import (Analysis, AnalysisNodeConnection, DataSet, ExtendedGroup,
                      InvestigationLink, NodeSet, Project, Tutorials,
-                     UserProfile, Workflow, WorkflowEngine, create_nodeset,
-                     delete_nodeset, get_nodeset, invalidate_cached_object,
-                     update_nodeset)
+                     UserProfile, Workflow, WorkflowDataInputMap,
+                     WorkflowEngine, create_nodeset, delete_nodeset,
+                     get_nodeset, invalidate_cached_object, update_nodeset)
 from .search_indexes import DataSetIndex
 from .utils import (filter_nodes_uuids_in_solr, get_aware_local_time,
                     move_obj_to_front)
@@ -1343,6 +1343,20 @@ class AnalysisTests(TestCase):
         self.workflow1 = Workflow.objects.create(
             name="Workflow1", workflow_engine=self.workflow_engine)
 
+        # Create FileStoreItems
+        self.file_store_item = FileStoreItem.objects.create(
+            datafile=SimpleUploadedFile(
+                'test_file.txt',
+                'Coffee is delicious!'
+            )
+        )
+        self.file_store_item1 = FileStoreItem.objects.create(
+            datafile=SimpleUploadedFile(
+                'test_file.txt',
+                'Coffee is delicious!'
+            )
+        )
+
         # Create some DataSets that will have an analysis run upon them
         self.dataset_with_analysis = DataSet.objects.create()
         self.dataset_with_analysis1 = DataSet.objects.create()
@@ -1388,13 +1402,29 @@ class AnalysisTests(TestCase):
         self.assay1 = Assay.objects.create(study=self.study1)
 
         # Create Nodes
-        self.node = Node.objects.create(assay=self.assay, study=self.study,
-                                        analysis_uuid=self.analysis.uuid)
+        self.node = Node.objects.create(
+            assay=self.assay,
+            study=self.study,
+            analysis_uuid=self.analysis.uuid,
+            file_uuid=self.file_store_item.uuid
+        )
+        self.node2 = Node.objects.create(
+            assay=self.assay1,
+            study=self.study,
+            analysis_uuid=self.analysis_with_node_analyzed_further.uuid,
+            file_uuid=self.file_store_item1.uuid
+        )
 
-        self.node2 = Node.objects.create(assay=self.assay1, study=self.study1,
-                                         analysis_uuid=self.
-                                         analysis_with_node_analyzed_further
-                                         .uuid)
+        # Create WorkflowDataInputMaps
+        self.wf_data_input_map = WorkflowDataInputMap.objects.create(
+            workflow_data_input_name="input 1",
+            data_uuid=self.node.uuid
+        )
+        self.wf_data_input_map2 = WorkflowDataInputMap.objects.create(
+            workflow_data_input_name="input 2",
+            data_uuid=self.node2.uuid
+        )
+
         # Create AnalysisNodeConnections
         self.analysis_node_connection = \
             AnalysisNodeConnection.objects.create(analysis=self.analysis,
@@ -1405,6 +1435,10 @@ class AnalysisTests(TestCase):
                 analysis=self.analysis_with_node_analyzed_further,
                 node=self.node2, step=2,
                 direction="in")
+
+        # Add wf_data_input_maps to Analysis M2M relationship
+        self.analysis.workflow_data_input_maps.add(self.wf_data_input_map,
+                                                   self.wf_data_input_map2)
 
     def test_verify_analysis_deletion_if_nodes_not_analyzed_further(self):
         # Try to delete Analysis with a Node that has an
@@ -1423,12 +1457,12 @@ class AnalysisTests(TestCase):
         self.assertIsNotNone(Analysis.objects.get(
             name='analysis_with_node_analyzed_further'))
 
-    def test_file_import_task_termination(self):
+    def test_terminate_file_import_tasks(self):
         with mock.patch(
-            "core.models.Analysis.terminate_file_import_tasks"
+            "file_store.models.FileStoreItem.terminate_file_import_task"
         ) as terminate_mock:
-            self.analysis.cancel()
-            self.assertTrue(terminate_mock.called)
+            self.analysis.terminate_file_import_tasks()
+            self.assertEqual(terminate_mock.call_count, 2)
 
 
 class UtilitiesTest(TestCase):
