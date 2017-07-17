@@ -24,15 +24,14 @@ from django.core.files.storage import FileSystemStorage
 from django.db import models
 from django.db.models.signals import pre_delete
 from django.dispatch import receiver
-from django_extensions.db.fields import UUIDField
 from django.utils import timezone
 from django.utils.deconstruct import deconstructible
 
 from celery.result import AsyncResult
 from celery.task.control import revoke
+from django_extensions.db.fields import UUIDField
 
 import core
-
 
 logger = logging.getLogger(__name__)
 
@@ -541,8 +540,6 @@ class FileStoreItem(models.Model):
     def terminate_file_import_task(self):
         """ Trys to terminate a celery file_import task based on a
         FileStoreItem's import_task_id field.
-
-        :param import_task_id: A FileStoreItem's import task id
 
         NOTE: That if you simply revoke() a task without the `terminate` ==
         True, said task will try to restart upon a Worker restart.
