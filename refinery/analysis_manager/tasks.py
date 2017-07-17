@@ -268,6 +268,7 @@ def run_analysis(analysis_uuid):
 
     # if cancelled by user
     if analysis.failed():
+        analysis.terminate_file_import_tasks()
         return
 
     _get_analysis_status(analysis_uuid)
