@@ -1,7 +1,5 @@
 import logging
 from optparse import make_option
-import py2neo
-import requests
 import time
 import urlparse
 
@@ -11,14 +9,12 @@ from django.core.exceptions import ImproperlyConfigured
 from django.core.management.base import BaseCommand, CommandError
 
 from guardian.utils import get_anonymous_user
+import py2neo
+import requests
 
 from core.models import DataSet, ExtendedGroup
-from core.utils import (
-    get_data_set_annotations,
-    normalize_annotation_ont_ids,
-    normalize_annotation_uris
-)
-
+from core.utils import (get_data_set_annotations, normalize_annotation_ont_ids,
+                        normalize_annotation_uris)
 
 logger = logging.getLogger(__name__)
 root_logger = logging.getLogger()

@@ -5,6 +5,7 @@ Created on May 11, 2012
 '''
 
 from django.contrib import admin
+
 from django_extensions.admin import ForeignKeyAutocompleteAdmin
 
 from data_set_manager import models

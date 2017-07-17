@@ -1,8 +1,10 @@
 import logging
-import py2neo
 import urlparse
+
 from django.conf import settings
 from django.core.management.base import BaseCommand
+
+import py2neo
 
 logger = logging.getLogger(__name__)
 

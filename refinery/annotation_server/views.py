@@ -8,7 +8,6 @@ from django.http import HttpResponse
 
 from .utils import GAP_REGIONS, MAPPABILITY_THEORETICAL, SUPPORTED_GENOMES
 
-
 logger = logging.getLogger(__name__)
 
 

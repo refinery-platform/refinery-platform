@@ -8,7 +8,7 @@ import struct
 
 from django.test import TestCase
 
-from file_server import tdf_file, models
+from file_server import models, tdf_file
 from file_store import models as fs_models
 
 

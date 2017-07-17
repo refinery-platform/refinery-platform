@@ -8,17 +8,18 @@ import logging
 
 from django.conf import settings
 from django.db import models
-from django_extensions.db.fields import UUIDField
-
 
 from celery.result import AsyncResult
+from django_extensions.db.fields import UUIDField
 import requests
 from requests.exceptions import HTTPError
 
-from .genomes import map_species_id_to_default_genome_build
-import data_set_manager
 import core
+import data_set_manager
 from file_store.models import FileStoreItem
+
+from .genomes import map_species_id_to_default_genome_build
+
 """
 TODO: Refactor import data_set_manager. Importing
 data_set_manager.tasks.generate_auxiliary_file()

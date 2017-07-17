@@ -8,8 +8,9 @@ import ast
 import copy
 import json
 import logging
-import networkx as nx
 import uuid
+
+import networkx as nx
 
 from core.utils import get_aware_local_time
 

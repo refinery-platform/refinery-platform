@@ -14,7 +14,6 @@ from haystack import indexes
 
 from data_set_manager.models import AnnotatedNode, Node
 
-
 logger = logging.getLogger(__name__)
 
 
