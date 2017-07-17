@@ -30,7 +30,7 @@ function DataSetDataDetailsApiFactory ($q, _, dataSetService) {
     function objectifyResponse (results) {
       var obj = {};
       for (var i = results.length; i--;) {
-        obj[results[i].uuid] = results[i];
+        obj[results[i].id] = results[i];
       }
       return obj;
     }

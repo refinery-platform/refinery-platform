@@ -4,11 +4,12 @@ import logging
 import os
 import uuid
 
-from bioblend.galaxy.client import ConnectionError
 from django.conf import settings
 from django.contrib import admin
 from django.db import transaction
 from django.utils import timezone
+
+from bioblend.galaxy.client import ConnectionError
 from django_docker_engine.docker_utils import DockerClientWrapper
 from jsonschema import RefResolver, ValidationError, validate
 
@@ -256,7 +257,7 @@ def create_tool_analysis(validated_analysis_config):
             validated_analysis_config
         )
     )
-    custom_name = validated_analysis_config["custom_name"]
+    name = validated_analysis_config["name"]
     current_workflow = common_analysis_objects["current_workflow"]
     data_set = common_analysis_objects["data_set"]
     user = common_analysis_objects["user"]
@@ -270,7 +271,7 @@ def create_tool_analysis(validated_analysis_config):
 
     analysis = AnalysisFactory(
         summary="Analysis run for: {}".format(tool),
-        name=custom_name,
+        name=name,
         project=user.profile.catch_all_project,
         data_set=data_set,
         workflow=current_workflow,

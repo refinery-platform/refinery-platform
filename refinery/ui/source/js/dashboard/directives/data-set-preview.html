@@ -1,6 +1,16 @@
-<div class="content-container" ng-class="{'hidden': !preview.active}">
+<div id="data-set-summary" class="content-container" ng-class="{'hidden': !preview.active}">
   <div ng-if="preview.active">
+  <!-- Intro.js Data Set Summary -->
   <div
+    ng-intro-options="preview.introsSatoriDataSetSummary.options"
+    ng-intro-method="preview.introsSatoriDataSetSummary._start"
+    ng-intro-exit-method="preview.introsSatoriDataSetSummary._exit"
+    ng-intro-onbeforechange="preview.introsSatoriDataSetSummary.beforeChangeEvent"
+    ng-intro-autostart="preview.introsSatoriDataSetSummary.autoStart"
+    ng-intro-oncomplete="preview.introsSatoriDataSetSummary.complete"
+    ng-intro-onexit="preview.introsSatoriDataSetSummary.exit">
+  <div
+    id="data-set-summary-topbar"
     class="refinery-panel-topbar"
     ng-class="{'allow-overflow': preview.animationFinished}">
     <div
@@ -15,13 +25,40 @@
         </button>
       </div>
       <div class="floatbox-max-left">
+        <button
+          id="back-to-satori"
+          class="btn btn-super-important clickable"
+          ng-click="preview.close()"
+          ng-if="preview.exploration">
+          <i class="fa fa-angle-double-left"></i>
+          Back to exploration
+        </button>
+        <span class="separator" ng-if="preview.exploration">&middot;</span>
         <a
+          id="view-in-file-browser"
           class="btn btn-important"
+          ng-show="!preview.settings.djangoApp.satoriDemo"
           ng-href="data_sets/{{ preview.dataSetUuid }}">
           <i class="fa fa-table"></i>
           View content in File Browser
         </a>
+        <a
+          id="view-in-file-browser"
+          class="btn btn-important is-not-allowed"
+          ng-show="preview.settings.djangoApp.satoriDemo"
+          ng-click="dashboard.openFileBrowserDisabled()">
+          <i class="fa fa-table"></i>
+          View content in File Browser
+        </a>
         <span class="separator">&middot;</span>
+        <button
+          id="intro-js-satori-data-set-summary-start"
+          class="btn clickable"
+          ng-click="preview.introsSatoriDataSetSummary.start()"
+          ng-if="preview.exploration">
+          <span class="fa fa-info-circle"></span>
+          Tour
+        </button>
         <button
           class="btn clickable spinnable"
           title="Import this shared data set into your own space to run analyses"
@@ -87,6 +124,7 @@
     <div
       class="singleStudy"
       ng-if="preview.numStudies === 1">
+      <div id="data-set-summary-summary">
       <h5 class="refinery-subheader">Summary</h5>
       <div class="inline-container">
         <p class="stronger" ng-bind-html="preview.dataSetDetails.title"></p>
@@ -173,6 +211,12 @@
           </a>
         </p>
       </div>
+      <div class="inline-container" ng-if="preview.dataSetDetails.accession">
+        <h6>Accession</h6>
+        <p>{{ preview.dataSetDetails.accession }}</p>
+      </div>
+    </div>
+    <div id="data-set-summary-analyses">
       <h5 class="refinery-subheader">
         Analyses
         <span
@@ -212,6 +256,8 @@
           <a ng-href="/data_sets/{{ preview.dataSetUuid }}/#/analyses/">View all analyses</a>
         </li>
       </ol>
+      </div>
+      <div id="data-set-summary-references">
       <h5 class="refinery-subheader">
         References
         <span
@@ -241,7 +287,7 @@
               {{ publication.citation.volume }},
               {{ publication.citation.issue }},
               {{ publication.citation.pages }}
-            <span>
+            </span>
             <span class="links">
               <a
                 target="_blank"
@@ -273,15 +319,11 @@
         </li>
       </ul>
       <div class="refinery-error" ng-if="preview.citationError">
-        <i
-          class="fa fa-exclamation-triangle"
-          title="We're deeply sorry but unfortunately something went wrong."
-          refinery-tooltip
-          refinery-tooltip-container="body"
-          refinery-tooltip-placement="top"
-          refinery-tooltip-delay-show="750"
-          refinery-tooltip-delay-hide="150"></i>
+        <i class="fa fa-exclamation-triangle"></i>
+        Could not load reference. The service might have timed out. Please try again later.
       </div>
+      </div>
+      <div id="data-set-summary-protocols">
       <h5 class="refinery-subheader">
         Protocols
         <span
@@ -305,6 +347,7 @@
           </p>
         </li>
       </ol>
+      </div>
     </div>
     <div
       class="multiStudies"

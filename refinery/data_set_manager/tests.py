@@ -12,10 +12,11 @@ from rest_framework.test import APIClient, APIRequestFactory, APITestCase
 
 from core.models import DataSet, ExtendedGroup, InvestigationLink
 from core.views import NodeViewSet
+from data_set_manager.tasks import parse_isatab
 from file_store.models import FileStoreItem
 
-from .models import (Assay, Attribute, AttributeOrder, Investigation, Node,
-                     Study)
+from .models import (AnnotatedNode, Assay, Attribute, AttributeOrder,
+                     Investigation, Node, Study)
 from .search_indexes import NodeIndex
 from .serializers import AttributeOrderSerializer
 from .utils import (create_facet_filter_query, customize_attribute_response,
@@ -1719,3 +1720,36 @@ class NodeIndexTests(APITestCase):
                           'type': u'',
                           'uuid': self.node_uuid,
                           'workflow_output': None})
+
+
+class AnnotatedNodeExplosionTestCase(TestCase):
+    def setUp(self):
+        self.username = 'coffee_lover'
+        self.password = 'coffeecoffee'
+        self.user = User.objects.create_user(
+            self.username,
+            '',
+            self.password
+        )
+
+    def test_metabolights_isatab_wont_import_with_rollback_a(self):
+        parse_isatab(
+            self.user.username,
+            True,
+            "data_set_manager/test-data/MTBLS1.zip"
+        )
+        self.assertEqual(DataSet.objects.count(), 0)
+        self.assertEqual(AnnotatedNode.objects.count(), 0)
+        self.assertEqual(Node.objects.count(), 0)
+        self.assertEqual(FileStoreItem.objects.count(), 0)
+
+    def test_metabolights_isatab_wont_import_with_rollback_b(self):
+        parse_isatab(
+            self.user.username,
+            True,
+            "data_set_manager/test-data/MTBLS112.zip"
+        )
+        self.assertEqual(DataSet.objects.count(), 0)
+        self.assertEqual(AnnotatedNode.objects.count(), 0)
+        self.assertEqual(Node.objects.count(), 0)
+        self.assertEqual(FileStoreItem.objects.count(), 0)
