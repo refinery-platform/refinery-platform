@@ -2,16 +2,19 @@ import glob
 import json
 import logging
 import os
+import uuid
 
-from bioblend.galaxy.client import ConnectionError
 from django.conf import settings
 from django.contrib import admin
 from django.db import transaction
 from django.utils import timezone
+
+from bioblend.galaxy.client import ConnectionError
+from django_docker_engine.docker_utils import DockerClientWrapper
 from jsonschema import RefResolver, ValidationError, validate
 
 from analysis_manager.utils import fetch_objects_required_for_analysis
-from core.models import DataSet, WorkflowEngine
+from core.models import DataSet, Workflow, WorkflowEngine
 from factory_boy.django_model_factories import (AnalysisFactory,
                                                 FileRelationshipFactory,
                                                 GalaxyParameterFactory,
@@ -19,7 +22,7 @@ from factory_boy.django_model_factories import (AnalysisFactory,
                                                 OutputFileFactory,
                                                 ParameterFactory,
                                                 ToolDefinitionFactory,
-                                                ToolFactory)
+                                                ToolFactory, WorkflowFactory)
 from file_store.models import FileType
 
 from .models import Tool, ToolDefinition
@@ -31,7 +34,9 @@ ANNOTATION_ERROR_MESSAGE = (
 )
 # Allow JSON Schema to find the JSON pointers we define in our schemas
 JSON_SCHEMA_FILE_RESOLVER = RefResolver(
-    "{}{}{}".format('file://', os.path.abspath("tool_manager/schemas"), '/'),
+    "file://{}/".format(
+        os.path.join(settings.BASE_DIR, "refinery/tool_manager/schemas")
+    ),
     None
 )
 
@@ -128,26 +133,51 @@ def create_tool_definition(annotation_data):
         workflow_engine = WorkflowEngine.objects.get(
             uuid=annotation_data["workflow_engine_uuid"]
         )
+        workflow = WorkflowFactory(
+            uuid=str(uuid.uuid4()),
+            name=annotation_data["name"],
+            summary="Workflow for: {}".format(annotation_data["name"]),
+            internal_id=annotation_data["galaxy_workflow_id"],
+            workflow_engine=workflow_engine,
+            is_active=True,
+            type=Workflow.ANALYSIS_TYPE,
+            graph=json.dumps(annotation_data["graph"])
+        )
+        workflow.set_manager_group(workflow_engine.get_manager_group())
+        workflow.share(workflow_engine.get_manager_group().get_managed_group())
 
         tool_definition = ToolDefinitionFactory(
             name=annotation_data["name"],
             description=annotation["description"],
             tool_type=tool_type,
             file_relationship=create_file_relationship_nesting(annotation),
-            galaxy_workflow_id=annotation_data["galaxy_workflow_id"],
-            workflow_engine=workflow_engine
+            workflow=workflow
         )
     elif tool_type == ToolDefinition.VISUALIZATION:
         tool_definition = ToolDefinitionFactory(
             name=annotation_data["name"],
             description=annotation["description"],
             tool_type=tool_type,
-            file_relationship=create_file_relationship_nesting(
-                annotation
-            ),
+            file_relationship=create_file_relationship_nesting(annotation),
             image_name=annotation["image_name"],
             container_input_path=annotation["container_input_path"],
         )
+
+        # If we've successfully created the ToolDefinition lets
+        #  pull down its docker image
+        try:
+            image_name, version = tool_definition.image_name.split(":")
+        except ValueError:
+            raise RuntimeError(
+                "Tool's Docker image: `{}` has no specified version".format(
+                    tool_definition.image_name
+                )
+            )
+        else:
+            logger.debug(
+                "Pulling Docker image: %s", tool_definition.image_name
+            )
+            DockerClientWrapper().pull(image_name, version=version)
 
     tool_definition.annotation = json.dumps(annotation)
     tool_definition.save()
@@ -227,7 +257,7 @@ def create_tool_analysis(validated_analysis_config):
             validated_analysis_config
         )
     )
-    custom_name = validated_analysis_config["custom_name"]
+    name = validated_analysis_config["name"]
     current_workflow = common_analysis_objects["current_workflow"]
     data_set = common_analysis_objects["data_set"]
     user = common_analysis_objects["user"]
@@ -241,7 +271,7 @@ def create_tool_analysis(validated_analysis_config):
 
     analysis = AnalysisFactory(
         summary="Analysis run for: {}".format(tool),
-        name=custom_name,
+        name=name,
         project=user.profile.catch_all_project,
         data_set=data_set,
         workflow=current_workflow,
@@ -399,6 +429,12 @@ def get_workflows():
                 workflow_data = galaxy_connection.workflows.show_workflow(
                     workflow["id"]
                 )
+                workflow_data["graph"] = (
+                    galaxy_connection.workflows.export_workflow_json(
+                        workflow["id"]
+                    )
+                )
+
                 workflow_dict[workflow_engine.uuid].append(workflow_data)
 
     return workflow_dict

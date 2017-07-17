@@ -1,5 +1,5 @@
-import uuid as uuid_builtin
 from datetime import datetime
+import uuid as uuid_builtin
 
 from core.models import Analysis, DataSet
 from factory_boy.django_model_factories import (AnalysisFactory,

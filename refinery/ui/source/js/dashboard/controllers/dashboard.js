@@ -8,10 +8,13 @@ function DashboardCtrl (
   $timeout,
   $rootScope,
   $window,
-  $uibModal,
   $log,
+  $sce,
+  $compile,
+  $scope,
   // 3rd party library
   _,
+  $uibModal,
   // Refinery modules
   pubSub,
   settings,
@@ -28,7 +31,11 @@ function DashboardCtrl (
   dashboardDataSetPreviewService,
   treemapContext,
   dashboardVisData,
-  dataCart
+  dataCart,
+  DashboardIntrosSatoriOverview,
+  DashboardIntrosDataSetView,
+  dashboardIntroSatoriEasterEgg,
+  dashboardVisQueryTerms
 ) {
   var that = this;
 
@@ -44,6 +51,7 @@ function DashboardCtrl (
 
   // Construct 3rd party library
   this._ = _;
+  this.$uibModal = $uibModal;
 
   // Construct Refinery modules
   this.pubSub = pubSub;
@@ -61,6 +69,10 @@ function DashboardCtrl (
   this.treemapContext = treemapContext;
   this.dashboardVisData = dashboardVisData;
   this.dataCart = dataCart;
+  this.introsSatoriOverview = new DashboardIntrosSatoriOverview();
+  this.introsSatoriDataSetView = new DashboardIntrosDataSetView(this);
+  this.queryTerms = dashboardVisQueryTerms;
+
   // variable to track filters and sorting selected in ui for data set api query
   this.dataSetParams = {};
 
@@ -75,6 +87,8 @@ function DashboardCtrl (
   this.dataSetsPanelHeight = 1;
   this.dataCartPanelHeight = 0;
 
+  this.initVis = this.$q.defer();
+  this.treemapContext.set('initVis', this.initVis.promise);
   this.icons = this.$window.getStaticUrl('images/icons.svg');
 
   // Check authentication
@@ -86,6 +100,14 @@ function DashboardCtrl (
   this.authService.isAdmin().then(function (isAdmin) {
     this.userIsAdmin = isAdmin;
   }.bind(this));
+
+  this.authService.getUserId().then(function (userId) {
+    this.userId = userId;
+  }.bind(this));
+
+  dashboardIntroSatoriEasterEgg.celebrate(
+    this.openSatoriIntroEasterEgg.bind(this)
+  );
 
   // Set up dataSets for `uiScroll`
   this.dataSets = new UiScrollSource(
@@ -150,7 +172,7 @@ function DashboardCtrl (
   this.dashboardDataSetsReloadService.setReload(function (hardReset) {
     if (hardReset) {
       this.dataSets.resetCache();
-      this.dataSet.reload();
+      this.dataSet.clearCache();
     }
     // Reset current list and reload uiScroll
     if (this.dataSetsAdapter) {
@@ -161,7 +183,10 @@ function DashboardCtrl (
   // This is a pseudo service just to have consistent naming with
   // `dashboardDataSetsReloadService`.
   this.dashboardAnalysesReloadService = {
-    reload: function () {
+    reload: function (hardReset) {
+      if (hardReset) {
+        this.analyses.resetCache();
+      }
       if (that.analysesAdapter) {
         that.analysesAdapter.reload();
       }
@@ -212,11 +237,18 @@ function DashboardCtrl (
       }
       if (toState.name === 'launchPad.exploration') {
         if (toParams.context) {
+          var depth = parseInt(toParams.visibleDepth, 10);
+          depth = depth > 0 ? depth : 1;
+
           this.treemapRoot = {
             branchId: toParams.branchId ? toParams.branchId : 0,
             ontId: toParams.context,
-            visibleDepth: toParams.visibleDepth
+            visibleDepth: depth
           };
+          this.initVis.resolve({
+            ontId: toParams.context,
+            visibleDepth: depth
+          });
         }
         // Need to wait another digestion cycle to ensure the layout is set
         // properly.
@@ -251,7 +283,6 @@ function DashboardCtrl (
     );
   }.bind(this));
 
-  this.queryTerms = {};
   this.queryRelatedDataSets = {};
 
   this.treemapContext.on('dataSets', function (response) {
@@ -294,22 +325,22 @@ function DashboardCtrl (
 
       if (data.terms[i].query) {
         // 1. Update query terms
-        if (!this.queryTerms[uri]) {
-          this.queryTerms[uri] = {};
-          this.queryTerms[uri].uri = uri;
-          this.queryTerms[uri].dataSetIds = data.terms[i].dataSetIds;
+        if (!this.queryTerms.get(uri)) {
+          this.queryTerms.set(uri, {
+            uri: uri,
+            label: data.terms[i].nodeLabel,
+            dataSetIds: data.terms[i].dataSetIds
+          });
         }
-        this.queryTerms[uri].mode = data.terms[i].mode;
+        this.queryTerms.setProp(uri, 'mode', data.terms[i].mode);
+        this.queryTerms.setProp(uri, 'root', data.terms[i].root);
       } else {
-        if (this.queryTerms[uri]) {
-          this.queryTerms[uri] = undefined;
-          delete this.queryTerms[uri];
-        }
+        this.queryTerms.remove(uri);
       }
     }
 
     // Update data set selection
-    if (this.numQueryTerms) {
+    if (this.queryTerms.length) {
       this.collectDataSetIds().then(function (dsIds) {
         this.selectDataSets(dsIds);
       }.bind(this));
@@ -322,12 +353,14 @@ function DashboardCtrl (
     var uri = this.getOriginalUri(data);
 
     // 1. Update query terms
-    if (!this.queryTerms[uri]) {
-      this.queryTerms[uri] = {};
-      this.queryTerms[uri].uri = uri;
-      this.queryTerms[uri].dataSetIds = data.dataSetIds;
+    if (!this.queryTerms.get(uri)) {
+      this.queryTerms.set(uri, {
+        uri: uri,
+        label: data.nodeLabel,
+        dataSetIds: data.dataSetIds
+      });
     }
-    this.queryTerms[uri].mode = data.mode;
+    this.queryTerms.setProp(uri, 'mode', data.mode);
 
     // Update data set selection
     this.collectDataSetIds().then(function (dsIds) {
@@ -338,10 +371,9 @@ function DashboardCtrl (
   this.$rootScope.$on('dashboardVisNodeUnquery', function (event, data) {
     var uri = this.getOriginalUri(data);
 
-    this.queryTerms[uri] = undefined;
-    delete this.queryTerms[uri];
+    this.queryTerms.remove(uri);
 
-    if (this.numQueryTerms) {
+    if (this.queryTerms.length) {
       this.collectDataSetIds().then(function (dsIds) {
         this.selectDataSets(dsIds);
       }.bind(this));
@@ -363,6 +395,24 @@ function DashboardCtrl (
     );
   }.bind(this));
 
+  this.customRepoModeHtml = $sce.trustAsHtml(
+    settings.djangoApp.repositoryModeHomePageHtml
+  );
+
+  function checkDomEl (times) {
+    var el = document.querySelector('#custom-repo-mode-html');
+
+    if (!el && times < 10) {
+      this.$timeout(function () {
+        checkDomEl.call(this, times + 1);
+      }.bind(this), times * 5);
+    } else {
+      $compile(angular.element(el).contents())($scope);
+    }
+  }
+
+  checkDomEl.call(this, 0);
+
   this.$timeout(function () {
     // Expand panel to full with
     if (this.repoMode) {
@@ -379,7 +429,7 @@ function DashboardCtrl (
           // See `services/width-fixer.js` for details.
           this.$log.error('Dashboard expand dataset exploration error,' +
             ' possibly due to the Refinery App failing to initialized.');
-        });
+        }.bind(this));
     }
   }.bind(this), 0);
 
@@ -554,15 +604,6 @@ Object.defineProperty(
 
 Object.defineProperty(
   DashboardCtrl.prototype,
-  'numQueryTerms', {
-    enumerable: true,
-    get: function () {
-      return Object.keys(this.queryTerms).length;
-    }
-  });
-
-Object.defineProperty(
-  DashboardCtrl.prototype,
   'treemapRoot', {
     enumerable: true,
     get: function () {
@@ -628,10 +669,10 @@ DashboardCtrl.prototype.addToDataCart = function (dataSet) {
  * @date    2016-05-09
  */
 DashboardCtrl.prototype.addAllCurrentToDataCart = function () {
-  this.dataSet.allIds.then(function (allIds) {
+  this.dataSet.ids.then(function (ids) {
     var promisedDataSets = [];
-    for (var i = allIds.length; i--;) {
-      promisedDataSets.push(this.dataSet.get(allIds[i]));
+    for (var i = ids.length; i--;) {
+      promisedDataSets.push(this.dataSet.get(ids[i]));
     }
     this.$q.all(promisedDataSets).then(function (dataSets) {
       this.dataCart.add(dataSets);
@@ -766,6 +807,8 @@ DashboardCtrl.prototype.collapseDatasetExploration = function () {
     if (!this.repoMode) {
       this.expandDataSetPanel = false;
       this.dashboardExpandablePanelService.trigger('collapser');
+    } else {
+      this.pubSub.trigger('vis.hide');
     }
 
     this.dataSet.highlight(
@@ -817,18 +860,18 @@ DashboardCtrl.prototype.collapseDataSetPreview = function () {
  * @return  {Object}  Object of _and, _or_, and _not_ arrays of query terms.
  */
 DashboardCtrl.prototype.collectAndOrNotTerms = function () {
-  var termUris = Object.keys(this.queryTerms);
+  var termUris = this.queryTerms.keys;
   var andTerms = [];
   var orTerms = [];
   var notTerms = [];
 
   for (var i = termUris.length; i--;) {
-    if (this.queryTerms[termUris[i]].mode === 'and') {
-      andTerms.push(this.queryTerms[termUris[i]]);
-    } else if (this.queryTerms[termUris[i]].mode === 'or') {
-      orTerms.push(this.queryTerms[termUris[i]]);
+    if (this.queryTerms.get(termUris[i]).mode === 'and') {
+      andTerms.push(this.queryTerms.get(termUris[i]));
+    } else if (this.queryTerms.get(termUris[i]).mode === 'or') {
+      orTerms.push(this.queryTerms.get(termUris[i]));
     } else {
-      notTerms.push(this.queryTerms[termUris[i]]);
+      notTerms.push(this.queryTerms.get(termUris[i]));
     }
   }
 
@@ -994,7 +1037,7 @@ DashboardCtrl.prototype.deselectDataSets = function () {
  * @param   {Object}  fromStateEvent  UI-router previous state object.
  */
 DashboardCtrl.prototype.expandDatasetExploration = function (fromStateEvent) {
-  var self = this;
+  var that = this;
 
   if (!fromStateEvent) {
     this.$state.transitionTo(
@@ -1013,9 +1056,9 @@ DashboardCtrl.prototype.expandDatasetExploration = function (fromStateEvent) {
     this.dashboardWidthFixerService
       .fixWidth()
       .then(function () {
-        self.expandDataSetPanel = true;
-        self.expandedDataSetPanelBorder = true;
-        self.dashboardExpandablePanelService.trigger('expander');
+        that.expandDataSetPanel = true;
+        that.expandedDataSetPanelBorder = true;
+        that.dashboardExpandablePanelService.trigger('expander');
       })
       .catch(function () {
         // This is weird. We should never run into here unless the whole app
@@ -1043,7 +1086,7 @@ DashboardCtrl.prototype.expandDatasetExploration = function (fromStateEvent) {
 DashboardCtrl.prototype.expandDataSetPreview = function (
   dataSetUuid, fromStateEvent
 ) {
-  var self = this;
+  var that = this;
 
   if (this.dataSetExploration) {
     this.dataSetExplorationTempHidden = true;
@@ -1068,9 +1111,9 @@ DashboardCtrl.prototype.expandDataSetPreview = function (
       this.dashboardWidthFixerService
         .fixWidth()
         .then(function () {
-          self.expandDataSetPanel = true;
-          self.expandedDataSetPanelBorder = true;
-          self.dashboardExpandablePanelService.trigger('expander');
+          that.expandDataSetPanel = true;
+          that.expandedDataSetPanelBorder = true;
+          that.dashboardExpandablePanelService.trigger('expander');
         })
         .catch(function () {
           // This is weird. We should never run into here unless the whole app
@@ -1149,7 +1192,7 @@ DashboardCtrl.prototype.getDataSetsPanelHeight = function () {
  * @return  {String}             Original URI.
  */
 DashboardCtrl.prototype.getOriginalUri = function (eventData) {
-  return eventData.clone ? eventData.clonedFromUri : eventData.nodeUri;
+  return eventData.nodeUri;
 };
 
 /* ----------------------------------- R ------------------------------------ */
@@ -1217,9 +1260,9 @@ DashboardCtrl.prototype.removeFromDataCart = function (dataSet) {
  * @author  Fritz Lekschas
  * @date    2016-05-09
  */
-DashboardCtrl.prototype.resetDataSetSearch = function () {
+DashboardCtrl.prototype.resetDataSetSearch = function (noStateChange) {
   this.searchQueryDataSets = '';
-  this.setDataSetSource();
+  this.setDataSetSource(undefined, noStateChange);
 };
 
 /* ----------------------------------- S ------------------------------------ */
@@ -1238,7 +1281,7 @@ DashboardCtrl.prototype.resetDataSetSearch = function () {
  *   selected.
  */
 DashboardCtrl.prototype.selectDataSets = function (ids) {
-  var queryTermUris = Object.keys(this.queryTerms);
+  var queryTermUris = this.queryTerms.keys;
   var query = this.treemapRoot.ontId;
 
   if (queryTermUris && queryTermUris.length) {
@@ -1247,7 +1290,7 @@ DashboardCtrl.prototype.selectDataSets = function (ids) {
       query += (
         queryTermUris[i] +
         '.' +
-        this.queryTerms[queryTermUris[i]].mode +
+        this.queryTerms.get(queryTermUris[i]).mode +
         '+'
       );
     }
@@ -1312,7 +1355,7 @@ DashboardCtrl.prototype.setDataSetSource = function (
 
   if (searchQuery) {
     if (searchQuery.length > 1) {
-      if (this.numQueryTerms && !this.oldTotalDs) {
+      if (this.queryTerms.length && !this.oldTotalDs) {
         this.oldTotalDs = this.dataSets.totalReadable;
       }
 
@@ -1629,6 +1672,22 @@ DashboardCtrl.prototype.triggerSorting = function (source) {
 };
 
 /**
+ * Open easter egg congratulation dialog
+ *
+ * @method  openSatoriIntroEasterEgg
+ * @author  Fritz Lekschas
+ * @date    2015-08-21
+ */
+DashboardCtrl.prototype.openSatoriIntroEasterEgg = function () {
+  this.$uibModal.open({
+    templateUrl: this.$window.getStaticUrl(
+      '/static/partials/dashboard/partials/intro-satori-easteregg.html'
+    ),
+    controller: 'IntroSatoriEasterEggCtrl as modal'
+  });
+};
+
+/*
  * Open the deletion modal for a given Datset.
  *
  * @method  openDataSetDeleteModal
@@ -1695,6 +1754,15 @@ DashboardCtrl.prototype.openAnalysisDeleteModal = function (analysis) {
   });
 };
 
+DashboardCtrl.prototype.openFileBrowserDisabled = function () {
+  this.$uibModal.open({
+    templateUrl: this.$window.getStaticUrl(
+      '/static/partials/dashboard/partials/file-browser-disabled.html'
+    ),
+    controller: 'IntroSatoriEasterEggCtrl as modal'
+  });
+};
+
 angular
   .module('refineryDashboard')
   .controller('DashboardCtrl', [
@@ -1704,9 +1772,12 @@ angular
     '$timeout',
     '$rootScope',
     '$window',
-    '$uibModal',
     '$log',
+    '$sce',
+    '$compile',
+    '$scope',
     '_',
+    '$uibModal',
     'pubSub',
     'settings',
     'dataSet',
@@ -1723,5 +1794,9 @@ angular
     'treemapContext',
     'dashboardVisData',
     'dataCart',
+    'DashboardIntrosSatoriOverview',
+    'DashboardIntrosDataSetView',
+    'dashboardIntroSatoriEasterEgg',
+    'dashboardVisQueryTerms',
     DashboardCtrl
   ]);

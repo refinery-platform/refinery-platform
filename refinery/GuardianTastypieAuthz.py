@@ -6,7 +6,6 @@ import logging
 from tastypie.authorization import Authorization
 from tastypie.exceptions import Unauthorized
 
-
 logger = logging.getLogger(__name__)
 
 

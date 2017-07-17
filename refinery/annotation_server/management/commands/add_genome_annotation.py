@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+
 import gzip
 import logging
 from optparse import make_option
@@ -7,10 +8,10 @@ import os
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 
-from ...models import WigDescription
-from ...utils import SUPPORTED_GENOMES
 from file_store.models import _mkdir
 
+from ...models import WigDescription
+from ...utils import SUPPORTED_GENOMES
 
 # Helper command to deal with additional annotation tracks not available from
 # UCSC genome browser

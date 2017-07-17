@@ -9,12 +9,13 @@ import logging
 import time
 import urlparse
 
-import requests
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.db.models import Q
 from django.utils.http import urlquote, urlunquote
+
 from guardian.shortcuts import get_objects_for_user
+import requests
 from requests.exceptions import HTTPError
 
 import core
@@ -100,13 +101,16 @@ def get_node_types(study_uuid, assay_uuid=None, files_only=False,
         # 1. find a node without children
         nodes = Node.objects.filter(study__uuid=study_uuid,
                                     assay__uuid=assay_uuid)
+
         for n in nodes:
             if n.children_set.count() == 0:
                 node = n
                 break
+
         # 2. recursively follow until reaching a source node
         sequence = _get_node_types_recursion(node)
         sequence.reverse()
+
         if filter_set is None:
             return sequence
         else:
@@ -145,6 +149,28 @@ def _get_parent_attributes(nodes, node_id):
     return attributes
 
 
+def _get_unique_parent_attributes(nodes, node_id):
+    """Recursively collects attributes from the current node and each parent
+    node until no more parents are available and make sure that the final list
+    of attributes is unique.
+    """
+    attributes = {}
+
+    if len(nodes[node_id]["parents"]) == 0:
+        for attr in nodes[node_id]["attributes"]:
+            attributes[attr[0]] = attr
+
+        return attributes
+
+    for parent_id in nodes[node_id]["parents"]:
+        attributes.update(_get_unique_parent_attributes(nodes, parent_id))
+
+    for attr in nodes[node_id]["attributes"]:
+        attributes[attr[0]] = attr
+
+    return attributes
+
+
 def _get_assay_name(result, node):
     if result[node]["type"] in Node.ASSAYS:
         return result[node]["name"]
@@ -155,8 +181,16 @@ def _get_assay_name(result, node):
     return None
 
 
-def _retrieve_nodes(study_uuid, assay_uuid=None,
-                    ontology_attribute_fields=False, node_uuids=None):
+def _retrieve_nodes(
+        study_uuid,
+        assay_uuid=None,
+        ontology_attribute_fields=False,
+        node_uuids=None):
+    """Retrieve all nodes associated to a study and optionally associated to an
+    assay.
+
+    If `node_uuids` is `None` query nodes (both from assay and from study only)
+    """
     node_fields = [
         "id",
         "uuid",
@@ -166,33 +200,42 @@ def _retrieve_nodes(study_uuid, assay_uuid=None,
         "parents",
         "attribute"
     ]
-    # if node_uuids is none: query nodes (both from assay and from study only)
-    if node_uuids is None:
-        if assay_uuid is None:
-            node_list = Node.objects.filter(
-                Q(study__uuid=study_uuid, assay__uuid__isnull=True)
-            ).prefetch_related("attribute_set").order_by(
-                "id", "attribute").values(*node_fields)
-        else:
-            node_list = Node.objects.filter(
-                Q(study__uuid=study_uuid, assay__uuid__isnull=True) |
-                Q(study__uuid=study_uuid, assay__uuid=assay_uuid)
-            ).prefetch_related("attribute_set").order_by(
-                "id", "attribute").values(*node_fields)
+
+    # Build filters
+    filters = {}
+    q_filters = []
+
+    if node_uuids is not None:
+        filters['uuid__in'] = node_uuids
     else:
-        node_list = (
-            Node.objects
-                .filter(uuid__in=node_uuids)
-                .prefetch_related("attribute_set")
-                .order_by("id", "attribute")
-                .values(*node_fields)
-        )
+        q_filters_1 = Q(study__uuid=study_uuid, assay__uuid__isnull=True)
+        if assay_uuid is not None:
+            q_filters_1 = (
+                q_filters_1 | Q(study__uuid=study_uuid, assay__uuid=assay_uuid)
+            )
+        q_filters.append(q_filters_1)
+
+    # Query for notes
+    node_list = (
+        Node.objects
+            .filter(*q_filters, **filters)
+            .prefetch_related("attribute_set")
+            .order_by("id", "attribute")
+            .values(*node_fields)
+    )
+
     if ontology_attribute_fields:
         attribute_fields = Attribute.ALL_FIELDS
     else:
         attribute_fields = Attribute.NON_ONTOLOGY_FIELDS
-    attribute_list = Attribute.objects.filter().order_by("id").values_list(
-        *attribute_fields)
+
+    attribute_list = (
+        Attribute.objects
+                 .filter()
+                 .order_by("id")
+                 .values_list(*attribute_fields)
+    )
+
     attributes = {}
     current_id = None
     current_node = None
@@ -200,12 +243,14 @@ def _retrieve_nodes(study_uuid, assay_uuid=None,
 
     for attribute in attribute_list:
         attributes[attribute[0]] = attribute
+
     for node in node_list:
         if current_id is None or current_id != node["id"]:
             # save current node
             if current_node is not None:
                 current_node["parents"] = uniquify(current_node["parents"])
                 nodes[current_id] = current_node
+
             # new node, start merging
             current_id = node["id"]
             current_node = {
@@ -218,18 +263,23 @@ def _retrieve_nodes(study_uuid, assay_uuid=None,
                 "file_uuid": node["file_uuid"]
             }
 
+        # Fritz: Do the parents really differ or is this overhead?
         if node["parents"] is not None:
             current_node["parents"].append(node["parents"])
+
         if node["attribute"] is not None:
             try:
                 current_node["attributes"].append(
-                    attributes[node["attribute"]])
+                    attributes[node["attribute"]]
+                )
             except:
                 pass
+
     # save last node
     if current_node is not None:
         current_node["parents"] = uniquify(current_node["parents"])
         nodes[current_id] = current_node
+
     return nodes
 
 
@@ -293,15 +343,64 @@ def get_matrix(node_type, study_uuid, assay_uuid=None,
     return results
 
 
-def update_annotated_nodes(node_type, study_uuid, assay_uuid=None,
-                           update=False):
-    # retrieve study and assay ids
-    study = Study.objects.filter(uuid=study_uuid)[0]
+def _create_annotated_node_objs(
+        bulk_list=[],
+        node=None,
+        study=None,
+        assay=None,
+        attrs=None):
+    """Helper method to bulk create annotated nodes.
+    """
+    counter = 0
+    if (node is not None and
+            study is not None and
+            assay is not None and
+            attrs is not None):
+        for attr_key in attrs:
+            counter += 1
+            bulk_list.append(
+                AnnotatedNode(
+                    node_id=node["id"],
+                    attribute_id=attrs[attr_key][0],
+                    study=study,
+                    assay=assay,
+                    node_uuid=node["uuid"],
+                    node_file_uuid=node["file_uuid"],
+                    node_type=node["type"],
+                    node_name=node["name"],
+                    attribute_type=attrs[attr_key][1],
+                    attribute_subtype=attrs[attr_key][2],
+                    attribute_value=attrs[attr_key][3],
+                    attribute_value_unit=attrs[attr_key][4]
+                )
+            )
+
+            if len(bulk_list) == MAX_BULK_LIST_SIZE:
+                AnnotatedNode.objects.bulk_create(bulk_list)
+                # Reset list
+                bulk_list = []
+
+    elif len(bulk_list) > 0:
+        # Create remaining annotated nodes
+        AnnotatedNode.objects.bulk_create(bulk_list)
+
+    return bulk_list, counter
+
+
+def update_annotated_nodes(
+        node_type,
+        study_uuid,
+        assay_uuid=None,
+        update=False):
+    # Retrieve first study and assay ids
+    study = Study.objects.get(uuid=study_uuid)
+
     if assay_uuid is not None:
-        assay = Assay.objects.filter(uuid=assay_uuid)[0]
+        assay = Assay.objects.get(uuid=assay_uuid)
     else:
         assay = None
-    # check if this combination of node_type, study_uuid and assay_uuid already
+
+    # Check if this combination of node_type, study_uuid and assay_uuid already
     # exists
     if assay is None:
         registry, created = AnnotatedNodeRegistry.objects.get_or_create(
@@ -309,89 +408,87 @@ def update_annotated_nodes(node_type, study_uuid, assay_uuid=None,
     else:
         registry, created = AnnotatedNodeRegistry.objects.get_or_create(
             study_id=study.id, assay_id=assay.id, node_type=node_type)
-    # update registry entry
+
+    # Update registry entry
     registry.save()
     if not created and not update:
         # registry entry exists and no updating requested
         return
-    # remove existing annotated node objects for this node_type in this
+
+    # Remove existing annotated node objects for this node_type in this
     # study/assay
     if assay_uuid is None:
-        counter = AnnotatedNode.objects.filter(
-            Q(study__uuid=study_uuid, assay__uuid__isnull=True),
-            node_type=node_type).count()
         AnnotatedNode.objects.filter(
             Q(study__uuid=study_uuid, assay__uuid__isnull=True),
             node_type=node_type).delete()
     else:
-        counter = AnnotatedNode.objects.filter(
-            Q(study__uuid=study_uuid, assay__uuid__isnull=True) |
-            Q(study__uuid=study_uuid, assay__uuid=assay_uuid),
-            node_type=node_type).count()
         AnnotatedNode.objects.filter(
             Q(study__uuid=study_uuid, assay__uuid__isnull=True) |
             Q(study__uuid=study_uuid, assay__uuid=assay_uuid),
             node_type=node_type).delete()
-    logger.info(str(counter) + " annotated nodes deleted.")
-    # retrieve annotated nodes
+
+    # Retrieve _all_ annotated nodes associated to the given study and assay
     nodes = _retrieve_nodes(study_uuid, assay_uuid, True)
 
-    # Disabled because it creates super large log message.
-    # a = [node["attributes"] for node_id, node in nodes.iteritems()]
-    # logger.info(a)
-
-    # insert node and attribute information
+    # Start timer
     start = time.time()
-    counter = 0
-    skipped_attributes = 0
+
+    # Holds AnnotatedNodes objects for bulk db entry creation
     bulk_list = []
+
+    # Total number of associated nodes of the given node type.
+    num_nodes_of_type = 0
+
+    # Sum of attributes of all `num_nodes_of_type`
+    total_attrs = 0
+
+    # Total number of unique attributes of `num_nodes`
+    total_unique_attrs = 0
+
+    # To avoid exponential node creation, count the number of nodes to be
+    # created first.
+    for node_id, node in nodes.iteritems():
+        total_unique_attrs += len(
+            nodes[node_id]["attributes"]
+        )
+
+        if node["type"] == node_type:
+            num_nodes_of_type += 1
+
+            attrs = _get_unique_parent_attributes(nodes, node_id)
+
+            u_len = len(attrs)
+
+            total_attrs += u_len
+
+    if total_attrs / num_nodes_of_type == total_unique_attrs:
+        error_message = (
+            "Exponential explosion! Creation of {} annotated nodes for {} "
+            "nodes of type {} is stopped!"
+        ).format(total_attrs, num_nodes_of_type, node_type)
+
+        logger.error(error_message)
+        raise RuntimeError(error_message)
+
     for node_id, node in nodes.iteritems():
         if node["type"] == node_type:
-            # save attributes (attribute[1], etc. are based on
-            # Attribute.ALL_FIELDS)
-            attributes = _get_parent_attributes(nodes, node_id)
+            bulk_list, counter = _create_annotated_node_objs(
+                bulk_list,
+                node,
+                study,
+                assay,
+                _get_unique_parent_attributes(nodes, node_id)
+            )
 
-            # List to keep track which attributes have already been added
-            check_list = {}
+    _create_annotated_node_objs(bulk_list)
 
-            for attribute in attributes:
-                # Skip if we've seen the attribute already
-                if attribute[0] in check_list:
-                    skipped_attributes += 1
-                    continue
-
-                counter += 1
-                bulk_list.append(
-                    AnnotatedNode(
-                        node_id=node["id"],
-                        attribute_id=attribute[0],
-                        study=study,
-                        assay=assay,
-                        node_uuid=node["uuid"],
-                        node_file_uuid=node["file_uuid"],
-                        node_type=node["type"],
-                        node_name=node["name"],
-                        attribute_type=attribute[1],
-                        attribute_subtype=attribute[2],
-                        attribute_value=attribute[3],
-                        attribute_value_unit=attribute[4]))
-
-                # Position zero represents the attribute ID.
-                check_list[attribute[0]] = True
-
-                if len(bulk_list) == MAX_BULK_LIST_SIZE:
-                    AnnotatedNode.objects.bulk_create(bulk_list)
-                    bulk_list = []
-    if len(bulk_list) > 0:
-        AnnotatedNode.objects.bulk_create(bulk_list)
-        bulk_list = []
     end = time.time()
+
     logger.info(
-        "Skipped creating %s duplicated annotated nodes",
-        str(skipped_attributes)
-    )
-    logger.info(
-        "%s annotated nodes generated in %s", str(counter), str(end - start)
+        "Created %s annotated nodes from %s nodes in %s msec",
+        str(total_attrs),
+        str(len(nodes)),
+        str(end - start)
     )
 
 
@@ -411,63 +508,71 @@ def calculate_checksum(f, algorithm='md5', bufsize=8192):
     return hasher.hexdigest()
 
 
-def add_annotated_nodes(node_type, study_uuid, assay_uuid=None):
-    _add_annotated_nodes(node_type, study_uuid, assay_uuid, None)
-
-
-def add_annotated_nodes_selection(node_uuids, node_type, study_uuid,
-                                  assay_uuid=None):
+def add_annotated_nodes_selection(
+        node_uuids,
+        node_type,
+        study_uuid,
+        assay_uuid=None):
     _add_annotated_nodes(node_type, study_uuid, assay_uuid, node_uuids)
 
 
-def _add_annotated_nodes(node_type, study_uuid, assay_uuid=None,
-                         node_uuids=None):
+def _add_annotated_nodes(
+        node_type,
+        study_uuid,
+        assay_uuid=None,
+        node_uuids=None):
+    """Add annotated nodes.
+
+    If `node_uuids=None` nothing is happeneing. This should be checked right
+    away.
+    """
+    if node_uuids is None:
+        return
+
+    # Get the first study with study UUID
     study = Study.objects.filter(uuid=study_uuid)[0]
+
     if assay_uuid is not None:
         assay = Assay.objects.filter(uuid=assay_uuid)[0]
     else:
         assay = None
-    # retrieve annotated nodes
+
+    # Retrieve annotated nodes
     nodes = _retrieve_nodes(study_uuid, assay_uuid, True)
     logger.info("%s retrieved from data set", str(len(nodes)))
-    # insert node and attribute information
-    import time
+
+    # Insert node and attribute information
     start = time.time()
+
     counter = 0
     bulk_list = []
+
     for node_id, node in nodes.iteritems():
         if node["type"] == node_type:
-            if node_uuids is not None and (node["uuid"] in node_uuids):
-                # save attributes (attribute[1], etc. are based on
-                # Attribute.ALL_FIELDS)
-                attributes = _get_parent_attributes(nodes, node_id)
+            if node["uuid"] in node_uuids:
+                bulk_list, num_created = _create_annotated_node_objs(
+                    bulk_list,
+                    node,
+                    study,
+                    assay,
+                    _get_unique_parent_attributes(nodes, node_id)
+                )
+                counter += num_created
 
-                for attribute in attributes:
-                    counter += 1
+    _create_annotated_node_objs(bulk_list)
 
-                    bulk_list.append(
-                        AnnotatedNode(
-                            node_id=node["id"],
-                            attribute_id=attribute[0],
-                            study=study,
-                            assay=assay,
-                            node_uuid=node["uuid"],
-                            node_file_uuid=node["file_uuid"],
-                            node_type=node["type"],
-                            node_name=node["name"],
-                            attribute_type=attribute[1],
-                            attribute_subtype=attribute[2],
-                            attribute_value=attribute[3],
-                            attribute_value_unit=attribute[4]))
-                    if len(bulk_list) == MAX_BULK_LIST_SIZE:
-                        AnnotatedNode.objects.bulk_create(bulk_list)
-                        bulk_list = []
     if len(bulk_list) > 0:
         AnnotatedNode.objects.bulk_create(bulk_list)
         bulk_list = []
+
     end = time.time()
-    logger.info("%s annotated nodes generated in %s",
-                str(counter), str(end - start))
+
+    logger.info(
+        "Added %s annotated nodes from %s nodes in %s msec",
+        str(counter),
+        str(len(nodes)),
+        str(end - start)
+    )
 
 
 def index_annotated_nodes(node_type, study_uuid, assay_uuid=None):
@@ -541,35 +646,17 @@ def generate_solr_params_for_user(params, user_id):
             # but there's nothing more to do here.
         investigation = investigation_link.investigation
 
-        try:
-            study = Study.objects.get(
-                investigation=investigation
-            )
-        except Study.DoesNotExist as e:
-            logger.error('Expected at least one Study for %s: %s',
-                         investigation, e)
-            continue
-            # Again, nothing more to do here.
-        except Study.MultipleObjectsReturned as e:
-            logger.error('Expected only one Study for %s: %s',
-                         investigation, e)
-            raise
+        study_ids = Study.objects.filter(
+            investigation=investigation
+        ).values_list('id', flat=True)
 
-        try:
-            assay = Assay.objects.get(study=study)
-        except Assay.DoesNotExist as e:
-            logger.error('Expected at least one Assay for %s: %s',
-                         study, e)
-            continue
-            # Again, nothing more to do here.
-        except Assay.MultipleObjectsReturned as e:
-            logger.error('Expected only one Assay for %s: %s',
-                         study, e)
-            raise
+        assay_uuids += Assay.objects.filter(
+            study_id__in=study_ids
+        ).values_list('uuid', flat=True)
 
-        assay_uuids.append(assay.uuid)
-
-    return _generate_solr_params(params, assay_uuids=assay_uuids)
+    return _generate_solr_params(params,
+                                 assay_uuids=assay_uuids,
+                                 facets_from_config=True)
 
 
 def generate_solr_params_for_assay(params, assay_uuid):
@@ -591,7 +678,7 @@ def generate_solr_params_for_assay(params, assay_uuid):
     return _generate_solr_params(params, assay_uuids=[assay_uuid])
 
 
-def _generate_solr_params(params, assay_uuids):
+def _generate_solr_params(params, assay_uuids, facets_from_config=False):
     """
     Either returns a solr url parameter string,
     or None if assay_uuids is empty.
@@ -609,6 +696,7 @@ def _generate_solr_params(params, assay_uuids):
     start = params.get('offset', '0')
     # row number suggested by solr docs, since there's no unlimited option
     row = params.get('limit', '10000000')
+    # TODO: Is there a reason for the explicit Nones below?
     field_limit = params.get('attributes', None)
     facet_field = params.get('facets', None)
     facet_pivot = params.get('pivots', None)
@@ -629,7 +717,19 @@ def _generate_solr_params(params, assay_uuids):
         return None
     solr_params = 'fq=assay_uuid:({})'.format(' OR '.join(assay_uuids))
 
-    if facet_field:
+    fq = params.get('fq')
+    if fq is not None:
+        solr_params += '&fq=' + fq
+
+    if facets_from_config:
+        # Twice as many facets as necessary, but easier than the alternative.
+        facet_template = '&facet.field={0}_Characteristics_generic_s' + \
+                   '&facet.field={0}_Factor_Value_generic_s'
+        solr_params += ''.join(
+            [facet_template.format(s) for s
+             in settings.USER_FILES_FACETS.split(",")])
+        solr_params += '&fl=*_generic_s,name,file_uuid,type,django_id'
+    elif facet_field:
         facet_field = facet_field.split(',')
         facet_field = insert_facet_field_filter(facet_filter, facet_field)
         split_facet_fields = generate_facet_fields_query(facet_field)
@@ -809,10 +909,7 @@ def get_owner_from_assay(uuid):
 
 def format_solr_response(solr_response):
     # Returns a reformatted solr response
-    try:
-        solr_response_json = json.loads(solr_response)
-    except TypeError:
-        return "Error loading json."
+    solr_response_json = json.loads(solr_response)
 
     # Reorganizes solr response into easier to digest objects.
     try:
@@ -830,6 +927,8 @@ def format_solr_response(solr_response):
             facet_field_counts)
         solr_response_json['facet_field_counts'] = facet_field_counts_obj
         del solr_response_json['facet_counts']
+    else:
+        solr_response_json['facet_field_counts'] = {}
 
     facet_field_docs = solr_response_json.get('response').get('docs')
     facet_field_docs_count = solr_response_json.get('response').get('numFound')

@@ -357,6 +357,7 @@ class Node(models.Model):
     PTM_ASSIGNMENT_FILE = "Post Translational Modification Assignment File"
     FREE_INDUCTION_DECAY_DATA_FILE = "Free Induction Decay Data File"
     ACQUISITION_PARAMETER_DATA_FILE = "Aquisition Parameter Data File"
+    METABOLITE_ASSIGNMENT_FILE = "Metabolite Assignment File"
 
     ASSAYS = {
         ASSAY,
@@ -383,7 +384,8 @@ class Node(models.Model):
         PROTEIN_ASSIGNMENT_FILE,
         PTM_ASSIGNMENT_FILE,
         FREE_INDUCTION_DECAY_DATA_FILE,
-        ACQUISITION_PARAMETER_DATA_FILE
+        ACQUISITION_PARAMETER_DATA_FILE,
+        METABOLITE_ASSIGNMENT_FILE
     }
 
     TYPES = ASSAYS | FILES | {
@@ -698,31 +700,31 @@ class AttributeOrder(models.Model):
 
 
 class AnnotatedNodeRegistry(models.Model):
-    study = models.ForeignKey(Study, db_index=True)
-    assay = models.ForeignKey(Assay, db_index=True, blank=True, null=True)
-    node_type = models.TextField(db_index=True)
+    study = models.ForeignKey(Study)
+    assay = models.ForeignKey(Assay, blank=True, null=True)
+    node_type = models.TextField()
     creation_date = models.DateTimeField(auto_now_add=True)
     modification_date = models.DateTimeField(auto_now=True)
 
 
 class AnnotatedNode(models.Model):
     node = models.ForeignKey(Node, db_index=True)
-    attribute = models.ForeignKey(Attribute, db_index=True)
-    study = models.ForeignKey(Study, db_index=True)
-    assay = models.ForeignKey(Assay, db_index=True, blank=True, null=True)
+    attribute = models.ForeignKey(Attribute)
+    study = models.ForeignKey(Study)
+    assay = models.ForeignKey(Assay, blank=True, null=True)
     node_uuid = UUIDField()
     node_file_uuid = UUIDField(blank=True, null=True)
-    node_type = models.TextField(db_index=True)
-    node_name = models.TextField(db_index=True)
-    attribute_type = models.TextField(db_index=True)
+    node_type = models.TextField()
+    node_name = models.TextField()
+    attribute_type = models.TextField()
     # subtype further qualifies the attribute type, e.g. type = factor value
     # and subtype = age
-    attribute_subtype = models.TextField(blank=True, null=True, db_index=True)
-    attribute_value = models.TextField(blank=True, null=True, db_index=True)
+    attribute_subtype = models.TextField(blank=True, null=True)
+    attribute_value = models.TextField(blank=True, null=True)
     attribute_value_unit = models.TextField(blank=True, null=True)
     # genome information
-    node_species = models.IntegerField(db_index=True, null=True)
-    node_genome_build = models.TextField(db_index=True, null=True)
+    node_species = models.IntegerField(null=True)
+    node_genome_build = models.TextField(null=True)
     node_analysis_uuid = UUIDField(
         default=None,
         blank=True,
@@ -802,7 +804,9 @@ def _query_solr(study, assay, attribute=None):
             'facet.limit': '-1'
         })
 
-    logger.debug('Query parameters: %s', params)
+    # This log tends to be massive and spams the log file. Turn on only when
+    # needed.
+    # logger.debug('Query parameters: %s', params)
 
     headers = {'Accept': 'application/json'}
     try:
@@ -814,7 +818,9 @@ def _query_solr(study, assay, attribute=None):
 
     results = response.json()
 
-    logger.debug('Query results: %s', results)
+    # This log tends to be massive and spams the log file. Turn on only when
+    # needed.
+    # logger.debug('Query results: %s', results)
 
     if results['response']['numFound'] == 0:
         raise ValueError('No results.')

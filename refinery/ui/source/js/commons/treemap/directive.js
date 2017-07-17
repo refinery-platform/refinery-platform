@@ -3,14 +3,16 @@
 function treemapDirective ($window) {
   return {
     bindToController: {
-      graph: '='
+      graph: '=',
+      introJs: '='
     },
     controller: 'TreemapCtrl',
     controllerAs: 'treemap',
     restrict: 'E',
     replace: true,
     scope: {
-      graph: '='
+      graph: '=',
+      introJs: '='
     },
     templateUrl: function () {
       return $window.getStaticUrl('partials/commons/treemap/template.html');

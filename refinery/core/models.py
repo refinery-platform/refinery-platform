@@ -7,15 +7,13 @@ from __future__ import absolute_import
 
 import ast
 import copy
+from datetime import datetime
 import logging
 import os
 import smtplib
 import socket
-from datetime import datetime
 from urlparse import urljoin
 
-import pysolr
-from bioblend import galaxy
 from django import forms
 from django.conf import settings
 from django.contrib import messages
@@ -36,12 +34,15 @@ from django.forms import ValidationError
 from django.template import Context, loader
 from django.template.loader import render_to_string
 from django.utils import timezone
+
+from bioblend import galaxy
 from django_auth_ldap.backend import LDAPBackend
 from django_extensions.db.fields import UUIDField
 from guardian.models import UserObjectPermission
 from guardian.shortcuts import (assign_perm, get_groups_with_perms,
                                 get_objects_for_group, get_users_with_perms,
                                 remove_perm)
+import pysolr
 from registration.models import RegistrationManager, RegistrationProfile
 from registration.signals import user_activated, user_registered
 
@@ -1195,7 +1196,6 @@ class Analysis(OwnableResource):
                     delete = False
 
         if delete:
-            # Cancel Analysis (galaxy cleanup also happens here)
             self.cancel()
 
             # Delete associated AnalysisResults
@@ -1336,6 +1336,7 @@ class Analysis(OwnableResource):
                 direction=analysis_node_connection['direction'],
                 is_refinery_file=analysis_node_connection['is_refinery_file']
             )
+
         # saving outputs of workflow to download
         for file_dl in history_download:
             temp_dl = WorkflowFilesDL(step_id=file_dl['step_id'],
@@ -1753,6 +1754,26 @@ class Analysis(OwnableResource):
                 logger.warning(
                     "No file found for '%s' in download '%s' ('%s')",
                     analysis_result.file_store_uuid, self.name, self.uuid)
+
+    def terminate_file_import_tasks(self):
+        """
+        Gathers all UUIDs of FileStoreItems used as inputs for the Analysis,
+        and trys to terminate their import_file tasks if possible
+        """
+        file_store_item_uuids = self.get_input_file_uuid_list()
+
+        for uuid in file_store_item_uuids:
+            try:
+                file_store_item = FileStoreItem.objects.get(uuid=uuid)
+            except (FileStoreItem.DoesNotExist,
+                    FileStoreItem.MultipleObjectsReturned) as e:
+                logger.error(
+                    "Couldn't properly fetch FileStoreItem with UUID: %s %s",
+                    uuid,
+                    e
+                )
+            else:
+                file_store_item.terminate_file_import_task()
 
 
 #: Defining available relationship types
@@ -2528,3 +2549,14 @@ class CustomRegistrationProfile(RegistrationProfile):
             "An email has been sent to admins informing of registration of  "
             "user %s", self.user
         )
+
+
+class SiteProfile(models.Model):
+    """Extension to the `Site` class to customize the Refinery instance further
+    """
+
+    site = models.OneToOneField(Site, related_name='profile')
+    repo_mode_home_page_html = models.TextField(blank=True)
+
+    def __unicode__(self):
+        return self.site.name

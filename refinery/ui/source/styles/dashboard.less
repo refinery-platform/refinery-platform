@@ -151,6 +151,7 @@
   height: @top-bar-height + 1px;
   color: #444;
   box-shadow: inset 0 -1px 0 0 lighten(@gray-light, 25%);
+  background: rgba(255, 255, 255, 0.9);
 
   label {
     margin: 0;
@@ -160,6 +161,88 @@
 
   .floatbox-max-right {
     height: 100%;
+  }
+
+  .floatbox-item {
+    position: relative;
+    display: block;
+    float: left;
+    padding: 0 .5em;
+    border-left: 1px solid lighten(@gray-light, 25%);
+
+    &.button-like {
+      padding: 0 1em;
+
+      &:hover,
+      &:focus {
+        color: @black;
+        background: lighten(@gray-light, 25%);
+      }
+
+      &:active {
+        color: @blue;
+        background: fade(@blue-shadow, 50%);
+      }
+    }
+
+    .rel-box {
+      position: relative;
+      display: inline-block;
+      height: 24px;
+    }
+  }
+
+  .icon-svg {
+    position: relative;
+    display: block;
+    width: 16px;
+    height: 24px;
+  }
+}
+
+#f-visible-depth {
+  width: 4em;
+}
+
+.top-half.is-maximized,
+.bottom-half.is-maximized {
+  height: 100%;
+}
+
+.top-half.is-maximized {
+  height: 100%;
+
+  .content {
+    bottom: 26px !important;
+  }
+}
+
+.bottom-half.is-maximized {
+  top: 24px;
+  height: 100%;
+}
+
+.top-half.is-minimized {
+  height: 25px;
+
+  .top-bar {
+    box-shadow: none;
+
+    .title::after {
+      content: '(Minimized):' !important;
+      margin-left: 0.25em;
+      text-transform: none;
+    }
+  }
+}
+
+.bottom-half.is-minimized {
+  top: 100%;
+  margin-top: -26px;
+  height: 0;
+
+  .top-bar {
+    box-shadow: none;
   }
 }
 
@@ -293,6 +376,25 @@
   background: #000;
 }
 
+.vis-wrapper .top-bar .button-like.active {
+  color: black;
+  font-weight: bold;
+  text-decoration: none;
+  background: @white;
+
+  &::before {
+    position: absolute;
+    display: block;
+    content: '';
+    bottom: -1px;
+    left: 4px;
+    right: 4px;
+    height: 1px;
+    background: fade(@blue-shadow, 50%);
+    box-shadow: 0 0 8px 0 @blue-shadow;
+  }
+}
+
 .vis-wrapper .top-bar button:hover,
 .vis-wrapper .top-bar button:focus {
   outline: none;
@@ -354,6 +456,22 @@
     border-bottom: 0;
     overflow: hidden;
     background: #fff;
+
+    .introjs-starter {
+      padding: 0 2rem;
+    }
+
+    .title.show {
+      font-size: 1em;
+      line-height: 1.85em;
+      border-right: 0;
+      padding: 0 0.25em 0 0;
+
+      &::after {
+        content: ':';
+        font-weight: normal;
+      }
+    }
   }
 
   .top-bar.details .global-controls {
@@ -395,11 +513,6 @@
     line-height: @top-bar-height;
   }
 
-  .top-bar .global-controls .control-btn,
-  .top-bar .controls {
-    box-shadow: 1px 0 0 0 #d9d9d9;
-  }
-
   .top-bar .control-switch {
     background: #fff;
     box-shadow: inset 1px 0 0 0 #d9d9d9, inset 0 -1px 0 0 #d9d9d9;
@@ -420,16 +533,25 @@
     box-shadow: 0 0 8px 0 @blue-shadow;
   }
 
+  .top-bar .control-btn.fakeHover,
   .top-bar .control-btn.active:hover:before {
+    font-weight: bold;
+    color: @white;
     background: @blue-shadow;
   }
 
+  .top-bar .control-btn .icon,
   .top-bar .control-btn [class*=' icon-'],
   .top-bar .control-btn [class^=icon-] {
     top: 4px;
     right: 8px;
     width: 16px;
     height: 16px;
+    line-height: 16px;
+
+    &.fa-info-circle {
+      font-size: 14px;
+    }
   }
 
   >.wrapper {
@@ -479,6 +601,7 @@
 
   .bar.highlight .bar-magnitude {
     fill: lighten(@blue-shadow, 20%);
+    stroke: lighten(@blue-shadow, 20%);
   }
 
   .top-bar .sort-precision:hover,
@@ -489,6 +612,37 @@
 
   .node .bg-border {
     fill: @orange;
+    stroke: @orange;
+  }
+
+  .node.lock-directly,
+  .column.active .node.lock-directly {
+    .bg {
+      fill: @orange;
+    }
+
+    .border {
+      stroke: @orange;
+    }
+  }
+
+  .node.hovering-directly .bg {
+    fill: @black;
+  }
+
+  .node.hovering-directly .border,
+  .node.hovering-indirectly .border,
+  .column.active .node.hovering-directly .border,
+  .column.active .node.hovering-indirectly .border,
+  .node.rooted.hovering-directly .border,
+  .node.rooted.hovering-indirectly .border,
+  .column.active .node.rooted.hovering-directly .border,
+  .column.active .node.rooted.hovering-indirectly .border {
+    stroke: @black;
+  }
+
+  .node.focus-directly .border,
+  .column.active .node.focus-directly .border {
     stroke: @orange;
   }
 
@@ -519,11 +673,12 @@
     text-shadow: 0 0 3px fadeout(@blue-shadow, 50%);
   }
 
-  .context-menu .component .label,
-  .context-menu .component .label-two,
-  .context-menu .component .separator {
+  .context-menu .component .label-wrapper .label,
+  .context-menu .component .label-wrapper .label-two,
+  .context-menu .component .label-wrapper .separator {
     display: inline-block;
     font-size: 1.2rem;
+    line-height: 2rem;
   }
 
   .context-menu .button .bg-bam-effect,
@@ -573,6 +728,43 @@
       font-size: 0.8em;
       color: @gray-light;
     }
+
+    .help-item {
+      display: inline-block;
+      margin-right: 0.5rem;
+
+      .f-box {
+        display: block;
+        float: left;
+        line-height: 22px;
+      }
+
+      .svg-icon {
+        display: block;
+        float: left;
+        width: 24px;
+        height: 24px;
+        padding: 2px;
+
+        &.icon-cursor-default {
+          padding: 4px 4px 5px 4px;
+        }
+
+        &.icon-cursor-click {
+          padding: 0 2px 2px 2px;
+        }
+
+        &.icon-cursor-dblclick {
+          padding: 0 2px 2px 2px;
+        }
+      }
+    }
+
+    .separator {
+      display: inline-block;
+      margin: 0 .5rem;
+      color: @gray-light;
+    }
   }
 
   .refinery-header .btn,
@@ -617,13 +809,59 @@
       height: 36px;
 
       h4 {
+        float: left;
         font-size: 15px;
         line-height: normal;
-        margin: 3px 0;
+        margin: 3px 10px 3px 0;
         height: 25px;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+      }
+
+      .query-terms {
+        height: 25px;
+        padding: 0 2px;
+        border: 1px solid darken(@gray-lighter, 10%);
+        border-radius: 3px;
+        line-height: 25px;
+
+        .no-query-terms {
+          margin-left: 3px;
+          color: @gray-light;
+        }
+
+        .badge {
+          display: block;
+          height: 19px;
+          margin: 0 5px 0 0;
+          padding: 0 5px;
+          border-radius: 2px;
+          line-height: 19px;
+
+          .mode {
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-right: 0.25rem;
+            cursor: pointer;
+
+            &::after {
+              content: ':';
+              font-weight: normal;
+            }
+          }
+
+          .close {
+            float: none;
+            margin-left: 5px;
+            color: inherit;
+            opacity: 0.5;
+
+            &:hover {
+              opacity: 1;
+            }
+          }
+        }
       }
     }
 
@@ -644,12 +882,6 @@
         color: @gray-light;
         font-size: 14px;
         line-height: 1em;
-      }
-
-      .separator {
-        padding-left: 0.25rem;
-        padding-right: 0.25rem;
-        color: @gray-lighter;
       }
 
       button.icon-only {
@@ -896,7 +1128,7 @@
 
       > li {
         position: relative;
-        padding: 5px 2.5rem 5px 0;
+        padding: 5px 3rem 5px 0;
         border-top: 1px solid @gray-lighter-rgba;
         transition: all @fast-transition-speed @ease-in-out-cubic;
 
@@ -1047,6 +1279,14 @@
           background: rgba(0, 0, 0, 0);
           transition: all @fast-transition-speed @ease-in-out-cubic;
           text-decoration: none;
+
+          &.is-not-allowed {
+            cursor: not-allowed;
+
+            i {
+              color: @gray-lighter-rgba;
+            }
+          }
         }
 
         .preview:hover {
@@ -1128,6 +1368,16 @@
 
           &:hover {
             background: lighten(@blue, 15%);
+          }
+        }
+
+        &.btn-super-important {
+          color: @black;
+          background: @orange;
+          font-weight: bold;
+
+          &:hover {
+            background: lighten(@orange, 15%);
           }
         }
 
@@ -1312,11 +1562,11 @@
           color: @gray-light;
           line-height: 1em;
           border-bottom: 1px solid lighten(@gray-light, 25%);
+        }
 
-          &:first-child {
-            margin-top: 0;
-            padding-top: 0;
-          }
+        .singleStudy div:first-child .refinery-subheader {
+          margin-top: 0;
+          padding-top: 0;
         }
 
         .scrollable {
@@ -1501,6 +1751,8 @@ body.repo-mode .refinery-dashboard {
   color: #286090;
 }
 
+@import "intro-js.less";
+
 #related-analyses {
   max-height: 250px;
   overflow: auto;
@@ -1526,4 +1778,22 @@ body.repo-mode .refinery-dashboard {
 
 #metadata-search {
   padding:2px 25px;
+}
+
+.custom-repo-mode-html {
+  padding: 0 1em 1em 1em;
+}
+
+.separator {
+  padding-left: 0.25rem;
+  padding-right: 0.25rem;
+  color: @gray-lighter;
+}
+
+.is-not-allowed {
+  cursor: not-allowed;
+}
+
+.is-screenshot-ready .refinery-dashboard .refinery-panel .refinery-sub-panel.border {
+  box-shadow: 2px 0 0 0 #e5e5e5;
 }

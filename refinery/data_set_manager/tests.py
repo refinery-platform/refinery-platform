@@ -1,20 +1,22 @@
+from StringIO import StringIO
 import json
 import re
-from StringIO import StringIO
 
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import (InMemoryUploadedFile,
                                             SimpleUploadedFile)
 from django.http import QueryDict
 from django.test import TestCase
+
 from rest_framework.test import APIClient, APIRequestFactory, APITestCase
 
 from core.models import DataSet, ExtendedGroup, InvestigationLink
 from core.views import NodeViewSet
+from data_set_manager.tasks import parse_isatab
 from file_store.models import FileStoreItem
 
-from .models import (Assay, Attribute, AttributeOrder, Investigation, Node,
-                     Study)
+from .models import (AnnotatedNode, Assay, Attribute, AttributeOrder,
+                     Investigation, Node, Study)
 from .search_indexes import NodeIndex
 from .serializers import AttributeOrderSerializer
 from .utils import (create_facet_filter_query, customize_attribute_response,
@@ -22,8 +24,9 @@ from .utils import (create_facet_filter_query, customize_attribute_response,
                     generate_facet_fields_query,
                     generate_filtered_facet_fields,
                     generate_solr_params_for_assay,
-                    get_file_url_from_node_uuid, get_owner_from_assay,
-                    hide_fields_from_list, initialize_attribute_order_ranks,
+                    generate_solr_params_for_user, get_file_url_from_node_uuid,
+                    get_owner_from_assay, hide_fields_from_list,
+                    initialize_attribute_order_ranks,
                     insert_facet_field_filter, is_field_in_hidden_list,
                     objectify_facet_field_counts, update_attribute_order_ranks)
 from .views import Assays, AssaysAttributes
@@ -744,27 +747,42 @@ class UtilitiesTest(TestCase):
         for field in list_not_hidden_field:
             self.assertEqual(is_field_in_hidden_list(field), False)
 
-    def test_generate_solr_params(self):
+    def test_generate_solr_params_no_params(self):
         # empty params
         query = generate_solr_params_for_assay(QueryDict({}), self.valid_uuid)
         self.assertEqual(str(query),
                          'fq=assay_uuid%3A%28{}%29'
-                         '&facet.field=Cell Type&'
-                         'facet.field=Analysis&facet.field=Organism&'
-                         'facet.field=Cell Line&facet.field=Type&'
-                         'facet.field=Group Name&fl=Character_Title%2C'
-                         'Specimen%2CCell Type%2CAnalysis%2COrganism%2C'
-                         'Cell Line%2CType%2CGroup Name&'
-                         'fq=type%3A%28%22Raw Data File%22 OR %22'
-                         'Derived Data File%22 OR %22Array Data File'
-                         '%22 OR %22Derived Array Data File%22 OR %22'
-                         'Array Data Matrix File%22 OR%22Derived Array '
-                         'Data Matrix File%22%29&fq=is_annotation%3A'
-                         'false&start=0&rows=10000000&q=django_ct%3A'
-                         'data_set_manager.node&wt=json&facet=true&'
-                         'facet.limit=-1'.format(
+                         '&facet.field=Cell Type'
+                         '&facet.field=Analysis'
+                         '&facet.field=Organism'
+                         '&facet.field=Cell Line'
+                         '&facet.field=Type'
+                         '&facet.field=Group Name'
+                         '&fl=Character_Title%2C'
+                         'Specimen%2C'
+                         'Cell Type%2C'
+                         'Analysis%2C'
+                         'Organism%2C'
+                         'Cell Line%2C'
+                         'Type%2C'
+                         'Group Name'
+                         '&fq=type%3A%28%22Raw Data File%22 '
+                         'OR %22Derived Data File%22 '
+                         'OR %22Array Data File%22 '
+                         'OR %22Derived Array Data File%22 '
+                         'OR %22Array Data Matrix File%22 '
+                         'OR%22Derived Array Data Matrix File%22%29'
+                         '&fq=is_annotation%3Afalse'
+                         '&start=0'
+                         '&rows=10000000'
+                         '&q=django_ct%3Adata_set_manager.node'
+                         '&wt=json'
+                         '&facet=true'
+                         '&facet.limit=-1'.format(
                                  self.valid_uuid))
-        # added parameter
+
+    def test_generate_solr_params_for_assay_with_params(self):
+        query = generate_solr_params_for_assay(QueryDict({}), self.valid_uuid)
         parameter_dict = {'limit': 7, 'offset': 2,
                           'include_facet_count': 'true',
                           'attributes': 'cats,mouse,dog,horse',
@@ -778,19 +796,57 @@ class UtilitiesTest(TestCase):
         )
         self.assertEqual(str(query),
                          'fq=assay_uuid%3A%28{}%29'
-                         '&facet.field=cats&'
-                         'facet.field=mouse&facet.field=dog&'
-                         'facet.field=horse&fl=cats%2C'
-                         'mouse%2Cdog%2Chorse&facet.pivot=cats%2Cmouse&'
-                         'fq=type%3A%28%22Raw Data File%22 OR %22'
-                         'Derived Data File%22 OR %22Array Data File'
-                         '%22 OR %22Derived Array Data File%22 OR %22'
-                         'Array Data Matrix File%22 OR%22Derived Array '
-                         'Data Matrix File%22%29&fq=is_annotation%3A'
-                         'true&start=2&rows=7&q=django_ct%3A'
-                         'data_set_manager.node&wt=json&facet=true&'
-                         'facet.limit=-1'.format(
+                         '&facet.field=cats'
+                         '&facet.field=mouse'
+                         '&facet.field=dog'
+                         '&facet.field=horse'
+                         '&fl=cats%2Cmouse%2Cdog%2Chorse'
+                         '&facet.pivot=cats%2Cmouse'
+                         '&fq=type%3A%28%22Raw Data File%22 '
+                         'OR %22Derived Data File%22 '
+                         'OR %22Array Data File%22 '
+                         'OR %22Derived Array Data File%22 '
+                         'OR %22Array Data Matrix File%22 '
+                         'OR%22Derived Array Data Matrix File%22%29'
+                         '&fq=is_annotation%3Atrue'
+                         '&start=2'
+                         '&rows=7'
+                         '&q=django_ct%3Adata_set_manager.node'
+                         '&wt=json'
+                         '&facet=true'
+                         '&facet.limit=-1'.format(
                                  self.valid_uuid))
+
+    def test_generate_solr_params_for_user(self):
+        query = generate_solr_params_for_user(QueryDict({}), self.user1.id)
+        self.assertEqual(str(query),
+                         'fq=assay_uuid%3A%28{} OR {}%29'
+                         '&facet.field=organism_Characteristics_generic_s'
+                         '&facet.field=organism_Factor_Value_generic_s'
+                         '&facet.field=technology_Characteristics_generic_s'
+                         '&facet.field=technology_Factor_Value_generic_s'
+                         '&facet.field=antibody_Characteristics_generic_s'
+                         '&facet.field=antibody_Factor_Value_generic_s'
+                         '&facet.field=genotype_Characteristics_generic_s'
+                         '&facet.field=genotype_Factor_Value_generic_s'
+                         '&facet.field=experimenter_Characteristics_generic_s'
+                         '&facet.field=experimenter_Factor_Value_generic_s'
+                         '&fl=%2A_generic_s'
+                         '%2Cname%2Cfile_uuid%2Ctype%2Cdjango_id'
+                         '&fq=type%3A%28%22Raw Data File%22 '
+                         'OR %22Derived Data File%22 '
+                         'OR %22Array Data File%22 '
+                         'OR %22Derived Array Data File%22 '
+                         'OR %22Array Data Matrix File%22 '
+                         'OR%22Derived Array Data Matrix File%22%29'
+                         '&fq=is_annotation%3Afalse'
+                         '&start=0'
+                         '&rows=10000000'
+                         '&q=django_ct%3Adata_set_manager.node'
+                         '&wt=json'
+                         '&facet=true'
+                         '&facet.limit=-1'.format(
+                             self.assay.uuid, self.new_assay.uuid))
 
     def test_generate_filtered_facet_fields(self):
         attribute_orders = AttributeOrder.objects.filter(
@@ -924,10 +980,25 @@ class UtilitiesTest(TestCase):
         )
 
     def test_format_solr_response_invalid(self):
-        # invalid input, error checking
+        # invalid input, do not mask error
         solr_response = {"test_object": "not a string"}
-        error = format_solr_response(solr_response)
-        self.assertEqual(error, "Error loading json.")
+        with self.assertRaises(TypeError):
+            format_solr_response(solr_response)
+
+    def test_customize_attribute_response_for_generics(self):
+        attributes = ['technology_Characteristics_generic_s',
+                      'antibody_Factor_Value_generic_s']
+        prettified_attributes = customize_attribute_response(attributes)
+        self.assertListEqual(
+            prettified_attributes,
+            [{'attribute_type': 'Characteristics',
+              'display_name': 'Technology',
+              'file_ext': 's',
+              'internal_name': 'technology_Characteristics_generic_s'},
+             {'attribute_type': 'Factor Value',
+              'display_name': 'Antibody',
+              'file_ext': 's',
+              'internal_name': 'antibody_Factor_Value_generic_s'}])
 
     def test_customize_attribute_response(self):
         # valid input
@@ -1670,3 +1741,36 @@ class NodeIndexTests(APITestCase):
                           'type': u'',
                           'uuid': self.node_uuid,
                           'workflow_output': None})
+
+
+class AnnotatedNodeExplosionTestCase(TestCase):
+    def setUp(self):
+        self.username = 'coffee_lover'
+        self.password = 'coffeecoffee'
+        self.user = User.objects.create_user(
+            self.username,
+            '',
+            self.password
+        )
+
+    def test_metabolights_isatab_wont_import_with_rollback_a(self):
+        parse_isatab(
+            self.user.username,
+            True,
+            "refinery/data_set_manager/test-data/MTBLS1.zip"
+        )
+        self.assertEqual(DataSet.objects.count(), 0)
+        self.assertEqual(AnnotatedNode.objects.count(), 0)
+        self.assertEqual(Node.objects.count(), 0)
+        self.assertEqual(FileStoreItem.objects.count(), 0)
+
+    def test_metabolights_isatab_wont_import_with_rollback_b(self):
+        parse_isatab(
+            self.user.username,
+            True,
+            "refinery/data_set_manager/test-data/MTBLS112.zip"
+        )
+        self.assertEqual(DataSet.objects.count(), 0)
+        self.assertEqual(AnnotatedNode.objects.count(), 0)
+        self.assertEqual(Node.objects.count(), 0)
+        self.assertEqual(FileStoreItem.objects.count(), 0)

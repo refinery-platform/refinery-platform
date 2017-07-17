@@ -25,8 +25,11 @@
     activeNodeService,
     toolSelectService
   ) {
-    // each input file type will have a color associated with it
-    var colorSelectionArray = ['#009E73', '#CC79A7', '#56B4E9', '#E69F00', '#F0E442', '#D55E00'];
+    // each input file type will have a color associated with it, rgb
+    var colorSelectionArray = [
+      '0,158,115', '204,121,167', '86,180,233',
+      '230,159,0', '240,228,66', '213,94,0'
+    ];
     var nodeService = activeNodeService;
     var toolService = toolSelectService;
     var vm = this;
@@ -344,7 +347,8 @@
       } else {
         // remove property when checkbox deselected
         for (var i = 0; i < vm.nodeSelectCollection[nodeUuid].inputTypeList.length; i++) {
-          if (_.isEqual(vm.nodeSelectCollection[nodeUuid].groupList[i], vm.currentGroup)) {
+          if (_.isEqual(vm.nodeSelectCollection[nodeUuid].groupList[i], vm.currentGroup) &&
+          vm.nodeSelectCollection[nodeUuid].inputTypeList[i] === inputTypeUuid) {
             vm.nodeSelectCollection[nodeUuid].groupList.splice(i, 1);
             vm.nodeSelectCollection[nodeUuid].inputTypeList.splice(i, 1);
             break;

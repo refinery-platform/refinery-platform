@@ -1,9 +1,10 @@
 import logging
 from urlparse import urljoin
 
-import requests
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
+
 from guardian.utils import get_anonymous_user
+import requests
 from rest_framework.test import (APIRequestFactory, APITestCase,
                                  force_authenticate)
 
@@ -24,7 +25,12 @@ class UserFilesAPITests(APITestCase):
         force_authenticate(request, user=self.user)
         response = self.view(request)
         self.assertEqual(response.status_code, 200)
-        self.assertItemsEqual(response.data.keys(), [])
+        self.assertItemsEqual(sorted(response.data.keys()), [
+            'attributes',
+            'facet_field_counts',
+            'nodes',
+            'nodes_count'
+        ])
 
 
 class UserFilesUITests(StaticLiveServerTestCase):

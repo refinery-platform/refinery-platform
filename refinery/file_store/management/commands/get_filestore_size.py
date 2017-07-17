@@ -1,11 +1,11 @@
 from __future__ import absolute_import
+
 import logging
 from subprocess import check_output
 
 from django.core.management.base import BaseCommand
 
 from ...models import FileStoreItem
-
 
 logger = logging.getLogger(__name__)
 

@@ -21,6 +21,7 @@ function DataSetPreviewCtrl (
   dataSetTakeOwnershipService,
   dashboardDataSetsReloadService,
   filesize,
+  DashboardIntrosDataSetSummary,
   permissionService
 ) {
   this.$log = $log;
@@ -44,6 +45,7 @@ function DataSetPreviewCtrl (
   this.dashboardDataSetsReloadService = dashboardDataSetsReloadService;
   this.permissionService = permissionService;
   this.filesize = filesize;
+  this.introsSatoriDataSetSummary = new DashboardIntrosDataSetSummary(this);
   this.importStatus = {};
 
   this.maxBadges = this.settings.dashboard.preview.maxBadges;
@@ -442,6 +444,7 @@ angular
     'dataSetTakeOwnershipService',
     'dashboardDataSetsReloadService',
     'filesize',
+    'DashboardIntrosDataSetSummary',
     'permissionService',
     DataSetPreviewCtrl
   ]);

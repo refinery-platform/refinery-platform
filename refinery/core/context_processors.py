@@ -12,6 +12,8 @@ import logging
 from django.conf import settings
 from django.contrib.sites.models import Site
 
+from core.models import SiteProfile
+
 logger = logging.getLogger(__name__)
 
 
@@ -23,6 +25,16 @@ def extra_context(context):
     console!
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     """
+
+    try:
+        repo_mode_home_page_html = SiteProfile.objects.get(
+            site=Site.objects.get_current()
+        ).repo_mode_home_page_html.replace(
+            '\n', ''
+        ).replace('\r', '').replace("'", "\\'")
+    except Exception:
+        repo_mode_home_page_html = 'null'
+
     return {
         "ADMIN_EMAIL": settings.ADMINS[0][1],
         "CURRENT_COMMIT": settings.CURRENT_COMMIT,
@@ -36,6 +48,7 @@ def extra_context(context):
         "REFINERY_GOOGLE_ANALYTICS_ID": settings.REFINERY_GOOGLE_ANALYTICS_ID,
         "REFINERY_INSTANCE_NAME": Site.objects.get_current().name,
         "REFINERY_REPOSITORY_MODE": settings.REFINERY_REPOSITORY_MODE,
+        "REFINERY_REPOSITORY_MODE_HOME_PAGE_HTML": repo_mode_home_page_html,
         "REFINERY_CONTACT_EMAIL": settings.DEFAULT_FROM_EMAIL,
         "REGISTRATION_OPEN": settings.REGISTRATION_OPEN,
         "REFINERY_REGISTRATION_CLOSED_MESSAGE":
@@ -49,6 +62,9 @@ def extra_context(context):
             settings.REFINERY_EXTERNAL_AUTH_MESSAGE,
         "REFINERY_TUTORIAL_STEPS": settings.REFINERY_TUTORIAL_STEPS,
         "SOLR_SYNONYM_SEARCH": settings.SOLR_SYNONYMS,
+        "SATORI_DEMO": settings.SATORI_DEMO,
         "STATIC_URL": settings.STATIC_URL,
+        "MEDIA_BUCKET": settings.MEDIA_BUCKET,
+        "DEPLOYMENT_PLATFORM": settings.DEPLOYMENT_PLATFORM,
         "USER_FILES_COLUMNS": settings.USER_FILES_COLUMNS
     }

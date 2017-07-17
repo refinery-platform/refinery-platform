@@ -9,13 +9,14 @@ from django.contrib import admin
 from django_extensions.admin import ForeignKeyAutocompleteAdmin
 from guardian.admin import GuardedModelAdmin
 
-from core.models import (
-    Analysis, AnalysisNodeConnection, AnalysisResult, DataSet, DiskQuota,
-    ExtendedGroup, InvestigationLink, NodePair, NodeRelationship, NodeSet,
-    Project, UserProfile, Workflow, WorkflowDataInput, WorkflowDataInputMap,
-    WorkflowEngine, WorkflowFilesDL, WorkflowInputRelationships, Download,
-    Invitation, Ontology,
-    Tutorials)
+from core.models import (Analysis, AnalysisNodeConnection, AnalysisResult,
+                         DataSet, DiskQuota, Download, ExtendedGroup,
+                         InvestigationLink, Invitation, NodePair,
+                         NodeRelationship, NodeSet, Ontology, Project,
+                         SiteProfile, Tutorials, UserProfile, Workflow,
+                         WorkflowDataInput, WorkflowDataInputMap,
+                         WorkflowEngine, WorkflowFilesDL,
+                         WorkflowInputRelationships)
 from core.utils import admin_ui_deletion
 
 
@@ -182,6 +183,10 @@ class OntologyAdmin(GuardedModelAdmin):
                     'owl2neo4j_version', 'import_date', 'update_date']
 
 
+class SiteProfileAdmin(GuardedModelAdmin):
+    list_display = ['__unicode__', 'site']
+
+
 admin.site.register(ExtendedGroup, ExtendedGroupAdmin)
 admin.site.register(Project, ProjectAdmin)
 admin.site.register(DataSet, DataSetAdmin)
@@ -205,3 +210,4 @@ admin.site.register(Tutorials, TutorialsAdmin)
 admin.site.register(WorkflowInputRelationships,
                     WorkflowInputRelationshipsAdmin)
 admin.site.register(Ontology, OntologyAdmin)
+admin.site.register(SiteProfile, SiteProfileAdmin)

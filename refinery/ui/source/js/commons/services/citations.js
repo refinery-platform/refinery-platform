@@ -8,7 +8,8 @@ angular
     '_',
     'doiService',
     'pubmedService',
-    function ($log, $q, _, doiService, pubmedService) {
+    'timeoutablePromise',
+    function ($log, $q, _, doiService, pubmedService, timeoutablePromise) {
       function extractDois (data) {
         var dois = [];
         try {
@@ -140,11 +141,11 @@ angular
               return preparePubmedAbstract(data);
             });
 
-          return $q.all([summary, abstract])
+          return timeoutablePromise($q.all([summary, abstract])
             .then(function (data) {
               data[0].abstract = data[1];
               return data[0];
-            });
+            }), 10000);
         }
 
         // Check if DOI
@@ -186,12 +187,12 @@ angular
               return null;
             });
 
-          return $q.all([doi, pubmed])
+          return timeoutablePromise($q.all([doi, pubmed])
             .then(mergeDoiPubmed)
             .catch(function () {
               // In case something failed we will return the DOI promise.
               return doi;
-            });
+            }), 10000);
         }
 
         return $q.reject(
