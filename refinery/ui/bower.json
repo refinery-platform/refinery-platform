@@ -46,6 +46,7 @@
     "ng-webworker": "0.2.3",
     "spark-md5": "2.0.2",
     "spectrum": "1.7.0",
+    "svgxuse": "1.2.4",
     "tipsy": "0.1.7",
     "d3-list-graph": "flekschas/d3-list-graph#v1.1.8",
     "angular-drag-and-drop-lists": "1.4.0",

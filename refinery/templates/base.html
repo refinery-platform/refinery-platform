@@ -322,6 +322,9 @@
   <script src="{% static "vendor/jquery-file-upload/js/jquery.fileupload-angular.js" %}"></script>
   <script src="{% static "js/data-set-import.js" %}"></script>
 
+  <!-- Fetch external SVGs referenced in <use> elements when the browser fails to do so -->
+  <script defer src="{% static "vendor/svgxuse/svgxuse.min.js" %}"></script>
+
   {% block script %}
   {% endblock %}
 
