@@ -1,5 +1,5 @@
-import uuid as uuid_builtin
 from datetime import datetime
+import uuid as uuid_builtin
 
 from core.models import Analysis, DataSet
 from factory_boy.django_model_factories import (AnalysisFactory,
@@ -66,11 +66,18 @@ def create_dataset_with_necessary_models():
     investigation_uuid = str(uuid_builtin.uuid4())
     investigation = InvestigationFactory(uuid=investigation_uuid)
 
-    study_uuid = str(uuid_builtin.uuid4())
+    study_uuid_0 = str(uuid_builtin.uuid4())
     StudyFactory(
-        uuid=study_uuid,
+        uuid=study_uuid_0,
         investigation=investigation,
         description="This is a great DataSet"
+    )
+
+    study_uuid_1 = str(uuid_builtin.uuid4())
+    StudyFactory(
+        uuid=study_uuid_1,
+        investigation=investigation,
+        description="It has multiple studies"
     )
 
     InvestigationLinkFactory(
