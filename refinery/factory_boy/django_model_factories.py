@@ -16,6 +16,14 @@ class DataSetFactory(factory.django.DjangoModelFactory):
     modification_date = datetime.now()
 
 
+class AssayFactory(factory.django.DjangoModelFactory):
+    """Minimal representation of an Assay"""
+    class Meta:
+        model = "data_set_manager.Assay"
+
+    uuid = uuid_builtin.uuid4()
+
+
 class StudyFactory(factory.django.DjangoModelFactory):
     """Minimal representation of a Study"""
     class Meta:
