@@ -1736,7 +1736,7 @@ class AnnotatedNodeExplosionTestCase(TestCase):
         parse_isatab(
             self.user.username,
             True,
-            "data_set_manager/test-data/MTBLS1.zip"
+            "refinery/data_set_manager/test-data/MTBLS1.zip"
         )
         self.assertEqual(DataSet.objects.count(), 0)
         self.assertEqual(AnnotatedNode.objects.count(), 0)
@@ -1747,7 +1747,7 @@ class AnnotatedNodeExplosionTestCase(TestCase):
         parse_isatab(
             self.user.username,
             True,
-            "data_set_manager/test-data/MTBLS112.zip"
+            "refinery/data_set_manager/test-data/MTBLS112.zip"
         )
         self.assertEqual(DataSet.objects.count(), 0)
         self.assertEqual(AnnotatedNode.objects.count(), 0)
