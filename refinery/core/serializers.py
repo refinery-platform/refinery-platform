@@ -4,10 +4,10 @@ import celery
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 
-from .models import DataSet, Workflow
 from data_set_manager.models import Node
 from file_store.models import FileStoreItem
 
+from .models import DataSet, Workflow
 
 logger = logging.getLogger(__name__)
 

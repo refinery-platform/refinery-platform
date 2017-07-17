@@ -11,10 +11,9 @@ from annotation_server.utils import SUPPORTED_GENOMES
 from core.utils import get_full_url
 from data_set_manager.models import Node
 from file_server.models import get_aux_file_item
+from file_server.views import profile_viewer
 from file_store.models import FileStoreItem
 from file_store.tasks import create, import_file, rename
-from file_server.views import profile_viewer
-
 
 logger = logging.getLogger(__name__)
 

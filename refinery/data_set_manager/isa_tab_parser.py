@@ -16,13 +16,12 @@ import tempfile
 from urlparse import urlparse
 from zipfile import ZipFile
 
-from .models import (Assay, Attribute, Contact, Design, Factor,
-                     Investigation, Node, Ontology, Protocol,
-                     ProtocolReference, ProtocolReferenceParameter,
-                     Publication, Study)
 import data_set_manager.tasks
 from file_store.tasks import create, import_file
 
+from .models import (Assay, Attribute, Contact, Design, Factor, Investigation,
+                     Node, Ontology, Protocol, ProtocolReference,
+                     ProtocolReferenceParameter, Publication, Study)
 
 logger = logging.getLogger(__name__)
 

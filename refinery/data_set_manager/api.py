@@ -10,9 +10,9 @@ from tastypie.authorization import Authorization
 from tastypie.constants import ALL, ALL_WITH_RELATIONS
 from tastypie.resources import ModelResource
 
-from .models import (Assay, Attribute, AttributeOrder, Investigation,
-                     Node, Protocol, ProtocolReference,
-                     ProtocolReferenceParameter, Publication, Study)
+from .models import (Assay, Attribute, AttributeOrder, Investigation, Node,
+                     Protocol, ProtocolReference, ProtocolReferenceParameter,
+                     Publication, Study)
 
 
 class AttributeResource(ModelResource):

@@ -2,6 +2,7 @@ from rest_framework import serializers
 from rest_framework_recursive.fields import RecursiveField
 
 from file_store.models import FileType
+
 from .models import (FileRelationship, InputFile, OutputFile, Parameter, Tool,
                      ToolDefinition)
 
