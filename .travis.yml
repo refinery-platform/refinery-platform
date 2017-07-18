@@ -45,7 +45,7 @@ before_script:
   - python manage.py migrate --noinput
   - npm install -g grunt-cli@0.1.13 bower@1.7.7 n --progress false --quiet || ( cat npm-debug.log && false )
   - node --version
-  - sudo n 6.11.1
+  - sudo `which n` 6.11.1
   - node --version
   - cd ui
   - npm install --progress false --quiet || ( cat npm-debug.log && false )
