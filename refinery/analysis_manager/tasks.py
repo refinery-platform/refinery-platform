@@ -18,6 +18,7 @@ from core.utils import get_full_url
 from data_set_manager.models import Node
 from file_store.models import FileStoreItem
 from file_store.tasks import create, import_file
+import tool_manager
 
 from .models import AnalysisStatus
 
@@ -84,6 +85,17 @@ def _get_analysis_status(analysis_uuid):
 
 def get_taskset_result(task_group_id):
     return TaskSetResult.restore(task_group_id)
+
+
+def _get_tool(analysis_uuid):
+    try:
+        return tool_manager.models.Tool.objects.get(
+            analysis__uuid=analysis_uuid
+        )
+    except (tool_manager.models.Tool.DoesNotExist,
+            tool_manager.models.Tool.MultipleObjectsReturned) as e:
+        logger.info(e)
+        return None
 
 
 def _attach_workflow_outputs(analysis_uuid):
