@@ -17,6 +17,7 @@ services:
   - docker
 
 install:
+  - node --version
   - npm --version
   - npm install -g npm@3.10.10
   - npm --version
@@ -34,6 +35,7 @@ env:
     # These env vars are available to every build
     - PYTHONPATH=$PYTHONPATH:../refinery:../refinery/config
     - DJANGO_SETTINGS_MODULE=config.settings.prod
+    - TRAVIS_NODE_VERSION='6.11.0'
 
 before_script:
   - createuser --createdb --no-superuser --no-createrole vagrant
