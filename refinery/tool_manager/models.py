@@ -307,6 +307,22 @@ class Tool(OwnableResource):
     def get_tool_type(self):
         return self.tool_definition.tool_type
 
+    def _get_analysis_config(self):
+        """
+        Construct  and return an Analysis Configuration dict to be validated.
+
+        NOTE: there is no exception handling here since everything
+        underneath Tool.launch() is inside of an atomic transaction.
+        :return: analysis_config dict
+        """
+        return {
+            "name": "Analysis: {}".format(self),
+            "studyUuid": self.dataset.get_latest_study().uuid,
+            "toolUuid": self.uuid,
+            "user_id": self.get_owner().id,
+            "workflowUuid": self.tool_definition.workflow.uuid
+        }
+
     def launch(self):
         if self.get_tool_type() == ToolDefinition.VISUALIZATION:
             return self._launch_visualization()
@@ -354,17 +370,12 @@ class Tool(OwnableResource):
                 )
             )
 
-        analysis_config = {
-            "name": "Analysis: {}".format(self),
-            "studyUuid": self.dataset.get_latest_study().uuid,
-            "toolUuid": self.uuid,
-            "user_id": self.get_owner().id,
-            "workflowUuid": self.tool_definition.workflow.uuid
-        }
+        analysis_config = self._get_analysis_config()
         validate_analysis_config(analysis_config)
 
         analysis = create_analysis(analysis_config)
         self.set_analysis(analysis.uuid)
+
         AnalysisStatus.objects.create(analysis=analysis)
 
         # Run the analysis task
