@@ -18,7 +18,9 @@ services:
 
 install:
   - node --version
-  - nvm use 6.11.0
+  - NODE_VERSION=6.11.0
+  - nvm install $NODE_VERSION
+  - nvm use $NODE_VERSION
   - node --version
 
   - npm --version
