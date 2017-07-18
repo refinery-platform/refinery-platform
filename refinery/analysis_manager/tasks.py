@@ -229,6 +229,7 @@ def _refinery_file_import(analysis_uuid):
     """
     analysis = _get_analysis(analysis_uuid)
     analysis_status = _get_analysis_status(analysis_uuid)
+    tool = _get_tool(analysis_uuid)
 
     if not analysis_status.refinery_import_task_group_id:
         logger.info("Starting analysis '%s'", analysis)
@@ -237,7 +238,11 @@ def _refinery_file_import(analysis_uuid):
                     analysis)
         refinery_import_tasks = []
 
-        input_file_uuid_list = analysis.get_input_file_uuid_list()
+        if tool:
+            input_file_uuid_list = tool.get_input_file_uuid_list()
+        else:
+            input_file_uuid_list = analysis.get_input_file_uuid_list()
+
         for input_file_uuid in input_file_uuid_list:
             refinery_import_task = import_file.subtask((input_file_uuid,))
             refinery_import_tasks.append(refinery_import_task)
