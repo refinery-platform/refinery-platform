@@ -282,6 +282,7 @@ def run_analysis(analysis_uuid):
     logger.info("Executing Analysis with UUID: ""%s", analysis_uuid)
 
     analysis = _get_analysis(analysis_uuid)
+    tool = _get_tool(analysis_uuid)
 
     # if cancelled by user
     if analysis.failed():
@@ -290,10 +291,55 @@ def run_analysis(analysis_uuid):
 
     _get_analysis_status(analysis_uuid)
     _refinery_file_import(analysis_uuid)
-    _run_galaxy_workflow(analysis_uuid)
-    _galaxy_file_import(analysis_uuid)
-    _galaxy_file_export(analysis_uuid)
-    _attach_workflow_outputs(analysis_uuid)
+
+    if tool:
+        # The code in this block will need to be modified so that we can
+        # monitor the state of galaxy file imports and workflow execution,
+        # but is a good starting point
+
+        connection = analysis.galaxy_connection()
+        library_dict = connection.libraries.create_library(
+            name="Library for: {}".format(tool)
+        )
+        history_dict = connection.histories.create_history(
+            name="History for: {}".format(tool)
+        )
+
+        galaxy_to_refinery_mappings = []
+
+        for file_uuid in tool.get_input_file_uuid_list():
+            file_store_item = FileStoreItem.objects.get(uuid=file_uuid)
+            library_dataset_dict = connection.libraries.upload_file_from_url(
+                library_dict["id"],
+                get_full_url(file_store_item.get_datafile_url())
+            )
+            history_dataset_dict = (
+                connection.histories.upload_dataset_from_library(
+                    history_dict["id"],
+                    library_dataset_dict[0]["id"]
+                )
+            )
+            galaxy_to_refinery_mappings.append(
+                {
+                    "refinery_file_uuid": file_uuid,
+                    "galaxy_dataset_history_id": history_dataset_dict["id"]
+                }
+            )
+        tool.update_file_relationships_with_galaxy_history_data(
+            galaxy_to_refinery_mappings
+        )
+
+        # - Create DatasetCollection
+        # - Invoke galaxy workflow (in a new history so that fetching outputs
+        #   is easy!)
+        # - Attach results of workflow (Analysis.attach_outputs_dataset is
+        # really nasty :/ )
+
+    else:
+        _run_galaxy_workflow(analysis_uuid)
+        _galaxy_file_import(analysis_uuid)
+        _galaxy_file_export(analysis_uuid)
+        _attach_workflow_outputs(analysis_uuid)
 
 
 def _run_galaxy_workflow(analysis_uuid):
