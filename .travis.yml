@@ -17,6 +17,7 @@ services:
   - docker
 
 install:
+  - npm --version
   - pip install -r requirements.txt --quiet
   # Install geckodriver required for selenium testing
   - GECKODRIVER_VERSION=v0.17.0
