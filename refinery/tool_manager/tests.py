@@ -991,7 +991,7 @@ class ToolTests(ToolManagerTestBase):
         self.assertEqual(
             self.tool.get_tool_launch_config(),
             {
-                'node_uuid_list': [],
+                'file_uuid_list': [],
                 "dataset_uuid": self.dataset.uuid,
                 "tool_definition_uuid": self.td.uuid,
                 "file_relationships": "['http://www.example.com/sample.seg']",
