@@ -270,6 +270,7 @@ def create_tool_analysis(validated_analysis_config):
         raise RuntimeError("Couldn't fetch Tool from UUID: {}".format(e))
 
     analysis = AnalysisFactory(
+        uuid=str(uuid.uuid4()),
         summary="Analysis run for: {}".format(tool),
         name=name,
         project=user.profile.catch_all_project,
