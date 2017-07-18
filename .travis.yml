@@ -18,9 +18,13 @@ services:
 
 install:
   - node --version
+  - nvm 6.11.0
+  - node --version
+
   - npm --version
   - npm install -g npm@3.10.10
   - npm --version
+
   - pip install -r requirements.txt --quiet
   # Install geckodriver required for selenium testing
   - GECKODRIVER_VERSION=v0.17.0
@@ -44,9 +48,6 @@ before_script:
   - erb config/config.json.erb > config/config.json
   - python manage.py migrate --noinput
   - npm install -g grunt-cli@0.1.13 bower@1.7.7 n --progress false --quiet || ( cat npm-debug.log && false )
-  - node --version
-  - sudo `which n` 6.11.1
-  - node --version
   - cd ui
   - npm install --progress false --quiet || ( cat npm-debug.log && false )
   - bower install --config.interactive=false --quiet
