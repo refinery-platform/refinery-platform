@@ -18,6 +18,7 @@ from analysis_manager.models import AnalysisStatus
 from analysis_manager.tasks import run_analysis
 from analysis_manager.utils import create_analysis, validate_analysis_config
 from core.models import Analysis, DataSet, OwnableResource, Workflow
+from data_set_manager.models import Node
 from data_set_manager.utils import get_file_url_from_node_uuid
 from file_store.models import FileType
 
@@ -280,9 +281,9 @@ class Tool(OwnableResource):
         )
 
     def get_input_file_uuid_list(self):
-        # Tools can't be created without the `node_uuid_list` existing so no
+        # Tools can't be created without the `file_uuid_list` existing so no
         # KeyError is being caught
-        return self.get_tool_launch_config()["node_uuid_list"]
+        return self.get_tool_launch_config()["file_uuid_list"]
 
     def get_file_relationships(self):
         return ast.literal_eval(
@@ -415,10 +416,15 @@ class Tool(OwnableResource):
             tool_launch_config["file_relationships"]
         )
 
-        # Add list of Node UUIDs to our ToolLaunchConfig for later use
-        tool_launch_config["node_uuid_list"] = node_uuids
+        # Add list of FileStoreItem UUIDs to our ToolLaunchConfig for later use
+        tool_launch_config["file_uuid_list"] = []
 
         for uuid in node_uuids:
+            node = Node.objects.get(uuid=uuid)
+
+            # Append file_uuid to list of FileStoreItem UUIDs
+            tool_launch_config["file_uuid_list"].append(node.file_uuid)
+
             file_url = get_file_url_from_node_uuid(uuid)
             tool_launch_config["file_relationships"] = (
                 tool_launch_config["file_relationships"].replace(
