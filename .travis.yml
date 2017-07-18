@@ -18,6 +18,8 @@ services:
 
 install:
   - npm --version
+  - npm install -g npm@3.10.10
+  - npm --version
   - pip install -r requirements.txt --quiet
   # Install geckodriver required for selenium testing
   - GECKODRIVER_VERSION=v0.17.0
