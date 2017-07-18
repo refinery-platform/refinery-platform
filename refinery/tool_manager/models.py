@@ -286,9 +286,25 @@ class Tool(OwnableResource):
         return self.get_tool_launch_config()["file_uuid_list"]
 
     def get_file_relationships(self):
+        return self.get_tool_launch_config()["file_relationships"]
+
+    def get_file_relationships_urls(self):
         return ast.literal_eval(
-            self.get_tool_launch_config()["file_relationships"]
+            self.get_tool_launch_config()["file_relationships_urls"]
         )
+
+    def get_file_relationship_galaxy_info(self):
+        return ast.literal_eval(
+            self.get_tool_launch_config()["file_relationships_galaxy"]
+        )
+
+    def get_node_uuids(self):
+        tool_launch_config = self.get_tool_launch_config()
+        node_uuids = re.findall(
+            r'[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}',
+            tool_launch_config["file_relationships"]
+        )
+        return node_uuids
 
     def get_relative_container_url(self):
         """
@@ -346,7 +362,7 @@ class Tool(OwnableResource):
             container_input_path=(
                 self.tool_definition.container_input_path
             ),
-            input={"file_relationships": self.get_file_relationships()},
+            input={"file_relationships": self.get_file_relationships_urls()},
             extra_directories=self.tool_definition.get_extra_directories()
         )
 
@@ -405,36 +421,62 @@ class Tool(OwnableResource):
         else:
             self.save()
 
-    def update_file_relationships_string(self):
+    def update_file_relationships_with_urls(self):
         """
         Replace a Tool's Node uuids in its `file_relationships` string with
-        their respective FileStoreItem's urls. No error handling here since
-        this method is only called in an atomic transaction.
+        their respective FileStoreItem's urls and assign this data to a new
+        key in the tool launch config: `file_relationships_urls`.
+        No error handling here since this method is only called in an atomic
+        transaction.
         """
 
         tool_launch_config = self.get_tool_launch_config()
-
-        node_uuids = re.findall(
-            r'[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}',
-            tool_launch_config["file_relationships"]
-        )
+        node_uuids = self.get_node_uuids()
 
         # Add list of FileStoreItem UUIDs to our ToolLaunchConfig for later use
         tool_launch_config["file_uuid_list"] = []
-
-        for uuid in node_uuids:
-            node = Node.objects.get(uuid=uuid)
+        tool_launch_config["file_relationships_urls"] = (
+            tool_launch_config["file_relationships"]
+        )
+        for node_uuid in node_uuids:
+            node = Node.objects.get(uuid=node_uuid)
 
             # Append file_uuid to list of FileStoreItem UUIDs
             tool_launch_config["file_uuid_list"].append(node.file_uuid)
 
-            file_url = get_file_url_from_node_uuid(uuid)
-            tool_launch_config["file_relationships"] = (
-                tool_launch_config["file_relationships"].replace(
-                    uuid, "'{}'".format(file_url)
+            file_url = get_file_url_from_node_uuid(node_uuid)
+            tool_launch_config["file_relationships_urls"] = (
+                tool_launch_config["file_relationships_urls"].replace(
+                    node_uuid, "'{}'".format(file_url)
                 )
             )
         self.set_tool_launch_config(tool_launch_config)
+
+    def update_file_relationships_with_galaxy_history_data(
+            self,  galaxy_to_refinery_mappings):
+        """
+        Replace a Tool's Node uuid in its `file_relationships` string with
+        information about the file uploaded into a galaxy history that
+        was fetched from said Node uuid and assign this data to a new
+        key in the tool launch config: `file_relationships_galaxy`.
+        No error handling here since this method is only called in an
+        atomic transaction.
+        """
+        tool_launch_config = self.get_tool_launch_config()
+        tool_launch_config["file_relationships_galaxy"] = (
+            tool_launch_config["file_relationships"]
+        )
+        for mapping in galaxy_to_refinery_mappings:
+            node = Node.objects.get(
+                file_uuid=mapping["refinery_file_uuid"]
+            )
+            tool_launch_config["file_relationships_galaxy"] = (
+                tool_launch_config["file_relationships_galaxy"].replace(
+                    node.uuid,
+                    "{}".format(json.dumps(mapping))
+                )
+            )
+            self.set_tool_launch_config(tool_launch_config)
 
 
 @receiver(pre_delete, sender=Tool)

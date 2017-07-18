@@ -224,10 +224,10 @@ def create_tool(tool_launch_configuration, user_instance):
         )
 
     tool.set_owner(user_instance)
-    tool.update_file_relationships_string()
+    tool.update_file_relationships_with_urls()
 
     try:
-        nesting = tool.get_file_relationships()
+        nesting = tool.get_file_relationships_urls()
     except (SyntaxError, ValueError) as e:
         raise RuntimeError(
             "ToolLaunchConfiguration's `file_relationships` could not be "
