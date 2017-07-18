@@ -352,9 +352,7 @@ class Tool(OwnableResource):
 
         DockerClientWrapper().run(container)
 
-        return JsonResponse(
-            {"tool_url": self.get_relative_container_url()}
-        )
+        return JsonResponse({"tool_url": self.get_relative_container_url()})
 
     def _launch_workflow(self):
         """
@@ -382,8 +380,13 @@ class Tool(OwnableResource):
         # Run the analysis task
         run_analysis.delay(analysis.uuid)
 
-        analysis_url = "/data_sets2/{}/#/analyses/".format(self.dataset.uuid)
-        return JsonResponse({"tool_url": analysis_url})
+        return JsonResponse(
+            {
+                "tool_url": "/data_sets2/{}/#/analyses/".format(
+                    self.dataset.uuid
+                )
+            }
+        )
 
     def set_tool_launch_config(self, tool_launch_config):
         self.tool_launch_configuration = json.dumps(tool_launch_config)
