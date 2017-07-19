@@ -8,7 +8,8 @@ from factory_boy.django_model_factories import (AnalysisFactory,
                                                 GalaxyInstanceFactory,
                                                 InvestigationFactory,
                                                 InvestigationLinkFactory,
-                                                ProjectFactory, StudyFactory,
+                                                NodeFactory, ProjectFactory,
+                                                StudyFactory,
                                                 WorkflowEngineFactory,
                                                 WorkflowFactory)
 
@@ -88,8 +89,11 @@ def create_dataset_with_necessary_models():
             uuid=assay_uuid,
             study=study
         )
+        node = NodeFactory()
+        node.name = 'node-{}'.format(i)
         AnnotatedNodeFactory(
             study=study,
-            assay=assay)
+            assay=assay,
+            node=node)
 
     return dataset
