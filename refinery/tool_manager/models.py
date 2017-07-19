@@ -435,6 +435,8 @@ class Tool(OwnableResource):
 
         # Add list of FileStoreItem UUIDs to our ToolLaunchConfig for later use
         tool_launch_config["file_uuid_list"] = []
+
+        # Copy `file_relationships` contents into `file_relationships_urls`
         tool_launch_config["file_relationships_urls"] = (
             tool_launch_config["file_relationships"]
         )
