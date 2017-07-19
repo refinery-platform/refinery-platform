@@ -2,8 +2,9 @@ from datetime import datetime
 import uuid as uuid_builtin
 
 from core.models import Analysis, DataSet
-from factory_boy.django_model_factories import (AnalysisFactory, AssayFactory,
-                                                DataSetFactory,
+from factory_boy.django_model_factories import (AnalysisFactory,
+                                                AnnotatedNodeFactory,
+                                                AssayFactory, DataSetFactory,
                                                 GalaxyInstanceFactory,
                                                 InvestigationFactory,
                                                 InvestigationLinkFactory,
@@ -83,10 +84,12 @@ def create_dataset_with_necessary_models():
 
     for i in xrange(2):
         assay_uuid = str(uuid_builtin.uuid4())
-        AssayFactory(
+        assay = AssayFactory(
             uuid=assay_uuid,
             study=study
         )
-        # TODO: create Nodes or AnnotatedNodes
+        AnnotatedNodeFactory(
+            study=study,
+            assay=assay)
 
     return dataset

@@ -41,6 +41,15 @@ class InvestigationLinkFactory(factory.django.DjangoModelFactory):
     date = datetime.now()
 
 
+class AnnotatedNodeFactory(factory.django.DjangoModelFactory):
+    """Minimal representation of an AnnotatedNode"""
+    class Meta:
+        model = "data_set_manager.AnnotatedNode"
+
+    attribute_id = 42
+    node_id = 42
+
+
 class AnalysisFactory(factory.django.DjangoModelFactory):
     """Minimal representation of an Analysis"""
     class Meta:
