@@ -17,9 +17,8 @@ from rest_framework.test import (APIRequestFactory, APITestCase,
                                  force_authenticate)
 
 from analysis_manager.tasks import run_analysis
-from core.models import (DataSet, ExtendedGroup, InvestigationLink, Project,
-                         Workflow, WorkflowEngine)
-from data_set_manager.models import Assay, Investigation, Node, Study
+from core.models import ExtendedGroup, Project, Workflow, WorkflowEngine
+from data_set_manager.models import Assay, Node
 from factory_boy.utils import create_dataset_with_necessary_models
 from file_store.models import FileStoreItem
 from galaxy_connector.models import Instance
@@ -39,6 +38,10 @@ TEST_DATA_PATH = "tool_manager/test_data"
 
 
 class ToolManagerTestBase(TestCase):
+    # Some members in assertions are truncated if they are too long, but we
+    # want to see them in their entirety
+    maxDiff = None
+
     def setUp(self):
         self.public_group = ExtendedGroup.objects.public_group()
         self.galaxy_instance = Instance.objects.create()
@@ -103,12 +106,27 @@ class ToolManagerTestBase(TestCase):
         else:
             raise RuntimeError("Please provide a valid tool_type")
 
+        test_file = StringIO.StringIO()
+        test_file.write('Coffee is really great.\n')
+        file_store_item = FileStoreItem.objects.create(
+            source="http://www.example.com/test_file.txt"
+        )
+
+        study = self.dataset.get_latest_study()
+        assay = Assay.objects.get(study=study)
+
+        self.node = Node.objects.create(
+            name="n0",
+            assay=assay,
+            study=study,
+            file_uuid=file_store_item.uuid
+        )
+
         # Create mock ToolLaunchConfiguration
         self.post_data = {
             "dataset_uuid": self.dataset.uuid,
             "tool_definition_uuid": self.td.uuid,
-            "file_relationships":
-                "['http://www.example.com/sample.seg']",
+            "file_relationships": "[{}]".format(self.node.uuid),
         }
 
         self.post_request = self.factory.post(
@@ -848,9 +866,6 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
 
 
 class ToolDefinitionTests(ToolManagerTestBase):
-    # Some members in assertions are truncated if they are too long, but we
-    # want to test them in their entirety
-    maxDiff = None
 
     def test_get_annotation(self):
         self.create_vis_tool_definition(annotation_file_name="igv.json")
@@ -904,15 +919,8 @@ class ToolTests(ToolManagerTestBase):
     def test_node_uuids_get_populated_with_urls(self):
         self.create_vis_tool_definition()
 
-        dataset = DataSet.objects.create(name="coffee dataset")
-        investigation = Investigation.objects.create()
-        study = Study.objects.create(investigation=investigation)
-        assay = Assay.objects.create(study=study)
-        InvestigationLink.objects.create(
-            investigation=investigation,
-            data_set=dataset,
-            version=1
-        )
+        study = self.dataset.get_latest_study()
+        assay = Assay.objects.get(study=study)
 
         test_file_a = StringIO.StringIO()
         test_file_a.write('Coffee is great.\n')
@@ -952,7 +960,7 @@ class ToolTests(ToolManagerTestBase):
         )
 
         post_data = {
-            "dataset_uuid": dataset.uuid,
+            "dataset_uuid": self.dataset.uuid,
             "tool_definition_uuid": self.td.uuid,
             "file_relationships": "[{}, {}]".format(
                 node_a.uuid,
@@ -973,11 +981,11 @@ class ToolTests(ToolManagerTestBase):
             self.post_response = self.tools_view(post_request)
             self.assertTrue(run_mock.called)
 
-        tool_launch = Tool.objects.get(
+        tool = Tool.objects.get(
             tool_definition__uuid=self.td.uuid
         )
 
-        file_relationships = tool_launch.get_file_relationships()
+        file_relationships = tool.get_file_relationships_urls()
 
         # Build regex and assert that the file_relationships structure is
         # populated from the FileStoreItem's datafiles that we've associated
@@ -991,18 +999,23 @@ class ToolTests(ToolManagerTestBase):
         self.assertEqual(
             self.tool.get_tool_launch_config(),
             {
-                'file_uuid_list': [],
+                'file_uuid_list': [self.node.file_uuid],
                 "dataset_uuid": self.dataset.uuid,
                 "tool_definition_uuid": self.td.uuid,
-                "file_relationships": "['http://www.example.com/sample.seg']",
+                "file_relationships": (
+                    "[{}]".format(self.node.uuid)
+                ),
+                "file_relationships_urls": (
+                    "['http://www.example.com/test_file.txt']"
+                )
             }
         )
 
-    def test_get_file_relationships(self):
+    def test_get_file_relationships_urls(self):
         self.create_valid_tool(ToolDefinition.WORKFLOW)
         self.assertEqual(
-            self.tool.get_file_relationships(),
-            ['http://www.example.com/sample.seg']
+            self.tool.get_file_relationships_urls(),
+            ['http://www.example.com/test_file.txt']
         )
 
     def test_launch_workflow_wrong_tool_type(self):
