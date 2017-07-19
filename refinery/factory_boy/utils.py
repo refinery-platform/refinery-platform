@@ -55,7 +55,8 @@ def make_analyses_with_single_dataset(number_to_create, user_instance):
 
 
 def create_dataset_with_necessary_models():
-    """Create Dataset with Investigation, Study, and Investigation Link"""
+    """Create Dataset with InvestigationLink, Investigation, Study,
+    and Assay"""
     dataset_uuid = str(uuid_builtin.uuid4())
     dataset = DataSetFactory(
         uuid=dataset_uuid,
@@ -80,10 +81,11 @@ def create_dataset_with_necessary_models():
         description="This is a great DataSet"
     )
 
-    assay_uuid = str(uuid_builtin.uuid4())
-    AssayFactory(
-        uuid=assay_uuid,
-        study=study
-    )
+    for i in xrange(2):
+        assay_uuid = str(uuid_builtin.uuid4())
+        AssayFactory(
+            uuid=assay_uuid,
+            study=study
+        )
 
     return dataset
