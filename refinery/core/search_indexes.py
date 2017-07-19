@@ -158,6 +158,7 @@ class DataSetIndex(indexes.SearchIndex, indexes.Indexable):
             template = loader.select_template(
                 ('search/indexes/core/dataset_text.txt',)
             )
+            logger.warn('nodes: %s', nodes)  # TODO: Should not be empty
             data['text'] = template.render(
                 Context({
                     'object': data_set,

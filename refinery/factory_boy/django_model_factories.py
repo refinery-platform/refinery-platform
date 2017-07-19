@@ -3,6 +3,8 @@ import uuid as uuid_builtin
 
 import factory
 
+from data_set_manager.models import Node
+
 
 class DataSetFactory(factory.django.DjangoModelFactory):
     """Minimal representation of a DataSet"""
@@ -45,6 +47,8 @@ class NodeFactory(factory.django.DjangoModelFactory):
     """Minimal representation of a Node"""
     class Meta:
         model = "data_set_manager.Node"
+
+    type = Node.RAW_DATA_FILE
 
 
 class AnnotatedNodeFactory(factory.django.DjangoModelFactory):

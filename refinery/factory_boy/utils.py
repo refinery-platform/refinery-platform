@@ -1,7 +1,7 @@
 from datetime import datetime
 import uuid as uuid_builtin
 
-from core.models import Analysis, DataSet
+from core.models import Analysis, DataSet, Node
 from factory_boy.django_model_factories import (AnalysisFactory,
                                                 AnnotatedNodeFactory,
                                                 AssayFactory, DataSetFactory,
@@ -96,6 +96,7 @@ def create_dataset_with_necessary_models():
         AnnotatedNodeFactory(
             study=study,
             assay=assay,
-            node=node)
+            node=node,
+            node_type=Node.RAW_DATA_FILE)
 
     return dataset
