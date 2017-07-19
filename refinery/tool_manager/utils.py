@@ -197,10 +197,10 @@ def create_tool_definition(annotation_data):
 @transaction.atomic
 def create_tool(tool_launch_configuration, user_instance):
     """
-   :param tool_launch_configuration: dict of data that represents a Tool
-   :param user_instance: User object that made the request to create said Tool
-   :returns: The created Tool object
-   """
+    :param tool_launch_configuration: dict of data that represents a Tool
+    :param user_instance: User object that made the request to create said Tool
+    :returns: The created Tool object
+    """
     # NOTE: that the usual exceptions for the get() aren't handled because
     # we're in the scope of an atomic transaction
     tool_definition = ToolDefinition.objects.get(
