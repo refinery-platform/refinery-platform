@@ -294,6 +294,9 @@ class Tool(OwnableResource):
         )
 
     def get_file_relationship_galaxy_info(self):
+        if self.get_tool_type() != ToolDefinition.WORKFLOW:
+            raise NotImplementedError
+
         return ast.literal_eval(
             self.get_tool_launch_config()["file_relationships_galaxy"]
         )
