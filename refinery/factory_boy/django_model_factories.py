@@ -41,12 +41,10 @@ class InvestigationLinkFactory(factory.django.DjangoModelFactory):
     date = datetime.now()
 
 
-class NodeFactory():
+class NodeFactory(factory.django.DjangoModelFactory):
     """Minimal representation of a Node"""
     class Meta:
-        model = "core.Node"
-
-    name = 'default-name'
+        model = "data_set_manager.Node"
 
 
 class AnnotatedNodeFactory(factory.django.DjangoModelFactory):

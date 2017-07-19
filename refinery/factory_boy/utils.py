@@ -89,8 +89,10 @@ def create_dataset_with_necessary_models():
             uuid=assay_uuid,
             study=study
         )
-        node = NodeFactory()
-        node.name = 'node-{}'.format(i)
+        node = NodeFactory(
+            name='node-{}'.format(i),
+            study=study
+        )
         AnnotatedNodeFactory(
             study=study,
             assay=assay,
