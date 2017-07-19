@@ -16,7 +16,8 @@ import mock
 from rest_framework.test import (APIRequestFactory, APITestCase,
                                  force_authenticate)
 
-from analysis_manager.tasks import run_analysis
+from analysis_manager.tasks import (_get_tool, _refinery_file_import,
+                                    run_analysis)
 from core.models import ExtendedGroup, Project, Workflow, WorkflowEngine
 from data_set_manager.models import Assay, Node
 from factory_boy.utils import create_dataset_with_necessary_models
@@ -1240,6 +1241,37 @@ class ToolLaunchTests(ToolManagerTestBase):
         tool_b = self.create_valid_tool(ToolDefinition.WORKFLOW)
 
         self.assertEqual(tool_a.dataset, tool_b.dataset)
+
+    def test__get_tool_no_analysis(self):
+        self.create_valid_tool(ToolDefinition.WORKFLOW)
+
+        analysis_uuid = self.tool.analysis.uuid
+        self.tool.analysis.delete()
+
+        self.assertEqual(
+            _get_tool(analysis_uuid),
+            None
+        )
+
+    def test__get_tool_with_analysis(self):
+        self.create_valid_tool(ToolDefinition.WORKFLOW)
+        self.assertEqual(
+            _get_tool(self.tool.analysis.uuid),
+            self.tool
+        )
+
+    @mock.patch.object(run_analysis, "retry", side_effect=None)
+    def test_get_input_file_uuid_list_gets_called_in_refinery_import(
+            self, retry_mock
+    ):
+        self.create_valid_tool(ToolDefinition.WORKFLOW)
+
+        with mock.patch(
+            "tool_manager.models.Tool.get_input_file_uuid_list"
+        ) as get_uuid_list_mock:
+            _refinery_file_import(self.tool.analysis.uuid)
+            self.assertTrue(get_uuid_list_mock.called)
+        self.assertTrue(retry_mock.called)
 
 
 class ToolLaunchSeleniumTests(ToolManagerTestBase, SeleniumTestBaseGeneric):
