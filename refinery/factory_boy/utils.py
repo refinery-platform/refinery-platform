@@ -90,13 +90,13 @@ def create_dataset_with_necessary_models():
             study=study
         )
         node = NodeFactory(
-            name='node-{}'.format(i),
             study=study
         )
         AnnotatedNodeFactory(
             study=study,
             assay=assay,
             node=node,
+            node_name='AnnotatedNode-{}'.format(i),
             node_type=Node.RAW_DATA_FILE)
 
     return dataset

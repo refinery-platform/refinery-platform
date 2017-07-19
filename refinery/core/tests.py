@@ -1,5 +1,6 @@
 import json
 import random
+import re
 import string
 from urlparse import urljoin
 
@@ -2417,7 +2418,12 @@ class CoreIndexTests(TestCase):
     def test_prepare(self):
         data = self.dataset_index.prepare(self.good_dataset)
         self.assertRegexpMatches(
-            data['text'], r'should match multiple fake nodes')
+            data['text'],
+            re.compile(
+                r'AnnotatedNode-\d.*AnnotatedNode-\d',
+                re.DOTALL
+            )
+        )
 
     def test_prepare_submitter(self):
         contact = Contact.objects.create(
