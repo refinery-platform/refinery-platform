@@ -20,7 +20,7 @@ def search_genes(request, genome, search_string):
                  genome, search_string)
 
     if genome in SUPPORTED_GENOMES:
-        current_table = eval(genome + "_EnsGene")
+        current_table = globals()[genome + "_EnsGene"]
         curr_vals = current_table.objects.filter(
             Q(name__contains=search_string) | Q(name2__contains=search_string)
         ).values('name', 'chrom', 'strand', 'txStart', 'txEnd', 'cdsStart',
@@ -81,7 +81,7 @@ def get_length(request, genome):
     logger.debug("annotation_server.get_length called for genome: %s", genome)
 
     if genome in SUPPORTED_GENOMES:
-        current_table = eval(genome + "_ChromInfo")
+        current_table = globals()[genome + "_ChromInfo"]
         data = ValuesQuerySetToDict(
             current_table.objects.values('chrom', 'size'))
         return HttpResponse(data, 'application/json')
@@ -95,7 +95,7 @@ def get_chrom_length(request, genome, chrom):
                  "%s chromosome: %s", genome, chrom)
 
     if genome in SUPPORTED_GENOMES:
-        current_table = eval(genome + "_ChromInfo")
+        current_table = globals()[genome + "_ChromInfo"]
         curr_vals = current_table.objects.filter(chrom__iexact=chrom).values(
             'chrom', 'size')
         data = ValuesQuerySetToDict(curr_vals)
@@ -112,7 +112,7 @@ def get_cytoband(request, genome, chrom):
                  "%s chromosome: %s", genome, chrom)
 
     if genome in SUPPORTED_GENOMES:
-        current_table = eval(genome + "_CytoBand")
+        current_table = globals()[genome + "_CytoBand"]
         curr_vals = current_table.objects.filter(chrom__iexact=chrom).values(
             'chrom', 'chromStart', 'chromEnd', 'name', 'gieStain')
         data = ValuesQuerySetToDict(curr_vals)
@@ -127,7 +127,7 @@ def get_genes(request, genome, chrom, start, end):
                  "%s chromosome: %s", genome, chrom)
 
     if genome in SUPPORTED_GENOMES:
-        current_table = eval(genome + "_EnsGene")
+        current_table = globals()[genome + "_EnsGene"]
         curr_vals = current_table.objects.filter(
             Q(chrom__iexact=chrom),
             Q(cdsStart__range=(start, end)) | Q(cdsEnd__range=(start, end))
@@ -145,7 +145,7 @@ def get_gc(request, genome, chrom, start, end):
                  "%s chromosome: %s:%s-%s", genome, chrom, start, end)
 
     if genome in SUPPORTED_GENOMES:
-        current_table = eval(genome + "_GC")
+        current_table = globals()[genome + "_GC"]
         curr_vals = current_table.objects.filter(
             Q(chrom__iexact=chrom),
             Q(position__range=(start, end)),
@@ -164,7 +164,7 @@ def get_maptheo(request, genome, chrom, start, end):
                  "%s chromosome: %s:%s-%s", genome, chrom, start, end)
 
     if genome in MAPPABILITY_THEORETICAL:
-        current_table = eval(genome + "_MappabilityTheoretical")
+        current_table = globals()[genome + "_MappabilityTheoretical"]
         curr_vals = current_table.objects.filter(
             Q(chrom__iexact=chrom),
             Q(chromStart__range=(start, end)) | Q(chromEnd__range=(start, end))
@@ -182,7 +182,7 @@ def get_mapemp(request, genome, chrom, start, end):
                  "%s chromosome: %s:%s-%s", genome, chrom, start, end)
 
     if genome in SUPPORTED_GENOMES:
-        current_table = eval(genome + "_MappabilityEmpirial")
+        current_table = globals()[genome + "_MappabilityEmpirial"]
         curr_vals = current_table.objects.filter(
             Q(chrom__iexact=chrom),
             Q(chromStart__range=(start, end)) | Q(chromEnd__range=(start, end))
@@ -199,7 +199,7 @@ def get_conservation(request, genome, chrom, start, end):
                  "%s chromosome: %s:%s-%s", genome, chrom, start, end)
 
     if genome in SUPPORTED_GENOMES:
-        current_table = eval(genome + "_Conservation")
+        current_table = globals()[genome + "_Conservation"]
         curr_vals = current_table.objects.filter(
             Q(chrom__iexact=chrom),
             Q(position__range=(start, end)),
@@ -217,7 +217,7 @@ def get_gapregion(request, genome, chrom, start, end):
                  "%s chromosome: %s:%s-%s", genome, chrom, start, end)
 
     if genome in GAP_REGIONS:
-        current_table = eval(genome + "_GapRegions")
+        current_table = globals()[genome + "_GapRegions"]
         curr_vals = current_table.objects.filter(
             Q(chrom__iexact=chrom),
             Q(chromStart__gte=start),

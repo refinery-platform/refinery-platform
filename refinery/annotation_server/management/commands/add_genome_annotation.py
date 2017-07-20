@@ -171,7 +171,7 @@ class Command(BaseCommand):
         """General function for adding Wig files into the annotation_server
         specifically for Conservation and GC content
         """
-        current_table = eval(db_model)
+        current_table = globals()[db_model]
         current_table.objects.all().delete()
         handle = getFileHandle(wig_file)
         for line in handle:
@@ -296,7 +296,7 @@ class Command(BaseCommand):
         """Function for adding additional gene annotation files
         i.e hg19 gencode, dm3 flybase, ce10 wormbase
         """
-        current_table = eval(db_model)
+        current_table = globals()[db_model]
         current_table.objects.all().delete()
         handle = getFileHandle(gff_file)
         for line in handle:
@@ -322,7 +322,7 @@ class Command(BaseCommand):
                      "genome: %s, file: %s table: %s",
                      self.GENOME_BUILD, bed_file, db_model)
 
-        current_table = eval(db_model)
+        current_table = globals()[db_model]
         current_table.objects.all().delete()
         handle = getFileHandle(bed_file)
         for line in handle:
@@ -341,7 +341,7 @@ class Command(BaseCommand):
                      "genome: %s, file: %s table: %s",
                      self.GENOME_BUILD, bed_file, db_model)
 
-        current_table = eval(db_model)
+        current_table = globals()[db_model]
         current_table.objects.all().delete()
         handle = getFileHandle(bed_file)
         for line in handle:
