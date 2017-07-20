@@ -49,15 +49,15 @@ class AnalysisStatus(models.Model):
     def refinery_import_state(self):
         return get_task_group_state(self.refinery_import_task_group_id)
 
-    def galaxy_import_state(self):
+    def galaxy_file_import_state(self):
         if self.galaxy_history_state and self.galaxy_import_progress != 0:
-            galaxy_import_state = [{
+            galaxy_file_import_state = [{
                 'state': self.galaxy_history_state,
                 'percent_done': self.galaxy_import_progress
             }]
         else:
-            galaxy_import_state = []
-        return galaxy_import_state
+            galaxy_file_import_state = []
+        return galaxy_file_import_state
 
     def galaxy_analysis_state(self):
         if self.galaxy_history_state and self.galaxy_history_progress:

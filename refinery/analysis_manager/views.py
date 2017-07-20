@@ -72,7 +72,7 @@ def analysis_status(request, uuid):
     if request.is_ajax():
         ret_json = {
             'refineryImport': status.refinery_import_state(),
-            'galaxyImport': status.galaxy_import_state(),
+            'galaxyImport': status.galaxy_file_import_state(),
             'galaxyAnalysis': status.galaxy_analysis_state(),
             'galaxyExport': status.galaxy_export_state(),
             'overall': analysis.get_status(),
