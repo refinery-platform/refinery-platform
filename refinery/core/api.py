@@ -126,16 +126,11 @@ class SharableResourceAPIInterface(object):
         return res_list
 
     def build_res_list(self, user):
-        if user.is_authenticated():
-            return get_objects_for_user(
-                user,
-                'core.read_%s' % self.res_type._meta.verbose_name
-            )
-        else:
-            return get_objects_for_group(
-                ExtendedGroup.objects.public_group(),
-                'core.read_%s' % self.res_type._meta.verbose_name
-            )
+        return get_objects_for_user(
+            user if user.is_authenticated()
+            else ExtendedGroup.objects.public_group(),
+            'core.read_%s' % self.res_type._meta.verbose_name
+        )
 
     # Turns on certain things depending on flags
     def transform_res_list(self, user, res_list, request, **kwargs):
@@ -367,8 +362,7 @@ class SharableResourceAPIInterface(object):
             kwargs['sharing'] = True
             res_list = self.build_res_list(request.user)
             return self.process_get_list(request, res_list, **kwargs)
-        else:
-            return HttpMethodNotAllowed()
+        return HttpMethodNotAllowed()
 
 
 class ProjectResource(ModelResource, SharableResourceAPIInterface):
@@ -401,8 +395,7 @@ class ProjectResource(ModelResource, SharableResourceAPIInterface):
                 self.build_res_list(request.user)
             )
             return self.process_get_list(request, res_list, **kwargs)
-        else:
-            return HttpMethodNotAllowed()
+        return HttpMethodNotAllowed()
 
     def obj_create(self, bundle, **kwargs):
         return SharableResourceAPIInterface.obj_create(self, bundle, **kwargs)
@@ -1521,22 +1514,19 @@ class GroupManagementResource(Resource):
     # This implies that users just have to be in the manager group, not
     # necessarily in the group itself.
     def user_authorized(self, user, group):
-        if self.is_manager_group(group):
-            return user in group.user_set.all()
-        else:
-            return user in group.extendedgroup.manager_group.user_set.all()
+        user_set = group.user_set \
+            if self.is_manager_group(group) \
+            else group.extendedgroup.manager_group.user_set
+        return user in user_set.all()
 
     # Endpoints for this resource.
 
     def detail_uri_kwargs(self, bundle_or_obj):
-        kwargs = {}
-
-        if isinstance(bundle_or_obj, Bundle):
-            kwargs['group_id'] = bundle_or_obj.obj.group_id
-        else:
-            kwargs['group_id'] = bundle_or_obj.group_id
-
-        return kwargs
+        return {
+            'group_id': bundle_or_obj.obj.group_id
+            if isinstance(bundle_or_obj, Bundle)
+            else bundle_or_obj.group_id
+        }
 
     def prepend_urls(self):
         return [
