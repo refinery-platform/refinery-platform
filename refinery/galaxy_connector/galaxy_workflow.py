@@ -47,9 +47,9 @@ def workflowMap(workflow):
         input_id = curr_workflow_step["id"]
         connect_dict = curr_workflow_step["input_connections"]
         if (len(connect_dict)) == 1:
-            for keys, val in connect_dict.iteritems():
-                if "id" in connect_dict[keys]:
-                    step_input_id = connect_dict[keys]['id']
+            for key in connect_dict.keys():
+                if "id" in connect_dict[key]:
+                    step_input_id = connect_dict[key]['id']
                     map[input_id] = map[step_input_id]
         elif (len(connect_dict)) > 1:
             map[input_id] = "all"
@@ -473,7 +473,7 @@ def countWorkflowSteps(workflow):
                 pja_step = curr_step['post_job_actions']
                 pja_hide_count = 0
                 # if using HideDatasetActions from older versions of galaxy
-                for k, v in pja_step.iteritems():
+                for k in pja_step.keys():
                     if (k.find('HideDatasetActionoutput_') > -1):
                         pja_hide_count += 1
                 diff_count = output_num - pja_hide_count

@@ -184,7 +184,7 @@ def create_noderelationship_analysis(validated_analysis_config):
     count = 0
     for samp in ret_list:
         count += 1
-        for k, v in samp.items():
+        for k in samp.keys():
             temp_input = WorkflowDataInputMap.objects.create(
                 workflow_data_input_name=k,
                 data_uuid=samp[k]["node_uuid"],
