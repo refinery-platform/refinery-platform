@@ -312,7 +312,6 @@ class Command(BaseCommand):
                     'start=t1[3], end=t1[4], score=t1[5], strand=t1[6], '
                     'frame=t1[7], attribute=t1[8], %s)'
                 )
-                parse_db_string(attrib, table_vals)
                 db_string = db_string % (parse_db_string(attrib, table_vals))
                 item = eval(db_string)
                 item.save()
