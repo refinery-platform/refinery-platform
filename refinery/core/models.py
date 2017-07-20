@@ -2469,7 +2469,7 @@ class CustomRegistrationManager(RegistrationManager):
 
         return new_user
 
-    create_inactive_user = transaction.commit_on_success(
+    create_inactive_user = transaction.atomic(
         custom_create_inactive_user)
 
 
