@@ -3,14 +3,15 @@ Created on May 10, 2012
 
 @author: nils
 '''
-import logging
 from datetime import datetime
+import logging
 
-import requests
-from celery.result import AsyncResult
 from django.conf import settings
 from django.db import models
+
+from celery.result import AsyncResult
 from django_extensions.db.fields import UUIDField
+import requests
 from requests.exceptions import HTTPError
 
 import core
@@ -870,13 +871,14 @@ def initialize_attribute_order(study, assay):
                     study=study,
                     assay=assay,
                     solr_field=key,
-                    rank=++rank,
+                    rank=rank,
                     is_facet=is_facet,
                     is_exposed=is_exposed,
                     is_internal=is_internal,
                     is_active=is_active
                 )
             )
+            rank += 1
     # insert AttributeOrder objects into database
     AttributeOrder.objects.bulk_create(attribute_order_objects)
 
