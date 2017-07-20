@@ -395,7 +395,6 @@ def get_aux_file_item(data_file_uuid):
         return None
 
 
-@transaction.commit_manually()
 def _add_tdf(data_file):
     """Create a new TDFItem instance.
     :param data_file: TDF file instance.
@@ -405,18 +404,15 @@ def _add_tdf(data_file):
     """
     # create TDFItem instance
     try:
-        item = TDFItem.objects.create(data_file=data_file)
+        with transaction.atomic:
+            item = TDFItem.objects.create(data_file=data_file)
     except (IntegrityError, ValueError) as e:
-        transaction.rollback()
         logger.error("Failed to create TDFItem: %s", e.message)
         return None
-
-    transaction.commit()
     logger.info("TDFItem created with UUID '%s'", item.data_file.uuid)
     return item
 
 
-@transaction.commit_manually()
 def _add_bigbed(data_file):
     """Create a new BigBEDItem instance.
     :param data_file: BigBED file instance.
@@ -425,18 +421,15 @@ def _add_bigbed(data_file):
     there was an error.
     """
     try:
-        item = BigBEDItem.objects.create(data_file=data_file)
+        with transaction.atomic:
+            item = BigBEDItem.objects.create(data_file=data_file)
     except (IntegrityError, ValueError) as e:
-        transaction.rollback()
         logger.error("Failed to create BigBEDItem: %s", e.message)
         return None
-
-    transaction.commit()
     logger.info("BigBEDItem created with UUID '%s'", item.data_file.uuid)
     return item
 
 
-@transaction.commit_manually
 def _add_bam(data_file, tdf_file_uuid=None):
     """Create a new BAMItem instance.
     Manual transaction control is required when using PostgreSQL and save() or
@@ -456,18 +449,17 @@ def _add_bam(data_file, tdf_file_uuid=None):
         logger.debug("TDF file UUID was not provided")
     # create BAMItem instance
     try:
-        item = BAMItem.objects.create(data_file=data_file, tdf_file=tdf_file)
+        with transaction.atomic:
+            item = BAMItem.objects.create(
+                data_file=data_file, tdf_file=tdf_file
+            )
     except (IntegrityError, ValueError) as e:
-        transaction.rollback()
         logger.error("Failed to create BAMItem: %s", e.message)
         return None
-
-    transaction.commit()
     logger.info("BAMItem created")
     return item
 
 
-@transaction.commit_manually
 def _add_wig(data_file, tdf_file_uuid=None):
     """Create a new WIGItem instance.
     Manual transaction control is required when using PostgreSQL and save() or
@@ -488,12 +480,12 @@ def _add_wig(data_file, tdf_file_uuid=None):
         logger.debug("TDF file UUID was not provided")
     # create WIGItem instance
     try:
-        item = WIGItem.objects.create(data_file=data_file, tdf_file=tdf_file)
+        with transaction.atomic:
+            item = WIGItem.objects.create(
+                data_file=data_file, tdf_file=tdf_file
+            )
     except (IntegrityError, ValueError) as e:
-        transaction.rollback()
         logger.error("Failed to create WIGItem. %s", e.message)
         return None
-
-    transaction.commit()
     logger.info("WIGItem '{}' created".format(item.data_file.uuid))
     return item
