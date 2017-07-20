@@ -53,19 +53,7 @@ def parse_gff_attribute(attr):
     return ret_dict
 
 
-def parse_db_string(attr, sym):
-    """Helper function for entering gff, gtf, files into models"""
-    ret_string = ''
-    for var in sym:
-        if var in attr:
-            if ret_string:
-                ret_string += ', %s="%s"' % (var, attr[var])
-            else:
-                ret_string += '%s="%s"' % (var, attr[var])
-    return ret_string
-
-
-def parse_db_string_to_dict(attr, sym):
+def parse_db_params(attr, sym):
     """Helper function for entering gff, gtf, files into models"""
     return {k: attr[k] for k in sym}
 
@@ -201,7 +189,7 @@ class Command(BaseCommand):
                     ret_attr = parse_wig_attribute(line)
                     table_vals = ['name', 'altColor', 'color', 'visibility',
                                   'priority', 'type', 'description']
-                    params = parse_db_string_to_dict(
+                    params = parse_db_params(
                         ret_attr, table_vals
                     )
                     item = WigDescription(
@@ -308,13 +296,11 @@ class Command(BaseCommand):
             if line[0] != '#':
                 t1 = line.strip().split('\t')
                 attrib = parse_gff_attribute(t1[8])
-                db_string = (
-                    'current_table(chrom=t1[0], source=t1[1], feature=t1[2], '
-                    'start=t1[3], end=t1[4], score=t1[5], strand=t1[6], '
-                    'frame=t1[7], attribute=t1[8], %s)'
-                )
-                db_string = db_string % (parse_db_string(attrib, table_vals))
-                item = eval(db_string)
+                params = parse_db_params(attrib, table_vals)
+                item = current_table(
+                    chrom=t1[0], source=t1[1], feature=t1[2],
+                    start=t1[3], end=t1[4], score=t1[5], strand=t1[6],
+                    frame=t1[7], attribute=t1[8], **params)
                 item.save()
 
     def addGapRegions(self, bed_file, db_model):
