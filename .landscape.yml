@@ -1,4 +1,4 @@
 uses:
   - django
-ignore_paths:
+ignore-paths:
   - migrations
