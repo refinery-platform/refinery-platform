@@ -85,7 +85,7 @@ class Command(BaseCommand):
             # if file doesn't exist yet, then just make last_date_run today
             last_date_run = date.today()
 
-        sys.stdout.write("getting %s", ae_query)
+        sys.stdout.write("getting %s" % ae_query)
 
         try:
             response = requests.get(ae_query, stream=True)
@@ -93,7 +93,7 @@ class Command(BaseCommand):
         except HTTPError as e:
             sys.stdout.write(e)
 
-        sys.stdout.write("writing to file %s", ae_file)
+        sys.stdout.write("writing to file %s" % ae_file)
         # TODO: use context manager for file operations
         f = open(ae_file, 'w')
         # download in pieces to make sure you're never biting off too much

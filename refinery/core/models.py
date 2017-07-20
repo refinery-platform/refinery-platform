@@ -872,7 +872,7 @@ class InvestigationLink(models.Model):
                 uuid=self.investigation.uuid)
         except (NodeCollection.DoesNotExist,
                 NodeCollection.MultipleObjectsReturned) as e:
-            logger.error("Could not fetch NodeCollection: ", e)
+            logger.error("Could not fetch NodeCollection: %s", e)
 
 
 class WorkflowDataInput(models.Model):
@@ -1025,11 +1025,13 @@ class Workflow(SharableResource, ManageableResource):
             try:
                 self.data_inputs.remove()
             except Exception as e:
-                logger.error("Could not delete WorkflowDataInput", e)
+                logger.error(
+                    "Could not delete WorkflowDataInput: %s", e)
             try:
                 self.input_relationships.remove()
             except Exception as e:
-                logger.error("Could not delete WorkflowInputRelationship", e)
+                logger.error(
+                    "Could not delete WorkflowInputRelationship: %s", e)
 
             super(Workflow, self).delete()
 
