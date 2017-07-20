@@ -329,9 +329,9 @@ class TDFFile(object):
             # (first tile_index is usually > 0)
             location = {}
             for window_function in window_functions:
-                logger.debug("WF: ", window_function)
+                logger.debug("WF: %s", window_function)
                 tile = tiles[window_function][tile_index]
-                logger.debug("Type: ", str(tile.type))
+                logger.debug("Type: %s", tile.type)
                 if tile.type == TDFTile.Type.EMPTY:
                     location["start"] = int(
                         tile_index * data_sets[window_function].tile_width + 1)
@@ -749,7 +749,7 @@ def get_profile_from_file(data_set, start_location, end_location, file_object):
         # (first tile_index is usually > 0)
         location = []
         tile = tiles[tile_index]
-        logger.debug("Type: ", str(tile.type))
+        logger.debug("Type: %s", tile.type)
         if tile.type == TDFTile.Type.EMPTY:
             location.append(int(tile_index * data_set.tile_width + 1))
             location.append(int((tile_index + 1) * data_set.tile_width))
