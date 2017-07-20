@@ -204,9 +204,10 @@ class Command(BaseCommand):
                     params = parse_db_string_to_dict(
                         ret_attr, table_vals
                     )
-                    params['genome_build'] = self.GENOME_BUILD
-                    params['annotation_type'] = annot_type
-                    item = WigDescription(**params)
+                    item = WigDescription(
+                        genome_build=self.GENOME_BUILD,
+                        annotation_type=annot_type,
+                        **params)
                     item.save()
 
                 elif t1[0] == 'fixedStep':
