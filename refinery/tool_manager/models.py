@@ -458,7 +458,7 @@ class Tool(OwnableResource):
         self.set_tool_launch_config(tool_launch_config)
 
     def update_file_relationships_with_galaxy_history_data(
-            self,  galaxy_to_refinery_mappings):
+            self,  galaxy_to_refinery_mapping):
         """
         Replace a Tool's Node uuid in its `file_relationships` string with
         information about the file uploaded into a galaxy history that
@@ -471,17 +471,17 @@ class Tool(OwnableResource):
         tool_launch_config["file_relationships_galaxy"] = (
             tool_launch_config["file_relationships"]
         )
-        for mapping in galaxy_to_refinery_mappings:
-            node = Node.objects.get(
-                file_uuid=mapping["refinery_file_uuid"]
+
+        node = Node.objects.get(
+            file_uuid=galaxy_to_refinery_mapping["refinery_file_uuid"]
+        )
+        tool_launch_config["file_relationships_galaxy"] = (
+            tool_launch_config["file_relationships_galaxy"].replace(
+                node.uuid,
+                "{}".format(json.dumps(galaxy_to_refinery_mapping))
             )
-            tool_launch_config["file_relationships_galaxy"] = (
-                tool_launch_config["file_relationships_galaxy"].replace(
-                    node.uuid,
-                    "{}".format(json.dumps(mapping))
-                )
-            )
-            self.set_tool_launch_config(tool_launch_config)
+        )
+        self.set_tool_launch_config(tool_launch_config)
 
 
 @receiver(pre_delete, sender=Tool)
