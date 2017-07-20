@@ -1993,7 +1993,7 @@ def create_nodeset(name, study, assay, summary='', solr_query='',
     :raises: IntegrityError, ValueError
     """
     try:
-        with transaction.atomic:
+        with transaction.atomic():
             nodeset = NodeSet.objects.create(
                 name=name,
                 study=study,

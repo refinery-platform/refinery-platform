@@ -404,7 +404,7 @@ def _add_tdf(data_file):
     """
     # create TDFItem instance
     try:
-        with transaction.atomic:
+        with transaction.atomic():
             item = TDFItem.objects.create(data_file=data_file)
     except (IntegrityError, ValueError) as e:
         logger.error("Failed to create TDFItem: %s", e.message)
@@ -421,7 +421,7 @@ def _add_bigbed(data_file):
     there was an error.
     """
     try:
-        with transaction.atomic:
+        with transaction.atomic():
             item = BigBEDItem.objects.create(data_file=data_file)
     except (IntegrityError, ValueError) as e:
         logger.error("Failed to create BigBEDItem: %s", e.message)
@@ -449,7 +449,7 @@ def _add_bam(data_file, tdf_file_uuid=None):
         logger.debug("TDF file UUID was not provided")
     # create BAMItem instance
     try:
-        with transaction.atomic:
+        with transaction.atomic():
             item = BAMItem.objects.create(
                 data_file=data_file, tdf_file=tdf_file
             )
@@ -480,7 +480,7 @@ def _add_wig(data_file, tdf_file_uuid=None):
         logger.debug("TDF file UUID was not provided")
     # create WIGItem instance
     try:
-        with transaction.atomic:
+        with transaction.atomic():
             item = WIGItem.objects.create(
                 data_file=data_file, tdf_file=tdf_file
             )
