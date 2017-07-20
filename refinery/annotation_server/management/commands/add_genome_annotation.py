@@ -65,6 +65,11 @@ def parse_db_string(attr, sym):
     return ret_string
 
 
+def parse_db_string_to_dict(attr, sym):
+    """Helper function for entering gff, gtf, files into models"""
+    return {k: attr[k] for k in sym}
+
+
 def getFileHandle(file_in):
     """Helper function for returning a file handler
     :param file_in: Path for file
@@ -196,14 +201,12 @@ class Command(BaseCommand):
                     ret_attr = parse_wig_attribute(line)
                     table_vals = ['name', 'altColor', 'color', 'visibility',
                                   'priority', 'type', 'description']
-                    db_string = "WigDescription(genome_build='%s', " \
-                                "annotation_type='%s', %s)"
-                    db_string = db_string % (
-                        self.GENOME_BUILD, annot_type, parse_db_string(
-                            ret_attr, table_vals)
+                    params = parse_db_string_to_dict(
+                        ret_attr, table_vals
                     )
-                    # saving to wigDescription model
-                    item = eval(db_string)
+                    params['genome_build'] = self.GENOME_BUILD
+                    params['annotation_type'] = annot_type
+                    item = WigDescription(**params)
                     item.save()
 
                 elif t1[0] == 'fixedStep':
