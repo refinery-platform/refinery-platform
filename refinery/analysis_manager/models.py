@@ -29,6 +29,10 @@ class AnalysisStatus(models.Model):
     #: state of Galaxy history
     galaxy_history_state = CharField(max_length=10, blank=True,
                                      choices=GALAXY_HISTORY_STATES)
+
+    #: percentage of successfully imported datasets in Galaxy history
+    galaxy_import_progress = PositiveSmallIntegerField(default=0)
+
     #: percentage of successfully processed datasets in Galaxy history
     galaxy_history_progress = PositiveSmallIntegerField(blank=True, null=True)
 
@@ -46,7 +50,14 @@ class AnalysisStatus(models.Model):
         return get_task_group_state(self.refinery_import_task_group_id)
 
     def galaxy_import_state(self):
-        return get_task_group_state(self.galaxy_import_task_group_id)
+        if self.galaxy_history_state and self.galaxy_import_progress != 0:
+            galaxy_import_state = [{
+                'state': self.galaxy_history_state,
+                'percent_done': self.galaxy_import_progress
+            }]
+        else:
+            galaxy_import_state = []
+        return galaxy_import_state
 
     def galaxy_analysis_state(self):
         if self.galaxy_history_state and self.galaxy_history_progress:
