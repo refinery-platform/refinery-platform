@@ -4,7 +4,8 @@ import uuid as uuid_builtin
 from core.models import Analysis, DataSet, Node
 from factory_boy.django_model_factories import (AnalysisFactory,
                                                 AnnotatedNodeFactory,
-                                                AssayFactory, DataSetFactory,
+                                                AssayFactory, AttributeFactory,
+                                                DataSetFactory,
                                                 GalaxyInstanceFactory,
                                                 InvestigationFactory,
                                                 InvestigationLinkFactory,
@@ -89,8 +90,10 @@ def create_dataset_with_necessary_models():
             uuid=assay_uuid,
             study=study
         )
+        attribute = AttributeFactory()
         node = NodeFactory(
-            study=study
+            study=study,
+            attribute=attribute
         )
         AnnotatedNodeFactory(
             study=study,

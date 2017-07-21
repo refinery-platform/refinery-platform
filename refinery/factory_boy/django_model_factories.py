@@ -56,7 +56,11 @@ class AnnotatedNodeFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = "data_set_manager.AnnotatedNode"
 
-    attribute_id = 42
+
+class AttributeFactory(factory.django.DjangoModelFactory):
+    """Minimal representation of an Attribute"""
+    class Meta:
+        model = "data_set_manager.Attribute"
 
 
 class AnalysisFactory(factory.django.DjangoModelFactory):
