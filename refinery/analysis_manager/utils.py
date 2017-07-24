@@ -45,7 +45,7 @@ def create_analysis(validated_analysis_config):
     if validated_analysis_config.get("nodeRelationshipUuid"):
         return create_noderelationship_analysis(validated_analysis_config)
 
-    # Create an analysis for new-type Workflow-based Tools
+    # Create an analysis for new Workflow-based Tools
     if validated_analysis_config.get("toolUuid"):
         return tool_manager.utils.create_tool_analysis(
             validated_analysis_config

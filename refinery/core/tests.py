@@ -16,6 +16,7 @@ from rest_framework.test import (APIClient, APIRequestFactory, APITestCase,
 from tastypie.exceptions import NotFound
 from tastypie.test import ResourceTestCase
 
+from analysis_manager.models import AnalysisStatus
 from data_set_manager.models import Assay, Contact, Investigation, Node, Study
 from factory_boy.utils import create_dataset_with_necessary_models
 from file_store.models import FileStoreItem
@@ -1373,6 +1374,9 @@ class AnalysisTests(TestCase):
             workflow=self.workflow,
             status="SUCCESS"
         )
+        self.analysis_status = AnalysisStatus.objects.create(
+            analysis=self.analysis
+        )
         self.analysis_with_node_analyzed_further = Analysis.objects.create(
             name='analysis_with_node_analyzed_further',
             summary='This is a summary',
@@ -1463,6 +1467,38 @@ class AnalysisTests(TestCase):
         ) as terminate_mock:
             self.analysis.terminate_file_import_tasks()
             self.assertEqual(terminate_mock.call_count, 2)
+
+    def test_galaxy_tool_file_import_state_returns_data_when_it_should(self):
+        self.analysis_status.galaxy_history_state = AnalysisStatus.PROGRESS
+        self.analysis_status.galaxy_import_progress = 96
+
+        self.assertEqual(
+            self.analysis_status.tool_based_galaxy_file_import_state(),
+            [
+                {
+                    'state': self.analysis_status.galaxy_history_state,
+                    'percent_done': self.analysis_status.galaxy_import_progress
+                }
+            ]
+        )
+
+    def test_galaxy_tool_file_import_state_is_empty_without_a_history_state(
+            self):
+        self.analysis_status.galaxy_import_progress = 96
+
+        self.assertEqual(
+            self.analysis_status.tool_based_galaxy_file_import_state(),
+            []
+        )
+
+    def test_galaxy_tool_file_import_state_is_empty_without_import_progress(
+            self):
+        self.analysis_status.galaxy_history_state = AnalysisStatus.PROGRESS
+
+        self.assertEqual(
+            self.analysis_status.tool_based_galaxy_file_import_state(),
+            []
+        )
 
 
 class UtilitiesTest(TestCase):
