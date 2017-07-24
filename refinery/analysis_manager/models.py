@@ -50,6 +50,9 @@ class AnalysisStatus(models.Model):
         return get_task_group_state(self.refinery_import_task_group_id)
 
     def galaxy_file_import_state(self):
+        return get_task_group_state(self.galaxy_import_task_group_id)
+
+    def tool_based_galaxy_file_import_state(self):
         if self.galaxy_history_state and self.galaxy_import_progress != 0:
             galaxy_file_import_state = [{
                 'state': self.galaxy_history_state,

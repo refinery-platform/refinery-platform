@@ -1468,12 +1468,12 @@ class AnalysisTests(TestCase):
             self.analysis.terminate_file_import_tasks()
             self.assertEqual(terminate_mock.call_count, 2)
 
-    def test_galaxy_file_import_state_returns_data_when_it_should(self):
+    def test_galaxy_tool_file_import_state_returns_data_when_it_should(self):
         self.analysis_status.galaxy_history_state = AnalysisStatus.PROGRESS
         self.analysis_status.galaxy_import_progress = 96
 
         self.assertEqual(
-            self.analysis_status.galaxy_file_import_state(),
+            self.analysis_status.tool_based_galaxy_file_import_state(),
             [
                 {
                     'state': self.analysis_status.galaxy_history_state,
@@ -1482,19 +1482,21 @@ class AnalysisTests(TestCase):
             ]
         )
 
-    def test_galaxy_file_import_state_is_empty_without_a_history_state(self):
+    def test_galaxy_tool_file_import_state_is_empty_without_a_history_state(
+            self):
         self.analysis_status.galaxy_import_progress = 96
 
         self.assertEqual(
-            self.analysis_status.galaxy_file_import_state(),
+            self.analysis_status.tool_based_galaxy_file_import_state(),
             []
         )
 
-    def test_galaxy_file_import_state_is_empty_without_import_progress(self):
+    def test_galaxy_tool_file_import_state_is_empty_without_import_progress(
+            self):
         self.analysis_status.galaxy_history_state = AnalysisStatus.PROGRESS
 
         self.assertEqual(
-            self.analysis_status.galaxy_file_import_state(),
+            self.analysis_status.tool_based_galaxy_file_import_state(),
             []
         )
 
