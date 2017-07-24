@@ -14,13 +14,15 @@ from analysis_manager.utils import (_fetch_node_relationship, _fetch_node_set,
                                     create_analysis,
                                     fetch_objects_required_for_analysis,
                                     validate_analysis_config)
-from analysis_manager.views import run
+from analysis_manager.views import analysis_status, run
 from core.models import (Analysis, DataSet, NodeRelationship, NodeSet, Project,
                          Workflow, WorkflowEngine)
 from data_set_manager.models import Assay
 from factory_boy.utils import (create_dataset_with_necessary_models,
                                make_analyses_with_single_dataset)
 from galaxy_connector.models import Instance
+from tool_manager.models import ToolDefinition
+from tool_manager.tests import ToolManagerTestBase
 
 
 class AnalysisConfigTests(TestCase):
@@ -429,36 +431,38 @@ class AnalysisUtilsTests(TestCase):
             _fetch_node_relationship(str(uuid.uuid4()))
 
 
-class AnalysisRunViewTests(TestCase):
+class AnalysisViewsTests(ToolManagerTestBase):
     """
-    Test `analysis_manager.views.run`
+    Tests for `analysis_manager.views`
     """
     def setUp(self):
+        super(AnalysisViewsTests, self).setUp()
         self.request_factory = RequestFactory()
-        self.username = 'coffee_lover'
-        self.password = 'coffeecoffee'
-        self.user = User.objects.create_user(self.username, '', self.password)
-        self.user.id = 1
         make_analyses_with_single_dataset(1, self.user)
         self.analysis = Analysis.objects.all()[0]
-        self.view_root = "/analysis_manager/run/"
+        AnalysisStatus.objects.create(analysis=self.analysis)
+
+        self.run_url_root = "/analysis_manager/run/"
+        self.status_url_root = "/analysis_manager/{}/".format(
+            self.analysis.uuid
+        )
 
     def test_analysis_run_view_invalid_http_verbs(self):
         # GET PUT PATCH DELETE etc.
         response = self.client.get(
-            self.view_root,
+            self.run_url_root,
             HTTP_X_REQUESTED_WITH='XMLHttpRequest'
         )
         self.assertEqual(type(response), HttpResponseNotAllowed)
 
         response = self.client.delete(
-            self.view_root,
+            self.run_url_root,
             HTTP_X_REQUESTED_WITH='XMLHttpRequest'
         )
         self.assertEqual(type(response), HttpResponseNotAllowed)
 
         response = self.client.put(
-            self.view_root,
+            self.run_url_root,
             data={
                 "name": "Valid Tool Analysis Config",
                 "studyUuid": str(uuid.uuid4()),
@@ -471,7 +475,7 @@ class AnalysisRunViewTests(TestCase):
         self.assertEqual(type(response), HttpResponseNotAllowed)
 
         response = self.client.patch(
-            self.view_root,
+            self.run_url_root,
             data={
                 "name": "Valid Tool Analysis Config",
                 "studyUuid": str(uuid.uuid4()),
@@ -488,7 +492,7 @@ class AnalysisRunViewTests(TestCase):
             return_value=self.analysis
         ) as create_analysis_mock:
             request = self.request_factory.post(
-                self.view_root,
+                self.run_url_root,
                 json.dumps({
                     "name": "Valid Tool Analysis Config",
                     "studyUuid": str(uuid.uuid4()),
@@ -513,7 +517,7 @@ class AnalysisRunViewTests(TestCase):
 
     def test_analysis_run_view_invalid_data(self):
         response = self.client.post(
-            self.view_root,
+            self.run_url_root,
             data=json.dumps({
                 "name": "Valid Tool Analysis Config",
                 "studyUuid": str(uuid.uuid4()),
@@ -527,7 +531,7 @@ class AnalysisRunViewTests(TestCase):
 
     def test_analysis_view_non_ajax_request(self):
         response = self.client.post(
-            self.view_root,
+            self.run_url_root,
             data={
                 "name": "Valid Tool Analysis Config",
                 "studyUuid": str(uuid.uuid4()),
@@ -536,6 +540,64 @@ class AnalysisRunViewTests(TestCase):
             }
         )
         self.assertEqual(type(response), HttpResponseBadRequest)
+
+    @mock.patch.object(AnalysisStatus,
+                       "galaxy_file_import_state",
+                       return_value="coffee")
+    def test_non_tool_analysis_calls_old_galaxy_file_import_state(
+            self,
+            file_import_state_mock
+    ):
+        request = self.request_factory.get(
+            self.status_url_root,
+            content_type="application/json",
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest'
+        )
+        request.user = self.user
+        response = analysis_status(request, self.analysis.uuid)
+        self.assertTrue(file_import_state_mock.called)
+
+        self.assertEqual(
+            json.loads(response.content),
+            {
+                "galaxyAnalysis": [],
+                "refineryImport": [],
+                "galaxyImport": "coffee",
+                "overall": "INITIALIZED",
+                "galaxyExport": []
+            }
+        )
+
+    @mock.patch.object(AnalysisStatus,
+                       "tool_based_galaxy_file_import_state",
+                       return_value="coffee")
+    def test_tool_analysis_calls_tool_based_galaxy_file_import_state(
+            self,
+            file_import_state_mock
+    ):
+        self.create_valid_tool(ToolDefinition.WORKFLOW)
+        self.status_url_root = "/analysis_manager/{}/".format(
+            self.tool.analysis.uuid
+        )
+        request = self.request_factory.get(
+            self.status_url_root,
+            content_type="application/json",
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest'
+        )
+        request.user = self.user
+        response = analysis_status(request, self.tool.analysis.uuid)
+        self.assertTrue(file_import_state_mock.called)
+
+        self.assertEqual(
+            json.loads(response.content),
+            {
+                "galaxyAnalysis": [],
+                "refineryImport": [],
+                "galaxyImport": "coffee",
+                "overall": "INITIALIZED",
+                "galaxyExport": []
+            }
+        )
 
 
 class AnalysisRunTests(TestCase):
