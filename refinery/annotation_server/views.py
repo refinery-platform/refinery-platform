@@ -28,26 +28,7 @@ def search_genes(request, genome, search_string):
 
         data = ValuesQuerySetToDict(curr_vals)
         return HttpResponse(data, 'application/json')
-    else:
-        return HttpResponse(status=400)
-
-    # Postbio query
-    # cursor = connection.cursor()
-    # query = """Select a.name, a.symbol, a.synonyms,
-    # <b.region as start, #>b.region as end, b.chrom FROM (SELECT name, symbol,
-    # synonyms from dm3.flybase2004xref where symbol ilike '%s') a JOIN
-    # (SELECT f.name, f.region, f.seq_id, s.name as chrom FROM dm3.flybase f
-    # JOIN dm3.sequence s ON f.seq_id = s.id where s.name = 'chr2L' OR
-    # s.name = 'chr2R' OR s.name = 'chr3L' OR s.name = 'chr3R' OR
-    # s.name = 'chr4' OR s.name ='chrX' )  b ON a.name = b.name """ %
-    # (search_string)
-    # cursor.execute(query)
-
-    # return HttpResponse(cursor_to_json(cursor), 'application/javascript')
-
-    # The code above doesn't work because `cursor` was already commented out.
-    # This method probably needs refactoring.
-    return HttpResponse(status=500)
+    return HttpResponse(status=400)
 
 
 def search_extended_genes(request, genome, search_string):
@@ -71,8 +52,7 @@ def get_sequence(request, genome, chrom, start, end):
             .format(start, offset, genome, chrom)
         cursor.execute(query)
         return HttpResponse(cursor_to_json(cursor), 'application/javascript')
-    else:
-        return HttpResponse(status=400)
+    return HttpResponse(status=400)
 
 
 def get_length(request, genome):
@@ -85,8 +65,7 @@ def get_length(request, genome):
         data = ValuesQuerySetToDict(
             current_table.objects.values('chrom', 'size'))
         return HttpResponse(data, 'application/json')
-    else:
-        return HttpResponse(status=400)
+    return HttpResponse(status=400)
 
 
 def get_chrom_length(request, genome, chrom):
@@ -100,8 +79,7 @@ def get_chrom_length(request, genome, chrom):
             'chrom', 'size')
         data = ValuesQuerySetToDict(curr_vals)
         return HttpResponse(data, 'application/json')
-    else:
-        return HttpResponse(status=400)
+    return HttpResponse(status=400)
 
     # TODO: return genome lengths according to chrom order i.e. 1,2,3 etc.
 
@@ -117,8 +95,7 @@ def get_cytoband(request, genome, chrom):
             'chrom', 'chromStart', 'chromEnd', 'name', 'gieStain')
         data = ValuesQuerySetToDict(curr_vals)
         return HttpResponse(data, 'application/json')
-    else:
-        return HttpResponse(status=400)
+    return HttpResponse(status=400)
 
 
 def get_genes(request, genome, chrom, start, end):
@@ -135,8 +112,7 @@ def get_genes(request, genome, chrom, start, end):
                  'cdsEnd', 'exonCount', 'exonStarts', 'exonEnds')
         data = ValuesQuerySetToDict(curr_vals)
         return HttpResponse(data, 'application/json')
-    else:
-        return HttpResponse(status=400)
+    return HttpResponse(status=400)
 
 
 def get_gc(request, genome, chrom, start, end):
@@ -152,8 +128,7 @@ def get_gc(request, genome, chrom, start, end):
         ).values('chrom', 'position', 'value')
         data = ValuesQuerySetToDict(curr_vals)
         return HttpResponse(data, 'application/json')
-    else:
-        return HttpResponse(status=400)
+    return HttpResponse(status=400)
 
 
 def get_maptheo(request, genome, chrom, start, end):
@@ -171,8 +146,7 @@ def get_maptheo(request, genome, chrom, start, end):
         ).values('chrom', 'chromStart', 'chromEnd')
         data = ValuesQuerySetToDict(curr_vals)
         return HttpResponse(data, 'application/json')
-    else:
-        return HttpResponse(status=400)
+    return HttpResponse(status=400)
 
 
 def get_mapemp(request, genome, chrom, start, end):
@@ -189,8 +163,7 @@ def get_mapemp(request, genome, chrom, start, end):
         ).values('chrom', 'chromStart', 'chromEnd')
         data = ValuesQuerySetToDict(curr_vals)
         return HttpResponse(data, 'application/json')
-    else:
-        return HttpResponse(status=400)
+    return HttpResponse(status=400)
 
 
 def get_conservation(request, genome, chrom, start, end):
@@ -206,8 +179,7 @@ def get_conservation(request, genome, chrom, start, end):
         ).values('chrom', 'position', 'value')
         data = ValuesQuerySetToDict(curr_vals)
         return HttpResponse(data, 'application/json')
-    else:
-        return HttpResponse(status=400)
+    return HttpResponse(status=400)
 
 
 def get_gapregion(request, genome, chrom, start, end):
@@ -226,8 +198,7 @@ def get_gapregion(request, genome, chrom, start, end):
                  'bridge')
         data = ValuesQuerySetToDict(curr_vals)
         return HttpResponse(data, 'application/json')
-    else:
-        return HttpResponse(status=400)
+    return HttpResponse(status=400)
 
 
 def cursor_to_json(cursor_in):

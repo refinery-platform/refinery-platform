@@ -364,7 +364,7 @@ class ProcessISATabView(View):
             download_file(url, temp_file_path)
         except DownloadError as e:
             error_msg = "Problem downloading ISA-Tab file from: " + url
-            logger.error("%s. %s", (error_msg, e))
+            logger.error("%s. %s", error_msg, e)
             return {
                 "success": False,
                 "message": error_msg

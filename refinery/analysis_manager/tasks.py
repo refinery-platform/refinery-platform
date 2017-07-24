@@ -343,7 +343,7 @@ def _import_analysis_in_galaxy(ret_list, library_id, connection):
     """
     logger.debug("Uploading analysis input files to Galaxy")
     for fileset in ret_list:
-        for k, v in fileset.iteritems():
+        for k in fileset.keys():
 
             cur_item = fileset[k]
 
