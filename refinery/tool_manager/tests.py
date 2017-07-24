@@ -1365,6 +1365,7 @@ class ToolLaunchTests(ToolManagerTestBase):
         )
 
     def test_is_tool_based(self):
+        self.create_valid_tool(ToolDefinition.WORKFLOW)
         self.assertTrue(self.tool.analysis.is_tool_based)
 
 
