@@ -9,7 +9,7 @@ from guardian.utils import get_anonymous_user
 import mock
 
 from analysis_manager.models import AnalysisStatus
-from analysis_manager.tasks import run_analysis
+from analysis_manager.tasks import _refinery_file_import, run_analysis
 from analysis_manager.utils import (_fetch_node_relationship, _fetch_node_set,
                                     create_analysis,
                                     fetch_objects_required_for_analysis,
@@ -582,3 +582,14 @@ class AnalysisRunTests(TestCase):
             self.analysis.set_status(Analysis.FAILURE_STATUS)
             run_analysis(self.analysis.uuid)
             self.assertTrue(terminate_mock.called)
+
+    @mock.patch.object(run_analysis, "retry", side_effect=None)
+    def test_get_input_file_uuid_list_gets_called_in_refinery_import(
+            self, retry_mock
+    ):
+        with mock.patch(
+                "core.models.Analysis.get_input_file_uuid_list"
+        ) as get_uuid_list_mock:
+            _refinery_file_import(self.analysis.uuid)
+            self.assertTrue(get_uuid_list_mock.called)
+        self.assertTrue(retry_mock.called)

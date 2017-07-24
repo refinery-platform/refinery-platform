@@ -293,7 +293,7 @@ class Tool(OwnableResource):
             self.get_tool_launch_config()["file_relationships_urls"]
         )
 
-    def get_file_relationship_galaxy_info(self):
+    def get_file_relationships_galaxy(self):
         if self.get_tool_type() != ToolDefinition.WORKFLOW:
             raise NotImplementedError
 

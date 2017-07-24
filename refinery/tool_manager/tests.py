@@ -12,11 +12,16 @@ from django.core.management import CommandError, call_command
 from django.http import HttpResponseBadRequest
 from django.test import TestCase
 
+import bioblend
 import mock
 from rest_framework.test import (APIRequestFactory, APITestCase,
                                  force_authenticate)
+from test_data.galaxy_mocks import (history_dataset_dict, history_dict,
+                                    library_dataset_dict, library_dict)
 
+from analysis_manager.models import AnalysisStatus
 from analysis_manager.tasks import (_get_tool, _refinery_file_import,
+                                    _tool_based_galaxy_file_import,
                                     run_analysis)
 from core.models import ExtendedGroup, Project, Workflow, WorkflowEngine
 from data_set_manager.models import Assay, Node
@@ -109,7 +114,7 @@ class ToolManagerTestBase(TestCase):
 
         test_file = StringIO.StringIO()
         test_file.write('Coffee is really great.\n')
-        file_store_item = FileStoreItem.objects.create(
+        self.file_store_item = FileStoreItem.objects.create(
             source="http://www.example.com/test_file.txt"
         )
 
@@ -120,7 +125,7 @@ class ToolManagerTestBase(TestCase):
             name="n0",
             assay=assay,
             study=study,
-            file_uuid=file_store_item.uuid
+            file_uuid=self.file_store_item.uuid
         )
 
         # Create mock ToolLaunchConfiguration
@@ -1202,6 +1207,8 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
 
 
 class ToolLaunchTests(ToolManagerTestBase):
+    tasks_mock = "analysis_manager.tasks"
+
     def test_transaction_rollback_bad_dataset_uuid(self):
         self.create_vis_tool_definition()
 
@@ -1272,6 +1279,91 @@ class ToolLaunchTests(ToolManagerTestBase):
             _refinery_file_import(self.tool.analysis.uuid)
             self.assertTrue(get_uuid_list_mock.called)
         self.assertTrue(retry_mock.called)
+
+    @mock.patch("{}._refinery_file_import".format(tasks_mock))
+    @mock.patch("{}._run_tool_based_galaxy_workflow".format(tasks_mock))
+    def test_run_tool_based_galaxy_workflow_is_called(
+            self,
+            refinery_file_import_mock,
+            run_tool_based_galaxy_workflow_mock
+    ):
+        self.create_valid_tool(ToolDefinition.WORKFLOW)
+        run_analysis(self.tool.analysis.uuid)
+        self.assertTrue(refinery_file_import_mock.called)
+        self.assertTrue(run_tool_based_galaxy_workflow_mock.called)
+
+    @mock.patch.object(
+        bioblend.galaxy.libraries.LibraryClient,
+        "upload_file_from_url",
+        return_value=library_dataset_dict
+    )
+    @mock.patch.object(
+        bioblend.galaxy.histories.HistoryClient,
+        "upload_dataset_from_library",
+        return_value=history_dataset_dict
+    )
+    def test__tool_based_galaxy_file_import_sets_file_relationships_galaxy(
+            self,
+            library_upload_mock,
+            history_upload_mock
+    ):
+        self.create_valid_tool(ToolDefinition.WORKFLOW)
+
+        _tool_based_galaxy_file_import(
+            self.tool.analysis.uuid,
+            self.file_store_item.uuid,
+            history_dict,
+            library_dict
+        )
+
+        self.assertTrue(library_upload_mock.called)
+        self.assertTrue(history_upload_mock.called)
+
+        self.assertEqual(
+            Tool.objects.get(
+                uuid=self.tool.uuid
+            ).get_file_relationships_galaxy(),
+            [
+                {
+                    "refinery_file_uuid": self.file_store_item.uuid,
+                    "galaxy_dataset_history_id": history_dataset_dict["id"]
+                }
+            ]
+        )
+
+    @mock.patch.object(
+        bioblend.galaxy.libraries.LibraryClient,
+        "upload_file_from_url",
+        return_value=library_dataset_dict
+    )
+    @mock.patch.object(
+        bioblend.galaxy.histories.HistoryClient,
+        "upload_dataset_from_library",
+        return_value=history_dataset_dict
+    )
+    def test__tool_based_galaxy_file_import_updates_galaxy_import_progress(
+            self,
+            library_upload_mock,
+            history_upload_mock
+    ):
+        self.create_valid_tool(ToolDefinition.WORKFLOW)
+
+        _tool_based_galaxy_file_import(
+            self.tool.analysis.uuid,
+            self.file_store_item.uuid,
+            history_dict,
+            library_dict
+        )
+
+        self.assertTrue(library_upload_mock.called)
+        self.assertTrue(history_upload_mock.called)
+
+        self.assertEqual(
+            AnalysisStatus.objects.get(
+                analysis=self.tool.analysis
+            ).galaxy_import_progress,
+            100
+        )
 
 
 class ToolLaunchSeleniumTests(ToolManagerTestBase, SeleniumTestBaseGeneric):
