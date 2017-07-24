@@ -1975,7 +1975,6 @@ def get_current_node_set(study_uuid, assay_uuid):
         return node_set
 
 
-@transaction.commit_manually()
 def create_nodeset(name, study, assay, summary='', solr_query='',
                    solr_query_components=''):
     """Create a new NodeSet.
@@ -1996,19 +1995,18 @@ def create_nodeset(name, study, assay, summary='', solr_query='',
     :raises: IntegrityError, ValueError
     """
     try:
-        nodeset = NodeSet.objects.create(
-            name=name,
-            study=study,
-            assay=assay,
-            summary=summary,
-            solr_query=solr_query,
-            solr_query_components=solr_query_components
-        )
+        with transaction.atomic():
+            nodeset = NodeSet.objects.create(
+                name=name,
+                study=study,
+                assay=assay,
+                summary=summary,
+                solr_query=solr_query,
+                solr_query_components=solr_query_components
+            )
     except (IntegrityError, ValueError) as e:
-        transaction.rollback()
         logger.error("Failed to create NodeSet: %s", e.message)
         raise
-    transaction.commit()
     logger.info("NodeSet created with UUID '%s'", nodeset.uuid)
     return nodeset
 
@@ -2473,7 +2471,7 @@ class CustomRegistrationManager(RegistrationManager):
 
         return new_user
 
-    create_inactive_user = transaction.commit_on_success(
+    create_inactive_user = transaction.atomic(
         custom_create_inactive_user)
 
 
