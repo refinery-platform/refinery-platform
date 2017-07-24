@@ -311,10 +311,9 @@ class Tool(OwnableResource):
         )
 
     def get_node_uuids(self):
-        tool_launch_config = self.get_tool_launch_config()
         node_uuids = re.findall(
             r'[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}',
-            tool_launch_config[self.FILE_RELATIONSHIPS]
+            self.get_file_relationships()
         )
         return node_uuids
 
@@ -452,7 +451,7 @@ class Tool(OwnableResource):
 
         # Copy `file_relationships` contents into `file_relationships_urls`
         tool_launch_config[self.FILE_RELATIONSHIPS_URLS] = (
-            tool_launch_config[self.FILE_RELATIONSHIPS]
+            self.get_file_relationships()
         )
         for node_uuid in node_uuids:
             node = Node.objects.get(uuid=node_uuid)
