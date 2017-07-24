@@ -3,7 +3,7 @@ import random
 import string
 from urlparse import urljoin
 
-from django.contrib.auth.models import Group, User
+from django.contrib.auth.models import AnonymousUser, Group, User
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.utils import timezone
@@ -1493,16 +1493,50 @@ class UtilitiesTest(TestCase):
             ]
 
     def test_get_resources_for_user(self):
-        user = User.objects.create_user(
+        anon_user = AnonymousUser()
+        auth_user = User.objects.create_user(
             'testuser', 'test@example.com', 'password')
-        user_objects = get_resources_for_user(user, 'dataset')
-        self.assertEqual(len(user_objects), 0)
+        public_group = ExtendedGroup.objects.public_group()
 
-        public_group_objects = get_objects_for_group(
-            ExtendedGroup.objects.public_group(),
-            'core.read_dataset'
-        )
-        self.assertEqual(len(public_group_objects), 0)
+        def anon_datasets():
+            return get_resources_for_user(anon_user, 'dataset')
+
+        def auth_datasets():
+            return get_resources_for_user(auth_user, 'dataset')
+
+        def public_datasets():
+            return get_objects_for_group(
+                public_group,
+                'core.read_dataset'
+            )
+
+        # The point of this test is to make sure getting
+        # resources for the Anonymous User is the same as
+        # getting resources for the Public Group.
+
+        self.assertTrue(auth_user.is_authenticated())
+
+        # Both ways should be the same, and empty, to begin:
+
+        self.assertEqual(len(anon_datasets()), 0)
+        self.assertEqual(len(auth_datasets()), 0)
+        self.assertEqual(len(public_datasets()), 0)
+
+        # Create a data set:
+
+        dataset = create_dataset_with_necessary_models()
+        dataset.set_owner(auth_user)
+
+        self.assertEqual(len(anon_datasets()), 0)
+        self.assertEqual(len(auth_datasets()), 1)
+        self.assertEqual(len(public_datasets()), 0)
+
+        # Make data set public:
+
+        dataset.share(public_group)
+        self.assertEqual(len(anon_datasets()), 1)
+        self.assertEqual(len(auth_datasets()), 1)
+        self.assertEqual(len(public_datasets()), 1)
 
     def test_get_aware_local_time(self):
         expected_time = timezone.localtime(timezone.now())
