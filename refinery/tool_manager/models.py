@@ -257,6 +257,15 @@ class Tool(OwnableResource):
     A Tool is a representation of the information it will take to launch a
     Refinery-based Tool
     """
+
+    # Some string constants to aid any future refactoring efforts
+    FILE_UUID_LIST = "file_uuid_list"
+    FILE_RELATIONSHIPS = "file_relationships"
+    FILE_RELATIONSHIPS_URLS = "{}_urls".format(FILE_RELATIONSHIPS)
+    FILE_RELATIONSHIPS_GALAXY = "{}_galaxy".format(FILE_RELATIONSHIPS)
+    GALAXY_DATASET_HISTORY_ID = "galaxy_dataset_history_id"
+    REFINERY_FILE_UUID = "refinery_file_uuid"
+
     dataset = models.ForeignKey(DataSet)
     analysis = models.OneToOneField(Analysis, blank=True, null=True)
     container_name = models.CharField(
@@ -283,14 +292,14 @@ class Tool(OwnableResource):
     def get_input_file_uuid_list(self):
         # Tools can't be created without the `file_uuid_list` existing so no
         # KeyError is being caught
-        return self.get_tool_launch_config()["file_uuid_list"]
+        return self.get_tool_launch_config()[self.FILE_UUID_LIST]
 
     def get_file_relationships(self):
-        return self.get_tool_launch_config()["file_relationships"]
+        return self.get_tool_launch_config()[self.FILE_RELATIONSHIPS]
 
     def get_file_relationships_urls(self):
         return ast.literal_eval(
-            self.get_tool_launch_config()["file_relationships_urls"]
+            self.get_tool_launch_config()[self.FILE_RELATIONSHIPS_URLS]
         )
 
     def get_file_relationships_galaxy(self):
@@ -298,14 +307,14 @@ class Tool(OwnableResource):
             raise NotImplementedError
 
         return ast.literal_eval(
-            self.get_tool_launch_config()["file_relationships_galaxy"]
+            self.get_tool_launch_config()[self.FILE_RELATIONSHIPS_GALAXY]
         )
 
     def get_node_uuids(self):
         tool_launch_config = self.get_tool_launch_config()
         node_uuids = re.findall(
             r'[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}',
-            tool_launch_config["file_relationships"]
+            tool_launch_config[self.FILE_RELATIONSHIPS]
         )
         return node_uuids
 
@@ -365,7 +374,9 @@ class Tool(OwnableResource):
             container_input_path=(
                 self.tool_definition.container_input_path
             ),
-            input={"file_relationships": self.get_file_relationships_urls()},
+            input={
+                self.FILE_RELATIONSHIPS: self.get_file_relationships_urls()
+            },
             extra_directories=self.tool_definition.get_extra_directories()
         )
 
@@ -437,21 +448,21 @@ class Tool(OwnableResource):
         node_uuids = self.get_node_uuids()
 
         # Add list of FileStoreItem UUIDs to our ToolLaunchConfig for later use
-        tool_launch_config["file_uuid_list"] = []
+        tool_launch_config[self.FILE_UUID_LIST] = []
 
         # Copy `file_relationships` contents into `file_relationships_urls`
-        tool_launch_config["file_relationships_urls"] = (
-            tool_launch_config["file_relationships"]
+        tool_launch_config[self.FILE_RELATIONSHIPS_URLS] = (
+            tool_launch_config[self.FILE_RELATIONSHIPS]
         )
         for node_uuid in node_uuids:
             node = Node.objects.get(uuid=node_uuid)
 
             # Append file_uuid to list of FileStoreItem UUIDs
-            tool_launch_config["file_uuid_list"].append(node.file_uuid)
+            tool_launch_config[self.FILE_UUID_LIST].append(node.file_uuid)
 
             file_url = get_file_url_from_node_uuid(node_uuid)
-            tool_launch_config["file_relationships_urls"] = (
-                tool_launch_config["file_relationships_urls"].replace(
+            tool_launch_config[self.FILE_RELATIONSHIPS_URLS] = (
+                tool_launch_config[self.FILE_RELATIONSHIPS_URLS].replace(
                     node_uuid, "'{}'".format(file_url)
                 )
             )
@@ -468,15 +479,15 @@ class Tool(OwnableResource):
         atomic transaction.
         """
         tool_launch_config = self.get_tool_launch_config()
-        tool_launch_config["file_relationships_galaxy"] = (
-            tool_launch_config["file_relationships"]
+        tool_launch_config[self.FILE_RELATIONSHIPS_GALAXY] = (
+            tool_launch_config[self.FILE_RELATIONSHIPS]
         )
 
         node = Node.objects.get(
-            file_uuid=galaxy_to_refinery_mapping["refinery_file_uuid"]
+            file_uuid=galaxy_to_refinery_mapping[Tool.REFINERY_FILE_UUID]
         )
-        tool_launch_config["file_relationships_galaxy"] = (
-            tool_launch_config["file_relationships_galaxy"].replace(
+        tool_launch_config[self.FILE_RELATIONSHIPS_GALAXY] = (
+            tool_launch_config[self.FILE_RELATIONSHIPS_GALAXY].replace(
                 node.uuid,
                 "{}".format(json.dumps(galaxy_to_refinery_mapping))
             )

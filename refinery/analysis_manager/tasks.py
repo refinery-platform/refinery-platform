@@ -555,8 +555,8 @@ def _tool_based_galaxy_file_import(analysis_uuid, file_store_item_uuid,
 
     tool.update_file_relationships_with_galaxy_history_data(
         {
-            "refinery_file_uuid": file_store_item_uuid,
-            "galaxy_dataset_history_id": history_dataset_dict["id"]
+            tool.REFINERY_FILE_UUID: file_store_item_uuid,
+            tool.GALAXY_DATASET_HISTORY_ID: history_dataset_dict["id"]
         }
     )
 

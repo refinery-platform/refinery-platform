@@ -132,7 +132,7 @@ class ToolManagerTestBase(TestCase):
         self.post_data = {
             "dataset_uuid": self.dataset.uuid,
             "tool_definition_uuid": self.td.uuid,
-            "file_relationships": "[{}]".format(self.node.uuid),
+            Tool.FILE_RELATIONSHIPS: "[{}]".format(self.node.uuid),
         }
 
         self.post_request = self.factory.post(
@@ -968,7 +968,7 @@ class ToolTests(ToolManagerTestBase):
         post_data = {
             "dataset_uuid": self.dataset.uuid,
             "tool_definition_uuid": self.td.uuid,
-            "file_relationships": "[{}, {}]".format(
+            Tool.FILE_RELATIONSHIPS: "[{}, {}]".format(
                 node_a.uuid,
                 node_b.uuid
             )
@@ -1005,13 +1005,13 @@ class ToolTests(ToolManagerTestBase):
         self.assertEqual(
             self.tool.get_tool_launch_config(),
             {
-                'file_uuid_list': [self.node.file_uuid],
+                self.tool.FILE_UUID_LIST: [self.node.file_uuid],
                 "dataset_uuid": self.dataset.uuid,
                 "tool_definition_uuid": self.td.uuid,
-                "file_relationships": (
+                Tool.FILE_RELATIONSHIPS: (
                     "[{}]".format(self.node.uuid)
                 ),
-                "file_relationships_urls": (
+                self.tool.FILE_RELATIONSHIPS_URLS: (
                     "['http://www.example.com/test_file.txt']"
                 )
             }
@@ -1086,7 +1086,7 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
 
         tool_launch_configuration = {
             "tool_definition_uuid": self.td.uuid,
-            "file_relationships": {
+            Tool.FILE_RELATIONSHIPS: {
                 "invalid":
                     [
                         [
@@ -1118,7 +1118,7 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
         post_data = {
             "dataset_uuid": self.dataset.uuid,
             "tool_definition_uuid": self.td.uuid,
-            "file_relationships": str(
+            Tool.FILE_RELATIONSHIPS: str(
                 [
                     "www.example.com/cool_file.txt",
                     (
@@ -1156,7 +1156,7 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
         tool_launch_configuration = {
             "dataset_uuid": self.dataset.uuid,
             "tool_definition_uuid": td.uuid,
-            "file_relationships": str(["www.example.com"])
+            Tool.FILE_RELATIONSHIPS: str(["www.example.com"])
         }
         self.post_request = self.factory.post(
             self.tools_url_root,
@@ -1187,7 +1187,7 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
         tool_launch_configuration = {
             "dataset_uuid": self.dataset.uuid,
             "tool_definition_uuid": td.uuid,
-            "file_relationships": str(["www.example.com"])
+            Tool.FILE_RELATIONSHIPS: str(["www.example.com"])
         }
         self.post_request = self.factory.post(
             self.tools_url_root,
@@ -1215,7 +1215,7 @@ class ToolLaunchTests(ToolManagerTestBase):
         self.post_data = {
             "dataset_uuid": self.dataset.uuid,
             "tool_definition_uuid": self.td.uuid,
-            "file_relationships": str(["www.example.com/cool_file.txt"])
+            Tool.FILE_RELATIONSHIPS: str(["www.example.com/cool_file.txt"])
         }
 
         self.dataset.delete()
@@ -1324,8 +1324,8 @@ class ToolLaunchTests(ToolManagerTestBase):
             ).get_file_relationships_galaxy(),
             [
                 {
-                    "refinery_file_uuid": self.file_store_item.uuid,
-                    "galaxy_dataset_history_id": history_dataset_dict["id"]
+                    Tool.REFINERY_FILE_UUID: self.file_store_item.uuid,
+                    Tool.GALAXY_DATASET_HISTORY_ID: history_dataset_dict["id"]
                 }
             ]
         )
@@ -1402,7 +1402,7 @@ class ToolLaunchSeleniumTests(ToolManagerTestBase, SeleniumTestBaseGeneric):
             self.post_data = {
                 "dataset_uuid": self.dataset.uuid,
                 "tool_definition_uuid": self.td.uuid,
-                "file_relationships": "['{}']".format(
+                Tool.FILE_RELATIONSHIPS: "['{}']".format(
                     urljoin(
                         self.live_server_url,
                         "tool_manager/test_data/sample.seg"
@@ -1466,7 +1466,7 @@ class ToolLaunchSeleniumTests(ToolManagerTestBase, SeleniumTestBaseGeneric):
             self.post_data = {
                 "dataset_uuid": self.dataset.uuid,
                 "tool_definition_uuid": self.td.uuid,
-                "file_relationships": str(
+                Tool.FILE_RELATIONSHIPS: str(
                     [
                         "https://s3.amazonaws.com/pkerp/public/"
                         "dixon2012-h1hesc-hindiii-allreps-filtered."
@@ -1536,7 +1536,7 @@ class ToolLaunchConfigurationTests(ToolManagerTestBase):
         tool_launch_configuration = {
             "dataset_uuid": self.dataset.uuid,
             "tool_definition_uuid": self.td.uuid,
-            "file_relationships": "!!{}!!".format(
+            Tool.FILE_RELATIONSHIPS: "!!{}!!".format(
                 str(["www.example.com/cool_file.txt"])
             )
         }
@@ -1552,7 +1552,7 @@ class ToolLaunchConfigurationTests(ToolManagerTestBase):
         tool_launch_configuration = {
             "dataset_uuid": self.dataset.uuid,
             "tool_definition_uuid": self.td.uuid,
-            "file_relationships": str(
+            Tool.FILE_RELATIONSHIPS: str(
                 [
                     (
                         {"Dicts aren't": "LIST/PAIR-like"},
@@ -1577,7 +1577,7 @@ class ToolLaunchConfigurationTests(ToolManagerTestBase):
         tool_launch_configuration = {
             "dataset_uuid": self.dataset.uuid,
             "tool_definition_uuid": self.td.uuid,
-            "file_relationships": str(
+            Tool.FILE_RELATIONSHIPS: str(
                 [
                     ("a", "b"),
                     ["c", "d"]
@@ -1594,7 +1594,7 @@ class ToolLaunchConfigurationTests(ToolManagerTestBase):
     def test_invalid_TLC_bad_tooldefinition_uuid(self):
         tool_launch_configuration = {
             "tool_definition_uuid": "This is an invalid ToolDef UUID",
-            "file_relationships": str(["www.example.com/cool_file.txt"])
+            Tool.FILE_RELATIONSHIPS: str(["www.example.com/cool_file.txt"])
         }
         with self.assertRaises(RuntimeError) as context:
             validate_tool_launch_configuration(tool_launch_configuration)
@@ -1607,7 +1607,7 @@ class ToolLaunchConfigurationTests(ToolManagerTestBase):
         tool_launch_configuration = {
             "dataset_uuid": self.dataset.uuid,
             "tool_definition_uuid": self.td.uuid,
-            "file_relationships": str(
+            Tool.FILE_RELATIONSHIPS: str(
                 ["coffee"]
             )
         }
@@ -1617,7 +1617,7 @@ class ToolLaunchConfigurationTests(ToolManagerTestBase):
         tool_launch_configuration = {
             "dataset_uuid": self.dataset.uuid,
             "tool_definition_uuid": self.td.uuid,
-            "file_relationships": str(
+            Tool.FILE_RELATIONSHIPS: str(
                 [
                     ("coffee", "coffee")
                 ]
@@ -1629,7 +1629,7 @@ class ToolLaunchConfigurationTests(ToolManagerTestBase):
         tool_launch_configuration = {
             "dataset_uuid": self.dataset.uuid,
             "tool_definition_uuid": self.td.uuid,
-            "file_relationships": str(
+            Tool.FILE_RELATIONSHIPS: str(
                 [
                     [
                         ("coffee", "coffee"),
@@ -1646,7 +1646,7 @@ class ToolLaunchConfigurationTests(ToolManagerTestBase):
         tool_launch_configuration = {
             "dataset_uuid": self.dataset.uuid,
             "tool_definition_uuid": self.td.uuid,
-            "file_relationships": str(
+            Tool.FILE_RELATIONSHIPS: str(
                 ("coffee", "coffee")
             )
         }
@@ -1656,7 +1656,7 @@ class ToolLaunchConfigurationTests(ToolManagerTestBase):
         tool_launch_configuration = {
             "dataset_uuid": self.dataset.uuid,
             "tool_definition_uuid": self.td.uuid,
-            "file_relationships": str(
+            Tool.FILE_RELATIONSHIPS: str(
                 (["coffee", "coffee"], ["coffee", "coffee"])
             )
         }
