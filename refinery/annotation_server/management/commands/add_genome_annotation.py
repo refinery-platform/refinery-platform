@@ -53,16 +53,9 @@ def parse_gff_attribute(attr):
     return ret_dict
 
 
-def parse_db_string(attr, sym):
+def parse_db_params(attr, sym):
     """Helper function for entering gff, gtf, files into models"""
-    ret_string = ''
-    for var in sym:
-        if var in attr:
-            if ret_string:
-                ret_string += ', %s="%s"' % (var, attr[var])
-            else:
-                ret_string += '%s="%s"' % (var, attr[var])
-    return ret_string
+    return {k: attr[k] for k in sym}
 
 
 def getFileHandle(file_in):
@@ -171,7 +164,7 @@ class Command(BaseCommand):
         """General function for adding Wig files into the annotation_server
         specifically for Conservation and GC content
         """
-        current_table = eval(db_model)
+        current_table = globals()[db_model]
         current_table.objects.all().delete()
         handle = getFileHandle(wig_file)
         for line in handle:
@@ -196,14 +189,13 @@ class Command(BaseCommand):
                     ret_attr = parse_wig_attribute(line)
                     table_vals = ['name', 'altColor', 'color', 'visibility',
                                   'priority', 'type', 'description']
-                    db_string = "WigDescription(genome_build='%s', " \
-                                "annotation_type='%s', %s)"
-                    db_string = db_string % (
-                        self.GENOME_BUILD, annot_type, parse_db_string(
-                            ret_attr, table_vals)
+                    params = parse_db_params(
+                        ret_attr, table_vals
                     )
-                    # saving to wigDescription model
-                    item = eval(db_string)
+                    item = WigDescription(
+                        genome_build=self.GENOME_BUILD,
+                        annotation_type=annot_type,
+                        **params)
                     item.save()
 
                 elif t1[0] == 'fixedStep':
@@ -296,7 +288,7 @@ class Command(BaseCommand):
         """Function for adding additional gene annotation files
         i.e hg19 gencode, dm3 flybase, ce10 wormbase
         """
-        current_table = eval(db_model)
+        current_table = globals()[db_model]
         current_table.objects.all().delete()
         handle = getFileHandle(gff_file)
         for line in handle:
@@ -304,14 +296,11 @@ class Command(BaseCommand):
             if line[0] != '#':
                 t1 = line.strip().split('\t')
                 attrib = parse_gff_attribute(t1[8])
-                db_string = (
-                    'current_table(chrom=t1[0], source=t1[1], feature=t1[2], '
-                    'start=t1[3], end=t1[4], score=t1[5], strand=t1[6], '
-                    'frame=t1[7], attribute=t1[8], %s)'
-                )
-                parse_db_string(attrib, table_vals)
-                db_string = db_string % (parse_db_string(attrib, table_vals))
-                item = eval(db_string)
+                params = parse_db_params(attrib, table_vals)
+                item = current_table(
+                    chrom=t1[0], source=t1[1], feature=t1[2],
+                    start=t1[3], end=t1[4], score=t1[5], strand=t1[6],
+                    frame=t1[7], attribute=t1[8], **params)
                 item.save()
 
     def addGapRegions(self, bed_file, db_model):
@@ -322,7 +311,7 @@ class Command(BaseCommand):
                      "genome: %s, file: %s table: %s",
                      self.GENOME_BUILD, bed_file, db_model)
 
-        current_table = eval(db_model)
+        current_table = globals()[db_model]
         current_table.objects.all().delete()
         handle = getFileHandle(bed_file)
         for line in handle:
@@ -341,7 +330,7 @@ class Command(BaseCommand):
                      "genome: %s, file: %s table: %s",
                      self.GENOME_BUILD, bed_file, db_model)
 
-        current_table = eval(db_model)
+        current_table = globals()[db_model]
         current_table.objects.all().delete()
         handle = getFileHandle(bed_file)
         for line in handle:
