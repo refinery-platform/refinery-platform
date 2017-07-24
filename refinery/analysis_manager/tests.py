@@ -655,3 +655,6 @@ class AnalysisRunTests(TestCase):
             _refinery_file_import(self.analysis.uuid)
             self.assertTrue(get_uuid_list_mock.called)
         self.assertTrue(retry_mock.called)
+
+    def test_is_tool_based(self):
+        self.assertFalse(self.analysis.is_tool_based)

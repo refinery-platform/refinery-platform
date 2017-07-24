@@ -1364,6 +1364,9 @@ class ToolLaunchTests(ToolManagerTestBase):
             100
         )
 
+    def test_is_tool_based(self):
+        self.assertTrue(self.tool.analysis.is_tool_based)
+
 
 class ToolLaunchSeleniumTests(ToolManagerTestBase, SeleniumTestBaseGeneric):
     def setUp(self):
