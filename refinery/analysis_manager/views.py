@@ -17,7 +17,6 @@ from core.models import (Analysis, NodePair, NodeRelationship, NodeSet,
 from core.utils import get_aware_local_time
 from core.views import custom_error_page
 from data_set_manager.models import Assay, Node, Study
-from tool_manager.models import Tool
 from workflow_manager.tasks import get_workflows
 
 from .models import AnalysisStatus
@@ -77,19 +76,12 @@ def analysis_status(request, uuid):
             'galaxyExport': status.galaxy_export_state(),
             'overall': analysis.get_status(),
         }
-        try:
-            Tool.objects.get(analysis=analysis)
-        except (Tool.DoesNotExist, Tool.MultipleObjectsReturned) as e:
-            logger.debug(
-                "Could not fetch Tool with analysis: %s %s",
-                analysis,
-                e
-            )
-            ret_json['galaxyImport'] = status.galaxy_file_import_state()
-        else:
+        if analysis.is_tool_based:
             ret_json['galaxyImport'] = (
                 status.tool_based_galaxy_file_import_state()
             )
+        else:
+            ret_json['galaxyImport'] = status.galaxy_file_import_state()
 
         logger.debug("Analysis status for '%s': %s",
                      analysis.name, json.dumps(ret_json))
