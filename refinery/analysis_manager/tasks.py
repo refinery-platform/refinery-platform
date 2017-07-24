@@ -376,7 +376,7 @@ def _run_tool_based_galaxy_workflow(analysis_uuid):
         logger.debug("Starting analysis execution in Galaxy")
 
         galaxy_import_tasks = [
-            _galaxy_tool_file_import.subtask(
+            _tool_based_galaxy_file_import.subtask(
                 (
                     analysis_uuid,
                     file_store_item_uuid,
@@ -384,7 +384,7 @@ def _run_tool_based_galaxy_workflow(analysis_uuid):
                     library_dict,
                 )
             ) for file_store_item_uuid in tool.get_input_file_uuid_list()
-        ]
+            ]
 
         galaxy_file_import_taskset = TaskSet(
             tasks=galaxy_import_tasks
@@ -532,8 +532,8 @@ def _start_galaxy_analysis(analysis_uuid):
 
 
 @task()
-def _galaxy_tool_file_import(analysis_uuid, file_store_item_uuid,
-                             history_dict, library_dict):
+def _tool_based_galaxy_file_import(analysis_uuid, file_store_item_uuid,
+                                   history_dict, library_dict):
 
     analysis = _get_analysis(analysis_uuid)
     analysis_status = _get_analysis_status(analysis_uuid)
