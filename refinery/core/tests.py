@@ -8,7 +8,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.utils import timezone
 
-from guardian.shortcuts import assign_perm
+from guardian.shortcuts import assign_perm, get_objects_for_group
 import mock
 import mockcache as memcache
 from rest_framework.test import (APIClient, APIRequestFactory, APITestCase,
@@ -30,7 +30,7 @@ from .models import (Analysis, AnalysisNodeConnection, DataSet, ExtendedGroup,
                      get_nodeset, invalidate_cached_object, update_nodeset)
 from .search_indexes import DataSetIndex
 from .utils import (filter_nodes_uuids_in_solr, get_aware_local_time,
-                    move_obj_to_front)
+                    get_resources_for_user, move_obj_to_front)
 from .views import AnalysesViewSet, DataSetsViewSet
 
 cache = memcache.Client(["127.0.0.1:11211"])
@@ -1491,6 +1491,18 @@ class UtilitiesTest(TestCase):
             "32e977fc-b906-4315-b6ed-6a644d173492",
             "910117c5-fda2-4700-ae87-dc897f3a5d85"
             ]
+
+    def test_get_resources_for_user(self):
+        user = User.objects.create_user(
+            'testuser', 'test@example.com', 'password')
+        user_objects = get_resources_for_user(user, 'dataset')
+        self.assertEqual(len(user_objects), 0)
+
+        public_group_objects = get_objects_for_group(
+            ExtendedGroup.objects.public_group(),
+            'core.read_dataset'
+        )
+        self.assertEqual(len(public_group_objects), 0)
 
     def test_get_aware_local_time(self):
         expected_time = timezone.localtime(timezone.now())
