@@ -34,6 +34,8 @@ class AnalysisStatus(models.Model):
     galaxy_import_progress = PositiveSmallIntegerField(default=0)
 
     #: percentage of successfully processed datasets in Galaxy history
+    # TODO: refactor `galaxy_history_progress` to take advantage of a
+    # default value of 0, and
     galaxy_history_progress = PositiveSmallIntegerField(blank=True, null=True)
 
     def __unicode__(self):
