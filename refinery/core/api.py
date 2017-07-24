@@ -128,7 +128,7 @@ class SharableResourceAPIInterface(object):
     def build_res_list(self, user):
         return get_objects_for_user(
             user if user.is_authenticated()
-            else ExtendedGroup.objects.public_group(),
+            else get_anonymous_user(),
             'core.read_%s' % self.res_type._meta.verbose_name
         )
 
