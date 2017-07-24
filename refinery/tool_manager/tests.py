@@ -1255,10 +1255,9 @@ class ToolLaunchTests(ToolManagerTestBase):
         analysis_uuid = self.tool.analysis.uuid
         self.tool.analysis.delete()
 
-        self.assertEqual(
-            _get_tool(analysis_uuid),
-            None
-        )
+        with mock.patch.object(run_analysis, "update_state") as update_mock:
+            _get_tool(analysis_uuid)
+            self.assertTrue(update_mock.called)
 
     def test__get_tool_with_analysis(self):
         self.create_valid_tool(ToolDefinition.WORKFLOW)

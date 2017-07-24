@@ -56,6 +56,7 @@ from galaxy_connector.galaxy_workflow import (configure_workflow,
                                               countWorkflowSteps,
                                               create_expanded_workflow_graph)
 from galaxy_connector.models import Instance
+import tool_manager
 
 from .utils import (add_or_update_user_to_neo4j, add_read_access_in_neo4j,
                     delete_analysis_index, delete_data_set_index,
@@ -1774,6 +1775,15 @@ class Analysis(OwnableResource):
                 )
             else:
                 file_store_item.terminate_file_import_task()
+
+    @property
+    def is_tool_based(self):
+        try:
+            tool_manager.models.Tool.objects.get(analysis=self)
+            return True
+        except (tool_manager.models.Tool.DoesNotExist,
+                tool_manager.models.Tool.MultipleObjectsReturned):
+            return False
 
 
 #: Defining available relationship types

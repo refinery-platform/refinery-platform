@@ -94,8 +94,9 @@ def _get_tool(analysis_uuid):
         )
     except (tool_manager.models.Tool.DoesNotExist,
             tool_manager.models.Tool.MultipleObjectsReturned) as e:
-        logger.info(e)
-        return None
+        logger.error("Could not fetch Tool for this analysis: %s", e)
+        run_analysis.update_state(state=celery.states.FAILURE)
+        return
 
 
 def _attach_workflow_outputs(analysis_uuid):
@@ -229,7 +230,6 @@ def _refinery_file_import(analysis_uuid):
     """
     analysis = _get_analysis(analysis_uuid)
     analysis_status = _get_analysis_status(analysis_uuid)
-    tool = _get_tool(analysis_uuid)
 
     if not analysis_status.refinery_import_task_group_id:
         logger.info("Starting analysis '%s'", analysis)
@@ -238,7 +238,8 @@ def _refinery_file_import(analysis_uuid):
                     analysis)
         refinery_import_tasks = []
 
-        if tool:
+        if analysis.is_tool_based:
+            tool = _get_tool(analysis_uuid)
             input_file_uuid_list = tool.get_input_file_uuid_list()
         else:
             input_file_uuid_list = analysis.get_input_file_uuid_list()
@@ -282,7 +283,6 @@ def run_analysis(analysis_uuid):
     logger.info("Executing Analysis with UUID: ""%s", analysis_uuid)
 
     analysis = _get_analysis(analysis_uuid)
-    tool = _get_tool(analysis_uuid)
 
     # if cancelled by user
     if analysis.failed():
@@ -292,7 +292,7 @@ def run_analysis(analysis_uuid):
     _get_analysis_status(analysis_uuid)
     _refinery_file_import(analysis_uuid)
 
-    if tool:
+    if analysis.is_tool_based:
         _run_tool_based_galaxy_workflow(analysis_uuid)
     else:
         _run_galaxy_workflow(analysis_uuid)
