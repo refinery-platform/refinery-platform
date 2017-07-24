@@ -44,7 +44,7 @@ from core.models import (Analysis, DataSet, ExtendedGroup, FastQC,
                          NodeRelationship, NodeSet, Project,
                          ResourceStatistics, Tutorials, UserAuthentication,
                          UserProfile, Workflow, WorkflowInputRelationships)
-from core.utils import get_data_sets_annotations
+from core.utils import get_data_sets_annotations, get_resources_for_user
 from data_set_manager.api import (AssayResource, InvestigationResource,
                                   StudyResource)
 from data_set_manager.models import Attribute, Node, Study
@@ -126,11 +126,7 @@ class SharableResourceAPIInterface(object):
         return res_list
 
     def build_res_list(self, user):
-        return get_objects_for_user(
-            user if user.is_authenticated()
-            else get_anonymous_user(),
-            'core.read_%s' % self.res_type._meta.verbose_name
-        )
+        return get_resources_for_user(user, self.res_type._meta.verbose_name)
 
     # Turns on certain things depending on flags
     def transform_res_list(self, user, res_list, request, **kwargs):
