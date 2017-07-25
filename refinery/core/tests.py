@@ -1493,13 +1493,17 @@ class UtilitiesTest(TestCase):
             ]
 
     def test_get_resources_for_user(self):
-        anon_user = AnonymousUser()
+        django_anon_user = AnonymousUser()
+        guardian_anon_user = User.get_anonymous()
         auth_user = User.objects.create_user(
             'testuser', 'test@example.com', 'password')
         public_group = ExtendedGroup.objects.public_group()
 
-        def anon_datasets():
-            return get_resources_for_user(anon_user, 'dataset')
+        def django_anon_datasets():
+            return get_resources_for_user(django_anon_user, 'dataset')
+
+        def guardian_anon_datasets():
+            return get_resources_for_user(guardian_anon_user, 'dataset')
 
         def auth_datasets():
             return get_resources_for_user(auth_user, 'dataset')
@@ -1513,12 +1517,16 @@ class UtilitiesTest(TestCase):
         # The point of this test is to make sure getting
         # resources for the Anonymous User is the same as
         # getting resources for the Public Group.
+        # (In practice, it should be the Guardian
+        # Anonymous, but if it's Django for some reason,
+        # it should still work.)
 
         self.assertTrue(auth_user.is_authenticated())
 
         # Both ways should be the same, and empty, to begin:
 
-        self.assertEqual(len(anon_datasets()), 0)
+        self.assertEqual(len(django_anon_datasets()), 0)
+        self.assertEqual(len(guardian_anon_datasets()), 0)
         self.assertEqual(len(auth_datasets()), 0)
         self.assertEqual(len(public_datasets()), 0)
 
@@ -1527,14 +1535,16 @@ class UtilitiesTest(TestCase):
         dataset = create_dataset_with_necessary_models()
         dataset.set_owner(auth_user)
 
-        self.assertEqual(len(anon_datasets()), 0)
+        self.assertEqual(len(django_anon_datasets()), 0)
+        self.assertEqual(len(guardian_anon_datasets()), 0)
         self.assertEqual(len(auth_datasets()), 1)
         self.assertEqual(len(public_datasets()), 0)
 
         # Make data set public:
 
         dataset.share(public_group)
-        self.assertEqual(len(anon_datasets()), 1)
+        self.assertEqual(len(django_anon_datasets()), 1)
+        self.assertEqual(len(guardian_anon_datasets()), 1)
         self.assertEqual(len(auth_datasets()), 1)
         self.assertEqual(len(public_datasets()), 1)
 
