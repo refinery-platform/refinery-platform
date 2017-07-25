@@ -44,7 +44,7 @@ from core.models import (Analysis, DataSet, ExtendedGroup, FastQC,
                          NodeRelationship, NodeSet, Project,
                          ResourceStatistics, Tutorials, UserAuthentication,
                          UserProfile, Workflow, WorkflowInputRelationships)
-from core.utils import get_data_sets_annotations
+from core.utils import get_data_sets_annotations, get_resources_for_user
 from data_set_manager.api import (AssayResource, InvestigationResource,
                                   StudyResource)
 from data_set_manager.models import Attribute, Node, Study
@@ -125,12 +125,8 @@ class SharableResourceAPIInterface(object):
 
         return res_list
 
-    def build_res_list(self, user):
-        return get_objects_for_user(
-            user if user.is_authenticated()
-            else ExtendedGroup.objects.public_group(),
-            'core.read_%s' % self.res_type._meta.verbose_name
-        )
+    def _build_res_list(self, user):
+        return get_resources_for_user(user, self.res_type._meta.verbose_name)
 
     # Turns on certain things depending on flags
     def transform_res_list(self, user, res_list, request, **kwargs):
@@ -288,7 +284,7 @@ class SharableResourceAPIInterface(object):
 
     def get_object_list(self, request):
         user = request.user
-        obj_list = self.build_res_list(user)
+        obj_list = self._build_res_list(user)
         r_list = self.transform_res_list(user, obj_list, request)
         return r_list
 
@@ -360,7 +356,7 @@ class SharableResourceAPIInterface(object):
     def res_sharing_list(self, request, **kwargs):
         if request.method == 'GET':
             kwargs['sharing'] = True
-            res_list = self.build_res_list(request.user)
+            res_list = self._build_res_list(request.user)
             return self.process_get_list(request, res_list, **kwargs)
         return HttpMethodNotAllowed()
 
@@ -392,7 +388,7 @@ class ProjectResource(ModelResource, SharableResourceAPIInterface):
             kwargs['sharing'] = True
             res_list = filter(
                 lambda r: not r.is_catch_all,
-                self.build_res_list(request.user)
+                self._build_res_list(request.user)
             )
             return self.process_get_list(request, res_list, **kwargs)
         return HttpMethodNotAllowed()

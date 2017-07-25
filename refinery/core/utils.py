@@ -14,6 +14,8 @@ from django.core.mail import send_mail
 from django.db import connection
 from django.utils import timezone
 
+from guardian.shortcuts import get_objects_for_user
+from guardian.utils import get_anonymous_user
 import py2neo
 import requests
 from rest_framework.response import Response
@@ -983,3 +985,11 @@ def api_error_response(error_message, http_status_code):
     """Return and log error for Django Rest Framework API calls"""
     logger.error(error_message)
     return Response({'Error': error_message}, status=http_status_code)
+
+
+def get_resources_for_user(user, resource_type):
+    return get_objects_for_user(
+        user if user.is_authenticated()
+        else get_anonymous_user(),
+        'core.read_%s' % resource_type
+    )

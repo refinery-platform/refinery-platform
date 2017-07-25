@@ -3,12 +3,12 @@ import random
 import string
 from urlparse import urljoin
 
-from django.contrib.auth.models import Group, User
+from django.contrib.auth.models import AnonymousUser, Group, User
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.utils import timezone
 
-from guardian.shortcuts import assign_perm
+from guardian.shortcuts import assign_perm, get_objects_for_group
 import mock
 import mockcache as memcache
 from rest_framework.test import (APIClient, APIRequestFactory, APITestCase,
@@ -31,7 +31,7 @@ from .models import (Analysis, AnalysisNodeConnection, DataSet, ExtendedGroup,
                      get_nodeset, invalidate_cached_object, update_nodeset)
 from .search_indexes import DataSetIndex
 from .utils import (filter_nodes_uuids_in_solr, get_aware_local_time,
-                    move_obj_to_front)
+                    get_resources_for_user, move_obj_to_front)
 from .views import AnalysesViewSet, DataSetsViewSet
 
 cache = memcache.Client(["127.0.0.1:11211"])
@@ -1527,6 +1527,62 @@ class UtilitiesTest(TestCase):
             "32e977fc-b906-4315-b6ed-6a644d173492",
             "910117c5-fda2-4700-ae87-dc897f3a5d85"
             ]
+
+    def test_get_resources_for_user(self):
+        django_anon_user = AnonymousUser()
+        guardian_anon_user = User.get_anonymous()
+        auth_user = User.objects.create_user(
+            'testuser', 'test@example.com', 'password')
+        public_group = ExtendedGroup.objects.public_group()
+
+        def django_anon_datasets():
+            return get_resources_for_user(django_anon_user, 'dataset')
+
+        def guardian_anon_datasets():
+            return get_resources_for_user(guardian_anon_user, 'dataset')
+
+        def auth_datasets():
+            return get_resources_for_user(auth_user, 'dataset')
+
+        def public_datasets():
+            return get_objects_for_group(
+                public_group,
+                'core.read_dataset'
+            )
+
+        # The point of this test is to make sure getting
+        # resources for the Anonymous User is the same as
+        # getting resources for the Public Group.
+        # (In practice, it should be the Guardian
+        # Anonymous, but if it's Django for some reason,
+        # it should still work.)
+
+        self.assertTrue(auth_user.is_authenticated())
+
+        # Both ways should be the same, and empty, to begin:
+
+        self.assertEqual(len(django_anon_datasets()), 0)
+        self.assertEqual(len(guardian_anon_datasets()), 0)
+        self.assertEqual(len(auth_datasets()), 0)
+        self.assertEqual(len(public_datasets()), 0)
+
+        # Create a data set:
+
+        dataset = create_dataset_with_necessary_models()
+        dataset.set_owner(auth_user)
+
+        self.assertEqual(len(django_anon_datasets()), 0)
+        self.assertEqual(len(guardian_anon_datasets()), 0)
+        self.assertEqual(len(auth_datasets()), 1)
+        self.assertEqual(len(public_datasets()), 0)
+
+        # Make data set public:
+
+        dataset.share(public_group)
+        self.assertEqual(len(django_anon_datasets()), 1)
+        self.assertEqual(len(guardian_anon_datasets()), 1)
+        self.assertEqual(len(auth_datasets()), 1)
+        self.assertEqual(len(public_datasets()), 1)
 
     def test_get_aware_local_time(self):
         expected_time = timezone.localtime(timezone.now())
