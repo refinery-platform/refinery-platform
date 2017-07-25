@@ -14,7 +14,6 @@ from django.contrib.auth.models import User
 from django.db.models import Q
 from django.utils.http import urlquote, urlunquote
 
-from guardian.shortcuts import get_objects_for_user
 import requests
 from requests.exceptions import HTTPError
 
@@ -626,16 +625,12 @@ def generate_solr_params_for_user(params, user_id):
         fq - filter query
      """
 
-    user = None
     try:
         user = User.objects.get(id=user_id)
     except User.DoesNotExist:
-        pass
+        user = User.get_anonymous()
 
-    if user:
-        datasets = get_objects_for_user(user, "core.read_dataset")
-    else:
-        datasets = []
+    datasets = core.utils.get_resources_for_user(user, "dataset")
 
     assay_uuids = []
     for dataset in datasets:
