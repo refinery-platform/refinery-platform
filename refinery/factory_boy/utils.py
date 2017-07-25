@@ -85,17 +85,12 @@ def create_dataset_with_necessary_models():
     )
 
     assay_uuid = str(uuid_builtin.uuid4())
-    AssayFactory(
+    assay = AssayFactory(
         uuid=assay_uuid,
         study=study
     )
 
     for i in xrange(2):
-        assay_uuid = str(uuid_builtin.uuid4())
-        assay = AssayFactory(
-            uuid=assay_uuid,
-            study=study
-        )
         node = NodeFactory(
             study=study
         )
