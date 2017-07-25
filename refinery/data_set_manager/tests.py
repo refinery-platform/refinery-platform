@@ -8,7 +8,6 @@ from django.core.files.uploadedfile import (InMemoryUploadedFile,
 from django.http import QueryDict
 from django.test import TestCase
 
-from refinery.user_files_manager.utils import generate_solr_params_for_user
 from rest_framework.test import APIClient, APIRequestFactory, APITestCase
 
 from core.models import DataSet, ExtendedGroup, InvestigationLink
@@ -816,37 +815,6 @@ class UtilitiesTest(TestCase):
                          '&facet=true'
                          '&facet.limit=-1'.format(
                                  self.valid_uuid))
-
-    def test_generate_solr_params_for_user(self):
-        query = generate_solr_params_for_user(QueryDict({}), self.user1.id)
-        self.assertEqual(str(query),
-                         'fq=assay_uuid%3A%28{} OR {}%29'
-                         '&facet.field=organism_Characteristics_generic_s'
-                         '&facet.field=organism_Factor_Value_generic_s'
-                         '&facet.field=technology_Characteristics_generic_s'
-                         '&facet.field=technology_Factor_Value_generic_s'
-                         '&facet.field=antibody_Characteristics_generic_s'
-                         '&facet.field=antibody_Factor_Value_generic_s'
-                         '&facet.field=genotype_Characteristics_generic_s'
-                         '&facet.field=genotype_Factor_Value_generic_s'
-                         '&facet.field=experimenter_Characteristics_generic_s'
-                         '&facet.field=experimenter_Factor_Value_generic_s'
-                         '&fl=%2A_generic_s'
-                         '%2Cname%2Cfile_uuid%2Ctype%2Cdjango_id'
-                         '&fq=type%3A%28%22Raw Data File%22 '
-                         'OR %22Derived Data File%22 '
-                         'OR %22Array Data File%22 '
-                         'OR %22Derived Array Data File%22 '
-                         'OR %22Array Data Matrix File%22 '
-                         'OR%22Derived Array Data Matrix File%22%29'
-                         '&fq=is_annotation%3Afalse'
-                         '&start=0'
-                         '&rows=10000000'
-                         '&q=django_ct%3Adata_set_manager.node'
-                         '&wt=json'
-                         '&facet=true'
-                         '&facet.limit=-1'.format(
-                             self.assay.uuid, self.new_assay.uuid))
 
     def test_generate_filtered_facet_fields(self):
         attribute_orders = AttributeOrder.objects.filter(
