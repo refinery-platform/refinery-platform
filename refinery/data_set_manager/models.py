@@ -870,6 +870,7 @@ def initialize_attribute_order(study, assay):
                     study=study,
                     assay=assay,
                     solr_field=key,
+                    rank=0,
                     is_facet=is_facet,
                     is_exposed=is_exposed,
                     is_internal=is_internal,
