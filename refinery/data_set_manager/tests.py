@@ -8,6 +8,7 @@ from django.core.files.uploadedfile import (InMemoryUploadedFile,
 from django.http import QueryDict
 from django.test import TestCase
 
+from refinery.user_files_manager.utils import generate_solr_params_for_user
 from rest_framework.test import APIClient, APIRequestFactory, APITestCase
 
 from core.models import DataSet, ExtendedGroup, InvestigationLink
@@ -24,9 +25,8 @@ from .utils import (create_facet_filter_query, customize_attribute_response,
                     generate_facet_fields_query,
                     generate_filtered_facet_fields,
                     generate_solr_params_for_assay,
-                    generate_solr_params_for_user, get_file_url_from_node_uuid,
-                    get_owner_from_assay, hide_fields_from_list,
-                    initialize_attribute_order_ranks,
+                    get_file_url_from_node_uuid, get_owner_from_assay,
+                    hide_fields_from_list, initialize_attribute_order_ranks,
                     insert_facet_field_filter, is_field_in_hidden_list,
                     objectify_facet_field_counts, update_attribute_order_ranks)
 from .views import Assays, AssaysAttributes
