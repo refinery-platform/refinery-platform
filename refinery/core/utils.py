@@ -23,9 +23,10 @@ from rest_framework.response import Response
 # These imports go against our coding style guide, but are necessary for the
 #  time being due to mutual import issues
 import core
+from core.models import InvestigationLink
 from core.search_indexes import DataSetIndex
 import data_set_manager
-from data_set_manager.models import InvestigationLink, Study
+from data_set_manager.models import Study
 from data_set_manager.search_indexes import NodeIndex
 
 logger = logging.getLogger(__name__)

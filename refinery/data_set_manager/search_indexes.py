@@ -11,6 +11,7 @@ from django.conf import settings
 
 from haystack import indexes
 
+from core.utils import get_data_set_for_study_uuid
 from file_store.models import FileStoreItem
 
 from .models import AnnotatedNode, Node
@@ -57,7 +58,10 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
         data = super(NodeIndex, self).prepare(object)
         annotations = AnnotatedNode.objects.filter(node=object)
         study_id = str(object.study.id)
-        logging.info('investigation: %s', object.study.investigation.id)
+
+        data_set = get_data_set_for_study_uuid(object.study.uuid)
+
+        logging.info('ds uuid: %s', data_set.uuid)
 
         if object.assay is not None:
             study_id += "_" + str(object.assay.id)
