@@ -53,14 +53,16 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
     # https://groups.google.com/forum/?fromgroups#!topic/django-haystack/g39QjTkN-Yg
     # http://stackoverflow.com/questions/7399871/django-haystack-sort-results-by-title
     def prepare(self, object):
+
         data = super(NodeIndex, self).prepare(object)
         annotations = AnnotatedNode.objects.filter(node=object)
-        uuid = str(object.study.id)
+        study_id = str(object.study.id)
+        logging.info('investigation: %s', object.study.investigation.id)
 
         if object.assay is not None:
-            uuid += "_" + str(object.assay.id)
+            study_id += "_" + str(object.assay.id)
 
-        suffix = "_" + uuid + "_s"
+        suffix = "_" + study_id + "_s"
 
         # create dynamic fields for each attribute
         for annotation in annotations:

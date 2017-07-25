@@ -13,10 +13,9 @@ from jsonschema import RefResolver, ValidationError, validate
 import requests
 from requests.packages.urllib3.exceptions import HTTPError
 
-from core.models import (Analysis, InvestigationLink, NodeRelationship,
-                         NodeSet, Workflow, WorkflowDataInputMap)
-from core.utils import get_aware_local_time
-from data_set_manager.models import Study
+from core.models import (Analysis, NodeRelationship, NodeSet, Workflow,
+                         WorkflowDataInputMap)
+from core.utils import get_aware_local_time, get_data_set_for_study_uuid
 import tool_manager
 
 logger = logging.getLogger(__name__)
@@ -219,19 +218,7 @@ def fetch_objects_required_for_analysis(validated_analysis_config):
             "Couldn't fetch Workflow from UUID: {} {}".format(workflow_uuid, e)
         )
 
-    try:
-        study = Study.objects.get(uuid=study_uuid)
-    except(Study.DoesNotExist, Study.MultipleObjectsReturned) as e:
-        raise RuntimeError(
-            "Couldn't fetch Study from UUID: {} {}".format(study_uuid, e)
-        )
-
-    try:
-        data_set = InvestigationLink.objects.filter(
-            investigation__uuid=study.investigation.uuid
-        ).order_by("version").reverse()[0].data_set
-    except (AttributeError, IndexError) as e:
-        raise RuntimeError("Couldn't fetch DataSet {}".format(e))
+    data_set = get_data_set_for_study_uuid(study_uuid)
 
     return {
         "user": user,
