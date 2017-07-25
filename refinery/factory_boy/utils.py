@@ -83,7 +83,7 @@ def create_dataset_with_necessary_models():
         investigation=investigation,
         description="This is a great DataSet"
     )
-    
+
     assay_uuid = str(uuid_builtin.uuid4())
     AssayFactory(
         uuid=assay_uuid,
