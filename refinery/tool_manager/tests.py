@@ -1435,7 +1435,7 @@ class ToolLaunchSeleniumTests(ToolManagerTestBase, SeleniumTestBaseGeneric):
             )
 
             self.browser.get(igv_url)
-            time.sleep(5)
+            time.sleep(15)
 
             wait_until_class_visible(self.browser, "igv-track-label", MAX_WAIT)
             self.assertEqual(
