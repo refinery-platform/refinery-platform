@@ -90,16 +90,19 @@ def create_dataset_with_necessary_models():
             uuid=assay_uuid,
             study=study
         )
-        attribute = AttributeFactory()
         node = NodeFactory(
-            study=study,
-            attribute=attribute
+            study=study
+        )
+        attribute = AttributeFactory(
+            node=node
         )
         AnnotatedNodeFactory(
             study=study,
             assay=assay,
             node=node,
             node_name='AnnotatedNode-{}'.format(i),
-            node_type=Node.RAW_DATA_FILE)
+            node_type=Node.RAW_DATA_FILE,
+            attribute=attribute
+        )
 
     return dataset
