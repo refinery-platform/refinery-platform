@@ -1,6 +1,5 @@
 sudo: required
 
-group: deprecated-2017Q2 # TODO: Remove this before Sept. 1, 2017
 language: python
 cache: pip
 addons:
@@ -11,12 +10,23 @@ addons:
 
 python:
   - 2.7
+
 services:
   - postgresql
   - neo4j
   - docker
 
 install:
+  - node --version
+  - NODE_VERSION=6.11.0
+  - nvm install $NODE_VERSION
+  - nvm use $NODE_VERSION
+  - node --version
+
+  - npm --version
+  - npm install -g npm@3.10.10
+  - npm --version
+
   - pip install -r requirements.txt --quiet
   # Install geckodriver required for selenium testing
   - GECKODRIVER_VERSION=v0.17.0

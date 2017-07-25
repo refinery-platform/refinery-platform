@@ -35,8 +35,11 @@
       data_upload_tut_viewed: `{{ user.profile.has_viewed_data_upload_tut}}`,
       admins: '{{ ADMIN_EMAIL|safe }}',
       repositoryMode: {{ REFINERY_REPOSITORY_MODE|yesno:"true,false,undefined" }},
+      repositoryModeHomePageHtml: '{{ REFINERY_REPOSITORY_MODE_HOME_PAGE_HTML.strip|safe }}',
       solrSynonymSearch: {{ SOLR_SYNONYM_SEARCH|lower }},
       refineryTutorialSteps: '{{  REFINERY_TUTORIAL_STEPS|escapejs }}',
+      refineryInstanceName: '{{ REFINERY_INSTANCE_NAME }}',
+      satoriDemo: {{ SATORI_DEMO|yesno:"true,false,false" }},
       staticUrl: '{{ STATIC_URL|escapejs }}',
       userFilesColumns: '{{ USER_FILES_COLUMNS }}'.split(','),
       userFilesFilters: '{{ USER_FILES_FILTERS }}'.split(','),
@@ -72,6 +75,7 @@
 </head>
 
 <body
+  class="{{ SATORI_DEMO|yesno:"is-screenshot-ready,," }}"
   ng-app="{% block ng_app %}refineryApp{% endblock %}"
   ng-controller="AppCtrl as app"
   ng-class="{ 'repo-mode': app.repoMode }"
@@ -248,9 +252,10 @@
   <script src="{% static "vendor/jquery/dist/jquery.min.js" %}"></script>
   <script src="{% static "js/jquery-ui/jquery-ui-1.10.0.custom.min.js" %}"></script>
   <script src="{% static "vendor/bootstrap/dist/js/bootstrap.min.js" %}"></script>
-  <script src="{% static "vendor/intro.js/minified/intro.min.js" %}"></script>
+  <script src="{% static "vendor/intro-js/minified/intro.min.js" %}"></script>
   <script src="{% static "vendor/angular/angular.min.js" %}"></script>
-  <script src="{% static "vendor/angular-intro.js/build/angular-intro.min.js" %}"></script>
+  <script src="{% static "vendor/angular-intro-js/build/angular-intro.min.js" %}"></script>
+  <script src="{% static "vendor/angular-local-storage/dist/angular-local-storage.min.js" %}"></script>
   <script src="{% static "vendor/angular-animate/angular-animate.min.js" %}"></script>
   <script src="{% static "vendor/select2/select2.min.js" %}"></script>
   <script src="{% static "vendor/ui-select/dist/select.min.js" %}"></script>
@@ -272,6 +277,12 @@
     // lodash v2 or other libraries like underscore.
     window.lodashLatest = _.noConflict();
   </script>
+
+  <!-- Only needed when loading D3.js v4 and D3.js v3 -->
+  <!-- This an be removed once everything runs on D3.js v4 -->
+  {% block vendor_scripts_pre_d3_v3 %}
+  {% endblock %}
+
   <script src="{% static "vendor/d3/d3.min.js" %}"></script>
   <script src="{% static "vendor/humanize/humanize.js" %}"></script>
   <script src="{% static "vendor/aws-sdk-js/dist/aws-sdk.min.js" %}"></script>
@@ -311,10 +322,29 @@
   <script src="{% static "vendor/jquery-file-upload/js/jquery.fileupload-angular.js" %}"></script>
   <script src="{% static "js/data-set-import.js" %}"></script>
 
+  <!-- Fetch external SVGs referenced in <use> elements when the browser fails to do so -->
+  <script defer src="{% static "vendor/svgxuse/svgxuse.min.js" %}"></script>
+
   {% block script %}
   {% endblock %}
 
   <script type="text/javascript">
+    /**
+     * Provides requestAnimationFrame in a cross browser way.
+     * @author paulirish / http://paulirish.com/
+     */
+    if (!window.requestAnimationFrame) {
+      window.requestAnimationFrame = ( function() {
+        return window.webkitRequestAnimationFrame ||
+          window.mozRequestAnimationFrame ||
+          window.oRequestAnimationFrame ||
+          window.msRequestAnimationFrame ||
+          function( /* function FrameRequestCallback */ callback, /* DOMElement Element */ element ) {
+            window.setTimeout( callback, 1000 / 60 );
+          };
+      } )();
+    }
+
     // activate bootstrap tooltips
       $('a[rel=tooltip]').tooltip();
 

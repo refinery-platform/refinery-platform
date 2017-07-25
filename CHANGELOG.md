@@ -1,6 +1,139 @@
 # Change Log
 
-## [v1.5.6](https://github.com/refinery-platform/refinery-platform/tree/v1.5.6) (2017-05-09)
+## [v1.5.8](https://github.com/refinery-platform/refinery-platform/tree/v1.5.8) (2017-07-11)
+[Full Changelog](https://github.com/refinery-platform/refinery-platform/compare/v1.5.7...v1.5.8)
+
+**Implemented enhancements:**
+
+- Flekschas/satori v1.5 [\#1776](https://github.com/refinery-platform/refinery-platform/pull/1776) ([flekschas](https://github.com/flekschas))
+
+**Fixed bugs:**
+
+- Search keywords are still highlighted after clearing the search [\#1583](https://github.com/refinery-platform/refinery-platform/issues/1583)
+- Flekschas/satori v1.5 [\#1776](https://github.com/refinery-platform/refinery-platform/pull/1776) ([flekschas](https://github.com/flekschas))
+
+## [v1.5.7](https://github.com/refinery-platform/refinery-platform/tree/v1.5.7) (2017-07-11)
+[Full Changelog](https://github.com/refinery-platform/refinery-platform/compare/v1.5.6...v1.5.7)
+
+**Implemented enhancements:**
+
+- IntroJs tutorials are not checked until user refreshes page [\#1774](https://github.com/refinery-platform/refinery-platform/issues/1774)
+- Tool Panel Collapse [\#1645](https://github.com/refinery-platform/refinery-platform/issues/1645)
+- Add description of backup and recovery on AWS to wiki [\#901](https://github.com/refinery-platform/refinery-platform/issues/901)
+- Flekschas/isa tab import no annotated node explosion [\#1763](https://github.com/refinery-platform/refinery-platform/pull/1763) ([flekschas](https://github.com/flekschas))
+
+**Fixed bugs:**
+
+- Provisioning failure with NoMethodError in Puppet [\#1847](https://github.com/refinery-platform/refinery-platform/issues/1847)
+- Handle Exceptions during `rebuild\_index` mgmt. command [\#1735](https://github.com/refinery-platform/refinery-platform/issues/1735)
+- Handle AttributeError in DataSet REST API [\#1734](https://github.com/refinery-platform/refinery-platform/issues/1734)
+- Flekschas/isa tab archive import bug fix [\#1762](https://github.com/refinery-platform/refinery-platform/pull/1762) ([flekschas](https://github.com/flekschas))
+
+**Closed issues:**
+
+- finalize isort config [\#1830](https://github.com/refinery-platform/refinery-platform/issues/1830)
+- UI: /user\_files -\> /user/files [\#1792](https://github.com/refinery-platform/refinery-platform/issues/1792)
+- use isort to reorder imports, and add to flake8 [\#1770](https://github.com/refinery-platform/refinery-platform/issues/1770)
+- avoid writing to `config.yaml` file [\#1751](https://github.com/refinery-platform/refinery-platform/issues/1751)
+- Make sure EBS data volume is unmounted without errors on stack deletion [\#1722](https://github.com/refinery-platform/refinery-platform/issues/1722)
+- Be able to Launch a `ToolDefinition: Workflow` with `tools` endpoint [\#1712](https://github.com/refinery-platform/refinery-platform/issues/1712)
+- Import SCC public RNA-Seq & ChipSeq Datasets [\#1706](https://github.com/refinery-platform/refinery-platform/issues/1706)
+- Data Set 2 - Launch Tool Validation UI [\#1701](https://github.com/refinery-platform/refinery-platform/issues/1701)
+- UI - Grid Selection Display [\#1649](https://github.com/refinery-platform/refinery-platform/issues/1649)
+- Node Groups Repurpose [\#1643](https://github.com/refinery-platform/refinery-platform/issues/1643)
+- After migration of repo, reconnect travis [\#1493](https://github.com/refinery-platform/refinery-platform/issues/1493)
+- On AWS the suggested EBS volume is too small [\#938](https://github.com/refinery-platform/refinery-platform/issues/938)
+- modify workflow definitions to include file type in input names [\#266](https://github.com/refinery-platform/refinery-platform/issues/266)
+
+**Merged pull requests:**
+
+- Scottx611x/analysis custom name bugfix [\#1897](https://github.com/refinery-platform/refinery-platform/pull/1897) ([scottx611x](https://github.com/scottx611x))
+- Annotated node explosion with tests [\#1887](https://github.com/refinery-platform/refinery-platform/pull/1887) ([scottx611x](https://github.com/scottx611x))
+- Add refinery-base styling to buttons. [\#1870](https://github.com/refinery-platform/refinery-platform/pull/1870) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/data set2 css update [\#1866](https://github.com/refinery-platform/refinery-platform/pull/1866) ([jkmarx](https://github.com/jkmarx))
+- Data structure rather than string is more robust [\#1865](https://github.com/refinery-platform/refinery-platform/pull/1865) ([mccalluc](https://github.com/mccalluc))
+- No more ajax error when not logged in \(facets still empty, though\) [\#1864](https://github.com/refinery-platform/refinery-platform/pull/1864) ([mccalluc](https://github.com/mccalluc))
+- Jkmarx/add comments in tool launch [\#1862](https://github.com/refinery-platform/refinery-platform/pull/1862) ([jkmarx](https://github.com/jkmarx))
+- ELB Logging in CloudFormation [\#1860](https://github.com/refinery-platform/refinery-platform/pull/1860) ([drj11](https://github.com/drj11))
+- Fix concat bug when offset is 0. [\#1859](https://github.com/refinery-platform/refinery-platform/pull/1859) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/add exit modal [\#1858](https://github.com/refinery-platform/refinery-platform/pull/1858) ([jkmarx](https://github.com/jkmarx))
+- Mccalluc/make the facets do something [\#1857](https://github.com/refinery-platform/refinery-platform/pull/1857) ([mccalluc](https://github.com/mccalluc))
+- Hackdna/s3 data upload [\#1856](https://github.com/refinery-platform/refinery-platform/pull/1856) ([hackdna](https://github.com/hackdna))
+- Mccalluc/connect user files facets api ui [\#1855](https://github.com/refinery-platform/refinery-platform/pull/1855) ([mccalluc](https://github.com/mccalluc))
+- Scottx611x/run analysis refactoring [\#1854](https://github.com/refinery-platform/refinery-platform/pull/1854) ([scottx611x](https://github.com/scottx611x))
+- Mccalluc/refactor search indexes [\#1850](https://github.com/refinery-platform/refinery-platform/pull/1850) ([mccalluc](https://github.com/mccalluc))
+- Update text. [\#1849](https://github.com/refinery-platform/refinery-platform/pull/1849) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/remove group bug [\#1846](https://github.com/refinery-platform/refinery-platform/pull/1846) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/fix icon bug [\#1843](https://github.com/refinery-platform/refinery-platform/pull/1843) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/remove group bug [\#1842](https://github.com/refinery-platform/refinery-platform/pull/1842) ([jkmarx](https://github.com/jkmarx))
+- Scottx611x/workflow launching updates [\#1841](https://github.com/refinery-platform/refinery-platform/pull/1841) ([scottx611x](https://github.com/scottx611x))
+- /api/v2/user/files/ now returns the facets I need [\#1840](https://github.com/refinery-platform/refinery-platform/pull/1840) ([mccalluc](https://github.com/mccalluc))
+- Jkmarx/details owner name bug [\#1839](https://github.com/refinery-platform/refinery-platform/pull/1839) ([jkmarx](https://github.com/jkmarx))
+- Mccalluc/user files facets [\#1838](https://github.com/refinery-platform/refinery-platform/pull/1838) ([mccalluc](https://github.com/mccalluc))
+- Jkmarx/relocate config button [\#1835](https://github.com/refinery-platform/refinery-platform/pull/1835) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/missing nav bar bug [\#1834](https://github.com/refinery-platform/refinery-platform/pull/1834) ([jkmarx](https://github.com/jkmarx))
+- Sort django above other third party, and local above first part [\#1831](https://github.com/refinery-platform/refinery-platform/pull/1831) ([mccalluc](https://github.com/mccalluc))
+- Fix color issue associate on deselecting a node. [\#1829](https://github.com/refinery-platform/refinery-platform/pull/1829) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/reindex on remove [\#1828](https://github.com/refinery-platform/refinery-platform/pull/1828) ([jkmarx](https://github.com/jkmarx))
+- Scottx611x/workflow launching [\#1825](https://github.com/refinery-platform/refinery-platform/pull/1825) ([scottx611x](https://github.com/scottx611x))
+- Mccalluc/add fields to datasetmanager index [\#1824](https://github.com/refinery-platform/refinery-platform/pull/1824) ([mccalluc](https://github.com/mccalluc))
+- Explain why we have a default haystack [\#1823](https://github.com/refinery-platform/refinery-platform/pull/1823) ([mccalluc](https://github.com/mccalluc))
+- Jkmarx/add missing library [\#1821](https://github.com/refinery-platform/refinery-platform/pull/1821) ([jkmarx](https://github.com/jkmarx))
+- Add depthNames data and replace types. [\#1820](https://github.com/refinery-platform/refinery-platform/pull/1820) ([jkmarx](https://github.com/jkmarx))
+- Hackdna/s3 data upload backend [\#1819](https://github.com/refinery-platform/refinery-platform/pull/1819) ([hackdna](https://github.com/hackdna))
+- Scottx611x/analysis manager updates [\#1817](https://github.com/refinery-platform/refinery-platform/pull/1817) ([scottx611x](https://github.com/scottx611x))
+- Jkmarx/row template updates [\#1816](https://github.com/refinery-platform/refinery-platform/pull/1816) ([jkmarx](https://github.com/jkmarx))
+- Mccalluc/begin user files facets [\#1814](https://github.com/refinery-platform/refinery-platform/pull/1814) ([mccalluc](https://github.com/mccalluc))
+- Mccalluc/better user files columns [\#1811](https://github.com/refinery-platform/refinery-platform/pull/1811) ([mccalluc](https://github.com/mccalluc))
+- Jkmarx/parameter popover [\#1810](https://github.com/refinery-platform/refinery-platform/pull/1810) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/panel view perms [\#1808](https://github.com/refinery-platform/refinery-platform/pull/1808) ([jkmarx](https://github.com/jkmarx))
+- Add Contributing.md [\#1807](https://github.com/refinery-platform/refinery-platform/pull/1807) ([scottx611x](https://github.com/scottx611x))
+- Fix launch button regardless of sizing. [\#1806](https://github.com/refinery-platform/refinery-platform/pull/1806) ([jkmarx](https://github.com/jkmarx))
+- Scottx611x/tool manager updates [\#1805](https://github.com/refinery-platform/refinery-platform/pull/1805) ([scottx611x](https://github.com/scottx611x))
+- Jkmarx/data set 2 fix button hide [\#1804](https://github.com/refinery-platform/refinery-platform/pull/1804) ([jkmarx](https://github.com/jkmarx))
+- Fix bound bug by using the auto-resize ui-grid module. [\#1802](https://github.com/refinery-platform/refinery-platform/pull/1802) ([jkmarx](https://github.com/jkmarx))
+- Fix parsing error. [\#1801](https://github.com/refinery-platform/refinery-platform/pull/1801) ([jkmarx](https://github.com/jkmarx))
+- Refactor - simplify popover in input group. [\#1800](https://github.com/refinery-platform/refinery-platform/pull/1800) ([jkmarx](https://github.com/jkmarx))
+- Scottx611x/tool manager updates [\#1799](https://github.com/refinery-platform/refinery-platform/pull/1799) ([scottx611x](https://github.com/scottx611x))
+- Mccalluc/user file browser real data [\#1798](https://github.com/refinery-platform/refinery-platform/pull/1798) ([mccalluc](https://github.com/mccalluc))
+- Jkmarx/data set 2 tools param [\#1797](https://github.com/refinery-platform/refinery-platform/pull/1797) ([jkmarx](https://github.com/jkmarx))
+- Scottx611x/selenium bug fix [\#1795](https://github.com/refinery-platform/refinery-platform/pull/1795) ([scottx611x](https://github.com/scottx611x))
+- Jkmarx/https fix [\#1793](https://github.com/refinery-platform/refinery-platform/pull/1793) ([jkmarx](https://github.com/jkmarx))
+- Mccalluc/landscape smells [\#1791](https://github.com/refinery-platform/refinery-platform/pull/1791) ([mccalluc](https://github.com/mccalluc))
+- Jkmarx/generalize attribute filter [\#1790](https://github.com/refinery-platform/refinery-platform/pull/1790) ([jkmarx](https://github.com/jkmarx))
+- Update smaller services according to style guide. [\#1788](https://github.com/refinery-platform/refinery-platform/pull/1788) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/file browser refactor services [\#1787](https://github.com/refinery-platform/refinery-platform/pull/1787) ([jkmarx](https://github.com/jkmarx))
+- Update module and setting file to style guide. [\#1786](https://github.com/refinery-platform/refinery-platform/pull/1786) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/file browser refactor ctrl [\#1785](https://github.com/refinery-platform/refinery-platform/pull/1785) ([jkmarx](https://github.com/jkmarx))
+- Mccalluc/user files continued [\#1784](https://github.com/refinery-platform/refinery-platform/pull/1784) ([mccalluc](https://github.com/mccalluc))
+- Refactor directives according to angular style guide. [\#1783](https://github.com/refinery-platform/refinery-platform/pull/1783) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/data set 2 additional comments [\#1782](https://github.com/refinery-platform/refinery-platform/pull/1782) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/persist workflow collapse [\#1781](https://github.com/refinery-platform/refinery-platform/pull/1781) ([jkmarx](https://github.com/jkmarx))
+- Add scrolling to tool panel. [\#1780](https://github.com/refinery-platform/refinery-platform/pull/1780) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/data set 2 input group column bug [\#1779](https://github.com/refinery-platform/refinery-platform/pull/1779) ([jkmarx](https://github.com/jkmarx))
+- Move helper functions from main AWS stack into a separate utils file [\#1777](https://github.com/refinery-platform/refinery-platform/pull/1777) ([hackdna](https://github.com/hackdna))
+- Mccalluc/user files next steps [\#1772](https://github.com/refinery-platform/refinery-platform/pull/1772) ([mccalluc](https://github.com/mccalluc))
+- isort prehook [\#1771](https://github.com/refinery-platform/refinery-platform/pull/1771) ([mccalluc](https://github.com/mccalluc))
+- Scottx611x/cleanup tool containers [\#1766](https://github.com/refinery-platform/refinery-platform/pull/1766) ([scottx611x](https://github.com/scottx611x))
+- Jkmarx/data set 2 remove bug [\#1761](https://github.com/refinery-platform/refinery-platform/pull/1761) ([jkmarx](https://github.com/jkmarx))
+- Add popover in input group column. [\#1758](https://github.com/refinery-platform/refinery-platform/pull/1758) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/data set 2 list display changes [\#1757](https://github.com/refinery-platform/refinery-platform/pull/1757) ([jkmarx](https://github.com/jkmarx))
+- S3 bucket for config [\#1756](https://github.com/refinery-platform/refinery-platform/pull/1756) ([drj11](https://github.com/drj11))
+- Jkmarx/display node data [\#1750](https://github.com/refinery-platform/refinery-platform/pull/1750) ([jkmarx](https://github.com/jkmarx))
+- Mccalluc/all files empty ui start api [\#1749](https://github.com/refinery-platform/refinery-platform/pull/1749) ([mccalluc](https://github.com/mccalluc))
+- Scottx611x/update index on post save [\#1748](https://github.com/refinery-platform/refinery-platform/pull/1748) ([scottx611x](https://github.com/scottx611x))
+- Handle errors that have occured when rebuilding solr's index [\#1746](https://github.com/refinery-platform/refinery-platform/pull/1746) ([scottx611x](https://github.com/scottx611x))
+- Jkmarx/add launch validation [\#1745](https://github.com/refinery-platform/refinery-platform/pull/1745) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/remove node group [\#1744](https://github.com/refinery-platform/refinery-platform/pull/1744) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/hide selection column [\#1743](https://github.com/refinery-platform/refinery-platform/pull/1743) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/collapse tool panel [\#1742](https://github.com/refinery-platform/refinery-platform/pull/1742) ([jkmarx](https://github.com/jkmarx))
+- Add event to close popover when clicking on select icon. [\#1741](https://github.com/refinery-platform/refinery-platform/pull/1741) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/data set 2 input group display [\#1740](https://github.com/refinery-platform/refinery-platform/pull/1740) ([jkmarx](https://github.com/jkmarx))
+- Scottx611x/dataset api error handling [\#1739](https://github.com/refinery-platform/refinery-platform/pull/1739) ([scottx611x](https://github.com/scottx611x))
+- Jkmarx/data set 2 add selection nav [\#1737](https://github.com/refinery-platform/refinery-platform/pull/1737) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/generate launch configs [\#1733](https://github.com/refinery-platform/refinery-platform/pull/1733) ([jkmarx](https://github.com/jkmarx))
+
+## [v1.5.6](https://github.com/refinery-platform/refinery-platform/tree/v1.5.6) (2017-05-15)
 [Full Changelog](https://github.com/refinery-platform/refinery-platform/compare/v1.5.5...v1.5.6)
 
 **Implemented enhancements:**
@@ -19,6 +152,7 @@
 
 **Fixed bugs:**
 
+- Group Details: Empty Names [\#1726](https://github.com/refinery-platform/refinery-platform/issues/1726)
 - Revise indexing of data sets in Refinery [\#1702](https://github.com/refinery-platform/refinery-platform/issues/1702)
 - Help popover's partial not found [\#1673](https://github.com/refinery-platform/refinery-platform/issues/1673)
 - Paired Input File Mapping - Safari Web Content Error [\#1663](https://github.com/refinery-platform/refinery-platform/issues/1663)
@@ -30,6 +164,7 @@
 
 **Closed issues:**
 
+- Changes to Upload page text [\#1729](https://github.com/refinery-platform/refinery-platform/issues/1729)
 - Use stack name to generate RDS instance name [\#1718](https://github.com/refinery-platform/refinery-platform/issues/1718)
 - Avoid explicitly setting Availability Zone. [\#1709](https://github.com/refinery-platform/refinery-platform/issues/1709)
 - Collaboration/sharing updates [\#1707](https://github.com/refinery-platform/refinery-platform/issues/1707)
@@ -44,6 +179,9 @@
 
 **Merged pull requests:**
 
+- Jkmarx/import text update [\#1732](https://github.com/refinery-platform/refinery-platform/pull/1732) ([hackdna](https://github.com/hackdna))
+- Jkmarx/import text update [\#1731](https://github.com/refinery-platform/refinery-platform/pull/1731) ([jkmarx](https://github.com/jkmarx))
+- Scottx611x/migration bug fix [\#1723](https://github.com/refinery-platform/refinery-platform/pull/1723) ([scottx611x](https://github.com/scottx611x))
 - Add `REFINERY\_CUSTOM\_NAVBAR\_ITEM` setting to display extra link [\#1721](https://github.com/refinery-platform/refinery-platform/pull/1721) ([scottx611x](https://github.com/scottx611x))
 - Add reserved word list to data import upload page. [\#1720](https://github.com/refinery-platform/refinery-platform/pull/1720) ([jkmarx](https://github.com/jkmarx))
 - Name RDS instance with the CloudFormation stack name [\#1719](https://github.com/refinery-platform/refinery-platform/pull/1719) ([drj11](https://github.com/drj11))
@@ -273,6 +411,7 @@
 - Jkmarx/dev autofixer upgrade [\#1571](https://github.com/refinery-platform/refinery-platform/pull/1571) ([jkmarx](https://github.com/jkmarx))
 - Scottx611x/anonymous user fix [\#1570](https://github.com/refinery-platform/refinery-platform/pull/1570) ([scottx611x](https://github.com/scottx611x))
 - Re-enable default Apache vhost [\#1569](https://github.com/refinery-platform/refinery-platform/pull/1569) ([hackdna](https://github.com/hackdna))
+- Scottx611x/django 1.7 upgrade [\#1511](https://github.com/refinery-platform/refinery-platform/pull/1511) ([scottx611x](https://github.com/scottx611x))
 - Flekschas/angular 1.5 [\#1559](https://github.com/refinery-platform/refinery-platform/pull/1559) ([jkmarx](https://github.com/jkmarx))
 - Jkmarx/tech debt update does not exist [\#1553](https://github.com/refinery-platform/refinery-platform/pull/1553) ([jkmarx](https://github.com/jkmarx))
 - Jkmarx/javascript dependency pin [\#1521](https://github.com/refinery-platform/refinery-platform/pull/1521) ([jkmarx](https://github.com/jkmarx))
@@ -296,6 +435,8 @@
 - Scottx611x/django 1.7 upgrade apache settings fix [\#1544](https://github.com/refinery-platform/refinery-platform/pull/1544) ([scottx611x](https://github.com/scottx611x))
 - Scottx611x/django 1.7 upgrade storage fix [\#1543](https://github.com/refinery-platform/refinery-platform/pull/1543) ([scottx611x](https://github.com/scottx611x))
 - Scottx611x/automate neo4 j installation [\#1536](https://github.com/refinery-platform/refinery-platform/pull/1536) ([scottx611x](https://github.com/scottx611x))
+- Use proper string formatting syntax [\#1529](https://github.com/refinery-platform/refinery-platform/pull/1529) ([scottx611x](https://github.com/scottx611x))
+- Scottx611x/error message fix [\#1502](https://github.com/refinery-platform/refinery-platform/pull/1502) ([scottx611x](https://github.com/scottx611x))
 
 ## [v1.5.2](https://github.com/refinery-platform/refinery-platform/tree/v1.5.2) (2016-11-18)
 [Full Changelog](https://github.com/refinery-platform/refinery-platform/compare/v1.5.1...v1.5.2)
@@ -363,6 +504,12 @@
 
 **Merged pull requests:**
 
+- Add gene annotation track to IGV. Fix \#1494. [\#1516](https://github.com/refinery-platform/refinery-platform/pull/1516) ([mccalluc](https://github.com/mccalluc))
+- Scottx611x/resolve manual fake issue [\#1515](https://github.com/refinery-platform/refinery-platform/pull/1515) ([scottx611x](https://github.com/scottx611x))
+- This helper script has been moved to its own repo [\#1513](https://github.com/refinery-platform/refinery-platform/pull/1513) ([mccalluc](https://github.com/mccalluc))
+- Jkmarx/higlass ui [\#1510](https://github.com/refinery-platform/refinery-platform/pull/1510) ([jkmarx](https://github.com/jkmarx))
+- Towards HiGlass UI [\#1509](https://github.com/refinery-platform/refinery-platform/pull/1509) ([mccalluc](https://github.com/mccalluc))
+- Fix for tabular metadata uploads that only contain one row [\#1479](https://github.com/refinery-platform/refinery-platform/pull/1479) ([scottx611x](https://github.com/scottx611x))
 - Hackdna/neo4j repo key error [\#1505](https://github.com/refinery-platform/refinery-platform/pull/1505) ([hackdna](https://github.com/hackdna))
 
 ## [v1.5.1](https://github.com/refinery-platform/refinery-platform/tree/v1.5.1) (2016-10-20)
@@ -376,6 +523,12 @@
 
 - Adding User to neo4J produces too much travis output [\#1376](https://github.com/refinery-platform/refinery-platform/issues/1376)
 - Enable viewing BAM files in IGV [\#1264](https://github.com/refinery-platform/refinery-platform/issues/1264)
+
+**Merged pull requests:**
+
+- Remove all occurrences of `print` currently within our codebase [\#1483](https://github.com/refinery-platform/refinery-platform/pull/1483) ([scottx611x](https://github.com/scottx611x))
+- Fix caching bug where \# of Analyses run on a DataSet wasn't updated [\#1481](https://github.com/refinery-platform/refinery-platform/pull/1481) ([scottx611x](https://github.com/scottx611x))
+- Fix search text placement to work in Firefox as well [\#1480](https://github.com/refinery-platform/refinery-platform/pull/1480) ([scottx611x](https://github.com/scottx611x))
 
 ## [v1.5.0](https://github.com/refinery-platform/refinery-platform/tree/v1.5.0) (2016-10-14)
 [Full Changelog](https://github.com/refinery-platform/refinery-platform/compare/v1.4.0...v1.5.0)
@@ -448,6 +601,12 @@
 
 **Merged pull requests:**
 
+- provide link to installation notes [\#1462](https://github.com/refinery-platform/refinery-platform/pull/1462) ([mccalluc](https://github.com/mccalluc))
+- Remove wobbly Help animation upon User's first login [\#1447](https://github.com/refinery-platform/refinery-platform/pull/1447) ([scottx611x](https://github.com/scottx611x))
+- Scottx611x/deletion from ui [\#1445](https://github.com/refinery-platform/refinery-platform/pull/1445) ([scottx611x](https://github.com/scottx611x))
+- Hackdna/workflow import [\#1443](https://github.com/refinery-platform/refinery-platform/pull/1443) ([hackdna](https://github.com/hackdna))
+- Mccalluc/remove sphinx [\#1438](https://github.com/refinery-platform/refinery-platform/pull/1438) ([mccalluc](https://github.com/mccalluc))
+- Mccalluc/travis fast fail [\#1423](https://github.com/refinery-platform/refinery-platform/pull/1423) ([mccalluc](https://github.com/mccalluc))
 - Jkmarx/unify alert appearance [\#1448](https://github.com/refinery-platform/refinery-platform/pull/1448) ([jkmarx](https://github.com/jkmarx))
 - AWS backups [\#1418](https://github.com/refinery-platform/refinery-platform/pull/1418) ([drj11](https://github.com/drj11))
 - Jkmarx/dataset2 new layout [\#1413](https://github.com/refinery-platform/refinery-platform/pull/1413) ([jkmarx](https://github.com/jkmarx))
@@ -466,6 +625,9 @@
 - Tutorial overlays for end users [\#1226](https://github.com/refinery-platform/refinery-platform/issues/1226)
 - Reword tabular file import instructions and add more help [\#1111](https://github.com/refinery-platform/refinery-platform/issues/1111)
 - Two import buttons are confusing [\#797](https://github.com/refinery-platform/refinery-platform/issues/797)
+- Jkmarx/dataset2 launch analysis [\#1385](https://github.com/refinery-platform/refinery-platform/pull/1385) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/dataset2 display refactor [\#1382](https://github.com/refinery-platform/refinery-platform/pull/1382) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/dataset2 remove orange nav [\#1375](https://github.com/refinery-platform/refinery-platform/pull/1375) ([jkmarx](https://github.com/jkmarx))
 
 **Fixed bugs:**
 
@@ -475,11 +637,27 @@
 - UI suggests Data set files can be reordered, but they can't [\#1313](https://github.com/refinery-platform/refinery-platform/issues/1313)
 - Metadata table preview does not persist [\#1291](https://github.com/refinery-platform/refinery-platform/issues/1291)
 - DataSet2 - UI Grid Bug [\#1268](https://github.com/refinery-platform/refinery-platform/issues/1268)
+- Jkmarx/data import safari fix [\#1383](https://github.com/refinery-platform/refinery-platform/pull/1383) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/dataset2 analysis bug [\#1368](https://github.com/refinery-platform/refinery-platform/pull/1368) ([jkmarx](https://github.com/jkmarx))
 
 **Closed issues:**
 
 - For the time being, support both old and new IGV [\#1356](https://github.com/refinery-platform/refinery-platform/issues/1356)
 - Integrate ELB with the CloudFormation stack [\#1170](https://github.com/refinery-platform/refinery-platform/issues/1170)
+
+**Merged pull requests:**
+
+- Fix for \#1399 and \#1306 [\#1407](https://github.com/refinery-platform/refinery-platform/pull/1407) ([scottx611x](https://github.com/scottx611x))
+- Scottx611x/check datafile availability fix [\#1398](https://github.com/refinery-platform/refinery-platform/pull/1398) ([scottx611x](https://github.com/scottx611x))
+- Scottx611x/tutorial overlay [\#1392](https://github.com/refinery-platform/refinery-platform/pull/1392) ([scottx611x](https://github.com/scottx611x))
+- Revised help text for upload fields. [\#1391](https://github.com/refinery-platform/refinery-platform/pull/1391) ([ngehlenborg](https://github.com/ngehlenborg))
+- Scottx611x/enable viewing bam in igv [\#1390](https://github.com/refinery-platform/refinery-platform/pull/1390) ([scottx611x](https://github.com/scottx611x))
+- ADMIN was not being used consistently in the templates [\#1381](https://github.com/refinery-platform/refinery-platform/pull/1381) ([mccalluc](https://github.com/mccalluc))
+- Mccalluc/pytest selenium [\#1380](https://github.com/refinery-platform/refinery-platform/pull/1380) ([mccalluc](https://github.com/mccalluc))
+- Change file browser link color when in preview mode. [\#1374](https://github.com/refinery-platform/refinery-platform/pull/1374) ([jkmarx](https://github.com/jkmarx))
+- Rename data-set2 about tab to details tab. [\#1369](https://github.com/refinery-platform/refinery-platform/pull/1369) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/dataset2 refactor [\#1367](https://github.com/refinery-platform/refinery-platform/pull/1367) ([jkmarx](https://github.com/jkmarx))
+- Elastic Load Balancer [\#1319](https://github.com/refinery-platform/refinery-platform/pull/1319) ([drj11](https://github.com/drj11))
 
 ## [v1.3.0](https://github.com/refinery-platform/refinery-platform/tree/v1.3.0) (2016-08-26)
 [Full Changelog](https://github.com/refinery-platform/refinery-platform/compare/v1.2.0...v1.3.0)
@@ -515,6 +693,23 @@
 - caching in file server backend [\#351](https://github.com/refinery-platform/refinery-platform/issues/351)
 - Bring unit tests for file store up to date [\#339](https://github.com/refinery-platform/refinery-platform/issues/339)
 - Create development documentation using Sphinx. [\#304](https://github.com/refinery-platform/refinery-platform/issues/304)
+- Recolor import button and file browser link. [\#1366](https://github.com/refinery-platform/refinery-platform/pull/1366) ([jkmarx](https://github.com/jkmarx))
+- Update ISSUE\_TEMPLATE.md [\#1359](https://github.com/refinery-platform/refinery-platform/pull/1359) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/data import reorganize tabs [\#1345](https://github.com/refinery-platform/refinery-platform/pull/1345) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/data import sample file [\#1335](https://github.com/refinery-platform/refinery-platform/pull/1335) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/data import default selection [\#1334](https://github.com/refinery-platform/refinery-platform/pull/1334) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/data import text update [\#1331](https://github.com/refinery-platform/refinery-platform/pull/1331) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/node group ui update [\#1286](https://github.com/refinery-platform/refinery-platform/pull/1286) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/node group api reformat [\#1263](https://github.com/refinery-platform/refinery-platform/pull/1263) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/metadata upload stripped file [\#1261](https://github.com/refinery-platform/refinery-platform/pull/1261) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/data set2 select all update [\#1234](https://github.com/refinery-platform/refinery-platform/pull/1234) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/node group api update [\#1227](https://github.com/refinery-platform/refinery-platform/pull/1227) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/node group api v2 [\#1214](https://github.com/refinery-platform/refinery-platform/pull/1214) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/data set2 sharing details merge [\#1193](https://github.com/refinery-platform/refinery-platform/pull/1193) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/data set2 fastqc viewer [\#1180](https://github.com/refinery-platform/refinery-platform/pull/1180) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/analysis cancel owner check [\#1177](https://github.com/refinery-platform/refinery-platform/pull/1177) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/add tooltip data set preview [\#1174](https://github.com/refinery-platform/refinery-platform/pull/1174) ([jkmarx](https://github.com/jkmarx))
+- Flekschas/angularize import [\#1167](https://github.com/refinery-platform/refinery-platform/pull/1167) ([flekschas](https://github.com/flekschas))
 
 **Fixed bugs:**
 
@@ -558,6 +753,20 @@
 - DataSet 2 - Assay Attribute API -- Ranks Initially 0 [\#1035](https://github.com/refinery-platform/refinery-platform/issues/1035)
 - Unable to using latest Debian [\#1024](https://github.com/refinery-platform/refinery-platform/issues/1024)
 - figure out why Read the Docs can’t find the djcelery package [\#467](https://github.com/refinery-platform/refinery-platform/issues/467)
+- Jkmarx/data import md5 fix [\#1358](https://github.com/refinery-platform/refinery-platform/pull/1358) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/data import form valid [\#1355](https://github.com/refinery-platform/refinery-platform/pull/1355) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/data set import remove overall bar [\#1354](https://github.com/refinery-platform/refinery-platform/pull/1354) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/data set2 workflow fix [\#1320](https://github.com/refinery-platform/refinery-platform/pull/1320) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/display view fix [\#1297](https://github.com/refinery-platform/refinery-platform/pull/1297) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/data upload multiple file error [\#1296](https://github.com/refinery-platform/refinery-platform/pull/1296) ([jkmarx](https://github.com/jkmarx))
+- Fix conditional for updating current selection. [\#1285](https://github.com/refinery-platform/refinery-platform/pull/1285) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/data set2 attribute filter fix [\#1279](https://github.com/refinery-platform/refinery-platform/pull/1279) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/data set2 select all fix [\#1243](https://github.com/refinery-platform/refinery-platform/pull/1243) ([jkmarx](https://github.com/jkmarx))
+- Fix error in service import. [\#1203](https://github.com/refinery-platform/refinery-platform/pull/1203) ([jkmarx](https://github.com/jkmarx))
+- Add no wrap class to attribute filter count. [\#1178](https://github.com/refinery-platform/refinery-platform/pull/1178) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/analysis timezone bug [\#1173](https://github.com/refinery-platform/refinery-platform/pull/1173) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/data set2 attribute rank bug [\#1169](https://github.com/refinery-platform/refinery-platform/pull/1169) ([jkmarx](https://github.com/jkmarx))
+- Flekschas/satori fixes [\#1165](https://github.com/refinery-platform/refinery-platform/pull/1165) ([flekschas](https://github.com/flekschas))
 
 **Closed issues:**
 
@@ -577,6 +786,48 @@
 - DataSet2 - Implement Launch Analysis Single Input Workflows [\#1038](https://github.com/refinery-platform/refinery-platform/issues/1038)
 - Attribute Order Model Update  [\#891](https://github.com/refinery-platform/refinery-platform/issues/891)
 - Resource performance tests [\#365](https://github.com/refinery-platform/refinery-platform/issues/365)
+
+**Merged pull requests:**
+
+- Jkmarx/dataset2 attribute fix [\#1363](https://github.com/refinery-platform/refinery-platform/pull/1363) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/data import preview alert [\#1357](https://github.com/refinery-platform/refinery-platform/pull/1357) ([jkmarx](https://github.com/jkmarx))
+- Mccalluc/igvjs visualization [\#1349](https://github.com/refinery-platform/refinery-platform/pull/1349) ([mccalluc](https://github.com/mccalluc))
+- Scottx611x/adjust workflow api v2 [\#1328](https://github.com/refinery-platform/refinery-platform/pull/1328) ([scottx611x](https://github.com/scottx611x))
+- Add support for `.fq` FileExtension and `.BCL` FileType/FileExtension [\#1327](https://github.com/refinery-platform/refinery-platform/pull/1327) ([scottx611x](https://github.com/scottx611x))
+- Jkmarx/data set2 prevent empty nodes [\#1290](https://github.com/refinery-platform/refinery-platform/pull/1290) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/analysis run node group [\#1284](https://github.com/refinery-platform/refinery-platform/pull/1284) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/data set2 reset fix [\#1281](https://github.com/refinery-platform/refinery-platform/pull/1281) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/data set2 analyze [\#1274](https://github.com/refinery-platform/refinery-platform/pull/1274) ([jkmarx](https://github.com/jkmarx))
+- Disable spinner and progress bar when running npm and bower [\#1270](https://github.com/refinery-platform/refinery-platform/pull/1270) ([hackdna](https://github.com/hackdna))
+- Override django config [\#1266](https://github.com/refinery-platform/refinery-platform/pull/1266) ([drj11](https://github.com/drj11))
+- On metadata file upload, remove leading/trailing white spaces on all … [\#1259](https://github.com/refinery-platform/refinery-platform/pull/1259) ([jkmarx](https://github.com/jkmarx))
+- Add default to whitelist on reset. [\#1257](https://github.com/refinery-platform/refinery-platform/pull/1257) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/data set name bug [\#1256](https://github.com/refinery-platform/refinery-platform/pull/1256) ([jkmarx](https://github.com/jkmarx))
+- Add Private IP to ALLOWED\_HOSTS [\#1249](https://github.com/refinery-platform/refinery-platform/pull/1249) ([drj11](https://github.com/drj11))
+- Scottx611x/incorrect message fix [\#1236](https://github.com/refinery-platform/refinery-platform/pull/1236) ([scottx611x](https://github.com/scottx611x))
+- Use Django production settings for AWS [\#1231](https://github.com/refinery-platform/refinery-platform/pull/1231) ([drj11](https://github.com/drj11))
+- Scottx611x/dataset api adjustment [\#1229](https://github.com/refinery-platform/refinery-platform/pull/1229) ([scottx611x](https://github.com/scottx611x))
+- Jkmarx/data set2 node group [\#1225](https://github.com/refinery-platform/refinery-platform/pull/1225) ([jkmarx](https://github.com/jkmarx))
+- Bump librarian-puppet version [\#1221](https://github.com/refinery-platform/refinery-platform/pull/1221) ([drj11](https://github.com/drj11))
+- Handle the usual `get` errors and make viz\_manager/views PEP8 compliant [\#1218](https://github.com/refinery-platform/refinery-platform/pull/1218) ([scottx611x](https://github.com/scottx611x))
+- Add users with SSH\_USERS [\#1211](https://github.com/refinery-platform/refinery-platform/pull/1211) ([drj11](https://github.com/drj11))
+- Scottx611x/gzipped files fix [\#1210](https://github.com/refinery-platform/refinery-platform/pull/1210) ([scottx611x](https://github.com/scottx611x))
+- Jkmarx/data set2 about more unit tests [\#1206](https://github.com/refinery-platform/refinery-platform/pull/1206) ([jkmarx](https://github.com/jkmarx))
+- Fix location of solr plugin in AWS [\#1204](https://github.com/refinery-platform/refinery-platform/pull/1204) ([drj11](https://github.com/drj11))
+- Jkmarx/file store api add field [\#1201](https://github.com/refinery-platform/refinery-platform/pull/1201) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/data set2 about updates2 [\#1200](https://github.com/refinery-platform/refinery-platform/pull/1200) ([jkmarx](https://github.com/jkmarx))
+- Add fields to `DataSetResource` [\#1197](https://github.com/refinery-platform/refinery-platform/pull/1197) ([scottx611x](https://github.com/scottx611x))
+- Jkmarx/file store api updates [\#1196](https://github.com/refinery-platform/refinery-platform/pull/1196) ([jkmarx](https://github.com/jkmarx))
+- Scottx611x/gzipped files fix [\#1194](https://github.com/refinery-platform/refinery-platform/pull/1194) ([scottx611x](https://github.com/scottx611x))
+- Get RDS endpoint directly from CloudFormation [\#1189](https://github.com/refinery-platform/refinery-platform/pull/1189) ([drj11](https://github.com/drj11))
+- Scottx611x/auto import of data fix [\#1188](https://github.com/refinery-platform/refinery-platform/pull/1188) ([scottx611x](https://github.com/scottx611x))
+- Scottx611x/delete related pre isa archives [\#1186](https://github.com/refinery-platform/refinery-platform/pull/1186) ([scottx611x](https://github.com/scottx611x))
+- Provide simple strings that are configurable at the time of deployment [\#1184](https://github.com/refinery-platform/refinery-platform/pull/1184) ([scottx611x](https://github.com/scottx611x))
+- Scottx611x/admin public group fix [\#1183](https://github.com/refinery-platform/refinery-platform/pull/1183) ([scottx611x](https://github.com/scottx611x))
+- Celery amqp import error [\#1179](https://github.com/refinery-platform/refinery-platform/pull/1179) ([hackdna](https://github.com/hackdna))
+- Scottx611x/empty duplicate slug fix [\#1172](https://github.com/refinery-platform/refinery-platform/pull/1172) ([scottx611x](https://github.com/scottx611x))
+- Scottx611x/manual changes from release 1.2.0 [\#1168](https://github.com/refinery-platform/refinery-platform/pull/1168) ([scottx611x](https://github.com/scottx611x))
+- Scottx611x/delete related isa archvies [\#1160](https://github.com/refinery-platform/refinery-platform/pull/1160) ([scottx611x](https://github.com/scottx611x))
 
 ## [v1.2.0](https://github.com/refinery-platform/refinery-platform/tree/v1.2.0) (2016-05-23)
 [Full Changelog](https://github.com/refinery-platform/refinery-platform/compare/v1.1.0...v1.2.0)
@@ -642,6 +893,26 @@
 - \*\[4\]\* stop requiring page reloads in sample selection interface [\#301](https://github.com/refinery-platform/refinery-platform/issues/301)
 - \*\[8\]\* correct notifications about error states [\#298](https://github.com/refinery-platform/refinery-platform/issues/298)
 - allow user to view only those table rows selected with node selection [\#259](https://github.com/refinery-platform/refinery-platform/issues/259)
+- Jkmarx/paired analysis enhance properties [\#1162](https://github.com/refinery-platform/refinery-platform/pull/1162) ([jkmarx](https://github.com/jkmarx))
+- Download files in new tab. [\#1131](https://github.com/refinery-platform/refinery-platform/pull/1131) ([jkmarx](https://github.com/jkmarx))
+- Flekschas/satori fixes [\#1120](https://github.com/refinery-platform/refinery-platform/pull/1120) ([flekschas](https://github.com/flekschas))
+- Flekschas/email login [\#1115](https://github.com/refinery-platform/refinery-platform/pull/1115) ([flekschas](https://github.com/flekschas))
+- Flekschas/upload fixes [\#1088](https://github.com/refinery-platform/refinery-platform/pull/1088) ([flekschas](https://github.com/flekschas))
+- Webworkerify MD5 calculation to keep the UI usable when a large file is checked. [\#1087](https://github.com/refinery-platform/refinery-platform/pull/1087) ([flekschas](https://github.com/flekschas))
+- Swap caret to table for data-set-explorer link. [\#1065](https://github.com/refinery-platform/refinery-platform/pull/1065) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/add file download tool tip [\#1045](https://github.com/refinery-platform/refinery-platform/pull/1045) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/add file download data set2 [\#1042](https://github.com/refinery-platform/refinery-platform/pull/1042) ([jkmarx](https://github.com/jkmarx))
+- Flekschas/repo mode [\#1040](https://github.com/refinery-platform/refinery-platform/pull/1040) ([flekschas](https://github.com/flekschas))
+- Tag the root EBS [\#1037](https://github.com/refinery-platform/refinery-platform/pull/1037) ([drj11](https://github.com/drj11))
+- Flekschas/dashboard preview tweaks [\#1033](https://github.com/refinery-platform/refinery-platform/pull/1033) ([flekschas](https://github.com/flekschas))
+- Flekschas/rex paper [\#994](https://github.com/refinery-platform/refinery-platform/pull/994) ([flekschas](https://github.com/flekschas))
+- Jkmarx/data set fix solr params [\#977](https://github.com/refinery-platform/refinery-platform/pull/977) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/data set encode facet filters [\#974](https://github.com/refinery-platform/refinery-platform/pull/974) ([jkmarx](https://github.com/jkmarx))
+- Flekschas/node relationship refactoring [\#948](https://github.com/refinery-platform/refinery-platform/pull/948) ([flekschas](https://github.com/flekschas))
+- Flekschas/node mapping refactoring [\#947](https://github.com/refinery-platform/refinery-platform/pull/947) ([flekschas](https://github.com/flekschas))
+- Flekschas/ontology unit annotation fix [\#940](https://github.com/refinery-platform/refinery-platform/pull/940) ([flekschas](https://github.com/flekschas))
+- Flake8 [\#905](https://github.com/refinery-platform/refinery-platform/pull/905) ([flekschas](https://github.com/flekschas))
+- Dashboard exploration neo4j outsourcing [\#882](https://github.com/refinery-platform/refinery-platform/pull/882) ([flekschas](https://github.com/flekschas))
 
 **Fixed bugs:**
 
@@ -720,6 +991,22 @@
 - Analyses successfully completed in Galaxy are stuck at 100% in the execution stage. [\#408](https://github.com/refinery-platform/refinery-platform/issues/408)
 - Analysis monitoring checks analysis status before a history is created in Galaxy. [\#282](https://github.com/refinery-platform/refinery-platform/issues/282)
 - files with file extensions not registered in Refinery will not be assigned to new derived data file nodes [\#250](https://github.com/refinery-platform/refinery-platform/issues/250)
+- Fix viewing property bug with correcting data scope. [\#1143](https://github.com/refinery-platform/refinery-platform/pull/1143) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/analyze pair mapping bug [\#1129](https://github.com/refinery-platform/refinery-platform/pull/1129) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/analyze modal delete template [\#1127](https://github.com/refinery-platform/refinery-platform/pull/1127) ([jkmarx](https://github.com/jkmarx))
+- Add button styling which resolves issue \#1123. [\#1126](https://github.com/refinery-platform/refinery-platform/pull/1126) ([jkmarx](https://github.com/jkmarx))
+- Flekschas/satori fixes [\#1120](https://github.com/refinery-platform/refinery-platform/pull/1120) ([flekschas](https://github.com/flekschas))
+- Jkmarx/analysis monitor bug2 [\#1119](https://github.com/refinery-platform/refinery-platform/pull/1119) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/dashboard analysis link [\#1105](https://github.com/refinery-platform/refinery-platform/pull/1105) ([jkmarx](https://github.com/jkmarx))
+- Flekschas/upload prod fix [\#1096](https://github.com/refinery-platform/refinery-platform/pull/1096) ([flekschas](https://github.com/flekschas))
+- Jkmarx/analysis disable emails [\#1084](https://github.com/refinery-platform/refinery-platform/pull/1084) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/analysis cancel bug [\#1060](https://github.com/refinery-platform/refinery-platform/pull/1060) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/fix igv bug [\#1059](https://github.com/refinery-platform/refinery-platform/pull/1059) ([jkmarx](https://github.com/jkmarx))
+- Correct missing partial address. [\#1051](https://github.com/refinery-platform/refinery-platform/pull/1051) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/analyses timeview bug [\#1049](https://github.com/refinery-platform/refinery-platform/pull/1049) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/attribute api bug fix [\#1034](https://github.com/refinery-platform/refinery-platform/pull/1034) ([jkmarx](https://github.com/jkmarx))
+- Flekschas/rex paper [\#994](https://github.com/refinery-platform/refinery-platform/pull/994) ([flekschas](https://github.com/flekschas))
+- Flekschas/node mapping refactoring [\#947](https://github.com/refinery-platform/refinery-platform/pull/947) ([flekschas](https://github.com/flekschas))
 
 **Closed issues:**
 
@@ -764,6 +1051,71 @@
 - explore possibility of distributing Refinery \(+ Galaxy\) as an Amazon Machine Image [\#376](https://github.com/refinery-platform/refinery-platform/issues/376)
 - explore advantages \(and disadvantages\) of using a model to manage file types [\#305](https://github.com/refinery-platform/refinery-platform/issues/305)
 - Update to Celery 3.x [\#248](https://github.com/refinery-platform/refinery-platform/issues/248)
+
+**Merged pull requests:**
+
+- Jkmarx/data set config button styling [\#1163](https://github.com/refinery-platform/refinery-platform/pull/1163) ([jkmarx](https://github.com/jkmarx))
+- AWS Django settings [\#1156](https://github.com/refinery-platform/refinery-platform/pull/1156) ([drj11](https://github.com/drj11))
+- Add configurations for data volume [\#1144](https://github.com/refinery-platform/refinery-platform/pull/1144) ([drj11](https://github.com/drj11))
+- Add configuration for REFINERY\_DATA\_IMPORT\_DIR [\#1142](https://github.com/refinery-platform/refinery-platform/pull/1142) ([drj11](https://github.com/drj11))
+- Cleaning up ADMIN\_PASSWORD [\#1141](https://github.com/refinery-platform/refinery-platform/pull/1141) ([drj11](https://github.com/drj11))
+- Scottx611x/user registration edits [\#1132](https://github.com/refinery-platform/refinery-platform/pull/1132) ([hackdna](https://github.com/hackdna))
+- Move AWS config into single file [\#1130](https://github.com/refinery-platform/refinery-platform/pull/1130) ([drj11](https://github.com/drj11))
+- Scottx611x/own public datasets [\#1124](https://github.com/refinery-platform/refinery-platform/pull/1124) ([scottx611x](https://github.com/scottx611x))
+- Jkmarx/server date time zone aware [\#1122](https://github.com/refinery-platform/refinery-platform/pull/1122) ([jkmarx](https://github.com/jkmarx))
+- Add filter for analysis\_group column. [\#1112](https://github.com/refinery-platform/refinery-platform/pull/1112) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/data set2 files number [\#1107](https://github.com/refinery-platform/refinery-platform/pull/1107) ([jkmarx](https://github.com/jkmarx))
+- Jkmarx/data set2 attribute filter [\#1104](https://github.com/refinery-platform/refinery-platform/pull/1104) ([jkmarx](https://github.com/jkmarx))
+- Make the AWS EC2 instance key name configurable [\#1102](https://github.com/refinery-platform/refinery-platform/pull/1102) ([drj11](https://github.com/drj11))
+- Store stack name in file and use UTC [\#1101](https://github.com/refinery-platform/refinery-platform/pull/1101) ([drj11](https://github.com/drj11))
+- Scottx611x/galaxy large file uploads [\#1095](https://github.com/refinery-platform/refinery-platform/pull/1095) ([scottx611x](https://github.com/scottx611x))
+- Scottx611x/galaxy large file uploads [\#1092](https://github.com/refinery-platform/refinery-platform/pull/1092) ([scottx611x](https://github.com/scottx611x))
+- Update analysis link on dashboard analysis list. [\#1091](https://github.com/refinery-platform/refinery-platform/pull/1091) ([jkmarx](https://github.com/jkmarx))
+- Minor fixes for aws-config defaults [\#1086](https://github.com/refinery-platform/refinery-platform/pull/1086) ([drj11](https://github.com/drj11))
+- Flekschas/datasets group filter [\#1085](https://github.com/refinery-platform/refinery-platform/pull/1085) ([flekschas](https://github.com/flekschas))
+- Single CloudFormation stack [\#1080](https://github.com/refinery-platform/refinery-platform/pull/1080) ([drj11](https://github.com/drj11))
+- Flekschas/ng strict di [\#1078](https://github.com/refinery-platform/refinery-platform/pull/1078) ([flekschas](https://github.com/flekschas))
+- Jkmarx/analysis link removal [\#1075](https://github.com/refinery-platform/refinery-platform/pull/1075) ([jkmarx](https://github.com/jkmarx))
+- Set `analysis\_status` properly to alleviate issue of overall state be… [\#1067](https://github.com/refinery-platform/refinery-platform/pull/1067) ([scottx611x](https://github.com/scottx611x))
+- Refactoring how aws region is discovered [\#1036](https://github.com/refinery-platform/refinery-platform/pull/1036) ([drj11](https://github.com/drj11))
+- Jkmarx/data set attribute util [\#1032](https://github.com/refinery-platform/refinery-platform/pull/1032) ([jkmarx](https://github.com/jkmarx))
+- Flekschas/ui fixes [\#1031](https://github.com/refinery-platform/refinery-platform/pull/1031) ([flekschas](https://github.com/flekschas))
+- Add a `Name` tag for EC2 Web UI [\#1029](https://github.com/refinery-platform/refinery-platform/pull/1029) ([drj11](https://github.com/drj11))
+- Move solr data to persistent volume [\#1027](https://github.com/refinery-platform/refinery-platform/pull/1027) ([drj11](https://github.com/drj11))
+- Flekschas/eslint [\#1023](https://github.com/refinery-platform/refinery-platform/pull/1023) ([flekschas](https://github.com/flekschas))
+- Django superuser \(admin\) has configurable password [\#1004](https://github.com/refinery-platform/refinery-platform/pull/1004) ([drj11](https://github.com/drj11))
+- Return only the relative url, but still use the full url in vizualiza… [\#993](https://github.com/refinery-platform/refinery-platform/pull/993) ([scottx611x](https://github.com/scottx611x))
+- Jkmarx/data set infinite scroll [\#987](https://github.com/refinery-platform/refinery-platform/pull/987) ([jkmarx](https://github.com/jkmarx))
+- Scottx611x/galaxy deletion [\#984](https://github.com/refinery-platform/refinery-platform/pull/984) ([scottx611x](https://github.com/scottx611x))
+- Scottx611x/file extension rework [\#983](https://github.com/refinery-platform/refinery-platform/pull/983) ([scottx611x](https://github.com/scottx611x))
+- create the guest account as an inactive account [\#979](https://github.com/refinery-platform/refinery-platform/pull/979) ([drj11](https://github.com/drj11))
+- Configurable Site URL [\#976](https://github.com/refinery-platform/refinery-platform/pull/976) ([drj11](https://github.com/drj11))
+- Fix Apache's MEDIA\_ROOT serving directory. [\#953](https://github.com/refinery-platform/refinery-platform/pull/953) ([drj11](https://github.com/drj11))
+- Flekschas/update ui dependencies [\#951](https://github.com/refinery-platform/refinery-platform/pull/951) ([flekschas](https://github.com/flekschas))
+- Fix typo in erb syntax for supervisord.conf [\#941](https://github.com/refinery-platform/refinery-platform/pull/941) ([drj11](https://github.com/drj11))
+- Jkmarx/data set attribute filter [\#939](https://github.com/refinery-platform/refinery-platform/pull/939) ([jkmarx](https://github.com/jkmarx))
+- template supervisord.conf for AWS [\#937](https://github.com/refinery-platform/refinery-platform/pull/937) ([drj11](https://github.com/drj11))
+- Choose an availability zone at random [\#929](https://github.com/refinery-platform/refinery-platform/pull/929) ([drj11](https://github.com/drj11))
+- Dataset table angularize [\#925](https://github.com/refinery-platform/refinery-platform/pull/925) ([jkmarx](https://github.com/jkmarx))
+- Add aws-config template [\#922](https://github.com/refinery-platform/refinery-platform/pull/922) ([drj11](https://github.com/drj11))
+- automatically create IAM user and get SMTP credentials [\#921](https://github.com/refinery-platform/refinery-platform/pull/921) ([drj11](https://github.com/drj11))
+- Create fresh role for EC2 instance [\#913](https://github.com/refinery-platform/refinery-platform/pull/913) ([drj11](https://github.com/drj11))
+- Use `file\_ext` in place of `data\_type` as per http://bit.ly/24pDamC [\#908](https://github.com/refinery-platform/refinery-platform/pull/908) ([scottx611x](https://github.com/scottx611x))
+- Integrate with AWS SES [\#899](https://github.com/refinery-platform/refinery-platform/pull/899) ([drj11](https://github.com/drj11))
+- Pre commit hook [\#898](https://github.com/refinery-platform/refinery-platform/pull/898) ([flekschas](https://github.com/flekschas))
+- Analysis monitor ui [\#889](https://github.com/refinery-platform/refinery-platform/pull/889) ([jkmarx](https://github.com/jkmarx))
+- Scottx611x/django 1.6 upgrade [\#886](https://github.com/refinery-platform/refinery-platform/pull/886) ([scottx611x](https://github.com/scottx611x))
+- Put filesystem directly on external device [\#884](https://github.com/refinery-platform/refinery-platform/pull/884) ([drj11](https://github.com/drj11))
+- Set the Availability Zone for the new EC2 instance [\#881](https://github.com/refinery-platform/refinery-platform/pull/881) ([drj11](https://github.com/drj11))
+- Fix AWS issues with RDS [\#880](https://github.com/refinery-platform/refinery-platform/pull/880) ([drj11](https://github.com/drj11))
+- tag AWS resources [\#874](https://github.com/refinery-platform/refinery-platform/pull/874) ([drj11](https://github.com/drj11))
+- Fixing the postgresql rules on AWS [\#873](https://github.com/refinery-platform/refinery-platform/pull/873) ([drj11](https://github.com/drj11))
+- Upgrade to Celery 3.1 and django-celery 3.1 [\#871](https://github.com/refinery-platform/refinery-platform/pull/871) ([hackdna](https://github.com/hackdna))
+- Move AWS config into a directory [\#870](https://github.com/refinery-platform/refinery-platform/pull/870) ([drj11](https://github.com/drj11))
+- Connect to pre-existing RDS [\#867](https://github.com/refinery-platform/refinery-platform/pull/867) ([drj11](https://github.com/drj11))
+- Fix postgresql for "vagrant provision" [\#865](https://github.com/refinery-platform/refinery-platform/pull/865) ([drj11](https://github.com/drj11))
+- fix the git repo clone on AWS [\#862](https://github.com/refinery-platform/refinery-platform/pull/862) ([drj11](https://github.com/drj11))
+- Connect to pre-existing RDS [\#858](https://github.com/refinery-platform/refinery-platform/pull/858) ([drj11](https://github.com/drj11))
 
 ## [v1.1.0](https://github.com/refinery-platform/refinery-platform/tree/v1.1.0) (2016-01-14)
 [Full Changelog](https://github.com/refinery-platform/refinery-platform/compare/v1.0.0...v1.1.0)
@@ -905,6 +1257,12 @@
 - Upload data analysis workflows to the Galaxy toolshed. [\#290](https://github.com/refinery-platform/refinery-platform/issues/290)
 - Clicking "View in IGV" multiple times in quick succession with lead to multiple sets of launch buttons in the dialog [\#7](https://github.com/refinery-platform/refinery-platform/issues/7)
 
+**Merged pull requests:**
+
+- Document how to delete a stack [\#846](https://github.com/refinery-platform/refinery-platform/pull/846) ([drj11](https://github.com/drj11))
+- All the puppet code in one place [\#828](https://github.com/refinery-platform/refinery-platform/pull/828) ([drj11](https://github.com/drj11))
+- Deploy on Amazon AWS [\#798](https://github.com/refinery-platform/refinery-platform/pull/798) ([drj11](https://github.com/drj11))
+
 ## [v1.0.0](https://github.com/refinery-platform/refinery-platform/tree/v1.0.0) (2015-09-17)
 [Full Changelog](https://github.com/refinery-platform/refinery-platform/compare/v0.0.4...v1.0.0)
 
@@ -1012,6 +1370,10 @@
 - Add attribution section to license [\#320](https://github.com/refinery-platform/refinery-platform/issues/320)
 - explore django-pipeline for JavaScript and CSS packaging [\#272](https://github.com/refinery-platform/refinery-platform/issues/272)
 - remove old styles in static/core & static/galaxy-connector [\#271](https://github.com/refinery-platform/refinery-platform/issues/271)
+
+**Merged pull requests:**
+
+- Only issue warning when provisioning. [\#667](https://github.com/refinery-platform/refinery-platform/pull/667) ([drj11](https://github.com/drj11))
 
 ## [v0.0.4](https://github.com/refinery-platform/refinery-platform/tree/v0.0.4) (2015-08-11)
 [Full Changelog](https://github.com/refinery-platform/refinery-platform/compare/v0.0.2...v0.0.4)

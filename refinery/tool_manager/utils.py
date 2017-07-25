@@ -4,11 +4,12 @@ import logging
 import os
 import uuid
 
-from bioblend.galaxy.client import ConnectionError
 from django.conf import settings
 from django.contrib import admin
 from django.db import transaction
 from django.utils import timezone
+
+from bioblend.galaxy.client import ConnectionError
 from django_docker_engine.docker_utils import DockerClientWrapper
 from jsonschema import RefResolver, ValidationError, validate
 
@@ -196,10 +197,10 @@ def create_tool_definition(annotation_data):
 @transaction.atomic
 def create_tool(tool_launch_configuration, user_instance):
     """
-   :param tool_launch_configuration: dict of data that represents a Tool
-   :param user_instance: User object that made the request to create said Tool
-   :returns: The created Tool object
-   """
+    :param tool_launch_configuration: dict of data that represents a Tool
+    :param user_instance: User object that made the request to create said Tool
+    :returns: The created Tool object
+    """
     # NOTE: that the usual exceptions for the get() aren't handled because
     # we're in the scope of an atomic transaction
     tool_definition = ToolDefinition.objects.get(
@@ -223,10 +224,10 @@ def create_tool(tool_launch_configuration, user_instance):
         )
 
     tool.set_owner(user_instance)
-    tool.update_file_relationships_string()
+    tool.update_file_relationships_with_urls()
 
     try:
-        nesting = tool.get_file_relationships()
+        nesting = tool.get_file_relationships_urls()
     except (SyntaxError, ValueError) as e:
         raise RuntimeError(
             "ToolLaunchConfiguration's `file_relationships` could not be "
@@ -256,7 +257,7 @@ def create_tool_analysis(validated_analysis_config):
             validated_analysis_config
         )
     )
-    custom_name = validated_analysis_config["custom_name"]
+    name = validated_analysis_config["name"]
     current_workflow = common_analysis_objects["current_workflow"]
     data_set = common_analysis_objects["data_set"]
     user = common_analysis_objects["user"]
@@ -269,8 +270,9 @@ def create_tool_analysis(validated_analysis_config):
         raise RuntimeError("Couldn't fetch Tool from UUID: {}".format(e))
 
     analysis = AnalysisFactory(
+        uuid=str(uuid.uuid4()),
         summary="Analysis run for: {}".format(tool),
-        name=custom_name,
+        name=name,
         project=user.profile.catch_all_project,
         data_set=data_set,
         workflow=current_workflow,

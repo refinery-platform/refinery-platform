@@ -1,12 +1,11 @@
 import logging
-import time
+from optparse import make_option
 import os
 import sys
-from optparse import make_option
+import time
 
 from django.conf import settings
 from django.core.management.base import BaseCommand
-
 
 logger = logging.getLogger(__name__)
 

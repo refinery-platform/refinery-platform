@@ -3,8 +3,8 @@ Created on November 29, 2012
 
 @author: Psalm
 '''
-import sys
 from optparse import make_option
+import sys
 
 from django.contrib.auth.models import User
 from django.contrib.sites.models import Site

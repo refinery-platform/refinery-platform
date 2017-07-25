@@ -9,15 +9,20 @@ from guardian.utils import get_anonymous_user
 import mock
 
 from analysis_manager.models import AnalysisStatus
-from analysis_manager.tasks import run_analysis
-from analysis_manager.utils import (create_analysis,
+from analysis_manager.tasks import _refinery_file_import, run_analysis
+from analysis_manager.utils import (_fetch_node_relationship, _fetch_node_set,
+                                    create_analysis,
                                     fetch_objects_required_for_analysis,
                                     validate_analysis_config)
-from analysis_manager.views import run
-from core.models import Analysis, DataSet, Workflow, WorkflowEngine
+from analysis_manager.views import analysis_status, run
+from core.models import (Analysis, DataSet, NodeRelationship, NodeSet, Project,
+                         Workflow, WorkflowEngine)
+from data_set_manager.models import Assay
 from factory_boy.utils import (create_dataset_with_necessary_models,
                                make_analyses_with_single_dataset)
 from galaxy_connector.models import Instance
+from tool_manager.models import ToolDefinition
+from tool_manager.tests import ToolManagerTestBase
 
 
 class AnalysisConfigTests(TestCase):
@@ -31,7 +36,7 @@ class AnalysisConfigTests(TestCase):
                                  analysis_type,
                                  missing_a_field=False,
                                  valid_analysis_type_uuid=True,
-                                 valid_custom_name=True,
+                                 valid_name=True,
                                  valid_study_uuid=True,
                                  valid_user_id=True,
                                  valid_workflow_uuid=True):
@@ -57,8 +62,8 @@ class AnalysisConfigTests(TestCase):
         if analysis_type == "Tool":
             analysis_config["toolUuid"] = analysis_type_uuid
 
-        analysis_config["custom_name"] = (
-            "Valid Custom Name" if valid_custom_name else []
+        analysis_config["name"] = (
+            "Valid Custom Name" if valid_name else []
         )
 
         analysis_config["studyUuid"] = (
@@ -199,9 +204,17 @@ class AnalysisUtilsTests(TestCase):
             workflow_engine=self.workflow_engine
         )
         self.user = get_anonymous_user()
+        project = Project.objects.create(
+            name="Catch-All Project",
+            is_catch_all=True
+        )
+        project.set_owner(self.user)
+        self.user.profile.catch_all_project = project
+        self.user.profile.save()
 
         self.dataset = create_dataset_with_necessary_models()
         self.study = self.dataset.get_latest_study()
+        self.assay = Assay.objects.create(study=self.study)
 
     def test_create_nodeset_analysis(self):
         with mock.patch(
@@ -209,7 +222,7 @@ class AnalysisUtilsTests(TestCase):
         ) as create_nodeset_analysis_mock:
             create_analysis(
                 {
-                    "custom_name": "Valid NodeSet Analysis Config",
+                    "name": "Valid NodeSet Analysis Config",
                     "studyUuid": self.study.uuid,
                     "nodeSetUuid": str(uuid.uuid4()),
                     "user_id": self.user.id,
@@ -224,7 +237,7 @@ class AnalysisUtilsTests(TestCase):
         ) as create_noderelationship_analysis_mock:
             create_analysis(
                 {
-                    "custom_name": "Valid NodeRelationship Analysis Config",
+                    "name": "Valid NodeRelationship Analysis Config",
                     "studyUuid": self.study.uuid,
                     "nodeRelationshipUuid": str(uuid.uuid4()),
                     "user_id": self.user.id,
@@ -239,7 +252,7 @@ class AnalysisUtilsTests(TestCase):
         ) as create_tool_analysis_mock:
             create_analysis(
                 {
-                    "custom_name": "Valid Tool Analysis Config",
+                    "name": "Valid Tool Analysis Config",
                     "studyUuid": self.study.uuid,
                     "toolUuid": str(uuid.uuid4()),
                     "user_id": self.user.id,
@@ -309,39 +322,149 @@ class AnalysisUtilsTests(TestCase):
             )
             self.assertIn("Couldn't fetch DataSet", context.exception.message)
 
+    def test_create_noderelationship_analysis_with_user_provided_name(self):
+        name = "This is a user provided name"
+        with mock.patch(
+            "analysis_manager.utils._fetch_node_relationship"
+        ) as create_noderelationship_analysis_mock:
+            analysis = create_analysis(
+                {
+                    "name": name,
+                    "studyUuid": self.study.uuid,
+                    "nodeRelationshipUuid": str(uuid.uuid4()),
+                    "user_id": self.user.id,
+                    "workflowUuid": self.workflow.uuid
+                }
+            )
+            self.assertTrue(create_noderelationship_analysis_mock.called)
+            self.assertEqual(analysis.name, name)
 
-class AnalysisRunViewTests(TestCase):
+    def test_create_noderelationship_analysis_without_user_provided_name(self):
+        name = ""
+        with mock.patch(
+                "analysis_manager.utils._fetch_node_relationship"
+        ) as create_noderelationship_analysis_mock:
+            analysis = create_analysis(
+                {
+                    "name": name,
+                    "studyUuid": self.study.uuid,
+                    "nodeRelationshipUuid": str(uuid.uuid4()),
+                    "user_id": self.user.id,
+                    "workflowUuid": self.workflow.uuid
+                }
+            )
+            self.assertTrue(create_noderelationship_analysis_mock.called)
+            self.assertNotEqual(analysis.name, name)
+
+    @mock.patch("analysis_manager.utils._fetch_solr_uuids")
+    @mock.patch("analysis_manager.utils._associate_workflow_data_inputs")
+    def test_create_nodeset_analysis_with_user_provided_name(
+        self, get_solr_uuids_mock, workflow_inputs_mock
+    ):
+        name = "This is a user provided name"
+        with mock.patch(
+            "analysis_manager.utils._fetch_node_set"
+        ) as create_nodeset_analysis_mock:
+            analysis = create_analysis(
+                {
+                    "name": name,
+                    "studyUuid": self.study.uuid,
+                    "nodeSetUuid": str(uuid.uuid4()),
+                    "user_id": self.user.id,
+                    "workflowUuid": self.workflow.uuid
+                }
+            )
+            self.assertTrue(create_nodeset_analysis_mock.called)
+            self.assertEqual(analysis.name, name)
+        self.assertTrue(get_solr_uuids_mock.called)
+        self.assertTrue(workflow_inputs_mock.called)
+
+    @mock.patch("analysis_manager.utils._fetch_solr_uuids")
+    @mock.patch("analysis_manager.utils._associate_workflow_data_inputs")
+    def test_create_nodeset_analysis_without_user_provided_name(
+        self, get_solr_uuids_mock, workflow_inputs_mock
+    ):
+        name = ""
+        with mock.patch(
+            "analysis_manager.utils._fetch_node_set"
+        ) as create_noderelationship_analysis_mock:
+            analysis = create_analysis(
+                {
+                    "name": name,
+                    "studyUuid": self.study.uuid,
+                    "nodeSetUuid": str(uuid.uuid4()),
+                    "user_id": self.user.id,
+                    "workflowUuid": self.workflow.uuid
+                }
+            )
+            self.assertTrue(create_noderelationship_analysis_mock.called)
+            self.assertNotEqual(analysis.name, name)
+        self.assertTrue(get_solr_uuids_mock.called)
+        self.assertTrue(workflow_inputs_mock.called)
+
+    def test_fetch_nodeset_valid_uuid(self):
+        nodeset = NodeSet.objects.create(
+            study=self.study,
+            assay=self.assay
+        )
+        self.assertEqual(
+            nodeset,
+            _fetch_node_set(nodeset.uuid)
+        )
+
+    def test_fetch_nodeset_invalid_uuid(self):
+        with self.assertRaises(RuntimeError):
+            _fetch_node_set(str(uuid.uuid4()))
+
+    def test_fetch_node_relationship_valid_uuid(self):
+        node_relationship = NodeRelationship.objects.create(
+            study=self.study,
+            assay=self.assay
+        )
+        self.assertEqual(
+            node_relationship,
+            _fetch_node_relationship(node_relationship.uuid)
+        )
+
+    def test_fetch_node_relationship_invalid_uuid(self):
+        with self.assertRaises(RuntimeError):
+            _fetch_node_relationship(str(uuid.uuid4()))
+
+
+class AnalysisViewsTests(ToolManagerTestBase):
     """
-    Test `analysis_manager.views.run`
+    Tests for `analysis_manager.views`
     """
     def setUp(self):
+        super(AnalysisViewsTests, self).setUp()
         self.request_factory = RequestFactory()
-        self.username = 'coffee_lover'
-        self.password = 'coffeecoffee'
-        self.user = User.objects.create_user(self.username, '', self.password)
-        self.user.id = 1
         make_analyses_with_single_dataset(1, self.user)
         self.analysis = Analysis.objects.all()[0]
-        self.view_root = "/analysis_manager/run/"
+        AnalysisStatus.objects.create(analysis=self.analysis)
+
+        self.run_url_root = "/analysis_manager/run/"
+        self.status_url_root = "/analysis_manager/{}/".format(
+            self.analysis.uuid
+        )
 
     def test_analysis_run_view_invalid_http_verbs(self):
         # GET PUT PATCH DELETE etc.
         response = self.client.get(
-            self.view_root,
+            self.run_url_root,
             HTTP_X_REQUESTED_WITH='XMLHttpRequest'
         )
         self.assertEqual(type(response), HttpResponseNotAllowed)
 
         response = self.client.delete(
-            self.view_root,
+            self.run_url_root,
             HTTP_X_REQUESTED_WITH='XMLHttpRequest'
         )
         self.assertEqual(type(response), HttpResponseNotAllowed)
 
         response = self.client.put(
-            self.view_root,
+            self.run_url_root,
             data={
-                "custom_name": "Valid Tool Analysis Config",
+                "name": "Valid Tool Analysis Config",
                 "studyUuid": str(uuid.uuid4()),
                 "toolUuid": str(uuid.uuid4()),
                 "user_id": 1,
@@ -352,9 +475,9 @@ class AnalysisRunViewTests(TestCase):
         self.assertEqual(type(response), HttpResponseNotAllowed)
 
         response = self.client.patch(
-            self.view_root,
+            self.run_url_root,
             data={
-                "custom_name": "Valid Tool Analysis Config",
+                "name": "Valid Tool Analysis Config",
                 "studyUuid": str(uuid.uuid4()),
                 "toolUuid": str(uuid.uuid4()),
                 "workflowUuid": str(uuid.uuid4())
@@ -369,9 +492,9 @@ class AnalysisRunViewTests(TestCase):
             return_value=self.analysis
         ) as create_analysis_mock:
             request = self.request_factory.post(
-                self.view_root,
+                self.run_url_root,
                 json.dumps({
-                    "custom_name": "Valid Tool Analysis Config",
+                    "name": "Valid Tool Analysis Config",
                     "studyUuid": str(uuid.uuid4()),
                     "toolUuid": str(uuid.uuid4()),
                     "workflowUuid": str(uuid.uuid4())
@@ -394,9 +517,9 @@ class AnalysisRunViewTests(TestCase):
 
     def test_analysis_run_view_invalid_data(self):
         response = self.client.post(
-            self.view_root,
+            self.run_url_root,
             data=json.dumps({
-                "custom_name": "Valid Tool Analysis Config",
+                "name": "Valid Tool Analysis Config",
                 "studyUuid": str(uuid.uuid4()),
                 "toolUuid": str(uuid.uuid4()),
                 "workflowUuid": str(uuid.uuid4())
@@ -408,15 +531,73 @@ class AnalysisRunViewTests(TestCase):
 
     def test_analysis_view_non_ajax_request(self):
         response = self.client.post(
-            self.view_root,
+            self.run_url_root,
             data={
-                "custom_name": "Valid Tool Analysis Config",
+                "name": "Valid Tool Analysis Config",
                 "studyUuid": str(uuid.uuid4()),
                 "toolUuid": str(uuid.uuid4()),
                 "workflowUuid": str(uuid.uuid4())
             }
         )
         self.assertEqual(type(response), HttpResponseBadRequest)
+
+    @mock.patch.object(AnalysisStatus,
+                       "galaxy_file_import_state",
+                       return_value="coffee")
+    def test_non_tool_analysis_calls_old_galaxy_file_import_state(
+            self,
+            file_import_state_mock
+    ):
+        request = self.request_factory.get(
+            self.status_url_root,
+            content_type="application/json",
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest'
+        )
+        request.user = self.user
+        response = analysis_status(request, self.analysis.uuid)
+        self.assertTrue(file_import_state_mock.called)
+
+        self.assertEqual(
+            json.loads(response.content),
+            {
+                "galaxyAnalysis": [],
+                "refineryImport": [],
+                "galaxyImport": "coffee",
+                "overall": "INITIALIZED",
+                "galaxyExport": []
+            }
+        )
+
+    @mock.patch.object(AnalysisStatus,
+                       "tool_based_galaxy_file_import_state",
+                       return_value="coffee")
+    def test_tool_analysis_calls_tool_based_galaxy_file_import_state(
+            self,
+            file_import_state_mock
+    ):
+        self.create_valid_tool(ToolDefinition.WORKFLOW)
+        self.status_url_root = "/analysis_manager/{}/".format(
+            self.tool.analysis.uuid
+        )
+        request = self.request_factory.get(
+            self.status_url_root,
+            content_type="application/json",
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest'
+        )
+        request.user = self.user
+        response = analysis_status(request, self.tool.analysis.uuid)
+        self.assertTrue(file_import_state_mock.called)
+
+        self.assertEqual(
+            json.loads(response.content),
+            {
+                "galaxyAnalysis": [],
+                "refineryImport": [],
+                "galaxyImport": "coffee",
+                "overall": "INITIALIZED",
+                "galaxyExport": []
+            }
+        )
 
 
 class AnalysisRunTests(TestCase):
@@ -455,3 +636,25 @@ class AnalysisRunTests(TestCase):
         self.assertTrue(galaxy_import_mock.called)
         self.assertTrue(galaxy_export_mock.called)
         self.assertTrue(attach_outputs_mock.called)
+
+    def test_file_import_task_termination_on_analysis_failure(self):
+        with mock.patch(
+            "core.models.Analysis.terminate_file_import_tasks"
+        ) as terminate_mock:
+            self.analysis.set_status(Analysis.FAILURE_STATUS)
+            run_analysis(self.analysis.uuid)
+            self.assertTrue(terminate_mock.called)
+
+    @mock.patch.object(run_analysis, "retry", side_effect=None)
+    def test_get_input_file_uuid_list_gets_called_in_refinery_import(
+            self, retry_mock
+    ):
+        with mock.patch(
+                "core.models.Analysis.get_input_file_uuid_list"
+        ) as get_uuid_list_mock:
+            _refinery_file_import(self.analysis.uuid)
+            self.assertTrue(get_uuid_list_mock.called)
+        self.assertTrue(retry_mock.called)
+
+    def test_is_tool_based(self):
+        self.assertFalse(self.analysis.is_tool_based)

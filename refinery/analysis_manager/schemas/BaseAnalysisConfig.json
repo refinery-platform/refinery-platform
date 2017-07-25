@@ -13,7 +13,7 @@
     }
   },
   "properties": {
-    "custom_name": {
+    "name": {
       "type": "string"
     },
     "studyUuid": {

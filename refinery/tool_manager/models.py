@@ -18,6 +18,7 @@ from analysis_manager.models import AnalysisStatus
 from analysis_manager.tasks import run_analysis
 from analysis_manager.utils import create_analysis, validate_analysis_config
 from core.models import Analysis, DataSet, OwnableResource, Workflow
+from data_set_manager.models import Node
 from data_set_manager.utils import get_file_url_from_node_uuid
 from file_store.models import FileType
 
@@ -256,6 +257,15 @@ class Tool(OwnableResource):
     A Tool is a representation of the information it will take to launch a
     Refinery-based Tool
     """
+
+    # Some string constants to aid any future refactoring efforts
+    FILE_UUID_LIST = "file_uuid_list"
+    FILE_RELATIONSHIPS = "file_relationships"
+    FILE_RELATIONSHIPS_URLS = "{}_urls".format(FILE_RELATIONSHIPS)
+    FILE_RELATIONSHIPS_GALAXY = "{}_galaxy".format(FILE_RELATIONSHIPS)
+    GALAXY_DATASET_HISTORY_ID = "galaxy_dataset_history_id"
+    REFINERY_FILE_UUID = "refinery_file_uuid"
+
     dataset = models.ForeignKey(DataSet)
     analysis = models.OneToOneField(Analysis, blank=True, null=True)
     container_name = models.CharField(
@@ -280,14 +290,32 @@ class Tool(OwnableResource):
         )
 
     def get_input_file_uuid_list(self):
-        # Tools can't be created without the `node_uuid_list` existing so no
+        # Tools can't be created without the `file_uuid_list` existing so no
         # KeyError is being caught
-        return self.get_tool_launch_config()["node_uuid_list"]
+        return self.get_tool_launch_config()[self.FILE_UUID_LIST]
 
     def get_file_relationships(self):
+        return self.get_tool_launch_config()[self.FILE_RELATIONSHIPS]
+
+    def get_file_relationships_urls(self):
         return ast.literal_eval(
-            self.get_tool_launch_config()["file_relationships"]
+            self.get_tool_launch_config()[self.FILE_RELATIONSHIPS_URLS]
         )
+
+    def get_file_relationships_galaxy(self):
+        if self.get_tool_type() != ToolDefinition.WORKFLOW:
+            raise NotImplementedError
+
+        return ast.literal_eval(
+            self.get_tool_launch_config()[self.FILE_RELATIONSHIPS_GALAXY]
+        )
+
+    def get_node_uuids(self):
+        node_uuids = re.findall(
+            r'[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}',
+            self.get_file_relationships()
+        )
+        return node_uuids
 
     def get_relative_container_url(self):
         """
@@ -306,6 +334,22 @@ class Tool(OwnableResource):
 
     def get_tool_type(self):
         return self.tool_definition.tool_type
+
+    def _get_analysis_config(self):
+        """
+        Construct  and return an Analysis Configuration dict to be validated.
+
+        NOTE: there is no exception handling here since everything
+        underneath Tool.launch() is inside of an atomic transaction.
+        :return: analysis_config dict
+        """
+        return {
+            "name": "Analysis: {}".format(self),
+            "studyUuid": self.dataset.get_latest_study().uuid,
+            "toolUuid": self.uuid,
+            "user_id": self.get_owner().id,
+            "workflowUuid": self.tool_definition.workflow.uuid
+        }
 
     def launch(self):
         if self.get_tool_type() == ToolDefinition.VISUALIZATION:
@@ -329,15 +373,15 @@ class Tool(OwnableResource):
             container_input_path=(
                 self.tool_definition.container_input_path
             ),
-            input={"file_relationships": self.get_file_relationships()},
+            input={
+                self.FILE_RELATIONSHIPS: self.get_file_relationships_urls()
+            },
             extra_directories=self.tool_definition.get_extra_directories()
         )
 
         DockerClientWrapper().run(container)
 
-        return JsonResponse(
-            {"tool_url": self.get_relative_container_url()}
-        )
+        return JsonResponse({"tool_url": self.get_relative_container_url()})
 
     def _launch_workflow(self):
         """
@@ -354,24 +398,24 @@ class Tool(OwnableResource):
                 )
             )
 
-        analysis_config = {
-            "custom_name": "Analysis: {}".format(self),
-            "studyUuid": self.dataset.get_latest_study().uuid,
-            "toolUuid": self.uuid,
-            "user_id": self.get_owner().id,
-            "workflowUuid": self.tool_definition.workflow.uuid
-        }
+        analysis_config = self._get_analysis_config()
         validate_analysis_config(analysis_config)
 
         analysis = create_analysis(analysis_config)
         self.set_analysis(analysis.uuid)
+
         AnalysisStatus.objects.create(analysis=analysis)
 
         # Run the analysis task
         run_analysis.delay(analysis.uuid)
 
-        analysis_url = "/data_sets2/{}/#/analyses/".format(self.dataset.uuid)
-        return JsonResponse({"tool_url": analysis_url})
+        return JsonResponse(
+            {
+                "tool_url": "/data_sets2/{}/#/analyses/".format(
+                    self.dataset.uuid
+                )
+            }
+        )
 
     def set_tool_launch_config(self, tool_launch_config):
         self.tool_launch_configuration = json.dumps(tool_launch_config)
@@ -390,30 +434,63 @@ class Tool(OwnableResource):
         else:
             self.save()
 
-    def update_file_relationships_string(self):
+    def update_file_relationships_with_urls(self):
         """
         Replace a Tool's Node uuids in its `file_relationships` string with
-        their respective FileStoreItem's urls. No error handling here since
-        this method is only called in an atomic transaction.
+        their respective FileStoreItem's urls and assign this data to a new
+        key in the tool launch config: `file_relationships_urls`.
+        No error handling here since this method is only called in an atomic
+        transaction.
         """
 
         tool_launch_config = self.get_tool_launch_config()
+        node_uuids = self.get_node_uuids()
 
-        node_uuids = re.findall(
-            r'[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}',
-            tool_launch_config["file_relationships"]
+        # Add list of FileStoreItem UUIDs to our ToolLaunchConfig for later use
+        tool_launch_config[self.FILE_UUID_LIST] = []
+
+        # Copy `file_relationships` contents into `file_relationships_urls`
+        tool_launch_config[self.FILE_RELATIONSHIPS_URLS] = (
+            self.get_file_relationships()
         )
+        for node_uuid in node_uuids:
+            node = Node.objects.get(uuid=node_uuid)
 
-        # Add list of Node UUIDs to our ToolLaunchConfig for later use
-        tool_launch_config["node_uuid_list"] = node_uuids
+            # Append file_uuid to list of FileStoreItem UUIDs
+            tool_launch_config[self.FILE_UUID_LIST].append(node.file_uuid)
 
-        for uuid in node_uuids:
-            file_url = get_file_url_from_node_uuid(uuid)
-            tool_launch_config["file_relationships"] = (
-                tool_launch_config["file_relationships"].replace(
-                    uuid, "'{}'".format(file_url)
+            file_url = get_file_url_from_node_uuid(node_uuid)
+            tool_launch_config[self.FILE_RELATIONSHIPS_URLS] = (
+                tool_launch_config[self.FILE_RELATIONSHIPS_URLS].replace(
+                    node_uuid, "'{}'".format(file_url)
                 )
             )
+        self.set_tool_launch_config(tool_launch_config)
+
+    def update_file_relationships_with_galaxy_history_data(
+            self,  galaxy_to_refinery_mapping):
+        """
+        Replace a Tool's Node uuid in its `file_relationships` string with
+        information about the file uploaded into a galaxy history that
+        was fetched from said Node uuid and assign this data to a new
+        key in the tool launch config: `file_relationships_galaxy`.
+        No error handling here since this method is only called in an
+        atomic transaction.
+        """
+        tool_launch_config = self.get_tool_launch_config()
+        tool_launch_config[self.FILE_RELATIONSHIPS_GALAXY] = (
+            tool_launch_config[self.FILE_RELATIONSHIPS]
+        )
+
+        node = Node.objects.get(
+            file_uuid=galaxy_to_refinery_mapping[Tool.REFINERY_FILE_UUID]
+        )
+        tool_launch_config[self.FILE_RELATIONSHIPS_GALAXY] = (
+            tool_launch_config[self.FILE_RELATIONSHIPS_GALAXY].replace(
+                node.uuid,
+                "{}".format(json.dumps(galaxy_to_refinery_mapping))
+            )
+        )
         self.set_tool_launch_config(tool_launch_config)
 
 

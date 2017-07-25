@@ -12,14 +12,19 @@ from django.core.management import CommandError, call_command
 from django.http import HttpResponseBadRequest
 from django.test import TestCase
 
+import bioblend
 import mock
 from rest_framework.test import (APIRequestFactory, APITestCase,
                                  force_authenticate)
+from test_data.galaxy_mocks import (history_dataset_dict, history_dict,
+                                    library_dataset_dict, library_dict)
 
-from analysis_manager.tasks import run_analysis
-from core.models import (DataSet, ExtendedGroup, InvestigationLink, Project,
-                         Workflow, WorkflowEngine)
-from data_set_manager.models import Assay, Investigation, Node, Study
+from analysis_manager.models import AnalysisStatus
+from analysis_manager.tasks import (_get_tool, _refinery_file_import,
+                                    _tool_based_galaxy_file_import,
+                                    run_analysis)
+from core.models import ExtendedGroup, Project, Workflow, WorkflowEngine
+from data_set_manager.models import Assay, Node
 from factory_boy.utils import create_dataset_with_necessary_models
 from file_store.models import FileStoreItem
 from galaxy_connector.models import Instance
@@ -39,6 +44,10 @@ TEST_DATA_PATH = "tool_manager/test_data"
 
 
 class ToolManagerTestBase(TestCase):
+    # Some members in assertions are truncated if they are too long, but we
+    # want to see them in their entirety
+    maxDiff = None
+
     def setUp(self):
         self.public_group = ExtendedGroup.objects.public_group()
         self.galaxy_instance = Instance.objects.create()
@@ -103,12 +112,27 @@ class ToolManagerTestBase(TestCase):
         else:
             raise RuntimeError("Please provide a valid tool_type")
 
+        test_file = StringIO.StringIO()
+        test_file.write('Coffee is really great.\n')
+        self.file_store_item = FileStoreItem.objects.create(
+            source="http://www.example.com/test_file.txt"
+        )
+
+        study = self.dataset.get_latest_study()
+        assay = Assay.objects.get(study=study)
+
+        self.node = Node.objects.create(
+            name="n0",
+            assay=assay,
+            study=study,
+            file_uuid=self.file_store_item.uuid
+        )
+
         # Create mock ToolLaunchConfiguration
         self.post_data = {
             "dataset_uuid": self.dataset.uuid,
             "tool_definition_uuid": self.td.uuid,
-            "file_relationships":
-                "['http://www.example.com/sample.seg']",
+            Tool.FILE_RELATIONSHIPS: "[{}]".format(self.node.uuid),
         }
 
         self.post_request = self.factory.post(
@@ -848,9 +872,6 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
 
 
 class ToolDefinitionTests(ToolManagerTestBase):
-    # Some members in assertions are truncated if they are too long, but we
-    # want to test them in their entirety
-    maxDiff = None
 
     def test_get_annotation(self):
         self.create_vis_tool_definition(annotation_file_name="igv.json")
@@ -904,15 +925,8 @@ class ToolTests(ToolManagerTestBase):
     def test_node_uuids_get_populated_with_urls(self):
         self.create_vis_tool_definition()
 
-        dataset = DataSet.objects.create(name="coffee dataset")
-        investigation = Investigation.objects.create()
-        study = Study.objects.create(investigation=investigation)
-        assay = Assay.objects.create(study=study)
-        InvestigationLink.objects.create(
-            investigation=investigation,
-            data_set=dataset,
-            version=1
-        )
+        study = self.dataset.get_latest_study()
+        assay = Assay.objects.get(study=study)
 
         test_file_a = StringIO.StringIO()
         test_file_a.write('Coffee is great.\n')
@@ -952,9 +966,9 @@ class ToolTests(ToolManagerTestBase):
         )
 
         post_data = {
-            "dataset_uuid": dataset.uuid,
+            "dataset_uuid": self.dataset.uuid,
             "tool_definition_uuid": self.td.uuid,
-            "file_relationships": "[{}, {}]".format(
+            Tool.FILE_RELATIONSHIPS: "[{}, {}]".format(
                 node_a.uuid,
                 node_b.uuid
             )
@@ -973,11 +987,11 @@ class ToolTests(ToolManagerTestBase):
             self.post_response = self.tools_view(post_request)
             self.assertTrue(run_mock.called)
 
-        tool_launch = Tool.objects.get(
+        tool = Tool.objects.get(
             tool_definition__uuid=self.td.uuid
         )
 
-        file_relationships = tool_launch.get_file_relationships()
+        file_relationships = tool.get_file_relationships_urls()
 
         # Build regex and assert that the file_relationships structure is
         # populated from the FileStoreItem's datafiles that we've associated
@@ -991,18 +1005,23 @@ class ToolTests(ToolManagerTestBase):
         self.assertEqual(
             self.tool.get_tool_launch_config(),
             {
-                'node_uuid_list': [],
+                self.tool.FILE_UUID_LIST: [self.node.file_uuid],
                 "dataset_uuid": self.dataset.uuid,
                 "tool_definition_uuid": self.td.uuid,
-                "file_relationships": "['http://www.example.com/sample.seg']",
+                Tool.FILE_RELATIONSHIPS: (
+                    "[{}]".format(self.node.uuid)
+                ),
+                self.tool.FILE_RELATIONSHIPS_URLS: (
+                    "['http://www.example.com/test_file.txt']"
+                )
             }
         )
 
-    def test_get_file_relationships(self):
+    def test_get_file_relationships_urls(self):
         self.create_valid_tool(ToolDefinition.WORKFLOW)
         self.assertEqual(
-            self.tool.get_file_relationships(),
-            ['http://www.example.com/sample.seg']
+            self.tool.get_file_relationships_urls(),
+            ['http://www.example.com/test_file.txt']
         )
 
     def test_launch_workflow_wrong_tool_type(self):
@@ -1067,7 +1086,7 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
 
         tool_launch_configuration = {
             "tool_definition_uuid": self.td.uuid,
-            "file_relationships": {
+            Tool.FILE_RELATIONSHIPS: {
                 "invalid":
                     [
                         [
@@ -1099,7 +1118,7 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
         post_data = {
             "dataset_uuid": self.dataset.uuid,
             "tool_definition_uuid": self.td.uuid,
-            "file_relationships": str(
+            Tool.FILE_RELATIONSHIPS: str(
                 [
                     "www.example.com/cool_file.txt",
                     (
@@ -1137,7 +1156,7 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
         tool_launch_configuration = {
             "dataset_uuid": self.dataset.uuid,
             "tool_definition_uuid": td.uuid,
-            "file_relationships": str(["www.example.com"])
+            Tool.FILE_RELATIONSHIPS: str(["www.example.com"])
         }
         self.post_request = self.factory.post(
             self.tools_url_root,
@@ -1168,7 +1187,7 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
         tool_launch_configuration = {
             "dataset_uuid": self.dataset.uuid,
             "tool_definition_uuid": td.uuid,
-            "file_relationships": str(["www.example.com"])
+            Tool.FILE_RELATIONSHIPS: str(["www.example.com"])
         }
         self.post_request = self.factory.post(
             self.tools_url_root,
@@ -1188,13 +1207,15 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
 
 
 class ToolLaunchTests(ToolManagerTestBase):
+    tasks_mock = "analysis_manager.tasks"
+
     def test_transaction_rollback_bad_dataset_uuid(self):
         self.create_vis_tool_definition()
 
         self.post_data = {
             "dataset_uuid": self.dataset.uuid,
             "tool_definition_uuid": self.td.uuid,
-            "file_relationships": str(["www.example.com/cool_file.txt"])
+            Tool.FILE_RELATIONSHIPS: str(["www.example.com/cool_file.txt"])
         }
 
         self.dataset.delete()
@@ -1227,6 +1248,125 @@ class ToolLaunchTests(ToolManagerTestBase):
         tool_b = self.create_valid_tool(ToolDefinition.WORKFLOW)
 
         self.assertEqual(tool_a.dataset, tool_b.dataset)
+
+    def test__get_tool_no_analysis(self):
+        self.create_valid_tool(ToolDefinition.WORKFLOW)
+
+        analysis_uuid = self.tool.analysis.uuid
+        self.tool.analysis.delete()
+
+        with mock.patch.object(run_analysis, "update_state") as update_mock:
+            _get_tool(analysis_uuid)
+            self.assertTrue(update_mock.called)
+
+    def test__get_tool_with_analysis(self):
+        self.create_valid_tool(ToolDefinition.WORKFLOW)
+        self.assertEqual(
+            _get_tool(self.tool.analysis.uuid),
+            self.tool
+        )
+
+    @mock.patch.object(run_analysis, "retry", side_effect=None)
+    def test_get_input_file_uuid_list_gets_called_in_refinery_import(
+            self, retry_mock
+    ):
+        self.create_valid_tool(ToolDefinition.WORKFLOW)
+
+        with mock.patch(
+            "tool_manager.models.Tool.get_input_file_uuid_list"
+        ) as get_uuid_list_mock:
+            _refinery_file_import(self.tool.analysis.uuid)
+            self.assertTrue(get_uuid_list_mock.called)
+        self.assertTrue(retry_mock.called)
+
+    @mock.patch("{}._refinery_file_import".format(tasks_mock))
+    @mock.patch("{}._run_tool_based_galaxy_workflow".format(tasks_mock))
+    def test_run_tool_based_galaxy_workflow_is_called(
+            self,
+            refinery_file_import_mock,
+            run_tool_based_galaxy_workflow_mock
+    ):
+        self.create_valid_tool(ToolDefinition.WORKFLOW)
+        run_analysis(self.tool.analysis.uuid)
+        self.assertTrue(refinery_file_import_mock.called)
+        self.assertTrue(run_tool_based_galaxy_workflow_mock.called)
+
+    @mock.patch.object(
+        bioblend.galaxy.libraries.LibraryClient,
+        "upload_file_from_url",
+        return_value=library_dataset_dict
+    )
+    @mock.patch.object(
+        bioblend.galaxy.histories.HistoryClient,
+        "upload_dataset_from_library",
+        return_value=history_dataset_dict
+    )
+    def test__tool_based_galaxy_file_import_sets_file_relationships_galaxy(
+            self,
+            library_upload_mock,
+            history_upload_mock
+    ):
+        self.create_valid_tool(ToolDefinition.WORKFLOW)
+
+        _tool_based_galaxy_file_import(
+            self.tool.analysis.uuid,
+            self.file_store_item.uuid,
+            history_dict,
+            library_dict
+        )
+
+        self.assertTrue(library_upload_mock.called)
+        self.assertTrue(history_upload_mock.called)
+
+        self.assertEqual(
+            Tool.objects.get(
+                uuid=self.tool.uuid
+            ).get_file_relationships_galaxy(),
+            [
+                {
+                    Tool.REFINERY_FILE_UUID: self.file_store_item.uuid,
+                    Tool.GALAXY_DATASET_HISTORY_ID: history_dataset_dict["id"]
+                }
+            ]
+        )
+
+    @mock.patch.object(
+        bioblend.galaxy.libraries.LibraryClient,
+        "upload_file_from_url",
+        return_value=library_dataset_dict
+    )
+    @mock.patch.object(
+        bioblend.galaxy.histories.HistoryClient,
+        "upload_dataset_from_library",
+        return_value=history_dataset_dict
+    )
+    def test__tool_based_galaxy_file_import_updates_galaxy_import_progress(
+            self,
+            library_upload_mock,
+            history_upload_mock
+    ):
+        self.create_valid_tool(ToolDefinition.WORKFLOW)
+
+        _tool_based_galaxy_file_import(
+            self.tool.analysis.uuid,
+            self.file_store_item.uuid,
+            history_dict,
+            library_dict
+        )
+
+        self.assertTrue(library_upload_mock.called)
+        self.assertTrue(history_upload_mock.called)
+
+        self.assertEqual(
+            AnalysisStatus.objects.get(
+                analysis=self.tool.analysis
+            ).galaxy_import_progress,
+            100
+        )
+
+    def test_is_tool_based(self):
+        self.create_valid_tool(ToolDefinition.WORKFLOW)
+        self.assertTrue(self.tool.analysis.is_tool_based)
 
 
 class ToolLaunchSeleniumTests(ToolManagerTestBase, SeleniumTestBaseGeneric):
@@ -1262,7 +1402,7 @@ class ToolLaunchSeleniumTests(ToolManagerTestBase, SeleniumTestBaseGeneric):
             self.post_data = {
                 "dataset_uuid": self.dataset.uuid,
                 "tool_definition_uuid": self.td.uuid,
-                "file_relationships": "['{}']".format(
+                Tool.FILE_RELATIONSHIPS: "['{}']".format(
                     urljoin(
                         self.live_server_url,
                         "tool_manager/test_data/sample.seg"
@@ -1326,7 +1466,7 @@ class ToolLaunchSeleniumTests(ToolManagerTestBase, SeleniumTestBaseGeneric):
             self.post_data = {
                 "dataset_uuid": self.dataset.uuid,
                 "tool_definition_uuid": self.td.uuid,
-                "file_relationships": str(
+                Tool.FILE_RELATIONSHIPS: str(
                     [
                         "https://s3.amazonaws.com/pkerp/public/"
                         "dixon2012-h1hesc-hindiii-allreps-filtered."
@@ -1396,7 +1536,7 @@ class ToolLaunchConfigurationTests(ToolManagerTestBase):
         tool_launch_configuration = {
             "dataset_uuid": self.dataset.uuid,
             "tool_definition_uuid": self.td.uuid,
-            "file_relationships": "!!{}!!".format(
+            Tool.FILE_RELATIONSHIPS: "!!{}!!".format(
                 str(["www.example.com/cool_file.txt"])
             )
         }
@@ -1412,7 +1552,7 @@ class ToolLaunchConfigurationTests(ToolManagerTestBase):
         tool_launch_configuration = {
             "dataset_uuid": self.dataset.uuid,
             "tool_definition_uuid": self.td.uuid,
-            "file_relationships": str(
+            Tool.FILE_RELATIONSHIPS: str(
                 [
                     (
                         {"Dicts aren't": "LIST/PAIR-like"},
@@ -1437,7 +1577,7 @@ class ToolLaunchConfigurationTests(ToolManagerTestBase):
         tool_launch_configuration = {
             "dataset_uuid": self.dataset.uuid,
             "tool_definition_uuid": self.td.uuid,
-            "file_relationships": str(
+            Tool.FILE_RELATIONSHIPS: str(
                 [
                     ("a", "b"),
                     ["c", "d"]
@@ -1454,7 +1594,7 @@ class ToolLaunchConfigurationTests(ToolManagerTestBase):
     def test_invalid_TLC_bad_tooldefinition_uuid(self):
         tool_launch_configuration = {
             "tool_definition_uuid": "This is an invalid ToolDef UUID",
-            "file_relationships": str(["www.example.com/cool_file.txt"])
+            Tool.FILE_RELATIONSHIPS: str(["www.example.com/cool_file.txt"])
         }
         with self.assertRaises(RuntimeError) as context:
             validate_tool_launch_configuration(tool_launch_configuration)
@@ -1467,7 +1607,7 @@ class ToolLaunchConfigurationTests(ToolManagerTestBase):
         tool_launch_configuration = {
             "dataset_uuid": self.dataset.uuid,
             "tool_definition_uuid": self.td.uuid,
-            "file_relationships": str(
+            Tool.FILE_RELATIONSHIPS: str(
                 ["coffee"]
             )
         }
@@ -1477,7 +1617,7 @@ class ToolLaunchConfigurationTests(ToolManagerTestBase):
         tool_launch_configuration = {
             "dataset_uuid": self.dataset.uuid,
             "tool_definition_uuid": self.td.uuid,
-            "file_relationships": str(
+            Tool.FILE_RELATIONSHIPS: str(
                 [
                     ("coffee", "coffee")
                 ]
@@ -1489,7 +1629,7 @@ class ToolLaunchConfigurationTests(ToolManagerTestBase):
         tool_launch_configuration = {
             "dataset_uuid": self.dataset.uuid,
             "tool_definition_uuid": self.td.uuid,
-            "file_relationships": str(
+            Tool.FILE_RELATIONSHIPS: str(
                 [
                     [
                         ("coffee", "coffee"),
@@ -1506,7 +1646,7 @@ class ToolLaunchConfigurationTests(ToolManagerTestBase):
         tool_launch_configuration = {
             "dataset_uuid": self.dataset.uuid,
             "tool_definition_uuid": self.td.uuid,
-            "file_relationships": str(
+            Tool.FILE_RELATIONSHIPS: str(
                 ("coffee", "coffee")
             )
         }
@@ -1516,7 +1656,7 @@ class ToolLaunchConfigurationTests(ToolManagerTestBase):
         tool_launch_configuration = {
             "dataset_uuid": self.dataset.uuid,
             "tool_definition_uuid": self.td.uuid,
-            "file_relationships": str(
+            Tool.FILE_RELATIONSHIPS: str(
                 (["coffee", "coffee"], ["coffee", "coffee"])
             )
         }

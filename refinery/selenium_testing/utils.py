@@ -1,4 +1,5 @@
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
+
 from pyvirtualdisplay import Display
 from selenium import webdriver
 from selenium.common.exceptions import TimeoutException
@@ -8,7 +9,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 
 # The maximum amount of time that we allow an ExpectedCondition to wait
 # before timing out.
-MAX_WAIT = 60
+MAX_WAIT = 90
 
 
 class SeleniumTestBaseGeneric(StaticLiveServerTestCase):

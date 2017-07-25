@@ -2,6 +2,7 @@ import logging
 
 from django.db import transaction
 from django.http import HttpResponseBadRequest
+
 from guardian.exceptions import GuardianError
 from guardian.shortcuts import get_objects_for_user
 from rest_framework.permissions import IsAuthenticated

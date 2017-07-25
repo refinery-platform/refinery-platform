@@ -3,22 +3,22 @@ Created on May 10, 2012
 
 @author: nils
 '''
-from datetime import datetime
 import logging
+from datetime import datetime
 
+import requests
+from celery.result import AsyncResult
 from django.conf import settings
 from django.db import models
 from django_extensions.db.fields import UUIDField
-
-
-from celery.result import AsyncResult
-import requests
 from requests.exceptions import HTTPError
 
-from .genomes import map_species_id_to_default_genome_build
-import data_set_manager
 import core
+import data_set_manager
 from file_store.models import FileStoreItem
+
+from .genomes import map_species_id_to_default_genome_build
+
 """
 TODO: Refactor import data_set_manager. Importing
 data_set_manager.tasks.generate_auxiliary_file()
@@ -357,6 +357,7 @@ class Node(models.Model):
     PTM_ASSIGNMENT_FILE = "Post Translational Modification Assignment File"
     FREE_INDUCTION_DECAY_DATA_FILE = "Free Induction Decay Data File"
     ACQUISITION_PARAMETER_DATA_FILE = "Aquisition Parameter Data File"
+    METABOLITE_ASSIGNMENT_FILE = "Metabolite Assignment File"
 
     ASSAYS = {
         ASSAY,
@@ -383,7 +384,8 @@ class Node(models.Model):
         PROTEIN_ASSIGNMENT_FILE,
         PTM_ASSIGNMENT_FILE,
         FREE_INDUCTION_DECAY_DATA_FILE,
-        ACQUISITION_PARAMETER_DATA_FILE
+        ACQUISITION_PARAMETER_DATA_FILE,
+        METABOLITE_ASSIGNMENT_FILE
     }
 
     TYPES = ASSAYS | FILES | {
@@ -429,7 +431,7 @@ class Node(models.Model):
         node.save()
         return self
 
-    def get_derived_node_types(self):
+    def _get_derived_node_types(self):
         """
         This finds all node types which are "derived"
         :returns: a list of all node types which are "derived"
@@ -449,9 +451,7 @@ class Node(models.Model):
         :returns True if the node in question's type exists in the list of
         Node types which are "derived"
         """
-
-        if self.type in self.get_derived_node_types():
-            return True
+        return self.type in self._get_derived_node_types()
 
     def get_analysis_node_connections(self):
         return core.models.AnalysisNodeConnection.objects.filter(node=self)
@@ -469,7 +469,7 @@ class Node(models.Model):
             logger.error(e)
             return None
 
-    def create_and_associate_auxiliary_node(self, filestore_item_uuid):
+    def _create_and_associate_auxiliary_node(self, filestore_item_uuid):
             """
             Tries to create and associate an auxiliary Node with a parent
             node.
@@ -575,7 +575,7 @@ class Node(models.Model):
             auxiliary_file_store_item = FileStoreItem.objects.create(
                 source='auxiliary_file')
 
-            auxiliary_node = self.create_and_associate_auxiliary_node(
+            auxiliary_node = self._create_and_associate_auxiliary_node(
                 auxiliary_file_store_item.uuid)
 
             result = data_set_manager.tasks.generate_auxiliary_file.delay(
@@ -625,9 +625,6 @@ class Attribute(models.Model):
         "value_unit",
         "node"
     ]
-
-    def is_attribute(self, string):
-        return string.split("[")[0].strip() in self.TYPES
 
     node = models.ForeignKey(Node, db_index=True)
     type = models.TextField(db_index=True)
@@ -703,31 +700,31 @@ class AttributeOrder(models.Model):
 
 
 class AnnotatedNodeRegistry(models.Model):
-    study = models.ForeignKey(Study, db_index=True)
-    assay = models.ForeignKey(Assay, db_index=True, blank=True, null=True)
-    node_type = models.TextField(db_index=True)
+    study = models.ForeignKey(Study)
+    assay = models.ForeignKey(Assay, blank=True, null=True)
+    node_type = models.TextField()
     creation_date = models.DateTimeField(auto_now_add=True)
     modification_date = models.DateTimeField(auto_now=True)
 
 
 class AnnotatedNode(models.Model):
     node = models.ForeignKey(Node, db_index=True)
-    attribute = models.ForeignKey(Attribute, db_index=True)
-    study = models.ForeignKey(Study, db_index=True)
-    assay = models.ForeignKey(Assay, db_index=True, blank=True, null=True)
+    attribute = models.ForeignKey(Attribute)
+    study = models.ForeignKey(Study)
+    assay = models.ForeignKey(Assay, blank=True, null=True)
     node_uuid = UUIDField()
     node_file_uuid = UUIDField(blank=True, null=True)
-    node_type = models.TextField(db_index=True)
-    node_name = models.TextField(db_index=True)
-    attribute_type = models.TextField(db_index=True)
+    node_type = models.TextField()
+    node_name = models.TextField()
+    attribute_type = models.TextField()
     # subtype further qualifies the attribute type, e.g. type = factor value
     # and subtype = age
-    attribute_subtype = models.TextField(blank=True, null=True, db_index=True)
-    attribute_value = models.TextField(blank=True, null=True, db_index=True)
+    attribute_subtype = models.TextField(blank=True, null=True)
+    attribute_value = models.TextField(blank=True, null=True)
     attribute_value_unit = models.TextField(blank=True, null=True)
     # genome information
-    node_species = models.IntegerField(db_index=True, null=True)
-    node_genome_build = models.TextField(db_index=True, null=True)
+    node_species = models.IntegerField(null=True)
+    node_genome_build = models.TextField(null=True)
     node_analysis_uuid = UUIDField(
         default=None,
         blank=True,
@@ -763,11 +760,11 @@ def _is_internal_attribute(attribute):
 
 
 def _is_active_attribute(attribute):
-    return (not _is_internal_attribute(attribute) and attribute not in [])
+    return not _is_internal_attribute(attribute)
 
 
 def _is_exposed_attribute(attribute):
-    return True
+    return True  # TODO: Could we get rid of this?
 
 
 def _is_ignored_attribute(attribute):
@@ -775,16 +772,7 @@ def _is_ignored_attribute(attribute):
     return attribute in ["django_ct", "django_id", "id"]
 
 
-def _is_facet_attribute(attribute, study, assay):
-    """Tests if a an attribute should be used as a facet by default.
-    :param attribute: The name of the attribute.
-    :type attribute: string
-    :returns: True if the ratio between items in the data set and the number of
-    facet attribute values is smaller than
-    settings.DEFAULT_FACET_ATTRIBUTE_VALUES_RATIO, false otherwise.
-    """
-    ratio = 0.5
-
+def _query_solr(study, assay, attribute=None):
     types = ' OR '.join(
         '"{0}"'.format(type) for type in Node.FILES
     )
@@ -794,10 +782,6 @@ def _is_facet_attribute(attribute, study, assay):
     )
 
     params = {
-        'facet': 'true',
-        'facet.field': attribute,
-        'facet.sort': 'count',
-        'facet.limit': '-1',
         'fq': 'study_uuid:{study_uuid} AND '
               'assay_uuid: {assay_uuid} AND '
               'is_annotation:false AND '
@@ -812,7 +796,17 @@ def _is_facet_attribute(attribute, study, assay):
         'wt': 'json'
     }
 
-    logger.debug('Query parameters: %s', params)
+    if attribute is not None:
+        params.update({
+            'facet': 'true',
+            'facet.field': attribute,
+            'facet.sort': 'count',
+            'facet.limit': '-1'
+        })
+
+    # This log tends to be massive and spams the log file. Turn on only when
+    # needed.
+    # logger.debug('Query parameters: %s', params)
 
     headers = {'Accept': 'application/json'}
     try:
@@ -820,14 +814,30 @@ def _is_facet_attribute(attribute, study, assay):
         response.raise_for_status()
     except HTTPError as e:
         logger.error(e)
+        raise
 
     results = response.json()
 
-    logger.debug('Query results: %s', results)
+    # This log tends to be massive and spams the log file. Turn on only when
+    # needed.
+    # logger.debug('Query results: %s', results)
 
     if results['response']['numFound'] == 0:
-        raise ValueError('No facets found.')
+        raise ValueError('No results.')
 
+    return results
+
+
+def _is_facet_attribute(attribute, study, assay):
+    """Tests if a an attribute should be used as a facet by default.
+    :param attribute: The name of the attribute.
+    :type attribute: string
+    :returns: True if the ratio between items in the data set and the number of
+    facet attribute values is smaller than
+    settings.DEFAULT_FACET_ATTRIBUTE_VALUES_RATIO, false otherwise.
+    """
+    ratio = 0.5
+    results = _query_solr(attribute=attribute, study=study, assay=assay)
     items = results['response']['numFound']
     attribute_values = len(
         results['facet_counts']['facet_fields'][attribute]
@@ -845,49 +855,7 @@ def initialize_attribute_order(study, assay):
     :type assay: Assay
     :returns: Number of attributes that were indexed.
     """
-
-    types = ' OR '.join(
-        '"{0}"'.format(type) for type in Node.FILES
-    )
-
-    url = '{base_url}data_set_manager/select'.format(
-        base_url=settings.REFINERY_SOLR_BASE_URL
-    )
-
-    params = {
-        'fq': 'study_uuid:{study_uuid} AND '
-              'assay_uuid: {assay_uuid} AND '
-              'is_annotation:false AND '
-              'type:({types})'.format(
-                  study_uuid=study.uuid,
-                  assay_uuid=assay.uuid,
-                  types=types
-              ),
-        'q': 'django_ct:data_set_manager.node',
-        'rows': 1,
-        'start': 0,
-        'wt': 'json'
-    }
-
-    logger.debug('Query parameters: %s', params)
-
-    headers = {'Accept': 'application/json'}
-
-    try:
-        response = requests.get(url, params=params, headers=headers)
-        response.raise_for_status()
-    except HTTPError as e:
-        logger.error(e)
-
-    results = response.json()
-
-    logger.debug('Query results: %s', results)
-
-    if results['response']['numFound'] == 0:
-        raise ValueError(
-            'Assay node type is not supported. Please consult the official '
-            'release candidate.'
-        )
+    results = _query_solr(study=study, assay=assay)
 
     attribute_order_objects = []
     rank = 0
