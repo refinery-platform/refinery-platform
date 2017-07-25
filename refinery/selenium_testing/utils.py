@@ -9,7 +9,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 
 # The maximum amount of time that we allow an ExpectedCondition to wait
 # before timing out.
-MAX_WAIT = 60
+MAX_WAIT = 90
 
 
 class SeleniumTestBaseGeneric(StaticLiveServerTestCase):
