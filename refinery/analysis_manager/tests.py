@@ -3,7 +3,7 @@ import uuid
 
 from django.contrib.auth.models import User
 from django.http import HttpResponseBadRequest, HttpResponseNotAllowed
-from django.test import RequestFactory, TestCase
+from django.test import TestCase
 
 from guardian.utils import get_anonymous_user
 import mock
@@ -23,6 +23,22 @@ from factory_boy.utils import (create_dataset_with_necessary_models,
 from galaxy_connector.models import Instance
 from tool_manager.models import ToolDefinition
 from tool_manager.tests import ToolManagerTestBase
+
+
+class AnalysisManagerTestBase(TestCase):
+    def setUp(self):
+        self.username = 'coffee_lover'
+        self.password = 'coffeecoffee'
+        self.user = User.objects.create_user(self.username, '', self.password)
+
+        make_analyses_with_single_dataset(1, self.user)
+
+        self.analysis = Analysis.objects.all()[0]
+        self.analysis_status = AnalysisStatus.objects.create(
+            analysis=self.analysis
+        )
+
+        self.dataset = DataSet.objects.all()[0]
 
 
 class AnalysisConfigTests(TestCase):
@@ -431,16 +447,14 @@ class AnalysisUtilsTests(TestCase):
             _fetch_node_relationship(str(uuid.uuid4()))
 
 
-class AnalysisViewsTests(ToolManagerTestBase):
+class AnalysisViewsTests(AnalysisManagerTestBase, ToolManagerTestBase):
     """
     Tests for `analysis_manager.views`
     """
     def setUp(self):
-        super(AnalysisViewsTests, self).setUp()
-        self.request_factory = RequestFactory()
-        make_analyses_with_single_dataset(1, self.user)
-        self.analysis = Analysis.objects.all()[0]
-        AnalysisStatus.objects.create(analysis=self.analysis)
+        # super() will only ever resolve a single class type for a given method
+        AnalysisManagerTestBase.setUp(self)
+        ToolManagerTestBase.setUp(self)
 
         self.run_url_root = "/analysis_manager/run/"
         self.status_url_root = "/analysis_manager/{}/".format(
@@ -600,22 +614,8 @@ class AnalysisViewsTests(ToolManagerTestBase):
         )
 
 
-class AnalysisRunTests(TestCase):
+class AnalysisRunTests(AnalysisManagerTestBase):
     tasks_mock = "analysis_manager.tasks"
-
-    def setUp(self):
-        self.username = 'coffee_lover'
-        self.password = 'coffeecoffee'
-        self.user = User.objects.create_user(self.username, '', self.password)
-
-        make_analyses_with_single_dataset(1, self.user)
-
-        self.analysis = Analysis.objects.all()[0]
-        self.analysis_status = AnalysisStatus.objects.create(
-            analysis=self.analysis
-        )
-
-        self.dataset = DataSet.objects.all()[0]
 
     @mock.patch("{}._refinery_file_import".format(tasks_mock))
     @mock.patch("{}._run_galaxy_workflow".format(tasks_mock))
@@ -658,3 +658,35 @@ class AnalysisRunTests(TestCase):
 
     def test_is_tool_based(self):
         self.assertFalse(self.analysis.is_tool_based)
+
+
+class AnalysisStatusTests(AnalysisManagerTestBase):
+    def test_set_galaxy_history_state_with_valid_state(self):
+        self.analysis_status.set_galaxy_history_state(AnalysisStatus.PROGRESS)
+        self.assertEqual(
+            self.analysis_status.galaxy_history_state,
+            AnalysisStatus.PROGRESS
+        )
+
+    def test_set_galaxy_history_state_with_invalid_state(self):
+        with self.assertRaises(ValueError) as context:
+            self.analysis_status.set_galaxy_history_state("NOT A VALID STATE")
+            self.assertEqual(
+                context.exception.message,
+                "Invalid Galaxy history state given"
+            )
+
+    def test_set_galaxy_import_state_with_valid_state(self):
+        self.analysis_status.set_galaxy_import_state(AnalysisStatus.PROGRESS)
+        self.assertEqual(
+            self.analysis_status.galaxy_import_state,
+            AnalysisStatus.PROGRESS
+        )
+
+    def test_set_galaxy_import_state_with_invalid_state(self):
+        with self.assertRaises(ValueError) as context:
+            self.analysis_status.set_galaxy_import_state("NOT A VALID STATE")
+            self.assertEqual(
+                context.exception.message,
+                "Invalid Galaxy history state given"
+            )
