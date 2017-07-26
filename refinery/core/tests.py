@@ -1483,7 +1483,7 @@ class AnalysisTests(TestCase):
             ]
         )
 
-    def test_galaxy_tool_file_import_state_is_empty_without_aa_import_state(
+    def test_galaxy_tool_file_import_state_is_empty_without_an_import_state(
             self):
         self.analysis_status.galaxy_import_progress = 96
 
