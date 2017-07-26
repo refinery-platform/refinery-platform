@@ -252,6 +252,32 @@ def delete_input_files_and_file_relationships(sender, instance, *args,
         file_relationship.delete()
 
 
+def _visualization_tool_only(func):
+    def func_wrapper(*args, **kwargs):
+        if args[0].get_tool_type() != ToolDefinition.VISUALIZATION:
+            raise NotImplementedError(
+                "{} is only available for visualization-based Tools".format(
+                    func.__name__
+                )
+            )
+        else:
+            return func(*args, **kwargs)
+    return func_wrapper
+
+
+def _workflow_tool_only(func):
+    def func_wrapper(*args, **kwargs):
+        if args[0].get_tool_type() != ToolDefinition.WORKFLOW:
+            raise NotImplementedError(
+                "{} is only available for workflow-based Tools".format(
+                    func.__name__
+                )
+            )
+        else:
+            return func(*args, **kwargs)
+    return func_wrapper
+
+
 class Tool(OwnableResource):
     """
     A Tool is a representation of the information it will take to launch
@@ -295,6 +321,7 @@ class Tool(OwnableResource):
             self.uuid
         )
 
+    @_workflow_tool_only
     def create_collection_description(self):
         """
         Creates a dict containing information describing the Galaxy DataSet
@@ -315,6 +342,7 @@ class Tool(OwnableResource):
             ]
         }
 
+    @_workflow_tool_only
     def create_collection(self):
         collection_description = self.create_collection_description()
         connection = self.analysis.galaxy_connection()
@@ -324,6 +352,7 @@ class Tool(OwnableResource):
         )
         self.update_galaxy_data(self.COLLECTION_INFO, collection_info)
 
+    @_workflow_tool_only
     def create_workflow_inputs(self):
         return {
             '0': {
@@ -345,18 +374,14 @@ class Tool(OwnableResource):
             self.get_tool_launch_config()[self.FILE_RELATIONSHIPS_URLS]
         )
 
+    @_workflow_tool_only
     def get_file_relationships_galaxy(self):
-        if self.get_tool_type() != ToolDefinition.WORKFLOW:
-            raise NotImplementedError
-
         return ast.literal_eval(
             self.get_tool_launch_config()[self.FILE_RELATIONSHIPS_GALAXY]
         )
 
+    @_workflow_tool_only
     def get_galaxy_data(self):
-        if self.get_tool_type() != ToolDefinition.WORKFLOW:
-            raise NotImplementedError
-
         return self.get_tool_launch_config()[self.GALAXY_DATA]
 
     def get_node_uuids(self):
@@ -432,6 +457,7 @@ class Tool(OwnableResource):
 
         return JsonResponse({"tool_url": self.get_relative_container_url()})
 
+    @_workflow_tool_only
     def _launch_workflow(self):
         """
         Launch a workflow-based Tool
@@ -440,12 +466,6 @@ class Tool(OwnableResource):
             pointing to the Analysis' status page
         :raises: RuntimeError
         """
-        if self.get_tool_type() != ToolDefinition.WORKFLOW:
-            raise NotImplementedError(
-                "Tool: {} is not of type: {}".format(
-                    self, ToolDefinition.WORKFLOW
-                )
-            )
 
         analysis_config = self._get_analysis_config()
         validate_analysis_config(analysis_config)
@@ -466,6 +486,7 @@ class Tool(OwnableResource):
             }
         )
 
+    @_workflow_tool_only
     def _get_nesting_string(self, nesting=None, structure=""):
         """
         Gets the `LIST`/`PAIR` structure of our file_relationships,
@@ -495,6 +516,7 @@ class Tool(OwnableResource):
         self.tool_launch_configuration = json.dumps(tool_launch_config)
         self.save()
 
+    @_workflow_tool_only
     def set_analysis(self, analysis_uuid):
         """
         :param analysis_uuid: UUID of Analysis instance to associate with
@@ -541,6 +563,7 @@ class Tool(OwnableResource):
             )
         self.set_tool_launch_config(tool_launch_config)
 
+    @_workflow_tool_only
     def update_file_relationships_with_galaxy_history_data(
             self,  galaxy_to_refinery_mapping):
         """
@@ -568,6 +591,7 @@ class Tool(OwnableResource):
         )
         self.set_tool_launch_config(tool_launch_config)
 
+    @_workflow_tool_only
     def update_galaxy_data(self, key, value):
         tool_launch_config = self.get_tool_launch_config()
 
