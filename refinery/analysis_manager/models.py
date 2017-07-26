@@ -48,6 +48,10 @@ class AnalysisStatus(models.Model):
         return self.analysis.name
 
     def set_galaxy_history_state(self, state):
+        """
+        Set the `galaxy_history_state` of an analysis
+        :param state: a valid GALAXY_HISTORY_STATE
+        """
         if state in dict(self.GALAXY_HISTORY_STATES).keys():
             self.galaxy_history_state = state
             self.save()
