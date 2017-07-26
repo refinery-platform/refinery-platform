@@ -254,8 +254,8 @@ def delete_input_files_and_file_relationships(sender, instance, *args,
 
 class Tool(OwnableResource):
     """
-    A Tool is a representation of the information it will take to launch a
-    Refinery-based Tool
+    A Tool is a representation of the information it will take to launch
+    and monitor a ToolDefinition
     """
 
     # Some string constants to aid any future refactoring efforts
