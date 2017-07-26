@@ -295,6 +295,43 @@ class Tool(OwnableResource):
             self.uuid
         )
 
+    def create_collection_description(self):
+        """
+        Creates a dict containing information describing the Galaxy DataSet
+        Collection to create
+        :return: dict
+        """
+        nesting = self._get_nesting_string()
+        return {
+            'name': 'Collection ({})'.format(nesting),
+            "collection_type": self._get_nesting_string(),
+            "element_identifiers": [
+                {
+                    'id': item[self.GALAXY_DATASET_HISTORY_ID],
+                    'name': "{} File: {}".format(self.name, item),
+                    'src': 'hda'
+                }
+                for item in self.get_file_relationships_galaxy()
+            ]
+        }
+
+    def create_collection(self):
+        collection_description = self.create_collection_description()
+        connection = self.analysis.galaxy_connection()
+        collection_info = connection.histories.create_dataset_collection(
+            self.get_galaxy_data()[self.GALAXY_IMPORT_HISTORY_DICT]["id"],
+            collection_description
+        )
+        self.update_galaxy_data(self.COLLECTION_INFO, collection_info)
+
+    def create_workflow_inputs(self):
+        return {
+            '0': {
+                'id': self.get_galaxy_data()[self.COLLECTION_INFO]["id"],
+                'src': 'hdca'
+            }
+        }
+
     def get_input_file_uuid_list(self):
         # Tools can't be created without the `file_uuid_list` existing so no
         # KeyError is being caught
@@ -315,6 +352,12 @@ class Tool(OwnableResource):
         return ast.literal_eval(
             self.get_tool_launch_config()[self.FILE_RELATIONSHIPS_GALAXY]
         )
+
+    def get_galaxy_data(self):
+        if self.get_tool_type() != ToolDefinition.WORKFLOW:
+            raise NotImplementedError
+
+        return self.get_tool_launch_config()[self.GALAXY_DATA]
 
     def get_node_uuids(self):
         node_uuids = re.findall(
@@ -423,6 +466,31 @@ class Tool(OwnableResource):
             }
         )
 
+    def _get_nesting_string(self, nesting=None, structure=""):
+        """
+        Gets the `LIST`/`PAIR` structure of our file_relationships,
+        but flattened into a string.
+        :param nesting: Nested dict/tuple file_relationships data structure
+        form our tool launch config
+        :param structure:
+        :return:
+        """
+        if nesting is None:
+            nesting = self.get_file_relationships_urls()
+        try:
+            if isinstance(nesting, list):
+                structure += "LIST:"
+            if isinstance(nesting, tuple):
+                structure += "PAIR:"
+            if isinstance(nesting, str):
+                raise RuntimeError
+            return self._get_nesting_string(
+                nesting[0],
+                structure=structure
+            )
+        except RuntimeError:
+            return structure[:-1].lower()
+
     def set_tool_launch_config(self, tool_launch_config):
         self.tool_launch_configuration = json.dumps(tool_launch_config)
         self.save()
@@ -484,9 +552,10 @@ class Tool(OwnableResource):
         atomic transaction.
         """
         tool_launch_config = self.get_tool_launch_config()
-        tool_launch_config[self.FILE_RELATIONSHIPS_GALAXY] = (
-            tool_launch_config[self.FILE_RELATIONSHIPS]
-        )
+        if tool_launch_config.get(self.FILE_RELATIONSHIPS_GALAXY) is None:
+            tool_launch_config[self.FILE_RELATIONSHIPS_GALAXY] = (
+                tool_launch_config[self.FILE_RELATIONSHIPS]
+            )
 
         node = Node.objects.get(
             file_uuid=galaxy_to_refinery_mapping[Tool.REFINERY_FILE_UUID]
@@ -497,6 +566,16 @@ class Tool(OwnableResource):
                 "{}".format(json.dumps(galaxy_to_refinery_mapping))
             )
         )
+        self.set_tool_launch_config(tool_launch_config)
+
+    def update_galaxy_data(self, key, value):
+        tool_launch_config = self.get_tool_launch_config()
+
+        if tool_launch_config.get(self.GALAXY_DATA) is None:
+            tool_launch_config[self.GALAXY_DATA] = {}
+
+        tool_launch_config[self.GALAXY_DATA][key] = value
+
         self.set_tool_launch_config(tool_launch_config)
 
 
