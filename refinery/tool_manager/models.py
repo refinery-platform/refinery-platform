@@ -252,19 +252,6 @@ def delete_input_files_and_file_relationships(sender, instance, *args,
         file_relationship.delete()
 
 
-def _visualization_tool_only(func):
-    def func_wrapper(*args, **kwargs):
-        if args[0].get_tool_type() != ToolDefinition.VISUALIZATION:
-            raise NotImplementedError(
-                "{} is only available for visualization-based Tools".format(
-                    func.__name__
-                )
-            )
-        else:
-            return func(*args, **kwargs)
-    return func_wrapper
-
-
 def _workflow_tool_only(func):
     def func_wrapper(*args, **kwargs):
         if args[0].get_tool_type() != ToolDefinition.WORKFLOW:
