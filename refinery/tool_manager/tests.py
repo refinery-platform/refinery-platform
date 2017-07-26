@@ -1058,7 +1058,7 @@ class ToolTests(ToolManagerTestBase):
     def test_create_collection_non_workflow_tool(self):
         self.create_valid_tool(ToolDefinition.VISUALIZATION)
         with self.assertRaises(NotImplementedError):
-            self.tool.create_collection()
+            self.tool.create_dataset_collection()
 
     def test_create_workflow_inputs_non_workflow_tool(self):
         self.create_valid_tool(ToolDefinition.VISUALIZATION)
