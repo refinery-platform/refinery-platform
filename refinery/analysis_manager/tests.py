@@ -620,13 +620,13 @@ class AnalysisRunTests(AnalysisManagerTestBase):
 
     @mock.patch("{}._refinery_file_import".format(tasks_mock))
     @mock.patch("{}._run_galaxy_workflow".format(tasks_mock))
-    @mock.patch("{}._galaxy_file_import".format(tasks_mock))
+    @mock.patch("{}._check_galaxy_history_state".format(tasks_mock))
     @mock.patch("{}._galaxy_file_export".format(tasks_mock))
     @mock.patch("{}._attach_workflow_outputs".format(tasks_mock))
     def test_run_analysis(self,
                           refinery_import_mock,
                           run_galaxy_mock,
-                          galaxy_import_mock,
+                          check_galaxy_history_state_mock,
                           galaxy_export_mock,
                           attach_outputs_mock):
         # Run an Analysis and ensure that the methods to check the state of
@@ -634,7 +634,7 @@ class AnalysisRunTests(AnalysisManagerTestBase):
         run_analysis(self.analysis.uuid)
         self.assertTrue(refinery_import_mock.called)
         self.assertTrue(run_galaxy_mock.called)
-        self.assertTrue(galaxy_import_mock.called)
+        self.assertTrue(check_galaxy_history_state_mock.called)
         self.assertTrue(galaxy_export_mock.called)
         self.assertTrue(attach_outputs_mock.called)
 
