@@ -1637,7 +1637,14 @@ class NodeApiV2Tests(APITestCase):
 class NodeIndexTests(APITestCase):
 
     def setUp(self):
+        data_set = DataSet.objects.create()
         investigation = Investigation.objects.create()
+
+        InvestigationLink.objects.create(
+            investigation=investigation,
+            data_set=data_set
+        )
+
         study = Study.objects.create(investigation=investigation)
         assay = Assay.objects.create(study=study)
 

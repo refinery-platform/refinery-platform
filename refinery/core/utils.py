@@ -1009,6 +1009,6 @@ def get_data_set_for_study_uuid(study_uuid):
             investigation__uuid=study.investigation.uuid
         ).order_by("version").reverse()[0].data_set
     except (AttributeError, IndexError) as e:
-        raise RuntimeError("Couldn't fetch DataSet {}".format(e))
+        raise RuntimeError("Couldn't fetch DataSet: {}".format(e))
 
     return data_set
