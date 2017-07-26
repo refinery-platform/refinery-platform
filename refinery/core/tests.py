@@ -1,5 +1,6 @@
 import json
 import random
+import re
 import string
 from urlparse import urljoin
 
@@ -2544,6 +2545,16 @@ class CoreIndexTests(TestCase):
         self.dataset_index = DataSetIndex()
         self.good_dataset = create_dataset_with_necessary_models()
         self.bad_dataset = DataSet.objects.create()
+
+    def test_prepare(self):
+        data = self.dataset_index.prepare(self.good_dataset)
+        self.assertRegexpMatches(
+            data['text'],
+            re.compile(
+                r'AnnotatedNode-\d.*AnnotatedNode-\d',
+                re.DOTALL
+            )
+        )
 
     def test_prepare_submitter(self):
         contact = Contact.objects.create(

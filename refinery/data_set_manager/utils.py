@@ -10,11 +10,9 @@ import time
 import urlparse
 
 from django.conf import settings
-from django.contrib.auth.models import User
 from django.db.models import Q
 from django.utils.http import urlquote, urlunquote
 
-from guardian.shortcuts import get_objects_for_user
 import requests
 from requests.exceptions import HTTPError
 
@@ -609,56 +607,6 @@ def _index_annotated_nodes(node_type, study_uuid, assay_uuid=None,
     logger.info("%s nodes indexed in %s", str(counter), str(end - start))
 
 
-def generate_solr_params_for_user(params, user_id):
-    """Creates the encoded solr params limiting results to one user.
-    Keyword Argument
-        params -- python dict or QueryDict
-    Params/Solr Params
-        is_annotation - metadata
-        facet_count/facet - enables facet counts in query response, true/false
-        offset - paginate, offset response
-        limit/row - maximum number of documents
-        field_limit - set of fields to return
-        facet_field - specify a field which should be treated as a facet
-        facet_filter - adds params to facet fields&fqs for filtering on fields
-        facet_pivot - list of fields to pivot
-        sort - Ordering include field name, whitespace, & asc or desc.
-        fq - filter query
-     """
-
-    user = None
-    try:
-        user = User.objects.get(id=user_id)
-    except User.DoesNotExist:
-        pass
-
-    if user:
-        datasets = get_objects_for_user(user, "core.read_dataset")
-    else:
-        datasets = []
-
-    assay_uuids = []
-    for dataset in datasets:
-        investigation_link = dataset.get_latest_investigation_link()
-        if investigation_link is None:
-            continue
-            # It's not an error not to have data,
-            # but there's nothing more to do here.
-        investigation = investigation_link.investigation
-
-        study_ids = Study.objects.filter(
-            investigation=investigation
-        ).values_list('id', flat=True)
-
-        assay_uuids += Assay.objects.filter(
-            study_id__in=study_ids
-        ).values_list('uuid', flat=True)
-
-    return _generate_solr_params(params,
-                                 assay_uuids=assay_uuids,
-                                 facets_from_config=True)
-
-
 def generate_solr_params_for_assay(params, assay_uuid):
     """Creates the encoded solr params requiring only an assay.
     Keyword Argument
@@ -675,10 +623,10 @@ def generate_solr_params_for_assay(params, assay_uuid):
         sort - Ordering include field name, whitespace, & asc or desc.
         fq - filter query
      """
-    return _generate_solr_params(params, assay_uuids=[assay_uuid])
+    return generate_solr_params(params, assay_uuids=[assay_uuid])
 
 
-def _generate_solr_params(params, assay_uuids, facets_from_config=False):
+def generate_solr_params(params, assay_uuids, facets_from_config=False):
     """
     Either returns a solr url parameter string,
     or None if assay_uuids is empty.

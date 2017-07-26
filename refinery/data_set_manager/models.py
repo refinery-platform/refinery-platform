@@ -3,14 +3,15 @@ Created on May 10, 2012
 
 @author: nils
 '''
-import logging
 from datetime import datetime
+import logging
 
-import requests
-from celery.result import AsyncResult
 from django.conf import settings
 from django.db import models
+
+from celery.result import AsyncResult
 from django_extensions.db.fields import UUIDField
+import requests
 from requests.exceptions import HTTPError
 
 import core
@@ -858,7 +859,6 @@ def initialize_attribute_order(study, assay):
     results = _query_solr(study=study, assay=assay)
 
     attribute_order_objects = []
-    rank = 0
     for key in results['response']['docs'][0]:
         is_facet = _is_facet_attribute(key, study, assay)
         is_exposed = _is_exposed_attribute(key)
@@ -870,7 +870,7 @@ def initialize_attribute_order(study, assay):
                     study=study,
                     assay=assay,
                     solr_field=key,
-                    rank=++rank,
+                    rank=0,
                     is_facet=is_facet,
                     is_exposed=is_exposed,
                     is_internal=is_internal,

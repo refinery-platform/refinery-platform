@@ -1,13 +1,16 @@
 from datetime import datetime
 import uuid as uuid_builtin
 
-from core.models import Analysis, DataSet
-from factory_boy.django_model_factories import (AnalysisFactory, AssayFactory,
+from core.models import Analysis, DataSet, Node
+from factory_boy.django_model_factories import (AnalysisFactory,
+                                                AnnotatedNodeFactory,
+                                                AssayFactory, AttributeFactory,
                                                 DataSetFactory,
                                                 GalaxyInstanceFactory,
                                                 InvestigationFactory,
                                                 InvestigationLinkFactory,
-                                                ProjectFactory, StudyFactory,
+                                                NodeFactory, ProjectFactory,
+                                                StudyFactory,
                                                 WorkflowEngineFactory,
                                                 WorkflowFactory)
 
@@ -55,7 +58,8 @@ def make_analyses_with_single_dataset(number_to_create, user_instance):
 
 
 def create_dataset_with_necessary_models():
-    """Create Dataset with Investigation, Study, and Investigation Link"""
+    """Create Dataset with InvestigationLink, Investigation, Study,
+    and Assay"""
     dataset_uuid = str(uuid_builtin.uuid4())
     dataset = DataSetFactory(
         uuid=dataset_uuid,
@@ -66,22 +70,40 @@ def create_dataset_with_necessary_models():
     investigation_uuid = str(uuid_builtin.uuid4())
     investigation = InvestigationFactory(uuid=investigation_uuid)
 
-    study_uuid = str(uuid_builtin.uuid4())
-    study = StudyFactory(
-        uuid=study_uuid,
-        investigation=investigation,
-        description="This is a great DataSet"
-    )
-    assay_uuid = str(uuid_builtin.uuid4())
-    AssayFactory(
-        uuid=assay_uuid,
-        study=study
-    )
-
     InvestigationLinkFactory(
         data_set=dataset,
         investigation=investigation,
         version=1,
         date=datetime.now()
     )
+
+    study_uuid = str(uuid_builtin.uuid4())
+    study = StudyFactory(
+        uuid=study_uuid,
+        investigation=investigation,
+        description="This is a great DataSet"
+    )
+
+    assay_uuid = str(uuid_builtin.uuid4())
+    assay = AssayFactory(
+        uuid=assay_uuid,
+        study=study
+    )
+
+    for i in xrange(2):
+        node = NodeFactory(
+            study=study
+        )
+        attribute = AttributeFactory(
+            node=node
+        )
+        AnnotatedNodeFactory(
+            study=study,
+            assay=assay,
+            node=node,
+            node_name='AnnotatedNode-{}'.format(i),
+            node_type=Node.RAW_DATA_FILE,
+            attribute=attribute
+        )
+
     return dataset

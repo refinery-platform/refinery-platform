@@ -3,6 +3,8 @@ import uuid as uuid_builtin
 
 import factory
 
+from data_set_manager.models import Node
+
 
 class DataSetFactory(factory.django.DjangoModelFactory):
     """Minimal representation of a DataSet"""
@@ -17,7 +19,7 @@ class DataSetFactory(factory.django.DjangoModelFactory):
 
 
 class AssayFactory(factory.django.DjangoModelFactory):
-    """Minimal representation of a Assay"""
+    """Minimal representation of an Assay"""
     class Meta:
         model = "data_set_manager.Assay"
 
@@ -39,6 +41,26 @@ class InvestigationLinkFactory(factory.django.DjangoModelFactory):
 
     version = 1
     date = datetime.now()
+
+
+class NodeFactory(factory.django.DjangoModelFactory):
+    """Minimal representation of a Node"""
+    class Meta:
+        model = "data_set_manager.Node"
+
+    type = Node.RAW_DATA_FILE
+
+
+class AnnotatedNodeFactory(factory.django.DjangoModelFactory):
+    """Minimal representation of an AnnotatedNode"""
+    class Meta:
+        model = "data_set_manager.AnnotatedNode"
+
+
+class AttributeFactory(factory.django.DjangoModelFactory):
+    """Minimal representation of an Attribute"""
+    class Meta:
+        model = "data_set_manager.Attribute"
 
 
 class AnalysisFactory(factory.django.DjangoModelFactory):
