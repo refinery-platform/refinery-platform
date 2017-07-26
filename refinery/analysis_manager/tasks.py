@@ -66,6 +66,11 @@ def _check_galaxy_history_state(analysis_uuid):
         percent_complete = analysis.galaxy_progress()
     except RuntimeError:
         analysis_status.set_galaxy_history_state(AnalysisStatus.ERROR)
+        error_msg = (
+            "Analysis '{}' failed during Galaxy Workflow run".format(analysis)
+        )
+        logger.error(error_msg)
+        analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
         analysis.send_email()
         get_taskset_result(
             analysis_status.refinery_import_task_group_id
