@@ -52,6 +52,46 @@ class AnalysisHandlerTask(Task):
         analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
 
 
+def _check_galaxy_history_state(analysis_uuid):
+    """
+    Monitor the state of our Galaxy history from analysis.galaxy_progress().
+    Fail the `run_analysis` task appropriately if we run into trouble.
+    Update analysis_status.galaxy_history_progress &
+    analysis_status.galaxy_history_state along the way
+    """
+    analysis = _get_analysis(analysis_uuid)
+    analysis_status = _get_analysis_status(analysis_uuid)
+
+    try:
+        percent_complete = analysis.galaxy_progress()
+    except RuntimeError:
+        analysis_status.set_galaxy_history_state(AnalysisStatus.ERROR)
+        analysis.send_email()
+        get_taskset_result(
+            analysis_status.refinery_import_task_group_id
+        ).delete()
+        get_taskset_result(
+            analysis_status.galaxy_import_task_group_id
+        ).delete()
+        analysis.galaxy_cleanup()
+        return
+    except galaxy.client.ConnectionError:
+        analysis_status.set_galaxy_history_state(
+            AnalysisStatus.UNKNOWN
+        )
+        run_analysis.retry(countdown=RETRY_INTERVAL)
+    else:
+        # workaround to avoid moving the progress bar backward
+        if analysis_status.galaxy_history_progress < percent_complete:
+            analysis_status.galaxy_history_progress = percent_complete
+            analysis_status.save()
+        if percent_complete < 100:
+            analysis_status.set_galaxy_history_state(AnalysisStatus.PROGRESS)
+            run_analysis.retry(countdown=RETRY_INTERVAL)
+        else:
+            analysis_status.set_galaxy_history_state(AnalysisStatus.OK)
+
+
 def _get_analysis(analysis_uuid):
     """
     Try to fetch the Analysis from the given analysis_uuid. Fail the
@@ -182,47 +222,6 @@ def _galaxy_file_export(analysis_uuid):
         return
 
 
-def _galaxy_file_import(analysis_uuid):
-    """
-    Check on the status of the files being imported into Galaxy.
-    Fail the task appropriately if we cannot retrieve the status.
-    """
-    analysis = _get_analysis(analysis_uuid)
-    analysis_status = _get_analysis_status(analysis_uuid)
-
-    try:
-        percent_complete = analysis.galaxy_progress()
-    except RuntimeError:
-        analysis_status.set_galaxy_history_state(AnalysisStatus.ERROR)
-        analysis.send_email()
-        get_taskset_result(
-            analysis_status.refinery_import_task_group_id
-        ).delete()
-        get_taskset_result(
-            analysis_status.galaxy_import_task_group_id
-        ).delete()
-        analysis.galaxy_cleanup()
-        return
-    except galaxy.client.ConnectionError:
-        analysis_status.set_galaxy_history_state(
-            AnalysisStatus.UNKNOWN
-        )
-        run_analysis.retry(countdown=RETRY_INTERVAL)
-    else:
-        # workaround to avoid moving the progress bar backward
-        if analysis_status.galaxy_history_progress < percent_complete:
-            analysis_status.galaxy_history_progress = percent_complete
-            analysis_status.save()
-        if percent_complete < 100:
-            analysis_status.set_galaxy_history_state(
-                AnalysisStatus.PROGRESS)
-            run_analysis.retry(countdown=RETRY_INTERVAL)
-        else:
-            analysis_status.set_galaxy_history_state(
-                AnalysisStatus.OK
-            )
-
-
 @task()
 def _invoke_tool_based_galaxy_workflow(analysis_uuid):
     analysis = _get_analysis(analysis_uuid)
@@ -320,10 +319,11 @@ def run_analysis(analysis_uuid):
     if analysis.is_tool_based:
         _run_tool_based_galaxy_file_import(analysis_uuid)
         _run_tool_based_galaxy_workflow(analysis_uuid)
+        _check_galaxy_history_state(analysis_uuid)
         _run_tool_based_galaxy_file_export(analysis_uuid)
     else:
         _run_galaxy_workflow(analysis_uuid)
-        _galaxy_file_import(analysis_uuid)
+        _check_galaxy_history_state(analysis_uuid)
         _galaxy_file_export(analysis_uuid)
         _attach_workflow_outputs(analysis_uuid)
 
@@ -500,38 +500,6 @@ def _run_tool_based_galaxy_workflow(analysis_uuid):
         galaxy_workflow_taskset.delete()
         analysis.galaxy_cleanup()
         return
-
-    try:
-        percent_complete = analysis.galaxy_progress()
-    except RuntimeError:
-        analysis_status.set_galaxy_history_state(AnalysisStatus.ERROR)
-        analysis.send_email()
-        get_taskset_result(
-            analysis_status.refinery_import_task_group_id
-        ).delete()
-        get_taskset_result(
-            analysis_status.galaxy_import_task_group_id
-        ).delete()
-        analysis.galaxy_cleanup()
-        return
-    except galaxy.client.ConnectionError:
-        analysis_status.set_galaxy_history_state(
-            AnalysisStatus.UNKNOWN
-        )
-        run_analysis.retry(countdown=RETRY_INTERVAL)
-    else:
-        # workaround to avoid moving the progress bar backward
-        if analysis_status.galaxy_history_progress < percent_complete:
-            analysis_status.galaxy_history_progress = percent_complete
-            analysis_status.save()
-        if percent_complete < 100:
-            analysis_status.set_galaxy_history_state(
-                AnalysisStatus.PROGRESS)
-            run_analysis.retry(countdown=RETRY_INTERVAL)
-        else:
-            analysis_status.set_galaxy_history_state(
-                AnalysisStatus.OK
-            )
 
 
 def _import_analysis_in_galaxy(ret_list, library_id, connection):

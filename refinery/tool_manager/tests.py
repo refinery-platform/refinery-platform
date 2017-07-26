@@ -1368,12 +1368,14 @@ class ToolLaunchTests(ToolManagerTestBase):
     @mock.patch("{}._refinery_file_import".format(tasks_mock))
     @mock.patch("{}._run_tool_based_galaxy_file_import".format(tasks_mock))
     @mock.patch("{}._run_tool_based_galaxy_workflow".format(tasks_mock))
+    @mock.patch("{}._check_galaxy_history_state".format(tasks_mock))
     @mock.patch("{}._run_tool_based_galaxy_file_export".format(tasks_mock))
     def test_appropriate_methods_are_called_for_tool_based_analysis_run(
             self,
             refinery_file_import_mock,
             run_tool_based_galaxy_file_import_mock,
             run_tool_based_galaxy_workflow_mock,
+            check_galaxy_history_state_mock,
             run_tool_based_galaxy_file_export_mock
     ):
         self.create_valid_tool(ToolDefinition.WORKFLOW)
@@ -1382,6 +1384,7 @@ class ToolLaunchTests(ToolManagerTestBase):
         self.assertTrue(refinery_file_import_mock.called)
         self.assertTrue(run_tool_based_galaxy_file_import_mock.called)
         self.assertTrue(run_tool_based_galaxy_workflow_mock.called)
+        self.assertTrue(check_galaxy_history_state_mock.called)
         self.assertTrue(run_tool_based_galaxy_file_export_mock.called)
 
     @mock.patch.object(
