@@ -229,16 +229,14 @@ def _invoke_tool_based_galaxy_workflow(analysis_uuid):
     tool = _get_tool(analysis_uuid)
     connection = analysis.galaxy_connection()
 
-    # Create Dataset Collection
-    tool.create_collection()
+    tool.create_dataset_collection()
 
-    # Invoke Workflow
-    wf_inputs = tool.create_workflow_inputs()
+    workflow_inputs = tool.create_workflow_inputs()
 
     galaxy_workflow_invocation_data = connection.workflows.invoke_workflow(
         tool.tool_definition.workflow.internal_id,
         history_name="Workflow Run for {}".format(tool.name),
-        inputs=wf_inputs
+        inputs=workflow_inputs
     )
 
     analysis.history_id = galaxy_workflow_invocation_data["history_id"]

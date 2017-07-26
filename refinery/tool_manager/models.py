@@ -330,7 +330,7 @@ class Tool(OwnableResource):
         }
 
     @_workflow_tool_only
-    def create_collection(self):
+    def create_dataset_collection(self):
         collection_description = self.create_collection_description()
         connection = self.analysis.galaxy_connection()
         collection_info = connection.histories.create_dataset_collection(
@@ -552,7 +552,9 @@ class Tool(OwnableResource):
 
     @_workflow_tool_only
     def update_file_relationships_with_galaxy_history_data(
-            self,  galaxy_to_refinery_mapping):
+            self,
+            galaxy_to_refinery_mapping
+    ):
         """
         Replace a Tool's Node uuid in its `file_relationships` string with
         information about the file uploaded into a galaxy history that
