@@ -900,6 +900,13 @@ class ToolDefinitionTests(ToolManagerTestBase):
 
 
 class ToolTests(ToolManagerTestBase):
+    EXAMPLE_URL = "www.example.com/file.txt"
+    LIST = [EXAMPLE_URL]
+    LIST_PAIR = [(EXAMPLE_URL, EXAMPLE_URL)]
+    PAIR = (EXAMPLE_URL, EXAMPLE_URL)
+    PAIR_LIST = ([EXAMPLE_URL], [EXAMPLE_URL])
+    LIST_LIST_PAIR = [[(EXAMPLE_URL, EXAMPLE_URL)]]
+
     def test_tool_model_str(self):
         self.create_valid_tool(ToolDefinition.VISUALIZATION)
 
@@ -1098,6 +1105,41 @@ class ToolTests(ToolManagerTestBase):
         self.create_valid_tool(ToolDefinition.VISUALIZATION)
         with self.assertRaises(NotImplementedError):
             self.tool.update_file_relationships_with_galaxy_history_data()
+
+    def test__get_nesting_string_list(self):
+        self.create_valid_tool(ToolDefinition.WORKFLOW)
+        nesting_string = self.tool._get_nesting_string(
+            nesting=self.LIST
+        )
+        self.assertEqual(nesting_string, "list")
+
+    def test__get_nesting_string_pair(self):
+        self.create_valid_tool(ToolDefinition.WORKFLOW)
+        nesting_string = self.tool._get_nesting_string(
+            nesting=self.PAIR
+        )
+        self.assertEqual(nesting_string, "paired")
+
+    def test__get_nesting_string_list_pair(self):
+        self.create_valid_tool(ToolDefinition.WORKFLOW)
+        nesting_string = self.tool._get_nesting_string(
+            nesting=self.LIST_PAIR
+        )
+        self.assertEqual(nesting_string, "list:paired")
+
+    def test__get_nesting_string_pair_list(self):
+        self.create_valid_tool(ToolDefinition.WORKFLOW)
+        nesting_string = self.tool._get_nesting_string(
+            nesting=self.PAIR_LIST
+        )
+        self.assertEqual(nesting_string, "paired:list")
+
+    def test__get_nesting_string_list_list_pair(self):
+        self.create_valid_tool(ToolDefinition.WORKFLOW)
+        nesting_string = self.tool._get_nesting_string(
+            nesting=self.LIST_LIST_PAIR
+        )
+        self.assertEqual(nesting_string, "list:list:paired")
 
 
 class ToolAPITests(APITestCase, ToolManagerTestBase):

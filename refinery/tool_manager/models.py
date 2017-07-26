@@ -500,9 +500,9 @@ class Tool(OwnableResource):
             nesting = self.get_file_relationships_urls()
         try:
             if isinstance(nesting, list):
-                structure += "LIST:"
+                structure += "list:"
             if isinstance(nesting, tuple):
-                structure += "PAIR:"
+                structure += "paired:"
             if isinstance(nesting, str):
                 raise RuntimeError
             return self._get_nesting_string(
@@ -510,7 +510,7 @@ class Tool(OwnableResource):
                 structure=structure
             )
         except RuntimeError:
-            return structure[:-1].lower()
+            return structure[:-1]
 
     def set_tool_launch_config(self, tool_launch_config):
         self.tool_launch_configuration = json.dumps(tool_launch_config)
