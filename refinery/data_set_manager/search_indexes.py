@@ -57,16 +57,15 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
 
         data = super(NodeIndex, self).prepare(object)
         annotations = AnnotatedNode.objects.filter(node=object)
-        study_id = str(object.study.id)
+        suffix = str(object.study.id)
 
         data_set = get_data_set_for_study_uuid(object.study.uuid)
-
-        logging.info('ds uuid: %s', data_set.uuid)
+        data['data_set_uuid'] = data_set.uuid
 
         if object.assay is not None:
-            study_id += "_" + str(object.assay.id)
+            suffix += "_" + str(object.assay.id)
 
-        suffix = "_" + study_id + "_s"
+        suffix = "_" + suffix + "_s"
 
         # create dynamic fields for each attribute
         for annotation in annotations:

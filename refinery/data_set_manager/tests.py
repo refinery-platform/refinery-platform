@@ -1666,6 +1666,7 @@ class NodeIndexTests(APITestCase):
             study=study,
             file_uuid=file_store_item.uuid)
 
+        self.data_set_uuid = data_set.uuid
         self.assay_uuid = assay.uuid
         self.study_uuid = study.uuid
         self.file_uuid = file_store_item.uuid
@@ -1702,6 +1703,7 @@ class NodeIndexTests(APITestCase):
                           'REFINERY_WORKFLOW_OUTPUT_#_#_s': 'N/A',
                           'analysis_uuid': None,
                           'assay_uuid': self.assay_uuid,
+                          'data_set_uuid': self.data_set_uuid,
                           u'django_ct': u'data_set_manager.node',
                           u'django_id': u'#',
                           'file_uuid': self.file_uuid,
