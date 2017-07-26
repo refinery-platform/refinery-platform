@@ -1099,11 +1099,6 @@ class ToolTests(ToolManagerTestBase):
         with self.assertRaises(NotImplementedError):
             self.tool.update_file_relationships_with_galaxy_history_data()
 
-    def test_update_analysis_non_workflow_tool(self):
-        self.create_valid_tool(ToolDefinition.VISUALIZATION)
-        with self.assertRaises(NotImplementedError):
-            self.tool.update_analysis()
-
 
 class ToolAPITests(APITestCase, ToolManagerTestBase):
     def test_tools_exist(self):
