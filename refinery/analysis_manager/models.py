@@ -26,6 +26,9 @@ class AnalysisStatus(models.Model):
                                               auto=False)
     galaxy_import_task_group_id = UUIDField(blank=True, null=True, auto=False)
     galaxy_export_task_group_id = UUIDField(blank=True, null=True, auto=False)
+    galaxy_workflow_task_group_id = UUIDField(blank=True,
+                                              null=True,
+                                              auto=False)
     #: state of Galaxy history
     galaxy_history_state = CharField(max_length=10, blank=True,
                                      choices=GALAXY_HISTORY_STATES)
