@@ -782,7 +782,8 @@ def delete_analysis_index(node_instance):
     """
     try:
         data_set_manager.search_indexes.NodeIndex().remove_object(
-            node_instance, using='data_set_manager')
+            node_instance, using='data_set_manager'
+        )
         logger.debug('Deleted Analysis\' NodeIndex with (uuid: %s)',
                      node_instance.uuid)
     except Exception as e:
@@ -1012,7 +1013,8 @@ def get_data_set_for_study_uuid(study_uuid):
     except (AttributeError, IndexError) as e:
         raise RuntimeError(
             "Couldn't fetch DataSet for Investigation {}: {}".format(
-                investigation_uuid, e)
+                investigation_uuid, e
+            )
         )
 
     return data_set
