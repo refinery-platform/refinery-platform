@@ -444,6 +444,7 @@ class Tool(OwnableResource):
 
         return JsonResponse({"tool_url": self.get_relative_container_url()})
 
+    @_workflow_tool_only
     def _launch_workflow(self):
         """
         Launch a workflow-based Tool
