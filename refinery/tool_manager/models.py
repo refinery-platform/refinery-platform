@@ -259,11 +259,17 @@ class Tool(OwnableResource):
     """
 
     # Some string constants to aid any future refactoring efforts
+    COLLECTION_INFO = "collection_info"
     FILE_UUID_LIST = "file_uuid_list"
     FILE_RELATIONSHIPS = "file_relationships"
     FILE_RELATIONSHIPS_URLS = "{}_urls".format(FILE_RELATIONSHIPS)
     FILE_RELATIONSHIPS_GALAXY = "{}_galaxy".format(FILE_RELATIONSHIPS)
+    GALAXY_DATA = "galaxy_data"
     GALAXY_DATASET_HISTORY_ID = "galaxy_dataset_history_id"
+    GALAXY_IMPORT_HISTORY_DICT = "import_history_dict"
+    GALAXY_LIBRARY_DICT = "library_dict"
+    GALAXY_WORKFLOW_HISTORY_DICT = "workflow_history_dict"
+    GALAXY_WORKFLOW_INVOCATION_DATA = "galaxy_workflow_invocation_data"
     REFINERY_FILE_UUID = "refinery_file_uuid"
 
     dataset = models.ForeignKey(DataSet)
