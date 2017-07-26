@@ -1042,6 +1042,11 @@ class ToolTests(ToolManagerTestBase):
             }
         )
 
+    def test_update_galaxy_data_non_workflow_tool(self):
+        self.create_valid_tool(ToolDefinition.VISUALIZATION)
+        with self.assertRaises(NotImplementedError):
+            self.tool.update_galaxy_data("test", "data")
+
     def test_get_galaxy_data_non_workflow_tool(self):
         self.create_valid_tool(ToolDefinition.VISUALIZATION)
         with self.assertRaises(NotImplementedError):
