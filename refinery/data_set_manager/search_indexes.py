@@ -11,7 +11,6 @@ from django.conf import settings
 
 from haystack import indexes
 
-from core.utils import get_data_set_for_study_uuid
 from file_store.models import FileStoreItem
 
 from .models import AnnotatedNode, Node
@@ -61,7 +60,7 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
         suffix = str(object.study.id)
 
         try:
-            data_set = get_data_set_for_study_uuid(object.study.uuid)
+            data_set = object.study.get_dataset()
             data['data_set_uuid'] = data_set.uuid
         except RuntimeError as e:
             logger.warn(e)

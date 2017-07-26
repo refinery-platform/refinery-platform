@@ -25,7 +25,6 @@ from rest_framework.response import Response
 import core
 from core.search_indexes import DataSetIndex
 import data_set_manager
-from data_set_manager.models import Study
 
 logger = logging.getLogger(__name__)
 
@@ -995,26 +994,3 @@ def get_resources_for_user(user, resource_type):
         else get_anonymous_user(),
         'core.read_%s' % resource_type
     )
-
-
-def get_data_set_for_study_uuid(study_uuid):
-    try:
-        study = Study.objects.get(uuid=study_uuid)
-    except(Study.DoesNotExist, Study.MultipleObjectsReturned) as e:
-        raise RuntimeError(
-            "Couldn't fetch Study {}: {}".format(study_uuid, e)
-        )
-
-    try:
-        investigation_uuid = study.investigation.uuid
-        data_set = core.models.InvestigationLink.objects.filter(
-            investigation__uuid=investigation_uuid
-        ).order_by("version").reverse()[0].data_set
-    except (AttributeError, IndexError) as e:
-        raise RuntimeError(
-            "Couldn't fetch DataSet for Investigation {}: {}".format(
-                investigation_uuid, e
-            )
-        )
-
-    return data_set

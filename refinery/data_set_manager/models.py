@@ -204,6 +204,20 @@ class Study(NodeCollection):
     def assay_nodes(self):
         self.node_set(type=Node.ASSAY)
 
+    def get_dataset(self):
+        investigation_uuid = self.investigation.uuid
+        try:
+            data_set = core.models.InvestigationLink.objects.filter(
+                investigation__uuid=investigation_uuid
+            ).order_by("version").reverse()[0].data_set
+        except (AttributeError, IndexError) as e:
+            raise RuntimeError(
+                "Couldn't fetch DataSet for Investigation {}: {}".format(
+                    investigation_uuid, e
+                )
+            )
+        return data_set
+
     def __unicode__(self):
         return unicode(self.identifier) + ": " + unicode(self.title)
 
