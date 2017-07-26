@@ -94,3 +94,13 @@ history_dataset_dict = {
     u'rerunnable': False, u'purged': False,
     u'api_type': u'file'
 }
+
+galaxy_workflow_invocation_data = {
+    u'update_time': u'2017-07-26T19:19:25.833503',
+    u'uuid': u'56824ed1-7237-11e7-a25c-0c4de9d2ab81',
+    u'history_id': u'b2486a20bc56b90f',
+    u'state': u'new',
+    u'workflow_id': u'6fc9fbb81c497f69',
+    u'model_class': u'WorkflowInvocation',
+    u'id': u'52e496b945151ee8'
+}

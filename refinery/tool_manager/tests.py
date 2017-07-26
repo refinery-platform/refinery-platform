@@ -15,11 +15,14 @@ import bioblend
 import mock
 from rest_framework.test import (APIRequestFactory, APITestCase,
                                  force_authenticate)
-from test_data.galaxy_mocks import (history_dataset_dict, history_dict,
+from test_data.galaxy_mocks import (galaxy_workflow_invocation_data,
+                                    history_dataset_dict, history_dict,
                                     library_dataset_dict, library_dict)
 
 from analysis_manager.models import AnalysisStatus
-from analysis_manager.tasks import (_get_tool, _refinery_file_import,
+from analysis_manager.tasks import (_get_tool,
+                                    _invoke_tool_based_galaxy_workflow,
+                                    _refinery_file_import,
                                     _tool_based_galaxy_file_import,
                                     run_analysis)
 from core.models import ExtendedGroup, Project, Workflow, WorkflowEngine
@@ -1457,6 +1460,33 @@ class ToolLaunchTests(ToolManagerTestBase):
     def test_is_tool_based(self):
         self.create_valid_tool(ToolDefinition.WORKFLOW)
         self.assertTrue(self.tool.analysis.is_tool_based)
+
+    @mock.patch("tool_manager.models.Tool.create_dataset_collection")
+    @mock.patch("tool_manager.models.Tool.create_workflow_inputs")
+    @mock.patch.object(
+        bioblend.galaxy.workflows.WorkflowClient,
+        "invoke_workflow",
+        return_value=galaxy_workflow_invocation_data
+    )
+    def test__invoke_tool_based_galaxy_workflow(
+        self,
+        create_dataset_collection_mock,
+        create_workflow_inputs_mock,
+        invoke_workflow_mock
+    ):
+        self.create_valid_tool(ToolDefinition.WORKFLOW)
+        _invoke_tool_based_galaxy_workflow(self.tool.analysis.uuid)
+
+        self.assertTrue(create_dataset_collection_mock.called)
+        self.assertTrue(create_workflow_inputs_mock.called)
+        self.assertTrue(invoke_workflow_mock.called)
+
+        tool = Tool.objects.get(uuid=self.tool.uuid)
+
+        self.assertEqual(
+            tool.get_galaxy_data()[Tool.GALAXY_WORKFLOW_INVOCATION_DATA],
+            galaxy_workflow_invocation_data
+        )
 
 
 class ToolLaunchSeleniumTests(ToolManagerTestBase, SeleniumTestBaseGeneric):
