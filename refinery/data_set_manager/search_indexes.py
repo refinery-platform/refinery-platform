@@ -31,6 +31,7 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
     uuid = indexes.CharField(model_attr='uuid')
     study_uuid = indexes.CharField(model_attr='study__uuid')
     assay_uuid = indexes.CharField(model_attr='assay__uuid', null=True)
+    data_set_uuid = indexes.CharField(null=True)
     type = indexes.CharField(model_attr='type')
     name = indexes.CharField(model_attr='name', null=True)
     file_uuid = indexes.CharField(model_attr='file_uuid', null=True)
@@ -59,8 +60,11 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
         annotations = AnnotatedNode.objects.filter(node=object)
         suffix = str(object.study.id)
 
-        data_set = get_data_set_for_study_uuid(object.study.uuid)
-        data['data_set_uuid'] = data_set.uuid
+        try:
+            data_set = get_data_set_for_study_uuid(object.study.uuid)
+            data['data_set_uuid'] = data_set.uuid
+        except RuntimeError as e:
+            logger.warn(e)
 
         if object.assay is not None:
             suffix += "_" + str(object.assay.id)
