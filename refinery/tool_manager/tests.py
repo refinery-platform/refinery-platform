@@ -1034,6 +1034,76 @@ class ToolTests(ToolManagerTestBase):
         with self.assertRaises(RuntimeError):
             self.tool.set_analysis(str(uuid.uuid4()))
 
+    def test_update_galaxy_data(self):
+        self.create_valid_tool(ToolDefinition.WORKFLOW)
+        self.tool.update_galaxy_data("test", "data")
+        self.assertEqual(
+            self.tool.get_galaxy_data()["test"],
+            "data"
+        )
+
+    def test_update_galaxy_data_non_workflow_tool(self):
+        self.create_valid_tool(ToolDefinition.VISUALIZATION)
+        with self.assertRaises(NotImplementedError):
+            self.tool.update_galaxy_data("test", "data")
+
+    def test_get_galaxy_data(self):
+        self.create_valid_tool(ToolDefinition.WORKFLOW)
+        self.tool.update_galaxy_data("test", "data")
+        self.tool.update_galaxy_data("more", "data")
+        self.assertEqual(
+            self.tool.get_galaxy_data(),
+            {
+                "test": "data",
+                "more": "data"
+            }
+        )
+
+    def test_get_galaxy_data_non_workflow_tool(self):
+        self.create_valid_tool(ToolDefinition.VISUALIZATION)
+        with self.assertRaises(NotImplementedError):
+            self.tool.get_galaxy_data()
+
+    def test_create_collection_non_workflow_tool(self):
+        self.create_valid_tool(ToolDefinition.VISUALIZATION)
+        with self.assertRaises(NotImplementedError):
+            self.tool.create_collection()
+
+    def test_create_workflow_inputs_non_workflow_tool(self):
+        self.create_valid_tool(ToolDefinition.VISUALIZATION)
+        with self.assertRaises(NotImplementedError):
+            self.tool.create_workflow_inputs()
+
+    def test_get_file_relationships_galaxy_non_workflow_tool(self):
+        self.create_valid_tool(ToolDefinition.VISUALIZATION)
+        with self.assertRaises(NotImplementedError):
+            self.tool.get_file_relationships_galaxy()
+
+    def test__launch_workflow_non_workflow_tool(self):
+        self.create_valid_tool(ToolDefinition.VISUALIZATION)
+        with self.assertRaises(NotImplementedError):
+            self.tool._launch_workflow()
+
+    def test__get_nesting_string_non_workflow_tool(self):
+        self.create_valid_tool(ToolDefinition.VISUALIZATION)
+        with self.assertRaises(NotImplementedError):
+            self.tool._get_nesting_string()
+
+    def test_set_analysis_non_workflow_tool(self):
+        self.create_valid_tool(ToolDefinition.VISUALIZATION)
+        with self.assertRaises(NotImplementedError):
+            self.tool.set_analysis()
+
+    def test_update_file_rels_with_galaxy_history_data_non_workflow_tool(self):
+        self.create_valid_tool(ToolDefinition.VISUALIZATION)
+        with self.assertRaises(NotImplementedError):
+            self.tool.update_file_relationships_with_galaxy_history_data()
+
+    def test_update_analysis_non_workflow_tool(self):
+        self.create_valid_tool(ToolDefinition.VISUALIZATION)
+        with self.assertRaises(NotImplementedError):
+            self.tool.update_analysis()
+
 
 class ToolAPITests(APITestCase, ToolManagerTestBase):
     def test_tools_exist(self):

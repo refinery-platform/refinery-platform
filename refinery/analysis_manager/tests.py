@@ -3,7 +3,7 @@ import uuid
 
 from django.contrib.auth.models import User
 from django.http import HttpResponseBadRequest, HttpResponseNotAllowed
-from django.test import TestCase
+from django.test import RequestFactory, TestCase
 
 from guardian.utils import get_anonymous_user
 import mock
@@ -27,7 +27,7 @@ from tool_manager.tests import ToolManagerTestBase
 
 class AnalysisManagerTestBase(TestCase):
     def setUp(self):
-        self.username = 'coffee_lover'
+        self.username = 'coffee_tester'
         self.password = 'coffeecoffee'
         self.user = User.objects.create_user(self.username, '', self.password)
 
@@ -456,6 +456,7 @@ class AnalysisViewsTests(AnalysisManagerTestBase, ToolManagerTestBase):
         AnalysisManagerTestBase.setUp(self)
         ToolManagerTestBase.setUp(self)
 
+        self.request_factory = RequestFactory()
         self.run_url_root = "/analysis_manager/run/"
         self.status_url_root = "/analysis_manager/{}/".format(
             self.analysis.uuid
