@@ -479,9 +479,9 @@ class Tool(OwnableResource):
         Gets the `LIST`/`PAIR` structure of our file_relationships,
         but flattened into a string.
         :param nesting: Nested dict/tuple file_relationships data structure
-        form our tool launch config
+        from our tool launch config
         :param structure:
-        :return:
+        :return: String in the following form: ^((list|paired):*)+[^:]+$
         """
         if nesting is None:
             nesting = self.get_file_relationships_urls()
