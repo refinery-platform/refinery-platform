@@ -329,52 +329,7 @@ def run_analysis(analysis_uuid):
 
 
 def _run_tool_based_galaxy_file_export(analysis_uuid):
-    """
-    Check on the status of the files being exported from Galaxy.
-    Fail the task appropriately if we cannot retrieve the status.
-    """
-    analysis = _get_analysis(analysis_uuid)
-    analysis_status = _get_analysis_status(analysis_uuid)
-
-    if not analysis_status.galaxy_export_task_group_id:
-        galaxy_export_tasks = _get_galaxy_download_tasks(analysis)
-        logger.info(
-            "Starting downloading of results from Galaxy for analysis "
-            "'%s'", analysis)
-        galaxy_export_taskset = TaskSet(
-            tasks=galaxy_export_tasks
-        ).apply_async()
-        galaxy_export_taskset.save()
-        analysis_status.galaxy_export_task_group_id = (
-            galaxy_export_taskset.taskset_id
-        )
-        analysis_status.save()
-        run_analysis.retry(countdown=RETRY_INTERVAL)
-
-    # check if analysis results have finished downloading from Galaxy
-    galaxy_export_taskset = get_taskset_result(
-        analysis_status.galaxy_export_task_group_id
-    )
-    if not galaxy_export_taskset.ready():
-        logger.debug("Results download pending for analysis '%s'", analysis)
-        run_analysis.retry(countdown=RETRY_INTERVAL)
-    # all tasks must have succeeded or failed
-    elif not galaxy_export_taskset.successful():
-        error_msg = ("Analysis '{}' failed while downloading results "
-                     "from Galaxy".format(analysis))
-        logger.error(error_msg)
-        analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
-        analysis.send_email()
-
-        get_taskset_result(
-            analysis_status.refinery_import_task_group_id
-        ).delete()
-        get_taskset_result(
-            analysis_status.galaxy_import_task_group_id
-        ).delete()
-        galaxy_export_taskset.delete()
-        analysis.galaxy_cleanup()
-        return
+    raise NotImplementedError
 
 
 def _run_galaxy_workflow(analysis_uuid):
