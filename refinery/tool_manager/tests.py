@@ -4,7 +4,6 @@ import logging
 import re
 import time
 from urlparse import urljoin
-import uuid
 
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import InMemoryUploadedFile
@@ -1031,30 +1030,7 @@ class ToolTests(ToolManagerTestBase):
             ['http://www.example.com/test_file.txt']
         )
 
-    def test_launch_workflow_wrong_tool_type(self):
-        self.create_valid_tool(ToolDefinition.VISUALIZATION)
-        with self.assertRaises(NotImplementedError):
-            self.tool._launch_workflow()
-
-    def test_set_analysis_wrong_type(self):
-        self.create_valid_tool(ToolDefinition.WORKFLOW)
-        with self.assertRaises(RuntimeError):
-            self.tool.set_analysis(str(uuid.uuid4()))
-
     def test_update_galaxy_data(self):
-        self.create_valid_tool(ToolDefinition.WORKFLOW)
-        self.tool.update_galaxy_data("test", "data")
-        self.assertEqual(
-            self.tool.get_galaxy_data()["test"],
-            "data"
-        )
-
-    def test_update_galaxy_data_non_workflow_tool(self):
-        self.create_valid_tool(ToolDefinition.VISUALIZATION)
-        with self.assertRaises(NotImplementedError):
-            self.tool.update_galaxy_data("test", "data")
-
-    def test_get_galaxy_data(self):
         self.create_valid_tool(ToolDefinition.WORKFLOW)
         self.tool.update_galaxy_data("test", "data")
         self.tool.update_galaxy_data("more", "data")
@@ -1085,11 +1061,6 @@ class ToolTests(ToolManagerTestBase):
         self.create_valid_tool(ToolDefinition.VISUALIZATION)
         with self.assertRaises(NotImplementedError):
             self.tool.get_file_relationships_galaxy()
-
-    def test__launch_workflow_non_workflow_tool(self):
-        self.create_valid_tool(ToolDefinition.VISUALIZATION)
-        with self.assertRaises(NotImplementedError):
-            self.tool._launch_workflow()
 
     def test__get_nesting_string_non_workflow_tool(self):
         self.create_valid_tool(ToolDefinition.VISUALIZATION)
