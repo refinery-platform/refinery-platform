@@ -5,11 +5,13 @@ from django.contrib.auth.models import User
 from django.http import HttpResponseBadRequest, HttpResponseNotAllowed
 from django.test import RequestFactory, TestCase
 
+from bioblend.galaxy.client import ConnectionError
 from guardian.utils import get_anonymous_user
 import mock
 
 from analysis_manager.models import AnalysisStatus
-from analysis_manager.tasks import _refinery_file_import, run_analysis
+from analysis_manager.tasks import (_check_galaxy_history_state,
+                                    _refinery_file_import, run_analysis)
 from analysis_manager.utils import (_fetch_node_relationship, _fetch_node_set,
                                     create_analysis,
                                     fetch_objects_required_for_analysis,
@@ -630,7 +632,7 @@ class AnalysisRunTests(AnalysisManagerTestBase):
                           galaxy_export_mock,
                           attach_outputs_mock):
         # Run an Analysis and ensure that the methods to check the state of
-        # the tsk get called properly
+        # the task gets called properly
         run_analysis(self.analysis.uuid)
         self.assertTrue(refinery_import_mock.called)
         self.assertTrue(run_galaxy_mock.called)
@@ -659,6 +661,91 @@ class AnalysisRunTests(AnalysisManagerTestBase):
 
     def test_is_tool_based(self):
         self.assertFalse(self.analysis.is_tool_based)
+
+    @mock.patch.object(Analysis, "galaxy_progress", side_effect=RuntimeError)
+    @mock.patch("analysis_manager.tasks.get_taskset_result")
+    @mock.patch("core.models.Analysis.send_email")
+    @mock.patch("core.models.Analysis.galaxy_cleanup")
+    def test__check_galaxy_history_state_with_runtime_error(
+            self,
+            galaxy_progress_mock,
+            get_taskset_result_mock,
+            send_email_mock,
+            galaxy_cleanup_mock,
+
+    ):
+        _check_galaxy_history_state(self.analysis.uuid)
+
+        # Fetch analysis & analysis status since they have changed during
+        # the course of this test and the old `self` references are stale
+        analysis = Analysis.objects.get(uuid=self.analysis.uuid)
+        analysis_status = AnalysisStatus.objects.get(analysis=analysis)
+
+        self.assertEqual(
+            analysis_status.galaxy_history_state,
+            AnalysisStatus.ERROR
+        )
+        self.assertEqual(analysis.status, Analysis.FAILURE_STATUS)
+
+        self.assertTrue(galaxy_progress_mock.called)
+        self.assertTrue(get_taskset_result_mock.called)
+        self.assertTrue(send_email_mock.called)
+        self.assertTrue(galaxy_cleanup_mock.called)
+
+    @mock.patch.object(Analysis, "galaxy_progress",
+                       side_effect=ConnectionError("Couldn't establish "
+                                                   "Galaxy connection"))
+    @mock.patch.object(run_analysis, "retry", side_effect=None)
+    def test__check_galaxy_history_state_with_connection_error(
+            self,
+            galaxy_progress_mock,
+            retry_mock
+    ):
+        _check_galaxy_history_state(self.analysis.uuid)
+
+        # Fetch analysis status since it has changed during
+        # the course of this test and the old `self` reference is stale
+        analysis_status = AnalysisStatus.objects.get(analysis=self.analysis)
+
+        self.assertEqual(analysis_status.galaxy_history_state,
+                         AnalysisStatus.UNKNOWN)
+
+        self.assertTrue(galaxy_progress_mock.called)
+        self.assertTrue(retry_mock.called)
+
+    @mock.patch.object(Analysis, "galaxy_progress", return_value=50)
+    @mock.patch.object(run_analysis, "retry", side_effect=None)
+    def test__check_galaxy_history_state_progress_less_than_percent_complete(
+            self,
+            galaxy_progress_mock,
+            retry_mock
+    ):
+        self.analysis_status.galaxy_history_progress = 25
+        _check_galaxy_history_state(self.analysis.uuid)
+
+        analysis_status = AnalysisStatus.objects.get(analysis=self.analysis)
+
+        self.assertEqual(analysis_status.galaxy_history_progress, 50)
+        self.assertEqual(analysis_status.galaxy_history_state,
+                         AnalysisStatus.PROGRESS)
+
+        self.assertTrue(galaxy_progress_mock.called)
+        self.assertTrue(retry_mock.called)
+
+    @mock.patch.object(Analysis, "galaxy_progress", return_value=100)
+    def test__check_galaxy_history_state_percent_complete_is_100(
+            self,
+            galaxy_progress_mock
+    ):
+        self.analysis_status.galaxy_history_progress = 100
+        _check_galaxy_history_state(self.analysis.uuid)
+
+        analysis_status = AnalysisStatus.objects.get(analysis=self.analysis)
+
+        self.assertEqual(analysis_status.galaxy_history_state,
+                         AnalysisStatus.OK)
+
+        self.assertTrue(galaxy_progress_mock.called)
 
 
 class AnalysisStatusTests(AnalysisManagerTestBase):
