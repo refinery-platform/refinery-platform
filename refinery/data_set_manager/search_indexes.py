@@ -30,6 +30,7 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
     uuid = indexes.CharField(model_attr='uuid')
     study_uuid = indexes.CharField(model_attr='study__uuid')
     assay_uuid = indexes.CharField(model_attr='assay__uuid', null=True)
+    data_set_uuid = indexes.CharField(null=True)
     type = indexes.CharField(model_attr='type')
     name = indexes.CharField(model_attr='name', null=True)
     file_uuid = indexes.CharField(model_attr='file_uuid', null=True)
@@ -53,14 +54,21 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
     # https://groups.google.com/forum/?fromgroups#!topic/django-haystack/g39QjTkN-Yg
     # http://stackoverflow.com/questions/7399871/django-haystack-sort-results-by-title
     def prepare(self, object):
+
         data = super(NodeIndex, self).prepare(object)
         annotations = AnnotatedNode.objects.filter(node=object)
-        uuid = str(object.study.id)
+        suffix = str(object.study.id)
+
+        try:
+            data_set = object.study.get_dataset()
+            data['data_set_uuid'] = data_set.uuid
+        except RuntimeError as e:
+            logger.warn(e)
 
         if object.assay is not None:
-            uuid += "_" + str(object.assay.id)
+            suffix += "_" + str(object.assay.id)
 
-        suffix = "_" + uuid + "_s"
+        suffix = "_" + suffix + "_s"
 
         # create dynamic fields for each attribute
         for annotation in annotations:

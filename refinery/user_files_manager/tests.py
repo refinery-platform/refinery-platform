@@ -61,30 +61,33 @@ class UserFilesUtilsTests(TestCase):
         assay_uuid = Assay.objects.get(study=dataset.get_latest_study()).uuid
 
         query = generate_solr_params_for_user(QueryDict({}), user.id)
-        self.assertEqual(str(query),
-                         'fq=assay_uuid%3A%28{}%29'
-                         '&facet.field=organism_Characteristics_generic_s'
-                         '&facet.field=organism_Factor_Value_generic_s'
-                         '&facet.field=technology_Characteristics_generic_s'
-                         '&facet.field=technology_Factor_Value_generic_s'
-                         '&facet.field=antibody_Characteristics_generic_s'
-                         '&facet.field=antibody_Factor_Value_generic_s'
-                         '&facet.field=genotype_Characteristics_generic_s'
-                         '&facet.field=genotype_Factor_Value_generic_s'
-                         '&facet.field=experimenter_Characteristics_generic_s'
-                         '&facet.field=experimenter_Factor_Value_generic_s'
-                         '&fl=%2A_generic_s'
-                         '%2Cname%2Cfile_uuid%2Ctype%2Cdjango_id'
-                         '&fq=type%3A%28%22Raw Data File%22 '
+        self.assertEqual(str(query).split('&'), [
+                         'fq=assay_uuid%3A%28{}%29'.format(assay_uuid),
+                         'facet.field=organism_Characteristics_generic_s',
+                         'facet.field=organism_Factor_Value_generic_s',
+                         'facet.field=technology_Characteristics_generic_s',
+                         'facet.field=technology_Factor_Value_generic_s',
+                         'facet.field=antibody_Characteristics_generic_s',
+                         'facet.field=antibody_Factor_Value_generic_s',
+                         'facet.field=genotype_Characteristics_generic_s',
+                         'facet.field=genotype_Factor_Value_generic_s',
+                         'facet.field=experimenter_Characteristics_generic_s',
+                         'facet.field=experimenter_Factor_Value_generic_s',
+                         'fl=%2A_generic_s'
+                         '%2Cname'
+                         '%2C%2A_uuid'
+                         '%2Ctype'
+                         '%2Cdjango_id',
+                         'fq=type%3A%28%22Raw Data File%22 '
                          'OR %22Derived Data File%22 '
                          'OR %22Array Data File%22 '
                          'OR %22Derived Array Data File%22 '
                          'OR %22Array Data Matrix File%22 '
-                         'OR%22Derived Array Data Matrix File%22%29'
-                         '&fq=is_annotation%3Afalse'
-                         '&start=0'
-                         '&rows=10000000'
-                         '&q=django_ct%3Adata_set_manager.node'
-                         '&wt=json'
-                         '&facet=true'
-                         '&facet.limit=-1'.format(assay_uuid))
+                         'OR%22Derived Array Data Matrix File%22%29',
+                         'fq=is_annotation%3Afalse',
+                         'start=0',
+                         'rows=10000000',
+                         'q=django_ct%3Adata_set_manager.node',
+                         'wt=json',
+                         'facet=true',
+                         'facet.limit=-1'])

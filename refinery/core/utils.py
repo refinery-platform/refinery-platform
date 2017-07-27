@@ -25,7 +25,6 @@ from rest_framework.response import Response
 import core
 from core.search_indexes import DataSetIndex
 import data_set_manager
-from data_set_manager.search_indexes import NodeIndex
 
 logger = logging.getLogger(__name__)
 
@@ -781,7 +780,9 @@ def delete_analysis_index(node_instance):
     """Remove a Analysis' related document from Solr's index.
     """
     try:
-        NodeIndex().remove_object(node_instance, using='data_set_manager')
+        data_set_manager.search_indexes.NodeIndex().remove_object(
+            node_instance, using='data_set_manager'
+        )
         logger.debug('Deleted Analysis\' NodeIndex with (uuid: %s)',
                      node_instance.uuid)
     except Exception as e:

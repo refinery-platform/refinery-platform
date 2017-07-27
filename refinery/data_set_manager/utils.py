@@ -676,7 +676,7 @@ def generate_solr_params(params, assay_uuids, facets_from_config=False):
         solr_params += ''.join(
             [facet_template.format(s) for s
              in settings.USER_FILES_FACETS.split(",")])
-        solr_params += '&fl=*_generic_s,name,file_uuid,type,django_id'
+        solr_params += '&fl=*_generic_s,name,*_uuid,type,django_id'
     elif facet_field:
         facet_field = facet_field.split(',')
         facet_field = insert_facet_field_filter(facet_filter, facet_field)
