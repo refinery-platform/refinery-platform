@@ -14,7 +14,6 @@ from django.db.models import Q
 from django.utils.http import urlquote, urlunquote
 
 import requests
-from requests.exceptions import HTTPError
 
 import core
 
@@ -824,13 +823,26 @@ def search_solr(encoded_params, core):
         encoded_params:  Expect the params to be url-ready (using urlquote)
         core: Specify which node
     """
+    logger.warn('about to solr...')
     url_portion = '/'.join([core, "select"])
     url = urlparse.urljoin(settings.REFINERY_SOLR_BASE_URL, url_portion)
-    try:
-        full_response = requests.get(url, params=encoded_params)
-        full_response.raise_for_status()
-    except HTTPError as e:
-        logger.error(e)
+    full_response = requests.get(url, params=encoded_params)
+    if not full_response.ok:
+        try:
+            response_obj = json.loads(full_response.content)
+        except ValueError:
+            raise RuntimeError(
+                'Expected JSON from SOLR, not: %s', full_response.content
+            )
+        try:
+            raise RuntimeError('Solr error: {}\nin context: {}'.format(
+                response_obj['error']['msg'],
+                response_obj
+            ))
+        except KeyError:
+            raise RuntimeError(
+                'Not expected response structure: %s', response_obj
+            )
 
     response = full_response.content
 
