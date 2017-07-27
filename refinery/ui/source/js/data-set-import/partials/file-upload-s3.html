@@ -37,13 +37,47 @@
           <i class="fa fa-ban"></i>
           <span>Cancel upload</span>
         </button>
-
+      </div>
+    </div>
+    <!-- The table listing the files available for upload/download -->
+    <div class="container-fluid">
+      <div
+        class="row bordered-row v-centered-row"
+        ng-repeat="file in FileCtrl.files"
+        ng-class="{
+          'processing': FileCtrl.isFileUploadInProgress(file),
+          'bg-danger': file.$error
+        }">
+        <div class="col-xs-4">
+          <div class="v-center">
+            <p class="name">
+              <strong>{{ file.name }}</strong>
+              ({{ file.size | formatFileSize }})
+            </p>
+          </div>
+        </div>
+        <div class="col-xs-4">
+          <div class="v-center">
+            <div
+              class="progress progress-striped active"
+              ng-class="{ 'progress-striped active': FileCtrl.isFileUploadInProgress(file) }"
+              file-upload-progress="file.progress">
+              <div
+                class="progress-bar"
+                role="progressbar"
+                ng-class="{ 'progress-bar-success': file.success, 'progress-bar-danger': file.$error }"
+                ng-style="{ width: file.progress + '%' }">
+                <span ng-show="FileCtrl.isFileUploadInProgress(file)" ng-if="!file.error">
+                  {{ file.progress | number:0 }}%
+                </span>
+                <i class="fa fa-exclamation-triangle" ng-if="file.$error"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+<!--
         <div ng-show="FileCtrl.files.length > 0">
           <div ng-repeat="file in FileCtrl.files">
-            File:
-            <div>
-              {{file.name}} {{file.$error}} {{file.$errorParam}}
-            </div>
             <div class="progress">
               <div class="progress-bar"
                    role="progressbar"
@@ -70,6 +104,7 @@
             <div>{{Error}}</div>
           </div>
         </div>
+-->
       </div>
     </div>
   </form>

@@ -5,28 +5,34 @@
     .module('refineryDataSetImport')
     .controller('RefineryFileUploadS3Ctrl', RefineryFileUploadS3Ctrl);
 
-  RefineryFileUploadS3Ctrl.$inject = ['s3UploadService'];
+  RefineryFileUploadS3Ctrl.$inject = ['s3UploadService', '$log'];
 
-  function RefineryFileUploadS3Ctrl (s3UploadService) {
+  function RefineryFileUploadS3Ctrl (s3UploadService, $log) {
     var vm = this;
 
+    var isFileNew = function (file) {
+      // check if file upload has been attempted
+      return typeof file.progress === 'undefined';
+    };
+
     vm.addFiles = function (files) {
-      vm.files = files;
+      if (typeof vm.files === 'undefined') {
+        vm.files = files;
+      } else {
+        vm.files = vm.files.concat(files);
+      }
+      $log.info('Number of files: ' + vm.files.length);
     };
 
     vm.isFileUploadInProgress = function (file) {
+      if (typeof file.progress === 'undefined') {
+        return false;
+      }
       return file.progress < 100;
     };
 
     vm.isUploadEnabled = function () {
-      function isFileNew (file) {
-        // check if file upload has been attempted
-        return typeof file.progress === 'undefined';
-      }
-      if (typeof vm.files === 'undefined') {
-        return false;
-      }
-      if (vm.files.some(vm.isFileUploadInProgress)) {
+      if (typeof vm.files === 'undefined' || vm.files.some(vm.isFileUploadInProgress)) {
         return false;
       }
       return vm.files.some(isFileNew);
@@ -53,7 +59,11 @@
 
     vm.uploadFiles = function () {
       if (vm.files) {
-        angular.forEach(vm.files, vm.uploadFile);
+        for (var i = 0; i < vm.files.length; i++) {
+          if (isFileNew(vm.files[i])) {
+            vm.uploadFile(vm.files[i]);
+          }
+        }
       }
     };
 
