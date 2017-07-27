@@ -19,6 +19,10 @@
     getUserFiles().then(function (solr) {
       gridOptionsService.columnDefs = userFileBrowserFactory.createColumnDefs();
       gridOptionsService.data = userFileBrowserFactory.createData(solr.nodes);
+      gridOptionsService.onRegisterApi = function (api) {
+        console.log('register!', api);
+        api.core.on.sortChanged(vm, vm.sortChanged);
+      };
       promise.resolve();
     }, function () {
       $log.error('/user/files/ request failed');
@@ -27,6 +31,9 @@
 
     gridOptionsService.appScopeProvider = vm;
     vm.gridOptions = gridOptionsService;
+    vm.sortChanged = function (grid, sortColumns) {
+      console.log('sort', sortColumns);
+    };
   }
 })();
 
