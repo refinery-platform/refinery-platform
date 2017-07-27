@@ -10,6 +10,7 @@
     '$q',
     'uiGridConstants',
     'userFileBrowserFactory',
+    'userFileSortsService',
     'gridOptionsService'
   ];
 
@@ -18,6 +19,7 @@
       $q,
       uiGridConstants,
       userFileBrowserFactory,
+      userFileSortsService,
       gridOptionsService
   ) {
     var vm = this;
@@ -38,21 +40,32 @@
       if (typeof sortColumns !== 'undefined' &&
         typeof sortColumns[0] !== 'undefined' &&
         typeof sortColumns[0].sort !== 'undefined') {
+        var name = sortColumns[0].name;
+        // TODO: need to handle multiple sorts; also in original file-browser.
         switch (sortColumns[0].sort.direction) {
           case uiGridConstants.ASC:
-            console.log('sort asc');
+            console.log(name, 'asc');
+            userFileSortsService[name] = 'asc';
             // paramService.fileParam.sort = sortColumns[0].field + ' asc';
-            // vm.reset();
             break;
           case uiGridConstants.DESC:
-            console.log('sort desc');
+            console.log(name, 'desc');
+            userFileSortsService[name] = 'desc';
             // paramService.fileParam.sort = sortColumns[0].field + ' desc';
-            // vm.reset();
             break;
           default:
-            // vm.reset();
             break;
         }
+        // TODO: This is copy-and-paste
+        getUserFiles().then(function (solr) {
+          // TODO: Should there be something that wraps up this "then"? It is repeated.
+          // gridOptionsService.columnDefs = userFileBrowserFactory.createColumnDefs();
+          gridOptionsService.data = userFileBrowserFactory.createData(solr.nodes);
+          promise.resolve();
+        }, function () {
+          $log.error('/user/files/ request failed');
+          promise.reject();
+        });
       }
     };
 

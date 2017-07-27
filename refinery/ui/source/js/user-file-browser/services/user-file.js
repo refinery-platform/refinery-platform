@@ -5,9 +5,19 @@
     .factory('userFileService', userFileService);
 
   // TODO: userFileBrowserFiltersCtrl.filters is what I need, but maybe I need a new service?
-  userFileService.$inject = ['$resource', 'settings', 'userFileFiltersService'];
+  userFileService.$inject = [
+    '$resource',
+    'settings',
+    'userFileFiltersService',
+    'userFileSortsService'
+  ];
 
-  function userFileService ($resource, settings, userFileFiltersService) {
+  function userFileService (
+      $resource,
+      settings,
+      userFileFiltersService,
+      userFileSortsService
+  ) {
     var userFile = $resource(
       settings.appRoot + settings.refineryApiV2 + '/user/files/',
       {},
@@ -17,6 +27,7 @@
           params: {
             limit: 100, // Default is 100,000. Immutability make it hard in python.
             fq: function () {
+              console.log('!!! Hit by each filter?');
               var filters = Object.keys(userFileFiltersService).map(function (key) {
                 var values = userFileFiltersService[key];
                 // TODO: escaping!
@@ -27,6 +38,11 @@
               });
               // TODO: Repeated fq params may be more efficient, but not a big deal
               return filters.join(' AND ');
+            },
+            sort: function () {
+              console.log('!!! Hit by each sort?');
+              console.log('TODO: make solr sort from', userFileSortsService);
+              return 'organism_Characteristics_generic_s asc';
             }
           }
         }
