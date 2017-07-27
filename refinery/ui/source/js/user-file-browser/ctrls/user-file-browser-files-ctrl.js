@@ -25,14 +25,15 @@
       promise.reject();
     });
 
+    vm.sortChanged = function (grid, sortColumns) {
+      console.log('sort', sortColumns);
+    };
+
     gridOptionsService.appScopeProvider = vm;
     vm.gridOptions = gridOptionsService;
     vm.gridOptions.onRegisterApi = function (api) {
       console.log('register!', api);
-      api.core.on.sortChanged(vm, vm.sortChanged);
-    };
-    vm.sortChanged = function (grid, sortColumns) {
-      console.log('sort', sortColumns);
+      api.core.on.sortChanged(null, vm.sortChanged);
     };
   }
 })();
