@@ -102,6 +102,10 @@ class AnalysisStatus(models.Model):
         self.galaxy_import_task_group_id = galaxy_import_task_group_id
         self.save()
 
+    def set_galaxy_workflow_task_group_id(self, galaxy_workflow_task_group_id):
+        self.galaxy_workflow_task_group_id = galaxy_workflow_task_group_id
+        self.save()
+
 
 def get_task_group_state(task_group_id):
     """return a list containing states of all tasks given a task set ID"""
