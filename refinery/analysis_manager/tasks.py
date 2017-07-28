@@ -458,7 +458,7 @@ def _run_tool_based_galaxy_workflow(analysis_uuid):
 
         galaxy_workflow_taskset.save()
 
-        analysis_status.galaxy_workflow_task_group_id = (
+        analysis_status.set_galaxy_workflow_task_group_id(
             galaxy_workflow_taskset.taskset_id
         )
         analysis_status.set_galaxy_history_state(AnalysisStatus.PROGRESS)
