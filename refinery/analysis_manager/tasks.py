@@ -231,17 +231,10 @@ def _galaxy_file_export(analysis_uuid):
 def _invoke_tool_based_galaxy_workflow(analysis_uuid):
     analysis = _get_analysis(analysis_uuid)
     tool = _get_workflow_tool(analysis_uuid)
-    connection = analysis.galaxy_connection()
 
     tool.create_dataset_collection()
 
-    workflow_inputs = tool.create_workflow_inputs()
-
-    galaxy_workflow_invocation_data = connection.workflows.invoke_workflow(
-        tool.tool_definition.workflow.internal_id,
-        history_name="Workflow Run for {}".format(tool.name),
-        inputs=workflow_inputs
-    )
+    galaxy_workflow_invocation_data = tool.invoke_workflow()
 
     analysis.history_id = galaxy_workflow_invocation_data["history_id"]
     analysis.save()
@@ -609,23 +602,18 @@ def _start_galaxy_analysis(analysis_uuid):
 def _tool_based_galaxy_file_import(analysis_uuid, file_store_item_uuid,
                                    history_dict, library_dict):
 
-    analysis = _get_analysis(analysis_uuid)
     analysis_status = _get_analysis_status(analysis_uuid)
     tool = _get_workflow_tool(analysis_uuid)
 
-    connection = analysis.galaxy_connection()
-
     file_store_item = FileStoreItem.objects.get(uuid=file_store_item_uuid)
-    library_dataset_dict = connection.libraries.upload_file_from_url(
+    library_dataset_dict = tool.upload_datafile_to_library_from_url(
         library_dict["id"],
         get_full_url(file_store_item.get_datafile_url())
     )
-    history_dataset_dict = (
-        connection.histories.upload_dataset_from_library(
+    history_dataset_dict = tool.upload_dataset_from_library_to_history(
             history_dict["id"],
             library_dataset_dict[0]["id"]
         )
-    )
 
     tool.update_file_relationships_with_galaxy_history_data(
         {

@@ -432,6 +432,10 @@ class WorkflowTool(Tool):
             ('read_%s' % verbose_name, 'Can read %s' % verbose_name),
         )
 
+    @property
+    def galaxy_connection(self):
+        return self.analysis.galaxy_connection()
+
     def create_collection_description(self):
         """
         Creates a dict containing information describing the Galaxy DataSet
@@ -454,27 +458,30 @@ class WorkflowTool(Tool):
 
     def create_dataset_collection(self):
         collection_description = self.create_collection_description()
-        connection = self.analysis.galaxy_connection()
-        collection_info = connection.histories.create_dataset_collection(
-            self.get_galaxy_data()[self.GALAXY_IMPORT_HISTORY_DICT]["id"],
-            collection_description
+        collection_info = (
+            self.galaxy_connection.histories.create_dataset_collection(
+                self.get_tool_galaxy_info()[
+                    self.GALAXY_IMPORT_HISTORY_DICT
+                ]["id"],
+                collection_description
+            )
         )
         self.update_galaxy_data(self.COLLECTION_INFO, collection_info)
 
     def create_galaxy_history(self):
-        self.analysis.galaxy_connection().histories.create_history(
+        return self.galaxy_connection.histories.create_history(
             name="History for: {}".format(self)
         )
 
     def create_galaxy_library(self):
-        self.analysis.galaxy_connection().libraries.create_library(
+        return self.galaxy_connection.libraries.create_library(
             name="Library for: {}".format(self)
         )
 
     def create_workflow_inputs(self):
         return {
             '0': {
-                'id': self.get_galaxy_data()[self.COLLECTION_INFO]["id"],
+                'id': self.get_tool_galaxy_info()[self.COLLECTION_INFO]["id"],
                 'src': 'hdca'
             }
         }
@@ -484,7 +491,7 @@ class WorkflowTool(Tool):
             self.get_tool_launch_config()[self.FILE_RELATIONSHIPS_GALAXY]
         )
 
-    def get_galaxy_data(self):
+    def get_tool_galaxy_info(self):
         return self.get_tool_launch_config()[self.GALAXY_DATA]
 
     def get_galaxy_import_tasks(self):
@@ -496,11 +503,20 @@ class WorkflowTool(Tool):
                 (
                     self.analysis.uuid,
                     file_store_item_uuid,
-                    self.get_galaxy_data()[self.GALAXY_IMPORT_HISTORY_DICT],
-                    self.get_galaxy_data()[self.GALAXY_LIBRARY_DICT],
+                    self.get_tool_galaxy_info()[
+                        self.GALAXY_IMPORT_HISTORY_DICT
+                    ],
+                    self.get_tool_galaxy_info()[self.GALAXY_LIBRARY_DICT],
                 )
             ) for file_store_item_uuid in self.get_input_file_uuid_list()
         ]
+
+    def invoke_workflow(self):
+        return self.galaxy_connection.workflows.invoke_workflow(
+            self.tool_definition.workflow.internal_id,
+            history_name="Workflow Run for {}".format(self.name),
+            inputs=self.create_workflow_inputs()
+        )
 
     def _get_nesting_string(self, nesting=None, structure=""):
         """
@@ -601,6 +617,19 @@ class WorkflowTool(Tool):
         tool_launch_config = self.get_tool_launch_config()
         tool_launch_config[self.GALAXY_DATA][key] = value
         self.set_tool_launch_config(tool_launch_config)
+
+    def upload_datafile_to_library_from_url(self, library_id, datafile_url):
+        return self.galaxy_connection.libraries.upload_file_from_url(
+            library_id,
+            datafile_url
+        )
+
+    def upload_dataset_from_library_to_history(self, history_id,
+                                               library_dataset_id):
+        return self.galaxy_connection.histories.upload_dataset_from_library(
+            history_id,
+            library_dataset_id
+        )
 
 
 @receiver(pre_delete, sender=VisualizationTool)

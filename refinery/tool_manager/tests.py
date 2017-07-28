@@ -1051,7 +1051,7 @@ class ToolTests(ToolManagerTestBase):
         self.tool.update_galaxy_data("test", "data")
         self.tool.update_galaxy_data("more", "data")
         self.assertEqual(
-            self.tool.get_galaxy_data(),
+            self.tool.get_tool_galaxy_info(),
             {
                 "test": "data",
                 "more": "data"
@@ -1095,7 +1095,7 @@ class ToolTests(ToolManagerTestBase):
 
     def test_creating__workflow_tool_sets_tool_launch_config_galaxy_data(self):
         self.create_valid_tool(ToolDefinition.WORKFLOW)
-        self.assertEqual(self.tool.get_galaxy_data(), {})
+        self.assertEqual(self.tool.get_tool_galaxy_info(), {})
 
     def test_creating_vis_tool_doesnt_set_tool_launch_config_galaxy_data(self):
         self.create_valid_tool(ToolDefinition.VISUALIZATION)
@@ -1470,7 +1470,7 @@ class ToolLaunchTests(ToolManagerTestBase):
         tool = WorkflowTool.objects.get(uuid=self.tool.uuid)
 
         self.assertEqual(
-            tool.get_galaxy_data()[
+            tool.get_tool_galaxy_info()[
                 WorkflowTool.GALAXY_WORKFLOW_INVOCATION_DATA],
             galaxy_workflow_invocation_data
         )
@@ -1518,11 +1518,13 @@ class ToolLaunchTests(ToolManagerTestBase):
         self.assertEqual(analysis_status.galaxy_import_state,
                          AnalysisStatus.PROGRESS)
         self.assertEqual(
-            self.tool.get_galaxy_data()[self.tool.GALAXY_IMPORT_HISTORY_DICT],
+            self.tool.get_tool_galaxy_info()[
+                self.tool.GALAXY_IMPORT_HISTORY_DICT
+            ],
             history_dict
         )
         self.assertEqual(
-            self.tool.get_galaxy_data()[self.tool.GALAXY_LIBRARY_DICT],
+            self.tool.get_tool_galaxy_info()[self.tool.GALAXY_LIBRARY_DICT],
             library_dict
         )
 
