@@ -4,6 +4,7 @@ import logging
 import re
 import time
 from urlparse import urljoin
+import uuid
 
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import InMemoryUploadedFile
@@ -12,6 +13,7 @@ from django.http import HttpResponseBadRequest
 from django.test import TestCase
 
 import bioblend
+import celery
 import mock
 from rest_framework.test import (APIRequestFactory, APITestCase,
                                  force_authenticate)
@@ -19,10 +21,12 @@ from test_data.galaxy_mocks import (galaxy_workflow_invocation_data,
                                     history_dataset_dict, history_dict,
                                     library_dataset_dict, library_dict)
 
+import analysis_manager
 from analysis_manager.models import AnalysisStatus
 from analysis_manager.tasks import (_get_workflow_tool,
                                     _invoke_tool_based_galaxy_workflow,
                                     _refinery_file_import,
+                                    _run_tool_based_galaxy_file_import,
                                     _tool_based_galaxy_file_import,
                                     run_analysis)
 from core.models import ExtendedGroup, Project, Workflow, WorkflowEngine
@@ -32,6 +36,7 @@ from file_store.models import FileStoreItem
 from galaxy_connector.models import Instance
 from selenium_testing.utils import (MAX_WAIT, SeleniumTestBaseGeneric,
                                     wait_until_class_visible)
+import tool_manager
 
 from .models import (FileRelationship, GalaxyParameter, InputFile, OutputFile,
                      Parameter, Tool, ToolDefinition, VisualizationTool,
@@ -1442,8 +1447,8 @@ class ToolLaunchTests(ToolManagerTestBase):
         self.create_valid_tool(ToolDefinition.WORKFLOW)
         self.assertTrue(self.tool.analysis.is_tool_based)
 
-    @mock.patch("tool_manager.models.Tool.create_dataset_collection")
-    @mock.patch("tool_manager.models.Tool.create_workflow_inputs")
+    @mock.patch("tool_manager.models.WorkflowTool.create_dataset_collection")
+    @mock.patch("tool_manager.models.WorkflowTool.create_workflow_inputs")
     @mock.patch.object(
         bioblend.galaxy.workflows.WorkflowClient,
         "invoke_workflow",
@@ -1462,12 +1467,71 @@ class ToolLaunchTests(ToolManagerTestBase):
         self.assertTrue(create_workflow_inputs_mock.called)
         self.assertTrue(invoke_workflow_mock.called)
 
-        tool = Tool.objects.get(uuid=self.tool.uuid)
+        tool = WorkflowTool.objects.get(uuid=self.tool.uuid)
 
         self.assertEqual(
-            tool.get_galaxy_data()[Tool.GALAXY_WORKFLOW_INVOCATION_DATA],
+            tool.get_galaxy_data()[
+                WorkflowTool.GALAXY_WORKFLOW_INVOCATION_DATA],
             galaxy_workflow_invocation_data
         )
+
+    @mock.patch.object(tool_manager.models.WorkflowTool,
+                       "create_galaxy_history",
+                       return_value=history_dict)
+    @mock.patch.object(tool_manager.models.WorkflowTool,
+                       "create_galaxy_library",
+                       return_value=library_dict)
+    @mock.patch("celery.task.sets.TaskSet.apply_async")
+    @mock.patch.object(celery.result.TaskSetResult, "ready",
+                       return_value=False)
+    @mock.patch.object(analysis_manager.tasks, "get_taskset_result",
+                       return_value=celery.result.TaskSetResult(
+                           str(uuid.uuid4())
+                       ))
+    @mock.patch.object(AnalysisStatus, "set_galaxy_import_task_group_id")
+    @mock.patch("{}._tool_based_galaxy_file_import".format(tasks_mock))
+    @mock.patch.object(run_analysis, "retry")
+    def test__run_tool_based_galaxy_file_import_no_galaxy_import_task_group_id(
+            self,
+            create_history_mock,
+            create_library_mock,
+            apply_async_mock,
+            ready_mock,
+            taskset_result_mock,
+            set_galaxy_import_task_group_id_mock,
+            _tool_based_galaxy_file_import_mock,
+            retry_mock
+    ):
+        self.create_valid_tool(ToolDefinition.WORKFLOW)
+        self.tool.update_galaxy_data(self.tool.GALAXY_IMPORT_HISTORY_DICT,
+                                     history_dict)
+        self.tool.update_galaxy_data(self.tool.GALAXY_LIBRARY_DICT,
+                                     library_dict)
+
+        _run_tool_based_galaxy_file_import(self.tool.analysis.uuid)
+
+        self.assertEqual(len(self.tool.get_galaxy_import_tasks()), 1)
+
+        analysis_status = AnalysisStatus.objects.get(
+            analysis=self.tool.analysis
+        )
+        self.assertEqual(analysis_status.galaxy_import_state,
+                         AnalysisStatus.PROGRESS)
+        self.assertEqual(
+            self.tool.get_galaxy_data()[self.tool.GALAXY_IMPORT_HISTORY_DICT],
+            history_dict
+        )
+        self.assertEqual(
+            self.tool.get_galaxy_data()[self.tool.GALAXY_LIBRARY_DICT],
+            library_dict
+        )
+
+        self.assertTrue(apply_async_mock.called)
+        self.assertTrue(ready_mock.called)
+        self.assertTrue(taskset_result_mock.called)
+        self.assertTrue(set_galaxy_import_task_group_id_mock.called)
+        self.assertTrue(_tool_based_galaxy_file_import_mock.called)
+        self.assertTrue(retry_mock.called)
 
 
 class ToolLaunchSeleniumTests(ToolManagerTestBase, SeleniumTestBaseGeneric):

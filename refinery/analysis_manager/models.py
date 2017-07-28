@@ -98,6 +98,10 @@ class AnalysisStatus(models.Model):
     def galaxy_export_state(self):
         return get_task_group_state(self.galaxy_export_task_group_id)
 
+    def set_galaxy_import_task_group_id(self, galaxy_import_task_group_id):
+        self.galaxy_import_task_group_id = galaxy_import_task_group_id
+        self.save()
+
 
 def get_task_group_state(task_group_id):
     """return a list containing states of all tasks given a task set ID"""

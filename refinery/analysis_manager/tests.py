@@ -778,3 +778,11 @@ class AnalysisStatusTests(AnalysisManagerTestBase):
                 context.exception.message,
                 "Invalid Galaxy history state given"
             )
+
+    def test_set_galaxy_import_task_group_id(self):
+        test_uuid = str(uuid.uuid4())
+        self.analysis_status.set_galaxy_import_task_group_id(test_uuid)
+        self.assertEqual(
+            self.analysis_status.galaxy_import_task_group_id,
+            test_uuid
+        )
