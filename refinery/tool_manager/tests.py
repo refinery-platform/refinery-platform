@@ -1284,6 +1284,15 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
         self.assertEqual(self.post_response.status_code, 200)
         self.assertEqual(Tool.objects.count(), 1)
 
+    def test_both_tool_types_returned_from_api(self):
+        self.create_valid_tool(ToolDefinition.WORKFLOW)
+        self.create_valid_tool(ToolDefinition.VISUALIZATION)
+
+        self.get_request = self.factory.get(self.tools_url_root)
+        force_authenticate(self.get_request, self.user)
+        self.get_response = self.tools_view(self.get_request)
+        self.assertEqual(len(self.get_response.data), 2)
+
 
 class WorkflowToolLaunchTests(ToolManagerTestBase):
     tasks_mock = "analysis_manager.tasks"
