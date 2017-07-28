@@ -132,14 +132,14 @@ def get_taskset_result(task_group_id):
     return TaskSetResult.restore(task_group_id)
 
 
-def _get_tool(analysis_uuid):
+def _get_workflow_tool(analysis_uuid):
     try:
-        return tool_manager.models.Tool.objects.get(
+        return tool_manager.models.WorkflowTool.objects.get(
             analysis__uuid=analysis_uuid
         )
-    except (tool_manager.models.Tool.DoesNotExist,
-            tool_manager.models.Tool.MultipleObjectsReturned) as e:
-        logger.error("Could not fetch Tool for this analysis: %s", e)
+    except (tool_manager.models.WorkflowTool.DoesNotExist,
+            tool_manager.models.WorkflowTool.MultipleObjectsReturned) as e:
+        logger.error("Could not fetch WorkflowTool for this analysis: %s", e)
         run_analysis.update_state(state=celery.states.FAILURE)
         return
 
@@ -230,7 +230,7 @@ def _galaxy_file_export(analysis_uuid):
 @task()
 def _invoke_tool_based_galaxy_workflow(analysis_uuid):
     analysis = _get_analysis(analysis_uuid)
-    tool = _get_tool(analysis_uuid)
+    tool = _get_workflow_tool(analysis_uuid)
     connection = analysis.galaxy_connection()
 
     tool.create_dataset_collection()
@@ -268,7 +268,7 @@ def _refinery_file_import(analysis_uuid):
         refinery_import_tasks = []
 
         if analysis.is_tool_based:
-            tool = _get_tool(analysis_uuid)
+            tool = _get_workflow_tool(analysis_uuid)
             input_file_uuid_list = tool.get_input_file_uuid_list()
         else:
             input_file_uuid_list = analysis.get_input_file_uuid_list()
@@ -397,16 +397,11 @@ def _run_galaxy_workflow(analysis_uuid):
 def _run_tool_based_galaxy_file_import(analysis_uuid):
     analysis = _get_analysis(analysis_uuid)
     analysis_status = _get_analysis_status(analysis_uuid)
-    tool = _get_tool(analysis_uuid)
-    connection = analysis.galaxy_connection()
+    tool = _get_workflow_tool(analysis_uuid)
 
     if not analysis_status.galaxy_import_task_group_id:
-        library_dict = connection.libraries.create_library(
-            name="Library for: {}".format(tool)
-        )
-        history_dict = connection.histories.create_history(
-            name="History for: {}".format(tool)
-        )
+        library_dict = tool.create_galaxy_library()
+        history_dict = tool.create_galaxy_history()
 
         # Update Tool with information about its objects living in Galaxy
         tool.update_galaxy_data(tool.GALAXY_IMPORT_HISTORY_DICT, history_dict)
@@ -414,16 +409,7 @@ def _run_tool_based_galaxy_file_import(analysis_uuid):
 
         logger.debug("Starting file imports into Galaxy")
 
-        galaxy_import_tasks = [
-            _tool_based_galaxy_file_import.subtask(
-                (
-                    analysis_uuid,
-                    file_store_item_uuid,
-                    history_dict,
-                    library_dict,
-                )
-            ) for file_store_item_uuid in tool.get_input_file_uuid_list()
-            ]
+        galaxy_import_tasks = tool.get_galaxy_import_tasks()
 
         galaxy_file_import_taskset = TaskSet(
             tasks=galaxy_import_tasks
@@ -431,7 +417,7 @@ def _run_tool_based_galaxy_file_import(analysis_uuid):
 
         galaxy_file_import_taskset.save()
 
-        analysis_status.galaxy_import_task_group_id = (
+        analysis_status.set_galaxy_import_task_group_id(
             galaxy_file_import_taskset.taskset_id
         )
         analysis_status.set_galaxy_import_state(AnalysisStatus.PROGRESS)
@@ -625,7 +611,7 @@ def _tool_based_galaxy_file_import(analysis_uuid, file_store_item_uuid,
 
     analysis = _get_analysis(analysis_uuid)
     analysis_status = _get_analysis_status(analysis_uuid)
-    tool = _get_tool(analysis_uuid)
+    tool = _get_workflow_tool(analysis_uuid)
 
     connection = analysis.galaxy_connection()
 

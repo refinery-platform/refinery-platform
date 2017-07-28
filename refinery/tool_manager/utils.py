@@ -22,10 +22,12 @@ from factory_boy.django_model_factories import (AnalysisFactory,
                                                 OutputFileFactory,
                                                 ParameterFactory,
                                                 ToolDefinitionFactory,
-                                                ToolFactory, WorkflowFactory)
+                                                VisualizationToolFactory,
+                                                WorkflowFactory,
+                                                WorkflowToolFactory)
 from file_store.models import FileType
 
-from .models import Tool, ToolDefinition
+from .models import Tool, ToolDefinition, WorkflowTool
 
 logger = logging.getLogger(__name__)
 ANNOTATION_ERROR_MESSAGE = (
@@ -209,15 +211,26 @@ def create_tool(tool_launch_configuration, user_instance):
     dataset = DataSet.objects.get(
         uuid=tool_launch_configuration["dataset_uuid"]
     )
-    tool = ToolFactory(
-        name="{}-launch".format(tool_definition.name),
-        tool_definition=tool_definition,
-        tool_launch_configuration=json.dumps(tool_launch_configuration),
-        dataset=dataset
-    )
 
-    if tool.get_tool_type() == ToolDefinition.VISUALIZATION:
+    tool_type = tool_definition.tool_type
+
+    if tool_type == ToolDefinition.WORKFLOW:
+        tool_launch_configuration[WorkflowTool.GALAXY_DATA] = {}
+        tool = WorkflowToolFactory(
+            name="{}-launch".format(tool_definition.name),
+            tool_definition=tool_definition,
+            tool_launch_configuration=json.dumps(tool_launch_configuration),
+            dataset=dataset
+        )
+
+    if tool_type == ToolDefinition.VISUALIZATION:
         # Create a unique container name that adheres to docker's specs
+        tool = VisualizationToolFactory(
+            name="{}-launch".format(tool_definition.name),
+            tool_definition=tool_definition,
+            tool_launch_configuration=json.dumps(tool_launch_configuration),
+            dataset=dataset
+        )
         tool.container_name = "{}-{}".format(
             tool.name.replace(" ", ""),
             tool.uuid

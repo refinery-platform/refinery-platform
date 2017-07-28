@@ -20,7 +20,7 @@ from test_data.galaxy_mocks import (galaxy_workflow_invocation_data,
                                     library_dataset_dict, library_dict)
 
 from analysis_manager.models import AnalysisStatus
-from analysis_manager.tasks import (_get_tool,
+from analysis_manager.tasks import (_get_workflow_tool,
                                     _invoke_tool_based_galaxy_workflow,
                                     _refinery_file_import,
                                     _tool_based_galaxy_file_import,
@@ -34,7 +34,8 @@ from selenium_testing.utils import (MAX_WAIT, SeleniumTestBaseGeneric,
                                     wait_until_class_visible)
 
 from .models import (FileRelationship, GalaxyParameter, InputFile, OutputFile,
-                     Parameter, Tool, ToolDefinition)
+                     Parameter, Tool, ToolDefinition, VisualizationTool,
+                     WorkflowTool)
 from .utils import (FileTypeValidationError, create_tool,
                     create_tool_definition, validate_tool_annotation,
                     validate_tool_launch_configuration,
@@ -152,12 +153,19 @@ class ToolManagerTestBase(TestCase):
                 self.post_response = self.tools_view(self.post_request)
                 self.assertTrue(run_mock.called)
 
+            self.tool = VisualizationTool.objects.get(
+                tool_definition__uuid=self.td.uuid
+            )
+
         # Mock the run_analysis task
         elif tool_type == ToolDefinition.WORKFLOW:
             with mock.patch.object(run_analysis, 'delay', side_effect=None):
                 self.post_response = self.tools_view(self.post_request)
 
-        self.tool = Tool.objects.get(tool_definition__uuid=self.td.uuid)
+            self.tool = WorkflowTool.objects.get(
+                tool_definition__uuid=self.td.uuid
+            )
+
         self.get_request = self.factory.get(self.tools_url_root)
         force_authenticate(self.get_request, self.user)
         self.get_response = self.tools_view(self.get_request)
@@ -1045,46 +1053,6 @@ class ToolTests(ToolManagerTestBase):
             }
         )
 
-    def test_update_galaxy_data_non_workflow_tool(self):
-        self.create_valid_tool(ToolDefinition.VISUALIZATION)
-        with self.assertRaises(NotImplementedError):
-            self.tool.update_galaxy_data("test", "data")
-
-    def test_get_galaxy_data_non_workflow_tool(self):
-        self.create_valid_tool(ToolDefinition.VISUALIZATION)
-        with self.assertRaises(NotImplementedError):
-            self.tool.get_galaxy_data()
-
-    def test_create_collection_non_workflow_tool(self):
-        self.create_valid_tool(ToolDefinition.VISUALIZATION)
-        with self.assertRaises(NotImplementedError):
-            self.tool.create_dataset_collection()
-
-    def test_create_workflow_inputs_non_workflow_tool(self):
-        self.create_valid_tool(ToolDefinition.VISUALIZATION)
-        with self.assertRaises(NotImplementedError):
-            self.tool.create_workflow_inputs()
-
-    def test_get_file_relationships_galaxy_non_workflow_tool(self):
-        self.create_valid_tool(ToolDefinition.VISUALIZATION)
-        with self.assertRaises(NotImplementedError):
-            self.tool.get_file_relationships_galaxy()
-
-    def test__get_nesting_string_non_workflow_tool(self):
-        self.create_valid_tool(ToolDefinition.VISUALIZATION)
-        with self.assertRaises(NotImplementedError):
-            self.tool._get_nesting_string()
-
-    def test_set_analysis_non_workflow_tool(self):
-        self.create_valid_tool(ToolDefinition.VISUALIZATION)
-        with self.assertRaises(NotImplementedError):
-            self.tool.set_analysis()
-
-    def test_update_file_rels_with_galaxy_history_data_non_workflow_tool(self):
-        self.create_valid_tool(ToolDefinition.VISUALIZATION)
-        with self.assertRaises(NotImplementedError):
-            self.tool.update_file_relationships_with_galaxy_history_data()
-
     def test__get_nesting_string_list(self):
         self.create_valid_tool(ToolDefinition.WORKFLOW)
         nesting_string = self.tool._get_nesting_string(
@@ -1119,6 +1087,15 @@ class ToolTests(ToolManagerTestBase):
             nesting=self.LIST_LIST_PAIR
         )
         self.assertEqual(nesting_string, "list:list:paired")
+
+    def test_creating__workflow_tool_sets_tool_launch_config_galaxy_data(self):
+        self.create_valid_tool(ToolDefinition.WORKFLOW)
+        self.assertEqual(self.tool.get_galaxy_data(), {})
+
+    def test_creating_vis_tool_doesnt_set_tool_launch_config_galaxy_data(self):
+        self.create_valid_tool(ToolDefinition.VISUALIZATION)
+        with self.assertRaises(KeyError):
+            self.tool.get_tool_launch_config()[WorkflowTool.GALAXY_DATA]
 
 
 class ToolAPITests(APITestCase, ToolManagerTestBase):
@@ -1324,7 +1301,7 @@ class ToolLaunchTests(ToolManagerTestBase):
         self.assertEqual(self.tool.get_owner(), self.user)
         self.assertEqual(self.tool.get_tool_type(), ToolDefinition.WORKFLOW)
         self.assertEqual(
-            json.loads(self.post_response.content)["tool_url"],
+            json.loads(self.post_response.content)[Tool.TOOL_URL],
             '/data_sets2/{}/#/analyses/'.format(self.tool.dataset.uuid)
         )
 
@@ -1335,20 +1312,20 @@ class ToolLaunchTests(ToolManagerTestBase):
 
         self.assertEqual(tool_a.dataset, tool_b.dataset)
 
-    def test__get_tool_no_analysis(self):
+    def test__get_workflow_tool_no_analysis(self):
         self.create_valid_tool(ToolDefinition.WORKFLOW)
 
         analysis_uuid = self.tool.analysis.uuid
         self.tool.analysis.delete()
 
         with mock.patch.object(run_analysis, "update_state") as update_mock:
-            _get_tool(analysis_uuid)
+            _get_workflow_tool(analysis_uuid)
             self.assertTrue(update_mock.called)
 
-    def test__get_tool_with_analysis(self):
+    def test__get_workflow_tool_with_analysis(self):
         self.create_valid_tool(ToolDefinition.WORKFLOW)
         self.assertEqual(
-            _get_tool(self.tool.analysis.uuid),
+            _get_workflow_tool(self.tool.analysis.uuid),
             self.tool
         )
 
@@ -1415,13 +1392,14 @@ class ToolLaunchTests(ToolManagerTestBase):
         self.assertTrue(history_upload_mock.called)
 
         self.assertEqual(
-            Tool.objects.get(
+            WorkflowTool.objects.get(
                 uuid=self.tool.uuid
             ).get_file_relationships_galaxy(),
             [
                 {
                     Tool.REFINERY_FILE_UUID: self.file_store_item.uuid,
-                    Tool.GALAXY_DATASET_HISTORY_ID: history_dataset_dict["id"]
+                    self.tool.GALAXY_DATASET_HISTORY_ID: history_dataset_dict[
+                        "id"]
                 }
             ]
         )
@@ -1541,20 +1519,20 @@ class ToolLaunchSeleniumTests(ToolManagerTestBase, SeleniumTestBaseGeneric):
             force_authenticate(self.post_request, self.user)
             self.post_response = self.tools_view(self.post_request)
 
-            tool_launch = Tool.objects.get(
+            tool = VisualizationTool.objects.get(
                 tool_definition__uuid=self.td.uuid
             )
 
-            self.assertEqual(tool_launch.get_owner(), self.user)
+            self.assertEqual(tool.get_owner(), self.user)
             self.assertEqual(
-                tool_launch.get_tool_type(),
+                tool.get_tool_type(),
                 ToolDefinition.VISUALIZATION
             )
 
             # Check to see if IGV shows what we want
             igv_url = urljoin(
                 self.live_server_url,
-                tool_launch.get_relative_container_url()
+                tool.get_relative_container_url()
             )
 
             self.browser.get(igv_url)
@@ -1606,12 +1584,12 @@ class ToolLaunchSeleniumTests(ToolManagerTestBase, SeleniumTestBaseGeneric):
             force_authenticate(self.post_request, self.user)
             self.post_response = self.tools_view(self.post_request)
 
-            tool_launch = Tool.objects.get(
+            tool = VisualizationTool.objects.get(
                 tool_definition__uuid=self.td.uuid
             )
-            self.assertEqual(tool_launch.get_owner(), self.user)
+            self.assertEqual(tool.get_owner(), self.user)
             self.assertEqual(
-                tool_launch.get_tool_type(),
+                tool.get_tool_type(),
                 ToolDefinition.VISUALIZATION
             )
             # TODO: Add selenium-based test once higlass relative paths fixed
