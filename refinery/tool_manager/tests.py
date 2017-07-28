@@ -27,9 +27,11 @@ from analysis_manager.tasks import (_get_workflow_tool,
                                     _invoke_tool_based_galaxy_workflow,
                                     _refinery_file_import,
                                     _run_tool_based_galaxy_file_import,
+                                    _run_tool_based_galaxy_workflow,
                                     _tool_based_galaxy_file_import,
                                     run_analysis)
-from core.models import ExtendedGroup, Project, Workflow, WorkflowEngine
+from core.models import (Analysis, ExtendedGroup, Project, Workflow,
+                         WorkflowEngine)
 from data_set_manager.models import Assay, Node
 from factory_boy.utils import create_dataset_with_necessary_models
 from file_store.models import FileStoreItem
@@ -1274,31 +1276,8 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
         self.assertEqual(Tool.objects.count(), 1)
 
 
-class ToolLaunchTests(ToolManagerTestBase):
+class WorkflowToolLaunchTests(ToolManagerTestBase):
     tasks_mock = "analysis_manager.tasks"
-
-    def test_transaction_rollback_bad_dataset_uuid(self):
-        self.create_vis_tool_definition()
-
-        self.post_data = {
-            "dataset_uuid": self.dataset.uuid,
-            "tool_definition_uuid": self.td.uuid,
-            Tool.FILE_RELATIONSHIPS: str(["www.example.com/cool_file.txt"])
-        }
-
-        self.dataset.delete()
-
-        self.post_request = self.factory.post(
-            self.tools_url_root,
-            data=self.post_data,
-            format="json"
-        )
-        force_authenticate(self.post_request, self.user)
-        self.post_response = self.tools_view(self.post_request)
-        self.assertEqual(type(self.post_response), HttpResponseBadRequest)
-        self.assertEqual(Tool.objects.count(), 0)
-        self.assertIn("DataSet matching query does not exist.",
-                      self.post_response.content)
 
     def test_workflow_tool_launch_valid_workflow_object(self):
         self.create_valid_tool(ToolDefinition.WORKFLOW)
@@ -1354,11 +1333,11 @@ class ToolLaunchTests(ToolManagerTestBase):
     @mock.patch("{}._run_tool_based_galaxy_file_export".format(tasks_mock))
     def test_appropriate_methods_are_called_for_tool_based_analysis_run(
             self,
-            refinery_file_import_mock,
-            run_tool_based_galaxy_file_import_mock,
-            run_tool_based_galaxy_workflow_mock,
+            run_tool_based_galaxy_file_export_mock,
             check_galaxy_history_state_mock,
-            run_tool_based_galaxy_file_export_mock
+            run_tool_based_galaxy_workflow_mock,
+            run_tool_based_galaxy_file_import_mock,
+            refinery_file_import_mock
     ):
         self.create_valid_tool(ToolDefinition.WORKFLOW)
         run_analysis(self.tool.analysis.uuid)
@@ -1456,9 +1435,9 @@ class ToolLaunchTests(ToolManagerTestBase):
     )
     def test__invoke_tool_based_galaxy_workflow(
         self,
-        create_dataset_collection_mock,
+        invoke_workflow_mock,
         create_workflow_inputs_mock,
-        invoke_workflow_mock
+        create_dataset_collection_mock
     ):
         self.create_valid_tool(ToolDefinition.WORKFLOW)
         _invoke_tool_based_galaxy_workflow(self.tool.analysis.uuid)
@@ -1489,18 +1468,16 @@ class ToolLaunchTests(ToolManagerTestBase):
                            str(uuid.uuid4())
                        ))
     @mock.patch.object(AnalysisStatus, "set_galaxy_import_task_group_id")
-    @mock.patch("{}._tool_based_galaxy_file_import".format(tasks_mock))
     @mock.patch.object(run_analysis, "retry")
     def test__run_tool_based_galaxy_file_import_no_galaxy_import_task_group_id(
-            self,
-            create_history_mock,
-            create_library_mock,
-            apply_async_mock,
-            ready_mock,
-            taskset_result_mock,
-            set_galaxy_import_task_group_id_mock,
-            _tool_based_galaxy_file_import_mock,
-            retry_mock
+        self,
+        retry_mock,
+        set_galaxy_import_task_group_id_mock,
+        taskset_result_mock,
+        ready_mock,
+        apply_async_mock,
+        create_history_mock,
+        create_library_mock
     ):
         self.create_valid_tool(ToolDefinition.WORKFLOW)
         self.tool.update_galaxy_data(self.tool.GALAXY_IMPORT_HISTORY_DICT,
@@ -1532,11 +1509,138 @@ class ToolLaunchTests(ToolManagerTestBase):
         self.assertTrue(ready_mock.called)
         self.assertTrue(taskset_result_mock.called)
         self.assertTrue(set_galaxy_import_task_group_id_mock.called)
-        self.assertTrue(_tool_based_galaxy_file_import_mock.called)
         self.assertTrue(retry_mock.called)
+        self.assertEqual(retry_mock.call_count, 2)
+
+    @mock.patch.object(celery.result.TaskSetResult, "ready",
+                       return_value=True)
+    @mock.patch.object(celery.result.TaskSetResult, "successful",
+                       return_value=False)
+    @mock.patch.object(analysis_manager.tasks, "get_taskset_result",
+                       return_value=celery.result.TaskSetResult(
+                           str(uuid.uuid4())
+                       ))
+    @mock.patch.object(Analysis, "send_email")
+    @mock.patch.object(Analysis, "galaxy_cleanup")
+    def test__run_tool_based_galaxy_file_import_failure(
+        self,
+        galaxy_cleanup_mock,
+        send_email_mock,
+        taskset_result_mock,
+        successful_mock,
+        ready_mock
+    ):
+        self.create_valid_tool(ToolDefinition.WORKFLOW)
+
+        analysis_status = AnalysisStatus.objects.get(
+            analysis=self.tool.analysis
+        )
+        analysis_status.set_galaxy_import_task_group_id(str(uuid.uuid4()))
+
+        _run_tool_based_galaxy_file_import(self.tool.analysis.uuid)
+
+        analysis_status = AnalysisStatus.objects.get(
+            analysis=self.tool.analysis
+        )
+
+        self.assertEqual(
+            analysis_status.analysis.status,
+            Analysis.FAILURE_STATUS
+        )
+        self.assertEqual(
+            analysis_status.galaxy_import_state,
+            AnalysisStatus.ERROR
+        )
+        self.assertTrue(ready_mock.called)
+        self.assertTrue(successful_mock.called)
+        self.assertTrue(taskset_result_mock.called)
+        self.assertEqual(taskset_result_mock.call_count, 2)
+        self.assertTrue(send_email_mock.called)
+        self.assertTrue(galaxy_cleanup_mock.called)
+
+    @mock.patch("celery.task.sets.TaskSet.apply_async")
+    @mock.patch.object(celery.result.TaskSetResult, "ready",
+                       return_value=False)
+    @mock.patch.object(analysis_manager.tasks, "get_taskset_result",
+                       return_value=celery.result.TaskSetResult(
+                           str(uuid.uuid4())
+                       ))
+    @mock.patch.object(AnalysisStatus, "set_galaxy_workflow_task_group_id")
+    @mock.patch.object(run_analysis, "retry")
+    def test__run_tool_based_galaxy_workflow_no_galaxy_workflow_task_group_id(
+        self,
+        retry_mock,
+        set_galaxy_workflow_task_group_id_mock,
+        taskset_result_mock,
+        ready_mock,
+        apply_async_mock,
+    ):
+        self.create_valid_tool(ToolDefinition.WORKFLOW)
+        _run_tool_based_galaxy_workflow(self.tool.analysis.uuid)
+
+        analysis_status = AnalysisStatus.objects.get(
+            analysis=self.tool.analysis
+        )
+        self.assertEqual(analysis_status.galaxy_history_state,
+                         AnalysisStatus.PROGRESS)
+
+        self.assertTrue(apply_async_mock.called)
+        self.assertTrue(ready_mock.called)
+        self.assertTrue(taskset_result_mock.called)
+        self.assertTrue(set_galaxy_workflow_task_group_id_mock.called)
+        self.assertTrue(retry_mock.called)
+        self.assertEqual(retry_mock.call_count, 2)
+
+    @mock.patch.object(celery.result.TaskSetResult, "ready",
+                       return_value=True)
+    @mock.patch.object(celery.result.TaskSetResult, "successful",
+                       return_value=False)
+    @mock.patch.object(analysis_manager.tasks, "get_taskset_result",
+                       return_value=celery.result.TaskSetResult(
+                           str(uuid.uuid4())
+                       ))
+    @mock.patch.object(Analysis, "send_email")
+    @mock.patch.object(Analysis, "galaxy_cleanup")
+    def test__run_tool_based_galaxy_workflow_failure(
+            self,
+            galaxy_cleanup_mock,
+            send_email_mock,
+            taskset_result_mock,
+            successful_mock,
+            ready_mock
+    ):
+        self.create_valid_tool(ToolDefinition.WORKFLOW)
+
+        analysis_status = AnalysisStatus.objects.get(
+            analysis=self.tool.analysis
+        )
+        analysis_status.set_galaxy_workflow_task_group_id(str(uuid.uuid4()))
+
+        _run_tool_based_galaxy_workflow(self.tool.analysis.uuid)
+
+        analysis_status = AnalysisStatus.objects.get(
+            analysis=self.tool.analysis
+        )
+
+        self.assertEqual(
+            analysis_status.analysis.status,
+            Analysis.FAILURE_STATUS
+        )
+        self.assertEqual(
+            analysis_status.galaxy_history_state,
+            AnalysisStatus.ERROR
+        )
+
+        self.assertTrue(ready_mock.called)
+        self.assertTrue(successful_mock.called)
+        self.assertTrue(taskset_result_mock.called)
+        self.assertEqual(taskset_result_mock.call_count, 2)
+        self.assertTrue(send_email_mock.called)
+        self.assertTrue(galaxy_cleanup_mock.called)
 
 
-class ToolLaunchSeleniumTests(ToolManagerTestBase, SeleniumTestBaseGeneric):
+class VisualizationToolLaunchTests(ToolManagerTestBase,
+                                   SeleniumTestBaseGeneric):
     def setUp(self):
         # super() will only ever resolve a single class type for a given method
         ToolManagerTestBase.setUp(self)
@@ -1549,6 +1653,29 @@ class ToolLaunchSeleniumTests(ToolManagerTestBase, SeleniumTestBaseGeneric):
 
         # Explicitly call delete() to purge any containers we spun up
         Tool.objects.all().delete()
+
+    def test_transaction_rollback_bad_dataset_uuid(self):
+        self.create_vis_tool_definition()
+
+        self.post_data = {
+            "dataset_uuid": self.dataset.uuid,
+            "tool_definition_uuid": self.td.uuid,
+            Tool.FILE_RELATIONSHIPS: str(["www.example.com/cool_file.txt"])
+        }
+
+        self.dataset.delete()
+
+        self.post_request = self.factory.post(
+            self.tools_url_root,
+            data=self.post_data,
+            format="json"
+        )
+        force_authenticate(self.post_request, self.user)
+        self.post_response = self.tools_view(self.post_request)
+        self.assertEqual(type(self.post_response), HttpResponseBadRequest)
+        self.assertEqual(Tool.objects.count(), 0)
+        self.assertIn("DataSet matching query does not exist.",
+                      self.post_response.content)
 
     def test_visualization_container_launch_IGV(self):
         with open("{}/visualizations/igv.json".format(TEST_DATA_PATH)) as f:

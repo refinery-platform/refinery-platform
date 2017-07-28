@@ -626,11 +626,11 @@ class AnalysisRunTests(AnalysisManagerTestBase):
     @mock.patch("{}._galaxy_file_export".format(tasks_mock))
     @mock.patch("{}._attach_workflow_outputs".format(tasks_mock))
     def test_run_analysis(self,
-                          refinery_import_mock,
-                          run_galaxy_mock,
-                          check_galaxy_history_state_mock,
+                          attach_outputs_mock,
                           galaxy_export_mock,
-                          attach_outputs_mock):
+                          check_galaxy_history_state_mock,
+                          run_galaxy_mock,
+                          refinery_import_mock):
         # Run an Analysis and ensure that the methods to check the state of
         # the task gets called properly
         run_analysis(self.analysis.uuid)
@@ -672,7 +672,6 @@ class AnalysisRunTests(AnalysisManagerTestBase):
             get_taskset_result_mock,
             send_email_mock,
             galaxy_cleanup_mock,
-
     ):
         _check_galaxy_history_state(self.analysis.uuid)
 
@@ -698,8 +697,8 @@ class AnalysisRunTests(AnalysisManagerTestBase):
     @mock.patch.object(run_analysis, "retry", side_effect=None)
     def test__check_galaxy_history_state_with_connection_error(
             self,
-            galaxy_progress_mock,
-            retry_mock
+            retry_mock,
+            galaxy_progress_mock
     ):
         _check_galaxy_history_state(self.analysis.uuid)
 
@@ -717,8 +716,8 @@ class AnalysisRunTests(AnalysisManagerTestBase):
     @mock.patch.object(run_analysis, "retry", side_effect=None)
     def test__check_galaxy_history_state_progress_less_than_percent_complete(
             self,
-            galaxy_progress_mock,
-            retry_mock
+            retry_mock,
+            galaxy_progress_mock
     ):
         self.analysis_status.galaxy_history_progress = 25
         _check_galaxy_history_state(self.analysis.uuid)
