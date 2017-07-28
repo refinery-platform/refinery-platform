@@ -17,8 +17,8 @@ class Migration(migrations.Migration):
                 ('tool_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='tool_manager.Tool')),
             ],
             options={
-                'abstract': False,
-                'verbose_name': 'ownableresource',
+                'verbose_name': 'visualizationtool',
+                'permissions': (('read_visualizationtool', 'Can read visualizationtool'),),
             },
             bases=('tool_manager.tool',),
         ),
@@ -28,8 +28,8 @@ class Migration(migrations.Migration):
                 ('tool_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='tool_manager.Tool')),
             ],
             options={
-                'abstract': False,
-                'verbose_name': 'ownableresource',
+                'verbose_name': 'workflowtool',
+                'permissions': (('read_workflowtool', 'Can read workflowtool'),),
             },
             bases=('tool_manager.tool',),
         ),
