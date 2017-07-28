@@ -213,22 +213,24 @@ def create_tool(tool_launch_configuration, user_instance):
     )
 
     tool_type = tool_definition.tool_type
+    tool_name = "{}-launch".format(tool_definition.name)
+    tool_launch_configuration = json.dumps(tool_launch_configuration)
 
     if tool_type == ToolDefinition.WORKFLOW:
         tool_launch_configuration[WorkflowTool.GALAXY_DATA] = {}
         tool = WorkflowToolFactory(
-            name="{}-launch".format(tool_definition.name),
+            name=tool_name,
             tool_definition=tool_definition,
-            tool_launch_configuration=json.dumps(tool_launch_configuration),
+            tool_launch_configuration=tool_launch_configuration,
             dataset=dataset
         )
 
     if tool_type == ToolDefinition.VISUALIZATION:
         # Create a unique container name that adheres to docker's specs
         tool = VisualizationToolFactory(
-            name="{}-launch".format(tool_definition.name),
+            name=tool_name,
             tool_definition=tool_definition,
-            tool_launch_configuration=json.dumps(tool_launch_configuration),
+            tool_launch_configuration=tool_launch_configuration,
             dataset=dataset
         )
         tool.container_name = "{}-{}".format(
