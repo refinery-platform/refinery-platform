@@ -10,7 +10,8 @@ from guardian.utils import get_anonymous_user
 import mock
 
 from analysis_manager.models import AnalysisStatus
-from analysis_manager.tasks import (_check_galaxy_history_state,
+from analysis_manager.tasks import (_check_galaxy_history_state, _get_analysis,
+                                    _get_analysis_status,
                                     _refinery_file_import, run_analysis)
 from analysis_manager.utils import (_fetch_node_relationship, _fetch_node_set,
                                     create_analysis,
@@ -745,6 +746,17 @@ class AnalysisRunTests(AnalysisManagerTestBase):
                          AnalysisStatus.OK)
 
         self.assertTrue(galaxy_progress_mock.called)
+
+    @mock.patch.object(run_analysis, "update_state")
+    def test__get_analysis_bad_uuid(self, update_state_mock):
+        self.assertEqual(_get_analysis(str(uuid.uuid4())), None)
+        self.assertTrue(update_state_mock.called)
+
+    @mock.patch.object(run_analysis, "update_state")
+    def test__get_analysis_status_bad_uuid(self, update_state_mock):
+        self.analysis_status.delete()
+        self.assertEqual(_get_analysis_status(self.analysis.uuid), None)
+        self.assertTrue(update_state_mock.called)
 
 
 class AnalysisStatusTests(AnalysisManagerTestBase):

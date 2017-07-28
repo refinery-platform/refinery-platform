@@ -1095,6 +1095,16 @@ class ToolTests(ToolManagerTestBase):
         )
         self.assertEqual(nesting_string, "list:list:paired")
 
+    def test__get_nesting_string_from_file_relationships_urls(self):
+        self.create_valid_tool(
+            ToolDefinition.WORKFLOW,
+            annotation_file_name="LIST:LIST:PAIR.json"
+        )
+        self.assertEqual(
+            self.tool._get_nesting_string(),
+            "list:list:paired"
+        )
+
     def test_creating__workflow_tool_sets_tool_launch_config_galaxy_data(self):
         self.create_valid_tool(ToolDefinition.WORKFLOW)
         self.assertEqual(self.tool.get_tool_galaxy_info(), {})
@@ -1103,6 +1113,11 @@ class ToolTests(ToolManagerTestBase):
         self.create_valid_tool(ToolDefinition.VISUALIZATION)
         with self.assertRaises(KeyError):
             self.tool.get_tool_launch_config()[WorkflowTool.GALAXY_DATA]
+
+    def test_set_analysis_bad_uuid(self):
+        self.create_valid_tool(ToolDefinition.WORKFLOW)
+        with self.assertRaises(RuntimeError):
+            self.tool.set_analysis(str(uuid.uuid4()))
 
 
 class ToolAPITests(APITestCase, ToolManagerTestBase):
