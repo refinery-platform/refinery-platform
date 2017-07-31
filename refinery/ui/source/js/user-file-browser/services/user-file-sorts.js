@@ -7,7 +7,9 @@
   userFileSortsService.$inject = [];
 
   function userFileSortsService () {
-    var userFileSorts = {};
+    var userFileSorts = {
+      fields: []
+    };
     return userFileSorts;
   }
 })();

@@ -40,9 +40,12 @@
               return filters.join(' AND ');
             },
             sort: function () {
-              console.log('!!! Hit by each sort?');
-              console.log('TODO: make solr sort from', userFileSortsService);
-              return 'organism_Characteristics_generic_s asc';
+              var sort = userFileSortsService.fields.map(function (field) {
+                return field.name + '_Characteristics_generic_s ' + field.direction
+                    + ', ' + field.name + '_Factor_Value_s ' + field.direction;
+              }).join(', ');
+              console.log(sort);
+              return sort;
             }
           }
         }

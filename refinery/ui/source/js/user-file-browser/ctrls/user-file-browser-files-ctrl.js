@@ -44,7 +44,9 @@
           userFileSortsService.fields[i] = {
             name: column.field,
             direction: column.sort.direction
-            // column.sort.priority seems to be redundant with array order,
+            // NOTE: UI Grid uiGridConstants.ASC and DESC happen to match
+            // "asc" and "desc" for solr, but if that changed, this breaks.
+            // NOTE: column.sort.priority seems to be redundant with array order,
             // but I don't think we have this guaranteed.
           };
           console.log('service', userFileSortsService);
