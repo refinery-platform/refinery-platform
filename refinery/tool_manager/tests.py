@@ -33,6 +33,7 @@ from analysis_manager.tasks import (_get_workflow_tool,
 from core.models import (Analysis, ExtendedGroup, Project, Workflow,
                          WorkflowEngine)
 from data_set_manager.models import Assay, Node
+from factory_boy.django_model_factories import ToolFactory
 from factory_boy.utils import create_dataset_with_necessary_models
 from file_store.models import FileStoreItem
 from galaxy_connector.models import Instance
@@ -1112,6 +1113,17 @@ class ToolTests(ToolManagerTestBase):
         self.create_valid_tool(ToolDefinition.WORKFLOW)
         with self.assertRaises(RuntimeError):
             self.tool.set_analysis(str(uuid.uuid4()))
+
+    def test_tool_launch_method_raises_error_when_not_overridden(self):
+        self.create_workflow_tool_definition()
+        tool = ToolFactory(
+            dataset=self.dataset,
+            tool_definition=self.td
+        )
+        with self.assertRaises(NotImplementedError) as context:
+            tool.launch()
+
+        self.assertEqual(context.exception.message, tool.LAUNCH_WARNING)
 
 
 class ToolAPITests(APITestCase, ToolManagerTestBase):

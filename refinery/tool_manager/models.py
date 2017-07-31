@@ -265,6 +265,7 @@ class Tool(OwnableResource):
     FILE_UUID_LIST = "file_uuid_list"
     FILE_RELATIONSHIPS = "file_relationships"
     FILE_RELATIONSHIPS_URLS = "{}_urls".format(FILE_RELATIONSHIPS)
+    LAUNCH_WARNING = "Subclasses must implement `launch` method"
     REFINERY_FILE_UUID = "refinery_file_uuid"
     TOOL_URL = "tool_url"
 
@@ -344,6 +345,9 @@ class Tool(OwnableResource):
             "user_id": self.get_owner().id,
             "workflowUuid": self.tool_definition.workflow.uuid
         }
+
+    def launch(self):
+        raise NotImplementedError(Tool.LAUNCH_WARNING)
 
     def set_tool_launch_config(self, tool_launch_config):
         self.tool_launch_configuration = json.dumps(tool_launch_config)
