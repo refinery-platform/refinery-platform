@@ -25,9 +25,7 @@
       // TODO: provide information about the error to the user (block import?)
     });
 
-    // vm.progress = 0;
     vm.upload = function (file) {
-      var deferred = $q.defer();
       var params = {
         Bucket: settings.djangoApp.mediaBucket,
         Key: 'uploads' + '/' + AWS.config.credentials.identityId + '/' + file.name,
@@ -40,18 +38,7 @@
         // Give the owner of the bucket full control
         ACL: 'bucket-owner-full-control'
       };
-      var uploader = vm.s3.upload(params, options, function (err) {
-        if (err) {
-          $log.error('Error uploading file: ' + err);
-          deferred.reject(err);
-        }
-        deferred.resolve();
-      });
-      uploader.on('httpUploadProgress', function (event) {
-        deferred.notify(event);
-      });
-
-      return deferred.promise;
+      return vm.s3.upload(params, options);  // AWS.S3.ManagedUpload
     };
   }
 })();
