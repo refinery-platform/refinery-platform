@@ -43,8 +43,8 @@ function metadataTableDirective (
       // Watches for tab navigation
       scope.$on('$stateChangeStart', function (event) {
         if (metadataStatusService.metadataPreviewStatus) {
-          var answer = confirm('Uploading files or tabular data in preview' +
-            ' will be lost.'); // eslint-disable-line
+          var warning = 'Uploading in progress: data may be lost.';
+          var answer = confirm(warning); // eslint-disable-line no-alert
           if (!answer) {
             event.preventDefault();
           } else {
