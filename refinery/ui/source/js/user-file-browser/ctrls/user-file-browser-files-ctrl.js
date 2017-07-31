@@ -35,10 +35,7 @@
     });
 
     vm.sortChanged = function (grid, sortColumns) {
-      console.log('sort', sortColumns);
-      // TODO: This is copy-and-paste from file-browser
       if (typeof sortColumns !== 'undefined') {
-        userFileSortsService.fields = [];
         for (var i = 0; i < sortColumns.length; i++) {
           var column = sortColumns[i];
           userFileSortsService.fields[i] = {
@@ -49,7 +46,6 @@
             // NOTE: column.sort.priority seems to be redundant with array order,
             // but I don't think we have this guaranteed.
           };
-          console.log('service', userFileSortsService);
         }
 
         // TODO: This is copy-and-paste

@@ -27,7 +27,6 @@
           params: {
             limit: 100, // Default is 100,000. Immutability make it hard in python.
             fq: function () {
-              console.log('!!! Hit by each filter?');
               var filters = Object.keys(userFileFiltersService).map(function (key) {
                 var values = userFileFiltersService[key];
                 // TODO: escaping!
@@ -44,7 +43,6 @@
                 return field.name + '_Characteristics_generic_s ' + field.direction
                     + ', ' + field.name + '_Factor_Value_s ' + field.direction;
               }).join(', ');
-              console.log(sort);
               return sort;
             }
           }
