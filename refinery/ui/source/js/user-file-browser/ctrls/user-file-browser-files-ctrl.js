@@ -8,7 +8,6 @@
   UserFileBrowserFilesCtrl.$inject = [
     '$log',
     '$q',
-    'uiGridConstants',
     'userFileBrowserFactory',
     'userFileSortsService',
     'gridOptionsService'
@@ -17,7 +16,6 @@
   function UserFileBrowserFilesCtrl (
       $log,
       $q,
-      uiGridConstants,
       userFileBrowserFactory,
       userFileSortsService,
       gridOptionsService
