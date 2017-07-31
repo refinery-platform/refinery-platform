@@ -823,7 +823,6 @@ def search_solr(encoded_params, core):
         encoded_params:  Expect the params to be url-ready (using urlquote)
         core: Specify which node
     """
-    logger.warn('about to solr...')
     url_portion = '/'.join([core, "select"])
     url = urlparse.urljoin(settings.REFINERY_SOLR_BASE_URL, url_portion)
     full_response = requests.get(url, params=encoded_params)

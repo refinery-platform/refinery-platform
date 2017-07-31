@@ -64,7 +64,6 @@
     gridOptionsService.appScopeProvider = vm;
     vm.gridOptions = gridOptionsService;
     vm.gridOptions.onRegisterApi = function (api) {
-      console.log('register!', api);
       api.core.on.sortChanged(null, vm.sortChanged);
     };
   }
