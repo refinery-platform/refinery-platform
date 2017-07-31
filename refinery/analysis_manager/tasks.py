@@ -229,15 +229,14 @@ def _galaxy_file_export(analysis_uuid):
 
 @task()
 def _invoke_tool_based_galaxy_workflow(analysis_uuid):
-    analysis = _get_analysis(analysis_uuid)
     tool = _get_workflow_tool(analysis_uuid)
 
     tool.create_dataset_collection()
 
     galaxy_workflow_invocation_data = tool.invoke_workflow()
 
-    analysis.history_id = galaxy_workflow_invocation_data["history_id"]
-    analysis.save()
+    tool.analysis.history_id = galaxy_workflow_invocation_data["history_id"]
+    tool.analysis.save()
 
     tool.update_galaxy_data(
         tool.GALAXY_WORKFLOW_INVOCATION_DATA,
