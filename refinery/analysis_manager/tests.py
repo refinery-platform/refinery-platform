@@ -669,10 +669,10 @@ class AnalysisRunTests(AnalysisManagerTestBase):
     @mock.patch("core.models.Analysis.galaxy_cleanup")
     def test__check_galaxy_history_state_with_runtime_error(
             self,
-            galaxy_progress_mock,
-            get_taskset_result_mock,
-            send_email_mock,
             galaxy_cleanup_mock,
+            send_email_mock,
+            get_taskset_result_mock,
+            galaxy_progress_mock
     ):
         _check_galaxy_history_state(self.analysis.uuid)
 
