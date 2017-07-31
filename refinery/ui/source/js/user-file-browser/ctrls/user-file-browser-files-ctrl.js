@@ -37,25 +37,19 @@
     vm.sortChanged = function (grid, sortColumns) {
       console.log('sort', sortColumns);
       // TODO: This is copy-and-paste from file-browser
-      if (typeof sortColumns !== 'undefined' &&
-        typeof sortColumns[0] !== 'undefined' &&
-        typeof sortColumns[0].sort !== 'undefined') {
-        var name = sortColumns[0].name;
-        // TODO: need to handle multiple sorts; also in original file-browser.
-        switch (sortColumns[0].sort.direction) {
-          case uiGridConstants.ASC:
-            console.log(name, 'asc');
-            userFileSortsService[name] = 'asc';
-            // paramService.fileParam.sort = sortColumns[0].field + ' asc';
-            break;
-          case uiGridConstants.DESC:
-            console.log(name, 'desc');
-            userFileSortsService[name] = 'desc';
-            // paramService.fileParam.sort = sortColumns[0].field + ' desc';
-            break;
-          default:
-            break;
+      if (typeof sortColumns !== 'undefined') {
+        userFileSortsService.fields = [];
+        for (var i = 0; i < sortColumns.length; i++) {
+          var column = sortColumns[i];
+          userFileSortsService.fields[i] = {
+            name: column.field,
+            direction: column.sort.direction
+            // column.sort.priority seems to be redundant with array order,
+            // but I don't think we have this guaranteed.
+          };
+          console.log('service', userFileSortsService);
         }
+
         // TODO: This is copy-and-paste
         getUserFiles().then(function (solr) {
           // TODO: Should there be something that wraps up this "then"? It is repeated.
