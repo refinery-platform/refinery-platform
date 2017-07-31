@@ -831,7 +831,7 @@ def search_solr(encoded_params, core):
             response_obj = json.loads(full_response.content)
         except ValueError:
             raise RuntimeError(
-                'Expected JSON from SOLR, not: %s', full_response.content
+                'Expected Solr JSON, not: {}'.format(full_response.content)
             )
         try:
             raise RuntimeError('Solr error: {}\nin context: {}'.format(
@@ -840,7 +840,7 @@ def search_solr(encoded_params, core):
             ))
         except KeyError:
             raise RuntimeError(
-                'Not expected response structure: %s', response_obj
+                'Not expected response structure: {}'.format(response_obj)
             )
 
     response = full_response.content
