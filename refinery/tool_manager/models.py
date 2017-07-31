@@ -384,6 +384,10 @@ class Tool(OwnableResource):
 
 
 class VisualizationTool(Tool):
+    """
+    VisualizationTools are Tools that are specific to
+    launching and monitoring Dockerized visualizations
+    """
     class Meta:
         verbose_name = "visualizationtool"
         permissions = (
@@ -417,6 +421,10 @@ class VisualizationTool(Tool):
 
 
 class WorkflowTool(Tool):
+    """
+    WorkflowTools are Tools that are specific to
+    launching and monitoring Galaxy Workflows
+    """
     COLLECTION_INFO = "collection_info"
     FILE_RELATIONSHIPS_GALAXY = "{}_galaxy".format(Tool.FILE_RELATIONSHIPS)
     GALAXY_DATA = "galaxy_data"
@@ -457,10 +465,14 @@ class WorkflowTool(Tool):
         }
 
     def create_dataset_collection(self):
+        """
+        Creates a Galaxy DatasetCollection based off of the collection
+        description returned by: `WorkflowTool.create_collection_description()`
+        """
         collection_description = self.create_collection_description()
         collection_info = (
             self.galaxy_connection.histories.create_dataset_collection(
-                self.get_tool_galaxy_info()[
+                self.get_galaxy_dict()[
                     self.GALAXY_IMPORT_HISTORY_DICT
                 ]["id"],
                 collection_description
@@ -481,7 +493,7 @@ class WorkflowTool(Tool):
     def create_workflow_inputs(self):
         return {
             '0': {
-                'id': self.get_tool_galaxy_info()[self.COLLECTION_INFO]["id"],
+                'id': self.get_galaxy_dict()[self.COLLECTION_INFO]["id"],
                 'src': 'hdca'
             }
         }
@@ -491,7 +503,11 @@ class WorkflowTool(Tool):
             self.get_tool_launch_config()[self.FILE_RELATIONSHIPS_GALAXY]
         )
 
-    def get_tool_galaxy_info(self):
+    def get_galaxy_dict(self):
+        """
+        Fetch the dict in a Tool's `tool_launch_config` under the
+        `WorkflowTool.GALAXY_DATA` key
+        """
         return self.get_tool_launch_config()[self.GALAXY_DATA]
 
     def get_galaxy_import_tasks(self):
@@ -503,15 +519,16 @@ class WorkflowTool(Tool):
                 (
                     self.analysis.uuid,
                     file_store_item_uuid,
-                    self.get_tool_galaxy_info()[
+                    self.get_galaxy_dict()[
                         self.GALAXY_IMPORT_HISTORY_DICT
                     ],
-                    self.get_tool_galaxy_info()[self.GALAXY_LIBRARY_DICT],
+                    self.get_galaxy_dict()[self.GALAXY_LIBRARY_DICT],
                 )
             ) for file_store_item_uuid in self.get_input_file_uuid_list()
         ]
 
     def invoke_workflow(self):
+        """Invoke a Tool's workflow in Galaxy"""
         return self.galaxy_connection.workflows.invoke_workflow(
             self.tool_definition.workflow.internal_id,
             history_name="Workflow Run for {}".format(self.name),
@@ -614,18 +631,35 @@ class WorkflowTool(Tool):
         self.set_tool_launch_config(tool_launch_config)
 
     def update_galaxy_data(self, key, value):
+        """
+        Update a WorkflowTool's tool_launch_config dict under
+        `WorkflowTool.GALAXY_DATA` with a new key/value pair
+        """
         tool_launch_config = self.get_tool_launch_config()
         tool_launch_config[self.GALAXY_DATA][key] = value
         self.set_tool_launch_config(tool_launch_config)
 
     def upload_datafile_to_library_from_url(self, library_id, datafile_url):
+        """
+        Upload file from Refinery into a Galaxy Data Library form a
+        specified url
+        :param library_id: UUID string of the Galaxy Library to interact with
+        :param datafile_url: <String> Full url pointing to a Refinery
+        FileStoreItem datafile's source.
+        """
         return self.galaxy_connection.libraries.upload_file_from_url(
             library_id,
             datafile_url
         )
 
-    def upload_dataset_from_library_to_history(self, history_id,
+    def import_dataset_from_library_to_history(self, history_id,
                                                library_dataset_id):
+        """
+        Import a Galaxy DataSet from a Data Library into a History
+        :param history_id: UUID string of the Galaxy History to interact with
+        :param library_dataset_id: UUID string of the Galaxy Library DataSet
+         to interact with
+        """
         return self.galaxy_connection.histories.upload_dataset_from_library(
             history_id,
             library_dataset_id
@@ -635,7 +669,8 @@ class WorkflowTool(Tool):
 @receiver(pre_delete, sender=VisualizationTool)
 def remove_tool_container(sender, instance, *args, **kwargs):
     """
-    Remove the Docker container instance corresponding to a Tool's launch.
+    Remove the Docker container instance corresponding to a
+    VisualizationTool's launch.
     """
     try:
         DockerClientWrapper().purge_by_label(instance.uuid)
