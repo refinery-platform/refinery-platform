@@ -610,7 +610,7 @@ def _tool_based_galaxy_file_import(analysis_uuid, file_store_item_uuid,
         library_dict["id"],
         get_full_url(file_store_item.get_datafile_url())
     )
-    history_dataset_dict = tool.upload_dataset_from_library_to_history(
+    history_dataset_dict = tool.import_library_dataset_to_history(
             history_dict["id"],
             library_dataset_dict[0]["id"]
         )

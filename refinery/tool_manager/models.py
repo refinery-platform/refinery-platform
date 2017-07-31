@@ -560,6 +560,19 @@ class WorkflowTool(Tool):
         except RuntimeError:
             return structure[:-1]
 
+    def import_library_dataset_to_history(self, history_id,
+                                          library_dataset_id):
+        """
+        Import a Galaxy DataSet from a Data Library into a History
+        :param history_id: UUID string of the Galaxy History to interact with
+        :param library_dataset_id: UUID string of the Galaxy Library DataSet
+         to interact with
+        """
+        return self.galaxy_connection.histories.upload_dataset_from_library(
+            history_id,
+            library_dataset_id
+        )
+
     def launch(self):
         """
         Launch a workflow-based Tool
@@ -650,19 +663,6 @@ class WorkflowTool(Tool):
         return self.galaxy_connection.libraries.upload_file_from_url(
             library_id,
             datafile_url
-        )
-
-    def import_dataset_from_library_to_history(self, history_id,
-                                               library_dataset_id):
-        """
-        Import a Galaxy DataSet from a Data Library into a History
-        :param history_id: UUID string of the Galaxy History to interact with
-        :param library_dataset_id: UUID string of the Galaxy Library DataSet
-         to interact with
-        """
-        return self.galaxy_connection.histories.upload_dataset_from_library(
-            history_id,
-            library_dataset_id
         )
 
 
