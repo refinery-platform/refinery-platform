@@ -4,5 +4,3 @@ development/**
 docs/**
 node_modules/**
 production/**
-
-source/js/provvis/**
