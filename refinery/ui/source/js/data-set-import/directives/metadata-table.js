@@ -44,7 +44,7 @@ function metadataTableDirective (
       scope.$on('$stateChangeStart', function (event) {
         if (metadataStatusService.metadataPreviewStatus) {
           var answer = confirm('Uploading files or tabular data in preview' +
-            ' will be lost.');
+            ' will be lost.'); // eslint-disable-line
           if (!answer) {
             event.preventDefault();
           } else {

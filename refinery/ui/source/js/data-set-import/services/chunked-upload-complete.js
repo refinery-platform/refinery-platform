@@ -25,7 +25,7 @@ function ChunkedUploadFactory (
         transformRequest: function (data) {
           return $httpParamSerializerJQLike(data);
         }
-      },
+      }
     }
   );
 }
