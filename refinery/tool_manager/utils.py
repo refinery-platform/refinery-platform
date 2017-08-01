@@ -130,6 +130,12 @@ def create_tool_definition(annotation_data):
     """
     tool_type = annotation_data["tool_type"]
     annotation = annotation_data["annotation"]
+    common_tool_definition_params = {
+        "name": annotation_data["name"],
+        "description": annotation["description"],
+        "tool_type": tool_type,
+        "file_relationship": create_file_relationship_nesting(annotation),
+    }
 
     if tool_type == ToolDefinition.WORKFLOW:
         workflow_engine = WorkflowEngine.objects.get(
@@ -149,20 +155,14 @@ def create_tool_definition(annotation_data):
         workflow.share(workflow_engine.get_manager_group().get_managed_group())
 
         tool_definition = ToolDefinitionFactory(
-            name=annotation_data["name"],
-            description=annotation["description"],
-            tool_type=tool_type,
-            file_relationship=create_file_relationship_nesting(annotation),
-            workflow=workflow
+            workflow=workflow,
+            **common_tool_definition_params
         )
     elif tool_type == ToolDefinition.VISUALIZATION:
         tool_definition = ToolDefinitionFactory(
-            name=annotation_data["name"],
-            description=annotation["description"],
-            tool_type=tool_type,
-            file_relationship=create_file_relationship_nesting(annotation),
             image_name=annotation["image_name"],
             container_input_path=annotation["container_input_path"],
+            **common_tool_definition_params
         )
 
         # If we've successfully created the ToolDefinition lets
@@ -215,23 +215,28 @@ def create_tool(tool_launch_configuration, user_instance):
     tool_type = tool_definition.tool_type
     tool_name = "{}-launch".format(tool_definition.name)
 
+    common_tool_params = {
+        "name": tool_name,
+        "tool_definition": tool_definition,
+        Tool.TOOL_LAUNCH_CONFIGURATION: json.dumps(tool_launch_configuration),
+        "dataset": dataset
+    }
+
     if tool_type == ToolDefinition.WORKFLOW:
-        tool_launch_configuration[WorkflowTool.GALAXY_DATA] = {}
-        tool = WorkflowToolFactory(
-            name=tool_name,
-            tool_definition=tool_definition,
-            tool_launch_configuration=json.dumps(tool_launch_configuration),
-            dataset=dataset
+        tool_launch_configuration[WorkflowTool.GALAXY_DATA] = {
+            WorkflowTool.FILE_RELATIONSHIPS_GALAXY:
+                tool_launch_configuration[Tool.FILE_RELATIONSHIPS]
+        }
+        # Add updated Tool launch config info to common_tool_params dict
+        common_tool_params[Tool.TOOL_LAUNCH_CONFIGURATION] = json.dumps(
+            tool_launch_configuration
         )
+        tool = WorkflowToolFactory(**common_tool_params)
 
     if tool_type == ToolDefinition.VISUALIZATION:
+        tool = VisualizationToolFactory(**common_tool_params)
+
         # Create a unique container name that adheres to docker's specs
-        tool = VisualizationToolFactory(
-            name=tool_name,
-            tool_definition=tool_definition,
-            tool_launch_configuration=json.dumps(tool_launch_configuration),
-            dataset=dataset
-        )
         tool.container_name = "{}-{}".format(
             tool.name.replace(" ", ""),
             tool.uuid
