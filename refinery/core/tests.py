@@ -1,20 +1,23 @@
 import json
 import random
+import re
 import string
 from urlparse import urljoin
 
-import mock
-import mockcache as memcache
-from django.contrib.auth.models import Group, User
+from django.contrib.auth.models import AnonymousUser, Group, User
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.utils import timezone
-from guardian.shortcuts import assign_perm
+
+from guardian.shortcuts import assign_perm, get_objects_for_group
+import mock
+import mockcache as memcache
 from rest_framework.test import (APIClient, APIRequestFactory, APITestCase,
                                  force_authenticate)
 from tastypie.exceptions import NotFound
 from tastypie.test import ResourceTestCase
 
+from analysis_manager.models import AnalysisStatus
 from data_set_manager.models import Assay, Contact, Investigation, Node, Study
 from factory_boy.utils import create_dataset_with_necessary_models
 from file_store.models import FileStoreItem
@@ -24,12 +27,12 @@ from .api import AnalysisResource
 from .management.commands.create_user import init_user
 from .models import (Analysis, AnalysisNodeConnection, DataSet, ExtendedGroup,
                      InvestigationLink, NodeSet, Project, Tutorials,
-                     UserProfile, Workflow, WorkflowEngine, create_nodeset,
-                     delete_nodeset, get_nodeset, invalidate_cached_object,
-                     update_nodeset)
+                     UserProfile, Workflow, WorkflowDataInputMap,
+                     WorkflowEngine, create_nodeset, delete_nodeset,
+                     get_nodeset, invalidate_cached_object, update_nodeset)
 from .search_indexes import DataSetIndex
 from .utils import (filter_nodes_uuids_in_solr, get_aware_local_time,
-                    move_obj_to_front)
+                    get_resources_for_user, move_obj_to_front)
 from .views import AnalysesViewSet, DataSetsViewSet
 
 cache = memcache.Client(["127.0.0.1:11211"])
@@ -1316,9 +1319,7 @@ class DataSetDeletionTest(TestCase):
         self.assertIsNone(self.dataset_without_analysis.get_pre_isa_archive())
 
 
-class AnalysisDeletionTest(TestCase):
-    """Testing for the deletion of Analyses"""
-
+class AnalysisTests(TestCase):
     def setUp(self):
         # Create a user
         self.username = self.password = 'user'
@@ -1344,6 +1345,20 @@ class AnalysisDeletionTest(TestCase):
         self.workflow1 = Workflow.objects.create(
             name="Workflow1", workflow_engine=self.workflow_engine)
 
+        # Create FileStoreItems
+        self.file_store_item = FileStoreItem.objects.create(
+            datafile=SimpleUploadedFile(
+                'test_file.txt',
+                'Coffee is delicious!'
+            )
+        )
+        self.file_store_item1 = FileStoreItem.objects.create(
+            datafile=SimpleUploadedFile(
+                'test_file.txt',
+                'Coffee is delicious!'
+            )
+        )
+
         # Create some DataSets that will have an analysis run upon them
         self.dataset_with_analysis = DataSet.objects.create()
         self.dataset_with_analysis1 = DataSet.objects.create()
@@ -1359,6 +1374,9 @@ class AnalysisDeletionTest(TestCase):
             data_set=self.dataset_with_analysis,
             workflow=self.workflow,
             status="SUCCESS"
+        )
+        self.analysis_status = AnalysisStatus.objects.create(
+            analysis=self.analysis
         )
         self.analysis_with_node_analyzed_further = Analysis.objects.create(
             name='analysis_with_node_analyzed_further',
@@ -1389,13 +1407,29 @@ class AnalysisDeletionTest(TestCase):
         self.assay1 = Assay.objects.create(study=self.study1)
 
         # Create Nodes
-        self.node = Node.objects.create(assay=self.assay, study=self.study,
-                                        analysis_uuid=self.analysis.uuid)
+        self.node = Node.objects.create(
+            assay=self.assay,
+            study=self.study,
+            analysis_uuid=self.analysis.uuid,
+            file_uuid=self.file_store_item.uuid
+        )
+        self.node2 = Node.objects.create(
+            assay=self.assay1,
+            study=self.study,
+            analysis_uuid=self.analysis_with_node_analyzed_further.uuid,
+            file_uuid=self.file_store_item1.uuid
+        )
 
-        self.node2 = Node.objects.create(assay=self.assay1, study=self.study1,
-                                         analysis_uuid=self.
-                                         analysis_with_node_analyzed_further
-                                         .uuid)
+        # Create WorkflowDataInputMaps
+        self.wf_data_input_map = WorkflowDataInputMap.objects.create(
+            workflow_data_input_name="input 1",
+            data_uuid=self.node.uuid
+        )
+        self.wf_data_input_map2 = WorkflowDataInputMap.objects.create(
+            workflow_data_input_name="input 2",
+            data_uuid=self.node2.uuid
+        )
+
         # Create AnalysisNodeConnections
         self.analysis_node_connection = \
             AnalysisNodeConnection.objects.create(analysis=self.analysis,
@@ -1406,6 +1440,10 @@ class AnalysisDeletionTest(TestCase):
                 analysis=self.analysis_with_node_analyzed_further,
                 node=self.node2, step=2,
                 direction="in")
+
+        # Add wf_data_input_maps to Analysis M2M relationship
+        self.analysis.workflow_data_input_maps.add(self.wf_data_input_map,
+                                                   self.wf_data_input_map2)
 
     def test_verify_analysis_deletion_if_nodes_not_analyzed_further(self):
         # Try to delete Analysis with a Node that has an
@@ -1423,6 +1461,45 @@ class AnalysisDeletionTest(TestCase):
         self.analysis_with_node_analyzed_further.delete()
         self.assertIsNotNone(Analysis.objects.get(
             name='analysis_with_node_analyzed_further'))
+
+    def test_terminate_file_import_tasks(self):
+        with mock.patch(
+            "file_store.models.FileStoreItem.terminate_file_import_task"
+        ) as terminate_mock:
+            self.analysis.terminate_file_import_tasks()
+            self.assertEqual(terminate_mock.call_count, 2)
+
+    def test_galaxy_tool_file_import_state_returns_data_when_it_should(self):
+        self.analysis_status.galaxy_import_state = AnalysisStatus.PROGRESS
+        self.analysis_status.galaxy_import_progress = 96
+
+        self.assertEqual(
+            self.analysis_status.tool_based_galaxy_file_import_state(),
+            [
+                {
+                    'state': self.analysis_status.galaxy_import_state,
+                    'percent_done': self.analysis_status.galaxy_import_progress
+                }
+            ]
+        )
+
+    def test_galaxy_tool_file_import_state_is_empty_without_an_import_state(
+            self):
+        self.analysis_status.galaxy_import_progress = 96
+
+        self.assertEqual(
+            self.analysis_status.tool_based_galaxy_file_import_state(),
+            []
+        )
+
+    def test_galaxy_tool_file_import_state_is_empty_without_import_progress(
+            self):
+        self.analysis_status.galaxy_import_state = AnalysisStatus.PROGRESS
+
+        self.assertEqual(
+            self.analysis_status.tool_based_galaxy_file_import_state(),
+            []
+        )
 
 
 class UtilitiesTest(TestCase):
@@ -1451,6 +1528,62 @@ class UtilitiesTest(TestCase):
             "32e977fc-b906-4315-b6ed-6a644d173492",
             "910117c5-fda2-4700-ae87-dc897f3a5d85"
             ]
+
+    def test_get_resources_for_user(self):
+        django_anon_user = AnonymousUser()
+        guardian_anon_user = User.get_anonymous()
+        auth_user = User.objects.create_user(
+            'testuser', 'test@example.com', 'password')
+        public_group = ExtendedGroup.objects.public_group()
+
+        def django_anon_datasets():
+            return get_resources_for_user(django_anon_user, 'dataset')
+
+        def guardian_anon_datasets():
+            return get_resources_for_user(guardian_anon_user, 'dataset')
+
+        def auth_datasets():
+            return get_resources_for_user(auth_user, 'dataset')
+
+        def public_datasets():
+            return get_objects_for_group(
+                public_group,
+                'core.read_dataset'
+            )
+
+        # The point of this test is to make sure getting
+        # resources for the Anonymous User is the same as
+        # getting resources for the Public Group.
+        # (In practice, it should be the Guardian
+        # Anonymous, but if it's Django for some reason,
+        # it should still work.)
+
+        self.assertTrue(auth_user.is_authenticated())
+
+        # Both ways should be the same, and empty, to begin:
+
+        self.assertEqual(len(django_anon_datasets()), 0)
+        self.assertEqual(len(guardian_anon_datasets()), 0)
+        self.assertEqual(len(auth_datasets()), 0)
+        self.assertEqual(len(public_datasets()), 0)
+
+        # Create a data set:
+
+        dataset = create_dataset_with_necessary_models()
+        dataset.set_owner(auth_user)
+
+        self.assertEqual(len(django_anon_datasets()), 0)
+        self.assertEqual(len(guardian_anon_datasets()), 0)
+        self.assertEqual(len(auth_datasets()), 1)
+        self.assertEqual(len(public_datasets()), 0)
+
+        # Make data set public:
+
+        dataset.share(public_group)
+        self.assertEqual(len(django_anon_datasets()), 1)
+        self.assertEqual(len(guardian_anon_datasets()), 1)
+        self.assertEqual(len(auth_datasets()), 1)
+        self.assertEqual(len(public_datasets()), 1)
 
     def test_get_aware_local_time(self):
         expected_time = timezone.localtime(timezone.now())
@@ -2412,6 +2545,16 @@ class CoreIndexTests(TestCase):
         self.dataset_index = DataSetIndex()
         self.good_dataset = create_dataset_with_necessary_models()
         self.bad_dataset = DataSet.objects.create()
+
+    def test_prepare(self):
+        data = self.dataset_index.prepare(self.good_dataset)
+        self.assertRegexpMatches(
+            data['text'],
+            re.compile(
+                r'AnnotatedNode-\d.*AnnotatedNode-\d',
+                re.DOTALL
+            )
+        )
 
     def test_prepare_submitter(self):
         contact = Contact.objects.create(

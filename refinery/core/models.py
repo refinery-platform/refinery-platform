@@ -56,6 +56,7 @@ from galaxy_connector.galaxy_workflow import (configure_workflow,
                                               countWorkflowSteps,
                                               create_expanded_workflow_graph)
 from galaxy_connector.models import Instance
+import tool_manager
 
 from .utils import (add_or_update_user_to_neo4j, add_read_access_in_neo4j,
                     delete_analysis_index, delete_data_set_index,
@@ -872,7 +873,7 @@ class InvestigationLink(models.Model):
                 uuid=self.investigation.uuid)
         except (NodeCollection.DoesNotExist,
                 NodeCollection.MultipleObjectsReturned) as e:
-            logger.error("Could not fetch NodeCollection: ", e)
+            logger.error("Could not fetch NodeCollection: %s", e)
 
 
 class WorkflowDataInput(models.Model):
@@ -1025,11 +1026,13 @@ class Workflow(SharableResource, ManageableResource):
             try:
                 self.data_inputs.remove()
             except Exception as e:
-                logger.error("Could not delete WorkflowDataInput", e)
+                logger.error(
+                    "Could not delete WorkflowDataInput: %s", e)
             try:
                 self.input_relationships.remove()
             except Exception as e:
-                logger.error("Could not delete WorkflowInputRelationship", e)
+                logger.error(
+                    "Could not delete WorkflowInputRelationship: %s", e)
 
             super(Workflow, self).delete()
 
@@ -1196,7 +1199,6 @@ class Analysis(OwnableResource):
                     delete = False
 
         if delete:
-            # Cancel Analysis (galaxy cleanup also happens here)
             self.cancel()
 
             # Delete associated AnalysisResults
@@ -1756,6 +1758,35 @@ class Analysis(OwnableResource):
                     "No file found for '%s' in download '%s' ('%s')",
                     analysis_result.file_store_uuid, self.name, self.uuid)
 
+    def terminate_file_import_tasks(self):
+        """
+        Gathers all UUIDs of FileStoreItems used as inputs for the Analysis,
+        and trys to terminate their import_file tasks if possible
+        """
+        file_store_item_uuids = self.get_input_file_uuid_list()
+
+        for uuid in file_store_item_uuids:
+            try:
+                file_store_item = FileStoreItem.objects.get(uuid=uuid)
+            except (FileStoreItem.DoesNotExist,
+                    FileStoreItem.MultipleObjectsReturned) as e:
+                logger.error(
+                    "Couldn't properly fetch FileStoreItem with UUID: %s %s",
+                    uuid,
+                    e
+                )
+            else:
+                file_store_item.terminate_file_import_task()
+
+    @property
+    def is_tool_based(self):
+        try:
+            tool_manager.models.Tool.objects.get(analysis=self)
+            return True
+        except (tool_manager.models.Tool.DoesNotExist,
+                tool_manager.models.Tool.MultipleObjectsReturned):
+            return False
+
 
 #: Defining available relationship types
 INPUT_CONNECTION = 'in'
@@ -1954,7 +1985,6 @@ def get_current_node_set(study_uuid, assay_uuid):
         return node_set
 
 
-@transaction.commit_manually()
 def create_nodeset(name, study, assay, summary='', solr_query='',
                    solr_query_components=''):
     """Create a new NodeSet.
@@ -1975,19 +2005,18 @@ def create_nodeset(name, study, assay, summary='', solr_query='',
     :raises: IntegrityError, ValueError
     """
     try:
-        nodeset = NodeSet.objects.create(
-            name=name,
-            study=study,
-            assay=assay,
-            summary=summary,
-            solr_query=solr_query,
-            solr_query_components=solr_query_components
-        )
+        with transaction.atomic():
+            nodeset = NodeSet.objects.create(
+                name=name,
+                study=study,
+                assay=assay,
+                summary=summary,
+                solr_query=solr_query,
+                solr_query_components=solr_query_components
+            )
     except (IntegrityError, ValueError) as e:
-        transaction.rollback()
         logger.error("Failed to create NodeSet: %s", e.message)
         raise
-    transaction.commit()
     logger.info("NodeSet created with UUID '%s'", nodeset.uuid)
     return nodeset
 
@@ -2452,7 +2481,7 @@ class CustomRegistrationManager(RegistrationManager):
 
         return new_user
 
-    create_inactive_user = transaction.commit_on_success(
+    create_inactive_user = transaction.atomic(
         custom_create_inactive_user)
 
 
@@ -2530,3 +2559,14 @@ class CustomRegistrationProfile(RegistrationProfile):
             "An email has been sent to admins informing of registration of  "
             "user %s", self.user
         )
+
+
+class SiteProfile(models.Model):
+    """Extension to the `Site` class to customize the Refinery instance further
+    """
+
+    site = models.OneToOneField(Site, related_name='profile')
+    repo_mode_home_page_html = models.TextField(blank=True)
+
+    def __unicode__(self):
+        return self.site.name

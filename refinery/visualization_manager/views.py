@@ -11,10 +11,9 @@ from annotation_server.utils import SUPPORTED_GENOMES
 from core.utils import get_full_url
 from data_set_manager.models import Node
 from file_server.models import get_aux_file_item
+from file_server.views import profile_viewer
 from file_store.models import FileStoreItem
 from file_store.tasks import create, import_file, rename
-from file_server.views import profile_viewer
-
 
 logger = logging.getLogger(__name__)
 
@@ -462,7 +461,7 @@ def add_igv_samples(fields, results_samp, annot_samples=None):
 
     # writing column names to sample file
     col_names = "Linking_id"
-    for k, v in fields_dict.iteritems():
+    for v in fields_dict.values():
         col_names = col_names + '\t' + v
     temp_sample_name.write(col_names + "\n")
 
@@ -606,7 +605,7 @@ def get_sample_lines(fields, results):
 
         if line:
             # adding fields to sample information matrix
-            for k, v in fields.iteritems():
+            for k in fields.keys():
                 if k in row:
                     line = line + '\t' + row[k]
                 else:

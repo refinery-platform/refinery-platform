@@ -42,12 +42,12 @@
                 '</a>' +
                 '</div>',
             width: 30 },
-          { field: 'dataset',
+          { field: 'data_set_uuid',
             enableSorting: false,
             displayName: '',
             cellTemplate:
                 '<div class="ui-grid-cell-contents" >' +
-                '<a href="{{grid.getCellValue(row, col)}}" target="_blank">' +
+                '<a href="/data_sets/{{grid.getCellValue(row, col)}}">' +
                 '<i class="fa fa-file"></i>' +
                 '</a>' +
                 '</div>',

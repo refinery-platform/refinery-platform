@@ -11,13 +11,14 @@ from django.test import SimpleTestCase, TestCase
 import mock
 from rest_framework.test import APIRequestFactory, APITestCase
 
-from .models import (file_path, FILE_STORE_TEMP_DIR, FileExtension,
-                     FileStoreItem, FileType,
+from core.utils import get_full_url
+
+from .models import (FILE_STORE_TEMP_DIR, FileExtension, FileStoreItem,
+                     FileType, SymlinkedFileSystemStorage, file_path,
                      generate_file_source_translator, get_file_object,
-                     get_temp_dir, SymlinkedFileSystemStorage)
+                     get_temp_dir)
 from .serializers import FileStoreItemSerializer
 from .views import FileStoreItems
-from core.utils import get_full_url
 
 
 class FileStoreModuleTest(TestCase):

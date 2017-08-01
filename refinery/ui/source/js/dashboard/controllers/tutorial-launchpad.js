@@ -1,6 +1,3 @@
-/**
- * Created by scott on 7/18/16.
- */
 'use strict';
 
 function launchpadTutorialCtrl ($scope, updateUserTutorials, tutorialPageNavigation) {
@@ -14,17 +11,17 @@ function launchpadTutorialCtrl ($scope, updateUserTutorials, tutorialPageNavigat
   };
 
   $scope.launchpadCompletedEvent = function () {
-    document.getElementById('launchpadStep1Fix').style['min-width'] = null;
+    document.getElementById('data-set-panel').style['min-width'] = null;
     updateUserTutorials.updateUser(data);
   };
 
   $scope.launchpadExitEvent = function () {
-    document.getElementById('launchpadStep1Fix').style['min-width'] = null;
+    document.getElementById('data-set-panel').style['min-width'] = null;
   };
 
   $scope.launchpadChangeEvent = function (event) {
-    if (event.id === 'launchpadStep1') {
-      document.getElementById('launchpadStep1Fix').style['min-width'] = '100%';
+    if (event.id === 'search-interface') {
+      document.getElementById('data-set-panel').style['min-width'] = '100%';
     }
   };
 
@@ -62,27 +59,27 @@ function launchpadTutorialCtrl ($scope, updateUserTutorials, tutorialPageNavigat
         position: 'bottom'
       },
       {
-        element: document.querySelector('#launchpadStep0'),
+        element: document.querySelector('#launch-pad'),
         intro: '<div>' + stepText.STEP1 + '</div>',
         position: 'right'
       },
       {
-        element: document.querySelector('#launchpadStep1'),
+        element: document.querySelector('#search-interface'),
         intro: '<div>' + stepText.STEP2 + '</div>',
         position: 'bottom'
       },
       {
-        element: document.querySelector('#launchpadStep2'),
+        element: document.querySelector('#data-cart-filter-sort'),
         intro: '<div>' + stepText.STEP3 + '</div>',
         position: 'bottom'
       },
       {
-        element: document.querySelector('#launchpadStep3'),
+        element: document.querySelector('#data-set-list'),
         intro: '<div>' + stepText.STEP4 + '</div>',
         position: 'top'
       },
       {
-        element: document.querySelector('#launchpadStep4'),
+        element: document.querySelector('#analyses-panel'),
         intro: '<div' +
         '>' + stepText.STEP5.a + '<br></div><hr><div' +
         '>' + stepText.STEP5.b +
@@ -102,7 +99,7 @@ function launchpadTutorialCtrl ($scope, updateUserTutorials, tutorialPageNavigat
         position: 'left'
       },
       {
-        element: document.querySelector('#launchpadStep5'),
+        element: document.querySelector('#workflows-panel'),
         intro: '<div>' + stepText.STEP6 + '</div>',
         position: 'left'
       }

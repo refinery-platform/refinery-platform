@@ -5,11 +5,11 @@ Created on Feb 20, 2012
 '''
 
 from django.conf.urls import patterns, url
+
 from rest_framework.routers import DefaultRouter
 
 from .views import (AnalysesViewSet, DataSetsViewSet, NodeViewSet, OpenIDToken,
                     WorkflowViewSet)
-
 
 urlpatterns = patterns(
     'core.views',
@@ -85,7 +85,8 @@ urlpatterns = patterns(
     url(r'^pubmed/summary/(?P<id>.+)/', 'pubmed_summary',
         name="pubmed_summary"),
     url(r'^neo4j/annotations/$', 'neo4j_dataset_annotations',
-        name="neo4j_dataset_annotations")
+        name="neo4j_dataset_annotations"),
+    url(r'^auto_login/$', 'auto_login', name='auto_login')
 )
 
 # DRF url routing

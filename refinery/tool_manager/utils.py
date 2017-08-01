@@ -4,11 +4,12 @@ import logging
 import os
 import uuid
 
-from bioblend.galaxy.client import ConnectionError
 from django.conf import settings
 from django.contrib import admin
 from django.db import transaction
 from django.utils import timezone
+
+from bioblend.galaxy.client import ConnectionError
 from django_docker_engine.docker_utils import DockerClientWrapper
 from jsonschema import RefResolver, ValidationError, validate
 
@@ -21,10 +22,12 @@ from factory_boy.django_model_factories import (AnalysisFactory,
                                                 OutputFileFactory,
                                                 ParameterFactory,
                                                 ToolDefinitionFactory,
-                                                ToolFactory, WorkflowFactory)
+                                                VisualizationToolFactory,
+                                                WorkflowFactory,
+                                                WorkflowToolFactory)
 from file_store.models import FileType
 
-from .models import Tool, ToolDefinition
+from .models import Tool, ToolDefinition, WorkflowTool
 
 logger = logging.getLogger(__name__)
 ANNOTATION_ERROR_MESSAGE = (
@@ -127,6 +130,12 @@ def create_tool_definition(annotation_data):
     """
     tool_type = annotation_data["tool_type"]
     annotation = annotation_data["annotation"]
+    common_tool_definition_params = {
+        "name": annotation_data["name"],
+        "description": annotation["description"],
+        "tool_type": tool_type,
+        "file_relationship": create_file_relationship_nesting(annotation),
+    }
 
     if tool_type == ToolDefinition.WORKFLOW:
         workflow_engine = WorkflowEngine.objects.get(
@@ -146,20 +155,14 @@ def create_tool_definition(annotation_data):
         workflow.share(workflow_engine.get_manager_group().get_managed_group())
 
         tool_definition = ToolDefinitionFactory(
-            name=annotation_data["name"],
-            description=annotation["description"],
-            tool_type=tool_type,
-            file_relationship=create_file_relationship_nesting(annotation),
-            workflow=workflow
+            workflow=workflow,
+            **common_tool_definition_params
         )
     elif tool_type == ToolDefinition.VISUALIZATION:
         tool_definition = ToolDefinitionFactory(
-            name=annotation_data["name"],
-            description=annotation["description"],
-            tool_type=tool_type,
-            file_relationship=create_file_relationship_nesting(annotation),
             image_name=annotation["image_name"],
             container_input_path=annotation["container_input_path"],
+            **common_tool_definition_params
         )
 
         # If we've successfully created the ToolDefinition lets
@@ -196,10 +199,10 @@ def create_tool_definition(annotation_data):
 @transaction.atomic
 def create_tool(tool_launch_configuration, user_instance):
     """
-   :param tool_launch_configuration: dict of data that represents a Tool
-   :param user_instance: User object that made the request to create said Tool
-   :returns: The created Tool object
-   """
+    :param tool_launch_configuration: dict of data that represents a Tool
+    :param user_instance: User object that made the request to create said Tool
+    :returns: The created Tool object
+    """
     # NOTE: that the usual exceptions for the get() aren't handled because
     # we're in the scope of an atomic transaction
     tool_definition = ToolDefinition.objects.get(
@@ -208,14 +211,31 @@ def create_tool(tool_launch_configuration, user_instance):
     dataset = DataSet.objects.get(
         uuid=tool_launch_configuration["dataset_uuid"]
     )
-    tool = ToolFactory(
-        name="{}-launch".format(tool_definition.name),
-        tool_definition=tool_definition,
-        tool_launch_configuration=json.dumps(tool_launch_configuration),
-        dataset=dataset
-    )
 
-    if tool.get_tool_type() == ToolDefinition.VISUALIZATION:
+    tool_type = tool_definition.tool_type
+    tool_name = "{}-launch".format(tool_definition.name)
+
+    common_tool_params = {
+        "name": tool_name,
+        "tool_definition": tool_definition,
+        Tool.TOOL_LAUNCH_CONFIGURATION: json.dumps(tool_launch_configuration),
+        "dataset": dataset
+    }
+
+    if tool_type == ToolDefinition.WORKFLOW:
+        tool_launch_configuration[WorkflowTool.GALAXY_DATA] = {
+            WorkflowTool.FILE_RELATIONSHIPS_GALAXY:
+                tool_launch_configuration[Tool.FILE_RELATIONSHIPS]
+        }
+        # Add updated Tool launch config info to common_tool_params dict
+        common_tool_params[Tool.TOOL_LAUNCH_CONFIGURATION] = json.dumps(
+            tool_launch_configuration
+        )
+        tool = WorkflowToolFactory(**common_tool_params)
+
+    if tool_type == ToolDefinition.VISUALIZATION:
+        tool = VisualizationToolFactory(**common_tool_params)
+
         # Create a unique container name that adheres to docker's specs
         tool.container_name = "{}-{}".format(
             tool.name.replace(" ", ""),
@@ -223,10 +243,10 @@ def create_tool(tool_launch_configuration, user_instance):
         )
 
     tool.set_owner(user_instance)
-    tool.update_file_relationships_string()
+    tool.update_file_relationships_with_urls()
 
     try:
-        nesting = tool.get_file_relationships()
+        nesting = tool.get_file_relationships_urls()
     except (SyntaxError, ValueError) as e:
         raise RuntimeError(
             "ToolLaunchConfiguration's `file_relationships` could not be "
@@ -256,7 +276,7 @@ def create_tool_analysis(validated_analysis_config):
             validated_analysis_config
         )
     )
-    custom_name = validated_analysis_config["custom_name"]
+    name = validated_analysis_config["name"]
     current_workflow = common_analysis_objects["current_workflow"]
     data_set = common_analysis_objects["data_set"]
     user = common_analysis_objects["user"]
@@ -269,8 +289,9 @@ def create_tool_analysis(validated_analysis_config):
         raise RuntimeError("Couldn't fetch Tool from UUID: {}".format(e))
 
     analysis = AnalysisFactory(
+        uuid=str(uuid.uuid4()),
         summary="Analysis run for: {}".format(tool),
-        name=custom_name,
+        name=name,
         project=user.profile.catch_all_project,
         data_set=data_set,
         workflow=current_workflow,

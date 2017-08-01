@@ -4,14 +4,10 @@ from optparse import make_option
 from django.core.management.base import BaseCommand, CommandError
 
 from ...models import ToolDefinition
-from ...utils import (
-    ANNOTATION_ERROR_MESSAGE,
-    create_tool_definition,
-    get_visualization_annotations_list,
-    get_workflows,
-    validate_tool_annotation,
-    validate_workflow_step_annotation
-)
+from ...utils import (ANNOTATION_ERROR_MESSAGE, create_tool_definition,
+                      get_visualization_annotations_list, get_workflows,
+                      validate_tool_annotation,
+                      validate_workflow_step_annotation)
 
 
 class Command(BaseCommand):

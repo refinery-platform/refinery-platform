@@ -5,9 +5,19 @@
     .factory('userFileService', userFileService);
 
   // TODO: userFileBrowserFiltersCtrl.filters is what I need, but maybe I need a new service?
-  userFileService.$inject = ['$resource', 'settings', 'userFileFiltersService'];
+  userFileService.$inject = [
+    '$resource',
+    'settings',
+    'userFileFiltersService',
+    'userFileSortsService'
+  ];
 
-  function userFileService ($resource, settings, userFileFiltersService) {
+  function userFileService (
+      $resource,
+      settings,
+      userFileFiltersService,
+      userFileSortsService
+  ) {
     var userFile = $resource(
       settings.appRoot + settings.refineryApiV2 + '/user/files/',
       {},
@@ -21,12 +31,19 @@
                 var values = userFileFiltersService[key];
                 // TODO: escaping!
                 return values.map(function (value) {
-                  return '(' + key + '_Characteristics_generic_s:' + value +
-                  ' OR ' + key + '_Factor_Value_s:' + value + ')';
+                  return '(' + key + '_Characteristics_generic_s:"' + value + '"' +
+                  ' OR ' + key + '_Factor_Value_s:"' + value + '")';
                 }).join(' AND ');
               });
               // TODO: Repeated fq params may be more efficient, but not a big deal
               return filters.join(' AND ');
+            },
+            sort: function () {
+              var sort = userFileSortsService.fields.map(function (field) {
+                return field.name + '_Characteristics_generic_s ' + field.direction
+                    + ', ' + field.name + '_Factor_Value_s ' + field.direction;
+              }).join(', ');
+              return sort;
             }
           }
         }

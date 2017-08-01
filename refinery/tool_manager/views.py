@@ -2,6 +2,7 @@ import logging
 
 from django.db import transaction
 from django.http import HttpResponseBadRequest
+
 from guardian.exceptions import GuardianError
 from guardian.shortcuts import get_objects_for_user
 from rest_framework.permissions import IsAuthenticated
@@ -26,7 +27,6 @@ class ToolDefinitionsViewSet(ModelViewSet):
 
 class ToolsViewSet(ModelViewSet):
     """API endpoint that allows for Tools to be fetched and launched"""
-
     queryset = Tool.objects.all()
     serializer_class = ToolSerializer
     lookup_field = 'uuid'
@@ -38,10 +38,19 @@ class ToolsViewSet(ModelViewSet):
         This view returns a list of all the Tools that the currently
         authenticated user has read permissions on.
         """
+        user_tools = []
         try:
-            user_tools = get_objects_for_user(
-                self.request.user,
-                "tool_manager.read_tool"
+            user_tools.extend(
+                get_objects_for_user(
+                    self.request.user,
+                    "tool_manager.read_workflowtool"
+                )
+            )
+            user_tools.extend(
+                get_objects_for_user(
+                    self.request.user,
+                    "tool_manager.read_visualizationtool"
+                )
             )
         except GuardianError as e:
             return HttpResponseBadRequest(e)
@@ -61,7 +70,6 @@ class ToolsViewSet(ModelViewSet):
             try:
                 with transaction.atomic():
                     tool = create_tool(tool_launch_configuration, request.user)
-                    tool.set_owner(request.user)
                     return tool.launch()
             except Exception as e:
                 return HttpResponseBadRequest(e)

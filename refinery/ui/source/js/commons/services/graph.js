@@ -381,7 +381,7 @@ function GraphFactory (_) {
     var numAnnoDataSets = allIds.length;
     var retrievedDataSetsId;
 
-    // Convert to an array of strings to an array of integers.
+    // Convert from an array of strings to an array of integers.
     var allIntIds = _.map(allIds, function (el) {
       return parseInt(el, 10);
     });
@@ -501,12 +501,11 @@ function GraphFactory (_) {
   Graph.updatePropertyToBar = function (graph, properties) {
     var uris = Object.keys(graph);
     var node;
-    var propLeng = properties.length;
 
     // For every node in the graph...
     for (var i = uris.length; i--;) {
       node = graph[uris[i]];
-      for (var j = propLeng; j--;) {
+      for (var j = properties.length; j--;) {
         // ...if the property is actually available
         if (typeof node[properties[j]] !== 'undefined') {
           // ...we look at every bar
@@ -559,7 +558,7 @@ function GraphFactory (_) {
   };
 
   /**
-   * [toTree description]
+   * Transform graph into a tree.
    *
    * @method  toTree
    * @author  Fritz Lekschas

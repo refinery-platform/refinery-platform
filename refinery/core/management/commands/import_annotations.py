@@ -1,8 +1,5 @@
 import logging
 from optparse import make_option
-import py2neo
-import requests
-import sys
 import time
 import urlparse
 
@@ -12,10 +9,12 @@ from django.core.exceptions import ImproperlyConfigured
 from django.core.management.base import BaseCommand, CommandError
 
 from guardian.utils import get_anonymous_user
+import py2neo
+import requests
 
 from core.models import DataSet, ExtendedGroup
-from core.utils import (normalize_annotation_ont_ids, get_data_set_annotations)
-
+from core.utils import (get_data_set_annotations, normalize_annotation_ont_ids,
+                        normalize_annotation_uris)
 
 logger = logging.getLogger(__name__)
 root_logger = logging.getLogger()
@@ -74,12 +73,22 @@ class Command(BaseCommand):
                         'count': annotation['value_count']
                     }
                 )
+            elif (annotation['value_accession'].startswith('http://')):
+                tx.append(
+                    statement_uri,
+                    {
+                        'uri': annotation['value_accession'],
+                        'ds_id': annotation['data_set_id'],
+                        'ds_uuid': annotation['data_set_uuid'],
+                        'count': annotation['value_count']
+                    }
+                )
             else:
                 tx.append(
                     statement_name,
                     {
                         'ont_id': (
-                            annotation['value_source'] +
+                            annotation['value_source'].upper() +
                             ':' +
                             annotation['value_accession']
                         ),
@@ -174,7 +183,7 @@ class Command(BaseCommand):
             root_logger.setLevel(logging.DEBUG)
 
         if options['clear']:
-            sys.stdout.write('Clear existing annotations and users...')
+            self.stdout.write('Clear existing annotations and users...')
             start = time.time()
 
             graph = py2neo.Graph(
@@ -192,16 +201,17 @@ class Command(BaseCommand):
             end = time.time()
             minutes = int(round((end - start) // 60))
             seconds = int(round((end - start) % 60))
-            sys.stdout.write(
+            self.stdout.write(
                 'Clear existing annotations and users... {} min and {} sec'
                 .format(minutes, seconds)
             )
 
-        sys.stdout.write('Import annotations...')
+        self.stdout.write('Import annotations...')
 
         start = time.time()
 
         annotations = get_data_set_annotations(None)
+        annotations = normalize_annotation_uris(annotations)
         annotations = normalize_annotation_ont_ids(annotations)
         self.push_annotations_to_neo4j(annotations)
         self.push_users()
@@ -221,7 +231,7 @@ class Command(BaseCommand):
         minutes = int(round((end - start) // 60))
         seconds = int(round((end - start) % 60))
 
-        sys.stdout.write(
+        self.stdout.write(
             'Import annotations... {} min and {} sec'.format(
                 minutes, seconds
             )

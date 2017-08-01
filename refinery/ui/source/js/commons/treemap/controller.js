@@ -105,60 +105,65 @@ function TreemapCtrl (
   treemapContext,
   Webworker,
   $rootScope,
-  $timeout
+  $timeout,
+  dashboardIntroStarter,
+  dashboardVisWrapperResizer
 ) {
-  this.$ = $;
-  this._ = _;
-  this.$q = $q;
-  this.d3 = d3;
-  this.HEX = HEX;
-  this.$log = $log;
-  this.$window = $window;
-  this.$rootScope = $rootScope;
-  this.$element = $element;
-  this.$d3Element = this.$element.find('.treemap svg');
-  this.settings = treemapSettings;
-  this.pubSub = pubSub;
-  this.treemapContext = treemapContext;
-  this.$visWrapper = this.$element.closest('.vis-wrapper');
-  this.$timeout = $timeout;
+  var that = this;
 
-  this.Webworker = Webworker;
+  that.$ = $;
+  that._ = _;
+  that.$q = $q;
+  that.d3 = d3;
+  that.HEX = HEX;
+  that.$log = $log;
+  that.$window = $window;
+  that.$rootScope = $rootScope;
+  that.$element = $element;
+  that.$d3Element = that.$element.find('.treemap svg');
+  that.settings = treemapSettings;
+  that.pubSub = pubSub;
+  that.treemapContext = treemapContext;
+  that.$visWrapper = that.$element.closest('.vis-wrapper');
+  that.$timeout = $timeout;
+  that.dashboardVisWrapperResizer = dashboardVisWrapperResizer;
 
-  this._visibleDepth = 1;
-  this.currentLevel = 0;
+  that.Webworker = Webworker;
 
-  this.treemap.width = this.$d3Element.width();
-  this.treemap.height = this.$d3Element.height();
+  that._visibleDepth = 1;
+  that.currentLevel = 0;
 
-  this.numColors = 10;
-  this.steps = 6;
+  that.treemap.width = that.$d3Element.width();
+  that.treemap.height = that.$d3Element.height();
 
-  // this.treemap.colors = new D3Colors(
-  //   this.d3.scale.category10().domain(d3.range(this.numColors)).range()
-  // ).getScaledFadedColors(this.steps);
+  that.numColors = 10;
+  that.steps = 6;
+
+  // that.treemap.colors = new D3Colors(
+  //   that.d3.scale.category10().domain(d3.range(that.numColors)).range()
+  // ).getScaledFadedColors(that.steps);
 
   // Mono color scale
-  this.treemap.colors = new D3Colors(
+  that.treemap.colors = new D3Colors(
     ['#444444']
-  ).getScaledFadedColors(this.steps);
+  ).getScaledFadedColors(that.steps);
 
   // Mono color scale
-  this.treemap.lockHighlightColors = new D3Colors(
-    [this.settings.highlightBGColor]
-  ).getScaledFadedColors(this.steps);
+  that.treemap.lockHighlightColors = new D3Colors(
+    [that.settings.highlightBGColor]
+  ).getScaledFadedColors(that.steps);
 
-  this.multipleColorScaling = false;
+  that.multipleColorScaling = false;
 
-  this.treemap.x = this.d3.scale.linear()
-    .domain([0, this.treemap.width])
-    .range([0, this.treemap.width]);
+  that.treemap.x = that.d3.scale.linear()
+    .domain([0, that.treemap.width])
+    .range([0, that.treemap.width]);
 
-  this.treemap.y = this.d3.scale.linear()
-    .domain([0, this.treemap.height])
-    .range([0, this.treemap.height]);
+  that.treemap.y = that.d3.scale.linear()
+    .domain([0, that.treemap.height])
+    .range([0, that.treemap.height]);
 
-  this.treemap.el = this.d3.layout.treemap()
+  that.treemap.el = that.d3.layout.treemap()
     .children(function (d, depth) {
       return depth ? null : d._children;
     })
@@ -168,34 +173,68 @@ function TreemapCtrl (
     .round(false)
     .ratio(1);
 
-  this.treemap.element = this.d3.select(this.$d3Element[0])
-    .attr('viewBox', '0 0 ' + this.treemap.width + ' ' + this.treemap.height)
+  that.treemap.element = that.d3.select(that.$d3Element[0])
+    .attr('viewBox', '0 0 ' + that.treemap.width + ' ' + that.treemap.height);
+  that.treemap.$element = that.$(that.treemap.element.node());
+
+  that.treemap.mainGroup = that.treemap.element
     .append('g')
     .style('shape-rendering', 'crispEdges');
-  this.treemap.$element = this.$(this.treemap.element.node());
 
-  this.treemap.grandParent = this.d3.select(this.$visWrapper[0])
+  that.treemap.grandParent = that.d3.select(that.$visWrapper[0])
     .select('#treemap-root-path');
-  this.treemap.$grandParent = this.$(this.treemap.grandParent.node());
-  this.treemap.$grandParentContainer = this.treemap.$grandParent.parent();
+  that.treemap.$grandParent = that.$(that.treemap.grandParent.node());
+  that.treemap.$grandParentContainer = that.treemap.$grandParent.parent();
 
   // To-DO: Refactor, the `visData` service should handle this properly
   // The node index is needed to quickly access nodes since D3's tree map layout
   // requires a data structure which doesn't provide any quick access.
-  this.nodeIndex = {};
+  that.nodeIndex = {};
 
-  this.currentlyLockedNodes = {};
-  this.prevEvent = {};
+  that.currentlyLockedNodes = {};
+  that.prevEventDataSets = {};
 
-  if (this.graph) {
-    this.graph.then(function (data) {
-      this.data = data;
-      this.pubSub.trigger('treemap.loaded');
-      this.draw();
-    }.bind(this));
+  if (that.graph) {
+    that.graph.then(function (data) {
+      that.data = data;
+      that.pubSub.trigger('treemap.loaded');
+      that.draw();
+      that.addEventListeners();
+    });
   } else {
-    this.pubSub.trigger('treemap.noData');
+    that.pubSub.trigger('treemap.noData');
   }
+
+  that.introStart = function () {
+    dashboardIntroStarter.start('satori-treemap', that);
+  };
+
+  that.maximize = function () {
+    if (!that.isMaximized) {
+      dashboardVisWrapperResizer.maximize.call(dashboardVisWrapperResizer);
+      that.$timeout(that.reRender.bind(that), 0);
+    }
+  };
+
+  that.minimize = function () {
+    if (!that.isMinimized) {
+      dashboardVisWrapperResizer.minimize.call(dashboardVisWrapperResizer);
+      that.$timeout(that.reRender.bind(that), 0);
+    }
+  };
+
+  that.equalize = function () {
+    if (!that.isEqualized) {
+      dashboardVisWrapperResizer.equalize.call(dashboardVisWrapperResizer);
+      that.$timeout(that.reRender.bind(that), 0);
+    }
+  };
+
+  that.pubSub.on('resize', function () {
+    that.$timeout(that.reRender.bind(that), 25);
+  });
+
+  that.treemapContext.set('treemap', this);
 }
 
 /*
@@ -328,7 +367,9 @@ TreemapCtrl.prototype.addEventListeners = function () {
      * data = data
      */
 
-    that.highlightByTerm(that.d3.select(this).datum(), false, false, true);
+    that.storeEmitHighlightDataSets(
+      that.d3.select(this).datum(), false, false, true
+    );
     that.transition(that.d3.select(this).datum());
   });
 
@@ -347,7 +388,9 @@ TreemapCtrl.prototype.addEventListeners = function () {
         return;
       }
 
-      that.highlightByTerm(that.d3.select(this).datum(), false, false, true);
+      that.storeEmitHighlightDataSets(
+        that.d3.select(this).datum(), false, false, true
+      );
       that.transition(that.d3.select(this).datum());
     }
   );
@@ -356,7 +399,9 @@ TreemapCtrl.prototype.addEventListeners = function () {
     'mouseenter',
     '.node',
     function () {
-      that.highlightByTerm(that.d3.select(this).datum(), false, true, false);
+      that.storeEmitHighlightDataSets(
+        that.d3.select(this).datum(), false, true, false
+      );
     }
   );
 
@@ -364,7 +409,9 @@ TreemapCtrl.prototype.addEventListeners = function () {
     'mouseleave',
     '.node',
     function () {
-      that.highlightByTerm(that.d3.select(this).datum(), false, true, true);
+      that.storeEmitHighlightDataSets(
+        that.d3.select(this).datum(), false, true, true
+      );
     }
   );
 
@@ -376,10 +423,10 @@ TreemapCtrl.prototype.addEventListeners = function () {
 
       // Mac OS X's command key is down
       if (e.metaKey) {
-        that.highlightByTerm(that.d3.select(this).datum(), false, false, true);
+        that.storeEmitHighlightDataSets(data, false, false, true);
         that.transition(data);
       } else {
-        that.lockNode(this, data);
+        that.nodeLockToggleHandler(data);
       }
     }
   );
@@ -391,19 +438,11 @@ TreemapCtrl.prototype.addEventListeners = function () {
 
   // Listen to triggers from outside
   this.$rootScope.$on('dashboardVisNodeEnter', function (event, data) {
-    var uri = data.nodeUri;
-    if (data.clone) {
-      uri = data.clonedFromUri;
-    }
-    this.findNodesToHighlight(uri);
+    this.findNodesToHighlight(data.nodeUri);
   }.bind(this));
 
   this.$rootScope.$on('dashboardVisNodeLeave', function (event, data) {
-    var uri = data.nodeUri;
-    if (data.clone) {
-      uri = data.clonedFromUri;
-    }
-    this.findNodesToHighlight(uri, true);
+    this.findNodesToHighlight(data.nodeUri, true);
   }.bind(this));
 
   this.$rootScope.$on('dashboardVisNodeFocus', function (event, data) {
@@ -433,9 +472,6 @@ TreemapCtrl.prototype.addEventListeners = function () {
   this.$rootScope.$on('dashboardVisNodeRoot', function (event, data) {
     if (data.source !== 'treeMap') {
       var uri = data.nodeUri;
-      if (data.clone) {
-        uri = data.clonedFromUri;
-      }
       if (!this.nodeIndex[uri]) {
         this.$log.error('Node not found: ', uri);
       } else {
@@ -444,7 +480,8 @@ TreemapCtrl.prototype.addEventListeners = function () {
           uri: uri,
           // This is tricky because there are multiple paths in the tree map but
           // not in the list graph.
-          branchId: 0
+          branchId: 0,
+          label: this.nodeIndex[uri][0].label
         }, true);
       }
     }
@@ -452,57 +489,42 @@ TreemapCtrl.prototype.addEventListeners = function () {
 
   this.$rootScope.$on('dashboardVisNodeUnroot', function (event, data) {
     if (data.source !== 'treeMap') {
-      if (!data.clone) {
-        this.setRootNode({
-          ontId: this.absRootNode.ontId,
-          uri: this.absRootNode.uri,
-          branchId: 0
-        }, true);
-      }
+      this.setRootNode({
+        ontId: this.absRootNode.ontId,
+        uri: this.absRootNode.uri,
+        branchId: 0,
+        label: this.absRootNode.label
+      }, true);
     }
   }.bind(this));
 
   this.$rootScope.$on('dashboardVisNodeReroot', function (event, data) {
     if (data.source !== 'treeMap') {
       var uri = data.nodeUri;
-      if (data.clone) {
-        uri = data.clonedFromUri;
-      }
       if (!this.nodeIndex[uri]) {
         this.$log.error('Node not found: ', uri);
       } else {
         this.setRootNode({
           ontId: this.nodeIndex[uri][0].ontId,
           uri: uri,
-          branchId: 0
+          branchId: 0,
+          label: this.nodeIndex[uri][0].label
         }, true);
       }
     }
   }.bind(this));
 
-  this.$rootScope.$on('dashboardVisNodeLock', function (event, data) {
-    if (data.source !== 'treeMap') {
-      var uri = data.nodeUri;
-      if (data.clone) {
-        uri = data.clonedFromUri;
+  this.$rootScope.$on(
+    'dashboardVisNodeLock', function (event, data) {
+      if (data.source !== 'treeMap') {
+        this.nodeLockHandler(data.nodeUri, true);
       }
-      var selection = this.getD3NodeByUri(uri);
-      if (!selection.empty()) {
-        this.lockNode(selection.node(), selection.datum(), true);
-      }
-    }
-  }.bind(this));
+    }.bind(this)
+  );
 
   this.$rootScope.$on('dashboardVisNodeUnlock', function (event, data) {
     if (data.source !== 'treeMap') {
-      var uri = data.nodeUri;
-      if (data.clone) {
-        uri = data.clonedFromUri;
-      }
-      var selection = this.getD3NodeByUri(uri);
-      if (!selection.empty()) {
-        this.lockNode(selection.node(), selection.datum(), true);
-      }
+      this.nodeUnlockHandler(true);
     }
   }.bind(this));
 
@@ -512,6 +534,123 @@ TreemapCtrl.prototype.addEventListeners = function () {
       this.visibleDepth = data.visibleDepth;
     }
   }.bind(this));
+};
+
+/**
+ * Get the size of the treemap
+ *
+ * @method  getSize
+ * @author  Fritz Lekschas
+ * @date    2017-01-16
+ */
+TreemapCtrl.prototype.getSize = function () {
+  this.treemap.width = this.$d3Element.width();
+  this.treemap.height = this.$d3Element.height();
+};
+
+/**
+ * Update the size of the treemap
+ *
+ * @method  updateSize
+ * @author  Fritz Lekschas
+ * @date    2017-01-16
+ */
+TreemapCtrl.prototype.updateSize = function () {
+  this.getSize();
+  this.data.dx = this.treemap.width;
+  this.data.dy = this.treemap.height;
+
+  this.treemap.x = this.d3.scale.linear()
+    .domain([0, this.treemap.width])
+    .range([0, this.treemap.width]);
+
+  this.treemap.y = this.d3.scale.linear()
+    .domain([0, this.treemap.height])
+    .range([0, this.treemap.height]);
+
+  this.treemap.element.attr(
+    'viewBox', '0 0 ' + this.treemap.width + ' ' + this.treemap.height
+  );
+};
+
+/**
+ * Handles node lock toggling
+ *
+ * @method  nodeLockToggleHandler
+ * @author  Fritz Lekschas
+ * @date    2016-10-31
+ * @param   {Object}  data  D3 data object of the element.
+ */
+TreemapCtrl.prototype.nodeLockToggleHandler = function (data) {
+  if (this.lockedNodeUri) {
+    if (this.lockedNodeUri === data.uri) {
+      this.nodeUnlockHandler();
+    } else {
+      this.nodeUnlockHandler();
+      this.nodeLockHandler(data.uri);
+    }
+  } else {
+    this.nodeLockHandler(data.uri);
+  }
+};
+
+/**
+ * Handles node locking
+ *
+ * @method  nodeLockHandler
+ * @author  Fritz Lekschas
+ * @date    2016-10-31
+ * @param   {Object}   uri             URI of the node to be locked.
+ * @param   {Boolean}  noNotification  If `true` no notification will be emitted
+ */
+TreemapCtrl.prototype.nodeLockHandler = function (uri, noNotification) {
+  this.lockedNodeUri = uri;
+
+  this.checkNodesLocked();
+  this.storeEmitHighlightDataSets(
+    this.getDataByUri(this.lockedNodeUri), false, false, false, noNotification
+  );
+};
+
+/**
+ * Handles node unlocking
+ *
+ * @method  nodeUnlockHandler
+ * @author  Fritz Lekschas
+ * @date    2016-10-31
+ * @param   {Boolean}  noNotification  If `true` no notification will be emitted
+ */
+TreemapCtrl.prototype.nodeUnlockHandler = function (noNotification) {
+  if (this.lockedNodeUri) {
+    this.checkNodesLocked(true);
+    this.storeEmitHighlightDataSets(
+      this.getDataByUri(this.lockedNodeUri), false, false, true, noNotification
+    );
+
+    this.lockedNodeUri = undefined;
+  }
+};
+
+/**
+ * Checks if locked nodes needs to be visually locked.
+ *
+ * @method  checkNodesLocked
+ * @author  Fritz Lekschas
+ * @date    2016-10-31
+ * @param   {Boolean}  unlocked  If `true` will check for unlocking.
+ */
+TreemapCtrl.prototype.checkNodesLocked = function (unlocked) {
+  if (this.lockedNodeUri) {
+    var selection = this.getD3NodeByUri(this.lockedNodeUri);
+
+    if (!selection.empty()) {
+      if (unlocked) {
+        this.unlockNode(selection);
+      } else {
+        this.lockNode(selection);
+      }
+    }
+  }
 };
 
 /**
@@ -562,14 +701,33 @@ TreemapCtrl.prototype.findNodesToHighlight = function (uri, dehighlight) {
  * @method  lockNode
  * @author  Fritz Lekschas
  * @date    2016-05-06
- * @param   {Object}    element         DOM element.
- * @param   {Object}    data            The D3 data object associated to
- *   `element`.
+ * @param   {Object}    selection       D3 selection of elements.
  * @param   {Boolean}   noNotification  If `true` no events will be emmited.
  */
-TreemapCtrl.prototype.lockNode = function (element, data, noNotification) {
-  this.highlightByTerm(data, undefined, undefined, undefined, noNotification);
-  this.lockHighlightEl(element);
+TreemapCtrl.prototype.lockNode = function (selection) {
+  var that = this;
+
+  selection.each(function () {
+    that.lockHighlightEl(this);
+  });
+};
+
+/**
+ * Visually unlock a node (i.e. rectangle)
+ *
+ * @description
+ * This means resetting the filling of the currently locked node.
+ *
+ * @method  unlockNode
+ * @author  Fritz Lekschas
+ * @date    2016-10-30
+ */
+TreemapCtrl.prototype.unlockNode = function (selection) {
+  var that = this;
+
+  selection.each(function () {
+    that.unlockHighlightEl(this);
+  });
 };
 
 /**
@@ -601,6 +759,27 @@ TreemapCtrl.prototype.getD3NodeByUri = function (uri) {
   return this.treemap.element.selectAll('.node').filter(function (data) {
     return data.uri === uri;
   });
+};
+
+/**
+ * Get a DOM element's data by a node's URI.
+ *
+ * @method  getDataByUri
+ * @author  Fritz Lekschas
+ * @date    2016-10-31
+ * @param   {String}  uri  Node's URI.
+ * @return  {Object}       D3 data of the DOM element.
+ */
+TreemapCtrl.prototype.getDataByUri = function (uri) {
+  // This feels inefficient. There should be a way to cache node references so
+  // that the DOM doesn't need to be queried all the time.
+  var els = this.treemap.element.selectAll('.node').filter(function (data) {
+    return data.uri === uri;
+  });
+
+  var data = els.data();
+
+  return data[0];
 };
 
 /**
@@ -891,8 +1070,17 @@ TreemapCtrl.prototype.adjustLevelDepth = function (oldVisibleDepth) {
 
   return transition.then(function () {
     this.checkLabelReadbility();
+    this.checkNodesLocked();
     return true;
   }.bind(this));
+};
+
+TreemapCtrl.prototype.changeVisibleDepth = function (newValue, noLocationChange) {
+  if (noLocationChange) {
+    this.visibleDepth = newValue;
+  } else {
+    this.visibleDepth = newValue;
+  }
 };
 
 /**
@@ -1044,7 +1232,7 @@ TreemapCtrl.prototype.display = function (node, firstTime) {
   this.treemap.formerGroupWrapper = this.treemap.groupWrapper;
 
   // Create a new wrapper group for the children.
-  this.treemap.groupWrapper = this.treemap.element
+  this.treemap.groupWrapper = this.treemap.mainGroup
     .append('g')
     .datum(node)
     .attr('class', 'depth');
@@ -1052,8 +1240,14 @@ TreemapCtrl.prototype.display = function (node, firstTime) {
   // For completeness we store the children of level zero.
   this.children[0] = [this.treemap.groupWrapper];
 
+  var _node = node;
+
+  if (!node._children.length) {
+    _node = { _children: [node] };
+  }
+
   var children = this.addChildren(
-    this.treemap.groupWrapper, node, 1, firstTime);
+    this.treemap.groupWrapper, _node, 1, firstTime);
 
   // We have to cache the children to dynamically adjust the level depth.
   this.children[1] = [children[0]];
@@ -1070,9 +1264,10 @@ TreemapCtrl.prototype.display = function (node, firstTime) {
  *
  * @method  draw
  * @author  Fritz Lekschas
- * @date    2015-08-03
+ * @date    2017-05-05
+ * @param   {Boolean}  reRender  If `true` drawn is called by the rerenderer.
  */
-TreemapCtrl.prototype.draw = function () {
+TreemapCtrl.prototype.draw = function (reRender) {
   if (this.data === null) {
     return;
   }
@@ -1086,6 +1281,9 @@ TreemapCtrl.prototype.draw = function () {
 
     // Mark data as ready so that we can skip the former steps next time.
     this.data.ready = true;
+  } else {
+    this.updateSize();
+    this.layout(this.data, 0, true);
   }
 
   this.absRootNode = this.data;
@@ -1099,24 +1297,23 @@ TreemapCtrl.prototype.draw = function () {
   }
 
   if (rootNodeData) {
-    this.transition(
-      rootNodeData
-    );
+    this.transition(rootNodeData, reRender, true);
   } else {
-    this.setRootNode({
-      branchId: 0,
-      ontId: this.data.ontId,
-      uri: this.data.uri,
-      visibleDepth: this.visibleDepth
-    });
+    this.setRootNode(
+      {
+        branchId: 0,
+        ontId: this.data.ontId,
+        uri: this.data.uri,
+        visibleDepth: this.visibleDepth,
+        label: this.data.label
+      }
+    );
   }
 
   if (this.rootNode && this.rootNode.visibleDepth) {
     this._noVisibleDepthNotification = true;
     this.visibleDepth = this.rootNode.visibleDepth;
   }
-
-  this.addEventListeners();
 };
 
 /**
@@ -1170,7 +1367,7 @@ TreemapCtrl.prototype.fadeIn = function (selection, firstTime) {
 /**
  * Highlight datasets associated to a term.
  *
- * @method  highlightByTerm
+ * @method  storeEmitHighlightDataSets
  * @author  Fritz Lekschas
  * @date    2015-12-21
  *
@@ -1181,15 +1378,17 @@ TreemapCtrl.prototype.fadeIn = function (selection, firstTime) {
  * @param   {Boolean}  hover           If `true` reports only mouse over related
  *   highlighting.
  * @param   {Boolean}  reset           If `true` resets highlighting.
- * @param   {Boolean}  noNotification  If `true` suppressed event emiting.
  */
-TreemapCtrl.prototype.highlightByTerm = function (
+TreemapCtrl.prototype.storeEmitHighlightDataSets = function (
   data, multiple, hover, reset, noNotification
 ) {
+  // Check if data is available
+  if (!data) { return; }
+
   var dataSetIds = getAssociatedDataSets(data);
   var eventName;
   var mode = hover ? 'hover' : 'lock';
-  var prevData = this.prevEvent[mode + 'Terms'];
+  var prevData = this.prevEventDataSets[mode + 'Terms'];
   var set = false;
 
   if (prevData && reset !== true) {
@@ -1222,7 +1421,7 @@ TreemapCtrl.prototype.highlightByTerm = function (
     }
 
     if (prevData.nodeUri === data.uri) {
-      this.prevEvent[mode + 'Terms'] = undefined;
+      this.prevEventDataSets[mode + 'Terms'] = undefined;
     } else {
       if (!reset) {
         set = true;
@@ -1240,13 +1439,13 @@ TreemapCtrl.prototype.highlightByTerm = function (
     } else {
       eventName = 'dashboardVisNodeLock';
     }
-    this.prevEvent[mode + 'Terms'] = {
+    this.prevEventDataSets[mode + 'Terms'] = {
       nodeUri: data.uri,
       dataSetIds: dataSetIds,
       source: 'treeMap'
     };
     if (!noNotification) {
-      this.$rootScope.$emit(eventName, this.prevEvent[mode + 'Terms']);
+      this.$rootScope.$emit(eventName, this.prevEventDataSets[mode + 'Terms']);
     }
   }
 };
@@ -1294,33 +1493,31 @@ TreemapCtrl.prototype.initialize = function (data) {
  */
 TreemapCtrl.prototype.lockHighlightEl = function (element) {
   var d3El = this.d3.select(element);
-  var className = d3El.datum().meta.leaf ? '.leaf' : '.bg';
 
-  if (this.currentlyLockedNode) {
-    this.currentlyLockedNode.classed('locked', false)
-      .select(this.currentlyLockedNode.datum().meta.leaf ? '.leaf' : '.bg')
-      .attr('fill', function (data) {
-        return this.color.call(this, data);
-      }.bind(this));
+  d3El.classed('locked', true)
+    .select(d3El.datum().meta.leaf ? '.leaf' : '.bg')
+    .attr('fill', function (data, index) {
+      return this.color.call(this, data, index, undefined, true);
+    }.bind(this));
+};
 
-    if (this.currentlyLockedNode.datum().uri === d3El.datum().uri) {
-      this.currentlyLockedNode = undefined;
-    } else {
-      d3El.classed('locked', true).select(className)
-        .attr('fill', function (data, index) {
-          return this.color.call(this, data, index, undefined, true);
-        }.bind(this));
+/**
+ * Unhighlight locked state of a rectangle.
+ *
+ * @method  unlockHighlightEl
+ * @author  Fritz Lekschas
+ * @date    2016-10-31
+ *
+ * @param   {Object}  element  DOM element.
+ */
+TreemapCtrl.prototype.unlockHighlightEl = function (element) {
+  var d3El = this.d3.select(element);
 
-      this.currentlyLockedNode = d3El;
-    }
-  } else {
-    d3El.classed('locked', true).select(className)
-      .attr('fill', function (data, index) {
-        return this.color.call(this, data, index, undefined, true);
-      }.bind(this));
-
-    this.currentlyLockedNode = d3El;
-  }
+  d3El.classed('locked', false)
+    .select(d3El.datum().meta.leaf ? '.leaf' : '.bg')
+    .attr('fill', function (data) {
+      return this.color.call(this, data);
+    }.bind(this));
 };
 
 /**
@@ -1339,17 +1536,21 @@ TreemapCtrl.prototype.lockHighlightEl = function (element) {
  * @date    2015-08-03
  * @param   {Object}  data  D3 data object.
  */
-TreemapCtrl.prototype.layout = function (parent, depth) {
-  // Initialize a cache object used later
-  parent.cache = {};
+TreemapCtrl.prototype.layout = function (parent, depth, reRender) {
   parent.meta.depth = depth;
-  // Cache the the branch id for each node, which is needed to uniquely identify
-  // the position of a selected term.
-  if (parent.ontId in this.cacheTerms) {
-    parent.cache.branchId = this.cacheTerms[parent.ontId].push(parent) - 1;
-  } else {
-    this.cacheTerms[parent.ontId] = [parent];
-    parent.cache.branchId = 0;
+
+  if (!reRender) {
+    // Initialize a cache object used later
+    parent.cache = {};
+
+    // Cache the the branch id for each node, which is needed to uniquely
+    // identify the position of a selected term.
+    if (parent.ontId in this.cacheTerms) {
+      parent.cache.branchId = this.cacheTerms[parent.ontId].push(parent) - 1;
+    } else {
+      this.cacheTerms[parent.ontId] = [parent];
+      parent.cache.branchId = 0;
+    }
   }
 
   // Store a reference to the node by it's URI. Since nodes can be duplicated
@@ -1502,6 +1703,18 @@ TreemapCtrl.prototype.removeLevelsOfNodes = function (oldVisibleDepth) {
 };
 
 /**
+ * Rerender treemap
+ *
+ * @method  reRender
+ * @author  Fritz Lekschas
+ * @date    2017-01-16
+ */
+TreemapCtrl.prototype.reRender = function () {
+  this.draw(true);
+  this.checkLabelReadbility(this.visibleDepth);
+};
+
+/**
  * Set breadcrumb navigation from the current `node` to the root.
  *
  * @method  setBreadCrumb
@@ -1598,7 +1811,7 @@ TreemapCtrl.prototype.setRootNode = function (root, noNotification) {
     }
   }
 
-  if (prevRootUri === root.uri) {
+  if (root.uri === prevRootUri && root.uri === this.absRootNode.uri) {
     return;
   }
 
@@ -1626,15 +1839,17 @@ TreemapCtrl.prototype.setRootNode = function (root, noNotification) {
   var terms = [
     {
       nodeUri: root.uri,
+      nodeLabel: root.label,
       dataSetIds: getAssociatedDataSets(
         this.cacheTerms[root.ontId][root.branchId]
       ),
       mode: 'and',
-      query: true
+      query: true,
+      root: true
     }
   ];
 
-  if (prevRoot) {
+  if (prevRoot && prevRoot.ontId !== root.ontId) {
     terms.push({
       nodeUri: prevRootUri,
       dataSetIds: getAssociatedDataSets(
@@ -1656,7 +1871,7 @@ TreemapCtrl.prototype.setRootNode = function (root, noNotification) {
     branchId: root.branchId || 0
   });
 
-  this.transition(this.cacheTerms[root.ontId][root.branchId], true);
+  this.transition(this.cacheTerms[root.ontId][root.branchId], true, true);
 };
 
 /**
@@ -1718,9 +1933,14 @@ TreemapCtrl.prototype.setUpNodeCenterIcon = function (selection) {
  * @param   {Object}  noNotification  If `true` doesn't set the tree map context
  *   since the method was called by `setRootNode` already.
  */
-TreemapCtrl.prototype.transition = function (data, noNotification) {
+TreemapCtrl.prototype.transition = function (data, noNotification, auto) {
   if (this.treemap.transitioning || !data) {
     return;
+  }
+
+  if (!auto) {
+    this.transVis = true;
+    this.visibleDepth = 1;
   }
 
   this.currentLevel = data.meta.depth;
@@ -1751,7 +1971,7 @@ TreemapCtrl.prototype.transition = function (data, noNotification) {
       this.treemap.y.domain([data.y, data.y + data.dy]);
 
       // Enable anti-aliasing during the transition.
-      this.treemap.element.style('shape-rendering', null);
+      this.treemap.mainGroup.style('shape-rendering', null);
 
       // Fade-in entering text.
       newGroups.selectAll('.label').classed('visible', false);
@@ -1790,7 +2010,7 @@ TreemapCtrl.prototype.transition = function (data, noNotification) {
       // Remove the old node when the transition is finished.
       formerGroupWrapperTrans.remove()
         .each('end', function () {
-          this.treemap.element.style('shape-rendering', 'crispEdges');
+          this.treemap.mainGroup.style('shape-rendering', 'crispEdges');
           this.treemap.transitioning = false;
         }.bind(this));
 
@@ -1812,7 +2032,8 @@ TreemapCtrl.prototype.transition = function (data, noNotification) {
       this.setRootNode({
         ontId: data.ontId,
         uri: data.uri,
-        branchId: data.cache.branchId
+        branchId: data.cache.branchId,
+        label: data.name
       });
     }.bind(this));
   }
@@ -1990,16 +2211,50 @@ Object.defineProperty(
         adjustedLabels.finally(function () {
           this.loadingVisibleDepth = false;
           // Wait one digestion cycle.
-          this.$timeout(function () {
-            // Focus the input element again because it lost the focus when the
-            // input was disabled during the time the new nodes have been
-            // loaded.
-            this.$rootScope.$broadcast('focusOn', 'visibleDepthInput');
-          }.bind(this), 0);
+          if (!this.transVis) {
+            this.$timeout(function () {
+              // Focus the input element again because it lost the focus when the
+              // input was disabled during the time the new nodes have been
+              // loaded.
+              this.$rootScope.$broadcast('focusOn', 'visibleDepthInput');
+            }.bind(this), 0);
+          }
+          this.transVis = false;
         }.bind(this));
       }.bind(this), 0);
     }
-  });
+  }
+);
+
+Object.defineProperty(
+  TreemapCtrl.prototype,
+  'isMaximized',
+  {
+    get: function () {
+      return this.dashboardVisWrapperResizer.isMaximized;
+    }
+  }
+);
+
+Object.defineProperty(
+  TreemapCtrl.prototype,
+  'isMinimized',
+  {
+    get: function () {
+      return this.dashboardVisWrapperResizer.isMinimized;
+    }
+  }
+);
+
+Object.defineProperty(
+  TreemapCtrl.prototype,
+  'isEqualized',
+  {
+    get: function () {
+      return this.dashboardVisWrapperResizer.isEqualized;
+    }
+  }
+);
 
 angular
   .module('treemap')
@@ -2019,5 +2274,7 @@ angular
     'Webworker',
     '$rootScope',
     '$timeout',
+    'dashboardIntroStarter',
+    'dashboardVisWrapperResizer',
     TreemapCtrl
   ]);

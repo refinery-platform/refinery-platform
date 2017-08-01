@@ -29,11 +29,18 @@
       if (typeof userFileFiltersService[attribute] === 'undefined') {
         userFileFiltersService[attribute] = []; // Init empty set
       }
-      var index = userFileFiltersService[attribute].indexOf(value);
+      var set = userFileFiltersService[attribute];
+      var index = set.indexOf(value);
       if (index >= 0) {
-        userFileFiltersService[attribute].splice(index, 1);
+        // Remove from list
+        set.splice(index, 1);
+        // ... and delete list if empty.
+        if (set.length === 0) {
+          delete userFileFiltersService[attribute];
+        }
       } else {
-        userFileFiltersService[attribute].push(value);
+        // Add to list
+        set.push(value);
       }
 
       getUserFiles().then(function (solr) {

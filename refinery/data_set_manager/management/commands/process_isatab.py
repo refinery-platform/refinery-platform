@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+
 from collections import OrderedDict
 import logging
 from optparse import make_option
@@ -12,7 +13,6 @@ from celery.task.sets import TaskSet
 
 from ...tasks import parse_isatab
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -21,7 +21,8 @@ class Command(BaseCommand):
     Takes the directory of an ISA-Tab file as input, parses, and inputs it into
     the database\n\nUsage: python manage.py process_isatab <username> <isatab
     directory or file> [--base_pre_isa_dir <base pre-isatab directory or file>
-    --public --file_base_path <base path if file locations are relative>]\n
+    --public --file_base_path <base path if file locations are relative>
+    --overwrite]\n
     """
     option_list = BaseCommand.option_list + (
         make_option(
@@ -37,6 +38,11 @@ class Command(BaseCommand):
         ),
         make_option(
             '--public',
+            action='store_true',
+            default=False
+        ),
+        make_option(
+            '--overwrite',
             action='store_true',
             default=False
         )
@@ -93,7 +99,7 @@ class Command(BaseCommand):
 
         s_tasks = list()
         # Add subtasks to list
-        for k, v_list in isatab_dict.items():
+        for v_list in isatab_dict.values():
             isa_file = v_list.pop(0)
             try:
                 pre_file = v_list.pop(0)
@@ -105,8 +111,10 @@ class Command(BaseCommand):
                     options['public'],
                     isa_file,
                     self._additional_raw_data_file_extension,
-                    isa_file, pre_file,
-                    options['file_base_path']
+                    isa_file,
+                    pre_file,
+                    options['file_base_path'],
+                    options['overwrite']
                 )
             )
             s_tasks.append(sub_task)
@@ -119,10 +127,16 @@ class Command(BaseCommand):
         for (uuid, filename, skipped) in result.iterate():
             try:
                 if not skipped:
-                    logger.info(
-                        "%s / %s: Successfully parsed %s into "
-                        "DataSet with UUID %s",
-                        task_num, total, filename, uuid)
+                    if uuid is not None:
+                        logger.info(
+                            "%s / %s: Successfully parsed %s into "
+                            "DataSet with UUID %s",
+                            task_num, total, filename, uuid)
+                    else:
+                        logger.info(
+                            "%s / %s: Import of %s failed. Please check "
+                            "Celery log files.",
+                            task_num, total, filename, uuid)
                 else:
                     logger.info(
                         "%s / %s: Skipped %s as it has been "
