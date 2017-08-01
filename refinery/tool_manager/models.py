@@ -267,6 +267,7 @@ class Tool(OwnableResource):
     FILE_RELATIONSHIPS_URLS = "{}_urls".format(FILE_RELATIONSHIPS)
     LAUNCH_WARNING = "Subclasses must implement `launch` method"
     REFINERY_FILE_UUID = "refinery_file_uuid"
+    TOOL_LAUNCH_CONFIGURATION = "tool_launch_configuration"
     TOOL_URL = "tool_url"
 
     dataset = models.ForeignKey(DataSet)
@@ -457,15 +458,17 @@ class WorkflowTool(Tool):
         nesting = self._get_nesting_string()
         return {
             'name': 'Collection ({})'.format(nesting),
-            "collection_type": self._get_nesting_string(),
+            "collection_type": nesting,
             "element_identifiers": [
                 {
-                    'id': item[self.GALAXY_DATASET_HISTORY_ID],
-                    'name': "{} File: {}".format(self.name, item),
+                    'id': file_mapping[self.GALAXY_DATASET_HISTORY_ID],
+                    'name': "Refinery FileStoreItem: {}".format(
+                        file_mapping[self.REFINERY_FILE_UUID]
+                    ),
                     'src': 'hda'
                 }
-                for item in self.get_file_relationships_galaxy()
-                ]
+                for file_mapping in self.get_file_relationships_galaxy()
+            ]
         }
 
     def create_dataset_collection(self):
