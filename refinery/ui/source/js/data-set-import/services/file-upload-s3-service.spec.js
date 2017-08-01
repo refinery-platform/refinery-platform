@@ -13,8 +13,5 @@
       expect(service).toBeDefined();
     });
 
-    it('should have property named progress with default value of zero', function () {
-      expect(service.progress).toEqual(0);
-    });
   });
 })();
