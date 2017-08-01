@@ -12,6 +12,5 @@
     it('should exist', function () {
       expect(service).toBeDefined();
     });
-
   });
 })();
