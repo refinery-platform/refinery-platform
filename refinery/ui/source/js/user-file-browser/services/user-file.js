@@ -27,16 +27,18 @@
           params: {
             limit: 100, // Default is 100,000. Immutability make it hard in python.
             fq: function () {
+              var operation = ' OR ';
               var filters = Object.keys(userFileFiltersService).map(function (key) {
                 var values = userFileFiltersService[key];
                 // TODO: escaping!
                 return values.map(function (value) {
+                  // This clause should be OR, even if the outside is AND
                   return '(' + key + '_Characteristics_generic_s:"' + value + '"' +
                   ' OR ' + key + '_Factor_Value_s:"' + value + '")';
-                }).join(' AND ');
+                }).join(operation);
               });
               // TODO: Repeated fq params may be more efficient, but not a big deal
-              return filters.join(' AND ');
+              return filters.join(operation);
             },
             sort: function () {
               var sort = userFileSortsService.fields.map(function (field) {
