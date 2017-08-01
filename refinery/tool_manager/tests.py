@@ -921,9 +921,9 @@ class ToolTests(ToolManagerTestBase):
     EXAMPLE_URL = "www.example.com/file.txt"
     LIST = [EXAMPLE_URL]
     LIST_PAIR = [(EXAMPLE_URL, EXAMPLE_URL)]
+    LIST_LIST_PAIR = [[(EXAMPLE_URL, EXAMPLE_URL)]]
     PAIR = (EXAMPLE_URL, EXAMPLE_URL)
     PAIR_LIST = ([EXAMPLE_URL], [EXAMPLE_URL])
-    LIST_LIST_PAIR = [[(EXAMPLE_URL, EXAMPLE_URL)]]
 
     def test_tool_model_str(self):
         self.create_valid_tool(ToolDefinition.VISUALIZATION)
@@ -1056,45 +1056,68 @@ class ToolTests(ToolManagerTestBase):
         self.assertEqual(
             self.tool.get_galaxy_dict(),
             {
+                WorkflowTool.FILE_RELATIONSHIPS_GALAXY: (
+                    self.tool.get_file_relationships()
+                ),
                 "test": "data",
                 "more": "data"
             }
         )
 
-    def test__get_nesting_string_list(self):
+    @mock.patch.object(
+        WorkflowTool,
+        "_flatten_file_relationships_nesting",
+        return_value=[LIST]
+    )
+    def test__get_nesting_string_list(self, flatten_mock):
         self.create_valid_tool(ToolDefinition.WORKFLOW)
-        nesting_string = self.tool._get_nesting_string(
-            nesting=self.LIST
-        )
+        nesting_string = self.tool._get_nesting_string()
         self.assertEqual(nesting_string, "list")
+        self.assertTrue(flatten_mock.called)
 
-    def test__get_nesting_string_pair(self):
+    @mock.patch.object(
+        WorkflowTool,
+        "_flatten_file_relationships_nesting",
+        return_value=[PAIR]
+    )
+    def test__get_nesting_string_pair(self, flatten_mock):
         self.create_valid_tool(ToolDefinition.WORKFLOW)
-        nesting_string = self.tool._get_nesting_string(
-            nesting=self.PAIR
-        )
+        nesting_string = self.tool._get_nesting_string()
         self.assertEqual(nesting_string, "paired")
+        self.assertTrue(flatten_mock.called)
 
-    def test__get_nesting_string_list_pair(self):
+    @mock.patch.object(
+        WorkflowTool,
+        "_flatten_file_relationships_nesting",
+        return_value=[LIST, PAIR]
+    )
+    def test__get_nesting_string_list_pair(self, flatten_mock):
         self.create_valid_tool(ToolDefinition.WORKFLOW)
-        nesting_string = self.tool._get_nesting_string(
-            nesting=self.LIST_PAIR
-        )
+        nesting_string = self.tool._get_nesting_string()
         self.assertEqual(nesting_string, "list:paired")
+        self.assertTrue(flatten_mock.called)
 
-    def test__get_nesting_string_pair_list(self):
+    @mock.patch.object(
+        WorkflowTool,
+        "_flatten_file_relationships_nesting",
+        return_value=[PAIR, LIST]
+    )
+    def test__get_nesting_string_pair_list(self, flatten_mock):
         self.create_valid_tool(ToolDefinition.WORKFLOW)
-        nesting_string = self.tool._get_nesting_string(
-            nesting=self.PAIR_LIST
-        )
+        nesting_string = self.tool._get_nesting_string()
         self.assertEqual(nesting_string, "paired:list")
+        self.assertTrue(flatten_mock.called)
 
-    def test__get_nesting_string_list_list_pair(self):
+    @mock.patch.object(
+        WorkflowTool,
+        "_flatten_file_relationships_nesting",
+        return_value=[LIST, LIST, PAIR]
+    )
+    def test__get_nesting_string_list_list_pair(self, flatten_mock):
         self.create_valid_tool(ToolDefinition.WORKFLOW)
-        nesting_string = self.tool._get_nesting_string(
-            nesting=self.LIST_LIST_PAIR
-        )
+        nesting_string = self.tool._get_nesting_string()
         self.assertEqual(nesting_string, "list:list:paired")
+        self.assertTrue(flatten_mock.called)
 
     def test__get_nesting_string_from_file_relationships_urls(self):
         self.create_valid_tool(ToolDefinition.WORKFLOW)
@@ -1102,7 +1125,14 @@ class ToolTests(ToolManagerTestBase):
 
     def test_creating__workflow_tool_sets_tool_launch_config_galaxy_data(self):
         self.create_valid_tool(ToolDefinition.WORKFLOW)
-        self.assertEqual(self.tool.get_galaxy_dict(), {})
+        self.assertEqual(
+            self.tool.get_galaxy_dict(),
+            {
+                WorkflowTool.FILE_RELATIONSHIPS_GALAXY: (
+                    self.tool.get_file_relationships()
+                )
+            }
+        )
 
     def test_creating_vis_tool_doesnt_set_tool_launch_config_galaxy_data(self):
         self.create_valid_tool(ToolDefinition.VISUALIZATION)
@@ -1124,6 +1154,30 @@ class ToolTests(ToolManagerTestBase):
             tool.launch()
 
         self.assertEqual(context.exception.message, tool.LAUNCH_WARNING)
+
+    def test__flatten_file_relationships_nesting_deep_nesting(self):
+        self.create_valid_tool(ToolDefinition.WORKFLOW)
+        flattened_nesting = self.tool._flatten_file_relationships_nesting(
+            nesting=self.LIST_LIST_PAIR
+        )
+        self.assertEqual(
+            flattened_nesting,
+            [
+                [[(self.EXAMPLE_URL, self.EXAMPLE_URL)]],
+                [(self.EXAMPLE_URL, self.EXAMPLE_URL)],
+                (self.EXAMPLE_URL, self.EXAMPLE_URL)
+            ]
+        )
+
+    def test__flatten_file_relationships_nesting_shallow_nesting(self):
+        self.create_valid_tool(ToolDefinition.WORKFLOW)
+        flattened_nesting = self.tool._flatten_file_relationships_nesting(
+            nesting=self.PAIR
+        )
+        self.assertEqual(
+            flattened_nesting,
+            [(self.EXAMPLE_URL, self.EXAMPLE_URL)]
+        )
 
 
 class ToolAPITests(APITestCase, ToolManagerTestBase):
