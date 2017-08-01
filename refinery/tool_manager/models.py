@@ -536,7 +536,8 @@ class WorkflowTool(Tool):
 
     def get_file_relationships_galaxy(self):
         return ast.literal_eval(
-            self.get_tool_launch_config()[self.FILE_RELATIONSHIPS_GALAXY]
+            self.get_tool_launch_config(
+            )[self.GALAXY_DATA][self.FILE_RELATIONSHIPS_GALAXY]
         )
 
     def get_galaxy_dict(self):
@@ -654,17 +655,20 @@ class WorkflowTool(Tool):
         No error handling here since this method is only called in an
         atomic transaction.
         """
-        tool_launch_config = self.get_tool_launch_config()
+        galaxy_dict = self.get_galaxy_dict()
 
         node = Node.objects.get(
             file_uuid=galaxy_to_refinery_mapping[Tool.REFINERY_FILE_UUID]
         )
-        tool_launch_config[self.FILE_RELATIONSHIPS_GALAXY] = (
-            tool_launch_config[self.FILE_RELATIONSHIPS_GALAXY].replace(
+        galaxy_dict[self.FILE_RELATIONSHIPS_GALAXY] = (
+            galaxy_dict[self.FILE_RELATIONSHIPS_GALAXY].replace(
                 node.uuid,
                 "{}".format(json.dumps(galaxy_to_refinery_mapping))
             )
         )
+
+        tool_launch_config = self.get_tool_launch_config()
+        tool_launch_config[self.GALAXY_DATA] = galaxy_dict
         self.set_tool_launch_config(tool_launch_config)
 
     def update_galaxy_data(self, key, value):
