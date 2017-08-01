@@ -52,6 +52,51 @@ class AnalysisHandlerTask(Task):
         analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
 
 
+def _check_galaxy_history_state(analysis_uuid):
+    """
+    Monitor the state of our Galaxy history from analysis.galaxy_progress().
+    Fail the `run_analysis` task appropriately if we run into trouble.
+    Update analysis_status.galaxy_history_progress &
+    analysis_status.galaxy_history_state along the way
+    """
+    analysis = _get_analysis(analysis_uuid)
+    analysis_status = _get_analysis_status(analysis_uuid)
+
+    try:
+        percent_complete = analysis.galaxy_progress()
+    except RuntimeError:
+        analysis_status.set_galaxy_history_state(AnalysisStatus.ERROR)
+        error_msg = (
+            "Analysis '{}' failed during Galaxy Workflow run".format(analysis)
+        )
+        logger.error(error_msg)
+        analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
+        analysis.send_email()
+        get_taskset_result(
+            analysis_status.refinery_import_task_group_id
+        ).delete()
+        get_taskset_result(
+            analysis_status.galaxy_import_task_group_id
+        ).delete()
+        analysis.galaxy_cleanup()
+        return
+    except galaxy.client.ConnectionError:
+        analysis_status.set_galaxy_history_state(
+            AnalysisStatus.UNKNOWN
+        )
+        run_analysis.retry(countdown=RETRY_INTERVAL)
+    else:
+        # workaround to avoid moving the progress bar backward
+        if analysis_status.galaxy_history_progress < percent_complete:
+            analysis_status.galaxy_history_progress = percent_complete
+            analysis_status.save()
+        if percent_complete < 100:
+            analysis_status.set_galaxy_history_state(AnalysisStatus.PROGRESS)
+            run_analysis.retry(countdown=RETRY_INTERVAL)
+        else:
+            analysis_status.set_galaxy_history_state(AnalysisStatus.OK)
+
+
 def _get_analysis(analysis_uuid):
     """
     Try to fetch the Analysis from the given analysis_uuid. Fail the
@@ -87,14 +132,14 @@ def get_taskset_result(task_group_id):
     return TaskSetResult.restore(task_group_id)
 
 
-def _get_tool(analysis_uuid):
+def _get_workflow_tool(analysis_uuid):
     try:
-        return tool_manager.models.Tool.objects.get(
+        return tool_manager.models.WorkflowTool.objects.get(
             analysis__uuid=analysis_uuid
         )
-    except (tool_manager.models.Tool.DoesNotExist,
-            tool_manager.models.Tool.MultipleObjectsReturned) as e:
-        logger.error("Could not fetch Tool for this analysis: %s", e)
+    except (tool_manager.models.WorkflowTool.DoesNotExist,
+            tool_manager.models.WorkflowTool.MultipleObjectsReturned) as e:
+        logger.error("Could not fetch WorkflowTool for this analysis: %s", e)
         run_analysis.update_state(state=celery.states.FAILURE)
         return
 
@@ -182,45 +227,21 @@ def _galaxy_file_export(analysis_uuid):
         return
 
 
-def _galaxy_file_import(analysis_uuid):
-    """
-    Check on the status of the files being imported into Galaxy.
-    Fail the task appropriately if we cannot retrieve the status.
-    """
-    analysis = _get_analysis(analysis_uuid)
-    analysis_status = _get_analysis_status(analysis_uuid)
+@task()
+def _invoke_tool_based_galaxy_workflow(analysis_uuid):
+    tool = _get_workflow_tool(analysis_uuid)
 
-    try:
-        percent_complete = analysis.galaxy_progress()
-    except RuntimeError:
-        analysis_status.set_galaxy_history_state(AnalysisStatus.ERROR)
-        analysis.send_email()
-        get_taskset_result(
-            analysis_status.refinery_import_task_group_id
-        ).delete()
-        get_taskset_result(
-            analysis_status.galaxy_import_task_group_id
-        ).delete()
-        analysis.galaxy_cleanup()
-        return
-    except galaxy.client.ConnectionError:
-        analysis_status.set_galaxy_history_state(
-            AnalysisStatus.UNKNOWN
-        )
-        run_analysis.retry(countdown=RETRY_INTERVAL)
-    else:
-        # workaround to avoid moving the progress bar backward
-        if analysis_status.galaxy_history_progress < percent_complete:
-            analysis_status.galaxy_history_progress = percent_complete
-            analysis_status.save()
-        if percent_complete < 100:
-            analysis_status.set_galaxy_history_state(
-                AnalysisStatus.PROGRESS)
-            run_analysis.retry(countdown=RETRY_INTERVAL)
-        else:
-            analysis_status.set_galaxy_history_state(
-                AnalysisStatus.OK
-            )
+    tool.create_dataset_collection()
+
+    galaxy_workflow_invocation_data = tool.invoke_workflow()
+
+    tool.analysis.history_id = galaxy_workflow_invocation_data["history_id"]
+    tool.analysis.save()
+
+    tool.update_galaxy_data(
+        tool.GALAXY_WORKFLOW_INVOCATION_DATA,
+        galaxy_workflow_invocation_data
+    )
 
 
 def _refinery_file_import(analysis_uuid):
@@ -239,7 +260,7 @@ def _refinery_file_import(analysis_uuid):
         refinery_import_tasks = []
 
         if analysis.is_tool_based:
-            tool = _get_tool(analysis_uuid)
+            tool = _get_workflow_tool(analysis_uuid)
             input_file_uuid_list = tool.get_input_file_uuid_list()
         else:
             input_file_uuid_list = analysis.get_input_file_uuid_list()
@@ -293,12 +314,19 @@ def run_analysis(analysis_uuid):
     _refinery_file_import(analysis_uuid)
 
     if analysis.is_tool_based:
+        _run_tool_based_galaxy_file_import(analysis_uuid)
         _run_tool_based_galaxy_workflow(analysis_uuid)
+        _check_galaxy_history_state(analysis_uuid)
+        _run_tool_based_galaxy_file_export(analysis_uuid)
     else:
         _run_galaxy_workflow(analysis_uuid)
-        _galaxy_file_import(analysis_uuid)
+        _check_galaxy_history_state(analysis_uuid)
         _galaxy_file_export(analysis_uuid)
         _attach_workflow_outputs(analysis_uuid)
+
+
+def _run_tool_based_galaxy_file_export(analysis_uuid):
+    raise NotImplementedError
 
 
 def _run_galaxy_workflow(analysis_uuid):
@@ -358,33 +386,22 @@ def _run_galaxy_workflow(analysis_uuid):
         return
 
 
-def _run_tool_based_galaxy_workflow(analysis_uuid):
-
+def _run_tool_based_galaxy_file_import(analysis_uuid):
     analysis = _get_analysis(analysis_uuid)
     analysis_status = _get_analysis_status(analysis_uuid)
-    tool = _get_tool(analysis_uuid)
+    tool = _get_workflow_tool(analysis_uuid)
 
     if not analysis_status.galaxy_import_task_group_id:
-        connection = analysis.galaxy_connection()
-        library_dict = connection.libraries.create_library(
-            name="Library for: {}".format(tool)
-        )
-        history_dict = connection.histories.create_history(
-            name="History for: {}".format(tool)
-        )
+        library_dict = tool.create_galaxy_library()
+        history_dict = tool.create_galaxy_history()
 
-        logger.debug("Starting analysis execution in Galaxy")
+        # Update Tool with information about its objects living in Galaxy
+        tool.update_galaxy_data(tool.GALAXY_IMPORT_HISTORY_DICT, history_dict)
+        tool.update_galaxy_data(tool.GALAXY_LIBRARY_DICT, library_dict)
 
-        galaxy_import_tasks = [
-            _tool_based_galaxy_file_import.subtask(
-                (
-                    analysis_uuid,
-                    file_store_item_uuid,
-                    history_dict,
-                    library_dict,
-                )
-            ) for file_store_item_uuid in tool.get_input_file_uuid_list()
-            ]
+        logger.debug("Starting file imports into Galaxy")
+
+        galaxy_import_tasks = tool.get_galaxy_import_tasks()
 
         galaxy_file_import_taskset = TaskSet(
             tasks=galaxy_import_tasks
@@ -392,10 +409,10 @@ def _run_tool_based_galaxy_workflow(analysis_uuid):
 
         galaxy_file_import_taskset.save()
 
-        analysis_status.galaxy_import_task_group_id = (
+        analysis_status.set_galaxy_import_task_group_id(
             galaxy_file_import_taskset.taskset_id
         )
-        analysis_status.set_galaxy_history_state(AnalysisStatus.PROGRESS)
+        analysis_status.set_galaxy_import_state(AnalysisStatus.PROGRESS)
         run_analysis.retry(countdown=RETRY_INTERVAL)
 
     # Check if data files were successfully imported into Galaxy
@@ -409,12 +426,61 @@ def _run_tool_based_galaxy_workflow(analysis_uuid):
         error_msg = "Analysis '{}' failed in Galaxy".format(analysis)
         logger.error(error_msg)
         analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
-        analysis_status.set_galaxy_history_state(AnalysisStatus.ERROR)
+        analysis_status.set_galaxy_import_state(AnalysisStatus.ERROR)
         analysis.send_email()
         get_taskset_result(
             analysis_status.refinery_import_task_group_id
         ).delete()
         galaxy_file_import_taskset.delete()
+        analysis.galaxy_cleanup()
+        return
+
+
+def _run_tool_based_galaxy_workflow(analysis_uuid):
+    """
+    Create DataSetCollection objects in galaxy, and invoke the workflow
+    belonging to our tool.
+    """
+    analysis = _get_analysis(analysis_uuid)
+    analysis_status = _get_analysis_status(analysis_uuid)
+
+    if not analysis_status.galaxy_workflow_task_group_id:
+        logger.debug("Starting workflow execution in Galaxy")
+
+        galaxy_workflow_tasks = [
+            _invoke_tool_based_galaxy_workflow.subtask((analysis_uuid,))
+        ]
+
+        galaxy_workflow_taskset = TaskSet(
+            tasks=galaxy_workflow_tasks
+        ).apply_async()
+
+        galaxy_workflow_taskset.save()
+
+        analysis_status.set_galaxy_workflow_task_group_id(
+            galaxy_workflow_taskset.taskset_id
+        )
+        analysis_status.set_galaxy_history_state(AnalysisStatus.PROGRESS)
+        run_analysis.retry(countdown=RETRY_INTERVAL)
+
+    # Check on the status of the running galaxy workflow
+    galaxy_workflow_taskset = get_taskset_result(
+        analysis_status.galaxy_workflow_task_group_id
+    )
+    if not galaxy_workflow_taskset.ready():
+        logger.debug("Analysis '%s' pending in Galaxy", analysis)
+        run_analysis.retry(countdown=RETRY_INTERVAL)
+
+    elif not galaxy_workflow_taskset.successful():
+        error_msg = "Analysis '{}' failed in Galaxy".format(analysis)
+        logger.error(error_msg)
+        analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
+        analysis_status.set_galaxy_history_state(AnalysisStatus.ERROR)
+        analysis.send_email()
+        get_taskset_result(
+            analysis_status.refinery_import_task_group_id
+        ).delete()
+        galaxy_workflow_taskset.delete()
         analysis.galaxy_cleanup()
         return
 
@@ -535,23 +601,18 @@ def _start_galaxy_analysis(analysis_uuid):
 def _tool_based_galaxy_file_import(analysis_uuid, file_store_item_uuid,
                                    history_dict, library_dict):
 
-    analysis = _get_analysis(analysis_uuid)
     analysis_status = _get_analysis_status(analysis_uuid)
-    tool = _get_tool(analysis_uuid)
-
-    connection = analysis.galaxy_connection()
+    tool = _get_workflow_tool(analysis_uuid)
 
     file_store_item = FileStoreItem.objects.get(uuid=file_store_item_uuid)
-    library_dataset_dict = connection.libraries.upload_file_from_url(
+    library_dataset_dict = tool.upload_datafile_to_library_from_url(
         library_dict["id"],
         get_full_url(file_store_item.get_datafile_url())
     )
-    history_dataset_dict = (
-        connection.histories.upload_dataset_from_library(
+    history_dataset_dict = tool.import_library_dataset_to_history(
             history_dict["id"],
             library_dataset_dict[0]["id"]
         )
-    )
 
     tool.update_file_relationships_with_galaxy_history_data(
         {
@@ -569,13 +630,7 @@ def _tool_based_galaxy_file_import(analysis_uuid, file_store_item_uuid,
 
     if (analysis_status.galaxy_import_progress ==
             single_file_percentage * number_of_files):
-        analysis_status.set_galaxy_history_state(AnalysisStatus.OK)
-
-    # - Create DatasetCollection
-    # - Invoke galaxy workflow (in a new history so that fetching outputs
-    #   is easy!)
-    # - Attach results of workflow (Analysis.attach_outputs_dataset is
-    # really nasty :/ )
+        analysis_status.set_galaxy_import_state(AnalysisStatus.OK)
 
 
 def _get_galaxy_download_tasks(analysis):

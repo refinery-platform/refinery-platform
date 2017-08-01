@@ -128,6 +128,18 @@ class ToolFactory(factory.django.DjangoModelFactory):
         model = "tool_manager.Tool"
 
 
+class VisualizationToolFactory(factory.django.DjangoModelFactory):
+    """Minimal representation of a VisualizationTool"""
+    class Meta:
+        model = "tool_manager.VisualizationTool"
+
+
+class WorkflowToolFactory(factory.django.DjangoModelFactory):
+    """Minimal representation of a WorkflowTool"""
+    class Meta:
+        model = "tool_manager.WorkflowTool"
+
+
 class FileRelationshipFactory(factory.django.DjangoModelFactory):
     """Minimal representation of a FileRelationship"""
     class Meta:

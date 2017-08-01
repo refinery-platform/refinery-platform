@@ -15,7 +15,7 @@ from django_extensions.db.fields import UUIDField
 from docker.errors import APIError
 
 from analysis_manager.models import AnalysisStatus
-from analysis_manager.tasks import run_analysis
+from analysis_manager.tasks import _tool_based_galaxy_file_import, run_analysis
 from analysis_manager.utils import create_analysis, validate_analysis_config
 from core.models import Analysis, DataSet, OwnableResource, Workflow
 from data_set_manager.models import Node
@@ -252,19 +252,23 @@ def delete_input_files_and_file_relationships(sender, instance, *args,
         file_relationship.delete()
 
 
+class ToolManager(models.Manager):
+    def get_query_set(self):
+        return VisualizationTool.objects.all() | WorkflowTool.objects.all()
+
+
 class Tool(OwnableResource):
     """
-    A Tool is a representation of the information it will take to launch a
-    Refinery-based Tool
+    A Tool is a representation of the information it will take to launch
+    and monitor a ToolDefinition
     """
-
-    # Some string constants to aid any future refactoring efforts
     FILE_UUID_LIST = "file_uuid_list"
     FILE_RELATIONSHIPS = "file_relationships"
     FILE_RELATIONSHIPS_URLS = "{}_urls".format(FILE_RELATIONSHIPS)
-    FILE_RELATIONSHIPS_GALAXY = "{}_galaxy".format(FILE_RELATIONSHIPS)
-    GALAXY_DATASET_HISTORY_ID = "galaxy_dataset_history_id"
+    LAUNCH_WARNING = "Subclasses must implement `launch` method"
     REFINERY_FILE_UUID = "refinery_file_uuid"
+    TOOL_LAUNCH_CONFIGURATION = "tool_launch_configuration"
+    TOOL_URL = "tool_url"
 
     dataset = models.ForeignKey(DataSet)
     analysis = models.OneToOneField(Analysis, blank=True, null=True)
@@ -300,14 +304,6 @@ class Tool(OwnableResource):
     def get_file_relationships_urls(self):
         return ast.literal_eval(
             self.get_tool_launch_config()[self.FILE_RELATIONSHIPS_URLS]
-        )
-
-    def get_file_relationships_galaxy(self):
-        if self.get_tool_type() != ToolDefinition.WORKFLOW:
-            raise NotImplementedError
-
-        return ast.literal_eval(
-            self.get_tool_launch_config()[self.FILE_RELATIONSHIPS_GALAXY]
         )
 
     def get_node_uuids(self):
@@ -352,87 +348,11 @@ class Tool(OwnableResource):
         }
 
     def launch(self):
-        if self.get_tool_type() == ToolDefinition.VISUALIZATION:
-            return self._launch_visualization()
-
-        if self.get_tool_type() == ToolDefinition.WORKFLOW:
-            return self._launch_workflow()
-
-    def _launch_visualization(self):
-        """
-        Launch a visualization-based Tool
-        :returns:
-            - <JsonResponse> w/ `tool_url` key corresponding to the
-        launched container's url
-            - <HttpResponseBadRequest>, <HttpServerError>
-        """
-        container = DockerContainerSpec(
-            image_name=self.tool_definition.image_name,
-            container_name=self.container_name,
-            labels={self.uuid: ToolDefinition.VISUALIZATION},
-            container_input_path=(
-                self.tool_definition.container_input_path
-            ),
-            input={
-                self.FILE_RELATIONSHIPS: self.get_file_relationships_urls()
-            },
-            extra_directories=self.tool_definition.get_extra_directories()
-        )
-
-        DockerClientWrapper().run(container)
-
-        return JsonResponse({"tool_url": self.get_relative_container_url()})
-
-    def _launch_workflow(self):
-        """
-        Launch a workflow-based Tool
-        :returns:
-            - <JsonResponse> w/ `tool_url` key corresponding to the url
-            pointing to the Analysis' status page
-        :raises: RuntimeError
-        """
-        if self.get_tool_type() != ToolDefinition.WORKFLOW:
-            raise NotImplementedError(
-                "Tool: {} is not of type: {}".format(
-                    self, ToolDefinition.WORKFLOW
-                )
-            )
-
-        analysis_config = self._get_analysis_config()
-        validate_analysis_config(analysis_config)
-
-        analysis = create_analysis(analysis_config)
-        self.set_analysis(analysis.uuid)
-
-        AnalysisStatus.objects.create(analysis=analysis)
-
-        # Run the analysis task
-        run_analysis.delay(analysis.uuid)
-
-        return JsonResponse(
-            {
-                "tool_url": "/data_sets2/{}/#/analyses/".format(
-                    self.dataset.uuid
-                )
-            }
-        )
+        raise NotImplementedError(Tool.LAUNCH_WARNING)
 
     def set_tool_launch_config(self, tool_launch_config):
         self.tool_launch_configuration = json.dumps(tool_launch_config)
         self.save()
-
-    def set_analysis(self, analysis_uuid):
-        """
-        :param analysis_uuid: UUID of Analysis instance to associate with
-        the Tool
-        :raises: RuntimeError
-        """
-        try:
-            self.analysis = Analysis.objects.get(uuid=analysis_uuid)
-        except(Analysis.DoesNotExist, Analysis.MultipleObjectsReturned) as e:
-            raise RuntimeError(e)
-        else:
-            self.save()
 
     def update_file_relationships_with_urls(self):
         """
@@ -467,8 +387,266 @@ class Tool(OwnableResource):
             )
         self.set_tool_launch_config(tool_launch_config)
 
+
+class VisualizationTool(Tool):
+    """
+    VisualizationTools are Tools that are specific to
+    launching and monitoring Dockerized visualizations
+    """
+    class Meta:
+        verbose_name = "visualizationtool"
+        permissions = (
+            ('read_%s' % verbose_name, 'Can read %s' % verbose_name),
+        )
+
+    def launch(self):
+        """
+        Launch a visualization-based Tool
+        :returns:
+            - <JsonResponse> w/ `tool_url` key corresponding to the
+        launched container's url
+            - <HttpResponseBadRequest>, <HttpServerError>
+        """
+        container = DockerContainerSpec(
+            image_name=self.tool_definition.image_name,
+            container_name=self.container_name,
+            labels={self.uuid: ToolDefinition.VISUALIZATION},
+            container_input_path=(
+                self.tool_definition.container_input_path
+            ),
+            input={
+                self.FILE_RELATIONSHIPS: self.get_file_relationships_urls()
+            },
+            extra_directories=self.tool_definition.get_extra_directories()
+        )
+
+        DockerClientWrapper().run(container)
+
+        return JsonResponse({Tool.TOOL_URL: self.get_relative_container_url()})
+
+
+class WorkflowTool(Tool):
+    """
+    WorkflowTools are Tools that are specific to
+    launching and monitoring Galaxy Workflows
+    """
+    COLLECTION_INFO = "collection_info"
+    FILE_RELATIONSHIPS_GALAXY = "{}_galaxy".format(Tool.FILE_RELATIONSHIPS)
+    GALAXY_DATA = "galaxy_data"
+    GALAXY_DATASET_HISTORY_ID = "galaxy_dataset_history_id"
+    GALAXY_IMPORT_HISTORY_DICT = "import_history_dict"
+    GALAXY_LIBRARY_DICT = "library_dict"
+    GALAXY_WORKFLOW_HISTORY_DICT = "workflow_history_dict"
+    GALAXY_WORKFLOW_INVOCATION_DATA = "galaxy_workflow_invocation_data"
+
+    class Meta:
+        verbose_name = "workflowtool"
+        permissions = (
+            ('read_%s' % verbose_name, 'Can read %s' % verbose_name),
+        )
+
+    @property
+    def galaxy_connection(self):
+        return self.analysis.galaxy_connection()
+
+    def create_collection_description(self):
+        """
+        Creates a dict containing information describing the Galaxy DataSet
+        Collection to create
+        :return: dict
+        """
+        nesting = self._get_nesting_string()
+        return {
+            'name': 'Collection ({})'.format(nesting),
+            "collection_type": nesting,
+            "element_identifiers": [
+                {
+                    'id': file_mapping[self.GALAXY_DATASET_HISTORY_ID],
+                    'name': "Refinery FileStoreItem: {}".format(
+                        file_mapping[self.REFINERY_FILE_UUID]
+                    ),
+                    'src': 'hda'
+                }
+                for file_mapping in self.get_file_relationships_galaxy()
+            ]
+        }
+
+    def create_dataset_collection(self):
+        """
+        Creates a Galaxy DatasetCollection based off of the collection
+        description returned by: `WorkflowTool.create_collection_description()`
+        """
+        collection_description = self.create_collection_description()
+        collection_info = (
+            self.galaxy_connection.histories.create_dataset_collection(
+                self.get_galaxy_dict()[
+                    self.GALAXY_IMPORT_HISTORY_DICT
+                ]["id"],
+                collection_description
+            )
+        )
+        self.update_galaxy_data(self.COLLECTION_INFO, collection_info)
+
+    def create_galaxy_history(self):
+        return self.galaxy_connection.histories.create_history(
+            name="History for: {}".format(self)
+        )
+
+    def create_galaxy_library(self):
+        return self.galaxy_connection.libraries.create_library(
+            name="Library for: {}".format(self)
+        )
+
+    def create_workflow_inputs(self):
+        return {
+            '0': {
+                'id': self.get_galaxy_dict()[self.COLLECTION_INFO]["id"],
+                'src': 'hdca'
+            }
+        }
+
+    def _flatten_file_relationships_nesting(self, nesting=None,
+                                            structure=None):
+        """
+        Gets the `LIST`/`PAIR` structure of our file_relationships,
+        but flattened into a list.
+        :param nesting: Nested list/tuple file_relationships data structure
+        from our tool launch config
+        :param structure: list to store each level of nesting in
+        :return: list containing a flattened representation of the nested
+        list/tuple structure of a Tool's file_relationships
+        """
+
+        if nesting is None:
+            nesting = self.get_file_relationships_urls()
+
+        if structure is None:
+            structure = []
+
+        if isinstance(nesting, list):
+            structure.append(nesting)
+        if isinstance(nesting, tuple):
+            structure.append(nesting)
+        if isinstance(nesting, str):
+            return structure
+        return self._flatten_file_relationships_nesting(
+            nesting[0],
+            structure=structure
+        )
+
+    def get_file_relationships_galaxy(self):
+        return ast.literal_eval(
+            self.get_tool_launch_config(
+            )[self.GALAXY_DATA][self.FILE_RELATIONSHIPS_GALAXY]
+        )
+
+    def get_galaxy_dict(self):
+        """
+        Fetch the dict in a Tool's `tool_launch_config` under the
+        `WorkflowTool.GALAXY_DATA` key
+        """
+        return self.get_tool_launch_config()[self.GALAXY_DATA]
+
+    def get_galaxy_import_tasks(self):
+        """
+        Create and return a list of _tool_based_galaxy_file_import() tasks
+        """
+        return [
+            _tool_based_galaxy_file_import.subtask(
+                (
+                    self.analysis.uuid,
+                    file_store_item_uuid,
+                    self.get_galaxy_dict()[
+                        self.GALAXY_IMPORT_HISTORY_DICT
+                    ],
+                    self.get_galaxy_dict()[self.GALAXY_LIBRARY_DICT],
+                )
+            ) for file_store_item_uuid in self.get_input_file_uuid_list()
+        ]
+
+    def _get_nesting_string(self, nesting_string=""):
+        """
+        Gets the `LIST`/`PAIR` structure of our file_relationships,
+        but flattened into a string.
+        :param nesting_string: placeholder string to append `list/paired` to
+        :return: String in the following form: ^((list|paired):*)+[^:]+$
+        """
+
+        flattened_nesting = self._flatten_file_relationships_nesting()
+
+        for file_relationship in flattened_nesting:
+            if isinstance(file_relationship, list):
+                nesting_string += "list:"
+            if isinstance(file_relationship, tuple):
+                nesting_string += "paired:"
+        return nesting_string[:-1]
+
+    def import_library_dataset_to_history(self, history_id,
+                                          library_dataset_id):
+        """
+        Import a Galaxy DataSet from a Data Library into a History
+        :param history_id: UUID string of the Galaxy History to interact with
+        :param library_dataset_id: UUID string of the Galaxy Library DataSet
+         to interact with
+        """
+        return self.galaxy_connection.histories.upload_dataset_from_library(
+            history_id,
+            library_dataset_id
+        )
+
+    def invoke_workflow(self):
+        """Invoke a Tool's workflow in Galaxy"""
+        return self.galaxy_connection.workflows.invoke_workflow(
+            self.tool_definition.workflow.internal_id,
+            history_name="Workflow Run for {}".format(self.name),
+            inputs=self.create_workflow_inputs()
+        )
+
+    def launch(self):
+        """
+        Launch a workflow-based Tool
+        :returns:
+            - <JsonResponse> w/ `tool_url` key corresponding to the url
+            pointing to the Analysis' status page
+        :raises: RuntimeError
+        """
+
+        analysis_config = self._get_analysis_config()
+        validate_analysis_config(analysis_config)
+
+        analysis = create_analysis(analysis_config)
+        self.set_analysis(analysis.uuid)
+
+        AnalysisStatus.objects.create(analysis=analysis)
+
+        # Run the analysis task
+        run_analysis.delay(analysis.uuid)
+
+        return JsonResponse(
+            {
+                Tool.TOOL_URL: "/data_sets2/{}/#/analyses/".format(
+                    self.dataset.uuid
+                )
+            }
+        )
+
+    def set_analysis(self, analysis_uuid):
+        """
+        :param analysis_uuid: UUID of Analysis instance to associate with
+        the Tool
+        :raises: RuntimeError
+        """
+        try:
+            self.analysis = Analysis.objects.get(uuid=analysis_uuid)
+        except(Analysis.DoesNotExist, Analysis.MultipleObjectsReturned) as e:
+            raise RuntimeError(e)
+        else:
+            self.save()
+
     def update_file_relationships_with_galaxy_history_data(
-            self,  galaxy_to_refinery_mapping):
+            self,
+            galaxy_to_refinery_mapping
+    ):
         """
         Replace a Tool's Node uuid in its `file_relationships` string with
         information about the file uploaded into a galaxy history that
@@ -477,31 +655,53 @@ class Tool(OwnableResource):
         No error handling here since this method is only called in an
         atomic transaction.
         """
-        tool_launch_config = self.get_tool_launch_config()
-        tool_launch_config[self.FILE_RELATIONSHIPS_GALAXY] = (
-            tool_launch_config[self.FILE_RELATIONSHIPS]
-        )
+        galaxy_dict = self.get_galaxy_dict()
 
         node = Node.objects.get(
             file_uuid=galaxy_to_refinery_mapping[Tool.REFINERY_FILE_UUID]
         )
-        tool_launch_config[self.FILE_RELATIONSHIPS_GALAXY] = (
-            tool_launch_config[self.FILE_RELATIONSHIPS_GALAXY].replace(
+        galaxy_dict[self.FILE_RELATIONSHIPS_GALAXY] = (
+            galaxy_dict[self.FILE_RELATIONSHIPS_GALAXY].replace(
                 node.uuid,
                 "{}".format(json.dumps(galaxy_to_refinery_mapping))
             )
         )
+
+        tool_launch_config = self.get_tool_launch_config()
+        tool_launch_config[self.GALAXY_DATA] = galaxy_dict
         self.set_tool_launch_config(tool_launch_config)
 
+    def update_galaxy_data(self, key, value):
+        """
+        Update a WorkflowTool's tool_launch_config dict under
+        `WorkflowTool.GALAXY_DATA` with a new key/value pair
+        """
+        tool_launch_config = self.get_tool_launch_config()
+        tool_launch_config[self.GALAXY_DATA][key] = value
+        self.set_tool_launch_config(tool_launch_config)
 
-@receiver(pre_delete, sender=Tool)
+    def upload_datafile_to_library_from_url(self, library_id, datafile_url):
+        """
+        Upload file from Refinery into a Galaxy Data Library form a
+        specified url
+        :param library_id: UUID string of the Galaxy Library to interact with
+        :param datafile_url: <String> Full url pointing to a Refinery
+        FileStoreItem datafile's source.
+        """
+        return self.galaxy_connection.libraries.upload_file_from_url(
+            library_id,
+            datafile_url
+        )
+
+
+@receiver(pre_delete, sender=VisualizationTool)
 def remove_tool_container(sender, instance, *args, **kwargs):
     """
-    Remove the Docker container instance corresponding to a Tool's launch.
+    Remove the Docker container instance corresponding to a
+    VisualizationTool's launch.
     """
-    if instance.get_tool_type() == ToolDefinition.VISUALIZATION:
-        try:
-            DockerClientWrapper().purge_by_label(instance.uuid)
-        except APIError as e:
-            logger.error("Couldn't purge container for Tool with UUID: %s %s",
-                         instance.uuid, e)
+    try:
+        DockerClientWrapper().purge_by_label(instance.uuid)
+    except APIError as e:
+        logger.error("Couldn't purge container for Tool with UUID: %s %s",
+                     instance.uuid, e)
