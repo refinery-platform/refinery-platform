@@ -502,6 +502,35 @@ class WorkflowTool(Tool):
             }
         }
 
+    def _flatten_file_relationships_nesting(self, nesting=None,
+                                            structure=None):
+        """
+        Gets the `LIST`/`PAIR` structure of our file_relationships,
+        but flattened into a list.
+        :param nesting: Nested list/tuple file_relationships data structure
+        from our tool launch config
+        :param structure: list to store each level of nesting in
+        :return: list containing a flattened representation of the nested
+        list/tuple structure of a Tool's file_relationships
+        """
+
+        if nesting is None:
+            nesting = self.get_file_relationships_urls()
+
+        if structure is None:
+            structure = []
+
+        if isinstance(nesting, list):
+            structure.append(nesting)
+        if isinstance(nesting, tuple):
+            structure.append(nesting)
+        if isinstance(nesting, str):
+            return structure
+        return self._flatten_file_relationships_nesting(
+            nesting[0],
+            structure=structure
+        )
+
     def get_file_relationships_galaxy(self):
         return ast.literal_eval(
             self.get_tool_launch_config()[self.FILE_RELATIONSHIPS_GALAXY]
@@ -531,38 +560,22 @@ class WorkflowTool(Tool):
             ) for file_store_item_uuid in self.get_input_file_uuid_list()
         ]
 
-    def invoke_workflow(self):
-        """Invoke a Tool's workflow in Galaxy"""
-        return self.galaxy_connection.workflows.invoke_workflow(
-            self.tool_definition.workflow.internal_id,
-            history_name="Workflow Run for {}".format(self.name),
-            inputs=self.create_workflow_inputs()
-        )
-
-    def _get_nesting_string(self, nesting=None, structure=""):
+    def _get_nesting_string(self, nesting_string=""):
         """
         Gets the `LIST`/`PAIR` structure of our file_relationships,
         but flattened into a string.
-        :param nesting: Nested dict/tuple file_relationships data structure
-        from our tool launch config
-        :param structure:
+        :param nesting_string: placeholder string to append `list/paired` to
         :return: String in the following form: ^((list|paired):*)+[^:]+$
         """
-        if nesting is None:
-            nesting = self.get_file_relationships_urls()
-        try:
-            if isinstance(nesting, list):
-                structure += "list:"
-            if isinstance(nesting, tuple):
-                structure += "paired:"
-            if isinstance(nesting, str):
-                raise RuntimeError
-            return self._get_nesting_string(
-                nesting[0],
-                structure=structure
-            )
-        except RuntimeError:
-            return structure[:-1]
+
+        flattened_nesting = self._flatten_file_relationships_nesting()
+
+        for file_relationship in flattened_nesting:
+            if isinstance(file_relationship, list):
+                nesting_string += "list:"
+            if isinstance(file_relationship, tuple):
+                nesting_string += "paired:"
+        return nesting_string[:-1]
 
     def import_library_dataset_to_history(self, history_id,
                                           library_dataset_id):
@@ -575,6 +588,14 @@ class WorkflowTool(Tool):
         return self.galaxy_connection.histories.upload_dataset_from_library(
             history_id,
             library_dataset_id
+        )
+
+    def invoke_workflow(self):
+        """Invoke a Tool's workflow in Galaxy"""
+        return self.galaxy_connection.workflows.invoke_workflow(
+            self.tool_definition.workflow.internal_id,
+            history_name="Workflow Run for {}".format(self.name),
+            inputs=self.create_workflow_inputs()
         )
 
     def launch(self):
