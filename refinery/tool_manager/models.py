@@ -652,10 +652,6 @@ class WorkflowTool(Tool):
         atomic transaction.
         """
         tool_launch_config = self.get_tool_launch_config()
-        if tool_launch_config.get(self.FILE_RELATIONSHIPS_GALAXY) is None:
-            tool_launch_config[self.FILE_RELATIONSHIPS_GALAXY] = (
-                tool_launch_config[self.FILE_RELATIONSHIPS]
-            )
 
         node = Node.objects.get(
             file_uuid=galaxy_to_refinery_mapping[Tool.REFINERY_FILE_UUID]
