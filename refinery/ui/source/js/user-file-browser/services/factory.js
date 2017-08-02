@@ -23,7 +23,6 @@
       getUserFiles: getUserFiles
     };
     var URL = 'url';
-    var FILENAME = 'filename';
     return service;
 
     /*
@@ -53,8 +52,7 @@
                 '<i class="fa fa-file"></i>' +
                 '</a>' +
                 '</div>',
-            width: 30 },
-          { field: FILENAME }];
+            width: 30 }];
       settings.djangoApp.userFilesColumns.forEach(function (column) {
         defs.push({ field: column });
       });
@@ -75,7 +73,6 @@
           row[display] = node[internalName];
         });
         row[URL] = row.name;
-        row[FILENAME] = decodeURIComponent(row.name.replace(/.*\//, ''));
         data.push(row);
       });
       return data;
