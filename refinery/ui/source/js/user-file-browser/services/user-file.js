@@ -27,7 +27,7 @@
         query: {
           method: 'GET',
           params: {
-            limit: 100, // Default is 100,000. Immutability make it hard in python.
+            limit: 1000, // Default is 100,000. Immutability make it hard in python.
             fq: function () {
               var operation = ' OR ';
               var filters = Object.keys(userFileFiltersService).map(function (key) {
