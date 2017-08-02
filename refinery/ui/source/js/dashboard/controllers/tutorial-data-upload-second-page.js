@@ -5,7 +5,6 @@
 function dataUploadTutorialCtrl2 (
   $scope, tutorialPageNavigation, updateUserTutorials) {
   var stepText = $scope.refineryTutorialSteps.DATA_UPLOAD_TUTORIAL;
-  // var lastEventId = null;
 
   $scope.dataUploadCompletedEvent = function () {
     var data = {
