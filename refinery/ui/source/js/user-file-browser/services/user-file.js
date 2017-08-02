@@ -18,6 +18,8 @@
       userFileFiltersService,
       userFileSortsService
   ) {
+    var characterSuffix = '_Characteristics_generic_s';
+    var factorSuffix = '_Factor_Value_generic_s';
     var userFile = $resource(
       settings.appRoot + settings.refineryApiV2 + '/user/files/',
       {},
@@ -31,8 +33,9 @@
                 var values = userFileFiltersService[key];
                 // TODO: escaping!
                 return values.map(function (value) {
-                  return '(' + key + '_Characteristics_generic_s:"' + value + '"' +
-                  ' OR ' + key + '_Factor_Value_s:"' + value + '")';
+                  return '(' +
+                      key + characterSuffix + ':"' + value + '" OR ' +
+                      key + factorSuffix + ':"' + value + '")';
                 }).join(' AND ');
               });
               // TODO: Repeated fq params may be more efficient, but not a big deal
@@ -47,8 +50,8 @@
                   return 'name ' + direction;
                 }
                 return [
-                  name + '_Characteristics_generic_s ' + direction,
-                  name + '_Factor_Value_s ' + direction].join(', ');
+                  name + characterSuffix + ' ' + direction,
+                  name + factorSuffix + ' ' + direction].join(', ');
               }).join(', ');
             }
           }
