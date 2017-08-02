@@ -22,6 +22,8 @@
       createFilters: createFilters,
       getUserFiles: getUserFiles
     };
+    var URL = 'url';
+    var FILENAME = 'filename';
     return service;
 
     /*
@@ -32,7 +34,7 @@
 
     function createColumnDefs () {
       var defs = [
-           { field: 'url',
+           { field: URL,
             enableSorting: false,
             displayName: '',
             cellTemplate:
@@ -52,7 +54,7 @@
                 '</a>' +
                 '</div>',
             width: 30 },
-          { field: 'filename' }];
+          { field: FILENAME }];
       settings.djangoApp.userFilesColumns.forEach(function (column) {
         defs.push({ field: column });
       });
@@ -72,8 +74,8 @@
           var display = mapInternalToDisplay(internalName);
           row[display] = node[internalName];
         });
-        row.url = row.name;
-        row.filename = decodeURIComponent(row.name.replace(/.*\//, ''));
+        row[URL] = row.name;
+        row[FILENAME] = decodeURIComponent(row.name.replace(/.*\//, ''));
         data.push(row);
       });
       return data;
