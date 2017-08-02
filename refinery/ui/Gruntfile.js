@@ -524,13 +524,6 @@ module.exports = function (grunt) {
     },
 
     /*
-     * Autoformats JS code using esformatter.
-     */
-    esformatter: {
-      src: fileGlob
-    },
-
-    /*
      * Lint source JS files to find possible flaws that could lead to errors.
      */
     eslint: {
