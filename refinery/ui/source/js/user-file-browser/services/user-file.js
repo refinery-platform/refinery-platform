@@ -41,13 +41,14 @@
             sort: function () {
               return userFileSortsService.fields.map(function (field) {
                 var name = field.name;
-                var dir = field.direction;
+                var direction = field.direction;
+
                 if (name === 'filename') {
-                  return 'name ' + dir;
+                  return 'name ' + direction;
                 }
                 return [
-                  name + '_Characteristics_generic_s ' + dir,
-                  name + '_Factor_Value_s ' + dir].join(', ');
+                  name + '_Characteristics_generic_s ' + direction,
+                  name + '_Factor_Value_s ' + direction].join(', ');
               }).join(', ');
             }
           }
