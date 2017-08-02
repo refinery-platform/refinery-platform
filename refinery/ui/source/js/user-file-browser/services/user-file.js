@@ -40,9 +40,14 @@
             },
             sort: function () {
               var sort = userFileSortsService.fields.map(function (field) {
-                return field.name === 'filename' ? ('name ' + field.direction) :
-                    (field.name + '_Characteristics_generic_s ' + field.direction
-                    + ', ' + field.name + '_Factor_Value_s ' + field.direction);
+                var name = field.name;
+                var dir = field.direction;
+                if (name === 'filename') {
+                  return 'name ' + dir;
+                }
+                return [
+                  name + '_Characteristics_generic_s ' + dir,
+                  name + '_Factor_Value_s ' + dir].join(', ');
               }).join(', ');
               return sort;
             }
