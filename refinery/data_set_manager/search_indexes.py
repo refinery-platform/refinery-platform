@@ -71,7 +71,8 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
         suffix = "_" + suffix + "_s"
         generic_suffix = "_generic_s"
 
-        data['filename' + generic_suffix] = re.sub(r'.*/', '', data['name'])
+        data['filename_Characteristics' + generic_suffix] = \
+            re.sub(r'.*/', '', data['name'])
 
         # create dynamic fields for each attribute
         for annotation in annotations:
