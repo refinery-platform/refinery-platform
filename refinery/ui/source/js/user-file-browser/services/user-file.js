@@ -39,7 +39,7 @@
               return filters.join(' AND ');
             },
             sort: function () {
-              var sort = userFileSortsService.fields.map(function (field) {
+              return userFileSortsService.fields.map(function (field) {
                 var name = field.name;
                 var dir = field.direction;
                 if (name === 'filename') {
@@ -49,7 +49,6 @@
                   name + '_Characteristics_generic_s ' + dir,
                   name + '_Factor_Value_s ' + dir].join(', ');
               }).join(', ');
-              return sort;
             }
           }
         }
