@@ -160,7 +160,7 @@
             .expectGET(
                 settings.appRoot +
                 settings.refineryApiV2 +
-                '/user/files/?fq=&limit=100&sort='
+                '/user/files/?fq=&limit=1000&sort='
             ).respond(200, fakeResponse);
       });
     });
