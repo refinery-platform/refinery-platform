@@ -1709,7 +1709,7 @@ class NodeIndexTests(APITestCase):
                           u'django_ct': u'data_set_manager.node',
                           u'django_id': u'#',
                           'file_uuid': self.file_uuid,
-                          'filename_Characteristics_generic_s': 'fake.txt',
+                          'filename_Characteristics_generic_s': u'fake.txt',
                           'genome_build': None,
                           u'id': u'data_set_manager.node.#',
                           'is_annotation': False,
@@ -1718,6 +1718,7 @@ class NodeIndexTests(APITestCase):
                           'study_uuid': self.study_uuid,
                           'subanalysis': None,
                           'text': u'',
+                          'technology_Characteristics_generic_s': '',
                           'type': u'',
                           'uuid': self.node_uuid,
                           'workflow_output': None})
