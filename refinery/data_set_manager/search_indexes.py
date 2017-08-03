@@ -69,6 +69,10 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
             suffix += "_" + str(object.assay.id)
 
         suffix = "_" + suffix + "_s"
+        generic_suffix = "_generic_s"
+
+        data['filename_Characteristics' + generic_suffix] = \
+            re.sub(r'.*/', '', data['name'])
 
         # create dynamic fields for each attribute
         for annotation in annotations:
@@ -85,7 +89,7 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
                           name)
 
             uniq_key = name + suffix
-            generic_key = name + "_generic_s"
+            generic_key = name + generic_suffix
             # a node might have multiple parents with different attribute
             # values for a given attribute
             # e.g. parentA Characteristic[cell type] = K562 and

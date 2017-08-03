@@ -46,10 +46,6 @@
               return userFileSortsService.fields.map(function (field) {
                 var name = field.name;
                 var direction = field.direction;
-
-                if (name === 'filename') {
-                  return 'name ' + direction;
-                }
                 return [
                   name + characterSuffix + ' ' + direction,
                   name + factorSuffix + ' ' + direction].join(', ');
