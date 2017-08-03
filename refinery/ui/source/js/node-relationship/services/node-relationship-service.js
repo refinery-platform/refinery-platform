@@ -5,7 +5,7 @@
 
 function nodeRelationshipService ($log, $window, NodeRelationshipResource) {
   var _createNodeRelationship = function (
-    name, summary, type, is_current, success, error
+    name, summary, type, is_current, success, error // eslint-disable-line camelcase
   ) {
     var resource = new NodeRelationshipResource({
       study: '/api/v1/study/' + $window.externalStudyUuid + '/',

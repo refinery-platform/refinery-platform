@@ -8,7 +8,7 @@ angular
         settings.appRoot + settings.refineryApiV2 + '/data_sets/:uuid/',
         {
           uuid: '@uuid',
-          format: 'json',
+          format: 'json'
         },
         {
           partial_update: {

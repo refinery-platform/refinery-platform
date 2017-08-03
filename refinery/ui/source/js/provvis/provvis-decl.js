@@ -1,4 +1,5 @@
 'use strict';
+/* eslint-disable */
 
 /**
  * Module for constructor function declaration.
