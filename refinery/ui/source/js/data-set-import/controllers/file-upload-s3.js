@@ -10,9 +10,11 @@
   function RefineryFileUploadS3Ctrl (s3UploadService, $log, $scope) {
     var vm = this;
 
-    vm.isFileNew = function (file) {
-      // check if file upload has been attempted
-      return typeof file.progress === 'undefined';
+    vm.isUploadConfigured = function () {
+      if (s3UploadService.isConfigReady) {
+        return s3UploadService.isConfigValid();
+      }
+      return false;
     };
 
     vm.addFiles = function (files) {
@@ -23,44 +25,55 @@
       }
     };
 
-    vm.isFileUploadInProgress = function (file) {
+    vm.isFileNew = function (file) {
+      // check if file upload has been attempted
+      return typeof file.progress === 'undefined';
+    };
+
+    vm.isUploadInProgress = function (file) {
       if (vm.isFileNew(file) || file.$error || file.success) {
         return false;
       }
       return file.progress <= 100;
     };
 
+    vm.areUploadsInProgress = function () {
+      if (typeof vm.files === 'undefined') {
+        return false;
+      }
+      return vm.files.some(vm.isUploadInProgress);
+    };
+
     vm.isUploadEnabled = function () {
-      if (typeof vm.files === 'undefined' || vm.files.some(vm.isFileUploadInProgress)) {
+      if (typeof vm.files === 'undefined' || vm.areUploadsInProgress()) {
         return false;
       }
       return vm.files.some(vm.isFileNew);
     };
 
-    vm.areFileUploadsInProgress = function () {
-      if (typeof vm.files === 'undefined') {
-        return false;
-      }
-      return vm.files.some(vm.isFileUploadInProgress);
-    };
-
     vm.uploadFile = function (file) {
+      try {
+        file.managedUpload = s3UploadService.upload(file);
+      } catch (e) {
+        file.progress = 100;
+        file.$error = 'Data upload configuration error';
+        return;
+      }
       file.progress = 0;
-      var managedUpload = s3UploadService.upload(file);
-      managedUpload.on('httpUploadProgress', function (progress) {
+      file.managedUpload.on('httpUploadProgress', function (progress) {
         $scope.$apply(function () {
-          // write the progress as a percentage
           file.progress = (progress.loaded / progress.total) * 100;
         });
       });
-      managedUpload.promise().then(function () {
+      file.managedUpload.promise().then(function () {
         $scope.$apply(function () {
           file.success = true;
         });
       }, function (error) {
         $scope.$apply(function () {
-          vm.error = error;
-          $log.error('Error uploading file ' + file + ': ' + vm.error);
+          file.progress = 100;
+          file.$error = error;
+          $log.error('Error uploading file ' + file.name + ': ' + file.$error);
         });
       });
     };
@@ -76,8 +89,8 @@
     };
 
     vm.cancelUpload = function (file) {
-      // stub
-      return file;
+      file.managedUpload.abort();
+      $log.warn('Upload canceled: ' + file.name);
     };
 
     vm.cancelUploads = function () {

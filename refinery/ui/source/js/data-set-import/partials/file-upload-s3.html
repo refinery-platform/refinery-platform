@@ -13,13 +13,15 @@
         <!-- The fileinput-button span is used to style the file input field as button -->
         <span
           class="refinery-base btn btn-default btn-sm fileinput-button"
-          ng-class="{ 'disabled': disabled }">
+          ng-class="{ 'disabled': !FileCtrl.isUploadConfigured() }">
+          <i class="fa fa-plus"></i>
           Add files &hellip;
           <input
             type="file"
             class="refinery-base"
             ngf-select="FileCtrl.addFiles($files)"
             ngf-multiple="true"
+            ng-disabled="!FileCtrl.isUploadConfigured()"
           >
         </span>
 
@@ -33,7 +35,7 @@
         <button
           class="refinery-base btn btn-default btn-sm cancel"
           ng-click="FileCtrl.cancelUploads()"
-          ng-disabled="!FileCtrl.areFileUploadsInProgress()">
+          ng-disabled="!FileCtrl.areUploadsInProgress()">
           <i class="fa fa-ban"></i>
           <span>Cancel upload</span>
         </button>
@@ -45,7 +47,7 @@
         class="row bordered-row v-centered-row"
         ng-repeat="file in FileCtrl.files"
         ng-class="{
-          'processing': FileCtrl.isFileUploadInProgress(file),
+          'processing': FileCtrl.isUploadInProgress(file),
           'bg-danger': file.$error
         }">
         <div class="col-xs-4">
@@ -60,14 +62,14 @@
           <div class="v-center">
             <div
               class="progress progress-striped active"
-              ng-class="{ 'progress-striped active': FileCtrl.isFileUploadInProgress(file) }"
+              ng-class="{ 'progress-striped active': FileCtrl.isUploadInProgress(file) }"
               file-upload-progress="file.progress">
               <div
                 class="progress-bar"
                 role="progressbar"
                 ng-class="{ 'progress-bar-success': file.success, 'progress-bar-danger': file.$error }"
                 ng-style="{ width: file.progress + '%' }">
-                <span ng-show="FileCtrl.isFileUploadInProgress(file)" ng-if="!file.error">
+                <span ng-show="FileCtrl.isUploadInProgress(file)" ng-if="!file.error">
                   {{ file.progress | number:0 }}%
                 </span>
                 <i class="fa fa-exclamation-triangle" ng-if="file.$error"></i>
@@ -80,14 +82,14 @@
             <button
               class="active-group refinery-base btn btn-default btn-sm start"
               ng-click="FileCtrl.uploadFile(file)"
-              ng-disabled="FileCtrl.isFileUploadInProgress(file)">
+              ng-disabled="FileCtrl.isUploadInProgress(file)">
               <i class="fa fa-upload"></i>
               <span>Start</span>
             </button>
             <button
               class="refinery-base btn btn-default btn-sm cancel"
               ng-click="FileCtrl.cancelUpload(file)"
-              ng-hide="!FileCtrl.isFileUploadInProgress(file)"
+              ng-hide="!FileCtrl.isUploadInProgress(file)"
               ng-disabled="FileCtrl.isFileNew(file)">
               <i class="fa fa-ban"></i>
               <span>Cancel</span>
