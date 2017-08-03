@@ -57,7 +57,7 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
 
         data = super(NodeIndex, self).prepare(object)
         annotations = AnnotatedNode.objects.filter(node=object)
-        suffix = str(object.study.id)
+        id_suffix = str(object.study.id)
 
         try:
             data_set = object.study.get_dataset()
@@ -66,13 +66,17 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
             logger.warn(e)
 
         if object.assay is not None:
-            suffix += "_" + str(object.assay.id)
+            id_suffix += "_" + str(object.assay.id)
 
-        suffix = "_" + suffix + "_s"
+        id_suffix = "_" + id_suffix + "_s"
         generic_suffix = "_generic_s"
 
         data['filename_Characteristics' + generic_suffix] = \
             re.sub(r'.*/', '', data['name'])
+        data['technology_Characteristics' + generic_suffix] = \
+            set() if (object.assay is None or
+                      object.assay.technology is None) \
+            else {object.assay.technology}
 
         # create dynamic fields for each attribute
         for annotation in annotations:
@@ -88,7 +92,7 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
                           settings.REFINERY_SOLR_SPACE_DYNAMIC_FIELDS,
                           name)
 
-            uniq_key = name + suffix
+            uniq_key = name + id_suffix
             generic_key = name + generic_suffix
             # a node might have multiple parents with different attribute
             # values for a given attribute
@@ -120,20 +124,20 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
             file_store_item = None
 
         data.update({
-            NodeIndex.TYPE_PREFIX + suffix:
+            NodeIndex.TYPE_PREFIX + id_suffix:
                 object.type,
-            NodeIndex.NAME_PREFIX + suffix:
+            NodeIndex.NAME_PREFIX + id_suffix:
                 object.name,
-            NodeIndex.FILETYPE_PREFIX + suffix:
+            NodeIndex.FILETYPE_PREFIX + id_suffix:
                 "" if file_store_item is None
                 else file_store_item.get_filetype(),
-            NodeIndex.ANALYSIS_UUID_PREFIX + suffix:
+            NodeIndex.ANALYSIS_UUID_PREFIX + id_suffix:
                 "N/A" if object.analysis_uuid is None
                 else object.analysis_uuid,
-            NodeIndex.SUBANALYSIS_PREFIX + suffix:
+            NodeIndex.SUBANALYSIS_PREFIX + id_suffix:
                 (-1 if object.subanalysis is None  # TODO: upgrade flake8
                  else object.subanalysis),         # and remove parentheses
-            NodeIndex.WORKFLOW_OUTPUT_PREFIX + suffix:
+            NodeIndex.WORKFLOW_OUTPUT_PREFIX + id_suffix:
                 "N/A" if object.workflow_output is None
                 else object.workflow_output
         })
