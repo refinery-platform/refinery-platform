@@ -1646,7 +1646,7 @@ class NodeIndexTests(APITestCase):
         )
 
         study = Study.objects.create(investigation=investigation)
-        assay = Assay.objects.create(study=study)
+        assay = Assay.objects.create(study=study, technology='whizbang')
 
         test_file = StringIO()
         test_file.write('Coffee is great.\n')
@@ -1718,7 +1718,7 @@ class NodeIndexTests(APITestCase):
                           'study_uuid': self.study_uuid,
                           'subanalysis': None,
                           'text': u'',
-                          'technology_Characteristics_generic_s': '',
+                          'technology_Characteristics_generic_s': 'whizbang',
                           'type': u'',
                           'uuid': self.node_uuid,
                           'workflow_output': None})
