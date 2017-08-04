@@ -73,15 +73,19 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
 
         data['filename_Characteristics' + generic_suffix] = \
             re.sub(r'.*/', '', data['name'])
+        # TODO: get attributes from class?
         for attr in ['measurement',
                      'measurement_accession', 'measurement_source',
                      'technology',
                      'technology_accession', 'technology_source',
                      'platform']:
-            data[attr + '_Characteristics' + generic_suffix] = \
-                set() if (object.assay is None or
-                          getattr(object.assay, attr) is None) \
-                else {getattr(object.assay, attr)}
+            key = attr + '_Characteristics' + generic_suffix
+            data[key] = set()
+            assay = object.assay
+            if (assay is not None):
+                assay_attr = getattr(assay, attr)
+                if (assay_attr is not None):
+                    data[key].add(assay_attr)
 
         # create dynamic fields for each attribute
         for annotation in annotations:
