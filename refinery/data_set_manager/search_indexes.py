@@ -50,6 +50,22 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
         """Used when the entire index for model is updated."""
         return self.get_model().objects.all()
 
+    GENERIC_SUFFIX = "_generic_s"
+
+    def _assay_data(self, object):
+        data = {}
+        for field in Assay._meta.fields:
+            if (field.name in ['id', 'uuid', 'study', 'file_name']):
+                continue
+            key = field.name + '_Characteristics' + NodeIndex.GENERIC_SUFFIX
+            data[key] = set()
+            assay = object.assay
+            if (assay is not None):
+                assay_attr = getattr(assay, field.name)
+                if (assay_attr is not None):
+                    data[key].add(assay_attr)
+        return data
+
     # dynamic fields:
     # https://groups.google.com/forum/?fromgroups#!topic/django-haystack/g39QjTkN-Yg
     # http://stackoverflow.com/questions/7399871/django-haystack-sort-results-by-title
@@ -69,21 +85,11 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
             id_suffix += "_" + str(object.assay.id)
 
         id_suffix = "_" + id_suffix + "_s"
-        generic_suffix = "_generic_s"
 
-        data['filename_Characteristics' + generic_suffix] = \
+        data['filename_Characteristics' + NodeIndex.GENERIC_SUFFIX] = \
             re.sub(r'.*/', '', data['name'])
 
-        for field in Assay._meta.fields:
-            if (field.name in ['id', 'uuid', 'study', 'file_name']):
-                continue
-            key = field.name + '_Characteristics' + generic_suffix
-            data[key] = set()
-            assay = object.assay
-            if (assay is not None):
-                assay_attr = getattr(assay, field.name)
-                if (assay_attr is not None):
-                    data[key].add(assay_attr)
+        data.update(self._assay_data(object))
 
         # create dynamic fields for each attribute
         for annotation in annotations:
@@ -100,7 +106,7 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
                           name)
 
             uniq_key = name + id_suffix
-            generic_key = name + generic_suffix
+            generic_key = name + NodeIndex.GENERIC_SUFFIX
             # a node might have multiple parents with different attribute
             # values for a given attribute
             # e.g. parentA Characteristic[cell type] = K562 and
