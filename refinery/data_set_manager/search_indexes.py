@@ -55,14 +55,14 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
     def _assay_data(self, object):
         data = {}
         for field in Assay._meta.fields:
-            if (field.name in ['id', 'uuid', 'study', 'file_name']):
+            if field.name in ['id', 'uuid', 'study', 'file_name']:
                 continue
             key = field.name + '_Characteristics' + NodeIndex.GENERIC_SUFFIX
             data[key] = set()
             assay = object.assay
-            if (assay is not None):
+            if assay is not None:
                 assay_attr = getattr(assay, field.name)
-                if (assay_attr is not None):
+                if assay_attr is not None:
                     data[key].add(assay_attr)
         return data
 
