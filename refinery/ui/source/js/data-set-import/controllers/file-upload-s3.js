@@ -61,8 +61,11 @@
       }
       file.progress = 0;
       file.managedUpload.on('httpUploadProgress', function (progress) {
-        $scope.$apply(function () {
-          file.progress = (progress.loaded / progress.total) * 100;
+        // $applyAsync is used to avoid $rootScope:inprog error
+        $scope.$applyAsync(function () {
+          if (progress.total) {
+            file.progress = (progress.loaded / progress.total) * 100;
+          }
         });
       });
       file.managedUpload.promise().then(function () {
@@ -89,19 +92,16 @@
     };
 
     vm.cancelUpload = function (file) {
-      file.managedUpload.abort();
-      $log.warn('Upload canceled: ' + file.name);
+      if (vm.isUploadInProgress(file)) {
+        file.managedUpload.abort();
+        $log.warn('Upload canceled: ' + file.name);
+      }
     };
 
     vm.cancelUploads = function () {
       if (vm.files) {
         angular.forEach(vm.files, vm.cancelUpload);
       }
-    };
-
-    vm.deleteUpload = function (file) {
-      // stub
-      return file;
     };
   }
 })();
