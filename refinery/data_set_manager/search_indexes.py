@@ -13,7 +13,7 @@ from haystack import indexes
 
 from file_store.models import FileStoreItem
 
-from .models import AnnotatedNode, Node
+from .models import AnnotatedNode, Assay, Node
 
 logger = logging.getLogger(__name__)
 
@@ -73,17 +73,15 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
 
         data['filename_Characteristics' + generic_suffix] = \
             re.sub(r'.*/', '', data['name'])
-        # TODO: get attributes from class?
-        for attr in ['measurement',
-                     'measurement_accession', 'measurement_source',
-                     'technology',
-                     'technology_accession', 'technology_source',
-                     'platform']:
-            key = attr + '_Characteristics' + generic_suffix
+
+        for field in Assay._meta.fields:
+            if (field.name in ['id', 'uuid', 'study', 'file_name']):
+                continue
+            key = field.name + '_Characteristics' + generic_suffix
             data[key] = set()
             assay = object.assay
             if (assay is not None):
-                assay_attr = getattr(assay, attr)
+                assay_attr = getattr(assay, field.name)
                 if (assay_attr is not None):
                     data[key].add(assay_attr)
 
