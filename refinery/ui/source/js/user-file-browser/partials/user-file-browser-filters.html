@@ -24,7 +24,14 @@
         role="tabpanel"
         aria-labelledby="{{ attribute }}">
         <div class="panel-body">
-          <div ng-repeat="field in attributeObj.facetObj track by $index">
+          <div class="checkbox container">
+            <div class="row">
+              <div class="col-xs-1"></div>
+              <div class="col-xs-8"><button class="btn btn-sm">sort</button></div>
+              <div class="col-xs-3"><button class="btn btn-sm">sort</button></div>
+            </div>
+          </div>
+          <div ng-repeat="field in attributeObj.facetObj | orderBy: 'name' track by $index">
             <div class="checkbox container">
                 <div class="row">
                   <div class="col-xs-1">
