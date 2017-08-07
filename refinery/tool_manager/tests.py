@@ -1217,14 +1217,13 @@ class WorkflowToolTests(ToolManagerTestBase):
         collection_description = self.tool._create_collection_description()
         self.assertEqual(
             collection_description.type,
-            "paired:list"
+            "{}:{}".format(WorkflowTool.PAIRED, WorkflowTool.LIST)
         )
 
         self.assertEqual(len(collection_description.elements), 2)
         for element in collection_description.elements:
             self.assertEqual(type(element), CollectionElement)
             self.assertEqual(element.type, WorkflowTool.LIST)
-
             for el in element.elements:
                 self.assertEqual(type(el), HistoryDatasetElement)
 
@@ -1235,40 +1234,27 @@ class WorkflowToolTests(ToolManagerTestBase):
         )
 
         self.update_nodes()
-
         collection_description = self.tool._create_collection_description()
-
         self.assertEqual(
             collection_description.type,
-            "list:list:paired"
+            "{}:{}:{}".format(
+                WorkflowTool.LIST,
+                WorkflowTool.LIST,
+                WorkflowTool.PAIRED
+            )
         )
-        self.assertEqual(len(collection_description.elements), 1)
 
+        self.assertEqual(len(collection_description.elements), 1)
         for element in collection_description.elements:
             self.assertEqual(type(element), CollectionElement)
-            self.assertEqual(
-                element.type,
-                "list"
-            )
-            self.assertEqual(
-                len(element.elements),
-                2
-            )
-            for item in element.elements:
-                self.assertEqual(
-                    item.type,
-                    "paired"
-                )
-                self.assertEqual(
-                    len(element.elements),
-                    2
-                )
+            self.assertEqual(element.type, WorkflowTool.LIST)
+            self.assertEqual(len(element.elements), 2)
+            for el in element.elements:
+                self.assertEqual(el.type, WorkflowTool.PAIRED)
+                self.assertEqual(len(element.elements), 2)
 
-                for thing in item.elements:
-                    self.assertEqual(
-                        type(thing),
-                        HistoryDatasetElement
-                    )
+                for thing in el.elements:
+                    self.assertEqual(type(thing), HistoryDatasetElement)
 
     def test_galaxy_collection_type_pair(self):
         self.create_valid_tool(
@@ -1333,6 +1319,15 @@ class WorkflowToolTests(ToolManagerTestBase):
             self.tool.galaxy_collection_type,
             WorkflowTool.LIST
         )
+
+    def test_galaxy_history_id(self):
+        self.create_valid_tool(ToolDefinition.WORKFLOW)
+        self.tool.update_galaxy_data(
+            WorkflowTool.GALAXY_IMPORT_HISTORY_DICT,
+            {"id": "COFFEE"}
+        )
+
+        self.assertEqual(self.tool.galaxy_history_id, "COFFEE")
 
 
 class ToolAPITests(APITestCase, ToolManagerTestBase):
