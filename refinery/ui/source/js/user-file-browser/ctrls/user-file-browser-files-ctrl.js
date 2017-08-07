@@ -62,7 +62,7 @@
     };
 
     gridOptionsService.appScopeProvider = vm;
-    vm.filterQuery = function () {
+    vm.fileBrowserFilterQuery = function () {
       var params = {};
       Object.keys(userFileFiltersService).forEach(function (key) {
         // TODO: The set of filters on /user/files does not match the filters on /data_sets2.
