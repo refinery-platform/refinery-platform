@@ -1,5 +1,17 @@
-<div
-  ui-grid="$ctrl.gridOptions"
-  ui-grid-resize-columns
-  class="grid">
+<div>
+    <a ng-href="/user/files.csv?{{ csvFilterQuery() }}">
+        <!-- TODO: This is not working: What's the right syntax? -->
+        <i class="fa fa-arrow-circle-o-down"></i>
+        Download as CSV
+    </a>
+</div>
+<div class="m-r-1">
+    <!-- Bootstrap col classes are using the window width, not our inner div.
+         #table-filter has a margin-left, so do something similar on the other side -->
+    <!-- TODO: Why isn't it full height? -->
+    <div
+      ui-grid="$ctrl.gridOptions"
+      ui-grid-resize-columns
+      class="grid">
+    </div>
 </div>
