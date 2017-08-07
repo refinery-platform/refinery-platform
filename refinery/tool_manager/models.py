@@ -443,7 +443,7 @@ class WorkflowTool(Tool):
     GALAXY_WORKFLOW_HISTORY_DICT = "workflow_history_dict"
     GALAXY_WORKFLOW_INVOCATION_DATA = "galaxy_workflow_invocation_data"
     LIST = "list"
-    NESTING_LIST = "nesting_list"
+    FILE_RELATIONSHIPS_NESTING = "file_relationships_nesting"
     PAIRED = "paired"
 
     class Meta:
@@ -712,22 +712,22 @@ class WorkflowTool(Tool):
         Create and return a list containing each level of nesting from our
         `file_relationships` structure
         """
-        if not kwargs.get(self.NESTING_LIST):
-            kwargs[self.NESTING_LIST] = []
+        if not kwargs.get(self.FILE_RELATIONSHIPS_NESTING):
+            kwargs[self.FILE_RELATIONSHIPS_NESTING] = []
 
-        nesting_list = kwargs[self.NESTING_LIST]
+        file_relationships_nesting = kwargs[self.FILE_RELATIONSHIPS_NESTING]
         for arg in args:
             if isinstance(arg, dict):
-                nesting_list.append(arg)
+                file_relationships_nesting.append(arg)
                 continue
             elif isinstance(arg, tuple):
-                nesting_list.append(arg)
+                file_relationships_nesting.append(arg)
                 self._parse_file_relationships_nesting(*list(arg), **kwargs)
             else:
-                nesting_list.append(arg)
+                file_relationships_nesting.append(arg)
                 self._parse_file_relationships_nesting(*arg, **kwargs)
 
-        return nesting_list
+        return file_relationships_nesting
 
     def set_analysis(self, analysis_uuid):
         """
