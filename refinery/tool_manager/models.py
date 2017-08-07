@@ -458,6 +458,13 @@ class WorkflowTool(Tool):
 
     @property
     def galaxy_collection_type(self, nesting_string=""):
+        """
+        Get the string representation of the Galaxy Dataset Collection type
+        from a WorkflowTool's nested file_relationships.
+        :param nesting_string: Placeholder string for recursive iterations to
+        append to.
+        :return: <String> in the following form: ^((list|paired):*)+[^:]+$
+        """
         flattened_nesting = self._flatten_file_relationships_nesting()
         for index, file_relationship in enumerate(flattened_nesting):
             if isinstance(file_relationship, list):
