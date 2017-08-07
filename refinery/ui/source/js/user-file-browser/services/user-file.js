@@ -32,11 +32,12 @@
               var filters = Object.keys(userFileFiltersService).map(function (key) {
                 var values = userFileFiltersService[key];
                 // TODO: escaping!
-                return values.map(function (value) {
+                var orValues = values.map(function (value) {
                   return '(' +
                       key + characterSuffix + ':"' + value + '" OR ' +
                       key + factorSuffix + ':"' + value + '")';
                 }).join(' OR ');
+                return '(' + orValues + ')';
               });
               return filters.join(' AND ');
             },
