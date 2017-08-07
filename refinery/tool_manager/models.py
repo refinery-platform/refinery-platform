@@ -545,11 +545,24 @@ class WorkflowTool(Tool):
         if galaxy_element_list is None:
             galaxy_element_list = []
 
+        # Toggle between the creation of `forward` and `reverse`
+        # HistoryDatasetElements for `paired` CollectionElements
+        reverse_read = False
+
         for nested_element in reversed(file_relationship_nesting_list):
             if isinstance(nested_element, dict):
+                element_name = nested_element["refinery_file_uuid"]
+                if self.galaxy_collection_type.split(":")[-1] == self.PAIRED:
+                    if reverse_read:
+                        element_name = self.REVERSE
+                        reverse_read = False
+                    else:
+                        element_name = self.FORWARD
+                        reverse_read = True
+
                 galaxy_element_list.append(
                     HistoryDatasetElement(
-                        name=nested_element["refinery_file_uuid"],
+                        name=element_name,
                         id=nested_element['galaxy_dataset_history_id']
                     )
                 )
