@@ -436,6 +436,8 @@ class WorkflowTool(Tool):
     """
     COLLECTION_INFO = "collection_info"
     FILE_RELATIONSHIPS_GALAXY = "{}_galaxy".format(Tool.FILE_RELATIONSHIPS)
+    FILE_RELATIONSHIPS_NESTING = "file_relationships_nesting"
+    FORWARD = "forward"
     GALAXY_DATA = "galaxy_data"
     GALAXY_DATASET_HISTORY_ID = "galaxy_dataset_history_id"
     GALAXY_IMPORT_HISTORY_DICT = "import_history_dict"
@@ -443,8 +445,8 @@ class WorkflowTool(Tool):
     GALAXY_WORKFLOW_HISTORY_DICT = "workflow_history_dict"
     GALAXY_WORKFLOW_INVOCATION_DATA = "galaxy_workflow_invocation_data"
     LIST = "list"
-    FILE_RELATIONSHIPS_NESTING = "file_relationships_nesting"
     PAIRED = "paired"
+    REVERSE = "reverse"
 
     class Meta:
         verbose_name = "workflowtool"
