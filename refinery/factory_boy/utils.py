@@ -57,7 +57,7 @@ def make_analyses_with_single_dataset(number_to_create, user_instance):
         analysis.save()
 
 
-def create_dataset_with_necessary_models():
+def create_dataset_with_necessary_models(create_nodes=True):
     """Create Dataset with InvestigationLink, Investigation, Study,
     and Assay"""
     dataset_uuid = str(uuid_builtin.uuid4())
@@ -90,20 +90,21 @@ def create_dataset_with_necessary_models():
         study=study
     )
 
-    for i in xrange(2):
-        node = NodeFactory(
-            study=study
-        )
-        attribute = AttributeFactory(
-            node=node
-        )
-        AnnotatedNodeFactory(
-            study=study,
-            assay=assay,
-            node=node,
-            node_name='AnnotatedNode-{}'.format(i),
-            node_type=Node.RAW_DATA_FILE,
-            attribute=attribute
-        )
+    if create_nodes:
+        for i in xrange(2):
+            node = NodeFactory(
+                study=study
+            )
+            attribute = AttributeFactory(
+                node=node
+            )
+            AnnotatedNodeFactory(
+                study=study,
+                assay=assay,
+                node=node,
+                node_name='AnnotatedNode-{}'.format(i),
+                node_type=Node.RAW_DATA_FILE,
+                attribute=attribute
+            )
 
     return dataset
