@@ -1192,6 +1192,15 @@ class WorkflowToolTests(ToolManagerTestBase):
             for el in element.elements:
                 self.assertEqual(type(el), HistoryDatasetElement)
 
+            self.assertEqual(
+                element.elements[0].to_dict()["name"],
+                WorkflowTool.FORWARD
+            )
+            self.assertEqual(
+                element.elements[1].to_dict()["name"],
+                WorkflowTool.REVERSE
+            )
+
     def test_paired_dataset_collection_creation(self):
         self.create_valid_tool(
             ToolDefinition.WORKFLOW,
@@ -1207,6 +1216,15 @@ class WorkflowToolTests(ToolManagerTestBase):
 
         for element in collection_description.elements:
             self.assertEqual(type(element), HistoryDatasetElement)
+
+        self.assertEqual(
+            collection_description.elements[0].to_dict()["name"],
+            WorkflowTool.FORWARD
+        )
+        self.assertEqual(
+            collection_description.elements[1].to_dict()["name"],
+            WorkflowTool.REVERSE
+        )
 
     def test_paired_list_dataset_collection_description_creation(self):
         self.create_valid_tool(
@@ -1255,6 +1273,15 @@ class WorkflowToolTests(ToolManagerTestBase):
 
                 for thing in el.elements:
                     self.assertEqual(type(thing), HistoryDatasetElement)
+
+                self.assertEqual(
+                    el.elements[0].to_dict()["name"],
+                    WorkflowTool.FORWARD
+                )
+                self.assertEqual(
+                    el.elements[1].to_dict()["name"],
+                    WorkflowTool.REVERSE
+                )
 
     def test_galaxy_collection_type_pair(self):
         self.create_valid_tool(
