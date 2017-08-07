@@ -90,4 +90,5 @@ class UserFilesUtilsTests(TestCase):
                          'q=django_ct%3Adata_set_manager.node',
                          'wt=json',
                          'facet=true',
-                         'facet.limit=-1'])
+                         'facet.limit=-1',
+                         'facet.mincount=1'])
