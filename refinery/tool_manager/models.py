@@ -535,7 +535,8 @@ class WorkflowTool(Tool):
         """
         file_relationship_nesting_list = (
             self._parse_file_relationships_nesting(
-                *self.get_file_relationships_galaxy()
+                *self.get_file_relationships_galaxy()  # Please note the `*`
+                # unpacking operator used here
             )
         )
 
