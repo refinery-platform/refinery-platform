@@ -1103,22 +1103,6 @@ class ToolTests(ToolManagerTestBase):
 
 class WorkflowToolTests(ToolManagerTestBase):
     def setUp(self):
-        self.EXAMPLE_URL = "www.example.com/file.txt"
-        self.LIST_LIST_PAIR_MOCK = [
-            [
-                (self.EXAMPLE_URL, self.EXAMPLE_URL),
-                (self.EXAMPLE_URL, self.EXAMPLE_URL)
-            ],
-            [
-                (self.EXAMPLE_URL, self.EXAMPLE_URL),
-                (self.EXAMPLE_URL, self.EXAMPLE_URL)
-            ]
-        ]
-        self.PAIR_LIST_MOCK = (
-            [self.EXAMPLE_URL, self.EXAMPLE_URL],
-            [self.EXAMPLE_URL,  self.EXAMPLE_URL]
-        )
-
         super(WorkflowToolTests, self).setUp()
         self.LIST = "[{}]".format(self.make_node())
         self.LIST_PAIR = "[({}, {}), ({}, {})]".format(
@@ -1348,34 +1332,6 @@ class WorkflowToolTests(ToolManagerTestBase):
         self.assertEqual(
             self.tool.galaxy_collection_type,
             WorkflowTool.LIST
-        )
-
-    def test__flatten_file_relationships_nesting_deep_nesting(self):
-        self.create_valid_tool(ToolDefinition.WORKFLOW)
-        self.update_nodes()
-
-        flattened_nesting = self.tool._flatten_file_relationships_nesting(
-            nesting=self.LIST_LIST_PAIR_MOCK
-        )
-        self.assertEqual(
-            flattened_nesting,
-            [
-                [[(self.EXAMPLE_URL, self.EXAMPLE_URL)]],
-                [(self.EXAMPLE_URL, self.EXAMPLE_URL)],
-                (self.EXAMPLE_URL, self.EXAMPLE_URL)
-            ]
-        )
-
-    def test__flatten_file_relationships_nesting_shallow_nesting(self):
-        self.create_valid_tool(ToolDefinition.WORKFLOW)
-        self.update_nodes()
-
-        flattened_nesting = self.tool._flatten_file_relationships_nesting(
-            nesting=self.PAIR
-        )
-        self.assertEqual(
-            flattened_nesting,
-            [(self.EXAMPLE_URL, self.EXAMPLE_URL)]
         )
 
 
