@@ -657,7 +657,8 @@ def generate_solr_params(params, assay_uuids, facets_from_config=False):
                   'rows=%s' % row,
                   'q=django_ct:data_set_manager.node&wt=json',
                   'facet=%s' % facet_count,
-                  'facet.limit=-1'
+                  'facet.limit=-1',
+                  'facet.mincount=1'
                   ])
 
     if len(assay_uuids) == 0:
