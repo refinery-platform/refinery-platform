@@ -44,7 +44,18 @@
       return vm.files.some(vm.isUploadInProgress);
     };
 
-    vm.isUploadEnabled = function () {
+    vm.isUploadComplete = function (file) {
+      return (file.$error || file.success);
+    };
+
+    vm.areUploadsCancellable = function () {
+      if (typeof vm.files === 'undefined') {
+        return false;
+      }
+      return !vm.files.every(vm.isUploadComplete);
+    };
+
+    vm.areUploadsEnabled = function () {
       if (typeof vm.files === 'undefined' || vm.areUploadsInProgress()) {
         return false;
       }
@@ -61,7 +72,7 @@
       }
       file.progress = 0;
       file.managedUpload.on('httpUploadProgress', function (progress) {
-        // $applyAsync is used to avoid $rootScope:inprog error
+        // $applyAsync is used to avoid $rootScope:inprog error when canceling uploads
         $scope.$applyAsync(function () {
           if (progress.total) {
             file.progress = (progress.loaded / progress.total) * 100;
@@ -92,6 +103,12 @@
     };
 
     vm.cancelUpload = function (file) {
+      if (vm.isFileNew(file)) {
+        var position = vm.files.indexOf(file);
+        if (position > -1) {
+          vm.files.splice(position, 1);
+        }
+      }
       if (vm.isUploadInProgress(file)) {
         file.managedUpload.abort();
         $log.warn('Upload canceled: ' + file.name);
@@ -100,7 +117,11 @@
 
     vm.cancelUploads = function () {
       if (vm.files) {
-        angular.forEach(vm.files, vm.cancelUpload);
+        // this iteration approach is necessary because vm.files is re-indexed by splice()
+        var index = vm.files.length;
+        while (index--) {
+          vm.cancelUpload(vm.files[index]);
+        }
       }
     };
   }
