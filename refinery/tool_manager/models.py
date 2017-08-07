@@ -514,8 +514,16 @@ class WorkflowTool(Tool):
                                 galaxy_element_data
                             )
         else:
-            assert len(galaxy_element_data) == 1
-            assert type(galaxy_element_data[0]) == CollectionDescription
+            # These assertions are only temporary until further testing has
+            # been done on this feature
+            assert len(galaxy_element_data) == 1, \
+                "Only one element should be present in: {}".format(
+                    galaxy_element_data
+                )
+            assert type(galaxy_element_data[0]) == CollectionDescription, \
+                "Element: {} should be of type: CollectionDescription".format(
+                    galaxy_element_data[0]
+                )
             return galaxy_element_data[0]
 
     def _create_collection_description(self, galaxy_element_list=None):
