@@ -4,7 +4,7 @@
     aria-multiselectable="true">
     <div
       ng-repeat="(attribute, attributeObj) in $ctrl.attributeFilters track by $index"
-      ng-init="attributeIndex = $index">
+      ng-init="attributeIndex = $index; order = '-count'">
       <div class="panel panel-default">
         <div class="panel-heading" role="tab">
           <h4 class="panel-title" ng-click="$ctrl.togglePanel(attribute)">
@@ -19,7 +19,18 @@
         role="tabpanel"
         aria-labelledby="{{ attribute }}">
         <div class="panel-body">
-          <div ng-repeat="field in attributeObj.facetObj track by $index">
+          <div class="checkbox container">
+            <div class="row">
+              <div class="col-xs-1"></div>
+              <div class="col-xs-8">
+                <button ng-click="order = 'name'" ng-show="order === '-count'" class="btn btn-sm">sort</button>
+              </div>
+              <div class="col-xs-3">
+                <button ng-click="order = '-count'" ng-show="order === 'name'" class="btn btn-sm">sort</button>
+              </div>
+            </div>
+          </div>
+          <div ng-repeat="field in attributeObj.facetObj | orderBy: order track by $index">
             <div class="checkbox container">
                 <div class="row">
                   <div class="col-xs-1">
