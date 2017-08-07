@@ -24,14 +24,24 @@
         role="tabpanel"
         aria-labelledby="{{ attribute }}">
         <div class="panel-body">
-          <div class="checkbox container">
+          <div ng-hide="$ctrl.hidden[attribute]" class="checkbox container">
             <div class="row">
               <div class="col-xs-1"></div>
               <div class="col-xs-8">
-                <button ng-click="order = 'name'" ng-show="order === '-count'" class="btn btn-sm">sort</button>
+                <button
+                  ng-click="order = 'name'"
+                  ng-class="{'btn-primary': order == 'name', 'btn': order != 'name'}"
+                  class="btn btn-xs">
+                  <i class="fa fa-sort-alpha-asc" aria-hidden="true"></i>
+                </button>
               </div>
               <div class="col-xs-3">
-                <button ng-click="order = '-count'" ng-show="order === 'name'" class="btn btn-sm">sort</button>
+                <button
+                  ng-click="order = '-count'"
+                  ng-class="{'btn-primary': order == '-count', 'btn': order != '-count'}"
+                  class="btn btn-primary btn-xs">
+                  <i class="fa fa-sort-numeric-desc" aria-hidden="true"></i>
+                </button>
               </div>
             </div>
           </div>
