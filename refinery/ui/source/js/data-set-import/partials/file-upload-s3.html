@@ -13,7 +13,7 @@
         <!-- The fileinput-button span is used to style the file input field as button -->
         <span
           class="refinery-base btn btn-default btn-sm fileinput-button"
-          ng-class="{ 'disabled': !FileCtrl.isUploadConfigured() }">
+          ng-class="{ 'disabled': !FileCtrl.isUploadConfigured() || FileCtrl.areUploadsInProgress() }">
           <i class="fa fa-plus"></i>
           Add files &hellip;
           <input
@@ -21,7 +21,7 @@
             class="refinery-base"
             ngf-select="FileCtrl.addFiles($files)"
             ngf-multiple="true"
-            ng-disabled="!FileCtrl.isUploadConfigured()"
+            ng-disabled="!FileCtrl.isUploadConfigured() || FileCtrl.areUploadsInProgress()"
           >
         </span>
 
