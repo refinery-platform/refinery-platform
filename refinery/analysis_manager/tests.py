@@ -700,7 +700,7 @@ class AnalysisRunTests(AnalysisManagerTestBase):
     @mock.patch.object(LibraryClient, "delete_library")
     @mock.patch.object(HistoryClient, "delete_history")
     @mock.patch.object(WorkflowClient, "delete_workflow")
-    def test__galaxy_cleanup_methods_are_called_on_analysis_failure(
+    def test_galaxy_cleanup_methods_are_called_on_analysis_failure(
             self,
             delete_workflow_mock,
             delete_history_mock,
@@ -715,12 +715,8 @@ class AnalysisRunTests(AnalysisManagerTestBase):
 
         self.analysis.cancel()
 
-        # Fetch analysis & analysis status since they have changed during
-        # the course of this test and the old `self` references are stale
-        analysis = Analysis.objects.get(uuid=self.analysis.uuid)
-
-        self.assertEqual(analysis.status, Analysis.FAILURE_STATUS)
-        self.assertTrue(analysis.canceled)
+        self.assertEqual(self.analysis.status, Analysis.FAILURE_STATUS)
+        self.assertTrue(self.analysis.canceled)
 
         self.assertTrue(delete_workflow_mock.called)
         self.assertTrue(delete_history_mock.called)
