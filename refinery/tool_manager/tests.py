@@ -1562,14 +1562,9 @@ class WorkflowToolLaunchTests(ToolManagerTestBase):
 
         self.assertEqual(tool_a.dataset, tool_b.dataset)
 
-    def test__get_workflow_tool_no_analysis(self):
+    @mock.patch.object(Analysis, "galaxy_cleanup")
+    def test__get_workflow_tool_no_analysis(self, galaxy_cleanup_mock):
         self.create_valid_tool(ToolDefinition.WORKFLOW)
-        self.tool.update_galaxy_data(
-            self.tool.GALAXY_IMPORT_HISTORY_DICT,
-            {
-                "id": self.GALAXY_ID_MOCK
-            }
-        )
 
         analysis_uuid = self.tool.analysis.uuid
         self.tool.analysis.delete()
@@ -1577,6 +1572,7 @@ class WorkflowToolLaunchTests(ToolManagerTestBase):
         with mock.patch.object(run_analysis, "update_state") as update_mock:
             _get_workflow_tool(analysis_uuid)
             self.assertTrue(update_mock.called)
+        self.assertTrue(galaxy_cleanup_mock.called)
 
     def test__get_workflow_tool_with_analysis(self):
         self.create_valid_tool(ToolDefinition.WORKFLOW)
