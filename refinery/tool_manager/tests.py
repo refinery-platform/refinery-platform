@@ -1564,6 +1564,12 @@ class WorkflowToolLaunchTests(ToolManagerTestBase):
 
     def test__get_workflow_tool_no_analysis(self):
         self.create_valid_tool(ToolDefinition.WORKFLOW)
+        self.tool.update_galaxy_data(
+            self.tool.GALAXY_IMPORT_HISTORY_DICT,
+            {
+                "id": self.GALAXY_ID_MOCK
+            }
+        )
 
         analysis_uuid = self.tool.analysis.uuid
         self.tool.analysis.delete()
