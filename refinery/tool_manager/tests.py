@@ -6,6 +6,7 @@ import time
 from urlparse import urljoin
 import uuid
 
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.core.management import CommandError, call_command
@@ -15,6 +16,9 @@ from django.test import TestCase
 import bioblend
 from bioblend.galaxy.dataset_collections import (CollectionElement,
                                                  HistoryDatasetElement)
+from bioblend.galaxy.histories import HistoryClient
+from bioblend.galaxy.libraries import LibraryClient
+from bioblend.galaxy.workflows import WorkflowClient
 import celery
 import mock
 from rest_framework.test import (APIRequestFactory, APITestCase,
@@ -60,6 +64,7 @@ class ToolManagerTestBase(TestCase):
     # Some members in assertions are truncated if they are too long, but we
     # want to see them in their entirety
     maxDiff = None
+    GALAXY_ID_MOCK = "6fc9fbb81c497f69"
 
     def setUp(self):
         self.public_group = ExtendedGroup.objects.public_group()
@@ -1354,7 +1359,7 @@ class WorkflowToolTests(ToolManagerTestBase):
             {"id": "COFFEE"}
         )
 
-        self.assertEqual(self.tool.galaxy_history_id, "COFFEE")
+        self.assertEqual(self.tool.galaxy_import_history_id, "COFFEE")
 
 
 class ToolAPITests(APITestCase, ToolManagerTestBase):
@@ -1898,6 +1903,46 @@ class WorkflowToolLaunchTests(ToolManagerTestBase):
         self.assertEqual(taskset_result_mock.call_count, 2)
         self.assertTrue(send_email_mock.called)
         self.assertTrue(galaxy_cleanup_mock.called)
+
+    @mock.patch.object(LibraryClient, "delete_library")
+    @mock.patch.object(HistoryClient, "delete_history")
+    @mock.patch.object(WorkflowClient, "delete_workflow")
+    def test__galaxy_cleanup_methods_are_called_on_analysis_failure(
+            self,
+            delete_workflow_mock,
+            delete_history_mock,
+            delete_library_mock
+    ):
+        settings.REFINERY_GALAXY_ANALYSIS_CLEANUP = "always"
+
+        self.create_valid_tool(ToolDefinition.WORKFLOW)
+
+        self.tool.update_galaxy_data(
+            self.tool.GALAXY_IMPORT_HISTORY_DICT,
+            {
+                "id": self.GALAXY_ID_MOCK
+            }
+        )
+
+        self.tool.analysis.workflow_galaxy_id = self.GALAXY_ID_MOCK
+        self.tool.analysis.history_id = self.GALAXY_ID_MOCK
+        self.tool.analysis.library_id = self.GALAXY_ID_MOCK
+        self.tool.analysis.save()
+
+        self.tool.analysis.cancel()
+
+        # Fetch analysis & analysis status since they have changed during
+        # the course of this test and the old `self` references are stale
+        analysis = Analysis.objects.get(uuid=self.tool.analysis.uuid)
+
+        self.assertEqual(analysis.status, Analysis.FAILURE_STATUS)
+        self.assertTrue(analysis.canceled)
+
+        self.assertFalse(delete_workflow_mock.called)
+        self.assertTrue(delete_history_mock.called)
+        self.assertTrue(delete_library_mock.called)
+
+        self.assertEqual(delete_history_mock.call_count, 2)
 
 
 class VisualizationToolLaunchTests(ToolManagerTestBase,
