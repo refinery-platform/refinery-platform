@@ -10,7 +10,7 @@
     '$timeout',
     '$window',
     'assayFiltersService',
-    'selectedFilterService',
+    'selectedFilterService'
   ];
 
   function rpFileBrowserAssayFilters (

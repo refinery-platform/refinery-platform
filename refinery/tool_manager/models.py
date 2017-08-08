@@ -9,6 +9,9 @@ from django.db.models.signals import post_delete, pre_delete
 from django.dispatch import receiver
 from django.http import JsonResponse
 
+from bioblend.galaxy.dataset_collections import (CollectionDescription,
+                                                 CollectionElement,
+                                                 HistoryDatasetElement)
 from django_docker_engine.docker_utils import (DockerClientWrapper,
                                                DockerContainerSpec)
 from django_extensions.db.fields import UUIDField
@@ -393,6 +396,7 @@ class VisualizationTool(Tool):
     VisualizationTools are Tools that are specific to
     launching and monitoring Dockerized visualizations
     """
+
     class Meta:
         verbose_name = "visualizationtool"
         permissions = (
@@ -432,12 +436,17 @@ class WorkflowTool(Tool):
     """
     COLLECTION_INFO = "collection_info"
     FILE_RELATIONSHIPS_GALAXY = "{}_galaxy".format(Tool.FILE_RELATIONSHIPS)
+    FILE_RELATIONSHIPS_NESTING = "file_relationships_nesting"
+    FORWARD = "forward"
     GALAXY_DATA = "galaxy_data"
     GALAXY_DATASET_HISTORY_ID = "galaxy_dataset_history_id"
     GALAXY_IMPORT_HISTORY_DICT = "import_history_dict"
     GALAXY_LIBRARY_DICT = "library_dict"
     GALAXY_WORKFLOW_HISTORY_DICT = "workflow_history_dict"
     GALAXY_WORKFLOW_INVOCATION_DATA = "galaxy_workflow_invocation_data"
+    LIST = "list"
+    PAIRED = "paired"
+    REVERSE = "reverse"
 
     class Meta:
         verbose_name = "workflowtool"
@@ -449,40 +458,149 @@ class WorkflowTool(Tool):
     def galaxy_connection(self):
         return self.analysis.galaxy_connection()
 
-    def create_collection_description(self):
+    @property
+    def galaxy_collection_type(self, nesting_string=""):
         """
-        Creates a dict containing information describing the Galaxy DataSet
-        Collection to create
-        :return: dict
+        Get the string representation of the Galaxy Dataset Collection type
+        from a WorkflowTool's nested file_relationships.
+        :param nesting_string: Placeholder string for recursive iterations to
+        append to.
+        :return: <String> in the following form: ^((list|paired):*)+[^:]+$
         """
-        nesting = self._get_nesting_string()
-        return {
-            'name': 'Collection ({})'.format(nesting),
-            "collection_type": nesting,
-            "element_identifiers": [
-                {
-                    'id': file_mapping[self.GALAXY_DATASET_HISTORY_ID],
-                    'name': "Refinery FileStoreItem: {}".format(
-                        file_mapping[self.REFINERY_FILE_UUID]
-                    ),
-                    'src': 'hda'
-                }
-                for file_mapping in self.get_file_relationships_galaxy()
-            ]
-        }
+        flattened_nesting = self._flatten_file_relationships_nesting()
+        for index, file_relationship in enumerate(flattened_nesting):
+            if isinstance(file_relationship, list):
+                nesting_string += "{}:".format(WorkflowTool.LIST)
+            if isinstance(file_relationship, tuple):
+                nesting_string += "{}:".format(WorkflowTool.PAIRED)
+        return nesting_string[:-1]
+
+    @property
+    def galaxy_history_id(self):
+        return self.get_galaxy_dict()[self.GALAXY_IMPORT_HISTORY_DICT]["id"]
+
+    def _associate_collection_elements(self, galaxy_element_data):
+        """
+        Handles the association of Galaxy objects with their parent elements
+        :param galaxy_element_data: list of bioblend objects to associate
+        with each other
+        :return: <CollectionDescription>
+        """
+        if not len(galaxy_element_data) == 1:
+            for index, galaxy_element in enumerate(galaxy_element_data):
+                if type(galaxy_element) == CollectionDescription:
+                    for prev_galaxy_element in galaxy_element_data[:index]:
+                        if (type(prev_galaxy_element) ==
+                                HistoryDatasetElement or
+                                type(prev_galaxy_element) ==
+                                CollectionElement):
+                            galaxy_element.add(prev_galaxy_element)
+                            galaxy_element_data.remove(prev_galaxy_element)
+                            return self._associate_collection_elements(
+                                galaxy_element_data
+                            )
+                if type(galaxy_element) == CollectionElement:
+                    for prev_galaxy_element in galaxy_element_data[:index]:
+                        if type(prev_galaxy_element) == HistoryDatasetElement:
+                            galaxy_element.add(prev_galaxy_element)
+                            galaxy_element_data.remove(prev_galaxy_element)
+                            return self._associate_collection_elements(
+                                galaxy_element_data
+                            )
+                        if (type(prev_galaxy_element) == CollectionElement and
+                                prev_galaxy_element.type !=
+                                galaxy_element.type):
+                            galaxy_element.add(prev_galaxy_element)
+                            galaxy_element_data.remove(prev_galaxy_element)
+                            return self._associate_collection_elements(
+                                galaxy_element_data
+                            )
+        else:
+            # These assertions are only temporary until further testing has
+            # been done on this feature
+            assert len(galaxy_element_data) == 1, \
+                "Only one element should be present in: {}".format(
+                    galaxy_element_data
+                )
+            assert type(galaxy_element_data[0]) == CollectionDescription, \
+                "Element: {} should be of type: CollectionDescription".format(
+                    galaxy_element_data[0]
+                )
+            return galaxy_element_data[0]
+
+    def _create_collection_description(self, galaxy_element_list=None):
+        """
+        Creates an appropriate bioblend.galaxy.CollectionDescription
+        instance based off of the structure of our WorkflowTool's
+        file_relationships in a recursive manner.
+        :return: <CollectionDescription>
+        """
+        file_relationship_nesting_list = (
+            self._parse_file_relationships_nesting(
+                *self.get_file_relationships_galaxy()  # Please note the `*`
+                # unpacking operator used here
+            )
+        )
+
+        if galaxy_element_list is None:
+            galaxy_element_list = []
+
+        # Toggle between the creation of `forward` and `reverse`
+        # HistoryDatasetElements for `paired` CollectionElements
+        reverse_read = False
+
+        for nested_element in reversed(file_relationship_nesting_list):
+            if isinstance(nested_element, dict):
+                element_name = nested_element["refinery_file_uuid"]
+                if self.galaxy_collection_type.split(":")[-1] == self.PAIRED:
+                    if reverse_read:
+                        element_name = self.REVERSE
+                        reverse_read = False
+                    else:
+                        element_name = self.FORWARD
+                        reverse_read = True
+
+                galaxy_element_list.append(
+                    HistoryDatasetElement(
+                        name=element_name,
+                        id=nested_element['galaxy_dataset_history_id']
+                    )
+                )
+            elif isinstance(nested_element, list):
+                list_collection_element = CollectionElement(
+                    name=self.LIST,
+                    type=self.LIST
+                )
+                list_collection_element.elements = []
+                galaxy_element_list.append(list_collection_element)
+
+            elif isinstance(nested_element, tuple):
+                paired_collection_element = CollectionElement(
+                    name=self.PAIRED,
+                    type=self.PAIRED
+                )
+                paired_collection_element.elements = []
+                galaxy_element_list.append(paired_collection_element)
+
+        collection_description = CollectionDescription(
+            name="{} - {}".format(self.name, self.galaxy_collection_type),
+            type=self.galaxy_collection_type
+        )
+        collection_description.elements = []
+        galaxy_element_list.append(collection_description)
+
+        return self._associate_collection_elements(galaxy_element_list)
 
     def create_dataset_collection(self):
         """
         Creates a Galaxy DatasetCollection based off of the collection
-        description returned by: `WorkflowTool.create_collection_description()`
+        description returned by:
+        `WorkflowTool._create_collection_description()`
         """
-        collection_description = self.create_collection_description()
         collection_info = (
             self.galaxy_connection.histories.create_dataset_collection(
-                self.get_galaxy_dict()[
-                    self.GALAXY_IMPORT_HISTORY_DICT
-                ]["id"],
-                collection_description
+                history_id=self.galaxy_history_id,
+                collection_description=self._create_collection_description()
             )
         )
         self.update_galaxy_data(self.COLLECTION_INFO, collection_info)
@@ -518,7 +636,7 @@ class WorkflowTool(Tool):
         """
 
         if nesting is None:
-            nesting = self.get_file_relationships_urls()
+            nesting = self.get_file_relationships_galaxy()
 
         if structure is None:
             structure = []
@@ -527,7 +645,7 @@ class WorkflowTool(Tool):
             structure.append(nesting)
         if isinstance(nesting, tuple):
             structure.append(nesting)
-        if isinstance(nesting, str):
+        if isinstance(nesting, dict):
             return structure
         return self._flatten_file_relationships_nesting(
             nesting[0],
@@ -562,24 +680,7 @@ class WorkflowTool(Tool):
                     self.get_galaxy_dict()[self.GALAXY_LIBRARY_DICT],
                 )
             ) for file_store_item_uuid in self.get_input_file_uuid_list()
-        ]
-
-    def _get_nesting_string(self, nesting_string=""):
-        """
-        Gets the `LIST`/`PAIR` structure of our file_relationships,
-        but flattened into a string.
-        :param nesting_string: placeholder string to append `list/paired` to
-        :return: String in the following form: ^((list|paired):*)+[^:]+$
-        """
-
-        flattened_nesting = self._flatten_file_relationships_nesting()
-
-        for file_relationship in flattened_nesting:
-            if isinstance(file_relationship, list):
-                nesting_string += "list:"
-            if isinstance(file_relationship, tuple):
-                nesting_string += "paired:"
-        return nesting_string[:-1]
+            ]
 
     def import_library_dataset_to_history(self, history_id,
                                           library_dataset_id):
@@ -629,6 +730,28 @@ class WorkflowTool(Tool):
                 )
             }
         )
+
+    def _parse_file_relationships_nesting(self, *args, **kwargs):
+        """
+        Create and return a list containing each level of nesting from our
+        `file_relationships` structure
+        """
+        if not kwargs.get(self.FILE_RELATIONSHIPS_NESTING):
+            kwargs[self.FILE_RELATIONSHIPS_NESTING] = []
+
+        file_relationships_nesting = kwargs[self.FILE_RELATIONSHIPS_NESTING]
+        for arg in args:
+            if isinstance(arg, dict):
+                file_relationships_nesting.append(arg)
+                continue
+            elif isinstance(arg, tuple):
+                file_relationships_nesting.append(arg)
+                self._parse_file_relationships_nesting(*list(arg), **kwargs)
+            else:
+                file_relationships_nesting.append(arg)
+                self._parse_file_relationships_nesting(*arg, **kwargs)
+
+        return file_relationships_nesting
 
     def set_analysis(self, analysis_uuid):
         """

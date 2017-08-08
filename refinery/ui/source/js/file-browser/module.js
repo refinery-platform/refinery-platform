@@ -17,6 +17,6 @@
       'ui.grid.infiniteScroll',
       'ui.grid.pinning',
       'ui.grid.resizeColumns',
-      'ui.select',
+      'ui.select'
     ]);
 })();

@@ -81,7 +81,7 @@ COGNITO_IDENTITY_POOL_NAME: "Refinery Platform"
 # Constraint: [\w._-]+
 COGNITO_DEVELOPER_PROVIDER_NAME: "login.refinery"
 
-USER_FILES_COLUMNS: "organism,technology,antibody,date,genotype,experimenter"
+USER_FILES_COLUMNS: "filename,organism,technology,antibody,date,genotype,experimenter"
 
 # == Rarely changed ==
 

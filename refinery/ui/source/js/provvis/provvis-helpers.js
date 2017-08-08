@@ -1,4 +1,5 @@
 'use strict';
+/* eslint-disable */
 
 /**
  * Helper function collection for the provvis module.
