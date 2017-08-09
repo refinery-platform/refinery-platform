@@ -5,9 +5,21 @@
     .module('refineryDataSetImport')
     .service('s3UploadService', s3UploadService);
 
-  s3UploadService.$inject = ['$log', '$rootScope', 'openIdTokenService', 'settings'];
+  s3UploadService.$inject = [
+    '$log',
+    '$rootScope',
+    'dataSetImportSettings',
+    'openIdTokenService',
+    'settings'
+  ];
 
-  function s3UploadService ($log, $rootScope, openIdTokenService, settings) {
+  function s3UploadService (
+    $log,
+    $rootScope,
+    dataSetImportSettings,
+    openIdTokenService,
+    settings
+  ) {
     var vm = this;
     vm.isConfigReady = false;
 
@@ -68,10 +80,9 @@
         throw e;
       }
       var options = {
-        partSize: 50 * 1024 * 1024,  // bytes
-        queueSize: 2,
-        // Give the owner of the bucket full control
-        ACL: 'bucket-owner-full-control'
+        partSize: dataSetImportSettings.chunkSize,
+        queueSize: dataSetImportSettings.queueSize,
+        ACL: dataSetImportSettings.ACL
       };
       return vm.s3obj.upload(params, options);  // AWS.S3.ManagedUpload
     };
