@@ -1199,15 +1199,6 @@ class OpenIDToken(APIView):
             return api_error_response(
                 message, status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-        try:
-            identity_pool_name = settings.COGNITO_IDENTITY_POOL_NAME
-            developer_provider_name = settings.COGNITO_DEVELOPER_PROVIDER_NAME
-        except AttributeError as exc:
-            message = "Server AWS configuration is incorrect: {}".format(exc)
-            logger.error(message)
-            return api_error_response(
-                message, status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
 
         try:
             client = boto3.client('cognito-identity', region_name=region)
@@ -1235,12 +1226,16 @@ class OpenIDToken(APIView):
         # retrieve Cognito identity pool ID using pool name
         identity_pool_id = ''
         for identity_pool in response['IdentityPools']:
-            if identity_pool['IdentityPoolName'] == identity_pool_name:
+            if (identity_pool['IdentityPoolName'] ==
+                    settings.COGNITO_IDENTITY_POOL_NAME):
                 identity_pool_id = identity_pool['IdentityPoolId']
         try:
             token = client.get_open_id_token_for_developer_identity(
                 IdentityPoolId=identity_pool_id,
-                Logins={developer_provider_name: request.user.username}
+                Logins={
+                    settings.COGNITO_DEVELOPER_PROVIDER_NAME:
+                        request.user.username
+                }
             )
         except (botocore.exceptions.ClientError,
                 botocore.exceptions.ParamValidationError) as exc:
