@@ -1,11 +1,15 @@
 import json
 import uuid
 
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.http import HttpResponseBadRequest, HttpResponseNotAllowed
 from django.test import RequestFactory, TestCase
 
 from bioblend.galaxy.client import ConnectionError
+from bioblend.galaxy.histories import HistoryClient
+from bioblend.galaxy.libraries import LibraryClient
+from bioblend.galaxy.workflows import WorkflowClient
 from guardian.utils import get_anonymous_user
 import mock
 
@@ -620,6 +624,7 @@ class AnalysisViewsTests(AnalysisManagerTestBase, ToolManagerTestBase):
 
 class AnalysisRunTests(AnalysisManagerTestBase):
     tasks_mock = "analysis_manager.tasks"
+    GALAXY_ID_MOCK = "6fc9fbb81c497f69"
 
     @mock.patch("{}._refinery_file_import".format(tasks_mock))
     @mock.patch("{}._run_galaxy_workflow".format(tasks_mock))
@@ -691,6 +696,33 @@ class AnalysisRunTests(AnalysisManagerTestBase):
         self.assertTrue(get_taskset_result_mock.called)
         self.assertTrue(send_email_mock.called)
         self.assertTrue(galaxy_cleanup_mock.called)
+
+    @mock.patch.object(LibraryClient, "delete_library")
+    @mock.patch.object(HistoryClient, "delete_history")
+    @mock.patch.object(WorkflowClient, "delete_workflow")
+    def test_galaxy_cleanup_methods_are_called_on_analysis_failure(
+            self,
+            delete_workflow_mock,
+            delete_history_mock,
+            delete_library_mock
+    ):
+        settings.REFINERY_GALAXY_ANALYSIS_CLEANUP = "always"
+
+        self.analysis.workflow_galaxy_id = self.GALAXY_ID_MOCK
+        self.analysis.history_id = self.GALAXY_ID_MOCK
+        self.analysis.library_id = self.GALAXY_ID_MOCK
+        self.analysis.save()
+
+        self.analysis.cancel()
+
+        self.assertEqual(self.analysis.status, Analysis.FAILURE_STATUS)
+        self.assertTrue(self.analysis.canceled)
+
+        self.assertTrue(delete_workflow_mock.called)
+        self.assertTrue(delete_history_mock.called)
+        self.assertTrue(delete_library_mock.called)
+
+        self.assertEqual(delete_history_mock.call_count, 1)
 
     @mock.patch.object(Analysis, "galaxy_progress",
                        side_effect=ConnectionError("Couldn't establish "
