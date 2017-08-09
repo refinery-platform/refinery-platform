@@ -5,9 +5,9 @@
     .module('refineryDataSetImport')
     .service('s3UploadService', s3UploadService);
 
-  s3UploadService.$inject = ['$log', 'openIdTokenService', 'settings'];
+  s3UploadService.$inject = ['$log', '$rootScope', 'openIdTokenService', 'settings'];
 
-  function s3UploadService ($log, openIdTokenService, settings) {
+  function s3UploadService ($log, $rootScope, openIdTokenService, settings) {
     var vm = this;
     vm.isConfigReady = false;
 
@@ -22,14 +22,20 @@
         httpOptions: { timeout: 360000 }
       });
       AWS.config.credentials.getPromise().then(function () {
-        vm.isConfigReady = true;
+        $rootScope.$apply(function () {
+          vm.isConfigReady = true;
+        });
       }, function (error) {
         $log.error('Failed to obtain credentials using Cognito Identity service: ' + error);
-        vm.isConfigReady = true;
+        $rootScope.$apply(function () {
+          vm.isConfigReady = true;
+        });
       });
     }, function (response) {
       $log.error('Failed to obtain AWS OpenID Connect token: ' + response.statusText);
-      vm.isConfigReady = true;
+      $rootScope.$apply(function () {
+        vm.isConfigReady = true;
+      });
     });
 
     vm.isConfigValid = function () {
