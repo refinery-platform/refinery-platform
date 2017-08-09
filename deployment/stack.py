@@ -190,7 +190,7 @@ def make_template(config, config_yaml):
         "EngineVersion": "9.3.14",
         # "KmsKeyId" ?
         "MasterUsername": "root",
-        "MasterUserPassword": "mypassword",
+        "MasterUserPassword": config['RDS_SUPERUSER_PASSWORD'],
         "MultiAZ": False,
         "Port": "5432",
         "PubliclyAccessible": False,
