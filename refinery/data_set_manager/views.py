@@ -11,6 +11,7 @@ import shutil
 import urlparse
 
 from django import forms
+from django.conf import settings
 from django.core.urlresolvers import reverse
 from django.http import (Http404, HttpResponse, HttpResponseBadRequest,
                          HttpResponseRedirect, HttpResponseServerError)
@@ -18,6 +19,8 @@ from django.shortcuts import render, render_to_response
 from django.template import RequestContext
 from django.views.generic import View
 
+import boto3
+import botocore
 from chunked_upload.models import ChunkedUpload
 from chunked_upload.views import ChunkedUploadCompleteView, ChunkedUploadView
 from rest_framework import status
@@ -497,29 +500,50 @@ class CheckDataFilesView(View):
         if not request.is_ajax() or not request.body:
             return HttpResponseBadRequest()
 
-        file_data = json.loads(request.body)
         try:
-            base_path = file_data["base_path"]
+            file_data = json.loads(request.body)
+        except ValueError:
+            return HttpResponseBadRequest()
+        try:
+            input_file_list = file_data['list']
         except KeyError:
-            base_path = ""
+            return HttpResponseBadRequest()
+
+        try:
+            base_path = file_data['base_path']
+        except KeyError:
+            base_path = None
+        try:
+            identity_id = file_data['identityId']
+        except KeyError:
+            identity_id = None
 
         bad_file_list = []
         translate_file_source = generate_file_source_translator(
-            username=request.user.username, base_path=base_path)
-        # check if files are available
-        try:
-            for file_path in file_data["list"]:
-                # Explicitly check if file_path here is a string or unicode
-                # string
-                if not isinstance(file_path, unicode):
-                    bad_file_list.append(file_path)
-                else:
+            username=request.user.username, base_path=base_path,
+            identity_id=identity_id
+        )
+
+        for file_path in input_file_list:
+            if not isinstance(file_path, unicode):
+                bad_file_list.append(file_path)
+            else:
+                if settings.DEPLOYMENT_PLATFORM == 'aws':
+                    # check if S3 object key exists
+                    s3 = boto3.resource('s3')
+                    try:
+                        s3.Object(
+                            settings.MEDIA_BUCKET,
+                            "uploads/{}/{}".format(identity_id, file_path)
+                        ).load()
+                    except botocore.exceptions.ClientError:
+                        bad_file_list.append(file_path)
+                else:  # POSIX file system
                     file_path = translate_file_source(file_path)
                     if not os.path.exists(file_path):
                         bad_file_list.append(file_path)
-                logger.debug("Checked file path: '%s'", file_path)
-        except KeyError:  # if there's no list provided
-            return HttpResponseBadRequest()
+            logger.debug("Checked file path: '%s'", file_path)
+
         # prefix output to protect from JSON vulnerability (stripped by
         # Angular)
         return HttpResponse(")]}',\n" + json.dumps(bad_file_list),

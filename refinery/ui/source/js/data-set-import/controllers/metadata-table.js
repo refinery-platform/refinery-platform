@@ -8,6 +8,7 @@ function MetadataTableImportCtrl (
   d3,
   $uibModal,
   fileSources,
+  settings,
   tabularFileImportApi,
   metadataStatusService
 ) {
@@ -18,6 +19,7 @@ function MetadataTableImportCtrl (
   this.d3 = d3;
   this.$uibModal = $uibModal;
   this.fileSources = fileSources;
+  this.settings = settings;
   this.showFileUpload = false;
   this.tabularFileImportApi = tabularFileImportApi;
   this.metadataStatusService = metadataStatusService;
@@ -204,17 +206,22 @@ MetadataTableImportCtrl.prototype.makeColumnDefs = function () {
 MetadataTableImportCtrl.prototype.checkFiles = function () {
   var self = this;
 
-  // Check if the files listed in the dataFileColumn exist on the server.
+  // check if the files listed in the dataFileColumn exist on the server
   var fileData = {
     base_path: self.basePath,
     list: []
   };
 
-  // Get the list of file references
+  // get the list of file references
   if (self.dataFileColumn) {
     self.metadata.forEach(function (row) {
       fileData.list.push(row[self.dataFileColumn]);
     });
+  }
+
+  // get S3 bucket name and Cognito identity ID if deployed on AWS
+  if (this.settings.djangoApp.deploymentPlatform === 'aws') {
+    fileData.identityId = AWS.config.credentials.identityId;
   }
 
   self.fileSources
@@ -343,6 +350,7 @@ angular
     'd3',
     '$uibModal',
     'fileSources',
+    'settings',
     'tabularFileImportApi',
     'metadataStatusService',
     MetadataTableImportCtrl
