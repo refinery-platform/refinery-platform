@@ -276,8 +276,11 @@ class SingleFileColumnParser:
                 logger.error("Couldn't properly fetch FileStoreItem %s", e)
             else:
 
-                if self.file_permanent or file_store_item.source.startswith(
-                        settings.REFINERY_DATA_IMPORT_DIR):
+                if (self.file_permanent
+                        or file_store_item.source.startswith(
+                            settings.REFINERY_DATA_IMPORT_DIR
+                        )
+                        or file_store_item.source.startswith('s3://')):
                     import_file.delay(uuid)
 
         return investigation
@@ -300,7 +303,8 @@ def process_metadata_table(
     slug=None,
     is_public=False,
     delimiter="comma",
-    custom_delimiter_string=","
+    custom_delimiter_string=",",
+    identity_id=None
 ):
     """Create a dataset given a metadata file object and its description
     :param username: username
@@ -388,7 +392,7 @@ def process_metadata_table(
     data_file_permanent = bool(data_file_permanent)
     is_public = bool(is_public)
     file_source_translator = generate_file_source_translator(
-        username=username, base_path=base_path)
+        username=username, base_path=base_path, identity_id=identity_id)
 
     parser = SingleFileColumnParser(
         metadata_file=metadata_file,

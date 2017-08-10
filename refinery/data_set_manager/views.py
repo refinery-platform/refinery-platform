@@ -449,6 +449,20 @@ class ProcessMetadataTableView(View):
             column.replace('string:', '') for column in source_column_index
         ]
 
+        if settings.DEPLOYMENT_PLATFORM == 'aws':
+            try:
+                identity_id = request.POST.get('identity_id')
+            except (KeyError, ValueError):
+                error = {'error_message': 'identity_id is missing'}
+                if request.is_ajax():
+                    return HttpResponseBadRequest(
+                        json.dumps(error), 'application/json'
+                    )
+                else:
+                    return render(request, self.template_name, error)
+        else:
+            identity_id = None
+
         try:
             dataset_uuid = process_metadata_table(
                 username=request.user.username,
@@ -469,7 +483,8 @@ class ProcessMetadataTableView(View):
                 delimiter=request.POST.get('delimiter'),
                 custom_delimiter_string=request.POST.get(
                     'custom_delimiter_string', False
-                )
+                ),
+                identity_id=identity_id
             )
         except Exception as error_msg:
             error = {'error_message': error_msg}
@@ -528,18 +543,18 @@ class CheckDataFilesView(View):
             if not isinstance(file_path, unicode):
                 bad_file_list.append(file_path)
             else:
+                file_path = translate_file_source(file_path)
                 if settings.DEPLOYMENT_PLATFORM == 'aws':
                     # check if S3 object key exists
+                    result = urlparse.urlparse(file_path)
+                    bucket_name = result.netloc
+                    key = result.path[1:]  # strip leading slash
                     s3 = boto3.resource('s3')
                     try:
-                        s3.Object(
-                            settings.MEDIA_BUCKET,
-                            "uploads/{}/{}".format(identity_id, file_path)
-                        ).load()
+                        s3.Object(bucket_name, key).load()
                     except botocore.exceptions.ClientError:
-                        bad_file_list.append(file_path)
+                        bad_file_list.append(os.path.basename(key))
                 else:  # POSIX file system
-                    file_path = translate_file_source(file_path)
                     if not os.path.exists(file_path):
                         bad_file_list.append(file_path)
             logger.debug("Checked file path: '%s'", file_path)

@@ -3,10 +3,13 @@ import logging
 import os
 import stat
 from tempfile import NamedTemporaryFile
-from urlparse import urlparse
+import urlparse
 
+from django.conf import settings
 from django.core.files import File
 
+import boto3
+import botocore
 import celery
 from celery.signals import task_success
 from celery.task import task
@@ -82,8 +85,7 @@ def import_file(uuid, refresh=False, file_size=0):
             logger.info("File already exists: '%s'", item.get_absolute_path())
             return item.uuid
 
-    # if source is an absolute file system path then copy,
-    # otherwise assume it is a URL and download
+    # start the transfer
     if os.path.isabs(item.source):
         if os.path.isfile(item.source):
             # check if source file can be opened
@@ -102,7 +104,9 @@ def import_file(uuid, refresh=False, file_size=0):
         else:
             logger.error("Copying failed: source is not a file")
             return None
-    else:
+    elif item.source.startswith('s3://'):  # source is an AWS S3 URL
+        logger.debug("Downloading file from '%s'", item.source)
+    else:  # assume that source is a regular URL
         # check if source file can be downloaded
         try:
             response = requests.get(item.source, stream=True)
@@ -110,25 +114,21 @@ def import_file(uuid, refresh=False, file_size=0):
         except HTTPError as e:
             logger.error("Could not open URL '%s'. Reason: '%s'",
                          item.source, e)
-
             import_file.update_state(
                 state=celery.states.FAILURE,
-                meta='Analysis Failed during import_file subtask'
+                meta='Analysis failed during file import'
             )
-
             # ignore the task so no other state is recorded
-            # See: http://stackoverflow.com/a/33143545
+            # http://stackoverflow.com/a/33143545
             raise celery.exceptions.Ignore()
-
         # FIXME: When importing a tabular file into Refinery, there is a
-        # dependance on this ConnectionError below returning `None`!!!!
-        except(ConnectionError, ValueError) as e:
+        # dependence on this ConnectionError below returning `None`!!!!
+        except (ConnectionError, ValueError) as e:
             logger.error("Could not open URL '%s'. Reason: '%s'",
                          item.source, e)
             return None
 
         with NamedTemporaryFile(dir=get_temp_dir(), delete=False) as tmpfile:
-
             # provide a default value in case Content-Length is missing
             remote_file_size = int(
                 response.headers.get('Content-Length', file_size)
@@ -137,8 +137,7 @@ def import_file(uuid, refresh=False, file_size=0):
             # download and save the file
             import_failure = False
             local_file_size = 0
-            block_size = 10 * 1024 * 1024  # 10MB
-
+            block_size = 10 * 1024 * 1024  # bytes
             try:
                 for buf in response.iter_content(block_size):
                     local_file_size += len(buf)
@@ -154,8 +153,8 @@ def import_file(uuid, refresh=False, file_size=0):
 
                     # check if we have a sane value for file size
                     if remote_file_size > 0:
-                        percent_done = local_file_size * 100. / \
-                                       remote_file_size
+                        percent_done = \
+                            local_file_size * 100. / remote_file_size
                     else:
                         percent_done = 0
 
@@ -192,7 +191,7 @@ def import_file(uuid, refresh=False, file_size=0):
         logger.debug("Finished downloading from '%s'", item.source)
 
         # get the file name from URL (remove query string)
-        u = urlparse(item.source)
+        u = urlparse.urlparse(item.source)
         src_file_name = os.path.basename(u.path)
         # construct destination path based on source file name
         rel_dst_path = item.datafile.storage.get_available_name(
@@ -234,17 +233,30 @@ def begin_auxiliary_node_generation(**kwargs):
     # NOTE: Celery docs suggest to access these fields through kwargs as the
     # structure of celery signal handlers changes often
     # See: http://bit.ly/2cbTy3k
-
     file_store_item_uuid = kwargs['result']
-
     try:
         Node.objects.get(
             file_uuid=file_store_item_uuid
         ).run_generate_auxiliary_node_task()
-    except (Node.DoesNotExist,
-            Node.MultipleObjectsReturned) \
-            as e:
-        logger.error("Couldn't properly fetch Node: %s", e)
+    except (Node.DoesNotExist, Node.MultipleObjectsReturned) as exc:
+        logger.error("Couldn't properly fetch Node: %s", exc)
+
+
+@task_success.connect(sender=import_file)
+def delete_s3_object(**kwargs):
+    if settings.DEPLOYMENT_PLATFORM != 'aws':
+        return
+    uuid = kwargs['result']
+    item = FileStoreItem.objects.get_item(uuid=uuid)
+    if item:
+        result = urlparse.urlparse(item.source)
+        bucket_name = result.netloc
+        key = result.path[1:]  # strip leading slash
+        s3 = boto3.resource('s3')
+        try:
+            s3.Object(bucket_name, key).delete()
+        except botocore.exceptions.ClientError:
+            logger.error("Failed to delete '%s'", item.source)
 
 
 @task()

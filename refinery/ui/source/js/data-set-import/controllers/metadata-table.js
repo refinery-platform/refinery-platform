@@ -318,6 +318,10 @@ MetadataTableImportCtrl.prototype.startImport = function () {
   if (self.dataFilePermanent) {
     formData.append('data_file_permanent', self.dataFilePermanent);
   }
+  // get S3 bucket name and Cognito identity ID if deployed on AWS
+  if (this.settings.djangoApp.deploymentPlatform === 'aws') {
+    formData.append('identity_id', AWS.config.credentials.identityId);
+  }
 
   return this.tabularFileImportApi
     .create({}, formData)

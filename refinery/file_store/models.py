@@ -123,7 +123,7 @@ def map_source(source):
 def generate_file_source_translator(username=None, base_path=None,
                                     identity_id=None):
     """Generate file source reference translator function based on username or
-    base_path, or S3 bucket name and Cognito identity ID
+    base_path or AWS Cognito identity ID
     username: user's subdirectory in settings.REFINERY_DATA_IMPORT_DIR
     base_path: absolute path to prepend to source if source is relative
     identity_id: AWS Cognito identity ID of the current user
@@ -134,15 +134,17 @@ def generate_file_source_translator(username=None, base_path=None,
         source: URL, absolute or relative file system path
         """
         source = map_source(source.strip())
+
         # ignore URLs and absolute file paths
         if core.utils.is_url(source) or os.path.isabs(source):
             return source
+
         # process relative path
         if identity_id:
-            source = "https://{}.s3.amazonaws.com/uploads/{}/{}".format(
+            source = "s3://{}/uploads/{}/{}".format(
                 settings.MEDIA_BUCKET, identity_id, source
             )
-        if base_path:
+        elif base_path:
             source = os.path.join(base_path, source)
         elif username:
             source = os.path.join(
