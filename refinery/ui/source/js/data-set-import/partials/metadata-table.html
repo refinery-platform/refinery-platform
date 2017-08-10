@@ -379,10 +379,34 @@
               <h1>Advanced</h1>
             </span>
           </div>
+
           <div uib-collapse="isAdvancedCollapsed">
             <div class="row m-t-1-4 m-b-1-4">
               <div class="col-sm-6 col-md-3 col-lg-2">
-                Auxiliary File Column
+                Base Path
+              </div>
+              <div class="col-sm-6 col-md-3 col-lg-2">
+                <input
+                  type="text"
+                  class="width-95"
+                  name="base_path"
+                  ng-model="metadataTable.basePath">
+              </div>
+              <div class="col-sm-12 col-md-6 col-lg-8">
+                Base path of your data files if using relative file locations.
+                <a
+                  popover-placement="right"
+                  uib-popover="'Placeholder Text"
+                  popover-title="Base Path"
+                  popover-trigger="focus"
+                  popover-append-to-body="true"
+                  tabindex="0">
+              </div>
+            </div>
+
+            <div class="row m-t-1-4 m-b-1-4">
+              <div class="col-sm-6 col-md-3 col-lg-2">
+                  Auxiliary File Column
               </div>
               <div class="col-sm-6 col-md-3 col-lg-2">
                 <select

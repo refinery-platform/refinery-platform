@@ -299,6 +299,9 @@ MetadataTableImportCtrl.prototype.startImport = function () {
   if (self.speciesColumn) {
     formData.append('species_column', self.speciesColumn);
   }
+  if (self.basePath) {
+    formData.append('base_path', self.basePath);
+  }
   if (self.annotationColumn) {
     formData.append('annotation_column', self.annotationColumn);
   }
