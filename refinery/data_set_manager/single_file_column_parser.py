@@ -276,11 +276,9 @@ class SingleFileColumnParser:
                 logger.error("Couldn't properly fetch FileStoreItem %s", e)
             else:
 
-                if (self.file_permanent or
-                        file_store_item.source.startswith(
-                            settings.REFINERY_DATA_IMPORT_DIR
-                        ) or
-                        file_store_item.source.startswith('s3://')):
+                if (self.file_permanent or file_store_item.source.startswith(
+                        (settings.REFINERY_DATA_IMPORT_DIR, 's3://')
+                )):
                     import_file.delay(uuid)
 
         return investigation

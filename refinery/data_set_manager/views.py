@@ -541,13 +541,13 @@ class CheckDataFilesView(View):
 
         if settings.DEPLOYMENT_PLATFORM == 'aws':
             # get a list of all uploaded S3 objects for the user
-            user_s3_key_list = []
+            uploaded_s3_key_list = []
             s3 = boto3.resource('s3')
             s3_bucket = s3.Bucket(settings.MEDIA_BUCKET)
             for s3_object in s3_bucket.objects.filter(
                     Prefix='uploads/{}'.format(identity_id)
             ):
-                user_s3_key_list.append(s3_object.key)
+                uploaded_s3_key_list.append(s3_object.key)
 
         for input_file_path in input_file_list:
             if not isinstance(input_file_path, unicode):
@@ -557,7 +557,7 @@ class CheckDataFilesView(View):
                 if settings.DEPLOYMENT_PLATFORM == 'aws':
                     # check if S3 object key exists
                     bucket_name, key = parse_s3_url(input_file_path)
-                    if key not in user_s3_key_list:
+                    if key not in uploaded_s3_key_list:
                         bad_file_list.append(os.path.basename(key))
                 else:  # POSIX file system
                     if not os.path.exists(input_file_path):

@@ -105,16 +105,34 @@ def import_file(uuid, refresh=False, file_size=0):
         else:
             logger.error("Copying failed: source is not a file")
             return None
-    elif item.source.startswith('s3://'):  # source is an AWS S3 URL
-        logger.debug("Downloading file from '%s'", item.source)
+    elif item.source.startswith('s3://'):
+        bucket_name, key = parse_s3_url(item.source)
+        s3 = boto3.resource('s3')
+        uploaded_object = s3.Object(bucket_name, key)
+        with NamedTemporaryFile(dir=get_temp_dir()) as download:
+            logger.debug("Downloading file from '%s'", item.source)
+            try:
+                uploaded_object.download_fileobj(download)
+            except botocore.exceptions.ClientError:
+                logger.error("Failed to download '%s'", item.source)
+                import_file.update_state(
+                    state=celery.states.FAILURE,
+                    meta='Failed to import uploaded file'
+                )
+                return None
+            logger.debug("Saving downloaded file to '%s'", item.datafile.name)
+            item.datafile.save(os.path.basename(key), File(download))
+        try:
+            s3.Object(bucket_name, key).delete()
+        except botocore.exceptions.ClientError:
+            logger.error("Failed to delete '%s'", item.source)
     else:  # assume that source is a regular URL
         # check if source file can be downloaded
         try:
             response = requests.get(item.source, stream=True)
             response.raise_for_status()
-        except HTTPError as e:
-            logger.error("Could not open URL '%s'. Reason: '%s'",
-                         item.source, e)
+        except HTTPError as exc:
+            logger.error("Could not open URL '%s': '%s'", item.source, exc)
             import_file.update_state(
                 state=celery.states.FAILURE,
                 meta='Analysis failed during file import'
@@ -124,9 +142,8 @@ def import_file(uuid, refresh=False, file_size=0):
             raise celery.exceptions.Ignore()
         # FIXME: When importing a tabular file into Refinery, there is a
         # dependence on this ConnectionError below returning `None`!!!!
-        except (ConnectionError, ValueError) as e:
-            logger.error("Could not open URL '%s'. Reason: '%s'",
-                         item.source, e)
+        except (ConnectionError, ValueError) as exc:
+            logger.error("Could not open URL '%s': '%s'", item.source, exc)
             return None
 
         with NamedTemporaryFile(dir=get_temp_dir(), delete=False) as tmpfile:
@@ -165,26 +182,22 @@ def import_file(uuid, refresh=False, file_size=0):
                             "percent_done": "{:.0f}".format(percent_done),
                             "current": local_file_size,
                             "total": remote_file_size
-                        })
-
+                        }
+                    )
             except ContentDecodingError as e:
                 logger.error("Error while decoding response content:%s" % e)
                 import_failure = True
 
             if import_failure:
                 # delete temp. file if download failed
-                logger.error("File import task has failed. Deleting "
-                             "temporary file...")
-
-                # Setting the tempfile's delete == True deletes the file
-                # upon a `close()`
+                logger.error(
+                    "File import task has failed. Deleting temporary file..."
+                )
                 tmpfile.delete = True
-
                 import_file.update_state(
                     state=celery.states.FAILURE,
                     meta='Analysis Failed during import_file subtask'
                 )
-
                 # ignore the task so no other state is recorded
                 # See: http://stackoverflow.com/a/33143545
                 raise celery.exceptions.Ignore()
@@ -233,7 +246,7 @@ def import_file(uuid, refresh=False, file_size=0):
 def begin_auxiliary_node_generation(**kwargs):
     # NOTE: Celery docs suggest to access these fields through kwargs as the
     # structure of celery signal handlers changes often
-    # See: http://bit.ly/2cbTy3k
+    # http://docs.celeryproject.org/en/3.1/userguide/signals.html#basics
     file_store_item_uuid = kwargs['result']
     try:
         Node.objects.get(
@@ -241,21 +254,6 @@ def begin_auxiliary_node_generation(**kwargs):
         ).run_generate_auxiliary_node_task()
     except (Node.DoesNotExist, Node.MultipleObjectsReturned) as exc:
         logger.error("Couldn't properly fetch Node: %s", exc)
-
-
-@task_success.connect(sender=import_file)
-def delete_s3_object(**kwargs):
-    if settings.DEPLOYMENT_PLATFORM != 'aws':
-        return
-    uuid = kwargs['result']
-    item = FileStoreItem.objects.get_item(uuid=uuid)
-    if item:
-        bucket_name, key = parse_s3_url(item.source)
-        s3 = boto3.resource('s3')
-        try:
-            s3.Object(bucket_name, key).delete()
-        except botocore.exceptions.ClientError:
-            logger.error("Failed to delete '%s'", item.source)
 
 
 @task()
