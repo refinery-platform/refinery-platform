@@ -5,7 +5,6 @@ import stat
 from tempfile import NamedTemporaryFile
 import urlparse
 
-from django.conf import settings
 from django.core.files import File
 
 import boto3

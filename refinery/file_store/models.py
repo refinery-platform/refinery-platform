@@ -527,18 +527,18 @@ class FileStoreItem(models.Model):
         :type self: A FileStoreItem instance
         :returns: A url for the given FileStoreItem or None
         """
-
         if self.is_local():
             return self.datafile.url
         else:
             # data file doesn't exist on disk
             if os.path.isabs(self.source):
                 # source is a file system path
-                logger.error("File not found at '%s'",
-                             self.datafile.name)
+                logger.error("File not found at '%s'", self.datafile.name)
                 return None
             else:
                 # source is a URL
+                if self.source.startswith('s3://'):
+                    return None
                 return self.source
 
     def get_import_status(self):
