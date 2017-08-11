@@ -19,7 +19,8 @@ from requests.exceptions import (ConnectionError, ContentDecodingError,
 
 from data_set_manager.models import Node
 
-from .models import FILE_STORE_BASE_DIR, FileStoreItem, file_path, get_temp_dir
+from .models import (FILE_STORE_BASE_DIR, FileStoreItem, file_path,
+                     get_temp_dir, parse_s3_url)
 
 logger = logging.getLogger(__name__)
 
@@ -249,9 +250,7 @@ def delete_s3_object(**kwargs):
     uuid = kwargs['result']
     item = FileStoreItem.objects.get_item(uuid=uuid)
     if item:
-        result = urlparse.urlparse(item.source)
-        bucket_name = result.netloc
-        key = result.path[1:]  # strip leading slash
+        bucket_name, key = parse_s3_url(item.source)
         s3 = boto3.resource('s3')
         try:
             s3.Object(bucket_name, key).delete()

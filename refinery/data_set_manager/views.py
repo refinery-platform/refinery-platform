@@ -20,7 +20,6 @@ from django.template import RequestContext
 from django.views.generic import View
 
 import boto3
-import botocore
 from chunked_upload.models import ChunkedUpload
 from chunked_upload.views import ChunkedUploadCompleteView, ChunkedUploadView
 from rest_framework import status
@@ -29,7 +28,8 @@ from rest_framework.views import APIView
 
 from core.models import DataSet, get_user_import_dir
 from core.utils import get_full_url
-from file_store.models import generate_file_source_translator, get_temp_dir
+from file_store.models import (generate_file_source_translator, get_temp_dir,
+                               parse_s3_url)
 from file_store.tasks import DownloadError, download_file
 
 from .models import Assay, AttributeOrder, Study
@@ -539,25 +539,30 @@ class CheckDataFilesView(View):
             identity_id=identity_id
         )
 
-        for file_path in input_file_list:
-            if not isinstance(file_path, unicode):
-                bad_file_list.append(file_path)
+        if settings.DEPLOYMENT_PLATFORM == 'aws':
+            # get a list of all uploaded S3 objects for the user
+            user_s3_key_list = []
+            s3 = boto3.resource('s3')
+            s3_bucket = s3.Bucket(settings.MEDIA_BUCKET)
+            for s3_object in s3_bucket.objects.filter(
+                    Prefix='uploads/{}'.format(identity_id)
+            ):
+                user_s3_key_list.append(s3_object.key)
+
+        for input_file_path in input_file_list:
+            if not isinstance(input_file_path, unicode):
+                bad_file_list.append(input_file_path)
             else:
-                file_path = translate_file_source(file_path)
+                input_file_path = translate_file_source(input_file_path)
                 if settings.DEPLOYMENT_PLATFORM == 'aws':
                     # check if S3 object key exists
-                    result = urlparse.urlparse(file_path)
-                    bucket_name = result.netloc
-                    key = result.path[1:]  # strip leading slash
-                    s3 = boto3.resource('s3')
-                    try:
-                        s3.Object(bucket_name, key).load()
-                    except botocore.exceptions.ClientError:
+                    bucket_name, key = parse_s3_url(input_file_path)
+                    if key not in user_s3_key_list:
                         bad_file_list.append(os.path.basename(key))
                 else:  # POSIX file system
-                    if not os.path.exists(file_path):
-                        bad_file_list.append(file_path)
-            logger.debug("Checked file path: '%s'", file_path)
+                    if not os.path.exists(input_file_path):
+                        bad_file_list.append(input_file_path)
+            logger.debug("Checked file path: '%s'", input_file_path)
 
         # prefix output to protect from JSON vulnerability (stripped by
         # Angular)

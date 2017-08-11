@@ -17,7 +17,7 @@ Example: FILE_STORE_DIR = 'files'
 import logging
 import os
 import re
-from urlparse import urljoin
+import urlparse
 
 from django.conf import settings
 from django.core.files.storage import FileSystemStorage
@@ -81,7 +81,7 @@ if not settings.FILE_UPLOAD_MAX_MEMORY_SIZE:
 
 # http://stackoverflow.com/q/4832626
 FILE_STORE_BASE_URL = \
-    urljoin(settings.MEDIA_URL, settings.FILE_STORE_DIR) + '/'
+    urlparse.urljoin(settings.MEDIA_URL, settings.FILE_STORE_DIR) + '/'
 
 
 def file_path(instance, filename):
@@ -728,17 +728,16 @@ def _rename_file_on_disk(current_path, new_path):
 
 
 def get_extension_from_path(path):
-    '''Return file extension given its file system path.
+    """Return file extension given its file system path
 
-    :returns: str -- File extension preceeded by a period.
-
-    '''
+    :returns: str -- File extension preceded by a period.
+    """
     return os.path.splitext(path)[-1]
 
 
-class FileStoreCache:
-    '''
-    LRU file cache
-    '''
-    # doubly-linked list or heapq
-    pass
+def parse_s3_url(url):
+    """Return a tuple containing S3 bucket name and object key given S3
+    protocol URL (s3://bucket-name/key)
+    """
+    result = urlparse.urlparse(url)
+    return result.netloc, result.path[1:]  # strip leading slash
