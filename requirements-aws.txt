@@ -1,2 +1,1 @@
 django-smtp-ssl==1.0
-django-storages==1.5.0
