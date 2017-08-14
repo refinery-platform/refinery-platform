@@ -449,7 +449,7 @@ class ProcessMetadataTableView(View):
             column.replace('string:', '') for column in source_column_index
         ]
 
-        if settings.DEPLOYMENT_PLATFORM == 'aws':
+        if settings.REFINERY_DEPLOYMENT_PLATFORM == 'aws':
             try:
                 identity_id = request.POST.get('identity_id')
             except (KeyError, ValueError):
@@ -539,7 +539,7 @@ class CheckDataFilesView(View):
             identity_id=identity_id
         )
 
-        if settings.DEPLOYMENT_PLATFORM == 'aws':
+        if settings.REFINERY_DEPLOYMENT_PLATFORM == 'aws':
             # get a list of all uploaded S3 objects for the user
             uploaded_s3_key_list = []
             s3 = boto3.resource('s3')
@@ -554,7 +554,7 @@ class CheckDataFilesView(View):
                 bad_file_list.append(input_file_path)
             else:
                 input_file_path = translate_file_source(input_file_path)
-                if settings.DEPLOYMENT_PLATFORM == 'aws':
+                if settings.REFINERY_DEPLOYMENT_PLATFORM == 'aws':
                     # check if S3 object key exists
                     bucket_name, key = parse_s3_url(input_file_path)
                     if key not in uploaded_s3_key_list:
