@@ -119,8 +119,9 @@ def import_file(uuid, refresh=False, file_size=0):
                     meta='Failed to import uploaded file'
                 )
                 return None
-            logger.debug("Saving downloaded file to '%s'", item.datafile.name)
+            logger.debug("Saving downloaded file '%s'", download.name)
             item.datafile.save(os.path.basename(key), File(download))
+            logger.debug("Saved downloaded file to '%s'", item.datafile.name)
         try:
             s3.Object(bucket_name, key).delete()
         except botocore.exceptions.ClientError:
