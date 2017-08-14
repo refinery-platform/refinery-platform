@@ -190,7 +190,7 @@ def create_tool_definition(annotation_data):
     )
     create_and_associate_parameters(
         tool_definition,
-        annotation["parameters"]
+        annotation[ToolDefinition.PARAMETERS]
     )
 
     return tool_definition

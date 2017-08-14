@@ -43,6 +43,8 @@ class Parameter(models.Model):
     ATTRIBUTE = "ATTRIBUTE"
     FILE = "FILE"
 
+    STRING_TYPES = [FILE, ATTRIBUTE, GENOME_BUILD, STRING]
+
     VALUE_TYPES = (
         (INTEGER, "int"),
         (STRING, "str"),
@@ -70,6 +72,16 @@ class Parameter(models.Model):
         except (GalaxyParameter.DoesNotExist,
                 GalaxyParameter.MultipleObjectsReturned):
             return None
+
+    def cast_param_value_to_proper_type(self, parameter_value):
+        if self.value_type in self.STRING_TYPES:
+            return str(parameter_value)
+        elif self.value_type == self.BOOLEAN:
+            return bool(parameter_value)
+        elif self.value_type == self.INTEGER:
+            return int(parameter_value)
+        elif self.value_type == self.FLOAT:
+            return float(parameter_value)
 
 
 class GalaxyParameter(Parameter):
@@ -148,6 +160,7 @@ class ToolDefinition(models.Model):
     outputs, and input file structuring.
     """
 
+    PARAMETERS = "parameters"
     WORKFLOW = 'WORKFLOW'
     VISUALIZATION = 'VISUALIZATION'
     TOOL_TYPES = (
@@ -623,6 +636,23 @@ class WorkflowTool(Tool):
             }
         }
 
+    def create_workflow_parameters_dict(self):
+        params_dict = {}
+        tool_launch_config_parameters = self._get_workflow_parameters()
+
+        for galaxy_parameter_uuid in tool_launch_config_parameters:
+            parameter = GalaxyParameter.objects.get(uuid=galaxy_parameter_uuid)
+
+            if params_dict.get(parameter.galaxy_workflow_step) is None:
+                params_dict[parameter.galaxy_workflow_step] = {}
+
+            params_dict[parameter.galaxy_workflow_step][parameter.name] = (
+                parameter.cast_param_value_to_proper_type(
+                    tool_launch_config_parameters[galaxy_parameter_uuid]
+                )
+            )
+        return params_dict
+
     def _flatten_file_relationships_nesting(self, nesting=None,
                                             structure=None):
         """
@@ -671,16 +701,14 @@ class WorkflowTool(Tool):
         """
         return [
             _tool_based_galaxy_file_import.subtask(
-                (
-                    self.analysis.uuid,
-                    file_store_item_uuid,
-                    self.get_galaxy_dict()[
-                        self.GALAXY_IMPORT_HISTORY_DICT
-                    ],
-                    self.get_galaxy_dict()[self.GALAXY_LIBRARY_DICT],
-                )
+                self.analysis.uuid,
+                file_store_item_uuid,
+                self.get_galaxy_dict()[
+                    self.GALAXY_IMPORT_HISTORY_DICT
+                ],
+                self.get_galaxy_dict()[self.GALAXY_LIBRARY_DICT],
             ) for file_store_item_uuid in self.get_input_file_uuid_list()
-            ]
+        ]
 
     def import_library_dataset_to_history(self, history_id,
                                           library_dataset_id):
@@ -700,7 +728,8 @@ class WorkflowTool(Tool):
         return self.galaxy_connection.workflows.invoke_workflow(
             self.tool_definition.workflow.internal_id,
             history_name="Workflow Run for {}".format(self.name),
-            inputs=self.create_workflow_inputs()
+            inputs=self.create_workflow_inputs(),
+            params=self.create_workflow_parameters_dict()
         )
 
     def launch(self):

@@ -14,6 +14,13 @@
         "galaxy_workflow_step": 1
       },
       {
+        "name": "Float Param",
+        "description": "Float Param description",
+        "value_type": "FLOAT",
+        "default_value": 1.234,
+        "galaxy_workflow_step": 7
+      },
+      {
         "name": "String Param",
         "description": "String Param description",
         "value_type": "STRING",

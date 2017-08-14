@@ -32,8 +32,8 @@ from analysis_manager.tasks import (_get_workflow_tool,
                                     _run_tool_based_galaxy_workflow,
                                     _tool_based_galaxy_file_import,
                                     run_analysis)
-from core.models import (Analysis, ExtendedGroup, Project, Workflow,
-                         WorkflowEngine)
+from core.models import (INPUT_CONNECTION, Analysis, AnalysisNodeConnection,
+                         ExtendedGroup, Project, Workflow, WorkflowEngine)
 from data_set_manager.models import Assay, Node
 from factory_boy.django_model_factories import ToolFactory
 from factory_boy.utils import create_dataset_with_necessary_models
@@ -149,12 +149,20 @@ class ToolManagerTestBase(TestCase):
                 "dataset_uuid": self.dataset.uuid,
                 "tool_definition_uuid": self.td.uuid,
                 Tool.FILE_RELATIONSHIPS: "[{}]".format(self.node.uuid),
+                ToolDefinition.PARAMETERS: {
+                    galaxy_param.uuid: galaxy_param.default_value
+                    for galaxy_param in GalaxyParameter.objects.all()
+                    }
             }
         else:
             self.post_data = {
                 "dataset_uuid": self.dataset.uuid,
                 "tool_definition_uuid": self.td.uuid,
                 Tool.FILE_RELATIONSHIPS: file_relationships,
+                ToolDefinition.PARAMETERS: {
+                    galaxy_param.uuid: galaxy_param.default_value
+                    for galaxy_param in GalaxyParameter.objects.all()
+                }
             }
 
         self.post_request = self.factory.post(
@@ -351,7 +359,7 @@ class ToolDefinitionAPITests(ToolManagerTestBase, APITestCase):
          parameter objects
         """
         for tool_definition in self.get_response.data:
-            for parameter in tool_definition["parameters"]:
+            for parameter in tool_definition[ToolDefinition.PARAMETERS]:
                 if tool_definition["tool_type"] == ToolDefinition.WORKFLOW:
                     self.assertIn("galaxy_workflow_step", parameter.keys())
                 elif (tool_definition["tool_type"] ==
@@ -1355,6 +1363,50 @@ class WorkflowToolTests(ToolManagerTestBase):
         )
 
         self.assertEqual(self.tool.galaxy_history_id, "COFFEE")
+
+    def test_analysis_node_connections_are_created_for_all_input_nodes(self):
+        self.create_valid_tool(
+            ToolDefinition.WORKFLOW,
+            file_relationships=self.LIST_LIST_PAIR
+        )
+
+        analysis_node_connections = []
+        tool_nodes = self.tool._get_input_nodes()
+
+        for node in tool_nodes:
+            analysis_node_connections.append(
+                AnalysisNodeConnection.objects.get(
+                    node=node,
+                    analysis=self.tool.analysis
+                )
+            )
+
+        self.assertEqual(
+            len(analysis_node_connections),
+            len(tool_nodes)
+        )
+
+        for analysis_node_connection in analysis_node_connections:
+            self.assertEqual(
+                analysis_node_connection.direction,
+                INPUT_CONNECTION
+            )
+
+    def test_galaxy_parameter_dict_creation(self):
+        self.create_valid_tool(
+            ToolDefinition.WORKFLOW,
+            annotation_file_name="LIST:PAIR.json"
+        )
+
+        parameters_dict = self.tool.create_workflow_parameters_dict()
+
+        self.assertEqual(parameters_dict[1]["Integer Param"], 1337)
+        self.assertEqual(parameters_dict[7]["Float Param"], 1.234)
+        self.assertEqual(parameters_dict[1]["String Param"], "Coffee is great")
+        self.assertEqual(parameters_dict[2]["Boolean Param"], True)
+        self.assertEqual(parameters_dict[4]["Attribute Param"], "Species")
+        self.assertEqual(parameters_dict[5]["File Param"],
+                         "/media/file_store/file.cool")
 
 
 class ToolAPITests(APITestCase, ToolManagerTestBase):

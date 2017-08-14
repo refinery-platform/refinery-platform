@@ -147,7 +147,7 @@ class Command(BaseCommand):
 
                     # Include `parameters` and `output_files` as keys in our
                     # workflow annotation
-                    workflow["annotation"]["parameters"] = []
+                    workflow["annotation"][ToolDefinition.PARAMETERS] = []
                     workflow["annotation"]["output_files"] = []
 
                     # Workflows need to know about their associated
@@ -212,7 +212,7 @@ class Command(BaseCommand):
                         "{} {}".format(ANNOTATION_ERROR_MESSAGE, e)
                     )
                 try:
-                    parameters = step_annotation["parameters"]
+                    parameters = step_annotation[ToolDefinition.PARAMETERS]
                 except KeyError:
                     # `parameters` aren't required for each workflow step
                     pass
@@ -230,9 +230,8 @@ class Command(BaseCommand):
                             )
                         else:
                             parameter["galaxy_workflow_step"] = int(step_index)
-                            workflow["annotation"]["parameters"].append(
-                                parameter
-                            )
+                            workflow["annotation"][
+                                ToolDefinition.PARAMETERS].append(parameter)
                 try:
                     output_files = step_annotation["output_files"]
                 except KeyError:
