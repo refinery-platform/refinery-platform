@@ -45,9 +45,7 @@
       });
     }, function (response) {
       $log.error('Failed to obtain AWS OpenID Connect token: ' + response.statusText);
-      $rootScope.$apply(function () {
-        vm.isConfigReady = true;
-      });
+      vm.isConfigReady = true;
     });
 
     vm.isConfigValid = function () {
