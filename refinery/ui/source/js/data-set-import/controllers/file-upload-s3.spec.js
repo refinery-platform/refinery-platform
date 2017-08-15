@@ -77,10 +77,13 @@
         expect(ctrl.isUploadComplete).toBeDefined();
       });
       it('should return true if upload status is error', function () {
-        expect(ctrl.isUploadComplete({ $error: true })).toBe(true);
+        expect(ctrl.isUploadComplete({ $error: 'error message' })).toBe(true);
       });
       it('should return true if upload status is success', function () {
         expect(ctrl.isUploadComplete({ success: true })).toBe(true);
+      });
+      it('should return false if upload status is undefined', function () {
+        expect(ctrl.isUploadComplete({ $error: undefined, success: undefined })).toBe(false);
       });
     });
 
@@ -88,11 +91,17 @@
       it('should be defined', function () {
         expect(ctrl.areUploadsCancellable).toBeDefined();
       });
+      it('should return false when no files were added', function () {
+        expect(ctrl.areUploadsCancellable()).toBe(false);
+      });
     });
 
     describe('areUploadsEnabled', function () {
       it('should be defined', function () {
         expect(ctrl.areUploadsEnabled).toBeDefined();
+      });
+      it('should return false when no files were added', function () {
+        expect(ctrl.areUploadsEnabled()).toBe(false);
       });
     });
 

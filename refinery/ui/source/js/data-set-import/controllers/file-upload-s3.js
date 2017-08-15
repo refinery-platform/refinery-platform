@@ -46,7 +46,7 @@
     };
 
     vm.isUploadComplete = function (file) {
-      return (file.$error || file.success);
+      return Boolean(file.$error || file.success);
     };
 
     vm.areUploadsCancellable = function () {
