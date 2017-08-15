@@ -16,9 +16,43 @@
       ctrl = $controller('RefineryFileUploadS3Ctrl', { $scope: scope });
     }));
 
-    describe('multifileUploadInProgress', function () {
+    it('RefineryFileUploadS3Ctrl should exist', function () {
+      expect(ctrl).toBeDefined();
+    });
+
+    describe('vm.files', function () {
+      it('should be undefined', function () {
+        expect(ctrl.files).toBeUndefined();
+      });
+    });
+
+    describe('vm.multifileUploadInProgress', function () {
       it('should be false', function () {
         expect(ctrl.multifileUploadInProgress).toBe(false);
+      });
+    });
+
+    describe('isUploadConfigured', function () {
+      it('should be defined', function () {
+        expect(ctrl.isUploadConfigured).toBeDefined();
+      });
+    });
+
+    describe('addFiles', function () {
+      it('should be defined', function () {
+        expect(ctrl.addFiles).toBeDefined();
+      });
+      it('should return no value', function () {
+        expect(ctrl.addFiles([])).toBeUndefined();
+      });
+      it('should add files', function () {
+        ctrl.addFiles([]);
+        expect(ctrl.files).toEqual([]);
+      });
+      it('should concatenate files if files exist', function () {
+        ctrl.files = [{}];
+        ctrl.addFiles([{}]);
+        expect(ctrl.files).toEqual([{}, {}]);
       });
     });
 
@@ -36,30 +70,20 @@
       });
     });
 
-    describe('addFiles', function () {
-      it('should be defined', function () {
-        expect(ctrl.addFiles).toBeDefined();
-      });
-      it('should return no value', function () {
-        expect(ctrl.addFiles([])).toBeUndefined();
-      });
-    });
-
-    describe('isUploadConfigured', function () {
-      it('should be defined', function () {
-        expect(ctrl.isUploadConfigured).toBeDefined();
-      });
-    });
-
     describe('isUploadInProgress', function () {
       it('should be defined', function () {
         expect(ctrl.isUploadInProgress).toBeDefined();
       });
-      it('should return false if file progress is undefined', function () {
+      it('should return false if file is new', function () {
+        spyOn(ctrl, 'isFileNew').and.returnValue(true);
         expect(ctrl.isUploadInProgress({})).toBe(false);
+        expect(ctrl.isFileNew).toHaveBeenCalled();
       });
       it('should return false if file progress is >100', function () {
         expect(ctrl.isUploadInProgress({ progress: 101 })).toBe(false);
+      });
+      it('should return false if file progress is <=100', function () {
+        expect(ctrl.isUploadInProgress({ progress: 0 })).toBe(true);
       });
     });
 
@@ -69,6 +93,10 @@
       });
       it('should return false when no files were added', function () {
         expect(ctrl.areUploadsInProgress()).toBe(false);
+      });
+      it('should return true when at least one upload is in progress', function () {
+        ctrl.files = [{ progress: 0 }];
+        expect(ctrl.areUploadsInProgress()).toBe(true);
       });
     });
 
@@ -83,7 +111,7 @@
         expect(ctrl.isUploadComplete({ success: true })).toBe(true);
       });
       it('should return false if upload status is undefined', function () {
-        expect(ctrl.isUploadComplete({ $error: undefined, success: undefined })).toBe(false);
+        expect(ctrl.isUploadComplete({})).toBe(false);
       });
     });
 
@@ -94,6 +122,10 @@
       it('should return false when no files were added', function () {
         expect(ctrl.areUploadsCancellable()).toBe(false);
       });
+      it('should return true when at least one file has not been uploaded', function () {
+        ctrl.files = [{}];
+        expect(ctrl.areUploadsCancellable()).toBe(true);
+      });
     });
 
     describe('areUploadsEnabled', function () {
@@ -102,6 +134,14 @@
       });
       it('should return false when no files were added', function () {
         expect(ctrl.areUploadsEnabled()).toBe(false);
+      });
+      it('should return false when any uploads are in progress', function () {
+        ctrl.files = [{ progress: 0 }];
+        expect(ctrl.areUploadsEnabled()).toBe(false);
+      });
+      it('should return true when any files were added', function () {
+        ctrl.files = [{}];
+        expect(ctrl.areUploadsEnabled()).toBe(true);
       });
     });
 
