@@ -2,10 +2,8 @@
   <div class="panel-group data-set-filters" id="attribute-filter"
     role="tablist"
     aria-multiselectable="true">
-     <div class="refinery-subheader m-t-1">
-      <h2>
-        Attribute Filters
-      </h2>
+    <div class="refinery-subheader m-t-1">
+      <input ng-model="search" ng-init="search = ''" style="width: 100%;" placeholder="search...">
     </div>
     <div
       ng-repeat="(attribute, attributeObj) in $ctrl.attributeFilters track by $index"
@@ -25,7 +23,7 @@
         aria-labelledby="{{ attribute }}">
         <div class="panel-body">
           <div ng-repeat="field in attributeObj.facetObj track by $index">
-            <div class="checkbox container">
+            <div ng-show="field.name.toLowerCase().includes(search.toLowerCase())" class="checkbox container">
                 <div class="row">
                   <div class="col-xs-1">
                     <input

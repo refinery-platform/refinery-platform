@@ -455,7 +455,6 @@ class WorkflowTool(Tool):
     GALAXY_DATASET_HISTORY_ID = "galaxy_dataset_history_id"
     GALAXY_IMPORT_HISTORY_DICT = "import_history_dict"
     GALAXY_LIBRARY_DICT = "library_dict"
-    GALAXY_WORKFLOW_HISTORY_DICT = "workflow_history_dict"
     GALAXY_WORKFLOW_INVOCATION_DATA = "galaxy_workflow_invocation_data"
     LIST = "list"
     PAIRED = "paired"
@@ -489,8 +488,12 @@ class WorkflowTool(Tool):
         return nesting_string[:-1]
 
     @property
-    def galaxy_history_id(self):
+    def galaxy_import_history_id(self):
         return self.get_galaxy_dict()[self.GALAXY_IMPORT_HISTORY_DICT]["id"]
+
+    @property
+    def galaxy_workflow_history_id(self):
+        return self.analysis.history_id
 
     def _associate_collection_elements(self, galaxy_element_data):
         """
@@ -612,7 +615,7 @@ class WorkflowTool(Tool):
         """
         collection_info = (
             self.galaxy_connection.histories.create_dataset_collection(
-                history_id=self.galaxy_history_id,
+                history_id=self.galaxy_import_history_id,
                 collection_description=self._create_collection_description()
             )
         )

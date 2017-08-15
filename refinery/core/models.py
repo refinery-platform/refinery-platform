@@ -1422,20 +1422,43 @@ class Analysis(OwnableResource):
             connection = self.galaxy_connection()
             error_msg = "Error deleting Galaxy %s for analysis '%s': %s"
 
-            # Delete Galaxy libraries, workflows and histories
+            # Delete Galaxy library
             if self.library_id:
                 try:
                     connection.libraries.delete_library(self.library_id)
                 except galaxy.client.ConnectionError as e:
                     logger.error(error_msg, 'library', self.name, e.message)
 
-            if self.workflow_galaxy_id:
+            # Delete Galaxy Workflow
+            # NOTE: Legacy analysis launches depended on uploading a copy of
+            # the Workflow into galaxy, while newer Tool-based ones utilize the
+            # original galaxy workflow which we don't want to delete
+            if not self.is_tool_based:
+                if self.workflow_galaxy_id:
+                    try:
+                        connection.workflows.delete_workflow(
+                            self.workflow_galaxy_id
+                        )
+                    except galaxy.client.ConnectionError as e:
+                        logger.error(error_msg, 'workflow', self.name,
+                                     e.message)
+            else:
+                workflow_tool = tool_manager.models.WorkflowTool
                 try:
-                    connection.workflows.delete_workflow(
-                        self.workflow_galaxy_id)
-                except galaxy.client.ConnectionError as e:
-                    logger.error(error_msg, 'workflow', self.name, e.message)
-
+                    tool = workflow_tool.objects.get(analysis__uuid=self.uuid)
+                except(workflow_tool.DoesNotExist,
+                       workflow_tool.MultipleObjectsReturned) as e:
+                    logger.error("Could not properly fetch Tool: %s", e)
+                else:
+                    if tool.galaxy_import_history_id:
+                        try:
+                            connection.histories.delete_history(
+                                tool.galaxy_import_history_id,
+                                purge=True
+                            )
+                        except galaxy.client.ConnectionError as e:
+                            logger.error(error_msg, 'history', self.name,
+                                         e.message)
             if self.history_id:
                 try:
                     connection.histories.delete_history(self.history_id,

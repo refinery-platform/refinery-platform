@@ -9,6 +9,7 @@
     '$log',
     '$q',
     'userFileBrowserFactory',
+    'userFileFiltersService',
     'userFileSortsService',
     'gridOptionsService'
   ];
@@ -17,6 +18,7 @@
       $log,
       $q,
       userFileBrowserFactory,
+      userFileFiltersService,
       userFileSortsService,
       gridOptionsService
   ) {
@@ -60,6 +62,17 @@
     };
 
     gridOptionsService.appScopeProvider = vm;
+    vm.fileBrowserFilterQuery = function () {
+      var params = {};
+      Object.keys(userFileFiltersService).forEach(function (key) {
+        // TODO: The set of filters on /user/files does not match the filters on /data_sets2.
+        // TODO: I don't know whether a given filter is under "Characteristics" or something else.
+        // TODO: The target page doesn't load right now, even with the query,
+        // TODO:     and switching between tabs loses the query.
+        params[key + '_Characteristics_generic_s'] = userFileFiltersService[key];
+      });
+      return encodeURIComponent(JSON.stringify(params));
+    };
     vm.gridOptions = gridOptionsService;
     vm.gridOptions.onRegisterApi = function (api) {
       api.core.on.sortChanged(null, vm.sortChanged);

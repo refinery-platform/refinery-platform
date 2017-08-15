@@ -302,9 +302,11 @@
 
 #table-filter {
   height: 81vh;
+  max-height: 81vh;
   margin: 0 0 0 10px;
   padding: 0;
   border: 1px solid #d4d4d4;
+  overflow: auto;
   h3 {
     font-weight: bold;
   }
@@ -339,6 +341,16 @@
     border-top: none;
     padding-top: 0;
     padding-bottom: 0;
+    max-height: 8em;
+    -moz-transition: .3s;
+    -ms-transition: .3s;
+    -o-transition: .3s;
+    -webkit-transition: .3s;
+    transition: .3s;
+    overflow: auto;
+  }
+  .panel-body:hover {
+      max-height: 300px;
   }
 
 }
