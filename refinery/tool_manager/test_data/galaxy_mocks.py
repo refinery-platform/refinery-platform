@@ -104,3 +104,43 @@ galaxy_workflow_invocation_data = {
     u'model_class': u'WorkflowInvocation',
     u'id': u'52e496b945151ee8'
 }
+
+galaxy_workflow_dict = {
+    u'a_galaxy_workflow': u'true',
+    u'format-version': u'0.1',
+    u'name': u'list test wf',
+    u'steps': {
+        u'1': {
+            u'tool_id': u'refinery_test_LIST-N',
+            u'errors': None,
+            u'uuid': u'537a15ff-a8d3-4c1a-8b25-99826bdc91c2',
+            u'tool_version': u'0.1',
+            u'outputs': [
+                {u'type': u'txt', u'name': u'output_file'}
+            ],
+            u'post_job_actions': {
+                u'HideDatasetActionoutput_file': {
+                    u'output_name': u'output_file',
+                    u'action_type': u'HideDatasetAction',
+                    u'action_arguments': {}
+                }
+            },
+            u'workflow_outputs': [],
+            u'content_id': u'refinery_test_LIST-N', u'input_connections': {
+                u'input_file': {u'output_name': u'output', u'id': 0}},
+            u'position': {u'top': 302.5, u'left': 814.5},
+            u'label': None, u'type': u'tool', u'id': 1,
+            u'name': u'Refinery test tool LIST - N'},
+        u'0': {u'tool_id': None, u'errors': None,
+               u'uuid': u'fa8f08cd-0257-4d4d-9f35-e70bc0e8ca3b',
+               u'tool_version': None, u'outputs': [], u'workflow_outputs': [
+                {u'output_name': u'output',
+                 u'uuid': u'4d34bec2-8124-4de2-be7f-ef4f137b39db',
+                 u'label': None}], u'annotation': u'', u'content_id': None,
+               u'input_connections': {}, u'inputs': [],
+               u'position': {u'top': 301.5, u'left': 391.5},
+               u'tool_state': u'{"collection_type": "list"}', u'label': None,
+               u'type': u'data_collection_input', u'id': 0,
+               u'name': u'Input dataset collection'}},
+    u'uuid': u'9e119199-c589-4e42-b358-cd6f046b7e59'
+}
