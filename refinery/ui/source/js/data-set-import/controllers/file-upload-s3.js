@@ -5,9 +5,9 @@
     .module('refineryDataSetImport')
     .controller('RefineryFileUploadS3Ctrl', RefineryFileUploadS3Ctrl);
 
-  RefineryFileUploadS3Ctrl.$inject = ['s3UploadService', '$log', '$scope'];
+  RefineryFileUploadS3Ctrl.$inject = ['$log', '$scope', 's3UploadService'];
 
-  function RefineryFileUploadS3Ctrl (s3UploadService, $log, $scope) {
+  function RefineryFileUploadS3Ctrl ($log, $scope, s3UploadService) {
     var vm = this;
     vm.multifileUploadInProgress = false;
 
