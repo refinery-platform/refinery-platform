@@ -584,7 +584,7 @@ class WorkflowTool(Tool):
 
         return analysis
 
-    def _create_analysis_node_connections(self, input_nodes=True):
+    def create_analysis_node_connections(self, input_nodes=True):
         """
         Create the AnalysisNodeConnection objects corresponding to the input or
         derived Nodes of a WorkflowTool launch.
@@ -910,7 +910,7 @@ class WorkflowTool(Tool):
         :raises: RuntimeError
         """
         analysis = self._create_analysis()
-        self._create_analysis_node_connections()
+        self.create_analysis_node_connections()
 
         # Run the analysis task
         run_analysis.delay(analysis.uuid)
