@@ -506,6 +506,17 @@ class WorkflowTool(Tool):
             self.get_galaxy_dict()[self.GALAXY_WORKFLOW_INVOCATION_DATA]["id"]
         )["steps"]
 
+    @property
+    def subanalysis_number(self):
+        """
+        Return an <int> corresponding to the # of successful Analyses that
+        have been run on our WorkflowTool's Refinery Dataset + 1 (For the
+        current Analysis run)
+        """
+        return self.dataset.get_analyses().filter(
+            status=Analysis.SUCCESS_STATUS
+        ).count() + 1
+
     def _associate_collection_elements(self, galaxy_element_data):
         """
         Handles the association of Galaxy objects with their parent elements
