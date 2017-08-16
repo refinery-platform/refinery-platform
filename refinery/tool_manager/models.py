@@ -495,6 +495,17 @@ class WorkflowTool(Tool):
     def galaxy_workflow_history_id(self):
         return self.analysis.history_id
 
+    @property
+    def galaxy_workflow_invocation_steps(self):
+        """
+        Return a list of dicts corresponding to each step of our
+        Galaxy Workflow's invocation.
+        """
+        return self.galaxy_connection.workflows.show_invocation(
+            self.analysis.history_id,
+            self.get_galaxy_dict()[self.GALAXY_WORKFLOW_INVOCATION_DATA]["id"]
+        )["steps"]
+
     def _associate_collection_elements(self, galaxy_element_data):
         """
         Handles the association of Galaxy objects with their parent elements
