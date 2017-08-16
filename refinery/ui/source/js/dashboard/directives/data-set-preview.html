@@ -247,13 +247,13 @@
              </a>
           </span>
           <span ng-if="analysis.status !== 'SUCCESS'">
-            <a ng-href="/data_sets_old/{{ analysis.data_set__uuid }}/#/analyses">
+            <a ng-href="/data_sets2/{{ analysis.data_set__uuid }}/#/analyses/">
               {{ analysis.name }}
             </a>
           </span>
         </li>
         <li ng-if="preview.numAnalyses > preview.maxAnalyses">
-          <a ng-href="/data_sets_old/{{ preview.dataSetUuid }}/#/analyses/">View all analyses</a>
+          <a ng-href="/data_sets2/{{ preview.dataSetUuid }}/#/analyses/">View all analyses</a>
         </li>
       </ol>
       </div>
