@@ -455,6 +455,7 @@ class WorkflowTool(Tool):
     GALAXY_IMPORT_HISTORY_DICT = "import_history_dict"
     GALAXY_LIBRARY_DICT = "library_dict"
     GALAXY_WORKFLOW_INVOCATION_DATA = "galaxy_workflow_invocation_data"
+    INPUT_STEP = 0
     LIST = "list"
     PAIRED = "paired"
     REVERSE = "reverse"
