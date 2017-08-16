@@ -28,7 +28,7 @@
 
     vm.isFileNew = function (file) {
       // check if file upload has been attempted
-      return typeof file.progress === 'undefined';
+      return !('progress' in file);
     };
 
     vm.isUploadInProgress = function (file) {

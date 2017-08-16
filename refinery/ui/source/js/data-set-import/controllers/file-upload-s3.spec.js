@@ -63,7 +63,7 @@
         expect(ctrl.isFileNew).toEqual(jasmine.any(Function));
       });
       it('should return true if file progress is undefined', function () {
-        var file = { progress: undefined };
+        var file = {};
         expect(ctrl.isFileNew(file)).toBe(true);
       });
       it('should return false if file progress has been set', function () {
