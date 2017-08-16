@@ -960,7 +960,7 @@ class WorkflowTool(Tool):
 
     def update_file_relationships_with_galaxy_history_data(
             self,
-            galaxy_to_refinery_mapping
+            galaxy_to_refinery_mapping_list
     ):
         """
         Replace a Tool's Node uuid in its `file_relationships` string with
@@ -969,22 +969,27 @@ class WorkflowTool(Tool):
         key in the tool launch config: `file_relationships_galaxy`.
         No error handling here since this method is only called in an
         atomic transaction.
+        :param galaxy_to_refinery_mapping_list: list containing dicts in the
+        form of:
+            {
+                Tool.REFINERY_FILE_UUID: file_store_item_uuid,
+                Tool.GALAXY_DATASET_HISTORY_ID: history_dataset_dict["id"]
+            }
         """
         galaxy_dict = self.get_galaxy_dict()
-
-        node = Node.objects.get(
-            file_uuid=galaxy_to_refinery_mapping[Tool.REFINERY_FILE_UUID]
-        )
-        galaxy_dict[self.FILE_RELATIONSHIPS_GALAXY] = (
-            galaxy_dict[self.FILE_RELATIONSHIPS_GALAXY].replace(
-                node.uuid,
-                "{}".format(json.dumps(galaxy_to_refinery_mapping))
+        for galaxy_to_refinery_mapping in galaxy_to_refinery_mapping_list:
+            node = Node.objects.get(
+                file_uuid=galaxy_to_refinery_mapping[Tool.REFINERY_FILE_UUID]
             )
-        )
-
-        tool_launch_config = self.get_tool_launch_config()
-        tool_launch_config[self.GALAXY_DATA] = galaxy_dict
-        self.set_tool_launch_config(tool_launch_config)
+            galaxy_dict[self.FILE_RELATIONSHIPS_GALAXY] = (
+                galaxy_dict[self.FILE_RELATIONSHIPS_GALAXY].replace(
+                    node.uuid,
+                    "{}".format(json.dumps(galaxy_to_refinery_mapping))
+                )
+            )
+            tool_launch_config = self.get_tool_launch_config()
+            tool_launch_config[self.GALAXY_DATA] = galaxy_dict
+            self.set_tool_launch_config(tool_launch_config)
 
     def update_galaxy_data(self, key, value):
         """

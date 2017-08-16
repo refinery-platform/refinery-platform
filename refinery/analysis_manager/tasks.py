@@ -404,7 +404,7 @@ def _run_tool_based_galaxy_file_import(analysis_uuid):
 
         galaxy_file_import_taskset = TaskSet(
             tasks=galaxy_import_tasks
-        ).apply()
+        ).apply_async()
 
         galaxy_file_import_taskset.save()
 
@@ -445,6 +445,14 @@ def _run_tool_based_galaxy_workflow(analysis_uuid):
 
     if not analysis_status.galaxy_workflow_task_group_id:
         logger.debug("Starting workflow execution in Galaxy")
+        tool = _get_workflow_tool(analysis_uuid)
+        galaxy_file_import_taskset = get_taskset_result(
+            analysis_status.galaxy_import_task_group_id
+        )
+        galaxy_to_refinery_mapping_list = galaxy_file_import_taskset.join()
+        tool.update_file_relationships_with_galaxy_history_data(
+            galaxy_to_refinery_mapping_list
+        )
 
         galaxy_workflow_tasks = [
             _invoke_tool_based_galaxy_workflow.subtask((analysis_uuid,))
@@ -607,16 +615,10 @@ def _tool_based_galaxy_file_import(analysis_uuid, file_store_item_uuid,
         get_full_url(file_store_item.get_datafile_url())
     )
     history_dataset_dict = tool.import_library_dataset_to_history(
-            history_dict["id"],
-            library_dataset_dict[0]["id"]
-        )
-
-    tool.update_file_relationships_with_galaxy_history_data(
-        {
-            tool.REFINERY_FILE_UUID: file_store_item_uuid,
-            tool.GALAXY_DATASET_HISTORY_ID: history_dataset_dict["id"]
-        }
+        history_dict["id"],
+        library_dataset_dict[0]["id"]
     )
+    tool = _get_workflow_tool(analysis_uuid)
 
     number_of_files = len(tool.get_input_file_uuid_list())
     single_file_percentage = (100 / number_of_files)
@@ -630,6 +632,11 @@ def _tool_based_galaxy_file_import(analysis_uuid, file_store_item_uuid,
     if (analysis_status.galaxy_import_progress ==
             single_file_percentage * number_of_files):
         analysis_status.set_galaxy_import_state(AnalysisStatus.OK)
+
+    return {
+        tool.REFINERY_FILE_UUID: file_store_item_uuid,
+        tool.GALAXY_DATASET_HISTORY_ID: history_dataset_dict["id"]
+    }
 
 
 def _get_galaxy_download_tasks(analysis):
