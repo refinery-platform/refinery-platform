@@ -813,6 +813,20 @@ class WorkflowTool(Tool):
             galaxy_dataset_dict["file_ext"]
         )
 
+    def _get_galaxy_datasets_list(self):
+        """
+        Retrieve a list of Galaxy Datasets from the Galaxy History of our
+        Galaxy Workflow invocation.
+        """
+        dataset_list = (
+            self.galaxy_connection.histories.show_matching_datasets(
+                self.analysis.history_id
+            )
+        )
+
+        # Filter any Galaxy Datasets that have been purged.
+        return [dataset for dataset in dataset_list if not dataset["purged"]]
+
     def get_galaxy_dict(self):
         """
         Fetch the dict in a Tool's `tool_launch_config` under the
