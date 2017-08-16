@@ -869,6 +869,16 @@ class WorkflowTool(Tool):
     def _get_workflow_parameters(self):
         return self.get_tool_launch_config()[ToolDefinition.PARAMETERS]
 
+    def _get_workflow_step(self, galaxy_dataset_dict):
+        for step in self.galaxy_workflow_invocation_steps:
+            if step["job_id"] == galaxy_dataset_dict["creating_job"]:
+                return step["order_index"]
+
+        raise RuntimeError(
+            "Every galaxy dataset should have a corresponding step in the "
+            "workflow invocation."
+        )
+
     def import_library_dataset_to_history(self, history_id,
                                           library_dataset_id):
         """
