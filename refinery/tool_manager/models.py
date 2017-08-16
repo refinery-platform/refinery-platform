@@ -866,6 +866,9 @@ class WorkflowTool(Tool):
                 self.tool_definition.workflow.internal_id
             )
 
+    def _get_workflow_parameters(self):
+        return self.get_tool_launch_config()[ToolDefinition.PARAMETERS]
+
     def import_library_dataset_to_history(self, history_id,
                                           library_dataset_id):
         """
