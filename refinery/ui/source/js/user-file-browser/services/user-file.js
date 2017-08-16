@@ -21,7 +21,7 @@
     var characterSuffix = '_Characteristics_generic_s';
     var factorSuffix = '_Factor_Value_generic_s';
     var userFile = $resource(
-      settings.appRoot + settings.refineryApiV2 + '/user/files/',
+      settings.appRoot + settings.refineryApiV2 + '/files/',
       {},
       {
         query: {
