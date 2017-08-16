@@ -540,7 +540,11 @@ def validate_tool_annotation(annotation_dictionary):
         )
     except ValidationError as e:
         raise RuntimeError(
-            "{}{}".format(ANNOTATION_ERROR_MESSAGE, e)
+            "{}\n\n{}\n\n{}".format(
+                ANNOTATION_ERROR_MESSAGE,
+                e.message,
+                ["{}".format(err.message) for err in e.context]
+            )
         )
 
 
