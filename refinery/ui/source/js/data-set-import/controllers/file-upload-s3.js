@@ -9,6 +9,7 @@
 
   function RefineryFileUploadS3Ctrl ($log, $scope, s3UploadService) {
     var vm = this;
+    vm.files = [];
     vm.multifileUploadInProgress = false;
 
     vm.isUploadConfigured = function () {
@@ -19,11 +20,7 @@
     };
 
     vm.addFiles = function (files) {
-      if (typeof vm.files === 'undefined') {
-        vm.files = files;
-      } else {
-        vm.files = vm.files.concat(files);
-      }
+      vm.files = vm.files.concat(files);
     };
 
     vm.isFileNew = function (file) {
@@ -39,7 +36,7 @@
     };
 
     vm.areUploadsInProgress = function () {
-      if (typeof vm.files === 'undefined') {
+      if (vm.files.length === 0) {
         return false;
       }
       return vm.files.some(vm.isUploadInProgress);
@@ -50,14 +47,14 @@
     };
 
     vm.areUploadsCancellable = function () {
-      if (typeof vm.files === 'undefined') {
+      if (vm.files.length === 0) {
         return false;
       }
       return !vm.files.every(vm.isUploadComplete);
     };
 
     vm.areUploadsEnabled = function () {
-      if (typeof vm.files === 'undefined' || vm.areUploadsInProgress()) {
+      if (vm.files.length === 0 || vm.areUploadsInProgress()) {
         return false;
       }
       return vm.files.some(vm.isFileNew);

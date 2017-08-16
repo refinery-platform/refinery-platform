@@ -23,8 +23,8 @@
     });
 
     describe('vm.files', function () {
-      it('should be initially undefined', function () {
-        expect(ctrl.files).toBeUndefined();
+      it('should be initially empty', function () {
+        expect(ctrl.files).toEqual([]);
       });
     });
 
