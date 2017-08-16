@@ -909,14 +909,8 @@ class WorkflowTool(Tool):
             pointing to the Analysis' status page
         :raises: RuntimeError
         """
-
-        analysis_config = self._get_analysis_config()
-        validate_analysis_config(analysis_config)
-
-        analysis = create_analysis(analysis_config)
-        self.set_analysis(analysis.uuid)
-
-        AnalysisStatus.objects.create(analysis=analysis)
+        analysis = self._create_analysis()
+        self._create_analysis_node_connections()
 
         # Run the analysis task
         run_analysis.delay(analysis.uuid)
