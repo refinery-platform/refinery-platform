@@ -303,8 +303,7 @@ class Tool(OwnableResource):
         )
 
     def __str__(self):
-        return "Tool: {} {} {}".format(
-            self.get_tool_type(),
+        return "Tool: {} {}".format(
             self.get_tool_name(),
             self.uuid
         )
