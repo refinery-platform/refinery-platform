@@ -1054,6 +1054,14 @@ class ToolTests(ToolManagerTestBase):
 
     def test_get_tool_launch_config(self):
         self.create_valid_tool(ToolDefinition.WORKFLOW)
+        parameters_dict = self.tool._create_workflow_parameters_dict()
+        parameters_dict_with_uuids = {}
+        for key in parameters_dict.keys():
+            for k in parameters_dict[key].keys():
+                parameters_dict_with_uuids[
+                    GalaxyParameter.objects.get(name=k).uuid
+                ] = unicode(parameters_dict[key][k])
+
         self.assertEqual(
             self.tool.get_tool_launch_config(),
             {
@@ -1066,9 +1074,12 @@ class ToolTests(ToolManagerTestBase):
                 self.tool.FILE_RELATIONSHIPS_URLS: (
                     "['http://www.example.com/test_file.txt']"
                 ),
-                ToolDefinition.PARAMETERS: (
-                    self.tool.create_workflow_parameters_dict()
-                )
+                ToolDefinition.PARAMETERS: parameters_dict_with_uuids,
+                WorkflowTool.GALAXY_DATA: {
+                    WorkflowTool.FILE_RELATIONSHIPS_GALAXY: "[{}]".format(
+                        self.node.uuid
+                    )
+                }
             }
         )
 
@@ -1145,14 +1156,18 @@ class WorkflowToolTests(ToolManagerTestBase):
         self.FAKE_DATASET_HISTORY_ID = '0523152e8bc37aa7'
 
     def update_nodes(self):
+        galaxy_to_refinery_mapping_list = []
         for node in Node.objects.all():
-            self.tool.update_file_relationships_with_galaxy_history_data(
+            galaxy_to_refinery_mapping_list.append(
                 {
                     WorkflowTool.GALAXY_DATASET_HISTORY_ID:
                         self.FAKE_DATASET_HISTORY_ID,
                     Tool.REFINERY_FILE_UUID: node.file_uuid
                 }
             )
+        self.tool.update_file_relationships_with_galaxy_history_data(
+            galaxy_to_refinery_mapping_list
+        )
 
     def make_node(self):
         test_file = StringIO.StringIO()
@@ -1416,7 +1431,7 @@ class WorkflowToolTests(ToolManagerTestBase):
             annotation_file_name="LIST:PAIR.json"
         )
 
-        parameters_dict = self.tool.create_workflow_parameters_dict()
+        parameters_dict = self.tool._create_workflow_parameters_dict()
 
         self.assertEqual(parameters_dict[1]["Integer Param"], 1337)
         self.assertEqual(parameters_dict[7]["Float Param"], 1.234)
@@ -1706,7 +1721,7 @@ class WorkflowToolLaunchTests(ToolManagerTestBase):
         "upload_dataset_from_library",
         return_value=history_dataset_dict
     )
-    def test__tool_based_galaxy_file_import_sets_file_relationships_galaxy(
+    def test__galaxy_file_import_ceases_to_set_file_relationships_galaxy(
             self,
             library_upload_mock,
             history_upload_mock
@@ -1723,18 +1738,10 @@ class WorkflowToolLaunchTests(ToolManagerTestBase):
         self.assertTrue(library_upload_mock.called)
         self.assertTrue(history_upload_mock.called)
 
-        self.assertEqual(
+        with self.assertRaises(SyntaxError):
             WorkflowTool.objects.get(
                 uuid=self.tool.uuid
-            ).get_file_relationships_galaxy(),
-            [
-                {
-                    Tool.REFINERY_FILE_UUID: self.file_store_item.uuid,
-                    self.tool.GALAXY_DATASET_HISTORY_ID: history_dataset_dict[
-                        "id"]
-                }
-            ]
-        )
+            ).get_file_relationships_galaxy()
 
     @mock.patch.object(
         bioblend.galaxy.libraries.LibraryClient,
@@ -1775,7 +1782,9 @@ class WorkflowToolLaunchTests(ToolManagerTestBase):
         self.assertTrue(self.tool.analysis.is_tool_based)
 
     @mock.patch("tool_manager.models.WorkflowTool.create_dataset_collection")
-    @mock.patch("tool_manager.models.WorkflowTool.create_workflow_inputs_dict")
+    @mock.patch(
+        "tool_manager.models.WorkflowTool._create_workflow_inputs_dict"
+    )
     @mock.patch.object(
         bioblend.galaxy.workflows.WorkflowClient,
         "invoke_workflow",
@@ -1808,7 +1817,7 @@ class WorkflowToolLaunchTests(ToolManagerTestBase):
     @mock.patch.object(tool_manager.models.WorkflowTool,
                        "create_galaxy_library",
                        return_value=library_dict)
-    @mock.patch("celery.task.sets.TaskSet.apply")
+    @mock.patch("celery.task.sets.TaskSet.apply_async")
     @mock.patch.object(celery.result.TaskSetResult, "ready",
                        return_value=False)
     @mock.patch.object(analysis_manager.tasks, "get_taskset_result",
@@ -1906,6 +1915,8 @@ class WorkflowToolLaunchTests(ToolManagerTestBase):
         self.assertTrue(send_email_mock.called)
         self.assertTrue(galaxy_cleanup_mock.called)
 
+    @mock.patch.object(celery.result.TaskSetResult, "join",
+                       return_value=[])
     @mock.patch("celery.task.sets.TaskSet.apply_async")
     @mock.patch.object(celery.result.TaskSetResult, "ready",
                        return_value=False)
@@ -1922,6 +1933,7 @@ class WorkflowToolLaunchTests(ToolManagerTestBase):
         taskset_result_mock,
         ready_mock,
         apply_async_mock,
+        join_mock
     ):
         self.create_valid_tool(ToolDefinition.WORKFLOW)
         _run_tool_based_galaxy_workflow(self.tool.analysis.uuid)
@@ -1938,6 +1950,7 @@ class WorkflowToolLaunchTests(ToolManagerTestBase):
         self.assertTrue(set_galaxy_workflow_task_group_id_mock.called)
         self.assertTrue(retry_mock.called)
         self.assertEqual(retry_mock.call_count, 2)
+        self.assertTrue(join_mock.called)
 
     @mock.patch.object(celery.result.TaskSetResult, "ready",
                        return_value=True)
