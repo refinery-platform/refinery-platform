@@ -94,7 +94,7 @@ core_router = DefaultRouter()
 core_router.register(r'nodes', NodeViewSet)
 core_router.register(r'workflows', WorkflowViewSet)
 core_router.urls.extend([
-    url(r'^data_sets_old/(?P<uuid>'
+    url(r'^data_sets/(?P<uuid>'
         r'[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{'
         r''r'12})/$',
         DataSetsViewSet.as_view()),
