@@ -20,7 +20,9 @@ from docker.errors import APIError
 from analysis_manager.models import AnalysisStatus
 from analysis_manager.tasks import _tool_based_galaxy_file_import, run_analysis
 from analysis_manager.utils import create_analysis, validate_analysis_config
-from core.models import Analysis, DataSet, OwnableResource, Workflow
+from core.models import (INPUT_CONNECTION, OUTPUT_CONNECTION, Analysis,
+                         AnalysisNodeConnection, DataSet, OwnableResource,
+                         Workflow)
 from data_set_manager.models import Node
 from data_set_manager.utils import get_file_url_from_node_uuid
 from file_store.models import FileType
@@ -580,6 +582,49 @@ class WorkflowTool(Tool):
         AnalysisStatus.objects.create(analysis=analysis)
 
         return analysis
+
+    def _create_analysis_node_connections(self, input_nodes=True):
+        """
+        Create the AnalysisNodeConnection objects corresponding to the input or
+        derived Nodes of a WorkflowTool launch.
+
+        If the `input_nodes` parameter == True AnalysisNodeConnections
+        will only be created for the input Nodes of a Tool launch, otherwise
+        AnalysisNodeConnections will be created for the output Galaxy Datasets
+        from the Galaxy Workflow execution.
+
+        :param input_nodes: Boolean, aids in deciding whether or not to
+        create AnalysisNodeConnections of the INPUT/OUTPUT connection type.
+        """
+        logger.info(
+            "Creating %s AnalysisNodeConnections for %s",
+            "INPUT" if input_nodes else "OUTPUT", self.name
+        )
+        if input_nodes:
+            for node in self._get_input_nodes():
+                file_store_item = node.get_file_store_item()
+
+                AnalysisNodeConnection.objects.create(
+                    analysis=self.analysis,
+                    node=node,
+                    direction=INPUT_CONNECTION,
+                    name=node.name,
+                    step=self.INPUT_STEP,
+                    filename=file_store_item,
+                    is_refinery_file=file_store_item.is_local()
+                )
+        else:
+            for galaxy_dataset in self._get_galaxy_datasets_list():
+                AnalysisNodeConnection.objects.create(
+                    analysis=self.analysis,
+                    direction=OUTPUT_CONNECTION,
+                    name=galaxy_dataset["name"],
+                    subanalysis=self.subanalysis_number,
+                    step=self._get_workflow_step(galaxy_dataset),
+                    filename=galaxy_dataset["name"],
+                    filetype=galaxy_dataset["file_ext"],
+                    is_refinery_file=True
+                )
 
     def _create_collection_description(self, galaxy_element_list=None):
         """
