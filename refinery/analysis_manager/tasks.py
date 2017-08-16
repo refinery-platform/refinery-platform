@@ -306,9 +306,13 @@ def run_analysis(analysis_uuid):
     analysis = _get_analysis(analysis_uuid)
 
     # if cancelled by user
-    if analysis.failed():
-        analysis.terminate_file_import_tasks()
-        return
+    try:
+        if analysis.failed():
+            analysis.terminate_file_import_tasks()
+            return
+    except AttributeError as e:
+        logger.debug(e)
+        run_analysis.retry(countdown=RETRY_INTERVAL)
 
     _get_analysis_status(analysis_uuid)
     _refinery_file_import(analysis_uuid)
@@ -316,17 +320,12 @@ def run_analysis(analysis_uuid):
     if analysis.is_tool_based:
         _run_tool_based_galaxy_file_import(analysis_uuid)
         _run_tool_based_galaxy_workflow(analysis_uuid)
-        _check_galaxy_history_state(analysis_uuid)
-        _run_tool_based_galaxy_file_export(analysis_uuid)
     else:
         _run_galaxy_workflow(analysis_uuid)
-        _check_galaxy_history_state(analysis_uuid)
-        _galaxy_file_export(analysis_uuid)
-        _attach_workflow_outputs(analysis_uuid)
 
-
-def _run_tool_based_galaxy_file_export(analysis_uuid):
-    raise NotImplementedError
+    _check_galaxy_history_state(analysis_uuid)
+    _galaxy_file_export(analysis_uuid)
+    _attach_workflow_outputs(analysis_uuid)
 
 
 def _run_galaxy_workflow(analysis_uuid):
@@ -405,7 +404,7 @@ def _run_tool_based_galaxy_file_import(analysis_uuid):
 
         galaxy_file_import_taskset = TaskSet(
             tasks=galaxy_import_tasks
-        ).apply_async()
+        ).apply()
 
         galaxy_file_import_taskset.save()
 
@@ -600,8 +599,6 @@ def _start_galaxy_analysis(analysis_uuid):
 @task()
 def _tool_based_galaxy_file_import(analysis_uuid, file_store_item_uuid,
                                    history_dict, library_dict):
-
-    analysis_status = _get_analysis_status(analysis_uuid)
     tool = _get_workflow_tool(analysis_uuid)
 
     file_store_item = FileStoreItem.objects.get(uuid=file_store_item_uuid)
@@ -623,6 +620,8 @@ def _tool_based_galaxy_file_import(analysis_uuid, file_store_item_uuid,
 
     number_of_files = len(tool.get_input_file_uuid_list())
     single_file_percentage = (100 / number_of_files)
+
+    analysis_status = _get_analysis_status(analysis_uuid)
     analysis_status.galaxy_import_progress = (
         analysis_status.galaxy_import_progress + single_file_percentage
     )
@@ -639,6 +638,11 @@ def _get_galaxy_download_tasks(analysis):
     task_list = []
 
     # retrieving list of files to download for workflow
+    if analysis.is_tool_based:
+        tool = _get_workflow_tool(analysis.uuid)
+        tool.create_workflow_file_downloads()
+        tool.create_analysis_node_connections(input_nodes=False)
+
     dl_files = analysis.workflow_dl_files
     # creating dictionary based on files to download predetermined by workflow
     # w/ keep operators
@@ -667,42 +671,49 @@ def _get_galaxy_download_tasks(analysis):
         if results['state'] == 'ok':
             file_type = results["type"]
             curr_file_id = results['name']
+
             if curr_file_id in dl_dict:
                 curr_dl_dict = dl_dict[curr_file_id]
                 result_name = curr_dl_dict['filename'] + '.' + file_type
-                # size of file defined by galaxy
-                file_size = results['file_size']
-                # Determining tag if galaxy results should be download through
-                # http or copying files directly to retrieve HTML files as zip
-                # archives via dataset URL
-                if galaxy_instance.local_download and file_type != 'html':
-                    download_url = results['file_name']
-                else:
-                    download_url = urlparse.urljoin(
-                            galaxy_instance.base_url, '/'.join(
-                                    ['datasets', str(results['dataset_id']),
-                                     'display?to_ext=txt']))
-                # workaround to set the correct file type for zip archives of
-                # FastQC HTML reports produced by Galaxy dynamically
-                if file_type == 'html':
-                    file_type = 'zip'
-                # TODO: when changing permanent=True, fix update of % download
-                # of file
-                filestore_uuid = create(
-                    source=download_url, filetype=file_type)
-                # adding history files to django model
-                temp_file = AnalysisResult(
-                    analysis_uuid=analysis.uuid,
-                    file_store_uuid=filestore_uuid,
-                    file_name=result_name, file_type=file_type)
-                temp_file.save()
-                analysis.results.add(temp_file)
-                analysis.save()
-                # downloading analysis results into file_store
-                # only download files if size is greater than 1
-                if file_size > 0:
-                    task_id = import_file.subtask(
-                            (filestore_uuid, False, file_size))
-                    task_list.append(task_id)
+
+            if analysis.is_tool_based:
+                result_name = "{}.{}".format(results['name'], file_type)
+
+            # size of file defined by galaxy
+            file_size = results['file_size']
+            # Determining tag if galaxy results should be download through
+            # http or copying files directly to retrieve HTML files as zip
+            # archives via dataset URL
+            if galaxy_instance.local_download and file_type != 'html':
+                download_url = results['file_name']
+            else:
+                download_url = urlparse.urljoin(
+                        galaxy_instance.base_url, '/'.join(
+                                ['datasets', str(results['dataset_id']),
+                                 'display?to_ext=txt']))
+            # workaround to set the correct file type for zip archives of
+            # FastQC HTML reports produced by Galaxy dynamically
+            if file_type == 'html':
+                file_type = 'zip'
+            # TODO: when changing permanent=True, fix update of % download
+            # of file
+            filestore_uuid = create(
+                source=download_url,
+                filetype=file_type
+            )
+            # adding history files to django model
+            temp_file = AnalysisResult(
+                analysis_uuid=analysis.uuid,
+                file_store_uuid=filestore_uuid,
+                file_name=result_name, file_type=file_type)
+            temp_file.save()
+            analysis.results.add(temp_file)
+            analysis.save()
+            # downloading analysis results into file_store
+            # only download files if size is greater than 1
+            if file_size > 0:
+                task_id = import_file.subtask(
+                        (filestore_uuid, False, file_size))
+                task_list.append(task_id)
 
     return task_list
