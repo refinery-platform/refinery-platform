@@ -1422,7 +1422,10 @@ class Analysis(OwnableResource):
             connection = self.galaxy_connection()
             error_msg = "Error deleting Galaxy %s for analysis '%s': %s"
 
-            # Delete Galaxy library
+            logger.info("Purging galaxy of libraries, histories, "
+                        "and workflows related to the execution of Analysis "
+                        "with UUID: %s", self.uuid)
+
             if self.library_id:
                 try:
                     connection.libraries.delete_library(self.library_id)
@@ -1672,15 +1675,20 @@ class Analysis(OwnableResource):
         # 4. create derived data file nodes for all entries and connect to data
         # transformation nodes
         for output_connection in AnalysisNodeConnection.objects.filter(
-                analysis=self, direction=OUTPUT_CONNECTION):
+                analysis=self,
+                direction=OUTPUT_CONNECTION
+        ):
             # create derived data file node
-            derived_data_file_node = \
+            derived_data_file_node = (
                 Node.objects.create(
                     study=study, assay=assay,
                     type=Node.DERIVED_DATA_FILE,
-                    name=output_connection.name, analysis_uuid=self.uuid,
+                    name=output_connection.name,
+                    analysis_uuid=self.uuid,
                     subanalysis=output_connection.subanalysis,
-                    workflow_output=output_connection.name)
+                    workflow_output=output_connection.name
+                )
+            )
             # retrieve uuid of corresponding output file if exists
             logger.info("Results for '%s' and %s.%s: %s",
                         self.uuid,
@@ -1752,11 +1760,17 @@ class Analysis(OwnableResource):
 
         # 5. create annotated nodes and index new nodes
         node_uuids = AnalysisNodeConnection.objects.filter(
-            analysis=self, direction=OUTPUT_CONNECTION, is_refinery_file=True
+            analysis=self,
+            direction=OUTPUT_CONNECTION,
+            is_refinery_file=True
         ).values_list('node__uuid', flat=True)
+
         add_annotated_nodes_selection(
-            node_uuids, Node.DERIVED_DATA_FILE,
-            study.uuid, assay.uuid)
+            node_uuids,
+            Node.DERIVED_DATA_FILE,
+            study.uuid,
+            assay.uuid
+        )
         index_annotated_nodes_selection(node_uuids)
 
     def attach_outputs_downloads(self):
