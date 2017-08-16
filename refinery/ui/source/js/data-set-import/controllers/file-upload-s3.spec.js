@@ -4,43 +4,45 @@
   describe('RefineryFileUploadS3Ctrl', function () {
     var $controller;
     var $rootScope;
+    var s3UploadService;
     var ctrl;
     var scope;
 
     beforeEach(module('refineryApp'));
     beforeEach(module('refineryDataSetImport'));
-    beforeEach(inject(function (_$controller_, _$rootScope_) {
+    beforeEach(inject(function (_$controller_, _$rootScope_, _s3UploadService_) {
       $controller = _$controller_;
       $rootScope = _$rootScope_;
+      s3UploadService = _s3UploadService_;
       scope = $rootScope.$new();
       ctrl = $controller('RefineryFileUploadS3Ctrl', { $scope: scope });
     }));
 
-    it('RefineryFileUploadS3Ctrl should exist', function () {
+    it('should exist', function () {
       expect(ctrl).toBeDefined();
     });
 
     describe('vm.files', function () {
-      it('should be undefined', function () {
+      it('should be initially undefined', function () {
         expect(ctrl.files).toBeUndefined();
       });
     });
 
     describe('vm.multifileUploadInProgress', function () {
-      it('should be false', function () {
+      it('should be initially false', function () {
         expect(ctrl.multifileUploadInProgress).toBe(false);
       });
     });
 
     describe('isUploadConfigured', function () {
-      it('should be defined', function () {
-        expect(ctrl.isUploadConfigured).toBeDefined();
+      it('should be a function', function () {
+        expect(ctrl.isUploadConfigured).toEqual(jasmine.any(Function));
       });
     });
 
     describe('addFiles', function () {
-      it('should be defined', function () {
-        expect(ctrl.addFiles).toBeDefined();
+      it('should be a function', function () {
+        expect(ctrl.addFiles).toEqual(jasmine.any(Function));
       });
       it('should return no value', function () {
         expect(ctrl.addFiles([])).toBeUndefined();
@@ -57,8 +59,8 @@
     });
 
     describe('isFileNew', function () {
-      it('should be defined', function () {
-        expect(ctrl.isFileNew).toBeDefined();
+      it('should be a function', function () {
+        expect(ctrl.isFileNew).toEqual(jasmine.any(Function));
       });
       it('should return true if file progress is undefined', function () {
         var file = { progress: undefined };
@@ -71,8 +73,8 @@
     });
 
     describe('isUploadInProgress', function () {
-      it('should be defined', function () {
-        expect(ctrl.isUploadInProgress).toBeDefined();
+      it('should be a function', function () {
+        expect(ctrl.isUploadInProgress).toEqual(jasmine.any(Function));
       });
       it('should return false if file is new', function () {
         spyOn(ctrl, 'isFileNew').and.returnValue(true);
@@ -88,8 +90,8 @@
     });
 
     describe('areUploadsInProgress', function () {
-      it('should be defined', function () {
-        expect(ctrl.areUploadsInProgress).toBeDefined();
+      it('should be a function', function () {
+        expect(ctrl.areUploadsInProgress).toEqual(jasmine.any(Function));
       });
       it('should return false when no files were added', function () {
         expect(ctrl.areUploadsInProgress()).toBe(false);
@@ -101,8 +103,8 @@
     });
 
     describe('isUploadComplete', function () {
-      it('should be defined', function () {
-        expect(ctrl.isUploadComplete).toBeDefined();
+      it('should be a function', function () {
+        expect(ctrl.isUploadComplete).toEqual(jasmine.any(Function));
       });
       it('should return true if upload status is error', function () {
         expect(ctrl.isUploadComplete({ $error: 'error message' })).toBe(true);
@@ -116,8 +118,8 @@
     });
 
     describe('areUploadsCancellable', function () {
-      it('should be defined', function () {
-        expect(ctrl.areUploadsCancellable).toBeDefined();
+      it('should be a function', function () {
+        expect(ctrl.areUploadsCancellable).toEqual(jasmine.any(Function));
       });
       it('should return false when no files were added', function () {
         expect(ctrl.areUploadsCancellable()).toBe(false);
@@ -129,8 +131,8 @@
     });
 
     describe('areUploadsEnabled', function () {
-      it('should be defined', function () {
-        expect(ctrl.areUploadsEnabled).toBeDefined();
+      it('should be a function', function () {
+        expect(ctrl.areUploadsEnabled).toEqual(jasmine.any(Function));
       });
       it('should return false when no files were added', function () {
         expect(ctrl.areUploadsEnabled()).toBe(false);
@@ -146,26 +148,123 @@
     });
 
     describe('uploadFile', function () {
-      it('should be defined', function () {
-        expect(ctrl.uploadFile).toBeDefined();
+      var file = {};
+      var mockManagedUpload;
+      var mockProgressHandler;
+      var mockSuccessHandler;
+      var mockFailureHandler;
+      beforeEach(function () {
+        mockManagedUpload = {
+          on: function (event, callback) {
+            if (event === 'httpUploadProgress') {
+              mockProgressHandler = callback;
+            }
+          },
+          promise: function () {
+            return {
+              then: function (success, failure) {
+                mockSuccessHandler = success;
+                mockFailureHandler = failure;
+              }
+            };
+          }
+        };
+        spyOn(s3UploadService, 'upload').and.callFake(function () {
+          return mockManagedUpload;
+        });
+        ctrl.uploadFile(file);
+      });
+      it('should be a function', function () {
+        expect(ctrl.uploadFile).toEqual(jasmine.any(Function));
+      });
+      it('should call s3UploadService.upload()', function () {
+        expect(s3UploadService.upload).toHaveBeenCalled();
+      });
+      it('should initialize file progress to zero', function () {
+        expect(file.progress).toEqual(0);
+      });
+      it('should set an upload progress handler', function () {
+        expect(mockProgressHandler).toEqual(jasmine.any(Function));
+      });
+      it('should set an upload success handler', function () {
+        expect(mockSuccessHandler).toEqual(jasmine.any(Function));
+      });
+      it('should set an upload failure handler', function () {
+        expect(mockFailureHandler).toEqual(jasmine.any(Function));
+      });
+    });
+
+    describe('uploadFile error handling', function () {
+      var file = {};
+      beforeEach(function () {
+        spyOn(s3UploadService, 'upload').and.throwError();
+        ctrl.uploadFile(file);
+      });
+      it('should set file progress to 100 on error', function () {
+        expect(file.progress).toEqual(100);
+      });
+      it('should set the error message', function () {
+        expect(file.$error).toEqual(jasmine.any(String));
       });
     });
 
     describe('uploadFiles', function () {
-      it('should be defined', function () {
-        expect(ctrl.uploadFiles).toBeDefined();
+      var newFile = {};
+      var fileInProgress = { progress: 0 };
+      beforeEach(function () {
+        spyOn(ctrl, 'uploadFile').and.callFake(function () {});
+      });
+      it('should be a function', function () {
+        expect(ctrl.uploadFiles).toEqual(jasmine.any(Function));
+      });
+      it('should upload files that have not been uploaded yet', function () {
+        ctrl.files = [newFile, fileInProgress];
+        ctrl.uploadFiles();
+        expect(ctrl.uploadFile).toHaveBeenCalledWith(newFile);
+        expect(ctrl.uploadFile.calls.count()).toEqual(1);
       });
     });
 
     describe('cancelUpload', function () {
-      it('should be defined', function () {
-        expect(ctrl.cancelUpload).toBeDefined();
+      var mockManagedUpload;
+      beforeEach(function () {
+        mockManagedUpload = {
+          abort: function () {}
+        };
+        spyOn(mockManagedUpload, 'abort').and.callFake(function () {});
+      });
+      it('should be a function', function () {
+        expect(ctrl.cancelUpload).toEqual(jasmine.any(Function));
+      });
+      it('should remove new files from file array', function () {
+        var file = {};
+        ctrl.files = [file];
+        ctrl.cancelUpload(file);
+        expect(ctrl.files).toEqual([]);
+      });
+      it('should abort file uploads in progress', function () {
+        var file = { progress: 0, managedUpload: mockManagedUpload };
+        ctrl.files = [file];
+        ctrl.cancelUpload(file);
+        expect(ctrl.files).toEqual([file]);
+        expect(mockManagedUpload.abort.calls.count()).toEqual(1);
       });
     });
 
     describe('cancelUploads', function () {
-      it('should be defined', function () {
-        expect(ctrl.cancelUploads).toBeDefined();
+      var newFile = {};
+      var fileInProgress = { progress: 0 };
+      var completedFile = { success: true };
+      beforeEach(function () {
+        spyOn(ctrl, 'cancelUpload').and.callFake(function () {});
+      });
+      it('should be a function', function () {
+        expect(ctrl.cancelUploads).toEqual(jasmine.any(Function));
+      });
+      it('should call cancelUpload() for all files', function () {
+        ctrl.files = [newFile, fileInProgress, completedFile];
+        ctrl.cancelUploads();
+        expect(ctrl.cancelUpload.calls.count()).toEqual(3);
       });
     });
   });
