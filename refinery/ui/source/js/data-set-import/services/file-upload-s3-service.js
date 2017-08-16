@@ -63,7 +63,9 @@
 
     vm.upload = function (file) {
       if (!vm.isConfigValid()) {
-        throw Error('Error configuring S3 interface object');
+        var errorMessage = 'Error configuring S3 interface object';
+        $log.error(errorMessage);
+        throw Error(errorMessage);
       }
       var params;
       try {
