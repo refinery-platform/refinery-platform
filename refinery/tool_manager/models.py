@@ -723,6 +723,10 @@ class WorkflowTool(Tool):
         )
 
     def _create_workflow_inputs_dict(self):
+        """
+        Create and return the inputs dict expected from bioblend. See here:
+        http://bit.ly/2vIwmVw for details on its structure.
+        """
         return {
             '0': {
                 'id': self.get_galaxy_dict()[self.COLLECTION_INFO]["id"],
@@ -731,6 +735,10 @@ class WorkflowTool(Tool):
         }
 
     def _create_workflow_parameters_dict(self):
+        """
+        Create and return the params dict expected from bioblend. See here:
+        http://bit.ly/2vIwmVw for details on its structure.
+        """
         params_dict = {}
         tool_launch_config_parameters = self._get_workflow_parameters()
 
