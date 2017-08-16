@@ -169,9 +169,7 @@
             };
           }
         };
-        spyOn(s3UploadService, 'upload').and.callFake(function () {
-          return mockManagedUpload;
-        });
+        spyOn(s3UploadService, 'upload').and.returnValue(mockManagedUpload);
         ctrl.uploadFile(file);
       });
       it('should be a function', function () {
