@@ -321,7 +321,7 @@ MetadataTableImportCtrl.prototype.startImport = function () {
       // Set preview flag so ui won't trigger alert when navigating away.
       self.metadataStatusService.setMetadataPreviewStatus(false);
       self.$timeout(function () {
-        self.$window.location.href = '/data_sets/' + self.importedDataSetUuid;
+        self.$window.location.href = '/data_sets2/' + self.importedDataSetUuid;
       }, 2500);
     })
     .catch(function (error) {

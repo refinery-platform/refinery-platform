@@ -38,7 +38,7 @@
           id="view-in-file-browser"
           class="btn btn-important"
           ng-show="!preview.settings.djangoApp.satoriDemo"
-          ng-href="data_sets/{{ preview.dataSetUuid }}">
+          ng-href="data_sets2/{{ preview.dataSetUuid }}">
           <i class="fa fa-table"></i>
           View content in File Browser
         </a>
@@ -242,18 +242,18 @@
             refinery-tooltip-placement="left">
           </i>
           <span ng-if="analysis.status === 'SUCCESS'">
-             <a ng-href="/data_sets/{{ analysis.data_set__uuid }}/analysis/{{ analysis.uuid }}">
+             <a ng-href="/data_sets_old/{{ analysis.data_set__uuid }}/analysis/{{ analysis.uuid }}">
               {{ analysis.name }}
              </a>
           </span>
           <span ng-if="analysis.status !== 'SUCCESS'">
-            <a ng-href="/data_sets/{{ analysis.data_set__uuid }}/#/analyses">
+            <a ng-href="/data_sets2/{{ analysis.data_set__uuid }}/#/analyses/">
               {{ analysis.name }}
             </a>
           </span>
         </li>
         <li ng-if="preview.numAnalyses > preview.maxAnalyses">
-          <a ng-href="/data_sets/{{ preview.dataSetUuid }}/#/analyses/">View all analyses</a>
+          <a ng-href="/data_sets2/{{ preview.dataSetUuid }}/#/analyses/">View all analyses</a>
         </li>
       </ol>
       </div>

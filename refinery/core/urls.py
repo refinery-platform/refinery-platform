@@ -45,21 +45,21 @@ urlpatterns = patterns(
     url(r'^analyses/(?P<analysis_uuid>'
         r'[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/$',
         'analysis', name="analysis"),
-    url(r'^data_sets/(?P<data_set_uuid>'
+    url(r'^data_sets_old/(?P<data_set_uuid>'
         r'[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/$',
         'data_set', name="data_set"),
     url(r'^data_sets2/(?P<data_set_uuid>'
         r'[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/$',
         'data_set2', name="data_set2"),
-    url(r'^data_sets/(?P<data_set_uuid>'
+    url(r'^data_sets_old/(?P<data_set_uuid>'
         r'[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/'
         r'analysis/(?P<analysis_uuid>'
         r'[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/$',
         'data_set', name="data_set_analysis"),
-    url(r'^data_sets/(?P<uuid>'
+    url(r'^data_sets_old/(?P<uuid>'
         r'[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/edit/'
         r'$', 'data_set_edit', name="data_set_edit"),
-    url(r'^data_sets/(?P<slug>[a-zA-Z0-9\_]+)/$', 'data_set_slug',
+    url(r'^data_sets_old/(?P<slug>[a-zA-Z0-9\_]+)/$', 'data_set_slug',
         name="data_set_slug"),
     url(r'^workflows/(?P<uuid>'
         r'[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/$',
