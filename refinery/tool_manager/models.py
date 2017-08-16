@@ -806,6 +806,13 @@ class WorkflowTool(Tool):
             )[self.GALAXY_DATA][self.FILE_RELATIONSHIPS_GALAXY]
         )
 
+    @staticmethod
+    def _get_galaxy_dataset_filename(galaxy_dataset_dict):
+        return "{}.{}".format(
+            galaxy_dataset_dict["name"],
+            galaxy_dataset_dict["file_ext"]
+        )
+
     def get_galaxy_dict(self):
         """
         Fetch the dict in a Tool's `tool_launch_config` under the
