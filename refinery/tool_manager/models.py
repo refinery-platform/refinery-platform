@@ -321,7 +321,7 @@ class Tool(OwnableResource):
             self.get_tool_launch_config()[self.FILE_RELATIONSHIPS_URLS]
         )
 
-    def get_node_uuids(self):
+    def get_input_node_uuids(self):
         node_uuids = re.findall(
             r'[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}',
             self.get_file_relationships()
@@ -379,7 +379,7 @@ class Tool(OwnableResource):
         """
 
         tool_launch_config = self.get_tool_launch_config()
-        node_uuids = self.get_node_uuids()
+        node_uuids = self.get_input_node_uuids()
 
         # Add list of FileStoreItem UUIDs to our ToolLaunchConfig for later use
         tool_launch_config[self.FILE_UUID_LIST] = []
