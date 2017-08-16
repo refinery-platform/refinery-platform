@@ -532,8 +532,6 @@ class WorkflowTool(Tool):
                                 galaxy_element_data
                             )
         else:
-            # These assertions are only temporary until further testing has
-            # been done on this feature
             assert len(galaxy_element_data) == 1, \
                 "Only one element should be present in: {}".format(
                     galaxy_element_data
