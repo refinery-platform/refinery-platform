@@ -722,7 +722,7 @@ class WorkflowTool(Tool):
             name="Library for: {}".format(self)
         )
 
-    def create_workflow_inputs(self):
+    def _create_workflow_inputs_dict(self):
         return {
             '0': {
                 'id': self.get_galaxy_dict()[self.COLLECTION_INFO]["id"],
@@ -730,7 +730,7 @@ class WorkflowTool(Tool):
             }
         }
 
-    def create_workflow_parameters_dict(self):
+    def _create_workflow_parameters_dict(self):
         params_dict = {}
         tool_launch_config_parameters = self._get_workflow_parameters()
 
@@ -821,9 +821,9 @@ class WorkflowTool(Tool):
         """Invoke a Tool's workflow in Galaxy"""
         return self.galaxy_connection.workflows.invoke_workflow(
             self.tool_definition.workflow.internal_id,
-            history_name="Workflow Run for {}".format(self.name),
-            inputs=self.create_workflow_inputs(),
-            params=self.create_workflow_parameters_dict()
+            history_name="Workflow Run for {} {}".format(self.name, self.uuid),
+            inputs=self._create_workflow_inputs_dict(),
+            params=self._create_workflow_parameters_dict()
         )
 
     def launch(self):
