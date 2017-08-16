@@ -2,6 +2,7 @@ import ast
 import json
 import logging
 import re
+import uuid
 
 from django.conf import settings
 from django.db import models
@@ -631,12 +632,12 @@ class WorkflowTool(Tool):
         Creates an appropriate bioblend.galaxy.CollectionDescription
         instance based off of the structure of our WorkflowTool's
         file_relationships in a recursive manner.
-        :return: <CollectionDescription>
+        :return: bioblend.galaxy.CollectionDescription instance
         """
         file_relationship_nesting_list = (
             self._parse_file_relationships_nesting(
-                *self.get_file_relationships_galaxy()  # Please note the `*`
-                # unpacking operator used here
+                # Please note the `*` unpacking operator used here
+                *self.get_file_relationships_galaxy()
             )
         )
 
@@ -666,7 +667,11 @@ class WorkflowTool(Tool):
                 )
             elif isinstance(nested_element, list):
                 list_collection_element = CollectionElement(
-                    name=self.LIST,
+                    name="{} for WorkflowTool: {} - {}".format(
+                        self.LIST,
+                        self.uuid,
+                        str(uuid.uuid4())
+                    ),
                     type=self.LIST
                 )
                 list_collection_element.elements = []
@@ -674,7 +679,11 @@ class WorkflowTool(Tool):
 
             elif isinstance(nested_element, tuple):
                 paired_collection_element = CollectionElement(
-                    name=self.PAIRED,
+                    name="{} for WorkflowTool: {} - {}".format(
+                        self.PAIRED,
+                        self.uuid,
+                        str(uuid.uuid4())
+                    ),
                     type=self.PAIRED
                 )
                 paired_collection_element.elements = []
