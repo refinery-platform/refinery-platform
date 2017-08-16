@@ -849,6 +849,18 @@ class WorkflowTool(Tool):
             ) for file_store_item_uuid in self.get_input_file_uuid_list()
         ]
 
+    def _get_input_nodes(self):
+        """
+        Return a list of Node objects corresponding to the Node UUIDs we
+        receive from the front-end when a WorkflowTool is launched.
+
+        NOTE: There is no exception handling here since this method is
+        within the scope of an atomic transaction.
+        """
+        return [
+            Node.objects.get(uuid=uuid) for uuid in self.get_input_node_uuids()
+        ]
+
     def import_library_dataset_to_history(self, history_id,
                                           library_dataset_id):
         """
