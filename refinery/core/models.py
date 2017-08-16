@@ -1513,7 +1513,7 @@ class Analysis(OwnableResource):
             # TODO: avoid hardcoding URL protocol
             context_dict['url'] = urljoin(
                 "http://" + site_domain,
-                "data_sets/" + data_set_uuid + "/analysis/" + self.uuid)
+                "data_sets_old/" + data_set_uuid + "/analysis/" + self.uuid)
         else:
             email_subj = "[{}] Archive creation failed: {}".format(
                 site_name, name)
