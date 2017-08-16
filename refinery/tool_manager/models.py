@@ -564,6 +564,23 @@ class WorkflowTool(Tool):
                 )
             return galaxy_element_data[0]
 
+    def _create_analysis(self):
+        """Create the Analysis instance for our WorkflowTool's launch()"""
+        analysis_config = self._get_analysis_config()
+        validate_analysis_config(analysis_config)
+
+        analysis = create_analysis(analysis_config)
+        self.set_analysis(analysis.uuid)
+
+        workflow_dict = self._get_workflow_dict()
+        self.analysis.workflow_copy = workflow_dict
+        self.analysis.workflow_steps_num = len(workflow_dict["steps"].keys())
+        self.analysis.save()
+
+        AnalysisStatus.objects.create(analysis=analysis)
+
+        return analysis
+
     def _create_collection_description(self, galaxy_element_list=None):
         """
         Creates an appropriate bioblend.galaxy.CollectionDescription
