@@ -23,7 +23,7 @@ from analysis_manager.tasks import _tool_based_galaxy_file_import, run_analysis
 from analysis_manager.utils import create_analysis, validate_analysis_config
 from core.models import (INPUT_CONNECTION, OUTPUT_CONNECTION, Analysis,
                          AnalysisNodeConnection, DataSet, OwnableResource,
-                         Workflow)
+                         Workflow, WorkflowFilesDL)
 from data_set_manager.models import Node
 from data_set_manager.utils import get_file_url_from_node_uuid
 from file_store.models import FileType
@@ -754,6 +754,22 @@ class WorkflowTool(Tool):
                 )
             )
         return params_dict
+
+    def create_workflow_file_downloads(self):
+        """
+        Create the proper WorkflowFilesDL objects from the list of Galaxy
+        Datasets in our Galaxy Workflow invocation's History and add them to
+        the M2M relation in our WorkflowTool's Analysis.
+        """
+        for galaxy_dataset in self._get_galaxy_datasets_list():
+            self.analysis.workflow_dl_files.add(
+                WorkflowFilesDL.objects.create(
+                    step_id=self._get_workflow_step(galaxy_dataset),
+                    filename=self._get_galaxy_dataset_filename(galaxy_dataset)
+                )
+            )
+
+        self.analysis.save()
 
     def _flatten_file_relationships_nesting(self, nesting=None,
                                             structure=None):
