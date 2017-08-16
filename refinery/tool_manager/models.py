@@ -611,7 +611,7 @@ class WorkflowTool(Tool):
                     direction=INPUT_CONNECTION,
                     name=node.name,
                     step=self.INPUT_STEP,
-                    filename=file_store_item,
+                    filename=file_store_item.datafile.name,
                     is_refinery_file=file_store_item.is_local()
                 )
         else:
