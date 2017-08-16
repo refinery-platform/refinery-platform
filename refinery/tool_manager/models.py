@@ -840,12 +840,12 @@ class WorkflowTool(Tool):
         """
         return [
             _tool_based_galaxy_file_import.subtask(
-                self.analysis.uuid,
-                file_store_item_uuid,
-                self.get_galaxy_dict()[
-                    self.GALAXY_IMPORT_HISTORY_DICT
-                ],
-                self.get_galaxy_dict()[self.GALAXY_LIBRARY_DICT],
+                (
+                    self.analysis.uuid,
+                    file_store_item_uuid,
+                    self.get_galaxy_dict()[self.GALAXY_IMPORT_HISTORY_DICT],
+                    self.get_galaxy_dict()[self.GALAXY_LIBRARY_DICT],
+                )
             ) for file_store_item_uuid in self.get_input_file_uuid_list()
         ]
 
