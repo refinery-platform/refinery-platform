@@ -893,7 +893,7 @@ class WorkflowTool(Tool):
         )
 
     def invoke_workflow(self):
-        """Invoke a Tool's workflow in Galaxy"""
+        """Invoke a WorflowTool's Galaxy Workflow"""
         return self.galaxy_connection.workflows.invoke_workflow(
             self.tool_definition.workflow.internal_id,
             history_name="Workflow Run for {} {}".format(self.name, self.uuid),
