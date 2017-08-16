@@ -861,6 +861,11 @@ class WorkflowTool(Tool):
             Node.objects.get(uuid=uuid) for uuid in self.get_input_node_uuids()
         ]
 
+    def _get_workflow_dict(self):
+        return self.galaxy_connection.workflows.export_workflow_dict(
+                self.tool_definition.workflow.internal_id
+            )
+
     def import_library_dataset_to_history(self, history_id,
                                           library_dataset_id):
         """
