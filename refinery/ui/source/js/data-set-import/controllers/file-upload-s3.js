@@ -105,7 +105,8 @@
         for (var i = 0; i < vm.files.length; i++) {
           if (vm.isFileNew(vm.files[i])) {
             vm.uploadFile(vm.files[i]);
-            return;
+            // to enable sequential uploads
+            return;  // uploadFiles() will be called again from uploadFile()
           }
         }
         vm.multifileUploadInProgress = false;
