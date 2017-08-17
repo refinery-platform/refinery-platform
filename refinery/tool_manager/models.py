@@ -617,7 +617,7 @@ class WorkflowTool(Tool):
                     is_refinery_file=file_store_item.is_local()
                 )
         else:
-            for galaxy_dataset in self._get_galaxy_datasets_list():
+            for galaxy_dataset in self._get_galaxy_history_dataset_list():
                 AnalysisNodeConnection.objects.create(
                     analysis=self.analysis,
                     direction=OUTPUT_CONNECTION,
