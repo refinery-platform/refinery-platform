@@ -977,7 +977,8 @@ class WorkflowTool(Tool):
             galaxy_dict[self.FILE_RELATIONSHIPS_GALAXY] = (
                 galaxy_dict[self.FILE_RELATIONSHIPS_GALAXY].replace(
                     node.uuid,
-                    "{}".format(json.dumps(galaxy_to_refinery_dict))
+                    "{}".format(json.dumps(galaxy_to_refinery_dict)),
+                    1
                 )
             )
             tool_launch_config = self.get_tool_launch_config()
