@@ -19,7 +19,8 @@ from django_extensions.db.fields import UUIDField
 from docker.errors import APIError
 
 from analysis_manager.models import AnalysisStatus
-from analysis_manager.tasks import _tool_based_galaxy_file_import, run_analysis
+from analysis_manager.tasks import (_tool_based_galaxy_file_import,
+                                    get_taskset_result, run_analysis)
 from analysis_manager.utils import create_analysis, validate_analysis_config
 from core.models import (INPUT_CONNECTION, OUTPUT_CONNECTION, Analysis,
                          AnalysisNodeConnection, DataSet, OwnableResource,
@@ -958,10 +959,7 @@ class WorkflowTool(Tool):
         else:
             self.save()
 
-    def update_file_relationships_with_galaxy_history_data(
-            self,
-            galaxy_to_refinery_mapping_list
-    ):
+    def update_file_relationships_with_galaxy_history_data(self):
         """
         Replace a Tool's Node uuid in its `file_relationships` string with
         information about the file uploaded into a galaxy history that
@@ -969,22 +967,22 @@ class WorkflowTool(Tool):
         key in the tool launch config: `file_relationships_galaxy`.
         No error handling here since this method is only called in an
         atomic transaction.
-        :param galaxy_to_refinery_mapping_list: list containing dicts in the
-        form of:
-            {
-                Tool.REFINERY_FILE_UUID: file_store_item_uuid,
-                Tool.GALAXY_DATASET_HISTORY_ID: history_dataset_dict["id"]
-            }
         """
+        analysis_status = AnalysisStatus.objects.get(analysis=self.analysis)
         galaxy_dict = self.get_galaxy_dict()
-        for galaxy_to_refinery_mapping in galaxy_to_refinery_mapping_list:
+
+        galaxy_to_refinery_mapping_list = get_taskset_result(
+            analysis_status.galaxy_import_task_group_id
+        ).join()
+
+        for galaxy_to_refinery_dict in galaxy_to_refinery_mapping_list:
             node = Node.objects.get(
-                file_uuid=galaxy_to_refinery_mapping[Tool.REFINERY_FILE_UUID]
+                file_uuid=galaxy_to_refinery_dict[Tool.REFINERY_FILE_UUID]
             )
             galaxy_dict[self.FILE_RELATIONSHIPS_GALAXY] = (
                 galaxy_dict[self.FILE_RELATIONSHIPS_GALAXY].replace(
                     node.uuid,
-                    "{}".format(json.dumps(galaxy_to_refinery_mapping))
+                    "{}".format(json.dumps(galaxy_to_refinery_dict))
                 )
             )
             tool_launch_config = self.get_tool_launch_config()

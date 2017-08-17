@@ -442,17 +442,12 @@ def _run_tool_based_galaxy_workflow(analysis_uuid):
     """
     analysis = _get_analysis(analysis_uuid)
     analysis_status = _get_analysis_status(analysis_uuid)
+    tool = _get_workflow_tool(analysis_uuid)
 
     if not analysis_status.galaxy_workflow_task_group_id:
         logger.debug("Starting workflow execution in Galaxy")
-        tool = _get_workflow_tool(analysis_uuid)
-        galaxy_file_import_taskset = get_taskset_result(
-            analysis_status.galaxy_import_task_group_id
-        )
-        galaxy_to_refinery_mapping_list = galaxy_file_import_taskset.join()
-        tool.update_file_relationships_with_galaxy_history_data(
-            galaxy_to_refinery_mapping_list
-        )
+
+        tool.update_file_relationships_with_galaxy_history_data()
 
         galaxy_workflow_tasks = [
             _invoke_tool_based_galaxy_workflow.subtask((analysis_uuid,))
