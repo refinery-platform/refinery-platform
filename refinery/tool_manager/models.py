@@ -501,17 +501,6 @@ class WorkflowTool(Tool):
         return self.analysis.history_id
 
     @property
-    def galaxy_workflow_invocation_steps(self):
-        """
-        Return a list of dicts corresponding to each step of our
-        Galaxy Workflow's invocation.
-        """
-        return self.galaxy_connection.workflows.show_invocation(
-            self.analysis.history_id,
-            self.get_galaxy_dict()[self.GALAXY_WORKFLOW_INVOCATION_DATA]["id"]
-        )["steps"]
-
-    @property
     def subanalysis_number(self):
         """
         Return an <int> corresponding to the # of successful Analyses that
@@ -851,6 +840,16 @@ class WorkflowTool(Tool):
             ) for file_store_item_uuid in self.get_input_file_uuid_list()
         ]
 
+    def _get_galaxy_workflow_invocation_steps(self):
+        """
+        Return a list of dicts corresponding to each step of our
+        Galaxy Workflow's invocation.
+        """
+        return self.galaxy_connection.workflows.show_invocation(
+            self.analysis.history_id,
+            self.get_galaxy_dict()[self.GALAXY_WORKFLOW_INVOCATION_DATA]["id"]
+        )["steps"]
+
     def _get_input_nodes(self):
         """
         Return a list of Node objects corresponding to the Node UUIDs we
@@ -872,14 +871,9 @@ class WorkflowTool(Tool):
         return self.get_tool_launch_config()[ToolDefinition.PARAMETERS]
 
     def _get_workflow_step(self, galaxy_dataset_dict):
-        for step in self.galaxy_workflow_invocation_steps:
+        for step in self._get_galaxy_workflow_invocation_steps():
             if step["job_id"] == galaxy_dataset_dict["creating_job"]:
                 return step["order_index"]
-
-        raise RuntimeError(
-            "Every galaxy dataset should have a corresponding step in the "
-            "workflow invocation."
-        )
 
     def import_library_dataset_to_history(self, history_id,
                                           library_dataset_id):
