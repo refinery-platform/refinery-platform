@@ -701,7 +701,7 @@ class DataSet(SharableResource):
             investigation=self.get_investigation(version)
         )
 
-    def get_study(self):
+    def _get_study(self):
         studies = self.data_set.get_studies()
         if len(studies) != 1:
             raise StandardError(
@@ -710,15 +710,15 @@ class DataSet(SharableResource):
                 ))
         return studies[0]
 
-    def get_assays(self, version=None):
+    def _get_assays(self, version=None):
         return Assay.objects.filter(
             study=Study.objects.filter(
                 investigation=self.get_investigation()
             )
         )
 
-    def get_assay(self):
-        assays = self.data_set.get_assays()
+    def _get_assay(self):
+        assays = self.data_set._get_assays()
         if len(assays) != 1:
             raise StandardError(
                 'Expected exactly 1 assay on {}, instead got {}'.format(
@@ -1507,8 +1507,8 @@ class Analysis(OwnableResource):
     def data_sets_query(self):
         analysis_facet_name = '{}_{}_{}_s'.format(
             NodeIndex.ANALYSIS_UUID_PREFIX,
-            self.data_set.get_study().id,
-            self.data_set.get_assay().id,
+            self.data_set._get_study().id,
+            self.data_set._get_assay().id,
         )
         return quote(json.dumps({analysis_facet_name: self.uuid}))
 
