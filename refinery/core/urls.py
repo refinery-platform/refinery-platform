@@ -6,12 +6,11 @@ Created on Feb 20, 2012
 
 from django.conf.urls import patterns, url
 
+from constants import UUID_RE
 from rest_framework.routers import DefaultRouter
 
 from .views import (AnalysesViewSet, DataSetsViewSet, NodeViewSet, OpenIDToken,
                     WorkflowViewSet)
-
-UUID_RE = r'[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}'
 
 urlpatterns = patterns(
     'core.views',
