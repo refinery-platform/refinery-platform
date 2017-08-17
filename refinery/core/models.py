@@ -8,10 +8,12 @@ from __future__ import absolute_import
 import ast
 import copy
 from datetime import datetime
+import json
 import logging
 import os
 import smtplib
 import socket
+from urllib import quote
 from urlparse import urljoin
 
 from django import forms
@@ -1508,12 +1510,20 @@ class Analysis(OwnableResource):
                         'uuid': self.uuid
                         }
         if self.successful():
+            analysis_facet_name = 'REFINERY_ANALYSIS_UUID_{}_{}_s'.format(
+                'foo',
+                'bar'  # TODO
+            )
             email_subj = "[{}] Archive ready for download: {}".format(
                 site_name, name)
             # TODO: avoid hardcoding URL protocol
             context_dict['url'] = urljoin(
                 "http://" + site_domain,
-                "data_sets_old/" + data_set_uuid + "/analysis/" + self.uuid)
+                "data_sets2/{}/analysis/{}".format(
+                    data_set_uuid,
+                    quote(json.dumps({analysis_facet_name: self.uuid}))
+                )
+            )
         else:
             email_subj = "[{}] Archive creation failed: {}".format(
                 site_name, name)
