@@ -306,13 +306,9 @@ def run_analysis(analysis_uuid):
     analysis = _get_analysis(analysis_uuid)
 
     # if cancelled by user
-    try:
-        if analysis.failed():
-            analysis.terminate_file_import_tasks()
-            return
-    except AttributeError as e:
-        logger.debug(e)
-        run_analysis.retry(countdown=RETRY_INTERVAL)
+    if analysis.failed():
+        analysis.terminate_file_import_tasks()
+        return
 
     _get_analysis_status(analysis_uuid)
     _refinery_file_import(analysis_uuid)

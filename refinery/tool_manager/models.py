@@ -908,8 +908,8 @@ class WorkflowTool(Tool):
         analysis = self._create_analysis()
         self.create_analysis_node_connections()
 
-        # Run the analysis task
-        run_analysis.delay(analysis.uuid)
+        # Run the analysis task with a 5 second delay
+        run_analysis.apply_async((analysis.uuid,), countdown=5)
 
         return JsonResponse(
             {
