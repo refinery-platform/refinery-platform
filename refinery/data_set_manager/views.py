@@ -453,10 +453,11 @@ class ProcessMetadataTableView(View):
             try:
                 identity_id = request.POST.get('identity_id')
             except (KeyError, ValueError):
-                error = {'error_message': 'identity_id is missing'}
+                error_msg = 'identity_id is missing'
+                error = {'error_message': error_msg}
                 if request.is_ajax():
                     return HttpResponseBadRequest(
-                        json.dumps(error), 'application/json'
+                        json.dumps({'error': error_msg}), 'application/json'
                     )
                 else:
                     return render(request, self.template_name, error)
