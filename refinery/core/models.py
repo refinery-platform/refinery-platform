@@ -701,12 +701,30 @@ class DataSet(SharableResource):
             investigation=self.get_investigation(version)
         )
 
+    def get_study(self):
+        studies = self.data_set.get_studies()
+        if len(studies) != 1:
+            raise StandardError(
+                'Expected exactly 1 study on {}, instead got {}'.format(
+                    self.data_set, len(studies)
+                ))
+        return studies[0]
+
     def get_assays(self, version=None):
         return Assay.objects.filter(
             study=Study.objects.filter(
                 investigation=self.get_investigation()
             )
         )
+
+    def get_assay(self):
+        assays = self.data_set.get_assays()
+        if len(assays) != 1:
+            raise StandardError(
+                'Expected exactly 1 assay on {}, instead got {}'.format(
+                    self.data_set, len(assays)
+                ))
+        return assays[0]
 
     def get_file_count(self):
         """Returns the number of files in the data set"""
@@ -1511,24 +1529,10 @@ class Analysis(OwnableResource):
                         'uuid': self.uuid
                         }
         if self.successful():
-            studies = self.data_set.get_studies()
-            if len(studies) != 1:
-                raise StandardError(
-                    'Expected exactly 1 study on {}, instead got {}'.format(
-                        self.data_set, len(studies)
-                    ))
-
-            assays = self.data_set.get_assays()
-            if len(assays) != 1:
-                raise StandardError(
-                    'Expected exactly 1 assay on {}, instead got {}'.format(
-                        self.data_set, len(assays)
-                    ))
-
             analysis_facet_name = '{}_{}_{}_s'.format(
                 NodeIndex.ANALYSIS_UUID_PREFIX,
-                studies[0].id,
-                assays[0].id
+                self.data_set.get_study().id,
+                self.data_set.get_assay().id,
             )
             email_subj = "[{}] Archive ready for download: {}".format(
                 site_name, name)
