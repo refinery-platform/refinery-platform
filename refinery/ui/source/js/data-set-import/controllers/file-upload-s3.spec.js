@@ -2,21 +2,17 @@
   'use strict';
 
   describe('RefineryFileUploadS3Ctrl', function () {
-    var $controller;
-    var $rootScope;
-    var s3UploadService;
     var ctrl;
-    var scope;
+    var s3UploadService;
 
-    beforeEach(module('refineryApp'));
-    beforeEach(module('refineryDataSetImport'));
-    beforeEach(inject(function (_$controller_, _$rootScope_, _s3UploadService_) {
-      $controller = _$controller_;
-      $rootScope = _$rootScope_;
-      s3UploadService = _s3UploadService_;
-      scope = $rootScope.$new();
-      ctrl = $controller('RefineryFileUploadS3Ctrl', { $scope: scope });
-    }));
+    beforeEach(function () {
+      module('refineryApp');
+      module('refineryDataSetImport');
+      inject(function ($controller, $rootScope, _s3UploadService_) {
+        s3UploadService = _s3UploadService_;
+        ctrl = $controller('RefineryFileUploadS3Ctrl', { $scope: $rootScope.$new() });
+      });
+    });
 
     it('should exist', function () {
       expect(ctrl).toBeDefined();
