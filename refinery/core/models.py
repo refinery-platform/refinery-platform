@@ -1504,7 +1504,7 @@ class Analysis(OwnableResource):
             input_file_uuid_list.append(cur_fs_uuid)
         return input_file_uuid_list
 
-    def query(self):
+    def data_sets_query(self):
         analysis_facet_name = '{}_{}_{}_s'.format(
             NodeIndex.ANALYSIS_UUID_PREFIX,
             self.data_set.get_study().id,
@@ -1544,7 +1544,7 @@ class Analysis(OwnableResource):
                 "http://" + site_domain,
                 "data_sets2/{}/#/files/?{}".format(
                     data_set_uuid,
-                    self.query()
+                    self.data_sets_query()
                 )
             )
         else:

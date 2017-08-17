@@ -991,7 +991,7 @@ class AnalysisResource(ModelResource):
 
     def dehydrate(self, bundle):
         # data_sets_query
-        bundle.data['data_sets_query'] = 'TODO'
+        bundle.data['data_sets_query'] = bundle.obj.data_sets_query()
 
         # owner
         bundle.data['is_owner'] = False
