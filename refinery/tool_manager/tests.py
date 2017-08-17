@@ -2116,7 +2116,7 @@ class WorkflowToolLaunchTests(ToolManagerTestBase):
     @mock.patch("celery.task.sets.TaskSet.apply_async")
     @mock.patch.object(celery.result.TaskSetResult, "ready",
                        return_value=False)
-    @mock.patch.object(tool_manager.models, "get_taskset_result",
+    @mock.patch.object(analysis_manager.tasks, "get_taskset_result",
                        return_value=celery.result.TaskSetResult(
                            str(uuid.uuid4())
                        ))
@@ -2131,7 +2131,15 @@ class WorkflowToolLaunchTests(ToolManagerTestBase):
         apply_async_mock
     ):
         self.create_valid_tool(ToolDefinition.WORKFLOW)
-        _run_tool_based_galaxy_workflow(self.tool.analysis.uuid)
+        with mock.patch(
+            "tool_manager.models.WorkflowTool."
+            "update_file_relationships_with_galaxy_history_data",
+        ) as update_file_relationships_with_galaxy_history_data_mock:
+            _run_tool_based_galaxy_workflow(self.tool.analysis.uuid)
+
+        self.assertTrue(
+            update_file_relationships_with_galaxy_history_data_mock.called
+        )
 
         analysis_status = AnalysisStatus.objects.get(
             analysis=self.tool.analysis
