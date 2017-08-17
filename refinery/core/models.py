@@ -50,6 +50,7 @@ from registration.signals import user_activated, user_registered
 
 from data_set_manager.models import (Assay, Investigation, Node,
                                      NodeCollection, Study)
+from data_set_manager.search_indexes import NodeIndex
 from data_set_manager.utils import (add_annotated_nodes_selection,
                                     index_annotated_nodes_selection)
 from file_store.models import FileStoreItem, FileType, get_file_size
@@ -1510,9 +1511,24 @@ class Analysis(OwnableResource):
                         'uuid': self.uuid
                         }
         if self.successful():
-            analysis_facet_name = 'REFINERY_ANALYSIS_UUID_{}_{}_s'.format(
-                'foo',
-                'bar'  # TODO
+            studies = self.data_set.get_studies()
+            if len(studies) != 1:
+                raise StandardError(
+                    'Expected exactly 1 study on {}, instead got {}'.format(
+                        self.data_set, len(studies)
+                    ))
+
+            assays = self.data_set.get_assays()
+            if len(assays) != 1:
+                raise StandardError(
+                    'Expected exactly 1 assay on {}, instead got {}'.format(
+                        self.data_set, len(assays)
+                    ))
+
+            analysis_facet_name = '{}_{}_{}_s'.format(
+                NodeIndex.ANALYSIS_UUID_PREFIX,
+                studies[0].id,
+                assays[0].id
             )
             email_subj = "[{}] Archive ready for download: {}".format(
                 site_name, name)
