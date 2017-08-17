@@ -13,7 +13,6 @@ from django.core.management import CommandError, call_command
 from django.http import HttpResponseBadRequest
 from django.test import TestCase
 
-import bioblend
 from bioblend.galaxy.dataset_collections import (CollectionElement,
                                                  HistoryDatasetElement)
 from bioblend.galaxy.histories import HistoryClient
@@ -23,22 +22,27 @@ import celery
 import mock
 from rest_framework.test import (APIRequestFactory, APITestCase,
                                  force_authenticate)
-from test_data.galaxy_mocks import (galaxy_workflow_dict,
+from test_data.galaxy_mocks import (galaxy_datasets_list,
+                                    galaxy_history_download_list,
+                                    galaxy_workflow_dict,
+                                    galaxy_workflow_invocation,
                                     galaxy_workflow_invocation_data,
                                     history_dataset_dict, history_dict,
                                     library_dataset_dict, library_dict)
 
 import analysis_manager
 from analysis_manager.models import AnalysisStatus
-from analysis_manager.tasks import (_get_workflow_tool,
+from analysis_manager.tasks import (_get_galaxy_download_tasks,
+                                    _get_workflow_tool,
                                     _invoke_tool_based_galaxy_workflow,
                                     _refinery_file_import,
                                     _run_tool_based_galaxy_file_import,
                                     _run_tool_based_galaxy_workflow,
                                     _tool_based_galaxy_file_import,
                                     run_analysis)
-from core.models import (INPUT_CONNECTION, Analysis, AnalysisNodeConnection,
-                         ExtendedGroup, Project, Workflow, WorkflowEngine)
+from core.models import (INPUT_CONNECTION, OUTPUT_CONNECTION, Analysis,
+                         AnalysisNodeConnection, AnalysisResult, ExtendedGroup,
+                         Project, Workflow, WorkflowEngine, WorkflowFilesDL)
 from data_set_manager.models import Assay, Node
 from factory_boy.django_model_factories import ToolFactory
 from factory_boy.utils import create_dataset_with_necessary_models
@@ -69,7 +73,9 @@ class ToolManagerTestBase(TestCase):
 
     def setUp(self):
         self.public_group = ExtendedGroup.objects.public_group()
-        self.galaxy_instance = Instance.objects.create()
+        self.galaxy_instance = Instance.objects.create(
+            base_url="http://www.example.com/galaxy"
+        )
         self.workflow_engine = WorkflowEngine.objects.create(
             instance=self.galaxy_instance
         )
@@ -1141,6 +1147,7 @@ class ToolTests(ToolManagerTestBase):
 class WorkflowToolTests(ToolManagerTestBase):
     def setUp(self):
         super(WorkflowToolTests, self).setUp()
+
         self.LIST = "[{}]".format(self.make_node())
         self.LIST_PAIR = "[({}, {}), ({}, {})]".format(
             *[self.make_node() for i in range(0, 4)]
@@ -1155,7 +1162,11 @@ class WorkflowToolTests(ToolManagerTestBase):
 
         self.FAKE_DATASET_HISTORY_ID = '0523152e8bc37aa7'
 
-    def update_nodes(self):
+    @mock.patch.object(tool_manager.models, "get_taskset_result",
+                       return_value=celery.result.TaskSetResult(
+                           str(uuid.uuid4())
+                       ))
+    def update_nodes(self, get_taskset_result_mock):
         galaxy_to_refinery_mapping_list = []
         for node in Node.objects.all():
             galaxy_to_refinery_mapping_list.append(
@@ -1165,9 +1176,14 @@ class WorkflowToolTests(ToolManagerTestBase):
                     Tool.REFINERY_FILE_UUID: node.file_uuid
                 }
             )
-        self.tool.update_file_relationships_with_galaxy_history_data(
-            galaxy_to_refinery_mapping_list
-        )
+        with mock.patch.object(
+                celery.result.TaskSetResult,
+                "join",
+                return_value=galaxy_to_refinery_mapping_list
+        ) as join_mock:
+            self.tool.update_file_relationships_with_galaxy_history_data()
+        self.assertTrue(join_mock.called)
+        self.assertTrue(get_taskset_result_mock.called)
 
     def make_node(self):
         test_file = StringIO.StringIO()
@@ -1453,6 +1469,188 @@ class WorkflowToolTests(ToolManagerTestBase):
         for file_store_item_uuid in self.tool.get_input_file_uuid_list():
             FileStoreItem.objects.get(uuid=file_store_item_uuid)
 
+    def test_galaxy_workflow_history_id(self):
+        self.create_valid_tool(ToolDefinition.WORKFLOW)
+        self.assertEqual(
+            self.tool.galaxy_workflow_history_id,
+            self.tool.analysis.history_id
+        )
+
+    def test_subanalysis_number(self):
+        self.create_valid_tool(ToolDefinition.WORKFLOW)
+        self.assertEqual(self.tool.subanalysis_number, 1)
+        self.tool.analysis.set_status(Analysis.SUCCESS_STATUS)
+        self.assertEqual(self.tool.subanalysis_number, 2)
+
+    def test__create_workflow_inputs_dict(self):
+        self.create_valid_tool(ToolDefinition.WORKFLOW)
+        self.tool.update_galaxy_data(
+            self.tool.COLLECTION_INFO,
+            {
+                "id": "coffee"
+            }
+        )
+        self.assertEqual(
+            self.tool._create_workflow_inputs_dict(),
+            {
+                '0': {
+                    'id': 'coffee',
+                    'src': self.tool.HISTORY_DATASET_COLLECTION_ASSOCIATION
+                }
+            }
+        )
+
+    @mock.patch(
+        "bioblend.galaxy.workflows.WorkflowClient.show_invocation",
+        return_value=galaxy_workflow_invocation
+    )
+    @mock.patch(
+        "bioblend.galaxy.histories.HistoryClient.show_matching_datasets",
+        return_value=galaxy_datasets_list
+    )
+    def test_create_workflow_file_downloads(self,
+                                            show_matching_datasets_mock,
+                                            show_invocation_mock):
+        self.create_valid_tool(ToolDefinition.WORKFLOW)
+        self.tool.update_galaxy_data(
+            self.tool.GALAXY_WORKFLOW_INVOCATION_DATA,
+            {
+                "id": self.GALAXY_ID_MOCK
+            }
+        )
+
+        self.tool.create_workflow_file_downloads()
+        self.assertEqual(WorkflowFilesDL.objects.count(), 2)
+        self.assertTrue(show_matching_datasets_mock.called)
+        self.assertTrue(show_invocation_mock.called)
+
+    @mock.patch(
+        "bioblend.galaxy.histories.HistoryClient.show_matching_datasets",
+        return_value=galaxy_datasets_list
+    )
+    def test__get_galaxy_dataset_filename(self, galaxy_datasets_mock):
+        self.create_valid_tool(ToolDefinition.WORKFLOW)
+        for galaxy_dataset in self.tool._get_galaxy_history_dataset_list():
+            self.tool._get_galaxy_dataset_filename(galaxy_dataset)
+
+        self.assertTrue(galaxy_datasets_mock.called)
+
+    @mock.patch(
+        "bioblend.galaxy.histories.HistoryClient.show_matching_datasets",
+        return_value=galaxy_datasets_list
+    )
+    def test__get_galaxy_datasets_list(self, galaxy_datasets_mock):
+        self.create_valid_tool(ToolDefinition.WORKFLOW)
+
+        for dataset in self.tool._get_galaxy_history_dataset_list():
+            self.assertIn(dataset, galaxy_datasets_list)
+
+        self.assertTrue(galaxy_datasets_mock.called)
+
+    @mock.patch(
+        "bioblend.galaxy.workflows.WorkflowClient.show_invocation",
+        return_value=galaxy_workflow_invocation
+    )
+    @mock.patch(
+        "bioblend.galaxy.histories.HistoryClient.show_matching_datasets",
+        return_value=galaxy_datasets_list
+    )
+    def test__get_workflow_step(self,
+                                show_matching_datasets_mock,
+                                show_invocation_mock):
+        self.create_valid_tool(ToolDefinition.WORKFLOW)
+        self.tool.update_galaxy_data(
+            self.tool.GALAXY_WORKFLOW_INVOCATION_DATA,
+            {
+                "id": self.GALAXY_ID_MOCK
+            }
+        )
+
+        for galaxy_dataset in self.tool._get_galaxy_history_dataset_list():
+            step = self.tool._get_workflow_step(galaxy_dataset)
+            self.assertEqual(step, 1)
+
+        self.assertTrue(show_matching_datasets_mock.called)
+        self.assertTrue(show_invocation_mock.called)
+
+    @mock.patch(
+        "galaxy_connector.models.Instance.get_history_file_list",
+        return_value=galaxy_history_download_list
+    )
+    @mock.patch(
+        "bioblend.galaxy.workflows.WorkflowClient.show_invocation",
+        return_value=galaxy_workflow_invocation
+    )
+    @mock.patch(
+        "bioblend.galaxy.histories.HistoryClient.show_matching_datasets",
+        return_value=galaxy_datasets_list
+    )
+    def test__get_galaxy_download_tasks(self,
+                                        show_matching_datasets_mock,
+                                        show_invocation_mock,
+                                        get_history_file_list_mock):
+        self.create_valid_tool(ToolDefinition.WORKFLOW)
+        self.tool.update_galaxy_data(
+            self.tool.GALAXY_WORKFLOW_INVOCATION_DATA,
+            {
+                "id": self.GALAXY_ID_MOCK
+            }
+        )
+
+        task_list = _get_galaxy_download_tasks(self.tool.analysis)
+        self.assertTrue(show_matching_datasets_mock.called)
+        self.assertTrue(show_invocation_mock.called)
+        self.assertTrue(get_history_file_list_mock.called)
+
+        self.assertEqual(AnalysisResult.objects.count(), 3)
+
+        # There will be one less WorkflowFilesDL because one of our mock
+        # datasets has been "purged"
+        self.assertEqual(WorkflowFilesDL.objects.count(), 2)
+        self.assertEqual(
+            AnalysisResult.objects.count(),
+            self.tool.analysis.results.all().count()
+        )
+        self.assertEqual(len(task_list), 3)
+
+    @mock.patch(
+        "bioblend.galaxy.workflows.WorkflowClient.show_invocation",
+        return_value=galaxy_workflow_invocation
+    )
+    @mock.patch(
+        "bioblend.galaxy.histories.HistoryClient.show_matching_datasets",
+        return_value=galaxy_datasets_list
+    )
+    def test_create_analysis_node_connection_outputs(
+            self,
+            show_matching_datasets_mock,
+            show_invocation_mock
+    ):
+        self.create_valid_tool(ToolDefinition.WORKFLOW)
+        self.tool.update_galaxy_data(
+            self.tool.GALAXY_WORKFLOW_INVOCATION_DATA,
+            {
+                "id": self.GALAXY_ID_MOCK
+            }
+        )
+        self.tool.create_analysis_node_connections(input_nodes=False)
+        self.assertEqual(AnalysisNodeConnection.objects.count(), 3)
+        self.assertEqual(
+            AnalysisNodeConnection.objects.filter(
+                direction=INPUT_CONNECTION
+            ).count(),
+            1
+        )
+        self.assertEqual(
+            AnalysisNodeConnection.objects.filter(
+                direction=OUTPUT_CONNECTION
+            ).count(),
+            2
+        )
+
+        self.assertTrue(show_matching_datasets_mock.called)
+        self.assertTrue(show_invocation_mock.called)
+
 
 class ToolAPITests(APITestCase, ToolManagerTestBase):
     def test_tools_exist(self):
@@ -1712,12 +1910,12 @@ class WorkflowToolLaunchTests(ToolManagerTestBase):
         self.assertTrue(attach_workflow_outputs_mock.called)
 
     @mock.patch.object(
-        bioblend.galaxy.libraries.LibraryClient,
+        LibraryClient,
         "upload_file_from_url",
         return_value=library_dataset_dict
     )
     @mock.patch.object(
-        bioblend.galaxy.histories.HistoryClient,
+        HistoryClient,
         "upload_dataset_from_library",
         return_value=history_dataset_dict
     )
@@ -1744,12 +1942,12 @@ class WorkflowToolLaunchTests(ToolManagerTestBase):
             ).get_file_relationships_galaxy()
 
     @mock.patch.object(
-        bioblend.galaxy.libraries.LibraryClient,
+        LibraryClient,
         "upload_file_from_url",
         return_value=library_dataset_dict
     )
     @mock.patch.object(
-        bioblend.galaxy.histories.HistoryClient,
+        HistoryClient,
         "upload_dataset_from_library",
         return_value=history_dataset_dict
     )
@@ -1786,7 +1984,7 @@ class WorkflowToolLaunchTests(ToolManagerTestBase):
         "tool_manager.models.WorkflowTool._create_workflow_inputs_dict"
     )
     @mock.patch.object(
-        bioblend.galaxy.workflows.WorkflowClient,
+        WorkflowClient,
         "invoke_workflow",
         return_value=galaxy_workflow_invocation_data
     )
@@ -1915,12 +2113,10 @@ class WorkflowToolLaunchTests(ToolManagerTestBase):
         self.assertTrue(send_email_mock.called)
         self.assertTrue(galaxy_cleanup_mock.called)
 
-    @mock.patch.object(celery.result.TaskSetResult, "join",
-                       return_value=[])
     @mock.patch("celery.task.sets.TaskSet.apply_async")
     @mock.patch.object(celery.result.TaskSetResult, "ready",
                        return_value=False)
-    @mock.patch.object(analysis_manager.tasks, "get_taskset_result",
+    @mock.patch.object(tool_manager.models, "get_taskset_result",
                        return_value=celery.result.TaskSetResult(
                            str(uuid.uuid4())
                        ))
@@ -1932,8 +2128,7 @@ class WorkflowToolLaunchTests(ToolManagerTestBase):
         set_galaxy_workflow_task_group_id_mock,
         taskset_result_mock,
         ready_mock,
-        apply_async_mock,
-        join_mock
+        apply_async_mock
     ):
         self.create_valid_tool(ToolDefinition.WORKFLOW)
         _run_tool_based_galaxy_workflow(self.tool.analysis.uuid)
@@ -1950,7 +2145,6 @@ class WorkflowToolLaunchTests(ToolManagerTestBase):
         self.assertTrue(set_galaxy_workflow_task_group_id_mock.called)
         self.assertTrue(retry_mock.called)
         self.assertEqual(retry_mock.call_count, 2)
-        self.assertTrue(join_mock.called)
 
     @mock.patch.object(celery.result.TaskSetResult, "ready",
                        return_value=True)
