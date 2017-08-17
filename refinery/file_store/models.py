@@ -17,7 +17,7 @@ Example: FILE_STORE_DIR = 'files'
 import logging
 import os
 import re
-from urlparse import urljoin
+import urlparse
 
 from django.conf import settings
 from django.core.files.storage import FileSystemStorage
@@ -81,7 +81,7 @@ if not settings.FILE_UPLOAD_MAX_MEMORY_SIZE:
 
 # http://stackoverflow.com/q/4832626
 FILE_STORE_BASE_URL = \
-    urljoin(settings.MEDIA_URL, settings.FILE_STORE_DIR) + '/'
+    urlparse.urljoin(settings.MEDIA_URL, settings.FILE_STORE_DIR) + '/'
 
 
 def file_path(instance, filename):
@@ -120,11 +120,13 @@ def map_source(source):
     return source
 
 
-def generate_file_source_translator(username='', base_path=''):
+def generate_file_source_translator(username=None, base_path=None,
+                                    identity_id=None):
     """Generate file source reference translator function based on username or
-    base_path
+    base_path or AWS Cognito identity ID
     username: user's subdirectory in settings.REFINERY_DATA_IMPORT_DIR
     base_path: absolute path to prepend to source if source is relative
+    identity_id: AWS Cognito identity ID of the current user
     """
 
     def translate(source):
@@ -132,11 +134,17 @@ def generate_file_source_translator(username='', base_path=''):
         source: URL, absolute or relative file system path
         """
         source = map_source(source.strip())
+
         # ignore URLs and absolute file paths
         if core.utils.is_url(source) or os.path.isabs(source):
             return source
+
         # process relative path
-        if base_path:
+        if identity_id:
+            source = "s3://{}/uploads/{}/{}".format(
+                settings.MEDIA_BUCKET, identity_id, source
+            )
+        elif base_path:
             source = os.path.join(base_path, source)
         elif username:
             source = os.path.join(
@@ -201,8 +209,8 @@ class _FileStoreItemManager(models.Manager):
         item.set_filetype(filetype)
 
         # symlink if source is a file system path outside of the import dir
-        if (os.path.isabs(item.source) and settings.
-                REFINERY_DATA_IMPORT_DIR not in item.source):
+        if (os.path.isabs(item.source) and
+                settings.REFINERY_DATA_IMPORT_DIR not in item.source):
             item.symlink_datafile()
 
         return item
@@ -519,18 +527,18 @@ class FileStoreItem(models.Model):
         :type self: A FileStoreItem instance
         :returns: A url for the given FileStoreItem or None
         """
-
         if self.is_local():
             return self.datafile.url
         else:
             # data file doesn't exist on disk
             if os.path.isabs(self.source):
                 # source is a file system path
-                logger.error("File not found at '%s'",
-                             self.datafile.name)
+                logger.error("File not found at '%s'", self.datafile.name)
                 return None
             else:
                 # source is a URL
+                if self.source.startswith('s3://'):
+                    return None
                 return self.source
 
     def get_import_status(self):
@@ -720,17 +728,16 @@ def _rename_file_on_disk(current_path, new_path):
 
 
 def get_extension_from_path(path):
-    '''Return file extension given its file system path.
+    """Return file extension given its file system path
 
-    :returns: str -- File extension preceeded by a period.
-
-    '''
+    :returns: str -- File extension preceded by a period.
+    """
     return os.path.splitext(path)[-1]
 
 
-class FileStoreCache:
-    '''
-    LRU file cache
-    '''
-    # doubly-linked list or heapq
-    pass
+def parse_s3_url(url):
+    """Return a tuple containing S3 bucket name and object key given S3
+    protocol URL (s3://bucket-name/key)
+    """
+    result = urlparse.urlparse(url)
+    return result.netloc, result.path[1:]  # strip leading slash

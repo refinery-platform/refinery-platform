@@ -622,7 +622,10 @@ def make_template(config, config_yaml):
                 "Resource": "*"
             },
             {
-                "Action": "s3:PutObject",
+                "Action": [
+                    "s3:PutObject",
+                    "s3:AbortMultipartUpload"
+                ],
                 "Effect": "Allow",
                 "Resource": {
                     "Fn::Sub": [
