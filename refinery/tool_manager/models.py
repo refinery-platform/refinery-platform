@@ -763,7 +763,7 @@ class WorkflowTool(Tool):
         Datasets in our Galaxy Workflow invocation's History and add them to
         the M2M relation in our WorkflowTool's Analysis.
         """
-        for galaxy_dataset in self._get_galaxy_datasets_list():
+        for galaxy_dataset in self._get_galaxy_history_dataset_list():
             self.analysis.workflow_dl_files.add(
                 WorkflowFilesDL.objects.create(
                     step_id=self._get_workflow_step(galaxy_dataset),
@@ -815,7 +815,7 @@ class WorkflowTool(Tool):
             galaxy_dataset_dict["file_ext"]
         )
 
-    def _get_galaxy_datasets_list(self):
+    def _get_galaxy_history_dataset_list(self):
         """
         Retrieve a list of Galaxy Datasets from the Galaxy History of our
         Galaxy Workflow invocation.
