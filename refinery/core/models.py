@@ -688,6 +688,12 @@ class DataSet(SharableResource):
         except(Study.DoesNotExist, Study.MultipleObjectsReturned) as e:
             raise RuntimeError("Couldn't properly fetch Study: {}".format(e))
 
+    def get_latest_assay(self, version=None):
+        try:
+            return Assay.objects.get(study=self.get_latest_study(version))
+        except(Assay.DoesNotExist, Assay.MultipleObjectsReturned) as e:
+            raise RuntimeError("Couldn't properly fetch Assay: {}".format(e))
+
     def get_investigation(self, version=None):
         investigation_link = self.get_latest_investigation_link(version)
 
@@ -701,30 +707,12 @@ class DataSet(SharableResource):
             investigation=self.get_investigation(version)
         )
 
-    def _get_study(self):
-        studies = self.data_set.get_studies()
-        if len(studies) != 1:
-            raise StandardError(
-                'Expected exactly 1 study on {}, instead got {}'.format(
-                    self.data_set, len(studies)
-                ))
-        return studies[0]
-
-    def _get_assays(self, version=None):
+    def get_assays(self, version=None):
         return Assay.objects.filter(
             study=Study.objects.filter(
                 investigation=self.get_investigation()
             )
         )
-
-    def _get_assay(self):
-        assays = self.data_set._get_assays()
-        if len(assays) != 1:
-            raise StandardError(
-                'Expected exactly 1 assay on {}, instead got {}'.format(
-                    self.data_set, len(assays)
-                ))
-        return assays[0]
 
     def get_file_count(self):
         """Returns the number of files in the data set"""
@@ -1507,8 +1495,8 @@ class Analysis(OwnableResource):
     def data_sets_query(self):
         analysis_facet_name = '{}_{}_{}_s'.format(
             NodeIndex.ANALYSIS_UUID_PREFIX,
-            self.data_set._get_study().id,
-            self.data_set._get_assay().id,
+            self.get_latest_study().id,
+            self.get_latest_assay().id,
         )
         return quote(json.dumps({analysis_facet_name: self.uuid}))
 
