@@ -459,6 +459,7 @@ class WorkflowTool(Tool):
     GALAXY_IMPORT_HISTORY_DICT = "import_history_dict"
     GALAXY_LIBRARY_DICT = "library_dict"
     GALAXY_WORKFLOW_INVOCATION_DATA = "galaxy_workflow_invocation_data"
+    HISTORY_DATASET_COLLECTION_ASSOCIATION = 'hdca'
     INPUT_STEP = 0
     LIST = "list"
     PAIRED = "paired"
@@ -731,7 +732,7 @@ class WorkflowTool(Tool):
         return {
             '0': {
                 'id': self.get_galaxy_dict()[self.COLLECTION_INFO]["id"],
-                'src': 'hdca'
+                'src': self.HISTORY_DATASET_COLLECTION_ASSOCIATION
             }
         }
 
