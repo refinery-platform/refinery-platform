@@ -1495,8 +1495,8 @@ class Analysis(OwnableResource):
     def data_sets_query(self):
         analysis_facet_name = '{}_{}_{}_s'.format(
             NodeIndex.ANALYSIS_UUID_PREFIX,
-            self.get_latest_study().id,
-            self.get_latest_assay().id,
+            self.data_set.get_latest_study().id,
+            self.data_set.get_latest_assay().id,
         )
         return quote(json.dumps({analysis_facet_name: self.uuid}))
 
