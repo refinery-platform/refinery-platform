@@ -223,9 +223,11 @@ class Command(BaseCommand):
                         # parameters of the Workflow step's `tool_inputs`
                         if parameter["name"] not in step["tool_inputs"]:
                             raise CommandError(
-                                "{} is not a valid parameter for {}".format(
+                                "{} is not a valid parameter for {}. \n"
+                                "Valid parameters are: {}".format(
                                     parameter["name"],
-                                    step["tool_id"]
+                                    step["tool_id"],
+                                    step["tool_inputs"]
                                 )
                             )
                         else:
