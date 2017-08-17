@@ -1504,6 +1504,14 @@ class Analysis(OwnableResource):
             input_file_uuid_list.append(cur_fs_uuid)
         return input_file_uuid_list
 
+    def query(self):
+        analysis_facet_name = '{}_{}_{}_s'.format(
+            NodeIndex.ANALYSIS_UUID_PREFIX,
+            self.data_set.get_study().id,
+            self.data_set.get_assay().id,
+        )
+        return quote(json.dumps({analysis_facet_name: self.uuid}))
+
     def send_email(self):
         """Sends an email when the analysis is finished"""
         # don't mail the user if analysis was canceled
@@ -1529,19 +1537,14 @@ class Analysis(OwnableResource):
                         'uuid': self.uuid
                         }
         if self.successful():
-            analysis_facet_name = '{}_{}_{}_s'.format(
-                NodeIndex.ANALYSIS_UUID_PREFIX,
-                self.data_set.get_study().id,
-                self.data_set.get_assay().id,
-            )
             email_subj = "[{}] Archive ready for download: {}".format(
                 site_name, name)
             # TODO: avoid hardcoding URL protocol
             context_dict['url'] = urljoin(
                 "http://" + site_domain,
-                "data_sets2/{}/analysis/{}".format(
+                "data_sets2/{}/#/files/?{}".format(
                     data_set_uuid,
-                    quote(json.dumps({analysis_facet_name: self.uuid}))
+                    self.query()
                 )
             )
         else:

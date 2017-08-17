@@ -990,8 +990,10 @@ class AnalysisResource(ModelResource):
         ordering = ['name', 'creation_date', 'time_start', 'time_end']
 
     def dehydrate(self, bundle):
+        # data_sets_query
         bundle.data['data_sets_query'] = 'TODO'
 
+        # owner
         bundle.data['is_owner'] = False
         owner = bundle.obj.get_owner()
         if owner:
@@ -1003,7 +1005,6 @@ class AnalysisResource(ModelResource):
                     bundle.data['is_owner'] = True
             except:
                 bundle.data['owner'] = None
-
         else:
             bundle.data['owner'] = None
 
