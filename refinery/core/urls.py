@@ -82,9 +82,9 @@ core_router = DefaultRouter()
 core_router.register(r'nodes', NodeViewSet)
 core_router.register(r'workflows', WorkflowViewSet)
 core_router.urls.extend([
-    url(r'^data_sets/(?P<uuid>{})/$',
+    url(r'^data_sets/(?P<uuid>' + UUID_RE + r')/$',
         DataSetsViewSet.as_view()),
-    url(r'^analyses/(?P<uuid>{})/$',
+    url(r'^analyses/(?P<uuid>' + UUID_RE + r')/$',
         AnalysesViewSet.as_view()),
     url(r'^openid_token/$',
         OpenIDToken.as_view(), name="openid-token")
