@@ -20,10 +20,10 @@
     var vm = this;
 
     vm.togglePanel = function (attribute) {
-      vm.hidden[attribute] = ! vm.hidden[attribute];
+      vm.visible[attribute] = ! vm.visible[attribute];
     };
 
-    vm.hidden = {};
+    vm.visible = {};
 
     vm.filterUpdate = function (attribute, value) {
       if (typeof userFileFiltersService[attribute] === 'undefined') {
