@@ -709,6 +709,9 @@ class DataSet(SharableResource):
 
     def get_assays(self, version=None):
         return Assay.objects.filter(
+            # TODO: This can't be right!
+            # It will return multiple, but it's expecting one.
+            # Is this method even being used?
             study=Study.objects.filter(
                 investigation=self.get_investigation()
             )

@@ -768,8 +768,8 @@ class AnalysisResourceTest(ResourceTestCase):
         self.user_catch_all_project = UserProfile.objects.get(
             user=self.user
         ).catch_all_project
-        self.dataset = DataSet.objects.create()
-        self.dataset2 = DataSet.objects.create()
+        self.dataset = create_dataset_with_necessary_models()
+        self.dataset2 = create_dataset_with_necessary_models()
         self.galaxy_instance = Instance.objects.create()
         self.workflow_engine = WorkflowEngine.objects.create(
             instance=self.galaxy_instance
