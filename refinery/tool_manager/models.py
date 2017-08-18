@@ -855,7 +855,7 @@ class WorkflowTool(Tool):
                     self.get_galaxy_dict()[self.GALAXY_LIBRARY_DICT],
                 )
             ) for file_store_item_uuid in self.get_input_file_uuid_list()
-        ]
+            ]
 
     @handle_bioblend_exceptions
     def _get_galaxy_workflow_invocation_steps(self):
@@ -883,8 +883,11 @@ class WorkflowTool(Tool):
     @handle_bioblend_exceptions
     def _get_workflow_dict(self):
         return self.galaxy_connection.workflows.export_workflow_dict(
-                self.tool_definition.workflow.internal_id
-            )
+            self._get_workflow_internal_id()
+        )
+
+    def _get_workflow_internal_id(self):
+        return self.tool_definition.workflow.internal_id
 
     def _get_workflow_parameters(self):
         return self.get_tool_launch_config()[ToolDefinition.PARAMETERS]
@@ -912,7 +915,7 @@ class WorkflowTool(Tool):
     def invoke_workflow(self):
         """Invoke a WorflowTool's Galaxy Workflow"""
         return self.galaxy_connection.workflows.invoke_workflow(
-            self.tool_definition.workflow.internal_id,
+            self._get_workflow_internal_id(),
             history_name="Workflow Run for {} {}".format(self.name, self.uuid),
             inputs=self._create_workflow_inputs_dict(),
             params=self._create_workflow_parameters_dict()
