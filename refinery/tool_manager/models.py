@@ -641,7 +641,7 @@ class WorkflowTool(Tool):
         file_relationship_nesting_list = (
             self._parse_file_relationships_nesting(
                 # Please note the `*` unpacking operator used here
-                *self.get_file_relationships_galaxy()
+                *self.get_galaxy_file_relationships()
             )
         )
 
@@ -791,7 +791,7 @@ class WorkflowTool(Tool):
         """
 
         if nesting is None:
-            nesting = self.get_file_relationships_galaxy()
+            nesting = self.get_galaxy_file_relationships()
 
         if structure is None:
             structure = []
@@ -818,6 +818,12 @@ class WorkflowTool(Tool):
         return "{}.{}".format(
             galaxy_dataset_dict["name"],
             galaxy_dataset_dict["file_ext"]
+        )
+
+    def get_galaxy_file_relationships(self):
+        return ast.literal_eval(
+            self.get_tool_launch_config(
+            )[self.GALAXY_DATA][self.FILE_RELATIONSHIPS_GALAXY]
         )
 
     @handle_bioblend_exceptions
