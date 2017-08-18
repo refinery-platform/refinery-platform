@@ -1552,7 +1552,7 @@ class WorkflowToolLaunchTests(ToolManagerTestBase):
         self.assertEqual(self.tool.get_tool_type(), ToolDefinition.WORKFLOW)
         self.assertEqual(
             json.loads(self.post_response.content)[Tool.TOOL_URL],
-            '/data_sets2/{}/#/analyses/'.format(self.tool.dataset.uuid)
+            '/data_sets/{}/#/analyses/'.format(self.tool.dataset.uuid)
         )
 
     def test_many_tools_can_be_launched_from_same_dataset(self):

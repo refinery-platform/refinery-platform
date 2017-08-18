@@ -41,9 +41,9 @@ urlpatterns = patterns(
         'analysis', name="analysis"),
     url(r'^provenance/(?P<data_set_uuid>' + UUID_RE + r')/$',
         'data_set', name="data_set"),
-    url(r'^data_sets2/(?P<data_set_uuid>' + UUID_RE + r')/$',
+    url(r'^data_sets/(?P<data_set_uuid>' + UUID_RE + r')/$',
         'data_set2', name="data_set2"),
-    url(r'^data_sets2/(?P<slug>[a-zA-Z0-9\_]+)/$',
+    url(r'^data_sets/(?P<slug>[a-zA-Z0-9\_]+)/$',
         'data_set2_slug', name="data_set2_slug"),
     url(r'^provenance/(?P<data_set_uuid>' + UUID_RE + r')/'
         r'analysis/(?P<analysis_uuid>' + UUID_RE + r')/$',

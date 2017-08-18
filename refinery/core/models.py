@@ -1518,7 +1518,7 @@ class Analysis(OwnableResource):
             # TODO: avoid hardcoding URL protocol
             context_dict['url'] = urljoin(
                 "http://" + site_domain,
-                "data_sets2/{}/#/files/?{}".format(
+                "data_sets/{}/#/files/?{}".format(
                     data_set_uuid,
                     self.data_sets_query()
                 )

@@ -106,7 +106,7 @@ function refineryDataSetNavConfig (
         controller: 'FileBrowserCtrl',
         controllerAs: 'FBCtrl'
       },
-      '^\/data_sets2\/.*\/$',
+      '^\/data_sets\/.*\/$',
       true
     )
     .state(
@@ -119,7 +119,7 @@ function refineryDataSetNavConfig (
         controller: 'AnalysisMonitorCtrl',
         controllerAs: 'AMCtrl'
       },
-      '^\/data_sets2\/.*\/$',
+      '^\/data_sets\/.*\/$',
       true
     )
     .state(
@@ -132,7 +132,7 @@ function refineryDataSetNavConfig (
         controller: 'AboutDetailsCtrl',
         controllerAs: 'ADCtrl'
       },
-      '^\/data_sets2\/.*\/$',
+      '^\/data_sets\/.*\/$',
       true
     );
 
@@ -144,7 +144,7 @@ function refineryDataSetNavConfig (
     )
     .otherwise(
       '/files/',
-      '^\/data_sets2\/.*\/$',
+      '^\/data_sets\/.*\/$',
       true
   );
 }
