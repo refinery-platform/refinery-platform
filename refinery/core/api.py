@@ -976,7 +976,7 @@ class AnalysisResource(ModelResource):
             'modification_date', 'history_id', 'library_id', 'name',
             'workflow__uuid', 'resource_uri', 'status', 'time_end',
             'time_start', 'uuid', 'workflow_galaxy_id', 'workflow_steps_num',
-            'workflow_copy', 'owner', 'is_owner'
+            'workflow_copy', 'owner', 'is_owner', 'data_sets_query'
         ]
 
         filtering = {
@@ -989,6 +989,10 @@ class AnalysisResource(ModelResource):
         ordering = ['name', 'creation_date', 'time_start', 'time_end']
 
     def dehydrate(self, bundle):
+        # data_sets_query
+        bundle.data['data_sets_query'] = bundle.obj.data_sets_query()
+
+        # owner
         bundle.data['is_owner'] = False
         owner = bundle.obj.get_owner()
         if owner:
@@ -1000,7 +1004,6 @@ class AnalysisResource(ModelResource):
                     bundle.data['is_owner'] = True
             except:
                 bundle.data['owner'] = None
-
         else:
             bundle.data['owner'] = None
 

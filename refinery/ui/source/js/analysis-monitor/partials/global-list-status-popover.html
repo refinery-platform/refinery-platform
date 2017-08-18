@@ -55,7 +55,7 @@
             </div>
             <div class="analyses-global-text">
               <span ng-if="analysis.status === 'SUCCESS'">
-                <a id="analyses-popover-links" ng-href="/data_sets_old/{{analysis.data_set__uuid}}/analysis/{{analysis.uuid}}">
+                <a id="analyses-popover-links" ng-href="/data_sets2/{{analysis.data_set__uuid}}/#/files/?{{analysis.data_sets_query}}">
                   {{ analysis.name }}
                 </a>
               </span>

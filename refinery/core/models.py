@@ -8,10 +8,12 @@ from __future__ import absolute_import
 import ast
 import copy
 from datetime import datetime
+import json
 import logging
 import os
 import smtplib
 import socket
+from urllib import quote
 from urlparse import urljoin
 
 from django import forms
@@ -48,6 +50,7 @@ from registration.signals import user_activated, user_registered
 
 from data_set_manager.models import (Assay, Investigation, Node,
                                      NodeCollection, Study)
+from data_set_manager.search_indexes import NodeIndex
 from data_set_manager.utils import (add_annotated_nodes_selection,
                                     index_annotated_nodes_selection)
 from file_store.models import FileStoreItem, FileType, get_file_size
@@ -684,6 +687,12 @@ class DataSet(SharableResource):
             )
         except(Study.DoesNotExist, Study.MultipleObjectsReturned) as e:
             raise RuntimeError("Couldn't properly fetch Study: {}".format(e))
+
+    def get_latest_assay(self, version=None):
+        try:
+            return Assay.objects.get(study=self.get_latest_study(version))
+        except(Assay.DoesNotExist, Assay.MultipleObjectsReturned) as e:
+            raise RuntimeError("Couldn't properly fetch Assay: {}".format(e))
 
     def get_investigation(self, version=None):
         investigation_link = self.get_latest_investigation_link(version)
@@ -1471,6 +1480,14 @@ class Analysis(OwnableResource):
             input_file_uuid_list.append(cur_fs_uuid)
         return input_file_uuid_list
 
+    def data_sets_query(self):
+        analysis_facet_name = '{}_{}_{}_s'.format(
+            NodeIndex.ANALYSIS_UUID_PREFIX,
+            self.data_set.get_latest_study().id,
+            self.data_set.get_latest_assay().id,
+        )
+        return quote(json.dumps({analysis_facet_name: self.uuid}))
+
     def send_email(self):
         """Sends an email when the analysis is finished"""
         # don't mail the user if analysis was canceled
@@ -1501,7 +1518,11 @@ class Analysis(OwnableResource):
             # TODO: avoid hardcoding URL protocol
             context_dict['url'] = urljoin(
                 "http://" + site_domain,
-                "data_sets_old/" + data_set_uuid + "/analysis/" + self.uuid)
+                "data_sets2/{}/#/files/?{}".format(
+                    data_set_uuid,
+                    self.data_sets_query()
+                )
+            )
         else:
             email_subj = "[{}] Archive creation failed: {}".format(
                 site_name, name)

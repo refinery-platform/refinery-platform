@@ -242,7 +242,7 @@
             refinery-tooltip-placement="left">
           </i>
           <span ng-if="analysis.status === 'SUCCESS'">
-             <a ng-href="/data_sets_old/{{ analysis.data_set__uuid }}/analysis/{{ analysis.uuid }}">
+             <a ng-href="/data_sets2/{{ analysis.data_set__uuid }}/#/files/?{{analysis.data_sets_query}}">
               {{ analysis.name }}
              </a>
           </span>
