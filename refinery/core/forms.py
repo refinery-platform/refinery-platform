@@ -10,7 +10,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from registration.forms import RegistrationForm, RegistrationFormUniqueEmail
 
-from .models import DataSet, Project, UserProfile, Workflow
+from .models import Project, UserProfile, Workflow
 
 
 class ProjectForm(ModelForm):
@@ -78,9 +78,3 @@ class WorkflowForm(ModelForm):
     class Meta:
         model = Workflow
         fields = ["name", "slug", "summary", "description", "is_active"]
-
-
-class DataSetForm(ModelForm):
-    class Meta:
-        model = DataSet
-        fields = ["summary", "description", "slug"]
