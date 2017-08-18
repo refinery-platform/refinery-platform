@@ -1504,7 +1504,7 @@ class AnalysisTests(TestCase):
     def test_data_sets_query(self):
         self.assertRegexpMatches(
             self.analysis_with_node_analyzed_further.data_sets_query(),
-            '%7B%22REFINERY_ANALYSIS_UUID_\d_\d_s%22%3A%20%.+%22%7D'
+            '%7B%22REFINERY_ANALYSIS_UUID_\d+_\d+_s%22%3A%20%.+%22%7D'
             # TODO: UUID_RE when that is merged
         )
 
