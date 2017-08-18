@@ -453,8 +453,8 @@ def handle_bioblend_exceptions(func):
         try:
             return func(*args, **kwargs)
         except bioblend.ConnectionError as e:
-            logger.debug("Error while interacting with bioblend: %e", e)
-
+            logger.error("Error while interacting with bioblend: %e", e)
+            raise
     return func_wrapper
 
 
