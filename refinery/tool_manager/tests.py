@@ -1936,7 +1936,7 @@ class WorkflowToolLaunchTests(ToolManagerTestBase):
         self.assertTrue(library_upload_mock.called)
         self.assertTrue(history_upload_mock.called)
 
-        with self.assertRaises(SyntaxError):
+        with self.assertRaises(ValueError):
             WorkflowTool.objects.get(
                 uuid=self.tool.uuid
             ).get_file_relationships_galaxy()
