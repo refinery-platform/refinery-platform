@@ -983,8 +983,7 @@ def move_obj_to_front(obj_arr, match_key, match_value):
 
 
 def api_error_response(error_message, http_status_code):
-    """Return and log error for Django Rest Framework API calls"""
-    logger.error(error_message)
+    """Return a standardized error for Django Rest Framework API calls"""
     return Response({'Error': error_message}, status=http_status_code)
 
 

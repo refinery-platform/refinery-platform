@@ -15,8 +15,8 @@ from core.utils import get_full_url
 
 from .models import (FILE_STORE_TEMP_DIR, FileExtension, FileStoreItem,
                      FileType, SymlinkedFileSystemStorage, file_path,
-                     generate_file_source_translator, get_file_object,
-                     get_temp_dir)
+                     generate_file_source_translator, get_extension_from_path,
+                     get_file_object, get_temp_dir, parse_s3_url)
 from .serializers import FileStoreItemSerializer
 from .views import FileStoreItems
 
@@ -104,15 +104,22 @@ class FileStoreModuleTest(TestCase):
         # check if an expected object is returned
         self.assertEqual(file_object, mock.sentinel.file_object)
 
+    def test_get_extension_from_path(self):
+        extension = get_extension_from_path(self.path_source)
+        self.assertEqual(extension, '.dat')
+
+    def test_parse_s3_url(self):
+        bucket_name, key = parse_s3_url('s3://bucket-name/key')
+        self.assertEqual(bucket_name, 'bucket-name')
+        self.assertEqual(key, 'key')
+
 
 class FileStoreItemTest(TestCase):
     """FileStoreItem methods test"""
 
     def setUp(self):
-        self.tdf_filetype = FileType.objects.get(
-            name="TDF")
-        self.tdf_fileextension = FileExtension.objects.get(
-            name='tdf')
+        self.tdf_filetype = FileType.objects.get(name="TDF")
+        self.tdf_fileextension = FileExtension.objects.get(name='tdf')
 
         self.filename = 'test_file.idf'
         self.sharename = 'labname'

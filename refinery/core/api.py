@@ -23,6 +23,7 @@ from django.forms import ValidationError
 from django.template import Context, loader
 from django.utils import timezone
 
+from constants import UUID_RE
 from fadapa import Fadapa
 from guardian.models import GroupObjectPermission
 from guardian.shortcuts import get_objects_for_group, get_objects_for_user
@@ -56,7 +57,6 @@ signer = Signer()
 
 # Specifically made for descendants of SharableResource.
 class SharableResourceAPIInterface(object):
-    uuid_regex = '[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}'
 
     def __init__(self, res_type):
         self.res_type = res_type
@@ -293,7 +293,7 @@ class SharableResourceAPIInterface(object):
     def prepend_urls(self):
         return [
             url(r'^(?P<resource_name>%s)/(?P<uuid>%s)/sharing/$' %
-                (self._meta.resource_name, self.uuid_regex),
+                (self._meta.resource_name, UUID_RE),
                 self.wrap_view('res_sharing'),
                 name='api_%s_sharing' % (self._meta.resource_name)),
             url(r'^(?P<resource_name>%s)/sharing/$' %
@@ -463,7 +463,6 @@ class UserProfileResource(ModelResource):
 
 class DataSetResource(SharableResourceAPIInterface, ModelResource):
     id_regex = '[0-9]+'
-    uuid_regex = '[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}'
     share_list = fields.ListField(attribute='share_list', null=True)
     public = fields.BooleanField(attribute='public', null=True)
     is_owner = fields.BooleanField(attribute='is_owner', null=True)
@@ -588,7 +587,7 @@ class DataSetResource(SharableResourceAPIInterface, ModelResource):
                 ),
             url(r'^(?P<resource_name>%s)/(?P<uuid>%s)/investigation%s$' % (
                     self._meta.resource_name,
-                    self.uuid_regex,
+                    UUID_RE,
                     trailing_slash()
                 ),
                 self.wrap_view('get_investigation'),
@@ -597,7 +596,7 @@ class DataSetResource(SharableResourceAPIInterface, ModelResource):
                 ),
             url(r'^(?P<resource_name>%s)/(?P<uuid>%s)/studies%s$' % (
                     self._meta.resource_name,
-                    self.uuid_regex,
+                    UUID_RE,
                     trailing_slash()
                 ),
                 self.wrap_view('get_studies'),
@@ -606,7 +605,7 @@ class DataSetResource(SharableResourceAPIInterface, ModelResource):
                 )),
             url(r'^(?P<resource_name>%s)/(?P<uuid>%s)/assays%s$' % (
                     self._meta.resource_name,
-                    self.uuid_regex,
+                    UUID_RE,
                     trailing_slash()
                 ),
                 self.wrap_view('get_assays'),
@@ -615,7 +614,7 @@ class DataSetResource(SharableResourceAPIInterface, ModelResource):
                 )),
             url(r'^(?P<resource_name>%s)/(?P<uuid>%s)/analyses%s$' % (
                     self._meta.resource_name,
-                    self.uuid_regex,
+                    UUID_RE,
                     trailing_slash()
                 ),
                 self.wrap_view('get_analyses'),
@@ -625,8 +624,8 @@ class DataSetResource(SharableResourceAPIInterface, ModelResource):
             url(r'^(?P<resource_name>%s)/(?P<uuid>%s)/studies/'
                 r'(?P<study_uuid>%s)/assays%s$' % (
                     self._meta.resource_name,
-                    self.uuid_regex,
-                    self.uuid_regex,
+                    UUID_RE,
+                    UUID_RE,
                     trailing_slash()
                 ),
                 self.wrap_view('get_study_assays'),
@@ -1073,9 +1072,7 @@ class NodeResource(ModelResource):
 
     def prepend_urls(self):
         return [
-            url(r"^(?P<resource_name>%s)/(?P<uuid>"
-                r"[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}"
-                r")/$" %
+            url((r"^(?P<resource_name>%s)/(?P<uuid>" + UUID_RE + r")/$") %
                 self._meta.resource_name,
                 self.wrap_view('dispatch_detail'),
                 name="api_dispatch_detail"),
@@ -1172,9 +1169,7 @@ class NodeSetResource(ModelResource):
 
     def prepend_urls(self):
         return [
-            url(r"^(?P<resource_name>%s)/(?P<uuid>"
-                r"[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}"
-                r")/$" %
+            url((r"^(?P<resource_name>%s)/(?P<uuid>" + UUID_RE + r")/$") %
                 self._meta.resource_name,
                 self.wrap_view('dispatch_detail'),
                 name="api_dispatch_detail"),
@@ -1188,7 +1183,7 @@ class NodeSetResource(ModelResource):
         # get the Study specified by the UUID in the new NodeSet
         study_uri = bundle.data['study']
         match = re.search(
-            '[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}',
+            UUID_RE,
             study_uri)
         study_uuid = match.group()
         try:
@@ -2085,13 +2080,10 @@ class ExtendedGroupResource(ModelResource):
             url(r'^extended_groups/members/$',
                 self.wrap_view('ext_groups_members_list'),
                 name='api_ext_group_members_list'),
-            url(r'^extended_groups/(?P<uuid>'
-                r'[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}'
-                r')/members/$',
+            url(r'^extended_groups/(?P<uuid>' + UUID_RE + r')/members/$',
                 self.wrap_view('ext_groups_members_basic'),
                 name='api_ext_group_members_basic'),
-            url(r'^extended_groups/(?P<uuid>'
-                r'[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}'
+            url(r'^extended_groups/(?P<uuid>' + UUID_RE +
                 r')/members/(?P<user_id>[0-9]+)/$',
                 self.wrap_view('ext_groups_members_detail'),
                 name='api_ext_group_members_detail'),

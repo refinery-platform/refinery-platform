@@ -20,10 +20,10 @@
     var vm = this;
 
     vm.togglePanel = function (attribute) {
-      vm.hidden[attribute] = ! vm.hidden[attribute];
+      vm.visible[attribute] = ! vm.visible[attribute];
     };
 
-    vm.hidden = {};
+    vm.visible = {};
 
     vm.filterUpdate = function (attribute, value) {
       if (typeof userFileFiltersService[attribute] === 'undefined') {
@@ -49,7 +49,7 @@
         gridOptionsService.data = userFileBrowserFactory.createData(solr.nodes);
         promise.resolve();
       }, function () {
-        $log.error('/user/files/ request failed');
+        $log.error('/files/ request failed');
         promise.reject();
       });
     };
@@ -61,7 +61,7 @@
           userFileBrowserFactory.createFilters(solr.facet_field_counts);
       promise.resolve();
     }, function () {
-      $log.error('/user/files/ request failed');
+      $log.error('/files/ request failed');
       promise.reject();
     });
   }

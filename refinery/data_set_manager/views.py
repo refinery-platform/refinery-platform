@@ -11,6 +11,7 @@ import shutil
 import urlparse
 
 from django import forms
+from django.conf import settings
 from django.core.urlresolvers import reverse
 from django.http import (Http404, HttpResponse, HttpResponseBadRequest,
                          HttpResponseRedirect, HttpResponseServerError)
@@ -18,6 +19,7 @@ from django.shortcuts import render, render_to_response
 from django.template import RequestContext
 from django.views.generic import View
 
+import boto3
 from chunked_upload.models import ChunkedUpload
 from chunked_upload.views import ChunkedUploadCompleteView, ChunkedUploadView
 from rest_framework import status
@@ -26,7 +28,8 @@ from rest_framework.views import APIView
 
 from core.models import DataSet, get_user_import_dir
 from core.utils import get_full_url
-from file_store.models import generate_file_source_translator, get_temp_dir
+from file_store.models import (generate_file_source_translator, get_temp_dir,
+                               parse_s3_url)
 from file_store.tasks import DownloadError, download_file
 
 from .models import Assay, AttributeOrder, Study
@@ -446,6 +449,21 @@ class ProcessMetadataTableView(View):
             column.replace('string:', '') for column in source_column_index
         ]
 
+        if settings.REFINERY_DEPLOYMENT_PLATFORM == 'aws':
+            try:
+                identity_id = request.POST.get('identity_id')
+            except (KeyError, ValueError):
+                error_msg = 'identity_id is missing'
+                error = {'error_message': error_msg}
+                if request.is_ajax():
+                    return HttpResponseBadRequest(
+                        json.dumps({'error': error_msg}), 'application/json'
+                    )
+                else:
+                    return render(request, self.template_name, error)
+        else:
+            identity_id = None
+
         try:
             dataset_uuid = process_metadata_table(
                 username=request.user.username,
@@ -466,7 +484,8 @@ class ProcessMetadataTableView(View):
                 delimiter=request.POST.get('delimiter'),
                 custom_delimiter_string=request.POST.get(
                     'custom_delimiter_string', False
-                )
+                ),
+                identity_id=identity_id
             )
         except Exception as error_msg:
             error = {'error_message': error_msg}
@@ -497,29 +516,55 @@ class CheckDataFilesView(View):
         if not request.is_ajax() or not request.body:
             return HttpResponseBadRequest()
 
-        file_data = json.loads(request.body)
         try:
-            base_path = file_data["base_path"]
+            file_data = json.loads(request.body)
+        except ValueError:
+            return HttpResponseBadRequest()
+        try:
+            input_file_list = file_data['list']
         except KeyError:
-            base_path = ""
+            return HttpResponseBadRequest()
+
+        try:
+            base_path = file_data['base_path']
+        except KeyError:
+            base_path = None
+        try:
+            identity_id = file_data['identityId']
+        except KeyError:
+            identity_id = None
 
         bad_file_list = []
         translate_file_source = generate_file_source_translator(
-            username=request.user.username, base_path=base_path)
-        # check if files are available
-        try:
-            for file_path in file_data["list"]:
-                # Explicitly check if file_path here is a string or unicode
-                # string
-                if not isinstance(file_path, unicode):
-                    bad_file_list.append(file_path)
-                else:
-                    file_path = translate_file_source(file_path)
-                    if not os.path.exists(file_path):
-                        bad_file_list.append(file_path)
-                logger.debug("Checked file path: '%s'", file_path)
-        except KeyError:  # if there's no list provided
-            return HttpResponseBadRequest()
+            username=request.user.username, base_path=base_path,
+            identity_id=identity_id
+        )
+
+        if settings.REFINERY_DEPLOYMENT_PLATFORM == 'aws':
+            # get a list of all uploaded S3 objects for the user
+            uploaded_s3_key_list = []
+            s3 = boto3.resource('s3')
+            s3_bucket = s3.Bucket(settings.MEDIA_BUCKET)
+            for s3_object in s3_bucket.objects.filter(
+                    Prefix='uploads/{}'.format(identity_id)
+            ):
+                uploaded_s3_key_list.append(s3_object.key)
+
+        for input_file_path in input_file_list:
+            if not isinstance(input_file_path, unicode):
+                bad_file_list.append(input_file_path)
+            else:
+                input_file_path = translate_file_source(input_file_path)
+                if settings.REFINERY_DEPLOYMENT_PLATFORM == 'aws':
+                    # check if S3 object key exists
+                    bucket_name, key = parse_s3_url(input_file_path)
+                    if key not in uploaded_s3_key_list:
+                        bad_file_list.append(os.path.basename(key))
+                else:  # POSIX file system
+                    if not os.path.exists(input_file_path):
+                        bad_file_list.append(input_file_path)
+            logger.debug("Checked file path: '%s'", input_file_path)
+
         # prefix output to protect from JSON vulnerability (stripped by
         # Angular)
         return HttpResponse(")]}',\n" + json.dumps(bad_file_list),

@@ -109,7 +109,7 @@ def make_storage_template():
                 'CorsRules': [
                     {
                         'AllowedOrigins': ['*'],
-                        'AllowedMethods': ['POST', 'PUT'],
+                        'AllowedMethods': ['POST', 'PUT', 'DELETE'],
                         'AllowedHeaders': ['*'],
                         'ExposedHeaders': ['ETag'],
                         'MaxAge': 3000,

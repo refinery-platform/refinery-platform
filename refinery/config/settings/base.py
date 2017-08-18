@@ -633,7 +633,7 @@ os.environ["DJANGO_LIVE_TEST_SERVER_ADDRESS"] = "localhost:10000-12000"
 
 DJANGO_DOCKER_ENGINE_BASE_URL = "visualizations"
 
-DEPLOYMENT_PLATFORM = "vagrant"
+REFINERY_DEPLOYMENT_PLATFORM = "vagrant"
 
 # HTML-safe item to be displayed to the right of the `About` link in the navbar
 REFINERY_CUSTOM_NAVBAR_ITEM = get_setting("REFINERY_CUSTOM_NAVBAR_ITEM")
