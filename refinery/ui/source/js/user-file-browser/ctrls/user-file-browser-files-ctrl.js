@@ -30,7 +30,7 @@
       gridOptionsService.data = userFileBrowserFactory.createData(solr.nodes);
       promise.resolve();
     }, function () {
-      $log.error('/user/files/ request failed');
+      $log.error('/files/ request failed');
       promise.reject();
     });
 
@@ -55,7 +55,7 @@
           gridOptionsService.data = userFileBrowserFactory.createData(solr.nodes);
           promise.resolve();
         }, function () {
-          $log.error('/user/files/ request failed');
+          $log.error('/files/ request failed');
           promise.reject();
         });
       }
@@ -65,7 +65,7 @@
     vm.fileBrowserFilterQuery = function () {
       var params = {};
       Object.keys(userFileFiltersService).forEach(function (key) {
-        // TODO: The set of filters on /user/files does not match the filters on /data_sets2.
+        // TODO: The set of filters on /files does not match the filters on /data_sets2.
         // TODO: I don't know whether a given filter is under "Characteristics" or something else.
         // TODO: The target page doesn't load right now, even with the query,
         // TODO:     and switching between tabs loses the query.

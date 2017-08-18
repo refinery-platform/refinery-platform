@@ -49,7 +49,7 @@
         gridOptionsService.data = userFileBrowserFactory.createData(solr.nodes);
         promise.resolve();
       }, function () {
-        $log.error('/user/files/ request failed');
+        $log.error('/files/ request failed');
         promise.reject();
       });
     };
@@ -61,7 +61,7 @@
           userFileBrowserFactory.createFilters(solr.facet_field_counts);
       promise.resolve();
     }, function () {
-      $log.error('/user/files/ request failed');
+      $log.error('/files/ request failed');
       promise.reject();
     });
   }
