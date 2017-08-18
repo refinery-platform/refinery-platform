@@ -10,6 +10,7 @@ from django.db.models.signals import post_delete, pre_delete
 from django.dispatch import receiver
 from django.http import JsonResponse
 
+import bioblend
 from bioblend.galaxy.dataset_collections import (CollectionDescription,
                                                  CollectionElement,
                                                  HistoryDatasetElement)
@@ -445,6 +446,18 @@ class VisualizationTool(Tool):
         return JsonResponse({Tool.TOOL_URL: self.get_relative_container_url()})
 
 
+def handle_bioblend_exceptions(func):
+    """Decorator to be used on functions that make calls using bioblend"""
+
+    def func_wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except bioblend.ConnectionError as e:
+            logger.debug("Error while interacting with bioblend: %e", e)
+
+    return func_wrapper
+
+
 class WorkflowTool(Tool):
     """
     WorkflowTools are Tools that are specific to
@@ -689,6 +702,7 @@ class WorkflowTool(Tool):
 
         return self._associate_collection_elements(galaxy_element_list)
 
+    @handle_bioblend_exceptions
     def create_dataset_collection(self):
         """
         Creates a Galaxy DatasetCollection based off of the collection
@@ -703,11 +717,13 @@ class WorkflowTool(Tool):
         )
         self.update_galaxy_data(self.COLLECTION_INFO, collection_info)
 
+    @handle_bioblend_exceptions
     def create_galaxy_history(self):
         return self.galaxy_connection.histories.create_history(
             name="History for: {}".format(self)
         )
 
+    @handle_bioblend_exceptions
     def create_galaxy_library(self):
         return self.galaxy_connection.libraries.create_library(
             name="Library for: {}".format(self)
@@ -804,6 +820,7 @@ class WorkflowTool(Tool):
             galaxy_dataset_dict["file_ext"]
         )
 
+    @handle_bioblend_exceptions
     def _get_galaxy_history_dataset_list(self):
         """
         Retrieve a list of Galaxy Datasets from the Galaxy History of our
@@ -840,6 +857,7 @@ class WorkflowTool(Tool):
             ) for file_store_item_uuid in self.get_input_file_uuid_list()
         ]
 
+    @handle_bioblend_exceptions
     def _get_galaxy_workflow_invocation_steps(self):
         """
         Return a list of dicts corresponding to each step of our
@@ -862,6 +880,7 @@ class WorkflowTool(Tool):
             Node.objects.get(uuid=uuid) for uuid in self.get_input_node_uuids()
         ]
 
+    @handle_bioblend_exceptions
     def _get_workflow_dict(self):
         return self.galaxy_connection.workflows.export_workflow_dict(
                 self.tool_definition.workflow.internal_id
@@ -875,6 +894,7 @@ class WorkflowTool(Tool):
             if step["job_id"] == galaxy_dataset_dict["creating_job"]:
                 return step["order_index"]
 
+    @handle_bioblend_exceptions
     def import_library_dataset_to_history(self, history_id,
                                           library_dataset_id):
         """
@@ -888,6 +908,7 @@ class WorkflowTool(Tool):
             library_dataset_id
         )
 
+    @handle_bioblend_exceptions
     def invoke_workflow(self):
         """Invoke a WorflowTool's Galaxy Workflow"""
         return self.galaxy_connection.workflows.invoke_workflow(
@@ -994,6 +1015,7 @@ class WorkflowTool(Tool):
         tool_launch_config[self.GALAXY_DATA][key] = value
         self.set_tool_launch_config(tool_launch_config)
 
+    @handle_bioblend_exceptions
     def upload_datafile_to_library_from_url(self, library_id, datafile_url):
         """
         Upload file from Refinery into a Galaxy Data Library form a
