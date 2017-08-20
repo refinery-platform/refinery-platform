@@ -308,10 +308,7 @@ class Tool(OwnableResource):
         )
 
     def __str__(self):
-        return "Tool: {} {}".format(
-            self.get_tool_name(),
-            self.uuid
-        )
+        return "Tool: {}".format(self.get_tool_name())
 
     def get_input_file_uuid_list(self):
         # Tools can't be created without the `file_uuid_list` existing so no
@@ -360,7 +357,7 @@ class Tool(OwnableResource):
         :return: analysis_config dict
         """
         return {
-            "name": "Analysis: {}".format(self),
+            "name": "{}".format(self),
             "studyUuid": self.dataset.get_latest_study().uuid,
             "toolUuid": self.uuid,
             "user_id": self.get_owner().id,
