@@ -14,7 +14,7 @@
           class="preview"
           title="View content in File Browser"
           ng-if="modal.deletionMessage == null"
-          ng-href="data_sets/{{ modal.dataSet.uuid }}"
+          ng-href="data_sets2/{{ modal.dataSet.uuid }}"
           ng-bind-html="modal.dataSet.title"
           refinery-tooltip
           refinery-tooltip-placement="top"
@@ -79,13 +79,13 @@
           <span ng-switch on="analysis.status">
               <span ng-if="SUCCESS">
                 <a
-                ng-href="/data_sets/{{modal.dataSet.uuid}}/analysis/{{analysis.uuid}}">
+                ng-href="/data_sets2/{{modal.dataSet.uuid}}/#/files/?{{modal.analysis.data_sets_query}}">
                 {{ analysis.name }}
               </a>
               </span>
               <span ng-if="!SUCCESS">
                 <a
-                ng-href="/data_sets/{{modal.dataSet.uuid}}/#/analyses">
+                ng-href="/data_sets2/{{modal.dataSet.uuid}}/#/analyses/">
                 {{ analysis.name }}
               </a>
               </span>

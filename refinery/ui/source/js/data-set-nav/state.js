@@ -15,7 +15,7 @@ function refineryDataSetNavConfig (
         },
         controller: 'refineryDataSetNavFilesCtrl'
       },
-      '^\/data_sets\/.*\/$',
+      '^\/data_sets_old\/.*\/$',
       true
     )
     .state(
@@ -29,7 +29,7 @@ function refineryDataSetNavConfig (
         },
         controller: 'refineryDataSetNavFilesBrowseCtrl'
       },
-      '^\/data_sets\/.*\/$',
+      '^\/data_sets_old\/.*\/$',
       true
     )
     .state(
@@ -43,7 +43,7 @@ function refineryDataSetNavConfig (
         },
         controller: 'refineryDataSetNavAnalyzeCtrl'
       },
-      '^\/data_sets\/.*\/$',
+      '^\/data_sets_old\/.*\/$',
       true
     )
     .state(
@@ -57,7 +57,7 @@ function refineryDataSetNavConfig (
         url: '/files/visualize/',
         controller: 'refineryDataSetNavVisualizeCtrl'
       },
-      '^\/data_sets\/.*\/$',
+      '^\/data_sets_old\/.*\/$',
       true
     )
     .state(
@@ -69,7 +69,7 @@ function refineryDataSetNavConfig (
         },
         controller: 'refineryDataSetNavBlueprintCtrl'
       },
-      '^\/data_sets\/.*\/$',
+      '^\/data_sets_old\/.*\/$',
       true
     )
     .state(
@@ -77,7 +77,7 @@ function refineryDataSetNavConfig (
         url: '/attributes/',
         controller: 'refineryDataSetNavBlueprintCtrl'
       },
-      '^\/data_sets\/.*\/$',
+      '^\/data_sets_old\/.*\/$',
       true
     )
     .state(
@@ -85,7 +85,7 @@ function refineryDataSetNavConfig (
         url: '/details/',
         controller: 'refineryDataSetNavBlueprintCtrl'
       },
-      '^\/data_sets\/.*\/$',
+      '^\/data_sets_old\/.*\/$',
       true
     )
     .state(
@@ -93,7 +93,7 @@ function refineryDataSetNavConfig (
         url: '/sharing/',
         controller: 'refineryDataSetNavBlueprintCtrl'
       },
-      '^\/data_sets\/.*\/$',
+      '^\/data_sets_old\/.*\/$',
       true
     )
     .state(
@@ -139,7 +139,7 @@ function refineryDataSetNavConfig (
   refineryUrlRouterProvider
     .otherwise(
       '/files/browse',
-      '^\/data_sets\/.*\/$',
+      '^\/data_sets_old\/.*\/$',
       true
     )
     .otherwise(

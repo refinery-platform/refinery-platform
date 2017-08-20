@@ -1,7 +1,7 @@
 'use strict';
 
 describe('RefineryDataSetNav.state: unit tests', function () {
-  var basePath = '/data_sets/whatever/';
+  var basePath = '/data_sets_old/whatever/';
 
   var $location;
   var $state;
@@ -74,7 +74,7 @@ describe('RefineryDataSetNav.state: unit tests', function () {
 
   describe('state "/data_set/<UUID>/"', function () {
     beforeEach(function () {
-      basePath = '/data_sets/whatever/';
+      basePath = '/data_sets_old/whatever/';
       $window = {
         location: {
           pathname: basePath

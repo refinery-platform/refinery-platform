@@ -2,6 +2,7 @@ import json
 import random
 import re
 import string
+from urllib import quote
 from urlparse import urljoin
 
 from django.contrib.auth.models import AnonymousUser, Group, User
@@ -9,6 +10,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.utils import timezone
 
+from constants import UUID_RE
 from guardian.shortcuts import assign_perm, get_objects_for_group
 import mock
 import mockcache as memcache
@@ -768,8 +770,8 @@ class AnalysisResourceTest(ResourceTestCase):
         self.user_catch_all_project = UserProfile.objects.get(
             user=self.user
         ).catch_all_project
-        self.dataset = DataSet.objects.create()
-        self.dataset2 = DataSet.objects.create()
+        self.dataset = create_dataset_with_necessary_models()
+        self.dataset2 = create_dataset_with_necessary_models()
         self.galaxy_instance = Instance.objects.create()
         self.workflow_engine = WorkflowEngine.objects.create(
             instance=self.galaxy_instance
@@ -1499,6 +1501,13 @@ class AnalysisTests(TestCase):
         self.assertEqual(
             self.analysis_status.tool_based_galaxy_file_import_state(),
             []
+        )
+
+    def test_data_sets_query(self):
+        self.assertRegexpMatches(
+            self.analysis_with_node_analyzed_further.data_sets_query(),
+            quote('{"REFINERY_ANALYSIS_UUID_') + r'\d+_\d+' +
+            quote('_s": "') + UUID_RE + quote('"}')
         )
 
 
