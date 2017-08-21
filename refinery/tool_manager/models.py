@@ -511,17 +511,6 @@ class WorkflowTool(Tool):
     def galaxy_workflow_history_id(self):
         return self.analysis.history_id
 
-    @property
-    def subanalysis_number(self):
-        """
-        Return an <int> corresponding to the # of successful Analyses that
-        have been run on our WorkflowTool's Refinery Dataset + 1 (For the
-        current Analysis run)
-        """
-        return self.dataset.get_analyses().filter(
-            status=Analysis.SUCCESS_STATUS
-        ).count() + 1
-
     def _associate_collection_elements(self, galaxy_element_data):
         """
         Handles the association of Galaxy objects with their parent elements
@@ -622,7 +611,7 @@ class WorkflowTool(Tool):
                     analysis=self.analysis,
                     direction=OUTPUT_CONNECTION,
                     name=galaxy_dataset["name"],
-                    subanalysis=self.subanalysis_number,
+                    subanalysis=self._get_analysis_group_number(),
                     step=self._get_workflow_step(galaxy_dataset),
                     filename=galaxy_dataset["name"],
                     filetype=galaxy_dataset["file_ext"],
@@ -808,11 +797,15 @@ class WorkflowTool(Tool):
             structure=structure
         )
 
-    def get_file_relationships_galaxy(self):
-        return ast.literal_eval(
-            self.get_tool_launch_config(
-            )[self.GALAXY_DATA][self.FILE_RELATIONSHIPS_GALAXY]
-        )
+    def _get_analysis_group_number(self):
+        """
+        Return an <int> corresponding to the # of successful Analyses that
+        have been run on our WorkflowTool's Refinery Dataset + 1 (For the
+        current Analysis run)
+        """
+        return self.dataset.get_analyses().filter(
+            status=Analysis.SUCCESS_STATUS
+        ).count() + 1
 
     @staticmethod
     def _get_galaxy_dataset_filename(galaxy_dataset_dict):
