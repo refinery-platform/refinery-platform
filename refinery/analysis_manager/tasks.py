@@ -649,15 +649,17 @@ def _get_galaxy_download_tasks(analysis):
     # w/ keep operators
     dl_dict = {}
     for dl in dl_files.all():
-        temp_dict = {}
-        temp_dict['filename'] = dl.filename
-        temp_dict['pair_id'] = dl.pair_id
+        temp_dict = {
+            'filename': dl.filename,
+            'pair_id': dl.pair_id
+        }
         dl_dict[str(dl.step_id)] = temp_dict
     galaxy_instance = analysis.workflow.workflow_engine.instance
 
     try:
         download_list = galaxy_instance.get_history_file_list(
-            analysis.history_id)
+            analysis.history_id
+        )
     except galaxy.client.ConnectionError as exc:
         error_msg = (
             "Error downloading Galaxy history files for analysis '%s': %s"
