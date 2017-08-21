@@ -672,9 +672,8 @@ class WorkflowTool(Tool):
 
             elif isinstance(nested_element, tuple):
                 paired_collection_element = CollectionElement(
-                    name="{} for WorkflowTool: {} - {}".format(
+                    name="{} collection {}".format(
                         self.PAIRED,
-                        self.uuid,
                         str(uuid.uuid4())
                     ),
                     type=self.PAIRED
@@ -739,16 +738,22 @@ class WorkflowTool(Tool):
         tool_launch_config_parameters = self._get_workflow_parameters()
 
         for galaxy_parameter_uuid in tool_launch_config_parameters:
-            parameter = GalaxyParameter.objects.get(uuid=galaxy_parameter_uuid)
+            galaxy_parameter = GalaxyParameter.objects.get(
+                uuid=galaxy_parameter_uuid
+            )
+            workflow_step = galaxy_parameter.galaxy_workflow_step
 
-            if params_dict.get(parameter.galaxy_workflow_step) is None:
-                params_dict[parameter.galaxy_workflow_step] = {}
+            if params_dict.get(workflow_step) is None:
+                params_dict[workflow_step] = self._get_tool_inputs_dict(
+                    workflow_step
+                )
 
-            params_dict[parameter.galaxy_workflow_step][parameter.name] = (
-                parameter.cast_param_value_to_proper_type(
+            params_dict[workflow_step][galaxy_parameter.name] = (
+                galaxy_parameter.cast_param_value_to_proper_type(
                     tool_launch_config_parameters[galaxy_parameter_uuid]
                 )
             )
+
         return params_dict
 
     def create_workflow_file_downloads(self):
