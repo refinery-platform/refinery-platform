@@ -469,6 +469,7 @@ class WorkflowTool(Tool):
     GALAXY_IMPORT_HISTORY_DICT = "import_history_dict"
     GALAXY_LIBRARY_DICT = "library_dict"
     GALAXY_WORKFLOW_INVOCATION_DATA = "galaxy_workflow_invocation_data"
+    GALAXY_TO_REFINERY_MAPPING_LIST = "galaxy_to_refinery_mapping_list"
     HISTORY_DATASET_COLLECTION_ASSOCIATION = 'hdca'
     INPUT_STEP = 0
     LIST = "list"
@@ -651,7 +652,10 @@ class WorkflowTool(Tool):
 
         for nested_element in reversed(file_relationship_nesting_list):
             if isinstance(nested_element, dict):
-                element_name = nested_element["refinery_file_uuid"]
+                self._update_galaxy_to_refinery_file_mapping_list(
+                    nested_element
+                )
+                element_name = nested_element[self.REFINERY_FILE_UUID]
                 if self.galaxy_collection_type.split(":")[-1] == self.PAIRED:
                     if reverse_read:
                         element_name = self.REVERSE
@@ -1020,6 +1024,17 @@ class WorkflowTool(Tool):
         tool_launch_config = self.get_tool_launch_config()
         tool_launch_config[self.GALAXY_DATA][key] = value
         self.set_tool_launch_config(tool_launch_config)
+
+    def _update_galaxy_to_refinery_file_mapping_list(
+            self, galaxy_to_refinery_mapping_dict):
+        galaxy_to_refinery_mapping_list = (
+            self._get_galaxy_file_mapping_list()
+        )
+        galaxy_to_refinery_mapping_list.append(galaxy_to_refinery_mapping_dict)
+        self.update_galaxy_data(
+            self.GALAXY_TO_REFINERY_MAPPING_LIST,
+            galaxy_to_refinery_mapping_list
+        )
 
     @handle_bioblend_exceptions
     def upload_datafile_to_library_from_url(self, library_id, datafile_url):
