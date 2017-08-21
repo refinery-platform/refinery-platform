@@ -206,7 +206,7 @@ class ToolManagerTestBase(TestCase):
             ):
                 with mock.patch.object(
                         run_analysis,
-                        'delay',
+                        'apply_async',
                         side_effect=None
                 ):
                     self.post_response = self.tools_view(self.post_request)
