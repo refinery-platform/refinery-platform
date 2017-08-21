@@ -257,7 +257,8 @@ class ToolManagerTestBase(TestCase):
 
         # Don't pull down images in tests
         with mock.patch(
-            "django_docker_engine.docker_utils.DockerClientWrapper.pull"
+            "django_docker_engine.docker_utils.DockerClientWrapper.pull",
+            return_value=None
         ) as pull_mock:
             self.td = create_tool_definition(self.tool_annotation_json)
             self.assertTrue(pull_mock.called)
@@ -1619,13 +1620,17 @@ class WorkflowToolTests(ToolManagerTestBase):
         self.create_valid_tool(ToolDefinition.WORKFLOW)
         self.update_nodes()
         self.assertEqual(
-            self.tool.get_galaxy_dict(),
-            {
-                WorkflowTool.FILE_RELATIONSHIPS_GALAXY: (
-                    str(self.tool.get_galaxy_file_relationships())
-                ),
-                WorkflowTool.GALAXY_TO_REFINERY_MAPPING_LIST: []
-            }
+            self.tool.get_galaxy_dict()[
+                WorkflowTool.FILE_RELATIONSHIPS_GALAXY
+            ],
+            unicode(
+                self.tool.get_galaxy_file_relationships()
+            ).replace("'", '"')
+        )
+        self.assertEqual(
+            self.tool.get_galaxy_dict()[
+                WorkflowTool.GALAXY_TO_REFINERY_MAPPING_LIST],
+            []
         )
 
     @mock.patch.object(WorkflowTool, "_get_tool_data")
@@ -1640,9 +1645,6 @@ class WorkflowToolTests(ToolManagerTestBase):
                     GalaxyParameter.objects.get(name=k).uuid
                 ] = str(parameters_dict[key][k])
 
-        tool_launch_config = self.tool.get_tool_launch_config()
-        tool_launch_config[WorkflowTool.GALAXY_DATA] = None
-        self.tool.set_tool_launch_config(tool_launch_config)
         self.assertEqual(
             self.tool.get_tool_launch_config(),
             {
@@ -1656,7 +1658,14 @@ class WorkflowToolTests(ToolManagerTestBase):
                     u"['http://www.example.com/test_file.txt']"
                 ),
                 ToolDefinition.PARAMETERS: parameters_dict_with_uuids,
-                WorkflowTool.GALAXY_DATA: None
+                WorkflowTool.GALAXY_DATA: {
+                    WorkflowTool.FILE_RELATIONSHIPS_GALAXY: (
+                        unicode(
+                            self.tool.get_galaxy_file_relationships()
+                        ).replace("'", '"')
+                    ),
+                    WorkflowTool.GALAXY_TO_REFINERY_MAPPING_LIST: []
+                }
             }
         )
         self.assertTrue(get_tool_data_mock.called)
