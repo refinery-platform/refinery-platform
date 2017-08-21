@@ -240,7 +240,10 @@ def _invoke_tool_based_galaxy_workflow(analysis_uuid):
 
     tool.update_galaxy_data(
         tool.GALAXY_WORKFLOW_INVOCATION_DATA,
-        galaxy_workflow_invocation_data
+        tool.galaxy_connection.workflows.show_invocation(
+            tool.get_workflow_internal_id(),
+            galaxy_workflow_invocation_data["id"]
+        )
     )
 
 
