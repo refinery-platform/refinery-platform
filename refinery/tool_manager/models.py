@@ -818,6 +818,9 @@ class WorkflowTool(Tool):
             galaxy_dataset_dict["file_ext"]
         )
 
+    def _get_galaxy_file_mapping_list(self):
+        return self.get_galaxy_dict()[self.GALAXY_TO_REFINERY_MAPPING_LIST]
+
     def get_galaxy_file_relationships(self):
         return ast.literal_eval(
             self.get_tool_launch_config(
@@ -882,15 +885,52 @@ class WorkflowTool(Tool):
         """
         return [
             Node.objects.get(uuid=uuid) for uuid in self.get_input_node_uuids()
+            ]
+
+    @handle_bioblend_exceptions
+    def _get_tool_data(self, workflow_step):
+        return self.galaxy_connection.tools.show_tool(
+            self.galaxy_connection.workflows.show_workflow(
+                self.get_workflow_internal_id()
+            )["steps"][workflow_step]["tool_id"],
+            io_details=True
+        )
+
+    @handle_bioblend_exceptions
+    def _get_tool_inputs_dict(self, workflow_step):
+        tool_data = self._get_tool_data(str(workflow_step))
+        tool_data_inputs = [
+            param for param in tool_data["inputs"]
+            if param["type"] not in ["data", "data_collection"]
         ]
+        cast_to_type = {
+            "text": str,
+            "integer": int,
+            "float": float,
+            "boolean": bool
+        }
+
+        tool_inputs_dict = {}
+        for input_dict in tool_data_inputs:
+            try:
+                proper_parameter_value = cast_to_type[input_dict["type"]](
+                    input_dict["value"]
+                )
+            except KeyError as e:
+                logger.error(e)
+                proper_parameter_value = input_dict["value"]
+
+            tool_inputs_dict[input_dict["name"]] = proper_parameter_value
+
+        return tool_inputs_dict
 
     @handle_bioblend_exceptions
     def _get_workflow_dict(self):
         return self.galaxy_connection.workflows.export_workflow_dict(
-            self._get_workflow_internal_id()
+            self.get_workflow_internal_id()
         )
 
-    def _get_workflow_internal_id(self):
+    def get_workflow_internal_id(self):
         return self.tool_definition.workflow.internal_id
 
     def _get_workflow_parameters(self):
@@ -919,7 +959,7 @@ class WorkflowTool(Tool):
     def invoke_workflow(self):
         """Invoke a WorflowTool's Galaxy Workflow"""
         return self.galaxy_connection.workflows.invoke_workflow(
-            self._get_workflow_internal_id(),
+            self.get_workflow_internal_id(),
             history_name="Workflow Run for {} {}".format(self.name, self.uuid),
             inputs=self._create_workflow_inputs_dict(),
             params=self._create_workflow_parameters_dict()
