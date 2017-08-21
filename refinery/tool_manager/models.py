@@ -656,14 +656,13 @@ class WorkflowTool(Tool):
                 galaxy_element_list.append(
                     HistoryDatasetElement(
                         name=element_name,
-                        id=nested_element['galaxy_dataset_history_id']
+                        id=nested_element[self.GALAXY_DATASET_HISTORY_ID]
                     )
                 )
             elif isinstance(nested_element, list):
                 list_collection_element = CollectionElement(
-                    name="{} for WorkflowTool: {} - {}".format(
+                    name="{} collection {}".format(
                         self.LIST,
-                        self.uuid,
                         str(uuid.uuid4())
                     ),
                     type=self.LIST
