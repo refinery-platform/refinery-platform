@@ -832,7 +832,7 @@ class WorkflowTool(Tool):
         """
         dataset_list = (
             self.galaxy_connection.histories.show_matching_datasets(
-                self.analysis.history_id
+                self.galaxy_workflow_history_id
             )
         )
 
@@ -868,7 +868,7 @@ class WorkflowTool(Tool):
         Galaxy Workflow's invocation.
         """
         return self.galaxy_connection.workflows.show_invocation(
-            self.analysis.history_id,
+            self.galaxy_workflow_history_id,
             self.get_galaxy_dict()[self.GALAXY_WORKFLOW_INVOCATION_DATA]["id"]
         )["steps"]
 
