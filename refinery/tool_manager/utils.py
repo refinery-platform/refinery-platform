@@ -226,9 +226,9 @@ def create_tool(tool_launch_configuration, user_instance):
     if tool_type == ToolDefinition.WORKFLOW:
         tool_launch_configuration[WorkflowTool.GALAXY_DATA] = {
             WorkflowTool.FILE_RELATIONSHIPS_GALAXY:
-                tool_launch_configuration[Tool.FILE_RELATIONSHIPS]
+                tool_launch_configuration[Tool.FILE_RELATIONSHIPS],
+            WorkflowTool.GALAXY_TO_REFINERY_MAPPING_LIST: []
         }
-        # Add updated Tool launch config info to common_tool_params dict
         common_tool_params[Tool.TOOL_LAUNCH_CONFIGURATION] = json.dumps(
             tool_launch_configuration
         )
