@@ -211,6 +211,8 @@ class ToolManagerTestBase(TestCase):
                         side_effect=None
                 ):
                     self.post_response = self.tools_view(self.post_request)
+                    assert self.post_response.status_code == 200, \
+                        self.post_response.content
                     logger.debug(self.post_response.content)
 
             self.tool = WorkflowTool.objects.get(
