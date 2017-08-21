@@ -1,5 +1,4 @@
 import logging
-import sys
 
 from django.db import transaction
 from django.http import HttpResponseBadRequest
@@ -75,9 +74,4 @@ class ToolsViewSet(ModelViewSet):
                     return tool.launch()
             except Exception as e:
                 logger.error(e)
-                return HttpResponseBadRequest(
-                    "{} {}".format(
-                        e.message,
-                        sys.exc_info()[0]
-                    )
-                )
+                return HttpResponseBadRequest(e)
