@@ -200,10 +200,9 @@ class ToolManagerTestBase(TestCase):
 
         # Mock the run_analysis task
         elif tool_type == ToolDefinition.WORKFLOW:
-            with mock.patch.object(
-                    WorkflowTool,
-                    '_get_workflow_dict',
-                    return_value=galaxy_workflow_dict
+            with mock.patch(
+                "tool_manager.models.WorkflowTool._get_workflow_dict",
+                return_value=galaxy_workflow_dict
             ):
                 with mock.patch.object(
                         run_analysis,
