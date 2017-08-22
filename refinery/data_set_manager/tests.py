@@ -1,6 +1,9 @@
 from StringIO import StringIO
+import contextlib
 import json
 import re
+import shutil
+import tempfile
 
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import (InMemoryUploadedFile,
@@ -12,6 +15,7 @@ from rest_framework.test import APIClient, APIRequestFactory, APITestCase
 
 from core.models import DataSet, ExtendedGroup, InvestigationLink
 from core.views import NodeViewSet
+from data_set_manager.isa_tab_parser import IsaTabParser
 from data_set_manager.tasks import parse_isatab
 from file_store.models import FileStoreItem
 
@@ -343,6 +347,25 @@ class AssaysAttributesAPITests(APITestCase):
                 response.content, '"Only owner may edit attribute order."'
                 )
         self.client.logout()
+
+
+@contextlib.contextmanager
+def temporary_directory(*args, **kwargs):
+    d = tempfile.mkdtemp(*args, **kwargs)
+    try:
+        yield d
+    finally:
+        shutil.rmtree(d)
+
+
+class IsaTabParserTests(TestCase):
+    def setUp(self):
+        pass
+
+    def test_empty(self):
+        with temporary_directory() as tmp:
+            with self.assertRaises(IndexError):
+                IsaTabParser().run(tmp)
 
 
 class UtilitiesTest(TestCase):
