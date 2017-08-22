@@ -16,7 +16,7 @@ from rest_framework.test import APIClient, APIRequestFactory, APITestCase
 
 from core.models import DataSet, ExtendedGroup, InvestigationLink
 from core.views import NodeViewSet
-import data_set_manager
+from data_set_manager.isa_tab_parser import IsaTabParser, ParserException
 from data_set_manager.tasks import parse_isatab
 from file_store.models import FileStoreItem
 
@@ -361,29 +361,15 @@ def temporary_directory(*args, **kwargs):
 
 class IsaTabParserTests(TestCase):
 
-    # TODO: If I try to delete "data_set_manager.isa_tab_parser." ->
-    # Traceback (most recent call last):
-    #   File "<console>", line 1, in <module>
-    #   File "/vagrant/refinery/data_set_manager/tests.py",
-    #     line 19, in <module>
-    #     from data_set_manager.isa_tab_parser import IsaTabParser
-    #   File "/vagrant/refinery/data_set_manager/isa_tab_parser.py",
-    #     line 19, in <module>
-    #     import data_set_manager.tasks
-    #   File "/vagrant/refinery/data_set_manager/tasks.py",
-    #     line 32, in <module>
-    #     from .isa_tab_parser import IsaTabParser
-    # ImportError: cannot import name IsaTabParser
-
     def parse(self, dir_name):
         parent = os.path.dirname(os.path.abspath(__file__))
         dir = os.path.join(parent, 'test-data', dir_name)
-        return data_set_manager.isa_tab_parser.IsaTabParser().run(dir)
+        return IsaTabParser().run(dir)
 
     def test_empty(self):
         with temporary_directory() as tmp:
-            with self.assertRaises(ValueError):
-                data_set_manager.isa_tab_parser.IsaTabParser().run(tmp)
+            with self.assertRaises(ParserException):
+                IsaTabParser().run(tmp)
 
     def test_minimal(self):
         investigation = self.parse('minimal')
@@ -395,7 +381,7 @@ class IsaTabParserTests(TestCase):
         self.assertEqual(len(assays), 1)
 
     def test_mising_investigation(self):
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ParserException):
             self.parse('missing-investigation')
 
     def test_mising_study(self):
