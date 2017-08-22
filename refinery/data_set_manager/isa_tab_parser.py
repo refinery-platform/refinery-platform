@@ -17,6 +17,7 @@ from urlparse import urlparse
 from zipfile import ZipFile
 
 import data_set_manager.tasks
+from file_store.models import FileStoreItem
 from file_store.tasks import create, import_file
 
 from .models import (Assay, Attribute, Contact, Design, Factor, Investigation,
@@ -332,10 +333,14 @@ class IsaTabParser:
                     else:
                         file_path = node_name
 
-                uuid = create(source=file_path)
-
-                if uuid is not None:
-                    node.file_uuid = uuid
+                item = FileStoreItem.objects.create_item(
+                    source=file_path, sharename='', filetype=''
+                )
+                if item is not None:
+                    # start importing data file if it was uploaded
+                    if item.source == os.path.basename(item.source):
+                        import_file.delay(item.uuid)
+                    node.file_uuid = item.uuid
                     node.save()
                 else:
                     logger.exception(
