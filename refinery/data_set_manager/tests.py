@@ -381,7 +381,7 @@ class IsaTabParserTests(TestCase):
 
     def test_empty(self):
         with temporary_directory() as tmp:
-            with self.assertRaises(IndexError):
+            with self.assertRaises(ValueError):
                 data_set_manager.isa_tab_parser.IsaTabParser().run(tmp)
 
     def test_minimal(self):
@@ -396,7 +396,7 @@ class IsaTabParserTests(TestCase):
 
     def test_mising_investigation(self):
         dir = os.path.join(self.data_dir, 'missing-investigation')
-        with self.assertRaises(IndexError):
+        with self.assertRaises(ValueError):
             data_set_manager.isa_tab_parser.IsaTabParser().run(dir)
 
     def test_mising_study(self):
