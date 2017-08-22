@@ -1744,23 +1744,27 @@ class AnnotatedNodeExplosionTestCase(TestCase):
         )
 
     def test_metabolights_isatab_wont_import_with_rollback_a(self):
-        parse_isatab(
-            self.user.username,
-            True,
-            "refinery/data_set_manager/test-data/MTBLS1.zip"
-        )
+        with self.assertRaises(RuntimeError) as context:
+            parse_isatab(
+                self.user.username,
+                True,
+                "data_set_manager/test-data/MTBLS1.zip"
+            )
         self.assertEqual(DataSet.objects.count(), 0)
         self.assertEqual(AnnotatedNode.objects.count(), 0)
         self.assertEqual(Node.objects.count(), 0)
         self.assertEqual(FileStoreItem.objects.count(), 0)
+        self.assertIn("Exponential explosion", context.exception.message)
 
     def test_metabolights_isatab_wont_import_with_rollback_b(self):
-        parse_isatab(
-            self.user.username,
-            True,
-            "refinery/data_set_manager/test-data/MTBLS112.zip"
-        )
+        with self.assertRaises(RuntimeError) as context:
+            parse_isatab(
+                self.user.username,
+                True,
+                "data_set_manager/test-data/MTBLS112.zip"
+            )
         self.assertEqual(DataSet.objects.count(), 0)
         self.assertEqual(AnnotatedNode.objects.count(), 0)
         self.assertEqual(Node.objects.count(), 0)
         self.assertEqual(FileStoreItem.objects.count(), 0)
+        self.assertIn("Exponential explosion", context.exception.message)
