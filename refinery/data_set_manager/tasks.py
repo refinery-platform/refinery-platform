@@ -529,10 +529,8 @@ def parse_isatab(
                 )
                 return data_uuid, os.path.basename(path), False
         except:  # prints the error message without breaking things
-            logger.error("*** print_tb:")
             exc_type, exc_value, exc_traceback = sys.exc_info()
             logger.error(traceback.print_tb(exc_traceback, file=sys.stdout))
-            logger.error("*** print_exception:")
             logger.error(
                 traceback.print_exception(
                     exc_type,
