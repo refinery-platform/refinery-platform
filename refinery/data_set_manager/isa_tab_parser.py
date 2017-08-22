@@ -972,7 +972,7 @@ class IsaTabParser:
                         if name.startswith("..") or name.startswith("/"):
                             raise ParserException(
                                 "Unable to extract assumed ISArchive "
-                                "file {:r} due to illegal file path: {}"
+                                "file {!r} due to illegal file path: {}"
                                 .format(path, name)
                             )
                     # extract archive
@@ -995,7 +995,7 @@ class IsaTabParser:
                     path = extract_path
             except:
                 raise ParserException(
-                    "Unable to extract assumed ISArchive file {:r}."
+                    "Unable to extract assumed ISArchive file {!r}."
                     .format(path)
                 )
         # 2. identify investigation file
@@ -1003,7 +1003,7 @@ class IsaTabParser:
             investigation_file_name = glob.glob("%s/i*.txt" % path).pop()
         except IndexError as exception:
             raise ParserException(
-                "Unable to identify ISArchive file in {:r} {}.".format(
+                "Unable to identify ISArchive file in {!r} {}.".format(
                     path,
                     exception
                 )
@@ -1143,7 +1143,7 @@ class IsaTabParser:
                         if name.startswith("..") or name.startswith("/"):
                             raise ParserException(
                                 "Unable to extract assumed ISArchive "
-                                "file {:r} due to illegal file path: {:r}"
+                                "file {!r} due to illegal file path: {!r}"
                                 .format(path, name)
                             )
                     # extract archive
@@ -1167,7 +1167,7 @@ class IsaTabParser:
                     path = extract_path
             except:
                 raise ParserException(
-                    "Unable to extract assumed ISArchive file {:r}."
+                    "Unable to extract assumed ISArchive file {!r}."
                     .format(path)
                 )
 
@@ -1176,7 +1176,7 @@ class IsaTabParser:
             investigation_file_name = glob.glob("%s/i*.txt" % path).pop()
         except IndexError:
             raise ParserException(
-                "Unable to identify ISArchive file in {:r}.".format(path)
+                "Unable to identify ISArchive file in {!r}.".format(path)
             )
 
         logger.info("Investigation file path: %s", investigation_file_name)

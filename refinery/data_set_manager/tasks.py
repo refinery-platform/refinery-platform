@@ -25,7 +25,7 @@ from requests.exceptions import HTTPError
 from core.models import DataSet, ExtendedGroup, FileStoreItem
 from core.utils import (add_data_set_to_neo4j, update_annotation_sets_neo4j,
                         update_data_set_index)
-import data_set_manager
+import data_set_manager.isa_tab_parser
 from file_store.models import FileExtension
 
 from .models import Investigation, Node, initialize_attribute_order
