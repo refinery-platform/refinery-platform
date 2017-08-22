@@ -360,6 +360,21 @@ def temporary_directory(*args, **kwargs):
 
 
 class IsaTabParserTests(TestCase):
+
+    # TODO: If I try to delete "data_set_manager.isa_tab_parser." ->
+    # Traceback (most recent call last):
+    #   File "<console>", line 1, in <module>
+    #   File "/vagrant/refinery/data_set_manager/tests.py",
+    #     line 19, in <module>
+    #     from data_set_manager.isa_tab_parser import IsaTabParser
+    #   File "/vagrant/refinery/data_set_manager/isa_tab_parser.py",
+    #     line 19, in <module>
+    #     import data_set_manager.tasks
+    #   File "/vagrant/refinery/data_set_manager/tasks.py",
+    #     line 32, in <module>
+    #     from .isa_tab_parser import IsaTabParser
+    # ImportError: cannot import name IsaTabParser
+
     def setUp(self):
         parent = os.path.dirname(os.path.abspath(__file__))
         self.data_dir = os.path.join(parent, 'test-data')
