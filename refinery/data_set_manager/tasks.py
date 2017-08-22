@@ -25,9 +25,9 @@ from requests.exceptions import HTTPError
 from core.models import DataSet, ExtendedGroup, FileStoreItem
 from core.utils import (add_data_set_to_neo4j, update_annotation_sets_neo4j,
                         update_data_set_index)
+import data_set_manager
 from file_store.models import FileExtension
 
-from .isa_tab_parser import IsaTabParser
 from .models import Investigation, Node, initialize_attribute_order
 from .utils import (calculate_checksum, get_node_types, index_annotated_nodes,
                     update_annotated_nodes)
@@ -451,7 +451,7 @@ def parse_isatab(
     pre_isa_archive: optional copy of files that were converted to ISA-Tab
     file_base_path: if your file locations are relative paths, this is the base
     """
-    p = IsaTabParser()
+    p = data_set_manager.isa_tab_parser.IsaTabParser()
     p.additional_raw_data_file_extension = additional_raw_data_file_extension
     p.file_base_path = file_base_path
     """Get the study title and investigation id and see if anything is in the

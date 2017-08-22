@@ -16,7 +16,7 @@ import tempfile
 from urlparse import urlparse
 from zipfile import ZipFile
 
-import data_set_manager.tasks
+import data_set_manager
 from file_store.tasks import create, import_file
 
 from .models import (Assay, Attribute, Contact, Design, Factor, Investigation,
