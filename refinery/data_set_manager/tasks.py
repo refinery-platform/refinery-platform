@@ -8,10 +8,8 @@ import re
 import shutil
 import string
 import subprocess
-import sys
 import tempfile
 import time
-import traceback
 
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -515,7 +513,6 @@ def parse_isatab(
                     investigation.investigationlink_set.all()[0].data_set.uuid,
                     os.path.basename(path),
                     True)
-    try:
         with transaction.atomic():
             investigation = p.run(
                 path,
@@ -528,19 +525,6 @@ def parse_isatab(
                 public=public
             )
             return data_uuid, os.path.basename(path), False
-    except:  # prints the error message without breaking things
-        logger.error("*** print_tb:")
-        exc_type, exc_value, exc_traceback = sys.exc_info()
-        logger.error(traceback.print_tb(exc_traceback, file=sys.stdout))
-        logger.error("*** print_exception:")
-        logger.error(
-            traceback.print_exception(
-                exc_type,
-                exc_value,
-                exc_traceback,
-                file=sys.stdout
-            )
-        )
     return None, os.path.basename(path), False
 
 
