@@ -1,6 +1,7 @@
 from StringIO import StringIO
 import contextlib
 import json
+import os
 import re
 import shutil
 import tempfile
@@ -15,7 +16,7 @@ from rest_framework.test import APIClient, APIRequestFactory, APITestCase
 
 from core.models import DataSet, ExtendedGroup, InvestigationLink
 from core.views import NodeViewSet
-from data_set_manager.isa_tab_parser import IsaTabParser
+import data_set_manager
 from data_set_manager.tasks import parse_isatab
 from file_store.models import FileStoreItem
 
@@ -360,12 +361,17 @@ def temporary_directory(*args, **kwargs):
 
 class IsaTabParserTests(TestCase):
     def setUp(self):
-        pass
+        parent = os.path.dirname(os.path.abspath(__file__))
+        self.data_dir = os.path.join(parent, 'test-data')
 
     def test_empty(self):
         with temporary_directory() as tmp:
             with self.assertRaises(IndexError):
-                IsaTabParser().run(tmp)
+                data_set_manager.isa_tab_parser.IsaTabParser().run(tmp)
+
+    def test_minimal(self):
+        dir = os.path.join(self.data_dir, 'minimal')
+        data_set_manager.isa_tab_parser.IsaTabParser().run(dir)
 
 
 class UtilitiesTest(TestCase):
