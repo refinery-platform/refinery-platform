@@ -375,9 +375,10 @@ class IsaTabParserTests(TestCase):
     #     from .isa_tab_parser import IsaTabParser
     # ImportError: cannot import name IsaTabParser
 
-    def setUp(self):
+    def parse(self, dir_name):
         parent = os.path.dirname(os.path.abspath(__file__))
-        self.data_dir = os.path.join(parent, 'test-data')
+        dir = os.path.join(parent, 'test-data', dir_name)
+        return data_set_manager.isa_tab_parser.IsaTabParser().run(dir)
 
     def test_empty(self):
         with temporary_directory() as tmp:
@@ -385,8 +386,7 @@ class IsaTabParserTests(TestCase):
                 data_set_manager.isa_tab_parser.IsaTabParser().run(tmp)
 
     def test_minimal(self):
-        dir = os.path.join(self.data_dir, 'minimal')
-        investigation = data_set_manager.isa_tab_parser.IsaTabParser().run(dir)
+        investigation = self.parse('minimal')
 
         studies = investigation.study_set.all()
         self.assertEqual(len(studies), 1)
@@ -395,19 +395,20 @@ class IsaTabParserTests(TestCase):
         self.assertEqual(len(assays), 1)
 
     def test_mising_investigation(self):
-        dir = os.path.join(self.data_dir, 'missing-investigation')
         with self.assertRaises(ValueError):
-            data_set_manager.isa_tab_parser.IsaTabParser().run(dir)
+            self.parse('missing-investigation')
 
     def test_mising_study(self):
-        dir = os.path.join(self.data_dir, 'missing-study')
         with self.assertRaises(IOError):
-            data_set_manager.isa_tab_parser.IsaTabParser().run(dir)
+            self.parse('missing-study')
 
     def test_mising_assay(self):
-        dir = os.path.join(self.data_dir, 'missing-assay')
         with self.assertRaises(IOError):
-            data_set_manager.isa_tab_parser.IsaTabParser().run(dir)
+            self.parse('missing-assay')
+
+    def test_multiple_investigation(self):
+        # TODO: I think this should fail?
+        self.parse('multiple-investigation')
 
 
 class UtilitiesTest(TestCase):
