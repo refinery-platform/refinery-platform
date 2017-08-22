@@ -515,32 +515,32 @@ def parse_isatab(
                     investigation.investigationlink_set.all()[0].data_set.uuid,
                     os.path.basename(path),
                     True)
-    try:
-        with transaction.atomic():
-            investigation = p.run(
-                path,
-                isa_archive=isa_archive,
-                preisa_archive=pre_isa_archive
+        try:
+            with transaction.atomic():
+                investigation = p.run(
+                    path,
+                    isa_archive=isa_archive,
+                    preisa_archive=pre_isa_archive
+                )
+                data_uuid = create_dataset(
+                    investigation.uuid,
+                    username,
+                    public=public
+                )
+                return data_uuid, os.path.basename(path), False
+        except:  # prints the error message without breaking things
+            logger.error("*** print_tb:")
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            logger.error(traceback.print_tb(exc_traceback, file=sys.stdout))
+            logger.error("*** print_exception:")
+            logger.error(
+                traceback.print_exception(
+                    exc_type,
+                    exc_value,
+                    exc_traceback,
+                    file=sys.stdout
+                )
             )
-            data_uuid = create_dataset(
-                investigation.uuid,
-                username,
-                public=public
-            )
-            return data_uuid, os.path.basename(path), False
-    except:  # prints the error message without breaking things
-        logger.error("*** print_tb:")
-        exc_type, exc_value, exc_traceback = sys.exc_info()
-        logger.error(traceback.print_tb(exc_traceback, file=sys.stdout))
-        logger.error("*** print_exception:")
-        logger.error(
-            traceback.print_exception(
-                exc_type,
-                exc_value,
-                exc_traceback,
-                file=sys.stdout
-            )
-        )
     return None, os.path.basename(path), False
 
 
