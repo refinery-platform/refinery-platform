@@ -386,7 +386,13 @@ class IsaTabParserTests(TestCase):
 
     def test_minimal(self):
         dir = os.path.join(self.data_dir, 'minimal')
-        data_set_manager.isa_tab_parser.IsaTabParser().run(dir)
+        investigation = data_set_manager.isa_tab_parser.IsaTabParser().run(dir)
+
+        studies = investigation.study_set.all()
+        self.assertEqual(len(studies), 1)
+
+        assays = studies[0].assay_set.all()
+        self.assertEqual(len(assays), 1)
 
 
 class UtilitiesTest(TestCase):
