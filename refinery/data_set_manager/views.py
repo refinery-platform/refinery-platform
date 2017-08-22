@@ -279,7 +279,14 @@ class ProcessISATabView(View):
                         )
                     )
             else:
-                response = self.import_by_file(f)
+                try:
+                    response = self.import_by_file(f)
+                except Exception as e:
+                    logger.error(traceback.format_exc(e))
+                    return HttpResponseBadRequest(
+                        "{} {}".format(PARSER_UNEXPECTED_ERROR_MESSAGE, e)
+                    )
+
                 if not response['success']:
                     if request.is_ajax():
                         return HttpResponse(
