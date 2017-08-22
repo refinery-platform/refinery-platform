@@ -410,6 +410,21 @@ class IsaTabParserTests(TestCase):
         # TODO: I think this should fail?
         self.parse('multiple-investigation')
 
+    def test_multiple_study(self):
+        investigation = self.parse('multiple-study')
+
+        studies = investigation.study_set.all()
+        self.assertEqual(len(studies), 2)
+
+        assays0 = studies[0].assay_set.all()
+        self.assertEqual(len(assays0), 1)
+
+        assays1 = studies[1].assay_set.all()
+        self.assertEqual(len(assays1), 1)
+
+    def test_multiple_assay(self):
+        pass
+
 
 class UtilitiesTest(TestCase):
 
