@@ -394,6 +394,21 @@ class IsaTabParserTests(TestCase):
         assays = studies[0].assay_set.all()
         self.assertEqual(len(assays), 1)
 
+    def test_mising_investigation(self):
+        dir = os.path.join(self.data_dir, 'missing-investigation')
+        with self.assertRaises(IndexError):
+            data_set_manager.isa_tab_parser.IsaTabParser().run(dir)
+
+    def test_mising_study(self):
+        dir = os.path.join(self.data_dir, 'missing-study')
+        with self.assertRaises(IOError):
+            data_set_manager.isa_tab_parser.IsaTabParser().run(dir)
+
+    def test_mising_assay(self):
+        dir = os.path.join(self.data_dir, 'missing-assay')
+        with self.assertRaises(IOError):
+            data_set_manager.isa_tab_parser.IsaTabParser().run(dir)
+
 
 class UtilitiesTest(TestCase):
 
