@@ -98,11 +98,11 @@ class ToolManagerMocks(TestCase):
             WorkflowClient, "delete_workflow").start()
         self.invoke_workflow_mock = mock.patch.object(
             WorkflowClient, "invoke_workflow",
-            return_value=galaxy_workflow_invocation
+            return_value=galaxy_workflow_invocation_data
         ).start()
         self.galaxy_workflow_show_invocation_mock = mock.patch.object(
             WorkflowClient, "show_invocation",
-            return_value=galaxy_workflow_invocation_data
+            return_value=galaxy_workflow_invocation
         ).start()
         self.create_history_mock = mock.patch.object(
             WorkflowTool, "create_galaxy_history", return_value=history_dict
