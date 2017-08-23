@@ -961,7 +961,7 @@ class WorkflowTool(Tool):
             "There should always be one corresponding workflow step, "
             "but there are {}".format(len(creating_workflow_step))
         )
-        return creating_workflow_step[0]
+        return list(creating_workflow_step)[0]
 
     @handle_bioblend_exceptions
     def import_library_dataset_to_history(self, history_id,
