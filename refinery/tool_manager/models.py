@@ -120,7 +120,9 @@ class FileRelationship(models.Model):
     value_type = models.CharField(max_length=100, choices=RELATIONSHIP_TYPES)
 
     # NOTE: `symmetrical=False` is not very common. It's necessary for the
-    # self-referential M2M below. See: http://bit.ly/2mpPQfT
+    # self-referential M2M below.
+    # See: https://docs.djangoproject.com/en/1.7/ref/models/fields/#django
+    # .db.models.ManyToManyField.symmetrical
     file_relationship = models.ManyToManyField(
         "self", symmetrical=False, null=True, blank=True)
 
@@ -728,7 +730,9 @@ class WorkflowTool(Tool):
     def _create_workflow_inputs_dict(self):
         """
         Create and return the inputs dict expected from bioblend. See here:
-        http://bit.ly/2vIwmVw for details on its structure.
+        http://bioblend.readthedocs.io/en/latest/api_docs/galaxy/all.html
+        #bioblend.galaxy.workflows.WorkflowClient.invoke_workflow
+        for details on its structure.
         """
         return {
             '0': {
@@ -740,7 +744,9 @@ class WorkflowTool(Tool):
     def _create_workflow_parameters_dict(self):
         """
         Create and return the params dict expected from bioblend. See here:
-        http://bit.ly/2vIwmVw for details on its structure.
+        http://bioblend.readthedocs.io/en/latest/api_docs/galaxy/all.html
+        #bioblend.galaxy.workflows.WorkflowClient.invoke_workflow
+        for details on its structure.
         """
         params_dict = {}
         workflow_parameters = self._get_workflow_parameters()
