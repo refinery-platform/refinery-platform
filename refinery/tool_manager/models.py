@@ -585,48 +585,40 @@ class WorkflowTool(Tool):
         AnalysisStatus.objects.create(analysis=analysis)
         return analysis
 
-    def create_analysis_node_connections(self, input_nodes=True):
+    def create_analysis_input_node_connections(self):
         """
-        Create the AnalysisNodeConnection objects corresponding to the input or
-        derived Nodes of a WorkflowTool launch.
-
-        If the `input_nodes` parameter == True AnalysisNodeConnections
-        will only be created for the input Nodes of a Tool launch, otherwise
-        AnalysisNodeConnections will be created for the output Galaxy Datasets
-        from the Galaxy Workflow execution.
-
-        :param input_nodes: Boolean, aids in deciding whether or not to
-        create AnalysisNodeConnections of the INPUT/OUTPUT connection type.
+        Create the AnalysisNodeConnection objects corresponding to the input
+        Nodes of a WorkflowTool launch.
         """
-        logger.info(
-            "Creating %s AnalysisNodeConnections for %s",
-            "INPUT" if input_nodes else "OUTPUT", self.name
-        )
-        if input_nodes:
-            for node in self._get_input_nodes():
-                file_store_item = node.get_file_store_item()
+        for node in self._get_input_nodes():
+            file_store_item = node.get_file_store_item()
 
-                AnalysisNodeConnection.objects.create(
-                    analysis=self.analysis,
-                    node=node,
-                    direction=INPUT_CONNECTION,
-                    name=node.name,
-                    step=0,
-                    filename=file_store_item.datafile.name,
-                    is_refinery_file=file_store_item.is_local()
-                )
-        else:
-            for galaxy_dataset in self._get_galaxy_history_dataset_list():
-                AnalysisNodeConnection.objects.create(
-                    analysis=self.analysis,
-                    direction=OUTPUT_CONNECTION,
-                    name=galaxy_dataset["name"],
-                    subanalysis=self._get_analysis_group_number(),
-                    step=self._get_workflow_step(galaxy_dataset),
-                    filename=galaxy_dataset["name"],
-                    filetype=galaxy_dataset["file_ext"],
-                    is_refinery_file=True
-                )
+            AnalysisNodeConnection.objects.create(
+                analysis=self.analysis,
+                node=node,
+                direction=INPUT_CONNECTION,
+                name=node.name,
+                step=0,
+                filename=file_store_item.datafile.name,
+                is_refinery_file=file_store_item.is_local()
+            )
+
+    def create_analysis_output_node_connections(self):
+        """
+        Create the AnalysisNodeConnection objects corresponding to the output
+        Nodes (Derived Data) of a WorkflowTool launch.
+        """
+        for galaxy_dataset in self._get_galaxy_history_dataset_list():
+            AnalysisNodeConnection.objects.create(
+                analysis=self.analysis,
+                direction=OUTPUT_CONNECTION,
+                name=galaxy_dataset["name"],
+                subanalysis=self._get_analysis_group_number(),
+                step=self._get_workflow_step(galaxy_dataset),
+                filename=galaxy_dataset["name"],
+                filetype=galaxy_dataset["file_ext"],
+                is_refinery_file=True
+            )
 
     def _create_collection_description(self, galaxy_element_list=None):
         """
@@ -992,7 +984,7 @@ class WorkflowTool(Tool):
         :raises: RuntimeError
         """
         analysis = self._create_analysis()
-        self.create_analysis_node_connections()
+        self.create_analysis_input_node_connections()
 
         # TODO: Might hit race condition if Analysis isn't created in 5 seconds
         run_analysis.apply_async((analysis.uuid,), countdown=5)

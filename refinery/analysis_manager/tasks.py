@@ -643,7 +643,7 @@ def _get_galaxy_download_task_ids(analysis):
     if analysis.is_tool_based:
         tool = _get_workflow_tool(analysis.uuid)
         tool.create_workflow_file_downloads()
-        tool.create_analysis_node_connections(input_nodes=False)
+        tool.create_analysis_output_node_connections()
 
     dl_files = analysis.workflow_dl_files
     # creating dictionary based on files to download predetermined by workflow

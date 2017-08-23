@@ -1589,7 +1589,7 @@ class WorkflowToolTests(ToolManagerTestBase):
                 "id": self.GALAXY_ID_MOCK
             }
         )
-        self.tool.create_analysis_node_connections(input_nodes=False)
+        self.tool.create_analysis_output_node_connections()
         self.assertEqual(AnalysisNodeConnection.objects.count(), 3)
         self.assertEqual(
             AnalysisNodeConnection.objects.filter(
