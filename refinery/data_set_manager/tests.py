@@ -413,8 +413,13 @@ class IsaTabParserTests(TestCase):
             self.parse('multiple-study-missing-assay')
 
     def test_multiple_assay(self):
-        # TODO: Is it even possible to have multiple Assays per Study?
-        pass
+        investigation = self.parse('multiple-assay')
+
+        studies = investigation.study_set.all()
+        self.assertEqual(len(studies), 1)
+
+        assays = studies[0].assay_set.all()
+        self.assertEqual(len(assays), 2)
 
 
 class UtilitiesTest(TestCase):
