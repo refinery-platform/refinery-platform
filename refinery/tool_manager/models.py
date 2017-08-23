@@ -671,10 +671,7 @@ class WorkflowTool(Tool):
                 )
             elif isinstance(nested_element, list):
                 list_collection_element = CollectionElement(
-                    name="{} collection {}".format(
-                        self.LIST,
-                        str(uuid.uuid4())
-                    ),
+                    name="{} collection {}".format(self.LIST, uuid.uuid4()),
                     type=self.LIST
                 )
                 list_collection_element.elements = []
@@ -682,10 +679,7 @@ class WorkflowTool(Tool):
 
             elif isinstance(nested_element, tuple):
                 paired_collection_element = CollectionElement(
-                    name="{} collection {}".format(
-                        self.PAIRED,
-                        str(uuid.uuid4())
-                    ),
+                    name="{} collection {}".format(self.PAIRED, uuid.uuid4()),
                     type=self.PAIRED
                 )
                 paired_collection_element.elements = []
