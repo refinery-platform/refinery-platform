@@ -907,7 +907,6 @@ class WorkflowTool(Tool):
             io_details=True
         )
 
-    @handle_bioblend_exceptions
     def _get_tool_inputs_dict(self, workflow_step):
         """
         Retrive that valid input parameters for the Galaxy tool in our current
