@@ -9,7 +9,7 @@
     '$log',
     '$q',
     'userFileBrowserFactory',
-    'userFileFiltersService',
+    'userFileParamsService',
     'userFileSortsService',
     'gridOptionsService'
   ];
@@ -18,7 +18,7 @@
       $log,
       $q,
       userFileBrowserFactory,
-      userFileFiltersService,
+      userFileParamsService,
       userFileSortsService,
       gridOptionsService
   ) {
@@ -63,7 +63,9 @@
 
     gridOptionsService.appScopeProvider = vm;
     vm.downloadFilterQuery = function () {
-      return 'TODO!!!';
+      var fq = userFileParamsService.fq();
+      var sort = userFileParamsService.sort();
+      return 'fq=' + fq + '&sort=' + sort; // TODO: Do this the right way
     };
     vm.gridOptions = gridOptionsService;
     vm.gridOptions.onRegisterApi = function (api) {
