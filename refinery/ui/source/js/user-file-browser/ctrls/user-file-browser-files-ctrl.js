@@ -62,6 +62,9 @@
     };
 
     gridOptionsService.appScopeProvider = vm;
+    vm.downloadFilterQuery = function () {
+      return 'TODO!!!';
+    };
     vm.gridOptions = gridOptionsService;
     vm.gridOptions.onRegisterApi = function (api) {
       api.core.on.sortChanged(null, vm.sortChanged);
