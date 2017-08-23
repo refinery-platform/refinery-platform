@@ -952,9 +952,16 @@ class WorkflowTool(Tool):
         return self.get_tool_launch_config()[ToolDefinition.PARAMETERS]
 
     def _get_workflow_step(self, galaxy_dataset_dict):
-        for step in self._get_galaxy_workflow_invocation()["steps"]:
-            if step["job_id"] == galaxy_dataset_dict["creating_job"]:
-                return step["order_index"]
+        creating_workflow_step_list = [
+            step["order_index"]
+            for step in self._get_galaxy_workflow_invocation()["steps"]
+            if step["job_id"] == galaxy_dataset_dict["creating_job"]
+        ]
+        assert len(creating_workflow_step_list) == 1, (
+            "There should always be one corresponding workflow step, "
+            "but there are {}".format(len(creating_workflow_step_list))
+        )
+        return creating_workflow_step_list[0]
 
     @handle_bioblend_exceptions
     def import_library_dataset_to_history(self, history_id,
