@@ -997,6 +997,8 @@ class WorkflowTool(Tool):
         """
         analysis = self._create_analysis()
         self.create_analysis_node_connections()
+
+        # TODO: Might hit race condition if Analysis isn't created in 5 seconds
         run_analysis.apply_async((analysis.uuid,), countdown=5)
 
         return JsonResponse(
