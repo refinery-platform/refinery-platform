@@ -627,10 +627,11 @@ def _tool_based_galaxy_file_import(analysis_uuid, file_store_item_uuid,
             single_file_percentage * number_of_files):
         analysis_status.set_galaxy_import_state(AnalysisStatus.OK)
 
-    return {
+    galaxy_to_refinery_file_mapping = {
         tool.REFINERY_FILE_UUID: file_store_item_uuid,
         tool.GALAXY_DATASET_HISTORY_ID: history_dataset_dict["id"]
     }
+    return galaxy_to_refinery_file_mapping
 
 
 def _get_galaxy_download_tasks(analysis):
