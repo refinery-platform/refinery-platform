@@ -6,6 +6,7 @@ import time
 from urlparse import urljoin
 import uuid
 
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.core.management import CommandError, call_command
@@ -13,6 +14,11 @@ from django.http import HttpResponseBadRequest
 from django.test import TestCase
 
 import bioblend
+from bioblend.galaxy.dataset_collections import (CollectionElement,
+                                                 HistoryDatasetElement)
+from bioblend.galaxy.histories import HistoryClient
+from bioblend.galaxy.libraries import LibraryClient
+from bioblend.galaxy.workflows import WorkflowClient
 import celery
 import mock
 from rest_framework.test import (APIRequestFactory, APITestCase,
@@ -58,6 +64,7 @@ class ToolManagerTestBase(TestCase):
     # Some members in assertions are truncated if they are too long, but we
     # want to see them in their entirety
     maxDiff = None
+    GALAXY_ID_MOCK = "6fc9fbb81c497f69"
 
     def setUp(self):
         self.public_group = ExtendedGroup.objects.public_group()
@@ -67,7 +74,7 @@ class ToolManagerTestBase(TestCase):
         )
         self.workflow_engine.set_manager_group(self.public_group.manager_group)
 
-        self.dataset = create_dataset_with_necessary_models()
+        self.dataset = create_dataset_with_necessary_models(create_nodes=False)
 
         self.mock_vis_annotations_reference = (
             "tool_manager.management.commands.generate_tool_definitions"
@@ -111,7 +118,10 @@ class ToolManagerTestBase(TestCase):
         # Trigger the pre_delete signal so that datafiles are purged
         FileStoreItem.objects.all().delete()
 
-    def create_valid_tool(self, tool_type, annotation_file_name=None):
+    def create_valid_tool(self, tool_type,
+                          file_relationships=None,
+                          annotation_file_name=None):
+
         if tool_type == ToolDefinition.WORKFLOW:
             self.create_workflow_tool_definition(
                 annotation_file_name=annotation_file_name
@@ -123,28 +133,34 @@ class ToolManagerTestBase(TestCase):
         else:
             raise RuntimeError("Please provide a valid tool_type")
 
-        test_file = StringIO.StringIO()
-        test_file.write('Coffee is really great.\n')
-        self.file_store_item = FileStoreItem.objects.create(
-            source="http://www.example.com/test_file.txt"
-        )
+        if file_relationships is None:
+            test_file = StringIO.StringIO()
+            test_file.write('Coffee is really great.\n')
+            self.file_store_item = FileStoreItem.objects.create(
+                source="http://www.example.com/test_file.txt"
+            )
 
-        study = self.dataset.get_latest_study()
-        assay = Assay.objects.get(study=study)
+            study = self.dataset.get_latest_study()
+            assay = Assay.objects.get(study=study)
 
-        self.node = Node.objects.create(
-            name="n0",
-            assay=assay,
-            study=study,
-            file_uuid=self.file_store_item.uuid
-        )
+            self.node = Node.objects.create(
+                name="n0",
+                assay=assay,
+                study=study,
+                file_uuid=self.file_store_item.uuid
+            )
 
-        # Create mock ToolLaunchConfiguration
-        self.post_data = {
-            "dataset_uuid": self.dataset.uuid,
-            "tool_definition_uuid": self.td.uuid,
-            Tool.FILE_RELATIONSHIPS: "[{}]".format(self.node.uuid),
-        }
+            self.post_data = {
+                "dataset_uuid": self.dataset.uuid,
+                "tool_definition_uuid": self.td.uuid,
+                Tool.FILE_RELATIONSHIPS: "[{}]".format(self.node.uuid),
+            }
+        else:
+            self.post_data = {
+                "dataset_uuid": self.dataset.uuid,
+                "tool_definition_uuid": self.td.uuid,
+                Tool.FILE_RELATIONSHIPS: file_relationships,
+            }
 
         self.post_request = self.factory.post(
             self.tools_url_root,
@@ -918,13 +934,6 @@ class ToolDefinitionTests(ToolManagerTestBase):
 
 
 class ToolTests(ToolManagerTestBase):
-    EXAMPLE_URL = "www.example.com/file.txt"
-    LIST = [EXAMPLE_URL]
-    LIST_PAIR = [(EXAMPLE_URL, EXAMPLE_URL)]
-    LIST_LIST_PAIR = [[(EXAMPLE_URL, EXAMPLE_URL)]]
-    PAIR = (EXAMPLE_URL, EXAMPLE_URL)
-    PAIR_LIST = ([EXAMPLE_URL], [EXAMPLE_URL])
-
     def test_tool_model_str(self):
         self.create_valid_tool(ToolDefinition.VISUALIZATION)
 
@@ -1064,65 +1073,6 @@ class ToolTests(ToolManagerTestBase):
             }
         )
 
-    @mock.patch.object(
-        WorkflowTool,
-        "_flatten_file_relationships_nesting",
-        return_value=[LIST]
-    )
-    def test__get_nesting_string_list(self, flatten_mock):
-        self.create_valid_tool(ToolDefinition.WORKFLOW)
-        nesting_string = self.tool._get_nesting_string()
-        self.assertEqual(nesting_string, "list")
-        self.assertTrue(flatten_mock.called)
-
-    @mock.patch.object(
-        WorkflowTool,
-        "_flatten_file_relationships_nesting",
-        return_value=[PAIR]
-    )
-    def test__get_nesting_string_pair(self, flatten_mock):
-        self.create_valid_tool(ToolDefinition.WORKFLOW)
-        nesting_string = self.tool._get_nesting_string()
-        self.assertEqual(nesting_string, "paired")
-        self.assertTrue(flatten_mock.called)
-
-    @mock.patch.object(
-        WorkflowTool,
-        "_flatten_file_relationships_nesting",
-        return_value=[LIST, PAIR]
-    )
-    def test__get_nesting_string_list_pair(self, flatten_mock):
-        self.create_valid_tool(ToolDefinition.WORKFLOW)
-        nesting_string = self.tool._get_nesting_string()
-        self.assertEqual(nesting_string, "list:paired")
-        self.assertTrue(flatten_mock.called)
-
-    @mock.patch.object(
-        WorkflowTool,
-        "_flatten_file_relationships_nesting",
-        return_value=[PAIR, LIST]
-    )
-    def test__get_nesting_string_pair_list(self, flatten_mock):
-        self.create_valid_tool(ToolDefinition.WORKFLOW)
-        nesting_string = self.tool._get_nesting_string()
-        self.assertEqual(nesting_string, "paired:list")
-        self.assertTrue(flatten_mock.called)
-
-    @mock.patch.object(
-        WorkflowTool,
-        "_flatten_file_relationships_nesting",
-        return_value=[LIST, LIST, PAIR]
-    )
-    def test__get_nesting_string_list_list_pair(self, flatten_mock):
-        self.create_valid_tool(ToolDefinition.WORKFLOW)
-        nesting_string = self.tool._get_nesting_string()
-        self.assertEqual(nesting_string, "list:list:paired")
-        self.assertTrue(flatten_mock.called)
-
-    def test__get_nesting_string_from_file_relationships_urls(self):
-        self.create_valid_tool(ToolDefinition.WORKFLOW)
-        self.assertEqual(self.tool._get_nesting_string(), "list")
-
     def test_creating__workflow_tool_sets_tool_launch_config_galaxy_data(self):
         self.create_valid_tool(ToolDefinition.WORKFLOW)
         self.assertEqual(
@@ -1155,29 +1105,261 @@ class ToolTests(ToolManagerTestBase):
 
         self.assertEqual(context.exception.message, tool.LAUNCH_WARNING)
 
-    def test__flatten_file_relationships_nesting_deep_nesting(self):
-        self.create_valid_tool(ToolDefinition.WORKFLOW)
-        flattened_nesting = self.tool._flatten_file_relationships_nesting(
-            nesting=self.LIST_LIST_PAIR
+
+class WorkflowToolTests(ToolManagerTestBase):
+    def setUp(self):
+        super(WorkflowToolTests, self).setUp()
+        self.LIST = "[{}]".format(self.make_node())
+        self.LIST_PAIR = "[({}, {}), ({}, {})]".format(
+            *[self.make_node() for i in range(0, 4)]
         )
-        self.assertEqual(
-            flattened_nesting,
-            [
-                [[(self.EXAMPLE_URL, self.EXAMPLE_URL)]],
-                [(self.EXAMPLE_URL, self.EXAMPLE_URL)],
-                (self.EXAMPLE_URL, self.EXAMPLE_URL)
-            ]
+        self.PAIR = "({}, {})".format(*[self.make_node() for i in range(0, 2)])
+        self.LIST_LIST_PAIR = "[[({}, {}), ({}, {})]]".format(
+            *[self.make_node() for i in range(0, 4)]
+        )
+        self.PAIR_LIST = "([{}, {}], [{}, {}])".format(
+            *[self.make_node() for i in range(0, 4)]
         )
 
-    def test__flatten_file_relationships_nesting_shallow_nesting(self):
-        self.create_valid_tool(ToolDefinition.WORKFLOW)
-        flattened_nesting = self.tool._flatten_file_relationships_nesting(
-            nesting=self.PAIR
+        self.FAKE_DATASET_HISTORY_ID = '0523152e8bc37aa7'
+
+    def update_nodes(self):
+        for node in Node.objects.all():
+            self.tool.update_file_relationships_with_galaxy_history_data(
+                {
+                    WorkflowTool.GALAXY_DATASET_HISTORY_ID:
+                        self.FAKE_DATASET_HISTORY_ID,
+                    Tool.REFINERY_FILE_UUID: node.file_uuid
+                }
+            )
+
+    def make_node(self):
+        test_file = StringIO.StringIO()
+
+        test_file.write('Coffee is really great.\n')
+        self.file_store_item = FileStoreItem.objects.create(
+            source="http://www.example.com/test_file.txt"
+        )
+
+        study = self.dataset.get_latest_study()
+        assay = Assay.objects.get(study=study)
+
+        node = Node.objects.create(
+            name="n0",
+            assay=assay,
+            study=study,
+            file_uuid=self.file_store_item.uuid
+        )
+        return node.uuid
+
+    def test_list_dataset_collection_description_creation(self):
+        self.create_valid_tool(
+            ToolDefinition.WORKFLOW,
+            file_relationships=self.LIST
+        )
+        self.update_nodes()
+        collection_description = self.tool._create_collection_description()
+
+        self.assertEqual(
+            collection_description.type,
+            WorkflowTool.LIST
         )
         self.assertEqual(
-            flattened_nesting,
-            [(self.EXAMPLE_URL, self.EXAMPLE_URL)]
+            len(collection_description.elements),
+            1
         )
+        for element in collection_description.elements:
+            self.assertEqual(
+                type(element),
+                HistoryDatasetElement
+            )
+
+    def test_list_pair_dataset_collection_description_creation(self):
+        self.create_valid_tool(
+            ToolDefinition.WORKFLOW,
+            file_relationships=self.LIST_PAIR
+        )
+        self.update_nodes()
+        collection_description = self.tool._create_collection_description()
+        self.assertEqual(
+            collection_description.type,
+            "{}:{}".format(WorkflowTool.LIST, WorkflowTool.PAIRED)
+        )
+        self.assertEqual(
+            len(collection_description.elements),
+            2
+        )
+        for element in collection_description.elements:
+            self.assertEqual(type(element), CollectionElement)
+            self.assertEqual(element.type, WorkflowTool.PAIRED)
+            self.assertEqual(len(element.elements), 2)
+
+            for el in element.elements:
+                self.assertEqual(type(el), HistoryDatasetElement)
+
+            self.assertEqual(
+                element.elements[0].to_dict()["name"],
+                WorkflowTool.FORWARD
+            )
+            self.assertEqual(
+                element.elements[1].to_dict()["name"],
+                WorkflowTool.REVERSE
+            )
+
+    def test_paired_dataset_collection_creation(self):
+        self.create_valid_tool(
+            ToolDefinition.WORKFLOW,
+            file_relationships=self.PAIR
+        )
+        self.update_nodes()
+        collection_description = self.tool._create_collection_description()
+        self.assertEqual(
+            collection_description.type,
+            WorkflowTool.PAIRED
+        )
+        self.assertEqual(len(collection_description.elements), 2)
+
+        for element in collection_description.elements:
+            self.assertEqual(type(element), HistoryDatasetElement)
+
+        self.assertEqual(
+            collection_description.elements[0].to_dict()["name"],
+            WorkflowTool.FORWARD
+        )
+        self.assertEqual(
+            collection_description.elements[1].to_dict()["name"],
+            WorkflowTool.REVERSE
+        )
+
+    def test_paired_list_dataset_collection_description_creation(self):
+        self.create_valid_tool(
+            ToolDefinition.WORKFLOW,
+            file_relationships=self.PAIR_LIST
+        )
+        self.update_nodes()
+        collection_description = self.tool._create_collection_description()
+        self.assertEqual(
+            collection_description.type,
+            "{}:{}".format(WorkflowTool.PAIRED, WorkflowTool.LIST)
+        )
+
+        self.assertEqual(len(collection_description.elements), 2)
+        for element in collection_description.elements:
+            self.assertEqual(type(element), CollectionElement)
+            self.assertEqual(element.type, WorkflowTool.LIST)
+            for el in element.elements:
+                self.assertEqual(type(el), HistoryDatasetElement)
+
+    def test_list_list_paired_dataset_collection_creation(self):
+        self.create_valid_tool(
+            ToolDefinition.WORKFLOW,
+            file_relationships=self.LIST_LIST_PAIR
+        )
+
+        self.update_nodes()
+        collection_description = self.tool._create_collection_description()
+        self.assertEqual(
+            collection_description.type,
+            "{}:{}:{}".format(
+                WorkflowTool.LIST,
+                WorkflowTool.LIST,
+                WorkflowTool.PAIRED
+            )
+        )
+
+        self.assertEqual(len(collection_description.elements), 1)
+        for element in collection_description.elements:
+            self.assertEqual(type(element), CollectionElement)
+            self.assertEqual(element.type, WorkflowTool.LIST)
+            self.assertEqual(len(element.elements), 2)
+            for el in element.elements:
+                self.assertEqual(el.type, WorkflowTool.PAIRED)
+                self.assertEqual(len(element.elements), 2)
+
+                for thing in el.elements:
+                    self.assertEqual(type(thing), HistoryDatasetElement)
+
+                self.assertEqual(
+                    el.elements[0].to_dict()["name"],
+                    WorkflowTool.FORWARD
+                )
+                self.assertEqual(
+                    el.elements[1].to_dict()["name"],
+                    WorkflowTool.REVERSE
+                )
+
+    def test_galaxy_collection_type_pair(self):
+        self.create_valid_tool(
+            ToolDefinition.WORKFLOW,
+            file_relationships=self.PAIR
+        )
+        self.update_nodes()
+        self.assertEqual(
+            self.tool.galaxy_collection_type,
+            WorkflowTool.PAIRED
+        )
+
+    def test_galaxy_collection_type_list_pair(self):
+        self.create_valid_tool(
+            ToolDefinition.WORKFLOW,
+            file_relationships=self.LIST_PAIR
+        )
+        self.update_nodes()
+        self.assertEqual(
+            self.tool.galaxy_collection_type,
+            "{}:{}".format(
+                WorkflowTool.LIST,
+                WorkflowTool.PAIRED
+            )
+        )
+
+    def test_galaxy_collection_type_pair_list(self):
+        self.create_valid_tool(
+            ToolDefinition.WORKFLOW,
+            file_relationships=self.PAIR_LIST
+        )
+        self.update_nodes()
+        self.assertEqual(
+            self.tool.galaxy_collection_type,
+            "{}:{}".format(
+                WorkflowTool.PAIRED,
+                WorkflowTool.LIST
+            )
+        )
+
+    def test_galaxy_collection_type_list_list_pair(self):
+        self.create_valid_tool(
+            ToolDefinition.WORKFLOW,
+            file_relationships=self.LIST_LIST_PAIR
+        )
+        self.update_nodes()
+        self.assertEqual(
+            self.tool.galaxy_collection_type,
+            "{}:{}:{}".format(
+                WorkflowTool.LIST,
+                WorkflowTool.LIST,
+                WorkflowTool.PAIRED
+            )
+        )
+
+    def test_galaxy_collection_type_list(self):
+        self.create_valid_tool(
+            ToolDefinition.WORKFLOW
+        )
+        self.update_nodes()
+        self.assertEqual(
+            self.tool.galaxy_collection_type,
+            WorkflowTool.LIST
+        )
+
+    def test_galaxy_history_id(self):
+        self.create_valid_tool(ToolDefinition.WORKFLOW)
+        self.tool.update_galaxy_data(
+            WorkflowTool.GALAXY_IMPORT_HISTORY_DICT,
+            {"id": "COFFEE"}
+        )
+
+        self.assertEqual(self.tool.galaxy_import_history_id, "COFFEE")
 
 
 class ToolAPITests(APITestCase, ToolManagerTestBase):
@@ -1370,7 +1552,7 @@ class WorkflowToolLaunchTests(ToolManagerTestBase):
         self.assertEqual(self.tool.get_tool_type(), ToolDefinition.WORKFLOW)
         self.assertEqual(
             json.loads(self.post_response.content)[Tool.TOOL_URL],
-            '/data_sets2/{}/#/analyses/'.format(self.tool.dataset.uuid)
+            '/data_sets/{}/#/analyses/'.format(self.tool.dataset.uuid)
         )
 
     def test_many_tools_can_be_launched_from_same_dataset(self):
@@ -1380,7 +1562,8 @@ class WorkflowToolLaunchTests(ToolManagerTestBase):
 
         self.assertEqual(tool_a.dataset, tool_b.dataset)
 
-    def test__get_workflow_tool_no_analysis(self):
+    @mock.patch.object(Analysis, "galaxy_cleanup")
+    def test__get_workflow_tool_no_analysis(self, galaxy_cleanup_mock):
         self.create_valid_tool(ToolDefinition.WORKFLOW)
 
         analysis_uuid = self.tool.analysis.uuid
@@ -1389,6 +1572,7 @@ class WorkflowToolLaunchTests(ToolManagerTestBase):
         with mock.patch.object(run_analysis, "update_state") as update_mock:
             _get_workflow_tool(analysis_uuid)
             self.assertTrue(update_mock.called)
+        self.assertTrue(galaxy_cleanup_mock.called)
 
     def test__get_workflow_tool_with_analysis(self):
         self.create_valid_tool(ToolDefinition.WORKFLOW)
@@ -1721,6 +1905,42 @@ class WorkflowToolLaunchTests(ToolManagerTestBase):
         self.assertEqual(taskset_result_mock.call_count, 2)
         self.assertTrue(send_email_mock.called)
         self.assertTrue(galaxy_cleanup_mock.called)
+
+    @mock.patch.object(LibraryClient, "delete_library")
+    @mock.patch.object(HistoryClient, "delete_history")
+    @mock.patch.object(WorkflowClient, "delete_workflow")
+    def test_galaxy_cleanup_methods_are_called_on_analysis_failure(
+            self,
+            delete_workflow_mock,
+            delete_history_mock,
+            delete_library_mock
+    ):
+        settings.REFINERY_GALAXY_ANALYSIS_CLEANUP = "always"
+
+        self.create_valid_tool(ToolDefinition.WORKFLOW)
+
+        self.tool.update_galaxy_data(
+            self.tool.GALAXY_IMPORT_HISTORY_DICT,
+            {
+                "id": self.GALAXY_ID_MOCK
+            }
+        )
+
+        self.tool.analysis.workflow_galaxy_id = self.GALAXY_ID_MOCK
+        self.tool.analysis.history_id = self.GALAXY_ID_MOCK
+        self.tool.analysis.library_id = self.GALAXY_ID_MOCK
+        self.tool.analysis.save()
+
+        self.tool.analysis.cancel()
+
+        self.assertEqual(self.tool.analysis.status, Analysis.FAILURE_STATUS)
+        self.assertTrue(self.tool.analysis.canceled)
+
+        self.assertFalse(delete_workflow_mock.called)
+        self.assertTrue(delete_history_mock.called)
+        self.assertTrue(delete_library_mock.called)
+
+        self.assertEqual(delete_history_mock.call_count, 2)
 
 
 class VisualizationToolLaunchTests(ToolManagerTestBase,

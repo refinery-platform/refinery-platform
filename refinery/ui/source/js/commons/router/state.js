@@ -44,7 +44,7 @@ function RefineryStateProvider ($window, $stateProvider, _, locationTest) {
  * this:
  * http://sub.domain.tld:port/users/#/edit
  * http://sub.domain.tld:port/groups/#/edit
- * http://sub.domain.tld:port/data_sets//#/edit
+ * http://sub.domain.tld:port/provenance//#/edit
  *
  * <pre>
  * var app = angular.module('app', ['refineryRouter']);
@@ -88,7 +88,7 @@ function RefineryStateProvider ($window, $stateProvider, _, locationTest) {
  *        templateUrl: '/static/partials/group/edit.html',
  *        controller: 'DataSetsCtrl as dataSets'
  *      },
- *      '^\/data_sets\/.*\/$', true);
+ *      '^\/provenance\/.*\/$', true);
  * });
  * </pre>
  *

@@ -28,13 +28,13 @@
     <span ng-if="modal.analysis.status == 'SUCCESS'">
       <a
       ng-href="/data_sets/{{modal.analysis
-      .data_set__uuid}}/analysis/{{modal.analysis.uuid}}">
+      .data_set__uuid}}/#/files/?{{modal.analysis.data_sets_query}}">
       {{ modal.analysis.name }}
     </a>
     </span>
     <span ng-if="modal.analysis.status != 'SUCCESS'">
       <a
-      ng-href="/data_sets/{{modal.analysis.data_set__uuid}}/#/analyses">
+      ng-href="/data_sets/{{modal.analysis.data_set__uuid}}/#/files/?{{modal.analysis.data_sets_query}}">
       {{ modal.analysis.name }}
     </a>
     </span>
@@ -45,7 +45,7 @@
   <span ng-if="modal.deletionMessage != null && !modal.deleteSuccessful">
     <a
       ng-href="/data_sets/{{modal.analysis
-      .data_set__uuid}}/analysis/{{modal.analysis.uuid}}">
+      .data_set__uuid}}/#/files/?{{modal.analysis.data_sets_query}}">
       {{ modal.analysis.name }}
     </a>
   </span>

@@ -657,7 +657,8 @@ def generate_solr_params(params, assay_uuids, facets_from_config=False):
                   'rows=%s' % row,
                   'q=django_ct:data_set_manager.node&wt=json',
                   'facet=%s' % facet_count,
-                  'facet.limit=-1'
+                  'facet.limit=-1',
+                  'facet.mincount=1'
                   ])
 
     if len(assay_uuids) == 0:
@@ -670,12 +671,15 @@ def generate_solr_params(params, assay_uuids, facets_from_config=False):
 
     if facets_from_config:
         # Twice as many facets as necessary, but easier than the alternative.
-        facet_template = '&facet.field={0}_Characteristics_generic_s' + \
-                   '&facet.field={0}_Factor_Value_generic_s'
+        facet_template = '&facet.field={0}_Characteristics{1}' + \
+                   '&facet.field={0}_Factor_Value{1}'
         solr_params += ''.join(
-            [facet_template.format(s) for s
-             in settings.USER_FILES_FACETS.split(",")])
-        solr_params += '&fl=*_generic_s,name,*_uuid,type,django_id'
+            [facet_template.format(s, NodeIndex.GENERIC_SUFFIX) for s
+             in settings.USER_FILES_FACETS.split(",")]
+        )
+        solr_params += '&fl=*{},name,*_uuid,type,django_id'.format(
+            NodeIndex.GENERIC_SUFFIX
+        )
     elif facet_field:
         facet_field = facet_field.split(',')
         facet_field = insert_facet_field_filter(facet_filter, facet_field)
@@ -779,7 +783,7 @@ def is_field_in_hidden_list(field):
                      'assay_uuid', 'type', 'is_annotation', 'species',
                      'genome_build', 'name', 'django_ct']
 
-    if field in hidden_fields:
+    if field in hidden_fields or NodeIndex.GENERIC_SUFFIX in field:
         return True
     else:
         return False

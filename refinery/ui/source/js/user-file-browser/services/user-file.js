@@ -21,7 +21,7 @@
     var characterSuffix = '_Characteristics_generic_s';
     var factorSuffix = '_Factor_Value_generic_s';
     var userFile = $resource(
-      settings.appRoot + settings.refineryApiV2 + '/user/files/',
+      settings.appRoot + settings.refineryApiV2 + '/files/',
       {},
       {
         query: {
@@ -29,18 +29,17 @@
           params: {
             limit: 100, // Default is 100,000. Immutability make it hard in python.
             fq: function () {
-              var operation = ' OR ';
               var filters = Object.keys(userFileFiltersService).map(function (key) {
                 var values = userFileFiltersService[key];
                 // TODO: escaping!
-                return values.map(function (value) {
+                var orValues = values.map(function (value) {
                   return '(' +
                       key + characterSuffix + ':"' + value + '" OR ' +
                       key + factorSuffix + ':"' + value + '")';
-                }).join(operation);
+                }).join(' OR ');
+                return '(' + orValues + ')';
               });
-              // TODO: Repeated fq params may be more efficient, but not a big deal
-              return filters.join(operation);
+              return filters.join(' AND ');
             },
             sort: function () {
               return userFileSortsService.fields.map(function (field) {

@@ -2,10 +2,8 @@
   <div class="panel-group data-set-filters" id="attribute-filter"
     role="tablist"
     aria-multiselectable="true">
-     <div class="refinery-subheader m-t-1">
-      <h2>
-        Attribute Filters
-      </h2>
+    <div class="refinery-subheader m-t-1">
+      <input ng-model="search" ng-init="search = ''" style="width: 100%;" placeholder="search...">
     </div>
     <div
       ng-repeat="(attribute, attributeObj) in $ctrl.attributeFilters track by $index"
@@ -13,19 +11,19 @@
       <div class="panel panel-default">
         <div class="panel-heading" role="tab">
           <h4 class="panel-title" ng-click="$ctrl.togglePanel(attribute)">
-            <i class="fa fa-caret-down fa-pull-left" ng-hide="$ctrl.hidden[attribute]"></i>
-            <i class="fa fa-caret-right fa-pull-left" ng-hide="!$ctrl.hidden[attribute]"></i>
+            <i class="fa fa-caret-down fa-pull-left" ng-hide="!$ctrl.visible[attribute]"></i>
+            <i class="fa fa-caret-right fa-pull-left" ng-hide="$ctrl.visible[attribute]"></i>
             {{ attribute }} &nbsp; ({{ attributeObj.facetObj.length }})
           </h4>
         </div>
       <div id="{{attribute | replaceWhiteSpaceWithHyphen}}"
-        ng-hide="$ctrl.hidden[attribute]"
+        ng-hide="!$ctrl.visible[attribute]"
         class="panel-collapse collapse in"
         role="tabpanel"
         aria-labelledby="{{ attribute }}">
         <div class="panel-body">
           <div ng-repeat="field in attributeObj.facetObj track by $index">
-            <div class="checkbox container">
+            <div ng-show="field.name.toLowerCase().includes(search.toLowerCase())" class="checkbox container">
                 <div class="row">
                   <div class="col-xs-1">
                     <input

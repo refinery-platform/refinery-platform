@@ -48,9 +48,10 @@
             displayName: '',
             cellTemplate:
                 '<div class="ui-grid-cell-contents" >' +
-                '<a href="/data_sets/{{grid.getCellValue(row, col)}}">' +
-                '<i class="fa fa-file"></i>' +
-                '</a>' +
+                  '<a href="/data_sets/{{grid.getCellValue(row, col)}}' +
+                           '/#/files/?{{grid.appScope.fileBrowserFilterQuery()}}">' +
+                    '<i class="fa fa-file"></i>' +
+                  '</a>' +
                 '</div>',
             width: 30 }];
       settings.djangoApp.userFilesColumns.forEach(function (column) {

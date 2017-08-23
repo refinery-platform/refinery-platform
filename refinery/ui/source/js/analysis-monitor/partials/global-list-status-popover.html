@@ -39,7 +39,7 @@
                 &nbsp;
             </div>
             <div class="analyses-global-text">
-              <a id="analyses-popover-links" ng-href="/data_sets/{{analysis.data_set__uuid}}/#/analyses">
+              <a id="analyses-popover-links" ng-href="/data_sets/{{analysis.data_set__uuid}}/#/analyses/">
                 {{ analysis.name }}
               </a>
             </div>
@@ -55,7 +55,7 @@
             </div>
             <div class="analyses-global-text">
               <span ng-if="analysis.status === 'SUCCESS'">
-                <a id="analyses-popover-links" ng-href="/data_sets/{{analysis.data_set__uuid}}/analysis/{{analysis.uuid}}">
+                <a id="analyses-popover-links" ng-href="/data_sets/{{analysis.data_set__uuid}}/#/files/?{{analysis.data_sets_query}}">
                   {{ analysis.name }}
                 </a>
               </span>

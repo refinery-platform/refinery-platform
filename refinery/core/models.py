@@ -8,10 +8,12 @@ from __future__ import absolute_import
 import ast
 import copy
 from datetime import datetime
+import json
 import logging
 import os
 import smtplib
 import socket
+from urllib import quote
 from urlparse import urljoin
 
 from django import forms
@@ -48,6 +50,7 @@ from registration.signals import user_activated, user_registered
 
 from data_set_manager.models import (Assay, Investigation, Node,
                                      NodeCollection, Study)
+from data_set_manager.search_indexes import NodeIndex
 from data_set_manager.utils import (add_annotated_nodes_selection,
                                     index_annotated_nodes_selection)
 from file_store.models import FileStoreItem, FileType, get_file_size
@@ -685,6 +688,12 @@ class DataSet(SharableResource):
         except(Study.DoesNotExist, Study.MultipleObjectsReturned) as e:
             raise RuntimeError("Couldn't properly fetch Study: {}".format(e))
 
+    def get_latest_assay(self, version=None):
+        try:
+            return Assay.objects.get(study=self.get_latest_study(version))
+        except(Assay.DoesNotExist, Assay.MultipleObjectsReturned) as e:
+            raise RuntimeError("Couldn't properly fetch Assay: {}".format(e))
+
     def get_investigation(self, version=None):
         investigation_link = self.get_latest_investigation_link(version)
 
@@ -692,18 +701,6 @@ class DataSet(SharableResource):
             return investigation_link.investigation
         else:
             return None
-
-    def get_studies(self, version=None):
-        return Study.objects.filter(
-            investigation=self.get_investigation(version)
-        )
-
-    def get_assays(self, version=None):
-        return Assay.objects.filter(
-            study=Study.objects.filter(
-                investigation=self.get_investigation()
-            )
-        )
 
     def get_file_count(self):
         """Returns the number of files in the data set"""
@@ -1422,20 +1419,43 @@ class Analysis(OwnableResource):
             connection = self.galaxy_connection()
             error_msg = "Error deleting Galaxy %s for analysis '%s': %s"
 
-            # Delete Galaxy libraries, workflows and histories
+            # Delete Galaxy library
             if self.library_id:
                 try:
                     connection.libraries.delete_library(self.library_id)
                 except galaxy.client.ConnectionError as e:
                     logger.error(error_msg, 'library', self.name, e.message)
 
-            if self.workflow_galaxy_id:
+            # Delete Galaxy Workflow
+            # NOTE: Legacy analysis launches depended on uploading a copy of
+            # the Workflow into galaxy, while newer Tool-based ones utilize the
+            # original galaxy workflow which we don't want to delete
+            if not self.is_tool_based:
+                if self.workflow_galaxy_id:
+                    try:
+                        connection.workflows.delete_workflow(
+                            self.workflow_galaxy_id
+                        )
+                    except galaxy.client.ConnectionError as e:
+                        logger.error(error_msg, 'workflow', self.name,
+                                     e.message)
+            else:
+                workflow_tool = tool_manager.models.WorkflowTool
                 try:
-                    connection.workflows.delete_workflow(
-                        self.workflow_galaxy_id)
-                except galaxy.client.ConnectionError as e:
-                    logger.error(error_msg, 'workflow', self.name, e.message)
-
+                    tool = workflow_tool.objects.get(analysis__uuid=self.uuid)
+                except(workflow_tool.DoesNotExist,
+                       workflow_tool.MultipleObjectsReturned) as e:
+                    logger.error("Could not properly fetch Tool: %s", e)
+                else:
+                    if tool.galaxy_import_history_id:
+                        try:
+                            connection.histories.delete_history(
+                                tool.galaxy_import_history_id,
+                                purge=True
+                            )
+                        except galaxy.client.ConnectionError as e:
+                            logger.error(error_msg, 'history', self.name,
+                                         e.message)
             if self.history_id:
                 try:
                     connection.histories.delete_history(self.history_id,
@@ -1459,6 +1479,14 @@ class Analysis(OwnableResource):
                 uuid=cur_node_uuid).file_uuid
             input_file_uuid_list.append(cur_fs_uuid)
         return input_file_uuid_list
+
+    def data_sets_query(self):
+        analysis_facet_name = '{}_{}_{}_s'.format(
+            NodeIndex.ANALYSIS_UUID_PREFIX,
+            self.data_set.get_latest_study().id,
+            self.data_set.get_latest_assay().id,
+        )
+        return quote(json.dumps({analysis_facet_name: self.uuid}))
 
     def send_email(self):
         """Sends an email when the analysis is finished"""
@@ -1490,7 +1518,11 @@ class Analysis(OwnableResource):
             # TODO: avoid hardcoding URL protocol
             context_dict['url'] = urljoin(
                 "http://" + site_domain,
-                "data_sets/" + data_set_uuid + "/analysis/" + self.uuid)
+                "data_sets/{}/#/files/?{}".format(
+                    data_set_uuid,
+                    self.data_sets_query()
+                )
+            )
         else:
             email_subj = "[{}] Archive creation failed: {}".format(
                 site_name, name)

@@ -24,7 +24,7 @@ class UserFilesAPITests(APITestCase):
     def setUp(self):
         self.factory = APIRequestFactory()
         self.view = UserFiles.as_view()
-        self.url_root = '/api/v2/user/files/'
+        self.url_root = '/api/v2/files/'
         self.user = get_anonymous_user()
 
     def test_get(self):
@@ -45,7 +45,7 @@ class UserFilesUITests(StaticLiveServerTestCase):
         response = requests.get(
             urljoin(
                 self.live_server_url,
-                'user/files/'
+                'files/'
             )
         )
         self.assertIn("All Files", response.content)
@@ -90,4 +90,5 @@ class UserFilesUtilsTests(TestCase):
                          'q=django_ct%3Adata_set_manager.node',
                          'wt=json',
                          'facet=true',
-                         'facet.limit=-1'])
+                         'facet.limit=-1',
+                         'facet.mincount=1'])
