@@ -1083,9 +1083,7 @@ class WorkflowTool(Tool):
         This allows us to keep track of Datasets in our Galaxy history
         and which Refinery FileStoreItems they correspond to.
         """
-        galaxy_to_refinery_mapping_list = (
-            self._get_galaxy_file_mapping_list()
-        )
+        galaxy_to_refinery_mapping_list = self._get_galaxy_file_mapping_list()
         galaxy_to_refinery_mapping_list.append(galaxy_to_refinery_mapping_dict)
         self.update_galaxy_data(
             self.GALAXY_TO_REFINERY_MAPPING_LIST,
