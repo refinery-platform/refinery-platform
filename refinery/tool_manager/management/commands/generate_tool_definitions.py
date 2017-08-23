@@ -233,7 +233,8 @@ class Command(BaseCommand):
                         else:
                             parameter["galaxy_workflow_step"] = int(step_index)
                             workflow["annotation"][
-                                ToolDefinition.PARAMETERS].append(parameter)
+                                ToolDefinition.PARAMETERS
+                            ].append(parameter)
                 try:
                     output_files = step_annotation["output_files"]
                 except KeyError:
