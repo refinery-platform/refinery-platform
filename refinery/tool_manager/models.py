@@ -851,7 +851,6 @@ class WorkflowTool(Tool):
                 self.galaxy_workflow_history_id
             )
         )
-
         # Filter any Galaxy Datasets that have been purged.
         return [dataset for dataset in dataset_list if not dataset["purged"]]
 
@@ -930,7 +929,6 @@ class WorkflowTool(Tool):
             "float": float,
             "boolean": bool
         }
-
         tool_inputs_dict = {}
         for input_dict in tool_data_inputs:
             try:
@@ -942,7 +940,6 @@ class WorkflowTool(Tool):
                 proper_parameter_value = input_dict["value"]
 
             tool_inputs_dict[input_dict["name"]] = proper_parameter_value
-
         return tool_inputs_dict
 
     @handle_bioblend_exceptions
