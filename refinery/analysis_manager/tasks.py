@@ -683,6 +683,8 @@ def _get_galaxy_download_task_ids(analysis):
             if analysis.is_tool_based:
                 result_name = "{}.{}".format(results['name'], file_type)
 
+            assert result_name is not None, "'result_name' should be defined"
+
             # size of file defined by galaxy
             file_size = results['file_size']
             # Determining tag if galaxy results should be download through
