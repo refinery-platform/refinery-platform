@@ -187,7 +187,7 @@ def _galaxy_file_export(analysis_uuid):
     analysis_status = _get_analysis_status(analysis_uuid)
 
     if not analysis_status.galaxy_export_task_group_id:
-        galaxy_export_tasks = _get_galaxy_download_tasks(analysis)
+        galaxy_export_tasks = _get_galaxy_download_task_ids(analysis)
         logger.info(
             "Starting downloading of results from Galaxy for analysis "
             "'%s'", analysis)
@@ -634,10 +634,10 @@ def _tool_based_galaxy_file_import(analysis_uuid, file_store_item_uuid,
     return galaxy_to_refinery_file_mapping
 
 
-def _get_galaxy_download_tasks(analysis):
+def _get_galaxy_download_task_ids(analysis):
     """Get file import tasks for Galaxy analysis results"""
     logger.debug("Preparing to download analysis results from Galaxy")
-    task_list = []
+    task_id_list = []
 
     # retrieving list of files to download for workflow
     if analysis.is_tool_based:
@@ -668,7 +668,7 @@ def _get_galaxy_download_tasks(analysis):
         logger.error(error_msg, analysis.name, exc.message)
         analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
         analysis.galaxy_cleanup()
-        return task_list
+        return task_id_list
     # Iterating through files in current galaxy history
     for results in download_list:
         # download file if result state is "ok"
@@ -718,6 +718,6 @@ def _get_galaxy_download_tasks(analysis):
             if file_size > 0:
                 task_id = import_file.subtask(
                         (filestore_uuid, False, file_size))
-                task_list.append(task_id)
+                task_id_list.append(task_id)
 
-    return task_list
+    return task_id_list
