@@ -449,8 +449,9 @@ class VisualizationTool(Tool):
 
 
 def handle_bioblend_exceptions(func):
-    """Decorator to be used on functions that make calls using bioblend"""
-
+    """Decorator to be used on functions that make calls using bioblend
+       Set our Analysis to a FAILURE_STATE if we hit a bioblend ConnectionError
+    """
     def func_wrapper(*args, **kwargs):
         try:
             return func(*args, **kwargs)
@@ -872,8 +873,7 @@ class WorkflowTool(Tool):
     @handle_bioblend_exceptions
     def _get_galaxy_workflow_invocation_steps(self):
         """
-        Return a list of dicts corresponding to each step of our
-        Galaxy Workflow's invocation.
+        Fetch our Galaxy Workflow's invocation data.
         """
         return self.galaxy_connection.workflows.show_invocation(
             self.galaxy_workflow_history_id,
@@ -903,6 +903,10 @@ class WorkflowTool(Tool):
 
     @handle_bioblend_exceptions
     def _get_tool_inputs_dict(self, workflow_step):
+        """
+        Retrive that valid input parameters for the Galaxy tool in our current
+        Galaxy Workflow that corresponds to the given `workflow_step`
+        """
         tool_data = self._get_tool_data(str(workflow_step))
         tool_data_inputs = [
             param for param in tool_data["inputs"]
@@ -1069,6 +1073,12 @@ class WorkflowTool(Tool):
 
     def _update_galaxy_to_refinery_file_mapping_list(
             self, galaxy_to_refinery_mapping_dict):
+        """
+        Update Tool Launch Config information with a
+        `galaxy_to_refinery_mapping_dict`.
+        This allows us to keep track of Datasets in our Galaxy history
+        and which Refinery FileStoreItems they correspond to.
+        """
         galaxy_to_refinery_mapping_list = (
             self._get_galaxy_file_mapping_list()
         )
