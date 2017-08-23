@@ -1056,15 +1056,16 @@ class WorkflowTool(Tool):
                 file_uuid=galaxy_to_refinery_dict[Tool.REFINERY_FILE_UUID]
             )
             galaxy_dict[self.FILE_RELATIONSHIPS_GALAXY] = (
+                # Note the `1` in the replace call below. We only want to
+                # replace the first occurrence of Node UUIDs in case a workflow
+                # is launched with the same Node multiple times
                 galaxy_dict[self.FILE_RELATIONSHIPS_GALAXY].replace(
-                    node.uuid,
-                    "{}".format(json.dumps(galaxy_to_refinery_dict)),
-                    1
+                    node.uuid, json.dumps(galaxy_to_refinery_dict), 1
                 )
             )
-            tool_launch_config = self.get_tool_launch_config()
-            tool_launch_config[self.GALAXY_DATA] = galaxy_dict
-            self.set_tool_launch_config(tool_launch_config)
+        tool_launch_config = self.get_tool_launch_config()
+        tool_launch_config[self.GALAXY_DATA] = galaxy_dict
+        self.set_tool_launch_config(tool_launch_config)
 
     def update_galaxy_data(self, key, value):
         """
