@@ -79,6 +79,9 @@ class Parameter(models.Model):
             return None
 
     def cast_param_value_to_proper_type(self, parameter_value):
+        """Parameter values from the Tool Launch Configuration are all
+        strings, but the invocation of Galaxy workflows expects these values
+        to be of a certain type."""
         if self.value_type in self.STRING_TYPES:
             return str(parameter_value)
         elif self.value_type == self.BOOLEAN:
@@ -87,6 +90,8 @@ class Parameter(models.Model):
             return int(parameter_value)
         elif self.value_type == self.FLOAT:
             return float(parameter_value)
+        else:
+            return parameter_value
 
 
 class GalaxyParameter(Parameter):
