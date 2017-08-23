@@ -456,8 +456,12 @@ def handle_bioblend_exceptions(func):
         try:
             return func(*args, **kwargs)
         except bioblend.ConnectionError as e:
-            logger.error("Error while interacting with bioblend: %e", e)
-            raise
+            error_message = (
+                "Error while interacting with bioblend: {}".format(e)
+            )
+            logger.error(error_message)
+            args[0].analysis.cancel()
+            return
     return func_wrapper
 
 
@@ -578,7 +582,6 @@ class WorkflowTool(Tool):
         self.analysis.save()
 
         AnalysisStatus.objects.create(analysis=analysis)
-
         return analysis
 
     def create_analysis_node_connections(self, input_nodes=True):
@@ -741,9 +744,9 @@ class WorkflowTool(Tool):
         http://bit.ly/2vIwmVw for details on its structure.
         """
         params_dict = {}
-        tool_launch_config_parameters = self._get_workflow_parameters()
+        workflow_parameters = self._get_workflow_parameters()
 
-        for galaxy_parameter_uuid in tool_launch_config_parameters:
+        for galaxy_parameter_uuid in workflow_parameters:
             galaxy_parameter = GalaxyParameter.objects.get(
                 uuid=galaxy_parameter_uuid
             )
@@ -756,10 +759,9 @@ class WorkflowTool(Tool):
 
             params_dict[workflow_step][galaxy_parameter.name] = (
                 galaxy_parameter.cast_param_value_to_proper_type(
-                    tool_launch_config_parameters[galaxy_parameter_uuid]
+                    workflow_parameters[galaxy_parameter_uuid]
                 )
             )
-
         return params_dict
 
     def create_workflow_file_downloads(self):
@@ -871,14 +873,14 @@ class WorkflowTool(Tool):
             ]
 
     @handle_bioblend_exceptions
-    def _get_galaxy_workflow_invocation_steps(self):
+    def _get_galaxy_workflow_invocation(self):
         """
         Fetch our Galaxy Workflow's invocation data.
         """
         return self.galaxy_connection.workflows.show_invocation(
             self.galaxy_workflow_history_id,
             self.get_galaxy_dict()[self.GALAXY_WORKFLOW_INVOCATION_DATA]["id"]
-        )["steps"]
+        )
 
     def _get_input_nodes(self):
         """
@@ -908,10 +910,15 @@ class WorkflowTool(Tool):
         Galaxy Workflow that corresponds to the given `workflow_step`
         """
         tool_data = self._get_tool_data(str(workflow_step))
+
+        # we don't want to retrieve information about data inputs here
         tool_data_inputs = [
             param for param in tool_data["inputs"]
             if param["type"] not in ["data", "data_collection"]
         ]
+        # The information from bioblend is returned as unicode strings,
+        # but we need to cast to the proper types to invoke the workflow
+        # with edited parameters
         cast_to_type = {
             "text": str,
             "integer": int,
@@ -922,8 +929,8 @@ class WorkflowTool(Tool):
         tool_inputs_dict = {}
         for input_dict in tool_data_inputs:
             try:
-                proper_parameter_value = cast_to_type[input_dict["type"]](
-                    input_dict["value"]
+                proper_parameter_value = (
+                    cast_to_type[input_dict["type"]](input_dict["value"])
                 )
             except KeyError as e:
                 logger.error(e)
@@ -946,7 +953,7 @@ class WorkflowTool(Tool):
         return self.get_tool_launch_config()[ToolDefinition.PARAMETERS]
 
     def _get_workflow_step(self, galaxy_dataset_dict):
-        for step in self._get_galaxy_workflow_invocation_steps():
+        for step in self._get_galaxy_workflow_invocation()["steps"]:
             if step["job_id"] == galaxy_dataset_dict["creating_job"]:
                 return step["order_index"]
 
@@ -984,8 +991,6 @@ class WorkflowTool(Tool):
         """
         analysis = self._create_analysis()
         self.create_analysis_node_connections()
-
-        # Run the analysis task with a 5 second delay
         run_analysis.apply_async((analysis.uuid,), countdown=5)
 
         return JsonResponse(
