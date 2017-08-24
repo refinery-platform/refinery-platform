@@ -77,7 +77,8 @@ class UserFilesUtilsTests(TestCase):
                          '%2Cname'
                          '%2C%2A_uuid'
                          '%2Ctype'
-                         '%2Cdjango_id',
+                         '%2Cdjango_id'
+                         '%2CREFINERY_DOWNLOAD_URL_s',
                          'fq=type%3A%28%22Raw Data File%22 '
                          'OR %22Derived Data File%22 '
                          'OR %22Array Data File%22 '
