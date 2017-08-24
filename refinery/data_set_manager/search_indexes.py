@@ -137,6 +137,9 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
             file_store_item = None
 
         data.update({
+            'download':
+                '' if file_store_item is None
+                else file_store_item.get_datafile_url(),
             NodeIndex.TYPE_PREFIX + id_suffix:
                 object.type,
             NodeIndex.NAME_PREFIX + id_suffix:
