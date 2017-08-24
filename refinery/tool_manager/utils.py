@@ -15,6 +15,7 @@ from jsonschema import RefResolver, ValidationError, validate
 
 from analysis_manager.utils import fetch_objects_required_for_analysis
 from core.models import DataSet, Workflow, WorkflowEngine
+from core.utils import get_aware_local_time
 from factory_boy.django_model_factories import (AnalysisFactory,
                                                 FileRelationshipFactory,
                                                 GalaxyParameterFactory,
@@ -274,7 +275,6 @@ def create_tool_analysis(validated_analysis_config):
             validated_analysis_config
         )
     )
-    name = validated_analysis_config["name"]
     current_workflow = common_analysis_objects["current_workflow"]
     data_set = common_analysis_objects["data_set"]
     user = common_analysis_objects["user"]
@@ -290,7 +290,11 @@ def create_tool_analysis(validated_analysis_config):
     analysis = AnalysisFactory(
         uuid=str(uuid.uuid4()),
         summary="Galaxy workflow execution for: {}".format(tool.name),
-        name="{} - {}".format(name, tool.uuid),
+        name="{} {} - {}".format(
+            tool.get_tool_name(),
+            get_aware_local_time().strftime("%Y/%m/%d %H:%M:%S"),
+            tool.get_owner_username().title()
+        ),
         project=user.profile.catch_all_project,
         data_set=data_set,
         workflow=current_workflow,
