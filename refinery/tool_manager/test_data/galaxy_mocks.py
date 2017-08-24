@@ -59,9 +59,9 @@ galaxy_workflow_dict = {
 
 galaxy_datasets_list = [
     {
-        u'creating_job': u'1d1dbe75827398cd',
+        u'creating_job': u'efwefwee75g27398cd',
         u'file_size': 406,
-        u'dataset_id': u'953f3a3e2982a4fa',
+        u'dataset_id': u'gergg34g34g44',
         u'id': u'd32aba4ae7b4124a',
         u'state': u'ok',
         u'history_id': u'67ce804af6ec796b',
@@ -73,7 +73,7 @@ galaxy_datasets_list = [
     {
         u'creating_job': u'1d1dbe75827398cd',
         u'file_size': 406,
-        u'dataset_id': u'953f3a3e3982a4fa',
+        u'dataset_id': u'34g34g34g3g34g3',
         u'id': u'd22aba4ae7b4124a',
         u'state': u'ok',
         u'history_id': u'67ce804af6ec796b',
@@ -83,9 +83,9 @@ galaxy_datasets_list = [
         u'purged': False
     },
     {
-         u'creating_job': u'1d1dbe75827398cd',
+         u'creating_job': u'32456789rwjefvtg7',
          u'file_size': 406,
-         u'dataset_id': u'953f3a3e2982a4fa',
+         u'dataset_id': u'4gh33gt34g34g',
          u'id': u'd32aba4ae7b4124a',
          u'state': u'ok',
          u'history_id': u'67ce804af6ec796b',
@@ -104,9 +104,12 @@ galaxy_workflow_invocation = {
         {u'job_id': u'1d1dbe75827398cd', u'order_index': 1,
             u'workflow_step_id': u'507bf06c009b95ec',
             u'id': u'ae7005de11c97062'},
-        {u'job_id': u'1d1dbe75827398cd', u'order_index': 1,
-            u'workflow_step_id': u'507bf06c009b95ec',
-            u'id': u'ae7005de11c97062'}
+        {u'job_id': u'efwefwee75g27398cd', u'order_index': 1,
+            u'workflow_step_id': u'507bg06c009b95ec',
+            u'id': u'ae7005de11c97062'},
+        {u'job_id': u'32456789rwjefvtg7', u'order_index': 1,
+         u'workflow_step_id': u'507bg06c009b95ec',
+         u'id': u'45765uytrerd2t4'}
     ],
     u'id': u'ddaca2bad6847b13'
 }
