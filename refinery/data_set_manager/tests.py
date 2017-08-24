@@ -1698,6 +1698,7 @@ class NodeIndexTests(APITestCase):
                 else v
             )
             for (k, v) in data.items())
+        self.assertRegexpMatches(data.pop('download'), '/media/file_store/.*')
         self.assertEqual(data,
                          {'REFINERY_ANALYSIS_UUID_#_#_s': 'N/A',
                           'REFINERY_FILETYPE_#_#_s': None,
