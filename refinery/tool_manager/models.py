@@ -991,7 +991,7 @@ class WorkflowTool(Tool):
 
         return JsonResponse(
             {
-                Tool.TOOL_URL: "/data_sets2/{}/#/analyses/".format(
+                Tool.TOOL_URL: "/data_sets/{}/#/analyses/".format(
                     self.dataset.uuid
                 )
             }
