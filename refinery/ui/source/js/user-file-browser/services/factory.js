@@ -39,7 +39,7 @@
             cellTemplate:
                 '<div class="ui-grid-cell-contents" >' +
                 '<a href="{{grid.getCellValue(row, col)}}" target="_blank" ' +
-                   'ng-show="{{grid.getCellValue(row, col)}}">' +
+                    'ng-show="grid.getCellValue(row, col)">' +
                 '<i class="fa fa-arrow-circle-o-down"></i>' +
                 '</a>' +
                 '</div>',
