@@ -1692,13 +1692,12 @@ class NodeIndexTests(APITestCase):
         data = NodeIndex().prepare(self.node)
         data = dict(
             (
-                re.sub(r'\d+', '#', k),
-                re.sub(r'\d+', '#', v) if
+                re.sub(r'[^_./]*\d+[^_./]*', '#', k),
+                re.sub(r'[^_./]*\d+[^_./]*', '#', v) if
                 type(v) in (unicode, str) and not('uuid' in k)
                 else v
             )
             for (k, v) in data.items())
-        self.assertRegexpMatches(data.pop('download'), '/media/file_store/.*')
         self.assertEqual(data,
                          {'REFINERY_ANALYSIS_UUID_#_#_s': 'N/A',
                           'REFINERY_FILETYPE_#_#_s': None,
@@ -1711,6 +1710,7 @@ class NodeIndexTests(APITestCase):
                           'data_set_uuid': self.data_set_uuid,
                           u'django_ct': u'data_set_manager.node',
                           u'django_id': u'#',
+                          'download': u'/media/file_store/#/#/test_file_#.txt',
                           'file_uuid': self.file_uuid,
                           'filename_Characteristics_generic_s': u'fake.txt',
                           'genome_build': None,
