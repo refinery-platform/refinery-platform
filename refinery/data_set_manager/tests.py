@@ -1509,17 +1509,14 @@ class NodeClassMethodTests(TestCase):
 
     def test_get_analysis(self):
         make_analyses_with_single_dataset(1, self.user)
-        self.analysis = Analysis.objects.all()[0]
+        analysis = Analysis.objects.all()[0]
 
         node_with_analysis = Node.objects.create(
             assay=self.assay,
             study=self.study,
-            analysis_uuid=self.analysis.uuid
+            analysis_uuid=analysis.uuid
         )
-        self.assertEqual(
-            node_with_analysis.get_analysis(),
-            self.analysis
-        )
+        self.assertEqual(node_with_analysis.get_analysis(), analysis)
 
     def test_get_analysis_no_analysis(self):
         self.assertIsNone(self.node.get_analysis())
