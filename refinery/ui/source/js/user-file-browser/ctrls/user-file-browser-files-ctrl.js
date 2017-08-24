@@ -6,19 +6,21 @@
   .controller('UserFileBrowserFilesCtrl', UserFileBrowserFilesCtrl);
 
   UserFileBrowserFilesCtrl.$inject = [
+    '$httpParamSerializer',
     '$log',
     '$q',
     'userFileBrowserFactory',
-    'userFileFiltersService',
+    'userFileParamsService',
     'userFileSortsService',
     'gridOptionsService'
   ];
 
   function UserFileBrowserFilesCtrl (
+      $httpParamSerializer,
       $log,
       $q,
       userFileBrowserFactory,
-      userFileFiltersService,
+      userFileParamsService,
       userFileSortsService,
       gridOptionsService
   ) {
@@ -62,6 +64,12 @@
     };
 
     gridOptionsService.appScopeProvider = vm;
+    vm.downloadFilterQuery = function () {
+      return $httpParamSerializer({
+        fq: userFileParamsService.fq(),
+        sort: userFileParamsService.sort()
+      });
+    };
     vm.gridOptions = gridOptionsService;
     vm.gridOptions.onRegisterApi = function (api) {
       api.core.on.sortChanged(null, vm.sortChanged);
