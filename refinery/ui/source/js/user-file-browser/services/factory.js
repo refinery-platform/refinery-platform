@@ -33,7 +33,7 @@
 
     function createColumnDefs () {
       var defs = [
-           { field: 'download',
+           { field: 'REFINERY_DOWNLOAD_URL_s',
             enableSorting: false,
             displayName: '',
             cellTemplate:

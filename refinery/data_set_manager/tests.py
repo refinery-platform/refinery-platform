@@ -1701,6 +1701,8 @@ class NodeIndexTests(APITestCase):
         self.assertEqual(data,
                          {'REFINERY_ANALYSIS_UUID_#_#_s': 'N/A',
                           'REFINERY_FILETYPE_#_#_s': None,
+                          'REFINERY_DOWNLOAD_URL_s':
+                              u'/media/file_store/#/#/test_file_#.txt',
                           'REFINERY_NAME_#_#_s': 'http://example.com/fake.txt',
                           'REFINERY_SUBANALYSIS_#_#_s': -1,
                           'REFINERY_TYPE_#_#_s': u'',
@@ -1710,7 +1712,6 @@ class NodeIndexTests(APITestCase):
                           'data_set_uuid': self.data_set_uuid,
                           u'django_ct': u'data_set_manager.node',
                           u'django_id': u'#',
-                          'download': u'/media/file_store/#/#/test_file_#.txt',
                           'file_uuid': self.file_uuid,
                           'filename_Characteristics_generic_s': u'fake.txt',
                           'genome_build': None,
