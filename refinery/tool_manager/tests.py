@@ -2232,6 +2232,18 @@ class WorkflowToolLaunchTests(ToolManagerTestBase):
         self.assertTrue(invoke_workflow_mock.called)
         self.assertTrue(self.tool_data_mock.called)
 
+    def test_workflow_tool_analysis_name(self):
+        self.create_valid_tool(ToolDefinition.WORKFLOW)
+        tool_name, timestamp, username = self.tool.analysis.name.split("-")
+
+        self.assertEqual(tool_name.strip(), self.tool.get_tool_name())
+        self.assertEqual(username.strip(),
+                         self.tool.get_owner_username().title())
+        self.assertRegexpMatches(
+            timestamp,
+            r'\d{4}\/\d{2}\/\d{1,2}\s\d{1,2}:\d{1,2}:\d{1,2}'
+        )
+
 
 class VisualizationToolLaunchTests(ToolManagerTestBase,
                                    SeleniumTestBaseGeneric):

@@ -290,7 +290,7 @@ def create_tool_analysis(validated_analysis_config):
     analysis = AnalysisFactory(
         uuid=str(uuid.uuid4()),
         summary="Galaxy workflow execution for: {}".format(tool.name),
-        name="{} {} - {}".format(
+        name="{} - {} - {}".format(
             tool.get_tool_name(),
             get_aware_local_time().strftime("%Y/%m/%d %H:%M:%S"),
             tool.get_owner_username().title()
