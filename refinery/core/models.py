@@ -1521,7 +1521,7 @@ class Analysis(OwnableResource):
             # TODO: avoid hardcoding URL protocol
             context_dict['url'] = urljoin(
                 "http://" + site_domain,
-                "data_sets2/{}/#/files/?{}".format(
+                "data_sets/{}/#/files/?{}".format(
                     data_set_uuid,
                     self.data_sets_query()
                 )
@@ -1858,9 +1858,9 @@ class AnalysisNodeConnection(models.Model):
 
     # (display) name for an output file "wig_outfile" or "outfile"
     # (unique for a given workflow template)
-    name = models.CharField(null=False, blank=False, max_length=100)
+    name = models.CharField(null=False, blank=False, max_length=500)
     # file name of the connection, e.g. "wig_outfile" or "outfile"
-    filename = models.CharField(null=False, blank=False, max_length=100)
+    filename = models.CharField(null=False, blank=False, max_length=500)
     # file type if known
     filetype = models.CharField(null=True, blank=True, max_length=100)
     # direction of the connection, either an input or an output

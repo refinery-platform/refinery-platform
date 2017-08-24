@@ -6,19 +6,21 @@
   .controller('UserFileBrowserFilesCtrl', UserFileBrowserFilesCtrl);
 
   UserFileBrowserFilesCtrl.$inject = [
+    '$httpParamSerializer',
     '$log',
     '$q',
     'userFileBrowserFactory',
-    'userFileFiltersService',
+    'userFileParamsService',
     'userFileSortsService',
     'gridOptionsService'
   ];
 
   function UserFileBrowserFilesCtrl (
+      $httpParamSerializer,
       $log,
       $q,
       userFileBrowserFactory,
-      userFileFiltersService,
+      userFileParamsService,
       userFileSortsService,
       gridOptionsService
   ) {
@@ -62,16 +64,11 @@
     };
 
     gridOptionsService.appScopeProvider = vm;
-    vm.fileBrowserFilterQuery = function () {
-      var params = {};
-      Object.keys(userFileFiltersService).forEach(function (key) {
-        // TODO: The set of filters on /files does not match the filters on /data_sets2.
-        // TODO: I don't know whether a given filter is under "Characteristics" or something else.
-        // TODO: The target page doesn't load right now, even with the query,
-        // TODO:     and switching between tabs loses the query.
-        params[key + '_Characteristics_generic_s'] = userFileFiltersService[key];
+    vm.downloadFilterQuery = function () {
+      return $httpParamSerializer({
+        fq: userFileParamsService.fq(),
+        sort: userFileParamsService.sort()
       });
-      return encodeURIComponent(JSON.stringify(params));
     };
     vm.gridOptions = gridOptionsService;
     vm.gridOptions.onRegisterApi = function (api) {

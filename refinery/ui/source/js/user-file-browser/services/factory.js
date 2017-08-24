@@ -48,8 +48,8 @@
             displayName: '',
             cellTemplate:
                 '<div class="ui-grid-cell-contents" >' +
-                  '<a href="/data_sets2/{{grid.getCellValue(row, col)}}' +
-                           '/#/files/?{{grid.appScope.fileBrowserFilterQuery()}}">' +
+                  '<a href="/data_sets/{{grid.getCellValue(row, col)}}' +
+                           '/#/files/">' +
                     '<i class="fa fa-file"></i>' +
                   '</a>' +
                 '</div>',
