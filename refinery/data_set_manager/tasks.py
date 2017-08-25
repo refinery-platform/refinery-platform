@@ -453,16 +453,17 @@ def parse_isatab(
     pre_isa_archive: optional copy of files that were converted to ISA-Tab
     file_base_path: if your file locations are relative paths, this is the base
     """
-    p = IsaTabParser()
-    p.additional_raw_data_file_extension = additional_raw_data_file_extension
-    p.file_base_path = file_base_path
+    p = IsaTabParser(
+        additional_raw_data_file_extension=additional_raw_data_file_extension,
+        file_base_path=file_base_path
+    )
     """Get the study title and investigation id and see if anything is in the
     database and if so compare the checksum
     """
     # 1. First check whether the user exists
     try:
         user = User.objects.get(username__exact=username)
-    except:
+    except (User.DoesNotExist, User.MultipleObjectsReturned):
         user = None
     # 2. If user exists we need to quickly get the dataset title to see if its
     # already in the DB

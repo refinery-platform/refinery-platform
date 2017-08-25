@@ -28,26 +28,6 @@ logger = logging.getLogger(__name__)
 
 
 class IsaTabParser:
-    # parser flags/settings
-    ignore_case = True
-    ignore_missing_protocols = True
-    # TODO: remove this temporary fix to deal with ISA-Tab from ArrayExpression
-    # (see also _parse_node)
-    additional_raw_data_file_extension = None
-    # absolute path used prefix data file names and paths encountered in the
-    # input file
-    file_base_path = None
-    # internals
-    _current_investigation = None
-    _current_study = None
-    _current_assay = None
-    _current_node = None
-    _previous_node = None
-    _current_attribute = None
-    _current_protocol_reference = None
-    _current_reader = None
-    _current_file = None
-    _current_file_name = None
     # TODO: use these where appropriate
     SEPARATOR_CHARACTER = "\t"
     QUOTE_CHARACTER = "\""
@@ -269,8 +249,27 @@ class IsaTabParser:
         }
     }
 
-    def __init__(self):
-        pass
+    def __init__(self, additional_raw_data_file_extension=None,
+                 file_base_path=None):
+        # parser flags/settings
+        self.ignore_case = True
+        self.ignore_missing_protocols = True
+        # TODO: remove this temporary fix to deal with ISA-Tab from
+        # ArrayExpress (see also _parse_node)
+        self.additional_raw_data_file_extension = \
+            additional_raw_data_file_extension
+        self.file_base_path = file_base_path
+        # internals
+        self._current_investigation = None
+        self._current_study = None
+        self._current_assay = None
+        self._current_node = None
+        self._previous_node = None
+        self._current_attribute = None
+        self._current_protocol_reference = None
+        self._current_reader = None
+        self._current_file = None
+        self._current_file_name = None
 
     def _split_header(self, header):
         return [x.strip() for x in header.replace("]", "").strip().split("[")]
