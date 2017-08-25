@@ -7,17 +7,17 @@
     </div>
     <div
       ng-repeat="(attribute, attributeObj) in $ctrl.attributeFilters track by $index"
-      ng-init="attributeIndex = $index; folded_down = ">
+      ng-init="attributeIndex = $index">
       <div class="panel panel-default">
         <div class="panel-heading" role="tab">
           <h4 class="panel-title" ng-click="$ctrl.togglePanel(attribute)">
-            <i class="fa fa-caret-down fa-pull-left" ng-hide="!($ctrl.folded_down[attribute] || attributeObj.lowerCaseNames.includes(search.toLowerCase()) && search.length)"></i>
-            <i class="fa fa-caret-right fa-pull-left" ng-hide="$ctrl.folded_down[attribute] || attributeObj.lowerCaseNames.includes(search.toLowerCase()) && search.length"></i>
+            <i class="fa fa-caret-down fa-pull-left" ng-hide="!$ctrl.isDown(attribute, search)"></i>
+            <i class="fa fa-caret-right fa-pull-left" ng-hide="$ctrl.isDown(attribute, search)"></i>
             {{ attribute }} &nbsp; ({{ attributeObj.facetObj.length }})
           </h4>
         </div>
       <div id="{{attribute | replaceWhiteSpaceWithHyphen}}"
-        ng-hide="!($ctrl.folded_down[attribute] || attributeObj.lowerCaseNames.includes(search.toLowerCase()) && search.length)"
+        ng-hide="!$ctrl.isDown(attribute, search)"
         class="panel-collapse collapse in"
         role="tabpanel"
         aria-labelledby="{{ attribute }}">
