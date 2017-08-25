@@ -11,13 +11,13 @@
       <div class="panel panel-default">
         <div class="panel-heading" role="tab">
           <h4 class="panel-title" ng-click="$ctrl.togglePanel(attribute)">
-            <i class="fa fa-caret-down fa-pull-left" ng-hide="!$ctrl.folded_down[attribute]"></i>
-            <i class="fa fa-caret-right fa-pull-left" ng-hide="$ctrl.folded_down[attribute]"></i>
+            <i class="fa fa-caret-down fa-pull-left" ng-hide="!($ctrl.folded_down[attribute] || attributeObj.lowerCaseNames.includes(search.toLowerCase()) && search.length)"></i>
+            <i class="fa fa-caret-right fa-pull-left" ng-hide="$ctrl.folded_down[attribute] || attributeObj.lowerCaseNames.includes(search.toLowerCase()) && search.length"></i>
             {{ attribute }} &nbsp; ({{ attributeObj.facetObj.length }})
           </h4>
         </div>
       <div id="{{attribute | replaceWhiteSpaceWithHyphen}}"
-        ng-hide="!$ctrl.folded_down[attribute]"
+        ng-hide="!($ctrl.folded_down[attribute] || attributeObj.lowerCaseNames.includes(search.toLowerCase()) && search.length)"
         class="panel-collapse collapse in"
         role="tabpanel"
         aria-labelledby="{{ attribute }}">
