@@ -13,16 +13,17 @@ import os
 import re
 import string
 import tempfile
-from urlparse import urlparse
 from zipfile import ZipFile
 
-import data_set_manager.tasks
+from django.conf import settings
+
 from file_store.models import FileStoreItem
 from file_store.tasks import create, import_file
 
 from .models import (Assay, Attribute, Contact, Design, Factor, Investigation,
                      Node, Ontology, Protocol, ProtocolReference,
                      ProtocolReferenceParameter, Publication, Study)
+from .utils import fix_last_column
 
 logger = logging.getLogger(__name__)
 
@@ -249,16 +250,16 @@ class IsaTabParser:
         }
     }
 
-    def __init__(self, additional_raw_data_file_extension=None,
-                 file_base_path=None):
-        # parser flags/settings
-        self.ignore_case = True
-        self.ignore_missing_protocols = True
+    def __init__(self, file_source_translator,
+                 additional_raw_data_file_extension=None):
+        self.file_source_translator = file_source_translator
         # TODO: remove this temporary fix to deal with ISA-Tab from
         # ArrayExpress (see also _parse_node)
         self.additional_raw_data_file_extension = \
             additional_raw_data_file_extension
-        self.file_base_path = file_base_path
+        # parser flags/settings
+        self.ignore_case = True
+        self.ignore_missing_protocols = True
         # internals
         self._current_investigation = None
         self._current_study = None
@@ -320,26 +321,17 @@ class IsaTabParser:
                     header_components[0] in Node.FILES and
                     node_name is not ""):
                 # create the nodes for the data file in this row
-                if self.file_base_path is None:
-                    file_path = node_name
-                else:
-                    # test if this node is referring to a remote url
-                    components = urlparse(node_name)
-                    if components.scheme == "" or components.netloc == "":
-                        # not a remote url
-                        file_path = os.path.join(
-                            self.file_base_path, node_name)
-                    else:
-                        file_path = node_name
-
-                item = FileStoreItem.objects.create_item(
+                file_path = self.file_source_translator(node_name)
+                file_store_item = FileStoreItem.objects.create_item(
                     source=file_path, sharename='', filetype=''
                 )
-                if item is not None:
+                if file_store_item is not None:
                     # start importing data file if it was uploaded
-                    if item.source == os.path.basename(item.source):
-                        import_file.delay(item.uuid)
-                    node.file_uuid = item.uuid
+                    if file_store_item.source.startswith(
+                            (settings.REFINERY_DATA_IMPORT_DIR, 's3://')
+                    ):
+                        import_file.delay(file_store_item.uuid)
+                    node.file_uuid = file_store_item.uuid
                     node.save()
                 else:
                     logger.exception(
@@ -987,18 +979,15 @@ class IsaTabParser:
                 # parse study file
                 self._current_assay = None
                 study_file_name = os.path.join(path, study.file_name)
-                if data_set_manager.tasks.fix_last_col(study_file_name):
+                if fix_last_column(study_file_name):
                     self._parse_study_file(study, study_file_name)
                     for assay in study.assay_set.all():
                         # parse assay file
                         self._previous_node = None
                         assay_file_name = os.path.join(path, assay.file_name)
-                        if data_set_manager.tasks.fix_last_col(
-                                assay_file_name):
-                            self._parse_assay_file(
-                                study,
-                                assay,
-                                assay_file_name)
+                        if fix_last_column(assay_file_name):
+                            self._parse_assay_file(study, assay,
+                                                   assay_file_name)
         else:
             logger.exception(
                 "No investigation was identified when parsing investigation "
