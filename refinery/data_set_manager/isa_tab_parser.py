@@ -929,17 +929,6 @@ class IsaTabParser:
         the archive extracts into a subdirectory named <archive> if the
         ISArchive is called <archive>.zip.
         """
-        # reset all variables
-        self._current_investigation = None
-        self._current_study = None
-        self._current_assay = None
-        self._current_node = None
-        self._previous_node = None
-        self._current_attribute = None
-        self._current_protocol_reference = None
-        self._current_reader = None
-        self._current_file = None
-        self._current_file_name = None
         # 1. test if archive needs to be extracted and extract if necessary
         if not os.path.isdir(path):
             # assign to isa_archive if it's an archive anyway
