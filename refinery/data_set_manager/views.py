@@ -278,11 +278,10 @@ class ProcessISATabView(View):
                 "Temp file name: '%s'", response['data']['temp_file_path']
             )
 
-            dataset_uuid = (parse_isatab.delay(
-                request.user.username,
-                False,
-                response['data']['temp_file_path']
-            ).get())[0]
+            dataset_uuid = parse_isatab.delay(
+                username=request.user.username, public=False,
+                path=response['data']['temp_file_path']
+            ).get()[0]
 
             # TODO: exception handling (OSError)
             os.unlink(response['data']['temp_file_path'])
