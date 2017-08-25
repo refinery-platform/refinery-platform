@@ -10,10 +10,29 @@
       ng-init="attributeIndex = $index; order = '-count'">
       <div class="panel panel-default">
         <div class="panel-heading" role="tab">
-          <h4 class="panel-title" ng-click="$ctrl.togglePanel(attribute)">
-            <i class="fa fa-caret-down fa-pull-left" ng-hide="!$ctrl.isDown(attribute, search)"></i>
-            <i class="fa fa-caret-right fa-pull-left" ng-hide="$ctrl.isDown(attribute, search)"></i>
-            {{ attribute }} &nbsp; ({{ attributeObj.facetObj.length }})
+          <h4 class="panel-title">
+
+              <span ng-click="$ctrl.togglePanel(attribute)">
+                <i class="fa fa-caret-down fa-pull-left" ng-hide="!$ctrl.isDown(attribute, search)"></i>
+                <i class="fa fa-caret-right fa-pull-left" ng-hide="$ctrl.isDown(attribute, search)"></i>
+                {{ attribute }} &nbsp; ({{ attributeObj.facetObj.length }})
+              </span>
+
+              <span ng-hide="!$ctrl.isDown(attribute, search)">
+                <button
+                  ng-click="order = 'name'"
+                  ng-hide="order == 'name'"
+                  class="btn btn-xs">
+                  <i class="fa fa-sort-alpha-asc" aria-hidden="true"></i>
+                </button>
+                <button
+                  ng-click="order = '-count'"
+                  ng-hide="order == '-count'"
+                  class="btn btn-xs">
+                  <i class="fa fa-sort-numeric-desc" aria-hidden="true"></i>
+                </button>
+              </span>
+
           </h4>
         </div>
         <div id="{{attribute | replaceWhiteSpaceWithHyphen}}"
@@ -22,27 +41,6 @@
             role="tabpanel"
             aria-labelledby="{{ attribute }}">
             <div class="panel-body">
-              <div class="checkbox container">
-                <div class="row">
-                  <div class="col-xs-1"></div>
-                  <div class="col-xs-8">
-                    <button
-                      ng-click="order = 'name'"
-                      ng-class="{'btn-primary': order == 'name', 'btn': order != 'name'}"
-                      class="btn btn-xs">
-                      <i class="fa fa-sort-alpha-asc" aria-hidden="true"></i>
-                    </button>
-                  </div>
-                  <div class="col-xs-3">
-                    <button
-                      ng-click="order = '-count'"
-                      ng-class="{'btn-primary': order == '-count', 'btn': order != '-count'}"
-                      class="btn btn-primary btn-xs">
-                      <i class="fa fa-sort-numeric-desc" aria-hidden="true"></i>
-                    </button>
-                  </div>
-                </div>
-              </div>
               <div ng-repeat="field in attributeObj.facetObj | orderBy: order track by $index">
                 <div ng-show="field.name.toLowerCase().includes(search.toLowerCase())" class="checkbox container">
                     <div class="row">
