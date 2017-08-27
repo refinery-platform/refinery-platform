@@ -243,31 +243,30 @@ def create_tool_analysis(validated_analysis_config):
     :return: an Analysis instance
     :raises: RuntimeError
     """
-
-    # Input list for running analysis
     common_analysis_objects = (
         fetch_objects_required_for_analysis(
             validated_analysis_config
         )
     )
-    name = validated_analysis_config["name"]
     current_workflow = common_analysis_objects["current_workflow"]
     data_set = common_analysis_objects["data_set"]
     user = common_analysis_objects["user"]
 
     try:
-        tool = Tool.objects.get(
+        tool = WorkflowTool.objects.get(
             uuid=validated_analysis_config["toolUuid"]
         )
-    except (Tool.DoesNotExist, Tool.MultipleObjectsReturned) as e:
+    except (WorkflowTool.DoesNotExist,
+            WorkflowTool.MultipleObjectsReturned) as e:
         raise RuntimeError("Couldn't fetch Tool from UUID: {}".format(e))
 
     analysis = AnalysisFactory(
         uuid=str(uuid.uuid4()),
         summary="Galaxy workflow execution for: {}".format(tool.name),
-        name="{} - {}".format(
-            name,
-            get_aware_local_time().strftime("%Y-%m-%d @ %H:%M:%S")
+        name="{} {} - {}".format(
+            tool.get_tool_name(),
+            get_aware_local_time().strftime("%Y/%m/%d %H:%M:%S"),
+            tool.get_owner_username().title()
         ),
         project=user.profile.catch_all_project,
         data_set=data_set,

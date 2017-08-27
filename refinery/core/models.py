@@ -2302,12 +2302,6 @@ class Invitation(models.Model):
         return super(Invitation, self).save(*arg, **kwargs)
 
 
-# TODO - Back this with DB as a models.Model
-class FastQC(object):
-    def __init__(self, data=None):
-        self.data = data
-
-
 @receiver(post_save, sender=User)
 @skip_if_test_run
 def _add_user_to_neo4j(sender, **kwargs):
