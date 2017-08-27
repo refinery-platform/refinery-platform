@@ -3,7 +3,7 @@ from rest_framework_recursive.fields import RecursiveField
 
 from file_store.models import FileType
 
-from .models import (FileRelationship, InputFile, OutputFile, Parameter, Tool,
+from .models import (FileRelationship, InputFile, Parameter, Tool,
                      ToolDefinition)
 
 
@@ -63,17 +63,8 @@ class FileRelationshipSerializer(serializers.ModelSerializer):
         exclude = ["id"]
 
 
-class OutputFileSerializer(serializers.ModelSerializer):
-    filetype = FileTypeSerializer()
-
-    class Meta:
-        model = OutputFile
-        exclude = ["id"]
-
-
 class ToolDefinitionSerializer(serializers.ModelSerializer):
     file_relationship = FileRelationshipSerializer()
-    output_files = OutputFileSerializer(many=True)
     parameters = ParameterSerializer(many=True, allow_null=True)
 
     class Meta:
