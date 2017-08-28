@@ -6,7 +6,6 @@
         "name",
         "description",
         "file_relationship",
-        "input_output_relationship",
         "parameters"
       ],
       "properties": {
@@ -18,10 +17,6 @@
         },
         "file_relationship": {
           "$ref": "FileRelationship.json#"
-        },
-        "input_output_relationship": {
-          "type": "string",
-          "enum": ["N-N", "N-1"]
         },
         "parameters": {
           "type": "array",
