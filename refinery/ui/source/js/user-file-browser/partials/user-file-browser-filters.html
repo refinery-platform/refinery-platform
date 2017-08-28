@@ -54,9 +54,7 @@
                       <div class="col-xs-8">
                         <label for="{{ field.name | replaceWhiteSpaceWithHyphen
                           }}-{{ $index }}">
-                          <span>
-                            {{ field.name }}
-                          </span>
+                          <span ng-bind-html="field.name | highlight:search"></span>
                         </label>
                       </div>
                       <div class="col-xs-3">
