@@ -35,7 +35,6 @@
         "name",
         "description",
         "file_relationship",
-        "output_files",
         "parameters",
         "extra_directories",
         "container_input_path",
@@ -55,12 +54,6 @@
           "type": "array",
           "items": {
             "$ref": "Parameter.json#"
-          }
-        },
-        "output_files": {
-          "type": "array",
-          "items": {
-            "$ref": "OutputFile.json#"
           }
         },
         "tool_type":{
