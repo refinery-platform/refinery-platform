@@ -1711,14 +1711,16 @@ class NodeIndexTests(APITestCase):
         data = NodeIndex().prepare(self.node)
         data = dict(
             (
-                re.sub(r'\d+', '#', k),
-                re.sub(r'\d+', '#', v) if
+                re.sub(r'[^_./]*\d+[^_./]*', '#', k),
+                re.sub(r'[^_./]*\d+[^_./]*', '#', v) if
                 type(v) in (unicode, str) and not('uuid' in k)
                 else v
             )
             for (k, v) in data.items())
         self.assertEqual(data,
                          {'REFINERY_ANALYSIS_UUID_#_#_s': 'N/A',
+                          'REFINERY_DOWNLOAD_URL_s':
+                              u'/media/file_store/#/#/test_file.txt',
                           'REFINERY_FILETYPE_#_#_s': None,
                           'REFINERY_NAME_#_#_s': 'http://example.com/fake.txt',
                           'REFINERY_SUBANALYSIS_#_#_s': -1,

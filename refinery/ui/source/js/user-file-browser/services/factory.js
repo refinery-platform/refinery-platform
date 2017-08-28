@@ -33,12 +33,13 @@
 
     function createColumnDefs () {
       var defs = [
-           { field: URL,
+           { field: 'REFINERY_DOWNLOAD_URL_s',
             enableSorting: false,
             displayName: '',
             cellTemplate:
                 '<div class="ui-grid-cell-contents" >' +
-                '<a href="{{grid.getCellValue(row, col)}}" target="_blank">' +
+                '<a href="{{grid.getCellValue(row, col)}}" target="_blank" ' +
+                    'ng-show="grid.getCellValue(row, col)">' +
                 '<i class="fa fa-arrow-circle-o-down"></i>' +
                 '</a>' +
                 '</div>',
@@ -84,8 +85,14 @@
       Object.keys(solrFacetCounts).forEach(function (key) {
         if (solrFacetCounts[key].length > 0) {
           // TODO: can't use AttributeOrder (it's per dataset), but this is bad.
-          filters[mapInternalToDisplay(key)] =
-            { facetObj: solrFacetCounts[key] };
+          var facetObj = solrFacetCounts[key];
+          var lowerCaseNames = facetObj.map(function (nameCount) {
+            return nameCount.name.toLowerCase();
+          }).join(' ');
+          filters[mapInternalToDisplay(key)] = {
+            facetObj: facetObj,
+            lowerCaseNames: lowerCaseNames
+          };
         }
       });
       return filters;
