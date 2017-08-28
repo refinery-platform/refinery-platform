@@ -391,6 +391,6 @@
 </div>
 <p>
   Current version <span class="emphasized">{{ ADCtrl.dataSet.version }}</span>.
-  Data set created <span class="emphasized">{{ ADCtrl.dataSet.creation_date }}</span>.
-  Last modified <span class="emphasized">{{ ADCtrl.dataSet.modification_date }}</span>.
+  Data set created <span class="emphasized">{{ ADCtrl.dataSet.creation_date | date:'medium' }}</span>.
+  Last modified <span class="emphasized">{{ ADCtrl.dataSet.modification_date | date:'medium' }}</span>.
 </p>
