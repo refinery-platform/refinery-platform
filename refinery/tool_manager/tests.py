@@ -2094,6 +2094,36 @@ class WorkflowToolLaunchTests(ToolManagerTestBase):
         self.assertTrue(send_email_mock.called)
         self.assertTrue(galaxy_cleanup_mock.called)
 
+    @mock.patch.object(celery.result.TaskSetResult, "ready",
+                       return_value=True)
+    @mock.patch.object(celery.result.TaskSetResult, "successful",
+                       return_value=True)
+    def test__run_tool_based_galaxy_file_import_success(
+            self,
+            successful_mock,
+            ready_mock
+    ):
+        self.create_valid_tool(ToolDefinition.WORKFLOW)
+        analysis_status = AnalysisStatus.objects.get(
+            analysis=self.tool.analysis
+        )
+        analysis_status.set_galaxy_import_task_group_id(str(uuid.uuid4()))
+        _run_tool_based_galaxy_file_import(self.tool.analysis.uuid)
+        analysis_status = AnalysisStatus.objects.get(
+            analysis=self.tool.analysis
+        )
+        self.assertEqual(
+            analysis_status.galaxy_import_state,
+            AnalysisStatus.OK
+        )
+        self.assertTrue(ready_mock.called)
+        self.assertTrue(successful_mock.called)
+        self.assertTrue(self.analysis_manager_taskset_result_mock.called)
+        self.assertEqual(
+            self.analysis_manager_taskset_result_mock.call_count,
+            1
+        )
+
     @mock.patch("celery.task.sets.TaskSet.apply_async")
     @mock.patch.object(celery.result.TaskSetResult, "ready",
                        return_value=False)
