@@ -432,6 +432,8 @@ def _run_tool_based_galaxy_file_import(analysis_uuid):
         galaxy_file_import_taskset.delete()
         analysis.galaxy_cleanup()
         return
+    else:
+        analysis_status.set_galaxy_import_state(AnalysisStatus.OK)
 
 
 def _run_tool_based_galaxy_workflow(analysis_uuid):
@@ -625,7 +627,10 @@ def _tool_based_galaxy_file_import(analysis_uuid, file_store_item_uuid,
 
     if (analysis_status.galaxy_import_progress ==
             single_file_percentage * number_of_files):
-        analysis_status.set_galaxy_import_state(AnalysisStatus.OK)
+        # Imports are complete at this point so update
+        # `galaxy_import_progress` to `100`.
+        analysis_status.galaxy_import_progress = 100
+        analysis_status.save()
 
     galaxy_to_refinery_file_mapping = {
         tool.REFINERY_FILE_UUID: file_store_item_uuid,
