@@ -1,6 +1,6 @@
 <div class="refinery-header">
   <div class="refinery-header-left">
-    <h3>{{ ADCtrl.dataSet.accession }}: {{ ADCtrl.dataSet.title }}</h3>
+    <h3>{{ ADCtrl.dataSet.title }}</h3>
     <span ng-if="ADCtrl.dataSet.is_owner">
       <a
         ng-click="ADCtrl.isCollapsed.title = !ADCtrl.isCollapsed.title"
@@ -379,9 +379,9 @@
 </span>
 <p>
   {{ ADCtrl.dataSet.file_count }} files
-  <div ng-if="ADCtrl.dataSet.file_size > 0">
-   - {{ ADCtrl.dataSet.file_size | fileSizeFormat }}
-  </div>
+  <span ng-if="ADCtrl.dataSet.file_size > 0">
+   using {{ ADCtrl.dataSet.file_size | fileSizeFormat }}
+  </span>
 </p>
 
 <div class="refinery-header">
