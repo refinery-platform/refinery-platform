@@ -13,7 +13,20 @@
 {% block content %}
 <div class="refinery-panel refinery-panel-content scrollable">
 	<div class="row">
-		<div class="refinery-header">
+      {% if DJANGO_DOCKER_ENGINE_BASE_URL in request.path %}
+          <p>
+              Please wait: The visualization is warming up.
+          </p>
+          <script>
+            window.setTimeout(
+                    function() {
+                        window.location.reload()
+                    },
+                    3000
+            )
+          </script>
+      {% else %}
+        <div class="refinery-header">
 			<span class="refinery-header-left">
 				<h3>Server Problem</h3>
 			</span>
@@ -23,6 +36,7 @@
 			Please contact your <a href='mailto:{{ADMIN_EMAIL}}?Subject=Refinery%20Error' target='_top'>System Administrator</a> if this is a recurring problem and describe
             anything you might have done that may have caused the error.
 		</p>
+      {% endif %}
 	</div>
 </div>
 {% endblock %}
