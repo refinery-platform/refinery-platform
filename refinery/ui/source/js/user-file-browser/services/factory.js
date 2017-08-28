@@ -85,8 +85,14 @@
       Object.keys(solrFacetCounts).forEach(function (key) {
         if (solrFacetCounts[key].length > 0) {
           // TODO: can't use AttributeOrder (it's per dataset), but this is bad.
-          filters[mapInternalToDisplay(key)] =
-            { facetObj: solrFacetCounts[key] };
+          var facetObj = solrFacetCounts[key];
+          var lowerCaseNames = facetObj.map(function (nameCount) {
+            return nameCount.name.toLowerCase();
+          }).join(' ');
+          filters[mapInternalToDisplay(key)] = {
+            facetObj: facetObj,
+            lowerCaseNames: lowerCaseNames
+          };
         }
       });
       return filters;
