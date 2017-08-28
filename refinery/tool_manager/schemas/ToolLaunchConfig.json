@@ -17,6 +17,14 @@
     },
     "parameters": {
       "type": "object"
+    },
+    "output_files": {
+      "type": "array",
+      "items": {
+       "oneOf": [
+         {"$ref": "OutputFile.json#"}
+       ]
+      }
     }
   }
 }
