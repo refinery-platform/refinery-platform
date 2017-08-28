@@ -20,6 +20,7 @@ from factory_boy.django_model_factories import (AnalysisFactory,
                                                 FileRelationshipFactory,
                                                 GalaxyParameterFactory,
                                                 InputFileFactory,
+                                                OutputFileFactory,
                                                 ParameterFactory,
                                                 ToolDefinitionFactory,
                                                 VisualizationToolFactory,
@@ -71,6 +72,28 @@ class FileTypeValidationError(RuntimeError):
         )
 
         super(FileTypeValidationError, self).__init__(error_message)
+
+
+def create_and_associate_output_files(tool_definition, output_files):
+    for output_file in output_files:
+        try:
+            filetype = FileType.objects.get(
+                name=output_file["filetype"]["name"]
+            )
+        except (FileType.DoesNotExist,
+                FileType.MultipleObjectsReturned) as e:
+            raise FileTypeValidationError(
+                output_file["filetype"]["name"],
+                e
+            )
+        else:
+            tool_definition.output_files.add(
+                OutputFileFactory(
+                    name=output_file["name"],
+                    description=output_file["description"],
+                    filetype=filetype
+                )
+            )
 
 
 def create_and_associate_parameters(tool_definition, parameters):
@@ -162,6 +185,10 @@ def create_tool_definition(annotation_data):
     tool_definition.annotation = json.dumps(annotation)
     tool_definition.save()
 
+    create_and_associate_output_files(
+        tool_definition,
+        annotation["output_files"]
+    )
     create_and_associate_parameters(
         tool_definition,
         annotation[ToolDefinition.PARAMETERS]
