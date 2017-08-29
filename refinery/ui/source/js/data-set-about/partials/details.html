@@ -397,9 +397,8 @@
 <form id="isaTabImportForm" enctype="multipart/form-data" action="/data_set_manager/import/take_ownership/" method="post"
       ng-if="ADCtrl.dataSet.isa_archive && ADCtrl.dataSet.public && !ADCtrl.dataSet.is_owner">
     <!-- TODO: check if logged in: anonymous user can not import -->
-    <!-- TODO: type=hidden -->
-    <input name="csrfmiddlewaretoken" value="{{ ADCtrl.csrfToken }}" />
-    <input name="isa_tab_url" value="{{ ADCtrl.dataSet.isa_archive_url }}" />
+    <input type="hidden" name="csrfmiddlewaretoken" value="{{ ADCtrl.csrfToken }}" />
+    <input type="hidden" name="isa_tab_url" value="{{ ADCtrl.dataSet.isa_archive_url }}" />
     <input class="refinery-base btn btn-important"
           id="isa-import-button" type="submit" value="Import into own Space"/>
     <div style="padding: 15px; display: block; height: 22px; width: 22px;" id="isa-spinner"></div>
