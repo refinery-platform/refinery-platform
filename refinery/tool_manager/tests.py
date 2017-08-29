@@ -53,11 +53,10 @@ from galaxy_connector.models import Instance
 from selenium_testing.utils import (MAX_WAIT, SeleniumTestBaseGeneric,
                                     wait_until_class_visible)
 
-from .models import (FileRelationship, GalaxyParameter, InputFile, OutputFile,
-                     Parameter, Tool, ToolDefinition, VisualizationTool,
-                     WorkflowTool)
-from .utils import (FileTypeValidationError, create_tool,
-                    create_tool_definition, validate_tool_annotation,
+from .models import (FileRelationship, GalaxyParameter, InputFile, Parameter,
+                     Tool, ToolDefinition, VisualizationTool, WorkflowTool)
+from .utils import (create_tool, create_tool_definition,
+                    validate_tool_annotation,
                     validate_tool_launch_configuration,
                     validate_workflow_step_annotation)
 from .views import ToolDefinitionsViewSet, ToolsViewSet
@@ -479,24 +478,6 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
             )
             self.assertEqual(ToolDefinition.objects.count(), 0)
 
-    def test_workflow_invalid_filetype(self):
-        with open(
-            "{}/workflows/annotation_bad_filetype.json".format(TEST_DATA_PATH)
-        ) as f:
-            workflow_annotation = json.loads(f.read())
-            workflow_annotation[
-                "workflow_engine_uuid"
-            ] = self.workflow_engine.uuid
-
-            self.assertIsNone(
-                validate_tool_annotation(workflow_annotation))
-            self.assertRaises(
-                FileTypeValidationError,
-                create_tool_definition,
-                workflow_annotation
-            )
-            self.assertEqual(ToolDefinition.objects.count(), 0)
-
     def test_workflow_with_bad_nesting(self):
         with open(
             "{}/workflows/annotation_bad_nesting.json".format(TEST_DATA_PATH)
@@ -520,18 +501,6 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
                 validate_tool_annotation(workflow_annotation)
             )
 
-    def test_workflow_with_bad_parameters_validation(self):
-        with open(
-            "{}/workflows/annotation_invalid_parameters.json".format(
-                TEST_DATA_PATH
-            )
-        ) as f:
-            workflow_annotation = json.loads(f.read())
-            self.assertRaises(
-                RuntimeError,
-                validate_tool_annotation, workflow_annotation)
-            self.assertEqual(ToolDefinition.objects.count(), 0)
-
     def test_list_visualization_tool_def_validation(self):
         with open(
             "{}/visualizations/hello_world.json".format(TEST_DATA_PATH)
@@ -546,7 +515,6 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
 
         self.assertEqual(ToolDefinition.objects.count(), 1)
 
-        self.assertEqual(self.td.output_files.count(), 0)
         self.assertEqual(self.td.parameters.count(), 1)
         self.assertEqual(
             self.td.file_relationship.file_relationship.count(),
@@ -566,7 +534,6 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
 
         self.assertEqual(ToolDefinition.objects.count(), 1)
 
-        self.assertEqual(self.td.output_files.count(), 4)
         self.assertEqual(self.td.parameters.count(), 7)
         self.assertEqual(
             self.td.file_relationship.file_relationship.count(),
@@ -586,7 +553,6 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
         )
 
         self.assertEqual(ToolDefinition.objects.count(), 1)
-        self.assertEqual(self.td.output_files.count(), 1)
         self.assertEqual(self.td.parameters.count(), 6)
         self.assertEqual(
             self.td.file_relationship.file_relationship.count(),
@@ -618,7 +584,6 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
             annotation_file_name="LIST:LIST:PAIR.json"
         )
         self.assertEqual(ToolDefinition.objects.count(), 1)
-        self.assertEqual(self.td.output_files.count(), 1)
         self.assertEqual(self.td.parameters.count(), 3)
         self.assertEqual(
             self.td.file_relationship.file_relationship.count(),
@@ -657,7 +622,6 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
         )
 
         self.assertEqual(ToolDefinition.objects.count(), 1)
-        self.assertEqual(self.td.output_files.count(), 1)
         self.assertEqual(self.td.parameters.count(), 3)
         self.assertEqual(
             self.td.file_relationship.file_relationship.count(),
@@ -700,7 +664,6 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
         self.assertEqual(GalaxyParameter.objects.count(), 0)
         self.assertEqual(Parameter.objects.count(), 0)
         self.assertEqual(InputFile.objects.count(), 0)
-        self.assertEqual(OutputFile.objects.count(), 0)
 
     def test_list_pair_workflow_related_object_deletion(self):
         self.create_workflow_tool_definition(
@@ -713,7 +676,6 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
         self.assertEqual(GalaxyParameter.objects.count(), 0)
         self.assertEqual(Parameter.objects.count(), 0)
         self.assertEqual(InputFile.objects.count(), 0)
-        self.assertEqual(OutputFile.objects.count(), 0)
 
     def test_list_list_pair_workflow_related_object_deletion(self):
         self.create_workflow_tool_definition(
@@ -726,7 +688,6 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
         self.assertEqual(GalaxyParameter.objects.count(), 0)
         self.assertEqual(Parameter.objects.count(), 0)
         self.assertEqual(InputFile.objects.count(), 0)
-        self.assertEqual(OutputFile.objects.count(), 0)
 
     def test_list_pair_list_workflow_related_object_deletion(self):
         self.create_workflow_tool_definition(
@@ -739,7 +700,6 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
         self.assertEqual(GalaxyParameter.objects.count(), 0)
         self.assertEqual(Parameter.objects.count(), 0)
         self.assertEqual(InputFile.objects.count(), 0)
-        self.assertEqual(OutputFile.objects.count(), 0)
 
     def test_deletion_of_a_respective_tooldefinitions_objects_only(self):
         with open(
@@ -776,7 +736,6 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
         self.assertEqual(GalaxyParameter.objects.count(), 13)
         self.assertEqual(Parameter.objects.count(), 13)
         self.assertEqual(InputFile.objects.count(), 3)
-        self.assertEqual(OutputFile.objects.count(), 5)
 
         td2.delete()
 
@@ -785,7 +744,6 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
         self.assertEqual(GalaxyParameter.objects.count(), 7)
         self.assertEqual(Parameter.objects.count(), 7)
         self.assertEqual(InputFile.objects.count(), 1)
-        self.assertEqual(OutputFile.objects.count(), 4)
 
         td3.delete()
 
@@ -794,7 +752,6 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
         self.assertEqual(GalaxyParameter.objects.count(), 0)
         self.assertEqual(Parameter.objects.count(), 0)
         self.assertEqual(InputFile.objects.count(), 0)
-        self.assertEqual(OutputFile.objects.count(), 0)
 
     def test_valid_workflow_step_annotations_a(self):
         with open(
@@ -825,19 +782,6 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
             workflow_step_annotation = json.loads(f.read())
             self.assertIsNone(
                 validate_workflow_step_annotation(workflow_step_annotation)
-            )
-
-    def test_invalid_workflow_step_annotation_a(self):
-        with open(
-            "{}/workflows/step_annotation_invalid_a.json".format(
-                TEST_DATA_PATH
-            )
-        ) as f:
-            workflow_step_annotation = json.loads(f.read())
-            self.assertRaises(
-                RuntimeError,
-                validate_workflow_step_annotation,
-                workflow_step_annotation
             )
 
     def test_invalid_workflow_step_annotation_b(self):
@@ -915,7 +859,6 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
                 self.assertEqual(GalaxyParameter.objects.count(), 9)
                 self.assertEqual(Parameter.objects.count(), 10)
                 self.assertEqual(InputFile.objects.count(), 6)
-                self.assertEqual(OutputFile.objects.count(), 3)
 
     def test_workflow_pair_too_many_inputs(self):
         with open(
@@ -1860,7 +1803,7 @@ class WorkflowToolLaunchTests(ToolManagerTestBase):
         )
         self.assertEqual(
             json.loads(self.post_response.content)[Tool.TOOL_URL],
-            '/data_sets2/{}/#/analyses/'.format(self.tool.dataset.uuid)
+            '/data_sets/{}/#/analyses/'.format(self.tool.dataset.uuid)
         )
 
     def test_many_tools_can_be_launched_from_same_dataset(self):
@@ -2094,6 +2037,36 @@ class WorkflowToolLaunchTests(ToolManagerTestBase):
         self.assertTrue(send_email_mock.called)
         self.assertTrue(galaxy_cleanup_mock.called)
 
+    @mock.patch.object(celery.result.TaskSetResult, "ready",
+                       return_value=True)
+    @mock.patch.object(celery.result.TaskSetResult, "successful",
+                       return_value=True)
+    def test__run_tool_based_galaxy_file_import_success(
+            self,
+            successful_mock,
+            ready_mock
+    ):
+        self.create_valid_tool(ToolDefinition.WORKFLOW)
+        analysis_status = AnalysisStatus.objects.get(
+            analysis=self.tool.analysis
+        )
+        analysis_status.set_galaxy_import_task_group_id(str(uuid.uuid4()))
+        _run_tool_based_galaxy_file_import(self.tool.analysis.uuid)
+        analysis_status = AnalysisStatus.objects.get(
+            analysis=self.tool.analysis
+        )
+        self.assertEqual(
+            analysis_status.galaxy_import_state,
+            AnalysisStatus.OK
+        )
+        self.assertTrue(ready_mock.called)
+        self.assertTrue(successful_mock.called)
+        self.assertTrue(self.analysis_manager_taskset_result_mock.called)
+        self.assertEqual(
+            self.analysis_manager_taskset_result_mock.call_count,
+            1
+        )
+
     @mock.patch("celery.task.sets.TaskSet.apply_async")
     @mock.patch.object(celery.result.TaskSetResult, "ready",
                        return_value=False)
@@ -2231,6 +2204,18 @@ class WorkflowToolLaunchTests(ToolManagerTestBase):
         self.assertEqual(self.delete_history_mock.call_count, 2)
         self.assertTrue(invoke_workflow_mock.called)
         self.assertTrue(self.tool_data_mock.called)
+
+    def test_workflow_tool_analysis_name(self):
+        self.create_valid_tool(ToolDefinition.WORKFLOW)
+        tool_name, timestamp, username = self.tool.analysis.name.split("-")
+
+        self.assertEqual(tool_name.strip(), self.tool.get_tool_name())
+        self.assertEqual(username.strip(),
+                         self.tool.get_owner_username().title())
+        self.assertRegexpMatches(
+            timestamp,
+            r'\d{4}\/\d{2}\/\d{1,2}\s\d{1,2}:\d{1,2}:\d{1,2}'
+        )
 
 
 class VisualizationToolLaunchTests(ToolManagerTestBase,

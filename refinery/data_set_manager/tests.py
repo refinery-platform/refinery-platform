@@ -10,9 +10,10 @@ from django.test import TestCase
 
 from rest_framework.test import APIClient, APIRequestFactory, APITestCase
 
-from core.models import DataSet, ExtendedGroup, InvestigationLink
+from core.models import Analysis, DataSet, ExtendedGroup, InvestigationLink
 from core.views import NodeViewSet
 from data_set_manager.tasks import parse_isatab
+from factory_boy.utils import make_analyses_with_single_dataset
 from file_store.models import FileStoreItem
 
 from .models import (AnnotatedNode, Assay, Attribute, AttributeOrder,
@@ -1385,6 +1386,10 @@ class UtilitiesTest(TestCase):
 
 class NodeClassMethodTests(TestCase):
     def setUp(self):
+        self.username = 'coffee_tester'
+        self.password = 'coffeecoffee'
+        self.user = User.objects.create_user(self.username, '', self.password)
+
         self.filestore_item = FileStoreItem.objects.create(
             datafile=SimpleUploadedFile(
                 'test_file.bam',
@@ -1501,6 +1506,20 @@ class NodeClassMethodTests(TestCase):
         relative_url = self.file_node.get_relative_file_store_item_url()
         self.assertEqual(relative_url, self.file_node.get_file_store_item(
         ).get_datafile_url())
+
+    def test_get_analysis(self):
+        make_analyses_with_single_dataset(1, self.user)
+        analysis = Analysis.objects.all()[0]
+
+        node_with_analysis = Node.objects.create(
+            assay=self.assay,
+            study=self.study,
+            analysis_uuid=analysis.uuid
+        )
+        self.assertEqual(node_with_analysis.get_analysis(), analysis)
+
+    def test_get_analysis_no_analysis(self):
+        self.assertIsNone(self.node.get_analysis())
 
 
 class NodeApiV2Tests(APITestCase):
@@ -1692,14 +1711,16 @@ class NodeIndexTests(APITestCase):
         data = NodeIndex().prepare(self.node)
         data = dict(
             (
-                re.sub(r'\d+', '#', k),
-                re.sub(r'\d+', '#', v) if
+                re.sub(r'[^_./]*\d+[^_./]*', '#', k),
+                re.sub(r'[^_./]*\d+[^_./]*', '#', v) if
                 type(v) in (unicode, str) and not('uuid' in k)
                 else v
             )
             for (k, v) in data.items())
         self.assertEqual(data,
                          {'REFINERY_ANALYSIS_UUID_#_#_s': 'N/A',
+                          'REFINERY_DOWNLOAD_URL_s':
+                              u'/media/file_store/#/#/test_file.txt',
                           'REFINERY_FILETYPE_#_#_s': None,
                           'REFINERY_NAME_#_#_s': 'http://example.com/fake.txt',
                           'REFINERY_SUBANALYSIS_#_#_s': -1,

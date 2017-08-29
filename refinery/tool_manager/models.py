@@ -148,20 +148,6 @@ class InputFile(models.Model):
             self.uuid)
 
 
-class OutputFile(models.Model):
-    """
-    An Output file describes a file and allowed Refinery FileType(s) that we
-    will associate with a tool as its expected output(s)
-    """
-    uuid = UUIDField(unique=True, auto=True)
-    name = models.TextField(max_length=100)
-    description = models.TextField(max_length=500)
-    filetype = models.ForeignKey(FileType)
-
-    def __str__(self):
-        return "{}: {} {}".format(self.name, self.filetype, self.uuid)
-
-
 class ToolDefinition(models.Model):
     """
     A ToolDefinition is a generic representation of a tool that the
@@ -185,7 +171,6 @@ class ToolDefinition(models.Model):
     description = models.TextField(max_length=500)
     tool_type = models.CharField(max_length=100, choices=TOOL_TYPES)
     file_relationship = models.ForeignKey(FileRelationship)
-    output_files = models.ManyToManyField(OutputFile)
     parameters = models.ManyToManyField(Parameter)
     image_name = models.CharField(max_length=255, blank=True)
     container_input_path = models.CharField(
@@ -239,10 +224,6 @@ def delete_associated_objects(sender, instance, *args, **kwargs):
     parameters = instance.parameters.all()
     for parameter in parameters:
         parameter.delete()
-
-    output_files = instance.output_files.all()
-    for output_file in output_files:
-        output_file.delete()
 
     # Set any associated Workflows to be inactive
     # this will remove the Workflow entries from the UI, but won't delete
@@ -940,16 +921,16 @@ class WorkflowTool(Tool):
         return self.get_tool_launch_config()[ToolDefinition.PARAMETERS]
 
     def _get_workflow_step(self, galaxy_dataset_dict):
-        creating_workflow_step = set([
+        workflow_steps = [
             step["order_index"]
             for step in self._get_galaxy_workflow_invocation()["steps"]
             if step["job_id"] == galaxy_dataset_dict["creating_job"]
-        ])
-        assert len(creating_workflow_step) == 1, (
+        ]
+        assert len(workflow_steps) == 1, (
             "There should always be one corresponding workflow step, "
-            "but there are {}".format(len(creating_workflow_step))
+            "but there are {}".format(len(workflow_steps))
         )
-        return list(creating_workflow_step)[0]
+        return workflow_steps[0]
 
     @handle_bioblend_exceptions
     def import_library_dataset_to_history(self, history_id,
@@ -991,7 +972,7 @@ class WorkflowTool(Tool):
 
         return JsonResponse(
             {
-                Tool.TOOL_URL: "/data_sets2/{}/#/analyses/".format(
+                Tool.TOOL_URL: "/data_sets/{}/#/analyses/".format(
                     self.dataset.uuid
                 )
             }

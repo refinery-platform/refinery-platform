@@ -83,18 +83,6 @@
           name: 'List of Lists',
           value_type: 'LIST'
         },
-        output_files: [
-          {
-            filetype: {
-              name: 'BIGWIG',
-              description: 'Big WIG',
-              used_for_visualization: true
-            },
-            uuid: mocker.generateUuid(),
-            name: 'output_file',
-            description: 'cool'
-          }
-        ],
         parameters: [],
         uuid: mocker.generateUuid(),
         name: 'Test workflow: LIST:LIST:PAIR',

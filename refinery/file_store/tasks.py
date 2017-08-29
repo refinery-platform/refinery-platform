@@ -17,6 +17,7 @@ from requests.exceptions import (ConnectionError, ContentDecodingError,
                                  HTTPError)
 
 from data_set_manager.models import Node
+from data_set_manager.search_indexes import NodeIndex
 
 from .models import (FILE_STORE_BASE_DIR, FileStoreItem, file_path,
                      get_temp_dir, parse_s3_url)
@@ -240,6 +241,18 @@ def import_file(uuid, refresh=False, file_size=0):
         item.save()
 
     return item.uuid
+
+
+@task_success.connect(sender=import_file)
+def update_solr_index(**kwargs):
+    file_store_item_uuid = kwargs['result']
+    try:
+        node = Node.objects.get(
+            file_uuid=file_store_item_uuid
+        )
+        NodeIndex().update_object(node)
+    except (Node.DoesNotExist, Node.MultipleObjectsReturned) as exc:
+        logger.error("Couldn't properly fetch Node: %s", exc)
 
 
 @task_success.connect(sender=import_file)

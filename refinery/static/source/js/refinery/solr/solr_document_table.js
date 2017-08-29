@@ -64,11 +64,6 @@ SolrDocumentTable = function(
             var link = '<a title="Download linked file" href="' +
               result.file_url + '" target="_blank">' +
               '<i class="fa fa-arrow-circle-o-down"></i></a>';
-            if (result.file_url.indexOf("fastqc_results") >= 0) {
-              // Should change .txt extension to FastQC specific later.
-              link += '&nbsp;<a title="View FastQC Result" href="/fastqc_viewer/#/' +
-                result.analysis_uuid + '"><i class="fa fa-bar-chart-o"></i></a>';
-            }
             $('#' + id).html(link)
           }
           else if (result.file_import_status != null) {
@@ -107,7 +102,7 @@ SolrDocumentTable.prototype.render = function(solrResponse) {
     .trigger('refinery/solrTable/destroy')
     .html("");
    // Required while data set 2 lives in parallel.
-  if (window.location.href.indexOf('data_sets2') === -1) {
+  if (window.location.href.indexOf('data_sets') === -1) {
     self._renderTable(solrResponse);
     //$( "#" + self._parentElementId ).html( code );
     // attach event listeners

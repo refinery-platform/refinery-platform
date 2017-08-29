@@ -45,7 +45,7 @@
     var showAnnotation = false;
 
     // To avoid generation when in the data set 2 browser
-    if (window.location.href.indexOf('data_sets2') === -1) {
+    if (window.location.href.indexOf('data_sets') === -1) {
       configurator.initialize(function () {
         query = new SolrQuery(configurator, queryCommands);
         query.initialize();
