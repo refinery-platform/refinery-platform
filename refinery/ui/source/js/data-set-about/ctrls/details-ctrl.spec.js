@@ -18,6 +18,8 @@ describe('Controller: DetailsCtrl', function () {
     });
     factory = _dataSetAboutFactory_;
     $window.externalAssayUuid = 'x508x83x-x9xx-4740-x9x7-x7x0x631280x';
+    $window.csrf_token = 'fake-csrf-token';
+    $window.djangoApp = {};
   }));
 
   it('refineryDataSetAbout ctrl should exist', function () {
