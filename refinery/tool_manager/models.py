@@ -505,6 +505,14 @@ class WorkflowTool(Tool):
     def galaxy_workflow_history_id(self):
         return self.analysis.history_id
 
+    @property
+    def has_dataset_collection_input(self):
+        workflow_input_type = self._get_workflow_dict()["steps"]["0"]["type"]
+        if workflow_input_type == self.DATA_COLLECTION_INPUT:
+            return True
+        else:
+            return False
+
     def _associate_collection_elements(self, galaxy_element_data):
         """
         Handles the association of Galaxy objects with their parent elements
@@ -596,14 +604,14 @@ class WorkflowTool(Tool):
                 analysis=self.analysis,
                 direction=OUTPUT_CONNECTION,
                 name=galaxy_dataset["name"],
-                subanalysis=self._get_analysis_group_number(),
+                subanalysis=self._get_analysis_group_number(galaxy_dataset),
                 step=self._get_workflow_step(galaxy_dataset),
                 filename=galaxy_dataset["name"],
                 filetype=galaxy_dataset["file_ext"],
                 is_refinery_file=True
             )
 
-    def _create_collection_description(self, galaxy_element_list=None):
+    def _create_collection_description(self):
         """
         Creates an appropriate bioblend.galaxy.CollectionDescription
         instance based off of the structure of our WorkflowTool's
@@ -616,9 +624,8 @@ class WorkflowTool(Tool):
                 *self.get_galaxy_file_relationships()
             )
         )
-
-        if galaxy_element_list is None:
-            galaxy_element_list = []
+        analysis_group = 0
+        galaxy_element_list = []
 
         # Toggle between the creation of `forward` and `reverse`
         # HistoryDatasetElements for `paired` CollectionElements
@@ -626,9 +633,13 @@ class WorkflowTool(Tool):
 
         for nested_element in reversed(file_relationship_nesting_list):
             if isinstance(nested_element, dict):
+                nested_element[self.ANALYSIS_GROUP] = analysis_group
                 self._update_galaxy_to_refinery_file_mapping_list(
                     nested_element
                 )
+                if not self.has_dataset_collection_input:
+                    analysis_group += 1
+
                 element_name = nested_element[self.REFINERY_FILE_UUID]
                 if self.galaxy_collection_type.split(":")[-1] == self.PAIRED:
                     if reverse_read:
@@ -645,6 +656,8 @@ class WorkflowTool(Tool):
                     )
                 )
             elif isinstance(nested_element, list):
+                if self.has_dataset_collection_input:
+                    analysis_group += 1
                 list_collection_element = CollectionElement(
                     name="{} collection {}".format(self.LIST, uuid.uuid4()),
                     type=self.LIST
@@ -653,6 +666,8 @@ class WorkflowTool(Tool):
                 galaxy_element_list.append(list_collection_element)
 
             elif isinstance(nested_element, tuple):
+                if self.has_dataset_collection_input:
+                    analysis_group += 1
                 paired_collection_element = CollectionElement(
                     name="{} collection {}".format(self.PAIRED, uuid.uuid4()),
                     type=self.PAIRED
