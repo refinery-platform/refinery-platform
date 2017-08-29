@@ -500,6 +500,7 @@ class DataSetResource(SharableResourceAPIInterface, ModelResource):
 
         if isa_archive:
             bundle.data["isa_archive"] = isa_archive.uuid
+            bundle.data["isa_archive_url"] = isa_archive.get_datafile_url()
 
         if pre_isa_archive:
             bundle.data["pre_isa_archive"] = pre_isa_archive.uuid
