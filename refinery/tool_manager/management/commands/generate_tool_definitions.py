@@ -11,7 +11,7 @@ from ...utils import (ANNOTATION_ERROR_MESSAGE, create_tool_definition,
 
 
 class Command(BaseCommand):
-    help = "Creates sample Tool Definitions."
+    help = "Creates Tool Definitions."
     """
     Name: handle
     Description:
