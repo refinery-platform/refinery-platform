@@ -76,7 +76,7 @@
         self.importedDataSetUuid = response.data.new_data_set_uuid;
         self.isSuccessfullyImported = true;
         self.$timeout(function () {
-          self.$window.location.href = '/data_sets2/' + self.importedDataSetUuid;
+          self.$window.location.href = '/data_sets/' + self.importedDataSetUuid;
         }, 2500);
       })
       .catch(function (error) {
