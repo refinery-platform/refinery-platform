@@ -798,15 +798,26 @@ class WorkflowTool(Tool):
             structure=structure
         )
 
-    def _get_analysis_group_number(self):
+    def _get_analysis_group_number(self, galaxy_dataset_dict):
         """
-        Return an <int> corresponding to the # of successful Analyses that
-        have been run on our WorkflowTool's Refinery Dataset + 1 (For the
-        current Analysis run)
+
+        :param galaxy_dataset_dict:
+        :return:
         """
-        return self.dataset.get_analyses().filter(
-            status=Analysis.SUCCESS_STATUS
-        ).count() + 1
+        galaxy_dataset_id = self._get_refinery_input_file_id(
+            galaxy_dataset_dict
+        )
+        for refinery_file_mapping in self._get_galaxy_file_mapping_list():
+            refinery_input_file_id = refinery_file_mapping[
+                self.GALAXY_DATASET_HISTORY_ID
+            ]
+            logger.debug("refinery_input_file_id: %s", refinery_input_file_id)
+            logger.debug("galaxy_dataset_id: %s", galaxy_dataset_id)
+
+            if refinery_input_file_id == galaxy_dataset_id:
+                return refinery_file_mapping[self.ANALYSIS_GROUP]
+
+        raise RuntimeError("We shouldn't reach this point")
 
     @staticmethod
     def _get_galaxy_dataset_filename(galaxy_dataset_dict):
@@ -865,6 +876,14 @@ class WorkflowTool(Tool):
             ]
 
     @handle_bioblend_exceptions
+    def _get_galaxy_dataset_provenance(self, galaxy_dataset_dict):
+        return self.galaxy_connection.histories.show_dataset_provenance(
+            self.galaxy_workflow_history_id,
+            galaxy_dataset_dict["id"],
+            follow=True
+        )
+
+    @handle_bioblend_exceptions
     def _get_galaxy_workflow_invocation(self):
         """
         Fetch our Galaxy Workflow's invocation data.
@@ -885,6 +904,30 @@ class WorkflowTool(Tool):
         return [
             Node.objects.get(uuid=uuid) for uuid in self.get_input_node_uuids()
             ]
+
+    @handle_bioblend_exceptions
+    def _get_refinery_input_file_id(self, galaxy_dataset_dict):
+        """
+
+        :param galaxy_dataset_dict:
+        :return:
+        """
+        job_inputs = self.galaxy_connection.jobs.show_job(
+            self._get_galaxy_dataset_provenance(galaxy_dataset_dict)["job_id"]
+        )["inputs"]
+
+        for key in job_inputs.keys():
+            galaxy_dataset = job_inputs[key]
+            galaxy_dataset_provenence = self._get_galaxy_dataset_provenance(
+                galaxy_dataset
+            )
+            # If we reach a point where the tool in the provenance is an
+            # `upload` tool, we can tell which Refinery FileStoreItem our
+            # derived dataset came from
+            if "upload" not in galaxy_dataset_provenence["tool_id"]:
+                self._get_refinery_input_file_id(galaxy_dataset)
+            else:
+                return galaxy_dataset["id"]
 
     @handle_bioblend_exceptions
     def _get_tool_data(self, workflow_step):
