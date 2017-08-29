@@ -231,8 +231,10 @@ class ProcessISATabView(View):
             except KeyError:
                 url = None
 
-            response = self.import_by_url(url) if url \
-                else self.import_by_file(f)
+            if url:
+                response = self.import_by_url(url)
+            else:
+                response = self.import_by_file(f)
             if not response['success']:
                 if request.is_ajax():
                     return HttpResponse(
