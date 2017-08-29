@@ -940,7 +940,7 @@ class WorkflowTool(Tool):
 
     def _get_tool_inputs_dict(self, workflow_step):
         """
-        Retrive that valid input parameters for the Galaxy tool in our current
+        Retrieve that valid input parameters for the Galaxy tool in our current
         Galaxy Workflow that corresponds to the given `workflow_step`
         """
         tool_data = self._get_tool_data(str(workflow_step))
