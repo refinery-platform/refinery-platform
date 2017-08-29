@@ -9,6 +9,7 @@ function AboutDetailsCtrl (
   fileRelationshipService
   ) {
   var vm = this;
+  vm.csrfToken = $window.csrf_token;
   vm.assays = dataSetAboutFactory.assays;
   vm.dataSet = dataSetAboutFactory.dataSet;
   vm.dataSetUuid = $window.dataSetUuid;
