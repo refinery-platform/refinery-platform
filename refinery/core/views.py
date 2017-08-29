@@ -294,12 +294,12 @@ def project_edit(request, uuid):
                               context_instance=RequestContext(request))
 
 
-def data_set_slug(request, slug):
+def provenance_slug(request, slug):
     d = get_object_or_404(DataSet, slug=slug)
-    return data_set(request, d.uuid)
+    return provenance(request, d.uuid)
 
 
-def data_set(request, data_set_uuid, analysis_uuid=None):
+def provenance(request, data_set_uuid, analysis_uuid=None):
     data_set = get_object_or_404(DataSet, uuid=data_set_uuid)
     public_group = ExtendedGroup.objects.public_group()
 
