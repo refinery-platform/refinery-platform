@@ -31,7 +31,6 @@
           name: 'List of FASTQ Files',
           value_type: 'LIST'
         },
-        output_files: [],
         parameters: [
           {
             galaxy_workflow_step: 1,

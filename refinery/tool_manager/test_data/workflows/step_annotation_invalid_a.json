@@ -1,5 +1,4 @@
 {
-	"output_files": "coffee is not a valid output_file object",
 	"parameter": [
 		{
 			"description": "Whether or not to include an empty output file.",

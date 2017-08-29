@@ -145,10 +145,8 @@ class Command(BaseCommand):
                             "valid JSON: {}".format(workflow["name"], e)
                         )
 
-                    # Include `parameters` and `output_files` as keys in our
-                    # workflow annotation
+                    # Include `parameters` key in our workflow annotation
                     workflow["annotation"][ToolDefinition.PARAMETERS] = []
-                    workflow["annotation"]["output_files"] = []
 
                     # Workflows need to know about their associated
                     # WorkflowEngines
@@ -184,11 +182,10 @@ class Command(BaseCommand):
     def parse_workflow_step_annotations(self, workflow):
         """
         Iterate through the workflow's step's annotations and
-        append to the `parameters` and `output_files` fields so they are
+        append to the `parameters` field so they are
         included in the validation of this workflow's annotation data
         :param workflow: dict containing a workflow's information
         :return: `workflow` dict with updated annotation info for `parameters`
-        and `output_files`
         """
         for step_index in workflow["steps"]:
             step = workflow["steps"][step_index]
@@ -235,33 +232,4 @@ class Command(BaseCommand):
                             workflow["annotation"][
                                 ToolDefinition.PARAMETERS
                             ].append(parameter)
-                try:
-                    output_files = step_annotation["output_files"]
-                except KeyError:
-                    # `output_files` aren't required for each workflow step
-                    pass
-                else:
-                    for output_file in output_files:
-                        # Check User-defined output_files in
-                        # annotation data against the available
-                        # output_file  of the Workflow step's `tool_inputs`
-                        valid_output_names = []
-                        for key in step["input_steps"].iterkeys():
-                            valid_output_names.append(
-                                step["input_steps"][key]["step_output"]
-                            )
-                        if output_file["name"] not in valid_output_names:
-                            raise CommandError(
-                                "`{}` is not a valid output "
-                                "file for {}. Valid ouput_file "
-                                "names are: {}".format(
-                                    output_file["name"],
-                                    step["tool_id"],
-                                    valid_output_names
-                                )
-                            )
-                        else:
-                            workflow["annotation"]["output_files"].append(
-                                output_file
-                            )
         return workflow
