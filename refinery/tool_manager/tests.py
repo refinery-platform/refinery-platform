@@ -18,6 +18,7 @@ import bioblend
 from bioblend.galaxy.dataset_collections import (CollectionElement,
                                                  HistoryDatasetElement)
 from bioblend.galaxy.histories import HistoryClient
+from bioblend.galaxy.jobs import JobsClient
 from bioblend.galaxy.libraries import LibraryClient
 from bioblend.galaxy.workflows import WorkflowClient
 import celery
@@ -25,8 +26,10 @@ from constants import UUID_RE
 import mock
 from rest_framework.test import (APIRequestFactory, APITestCase,
                                  force_authenticate)
-from test_data.galaxy_mocks import (galaxy_datasets_list,
-                                    galaxy_history_download_list,
+from test_data.galaxy_mocks import (galaxy_dataset_provenance_0,
+                                    galaxy_dataset_provenance_1,
+                                    galaxy_datasets_list,
+                                    galaxy_history_download_list, galaxy_job,
                                     galaxy_tool_data, galaxy_workflow_dict,
                                     galaxy_workflow_invocation,
                                     galaxy_workflow_invocation_data,
@@ -67,36 +70,46 @@ TEST_DATA_PATH = "tool_manager/test_data"
 
 class ToolManagerMocks(TestCase):
     def setUp(self):
+        # Galaxy Dataset mocks
         self.galaxy_datasets_list_mock = mock.patch.object(
             HistoryClient, "show_matching_datasets",
             return_value=galaxy_datasets_list
         ).start()
+
+        # Galaxy History mocks
         self.history_upload_mock = mock.patch.object(
             HistoryClient, "upload_dataset_from_library",
             return_value=history_dataset_dict
         ).start()
         self.delete_history_mock = mock.patch.object(
-            HistoryClient, "delete_history").start()
+            HistoryClient, "delete_history"
+        ).start()
+        self.show_dataset_provenace_mock = mock.patch.object(
+            HistoryClient, "show_dataset_provenance",
+            side_effect=[
+                galaxy_dataset_provenance_0, galaxy_dataset_provenance_1,
+                galaxy_dataset_provenance_0, galaxy_dataset_provenance_1
+            ]
+        ).start()
+
+        # Galaxy Job mocks
+        self.show_job_mock = mock.patch.object(
+            JobsClient, "show_job", side_effect=[galaxy_job, galaxy_job]
+        ).start()
+
+        # Galaxy Library mocks
         self.delete_library_mock = mock.patch.object(
-            LibraryClient, "delete_library").start()
+            LibraryClient, "delete_library"
+        ).start()
         self.library_upload_mock = mock.patch.object(
             LibraryClient, "upload_file_from_url",
             return_value=library_dataset_dict
         ).start()
-        self.analysis_manager_taskset_result_mock = mock.patch(
-            "analysis_manager.tasks.get_taskset_result",
-            return_value=celery.result.TaskSetResult(str(uuid.uuid4()))
-        ).start()
-        self.get_taskset_result_mock = mock.patch(
-            "tool_manager.models.get_taskset_result",
-            return_value=celery.result.TaskSetResult(str(uuid.uuid4()))
-        ).start()
-        self.get_history_file_list_mock = mock.patch(
-            "galaxy_connector.models.Instance.get_history_file_list",
-            return_value=galaxy_history_download_list
-        ).start()
+
+        # Galaxy Workflow mocks
         self.delete_workflow_mock = mock.patch.object(
-            WorkflowClient, "delete_workflow").start()
+            WorkflowClient, "delete_workflow"
+        ).start()
         self.invoke_workflow_mock = mock.patch.object(
             WorkflowClient, "invoke_workflow",
             return_value=galaxy_workflow_invocation_data
@@ -104,6 +117,24 @@ class ToolManagerMocks(TestCase):
         self.galaxy_workflow_show_invocation_mock = mock.patch.object(
             WorkflowClient, "show_invocation",
             return_value=galaxy_workflow_invocation
+        ).start()
+
+        # analysis_manager mocks
+        self.analysis_manager_taskset_result_mock = mock.patch(
+            "analysis_manager.tasks.get_taskset_result",
+            return_value=celery.result.TaskSetResult(str(uuid.uuid4()))
+        ).start()
+
+        # galaxy_connector mocks
+        self.get_history_file_list_mock = mock.patch(
+            "galaxy_connector.models.Instance.get_history_file_list",
+            return_value=galaxy_history_download_list
+        ).start()
+
+        # tool_manager mocks
+        self.get_taskset_result_mock = mock.patch(
+            "tool_manager.models.get_taskset_result",
+            return_value=celery.result.TaskSetResult(str(uuid.uuid4()))
         ).start()
         self.create_history_mock = mock.patch.object(
             WorkflowTool, "create_galaxy_history", return_value=history_dict
@@ -113,13 +144,19 @@ class ToolManagerMocks(TestCase):
         ).start()
         self.tool_data_mock = mock.patch.object(
             WorkflowTool, "_get_tool_data",
-            return_value=galaxy_tool_data).start()
+            return_value=galaxy_tool_data
+        ).start()
+        self.get_workflow_dict_mock = mock.patch.object(
+                WorkflowTool, "_get_workflow_dict",
+                return_value=galaxy_workflow_dict
+        ).start()
 
 
 class ToolManagerTestBase(ToolManagerMocks):
     # Some members in assertions are truncated if they are too long, but we
     # want to see them in their entirety
     maxDiff = None
+    FAKE_DATASET_HISTORY_ID = "0dd7fa018f646963"
     GALAXY_ID_MOCK = "6fc9fbb81c497f69"
 
     def setUp(self):
@@ -252,19 +289,14 @@ class ToolManagerTestBase(ToolManagerMocks):
 
         # Mock the run_analysis task
         elif tool_type == ToolDefinition.WORKFLOW:
-            with mock.patch(
-                "tool_manager.models.WorkflowTool._get_workflow_dict",
-                return_value=galaxy_workflow_dict
+            with mock.patch.object(
+                run_analysis, 'apply_async', side_effect=None
             ):
-                with mock.patch.object(
-                        run_analysis,
-                        'apply_async',
-                        side_effect=None
-                ):
-                    self.post_response = self.tools_view(self.post_request)
-                    assert self.post_response.status_code == 200, \
-                        self.post_response.content
-                    logger.debug(self.post_response.content)
+                self.post_response = self.tools_view(self.post_request)
+                assert self.post_response.status_code == 200, \
+                    self.post_response.content
+                logger.debug(self.post_response.content)
+            self.assertTrue(self.get_workflow_dict_mock.called)
 
             self.tool = WorkflowTool.objects.get(
                 tool_definition__uuid=self.td.uuid
@@ -1118,18 +1150,23 @@ class WorkflowToolTests(ToolManagerTestBase):
             *[self.make_node() for i in range(0, 4)]
         )
 
-        self.FAKE_DATASET_HISTORY_ID = '0523152e8bc37aa7'
-
     def update_nodes(self):
         galaxy_to_refinery_mapping_list = []
-        for node in Node.objects.all():
+        for node in self.tool._get_input_nodes():
             galaxy_to_refinery_mapping_list.append(
                 {
                     WorkflowTool.GALAXY_DATASET_HISTORY_ID:
                         self.FAKE_DATASET_HISTORY_ID,
-                    Tool.REFINERY_FILE_UUID: node.file_uuid
+                    Tool.REFINERY_FILE_UUID: node.file_uuid,
+                    WorkflowTool.ANALYSIS_GROUP: 0
                 }
             )
+
+        self.tool.update_galaxy_data(
+            self.tool.GALAXY_TO_REFINERY_MAPPING_LIST,
+            galaxy_to_refinery_mapping_list
+        )
+
         with mock.patch.object(
                 celery.result.TaskSetResult,
                 "join",
@@ -1424,10 +1461,15 @@ class WorkflowToolTests(ToolManagerTestBase):
         )
 
     def test_get_analysis_group_number(self):
-        self.create_valid_tool(ToolDefinition.WORKFLOW)
-        self.assertEqual(self.tool._get_analysis_group_number(), 1)
-        self.tool.analysis.set_status(Analysis.SUCCESS_STATUS)
-        self.assertEqual(self.tool._get_analysis_group_number(), 2)
+        self.create_valid_tool(ToolDefinition.WORKFLOW,
+                               file_relationships=self.LIST)
+        self.update_nodes()
+        self.tool._create_collection_description()
+        for galaxy_dataset in self.tool._get_galaxy_history_dataset_list():
+            self.assertEqual(
+                self.tool._get_analysis_group_number(galaxy_dataset),
+                0
+            )
 
     def test__create_workflow_inputs_dict(self):
         self.create_valid_tool(ToolDefinition.WORKFLOW)
@@ -1505,6 +1547,8 @@ class WorkflowToolTests(ToolManagerTestBase):
                 "id": self.GALAXY_ID_MOCK
             }
         )
+        self.update_nodes()
+        self.tool._create_collection_description()
 
         task_id_list = _get_galaxy_download_task_ids(self.tool.analysis)
         self.assertTrue(self.galaxy_workflow_show_invocation_mock.called)
@@ -1525,13 +1569,17 @@ class WorkflowToolTests(ToolManagerTestBase):
             self.assertRegexpMatches(str(task_id), UUID_RE)
 
     def test_create_analysis_node_connection_outputs(self):
-        self.create_valid_tool(ToolDefinition.WORKFLOW)
+        self.create_valid_tool(ToolDefinition.WORKFLOW,
+                               file_relationships=self.LIST)
         self.tool.update_galaxy_data(
             self.tool.GALAXY_WORKFLOW_INVOCATION_DATA,
             {
                 "id": self.GALAXY_ID_MOCK
             }
         )
+        self.update_nodes()
+        self.tool._create_collection_description()
+
         self.tool.create_analysis_output_node_connections()
         self.assertEqual(AnalysisNodeConnection.objects.count(), 3)
         self.assertEqual(
@@ -1564,7 +1612,14 @@ class WorkflowToolTests(ToolManagerTestBase):
         self.assertEqual(
             self.tool.get_galaxy_dict()[
                 WorkflowTool.GALAXY_TO_REFINERY_MAPPING_LIST],
-            []
+            [
+                {
+                    self.tool.GALAXY_DATASET_HISTORY_ID:
+                        self.FAKE_DATASET_HISTORY_ID,
+                    self.tool.REFINERY_FILE_UUID: self.node.file_uuid,
+                    WorkflowTool.ANALYSIS_GROUP: 0
+                }
+            ]
         )
 
     @mock.patch.object(WorkflowTool, "_get_tool_data")
@@ -1598,7 +1653,14 @@ class WorkflowToolTests(ToolManagerTestBase):
                             self.tool.get_galaxy_file_relationships()
                         ).replace("'", '"')
                     ),
-                    WorkflowTool.GALAXY_TO_REFINERY_MAPPING_LIST: []
+                    WorkflowTool.GALAXY_TO_REFINERY_MAPPING_LIST: [
+                        {
+                            self.tool.GALAXY_DATASET_HISTORY_ID:
+                                self.FAKE_DATASET_HISTORY_ID,
+                            self.tool.REFINERY_FILE_UUID: self.node.file_uuid,
+                            WorkflowTool.ANALYSIS_GROUP: 0
+                        }
+                    ]
                 }
             }
         )
