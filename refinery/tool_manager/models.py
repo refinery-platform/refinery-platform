@@ -615,7 +615,7 @@ class WorkflowTool(Tool):
         """
         Creates an appropriate bioblend.galaxy.CollectionDescription
         instance based off of the structure of our WorkflowTool's
-        file_relationships in a recursive manner.
+        file_relationships.
         :return: bioblend.galaxy.CollectionDescription instance
         """
         file_relationship_nesting_list = (
