@@ -20,10 +20,15 @@
     var vm = this;
 
     vm.togglePanel = function (attribute) {
-      vm.visible[attribute] = ! vm.visible[attribute];
+      vm.foldedDown[attribute] = ! vm.foldedDown[attribute];
     };
 
-    vm.visible = {};
+    vm.foldedDown = {};
+    vm.isDown = function (attribute, search) {
+      var attributeObj = vm.attributeFilters[attribute];
+      return vm.foldedDown[attribute] ||
+          attributeObj.lowerCaseNames.includes(search.toLowerCase()) && search.length;
+    };
 
     vm.filterUpdate = function (attribute, value) {
       if (typeof userFileFiltersService[attribute] === 'undefined') {

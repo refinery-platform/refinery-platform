@@ -26,26 +26,26 @@
   var currentAnalysisUuid = analysisUuid;
 
   $(document).ready(function () {
-    configurator = new DataSetConfigurator(externalStudyUuid, externalAssayUuid, "configurator-panel", REFINERY_API_BASE_URL, csrf_token);
-    configurator.initialize();
+    // To avoid generation when in the current file  browser
+    if (window.location.href.indexOf('provenance') > -1) {
+      configurator = new DataSetConfigurator(externalStudyUuid, externalAssayUuid, "configurator-panel", REFINERY_API_BASE_URL, csrf_token);
+      configurator.initialize();
 
 
-    // event handling
-    var documentTableCommands = new Backbone.Wreqr.Commands();
-    var facetViewCommands = new Backbone.Wreqr.Commands();
-    var analysisViewCommands = new Backbone.Wreqr.Commands();
-    var pivotMatrixCommands = new Backbone.Wreqr.Commands();
-    var clientCommands = new Backbone.Wreqr.Commands();
-    var queryCommands = new Backbone.Wreqr.Commands();
-    var dataSetMonitorCommands = new Backbone.Wreqr.Commands();
+      // event handling
+      var documentTableCommands = new Backbone.Wreqr.Commands();
+      var facetViewCommands = new Backbone.Wreqr.Commands();
+      var analysisViewCommands = new Backbone.Wreqr.Commands();
+      var pivotMatrixCommands = new Backbone.Wreqr.Commands();
+      var clientCommands = new Backbone.Wreqr.Commands();
+      var queryCommands = new Backbone.Wreqr.Commands();
+      var dataSetMonitorCommands = new Backbone.Wreqr.Commands();
 
-    var lastSolrResponse = null,
-        lastProvVisSolrResponse = null;
+      var lastSolrResponse        = null,
+          lastProvVisSolrResponse = null;
 
-    var showAnnotation = false;
+      var showAnnotation = false;
 
-    // To avoid generation when in the data set 2 browser
-    if (window.location.href.indexOf('data_sets2') === -1) {
       configurator.initialize(function () {
         query = new SolrQuery(configurator, queryCommands);
         query.initialize();
@@ -456,14 +456,13 @@
         client.initialize(query, false);
         client.initialize(annotationQuery, false);
       });
-    }
 
 
-    configurator.getState(function () {
+      configurator.getState(function () {
         // callback
-    });
+      });
 
-
+    }
   });
 
 

@@ -1,6 +1,6 @@
 <div class="refinery-header">
   <div class="refinery-header-left">
-    <h3>{{ ADCtrl.dataSet.accession }}: {{ ADCtrl.dataSet.title }}</h3>
+    <h3>{{ ADCtrl.dataSet.title }}</h3>
     <span ng-if="ADCtrl.dataSet.is_owner">
       <a
         ng-click="ADCtrl.isCollapsed.title = !ADCtrl.isCollapsed.title"
@@ -356,7 +356,7 @@
 </span>
 <div ng-if="ADCtrl.dataSet.isa_archive">
 <p>
-   <a href="{{ADCtrl.fileStoreItem.datafile && ADCtrl.fileStoreItem.datafile}}">
+   <a href="{{ADCtrl.fileStoreItem.datafile}}">
     {{ADCtrl.fileStoreItem.datafile | isaArchiveName}}
   </a>
     - {{ADCtrl.fileStoreItem.file_size | fileSizeFormat}}
@@ -370,7 +370,7 @@
     - {{ADCtrl.fileStoreItem.file_size | fileSizeFormat}}
   </p>
 </div>
-<div ng-if="!(ADCtrl.dataSet.isa_archive || ADCtrl.dataSet.pre_isa_archive)">
+<div ng-if="!(ADCtrl.dataSet.isa_archive || ADCtrl.dataSet.pre_isa_archive && ADCtrl.fileStoreItem.datafile)">
 <p class="emphasized">Not available.</p>
 </div>
 
@@ -379,9 +379,9 @@
 </span>
 <p>
   {{ ADCtrl.dataSet.file_count }} files
-  <div ng-if="ADCtrl.dataSet.file_size > 0">
-   - {{ ADCtrl.dataSet.file_size | fileSizeFormat }}
-  </div>
+  <span ng-if="ADCtrl.dataSet.file_size > 0">
+   using {{ ADCtrl.dataSet.file_size | fileSizeFormat }}
+  </span>
 </p>
 
 <div class="refinery-header">
@@ -391,6 +391,6 @@
 </div>
 <p>
   Current version <span class="emphasized">{{ ADCtrl.dataSet.version }}</span>.
-  Data set created <span class="emphasized">{{ ADCtrl.dataSet.creation_date }}</span>.
-  Last modified <span class="emphasized">{{ ADCtrl.dataSet.modification_date }}</span>.
+  Data set created <span class="emphasized">{{ ADCtrl.dataSet.creation_date | date:'medium' }}</span>.
+  Last modified <span class="emphasized">{{ ADCtrl.dataSet.modification_date | date:'medium' }}</span>.
 </p>

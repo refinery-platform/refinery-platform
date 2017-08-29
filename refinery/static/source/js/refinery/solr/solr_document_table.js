@@ -107,12 +107,10 @@ SolrDocumentTable.prototype.render = function(solrResponse) {
     .trigger('refinery/solrTable/destroy')
     .html("");
    // Required while data set 2 lives in parallel.
-  if (window.location.href.indexOf('data_sets2') === -1) {
-    self._renderTable(solrResponse);
+  self._renderTable(solrResponse);
     //$( "#" + self._parentElementId ).html( code );
     // attach event listeners
     // ..
-  }
 };
 
 SolrDocumentTable.prototype._renderTable = function(solrResponse) {
