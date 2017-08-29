@@ -453,7 +453,9 @@ class WorkflowTool(Tool):
     WorkflowTools are Tools that are specific to
     launching and monitoring Galaxy Workflows
     """
+    ANALYSIS_GROUP = "analysis_group"
     COLLECTION_INFO = "collection_info"
+    DATA_COLLECTION_INPUT = "data_collection_input"
     FILE_RELATIONSHIPS_GALAXY = "{}_galaxy".format(Tool.FILE_RELATIONSHIPS)
     FILE_RELATIONSHIPS_NESTING = "file_relationships_nesting"
     FORWARD = "forward"
@@ -463,7 +465,7 @@ class WorkflowTool(Tool):
     GALAXY_LIBRARY_DICT = "library_dict"
     GALAXY_WORKFLOW_INVOCATION_DATA = "galaxy_workflow_invocation_data"
     GALAXY_TO_REFINERY_MAPPING_LIST = "galaxy_to_refinery_mapping_list"
-    HISTORY_DATASET_COLLECTION_ASSOCIATION = 'hdca'
+    HISTORY_DATASET_COLLECTION_ASSOCIATION = "hdca"
     LIST = "list"
     PAIRED = "paired"
     REVERSE = "reverse"
