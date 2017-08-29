@@ -836,7 +836,11 @@ class WorkflowTool(Tool):
             )
         )
         # Filter any Galaxy Datasets that have been purged.
-        return [dataset for dataset in dataset_list if not dataset["purged"]]
+        non_purged_datasets = [
+            dataset for dataset in dataset_list if not dataset["purged"]
+        ]
+
+        return non_purged_datasets
 
     def get_galaxy_dict(self):
         """
