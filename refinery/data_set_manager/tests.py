@@ -1652,7 +1652,7 @@ class NodeIndexTests(APITestCase):
 
         test_file = StringIO()
         test_file.write('Coffee is great.\n')
-        file_store_item = FileStoreItem.objects.create(
+        self.file_store_item = FileStoreItem.objects.create(
             datafile=InMemoryUploadedFile(
                 test_file,
                 field_name='tempfile',
@@ -1666,14 +1666,14 @@ class NodeIndexTests(APITestCase):
         self.node = Node.objects.create(
             assay=assay,
             study=study,
-            file_uuid=file_store_item.uuid,
+            file_uuid=self.file_store_item.uuid,
             name='http://example.com/fake.txt'
         )
 
         self.data_set_uuid = data_set.uuid
         self.assay_uuid = assay.uuid
         self.study_uuid = study.uuid
-        self.file_uuid = file_store_item.uuid
+        self.file_uuid = self.file_store_item.uuid
         self.node_uuid = self.node.uuid
 
         Attribute.objects.create(
@@ -1690,20 +1690,19 @@ class NodeIndexTests(APITestCase):
 
     def test_prepare(self):
         data = NodeIndex().prepare(self.node)
-        self.assertRegexpMatches(
-            data.pop('REFINERY_DOWNLOAD_URL_s'),
-            r'^/media/file_store/.*test_file.*\.txt'
-        )
         data = dict(
             (
                 re.sub(r'[^_./]*\d+[^_./]*', '#', k),
                 re.sub(r'[^_./]*\d+[^_./]*', '#', v) if
-                type(v) in (unicode, str) and not('uuid' in k)
+                type(v) in (unicode, str) and
+                'REFINERY_DOWNLOAD_URL_s' not in k and 'uuid' not in k
                 else v
             )
             for (k, v) in data.items())
         self.assertEqual(data,
                          {'REFINERY_ANALYSIS_UUID_#_#_s': 'N/A',
+                          'REFINERY_DOWNLOAD_URL_s':
+                              self.file_store_item.get_datafile_url(),
                           'REFINERY_FILETYPE_#_#_s': None,
                           'REFINERY_NAME_#_#_s': 'http://example.com/fake.txt',
                           'REFINERY_SUBANALYSIS_#_#_s': -1,
