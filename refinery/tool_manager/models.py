@@ -922,10 +922,10 @@ class WorkflowTool(Tool):
             # If we reach a point where the tool in the provenance is an
             # `upload` tool, we can tell which Refinery FileStoreItem our
             # derived dataset came from
-            if "upload" not in galaxy_dataset_provenence["tool_id"]:
-                self._get_refinery_input_file_id(galaxy_dataset)
-            else:
+            if "upload" in galaxy_dataset_provenence[self.TOOL_ID]:
                 return galaxy_dataset["id"]
+            else:
+                self._get_refinery_input_file_id(galaxy_dataset)
 
     @handle_bioblend_exceptions
     def _get_tool_data(self, workflow_step):
