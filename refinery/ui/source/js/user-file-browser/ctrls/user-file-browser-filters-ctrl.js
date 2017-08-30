@@ -6,6 +6,7 @@
   .controller('UserFileBrowserFiltersCtrl', UserFileBrowserFiltersCtrl);
 
   UserFileBrowserFiltersCtrl.$inject = [
+    '$location',
     '$log',
     '$q',
     'gridOptionsService',
@@ -13,7 +14,7 @@
     'userFileFiltersService'
   ];
 
-  function UserFileBrowserFiltersCtrl ($log, $q,
+  function UserFileBrowserFiltersCtrl ($location, $log, $q,
                                        gridOptionsService,
                                        userFileBrowserFactory,
                                        userFileFiltersService) {
@@ -47,6 +48,8 @@
         // Add to list
         set.push(value);
       }
+
+      $location.search(userFileFiltersService);
 
       getUserFiles().then(function (solr) {
         // TODO: Should there be something that wraps up this "then"? It is repeated.

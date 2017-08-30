@@ -7,6 +7,7 @@
 
   UserFileBrowserFilesCtrl.$inject = [
     '$httpParamSerializer',
+    '$location',
     '$log',
     '$q',
     'userFileBrowserFactory',
@@ -17,6 +18,7 @@
 
   function UserFileBrowserFilesCtrl (
       $httpParamSerializer,
+      $location,
       $log,
       $q,
       userFileBrowserFactory,
@@ -37,18 +39,16 @@
     });
 
     vm.sortChanged = function (grid, sortColumns) {
-      if (typeof sortColumns !== 'undefined') {
-        for (var i = 0; i < sortColumns.length; i++) {
-          var column = sortColumns[i];
-          userFileSortsService.fields[i] = {
-            name: column.field,
-            direction: column.sort.direction
-            // NOTE: UI Grid uiGridConstants.ASC and DESC happen to match
-            // "asc" and "desc" for solr, but if that changed, this breaks.
-            // NOTE: column.sort.priority seems to be redundant with array order,
-            // but I don't think we have this guaranteed.
-          };
-        }
+      var sortUrlParam = 'name'; // TODO: Rename to "sort"
+      var directionUrlParam = 'direction';
+      if (typeof sortColumns !== 'undefined' && sortColumns.length === 1) {
+        // NOTE: With the current config, you can only sort on one column
+        var column = sortColumns[0];
+        var sortObj = {};
+        sortObj[sortUrlParam] = column.field;
+        sortObj[directionUrlParam] = column.sort.direction;
+        userFileSortsService.fields[0] = sortObj;
+        $location.search(sortObj);
 
         // TODO: This is copy-and-paste
         getUserFiles().then(function (solr) {
@@ -60,6 +60,9 @@
           $log.error('/files/ request failed');
           promise.reject();
         });
+      } else {
+        $location.search(sortUrlParam, null);
+        $location.search(directionUrlParam, null);
       }
     };
 
