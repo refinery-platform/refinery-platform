@@ -603,7 +603,7 @@ class WorkflowTool(Tool):
                 is_refinery_file=True
             )
 
-    def _create_collection_description(self):
+    def _create_collection_description(self, analysis_group=0):
         """
         Creates an appropriate bioblend.galaxy.CollectionDescription
         instance based off of the structure of our WorkflowTool's
@@ -616,7 +616,6 @@ class WorkflowTool(Tool):
                 *self.get_galaxy_file_relationships()
             )
         )
-        analysis_group = 0
         galaxy_element_list = []
         workflow_is_collection_based = self._has_dataset_collection_input()
 
