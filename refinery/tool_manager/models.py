@@ -834,10 +834,8 @@ class WorkflowTool(Tool):
         Retrieve a list of Galaxy Datasets from the Galaxy History of our
         Galaxy Workflow invocation.
         """
-        dataset_list = (
-            self.galaxy_connection.histories.show_matching_datasets(
-                self.galaxy_workflow_history_id
-            )
+        dataset_list = self.galaxy_connection.histories.show_matching_datasets(
+            self.galaxy_workflow_history_id
         )
         # Filter any Galaxy Datasets that have been purged.
         non_purged_datasets = [
