@@ -48,8 +48,7 @@
         // Add to list
         set.push(value);
       }
-
-      $location.search(userFileFiltersService);
+      $location.search(attribute, set);
 
       getUserFiles().then(function (solr) {
         // TODO: Should there be something that wraps up this "then"? It is repeated.

@@ -39,16 +39,18 @@
     });
 
     vm.sortChanged = function (grid, sortColumns) {
-      var sortUrlParam = 'name'; // TODO: Rename to "sort"
+      var sortUrlParam = 'sort';
       var directionUrlParam = 'direction';
-      if (typeof sortColumns !== 'undefined' && sortColumns.length === 1) {
+      if (typeof sortColumns !== 'undefined' && sortColumns.length > 1) {
         // NOTE: With the current config, you can only sort on one column
         var column = sortColumns[0];
-        var sortObj = {};
-        sortObj[sortUrlParam] = column.field;
-        sortObj[directionUrlParam] = column.sort.direction;
-        userFileSortsService.fields[0] = sortObj;
-        $location.search(sortObj);
+        // If a hash is used with $location.search, it clears all params
+        $location.search(sortUrlParam, column.field);
+        $location.search(directionUrlParam, column.sort.direction);
+        userFileSortsService.fields[0] = {
+          name: column.field,
+          direction: column.sort.direction
+        };
 
         // TODO: This is copy-and-paste
         getUserFiles().then(function (solr) {
