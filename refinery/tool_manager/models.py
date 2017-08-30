@@ -505,14 +505,6 @@ class WorkflowTool(Tool):
     def galaxy_workflow_history_id(self):
         return self.analysis.history_id
 
-    @property
-    def has_dataset_collection_input(self):
-        workflow_input_type = self._get_workflow_dict()["steps"]["0"]["type"]
-        if workflow_input_type == self.DATA_COLLECTION_INPUT:
-            return True
-        else:
-            return False
-
     def _associate_collection_elements(self, galaxy_element_data):
         """
         Handles the association of Galaxy objects with their parent elements
@@ -626,6 +618,7 @@ class WorkflowTool(Tool):
         )
         analysis_group = 0
         galaxy_element_list = []
+        workflow_is_collection_based = self._has_dataset_collection_input()
 
         # Toggle between the creation of `forward` and `reverse`
         # HistoryDatasetElements for `paired` CollectionElements
@@ -634,10 +627,11 @@ class WorkflowTool(Tool):
         for nested_element in reversed(file_relationship_nesting_list):
             if isinstance(nested_element, dict):
                 nested_element[self.ANALYSIS_GROUP] = analysis_group
+
                 self._update_galaxy_to_refinery_file_mapping_list(
                     nested_element
                 )
-                if not self.has_dataset_collection_input:
+                if not workflow_is_collection_based:
                     analysis_group += 1
 
                 element_name = nested_element[self.REFINERY_FILE_UUID]
@@ -656,8 +650,9 @@ class WorkflowTool(Tool):
                     )
                 )
             elif isinstance(nested_element, list):
-                if self.has_dataset_collection_input:
+                if workflow_is_collection_based:
                     analysis_group += 1
+
                 list_collection_element = CollectionElement(
                     name="{} collection {}".format(self.LIST, uuid.uuid4()),
                     type=self.LIST
@@ -666,8 +661,9 @@ class WorkflowTool(Tool):
                 galaxy_element_list.append(list_collection_element)
 
             elif isinstance(nested_element, tuple):
-                if self.has_dataset_collection_input:
+                if workflow_is_collection_based:
                     analysis_group += 1
+
                 paired_collection_element = CollectionElement(
                     name="{} collection {}".format(self.PAIRED, uuid.uuid4()),
                     type=self.PAIRED
@@ -1007,6 +1003,18 @@ class WorkflowTool(Tool):
             "but there are {}".format(len(workflow_steps))
         )
         return workflow_steps[0]
+
+    def _has_dataset_collection_input(self):
+        """
+        Determine whether our Workflow's input step has a Galaxy Dataset
+        Collection as input or not.
+        :returns: Boolean
+        """
+        workflow_input_type = self._get_workflow_dict()["steps"]["0"]["type"]
+        if workflow_input_type == self.DATA_COLLECTION_INPUT:
+            return True
+        else:
+            return False
 
     @handle_bioblend_exceptions
     def import_library_dataset_to_history(self, history_id,
