@@ -41,7 +41,7 @@
     vm.sortChanged = function (grid, sortColumns) {
       var sortUrlParam = 'sort';
       var directionUrlParam = 'direction';
-      if (typeof sortColumns !== 'undefined' && sortColumns.length > 1) {
+      if (typeof sortColumns !== 'undefined' && sortColumns.length > 0) {
         // NOTE: With the current config, you can only sort on one column
         var column = sortColumns[0];
         // If a hash is used with $location.search, it clears all params

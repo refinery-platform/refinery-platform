@@ -32,6 +32,21 @@
     };
 
     vm.filterUpdate = function (attribute, value) {
+      var set = filterSet(attribute, value);
+      $location.search(attribute, set);
+
+      getUserFiles().then(function (solr) {
+        // TODO: Should there be something that wraps up this "then"? It is repeated.
+        // gridOptionsService.columnDefs = userFileBrowserFactory.createColumnDefs();
+        gridOptionsService.data = userFileBrowserFactory.createData(solr.nodes);
+        promise.resolve();
+      }, function () {
+        $log.error('/files/ request failed');
+        promise.reject();
+      });
+    };
+
+    function filterSet (attribute, value) {
       if (typeof userFileFiltersService[attribute] === 'undefined') {
         userFileFiltersService[attribute] = []; // Init empty set
       }
@@ -48,21 +63,30 @@
         // Add to list
         set.push(value);
       }
-      $location.search(attribute, set);
+      console.log('set now:', set);
+      return set;
+    }
 
-      getUserFiles().then(function (solr) {
-        // TODO: Should there be something that wraps up this "then"? It is repeated.
-        // gridOptionsService.columnDefs = userFileBrowserFactory.createColumnDefs();
-        gridOptionsService.data = userFileBrowserFactory.createData(solr.nodes);
-        promise.resolve();
-      }, function () {
-        $log.error('/files/ request failed');
-        promise.reject();
-      });
-    };
+    console.log('search:', $location.search());
+    angular.forEach($location.search(), function (values, key) {
+      console.log(key, values);
+      if (key === 'sort' || key === 'direction') {
+        // TODO: sorts
+      } else {
+        if (typeof values === 'string') {
+          filterSet(key, values);
+        } else {
+          angular.forEach(values, function (value) {
+            filterSet(key, value);
+          });
+        }
+      }
+    });
+    console.log('filters:', userFileFiltersService);
 
     var promise = $q.defer();
     var getUserFiles = userFileBrowserFactory.getUserFiles;
+
     getUserFiles().then(function (solr) {
       vm.attributeFilters =
           userFileBrowserFactory.createFilters(solr.facet_field_counts);
