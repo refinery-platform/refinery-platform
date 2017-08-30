@@ -627,12 +627,9 @@ class WorkflowTool(Tool):
         for nested_element in reversed(file_relationship_nesting_list):
             if isinstance(nested_element, dict):
                 nested_element[self.ANALYSIS_GROUP] = analysis_group
-
                 self._update_galaxy_to_refinery_file_mapping_list(
                     nested_element
                 )
-                if not workflow_is_collection_based:
-                    analysis_group += 1
 
                 element_name = nested_element[self.REFINERY_FILE_UUID]
                 if self.galaxy_collection_type.split(":")[-1] == self.PAIRED:
@@ -642,6 +639,9 @@ class WorkflowTool(Tool):
                     else:
                         element_name = self.FORWARD
                         reverse_read = True
+                else:
+                    if not workflow_is_collection_based:
+                        analysis_group += 1
 
                 galaxy_element_list.append(
                     HistoryDatasetElement(
@@ -661,8 +661,7 @@ class WorkflowTool(Tool):
                 galaxy_element_list.append(list_collection_element)
 
             elif isinstance(nested_element, tuple):
-                if workflow_is_collection_based:
-                    analysis_group += 1
+                analysis_group += 1
 
                 paired_collection_element = CollectionElement(
                     name="{} collection {}".format(self.PAIRED, uuid.uuid4()),
