@@ -85,17 +85,13 @@ class ToolManagerMocks(TestCase):
         self.delete_history_mock = mock.patch.object(
             HistoryClient, "delete_history"
         ).start()
-        self.show_dataset_provenace_mock = mock.patch.object(
-            HistoryClient, "show_dataset_provenance",
-            side_effect=[
-                galaxy_dataset_provenance_0, galaxy_dataset_provenance_1,
-                galaxy_dataset_provenance_0, galaxy_dataset_provenance_1
-            ]
+        self.show_dataset_provenance_mock = mock.patch.object(
+            HistoryClient, "show_dataset_provenance"
         ).start()
 
         # Galaxy Job mocks
         self.show_job_mock = mock.patch.object(
-            JobsClient, "show_job", side_effect=[galaxy_job, galaxy_job]
+            JobsClient, "show_job", return_value=galaxy_job
         ).start()
 
         # Galaxy Library mocks
@@ -1160,6 +1156,10 @@ class WorkflowToolTests(ToolManagerTestBase):
         self.PAIR_LIST = "([{}, {}], [{}, {}])".format(
             *[self.make_node() for i in range(0, 4)]
         )
+        self.show_dataset_provenance_side_effect = [
+            galaxy_dataset_provenance_0, galaxy_dataset_provenance_0,
+            galaxy_dataset_provenance_1, galaxy_dataset_provenance_1
+        ]
 
     def update_nodes(self):
         galaxy_to_refinery_mapping_list = []
@@ -1534,6 +1534,9 @@ class WorkflowToolTests(ToolManagerTestBase):
         self.assertTrue(self.galaxy_datasets_list_mock.called)
 
     def test__get_galaxy_download_tasks(self):
+        self.show_dataset_provenance_mock.side_effect = (
+            self.show_dataset_provenance_side_effect * 3
+        )
         self.create_valid_tool(ToolDefinition.WORKFLOW)
         self.tool.update_galaxy_data(
             self.tool.GALAXY_WORKFLOW_INVOCATION_DATA,
@@ -1562,7 +1565,12 @@ class WorkflowToolTests(ToolManagerTestBase):
         for task_id in task_id_list:
             self.assertRegexpMatches(str(task_id), UUID_RE)
 
+        self.assertEqual(self.show_dataset_provenance_mock.call_count, 8)
+
     def test_create_analysis_node_connection_outputs(self):
+        self.show_dataset_provenance_mock.side_effect = (
+            self.show_dataset_provenance_side_effect * 3
+        )
         self.create_valid_tool(ToolDefinition.WORKFLOW,
                                file_relationships=self.LIST_BASIC)
         self.tool.update_galaxy_data(
@@ -1591,6 +1599,7 @@ class WorkflowToolTests(ToolManagerTestBase):
 
         self.assertTrue(self.galaxy_workflow_show_invocation_mock.called)
         self.assertTrue(self.galaxy_datasets_list_mock.called)
+        self.assertEqual(self.show_dataset_provenance_mock.call_count, 8)
 
     def test_creating__workflow_tool_sets_tool_launch_config_galaxy_data(self):
         self.create_valid_tool(ToolDefinition.WORKFLOW)
