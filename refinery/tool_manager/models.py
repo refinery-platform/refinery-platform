@@ -810,13 +810,8 @@ class WorkflowTool(Tool):
             refinery_input_file_id = refinery_file_mapping[
                 self.GALAXY_DATASET_HISTORY_ID
             ]
-            logger.debug("refinery_input_file_id: %s", refinery_input_file_id)
-            logger.debug("galaxy_dataset_id: %s", galaxy_dataset_id)
-
             if refinery_input_file_id == galaxy_dataset_id:
                 return refinery_file_mapping[self.ANALYSIS_GROUP]
-
-        raise RuntimeError("We shouldn't reach this point")
 
     @staticmethod
     def _get_galaxy_dataset_filename(galaxy_dataset_dict):
