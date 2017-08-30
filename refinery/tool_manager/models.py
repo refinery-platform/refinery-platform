@@ -800,9 +800,12 @@ class WorkflowTool(Tool):
 
     def _get_analysis_group_number(self, galaxy_dataset_dict):
         """
+        Fetch the Analysis Group Number (subanalysis) corresponding to the
+        derived Galaxy Dataset from our Galaxy Workflow invocation.
 
-        :param galaxy_dataset_dict:
-        :return:
+        :param galaxy_dataset_dict: dict containing information about a
+        Galaxy Dataset
+        :return: <int> corresponding to said Galaxy Dataset's analysis group
         """
         galaxy_dataset_id = self._get_refinery_input_file_id(
             galaxy_dataset_dict
@@ -908,9 +911,18 @@ class WorkflowTool(Tool):
     @handle_bioblend_exceptions
     def _get_refinery_input_file_id(self, galaxy_dataset_dict):
         """
-
-        :param galaxy_dataset_dict:
-        :return:
+        Retrieve the Galaxy Dataset id corresponding to the Refinery file
+        that a Derived Dataset ultimately came from.
+        This is done through a combination of WorkflowTools keeping track of
+        which FileStoreItems correspond to which Datasets in our
+        Galaxy History
+        (see WorkflowTool._update_galaxy_to_refinery_file_mapping_list),
+        and utilizing `bioblend.galaxy.histories.show_dataset_provenance` in a
+        recursive manner to trace back to where any derived data came from.
+        :param galaxy_dataset_dict: dict containing information about a
+        Galaxy Dataset
+        :return: id of the Galaxy Dataset corresponding to our
+        `galaxy_dataset_dict`s Refinery input file
         """
         job_inputs = self.galaxy_connection.jobs.show_job(
             self._get_galaxy_dataset_provenance(galaxy_dataset_dict)["job_id"]
