@@ -31,6 +31,7 @@ from test_data.galaxy_mocks import (galaxy_dataset_provenance_0,
                                     galaxy_datasets_list,
                                     galaxy_history_download_list, galaxy_job,
                                     galaxy_tool_data, galaxy_workflow_dict,
+                                    galaxy_workflow_dict_collection,
                                     galaxy_workflow_invocation,
                                     galaxy_workflow_invocation_data,
                                     history_dataset_dict, history_dict,
@@ -1665,6 +1666,19 @@ class WorkflowToolTests(ToolManagerTestBase):
             }
         )
         self.assertTrue(tool_data_mock.called)
+
+    def test__has_dataset_collection_input_true(self):
+        self.create_valid_tool(ToolDefinition.WORKFLOW)
+        with mock.patch.object(
+            WorkflowTool, "_get_workflow_dict",
+            return_value=galaxy_workflow_dict_collection
+        ) as get_workflow_dict_mock:
+            self.assertTrue(self.tool._has_dataset_collection_input())
+            self.assertTrue(get_workflow_dict_mock.called)
+
+    def test__has_dataset_collection_input_false(self):
+        self.create_valid_tool(ToolDefinition.WORKFLOW)
+        self.assertFalse(self.tool._has_dataset_collection_input())
 
 
 class ToolAPITests(APITestCase, ToolManagerTestBase):

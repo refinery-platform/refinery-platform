@@ -57,6 +57,17 @@ galaxy_workflow_dict = {
     }
 }
 
+galaxy_workflow_dict_collection = {
+    u'name': u'list test wf',
+    u'steps': {
+        u'1': {u'tool_id': u'refinery_test_LIST-N', u'id': 1,
+               u'name': u'Refinery test tool LIST - N'},
+        u'0': {u'tool_id': u'refinery_test_LIST-N', u'id': 0,
+               u'name': u'Refinery test tool LIST - N', u'type':
+                   u'data_collection_input'}
+    }
+}
+
 galaxy_datasets_list = [
     {
         u'creating_job': u'efwefwee75g27398cd',
