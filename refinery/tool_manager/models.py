@@ -469,6 +469,7 @@ class WorkflowTool(Tool):
     LIST = "list"
     PAIRED = "paired"
     REVERSE = "reverse"
+    TOOL_ID = "tool_id"
 
     class Meta:
         verbose_name = "workflowtool"
@@ -932,7 +933,7 @@ class WorkflowTool(Tool):
         return self.galaxy_connection.tools.show_tool(
             self.galaxy_connection.workflows.show_workflow(
                 self.get_workflow_internal_id()
-            )["steps"][workflow_step]["tool_id"],
+            )["steps"][workflow_step][self.TOOL_ID],
             io_details=True
         )
 
