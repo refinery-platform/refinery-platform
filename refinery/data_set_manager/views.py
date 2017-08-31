@@ -233,46 +233,27 @@ class ProcessISATabView(View):
 
             if url:
                 response = self.import_by_url(url)
-                if not response['success']:
-                    if request.is_ajax():
-                        return HttpResponse(
-                            json.dumps({
-                                'error': response.message
-                            }),
-                            content_type='application/json'
-                        )
-
-                    return render_to_response(
-                        self.template_name,
-                        context_instance=RequestContext(
-                            request,
-                            {
-                                'form': form,
-                                'error': response.message
-                            }
-                        )
-                    )
             else:
                 response = self.import_by_file(f)
-                if not response['success']:
-                    if request.is_ajax():
-                        return HttpResponse(
-                            json.dumps({
-                                'error': response.message
-                            }),
-                            content_type='application/json'
-                        )
-
-                    return render_to_response(
-                        self.template_name,
-                        context_instance=RequestContext(
-                            request,
-                            {
-                                'form': form,
-                                'error': response.message
-                            }
-                        )
+            if not response['success']:
+                if request.is_ajax():
+                    return HttpResponse(
+                        json.dumps({
+                            'error': response.message
+                        }),
+                        content_type='application/json'
                     )
+
+                return render_to_response(
+                    self.template_name,
+                    context_instance=RequestContext(
+                        request,
+                        {
+                            'form': form,
+                            'error': response.message
+                        }
+                    )
+                )
 
             logger.debug(
                 "Temp file name: '%s'", response['data']['temp_file_path']
