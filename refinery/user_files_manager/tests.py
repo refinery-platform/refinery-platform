@@ -41,7 +41,7 @@ class UserFilesAPITests(APITestCase):
 
 
 class UserFilesUITests(StaticLiveServerTestCase):
-    def test_get(self):
+    def test_ui(self):
         response = requests.get(
             urljoin(
                 self.live_server_url,
@@ -49,6 +49,19 @@ class UserFilesUITests(StaticLiveServerTestCase):
             )
         )
         self.assertIn("All Files", response.content)
+
+    def test_csv(self):
+        response = requests.get(
+            urljoin(
+                self.live_server_url,
+                'files_download'
+            )
+        )
+        self.assertEqual(
+            response.content,
+            'url,filename,organism,technology,'
+            'antibody,date,genotype,experimenter\r\n'
+        )
 
 
 class UserFilesUtilsTests(TestCase):
