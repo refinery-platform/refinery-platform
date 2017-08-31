@@ -44,7 +44,8 @@
 
       getUserFiles().then(function (solr) {
         // TODO: Should there be something that wraps up this "then"? It is repeated.
-        // gridOptionsService.columnDefs = userFileBrowserFactory.createColumnDefs();
+        vm.attributeFilters =
+          userFileBrowserFactory.createFilters(solr.facet_field_counts);
         gridOptionsService.data = userFileBrowserFactory.createData(solr.nodes);
         promise.resolve();
       }, function () {
