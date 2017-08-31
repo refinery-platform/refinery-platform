@@ -1146,6 +1146,9 @@ class WorkflowToolTests(ToolManagerTestBase):
         self.LIST = "[{}, {}, {}, {}]".format(
             *[self.make_node() for i in range(0, 4)]
         )
+        self.LIST_LIST = "[[{}, {}], [{}, {}]]".format(
+            *[self.make_node() for i in range(0, 4)]
+        )
         self.LIST_PAIR = "[({}, {}), ({}, {})]".format(
             *[self.make_node() for i in range(0, 4)]
         )
@@ -1808,6 +1811,87 @@ class WorkflowToolTests(ToolManagerTestBase):
             galaxy_file_mapping_list[3][WorkflowTool.ANALYSIS_GROUP],
             1
         )
+
+    def test_analysis_group_numbers_list_list_dsc_collection_workflow(self):
+        has_dataset_collection_input_mock = (
+            self.has_dataset_collection_input_mock_true.start()
+        )
+        self.create_valid_tool(
+            ToolDefinition.WORKFLOW,
+            file_relationships=self.LIST_LIST
+        )
+        self.update_nodes()
+        self.tool._create_collection_description()
+        self.assertTrue(has_dataset_collection_input_mock.called)
+        galaxy_file_mapping_list = self.tool._get_galaxy_file_mapping_list()
+
+        self.assertEqual(
+            galaxy_file_mapping_list[0][WorkflowTool.ANALYSIS_GROUP],
+            0
+        )
+        self.assertEqual(
+            galaxy_file_mapping_list[1][WorkflowTool.ANALYSIS_GROUP],
+            0
+        )
+        self.assertEqual(
+            galaxy_file_mapping_list[2][WorkflowTool.ANALYSIS_GROUP],
+            1
+        )
+        self.assertEqual(
+            galaxy_file_mapping_list[3][WorkflowTool.ANALYSIS_GROUP],
+            1
+        )
+
+    def test_analysis_group_numbers_list_list_non_dsc_collection_workflow(
+            self):
+        has_dataset_collection_input_mock = (
+            self.has_dataset_collection_input_mock_false.start()
+        )
+        self.create_valid_tool(
+            ToolDefinition.WORKFLOW,
+            file_relationships=self.LIST_LIST
+        )
+        self.update_nodes()
+        self.tool._create_collection_description()
+        self.assertTrue(has_dataset_collection_input_mock.called)
+        galaxy_file_mapping_list = self.tool._get_galaxy_file_mapping_list()
+
+        self.assertEqual(
+            galaxy_file_mapping_list[0][WorkflowTool.ANALYSIS_GROUP],
+            0
+        )
+        self.assertEqual(
+            galaxy_file_mapping_list[1][WorkflowTool.ANALYSIS_GROUP],
+            1
+        )
+        self.assertEqual(
+            galaxy_file_mapping_list[2][WorkflowTool.ANALYSIS_GROUP],
+            2
+        )
+        self.assertEqual(
+            galaxy_file_mapping_list[3][WorkflowTool.ANALYSIS_GROUP],
+            3
+        )
+
+    def test__get_analysis_group_number(self):
+        self.show_dataset_provenance_mock.side_effect = (
+            self.show_dataset_provenance_side_effect * 3
+        )
+
+        self.create_valid_tool(ToolDefinition.WORKFLOW)
+        self.node.file_uuid = self.FAKE_DATASET_HISTORY_ID
+        self.node.save()
+
+        self.update_nodes()
+        self.tool._create_collection_description()
+
+        self.assertEqual(
+            self.tool._get_analysis_group_number(
+                self.tool._get_galaxy_history_dataset_list()[0]
+            ),
+            0
+        )
+        self.assertEqual(self.show_dataset_provenance_mock.call_count, 4)
 
 
 class ToolAPITests(APITestCase, ToolManagerTestBase):
