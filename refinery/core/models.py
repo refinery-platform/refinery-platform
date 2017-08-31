@@ -1780,7 +1780,7 @@ class Analysis(OwnableResource):
             study.uuid,
             assay.uuid
         )
-        index_annotated_nodes_selection(node_uuids)
+        self._prepare_annotated_nodes(node_uuids)
 
     def attach_outputs_downloads(self):
         analysis_results = AnalysisResult.objects.filter(
@@ -1823,6 +1823,21 @@ class Analysis(OwnableResource):
                 )
             else:
                 file_store_item.terminate_file_import_task()
+
+    def _prepare_annotated_nodes(self, node_uuids):
+        """
+        Wrapper method to ensure that `rename_results` is called before
+        index_annotated_nodes_selection.
+
+        If `rename_results` isn't executed before
+        `index_annotated_nodes_selection` we end up indexing incorrect
+        information.
+
+        Call order is ensured through:
+        core.tests.test__prepare_annotated_nodes_calls_methods_in_proper_order
+        """
+        self.rename_results()
+        index_annotated_nodes_selection(node_uuids)
 
     @property
     def is_tool_based(self):
