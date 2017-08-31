@@ -31,6 +31,11 @@
           attributeObj.lowerCaseNames.includes(search.toLowerCase()) && search.length;
     };
 
+    vm.filterIsSet = function (attribute, value) {
+      var attr = userFileFiltersService[attribute];
+      return angular.isObject(attr) && attr.indexOf(value) >= 0;
+    };
+
     vm.filterUpdate = function (attribute, value) {
       var set = filterSet(attribute, value);
       $location.search(attribute, set);
@@ -63,13 +68,10 @@
         // Add to list
         set.push(value);
       }
-      console.log('set now:', set);
       return set;
     }
 
-    console.log('search:', $location.search());
     angular.forEach($location.search(), function (values, key) {
-      console.log(key, values);
       if (key === 'sort' || key === 'direction') {
         // TODO: sorts
       } else {
@@ -82,7 +84,6 @@
         }
       }
     });
-    console.log('filters:', userFileFiltersService);
 
     var promise = $q.defer();
     var getUserFiles = userFileBrowserFactory.getUserFiles;
