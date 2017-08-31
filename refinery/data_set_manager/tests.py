@@ -1692,48 +1692,53 @@ class NodeIndexTests(APITestCase):
         data = NodeIndex().prepare(self.node)
         data = dict(
             (
-                re.sub(r'[^_./]*\d+[^_./]*', '#', k),
-                re.sub(r'[^_./]*\d+[^_./]*', '#', v) if
-                type(v) in (unicode, str) and
-                'REFINERY_DOWNLOAD_URL_s' not in k and 'uuid' not in k
-                else v
+                re.sub(r'[^_./]*\d+[^_./]*', '#', key),
+                re.sub(r'[^_./]*\d+[^_./]*', '#', value) if
+                type(value) in (unicode, str) and
+                key != 'REFINERY_DOWNLOAD_URL_s' and
+                'uuid' not in key
+                else value
             )
-            for (k, v) in data.items())
-        self.assertEqual(data,
-                         {'REFINERY_ANALYSIS_UUID_#_#_s': 'N/A',
-                          'REFINERY_DOWNLOAD_URL_s':
-                              self.file_store_item.get_datafile_url(),
-                          'REFINERY_FILETYPE_#_#_s': None,
-                          'REFINERY_NAME_#_#_s': 'http://example.com/fake.txt',
-                          'REFINERY_SUBANALYSIS_#_#_s': -1,
-                          'REFINERY_TYPE_#_#_s': u'',
-                          'REFINERY_WORKFLOW_OUTPUT_#_#_s': 'N/A',
-                          'analysis_uuid': None,
-                          'assay_uuid': self.assay_uuid,
-                          'data_set_uuid': self.data_set_uuid,
-                          u'django_ct': u'data_set_manager.node',
-                          u'django_id': u'#',
-                          'file_uuid': self.file_uuid,
-                          'filename_Characteristics_generic_s': u'fake.txt',
-                          'genome_build': None,
-                          u'id': u'data_set_manager.node.#',
-                          'is_annotation': False,
-                          'measurement_Characteristics_generic_s': '',
-                          'measurement_accession_Characteristics_generic_s':
-                              '',
-                          'measurement_source_Characteristics_generic_s': '',
-                          'name': u'http://example.com/fake.txt',
-                          'platform_Characteristics_generic_s': '',
-                          'species': None,
-                          'study_uuid': self.study_uuid,
-                          'subanalysis': None,
-                          'text': u'',
-                          'technology_Characteristics_generic_s': 'whizbang',
-                          'technology_accession_Characteristics_generic_s': '',
-                          'technology_source_Characteristics_generic_s': '',
-                          'type': u'',
-                          'uuid': self.node_uuid,
-                          'workflow_output': None})
+            for (key, value) in data.items()
+        )
+        self.assertEqual(
+            data,
+            {
+                'REFINERY_ANALYSIS_UUID_#_#_s': 'N/A',
+                'REFINERY_DOWNLOAD_URL_s':
+                    self.file_store_item.get_datafile_url(),
+                'REFINERY_FILETYPE_#_#_s': None,
+                'REFINERY_NAME_#_#_s': 'http://example.com/fake.txt',
+                'REFINERY_SUBANALYSIS_#_#_s': -1,
+                'REFINERY_TYPE_#_#_s': u'',
+                'REFINERY_WORKFLOW_OUTPUT_#_#_s': 'N/A',
+                'analysis_uuid': None,
+                'assay_uuid': self.assay_uuid,
+                'data_set_uuid': self.data_set_uuid,
+                u'django_ct': u'data_set_manager.node',
+                u'django_id': u'#',
+                'file_uuid': self.file_uuid,
+                'filename_Characteristics_generic_s': u'fake.txt',
+                'genome_build': None,
+                u'id': u'data_set_manager.node.#',
+                'is_annotation': False,
+                'measurement_Characteristics_generic_s': '',
+                'measurement_accession_Characteristics_generic_s': '',
+                'measurement_source_Characteristics_generic_s': '',
+                'name': u'http://example.com/fake.txt',
+                'platform_Characteristics_generic_s': '',
+                'species': None,
+                'study_uuid': self.study_uuid,
+                'subanalysis': None,
+                'text': u'',
+                'technology_Characteristics_generic_s': 'whizbang',
+                'technology_accession_Characteristics_generic_s': '',
+                'technology_source_Characteristics_generic_s': '',
+                'type': u'',
+                'uuid': self.node_uuid,
+                'workflow_output': None
+            }
+        )
 
 
 class AnnotatedNodeExplosionTestCase(TestCase):
