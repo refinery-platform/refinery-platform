@@ -11,13 +11,15 @@
     '$q',
     'gridOptionsService',
     'userFileBrowserFactory',
-    'userFileFiltersService'
+    'userFileFiltersService',
+    'userFileSortsService'
   ];
 
   function UserFileBrowserFiltersCtrl ($location, $log, $q,
                                        gridOptionsService,
                                        userFileBrowserFactory,
-                                       userFileFiltersService) {
+                                       userFileFiltersService,
+                                       userFileSortsService) {
     var vm = this;
 
     vm.togglePanel = function (attribute) {
@@ -71,9 +73,13 @@
       return set;
     }
 
+    var sort;
+    var direction;
     angular.forEach($location.search(), function (values, key) {
-      if (key === 'sort' || key === 'direction') {
-        // TODO: sorts
+      if (key === 'sort') {
+        sort = values;
+      } else if (key === 'direction') {
+        direction = values;
       } else {
         if (typeof values === 'string') {
           filterSet(key, values);
@@ -84,6 +90,12 @@
         }
       }
     });
+    if (angular.isString(sort) && angular.isString(direction)) {
+      userFileSortsService.fields[0] = {
+        name: sort,
+        direction: direction
+      };
+    }
 
     var promise = $q.defer();
     var getUserFiles = userFileBrowserFactory.getUserFiles;
