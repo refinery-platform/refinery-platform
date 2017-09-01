@@ -72,6 +72,8 @@
         var internalNames = Object.keys(node);
         internalNames.forEach(function (internalName) {
           var display = mapInternalToDisplay(internalName);
+          // TODO: Name collisions might happen here:
+          // organism_Characteristics vs organism_Factor_Value
           row[display] = node[internalName];
         });
         row[URL] = row.name;
@@ -89,6 +91,7 @@
           var lowerCaseNames = facetObj.map(function (nameCount) {
             return nameCount.name.toLowerCase();
           }).join(' ');
+          // TODO: This is where name collisions need to be handled.
           filters[mapInternalToDisplay(key)] = {
             facetObj: facetObj,
             lowerCaseNames: lowerCaseNames
