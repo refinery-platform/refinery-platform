@@ -680,51 +680,47 @@ def _get_galaxy_download_task_ids(analysis):
         if results['state'] == 'ok':
             file_type = results["type"]
             curr_file_id = results['name']
-
-            if curr_file_id in dl_dict:
-                curr_dl_dict = dl_dict[curr_file_id]
-                result_name = curr_dl_dict['filename'] + '.' + file_type
-
-            if analysis.is_tool_based:
-                result_name = "{}.{}".format(results['name'], file_type)
-
-            assert result_name is not None, "'result_name' should be defined"
-
-            # size of file defined by galaxy
-            file_size = results['file_size']
-            # Determining tag if galaxy results should be download through
-            # http or copying files directly to retrieve HTML files as zip
-            # archives via dataset URL
-            if galaxy_instance.local_download and file_type != 'html':
-                download_url = results['file_name']
-            else:
-                download_url = urlparse.urljoin(
-                        galaxy_instance.base_url, '/'.join(
-                                ['datasets', str(results['dataset_id']),
-                                 'display?to_ext=txt']))
-            # workaround to set the correct file type for zip archives of
-            # FastQC HTML reports produced by Galaxy dynamically
-            if file_type == 'html':
-                file_type = 'zip'
-            # TODO: when changing permanent=True, fix update of % download
-            # of file
-            filestore_uuid = create(
-                source=download_url,
-                filetype=file_type
-            )
-            # adding history files to django model
-            temp_file = AnalysisResult(
-                analysis_uuid=analysis.uuid,
-                file_store_uuid=filestore_uuid,
-                file_name=result_name, file_type=file_type)
-            temp_file.save()
-            analysis.results.add(temp_file)
-            analysis.save()
-            # downloading analysis results into file_store
-            # only download files if size is greater than 1
-            if file_size > 0:
-                task_id = import_file.subtask(
-                        (filestore_uuid, False, file_size))
-                task_id_list.append(task_id)
+            if curr_file_id in dl_dict or analysis.is_tool_based:
+                if analysis.is_tool_based:
+                    result_name = "{}.{}".format(results['name'], file_type)
+                else:
+                    curr_dl_dict = dl_dict[curr_file_id]
+                    result_name = curr_dl_dict['filename'] + '.' + file_type
+                # size of file defined by galaxy
+                file_size = results['file_size']
+                # Determining tag if galaxy results should be download through
+                # http or copying files directly to retrieve HTML files as zip
+                # archives via dataset URL
+                if galaxy_instance.local_download and file_type != 'html':
+                    download_url = results['file_name']
+                else:
+                    download_url = urlparse.urljoin(
+                            galaxy_instance.base_url, '/'.join(
+                                    ['datasets', str(results['dataset_id']),
+                                     'display?to_ext=txt']))
+                # workaround to set the correct file type for zip archives of
+                # FastQC HTML reports produced by Galaxy dynamically
+                if file_type == 'html':
+                    file_type = 'zip'
+                # TODO: when changing permanent=True, fix update of % download
+                # of file
+                filestore_uuid = create(
+                    source=download_url,
+                    filetype=file_type
+                )
+                # adding history files to django model
+                temp_file = AnalysisResult(
+                    analysis_uuid=analysis.uuid,
+                    file_store_uuid=filestore_uuid,
+                    file_name=result_name, file_type=file_type)
+                temp_file.save()
+                analysis.results.add(temp_file)
+                analysis.save()
+                # downloading analysis results into file_store
+                # only download files if size is greater than 1
+                if file_size > 0:
+                    task_id = import_file.subtask(
+                            (filestore_uuid, False, file_size))
+                    task_id_list.append(task_id)
 
     return task_id_list
