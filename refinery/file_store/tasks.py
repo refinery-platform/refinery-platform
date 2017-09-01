@@ -5,6 +5,7 @@ import stat
 from tempfile import NamedTemporaryFile
 import urlparse
 
+from django.conf import settings
 from django.core.files import File
 
 import boto3
@@ -88,23 +89,21 @@ def import_file(uuid, refresh=False, file_size=0):
 
     # start the transfer
     if os.path.isabs(item.source):
-        if os.path.isfile(item.source):
-            # check if source file can be opened
-            try:
-                srcfile = File(open(item.source))
-            except IOError:
-                logger.error("Could not open file: %s", item.source)
-                return None
-            srcfilename = os.path.basename(item.source)
-
-            # TODO: copy file in chunks to display progress report
-            # model is saved by default if FileField.save() is called
-            item.datafile.save(srcfilename, srcfile)
-            srcfile.close()
-            logger.info("File copied")
-        else:
-            logger.error("Copying failed: source is not a file")
+        try:
+            with open(item.source, 'r') as f:
+                # TODO: copy file in chunks to display progress report
+                # model is saved by default if FileField.save() is called
+                item.datafile.save(os.path.basename(item.source), File(f))
+        except IOError:
+            logger.error("Could not open file: %s", item.source)
             return None
+        if item.source.startswith(settings.REFINERY_DATA_IMPORT_DIR):
+            try:
+                os.unlink(item.source)
+            except IOError:
+                logger.error("Could not delete uploaded source file '%s'",
+                             item.source)
+        logger.info("File copied from '%s'", item.source)
     elif item.source.startswith('s3://'):
         bucket_name, key = parse_s3_url(item.source)
         s3 = boto3.resource('s3')
