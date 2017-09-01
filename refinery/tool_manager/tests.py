@@ -305,6 +305,7 @@ class ToolManagerTestBase(ToolManagerMocks):
             self.tool = WorkflowTool.objects.get(
                 tool_definition__uuid=self.td.uuid
             )
+            self.update_tool_nodes()
 
         self.get_request = self.factory.get(self.tools_url_root)
         force_authenticate(self.get_request, self.user)
@@ -369,6 +370,35 @@ class ToolManagerTestBase(ToolManagerMocks):
                 self.workflow_engine.uuid
             )
             self.td = create_tool_definition(self.tool_annotation_data)
+
+    def update_tool_nodes(self):
+        """
+        Helper method to update a WorkflowTool's
+        galaxy_to_refinery_mapping_list as it would be if we were
+        interacting with an actual Galaxy instance
+        """
+        galaxy_to_refinery_mapping_list = []
+        for node in self.tool._get_input_nodes():
+            galaxy_to_refinery_mapping_list.append(
+                {
+                    WorkflowTool.GALAXY_DATASET_HISTORY_ID:
+                        self.FAKE_DATASET_HISTORY_ID,
+                    Tool.REFINERY_FILE_UUID: node.file_uuid,
+                }
+            )
+
+        with mock.patch.object(
+                celery.result.TaskSetResult,
+                "join",
+                return_value=galaxy_to_refinery_mapping_list
+        ) as join_mock:
+            self.tool.update_file_relationships_with_galaxy_history_data()
+        self.assertTrue(join_mock.called)
+        self.assertTrue(self.get_taskset_result_mock.called)
+
+        self.collection_description = (
+            self.tool._create_collection_description()
+        )
 
     def test_create_valid_tool(self):
         with self.assertRaises(RuntimeError):
@@ -1108,9 +1138,16 @@ class ToolTests(ToolManagerTestBase):
             self.tool.get_galaxy_dict(),
             {
                 WorkflowTool.FILE_RELATIONSHIPS_GALAXY: (
-                    self.tool.get_file_relationships()
+                    self.tool.get_galaxy_file_relationships()
                 ),
-                WorkflowTool.GALAXY_TO_REFINERY_MAPPING_LIST: [],
+                WorkflowTool.GALAXY_TO_REFINERY_MAPPING_LIST: [
+                    {
+                        self.tool.GALAXY_DATASET_HISTORY_ID:
+                            self.FAKE_DATASET_HISTORY_ID,
+                        self.tool.REFINERY_FILE_UUID: self.node.file_uuid,
+                        WorkflowTool.ANALYSIS_GROUP: 0
+                    }
+                ],
                 "test": "data",
                 "more": "data"
             }
@@ -1164,26 +1201,6 @@ class WorkflowToolTests(ToolManagerTestBase):
             galaxy_dataset_provenance_1, galaxy_dataset_provenance_1
         ]
 
-    def update_nodes(self):
-        galaxy_to_refinery_mapping_list = []
-        for node in self.tool._get_input_nodes():
-            galaxy_to_refinery_mapping_list.append(
-                {
-                    WorkflowTool.GALAXY_DATASET_HISTORY_ID:
-                        self.FAKE_DATASET_HISTORY_ID,
-                    Tool.REFINERY_FILE_UUID: node.file_uuid,
-                }
-            )
-
-        with mock.patch.object(
-                celery.result.TaskSetResult,
-                "join",
-                return_value=galaxy_to_refinery_mapping_list
-        ) as join_mock:
-            self.tool.update_file_relationships_with_galaxy_history_data()
-        self.assertTrue(join_mock.called)
-        self.assertTrue(self.get_taskset_result_mock.called)
-
     def make_node(self):
         test_file = StringIO.StringIO()
 
@@ -1208,18 +1225,15 @@ class WorkflowToolTests(ToolManagerTestBase):
             ToolDefinition.WORKFLOW,
             file_relationships=self.LIST_BASIC
         )
-        self.update_nodes()
-        collection_description = self.tool._create_collection_description()
-
         self.assertEqual(
-            collection_description.type,
+            self.collection_description.type,
             WorkflowTool.LIST
         )
         self.assertEqual(
-            len(collection_description.elements),
+            len(self.collection_description.elements),
             1
         )
-        for element in collection_description.elements:
+        for element in self.collection_description.elements:
             self.assertEqual(
                 type(element),
                 HistoryDatasetElement
@@ -1230,17 +1244,15 @@ class WorkflowToolTests(ToolManagerTestBase):
             ToolDefinition.WORKFLOW,
             file_relationships=self.LIST_PAIR
         )
-        self.update_nodes()
-        collection_description = self.tool._create_collection_description()
         self.assertEqual(
-            collection_description.type,
+            self.collection_description.type,
             "{}:{}".format(WorkflowTool.LIST, WorkflowTool.PAIRED)
         )
         self.assertEqual(
-            len(collection_description.elements),
+            len(self.collection_description.elements),
             2
         )
-        for element in collection_description.elements:
+        for element in self.collection_description.elements:
             self.assertEqual(type(element), CollectionElement)
             self.assertEqual(element.type, WorkflowTool.PAIRED)
             self.assertEqual(len(element.elements), 2)
@@ -1262,23 +1274,21 @@ class WorkflowToolTests(ToolManagerTestBase):
             ToolDefinition.WORKFLOW,
             file_relationships=self.PAIR
         )
-        self.update_nodes()
-        collection_description = self.tool._create_collection_description()
         self.assertEqual(
-            collection_description.type,
+            self.collection_description.type,
             WorkflowTool.PAIRED
         )
-        self.assertEqual(len(collection_description.elements), 2)
+        self.assertEqual(len(self.collection_description.elements), 2)
 
-        for element in collection_description.elements:
+        for element in self.collection_description.elements:
             self.assertEqual(type(element), HistoryDatasetElement)
 
         self.assertEqual(
-            collection_description.elements[0].to_dict()["name"],
+            self.collection_description.elements[0].to_dict()["name"],
             WorkflowTool.FORWARD
         )
         self.assertEqual(
-            collection_description.elements[1].to_dict()["name"],
+            self.collection_description.elements[1].to_dict()["name"],
             WorkflowTool.REVERSE
         )
 
@@ -1287,15 +1297,13 @@ class WorkflowToolTests(ToolManagerTestBase):
             ToolDefinition.WORKFLOW,
             file_relationships=self.PAIR_LIST
         )
-        self.update_nodes()
-        collection_description = self.tool._create_collection_description()
         self.assertEqual(
-            collection_description.type,
+            self.collection_description.type,
             "{}:{}".format(WorkflowTool.PAIRED, WorkflowTool.LIST)
         )
 
-        self.assertEqual(len(collection_description.elements), 2)
-        for element in collection_description.elements:
+        self.assertEqual(len(self.collection_description.elements), 2)
+        for element in self.collection_description.elements:
             self.assertEqual(type(element), CollectionElement)
             self.assertEqual(element.type, WorkflowTool.LIST)
             for el in element.elements:
@@ -1306,11 +1314,8 @@ class WorkflowToolTests(ToolManagerTestBase):
             ToolDefinition.WORKFLOW,
             file_relationships=self.LIST_LIST_PAIR
         )
-
-        self.update_nodes()
-        collection_description = self.tool._create_collection_description()
         self.assertEqual(
-            collection_description.type,
+            self.collection_description.type,
             "{}:{}:{}".format(
                 WorkflowTool.LIST,
                 WorkflowTool.LIST,
@@ -1318,8 +1323,8 @@ class WorkflowToolTests(ToolManagerTestBase):
             )
         )
 
-        self.assertEqual(len(collection_description.elements), 1)
-        for element in collection_description.elements:
+        self.assertEqual(len(self.collection_description.elements), 1)
+        for element in self.collection_description.elements:
             self.assertEqual(type(element), CollectionElement)
             self.assertEqual(element.type, WorkflowTool.LIST)
             self.assertEqual(len(element.elements), 2)
@@ -1344,7 +1349,6 @@ class WorkflowToolTests(ToolManagerTestBase):
             ToolDefinition.WORKFLOW,
             file_relationships=self.PAIR
         )
-        self.update_nodes()
         self.assertEqual(
             self.tool.galaxy_collection_type,
             WorkflowTool.PAIRED
@@ -1355,7 +1359,6 @@ class WorkflowToolTests(ToolManagerTestBase):
             ToolDefinition.WORKFLOW,
             file_relationships=self.LIST_PAIR
         )
-        self.update_nodes()
         self.assertEqual(
             self.tool.galaxy_collection_type,
             "{}:{}".format(
@@ -1369,7 +1372,6 @@ class WorkflowToolTests(ToolManagerTestBase):
             ToolDefinition.WORKFLOW,
             file_relationships=self.PAIR_LIST
         )
-        self.update_nodes()
         self.assertEqual(
             self.tool.galaxy_collection_type,
             "{}:{}".format(
@@ -1383,7 +1385,6 @@ class WorkflowToolTests(ToolManagerTestBase):
             ToolDefinition.WORKFLOW,
             file_relationships=self.LIST_LIST_PAIR
         )
-        self.update_nodes()
         self.assertEqual(
             self.tool.galaxy_collection_type,
             "{}:{}:{}".format(
@@ -1397,7 +1398,6 @@ class WorkflowToolTests(ToolManagerTestBase):
         self.create_valid_tool(
             ToolDefinition.WORKFLOW
         )
-        self.update_nodes()
         self.assertEqual(
             self.tool.galaxy_collection_type,
             WorkflowTool.LIST
@@ -1547,9 +1547,6 @@ class WorkflowToolTests(ToolManagerTestBase):
                 "id": self.GALAXY_ID_MOCK
             }
         )
-        self.update_nodes()
-        self.tool._create_collection_description()
-
         task_id_list = _get_galaxy_download_task_ids(self.tool.analysis)
         self.assertTrue(self.galaxy_workflow_show_invocation_mock.called)
         self.assertTrue(self.galaxy_datasets_list_mock.called)
@@ -1582,9 +1579,6 @@ class WorkflowToolTests(ToolManagerTestBase):
                 "id": self.GALAXY_ID_MOCK
             }
         )
-        self.update_nodes()
-        self.tool._create_collection_description()
-
         self.tool.create_analysis_output_node_connections()
         self.assertEqual(AnalysisNodeConnection.objects.count(), 3)
         self.assertEqual(
@@ -1606,9 +1600,6 @@ class WorkflowToolTests(ToolManagerTestBase):
 
     def test_creating__workflow_tool_sets_tool_launch_config_galaxy_data(self):
         self.create_valid_tool(ToolDefinition.WORKFLOW)
-        self.update_nodes()
-        self.tool._create_collection_description()
-
         self.assertEqual(
             self.tool.get_galaxy_dict()[
                 WorkflowTool.FILE_RELATIONSHIPS_GALAXY
@@ -1633,9 +1624,6 @@ class WorkflowToolTests(ToolManagerTestBase):
     @mock.patch.object(WorkflowTool, "_get_tool_data")
     def test_get_tool_launch_config(self, tool_data_mock):
         self.create_valid_tool(ToolDefinition.WORKFLOW)
-        self.update_nodes()
-        self.tool._create_collection_description()
-
         parameters_dict = self.tool._create_workflow_parameters_dict()
         parameters_dict_with_uuids = {}
         for key in parameters_dict.keys():
@@ -1697,12 +1685,12 @@ class WorkflowToolTests(ToolManagerTestBase):
             ToolDefinition.WORKFLOW,
             file_relationships=self.LIST
         )
-        self.update_nodes()
-        self.tool._create_collection_description()
         self.assertTrue(has_dataset_collection_input_mock.called)
-
-        for file_mapping in self.tool._get_galaxy_file_mapping_list():
-            self.assertEqual(file_mapping[WorkflowTool.ANALYSIS_GROUP], 0)
+        self.assertEqual(
+            [0, 0, 0, 0],
+            [item[WorkflowTool.ANALYSIS_GROUP] for item in
+             self.tool._get_galaxy_file_mapping_list()]
+        )
 
     def test_analysis_group_numbers_list_dsc_non_collection_workflow(self):
         has_dataset_collection_input_mock = (
@@ -1712,13 +1700,12 @@ class WorkflowToolTests(ToolManagerTestBase):
             ToolDefinition.WORKFLOW,
             file_relationships=self.LIST
         )
-        self.update_nodes()
-        self.tool._create_collection_description()
-
         self.assertTrue(has_dataset_collection_input_mock.called)
-        for index, file_mapping in \
-                enumerate(self.tool._get_galaxy_file_mapping_list()):
-            self.assertEqual(file_mapping[WorkflowTool.ANALYSIS_GROUP], index)
+        self.assertEqual(
+            [0, 1, 2, 3],
+            [item[WorkflowTool.ANALYSIS_GROUP] for item in
+             self.tool._get_galaxy_file_mapping_list()]
+        )
 
     def test_analysis_group_numbers_pair_dsc_collection_workflow(self):
         has_dataset_collection_input_mock = (
@@ -1728,12 +1715,12 @@ class WorkflowToolTests(ToolManagerTestBase):
             ToolDefinition.WORKFLOW,
             file_relationships=self.PAIR
         )
-        self.update_nodes()
-        self.tool._create_collection_description()
         self.assertTrue(has_dataset_collection_input_mock.called)
-
-        for file_mapping in self.tool._get_galaxy_file_mapping_list():
-            self.assertEqual(file_mapping[WorkflowTool.ANALYSIS_GROUP], 0)
+        self.assertEqual(
+            [0, 0, 0, 0],
+            [item[WorkflowTool.ANALYSIS_GROUP] for item in
+             self.tool._get_galaxy_file_mapping_list()]
+        )
 
     def test_analysis_group_numbers_pair_dsc_non_collection_workflow(self):
         has_dataset_collection_input_mock = (
@@ -1743,12 +1730,12 @@ class WorkflowToolTests(ToolManagerTestBase):
             ToolDefinition.WORKFLOW,
             file_relationships=self.PAIR
         )
-        self.update_nodes()
-        self.tool._create_collection_description()
-
         self.assertTrue(has_dataset_collection_input_mock.called)
-        for file_mapping in self.tool._get_galaxy_file_mapping_list():
-            self.assertEqual(file_mapping[WorkflowTool.ANALYSIS_GROUP], 0)
+        self.assertEqual(
+            [0, 0, 0, 0],
+            [item[WorkflowTool.ANALYSIS_GROUP] for item in
+             self.tool._get_galaxy_file_mapping_list()]
+        )
 
     def test_analysis_group_numbers_list_pair_dsc_collection_workflow(self):
         has_dataset_collection_input_mock = (
@@ -1758,26 +1745,11 @@ class WorkflowToolTests(ToolManagerTestBase):
             ToolDefinition.WORKFLOW,
             file_relationships=self.LIST_PAIR
         )
-        self.update_nodes()
-        self.tool._create_collection_description()
         self.assertTrue(has_dataset_collection_input_mock.called)
-        galaxy_file_mapping_list = self.tool._get_galaxy_file_mapping_list()
-
         self.assertEqual(
-            galaxy_file_mapping_list[0][WorkflowTool.ANALYSIS_GROUP],
-            0
-        )
-        self.assertEqual(
-            galaxy_file_mapping_list[1][WorkflowTool.ANALYSIS_GROUP],
-            0
-        )
-        self.assertEqual(
-            galaxy_file_mapping_list[2][WorkflowTool.ANALYSIS_GROUP],
-            1
-        )
-        self.assertEqual(
-            galaxy_file_mapping_list[3][WorkflowTool.ANALYSIS_GROUP],
-            1
+            [0, 0, 1, 1],
+            [item[WorkflowTool.ANALYSIS_GROUP] for item in
+             self.tool._get_galaxy_file_mapping_list()]
         )
 
     def test_analysis_group_numbers_list_pair_non_dsc_collection_workflow(
@@ -1790,26 +1762,11 @@ class WorkflowToolTests(ToolManagerTestBase):
             ToolDefinition.WORKFLOW,
             file_relationships=self.LIST_PAIR
         )
-        self.update_nodes()
-        self.tool._create_collection_description()
         self.assertTrue(has_dataset_collection_input_mock.called)
-        galaxy_file_mapping_list = self.tool._get_galaxy_file_mapping_list()
-
         self.assertEqual(
-            galaxy_file_mapping_list[0][WorkflowTool.ANALYSIS_GROUP],
-            0
-        )
-        self.assertEqual(
-            galaxy_file_mapping_list[1][WorkflowTool.ANALYSIS_GROUP],
-            0
-        )
-        self.assertEqual(
-            galaxy_file_mapping_list[2][WorkflowTool.ANALYSIS_GROUP],
-            1
-        )
-        self.assertEqual(
-            galaxy_file_mapping_list[3][WorkflowTool.ANALYSIS_GROUP],
-            1
+            [0, 0, 1, 1],
+            [item[WorkflowTool.ANALYSIS_GROUP] for item in
+             self.tool._get_galaxy_file_mapping_list()]
         )
 
     def test_analysis_group_numbers_list_list_dsc_collection_workflow(self):
@@ -1820,26 +1777,11 @@ class WorkflowToolTests(ToolManagerTestBase):
             ToolDefinition.WORKFLOW,
             file_relationships=self.LIST_LIST
         )
-        self.update_nodes()
-        self.tool._create_collection_description()
         self.assertTrue(has_dataset_collection_input_mock.called)
-        galaxy_file_mapping_list = self.tool._get_galaxy_file_mapping_list()
-
         self.assertEqual(
-            galaxy_file_mapping_list[0][WorkflowTool.ANALYSIS_GROUP],
-            0
-        )
-        self.assertEqual(
-            galaxy_file_mapping_list[1][WorkflowTool.ANALYSIS_GROUP],
-            0
-        )
-        self.assertEqual(
-            galaxy_file_mapping_list[2][WorkflowTool.ANALYSIS_GROUP],
-            1
-        )
-        self.assertEqual(
-            galaxy_file_mapping_list[3][WorkflowTool.ANALYSIS_GROUP],
-            1
+            [0, 0, 1, 1],
+            [item[WorkflowTool.ANALYSIS_GROUP] for item in
+             self.tool._get_galaxy_file_mapping_list()]
         )
 
     def test_analysis_group_numbers_list_list_non_dsc_collection_workflow(
@@ -1851,26 +1793,11 @@ class WorkflowToolTests(ToolManagerTestBase):
             ToolDefinition.WORKFLOW,
             file_relationships=self.LIST_LIST
         )
-        self.update_nodes()
-        self.tool._create_collection_description()
         self.assertTrue(has_dataset_collection_input_mock.called)
-        galaxy_file_mapping_list = self.tool._get_galaxy_file_mapping_list()
-
         self.assertEqual(
-            galaxy_file_mapping_list[0][WorkflowTool.ANALYSIS_GROUP],
-            0
-        )
-        self.assertEqual(
-            galaxy_file_mapping_list[1][WorkflowTool.ANALYSIS_GROUP],
-            1
-        )
-        self.assertEqual(
-            galaxy_file_mapping_list[2][WorkflowTool.ANALYSIS_GROUP],
-            2
-        )
-        self.assertEqual(
-            galaxy_file_mapping_list[3][WorkflowTool.ANALYSIS_GROUP],
-            3
+            [0, 1, 2, 3],
+            [item[WorkflowTool.ANALYSIS_GROUP] for item in
+             self.tool._get_galaxy_file_mapping_list()]
         )
 
     def test__get_analysis_group_number(self):
@@ -1881,9 +1808,6 @@ class WorkflowToolTests(ToolManagerTestBase):
         self.create_valid_tool(ToolDefinition.WORKFLOW)
         self.node.file_uuid = self.FAKE_DATASET_HISTORY_ID
         self.node.save()
-
-        self.update_nodes()
-        self.tool._create_collection_description()
 
         self.assertEqual(
             self.tool._get_analysis_group_number(
@@ -2168,20 +2092,18 @@ class WorkflowToolLaunchTests(ToolManagerTestBase):
     def test__galaxy_file_import_ceases_to_set_file_relationships_galaxy(self):
         self.create_valid_tool(ToolDefinition.WORKFLOW)
 
-        _tool_based_galaxy_file_import(
-            self.tool.analysis.uuid,
-            self.file_store_item.uuid,
-            history_dict,
-            library_dict
-        )
-
+        with mock.patch.object(
+            WorkflowTool, "update_file_relationships_with_galaxy_history_data"
+        ) as update_file_relationships_galaxy_mock:
+            _tool_based_galaxy_file_import(
+                self.tool.analysis.uuid,
+                self.file_store_item.uuid,
+                history_dict,
+                library_dict
+            )
         self.assertTrue(self.library_upload_mock.called)
         self.assertTrue(self.history_upload_mock.called)
-
-        with self.assertRaises(SyntaxError):
-            WorkflowTool.objects.get(
-                uuid=self.tool.uuid
-            ).get_galaxy_file_relationships()
+        self.assertFalse(update_file_relationships_galaxy_mock.called)
 
     def test__tool_based_galaxy_file_import_updates_galaxy_import_progress(
             self
