@@ -161,7 +161,6 @@ def _attach_workflow_outputs(analysis_uuid):
                        analysis.workflow.type, analysis.name)
 
     analysis.set_status(Analysis.SUCCESS_STATUS)
-    analysis.rename_results()
     analysis.send_email()
     logger.info("Analysis '%s' finished successfully", analysis)
     analysis.galaxy_cleanup()

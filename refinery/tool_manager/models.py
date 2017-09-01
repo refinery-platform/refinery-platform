@@ -453,7 +453,9 @@ class WorkflowTool(Tool):
     WorkflowTools are Tools that are specific to
     launching and monitoring Galaxy Workflows
     """
+    ANALYSIS_GROUP = "analysis_group"
     COLLECTION_INFO = "collection_info"
+    DATA_COLLECTION_INPUT = "data_collection_input"
     FILE_RELATIONSHIPS_GALAXY = "{}_galaxy".format(Tool.FILE_RELATIONSHIPS)
     FILE_RELATIONSHIPS_NESTING = "file_relationships_nesting"
     FORWARD = "forward"
@@ -463,10 +465,11 @@ class WorkflowTool(Tool):
     GALAXY_LIBRARY_DICT = "library_dict"
     GALAXY_WORKFLOW_INVOCATION_DATA = "galaxy_workflow_invocation_data"
     GALAXY_TO_REFINERY_MAPPING_LIST = "galaxy_to_refinery_mapping_list"
-    HISTORY_DATASET_COLLECTION_ASSOCIATION = 'hdca'
+    HISTORY_DATASET_COLLECTION_ASSOCIATION = "hdca"
     LIST = "list"
     PAIRED = "paired"
     REVERSE = "reverse"
+    TOOL_ID = "tool_id"
 
     class Meta:
         verbose_name = "workflowtool"
@@ -594,18 +597,18 @@ class WorkflowTool(Tool):
                 analysis=self.analysis,
                 direction=OUTPUT_CONNECTION,
                 name=galaxy_dataset["name"],
-                subanalysis=self._get_analysis_group_number(),
+                subanalysis=self._get_analysis_group_number(galaxy_dataset),
                 step=self._get_workflow_step(galaxy_dataset),
                 filename=galaxy_dataset["name"],
                 filetype=galaxy_dataset["file_ext"],
                 is_refinery_file=True
             )
 
-    def _create_collection_description(self, galaxy_element_list=None):
+    def _create_collection_description(self, analysis_group=0):
         """
         Creates an appropriate bioblend.galaxy.CollectionDescription
         instance based off of the structure of our WorkflowTool's
-        file_relationships in a recursive manner.
+        file_relationships.
         :return: bioblend.galaxy.CollectionDescription instance
         """
         file_relationship_nesting_list = (
@@ -614,9 +617,8 @@ class WorkflowTool(Tool):
                 *self.get_galaxy_file_relationships()
             )
         )
-
-        if galaxy_element_list is None:
-            galaxy_element_list = []
+        galaxy_element_list = []
+        workflow_is_collection_based = self._has_dataset_collection_input()
 
         # Toggle between the creation of `forward` and `reverse`
         # HistoryDatasetElements for `paired` CollectionElements
@@ -624,9 +626,11 @@ class WorkflowTool(Tool):
 
         for nested_element in reversed(file_relationship_nesting_list):
             if isinstance(nested_element, dict):
+                nested_element[self.ANALYSIS_GROUP] = analysis_group
                 self._update_galaxy_to_refinery_file_mapping_list(
                     nested_element
                 )
+
                 element_name = nested_element[self.REFINERY_FILE_UUID]
                 if self.galaxy_collection_type.split(":")[-1] == self.PAIRED:
                     if reverse_read:
@@ -635,6 +639,9 @@ class WorkflowTool(Tool):
                     else:
                         element_name = self.FORWARD
                         reverse_read = True
+                else:
+                    if not workflow_is_collection_based:
+                        analysis_group += 1
 
                 galaxy_element_list.append(
                     HistoryDatasetElement(
@@ -643,6 +650,9 @@ class WorkflowTool(Tool):
                     )
                 )
             elif isinstance(nested_element, list):
+                if workflow_is_collection_based:
+                    analysis_group += 1
+
                 list_collection_element = CollectionElement(
                     name="{} collection {}".format(self.LIST, uuid.uuid4()),
                     type=self.LIST
@@ -651,6 +661,8 @@ class WorkflowTool(Tool):
                 galaxy_element_list.append(list_collection_element)
 
             elif isinstance(nested_element, tuple):
+                analysis_group += 1
+
                 paired_collection_element = CollectionElement(
                     name="{} collection {}".format(self.PAIRED, uuid.uuid4()),
                     type=self.PAIRED
@@ -781,15 +793,24 @@ class WorkflowTool(Tool):
             structure=structure
         )
 
-    def _get_analysis_group_number(self):
+    def _get_analysis_group_number(self, galaxy_dataset_dict):
         """
-        Return an <int> corresponding to the # of successful Analyses that
-        have been run on our WorkflowTool's Refinery Dataset + 1 (For the
-        current Analysis run)
+        Fetch the Analysis Group Number (subanalysis) corresponding to the
+        derived Galaxy Dataset from our Galaxy Workflow invocation.
+
+        :param galaxy_dataset_dict: dict containing information about a
+        Galaxy Dataset
+        :return: <int> corresponding to said Galaxy Dataset's analysis group
         """
-        return self.dataset.get_analyses().filter(
-            status=Analysis.SUCCESS_STATUS
-        ).count() + 1
+        galaxy_dataset_id = self._get_refinery_input_file_id(
+            galaxy_dataset_dict
+        )
+        for refinery_file_mapping in self._get_galaxy_file_mapping_list():
+            refinery_input_file_id = refinery_file_mapping[
+                self.GALAXY_DATASET_HISTORY_ID
+            ]
+            if refinery_input_file_id == galaxy_dataset_id:
+                return refinery_file_mapping[self.ANALYSIS_GROUP]
 
     @staticmethod
     def _get_galaxy_dataset_filename(galaxy_dataset_dict):
@@ -813,13 +834,13 @@ class WorkflowTool(Tool):
         Retrieve a list of Galaxy Datasets from the Galaxy History of our
         Galaxy Workflow invocation.
         """
-        dataset_list = (
-            self.galaxy_connection.histories.show_matching_datasets(
-                self.galaxy_workflow_history_id
-            )
+        dataset_list = self.galaxy_connection.histories.show_matching_datasets(
+            self.galaxy_workflow_history_id
         )
-        # Filter any Galaxy Datasets that have been purged.
-        return [dataset for dataset in dataset_list if not dataset["purged"]]
+        non_purged_datasets = [
+            dataset for dataset in dataset_list if not dataset["purged"]
+        ]
+        return non_purged_datasets
 
     def get_galaxy_dict(self):
         """
@@ -844,6 +865,14 @@ class WorkflowTool(Tool):
             ]
 
     @handle_bioblend_exceptions
+    def _get_galaxy_dataset_provenance(self, galaxy_dataset_dict):
+        return self.galaxy_connection.histories.show_dataset_provenance(
+            self.galaxy_workflow_history_id,
+            galaxy_dataset_dict["id"],
+            follow=True
+        )
+
+    @handle_bioblend_exceptions
     def _get_galaxy_workflow_invocation(self):
         """
         Fetch our Galaxy Workflow's invocation data.
@@ -866,17 +895,50 @@ class WorkflowTool(Tool):
             ]
 
     @handle_bioblend_exceptions
+    def _get_refinery_input_file_id(self, galaxy_dataset_dict):
+        """
+        Retrieve the Galaxy Dataset id corresponding to the Refinery file
+        that a Derived Dataset ultimately came from.
+        This is done through a combination of WorkflowTools keeping track of
+        which FileStoreItems correspond to which Datasets in our
+        Galaxy History
+        (see WorkflowTool._update_galaxy_to_refinery_file_mapping_list),
+        and utilizing `bioblend.galaxy.histories.show_dataset_provenance` in a
+        recursive manner to trace back to where any derived data came from.
+        :param galaxy_dataset_dict: dict containing information about a
+        Galaxy Dataset
+        :return: id of the Galaxy Dataset corresponding to our
+        `galaxy_dataset_dict`s Refinery input file
+        """
+        job_inputs = self.galaxy_connection.jobs.show_job(
+            self._get_galaxy_dataset_provenance(galaxy_dataset_dict)["job_id"]
+        )["inputs"]
+
+        for key in job_inputs.keys():
+            galaxy_dataset = job_inputs[key]
+            galaxy_dataset_provenance = self._get_galaxy_dataset_provenance(
+                galaxy_dataset
+            )
+            # If we reach a point where the tool in the provenance is an
+            # `upload` tool, we can tell which Refinery FileStoreItem our
+            # derived dataset came from
+            if "upload" in galaxy_dataset_provenance[self.TOOL_ID]:
+                return galaxy_dataset["id"]
+            else:
+                return self._get_refinery_input_file_id(galaxy_dataset)
+
+    @handle_bioblend_exceptions
     def _get_tool_data(self, workflow_step):
         return self.galaxy_connection.tools.show_tool(
             self.galaxy_connection.workflows.show_workflow(
                 self.get_workflow_internal_id()
-            )["steps"][workflow_step]["tool_id"],
+            )["steps"][workflow_step][self.TOOL_ID],
             io_details=True
         )
 
     def _get_tool_inputs_dict(self, workflow_step):
         """
-        Retrive that valid input parameters for the Galaxy tool in our current
+        Retrieve the valid input parameters for the Galaxy tool in our current
         Galaxy Workflow that corresponds to the given `workflow_step`
         """
         tool_data = self._get_tool_data(str(workflow_step))
@@ -931,6 +993,15 @@ class WorkflowTool(Tool):
             "but there are {}".format(len(workflow_steps))
         )
         return workflow_steps[0]
+
+    def _has_dataset_collection_input(self):
+        """
+        Determine whether our Workflow's input step has a Galaxy Dataset
+        Collection as input or not.
+        :returns: Boolean
+        """
+        workflow_input_type = self._get_workflow_dict()["steps"]["0"]["type"]
+        return workflow_input_type == self.DATA_COLLECTION_INPUT
 
     @handle_bioblend_exceptions
     def import_library_dataset_to_history(self, history_id,
