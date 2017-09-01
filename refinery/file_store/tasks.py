@@ -247,12 +247,11 @@ def import_file(uuid, refresh=False, file_size=0):
 def update_solr_index(**kwargs):
     file_store_item_uuid = kwargs['result']
     try:
-        node = Node.objects.get(
-            file_uuid=file_store_item_uuid
-        )
-        NodeIndex().update_object(node)
+        node = Node.objects.get(file_uuid=file_store_item_uuid)
     except (Node.DoesNotExist, Node.MultipleObjectsReturned) as exc:
-        logger.error("Couldn't properly fetch Node: %s", exc)
+        logger.error("Couldn't retrieve Node: %s", exc)
+    else:
+        NodeIndex().update_object(node)
 
 
 @task_success.connect(sender=import_file)
@@ -262,11 +261,11 @@ def begin_auxiliary_node_generation(**kwargs):
     # http://docs.celeryproject.org/en/3.1/userguide/signals.html#basics
     file_store_item_uuid = kwargs['result']
     try:
-        Node.objects.get(
-            file_uuid=file_store_item_uuid
-        ).run_generate_auxiliary_node_task()
+        node = Node.objects.get(file_uuid=file_store_item_uuid)
     except (Node.DoesNotExist, Node.MultipleObjectsReturned) as exc:
-        logger.error("Couldn't properly fetch Node: %s", exc)
+        logger.error("Couldn't retrieve Node: %s", exc)
+    else:
+        node.run_generate_auxiliary_node_task()
 
 
 @task()
