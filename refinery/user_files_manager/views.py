@@ -9,6 +9,7 @@ from django.template import RequestContext
 
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from unidecode import unidecode
 
 from data_set_manager.search_indexes import NodeIndex
 from data_set_manager.utils import format_solr_response, search_solr
@@ -39,8 +40,12 @@ def user_files_csv(request):
     for doc in docs:
         row = [doc.get(NodeIndex.DOWNLOAD_URL) or '']
         for col in cols:
-            row.append(doc.get(col + '_Characteristics_generic_s') or
-                       doc.get(col + '_Factor_Value_generic_s') or '')
+            possibly_unicode = (
+                doc.get(col + '_Characteristics_generic_s') or
+                doc.get(col + '_Factor_Value_generic_s') or
+                ''
+            )
+            row.append(unidecode(possibly_unicode))
         writer.writerow(row)
 
     return response

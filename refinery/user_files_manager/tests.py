@@ -79,7 +79,7 @@ class UserFilesViewTests(TestCase):
             'filename_Characteristics' + NodeIndex.GENERIC_SUFFIX:
                 'fake-filename',
             'organism_Factor_Value' + NodeIndex.GENERIC_SUFFIX:
-                'fake-organism'
+                u'handles\u2013unicode'
             # Just want to exercise "_Characteristics" and "_Factor_Value":
             # Doesn't matter if the names are backwards.
         }
@@ -96,7 +96,7 @@ class UserFilesViewTests(TestCase):
                 response.content,
                 'url,filename,organism,technology,'
                 'antibody,date,genotype,experimenter\r\n'
-                'fake-url,fake-filename,fake-organism,,,,,\r\n'
+                'fake-url,fake-filename,handles-unicode,,,,,\r\n'
             )
 
 
