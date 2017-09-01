@@ -30,7 +30,7 @@ from core.models import DataSet, get_user_import_dir
 from core.utils import get_full_url
 from file_store.models import (generate_file_source_translator, get_temp_dir,
                                parse_s3_url)
-from file_store.tasks import DownloadError, download_file
+from file_store.tasks import DownloadError, download_file, import_file
 
 from .models import Assay, AttributeOrder, Study
 from .serializers import AssaySerializer, AttributeOrderSerializer
@@ -267,47 +267,45 @@ class ProcessISATabView(View):
             # TODO: exception handling (OSError)
             os.unlink(response['data']['temp_file_path'])
             if dataset_uuid:
+                try:
+                    dataset = DataSet.objects.get(uuid=dataset_uuid)
+                except (DataSet.DoesNotExist, DataSet.MultipleObjectsReturned):
+                    logger.error(
+                        "Cannot import data files for data set UUID '%s'",
+                        dataset_uuid
+                    )
+                else:
+                    # start importing uploaded data files
+                    for file_store_item in dataset.get_file_store_items():
+                        if file_store_item.source.startswith(
+                            (settings.REFINERY_DATA_IMPORT_DIR, 's3://')
+                        ):
+                            import_file.delay(file_store_item.uuid)
+
                 if request.is_ajax():
                     return HttpResponse(
                         json.dumps({
                             'success': 'Data set imported',
-                            'data': {
-                                'new_data_set_uuid': dataset_uuid
-                            }
+                            'data': {'new_data_set_uuid': dataset_uuid}
                         }),
                         content_type='application/json'
                     )
-
                 return HttpResponseRedirect(
                     reverse(self.success_view_name, args=[dataset_uuid])
                 )
             else:
                 error = 'Problem parsing ISA-Tab file'
                 if request.is_ajax():
-                    return HttpResponse(
-                        json.dumps({
-                            'error': error
-                        }),
-                        content_type='application/json'
-                    )
-
-                context = RequestContext(
-                    request,
-                    {
-                        'form': form,
-                        'error': error
-                    }
-                )
-                return render_to_response(
-                    self.template_name,
-                    context_instance=context
-                )
+                    return HttpResponse(json.dumps({'error': error}),
+                                        content_type='application/json')
+                context = RequestContext(request, {'form': form,
+                                                   'error': error})
+                return render_to_response(self.template_name,
+                                          context_instance=context)
         else:  # submitted form is not valid
             context = RequestContext(request, {'form': form})
-            return render_to_response(
-                self.template_name,
-                context_instance=context
-            )
+            return render_to_response(self.template_name,
+                                      context_instance=context)
 
     def import_by_file(self, file):
         temp_file_path = os.path.join(get_temp_dir(), file.name)

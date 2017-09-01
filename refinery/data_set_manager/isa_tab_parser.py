@@ -15,8 +15,6 @@ import string
 import tempfile
 from zipfile import ZipFile
 
-from django.conf import settings
-
 from file_store.models import FileStoreItem
 from file_store.tasks import create, import_file
 
@@ -325,22 +323,18 @@ class IsaTabParser:
                 file_store_item = FileStoreItem.objects.create_item(
                     source=file_path, sharename='', filetype=''
                 )
-                if file_store_item is not None:
-                    # start importing data file if it was uploaded
-                    if file_store_item.source.startswith(
-                            (settings.REFINERY_DATA_IMPORT_DIR, 's3://')
-                    ):
-                        import_file.delay(file_store_item.uuid)
+                if file_store_item:
                     node.file_uuid = file_store_item.uuid
                     node.save()
                 else:
-                    logger.exception(
-                        "Unable to add " + file_path + " to file store as a "
-                        "temporary file.")
+                    logger.error(
+                        "Unable to add %s to file store as a temporary file",
+                        file_path
+                    )
             if is_new:
-                logger.info("New node " + str(node) + " created.")
+                logger.info("New node %s created", str(node))
             else:
-                logger.info("Node " + str(node) + " retrieved.")
+                logger.info("Node %s retrieved", str(node))
         else:
             if len(node_name) > 0:
                 node = Node.objects.create(
