@@ -20,9 +20,22 @@
     });
 
     describe('createData', function () {
-      it('handles duplicates', function () {
+      it('handles empty', function () {
         expect(factory.createData([]))
         .toEqual([]);
+      });
+
+      it('handles matching duplicates', function () {
+        expect(factory.createData([{
+          name: 'http://example.com/foo.bar',
+          organism_Characteristics_generic_s: 'dog',
+          organism_Factor_Value_generic_s: 'dog'
+        }]))
+        .toEqual([{
+          url: 'http://example.com/foo.bar',
+          name: 'http://example.com/foo.bar', // TODO: This could be removed?
+          organism: 'dog'
+        }]);
       });
     });
 
