@@ -926,6 +926,7 @@ class WorkflowTool(Tool):
             if "upload" in galaxy_dataset_provenance[self.TOOL_ID]:
                 return galaxy_dataset["id"]
             else:
+                # Recursive call
                 return self._get_refinery_input_file_id(galaxy_dataset)
 
     @handle_bioblend_exceptions
