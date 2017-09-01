@@ -36,6 +36,8 @@
           name: 'http://example.com/foo.bar', // TODO: This could be removed?
           organism: 'dog'
         }]);
+
+        // TODO: and what if they don't match?
       });
     });
 
@@ -59,7 +61,7 @@
                 { name: 'mouse', value: 3 },
                 { name: 'dog', value: 4 } // TODO: Merge
               ],
-              lowerCaseNames: 'mouse dog'
+              lowerCaseNames: ' mouse cat mouse dog'
             }
           }
         );

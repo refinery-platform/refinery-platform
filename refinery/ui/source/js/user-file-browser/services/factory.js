@@ -82,20 +82,45 @@
       return data;
     }
 
+    // function mergeAndAddObject (target, source) {
+    //   Object.keys(source).forEach( function(key) {
+    //     if (typeof target[key] === 'undefined') {
+    //       target[key] = source[key];
+    //     } else {
+    //       target[key] += source[key];
+    //     }
+    //   });
+    // }
+    //
+    // function objectToNameValue (object) {
+    //
+    // }
+    //
+    // function nameValueToObject (nameValue) {
+    //
+    // }
+    //
+    // function mergeAndAddNameValues (target, source) {
+    //
+    // }
+
     function createFilters (solrFacetCounts) {
       var filters = {};
       Object.keys(solrFacetCounts).forEach(function (key) {
         if (solrFacetCounts[key].length > 0) {
-          // TODO: can't use AttributeOrder (it's per dataset), but this is bad.
           var facetObj = solrFacetCounts[key];
           var lowerCaseNames = facetObj.map(function (nameCount) {
             return nameCount.name.toLowerCase();
           }).join(' ');
-          // TODO: This is where name collisions need to be handled.
-          filters[mapInternalToDisplay(key)] = {
-            facetObj: facetObj,
-            lowerCaseNames: lowerCaseNames
-          };
+          var display = mapInternalToDisplay(key);
+          if (!angular.isDefined(filters[display])) {
+            filters[display] = {
+              facetObj: {},
+              lowerCaseNames: ''
+            };
+          }
+          filters[display].lowerCaseNames += ' ' + lowerCaseNames;
+          // mergeAndAddNameValues(filters[display].facetObj, facetObj);
         }
       });
       return filters;
