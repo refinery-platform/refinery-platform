@@ -803,15 +803,26 @@ class WorkflowTool(Tool):
         Galaxy Dataset
         :return: <int> corresponding to said Galaxy Dataset's analysis group
         """
-        galaxy_dataset_id = self._get_refinery_input_file_id(
+        refinery_input_file_id = self._get_refinery_input_file_id(
             galaxy_dataset_dict
         )
-        for refinery_file_mapping in self._get_galaxy_file_mapping_list():
-            refinery_input_file_id = refinery_file_mapping[
+        refinery_to_galaxy_file_mappings = self._get_galaxy_file_mapping_list()
+
+        matching_refinery_to_galaxy_file_mappings = [
+            refinery_to_galaxy_file_map
+            for refinery_to_galaxy_file_map in refinery_to_galaxy_file_mappings
+            if refinery_input_file_id == refinery_to_galaxy_file_map[
                 self.GALAXY_DATASET_HISTORY_ID
             ]
-            if refinery_input_file_id == galaxy_dataset_id:
-                return refinery_file_mapping[self.ANALYSIS_GROUP]
+        ]
+        assert len(matching_refinery_to_galaxy_file_mappings) == 1, (
+            "`matching_refinery_to_galaxy_file_mappings` should only "
+            "contain a single element."
+        )
+        analysis_group_number = (
+            matching_refinery_to_galaxy_file_mappings[0][self.ANALYSIS_GROUP]
+        )
+        return analysis_group_number
 
     @staticmethod
     def _get_galaxy_dataset_filename(galaxy_dataset_dict):
