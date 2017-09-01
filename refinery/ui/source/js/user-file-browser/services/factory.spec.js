@@ -19,6 +19,40 @@
       expect(factory).toBeDefined();
     });
 
+    describe('createData', function () {
+      it('handles duplicates', function () {
+        expect(factory.createData([]))
+        .toEqual([]);
+      });
+    });
+
+    describe('createFilters', function () {
+      it('handles duplicates', function () {
+        expect(factory.createFilters(
+          {
+            organism_Characteristics_generic_s: [
+              { name: 'mouse', value: 1 },
+              { name: 'cat', value: 2 }
+            ],
+            organism_Factor_Value_generic_s: [
+              { name: 'mouse', value: 3 },
+              { name: 'dog', value: 4 }
+            ]
+          }
+        )).toEqual(
+          {
+            organism: {
+              facetObj: [
+                { name: 'mouse', value: 3 },
+                { name: 'dog', value: 4 } // TODO: Merge
+              ],
+              lowerCaseNames: 'mouse dog'
+            }
+          }
+        );
+      });
+    });
+
     describe('getUserFiles', function () {
       var userFiles;
 
@@ -29,54 +63,18 @@
       ) {
         userFiles = {
           nodes: [
-            {
-              REFINERY_ANALYSIS_UUID_6_3_s: 'N/A',
-              Author_Characteristics_6_3_s: 'McConnell',
-              REFINERY_WORKFLOW_OUTPUT_6_3_s: 'N/A'
-            },
-            {
-              REFINERY_ANALYSIS_UUID_6_3_s: 'fbc78aaa-1050-403b-858c-a1504a40ef54',
-              Author_Characteristics_6_3_s: 'McConnell',
-              REFINERY_WORKFLOW_OUTPUT_6_3_s: '1_test_01'
-            },
-            {
-              REFINERY_ANALYSIS_UUID_6_3_s: '547ac4a0-7d5a-48a9-8859-8620ad94c7a2',
-              Author_Characteristics_6_3_s: 'McConnell',
-              REFINERY_WORKFLOW_OUTPUT_6_3_s: '1_test tool out'
-            }],
+            { field: 'value' }
+          ],
           attributes: [{
-            attribute_type: 'Internal',
+            field: 'Internal',
             file_ext: 's',
-            display_name: 'Output Type',
-            internal_name: 'REFINERY_WORKFLOW_OUTPUT_6_3_s'
-          }, {
-            attribute_type: 'Internal',
-            file_ext: 's',
-            display_name: 'Analysis',
-            internal_name: 'REFINERY_ANALYSIS_UUID_6_3_s'
-          }, {
-            attribute_type: 'Characteristics',
-            file_ext: 's',
-            display_name: 'Author',
-            internal_name: 'Author_Characteristics_6_3_s'
+            display_name: 'foo bar',
+            internal_name: 'REFINERY_foo_bar'
           }],
           facet_field_counts: {
-            REFINERY_WORKFLOW_OUTPUT_6_3_s: {
-              '1_test_04': 2,
-              '1_test_02': 2
-            },
-            REFINERY_ANALYSIS_UUID_6_3_s: {
-              '5d2311d1-6d8c-4857-bc57-2f25563aee91': 4
-            },
-            Author_Characteristics_6_3_s: {
-              Vezza: 1,
-              'Harslem/Heafner': 1,
-              McConnell: 6,
-              'Crocker + McConnell': 4,
-              Crocker: 4,
-              'Postel/Cerf': 1,
-              Cotton: 1
-            }
+            field: [
+              { name: 'name', count: 42 }
+            ]
           }
         };
         spyOn(userFileService, 'query').and.callFake(function () {
