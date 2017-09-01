@@ -1,3 +1,4 @@
+import json
 import logging
 from urlparse import urljoin
 
@@ -7,11 +8,13 @@ from django.http import QueryDict
 from django.test import RequestFactory, TestCase
 
 from guardian.utils import get_anonymous_user
+import mock
 import requests
 from rest_framework.test import (APIRequestFactory, APITestCase,
                                  force_authenticate)
 
 from data_set_manager.models import Assay
+from data_set_manager.search_indexes import NodeIndex
 from factory_boy.utils import create_dataset_with_necessary_models
 
 from .utils import generate_solr_params_for_user
@@ -65,16 +68,36 @@ class UserFilesUITests(StaticLiveServerTestCase):
 
 
 class UserFilesViewTests(TestCase):
+
     def test_user_files_csv(self):
         request = RequestFactory().get('/fake-url')
         request.user = User.objects.create_user(
             'testuser', 'test@example.com', 'password')
-        response = user_files_csv(request)
-        self.assertEqual(
-            response.content,
-            'url,filename,organism,technology,'
-            'antibody,date,genotype,experimenter\r\n'
-        )
+        mock_doc = {
+            NodeIndex.DOWNLOAD_URL:
+                'fake-url',
+            'filename_Characteristics' + NodeIndex.GENERIC_SUFFIX:
+                'fake-filename',
+            'organism_Factor_Value' + NodeIndex.GENERIC_SUFFIX:
+                'fake-organism'
+            # Just want to exercise "_Characteristics" and "_Factor_Value":
+            # Doesn't matter if the names are backwards.
+        }
+        with mock.patch(
+            'user_files_manager.views._get_solr',
+            return_value=json.dumps({
+                'response': {
+                    'docs': [mock_doc]
+                }
+            })
+        ):
+            response = user_files_csv(request)
+            self.assertEqual(
+                response.content,
+                'url,filename,organism,technology,'
+                'antibody,date,genotype,experimenter\r\n'
+                'fake-url,fake-filename,fake-organism,,,,,\r\n'
+            )
 
 
 class UserFilesUtilsTests(TestCase):
