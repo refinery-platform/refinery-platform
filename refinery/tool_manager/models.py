@@ -1001,10 +1001,7 @@ class WorkflowTool(Tool):
         :returns: Boolean
         """
         workflow_input_type = self._get_workflow_dict()["steps"]["0"]["type"]
-        if workflow_input_type == self.DATA_COLLECTION_INPUT:
-            return True
-        else:
-            return False
+        return workflow_input_type == self.DATA_COLLECTION_INPUT
 
     @handle_bioblend_exceptions
     def import_library_dataset_to_history(self, history_id,
