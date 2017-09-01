@@ -450,14 +450,12 @@ def parse_isatab(username, public, path,
             # TODO: error handling
             with open(path, 'rb') as f:
                 new_checksum = calculate_checksum(f)
-            if (checksum == new_checksum):
+            if checksum == new_checksum:
                 # Checksums are identical so we can skip this file.
                 logger.info("The checksum of both files is the same: %s",
                             checksum)
-                return (
-                    investigation.investigationlink_set.all()[0].data_set.uuid,
-                    os.path.basename(path),
-                    True)
+                return \
+                    investigation.investigationlink_set.all()[0].data_set.uuid
     try:
         with transaction.atomic():
             investigation = parser.run(
@@ -470,7 +468,7 @@ def parse_isatab(username, public, path,
                 username,
                 public=public
             )
-            return data_uuid, os.path.basename(path), False
+            return data_uuid
     except:  # prints the error message without breaking things
         exc_type, exc_value, exc_traceback = sys.exc_info()
         logger.error(traceback.print_tb(exc_traceback, file=sys.stdout))
@@ -482,7 +480,7 @@ def parse_isatab(username, public, path,
                 file=sys.stdout
             )
         )
-        return None, os.path.basename(path), False
+    return None
 
 
 @task()
