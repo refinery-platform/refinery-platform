@@ -438,11 +438,13 @@ def parse_isatab(username, public, path,
                                 logger.info("Get file: %s",
                                             fileStoreItem.get_absolute_path())
                                 checksum = calculate_checksum(
-                                    fileStoreItem.get_file_object())
-                            except IOError as e:
+                                    fileStoreItem.get_file_object()
+                                )
+                            except IOError as exc:
                                 logger.error(
-                                    "Original isatab archive wasn't found. "
-                                    "Error: '%s'", e)
+                                    "Original ISA-tab archive wasn't found. "
+                                    "Error: '%s'", exc
+                                )
         # 4. Finally if we got a checksum for an existing file, we calculate
         # the checksum for the new file and compare them
         if checksum:
@@ -459,14 +461,10 @@ def parse_isatab(username, public, path,
     try:
         with transaction.atomic():
             investigation = parser.run(
-                path,
-                isa_archive=isa_archive,
-                preisa_archive=pre_isa_archive
+                path, isa_archive=isa_archive, preisa_archive=pre_isa_archive
             )
             data_uuid = create_dataset(
-                investigation.uuid,
-                username,
-                public=public
+                investigation.uuid, username, public=public
             )
             return data_uuid
     except:  # prints the error message without breaking things
@@ -474,10 +472,7 @@ def parse_isatab(username, public, path,
         logger.error(traceback.print_tb(exc_traceback, file=sys.stdout))
         logger.error(
             traceback.print_exception(
-                exc_type,
-                exc_value,
-                exc_traceback,
-                file=sys.stdout
+                exc_type, exc_value, exc_traceback, file=sys.stdout
             )
         )
     return None
