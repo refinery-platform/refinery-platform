@@ -1138,7 +1138,9 @@ class ToolTests(ToolManagerTestBase):
             self.tool.get_galaxy_dict(),
             {
                 WorkflowTool.FILE_RELATIONSHIPS_GALAXY: (
-                    self.tool.get_galaxy_file_relationships()
+                    unicode(
+                        self.tool.get_galaxy_file_relationships()
+                    ).replace("'", '"')
                 ),
                 WorkflowTool.GALAXY_TO_REFINERY_MAPPING_LIST: [
                     {
@@ -1717,7 +1719,7 @@ class WorkflowToolTests(ToolManagerTestBase):
         )
         self.assertTrue(has_dataset_collection_input_mock.called)
         self.assertEqual(
-            [0, 0, 0, 0],
+            [0, 0],
             [item[WorkflowTool.ANALYSIS_GROUP] for item in
              self.tool._get_galaxy_file_mapping_list()]
         )
@@ -1732,7 +1734,7 @@ class WorkflowToolTests(ToolManagerTestBase):
         )
         self.assertTrue(has_dataset_collection_input_mock.called)
         self.assertEqual(
-            [0, 0, 0, 0],
+            [0, 0],
             [item[WorkflowTool.ANALYSIS_GROUP] for item in
              self.tool._get_galaxy_file_mapping_list()]
         )
