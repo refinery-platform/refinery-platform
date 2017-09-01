@@ -4,7 +4,7 @@ from urlparse import urljoin
 from django.contrib.auth.models import User
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from django.http import QueryDict
-from django.test import TestCase
+from django.test import RequestFactory, TestCase
 
 from guardian.utils import get_anonymous_user
 import requests
@@ -15,7 +15,7 @@ from data_set_manager.models import Assay
 from factory_boy.utils import create_dataset_with_necessary_models
 
 from .utils import generate_solr_params_for_user
-from .views import UserFiles
+from .views import UserFiles, user_files_csv
 
 logger = logging.getLogger(__name__)
 
@@ -57,6 +57,19 @@ class UserFilesUITests(StaticLiveServerTestCase):
                 'files_download'
             )
         )
+        self.assertEqual(
+            response.content,
+            'url,filename,organism,technology,'
+            'antibody,date,genotype,experimenter\r\n'
+        )
+
+
+class UserFilesViewTests(TestCase):
+    def test_user_files_csv(self):
+        request = RequestFactory().get('/fake-url')
+        request.user = User.objects.create_user(
+            'testuser', 'test@example.com', 'password')
+        response = user_files_csv(request)
         self.assertEqual(
             response.content,
             'url,filename,organism,technology,'
