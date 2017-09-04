@@ -43,15 +43,15 @@
 
     describe('createFilters', function () {
       describe('utils', function () {
-        // it('_mergeAndAddObject', function () {
-        //   var a = {a: 1};
-        //   var b = {a: 2, b: 3};
-        //   factory._mergeAndAddObject(a, b);
-        //   expect(a).toEqual({
-        //     a: 3,
-        //     b: 3
-        //   })
-        // });
+        it('_mergeAndAddObject', function () {
+          var a = { a: 1 };
+          var b = { a: 2, b: 3 };
+          factory._mergeAndAddObject(a, b);
+          expect(a).toEqual({
+            a: 3,
+            b: 3
+          });
+        });
         it('_objectToNameValue', function () {
           expect(factory._objectToNameValue({
             a: 1
