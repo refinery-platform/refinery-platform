@@ -68,15 +68,15 @@
             a: 1
           });
         });
-        // it('_mergeAndAddNameValues', function () {
-        //   var a = [{name: a, value: 1}];
-        //   var b = [{name: a, value: 2}, {name: b, value: 3}];
-        //   factory._mergeAndAddNameValues(a, b);
-        //   expect(a).toEqual([
-        //     {name: a, value: 3},
-        //     {name: b, value: 3}
-        //   ])
-        // });
+        it('_mergeAndAddNameValues', function () {
+          var a = [{ name: 'a', value: 1 }];
+          var b = [{ name: 'a', value: 2 }, { name: 'b', value: 3 }];
+          factory._mergeAndAddNameValues(a, b);
+          expect(a).toEqual([
+            { name: 'a', value: 3 },
+            { name: 'b', value: 3 }
+          ]);
+        });
       });
       // it('handles duplicates', function () {
       //   expect(factory.createFilters(
