@@ -42,30 +42,66 @@
     });
 
     describe('createFilters', function () {
-      it('handles duplicates', function () {
-        expect(factory.createFilters(
-          {
-            organism_Characteristics_generic_s: [
-              { name: 'mouse', value: 1 },
-              { name: 'cat', value: 2 }
-            ],
-            organism_Factor_Value_generic_s: [
-              { name: 'mouse', value: 3 },
-              { name: 'dog', value: 4 }
-            ]
-          }
-        )).toEqual(
-          {
-            organism: {
-              facetObj: [
-                { name: 'mouse', value: 3 },
-                { name: 'dog', value: 4 } // TODO: Merge
-              ],
-              lowerCaseNames: ' mouse cat mouse dog'
-            }
-          }
-        );
+      describe('utils', function () {
+        // it('_mergeAndAddObject', function () {
+        //   var a = {a: 1};
+        //   var b = {a: 2, b: 3};
+        //   factory._mergeAndAddObject(a, b);
+        //   expect(a).toEqual({
+        //     a: 3,
+        //     b: 3
+        //   })
+        // });
+        it('_objectToNameValue', function () {
+          expect(factory._objectToNameValue({
+            a: 1
+          })).toEqual([{
+            name: 'a',
+            value: 1
+          }]);
+        });
+        it('_nameValueToObject', function () {
+          expect(factory._nameValueToObject([{
+            name: 'a',
+            value: 1
+          }])).toEqual({
+            a: 1
+          });
+        });
+        // it('_mergeAndAddNameValues', function () {
+        //   var a = [{name: a, value: 1}];
+        //   var b = [{name: a, value: 2}, {name: b, value: 3}];
+        //   factory._mergeAndAddNameValues(a, b);
+        //   expect(a).toEqual([
+        //     {name: a, value: 3},
+        //     {name: b, value: 3}
+        //   ])
+        // });
       });
+      // it('handles duplicates', function () {
+      //   expect(factory.createFilters(
+      //     {
+      //       organism_Characteristics_generic_s: [
+      //         { name: 'mouse', value: 1 },
+      //         { name: 'cat', value: 2 }
+      //       ],
+      //       organism_Factor_Value_generic_s: [
+      //         { name: 'mouse', value: 3 },
+      //         { name: 'dog', value: 4 }
+      //       ]
+      //     }
+      //   )).toEqual(
+      //     {
+      //       organism: {
+      //         facetObj: [
+      //           { name: 'mouse', value: 3 },
+      //           { name: 'dog', value: 4 } // TODO: Merge
+      //         ],
+      //         lowerCaseNames: ' mouse cat mouse dog'
+      //       }
+      //     }
+      //   );
+      // });
     });
 
     describe('getUserFiles', function () {

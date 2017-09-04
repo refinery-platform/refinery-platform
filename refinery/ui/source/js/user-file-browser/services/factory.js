@@ -20,7 +20,11 @@
       createColumnDefs: createColumnDefs,
       createData: createData,
       createFilters: createFilters,
-      getUserFiles: getUserFiles
+      getUserFiles: getUserFiles,
+      _mergeAndAddObject: _mergeAndAddObject,
+      _objectToNameValue: _objectToNameValue,
+      _nameValueToObject: _nameValueToObject,
+      _mergeAndAddNameValues: _mergeAndAddNameValues
     };
     var URL = 'url';
     return service;
@@ -82,27 +86,45 @@
       return data;
     }
 
-    // function mergeAndAddObject (target, source) {
-    //   Object.keys(source).forEach( function(key) {
-    //     if (typeof target[key] === 'undefined') {
-    //       target[key] = source[key];
-    //     } else {
-    //       target[key] += source[key];
-    //     }
-    //   });
-    // }
-    //
-    // function objectToNameValue (object) {
-    //
-    // }
-    //
-    // function nameValueToObject (nameValue) {
-    //
-    // }
-    //
-    // function mergeAndAddNameValues (target, source) {
-    //
-    // }
+    function _mergeAndAddObject (target, extra) {
+      Object.keys(extra).forEach(function (key) {
+        if (typeof target[key] === 'undefined') {
+          target[key] = extra[key];
+        } else {
+          target[key] += extra[key];
+        }
+      });
+    }
+
+    function _objectToNameValue (object) {
+      var nv = [];
+      Object.keys(object).forEach(function (key) {
+        nv.push({
+          name: key,
+          value: object[key]
+        });
+      });
+      return nv;
+    }
+
+    function _nameValueToObject (nameValue) {
+      var obj = {};
+      nameValue.forEach(function (nv) {
+        obj[nv.name] = nv.value;
+      });
+      return obj;
+    }
+
+    function _mergeAndAddNameValues (targetNV, extraNV) {
+      var targetObj = _nameValueToObject(targetNV);
+      var extraObj = _nameValueToObject(extraNV);
+      _mergeAndAddObject(targetObj, extraObj);
+      var newTargetNV = _objectToNameValue(targetObj);
+      targetNV.length = 0;
+      newTargetNV.forEach(function (nv) {
+        targetNV.push(nv);
+      });
+    }
 
     function createFilters (solrFacetCounts) {
       var filters = {};
