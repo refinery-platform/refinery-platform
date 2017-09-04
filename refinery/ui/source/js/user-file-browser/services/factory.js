@@ -134,15 +134,16 @@
           var lowerCaseNames = facetObj.map(function (nameCount) {
             return nameCount.name.toLowerCase();
           }).join(' ');
+          // "foo_Characteristic" and "foo_Factor_Value" both map to "foo".
           var display = mapInternalToDisplay(key);
           if (!angular.isDefined(filters[display])) {
             filters[display] = {
-              facetObj: {},
+              facetObj: [],
               lowerCaseNames: ''
             };
           }
           filters[display].lowerCaseNames += ' ' + lowerCaseNames;
-          // mergeAndAddNameValues(filters[display].facetObj, facetObj);
+          _mergeAndAddNameValues(filters[display].facetObj, facetObj);
         }
       });
       return filters;

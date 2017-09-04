@@ -78,30 +78,31 @@
           ]);
         });
       });
-      // it('handles duplicates', function () {
-      //   expect(factory.createFilters(
-      //     {
-      //       organism_Characteristics_generic_s: [
-      //         { name: 'mouse', value: 1 },
-      //         { name: 'cat', value: 2 }
-      //       ],
-      //       organism_Factor_Value_generic_s: [
-      //         { name: 'mouse', value: 3 },
-      //         { name: 'dog', value: 4 }
-      //       ]
-      //     }
-      //   )).toEqual(
-      //     {
-      //       organism: {
-      //         facetObj: [
-      //           { name: 'mouse', value: 3 },
-      //           { name: 'dog', value: 4 } // TODO: Merge
-      //         ],
-      //         lowerCaseNames: ' mouse cat mouse dog'
-      //       }
-      //     }
-      //   );
-      // });
+      it('handles duplicates', function () {
+        expect(factory.createFilters(
+          {
+            organism_Characteristics_generic_s: [
+              { name: 'mouse', value: 1 },
+              { name: 'cat', value: 2 }
+            ],
+            organism_Factor_Value_generic_s: [
+              { name: 'mouse', value: 3 },
+              { name: 'dog', value: 4 }
+            ]
+          }
+        )).toEqual(
+          {
+            organism: {
+              facetObj: [
+                { name: 'mouse', value: 4 },
+                { name: 'cat', value: 2 },
+                { name: 'dog', value: 4 }
+              ],
+              lowerCaseNames: ' mouse cat mouse dog'
+            }
+          }
+        );
+      });
     });
 
     describe('getUserFiles', function () {
