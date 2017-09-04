@@ -98,7 +98,7 @@
                 { name: 'cat', value: 2 },
                 { name: 'dog', value: 4 }
               ],
-              lowerCaseNames: ' mouse cat mouse dog'
+              lowerCaseNames: ' mouse cat mouse dog' // This is ok: Just used for substring search.
             }
           }
         );
