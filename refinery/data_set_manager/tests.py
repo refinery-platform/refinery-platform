@@ -1711,14 +1711,18 @@ class NodeIndexTests(APITestCase):
         data = NodeIndex().prepare(self.node)
         data = dict(
             (
-                re.sub(r'[^_./]*\d+[^_./]*', '#', key),
-                re.sub(r'[^_./]*\d+[^_./]*', '#', value) if
+                re.sub(r'\d+', '#', key),
+                re.sub(r'\d+', '#', value) if
                 type(value) in (unicode, str) and
                 key != 'REFINERY_DOWNLOAD_URL_s' and
                 'uuid' not in key
                 else value
             )
             for (key, value) in data.items()
+        )
+        self.assertRexexpMatches(
+            r'^http://example.com/media/file_store/',
+            data['REFINERY_DOWNLOAD_URL_s']
         )
         self.assertEqual(
             data,
