@@ -466,6 +466,7 @@ class WorkflowTool(Tool):
     GALAXY_WORKFLOW_INVOCATION_DATA = "galaxy_workflow_invocation_data"
     GALAXY_TO_REFINERY_MAPPING_LIST = "galaxy_to_refinery_mapping_list"
     HISTORY_DATASET_COLLECTION_ASSOCIATION = "hdca"
+    INPUT_DATASET_COLLECTION = "Input Dataset Collection"
     LIST = "list"
     PAIRED = "paired"
     REVERSE = "reverse"
