@@ -11,8 +11,6 @@ from django.test import SimpleTestCase, TestCase
 import mock
 from rest_framework.test import APIRequestFactory, APITestCase
 
-from core.utils import get_full_url
-
 from .models import (FILE_STORE_TEMP_DIR, FileExtension, FileStoreItem,
                      FileType, SymlinkedFileSystemStorage, file_path,
                      generate_file_source_translator, get_extension_from_path,
@@ -141,7 +139,7 @@ class FileStoreItemTest(TestCase):
         )
 
         self.assertEqual(
-            get_full_url(local_file.get_datafile_url()),
+            local_file.get_datafile_url(),
             '{}://{}{}'.format(
                 settings.REFINERY_URL_SCHEME,
                 Site.objects.get_current().domain,
@@ -158,7 +156,7 @@ class FileStoreItemTest(TestCase):
             source=self.url_source,
             sharename=self.sharename
         )
-        self.assertEqual(get_full_url(item_from_url.get_datafile_url()),
+        self.assertEqual(item_from_url.get_datafile_url(),
                          item_from_url.source)
 
     def test_get_file_type(self):
