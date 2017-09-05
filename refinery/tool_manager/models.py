@@ -605,7 +605,7 @@ class WorkflowTool(Tool):
                 is_refinery_file=True
             )
 
-    def _create_collection_description(self, analysis_group=0):
+    def _create_collection_description(self):
         """
         Creates an appropriate bioblend.galaxy.CollectionDescription
         instance based off of the structure of our WorkflowTool's
@@ -618,6 +618,7 @@ class WorkflowTool(Tool):
                 *self.get_galaxy_file_relationships()
             )
         )
+        analysis_group = 0
         galaxy_element_list = []
         workflow_is_collection_based = self._has_dataset_collection_input()
 
@@ -803,15 +804,26 @@ class WorkflowTool(Tool):
         Galaxy Dataset
         :return: <int> corresponding to said Galaxy Dataset's analysis group
         """
-        galaxy_dataset_id = self._get_refinery_input_file_id(
+        refinery_input_file_id = self._get_refinery_input_file_id(
             galaxy_dataset_dict
         )
-        for refinery_file_mapping in self._get_galaxy_file_mapping_list():
-            refinery_input_file_id = refinery_file_mapping[
+        refinery_to_galaxy_file_mappings = self._get_galaxy_file_mapping_list()
+
+        matching_refinery_to_galaxy_file_mappings = [
+            refinery_to_galaxy_file_map
+            for refinery_to_galaxy_file_map in refinery_to_galaxy_file_mappings
+            if refinery_input_file_id == refinery_to_galaxy_file_map[
                 self.GALAXY_DATASET_HISTORY_ID
             ]
-            if refinery_input_file_id == galaxy_dataset_id:
-                return refinery_file_mapping[self.ANALYSIS_GROUP]
+        ]
+        assert len(matching_refinery_to_galaxy_file_mappings) == 1, (
+            "`matching_refinery_to_galaxy_file_mappings` should only "
+            "contain a single element."
+        )
+        analysis_group_number = (
+            matching_refinery_to_galaxy_file_mappings[0][self.ANALYSIS_GROUP]
+        )
+        return analysis_group_number
 
     @staticmethod
     def _get_galaxy_dataset_filename(galaxy_dataset_dict):
@@ -926,6 +938,7 @@ class WorkflowTool(Tool):
             if "upload" in galaxy_dataset_provenance[self.TOOL_ID]:
                 return galaxy_dataset["id"]
             else:
+                # Recursive call
                 return self._get_refinery_input_file_id(galaxy_dataset)
 
     @handle_bioblend_exceptions

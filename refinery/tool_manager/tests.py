@@ -305,7 +305,7 @@ class ToolManagerTestBase(ToolManagerMocks):
             self.tool = WorkflowTool.objects.get(
                 tool_definition__uuid=self.td.uuid
             )
-            self.update_tool_nodes()
+            self._update_galaxy_file_mapping()
 
         self.get_request = self.factory.get(self.tools_url_root)
         force_authenticate(self.get_request, self.user)
@@ -371,7 +371,7 @@ class ToolManagerTestBase(ToolManagerMocks):
             )
             self.td = create_tool_definition(self.tool_annotation_data)
 
-    def update_tool_nodes(self):
+    def _update_galaxy_file_mapping(self):
         """
         Helper method to update a WorkflowTool's
         galaxy_to_refinery_mapping_list as it would be if we were
