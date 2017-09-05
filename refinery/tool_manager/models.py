@@ -582,9 +582,9 @@ class WorkflowTool(Tool):
                 analysis=self.analysis,
                 node=node,
                 direction=INPUT_CONNECTION,
-                name=node.name,
+                name=file_store_item.datafile.name,
                 step=0,
-                filename=file_store_item.datafile.name,
+                filename=self.INPUT_DATASET_COLLECTION,
                 is_refinery_file=file_store_item.is_local()
             )
 

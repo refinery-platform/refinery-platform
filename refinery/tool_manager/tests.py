@@ -1433,6 +1433,11 @@ class WorkflowToolTests(ToolManagerTestBase):
                 analysis_node_connection.direction,
                 INPUT_CONNECTION
             )
+            self.assertEqual(
+                analysis_node_connection.filename,
+                WorkflowTool.INPUT_DATASET_COLLECTION
+            )
+            self.assertEqual(analysis_node_connection.step, 0)
 
     def test_galaxy_parameter_dict_creation(self):
         self.create_valid_tool(
