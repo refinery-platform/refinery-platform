@@ -528,7 +528,7 @@ class FileStoreItem(models.Model):
         :returns: A url for the given FileStoreItem or None
         """
         if self.is_local():
-            return self.datafile.url
+            return core.utils.get_full_url(self.datafile.url)
         else:
             # data file doesn't exist on disk
             if os.path.isabs(self.source):
