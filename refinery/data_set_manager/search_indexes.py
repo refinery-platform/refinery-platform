@@ -11,6 +11,7 @@ from django.conf import settings
 
 from haystack import indexes
 
+from core.utils import get_full_url
 from file_store.models import FileStoreItem
 
 from .models import AnnotatedNode, Assay, Node
@@ -140,7 +141,7 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
         data.update({
             NodeIndex.DOWNLOAD_URL:
                 '' if file_store_item is None
-                else file_store_item.get_datafile_url(),
+                else get_full_url(file_store_item.get_datafile_url()),
             NodeIndex.TYPE_PREFIX + id_suffix:
                 object.type,
             NodeIndex.NAME_PREFIX + id_suffix:
