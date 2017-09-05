@@ -235,15 +235,30 @@ class ProcessISATabView(View):
                 response = self.import_by_url(url)
             else:
                 response = self.import_by_file(f)
+
+            # get AWS Cognito identity ID
+            if settings.REFINERY_DEPLOYMENT_PLATFORM == 'aws':
+                try:
+                    identity_id = form.cleaned_data['identity_id']
+                except (KeyError, ValueError):
+                    error_msg = 'identity_id is missing'
+                    error = {'error_message': error_msg}
+                    if request.is_ajax():
+                        return HttpResponseBadRequest(
+                            json.dumps({'error': error_msg}),
+                            'application/json'
+                        )
+                    else:
+                        return render(request, self.template_name, error)
+            else:
+                identity_id = None
+
             if not response['success']:
                 if request.is_ajax():
                     return HttpResponse(
-                        json.dumps({
-                            'error': response.message
-                        }),
+                        json.dumps({'error': response.message}),
                         content_type='application/json'
                     )
-
                 return render_to_response(
                     self.template_name,
                     context_instance=RequestContext(
@@ -261,11 +276,14 @@ class ProcessISATabView(View):
 
             dataset_uuid = parse_isatab.delay(
                 username=request.user.username, public=False,
-                path=response['data']['temp_file_path']
+                path=response['data']['temp_file_path'],
+                identity_id=identity_id
             ).get()
 
             # TODO: exception handling (OSError)
             os.unlink(response['data']['temp_file_path'])
+
+            # import data files
             if dataset_uuid:
                 try:
                     dataset = DataSet.objects.get(uuid=dataset_uuid)
@@ -508,7 +526,7 @@ class CheckDataFilesView(View):
         except KeyError:
             base_path = None
         try:
-            identity_id = file_data['identityId']
+            identity_id = file_data['identity_id']
         except KeyError:
             identity_id = None
 

@@ -5,14 +5,17 @@
     .module('refineryDataSetImport')
     .controller('IsaTabImportCtrl', IsaTabImportCtrl);
 
-  IsaTabImportCtrl.$inject = ['$log', '$rootScope', '$timeout', '$window', 'isaTabImportApi'];
+  IsaTabImportCtrl.$inject = [
+    '$log', '$rootScope', '$timeout', '$window', 'isaTabImportApi', 'settings'
+  ];
 
-  function IsaTabImportCtrl ($log, $rootScope, $timeout, $window, isaTabImportApi) {
+  function IsaTabImportCtrl ($log, $rootScope, $timeout, $window, isaTabImportApi, settings) {
     this.$log = $log;
     this.$rootScope = $rootScope;
     this.$timeout = $timeout;
     this.$window = $window;
     this.isaTabImportApi = isaTabImportApi;
+    this.settings = settings;
     this.showFileUpload = false;
   }
 
@@ -68,6 +71,11 @@
     var formData = new FormData();
     formData.append('isa_tab_file', this.file);
     formData.append('isa_tab_url', this.urlToFile);
+
+    // get Cognito identity ID if deployed on AWS
+    if (this.settings.djangoApp.deploymentPlatform === 'aws') {
+      formData.append('identity_id', AWS.config.credentials.identityId);
+    }
 
     return this.isaTabImportApi
       .create({}, formData)

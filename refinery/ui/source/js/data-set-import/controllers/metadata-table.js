@@ -219,9 +219,9 @@ MetadataTableImportCtrl.prototype.checkFiles = function () {
     });
   }
 
-  // get S3 bucket name and Cognito identity ID if deployed on AWS
+  // get Cognito identity ID if deployed on AWS
   if (this.settings.djangoApp.deploymentPlatform === 'aws') {
-    fileData.identityId = AWS.config.credentials.identityId;
+    fileData.identity_id = AWS.config.credentials.identityId;
   }
 
   self.fileSources
@@ -318,7 +318,7 @@ MetadataTableImportCtrl.prototype.startImport = function () {
   if (self.dataFilePermanent) {
     formData.append('data_file_permanent', self.dataFilePermanent);
   }
-  // get S3 bucket name and Cognito identity ID if deployed on AWS
+  // get Cognito identity ID if deployed on AWS
   if (this.settings.djangoApp.deploymentPlatform === 'aws') {
     formData.append('identity_id', AWS.config.credentials.identityId);
   }

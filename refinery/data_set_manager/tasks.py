@@ -373,7 +373,7 @@ def annotate_nodes(investigation_uuid):
 
 
 @task()
-def parse_isatab(username, public, path,
+def parse_isatab(username, public, path, identity_id=None,
                  additional_raw_data_file_extension=None, isa_archive=None,
                  pre_isa_archive=None, file_base_path=None, overwrite=False):
     """parses in an ISA-TAB file to create database entries and creates or
@@ -393,7 +393,7 @@ def parse_isatab(username, public, path,
     file_base_path: if your file locations are relative paths, this is the base
     """
     file_source_translator = generate_file_source_translator(
-        username=username, base_path=file_base_path
+        username=username, base_path=file_base_path, identity_id=identity_id
     )
     parser = IsaTabParser(
         file_source_translator=file_source_translator,
