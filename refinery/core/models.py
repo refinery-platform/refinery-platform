@@ -1419,7 +1419,10 @@ class Analysis(OwnableResource):
             connection = self.galaxy_connection()
             error_msg = "Error deleting Galaxy %s for analysis '%s': %s"
 
-            # Delete Galaxy library
+            logger.info("Purging galaxy of libraries, histories, "
+                        "and workflows related to the execution of Analysis "
+                        "with UUID: %s", self.uuid)
+
             if self.library_id:
                 try:
                     connection.libraries.delete_library(self.library_id)
@@ -1681,15 +1684,20 @@ class Analysis(OwnableResource):
         # 4. create derived data file nodes for all entries and connect to data
         # transformation nodes
         for output_connection in AnalysisNodeConnection.objects.filter(
-                analysis=self, direction=OUTPUT_CONNECTION):
+                analysis=self,
+                direction=OUTPUT_CONNECTION
+        ):
             # create derived data file node
-            derived_data_file_node = \
+            derived_data_file_node = (
                 Node.objects.create(
                     study=study, assay=assay,
                     type=Node.DERIVED_DATA_FILE,
-                    name=output_connection.name, analysis_uuid=self.uuid,
+                    name=output_connection.name,
+                    analysis_uuid=self.uuid,
                     subanalysis=output_connection.subanalysis,
-                    workflow_output=output_connection.name)
+                    workflow_output=output_connection.name
+                )
+            )
             # retrieve uuid of corresponding output file if exists
             logger.info("Results for '%s' and %s.%s: %s",
                         self.uuid,
@@ -1761,12 +1769,18 @@ class Analysis(OwnableResource):
 
         # 5. create annotated nodes and index new nodes
         node_uuids = AnalysisNodeConnection.objects.filter(
-            analysis=self, direction=OUTPUT_CONNECTION, is_refinery_file=True
+            analysis=self,
+            direction=OUTPUT_CONNECTION,
+            is_refinery_file=True
         ).values_list('node__uuid', flat=True)
+
         add_annotated_nodes_selection(
-            node_uuids, Node.DERIVED_DATA_FILE,
-            study.uuid, assay.uuid)
-        index_annotated_nodes_selection(node_uuids)
+            node_uuids,
+            Node.DERIVED_DATA_FILE,
+            study.uuid,
+            assay.uuid
+        )
+        self._prepare_annotated_nodes(node_uuids)
 
     def attach_outputs_downloads(self):
         analysis_results = AnalysisResult.objects.filter(
@@ -1810,6 +1824,21 @@ class Analysis(OwnableResource):
             else:
                 file_store_item.terminate_file_import_task()
 
+    def _prepare_annotated_nodes(self, node_uuids):
+        """
+        Wrapper method to ensure that `rename_results` is called before
+        index_annotated_nodes_selection.
+
+        If `rename_results` isn't executed before
+        `index_annotated_nodes_selection` we end up indexing incorrect
+        information.
+
+        Call order is ensured through:
+        core.tests.test__prepare_annotated_nodes_calls_methods_in_proper_order
+        """
+        self.rename_results()
+        index_annotated_nodes_selection(node_uuids)
+
     @property
     def is_tool_based(self):
         try:
@@ -1844,9 +1873,9 @@ class AnalysisNodeConnection(models.Model):
 
     # (display) name for an output file "wig_outfile" or "outfile"
     # (unique for a given workflow template)
-    name = models.CharField(null=False, blank=False, max_length=100)
+    name = models.CharField(null=False, blank=False, max_length=500)
     # file name of the connection, e.g. "wig_outfile" or "outfile"
-    filename = models.CharField(null=False, blank=False, max_length=100)
+    filename = models.CharField(null=False, blank=False, max_length=500)
     # file type if known
     filetype = models.CharField(null=True, blank=True, max_length=100)
     # direction of the connection, either an input or an output
@@ -2286,12 +2315,6 @@ class Invitation(models.Model):
         if not self.id:
             self.created = timezone.now()
         return super(Invitation, self).save(*arg, **kwargs)
-
-
-# TODO - Back this with DB as a models.Model
-class FastQC(object):
-    def __init__(self, data=None):
-        self.data = data
 
 
 @receiver(post_save, sender=User)

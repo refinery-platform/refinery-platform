@@ -161,7 +161,6 @@ def _attach_workflow_outputs(analysis_uuid):
                        analysis.workflow.type, analysis.name)
 
     analysis.set_status(Analysis.SUCCESS_STATUS)
-    analysis.rename_results()
     analysis.send_email()
     logger.info("Analysis '%s' finished successfully", analysis)
     analysis.galaxy_cleanup()
@@ -187,7 +186,7 @@ def _galaxy_file_export(analysis_uuid):
     analysis_status = _get_analysis_status(analysis_uuid)
 
     if not analysis_status.galaxy_export_task_group_id:
-        galaxy_export_tasks = _get_galaxy_download_tasks(analysis)
+        galaxy_export_tasks = _get_galaxy_download_task_ids(analysis)
         logger.info(
             "Starting downloading of results from Galaxy for analysis "
             "'%s'", analysis)
@@ -240,7 +239,10 @@ def _invoke_tool_based_galaxy_workflow(analysis_uuid):
 
     tool.update_galaxy_data(
         tool.GALAXY_WORKFLOW_INVOCATION_DATA,
-        galaxy_workflow_invocation_data
+        tool.galaxy_connection.workflows.show_invocation(
+            tool.get_workflow_internal_id(),
+            galaxy_workflow_invocation_data["id"]
+        )
     )
 
 
@@ -316,17 +318,12 @@ def run_analysis(analysis_uuid):
     if analysis.is_tool_based:
         _run_tool_based_galaxy_file_import(analysis_uuid)
         _run_tool_based_galaxy_workflow(analysis_uuid)
-        _check_galaxy_history_state(analysis_uuid)
-        _run_tool_based_galaxy_file_export(analysis_uuid)
     else:
         _run_galaxy_workflow(analysis_uuid)
-        _check_galaxy_history_state(analysis_uuid)
-        _galaxy_file_export(analysis_uuid)
-        _attach_workflow_outputs(analysis_uuid)
 
-
-def _run_tool_based_galaxy_file_export(analysis_uuid):
-    raise NotImplementedError
+    _check_galaxy_history_state(analysis_uuid)
+    _galaxy_file_export(analysis_uuid)
+    _attach_workflow_outputs(analysis_uuid)
 
 
 def _run_galaxy_workflow(analysis_uuid):
@@ -434,6 +431,8 @@ def _run_tool_based_galaxy_file_import(analysis_uuid):
         galaxy_file_import_taskset.delete()
         analysis.galaxy_cleanup()
         return
+    else:
+        analysis_status.set_galaxy_import_state(AnalysisStatus.OK)
 
 
 def _run_tool_based_galaxy_workflow(analysis_uuid):
@@ -443,9 +442,12 @@ def _run_tool_based_galaxy_workflow(analysis_uuid):
     """
     analysis = _get_analysis(analysis_uuid)
     analysis_status = _get_analysis_status(analysis_uuid)
+    tool = _get_workflow_tool(analysis_uuid)
 
     if not analysis_status.galaxy_workflow_task_group_id:
         logger.debug("Starting workflow execution in Galaxy")
+
+        tool.update_file_relationships_with_galaxy_history_data()
 
         galaxy_workflow_tasks = [
             _invoke_tool_based_galaxy_workflow.subtask((analysis_uuid,))
@@ -600,8 +602,6 @@ def _start_galaxy_analysis(analysis_uuid):
 @task()
 def _tool_based_galaxy_file_import(analysis_uuid, file_store_item_uuid,
                                    history_dict, library_dict):
-
-    analysis_status = _get_analysis_status(analysis_uuid)
     tool = _get_workflow_tool(analysis_uuid)
 
     file_store_item = FileStoreItem.objects.get(uuid=file_store_item_uuid)
@@ -610,19 +610,15 @@ def _tool_based_galaxy_file_import(analysis_uuid, file_store_item_uuid,
         get_full_url(file_store_item.get_datafile_url())
     )
     history_dataset_dict = tool.import_library_dataset_to_history(
-            history_dict["id"],
-            library_dataset_dict[0]["id"]
-        )
-
-    tool.update_file_relationships_with_galaxy_history_data(
-        {
-            tool.REFINERY_FILE_UUID: file_store_item_uuid,
-            tool.GALAXY_DATASET_HISTORY_ID: history_dataset_dict["id"]
-        }
+        history_dict["id"],
+        library_dataset_dict[0]["id"]
     )
+    tool = _get_workflow_tool(analysis_uuid)
 
     number_of_files = len(tool.get_input_file_uuid_list())
     single_file_percentage = (100 / number_of_files)
+
+    analysis_status = _get_analysis_status(analysis_uuid)
     analysis_status.galaxy_import_progress = (
         analysis_status.galaxy_import_progress + single_file_percentage
     )
@@ -630,29 +626,45 @@ def _tool_based_galaxy_file_import(analysis_uuid, file_store_item_uuid,
 
     if (analysis_status.galaxy_import_progress ==
             single_file_percentage * number_of_files):
-        analysis_status.set_galaxy_import_state(AnalysisStatus.OK)
+        # Imports are complete at this point so update
+        # `galaxy_import_progress` to `100`.
+        analysis_status.galaxy_import_progress = 100
+        analysis_status.save()
+
+    galaxy_to_refinery_file_mapping = {
+        tool.REFINERY_FILE_UUID: file_store_item_uuid,
+        tool.GALAXY_DATASET_HISTORY_ID: history_dataset_dict["id"]
+    }
+    return galaxy_to_refinery_file_mapping
 
 
-def _get_galaxy_download_tasks(analysis):
+def _get_galaxy_download_task_ids(analysis):
     """Get file import tasks for Galaxy analysis results"""
     logger.debug("Preparing to download analysis results from Galaxy")
-    task_list = []
+    task_id_list = []
 
     # retrieving list of files to download for workflow
+    if analysis.is_tool_based:
+        tool = _get_workflow_tool(analysis.uuid)
+        tool.create_workflow_file_downloads()
+        tool.create_analysis_output_node_connections()
+
     dl_files = analysis.workflow_dl_files
     # creating dictionary based on files to download predetermined by workflow
     # w/ keep operators
     dl_dict = {}
     for dl in dl_files.all():
-        temp_dict = {}
-        temp_dict['filename'] = dl.filename
-        temp_dict['pair_id'] = dl.pair_id
+        temp_dict = {
+            'filename': dl.filename,
+            'pair_id': dl.pair_id
+        }
         dl_dict[str(dl.step_id)] = temp_dict
     galaxy_instance = analysis.workflow.workflow_engine.instance
 
     try:
         download_list = galaxy_instance.get_history_file_list(
-            analysis.history_id)
+            analysis.history_id
+        )
     except galaxy.client.ConnectionError as exc:
         error_msg = (
             "Error downloading Galaxy history files for analysis '%s': %s"
@@ -660,16 +672,19 @@ def _get_galaxy_download_tasks(analysis):
         logger.error(error_msg, analysis.name, exc.message)
         analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
         analysis.galaxy_cleanup()
-        return task_list
+        return task_id_list
     # Iterating through files in current galaxy history
     for results in download_list:
         # download file if result state is "ok"
         if results['state'] == 'ok':
             file_type = results["type"]
             curr_file_id = results['name']
-            if curr_file_id in dl_dict:
-                curr_dl_dict = dl_dict[curr_file_id]
-                result_name = curr_dl_dict['filename'] + '.' + file_type
+            if curr_file_id in dl_dict or analysis.is_tool_based:
+                if analysis.is_tool_based:
+                    result_name = "{}.{}".format(results['name'], file_type)
+                else:
+                    curr_dl_dict = dl_dict[curr_file_id]
+                    result_name = curr_dl_dict['filename'] + '.' + file_type
                 # size of file defined by galaxy
                 file_size = results['file_size']
                 # Determining tag if galaxy results should be download through
@@ -689,7 +704,9 @@ def _get_galaxy_download_tasks(analysis):
                 # TODO: when changing permanent=True, fix update of % download
                 # of file
                 filestore_uuid = create(
-                    source=download_url, filetype=file_type)
+                    source=download_url,
+                    filetype=file_type
+                )
                 # adding history files to django model
                 temp_file = AnalysisResult(
                     analysis_uuid=analysis.uuid,
@@ -703,6 +720,6 @@ def _get_galaxy_download_tasks(analysis):
                 if file_size > 0:
                     task_id = import_file.subtask(
                             (filestore_uuid, False, file_size))
-                    task_list.append(task_id)
+                    task_id_list.append(task_id)
 
-    return task_list
+    return task_id_list

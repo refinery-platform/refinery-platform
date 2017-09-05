@@ -7,7 +7,6 @@
     "image_name": "nginx:1.10.3-alpine",
     "description": "This visualization does really cool things",
     "parameters": [],
-    "output_files":[],
     "file_relationship": {
       "file_relationship": {},
       "value_type": "LIST",

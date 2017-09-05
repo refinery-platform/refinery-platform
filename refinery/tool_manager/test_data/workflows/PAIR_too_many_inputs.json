@@ -41,13 +41,6 @@
         "galaxy_workflow_step": 5
       }
     ],
-    "output_files": [
-      {
-        "filetype": {"name": "FASTQ"},
-        "name": "Cool Input File",
-        "description": "Cool Input File Description"
-      }
-    ],
     "file_relationship": {
       "file_relationship": {},
       "value_type": "PAIR",
