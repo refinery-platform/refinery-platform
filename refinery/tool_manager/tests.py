@@ -1429,9 +1429,21 @@ class WorkflowToolTests(ToolManagerTestBase):
         ]
         self.assertEqual(len(analysis_node_connections), len(tool_nodes))
         for analysis_node_connection in analysis_node_connections:
+            file_store_item = (
+                analysis_node_connection.node.get_file_store_item()
+            )
             self.assertEqual(
                 analysis_node_connection.direction,
                 INPUT_CONNECTION
+            )
+            self.assertEqual(
+                analysis_node_connection.filename,
+                WorkflowTool.INPUT_DATASET_COLLECTION
+            )
+            self.assertEqual(analysis_node_connection.step, 0)
+            self.assertEqual(
+                analysis_node_connection.name,
+                file_store_item.datafile.name
             )
 
     def test_galaxy_parameter_dict_creation(self):

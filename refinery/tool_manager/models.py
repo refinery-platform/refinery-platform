@@ -466,6 +466,7 @@ class WorkflowTool(Tool):
     GALAXY_WORKFLOW_INVOCATION_DATA = "galaxy_workflow_invocation_data"
     GALAXY_TO_REFINERY_MAPPING_LIST = "galaxy_to_refinery_mapping_list"
     HISTORY_DATASET_COLLECTION_ASSOCIATION = "hdca"
+    INPUT_DATASET_COLLECTION = "Input Dataset Collection"
     LIST = "list"
     PAIRED = "paired"
     REVERSE = "reverse"
@@ -581,9 +582,9 @@ class WorkflowTool(Tool):
                 analysis=self.analysis,
                 node=node,
                 direction=INPUT_CONNECTION,
-                name=node.name,
+                name=file_store_item.datafile.name,
                 step=0,
-                filename=file_store_item.datafile.name,
+                filename=self.INPUT_DATASET_COLLECTION,
                 is_refinery_file=file_store_item.is_local()
             )
 
