@@ -20,7 +20,11 @@
       createColumnDefs: createColumnDefs,
       createData: createData,
       createFilters: createFilters,
-      getUserFiles: getUserFiles
+      getUserFiles: getUserFiles,
+      _mergeAndAddObject: _mergeAndAddObject,
+      _objectToNameValue: _objectToNameValue,
+      _nameValueToObject: _nameValueToObject,
+      _mergeAndAddNameValues: _mergeAndAddNameValues
     };
     var URL = 'url';
     return service;
@@ -72,6 +76,8 @@
         var internalNames = Object.keys(node);
         internalNames.forEach(function (internalName) {
           var display = mapInternalToDisplay(internalName);
+          // TODO: Name collisions might happen here:
+          // organism_Characteristics vs organism_Factor_Value
           row[display] = node[internalName];
         });
         row[URL] = row.name;
@@ -80,19 +86,64 @@
       return data;
     }
 
+    function _mergeAndAddObject (target, extra) {
+      Object.keys(extra).forEach(function (key) {
+        if (typeof target[key] === 'undefined') {
+          target[key] = extra[key];
+        } else {
+          target[key] += extra[key];
+        }
+      });
+    }
+
+    function _objectToNameValue (object) {
+      var nv = [];
+      Object.keys(object).forEach(function (key) {
+        nv.push({
+          name: key,
+          value: object[key]
+        });
+      });
+      return nv;
+    }
+
+    function _nameValueToObject (nameValue) {
+      var obj = {};
+      nameValue.forEach(function (nv) {
+        obj[nv.name] = nv.value;
+      });
+      return obj;
+    }
+
+    function _mergeAndAddNameValues (targetNV, extraNV) {
+      var targetObj = _nameValueToObject(targetNV);
+      var extraObj = _nameValueToObject(extraNV);
+      _mergeAndAddObject(targetObj, extraObj);
+      var newTargetNV = _objectToNameValue(targetObj);
+      targetNV.length = 0;
+      newTargetNV.forEach(function (nv) {
+        targetNV.push(nv);
+      });
+    }
+
     function createFilters (solrFacetCounts) {
       var filters = {};
       Object.keys(solrFacetCounts).forEach(function (key) {
         if (solrFacetCounts[key].length > 0) {
-          // TODO: can't use AttributeOrder (it's per dataset), but this is bad.
           var facetObj = solrFacetCounts[key];
           var lowerCaseNames = facetObj.map(function (nameCount) {
             return nameCount.name.toLowerCase();
           }).join(' ');
-          filters[mapInternalToDisplay(key)] = {
-            facetObj: facetObj,
-            lowerCaseNames: lowerCaseNames
-          };
+          // "foo_Characteristic" and "foo_Factor_Value" both map to "foo".
+          var display = mapInternalToDisplay(key);
+          if (!angular.isDefined(filters[display])) {
+            filters[display] = {
+              facetObj: [],
+              lowerCaseNames: ''
+            };
+          }
+          filters[display].lowerCaseNames += ' ' + lowerCaseNames;
+          _mergeAndAddNameValues(filters[display].facetObj, facetObj);
         }
       });
       return filters;
