@@ -1180,7 +1180,10 @@ class OpenIDToken(APIView):
             )
         except (botocore.exceptions.ClientError,
                 botocore.exceptions.ParamValidationError) as exc:
-            message = "Error retrieving OpenID token: {}".format(exc)
+            message = ("Could not obtain OpenID token for user '{}' in "
+                       "IdentityPoolId '{}': {}".format(
+                        request.user.username, identity_pool_id, exc
+                        ))
             logger.error(message)
             return api_error_response(
                 message, status.HTTP_500_INTERNAL_SERVER_ERROR
