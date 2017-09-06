@@ -1722,7 +1722,9 @@ class NodeIndexTests(APITestCase):
         )
         self.assertRegexpMatches(
             data['REFINERY_DOWNLOAD_URL_s'],
-            r'^http://example.com/media/file_store/.+/test_file_.+txt$'
+            r'^http://example.com/media/file_store/.+/test_file.+txt$'
+            # There may or may not be a suffix on "test_file",
+            # depending on environment. Don't make it too strict!
         )
         self.assertEqual(
             data,
