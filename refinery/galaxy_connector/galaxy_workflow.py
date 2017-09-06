@@ -531,7 +531,7 @@ def create_expanded_workflow_graph(dictionary):
     graph = nx.MultiDiGraph()
     steps = dictionary["steps"]
     galaxy_input_types = [
-        'data_input',
+        tool_manager.models.WorkflowTool.DATA_INPUT,
         tool_manager.models.WorkflowTool.DATA_COLLECTION_INPUT
     ]
 

@@ -455,6 +455,7 @@ class WorkflowTool(Tool):
     """
     ANALYSIS_GROUP = "analysis_group"
     COLLECTION_INFO = "collection_info"
+    DATA_INPUT = "data_input"
     DATA_COLLECTION_INPUT = "data_collection_input"
     FILE_RELATIONSHIPS_GALAXY = "{}_galaxy".format(Tool.FILE_RELATIONSHIPS)
     FILE_RELATIONSHIPS_NESTING = "file_relationships_nesting"
@@ -466,7 +467,8 @@ class WorkflowTool(Tool):
     GALAXY_WORKFLOW_INVOCATION_DATA = "galaxy_workflow_invocation_data"
     GALAXY_TO_REFINERY_MAPPING_LIST = "galaxy_to_refinery_mapping_list"
     HISTORY_DATASET_COLLECTION_ASSOCIATION = "hdca"
-    INPUT_DATASET_COLLECTION = "Input Dataset Collection"
+    INPUT_DATASET = "Input Dataset"
+    INPUT_DATASET_COLLECTION = "{} Collection".format(INPUT_DATASET)
     LIST = "list"
     PAIRED = "paired"
     REVERSE = "reverse"
@@ -584,7 +586,11 @@ class WorkflowTool(Tool):
                 direction=INPUT_CONNECTION,
                 name=file_store_item.datafile.name,
                 step=0,
-                filename=self.INPUT_DATASET_COLLECTION,
+                filename=(
+                    self.INPUT_DATASET_COLLECTION
+                    if self._has_dataset_collection_input()
+                    else self.INPUT_DATASET
+                ),
                 is_refinery_file=file_store_item.is_local()
             )
 
