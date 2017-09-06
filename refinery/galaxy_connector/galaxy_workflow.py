@@ -530,10 +530,7 @@ def configure_workflow(workflow_dict, ret_list):
 def create_expanded_workflow_graph(dictionary):
     graph = nx.MultiDiGraph()
     steps = dictionary["steps"]
-    galaxy_input_types = [
-        tool_manager.models.WorkflowTool.DATA_INPUT,
-        tool_manager.models.WorkflowTool.DATA_COLLECTION_INPUT
-    ]
+    galaxy_input_types = tool_manager.models.WorkflowTool.GALAXY_INPUT_TYPES
 
     # iterate over steps to create nodes
     for current_node_id, step in steps.iteritems():
