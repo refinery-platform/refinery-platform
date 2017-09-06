@@ -1684,10 +1684,19 @@ class Analysis(OwnableResource):
                     input_connection.node.add_child(data_transformation_node)
         # 4. create derived data file nodes for all entries and connect to data
         # transformation nodes
-        for output_connection in AnalysisNodeConnection.objects.filter(
-                analysis=self,
-                direction=OUTPUT_CONNECTION
+        for index, output_connection in enumerate(
+                AnalysisNodeConnection.objects.filter(
+                    analysis=self,
+                    direction=OUTPUT_CONNECTION
+                )
         ):
+            analysis_results = AnalysisResult.objects.filter(
+                analysis_uuid=self.uuid,
+                file_name=(
+                    output_connection.name + "." + output_connection.filetype
+                )
+            )
+
             # create derived data file node
             derived_data_file_node = (
                 Node.objects.create(
@@ -1702,37 +1711,23 @@ class Analysis(OwnableResource):
             # retrieve uuid of corresponding output file if exists
             logger.info("Results for '%s' and %s.%s: %s",
                         self.uuid,
-                        output_connection.filename, output_connection.filetype,
+                        output_connection.filename,
+                        output_connection.filetype,
                         str(AnalysisResult.objects.filter(
                             analysis_uuid=self.uuid,
-                            file_name=(output_connection.name + "." +
-                                       output_connection.filetype)).count()))
-            analysis_results = AnalysisResult.objects.filter(
-                analysis_uuid=self.uuid,
-                file_name=(output_connection.name + "." +
-                           output_connection.filetype))
+                            file_name=(
+                                output_connection.name + "." +
+                                output_connection.filetype)).count()))
 
-            if analysis_results.count() == 0:
-                logger.info("No output file found for node '%s' ('%s')",
-                            derived_data_file_node.name,
-                            derived_data_file_node.uuid)
-
-            if analysis_results.count() == 1:
-                derived_data_file_node.file_uuid = \
-                    analysis_results[0].file_store_uuid
-                logger.debug(
-                    "Output file %s.%s ('%s') assigned to node %s ('%s')",
-                    output_connection.name,
-                    output_connection.filetype,
-                    analysis_results[0].file_store_uuid,
-                    derived_data_file_node.name,
-                    derived_data_file_node.uuid)
-
-            if analysis_results.count() > 1:
-                logger.warning("Multiple output files returned for '%s.%s'." +
-                               "No assignment to output node was made.",
-                               output_connection.filename,
-                               output_connection.filetype)
+            derived_data_file_node.file_uuid = \
+                analysis_results[index].file_store_uuid
+            logger.debug(
+                "Output file %s.%s ('%s') assigned to node %s ('%s')",
+                output_connection.name,
+                output_connection.filetype,
+                analysis_results[index].file_store_uuid,
+                derived_data_file_node.name,
+                derived_data_file_node.uuid)
             output_connection.node = derived_data_file_node
             output_connection.save()
             # get graph edge that corresponds to this output node:
