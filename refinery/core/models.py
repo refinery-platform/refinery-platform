@@ -1692,11 +1692,9 @@ class Analysis(OwnableResource):
         ):
             analysis_results = AnalysisResult.objects.filter(
                 analysis_uuid=self.uuid,
-                file_name=(
-                    output_connection.name + "." + output_connection.filetype
-                )
+                file_name="{}.{}".format(output_connection.name,
+                                         output_connection.filetype)
             )
-
             # create derived data file node
             derived_data_file_node = (
                 Node.objects.create(
@@ -1719,15 +1717,17 @@ class Analysis(OwnableResource):
                                 output_connection.name + "." +
                                 output_connection.filetype)).count()))
 
-            derived_data_file_node.file_uuid = \
+            derived_data_file_node.file_uuid = (
                 analysis_results[index].file_store_uuid
+            )
             logger.debug(
                 "Output file %s.%s ('%s') assigned to node %s ('%s')",
                 output_connection.name,
                 output_connection.filetype,
                 analysis_results[index].file_store_uuid,
                 derived_data_file_node.name,
-                derived_data_file_node.uuid)
+                derived_data_file_node.uuid
+            )
             output_connection.node = derived_data_file_node
             output_connection.save()
             # get graph edge that corresponds to this output node:
@@ -1751,16 +1751,14 @@ class Analysis(OwnableResource):
                             data_transformation_input_node)
                         # TODO: here we could add a (Refinery internal)
                         # attribute to the derived data file node to
-                        # indicate
-                        # which output of the tool it corresponds to
+                        # indicate which output of the tool it corresponds to
             # connect outputs that are not inputs for any data
             # transformation
             if (output_connection.is_refinery_file and
                     derived_data_file_node.parents.count() == 0):
                 graph.node[output_connection.step]['node'].add_child(
                     derived_data_file_node)
-            # delete output nodes that are not refinery files and
-            # don't have
+            # delete output nodes that are not refinery files and don't have
             # any children
             if (not output_connection.is_refinery_file and
                     derived_data_file_node.children.count() == 0):
