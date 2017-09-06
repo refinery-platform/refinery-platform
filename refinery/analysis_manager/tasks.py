@@ -14,7 +14,6 @@ from celery.task.sets import TaskSet
 import requests
 
 from core.models import Analysis, AnalysisResult, Workflow
-from core.utils import get_full_url
 from data_set_manager.models import Node
 from file_store.models import FileStoreItem
 from file_store.tasks import create, import_file
@@ -515,7 +514,7 @@ def _import_analysis_in_galaxy(ret_list, library_id, connection):
 
             # Create url based on filestore_item's location (local file or
             # external file)
-            file_url = get_full_url(current_filestore_item.get_datafile_url())
+            file_url = current_filestore_item.get_datafile_url()
 
             try:
                 file_id = connection.libraries.upload_file_from_url(
@@ -607,7 +606,7 @@ def _tool_based_galaxy_file_import(analysis_uuid, file_store_item_uuid,
     file_store_item = FileStoreItem.objects.get(uuid=file_store_item_uuid)
     library_dataset_dict = tool.upload_datafile_to_library_from_url(
         library_dict["id"],
-        get_full_url(file_store_item.get_datafile_url())
+        file_store_item.get_datafile_url()
     )
     history_dataset_dict = tool.import_library_dataset_to_history(
         history_dict["id"],

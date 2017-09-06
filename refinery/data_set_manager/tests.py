@@ -1709,14 +1709,20 @@ class NodeIndexTests(APITestCase):
         data = NodeIndex().prepare(self.node)
         data = dict(
             (
-                re.sub(r'[^_./]*\d+[^_./]*', '#', key),
-                re.sub(r'[^_./]*\d+[^_./]*', '#', value) if
+                re.sub(r'\d+', '#', key),
+                re.sub(r'\d+', '#', value) if
                 type(value) in (unicode, str) and
                 key != 'REFINERY_DOWNLOAD_URL_s' and
                 'uuid' not in key
                 else value
             )
             for (key, value) in data.items()
+        )
+        self.assertRegexpMatches(
+            data['REFINERY_DOWNLOAD_URL_s'],
+            r'^http://example.com/media/file_store/.+/test_file.+txt$'
+            # There may or may not be a suffix on "test_file",
+            # depending on environment. Don't make it too strict!
         )
         self.assertEqual(
             data,
