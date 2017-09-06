@@ -239,7 +239,7 @@ class ProcessISATabView(View):
             # get AWS Cognito identity ID
             if settings.REFINERY_DEPLOYMENT_PLATFORM == 'aws':
                 try:
-                    identity_id = form.cleaned_data['identity_id']
+                    identity_id = request.POST.get('identity_id')
                 except (KeyError, ValueError):
                     error_msg = 'identity_id is missing'
                     error = {'error_message': error_msg}
