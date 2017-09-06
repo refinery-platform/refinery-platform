@@ -1655,7 +1655,8 @@ class Analysis(OwnableResource):
             analysis=self, direction=INPUT_CONNECTION)[0].node.assay
         # 1. read workflow into graph
         graph = create_expanded_workflow_graph(
-            ast.literal_eval(self.workflow_copy))
+            ast.literal_eval(self.workflow_copy)
+        )
         # 2. create data transformation nodes for all tool nodes
         data_transformation_nodes = [graph.node[node_id]
                                      for node_id in graph.nodes()
@@ -1754,14 +1755,17 @@ class Analysis(OwnableResource):
                         derived_data_file_node.add_child(
                             data_transformation_input_node)
                         # TODO: here we could add a (Refinery internal)
-                        # attribute to the derived data file node to indicate
+                        # attribute to the derived data file node to
+                        # indicate
                         # which output of the tool it corresponds to
-            # connect outputs that are not inputs for any data transformation
+            # connect outputs that are not inputs for any data
+            # transformation
             if (output_connection.is_refinery_file and
                     derived_data_file_node.parents.count() == 0):
                 graph.node[output_connection.step]['node'].add_child(
                     derived_data_file_node)
-            # delete output nodes that are not refinery files and don't have
+            # delete output nodes that are not refinery files and
+            # don't have
             # any children
             if (not output_connection.is_refinery_file and
                     derived_data_file_node.children.count() == 0):
