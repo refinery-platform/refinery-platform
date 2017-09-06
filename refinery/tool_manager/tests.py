@@ -1415,6 +1415,7 @@ class WorkflowToolTests(ToolManagerTestBase):
         self.assertEqual(self.tool.galaxy_import_history_id, "COFFEE")
 
     def test_analysis_node_connections_are_created_for_all_input_nodes(self):
+        self.has_dataset_collection_input_mock_true.start()
         self.create_valid_tool(
             ToolDefinition.WORKFLOW,
             file_relationships=self.LIST_LIST_PAIR
@@ -1581,7 +1582,7 @@ class WorkflowToolTests(ToolManagerTestBase):
 
         self.assertEqual(self.show_dataset_provenance_mock.call_count, 8)
 
-    def test_create_analysis_node_connection_outputs(self):
+    def test_create_analysis_node_connections(self):
         self.show_dataset_provenance_mock.side_effect = (
             self.show_dataset_provenance_side_effect * 3
         )
@@ -1601,12 +1602,22 @@ class WorkflowToolTests(ToolManagerTestBase):
             ).count(),
             1
         )
-        self.assertEqual(
-            AnalysisNodeConnection.objects.filter(
-                direction=OUTPUT_CONNECTION
-            ).count(),
-            2
+        output_node_connections = AnalysisNodeConnection.objects.filter(
+            direction=OUTPUT_CONNECTION
         )
+
+        self.assertEqual(len(output_node_connections), 2)
+        for output_connection in output_node_connections:
+            self.assertEqual(output_connection.analysis, self.tool.analysis)
+            self.assertEqual(output_connection.direction, OUTPUT_CONNECTION)
+            self.assertEqual(output_connection.name, galaxy_datasets_list[
+                0]["name"])
+            self.assertEqual(output_connection.subanalysis, 0)
+            self.assertEqual(output_connection.filename, galaxy_datasets_list[
+                0]["name"])
+            self.assertEqual(output_connection.filetype, galaxy_datasets_list[
+                0]["file_ext"])
+            self.assertTrue(output_connection.is_refinery_file)
 
         self.assertTrue(self.galaxy_workflow_show_invocation_mock.called)
         self.assertTrue(self.galaxy_datasets_list_mock.called)
@@ -1830,6 +1841,84 @@ class WorkflowToolTests(ToolManagerTestBase):
             0
         )
         self.assertEqual(self.show_dataset_provenance_mock.call_count, 4)
+
+    def test_create_analysis_input_node_connections_dsc_input(self):
+        self.has_dataset_collection_input_mock_true.start()
+        self.create_valid_tool(ToolDefinition.WORKFLOW,
+                               file_relationships=self.LIST)
+        tool_nodes = self.tool._get_input_nodes()
+        analysis_node_connections = AnalysisNodeConnection.objects.filter(
+            direction=INPUT_CONNECTION
+        )
+        self.assertEqual(len(analysis_node_connections), len(tool_nodes))
+
+        for index, node in enumerate(tool_nodes):
+            self.assertEqual(
+                analysis_node_connections[index].analysis,
+                self.tool.analysis
+            )
+            self.assertEqual(analysis_node_connections[index].node, node)
+            self.assertEqual(
+                analysis_node_connections[index].direction,
+                INPUT_CONNECTION
+            )
+            self.assertEqual(
+                analysis_node_connections[index].name,
+                node.get_file_store_item().datafile.name
+            )
+            self.assertEqual(analysis_node_connections[index].step, 0)
+            self.assertEqual(
+                analysis_node_connections[index].filename,
+                WorkflowTool.INPUT_DATASET_COLLECTION
+            )
+            self.assertFalse(analysis_node_connections[index].is_refinery_file)
+
+    def test_create_analysis_input_node_connections_non_dsc_input(self):
+        self.has_dataset_collection_input_mock_false.start()
+        self.create_valid_tool(ToolDefinition.WORKFLOW,
+                               file_relationships=self.LIST)
+        tool_nodes = self.tool._get_input_nodes()
+        analysis_node_connections = AnalysisNodeConnection.objects.filter(
+            direction=INPUT_CONNECTION
+        )
+        self.assertEqual(len(analysis_node_connections), len(tool_nodes))
+
+        for index, node in enumerate(tool_nodes):
+            self.assertEqual(
+                analysis_node_connections[index].analysis,
+                self.tool.analysis
+            )
+            self.assertEqual(analysis_node_connections[index].node, node)
+            self.assertEqual(
+                analysis_node_connections[index].direction,
+                INPUT_CONNECTION
+            )
+            self.assertEqual(
+                analysis_node_connections[index].name,
+                node.get_file_store_item().datafile.name
+            )
+            self.assertEqual(analysis_node_connections[index].step, 0)
+            self.assertEqual(
+                analysis_node_connections[index].filename,
+                WorkflowTool.INPUT_DATASET
+            )
+            self.assertFalse(analysis_node_connections[index].is_refinery_file)
+
+    def test_attach_outputs_dataset_dsc(self):
+        self.has_dataset_collection_input_mock_true.start()
+
+        self.create_valid_tool(ToolDefinition.WORKFLOW)
+        self.tool.create_analysis_input_node_connections()
+        self.tool.create_analysis_output_node_connections()
+        self.tool.analysis.attach_outputs_dataset()
+
+    def test_attach_outputs_dataset_non_dsc(self):
+        self.has_dataset_collection_input_mock_false.start()
+
+        self.create_valid_tool(ToolDefinition.WORKFLOW)
+        self.tool.create_analysis_input_node_connections()
+        self.tool.create_analysis_output_node_connections()
+        self.tool.analysis.attach_outputs_dataset()
 
 
 class ToolAPITests(APITestCase, ToolManagerTestBase):
