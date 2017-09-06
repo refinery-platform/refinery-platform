@@ -1720,9 +1720,9 @@ class NodeIndexTests(APITestCase):
             )
             for (key, value) in data.items()
         )
-        self.assertRexexpMatches(
-            r'^http://example.com/media/file_store/',
-            data['REFINERY_DOWNLOAD_URL_s']
+        self.assertRegexpMatches(
+            data['REFINERY_DOWNLOAD_URL_s'],
+            r'^http://example.com/media/file_store/.+/test_file_.+txt$'
         )
         self.assertEqual(
             data,
