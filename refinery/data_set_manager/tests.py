@@ -778,8 +778,7 @@ class UtilitiesTest(TestCase):
                          '&q=django_ct%3Adata_set_manager.node'
                          '&wt=json'
                          '&facet=true'
-                         '&facet.limit=-1'
-                         '&facet.mincount=1'.format(
+                         '&facet.limit=-1'.format(
                                  self.valid_uuid))
 
     def test_generate_solr_params_for_assay_with_params(self):
@@ -815,8 +814,7 @@ class UtilitiesTest(TestCase):
                          '&q=django_ct%3Adata_set_manager.node'
                          '&wt=json'
                          '&facet=true'
-                         '&facet.limit=-1'
-                         '&facet.mincount=1'.format(
+                         '&facet.limit=-1'.format(
                                  self.valid_uuid))
 
     def test_generate_filtered_facet_fields(self):
