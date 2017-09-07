@@ -1717,22 +1717,29 @@ class Analysis(OwnableResource):
                             file_name=(
                                 output_connection.name + "." +
                                 output_connection.filetype)).count()))
-            if len(analysis_results) > 1:
-                analysis_result = analysis_results[index]
+            if analysis_results.count() == 0:
+                logger.info(
+                    "No output file found for node '%s' ('%s')",
+                    derived_data_file_node.name,
+                    derived_data_file_node.uuid
+                )
             else:
-                analysis_result = analysis_results[0]
+                if analysis_results.count() > 1:
+                    analysis_result = analysis_results[index]
+                else:
+                    analysis_result = analysis_results[0]
 
-            derived_data_file_node.file_uuid = (
-                analysis_result.file_store_uuid
-            )
-            logger.debug(
-                "Output file %s.%s ('%s') assigned to node %s ('%s')",
-                output_connection.name,
-                output_connection.filetype,
-                analysis_result.file_store_uuid,
-                derived_data_file_node.name,
-                derived_data_file_node.uuid
-            )
+                derived_data_file_node.file_uuid = (
+                    analysis_result.file_store_uuid
+                )
+                logger.debug(
+                    "Output file %s.%s ('%s') assigned to node %s ('%s')",
+                    output_connection.name,
+                    output_connection.filetype,
+                    analysis_result.file_store_uuid,
+                    derived_data_file_node.name,
+                    derived_data_file_node.uuid
+                )
             output_connection.node = derived_data_file_node
             output_connection.save()
             # get graph edge that corresponds to this output node:
