@@ -1126,6 +1126,7 @@ class WorkflowTool(Tool):
 
         for galaxy_to_refinery_dict in galaxy_to_refinery_mapping_list:
             node = Node.objects.get(
+                uuid__in=self.get_input_node_uuids(),
                 file_uuid=galaxy_to_refinery_dict[Tool.REFINERY_FILE_UUID]
             )
             galaxy_dict[self.FILE_RELATIONSHIPS_GALAXY] = (
