@@ -1699,9 +1699,8 @@ class Analysis(OwnableResource):
                 analysis_uuid=self.uuid,
                 file_name=output_connection_filename
             )
-            if analysis_results_counter is None:
-                analysis_results_counter = 0
-            if analysis_results_counter == analysis_results.count():
+            if (analysis_results_counter is None or
+                    analysis_results_counter == analysis_results.count()):
                 analysis_results_counter = 0
 
             # create derived data file node
