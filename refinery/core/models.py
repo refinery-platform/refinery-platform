@@ -1687,8 +1687,10 @@ class Analysis(OwnableResource):
         output_node_connections = AnalysisNodeConnection.objects.filter(
             analysis=self,
             direction=OUTPUT_CONNECTION
-        )
-        for index, output_connection in enumerate(output_node_connections):
+        ).order_by('filename')
+
+        analysis_results_counter = None
+        for output_connection in output_node_connections:
             output_connection_filename = "{}.{}".format(
                 output_connection.name,
                 output_connection.filetype
@@ -1697,6 +1699,11 @@ class Analysis(OwnableResource):
                 analysis_uuid=self.uuid,
                 file_name=output_connection_filename
             )
+            if analysis_results_counter is None:
+                analysis_results_counter = 0
+            if analysis_results_counter == analysis_results.count():
+                analysis_results_counter = 0
+
             # create derived data file node
             derived_data_file_node = (
                 Node.objects.create(
@@ -1721,7 +1728,10 @@ class Analysis(OwnableResource):
                             derived_data_file_node.uuid)
             else:
                 if analysis_results.count() > 1:
-                    analysis_result = analysis_results[index]
+                    analysis_result = analysis_results[
+                        analysis_results_counter
+                    ]
+                    analysis_results_counter += 1
                 else:
                     analysis_result = analysis_results[0]
 
