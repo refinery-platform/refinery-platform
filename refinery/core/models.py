@@ -1691,10 +1691,14 @@ class Analysis(OwnableResource):
                     direction=OUTPUT_CONNECTION
                 )
         ):
+            output_connection_filename = "{}.{}".format(
+                output_connection.name,
+                output_connection.filetype
+            )
+
             analysis_results = AnalysisResult.objects.filter(
                 analysis_uuid=self.uuid,
-                file_name="{}.{}".format(output_connection.name,
-                                         output_connection.filetype)
+                file_name=output_connection_filename
             )
             # create derived data file node
             derived_data_file_node = (
@@ -1710,19 +1714,14 @@ class Analysis(OwnableResource):
             # retrieve uuid of corresponding output file if exists
             logger.info("Results for '%s' and %s.%s: %s",
                         self.uuid,
-                        output_connection.filename,
+                        output_connection_filename,
                         output_connection.filetype,
-                        str(AnalysisResult.objects.filter(
-                            analysis_uuid=self.uuid,
-                            file_name=(
-                                output_connection.name + "." +
-                                output_connection.filetype)).count()))
+                        analysis_results.count())
+
             if analysis_results.count() == 0:
-                logger.info(
-                    "No output file found for node '%s' ('%s')",
-                    derived_data_file_node.name,
-                    derived_data_file_node.uuid
-                )
+                logger.info("No output file found for node '%s' ('%s')",
+                            derived_data_file_node.name,
+                            derived_data_file_node.uuid)
             else:
                 if analysis_results.count() > 1:
                     analysis_result = analysis_results[index]
@@ -1733,9 +1732,8 @@ class Analysis(OwnableResource):
                     analysis_result.file_store_uuid
                 )
                 logger.debug(
-                    "Output file %s.%s ('%s') assigned to node %s ('%s')",
-                    output_connection.name,
-                    output_connection.filetype,
+                    "Output file %s ('%s') assigned to node %s ('%s')",
+                    output_connection_filename,
                     analysis_result.file_store_uuid,
                     derived_data_file_node.name,
                     derived_data_file_node.uuid
@@ -1748,19 +1746,25 @@ class Analysis(OwnableResource):
             # (if exists)
             if len(graph.edges([output_connection.step])) > 0:
                 for edge in graph.edges_iter([output_connection.step]):
-                    if (graph[edge[0]][edge[1]]['output_id'] ==
-                        str(output_connection.step) + "_" +
-                            output_connection.filename):
+                    output_id = "{}_{}".format(
+                        output_connection.step,
+                        output_connection.filename
+                    )
+                    if graph[edge[0]][edge[1]]['output_id'] == output_id:
                         output_node_id = edge[0]
                         input_node_id = edge[1]
-                        data_transformation_output_node = \
+                        data_transformation_output_node = (
                             graph.node[output_node_id]['node']
-                        data_transformation_input_node = \
+                        )
+                        data_transformation_input_node = (
                             graph.node[input_node_id]['node']
+                        )
                         data_transformation_output_node.add_child(
-                            derived_data_file_node)
+                            derived_data_file_node
+                        )
                         derived_data_file_node.add_child(
-                            data_transformation_input_node)
+                            data_transformation_input_node
+                        )
                         # TODO: here we could add a (Refinery internal)
                         # attribute to the derived data file node to
                         # indicate which output of the tool it corresponds to
