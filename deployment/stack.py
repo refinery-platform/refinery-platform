@@ -180,10 +180,19 @@ def make_template(config, config_yaml):
         core.DeletionPolicy("Snapshot"),
     )
 
+    # Used to choose an AMI given a Region, and a host OS.
+    cft.mappings.ami = core.Mapping(
+        'Image',
+        {'us-east-1': {'ubuntu1404':  'ami-d05e75b8'}})
+
     cft.resources.ec2_instance = core.Resource(
         'WebInstance', 'AWS::EC2::Instance',
         core.Properties({
-            'ImageId': 'ami-d05e75b8',
+            'ImageId': functions.find_in_map(
+                            'Image',
+                            functions.ref("AWS::Region"),
+                            'ubuntu1404',
+                            ),
             'InstanceType': 'm3.medium',
             'UserData': functions.base64(user_data_script),
             'KeyName': config['KEY_NAME'],
