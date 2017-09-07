@@ -1926,6 +1926,25 @@ class WorkflowToolTests(ToolManagerTestBase):
             _get_galaxy_download_task_ids(self.tool.analysis)
             self.tool.analysis.attach_outputs_dataset()
             self.assertTrue(galaxy_workflow_dict_collection_mock.called)
+
+        input_connection = AnalysisNodeConnection.objects.filter(
+            analysis=self.tool.analysis,
+            direction=INPUT_CONNECTION
+        )[0]
+        assay = input_connection.node.assay
+        study = input_connection.node.study
+        for output_connection in AnalysisNodeConnection.objects.filter(
+                analysis=self.tool.analysis, direction=OUTPUT_CONNECTION):
+            self.assertEqual(output_connection.node.study, study)
+            self.assertEqual(output_connection.node.assay, assay)
+            self.assertEqual(output_connection.node.name,
+                             output_connection.name)
+            self.assertEqual(output_connection.node.analysis_uuid,
+                             self.tool.analysis.uuid)
+            self.assertEqual(output_connection.node.subanalysis,
+                             output_connection.subanalysis)
+            self.assertEqual(output_connection.node.workflow_output,
+                             output_connection.name)
         self.assertEqual(self.show_dataset_provenance_mock.call_count, 8)
 
     def test_attach_outputs_dataset_non_dsc(self):
@@ -1940,7 +1959,24 @@ class WorkflowToolTests(ToolManagerTestBase):
         )
         _get_galaxy_download_task_ids(self.tool.analysis)
         self.tool.analysis.attach_outputs_dataset()
-
+        input_connection = AnalysisNodeConnection.objects.filter(
+            analysis=self.tool.analysis,
+            direction=INPUT_CONNECTION
+        )[0]
+        assay = input_connection.node.assay
+        study = input_connection.node.study
+        for output_connection in AnalysisNodeConnection.objects.filter(
+                analysis=self.tool.analysis, direction=OUTPUT_CONNECTION):
+            self.assertEqual(output_connection.node.study, study)
+            self.assertEqual(output_connection.node.assay, assay)
+            self.assertEqual(output_connection.node.name,
+                             output_connection.name)
+            self.assertEqual(output_connection.node.analysis_uuid,
+                             self.tool.analysis.uuid)
+            self.assertEqual(output_connection.node.subanalysis,
+                             output_connection.subanalysis)
+            self.assertEqual(output_connection.node.workflow_output,
+                             output_connection.name)
         self.assertEqual(self.show_dataset_provenance_mock.call_count, 8)
 
 
