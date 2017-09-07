@@ -587,11 +587,7 @@ class WorkflowTool(Tool):
                 direction=INPUT_CONNECTION,
                 name=file_store_item.datafile.name,
                 step=0,
-                filename=(
-                    self.INPUT_DATASET_COLLECTION
-                    if self._has_dataset_collection_input()
-                    else self.INPUT_DATASET
-                ),
+                filename=self._get_analysis_node_connection_input_filename(),
                 is_refinery_file=file_store_item.is_local()
             )
 
@@ -831,6 +827,13 @@ class WorkflowTool(Tool):
             matching_refinery_to_galaxy_file_mappings[0][self.ANALYSIS_GROUP]
         )
         return analysis_group_number
+
+    def _get_analysis_node_connection_input_filename(self):
+        return (
+            self.INPUT_DATASET_COLLECTION if
+            self._has_dataset_collection_input()
+            else self.INPUT_DATASET
+        )
 
     @staticmethod
     def _get_galaxy_dataset_filename(galaxy_dataset_dict):
