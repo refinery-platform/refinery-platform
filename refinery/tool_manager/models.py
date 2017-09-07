@@ -14,6 +14,7 @@ import bioblend
 from bioblend.galaxy.dataset_collections import (CollectionDescription,
                                                  CollectionElement,
                                                  HistoryDatasetElement)
+from constants import UUID_RE
 from django_docker_engine.docker_utils import (DockerClientWrapper,
                                                DockerContainerSpec)
 from django_extensions.db.fields import UUIDField
@@ -312,10 +313,7 @@ class Tool(OwnableResource):
         )
 
     def get_input_node_uuids(self):
-        node_uuids = re.findall(
-            r'[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}',
-            self.get_file_relationships()
-        )
+        node_uuids = re.findall(UUID_RE, self.get_file_relationships())
         return node_uuids
 
     def get_relative_container_url(self):
