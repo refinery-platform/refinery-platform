@@ -1684,18 +1684,15 @@ class Analysis(OwnableResource):
                     input_connection.node.add_child(data_transformation_node)
         # 4. create derived data file nodes for all entries and connect to data
         # transformation nodes
-
-        for index, output_connection in enumerate(
-                AnalysisNodeConnection.objects.filter(
-                    analysis=self,
-                    direction=OUTPUT_CONNECTION
-                )
-        ):
+        output_node_connections = AnalysisNodeConnection.objects.filter(
+            analysis=self,
+            direction=OUTPUT_CONNECTION
+        )
+        for index, output_connection in enumerate(output_node_connections):
             output_connection_filename = "{}.{}".format(
                 output_connection.name,
                 output_connection.filetype
             )
-
             analysis_results = AnalysisResult.objects.filter(
                 analysis_uuid=self.uuid,
                 file_name=output_connection_filename
