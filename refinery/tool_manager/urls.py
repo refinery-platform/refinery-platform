@@ -11,7 +11,10 @@ tool_manager_router = DefaultRouter()
 tool_manager_router.register(r'tools', ToolsViewSet)
 tool_manager_router.register(r'tool_definitions', ToolDefinitionsViewSet)
 
-url_patterns = Proxy(FileLogger(settings.PROXY_LOG)).url_patterns()
+url_patterns = Proxy(
+    logger=FileLogger(settings.PROXY_LOG),
+    please_wait_content='TODO: Please wait'
+).url_patterns()
 django_docker_engine_url = url(
     r'^{}/'.format(settings.DJANGO_DOCKER_ENGINE_BASE_URL),
     include(url_patterns)
