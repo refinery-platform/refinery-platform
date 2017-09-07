@@ -99,19 +99,8 @@
                 ng-model="isaTabImport.showFileUpload">
               Yes
             </label>
- <!--
-            <a
-              popover-placement="right"
-              uib-popover-html="'Select <strong>Yes</strong> if the ISA archive contains names of local files which now need to be uploaded.
-              Select <strong>No</strong> if the ISA archive contains URLs of remote files already uploaded elsewhere.'"
-              popover-title="Upload Local Data Files"
-              popover-trigger="focus"
-              popover-append-to-body="true"
-              tabindex="0">
-              <i class="fa fa-question-circle info-icon icon-only"></i>
-            </a>
--->
           </div>
+
           <div class="m-t-1 m-b-1" ng-if="isaTabImport.showFileUpload">
             <rp-file-upload></rp-file-upload>
           </div>
@@ -123,9 +112,7 @@
         class="block refinery-base btn btn-default"
         ng-click="isaTabImport.startImport()"
         ng-if="isaTabImport.file || isaTabImport.urlToFile"
-        ng-disabled="
-          isaTabImport.isSuccessfullyImported || !isaTabImport.checkImportOption
-        ">
+        ng-disabled="isaTabImport.isSuccessfullyImported || !isaTabImport.checkImportOption">
         Start Import
       </button>
     </div>
