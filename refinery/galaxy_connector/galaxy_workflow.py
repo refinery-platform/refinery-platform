@@ -5,6 +5,7 @@ Created on Jan 11, 2012
 '''
 
 import ast
+import collections
 import copy
 import json
 import logging
@@ -529,7 +530,7 @@ def configure_workflow(workflow_dict, ret_list):
 
 def create_expanded_workflow_graph(dictionary):
     graph = nx.MultiDiGraph()
-    steps = dictionary["steps"]
+    steps = collections.OrderedDict(sorted(dictionary["steps"].items()))
     galaxy_input_types = tool_manager.models.WorkflowTool.GALAXY_INPUT_TYPES
 
     # iterate over steps to create nodes
@@ -539,20 +540,23 @@ def create_expanded_workflow_graph(dictionary):
         # create node
         graph.add_node(current_node_id)
         # add node attributes
-        graph.node[current_node_id]['name'] = \
-            str(current_node_id) + ": " + step['name']
+        graph.node[current_node_id]['name'] = "{}:{}".format(
+            current_node_id,
+            step['name']
+        )
         graph.node[current_node_id]['tool_id'] = step['tool_id']
         graph.node[current_node_id]['type'] = step['type']
         graph.node[current_node_id]['position'] = (
-            int(step['position']['left']), -int(step['position']['top']))
+            int(step['position']['left']), -int(step['position']['top'])
+        )
         graph.node[current_node_id]['node'] = None
     # iterate over steps to create edges (this is done by looking at
     # input_connections, i.e. only by looking at tool nodes)
     for current_node_id, step in steps.iteritems():
         # ensure node id is an integer
         current_node_id = int(current_node_id)
-        for current_node_input_name, input_connection in \
-                step['input_connections'].iteritems():
+        input_connections = step['input_connections'].iteritems()
+        for current_node_input_name, input_connection in input_connections:
             parent_node_id = input_connection["id"]
             # test if parent node is a tool node or an input node to pick the
             # right name for the outgoing edge
@@ -562,16 +566,18 @@ def create_expanded_workflow_graph(dictionary):
                 )
             else:
                 parent_node_output_name = input_connection['output_name']
-
-            edge_output_id = str(
-                parent_node_id) + '_' + parent_node_output_name
-            edge_input_id = str(
-                current_node_id) + '_' + current_node_input_name
-            edge_id = edge_output_id + '___' + edge_input_id
+            edge_output_id = "{}_{}".format(
+                parent_node_id,
+                parent_node_output_name
+            )
+            edge_input_id = "{}_{}".format(
+                current_node_id,
+                current_node_input_name
+            )
+            edge_id = "{}___{}".format(edge_output_id, edge_input_id)
             graph.add_edge(parent_node_id, current_node_id, key=edge_id)
-            graph[parent_node_id][current_node_id]['output_id'] = str(
-                parent_node_id) + '_' + parent_node_output_name
-            graph[parent_node_id][current_node_id]['input_id'] = str(
-                current_node_id) + '_' + current_node_input_name
-
+            graph[parent_node_id][current_node_id]['output_id'] = (
+                edge_output_id
+            )
+            graph[parent_node_id][current_node_id]['input_id'] = edge_input_id
     return graph
