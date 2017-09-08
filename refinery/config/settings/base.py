@@ -1,3 +1,4 @@
+from datetime import timedelta
 import json
 import logging
 import os
@@ -369,6 +370,15 @@ EMAIL_SUBJECT_PREFIX = get_setting("EMAIL_SUBJECT_PREFIX")
 # for system stability
 CELERYD_MAX_TASKS_PER_CHILD = get_setting("CELERYD_MAX_TASKS_PER_CHILD")
 CELERY_ROUTES = {"file_store.tasks.import_file": {"queue": "file_import"}}
+
+# TODO: Does this belong here or in config.json.erb?
+CELERYBEAT_SCHEDULE = {
+    'gc-docker-containers': {
+        'task': 'tool_manager.tasks.docker_garbage_collection',
+        'schedule': timedelta(seconds=30)
+    },
+}
+
 
 CHUNKED_UPLOAD_ABSTRACT_MODEL = False
 
