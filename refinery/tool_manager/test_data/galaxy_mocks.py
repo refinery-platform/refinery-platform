@@ -154,6 +154,11 @@ galaxy_datasets_list = [
     }
 ]
 
+galaxy_datasets_list_same_output_names = []
+for galaxy_dataset in galaxy_datasets_list:
+    galaxy_dataset["name"] = "Output File"
+    galaxy_datasets_list_same_output_names.append(galaxy_dataset)
+
 galaxy_workflow_invocation = {
     u'inputs': {u'0': {u'src': u'hdca', u'id': u'f0cc9868bc58f90b'}},
     u'history_id': u'67ce804af6ec796b',
@@ -189,6 +194,10 @@ galaxy_history_download_list = [
         u'dataset_id': u'953f3a3e2982a4fa', u'type': u'txt'
     }
 ]
+galaxy_history_download_list_same_names = []
+for galaxy_history_download in galaxy_history_download_list:
+    galaxy_history_download["name"] = "Output File"
+    galaxy_history_download_list_same_names.append(galaxy_history_download)
 
 galaxy_tool_data = {
     u'inputs': [

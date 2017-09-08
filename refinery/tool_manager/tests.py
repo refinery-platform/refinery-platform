@@ -29,8 +29,11 @@ from rest_framework.test import (APIRequestFactory, APITestCase,
 from test_data.galaxy_mocks import (galaxy_dataset_provenance_0,
                                     galaxy_dataset_provenance_1,
                                     galaxy_datasets_list,
-                                    galaxy_history_download_list, galaxy_job,
-                                    galaxy_tool_data, galaxy_workflow_dict,
+                                    galaxy_datasets_list_same_output_names,
+                                    galaxy_history_download_list,
+                                    galaxy_history_download_list_same_names,
+                                    galaxy_job, galaxy_tool_data,
+                                    galaxy_workflow_dict,
                                     galaxy_workflow_dict_collection,
                                     galaxy_workflow_invocation,
                                     galaxy_workflow_invocation_data,
@@ -996,7 +999,6 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
 
 
 class ToolDefinitionTests(ToolManagerTestBase):
-
     def test_get_annotation(self):
         self.create_vis_tool_definition(annotation_file_name="igv.json")
         self.assertEqual(self.td.get_annotation(),
@@ -1201,6 +1203,30 @@ class WorkflowToolTests(ToolManagerTestBase):
             galaxy_dataset_provenance_0, galaxy_dataset_provenance_0,
             galaxy_dataset_provenance_1, galaxy_dataset_provenance_1
         ]
+
+    def _assert_analysis_node_connection_outputs_validity(self):
+        input_connection = AnalysisNodeConnection.objects.filter(
+            analysis=self.tool.analysis,
+            direction=INPUT_CONNECTION
+        )[0]
+        assay = input_connection.node.assay
+        study = input_connection.node.study
+        output_connections = AnalysisNodeConnection.objects.filter(
+            analysis=self.tool.analysis,
+            direction=OUTPUT_CONNECTION
+        )
+        self.assertGreater(output_connections.count(), 0)
+        for output_connection in output_connections:
+            self.assertEqual(output_connection.node.study, study)
+            self.assertEqual(output_connection.node.assay, assay)
+            self.assertEqual(output_connection.node.name,
+                             output_connection.name)
+            self.assertEqual(output_connection.node.analysis_uuid,
+                             self.tool.analysis.uuid)
+            self.assertEqual(output_connection.node.subanalysis,
+                             output_connection.subanalysis)
+            self.assertEqual(output_connection.node.workflow_output,
+                             output_connection.name)
 
     def make_node(self):
         test_file = StringIO.StringIO()
@@ -1508,12 +1534,11 @@ class WorkflowToolTests(ToolManagerTestBase):
                 "id": self.GALAXY_ID_MOCK
             }
         )
-
         self.tool.create_workflow_file_downloads()
         self.assertEqual(WorkflowFilesDL.objects.count(), 2)
         for workflow_file_dl in WorkflowFilesDL.objects.all():
             self.assertTrue(workflow_file_dl.filename.startswith(
-                "Refinery test tool"
+                "Output File"
             ))
             self.assertTrue(workflow_file_dl.filename.endswith(".txt"))
         self.assertTrue(self.galaxy_workflow_show_invocation_mock.called)
@@ -1926,25 +1951,7 @@ class WorkflowToolTests(ToolManagerTestBase):
             _get_galaxy_download_task_ids(self.tool.analysis)
             self.tool.analysis.attach_outputs_dataset()
             self.assertTrue(galaxy_workflow_dict_collection_mock.called)
-
-        input_connection = AnalysisNodeConnection.objects.filter(
-            analysis=self.tool.analysis,
-            direction=INPUT_CONNECTION
-        )[0]
-        assay = input_connection.node.assay
-        study = input_connection.node.study
-        for output_connection in AnalysisNodeConnection.objects.filter(
-                analysis=self.tool.analysis, direction=OUTPUT_CONNECTION):
-            self.assertEqual(output_connection.node.study, study)
-            self.assertEqual(output_connection.node.assay, assay)
-            self.assertEqual(output_connection.node.name,
-                             output_connection.name)
-            self.assertEqual(output_connection.node.analysis_uuid,
-                             self.tool.analysis.uuid)
-            self.assertEqual(output_connection.node.subanalysis,
-                             output_connection.subanalysis)
-            self.assertEqual(output_connection.node.workflow_output,
-                             output_connection.name)
+            self._assert_analysis_node_connection_outputs_validity()
         self.assertEqual(self.show_dataset_provenance_mock.call_count, 8)
 
     def test_attach_outputs_dataset_non_dsc(self):
@@ -1959,24 +1966,32 @@ class WorkflowToolTests(ToolManagerTestBase):
         )
         _get_galaxy_download_task_ids(self.tool.analysis)
         self.tool.analysis.attach_outputs_dataset()
-        input_connection = AnalysisNodeConnection.objects.filter(
-            analysis=self.tool.analysis,
-            direction=INPUT_CONNECTION
-        )[0]
-        assay = input_connection.node.assay
-        study = input_connection.node.study
-        for output_connection in AnalysisNodeConnection.objects.filter(
-                analysis=self.tool.analysis, direction=OUTPUT_CONNECTION):
-            self.assertEqual(output_connection.node.study, study)
-            self.assertEqual(output_connection.node.assay, assay)
-            self.assertEqual(output_connection.node.name,
-                             output_connection.name)
-            self.assertEqual(output_connection.node.analysis_uuid,
-                             self.tool.analysis.uuid)
-            self.assertEqual(output_connection.node.subanalysis,
-                             output_connection.subanalysis)
-            self.assertEqual(output_connection.node.workflow_output,
-                             output_connection.name)
+        self._assert_analysis_node_connection_outputs_validity()
+        self.assertEqual(self.show_dataset_provenance_mock.call_count, 8)
+
+    @mock.patch.object(HistoryClient, "show_matching_datasets",
+                       return_value=galaxy_datasets_list_same_output_names)
+    @mock.patch("galaxy_connector.models.Instance.get_history_file_list",
+                return_value=galaxy_history_download_list_same_names)
+    def test_attach_outputs_dataset_same_name_workflow_results(
+            self,
+            same_name_galaxy_history_datasets_mock,
+            same_name_galaxy_datasets_mock
+    ):
+        self.show_dataset_provenance_mock.side_effect = (
+            self.show_dataset_provenance_side_effect * 3
+        )
+        self.has_dataset_collection_input_mock_false.start()
+        self.create_valid_tool(ToolDefinition.WORKFLOW)
+        self.tool.update_galaxy_data(
+            self.tool.GALAXY_WORKFLOW_INVOCATION_DATA,
+            {"id": self.GALAXY_ID_MOCK}
+        )
+        _get_galaxy_download_task_ids(self.tool.analysis)
+        self.tool.analysis.attach_outputs_dataset()
+        self.assertTrue(same_name_galaxy_history_datasets_mock.called)
+        self.assertTrue(same_name_galaxy_datasets_mock.called)
+        self._assert_analysis_node_connection_outputs_validity()
         self.assertEqual(self.show_dataset_provenance_mock.call_count, 8)
 
 
@@ -2637,7 +2652,6 @@ class VisualizationToolLaunchTests(ToolManagerTestBase,
             self.mock_vis_annotations_reference,
             return_value=tool_annotation
         ) as mocked_method:
-
             call_command("generate_tool_definitions", visualizations=True)
 
             self.assertTrue(mocked_method.called)
