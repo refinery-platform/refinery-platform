@@ -702,6 +702,16 @@ class DataSet(SharableResource):
         else:
             return None
 
+    def get_studies(self, version=None):
+        return Study.objects.filter(
+            investigation=self.get_investigation(version)
+        )
+
+    def get_assays(self, version=None):
+        return Assay.objects.filter(
+            study=self.get_studies(version)
+        )
+
     def get_file_count(self):
         """Returns the number of files in the data set"""
         investigation = self.get_investigation()
