@@ -154,10 +154,44 @@ galaxy_datasets_list = [
     }
 ]
 
-galaxy_datasets_list_same_output_names = []
-for galaxy_dataset in galaxy_datasets_list:
-    galaxy_dataset["name"] = "Output File"
-    galaxy_datasets_list_same_output_names.append(galaxy_dataset)
+galaxy_datasets_list_same_output_names = [
+    {
+        u'creating_job': u'efwefwee75g27398cd',
+        u'file_size': 406,
+        u'dataset_id': u'gergg34g34g44',
+        u'id': u'd32aba4ae7b4124a',
+        u'state': u'ok',
+        u'history_id': u'67ce804af6ec796b',
+        u'name': u'Output file',
+        u'file_ext': u'txt',
+        u'url': u'/api/histories/67ce804af6ec796b/contents/d32aba4ae7b4124a',
+        u'purged': False
+    },
+    {
+        u'creating_job': u'1d1dbe75827398cd',
+        u'file_size': 406,
+        u'dataset_id': u'34g34g34g3g34g3',
+        u'id': u'd22aba4ae7b4124a',
+        u'state': u'ok',
+        u'history_id': u'67ce804af6ec796b',
+        u'name': u'Output file',
+        u'file_ext': u'txt',
+        u'url': u'/api/histories/67ce804af6ec796b/contents/d32aba4ae7b4124a',
+        u'purged': False
+    },
+    {
+        u'creating_job': u'32456789rwjefvtg7',
+        u'file_size': 406,
+        u'dataset_id': u'4gh33gt34g34g',
+        u'id': u'd32aba4ae7b4124a',
+        u'state': u'ok',
+        u'history_id': u'67ce804af6ec796b',
+        u'name': u'Output file',
+        u'file_ext': u'txt',
+        u'url': u'/api/histories/67ce804af6ec796b/contents/d32aba4ae7b4124a',
+        u'purged': True
+    }
+]
 
 galaxy_workflow_invocation = {
     u'inputs': {u'0': {u'src': u'hdca', u'id': u'f0cc9868bc58f90b'}},
@@ -194,10 +228,23 @@ galaxy_history_download_list = [
         u'dataset_id': u'953f3a3e2982a4fa', u'type': u'txt'
     }
 ]
-galaxy_history_download_list_same_names = []
-for galaxy_history_download in galaxy_history_download_list:
-    galaxy_history_download["name"] = "Output File"
-    galaxy_history_download_list_same_names.append(galaxy_history_download)
+galaxy_history_download_list_same_names = [
+    {
+        u'name': u'Output file',
+        u'state': u'ok', u'file_size': 211,
+        u'dataset_id': u'8ee788c99983ff96', u'type': u'txt'
+    },
+    {
+        u'name': u'Output file',
+        u'state': u'ok', u'file_size': 211,
+        u'dataset_id': u'14bb1cdaa43f5769', u'type': u'txt'
+    },
+    {
+        u'name': u'Output file',
+        u'state': u'ok', u'file_size': 714,
+        u'dataset_id': u'953f3a3e2982a4fa', u'type': u'txt'
+    }
+]
 
 galaxy_tool_data = {
     u'inputs': [
