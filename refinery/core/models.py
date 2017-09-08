@@ -1727,6 +1727,8 @@ class Analysis(OwnableResource):
                             derived_data_file_node.uuid)
             else:
                 if analysis_results.count() > 1:
+                    logger.info("More than one AnalysisResult for: %s",
+                                output_connection_filename)
                     analysis_result = analysis_results[
                         analysis_results_counter
                     ]
