@@ -78,7 +78,11 @@ class ToolManagerMocks(TestCase):
         self.galaxy_datasets_list_mock = mock.patch.object(
             HistoryClient, "show_matching_datasets",
             return_value=galaxy_datasets_list
-        ).start()
+        )
+        self.galaxy_datasets_list_same_names_mock = mock.patch.object(
+            HistoryClient, "show_matching_datasets",
+            return_value=galaxy_datasets_list_same_output_names
+        )
 
         # Galaxy History mocks
         self.history_upload_mock = mock.patch.object(
@@ -126,10 +130,14 @@ class ToolManagerMocks(TestCase):
         ).start()
 
         # galaxy_connector mocks
-        self.get_history_file_list_mock = mock.patch(
-            "galaxy_connector.models.Instance.get_history_file_list",
+        self.get_history_file_list_mock = mock.patch.object(
+            Instance, "get_history_file_list",
             return_value=galaxy_history_download_list
-        ).start()
+        )
+        self.get_history_file_list_same_names_mock = mock.patch.object(
+            Instance, "get_history_file_list",
+            return_value=galaxy_history_download_list_same_names
+        )
 
         # tool_manager mocks
         self.get_taskset_result_mock = mock.patch(
