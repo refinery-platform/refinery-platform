@@ -1,10 +1,25 @@
 <html>
 <head>
     <title>Please wait</title>
-    <meta http-equiv="refresh" content="5">
+    <meta http-equiv="refresh" content="10">
 </head>
 <body>
     <h1>Please wait</h1>
     <p>Please wait while your visualization loads.</p>
+    <script>
+        // Hi-frequency meta-refreshes are bad, but we can keep the 10 second
+        // meta-refresh as a fall-back, in case something goes wrong here:
+        setInterval(function() {
+            var request = new XMLHttpRequest();
+            request.addEventListener("load", function() {
+                if(request.status === 200){
+					window.location.reload(true);
+                    // "true": reload from server, ignore cache.
+				};
+            }, false);
+            request.open('GET', window.location.href);
+            request.send()
+        }, 1000);
+    </script>
 </body>
 </html>
