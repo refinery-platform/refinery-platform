@@ -49,9 +49,8 @@ def _mkdir(path):
         os.mkdir(path)
     except OSError as e:
         logger.error("Error creating directory '%s': %s", path, e)
-        return False
-    logger.info("Created directory '%s'", path)
-    return True
+    else:
+        logger.info("Created directory '%s'", path)
 
 
 # create data storage directories

@@ -1,5 +1,3 @@
-"""This file contains tests for file_store.models and file_store.tasks
-"""
 import os
 from urlparse import urljoin
 
@@ -11,10 +9,8 @@ from django.test import SimpleTestCase, TestCase
 import mock
 from rest_framework.test import APIRequestFactory, APITestCase
 
-from core.utils import get_full_url
-
-from .models import (FILE_STORE_TEMP_DIR, FileExtension, FileStoreItem,
-                     FileType, SymlinkedFileSystemStorage, file_path,
+from .models import (FileExtension, FileStoreItem, FileType,
+                     SymlinkedFileSystemStorage, file_path,
                      generate_file_source_translator, get_extension_from_path,
                      get_file_object, get_temp_dir, parse_s3_url)
 from .serializers import FileStoreItemSerializer
