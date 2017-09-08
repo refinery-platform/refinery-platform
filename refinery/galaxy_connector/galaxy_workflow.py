@@ -13,6 +13,7 @@ import uuid
 import networkx as nx
 
 from core.utils import get_aware_local_time
+import tool_manager
 
 logger = logging.getLogger(__name__)
 
@@ -529,6 +530,11 @@ def configure_workflow(workflow_dict, ret_list):
 def create_expanded_workflow_graph(dictionary):
     graph = nx.MultiDiGraph()
     steps = dictionary["steps"]
+    galaxy_input_types = [
+        'data_input',
+        tool_manager.models.WorkflowTool.DATA_COLLECTION_INPUT
+    ]
+
     # iterate over steps to create nodes
     for current_node_id, step in steps.iteritems():
         # ensure node id is an integer
@@ -553,9 +559,10 @@ def create_expanded_workflow_graph(dictionary):
             parent_node_id = input_connection["id"]
             # test if parent node is a tool node or an input node to pick the
             # right name for the outgoing edge
-            if graph.node[parent_node_id]['type'] == 'data_input':
-                parent_node_output_name = \
+            if graph.node[parent_node_id]['type'] in galaxy_input_types:
+                parent_node_output_name = (
                     steps[str(parent_node_id)]['inputs'][0]['name']
+                )
             else:
                 parent_node_output_name = input_connection['output_name']
 

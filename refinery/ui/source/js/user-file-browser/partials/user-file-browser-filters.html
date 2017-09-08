@@ -49,6 +49,7 @@
                           type="checkbox"
                           name="optionsCheckboxes"
                           ng-click="$ctrl.filterUpdate(attribute, field.name)"
+                          ng-checked="$ctrl.filterIsSet(attribute, field.name)"
                           id="{{ field.name | replaceWhiteSpaceWithHyphen }}-{{ $index }}">
                       </div>
                       <div class="col-xs-8">

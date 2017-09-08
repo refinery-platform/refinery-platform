@@ -70,6 +70,8 @@ class ToolsViewSet(ModelViewSet):
             try:
                 with transaction.atomic():
                     tool = create_tool(tool_launch_configuration, request.user)
+                    logger.debug("Successfully created Tool: %s", tool.name)
                     return tool.launch()
             except Exception as e:
+                logger.error(e)
                 return HttpResponseBadRequest(e)

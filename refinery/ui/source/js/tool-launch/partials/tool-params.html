@@ -92,10 +92,19 @@
                    </div>
                  </div>
                  <div ng-switch-when="BOOLEAN">
-                   <label class="p-l-1-2">
+                   <label
+                     class="p-l-1-2"
+                     ng-if="param.default_value == 'True'">
                       <input
                         type="checkbox"
-                        ng-checked="param.default_value"
+                        ng-checked=true
+                        ng-model="$ctrl.paramsForm[param.uuid]">
+                   </label>
+                   <label
+                     class="p-l-1-2"
+                     ng-if="param.default_value == 'False'">
+                      <input
+                        type="checkbox"
                         ng-model="$ctrl.paramsForm[param.uuid]">
                    </label>
                   </div>

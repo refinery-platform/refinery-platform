@@ -57,7 +57,6 @@ angular
     'refineryDashboard',
     'refineryAnalysisMonitor',
     'refineryCollaboration',
-    'refineryChart',
     'refineryFileBrowser',
     'refineryDataSetAbout',
     'refineryToolLaunch',

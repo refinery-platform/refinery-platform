@@ -1510,6 +1510,30 @@ class AnalysisTests(TestCase):
             quote('_s": "') + UUID_RE + quote('"}')
         )
 
+    @mock.patch("core.models.index_annotated_nodes_selection")
+    @mock.patch.object(Analysis, "rename_results")
+    def test__prepare_annotated_nodes_calls_methods_in_proper_order(
+            self,
+            rename_results_mock,
+            index_annotated_nodes_selection_mock
+    ):
+        mock_manager = mock.Mock()
+        mock_manager.attach_mock(rename_results_mock, "rename_results_mock")
+        mock_manager.attach_mock(index_annotated_nodes_selection_mock,
+                                 "index_annotated_nodes_selection_mock")
+
+        self.analysis._prepare_annotated_nodes(node_uuids=None)
+
+        # Assert that `rename_results` is called before
+        # `index_annotated_nodes_selection`
+        self.assertEqual(
+            mock_manager.mock_calls,
+            [
+                mock.call.rename_results_mock(),
+                mock.call.index_annotated_nodes_selection_mock(None)
+            ]
+        )
+
 
 class UtilitiesTest(TestCase):
     def setUp(self):

@@ -13,9 +13,8 @@ from tastypie.api import Api
 
 from config.utils import RouterCombiner
 from core.api import (AnalysisResource, DataSetResource, ExtendedGroupResource,
-                      FastQCResource, GroupManagementResource,
-                      InvitationResource, NodePairResource,
-                      NodeRelationshipResource, NodeResource,
+                      GroupManagementResource, InvitationResource,
+                      NodePairResource, NodeRelationshipResource, NodeResource,
                       NodeSetListResource, NodeSetResource, ProjectResource,
                       StatisticsResource, UserAuthenticationResource,
                       UserProfileResource, WorkflowInputRelationshipsResource,
@@ -71,7 +70,6 @@ v1_api.register(ProtocolReferenceParameterResource())
 v1_api.register(PublicationResource())
 v1_api.register(AttributeResource())
 v1_api.register(ExtendedGroupResource())
-v1_api.register(FastQCResource())
 v1_api.register(UserProfileResource())
 
 

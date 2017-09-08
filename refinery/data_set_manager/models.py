@@ -446,6 +446,16 @@ class Node(models.Model):
         node.save()
         return self
 
+    def get_analysis(self):
+        try:
+            return core.models.Analysis.objects.get(uuid=self.analysis_uuid)
+        except core.models.Analysis.DoesNotExist:
+            return None
+        except core.models.Analysis.MultipleObjectsReturned as e:
+            logger.error("Multiple Analyses found for Node with UUID: %s %s",
+                         self.uuid, e)
+            return None
+
     def _get_derived_node_types(self):
         """
         This finds all node types which are "derived"
