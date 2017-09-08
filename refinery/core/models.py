@@ -709,10 +709,7 @@ class DataSet(SharableResource):
 
     def get_assays(self, version=None):
         return Assay.objects.filter(
-            # TODO: filter returns a list, so I doubt this works?
-            study=Study.objects.filter(
-                investigation=self.get_investigation()
-            )
+            study=self.get_studies(version)
         )
 
     def get_file_count(self):

@@ -2019,6 +2019,14 @@ class DataSetTests(TestCase):
         self.node4 = Node.objects.create(
             name="n4", assay=self.assay, study=self.study)
 
+    def test_get_studies(self):
+        studies = self.dataset.get_studies()
+        self.assertEqual(len(studies), 1)
+
+    def test_get_assays(self):
+        assays = self.dataset.get_assays()
+        self.assertEqual(len(assays), 1)
+
     def test_get_file_store_items(self):
         file_store_items = self.dataset.get_file_store_items()
         self.assertEqual(len(file_store_items), 3)
