@@ -2005,6 +2005,7 @@ class WorkflowToolTests(ToolManagerTestBase):
         self.assertEqual(self.show_dataset_provenance_mock.call_count, 8)
 
     def test_attach_outputs_dataset_same_name_workflow_results(self):
+        self.galaxy_datasets_list_same_names_mock.start()
         same_name_galaxy_history_datasets_mock = (
             self.get_history_file_list_same_names_mock.start()
         )
@@ -2018,6 +2019,21 @@ class WorkflowToolTests(ToolManagerTestBase):
             {"id": self.GALAXY_ID_MOCK}
         )
         _get_galaxy_download_task_ids(self.tool.analysis)
+        output_connections = AnalysisNodeConnection.objects.filter(
+            analysis=self.tool.analysis,
+            direction=OUTPUT_CONNECTION
+        )
+        self.assertGreater(output_connections.count(), 0)
+        for output_connection in output_connections:
+            output_connection_filename = "{}.{}".format(
+                output_connection.name,
+                output_connection.filetype
+            )
+            analysis_results = AnalysisResult.objects.filter(
+                analysis_uuid=self.tool.analysis.uuid,
+                file_name=output_connection_filename
+            )
+            self.assertGreater(analysis_results.count(), 1)
         self.tool.analysis.attach_outputs_dataset()
         self.assertTrue(same_name_galaxy_history_datasets_mock.called)
         self._assert_analysis_node_connection_outputs_validity()
