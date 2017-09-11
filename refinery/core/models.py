@@ -1663,17 +1663,23 @@ class Analysis(OwnableResource):
                                      if graph.node[node_id]['type'] == "tool"]
         for data_transformation_node in data_transformation_nodes:
             # TODO: incorporate subanalysis id in tool name???
-            data_transformation_node['node'] = \
+            data_transformation_node['node'] = (
                 Node.objects.create(
-                    study=study, assay=assay, analysis_uuid=self.uuid,
+                    study=study,
+                    assay=assay,
+                    analysis_uuid=self.uuid,
                     type=Node.DATA_TRANSFORMATION,
                     name=data_transformation_node['tool_id'] + '_' +
                     data_transformation_node['name']
                 )
+            )
         # 3. create connection from input nodes to first data transformation
         # nodes (input tool nodes in the graph are skipped)
-        for input_connection in AnalysisNodeConnection.objects.filter(
-                analysis=self, direction=INPUT_CONNECTION):
+        input_node_connections = AnalysisNodeConnection.objects.filter(
+            analysis=self,
+            direction=INPUT_CONNECTION
+        )
+        for input_connection in input_node_connections:
             for edge in graph.edges_iter([input_connection.step]):
                 if (graph[edge[0]][edge[1]]['output_id'] ==
                         str(input_connection.step) + '_' +
@@ -1684,29 +1690,19 @@ class Analysis(OwnableResource):
                     input_connection.node.add_child(data_transformation_node)
         # 4. create derived data file nodes for all entries and connect to data
         # transformation nodes
-        output_node_connections = AnalysisNodeConnection.objects.filter(
-            analysis=self,
-            direction=OUTPUT_CONNECTION
-        ).order_by('filename')
+        output_connection_to_analysis_result_mapping = (
+            self._get_output_connection_to_analysis_result_mapping()
+        )
 
-        analysis_results_counter = None
-        for output_connection in output_node_connections:
-            output_connection_filename = "{}.{}".format(
-                output_connection.name,
-                output_connection.filetype
-            )
-            analysis_results = AnalysisResult.objects.filter(
-                analysis_uuid=self.uuid,
-                file_name=output_connection_filename
-            )
-            if (analysis_results_counter is None or
-                    analysis_results_counter == analysis_results.count()):
-                analysis_results_counter = 0
-
+        output_mapping = (
+            output_connection_to_analysis_result_mapping.iteritems()
+        )
+        for output_connection, analysis_result in output_mapping:
             # create derived data file node
             derived_data_file_node = (
                 Node.objects.create(
-                    study=study, assay=assay,
+                    study=study,
+                    assay=assay,
                     type=Node.DERIVED_DATA_FILE,
                     name=output_connection.name,
                     analysis_uuid=self.uuid,
@@ -1716,36 +1712,16 @@ class Analysis(OwnableResource):
             )
             # retrieve uuid of corresponding output file if exists
             logger.info("Results for '%s' and %s.%s: %s",
-                        self.uuid,
-                        output_connection_filename,
-                        output_connection.filetype,
-                        analysis_results.count())
+                        self.uuid, output_connection,
+                        output_connection.filetype, analysis_result)
 
-            if analysis_results.count() == 0:
-                logger.info("No output file found for node '%s' ('%s')",
-                            derived_data_file_node.name,
-                            derived_data_file_node.uuid)
-            else:
-                if analysis_results.count() > 1:
-                    logger.info("More than one AnalysisResult for: %s",
-                                output_connection_filename)
-                    analysis_result = analysis_results[
-                        analysis_results_counter
-                    ]
-                    analysis_results_counter += 1
-                else:
-                    analysis_result = analysis_results[0]
+            derived_data_file_node.file_uuid = analysis_result.file_store_uuid
 
-                derived_data_file_node.file_uuid = (
-                    analysis_result.file_store_uuid
-                )
-                logger.debug(
-                    "Output file %s ('%s') assigned to node %s ('%s')",
-                    output_connection_filename,
-                    analysis_result.file_store_uuid,
-                    derived_data_file_node.name,
-                    derived_data_file_node.uuid
-                )
+            logger.debug("Output file %s ('%s') assigned to node %s ('%s')",
+                         output_connection, analysis_result.file_store_uuid,
+                         derived_data_file_node.name,
+                         derived_data_file_node.uuid)
+
             output_connection.node = derived_data_file_node
             output_connection.save()
             # get graph edge that corresponds to this output node:
@@ -1859,6 +1835,47 @@ class Analysis(OwnableResource):
         """
         self.rename_results()
         index_annotated_nodes_selection(node_uuids)
+
+    def _get_output_connection_to_analysis_result_mapping(self):
+        """
+        Create and return a dict mapping each "output" type
+        AnalysisNodeConnection to it's respective analysis result.
+
+        This is especially useful when we run into the edge-case described
+        here: https://github.com/
+        refinery-platform/refinery-platform/pull/2099#issue-255989396
+        """
+        distinct_filenames_map = {}
+        output_connections_to_analysis_results = {}
+
+        output_node_connections = AnalysisNodeConnection.objects.filter(
+            analysis=self,
+            direction=OUTPUT_CONNECTION
+        )
+        # Fetch the distinct file names from our output
+        # AnalysisNodeConnections for this Analysis and initialize a dict
+        # mapping the unique file names to a list of AnalysisNodeConnections
+        # sharing said filename.
+        for output_connection in output_node_connections:
+            # Populate entry if not seen yet
+            if distinct_filenames_map.get(output_connection.filename) is None:
+                distinct_filenames_map[output_connection.filename] = []
+
+            distinct_filenames_map[output_connection.filename].append(
+                output_connection
+            )
+        # Associate the AnalysisNodeConnections with their respective
+        # AnalysisResults
+        for output_connections in distinct_filenames_map.values():
+            for index, output_connection in enumerate(output_connections):
+                analysis_result = AnalysisResult.objects.filter(
+                    analysis_uuid=self.uuid,
+                    file_name=output_connection.filename
+                )[index]
+                output_connections_to_analysis_results[output_connection] = (
+                    analysis_result
+                )
+        return output_connections_to_analysis_results
 
     @property
     def is_tool_based(self):

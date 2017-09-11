@@ -601,7 +601,7 @@ class WorkflowTool(Tool):
                 name=galaxy_dataset["name"],
                 subanalysis=self._get_analysis_group_number(galaxy_dataset),
                 step=self._get_workflow_step(galaxy_dataset),
-                filename=galaxy_dataset["name"],
+                filename=self._get_galaxy_dataset_filename(galaxy_dataset),
                 filetype=galaxy_dataset["file_ext"],
                 is_refinery_file=True
             )
