@@ -393,6 +393,10 @@ class Tool(OwnableResource):
         self.set_tool_launch_config(tool_launch_config)
 
 
+class VisualizationToolError(Exception):
+    pass
+
+
 class VisualizationTool(Tool):
     """
     VisualizationTools are Tools that are specific to
@@ -415,9 +419,8 @@ class VisualizationTool(Tool):
         """
         client = DockerClientWrapper()
         max = settings.DJANGO_DOCKER_ENGINE_MAX_CONTAINERS
-        if max and len(client.list()) >= max:
-            logger.warn('Already have max containers; will not start another')
-            return JsonResponse({})  # TODO: How to report error?
+        if len(client.list()) >= max:
+            raise VisualizationToolError('Max containers')
         container = DockerContainerSpec(
             image_name=self.tool_definition.image_name,
             container_name=self.container_name,

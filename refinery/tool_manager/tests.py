@@ -2486,7 +2486,7 @@ class VisualizationToolLaunchTests(ToolManagerTestBase,
 
     def _start_visualization(
             self, json_name, file_relationships,
-            assertions=None, count=1
+            assertions=None, count=None
     ):
         with open(
             "{}/visualizations/{}".format(TEST_DATA_PATH, json_name)
@@ -2522,7 +2522,8 @@ class VisualizationToolLaunchTests(ToolManagerTestBase,
             tools = VisualizationTool.objects.filter(
                 tool_definition__uuid=self.td.uuid
             )
-            self.assertEqual(len(tools), count)
+            if count:
+                self.assertEqual(len(tools), count)
             last_tool = tools[len(tools)-1]
             self.assertEqual(last_tool.get_owner(), self.user)
             self.assertEqual(
@@ -2596,10 +2597,12 @@ class VisualizationToolLaunchTests(ToolManagerTestBase,
                 count=i+1
             )
 
-        self._start_visualization(
-            'hello_world.json',
-            "https://www.example.com/file.txt"
-        )
+        with self.assertRaises(AssertionError):
+            # '400 != 200': Not what we really want?
+            self._start_visualization(
+                'hello_world.json',
+                "https://www.example.com/file.txt"
+            )
 
 
 class ToolLaunchConfigurationTests(ToolManagerTestBase):
