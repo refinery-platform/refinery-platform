@@ -72,8 +72,8 @@
     formData.append('isa_tab_file', this.file);
     formData.append('isa_tab_url', this.urlToFile);
 
-    // get Cognito identity ID if deployed on AWS
-    if (this.settings.djangoApp.deploymentPlatform === 'aws') {
+    // collect Cognito identity ID if deployed on AWS and credentials are available
+    if (this.settings.djangoApp.deploymentPlatform === 'aws' && AWS.config.credentials !== null) {
       formData.append('identity_id', AWS.config.credentials.identityId);
     }
 

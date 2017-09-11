@@ -219,8 +219,8 @@ MetadataTableImportCtrl.prototype.checkFiles = function () {
     });
   }
 
-  // get Cognito identity ID if deployed on AWS
-  if (this.settings.djangoApp.deploymentPlatform === 'aws') {
+  // collect Cognito identity ID if deployed on AWS and credentials are available
+  if (this.settings.djangoApp.deploymentPlatform === 'aws' && AWS.config.credentials !== null) {
     fileData.identity_id = AWS.config.credentials.identityId;
   }
 
@@ -318,8 +318,8 @@ MetadataTableImportCtrl.prototype.startImport = function () {
   if (self.dataFilePermanent) {
     formData.append('data_file_permanent', self.dataFilePermanent);
   }
-  // get Cognito identity ID if deployed on AWS
-  if (this.settings.djangoApp.deploymentPlatform === 'aws') {
+  // collect Cognito identity ID if deployed on AWS and credentials are available
+  if (this.settings.djangoApp.deploymentPlatform === 'aws' && AWS.config.credentials !== null) {
     formData.append('identity_id', AWS.config.credentials.identityId);
   }
 
