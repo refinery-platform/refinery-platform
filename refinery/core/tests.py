@@ -22,14 +22,15 @@ from tastypie.test import ResourceTestCase
 from analysis_manager.models import AnalysisStatus
 from data_set_manager.models import Assay, Contact, Investigation, Node, Study
 from factory_boy.utils import create_dataset_with_necessary_models
-from file_store.models import FileStoreItem
+from file_store.models import FileStoreItem, FileType
 from galaxy_connector.models import Instance
 
 from .api import AnalysisResource
 from .management.commands.create_user import init_user
-from .models import (Analysis, AnalysisNodeConnection, DataSet, ExtendedGroup,
-                     InvestigationLink, NodeSet, Project, Tutorials,
-                     UserProfile, Workflow, WorkflowDataInputMap,
+from .models import (INPUT_CONNECTION, OUTPUT_CONNECTION, Analysis,
+                     AnalysisNodeConnection, AnalysisResult, DataSet,
+                     ExtendedGroup, InvestigationLink, NodeSet, Project,
+                     Tutorials, UserProfile, Workflow, WorkflowDataInputMap,
                      WorkflowEngine, create_nodeset, delete_nodeset,
                      get_nodeset, invalidate_cached_object, update_nodeset)
 from .search_indexes import DataSetIndex
@@ -1347,12 +1348,15 @@ class AnalysisTests(TestCase):
         self.workflow1 = Workflow.objects.create(
             name="Workflow1", workflow_engine=self.workflow_engine)
 
+        text_filetype = FileType.objects.get(name="TXT")
+
         # Create FileStoreItems
         self.file_store_item = FileStoreItem.objects.create(
             datafile=SimpleUploadedFile(
                 'test_file.txt',
                 'Coffee is delicious!'
-            )
+            ),
+            filetype=text_filetype
         )
         self.file_store_item1 = FileStoreItem.objects.create(
             datafile=SimpleUploadedFile(
@@ -1412,6 +1416,7 @@ class AnalysisTests(TestCase):
         self.node = Node.objects.create(
             assay=self.assay,
             study=self.study,
+            name="test_node",
             analysis_uuid=self.analysis.uuid,
             file_uuid=self.file_store_item.uuid
         )
@@ -1431,17 +1436,38 @@ class AnalysisTests(TestCase):
             workflow_data_input_name="input 2",
             data_uuid=self.node2.uuid
         )
+        self.node_filename = "{}.{}".format(
+            self.node.name,
+            self.node.get_file_store_item().get_file_extension()
+        )
 
         # Create AnalysisNodeConnections
-        self.analysis_node_connection = \
-            AnalysisNodeConnection.objects.create(analysis=self.analysis,
-                                                  node=self.node, step=1,
-                                                  direction="out")
-        self.analysis_node_connection_with_node_analyzed_further = \
+        self.analysis_node_connection_a = (
+            AnalysisNodeConnection.objects.create(
+                analysis=self.analysis,
+                node=self.node,
+                step=1,
+                filename=self.node_filename,
+                direction=OUTPUT_CONNECTION
+            )
+        )
+        self.analysis_node_connection_b = (
+            AnalysisNodeConnection.objects.create(
+                analysis=self.analysis,
+                node=self.node,
+                step=1,
+                filename=self.node_filename,
+                direction=OUTPUT_CONNECTION
+            )
+        )
+        self.analysis_node_connection_with_node_analyzed_further = (
             AnalysisNodeConnection.objects.create(
                 analysis=self.analysis_with_node_analyzed_further,
-                node=self.node2, step=2,
-                direction="in")
+                node=self.node2,
+                step=0,
+                direction=INPUT_CONNECTION
+            )
+        )
 
         # Add wf_data_input_maps to Analysis M2M relationship
         self.analysis.workflow_data_input_maps.add(self.wf_data_input_map,
@@ -1532,6 +1558,30 @@ class AnalysisTests(TestCase):
                 mock.call.rename_results_mock(),
                 mock.call.index_annotated_nodes_selection_mock(None)
             ]
+        )
+
+    def test___get_output_connection_to_analysis_result_mapping(self):
+        analysis_result_a = AnalysisResult.objects.create(
+            analysis_uuid=self.analysis.uuid,
+            file_store_uuid=self.node.file_uuid,
+            file_name=self.node_filename,
+            file_type=self.node.get_file_store_item().filetype
+        )
+        analysis_result_b = AnalysisResult.objects.create(
+            analysis_uuid=self.analysis.uuid,
+            file_store_uuid=self.node.file_uuid,
+            file_name=self.node_filename,
+            file_type=self.node.get_file_store_item().filetype
+        )
+        output_mapping = (
+            self.analysis._get_output_connection_to_analysis_result_mapping()
+        )
+        self.assertEqual(
+            output_mapping,
+            {
+                self.analysis_node_connection_a: analysis_result_b,
+                self.analysis_node_connection_b: analysis_result_a
+            }
         )
 
 
