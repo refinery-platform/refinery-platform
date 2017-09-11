@@ -2660,8 +2660,7 @@ class ToolLaunchConfigurationTests(ToolManagerTestBase):
         with self.assertRaises(RuntimeError) as context:
             create_tool(tool_launch_configuration, self.user)
         self.assertIn(
-            "The `file_relationships` defined didn't yield a valid "
-            "LIST/PAIR nesting.",
+            '{"Dicts aren\'t": \'LIST/PAIR-like\'}',
             context.exception.message
         )
 
