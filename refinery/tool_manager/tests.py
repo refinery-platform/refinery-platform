@@ -2616,7 +2616,9 @@ class VisualizationToolLaunchTests(ToolManagerTestBase,
             self.post_data = {
                 "dataset_uuid": self.dataset.uuid,
                 "tool_definition_uuid": self.td.uuid,
-                Tool.FILE_RELATIONSHIPS: None
+                Tool.FILE_RELATIONSHIPS: str([
+                    "https://www.example.com/file.txt"
+                ])
             }
 
             self.post_request = self.factory.post(
@@ -2625,7 +2627,8 @@ class VisualizationToolLaunchTests(ToolManagerTestBase,
                 format="json"
             )
             force_authenticate(self.post_request, self.user)
-            self.tools_view(self.post_request)
+            post_response = self.tools_view(self.post_request)
+            self.assertEqual(post_response.status_code, 200)
 
             tool = VisualizationTool.objects.all()[0]
 
