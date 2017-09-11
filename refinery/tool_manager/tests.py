@@ -1672,7 +1672,9 @@ class WorkflowToolTests(ToolManagerTestBase):
             self.assertEqual(output_connection.subanalysis, 0)
             self.assertEqual(
                 output_connection.filename,
-                galaxy_datasets_list[index]["name"]
+                self.tool._get_galaxy_dataset_filename(
+                    galaxy_datasets_list[index]
+                )
             )
             self.assertEqual(
                 output_connection.filetype,
