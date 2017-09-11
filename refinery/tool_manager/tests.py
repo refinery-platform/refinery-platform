@@ -2486,7 +2486,7 @@ class VisualizationToolLaunchTests(ToolManagerTestBase,
 
     def _start_visualization(
             self, json_name, file_relationships,
-            assertions=None, count=None
+            assertions=None, count=1
     ):
         with open(
             "{}/visualizations/{}".format(TEST_DATA_PATH, json_name)

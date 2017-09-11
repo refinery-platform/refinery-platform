@@ -393,7 +393,7 @@ class Tool(OwnableResource):
         self.set_tool_launch_config(tool_launch_config)
 
 
-class VisualizationToolError(Exception):
+class VisualizationToolError(StandardError):
     pass
 
 
@@ -418,8 +418,8 @@ class VisualizationTool(Tool):
             - <HttpResponseBadRequest>, <HttpServerError>
         """
         client = DockerClientWrapper()
-        max = settings.DJANGO_DOCKER_ENGINE_MAX_CONTAINERS
-        if len(client.list()) >= max:
+        max_containers = settings.DJANGO_DOCKER_ENGINE_MAX_CONTAINERS
+        if len(client.list()) >= max_containers:
             raise VisualizationToolError('Max containers')
         container = DockerContainerSpec(
             image_name=self.tool_definition.image_name,
