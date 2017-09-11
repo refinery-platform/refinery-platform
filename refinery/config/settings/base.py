@@ -3,6 +3,7 @@ import json
 import logging
 import os
 import subprocess
+import urlparse
 
 from django.core.exceptions import ImproperlyConfigured
 
@@ -408,8 +409,19 @@ AE_BASE_URL = "http://www.ebi.ac.uk/arrayexpress/experiments"
 
 ISA_TAB_DIR = get_setting("ISA_TAB_DIR")
 
-# relative to MEDIA_ROOT, must exist along with 'temp' subdirectory
-FILE_STORE_DIR = 'file_store'
+# relative to MEDIA_ROOT
+FILE_STORE_DIR = get_setting('FILE_STORE_DIR', default='file_store')
+# absolute path to the file store root dir
+FILE_STORE_BASE_DIR = os.path.join(MEDIA_ROOT, FILE_STORE_DIR)
+FILE_STORE_TEMP_DIR = os.path.join(FILE_STORE_BASE_DIR, 'temp')
+# for SymlinkedFileSystemStorage (http://stackoverflow.com/q/4832626)
+FILE_STORE_BASE_URL = urlparse.urljoin(MEDIA_URL, FILE_STORE_DIR) + '/'
+# move uploaded files into file store quickly instead of copying
+FILE_UPLOAD_TEMP_DIR = get_setting('FILE_UPLOAD_TEMP_DIR',
+                                   default=FILE_STORE_TEMP_DIR)
+# always keep uploaded files on disk
+FILE_UPLOAD_MAX_MEMORY_SIZE = get_setting('FILE_UPLOAD_MAX_MEMORY_SIZE',
+                                          default=0)
 
 # optional dictionary for translating file URLs into locally accessible file
 # system paths (and vice versa) by substituting 'pattern' for 'replacement'

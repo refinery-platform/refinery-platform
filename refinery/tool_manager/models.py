@@ -14,6 +14,7 @@ import bioblend
 from bioblend.galaxy.dataset_collections import (CollectionDescription,
                                                  CollectionElement,
                                                  HistoryDatasetElement)
+from constants import UUID_RE
 from django_docker_engine.docker_utils import (DockerClientWrapper,
                                                DockerContainerSpec)
 from django_extensions.db.fields import UUIDField
@@ -312,10 +313,7 @@ class Tool(OwnableResource):
         )
 
     def get_input_node_uuids(self):
-        node_uuids = re.findall(
-            r'[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}',
-            self.get_file_relationships()
-        )
+        node_uuids = re.findall(UUID_RE, self.get_file_relationships())
         return node_uuids
 
     def get_relative_container_url(self):
@@ -463,6 +461,7 @@ class WorkflowTool(Tool):
     """
     ANALYSIS_GROUP = "analysis_group"
     COLLECTION_INFO = "collection_info"
+    DATA_INPUT = "data_input"
     DATA_COLLECTION_INPUT = "data_collection_input"
     FILE_RELATIONSHIPS_GALAXY = "{}_galaxy".format(Tool.FILE_RELATIONSHIPS)
     FILE_RELATIONSHIPS_NESTING = "file_relationships_nesting"
@@ -470,11 +469,13 @@ class WorkflowTool(Tool):
     GALAXY_DATA = "galaxy_data"
     GALAXY_DATASET_HISTORY_ID = "galaxy_dataset_history_id"
     GALAXY_IMPORT_HISTORY_DICT = "import_history_dict"
+    GALAXY_INPUT_TYPES = [DATA_INPUT, DATA_COLLECTION_INPUT]
     GALAXY_LIBRARY_DICT = "library_dict"
     GALAXY_WORKFLOW_INVOCATION_DATA = "galaxy_workflow_invocation_data"
     GALAXY_TO_REFINERY_MAPPING_LIST = "galaxy_to_refinery_mapping_list"
     HISTORY_DATASET_COLLECTION_ASSOCIATION = "hdca"
-    INPUT_DATASET_COLLECTION = "Input Dataset Collection"
+    INPUT_DATASET = "Input Dataset"
+    INPUT_DATASET_COLLECTION = "{} Collection".format(INPUT_DATASET)
     LIST = "list"
     PAIRED = "paired"
     REVERSE = "reverse"
@@ -592,7 +593,7 @@ class WorkflowTool(Tool):
                 direction=INPUT_CONNECTION,
                 name=file_store_item.datafile.name,
                 step=0,
-                filename=self.INPUT_DATASET_COLLECTION,
+                filename=self._get_analysis_node_connection_input_filename(),
                 is_refinery_file=file_store_item.is_local()
             )
 
@@ -608,7 +609,7 @@ class WorkflowTool(Tool):
                 name=galaxy_dataset["name"],
                 subanalysis=self._get_analysis_group_number(galaxy_dataset),
                 step=self._get_workflow_step(galaxy_dataset),
-                filename=galaxy_dataset["name"],
+                filename=self._get_galaxy_dataset_filename(galaxy_dataset),
                 filetype=galaxy_dataset["file_ext"],
                 is_refinery_file=True
             )
@@ -832,6 +833,13 @@ class WorkflowTool(Tool):
             matching_refinery_to_galaxy_file_mappings[0][self.ANALYSIS_GROUP]
         )
         return analysis_group_number
+
+    def _get_analysis_node_connection_input_filename(self):
+        return (
+            self.INPUT_DATASET_COLLECTION if
+            self._has_dataset_collection_input()
+            else self.INPUT_DATASET
+        )
 
     @staticmethod
     def _get_galaxy_dataset_filename(galaxy_dataset_dict):
@@ -1124,6 +1132,7 @@ class WorkflowTool(Tool):
 
         for galaxy_to_refinery_dict in galaxy_to_refinery_mapping_list:
             node = Node.objects.get(
+                uuid__in=self.get_input_node_uuids(),
                 file_uuid=galaxy_to_refinery_dict[Tool.REFINERY_FILE_UUID]
             )
             galaxy_dict[self.FILE_RELATIONSHIPS_GALAXY] = (
