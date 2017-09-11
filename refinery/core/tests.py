@@ -1578,10 +1578,10 @@ class AnalysisTests(TestCase):
         )
         self.assertEqual(
             output_mapping,
-            {
-                self.analysis_node_connection_a: analysis_result_a,
-                self.analysis_node_connection_b: analysis_result_b
-            }
+            [
+                (self.analysis_node_connection_b, analysis_result_b),
+                (self.analysis_node_connection_a, analysis_result_a)
+            ]
         )
 
 

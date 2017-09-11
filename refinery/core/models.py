@@ -6,6 +6,7 @@ Created on Feb 20, 2012
 from __future__ import absolute_import
 
 import ast
+from collections import defaultdict
 import copy
 from datetime import datetime
 import json
@@ -1693,11 +1694,9 @@ class Analysis(OwnableResource):
         output_connection_to_analysis_result_mapping = (
             self._get_output_connection_to_analysis_result_mapping()
         )
+        output_mappings = output_connection_to_analysis_result_mapping
 
-        output_mapping = (
-            output_connection_to_analysis_result_mapping.iteritems()
-        )
-        for output_connection, analysis_result in output_mapping:
+        for output_connection, analysis_result in output_mappings:
             # create derived data file node
             derived_data_file_node = (
                 Node.objects.create(
@@ -1752,8 +1751,7 @@ class Analysis(OwnableResource):
                         # TODO: here we could add a (Refinery internal)
                         # attribute to the derived data file node to
                         # indicate which output of the tool it corresponds to
-            # connect outputs that are not inputs for any data
-            # transformation
+            # connect outputs that are not inputs for any data transformation
             if (output_connection.is_refinery_file and
                     derived_data_file_node.parents.count() == 0):
                 graph.node[output_connection.step]['node'].add_child(
@@ -1845,22 +1843,18 @@ class Analysis(OwnableResource):
         here: https://github.com/
         refinery-platform/refinery-platform/pull/2099#issue-255989396
         """
-        distinct_filenames_map = {}
-        output_connections_to_analysis_results = {}
+        distinct_filenames_map = defaultdict(lambda: [])
+        output_connections_to_analysis_results = []
 
         output_node_connections = AnalysisNodeConnection.objects.filter(
             analysis=self,
             direction=OUTPUT_CONNECTION
         )
         # Fetch the distinct file names from our output
-        # AnalysisNodeConnections for this Analysis and initialize a dict
+        # AnalysisNodeConnections for this Analysis construct a dict
         # mapping the unique file names to a list of AnalysisNodeConnections
         # sharing said filename.
         for output_connection in output_node_connections:
-            # Populate entry if not seen yet
-            if distinct_filenames_map.get(output_connection.filename) is None:
-                distinct_filenames_map[output_connection.filename] = []
-
             distinct_filenames_map[output_connection.filename].append(
                 output_connection
             )
@@ -1872,8 +1866,8 @@ class Analysis(OwnableResource):
                     analysis_uuid=self.uuid,
                     file_name=output_connection.filename
                 )[index]
-                output_connections_to_analysis_results[output_connection] = (
-                    analysis_result
+                output_connections_to_analysis_results.append(
+                    (output_connection, analysis_result)
                 )
         return output_connections_to_analysis_results
 
