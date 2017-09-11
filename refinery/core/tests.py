@@ -1561,13 +1561,13 @@ class AnalysisTests(TestCase):
         )
 
     def test___get_output_connection_to_analysis_result_mapping(self):
-        analysis_result_a = AnalysisResult.objects.create(
+        analysis_result_b = AnalysisResult.objects.create(
             analysis_uuid=self.analysis.uuid,
             file_store_uuid=self.node.file_uuid,
             file_name=self.node_filename,
             file_type=self.node.get_file_store_item().filetype
         )
-        analysis_result_b = AnalysisResult.objects.create(
+        analysis_result_a = AnalysisResult.objects.create(
             analysis_uuid=self.analysis.uuid,
             file_store_uuid=self.node.file_uuid,
             file_name=self.node_filename,
@@ -1579,8 +1579,8 @@ class AnalysisTests(TestCase):
         self.assertEqual(
             output_mapping,
             {
-                self.analysis_node_connection_a: analysis_result_b,
-                self.analysis_node_connection_b: analysis_result_a
+                self.analysis_node_connection_a: analysis_result_a,
+                self.analysis_node_connection_b: analysis_result_b
             }
         )
 
