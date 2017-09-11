@@ -61,7 +61,7 @@ from file_store.models import FileStoreItem
 from galaxy_connector.models import Instance
 from selenium_testing.utils import (MAX_WAIT, SeleniumTestBaseGeneric,
                                     wait_until_class_visible)
-from tool_manager.tasks import docker_garbage_collection
+from tool_manager.tasks import django_docker_cleanup
 
 from .models import (FileRelationship, GalaxyParameter, InputFile, Parameter,
                      Tool, ToolDefinition, VisualizationTool, WorkflowTool)
@@ -2788,7 +2788,7 @@ class VisualizationToolLaunchTests(ToolManagerTestBase,
             DockerClientWrapper().lookup_container_url(tool.container_name)
 
             time.sleep(wait_time * 2)
-            docker_garbage_collection()
+            django_docker_cleanup()
             time.sleep(wait_time * 2)
 
             with self.assertRaises(NotFound):

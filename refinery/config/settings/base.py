@@ -374,8 +374,8 @@ CELERY_ROUTES = {"file_store.tasks.import_file": {"queue": "file_import"}}
 
 # TODO: Does this belong here or in config.json.erb?
 CELERYBEAT_SCHEDULE = {
-    'gc-docker-containers': {
-        'task': 'tool_manager.tasks.docker_garbage_collection',
+    'django_docker_cleanup': {
+        'task': 'tool_manager.tasks.django_docker_cleanup',
         'schedule': timedelta(seconds=30)
     },
 }

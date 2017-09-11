@@ -5,7 +5,7 @@ from django_docker_engine.docker_utils import DockerClientWrapper
 
 
 @task()
-def docker_garbage_collection():
+def django_docker_cleanup():
     # TODO: Specify manager, if not default
     client = DockerClientWrapper()
     client.purge_inactive(settings.DJANGO_DOCKER_ENGINE_SECONDS_INACTIVE)
