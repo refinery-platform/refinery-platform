@@ -2484,15 +2484,18 @@ class VisualizationToolLaunchTests(ToolManagerTestBase,
         self.assertIn("DataSet matching query does not exist.",
                       self.post_response.content)
 
-    def test_visualization_container_launch_IGV(self):
-        with open("{}/visualizations/igv.json".format(TEST_DATA_PATH)) as f:
+    def _start_visualization(
+            self, json_name, file_relationships, assertions=None
+    ):
+        with open(
+            "{}/visualizations/{}".format(TEST_DATA_PATH, json_name)
+        ) as f:
             tool_annotation = [json.loads(f.read())]
 
         with mock.patch(
             self.mock_vis_annotations_reference,
             return_value=tool_annotation
         ) as mocked_method:
-
             call_command("generate_tool_definitions", visualizations=True)
 
             self.assertTrue(mocked_method.called)
@@ -2503,12 +2506,7 @@ class VisualizationToolLaunchTests(ToolManagerTestBase,
             self.post_data = {
                 "dataset_uuid": self.dataset.uuid,
                 "tool_definition_uuid": self.td.uuid,
-                Tool.FILE_RELATIONSHIPS: "['{}']".format(
-                    urljoin(
-                        self.live_server_url,
-                        "tool_manager/test_data/sample.seg"
-                    )
-                )
+                Tool.FILE_RELATIONSHIPS: str([file_relationships])
             }
 
             self.post_request = self.factory.post(
@@ -2517,18 +2515,23 @@ class VisualizationToolLaunchTests(ToolManagerTestBase,
                 format="json"
             )
             force_authenticate(self.post_request, self.user)
-            self.post_response = self.tools_view(self.post_request)
+            post_response = self.tools_view(self.post_request)
+            self.assertEqual(post_response.status_code, 200)
 
             tool = VisualizationTool.objects.get(
                 tool_definition__uuid=self.td.uuid
             )
-
             self.assertEqual(tool.get_owner(), self.user)
             self.assertEqual(
                 tool.get_tool_type(),
                 ToolDefinition.VISUALIZATION
             )
 
+            if assertions:
+                assertions(tool)
+
+    def test_visualization_container_launch_IGV(self):
+        def assertions(tool):
             # Check to see if IGV shows what we want
             igv_url = urljoin(
                 self.live_server_url,
@@ -2546,100 +2549,41 @@ class VisualizationToolLaunchTests(ToolManagerTestBase,
                 )[0].text
             )
 
+        self._start_visualization(
+            'igv.json',
+            # Can't be unicode. There's a TODO in utils.
+            str(self.live_server_url + "/tool_manager/test_data/sample.seg"),
+            assertions
+        )
+
     def test_visualization_container_launch_HiGlass(self):
-        with open(
-            "{}/visualizations/higlass.json".format(TEST_DATA_PATH)
-        ) as f:
-            tool_annotation = [json.loads(f.read())]
-
-        with mock.patch(
-                self.mock_vis_annotations_reference,
-                return_value=tool_annotation
-        ) as mocked_method:
-            call_command("generate_tool_definitions", visualizations=True)
-
-            self.assertTrue(mocked_method.called)
-            self.assertEqual(ToolDefinition.objects.count(), 1)
-            self.td = ToolDefinition.objects.all()[0]
-
-            # Create mock ToolLaunchConfiguration
-            self.post_data = {
-                "dataset_uuid": self.dataset.uuid,
-                "tool_definition_uuid": self.td.uuid,
-                Tool.FILE_RELATIONSHIPS: str(
-                    [
-                        "https://s3.amazonaws.com/pkerp/public/"
-                        "dixon2012-h1hesc-hindiii-allreps-filtered."
-                        "1000kb.multires.cool"
-                    ]
-                )
-            }
-
-            self.post_request = self.factory.post(
-                self.tools_url_root,
-                data=self.post_data,
-                format="json"
-            )
-            force_authenticate(self.post_request, self.user)
-            self.post_response = self.tools_view(self.post_request)
-
-            tool = VisualizationTool.objects.get(
-                tool_definition__uuid=self.td.uuid
-            )
-            self.assertEqual(tool.get_owner(), self.user)
-            self.assertEqual(
-                tool.get_tool_type(),
-                ToolDefinition.VISUALIZATION
-            )
+        self._start_visualization(
+            'higlass.json',
+            "https://s3.amazonaws.com/pkerp/public/"
+            "dixon2012-h1hesc-hindiii-allreps-filtered."
+            "1000kb.multires.cool"
             # TODO: Add selenium-based test once higlass relative paths fixed
+        )
 
-    def test_docker_garbage_collection(self):
+    def test_docker_cleanup(self):
         wait_time = 1
         settings.DJANGO_DOCKER_ENGINE_SECONDS_INACTIVE = wait_time
 
-        with open(
-                "{}/visualizations/hello_world.json".format(TEST_DATA_PATH)
-        ) as f:
-            tool_annotation = [json.loads(f.read())]
-
-        with mock.patch(
-                self.mock_vis_annotations_reference,
-                return_value=tool_annotation
-        ) as mocked_method:
-            call_command("generate_tool_definitions", visualizations=True)
-
-            self.assertTrue(mocked_method.called)
-            self.assertEqual(ToolDefinition.objects.count(), 1)
-            self.td = ToolDefinition.objects.all()[0]
-
-            # Create mock ToolLaunchConfiguration
-            self.post_data = {
-                "dataset_uuid": self.dataset.uuid,
-                "tool_definition_uuid": self.td.uuid,
-                Tool.FILE_RELATIONSHIPS: str([
-                    "https://www.example.com/file.txt"
-                ])
-            }
-
-            self.post_request = self.factory.post(
-                self.tools_url_root,
-                data=self.post_data,
-                format="json"
-            )
-            force_authenticate(self.post_request, self.user)
-            post_response = self.tools_view(self.post_request)
-            self.assertEqual(post_response.status_code, 200)
-
-            tool = VisualizationTool.objects.all()[0]
-
+        def assertions(tool):
             DockerClientWrapper().lookup_container_url(tool.container_name)
 
-            time.sleep(wait_time*2)
+            time.sleep(wait_time * 2)
             docker_garbage_collection()
-            time.sleep(wait_time*2)
+            time.sleep(wait_time * 2)
 
             with self.assertRaises(NotFound):
                 DockerClientWrapper().lookup_container_url(tool.container_name)
+
+        self._start_visualization(
+            'hello_world.json',
+            "https://www.example.com/file.txt",
+            assertions
+        )
 
 
 class ToolLaunchConfigurationTests(ToolManagerTestBase):
