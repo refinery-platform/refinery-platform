@@ -23,6 +23,8 @@ from bioblend.galaxy.libraries import LibraryClient
 from bioblend.galaxy.workflows import WorkflowClient
 import celery
 from constants import UUID_RE
+from django_docker_engine.docker_utils import DockerClientWrapper
+from docker.errors import NotFound
 import mock
 from rest_framework.test import (APIRequestFactory, APITestCase,
                                  force_authenticate)
@@ -56,6 +58,7 @@ from file_store.models import FileStoreItem
 from galaxy_connector.models import Instance
 from selenium_testing.utils import (MAX_WAIT, SeleniumTestBaseGeneric,
                                     wait_until_class_visible)
+from tool_manager.tasks import docker_garbage_collection
 
 from .models import (FileRelationship, GalaxyParameter, InputFile, Parameter,
                      Tool, ToolDefinition, VisualizationTool, WorkflowTool)
@@ -2589,6 +2592,51 @@ class VisualizationToolLaunchTests(ToolManagerTestBase,
                 ToolDefinition.VISUALIZATION
             )
             # TODO: Add selenium-based test once higlass relative paths fixed
+
+    def test_docker_garbage_collection(self):
+        wait_time = 1
+        settings.DJANGO_DOCKER_ENGINE_SECONDS_INACTIVE = wait_time
+
+        with open(
+                "{}/visualizations/hello_world.json".format(TEST_DATA_PATH)
+        ) as f:
+            tool_annotation = [json.loads(f.read())]
+
+        with mock.patch(
+                self.mock_vis_annotations_reference,
+                return_value=tool_annotation
+        ) as mocked_method:
+            call_command("generate_tool_definitions", visualizations=True)
+
+            self.assertTrue(mocked_method.called)
+            self.assertEqual(ToolDefinition.objects.count(), 1)
+            self.td = ToolDefinition.objects.all()[0]
+
+            # Create mock ToolLaunchConfiguration
+            self.post_data = {
+                "dataset_uuid": self.dataset.uuid,
+                "tool_definition_uuid": self.td.uuid,
+                Tool.FILE_RELATIONSHIPS: None
+            }
+
+            self.post_request = self.factory.post(
+                self.tools_url_root,
+                data=self.post_data,
+                format="json"
+            )
+            force_authenticate(self.post_request, self.user)
+            self.tools_view(self.post_request)
+
+            tool = VisualizationTool.objects.all()[0]
+
+            DockerClientWrapper().lookup_container_url(tool.container_name)
+
+            time.sleep(wait_time*2)
+            docker_garbage_collection()
+            time.sleep(wait_time*2)
+
+            with self.assertRaises(NotFound):
+                DockerClientWrapper().lookup_container_url(tool.container_name)
 
 
 class ToolLaunchConfigurationTests(ToolManagerTestBase):
