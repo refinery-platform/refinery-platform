@@ -2485,7 +2485,8 @@ class VisualizationToolLaunchTests(ToolManagerTestBase,
                       self.post_response.content)
 
     def _start_visualization(
-            self, json_name, file_relationships, assertions=None
+            self, json_name, file_relationships,
+            assertions=None, count=1
     ):
         with open(
             "{}/visualizations/{}".format(TEST_DATA_PATH, json_name)
@@ -2496,9 +2497,9 @@ class VisualizationToolLaunchTests(ToolManagerTestBase,
             self.mock_vis_annotations_reference,
             return_value=tool_annotation
         ) as mocked_method:
-            call_command("generate_tool_definitions", visualizations=True)
-
-            self.assertTrue(mocked_method.called)
+            if count == 1:
+                call_command("generate_tool_definitions", visualizations=True)
+                self.assertTrue(mocked_method.called)
             self.assertEqual(ToolDefinition.objects.count(), 1)
             self.td = ToolDefinition.objects.all()[0]
 
@@ -2518,19 +2519,22 @@ class VisualizationToolLaunchTests(ToolManagerTestBase,
             post_response = self.tools_view(self.post_request)
             self.assertEqual(post_response.status_code, 200)
 
-            tool = VisualizationTool.objects.get(
+            tools = VisualizationTool.objects.filter(
                 tool_definition__uuid=self.td.uuid
             )
-            self.assertEqual(tool.get_owner(), self.user)
+            if count:
+                self.assertEqual(len(tools), count)
+            last_tool = tools.last()
+            self.assertEqual(last_tool.get_owner(), self.user)
             self.assertEqual(
-                tool.get_tool_type(),
+                last_tool.get_tool_type(),
                 ToolDefinition.VISUALIZATION
             )
 
             if assertions:
-                assertions(tool)
+                assertions(last_tool)
 
-    def test_visualization_container_launch_IGV(self):
+    def test_IGV(self):
         def assertions(tool):
             # Check to see if IGV shows what we want
             igv_url = urljoin(
@@ -2556,7 +2560,7 @@ class VisualizationToolLaunchTests(ToolManagerTestBase,
             assertions
         )
 
-    def test_visualization_container_launch_HiGlass(self):
+    def test_HiGlass(self):
         self._start_visualization(
             'higlass.json',
             "https://s3.amazonaws.com/pkerp/public/"
@@ -2584,6 +2588,21 @@ class VisualizationToolLaunchTests(ToolManagerTestBase,
             "https://www.example.com/file.txt",
             assertions
         )
+
+    def test_max_containers(self):
+        for i in xrange(settings.DJANGO_DOCKER_ENGINE_MAX_CONTAINERS):
+            self._start_visualization(
+                'hello_world.json',
+                "https://www.example.com/file.txt",
+                count=i+1
+            )
+
+        with self.assertRaises(AssertionError):
+            # '400 != 200': Not what we really want?
+            self._start_visualization(
+                'hello_world.json',
+                "https://www.example.com/file.txt"
+            )
 
 
 class ToolLaunchConfigurationTests(ToolManagerTestBase):
