@@ -13,7 +13,7 @@ FILE_STORE_DIR setting - main file store directory
 Example: FILE_STORE_DIR = 'files'
 
 """
-
+import errno
 import logging
 import os
 import re
@@ -42,22 +42,19 @@ def _mkdir(path):
 
     :param path: Absolute file system path.
     :type path: str.
-    :returns: bool -- True if directory was created, False if it wasn't.
     """
-    logger.debug("Creating directory '%s'", path)
     try:
         os.mkdir(path)
-    except OSError as e:
-        logger.error("Error creating directory '%s': %s", path, e)
+    except OSError as exc:
+        if exc.errno != errno.EEXIST or not os.path.isdir(path):
+            logger.error("Error creating directory '%s': %s", path, exc)
     else:
         logger.info("Created directory '%s'", path)
 
 
 # create data storage directories
-if not os.path.isdir(settings.FILE_STORE_BASE_DIR):
-    _mkdir(settings.FILE_STORE_BASE_DIR)
-if not os.path.isdir(settings.FILE_STORE_TEMP_DIR):
-    _mkdir(settings.FILE_STORE_TEMP_DIR)
+_mkdir(settings.FILE_STORE_BASE_DIR)
+_mkdir(settings.FILE_STORE_TEMP_DIR)
 
 
 def file_path(instance, filename):
