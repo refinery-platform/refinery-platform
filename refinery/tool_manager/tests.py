@@ -2524,7 +2524,7 @@ class VisualizationToolLaunchTests(ToolManagerTestBase,
             )
             if count:
                 self.assertEqual(len(tools), count)
-            last_tool = tools[len(tools)-1]
+            last_tool = tools.last()
             self.assertEqual(last_tool.get_owner(), self.user)
             self.assertEqual(
                 last_tool.get_tool_type(),
