@@ -5,7 +5,6 @@ Created on Jan 11, 2012
 '''
 
 import ast
-import collections
 import copy
 import json
 import logging
@@ -530,7 +529,7 @@ def configure_workflow(workflow_dict, ret_list):
 
 def create_expanded_workflow_graph(dictionary):
     graph = nx.MultiDiGraph()
-    steps = collections.OrderedDict(sorted(dictionary["steps"].items()))
+    steps = dictionary["steps"]
     galaxy_input_types = tool_manager.models.WorkflowTool.GALAXY_INPUT_TYPES
 
     # iterate over steps to create nodes
