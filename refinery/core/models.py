@@ -6,6 +6,7 @@ Created on Feb 20, 2012
 from __future__ import absolute_import
 
 import ast
+from collections import defaultdict
 import copy
 from datetime import datetime
 import json
@@ -695,6 +696,16 @@ class DataSet(SharableResource):
             return investigation_link.investigation
         else:
             return None
+
+    def get_studies(self, version=None):
+        return Study.objects.filter(
+            investigation=self.get_investigation(version)
+        )
+
+    def get_assays(self, version=None):
+        return Assay.objects.filter(
+            study=self.get_studies(version)
+        )
 
     def get_file_count(self):
         """Returns the number of files in the data set"""
@@ -1411,7 +1422,10 @@ class Analysis(OwnableResource):
             connection = self.galaxy_connection()
             error_msg = "Error deleting Galaxy %s for analysis '%s': %s"
 
-            # Delete Galaxy library
+            logger.info("Purging galaxy of libraries, histories, "
+                        "and workflows related to the execution of Analysis "
+                        "with UUID: %s", self.uuid)
+
             if self.library_id:
                 try:
                     connection.libraries.delete_library(self.library_id)
@@ -1644,24 +1658,31 @@ class Analysis(OwnableResource):
             analysis=self, direction=INPUT_CONNECTION)[0].node.assay
         # 1. read workflow into graph
         graph = create_expanded_workflow_graph(
-            ast.literal_eval(self.workflow_copy))
+            ast.literal_eval(self.workflow_copy)
+        )
         # 2. create data transformation nodes for all tool nodes
         data_transformation_nodes = [graph.node[node_id]
                                      for node_id in graph.nodes()
                                      if graph.node[node_id]['type'] == "tool"]
         for data_transformation_node in data_transformation_nodes:
             # TODO: incorporate subanalysis id in tool name???
-            data_transformation_node['node'] = \
+            data_transformation_node['node'] = (
                 Node.objects.create(
-                    study=study, assay=assay, analysis_uuid=self.uuid,
+                    study=study,
+                    assay=assay,
+                    analysis_uuid=self.uuid,
                     type=Node.DATA_TRANSFORMATION,
                     name=data_transformation_node['tool_id'] + '_' +
                     data_transformation_node['name']
                 )
+            )
         # 3. create connection from input nodes to first data transformation
         # nodes (input tool nodes in the graph are skipped)
-        for input_connection in AnalysisNodeConnection.objects.filter(
-                analysis=self, direction=INPUT_CONNECTION):
+        input_node_connections = AnalysisNodeConnection.objects.filter(
+            analysis=self,
+            direction=INPUT_CONNECTION
+        )
+        for input_connection in input_node_connections:
             for edge in graph.edges_iter([input_connection.step]):
                 if (graph[edge[0]][edge[1]]['output_id'] ==
                         str(input_connection.step) + '_' +
@@ -1672,50 +1693,36 @@ class Analysis(OwnableResource):
                     input_connection.node.add_child(data_transformation_node)
         # 4. create derived data file nodes for all entries and connect to data
         # transformation nodes
-        for output_connection in AnalysisNodeConnection.objects.filter(
-                analysis=self, direction=OUTPUT_CONNECTION):
+        output_connection_to_analysis_result_mapping = (
+            self._get_output_connection_to_analysis_result_mapping()
+        )
+        output_mappings = output_connection_to_analysis_result_mapping
+
+        for output_connection, analysis_result in output_mappings:
             # create derived data file node
-            derived_data_file_node = \
+            derived_data_file_node = (
                 Node.objects.create(
-                    study=study, assay=assay,
+                    study=study,
+                    assay=assay,
                     type=Node.DERIVED_DATA_FILE,
-                    name=output_connection.name, analysis_uuid=self.uuid,
+                    name=output_connection.name,
+                    analysis_uuid=self.uuid,
                     subanalysis=output_connection.subanalysis,
-                    workflow_output=output_connection.name)
+                    workflow_output=output_connection.name
+                )
+            )
             # retrieve uuid of corresponding output file if exists
             logger.info("Results for '%s' and %s.%s: %s",
-                        self.uuid,
-                        output_connection.filename, output_connection.filetype,
-                        str(AnalysisResult.objects.filter(
-                            analysis_uuid=self.uuid,
-                            file_name=(output_connection.name + "." +
-                                       output_connection.filetype)).count()))
-            analysis_results = AnalysisResult.objects.filter(
-                analysis_uuid=self.uuid,
-                file_name=(output_connection.name + "." +
-                           output_connection.filetype))
+                        self.uuid, output_connection,
+                        output_connection.filetype, analysis_result)
 
-            if analysis_results.count() == 0:
-                logger.info("No output file found for node '%s' ('%s')",
-                            derived_data_file_node.name,
-                            derived_data_file_node.uuid)
+            derived_data_file_node.file_uuid = analysis_result.file_store_uuid
 
-            if analysis_results.count() == 1:
-                derived_data_file_node.file_uuid = \
-                    analysis_results[0].file_store_uuid
-                logger.debug(
-                    "Output file %s.%s ('%s') assigned to node %s ('%s')",
-                    output_connection.name,
-                    output_connection.filetype,
-                    analysis_results[0].file_store_uuid,
-                    derived_data_file_node.name,
-                    derived_data_file_node.uuid)
+            logger.debug("Output file %s ('%s') assigned to node %s ('%s')",
+                         output_connection, analysis_result.file_store_uuid,
+                         derived_data_file_node.name,
+                         derived_data_file_node.uuid)
 
-            if analysis_results.count() > 1:
-                logger.warning("Multiple output files returned for '%s.%s'." +
-                               "No assignment to output node was made.",
-                               output_connection.filename,
-                               output_connection.filetype)
             output_connection.node = derived_data_file_node
             output_connection.save()
             # get graph edge that corresponds to this output node:
@@ -1724,22 +1731,28 @@ class Analysis(OwnableResource):
             # (if exists)
             if len(graph.edges([output_connection.step])) > 0:
                 for edge in graph.edges_iter([output_connection.step]):
-                    if (graph[edge[0]][edge[1]]['output_id'] ==
-                        str(output_connection.step) + "_" +
-                            output_connection.filename):
+                    output_id = "{}_{}".format(
+                        output_connection.step,
+                        output_connection.filename
+                    )
+                    if graph[edge[0]][edge[1]]['output_id'] == output_id:
                         output_node_id = edge[0]
                         input_node_id = edge[1]
-                        data_transformation_output_node = \
+                        data_transformation_output_node = (
                             graph.node[output_node_id]['node']
-                        data_transformation_input_node = \
+                        )
+                        data_transformation_input_node = (
                             graph.node[input_node_id]['node']
+                        )
                         data_transformation_output_node.add_child(
-                            derived_data_file_node)
+                            derived_data_file_node
+                        )
                         derived_data_file_node.add_child(
-                            data_transformation_input_node)
+                            data_transformation_input_node
+                        )
                         # TODO: here we could add a (Refinery internal)
-                        # attribute to the derived data file node to indicate
-                        # which output of the tool it corresponds to
+                        # attribute to the derived data file node to
+                        # indicate which output of the tool it corresponds to
             # connect outputs that are not inputs for any data transformation
             if (output_connection.is_refinery_file and
                     derived_data_file_node.parents.count() == 0):
@@ -1753,12 +1766,18 @@ class Analysis(OwnableResource):
 
         # 5. create annotated nodes and index new nodes
         node_uuids = AnalysisNodeConnection.objects.filter(
-            analysis=self, direction=OUTPUT_CONNECTION, is_refinery_file=True
+            analysis=self,
+            direction=OUTPUT_CONNECTION,
+            is_refinery_file=True
         ).values_list('node__uuid', flat=True)
+
         add_annotated_nodes_selection(
-            node_uuids, Node.DERIVED_DATA_FILE,
-            study.uuid, assay.uuid)
-        index_annotated_nodes_selection(node_uuids)
+            node_uuids,
+            Node.DERIVED_DATA_FILE,
+            study.uuid,
+            assay.uuid
+        )
+        self._prepare_annotated_nodes(node_uuids)
 
     def attach_outputs_downloads(self):
         analysis_results = AnalysisResult.objects.filter(
@@ -1802,6 +1821,58 @@ class Analysis(OwnableResource):
             else:
                 file_store_item.terminate_file_import_task()
 
+    def _prepare_annotated_nodes(self, node_uuids):
+        """
+        Wrapper method to ensure that `rename_results` is called before
+        index_annotated_nodes_selection.
+
+        If `rename_results` isn't executed before
+        `index_annotated_nodes_selection` we end up indexing incorrect
+        information.
+
+        Call order is ensured through:
+        core.tests.test__prepare_annotated_nodes_calls_methods_in_proper_order
+        """
+        self.rename_results()
+        index_annotated_nodes_selection(node_uuids)
+
+    def _get_output_connection_to_analysis_result_mapping(self):
+        """
+        Create and return a dict mapping each "output" type
+        AnalysisNodeConnection to it's respective analysis result.
+
+        This is especially useful when we run into the edge-case described
+        here: https://github.com/
+        refinery-platform/refinery-platform/pull/2099#issue-255989396
+        """
+        distinct_filenames_map = defaultdict(lambda: [])
+        output_connections_to_analysis_results = []
+
+        output_node_connections = AnalysisNodeConnection.objects.filter(
+            analysis=self,
+            direction=OUTPUT_CONNECTION
+        )
+        # Fetch the distinct file names from our output
+        # AnalysisNodeConnections for this Analysis construct a dict
+        # mapping the unique file names to a list of AnalysisNodeConnections
+        # sharing said filename.
+        for output_connection in output_node_connections:
+            distinct_filenames_map[output_connection.filename].append(
+                output_connection
+            )
+        # Associate the AnalysisNodeConnections with their respective
+        # AnalysisResults
+        for output_connections in distinct_filenames_map.values():
+            for index, output_connection in enumerate(output_connections):
+                analysis_result = AnalysisResult.objects.filter(
+                    analysis_uuid=self.uuid,
+                    file_name=output_connection.filename
+                )[index]
+                output_connections_to_analysis_results.append(
+                    (output_connection, analysis_result)
+                )
+        return output_connections_to_analysis_results
+
     @property
     def is_tool_based(self):
         try:
@@ -1836,9 +1907,9 @@ class AnalysisNodeConnection(models.Model):
 
     # (display) name for an output file "wig_outfile" or "outfile"
     # (unique for a given workflow template)
-    name = models.CharField(null=False, blank=False, max_length=100)
+    name = models.CharField(null=False, blank=False, max_length=500)
     # file name of the connection, e.g. "wig_outfile" or "outfile"
-    filename = models.CharField(null=False, blank=False, max_length=100)
+    filename = models.CharField(null=False, blank=False, max_length=500)
     # file type if known
     filetype = models.CharField(null=True, blank=True, max_length=100)
     # direction of the connection, either an input or an output
@@ -2278,12 +2349,6 @@ class Invitation(models.Model):
         if not self.id:
             self.created = timezone.now()
         return super(Invitation, self).save(*arg, **kwargs)
-
-
-# TODO - Back this with DB as a models.Model
-class FastQC(object):
-    def __init__(self, data=None):
-        self.data = data
 
 
 @receiver(post_save, sender=User)

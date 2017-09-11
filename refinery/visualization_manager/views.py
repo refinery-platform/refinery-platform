@@ -8,7 +8,6 @@ from django.shortcuts import redirect
 from annotation_server.models import (genome_build_to_species,
                                       taxon_id_to_genome_build)
 from annotation_server.utils import SUPPORTED_GENOMES
-from core.utils import get_full_url
 from data_set_manager.models import Node
 from file_server.models import get_aux_file_item
 from file_server.views import profile_viewer
@@ -133,7 +132,7 @@ def create_igv_session(genome, uuids, is_file_uuid=False):
         # delete temp file
         os.unlink(tempfilename.name)
         # Url for session file
-        fs_url = get_full_url(filestore_item.get_datafile_url())
+        fs_url = filestore_item.get_datafile_url()
         # IGV url for automatic launch of Java Webstart
         igv_url = "http://www.broadinstitute.org/igv/projects/current/igv" \
                   ".php?sessionURL=" + fs_url
@@ -394,7 +393,7 @@ def create_igv_session_annot(genome, uuids, annot_uuids=None, samp_file=None):
             logger.error("Couldn't properly fetch FileStoreItem: %s", e)
         else:
             # Url for session file
-            sessionfile_url = get_full_url(filestore_item.get_datafile_url())
+            sessionfile_url = filestore_item.get_datafile_url()
 
             # IGV url for automatic launch of Java Webstart
             igv_url = \
@@ -508,7 +507,7 @@ def add_igv_samples(fields, results_samp, annot_samples=None):
             logger.error("Couldn't properly fetch FileStoreItem: %s", e)
         else:
             # full path to selected UUID File
-            curr_url = get_full_url(curr_fs.get_datafile_url())
+            curr_url = curr_fs.get_datafile_url()
 
             # delete temp file
             os.unlink(temp_sample_name.name)
@@ -574,7 +573,7 @@ def create_temp_filename_and_url(temp_fs, samp_file):
     temp_name = temp_name[len(temp_name) - 1]
 
     # full path to selected UUID File
-    temp_url = get_full_url(temp_fs.get_datafile_url())
+    temp_url = temp_fs.get_datafile_url()
 
     # IGV SEG FILE HACK
     if samp_file:

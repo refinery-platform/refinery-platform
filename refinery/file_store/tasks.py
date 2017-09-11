@@ -20,8 +20,7 @@ from requests.exceptions import (ConnectionError, ContentDecodingError,
 from data_set_manager.models import Node
 from data_set_manager.search_indexes import NodeIndex
 
-from .models import (FILE_STORE_BASE_DIR, FileStoreItem, file_path,
-                     get_temp_dir, parse_s3_url)
+from .models import FileStoreItem, file_path, get_temp_dir, parse_s3_url
 
 logger = logging.getLogger(__name__)
 
@@ -211,7 +210,7 @@ def import_file(uuid, refresh=False, file_size=0):
         rel_dst_path = item.datafile.storage.get_available_name(
             file_path(item, src_file_name)
         )
-        abs_dst_path = os.path.join(FILE_STORE_BASE_DIR, rel_dst_path)
+        abs_dst_path = os.path.join(settings.FILE_STORE_BASE_DIR, rel_dst_path)
         # move the temp file into the file store
         try:
             if not os.path.exists(os.path.dirname(abs_dst_path)):

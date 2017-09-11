@@ -87,6 +87,8 @@ class TakeOwnershipOfPublicDatasetView(View):
         from_old_template = False
 
         if 'isa_tab_url' in request.POST:
+            # TODO: I think isa_tab_url is already a full url,
+            # making this redundant.
             full_isa_tab_url = get_full_url(request.POST['isa_tab_url'])
             from_old_template = True
         else:
@@ -111,8 +113,9 @@ class TakeOwnershipOfPublicDatasetView(View):
                 return HttpResponseBadRequest(err_msg)
 
             try:
-                full_isa_tab_url = get_full_url(DataSet.objects.get(
-                    uuid=data_set_uuid).get_isa_archive().get_datafile_url())
+                full_isa_tab_url = DataSet.objects.get(
+                    uuid=data_set_uuid
+                ).get_isa_archive().get_datafile_url()
             except (DataSet.DoesNotExist, DataSet.MultipleObjectsReturned,
                     Exception) as e:
                 err_msg = "Something went wrong"

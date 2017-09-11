@@ -891,11 +891,6 @@ def pubmed_summary(request, id):
     return HttpResponse(response, content_type='application/json')
 
 
-def fastqc_viewer(request):
-    return render_to_response('core/fastqc-viewer.html', {},
-                              context_instance=RequestContext(request))
-
-
 @gzip_page
 def neo4j_dataset_annotations(request):
     """Query Neo4J for dataset annotations per user"""
