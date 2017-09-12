@@ -1667,6 +1667,7 @@ class NodeIndexTests(APITestCase):
         study = Study.objects.create(investigation=investigation)
         assay = Assay.objects.create(study=study, technology='whizbang')
 
+        # None of the details of the test_file except name matter for the test
         test_file = StringIO()
         test_file.write('Coffee is great.\n')
         self.file_store_item = FileStoreItem.objects.create(
