@@ -2766,8 +2766,7 @@ class VisualizationToolLaunchTests(ToolManagerTestBase,
 
         self._start_visualization(
             'igv.json',
-            # Can't be unicode. There's a TODO in utils.
-            str(self.live_server_url + "/tool_manager/test_data/sample.seg"),
+            self.live_server_url + "/tool_manager/test_data/sample.seg",
             assertions
         )
 

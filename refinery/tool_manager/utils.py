@@ -468,8 +468,7 @@ def parse_file_relationship_nesting(nested_structure, nesting_dict=None,
         raise RuntimeError(
             "LIST/PAIR structure is not balanced {}".format(nesting_contents)
         )
-    # TODO: If it's a unicode instead of str, it breaks. Too fragile?
-    if nesting_types == {str}:
+    if nesting_types in [{str}, {unicode}]:
         # If we reach a nesting level with all `str` we can return
         return
 
