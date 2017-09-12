@@ -514,7 +514,7 @@ class Node(models.Model):
             # (<Node_object>, Boolean: <created>)
             # So, if this Node is newly created, we will associate it as a
             # child to its parent, otherwise nothing happens
-            # See here for reference: http://bit.ly/2bL0PH5
+            # https://docs.djangoproject.com/en/1.10/ref/models/querysets/#get-or-create
             node_object = node[0]
             is_newly_created_node = node[1]
 

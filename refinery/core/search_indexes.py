@@ -90,7 +90,8 @@ class DataSetIndex(indexes.SearchIndex, indexes.Indexable):
                 )
 
         # Cast to `list` looks redundant, but MultiValueField stores sets
-        # improperly, introducing a search bug. See: http://bit.ly/2pZLE5c
+        # improperly, introducing a search bug.
+        # https://github.com/refinery-platform/refinery-platform/pull/1716#discussion_r115339987
         return list(set(submitters))
 
     def prepare_measurement(self, object):
@@ -107,7 +108,8 @@ class DataSetIndex(indexes.SearchIndex, indexes.Indexable):
                 measurements.append(assay.measurement)
 
         # Cast to `list` looks redundant, but MultiValueField stores sets
-        # improperly, introducing a search bug. See: http://bit.ly/2pZLE5c
+        # improperly, introducing a search bug.
+        # https://github.com/refinery-platform/refinery-platform/pull/1716#discussion_r115339987
         return list(set(measurements))
 
     def prepare_technology(self, object):
@@ -124,7 +126,8 @@ class DataSetIndex(indexes.SearchIndex, indexes.Indexable):
                 technologies.append(assay.technology)
 
         # Cast to `list` looks redundant, but MultiValueField stores sets
-        # improperly, introducing a search bug. See: http://bit.ly/2pZLE5c
+        # improperly, introducing a search bug.
+        # https://github.com/refinery-platform/refinery-platform/pull/1716#discussion_r115339987
         return list(set(technologies))
 
     # from:

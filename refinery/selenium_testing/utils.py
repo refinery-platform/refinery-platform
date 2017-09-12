@@ -15,7 +15,8 @@ MAX_WAIT = 60
 class SeleniumTestBaseGeneric(StaticLiveServerTestCase):
     """Base class to be used for all selenium-based tests"""
 
-    # Don't delete data migration data after test runs: http://bit.ly/2lAYqVJ
+    # Don't delete data migration data after test runs:
+    # https://docs.djangoproject.com/en/1.7/topics/testing/tools/#transactiontestcase
     serialized_rollback = True
 
     def setUp(self):
