@@ -2,6 +2,7 @@ class refinery::neo4j {
 
   class neo4jFetch {
     $neo4j_runtime_settings = '/etc/neo4j/neo4j-server.properties'
+    $neo4j_launch_settings = '/etc/neo4j/neo4j-wrapper.conf'
 
     apt::source { 'neo4j':
       ensure   => 'present',
@@ -40,6 +41,14 @@ class refinery::neo4j {
       'neo4j_increase_transaction_timeout':
         path => $neo4j_runtime_settings,
         line => 'org.neo4j.server.transaction.timeout=600';
+      'neo4j_reduce_max_memory':
+        path    => $neo4j_launch_settings,
+        line    => 'wrapper.java.maxmemory=32',
+        match   => 'wrapper.java.maxmemory',
+        replace => $::deployment_platform ? {
+          'aws'   => false,
+          default => true,
+        };
     }
     ~>
     service { 'neo4j-service':
