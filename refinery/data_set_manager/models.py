@@ -428,7 +428,7 @@ class Node(models.Model):
     analysis_uuid = UUIDField(default=None, blank=True, null=True, auto=False)
     is_auxiliary_node = models.BooleanField(default=False)
     subanalysis = models.IntegerField(null=True, blank=False)
-    workflow_output = models.CharField(null=True, blank=False, max_length=100)
+    workflow_output = models.CharField(null=True, blank=False, max_length=500)
 
     def __unicode__(self):
         return unicode(self.type) + ": " + unicode(self.name) + " (" +\
