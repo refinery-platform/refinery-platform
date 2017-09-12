@@ -13,40 +13,20 @@ import os
 import re
 import string
 import tempfile
-from urlparse import urlparse
 from zipfile import ZipFile
 
-import data_set_manager.tasks
+from file_store.models import FileStoreItem
 from file_store.tasks import create, import_file
 
 from .models import (Assay, Attribute, Contact, Design, Factor, Investigation,
                      Node, Ontology, Protocol, ProtocolReference,
                      ProtocolReferenceParameter, Publication, Study)
+from .utils import fix_last_column
 
 logger = logging.getLogger(__name__)
 
 
 class IsaTabParser:
-    # parser flags/settings
-    ignore_case = True
-    ignore_missing_protocols = True
-    # TODO: remove this temporary fix to deal with ISA-Tab from ArrayExpression
-    # (see also _parse_node)
-    additional_raw_data_file_extension = None
-    # absolute path used prefix data file names and paths encountered in the
-    # input file
-    file_base_path = None
-    # internals
-    _current_investigation = None
-    _current_study = None
-    _current_assay = None
-    _current_node = None
-    _previous_node = None
-    _current_attribute = None
-    _current_protocol_reference = None
-    _current_reader = None
-    _current_file = None
-    _current_file_name = None
     # TODO: use these where appropriate
     SEPARATOR_CHARACTER = "\t"
     QUOTE_CHARACTER = "\""
@@ -268,8 +248,27 @@ class IsaTabParser:
         }
     }
 
-    def __init__(self):
-        pass
+    def __init__(self, file_source_translator,
+                 additional_raw_data_file_extension=None):
+        self.file_source_translator = file_source_translator
+        # TODO: remove this temporary fix to deal with ISA-Tab from
+        # ArrayExpress (see also _parse_node)
+        self.additional_raw_data_file_extension = \
+            additional_raw_data_file_extension
+        # parser flags/settings
+        self.ignore_case = True
+        self.ignore_missing_protocols = True
+        # internals
+        self._current_investigation = None
+        self._current_study = None
+        self._current_assay = None
+        self._current_node = None
+        self._previous_node = None
+        self._current_attribute = None
+        self._current_protocol_reference = None
+        self._current_reader = None
+        self._current_file = None
+        self._current_file_name = None
 
     def _split_header(self, header):
         return [x.strip() for x in header.replace("]", "").strip().split("[")]
@@ -320,31 +319,22 @@ class IsaTabParser:
                     header_components[0] in Node.FILES and
                     node_name is not ""):
                 # create the nodes for the data file in this row
-                if self.file_base_path is None:
-                    file_path = node_name
-                else:
-                    # test if this node is referring to a remote url
-                    components = urlparse(node_name)
-                    if components.scheme == "" or components.netloc == "":
-                        # not a remote url
-                        file_path = os.path.join(
-                            self.file_base_path, node_name)
-                    else:
-                        file_path = node_name
-
-                uuid = create(source=file_path)
-
-                if uuid is not None:
-                    node.file_uuid = uuid
+                file_path = self.file_source_translator(node_name)
+                file_store_item = FileStoreItem.objects.create_item(
+                    source=file_path, sharename='', filetype=''
+                )
+                if file_store_item:
+                    node.file_uuid = file_store_item.uuid
                     node.save()
                 else:
-                    logger.exception(
-                        "Unable to add " + file_path + " to file store as a "
-                        "temporary file.")
+                    logger.error(
+                        "Unable to add %s to file store as a temporary file",
+                        file_path
+                    )
             if is_new:
-                logger.info("New node " + str(node) + " created.")
+                logger.info("New node %s created", str(node))
             else:
-                logger.info("Node " + str(node) + " retrieved.")
+                logger.info("Node %s retrieved", str(node))
         else:
             if len(node_name) > 0:
                 node = Node.objects.create(
@@ -925,17 +915,6 @@ class IsaTabParser:
         the archive extracts into a subdirectory named <archive> if the
         ISArchive is called <archive>.zip.
         """
-        # reset all variables
-        self._current_investigation = None
-        self._current_study = None
-        self._current_assay = None
-        self._current_node = None
-        self._previous_node = None
-        self._current_attribute = None
-        self._current_protocol_reference = None
-        self._current_reader = None
-        self._current_file = None
-        self._current_file_name = None
         # 1. test if archive needs to be extracted and extract if necessary
         if not os.path.isdir(path):
             # assign to isa_archive if it's an archive anyway
@@ -994,18 +973,15 @@ class IsaTabParser:
                 # parse study file
                 self._current_assay = None
                 study_file_name = os.path.join(path, study.file_name)
-                if data_set_manager.tasks.fix_last_col(study_file_name):
+                if fix_last_column(study_file_name):
                     self._parse_study_file(study, study_file_name)
                     for assay in study.assay_set.all():
                         # parse assay file
                         self._previous_node = None
                         assay_file_name = os.path.join(path, assay.file_name)
-                        if data_set_manager.tasks.fix_last_col(
-                                assay_file_name):
-                            self._parse_assay_file(
-                                study,
-                                assay,
-                                assay_file_name)
+                        if fix_last_column(assay_file_name):
+                            self._parse_assay_file(study, assay,
+                                                   assay_file_name)
         else:
             logger.exception(
                 "No investigation was identified when parsing investigation "

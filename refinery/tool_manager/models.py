@@ -391,6 +391,10 @@ class Tool(OwnableResource):
         self.set_tool_launch_config(tool_launch_config)
 
 
+class VisualizationToolError(StandardError):
+    pass
+
+
 class VisualizationTool(Tool):
     """
     VisualizationTools are Tools that are specific to
@@ -411,6 +415,10 @@ class VisualizationTool(Tool):
         launched container's url
             - <HttpResponseBadRequest>, <HttpServerError>
         """
+        client = DockerClientWrapper()
+        max_containers = settings.DJANGO_DOCKER_ENGINE_MAX_CONTAINERS
+        if len(client.list()) >= max_containers:
+            raise VisualizationToolError('Max containers')
         container = DockerContainerSpec(
             image_name=self.tool_definition.image_name,
             container_name=self.container_name,
@@ -424,7 +432,7 @@ class VisualizationTool(Tool):
             extra_directories=self.tool_definition.get_extra_directories()
         )
 
-        DockerClientWrapper().run(container)
+        client.run(container)
 
         return JsonResponse({Tool.TOOL_URL: self.get_relative_container_url()})
 

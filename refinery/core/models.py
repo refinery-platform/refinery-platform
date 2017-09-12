@@ -553,38 +553,32 @@ class DataSet(SharableResource):
 
         try:
             self.get_isa_archive().delete()
-
         except AttributeError as e:
             logger.debug("DataSet has no isa_archive to delete: %s", e)
 
         try:
             self.get_pre_isa_archive().delete()
-
         except AttributeError as e:
             logger.debug("DataSet has no pre_isa_archive to delete: %s", e)
 
         related_investigation_links = self.get_investigation_links()
 
         for investigation_link in related_investigation_links:
-
             node_collection = investigation_link.get_node_collection()
-
             try:
                 node_collection.delete()
             except Exception as e:
                 logger.error("Couldn't delete NodeCollection: %s", e)
 
-        # Try to terminate any currently running FileImport tasks just to be
-        # safe
-        file_store_items = self.get_file_store_items()
-        if file_store_items is not None:
-            for file_store_item in file_store_items:
-                file_store_item.terminate_file_import_task()
+        # terminate any running file import tasks
+        for file_store_item in self.get_file_store_items():
+            file_store_item.terminate_file_import_task()
+
         try:
             super(DataSet, self).delete()
-        except Exception as e:
-            return False, "Something unexpected happened. DataSet: {} could " \
-                          "not be deleted. {}".format(self.name, e)
+        except Exception as exc:
+            return False, "DataSet {} could not be deleted: {}".format(
+                self.name, exc)
         else:
             # Return a "truthy" value here so that the admin ui and
             # front-end ui knows if the deletion succeeded or not as well as
@@ -811,27 +805,25 @@ class DataSet(SharableResource):
             )
 
     def get_file_store_items(self):
+        """Returns a list of all data files associated with the data set"""
+        file_store_items = []
         investigation = self.get_investigation()
 
         try:
             study = Study.objects.get(investigation=investigation)
-            nodes = Node.objects.filter(study=study)
         except (Study.DoesNotExist, Study.MultipleObjectsReturned) as e:
             logger.error("Could not fetch Study properly: %s", e)
         else:
-            file_store_items = []
-
-            for node in nodes:
+            for node in Node.objects.filter(study=study):
                 try:
                     file_store_items.append(
                         FileStoreItem.objects.get(uuid=node.file_uuid)
                     )
-
                 except(FileStoreItem.DoesNotExist,
                        FileStoreItem.MultipleObjectsReturned) as e:
                     logger.error("Error while fetching FileStoreItem: %s", e)
 
-            return file_store_items
+        return file_store_items
 
     def is_valid(self):
         """

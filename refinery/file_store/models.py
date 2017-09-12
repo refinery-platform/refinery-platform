@@ -502,17 +502,14 @@ class FileStoreItem(models.Model):
         """
         if self.is_local():
             return core.utils.get_full_url(self.datafile.url)
-        else:
-            # data file doesn't exist on disk
-            if os.path.isabs(self.source):
-                # source is a file system path
-                logger.error("File not found at '%s'", self.datafile.name)
+
+        if core.utils.is_url(self.source):
+            if self.source.startswith('s3://'):
                 return None
-            else:
-                # source is a URL
-                if self.source.startswith('s3://'):
-                    return None
-                return self.source
+            return self.source
+
+        logger.error("File not found at '%s'", self.datafile.name)
+        return None
 
     def get_import_status(self):
         """Return file import task state"""

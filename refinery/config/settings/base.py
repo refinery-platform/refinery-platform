@@ -1,3 +1,4 @@
+from datetime import timedelta
 import json
 import logging
 import os
@@ -371,6 +372,15 @@ EMAIL_SUBJECT_PREFIX = get_setting("EMAIL_SUBJECT_PREFIX")
 CELERYD_MAX_TASKS_PER_CHILD = get_setting("CELERYD_MAX_TASKS_PER_CHILD")
 CELERY_ROUTES = {"file_store.tasks.import_file": {"queue": "file_import"}}
 
+# TODO: Does this belong here or in config.json.erb?
+CELERYBEAT_SCHEDULE = {
+    'django_docker_cleanup': {
+        'task': 'tool_manager.tasks.django_docker_cleanup',
+        'schedule': timedelta(seconds=30)
+    },
+}
+
+
 CHUNKED_UPLOAD_ABSTRACT_MODEL = False
 
 # === Refinery Settings ===
@@ -643,15 +653,17 @@ VISUALIZATION_ANNOTATION_BASE_PATH = "tool_manager/visualization_annotations"
 # To avoid Port conflicts between LiveServerTestCases http://bit.ly/2pb64KN
 os.environ["DJANGO_LIVE_TEST_SERVER_ADDRESS"] = "localhost:10000-12000"
 
+DJANGO_DOCKER_ENGINE_MAX_CONTAINERS = 10
 DJANGO_DOCKER_ENGINE_BASE_URL = "visualizations"
+# Time in seconds to wait before killing unused visualization
+DJANGO_DOCKER_ENGINE_SECONDS_INACTIVE = 60
+# Location of DjangoDockerEngine proxy logging
+PROXY_LOG = '/tmp/django_docker_engine.log'
 
 REFINERY_DEPLOYMENT_PLATFORM = "vagrant"
 
 # HTML-safe item to be displayed to the right of the `About` link in the navbar
 REFINERY_CUSTOM_NAVBAR_ITEM = get_setting("REFINERY_CUSTOM_NAVBAR_ITEM")
-
-# Location of DjangoDockerEngine proxy logging
-PROXY_LOG = '/tmp/django_docker_engine.log'
 
 USER_FILES_COLUMNS = get_setting("USER_FILES_COLUMNS")
 USER_FILES_FACETS = get_setting("USER_FILES_FACETS")

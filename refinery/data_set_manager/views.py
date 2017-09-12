@@ -30,7 +30,7 @@ from core.models import DataSet, get_user_import_dir
 from core.utils import get_full_url
 from file_store.models import (generate_file_source_translator, get_temp_dir,
                                parse_s3_url)
-from file_store.tasks import DownloadError, download_file
+from file_store.tasks import DownloadError, download_file, import_file
 
 from .models import Assay, AttributeOrder, Study
 from .serializers import AssaySerializer, AttributeOrderSerializer
@@ -198,7 +198,7 @@ class ProcessISATabView(View):
             return response
         logger.debug("Temp file name: '%s'", temp_file_path)
         dataset_uuid = parse_isatab.delay(request.user.username, False,
-                                          temp_file_path).get()[0]
+                                          temp_file_path).get()
         # TODO: exception handling
         os.unlink(temp_file_path)
         if dataset_uuid:
@@ -238,15 +238,30 @@ class ProcessISATabView(View):
                 response = self.import_by_url(url)
             else:
                 response = self.import_by_file(f)
+
+            # get AWS Cognito identity ID
+            if settings.REFINERY_DEPLOYMENT_PLATFORM == 'aws':
+                try:
+                    identity_id = request.POST.get('identity_id')
+                except (KeyError, ValueError):
+                    error_msg = 'identity_id is missing'
+                    error = {'error_message': error_msg}
+                    if request.is_ajax():
+                        return HttpResponseBadRequest(
+                            json.dumps({'error': error_msg}),
+                            'application/json'
+                        )
+                    else:
+                        return render(request, self.template_name, error)
+            else:
+                identity_id = None
+
             if not response['success']:
                 if request.is_ajax():
                     return HttpResponse(
-                        json.dumps({
-                            'error': response.message
-                        }),
+                        json.dumps({'error': response.message}),
                         content_type='application/json'
                     )
-
                 return render_to_response(
                     self.template_name,
                     context_instance=RequestContext(
@@ -262,56 +277,56 @@ class ProcessISATabView(View):
                 "Temp file name: '%s'", response['data']['temp_file_path']
             )
 
-            dataset_uuid = (parse_isatab.delay(
-                request.user.username,
-                False,
-                response['data']['temp_file_path']
-            ).get())[0]
+            dataset_uuid = parse_isatab.delay(
+                username=request.user.username, public=False,
+                path=response['data']['temp_file_path'],
+                identity_id=identity_id
+            ).get()
 
             # TODO: exception handling (OSError)
             os.unlink(response['data']['temp_file_path'])
+
+            # import data files
             if dataset_uuid:
+                try:
+                    dataset = DataSet.objects.get(uuid=dataset_uuid)
+                except (DataSet.DoesNotExist, DataSet.MultipleObjectsReturned):
+                    logger.error(
+                        "Cannot import data files for data set UUID '%s'",
+                        dataset_uuid
+                    )
+                else:
+                    # start importing uploaded data files
+                    for file_store_item in dataset.get_file_store_items():
+                        if file_store_item.source.startswith(
+                            (settings.REFINERY_DATA_IMPORT_DIR, 's3://')
+                        ):
+                            import_file.delay(file_store_item.uuid)
+
                 if request.is_ajax():
                     return HttpResponse(
                         json.dumps({
                             'success': 'Data set imported',
-                            'data': {
-                                'new_data_set_uuid': dataset_uuid
-                            }
+                            'data': {'new_data_set_uuid': dataset_uuid}
                         }),
                         content_type='application/json'
                     )
-
                 return HttpResponseRedirect(
                     reverse(self.success_view_name, args=[dataset_uuid])
                 )
             else:
                 error = 'Problem parsing ISA-Tab file'
                 if request.is_ajax():
-                    return HttpResponse(
-                        json.dumps({
-                            'error': error
-                        }),
-                        content_type='application/json'
-                    )
-
-                context = RequestContext(
-                    request,
-                    {
-                        'form': form,
-                        'error': error
-                    }
-                )
-                return render_to_response(
-                    self.template_name,
-                    context_instance=context
-                )
+                    return HttpResponse(json.dumps({'error': error}),
+                                        content_type='application/json')
+                context = RequestContext(request, {'form': form,
+                                                   'error': error})
+                return render_to_response(self.template_name,
+                                          context_instance=context)
         else:  # submitted form is not valid
             context = RequestContext(request, {'form': form})
-            return render_to_response(
-                self.template_name,
-                context_instance=context
-            )
+            return render_to_response(self.template_name,
+                                      context_instance=context)
 
     def import_by_file(self, file):
         temp_file_path = os.path.join(get_temp_dir(), file.name)
@@ -514,7 +529,7 @@ class CheckDataFilesView(View):
         except KeyError:
             base_path = None
         try:
-            identity_id = file_data['identityId']
+            identity_id = file_data['identity_id']
         except KeyError:
             identity_id = None
 
