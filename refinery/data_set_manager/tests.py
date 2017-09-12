@@ -16,8 +16,8 @@ from data_set_manager.tasks import parse_isatab
 from factory_boy.utils import make_analyses_with_single_dataset
 from file_store.models import FileStoreItem
 
-from .models import (AnnotatedNode, Assay, Attribute, AttributeOrder,
-                     Investigation, Node, Study)
+from .models import (AnnotatedNode, Assay, AttributeOrder, Investigation, Node,
+                     Study)
 from .search_indexes import NodeIndex
 from .serializers import AttributeOrderSerializer
 from .utils import (create_facet_filter_query, customize_attribute_response,
@@ -1692,13 +1692,6 @@ class NodeIndexTests(APITestCase):
         self.study_uuid = study.uuid
         self.file_uuid = self.file_store_item.uuid
         self.node_uuid = self.node.uuid
-
-        Attribute.objects.create(
-            node=self.node,
-            type=Attribute.CHARACTERISTICS,
-            subtype='fake subtype',
-            value='fake value'
-        )
 
         self.maxDiff = None
 
