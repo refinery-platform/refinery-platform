@@ -13,7 +13,6 @@ FILE_STORE_DIR setting - main file store directory
 Example: FILE_STORE_DIR = 'files'
 
 """
-import errno
 import logging
 import os
 import re
@@ -37,19 +36,20 @@ logger = logging.getLogger(__name__)
 
 
 def _mkdir(path):
-    """Create directory given absolute file system path.
-    Does not create intermediate dirs if they don't exist.
+    """Create directory given absolute file system path
+    Does not create intermediate dirs if they don't exist, raises RuntimeError
 
-    :param path: Absolute file system path.
-    :type path: str.
+    :param path: Absolute file system path
+    :type path: str
     """
-    try:
-        os.mkdir(path)
-    except OSError as exc:
-        if exc.errno != errno.EEXIST or not os.path.isdir(path):
+    if not os.path.isdir(path):
+        try:
+            os.mkdir(path)
+        except OSError as exc:
             logger.error("Error creating directory '%s': %s", path, exc)
-    else:
-        logger.info("Created directory '%s'", path)
+            raise RuntimeError()
+        else:
+            logger.info("Created directory '%s'", path)
 
 
 # create data storage directories
