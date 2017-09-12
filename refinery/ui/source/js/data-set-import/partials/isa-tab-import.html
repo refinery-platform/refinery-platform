@@ -1,10 +1,10 @@
 <div id="isa-tab-import-form">
   <div id="dataUploadTutorialStep6">
-   <div>
-    <p>
-      Please provide <code>.zip</code> archive containing an investigation, study, and assay
-      file.
-    </p>
+    <div>
+      <p>
+        Please provide <code>.zip</code> archive containing an investigation, study, and assay
+        file.
+      </p>
     </div>
 
     <div class="relative">
@@ -77,14 +77,42 @@
           ng-disabled="!!isaTabImport.file">
       </label>
 
+      <div class="refinery-subheader m-t-1">
+        <h1>Complete Submission</h1>
+      </div>
+      <div class="row m-t-1-4 m-b-1-4">
+        <div class="col-sm-12 col-md-12 col-lg-12">
+          <div class="m-t-1 m-b-1">
+            Would you like to upload data files?
+            <label class="p-l-1-2">
+              <input
+                type="radio"
+                ng-value="false"
+                ng-model="isaTabImport.showFileUpload"
+                checked>
+              No
+            </label>
+            <label class="p-l-1-2">
+              <input
+                type="radio"
+                ng-value="true"
+                ng-model="isaTabImport.showFileUpload">
+              Yes
+            </label>
+          </div>
+
+          <div class="m-t-1 m-b-1" ng-if="isaTabImport.showFileUpload">
+            <rp-file-upload></rp-file-upload>
+          </div>
+        </div>
+      </div>
+
       <button
         id="isa-import-button"
         class="block refinery-base btn btn-default"
         ng-click="isaTabImport.startImport()"
         ng-if="isaTabImport.file || isaTabImport.urlToFile"
-        ng-disabled="
-          isaTabImport.isSuccessfullyImported || !isaTabImport.checkImportOption
-        ">
+        ng-disabled="isaTabImport.isSuccessfullyImported || !isaTabImport.checkImportOption">
         Start Import
       </button>
     </div>

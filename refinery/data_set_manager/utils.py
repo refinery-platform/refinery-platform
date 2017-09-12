@@ -3,9 +3,12 @@ Created on May 29, 2012
 
 @author: nils
 '''
+import csv
 import hashlib
 import json
 import logging
+import shutil
+import tempfile
 import time
 import urlparse
 
@@ -1094,3 +1097,56 @@ def get_file_url_from_node_uuid(node_uuid):
             )
         else:
             return core.utils.get_full_url(url)
+
+
+def fix_last_column(file):
+    """If the header has empty columns in it, then it will delete this and
+    corresponding columns in the rows; returns 0 or 1 based on whether it
+    failed or was successful, respectively
+    Parameters:
+    file: name of file to fix
+    """
+    # TODO: exception handling for file operations (IOError)
+    logger.info("trying to fix the last column if necessary")
+    # FIXME: use context manager to handle file opening and closing
+    reader = csv.reader(open(file, 'rU'), dialect='excel-tab')
+    tempfilename = tempfile.NamedTemporaryFile().name
+    writer = csv.writer(open(tempfilename, 'wb'), dialect='excel-tab')
+    # check that all rows have the same length
+    header = reader.next()
+    header_length = len(header)
+    num_empty_cols = 0  # number of empty header columns
+    # TODO: throw exception if there is an empty field in the header between
+    # two non-empty fields
+    for item in header:
+        if not item.strip():
+            num_empty_cols += 1
+    # write the file
+    writer.writerow(header[:-num_empty_cols])
+    if num_empty_cols > 0:  # if there are empty header columns
+        logger.info("Empty columns in header present, attempting to fix...")
+        # check that all the rows are the same length
+        line = 0
+        for row in reader:
+            line += 1
+            if len(row) < header_length - num_empty_cols:
+                logger.error(
+                    "Line " + str(line) + " in the file had fewer fields than "
+                    "the header.")
+                return False
+            # check that all the end columns that are supposed to be empty are
+            i = 0
+            if len(row) > len(header) - num_empty_cols:
+                while i < num_empty_cols:
+                    i += 1
+                    check_item = row[-i].strip()
+                    if check_item:  # item not empty
+                        logger.error(
+                            "Found a value in " + str(line) +
+                            " where an empty column was expected.")
+                        return False
+                writer.writerow(row[:-num_empty_cols])
+            else:
+                writer.writerow(row)
+        shutil.move(tempfilename, file)
+    return True
