@@ -10,8 +10,8 @@ class refinery::solr {
     }
 
     archive { "solr_download":
-      path        => "/tmp/${solr_archive}",
-      source      => "${solr_url}",
+      path   => "/tmp/${solr_archive}",
+      source => "${solr_url}",
     }
     ->
     exec { "solr_extract_installer":
@@ -39,10 +39,19 @@ class refinery::solr {
       require => [ File["/opt"], Package['java'] ],
     }
     ->
-    file_line { "solr_config_home":
-      path  => "/var/solr/solr.in.sh",
-      line  => "SOLR_HOME=${django_root}/solr",
-      match => "^SOLR_HOME",
+    file_line {
+      "solr_config_home":
+        path  => "/var/solr/solr.in.sh",
+        line  => "SOLR_HOME=${django_root}/solr",
+        match => "^SOLR_HOME";
+      'solr_config_heap':
+        path    => '/var/solr/solr.in.sh',
+        line    => 'SOLR_HEAP="32m"',
+        match   => 'SOLR_HEAP=',
+        replace => $::deployment_platform ? {
+          'aws'   => false,
+          default => true,
+        };
     }
     ->
     file_line { "solr_config_log":
