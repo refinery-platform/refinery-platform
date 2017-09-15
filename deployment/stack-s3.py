@@ -17,7 +17,7 @@ import boto3
 from cfn_pyplates.core import (CloudFormationTemplate, DeletionPolicy,
                                Parameter, Properties, Resource)
 from cfn_pyplates.functions import get_att, ref
-from utils import load_tags
+from utils import Output, load_tags
 import yaml
 
 REFINERY_CONFIG_FILE = 'aws-config/config.yaml'
@@ -119,46 +119,49 @@ def make_storage_template():
     )
 
     # Resources
-    cft.resources.add(Resource(
-        'StaticStorageBucket',
-        'AWS::S3::Bucket',
-        Properties({
-            'BucketName': ref('StaticBucketName'),
-            'AccessControl': 'PublicRead',
-            'CorsConfiguration': {
-                'CorsRules': [
-                    {
-                        'AllowedOrigins': ['*'],
-                        'AllowedMethods': ['GET'],
-                        'AllowedHeaders': ['Authorization'],
-                        'MaxAge': 3000,
-                    }
-                ]
-            },
-        }),
-        DeletionPolicy('Retain'),
-    ))
-    cft.resources.add(Resource(
-        'MediaStorageBucket',
-        'AWS::S3::Bucket',
-        Properties({
-            'BucketName': ref('MediaBucketName'),
-            'AccessControl': 'PublicRead',
-            'CorsConfiguration': {
-                'CorsRules': [
-                    {
-                        'AllowedOrigins': ['*'],
-                        'AllowedMethods': ['POST', 'PUT', 'DELETE'],
-                        'AllowedHeaders': ['*'],
-                        'ExposedHeaders': ['ETag'],
-                        'MaxAge': 3000,
-                    }
-                ]
-            }
-        }),
-        DeletionPolicy('Retain'),
-    ))
-
+    cft.resources.add(
+        Resource(
+            'StaticStorageBucket',
+            'AWS::S3::Bucket',
+            Properties({
+                'BucketName': ref('StaticBucketName'),
+                'AccessControl': 'PublicRead',
+                'CorsConfiguration': {
+                    'CorsRules': [
+                        {
+                            'AllowedOrigins': ['*'],
+                            'AllowedMethods': ['GET'],
+                            'AllowedHeaders': ['Authorization'],
+                            'MaxAge': 3000,
+                        }
+                    ]
+                },
+            }),
+            DeletionPolicy('Retain'),
+        )
+    )
+    cft.resources.add(
+        Resource(
+            'MediaStorageBucket',
+            'AWS::S3::Bucket',
+            Properties({
+                'BucketName': ref('MediaBucketName'),
+                'AccessControl': 'PublicRead',
+                'CorsConfiguration': {
+                    'CorsRules': [
+                        {
+                            'AllowedOrigins': ['*'],
+                            'AllowedMethods': ['POST', 'PUT', 'DELETE'],
+                            'AllowedHeaders': ['*'],
+                            'ExposedHeaders': ['ETag'],
+                            'MaxAge': 3000,
+                        }
+                    ]
+                }
+            }),
+            DeletionPolicy('Retain'),
+        )
+    )
     # Cognito Identity Pool for Developer Authenticated Identities Authflow
     # http://docs.aws.amazon.com/cognito/latest/developerguide/authentication-flow.html
     cft.resources.add(
@@ -248,6 +251,16 @@ def make_storage_template():
                     ]
                 }
             )
+        )
+    )
+
+    # Outputs
+    cft.outputs.add(
+        Output(
+            'IdentityPoolId',
+            ref('IdentityPool'),
+            {'Fn::Sub': '${AWS::StackName}IdentityPoolId'},
+            'Cognito identity pool ID'
         )
     )
 

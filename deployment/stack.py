@@ -47,9 +47,7 @@ def main():
             StackName=config['STACK_NAME'],
             TemplateBody=str(template),
             Capabilities=['CAPABILITY_IAM'],
-            Tags=load_tags(),
-            Parameters=[
-            ]
+            Tags=load_tags()
         )
         sys.stdout.write("{}\n".format(json.dumps(response, indent=2)))
 
@@ -315,10 +313,15 @@ def make_template(config, config_yaml):
                                     "Fn::Sub": [
                                         "arn:aws:cognito-identity:"
                                         "${AWS::Region}:${AWS::AccountId}:"
-                                        "identitypool/${Pool}",
+                                        "identitypool/${PoolId}",
                                         {
-                                            "Pool":
-                                                functions.ref('IdentityPool')
+                                            "PoolId": {
+                                                "Fn::ImportValue": {
+                                                    "Fn::Sub":
+                                                        "${AWS::StackName}"
+                                                        "StorageIdentityPoolId"
+                                                }
+                                            }
                                         }
                                     ]
                                 }
