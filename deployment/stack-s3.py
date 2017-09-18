@@ -230,7 +230,7 @@ def make_storage_template():
                 "Effect": "Allow",
                 "Resource": {
                     "Fn::Sub":
-                        "arn:aws:s3:::${AWS::StackName}Media/uploads/"
+                        "arn:aws:s3:::${MediaStorageBucket}/uploads/"
                         "${!cognito-identity.amazonaws.com:sub}/*"
                 }
             }
