@@ -22,9 +22,9 @@
       createFilters: createFilters,
       getUserFiles: getUserFiles,
       _mergeAndAddObject: _mergeAndAddObject,
-      _objectToNameValue: _objectToNameValue,
-      _nameValueToObject: _nameValueToObject,
-      _mergeAndAddNameValues: _mergeAndAddNameValues
+      _objectToNameCount: _objectToNameCount,
+      _nameCountToObject: _nameCountToObject,
+      _mergeAndAddNameCounts: _mergeAndAddNameCounts
     };
     var URL = 'url';
     return service;
@@ -96,34 +96,38 @@
       });
     }
 
-    function _objectToNameValue (object) {
+    function _objectToNameCount (object) {
       var nv = [];
       Object.keys(object).forEach(function (key) {
         nv.push({
           name: key,
-          value: object[key]
+          count: object[key]
         });
       });
+      console.log('objectToNameCount', nv);
       return nv;
     }
 
-    function _nameValueToObject (nameValue) {
+    function _nameCountToObject (nameCount) {
       var obj = {};
-      nameValue.forEach(function (nv) {
-        obj[nv.name] = nv.value;
+      nameCount.forEach(function (nv) {
+        obj[nv.name] = nv.count;
       });
+      console.log('nameCountToObject', obj);
       return obj;
     }
 
-    function _mergeAndAddNameValues (targetNV, extraNV) {
-      var targetObj = _nameValueToObject(targetNV);
-      var extraObj = _nameValueToObject(extraNV);
+    function _mergeAndAddNameCounts (targetNV, extraNV) {
+      console.log('mergeAndAdd (start)', targetNV, extraNV);
+      var targetObj = _nameCountToObject(targetNV);
+      var extraObj = _nameCountToObject(extraNV);
       _mergeAndAddObject(targetObj, extraObj);
-      var newTargetNV = _objectToNameValue(targetObj);
+      var newTargetNV = _objectToNameCount(targetObj);
       targetNV.length = 0;
       newTargetNV.forEach(function (nv) {
         targetNV.push(nv);
       });
+      console.log('mergeAndAdd (end)', targetNV, extraNV);
     }
 
     function createFilters (solrFacetCounts) {
@@ -143,9 +147,10 @@
             };
           }
           filters[display].lowerCaseNames += ' ' + lowerCaseNames;
-          _mergeAndAddNameValues(filters[display].facetObj, facetObj);
+          _mergeAndAddNameCounts(filters[display].facetObj, facetObj);
         }
       });
+      console.log('filters! (Counts should not be undefined)', filters);
       return filters;
     }
 
