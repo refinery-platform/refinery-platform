@@ -104,7 +104,6 @@
           count: object[key]
         });
       });
-      console.log('objectToNameCount', nc);
       return nc;
     }
 
@@ -113,12 +112,10 @@
       nameCount.forEach(function (nc) {
         obj[nc.name] = nc.count;
       });
-      console.log('nameCountToObject', obj);
       return obj;
     }
 
     function _mergeAndAddNameCounts (targetNC, extraNC) {
-      console.log('mergeAndAdd (start)', targetNC, extraNC);
       var targetObj = _nameCountToObject(targetNC);
       var extraObj = _nameCountToObject(extraNC);
       _mergeAndAddObject(targetObj, extraObj);
@@ -127,7 +124,6 @@
       newTargetNC.forEach(function (nc) {
         targetNC.push(nc);
       });
-      console.log('mergeAndAdd (end)', targetNC, extraNC);
     }
 
     function createFilters (solrFacetCounts) {
@@ -150,7 +146,6 @@
           _mergeAndAddNameCounts(filters[display].facetObj, facetObj);
         }
       });
-      console.log('filters! (Counts should not be undefined)', filters);
       return filters;
     }
 
