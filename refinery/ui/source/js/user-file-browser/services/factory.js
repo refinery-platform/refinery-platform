@@ -97,37 +97,37 @@
     }
 
     function _objectToNameCount (object) {
-      var nv = [];
+      var nc = [];
       Object.keys(object).forEach(function (key) {
-        nv.push({
+        nc.push({
           name: key,
           count: object[key]
         });
       });
-      console.log('objectToNameCount', nv);
-      return nv;
+      console.log('objectToNameCount', nc);
+      return nc;
     }
 
     function _nameCountToObject (nameCount) {
       var obj = {};
-      nameCount.forEach(function (nv) {
-        obj[nv.name] = nv.count;
+      nameCount.forEach(function (nc) {
+        obj[nc.name] = nc.count;
       });
       console.log('nameCountToObject', obj);
       return obj;
     }
 
-    function _mergeAndAddNameCounts (targetNV, extraNV) {
-      console.log('mergeAndAdd (start)', targetNV, extraNV);
-      var targetObj = _nameCountToObject(targetNV);
-      var extraObj = _nameCountToObject(extraNV);
+    function _mergeAndAddNameCounts (targetNC, extraNC) {
+      console.log('mergeAndAdd (start)', targetNC, extraNC);
+      var targetObj = _nameCountToObject(targetNC);
+      var extraObj = _nameCountToObject(extraNC);
       _mergeAndAddObject(targetObj, extraObj);
-      var newTargetNV = _objectToNameCount(targetObj);
-      targetNV.length = 0;
-      newTargetNV.forEach(function (nv) {
-        targetNV.push(nv);
+      var newTargetNC = _objectToNameCount(targetObj);
+      targetNC.length = 0;
+      newTargetNC.forEach(function (nc) {
+        targetNC.push(nc);
       });
-      console.log('mergeAndAdd (end)', targetNV, extraNV);
+      console.log('mergeAndAdd (end)', targetNC, extraNC);
     }
 
     function createFilters (solrFacetCounts) {
