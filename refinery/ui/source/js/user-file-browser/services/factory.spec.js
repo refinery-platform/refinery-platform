@@ -52,29 +52,29 @@
             b: 3
           });
         });
-        it('_objectToNameValue', function () {
-          expect(factory._objectToNameValue({
+        it('_objectToNameCount', function () {
+          expect(factory._objectToNameCount({
             a: 1
           })).toEqual([{
             name: 'a',
-            value: 1
+            count: 1
           }]);
         });
-        it('_nameValueToObject', function () {
-          expect(factory._nameValueToObject([{
+        it('_nameCountToObject', function () {
+          expect(factory._nameCountToObject([{
             name: 'a',
-            value: 1
+            count: 1
           }])).toEqual({
             a: 1
           });
         });
-        it('_mergeAndAddNameValues', function () {
-          var a = [{ name: 'a', value: 1 }];
-          var b = [{ name: 'a', value: 2 }, { name: 'b', value: 3 }];
-          factory._mergeAndAddNameValues(a, b);
+        it('_mergeAndAddNameCounts', function () {
+          var a = [{ name: 'a', count: 1 }];
+          var b = [{ name: 'a', count: 2 }, { name: 'b', count: 3 }];
+          factory._mergeAndAddNameCounts(a, b);
           expect(a).toEqual([
-            { name: 'a', value: 3 },
-            { name: 'b', value: 3 }
+            { name: 'a', count: 3 },
+            { name: 'b', count: 3 }
           ]);
         });
       });
@@ -82,21 +82,21 @@
         expect(factory.createFilters(
           {
             organism_Characteristics_generic_s: [
-              { name: 'mouse', value: 1 },
-              { name: 'cat', value: 2 }
+              { name: 'mouse', count: 1 },
+              { name: 'cat', count: 2 }
             ],
             organism_Factor_Value_generic_s: [
-              { name: 'mouse', value: 3 },
-              { name: 'dog', value: 4 }
+              { name: 'mouse', count: 3 },
+              { name: 'dog', count: 4 }
             ]
           }
         )).toEqual(
           {
             organism: {
               facetObj: [
-                { name: 'mouse', value: 4 },
-                { name: 'cat', value: 2 },
-                { name: 'dog', value: 4 }
+                { name: 'mouse', count: 4 },
+                { name: 'cat', count: 2 },
+                { name: 'dog', count: 4 }
               ],
               lowerCaseNames: ' mouse cat mouse dog' // This is ok: Just used for substring search.
             }
@@ -115,7 +115,7 @@
       ) {
         userFiles = {
           nodes: [
-            { field: 'value' }
+            { field: 'count' }
           ],
           attributes: [{
             field: 'Internal',
