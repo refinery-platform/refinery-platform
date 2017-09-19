@@ -22,9 +22,9 @@
       createFilters: createFilters,
       getUserFiles: getUserFiles,
       _mergeAndAddObject: _mergeAndAddObject,
-      _objectToNameValue: _objectToNameValue,
-      _nameValueToObject: _nameValueToObject,
-      _mergeAndAddNameValues: _mergeAndAddNameValues
+      _objectToNameCount: _objectToNameCount,
+      _nameCountToObject: _nameCountToObject,
+      _mergeAndAddNameCounts: _mergeAndAddNameCounts
     };
     var URL = 'url';
     return service;
@@ -96,33 +96,33 @@
       });
     }
 
-    function _objectToNameValue (object) {
-      var nv = [];
+    function _objectToNameCount (object) {
+      var nc = [];
       Object.keys(object).forEach(function (key) {
-        nv.push({
+        nc.push({
           name: key,
-          value: object[key]
+          count: object[key]
         });
       });
-      return nv;
+      return nc;
     }
 
-    function _nameValueToObject (nameValue) {
+    function _nameCountToObject (nameCount) {
       var obj = {};
-      nameValue.forEach(function (nv) {
-        obj[nv.name] = nv.value;
+      nameCount.forEach(function (nc) {
+        obj[nc.name] = nc.count;
       });
       return obj;
     }
 
-    function _mergeAndAddNameValues (targetNV, extraNV) {
-      var targetObj = _nameValueToObject(targetNV);
-      var extraObj = _nameValueToObject(extraNV);
+    function _mergeAndAddNameCounts (targetNC, extraNC) {
+      var targetObj = _nameCountToObject(targetNC);
+      var extraObj = _nameCountToObject(extraNC);
       _mergeAndAddObject(targetObj, extraObj);
-      var newTargetNV = _objectToNameValue(targetObj);
-      targetNV.length = 0;
-      newTargetNV.forEach(function (nv) {
-        targetNV.push(nv);
+      var newTargetNC = _objectToNameCount(targetObj);
+      targetNC.length = 0;
+      newTargetNC.forEach(function (nc) {
+        targetNC.push(nc);
       });
     }
 
@@ -143,7 +143,7 @@
             };
           }
           filters[display].lowerCaseNames += ' ' + lowerCaseNames;
-          _mergeAndAddNameValues(filters[display].facetObj, facetObj);
+          _mergeAndAddNameCounts(filters[display].facetObj, facetObj);
         }
       });
       return filters;
