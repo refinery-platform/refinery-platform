@@ -18,6 +18,7 @@ with open(please_wait_path, 'r') as f:
     please_wait_content = f.read()
 
 url_patterns = Proxy(
+    settings.DJANGO_DOCKER_ENGINE_DATA_DIR,
     logger=FileLogger(settings.PROXY_LOG),
     please_wait_content=please_wait_content
 ).url_patterns()

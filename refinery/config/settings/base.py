@@ -658,7 +658,8 @@ DJANGO_DOCKER_ENGINE_BASE_URL = "visualizations"
 # Time in seconds to wait before killing unused visualization
 DJANGO_DOCKER_ENGINE_SECONDS_INACTIVE = 60 * 60
 # Location of DjangoDockerEngine proxy logging
-PROXY_LOG = '/tmp/django_docker_engine.log'
+DJANGO_DOCKER_ENGINE_DATA_DIR = '/data/django-docker-engine-data'
+PROXY_LOG = '/data/django-docker-engine.log'
 
 REFINERY_DEPLOYMENT_PLATFORM = "vagrant"
 
