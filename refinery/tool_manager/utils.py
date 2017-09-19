@@ -31,8 +31,10 @@ from .models import Tool, ToolDefinition, WorkflowTool
 
 logger = logging.getLogger(__name__)
 ANNOTATION_ERROR_MESSAGE = (
-    "Tool not properly annotated. Please read: http://bit.ly/2nalk6w for "
-    "examples and more information on how to properly annotate your tools."
+    "Tool not properly annotated. For examples and more information "
+    "on how to properly annotate your tools, please read "
+    "https://github.com/refinery-platform/refinery-platform/wiki/"
+    "Annotating-&-Importing-Refinery-Tools#importing-refinery-tools"
 )
 # Allow JSON Schema to find the JSON pointers we define in our schemas
 JSON_SCHEMA_FILE_RESOLVER = RefResolver(
@@ -296,7 +298,7 @@ def create_file_relationship_nesting(workflow_annotation,
     # One may think: "why not just have `file_relationships=[]` in the
     # method signature?" But this [utilizing mutable arguments] is a
     # common Python "gotcha". Especially in the context of recursive methods.
-    # It's illustrated well here: http://bit.ly/21b5Axg
+    # http://docs.python-guide.org/en/latest/writing/gotchas/#mutable-default-arguments
     if not file_relationships:
         file_relationships = []
 

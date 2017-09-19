@@ -522,7 +522,7 @@ class FileStoreItem(models.Model):
         NOTE: That if you simply revoke() a task without the `terminate` ==
         True, said task will try to restart upon a Worker restart.
 
-        See: http://bit.ly/2di038U or http://bit.ly/1qb8763
+        http://docs.celeryproject.org/en/latest/userguide/workers.html#revoke-revoking-tasks
         """
         try:
             revoke(self.import_task_id, terminate=True)

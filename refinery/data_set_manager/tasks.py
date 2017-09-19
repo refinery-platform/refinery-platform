@@ -539,7 +539,7 @@ def generate_bam_index(auxiliary_file_store_item_uuid, datafile_path):
     # Try and fetch the bam_index FileExtension
     # NOTE: that we are not handling the normal errors for an orm.get()s below
     # because we want the task from which this function is called within to
-    # fail if we can't get what we want http://bit.ly/1KSbazM
+    # fail if we can't get what we want.
     bam_index_file_extension = FileExtension.objects.get(name="bai").name
     auxiliary_file_store_item = FileStoreItem.objects.get(
         uuid=auxiliary_file_store_item_uuid)
