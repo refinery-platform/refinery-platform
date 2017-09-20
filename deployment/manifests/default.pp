@@ -31,6 +31,14 @@ exec { "activate_user":
   require     => Exec['create_guest'],
 }
 
+# Django-docker-engine needs a place for ephemeral data.
+# In production, this is a separate EBS mount, so we don't need to create it locally.
+file { '/data':
+  ensure => 'directory',
+  owner  => $app_user,
+  group  => $app_group
+}
+
 # See code in refinery-modules/refinery/...
 include refinery
 include refinery::apache2
