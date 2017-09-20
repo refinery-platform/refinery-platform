@@ -43,6 +43,7 @@ env:
     - DJANGO_SETTINGS_MODULE=config.settings.prod
 
 before_script:
+  - mkdir /data # In vagrant, this is created by puppet; In production, this is an EBS mount.
   - createuser --createdb --no-superuser --no-createrole vagrant
   - createdb -O vagrant refinery
   - cd refinery
