@@ -1609,15 +1609,21 @@ class Analysis(OwnableResource):
                     if item.get_filetype() == zipfile:
                         new_file_name = ''.join([root, '.zip'])
             renamed_file_store_item_uuid = rename(
-                result.file_store_uuid, new_file_name)
+                result.file_store_uuid,
+                new_file_name
+            )
 
             # Try to generate an auxiliary node for visualization purposes
             # NOTE: We have to do this after renaming happens because before
             #  renaming, said FileStoreItems's datafile field does not point
             #  to an actual file
+
+            file_store_item_uuid = (
+                renamed_file_store_item_uuid if
+                renamed_file_store_item_uuid else result.file_store_uuid
+            )
             try:
-                node = Node.objects.get(
-                    file_uuid=renamed_file_store_item_uuid)
+                node = Node.objects.get(file_uuid=file_store_item_uuid)
             except (Node.DoesNotExist, Node.MultipleObjectsReturned) as e:
                 logger.error("Error Fetching Node: %s", e)
             else:
@@ -1653,27 +1659,35 @@ class Analysis(OwnableResource):
         # for testing: attach workflow graph and output files to data set graph
         # 0. get study and assay from the first input node
         study = AnalysisNodeConnection.objects.filter(
-            analysis=self, direction=INPUT_CONNECTION)[0].node.study
+            analysis=self,
+            direction=INPUT_CONNECTION
+        ).first().node.study
         assay = AnalysisNodeConnection.objects.filter(
-            analysis=self, direction=INPUT_CONNECTION)[0].node.assay
+            analysis=self,
+            direction=INPUT_CONNECTION
+        ).first().node.assay
         # 1. read workflow into graph
         graph = create_expanded_workflow_graph(
             ast.literal_eval(self.workflow_copy)
         )
         # 2. create data transformation nodes for all tool nodes
-        data_transformation_nodes = [graph.node[node_id]
-                                     for node_id in graph.nodes()
-                                     if graph.node[node_id]['type'] == "tool"]
+        data_transformation_nodes = [
+            graph.node[node_id] for node_id in graph.nodes()
+            if graph.node[node_id]['type'] == "tool"
+        ]
         for data_transformation_node in data_transformation_nodes:
             # TODO: incorporate subanalysis id in tool name???
+            node_name = "{}_{}".format(
+                data_transformation_node['tool_id'],
+                data_transformation_node['name']
+            )
             data_transformation_node['node'] = (
                 Node.objects.create(
                     study=study,
                     assay=assay,
                     analysis_uuid=self.uuid,
                     type=Node.DATA_TRANSFORMATION,
-                    name=data_transformation_node['tool_id'] + '_' +
-                    data_transformation_node['name']
+                    name=node_name
                 )
             )
         # 3. create connection from input nodes to first data transformation
@@ -1684,12 +1698,15 @@ class Analysis(OwnableResource):
         )
         for input_connection in input_node_connections:
             for edge in graph.edges_iter([input_connection.step]):
-                if (graph[edge[0]][edge[1]]['output_id'] ==
-                        str(input_connection.step) + '_' +
-                        input_connection.filename):
+                input_id = "{}_{}".format(
+                    input_connection.step,
+                    input_connection.filename
+                )
+                if graph[edge[0]][edge[1]]['output_id'] == input_id:
                     input_node_id = edge[1]
-                    data_transformation_node = \
+                    data_transformation_node = (
                         graph.node[input_node_id]['node']
+                    )
                     input_connection.node.add_child(data_transformation_node)
         # 4. create derived data file nodes for all entries and connect to data
         # transformation nodes
