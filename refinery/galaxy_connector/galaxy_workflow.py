@@ -527,9 +527,9 @@ def configure_workflow(workflow_dict, ret_list):
     return new_workflow, history_download, analysis_node_connections
 
 
-def create_expanded_workflow_graph(dictionary):
+def create_expanded_workflow_graph(galaxy_workflow_dict):
     graph = nx.MultiDiGraph()
-    steps = dictionary["steps"]
+    steps = galaxy_workflow_dict["steps"]
     galaxy_input_types = tool_manager.models.WorkflowTool.GALAXY_INPUT_TYPES
 
     # iterate over steps to create nodes
