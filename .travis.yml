@@ -43,6 +43,7 @@ env:
     - DJANGO_SETTINGS_MODULE=config.settings.prod
 
 before_script:
+  # Vagrant is not used on travis: This user is just for the database.
   - createuser --createdb --no-superuser --no-createrole vagrant
   - createdb -O vagrant refinery
 
