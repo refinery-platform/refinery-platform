@@ -59,6 +59,28 @@ galaxy_workflow_dict = {
                     u'id': 0
                 }
             },
+            u'workflow_outputs': [
+                {
+                    u'output_name': u'Refinery test tool LIST - N on data 2',
+                    u'uuid': u'db331eb4-313a-47e0-9998-0e4aa03786d4',
+                },
+                {
+                    u'output_name': u'Refinery test tool LIST - N on data 4',
+                    u'uuid': u'8adc43a1-e075-4ad5-be6a-b9791532b801',
+                },
+                {
+                    u'output_name': u'Output file',
+                    u'uuid': u'adc43a1-e075-4ad5-be6a-b9791532b8018',
+                },
+                {
+                    u'output_name': u'Output file',
+                    u'uuid': u'adc43a1-e075-4ad5-be6a-b9791532b8018',
+                },
+                {
+                    u'output_name': u'Output file',
+                    u'uuid': u'adc43a1-e075-4ad5-be6a-b9791532b8018',
+                }
+            ],
             u'name': u'Refinery test tool LIST - N',
             u'type': u'tool',
             u'position': {
@@ -80,7 +102,6 @@ galaxy_workflow_dict = {
         }
     }
 }
-
 galaxy_workflow_dict_collection = {
     u'name': u'list test wf',
     u'steps': {
@@ -93,6 +114,16 @@ galaxy_workflow_dict_collection = {
                     u'id': 0
                 }
             },
+            u'workflow_outputs': [
+                {
+                    u'output_name': u'Refinery test tool LIST - N on data 2',
+                    u'uuid': u'db331eb4-313a-47e0-9998-0e4aa03786d4',
+                },
+                {
+                    u'output_name': u'Refinery test tool LIST - N on data 4',
+                    u'uuid': u'8adc43a1-e075-4ad5-be6a-b9791532b801',
+                }
+            ],
             u'name': u'Refinery test tool LIST - N',
             u'type': u'tool',
             u'position': {
@@ -126,10 +157,11 @@ galaxy_datasets_list = [
         u'name': u'Refinery test tool LIST - N on data 4',
         u'file_ext': u'txt',
         u'url': u'/api/histories/67ce804af6ec796b/contents/d32aba4ae7b4124a',
-        u'purged': False
+        u'purged': False,
+        u'uuid': u'8adc43a1-e075-4ad5-be6a-b9791532b801'
     },
     {
-        u'creating_job': u'1d1dbe75827398cd',
+        u'creating_job': u'efwefwee75g27398cd',
         u'file_size': 406,
         u'dataset_id': u'34g34g34g3g34g3',
         u'id': u'd22aba4ae7b4124a',
@@ -138,10 +170,11 @@ galaxy_datasets_list = [
         u'name': u'Refinery test tool LIST - N on data 3',
         u'file_ext': u'txt',
         u'url': u'/api/histories/67ce804af6ec796b/contents/d32aba4ae7b4124a',
-        u'purged': False
+        u'purged': False,
+        u'uuid': u'5b5625c7-3c28-4542-b9c5-2ca9cee301b0'
     },
     {
-        u'creating_job': u'32456789rwjefvtg7',
+        u'creating_job': u'efwefwee75g27398cd',
         u'file_size': 406,
         u'dataset_id': u'4gh33gt34g34g',
         u'id': u'd32aba4ae7b4124a',
@@ -150,7 +183,8 @@ galaxy_datasets_list = [
         u'name': u'Refinery test tool LIST - N on data 2',
         u'file_ext': u'txt',
         u'url': u'/api/histories/67ce804af6ec796b/contents/d32aba4ae7b4124a',
-        u'purged': True
+        u'purged': True,
+        u'uuid': u'db331eb4-313a-47e0-9998-0e4aa03786d4'
     }
 ]
 
@@ -165,10 +199,11 @@ galaxy_datasets_list_same_output_names = [
         u'name': u'Output file',
         u'file_ext': u'txt',
         u'url': u'/api/histories/67ce804af6ec796b/contents/d32aba4ae7b4124a',
-        u'purged': False
+        u'purged': False,
+        u'uuid': u'adc43a1-e075-4ad5-be6a-b9791532b8018'
     },
     {
-        u'creating_job': u'1d1dbe75827398cd',
+        u'creating_job': u'efwefwee75g27398cd',
         u'file_size': 406,
         u'dataset_id': u'34g34g34g3g34g3',
         u'id': u'd22aba4ae7b4124a',
@@ -177,10 +212,11 @@ galaxy_datasets_list_same_output_names = [
         u'name': u'Output file',
         u'file_ext': u'txt',
         u'url': u'/api/histories/67ce804af6ec796b/contents/d32aba4ae7b4124a',
-        u'purged': False
+        u'purged': False,
+        u'uuid': u'adc43a1-e075-4ad5-be6a-b9791532b8018'
     },
     {
-        u'creating_job': u'32456789rwjefvtg7',
+        u'creating_job': u'efwefwee75g27398cd',
         u'file_size': 406,
         u'dataset_id': u'4gh33gt34g34g',
         u'id': u'd32aba4ae7b4124a',
@@ -189,7 +225,8 @@ galaxy_datasets_list_same_output_names = [
         u'name': u'Output file',
         u'file_ext': u'txt',
         u'url': u'/api/histories/67ce804af6ec796b/contents/d32aba4ae7b4124a',
-        u'purged': True
+        u'purged': True,
+        u'uuid': u'adc43a1-e075-4ad5-be6a-b9791532b8018'
     }
 ]
 
@@ -215,34 +252,49 @@ galaxy_history_download_list = [
     {
         u'name': u'Refinery test tool LIST - N on data 4',
         u'state': u'ok', u'file_size': 211,
-        u'dataset_id': u'8ee788c99983ff96', u'type': u'txt'
+        u'dataset_id': u'8ee788c99983ff96', u'type': u'txt',
+        u'uuid': u'8adc43a1-e075-4ad5-be6a-b9791532b801'
     },
     {
         u'name': u'Refinery test tool LIST - N on data 3',
         u'state': u'ok', u'file_size': 211,
-        u'dataset_id': u'14bb1cdaa43f5769', u'type': u'txt'
+        u'dataset_id': u'14bb1cdaa43f5769', u'type': u'txt',
+        u'uuid': u'5b5625c7-3c28-4542-b9c5-2ca9cee301b0'
+
     },
     {
         u'name': u'Refinery test tool LIST - N on data 2',
         u'state': u'ok', u'file_size': 714,
-        u'dataset_id': u'953f3a3e2982a4fa', u'type': u'txt'
+        u'dataset_id': u'953f3a3e2982a4fa', u'type': u'txt',
+        u'uuid': u'db331eb4-313a-47e0-9998-0e4aa03786d4'
+
     }
 ]
 galaxy_history_download_list_same_names = [
     {
         u'name': u'Output file',
         u'state': u'ok', u'file_size': 211,
-        u'dataset_id': u'8ee788c99983ff96', u'type': u'txt'
+        u'dataset_id': u'8ee788c99983ff96', u'type': u'txt',
+        u'uuid': u'adc43a1-e075-4ad5-be6a-b9791532b8018'
+
     },
     {
         u'name': u'Output file',
-        u'state': u'ok', u'file_size': 211,
-        u'dataset_id': u'14bb1cdaa43f5769', u'type': u'txt'
+        u'state': u'ok',
+        u'file_size': 211,
+        u'dataset_id': u'14bb1cdaa43f5769',
+        u'type': u'txt',
+        u'uuid': u'adc43a1-e075-4ad5-be6a-b9791532b8018'
+
     },
     {
         u'name': u'Output file',
-        u'state': u'ok', u'file_size': 714,
-        u'dataset_id': u'953f3a3e2982a4fa', u'type': u'txt'
+        u'state': u'ok',
+        u'file_size': 714,
+        u'dataset_id': u'953f3a3e2982a4fa',
+        u'type': u'txt',
+        u'uuid': u'adc43a1-e075-4ad5-be6a-b9791532b8018'
+
     }
 ]
 
@@ -269,8 +321,21 @@ galaxy_job = {
         }
     },
     u'outputs': {
-        u'output_file': {
-            u'src': u'hda', u'id': u'6189d907339532bf'
+        u'Refinery test tool LIST - N on data 4': {
+            u'src': u'hda',
+            u'uuid': u'8adc43a1-e075-4ad5-be6a-b9791532b801'
+        },
+        u'Refinery test tool LIST - N on data 3': {
+            u'src': u'hda',
+            u'uuid': u'5b5625c7-3c28-4542-b9c5-2ca9cee301b0'
+        },
+        u'Refinery test tool LIST - N on data 2': {
+            u'src': u'hda',
+            u'uuid': u'db331eb4-313a-47e0-9998-0e4aa03786d4'
+        },
+        u'Output file': {
+            u'src': u'hda',
+            u'uuid': u'adc43a1-e075-4ad5-be6a-b9791532b8018'
         }
     },
     u'exit_code': 0,
@@ -287,7 +352,7 @@ galaxy_job = {
     },
     u'model_class': u'Job',
     u'external_id': u'16585',
-    u'id': u'38fe481bc1c2ecc0'
+    u'id': u'efwefwee75g27398cd'
 }
 
 galaxy_dataset_provenance_0 = {
