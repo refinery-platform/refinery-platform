@@ -36,7 +36,7 @@ class refinery::solr {
       cwd     => "/usr/local/src",
       creates => "/opt/solr-${solr_version}",
       path    => "/usr/bin:/bin",
-      require => [ File["/opt"], Package['java'] ],
+      require => [ File["/opt"], File["${::solr_dir}"], Package['java'] ],
     }
     ->
     file_line { "solr_config_home":

@@ -24,8 +24,7 @@ tutorial_settings_file_path = os.path.join(
     'refinery/config/tutorial_steps.json'
 )
 
-override_path = os.path.join(BASE_DIR,
-                             'refinery/config/override-config.yaml')
+override_path = os.path.join(BASE_DIR, 'refinery/config/override-config.yaml')
 
 # load config.json
 try:
@@ -658,7 +657,7 @@ DJANGO_DOCKER_ENGINE_BASE_URL = "visualizations"
 # Time in seconds to wait before killing unused visualization
 DJANGO_DOCKER_ENGINE_SECONDS_INACTIVE = 60 * 60
 # Location of DjangoDockerEngine proxy logging
-DJANGO_DOCKER_ENGINE_DATA_DIR = '/data/django-docker-engine-data'
+DJANGO_DOCKER_ENGINE_DATA_DIR = get_setting("DJANGO_DOCKER_ENGINE_DATA_DIR")
 PROXY_LOG = '/data/django-docker-engine.log'
 
 REFINERY_DEPLOYMENT_PLATFORM = "vagrant"

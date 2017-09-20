@@ -8,36 +8,18 @@ $requirements = "${project_root}/requirements.txt"
 $isa_tab_dir = "${project_root}/isa-tab"
 $media_root = "${project_root}/media"
 $import_dir = "${project_root}/import"
-$solr_custom_synonyms_file =
-  "${django_root}/solr/core/conf/custom-synonyms.txt"
+$data_dir = '/data'
+$docker_dir = "${data_dir}/docker"
+$solr_dir = "${data_dir}/solr"
+$solr_custom_synonyms_file = "${django_root}/solr/core/conf/custom-synonyms.txt"
 $solr_lib_dir = "${django_root}/solr/lib"
+$solr_data_set_manager_data = "${data_dir}/solr/data_set_manager"
+$solr_core_data = "${data_dir}/solr/core"
 $conf_mode = "dev"
 $django_settings_module = "config.settings.${conf_mode}"
 $ui_app_root = "${django_root}/ui"
 $site_name = "Refinery"
 $site_url = "192.168.50.50:8000"
-
-# to make logs easier to read
-class { 'timezone':
-  timezone => 'America/New_York',
-}
-
-# On Vagrant, it's okay to activate the 'guest' user.
-exec { "activate_user":
-  command     => "${virtualenv}/bin/python ${django_root}/manage.py activate_user guest",
-  environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
-  user        => $app_user,
-  group       => $app_group,
-  require     => Exec['create_guest'],
-}
-
-# Django-docker-engine needs a place for ephemeral data.
-# In production, this is a separate EBS mount, so we don't need to create it locally.
-file { '/data':
-  ensure => 'directory',
-  owner  => $app_user,
-  group  => $app_group
-}
 
 # See code in refinery-modules/refinery/...
 include refinery
@@ -48,3 +30,4 @@ include refinery::postgresql
 include refinery::python
 include refinery::selenium
 include refinery::solr
+include refinery::storage

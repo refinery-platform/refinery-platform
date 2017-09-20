@@ -3,17 +3,18 @@ class refinery {
 # for better performance
 sysctl { 'vm.swappiness': value => '10' }
 
+# to make logs easier to read
+class { 'timezone':
+  timezone => 'America/New_York',
+}
+
 user { $::app_user: ensure => present, }
+
+include '::rabbitmq'
 
 file { "/home/${app_user}/.ssh/config":
   ensure => file,
   source => "${deployment_root}/ssh-config",
-  owner  => $app_user,
-  group  => $app_group,
-}
-
-file { ["${project_root}/isa-tab", "${project_root}/import", "${project_root}/static"]:
-  ensure => directory,
   owner  => $app_user,
   group  => $app_group,
 }
@@ -70,13 +71,34 @@ exec { "set_up_refinery_site_name":
   user        => $app_user,
   group       => $app_group,
 }
-->
 
-file { "/opt":
-  ensure => directory,
+if $::deployment_platform == 'aws' {
+  exec { 'generate_superuser_json':
+    command     => "${virtualenv}/bin/python ${deployment_root}/bin/generate-superuser > ${django_root}/core/fixtures/superuser.json.new",
+    environment => ["PYTHONPATH=${django_root}", "DJANGO_SETTINGS_MODULE=${django_settings_module}"],
+    user        => $app_user,
+    group       => $app_group,
+    require     => Exec['migrate'],
+    before      => Exec['create_superuser'],
+  }
+  ->
+  exec { 'copy_superuser_json':
+    command     => "/bin/cp ${django_root}/core/fixtures/superuser.json.new ${django_root}/core/fixtures/superuser.json",
+    user        => $app_user,
+    group       => $app_group,
+    before      => Exec['create_superuser'],
+  }
 }
-
-include '::rabbitmq'
+else {
+  # on Vagrant, it's okay to activate the 'guest' user
+  exec { 'activate_user':
+    command     => "${virtualenv}/bin/python ${django_root}/manage.py activate_user guest",
+    environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
+    user        => $app_user,
+    group       => $app_group,
+    require     => Exec['create_guest'],
+  }
+}
 
 class ui {
   apt::source { 'nodejs':
