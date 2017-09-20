@@ -1728,53 +1728,65 @@ class Analysis(OwnableResource):
                     workflow_output=output_connection.name
                 )
             )
-            # retrieve uuid of corresponding output file if exists
-            logger.info("Results for '%s' and %s.%s: %s",
-                        self.uuid, output_connection,
-                        output_connection.filetype, analysis_result)
-
-            derived_data_file_node.file_uuid = analysis_result.file_store_uuid
-
-            logger.debug("Output file %s ('%s') assigned to node %s ('%s')",
-                         output_connection, analysis_result.file_store_uuid,
-                         derived_data_file_node.name,
-                         derived_data_file_node.uuid)
-
+            if output_connection.is_refinery_file:
+                # retrieve uuid of corresponding output file if exists
+                logger.info(
+                    "Results for '%s' and %s.%s: %s",
+                    self.uuid,
+                    output_connection,
+                    output_connection.filetype,
+                    analysis_result
+                )
+                derived_data_file_node.file_uuid = (
+                    analysis_result.file_store_uuid
+                )
+                logger.debug(
+                    "Output file %s ('%s') assigned to node %s ('%s')",
+                    output_connection,
+                    analysis_result.file_store_uuid,
+                    derived_data_file_node.name,
+                    derived_data_file_node.uuid
+                )
             output_connection.node = derived_data_file_node
             output_connection.save()
+
             # get graph edge that corresponds to this output node:
             # a. attach output node to source data transformation node
             # b. attach output node to target data transformation node
             # (if exists)
-            if len(graph.edges([output_connection.step])) > 0:
-                for edge in graph.edges_iter([output_connection.step]):
+            workflow_step = output_connection.step
+            if len(graph.edges([workflow_step])) > 0:
+                for edge in graph.edges_iter([workflow_step]):
                     output_id = "{}_{}".format(
-                        output_connection.step,
-                        output_connection.filename
+                        workflow_step,
+                        output_connection.name
                     )
                     if graph[edge[0]][edge[1]]['output_id'] == output_id:
-                        output_node_id = edge[0]
-                        input_node_id = edge[1]
-                        data_transformation_output_node = (
-                            graph.node[output_node_id]['node']
-                        )
+                        input_node_id = edge[0]
+                        output_node_id = edge[1]
+
                         data_transformation_input_node = (
                             graph.node[input_node_id]['node']
                         )
-                        data_transformation_output_node.add_child(
+                        data_transformation_output_node = (
+                            graph.node[output_node_id]['node']
+                        )
+                        data_transformation_input_node.add_child(
                             derived_data_file_node
                         )
                         derived_data_file_node.add_child(
-                            data_transformation_input_node
+                            data_transformation_output_node
                         )
                         # TODO: here we could add a (Refinery internal)
                         # attribute to the derived data file node to
                         # indicate which output of the tool it corresponds to
+
             # connect outputs that are not inputs for any data transformation
             if (output_connection.is_refinery_file and
                     derived_data_file_node.parents.count() == 0):
                 graph.node[output_connection.step]['node'].add_child(
-                    derived_data_file_node)
+                    derived_data_file_node
+                )
             # delete output nodes that are not refinery files and don't have
             # any children
             if (not output_connection.is_refinery_file and
@@ -1885,10 +1897,21 @@ class Analysis(OwnableResource):
                     analysis_uuid=self.uuid,
                     file_name=output_connection.filename
                 )[index]
-                output_connections_to_analysis_results.append(
-                    (output_connection, analysis_result)
-                )
-        return output_connections_to_analysis_results
+                if output_connection.is_refinery_file:
+                    output_connections_to_analysis_results.append(
+                        (output_connection, analysis_result)
+                    )
+                else:
+                    output_connections_to_analysis_results.append(
+                        (output_connection, None)
+                    )
+
+        # return a sorted list based on the AnalysisNodeConnections step
+        # attribute
+        return sorted(
+            output_connections_to_analysis_results,
+            key=lambda x: x[0].step
+        )
 
     @property
     def is_tool_based(self):
