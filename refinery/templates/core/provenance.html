@@ -131,39 +131,6 @@
 <div ng-controller="DataSetNavCtrl" ng-cloak>
   <div ng-controller="DataSetUiModeCtrl">
 
-    <div class="refinery-panel-tabs">
-
-      <div class="row">
-
-        <div class="col-md-3">
-          <div class="btn-group" role="group" aria-label="...">
-          <!-- ng-hide if the file tab is not selected -->
-            <button type="button" class="btn btn-warning data-set-view-tabs"
-              ng-class="{active: $root.mode==='browse'}" ui-sref="browse"
-              ui-sref-active="active">
-              Browse
-            </button>
-            {% if has_change_dataset_permission %}
-              <button type="button" class="btn btn-warning data-set-view-tabs"
-                ng-class="{active:$root.mode==='analyze'}"
-                ui-sref="analyze" ui-sref-active="active">
-                Analyze
-              </button>
-            {% endif %}
-            <button type="button" id="visualizeTab" class="btn btn-warning
-            data-set-view-tabs"
-              ng-class="{active:$root.mode==='visualize'}" ui-sref="visualize"
-              ui-sref-active="active">
-              Visualize
-            </button>
-          </div>
-        </div>
-
-      </div>
-
-    </div>
-
-
     <div class="refinery-panel refinery-panel-content jquery-full-height handle-overflow">
       {% if data_set %}
         <!-- tabs -->
