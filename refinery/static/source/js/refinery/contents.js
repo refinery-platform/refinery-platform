@@ -139,6 +139,7 @@
 
           $('#view-selector').on("change", function (e) {
             if (e.val === "provenance-view-tab") {
+              console.warn('change!');
               if (provvis.get() instanceof provvisDecl.ProvVis === true) {
                 provvisRender.update(provvis.get(), lastProvVisSolrResponse);
               } else {
@@ -147,6 +148,20 @@
                 provVisQuery.setDocumentIndex(0);
                 client.run(provVisQuery, SOLR_FULL_QUERY);
               }
+            }
+          });
+
+          console.warn('set on-changes');
+
+          $(function() {
+            console.warn('on-load?');
+            if (provvis.get() instanceof provvisDecl.ProvVis === true) {
+              provvisRender.update(provvis.get(), lastProvVisSolrResponse);
+            } else {
+              provVisQuery = query.clone();
+              provVisQuery.setDocumentCount(provVisQuery.getTotalDocumentCount());
+              provVisQuery.setDocumentIndex(0);
+              client.run(provVisQuery, SOLR_FULL_QUERY);
             }
           });
 
