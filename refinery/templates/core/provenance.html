@@ -159,38 +159,6 @@
           </div>
         </div>
 
-        <div class="col-md-9">
-          <ul class="nav nav-tabs" id="tabs" style="float: right;">
-            <li ui-sref-active="active" id="filesTab">
-              <a ui-sref="files" class="dataSetTabs">
-                Files
-              </a>
-            </li>
-            {% if has_change_dataset_permission %}
-              <li ui-sref-active="active"><a
-              ui-sref="attributes" class="dataSetTabs">Attributes</a></li>
-            {% endif %}
-            <li ui-sref-active="active">
-              <a ui-sref="analyses" id="analyze-tab" class="dataSetTabs">
-                <span ng-controller="AnalysisMonitorCtrl">
-                  <span rp-analysis-monitor-running-tab-icon></span>
-                </span>
-                Analyses
-              </a>
-            </li>
-            <li ui-sref-active="active">
-              <a ui-sref="details" class="dataSetTabs" >
-                Details
-              </a>
-            </li>
-            <li ui-sref-active="active">
-              <a ui-sref="sharing" class="dataSetTabs">
-                Sharing
-              </a>
-            </li>
-          </ul>
-        </div>
-
       </div>
 
     </div>
