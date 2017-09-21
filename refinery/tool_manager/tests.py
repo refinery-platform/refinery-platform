@@ -55,7 +55,9 @@ from core.models import (INPUT_CONNECTION, OUTPUT_CONNECTION, Analysis,
                          AnalysisNodeConnection, AnalysisResult, ExtendedGroup,
                          Project, Workflow, WorkflowEngine, WorkflowFilesDL)
 from data_set_manager.models import AnnotatedNode, Assay, Attribute, Node
-from factory_boy.django_model_factories import ToolFactory
+from factory_boy.django_model_factories import (AnnotatedNodeFactory,
+                                                AttributeFactory, NodeFactory,
+                                                ToolFactory)
 from factory_boy.utils import create_dataset_with_necessary_models
 from file_store.models import FileStoreItem
 from galaxy_connector.models import Instance
@@ -1259,20 +1261,20 @@ class WorkflowToolTests(ToolManagerTestBase):
         study = self.dataset.get_latest_study()
         assay = Assay.objects.get(study=study)
 
-        node = Node.objects.create(
+        node = NodeFactory(
             name="Node {}".format(uuid.uuid4()),
             assay=assay,
             study=study,
             type=Node.RAW_DATA_FILE,
             file_uuid=self.file_store_item.uuid
         )
-        attribute = Attribute.objects.create(
+        attribute = AttributeFactory(
             node=node,
             type=Attribute.CHARACTERISTICS,
             subtype='coffee',
             value='coffee'
         )
-        AnnotatedNode.objects.create(
+        AnnotatedNodeFactory(
             node_id=node.id,
             attribute_id=attribute.id,
             study=study,
