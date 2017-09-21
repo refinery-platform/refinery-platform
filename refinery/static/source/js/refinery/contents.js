@@ -128,7 +128,6 @@
           tableView.setDocumentsPerPage(20);
           analysisView = new SolrAnalysisView("solr-analysis-view", "solranalysis1", query, configurator, analysisViewCommands, dataSetMonitor);
           facetView = new SolrFacetView("solr-facet-view", "solrfacets1", query, configurator, facetViewCommands);
-          documentCountView = new SolrDocumentCountView("solr-document-count-view", "solrcounts1", query, undefined);
 
           pivotMatrixView = new SolrPivotMatrix("solr-pivot-matrix", "solrpivot1", query, {}, pivotMatrixCommands);
 
@@ -236,7 +235,6 @@
             analysisView.render(arguments.response);
             facetView.render(arguments.response);
 
-            documentCountView.render(arguments.response);
             pivotMatrixView.render(arguments.response);
             updateDownloadButton("submitReposBtn");
             updateIgvButton("igv-multi-species");
@@ -287,8 +285,6 @@
             dataQueryString = client.createUnpaginatedUrl(dataQuery, SOLR_SELECTION_QUERY);
             annotationQueryString = client.createUnpaginatedUrl(query, SOLR_SELECTION_QUERY);
           }
-
-          documentCountView.render();
 
           // update viewer buttons
           updateIgvButton("igv-multi-species");
