@@ -54,7 +54,7 @@ from analysis_manager.tasks import (_get_galaxy_download_task_ids,
 from core.models import (INPUT_CONNECTION, OUTPUT_CONNECTION, Analysis,
                          AnalysisNodeConnection, AnalysisResult, ExtendedGroup,
                          Project, Workflow, WorkflowEngine, WorkflowFilesDL)
-from data_set_manager.models import AnnotatedNode, Assay, Attribute, Node
+from data_set_manager.models import Assay, Attribute, Node
 from factory_boy.django_model_factories import (AnnotatedNodeFactory,
                                                 AttributeFactory, NodeFactory,
                                                 ToolFactory)
@@ -2069,21 +2069,34 @@ class WorkflowToolTests(ToolManagerTestBase):
         self.show_job_mock.side_effect = self.show_job_side_effect * 4
 
         self.create_valid_tool(ToolDefinition.WORKFLOW)
-
-        annotated_nodes_number = AnnotatedNode.objects.count()
-        self.assertEqual(annotated_nodes_number, 23)
-
         _get_galaxy_download_task_ids(self.tool.analysis)
+
+        exposed_output_connections = AnalysisNodeConnection.objects.filter(
+            analysis=self.tool.analysis,
+            direction=OUTPUT_CONNECTION,
+            is_refinery_file=True
+        )
+        self.assertEqual(exposed_output_connections.count(), 2)
+        # Make sure output connections have no node before "attachment" step
+        for output_connection in exposed_output_connections:
+            self.assertIsNone(output_connection.node)
+
         self.tool.analysis.attach_outputs_dataset()
 
-        # self.show_job_mock.side_effect = self.show_job_side_effect * 4
-        # annotated_nodes_number = AnnotatedNode.objects.count()
-        # self.assertEqual(
-        #     annotated_nodes_number,
-        #     annotated_nodes_number + len(
-        #         self.tool._get_exposed_workflow_outputs()
-        #     )
-        # )
+        # Have to fetch again here since AnalysisNodeConnections have been
+        # updated
+        exposed_output_connections = AnalysisNodeConnection.objects.filter(
+            analysis=self.tool.analysis,
+            direction=OUTPUT_CONNECTION,
+            is_refinery_file=True
+        )
+        self.assertEqual(exposed_output_connections.count(), 2)
+        # Assert that AnalysisNodeConnection outputs now have nodes,
+        # and that their nodes have parents
+        for output_connection in exposed_output_connections:
+            self.assertFalse(output_connection.node.is_orphan())
+
+        self._assert_analysis_node_connection_outputs_validity()
 
 
 class ToolAPITests(APITestCase, ToolManagerTestBase):
