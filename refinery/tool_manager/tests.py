@@ -1651,9 +1651,8 @@ class WorkflowToolTests(ToolManagerTestBase):
 
         self.assertEqual(AnalysisResult.objects.count(), 3)
 
-        # There will be two less WorkflowFilesDL because one of our mock
-        # datasets has been "purged", and one of them isn't a specified
-        # workflow_output
+        # There will be one less WorkflowFilesDL because one of our mock
+        # datasets has been "purged"
         self.assertEqual(WorkflowFilesDL.objects.count(), 2)
         self.assertEqual(
             AnalysisResult.objects.count(),
