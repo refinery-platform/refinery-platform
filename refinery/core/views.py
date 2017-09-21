@@ -346,7 +346,7 @@ def provenance(request, data_set_uuid, analysis_uuid=None):
     except FileStoreItem.DoesNotExist:
         pass
     return render_to_response(
-        'core/data_set.html',
+        'core/provenance.html',
         {
             "data_set": data_set,
             "analysis_uuid": analysis_uuid,
