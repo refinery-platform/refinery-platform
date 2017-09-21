@@ -1234,7 +1234,7 @@ class WorkflowTool(Tool):
     @handle_bioblend_exceptions
     def upload_datafile_to_library_from_url(self, library_id, datafile_url):
         """
-        Upload file from Refinery into a Galaxy Data Library form a
+        Upload file from Refinery into a Galaxy Data Library from a
         specified url
         :param library_id: UUID string of the Galaxy Library to interact with
         :param datafile_url: <String> Full url pointing to a Refinery
