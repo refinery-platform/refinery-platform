@@ -461,6 +461,7 @@ class WorkflowTool(Tool):
     """
     ANALYSIS_GROUP = "analysis_group"
     COLLECTION_INFO = "collection_info"
+    CREATING_JOB = "creating_job"
     DATA_INPUT = "data_input"
     DATA_COLLECTION_INPUT = "data_collection_input"
     FILE_RELATIONSHIPS_GALAXY = "{}_galaxy".format(Tool.FILE_RELATIONSHIPS)
@@ -842,7 +843,7 @@ class WorkflowTool(Tool):
     @handle_bioblend_exceptions
     def _get_galaxy_dataset_job(self, galaxy_dataset_dict):
         return self.galaxy_connection.jobs.show_job(
-            galaxy_dataset_dict["creating_job"]
+            galaxy_dataset_dict[self.CREATING_JOB]
         )
 
     @staticmethod
@@ -1050,7 +1051,7 @@ class WorkflowTool(Tool):
     def _get_workflow_step(self, galaxy_dataset_dict):
         workflow_steps = []
         for step in self._get_galaxy_workflow_invocation()["steps"]:
-            if step["job_id"] == galaxy_dataset_dict["creating_job"]:
+            if step["job_id"] == galaxy_dataset_dict[self.CREATING_JOB]:
                     workflow_steps.append(step["order_index"])
 
         if not workflow_steps:
