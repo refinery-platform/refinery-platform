@@ -51,7 +51,7 @@ galaxy_workflow_dict = {
     u'name': u'list test wf',
     u'steps': {
         u'1': {
-            u'tool_id': u'refinery_test_LIST-N-2',
+            u'tool_id': u'refinery_test_LIST-N-1',
             u'id': 1,
             u'input_connections': {
                 u'input_file': {
@@ -69,7 +69,17 @@ galaxy_workflow_dict = {
                     u'uuid': u'adc43a1-e075-4ad5-be6a-b9791532b8018',
                 }
             ],
-            u'name': u'Refinery test tool LIST - N',
+            u'outputs': [
+                {
+                    u'type': u'txt',
+                    u'name': u'Refinery test tool LIST - N on data 4'
+                },
+                {
+                    u'type': u'txt',
+                    u'name': u'Output file'
+                }
+            ],
+            u'name': u'Refinery test tool LIST - N - 1',
             u'type': u'tool',
             u'position': {
                 u'top': 513,
@@ -77,12 +87,12 @@ galaxy_workflow_dict = {
             }
         },
         u'2': {
-            u'tool_id': u'refinery_test_LIST-N-1',
+            u'tool_id': u'refinery_test_LIST-N-2',
             u'id': 2,
             u'input_connections': {
-                u'input_file': {
-                    u'output_name': u'output',
-                    u'id': 0
+                u'input_name': {
+                    u'output_name': u'Refinery test tool LIST - N on data 4',
+                    u'id': 1
                 }
             },
             u'workflow_outputs': [
@@ -95,7 +105,17 @@ galaxy_workflow_dict = {
                     u'uuid': u'adc43a1-4ad5-e075-be6a-b9791532b8018',
                 }
             ],
-            u'name': u'Refinery test tool LIST - N',
+            u'outputs': [
+                {
+                    u'type': u'txt',
+                    u'name': u'Refinery test tool LIST - N on data 3'
+                },
+                {
+                    u'type': u'txt',
+                    u'name': u'Output file'
+                }
+            ],
+            u'name': u'Refinery test tool LIST - N - 2',
             u'type': u'tool',
             u'position': {
                 u'top': 513,
@@ -120,7 +140,7 @@ galaxy_workflow_dict_collection = {
     u'name': u'list test wf',
     u'steps': {
         u'1': {
-            u'tool_id': u'refinery_test_LIST-N-2',
+            u'tool_id': u'refinery_test_LIST-N-1',
             u'id': 1,
             u'input_connections': {
                 u'input_file': {
@@ -138,7 +158,17 @@ galaxy_workflow_dict_collection = {
                     u'uuid': u'adc43a1-e075-4ad5-be6a-b9791532b8018',
                 }
             ],
-            u'name': u'Refinery test tool LIST - N',
+            u'outputs': [
+                {
+                    u'type': u'txt',
+                    u'name': u'Refinery test tool LIST - N on data 4'
+                },
+                {
+                    u'type': u'txt',
+                    u'name': u'Output file'
+                }
+            ],
+            u'name': u'Refinery test tool LIST - N - 1',
             u'type': u'tool',
             u'position': {
                 u'top': 513,
@@ -146,12 +176,12 @@ galaxy_workflow_dict_collection = {
             }
         },
         u'2': {
-            u'tool_id': u'refinery_test_LIST-N-1',
+            u'tool_id': u'refinery_test_LIST-N-2',
             u'id': 2,
             u'input_connections': {
-                u'input_file': {
-                    u'output_name': u'output',
-                    u'id': 0
+                u'input_name': {
+                    u'output_name': u'Refinery test tool LIST - N on data 4',
+                    u'id': 1
                 }
             },
             u'workflow_outputs': [
@@ -164,7 +194,17 @@ galaxy_workflow_dict_collection = {
                     u'uuid': u'adc43a1-4ad5-e075-be6a-b9791532b8018',
                 }
             ],
-            u'name': u'Refinery test tool LIST - N',
+            u'outputs': [
+                {
+                    u'type': u'txt',
+                    u'name': u'Refinery test tool LIST - N on data 3'
+                },
+                {
+                    u'type': u'txt',
+                    u'name': u'Output file'
+                }
+            ],
+            u'name': u'Refinery test tool LIST - N - 2',
             u'type': u'tool',
             u'position': {
                 u'top': 513,
