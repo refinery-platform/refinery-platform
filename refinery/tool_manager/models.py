@@ -819,17 +819,16 @@ class WorkflowTool(Tool):
         )
         refinery_to_galaxy_file_mappings = self._get_galaxy_file_mapping_list()
 
-        analysis_groups = [
-            refinery_to_galaxy_file_map[self.ANALYSIS_GROUP]
-            for refinery_to_galaxy_file_map in refinery_to_galaxy_file_mappings
-            if refinery_input_file_id == refinery_to_galaxy_file_map[
-                self.GALAXY_DATASET_HISTORY_ID
-            ]
-        ]
-        assert len(list(set(analysis_groups))) == 1, (
-            "`analysis_groups` should only contain a single element."
+        analysis_group_number = None
+        for refinery_to_galaxy_file_map in refinery_to_galaxy_file_mappings:
+            if (refinery_input_file_id == refinery_to_galaxy_file_map[
+                    self.GALAXY_DATASET_HISTORY_ID]):
+                analysis_group_number = (
+                    refinery_to_galaxy_file_map[self.ANALYSIS_GROUP]
+                )
+        assert analysis_group_number is not None, (
+            "`analysis_group_number` shouldn't be `None`"
         )
-        analysis_group_number = analysis_groups[0]
         return analysis_group_number
 
     def _get_analysis_node_connection_input_filename(self):
@@ -1048,19 +1047,16 @@ class WorkflowTool(Tool):
         return self.get_tool_launch_config()[ToolDefinition.PARAMETERS]
 
     def _get_workflow_step(self, galaxy_dataset_dict):
-        workflow_steps = []
+        workflow_step = None
         for step in self._get_galaxy_workflow_invocation()["steps"]:
-            if step["job_id"] == galaxy_dataset_dict["creating_job"]:
-                    workflow_steps.append(step["order_index"])
-
-        if not workflow_steps:
-            workflow_steps.append(0)
-
-        assert len(workflow_steps) == 1, (
-            "There should always be one corresponding workflow step, "
-            "but there are {}".format(len(workflow_steps))
-        )
-        return workflow_steps[0]
+            if step["job_id"] is not None:
+                if step["job_id"] == galaxy_dataset_dict["creating_job"]:
+                    workflow_step = step["order_index"]
+            else:
+                # Workflow steps that don't have a `job_id` correspond to an
+                #  input/upload step i.e. `0`
+                workflow_step = 0
+        return workflow_step
 
     def _get_creating_job_output_name(self, galaxy_dataset_dict):
         """
@@ -1076,20 +1072,17 @@ class WorkflowTool(Tool):
         """
         creating_job = self._get_galaxy_dataset_job(galaxy_dataset_dict)
         creating_job_outputs = creating_job["outputs"]
-        logger.debug("Dataset: %s", galaxy_dataset_dict)
-        logger.debug("Creating job outputs: %s", creating_job_outputs)
-        workflow_step_output_name = [
-            output_name for output_name in creating_job_outputs.keys()
-            if creating_job_outputs[output_name]["uuid"] ==
-            galaxy_dataset_dict["uuid"]
-        ]
-        assert len(workflow_step_output_name) == 1, (
-            "There should only be one creating job output name for a "
-            "Galaxy dataset. There were: {}".format(
-                len(workflow_step_output_name)
-            )
+
+        workflow_step_output_name = None
+        for output_name in creating_job_outputs.keys():
+            if (creating_job_outputs[output_name]["uuid"] ==
+                    galaxy_dataset_dict["uuid"]):
+                workflow_step_output_name = output_name
+
+        assert workflow_step_output_name is not None, (
+            "There should be a creating job output name for a Galaxy Dataset"
         )
-        return workflow_step_output_name[0]
+        return workflow_step_output_name
 
     def _has_dataset_collection_input(self):
         """
