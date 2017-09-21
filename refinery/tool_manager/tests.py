@@ -2785,14 +2785,17 @@ class VisualizationToolLaunchTests(ToolManagerTestBase,
         settings.DJANGO_DOCKER_ENGINE_SECONDS_INACTIVE = wait_time
 
         def assertions(tool):
-            DockerClientWrapper().lookup_container_url(tool.container_name)
+            client = DockerClientWrapper(
+                settings.DJANGO_DOCKER_ENGINE_DATA_DIR
+            )
+            client.lookup_container_url(tool.container_name)
 
             time.sleep(wait_time * 2)
             django_docker_cleanup()
             time.sleep(wait_time * 2)
 
             with self.assertRaises(NotFound):
-                DockerClientWrapper().lookup_container_url(tool.container_name)
+                client.lookup_container_url(tool.container_name)
 
         self._start_visualization(
             'hello_world.json',
