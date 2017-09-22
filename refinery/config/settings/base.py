@@ -659,7 +659,10 @@ DJANGO_DOCKER_ENGINE_BASE_URL = "visualizations"
 DJANGO_DOCKER_ENGINE_SECONDS_INACTIVE = 60 * 60
 # Location of DjangoDockerEngine proxy logging
 DJANGO_DOCKER_ENGINE_DATA_DIR = get_setting("DJANGO_DOCKER_ENGINE_DATA_DIR")
-PROXY_LOG = '/data/django-docker-engine.log'
+PROXY_LOG = os.path.join(
+    DJANGO_DOCKER_ENGINE_DATA_DIR,
+    'django-docker-engine.log'
+)
 
 REFINERY_DEPLOYMENT_PLATFORM = "vagrant"
 
