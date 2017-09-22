@@ -869,14 +869,17 @@ class WorkflowTool(Tool):
         Galaxy Workflow invocation all tool outputs in the Galaxy Workflow
         editor.
         """
-        dataset_list = self.galaxy_connection.histories.show_matching_datasets(
-            self.galaxy_workflow_history_id
+        galaxy_dataset_list = (
+            self.galaxy_connection.histories.show_matching_datasets(
+                self.galaxy_workflow_history_id
+            )
         )
-        non_purged_datasets = [
-            dataset for dataset in dataset_list
-            if not dataset["purged"] and self._get_workflow_step(dataset) > 0
+        retained_datasets = [
+            galaxy_dataset for galaxy_dataset in galaxy_dataset_list
+            if not galaxy_dataset["purged"] and
+            self._get_workflow_step(galaxy_dataset) > 0
         ]
-        return non_purged_datasets
+        return retained_datasets
 
     def _get_exposed_workflow_outputs(self):
         """
