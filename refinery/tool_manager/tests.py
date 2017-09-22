@@ -2778,6 +2778,7 @@ class VisualizationToolLaunchTests(ToolManagerTestBase,
             )
             force_authenticate(self.post_request, self.user)
             post_response = self.tools_view(self.post_request)
+            logger.debug("RESPONSE_DATA: %s", post_response.content)
             self.assertEqual(post_response.status_code, 200)
 
             tools = VisualizationTool.objects.filter(
