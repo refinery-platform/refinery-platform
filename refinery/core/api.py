@@ -4,6 +4,7 @@ Created on May 4, 2012
 @author: nils
 '''
 
+import ast
 from datetime import timedelta
 import json
 import logging
@@ -1007,7 +1008,21 @@ class AnalysisResource(ModelResource):
         else:
             bundle.data['owner'] = None
 
-        bundle.data['workflow_json'] = json.dumps(bundle.data['workflow_copy'])
+        workflow_dict = None
+        try:
+            workflow_dict = ast.literal_eval(bundle.data['workflow_copy'])
+        except ValueError, e:
+            # TODO: Remove this and just let any errors bubble up.
+            # I don't think I should do that at this moment because
+            # I shouldn't make production any fussier about values
+            # in DB than it is right now.
+            logger.warn(
+                '%s: Cannot parse workflow as python repr: %s',
+                e, bundle.data['workflow_copy']
+            )
+        if workflow_dict:
+            workflow_json = json.dumps(workflow_dict)
+            bundle.data['workflow_json'] = workflow_json
 
         return bundle
 
