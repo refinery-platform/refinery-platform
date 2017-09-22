@@ -1589,9 +1589,9 @@ class AnalysisTests(TestCase):
         self.assertEqual(
             output_mapping,
             [
-                (self.analysis_node_connection_a, analysis_result_1),
+                (self.analysis_node_connection_c, analysis_result_0),
                 (self.analysis_node_connection_b, None),
-                (self.analysis_node_connection_c, analysis_result_0)
+                (self.analysis_node_connection_a, analysis_result_1)
             ]
         )
 
