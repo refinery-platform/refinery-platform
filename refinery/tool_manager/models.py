@@ -900,16 +900,18 @@ class WorkflowTool(Tool):
             # `tool_id` corresponds to the descriptive name of a galaxy
             # tool. Not a UUID-like string like one may think
             if "upload" not in creating_job["tool_id"]:
-                workflow_step = self._get_workflow_step(galaxy_dataset)
-                workflow_steps = self._get_workflow_dict()["steps"]
+                workflow_step_key = str(
+                    self._get_workflow_step(galaxy_dataset)
+                )
+                workflow_steps_dict = self._get_workflow_dict()["steps"]
                 creating_job_output_name = (
                     self._get_creating_job_output_name(galaxy_dataset)
                 )
-                workflow_output_names = [
-                    output["output_name"] for output in
-                    workflow_steps[str(workflow_step)]["workflow_outputs"]
+                workflow_step_output_names = [
+                    workflow_output["output_name"] for workflow_output in
+                    workflow_steps_dict[workflow_step_key]["workflow_outputs"]
                 ]
-                if creating_job_output_name in workflow_output_names:
+                if creating_job_output_name in workflow_step_output_names:
                     exposed_galaxy_datasets.append(galaxy_dataset)
         return exposed_galaxy_datasets
 
