@@ -893,22 +893,25 @@ class WorkflowTool(Tool):
         outputs of the WorkflowTool's Galaxy Workflow that have been
         explicitly exposed
         """
-        visible_datasets = []
-        for dataset in self._get_galaxy_history_dataset_list():
-            creating_job = self._get_galaxy_dataset_job(dataset)
+        exposed_galaxy_datasets = []
+        for galaxy_dataset in self._get_galaxy_history_dataset_list():
+            creating_job = self._get_galaxy_dataset_job(galaxy_dataset)
+
+            # `tool_id` corresponds to the descriptive name of a galaxy
+            # tool. Not a UUID-like string like one may think
             if "upload" not in creating_job["tool_id"]:
-                workflow_step = self._get_workflow_step(dataset)
+                workflow_step = self._get_workflow_step(galaxy_dataset)
                 workflow_steps = self._get_workflow_dict()["steps"]
                 creating_job_output_name = (
-                    self._get_creating_job_output_name(dataset)
+                    self._get_creating_job_output_name(galaxy_dataset)
                 )
                 workflow_output_names = [
                     output["output_name"] for output in
                     workflow_steps[str(workflow_step)]["workflow_outputs"]
                 ]
                 if creating_job_output_name in workflow_output_names:
-                    visible_datasets.append(dataset)
-        return visible_datasets
+                    exposed_galaxy_datasets.append(galaxy_dataset)
+        return exposed_galaxy_datasets
 
     def get_galaxy_dict(self):
         """
