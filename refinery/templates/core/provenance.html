@@ -132,67 +132,24 @@
   <div ng-controller="DataSetUiModeCtrl">
 
     <div class="refinery-panel-tabs">
-
       <div class="row">
-
-        <div class="col-md-3">
-          <div class="btn-group" role="group" aria-label="...">
-          <!-- ng-hide if the file tab is not selected -->
-            <button type="button" class="btn btn-warning data-set-view-tabs"
-              ng-class="{active: $root.mode==='browse'}" ui-sref="browse"
-              ui-sref-active="active">
-              Browse
-            </button>
-            {% if has_change_dataset_permission %}
-              <button type="button" class="btn btn-warning data-set-view-tabs"
-                ng-class="{active:$root.mode==='analyze'}"
-                ui-sref="analyze" ui-sref-active="active">
-                Analyze
-              </button>
-            {% endif %}
-            <button type="button" id="visualizeTab" class="btn btn-warning
-            data-set-view-tabs"
-              ng-class="{active:$root.mode==='visualize'}" ui-sref="visualize"
-              ui-sref-active="active">
-              Visualize
-            </button>
-          </div>
-        </div>
-
-        <div class="col-md-9">
-          <ul class="nav nav-tabs" id="tabs" style="float: right;">
-            <li ui-sref-active="active" id="filesTab">
-              <a ui-sref="files" class="dataSetTabs">
-                Files
-              </a>
+        <div class="col-md-9 col-md-offset-3">
+          <ul class="nav nav-tabs float-right" id="tabs">
+            <li>
+              <a href="/data_sets/{{ data_set.uuid }}/#/files/">Files</a>
             </li>
-            {% if has_change_dataset_permission %}
-              <li ui-sref-active="active"><a
-              ui-sref="attributes" class="dataSetTabs">Attributes</a></li>
-            {% endif %}
-            <li ui-sref-active="active">
-              <a ui-sref="analyses" id="analyze-tab" class="dataSetTabs">
-                <span ng-controller="AnalysisMonitorCtrl">
-                  <span rp-analysis-monitor-running-tab-icon></span>
-                </span>
-                Analyses
-              </a>
+            <li>
+              <a href="/data_sets/{{ data_set.uuid }}/#/analyses/">Analyses</a>
             </li>
-            <li ui-sref-active="active">
-              <a ui-sref="details" class="dataSetTabs" >
-                Details
-              </a>
+            <li>
+              <a href="/data_sets/{{ data_set.uuid }}/#/about/">Details</a>
             </li>
-            <li ui-sref-active="active">
-              <a ui-sref="sharing" class="dataSetTabs">
-                Sharing
-              </a>
+            <li class="active">
+              <a href="/provenance/{{ data_set.uuid }}">Provenance</a>
             </li>
           </ul>
         </div>
-
       </div>
-
     </div>
 
 
@@ -231,75 +188,14 @@
                   </div>
 
                   <div class="row">
-                    <div class="col-md-2">
-                      {% if not REFINERY_REPOSITORY_MODE %}
-                        <div class="row" style="margin-bottom: 5px;">
-                          <div class="col-md-12">
-                              <span id="node-set-manager-panel">
-                                <!-- <label class="control-label"
-                                style="font-size: large; margin-left: 15px;
-                                margin-right: 5px; position: relative; top: 3px;">
-                                Selection
-                                </label> -->
-                                <span id="node-set-manager-controls"></span>
-                              </span>
-                          </div>
-                        </div>
-                        <div class="row" style="margin-bottom: 5px;">
-                          <div class="col-md-12">
-                            <div style="width: 100%;">
-                              <div id="node-set-save-button" class="refinery-base
-                              btn btn-default btn-xs">
-                                Save
-                              </div>
-                              <div id="clear-facets"
-                                class="refinery-base btn btn-default btn-xs">
-                                Reset
-                              </div>
-                              <!-- <div id="" class="btn btn-mini">Download</div> -->
-                            </div>
-                          </div>
-                        </div>
-                      {% endif %}
-
-                    <!--
-                    <ul class="nav nav-pills" id="navigation-tabs">
-                        <li class="active"><a href="#solr-facet-view" data-toggle="pill">Facets</a></li>
-                    </ul>
-                    -->
-                      <div class="row y-scrollable">
-                        <div class="col-md-12">
-                          <span style="font-style: italic; color: darkgray;">
-                            Attribute Filter
-                          </span>
-                          <div id="solr-facet-view" class="panel-group"></div>
-                        </div>
-                        <div class="col-md-12">
-                          <span style="font-style: italic; color: darkgray;">
-                            Analysis Filter
-                          </span>
-                          <div id="solr-analysis-view" class="panel-group"></div>
-                        </div>
-                      </div>
-                    </div>
 
                   {% verbatim %}
-                    <div class="col-md-10" id="main-area">
+                    <div class="col-md-12" id="main-area">
                   {% endverbatim %}
 
                     <div class="row" style="margin-bottom: 5px;">
-                      <div class="col-md-3">
-                        <span class="control-label"
-                          id="solr-document-count-view" style="float: left;
-                          margin-top: 3px;"></span>
-                        <a href="#" id="help-selection-button" style="height:
-                         20px; width: 20px;">
-                          <i
-                            class="fa fa-question-circle info-icon icon-only"
-                          style="font-size: 20px; margin-left: 5px; margin-right: 5px; position: relative; top: 5px;"></i></a>
-                      </div>
 
-                      <div class="col-md-9">
+                      <div class="col-md-12">
                         <!--
                         <a id="igv-multi-species" href="#" role="button" style="margin-left: 5px" class="btn btn-warning" data-toggle="modal" rel="tooltip" data-placement="bottom" data-html="true" title="Launch IGV with<br>current selection."><i class="icon-bar-chart"></i>&nbsp;&nbsp;View in IGV</a>
                         <a href="#" id="help-igv-button" style="height: 20px; width: 20px;"><i class="icon-question-sign" style="font-size: 20px; margin-left: 5px; margin-right: 5px; position: relative; top: 5px;"></i></a>
@@ -321,34 +217,6 @@
                               20px; margin-left: 5px; margin-right: 5px; position: relative; top: 5px;"></i></a>
                           {% endfor %}
                         {% endif %}
-
-                        <div id="view-selector-div">
-                          <label id="label-display" for="s2id_autogen1">Display</label>
-                          <select id="view-selector">
-                            <option value="table-view-tab">Table</option>
-                            <option value="pivot-view-tab">Matrix</option>
-                            <option value="provenance-view-tab">Provenance
-                            </option>
-                          </select>
-                          <a href="#" id="help-view-selector-button">
-                            <i class="fa fa-question-circle info-icon icon-only"></i>
-                          </a>
-                        </div>
-
-                        <!-- the original tab pills: now remote controlled by the select2 -->
-                        <div class="tabbable" hidden>
-                          <ul class="nav nav-pills" id="navigation-tabs">
-                            <li class="active">
-                              <a href="#table-view-tab" data-toggle="pill">List</a>
-                            </li>
-                            <li>
-                              <a href="#pivot-view-tab" data-toggle="pill">Matrix</a>
-                            </li>
-                            <li>
-                              <a href="#provenance-view-tab" data-toggle="pill">Provenance</a>
-                            </li>
-                          </ul>
-                        </div>
 
                         <!-- Prepared for future use! Do not remove. -->
                         <!--
@@ -379,7 +247,7 @@
                     <div class="row">
                       <div class="tabbable">
                         <div class="tab-content">
-                          <div class="tab-pane active fade in" id="table-view-tab">
+                          <div class="tab-pane fade in" id="table-view-tab">
                             <dynamic>
                               <div class="refinery-panel-content">
                                 <div id="solr-table-view" class="scrollable scrollable-floatThead jquery-full-height"></div>
@@ -392,7 +260,7 @@
                               <!-- the matrix -->
                             </div>
                           </div>
-                          <div class="tab-pane fade in"
+                          <div class="tab-pane active fade in"
                                id="provenance-view-tab"
                                style="overflow: hidden;">
                               <div class="refinery-panel-content">
