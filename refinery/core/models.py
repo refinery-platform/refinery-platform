@@ -1900,13 +1900,7 @@ class Analysis(OwnableResource):
                     output_connections_to_analysis_results.append(
                         (output_connection, None)
                     )
-
-        # return a sorted list based on the AnalysisNodeConnections step
-        # attribute
-        return sorted(
-            output_connections_to_analysis_results,
-            key=lambda x: x[0].step
-        )
+        return output_connections_to_analysis_results
 
     @property
     def is_tool_based(self):
