@@ -461,6 +461,7 @@ class WorkflowTool(Tool):
     """
     ANALYSIS_GROUP = "analysis_group"
     COLLECTION_INFO = "collection_info"
+    CREATING_JOB = "creating_job"
     DATA_INPUT = "data_input"
     DATA_COLLECTION_INPUT = "data_collection_input"
     FILE_RELATIONSHIPS_GALAXY = "{}_galaxy".format(Tool.FILE_RELATIONSHIPS)
@@ -476,6 +477,7 @@ class WorkflowTool(Tool):
     HISTORY_DATASET_COLLECTION_ASSOCIATION = "hdca"
     INPUT_DATASET = "Input Dataset"
     INPUT_DATASET_COLLECTION = "{} Collection".format(INPUT_DATASET)
+    INPUT_STEP_NUMBER = 0
     LIST = "list"
     PAIRED = "paired"
     REVERSE = "reverse"
@@ -592,7 +594,7 @@ class WorkflowTool(Tool):
                 node=node,
                 direction=INPUT_CONNECTION,
                 name=file_store_item.datafile.name,
-                step=0,
+                step=self.INPUT_STEP_NUMBER,
                 filename=self._get_analysis_node_connection_input_filename(),
                 is_refinery_file=file_store_item.is_local()
             )
@@ -602,16 +604,17 @@ class WorkflowTool(Tool):
         Create the AnalysisNodeConnection objects corresponding to the output
         Nodes (Derived Data) of a WorkflowTool launch.
         """
+        exposed_workflow_outputs = self._get_exposed_workflow_outputs()
         for galaxy_dataset in self._get_galaxy_history_dataset_list():
             AnalysisNodeConnection.objects.create(
                 analysis=self.analysis,
                 direction=OUTPUT_CONNECTION,
-                name=galaxy_dataset["name"],
+                name=self._get_creating_job_output_name(galaxy_dataset),
                 subanalysis=self._get_analysis_group_number(galaxy_dataset),
                 step=self._get_workflow_step(galaxy_dataset),
                 filename=self._get_galaxy_dataset_filename(galaxy_dataset),
                 filetype=galaxy_dataset["file_ext"],
-                is_refinery_file=True
+                is_refinery_file=galaxy_dataset in exposed_workflow_outputs
             )
 
     def _create_collection_description(self):
@@ -765,7 +768,7 @@ class WorkflowTool(Tool):
         Datasets in our Galaxy Workflow invocation's History and add them to
         the M2M relation in our WorkflowTool's Analysis.
         """
-        for galaxy_dataset in self._get_galaxy_history_dataset_list():
+        for galaxy_dataset in self._get_exposed_workflow_outputs():
             self.analysis.workflow_dl_files.add(
                 WorkflowFilesDL.objects.create(
                     step_id=self._get_workflow_step(galaxy_dataset),
@@ -818,27 +821,30 @@ class WorkflowTool(Tool):
         )
         refinery_to_galaxy_file_mappings = self._get_galaxy_file_mapping_list()
 
-        matching_refinery_to_galaxy_file_mappings = [
-            refinery_to_galaxy_file_map
+        analysis_groups = [
+            refinery_to_galaxy_file_map[self.ANALYSIS_GROUP]
             for refinery_to_galaxy_file_map in refinery_to_galaxy_file_mappings
             if refinery_input_file_id == refinery_to_galaxy_file_map[
                 self.GALAXY_DATASET_HISTORY_ID
             ]
         ]
-        assert len(matching_refinery_to_galaxy_file_mappings) == 1, (
-            "`matching_refinery_to_galaxy_file_mappings` should only "
-            "contain a single element."
+        assert len(list(set(analysis_groups))) == 1, (
+            "`analysis_groups` should only contain a single element."
         )
-        analysis_group_number = (
-            matching_refinery_to_galaxy_file_mappings[0][self.ANALYSIS_GROUP]
-        )
-        return analysis_group_number
+        analysis_group = analysis_groups[0]
+        return analysis_group
 
     def _get_analysis_node_connection_input_filename(self):
         return (
             self.INPUT_DATASET_COLLECTION if
             self._has_dataset_collection_input()
             else self.INPUT_DATASET
+        )
+
+    @handle_bioblend_exceptions
+    def _get_galaxy_dataset_job(self, galaxy_dataset_dict):
+        return self.galaxy_connection.jobs.show_job(
+            galaxy_dataset_dict[self.CREATING_JOB]
         )
 
     @staticmethod
@@ -861,15 +867,54 @@ class WorkflowTool(Tool):
     def _get_galaxy_history_dataset_list(self):
         """
         Retrieve a list of Galaxy Datasets from the Galaxy History of our
-        Galaxy Workflow invocation.
+        Galaxy Workflow invocation all tool outputs in the Galaxy Workflow
+        editor.
         """
-        dataset_list = self.galaxy_connection.histories.show_matching_datasets(
-            self.galaxy_workflow_history_id
+        galaxy_dataset_list = (
+            self.galaxy_connection.histories.show_matching_datasets(
+                self.galaxy_workflow_history_id
+            )
         )
-        non_purged_datasets = [
-            dataset for dataset in dataset_list if not dataset["purged"]
+        retained_datasets = [
+            galaxy_dataset for galaxy_dataset in galaxy_dataset_list
+            if not galaxy_dataset["purged"] and
+            self._get_workflow_step(galaxy_dataset) > 0
         ]
-        return non_purged_datasets
+        return retained_datasets
+
+    def _get_exposed_workflow_outputs(self):
+        """
+        Retrieve all Galaxy Datasets that correspond to an asterisked
+        output in the Galaxy workflow editor.
+
+        https://galaxyproject.org/learn/advanced-workflow
+        /basic-editing/#hidden_datasets
+
+        :return: A list of Galaxy Dataset dicts that correspond to
+        outputs of the WorkflowTool's Galaxy Workflow that have been
+        explicitly exposed
+        """
+        exposed_galaxy_datasets = []
+        for galaxy_dataset in self._get_galaxy_history_dataset_list():
+            creating_job = self._get_galaxy_dataset_job(galaxy_dataset)
+
+            # `tool_id` corresponds to the descriptive name of a galaxy
+            # tool. Not a UUID-like string like one may think
+            if "upload" not in creating_job["tool_id"]:
+                workflow_step_key = str(
+                    self._get_workflow_step(galaxy_dataset)
+                )
+                workflow_steps_dict = self._get_workflow_dict()["steps"]
+                creating_job_output_name = (
+                    self._get_creating_job_output_name(galaxy_dataset)
+                )
+                workflow_step_output_names = [
+                    workflow_output["output_name"] for workflow_output in
+                    workflow_steps_dict[workflow_step_key]["workflow_outputs"]
+                ]
+                if creating_job_output_name in workflow_step_output_names:
+                    exposed_galaxy_datasets.append(galaxy_dataset)
+        return exposed_galaxy_datasets
 
     def get_galaxy_dict(self):
         """
@@ -1013,16 +1058,41 @@ class WorkflowTool(Tool):
         return self.get_tool_launch_config()[ToolDefinition.PARAMETERS]
 
     def _get_workflow_step(self, galaxy_dataset_dict):
-        workflow_steps = [
-            step["order_index"]
-            for step in self._get_galaxy_workflow_invocation()["steps"]
-            if step["job_id"] == galaxy_dataset_dict["creating_job"]
+        for step in self._get_galaxy_workflow_invocation()["steps"]:
+            if step["job_id"] == galaxy_dataset_dict[self.CREATING_JOB]:
+                    return step["order_index"]
+
+        # If we reach this point and have no workflow_steps, this means that
+        #  the galaxy dataset in question corresponds to an `upload` or
+        # `input` step i.e. `0`
+        return self.INPUT_STEP_NUMBER
+
+    def _get_creating_job_output_name(self, galaxy_dataset_dict):
+        """
+        Retrieve the specified output name from the creating Galaxy Job that
+        corresponds to a Galaxy Dataset
+        :param galaxy_dataset_dict: dict containing information about a
+        Galaxy Dataset.
+
+        This is useful if there are any post-job-actions in place to do
+        renaming of said output dataset.
+
+        :return: The proper output name of our galaxy dataset
+        """
+        creating_job = self._get_galaxy_dataset_job(galaxy_dataset_dict)
+        creating_job_outputs = creating_job["outputs"]
+        workflow_step_output_name = [
+            output_name for output_name in creating_job_outputs.keys()
+            if creating_job_outputs[output_name]["uuid"] ==
+            galaxy_dataset_dict["uuid"]
         ]
-        assert len(workflow_steps) == 1, (
-            "There should always be one corresponding workflow step, "
-            "but there are {}".format(len(workflow_steps))
+        assert len(workflow_step_output_name) == 1, (
+            "There should only be one creating job output name for a "
+            "Galaxy dataset. There were: {}".format(
+                len(workflow_step_output_name)
+            )
         )
-        return workflow_steps[0]
+        return workflow_step_output_name[0]
 
     def _has_dataset_collection_input(self):
         """
@@ -1174,7 +1244,7 @@ class WorkflowTool(Tool):
     @handle_bioblend_exceptions
     def upload_datafile_to_library_from_url(self, library_id, datafile_url):
         """
-        Upload file from Refinery into a Galaxy Data Library form a
+        Upload file from Refinery into a Galaxy Data Library from a
         specified url
         :param library_id: UUID string of the Galaxy Library to interact with
         :param datafile_url: <String> Full url pointing to a Refinery

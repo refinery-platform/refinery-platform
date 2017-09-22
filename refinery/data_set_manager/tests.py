@@ -1446,6 +1446,11 @@ class NodeClassMethodTests(TestCase):
         # Check inverse relationship:
         self.assertEqual(self.another_node.uuid, self.node.get_children()[0])
 
+    def test_is_orphan(self):
+        self.assertTrue(self.another_node.is_orphan())
+        self.node.add_child(self.another_node)
+        self.assertFalse(self.another_node.is_orphan())
+
     # Auxiliary nodes:
 
     def test_create_and_associate_auxiliary_node(self):
