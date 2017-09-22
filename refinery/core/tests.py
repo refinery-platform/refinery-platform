@@ -812,7 +812,15 @@ class AnalysisResourceTest(ResourceTestCase):
         )
         self.assertValidJSONResponse(response)
         data = self.deserialize(response)
-        self.assertKeys(data, AnalysisResource.Meta.fields)
+
+        expected = set(AnalysisResource.Meta.fields)
+        expected.add(u'workflow_json')
+
+        self.assertEqual(set(data.keys()), expected)
+        self.assertEqual(data['uuid'], analysis.uuid)
+
+        self.assertEqual(data['workflow_json'], u'null')
+        # TODO: get a non-null value.
         self.assertEqual(data['uuid'], analysis.uuid)
 
     def test_get_analysis_list(self):

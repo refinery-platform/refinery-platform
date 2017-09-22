@@ -1007,6 +1007,8 @@ class AnalysisResource(ModelResource):
         else:
             bundle.data['owner'] = None
 
+        bundle.data['workflow_json'] = json.dumps(bundle.data['workflow_copy'])
+
         return bundle
 
     def get_object_list(self, request, **kwargs):
