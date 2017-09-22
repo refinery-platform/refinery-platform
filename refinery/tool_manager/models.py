@@ -1081,8 +1081,6 @@ class WorkflowTool(Tool):
         """
         creating_job = self._get_galaxy_dataset_job(galaxy_dataset_dict)
         creating_job_outputs = creating_job["outputs"]
-        logger.debug("Dataset: %s", galaxy_dataset_dict)
-        logger.debug("Creating job outputs: %s", creating_job_outputs)
         workflow_step_output_name = [
             output_name for output_name in creating_job_outputs.keys()
             if creating_job_outputs[output_name]["uuid"] ==
