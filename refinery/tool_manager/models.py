@@ -1062,13 +1062,12 @@ class WorkflowTool(Tool):
             if step["job_id"] == galaxy_dataset_dict[self.CREATING_JOB]:
                     workflow_steps.append(step["order_index"])
 
+        # If we reach this point and have no workflow_steps, this means that
+        #  the galaxy dataset in question corresponds to an `upload` or
+        # `input` step i.e. `0`
         if not workflow_steps:
             workflow_steps.append(0)
 
-        assert len(workflow_steps) == 1, (
-            "There should always be one corresponding workflow step, "
-            "but there are {}".format(len(workflow_steps))
-        )
         return workflow_steps[0]
 
     def _get_creating_job_output_name(self, galaxy_dataset_dict):
