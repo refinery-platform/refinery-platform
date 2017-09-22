@@ -1595,6 +1595,20 @@ class AnalysisTests(TestCase):
             ]
         )
 
+    def test_analysis_node_connection_input_id(self):
+        self.assertEqual(
+            self.analysis_node_connection_a.get_input_connection_id(),
+            "{}_{}".format(self.analysis_node_connection_a.step,
+                           self.analysis_node_connection_a.filename)
+        )
+
+    def test_analysis_node_connection_output_id(self):
+        self.assertEqual(
+            self.analysis_node_connection_a.get_output_connection_id(),
+            "{}_{}".format(self.analysis_node_connection_a.step,
+                           self.analysis_node_connection_a.name)
+        )
+
 
 class UtilitiesTest(TestCase):
     def setUp(self):

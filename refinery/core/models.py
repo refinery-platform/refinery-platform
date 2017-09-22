@@ -1698,10 +1698,8 @@ class Analysis(OwnableResource):
         )
         for input_connection in input_node_connections:
             for edge in graph.edges_iter([input_connection.step]):
-                input_id = "{}_{}".format(
-                    input_connection.step,
-                    input_connection.filename
-                )
+                input_id = input_connection.get_input_connection_id()
+
                 if graph[edge[0]][edge[1]]['output_id'] == input_id:
                     input_node_id = edge[1]
                     data_transformation_node = (
@@ -1757,10 +1755,8 @@ class Analysis(OwnableResource):
             workflow_step = output_connection.step
             if len(graph.edges([workflow_step])) > 0:
                 for edge in graph.edges_iter([workflow_step]):
-                    output_id = "{}_{}".format(
-                        workflow_step,
-                        output_connection.name
-                    )
+                    output_id = output_connection.get_output_connection_id()
+
                     if graph[edge[0]][edge[1]]['output_id'] == output_id:
                         input_node_id = edge[0]
                         output_node_id = edge[1]
@@ -1967,6 +1963,12 @@ class AnalysisNodeConnection(models.Model):
             str(self.step) + "_" +
             self.name + " (" + str(self.is_refinery_file) + ")"
         )
+
+    def get_input_connection_id(self):
+        return "{}_{}".format(self.step, self.filename)
+
+    def get_output_connection_id(self):
+        return "{}_{}".format(self.step, self.name)
 
 
 class Download(TemporaryResource, OwnableResource):
