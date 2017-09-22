@@ -16,6 +16,7 @@ $django_settings_module = "config.settings.${conf_mode}"
 $ui_app_root = "${django_root}/ui"
 $site_name = "Refinery"
 $site_url = "192.168.50.50:8000"
+$django_docker_engine_data_dir = "/data/django-docker-engine-data"
 
 # to make logs easier to read
 class { 'timezone':
