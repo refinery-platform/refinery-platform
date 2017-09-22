@@ -1752,9 +1752,8 @@ class Analysis(OwnableResource):
             # a. attach output node to source data transformation node
             # b. attach output node to target data transformation node
             # (if exists)
-            workflow_step = output_connection.step
-            if len(graph.edges([workflow_step])) > 0:
-                for edge in graph.edges_iter([workflow_step]):
+            if len(graph.edges([output_connection.step])) > 0:
+                for edge in graph.edges_iter([output_connection.step]):
                     output_id = output_connection.get_output_connection_id()
 
                     if graph[edge[0]][edge[1]]['output_id'] == output_id:
