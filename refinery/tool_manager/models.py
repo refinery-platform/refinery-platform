@@ -477,6 +477,7 @@ class WorkflowTool(Tool):
     HISTORY_DATASET_COLLECTION_ASSOCIATION = "hdca"
     INPUT_DATASET = "Input Dataset"
     INPUT_DATASET_COLLECTION = "{} Collection".format(INPUT_DATASET)
+    INPUT_STEP_NUMBER = 0
     LIST = "list"
     PAIRED = "paired"
     REVERSE = "reverse"
@@ -593,7 +594,7 @@ class WorkflowTool(Tool):
                 node=node,
                 direction=INPUT_CONNECTION,
                 name=file_store_item.datafile.name,
-                step=0,
+                step=self.INPUT_STEP_NUMBER,
                 filename=self._get_analysis_node_connection_input_filename(),
                 is_refinery_file=file_store_item.is_local()
             )
@@ -1057,18 +1058,14 @@ class WorkflowTool(Tool):
         return self.get_tool_launch_config()[ToolDefinition.PARAMETERS]
 
     def _get_workflow_step(self, galaxy_dataset_dict):
-        workflow_steps = []
         for step in self._get_galaxy_workflow_invocation()["steps"]:
             if step["job_id"] == galaxy_dataset_dict[self.CREATING_JOB]:
-                    workflow_steps.append(step["order_index"])
+                    return step["order_index"]
 
         # If we reach this point and have no workflow_steps, this means that
         #  the galaxy dataset in question corresponds to an `upload` or
         # `input` step i.e. `0`
-        if not workflow_steps:
-            workflow_steps.append(0)
-
-        return workflow_steps[0]
+        return self.INPUT_STEP_NUMBER
 
     def _get_creating_job_output_name(self, galaxy_dataset_dict):
         """
