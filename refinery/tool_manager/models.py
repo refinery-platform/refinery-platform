@@ -830,8 +830,8 @@ class WorkflowTool(Tool):
         assert len(list(set(analysis_groups))) == 1, (
             "`analysis_groups` should only contain a single element."
         )
-        analysis_group_number = analysis_groups[0]
-        return analysis_group_number
+        analysis_group = analysis_groups[0]
+        return analysis_group
 
     def _get_analysis_node_connection_input_filename(self):
         return (
