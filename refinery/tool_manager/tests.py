@@ -1197,6 +1197,20 @@ class ToolTests(ToolManagerTestBase):
 
         self.assertEqual(context.exception.message, tool.LAUNCH_WARNING)
 
+    def test__create_solr_params_for_input_node(self):
+        self.create_valid_tool(ToolDefinition.VISUALIZATION)
+        input_node_solr_params = (
+            self.tool._create_solr_params_from_input_node_uuid("COFFEE")
+        )
+        self.assertEqual(
+            input_node_solr_params,
+            {
+                "q": "django_ct:data_set_manager.node",
+                "wt": "json",
+                "fq": "uuid:COFFEE"
+            }
+        )
+
 
 class WorkflowToolTests(ToolManagerTestBase):
     def setUp(self):
