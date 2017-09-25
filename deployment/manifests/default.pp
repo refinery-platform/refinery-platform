@@ -16,6 +16,8 @@ $django_settings_module = "config.settings.${conf_mode}"
 $ui_app_root = "${django_root}/ui"
 $site_name = "Refinery"
 $site_url = "192.168.50.50:8000"
+$data_dir = "/data"
+$django_docker_engine_data_dir = "${data_dir}/django-docker-engine-data"
 
 # to make logs easier to read
 class { 'timezone':
@@ -33,7 +35,7 @@ exec { "activate_user":
 
 # Django-docker-engine needs a place for ephemeral data.
 # In production, this is a separate EBS mount, so we don't need to create it locally.
-file { '/data':
+file { $::data_dir:
   ensure => 'directory',
   owner  => $app_user,
   group  => $app_group
