@@ -237,7 +237,7 @@
           }
 
           /* Set face attributes for nodes in Provenance Visualization.*/
-          if (arguments.query == provVisQuery && provvis.get() instanceof provvisDecl.ProvVis === false) {
+          if (arguments.query == provVisQuery && ! provvis.get() instanceof provvisDecl.ProvVis && dataSetMonitor.analyses) {
             provvis.run(currentStudyUuid, dataSetMonitor.analyses.objects, arguments.response);
           }
 
@@ -246,7 +246,7 @@
           }
 
           /* Update Provenance Visualization by filtered nodeset. */
-          if (($('.nav-pills li.active a').attr('href').split("#")[1] === 'provenance-view-tab') && arguments.query == provVisQuery && provvis.get() instanceof provvisDecl.ProvVis) {
+          if (arguments.query == provVisQuery && provvis.get() instanceof provvisDecl.ProvVis) {
             provvisRender.update(provvis.get(), arguments.response);
           }
         });
