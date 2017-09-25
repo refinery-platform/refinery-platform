@@ -27,6 +27,7 @@ $solr_data_set_manager_data = "/data/solr/data_set_manager"
 $solr_core_data = "/data/solr/core"
 
 $deployment_platform = 'aws'
+$django_docker_engine_data_dir = "/data/django-docker-engine-data"
 
 # See code in refinery-modules/refinery/...
 include refinery
