@@ -23,7 +23,6 @@ class SeleniumTestBaseGeneric(StaticLiveServerTestCase):
         self.display = Display(visible=0, size=(1366, 768))
         self.display.start()
         self.browser = webdriver.Firefox()
-        self.browser.maximize_window()
 
     def tearDown(self):
         # NOTE: quit() destroys ANY currently running webdriver instances.
