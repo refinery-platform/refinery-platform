@@ -1197,17 +1197,76 @@ class ToolTests(ToolManagerTestBase):
 
         self.assertEqual(context.exception.message, tool.LAUNCH_WARNING)
 
-    def test__create_solr_params_for_input_node(self):
-        self.create_valid_tool(ToolDefinition.VISUALIZATION)
-        input_node_solr_params = (
-            self.tool._create_solr_params_from_input_node_uuid("COFFEE")
-        )
+
+class VisualizationToolTests(ToolManagerTestBase):
+    def setUp(self):
+        super(VisualizationToolTests, self).setUp()
+        self.tool = self.create_valid_tool(ToolDefinition.VISUALIZATION)
+
+        self.search_solr_mock = mock.patch(
+            "tool_manager.models.search_solr",
+            return_value=json.dumps({
+                "responseHeader": {
+                    "status": 0,
+                    "QTime": 36,
+                    "params": (
+                        self.tool._create_solr_params_from_input_node_uuid(
+                            self.node.uuid
+                        )
+                    )
+                },
+                "response": {
+                    "numFound": 1,
+                    "start": 0,
+                    "docs": [
+                        {
+                            "uuid": self.node.uuid,
+                            "name": self.node.name,
+                            "type": self.node.type,
+                            "file_uuid": self.node.file_uuid,
+                            "organism_Characteristics_generic_s":
+                                "Mus musculus",
+                        }
+                    ]
+                }
+            })
+        ).start()
+
+    def test_get_detailed_input_nodes_dict(self):
+        input_nodes_meta_info = self.tool._get_detailed_input_nodes_dict()
         self.assertEqual(
-            input_node_solr_params,
+            input_nodes_meta_info,
             {
-                "q": "django_ct:data_set_manager.node",
-                "wt": "json",
-                "fq": "uuid:COFFEE"
+                self.node.uuid: {
+                    'facet_field_counts': {},
+                    'file_url': u'http://www.example.com/test_file.txt',
+                    'nodes_count': 1,
+                    'attributes': [],
+                    'nodes': [
+                        {
+                            u'file_uuid': self.node.file_uuid,
+                            u'type': self.node.type,
+                            u'organism_Characteristics_generic_s':
+                                u'Mus musculus',
+                            u'name': self.node.name,
+                            u'uuid': self.node.uuid
+                        }
+                    ]
+                }
+            }
+        )
+        self.assertTrue(self.search_solr_mock.called)
+
+    def test__create_input_dict(self):
+        tool_input_dict = self.tool._create_container_input_dict()
+        file_relationships = self.tool.get_file_relationships_urls()
+
+        self.assertEqual(
+            tool_input_dict,
+            {
+                Tool.FILE_RELATIONSHIPS: file_relationships,
+                VisualizationTool.NODE_INFORMATION:
+                    self.tool._get_detailed_input_nodes_dict(),
             }
         )
 

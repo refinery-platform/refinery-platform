@@ -403,12 +403,43 @@ class VisualizationTool(Tool):
     VisualizationTools are Tools that are specific to
     launching and monitoring Dockerized visualizations
     """
+    FILE_URL = "file_url"
+    NODE_INFORMATION = "node_info"
 
     class Meta:
         verbose_name = "visualizationtool"
         permissions = (
             ('read_%s' % verbose_name, 'Can read %s' % verbose_name),
         )
+
+    def _create_container_input_dict(self):
+        """
+        Creat a dictionary containing information that Dockerized
+        Visualizations will have access to
+        """
+        return {
+            self.FILE_RELATIONSHIPS: self.get_file_relationships_urls(),
+            self.NODE_INFORMATION: self._get_detailed_input_nodes_dict()
+        }
+
+    def _get_detailed_input_nodes_dict(self):
+        """
+        Create and return a dict with detailed information about all of our
+        Tool's input Nodes.
+
+        This detailed info contains:
+            - Whatever we have in our Solr index for a given Node
+            - A full url pointing to our Node's FileStoreItem's datafile
+        """
+        nodes = self._get_input_nodes()
+        node_info = {}
+        for node in nodes:
+            solr_response_json = node.get_solr_response_json()
+            node_info[node.uuid] = solr_response_json
+            node_info[node.uuid][self.FILE_URL] = get_file_url_from_node_uuid(
+                node.uuid
+            )
+        return node_info
 
     def get_relative_container_url(self):
         """
@@ -431,16 +462,13 @@ class VisualizationTool(Tool):
         max_containers = settings.DJANGO_DOCKER_ENGINE_MAX_CONTAINERS
         if len(client.list()) >= max_containers:
             raise VisualizationToolError('Max containers')
+
         container = DockerContainerSpec(
             image_name=self.tool_definition.image_name,
             container_name=self.container_name,
             labels={self.uuid: ToolDefinition.VISUALIZATION},
-            container_input_path=(
-                self.tool_definition.container_input_path
-            ),
-            input={
-                self.FILE_RELATIONSHIPS: self.get_file_relationships_urls()
-            },
+            container_input_path=self.tool_definition.container_input_path,
+            input=self._create_container_input_dict(),
             extra_directories=self.tool_definition.get_extra_directories()
         )
 
