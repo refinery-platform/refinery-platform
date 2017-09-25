@@ -299,14 +299,6 @@ class Tool(OwnableResource):
     def __str__(self):
         return "Tool: {}".format(self.get_tool_name())
 
-    @staticmethod
-    def _create_solr_params_from_input_node_uuid(input_node_uuid):
-        return {
-            "q": "django_ct:data_set_manager.node",
-            "wt": "json",
-            "fq": "uuid:{}".format(input_node_uuid)
-        }
-
     def get_input_file_uuid_list(self):
         # Tools can't be created without the `file_uuid_list` existing so no
         # KeyError is being caught

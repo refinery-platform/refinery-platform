@@ -1524,6 +1524,17 @@ class NodeClassMethodTests(TestCase):
     def test_get_analysis_no_analysis(self):
         self.assertIsNone(self.node.get_analysis())
 
+    def test__create_solr_params(self):
+        node_solr_params = self.node._create_solr_params()
+        self.assertEqual(
+            node_solr_params,
+            {
+                "q": "django_ct:data_set_manager.node",
+                "wt": "json",
+                "fq": "uuid:{}".format(self.node.uuid)
+            }
+        )
+
 
 class NodeApiV2Tests(APITestCase):
 
