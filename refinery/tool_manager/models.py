@@ -316,14 +316,17 @@ class Tool(OwnableResource):
         node_uuids = re.findall(UUID_RE, self.get_file_relationships())
         return node_uuids
 
-    def get_relative_container_url(self):
+    def _get_input_nodes(self):
         """
-        Construct & return the relative url of our Tool's container
+        Return a list of Node objects corresponding to the Node UUIDs we
+        receive from the front-end when a WorkflowTool is launched.
+
+        NOTE: There is no exception handling here since this method is
+        within the scope of an atomic transaction.
         """
-        return "/{}/{}".format(
-            settings.DJANGO_DOCKER_ENGINE_BASE_URL,
-            self.container_name
-        )
+        return [
+            Node.objects.get(uuid=uuid) for uuid in self.get_input_node_uuids()
+        ]
 
     def get_tool_launch_config(self):
         return json.loads(self.tool_launch_configuration)
@@ -405,6 +408,15 @@ class VisualizationTool(Tool):
         verbose_name = "visualizationtool"
         permissions = (
             ('read_%s' % verbose_name, 'Can read %s' % verbose_name),
+        )
+
+    def get_relative_container_url(self):
+        """
+        Construct & return the relative url of our Tool's container
+        """
+        return "/{}/{}".format(
+            settings.DJANGO_DOCKER_ENGINE_BASE_URL,
+            self.container_name
         )
 
     def launch(self):
@@ -955,18 +967,6 @@ class WorkflowTool(Tool):
             self.galaxy_workflow_history_id,
             self.get_galaxy_dict()[self.GALAXY_WORKFLOW_INVOCATION_DATA]["id"]
         )
-
-    def _get_input_nodes(self):
-        """
-        Return a list of Node objects corresponding to the Node UUIDs we
-        receive from the front-end when a WorkflowTool is launched.
-
-        NOTE: There is no exception handling here since this method is
-        within the scope of an atomic transaction.
-        """
-        return [
-            Node.objects.get(uuid=uuid) for uuid in self.get_input_node_uuids()
-            ]
 
     @handle_bioblend_exceptions
     def _get_refinery_input_file_id(self, galaxy_dataset_dict):
