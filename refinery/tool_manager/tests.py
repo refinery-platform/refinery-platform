@@ -1210,9 +1210,7 @@ class VisualizationToolTests(ToolManagerTestBase):
                     "status": 0,
                     "QTime": 36,
                     "params": (
-                        self.tool._create_solr_params_from_input_node_uuid(
-                            self.node.uuid
-                        )
+                        self.node._create_solr_params()
                     )
                 },
                 "response": {
