@@ -236,18 +236,18 @@
             pivotMatrixView.updateMatrix(arguments.response);
           }
 
-          /* Set face attributes for nodes in Provenance Visualization.*/
-          if (arguments.query == provVisQuery && ! provvis.get() instanceof provvisDecl.ProvVis && dataSetMonitor.analyses) {
-            provvis.run(currentStudyUuid, dataSetMonitor.analyses.objects, arguments.response);
-          }
-
           if (arguments.query == provVisQuery) {
-            lastProvVisSolrResponse = arguments.response;
-          }
+            /* Set face attributes for nodes in Provenance Visualization.*/
+            if (! provvis.get() instanceof provvisDecl.ProvVis && dataSetMonitor.analyses) {
+              provvis.run(currentStudyUuid, dataSetMonitor.analyses.objects, arguments.response);
+            }
 
-          /* Update Provenance Visualization by filtered nodeset. */
-          if (arguments.query == provVisQuery && provvis.get() instanceof provvisDecl.ProvVis) {
-            provvisRender.update(provvis.get(), arguments.response);
+            lastProvVisSolrResponse = arguments.response;
+
+            /* Update Provenance Visualization by filtered nodeset. */
+            if (provvis.get() instanceof provvisDecl.ProvVis) {
+              provvisRender.update(provvis.get(), arguments.response);
+            }
           }
         });
 
