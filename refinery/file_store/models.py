@@ -13,7 +13,6 @@ FILE_STORE_DIR setting - main file store directory
 Example: FILE_STORE_DIR = 'files'
 
 """
-
 import logging
 import os
 import re
@@ -37,27 +36,25 @@ logger = logging.getLogger(__name__)
 
 
 def _mkdir(path):
-    """Create directory given absolute file system path.
-    Does not create intermediate dirs if they don't exist.
+    """Create directory given absolute file system path
+    Does not create intermediate dirs if they don't exist, raises RuntimeError
 
-    :param path: Absolute file system path.
-    :type path: str.
-    :returns: bool -- True if directory was created, False if it wasn't.
+    :param path: Absolute file system path
+    :type path: str
     """
-    logger.debug("Creating directory '%s'", path)
-    try:
-        os.mkdir(path)
-    except OSError as e:
-        logger.error("Error creating directory '%s': %s", path, e)
-    else:
-        logger.info("Created directory '%s'", path)
+    if not os.path.isdir(path):
+        try:
+            os.mkdir(path)
+        except OSError as exc:
+            logger.error("Error creating directory '%s': %s", path, exc)
+            raise RuntimeError()
+        else:
+            logger.info("Created directory '%s'", path)
 
 
 # create data storage directories
-if not os.path.isdir(settings.FILE_STORE_BASE_DIR):
-    _mkdir(settings.FILE_STORE_BASE_DIR)
-if not os.path.isdir(settings.FILE_STORE_TEMP_DIR):
-    _mkdir(settings.FILE_STORE_TEMP_DIR)
+_mkdir(settings.FILE_STORE_BASE_DIR)
+_mkdir(settings.FILE_STORE_TEMP_DIR)
 
 
 def file_path(instance, filename):
@@ -525,7 +522,7 @@ class FileStoreItem(models.Model):
         NOTE: That if you simply revoke() a task without the `terminate` ==
         True, said task will try to restart upon a Worker restart.
 
-        See: http://bit.ly/2di038U or http://bit.ly/1qb8763
+        http://docs.celeryproject.org/en/latest/userguide/workers.html#revoke-revoking-tasks
         """
         try:
             revoke(self.import_task_id, terminate=True)

@@ -124,10 +124,9 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
                 else:
                     data[key].add("N/A")
         # iterate over all keys in data and join sets into strings
-        # TODO: This doesn't feel right: facet each separately?
         for key, value in data.iteritems():
             if type(value) is set:
-                data[key] = " + ".join(value)
+                data[key] = " + ".join(sorted(value))
 
         try:
             file_store_item = FileStoreItem.objects.get(

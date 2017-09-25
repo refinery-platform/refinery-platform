@@ -643,13 +643,15 @@ AUTO_LOGIN = get_setting("AUTO_LOGIN", local_settings, [])
 TEST_RUNNER = "django.test.runner.DiscoverRunner"
 
 # Required for pre-Django 1.9 TransactionTestCases utilizing
-# `serialized_rollback` to function properly http://bit.ly/2l5gR30
+# `serialized_rollback` to function properly.
+# https://code.djangoproject.com/ticket/23727#comment:13
 TEST_NON_SERIALIZED_APPS = ['core', 'django.contrib.contenttypes',
                             'django.contrib.auth']
 
 VISUALIZATION_ANNOTATION_BASE_PATH = "tool_manager/visualization_annotations"
 
-# To avoid Port conflicts between LiveServerTestCases http://bit.ly/2pb64KN
+# To avoid Port conflicts between LiveServerTestCases
+# https://docs.djangoproject.com/en/1.7/topics/testing/tools/#liveservertestcase
 os.environ["DJANGO_LIVE_TEST_SERVER_ADDRESS"] = "localhost:10000-12000"
 
 DJANGO_DOCKER_ENGINE_MAX_CONTAINERS = 10

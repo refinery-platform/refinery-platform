@@ -63,9 +63,7 @@ class Command(LabelCommand):
 
     # absolute path to the file store root dir
     ANNOTATION_BASE_DIR = os.path.join(settings.MEDIA_ROOT, ANNOTATION_DIR)
-    # create this directory in case it doesn't exist
-    if not os.path.isdir(ANNOTATION_BASE_DIR):
-        _mkdir(ANNOTATION_BASE_DIR)
+    _mkdir(ANNOTATION_BASE_DIR)
 
     """
     Name: handle
