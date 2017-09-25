@@ -6,5 +6,6 @@ from storages.backends.s3boto3 import S3Boto3Storage
 class S3StaticStorage(S3Boto3Storage):
     def __init__(self):
         super(S3StaticStorage, self).__init__(
-            bucket=settings.STATIC_BUCKET, querystring_auth=False
+            bucket=settings.STATIC_BUCKET, querystring_auth=False,
+            custom_domain=settings.STATIC_BUCKET + '.s3.amazonaws.com'
         )
