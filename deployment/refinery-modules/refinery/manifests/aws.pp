@@ -56,13 +56,6 @@ file { "/data/solr":
   before => Exec["solr_install"],
 }
 ->
-file { "$django_docker_engine_data_dir":
-  ensure => directory,
-  owner => "$app_user",
-  group => "$app_user",
-  mode => "0755",
-}
-->
 file { "$solr_data_set_manager_data":
   ensure => directory,
   owner => "$app_user",
@@ -71,6 +64,13 @@ file { "$solr_data_set_manager_data":
 }
 ->
 file { "$solr_core_data":
+  ensure => directory,
+  owner => "$app_user",
+  group => "$app_user",
+  mode => "0755",
+}
+->
+file { $::django_docker_engine_data_dir:
   ensure => directory,
   owner => "$app_user",
   group => "$app_user",
