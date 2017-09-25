@@ -31,7 +31,7 @@
     }
   },
   "DEFAULT_FROM_EMAIL": "<%= @default_from_email || "webmaster@localhost" %>",
-  "DJANGO_DOCKER_ENGINE_DATA_DIR": "<%= @docker_dir %>",
+  "DJANGO_DOCKER_ENGINE_DATA_DIR": "<%= @docker_dir || "/data" %>",
   "EMAIL_HOST": "<%= @email_host || "localhost" %>",
   "EMAIL_PORT": 25,
   "EMAIL_HOST_USER": "<%= @email_host_user %>",
