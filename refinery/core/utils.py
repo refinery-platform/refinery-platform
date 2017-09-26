@@ -14,6 +14,7 @@ from django.core.mail import send_mail
 from django.db import connection
 from django.utils import timezone
 
+from celery.task import task
 from guardian.shortcuts import get_objects_for_user
 from guardian.utils import get_anonymous_user
 import py2neo
@@ -196,12 +197,17 @@ def add_read_access_in_neo4j(dataset_uuids, user_ids):
 
 
 @skip_if_test_run
-def update_annotation_sets_neo4j(username=''):
+def async_update_annotation_sets_neo4j(username=''):
     """
-    Update annotation sets in Neo4J
+    Trigger asynch update of annotation sets in Neo4J
     AnnotationSets link Ontology classes from accessible DataSets with users
     """
 
+    _update_annotation_sets_neo4j.delay(username)
+
+
+@task()
+def _update_annotation_sets_neo4j(username):
     logger.info(
         'Updating annotation sets for "%s" (If username is empty, updates for '
         'all users) in Neo4J.',

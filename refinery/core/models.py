@@ -63,12 +63,12 @@ from galaxy_connector.models import Instance
 import tool_manager
 
 from .utils import (add_or_update_user_to_neo4j, add_read_access_in_neo4j,
-                    delete_analysis_index, delete_data_set_index,
-                    delete_data_set_neo4j, delete_ontology_from_neo4j,
-                    delete_user_in_neo4j, email_admin, get_aware_local_time,
+                    async_update_annotation_sets_neo4j, delete_analysis_index,
+                    delete_data_set_index, delete_data_set_neo4j,
+                    delete_ontology_from_neo4j, delete_user_in_neo4j,
+                    email_admin, get_aware_local_time,
                     invalidate_cached_object, remove_read_access_in_neo4j,
-                    skip_if_test_run, update_annotation_sets_neo4j,
-                    update_data_set_index)
+                    skip_if_test_run, update_data_set_index)
 
 logger = logging.getLogger(__name__)
 
@@ -841,12 +841,12 @@ class DataSet(SharableResource):
 def _dataset_delete(sender, instance, *args, **kwargs):
     delete_data_set_index(instance)
     delete_data_set_neo4j(instance.uuid)
-    update_annotation_sets_neo4j()
+    async_update_annotation_sets_neo4j()
 
 
 @receiver(post_save, sender=DataSet)
 def _dataset_saved(sender, instance, *args, **kwargs):
-    update_annotation_sets_neo4j()
+    async_update_annotation_sets_neo4j()
     update_data_set_index(instance)
 
 
@@ -2366,7 +2366,7 @@ def _add_user_to_neo4j(sender, **kwargs):
         ),
         [user.id]
     )
-    update_annotation_sets_neo4j(user.username)
+    async_update_annotation_sets_neo4j(user.username)
 
 
 @receiver(pre_delete, sender=User)
