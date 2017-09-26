@@ -301,6 +301,8 @@ class ToolManagerTestBase(ToolManagerMocks):
                 "django_docker_engine.docker_utils.DockerClientWrapper.run"
             ) as run_mock:
                 self.post_response = self.tools_view(self.post_request)
+                logger.debug("Visualization tool response: %s",
+                             self.post_response.content)
                 self.assertTrue(run_mock.called)
 
             self.tool = VisualizationTool.objects.get(
