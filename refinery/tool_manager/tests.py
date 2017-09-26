@@ -193,6 +193,49 @@ class ToolManagerTestBase(ToolManagerMocks):
 
         self.dataset = create_dataset_with_necessary_models(create_nodes=False)
 
+        study = self.dataset.get_latest_study()
+        assay = Assay.objects.get(study=study)
+
+        test_file = StringIO.StringIO()
+        test_file.write('Coffee is really great.\n')
+        self.file_store_item = FileStoreItem.objects.create(
+            source="http://www.example.com/test_file.txt"
+        )
+
+        self.node = Node.objects.create(
+            name="Node {}".format(uuid.uuid4()),
+            assay=assay,
+            study=study,
+            file_uuid=self.file_store_item.uuid
+        )
+
+        self.search_solr_mock = mock.patch(
+            "data_set_manager.utils.search_solr",
+            return_value=json.dumps({
+                "responseHeader": {
+                    "status": 0,
+                    "QTime": 36,
+                    "params": (
+                        self.node._create_solr_params()
+                    )
+                },
+                "response": {
+                    "numFound": 1,
+                    "start": 0,
+                    "docs": [
+                        {
+                            "uuid": self.node.uuid,
+                            "name": self.node.name,
+                            "type": self.node.type,
+                            "file_uuid": self.node.file_uuid,
+                            "organism_Characteristics_generic_s":
+                                "Mus musculus",
+                        }
+                    ]
+                }
+            })
+        ).start()
+
         self.mock_vis_annotations_reference = (
             "tool_manager.management.commands.generate_tool_definitions"
             ".get_visualization_annotations_list"
@@ -252,22 +295,6 @@ class ToolManagerTestBase(ToolManagerMocks):
             raise RuntimeError("Please provide a valid tool_type")
 
         if file_relationships is None:
-            test_file = StringIO.StringIO()
-            test_file.write('Coffee is really great.\n')
-            self.file_store_item = FileStoreItem.objects.create(
-                source="http://www.example.com/test_file.txt"
-            )
-
-            study = self.dataset.get_latest_study()
-            assay = Assay.objects.get(study=study)
-
-            self.node = Node.objects.create(
-                name="Node {}".format(uuid.uuid4()),
-                assay=assay,
-                study=study,
-                file_uuid=self.file_store_item.uuid
-            )
-
             self.post_data = {
                 "dataset_uuid": self.dataset.uuid,
                 "tool_definition_uuid": self.td.uuid,
@@ -1205,33 +1232,6 @@ class VisualizationToolTests(ToolManagerTestBase):
         super(VisualizationToolTests, self).setUp()
         self.tool = self.create_valid_tool(ToolDefinition.VISUALIZATION)
 
-        self.search_solr_mock = mock.patch(
-            "data_set_manager.utils.search_solr",
-            return_value=json.dumps({
-                "responseHeader": {
-                    "status": 0,
-                    "QTime": 36,
-                    "params": (
-                        self.node._create_solr_params()
-                    )
-                },
-                "response": {
-                    "numFound": 1,
-                    "start": 0,
-                    "docs": [
-                        {
-                            "uuid": self.node.uuid,
-                            "name": self.node.name,
-                            "type": self.node.type,
-                            "file_uuid": self.node.file_uuid,
-                            "organism_Characteristics_generic_s":
-                                "Mus musculus",
-                        }
-                    ]
-                }
-            })
-        ).start()
-
     def test_get_detailed_input_nodes_dict(self):
         input_nodes_meta_info = self.tool._get_detailed_input_nodes_dict()
         self.assertEqual(
@@ -1239,7 +1239,9 @@ class VisualizationToolTests(ToolManagerTestBase):
             {
                 self.node.uuid: {
                     'facet_field_counts': {},
-                    'file_url': u'http://www.example.com/test_file.txt',
+                    'file_url': (
+                        self.node.get_file_store_item().get_datafile_url()
+                    ),
                     'nodes_count': 1,
                     'attributes': [],
                     'nodes': [
