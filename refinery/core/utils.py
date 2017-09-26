@@ -199,11 +199,19 @@ def add_read_access_in_neo4j(dataset_uuids, user_ids):
 @skip_if_test_run
 def async_update_annotation_sets_neo4j(username=''):
     """
-    Trigger asynch update of annotation sets in Neo4J
+    Trigger async update of annotation sets in Neo4J
     AnnotationSets link Ontology classes from accessible DataSets with users
     """
-
     _update_annotation_sets_neo4j.delay(username)
+
+
+@skip_if_test_run
+def sync_update_annotation_sets_neo4j(username=''):
+    """
+    Trigger async update of annotation sets in Neo4J
+    AnnotationSets link Ontology classes from accessible DataSets with users
+    """
+    _update_annotation_sets_neo4j(username)
 
 
 @task()
