@@ -454,7 +454,7 @@ class Node(models.Model):
         return {
             "q": "django_ct:data_set_manager.node",
             "wt": "json",
-            "fq": "uuid:{}".format(self.uuid)
+            "fq": "uuid:({} {} {} {})".format(self.uuid)
         }
 
     def get_analysis(self):
