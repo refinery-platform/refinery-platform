@@ -446,17 +446,6 @@ class Node(models.Model):
         node.save()
         return self
 
-    def _create_solr_params(self):
-        """
-        Create and return a dict containing the proper Solr params to query
-        for the information of a Node
-        """
-        return {
-            "q": "django_ct:data_set_manager.node",
-            "wt": "json",
-            "fq": "uuid:({} {} {} {})".format(self.uuid)
-        }
-
     def get_analysis(self):
         try:
             return core.models.Analysis.objects.get(uuid=self.analysis_uuid)
@@ -466,17 +455,6 @@ class Node(models.Model):
             logger.error("Multiple Analyses found for Node with UUID: %s %s",
                          self.uuid, e)
             return None
-
-    def get_solr_response_json(self):
-        """
-        Fetch the information indexed within Solr for a Node and return
-        it as JSON
-        """
-        solr_response = data_set_manager.utils.search_solr(
-            self._create_solr_params(),
-            'data_set_manager'
-        )
-        return data_set_manager.utils.format_solr_response(solr_response)
 
     def _get_derived_node_types(self):
         """
