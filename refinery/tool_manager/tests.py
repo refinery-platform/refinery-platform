@@ -1204,7 +1204,7 @@ class VisualizationToolTests(ToolManagerTestBase):
         self.tool = self.create_valid_tool(ToolDefinition.VISUALIZATION)
 
         self.search_solr_mock = mock.patch(
-            "tool_manager.models.search_solr",
+            "data_set_manager.utils.search_solr",
             return_value=json.dumps({
                 "responseHeader": {
                     "status": 0,
