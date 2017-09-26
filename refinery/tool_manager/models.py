@@ -28,7 +28,8 @@ from core.models import (INPUT_CONNECTION, OUTPUT_CONNECTION, Analysis,
                          AnalysisNodeConnection, DataSet, OwnableResource,
                          Workflow, WorkflowFilesDL)
 from data_set_manager.models import Node
-from data_set_manager.utils import get_file_url_from_node_uuid
+from data_set_manager.utils import (get_file_url_from_node_uuid,
+                                    get_solr_response_json)
 from file_store.models import FileType
 
 logger = logging.getLogger(__name__)
@@ -431,14 +432,19 @@ class VisualizationTool(Tool):
             - Whatever we have in our Solr index for a given Node
             - A full url pointing to our Node's FileStoreItem's datafile
         """
-        nodes = self._get_input_nodes()
-        node_info = {}
-        for node in nodes:
-            solr_response_json = node.get_solr_response_json()
-            node_info[node.uuid] = solr_response_json
-            node_info[node.uuid][self.FILE_URL] = get_file_url_from_node_uuid(
-                node.uuid
-            )
+
+        solr_response_json = get_solr_response_json(
+            self.get_input_node_uuids()
+        )
+
+        node_info = {
+            node["uuid"]: {
+                "node_solr_data": node,
+                self.FILE_URL: get_file_url_from_node_uuid(node["uuid"])
+            }
+            for node in solr_response_json["nodes"]
+        }
+
         return node_info
 
     def get_relative_container_url(self):
