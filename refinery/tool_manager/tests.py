@@ -55,6 +55,7 @@ from core.models import (INPUT_CONNECTION, OUTPUT_CONNECTION, Analysis,
                          AnalysisNodeConnection, AnalysisResult, ExtendedGroup,
                          Project, Workflow, WorkflowEngine, WorkflowFilesDL)
 from data_set_manager.models import Assay, Attribute, Node
+from data_set_manager.utils import _create_solr_params
 from factory_boy.django_model_factories import (AnnotatedNodeFactory,
                                                 AttributeFactory, NodeFactory,
                                                 ToolFactory)
@@ -193,8 +194,10 @@ class ToolManagerTestBase(ToolManagerMocks):
 
         self.dataset = create_dataset_with_necessary_models(create_nodes=False)
 
-        study = self.dataset.get_latest_study()
-        assay = Assay.objects.get(study=study)
+        self.study = self.dataset.get_latest_study()
+        self.assay = Assay.objects.get(study=self.study)
+
+        self.create_mock_file_relationships()
 
         test_file = StringIO.StringIO()
         test_file.write('Coffee is really great.\n')
@@ -204,37 +207,10 @@ class ToolManagerTestBase(ToolManagerMocks):
 
         self.node = Node.objects.create(
             name="Node {}".format(uuid.uuid4()),
-            assay=assay,
-            study=study,
+            assay=self.assay,
+            study=self.study,
             file_uuid=self.file_store_item.uuid
         )
-
-        self.search_solr_mock = mock.patch(
-            "data_set_manager.utils.search_solr",
-            return_value=json.dumps({
-                "responseHeader": {
-                    "status": 0,
-                    "QTime": 36,
-                    "params": (
-                        self.node._create_solr_params()
-                    )
-                },
-                "response": {
-                    "numFound": 1,
-                    "start": 0,
-                    "docs": [
-                        {
-                            "uuid": self.node.uuid,
-                            "name": self.node.name,
-                            "type": self.node.type,
-                            "file_uuid": self.node.file_uuid,
-                            "organism_Characteristics_generic_s":
-                                "Mus musculus",
-                        }
-                    ]
-                }
-            })
-        ).start()
 
         self.mock_vis_annotations_reference = (
             "tool_manager.management.commands.generate_tool_definitions"
@@ -327,9 +303,14 @@ class ToolManagerTestBase(ToolManagerMocks):
             with mock.patch(
                 "django_docker_engine.docker_utils.DockerClientWrapper.run"
             ) as run_mock:
-                self.post_response = self.tools_view(self.post_request)
-                logger.debug("Visualization tool response: %s",
-                             self.post_response.content)
+                with mock.patch(
+                    "tool_manager.models.get_solr_response_json"
+                ):
+                    self.post_response = self.tools_view(self.post_request)
+                logger.debug(
+                    "Visualization tool launch response: %s",
+                    self.post_response.content
+                )
                 self.assertTrue(run_mock.called)
 
             self.tool = VisualizationTool.objects.get(
@@ -418,6 +399,61 @@ class ToolManagerTestBase(ToolManagerMocks):
                 self.workflow_engine.uuid
             )
             self.td = create_tool_definition(self.tool_annotation_data)
+
+    def create_mock_file_relationships(self):
+        self.LIST_BASIC = "[{}]".format(self.make_node())
+        self.LIST = "[{}, {}, {}, {}]".format(
+            *[self.make_node() for i in range(0, 4)]
+        )
+        self.LIST_LIST = "[[{}, {}], [{}, {}]]".format(
+            *[self.make_node() for i in range(0, 4)]
+        )
+        self.LIST_PAIR = "[({}, {}), ({}, {})]".format(
+            *[self.make_node() for i in range(0, 4)]
+        )
+        self.PAIR = "({}, {})".format(*[self.make_node() for i in range(0, 2)])
+        self.LIST_LIST_PAIR = "[[({}, {}), ({}, {})]]".format(
+            *[self.make_node() for i in range(0, 4)]
+        )
+        self.PAIR_LIST = "([{}, {}], [{}, {}])".format(
+            *[self.make_node() for i in range(0, 4)]
+        )
+
+    def make_node(self):
+        test_file = StringIO.StringIO()
+
+        test_file.write('Coffee is really great.\n')
+        self.file_store_item = FileStoreItem.objects.create(
+            source="http://www.example.com/test_file.txt"
+        )
+
+        node = NodeFactory(
+            name="Node {}".format(uuid.uuid4()),
+            assay=self.assay,
+            study=self.study,
+            type=Node.RAW_DATA_FILE,
+            file_uuid=self.file_store_item.uuid
+        )
+        attribute = AttributeFactory(
+            node=node,
+            type=Attribute.CHARACTERISTICS,
+            subtype='coffee',
+            value='coffee'
+        )
+        AnnotatedNodeFactory(
+            node_id=node.id,
+            attribute_id=attribute.id,
+            study=self.study,
+            assay=self.assay,
+            node_uuid=node.uuid,
+            node_file_uuid=node.file_uuid,
+            node_type=node.type,
+            node_name=node.name,
+            attribute_type=attribute.type,
+            attribute_subtype=attribute.subtype,
+            attribute_value=attribute.value,
+        )
+        return node.uuid
 
     def _update_galaxy_file_mapping(self):
         """
@@ -1230,31 +1266,55 @@ class ToolTests(ToolManagerTestBase):
 class VisualizationToolTests(ToolManagerTestBase):
     def setUp(self):
         super(VisualizationToolTests, self).setUp()
-        self.tool = self.create_valid_tool(ToolDefinition.VISUALIZATION)
+        self.visualization_tool = self.create_valid_tool(
+            ToolDefinition.VISUALIZATION,
+            file_relationships=self.LIST
+        )
+
+        self.search_solr_mock = mock.patch(
+            "data_set_manager.utils.search_solr",
+            return_value=json.dumps({
+                "responseHeader": {
+                    "status": 0,
+                    "QTime": 36,
+                    "params": (
+                        _create_solr_params(self.tool.get_input_node_uuids())
+                    )
+                },
+                "response": {
+                    "numFound": len(self.tool._get_input_nodes()),
+                    "start": 0,
+                    "docs": [
+                        {
+                            "uuid": node.uuid,
+                            "name": node.name,
+                            "type": node.type,
+                            "file_uuid": node.file_uuid,
+                            "organism_Characteristics_generic_s":
+                                "Mus musculus",
+                        } for node in self.tool._get_input_nodes()
+                    ]
+                }
+            })
+        ).start()
 
     def test_get_detailed_input_nodes_dict(self):
         input_nodes_meta_info = self.tool._get_detailed_input_nodes_dict()
         self.assertEqual(
             input_nodes_meta_info,
             {
-                self.node.uuid: {
-                    'facet_field_counts': {},
+                node.uuid: {
                     'file_url': (
                         self.node.get_file_store_item().get_datafile_url()
                     ),
-                    'nodes_count': 1,
-                    'attributes': [],
-                    'nodes': [
-                        {
-                            u'file_uuid': self.node.file_uuid,
-                            u'type': self.node.type,
-                            u'organism_Characteristics_generic_s':
-                                u'Mus musculus',
-                            u'name': self.node.name,
-                            u'uuid': self.node.uuid
-                        }
-                    ]
-                }
+                    'node_solr_data': {
+                        "uuid": node.uuid,
+                        "name": node.name,
+                        "type": node.type,
+                        "file_uuid": node.file_uuid,
+                        "organism_Characteristics_generic_s": "Mus musculus",
+                    }
+                } for node in self.tool._get_input_nodes()
             }
         )
         self.assertTrue(self.search_solr_mock.called)
@@ -1276,24 +1336,6 @@ class VisualizationToolTests(ToolManagerTestBase):
 class WorkflowToolTests(ToolManagerTestBase):
     def setUp(self):
         super(WorkflowToolTests, self).setUp()
-
-        self.LIST_BASIC = "[{}]".format(self.make_node())
-        self.LIST = "[{}, {}, {}, {}]".format(
-            *[self.make_node() for i in range(0, 4)]
-        )
-        self.LIST_LIST = "[[{}, {}], [{}, {}]]".format(
-            *[self.make_node() for i in range(0, 4)]
-        )
-        self.LIST_PAIR = "[({}, {}), ({}, {})]".format(
-            *[self.make_node() for i in range(0, 4)]
-        )
-        self.PAIR = "({}, {})".format(*[self.make_node() for i in range(0, 2)])
-        self.LIST_LIST_PAIR = "[[({}, {}), ({}, {})]]".format(
-            *[self.make_node() for i in range(0, 4)]
-        )
-        self.PAIR_LIST = "([{}, {}], [{}, {}])".format(
-            *[self.make_node() for i in range(0, 4)]
-        )
         self.show_dataset_provenance_side_effect = [
             galaxy_dataset_provenance_0, galaxy_dataset_provenance_0,
             galaxy_dataset_provenance_1, galaxy_dataset_provenance_1
@@ -1324,45 +1366,6 @@ class WorkflowToolTests(ToolManagerTestBase):
                              output_connection.subanalysis)
             self.assertEqual(output_connection.node.workflow_output,
                              output_connection.name)
-
-    def make_node(self):
-        test_file = StringIO.StringIO()
-
-        test_file.write('Coffee is really great.\n')
-        self.file_store_item = FileStoreItem.objects.create(
-            source="http://www.example.com/test_file.txt"
-        )
-
-        study = self.dataset.get_latest_study()
-        assay = Assay.objects.get(study=study)
-
-        node = NodeFactory(
-            name="Node {}".format(uuid.uuid4()),
-            assay=assay,
-            study=study,
-            type=Node.RAW_DATA_FILE,
-            file_uuid=self.file_store_item.uuid
-        )
-        attribute = AttributeFactory(
-            node=node,
-            type=Attribute.CHARACTERISTICS,
-            subtype='coffee',
-            value='coffee'
-        )
-        AnnotatedNodeFactory(
-            node_id=node.id,
-            attribute_id=attribute.id,
-            study=study,
-            assay=assay,
-            node_uuid=node.uuid,
-            node_file_uuid=node.file_uuid,
-            node_type=node.type,
-            node_name=node.name,
-            attribute_type=attribute.type,
-            attribute_subtype=attribute.subtype,
-            attribute_value=attribute.value,
-        )
-        return node.uuid
 
     def test_list_dataset_collection_description_creation(self):
         self.create_valid_tool(
