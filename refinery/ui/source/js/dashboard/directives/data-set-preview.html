@@ -132,17 +132,17 @@
       <div
         class="inline-container">
         <h6>Description</h6>
-        <p ng-if="preview.studies.description">
-          {{ preview.studies.description | cut:true:preview.descLength }}
+        <p ng-if="preview.dataSetDetails.description">
+          {{ preview.dataSetDetails.description }}
         </p>
-        <p ng-if="!preview.studies.description">
+        <p ng-if="!preview.dataSetDetails.description">
           <em>None</em>
         </p>
         <button
           class="is-mirrorable icon-only"
-          ng-if="preview.studies.description.length > preview.settings.dashboard.preview.defaultLengthDescription"
+          ng-if="preview.dataSetDetails.description.length > preview.settings.dashboard.preview.defaultLengthDescription"
           ng-click="preview.toggleDescription()"
-          ng-class="{'is-mirrored': preview.descLength > preview.studies.description.length }">
+          ng-class="{'is-mirrored': preview.descLength > preview.dataSetDetails.description.length }">
           <i class="fa fa-chevron-right"></i>
         </button>
       </div>
