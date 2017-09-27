@@ -1383,7 +1383,7 @@ class UtilitiesTest(TestCase):
                 context.exception.message
             )
 
-    def test__create_solr_params(self):
+    def test__create_solr_params_from_node_uuids(self):
         fake_node_uuids = [str(uuid.uuid4()), str(uuid.uuid4())]
         node_solr_params = _create_solr_params_from_node_uuids(fake_node_uuids)
         self.assertEqual(
