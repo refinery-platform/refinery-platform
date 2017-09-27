@@ -2,14 +2,12 @@ import StringIO
 import ast
 import json
 import logging
-import re
 import time
 from urlparse import urljoin
 import uuid
 
 from django.conf import settings
 from django.contrib.auth.models import User
-from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.core.management import CommandError, call_command
 from django.http import HttpResponseBadRequest
 from django.test import TestCase
@@ -1129,92 +1127,24 @@ class ToolTests(ToolManagerTestBase):
             self.assertTrue(purge_mock.called)
 
     def test_node_uuids_get_populated_with_urls(self):
-        self.create_vis_tool_definition()
-
-        study = self.dataset.get_latest_study()
-        assay = Assay.objects.get(study=study)
-
-        test_file_a = StringIO.StringIO()
-        test_file_a.write('Coffee is great.\n')
-        file_store_item_a = FileStoreItem.objects.create(
-            datafile=InMemoryUploadedFile(
-                test_file_a,
-                field_name='tempfile',
-                name='test_file_a.txt',
-                content_type='text/plain',
-                size=len(test_file_a.getvalue()),
-                charset='utf-8'
-            )
+        vis_tool = self.create_tool(
+            ToolDefinition.VISUALIZATION,
+            file_relationships=self.LIST
         )
-        test_file_b = StringIO.StringIO()
-        test_file_b.write('Coffee is really great.\n')
-        file_store_item_b = FileStoreItem.objects.create(
-            datafile=InMemoryUploadedFile(
-                test_file_b,
-                field_name='tempfile',
-                name='test_file_b.txt',
-                content_type='text/plain',
-                size=len(test_file_b.getvalue()),
-                charset='utf-8'
-            )
-        )
-        node_a = Node.objects.create(
-            name="n0",
-            assay=assay,
-            study=study,
-            file_uuid=file_store_item_a.uuid
-        )
-        node_b = Node.objects.create(
-            name="n0",
-            assay=assay,
-            study=study,
-            file_uuid=file_store_item_b.uuid
-        )
+        file_relationships = vis_tool.get_file_relationships_urls()
 
-        post_data = {
-            "dataset_uuid": self.dataset.uuid,
-            "tool_definition_uuid": self.td.uuid,
-            Tool.FILE_RELATIONSHIPS: "[{}, {}]".format(
-                node_a.uuid,
-                node_b.uuid
-            )
-        }
-        post_request = self.factory.post(
-            self.tools_url_root,
-            data=post_data,
-            format="json"
-        )
-        force_authenticate(post_request, self.user)
-
-        # We don't want to spin up containers for unit testing
-        with mock.patch(
-                "django_docker_engine.docker_utils.DockerClientWrapper.run"
-        ) as run_mock:
-            self.post_response = self.tools_view(post_request)
-            self.assertTrue(run_mock.called)
-
-        tool = Tool.objects.get(
-            tool_definition__uuid=self.td.uuid
-        )
-
-        file_relationships = tool.get_file_relationships_urls()
-
-        # Build regex and assert that the file_relationships structure is
-        # populated from the FileStoreItem's datafiles that we've associated
-        # with the Nodes above
-        regex = re.compile(r"test_file_[ab]\.txt")
         for url in file_relationships:
-            self.assertIsNotNone(regex.search(url))
+            self.assertIn("test_file.txt", url)
 
     def test_get_file_relationships_urls(self):
-        self.create_valid_tool(ToolDefinition.WORKFLOW)
+        self.create_tool(ToolDefinition.WORKFLOW)
         self.assertEqual(
             self.tool.get_file_relationships_urls(),
             ['http://www.example.com/test_file.txt']
         )
 
     def test_update_galaxy_data(self):
-        self.create_valid_tool(ToolDefinition.WORKFLOW)
+        self.create_tool(ToolDefinition.WORKFLOW)
         self.tool.update_galaxy_data("test", "data")
         self.tool.update_galaxy_data("more", "data")
         self.assertEqual(
@@ -2285,40 +2215,17 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
                       self.post_response.content)
 
     def test_good_extra_directories_path(self):
-        with open("{}/visualizations/"
-                  "LIST_visualization_good_extra_directories.json"
-                  .format(TEST_DATA_PATH)) as f:
-            visualization_annotation = json.loads(f.read())
-            create_tool_definition(visualization_annotation)
-
-        td = ToolDefinition.objects.get(
-            name=visualization_annotation["name"]
+        valid_annotation = "LIST_visualization_good_extra_directories.json"
+        self.create_tool(
+            ToolDefinition.VISUALIZATION,
+            annotation_file_name=valid_annotation,
+            file_relationships=self.LIST
         )
-
-        tool_launch_configuration = {
-            "dataset_uuid": self.dataset.uuid,
-            "tool_definition_uuid": td.uuid,
-            Tool.FILE_RELATIONSHIPS: str(["www.example.com"])
-        }
-        self.post_request = self.factory.post(
-            self.tools_url_root,
-            data=tool_launch_configuration,
-            format="json"
-        )
-        force_authenticate(self.post_request, self.user)
-        # We don't want to spin up containers for unit testing
-        with mock.patch(
-            "django_docker_engine.docker_utils.DockerClientWrapper.run"
-        ) as run_mock:
-            self.post_response = self.tools_view(self.post_request)
-            self.assertTrue(run_mock.called)
-
-        self.assertEqual(self.post_response.status_code, 200)
-        self.assertEqual(Tool.objects.count(), 1)
+        self.assertEqual(VisualizationTool.objects.count(), 1)
 
     def test_both_tool_types_returned_from_api(self):
-        self.create_valid_tool(ToolDefinition.WORKFLOW)
-        self.create_valid_tool(ToolDefinition.VISUALIZATION)
+        self.create_tool(ToolDefinition.WORKFLOW)
+        self.create_tool(ToolDefinition.VISUALIZATION)
 
         self.get_request = self.factory.get(self.tools_url_root)
         force_authenticate(self.get_request, self.user)
