@@ -1239,7 +1239,7 @@ class VisualizationToolTests(ToolManagerTestBase):
                     'file_url': (
                         self.node.get_file_store_item().get_datafile_url()
                     ),
-                    'node_solr_data': {
+                    VisualizationTool.NODE_SOLR_INFO: {
                         "uuid": node.uuid,
                         "name": node.name,
                         "type": node.type,
