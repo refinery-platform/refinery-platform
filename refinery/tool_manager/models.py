@@ -406,6 +406,7 @@ class VisualizationTool(Tool):
     """
     FILE_URL = "file_url"
     NODE_INFORMATION = "node_info"
+    NODE_SOLR_INFO = "node_solr_info"
 
     class Meta:
         verbose_name = "visualizationtool"
@@ -432,19 +433,16 @@ class VisualizationTool(Tool):
             - Whatever we have in our Solr index for a given Node
             - A full url pointing to our Node's FileStoreItem's datafile
         """
-
         solr_response_json = get_solr_response_json(
             self.get_input_node_uuids()
         )
-
         node_info = {
             node["uuid"]: {
-                "node_solr_data": node,
+                self.NODE_SOLR_INFO: node,
                 self.FILE_URL: get_file_url_from_node_uuid(node["uuid"])
             }
             for node in solr_response_json["nodes"]
         }
-
         return node_info
 
     def get_relative_container_url(self):

@@ -21,9 +21,10 @@ from .models import (AnnotatedNode, Assay, Attribute, AttributeOrder,
                      Investigation, Node, Study)
 from .search_indexes import NodeIndex
 from .serializers import AttributeOrderSerializer
-from .utils import (_create_solr_params, create_facet_filter_query,
-                    customize_attribute_response, escape_character_solr,
-                    format_solr_response, generate_facet_fields_query,
+from .utils import (_create_solr_params_from_node_uuids,
+                    create_facet_filter_query, customize_attribute_response,
+                    escape_character_solr, format_solr_response,
+                    generate_facet_fields_query,
                     generate_filtered_facet_fields,
                     generate_solr_params_for_assay,
                     get_file_url_from_node_uuid, get_owner_from_assay,
@@ -1384,7 +1385,7 @@ class UtilitiesTest(TestCase):
 
     def test__create_solr_params(self):
         fake_node_uuids = [str(uuid.uuid4()), str(uuid.uuid4())]
-        node_solr_params = _create_solr_params(fake_node_uuids)
+        node_solr_params = _create_solr_params_from_node_uuids(fake_node_uuids)
         self.assertEqual(
             node_solr_params,
             {

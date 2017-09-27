@@ -53,7 +53,7 @@ from core.models import (INPUT_CONNECTION, OUTPUT_CONNECTION, Analysis,
                          AnalysisNodeConnection, AnalysisResult, ExtendedGroup,
                          Project, Workflow, WorkflowEngine, WorkflowFilesDL)
 from data_set_manager.models import Assay, Attribute, Node
-from data_set_manager.utils import _create_solr_params
+from data_set_manager.utils import _create_solr_params_from_node_uuids
 from factory_boy.django_model_factories import (AnnotatedNodeFactory,
                                                 AttributeFactory, NodeFactory,
                                                 ToolFactory)
@@ -1208,7 +1208,9 @@ class VisualizationToolTests(ToolManagerTestBase):
                     "status": 0,
                     "QTime": 36,
                     "params": (
-                        _create_solr_params(self.tool.get_input_node_uuids())
+                        _create_solr_params_from_node_uuids(
+                            self.tool.get_input_node_uuids()
+                        )
                     )
                 },
                 "response": {
