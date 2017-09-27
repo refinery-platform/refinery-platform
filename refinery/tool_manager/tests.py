@@ -252,10 +252,10 @@ class ToolManagerTestBase(ToolManagerMocks):
         # Trigger the pre_delete signal so that datafiles are purged
         FileStoreItem.objects.all().delete()
 
-    def create_valid_tool(self,
-                          tool_type,
-                          file_relationships=None,
-                          annotation_file_name=None):
+    def create_tool(self,
+                    tool_type,
+                    file_relationships=None,
+                    annotation_file_name=None):
 
         if tool_type == ToolDefinition.WORKFLOW:
             self.create_workflow_tool_definition(
@@ -484,7 +484,7 @@ class ToolManagerTestBase(ToolManagerMocks):
 
     def test_create_valid_tool(self):
         with self.assertRaises(RuntimeError):
-            self.create_valid_tool("Coffee is not a valid tool type")
+            self.create_tool("Coffee is not a valid tool type")
 
 
 class ToolDefinitionAPITests(ToolManagerTestBase, APITestCase):
@@ -1107,7 +1107,7 @@ class ToolDefinitionTests(ToolManagerTestBase):
 
 class ToolTests(ToolManagerTestBase):
     def test_tool_model_str(self):
-        self.create_valid_tool(ToolDefinition.VISUALIZATION)
+        self.create_tool(ToolDefinition.VISUALIZATION)
 
         tool = Tool.objects.get(
             tool_definition__uuid=self.td.uuid
@@ -1118,7 +1118,7 @@ class ToolTests(ToolManagerTestBase):
         )
 
     def test_tool_container_removed_on_deletion(self):
-        self.create_valid_tool(ToolDefinition.VISUALIZATION)
+        self.create_tool(ToolDefinition.VISUALIZATION)
         with mock.patch(
             "django_docker_engine.docker_utils.DockerClientWrapper"
             ".purge_by_label"
@@ -1172,12 +1172,12 @@ class ToolTests(ToolManagerTestBase):
         )
 
     def test_creating_vis_tool_doesnt_set_tool_launch_config_galaxy_data(self):
-        self.create_valid_tool(ToolDefinition.VISUALIZATION)
+        self.create_tool(ToolDefinition.VISUALIZATION)
         with self.assertRaises(KeyError):
             self.tool.get_tool_launch_config()[WorkflowTool.GALAXY_DATA]
 
     def test_set_analysis_bad_uuid(self):
-        self.create_valid_tool(ToolDefinition.WORKFLOW)
+        self.create_tool(ToolDefinition.WORKFLOW)
         with self.assertRaises(RuntimeError):
             self.tool.set_analysis(str(uuid.uuid4()))
 
@@ -1196,7 +1196,7 @@ class ToolTests(ToolManagerTestBase):
 class VisualizationToolTests(ToolManagerTestBase):
     def setUp(self):
         super(VisualizationToolTests, self).setUp()
-        self.visualization_tool = self.create_valid_tool(
+        self.visualization_tool = self.create_tool(
             ToolDefinition.VISUALIZATION,
             file_relationships=self.LIST
         )
@@ -1298,7 +1298,7 @@ class WorkflowToolTests(ToolManagerTestBase):
                              output_connection.name)
 
     def test_list_dataset_collection_description_creation(self):
-        self.create_valid_tool(
+        self.create_tool(
             ToolDefinition.WORKFLOW,
             file_relationships=self.LIST_BASIC
         )
@@ -1317,7 +1317,7 @@ class WorkflowToolTests(ToolManagerTestBase):
             )
 
     def test_list_pair_dataset_collection_description_creation(self):
-        self.create_valid_tool(
+        self.create_tool(
             ToolDefinition.WORKFLOW,
             file_relationships=self.LIST_PAIR
         )
@@ -1347,7 +1347,7 @@ class WorkflowToolTests(ToolManagerTestBase):
             )
 
     def test_paired_dataset_collection_creation(self):
-        self.create_valid_tool(
+        self.create_tool(
             ToolDefinition.WORKFLOW,
             file_relationships=self.PAIR
         )
@@ -1370,7 +1370,7 @@ class WorkflowToolTests(ToolManagerTestBase):
         )
 
     def test_paired_list_dataset_collection_description_creation(self):
-        self.create_valid_tool(
+        self.create_tool(
             ToolDefinition.WORKFLOW,
             file_relationships=self.PAIR_LIST
         )
@@ -1387,7 +1387,7 @@ class WorkflowToolTests(ToolManagerTestBase):
                 self.assertEqual(type(el), HistoryDatasetElement)
 
     def test_list_list_paired_dataset_collection_creation(self):
-        self.create_valid_tool(
+        self.create_tool(
             ToolDefinition.WORKFLOW,
             file_relationships=self.LIST_LIST_PAIR
         )
@@ -1422,7 +1422,7 @@ class WorkflowToolTests(ToolManagerTestBase):
                 )
 
     def test_galaxy_collection_type_pair(self):
-        self.create_valid_tool(
+        self.create_tool(
             ToolDefinition.WORKFLOW,
             file_relationships=self.PAIR
         )
@@ -1432,7 +1432,7 @@ class WorkflowToolTests(ToolManagerTestBase):
         )
 
     def test_galaxy_collection_type_list_pair(self):
-        self.create_valid_tool(
+        self.create_tool(
             ToolDefinition.WORKFLOW,
             file_relationships=self.LIST_PAIR
         )
@@ -1445,7 +1445,7 @@ class WorkflowToolTests(ToolManagerTestBase):
         )
 
     def test_galaxy_collection_type_pair_list(self):
-        self.create_valid_tool(
+        self.create_tool(
             ToolDefinition.WORKFLOW,
             file_relationships=self.PAIR_LIST
         )
@@ -1458,7 +1458,7 @@ class WorkflowToolTests(ToolManagerTestBase):
         )
 
     def test_galaxy_collection_type_list_list_pair(self):
-        self.create_valid_tool(
+        self.create_tool(
             ToolDefinition.WORKFLOW,
             file_relationships=self.LIST_LIST_PAIR
         )
@@ -1472,7 +1472,7 @@ class WorkflowToolTests(ToolManagerTestBase):
         )
 
     def test_galaxy_collection_type_list(self):
-        self.create_valid_tool(
+        self.create_tool(
             ToolDefinition.WORKFLOW
         )
         self.assertEqual(
@@ -1481,7 +1481,7 @@ class WorkflowToolTests(ToolManagerTestBase):
         )
 
     def test_galaxy_history_id(self):
-        self.create_valid_tool(ToolDefinition.WORKFLOW)
+        self.create_tool(ToolDefinition.WORKFLOW)
         self.tool.update_galaxy_data(
             WorkflowTool.GALAXY_IMPORT_HISTORY_DICT,
             {"id": "COFFEE"}
@@ -1491,7 +1491,7 @@ class WorkflowToolTests(ToolManagerTestBase):
 
     def test_analysis_node_connections_are_created_for_all_input_nodes(self):
         self.has_dataset_collection_input_mock_true.start()
-        self.create_valid_tool(
+        self.create_tool(
             ToolDefinition.WORKFLOW,
             file_relationships=self.LIST_LIST_PAIR
         )
@@ -1523,7 +1523,7 @@ class WorkflowToolTests(ToolManagerTestBase):
             )
 
     def test_galaxy_parameter_dict_creation(self):
-        self.create_valid_tool(
+        self.create_tool(
             ToolDefinition.WORKFLOW,
             annotation_file_name="LIST:PAIR.json"
         )
@@ -1540,8 +1540,8 @@ class WorkflowToolTests(ToolManagerTestBase):
         self.assertTrue(self.tool_data_mock.called)
 
     def test_get_input_file_uuid_list_returns_proper_information(self):
-        self.create_valid_tool(ToolDefinition.WORKFLOW,
-                               file_relationships=self.LIST_LIST_PAIR)
+        self.create_tool(ToolDefinition.WORKFLOW,
+                         file_relationships=self.LIST_LIST_PAIR)
 
         self.assertEqual(
             len(self.tool.get_input_file_uuid_list()),
@@ -1552,14 +1552,14 @@ class WorkflowToolTests(ToolManagerTestBase):
             FileStoreItem.objects.get(uuid=file_store_item_uuid)
 
     def test_galaxy_workflow_history_id(self):
-        self.create_valid_tool(ToolDefinition.WORKFLOW)
+        self.create_tool(ToolDefinition.WORKFLOW)
         self.assertEqual(
             self.tool.galaxy_workflow_history_id,
             self.tool.analysis.history_id
         )
 
     def test__create_workflow_inputs_dict(self):
-        self.create_valid_tool(ToolDefinition.WORKFLOW)
+        self.create_tool(ToolDefinition.WORKFLOW)
         self.tool.update_galaxy_data(
             self.tool.COLLECTION_INFO,
             {
@@ -1580,7 +1580,7 @@ class WorkflowToolTests(ToolManagerTestBase):
         galaxy_datasets_list_mock = self.galaxy_datasets_list_mock.start()
         self.get_history_file_list_same_names_mock.start()
         self.show_job_mock.side_effect = self.show_job_side_effect
-        self.create_valid_tool(ToolDefinition.WORKFLOW)
+        self.create_tool(ToolDefinition.WORKFLOW)
         self.tool.create_workflow_file_downloads()
         self.assertEqual(WorkflowFilesDL.objects.count(), 2)
         for workflow_file_dl in WorkflowFilesDL.objects.all():
@@ -1597,7 +1597,7 @@ class WorkflowToolTests(ToolManagerTestBase):
         )
         self.get_history_file_list_mock.start()
         self.show_job_mock.side_effect = self.show_job_side_effect
-        self.create_valid_tool(ToolDefinition.WORKFLOW)
+        self.create_tool(ToolDefinition.WORKFLOW)
         self.tool.create_workflow_file_downloads()
         self.assertEqual(WorkflowFilesDL.objects.count(), 2)
         for workflow_file_dl in WorkflowFilesDL.objects.all():
@@ -1607,7 +1607,7 @@ class WorkflowToolTests(ToolManagerTestBase):
         self.assertTrue(galaxy_datasets_list_mock.called)
 
     def test__get_galaxy_dataset_filename(self):
-        self.create_valid_tool(ToolDefinition.WORKFLOW)
+        self.create_tool(ToolDefinition.WORKFLOW)
         galaxy_datasets_list_mock = self.galaxy_datasets_list_mock.start()
         for galaxy_dataset in self.tool._get_galaxy_history_dataset_list():
             self.tool._get_galaxy_dataset_filename(galaxy_dataset)
@@ -1615,7 +1615,7 @@ class WorkflowToolTests(ToolManagerTestBase):
 
     def test__get_galaxy_datasets_list(self):
         galaxy_datasets_list_mock = self.galaxy_datasets_list_mock.start()
-        self.create_valid_tool(ToolDefinition.WORKFLOW)
+        self.create_tool(ToolDefinition.WORKFLOW)
         for dataset in self.tool._get_galaxy_history_dataset_list():
             self.assertIn(dataset, galaxy_datasets_list)
         self.assertTrue(galaxy_datasets_list_mock.called)
@@ -1623,7 +1623,7 @@ class WorkflowToolTests(ToolManagerTestBase):
     def test__get_exposed_workflow_outputs(self):
         galaxy_datasets_list_mock = self.galaxy_datasets_list_mock.start()
         self.show_job_mock.side_effect = self.show_job_side_effect
-        self.create_valid_tool(ToolDefinition.WORKFLOW)
+        self.create_tool(ToolDefinition.WORKFLOW)
         all_galaxy_datasets = self.tool._get_galaxy_history_dataset_list()
         datasets_marked_as_output = self.tool._get_exposed_workflow_outputs()
         self.assertEqual(len(datasets_marked_as_output), 2)
@@ -1637,7 +1637,7 @@ class WorkflowToolTests(ToolManagerTestBase):
 
     def test__get_workflow_step(self):
         galaxy_datasets_list_mock = self.galaxy_datasets_list_mock.start()
-        self.create_valid_tool(ToolDefinition.WORKFLOW)
+        self.create_tool(ToolDefinition.WORKFLOW)
         for galaxy_dataset in self.tool._get_galaxy_history_dataset_list():
             step = self.tool._get_workflow_step(galaxy_dataset)
             self.assertIn(step, [1, 2])
@@ -1651,7 +1651,7 @@ class WorkflowToolTests(ToolManagerTestBase):
             self.show_dataset_provenance_side_effect * 3
         )
         self.show_job_mock.side_effect = self.show_job_side_effect * 4
-        self.create_valid_tool(ToolDefinition.WORKFLOW)
+        self.create_tool(ToolDefinition.WORKFLOW)
         task_id_list = _get_galaxy_download_task_ids(self.tool.analysis)
         self.assertTrue(self.galaxy_workflow_show_invocation_mock.called)
         self.assertTrue(galaxy_datasets_list_mock.called)
@@ -1678,8 +1678,8 @@ class WorkflowToolTests(ToolManagerTestBase):
             self.show_dataset_provenance_side_effect * 3
         )
         self.show_job_mock.side_effect = self.show_job_side_effect * 3
-        self.create_valid_tool(ToolDefinition.WORKFLOW,
-                               file_relationships=self.LIST_BASIC)
+        self.create_tool(ToolDefinition.WORKFLOW,
+                         file_relationships=self.LIST_BASIC)
         self.tool.create_analysis_output_node_connections()
         self.assertEqual(AnalysisNodeConnection.objects.count(), 3)
         self.assertEqual(
@@ -1718,7 +1718,7 @@ class WorkflowToolTests(ToolManagerTestBase):
         self.assertEqual(self.show_dataset_provenance_mock.call_count, 8)
 
     def test_creating__workflow_tool_sets_tool_launch_config_galaxy_data(self):
-        self.create_valid_tool(ToolDefinition.WORKFLOW)
+        self.create_tool(ToolDefinition.WORKFLOW)
         self.assertEqual(
             self.tool.get_galaxy_dict()[
                 WorkflowTool.FILE_RELATIONSHIPS_GALAXY
@@ -1742,7 +1742,7 @@ class WorkflowToolTests(ToolManagerTestBase):
 
     @mock.patch.object(WorkflowTool, "_get_tool_data")
     def test_get_tool_launch_config(self, tool_data_mock):
-        self.create_valid_tool(ToolDefinition.WORKFLOW)
+        self.create_tool(ToolDefinition.WORKFLOW)
         parameters_dict = self.tool._create_workflow_parameters_dict()
         parameters_dict_with_uuids = {}
         for key in parameters_dict.keys():
@@ -1787,7 +1787,7 @@ class WorkflowToolTests(ToolManagerTestBase):
         self.assertTrue(tool_data_mock.called)
 
     def test__has_dataset_collection_input_true(self):
-        self.create_valid_tool(ToolDefinition.WORKFLOW)
+        self.create_tool(ToolDefinition.WORKFLOW)
         with mock.patch.object(
             WorkflowTool, "_get_workflow_dict",
             return_value=galaxy_workflow_dict_collection
@@ -1796,14 +1796,14 @@ class WorkflowToolTests(ToolManagerTestBase):
             self.assertTrue(get_workflow_dict_mock.called)
 
     def test__has_dataset_collection_input_false(self):
-        self.create_valid_tool(ToolDefinition.WORKFLOW)
+        self.create_tool(ToolDefinition.WORKFLOW)
         self.assertFalse(self.tool._has_dataset_collection_input())
 
     def test_analysis_group_numbers_list_dsc_collection_workflow(self):
         has_dataset_collection_input_mock = (
             self.has_dataset_collection_input_mock_true.start()
         )
-        self.create_valid_tool(
+        self.create_tool(
             ToolDefinition.WORKFLOW,
             file_relationships=self.LIST
         )
@@ -1818,7 +1818,7 @@ class WorkflowToolTests(ToolManagerTestBase):
         has_dataset_collection_input_mock = (
             self.has_dataset_collection_input_mock_false.start()
         )
-        self.create_valid_tool(
+        self.create_tool(
             ToolDefinition.WORKFLOW,
             file_relationships=self.LIST
         )
@@ -1833,7 +1833,7 @@ class WorkflowToolTests(ToolManagerTestBase):
         has_dataset_collection_input_mock = (
             self.has_dataset_collection_input_mock_true.start()
         )
-        self.create_valid_tool(
+        self.create_tool(
             ToolDefinition.WORKFLOW,
             file_relationships=self.PAIR
         )
@@ -1848,7 +1848,7 @@ class WorkflowToolTests(ToolManagerTestBase):
         has_dataset_collection_input_mock = (
             self.has_dataset_collection_input_mock_false.start()
         )
-        self.create_valid_tool(
+        self.create_tool(
             ToolDefinition.WORKFLOW,
             file_relationships=self.PAIR
         )
@@ -1863,7 +1863,7 @@ class WorkflowToolTests(ToolManagerTestBase):
         has_dataset_collection_input_mock = (
             self.has_dataset_collection_input_mock_true.start()
         )
-        self.create_valid_tool(
+        self.create_tool(
             ToolDefinition.WORKFLOW,
             file_relationships=self.LIST_PAIR
         )
@@ -1880,7 +1880,7 @@ class WorkflowToolTests(ToolManagerTestBase):
             self.has_dataset_collection_input_mock_false.start()
         )
 
-        self.create_valid_tool(
+        self.create_tool(
             ToolDefinition.WORKFLOW,
             file_relationships=self.LIST_PAIR
         )
@@ -1895,7 +1895,7 @@ class WorkflowToolTests(ToolManagerTestBase):
         has_dataset_collection_input_mock = (
             self.has_dataset_collection_input_mock_true.start()
         )
-        self.create_valid_tool(
+        self.create_tool(
             ToolDefinition.WORKFLOW,
             file_relationships=self.LIST_LIST
         )
@@ -1911,7 +1911,7 @@ class WorkflowToolTests(ToolManagerTestBase):
         has_dataset_collection_input_mock = (
             self.has_dataset_collection_input_mock_false.start()
         )
-        self.create_valid_tool(
+        self.create_tool(
             ToolDefinition.WORKFLOW,
             file_relationships=self.LIST_LIST
         )
@@ -1928,7 +1928,7 @@ class WorkflowToolTests(ToolManagerTestBase):
         )
         self.show_job_mock.side_effect = self.show_job_side_effect
         self.galaxy_datasets_list_mock.start()
-        self.create_valid_tool(ToolDefinition.WORKFLOW)
+        self.create_tool(ToolDefinition.WORKFLOW)
         self.node.file_uuid = self.FAKE_DATASET_HISTORY_ID
         self.node.save()
 
@@ -1942,8 +1942,8 @@ class WorkflowToolTests(ToolManagerTestBase):
 
     def test_create_analysis_input_node_connections_dsc_input(self):
         self.has_dataset_collection_input_mock_true.start()
-        self.create_valid_tool(ToolDefinition.WORKFLOW,
-                               file_relationships=self.LIST)
+        self.create_tool(ToolDefinition.WORKFLOW,
+                         file_relationships=self.LIST)
         tool_nodes = self.tool._get_input_nodes()
         analysis_node_connections = AnalysisNodeConnection.objects.filter(
             direction=INPUT_CONNECTION
@@ -1973,8 +1973,8 @@ class WorkflowToolTests(ToolManagerTestBase):
 
     def test_create_analysis_input_node_connections_non_dsc_input(self):
         self.has_dataset_collection_input_mock_false.start()
-        self.create_valid_tool(ToolDefinition.WORKFLOW,
-                               file_relationships=self.LIST)
+        self.create_tool(ToolDefinition.WORKFLOW,
+                         file_relationships=self.LIST)
         tool_nodes = self.tool._get_input_nodes()
         analysis_node_connections = AnalysisNodeConnection.objects.filter(
             direction=INPUT_CONNECTION
@@ -2014,7 +2014,7 @@ class WorkflowToolTests(ToolManagerTestBase):
             WorkflowTool, "_get_workflow_dict",
             return_value=galaxy_workflow_dict_collection
         ) as galaxy_workflow_dict_collection_mock:
-            self.create_valid_tool(ToolDefinition.WORKFLOW)
+            self.create_tool(ToolDefinition.WORKFLOW)
             _get_galaxy_download_task_ids(self.tool.analysis)
             self.tool.analysis.attach_outputs_dataset()
             self.assertTrue(galaxy_workflow_dict_collection_mock.called)
@@ -2029,7 +2029,7 @@ class WorkflowToolTests(ToolManagerTestBase):
         self.galaxy_datasets_list_mock.start()
         self.get_history_file_list_mock.start()
         self.has_dataset_collection_input_mock_false.start()
-        self.create_valid_tool(ToolDefinition.WORKFLOW)
+        self.create_tool(ToolDefinition.WORKFLOW)
         _get_galaxy_download_task_ids(self.tool.analysis)
         self.tool.analysis.attach_outputs_dataset()
         self._assert_analysis_node_connection_outputs_validity()
@@ -2045,7 +2045,7 @@ class WorkflowToolTests(ToolManagerTestBase):
         )
         self.show_job_mock.side_effect = self.show_job_side_effect * 4
         self.has_dataset_collection_input_mock_false.start()
-        self.create_valid_tool(ToolDefinition.WORKFLOW)
+        self.create_tool(ToolDefinition.WORKFLOW)
         _get_galaxy_download_task_ids(self.tool.analysis)
         output_connections = AnalysisNodeConnection.objects.filter(
             analysis=self.tool.analysis,
@@ -2076,7 +2076,7 @@ class WorkflowToolTests(ToolManagerTestBase):
         )
         self.show_job_mock.side_effect = self.show_job_side_effect * 4
 
-        self.create_valid_tool(ToolDefinition.WORKFLOW)
+        self.create_tool(ToolDefinition.WORKFLOW)
         _get_galaxy_download_task_ids(self.tool.analysis)
 
         exposed_output_connections = AnalysisNodeConnection.objects.filter(
@@ -2109,7 +2109,7 @@ class WorkflowToolTests(ToolManagerTestBase):
 
 class ToolAPITests(APITestCase, ToolManagerTestBase):
     def test_tools_exist(self):
-        self.create_valid_tool(ToolDefinition.VISUALIZATION)
+        self.create_tool(ToolDefinition.VISUALIZATION)
         self.assertEqual(Tool.objects.count(), 1)
         self.assertEqual(
             Tool.objects.filter(
@@ -2119,18 +2119,18 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
         )
 
     def test_get_request_authenticated(self):
-        self.create_valid_tool(ToolDefinition.VISUALIZATION)
+        self.create_tool(ToolDefinition.VISUALIZATION)
         self.assertIsNotNone(self.get_response)
 
     def test_get_request_no_auth(self):
-        self.create_valid_tool(ToolDefinition.WORKFLOW)
+        self.create_tool(ToolDefinition.WORKFLOW)
         self.get_request = self.factory.get(self.tools_url_root)
         self.get_response = self.tools_view(self.get_request)
         self.assertEqual(self.get_response.status_code, 403)
 
     def test_get_request_tools_owned_by_user(self):
         # Creates a valid Tool for self.user
-        self.create_valid_tool(ToolDefinition.VISUALIZATION)
+        self.create_tool(ToolDefinition.VISUALIZATION)
 
         # Try to GET the aforementioned Tool, and assert that another user
         # can't do so
@@ -2139,7 +2139,7 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
         self.assertEqual(len(self.get_response.data), 0)
 
     def test_unallowed_http_verbs(self):
-        self.create_valid_tool(ToolDefinition.WORKFLOW)
+        self.create_tool(ToolDefinition.WORKFLOW)
         self.assertEqual(
             self.put_response.data['detail'],
             'Method "PUT" not allowed.'
@@ -2237,7 +2237,7 @@ class WorkflowToolLaunchTests(ToolManagerTestBase):
     tasks_mock = "analysis_manager.tasks"
 
     def test_workflow_tool_launch_valid_workflow_object(self):
-        self.create_valid_tool(ToolDefinition.WORKFLOW)
+        self.create_tool(ToolDefinition.WORKFLOW)
 
         self.assertEqual(self.tool.get_owner(), self.user)
         self.assertEqual(self.tool.get_tool_type(), ToolDefinition.WORKFLOW)
@@ -2256,14 +2256,14 @@ class WorkflowToolLaunchTests(ToolManagerTestBase):
 
     def test_many_tools_can_be_launched_from_same_dataset(self):
         self.dataset = create_dataset_with_necessary_models()
-        tool_a = self.create_valid_tool(ToolDefinition.VISUALIZATION)
-        tool_b = self.create_valid_tool(ToolDefinition.WORKFLOW)
+        tool_a = self.create_tool(ToolDefinition.VISUALIZATION)
+        tool_b = self.create_tool(ToolDefinition.WORKFLOW)
 
         self.assertEqual(tool_a.dataset, tool_b.dataset)
 
     @mock.patch.object(Analysis, "galaxy_cleanup")
     def test__get_workflow_tool_no_analysis(self, galaxy_cleanup_mock):
-        self.create_valid_tool(ToolDefinition.WORKFLOW)
+        self.create_tool(ToolDefinition.WORKFLOW)
 
         analysis_uuid = self.tool.analysis.uuid
         self.tool.analysis.delete()
@@ -2274,7 +2274,7 @@ class WorkflowToolLaunchTests(ToolManagerTestBase):
         self.assertTrue(galaxy_cleanup_mock.called)
 
     def test__get_workflow_tool_with_analysis(self):
-        self.create_valid_tool(ToolDefinition.WORKFLOW)
+        self.create_tool(ToolDefinition.WORKFLOW)
         self.assertEqual(
             _get_workflow_tool(self.tool.analysis.uuid),
             self.tool
@@ -2288,7 +2288,7 @@ class WorkflowToolLaunchTests(ToolManagerTestBase):
     def test_get_input_file_uuid_list_gets_called_in_refinery_import(
             self, retry_mock, ready_mock, successful_mock
     ):
-        self.create_valid_tool(ToolDefinition.WORKFLOW)
+        self.create_tool(ToolDefinition.WORKFLOW)
 
         with mock.patch(
             "tool_manager.models.Tool.get_input_file_uuid_list"
@@ -2314,7 +2314,7 @@ class WorkflowToolLaunchTests(ToolManagerTestBase):
             run_tool_based_galaxy_file_import_mock,
             refinery_file_import_mock
     ):
-        self.create_valid_tool(ToolDefinition.WORKFLOW)
+        self.create_tool(ToolDefinition.WORKFLOW)
         run_analysis(self.tool.analysis.uuid)
 
         self.assertTrue(refinery_file_import_mock.called)
@@ -2325,7 +2325,7 @@ class WorkflowToolLaunchTests(ToolManagerTestBase):
         self.assertTrue(attach_workflow_outputs_mock.called)
 
     def test__galaxy_file_import_ceases_to_set_file_relationships_galaxy(self):
-        self.create_valid_tool(ToolDefinition.WORKFLOW)
+        self.create_tool(ToolDefinition.WORKFLOW)
 
         with mock.patch.object(
             WorkflowTool, "update_file_relationships_with_galaxy_history_data"
@@ -2343,7 +2343,7 @@ class WorkflowToolLaunchTests(ToolManagerTestBase):
     def test__tool_based_galaxy_file_import_updates_galaxy_import_progress(
             self
     ):
-        self.create_valid_tool(ToolDefinition.WORKFLOW)
+        self.create_tool(ToolDefinition.WORKFLOW)
 
         _tool_based_galaxy_file_import(
             self.tool.analysis.uuid,
@@ -2363,7 +2363,7 @@ class WorkflowToolLaunchTests(ToolManagerTestBase):
         )
 
     def test_is_tool_based(self):
-        self.create_valid_tool(ToolDefinition.WORKFLOW)
+        self.create_tool(ToolDefinition.WORKFLOW)
         self.assertTrue(self.tool.analysis.is_tool_based)
 
     @mock.patch("tool_manager.models.WorkflowTool.create_dataset_collection")
@@ -2375,7 +2375,7 @@ class WorkflowToolLaunchTests(ToolManagerTestBase):
             create_workflow_inputs_mock,
             create_dataset_collection_mock
     ):
-        self.create_valid_tool(ToolDefinition.WORKFLOW)
+        self.create_tool(ToolDefinition.WORKFLOW)
         _invoke_tool_based_galaxy_workflow(self.tool.analysis.uuid)
 
         self.assertTrue(create_dataset_collection_mock.called)
@@ -2404,7 +2404,7 @@ class WorkflowToolLaunchTests(ToolManagerTestBase):
         ready_mock,
         apply_async_mock
     ):
-        self.create_valid_tool(ToolDefinition.WORKFLOW)
+        self.create_tool(ToolDefinition.WORKFLOW)
         self.tool.update_galaxy_data(self.tool.GALAXY_IMPORT_HISTORY_DICT,
                                      history_dict)
         self.tool.update_galaxy_data(self.tool.GALAXY_LIBRARY_DICT,
@@ -2450,7 +2450,7 @@ class WorkflowToolLaunchTests(ToolManagerTestBase):
         successful_mock,
         ready_mock
     ):
-        self.create_valid_tool(ToolDefinition.WORKFLOW)
+        self.create_tool(ToolDefinition.WORKFLOW)
 
         analysis_status = AnalysisStatus.objects.get(
             analysis=self.tool.analysis
@@ -2488,7 +2488,7 @@ class WorkflowToolLaunchTests(ToolManagerTestBase):
             successful_mock,
             ready_mock
     ):
-        self.create_valid_tool(ToolDefinition.WORKFLOW)
+        self.create_tool(ToolDefinition.WORKFLOW)
         analysis_status = AnalysisStatus.objects.get(
             analysis=self.tool.analysis
         )
@@ -2521,7 +2521,7 @@ class WorkflowToolLaunchTests(ToolManagerTestBase):
         ready_mock,
         apply_async_mock
     ):
-        self.create_valid_tool(ToolDefinition.WORKFLOW)
+        self.create_tool(ToolDefinition.WORKFLOW)
         with mock.patch(
             "tool_manager.models.WorkflowTool."
             "update_file_relationships_with_galaxy_history_data",
@@ -2556,7 +2556,7 @@ class WorkflowToolLaunchTests(ToolManagerTestBase):
             successful_mock,
             ready_mock
     ):
-        self.create_valid_tool(ToolDefinition.WORKFLOW)
+        self.create_tool(ToolDefinition.WORKFLOW)
 
         analysis_status = AnalysisStatus.objects.get(
             analysis=self.tool.analysis
@@ -2589,7 +2589,7 @@ class WorkflowToolLaunchTests(ToolManagerTestBase):
     def test_galaxy_cleanup_methods_are_called_on_analysis_failure(self):
         settings.REFINERY_GALAXY_ANALYSIS_CLEANUP = "always"
 
-        self.create_valid_tool(ToolDefinition.WORKFLOW)
+        self.create_tool(ToolDefinition.WORKFLOW)
 
         self.tool.update_galaxy_data(
             self.tool.GALAXY_IMPORT_HISTORY_DICT,
@@ -2618,7 +2618,7 @@ class WorkflowToolLaunchTests(ToolManagerTestBase):
             self, invoke_workflow_mock):
         settings.REFINERY_GALAXY_ANALYSIS_CLEANUP = "always"
 
-        self.create_valid_tool(
+        self.create_tool(
             ToolDefinition.WORKFLOW,
             annotation_file_name="LIST:PAIR.json"
         )
@@ -2648,7 +2648,7 @@ class WorkflowToolLaunchTests(ToolManagerTestBase):
         self.assertTrue(self.tool_data_mock.called)
 
     def test_workflow_tool_analysis_name(self):
-        self.create_valid_tool(ToolDefinition.WORKFLOW)
+        self.create_tool(ToolDefinition.WORKFLOW)
         tool_name, timestamp, username = self.tool.analysis.name.split("-")
 
         self.assertEqual(tool_name.strip(), self.tool.get_tool_name())
@@ -2731,7 +2731,8 @@ class VisualizationToolLaunchTests(ToolManagerTestBase,
                 format="json"
             )
             force_authenticate(self.post_request, self.user)
-            post_response = self.tools_view(self.post_request)
+            with mock.patch("tool_manager.models.get_solr_response_json"):
+                post_response = self.tools_view(self.post_request)
             logger.debug("VisualizationTool response content: %s",
                          post_response.content)
             self.assertEqual(post_response.status_code, 200)
