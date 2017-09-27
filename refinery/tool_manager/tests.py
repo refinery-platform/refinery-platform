@@ -2284,37 +2284,6 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
         self.assertIn("LIST/PAIR structure is not balanced",
                       self.post_response.content)
 
-    def test_bad_extra_directories_path_with_rollback(self):
-        with open("{}/visualizations/"
-                  "LIST_visualization_bad_extra_directories_path.json"
-                  .format(TEST_DATA_PATH)) as f:
-            visualization_annotation = json.loads(f.read())
-            create_tool_definition(visualization_annotation)
-
-        td = ToolDefinition.objects.get(
-            name=visualization_annotation["name"]
-        )
-
-        tool_launch_configuration = {
-            "dataset_uuid": self.dataset.uuid,
-            "tool_definition_uuid": td.uuid,
-            Tool.FILE_RELATIONSHIPS: str(["www.example.com"])
-        }
-        self.post_request = self.factory.post(
-            self.tools_url_root,
-            data=tool_launch_configuration,
-            format="json"
-        )
-        force_authenticate(self.post_request, self.user)
-        self.post_response = self.tools_view(self.post_request)
-
-        self.assertIsInstance(self.post_response, HttpResponseBadRequest)
-        self.assertEqual(
-            self.post_response.content,
-            'Specified path: `not_an_absolute_path` is not absolute'
-        )
-        self.assertEqual(Tool.objects.count(), 0)
-
     def test_good_extra_directories_path(self):
         with open("{}/visualizations/"
                   "LIST_visualization_good_extra_directories.json"
