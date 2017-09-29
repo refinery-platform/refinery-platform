@@ -1,9 +1,10 @@
-provider "aws" {
-  region = "${var.region}"
+terraform {
+  required_version = "~> 0.10"
+  backend "s3" {}
 }
 
-terraform {
-  backend "s3" {}
+provider "aws" {
+  region = "${var.region}"
 }
 
 resource "aws_s3_bucket" "terraform_state" {
