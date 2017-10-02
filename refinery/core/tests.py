@@ -2117,7 +2117,7 @@ class DataSetTests(TestCase):
 
     def test_neo4j_called_on_post_save(self):
         with mock.patch(
-            "core.models.update_annotation_sets_neo4j"
+            "core.models.async_update_annotation_sets_neo4j"
         ) as neo4j_mock:
             self.dataset.save()
             self.assertTrue(neo4j_mock.called)
