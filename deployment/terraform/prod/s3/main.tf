@@ -10,11 +10,11 @@ provider "aws" {
 }
 
 resource "aws_s3_bucket" "static_files" {
-  bucket = "${var.bucket_prefix}-stage-static"
+  bucket = "${var.bucket_prefix}-prod-static"
 }
 
 resource "aws_s3_bucket" "media_files" {
-  bucket = "${var.bucket_prefix}-stage-media"
+  bucket = "${var.bucket_prefix}-prod-media"
 
   lifecycle {
     prevent_destroy = true
