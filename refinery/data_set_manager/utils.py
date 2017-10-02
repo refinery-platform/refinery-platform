@@ -3,20 +3,20 @@ Created on May 29, 2012
 
 @author: nils
 '''
+import csv
 import hashlib
 import json
 import logging
+import shutil
+import tempfile
 import time
 import urlparse
 
 from django.conf import settings
-from django.contrib.auth.models import User
 from django.db.models import Q
 from django.utils.http import urlquote, urlunquote
 
-from guardian.shortcuts import get_objects_for_user
 import requests
-from requests.exceptions import HTTPError
 
 import core
 
@@ -563,7 +563,6 @@ def _add_annotated_nodes(
 
     if len(bulk_list) > 0:
         AnnotatedNode.objects.bulk_create(bulk_list)
-        bulk_list = []
 
     end = time.time()
 
@@ -609,56 +608,6 @@ def _index_annotated_nodes(node_type, study_uuid, assay_uuid=None,
     logger.info("%s nodes indexed in %s", str(counter), str(end - start))
 
 
-def generate_solr_params_for_user(params, user_id):
-    """Creates the encoded solr params limiting results to one user.
-    Keyword Argument
-        params -- python dict or QueryDict
-    Params/Solr Params
-        is_annotation - metadata
-        facet_count/facet - enables facet counts in query response, true/false
-        offset - paginate, offset response
-        limit/row - maximum number of documents
-        field_limit - set of fields to return
-        facet_field - specify a field which should be treated as a facet
-        facet_filter - adds params to facet fields&fqs for filtering on fields
-        facet_pivot - list of fields to pivot
-        sort - Ordering include field name, whitespace, & asc or desc.
-        fq - filter query
-     """
-
-    user = None
-    try:
-        user = User.objects.get(id=user_id)
-    except User.DoesNotExist:
-        pass
-
-    if user:
-        datasets = get_objects_for_user(user, "core.read_dataset")
-    else:
-        datasets = []
-
-    assay_uuids = []
-    for dataset in datasets:
-        investigation_link = dataset.get_latest_investigation_link()
-        if investigation_link is None:
-            continue
-            # It's not an error not to have data,
-            # but there's nothing more to do here.
-        investigation = investigation_link.investigation
-
-        study_ids = Study.objects.filter(
-            investigation=investigation
-        ).values_list('id', flat=True)
-
-        assay_uuids += Assay.objects.filter(
-            study_id__in=study_ids
-        ).values_list('uuid', flat=True)
-
-    return _generate_solr_params(params,
-                                 assay_uuids=assay_uuids,
-                                 facets_from_config=True)
-
-
 def generate_solr_params_for_assay(params, assay_uuid):
     """Creates the encoded solr params requiring only an assay.
     Keyword Argument
@@ -675,10 +624,10 @@ def generate_solr_params_for_assay(params, assay_uuid):
         sort - Ordering include field name, whitespace, & asc or desc.
         fq - filter query
      """
-    return _generate_solr_params(params, assay_uuids=[assay_uuid])
+    return generate_solr_params(params, assay_uuids=[assay_uuid])
 
 
-def _generate_solr_params(params, assay_uuids, facets_from_config=False):
+def generate_solr_params(params, assay_uuids, facets_from_config=False):
     """
     Either returns a solr url parameter string,
     or None if assay_uuids is empty.
@@ -723,12 +672,15 @@ def _generate_solr_params(params, assay_uuids, facets_from_config=False):
 
     if facets_from_config:
         # Twice as many facets as necessary, but easier than the alternative.
-        facet_template = '&facet.field={0}_Characteristics_generic_s' + \
-                   '&facet.field={0}_Factor_Value_generic_s'
+        facet_template = '&facet.field={0}_Characteristics{1}' + \
+                   '&facet.field={0}_Factor_Value{1}'
         solr_params += ''.join(
-            [facet_template.format(s) for s
-             in settings.USER_FILES_FACETS.split(",")])
-        solr_params += '&fl=*_generic_s,name,file_uuid,type,django_id'
+            [facet_template.format(s, NodeIndex.GENERIC_SUFFIX) for s
+             in settings.USER_FILES_FACETS.split(",")]
+        )
+        solr_params += '&fl=*{},name,*_uuid,type,django_id,{}'.format(
+            NodeIndex.GENERIC_SUFFIX, NodeIndex.DOWNLOAD_URL
+        )
     elif facet_field:
         facet_field = facet_field.split(',')
         facet_field = insert_facet_field_filter(facet_filter, facet_field)
@@ -832,7 +784,7 @@ def is_field_in_hidden_list(field):
                      'assay_uuid', 'type', 'is_annotation', 'species',
                      'genome_build', 'name', 'django_ct']
 
-    if field in hidden_fields:
+    if field in hidden_fields or NodeIndex.GENERIC_SUFFIX in field:
         return True
     else:
         return False
@@ -878,11 +830,23 @@ def search_solr(encoded_params, core):
     """
     url_portion = '/'.join([core, "select"])
     url = urlparse.urljoin(settings.REFINERY_SOLR_BASE_URL, url_portion)
-    try:
-        full_response = requests.get(url, params=encoded_params)
-        full_response.raise_for_status()
-    except HTTPError as e:
-        logger.error(e)
+    full_response = requests.get(url, params=encoded_params)
+    if not full_response.ok:
+        try:
+            response_obj = json.loads(full_response.content)
+        except ValueError:
+            raise RuntimeError(
+                'Expected Solr JSON, not: {}'.format(full_response.content)
+            )
+        try:
+            raise RuntimeError('Solr error: {}\nin context: {}'.format(
+                response_obj['error']['msg'],
+                response_obj
+            ))
+        except KeyError:
+            raise RuntimeError(
+                'Not expected response structure: {}'.format(response_obj)
+            )
 
     response = full_response.content
 
@@ -909,10 +873,7 @@ def get_owner_from_assay(uuid):
 
 def format_solr_response(solr_response):
     # Returns a reformatted solr response
-    try:
-        solr_response_json = json.loads(solr_response)
-    except TypeError:
-        return "Error loading json."
+    solr_response_json = json.loads(solr_response)
 
     # Reorganizes solr response into easier to digest objects.
     try:
@@ -1135,3 +1096,56 @@ def get_file_url_from_node_uuid(node_uuid):
             )
         else:
             return core.utils.get_full_url(url)
+
+
+def fix_last_column(file):
+    """If the header has empty columns in it, then it will delete this and
+    corresponding columns in the rows; returns 0 or 1 based on whether it
+    failed or was successful, respectively
+    Parameters:
+    file: name of file to fix
+    """
+    # TODO: exception handling for file operations (IOError)
+    logger.info("trying to fix the last column if necessary")
+    # FIXME: use context manager to handle file opening and closing
+    reader = csv.reader(open(file, 'rU'), dialect='excel-tab')
+    tempfilename = tempfile.NamedTemporaryFile().name
+    writer = csv.writer(open(tempfilename, 'wb'), dialect='excel-tab')
+    # check that all rows have the same length
+    header = reader.next()
+    header_length = len(header)
+    num_empty_cols = 0  # number of empty header columns
+    # TODO: throw exception if there is an empty field in the header between
+    # two non-empty fields
+    for item in header:
+        if not item.strip():
+            num_empty_cols += 1
+    # write the file
+    writer.writerow(header[:-num_empty_cols])
+    if num_empty_cols > 0:  # if there are empty header columns
+        logger.info("Empty columns in header present, attempting to fix...")
+        # check that all the rows are the same length
+        line = 0
+        for row in reader:
+            line += 1
+            if len(row) < header_length - num_empty_cols:
+                logger.error(
+                    "Line " + str(line) + " in the file had fewer fields than "
+                    "the header.")
+                return False
+            # check that all the end columns that are supposed to be empty are
+            i = 0
+            if len(row) > len(header) - num_empty_cols:
+                while i < num_empty_cols:
+                    i += 1
+                    check_item = row[-i].strip()
+                    if check_item:  # item not empty
+                        logger.error(
+                            "Found a value in " + str(line) +
+                            " where an empty column was expected.")
+                        return False
+                writer.writerow(row[:-num_empty_cols])
+            else:
+                writer.writerow(row)
+        shutil.move(tempfilename, file)
+    return True

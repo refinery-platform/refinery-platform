@@ -3,6 +3,8 @@ import uuid as uuid_builtin
 
 import factory
 
+from data_set_manager.models import Node
+
 
 class DataSetFactory(factory.django.DjangoModelFactory):
     """Minimal representation of a DataSet"""
@@ -14,6 +16,14 @@ class DataSetFactory(factory.django.DjangoModelFactory):
     name = "Test DataSet - {}".format(uuid)
     creation_date = datetime.now()
     modification_date = datetime.now()
+
+
+class AssayFactory(factory.django.DjangoModelFactory):
+    """Minimal representation of an Assay"""
+    class Meta:
+        model = "data_set_manager.Assay"
+
+    uuid = uuid_builtin.uuid4()
 
 
 class StudyFactory(factory.django.DjangoModelFactory):
@@ -31,6 +41,26 @@ class InvestigationLinkFactory(factory.django.DjangoModelFactory):
 
     version = 1
     date = datetime.now()
+
+
+class NodeFactory(factory.django.DjangoModelFactory):
+    """Minimal representation of a Node"""
+    class Meta:
+        model = "data_set_manager.Node"
+
+    type = Node.RAW_DATA_FILE
+
+
+class AnnotatedNodeFactory(factory.django.DjangoModelFactory):
+    """Minimal representation of an AnnotatedNode"""
+    class Meta:
+        model = "data_set_manager.AnnotatedNode"
+
+
+class AttributeFactory(factory.django.DjangoModelFactory):
+    """Minimal representation of an Attribute"""
+    class Meta:
+        model = "data_set_manager.Attribute"
 
 
 class AnalysisFactory(factory.django.DjangoModelFactory):
@@ -98,6 +128,18 @@ class ToolFactory(factory.django.DjangoModelFactory):
         model = "tool_manager.Tool"
 
 
+class VisualizationToolFactory(factory.django.DjangoModelFactory):
+    """Minimal representation of a VisualizationTool"""
+    class Meta:
+        model = "tool_manager.VisualizationTool"
+
+
+class WorkflowToolFactory(factory.django.DjangoModelFactory):
+    """Minimal representation of a WorkflowTool"""
+    class Meta:
+        model = "tool_manager.WorkflowTool"
+
+
 class FileRelationshipFactory(factory.django.DjangoModelFactory):
     """Minimal representation of a FileRelationship"""
     class Meta:
@@ -120,12 +162,6 @@ class GalaxyParameterFactory(factory.django.DjangoModelFactory):
     """Minimal representation of a GalaxyParameter"""
     class Meta:
         model = "tool_manager.GalaxyParameter"
-
-
-class OutputFileFactory(factory.django.DjangoModelFactory):
-    """Minimal representation of an OutputFile"""
-    class Meta:
-        model = "tool_manager.OutputFile"
 
 
 class FileTypeFactory(factory.django.DjangoModelFactory):

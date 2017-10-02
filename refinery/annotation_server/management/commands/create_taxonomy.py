@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+
 import os
 import re
 import shutil
@@ -9,7 +10,7 @@ import tempfile
 
 from django.conf import settings
 from django.core.management.base import BaseCommand
-from django.db import transaction, IntegrityError
+from django.db import IntegrityError, transaction
 
 import requests
 from requests.exceptions import HTTPError

@@ -3,21 +3,24 @@ import logging
 import os
 import stat
 from tempfile import NamedTemporaryFile
-from urlparse import urlparse
+import urlparse
 
+from django.conf import settings
 from django.core.files import File
 
+import boto3
+import botocore
 import celery
 from celery.signals import task_success
 from celery.task import task
 import requests
-from requests.exceptions import (ContentDecodingError, ConnectionError,
+from requests.exceptions import (ConnectionError, ContentDecodingError,
                                  HTTPError)
 
-from .models import (file_path, FILE_STORE_BASE_DIR, FileStoreItem,
-                     get_temp_dir)
 from data_set_manager.models import Node
+from data_set_manager.search_indexes import NodeIndex
 
+from .models import FileStoreItem, file_path, get_temp_dir, parse_s3_url
 
 logger = logging.getLogger(__name__)
 
@@ -83,53 +86,66 @@ def import_file(uuid, refresh=False, file_size=0):
             logger.info("File already exists: '%s'", item.get_absolute_path())
             return item.uuid
 
-    # if source is an absolute file system path then copy,
-    # otherwise assume it is a URL and download
+    # start the transfer
     if os.path.isabs(item.source):
-        if os.path.isfile(item.source):
-            # check if source file can be opened
-            try:
-                srcfile = File(open(item.source))
-            except IOError:
-                logger.error("Could not open file: %s", item.source)
-                return None
-            srcfilename = os.path.basename(item.source)
-
-            # TODO: copy file in chunks to display progress report
-            # model is saved by default if FileField.save() is called
-            item.datafile.save(srcfilename, srcfile)
-            srcfile.close()
-            logger.info("File copied")
-        else:
-            logger.error("Copying failed: source is not a file")
+        try:
+            with open(item.source, 'r') as f:
+                # TODO: copy file in chunks to display progress report
+                # model is saved by default if FileField.save() is called
+                item.datafile.save(os.path.basename(item.source), File(f))
+        except IOError:
+            logger.error("Could not open file: %s", item.source)
             return None
-    else:
+        if item.source.startswith(settings.REFINERY_DATA_IMPORT_DIR):
+            try:
+                os.unlink(item.source)
+            except IOError:
+                logger.error("Could not delete uploaded source file '%s'",
+                             item.source)
+        logger.info("File copied from '%s'", item.source)
+    elif item.source.startswith('s3://'):
+        bucket_name, key = parse_s3_url(item.source)
+        s3 = boto3.resource('s3')
+        uploaded_object = s3.Object(bucket_name, key)
+        with NamedTemporaryFile(dir=get_temp_dir()) as download:
+            logger.debug("Downloading file from '%s'", item.source)
+            try:
+                uploaded_object.download_fileobj(download)
+            except botocore.exceptions.ClientError:
+                logger.error("Failed to download '%s'", item.source)
+                import_file.update_state(
+                    state=celery.states.FAILURE,
+                    meta='Failed to import uploaded file'
+                )
+                return None
+            logger.debug("Saving downloaded file '%s'", download.name)
+            item.datafile.save(os.path.basename(key), File(download))
+            logger.debug("Saved downloaded file to '%s'", item.datafile.name)
+        try:
+            s3.Object(bucket_name, key).delete()
+        except botocore.exceptions.ClientError:
+            logger.error("Failed to delete '%s'", item.source)
+    else:  # assume that source is a regular URL
         # check if source file can be downloaded
         try:
             response = requests.get(item.source, stream=True)
             response.raise_for_status()
-        except HTTPError as e:
-            logger.error("Could not open URL '%s'. Reason: '%s'",
-                         item.source, e)
-
+        except HTTPError as exc:
+            logger.error("Could not open URL '%s': '%s'", item.source, exc)
             import_file.update_state(
                 state=celery.states.FAILURE,
-                meta='Analysis Failed during import_file subtask'
+                meta='Analysis failed during file import'
             )
-
             # ignore the task so no other state is recorded
-            # See: http://stackoverflow.com/a/33143545
+            # http://stackoverflow.com/a/33143545
             raise celery.exceptions.Ignore()
-
         # FIXME: When importing a tabular file into Refinery, there is a
-        # dependance on this ConnectionError below returning `None`!!!!
-        except(ConnectionError, ValueError) as e:
-            logger.error("Could not open URL '%s'. Reason: '%s'",
-                         item.source, e)
+        # dependence on this ConnectionError below returning `None`!!!!
+        except (ConnectionError, ValueError) as exc:
+            logger.error("Could not open URL '%s': '%s'", item.source, exc)
             return None
 
         with NamedTemporaryFile(dir=get_temp_dir(), delete=False) as tmpfile:
-
             # provide a default value in case Content-Length is missing
             remote_file_size = int(
                 response.headers.get('Content-Length', file_size)
@@ -138,8 +154,7 @@ def import_file(uuid, refresh=False, file_size=0):
             # download and save the file
             import_failure = False
             local_file_size = 0
-            block_size = 10 * 1024 * 1024  # 10MB
-
+            block_size = 10 * 1024 * 1024  # bytes
             try:
                 for buf in response.iter_content(block_size):
                     local_file_size += len(buf)
@@ -155,8 +170,8 @@ def import_file(uuid, refresh=False, file_size=0):
 
                     # check if we have a sane value for file size
                     if remote_file_size > 0:
-                        percent_done = local_file_size * 100. / \
-                                       remote_file_size
+                        percent_done = \
+                            local_file_size * 100. / remote_file_size
                     else:
                         percent_done = 0
 
@@ -166,26 +181,22 @@ def import_file(uuid, refresh=False, file_size=0):
                             "percent_done": "{:.0f}".format(percent_done),
                             "current": local_file_size,
                             "total": remote_file_size
-                        })
-
+                        }
+                    )
             except ContentDecodingError as e:
                 logger.error("Error while decoding response content:%s" % e)
                 import_failure = True
 
             if import_failure:
                 # delete temp. file if download failed
-                logger.error("File import task has failed. Deleting "
-                             "temporary file...")
-
-                # Setting the tempfile's delete == True deletes the file
-                # upon a `close()`
+                logger.error(
+                    "File import task has failed. Deleting temporary file..."
+                )
                 tmpfile.delete = True
-
                 import_file.update_state(
                     state=celery.states.FAILURE,
                     meta='Analysis Failed during import_file subtask'
                 )
-
                 # ignore the task so no other state is recorded
                 # See: http://stackoverflow.com/a/33143545
                 raise celery.exceptions.Ignore()
@@ -193,13 +204,13 @@ def import_file(uuid, refresh=False, file_size=0):
         logger.debug("Finished downloading from '%s'", item.source)
 
         # get the file name from URL (remove query string)
-        u = urlparse(item.source)
+        u = urlparse.urlparse(item.source)
         src_file_name = os.path.basename(u.path)
         # construct destination path based on source file name
         rel_dst_path = item.datafile.storage.get_available_name(
             file_path(item, src_file_name)
         )
-        abs_dst_path = os.path.join(FILE_STORE_BASE_DIR, rel_dst_path)
+        abs_dst_path = os.path.join(settings.FILE_STORE_BASE_DIR, rel_dst_path)
         # move the temp file into the file store
         try:
             if not os.path.exists(os.path.dirname(abs_dst_path)):
@@ -231,21 +242,28 @@ def import_file(uuid, refresh=False, file_size=0):
 
 
 @task_success.connect(sender=import_file)
+def update_solr_index(**kwargs):
+    file_store_item_uuid = kwargs['result']
+    try:
+        node = Node.objects.get(file_uuid=file_store_item_uuid)
+    except (Node.DoesNotExist, Node.MultipleObjectsReturned) as exc:
+        logger.error("Couldn't retrieve Node: %s", exc)
+    else:
+        NodeIndex().update_object(node)
+
+
+@task_success.connect(sender=import_file)
 def begin_auxiliary_node_generation(**kwargs):
     # NOTE: Celery docs suggest to access these fields through kwargs as the
     # structure of celery signal handlers changes often
-    # See: http://bit.ly/2cbTy3k
-
+    # http://docs.celeryproject.org/en/3.1/userguide/signals.html#basics
     file_store_item_uuid = kwargs['result']
-
     try:
-        Node.objects.get(
-            file_uuid=file_store_item_uuid
-        ).run_generate_auxiliary_node_task()
-    except (Node.DoesNotExist,
-            Node.MultipleObjectsReturned) \
-            as e:
-        logger.error("Couldn't properly fetch Node: %s", e)
+        node = Node.objects.get(file_uuid=file_store_item_uuid)
+    except (Node.DoesNotExist, Node.MultipleObjectsReturned) as exc:
+        logger.error("Couldn't retrieve Node: %s", exc)
+    else:
+        node.run_generate_auxiliary_node_task()
 
 
 @task()

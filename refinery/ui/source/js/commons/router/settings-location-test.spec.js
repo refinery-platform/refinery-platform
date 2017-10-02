@@ -27,7 +27,7 @@ describe('Constant: LocationTest', function () {
 
     expect(
       locationTest('www.refinery.com/datasets/',
-        'http://192.168.50.50:8000/data_sets/' +
+        'http://192.168.50.50:8000/provenance/' +
         '88d03196-0d41-42c7-9f16-4cf03657db07/#/' +
         'files/browse', 'true')
     ).toBe(false);
@@ -43,14 +43,14 @@ describe('Constant: LocationTest', function () {
     ).toBe(false);
 
     expect(
-      locationTest('http://192.168.50.50:8000/data_sets/' +
+      locationTest('http://192.168.50.50:8000/provenance/' +
         '88d03196-0d41-42c7-9f16-4cf03657db07/#/' +
         'files/browse', 'www.refinery.com/dataset/', 'false')
     ).toBe(false);
 
     expect(
       locationTest('www.refinery.com/dataset/',
-        'http://192.168.50.50:8000/data_sets/' +
+        'http://192.168.50.50:8000/provenance/' +
         '88d03196-0d41-42c7-9f16-4cf03657db07/#/' +
         'files/browse', 'true')
     ).toBe(false);

@@ -31,6 +31,7 @@
     }
   },
   "DEFAULT_FROM_EMAIL": "<%= @default_from_email || "webmaster@localhost" %>",
+  "DJANGO_DOCKER_ENGINE_DATA_DIR": "<%= @django_docker_engine_data_dir || "/data" %>",
   "EMAIL_HOST": "<%= @email_host || "localhost" %>",
   "EMAIL_PORT": 25,
   "EMAIL_HOST_USER": "<%= @email_host_user %>",
@@ -134,6 +135,6 @@
   "TOKEN_DURATION": 3,
   "USE_I18N": true,
   "USE_L10N": true,
-  "USER_FILES_COLUMNS": "organism,technology,antibody,date,genotype,experimenter",
+  "USER_FILES_COLUMNS": "filename,organism,technology,antibody,date,genotype,experimenter",
   "USER_FILES_FACETS": "organism,technology,antibody,genotype,experimenter"
 }

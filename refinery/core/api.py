@@ -13,40 +13,42 @@ import uuid
 
 from django.conf import settings
 from django.conf.urls import url
-from django.utils import timezone
-from django.contrib.auth.models import User, Group
-from django.contrib.sites.models import get_current_site
+from django.contrib.auth.models import Group, User
 from django.contrib.contenttypes.models import ContentType
-from django.core.mail import EmailMessage
-from django.template import loader, Context
+from django.contrib.sites.models import get_current_site
 from django.core.cache import cache
+from django.core.mail import EmailMessage
 from django.core.signing import Signer
 from django.forms import ValidationError
-from guardian.shortcuts import get_objects_for_user, get_objects_for_group
+from django.template import Context, loader
+from django.utils import timezone
+
+from constants import UUID_RE
 from guardian.models import GroupObjectPermission
+from guardian.shortcuts import get_objects_for_group, get_objects_for_user
 from guardian.utils import get_anonymous_user
 from tastypie import fields
-from tastypie.authentication import SessionAuthentication, Authentication
+from tastypie.authentication import Authentication, SessionAuthentication
 from tastypie.authorization import Authorization
 from tastypie.bundle import Bundle
-from tastypie.constants import ALL_WITH_RELATIONS, ALL
+from tastypie.constants import ALL, ALL_WITH_RELATIONS
 from tastypie.exceptions import ImmediateHttpResponse, NotFound, Unauthorized
-from tastypie.http import HttpNotFound, HttpForbidden, HttpBadRequest, \
-    HttpUnauthorized, HttpMethodNotAllowed, HttpAccepted, HttpCreated, \
-    HttpNoContent, HttpGone
+from tastypie.http import (HttpAccepted, HttpBadRequest, HttpCreated,
+                           HttpForbidden, HttpGone, HttpMethodNotAllowed,
+                           HttpNoContent, HttpNotFound, HttpUnauthorized)
 from tastypie.resources import ModelResource, Resource
 from tastypie.utils import trailing_slash
 
-from core.models import Project, NodeSet, NodeRelationship, NodePair, \
-    Workflow, WorkflowInputRelationships, Analysis, DataSet, \
-    ResourceStatistics, GroupManagement, ExtendedGroup, \
-    UserAuthentication, Invitation, UserProfile, FastQC, Tutorials
-from data_set_manager.api import StudyResource, AssayResource, \
-    InvestigationResource
-from data_set_manager.models import Node, Study, Attribute
+from core.models import (Analysis, DataSet, ExtendedGroup, GroupManagement,
+                         Invitation, NodePair, NodeRelationship, NodeSet,
+                         Project, ResourceStatistics, Tutorials,
+                         UserAuthentication, UserProfile, Workflow,
+                         WorkflowInputRelationships)
+from core.utils import get_data_sets_annotations, get_resources_for_user
+from data_set_manager.api import (AssayResource, InvestigationResource,
+                                  StudyResource)
+from data_set_manager.models import Attribute, Node, Study
 from file_store.models import FileStoreItem
-from fadapa import Fadapa
-from core.utils import get_data_sets_annotations
 
 logger = logging.getLogger(__name__)
 signer = Signer()
@@ -54,7 +56,6 @@ signer = Signer()
 
 # Specifically made for descendants of SharableResource.
 class SharableResourceAPIInterface(object):
-    uuid_regex = '[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}'
 
     def __init__(self, res_type):
         self.res_type = res_type
@@ -123,17 +124,8 @@ class SharableResourceAPIInterface(object):
 
         return res_list
 
-    def build_res_list(self, user):
-        if user.is_authenticated():
-            return get_objects_for_user(
-                user,
-                'core.read_%s' % self.res_type._meta.verbose_name
-            )
-        else:
-            return get_objects_for_group(
-                ExtendedGroup.objects.public_group(),
-                'core.read_%s' % self.res_type._meta.verbose_name
-            )
+    def _build_res_list(self, user):
+        return get_resources_for_user(user, self.res_type._meta.verbose_name)
 
     # Turns on certain things depending on flags
     def transform_res_list(self, user, res_list, request, **kwargs):
@@ -291,7 +283,7 @@ class SharableResourceAPIInterface(object):
 
     def get_object_list(self, request):
         user = request.user
-        obj_list = self.build_res_list(user)
+        obj_list = self._build_res_list(user)
         r_list = self.transform_res_list(user, obj_list, request)
         return r_list
 
@@ -300,7 +292,7 @@ class SharableResourceAPIInterface(object):
     def prepend_urls(self):
         return [
             url(r'^(?P<resource_name>%s)/(?P<uuid>%s)/sharing/$' %
-                (self._meta.resource_name, self.uuid_regex),
+                (self._meta.resource_name, UUID_RE),
                 self.wrap_view('res_sharing'),
                 name='api_%s_sharing' % (self._meta.resource_name)),
             url(r'^(?P<resource_name>%s)/sharing/$' %
@@ -363,10 +355,9 @@ class SharableResourceAPIInterface(object):
     def res_sharing_list(self, request, **kwargs):
         if request.method == 'GET':
             kwargs['sharing'] = True
-            res_list = self.build_res_list(request.user)
+            res_list = self._build_res_list(request.user)
             return self.process_get_list(request, res_list, **kwargs)
-        else:
-            return HttpMethodNotAllowed()
+        return HttpMethodNotAllowed()
 
 
 class ProjectResource(ModelResource, SharableResourceAPIInterface):
@@ -396,11 +387,10 @@ class ProjectResource(ModelResource, SharableResourceAPIInterface):
             kwargs['sharing'] = True
             res_list = filter(
                 lambda r: not r.is_catch_all,
-                self.build_res_list(request.user)
+                self._build_res_list(request.user)
             )
             return self.process_get_list(request, res_list, **kwargs)
-        else:
-            return HttpMethodNotAllowed()
+        return HttpMethodNotAllowed()
 
     def obj_create(self, bundle, **kwargs):
         return SharableResourceAPIInterface.obj_create(self, bundle, **kwargs)
@@ -472,7 +462,6 @@ class UserProfileResource(ModelResource):
 
 class DataSetResource(SharableResourceAPIInterface, ModelResource):
     id_regex = '[0-9]+'
-    uuid_regex = '[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}'
     share_list = fields.ListField(attribute='share_list', null=True)
     public = fields.BooleanField(attribute='public', null=True)
     is_owner = fields.BooleanField(attribute='is_owner', null=True)
@@ -510,6 +499,7 @@ class DataSetResource(SharableResourceAPIInterface, ModelResource):
 
         if isa_archive:
             bundle.data["isa_archive"] = isa_archive.uuid
+            bundle.data["isa_archive_url"] = isa_archive.get_datafile_url()
 
         if pre_isa_archive:
             bundle.data["pre_isa_archive"] = pre_isa_archive.uuid
@@ -597,7 +587,7 @@ class DataSetResource(SharableResourceAPIInterface, ModelResource):
                 ),
             url(r'^(?P<resource_name>%s)/(?P<uuid>%s)/investigation%s$' % (
                     self._meta.resource_name,
-                    self.uuid_regex,
+                    UUID_RE,
                     trailing_slash()
                 ),
                 self.wrap_view('get_investigation'),
@@ -606,7 +596,7 @@ class DataSetResource(SharableResourceAPIInterface, ModelResource):
                 ),
             url(r'^(?P<resource_name>%s)/(?P<uuid>%s)/studies%s$' % (
                     self._meta.resource_name,
-                    self.uuid_regex,
+                    UUID_RE,
                     trailing_slash()
                 ),
                 self.wrap_view('get_studies'),
@@ -615,7 +605,7 @@ class DataSetResource(SharableResourceAPIInterface, ModelResource):
                 )),
             url(r'^(?P<resource_name>%s)/(?P<uuid>%s)/assays%s$' % (
                     self._meta.resource_name,
-                    self.uuid_regex,
+                    UUID_RE,
                     trailing_slash()
                 ),
                 self.wrap_view('get_assays'),
@@ -624,7 +614,7 @@ class DataSetResource(SharableResourceAPIInterface, ModelResource):
                 )),
             url(r'^(?P<resource_name>%s)/(?P<uuid>%s)/analyses%s$' % (
                     self._meta.resource_name,
-                    self.uuid_regex,
+                    UUID_RE,
                     trailing_slash()
                 ),
                 self.wrap_view('get_analyses'),
@@ -634,8 +624,8 @@ class DataSetResource(SharableResourceAPIInterface, ModelResource):
             url(r'^(?P<resource_name>%s)/(?P<uuid>%s)/studies/'
                 r'(?P<study_uuid>%s)/assays%s$' % (
                     self._meta.resource_name,
-                    self.uuid_regex,
-                    self.uuid_regex,
+                    UUID_RE,
+                    UUID_RE,
                     trailing_slash()
                 ),
                 self.wrap_view('get_study_assays'),
@@ -986,7 +976,7 @@ class AnalysisResource(ModelResource):
             'modification_date', 'history_id', 'library_id', 'name',
             'workflow__uuid', 'resource_uri', 'status', 'time_end',
             'time_start', 'uuid', 'workflow_galaxy_id', 'workflow_steps_num',
-            'workflow_copy', 'owner', 'is_owner'
+            'workflow_copy', 'owner', 'is_owner', 'data_sets_query'
         ]
 
         filtering = {
@@ -999,6 +989,10 @@ class AnalysisResource(ModelResource):
         ordering = ['name', 'creation_date', 'time_start', 'time_end']
 
     def dehydrate(self, bundle):
+        # data_sets_query
+        bundle.data['data_sets_query'] = bundle.obj.data_sets_query()
+
+        # owner
         bundle.data['is_owner'] = False
         owner = bundle.obj.get_owner()
         if owner:
@@ -1010,7 +1004,6 @@ class AnalysisResource(ModelResource):
                     bundle.data['is_owner'] = True
             except:
                 bundle.data['owner'] = None
-
         else:
             bundle.data['owner'] = None
 
@@ -1079,9 +1072,7 @@ class NodeResource(ModelResource):
 
     def prepend_urls(self):
         return [
-            url(r"^(?P<resource_name>%s)/(?P<uuid>"
-                r"[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}"
-                r")/$" %
+            url((r"^(?P<resource_name>%s)/(?P<uuid>" + UUID_RE + r")/$") %
                 self._meta.resource_name,
                 self.wrap_view('dispatch_detail'),
                 name="api_dispatch_detail"),
@@ -1178,9 +1169,7 @@ class NodeSetResource(ModelResource):
 
     def prepend_urls(self):
         return [
-            url(r"^(?P<resource_name>%s)/(?P<uuid>"
-                r"[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}"
-                r")/$" %
+            url((r"^(?P<resource_name>%s)/(?P<uuid>" + UUID_RE + r")/$") %
                 self._meta.resource_name,
                 self.wrap_view('dispatch_detail'),
                 name="api_dispatch_detail"),
@@ -1194,7 +1183,7 @@ class NodeSetResource(ModelResource):
         # get the Study specified by the UUID in the new NodeSet
         study_uri = bundle.data['study']
         match = re.search(
-            '[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}',
+            UUID_RE,
             study_uri)
         study_uuid = match.group()
         try:
@@ -1519,22 +1508,19 @@ class GroupManagementResource(Resource):
     # This implies that users just have to be in the manager group, not
     # necessarily in the group itself.
     def user_authorized(self, user, group):
-        if self.is_manager_group(group):
-            return user in group.user_set.all()
-        else:
-            return user in group.extendedgroup.manager_group.user_set.all()
+        user_set = group.user_set \
+            if self.is_manager_group(group) \
+            else group.extendedgroup.manager_group.user_set
+        return user in user_set.all()
 
     # Endpoints for this resource.
 
     def detail_uri_kwargs(self, bundle_or_obj):
-        kwargs = {}
-
-        if isinstance(bundle_or_obj, Bundle):
-            kwargs['group_id'] = bundle_or_obj.obj.group_id
-        else:
-            kwargs['group_id'] = bundle_or_obj.group_id
-
-        return kwargs
+        return {
+            'group_id': bundle_or_obj.obj.group_id
+            if isinstance(bundle_or_obj, Bundle)
+            else bundle_or_obj.group_id
+        }
 
     def prepend_urls(self):
         return [
@@ -2094,13 +2080,10 @@ class ExtendedGroupResource(ModelResource):
             url(r'^extended_groups/members/$',
                 self.wrap_view('ext_groups_members_list'),
                 name='api_ext_group_members_list'),
-            url(r'^extended_groups/(?P<uuid>'
-                r'[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}'
-                r')/members/$',
+            url(r'^extended_groups/(?P<uuid>' + UUID_RE + r')/members/$',
                 self.wrap_view('ext_groups_members_basic'),
                 name='api_ext_group_members_basic'),
-            url(r'^extended_groups/(?P<uuid>'
-                r'[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}'
+            url(r'^extended_groups/(?P<uuid>' + UUID_RE +
                 r')/members/(?P<user_id>[0-9]+)/$',
                 self.wrap_view('ext_groups_members_detail'),
                 name='api_ext_group_members_detail'),
@@ -2233,93 +2216,3 @@ class ExtendedGroupResource(ModelResource):
             )
         else:
             return HttpMethodNotAllowed()
-
-
-# TODO: modify to be backed by a DB eventually.
-class FastQCResource(Resource):
-    data = fields.DictField(attribute='data', null=True)
-
-    class Meta:
-        resource_name = 'fastqc'
-        object_class = FastQC
-        detail_uri_name = 'analysis_uuid'
-        authentication = SessionAuthentication()
-
-    def is_float(self, value):
-        try:
-            float(value)
-            return True
-        except:
-            return False
-
-    def obj_get(self, bundle, **kwargs):
-        analysis = Analysis.objects.get(uuid=kwargs['analysis_uuid'])
-
-        if not analysis:
-            return HttpNotFound('Analysis not found')
-
-        analysis_results = analysis.results.all()
-
-        # For now assume fastqc files have a .txt extension.
-        fastqc_file_list = filter(
-            lambda f: '.txt' in f.file_name, analysis_results)
-
-        if len(fastqc_file_list) == 0:
-            return HttpNotFound("Unable to find matching FastQC file")
-
-        # Pick the first one because there's only supposed to be one.
-        fastqc_file = FileStoreItem.objects.get(
-            uuid=fastqc_file_list[0].file_store_uuid)
-
-        if not fastqc_file:
-            return HttpNotFound(
-                "Unable to find matching FastQC file in File Store")
-
-        fastqc_file_obj = fastqc_file.get_file_object()
-        fadapa_input = fastqc_file_obj.read().splitlines()
-
-        parser = Fadapa(fadapa_input)
-
-        tmp_dict = {'Summary': {}}
-
-        for i in parser.summary()[1:]:
-            tmp_dict['Summary'][i[0].lower().replace(' ', '_')] = {
-                'title': i[0],
-                'result': i[1]
-            }
-            parsed_data = []
-
-            try:
-                parsed_data = parser.clean_data(i[0])
-            except:
-                logger.warn(
-                    "No data found for " + i[0] + " in file " +
-                    fastqc_file_list[0].file_store_uuid
-                )
-
-            clean_data = []
-
-            for row in parsed_data:
-                clean_data.append(row[0:1] + map(
-                    lambda d:
-                    float(d) if self.is_float(d) else d,
-                    row[1:]))
-
-            tmp_dict[i[0]] = clean_data
-
-        # Modify the 'Basic Statistics' module if it exists.
-        if tmp_dict.get('Basic Statistics'):
-            mod = {}
-
-            for i in tmp_dict['Basic Statistics']:
-                mod[i[0]] = i[1]
-
-            tmp_dict['Basic Statistics'] = mod
-
-        # Rename to friendly format dict keys.
-        new = {}
-
-        for key in tmp_dict:
-            new[key.lower().replace(' ', '_')] = tmp_dict[key]
-
-        return FastQC(new)

@@ -1,26 +1,51 @@
 import json
 import uuid
 
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.http import HttpResponseBadRequest, HttpResponseNotAllowed
 from django.test import RequestFactory, TestCase
 
+from bioblend.galaxy.client import ConnectionError
+from bioblend.galaxy.histories import HistoryClient
+from bioblend.galaxy.libraries import LibraryClient
+from bioblend.galaxy.workflows import WorkflowClient
 from guardian.utils import get_anonymous_user
 import mock
 
 from analysis_manager.models import AnalysisStatus
-from analysis_manager.tasks import run_analysis
+from analysis_manager.tasks import (_check_galaxy_history_state, _get_analysis,
+                                    _get_analysis_status,
+                                    _refinery_file_import, run_analysis)
 from analysis_manager.utils import (_fetch_node_relationship, _fetch_node_set,
                                     create_analysis,
                                     fetch_objects_required_for_analysis,
                                     validate_analysis_config)
-from analysis_manager.views import run
+from analysis_manager.views import analysis_status, run
 from core.models import (Analysis, DataSet, NodeRelationship, NodeSet, Project,
                          Workflow, WorkflowEngine)
 from data_set_manager.models import Assay
 from factory_boy.utils import (create_dataset_with_necessary_models,
                                make_analyses_with_single_dataset)
 from galaxy_connector.models import Instance
+from tool_manager.models import ToolDefinition
+from tool_manager.tests import ToolManagerTestBase
+
+
+class AnalysisManagerTestBase(TestCase):
+    def setUp(self):
+        self.username = 'coffee_tester'
+        self.password = 'coffeecoffee'
+        self.user = User.objects.create_user(self.username, '', self.password)
+
+        make_analyses_with_single_dataset(1, self.user)
+
+        self.analysis = Analysis.objects.all()[0]
+        self.analysis_status = AnalysisStatus.objects.create(
+            analysis=self.analysis
+        )
+
+        self.dataset = DataSet.objects.all()[0]
 
 
 class AnalysisConfigTests(TestCase):
@@ -429,36 +454,37 @@ class AnalysisUtilsTests(TestCase):
             _fetch_node_relationship(str(uuid.uuid4()))
 
 
-class AnalysisRunViewTests(TestCase):
+class AnalysisViewsTests(AnalysisManagerTestBase, ToolManagerTestBase):
     """
-    Test `analysis_manager.views.run`
+    Tests for `analysis_manager.views`
     """
     def setUp(self):
+        # super() will only ever resolve a single class type for a given method
+        AnalysisManagerTestBase.setUp(self)
+        ToolManagerTestBase.setUp(self)
+
         self.request_factory = RequestFactory()
-        self.username = 'coffee_lover'
-        self.password = 'coffeecoffee'
-        self.user = User.objects.create_user(self.username, '', self.password)
-        self.user.id = 1
-        make_analyses_with_single_dataset(1, self.user)
-        self.analysis = Analysis.objects.all()[0]
-        self.view_root = "/analysis_manager/run/"
+        self.run_url_root = "/analysis_manager/run/"
+        self.status_url_root = "/analysis_manager/{}/".format(
+            self.analysis.uuid
+        )
 
     def test_analysis_run_view_invalid_http_verbs(self):
         # GET PUT PATCH DELETE etc.
         response = self.client.get(
-            self.view_root,
+            self.run_url_root,
             HTTP_X_REQUESTED_WITH='XMLHttpRequest'
         )
         self.assertEqual(type(response), HttpResponseNotAllowed)
 
         response = self.client.delete(
-            self.view_root,
+            self.run_url_root,
             HTTP_X_REQUESTED_WITH='XMLHttpRequest'
         )
         self.assertEqual(type(response), HttpResponseNotAllowed)
 
         response = self.client.put(
-            self.view_root,
+            self.run_url_root,
             data={
                 "name": "Valid Tool Analysis Config",
                 "studyUuid": str(uuid.uuid4()),
@@ -471,7 +497,7 @@ class AnalysisRunViewTests(TestCase):
         self.assertEqual(type(response), HttpResponseNotAllowed)
 
         response = self.client.patch(
-            self.view_root,
+            self.run_url_root,
             data={
                 "name": "Valid Tool Analysis Config",
                 "studyUuid": str(uuid.uuid4()),
@@ -488,7 +514,7 @@ class AnalysisRunViewTests(TestCase):
             return_value=self.analysis
         ) as create_analysis_mock:
             request = self.request_factory.post(
-                self.view_root,
+                self.run_url_root,
                 json.dumps({
                     "name": "Valid Tool Analysis Config",
                     "studyUuid": str(uuid.uuid4()),
@@ -513,7 +539,7 @@ class AnalysisRunViewTests(TestCase):
 
     def test_analysis_run_view_invalid_data(self):
         response = self.client.post(
-            self.view_root,
+            self.run_url_root,
             data=json.dumps({
                 "name": "Valid Tool Analysis Config",
                 "studyUuid": str(uuid.uuid4()),
@@ -527,7 +553,7 @@ class AnalysisRunViewTests(TestCase):
 
     def test_analysis_view_non_ajax_request(self):
         response = self.client.post(
-            self.view_root,
+            self.run_url_root,
             data={
                 "name": "Valid Tool Analysis Config",
                 "studyUuid": str(uuid.uuid4()),
@@ -537,40 +563,269 @@ class AnalysisRunViewTests(TestCase):
         )
         self.assertEqual(type(response), HttpResponseBadRequest)
 
+    @mock.patch.object(AnalysisStatus,
+                       "galaxy_file_import_state",
+                       return_value="coffee")
+    def test_non_tool_analysis_calls_old_galaxy_file_import_state(
+            self,
+            file_import_state_mock
+    ):
+        request = self.request_factory.get(
+            self.status_url_root,
+            content_type="application/json",
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest'
+        )
+        request.user = self.user
+        response = analysis_status(request, self.analysis.uuid)
+        self.assertTrue(file_import_state_mock.called)
 
-class AnalysisRunTests(TestCase):
-    tasks_mock = "analysis_manager.tasks"
-
-    def setUp(self):
-        self.username = 'coffee_lover'
-        self.password = 'coffeecoffee'
-        self.user = User.objects.create_user(self.username, '', self.password)
-
-        make_analyses_with_single_dataset(1, self.user)
-
-        self.analysis = Analysis.objects.all()[0]
-        self.analysis_status = AnalysisStatus.objects.create(
-            analysis=self.analysis
+        self.assertEqual(
+            json.loads(response.content),
+            {
+                "galaxyAnalysis": [],
+                "refineryImport": [],
+                "galaxyImport": "coffee",
+                "overall": "INITIALIZED",
+                "galaxyExport": []
+            }
         )
 
-        self.dataset = DataSet.objects.all()[0]
+    @mock.patch.object(AnalysisStatus,
+                       "tool_based_galaxy_file_import_state",
+                       return_value="coffee")
+    def test_tool_analysis_calls_tool_based_galaxy_file_import_state(
+            self,
+            file_import_state_mock
+    ):
+        self.create_valid_tool(ToolDefinition.WORKFLOW)
+        self.status_url_root = "/analysis_manager/{}/".format(
+            self.tool.analysis.uuid
+        )
+        request = self.request_factory.get(
+            self.status_url_root,
+            content_type="application/json",
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest'
+        )
+        request.user = self.user
+        response = analysis_status(request, self.tool.analysis.uuid)
+        self.assertTrue(file_import_state_mock.called)
+
+        self.assertEqual(
+            json.loads(response.content),
+            {
+                "galaxyAnalysis": [],
+                "refineryImport": [],
+                "galaxyImport": "coffee",
+                "overall": "INITIALIZED",
+                "galaxyExport": []
+            }
+        )
+
+
+class AnalysisRunTests(AnalysisManagerTestBase):
+    tasks_mock = "analysis_manager.tasks"
+    GALAXY_ID_MOCK = "6fc9fbb81c497f69"
 
     @mock.patch("{}._refinery_file_import".format(tasks_mock))
     @mock.patch("{}._run_galaxy_workflow".format(tasks_mock))
-    @mock.patch("{}._galaxy_file_import".format(tasks_mock))
+    @mock.patch("{}._check_galaxy_history_state".format(tasks_mock))
     @mock.patch("{}._galaxy_file_export".format(tasks_mock))
     @mock.patch("{}._attach_workflow_outputs".format(tasks_mock))
     def test_run_analysis(self,
-                          refinery_import_mock,
-                          run_galaxy_mock,
-                          galaxy_import_mock,
+                          attach_outputs_mock,
                           galaxy_export_mock,
-                          attach_outputs_mock):
+                          check_galaxy_history_state_mock,
+                          run_galaxy_mock,
+                          refinery_import_mock):
         # Run an Analysis and ensure that the methods to check the state of
-        # the tsk get called properly
+        # the task gets called properly
         run_analysis(self.analysis.uuid)
         self.assertTrue(refinery_import_mock.called)
         self.assertTrue(run_galaxy_mock.called)
-        self.assertTrue(galaxy_import_mock.called)
+        self.assertTrue(check_galaxy_history_state_mock.called)
         self.assertTrue(galaxy_export_mock.called)
         self.assertTrue(attach_outputs_mock.called)
+
+    def test_file_import_task_termination_on_analysis_failure(self):
+        with mock.patch(
+            "core.models.Analysis.terminate_file_import_tasks"
+        ) as terminate_mock:
+            self.analysis.set_status(Analysis.FAILURE_STATUS)
+            run_analysis(self.analysis.uuid)
+            self.assertTrue(terminate_mock.called)
+
+    @mock.patch.object(run_analysis, "retry", side_effect=None)
+    def test_get_input_file_uuid_list_gets_called_in_refinery_import(
+            self, retry_mock
+    ):
+        with mock.patch(
+                "core.models.Analysis.get_input_file_uuid_list"
+        ) as get_uuid_list_mock:
+            _refinery_file_import(self.analysis.uuid)
+            self.assertTrue(get_uuid_list_mock.called)
+        self.assertTrue(retry_mock.called)
+
+    def test_is_tool_based(self):
+        self.assertFalse(self.analysis.is_tool_based)
+
+    @mock.patch.object(Analysis, "galaxy_progress", side_effect=RuntimeError)
+    @mock.patch("analysis_manager.tasks.get_taskset_result")
+    @mock.patch("core.models.Analysis.send_email")
+    @mock.patch("core.models.Analysis.galaxy_cleanup")
+    def test__check_galaxy_history_state_with_runtime_error(
+            self,
+            galaxy_cleanup_mock,
+            send_email_mock,
+            get_taskset_result_mock,
+            galaxy_progress_mock
+    ):
+        _check_galaxy_history_state(self.analysis.uuid)
+
+        # Fetch analysis & analysis status since they have changed during
+        # the course of this test and the old `self` references are stale
+        analysis = Analysis.objects.get(uuid=self.analysis.uuid)
+        analysis_status = AnalysisStatus.objects.get(analysis=analysis)
+
+        self.assertEqual(
+            analysis_status.galaxy_history_state,
+            AnalysisStatus.ERROR
+        )
+        self.assertEqual(analysis.status, Analysis.FAILURE_STATUS)
+
+        self.assertTrue(galaxy_progress_mock.called)
+        self.assertTrue(get_taskset_result_mock.called)
+        self.assertTrue(send_email_mock.called)
+        self.assertTrue(galaxy_cleanup_mock.called)
+
+    @mock.patch.object(LibraryClient, "delete_library")
+    @mock.patch.object(HistoryClient, "delete_history")
+    @mock.patch.object(WorkflowClient, "delete_workflow")
+    def test_galaxy_cleanup_methods_are_called_on_analysis_failure(
+            self,
+            delete_workflow_mock,
+            delete_history_mock,
+            delete_library_mock
+    ):
+        settings.REFINERY_GALAXY_ANALYSIS_CLEANUP = "always"
+
+        self.analysis.workflow_galaxy_id = self.GALAXY_ID_MOCK
+        self.analysis.history_id = self.GALAXY_ID_MOCK
+        self.analysis.library_id = self.GALAXY_ID_MOCK
+        self.analysis.save()
+
+        self.analysis.cancel()
+
+        self.assertEqual(self.analysis.status, Analysis.FAILURE_STATUS)
+        self.assertTrue(self.analysis.canceled)
+
+        self.assertTrue(delete_workflow_mock.called)
+        self.assertTrue(delete_history_mock.called)
+        self.assertTrue(delete_library_mock.called)
+
+        self.assertEqual(delete_history_mock.call_count, 1)
+
+    @mock.patch.object(Analysis, "galaxy_progress",
+                       side_effect=ConnectionError("Couldn't establish "
+                                                   "Galaxy connection"))
+    @mock.patch.object(run_analysis, "retry", side_effect=None)
+    def test__check_galaxy_history_state_with_connection_error(
+            self,
+            retry_mock,
+            galaxy_progress_mock
+    ):
+        _check_galaxy_history_state(self.analysis.uuid)
+
+        # Fetch analysis status since it has changed during
+        # the course of this test and the old `self` reference is stale
+        analysis_status = AnalysisStatus.objects.get(analysis=self.analysis)
+
+        self.assertEqual(analysis_status.galaxy_history_state,
+                         AnalysisStatus.UNKNOWN)
+
+        self.assertTrue(galaxy_progress_mock.called)
+        self.assertTrue(retry_mock.called)
+
+    @mock.patch.object(Analysis, "galaxy_progress", return_value=50)
+    @mock.patch.object(run_analysis, "retry", side_effect=None)
+    def test__check_galaxy_history_state_progress_less_than_percent_complete(
+            self,
+            retry_mock,
+            galaxy_progress_mock
+    ):
+        self.analysis_status.galaxy_history_progress = 25
+        _check_galaxy_history_state(self.analysis.uuid)
+
+        analysis_status = AnalysisStatus.objects.get(analysis=self.analysis)
+
+        self.assertEqual(analysis_status.galaxy_history_progress, 50)
+        self.assertEqual(analysis_status.galaxy_history_state,
+                         AnalysisStatus.PROGRESS)
+
+        self.assertTrue(galaxy_progress_mock.called)
+        self.assertTrue(retry_mock.called)
+
+    @mock.patch.object(Analysis, "galaxy_progress", return_value=100)
+    def test__check_galaxy_history_state_percent_complete_is_100(
+            self,
+            galaxy_progress_mock
+    ):
+        self.analysis_status.galaxy_history_progress = 100
+        _check_galaxy_history_state(self.analysis.uuid)
+
+        analysis_status = AnalysisStatus.objects.get(analysis=self.analysis)
+
+        self.assertEqual(analysis_status.galaxy_history_state,
+                         AnalysisStatus.OK)
+
+        self.assertTrue(galaxy_progress_mock.called)
+
+    @mock.patch.object(run_analysis, "update_state")
+    def test__get_analysis_bad_uuid(self, update_state_mock):
+        self.assertEqual(_get_analysis(str(uuid.uuid4())), None)
+        self.assertTrue(update_state_mock.called)
+
+    @mock.patch.object(run_analysis, "update_state")
+    def test__get_analysis_status_bad_uuid(self, update_state_mock):
+        self.analysis_status.delete()
+        self.assertEqual(_get_analysis_status(self.analysis.uuid), None)
+        self.assertTrue(update_state_mock.called)
+
+
+class AnalysisStatusTests(AnalysisManagerTestBase):
+    def test_set_galaxy_history_state_with_valid_state(self):
+        self.analysis_status.set_galaxy_history_state(AnalysisStatus.PROGRESS)
+        self.assertEqual(
+            self.analysis_status.galaxy_history_state,
+            AnalysisStatus.PROGRESS
+        )
+
+    def test_set_galaxy_history_state_with_invalid_state(self):
+        with self.assertRaises(ValueError) as context:
+            self.analysis_status.set_galaxy_history_state("NOT A VALID STATE")
+            self.assertEqual(
+                context.exception.message,
+                "Invalid Galaxy history state given"
+            )
+
+    def test_set_galaxy_import_state_with_valid_state(self):
+        self.analysis_status.set_galaxy_import_state(AnalysisStatus.PROGRESS)
+        self.assertEqual(
+            self.analysis_status.galaxy_import_state,
+            AnalysisStatus.PROGRESS
+        )
+
+    def test_set_galaxy_import_state_with_invalid_state(self):
+        with self.assertRaises(ValueError) as context:
+            self.analysis_status.set_galaxy_import_state("NOT A VALID STATE")
+            self.assertEqual(
+                context.exception.message,
+                "Invalid Galaxy history state given"
+            )
+
+    def test_set_galaxy_import_task_group_id(self):
+        test_uuid = str(uuid.uuid4())
+        self.analysis_status.set_galaxy_import_task_group_id(test_uuid)
+        self.assertEqual(
+            self.analysis_status.galaxy_import_task_group_id,
+            test_uuid
+        )

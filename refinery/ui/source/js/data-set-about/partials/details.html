@@ -1,6 +1,6 @@
 <div class="refinery-header">
   <div class="refinery-header-left">
-    <h3>{{ ADCtrl.dataSet.accession }}: {{ ADCtrl.dataSet.title }}</h3>
+    <h3>{{ ADCtrl.dataSet.title }}</h3>
     <span ng-if="ADCtrl.dataSet.is_owner">
       <a
         ng-click="ADCtrl.isCollapsed.title = !ADCtrl.isCollapsed.title"
@@ -356,7 +356,7 @@
 </span>
 <div ng-if="ADCtrl.dataSet.isa_archive">
 <p>
-   <a href="{{ADCtrl.fileStoreItem.datafile && ADCtrl.fileStoreItem.datafile}}">
+   <a href="{{ADCtrl.fileStoreItem.datafile}}">
     {{ADCtrl.fileStoreItem.datafile | isaArchiveName}}
   </a>
     - {{ADCtrl.fileStoreItem.file_size | fileSizeFormat}}
@@ -370,7 +370,7 @@
     - {{ADCtrl.fileStoreItem.file_size | fileSizeFormat}}
   </p>
 </div>
-<div ng-if="!(ADCtrl.dataSet.isa_archive || ADCtrl.dataSet.pre_isa_archive)">
+<div ng-if="!(ADCtrl.dataSet.isa_archive || ADCtrl.dataSet.pre_isa_archive && ADCtrl.fileStoreItem.datafile)">
 <p class="emphasized">Not available.</p>
 </div>
 
@@ -379,9 +379,9 @@
 </span>
 <p>
   {{ ADCtrl.dataSet.file_count }} files
-  <div ng-if="ADCtrl.dataSet.file_size > 0">
-   - {{ ADCtrl.dataSet.file_size | fileSizeFormat }}
-  </div>
+  <span ng-if="ADCtrl.dataSet.file_size > 0">
+   using {{ ADCtrl.dataSet.file_size | fileSizeFormat }}
+  </span>
 </p>
 
 <div class="refinery-header">
@@ -391,6 +391,24 @@
 </div>
 <p>
   Current version <span class="emphasized">{{ ADCtrl.dataSet.version }}</span>.
-  Data set created <span class="emphasized">{{ ADCtrl.dataSet.creation_date }}</span>.
-  Last modified <span class="emphasized">{{ ADCtrl.dataSet.modification_date }}</span>.
+  Data set created <span class="emphasized">{{ ADCtrl.dataSet.creation_date | date:'medium' }}</span>.
+  Last modified <span class="emphasized">{{ ADCtrl.dataSet.modification_date | date:'medium' }}</span>.
 </p>
+<form id="isaTabImportForm" enctype="multipart/form-data" action="/data_set_manager/import/take_ownership/" method="post"
+      ng-if="ADCtrl.dataSet.isa_archive && ADCtrl.dataSet.public && !ADCtrl.dataSet.is_owner && ADCtrl.loggedIn">
+    <!-- TODO: check if logged in: anonymous user can not import -->
+    <input type="hidden" name="csrfmiddlewaretoken" value="{{ ADCtrl.csrfToken }}" />
+    <input type="hidden" name="isa_tab_url" value="{{ ADCtrl.dataSet.isa_archive_url }}" />
+    <input class="refinery-base btn btn-important"
+          id="isa-import-button" type="submit" value="Import into own space"/>
+    <a
+        popover-placement="right"
+        uib-popover-html="'Analyses run on a data set becomes part of the data set: For this reason you can not
+        run analyses on a data set you do not own. However, you are free to create your own copy of the original data set.'"
+        popover-title="Import this data set into your own space"
+        popover-trigger="focus"
+        popover-append-to-body="true"
+        tabindex="0">
+        <i class="fa fa-question-circle info-icon icon-only"></i>
+    </a>
+</form>

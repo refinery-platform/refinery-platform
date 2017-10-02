@@ -11,10 +11,10 @@ from django.http import HttpResponse
 from django.shortcuts import render_to_response
 from django.template.context import RequestContext
 
-import file_server.tdf_file as tdf_module
 import file_server.models as models
-from file_store.models import FileStoreItem
+import file_server.tdf_file as tdf_module
 import file_store
+from file_store.models import FileStoreItem
 
 logger = logging.getLogger(__name__)
 

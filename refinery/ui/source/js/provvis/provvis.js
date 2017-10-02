@@ -1,5 +1,5 @@
 'use strict';
-
+/* eslint-disable */
 /**
  * Angular module for the provenance visualization.
  */

@@ -72,20 +72,25 @@ def analysis_status(request, uuid):
     if request.is_ajax():
         ret_json = {
             'refineryImport': status.refinery_import_state(),
-            'galaxyImport': status.galaxy_import_state(),
             'galaxyAnalysis': status.galaxy_analysis_state(),
             'galaxyExport': status.galaxy_export_state(),
             'overall': analysis.get_status(),
         }
+        if analysis.is_tool_based:
+            ret_json['galaxyImport'] = (
+                status.tool_based_galaxy_file_import_state()
+            )
+        else:
+            ret_json['galaxyImport'] = status.galaxy_file_import_state()
+
         logger.debug("Analysis status for '%s': %s",
                      analysis.name, json.dumps(ret_json))
         return HttpResponse(json.dumps(ret_json, indent=4),
                             content_type='application/javascript')
-    else:
-        return render_to_response(
-            'analysis_manager/analysis_status.html',
-            {'uuid': uuid, 'status': status, 'analysis': analysis},
-            context_instance=RequestContext(request))
+    return render_to_response(
+        'analysis_manager/analysis_status.html',
+        {'uuid': uuid, 'status': status, 'analysis': analysis},
+        context_instance=RequestContext(request))
 
 
 @login_required
@@ -120,8 +125,7 @@ def analysis_cancel(request):
                 return HttpResponse()  # 200
         else:
             return HttpResponseForbidden()  # 403
-    else:
-        return HttpResponseNotAllowed(['POST'])  # 405
+    return HttpResponseNotAllowed(['POST'])  # 405
 
 
 def update_workflows(request):
@@ -143,8 +147,7 @@ def update_workflows(request):
         return HttpResponse(
             json_serializer.serialize(workflows, ensure_ascii=False),
             content_type='application/javascript')
-    else:
-        return HttpResponse(status=400)
+    return HttpResponse(status=400)
 
 
 def get_workflow_data_input_map(request, workflow_uuid):

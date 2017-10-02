@@ -13,7 +13,7 @@ from haystack import indexes
 
 from file_store.models import FileStoreItem
 
-from .models import AnnotatedNode, Node
+from .models import AnnotatedNode, Assay, Node
 
 logger = logging.getLogger(__name__)
 
@@ -25,11 +25,13 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
     ANALYSIS_UUID_PREFIX = "REFINERY_ANALYSIS_UUID"
     SUBANALYSIS_PREFIX = "REFINERY_SUBANALYSIS"
     FILETYPE_PREFIX = "REFINERY_FILETYPE"
+    DOWNLOAD_URL = "REFINERY_DOWNLOAD_URL_s"
 
     text = indexes.CharField(document=True, use_template=True)
     uuid = indexes.CharField(model_attr='uuid')
     study_uuid = indexes.CharField(model_attr='study__uuid')
     assay_uuid = indexes.CharField(model_attr='assay__uuid', null=True)
+    data_set_uuid = indexes.CharField(null=True)
     type = indexes.CharField(model_attr='type')
     name = indexes.CharField(model_attr='name', null=True)
     file_uuid = indexes.CharField(model_attr='file_uuid', null=True)
@@ -49,18 +51,46 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
         """Used when the entire index for model is updated."""
         return self.get_model().objects.all()
 
+    GENERIC_SUFFIX = "_generic_s"
+
+    def _assay_data(self, object):
+        data = {}
+        for field in Assay._meta.fields:
+            if field.name in ['id', 'uuid', 'study', 'file_name']:
+                continue
+            key = field.name + '_Characteristics' + NodeIndex.GENERIC_SUFFIX
+            data[key] = set()
+            assay = object.assay
+            if assay is not None:
+                assay_attr = getattr(assay, field.name)
+                if assay_attr is not None:
+                    data[key].add(assay_attr)
+        return data
+
     # dynamic fields:
     # https://groups.google.com/forum/?fromgroups#!topic/django-haystack/g39QjTkN-Yg
     # http://stackoverflow.com/questions/7399871/django-haystack-sort-results-by-title
     def prepare(self, object):
+
         data = super(NodeIndex, self).prepare(object)
         annotations = AnnotatedNode.objects.filter(node=object)
-        uuid = str(object.study.id)
+        id_suffix = str(object.study.id)
+
+        try:
+            data_set = object.study.get_dataset()
+            data['data_set_uuid'] = data_set.uuid
+        except RuntimeError as e:
+            logger.warn(e)
 
         if object.assay is not None:
-            uuid += "_" + str(object.assay.id)
+            id_suffix += "_" + str(object.assay.id)
 
-        suffix = "_" + uuid + "_s"
+        id_suffix = "_" + id_suffix + "_s"
+
+        data['filename_Characteristics' + NodeIndex.GENERIC_SUFFIX] = \
+            re.sub(r'.*/', '', data['name'])
+
+        data.update(self._assay_data(object))
 
         # create dynamic fields for each attribute
         for annotation in annotations:
@@ -76,8 +106,8 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
                           settings.REFINERY_SOLR_SPACE_DYNAMIC_FIELDS,
                           name)
 
-            uniq_key = name + suffix
-            generic_key = name + "_generic_s"
+            uniq_key = name + id_suffix
+            generic_key = name + NodeIndex.GENERIC_SUFFIX
             # a node might have multiple parents with different attribute
             # values for a given attribute
             # e.g. parentA Characteristic[cell type] = K562 and
@@ -108,20 +138,23 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
             file_store_item = None
 
         data.update({
-            NodeIndex.TYPE_PREFIX + suffix:
+            NodeIndex.DOWNLOAD_URL:
+                '' if file_store_item is None
+                else file_store_item.get_datafile_url(),
+            NodeIndex.TYPE_PREFIX + id_suffix:
                 object.type,
-            NodeIndex.NAME_PREFIX + suffix:
+            NodeIndex.NAME_PREFIX + id_suffix:
                 object.name,
-            NodeIndex.FILETYPE_PREFIX + suffix:
+            NodeIndex.FILETYPE_PREFIX + id_suffix:
                 "" if file_store_item is None
                 else file_store_item.get_filetype(),
-            NodeIndex.ANALYSIS_UUID_PREFIX + suffix:
-                "N/A" if object.analysis_uuid is None
-                else object.analysis_uuid,
-            NodeIndex.SUBANALYSIS_PREFIX + suffix:
+            NodeIndex.ANALYSIS_UUID_PREFIX + id_suffix:
+                "N/A" if object.get_analysis() is None
+                else object.get_analysis().name,
+            NodeIndex.SUBANALYSIS_PREFIX + id_suffix:
                 (-1 if object.subanalysis is None  # TODO: upgrade flake8
                  else object.subanalysis),         # and remove parentheses
-            NodeIndex.WORKFLOW_OUTPUT_PREFIX + suffix:
+            NodeIndex.WORKFLOW_OUTPUT_PREFIX + id_suffix:
                 "N/A" if object.workflow_output is None
                 else object.workflow_output
         })

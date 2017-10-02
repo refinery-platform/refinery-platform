@@ -3,9 +3,8 @@
 # See https://github.com/refinery-platform/refinery-platform/wiki/AWS for
 # more details
 
-# Like prod, but overriding some things.
 from .prod import *  # NOQA
-
+from .prod import INSTALLED_APPS, get_setting
 
 # Email
 EMAIL_BACKEND = 'django_smtp_ssl.SSLEmailBackend'
@@ -28,5 +27,4 @@ COGNITO_DEVELOPER_PROVIDER_NAME = get_setting(
 )
 
 # Refinery
-# TODO: uncomment after file upload to S3 is fully implemented
-# DEPLOYMENT_PLATFORM = 'aws'
+REFINERY_DEPLOYMENT_PLATFORM = 'aws'

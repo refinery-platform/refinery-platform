@@ -14,6 +14,13 @@
         "galaxy_workflow_step": 1
       },
       {
+        "name": "Float Param",
+        "description": "Float Param description",
+        "value_type": "FLOAT",
+        "default_value": 1.234,
+        "galaxy_workflow_step": 7
+      },
+      {
         "name": "String Param",
         "description": "String Param description",
         "value_type": "STRING",
@@ -42,13 +49,7 @@
         "galaxy_workflow_step": 5
       }
     ],
-    "output_files": [
-      {
-        "filetype": {"name": "FASTQ"},
-        "name": "Cool Input File",
-        "description": "Cool Input File Description"
-      }
-    ],
+
     "file_relationship": {
       "value_type": "LIST",
       "name": "List of Pairs",

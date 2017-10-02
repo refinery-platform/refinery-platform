@@ -15,7 +15,7 @@ function refineryDataSetNavConfig (
         },
         controller: 'refineryDataSetNavFilesCtrl'
       },
-      '^\/data_sets\/.*\/$',
+      '^\/provenance\/.*\/$',
       true
     )
     .state(
@@ -29,7 +29,7 @@ function refineryDataSetNavConfig (
         },
         controller: 'refineryDataSetNavFilesBrowseCtrl'
       },
-      '^\/data_sets\/.*\/$',
+      '^\/provenance\/.*\/$',
       true
     )
     .state(
@@ -43,7 +43,7 @@ function refineryDataSetNavConfig (
         },
         controller: 'refineryDataSetNavAnalyzeCtrl'
       },
-      '^\/data_sets\/.*\/$',
+      '^\/provenance\/.*\/$',
       true
     )
     .state(
@@ -57,7 +57,7 @@ function refineryDataSetNavConfig (
         url: '/files/visualize/',
         controller: 'refineryDataSetNavVisualizeCtrl'
       },
-      '^\/data_sets\/.*\/$',
+      '^\/provenance\/.*\/$',
       true
     )
     .state(
@@ -69,7 +69,7 @@ function refineryDataSetNavConfig (
         },
         controller: 'refineryDataSetNavBlueprintCtrl'
       },
-      '^\/data_sets\/.*\/$',
+      '^\/provenance\/.*\/$',
       true
     )
     .state(
@@ -77,7 +77,7 @@ function refineryDataSetNavConfig (
         url: '/attributes/',
         controller: 'refineryDataSetNavBlueprintCtrl'
       },
-      '^\/data_sets\/.*\/$',
+      '^\/provenance\/.*\/$',
       true
     )
     .state(
@@ -85,7 +85,7 @@ function refineryDataSetNavConfig (
         url: '/details/',
         controller: 'refineryDataSetNavBlueprintCtrl'
       },
-      '^\/data_sets\/.*\/$',
+      '^\/provenance\/.*\/$',
       true
     )
     .state(
@@ -93,7 +93,7 @@ function refineryDataSetNavConfig (
         url: '/sharing/',
         controller: 'refineryDataSetNavBlueprintCtrl'
       },
-      '^\/data_sets\/.*\/$',
+      '^\/provenance\/.*\/$',
       true
     )
     .state(
@@ -106,7 +106,7 @@ function refineryDataSetNavConfig (
         controller: 'FileBrowserCtrl',
         controllerAs: 'FBCtrl'
       },
-      '^\/data_sets2\/.*\/$',
+      '^\/data_sets\/.*\/$',
       true
     )
     .state(
@@ -119,7 +119,7 @@ function refineryDataSetNavConfig (
         controller: 'AnalysisMonitorCtrl',
         controllerAs: 'AMCtrl'
       },
-      '^\/data_sets2\/.*\/$',
+      '^\/data_sets\/.*\/$',
       true
     )
     .state(
@@ -132,19 +132,19 @@ function refineryDataSetNavConfig (
         controller: 'AboutDetailsCtrl',
         controllerAs: 'ADCtrl'
       },
-      '^\/data_sets2\/.*\/$',
+      '^\/data_sets\/.*\/$',
       true
     );
 
   refineryUrlRouterProvider
     .otherwise(
       '/files/browse',
-      '^\/data_sets\/.*\/$',
+      '^\/provenance\/.*\/$',
       true
     )
     .otherwise(
       '/files/',
-      '^\/data_sets2\/.*\/$',
+      '^\/data_sets\/.*\/$',
       true
   );
 }

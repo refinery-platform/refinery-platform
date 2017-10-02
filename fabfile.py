@@ -13,14 +13,14 @@ Requirements:
 """
 
 import os
-from fabric.api import env, run, sudo, execute, local
-from fabric.context_managers import prefix, cd, shell_env
+
+from fabric.api import env, execute, local, run, sudo
+from fabric.context_managers import cd, prefix, shell_env
 from fabric.contrib.files import sed
 from fabric.decorators import task, with_settings
 from fabric.operations import require
 from fabric.utils import abort, puts
 from fabtools.vagrant import vagrant
-
 
 # Fabric settings
 env.forward_agent = True    # for Github operations

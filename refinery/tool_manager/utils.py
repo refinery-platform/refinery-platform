@@ -15,17 +15,19 @@ from jsonschema import RefResolver, ValidationError, validate
 
 from analysis_manager.utils import fetch_objects_required_for_analysis
 from core.models import DataSet, Workflow, WorkflowEngine
+from core.utils import get_aware_local_time
 from factory_boy.django_model_factories import (AnalysisFactory,
                                                 FileRelationshipFactory,
                                                 GalaxyParameterFactory,
                                                 InputFileFactory,
-                                                OutputFileFactory,
                                                 ParameterFactory,
                                                 ToolDefinitionFactory,
-                                                ToolFactory, WorkflowFactory)
+                                                VisualizationToolFactory,
+                                                WorkflowFactory,
+                                                WorkflowToolFactory)
 from file_store.models import FileType
 
-from .models import Tool, ToolDefinition
+from .models import Tool, ToolDefinition, WorkflowTool
 
 logger = logging.getLogger(__name__)
 ANNOTATION_ERROR_MESSAGE = (
@@ -71,28 +73,6 @@ class FileTypeValidationError(RuntimeError):
         super(FileTypeValidationError, self).__init__(error_message)
 
 
-def create_and_associate_output_files(tool_definition, output_files):
-    for output_file in output_files:
-        try:
-            filetype = FileType.objects.get(
-                name=output_file["filetype"]["name"]
-            )
-        except (FileType.DoesNotExist,
-                FileType.MultipleObjectsReturned) as e:
-            raise FileTypeValidationError(
-                output_file["filetype"]["name"],
-                e
-            )
-        else:
-            tool_definition.output_files.add(
-                OutputFileFactory(
-                    name=output_file["name"],
-                    description=output_file["description"],
-                    filetype=filetype
-                )
-            )
-
-
 def create_and_associate_parameters(tool_definition, parameters):
     for parameter in parameters:
         if tool_definition.tool_type == ToolDefinition.WORKFLOW:
@@ -128,6 +108,12 @@ def create_tool_definition(annotation_data):
     """
     tool_type = annotation_data["tool_type"]
     annotation = annotation_data["annotation"]
+    common_tool_definition_params = {
+        "name": annotation_data["name"],
+        "description": annotation["description"],
+        "tool_type": tool_type,
+        "file_relationship": create_file_relationship_nesting(annotation),
+    }
 
     if tool_type == ToolDefinition.WORKFLOW:
         workflow_engine = WorkflowEngine.objects.get(
@@ -147,20 +133,14 @@ def create_tool_definition(annotation_data):
         workflow.share(workflow_engine.get_manager_group().get_managed_group())
 
         tool_definition = ToolDefinitionFactory(
-            name=annotation_data["name"],
-            description=annotation["description"],
-            tool_type=tool_type,
-            file_relationship=create_file_relationship_nesting(annotation),
-            workflow=workflow
+            workflow=workflow,
+            **common_tool_definition_params
         )
     elif tool_type == ToolDefinition.VISUALIZATION:
         tool_definition = ToolDefinitionFactory(
-            name=annotation_data["name"],
-            description=annotation["description"],
-            tool_type=tool_type,
-            file_relationship=create_file_relationship_nesting(annotation),
             image_name=annotation["image_name"],
             container_input_path=annotation["container_input_path"],
+            **common_tool_definition_params
         )
 
         # If we've successfully created the ToolDefinition lets
@@ -177,18 +157,16 @@ def create_tool_definition(annotation_data):
             logger.debug(
                 "Pulling Docker image: %s", tool_definition.image_name
             )
-            DockerClientWrapper().pull(image_name, version=version)
+            DockerClientWrapper(
+                settings.DJANGO_DOCKER_ENGINE_DATA_DIR
+            ).pull(image_name, version=version)
 
     tool_definition.annotation = json.dumps(annotation)
     tool_definition.save()
 
-    create_and_associate_output_files(
-        tool_definition,
-        annotation["output_files"]
-    )
     create_and_associate_parameters(
         tool_definition,
-        annotation["parameters"]
+        annotation[ToolDefinition.PARAMETERS]
     )
 
     return tool_definition
@@ -197,10 +175,10 @@ def create_tool_definition(annotation_data):
 @transaction.atomic
 def create_tool(tool_launch_configuration, user_instance):
     """
-   :param tool_launch_configuration: dict of data that represents a Tool
-   :param user_instance: User object that made the request to create said Tool
-   :returns: The created Tool object
-   """
+    :param tool_launch_configuration: dict of data that represents a Tool
+    :param user_instance: User object that made the request to create said Tool
+    :returns: The created Tool object
+    """
     # NOTE: that the usual exceptions for the get() aren't handled because
     # we're in the scope of an atomic transaction
     tool_definition = ToolDefinition.objects.get(
@@ -209,14 +187,31 @@ def create_tool(tool_launch_configuration, user_instance):
     dataset = DataSet.objects.get(
         uuid=tool_launch_configuration["dataset_uuid"]
     )
-    tool = ToolFactory(
-        name="{}-launch".format(tool_definition.name),
-        tool_definition=tool_definition,
-        tool_launch_configuration=json.dumps(tool_launch_configuration),
-        dataset=dataset
-    )
 
-    if tool.get_tool_type() == ToolDefinition.VISUALIZATION:
+    tool_type = tool_definition.tool_type
+    tool_name = "{}-launch".format(tool_definition.name)
+
+    common_tool_params = {
+        "name": tool_name,
+        "tool_definition": tool_definition,
+        Tool.TOOL_LAUNCH_CONFIGURATION: json.dumps(tool_launch_configuration),
+        "dataset": dataset
+    }
+
+    if tool_type == ToolDefinition.WORKFLOW:
+        tool_launch_configuration[WorkflowTool.GALAXY_DATA] = {
+            WorkflowTool.FILE_RELATIONSHIPS_GALAXY:
+                tool_launch_configuration[Tool.FILE_RELATIONSHIPS],
+            WorkflowTool.GALAXY_TO_REFINERY_MAPPING_LIST: []
+        }
+        common_tool_params[Tool.TOOL_LAUNCH_CONFIGURATION] = json.dumps(
+            tool_launch_configuration
+        )
+        tool = WorkflowToolFactory(**common_tool_params)
+
+    if tool_type == ToolDefinition.VISUALIZATION:
+        tool = VisualizationToolFactory(**common_tool_params)
+
         # Create a unique container name that adheres to docker's specs
         tool.container_name = "{}-{}".format(
             tool.name.replace(" ", ""),
@@ -224,10 +219,10 @@ def create_tool(tool_launch_configuration, user_instance):
         )
 
     tool.set_owner(user_instance)
-    tool.update_file_relationships_string()
+    tool.update_file_relationships_with_urls()
 
     try:
-        nesting = tool.get_file_relationships()
+        nesting = tool.get_file_relationships_urls()
     except (SyntaxError, ValueError) as e:
         raise RuntimeError(
             "ToolLaunchConfiguration's `file_relationships` could not be "
@@ -250,28 +245,29 @@ def create_tool_analysis(validated_analysis_config):
     :return: an Analysis instance
     :raises: RuntimeError
     """
-
-    # Input list for running analysis
     common_analysis_objects = (
-        fetch_objects_required_for_analysis(
-            validated_analysis_config
-        )
+        fetch_objects_required_for_analysis(validated_analysis_config)
     )
-    name = validated_analysis_config["name"]
     current_workflow = common_analysis_objects["current_workflow"]
     data_set = common_analysis_objects["data_set"]
     user = common_analysis_objects["user"]
 
     try:
-        tool = Tool.objects.get(
+        tool = WorkflowTool.objects.get(
             uuid=validated_analysis_config["toolUuid"]
         )
-    except (Tool.DoesNotExist, Tool.MultipleObjectsReturned) as e:
+    except (WorkflowTool.DoesNotExist,
+            WorkflowTool.MultipleObjectsReturned) as e:
         raise RuntimeError("Couldn't fetch Tool from UUID: {}".format(e))
 
     analysis = AnalysisFactory(
-        summary="Analysis run for: {}".format(tool),
-        name=name,
+        uuid=str(uuid.uuid4()),
+        summary="Galaxy workflow execution for: {}".format(tool.name),
+        name="{} - {} - {}".format(
+            tool.get_tool_name(),
+            get_aware_local_time().strftime("%Y/%m/%d %H:%M:%S"),
+            tool.get_owner_username().title()
+        ),
         project=user.profile.catch_all_project,
         data_set=data_set,
         workflow=current_workflow,
@@ -474,14 +470,18 @@ def parse_file_relationship_nesting(nested_structure, nesting_dict=None,
         raise RuntimeError(
             "LIST/PAIR structure is not balanced {}".format(nesting_contents)
         )
+    # TODO: If it's a unicode instead of str, it breaks. Too fragile?
     if nesting_types == {str}:
         # If we reach a nesting level with all `str` we can return
         return
 
-    if nesting_types not in [{list}, {tuple}]:
+    valid_types = [{list}, {tuple}]
+    if nesting_types not in valid_types:
         raise RuntimeError(
-            "The `file_relationships` defined didn't yield a valid "
-            "LIST/PAIR nesting. {}".format(nesting_contents)
+            "The 'file_relationships' {} type {} "
+            "is not a valid LIST/PAIR nesting: {}".format(
+                nesting_contents, nesting_types, valid_types
+            )
         )
 
     nesting_level += 1
@@ -516,7 +516,11 @@ def validate_tool_annotation(annotation_dictionary):
         )
     except ValidationError as e:
         raise RuntimeError(
-            "{}{}".format(ANNOTATION_ERROR_MESSAGE, e)
+            "{}\n\n{}\n\n{}".format(
+                ANNOTATION_ERROR_MESSAGE,
+                e.message,
+                ["{}".format(err.message) for err in e.context]
+            )
         )
 
 

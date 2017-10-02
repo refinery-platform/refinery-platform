@@ -38,9 +38,15 @@ describe('refineryDataSetImport.settings: unit tests', function () {
     });
 
     it('should have chunkSize constant set to a positive integer', function () {
-      expect(settings.chunkSize).toBeDefined();
-      expect(typeof settings.chunkSize).toEqual('number');
       expect(settings.chunkSize).toBeGreaterThan(0);
+    });
+
+    it('should have queueSize constant set to a positive integer', function () {
+      expect(settings.queueSize).toBeGreaterThan(0);
+    });
+
+    it('should have ACL constant set to a string', function () {
+      expect(settings.ACL).toEqual(jasmine.any(String));
     });
   });
 });

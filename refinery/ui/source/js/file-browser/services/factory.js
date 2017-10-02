@@ -139,21 +139,6 @@
       return nodeFile.$promise;
     }
 
-    /**
-     * Helper method for grabbing the internal name, in fastqc viewer template
-     * @param {obj} arrayOfObj - ui-grid data obj
-     */
-    function grabAnalysisInternalName (arrayOfObj) {
-      var internalName = '';
-      for (var i = 0; i < arrayOfObj.length; i ++) {
-        if (arrayOfObj[i].display_name === 'Analysis') {
-          internalName = arrayOfObj[i].internal_name;
-          break;
-        }
-      }
-      return internalName;
-    }
-
     // In an array of objects, removes an object with a display_name of 'uuid'
     function hideUuidAttribute (arrayOfObjs) {
       for (var i = arrayOfObjs.length - 1; i >= 0; i--) {
@@ -318,18 +303,11 @@
      * @param {string} _columnName - column name
      */
     function setCustomUrlColumn (_columnName) {
-      var internalName = grabAnalysisInternalName(assayAttributes);
       var _cellTemplate = '<div class="ngCellText text-align-center ui-grid-cell-contents"' +
             'ng-class="col.colIndex()">' +
             '<div ng-if="COL_FIELD" title="Download File \{{COL_FIELD}}\">' +
             '<a href="{{COL_FIELD}}" target="_blank">' +
-            '<i class="fa fa-arrow-circle-o-down"></i></a>' +
-            '<span class="fastqc-viewer" ' +
-            'ng-if="row.entity.Url.indexOf(' + "'fastqc_results'" + ') >= 0">' +
-            '&nbsp;<a title="View FastQC Result"' +
-            ' href="/fastqc_viewer/#/\{{row.entity.' + internalName + '}}\">' +
-            '<i class="fa fa-bar-chart-o"></i></a>' +
-            '</span></div>' +
+            '<i class="fa fa-arrow-circle-o-down"></i></a></div>' +
             '<div ng-if="!COL_FIELD"' +
               'title="File not available for download">' +
             '<i class="fa fa-bolt"></i>' +

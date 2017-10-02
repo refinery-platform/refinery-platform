@@ -11,6 +11,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
   # Every Vagrant virtual environment requires a box to build off of.
   config.vm.box = "ubuntu/trusty64"
+  config.vm.box_version = "20170619.0.0"
   config.vm.hostname = "refinery"
   config.vm.network "private_network", ip: "192.168.50.50"
 

@@ -8,13 +8,6 @@
         "type": "object",
         "$ref": "Parameter.json#"
       }
-    },
-    "output_files": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "$ref": "OutputFile.json#"
-      }
     }
   }
 }

@@ -10,9 +10,10 @@ from django.test import TestCase
 
 from rest_framework.test import APIClient, APIRequestFactory, APITestCase
 
-from core.models import DataSet, ExtendedGroup, InvestigationLink
+from core.models import Analysis, DataSet, ExtendedGroup, InvestigationLink
 from core.views import NodeViewSet
 from data_set_manager.tasks import parse_isatab
+from factory_boy.utils import make_analyses_with_single_dataset
 from file_store.models import FileStoreItem
 
 from .models import (AnnotatedNode, Assay, Attribute, AttributeOrder,
@@ -24,9 +25,8 @@ from .utils import (create_facet_filter_query, customize_attribute_response,
                     generate_facet_fields_query,
                     generate_filtered_facet_fields,
                     generate_solr_params_for_assay,
-                    generate_solr_params_for_user, get_file_url_from_node_uuid,
-                    get_owner_from_assay, hide_fields_from_list,
-                    initialize_attribute_order_ranks,
+                    get_file_url_from_node_uuid, get_owner_from_assay,
+                    hide_fields_from_list, initialize_attribute_order_ranks,
                     insert_facet_field_filter, is_field_in_hidden_list,
                     objectify_facet_field_counts, update_attribute_order_ranks)
 from .views import Assays, AssaysAttributes
@@ -817,37 +817,6 @@ class UtilitiesTest(TestCase):
                          '&facet.limit=-1'.format(
                                  self.valid_uuid))
 
-    def test_generate_solr_params_for_user(self):
-        query = generate_solr_params_for_user(QueryDict({}), self.user1.id)
-        self.assertEqual(str(query),
-                         'fq=assay_uuid%3A%28{} OR {}%29'
-                         '&facet.field=organism_Characteristics_generic_s'
-                         '&facet.field=organism_Factor_Value_generic_s'
-                         '&facet.field=technology_Characteristics_generic_s'
-                         '&facet.field=technology_Factor_Value_generic_s'
-                         '&facet.field=antibody_Characteristics_generic_s'
-                         '&facet.field=antibody_Factor_Value_generic_s'
-                         '&facet.field=genotype_Characteristics_generic_s'
-                         '&facet.field=genotype_Factor_Value_generic_s'
-                         '&facet.field=experimenter_Characteristics_generic_s'
-                         '&facet.field=experimenter_Factor_Value_generic_s'
-                         '&fl=%2A_generic_s'
-                         '%2Cname%2Cfile_uuid%2Ctype%2Cdjango_id'
-                         '&fq=type%3A%28%22Raw Data File%22 '
-                         'OR %22Derived Data File%22 '
-                         'OR %22Array Data File%22 '
-                         'OR %22Derived Array Data File%22 '
-                         'OR %22Array Data Matrix File%22 '
-                         'OR%22Derived Array Data Matrix File%22%29'
-                         '&fq=is_annotation%3Afalse'
-                         '&start=0'
-                         '&rows=10000000'
-                         '&q=django_ct%3Adata_set_manager.node'
-                         '&wt=json'
-                         '&facet=true'
-                         '&facet.limit=-1'.format(
-                             self.assay.uuid, self.new_assay.uuid))
-
     def test_generate_filtered_facet_fields(self):
         attribute_orders = AttributeOrder.objects.filter(
                 assay__uuid=self.valid_uuid)
@@ -980,10 +949,10 @@ class UtilitiesTest(TestCase):
         )
 
     def test_format_solr_response_invalid(self):
-        # invalid input, error checking
+        # invalid input, do not mask error
         solr_response = {"test_object": "not a string"}
-        error = format_solr_response(solr_response)
-        self.assertEqual(error, "Error loading json.")
+        with self.assertRaises(TypeError):
+            format_solr_response(solr_response)
 
     def test_customize_attribute_response_for_generics(self):
         attributes = ['technology_Characteristics_generic_s',
@@ -1415,6 +1384,10 @@ class UtilitiesTest(TestCase):
 
 class NodeClassMethodTests(TestCase):
     def setUp(self):
+        self.username = 'coffee_tester'
+        self.password = 'coffeecoffee'
+        self.user = User.objects.create_user(self.username, '', self.password)
+
         self.filestore_item = FileStoreItem.objects.create(
             datafile=SimpleUploadedFile(
                 'test_file.bam',
@@ -1451,9 +1424,39 @@ class NodeClassMethodTests(TestCase):
             file_uuid=self.filestore_item_1.uuid
         )
 
+    # Parents and Children:
+
+    def test_get_children(self):
+        self.assertEqual(self.node.get_children(), [])
+        self.node.add_child(self.another_node)
+        child_uuid = self.node.get_children()[0]
+        self.assertIsNotNone(child_uuid)
+        self.assertEqual(child_uuid, self.another_node.uuid)
+
+        # Check inverse relationship:
+        self.assertEqual(self.node.uuid, self.another_node.get_parents()[0])
+
+    def test_get_parents(self):
+        self.assertEqual(self.another_node.get_parents(), [])
+        self.node.add_child(self.another_node)
+        parent_uuid = self.another_node.get_parents()[0]
+        self.assertIsNotNone(parent_uuid)
+        self.assertEqual(parent_uuid, self.node.uuid)
+
+        # Check inverse relationship:
+        self.assertEqual(self.another_node.uuid, self.node.get_children()[0])
+
+    def test_is_orphan(self):
+        self.assertTrue(self.another_node.is_orphan())
+        self.node.add_child(self.another_node)
+        self.assertFalse(self.another_node.is_orphan())
+
+    # Auxiliary nodes:
+
     def test_create_and_associate_auxiliary_node(self):
         self.assertEqual(self.node.get_children(), [])
-        self.node.create_and_associate_auxiliary_node(self.filestore_item.uuid)
+        self.node._create_and_associate_auxiliary_node(
+            self.filestore_item.uuid)
         self.assertIsNotNone(self.node.get_children())
         self.assertIsNotNone(Node.objects.get(
             file_uuid=self.filestore_item.uuid))
@@ -1465,37 +1468,36 @@ class NodeClassMethodTests(TestCase):
         self.assertEqual(Node.objects.get(uuid=self.node.get_children()[
             0]).is_auxiliary_node, True)
 
-    def test_get_children(self):
-        self.assertEqual(self.node.get_children(), [])
-        self.node.add_child(self.another_node)
-        self.assertIsNotNone(self.node.get_children()[0])
-        self.assertEqual(self.node.get_children()[0], self.another_node.uuid)
-
-    def test_get_parents(self):
-        self.assertEqual(self.another_node.get_parents(), [])
-        self.node.add_child(self.another_node)
-        self.assertIsNotNone(self.another_node.get_parents()[0])
-        self.assertEqual(self.another_node.get_parents()[0], self.node.uuid)
-
     def test_get_auxiliary_nodes(self):
         self.assertEqual(self.node.get_children(), [])
-        self.node.create_and_associate_auxiliary_node(self.filestore_item.uuid)
-        self.assertNotEqual(self.node.get_children(), [])
-        self.assertEqual(Node.objects.get(
-            file_uuid=self.filestore_item.uuid
-        ).get_relative_file_store_item_url(),
-                         FileStoreItem.objects.get(
-                             uuid=Node.objects.get(
-                                 file_uuid=self.filestore_item.uuid).file_uuid
-                         ).get_datafile_url())
-        self.node.create_and_associate_auxiliary_node(self.filestore_item.uuid)
-        self.assertEqual(Node.objects.get(
-            file_uuid=self.filestore_item.uuid
-        ).get_relative_file_store_item_url(),
-                         FileStoreItem.objects.get(
-                             uuid=Node.objects.get(
-                                 file_uuid=self.filestore_item.uuid).file_uuid
-                         ).get_datafile_url())
+
+        for i in xrange(2):
+            self.node._create_and_associate_auxiliary_node(
+                self.filestore_item.uuid)
+            self.assertEqual(len(self.node.get_children()), 1)
+            # Still just one child even on second time.
+            self.assertEqual(Node.objects.get(
+                file_uuid=self.filestore_item.uuid
+            ).get_relative_file_store_item_url(),
+                 FileStoreItem.objects.get(
+                     uuid=Node.objects.get(
+                         file_uuid=self.filestore_item.uuid).file_uuid
+                 ).get_datafile_url())
+
+    def test_get_auxiliary_file_generation_task_state(self):
+        # Normal nodes will always return None
+        self.assertIsNone(self.node.get_auxiliary_file_generation_task_state())
+
+        # Auxiliary nodes will have a task state
+        self.node._create_and_associate_auxiliary_node(
+            self.filestore_item.uuid)
+        auxiliary = Node.objects.get(uuid=self.node.get_children()[0])
+        state = auxiliary.get_auxiliary_file_generation_task_state()
+        self.assertIn(state, ['PENDING', 'STARTING', 'SUCCESS'])
+        # Values from:
+        # http://docs.celeryproject.org/en/latest/_modules/celery/result.html#AsyncResult
+
+    # File store:
 
     def test_get_file_store_item(self):
         self.assertEqual(self.file_node.get_file_store_item(),
@@ -1506,10 +1508,21 @@ class NodeClassMethodTests(TestCase):
     def test_get_relative_file_store_item_url(self):
         relative_url = self.file_node.get_relative_file_store_item_url()
         self.assertEqual(relative_url, self.file_node.get_file_store_item(
-            ).get_datafile_url())
+        ).get_datafile_url())
 
-    def test_get_auxiliary_file_generation_task_state(self):
-        self.assertIsNone(self.node.get_auxiliary_file_generation_task_state())
+    def test_get_analysis(self):
+        make_analyses_with_single_dataset(1, self.user)
+        analysis = Analysis.objects.all()[0]
+
+        node_with_analysis = Node.objects.create(
+            assay=self.assay,
+            study=self.study,
+            analysis_uuid=analysis.uuid
+        )
+        self.assertEqual(node_with_analysis.get_analysis(), analysis)
+
+    def test_get_analysis_no_analysis(self):
+        self.assertIsNone(self.node.get_analysis())
 
 
 class NodeApiV2Tests(APITestCase):
@@ -1648,13 +1661,20 @@ class NodeApiV2Tests(APITestCase):
 class NodeIndexTests(APITestCase):
 
     def setUp(self):
+        data_set = DataSet.objects.create()
         investigation = Investigation.objects.create()
+
+        InvestigationLink.objects.create(
+            investigation=investigation,
+            data_set=data_set
+        )
+
         study = Study.objects.create(investigation=investigation)
-        assay = Assay.objects.create(study=study)
+        assay = Assay.objects.create(study=study, technology='whizbang')
 
         test_file = StringIO()
         test_file.write('Coffee is great.\n')
-        file_store_item = FileStoreItem.objects.create(
+        self.file_store_item = FileStoreItem.objects.create(
             datafile=InMemoryUploadedFile(
                 test_file,
                 field_name='tempfile',
@@ -1668,11 +1688,14 @@ class NodeIndexTests(APITestCase):
         self.node = Node.objects.create(
             assay=assay,
             study=study,
-            file_uuid=file_store_item.uuid)
+            file_uuid=self.file_store_item.uuid,
+            name='http://example.com/fake.txt'
+        )
 
+        self.data_set_uuid = data_set.uuid
         self.assay_uuid = assay.uuid
         self.study_uuid = study.uuid
-        self.file_uuid = file_store_item.uuid
+        self.file_uuid = self.file_store_item.uuid
         self.node_uuid = self.node.uuid
 
         Attribute.objects.create(
@@ -1691,35 +1714,59 @@ class NodeIndexTests(APITestCase):
         data = NodeIndex().prepare(self.node)
         data = dict(
             (
-                re.sub(r'\d+', '#', k),
-                re.sub(r'\d+', '#', v) if
-                type(v) in (unicode, str) and not('uuid' in k)
-                else v
+                re.sub(r'\d+', '#', key),
+                re.sub(r'\d+', '#', value) if
+                type(value) in (unicode, str) and
+                key != 'REFINERY_DOWNLOAD_URL_s' and
+                'uuid' not in key
+                else value
             )
-            for (k, v) in data.items())
-        self.assertEqual(data,
-                         {'REFINERY_ANALYSIS_UUID_#_#_s': 'N/A',
-                          'REFINERY_FILETYPE_#_#_s': None,
-                          'REFINERY_NAME_#_#_s': u'',
-                          'REFINERY_SUBANALYSIS_#_#_s': -1,
-                          'REFINERY_TYPE_#_#_s': u'',
-                          'REFINERY_WORKFLOW_OUTPUT_#_#_s': 'N/A',
-                          'analysis_uuid': None,
-                          'assay_uuid': self.assay_uuid,
-                          u'django_ct': u'data_set_manager.node',
-                          u'django_id': u'#',
-                          'file_uuid': self.file_uuid,
-                          'genome_build': None,
-                          u'id': u'data_set_manager.node.#',
-                          'is_annotation': False,
-                          'name': u'',
-                          'species': None,
-                          'study_uuid': self.study_uuid,
-                          'subanalysis': None,
-                          'text': u'',
-                          'type': u'',
-                          'uuid': self.node_uuid,
-                          'workflow_output': None})
+            for (key, value) in data.items()
+        )
+        self.assertRegexpMatches(
+            data['REFINERY_DOWNLOAD_URL_s'],
+            r'^http://example.com/media/file_store/.+/test_file.+txt$'
+            # There may or may not be a suffix on "test_file",
+            # depending on environment. Don't make it too strict!
+        )
+        self.assertEqual(
+            data,
+            {
+                'REFINERY_ANALYSIS_UUID_#_#_s': 'N/A',
+                'REFINERY_DOWNLOAD_URL_s':
+                    self.file_store_item.get_datafile_url(),
+                'REFINERY_FILETYPE_#_#_s': None,
+                'REFINERY_NAME_#_#_s': 'http://example.com/fake.txt',
+                'REFINERY_SUBANALYSIS_#_#_s': -1,
+                'REFINERY_TYPE_#_#_s': u'',
+                'REFINERY_WORKFLOW_OUTPUT_#_#_s': 'N/A',
+                'analysis_uuid': None,
+                'assay_uuid': self.assay_uuid,
+                'data_set_uuid': self.data_set_uuid,
+                u'django_ct': u'data_set_manager.node',
+                u'django_id': u'#',
+                'file_uuid': self.file_uuid,
+                'filename_Characteristics_generic_s': u'fake.txt',
+                'genome_build': None,
+                u'id': u'data_set_manager.node.#',
+                'is_annotation': False,
+                'measurement_Characteristics_generic_s': '',
+                'measurement_accession_Characteristics_generic_s': '',
+                'measurement_source_Characteristics_generic_s': '',
+                'name': u'http://example.com/fake.txt',
+                'platform_Characteristics_generic_s': '',
+                'species': None,
+                'study_uuid': self.study_uuid,
+                'subanalysis': None,
+                'text': u'',
+                'technology_Characteristics_generic_s': 'whizbang',
+                'technology_accession_Characteristics_generic_s': '',
+                'technology_source_Characteristics_generic_s': '',
+                'type': u'',
+                'uuid': self.node_uuid,
+                'workflow_output': None
+            }
+        )
 
 
 class AnnotatedNodeExplosionTestCase(TestCase):
@@ -1736,7 +1783,7 @@ class AnnotatedNodeExplosionTestCase(TestCase):
         parse_isatab(
             self.user.username,
             True,
-            "data_set_manager/test-data/MTBLS1.zip"
+            "refinery/data_set_manager/test-data/MTBLS1.zip"
         )
         self.assertEqual(DataSet.objects.count(), 0)
         self.assertEqual(AnnotatedNode.objects.count(), 0)
@@ -1747,7 +1794,7 @@ class AnnotatedNodeExplosionTestCase(TestCase):
         parse_isatab(
             self.user.username,
             True,
-            "data_set_manager/test-data/MTBLS112.zip"
+            "refinery/data_set_manager/test-data/MTBLS112.zip"
         )
         self.assertEqual(DataSet.objects.count(), 0)
         self.assertEqual(AnnotatedNode.objects.count(), 0)

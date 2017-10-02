@@ -9,12 +9,14 @@ from django.contrib import admin
 from django_extensions.admin import ForeignKeyAutocompleteAdmin
 from guardian.admin import GuardedModelAdmin
 
-from core.models import (
-    Analysis, AnalysisNodeConnection, AnalysisResult, DataSet, DiskQuota,
-    ExtendedGroup, InvestigationLink, NodePair, NodeRelationship, NodeSet,
-    Project, UserProfile, Workflow, WorkflowDataInput, WorkflowDataInputMap,
-    WorkflowEngine, WorkflowFilesDL, WorkflowInputRelationships, Download,
-    Invitation, Ontology, Tutorials, SiteProfile)
+from core.models import (Analysis, AnalysisNodeConnection, AnalysisResult,
+                         DataSet, DiskQuota, Download, ExtendedGroup,
+                         InvestigationLink, Invitation, NodePair,
+                         NodeRelationship, NodeSet, Ontology, Project,
+                         SiteProfile, Tutorials, UserProfile, Workflow,
+                         WorkflowDataInput, WorkflowDataInputMap,
+                         WorkflowEngine, WorkflowFilesDL,
+                         WorkflowInputRelationships)
 from core.utils import admin_ui_deletion
 
 

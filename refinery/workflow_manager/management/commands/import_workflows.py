@@ -2,8 +2,9 @@ from __future__ import absolute_import
 
 from django.core.management.base import BaseCommand
 
-from ...tasks import get_workflows
 from core.models import WorkflowEngine
+
+from ...tasks import get_workflows
 
 
 class Command(BaseCommand):

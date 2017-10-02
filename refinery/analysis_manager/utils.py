@@ -13,10 +13,9 @@ from jsonschema import RefResolver, ValidationError, validate
 import requests
 from requests.packages.urllib3.exceptions import HTTPError
 
-from core.models import (Analysis, InvestigationLink, NodeRelationship,
-                         NodeSet, Workflow, WorkflowDataInputMap)
+from core.models import (Analysis, NodeRelationship, NodeSet, Study, Workflow,
+                         WorkflowDataInputMap)
 from core.utils import get_aware_local_time
-from data_set_manager.models import Study
 import tool_manager
 
 logger = logging.getLogger(__name__)
@@ -45,7 +44,7 @@ def create_analysis(validated_analysis_config):
     if validated_analysis_config.get("nodeRelationshipUuid"):
         return create_noderelationship_analysis(validated_analysis_config)
 
-    # Create an analysis for new-type Workflow-based Tools
+    # Create an analysis for new Workflow-based Tools
     if validated_analysis_config.get("toolUuid"):
         return tool_manager.utils.create_tool_analysis(
             validated_analysis_config
@@ -184,7 +183,7 @@ def create_noderelationship_analysis(validated_analysis_config):
     count = 0
     for samp in ret_list:
         count += 1
-        for k, v in samp.items():
+        for k in samp.keys():
             temp_input = WorkflowDataInputMap.objects.create(
                 workflow_data_input_name=k,
                 data_uuid=samp[k]["node_uuid"],
@@ -223,15 +222,10 @@ def fetch_objects_required_for_analysis(validated_analysis_config):
         study = Study.objects.get(uuid=study_uuid)
     except(Study.DoesNotExist, Study.MultipleObjectsReturned) as e:
         raise RuntimeError(
-            "Couldn't fetch Study from UUID: {} {}".format(study_uuid, e)
+            "Couldn't fetch Study {}: {}".format(study_uuid, e)
         )
 
-    try:
-        data_set = InvestigationLink.objects.filter(
-            investigation__uuid=study.investigation.uuid
-        ).order_by("version").reverse()[0].data_set
-    except (AttributeError, IndexError) as e:
-        raise RuntimeError("Couldn't fetch DataSet {}".format(e))
+    data_set = study.get_dataset()
 
     return {
         "user": user,
@@ -259,7 +253,6 @@ def get_solr_results(query, facets=False, jsonp=False, annotation=False,
     :type selected_nodes: array
     :returns: dictionary of current solr results
     """
-    logger.debug("core.views: get_solr_results")
     if not facets:
         # replacing facets w/ false
         query = query.replace('facet=true', 'facet=false')

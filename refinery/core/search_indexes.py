@@ -14,7 +14,6 @@ from haystack import indexes
 
 from data_set_manager.models import AnnotatedNode, Node
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -142,7 +141,7 @@ class DataSetIndex(indexes.SearchIndex, indexes.Indexable):
             for study in studies:
                 assays = study.assay_set.all()
                 for assay in assays:
-                    nodes = list(AnnotatedNode.objects.filter(
+                    nodes += list(AnnotatedNode.objects.filter(
                         study__uuid=study.uuid,
                         assay__uuid=assay.uuid,
                         node_type__in=Node.FILES

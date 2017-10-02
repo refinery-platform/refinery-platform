@@ -9,9 +9,12 @@ from django.template import RequestContext
 
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from unidecode import unidecode
 
-from data_set_manager.utils import (format_solr_response,
-                                    generate_solr_params_for_user, search_solr)
+from data_set_manager.search_indexes import NodeIndex
+from data_set_manager.utils import format_solr_response, search_solr
+
+from .utils import generate_solr_params_for_user
 
 logger = logging.getLogger(__name__)
 
@@ -30,14 +33,19 @@ def user_files_csv(request):
     cols = settings.USER_FILES_COLUMNS.split(',')
 
     writer = csv.writer(response)
-    writer.writerow(cols)
+    writer.writerow(['url'] + cols)
+    # DOWNLOAD_URL's internal solr name not good for end-user.
 
     docs = loads(solr_response)['response']['docs']
     for doc in docs:
-        row = []
+        row = [doc.get(NodeIndex.DOWNLOAD_URL) or '']
         for col in cols:
-            row.append(doc.get(col + '_Characteristics_generic_s') or
-                       doc.get(col + '_Factor_Value_generic_s') or '')
+            possibly_unicode = (
+                doc.get(col + '_Characteristics_generic_s') or
+                doc.get(col + '_Factor_Value_generic_s') or
+                ''
+            )
+            row.append(unidecode(possibly_unicode))
         writer.writerow(row)
 
     return response

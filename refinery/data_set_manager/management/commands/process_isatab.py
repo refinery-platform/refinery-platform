@@ -99,7 +99,7 @@ class Command(BaseCommand):
 
         s_tasks = list()
         # Add subtasks to list
-        for k, v_list in isatab_dict.items():
+        for v_list in isatab_dict.values():
             isa_file = v_list.pop(0)
             try:
                 pre_file = v_list.pop(0)

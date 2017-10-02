@@ -5,9 +5,9 @@
     .module('refineryFileBrowser')
     .directive('rpFileDisplay', rpFileDisplay);
 
-  rpFileDisplay.$inject = ['$', '$window'];
+  rpFileDisplay.$inject = ['$', '$log', '$window'];
 
-  function rpFileDisplay ($, $window) {
+  function rpFileDisplay ($, $log, $window) {
     return {
       restrict: 'E',
       templateUrl: function () {
@@ -21,7 +21,7 @@
           if (event.val === 'pivot-view-tab') {
             $window.pivotMatrixView.render();
           } else if (event.val === 'provenance-view-tab') {
-            console.log('in provenance-view-tab');
+            $log.log('in provenance-view-tab');
           }
         });
       }

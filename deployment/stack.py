@@ -16,9 +16,7 @@ import sys
 
 import boto3
 from cfn_pyplates import core, functions
-
-from utils import (load_config, load_tags,
-                   save_s3_config, ensure_s3_bucket)
+from utils import ensure_s3_bucket, load_config, load_tags, save_s3_config
 
 VERSION = '1.1'
 
@@ -192,7 +190,7 @@ def make_template(config, config_yaml):
         "EngineVersion": "9.3.14",
         # "KmsKeyId" ?
         "MasterUsername": "root",
-        "MasterUserPassword": "mypassword",
+        "MasterUserPassword": config['RDS_SUPERUSER_PASSWORD'],
         "MultiAZ": False,
         "Port": "5432",
         "PubliclyAccessible": False,
@@ -624,7 +622,10 @@ def make_template(config, config_yaml):
                 "Resource": "*"
             },
             {
-                "Action": "s3:PutObject",
+                "Action": [
+                    "s3:PutObject",
+                    "s3:AbortMultipartUpload"
+                ],
                 "Effect": "Allow",
                 "Resource": {
                     "Fn::Sub": [

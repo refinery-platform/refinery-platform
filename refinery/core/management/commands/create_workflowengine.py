@@ -9,9 +9,8 @@ import logging
 from django.contrib.sites.models import Site
 from django.core.management.base import BaseCommand, CommandError
 
-from galaxy_connector.models import Instance
 from core.models import ExtendedGroup, WorkflowEngine
-
+from galaxy_connector.models import Instance
 
 logger = logging.getLogger(__name__)
 

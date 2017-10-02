@@ -4,18 +4,18 @@ Created on Jun 20, 2012
 @author: nils
 '''
 import csv
-import file_server
 import logging
 import operator
 
 from django.conf import settings
 
-from .models import Assay, Attribute, Investigation, Node, Study
-from .tasks import create_dataset
-from annotation_server.models import species_to_taxon_id, Taxon
+from annotation_server.models import Taxon, species_to_taxon_id
+import file_server
 from file_store.models import FileStoreItem, generate_file_source_translator
 from file_store.tasks import create, import_file
 
+from .models import Assay, Attribute, Investigation, Node, Study
+from .tasks import create_dataset
 
 logger = logging.getLogger(__name__)
 
@@ -269,15 +269,15 @@ class SingleFileColumnParser:
 
         for uuid in data_files:
             try:
-                file_store_item = FileStoreItem.objects.get(
-                        uuid=uuid)
+                file_store_item = FileStoreItem.objects.get(uuid=uuid)
             except (FileStoreItem.DoesNotExist,
                     FileStoreItem.MultipleObjectsReturned) as e:
                 logger.error("Couldn't properly fetch FileStoreItem %s", e)
             else:
 
-                if self.file_permanent or file_store_item.source.startswith(
-                        settings.REFINERY_DATA_IMPORT_DIR):
+                if (self.file_permanent or file_store_item.source.startswith(
+                        (settings.REFINERY_DATA_IMPORT_DIR, 's3://')
+                )):
                     import_file.delay(uuid)
 
         return investigation
@@ -300,7 +300,8 @@ def process_metadata_table(
     slug=None,
     is_public=False,
     delimiter="comma",
-    custom_delimiter_string=","
+    custom_delimiter_string=",",
+    identity_id=None
 ):
     """Create a dataset given a metadata file object and its description
     :param username: username
@@ -388,7 +389,7 @@ def process_metadata_table(
     data_file_permanent = bool(data_file_permanent)
     is_public = bool(is_public)
     file_source_translator = generate_file_source_translator(
-        username=username, base_path=base_path)
+        username=username, base_path=base_path, identity_id=identity_id)
 
     parser = SingleFileColumnParser(
         metadata_file=metadata_file,

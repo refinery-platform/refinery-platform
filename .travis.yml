@@ -1,6 +1,5 @@
 sudo: required
 
-group: deprecated-2017Q2 # TODO: Remove this before Sept. 1, 2017
 language: python
 cache: pip
 addons:
@@ -18,6 +17,16 @@ services:
   - docker
 
 install:
+  - node --version
+  - NODE_VERSION=6.11.0
+  - nvm install $NODE_VERSION
+  - nvm use $NODE_VERSION
+  - node --version
+
+  - npm --version
+  - npm install -g npm@3.10.10
+  - npm --version
+
   - pip install -r requirements.txt --quiet
   # Install geckodriver required for selenium testing
   - GECKODRIVER_VERSION=v0.17.0
@@ -34,8 +43,13 @@ env:
     - DJANGO_SETTINGS_MODULE=config.settings.prod
 
 before_script:
+  # Vagrant is not used on travis: This user is just for the database.
   - createuser --createdb --no-superuser --no-createrole vagrant
   - createdb -O vagrant refinery
+
+  - sudo mkdir /data # In vagrant, this is created by puppet; In production, this is an EBS mount.
+  - sudo chown $USER /data
+
   - cd refinery
 # See http://www.stuartellis.eu/articles/erb/#running-erb-from-the-command-line
   - erb config/config.json.erb > config/config.json
