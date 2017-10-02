@@ -10,23 +10,25 @@
       <div class="row"
         ng-if="FBCtrl.isOwner || FBCtrl.canEdit"
         id="tool-panel-show-button">
+
         <button
           class="btn btn-primary btn-sm"
           data-target="#tool-launch-panel"
           ng-click="FBCtrl.toggleToolPanel()">
-        <span ng-if="FBCtrl.collapsedToolPanel">
-          <i class="fa fa-angle-double-right" aria-hidden="true"></i>
-           Show Tool Panel
-        </span>
-        <span ng-if="!FBCtrl.collapsedToolPanel">
-          <i class="fa fa-angle-double-left" aria-hidden="true"></i>
-           Hide Tool Panel
-        </span>
+          <span ng-if="FBCtrl.collapsedToolPanel">
+            <i class="fa fa-angle-double-left" aria-hidden="true"></i>
+             Show Tool Panel
+          </span>
+          <span ng-if="!FBCtrl.collapsedToolPanel">
+            <i class="fa fa-angle-double-right" aria-hidden="true"></i>
+             Hide Tool Panel
+          </span>
         </button>
-        <span ng-if="FBCtrl.isOwner" class="float-right">
-          <i class="fa fa-wrench fa-border" rp-assay-files-util-modal>
-           <span class="font-awesome-text">Config</span>
-          </i>
+
+        <span class="float-right">
+          <span ng-if="FBCtrl.isOwner" class="btn btn-sm">
+            <i class="fa fa-wrench" rp-assay-files-util-modal></i>
+          </span>
           <a
             id="help-view-selector"
             popover-placement="right"
@@ -40,6 +42,7 @@
               id="config-question-icon"></i>
           </a>
         </span>
+
       </div>
       <div class="row" id="table-filter">
         <div id="filter-panel-body">
