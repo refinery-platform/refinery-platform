@@ -797,12 +797,15 @@ class AnalysisResourceTest(ResourceTestCase):
 
         self.dataset.set_owner(self.user)
 
+        workflow_dict = {'a': True}
+        workflow_as_repr = repr(workflow_dict)
         analysis = Analysis.objects.create(
             name='bla',
             summary='keks',
             project=self.user_catch_all_project,
             data_set=self.dataset,
-            workflow=self.workflow
+            workflow=self.workflow,
+            workflow_copy=workflow_as_repr
         )
         analysis.set_owner(self.user)
         analysis_uri = make_api_uri(Analysis._meta.module_name, analysis.uuid)
@@ -812,8 +815,16 @@ class AnalysisResourceTest(ResourceTestCase):
         )
         self.assertValidJSONResponse(response)
         data = self.deserialize(response)
-        self.assertKeys(data, AnalysisResource.Meta.fields)
+
+        expected_keys = set(AnalysisResource.Meta.fields)
+        expected_keys.add(u'workflow_json')
+
+        self.assertEqual(set(data.keys()), expected_keys)
         self.assertEqual(data['uuid'], analysis.uuid)
+
+        workflow_as_json = json.dumps(workflow_dict)
+        self.assertNotEqual(workflow_as_json, workflow_as_repr)
+        self.assertEqual(data['workflow_json'], workflow_as_json)
 
     def test_get_analysis_list(self):
         """Test retrieving a list of Analysis instances that belong to a user

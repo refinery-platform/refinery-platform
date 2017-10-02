@@ -272,30 +272,7 @@ var provvisInit = (function () {
   var extractWorkflows = function (analysesData) {
     analysesData.forEach(function (a) {
       /* Prepare for json format. */
-      var prepareJSON = function (wfCpy) {
-        var text = wfCpy.replace(/u'/g, '"');
-        text = text.replace(/\'/g, '"');
-        text = text.replace(/\sNone/g, ' "None"');
-        text = text.replace(/\\n/g, '');
-        text = text.replace(/\\/g, '');
-        text = text.replace(/\"{\"/g, '{"');
-        text = text.replace(/}\"/g, '}');
-        text = text.replace(/\"\"(\S+)\"\"/g, '"$1"');
-
-        /* Eliminate __xxxx__ parameters. */
-        text = text.replace(/\"__(\S*)__\":\s{1}\d*(,\s{1})?/g, '');
-        text = text.replace(/,\s{1}null/g, '');
-        text = text.replace(/null,/g, '');  // TODO: temp fix
-        text = text.replace(/,\s{1}}/g, '}');
-
-        return text;
-      };
-
-      /* Transform to JSON object. */
-      var text = prepareJSON(a.workflow_copy);
-      var wfData = JSON.parse(text);
-      var wfObj = wfData;
-      workflowData.set(a.workflow__uuid, wfObj);
+      workflowData.set(a.workflow__uuid, JSON.parse(a.workflow_json));
     });
   };
 
