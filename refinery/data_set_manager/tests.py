@@ -1,6 +1,7 @@
 from StringIO import StringIO
 import json
 import re
+import uuid
 
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import (InMemoryUploadedFile,
@@ -20,7 +21,8 @@ from .models import (AnnotatedNode, Assay, AttributeOrder, Investigation, Node,
                      Study)
 from .search_indexes import NodeIndex
 from .serializers import AttributeOrderSerializer
-from .utils import (create_facet_filter_query, customize_attribute_response,
+from .utils import (_create_solr_params_from_node_uuids,
+                    create_facet_filter_query, customize_attribute_response,
                     escape_character_solr, format_solr_response,
                     generate_facet_fields_query,
                     generate_filtered_facet_fields,
@@ -1380,6 +1382,18 @@ class UtilitiesTest(TestCase):
                 ),
                 context.exception.message
             )
+
+    def test__create_solr_params_from_node_uuids(self):
+        fake_node_uuids = [str(uuid.uuid4()), str(uuid.uuid4())]
+        node_solr_params = _create_solr_params_from_node_uuids(fake_node_uuids)
+        self.assertEqual(
+            node_solr_params,
+            {
+                "q": "django_ct:data_set_manager.node",
+                "wt": "json",
+                "fq": "uuid:'{}'".format(" OR ".join(fake_node_uuids))
+            }
+        )
 
 
 class NodeClassMethodTests(TestCase):

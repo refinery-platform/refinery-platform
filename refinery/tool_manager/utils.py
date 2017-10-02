@@ -77,25 +77,22 @@ class FileTypeValidationError(RuntimeError):
 
 def create_and_associate_parameters(tool_definition, parameters):
     for parameter in parameters:
+        common_params = {
+            "name": parameter["name"],
+            "description": parameter["description"],
+            "value_type": parameter["value_type"],
+            "default_value": parameter["default_value"],
+        }
+
         if tool_definition.tool_type == ToolDefinition.WORKFLOW:
             tool_definition.parameters.add(
                 GalaxyParameterFactory(
-                    name=parameter["name"],
-                    description=parameter["description"],
-                    value_type=parameter["value_type"],
-                    default_value=parameter["default_value"],
-                    galaxy_workflow_step=parameter["galaxy_workflow_step"]
+                    galaxy_workflow_step=parameter["galaxy_workflow_step"],
+                    **common_params
                 )
             )
         if tool_definition.tool_type == ToolDefinition.VISUALIZATION:
-            tool_definition.parameters.add(
-                ParameterFactory(
-                    name=parameter["name"],
-                    description=parameter["description"],
-                    value_type=parameter["value_type"],
-                    default_value=parameter["default_value"],
-                )
-            )
+            tool_definition.parameters.add(ParameterFactory(**common_params))
 
 
 @transaction.atomic

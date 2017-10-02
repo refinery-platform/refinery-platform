@@ -28,7 +28,8 @@ from core.models import (INPUT_CONNECTION, OUTPUT_CONNECTION, Analysis,
                          AnalysisNodeConnection, DataSet, OwnableResource,
                          Workflow, WorkflowFilesDL)
 from data_set_manager.models import Node
-from data_set_manager.utils import get_file_url_from_node_uuid
+from data_set_manager.utils import (get_file_url_from_node_uuid,
+                                    get_solr_response_json)
 from file_store.models import FileType
 
 logger = logging.getLogger(__name__)
@@ -316,14 +317,17 @@ class Tool(OwnableResource):
         node_uuids = re.findall(UUID_RE, self.get_file_relationships())
         return node_uuids
 
-    def get_relative_container_url(self):
+    def _get_input_nodes(self):
         """
-        Construct & return the relative url of our Tool's container
+        Return a list of Node objects corresponding to the Node UUIDs we
+        receive from the front-end when a WorkflowTool is launched.
+
+        NOTE: There is no exception handling here since this method is
+        within the scope of an atomic transaction.
         """
-        return "/{}/{}".format(
-            settings.DJANGO_DOCKER_ENGINE_BASE_URL,
-            self.container_name
-        )
+        return [
+            Node.objects.get(uuid=uuid) for uuid in self.get_input_node_uuids()
+        ]
 
     def get_tool_launch_config(self):
         return json.loads(self.tool_launch_configuration)
@@ -400,11 +404,54 @@ class VisualizationTool(Tool):
     VisualizationTools are Tools that are specific to
     launching and monitoring Dockerized visualizations
     """
+    FILE_URL = "file_url"
+    NODE_INFORMATION = "node_info"
+    NODE_SOLR_INFO = "node_solr_info"
 
     class Meta:
         verbose_name = "visualizationtool"
         permissions = (
             ('read_%s' % verbose_name, 'Can read %s' % verbose_name),
+        )
+
+    def _create_container_input_dict(self):
+        """
+        Creat a dictionary containing information that Dockerized
+        Visualizations will have access to
+        """
+        return {
+            self.FILE_RELATIONSHIPS: self.get_file_relationships_urls(),
+            self.NODE_INFORMATION: self._get_detailed_input_nodes_dict()
+        }
+
+    def _get_detailed_input_nodes_dict(self):
+        """
+        Create and return a dict with detailed information about all of our
+        Tool's input Nodes.
+
+        This detailed info contains:
+            - Whatever we have in our Solr index for a given Node
+            - A full url pointing to our Node's FileStoreItem's datafile
+        """
+        solr_response_json = get_solr_response_json(
+            self.get_input_node_uuids()
+        )
+        node_info = {
+            node["uuid"]: {
+                self.NODE_SOLR_INFO: node,
+                self.FILE_URL: get_file_url_from_node_uuid(node["uuid"])
+            }
+            for node in solr_response_json["nodes"]
+        }
+        return node_info
+
+    def get_relative_container_url(self):
+        """
+        Construct & return the relative url of our Tool's container
+        """
+        return "/{}/{}".format(
+            settings.DJANGO_DOCKER_ENGINE_BASE_URL,
+            self.container_name
         )
 
     def launch(self):
@@ -419,16 +466,13 @@ class VisualizationTool(Tool):
         max_containers = settings.DJANGO_DOCKER_ENGINE_MAX_CONTAINERS
         if len(client.list()) >= max_containers:
             raise VisualizationToolError('Max containers')
+
         container = DockerContainerSpec(
             image_name=self.tool_definition.image_name,
             container_name=self.container_name,
             labels={self.uuid: ToolDefinition.VISUALIZATION},
-            container_input_path=(
-                self.tool_definition.container_input_path
-            ),
-            input={
-                self.FILE_RELATIONSHIPS: self.get_file_relationships_urls()
-            },
+            container_input_path=self.tool_definition.container_input_path,
+            input=self._create_container_input_dict(),
             extra_directories=self.tool_definition.get_extra_directories()
         )
 
@@ -955,18 +999,6 @@ class WorkflowTool(Tool):
             self.galaxy_workflow_history_id,
             self.get_galaxy_dict()[self.GALAXY_WORKFLOW_INVOCATION_DATA]["id"]
         )
-
-    def _get_input_nodes(self):
-        """
-        Return a list of Node objects corresponding to the Node UUIDs we
-        receive from the front-end when a WorkflowTool is launched.
-
-        NOTE: There is no exception handling here since this method is
-        within the scope of an atomic transaction.
-        """
-        return [
-            Node.objects.get(uuid=uuid) for uuid in self.get_input_node_uuids()
-            ]
 
     @handle_bioblend_exceptions
     def _get_refinery_input_file_id(self, galaxy_dataset_dict):
