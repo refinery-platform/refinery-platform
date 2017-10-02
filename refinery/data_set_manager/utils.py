@@ -563,7 +563,6 @@ def _add_annotated_nodes(
 
     if len(bulk_list) > 0:
         AnnotatedNode.objects.bulk_create(bulk_list)
-        bulk_list = []
 
     end = time.time()
 

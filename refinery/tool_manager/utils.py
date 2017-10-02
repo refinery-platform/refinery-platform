@@ -159,7 +159,9 @@ def create_tool_definition(annotation_data):
             logger.debug(
                 "Pulling Docker image: %s", tool_definition.image_name
             )
-            DockerClientWrapper().pull(image_name, version=version)
+            DockerClientWrapper(
+                settings.DJANGO_DOCKER_ENGINE_DATA_DIR
+            ).pull(image_name, version=version)
 
     tool_definition.annotation = json.dumps(annotation)
     tool_definition.save()

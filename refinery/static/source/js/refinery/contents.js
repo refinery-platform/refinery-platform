@@ -128,26 +128,17 @@
           tableView.setDocumentsPerPage(20);
           analysisView = new SolrAnalysisView("solr-analysis-view", "solranalysis1", query, configurator, analysisViewCommands, dataSetMonitor);
           facetView = new SolrFacetView("solr-facet-view", "solrfacets1", query, configurator, facetViewCommands);
-          documentCountView = new SolrDocumentCountView("solr-document-count-view", "solrcounts1", query, undefined);
 
           pivotMatrixView = new SolrPivotMatrix("solr-pivot-matrix", "solrpivot1", query, {}, pivotMatrixCommands);
 
-          $('#view-selector').on("change", function (e) {
-            if (e.val === "pivot-view-tab") {
-              pivotMatrixView.render();
-            }
-          });
-
-          $('#view-selector').on("change", function (e) {
-            if (e.val === "provenance-view-tab") {
-              if (provvis.get() instanceof provvisDecl.ProvVis === true) {
-                provvisRender.update(provvis.get(), lastProvVisSolrResponse);
-              } else {
-                provVisQuery = query.clone();
-                provVisQuery.setDocumentCount(provVisQuery.getTotalDocumentCount());
-                provVisQuery.setDocumentIndex(0);
-                client.run(provVisQuery, SOLR_FULL_QUERY);
-              }
+          $(function() {
+            if (provvis.get() instanceof provvisDecl.ProvVis === true) {
+              provvisRender.update(provvis.get(), lastProvVisSolrResponse);
+            } else {
+              provVisQuery = query.clone();
+              provVisQuery.setDocumentCount(provVisQuery.getTotalDocumentCount());
+              provVisQuery.setDocumentIndex(0);
+              client.run(provVisQuery, SOLR_FULL_QUERY);
             }
           });
 
@@ -236,7 +227,6 @@
             analysisView.render(arguments.response);
             facetView.render(arguments.response);
 
-            documentCountView.render(arguments.response);
             pivotMatrixView.render(arguments.response);
             updateDownloadButton("submitReposBtn");
             updateIgvButton("igv-multi-species");
@@ -287,8 +277,6 @@
             dataQueryString = client.createUnpaginatedUrl(dataQuery, SOLR_SELECTION_QUERY);
             annotationQueryString = client.createUnpaginatedUrl(query, SOLR_SELECTION_QUERY);
           }
-
-          documentCountView.render();
 
           // update viewer buttons
           updateIgvButton("igv-multi-species");

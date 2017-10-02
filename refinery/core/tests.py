@@ -1448,16 +1448,28 @@ class AnalysisTests(TestCase):
                 node=self.node,
                 step=1,
                 filename=self.node_filename,
-                direction=OUTPUT_CONNECTION
+                direction=OUTPUT_CONNECTION,
+                is_refinery_file=True
             )
         )
         self.analysis_node_connection_b = (
             AnalysisNodeConnection.objects.create(
                 analysis=self.analysis,
                 node=self.node,
-                step=1,
+                step=2,
                 filename=self.node_filename,
-                direction=OUTPUT_CONNECTION
+                direction=OUTPUT_CONNECTION,
+                is_refinery_file=False
+            )
+        )
+        self.analysis_node_connection_c = (
+            AnalysisNodeConnection.objects.create(
+                analysis=self.analysis,
+                node=self.node,
+                step=3,
+                filename=self.node_filename,
+                direction=OUTPUT_CONNECTION,
+                is_refinery_file=True
             )
         )
         self.analysis_node_connection_with_node_analyzed_further = (
@@ -1561,27 +1573,40 @@ class AnalysisTests(TestCase):
         )
 
     def test___get_output_connection_to_analysis_result_mapping(self):
-        analysis_result_b = AnalysisResult.objects.create(
-            analysis_uuid=self.analysis.uuid,
-            file_store_uuid=self.node.file_uuid,
-            file_name=self.node_filename,
-            file_type=self.node.get_file_store_item().filetype
-        )
-        analysis_result_a = AnalysisResult.objects.create(
-            analysis_uuid=self.analysis.uuid,
-            file_store_uuid=self.node.file_uuid,
-            file_name=self.node_filename,
-            file_type=self.node.get_file_store_item().filetype
-        )
+        common_params = {
+            "analysis_uuid": self.analysis.uuid,
+            "file_store_uuid": self.node.file_uuid,
+            "file_name": self.node_filename,
+            "file_type": self.node.get_file_store_item().filetype
+        }
+        analysis_result_0 = AnalysisResult.objects.create(**common_params)
+        AnalysisResult.objects.create(**common_params)
+        analysis_result_1 = AnalysisResult.objects.create(**common_params)
+
         output_mapping = (
             self.analysis._get_output_connection_to_analysis_result_mapping()
         )
         self.assertEqual(
             output_mapping,
             [
-                (self.analysis_node_connection_b, analysis_result_b),
-                (self.analysis_node_connection_a, analysis_result_a)
+                (self.analysis_node_connection_c, analysis_result_0),
+                (self.analysis_node_connection_b, None),
+                (self.analysis_node_connection_a, analysis_result_1)
             ]
+        )
+
+    def test_analysis_node_connection_input_id(self):
+        self.assertEqual(
+            self.analysis_node_connection_a.get_input_connection_id(),
+            "{}_{}".format(self.analysis_node_connection_a.step,
+                           self.analysis_node_connection_a.filename)
+        )
+
+    def test_analysis_node_connection_output_id(self):
+        self.assertEqual(
+            self.analysis_node_connection_a.get_output_connection_id(),
+            "{}_{}".format(self.analysis_node_connection_a.step,
+                           self.analysis_node_connection_a.name)
         )
 
 

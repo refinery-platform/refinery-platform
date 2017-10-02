@@ -34,8 +34,8 @@ from test_data.galaxy_mocks import (galaxy_dataset_provenance_0,
                                     galaxy_datasets_list_same_output_names,
                                     galaxy_history_download_list,
                                     galaxy_history_download_list_same_names,
-                                    galaxy_job, galaxy_tool_data,
-                                    galaxy_workflow_dict,
+                                    galaxy_job_a, galaxy_job_b,
+                                    galaxy_tool_data, galaxy_workflow_dict,
                                     galaxy_workflow_dict_collection,
                                     galaxy_workflow_invocation,
                                     galaxy_workflow_invocation_data,
@@ -54,8 +54,10 @@ from analysis_manager.tasks import (_get_galaxy_download_task_ids,
 from core.models import (INPUT_CONNECTION, OUTPUT_CONNECTION, Analysis,
                          AnalysisNodeConnection, AnalysisResult, ExtendedGroup,
                          Project, Workflow, WorkflowEngine, WorkflowFilesDL)
-from data_set_manager.models import Assay, Node
-from factory_boy.django_model_factories import ToolFactory
+from data_set_manager.models import Assay, Attribute, Node
+from factory_boy.django_model_factories import (AnnotatedNodeFactory,
+                                                AttributeFactory, NodeFactory,
+                                                ToolFactory)
 from factory_boy.utils import create_dataset_with_necessary_models
 from file_store.models import FileStoreItem
 from galaxy_connector.models import Instance
@@ -101,7 +103,7 @@ class ToolManagerMocks(TestCase):
 
         # Galaxy Job mocks
         self.show_job_mock = mock.patch.object(
-            JobsClient, "show_job", return_value=galaxy_job
+            JobsClient, "show_job"
         ).start()
 
         # Galaxy Library mocks
@@ -319,6 +321,10 @@ class ToolManagerTestBase(ToolManagerMocks):
                 tool_definition__uuid=self.td.uuid
             )
             self._update_galaxy_file_mapping()
+            self.tool.update_galaxy_data(
+                self.tool.GALAXY_WORKFLOW_INVOCATION_DATA,
+                {"id": self.GALAXY_ID_MOCK}
+            )
 
         self.get_request = self.factory.get(self.tools_url_root)
         force_authenticate(self.get_request, self.user)
@@ -1162,6 +1168,9 @@ class ToolTests(ToolManagerTestBase):
                         WorkflowTool.ANALYSIS_GROUP: 0
                     }
                 ],
+                WorkflowTool.GALAXY_WORKFLOW_INVOCATION_DATA: {
+                    "id": self.GALAXY_ID_MOCK
+                },
                 "test": "data",
                 "more": "data"
             }
@@ -1214,6 +1223,8 @@ class WorkflowToolTests(ToolManagerTestBase):
             galaxy_dataset_provenance_0, galaxy_dataset_provenance_0,
             galaxy_dataset_provenance_1, galaxy_dataset_provenance_1
         ]
+        self.show_job_side_effect = [galaxy_job_a, galaxy_job_a,
+                                     galaxy_job_b, galaxy_job_b]
 
     def _assert_analysis_node_connection_outputs_validity(self):
         input_connection = AnalysisNodeConnection.objects.filter(
@@ -1250,11 +1261,31 @@ class WorkflowToolTests(ToolManagerTestBase):
         study = self.dataset.get_latest_study()
         assay = Assay.objects.get(study=study)
 
-        node = Node.objects.create(
+        node = NodeFactory(
             name="Node {}".format(uuid.uuid4()),
             assay=assay,
             study=study,
+            type=Node.RAW_DATA_FILE,
             file_uuid=self.file_store_item.uuid
+        )
+        attribute = AttributeFactory(
+            node=node,
+            type=Attribute.CHARACTERISTICS,
+            subtype='coffee',
+            value='coffee'
+        )
+        AnnotatedNodeFactory(
+            node_id=node.id,
+            attribute_id=attribute.id,
+            study=study,
+            assay=assay,
+            node_uuid=node.uuid,
+            node_file_uuid=node.file_uuid,
+            node_type=node.type,
+            node_name=node.name,
+            attribute_type=attribute.type,
+            attribute_subtype=attribute.subtype,
+            attribute_value=attribute.value,
         )
         return node.uuid
 
@@ -1540,13 +1571,8 @@ class WorkflowToolTests(ToolManagerTestBase):
     def test_create_workflow_file_downloads(self):
         galaxy_datasets_list_mock = self.galaxy_datasets_list_mock.start()
         self.get_history_file_list_same_names_mock.start()
+        self.show_job_mock.side_effect = self.show_job_side_effect
         self.create_valid_tool(ToolDefinition.WORKFLOW)
-        self.tool.update_galaxy_data(
-            self.tool.GALAXY_WORKFLOW_INVOCATION_DATA,
-            {
-                "id": self.GALAXY_ID_MOCK
-            }
-        )
         self.tool.create_workflow_file_downloads()
         self.assertEqual(WorkflowFilesDL.objects.count(), 2)
         for workflow_file_dl in WorkflowFilesDL.objects.all():
@@ -1562,13 +1588,8 @@ class WorkflowToolTests(ToolManagerTestBase):
             self.galaxy_datasets_list_same_names_mock.start()
         )
         self.get_history_file_list_mock.start()
+        self.show_job_mock.side_effect = self.show_job_side_effect
         self.create_valid_tool(ToolDefinition.WORKFLOW)
-        self.tool.update_galaxy_data(
-            self.tool.GALAXY_WORKFLOW_INVOCATION_DATA,
-            {
-                "id": self.GALAXY_ID_MOCK
-            }
-        )
         self.tool.create_workflow_file_downloads()
         self.assertEqual(WorkflowFilesDL.objects.count(), 2)
         for workflow_file_dl in WorkflowFilesDL.objects.all():
@@ -1591,18 +1612,27 @@ class WorkflowToolTests(ToolManagerTestBase):
             self.assertIn(dataset, galaxy_datasets_list)
         self.assertTrue(galaxy_datasets_list_mock.called)
 
+    def test__get_exposed_workflow_outputs(self):
+        galaxy_datasets_list_mock = self.galaxy_datasets_list_mock.start()
+        self.show_job_mock.side_effect = self.show_job_side_effect
+        self.create_valid_tool(ToolDefinition.WORKFLOW)
+        all_galaxy_datasets = self.tool._get_galaxy_history_dataset_list()
+        datasets_marked_as_output = self.tool._get_exposed_workflow_outputs()
+        self.assertEqual(len(datasets_marked_as_output), 2)
+        self.assertTrue(
+            all(
+                dataset in all_galaxy_datasets for dataset in
+                datasets_marked_as_output
+            )
+        )
+        self.assertTrue(galaxy_datasets_list_mock.called)
+
     def test__get_workflow_step(self):
         galaxy_datasets_list_mock = self.galaxy_datasets_list_mock.start()
         self.create_valid_tool(ToolDefinition.WORKFLOW)
-        self.tool.update_galaxy_data(
-            self.tool.GALAXY_WORKFLOW_INVOCATION_DATA,
-            {
-                "id": self.GALAXY_ID_MOCK
-            }
-        )
         for galaxy_dataset in self.tool._get_galaxy_history_dataset_list():
             step = self.tool._get_workflow_step(galaxy_dataset)
-            self.assertEqual(step, 1)
+            self.assertIn(step, [1, 2])
         self.assertTrue(self.galaxy_workflow_show_invocation_mock.called)
         self.assertTrue(galaxy_datasets_list_mock.called)
 
@@ -1612,13 +1642,8 @@ class WorkflowToolTests(ToolManagerTestBase):
         self.show_dataset_provenance_mock.side_effect = (
             self.show_dataset_provenance_side_effect * 3
         )
+        self.show_job_mock.side_effect = self.show_job_side_effect * 4
         self.create_valid_tool(ToolDefinition.WORKFLOW)
-        self.tool.update_galaxy_data(
-            self.tool.GALAXY_WORKFLOW_INVOCATION_DATA,
-            {
-                "id": self.GALAXY_ID_MOCK
-            }
-        )
         task_id_list = _get_galaxy_download_task_ids(self.tool.analysis)
         self.assertTrue(self.galaxy_workflow_show_invocation_mock.called)
         self.assertTrue(galaxy_datasets_list_mock.called)
@@ -1644,14 +1669,9 @@ class WorkflowToolTests(ToolManagerTestBase):
         self.show_dataset_provenance_mock.side_effect = (
             self.show_dataset_provenance_side_effect * 3
         )
+        self.show_job_mock.side_effect = self.show_job_side_effect * 3
         self.create_valid_tool(ToolDefinition.WORKFLOW,
                                file_relationships=self.LIST_BASIC)
-        self.tool.update_galaxy_data(
-            self.tool.GALAXY_WORKFLOW_INVOCATION_DATA,
-            {
-                "id": self.GALAXY_ID_MOCK
-            }
-        )
         self.tool.create_analysis_output_node_connections()
         self.assertEqual(AnalysisNodeConnection.objects.count(), 3)
         self.assertEqual(
@@ -1683,8 +1703,8 @@ class WorkflowToolTests(ToolManagerTestBase):
                 output_connection.filetype,
                 galaxy_datasets_list[index]["file_ext"]
             )
-            self.assertTrue(output_connection.is_refinery_file)
-
+        self.assertTrue(output_node_connections[0].is_refinery_file)
+        self.assertTrue(output_node_connections[1].is_refinery_file)
         self.assertTrue(self.galaxy_workflow_show_invocation_mock.called)
         self.assertTrue(galaxy_datasets_list_mock.called)
         self.assertEqual(self.show_dataset_provenance_mock.call_count, 8)
@@ -1749,7 +1769,10 @@ class WorkflowToolTests(ToolManagerTestBase):
                             self.tool.REFINERY_FILE_UUID: self.node.file_uuid,
                             WorkflowTool.ANALYSIS_GROUP: 0
                         }
-                    ]
+                    ],
+                    WorkflowTool.GALAXY_WORKFLOW_INVOCATION_DATA: {
+                        "id": self.GALAXY_ID_MOCK
+                    },
                 }
             }
         )
@@ -1895,6 +1918,7 @@ class WorkflowToolTests(ToolManagerTestBase):
         self.show_dataset_provenance_mock.side_effect = (
             self.show_dataset_provenance_side_effect * 3
         )
+        self.show_job_mock.side_effect = self.show_job_side_effect
         self.galaxy_datasets_list_mock.start()
         self.create_valid_tool(ToolDefinition.WORKFLOW)
         self.node.file_uuid = self.FAKE_DATASET_HISTORY_ID
@@ -1974,6 +1998,7 @@ class WorkflowToolTests(ToolManagerTestBase):
         self.show_dataset_provenance_mock.side_effect = (
             self.show_dataset_provenance_side_effect * 3
         )
+        self.show_job_mock.side_effect = self.show_job_side_effect * 4
         self.has_dataset_collection_input_mock_true.start()
         self.galaxy_datasets_list_mock.start()
         self.get_history_file_list_mock.start()
@@ -1982,10 +2007,6 @@ class WorkflowToolTests(ToolManagerTestBase):
             return_value=galaxy_workflow_dict_collection
         ) as galaxy_workflow_dict_collection_mock:
             self.create_valid_tool(ToolDefinition.WORKFLOW)
-            self.tool.update_galaxy_data(
-                self.tool.GALAXY_WORKFLOW_INVOCATION_DATA,
-                {"id": self.GALAXY_ID_MOCK}
-            )
             _get_galaxy_download_task_ids(self.tool.analysis)
             self.tool.analysis.attach_outputs_dataset()
             self.assertTrue(galaxy_workflow_dict_collection_mock.called)
@@ -1996,14 +2017,11 @@ class WorkflowToolTests(ToolManagerTestBase):
         self.show_dataset_provenance_mock.side_effect = (
             self.show_dataset_provenance_side_effect * 3
         )
+        self.show_job_mock.side_effect = self.show_job_side_effect * 4
         self.galaxy_datasets_list_mock.start()
         self.get_history_file_list_mock.start()
         self.has_dataset_collection_input_mock_false.start()
         self.create_valid_tool(ToolDefinition.WORKFLOW)
-        self.tool.update_galaxy_data(
-            self.tool.GALAXY_WORKFLOW_INVOCATION_DATA,
-            {"id": self.GALAXY_ID_MOCK}
-        )
         _get_galaxy_download_task_ids(self.tool.analysis)
         self.tool.analysis.attach_outputs_dataset()
         self._assert_analysis_node_connection_outputs_validity()
@@ -2017,12 +2035,9 @@ class WorkflowToolTests(ToolManagerTestBase):
         self.show_dataset_provenance_mock.side_effect = (
             self.show_dataset_provenance_side_effect * 3
         )
+        self.show_job_mock.side_effect = self.show_job_side_effect * 4
         self.has_dataset_collection_input_mock_false.start()
         self.create_valid_tool(ToolDefinition.WORKFLOW)
-        self.tool.update_galaxy_data(
-            self.tool.GALAXY_WORKFLOW_INVOCATION_DATA,
-            {"id": self.GALAXY_ID_MOCK}
-        )
         _get_galaxy_download_task_ids(self.tool.analysis)
         output_connections = AnalysisNodeConnection.objects.filter(
             analysis=self.tool.analysis,
@@ -2043,6 +2058,45 @@ class WorkflowToolTests(ToolManagerTestBase):
         self.assertTrue(same_name_galaxy_history_datasets_mock.called)
         self._assert_analysis_node_connection_outputs_validity()
         self.assertEqual(self.show_dataset_provenance_mock.call_count, 8)
+
+    def test_attach_outputs_dataset_makes_proper_node_inheritance_chain(self):
+        self.galaxy_datasets_list_mock.start()
+        self.get_history_file_list_mock.start()
+        self.has_dataset_collection_input_mock_false.start()
+        self.show_dataset_provenance_mock.side_effect = (
+            self.show_dataset_provenance_side_effect * 3
+        )
+        self.show_job_mock.side_effect = self.show_job_side_effect * 4
+
+        self.create_valid_tool(ToolDefinition.WORKFLOW)
+        _get_galaxy_download_task_ids(self.tool.analysis)
+
+        exposed_output_connections = AnalysisNodeConnection.objects.filter(
+            analysis=self.tool.analysis,
+            direction=OUTPUT_CONNECTION,
+            is_refinery_file=True
+        )
+        self.assertEqual(exposed_output_connections.count(), 2)
+        # Make sure output connections have no node before "attachment" step
+        for output_connection in exposed_output_connections:
+            self.assertIsNone(output_connection.node)
+
+        self.tool.analysis.attach_outputs_dataset()
+
+        # Have to fetch again here since AnalysisNodeConnections have been
+        # updated
+        exposed_output_connections = AnalysisNodeConnection.objects.filter(
+            analysis=self.tool.analysis,
+            direction=OUTPUT_CONNECTION,
+            is_refinery_file=True
+        )
+        self.assertEqual(exposed_output_connections.count(), 2)
+        # Assert that AnalysisNodeConnection outputs now have nodes,
+        # and that their nodes have parents
+        for output_connection in exposed_output_connections:
+            self.assertFalse(output_connection.node.is_orphan())
+
+        self._assert_analysis_node_connection_outputs_validity()
 
 
 class ToolAPITests(APITestCase, ToolManagerTestBase):
@@ -2368,10 +2422,6 @@ class WorkflowToolLaunchTests(ToolManagerTestBase):
             create_dataset_collection_mock
     ):
         self.create_valid_tool(ToolDefinition.WORKFLOW)
-        self.tool.update_galaxy_data(
-            self.tool.GALAXY_WORKFLOW_INVOCATION_DATA,
-            {"id": self.GALAXY_ID_MOCK}
-        )
         _invoke_tool_based_galaxy_workflow(self.tool.analysis.uuid)
 
         self.assertTrue(create_dataset_collection_mock.called)
@@ -2728,6 +2778,8 @@ class VisualizationToolLaunchTests(ToolManagerTestBase,
             )
             force_authenticate(self.post_request, self.user)
             post_response = self.tools_view(self.post_request)
+            logger.debug("VisualizationTool response content: %s",
+                         post_response.content)
             self.assertEqual(post_response.status_code, 200)
 
             tools = VisualizationTool.objects.filter(
@@ -2784,14 +2836,17 @@ class VisualizationToolLaunchTests(ToolManagerTestBase,
         settings.DJANGO_DOCKER_ENGINE_SECONDS_INACTIVE = wait_time
 
         def assertions(tool):
-            DockerClientWrapper().lookup_container_url(tool.container_name)
+            client = DockerClientWrapper(
+                settings.DJANGO_DOCKER_ENGINE_DATA_DIR
+            )
+            client.lookup_container_url(tool.container_name)
 
             time.sleep(wait_time * 2)
             django_docker_cleanup()
             time.sleep(wait_time * 2)
 
             with self.assertRaises(NotFound):
-                DockerClientWrapper().lookup_container_url(tool.container_name)
+                client.lookup_container_url(tool.container_name)
 
         self._start_visualization(
             'hello_world.json',

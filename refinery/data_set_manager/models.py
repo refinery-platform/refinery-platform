@@ -478,6 +478,9 @@ class Node(models.Model):
         """
         return self.type in self._get_derived_node_types()
 
+    def is_orphan(self):
+        return self.parents.count() == 0
+
     def get_analysis_node_connections(self):
         return core.models.AnalysisNodeConnection.objects.filter(node=self)
 

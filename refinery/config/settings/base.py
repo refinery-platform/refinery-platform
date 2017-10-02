@@ -658,9 +658,13 @@ os.environ["DJANGO_LIVE_TEST_SERVER_ADDRESS"] = "localhost:10000-12000"
 DJANGO_DOCKER_ENGINE_MAX_CONTAINERS = 10
 DJANGO_DOCKER_ENGINE_BASE_URL = "visualizations"
 # Time in seconds to wait before killing unused visualization
-DJANGO_DOCKER_ENGINE_SECONDS_INACTIVE = 60
+DJANGO_DOCKER_ENGINE_SECONDS_INACTIVE = 60 * 60
 # Location of DjangoDockerEngine proxy logging
-PROXY_LOG = '/tmp/django_docker_engine.log'
+DJANGO_DOCKER_ENGINE_DATA_DIR = get_setting("DJANGO_DOCKER_ENGINE_DATA_DIR")
+PROXY_LOG = os.path.join(
+    DJANGO_DOCKER_ENGINE_DATA_DIR,
+    'django-docker-engine.log'
+)
 
 REFINERY_DEPLOYMENT_PLATFORM = "vagrant"
 
