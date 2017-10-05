@@ -8,6 +8,7 @@ import json
 import logging
 import os
 import shutil
+import traceback
 import urlparse
 
 from django import forms
@@ -28,6 +29,7 @@ from rest_framework.views import APIView
 
 from core.models import DataSet, get_user_import_dir
 from core.utils import get_full_url
+from data_set_manager.isa_tab_parser import ParserException
 from file_store.models import (generate_file_source_translator, get_temp_dir,
                                parse_s3_url)
 from file_store.tasks import DownloadError, download_file, import_file
@@ -45,6 +47,8 @@ logger = logging.getLogger(__name__)
 
 
 # Data set import
+PARSER_ERROR_MESSAGE = "Improperly structured ISA-Tab file: "
+PARSER_UNEXPECTED_ERROR_MESSAGE = "ISA-Tab import Failure: "
 
 
 class DataSetImportView(View):
@@ -197,8 +201,32 @@ class ProcessISATabView(View):
             response.delete_cookie(self.isa_tab_cookie_name)
             return response
         logger.debug("Temp file name: '%s'", temp_file_path)
-        dataset_uuid = parse_isatab.delay(request.user.username, False,
-                                          temp_file_path).get()
+        try:
+            parse_isatab_invocation = parse_isatab.delay(
+                request.user.username,
+                False,
+                temp_file_path
+            ).get()
+        except ParserException as e:
+            error_message = "{} {}".format(
+                PARSER_ERROR_MESSAGE,
+                e.message
+            )
+            logger.error(error_message)
+            return HttpResponseBadRequest(error_message)
+        except Exception as e:
+            error_message = "{} {}".format(
+                PARSER_UNEXPECTED_ERROR_MESSAGE,
+                traceback.format_exc(e)
+            )
+            logger.error(error_message)
+            return HttpResponseBadRequest(
+                PARSER_UNEXPECTED_ERROR_MESSAGE +
+                e.message
+            )
+        else:
+            dataset_uuid = parse_isatab_invocation[0]
+
         # TODO: exception handling
         os.unlink(temp_file_path)
         if dataset_uuid:
@@ -237,7 +265,14 @@ class ProcessISATabView(View):
             if url:
                 response = self.import_by_url(url)
             else:
-                response = self.import_by_file(f)
+                try:
+                    response = self.import_by_file(f)
+                except Exception as e:
+                    logger.error(traceback.format_exc(e))
+                    return HttpResponseBadRequest(
+                       "{} {}".format(
+                        PARSER_UNEXPECTED_ERROR_MESSAGE, e)
+                    )
 
             # get AWS Cognito identity ID
             if settings.REFINERY_DEPLOYMENT_PLATFORM == 'aws':
@@ -277,11 +312,31 @@ class ProcessISATabView(View):
                 "Temp file name: '%s'", response['data']['temp_file_path']
             )
 
-            dataset_uuid = parse_isatab.delay(
-                username=request.user.username, public=False,
-                path=response['data']['temp_file_path'],
-                identity_id=identity_id
-            ).get()
+            try:
+                parse_isatab_invocation = parse_isatab.delay(
+                    request.user.username,
+                    False,
+                    response['data']['temp_file_path'],
+                    identity_id=identity_id
+                ).get()
+            except ParserException as e:
+                error_message = "{} {}".format(
+                    PARSER_ERROR_MESSAGE,
+                    e.message
+                )
+                logger.error(error_message)
+                return HttpResponseBadRequest(error_message)
+            except Exception as e:
+                error_message = "{} {}".format(
+                    PARSER_UNEXPECTED_ERROR_MESSAGE,
+                    traceback.format_exc(e)
+                )
+                logger.error(error_message)
+                return HttpResponseBadRequest(
+                    "{} {}".format(PARSER_UNEXPECTED_ERROR_MESSAGE, e)
+                )
+            else:
+                dataset_uuid = parse_isatab_invocation[0]
 
             # TODO: exception handling (OSError)
             os.unlink(response['data']['temp_file_path'])

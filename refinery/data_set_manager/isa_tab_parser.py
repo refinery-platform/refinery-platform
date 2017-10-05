@@ -26,6 +26,10 @@ from .utils import fix_last_column
 logger = logging.getLogger(__name__)
 
 
+class ParserException(Exception):
+    pass
+
+
 class IsaTabParser:
     # TODO: use these where appropriate
     SEPARATOR_CHARACTER = "\t"
@@ -327,9 +331,9 @@ class IsaTabParser:
                     node.file_uuid = file_store_item.uuid
                     node.save()
                 else:
-                    logger.error(
-                        "Unable to add %s to file store as a temporary file",
-                        file_path
+                    raise ParserException(
+                        "Unable to add {} to file store as a temporary file."
+                        .format(file_path)
                     )
             if is_new:
                 logger.info("New node %s created", str(node))
@@ -485,13 +489,15 @@ class IsaTabParser:
                         "was created since the parser is being run with "
                         "ignore_missing_protocols = True.")
                 else:
-                    logger.exception(
-                        "Undeclared protocol " + row[0] + " when parsing term "
-                        "protocol in line " +
-                        str(self._current_reader.line_num) + ", column " +
-                        str(len(headers) - len(row)) + "." + " An attempt to "
-                        "create this protocol failed.")
-                    raise Exception
+                    raise ParserException(
+                        "Undeclared protocol {} when parsing term "
+                        "protocol in line {}, column {}. An attempt to "
+                        "create this protocol failed.".format(
+                            row[0],
+                            self._current_reader.line_num,
+                            len(headers) - len(row)
+                        )
+                    )
 
             protocol_reference = ProtocolReference.objects.create(
                 node=self._current_node,
@@ -565,11 +571,14 @@ class IsaTabParser:
                 row.popleft()
                 return {"accession": accession, "source": source}
             else:
-                logger.exception(
-                    "Unexpected element " + headers[-len(row)] + " when "
-                    "parsing term information in line " +
-                    str(self._current_reader.line_num) + ", column " +
-                    str(len(headers) - len(row)) + ".")
+                raise ParserException(
+                    "Unexpected element {} when "
+                    "parsing term information in line {} , column {}.".format(
+                        headers[-len(row)],
+                        self._current_reader.line_num,
+                        len(headers) - len(row)
+                    )
+                )
         elif self.is_term_source(headers[-len(row)]):
             source = row[0]
             row.popleft()
@@ -580,17 +589,23 @@ class IsaTabParser:
                 row.popleft()
                 return {"accession": accession, "source": source}
             else:
-                logger.exception(
-                    "Unexpected element " + headers[-len(row)] + " when "
-                    "parsing term information in line " +
-                    str(self._current_reader.line_num) + ", column " +
-                    str(len(headers) - len(row)) + ".")
+                raise ParserException(
+                    "Unexpected element {} when "
+                    "parsing term information in line {} , column {}.".format(
+                        headers[-len(row)],
+                        self._current_reader.line_num,
+                        len(headers) - len(row)
+                    )
+                )
         else:
-            logger.exception(
-                "Unexpected element " + headers[-len(row)] + " when parsing "
-                "term information in line " +
-                str(self._current_reader.line_num) + ", column " +
-                str(len(headers) - len(row)) + ".")
+            raise ParserException(
+                "Unexpected element {} when "
+                "parsing term information in line {} , column {}.".format(
+                    headers[-len(row)],
+                    self._current_reader.line_num,
+                    len(headers) - len(row)
+                )
+            )
 
     def _parse_unit_information(self, headers, row):
         """Parses a term_accession, term_source pair
@@ -601,11 +616,13 @@ class IsaTabParser:
             unit = row[0]
             row.popleft()
         else:
-            logger.exception(
-                "Unexpected element " + headers[-len(row)] + " when parsing "
-                "unit information in line " +
-                str(self._current_reader.line_num) + ", column " +
-                str(len(headers) - len(row)) + "."
+            raise ParserException(
+                "Unexpected element {} when "
+                "parsing unit information in line {} , column {}.".format(
+                    headers[-len(row)],
+                    self._current_reader.line_num,
+                    len(headers) - len(row)
+                )
             )
         # parse term information if available
         if self.is_term_information(headers[-len(row)]):
@@ -842,7 +859,7 @@ class IsaTabParser:
                     # EOF reached
                     return None
             except:
-                logger.exception(
+                raise ParserException(
                     "End of file reached in multiline field in " +
                     self._current_file_name + "."
                 )
@@ -930,9 +947,10 @@ class IsaTabParser:
                     # the extract path
                     for name in zip.namelist():
                         if name.startswith("..") or name.startswith("/"):
-                            logger.exception(
-                                "Unable to extract assumed ISArchive file \"" +
-                                path + "\" due to illegal file path: " + name
+                            raise ParserException(
+                                "Unable to extract assumed ISArchive "
+                                "file {!r} due to illegal file path: {}"
+                                .format(path, name)
                             )
                     # extract archive
                     zip.extractall(extract_path)
@@ -953,16 +971,20 @@ class IsaTabParser:
                     )
                     path = extract_path
             except:
-                logger.exception(
-                    "Unable to extract assumed ISArchive file \"" + path +
-                    "\".")
+                raise ParserException(
+                    "Unable to extract assumed ISArchive file {!r}."
+                    .format(path)
+                )
         # 2. identify investigation file
         try:
             investigation_file_name = glob.glob("%s/i*.txt" % path).pop()
         except IndexError as exception:
-            logger.exception(
-                "Unable to identify ISArchive file in \"" + path + "\".")
-            raise exception
+            raise ParserException(
+                "Unable to identify ISArchive file in {!r} {}.".format(
+                    path,
+                    exception
+                )
+            )
         # 3. parse investigation file and identify study files and
         # corresponding assay files
         self._parse_investigation_file(investigation_file_name)
@@ -983,10 +1005,10 @@ class IsaTabParser:
                             self._parse_assay_file(study, assay,
                                                    assay_file_name)
         else:
-            logger.exception(
+            error_message = (
                 "No investigation was identified when parsing investigation "
                 "file \"" + investigation_file_name + "\"")
-            raise Exception()
+            raise ParserException(error_message)
         # 5. assign ISA-Tab archive and pre-ISA-Tab archive if present
         try:
             self._current_investigation.isarchive_file = create(isa_archive)
@@ -1092,9 +1114,11 @@ class IsaTabParser:
                     # the extract path
                     for name in zip.namelist():
                         if name.startswith("..") or name.startswith("/"):
-                            logger.exception(
-                                "Unable to extract assumed ISArchive file \"" +
-                                path + "\" due to illegal file path: " + name)
+                            raise ParserException(
+                                "Unable to extract assumed ISArchive "
+                                "file {!r} due to illegal file path: {!r}"
+                                .format(path, name)
+                            )
                     # extract archive
                     zip.extractall(extract_path)
 
@@ -1115,18 +1139,18 @@ class IsaTabParser:
                     )
                     path = extract_path
             except:
-                logger.exception(
-                    "Unable to extract assumed ISArchive file \"" + path +
-                    "\".")
+                raise ParserException(
+                    "Unable to extract assumed ISArchive file {!r}."
+                    .format(path)
+                )
 
         # 2. identify investigation file
         try:
             investigation_file_name = glob.glob("%s/i*.txt" % path).pop()
         except IndexError:
-            logger.exception(
-                "Unable to identify ISArchive file in \"" + path + "\"."
+            raise ParserException(
+                "Unable to identify ISArchive file in {!r}.".format(path)
             )
-            return (None, None)
 
         logger.info("Investigation file path: %s", investigation_file_name)
 
