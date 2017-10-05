@@ -235,6 +235,8 @@ function TreemapCtrl (
   });
 
   that.treemapContext.set('treemap', this);
+
+  that.icons = this.$window.getStaticUrl('images/icons.svg');
 }
 
 /*

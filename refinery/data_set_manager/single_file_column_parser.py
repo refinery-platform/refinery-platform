@@ -269,8 +269,7 @@ class SingleFileColumnParser:
 
         for uuid in data_files:
             try:
-                file_store_item = FileStoreItem.objects.get(
-                        uuid=uuid)
+                file_store_item = FileStoreItem.objects.get(uuid=uuid)
             except (FileStoreItem.DoesNotExist,
                     FileStoreItem.MultipleObjectsReturned) as e:
                 logger.error("Couldn't properly fetch FileStoreItem %s", e)

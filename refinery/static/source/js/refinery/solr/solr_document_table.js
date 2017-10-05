@@ -64,11 +64,6 @@ SolrDocumentTable = function(
             var link = '<a title="Download linked file" href="' +
               result.file_url + '" target="_blank">' +
               '<i class="fa fa-arrow-circle-o-down"></i></a>';
-            if (result.file_url.indexOf("fastqc_results") >= 0) {
-              // Should change .txt extension to FastQC specific later.
-              link += '&nbsp;<a title="View FastQC Result" href="/fastqc_viewer/#/' +
-                result.analysis_uuid + '"><i class="fa fa-bar-chart-o"></i></a>';
-            }
             $('#' + id).html(link)
           }
           else if (result.file_import_status != null) {
@@ -107,164 +102,14 @@ SolrDocumentTable.prototype.render = function(solrResponse) {
     .trigger('refinery/solrTable/destroy')
     .html("");
    // Required while data set 2 lives in parallel.
-  if (window.location.href.indexOf('data_sets2') === -1) {
-    self._renderTable(solrResponse);
+  self._renderTable(solrResponse);
     //$( "#" + self._parentElementId ).html( code );
     // attach event listeners
     // ..
-  }
 };
 
 SolrDocumentTable.prototype._renderTable = function(solrResponse) {
-  var self = this;
-  var tableHead = self._generateTableHead(solrResponse);
-  var tableBody = self._generateTableBody(solrResponse);
-  var topControlsId = self._idPrefix + '-top-controls';
-  var bottomControlsId = self._idPrefix + '-bottom-controls';
-  var documentsPerPageControlId = topControlsId + '-documents-per-page';
-  var visibleFieldsControlId = topControlsId + '-visible-fields';
-  var pagerControlId = bottomControlsId + '-pager';
-
-  $('<div/>', {
-    'class': '',
-    'id': topControlsId,
-    'html': ''
-  }).insertBefore("#table-view-tab");
-
-  $('<span/>', {
-    'class': 'dropdown',
-    'id': visibleFieldsControlId,
-    'html': ''
-  }).appendTo('#' + topControlsId);
-
-  self._generateVisibleFieldsControl(visibleFieldsControlId);
-
-  $('<span/>', {
-    'class': 'btn-group',
-    'id': documentsPerPageControlId,
-    'html': '',
-    'data-toggle': 'buttons-radio',
-    'style': 'margin-left: 15px;'
-  }).appendTo('#' + topControlsId);
-
-  self._generateDocumentsPerPageControl(
-    documentsPerPageControlId, [10, 20, 50, 100, 500]
-  );
-
-  $('<table/>', {
-    'class': 'table table-striped table-condensed',
-    'id': 'table_matrix',
-    'html': tableHead + "<tbody>" + tableBody + "</tbody>"
-  }).appendTo('#' + self._parentElementId);
-
-  $('<div/>', {
-    'class': '',
-    'id': bottomControlsId,
-    'html': ''
-  }).appendTo('#' + self._parentElementId);
-
-  $('<div/>', {
-    'class': 'dropdown',
-    'id': pagerControlId,
-    'html': ''
-  }).appendTo('#' + bottomControlsId);
-
-  /*
-   * Trigger event on self._parentElementId so that subsequent tools know that
-   * the table exists
-   */
-  $('#' + self._parentElementId).trigger('refinery/solrTable/created');
-
-  self._generatePagerControl(pagerControlId, 5, 2, 2);
-
-  // attach events
-
-  $(".field-header-sort").on("click", function(event) {
-    var fieldName = $(event.target).data("fieldname");
-    self._query.toggleFieldDirection(fieldName);
-    self._commands.execute(
-      SOLR_DOCUMENT_ORDER_UPDATED_COMMAND, {'fieldname': fieldName});
-  });
-
-  // attach event to node selection mode checkbox
-  $("#" + "node-selection-mode").click(function(event) {
-    if (!($(this).prop("checked"))){
-      self._query.setDocumentSelectionBlacklistMode(false);
-      self._query.clearDocumentSelection();
-      // update individual checkboxes in table
-      $("." + "document-checkbox-select").prop("checked", false).change();
-    }
-    else {
-      self._query.setDocumentSelectionBlacklistMode(true);
-      self._query.clearDocumentSelection();
-      // update individual checkboxes in table
-      $("." + "document-checkbox-select").prop("checked", true).change();
-    }
-    self._commands.execute(
-      SOLR_DOCUMENT_SELECTION_UPDATED_COMMAND, {'event': event});
-  });
-
-
-  $(".document-checkbox-select").on("click", function(event) {
-    var uuid = $(event.target).data("uuid");
-    var uuidIndex = self._query._documentSelection.indexOf(uuid);
-    var event = "";
-    if (uuidIndex != -1) {
-      // remove element
-      self._query._documentSelection.splice(uuidIndex, 1);
-      event = 'remove';
-    }
-    else {
-      // add element
-      self._query._documentSelection.push(uuid);
-      event = 'add';
-    }
-
-    var checkAllNodes = document.getElementById("node-selection-mode");
-    var totalCheckbox = $(".document-checkbox-select").length;
-    var totalCheckboxSelect = $('.document-checkbox-select:checked').length;
-
-    if(totalCheckboxSelect > 0 && totalCheckboxSelect < totalCheckbox) {
-      checkAllNodes.checked = true;
-      checkAllNodes.indeterminate = true;
-    }else if(totalCheckboxSelect > 0 && totalCheckboxSelect === totalCheckbox) {
-      checkAllNodes.indeterminate = false;
-      checkAllNodes.checked = true;
-    }else{
-      checkAllNodes.indeterminate = false;
-      checkAllNodes.checked = false;
-    }
-    self._commands.execute(
-      SOLR_DOCUMENT_SELECTION_UPDATED_COMMAND, {'uuid': uuid, 'event': event});
-  });
-
-  $(".refinery-dnd-handle").on("dragstart", function (event) {
-    var uuid = null;
-    // here we have to deal with browser specific differences in the dragstart
-    // event data structure
-    if (event.originalEvent.srcElement) {
-      // safari, chrome
-      uuid = event.originalEvent.srcElement.attributes['node-uuid'].value;
-    }
-    else if (event.target) {
-      // firefox
-      uuid = event.target.attributes['node-uuid'].value;
-    }
-    else {
-      // this browser doesn't seem to support any dragstart known to us
-      console.error("Unable to obtain node UUID of draggable.");
-    }
-    event.originalEvent.dataTransfer.setData(
-      'text/plain', JSON.stringify({
-        uuid: uuid,
-        html: '<table class="table table-striped table-condensed" style="margin-bottom: 0px;">' +
-        this.parentElement.parentElement.innerHTML + '</table>'
-      })
-    );
-  });
-
-  //click event to show entire string for trimDocEntry
-  self._toggleIndicator();
+  // Don't want anything rendered: Tracking down the caller of this is the next step.
 };
 
 

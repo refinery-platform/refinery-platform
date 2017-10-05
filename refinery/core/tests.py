@@ -22,14 +22,15 @@ from tastypie.test import ResourceTestCase
 from analysis_manager.models import AnalysisStatus
 from data_set_manager.models import Assay, Contact, Investigation, Node, Study
 from factory_boy.utils import create_dataset_with_necessary_models
-from file_store.models import FileStoreItem
+from file_store.models import FileStoreItem, FileType
 from galaxy_connector.models import Instance
 
 from .api import AnalysisResource
 from .management.commands.create_user import init_user
-from .models import (Analysis, AnalysisNodeConnection, DataSet, ExtendedGroup,
-                     InvestigationLink, NodeSet, Project, Tutorials,
-                     UserProfile, Workflow, WorkflowDataInputMap,
+from .models import (INPUT_CONNECTION, OUTPUT_CONNECTION, Analysis,
+                     AnalysisNodeConnection, AnalysisResult, DataSet,
+                     ExtendedGroup, InvestigationLink, NodeSet, Project,
+                     Tutorials, UserProfile, Workflow, WorkflowDataInputMap,
                      WorkflowEngine, create_nodeset, delete_nodeset,
                      get_nodeset, invalidate_cached_object, update_nodeset)
 from .search_indexes import DataSetIndex
@@ -796,12 +797,15 @@ class AnalysisResourceTest(ResourceTestCase):
 
         self.dataset.set_owner(self.user)
 
+        workflow_dict = {'a': True}
+        workflow_as_repr = repr(workflow_dict)
         analysis = Analysis.objects.create(
             name='bla',
             summary='keks',
             project=self.user_catch_all_project,
             data_set=self.dataset,
-            workflow=self.workflow
+            workflow=self.workflow,
+            workflow_copy=workflow_as_repr
         )
         analysis.set_owner(self.user)
         analysis_uri = make_api_uri(Analysis._meta.module_name, analysis.uuid)
@@ -811,8 +815,16 @@ class AnalysisResourceTest(ResourceTestCase):
         )
         self.assertValidJSONResponse(response)
         data = self.deserialize(response)
-        self.assertKeys(data, AnalysisResource.Meta.fields)
+
+        expected_keys = set(AnalysisResource.Meta.fields)
+        expected_keys.add(u'workflow_json')
+
+        self.assertEqual(set(data.keys()), expected_keys)
         self.assertEqual(data['uuid'], analysis.uuid)
+
+        workflow_as_json = json.dumps(workflow_dict)
+        self.assertNotEqual(workflow_as_json, workflow_as_repr)
+        self.assertEqual(data['workflow_json'], workflow_as_json)
 
     def test_get_analysis_list(self):
         """Test retrieving a list of Analysis instances that belong to a user
@@ -1347,12 +1359,15 @@ class AnalysisTests(TestCase):
         self.workflow1 = Workflow.objects.create(
             name="Workflow1", workflow_engine=self.workflow_engine)
 
+        text_filetype = FileType.objects.get(name="TXT")
+
         # Create FileStoreItems
         self.file_store_item = FileStoreItem.objects.create(
             datafile=SimpleUploadedFile(
                 'test_file.txt',
                 'Coffee is delicious!'
-            )
+            ),
+            filetype=text_filetype
         )
         self.file_store_item1 = FileStoreItem.objects.create(
             datafile=SimpleUploadedFile(
@@ -1412,6 +1427,7 @@ class AnalysisTests(TestCase):
         self.node = Node.objects.create(
             assay=self.assay,
             study=self.study,
+            name="test_node",
             analysis_uuid=self.analysis.uuid,
             file_uuid=self.file_store_item.uuid
         )
@@ -1431,17 +1447,50 @@ class AnalysisTests(TestCase):
             workflow_data_input_name="input 2",
             data_uuid=self.node2.uuid
         )
+        self.node_filename = "{}.{}".format(
+            self.node.name,
+            self.node.get_file_store_item().get_file_extension()
+        )
 
         # Create AnalysisNodeConnections
-        self.analysis_node_connection = \
-            AnalysisNodeConnection.objects.create(analysis=self.analysis,
-                                                  node=self.node, step=1,
-                                                  direction="out")
-        self.analysis_node_connection_with_node_analyzed_further = \
+        self.analysis_node_connection_a = (
+            AnalysisNodeConnection.objects.create(
+                analysis=self.analysis,
+                node=self.node,
+                step=1,
+                filename=self.node_filename,
+                direction=OUTPUT_CONNECTION,
+                is_refinery_file=True
+            )
+        )
+        self.analysis_node_connection_b = (
+            AnalysisNodeConnection.objects.create(
+                analysis=self.analysis,
+                node=self.node,
+                step=2,
+                filename=self.node_filename,
+                direction=OUTPUT_CONNECTION,
+                is_refinery_file=False
+            )
+        )
+        self.analysis_node_connection_c = (
+            AnalysisNodeConnection.objects.create(
+                analysis=self.analysis,
+                node=self.node,
+                step=3,
+                filename=self.node_filename,
+                direction=OUTPUT_CONNECTION,
+                is_refinery_file=True
+            )
+        )
+        self.analysis_node_connection_with_node_analyzed_further = (
             AnalysisNodeConnection.objects.create(
                 analysis=self.analysis_with_node_analyzed_further,
-                node=self.node2, step=2,
-                direction="in")
+                node=self.node2,
+                step=0,
+                direction=INPUT_CONNECTION
+            )
+        )
 
         # Add wf_data_input_maps to Analysis M2M relationship
         self.analysis.workflow_data_input_maps.add(self.wf_data_input_map,
@@ -1508,6 +1557,67 @@ class AnalysisTests(TestCase):
             self.analysis_with_node_analyzed_further.data_sets_query(),
             quote('{"REFINERY_ANALYSIS_UUID_') + r'\d+_\d+' +
             quote('_s": "') + UUID_RE + quote('"}')
+        )
+
+    @mock.patch("core.models.index_annotated_nodes_selection")
+    @mock.patch.object(Analysis, "rename_results")
+    def test__prepare_annotated_nodes_calls_methods_in_proper_order(
+            self,
+            rename_results_mock,
+            index_annotated_nodes_selection_mock
+    ):
+        mock_manager = mock.Mock()
+        mock_manager.attach_mock(rename_results_mock, "rename_results_mock")
+        mock_manager.attach_mock(index_annotated_nodes_selection_mock,
+                                 "index_annotated_nodes_selection_mock")
+
+        self.analysis._prepare_annotated_nodes(node_uuids=None)
+
+        # Assert that `rename_results` is called before
+        # `index_annotated_nodes_selection`
+        self.assertEqual(
+            mock_manager.mock_calls,
+            [
+                mock.call.rename_results_mock(),
+                mock.call.index_annotated_nodes_selection_mock(None)
+            ]
+        )
+
+    def test___get_output_connection_to_analysis_result_mapping(self):
+        common_params = {
+            "analysis_uuid": self.analysis.uuid,
+            "file_store_uuid": self.node.file_uuid,
+            "file_name": self.node_filename,
+            "file_type": self.node.get_file_store_item().filetype
+        }
+        analysis_result_0 = AnalysisResult.objects.create(**common_params)
+        AnalysisResult.objects.create(**common_params)
+        analysis_result_1 = AnalysisResult.objects.create(**common_params)
+
+        output_mapping = (
+            self.analysis._get_output_connection_to_analysis_result_mapping()
+        )
+        self.assertEqual(
+            output_mapping,
+            [
+                (self.analysis_node_connection_c, analysis_result_0),
+                (self.analysis_node_connection_b, None),
+                (self.analysis_node_connection_a, analysis_result_1)
+            ]
+        )
+
+    def test_analysis_node_connection_input_id(self):
+        self.assertEqual(
+            self.analysis_node_connection_a.get_input_connection_id(),
+            "{}_{}".format(self.analysis_node_connection_a.step,
+                           self.analysis_node_connection_a.filename)
+        )
+
+    def test_analysis_node_connection_output_id(self):
+        self.assertEqual(
+            self.analysis_node_connection_a.get_output_connection_id(),
+            "{}_{}".format(self.analysis_node_connection_a.step,
+                           self.analysis_node_connection_a.name)
         )
 
 
@@ -1995,6 +2105,14 @@ class DataSetTests(TestCase):
         self.node4 = Node.objects.create(
             name="n4", assay=self.assay, study=self.study)
 
+    def test_get_studies(self):
+        studies = self.dataset.get_studies()
+        self.assertEqual(len(studies), 1)
+
+    def test_get_assays(self):
+        assays = self.dataset.get_assays()
+        self.assertEqual(len(assays), 1)
+
     def test_get_file_store_items(self):
         file_store_items = self.dataset.get_file_store_items()
         self.assertEqual(len(file_store_items), 3)
@@ -2010,7 +2128,7 @@ class DataSetTests(TestCase):
 
     def test_neo4j_called_on_post_save(self):
         with mock.patch(
-            "core.models.update_annotation_sets_neo4j"
+            "core.models.async_update_annotation_sets_neo4j"
         ) as neo4j_mock:
             self.dataset.save()
             self.assertTrue(neo4j_mock.called)

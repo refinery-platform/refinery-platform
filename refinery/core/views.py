@@ -42,8 +42,7 @@ from data_set_manager.utils import generate_solr_params_for_assay
 from file_store.models import FileStoreItem
 from visualization_manager.views import igv_multi_species
 
-from .forms import (DataSetForm, ProjectForm, UserForm, UserProfileForm,
-                    WorkflowForm)
+from .forms import ProjectForm, UserForm, UserProfileForm, WorkflowForm
 from .models import (Analysis, CustomRegistrationProfile, DataSet,
                      ExtendedGroup, Invitation, Ontology, Project, UserProfile,
                      Workflow, WorkflowEngine)
@@ -295,6 +294,76 @@ def project_edit(request, uuid):
                               context_instance=RequestContext(request))
 
 
+def provenance_slug(request, slug):
+    d = get_object_or_404(DataSet, slug=slug)
+    return provenance(request, d.uuid)
+
+
+def provenance(request, data_set_uuid, analysis_uuid=None):
+    data_set = get_object_or_404(DataSet, uuid=data_set_uuid)
+    public_group = ExtendedGroup.objects.public_group()
+
+    if not request.user.has_perm('core.read_dataset', data_set):
+        if 'read_dataset' not in get_perms(public_group, data_set):
+            if request.user.is_authenticated():
+                return HttpResponseForbidden(
+                    custom_error_page(request, '403.html',
+                                      {user: request.user,
+                                       'msg': "view this data set"}))
+            else:
+                return HttpResponse(
+                    custom_error_page(request, '401.html',
+                                      {'msg': "view this data set"}),
+                    status='401')
+    # get studies
+    investigation = data_set.get_investigation()
+    studies = investigation.study_set.all()
+    # If repository mode, only return workflows tagged for the repository
+    if (settings.REFINERY_REPOSITORY_MODE):
+        workflows = Workflow.objects.filter(show_in_repository_mode=True)
+    else:
+        workflows = Workflow.objects.all()
+
+    study_uuid = studies[0].uuid
+    # used for solr field postfixes: FIELDNAME_STUDYID_ASSAY_ID_FIELDTYPE
+    study_id = studies[0].id
+    assay_uuid = studies[0].assay_set.all()[0].uuid
+    # used for solr field postfixes: FIELDNAME_STUDYID_ASSAY_ID_FIELDTYPE
+    assay_id = studies[0].assay_set.all()[0].id
+    # TODO: catch errors
+    isatab_archive = None
+    pre_isatab_archive = None
+    try:
+        if investigation.isarchive_file is not None:
+            isatab_archive = FileStoreItem.objects.get(
+                uuid=investigation.isarchive_file)
+    except FileStoreItem.DoesNotExist:
+        pass
+    try:
+        if investigation.pre_isarchive_file is not None:
+            pre_isatab_archive = FileStoreItem.objects.get(
+                uuid=investigation.pre_isarchive_file)
+    except FileStoreItem.DoesNotExist:
+        pass
+    return render_to_response(
+        'core/provenance.html',
+        {
+            "data_set": data_set,
+            "analysis_uuid": analysis_uuid,
+            "studies": studies,
+            "study_uuid": study_uuid,
+            "study_id": study_id,
+            "assay_uuid": assay_uuid,
+            "assay_id": assay_id,
+            "has_change_dataset_permission": 'change_dataset' in get_perms(
+                request.user, data_set),
+            "workflows": workflows,
+            "isatab_archive": isatab_archive,
+            "pre_isatab_archive": pre_isatab_archive,
+        },
+        context_instance=RequestContext(request))
+
+
 def data_set_slug(request, slug):
     d = get_object_or_404(DataSet, slug=slug)
     return data_set(request, d.uuid)
@@ -363,139 +432,6 @@ def data_set(request, data_set_uuid, analysis_uuid=None):
             "pre_isatab_archive": pre_isatab_archive,
         },
         context_instance=RequestContext(request))
-
-
-def data_set2_slug(request, slug):
-    d = get_object_or_404(DataSet, slug=slug)
-    return data_set2(request, d.uuid)
-
-
-def data_set2(request, data_set_uuid, analysis_uuid=None):
-    data_set = get_object_or_404(DataSet, uuid=data_set_uuid)
-    public_group = ExtendedGroup.objects.public_group()
-
-    if not request.user.has_perm('core.read_dataset', data_set):
-        if 'read_dataset' not in get_perms(public_group, data_set):
-            if request.user.is_authenticated():
-                return HttpResponseForbidden(
-                    custom_error_page(request, '403.html',
-                                      {user: request.user,
-                                       'msg': "view this data set"}))
-            else:
-                return HttpResponse(
-                    custom_error_page(request, '401.html',
-                                      {'msg': "view this data set"}),
-                    status='401')
-    # get studies
-    investigation = data_set.get_investigation()
-    studies = investigation.study_set.all()
-    # If repository mode, only return workflows tagged for the repository
-    if (settings.REFINERY_REPOSITORY_MODE):
-        workflows = Workflow.objects.filter(show_in_repository_mode=True)
-    else:
-        workflows = Workflow.objects.all()
-
-    study_uuid = studies[0].uuid
-    # used for solr field postfixes: FIELDNAME_STUDYID_ASSAY_ID_FIELDTYPE
-    study_id = studies[0].id
-    assay_uuid = studies[0].assay_set.all()[0].uuid
-    # used for solr field postfixes: FIELDNAME_STUDYID_ASSAY_ID_FIELDTYPE
-    assay_id = studies[0].assay_set.all()[0].id
-    # TODO: catch errors
-    isatab_archive = None
-    pre_isatab_archive = None
-    try:
-        if investigation.isarchive_file is not None:
-            isatab_archive = FileStoreItem.objects.get(
-                uuid=investigation.isarchive_file)
-    except FileStoreItem.DoesNotExist:
-        pass
-    try:
-        if investigation.pre_isarchive_file is not None:
-            pre_isatab_archive = FileStoreItem.objects.get(
-                uuid=investigation.pre_isarchive_file)
-    except FileStoreItem.DoesNotExist:
-        pass
-    return render_to_response(
-        'core/data_set2.html',
-        {
-            "data_set": data_set,
-            "analysis_uuid": analysis_uuid,
-            "studies": studies,
-            "study_uuid": study_uuid,
-            "study_id": study_id,
-            "assay_uuid": assay_uuid,
-            "assay_id": assay_id,
-            "has_change_dataset_permission": 'change_dataset' in get_perms(
-                request.user, data_set),
-            "workflows": workflows,
-            "isatab_archive": isatab_archive,
-            "pre_isatab_archive": pre_isatab_archive,
-        },
-        context_instance=RequestContext(request))
-
-
-def data_set_edit(request, uuid):
-    data_set = get_object_or_404(DataSet, uuid=uuid)
-
-    if not request.user.has_perm('core.change_dataset', data_set):
-        if request.user.is_authenticated():
-            return HttpResponseForbidden(
-                custom_error_page(request, '403.html',
-                                  {user: request.user,
-                                   'msg': "edit this data set"})
-            )
-        else:
-            return HttpResponse(
-                custom_error_page(request, '401.html',
-                                  {'msg': "edit this data set"}),
-                status='401'
-            )
-    # get studies
-    investigation = data_set.get_investigation()
-    studies = investigation.study_set.all()
-    study_uuid = studies[0].uuid
-    assay_uuid = studies[0].assay_set.all()[0].uuid
-    # TODO: catch errors
-    isatab_archive = None
-    pre_isatab_archive = None
-
-    try:
-        if investigation.isarchive_file is not None:
-            isatab_archive = FileStoreItem.objects.get(
-                uuid=investigation.isarchive_file
-            )
-    except FileStoreItem.DoesNotExist:
-        pass
-    try:
-        if investigation.pre_isarchive_file is not None:
-            pre_isatab_archive = FileStoreItem.objects.get(
-                uuid=investigation.pre_isarchive_file)
-    except FileStoreItem.DoesNotExist:
-        pass
-
-    if request.method == "POST":  # If the form has been submitted
-        # A form bound to the POST data
-        form = DataSetForm(data=request.POST, instance=data_set)
-        if form.is_valid():  # All validation rules pass
-            form.save()
-            # Process the data in form.cleaned_data
-            # Redirect after POST
-            return HttpResponseRedirect(
-                reverse('core.views.data_set', args=(uuid,)))
-    else:
-        form = DataSetForm(instance=data_set)  # An unbound form
-    return render_to_response('core/data_set_edit.html',
-                              {
-                                  'data_set': data_set,
-                                  "studies": studies,
-                                  "study_uuid": study_uuid,
-                                  "assay_uuid": assay_uuid,
-                                  "isatab_archive": isatab_archive,
-                                  "pre_isatab_archive": pre_isatab_archive,
-                                  'form': form
-                              },
-                              context_instance=RequestContext(request))
 
 
 def workflow_slug(request, slug):
@@ -955,11 +891,6 @@ def pubmed_summary(request, id):
     return HttpResponse(response, content_type='application/json')
 
 
-def fastqc_viewer(request):
-    return render_to_response('core/fastqc-viewer.html', {},
-                              context_instance=RequestContext(request))
-
-
 @gzip_page
 def neo4j_dataset_annotations(request):
     """Query Neo4J for dataset annotations per user"""
@@ -1244,7 +1175,10 @@ class OpenIDToken(APIView):
             )
         except (botocore.exceptions.ClientError,
                 botocore.exceptions.ParamValidationError) as exc:
-            message = "Error retrieving OpenID token: {}".format(exc)
+            message = ("Could not obtain OpenID token for user '{}' in "
+                       "IdentityPoolId '{}': {}".format(
+                        request.user.username, identity_pool_id, exc
+                        ))
             logger.error(message)
             return api_error_response(
                 message, status.HTTP_500_INTERNAL_SERVER_ERROR

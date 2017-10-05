@@ -19,7 +19,7 @@ function analysisMonitorAnalysesList ($location, $window) {
         galaxyExport: 'Downloading analysis results from Galaxy'
       };
 
-      if ($location.absUrl().indexOf('data_sets2') > -1) {
+      if ($location.absUrl().indexOf('data_sets') > -1) {
         scope.AMCtrl.updateAnalysesList();
       } else {
         scope.$on('refinery/analyze-tab-active', function () {

@@ -1,7 +1,9 @@
+from datetime import timedelta
 import json
 import logging
 import os
 import subprocess
+import urlparse
 
 from django.core.exceptions import ImproperlyConfigured
 
@@ -370,6 +372,15 @@ EMAIL_SUBJECT_PREFIX = get_setting("EMAIL_SUBJECT_PREFIX")
 CELERYD_MAX_TASKS_PER_CHILD = get_setting("CELERYD_MAX_TASKS_PER_CHILD")
 CELERY_ROUTES = {"file_store.tasks.import_file": {"queue": "file_import"}}
 
+# TODO: Does this belong here or in config.json.erb?
+CELERYBEAT_SCHEDULE = {
+    'django_docker_cleanup': {
+        'task': 'tool_manager.tasks.django_docker_cleanup',
+        'schedule': timedelta(seconds=30)
+    },
+}
+
+
 CHUNKED_UPLOAD_ABSTRACT_MODEL = False
 
 # === Refinery Settings ===
@@ -398,8 +409,19 @@ AE_BASE_URL = "http://www.ebi.ac.uk/arrayexpress/experiments"
 
 ISA_TAB_DIR = get_setting("ISA_TAB_DIR")
 
-# relative to MEDIA_ROOT, must exist along with 'temp' subdirectory
-FILE_STORE_DIR = 'file_store'
+# relative to MEDIA_ROOT
+FILE_STORE_DIR = get_setting('FILE_STORE_DIR', default='file_store')
+# absolute path to the file store root dir
+FILE_STORE_BASE_DIR = os.path.join(MEDIA_ROOT, FILE_STORE_DIR)
+FILE_STORE_TEMP_DIR = os.path.join(FILE_STORE_BASE_DIR, 'temp')
+# for SymlinkedFileSystemStorage (http://stackoverflow.com/q/4832626)
+FILE_STORE_BASE_URL = urlparse.urljoin(MEDIA_URL, FILE_STORE_DIR) + '/'
+# move uploaded files into file store quickly instead of copying
+FILE_UPLOAD_TEMP_DIR = get_setting('FILE_UPLOAD_TEMP_DIR',
+                                   default=FILE_STORE_TEMP_DIR)
+# always keep uploaded files on disk
+FILE_UPLOAD_MAX_MEMORY_SIZE = get_setting('FILE_UPLOAD_MAX_MEMORY_SIZE',
+                                          default=0)
 
 # optional dictionary for translating file URLs into locally accessible file
 # system paths (and vice versa) by substituting 'pattern' for 'replacement'
@@ -622,24 +644,27 @@ AUTO_LOGIN = get_setting("AUTO_LOGIN", local_settings, [])
 TEST_RUNNER = "django.test.runner.DiscoverRunner"
 
 # Required for pre-Django 1.9 TransactionTestCases utilizing
-# `serialized_rollback` to function properly http://bit.ly/2l5gR30
+# `serialized_rollback` to function properly.
+# https://code.djangoproject.com/ticket/23727#comment:13
 TEST_NON_SERIALIZED_APPS = ['core', 'django.contrib.contenttypes',
                             'django.contrib.auth']
 
 VISUALIZATION_ANNOTATION_BASE_PATH = "tool_manager/visualization_annotations"
 
-# To avoid Port conflicts between LiveServerTestCases http://bit.ly/2pb64KN
+# To avoid Port conflicts between LiveServerTestCases
+# https://docs.djangoproject.com/en/1.7/topics/testing/tools/#liveservertestcase
 os.environ["DJANGO_LIVE_TEST_SERVER_ADDRESS"] = "localhost:10000-12000"
 
+DJANGO_DOCKER_ENGINE_MAX_CONTAINERS = 10
 DJANGO_DOCKER_ENGINE_BASE_URL = "visualizations"
+# Time in seconds to wait before killing unused visualization
+DJANGO_DOCKER_ENGINE_SECONDS_INACTIVE = 60 * 60
+DJANGO_DOCKER_ENGINE_DATA_DIR = get_setting("DJANGO_DOCKER_ENGINE_DATA_DIR")
 
 REFINERY_DEPLOYMENT_PLATFORM = "vagrant"
 
 # HTML-safe item to be displayed to the right of the `About` link in the navbar
 REFINERY_CUSTOM_NAVBAR_ITEM = get_setting("REFINERY_CUSTOM_NAVBAR_ITEM")
-
-# Location of DjangoDockerEngine proxy logging
-PROXY_LOG = '/tmp/django_docker_engine.log'
 
 USER_FILES_COLUMNS = get_setting("USER_FILES_COLUMNS")
 USER_FILES_FACETS = get_setting("USER_FILES_FACETS")

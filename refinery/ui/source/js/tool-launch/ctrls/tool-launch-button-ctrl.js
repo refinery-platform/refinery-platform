@@ -41,7 +41,7 @@
     **/
     function launchTool () {
       toolLaunchService.postToolLaunch().then(function (response) {
-        $window.open(response.tool_url);
+        $window.location.href = response.tool_url;
       }, function (error) {
         $log.error(error);
       });

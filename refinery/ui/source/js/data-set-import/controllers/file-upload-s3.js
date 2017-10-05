@@ -97,17 +97,15 @@
     };
 
     vm.uploadFiles = function () {
-      if (vm.files) {
-        vm.multifileUploadInProgress = true;
-        for (var i = 0; i < vm.files.length; i++) {
-          if (vm.isFileNew(vm.files[i])) {
-            vm.uploadFile(vm.files[i]);
-            // to enable sequential uploads
-            return;  // uploadFiles() will be called again from uploadFile()
-          }
+      vm.multifileUploadInProgress = true;
+      for (var i = 0; i < vm.files.length; i++) {
+        if (vm.isFileNew(vm.files[i])) {
+          vm.uploadFile(vm.files[i]);
+          // to enable sequential uploads
+          return;  // uploadFiles() will be called again from uploadFile()
         }
-        vm.multifileUploadInProgress = false;
       }
+      vm.multifileUploadInProgress = false;
     };
 
     vm.cancelUpload = function (file) {
@@ -124,12 +122,10 @@
     };
 
     vm.cancelUploads = function () {
-      if (vm.files) {
-        // this iteration approach is necessary because vm.files is re-indexed by splice()
-        var index = vm.files.length;
-        while (index--) {
-          vm.cancelUpload(vm.files[index]);
-        }
+      // this iteration approach is necessary because vm.files is re-indexed in cancelUpload()
+      var index = vm.files.length;
+      while (index--) {
+        vm.cancelUpload(vm.files[index]);
       }
     };
   }

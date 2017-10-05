@@ -26,26 +26,26 @@
   var currentAnalysisUuid = analysisUuid;
 
   $(document).ready(function () {
-    configurator = new DataSetConfigurator(externalStudyUuid, externalAssayUuid, "configurator-panel", REFINERY_API_BASE_URL, csrf_token);
-    configurator.initialize();
+    // To avoid generation when in the current file  browser
+    if (window.location.href.indexOf('provenance') > -1) {
+      configurator = new DataSetConfigurator(externalStudyUuid, externalAssayUuid, "configurator-panel", REFINERY_API_BASE_URL, csrf_token);
+      configurator.initialize();
 
 
-    // event handling
-    var documentTableCommands = new Backbone.Wreqr.Commands();
-    var facetViewCommands = new Backbone.Wreqr.Commands();
-    var analysisViewCommands = new Backbone.Wreqr.Commands();
-    var pivotMatrixCommands = new Backbone.Wreqr.Commands();
-    var clientCommands = new Backbone.Wreqr.Commands();
-    var queryCommands = new Backbone.Wreqr.Commands();
-    var dataSetMonitorCommands = new Backbone.Wreqr.Commands();
+      // event handling
+      var documentTableCommands = new Backbone.Wreqr.Commands();
+      var facetViewCommands = new Backbone.Wreqr.Commands();
+      var analysisViewCommands = new Backbone.Wreqr.Commands();
+      var pivotMatrixCommands = new Backbone.Wreqr.Commands();
+      var clientCommands = new Backbone.Wreqr.Commands();
+      var queryCommands = new Backbone.Wreqr.Commands();
+      var dataSetMonitorCommands = new Backbone.Wreqr.Commands();
 
-    var lastSolrResponse = null,
-        lastProvVisSolrResponse = null;
+      var lastSolrResponse        = null,
+          lastProvVisSolrResponse = null;
 
-    var showAnnotation = false;
+      var showAnnotation = false;
 
-    // To avoid generation when in the data set 2 browser
-    if (window.location.href.indexOf('data_sets2') === -1) {
       configurator.initialize(function () {
         query = new SolrQuery(configurator, queryCommands);
         query.initialize();
@@ -128,26 +128,17 @@
           tableView.setDocumentsPerPage(20);
           analysisView = new SolrAnalysisView("solr-analysis-view", "solranalysis1", query, configurator, analysisViewCommands, dataSetMonitor);
           facetView = new SolrFacetView("solr-facet-view", "solrfacets1", query, configurator, facetViewCommands);
-          documentCountView = new SolrDocumentCountView("solr-document-count-view", "solrcounts1", query, undefined);
 
           pivotMatrixView = new SolrPivotMatrix("solr-pivot-matrix", "solrpivot1", query, {}, pivotMatrixCommands);
 
-          $('#view-selector').on("change", function (e) {
-            if (e.val === "pivot-view-tab") {
-              pivotMatrixView.render();
-            }
-          });
-
-          $('#view-selector').on("change", function (e) {
-            if (e.val === "provenance-view-tab") {
-              if (provvis.get() instanceof provvisDecl.ProvVis === true) {
-                provvisRender.update(provvis.get(), lastProvVisSolrResponse);
-              } else {
-                provVisQuery = query.clone();
-                provVisQuery.setDocumentCount(provVisQuery.getTotalDocumentCount());
-                provVisQuery.setDocumentIndex(0);
-                client.run(provVisQuery, SOLR_FULL_QUERY);
-              }
+          $(function() {
+            if (provvis.get() instanceof provvisDecl.ProvVis === true) {
+              provvisRender.update(provvis.get(), lastProvVisSolrResponse);
+            } else {
+              provVisQuery = query.clone();
+              provVisQuery.setDocumentCount(provVisQuery.getTotalDocumentCount());
+              provVisQuery.setDocumentIndex(0);
+              client.run(provVisQuery, SOLR_FULL_QUERY);
             }
           });
 
@@ -236,7 +227,6 @@
             analysisView.render(arguments.response);
             facetView.render(arguments.response);
 
-            documentCountView.render(arguments.response);
             pivotMatrixView.render(arguments.response);
             updateDownloadButton("submitReposBtn");
             updateIgvButton("igv-multi-species");
@@ -246,18 +236,18 @@
             pivotMatrixView.updateMatrix(arguments.response);
           }
 
-          /* Set face attributes for nodes in Provenance Visualization.*/
-          if (arguments.query == provVisQuery && provvis.get() instanceof provvisDecl.ProvVis === false) {
-            provvis.run(currentStudyUuid, dataSetMonitor.analyses.objects, arguments.response);
-          }
-
           if (arguments.query == provVisQuery) {
-            lastProvVisSolrResponse = arguments.response;
-          }
+            /* Set face attributes for nodes in Provenance Visualization.*/
+            if (! provvis.get() instanceof provvisDecl.ProvVis && dataSetMonitor.analyses) {
+              provvis.run(currentStudyUuid, dataSetMonitor.analyses.objects, arguments.response);
+            }
 
-          /* Update Provenance Visualization by filtered nodeset. */
-          if (($('.nav-pills li.active a').attr('href').split("#")[1] === 'provenance-view-tab') && arguments.query == provVisQuery && provvis.get() instanceof provvisDecl.ProvVis) {
-            provvisRender.update(provvis.get(), arguments.response);
+            lastProvVisSolrResponse = arguments.response;
+
+            /* Update Provenance Visualization by filtered nodeset. */
+            if (provvis.get() instanceof provvisDecl.ProvVis) {
+              provvisRender.update(provvis.get(), arguments.response);
+            }
           }
         });
 
@@ -287,8 +277,6 @@
             dataQueryString = client.createUnpaginatedUrl(dataQuery, SOLR_SELECTION_QUERY);
             annotationQueryString = client.createUnpaginatedUrl(query, SOLR_SELECTION_QUERY);
           }
-
-          documentCountView.render();
 
           // update viewer buttons
           updateIgvButton("igv-multi-species");
@@ -456,14 +444,13 @@
         client.initialize(query, false);
         client.initialize(annotationQuery, false);
       });
-    }
 
 
-    configurator.getState(function () {
+      configurator.getState(function () {
         // callback
-    });
+      });
 
-
+    }
   });
 
 

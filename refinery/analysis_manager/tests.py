@@ -597,7 +597,7 @@ class AnalysisViewsTests(AnalysisManagerTestBase, ToolManagerTestBase):
             self,
             file_import_state_mock
     ):
-        self.create_valid_tool(ToolDefinition.WORKFLOW)
+        self.create_tool(ToolDefinition.WORKFLOW)
         self.status_url_root = "/analysis_manager/{}/".format(
             self.tool.analysis.uuid
         )
