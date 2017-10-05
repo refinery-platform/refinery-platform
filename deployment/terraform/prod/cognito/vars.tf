@@ -10,3 +10,8 @@ variable "remote_state_bucket" {
 variable "identity_pool_name" {
   description = "Cognito federated identity pool name"
 }
+
+// temp workaround
+variable "stack_name" {
+  description = "Name of the CloudFormation stack for Cognito resources"
+}

@@ -320,7 +320,7 @@ def make_template(config, config_yaml):
                                                 "Fn::ImportValue": {
                                                     "Fn::Sub":
                                                         "${AWS::StackName}"
-                                                        "StorageIdentityPoolId"
+                                                        "IdentityPoolId"
                                                 }
                                             }
                                         }

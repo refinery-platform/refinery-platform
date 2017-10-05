@@ -1,3 +1,6 @@
 region = "us-east-1"
 
 identity_pool_name = "Refinery Platform"
+
+// temp workaround, should match STACK_NAME in deployment/aws-config/config.yaml
+stack_name = "ProdRefineryPlatform"

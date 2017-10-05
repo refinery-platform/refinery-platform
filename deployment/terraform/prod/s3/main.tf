@@ -12,7 +12,7 @@ provider "aws" {
 
 resource "aws_s3_bucket" "static_files" {
   acl    = "public-read"
-  bucket = "${var.bucket_name_base}-prod-static"
+  bucket = "${var.bucket_name_base}-static"
 
   cors_rule {
     allowed_headers = ["Authorization"]
@@ -24,7 +24,7 @@ resource "aws_s3_bucket" "static_files" {
 }
 
 //resource "aws_s3_bucket" "uploads" {
-//  bucket = "${var.bucket_name_base}-prod-upload"
+//  bucket = "${var.bucket_name_base}-upload"
 //
 //  cors_rule {
 //    allowed_headers = ["*"]
@@ -37,7 +37,7 @@ resource "aws_s3_bucket" "static_files" {
 
 resource "aws_s3_bucket" "media_files" {
 //  acl    = "public-read"
-  bucket = "${var.bucket_name_base}-prod-media"
+  bucket = "${var.bucket_name_base}-media"
 
   cors_rule {
     allowed_headers = ["*"]

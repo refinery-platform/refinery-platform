@@ -86,18 +86,18 @@ EOF
 // workaround for missing AWS::Cognito::IdentityPoolRoleAttachment
 // https://github.com/terraform-providers/terraform-provider-aws/issues/232
 resource "aws_cloudformation_stack" "identities" {
-  name         = "RefineryProdFederatedIdentity"
+  name         = "${var.stack_name}Identity"
   capabilities = ["CAPABILITY_IAM"]
 
   template_body = <<STACK
 {
-  "Description": "Allows users with identities in Cognito pool to upload files directly into S3",
+  "Description": "Refinery Platform federated identities",
   "Resources": {
     "IdentityPool": {
       "Type": "AWS::Cognito::IdentityPool",
       "Properties": {
         "IdentityPoolName": "${var.identity_pool_name}",
-        "DeveloperProviderName": "refinery.login",
+        "DeveloperProviderName": "login.refinery",
         "AllowUnauthenticatedIdentities": false
       }
     },
@@ -164,6 +164,17 @@ resource "aws_cloudformation_stack" "identities" {
             "Fn::GetAtt": [ "CognitoS3UploadRole", "Arn" ]
           }
         }
+      }
+    }
+  },
+  "Outputs": {
+    "IdentityPoolId": {
+      "Description": "Cognito identity pool ID",
+      "Value": {
+        "Ref": "IdentityPool"
+      },
+      "Export": {
+        "Name": "${var.stack_name}IdentityPoolId"
       }
     }
   }
