@@ -1799,6 +1799,17 @@ class IsaTabParserTests(TestCase):
             self.username, '', self.password
         )
 
+    def exponential_explosion_assertions(self, exception_context):
+        self.assertEqual(DataSet.objects.count(), 0)
+        self.assertEqual(AnnotatedNode.objects.count(), 0)
+        self.assertEqual(Node.objects.count(), 0)
+        self.assertEqual(FileStoreItem.objects.count(), 0)
+        self.assertEqual(Investigation.objects.count(), 0)
+        self.assertIn(
+            "Exponential explosion",
+            exception_context.exception.message
+        )
+
     def parse(self, dir_name):
         parent = os.path.dirname(os.path.abspath(__file__))
         file_source_translator = generate_file_source_translator(
@@ -1866,26 +1877,12 @@ class IsaTabParserTests(TestCase):
 
     def test_metabolights_isatab_wont_import_with_rollback_a(self):
         with self.assertRaises(RuntimeError) as context:
-            parse_isatab(
-                self.user.username,
-                True,
-                "data_set_manager/test-data/MTBLS1.zip"
-            )
-        self.assertEqual(DataSet.objects.count(), 0)
-        self.assertEqual(AnnotatedNode.objects.count(), 0)
-        self.assertEqual(Node.objects.count(), 0)
-        self.assertEqual(FileStoreItem.objects.count(), 0)
-        self.assertIn("Exponential explosion", context.exception.message)
+            parse_isatab(self.user.username, False,
+                         "data_set_manager/test-data/MTBLS1.zip")
+        self.exponential_explosion_assertions(context)
 
     def test_metabolights_isatab_wont_import_with_rollback_b(self):
         with self.assertRaises(RuntimeError) as context:
-            parse_isatab(
-                self.user.username,
-                True,
-                "data_set_manager/test-data/MTBLS112.zip"
-            )
-        self.assertEqual(DataSet.objects.count(), 0)
-        self.assertEqual(AnnotatedNode.objects.count(), 0)
-        self.assertEqual(Node.objects.count(), 0)
-        self.assertEqual(FileStoreItem.objects.count(), 0)
-        self.assertIn("Exponential explosion", context.exception.message)
+            parse_isatab(self.user.username, False,
+                         "data_set_manager/test-data/MTBLS112.zip")
+        self.exponential_explosion_assertions(context)
