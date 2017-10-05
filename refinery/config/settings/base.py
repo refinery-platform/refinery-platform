@@ -659,12 +659,7 @@ DJANGO_DOCKER_ENGINE_MAX_CONTAINERS = 10
 DJANGO_DOCKER_ENGINE_BASE_URL = "visualizations"
 # Time in seconds to wait before killing unused visualization
 DJANGO_DOCKER_ENGINE_SECONDS_INACTIVE = 60 * 60
-# Location of DjangoDockerEngine proxy logging
 DJANGO_DOCKER_ENGINE_DATA_DIR = get_setting("DJANGO_DOCKER_ENGINE_DATA_DIR")
-PROXY_LOG = os.path.join(
-    DJANGO_DOCKER_ENGINE_DATA_DIR,
-    'django-docker-engine.log'
-)
 
 REFINERY_DEPLOYMENT_PLATFORM = "vagrant"
 
