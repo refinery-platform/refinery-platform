@@ -27,6 +27,9 @@ resource "aws_cognito_identity_pool" "idp" {
 }
 
 resource "aws_iam_role" "upload_role" {
+  description = "Allows users with identities in Cognito pool to upload files directly into S3"
+  name_prefix = "RefineryProdUploadRole-"
+
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -39,7 +42,7 @@ resource "aws_iam_role" "upload_role" {
       "Action": "sts:AssumeRoleWithWebIdentity",
       "Condition": {
         "StringEquals": {
-          "cognito-identity.amazonaws.com:aud": ${aws_cognito_identity_pool.idp.id}
+          "cognito-identity.amazonaws.com:aud": "${aws_cognito_identity_pool.idp.id}"
         },
         "ForAnyValue:StringLike": {
           "cognito-identity.amazonaws.com:amr": "authenticated"
