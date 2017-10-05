@@ -7,10 +7,8 @@ import re
 import shutil
 import string
 import subprocess
-import sys
 import tempfile
 import time
-import traceback
 
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -458,24 +456,15 @@ def parse_isatab(username, public, path, identity_id=None,
                             checksum)
                 return \
                     investigation.investigationlink_set.all()[0].data_set.uuid
-    try:
-        with transaction.atomic():
-            investigation = parser.run(
-                path, isa_archive=isa_archive, preisa_archive=pre_isa_archive
-            )
-            data_uuid = create_dataset(
-                investigation.uuid, username, public=public
-            )
-            return data_uuid
-    except:  # prints the error message without breaking things
-        exc_type, exc_value, exc_traceback = sys.exc_info()
-        logger.error(traceback.print_tb(exc_traceback, file=sys.stdout))
-        logger.error(
-            traceback.print_exception(
-                exc_type, exc_value, exc_traceback, file=sys.stdout
-            )
+
+    with transaction.atomic():
+        investigation = parser.run(
+            path, isa_archive=isa_archive, preisa_archive=pre_isa_archive
         )
-    return None
+        data_uuid = create_dataset(
+            investigation.uuid, username, public=public
+        )
+        return data_uuid
 
 
 @task()
