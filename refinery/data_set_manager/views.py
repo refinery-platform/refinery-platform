@@ -293,8 +293,8 @@ class ProcessISATabView(View):
 
             if not response['success']:
                 if request.is_ajax():
-                    return HttpResponse(
-                        json.dumps({'error': response.message}),
+                    return HttpResponseBadRequest(
+                        json.dumps({'error': response["message"]}),
                         content_type='application/json'
                     )
                 return render_to_response(
@@ -303,7 +303,7 @@ class ProcessISATabView(View):
                         request,
                         {
                             'form': form,
-                            'error': response.message
+                            'error': response["message"]
                         }
                     )
                 )
