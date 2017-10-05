@@ -219,9 +219,9 @@ MetadataTableImportCtrl.prototype.checkFiles = function () {
     });
   }
 
-  // get S3 bucket name and Cognito identity ID if deployed on AWS
-  if (this.settings.djangoApp.deploymentPlatform === 'aws') {
-    fileData.identityId = AWS.config.credentials.identityId;
+  // collect Cognito identity ID if deployed on AWS and credentials are available
+  if (this.settings.djangoApp.deploymentPlatform === 'aws' && AWS.config.credentials !== null) {
+    fileData.identity_id = AWS.config.credentials.identityId;
   }
 
   self.fileSources
@@ -318,8 +318,8 @@ MetadataTableImportCtrl.prototype.startImport = function () {
   if (self.dataFilePermanent) {
     formData.append('data_file_permanent', self.dataFilePermanent);
   }
-  // get S3 bucket name and Cognito identity ID if deployed on AWS
-  if (this.settings.djangoApp.deploymentPlatform === 'aws') {
+  // collect Cognito identity ID if deployed on AWS and credentials are available
+  if (this.settings.djangoApp.deploymentPlatform === 'aws' && AWS.config.credentials !== null) {
     formData.append('identity_id', AWS.config.credentials.identityId);
   }
 
@@ -332,7 +332,7 @@ MetadataTableImportCtrl.prototype.startImport = function () {
       // Set preview flag so ui won't trigger alert when navigating away.
       self.metadataStatusService.setMetadataPreviewStatus(false);
       self.$timeout(function () {
-        self.$window.location.href = '/data_sets2/' + self.importedDataSetUuid;
+        self.$window.location.href = '/data_sets/' + self.importedDataSetUuid;
       }, 2500);
     })
     .catch(function (error) {

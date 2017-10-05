@@ -110,9 +110,7 @@ class Command(BaseCommand):
 
     # absolute path to the file store root dir
     ANNOTATION_BASE_DIR = os.path.join(settings.MEDIA_ROOT, ANNOTATION_DIR)
-    # create this directory in case it doesn't exist
-    if not os.path.isdir(ANNOTATION_BASE_DIR):
-        _mkdir(ANNOTATION_BASE_DIR)
+    _mkdir(ANNOTATION_BASE_DIR)
 
     def handle(self, *args, **options):
         if options['genome']:
@@ -121,10 +119,9 @@ class Command(BaseCommand):
                 # temp dir should be located on the same file system as the
                 # base dir
                 self.ANNOTATION_TEMP_DIR = os.path.join(
-                    self.ANNOTATION_BASE_DIR, self.GENOME_BUILD)
-                # create this directory in case it doesn't exist
-                if not os.path.isdir(self.ANNOTATION_TEMP_DIR):
-                    _mkdir(self.ANNOTATION_TEMP_DIR)
+                    self.ANNOTATION_BASE_DIR, self.GENOME_BUILD
+                )
+                _mkdir(self.ANNOTATION_TEMP_DIR)
                 if options['gene_annotation']:
                     # Human from GENCODE, fly from FlyBase, worm from WormBase
                     self.geneAnnotation(options['gene_annotation'])

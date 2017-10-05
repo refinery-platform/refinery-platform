@@ -253,7 +253,6 @@ def get_solr_results(query, facets=False, jsonp=False, annotation=False,
     :type selected_nodes: array
     :returns: dictionary of current solr results
     """
-    logger.debug("core.views: get_solr_results")
     if not facets:
         # replacing facets w/ false
         query = query.replace('facet=true', 'facet=false')

@@ -5,6 +5,7 @@ import stat
 from tempfile import NamedTemporaryFile
 import urlparse
 
+from django.conf import settings
 from django.core.files import File
 
 import boto3
@@ -17,9 +18,9 @@ from requests.exceptions import (ConnectionError, ContentDecodingError,
                                  HTTPError)
 
 from data_set_manager.models import Node
+from data_set_manager.search_indexes import NodeIndex
 
-from .models import (FILE_STORE_BASE_DIR, FileStoreItem, file_path,
-                     get_temp_dir, parse_s3_url)
+from .models import FileStoreItem, file_path, get_temp_dir, parse_s3_url
 
 logger = logging.getLogger(__name__)
 
@@ -87,23 +88,21 @@ def import_file(uuid, refresh=False, file_size=0):
 
     # start the transfer
     if os.path.isabs(item.source):
-        if os.path.isfile(item.source):
-            # check if source file can be opened
-            try:
-                srcfile = File(open(item.source))
-            except IOError:
-                logger.error("Could not open file: %s", item.source)
-                return None
-            srcfilename = os.path.basename(item.source)
-
-            # TODO: copy file in chunks to display progress report
-            # model is saved by default if FileField.save() is called
-            item.datafile.save(srcfilename, srcfile)
-            srcfile.close()
-            logger.info("File copied")
-        else:
-            logger.error("Copying failed: source is not a file")
+        try:
+            with open(item.source, 'r') as f:
+                # TODO: copy file in chunks to display progress report
+                # model is saved by default if FileField.save() is called
+                item.datafile.save(os.path.basename(item.source), File(f))
+        except IOError:
+            logger.error("Could not open file: %s", item.source)
             return None
+        if item.source.startswith(settings.REFINERY_DATA_IMPORT_DIR):
+            try:
+                os.unlink(item.source)
+            except IOError:
+                logger.error("Could not delete uploaded source file '%s'",
+                             item.source)
+        logger.info("File copied from '%s'", item.source)
     elif item.source.startswith('s3://'):
         bucket_name, key = parse_s3_url(item.source)
         s3 = boto3.resource('s3')
@@ -211,7 +210,7 @@ def import_file(uuid, refresh=False, file_size=0):
         rel_dst_path = item.datafile.storage.get_available_name(
             file_path(item, src_file_name)
         )
-        abs_dst_path = os.path.join(FILE_STORE_BASE_DIR, rel_dst_path)
+        abs_dst_path = os.path.join(settings.FILE_STORE_BASE_DIR, rel_dst_path)
         # move the temp file into the file store
         try:
             if not os.path.exists(os.path.dirname(abs_dst_path)):
@@ -243,17 +242,28 @@ def import_file(uuid, refresh=False, file_size=0):
 
 
 @task_success.connect(sender=import_file)
+def update_solr_index(**kwargs):
+    file_store_item_uuid = kwargs['result']
+    try:
+        node = Node.objects.get(file_uuid=file_store_item_uuid)
+    except (Node.DoesNotExist, Node.MultipleObjectsReturned) as exc:
+        logger.error("Couldn't retrieve Node: %s", exc)
+    else:
+        NodeIndex().update_object(node)
+
+
+@task_success.connect(sender=import_file)
 def begin_auxiliary_node_generation(**kwargs):
     # NOTE: Celery docs suggest to access these fields through kwargs as the
     # structure of celery signal handlers changes often
     # http://docs.celeryproject.org/en/3.1/userguide/signals.html#basics
     file_store_item_uuid = kwargs['result']
     try:
-        Node.objects.get(
-            file_uuid=file_store_item_uuid
-        ).run_generate_auxiliary_node_task()
+        node = Node.objects.get(file_uuid=file_store_item_uuid)
     except (Node.DoesNotExist, Node.MultipleObjectsReturned) as exc:
-        logger.error("Couldn't properly fetch Node: %s", exc)
+        logger.error("Couldn't retrieve Node: %s", exc)
+    else:
+        node.run_generate_auxiliary_node_task()
 
 
 @task()

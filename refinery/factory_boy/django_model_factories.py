@@ -164,12 +164,6 @@ class GalaxyParameterFactory(factory.django.DjangoModelFactory):
         model = "tool_manager.GalaxyParameter"
 
 
-class OutputFileFactory(factory.django.DjangoModelFactory):
-    """Minimal representation of an OutputFile"""
-    class Meta:
-        model = "tool_manager.OutputFile"
-
-
 class FileTypeFactory(factory.django.DjangoModelFactory):
     """Minimal representation of a FileType"""
     class Meta:

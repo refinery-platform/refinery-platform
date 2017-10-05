@@ -19,6 +19,92 @@
       expect(factory).toBeDefined();
     });
 
+    describe('createData', function () {
+      it('handles empty', function () {
+        expect(factory.createData([]))
+        .toEqual([]);
+      });
+
+      it('handles matching duplicates', function () {
+        expect(factory.createData([{
+          name: 'http://example.com/foo.bar',
+          organism_Characteristics_generic_s: 'dog',
+          organism_Factor_Value_generic_s: 'dog'
+        }]))
+        .toEqual([{
+          url: 'http://example.com/foo.bar',
+          name: 'http://example.com/foo.bar', // TODO: This could be removed?
+          organism: 'dog'
+        }]);
+
+        // TODO: and what if they don't match?
+      });
+    });
+
+    describe('createFilters', function () {
+      describe('utils', function () {
+        it('_mergeAndAddObject', function () {
+          var a = { a: 1 };
+          var b = { a: 2, b: 3 };
+          factory._mergeAndAddObject(a, b);
+          expect(a).toEqual({
+            a: 3,
+            b: 3
+          });
+        });
+        it('_objectToNameCount', function () {
+          expect(factory._objectToNameCount({
+            a: 1
+          })).toEqual([{
+            name: 'a',
+            count: 1
+          }]);
+        });
+        it('_nameCountToObject', function () {
+          expect(factory._nameCountToObject([{
+            name: 'a',
+            count: 1
+          }])).toEqual({
+            a: 1
+          });
+        });
+        it('_mergeAndAddNameCounts', function () {
+          var a = [{ name: 'a', count: 1 }];
+          var b = [{ name: 'a', count: 2 }, { name: 'b', count: 3 }];
+          factory._mergeAndAddNameCounts(a, b);
+          expect(a).toEqual([
+            { name: 'a', count: 3 },
+            { name: 'b', count: 3 }
+          ]);
+        });
+      });
+      it('handles duplicates', function () {
+        expect(factory.createFilters(
+          {
+            organism_Characteristics_generic_s: [
+              { name: 'mouse', count: 1 },
+              { name: 'cat', count: 2 }
+            ],
+            organism_Factor_Value_generic_s: [
+              { name: 'mouse', count: 3 },
+              { name: 'dog', count: 4 }
+            ]
+          }
+        )).toEqual(
+          {
+            organism: {
+              facetObj: [
+                { name: 'mouse', count: 4 },
+                { name: 'cat', count: 2 },
+                { name: 'dog', count: 4 }
+              ],
+              lowerCaseNames: ' mouse cat mouse dog' // This is ok: Just used for substring search.
+            }
+          }
+        );
+      });
+    });
+
     describe('getUserFiles', function () {
       var userFiles;
 
@@ -29,54 +115,18 @@
       ) {
         userFiles = {
           nodes: [
-            {
-              REFINERY_ANALYSIS_UUID_6_3_s: 'N/A',
-              Author_Characteristics_6_3_s: 'McConnell',
-              REFINERY_WORKFLOW_OUTPUT_6_3_s: 'N/A'
-            },
-            {
-              REFINERY_ANALYSIS_UUID_6_3_s: 'fbc78aaa-1050-403b-858c-a1504a40ef54',
-              Author_Characteristics_6_3_s: 'McConnell',
-              REFINERY_WORKFLOW_OUTPUT_6_3_s: '1_test_01'
-            },
-            {
-              REFINERY_ANALYSIS_UUID_6_3_s: '547ac4a0-7d5a-48a9-8859-8620ad94c7a2',
-              Author_Characteristics_6_3_s: 'McConnell',
-              REFINERY_WORKFLOW_OUTPUT_6_3_s: '1_test tool out'
-            }],
+            { field: 'count' }
+          ],
           attributes: [{
-            attribute_type: 'Internal',
+            field: 'Internal',
             file_ext: 's',
-            display_name: 'Output Type',
-            internal_name: 'REFINERY_WORKFLOW_OUTPUT_6_3_s'
-          }, {
-            attribute_type: 'Internal',
-            file_ext: 's',
-            display_name: 'Analysis',
-            internal_name: 'REFINERY_ANALYSIS_UUID_6_3_s'
-          }, {
-            attribute_type: 'Characteristics',
-            file_ext: 's',
-            display_name: 'Author',
-            internal_name: 'Author_Characteristics_6_3_s'
+            display_name: 'foo bar',
+            internal_name: 'REFINERY_foo_bar'
           }],
           facet_field_counts: {
-            REFINERY_WORKFLOW_OUTPUT_6_3_s: {
-              '1_test_04': 2,
-              '1_test_02': 2
-            },
-            REFINERY_ANALYSIS_UUID_6_3_s: {
-              '5d2311d1-6d8c-4857-bc57-2f25563aee91': 4
-            },
-            Author_Characteristics_6_3_s: {
-              Vezza: 1,
-              'Harslem/Heafner': 1,
-              McConnell: 6,
-              'Crocker + McConnell': 4,
-              Crocker: 4,
-              'Postel/Cerf': 1,
-              Cotton: 1
-            }
+            field: [
+              { name: 'name', count: 42 }
+            ]
           }
         };
         spyOn(userFileService, 'query').and.callFake(function () {

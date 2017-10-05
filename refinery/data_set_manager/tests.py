@@ -1,10 +1,7 @@
 from StringIO import StringIO
-import contextlib
 import json
-import os
 import re
-import shutil
-import tempfile
+import uuid
 
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import (InMemoryUploadedFile,
@@ -14,17 +11,18 @@ from django.test import TestCase
 
 from rest_framework.test import APIClient, APIRequestFactory, APITestCase
 
-from core.models import DataSet, ExtendedGroup, InvestigationLink
+from core.models import Analysis, DataSet, ExtendedGroup, InvestigationLink
 from core.views import NodeViewSet
-from data_set_manager.isa_tab_parser import IsaTabParser, ParserException
 from data_set_manager.tasks import parse_isatab
+from factory_boy.utils import make_analyses_with_single_dataset
 from file_store.models import FileStoreItem
 
-from .models import (AnnotatedNode, Assay, Attribute, AttributeOrder,
-                     Investigation, Node, Study)
+from .models import (AnnotatedNode, Assay, AttributeOrder, Investigation, Node,
+                     Study)
 from .search_indexes import NodeIndex
 from .serializers import AttributeOrderSerializer
-from .utils import (create_facet_filter_query, customize_attribute_response,
+from .utils import (_create_solr_params_from_node_uuids,
+                    create_facet_filter_query, customize_attribute_response,
                     escape_character_solr, format_solr_response,
                     generate_facet_fields_query,
                     generate_filtered_facet_fields,
@@ -348,78 +346,6 @@ class AssaysAttributesAPITests(APITestCase):
                 response.content, '"Only owner may edit attribute order."'
                 )
         self.client.logout()
-
-
-@contextlib.contextmanager
-def temporary_directory(*args, **kwargs):
-    d = tempfile.mkdtemp(*args, **kwargs)
-    try:
-        yield d
-    finally:
-        shutil.rmtree(d)
-
-
-class IsaTabParserTests(TestCase):
-
-    def parse(self, dir_name):
-        parent = os.path.dirname(os.path.abspath(__file__))
-        dir = os.path.join(parent, 'test-data', dir_name)
-        return IsaTabParser().run(dir)
-
-    def test_empty(self):
-        with temporary_directory() as tmp:
-            with self.assertRaises(ParserException):
-                IsaTabParser().run(tmp)
-
-    def test_minimal(self):
-        investigation = self.parse('minimal')
-
-        studies = investigation.study_set.all()
-        self.assertEqual(len(studies), 1)
-
-        assays = studies[0].assay_set.all()
-        self.assertEqual(len(assays), 1)
-
-    def test_mising_investigation(self):
-        with self.assertRaises(ParserException):
-            self.parse('missing-investigation')
-
-    def test_mising_study(self):
-        with self.assertRaises(IOError):
-            self.parse('missing-study')
-
-    def test_mising_assay(self):
-        with self.assertRaises(IOError):
-            self.parse('missing-assay')
-
-    def test_multiple_investigation(self):
-        # TODO: I think this should fail?
-        self.parse('multiple-investigation')
-
-    def test_multiple_study(self):
-        investigation = self.parse('multiple-study')
-
-        studies = investigation.study_set.all()
-        self.assertEqual(len(studies), 2)
-
-        assays0 = studies[0].assay_set.all()
-        self.assertEqual(len(assays0), 1)
-
-        assays1 = studies[1].assay_set.all()
-        self.assertEqual(len(assays1), 1)
-
-    def test_multiple_study_missing_assay(self):
-        with self.assertRaises(IOError):
-            self.parse('multiple-study-missing-assay')
-
-    def test_multiple_assay(self):
-        investigation = self.parse('multiple-assay')
-
-        studies = investigation.study_set.all()
-        self.assertEqual(len(studies), 1)
-
-        assays = studies[0].assay_set.all()
-        self.assertEqual(len(assays), 2)
 
 
 class UtilitiesTest(TestCase):
@@ -854,8 +780,7 @@ class UtilitiesTest(TestCase):
                          '&q=django_ct%3Adata_set_manager.node'
                          '&wt=json'
                          '&facet=true'
-                         '&facet.limit=-1'
-                         '&facet.mincount=1'.format(
+                         '&facet.limit=-1'.format(
                                  self.valid_uuid))
 
     def test_generate_solr_params_for_assay_with_params(self):
@@ -891,8 +816,7 @@ class UtilitiesTest(TestCase):
                          '&q=django_ct%3Adata_set_manager.node'
                          '&wt=json'
                          '&facet=true'
-                         '&facet.limit=-1'
-                         '&facet.mincount=1'.format(
+                         '&facet.limit=-1'.format(
                                  self.valid_uuid))
 
     def test_generate_filtered_facet_fields(self):
@@ -1459,9 +1383,25 @@ class UtilitiesTest(TestCase):
                 context.exception.message
             )
 
+    def test__create_solr_params_from_node_uuids(self):
+        fake_node_uuids = [str(uuid.uuid4()), str(uuid.uuid4())]
+        node_solr_params = _create_solr_params_from_node_uuids(fake_node_uuids)
+        self.assertEqual(
+            node_solr_params,
+            {
+                "q": "django_ct:data_set_manager.node",
+                "wt": "json",
+                "fq": "uuid:'{}'".format(" OR ".join(fake_node_uuids))
+            }
+        )
+
 
 class NodeClassMethodTests(TestCase):
     def setUp(self):
+        self.username = 'coffee_tester'
+        self.password = 'coffeecoffee'
+        self.user = User.objects.create_user(self.username, '', self.password)
+
         self.filestore_item = FileStoreItem.objects.create(
             datafile=SimpleUploadedFile(
                 'test_file.bam',
@@ -1519,6 +1459,11 @@ class NodeClassMethodTests(TestCase):
 
         # Check inverse relationship:
         self.assertEqual(self.another_node.uuid, self.node.get_children()[0])
+
+    def test_is_orphan(self):
+        self.assertTrue(self.another_node.is_orphan())
+        self.node.add_child(self.another_node)
+        self.assertFalse(self.another_node.is_orphan())
 
     # Auxiliary nodes:
 
@@ -1578,6 +1523,20 @@ class NodeClassMethodTests(TestCase):
         relative_url = self.file_node.get_relative_file_store_item_url()
         self.assertEqual(relative_url, self.file_node.get_file_store_item(
         ).get_datafile_url())
+
+    def test_get_analysis(self):
+        make_analyses_with_single_dataset(1, self.user)
+        analysis = Analysis.objects.all()[0]
+
+        node_with_analysis = Node.objects.create(
+            assay=self.assay,
+            study=self.study,
+            analysis_uuid=analysis.uuid
+        )
+        self.assertEqual(node_with_analysis.get_analysis(), analysis)
+
+    def test_get_analysis_no_analysis(self):
+        self.assertIsNone(self.node.get_analysis())
 
 
 class NodeApiV2Tests(APITestCase):
@@ -1727,9 +1686,10 @@ class NodeIndexTests(APITestCase):
         study = Study.objects.create(investigation=investigation)
         assay = Assay.objects.create(study=study, technology='whizbang')
 
+        # None of the details of the test_file except name matter for the test
         test_file = StringIO()
         test_file.write('Coffee is great.\n')
-        file_store_item = FileStoreItem.objects.create(
+        self.file_store_item = FileStoreItem.objects.create(
             datafile=InMemoryUploadedFile(
                 test_file,
                 field_name='tempfile',
@@ -1743,22 +1703,15 @@ class NodeIndexTests(APITestCase):
         self.node = Node.objects.create(
             assay=assay,
             study=study,
-            file_uuid=file_store_item.uuid,
+            file_uuid=self.file_store_item.uuid,
             name='http://example.com/fake.txt'
         )
 
         self.data_set_uuid = data_set.uuid
         self.assay_uuid = assay.uuid
         self.study_uuid = study.uuid
-        self.file_uuid = file_store_item.uuid
+        self.file_uuid = self.file_store_item.uuid
         self.node_uuid = self.node.uuid
-
-        Attribute.objects.create(
-            node=self.node,
-            type=Attribute.CHARACTERISTICS,
-            subtype='fake subtype',
-            value='fake value'
-        )
 
         self.maxDiff = None
 
@@ -1769,45 +1722,59 @@ class NodeIndexTests(APITestCase):
         data = NodeIndex().prepare(self.node)
         data = dict(
             (
-                re.sub(r'\d+', '#', k),
-                re.sub(r'\d+', '#', v) if
-                type(v) in (unicode, str) and not('uuid' in k)
-                else v
+                re.sub(r'\d+', '#', key),
+                re.sub(r'\d+', '#', value) if
+                type(value) in (unicode, str) and
+                key != 'REFINERY_DOWNLOAD_URL_s' and
+                'uuid' not in key
+                else value
             )
-            for (k, v) in data.items())
-        self.assertEqual(data,
-                         {'REFINERY_ANALYSIS_UUID_#_#_s': 'N/A',
-                          'REFINERY_FILETYPE_#_#_s': None,
-                          'REFINERY_NAME_#_#_s': 'http://example.com/fake.txt',
-                          'REFINERY_SUBANALYSIS_#_#_s': -1,
-                          'REFINERY_TYPE_#_#_s': u'',
-                          'REFINERY_WORKFLOW_OUTPUT_#_#_s': 'N/A',
-                          'analysis_uuid': None,
-                          'assay_uuid': self.assay_uuid,
-                          'data_set_uuid': self.data_set_uuid,
-                          u'django_ct': u'data_set_manager.node',
-                          u'django_id': u'#',
-                          'file_uuid': self.file_uuid,
-                          'filename_Characteristics_generic_s': u'fake.txt',
-                          'genome_build': None,
-                          u'id': u'data_set_manager.node.#',
-                          'is_annotation': False,
-                          'measurement_Characteristics_generic_s': '',
-                          'measurement_accession_Characteristics_generic_s':
-                              '',
-                          'measurement_source_Characteristics_generic_s': '',
-                          'name': u'http://example.com/fake.txt',
-                          'platform_Characteristics_generic_s': '',
-                          'species': None,
-                          'study_uuid': self.study_uuid,
-                          'subanalysis': None,
-                          'text': u'',
-                          'technology_Characteristics_generic_s': 'whizbang',
-                          'technology_accession_Characteristics_generic_s': '',
-                          'technology_source_Characteristics_generic_s': '',
-                          'type': u'',
-                          'uuid': self.node_uuid,
-                          'workflow_output': None})
+            for (key, value) in data.items()
+        )
+        self.assertRegexpMatches(
+            data['REFINERY_DOWNLOAD_URL_s'],
+            r'^http://example.com/media/file_store/.+/test_file.+txt$'
+            # There may or may not be a suffix on "test_file",
+            # depending on environment. Don't make it too strict!
+        )
+        self.assertEqual(
+            data,
+            {
+                'REFINERY_ANALYSIS_UUID_#_#_s': 'N/A',
+                'REFINERY_DOWNLOAD_URL_s':
+                    self.file_store_item.get_datafile_url(),
+                'REFINERY_FILETYPE_#_#_s': None,
+                'REFINERY_NAME_#_#_s': 'http://example.com/fake.txt',
+                'REFINERY_SUBANALYSIS_#_#_s': -1,
+                'REFINERY_TYPE_#_#_s': u'',
+                'REFINERY_WORKFLOW_OUTPUT_#_#_s': 'N/A',
+                'analysis_uuid': None,
+                'assay_uuid': self.assay_uuid,
+                'data_set_uuid': self.data_set_uuid,
+                u'django_ct': u'data_set_manager.node',
+                u'django_id': u'#',
+                'file_uuid': self.file_uuid,
+                'filename_Characteristics_generic_s': u'fake.txt',
+                'genome_build': None,
+                u'id': u'data_set_manager.node.#',
+                'is_annotation': False,
+                'measurement_Characteristics_generic_s': '',
+                'measurement_accession_Characteristics_generic_s': '',
+                'measurement_source_Characteristics_generic_s': '',
+                'name': u'http://example.com/fake.txt',
+                'platform_Characteristics_generic_s': '',
+                'species': None,
+                'study_uuid': self.study_uuid,
+                'subanalysis': None,
+                'text': u'',
+                'technology_Characteristics_generic_s': 'whizbang',
+                'technology_accession_Characteristics_generic_s': '',
+                'technology_source_Characteristics_generic_s': '',
+                'type': u'',
+                'uuid': self.node_uuid,
+                'workflow_output': None
+            }
+        )
 
 
 class AnnotatedNodeExplosionTestCase(TestCase):
@@ -1821,27 +1788,23 @@ class AnnotatedNodeExplosionTestCase(TestCase):
         )
 
     def test_metabolights_isatab_wont_import_with_rollback_a(self):
-        with self.assertRaises(RuntimeError) as context:
-            parse_isatab(
-                self.user.username,
-                True,
-                "data_set_manager/test-data/MTBLS1.zip"
-            )
+        parse_isatab(
+            self.user.username,
+            True,
+            "refinery/data_set_manager/test-data/MTBLS1.zip"
+        )
         self.assertEqual(DataSet.objects.count(), 0)
         self.assertEqual(AnnotatedNode.objects.count(), 0)
         self.assertEqual(Node.objects.count(), 0)
         self.assertEqual(FileStoreItem.objects.count(), 0)
-        self.assertIn("Exponential explosion", context.exception.message)
 
     def test_metabolights_isatab_wont_import_with_rollback_b(self):
-        with self.assertRaises(RuntimeError) as context:
-            parse_isatab(
-                self.user.username,
-                True,
-                "data_set_manager/test-data/MTBLS112.zip"
-            )
+        parse_isatab(
+            self.user.username,
+            True,
+            "refinery/data_set_manager/test-data/MTBLS112.zip"
+        )
         self.assertEqual(DataSet.objects.count(), 0)
         self.assertEqual(AnnotatedNode.objects.count(), 0)
         self.assertEqual(Node.objects.count(), 0)
         self.assertEqual(FileStoreItem.objects.count(), 0)
-        self.assertIn("Exponential explosion", context.exception.message)

@@ -9,6 +9,9 @@ function AboutDetailsCtrl (
   fileRelationshipService
   ) {
   var vm = this;
+  vm.loggedIn = typeof $window.djangoApp !== 'undefined' &&
+      typeof $window.djangoApp.userName !== 'undefined';
+  vm.csrfToken = $window.csrf_token;
   vm.assays = dataSetAboutFactory.assays;
   vm.dataSet = dataSetAboutFactory.dataSet;
   vm.dataSetUuid = $window.dataSetUuid;

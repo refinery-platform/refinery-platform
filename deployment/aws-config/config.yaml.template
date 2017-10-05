@@ -1,99 +1,82 @@
-# Refinery Platform Configuration
+# Refinery Platform AWS config
 
-# aws-config is a directory
-# containing the configuration of
-# a refinery-platform stack.
-# The configuration is stored in two files:
-# config.yaml and,
-# auto-config.yaml
+# aws-config contains configuration for CloudFormation stacks
+# The configuration is stored in two files: config.yaml and tags.yaml
 #
-# Neither of these files exist to begin with,
-# but `config.yaml` is required.
-# Typically this file, `config.yaml.template`,
-# is copied to `config.yaml` and edited.
+# Neither of these files exist to begin with but `config.yaml` is required
+# Copy `config.yaml.template` to `config.yaml` and edit
 
-# RDS_SNAPSHOT and DATA_SNAPSHOT are only used when
-# you are restoring a Refinery Platform Instance from
-# the snapshots of a previously created Refinery stack.
-# The first time you create a Refinery stack
-# you will not need to specify these;
-# fresh RDS instances and data volumes are created.
+# RDS_SNAPSHOT and DATA_SNAPSHOT are only used when restoring a Refinery Platform stack
+# from the EBS and RDS snapshots of a previously created stack
+# If you don't specify these then fresh RDS instances and data volumes will be created
 # RDS_SNAPSHOT: refinery-web-XXX
 # DATA_SNAPSHOT: snap-XXX
 
-# The password for the Django admin account.
-# If not set, an automatically generated one will be placed
-# in `auto-config.yaml`.
+# The password for the Django admin account
 # ADMIN_PASSWORD: "refinery"
 
-
-# Name and URL for the site.
-# You will need to change these.
-SITE_NAME: Refinery
+# Name and URL for the site - change these to match your configuration
+SITE_NAME: "Refinery"
 SITE_URL: "192.168.50.50:8000"
 
-# STACK_NAME is used to name the stack
-# (in the Web UI and other places), and to name instances
+# STACK_NAME is used to name the CloudFormation stacks
 # Constraint: alphanumeric characters, underscores, periods, and colons
 STACK_NAME: "RefineryStack"
-# Prefix for all S3 bucket names
+
+# Prefix for all S3 bucket names (must not be shared among stacks)
 # Constraint: DNS-compliant without periods (".")
 S3_BUCKET_NAME_BASE: "refinery"
 
-# the AWS ARN for the TLS certifcate that you wish to present.
-# TLS_CERTIFICATE: "arn:aws:acm:--region--:--accountnumber--:certificate/--id--"
-
-# Email addresses. It's usual to make these all the same. The stack will launch
-# correctly even when these are set to nonsense values. To successfully send
-# email the email addresses here must be verified for Amazon SES and the AWS
-# account should be out of the sandbox
-# http://docs.aws.amazon.com/ses/latest/DeveloperGuide/verify-addresses-and-domains.html
-#
-ADMIN: "refinery-registration@example.org"
-DEFAULT_FROM_EMAIL: "refinery-registration@example.org"
-SERVER_EMAIL: "refinery-registration@example.org"
-
-# size of the data volume in GB (ignored if a DATA_SNAPSHOT is specified)
-DATA_VOLUME_SIZE: 500
-# Type of the Data volume.
-# See http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSVolumeTypes.html
-DATA_VOLUME_TYPE: "st1"
-
-# The name of the EC2 key pair to use for SSH.
-# (this key pair is required to already exist in the AWS account)
-KEY_NAME: "id_rsa"
-
-# The name of the RDS instance that is created.
-# This is optional, the stack name will be used by default.
-# RDS_NAME: rds-refinery-default
-
-EMAIL_SUBJECT_PREFIX: "[Refinery] "
-
-# HTML-safe item to be displayed to the right of the `About` link in the navbar
-REFINERY_CUSTOM_NAVBAR_ITEM: '<a href="http://example.org/">Sample Entry</a>'
-REFINERY_URL_SCHEME: "http"
-REFINERY_WELCOME_EMAIL_MESSAGE: "Please fill out your user profile"
-REFINERY_WELCOME_EMAIL_SUBJECT: "Welcome to Refinery"
-REFINERY_GOOGLE_ANALYTICS_ID: ""
-
-# Constraint: [\w]+
+# Constraint: [\w]+ (must be unique within AWS account)
 COGNITO_IDENTITY_POOL_NAME: "Refinery Platform"
 # Constraint: [\w._-]+
 COGNITO_DEVELOPER_PROVIDER_NAME: "login.refinery"
+
+# AWS ARN for the TLS certifcate to be used for HTTPS connections
+# TLS_CERTIFICATE: "arn:aws:acm:--region--:--accountnumber--:certificate/--id--"
+
+# Email addresses for Django settings
+# Note: to successfully send email these addresses must be verified for Amazon SES
+# and the AWS account should be out of the sandbox
+# http://docs.aws.amazon.com/ses/latest/DeveloperGuide/verify-addresses-and-domains.html
+ADMIN: "refinery-registration@example.org"
+DEFAULT_FROM_EMAIL: "refinery-registration@example.org"
+SERVER_EMAIL: "refinery-registration@example.org"
+EMAIL_SUBJECT_PREFIX: "[Refinery] "
+
+# size of the data volume in GB (ignored if a DATA_SNAPSHOT is specified)
+DATA_VOLUME_SIZE: 500
+# Type of the Data volume
+# http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSVolumeTypes.html
+DATA_VOLUME_TYPE: "st1"
+
+# The name of the EC2 key pair to use for SSH (must already exist in the AWS account)
+KEY_NAME: "id_rsa"
+
+# The name of the RDS instance (if not set, the stack name will be used by default)
+# RDS_NAME: rds-refinery-default
+
+# HTML-safe item to be displayed to the right of the `About` link in the navbar
+REFINERY_CUSTOM_NAVBAR_ITEM: '<a href="http://example.org/">Sample Entry</a>'
+
+REFINERY_WELCOME_EMAIL_MESSAGE: "Please fill out your user profile"
+REFINERY_WELCOME_EMAIL_SUBJECT: "Welcome to Refinery"
+
+REFINERY_GOOGLE_ANALYTICS_ID: ""
+
+REFINERY_URL_SCHEME: "http"
 
 USER_FILES_COLUMNS: "filename,organism,technology,antibody,date,genotype,experimenter"
 
 # == Rarely changed ==
 
-# The password for the RDS superuser account.
-# (Not exposed to the public,
-# so it is not required to be secure).
+# Password for the RDS superuser account
 RDS_SUPERUSER_PASSWORD: "mypassword"
 
-# The name of the PostgreSQL role to create.
+# Name of the PostgreSQL role to create
 RDS_ROLE: "refinery"
 
-#List of github usernames to allow ssh access into the Refinery instance
+#List of github usernames to allow SSH access into the EC2 instance
 #SSH_USERS: <username_0> <username_1> ...
 
 # == Not changeable ==
