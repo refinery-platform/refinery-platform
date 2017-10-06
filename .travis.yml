@@ -71,11 +71,13 @@ script:
   - flake8 --exclude=migrations,ui ..
 
   - echo 'travis_fold:start:grunt'
-  - if test -n "GRUNT_TESTS"; then pushd ui && grunt && popd; fi
+  - pushd ui
+  - if test -n "$GRUNT_TESTS"; then grunt; fi
+  - popd
   - echo 'travis_fold:end:grunt'
 
   - echo 'travis_fold:start:django-tests'
-  - if test -n "DJANGO_TESTS"; coverage run manage.py test; fi
+  - if test -n "$DJANGO_TESTS"; then coverage run manage.py test; fi
   - echo 'travis_fold:end:django-tests'
 
   - set +e # Currently, codecov does not always exit with 0, but that should not cause travis to fail.
