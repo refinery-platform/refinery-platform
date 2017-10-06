@@ -1902,3 +1902,56 @@ class IsaTabParserTests(TestCase):
             parse_isatab(self.user.username, False,
                          "data_set_manager/test-data/HideLabBrokenB.zip")
         self.failed_isatab_assertions()
+
+
+class ProcessISATabViewTests(TestCase):
+    def setUp(self):
+        test_user = "test_user"
+        self.user = User.objects.create_user(test_user)
+        self.user.set_password(test_user)
+        self.user.save()
+        self.isa_tab_import_url = "/data_set_manager/import/isa-tab-form/"
+        is_logged_in = self.client.login(
+            username=self.user.username,
+            password=test_user
+        )
+        self.assertTrue(is_logged_in)
+
+    def tearDown(self):
+        FileStoreItem.objects.all().delete()
+
+    def successful_import_assertions(self):
+        self.assertEqual(DataSet.objects.count(), 1)
+        self.assertEqual(Study.objects.count(), 1)
+        self.assertEqual(Investigation.objects.count(), 1)
+        self.assertEqual(Assay.objects.count(), 1)
+
+    def unsuccessful_import_assertions(self):
+        self.assertEqual(DataSet.objects.count(), 0)
+        self.assertEqual(Study.objects.count(), 0)
+        self.assertEqual(Investigation.objects.count(), 0)
+        self.assertEqual(Assay.objects.count(), 0)
+
+    def test_post_good_isa_tab_file(self):
+        with open('data_set_manager/test-data/rfc-test.zip') as good_isa:
+            self.client.post(
+                self.isa_tab_import_url,
+                data={
+                    "isa_tab_url": None,
+                    "isa_tab_file": good_isa
+                },
+                HTTP_X_REQUESTED_WITH='XMLHttpRequest'
+            )
+        self.successful_import_assertions()
+
+    def test_post_bad_isa_tab_file(self):
+        with open('data_set_manager/test-data/HideLabBrokenA.zip') as bad_isa:
+            self.client.post(
+                self.isa_tab_import_url,
+                data={
+                    "isa_tab_url": None,
+                    "isa_tab_file": bad_isa
+                },
+                HTTP_X_REQUESTED_WITH='XMLHttpRequest'
+            )
+        self.unsuccessful_import_assertions()
