@@ -1799,16 +1799,12 @@ class IsaTabParserTests(TestCase):
             self.username, '', self.password
         )
 
-    def exponential_explosion_assertions(self, exception_context):
+    def failed_isatab_assertions(self):
         self.assertEqual(DataSet.objects.count(), 0)
         self.assertEqual(AnnotatedNode.objects.count(), 0)
         self.assertEqual(Node.objects.count(), 0)
         self.assertEqual(FileStoreItem.objects.count(), 0)
         self.assertEqual(Investigation.objects.count(), 0)
-        self.assertIn(
-            "Exponential explosion",
-            exception_context.exception.message
-        )
 
     def parse(self, dir_name):
         parent = os.path.dirname(os.path.abspath(__file__))
@@ -1879,10 +1875,30 @@ class IsaTabParserTests(TestCase):
         with self.assertRaises(RuntimeError) as context:
             parse_isatab(self.user.username, False,
                          "data_set_manager/test-data/MTBLS1.zip")
-        self.exponential_explosion_assertions(context)
+        self.failed_isatab_assertions()
+        self.assertIn(
+            "Exponential explosion",
+            context.exception.message
+        )
 
     def test_metabolights_isatab_wont_import_with_rollback_b(self):
         with self.assertRaises(RuntimeError) as context:
             parse_isatab(self.user.username, False,
                          "data_set_manager/test-data/MTBLS112.zip")
-        self.exponential_explosion_assertions(context)
+        self.failed_isatab_assertions()
+        self.assertIn(
+            "Exponential explosion",
+            context.exception.message
+        )
+
+    def test_bad_isatab_rollback_from_parser_exception_a(self):
+        with self.assertRaises(IOError):
+            parse_isatab(self.user.username, False,
+                         "data_set_manager/test-data/HideLabBrokenA.zip")
+        self.failed_isatab_assertions()
+
+    def test_bad_isatab_rollback_from_parser_exception_b(self):
+        with self.assertRaises(IOError):
+            parse_isatab(self.user.username, False,
+                         "data_set_manager/test-data/HideLabBrokenB.zip")
+        self.failed_isatab_assertions()
