@@ -1,4 +1,3 @@
 region = "us-east-1"
 
-// should match S3_BUCKET_NAME_BASE in deployment/aws-config/config/yaml
 bucket_name_base = "refinery-prod"
