@@ -283,13 +283,8 @@ class ProcessISATabView(View):
                 identity_id=identity_id
             ).get()
 
-            try:
-                os.unlink(response['data']['temp_file_path'])
-            except OSError as e:
-                logger.error(
-                    "Couldn't unlink temporary file: %s %s",
-                    response['data']['temp_file_path'], e
-                )
+            # TODO: exception handling (OSError)
+            os.unlink(response['data']['temp_file_path'])
 
             # import data files
             if dataset_uuid:
