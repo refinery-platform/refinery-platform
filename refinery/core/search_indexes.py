@@ -12,7 +12,7 @@ from django.template.context import Context
 
 from haystack import indexes
 
-import data_set_manager
+from data_set_manager.models import AnnotatedNode, Node
 
 logger = logging.getLogger(__name__)
 
@@ -144,19 +144,17 @@ class DataSetIndex(indexes.SearchIndex, indexes.Indexable):
             for study in studies:
                 assays = study.assay_set.all()
                 for assay in assays:
-                    nodes += list(
-                        data_set_manager.models.AnnotatedNode.objects.filter(
-                            study__uuid=study.uuid,
-                            assay__uuid=assay.uuid,
-                            node_type__in=data_set_manager.models.Node.FILES
-                        ).distinct(
-                            'node_name',
-                            'attribute_type',
-                            'attribute_subtype',
-                            'attribute_value',
-                            'attribute_value_unit'
-                        )
-                    )
+                    nodes += list(AnnotatedNode.objects.filter(
+                        study__uuid=study.uuid,
+                        assay__uuid=assay.uuid,
+                        node_type__in=Node.FILES
+                    ).distinct(
+                        'node_name',
+                        'attribute_type',
+                        'attribute_subtype',
+                        'attribute_value',
+                        'attribute_value_unit'
+                    ))
 
             # perform the template processing to render the
             # text field with *all* of our node data visible for indexing

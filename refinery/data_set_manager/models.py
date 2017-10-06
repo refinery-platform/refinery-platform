@@ -874,7 +874,6 @@ def _is_facet_attribute(attribute, study, assay):
     return (attribute_values / items) < ratio
 
 
-@core.utils.skip_if_test_run
 def initialize_attribute_order(study, assay):
     """Initializes the AttributeOrder table after all nodes for the given study
     and assay have been indexed by Solr.
