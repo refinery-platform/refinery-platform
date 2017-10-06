@@ -1,6 +1,7 @@
 region = "us-east-1"
 
-identity_pool_name = "Refinery Platform"
+// should match COGNITO_IDENTITY_POOL_NAME in deployment/aws-config/config.yaml
+identity_pool_name = "Prod Refinery Platform"
 
 // temp workaround, should match STACK_NAME in deployment/aws-config/config.yaml
 stack_name = "ProdRefineryPlatform"
