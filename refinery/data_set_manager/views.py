@@ -202,11 +202,11 @@ class ProcessISATabView(View):
             return response
         logger.debug("Temp file name: '%s'", temp_file_path)
         try:
-            parse_isatab_invocation = parse_isatab.delay(
+            parse_isatab_invocation = parse_isatab(
                 request.user.username,
                 False,
                 temp_file_path
-            ).get()
+            )
         except ParserException as e:
             error_message = "{} {}".format(
                 PARSER_ERROR_MESSAGE,
@@ -313,12 +313,12 @@ class ProcessISATabView(View):
             )
 
             try:
-                parse_isatab_invocation = parse_isatab.delay(
+                parse_isatab_invocation = parse_isatab(
                     request.user.username,
                     False,
                     response['data']['temp_file_path'],
                     identity_id=identity_id
-                ).get()
+                )
             except ParserException as e:
                 error_message = "{} {}".format(
                     PARSER_ERROR_MESSAGE,
