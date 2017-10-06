@@ -225,7 +225,7 @@ class ProcessISATabView(View):
                 e.message
             )
         else:
-            dataset_uuid = parse_isatab_invocation[0]
+            dataset_uuid = parse_isatab_invocation
 
         # TODO: exception handling
         os.unlink(temp_file_path)
@@ -336,7 +336,7 @@ class ProcessISATabView(View):
                     "{} {}".format(PARSER_UNEXPECTED_ERROR_MESSAGE, e)
                 )
             else:
-                dataset_uuid = parse_isatab_invocation[0]
+                dataset_uuid = parse_isatab_invocation
 
             # TODO: exception handling (OSError)
             os.unlink(response['data']['temp_file_path'])
