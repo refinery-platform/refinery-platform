@@ -336,8 +336,8 @@ def create_dataset(investigation_uuid, username, identifier=None, title=None,
     return dataset.uuid
 
 
-@task()
 @skip_if_test_run
+@task()
 def annotate_nodes(investigation_uuid):
     """Adds all nodes in this investigation to the annotated nodes table for
     faster lookup
