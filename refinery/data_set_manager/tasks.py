@@ -23,7 +23,7 @@ from requests.exceptions import HTTPError
 
 from core.models import DataSet, ExtendedGroup, FileStoreItem
 from core.utils import (add_data_set_to_neo4j,
-                        async_update_annotation_sets_neo4j,
+                        async_update_annotation_sets_neo4j, skip_if_test_run,
                         update_data_set_index)
 from file_store.models import FileExtension, generate_file_source_translator
 
@@ -336,6 +336,7 @@ def create_dataset(investigation_uuid, username, identifier=None, title=None,
     return dataset.uuid
 
 
+@skip_if_test_run
 @task()
 def annotate_nodes(investigation_uuid):
     """Adds all nodes in this investigation to the annotated nodes table for
