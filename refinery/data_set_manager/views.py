@@ -281,8 +281,14 @@ class ProcessISATabView(View):
                 response['data']['temp_file_path']
             ).get())[0]
 
-            # TODO: exception handling (OSError)
-            os.unlink(response['data']['temp_file_path'])
+            try:
+                os.unlink(response['data']['temp_file_path'])
+            except OSError as e:
+                logger.error(
+                    "Couldn't unlink temporary file: %s %s",
+                    response['data']['temp_file_path'], e
+                )
+
             if dataset_uuid:
                 if request.is_ajax():
                     return HttpResponse(
