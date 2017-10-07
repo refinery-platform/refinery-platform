@@ -13,15 +13,19 @@
 
   ToolLaunchButtonCtrl.$inject = [
     '$log',
+    '$timeout',
     'toolLaunchService',
     'toolSelectService',
+    '$uibModal',
     '$window'
   ];
 
   function ToolLaunchButtonCtrl (
     $log,
+    $timeout,
     toolLaunchService,
     toolSelectService,
+    $uibModal,
     $window
   ) {
     var vm = this;
@@ -43,6 +47,18 @@
       toolLaunchService.postToolLaunch().then(function (response) {
         $window.location.href = response.tool_url;
       }, function (error) {
+        $uibModal.open({
+          component: 'errorAPIModal',
+          resolve: {
+            modalData: function () {
+              return {
+                errorStatus: error.status,
+                errorMsg: error.data,
+                introMsg: 'Unable to launch tool, please try again.'
+              };
+            }
+          }
+        });
         $log.error(error);
       });
     }

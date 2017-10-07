@@ -1,0 +1,19 @@
+<div class="modal-header">
+  <h3>
+    Error Notification
+  </h3>
+</div>
+<div class="modal-body">
+  <p>
+    {{$ctrl.modalData.introMsg}}
+  </p>
+  <p>
+    The api returned a {{$ctrl.modalData.errorStatus}} status with an error
+    message of <em>{{$ctrl.modalData.errorMsg}}</em>.
+  </p>
+</div>
+<div class="modal-footer">
+  <button class="refiner-base btn btn-default" ng-click="$ctrl.closeModal()">
+    Close
+  </button>
+</div>
