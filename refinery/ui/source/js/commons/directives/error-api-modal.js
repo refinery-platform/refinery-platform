@@ -1,10 +1,10 @@
 (function () {
   'use strict';
   angular
-    .module('refineryToolLaunch')
+    .module('refineryApp')
     .component('errorAPIModal', {
       templateUrl: ['$window', function ($window) {
-        return $window.getStaticUrl('partials/tool-launch/partials/error-api-modal.html');
+        return $window.getStaticUrl('partials/commons/partials/error-api-modal.html');
       }],
       bindings: {
         modalInstance: '<',
