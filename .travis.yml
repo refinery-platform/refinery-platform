@@ -69,10 +69,10 @@ script:
   # TODO: Not the same behavior as pre-commit hook.
   # https://github.com/refinery-platform/refinery-platform/issues/1851
   - flake8 --exclude=migrations,ui ..
-  - grunt make
 
   - echo 'travis_fold:start:grunt'
   - pushd ui
+  - grunt make
   - if test -n "$GRUNT_TESTS"; then grunt test; fi
   - popd
   - echo 'travis_fold:end:grunt'
