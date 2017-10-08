@@ -18,7 +18,8 @@ services:
 matrix:
   include:
     - env: GRUNT_TESTS=True
-    - env: DJANGO_TESTS=True
+    - env: DJANGO_SELENIUM_TESTS=True
+    - env: DJANGO_UNIT_TESTS=True
 
 install:
   - node --version
@@ -72,14 +73,18 @@ script:
 
   - echo 'travis_fold:start:grunt'
   - pushd ui
-  - grunt make
+  - if ! test -n "DJANGO_UNIT_TESTS"; then grunt make; fi
   - if test -n "$GRUNT_TESTS"; then grunt test; fi
   - popd
   - echo 'travis_fold:end:grunt'
 
-  - echo 'travis_fold:start:django-tests'
-  - if test -n "$DJANGO_TESTS"; then coverage run manage.py test; fi
-  - echo 'travis_fold:end:django-tests'
+  - echo 'travis_fold:start:django-unit-tests'
+  - if test -n "$DJANGO_UNIT_TESTS"; then coverage run manage.py test; fi
+  - echo 'travis_fold:end:django-unit-tests'
+
+  - echo 'travis_fold:start:django-selenium-tests'
+  - if test -n "$DJANGO_SELENIUM_TESTS"; then coverage run manage.py test --pattern="selenium_tests.py"; fi
+  - echo 'travis_fold:end:django-selenium-tests'
 
   - set +e # Currently, codecov does not always exit with 0, but that should not cause travis to fail.
 
