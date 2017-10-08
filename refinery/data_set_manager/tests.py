@@ -13,10 +13,12 @@ from django.core.files.uploadedfile import (InMemoryUploadedFile,
 from django.http import QueryDict
 from django.test import TestCase
 
+import mock
 from rest_framework.test import APIClient, APIRequestFactory, APITestCase
 
 from core.models import Analysis, DataSet, ExtendedGroup, InvestigationLink
 from core.views import NodeViewSet
+import data_set_manager
 from data_set_manager.isa_tab_parser import IsaTabParser, ParserException
 from data_set_manager.tasks import parse_isatab
 from factory_boy.utils import make_analyses_with_single_dataset
@@ -1932,7 +1934,8 @@ class ProcessISATabViewTests(TestCase):
         self.assertEqual(Investigation.objects.count(), 0)
         self.assertEqual(Assay.objects.count(), 0)
 
-    def test_post_good_isa_tab_file(self):
+    @mock.patch.object(data_set_manager.views.import_file, "delay")
+    def test_post_good_isa_tab_file(self, delay_mock):
         with open('data_set_manager/test-data/rfc-test.zip') as good_isa:
             self.client.post(
                 self.isa_tab_import_url,
