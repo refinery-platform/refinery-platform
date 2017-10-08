@@ -2668,9 +2668,13 @@ class ToolLaunchConfigurationTests(ToolManagerTestBase):
         with mock.patch(
             self.mock_vis_annotations_reference, return_value=tool_annotation
         ) as mocked_method:
-            call_command("generate_tool_definitions", visualizations=True)
+            with mock.patch(
+                "django_docker_engine.docker_utils.DockerClientWrapper.pull"
+            ) as pull_image_mock:
+                call_command("generate_tool_definitions", visualizations=True)
 
             self.assertTrue(mocked_method.called)
+            self.assertTrue(pull_image_mock.called)
             self.assertEqual(ToolDefinition.objects.count(), 1)
             self.td = ToolDefinition.objects.all()[0]
 
