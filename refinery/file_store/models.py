@@ -629,7 +629,6 @@ def _delete_datafile(sender, **kwargs):
 
     """
     item = kwargs.get('instance')
-    logger.debug("Deleting FileStoreItem with UUID '%s'", item.uuid)
     item.delete_datafile()
 
 
