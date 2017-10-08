@@ -17,8 +17,8 @@ services:
   - docker
 matrix:
   include:
-    - env: GRUNT_TESTS=Test
-    - env: DJANGO_TESTS=Test
+    - env: GRUNT_TESTS=True
+    - env: DJANGO_TESTS=True
 
 install:
   - node --version
