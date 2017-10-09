@@ -82,6 +82,7 @@ script:
       flake8 --exclude=migrations,ui ..
     fi
 
+  - cd refinery
   - echo 'travis_fold:start:grunt'
   - pushd ui
   - if ! test -n "$DJANGO_UNIT_TESTS"; then grunt make; fi
