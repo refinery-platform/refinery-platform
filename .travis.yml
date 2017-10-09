@@ -4,8 +4,8 @@ language: python
 cache:
   - pip
   - directories:
-      - refienry/ui/node_modules
-      - refienry/ui/bower_components
+      - refinery/ui/node_modules
+      - refinery/ui/bower_components
 addons:
   firefox: "53.0.3"
   apt:
