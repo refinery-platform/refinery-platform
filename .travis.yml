@@ -90,6 +90,7 @@ script:
   - echo 'travis_fold:start:grunt'
   - pushd ui
   - if ! test -n "$DJANGO_UNIT_TESTS"; then grunt make; fi
+
   - if test -n "$GRUNT_TESTS"; then grunt test; fi
   - popd
   - echo 'travis_fold:end:grunt'
