@@ -76,7 +76,7 @@ before_script:
       cd ui
       npm install --progress false --quiet || ( cat npm-debug.log && false )
       bower install --config.interactive=false --quiet
-      cd ../
+      cd ../../
     fi
 
 script:
