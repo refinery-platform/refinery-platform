@@ -63,6 +63,7 @@ function AnalysisMonitorCtrl (
       limit: 10
     };
 
+    console.log('in the update global list');
     analysisMonitorFactory.getAnalysesList(params).then(function () {
       vm.analysesGlobalList = analysisMonitorFactory.analysesGlobalList;
       vm.setAnalysesGlobalLoadingFlag();
