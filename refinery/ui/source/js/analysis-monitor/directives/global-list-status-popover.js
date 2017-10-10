@@ -13,23 +13,29 @@ function rpAnalysisMonitorGlobalListStatusPopover (
 
       // catches all clicks, so popover will hide if you click anywhere other
       // than icon & popover
+
       $('body').on('click', function (e) {
-        console.log('i am a click event');
+        console.log($('#analysesCogIcon .popover').hasClass('in'));
+        console.log(e.target);
         // starts api calls if icon is clicked
-        if (e.target.id === 'global-analysis-status-run' ||
+        if ((e.target.id === 'global-analysis-status-run' ||
           e.target.id === 'global-analysis-status' ||
-          e.target.id === 'global-analysis-status-run-div') {
+          e.target.id === 'global-analysis-status-run-div') &&
+          !$('#analysesCogIcon .popover').hasClass('in')) {
+          // popover is being opened for the first time
+          console.log('in the first iffy');
           $('#global-analysis-status-run-div').tooltip('hide');
           $('#global-analysis-status').tooltip('hide');
-          console.log('in the first iffy');
           ctrl.updateAnalysesGlobalList();
-        }
-        if ((e.target.id !== 'global-analysis-status-run' &&
-          e.target.id !== 'global-analysis-status') &&
-          e.target.id !== 'global-analysis-status-run-div' &&
-          $(e.target).parents('.popover.in').length === 0) {
-         // $(element).popover('hide');
-          console.log('in the second iffy');
+        } else if (e.target.id === 'global-analysis-status-run' ||
+          e.target.id === 'global-analysis-status' ||
+          e.target.id === 'global-analysis-status-run-div' &&
+          $('#analysesCogIcon .popover').hasClass('in')
+        ) { // popover is open but is being triggered closed
+          console.log('being closed');
+          ctrl.cancelTimerGlobalList();
+        } else if (!$('#analysesCogIcon .popover').hasClass('in')) {
+          console.log('closed popover so cancel');
           ctrl.cancelTimerGlobalList();
         }
       });

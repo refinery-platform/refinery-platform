@@ -13,6 +13,11 @@ function rpAnalysisMonitorGlobalListStatusPopoverDetails ($window) {
     templateUrl:
       $window.getStaticUrl('partials/analysis-monitor/partials/global-list-status-popover.html'),
     link: function (scope, element, attr, $ctrl) {
+      scope.analysesGlobalLoadingFlag = $ctrl.analysesGlobalLoadingFlag;
+      scope.isAnalysesRunningGlobal = $ctrl.isAnalysesRunningGlobal;
+      scope.analysesGlobalList = $ctrl.analysesGlobalList;
+      scope.analysesGlobalDetail = $ctrl.analysesGlobalDetail;
+
       scope.$watchCollection(
         function () {
           return $ctrl.analysesGlobalList;
