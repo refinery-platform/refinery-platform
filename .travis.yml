@@ -31,19 +31,21 @@ env:
     - GRUNT=grunt
     - NPM_INSTALL=npm-install
     - PIP_INSTALL=pip-install
+    - SELENIUM_TESTS=selenium-tests
     - UI_MODULES_INSTALL=ui-modules-install
 
 matrix:
   include:
     - env: GRUNT_TESTS=grunt-tests
-    - env: DJANGO_SELENIUM_TESTS=django-selenium-tests
     - env: DJANGO_UNIT_TESTS=django-unit-tests
+    - env: REFINERY_SELENIUM_TESTS=refinery-selenium-tests
+    - env: TOOL_MANAGER_SELENIUM_TESTS=tool-manager-selenium-tests
 
 install:
   - start() { echo travis_fold':'start:$1; echo $1; }
   - end() { echo travis_fold':'end:$1; }
 
-  - start "$NPM_INSTALL"
+  - start $NPM_INSTALL
   - |
     if ! [ "$DJANGO_UNIT_TESTS" ]; then
       node --version
@@ -57,14 +59,14 @@ install:
     fi
   - end $NPM_INSTALL
 
-  - start "$PIP_INSTALL"
+  - start $PIP_INSTALL
   - if ! [ "$GRUNT_TESTS" ]; then pip install -r requirements.txt --quiet; fi
-  - end "$PIP_INSTALL"
+  - end $PIP_INSTALL
 
   # Install geckodriver required for selenium testing
-  - start "$GECKODRIVER_INSTALL"
+  - start $GECKODRIVER_INSTALL
   - |
-    if [ "$DJANGO_SELENIUM_TESTS" ]; then
+    if [ "$REFINERY_SELENIUM_TESTS" ] || [ "$TOOL_MANAGER_SELENIUM_TESTS" ]; then
       GECKODRIVER_VERSION=v0.17.0
       TAR=geckodriver-$GECKODRIVER_VERSION-linux64.tar
       wget https://github.com/mozilla/geckodriver/releases/download/$GECKODRIVER_VERSION/$TAR.gz
@@ -73,10 +75,10 @@ install:
       chmod a+x geckodriver
       export PATH=$PATH:`pwd`
     fi
-  - end "$GECKODRIVER_INSTALL"
+  - end $GECKODRIVER_INSTALL
 
 before_script:
-  - start "$DJANGO_MIGRATIONS"
+  - start $DJANGO_MIGRATIONS
   - |
     if ! [ "$GRUNT_TESTS" ]; then
       # Vagrant is not used on travis: This user is just for the database.
@@ -90,9 +92,9 @@ before_script:
       python manage.py migrate --noinput
       popd
     fi
-  - end "$DJANGO_MIGRATIONS"
+  - end $DJANGO_MIGRATIONS
 
-  - start "$UI_MODULES_INSTALL"
+  - start $UI_MODULES_INSTALL
   - |
     if ! [ "$DJANGO_UNIT_TESTS" ]; then
       pushd refinery
@@ -102,46 +104,47 @@ before_script:
       bower install --config.interactive=false --quiet
       popd && popd
     fi
-  - end "$UI_MODULES_INSTALL"
+  - end $UI_MODULES_INSTALL
 
 script:
   - set -e # Any error will cause travis to exit early and report a failure.
-  - start "$FLAKE8"
+  - start $FLAKE8
   - |
     if ! [ "$GRUNT_TESTS" ]; then
       # TODO: Not the same behavior as pre-commit hook.
       # https://github.com/refinery-platform/refinery-platform/issues/1851
       flake8 --exclude=migrations,ui ..
     fi
-  - end "$FLAKE8"
+  - end $FLAKE8
 
-  - start "$GRUNT"
+  - start $GRUNT
   - pushd refinery
   - pushd ui
   - if ! [ "$DJANGO_UNIT_TESTS" ]; then grunt make; fi
   - if [ "$GRUNT_TESTS" ]; then grunt test; fi
-  - popd && popd
-  - end "$GRUNT"
+  - popd
+  - end $GRUNT
 
-  - start "$DJANGO_UNIT_TESTS"
+  - start $DJANGO_UNIT_TESTS
   - if [ "$DJANGO_UNIT_TESTS" ]; then coverage run manage.py test; fi
-  - end "$DJANGO_UNIT_TESTS"
+  - end $DJANGO_UNIT_TESTS
 
-  - start "$DJANGO_SELENIUM_TESTS"
-  - if [ "$DJANGO_SELENIUM_TESTS" ]; then coverage run manage.py test --pattern="selenium_tests.py"; fi
-  - end "$DJANGO_SELENIUM_TESTS"
+  - start $SELENIUM_TESTS
+  - if [ "$REFIENRY_SELENIUM_TESTS" ]; then coverage run manage.py test selenium_testing --pattern="selenium_tests.py"; fi
+  - if [ "$TOOL_MANAGER_SELENIUM_TESTS" ]; then coverage run manage.py test tool_manager --pattern="selenium_tests.py"; fi
+  - end $SELENIUM_TESTS
 
   - set +e # Currently, codecov does not always exit with 0, but that should not cause travis to fail.
 
 after_success:
-  - start "$CODECOV"
+  - start $CODECOV
   - |
     if ! [ "$GRUNT_TESTS" ]; then
       codecov
     else
       npm run codecov
     fi
-  - end "$CODECOV"
+  - end $CODECOV
 
 notifications:
   slack:
