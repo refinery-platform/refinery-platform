@@ -48,6 +48,7 @@ install:
       node --version
       npm --version
       npm install -g npm@3.10.10
+      npm install -g codecov
       npm --version
     fi
 
