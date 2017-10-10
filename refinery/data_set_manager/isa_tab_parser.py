@@ -1005,10 +1005,10 @@ class IsaTabParser:
                             self._parse_assay_file(study, assay,
                                                    assay_file_name)
         else:
-            error_message = (
+            raise ParserException(
                 "No investigation was identified when parsing investigation "
-                "file \"" + investigation_file_name + "\"")
-            raise ParserException(error_message)
+                "file \"" + investigation_file_name + "\""
+            )
         # 5. assign ISA-Tab archive and pre-ISA-Tab archive if present
         try:
             self._current_investigation.isarchive_file = create(isa_archive)
