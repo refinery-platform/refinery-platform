@@ -116,8 +116,12 @@ script:
 
 after_success:
   - echo 'travis_fold:start:codecov'
-  - if ! [ "$GRUNT_TESTS" ]; then codecov; fi
-  - if [ "$GRUNT_TESTS"]; then npm run codecov; fi
+  - |
+    if ! [ "$GRUNT_TESTS" ]; then
+      codecov
+    else
+      npm run codecov
+    fi
   - echo 'travis_fold:end:codecov'
 
 notifications:
