@@ -19,13 +19,31 @@ python:
 services:
   - postgresql
 
+env:
+  global:
+    # These env vars are available to every build
+    - PYTHONPATH=$PYTHONPATH:../refinery:../refinery/config
+    - CODECOV=codecov
+    - DJANGO_SETTINGS_MODULE=config.settings.prod
+    - DJANGO_MIGRATIONS=django-migrations
+    - FLAKE8=flake8
+    - GECKODRIVER_INSTALL=geckdriver-install
+    - GRUNT=grunt
+    - NPM_INSTALL=npm-install
+    - PIP_INSTALL=pip-install
+    - UI_MODULES_INSTALL=ui-modules-install
+
 matrix:
   include:
-    - env: GRUNT_TESTS=True
-    - env: DJANGO_SELENIUM_TESTS=True
-    - env: DJANGO_UNIT_TESTS=True
+    - env: GRUNT_TESTS=grunt-tests
+    - env: DJANGO_SELENIUM_TESTS=django-selenium-tests
+    - env: DJANGO_UNIT_TESTS=django-unit-tests
 
 install:
+  - start() { echo travis_fold':'start:$1; echo $1; }
+  - end() { echo travis_fold':'end:$1; }
+
+  - start "$NPM_INSTALL"
   - |
     if ! [ "$DJANGO_UNIT_TESTS" ]; then
       node --version
@@ -37,9 +55,14 @@ install:
       npm install -g npm@3.10.10
       npm --version
     fi
+  - end $NPM_INSTALL
+
+  - start "$PIP_INSTALL"
   - if ! [ "$GRUNT_TESTS" ]; then pip install -r requirements.txt --quiet; fi
+  - end "$PIP_INSTALL"
 
   # Install geckodriver required for selenium testing
+  - start "$GECKODRIVER_INSTALL"
   - |
     if [ "$DJANGO_SELENIUM_TESTS" ]; then
       GECKODRIVER_VERSION=v0.17.0
@@ -50,14 +73,10 @@ install:
       chmod a+x geckodriver
       export PATH=$PATH:`pwd`
     fi
-
-env:
-  global:
-    # These env vars are available to every build
-    - PYTHONPATH=$PYTHONPATH:../refinery:../refinery/config
-    - DJANGO_SETTINGS_MODULE=config.settings.prod
+  - end "$GECKODRIVER_INSTALL"
 
 before_script:
+  - start "$DJANGO_MIGRATIONS"
   - |
     if ! [ "$GRUNT_TESTS" ]; then
       # Vagrant is not used on travis: This user is just for the database.
@@ -71,6 +90,9 @@ before_script:
       python manage.py migrate --noinput
       popd
     fi
+  - end "$DJANGO_MIGRATIONS"
+
+  - start "$UI_MODULES_INSTALL"
   - |
     if ! [ "$DJANGO_UNIT_TESTS" ]; then
       pushd refinery
@@ -80,49 +102,46 @@ before_script:
       bower install --config.interactive=false --quiet
       popd && popd
     fi
+  - end "$UI_MODULES_INSTALL"
 
 script:
   - set -e # Any error will cause travis to exit early and report a failure.
+  - start "$FLAKE8"
   - |
     if ! [ "$GRUNT_TESTS" ]; then
       # TODO: Not the same behavior as pre-commit hook.
       # https://github.com/refinery-platform/refinery-platform/issues/1851
       flake8 --exclude=migrations,ui ..
     fi
+  - end "$FLAKE8"
 
+  - start "$GRUNT"
   - pushd refinery
-  - echo 'travis_fold:start:grunt'
   - pushd ui
   - if ! [ "$DJANGO_UNIT_TESTS" ]; then grunt make; fi
   - if [ "$GRUNT_TESTS" ]; then grunt test; fi
   - popd && popd
-  - echo 'travis_fold:end:grunt'
+  - end "$GRUNT"
 
-  - |
-    if [ "$DJANGO_UNIT_TESTS" ]; then
-      echo 'travis_fold:start:django-unit-tests'
-      coverage run manage.py test
-      echo 'travis_fold:end:django-unit-tests'
-    fi
+  - start "$DJANGO_UNIT_TESTS"
+  - if [ "$DJANGO_UNIT_TESTS" ]; then coverage run manage.py test; fi
+  - end "$DJANGO_UNIT_TESTS"
 
-  - |
-    if [ "$DJANGO_SELENIUM_TESTS" ]; then
-      echo 'travis_fold:start:django-selenium-tests'
-      coverage run manage.py test --pattern="selenium_tests.py"
-      echo 'travis_fold:end:django-selenium-tests'
-    fi
+  - start "$DJANGO_SELENIUM_TESTS"
+  - if [ "$DJANGO_SELENIUM_TESTS" ]; then coverage run manage.py test --pattern="selenium_tests.py"; fi
+  - end "$DJANGO_SELENIUM_TESTS"
 
   - set +e # Currently, codecov does not always exit with 0, but that should not cause travis to fail.
 
 after_success:
-  - echo 'travis_fold:start:codecov'
+  - start "$CODECOV"
   - |
     if ! [ "$GRUNT_TESTS" ]; then
       codecov
     else
       npm run codecov
     fi
-  - echo 'travis_fold:end:codecov'
+  - end "$CODECOV"
 
 notifications:
   slack:
