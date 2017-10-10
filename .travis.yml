@@ -65,24 +65,24 @@ before_script:
       createdb -O vagrant refinery
       sudo mkdir /data
       sudo chown $USER /data
-      cd refinery
+      pushd refinery
       # See http://www.stuartellis.eu/articles/erb/#running-erb-from-the-command-line
       erb config/config.json.erb > config/config.json
       python manage.py migrate --noinput
-      cd ../
+      popd
     fi
   - |
     if ! [ "$DJANGO_UNIT_TESTS" ]; then
-      cd refinery
+      pushd refinery
       npm install -g grunt-cli@0.1.13 bower@1.7.7 --progress false --quiet || ( cat npm-debug.log && false )
-      cd ui
+      pushd ui
       npm install --progress false --quiet || ( cat npm-debug.log && false )
       bower install --config.interactive=false --quiet
-      cd ../../
+      popd && popd
     fi
 
 script:
-  - "set -e" # Any error will cause travis to exit early and report a failure.
+  - set -e # Any error will cause travis to exit early and report a failure.
   - |
     if ! [ "$GRUNT_TESTS" ]; then
       # TODO: Not the same behavior as pre-commit hook.
@@ -90,13 +90,12 @@ script:
       flake8 --exclude=migrations,ui ..
     fi
 
-  - cd refinery
+  - pushd refinery
   - echo 'travis_fold:start:grunt'
   - pushd ui
   - if ! [ "$DJANGO_UNIT_TESTS" ]; then grunt make; fi
-
   - if [ "$GRUNT_TESTS" ]; then grunt test; fi
-  - popd
+  - popd && popd
   - echo 'travis_fold:end:grunt'
 
   - echo 'travis_fold:start:django-unit-tests'
