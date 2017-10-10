@@ -306,15 +306,13 @@ def download_file(url, target_path, file_size=1):
     logger.debug("Downloading file from '%s'", url)
 
     # check if source file can be downloaded
-    # TODO: refactor to use requests
     try:
         response = requests.get(url, stream=True)
         response.raise_for_status()
-    except HTTPError as e:
+    except (HTTPError, requests.exceptions.ConnectionError) as e:
         logger.error(e)
-    except requests.exceptions.ConnectionError as e:
         raise DownloadError(
-            "Could not open URL '{}'. Reason: '{}'".format(url, e.reason))
+            "Could not open URL '{}'. Reason: '{}'".format(url, e))
     except ValueError as e:
         raise DownloadError("Could not open URL '{}'".format(url, e))
     else:
