@@ -1,8 +1,8 @@
-import copy
 import json
 import logging
 import os
 import re
+import uuid
 
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -31,165 +31,42 @@ JSON_SCHEMA_FILE_RESOLVER = RefResolver(
 
 def create_analysis(validated_analysis_config):
     """
-       Create an Analysis instance from any properly validated analysis_config
-       :param validated_analysis_config: a dict including the necessary
-       information to create an Analysis that has been validated prior by
-       `analysis_manager.utils.validate_analysis_config`
-       :return: an Analysis instance
-       :raises: RuntimeError
-       """
-    # Keeping support for legacy way of launching analyses
-    if validated_analysis_config.get("nodeSetUuid"):
-        return create_nodeset_analysis(validated_analysis_config)
-    if validated_analysis_config.get("nodeRelationshipUuid"):
-        return create_noderelationship_analysis(validated_analysis_config)
+    Create an Analysis instance from a properly validated analysis_config
+    :param validated_analysis_config: a dict including the necessary
+    information to create an Analysis that has been validated prior by
+    `analysis_manager.utils.validate_analysis_config`
+    :return: an Analysis instance
+    :raises: RuntimeError
+    """
+    common_analysis_objects = (
+        fetch_objects_required_for_analysis(validated_analysis_config)
+    )
+    current_workflow = common_analysis_objects["current_workflow"]
+    data_set = common_analysis_objects["data_set"]
+    user = common_analysis_objects["user"]
 
-    # Create an analysis for new Workflow-based Tools
-    if validated_analysis_config.get("toolUuid"):
-        return tool_manager.utils.create_tool_analysis(
-            validated_analysis_config
+    try:
+        tool = tool_manager.models.WorkflowTool.objects.get(
+            uuid=validated_analysis_config["tool_uuid"]
         )
+    except (tool_manager.models.WorkflowTool.DoesNotExist,
+            tool_manager.models.WorkflowTool.MultipleObjectsReturned) as e:
+        raise RuntimeError("Couldn't fetch Tool from UUID: {}".format(e))
 
-
-def create_nodeset_analysis(validated_analysis_config):
-    """
-    Create an Analysis instance from a validated analysis config with
-    Nodeset information
-    :param validated_analysis_config: a dict including the necessary
-    information to create an Analysis that has been validated prior by
-    `analysis_manager.utils.validate_analysis_config`
-    :return: an Analysis instance
-    :raises: RuntimeError
-    """
-    name = validated_analysis_config.get("name")
-    node_set_uuid = validated_analysis_config["nodeSetUuid"]
-
-    common_analysis_objects = fetch_objects_required_for_analysis(
-        validated_analysis_config
-    )
-    current_workflow = common_analysis_objects["current_workflow"]
-    data_set = common_analysis_objects["data_set"]
-    user = common_analysis_objects["user"]
-
-    curr_node_set = _fetch_node_set(node_set_uuid)
-    solr_uuids = _fetch_solr_uuids(curr_node_set)
-
-    logger.info("Associating analysis with data set %s (%s)",
-                data_set, data_set.uuid)
-
-    if not name:
-        name = _create_analysis_name(current_workflow)
-
-    summary_name = "None provided."
     analysis = Analysis.objects.create(
-        summary=summary_name,
-        name=name,
+        uuid=str(uuid.uuid4()),
+        summary="Galaxy workflow execution for: {}".format(tool.name),
+        name="{} - {} - {}".format(
+            tool.get_tool_name(),
+            get_aware_local_time().strftime("%Y/%m/%d %H:%M:%S"),
+            tool.get_owner_username().title()
+        ),
         project=user.profile.catch_all_project,
         data_set=data_set,
         workflow=current_workflow,
         time_start=timezone.now()
     )
     analysis.set_owner(user)
-
-    _associate_workflow_data_inputs(analysis, current_workflow, solr_uuids)
-
-    return analysis
-
-
-def create_noderelationship_analysis(validated_analysis_config):
-    """
-    Create an Analysis instance from a validated analysis config with
-    NodeRelationship information
-    :param validated_analysis_config: a dict including the necessary
-    information to create an Analysis that has been validated prior by
-    `analysis_manager.utils.validate_analysis_config`
-    :return: an Analysis instance
-    :raises: RuntimeError
-    """
-
-    # Input list for running analysis
-    ret_list = []
-
-    name = validated_analysis_config.get("name")
-    node_relationship_uuid = validated_analysis_config["nodeRelationshipUuid"]
-
-    common_analysis_objects = fetch_objects_required_for_analysis(
-        validated_analysis_config
-    )
-    current_workflow = common_analysis_objects["current_workflow"]
-    data_set = common_analysis_objects["data_set"]
-    user = common_analysis_objects["user"]
-
-    current_node_relationship = _fetch_node_relationship(
-        node_relationship_uuid
-    )
-
-    # Iterating over node pairs
-    input_keys = []
-    base_input = {}
-    # defining inputs used for analysis
-    for workflow_inputs in current_workflow.input_relationships.all():
-        base_input[workflow_inputs.set1] = {}
-        base_input[workflow_inputs.set2] = {}
-        input_keys.append(workflow_inputs.set1)
-        input_keys.append(workflow_inputs.set2)
-
-    # creating instance of instance of input data pairing for analysis,
-    # i.e. [{u'exp_file':
-    # {'node_uuid': u'3d061699-6bc8-11e2-9b55-406c8f1d5108', 'pair_id': 1},
-    # u'input_file':
-    # {'node_uuid': u'3d180d11-6bc8-11e2-9bc7-406c8f1d5108', 'pair_id': 1}}
-    # ]
-    count = 1
-    for curr_pair in current_node_relationship.node_pairs.all():
-        temp_pair = copy.deepcopy(base_input)
-        logger.debug("Temp Pair: %s", temp_pair)
-        logger.debug("Current Pair: %s", curr_pair)
-        if curr_pair.node2:
-            temp_pair[input_keys[0]]['node_uuid'] = curr_pair.node1.uuid
-            temp_pair[input_keys[0]]['pair_id'] = count
-            temp_pair[input_keys[1]]['node_uuid'] = curr_pair.node2.uuid
-            temp_pair[input_keys[1]]['pair_id'] = count
-            ret_list.append(temp_pair)
-            logger.debug("Temp Pair: %s", temp_pair)
-            count += 1
-
-    logger.info("Associating analysis with data set %s (%s)",
-                data_set, data_set.uuid)
-
-    # ANALYSIS MODEL
-    # How to create a simple analysis object
-    if not name:
-        name = _create_analysis_name(current_workflow)
-
-    summary_name = "None provided."
-
-    analysis = Analysis.objects.create(
-        summary=summary_name,
-        name=name,
-        project=user.profile.catch_all_project,
-        data_set=data_set,
-        workflow=current_workflow,
-        time_start=timezone.now()
-    )
-    analysis.set_owner(user)
-
-    logger.debug("ret_list")
-    logger.debug(json.dumps(ret_list, indent=4))
-
-    # ANALYSIS MODEL
-    # Updating Refinery Models for updated workflow input
-    # (galaxy worfkflow input id & node_uuid)
-    count = 0
-    for samp in ret_list:
-        count += 1
-        for k in samp.keys():
-            temp_input = WorkflowDataInputMap.objects.create(
-                workflow_data_input_name=k,
-                data_uuid=samp[k]["node_uuid"],
-                pair_id=count)
-            analysis.workflow_data_input_maps.add(temp_input)
-            analysis.save()
     return analysis
 
 
@@ -310,39 +187,6 @@ def get_solr_results(query, facets=False, jsonp=False, annotation=False,
         return ret_file_uuids
 
     return results
-
-
-def match_nodesets(ns1, ns2, diff_f, all_f, rel_type=None):
-    """Helper function for matching 2 nodesets solr results"""
-    logger.debug("analysis_manager.views match_nodesets called")
-    ret_info = {}
-    ret_info['total'] = str(len(ns1) + len(ns2))
-    ret_info['node1_count'] = str(len(ns1))
-    ret_info['node2_count'] = str(len(ns2))
-
-    best_list = []
-    template = {'uuid_1': '', 'uuid_2': '', 'frac': 0.0, 'same': 0, 'diff': 0,
-                'tot': 0, 'sel_tot': 0, 'sel': 0, 'sel_frac': 0.0}
-    i = 0
-    for node1 in ns1:
-        best_node = template.copy()
-        j = 0
-        for node2 in ns2:
-            if node1['uuid'] != node2['uuid']:
-                temp_node = template.copy()
-                temp_node['uuid_1'] = node1['uuid']
-                temp_node['uuid_2'] = node2['uuid']
-                # counts differences for list of fields
-                for df in diff_f:
-                    # if the given column matches between Nodesets
-                    if node1[df] == node2[df]:
-                        best_node = temp_node
-            j += 1
-        best_list.append(best_node)
-        i += 1
-    # matches
-    ret_info['matches'] = str(len(best_list))
-    return best_list, ret_info
 
 
 def validate_analysis_config(analysis_config):

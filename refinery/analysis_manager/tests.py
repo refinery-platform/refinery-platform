@@ -9,14 +9,12 @@ from django.test import RequestFactory, TestCase
 from bioblend.galaxy.client import ConnectionError
 from bioblend.galaxy.histories import HistoryClient
 from bioblend.galaxy.libraries import LibraryClient
-from bioblend.galaxy.workflows import WorkflowClient
 from guardian.utils import get_anonymous_user
 import mock
 
 from analysis_manager.models import AnalysisStatus
 from analysis_manager.tasks import (_check_galaxy_history_state, _get_analysis,
-                                    _get_analysis_status,
-                                    _refinery_file_import, run_analysis)
+                                    _get_analysis_status, run_analysis)
 from analysis_manager.utils import (_fetch_node_relationship, _fetch_node_set,
                                     create_analysis,
                                     fetch_objects_required_for_analysis,
@@ -239,36 +237,6 @@ class AnalysisUtilsTests(TestCase):
         self.study = self.dataset.get_latest_study()
         self.assay = Assay.objects.create(study=self.study)
 
-    def test_create_nodeset_analysis(self):
-        with mock.patch(
-            "analysis_manager.utils.create_nodeset_analysis"
-        ) as create_nodeset_analysis_mock:
-            create_analysis(
-                {
-                    "name": "Valid NodeSet Analysis Config",
-                    "studyUuid": self.study.uuid,
-                    "nodeSetUuid": str(uuid.uuid4()),
-                    "user_id": self.user.id,
-                    "workflowUuid": self.workflow.uuid
-                }
-            )
-            self.assertTrue(create_nodeset_analysis_mock.called)
-
-    def test_create_noderelationship_analysis(self):
-        with mock.patch(
-                "analysis_manager.utils.create_noderelationship_analysis"
-        ) as create_noderelationship_analysis_mock:
-            create_analysis(
-                {
-                    "name": "Valid NodeRelationship Analysis Config",
-                    "studyUuid": self.study.uuid,
-                    "nodeRelationshipUuid": str(uuid.uuid4()),
-                    "user_id": self.user.id,
-                    "workflowUuid": self.workflow.uuid
-                }
-            )
-            self.assertTrue(create_noderelationship_analysis_mock.called)
-
     def test_create_tool_analysis(self):
         with mock.patch(
             "tool_manager.utils.create_tool_analysis"
@@ -344,86 +312,6 @@ class AnalysisUtilsTests(TestCase):
                 }
             )
             self.assertIn("Couldn't fetch DataSet", context.exception.message)
-
-    def test_create_noderelationship_analysis_with_user_provided_name(self):
-        name = "This is a user provided name"
-        with mock.patch(
-            "analysis_manager.utils._fetch_node_relationship"
-        ) as create_noderelationship_analysis_mock:
-            analysis = create_analysis(
-                {
-                    "name": name,
-                    "studyUuid": self.study.uuid,
-                    "nodeRelationshipUuid": str(uuid.uuid4()),
-                    "user_id": self.user.id,
-                    "workflowUuid": self.workflow.uuid
-                }
-            )
-            self.assertTrue(create_noderelationship_analysis_mock.called)
-            self.assertEqual(analysis.name, name)
-
-    def test_create_noderelationship_analysis_without_user_provided_name(self):
-        name = ""
-        with mock.patch(
-                "analysis_manager.utils._fetch_node_relationship"
-        ) as create_noderelationship_analysis_mock:
-            analysis = create_analysis(
-                {
-                    "name": name,
-                    "studyUuid": self.study.uuid,
-                    "nodeRelationshipUuid": str(uuid.uuid4()),
-                    "user_id": self.user.id,
-                    "workflowUuid": self.workflow.uuid
-                }
-            )
-            self.assertTrue(create_noderelationship_analysis_mock.called)
-            self.assertNotEqual(analysis.name, name)
-
-    @mock.patch("analysis_manager.utils._fetch_solr_uuids")
-    @mock.patch("analysis_manager.utils._associate_workflow_data_inputs")
-    def test_create_nodeset_analysis_with_user_provided_name(
-        self, get_solr_uuids_mock, workflow_inputs_mock
-    ):
-        name = "This is a user provided name"
-        with mock.patch(
-            "analysis_manager.utils._fetch_node_set"
-        ) as create_nodeset_analysis_mock:
-            analysis = create_analysis(
-                {
-                    "name": name,
-                    "studyUuid": self.study.uuid,
-                    "nodeSetUuid": str(uuid.uuid4()),
-                    "user_id": self.user.id,
-                    "workflowUuid": self.workflow.uuid
-                }
-            )
-            self.assertTrue(create_nodeset_analysis_mock.called)
-            self.assertEqual(analysis.name, name)
-        self.assertTrue(get_solr_uuids_mock.called)
-        self.assertTrue(workflow_inputs_mock.called)
-
-    @mock.patch("analysis_manager.utils._fetch_solr_uuids")
-    @mock.patch("analysis_manager.utils._associate_workflow_data_inputs")
-    def test_create_nodeset_analysis_without_user_provided_name(
-        self, get_solr_uuids_mock, workflow_inputs_mock
-    ):
-        name = ""
-        with mock.patch(
-            "analysis_manager.utils._fetch_node_set"
-        ) as create_noderelationship_analysis_mock:
-            analysis = create_analysis(
-                {
-                    "name": name,
-                    "studyUuid": self.study.uuid,
-                    "nodeSetUuid": str(uuid.uuid4()),
-                    "user_id": self.user.id,
-                    "workflowUuid": self.workflow.uuid
-                }
-            )
-            self.assertTrue(create_noderelationship_analysis_mock.called)
-            self.assertNotEqual(analysis.name, name)
-        self.assertTrue(get_solr_uuids_mock.called)
-        self.assertTrue(workflow_inputs_mock.called)
 
     def test_fetch_nodeset_valid_uuid(self):
         nodeset = NodeSet.objects.create(
@@ -591,9 +479,9 @@ class AnalysisViewsTests(AnalysisManagerTestBase, ToolManagerTestBase):
         )
 
     @mock.patch.object(AnalysisStatus,
-                       "tool_based_galaxy_file_import_state",
+                       "galaxy_file_import_state",
                        return_value="coffee")
-    def test_tool_analysis_calls_tool_based_galaxy_file_import_state(
+    def test_tool_analysis_calls_galaxy_file_import_state(
             self,
             file_import_state_mock
     ):
@@ -626,26 +514,6 @@ class AnalysisRunTests(AnalysisManagerTestBase):
     tasks_mock = "analysis_manager.tasks"
     GALAXY_ID_MOCK = "6fc9fbb81c497f69"
 
-    @mock.patch("{}._refinery_file_import".format(tasks_mock))
-    @mock.patch("{}._run_galaxy_workflow".format(tasks_mock))
-    @mock.patch("{}._check_galaxy_history_state".format(tasks_mock))
-    @mock.patch("{}._galaxy_file_export".format(tasks_mock))
-    @mock.patch("{}._attach_workflow_outputs".format(tasks_mock))
-    def test_run_analysis(self,
-                          attach_outputs_mock,
-                          galaxy_export_mock,
-                          check_galaxy_history_state_mock,
-                          run_galaxy_mock,
-                          refinery_import_mock):
-        # Run an Analysis and ensure that the methods to check the state of
-        # the task gets called properly
-        run_analysis(self.analysis.uuid)
-        self.assertTrue(refinery_import_mock.called)
-        self.assertTrue(run_galaxy_mock.called)
-        self.assertTrue(check_galaxy_history_state_mock.called)
-        self.assertTrue(galaxy_export_mock.called)
-        self.assertTrue(attach_outputs_mock.called)
-
     def test_file_import_task_termination_on_analysis_failure(self):
         with mock.patch(
             "core.models.Analysis.terminate_file_import_tasks"
@@ -653,20 +521,6 @@ class AnalysisRunTests(AnalysisManagerTestBase):
             self.analysis.set_status(Analysis.FAILURE_STATUS)
             run_analysis(self.analysis.uuid)
             self.assertTrue(terminate_mock.called)
-
-    @mock.patch.object(run_analysis, "retry", side_effect=None)
-    def test_get_input_file_uuid_list_gets_called_in_refinery_import(
-            self, retry_mock
-    ):
-        with mock.patch(
-                "core.models.Analysis.get_input_file_uuid_list"
-        ) as get_uuid_list_mock:
-            _refinery_file_import(self.analysis.uuid)
-            self.assertTrue(get_uuid_list_mock.called)
-        self.assertTrue(retry_mock.called)
-
-    def test_is_tool_based(self):
-        self.assertFalse(self.analysis.is_tool_based)
 
     @mock.patch.object(Analysis, "galaxy_progress", side_effect=RuntimeError)
     @mock.patch("analysis_manager.tasks.get_taskset_result")
@@ -699,10 +553,8 @@ class AnalysisRunTests(AnalysisManagerTestBase):
 
     @mock.patch.object(LibraryClient, "delete_library")
     @mock.patch.object(HistoryClient, "delete_history")
-    @mock.patch.object(WorkflowClient, "delete_workflow")
     def test_galaxy_cleanup_methods_are_called_on_analysis_failure(
             self,
-            delete_workflow_mock,
             delete_history_mock,
             delete_library_mock
     ):
@@ -718,7 +570,6 @@ class AnalysisRunTests(AnalysisManagerTestBase):
         self.assertEqual(self.analysis.status, Analysis.FAILURE_STATUS)
         self.assertTrue(self.analysis.canceled)
 
-        self.assertTrue(delete_workflow_mock.called)
         self.assertTrue(delete_history_mock.called)
         self.assertTrue(delete_library_mock.called)
 

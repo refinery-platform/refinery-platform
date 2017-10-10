@@ -21,8 +21,8 @@ from django_extensions.db.fields import UUIDField
 from docker.errors import APIError
 
 from analysis_manager.models import AnalysisStatus
-from analysis_manager.tasks import (_tool_based_galaxy_file_import,
-                                    get_taskset_result, run_analysis)
+from analysis_manager.tasks import (_galaxy_file_import, get_taskset_result,
+                                    run_analysis)
 from analysis_manager.utils import create_analysis, validate_analysis_config
 from core.models import (INPUT_CONNECTION, OUTPUT_CONNECTION, Analysis,
                          AnalysisNodeConnection, DataSet, OwnableResource,
@@ -968,11 +968,9 @@ class WorkflowTool(Tool):
         return self.get_tool_launch_config()[self.GALAXY_DATA]
 
     def get_galaxy_import_tasks(self):
-        """
-        Create and return a list of _tool_based_galaxy_file_import() tasks
-        """
+        """Create and return a list of _galaxy_file_import() tasks"""
         return [
-            _tool_based_galaxy_file_import.subtask(
+            _galaxy_file_import.subtask(
                 (
                     self.analysis.uuid,
                     file_store_item_uuid,

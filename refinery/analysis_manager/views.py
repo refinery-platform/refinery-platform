@@ -12,17 +12,13 @@ from django.http import (HttpResponse, HttpResponseBadRequest,
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 
-from core.models import (Analysis, NodePair, NodeRelationship, NodeSet,
-                         Workflow, WorkflowEngine)
-from core.utils import get_aware_local_time
+from core.models import Analysis, Workflow, WorkflowEngine
 from core.views import custom_error_page
-from data_set_manager.models import Assay, Node, Study
 from workflow_manager.tasks import get_workflows
 
 from .models import AnalysisStatus
 from .tasks import run_analysis
-from .utils import (create_analysis, get_solr_results, match_nodesets,
-                    validate_analysis_config)
+from .utils import create_analysis, validate_analysis_config
 
 logger = logging.getLogger(__name__)
 
@@ -75,14 +71,8 @@ def analysis_status(request, uuid):
             'galaxyAnalysis': status.galaxy_analysis_state(),
             'galaxyExport': status.galaxy_export_state(),
             'overall': analysis.get_status(),
+            'galaxyImport': status.galaxy_file_import_state()
         }
-        if analysis.is_tool_based:
-            ret_json['galaxyImport'] = (
-                status.tool_based_galaxy_file_import_state()
-            )
-        else:
-            ret_json['galaxyImport'] = status.galaxy_file_import_state()
-
         logger.debug("Analysis status for '%s': %s",
                      analysis.name, json.dumps(ret_json))
         return HttpResponse(json.dumps(ret_json, indent=4),
@@ -195,88 +185,3 @@ def run(request):
     run_analysis.delay(analysis.uuid)
 
     return HttpResponse(reverse('analysis-status', args=(analysis.uuid,)))
-
-
-def create_noderelationship(request):
-    """ajax function for creating noderelationships based on multiple node sets
-    """
-    logger.debug("analysis_manager.views create_noderelationship called")
-    logger.debug(json.dumps(request.POST, indent=4))
-    if request.is_ajax():
-        nr_name = request.POST.getlist('name')[0]
-        nr_description = request.POST.getlist('description')[0]
-        # getting nodeset uuids
-        node_set_uuid1 = request.POST.getlist('node_set_uuid1')[0]
-        node_set_uuid2 = request.POST.getlist('node_set_uuid2')[0]
-        # getting instances of current nodeset
-        curr_node_set1 = NodeSet.objects.get(uuid=node_set_uuid1)
-        curr_node_set2 = NodeSet.objects.get(uuid=node_set_uuid2)
-        # fields to match on
-        diff_fields = request.POST.getlist('fields[]')
-        if len(diff_fields) < 1:
-            logger.error('create_noderelationship: failed b/c no field '
-                         'selected for defining Node Relationships')
-        # get study uuid
-        assay_uuid = request.POST.getlist('assay_uuid')[0]
-        study_uuid = request.POST.getlist('study_uuid')[0]
-        study = Study.objects.get(uuid=study_uuid)
-        # TODO: catch if study or data set don't exist
-        study = Study.objects.get(uuid=study_uuid)
-        assay = Assay.objects.get(uuid=assay_uuid)
-        # Need to deal w/ limits on current solr queries
-        # solr results
-        curr_node_dict1 = curr_node_set1.solr_query_components
-        curr_node_dict1 = json.loads(curr_node_dict1)
-        curr_node_dict2 = curr_node_set2.solr_query_components
-        curr_node_dict2 = json.loads(curr_node_dict2)
-        # getting list of node uuids based on input solr query
-        node_set_solr1 = get_solr_results(
-            curr_node_set1.solr_query,
-            selected_mode=curr_node_dict1['documentSelectionBlacklistMode'],
-            selected_nodes=curr_node_dict1['documentSelection']
-        )
-        node_set_solr2 = get_solr_results(
-            curr_node_set2.solr_query,
-            selected_mode=curr_node_dict2['documentSelectionBlacklistMode'],
-            selected_nodes=curr_node_dict2['documentSelection']
-        )
-        # all fields from the first solr query
-        all_fields = node_set_solr1['responseHeader']['params']['fl']
-        # actual documents retreived from solr response
-        node_set_results1 = node_set_solr1['response']['docs']
-        node_set_results2 = node_set_solr2['response']['docs']
-        # match between 2 nodesets for a given column
-        nodes_set_match, match_info = match_nodesets(
-            node_set_results1, node_set_results2, diff_fields, all_fields)
-
-        logger.debug("MAKING RELATIONSHIPS NOW")
-        logger.debug(json.dumps(nodes_set_match, indent=4))
-        logger.debug(nodes_set_match)
-        # TODO: need to include names, descriptions, summary
-        if nr_name.strip() == '':
-            nr_name = "{} - {} {}".format(
-                curr_node_set1.name, curr_node_set2.name, str(
-                    get_aware_local_time())
-            )
-        if nr_description.strip() == '':
-            nr_description = "{} - {} {}".format(
-                curr_node_set1.name, curr_node_set2.name, str(
-                    get_aware_local_time())
-            )
-        new_relationship = NodeRelationship(node_set_1=curr_node_set1,
-                                            node_set_2=curr_node_set2,
-                                            study=study,
-                                            assay=assay,
-                                            name=nr_name,
-                                            summary=nr_description)
-        new_relationship.save()
-
-        for i in range(len(nodes_set_match)):
-            node1 = Node.objects.get(uuid=nodes_set_match[i]['uuid_1'])
-            node2 = Node.objects.get(uuid=nodes_set_match[i]['uuid_2'])
-            new_pair = NodePair(node1=node1, node2=node2, group=i+1)
-            new_pair.save()
-            new_relationship.node_pairs.add(new_pair)
-
-        return HttpResponse(json.dumps(match_info, indent=4),
-                            content_type='application/json')
