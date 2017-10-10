@@ -16,7 +16,6 @@ from analysis_manager.models import AnalysisStatus
 from analysis_manager.tasks import (_check_galaxy_history_state, _get_analysis,
                                     _get_analysis_status, run_analysis)
 from analysis_manager.utils import (_fetch_node_relationship, _fetch_node_set,
-                                    create_analysis,
                                     fetch_objects_required_for_analysis,
                                     validate_analysis_config)
 from analysis_manager.views import analysis_status, run
@@ -47,14 +46,7 @@ class AnalysisManagerTestBase(TestCase):
 
 
 class AnalysisConfigTests(TestCase):
-    """
-    Test for validation of the two legacy ways of launching Analyses (
-    using NodeSets and NodeRelationships) as well as for the new Tool-based
-    approach
-    """
-
     def generate_analysis_config(self,
-                                 analysis_type,
                                  missing_a_field=False,
                                  valid_analysis_type_uuid=True,
                                  valid_name=True,
@@ -62,31 +54,14 @@ class AnalysisConfigTests(TestCase):
                                  valid_user_id=True,
                                  valid_workflow_uuid=True):
         analysis_config = {}
-        valid_analysis_types = ["NodeSet", "NodeRelationship", "Tool"]
-
-        assert analysis_type in valid_analysis_types, \
-            "Not a valid analysis_type. {} not in {}".format(
-                analysis_type,
-                valid_analysis_types
-            )
-
         analysis_type_uuid = (
             str(uuid.uuid4()) if valid_analysis_type_uuid else ""
         )
-
-        if analysis_type == "NodeSet":
-            analysis_config["nodeSetUuid"] = analysis_type_uuid
-
-        if analysis_type == "NodeRelationship":
-            analysis_config["nodeRelationshipUuid"] = analysis_type_uuid
-
-        if analysis_type == "Tool":
-            analysis_config["tool_uuid"] = analysis_type_uuid
+        analysis_config["tool_uuid"] = analysis_type_uuid
 
         analysis_config["name"] = (
             "Valid Custom Name" if valid_name else []
         )
-
         analysis_config["study_uuid"] = (
             str(uuid.uuid4()) if valid_study_uuid else ""
         )
@@ -102,111 +77,28 @@ class AnalysisConfigTests(TestCase):
 
         return analysis_config
 
-    def test_valid_nodeset_analysis_config(self):
-        # Not asserting anything here because if later down the line
-        # `validate_analysis_config()` changes and raises some new Exception
-        # it could fall through the cracks
-        validate_analysis_config(
-            self.generate_analysis_config(analysis_type="NodeSet")
-        )
-
-    def test_invalid_nodeset_analysis_config_missing_field(self):
-        with self.assertRaises(RuntimeError):
-            validate_analysis_config(
-                self.generate_analysis_config(
-                    analysis_type="NodeSet",
-                    missing_a_field=True
-                )
-            )
-
-    def test_invalid_nodeset_analysis_config_non_uuid_field(self):
-        with self.assertRaises(RuntimeError):
-            validate_analysis_config(
-                self.generate_analysis_config(
-                    analysis_type="NodeSet",
-                    valid_study_uuid=False
-                )
-            )
-
-    def test_invalid_nodeset_analysis_config_non_int_field(self):
-        with self.assertRaises(RuntimeError):
-            validate_analysis_config(
-                self.generate_analysis_config(
-                    analysis_type="NodeSet",
-                    valid_user_id=False
-                )
-            )
-
-    def test_valid_noderelationship_analysis_config(self):
-        # Not asserting anything here because if later down the line
-        # `validate_analysis_config()` changes and raises some new Exception
-        # it could fall through the cracks
-        validate_analysis_config(
-            self.generate_analysis_config(
-                analysis_type="NodeRelationship"
-            )
-        )
-
-    def test_invalid_noderelationship_analysis_config_missing_field(self):
-        with self.assertRaises(RuntimeError):
-            validate_analysis_config(
-                self.generate_analysis_config(
-                    analysis_type="NodeRelationship",
-                    missing_a_field=True
-                )
-            )
-
-    def test_invalid_noderelationship_analysis_config_non_uuid_field(self):
-        with self.assertRaises(RuntimeError):
-            validate_analysis_config(
-                self.generate_analysis_config(
-                    analysis_type="NodeRelationship",
-                    valid_workflow_uuid=False
-                )
-            )
-
-    def test_invalid_noderelationship_analysis_config_non_int_field(self):
-        with self.assertRaises(RuntimeError):
-            validate_analysis_config(
-                self.generate_analysis_config(
-                    analysis_type="NodeRelationship",
-                    valid_user_id=False
-                )
-            )
-
     def test_valid_tool_analysis_config(self):
         # Not asserting anything here because if later down the line
         # `validate_analysis_config()` changes and raises some new Exception
         # it could fall through the cracks
-        validate_analysis_config(
-            self.generate_analysis_config(analysis_type="Tool")
-        )
+        validate_analysis_config(self.generate_analysis_config())
 
     def test_invalid_tool_analysis_config_missing_field(self):
         with self.assertRaises(RuntimeError):
             validate_analysis_config(
-                self.generate_analysis_config(
-                    analysis_type="Tool",
-                    missing_a_field=True
-                )
+                self.generate_analysis_config(missing_a_field=True)
             )
 
     def test_invalid_tool_analysis_config_non_uuid_field(self):
         with self.assertRaises(RuntimeError):
             validate_analysis_config(
-                self.generate_analysis_config(
-                    analysis_type="Tool",
-                    valid_analysis_type_uuid=False
-                )
+                self.generate_analysis_config(valid_analysis_type_uuid=False)
             )
 
     def test_invalid_tool_analysis_config_non_int_field(self):
         with self.assertRaises(RuntimeError):
             validate_analysis_config(
-                self.generate_analysis_config(
-                    analysis_type="Tool",
-                    valid_user_id=False
-                )
+                self.generate_analysis_config(valid_user_id=False)
             )
 
 
@@ -236,18 +128,6 @@ class AnalysisUtilsTests(TestCase):
         self.dataset = create_dataset_with_necessary_models()
         self.study = self.dataset.get_latest_study()
         self.assay = Assay.objects.create(study=self.study)
-
-    def test_create_tool_analysis(self):
-        create_analysis(
-            {
-                "name": "Valid Tool Analysis Config",
-                "study_uuid": self.study.uuid,
-                "tool_uuid": str(uuid.uuid4()),
-                "user_id": self.user.id,
-                "workflow_uuid": self.workflow.uuid
-            }
-        )
-        self.assertEqual(Analysis.objects.count(), 1)
 
     def test_fetch_objects_required_for_analyses(self):
         self.assertEqual(
