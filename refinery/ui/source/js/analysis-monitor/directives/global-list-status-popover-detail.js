@@ -18,6 +18,11 @@ function rpAnalysisMonitorGlobalListStatusPopoverDetails ($window) {
       scope.analysesGlobalList = $ctrl.analysesGlobalList;
       scope.analysesGlobalDetail = $ctrl.analysesGlobalDetail;
 
+      scope.$on('$destroy', function () {
+        // when popover is closed
+        $ctrl.cancelTimerGlobalList();
+      });
+
       scope.$watchCollection(
         function () {
           return $ctrl.analysesGlobalList;
