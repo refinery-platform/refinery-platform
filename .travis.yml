@@ -126,6 +126,7 @@ after_success:
     if ! [ "$GRUNT_TESTS" ]; then
       codecov
     else
+      pushd ui
       npm run codecov
     fi
   - end $CODECOV
