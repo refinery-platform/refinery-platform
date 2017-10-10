@@ -202,7 +202,7 @@ class ProcessISATabView(View):
             return response
         logger.debug("Temp file name: '%s'", temp_file_path)
         try:
-            parse_isatab_invocation = parse_isatab(
+            dataset_uuid = parse_isatab(
                 request.user.username,
                 False,
                 temp_file_path
@@ -224,8 +224,6 @@ class ProcessISATabView(View):
                 PARSER_UNEXPECTED_ERROR_MESSAGE +
                 e.message
             )
-        else:
-            dataset_uuid = parse_isatab_invocation
 
         # TODO: exception handling
         os.unlink(temp_file_path)
