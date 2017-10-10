@@ -9,7 +9,7 @@ from django.contrib.auth.models import User
 from django.http import HttpResponseServerError
 from django.utils import timezone
 
-from jsonschema import RefResolver, ValidationError, validate
+from jsonschema import ValidationError, validate
 import requests
 from requests.packages.urllib3.exceptions import HTTPError
 
@@ -19,14 +19,6 @@ from core.utils import get_aware_local_time
 import tool_manager
 
 logger = logging.getLogger(__name__)
-
-# Allow JSON Schema to find the JSON pointers we define in our schemas
-JSON_SCHEMA_FILE_RESOLVER = RefResolver(
-    "file://{}/".format(
-        os.path.join(settings.BASE_DIR, "refinery/analysis_manager/schemas")
-    ),
-    None
-)
 
 
 def create_analysis(validated_analysis_config):
@@ -77,9 +69,9 @@ def fetch_objects_required_for_analysis(validated_analysis_config):
     :return: dict w/ mapping to the commonly used objects
     :raises: RuntimeError
     """
-    study_uuid = validated_analysis_config["studyUuid"]
+    study_uuid = validated_analysis_config["study_uuid"]
     user_id = validated_analysis_config["user_id"]
-    workflow_uuid = validated_analysis_config["workflowUuid"]
+    workflow_uuid = validated_analysis_config["workflow_uuid"]
 
     try:
         user = User.objects.get(id=user_id)
@@ -191,8 +183,8 @@ def get_solr_results(query, facets=False, jsonp=False, annotation=False,
 
 def validate_analysis_config(analysis_config):
     """
-    Validate incoming Tool Launch Configurations
-    :param tool_launch_config: json data containing a ToolLaunchConfiguration
+    Validate incoming Analysis Configurations
+    :param analysis_config: json data containing an Analysis configuration
     """
     with open(
             os.path.join(
@@ -202,11 +194,7 @@ def validate_analysis_config(analysis_config):
     ) as f:
         schema = json.loads(f.read())
     try:
-        validate(
-            analysis_config,
-            schema,
-            resolver=JSON_SCHEMA_FILE_RESOLVER
-        )
+        validate(analysis_config, schema)
     except ValidationError as e:
         raise RuntimeError(
             "Analysis Configuration is invalid: {}".format(e)
