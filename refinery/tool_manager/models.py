@@ -348,10 +348,10 @@ class Tool(OwnableResource):
         """
         return {
             "name": "{}".format(self),
-            "studyUuid": self.dataset.get_latest_study().uuid,
-            "toolUuid": self.uuid,
+            "study_uuid": self.dataset.get_latest_study().uuid,
+            "tool_uuid": self.uuid,
             "user_id": self.get_owner().id,
-            "workflowUuid": self.tool_definition.workflow.uuid
+            "workflow_uuid": self.tool_definition.workflow.uuid
         }
 
     def launch(self):

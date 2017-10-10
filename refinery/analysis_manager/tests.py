@@ -81,19 +81,19 @@ class AnalysisConfigTests(TestCase):
             analysis_config["nodeRelationshipUuid"] = analysis_type_uuid
 
         if analysis_type == "Tool":
-            analysis_config["toolUuid"] = analysis_type_uuid
+            analysis_config["tool_uuid"] = analysis_type_uuid
 
         analysis_config["name"] = (
             "Valid Custom Name" if valid_name else []
         )
 
-        analysis_config["studyUuid"] = (
+        analysis_config["study_uuid"] = (
             str(uuid.uuid4()) if valid_study_uuid else ""
         )
 
         analysis_config["user_id"] = 1 if valid_user_id else ""
 
-        analysis_config["workflowUuid"] = (
+        analysis_config["workflow_uuid"] = (
             str(uuid.uuid4()) if valid_workflow_uuid else ""
         )
 
@@ -238,27 +238,24 @@ class AnalysisUtilsTests(TestCase):
         self.assay = Assay.objects.create(study=self.study)
 
     def test_create_tool_analysis(self):
-        with mock.patch(
-            "tool_manager.utils.create_tool_analysis"
-        ) as create_tool_analysis_mock:
-            create_analysis(
-                {
-                    "name": "Valid Tool Analysis Config",
-                    "studyUuid": self.study.uuid,
-                    "toolUuid": str(uuid.uuid4()),
-                    "user_id": self.user.id,
-                    "workflowUuid": self.workflow.uuid
-                }
-            )
-            self.assertTrue(create_tool_analysis_mock.called)
+        create_analysis(
+            {
+                "name": "Valid Tool Analysis Config",
+                "study_uuid": self.study.uuid,
+                "tool_uuid": str(uuid.uuid4()),
+                "user_id": self.user.id,
+                "workflow_uuid": self.workflow.uuid
+            }
+        )
+        self.assertEqual(Analysis.objects.count(), 1)
 
     def test_fetch_objects_required_for_analyses(self):
         self.assertEqual(
             fetch_objects_required_for_analysis(
                 {
-                    "studyUuid": self.study.uuid,
+                    "study_uuid": self.study.uuid,
                     "user_id": self.user.id,
-                    "workflowUuid": self.workflow.uuid
+                    "workflow_uuid": self.workflow.uuid
                 }
             ),
             {
@@ -272,9 +269,9 @@ class AnalysisUtilsTests(TestCase):
         with self.assertRaises(RuntimeError) as context:
             fetch_objects_required_for_analysis(
                 {
-                    "studyUuid": self.study.uuid,
+                    "study_uuid": self.study.uuid,
                     "user_id": self.user.id,
-                    "workflowUuid": "COFFEE"
+                    "workflow_uuid": "COFFEE"
                 }
             )
             self.assertIn("Couldn't fetch Workflow", context.exception.message)
@@ -283,9 +280,9 @@ class AnalysisUtilsTests(TestCase):
         with self.assertRaises(RuntimeError) as context:
             fetch_objects_required_for_analysis(
                 {
-                    "studyUuid": "COFFEE",
+                    "study_uuid": "COFFEE",
                     "user_id": self.user.id,
-                    "workflowUuid": self.workflow.uuid
+                    "workflow_uuid": self.workflow.uuid
                 }
             )
             self.assertIn("Couldn't fetch Study", context.exception.message)
@@ -294,9 +291,9 @@ class AnalysisUtilsTests(TestCase):
         with self.assertRaises(RuntimeError) as context:
             fetch_objects_required_for_analysis(
                 {
-                    "studyUuid": self.study.uuid,
+                    "study_uuid": self.study.uuid,
                     "user_id": 400,
-                    "workflowUuid": self.workflow.uuid
+                    "workflow_uuid": self.workflow.uuid
                 }
             )
             self.assertIn("Couldn't fetch User", context.exception.message)
@@ -306,9 +303,9 @@ class AnalysisUtilsTests(TestCase):
         with self.assertRaises(RuntimeError) as context:
             fetch_objects_required_for_analysis(
                 {
-                    "studyUuid": self.study.uuid,
+                    "study_uuid": self.study.uuid,
                     "user_id": self.user.id,
-                    "workflowUuid": self.workflow.uuid
+                    "workflow_uuid": self.workflow.uuid
                 }
             )
             self.assertIn("Couldn't fetch DataSet", context.exception.message)
@@ -375,10 +372,10 @@ class AnalysisViewsTests(AnalysisManagerTestBase, ToolManagerTestBase):
             self.run_url_root,
             data={
                 "name": "Valid Tool Analysis Config",
-                "studyUuid": str(uuid.uuid4()),
-                "toolUuid": str(uuid.uuid4()),
+                "study_uuid": str(uuid.uuid4()),
+                "tool_uuid": str(uuid.uuid4()),
                 "user_id": 1,
-                "workflowUuid": str(uuid.uuid4())
+                "workflow_uuid": str(uuid.uuid4())
             },
             HTTP_X_REQUESTED_WITH='XMLHttpRequest'
         )
@@ -388,9 +385,9 @@ class AnalysisViewsTests(AnalysisManagerTestBase, ToolManagerTestBase):
             self.run_url_root,
             data={
                 "name": "Valid Tool Analysis Config",
-                "studyUuid": str(uuid.uuid4()),
-                "toolUuid": str(uuid.uuid4()),
-                "workflowUuid": str(uuid.uuid4())
+                "study_uuid": str(uuid.uuid4()),
+                "tool_uuid": str(uuid.uuid4()),
+                "workflow_uuid": str(uuid.uuid4())
             },
             HTTP_X_REQUESTED_WITH='XMLHttpRequest'
         )
@@ -405,9 +402,9 @@ class AnalysisViewsTests(AnalysisManagerTestBase, ToolManagerTestBase):
                 self.run_url_root,
                 json.dumps({
                     "name": "Valid Tool Analysis Config",
-                    "studyUuid": str(uuid.uuid4()),
-                    "toolUuid": str(uuid.uuid4()),
-                    "workflowUuid": str(uuid.uuid4())
+                    "study_uuid": str(uuid.uuid4()),
+                    "tool_uuid": str(uuid.uuid4()),
+                    "workflow_uuid": str(uuid.uuid4())
                 }),
                 content_type="application/json",
                 HTTP_X_REQUESTED_WITH='XMLHttpRequest'
@@ -430,9 +427,9 @@ class AnalysisViewsTests(AnalysisManagerTestBase, ToolManagerTestBase):
             self.run_url_root,
             data=json.dumps({
                 "name": "Valid Tool Analysis Config",
-                "studyUuid": str(uuid.uuid4()),
-                "toolUuid": str(uuid.uuid4()),
-                "workflowUuid": str(uuid.uuid4())
+                "study_uuid": str(uuid.uuid4()),
+                "tool_uuid": str(uuid.uuid4()),
+                "workflow_uuid": str(uuid.uuid4())
             }),
             content_type="application/json",
             HTTP_X_REQUESTED_WITH='XMLHttpRequest'
@@ -444,9 +441,9 @@ class AnalysisViewsTests(AnalysisManagerTestBase, ToolManagerTestBase):
             self.run_url_root,
             data={
                 "name": "Valid Tool Analysis Config",
-                "studyUuid": str(uuid.uuid4()),
-                "toolUuid": str(uuid.uuid4()),
-                "workflowUuid": str(uuid.uuid4())
+                "study_uuid": str(uuid.uuid4()),
+                "tool_uuid": str(uuid.uuid4()),
+                "workflow_uuid": str(uuid.uuid4())
             }
         )
         self.assertEqual(type(response), HttpResponseBadRequest)
