@@ -19,6 +19,7 @@ function rpAnalysisMonitorGlobalListStatusPopoverDetails ($window) {
       scope.analysesGlobalDetail = $ctrl.analysesGlobalDetail;
 
       scope.$on('$destroy', function () {
+        console.log('canceling api call');
         // when popover is closed
         $ctrl.cancelTimerGlobalList();
       });

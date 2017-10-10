@@ -2,7 +2,6 @@
   <a uib-popover-template="'analysesgloballist.html'"
     popover-trigger="'outsideClick'"
     popover-placement="left"
-    popover-html="true"
     type="button">
     <span ng-if="AMCtrl.isAnalysesRunningGlobal() || AMCtrl.launchAnalysisFlag">
       <span class="spinner" id="global-analysis-status-run-div"
@@ -23,11 +22,26 @@
         title="View Recent Analyses"></i>
     </span>
   </a>
+   <button uib-popover-template="'mytestpopover.html'"
+     popover-title="Yahoo"
+     type="button" class="btn btn-default">
+     Popover
+   </button>
 </span>
 
 
 <!-- Script for popup content in the tool status and analyses icon-->
 <script type="text/ng-template" id="analysesgloballist.html">
-  <rp-analysis-monitor-global-list-status-popover-details>
-  </rp-analysis-monitor-global-list-status-popover-details>
+  <div>
+      <rp-analysis-monitor-global-list-status-popover-details>
+      </rp-analysis-monitor-global-list-status-popover-details>
+  </div>
+</script>
+
+<script type="text/ng-template" id="mytestpopover.html">
+    <div>
+      <a href="http://www.cnn.com">
+      I am a test.
+      </a>
+    </div>
 </script>

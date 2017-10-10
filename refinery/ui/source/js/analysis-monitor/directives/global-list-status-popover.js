@@ -1,8 +1,6 @@
 'use strict';
 
-function rpAnalysisMonitorGlobalListStatusPopover (
-  $
-) {
+function rpAnalysisMonitorGlobalListStatusPopover () {
   return {
     scope: {},
     restrict: 'AE',
@@ -10,9 +8,9 @@ function rpAnalysisMonitorGlobalListStatusPopover (
     link: function (scope, element, attr, ctrl) {
       // The script is in the global-list-status.html template.
       element.on('click', function () {
-        if (!$('#analysesCogIcon .popover').hasClass('in')) {
-          $('#global-analysis-status-run-div').tooltip('hide');
-          $('#global-analysis-status').tooltip('hide');
+        if (!element.find('.popover').hasClass('in')) {
+          element.find('#global-analysis-status-run-div').tooltip('hide');
+          element.find('#global-analysis-status').tooltip('hide');
           ctrl.updateAnalysesGlobalList();
         }
       });
@@ -23,6 +21,5 @@ function rpAnalysisMonitorGlobalListStatusPopover (
 angular
   .module('refineryAnalysisMonitor')
   .directive('rpAnalysisMonitorGlobalListStatusPopover', [
-    '$',
     rpAnalysisMonitorGlobalListStatusPopover
   ]);
