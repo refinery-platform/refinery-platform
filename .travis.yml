@@ -26,7 +26,7 @@ matrix:
 
 install:
   - |
-    if ! test -n "$DJANGO_UNIT_TESTS"; then
+    if ! [ "$DJANGO_UNIT_TESTS" ]; then
       node --version
       NODE_VERSION=6.11.0
       nvm install $NODE_VERSION
@@ -36,13 +36,11 @@ install:
       npm install -g npm@3.10.10
       npm --version
     fi
-  - |
-    if ! test -n "$GRUNT_TESTS"; then
-      pip install -r requirements.txt --quiet
-    fi
+  - if ! [ "$GRUNT_TESTS" ]; then pip install -r requirements.txt --quiet; fi
+
   # Install geckodriver required for selenium testing
   - |
-    if test -n "$DJANGO_SELENIUM_TESTS"; then
+    if [ "$DJANGO_SELENIUM_TESTS" ]; then
       GECKODRIVER_VERSION=v0.17.0
       TAR=geckodriver-$GECKODRIVER_VERSION-linux64.tar
       wget https://github.com/mozilla/geckodriver/releases/download/$GECKODRIVER_VERSION/$TAR.gz
@@ -60,7 +58,7 @@ env:
 
 before_script:
   - |
-    if ! test -n "$GRUNT_TESTS"; then
+    if ! [ "$GRUNT_TESTS" ]; then
       # Vagrant is not used on travis: This user is just for the database.
       createuser --createdb --no-superuser --no-createrole vagrant
       createdb -O vagrant refinery
@@ -73,7 +71,7 @@ before_script:
       cd ../
     fi
   - |
-    if ! test -n "$DJANGO_UNIT_TESTS"; then
+    if ! [ "$DJANGO_UNIT_TESTS" ]; then
       cd refinery
       npm install -g grunt-cli@0.1.13 bower@1.7.7 --progress false --quiet || ( cat npm-debug.log && false )
       cd ui
@@ -85,7 +83,7 @@ before_script:
 script:
   - "set -e" # Any error will cause travis to exit early and report a failure.
   - |
-    if ! test -n "$GRUNT_TESTS"; then
+    if ! [ "$GRUNT_TESTS" ]; then
       # TODO: Not the same behavior as pre-commit hook.
       # https://github.com/refinery-platform/refinery-platform/issues/1851
       flake8 --exclude=migrations,ui ..
@@ -94,32 +92,26 @@ script:
   - cd refinery
   - echo 'travis_fold:start:grunt'
   - pushd ui
-  - if ! test -n "$DJANGO_UNIT_TESTS"; then grunt make; fi
+  - if ! [ "$DJANGO_UNIT_TESTS" ]; then grunt make; fi
 
-  - if test -n "$GRUNT_TESTS"; then grunt test; fi
+  - if [ "$GRUNT_TESTS" ]; then grunt test; fi
   - popd
   - echo 'travis_fold:end:grunt'
 
   - echo 'travis_fold:start:django-unit-tests'
-  - if test -n "$DJANGO_UNIT_TESTS"; then coverage run manage.py test; fi
+  - if [ "$DJANGO_UNIT_TESTS" ]; then coverage run manage.py test; fi
   - echo 'travis_fold:end:django-unit-tests'
 
   - echo 'travis_fold:start:django-selenium-tests'
-  - if test -n "$DJANGO_SELENIUM_TESTS"; then coverage run manage.py test --pattern="selenium_tests.py"; fi
+  - if [ "$DJANGO_SELENIUM_TESTS" ]; then coverage run manage.py test --pattern="selenium_tests.py"; fi
   - echo 'travis_fold:end:django-selenium-tests'
 
   - set +e # Currently, codecov does not always exit with 0, but that should not cause travis to fail.
 
 after_success:
   - echo 'travis_fold:start:codecov'
-  - |
-    if ! test -n "$GRUNT_TESTS"; then
-      codecov
-    fi
-  - |
-    if test -n "$GRUNT_TESTS"; then
-       npm run codecov
-    fi
+  - if ! [ "$GRUNT_TESTS" ]; then codecov; fi
+  - if [ "$GRUNT_TESTS"]; then npm run codecov; fi
   - echo 'travis_fold:end:codecov'
 
 notifications:
