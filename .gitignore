@@ -55,6 +55,7 @@ codekit-config.json
 /deployment/aws-config/tags.yaml
 /refinery/celerybeat-schedule*
 /refinery/config/config.json
+/refinery/config/config.json.prev
 /refinery/static/production/
 /refinery/static/development/
 /refinery/ui/production/
