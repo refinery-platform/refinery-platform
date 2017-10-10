@@ -41,21 +41,27 @@ module.exports = function(config) {
       prependPrefix: '/static/partials/',
       stripPrefix: 'source/js/'
     },
+
+    // test results reporter to use
+    // possible values: 'dots', 'progress'
+    // available reporters: https://npmjs.org/browse/keyword/karma-reporter
+    reporters: ['progress', 'coverage'],
+
+
     // Coverage repoter
-    reporters: [
-      // Reference: https://github.com/karma-runner/karma-coverage
-      // Output code coverage files
-      'coverage'
-    ],
-    // Configure code coverage reporter
     coverageReporter: {
+      // common output directory
+      dir : 'coverage/',
       reporters: [
-          // generates ./coverage/lcov.info
-          {type:'lcovonly', subdir: '.'},
-          // generates ./coverage/coverage-final.json
-          {type:'json', subdir: '.'}
+        // reporters not supporting the `file` property
+        { type: 'html', subdir: 'html' },
+        { type: 'lcov', subdir: 'lcov' },
+        // reporters supporting the `file` property, use `subdir` to directly
+        // output them in the `dir` directory
+        { type: 'cobertura', subdir: '.', file: 'cobertura.xml' },
       ]
     },
+
 
     // web server port
     port: 9999,

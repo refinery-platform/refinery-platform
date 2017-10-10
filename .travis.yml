@@ -48,7 +48,6 @@ install:
       node --version
       npm --version
       npm install -g npm@3.10.10
-      npm install -g codecov
       npm --version
     fi
 
@@ -127,7 +126,6 @@ after_success:
     if ! [ "$GRUNT_TESTS" ]; then
       codecov
     else
-      pushd ui
       npm run codecov
     fi
   - end $CODECOV
