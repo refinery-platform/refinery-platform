@@ -15,6 +15,7 @@ import requests
 from requests.exceptions import HTTPError
 
 import core
+from core.utils import skip_if_test_run
 import data_set_manager
 from file_store.models import FileStoreItem
 
@@ -874,6 +875,7 @@ def _is_facet_attribute(attribute, study, assay):
     return (attribute_values / items) < ratio
 
 
+@skip_if_test_run
 def initialize_attribute_order(study, assay):
     """Initializes the AttributeOrder table after all nodes for the given study
     and assay have been indexed by Solr.
