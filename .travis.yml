@@ -98,13 +98,19 @@ script:
   - popd && popd
   - echo 'travis_fold:end:grunt'
 
-  - echo 'travis_fold:start:django-unit-tests'
-  - if [ "$DJANGO_UNIT_TESTS" ]; then coverage run manage.py test; fi
-  - echo 'travis_fold:end:django-unit-tests'
+  - |
+    if [ "$DJANGO_UNIT_TESTS" ]; then
+      echo 'travis_fold:start:django-unit-tests'
+      coverage run manage.py test
+      echo 'travis_fold:end:django-unit-tests'
+    fi
 
-  - echo 'travis_fold:start:django-selenium-tests'
-  - if [ "$DJANGO_SELENIUM_TESTS" ]; then coverage run manage.py test --pattern="selenium_tests.py"; fi
-  - echo 'travis_fold:end:django-selenium-tests'
+  - |
+    if [ "$DJANGO_SELENIUM_TESTS" ]; then
+      echo 'travis_fold:start:django-selenium-tests'
+      coverage run manage.py test --pattern="selenium_tests.py"
+      echo 'travis_fold:end:django-selenium-tests'
+    fi
 
   - set +e # Currently, codecov does not always exit with 0, but that should not cause travis to fail.
 
