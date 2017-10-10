@@ -130,7 +130,7 @@ script:
   - end $DJANGO_UNIT_TESTS
 
   - start $SELENIUM_TESTS
-  - if [ "$REFIENRY_SELENIUM_TESTS" ]; then coverage run manage.py test selenium_testing --pattern="selenium_tests.py"; fi
+  - if [ "$REFINERY_SELENIUM_TESTS" ]; then coverage run manage.py test selenium_testing --pattern="selenium_tests.py"; fi
   - if [ "$TOOL_MANAGER_SELENIUM_TESTS" ]; then coverage run manage.py test tool_manager --pattern="selenium_tests.py"; fi
   - end $SELENIUM_TESTS
 
