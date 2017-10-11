@@ -1,6 +1,6 @@
-describe('Refinery', function() {
-  it('Has a homepage', function() {
-    cy.visit('http://192.168.50.50:8000/');
+describe('Not logged in', function() {
+  it('Has homepage', function() {
+    cy.visit('/');
     cy.contains('Refinery');
 
     cy.contains('Collaboration');
@@ -9,6 +9,8 @@ describe('Refinery', function() {
 
     cy.contains('Register');
     cy.contains('Login');
+
+    cy.contains('Launch Pad');
 
     cy.contains('Data Sets');
     cy.contains('List');
@@ -19,5 +21,32 @@ describe('Refinery', function() {
     cy.contains('No data sets available.');
     cy.contains('No analyses available.');
     cy.contains('No workflows available.');
+  });
+
+  it('Has statistics', function() {
+    cy.visit('/');
+    cy.contains('Statistics').click();
+
+    cy.contains('Statistics');
+
+    cy.contains('Users');
+    cy.contains('Groups');
+    cy.contains('Files');
+    cy.contains('Data Sets');
+    cy.contains('Workflows');
+    cy.contains('Projects');
+  });
+
+  it('Has about', function() {
+    cy.visit('/');
+    cy.contains('About').click();
+
+    cy.contains('About Refinery');
+
+    cy.contains('Background');
+    cy.contains('Contact');
+    cy.contains('Funding');
+    cy.contains('Most Recent Code for this Instance');
+    cy.contains('Team');
   });
 });
