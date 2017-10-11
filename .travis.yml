@@ -1,7 +1,10 @@
 sudo: required
 
 language: python
-cache: pip
+cache:
+  directories:
+    - /home/travis/.cache/pip
+    - /home/travis/.cypress/Cypress
 addons:
   firefox: "53.0.3"
   apt:
@@ -68,8 +71,9 @@ script:
 
   - echo 'travis_fold:start:cypress'
   - python manage.py runserver &
-  - while ! curl http://192.168.50.50:8000/ > /dev/null; do sleep 1; done
-  - pushd ui && node_modules/.bin/cypress run && popd
+  - BASEURL=http://127.0.0.1:8000
+  - while ! curl $BASEURL > /dev/null; do sleep 1; done
+  - pushd ui && node_modules/.bin/cypress run --config baseUrl=$BASEURL && popd
   - echo 'travis_fold:end:cypress'
 
 

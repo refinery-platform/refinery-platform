@@ -1,66 +1,70 @@
+function visible(text) {
+  return cy.contains(text).should('visible');
+}
+
 describe('Not logged in', function() {
   it('Has homepage', function() {
     cy.visit('/');
-    cy.contains('Refinery');
+    visible('Refinery');
 
-    cy.contains('Collaboration');
-    cy.contains('Statistics');
-    cy.contains('About');
+    visible('Collaboration');
+    visible('Statistics');
+    visible('About');
 
-    cy.contains('Register');
-    cy.contains('Login');
+    visible('Register');
+    visible('Login');
 
-    cy.contains('Launch Pad');
+    visible('Launch Pad');
 
-    cy.contains('Data Sets');
-    cy.contains('Analyses');
-    cy.contains('Workflows');
+    visible('Data Sets');
+    visible('Analyses');
+    visible('Workflows');
 
-    cy.contains('No data sets available.');
-    cy.contains('No analyses available.');
-    cy.contains('No workflows available.');
+    visible('No data sets available.');
+    visible('No analyses available.');
+    visible('No workflows available.');
 
-    cy.get('#global-analysis-status').click();
-    cy.contains('Recent Analyses');
-    cy.contains('No analyses performed.');
+    cy.get('#global-analysis-status').should('visible').click();
+    visible('Recent Analyses');
+    visible('No analyses performed.');
   });
 
   it('Has statistics', function() {
     cy.visit('/');
-    cy.contains('Statistics').click();
+    visible('Statistics').click();
 
-    cy.contains('Statistics');
+    visible('Statistics');
 
-    cy.contains('Users');
-    cy.contains('Groups');
-    cy.contains('Files');
-    cy.contains('Data Sets');
-    cy.contains('Workflows');
-    cy.contains('Projects');
+    visible('Users');
+    visible('Groups');
+    visible('Files');
+    visible('Data Sets');
+    visible('Workflows');
+    visible('Projects');
   });
 
   it('Has about', function() {
     cy.visit('/');
-    cy.contains('About').click();
+    visible('About').click();
 
-    cy.contains('About Refinery');
+    visible('About Refinery');
 
-    cy.contains('Background');
-    cy.contains('Contact');
-    cy.contains('Funding');
-    cy.contains('Most Recent Code for this Instance');
-    cy.contains('Team');
+    visible('Background');
+    visible('Contact');
+    visible('Funding');
+    visible('Most Recent Code for this Instance');
+    visible('Team');
   });
 
-  // it('Has explore', function() {
-  //   cy.visit('/');
-  //   // cy.contains('Explore').click();
-  //   // TODO: Not visible?
-  // });
-  //
-  // it('Has list', function() {
-  //   cy.visit('/');
-  //   cy.contains('List').click();
-  //   // TODO: Doesn't navigate?
-  // });
+  it('Has explore', function() {
+    cy.visit('/');
+    cy.get('.btn').contains('Explore').should('visible').click();
+    // TODO: Not visible?
+  });
+
+  it('Has list', function() {
+    cy.visit('/');
+    cy.get('.btn').contains('List').should('visible').click();
+    // TODO: Doesn't navigate?
+  });
 });
