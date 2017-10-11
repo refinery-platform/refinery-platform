@@ -30,9 +30,9 @@ env:
 
 matrix:
   include:
-    - env: TEST_SUITE=coverage run manage.py test
+    - env: TEST_SUITE='coverage run manage.py test'
     - if: type = pull_request
-      env: TEST_SUITE=coverage run manage.py test --pattern="selenium_tests.py"
+      env: TEST_SUITE='coverage run manage.py test --pattern="selenium_tests.py"'
 
 install:
   - start() { echo travis_fold':'start:$1; echo $1; }
@@ -68,9 +68,7 @@ before_script:
   # See http://www.stuartellis.eu/articles/erb/#running-erb-from-the-command-line
   - erb config/config.json.erb > config/config.json
   - python manage.py migrate --noinput
-  - popd
 
-  - pushd refinery
   - npm install -g grunt-cli@0.1.13 bower@1.7.7 --progress false --quiet || (cat npm-debug.log && false )
   - pushd ui
   - npm install --progress false --quiet || ( cat npm-debug.log && false )
