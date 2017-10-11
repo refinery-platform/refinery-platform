@@ -209,7 +209,6 @@ INSTALLED_APPS = (
     'file_server',
     'visualization_manager',
     'annotation_server',
-    'selenium_testing',
     'tool_manager',
     'flatblocks',
     'chunked_upload',
@@ -331,11 +330,6 @@ LOGGING = {
             'propagate': False,
         },
         'requests': {
-            'handlers': ['console'],
-            'level': 'ERROR',
-            'propagate': False,
-        },
-        'selenium': {
             'handlers': ['console'],
             'level': 'ERROR',
             'propagate': False,

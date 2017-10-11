@@ -55,5 +55,4 @@ include refinery::docker
 include refinery::neo4j
 include refinery::postgresql
 include refinery::python
-include refinery::selenium
 include refinery::solr
