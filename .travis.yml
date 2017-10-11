@@ -66,6 +66,11 @@ script:
   # https://github.com/refinery-platform/refinery-platform/issues/1851
   - flake8 --exclude=migrations,ui ..
 
+  - echo 'travis_fold:start:cypress'
+  - pushd ui && node_modules/.bin/cypress run && popd
+  - echo 'travis_fold:end:cypress'
+
+
   - echo 'travis_fold:start:grunt'
   - pushd ui && grunt && popd
   - echo 'travis_fold:end:grunt'
