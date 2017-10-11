@@ -3,17 +3,18 @@
 
   angular
     .module('refineryAnalysisMonitor')
-    .controller('AnalysisMonitorPopoverDetailsCtrl', AnalysisMonitorPopoverDetailsCtrl);
+    .controller('AnalysisMonitorPopoverCtrl', AnalysisMonitorPopoverCtrl);
 
-  AnalysisMonitorPopoverDetailsCtrl.$inject = ['$timeout', 'analysisMonitorFactory'];
+  AnalysisMonitorPopoverCtrl.$inject = ['$timeout', 'analysisMonitorFactory'];
 
-  function AnalysisMonitorPopoverDetailsCtrl ($timeout, analysisMonitorFactory) {
+  function AnalysisMonitorPopoverCtrl ($timeout, analysisMonitorFactory) {
     var vm = this;
+    vm.factory = analysisMonitorFactory;
+
     vm.analysesGlobalLoadingFlag = 'LOADING';
     vm.analysesGlobalList = [];
     vm.analysesGlobalDetail = {};
-    vm.cancelTimerRunningGlobalList = cancelTimerRunningGlobalList;
-    vm.factory = analysisMonitorFactory;
+    vm.cancelTimerGlobalList = cancelTimerGlobalList;
     vm.isAnalysesRunningGlobal = isAnalysesRunningGlobal;
     vm.refreshAnalysesGlobalDetail = refreshAnalysesGlobalDetail;
     vm.setAnalysesGlobalLoadingFlag = setAnalysesGlobalLoadingFlag;
@@ -25,9 +26,9 @@
    * ---------------------------------------------------------
    */
 
-    function cancelTimerRunningGlobalList () {
-      if (typeof vm.timerRunGlobalList !== 'undefined') {
-        $timeout.cancel(vm.timerRunGlobalList);
+    function cancelTimerGlobalList () {
+      if (typeof vm.timerGlobalList !== 'undefined') {
+        $timeout.cancel(vm.timerGlobalList);
       }
     }
 
@@ -67,7 +68,6 @@
 
       analysisMonitorFactory.getAnalysesList(params).then(function () {
         vm.analysesGlobalList = vm.factory.analysesGlobalList;
-        console.log(vm.analysesGlobalList);
         vm.setAnalysesGlobalLoadingFlag();
         vm.refreshAnalysesGlobalDetail();
       });
@@ -80,7 +80,7 @@
     };
 
     vm.$onDestroy = function () {
-      vm.cancelTimerRunningGlobalList();
+      vm.cancelTimerGlobalList();
     };
   }
 })();
