@@ -67,6 +67,7 @@ script:
   - flake8 --exclude=migrations,ui ..
 
   - echo 'travis_fold:start:cypress'
+  - python manage.py runserver &
   - pushd ui && node_modules/.bin/cypress run && popd
   - echo 'travis_fold:end:cypress'
 
