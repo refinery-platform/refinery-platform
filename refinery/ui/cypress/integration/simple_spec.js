@@ -59,12 +59,27 @@ describe('Not logged in', function() {
   it('Has explore', function() {
     cy.visit('/');
     cy.get('.btn').contains('Explore').should('visible').click();
-    // TODO: Not visible?
+
+    visible('Intro Tour');
+    visible('Highlight:');
+    visible('Lock:');
+    visible('Query:');
+    visible('TREEMAP:');
+    visible('Depth:');
+
+    cy.get('#list-graph-wrapper').contains('No data available!').should('visible');
+    cy.get('#treemap-wrapper').contains('No data available!').should('visible');
   });
 
   it('Has list', function() {
     cy.visit('/');
     cy.get('.btn').contains('List').should('visible').click();
-    // TODO: Doesn't navigate?
+
+    visible('Filename');
+    visible('Organism');
+    visible('Technology');
+    visible('Antibody');
+    visible('Date');
+    visible('Genotype');
   });
 });
