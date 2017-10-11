@@ -171,10 +171,14 @@
         {% endif %}
         &nbsp;&nbsp;|&nbsp;&nbsp;
         <span id="analyses-popover">
-      <a tabindex=8 rp-analysis-monitor-global-list-status-popover
+      <a tabindex=8
+        rp-analysis-monitor-global-list-status-tooltip-hider
         title="Recent Analyses">
-         <span rp-analysis-monitor-global-list-status></span>
-        </a>
+         <span>
+           <rp-analysis-monitor-global-list-status>
+           </rp-analysis-monitor-global-list-status>
+         </span>
+      </a>
       </span>
       </div>
       <div class="collapse navbar-collapse" id="navbarMain"
