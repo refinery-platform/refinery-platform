@@ -27,15 +27,16 @@ env:
     - DJANGO_SETTINGS_MODULE=config.settings.prod
     - FLAKE8=flake8
     - GRUNT=grunt
+    - DJANGO_TEST_COMMAND='coverage run manage.py test'
 
 matrix:
   include:
-    - env: TEST_SUITE='coverage run manage.py test'
+    - env: $DJANGO_TEST_COMMAND
     - if: type = pull_request
-      env: TEST_SUITE='coverage run manage.py test --pattern="selenium_tests.py"'
+      env: TEST_SUITE="${DJANGO_TEST_COMMAND} --pattern='selenium_tests.py'"
 
 install:
-  - start() { echo travis_fold':'start:$1; echo $1; }
+  - start() { echo travis_fold':'start:$1; echo "$1"; }
   - end() { echo travis_fold':'end:$1; }
 
   - node --version
