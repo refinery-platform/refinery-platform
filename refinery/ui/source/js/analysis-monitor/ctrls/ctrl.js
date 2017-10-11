@@ -264,6 +264,7 @@ function AnalysisMonitorCtrl (
 
   // Close ui-grid popover when tabbing
   fileRelationshipService.hideNodePopover = true;
+  console.log('in the analysis monitor ctrl');
 }
 
 angular

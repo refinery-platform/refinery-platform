@@ -228,20 +228,22 @@ border: none;
 }
 
 //Global analyses status icon/popover
-#analyses-popover {
-  .popover {
-    position: absolute;
-    display: block;
-    top: 20px !important;
-    right: 0 !important;
-    max-width: 450px;
-    z-index: 1010;
-    padding: 1px;
-    text-align: left;
-  }
+.global-analysis-popover {
+  position: absolute;
+  display: block;
+  top: 20px !important;
+  right: 0 !important;
+  max-width: 450px;
+  padding: 1px;
+  text-align: left;
+
  .popover.left .arrow:after, .arrow {
-      display: none;
-    }
+   display: none;
+ }
+}
+
+uib-popover-template-popup {
+
 }
 
 #global-analysis-status-run-div {

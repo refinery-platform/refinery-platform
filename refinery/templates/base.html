@@ -170,15 +170,14 @@
           data-placement="left" title="Log In" href="{{login_url}}?next={% if request.path %}{% ifnotequal registration_url request.path %}{% ifnotequal login_url request.path %}{{ request.path|safe }}{% else %}{% url "home" %}{% endifnotequal %}{% else %}{% url "home" %}{% endifnotequal %}{% else %}{% url "home" %}{% endif %}">Login</a>
         {% endif %}
         &nbsp;&nbsp;|&nbsp;&nbsp;
-        <span id="analyses-popover">
-      <a tabindex=8
-        rp-analysis-monitor-global-list-status-tooltip-hider
-        title="Recent Analyses">
-         <span>
-           <rp-analysis-monitor-global-list-status>
-           </rp-analysis-monitor-global-list-status>
-         </span>
-      </a>
+        <span>
+          <a rp-analysis-monitor-global-list-status-tooltip-hider
+            tabindex=8>
+             <span>
+               <rp-analysis-monitor-global-list-status>
+               </rp-analysis-monitor-global-list-status>
+             </span>
+          </a>
       </span>
       </div>
       <div class="collapse navbar-collapse" id="navbarMain"
