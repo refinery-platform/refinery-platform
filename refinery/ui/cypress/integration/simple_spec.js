@@ -13,14 +13,16 @@ describe('Not logged in', function() {
     cy.contains('Launch Pad');
 
     cy.contains('Data Sets');
-    cy.contains('List');
-    cy.contains('Explore');
     cy.contains('Analyses');
     cy.contains('Workflows');
 
     cy.contains('No data sets available.');
     cy.contains('No analyses available.');
     cy.contains('No workflows available.');
+
+    cy.get('#global-analysis-status').click();
+    cy.contains('Recent Analyses');
+    cy.contains('No analyses performed.');
   });
 
   it('Has statistics', function() {
@@ -49,4 +51,16 @@ describe('Not logged in', function() {
     cy.contains('Most Recent Code for this Instance');
     cy.contains('Team');
   });
+
+  // it('Has explore', function() {
+  //   cy.visit('/');
+  //   // cy.contains('Explore').click();
+  //   // TODO: Not visible?
+  // });
+  //
+  // it('Has list', function() {
+  //   cy.visit('/');
+  //   cy.contains('List').click();
+  //   // TODO: Doesn't navigate?
+  // });
 });
