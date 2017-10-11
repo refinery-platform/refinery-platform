@@ -6,18 +6,18 @@
     popover-append-to-body="true"
     popover-placement="left"
     popover-class="global-analysis-popover">
-    <span ng-if="AnalysisMonitorCtrl.isAnalysesRunningGlobal() || AnalysisMonitorCtrl.launchAnalysisFlag">
+    <span ng-if="$ctrl.analysesRunningGlobalList.length || $ctrl
+    .launchAnalysisFlag">
       <span class="spinner" id="global-analysis-status-run-div"
         refinery-tooltip
         refinery-tooltip-container="body"
         refinery-tooltip-placement="left"
         title="View Recent Analyses">
         <i class="fa fa-cog" id="global-analysis-status-run"></i>
-        {{ AnalysisMonitorCtrl.analysesRunningGlobalListCount }}
+        {{ $ctrl.analysesRunningGlobalListCount }}
       </span>
     </span>
-    <span ng-if="!(AnalysisMonitorCtrl.isAnalysesRunningGlobal()||
-      AnalysisMonitorCtrl.launchAnalysisFlag)">
+    <span ng-if="!($ctrl.analysesRunningGlobalList.length || $ctrl.launchAnalysisFlag)">
       <i class="fa fa-cog" id="global-analysis-status"
         refinery-tooltip
         refinery-tooltip-container="body"

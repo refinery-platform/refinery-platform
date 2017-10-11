@@ -9,15 +9,16 @@
 
   function AnalysisMonitorGlobalPopoverCtrl ($timeout, analysisMonitorFactory) {
     var vm = this;
-    vm.factory = analysisMonitorFactory;
+    var factory = analysisMonitorFactory;
 
     vm.analysesGlobalLoadingFlag = 'LOADING';
     vm.analysesGlobalList = [];
     vm.analysesGlobalDetail = {};
+    vm.analysesRunningGlobalList = [];
     vm.cancelTimerGlobalList = cancelTimerGlobalList;
-    vm.isAnalysesRunningGlobal = isAnalysesRunningGlobal;
     vm.refreshAnalysesGlobalDetail = refreshAnalysesGlobalDetail;
     vm.setAnalysesGlobalLoadingFlag = setAnalysesGlobalLoadingFlag;
+    vm.updateAnalysesGlobalDetail = updateAnalysesGlobalDetail;
     vm.updateAnalysesGlobalList = updateAnalysesGlobalList;
 
    /*
@@ -32,19 +33,9 @@
       }
     }
 
-    function isAnalysesRunningGlobal () {
-      if (
-        typeof vm.analysesRunningGlobalList !== 'undefined' &&
-        vm.analysesRunningGlobalList.length > 0
-      ) {
-        return true;
-      }
-      return false;
-    }
-
     function refreshAnalysesGlobalDetail () {
       vm.analysesRunningGlobalList =
-        vm.factory.analysesRunningGlobalList;
+        factory.analysesRunningGlobalList;
       for (var i = 0; i < vm.analysesRunningGlobalList.length; i++) {
         vm.updateAnalysesGlobalDetail(i);
       }
@@ -59,17 +50,17 @@
     }
 
     // Analysis monitor details gets populated from service - global
-    vm.updateAnalysesGlobalDetail = function (i) {
+    function updateAnalysesGlobalDetail (i) {
       (function (j) {
         if (typeof vm.analysesRunningGlobalList[j] !== 'undefined') {
           var runningUuid = vm.analysesRunningGlobalList[j].uuid;
-          analysisMonitorFactory.getAnalysesDetail(runningUuid).then(function () {
+          factory.getAnalysesDetail(runningUuid).then(function () {
             vm.analysesGlobalDetail[runningUuid] =
-              analysisMonitorFactory.analysesDetail[runningUuid];
+              factory.analysesDetail[runningUuid];
           });
         }
       }(i));
-    };
+    }
 
     // On global analysis icon, method set timer and refreshes the
     // analysis list and refreshes details for running analyses.
@@ -79,13 +70,13 @@
         limit: 10
       };
 
-      analysisMonitorFactory.getAnalysesList(params).then(function () {
-        vm.analysesGlobalList = vm.factory.analysesGlobalList;
+      factory.getAnalysesList(params).then(function () {
+        vm.analysesGlobalList = factory.analysesGlobalList;
         vm.setAnalysesGlobalLoadingFlag();
         vm.refreshAnalysesGlobalDetail();
       });
 
-      vm.timerGlobalList = $timeout(vm.updateAnalysesGlobalList, 10000);
+      vm.timerGlobalList = $timeout(vm.updateAnalysesGlobalList, 30000);
     }
 
     vm.$onInit = function () {

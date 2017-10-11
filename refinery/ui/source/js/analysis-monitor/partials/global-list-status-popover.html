@@ -1,4 +1,4 @@
-<div ng-switch on="analysesGlobalLoadingFlag">
+<div ng-switch on="$ctrl.analysesGlobalLoadingFlag">
   <div ng-switch-when="EMPTY">
     <p>
       No analyses performed.
@@ -10,12 +10,12 @@
   </div>
   <div ng-switch-default>
     <ul id="analyses-popover"
-      ng-repeat ="analysis in analysesGlobalList track by $index">
+      ng-repeat ="analysis in $ctrl.analysesGlobalList track by $index">
       <li>
         &nbsp;
         <span ng-switch on="analysis.status">
           <span ng-switch-when="UNKNOWN">
-             <div ng-if="(isAnalysesRunningGlobal())"
+             <div ng-if="$ctrl.analysesRunningGlobalList.length"
                class="analysis-running-percentage">
               &nbsp;
             </div>
@@ -28,22 +28,25 @@
             </div>
           </span>
           <span ng-switch-when="RUNNING">
-            <div ng-if="(isAnalysesRunningGlobal())"
+            <div ng-if="$ctrl.analysesRunningGlobalList.length"
               class="analysis-running-percentage">
-              {{ analysesGlobalDetail[analysis.uuid]|analysisMonitorRunningStatusPercent }}%
+              {{ $ctrl.analysesGlobalDetail[analysis
+                .uuid]|analysisMonitorRunningStatusPercent }}%
             </div>
             <div class="analyses-global-text-icon">
-               <i class="{{analysesGlobalDetail[analysis.uuid]|analysisMonitorRunningStatusBtn}}"></i>
+               <i class="{{$ctrl.analysesGlobalDetail[analysis
+                 .uuid]|analysisMonitorRunningStatusBtn}}"></i>
                 &nbsp;
             </div>
             <div class="analyses-global-text">
-              <a id="analyses-popover-links" ng-href="/data_sets/{{analysis.data_set__uuid}}/#/analyses/">
+              <a class="analyses-popover-links" ng-href="/data_sets/{{analysis
+              .data_set__uuid}}/#/analyses/">
                 {{ analysis.name }}
               </a>
             </div>
           </span>
           <span ng-switch-default>
-            <div ng-if="(isAnalysesRunningGlobal())"
+            <div ng-if="$ctrl.analysesRunningGlobalList.length"
               class="analysis-running-percentage">
               &nbsp;
             </div>
