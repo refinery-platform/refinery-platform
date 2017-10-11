@@ -57,7 +57,7 @@ script:
   - flake8 --exclude=migrations,ui ..
 
   - echo 'travis_fold:start:cypress'
-  - python manage.py collectstatic
+  - python manage.py collectstatic --noinput
   - python manage.py runserver &
   - BASEURL=http://127.0.0.1:8000
   - while ! curl $BASEURL > /dev/null; do sleep 1; done
