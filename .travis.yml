@@ -68,6 +68,7 @@ script:
 
   - echo 'travis_fold:start:cypress'
   - python manage.py runserver &
+  - while ! curl http://192.168.50.50:8000/ > /dev/null; do sleep 1; done
   - pushd ui && node_modules/.bin/cypress run && popd
   - echo 'travis_fold:end:cypress'
 
