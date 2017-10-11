@@ -13,6 +13,7 @@
     vm.analysesGlobalList = [];
     vm.analysesGlobalDetail = {};
     vm.cancelTimerRunningGlobalList = cancelTimerRunningGlobalList;
+    vm.factory = analysisMonitorFactory;
     vm.isAnalysesRunningGlobal = isAnalysesRunningGlobal;
     vm.refreshAnalysesGlobalDetail = refreshAnalysesGlobalDetail;
     vm.setAnalysesGlobalLoadingFlag = setAnalysesGlobalLoadingFlag;
@@ -42,7 +43,7 @@
 
     function refreshAnalysesGlobalDetail () {
       vm.analysesRunningGlobalList =
-        analysisMonitorFactory.analysesRunningGlobalList;
+        vm.factory.analysesRunningGlobalList;
       for (var i = 0; i < vm.analysesRunningGlobalList.length; i++) {
         vm.updateAnalysesGlobalDetail(i);
       }
@@ -65,7 +66,7 @@
       };
 
       analysisMonitorFactory.getAnalysesList(params).then(function () {
-        vm.analysesGlobalList = analysisMonitorFactory.analysesGlobalList;
+        vm.analysesGlobalList = vm.factory.analysesGlobalList;
         console.log(vm.analysesGlobalList);
         vm.setAnalysesGlobalLoadingFlag();
         vm.refreshAnalysesGlobalDetail();
