@@ -3,11 +3,11 @@
 
   angular
     .module('refineryAnalysisMonitor')
-    .controller('AnalysisMonitorPopoverCtrl', AnalysisMonitorPopoverCtrl);
+    .controller('AnalysisMonitorGlobalPopoverCtrl', AnalysisMonitorGlobalPopoverCtrl);
 
-  AnalysisMonitorPopoverCtrl.$inject = ['$timeout', 'analysisMonitorFactory'];
+  AnalysisMonitorGlobalPopoverCtrl.$inject = ['$timeout', 'analysisMonitorFactory'];
 
-  function AnalysisMonitorPopoverCtrl ($timeout, analysisMonitorFactory) {
+  function AnalysisMonitorGlobalPopoverCtrl ($timeout, analysisMonitorFactory) {
     var vm = this;
     vm.factory = analysisMonitorFactory;
 
@@ -57,6 +57,19 @@
         vm.analysesGlobalLoadingFlag = 'DONE';
       }
     }
+
+    // Analysis monitor details gets populated from service - global
+    vm.updateAnalysesGlobalDetail = function (i) {
+      (function (j) {
+        if (typeof vm.analysesRunningGlobalList[j] !== 'undefined') {
+          var runningUuid = vm.analysesRunningGlobalList[j].uuid;
+          analysisMonitorFactory.getAnalysesDetail(runningUuid).then(function () {
+            vm.analysesGlobalDetail[runningUuid] =
+              analysisMonitorFactory.analysesDetail[runningUuid];
+          });
+        }
+      }(i));
+    };
 
     // On global analysis icon, method set timer and refreshes the
     // analysis list and refreshes details for running analyses.

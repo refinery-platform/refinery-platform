@@ -3,7 +3,7 @@
 
   angular.module('refineryAnalysisMonitor')
     .component('rpAnalysisMonitorGlobalListStatusPopoverDetails', {
-      controller: 'AnalysisMonitorPopoverCtrl',
+      controller: 'AnalysisMonitorGlobalPopoverCtrl',
       templateUrl: ['$window', function ($window) {
         return $window.getStaticUrl(
           'partials/analysis-monitor/partials/global-list-status-popover.html'
