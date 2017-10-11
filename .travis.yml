@@ -31,9 +31,9 @@ env:
 
 matrix:
   include:
-    - env: $DJANGO_TEST_COMMAND
+    - env: TEST_SUITE=$DJANGO_TEST_COMMAND
     - if: type = pull_request
-      env: TEST_SUITE="${DJANGO_TEST_COMMAND} --pattern='selenium_tests.py'"
+      env: TEST_SUITE='${DJANGO_TEST_COMMAND} --pattern="selenium_tests.py"'
 
 install:
   - start() { echo travis_fold':'start:$1; echo "$1"; }
