@@ -5,39 +5,81 @@
     .module('refineryAnalysisMonitor')
     .controller('AnalysisMonitorPopoverDetailsCtrl', AnalysisMonitorPopoverDetailsCtrl);
 
-  AnalysisMonitorPopoverDetailsCtrl.$inject = ['$scope'];
+  AnalysisMonitorPopoverDetailsCtrl.$inject = ['$timeout', 'analysisMonitorFactory'];
 
-  function AnalysisMonitorPopoverDetailsCtrl ($scope) {
+  function AnalysisMonitorPopoverDetailsCtrl ($timeout, analysisMonitorFactory) {
     var vm = this;
+    vm.analysesGlobalLoadingFlag = 'LOADING';
+    vm.analysesGlobalList = [];
+    vm.analysesGlobalDetail = {};
+    vm.cancelTimerRunningGlobalList = cancelTimerRunningGlobalList;
+    vm.isAnalysesRunningGlobal = isAnalysesRunningGlobal;
+    vm.refreshAnalysesGlobalDetail = refreshAnalysesGlobalDetail;
+    vm.setAnalysesGlobalLoadingFlag = setAnalysesGlobalLoadingFlag;
+    vm.updateAnalysesGlobalList = updateAnalysesGlobalList;
+
+   /*
+   * ---------------------------------------------------------
+   * Method
+   * ---------------------------------------------------------
+   */
+
+    function cancelTimerRunningGlobalList () {
+      if (typeof vm.timerRunGlobalList !== 'undefined') {
+        $timeout.cancel(vm.timerRunGlobalList);
+      }
+    }
+
+    function isAnalysesRunningGlobal () {
+      if (
+        typeof vm.analysesRunningGlobalList !== 'undefined' &&
+        vm.analysesRunningGlobalList.length > 0
+      ) {
+        return true;
+      }
+      return false;
+    }
+
+    function refreshAnalysesGlobalDetail () {
+      vm.analysesRunningGlobalList =
+        analysisMonitorFactory.analysesRunningGlobalList;
+      for (var i = 0; i < vm.analysesRunningGlobalList.length; i++) {
+        vm.updateAnalysesGlobalDetail(i);
+      }
+    }
+
+    function setAnalysesGlobalLoadingFlag () {
+      if (vm.analysesGlobalList.length === 0) {
+        vm.analysesGlobalLoadingFlag = 'EMPTY';
+      } else {
+        vm.analysesGlobalLoadingFlag = 'DONE';
+      }
+    }
+
+    // On global analysis icon, method set timer and refreshes the
+    // analysis list and refreshes details for running analyses.
+    function updateAnalysesGlobalList () {
+      var params = {
+        format: 'json',
+        limit: 10
+      };
+
+      analysisMonitorFactory.getAnalysesList(params).then(function () {
+        vm.analysesGlobalList = analysisMonitorFactory.analysesGlobalList;
+        console.log(vm.analysesGlobalList);
+        vm.setAnalysesGlobalLoadingFlag();
+        vm.refreshAnalysesGlobalDetail();
+      });
+
+      vm.timerGlobalList = $timeout(vm.updateAnalysesGlobalList, 10000);
+    }
 
     vm.$onInit = function () {
-      console.log('in the onInint');
-      vm.analysesGlobalLoadingFlag = vm.displayCtrl.analysesGlobalLoadingFlag;
-      vm.isAnalysesRunningGlobal = vm.displayCtrl.isAnalysesRunningGlobal;
-      vm.analysesGlobalList = vm.displayCtrl.analysesGlobalList;
-      vm.analysesGlobalDetail = vm.displayCtrl.analysesGlobalDetail;
+      vm.updateAnalysesGlobalList();
+    };
 
-      $scope.$watchCollection(
-        function () {
-          return vm.displayCtrl.analysesGlobalList;
-        },
-        function () {
-          vm.analysesGlobalList = vm.displayCtrl.analysesGlobalList;
-          $scope.analysesGlobalDetail = vm.displayCtrl.analysesGlobalDetail;
-        }
-      );
-
-      $scope.$watch(
-        function () {
-          return vm.displayCtrl.analysesGlobalLoadingFlag;
-        },
-        function () {
-          vm.analysesGlobalLoadingFlag = vm.displayCtrl.analysesGlobalLoadingFlag;
-          vm.isAnalysesRunningGlobal = vm.displayCtrl.isAnalysesRunningGlobal;
-          vm.analysesGlobalList = vm.displayCtrl.analysesGlobalList;
-          vm.analysesGlobalDetail = vm.displayCtrl.analysesGlobalDetail;
-        }
-      );
+    vm.$onDestroy = function () {
+      vm.cancelTimerRunningGlobalList();
     };
   }
 })();
