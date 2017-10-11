@@ -32,8 +32,8 @@ matrix:
   include:
     - env: TEST_SUITE=pushd ui && grunt test && popd
     - env: TEST_SUITE=coverage run manage.py test
-    - env: TEST_SUITE=coverage run manage.py test --pattern="selenium_tests.py"
-      if: [ "$TRAVIS_PULL_REQUEST" != "false" ]
+    - if: type = pull_request
+      env: TEST_SUITE=coverage run manage.py test --pattern="selenium_tests.py"
 
 install:
   - start() { echo travis_fold':'start:$1; echo $1; }
