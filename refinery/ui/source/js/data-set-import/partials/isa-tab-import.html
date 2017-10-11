@@ -31,7 +31,7 @@
         ng-if="isaTabImport.isErrored">
         <div class="text-centered">
           <i class="fa fa-exclamation-triangle" aria-hidden="true"></i>
-          Oh no! We apologize. Something went terribly wrong. Please call your admin.
+          {{ isaTabImport.errorMessage }}
         </div>
       </div>
 
