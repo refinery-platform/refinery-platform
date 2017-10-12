@@ -21,6 +21,18 @@
     vm.updateAnalysesGlobalDetail = updateAnalysesGlobalDetail;
     vm.updateAnalysesGlobalList = updateAnalysesGlobalList;
 
+  /*
+   * ---------------------------------------------------------
+   * Life-style hooks
+   * ---------------------------------------------------------
+   */
+    vm.$onInit = function () {
+      vm.updateAnalysesGlobalList();
+    };
+
+    vm.$onDestroy = function () {
+      vm.cancelTimerGlobalList();
+    };
    /*
    * ---------------------------------------------------------
    * Method
@@ -78,13 +90,5 @@
 
       vm.timerGlobalList = $timeout(vm.updateAnalysesGlobalList, 30000);
     }
-
-    vm.$onInit = function () {
-      vm.updateAnalysesGlobalList();
-    };
-
-    vm.$onDestroy = function () {
-      vm.cancelTimerGlobalList();
-    };
   }
 })();

@@ -23,6 +23,11 @@
     vm.analysesRunningGlobalListCount = vm.analysesRunningGlobalList.length;
     vm.updateAnalysesRunningGlobalList = updateAnalysesRunningGlobalList;
 
+   /*
+   * ---------------------------------------------------------
+   * Life-style hooks
+   * ---------------------------------------------------------
+   */
     vm.$onInit = function () {
       vm.updateAnalysesRunningGlobalList();
     };
