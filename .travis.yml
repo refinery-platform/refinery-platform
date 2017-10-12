@@ -61,7 +61,6 @@ script:
   - echo 'travis_fold:end:grunt'
 
   - echo 'travis_fold:start:cypress'
-  - mkdir -p static/production
   - python manage.py collectstatic --noinput -v 0
   - python manage.py runserver --insecure &
   - BASEURL=http://127.0.0.1:8000
