@@ -2,7 +2,7 @@
   'use strict';
 
   angular.module('refineryAnalysisMonitor')
-    .component('rpAnalysisMonitorGlobalListStatusPopoverDetails', {
+    .component('rpAnalysisMonitorGlobalListStatusPopover', {
       controller: 'AnalysisMonitorGlobalPopoverCtrl',
       templateUrl: ['$window', function ($window) {
         return $window.getStaticUrl(
