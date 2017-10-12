@@ -238,14 +238,14 @@
 
           if (arguments.query == provVisQuery) {
             /* Set face attributes for nodes in Provenance Visualization.*/
-            if (! provvis.get() instanceof provvisDecl.ProvVis && dataSetMonitor.analyses) {
+            if (provvis.get() instanceof provvisDecl.ProvVis === false) {
               provvis.run(currentStudyUuid, dataSetMonitor.analyses.objects, arguments.response);
             }
 
             lastProvVisSolrResponse = arguments.response;
 
             /* Update Provenance Visualization by filtered nodeset. */
-            if (provvis.get() instanceof provvisDecl.ProvVis) {
+            if (($('.nav-pills li.active a').attr('href').split("#")[1] === 'provenance-view-tab') && provvis.get() instanceof provvisDecl.ProvVis) {
               provvisRender.update(provvis.get(), arguments.response);
             }
           }

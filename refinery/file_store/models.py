@@ -415,7 +415,7 @@ class FileStoreItem(models.Model):
         :returns: bool -- True if deletion succeeded, False otherwise.
         """
         if self.datafile:
-            logger.debug("Deleting datafile '%s'", self.datafile.name)
+            logger.info("Deleting datafile '%s'", self.datafile.name)
             try:
                 self.datafile.delete()
             except OSError as e:
@@ -629,7 +629,6 @@ def _delete_datafile(sender, **kwargs):
 
     """
     item = kwargs.get('instance')
-    logger.debug("Deleting FileStoreItem with UUID '%s'", item.uuid)
     item.delete_datafile()
 
 

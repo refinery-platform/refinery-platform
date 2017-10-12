@@ -1,6 +1,10 @@
 from StringIO import StringIO
+import contextlib
 import json
+import os
 import re
+import shutil
+import tempfile
 import uuid
 
 from django.contrib.auth.models import User
@@ -9,13 +13,16 @@ from django.core.files.uploadedfile import (InMemoryUploadedFile,
 from django.http import QueryDict
 from django.test import TestCase
 
+import mock
 from rest_framework.test import APIClient, APIRequestFactory, APITestCase
 
 from core.models import Analysis, DataSet, ExtendedGroup, InvestigationLink
 from core.views import NodeViewSet
+import data_set_manager
+from data_set_manager.isa_tab_parser import IsaTabParser, ParserException
 from data_set_manager.tasks import parse_isatab
 from factory_boy.utils import make_analyses_with_single_dataset
-from file_store.models import FileStoreItem
+from file_store.models import FileStoreItem, generate_file_source_translator
 
 from .models import (AnnotatedNode, Assay, AttributeOrder, Investigation, Node,
                      Study)
@@ -1777,34 +1784,177 @@ class NodeIndexTests(APITestCase):
         )
 
 
-class AnnotatedNodeExplosionTestCase(TestCase):
+@contextlib.contextmanager
+def temporary_directory(*args, **kwargs):
+    d = tempfile.mkdtemp(*args, **kwargs)
+    try:
+        yield d
+    finally:
+        shutil.rmtree(d)
+
+
+class IsaTabParserTests(TestCase):
     def setUp(self):
         self.username = 'coffee_lover'
         self.password = 'coffeecoffee'
         self.user = User.objects.create_user(
-            self.username,
-            '',
-            self.password
+            self.username, '', self.password
         )
+
+    def failed_isatab_assertions(self):
+        self.assertEqual(DataSet.objects.count(), 0)
+        self.assertEqual(AnnotatedNode.objects.count(), 0)
+        self.assertEqual(Node.objects.count(), 0)
+        self.assertEqual(FileStoreItem.objects.count(), 0)
+        self.assertEqual(Investigation.objects.count(), 0)
+
+    def parse(self, dir_name):
+        parent = os.path.dirname(os.path.abspath(__file__))
+        file_source_translator = generate_file_source_translator(
+            username=self.user.username
+        )
+        dir = os.path.join(parent, 'test-data', dir_name)
+        return IsaTabParser(
+            file_source_translator=file_source_translator
+        ).run(dir)
+
+    def test_empty(self):
+        with temporary_directory() as tmp:
+            with self.assertRaises(ParserException):
+                self.parse(tmp)
+
+    def test_minimal(self):
+        investigation = self.parse('minimal')
+
+        studies = investigation.study_set.all()
+        self.assertEqual(len(studies), 1)
+
+        assays = studies[0].assay_set.all()
+        self.assertEqual(len(assays), 1)
+
+    def test_mising_investigation(self):
+        with self.assertRaises(ParserException):
+            self.parse('missing-investigation')
+
+    def test_mising_study(self):
+        with self.assertRaises(IOError):
+            self.parse('missing-study')
+
+    def test_mising_assay(self):
+        with self.assertRaises(IOError):
+            self.parse('missing-assay')
+
+    def test_multiple_investigation(self):
+        # TODO: I think this should fail?
+        self.parse('multiple-investigation')
+
+    def test_multiple_study(self):
+        investigation = self.parse('multiple-study')
+
+        studies = investigation.study_set.all()
+        self.assertEqual(len(studies), 2)
+
+        assays0 = studies[0].assay_set.all()
+        self.assertEqual(len(assays0), 1)
+
+        assays1 = studies[1].assay_set.all()
+        self.assertEqual(len(assays1), 1)
+
+    def test_multiple_study_missing_assay(self):
+        with self.assertRaises(IOError):
+            self.parse('multiple-study-missing-assay')
+
+    def test_multiple_assay(self):
+        investigation = self.parse('multiple-assay')
+
+        studies = investigation.study_set.all()
+        self.assertEqual(len(studies), 1)
+
+        assays = studies[0].assay_set.all()
+        self.assertEqual(len(assays), 2)
 
     def test_metabolights_isatab_wont_import_with_rollback_a(self):
-        parse_isatab(
-            self.user.username,
-            True,
-            "refinery/data_set_manager/test-data/MTBLS1.zip"
+        with self.assertRaises(RuntimeError) as context:
+            parse_isatab(self.user.username, False,
+                         "data_set_manager/test-data/MTBLS1.zip")
+        self.failed_isatab_assertions()
+        self.assertIn(
+            "Exponential explosion",
+            context.exception.message
         )
-        self.assertEqual(DataSet.objects.count(), 0)
-        self.assertEqual(AnnotatedNode.objects.count(), 0)
-        self.assertEqual(Node.objects.count(), 0)
-        self.assertEqual(FileStoreItem.objects.count(), 0)
 
     def test_metabolights_isatab_wont_import_with_rollback_b(self):
-        parse_isatab(
-            self.user.username,
-            True,
-            "refinery/data_set_manager/test-data/MTBLS112.zip"
+        with self.assertRaises(RuntimeError) as context:
+            parse_isatab(self.user.username, False,
+                         "data_set_manager/test-data/MTBLS112.zip")
+        self.failed_isatab_assertions()
+        self.assertIn(
+            "Exponential explosion",
+            context.exception.message
         )
+
+    def test_bad_isatab_rollback_from_parser_exception_a(self):
+        with self.assertRaises(IOError):
+            parse_isatab(self.user.username, False,
+                         "data_set_manager/test-data/HideLabBrokenA.zip")
+        self.failed_isatab_assertions()
+
+    def test_bad_isatab_rollback_from_parser_exception_b(self):
+        with self.assertRaises(IOError):
+            parse_isatab(self.user.username, False,
+                         "data_set_manager/test-data/HideLabBrokenB.zip")
+        self.failed_isatab_assertions()
+
+
+class ProcessISATabViewTests(TestCase):
+    def setUp(self):
+        test_user = "test_user"
+        self.user = User.objects.create_user(test_user)
+        self.user.set_password(test_user)
+        self.user.save()
+        self.isa_tab_import_url = "/data_set_manager/import/isa-tab-form/"
+        is_logged_in = self.client.login(
+            username=self.user.username,
+            password=test_user
+        )
+        self.assertTrue(is_logged_in)
+
+    def tearDown(self):
+        FileStoreItem.objects.all().delete()
+
+    def successful_import_assertions(self):
+        self.assertEqual(DataSet.objects.count(), 1)
+        self.assertEqual(Study.objects.count(), 1)
+        self.assertEqual(Investigation.objects.count(), 1)
+        self.assertEqual(Assay.objects.count(), 1)
+
+    def unsuccessful_import_assertions(self):
         self.assertEqual(DataSet.objects.count(), 0)
-        self.assertEqual(AnnotatedNode.objects.count(), 0)
-        self.assertEqual(Node.objects.count(), 0)
-        self.assertEqual(FileStoreItem.objects.count(), 0)
+        self.assertEqual(Study.objects.count(), 0)
+        self.assertEqual(Investigation.objects.count(), 0)
+        self.assertEqual(Assay.objects.count(), 0)
+
+    @mock.patch.object(data_set_manager.views.import_file, "delay")
+    def test_post_good_isa_tab_file(self, delay_mock):
+        with open('data_set_manager/test-data/rfc-test.zip') as good_isa:
+            self.client.post(
+                self.isa_tab_import_url,
+                data={
+                    "isa_tab_url": None,
+                    "isa_tab_file": good_isa
+                },
+                HTTP_X_REQUESTED_WITH='XMLHttpRequest'
+            )
+        self.successful_import_assertions()
+
+    def test_post_bad_isa_tab_file(self):
+        with open('data_set_manager/test-data/HideLabBrokenA.zip') as bad_isa:
+            self.client.post(
+                self.isa_tab_import_url,
+                data={
+                    "isa_tab_url": None,
+                    "isa_tab_file": bad_isa
+                },
+                HTTP_X_REQUESTED_WITH='XMLHttpRequest'
+            )
+        self.unsuccessful_import_assertions()

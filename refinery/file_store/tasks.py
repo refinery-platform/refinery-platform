@@ -306,25 +306,27 @@ def download_file(url, target_path, file_size=1):
     logger.debug("Downloading file from '%s'", url)
 
     # check if source file can be downloaded
-    # TODO: refactor to use requests
     try:
         response = requests.get(url, stream=True)
         response.raise_for_status()
-    except HTTPError as e:
+    except (HTTPError, requests.exceptions.ConnectionError) as e:
         logger.error(e)
-    except requests.exceptions.ConnectionError as e:
         raise DownloadError(
-            "Could not open URL '{}'. Reason: '{}'".format(url, e.reason))
+            "Could not open URL '{}'. Reason: '{}'".format(url, e))
     except ValueError as e:
-        raise DownloadError("Could not open URL '{}'".format(url))
+        raise DownloadError("Could not open URL '{}'".format(url, e))
+    else:
+        # get remote file size, provide a default value in case
+        # Content-Length is missing
+        remotefilesize = int(
+            response.headers.get("Content-Length", file_size)
+        )
 
-    # get remote file size, provide a default value in case Content-Length is
-    # missing
-    remotefilesize = int(
-        response.headers.get("Content-Length", file_size))
-
-    # TODO: handle IOError
-    with open(target_path, 'wb+') as destination:
+    try:
+        destination = open(target_path, 'wb+')
+    except IOError as e:
+        raise DownloadError(e)
+    else:
         # download and save the file
         localfilesize = 0
         blocksize = 8 * 2 ** 10    # 8 Kbytes
@@ -336,15 +338,18 @@ def download_file(url, target_path, file_size=1):
                 percent_done = localfilesize * 100. / remotefilesize
             else:
                 percent_done = 0
-                import_file.update_state(
-                    state="PROGRESS",
-                    meta={"percent_done": "%3.2f%%" % (percent_done),
-                          'current': localfilesize,
-                          'total': remotefilesize}
-                    )
+            import_file.update_state(
+                state="PROGRESS",
+                meta={
+                    "percent_done": "%3.2f%%" % percent_done,
+                    "current": localfilesize,
+                    "total": remotefilesize
+                }
+            )
         # cleanup
         # TODO: delete temp file if download failed
         destination.flush()
+        destination.close()
 
     response.close()
     logger.debug("Finished downloading")
