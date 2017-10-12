@@ -26,14 +26,14 @@
 
 
 Cypress.Commands.add('visible',
-    (text) => {
-      cy.contains(text).should('visible')
-    }
+  function(text) {
+    return cy.contains(text).should('visible')
+  }
 );
 
 
 Cypress.Commands.add('django_shell',
-  function django_shell(cmd) {
+  function(cmd) {
     function quote(str) {
       return "'" + str.replace(/'/g, "'\"'\"'") + "'";
     }
@@ -43,5 +43,15 @@ Cypress.Commands.add('django_shell',
     var workon_cmd = "workon refinery-platform && " + manage_cmd;
     var vagrant_cmd = 'vagrant ssh -c ' + quote(workon_cmd);
     cy.exec('( ' + cd_cmd + ' ) || ( ' + vagrant_cmd + ' )')
+  }
+);
+
+Cypress.Commands.add('login_guest',
+  // TODO: Figure out how to POST with CSRF tocken?
+  function(next) {
+    cy.visit('/accounts/login/?next=' + ( next || '/') );
+    cy.get('#id_username').type('guest');
+    cy.get('#id_password').type('guest');
+    cy.get('.btn').contains('Login').click();
   }
 );
