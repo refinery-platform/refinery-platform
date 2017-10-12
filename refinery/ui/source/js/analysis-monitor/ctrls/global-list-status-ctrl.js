@@ -19,8 +19,7 @@
     var vm = this;
     var factory = analysisMonitorFactory;
 
-    vm.analysesRunningGlobalList = [];
-    vm.analysesRunningGlobalListCount = vm.analysesRunningGlobalList.length;
+    vm.analysesRunningGlobalListCount = factory.docCount;
     vm.updateAnalysesRunningGlobalList = updateAnalysesRunningGlobalList;
 
    /*
@@ -42,13 +41,12 @@
       var params = {
         format: 'json',
         limit: 0,
-        status__in: 'RUNNING,UNKNOWN'
+        status__in: 'RUNNING,UNKNOWN',
+        meta_only: true
       };
 
       factory.getAnalysesList(params).then(function () {
-        vm.analysesRunningGlobalList =
-          factory.analysesRunningGlobalList;
-        vm.analysesRunningGlobalListCount = vm.analysesRunningGlobalList.length;
+        vm.analysesRunningGlobalListCount = factory.docCount;
         vm.launchAnalysisFlag = false;
       });
       vm.timerRunGlobalList = $timeout(vm.updateAnalysesRunningGlobalList, 30000);

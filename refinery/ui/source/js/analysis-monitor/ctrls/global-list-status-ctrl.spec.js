@@ -23,7 +23,6 @@
     });
 
     it('Data & UI displays variables should exist for views', function () {
-      expect(ctrl.analysesRunningGlobalList).toEqual([]);
       expect(ctrl.analysesRunningGlobalListCount).toEqual(0);
     });
 

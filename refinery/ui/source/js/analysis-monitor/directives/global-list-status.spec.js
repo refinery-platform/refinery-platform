@@ -25,7 +25,8 @@
         .expectGET(
           settings.appRoot +
           settings.refineryApi +
-          '/analysis/?format=json&limit=0&order_by=-time_start&status__in=RUNNING,UNKNOWN'
+          '/analysis/?format=json&limit=0&meta_only=true&' +
+          'order_by=-time_start&status__in=RUNNING,UNKNOWN'
         ).respond(200, []);
 
       var scope = $rootScope.$new();
