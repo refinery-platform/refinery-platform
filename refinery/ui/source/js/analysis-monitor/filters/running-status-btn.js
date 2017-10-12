@@ -3,6 +3,7 @@
 // stage icon for the global analysis
 function analysisMonitorRunningStatusBtn () {
   return function (param) {
+    console.log(param);
     if (typeof param !== 'undefined' && Object.keys(param).length > 0) {
       if (param.refineryImport.state !== 'SUCCESS') {
         return 'fa fa-arrow-circle-down';

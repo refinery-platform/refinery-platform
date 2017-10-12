@@ -20,6 +20,7 @@
     vm.setAnalysesGlobalLoadingFlag = setAnalysesGlobalLoadingFlag;
     vm.updateAnalysesGlobalDetail = updateAnalysesGlobalDetail;
     vm.updateAnalysesGlobalList = updateAnalysesGlobalList;
+    vm.updateAnalysesRunningGlobalList = updateAnalysesRunningGlobalList;
 
   /*
    * ---------------------------------------------------------
@@ -46,8 +47,7 @@
     }
 
     function refreshAnalysesGlobalDetail () {
-      vm.analysesRunningGlobalList =
-        factory.analysesRunningGlobalList;
+      updateAnalysesRunningGlobalList();
       for (var i = 0; i < vm.analysesRunningGlobalList.length; i++) {
         vm.updateAnalysesGlobalDetail(i);
       }
@@ -89,6 +89,19 @@
       });
 
       vm.timerGlobalList = $timeout(vm.updateAnalysesGlobalList, 30000);
+    }
+
+       // Method always runs to show running number on global analysis icon
+    function updateAnalysesRunningGlobalList () {
+      var params = {
+        format: 'json',
+        limit: 0,
+        status__in: 'RUNNING,UNKNOWN'
+      };
+
+      factory.getAnalysesList(params).then(function () {
+        vm.analysesRunningGlobalList = factory.analysesRunningGlobalList;
+      });
     }
   }
 })();

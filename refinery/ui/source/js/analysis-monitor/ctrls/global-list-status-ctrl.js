@@ -49,7 +49,7 @@
         vm.analysesRunningGlobalListCount = factory.docCount[params.status__in];
         vm.launchAnalysisFlag = false;
       });
-      vm.timerRunGlobalList = $timeout(vm.updateAnalysesRunningGlobalList, 10000);
+      vm.timerRunGlobalList = $timeout(vm.updateAnalysesRunningGlobalList, 30000);
     }
 
    /*
