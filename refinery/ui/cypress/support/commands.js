@@ -38,7 +38,7 @@ Cypress.Commands.add('django_shell',
       return "'" + str.replace(/'/g, "'\"'\"'") + "'";
     }
 
-    var manage_cmd = "echo " + quote(cmd) + " | ./manage.py shell_plus";
+    var manage_cmd = "echo " + quote(cmd) + " | ./manage.py shell";
     var cd_cmd = "cd .. && " + manage_cmd;
     var workon_cmd = "workon refinery-platform && " + manage_cmd;
     var vagrant_cmd = 'vagrant ssh -c ' + quote(workon_cmd);
