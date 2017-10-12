@@ -1042,6 +1042,11 @@ class AnalysisResource(ModelResource):
             data_set__in=allowed_datasets.values_list("id", flat=True)
         )
 
+    def alter_list_data_to_serialize(self, request, data):
+        if request.GET.get('meta_only'):
+            return {'meta': data['meta']}
+        return data
+
 
 class NodeResource(ModelResource):
     parents = fields.ToManyField('core.api.NodeResource', 'parents')
