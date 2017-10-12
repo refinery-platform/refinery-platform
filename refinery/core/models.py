@@ -1721,7 +1721,7 @@ class Analysis(OwnableResource):
                     study=study,
                     assay=assay,
                     type=Node.DERIVED_DATA_FILE,
-                    name=output_connection.name,
+                    name=output_connection.galaxy_dataset_name,
                     analysis_uuid=self.uuid,
                     subanalysis=output_connection.subanalysis,
                     workflow_output=output_connection.name
@@ -1950,6 +1950,8 @@ class AnalysisNodeConnection(models.Model):
     # inputs) exist in Refinery
     is_refinery_file = models.BooleanField(null=False, blank=False,
                                            default=False)
+    galaxy_dataset_name = models.CharField(null=True, blank=True,
+                                           max_length=250)
 
     def __unicode__(self):
         return (
