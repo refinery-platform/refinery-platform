@@ -23,3 +23,25 @@
 //
 // -- This is will overwrite an existing command --
 // Cypress.Commands.overwrite("visit", (originalFn, url, options) => { ... })
+
+
+Cypress.Commands.add('visible',
+    (text) => {
+      cy.contains(text).should('visible')
+    }
+);
+
+
+Cypress.Commands.add('django_shell',
+  function django_shell(cmd) {
+    function quote(str) {
+      return "'" + str.replace(/'/g, "'\"'\"'") + "'";
+    }
+
+    var manage_cmd = "echo " + quote(cmd) + " | ./manage.py shell_plus";
+    var cd_cmd = "cd .. && " + manage_cmd;
+    var workon_cmd = "workon refinery-platform && " + manage_cmd;
+    var vagrant_cmd = 'vagrant ssh -c ' + quote(workon_cmd);
+    cy.exec('( ' + cd_cmd + ' ) || ( ' + vagrant_cmd + ' )')
+  }
+);
