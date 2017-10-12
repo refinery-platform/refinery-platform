@@ -5,7 +5,7 @@ function visible(text) {
 describe('Not logged in', function() {
   it('Has homepage', function() {
     cy.visit('/');
-    visible('Refinery');
+    //visible('Refinery');
 
     visible('Collaboration');
     visible('Statistics');
@@ -47,7 +47,7 @@ describe('Not logged in', function() {
     cy.visit('/');
     visible('About').click();
 
-    visible('About Refinery');
+    //visible('About Refinery');
 
     visible('Background');
     visible('Contact');
