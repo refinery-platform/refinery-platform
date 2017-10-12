@@ -6,7 +6,7 @@
     popover-append-to-body="true"
     popover-placement="left"
     popover-class="global-analysis-popover">
-    <span ng-if="$ctrl.analysesRunningGlobalList.length">
+    <span ng-if="$ctrl.analysesRunningGlobalListCount > 0">
       <span class="spinner" id="global-analysis-status-run-div"
         refinery-tooltip
         refinery-tooltip-container="body"
@@ -16,7 +16,7 @@
         {{ $ctrl.analysesRunningGlobalListCount }}
       </span>
     </span>
-    <span ng-if="!$ctrl.analysesRunningGlobalList.length">
+    <span ng-if="$ctrl.analysesRunningGlobalListCount == 0">
       <i class="fa fa-cog" id="global-analysis-status"
         refinery-tooltip
         refinery-tooltip-container="body"

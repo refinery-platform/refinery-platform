@@ -13,7 +13,7 @@ function analysisMonitorFactory (
   var analysesGlobalList = [];
   var analysesRunningGlobalList = [];
   var analysesDetail = {};
-  var docCount = 0; // meta data for document count
+  var docCount = {}; // meta data for document count
 
   var initializeAnalysesDetail = function (uuid) {
     analysesDetail[uuid] = {
@@ -115,17 +115,15 @@ function analysisMonitorFactory (
   };
 
   // Copies and sorts analyses list
-  var processAnalysesList = function (apiResponse, params) {
-    if ('meta_only' in params) {
-      docCount = apiResponse.meta.total_count;
-    } else if ('status__in' in params && 'data_set__uuid' in params) {
-      angular.copy(apiResponse.objects, analysesRunningList);
+  var processAnalysesList = function (data, params) {
+    if ('status__in' in params && 'data_set__uuid' in params) {
+      angular.copy(data, analysesRunningList);
     } else if ('status__in' in params) {
-      angular.copy(apiResponse.objects, analysesRunningGlobalList);
+      angular.copy(data, analysesRunningGlobalList);
     } else if ('limit' in params && 'data_set__uuid' in params) {
-      addElapseAndHumanTime(apiResponse.objects);
+      addElapseAndHumanTime(data);
     } else {
-      angular.copy(apiResponse.objects, analysesGlobalList);
+      angular.copy(data, analysesGlobalList);
     }
   };
 
@@ -135,7 +133,11 @@ function analysisMonitorFactory (
 
     var analysis = analysisService.query(params);
     analysis.$promise.then(function (response) {
-      processAnalysesList(response, params);
+      if ('meta_only' in params) {
+        docCount[params.status__in] = response.meta.total_count;
+      } else {
+        processAnalysesList(response.objects, params);
+      }
     });
 
     return analysis.$promise;

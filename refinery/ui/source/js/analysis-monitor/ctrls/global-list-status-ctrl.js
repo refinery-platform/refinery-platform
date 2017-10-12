@@ -19,7 +19,7 @@
     var vm = this;
     var factory = analysisMonitorFactory;
 
-    vm.analysesRunningGlobalListCount = factory.docCount;
+    vm.analysesRunningGlobalListCount = 0;
     vm.updateAnalysesRunningGlobalList = updateAnalysesRunningGlobalList;
 
    /*
@@ -46,10 +46,10 @@
       };
 
       factory.getAnalysesList(params).then(function () {
-        vm.analysesRunningGlobalListCount = factory.docCount;
+        vm.analysesRunningGlobalListCount = factory.docCount[params.status__in];
         vm.launchAnalysisFlag = false;
       });
-      vm.timerRunGlobalList = $timeout(vm.updateAnalysesRunningGlobalList, 30000);
+      vm.timerRunGlobalList = $timeout(vm.updateAnalysesRunningGlobalList, 10000);
     }
 
    /*
@@ -58,6 +58,7 @@
    * ---------------------------------------------------------
    */
     $scope.$on('rf/launchAnalysis', function () {
+      console.log('catching the launch of analysis');
       vm.analysesRunningGlobalListCount = vm.analysesRunningGlobalListCount + 1;
     });
 
