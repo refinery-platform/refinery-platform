@@ -1,15 +1,3 @@
-terraform {
-  required_version = "~> 0.10"
-
-  backend "s3" {
-    key = "prod/s3/terraform.tfstate"
-  }
-}
-
-provider "aws" {
-  region = "${var.region}"
-}
-
 resource "aws_s3_bucket" "static_files" {
   acl    = "public-read"
   bucket = "${var.bucket_name_base}-static"
