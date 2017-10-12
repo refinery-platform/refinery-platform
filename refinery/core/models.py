@@ -1336,7 +1336,6 @@ class Analysis(OwnableResource):
                 except galaxy.client.ConnectionError as e:
                     logger.error(error_msg, 'library', self.name, e.message)
 
-            # Delete Galaxy Workflow
             workflow_tool = tool_manager.models.WorkflowTool
             try:
                 tool = workflow_tool.objects.get(analysis__uuid=self.uuid)
