@@ -56,6 +56,10 @@ script:
   # https://github.com/refinery-platform/refinery-platform/issues/1851
   - flake8 --exclude=migrations,ui ..
 
+  - echo 'travis_fold:start:grunt'
+  - pushd ui && grunt && popd
+  - echo 'travis_fold:end:grunt'
+
   - echo 'travis_fold:start:cypress'
   - mkdir -p static/production
   - python manage.py collectstatic --noinput
@@ -64,11 +68,6 @@ script:
   - while ! curl $BASEURL > /dev/null; do sleep 1; done
   - pushd ui && node_modules/.bin/cypress run --config baseUrl=$BASEURL && popd
   - echo 'travis_fold:end:cypress'
-
-
-  - echo 'travis_fold:start:grunt'
-  - pushd ui && grunt && popd
-  - echo 'travis_fold:end:grunt'
 
   - echo 'travis_fold:start:django-tests'
   - coverage run manage.py test
