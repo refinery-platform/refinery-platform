@@ -58,7 +58,6 @@
    * ---------------------------------------------------------
    */
     $scope.$on('rf/launchAnalysis', function () {
-      console.log('catching the launch of analysis');
       vm.analysesRunningGlobalListCount = vm.analysesRunningGlobalListCount + 1;
     });
 
