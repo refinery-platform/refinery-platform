@@ -2,6 +2,18 @@ function visible(text) {
   return cy.contains(text).should('visible');
 }
 
+function django_shell(cmd) {
+  function quote(str) {
+    return "'" + str.replace(/'/g, "'\"'\"'") + "'";
+  }
+
+  var manage_cmd = "echo " + quote(cmd) + " | ./manage.py shell_plus";
+  var cd_cmd = "cd .. && " + manage_cmd;
+  var workon_cmd = "workon refinery-platform && " + manage_cmd;
+  var vagrant_cmd = 'vagrant ssh -c ' + quote(workon_cmd);
+  cy.exec('( ' + cd_cmd + ' ) || ( ' + vagrant_cmd + ' )')
+}
+
 describe('New user', function() {
   it('Account creation works', function() {
     cy.visit('/accounts/register/');
@@ -30,20 +42,19 @@ describe('New user', function() {
     visible('Thank you for registering!');
     visible('Your account is currently pending approval.');
 
-    // var python =
-    //     'from django.contrib.auth.models import User; ' +
-    //     'u = User.objects.filter(username="' + username + '")[0]; ' +
-    //     'u.is_active = True; ' +
-    //     'u.save()';
-    // cy.exec("cd .. && echo '" + python + "' | ./manage.py shell_plus");
-    //
-    // visible('Login').click();
-    // cy.get('#id_username').type(username);
-    // cy.get('#id_password').type(password);
-    //
-    // // TODO: Profile page
-    //
-    // visible('Logout').click();
-    // visible('Login')
+    django_shell(
+        'from django.contrib.auth.models import User; ' +
+        'u = User.objects.filter(username="' + username + '")[0]; ' +
+        'u.is_active = True; ' +
+        'u.save()'
+    );
+
+    visible('Login').click();
+    cy.get('#id_username').type(username);
+    cy.get('#id_password').type(password);
+    cy.get('.btn').contains('Login').click();
+    // At this point we are still on the "Thank you for registering" page.
+
+    visible('first last')
   });
 });
