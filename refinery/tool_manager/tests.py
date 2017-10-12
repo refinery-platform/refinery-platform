@@ -2110,8 +2110,9 @@ class WorkflowToolTests(ToolManagerTestBase):
 
     def test_that_galaxy_renamedatasetactions_are_handled(self):
         new_dataset_name = "COFFEE"
+        workflow_step = 1
         workflow_dict = galaxy_workflow_dict
-        workflow_dict["steps"]["1"]["post_job_actions"] = {
+        workflow_dict["steps"][str(workflow_step)]["post_job_actions"] = {
             "RenameDatasetActionRefinery test tool LIST - N on data 4": {
                 "action_arguments": {
                     "newname": new_dataset_name
@@ -2120,16 +2121,19 @@ class WorkflowToolTests(ToolManagerTestBase):
                 "output_name": "Refinery test tool LIST - N on data 4"
             }
         }
-        self.galaxy_datasets_list_mock.return_value = workflow_dict
+        self.get_workflow_dict_mock.return_value = workflow_dict
         self.galaxy_datasets_list_mock.start()
 
         self.create_tool(ToolDefinition.WORKFLOW)
         galaxy_datasets = self.tool._get_galaxy_history_dataset_list()
-        for galaxy_dataset in galaxy_datasets:
-            if self.tool._get_workflow_step(galaxy_dataset) == 1:
-                # Assert that the Output file w/ a
-                # RenamedDatasetAction in Galaxy was edited
-                self.assertEqual(galaxy_dataset["name"], new_dataset_name)
+        edited_galaxy_dataset = next(
+            (galaxy_dataset for galaxy_dataset in galaxy_datasets if
+             self.tool._get_workflow_step(galaxy_dataset) == workflow_step),
+            None
+        )
+        # Assert that the Output file w/ a
+        # RenamedDatasetAction in Galaxy was edited
+        self.assertEqual(edited_galaxy_dataset["name"], new_dataset_name)
 
 
 class ToolAPITests(APITestCase, ToolManagerTestBase):
