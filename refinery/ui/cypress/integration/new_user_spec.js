@@ -4,8 +4,7 @@ function visible(text) {
 
 describe('New user', function() {
   it('Account creation works', function() {
-    cy.visit('/');
-    visible('Register').click();
+    cy.visit('/accounts/register/');
 
     visible('Sign Up');
     visible('Register for an account');
@@ -15,19 +14,36 @@ describe('New user', function() {
 
     visible('Please correct the errors below.');
 
-    var timestamp = Date.now();
-    cy.get('#id_username').type('cypress_' + timestamp);
+    var username = 'cypress_' + Date.now();
+    var password = 'password';
+    cy.get('#id_username').type(username);
     cy.get('#id_first_name').type('first');
     cy.get('#id_last_name').type('last');
     cy.get('#id_affiliation').type('affiliation');
-    cy.get('#id_email').type('cypress_' + timestamp + '@example.com');
-    cy.get('#id_password1').type('password');
-    cy.get('#id_password2').type('password');
+    cy.get('#id_email').type(username + '@example.com');
+    cy.get('#id_password1').type(password);
+    cy.get('#id_password2').type(password);
 
     cy.get('.btn').contains('Register').should('visible').click();
 
     visible('Registration complete');
     visible('Thank you for registering!');
     visible('Your account is currently pending approval.');
+
+    // var python =
+    //     'from django.contrib.auth.models import User; ' +
+    //     'u = User.objects.filter(username="' + username + '")[0]; ' +
+    //     'u.is_active = True; ' +
+    //     'u.save()';
+    // cy.exec("cd .. && echo '" + python + "' | ./manage.py shell_plus");
+    //
+    // visible('Login').click();
+    // cy.get('#id_username').type(username);
+    // cy.get('#id_password').type(password);
+    //
+    // // TODO: Profile page
+    //
+    // visible('Logout').click();
+    // visible('Login')
   });
 });

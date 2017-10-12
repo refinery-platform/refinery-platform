@@ -362,6 +362,8 @@ SERVER_EMAIL = get_setting("SERVER_EMAIL")
 # so managers and admins know Refinery is emailing them
 EMAIL_SUBJECT_PREFIX = get_setting("EMAIL_SUBJECT_PREFIX")
 
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+
 # for system stability
 CELERYD_MAX_TASKS_PER_CHILD = get_setting("CELERYD_MAX_TASKS_PER_CHILD")
 CELERY_ROUTES = {"file_store.tasks.import_file": {"queue": "file_import"}}
