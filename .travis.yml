@@ -1,7 +1,12 @@
 sudo: required
 
 language: python
-cache: pip
+cache:
+  - pip
+  - directories:
+      - geckodriver
+      - refinery/ui/node_modules
+      - refinery/ui/bower_components
 addons:
   firefox: "53.0.3"
   apt:
@@ -13,21 +18,38 @@ python:
 
 services:
   - postgresql
-  - neo4j
-  - docker
+
+env:
+  global:
+    # These env vars are available to every build
+    - PYTHONPATH=$PYTHONPATH:../refinery:../refinery/config
+    - CODECOV=codecov
+    - DJANGO_SETTINGS_MODULE=config.settings.prod
+    - FLAKE8=flake8
+    - GRUNT=grunt
+    - DJANGO_TEST_COMMAND='coverage run manage.py test'
+
+matrix:
+  include:
+    - env: TEST_SUITE=$DJANGO_TEST_COMMAND
+    - if: type = pull_request
+      env: TEST_SUITE='${DJANGO_TEST_COMMAND} --pattern="selenium_tests.py"'
 
 install:
+  - start() { echo travis_fold':'start:$1; echo "$1"; }
+  - end() { echo travis_fold':'end:$1; }
+
   - node --version
   - NODE_VERSION=6.11.0
   - nvm install $NODE_VERSION
   - nvm use $NODE_VERSION
   - node --version
-
   - npm --version
   - npm install -g npm@3.10.10
   - npm --version
 
   - pip install -r requirements.txt --quiet
+
   # Install geckodriver required for selenium testing
   - GECKODRIVER_VERSION=v0.17.0
   - TAR=geckodriver-$GECKODRIVER_VERSION-linux64.tar
@@ -36,51 +58,48 @@ install:
   - tar -xvf $TAR
   - chmod a+x geckodriver
   - export PATH=$PATH:`pwd`
-env:
-  global:
-    # These env vars are available to every build
-    - PYTHONPATH=$PYTHONPATH:../refinery:../refinery/config
-    - DJANGO_SETTINGS_MODULE=config.settings.prod
 
 before_script:
   # Vagrant is not used on travis: This user is just for the database.
   - createuser --createdb --no-superuser --no-createrole vagrant
   - createdb -O vagrant refinery
-
-  - sudo mkdir /data # In vagrant, this is created by puppet; In production, this is an EBS mount.
+  - sudo mkdir /data
   - sudo chown $USER /data
-
-  - cd refinery
-# See http://www.stuartellis.eu/articles/erb/#running-erb-from-the-command-line
+  - pushd refinery
+  # See http://www.stuartellis.eu/articles/erb/#running-erb-from-the-command-line
   - erb config/config.json.erb > config/config.json
   - python manage.py migrate --noinput
-  - npm install -g grunt-cli@0.1.13 bower@1.7.7 --progress false --quiet || ( cat npm-debug.log && false )
-  - cd ui
+  - npm install -g grunt-cli@0.1.13 bower@1.8.2 --progress false --quiet || (cat npm-debug.log && false )
+  - pushd ui
   - npm install --progress false --quiet || ( cat npm-debug.log && false )
   - bower install --config.interactive=false --quiet
-  - cd ../
+  - popd && popd
+
+
 script:
   - set -e # Any error will cause travis to exit early and report a failure.
-
+  - start $FLAKE8
   # TODO: Not the same behavior as pre-commit hook.
   # https://github.com/refinery-platform/refinery-platform/issues/1851
   - flake8 --exclude=migrations,ui ..
+  - end $FLAKE8
 
-  - echo 'travis_fold:start:grunt'
+  - start $GRUNT
+  - pushd refinery
   - pushd ui && grunt && popd
-  - echo 'travis_fold:end:grunt'
+  - end $GRUNT
 
-  - echo 'travis_fold:start:django-tests'
-  - coverage run manage.py test
-  - echo 'travis_fold:end:django-tests'
-
+  - start $TEST_SUITE
+  - $TEST_SUITE
+  - end $TEST_SUITE
   - set +e # Currently, codecov does not always exit with 0, but that should not cause travis to fail.
 
 after_success:
-  - echo 'travis_fold:start:codecov'
+  - start $CODECOV
   - codecov
   - npm run codecov
-  - echo 'travis_fold:end:codecov'
+  - end $CODECOV
+
 notifications:
   slack:
     secure: nDs9Oj08nRizuD0edl6WcrSgaTPMyITQjZc4qPZpt+yOxUehWbrAmVhqYypfyvdj4qSi1E72rPTXftuBB1E1IZBgX4CCkrCkWGLgIxHaaValTd64oOX66eC3BbSehQxuJB7w1DWw54xBUkTy6+ufjAqiwhLpoEUeE296urAWYHU=
