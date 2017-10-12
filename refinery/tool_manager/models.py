@@ -658,7 +658,8 @@ class WorkflowTool(Tool):
                 step=self._get_workflow_step(galaxy_dataset),
                 filename=self._get_galaxy_dataset_filename(galaxy_dataset),
                 filetype=galaxy_dataset["file_ext"],
-                is_refinery_file=galaxy_dataset in exposed_workflow_outputs
+                is_refinery_file=galaxy_dataset in exposed_workflow_outputs,
+                galaxy_dataset_name=galaxy_dataset["name"]
             )
 
     def _create_collection_description(self):
