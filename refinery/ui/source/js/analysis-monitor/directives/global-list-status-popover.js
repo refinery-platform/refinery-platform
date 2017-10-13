@@ -1,3 +1,9 @@
+/**
+ * Analysis Monitor Global List Status Popover
+ * @namespace rpAnalysisMonitorGlobalListStatusPopover
+ * @desc Component for the analysis global status icon popover details
+ * @memberOf refineryApp.refineryAnalysisMonitor
+ */
 (function () {
   'use strict';
 
