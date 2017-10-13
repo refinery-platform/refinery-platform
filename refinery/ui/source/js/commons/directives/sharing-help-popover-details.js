@@ -1,3 +1,10 @@
+/**
+ * Sharing Help Popover Details
+ * @namespace rpSharingHelpPopoverDetails
+ * @desc Common tooltip component template used between the collaboration
+ * page and sharing/edit page
+ * @memberOf refineryApp
+ */
 (function () {
   angular
     .module('refineryApp')

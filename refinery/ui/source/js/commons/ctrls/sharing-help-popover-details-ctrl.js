@@ -20,6 +20,7 @@
     $location
   ) {
     var vm = this;
+    vm.isCollaborationPage = false;
 
    /*
    * ---------------------------------------------------------
@@ -27,8 +28,8 @@
    * ---------------------------------------------------------
    */
     vm.$onInit = function () {
+      // check if the user is on the collaboration page
       vm.isCollaborationPage = $location.search('collaboration').$$search.collaboration;
-      console.log(vm.isCollaborationPage);
     };
   }
 })();
