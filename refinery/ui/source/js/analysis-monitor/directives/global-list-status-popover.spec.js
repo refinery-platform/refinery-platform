@@ -30,7 +30,7 @@
 
       var scope = $rootScope.$new();
       var template = '<rp-analysis-monitor-global-list-status-popover>' +
-        '</rp-analysis-monitor-global-list-status-popover-details>';
+        '</rp-analysis-monitor-global-list-status-popover>';
       directiveElement = $compile(template)(scope);
       scope.$digest();
     }));

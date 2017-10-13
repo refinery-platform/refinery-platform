@@ -35,7 +35,7 @@
    * ---------------------------------------------------------
    */
     vm.$onInit = function () {
-      vm.updateAnalysesRunningGlobalList();
+      vm.updateAnalysesRunningGlobalListCount();
     };
 
    /*
