@@ -1,7 +1,7 @@
 (function () {
   'use strict';
 
-  describe('Controller: AnalysisMonitorGlobalPopoverCtrl', function () {
+  describe('Controller: AnalysisMonitorGlobalStatusPopoverCtrl', function () {
     var ctrl;
     var factory;
     var timeout;
@@ -14,7 +14,7 @@
       $timeout,
       analysisMonitorFactory
     ) {
-      ctrl = $controller('AnalysisMonitorGlobalPopoverCtrl', {
+      ctrl = $controller('AnalysisMonitorGlobalStatusPopoverCtrl', {
         $scope: $rootScope.$new()
       });
       factory = analysisMonitorFactory;

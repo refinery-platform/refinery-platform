@@ -1,7 +1,7 @@
 (function () {
   'use strict';
 
-  describe('Controller: AnalysisMonitorGlobalListStatusCtrl', function () {
+  describe('Controller: AnalysisMonitorGlobalStatusCtrl', function () {
     var ctrl;
     var factory;
 
@@ -13,24 +13,24 @@
       analysisMonitorFactory
     ) {
       factory = analysisMonitorFactory;
-      ctrl = $controller('AnalysisMonitorGlobalListStatusCtrl', {
+      ctrl = $controller('AnalysisMonitorGlobalStatusCtrl', {
         $scope: $rootScope.$new()
       });
     }));
 
-    it('AnalysisMonitorGlobalListStatusCtrl should exist', function () {
+    it('AnalysisMonitorGlobalStatusCtrl should exist', function () {
       expect(ctrl).toBeDefined();
     });
 
     it('Data & UI displays variables should exist for views', function () {
-      expect(ctrl.analysesRunningGlobalListCount).toEqual(0);
+      expect(ctrl.analysesRunningGlobalCount).toEqual(0);
     });
 
-    it('updateAnalysesRunningGlobalListCount is method', function () {
-      expect(angular.isFunction(ctrl.updateAnalysesRunningGlobalListCount)).toBe(true);
+    it('updateAnalysesRunningGlobalCount is method', function () {
+      expect(angular.isFunction(ctrl.updateAnalysesRunningGlobalCount)).toBe(true);
     });
 
-    it('updateAnalysesRunningGlobalListCount sets timer and returns promise', function () {
+    it('updateAnalysesRunningGlobalCount sets timer and returns promise', function () {
       var mockAnalysesRunningGlobalFlag = false;
       spyOn(factory, 'getAnalysesList').and.callFake(function () {
         return {
@@ -40,9 +40,9 @@
         };
       });
 
-      expect(typeof ctrl.timerRunGlobalList).toEqual('undefined');
-      ctrl.updateAnalysesRunningGlobalListCount();
-      expect(typeof ctrl.timerRunGlobalList).toBeDefined();
+      expect(typeof ctrl.timerRunGlobal).toEqual('undefined');
+      ctrl.updateAnalysesRunningGlobalCount();
+      expect(typeof ctrl.timerRunGlobal).toBeDefined();
       expect(mockAnalysesRunningGlobalFlag).toEqual(true);
     });
   });

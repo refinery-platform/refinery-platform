@@ -1,6 +1,6 @@
 /**
- * Analysis Monitor Global Popover Ctrl
- * @namespace AnalysisMonitorGlobalPopoverCtrl
+ * Analysis Monitor Global Status Popover Ctrl
+ * @namespace AnalysisMonitorGlobalStatusPopoverCtrl
  * @desc Component controller for the global list icon status popover in the navbar.
  * @memberOf refineryApp.refineryAnalysisMonitor
  */
@@ -9,11 +9,11 @@
 
   angular
     .module('refineryAnalysisMonitor')
-    .controller('AnalysisMonitorGlobalPopoverCtrl', AnalysisMonitorGlobalPopoverCtrl);
+    .controller('AnalysisMonitorGlobalStatusPopoverCtrl', AnalysisMonitorGlobalStatusPopoverCtrl);
 
-  AnalysisMonitorGlobalPopoverCtrl.$inject = ['$timeout', 'analysisMonitorFactory'];
+  AnalysisMonitorGlobalStatusPopoverCtrl.$inject = ['$timeout', 'analysisMonitorFactory'];
 
-  function AnalysisMonitorGlobalPopoverCtrl ($timeout, analysisMonitorFactory) {
+  function AnalysisMonitorGlobalStatusPopoverCtrl ($timeout, analysisMonitorFactory) {
     var vm = this;
     var factory = analysisMonitorFactory;
 

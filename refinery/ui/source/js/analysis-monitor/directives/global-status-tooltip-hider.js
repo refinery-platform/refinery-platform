@@ -4,11 +4,11 @@
   angular
     .module('refineryAnalysisMonitor')
     .directive(
-      'rpAnalysisMonitorGlobalListStatusTooltipHider',
-      rpAnalysisMonitorGlobalListStatusTooltipHider
+      'rpAnalysisMonitorGlobalStatusTooltipHider',
+      rpAnalysisMonitorGlobalStatusTooltipHider
     );
 
-  function rpAnalysisMonitorGlobalListStatusTooltipHider () {
+  function rpAnalysisMonitorGlobalStatusTooltipHider () {
     return {
       scope: {},
       restrict: 'A',

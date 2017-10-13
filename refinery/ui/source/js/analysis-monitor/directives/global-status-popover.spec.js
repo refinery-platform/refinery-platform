@@ -1,7 +1,7 @@
 (function () {
   'use strict';
 
-  describe('rpAnalysisMonitorGlobalListStatus component unit test', function () {
+  describe('rpAnalysisMonitorGlobalStatusPopover component unit test', function () {
     beforeEach(module('refineryApp'));
     beforeEach(module('refineryAnalysisMonitor'));
 
@@ -16,28 +16,27 @@
       settings
     ) {
       $templateCache.put(
-        $window.getStaticUrl('partials/analysis-monitor/partials/global-list-status.html'),
-        '<div id="global-list-status"></div>'
+        $window.getStaticUrl('partials/analysis-monitor/partials/global-status-popover.html'),
+        '<div id="global-status-popover"></div>'
       );
 
-      // Mock api call due to ctrl $init method
+       // Mock api call due to ctrl $init method
       $httpBackend
         .expectGET(
           settings.appRoot +
           settings.refineryApi +
-          '/analysis/?format=json&limit=0&meta_only=true&' +
-          'order_by=-time_start&status__in=RUNNING,UNKNOWN'
+          '/analysis/?format=json&limit=10&order_by=-time_start'
         ).respond(200, []);
 
       var scope = $rootScope.$new();
-      var template = '<rp-analysis-monitor-global-list-status>' +
-        '</rp-analysis-monitor-global-list-status>';
+      var template = '<rp-analysis-monitor-global-status-popover>' +
+        '</rp-analysis-monitor-global-status-popover>';
       directiveElement = $compile(template)(scope);
       scope.$digest();
     }));
 
     it('generates the appropriate HTML', function () {
-      expect(directiveElement.html()).toContain('global-list-status');
+      expect(directiveElement.html()).toContain('global-status-popover');
       expect(directiveElement.html()).toContain('</div>');
     });
   });

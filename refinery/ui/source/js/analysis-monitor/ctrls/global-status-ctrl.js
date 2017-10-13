@@ -1,6 +1,6 @@
 /**
- * Analysis Monitor Global List Status Ctrl
- * @namespace AnalysisMonitorGlobalListStatusCtrl
+ * Analysis Monitor Global Status Ctrl
+ * @namespace AnalysisMonitorGlobalStatusCtrl
  * @desc Component controller for the global list icon status in the nav
  * bar. Partial also contains the popover initializer.
  * @memberOf refineryApp.refineryAnalysisMonitor
@@ -10,15 +10,15 @@
 
   angular
     .module('refineryAnalysisMonitor')
-    .controller('AnalysisMonitorGlobalListStatusCtrl', AnalysisMonitorGlobalListStatusCtrl);
+    .controller('AnalysisMonitorGlobalStatusCtrl', AnalysisMonitorGlobalStatusCtrl);
 
-  AnalysisMonitorGlobalListStatusCtrl.$inject = [
+  AnalysisMonitorGlobalStatusCtrl.$inject = [
     '$scope',
     '$timeout',
     'analysisMonitorFactory'
   ];
 
-  function AnalysisMonitorGlobalListStatusCtrl (
+  function AnalysisMonitorGlobalStatusCtrl (
     $scope,
     $timeout,
     analysisMonitorFactory
@@ -26,8 +26,8 @@
     var vm = this;
     var factory = analysisMonitorFactory;
 
-    vm.analysesRunningGlobalListCount = 0;
-    vm.updateAnalysesRunningGlobalListCount = updateAnalysesRunningGlobalListCount;
+    vm.analysesRunningGlobalCount = 0;
+    vm.updateAnalysesRunningGlobalCount = updateAnalysesRunningGlobalCount;
 
    /*
    * ---------------------------------------------------------
@@ -35,7 +35,7 @@
    * ---------------------------------------------------------
    */
     vm.$onInit = function () {
-      vm.updateAnalysesRunningGlobalListCount();
+      vm.updateAnalysesRunningGlobalCount();
     };
 
    /*
@@ -44,11 +44,11 @@
    * ---------------------------------------------------------
    */
      /**
-     * @name updateAnalysesRunningGlobalListCount
+     * @name updateAnalysesRunningGlobalCount
      * @desc  Method always runs to show running number on global analysis icon
      * @memberOf refineryAnalysisMonitor.AnalysisMonitorGlobalListStatusCtrl
     **/
-    function updateAnalysesRunningGlobalListCount () {
+    function updateAnalysesRunningGlobalCount () {
       var params = {
         format: 'json',
         limit: 0,
@@ -57,11 +57,11 @@
       };
 
       factory.getAnalysesList(params).then(function () {
-        vm.analysesRunningGlobalListCount = factory.docCount[params.status__in];
+        vm.analysesRunningGlobalCount = factory.docCount[params.status__in];
         vm.launchAnalysisFlag = false;
       });
        // refreshes every 30 seconds
-      vm.timerRunGlobalList = $timeout(vm.updateAnalysesRunningGlobalList, 30000);
+      vm.timerRunGlobalList = $timeout(vm.updateAnalysesRunningGlobal, 30000);
     }
 
    /*
@@ -71,12 +71,12 @@
    */
     // Analysis launched, increases global count
     $scope.$on('rf/launchAnalysis', function () {
-      vm.analysesRunningGlobalListCount = vm.analysesRunningGlobalListCount + 1;
+      vm.analysesRunningGlobalCount = vm.analysesRunningGlobalCount + 1;
     });
     // Analysis launched, decreases global count
     $scope.$on('rf/cancelAnalysis', function () {
-      vm.analysesRunningGlobalListCount =
-        vm.analysesRunningGlobalListCount - 1;
+      vm.analysesRunningGlobalCount =
+        vm.analysesRunningGlobalCount - 1;
     });
   }
 })();

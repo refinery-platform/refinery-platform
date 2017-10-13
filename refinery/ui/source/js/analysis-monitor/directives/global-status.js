@@ -1,6 +1,6 @@
 /**
- * Analysis Monitor Global List Status
- * @namespace rpAnalysisMonitorGlobalListStatus
+ * Analysis Monitor Global Status
+ * @namespace rpAnalysisMonitorGlobalStatus
  * @desc Component for the analysis global status icon
  * @memberOf refineryApp.refineryAnalysisMonitor
  */
@@ -8,11 +8,11 @@
   'use strict';
 
   angular.module('refineryAnalysisMonitor')
-    .component('rpAnalysisMonitorGlobalListStatus', {
-      controller: 'AnalysisMonitorGlobalListStatusCtrl',
+    .component('rpAnalysisMonitorGlobalStatus', {
+      controller: 'AnalysisMonitorGlobalStatusCtrl',
       templateUrl: ['$window', function ($window) {
         return $window.getStaticUrl(
-          'partials/analysis-monitor/partials/global-list-status.html'
+          'partials/analysis-monitor/partials/global-status.html'
         );
       }]
     });
