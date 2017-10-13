@@ -1,3 +1,9 @@
+/**
+ * Analysis Monitor Global Popover Ctrl
+ * @namespace AnalysisMonitorGlobalPopoverCtrl
+ * @desc Component controller for the global list icon status popover in the navbar.
+ * @memberOf refineryApp.refineryAnalysisMonitor
+ */
 (function () {
   'use strict';
 
@@ -39,13 +45,24 @@
    * Method
    * ---------------------------------------------------------
    */
-
+    /**
+     * @name cancelTimerGlobalList
+     * @desc  Cancels timer which automatically triggers updating the info
+     * in the popover
+     * @memberOf refineryAnalysisMonitor.AnalysisMonitorGlobalPopoverCtrl
+    **/
     function cancelTimerGlobalList () {
       if (typeof vm.timerGlobalList !== 'undefined') {
         $timeout.cancel(vm.timerGlobalList);
       }
     }
 
+     /**
+     * @name refreshAnalysesGlobalDetail
+     * @desc  Updates the global list and then updates each set of details
+      * for the individual stage statues
+     * @memberOf refineryAnalysisMonitor.AnalysisMonitorGlobalPopoverCtrl
+    **/
     function refreshAnalysesGlobalDetail () {
       updateAnalysesRunningGlobalList();
       for (var i = 0; i < vm.analysesRunningGlobalList.length; i++) {
@@ -53,6 +70,11 @@
       }
     }
 
+    /**
+     * @name setAnalysesGlobalLoadingFlag
+     * @desc  View flag which checks to see if there's any analyses
+     * @memberOf refineryAnalysisMonitor.AnalysisMonitorGlobalPopoverCtrl
+    **/
     function setAnalysesGlobalLoadingFlag () {
       if (vm.analysesGlobalList.length === 0) {
         vm.analysesGlobalLoadingFlag = 'EMPTY';
@@ -61,7 +83,13 @@
       }
     }
 
-    // Analysis monitor details gets populated from service - global
+
+    /**
+     * @name updateAnalysesGlobalDetail
+     * @desc  Analysis monitor details are updated with details
+      * for the individual stage statues (Different API to get these details)
+     * @memberOf refineryAnalysisMonitor.AnalysisMonitorGlobalPopoverCtrl
+    **/
     function updateAnalysesGlobalDetail (i) {
       (function (j) {
         if (typeof vm.analysesRunningGlobalList[j] !== 'undefined') {
@@ -74,8 +102,12 @@
       }(i));
     }
 
-    // On global analysis icon, method set timer and refreshes the
-    // analysis list and refreshes details for running analyses.
+    /**
+     * @name updateAnalysesGlobalList
+     * @desc  Updates the list of last 10 ran analysis which user has view
+     * permissions
+     * @memberOf refineryAnalysisMonitor.AnalysisMonitorGlobalPopoverCtrl
+    **/
     function updateAnalysesGlobalList () {
       var params = {
         format: 'json',
@@ -91,7 +123,11 @@
       vm.timerGlobalList = $timeout(vm.updateAnalysesGlobalList, 5000);
     }
 
-       // Method always runs to show running number on global analysis icon
+    /**
+     * @name updateAnalysesRunningGlobalList
+     * @desc  Updates the list showing all running analysis
+     * @memberOf refineryAnalysisMonitor.AnalysisMonitorGlobalPopoverCtrl
+    **/
     function updateAnalysesRunningGlobalList () {
       var params = {
         format: 'json',
