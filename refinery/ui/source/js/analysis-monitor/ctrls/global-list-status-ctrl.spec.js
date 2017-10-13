@@ -26,11 +26,11 @@
       expect(ctrl.analysesRunningGlobalListCount).toEqual(0);
     });
 
-    it('updateAnalysesRunningGlobalList is method', function () {
-      expect(angular.isFunction(ctrl.updateAnalysesRunningGlobalList)).toBe(true);
+    it('updateAnalysesRunningGlobalListCount is method', function () {
+      expect(angular.isFunction(ctrl.updateAnalysesRunningGlobalListCount)).toBe(true);
     });
 
-    it('updateAnalysesRunningGlobalList sets timer and returns promise', function () {
+    it('updateAnalysesRunningGlobalListCount sets timer and returns promise', function () {
       var mockAnalysesRunningGlobalFlag = false;
       spyOn(factory, 'getAnalysesList').and.callFake(function () {
         return {
@@ -41,7 +41,7 @@
       });
 
       expect(typeof ctrl.timerRunGlobalList).toEqual('undefined');
-      ctrl.updateAnalysesRunningGlobalList();
+      ctrl.updateAnalysesRunningGlobalListCount();
       expect(typeof ctrl.timerRunGlobalList).toBeDefined();
       expect(mockAnalysesRunningGlobalFlag).toEqual(true);
     });

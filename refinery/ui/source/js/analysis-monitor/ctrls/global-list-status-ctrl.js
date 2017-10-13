@@ -1,3 +1,10 @@
+/**
+ * Analysis Monitor Global List Status Ctrl
+ * @namespace AnalysisMonitorGlobalListStatusCtrl
+ * @desc Component controller for the global list icon status in the nav
+ * bar. Partial also contains the popover initializer.
+ * @memberOf refineryApp.refineryAnalysisMonitor
+ */
 (function () {
   'use strict';
 
@@ -20,7 +27,7 @@
     var factory = analysisMonitorFactory;
 
     vm.analysesRunningGlobalListCount = 0;
-    vm.updateAnalysesRunningGlobalList = updateAnalysesRunningGlobalList;
+    vm.updateAnalysesRunningGlobalListCount = updateAnalysesRunningGlobalListCount;
 
    /*
    * ---------------------------------------------------------
@@ -36,8 +43,12 @@
    * Method
    * ---------------------------------------------------------
    */
-   // Method always runs to show running number on global analysis icon
-    function updateAnalysesRunningGlobalList () {
+     /**
+     * @name updateAnalysesRunningGlobalListCount
+     * @desc  Method always runs to show running number on global analysis icon
+     * @memberOf refineryAnalysisMonitor.AnalysisMonitorGlobalListStatusCtrl
+    **/
+    function updateAnalysesRunningGlobalListCount () {
       var params = {
         format: 'json',
         limit: 0,
@@ -49,6 +60,7 @@
         vm.analysesRunningGlobalListCount = factory.docCount[params.status__in];
         vm.launchAnalysisFlag = false;
       });
+       // refreshes every 30 seconds
       vm.timerRunGlobalList = $timeout(vm.updateAnalysesRunningGlobalList, 30000);
     }
 
@@ -57,10 +69,11 @@
    * Watchers
    * ---------------------------------------------------------
    */
+    // Analysis launched, increases global count
     $scope.$on('rf/launchAnalysis', function () {
       vm.analysesRunningGlobalListCount = vm.analysesRunningGlobalListCount + 1;
     });
-
+    // Analysis launched, decreases global count
     $scope.$on('rf/cancelAnalysis', function () {
       vm.analysesRunningGlobalListCount =
         vm.analysesRunningGlobalListCount - 1;
