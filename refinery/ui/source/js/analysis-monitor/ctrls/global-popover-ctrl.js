@@ -88,7 +88,7 @@
         vm.refreshAnalysesGlobalDetail();
       });
 
-      vm.timerGlobalList = $timeout(vm.updateAnalysesGlobalList, 30000);
+      vm.timerGlobalList = $timeout(vm.updateAnalysesGlobalList, 5000);
     }
 
        // Method always runs to show running number on global analysis icon

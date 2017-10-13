@@ -9,18 +9,18 @@
     &nbsp;<em>Retrieving recent analyses.</em>
   </div>
   <div ng-switch-default>
-    <ul id="analyses-popover"
+    <ul id="analyses-popover" class="list-unstyled"
       ng-repeat ="analysis in $ctrl.analysesGlobalList track by $index">
       <li class="row">
         <div ng-switch on="analysis.status">
           <div ng-switch-when="UNKNOWN">
-             <div ng-if="$ctrl.analysesRunningGlobalList.length"
-               class="analysis-running-percentage">
+            <div class="col-sm-2">
+              <i class="{{analysis.status | analysisStatusIcon}}
+              analyses-status"></i>
               &nbsp;
             </div>
-            <div class="analyses-global-text-icon">
-              <i class="col-sm-2 {{analysis.status | analysisStatusIcon}}
-              analyses-status"></i>
+            <div ng-if="$ctrl.analysesRunningGlobalList.length"
+               class="analysis-running-percentage">
               &nbsp;
             </div>
             <div class="col-sm-10 analyses-global-text">
@@ -28,18 +28,18 @@
             </div>
           </div>
           <div ng-switch-when="RUNNING">
-            <div ng-if="$ctrl.analysesRunningGlobalList.length"
-              class="col-sm-1 analysis-running-percentage">
-              {{ $ctrl.analysesGlobalDetail[analysis
-                .uuid]|analysisMonitorRunningStatusPercent }}%
-            </div>
-            <div class="col-sm-1 analyses-global-text-icon">
+            <div class="col-sm-1">
                <i class="{{$ctrl.analysesGlobalDetail[analysis
                  .uuid]|analysisMonitorRunningStatusBtn}}"></i>
                 &nbsp;
             </div>
+            <div ng-if="$ctrl.analysesRunningGlobalList.length"
+              class="col-sm-1">
+              {{ $ctrl.analysesGlobalDetail[analysis
+                .uuid]|analysisMonitorRunningStatusPercent }}%
+            </div>
             <div
-              class="col-sm-10 analyses-global-text"
+              class="col-sm-10"
               <a class="analyses-popover-links" ng-href="/data_sets/{{analysis
               .data_set__uuid}}/#/analyses/">
                 {{ analysis.name }}
@@ -47,26 +47,26 @@
             </div>
           </div>
           <div ng-switch-default>
-            <div ng-if="$ctrl.analysesRunningGlobalList.length"
-              class="col-sm-1 analysis-running-percentage">
+            <div class="col-sm-1">
+              <i class="{{analysis.status | analysisStatusIcon}} analyses-status"></i>
               &nbsp;
             </div>
-            <div class="col-sm-1 analyses-global-text-icon">
-            <i class=" {{analysis.status | analysisStatusIcon}}
-            analyses-status"></i>
-            &nbsp;
+            <div ng-if="$ctrl.analysesRunningGlobalList.length"
+              class="col-sm-1">
+              &nbsp;
             </div>
-            <div class="analyses-global-text"
+            <div
               ng-class="{'col-sm-10': $ctrl.analysesRunningGlobalList.length,
-                        'col-sm-11': !$ctrl.analysesRunningGlobalList.length}"
-              col-sm-8'>
+                        'col-sm-11': !$ctrl.analysesRunningGlobalList.length}"'>
               <div ng-if="analysis.status === 'SUCCESS'">
-                <a id="analyses-popover-links" ng-href="/data_sets/{{analysis.data_set__uuid}}/#/files/?{{analysis.data_sets_query}}">
+                <a class="analyses-popover-links" ng-href="/data_sets/{{analysis
+                .data_set__uuid}}/#/files/?{{analysis.data_sets_query}}">
                   {{ analysis.name }}
                 </a>
               </div>
               <div ng-if="analysis.status !== 'SUCCESS'">
-                <a id="analyses-popover-links" ng-href="/data_sets/{{ analysis.data_set__uuid }}/#/analyses/">
+                <a class="analyses-popover-links" ng-href="/data_sets/{{
+                  analysis.data_set__uuid }}/#/analyses/">
                   {{ analysis.name }}
                 </a>
               </div>
