@@ -1,7 +1,7 @@
 /**
  * Sharing Help Popover Details
  * @namespace rpSharingHelpPopoverDetails
- * @desc Common tooltip component template used between the collaboration
+ * @desc Common popover component template used between the collaboration
  * page and sharing/edit page
  * @memberOf refineryApp
  */
