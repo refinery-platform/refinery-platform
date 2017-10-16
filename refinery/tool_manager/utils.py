@@ -1,6 +1,7 @@
 import glob
 import json
 import logging
+import os
 import uuid
 
 from django.conf import settings
@@ -441,7 +442,12 @@ def validate_tool_annotation(annotation_dictionary):
     properly.
     :param annotation_dictionary: dict containing Tool annotation data
     """
-    with open(settings.REFINERY_TOOL_DEFINITION_SCHEMA) as f:
+    with open(
+            os.path.join(
+                settings.BASE_DIR,
+                "refinery/tool_manager/schemas/ToolDefinition.json"
+            )
+    ) as f:
         schema = json.loads(f.read())
     annotation_to_validate = annotation_dictionary["annotation"]
     annotation_to_validate["name"] = annotation_dictionary["name"]
@@ -469,7 +475,12 @@ def validate_workflow_step_annotation(workflow_step_dictionary):
     :param workflow_step_dictionary: dict containing a Galaxy Workflow step's
     data
     """
-    with open(settings.REFINERY_WORKFLOW_STEP_SCHEMA) as f:
+    with open(
+            os.path.join(
+                settings.BASE_DIR,
+                "refinery/tool_manager/schemas/WorkflowStep.json"
+            )
+    ) as f:
         schema = json.loads(f.read())
     try:
         validate(
@@ -488,7 +499,12 @@ def validate_tool_launch_configuration(tool_launch_config):
     Validate incoming Tool Launch Configurations
     :param tool_launch_config: json data containing a ToolLaunchConfiguration
     """
-    with open(settings.REFINERY_TOOL_LAUNCH_CONFIG_SCHEMA) as f:
+    with open(
+        os.path.join(
+            settings.BASE_DIR,
+            "refinery/tool_manager/schemas/ToolLaunchConfig.json"
+        )
+    ) as f:
         schema = json.loads(f.read())
     try:
         validate(
