@@ -2126,13 +2126,15 @@ class WorkflowToolTests(ToolManagerTestBase):
 
         self.create_tool(ToolDefinition.WORKFLOW)
         galaxy_datasets = self.tool._get_galaxy_history_dataset_list()
-        edited_galaxy_dataset = next(
+        edited_galaxy_datasets = [
             galaxy_dataset for galaxy_dataset in galaxy_datasets if
             self.tool._get_workflow_step(galaxy_dataset) == workflow_step
-        )
+        ]
+        assert len(edited_galaxy_datasets) == 1
+
         # Assert that the Output file w/ a
         # RenamedDatasetAction in Galaxy was edited
-        self.assertEqual(edited_galaxy_dataset["name"], new_dataset_name)
+        self.assertEqual(edited_galaxy_datasets[0]["name"], new_dataset_name)
 
 
 class ToolAPITests(APITestCase, ToolManagerTestBase):
