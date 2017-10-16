@@ -978,7 +978,7 @@ class WorkflowTool(Tool):
                     self.get_galaxy_dict()[self.GALAXY_LIBRARY_DICT],
                 )
             ) for file_store_item_uuid in self.get_input_file_uuid_list()
-            ]
+        ]
 
     @handle_bioblend_exceptions
     def _get_galaxy_dataset_provenance(self, galaxy_dataset_dict):
