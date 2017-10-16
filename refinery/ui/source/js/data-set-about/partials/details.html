@@ -1,6 +1,12 @@
 <div class="refinery-header">
   <div class="refinery-header-left">
-    <h3>{{ ADCtrl.dataSet.title }}</h3>
+
+    <h3>
+      {{ ADCtrl.dataSet.accession }}
+      <span ng-if="ADCtrl.dataSet.title && ADCtrl.dataSet.accession">
+        :
+      </span>
+      {{ ADCtrl.dataSet.title }}</h3>
     <span ng-if="ADCtrl.dataSet.is_owner">
       <a
         ng-click="ADCtrl.isCollapsed.title = !ADCtrl.isCollapsed.title"
@@ -18,7 +24,7 @@
         'accession', ADCtrl.editedDataSet.accession
         )"
         name="dataSetAccessionForm"
-        class="p-r-1-2 col-md-2">
+        class="p-r-1-2 col-md-4">
         <div class="form-group" ng-class='{"has-warning":!dataSetAccessionForm.$valid}'>
           <label class="control-label" for="dataSetAccessionInput">
             Edit Accession
@@ -81,7 +87,7 @@
       <form
         ng-submit="ADCtrl.updateDataSet('title', ADCtrl.editedDataSet.title)"
         name="dataSetTitleForm"
-        class="p-r-1-2 col-md-2">
+        class="p-r-1-2 col-md-4">
         <div class="form-group" ng-class='{"has-warning":!dataSetTitleForm.$valid}'>
           <label class="control-label" for="dataSetTitleInput">
             Edit Title
@@ -151,7 +157,7 @@
     <form
       ng-submit="ADCtrl.updateDataSet('summary', ADCtrl.editedDataSet.summary)"
       name="dataSetSummaryForm"
-      class="p-r-1-2 col-md-2">
+      class="p-r-1-2 col-md-4">
       <div class="form-group" ng-class='{"has-warning":!dataSetSummaryForm.$valid}'>
         <label class="control-label" for="dataSetSummaryInput">
           Edit Summary
@@ -221,7 +227,7 @@
     <form
       ng-submit="ADCtrl.updateDataSet('description', ADCtrl.editedDataSet.description)"
       name="dataSetDescriptionForm"
-      class="p-r-1-2 col-md-2">
+      class="p-r-1-2 col-md-4">
       <div class="form-group" ng-class='{"has-warning":!dataSetDescriptionForm.$valid}'>
         <label class="control-label" for="dataSetDescriptionInput">
           Edit Description
@@ -290,7 +296,7 @@
     <form
       ng-submit="ADCtrl.updateDataSet('slug', ADCtrl.editedDataSet.slug)"
       name="dataSetSlugForm"
-      class="p-r-1-2 col-md-2">
+      class="p-r-1-2 col-md-4">
       <div class="form-group" ng-class='{"has-warning":!dataSetSlugForm.$valid}'>
         <label class="control-label" for="dataSetSlugInput">
           Edit Shortcut Name
