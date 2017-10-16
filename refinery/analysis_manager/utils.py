@@ -184,6 +184,8 @@ def get_solr_results(query, facets=False, jsonp=False, annotation=False,
 def validate_analysis_config(analysis_config):
     """
     Validate incoming Analysis Configurations
+    No exception handling since this function is called within the atomic
+    transaction of a `WorkflowTool.launch()`
     :param analysis_config: json data containing an Analysis configuration
     """
     with open(
