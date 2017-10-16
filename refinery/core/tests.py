@@ -1460,7 +1460,8 @@ class AnalysisTests(TestCase):
                 step=1,
                 filename=self.node_filename,
                 direction=OUTPUT_CONNECTION,
-                is_refinery_file=True
+                is_refinery_file=True,
+                galaxy_dataset_name="Galaxy File Name"
             )
         )
         self.analysis_node_connection_b = (
@@ -1619,6 +1620,23 @@ class AnalysisTests(TestCase):
             "{}_{}".format(self.analysis_node_connection_a.step,
                            self.analysis_node_connection_a.name)
         )
+
+    def test__create_derived_data_file_node(self):
+        derived_data_file_node = self.analysis._create_derived_data_file_node(
+            self.study,
+            self.assay,
+            self.analysis_node_connection_a
+        )
+        self.assertEqual(derived_data_file_node.name, "Galaxy File Name")
+        self.assertEqual(derived_data_file_node.study, self.study)
+        self.assertEqual(derived_data_file_node.assay, self.assay)
+        self.assertEqual(derived_data_file_node.type, Node.DERIVED_DATA_FILE)
+        self.assertEqual(derived_data_file_node.analysis_uuid,
+                         self.analysis.uuid)
+        self.assertEqual(derived_data_file_node.subanalysis,
+                         self.analysis_node_connection_a.subanalysis)
+        self.assertEqual(derived_data_file_node.workflow_output,
+                         self.analysis_node_connection_a.name)
 
 
 class UtilitiesTest(TestCase):
