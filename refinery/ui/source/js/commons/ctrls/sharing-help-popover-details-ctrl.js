@@ -29,7 +29,7 @@
    */
     vm.$onInit = function () {
       // check if the user is on the collaboration page
-      vm.isCollaborationPage = $location.absUrl().indexOf('collaboration') > -1;
+      vm.isCollaborationPage = $location.absUrl().indexOf('/collaboration/') > -1;
     };
   }
 })();
