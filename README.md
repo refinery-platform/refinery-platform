@@ -52,6 +52,11 @@ To pull the latest code and update Refinery installation:
 $ fab vm update
 ```
 
+To run integration tests, hit "Run All Tests" in the Cypress UI after this command:
+```bash
+$ ./node_modules/.bin/cypress run --config baseUrl=http://192.168.50.50:8000
+```
+
 ### Refinery Operations on the VM
 
 Connect to the initialized VM:
