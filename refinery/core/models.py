@@ -1336,11 +1336,14 @@ class Analysis(OwnableResource):
                 except galaxy.client.ConnectionError as e:
                     logger.error(error_msg, 'library', self.name, e.message)
 
-            workflow_tool = tool_manager.models.WorkflowTool
             try:
-                tool = workflow_tool.objects.get(analysis__uuid=self.uuid)
-            except(workflow_tool.DoesNotExist,
-                   workflow_tool.MultipleObjectsReturned) as e:
+                tool = tool_manager.models.WorkflowTool.objects.get(
+                    analysis__uuid=self.uuid
+                )
+            except(
+                tool_manager.models.WorkflowTool.DoesNotExist,
+                tool_manager.models.WorkflowTool.MultipleObjectsReturned
+            ) as e:
                 logger.error("Could not properly fetch Tool: %s", e)
             else:
                 if tool.galaxy_import_history_id:
