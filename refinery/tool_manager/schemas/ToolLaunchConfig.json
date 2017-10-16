@@ -7,8 +7,8 @@
     "file_relationships"
   ],
   "properties": {
-    "dataset_uuid": {"$ref": "core/schemas/Base.json#patterns/uuid"},
-    "tool_definition_uuid": {"$ref": "core/schemas/Base.json#patterns/uuid"},
+    "dataset_uuid": {"$ref": "Base.json#patterns/uuid"},
+    "tool_definition_uuid": {"$ref": "Base.json#patterns/uuid"},
     "file_relationships": {
       "oneOf": [
         {"type": "string"},

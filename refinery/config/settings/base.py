@@ -8,7 +8,6 @@ import urlparse
 from django.core.exceptions import ImproperlyConfigured
 
 import djcelery
-from jsonschema import RefResolver
 import yaml
 
 logger = logging.getLogger(__name__)
@@ -671,9 +670,3 @@ USER_FILES_COLUMNS = get_setting("USER_FILES_COLUMNS")
 USER_FILES_FACETS = get_setting("USER_FILES_FACETS")
 
 MEDIA_BUCKET = ''  # a placeholder for use in context processor
-
-# Allow JSONSchema to find the JSON pointers to our schema files
-JSON_SCHEMA_FILE_RESOLVER = RefResolver(
-    "file://{}/".format(os.path.join(BASE_DIR, "refinery")),
-    None
-)

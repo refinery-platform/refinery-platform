@@ -10,7 +10,7 @@ from django.db import transaction
 
 from bioblend.galaxy.client import ConnectionError
 from django_docker_engine.docker_utils import DockerClientWrapper
-from jsonschema import ValidationError, validate
+from jsonschema import RefResolver, ValidationError, validate
 
 from core.models import DataSet, Workflow, WorkflowEngine
 from factory_boy.django_model_factories import (FileRelationshipFactory,
@@ -31,6 +31,13 @@ ANNOTATION_ERROR_MESSAGE = (
     "on how to properly annotate your tools, please read "
     "https://github.com/refinery-platform/refinery-platform/wiki/"
     "Annotating-&-Importing-Refinery-Tools#importing-refinery-tools"
+)
+# Allow JSON Schema to find the JSON pointers we define in our schemas
+JSON_SCHEMA_FILE_RESOLVER = RefResolver(
+    "file://{}/".format(
+        os.path.join(settings.BASE_DIR, "refinery/tool_manager/schemas")
+    ),
+    None
 )
 
 
@@ -456,7 +463,7 @@ def validate_tool_annotation(annotation_dictionary):
         validate(
             annotation_to_validate,
             schema,
-            resolver=settings.JSON_SCHEMA_FILE_RESOLVER
+            resolver=JSON_SCHEMA_FILE_RESOLVER
         )
     except ValidationError as e:
         raise RuntimeError(
@@ -486,7 +493,7 @@ def validate_workflow_step_annotation(workflow_step_dictionary):
         validate(
             workflow_step_dictionary,
             schema,
-            resolver=settings.JSON_SCHEMA_FILE_RESOLVER
+            resolver=JSON_SCHEMA_FILE_RESOLVER
         )
     except ValidationError as e:
         raise RuntimeError(
@@ -510,7 +517,7 @@ def validate_tool_launch_configuration(tool_launch_config):
         validate(
             tool_launch_config,
             schema,
-            resolver=settings.JSON_SCHEMA_FILE_RESOLVER
+            resolver=JSON_SCHEMA_FILE_RESOLVER
         )
     except ValidationError as e:
         raise RuntimeError(

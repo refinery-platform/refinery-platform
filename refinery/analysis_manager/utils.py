@@ -196,11 +196,7 @@ def validate_analysis_config(analysis_config):
     ) as f:
         schema = json.loads(f.read())
     try:
-        validate(
-            analysis_config,
-            schema,
-            resolver=settings.JSON_SCHEMA_FILE_RESOLVER
-        )
+        validate(analysis_config, schema)
     except ValidationError as e:
         raise RuntimeError(
             "Analysis Configuration is invalid: {}".format(e)
