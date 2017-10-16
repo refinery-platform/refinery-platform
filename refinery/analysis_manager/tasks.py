@@ -257,11 +257,9 @@ def _refinery_file_import(analysis_uuid):
         logger.info("Starting input file import tasks for analysis '%s'",
                     analysis)
         refinery_import_tasks = []
-
         tool = _get_workflow_tool(analysis_uuid)
-        input_file_uuid_list = tool.get_input_file_uuid_list()
 
-        for input_file_uuid in input_file_uuid_list:
+        for input_file_uuid in tool.get_input_file_uuid_list():
             refinery_import_task = import_file.subtask((input_file_uuid,))
             refinery_import_tasks.append(refinery_import_task)
         refinery_import_taskset = TaskSet(
