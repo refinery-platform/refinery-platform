@@ -16,12 +16,12 @@
           "type": "string"
         },
         "file_relationship": {
-          "$ref": "FileRelationship.json#"
+          "$ref": "tool_manager/schemas/FileRelationship.json#"
         },
         "parameters": {
           "type": "array",
           "items": {
-            "$ref": "GalaxyParameter.json#"
+            "$ref": "tool_manager/schemas/GalaxyParameter.json#"
           }
         },
         "tool_type":{
@@ -48,12 +48,12 @@
           "type": "string"
         },
         "file_relationship": {
-          "$ref": "FileRelationship.json#"
+          "$ref": "tool_manager/schemas/FileRelationship.json#"
         },
         "parameters": {
           "type": "array",
           "items": {
-            "$ref": "Parameter.json#"
+            "$ref": "tool_manager/schemas/Parameter.json#"
           }
         },
         "tool_type":{

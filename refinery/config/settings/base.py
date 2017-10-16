@@ -8,6 +8,7 @@ import urlparse
 from django.core.exceptions import ImproperlyConfigured
 
 import djcelery
+from jsonschema import RefResolver
 import yaml
 
 logger = logging.getLogger(__name__)
@@ -689,4 +690,10 @@ REFINERY_TOOL_DEFINITION_SCHEMA = os.path.join(
 REFINERY_WORKFLOW_STEP_SCHEMA = os.path.join(
     BASE_DIR,
     "refinery/tool_manager/schemas/WorkflowStep.json"
+)
+
+# Allow JSONSchema to find the JSON pointers to our schema files
+JSON_SCHEMA_FILE_RESOLVER = RefResolver(
+    "file://{}/".format(os.path.join(BASE_DIR, "refinery")),
+    None
 )

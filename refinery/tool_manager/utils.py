@@ -1,7 +1,6 @@
 import glob
 import json
 import logging
-import os
 import uuid
 
 from django.conf import settings
@@ -10,7 +9,7 @@ from django.db import transaction
 
 from bioblend.galaxy.client import ConnectionError
 from django_docker_engine.docker_utils import DockerClientWrapper
-from jsonschema import RefResolver, ValidationError, validate
+from jsonschema import ValidationError, validate
 
 from core.models import DataSet, Workflow, WorkflowEngine
 from factory_boy.django_model_factories import (FileRelationshipFactory,
@@ -31,13 +30,6 @@ ANNOTATION_ERROR_MESSAGE = (
     "on how to properly annotate your tools, please read "
     "https://github.com/refinery-platform/refinery-platform/wiki/"
     "Annotating-&-Importing-Refinery-Tools#importing-refinery-tools"
-)
-# Allow JSON Schema to find the JSON pointers we define in our schemas
-JSON_SCHEMA_FILE_RESOLVER = RefResolver(
-    "file://{}/".format(
-        os.path.join(settings.BASE_DIR, "refinery/tool_manager/schemas")
-    ),
-    None
 )
 
 
@@ -449,7 +441,6 @@ def validate_tool_annotation(annotation_dictionary):
     properly.
     :param annotation_dictionary: dict containing Tool annotation data
     """
-
     with open(settings.REFINERY_TOOL_DEFINITION_SCHEMA) as f:
         schema = json.loads(f.read())
     annotation_to_validate = annotation_dictionary["annotation"]
@@ -459,7 +450,7 @@ def validate_tool_annotation(annotation_dictionary):
         validate(
             annotation_to_validate,
             schema,
-            resolver=JSON_SCHEMA_FILE_RESOLVER
+            resolver=settings.JSON_SCHEMA_FILE_RESOLVER
         )
     except ValidationError as e:
         raise RuntimeError(
@@ -484,7 +475,7 @@ def validate_workflow_step_annotation(workflow_step_dictionary):
         validate(
             workflow_step_dictionary,
             schema,
-            resolver=JSON_SCHEMA_FILE_RESOLVER
+            resolver=settings.JSON_SCHEMA_FILE_RESOLVER
         )
     except ValidationError as e:
         raise RuntimeError(
@@ -503,7 +494,7 @@ def validate_tool_launch_configuration(tool_launch_config):
         validate(
             tool_launch_config,
             schema,
-            resolver=JSON_SCHEMA_FILE_RESOLVER
+            resolver=settings.JSON_SCHEMA_FILE_RESOLVER
         )
     except ValidationError as e:
         raise RuntimeError(

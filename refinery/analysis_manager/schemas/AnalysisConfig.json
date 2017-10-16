@@ -8,27 +8,21 @@
     "workflow_uuid"
 
   ],
-  "patterns": {
-    "uuid": {
-      "type": "string",
-      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-    }
-  },
   "properties": {
     "name": {
       "type": "string"
     },
     "study_uuid": {
-      "$ref": "#/patterns/uuid"
+      "$ref": "core/schemas/Base.json#patterns/uuid"
     },
     "tool_uuid": {
-      "$ref": "#/patterns/uuid"
+      "$ref": "core/schemas/Base.json#patterns/uuid"
     },
     "user_id": {
       "type": "number"
     },
     "workflow_uuid": {
-      "$ref": "#/patterns/uuid"
+      "$ref": "core/schemas/Base.json#patterns/uuid"
     }
   }
 }

@@ -6,7 +6,7 @@
       "type": "array",
       "items": {
         "type": "object",
-        "$ref": "Parameter.json#"
+        "$ref": "tool_manager/schemas/Parameter.json#"
       }
     }
   }
