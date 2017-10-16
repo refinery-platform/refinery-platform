@@ -31,6 +31,8 @@ env:
     # These env vars are available to every build
     - PYTHONPATH=$PYTHONPATH:../refinery:../refinery/config
     - DJANGO_SETTINGS_MODULE=config.settings.prod
+    # CYPRESS_RECORD_KEY:
+    - secure: oGdTYh3rnPdG7qVGYq3TgVESypir1btO2kmafumtKR6o+FYmMtb09pe+HtiT6Qfv4pDwnYZ2RTYqsTY4h6POigU5j7qQPSsZ5WkhHt9ybFyt/vfo2B95GaAIFt+8LVjTX5TItyw0/PPUCCUluQ1n8k/NCtSfMb0kIT/CuLrg7N8=
 
 before_script:
   # Vagrant is not used on travis: This user is just for the database.
@@ -65,7 +67,7 @@ script:
   - python manage.py runserver --insecure &
   - BASEURL=http://127.0.0.1:8000
   - while ! curl $BASEURL > /dev/null; do sleep 1; done
-  - pushd ui && node_modules/.bin/cypress run --config baseUrl=$BASEURL && popd
+  - pushd ui && node_modules/.bin/cypress run --config baseUrl=$BASEURL projectId=odo3mu && popd
   - echo 'travis_fold:end:cypress'
 
   - echo 'travis_fold:start:django-tests'
