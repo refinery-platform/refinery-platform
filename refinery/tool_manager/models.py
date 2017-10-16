@@ -658,7 +658,8 @@ class WorkflowTool(Tool):
                 step=self._get_workflow_step(galaxy_dataset),
                 filename=self._get_galaxy_dataset_filename(galaxy_dataset),
                 filetype=galaxy_dataset["file_ext"],
-                is_refinery_file=galaxy_dataset in exposed_workflow_outputs
+                is_refinery_file=galaxy_dataset in exposed_workflow_outputs,
+                galaxy_dataset_name=galaxy_dataset["name"]
             )
 
     def _create_collection_description(self):
@@ -920,7 +921,8 @@ class WorkflowTool(Tool):
             )
         )
         retained_datasets = [
-            galaxy_dataset for galaxy_dataset in galaxy_dataset_list
+            self._update_galaxy_dataset_name(galaxy_dataset)
+            for galaxy_dataset in galaxy_dataset_list
             if not galaxy_dataset["purged"] and
             self._get_workflow_step(galaxy_dataset) > 0
         ]
@@ -1270,6 +1272,35 @@ class WorkflowTool(Tool):
             self.GALAXY_TO_REFINERY_MAPPING_LIST,
             galaxy_to_refinery_mapping_list
         )
+
+    def _update_galaxy_dataset_name(self, galaxy_dataset_dict):
+        """
+        Update the name of a Galaxy Dataset if any Galaxy
+        RenameDatasetActions are detected for it
+        :param galaxy_dataset_dict: dict containing information about a
+        Galaxy Dataset
+        :return: galaxy_dataset_dict with an updated 'name' if a
+        RenameDatasetAction was detected, otherwise the original galaxy
+        dataset is returned
+        """
+        workflow_steps = self._get_workflow_dict()["steps"]
+        workflow_step_number = str(
+            self._get_workflow_step(galaxy_dataset_dict)
+        )
+        post_job_actions = workflow_steps[workflow_step_number].get(
+            "post_job_actions"
+        )
+        if post_job_actions:
+            rename_dataset_key = (
+                "RenameDatasetAction{}".format(galaxy_dataset_dict["name"])
+            )
+            if rename_dataset_key in post_job_actions.keys():
+                galaxy_dataset_dict["name"] = (
+                    post_job_actions[
+                        rename_dataset_key
+                    ]["action_arguments"]["newname"]
+                )
+        return galaxy_dataset_dict
 
     @handle_bioblend_exceptions
     def upload_datafile_to_library_from_url(self, library_id, datafile_url):

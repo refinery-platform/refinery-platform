@@ -1583,16 +1583,8 @@ class Analysis(OwnableResource):
 
         for output_connection, analysis_result in output_mappings:
             # create derived data file node
-            derived_data_file_node = (
-                Node.objects.create(
-                    study=study,
-                    assay=assay,
-                    type=Node.DERIVED_DATA_FILE,
-                    name=output_connection.name,
-                    analysis_uuid=self.uuid,
-                    subanalysis=output_connection.subanalysis,
-                    workflow_output=output_connection.name
-                )
+            derived_data_file_node = self._create_derived_data_file_node(
+                study, assay, output_connection
             )
             if output_connection.is_refinery_file:
                 # retrieve uuid of corresponding output file if exists
@@ -1770,6 +1762,18 @@ class Analysis(OwnableResource):
                     )
         return output_connections_to_analysis_results
 
+    def _create_derived_data_file_node(self, study,
+                                       assay, analysis_node_connection):
+        return Node.objects.create(
+            study=study,
+            assay=assay,
+            type=Node.DERIVED_DATA_FILE,
+            name=analysis_node_connection.galaxy_dataset_name,
+            analysis_uuid=self.uuid,
+            subanalysis=analysis_node_connection.subanalysis,
+            workflow_output=analysis_node_connection.name
+        )
+
 
 #: Defining available relationship types
 INPUT_CONNECTION = 'in'
@@ -1808,6 +1812,8 @@ class AnalysisNodeConnection(models.Model):
     # inputs) exist in Refinery
     is_refinery_file = models.BooleanField(null=False, blank=False,
                                            default=False)
+    galaxy_dataset_name = models.CharField(null=True, blank=True,
+                                           max_length=250)
 
     def __unicode__(self):
         return (

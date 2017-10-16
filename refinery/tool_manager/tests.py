@@ -2107,6 +2107,34 @@ class WorkflowToolTests(ToolManagerTestBase):
 
         self._assert_analysis_node_connection_outputs_validity()
 
+    def test_galaxy_renamedatasetaction_handling(self):
+        new_dataset_name = "COFFEE"
+        workflow_step = 1
+        workflow_dict = galaxy_workflow_dict
+        workflow_dict["steps"][str(workflow_step)]["post_job_actions"] = {
+            "RenameDatasetActionRefinery test tool LIST - N on data 4": {
+                "action_arguments": {
+                    "newname": new_dataset_name
+                },
+                "action_type": "RenameDatasetAction",
+                "output_name": "Refinery test tool LIST - N on data 4"
+            }
+        }
+        self.get_workflow_dict_mock.return_value = workflow_dict
+        self.galaxy_datasets_list_mock.start()
+
+        self.create_tool(ToolDefinition.WORKFLOW)
+        galaxy_datasets = self.tool._get_galaxy_history_dataset_list()
+        edited_galaxy_datasets = [
+            galaxy_dataset for galaxy_dataset in galaxy_datasets if
+            self.tool._get_workflow_step(galaxy_dataset) == workflow_step
+        ]
+        assert len(edited_galaxy_datasets) == 1
+
+        # Assert that the Output file w/ a
+        # RenamedDatasetAction in Galaxy was edited
+        self.assertEqual(edited_galaxy_datasets[0]["name"], new_dataset_name)
+
 
 class ToolAPITests(APITestCase, ToolManagerTestBase):
     def test_tools_exist(self):

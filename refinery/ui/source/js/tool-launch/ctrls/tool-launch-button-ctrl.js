@@ -15,6 +15,7 @@
     '$log',
     'toolLaunchService',
     'toolSelectService',
+    '$rootScope',
     '$window'
   ];
 
@@ -22,6 +23,7 @@
     $log,
     toolLaunchService,
     toolSelectService,
+    $rootScope,
     $window
   ) {
     var vm = this;
@@ -40,6 +42,7 @@
      * @memberOf refineryToolLaunch.ToolLaunchButtonCtrl
     **/
     function launchTool () {
+      $rootScope.$broadcast('rf/launchAnalysis');
       toolLaunchService.postToolLaunch().then(function (response) {
         $window.location.href = response.tool_url;
       }, function (error) {
