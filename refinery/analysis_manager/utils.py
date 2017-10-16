@@ -30,8 +30,8 @@ def create_analysis(validated_analysis_config):
     :return: an Analysis instance
     :raises: RuntimeError
     """
-    common_analysis_objects = (
-        fetch_objects_required_for_analysis(validated_analysis_config)
+    common_analysis_objects = fetch_objects_required_for_analysis(
+        validated_analysis_config
     )
     current_workflow = common_analysis_objects["current_workflow"]
     data_set = common_analysis_objects["data_set"]
