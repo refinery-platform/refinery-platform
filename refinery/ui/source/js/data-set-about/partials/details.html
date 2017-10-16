@@ -47,15 +47,23 @@
         class="btn btn-xs btn-primary"
         ng-click="ADCtrl.updateDataSet(
         'accession', ADCtrl.editedDataSet.accession)"
-        ng-disabled="!dataSetAccessionForm.$valid">
+        ng-disabled="!dataSetAccessionForm.$valid ||
+        ADCtrl.editedDataSet.accession == ADCtrl.dataSet.accession">
         Save
       </button>
+
       <span
         class='p-l-1-2 text-warning'
         ng-show="dataSetAccessionForm.dataSetAccession.$error.minlength ||
         dataSetAccessionForm.dataSetAccession.$error.required">
         <i class="fa fa-warning" aria-hidden="true"></i>
         Accession must be 3 characters long.
+      </span>
+      <span
+        class='p-l-1-2 text-warning'
+        ng-show="dataSetAccessionForm.dataSetAccession.$error.maxlength">
+        <i class="fa fa-warning" aria-hidden="true"></i>
+        Accession must be less than 32 characters long.
       </span>
       <span
         class='p-l-1-2 text-warning'
@@ -101,7 +109,8 @@
         type="submit"
         class="btn btn-xs btn-primary"
         ng-click="ADCtrl.updateDataSet('title', ADCtrl.editedDataSet.title)"
-        ng-disabled="!dataSetTitleForm.$valid">
+        ng-disabled="!dataSetTitleForm.$valid ||
+        ADCtrl.editedDataSet.title == ADCtrl.dataSet.title">
         Save
       </button>
       <span
@@ -170,7 +179,8 @@
       type="submit"
       class="btn btn-xs btn-primary"
       ng-click="ADCtrl.updateDataSet('summary', ADCtrl.editedDataSet.summary)"
-      ng-disabled="!dataSetSummaryForm.$valid">
+      ng-disabled="!dataSetSummaryForm.$valid ||
+      ADCtrl.editedDataSet.summary == ADCtrl.dataSet.summary">
       Save
     </button>
     <span
@@ -239,7 +249,8 @@
       type="submit"
       class="btn btn-xs btn-primary"
       ng-click="ADCtrl.updateDataSet('description', ADCtrl.editedDataSet.description)"
-      ng-disabled="!dataSetDescriptionForm.$valid">
+      ng-disabled="!dataSetDescriptionForm.$valid ||
+      ADCtrl.editedDataSet.description == ADCtrl.dataSet.description">
       Save
     </button>
     <span
@@ -307,7 +318,8 @@
       type="submit"
       class="btn btn-xs btn-primary"
       ng-click="ADCtrl.updateDataSet('slug', ADCtrl.editedDataSet.slug)"
-      ng-disabled="!dataSetSlugForm.$valid">
+      ng-disabled="!dataSetSlugForm.$valid ||
+      ADCtrl.editedDataSet.slug == ADCtrl.dataSet.slug">
       Save
     </button>
     <span

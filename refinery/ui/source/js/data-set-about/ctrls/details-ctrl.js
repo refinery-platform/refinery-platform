@@ -15,7 +15,7 @@ function AboutDetailsCtrl (
   vm.assays = dataSetAboutFactory.assays;
   vm.dataSet = dataSetAboutFactory.dataSet;
   vm.dataSetUuid = $window.dataSetUuid;
-  vm.editedDataSet = {}; // avoids updating while user edits(2-way-data-binding)
+  vm.editedDataSet = {};
   vm.fileStoreItem = dataSetAboutFactory.fileStoreItem;
   vm.isCollapsed = {
     title: true,
@@ -35,8 +35,8 @@ function AboutDetailsCtrl (
       .getDataSet(vm.dataSetUuid)
       .then(function () {
         vm.dataSet = dataSetAboutFactory.dataSet;
-        // initialize the edited dataset
-        vm.editedDataSet = dataSetAboutFactory.dataSet;
+        // initialize the edited dataset, avoids updating while user edits
+        angular.copy(vm.dataSet, vm.editedDataSet);
         // grab meta-data info
         if (dataSetAboutFactory.dataSet.isa_archive) {
           vm.refreshFileStoreItem(dataSetAboutFactory.dataSet.isa_archive);
