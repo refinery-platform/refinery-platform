@@ -1,6 +1,5 @@
 import json
 import logging
-import os
 import re
 import uuid
 
@@ -188,12 +187,7 @@ def validate_analysis_config(analysis_config):
     transaction of a `WorkflowTool.launch()`
     :param analysis_config: json data containing an Analysis configuration
     """
-    with open(
-            os.path.join(
-                settings.BASE_DIR,
-                "refinery/analysis_manager/schemas/AnalysisConfig.json"
-            )
-    ) as f:
+    with open(settings.REFINERY_ANALYSIS_CONFIG_SCHEMA) as f:
         schema = json.loads(f.read())
     try:
         validate(analysis_config, schema)

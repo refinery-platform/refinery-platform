@@ -670,3 +670,23 @@ USER_FILES_COLUMNS = get_setting("USER_FILES_COLUMNS")
 USER_FILES_FACETS = get_setting("USER_FILES_FACETS")
 
 MEDIA_BUCKET = ''  # a placeholder for use in context processor
+
+REFINERY_ANALYSIS_CONFIG_SCHEMA = os.path.join(
+    BASE_DIR,
+    "refinery/analysis_manager/schemas/AnalysisConfig.json"
+)
+
+REFINERY_TOOL_LAUNCH_CONFIG_SCHEMA = os.path.join(
+    BASE_DIR,
+    "refinery/tool_manager/schemas/ToolLaunchConfig.json"
+)
+
+REFINERY_TOOL_DEFINITION_SCHEMA = os.path.join(
+    BASE_DIR,
+    "refinery/tool_manager/schemas/ToolDefinition.json"
+)
+
+REFINERY_WORKFLOW_STEP_SCHEMA = os.path.join(
+    BASE_DIR,
+    "refinery/tool_manager/schemas/WorkflowStep.json"
+)
