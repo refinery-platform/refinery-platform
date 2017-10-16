@@ -12,23 +12,29 @@
   <div
     id="dataSetAccession"
     uib-collapse="ADCtrl.isCollapsed.title">
-    <div class="vertical-align">
+    <div class="vertical-align p-t-1-2">
       <form
         ng-submit="ADCtrl.updateDataSet(
         'accession', ADCtrl.updatedField.accession
         )"
         name="dataSetAccessionForm"
-        class="navbar-form text-align-center float-left">
-      <input
-        autofocus
-        type="text"
-        name="dataSetAccession"
-        class="form-control"
-        placeholder="update accession"
-        ng-model="ADCtrl.updatedField.accession"
-        ng-minlength="3"
-        ng-maxlength="32"
-        required>
+        class="p-r-1-2">
+        <div class="form-group" ng-class='{"has-warning":!dataSetAccessionForm.$valid}'>
+          <label class="control-label" for="dataSetAccessionInput">
+            Edit Accession
+          </label>
+          <input
+            autofocus
+            type="text"
+            id="dataSetAccessionInput"
+            name="dataSetAccession"
+            class="form-control"
+            ng-init="ADCtrl.updatedField.accession = ADCtrl.dataSet.accession"
+            ng-model="ADCtrl.updatedField.accession"
+            ng-minlength="3"
+            ng-maxlength="32"
+            required>
+        </div>
       </form>
 
       <button
