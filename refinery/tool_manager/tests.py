@@ -2108,7 +2108,7 @@ class WorkflowToolTests(ToolManagerTestBase):
 
         self._assert_analysis_node_connection_outputs_validity()
 
-    def test_that_galaxy_renamedatasetactions_are_handled(self):
+    def test_galaxy_renamedatasetaction_handling(self):
         new_dataset_name = "COFFEE"
         workflow_step = 1
         workflow_dict = galaxy_workflow_dict
