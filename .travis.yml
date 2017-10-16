@@ -67,7 +67,7 @@ script:
   - python manage.py runserver --insecure &
   - BASEURL=http://127.0.0.1:8000  # Needs to match cypress.json
   - while ! curl $BASEURL > /dev/null; do sleep 1; done
-  - pushd ui && node_modules/.bin/cypress run && popd
+  - pushd ui && node_modules/.bin/cypress run --record && popd
   - echo 'travis_fold:end:cypress'
 
   - echo 'travis_fold:start:django-tests'
