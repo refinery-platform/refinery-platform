@@ -421,8 +421,14 @@ def _run_galaxy_workflow(analysis_uuid):
 def _galaxy_file_import(analysis_uuid, file_store_item_uuid, history_dict,
                         library_dict):
     tool = _get_workflow_tool(analysis_uuid)
-
-    file_store_item = FileStoreItem.objects.get(uuid=file_store_item_uuid)
+    try:
+        file_store_item = FileStoreItem.objects.get(uuid=file_store_item_uuid)
+    except (FileStoreItem.DoesNotExist,
+            FileStoreItem.MultipleObjectsReturned) as e:
+        logger.error("Couldn't fetch FileStoreItem from UUID: %s %s",
+                     file_store_item_uuid, e)
+        run_analysis.update_state(state=celery.states.FAILURE)
+        return
     library_dataset_dict = tool.upload_datafile_to_library_from_url(
         library_dict["id"],
         file_store_item.get_datafile_url()
