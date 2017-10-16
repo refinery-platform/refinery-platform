@@ -521,10 +521,7 @@ def _get_galaxy_download_task_ids(analysis):
                 file_type = 'zip'
             # TODO: when changing permanent=True, fix update of % download
             # of file
-            filestore_uuid = create(
-                source=download_url,
-                filetype=file_type
-            )
+            filestore_uuid = create(source=download_url, filetype=file_type)
             # adding history files to django model
             temp_file = AnalysisResult(
                 analysis_uuid=analysis.uuid,
