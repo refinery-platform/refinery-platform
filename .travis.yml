@@ -65,7 +65,9 @@ script:
   # TODO: Move this after python unit tests
   # TODO: Start up solr and neo4j
   - echo 'travis_fold:start:cypress'
+  - python manage.py loaddata guest.json
   - python manage.py activate_user guest
+  - python manage.py add_users_to_public_group
   - python manage.py collectstatic --noinput -v 0
   - python manage.py runserver --insecure &
   - BASEURL=http://127.0.0.1:8000  # Needs to match cypress.json
