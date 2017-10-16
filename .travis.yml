@@ -62,8 +62,11 @@ script:
   - pushd ui && grunt && popd
   - echo 'travis_fold:end:grunt'
 
-  # TODO: Move this after python unit tests
-  # TODO: Start up solr and neo4j
+  - echo 'travis_fold:start:django-tests'
+  - coverage run manage.py test
+  - echo 'travis_fold:end:django-tests'
+
+  # TODO: Start up solr (and neo4j?)
   - echo 'travis_fold:start:cypress'
   - python manage.py loaddata guest.json
   - python manage.py activate_user guest
@@ -74,10 +77,6 @@ script:
   - while ! curl $BASEURL > /dev/null; do sleep 1; done
   - pushd ui && node_modules/.bin/cypress run --record && popd
   - echo 'travis_fold:end:cypress'
-
-  - echo 'travis_fold:start:django-tests'
-  - coverage run manage.py test
-  - echo 'travis_fold:end:django-tests'
 
   - set +e # Currently, codecov does not always exit with 0, but that should not cause travis to fail.
 
