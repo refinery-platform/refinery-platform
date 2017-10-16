@@ -2127,9 +2127,8 @@ class WorkflowToolTests(ToolManagerTestBase):
         self.create_tool(ToolDefinition.WORKFLOW)
         galaxy_datasets = self.tool._get_galaxy_history_dataset_list()
         edited_galaxy_dataset = next(
-            (galaxy_dataset for galaxy_dataset in galaxy_datasets if
-             self.tool._get_workflow_step(galaxy_dataset) == workflow_step),
-            None
+            galaxy_dataset for galaxy_dataset in galaxy_datasets if
+            self.tool._get_workflow_step(galaxy_dataset) == workflow_step
         )
         # Assert that the Output file w/ a
         # RenamedDatasetAction in Galaxy was edited
