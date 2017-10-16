@@ -28,7 +28,7 @@ describe('New user', function() {
 
     cy.django_shell(
         'from django.contrib.auth.models import User; ' +
-        'u = User.objects.filter(username="' + username + '")[0]; ' +
+        'u = User.objects.get(username="' + username + '"); ' +
         'u.is_active = True; ' +
         'u.save()'
     );
