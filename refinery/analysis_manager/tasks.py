@@ -122,7 +122,6 @@ def _get_analysis_status(analysis_uuid):
         logger.error("Can not retrieve status for analysis '%s': '%s'",
                      analysis, exc)
         run_analysis.update_state(state=celery.states.FAILURE)
-        return
 
 
 def get_taskset_result(task_group_id):
@@ -138,7 +137,6 @@ def _get_workflow_tool(analysis_uuid):
             tool_manager.models.WorkflowTool.MultipleObjectsReturned) as e:
         logger.error("Could not fetch WorkflowTool for this analysis: %s", e)
         run_analysis.update_state(state=celery.states.FAILURE)
-        return
 
 
 def _attach_workflow_outputs(analysis_uuid):
@@ -220,7 +218,6 @@ def _galaxy_file_export(analysis_uuid):
         ).delete()
         galaxy_export_taskset.delete()
         analysis.galaxy_cleanup()
-        return
 
 
 @task()
@@ -286,7 +283,6 @@ def _refinery_file_import(analysis_uuid):
         analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
         analysis.send_email()
         refinery_import_taskset.delete()
-        return
 
 
 @task(base=AnalysisHandlerTask, max_retries=None)
@@ -360,7 +356,6 @@ def _run_galaxy_file_import(analysis_uuid):
         ).delete()
         galaxy_file_import_taskset.delete()
         analysis.galaxy_cleanup()
-        return
     else:
         analysis_status.set_galaxy_import_state(AnalysisStatus.OK)
 
