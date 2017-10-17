@@ -1398,7 +1398,7 @@ class UtilitiesTest(TestCase):
             {
                 "q": "django_ct:data_set_manager.node",
                 "wt": "json",
-                "fq": "uuid:'{}'".format(" OR ".join(fake_node_uuids))
+                "fq": "uuid:({})".format(" OR ".join(fake_node_uuids))
             }
         )
 
