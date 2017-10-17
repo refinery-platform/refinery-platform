@@ -26,19 +26,26 @@
 
 
 Cypress.Commands.add('visible',
-  function(text) {
-    return cy.contains(text).should('visible')
+  {
+    prevSubject: 'optional'
+  },
+  function(subject, text) {
+    var start = subject ? cy.wrap(subject) : cy;
+    return start.contains(text).should('visible')
   }
 );
 
 Cypress.Commands.add('visible_btn',
-  function(text) {
+  {
+    prevSubject: 'optional'
+  },
+  function(subject, text) {
     // Often there are other elements on the page that will match just the text,
     // but constraining it to ".btn" will find the right one.
-    return cy.get('.btn').contains(text).should('visible');
+    var start = subject ? cy.wrap(subject) : cy;
+    return start.get('.btn').contains(text).should('visible');
   }
 );
-
 
 Cypress.Commands.add('django_shell',
   function(cmd) {
