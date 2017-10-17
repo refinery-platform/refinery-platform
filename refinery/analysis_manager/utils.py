@@ -9,7 +9,7 @@ from django.contrib.auth.models import User
 from django.http import HttpResponseServerError
 from django.utils import timezone
 
-from jsonschema import ValidationError, validate
+import jsonschema
 import requests
 from requests.packages.urllib3.exceptions import HTTPError
 
@@ -196,8 +196,8 @@ def validate_analysis_config(analysis_config):
     ) as f:
         schema = json.loads(f.read())
     try:
-        validate(analysis_config, schema)
-    except ValidationError as e:
+        jsonschema.validate(analysis_config, schema)
+    except jsonschema.ValidationError as e:
         raise RuntimeError(
             "Analysis Configuration is invalid: {}".format(e)
         )
