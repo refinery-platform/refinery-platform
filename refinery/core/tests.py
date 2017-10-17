@@ -1526,7 +1526,7 @@ class AnalysisTests(TestCase):
         self.analysis_status.galaxy_import_progress = 96
 
         self.assertEqual(
-            self.analysis_status.tool_based_galaxy_file_import_state(),
+            self.analysis_status.galaxy_file_import_state(),
             [
                 {
                     'state': self.analysis_status.galaxy_import_state,
@@ -1540,7 +1540,7 @@ class AnalysisTests(TestCase):
         self.analysis_status.galaxy_import_progress = 96
 
         self.assertEqual(
-            self.analysis_status.tool_based_galaxy_file_import_state(),
+            self.analysis_status.galaxy_file_import_state(),
             []
         )
 
@@ -1549,7 +1549,7 @@ class AnalysisTests(TestCase):
         self.analysis_status.galaxy_import_state = AnalysisStatus.PROGRESS
 
         self.assertEqual(
-            self.analysis_status.tool_based_galaxy_file_import_state(),
+            self.analysis_status.galaxy_file_import_state(),
             []
         )
 

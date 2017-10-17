@@ -21,8 +21,8 @@ from django_extensions.db.fields import UUIDField
 from docker.errors import APIError
 
 from analysis_manager.models import AnalysisStatus
-from analysis_manager.tasks import (_tool_based_galaxy_file_import,
-                                    get_taskset_result, run_analysis)
+from analysis_manager.tasks import (_galaxy_file_import, get_taskset_result,
+                                    run_analysis)
 from analysis_manager.utils import create_analysis, validate_analysis_config
 from core.models import (INPUT_CONNECTION, OUTPUT_CONNECTION, Analysis,
                          AnalysisNodeConnection, DataSet, OwnableResource,
@@ -348,10 +348,10 @@ class Tool(OwnableResource):
         """
         return {
             "name": "{}".format(self),
-            "studyUuid": self.dataset.get_latest_study().uuid,
-            "toolUuid": self.uuid,
+            "study_uuid": self.dataset.get_latest_study().uuid,
+            "tool_uuid": self.uuid,
             "user_id": self.get_owner().id,
-            "workflowUuid": self.tool_definition.workflow.uuid
+            "workflow_uuid": self.tool_definition.workflow.uuid
         }
 
     def launch(self):
@@ -970,11 +970,9 @@ class WorkflowTool(Tool):
         return self.get_tool_launch_config()[self.GALAXY_DATA]
 
     def get_galaxy_import_tasks(self):
-        """
-        Create and return a list of _tool_based_galaxy_file_import() tasks
-        """
+        """Create and return a list of _galaxy_file_import() tasks"""
         return [
-            _tool_based_galaxy_file_import.subtask(
+            _galaxy_file_import.subtask(
                 (
                     self.analysis.uuid,
                     file_store_item_uuid,
@@ -982,7 +980,7 @@ class WorkflowTool(Tool):
                     self.get_galaxy_dict()[self.GALAXY_LIBRARY_DICT],
                 )
             ) for file_store_item_uuid in self.get_input_file_uuid_list()
-            ]
+        ]
 
     @handle_bioblend_exceptions
     def _get_galaxy_dataset_provenance(self, galaxy_dataset_dict):
