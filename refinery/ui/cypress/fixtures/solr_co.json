@@ -1,0 +1,52 @@
+{
+  "highlighting": {
+    "core.dataset.2": {
+      "description": [
+        "Comparison of muscle stem cell preplates and myoblasts."
+      ],
+      "title": [
+        "<em>Comparison</em> of muscle stem cell preplates and myoblasts."
+      ]
+    }
+  },
+  "responseHeader": {
+    "status": 0,
+    "QTime": 45,
+    "params": {
+      "hl.maxAlternateFieldLength": "128",
+      "f.title.hl.alternateField": "title",
+      "defType": "edismax",
+      "rows": "50",
+      "hl.simple.post": "</em>",
+      "fq": "django_ct:core.dataset AND access:(u_2 OR g_100)",
+      "f.description.hl.alternateField": "description",
+      "q": "comparison",
+      "start": "0",
+      "synonyms": "false",
+      "wt": "json",
+      "hl": "true",
+      "qf": "title^0.5 accession submitter text description",
+      "hl.simple.pre": "<em>",
+      "hl.fl": "title,description",
+      "f.title.hl.fragsize": "0",
+      "allIds": "1",
+      "fl": "dbid,uuid,access"
+    }
+  },
+  "response": {
+    "start": 0,
+    "allIds": [
+      2
+    ],
+    "numFound": 1,
+    "docs": [
+      {
+        "access": [
+          "u_2"
+        ],
+        "dbid": 2,
+        "uuid": "b80f6abf-058a-4629-888f-d31375c1927e"
+      }
+    ]
+  }
+}
