@@ -52,24 +52,9 @@ describe('Not logged in', function() {
     cy.visible('Team');
   });
 
-  it('Has explore', function() {
-    cy.visit('/');
-    cy.get('.btn').contains('Explore').should('visible').click();
-
-    cy.visible('Intro Tour');
-    cy.visible('Highlight:');
-    cy.visible('Lock:');
-    cy.visible('Query:');
-    cy.visible('TREEMAP:');
-    cy.visible('Depth:');
-
-    cy.get('#list-graph-wrapper').contains('No data available!').should('visible');
-    cy.get('#treemap-wrapper').contains('No data available!').should('visible');
-  });
-
   it('Has list', function() {
     cy.visit('/');
-    cy.get('.btn').contains('List').should('visible').click();
+    cy.visible_btn('List').click();
 
     cy.visible('Filename');
     cy.visible('Organism');

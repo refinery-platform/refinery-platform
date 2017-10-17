@@ -6,7 +6,7 @@ describe('New user', function() {
     cy.visible('Register for an account');
     cy.visible('Indicates a required field');
 
-    cy.get('.btn').contains('Register').should('visible').click();
+    cy.visible_btn('Register').click();
 
     cy.visible('Please correct the errors below.');
 
@@ -20,7 +20,7 @@ describe('New user', function() {
     cy.get('#id_password1').type(password);
     cy.get('#id_password2').type(password);
 
-    cy.get('.btn').contains('Register').should('visible').click();
+    cy.visible_btn('Register').click();
 
     cy.visible('Registration complete');
     cy.visible('Thank you for registering!');
@@ -36,7 +36,7 @@ describe('New user', function() {
     cy.visible('Login').click();
     cy.get('#id_username').type(username);
     cy.get('#id_password').type(password);
-    cy.get('.btn').contains('Login').click();
+    cy.visible_btn('Login').click();
     // At this point we are still on the "Thank you for registering" page.
 
     cy.visible('first last')

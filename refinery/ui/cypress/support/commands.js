@@ -31,6 +31,14 @@ Cypress.Commands.add('visible',
   }
 );
 
+Cypress.Commands.add('visible_btn',
+  function(text) {
+    // Often there are other elements on the page that will match just the text,
+    // but constraining it to ".btn" will find the right one.
+    return cy.get('.btn').contains(text).should('visible');
+  }
+);
+
 
 Cypress.Commands.add('django_shell',
   function(cmd) {
@@ -52,6 +60,6 @@ Cypress.Commands.add('login_guest',
     cy.visit('/accounts/login/?next=' + ( next || '/') );
     cy.get('#id_username').type('guest');
     cy.get('#id_password').type('guest');
-    cy.get('.btn').contains('Login').click();
+    cy.visible_btn('Login').click();
   }
 );
