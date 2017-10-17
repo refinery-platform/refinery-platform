@@ -60,11 +60,13 @@ describe('Satori', function() {
     cy.visible_btn('Explore').click();
 
     cy.get('#list-graph-wrapper').visible('Name').click();
+    cy.get('#list-graph-wrapper').get('.sort-name .icon-sort-desc.visible');
     cy.get('#list-graph-wrapper').visible('No annotations').click(); // Last node, alphabetically.
     cy.get('#list-graph-wrapper').visible('Lock').click();
     cy.get('.node.lock-directly').invoke('attr','transform').should('contain', ', 0)');
 
     cy.get('#list-graph-wrapper').visible('Name').click();
+    cy.get('#list-graph-wrapper').get('.sort-name .icon-sort-asc.visible');
     cy.get('#list-graph-wrapper').visible('Biotin').click(); // First node, alphabetically.
     cy.get('#list-graph-wrapper').visible('Lock').click();
     cy.get('.node.lock-directly').invoke('attr','transform').should('contain', ', 0)');
