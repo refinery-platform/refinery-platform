@@ -51,6 +51,14 @@ before_script:
   - npm install --progress false --quiet || ( cat npm-debug.log && false )
   - bower install --config.interactive=false --quiet
   - cd ../
+
+  # Required for cypress tests; TODO: Move to puppet.
+  # TODO: Start up solr (and neo4j?)
+  - python manage.py loaddata guest.json
+  - python manage.py activate_user guest
+  - python manage.py add_users_to_public_group
+  - python manage.py collectstatic --noinput -v 0
+  - python manage.py runserver --insecure &
 script:
   - set -e # Any error will cause travis to exit early and report a failure.
 
@@ -66,15 +74,7 @@ script:
   - coverage run manage.py test
   - echo 'travis_fold:end:django-tests'
 
-  # TODO: Start up solr (and neo4j?)
   - echo 'travis_fold:start:cypress'
-  - python manage.py loaddata guest.json
-  - python manage.py activate_user guest
-  - python manage.py add_users_to_public_group
-  - python manage.py collectstatic --noinput -v 0
-  - python manage.py runserver --insecure &
-  - BASEURL=http://127.0.0.1:8000  # Needs to match cypress.json
-  - while ! curl $BASEURL > /dev/null; do sleep 1; done
   - pushd ui && node_modules/.bin/cypress run --record && popd
   - echo 'travis_fold:end:cypress'
 
