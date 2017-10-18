@@ -32,6 +32,13 @@ class Command(BaseCommand):
             dest='workflows',
             help='Generate ToolDefinitions for properly annotated '
                  'Galaxy-based Workflows'
+        ),
+        make_option(
+            '--force',
+            action='store_true',
+            dest='force',
+            help='Overwrite ToolDefinitions with the same names instead of '
+                 'skipping their creation'
         )
     )
 
@@ -40,43 +47,76 @@ class Command(BaseCommand):
         Creates ToolDefinitions based off of properly annotated Galaxy
         Workflows and Visualization Tools.
         """
+        force_delete = options["force"]
+
+        if force_delete:
+            result = self._ask_for_confirmation()
+            while len(result) < 1 or result[0].lower() not in "yn":
+                result = self._ask_for_confirmation()
+            if result[0].lower() == "n":
+                return
 
         if not options["visualizations"] and not options["workflows"]:
-            self.generate_visualization_tool_definitions()
-            self.generate_workflow_tool_definitions()
+            self.generate_tool_definitions(force=force_delete)
 
         if options["visualizations"]:
-            self.generate_visualization_tool_definitions()
-
+            self.generate_tool_definitions(workflows=False,
+                                           force=force_delete)
         if options["workflows"]:
-            self.generate_workflow_tool_definitions()
+            self.generate_tool_definitions(visualizations=False,
+                                           force=force_delete)
 
-    def generate_visualization_tool_definitions(self):
+    @staticmethod
+    def _ask_for_confirmation():
+        return raw_input("Are you sure you want to `--force`? This will "
+                         "delete any existing ToolDefinitions with the "
+                         "same name as any new ones you you're trying to "
+                         "import: [y/n]: ")
+
+    def generate_tool_definitions(self,
+                                  visualizations=True,
+                                  workflows=True,
+                                  force=False):
         """
         Validate visualization annotation data, and try to create a
         ToolDefinition if our validation rules pass.
         """
-        self.stdout.write(
-            self.style.WARNING(
-                "Generating Visualization-based ToolDefinitions"
-            )
-        )
-
-        visualization_annotations = get_visualization_annotations_list()
-
-        for visualization in visualization_annotations:
-            if visualization["name"] in [
-                t.name for t in ToolDefinition.objects.all()
-            ]:
-                self.stdout.write(
-                    self.style.NOTICE(
-                        "Skipping creation of `{0}` since ToolDefinition with "
-                        "name: `{0}` already exists.".format(
-                            visualization["name"]
-                        )
-                    )
+        if visualizations:
+            self.stdout.write(
+                self.style.WARNING(
+                    "Generating Visualization-based ToolDefinitions"
                 )
-            else:
+            )
+
+            visualization_annotations = get_visualization_annotations_list()
+
+            for visualization in visualization_annotations:
+                if visualization["name"] in [
+                    t.name for t in ToolDefinition.objects.all()
+                ]:
+                    if force:
+                        self.stdout.write(
+                            self.style.NOTICE(
+                                "Forcing deletion of of `{0}`".format(
+                                    visualization["name"]
+                                )
+                            )
+                        )
+                        ToolDefinition.objects.get(
+                            name=visualization["name"]
+                        ).delete()
+                    else:
+                        self.stdout.write(
+                            self.style.NOTICE(
+                                "Skipping creation of `{0}` since "
+                                "ToolDefinition with name: `{0}` "
+                                "already exists.".format(
+                                    visualization["name"]
+                                )
+                            )
+                        )
+                        continue
+
                 visualization["tool_type"] = ToolDefinition.VISUALIZATION
                 try:
                     validate_tool_annotation(visualization)
@@ -103,47 +143,56 @@ class Command(BaseCommand):
                         )
                     )
                 )
-
-    def generate_workflow_tool_definitions(self):
-        """
-        Fetch all Galaxy-based workflows, Validate workflow annotation data,
-        and try to create ToolDefinitions if our validation rules pass.
-        """
-        self.stdout.write(
-            self.style.WARNING(
-                "Generating Galaxy Workflow-based ToolDefinitions"
+        if workflows:
+            self.stdout.write(
+                self.style.WARNING(
+                    "Generating Galaxy Workflow-based ToolDefinitions"
+                )
             )
-        )
 
-        try:
-            workflows = get_workflows()
-        except RuntimeError as e:
-            raise CommandError(e)
+            try:
+                workflows = get_workflows()
+            except RuntimeError as e:
+                raise CommandError(e)
 
-        for workflow_engine_uuid in workflows:
-            for workflow in workflows[workflow_engine_uuid]:
-                if workflow["name"] in [
-                    t.name for t in ToolDefinition.objects.all()
-                ]:
-                    self.stdout.write(
-                        self.style.NOTICE(
-                            "Skipping creation of `{0}` since "
-                            "ToolDefinition with name: `{0}` already exists."
-                            .format(workflow["name"])
-                        )
-                    )
-                else:
+            for workflow_engine_uuid in workflows:
+                for workflow in workflows[workflow_engine_uuid]:
+                    if workflow["name"] in [
+                        t.name for t in ToolDefinition.objects.all()
+                    ]:
+                        if force:
+                            self.stdout.write(
+                                self.style.NOTICE(
+                                    "Forcing deletion of of `{0}`".format(
+                                        workflow["name"]
+                                    )
+                                )
+                            )
+                            ToolDefinition.objects.get(
+                                name=workflow["name"]
+                            ).delete()
+                        else:
+                            self.stdout.write(
+                                self.style.NOTICE(
+                                    "Skipping creation of `{0}` since "
+                                    "ToolDefinition with name: `{0}` already "
+                                    "exists.".format(workflow["name"])
+                                )
+                            )
+                            continue
+
                     workflow["galaxy_workflow_id"] = workflow["id"]
                     workflow["tool_type"] = ToolDefinition.WORKFLOW
-                    try:
-                        workflow["annotation"] = json.loads(
-                            workflow["annotation"]
-                        )
-                    except ValueError as e:
-                        raise CommandError(
-                            "Workflow: `{}`'s annotation is not "
-                            "valid JSON: {}".format(workflow["name"], e)
-                        )
+                    if not isinstance(workflow["annotation"], dict):
+                        try:
+                            workflow["annotation"] = json.loads(
+                                workflow["annotation"]
+                            )
+                        except ValueError as e:
+                            raise CommandError(
+                                "Workflow: `{}`'s annotation is not "
+                                "valid JSON: {}".format(workflow["name"], e)
+                            )
 
                     # Include `parameters` key in our workflow annotation
                     workflow["annotation"][ToolDefinition.PARAMETERS] = []
@@ -173,9 +222,7 @@ class Command(BaseCommand):
                     self.stdout.write(
                         self.style.WARNING(
                             "Generated ToolDefinition for Workflow: `{}`"
-                            .format(
-                                workflow["name"]
-                            )
+                            .format(workflow["name"])
                         )
                     )
 
