@@ -1,0 +1,32 @@
+{
+  "meta": {
+    "limit": 20,
+    "next": null,
+    "offset": 0,
+    "previous": null,
+    "total_count": 1
+  },
+  "objects": [
+    {
+      "description": "This is a great DataSet",
+      "file_name": "",
+      "id": 56,
+      "identifier": "",
+      "investigation_uuid": "c7dcdb8a-d5cd-412e-a85e-9ad7546ce553",
+      "protocols": [
+        
+      ],
+      "publications": [
+        
+      ],
+      "release_date": null,
+      "resource_uri": "/api/v1/study/338c7acd-5650-43dc-bd32-b1ffbff84312/",
+      "sources": [
+        
+      ],
+      "submission_date": null,
+      "title": "",
+      "uuid": "338c7acd-5650-43dc-bd32-b1ffbff84312"
+    }
+  ]
+}
