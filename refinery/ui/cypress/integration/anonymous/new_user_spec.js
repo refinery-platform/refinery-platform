@@ -1,4 +1,9 @@
 describe('New user', function() {
+  var username;
+  before(function() {
+    username = 'cypress_' + Date.now();
+  });
+
   it('Account creation works', function() {
     cy.visit('/accounts/register/');
 
@@ -10,7 +15,6 @@ describe('New user', function() {
 
     cy.visible('Please correct the errors below.');
 
-    var username = 'cypress_' + Date.now();
     var password = 'password';
     cy.get('#id_username').type(username);
     cy.get('#id_first_name').type('first');
@@ -39,6 +43,13 @@ describe('New user', function() {
     cy.visible_btn('Login').click();
     // At this point we are still on the "Thank you for registering" page.
 
-    cy.visible('first last')
+    cy.visible('first last');
+  });
+
+  after(function() {
+    cy.django_shell(
+        'from django.contrib.auth.models import User; ' +
+        'User.objects.get(username="' + username + '").delete()'
+    );
   });
 });
