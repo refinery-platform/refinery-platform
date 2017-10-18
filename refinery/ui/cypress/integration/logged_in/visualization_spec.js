@@ -1,4 +1,4 @@
-describe('Visualization', function() {
+describe.skip('Visualization', function() {
   it('Works', function() {
     // cy.django_manage('generate_tool_definitions');
     // TODO: Is this necessary? If the tool def already exists this will fail ... add "|| true"?
