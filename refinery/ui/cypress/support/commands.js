@@ -32,7 +32,7 @@ Cypress.Commands.add('visible_btn',
 
 function shell_quote(str) {
   return "'" + str.replace(/'/g, "'\"'\"'") + "'";
-};
+}
 
 Cypress.Commands.add('wrap_cmd',
   function(manage_cmd) {

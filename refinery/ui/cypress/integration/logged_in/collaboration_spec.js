@@ -1,7 +1,7 @@
 describe('Collaboration', function() {
   it.skip('Works', function() {
     /*
-    TODO:
+
     I'm running into a lot of unpredictability here. I think sometimes the problem may be
     that elements are visible, without being clickable, because they are still behind a modal.
 
