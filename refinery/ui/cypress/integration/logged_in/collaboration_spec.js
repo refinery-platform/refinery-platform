@@ -1,6 +1,7 @@
 describe('Collaboration', function() {
   it.skip('Works', function() {
     /*
+    TODO:
 
     I'm running into a lot of unpredictability here. I think sometimes the problem may be
     that elements are visible, without being clickable, because they are still behind a modal.
@@ -16,7 +17,7 @@ describe('Collaboration', function() {
     cy.visible('Pending Invitations');
 
     cy.visible_btn('Add').click();
-    // TODO: Often fail with: [$location:badpath] http://errors.angularjs.org/1.5.9/$location/badpath?p0=%2F%2F
+    // TODO: Often fails with: [$location:badpath] http://errors.angularjs.org/1.5.9/$location/badpath?p0=%2F%2F
     cy.visible('Add new groups');
     cy.visible('No two groups in Refinery may have the same name.');
     cy.visible('Names must be at least 3 characters long.');
