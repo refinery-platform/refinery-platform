@@ -57,7 +57,7 @@ describe('Preview', function() {
     cy.visible('Abstract');
     cy.visible('We examined the pattern of gene expression');
 
-    cy.get('.protocols').scrollIntoView();q
+    cy.get('.protocols').scrollIntoView();
     cy.visible('Protocols');
     cy.visible('growth protocol');
     cy.visible('Caco-2 cells were grown in 10% FBS');
