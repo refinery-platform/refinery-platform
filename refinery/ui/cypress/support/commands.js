@@ -30,17 +30,30 @@ Cypress.Commands.add('visible_btn',
   }
 );
 
-Cypress.Commands.add('django_shell',
-  function(cmd) {
-    function quote(str) {
-      return "'" + str.replace(/'/g, "'\"'\"'") + "'";
-    }
+function shell_quote(str) {
+  return "'" + str.replace(/'/g, "'\"'\"'") + "'";
+};
 
-    var manage_cmd = "echo " + quote(cmd) + " | ./manage.py shell";
+Cypress.Commands.add('wrap_cmd',
+  function(manage_cmd) {
     var cd_cmd = "cd .. && " + manage_cmd;
     var workon_cmd = "workon refinery-platform && " + manage_cmd;
-    var vagrant_cmd = 'vagrant ssh -c ' + quote(workon_cmd);
-    cy.exec('( ' + cd_cmd + ' ) || ( ' + vagrant_cmd + ' )')
+    var vagrant_cmd = 'vagrant ssh -c ' + shell_quote(workon_cmd);
+    return cy.exec('( ' + cd_cmd + ' ) || ( ' + vagrant_cmd + ' )')
+  }
+);
+
+Cypress.Commands.add('django_manage',
+  function(tool) {
+    var manage_cmd = "./manage.py " + tool;
+    return cy.wrap_cmd(manage_cmd);
+  }
+);
+
+Cypress.Commands.add('django_shell',
+  function(cmd) {
+    var manage_cmd = "echo " + shell_quote(cmd) + " | ./manage.py shell";
+    return cy.wrap_cmd(manage_cmd);
   }
 );
 
