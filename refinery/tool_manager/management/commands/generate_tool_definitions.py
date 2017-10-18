@@ -73,67 +73,53 @@ class Command(BaseCommand):
                          "same name as any new ones you you're trying to "
                          "import: [y/n]: ")
 
+    def _check_for_duplicates(self, tool_annotation, force_delete):
+        current_tool_definition_names = [
+            t.name for t in ToolDefinition.objects.all()
+        ]
+        if tool_annotation["name"] in current_tool_definition_names:
+            if force_delete:
+                self.stdout.write(
+                    self.style.NOTICE("Forcing deletion of of `{0}`".format(
+                            tool_annotation["name"]))
+                )
+                ToolDefinition.objects.get(
+                    name=tool_annotation["name"]
+                ).delete()
+            else:
+                self.stdout.write(
+                    self.style.NOTICE(
+                        "Skipping creation of `{0}` since "
+                        "ToolDefinition with name: `{0}` "
+                        "already exists.".format(tool_annotation["name"])
+                    )
+                )
+                return True
+
     def generate_tool_definitions(self,
                                   visualizations=True,
                                   workflows=True,
                                   force=False):
+        """Generate ToolDefinitions if our validation rules pass.
+        :param force: <Boolean> Whether or not to force deletion of
+        previously created ToolDefinitions with the same name as ones
+        currently being generated.
+        :param workflows: <Boolean> Whether to generate Workflow-based
+        ToolDefinitions or not
+        :param visualizations: <Boolean> Whether to generate
+        Visualization-based  ToolDefinitions or not
         """
-        Validate visualization annotation data, and try to create a
-        ToolDefinition if our validation rules pass.
-        """
-        if visualizations:
-            self.stdout.write(
-                self.style.WARNING(
-                    "Generating Visualization-based ToolDefinitions"
-                )
-            )
+        self.stdout.write(self.style.WARNING("Generating ToolDefinitions"))
 
+        if visualizations:
             visualization_annotations = get_visualization_annotations_list()
 
             for visualization in visualization_annotations:
-                if visualization["name"] in [
-                    t.name for t in ToolDefinition.objects.all()
-                ]:
-                    if force:
-                        self.stdout.write(
-                            self.style.NOTICE(
-                                "Forcing deletion of of `{0}`".format(
-                                    visualization["name"]
-                                )
-                            )
-                        )
-                        ToolDefinition.objects.get(
-                            name=visualization["name"]
-                        ).delete()
-                    else:
-                        self.stdout.write(
-                            self.style.NOTICE(
-                                "Skipping creation of `{0}` since "
-                                "ToolDefinition with name: `{0}` "
-                                "already exists.".format(
-                                    visualization["name"]
-                                )
-                            )
-                        )
-                        continue
+                if self._check_for_duplicates(visualization, force):
+                    continue
 
                 visualization["tool_type"] = ToolDefinition.VISUALIZATION
-                try:
-                    validate_tool_annotation(visualization)
-                except RuntimeError as e:
-                    raise CommandError(e)
-                except Exception as e:
-                    raise CommandError(
-                        "Something unexpected happened: {}".format(e)
-                    )
-                try:
-                    create_tool_definition(visualization)
-                except Exception as e:
-                    raise CommandError(
-                        "Creation of ToolDefinition failed. Database "
-                        "rolled back to its state before this "
-                        "ToolDefinition's attempted creation: {}".format(e)
-                    )
+                self._generate_tool_definition(visualization)
 
                 self.stdout.write(
                     self.style.WARNING(
@@ -144,12 +130,6 @@ class Command(BaseCommand):
                     )
                 )
         if workflows:
-            self.stdout.write(
-                self.style.WARNING(
-                    "Generating Galaxy Workflow-based ToolDefinitions"
-                )
-            )
-
             try:
                 workflows = get_workflows()
             except RuntimeError as e:
@@ -157,29 +137,8 @@ class Command(BaseCommand):
 
             for workflow_engine_uuid in workflows:
                 for workflow in workflows[workflow_engine_uuid]:
-                    if workflow["name"] in [
-                        t.name for t in ToolDefinition.objects.all()
-                    ]:
-                        if force:
-                            self.stdout.write(
-                                self.style.NOTICE(
-                                    "Forcing deletion of of `{0}`".format(
-                                        workflow["name"]
-                                    )
-                                )
-                            )
-                            ToolDefinition.objects.get(
-                                name=workflow["name"]
-                            ).delete()
-                        else:
-                            self.stdout.write(
-                                self.style.NOTICE(
-                                    "Skipping creation of `{0}` since "
-                                    "ToolDefinition with name: `{0}` already "
-                                    "exists.".format(workflow["name"])
-                                )
-                            )
-                            continue
+                    if self._check_for_duplicates(workflow, force):
+                        continue
 
                     workflow["galaxy_workflow_id"] = workflow["id"]
                     workflow["tool_type"] = ToolDefinition.WORKFLOW
@@ -202,22 +161,7 @@ class Command(BaseCommand):
                     workflow["workflow_engine_uuid"] = workflow_engine_uuid
 
                     workflow = self.parse_workflow_step_annotations(workflow)
-                    try:
-                        validate_tool_annotation(workflow)
-                    except RuntimeError as e:
-                        raise CommandError(e)
-                    except Exception as e:
-                        raise CommandError(
-                            "Something unexpected happened: {}".format(e)
-                        )
-                    try:
-                        create_tool_definition(workflow)
-                    except Exception as e:
-                        raise CommandError(
-                            "Creation of ToolDefinition failed. Database "
-                            "rolled back to its state before this "
-                            "ToolDefinition's attempted creation: {}".format(e)
-                        )
+                    self._generate_tool_definition(workflow)
 
                     self.stdout.write(
                         self.style.WARNING(
@@ -280,3 +224,21 @@ class Command(BaseCommand):
                                 ToolDefinition.PARAMETERS
                             ].append(parameter)
         return workflow
+
+    def _generate_tool_definition(self, annotation):
+        try:
+            validate_tool_annotation(annotation)
+        except RuntimeError as e:
+            raise CommandError(e)
+        except Exception as e:
+            raise CommandError(
+                "Something unexpected happened: {}".format(e)
+            )
+        try:
+            create_tool_definition(annotation)
+        except Exception as e:
+            raise CommandError(
+                "Creation of ToolDefinition failed. Database "
+                "rolled back to its state before this "
+                "ToolDefinition's attempted creation: {}".format(e)
+            )
