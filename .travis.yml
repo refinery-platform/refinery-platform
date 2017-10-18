@@ -57,6 +57,7 @@ before_script:
   - python manage.py loaddata guest.json
   - python manage.py activate_user guest
   - python manage.py add_users_to_public_group
+  - pushd ui && grunt make && popd
   - python manage.py collectstatic --noinput -v 0
   - python manage.py runserver --insecure &
 script:
@@ -67,7 +68,7 @@ script:
   - flake8 --exclude=migrations,ui ..
 
   - echo 'travis_fold:start:grunt'
-  - pushd ui && grunt && popd
+  - pushd ui && grunt test && popd
   - echo 'travis_fold:end:grunt'
 
   - echo 'travis_fold:start:django-tests'
