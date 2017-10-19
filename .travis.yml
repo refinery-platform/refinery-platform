@@ -44,7 +44,7 @@ env:
   global:
     # These env vars are available to every build
     - PYTHONPATH=$PYTHONPATH:../refinery:../refinery/config
-    - DJANGO_SETTINGS_MODULE=config.settings.prod_except_email
+    - DJANGO_SETTINGS_MODULE=config.settings.prod
     # CYPRESS_RECORD_KEY:
     - secure: oGdTYh3rnPdG7qVGYq3TgVESypir1btO2kmafumtKR6o+FYmMtb09pe+HtiT6Qfv4pDwnYZ2RTYqsTY4h6POigU5j7qQPSsZ5WkhHt9ybFyt/vfo2B95GaAIFt+8LVjTX5TItyw0/PPUCCUluQ1n8k/NCtSfMb0kIT/CuLrg7N8=
 
@@ -73,7 +73,7 @@ before_script:
   - python manage.py add_users_to_public_group
   - pushd ui && grunt make && popd
   - python manage.py collectstatic --noinput -v 0
-  - python manage.py runserver --insecure &
+  - python manage.py runserver --insecure --settings config.settings.prod_except_email &
 script:
   - set -e # Any error will cause travis to exit early and report a failure.
 
