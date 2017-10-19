@@ -73,7 +73,7 @@ class Command(BaseCommand):
                          "same name as any new ones you you're trying to "
                          "import: [y/n]: ")
 
-    def _check_for_duplicates(self, tool_annotation):
+    def _has_duplicates(self, tool_annotation):
         current_tool_definition_names = [
             t.name for t in ToolDefinition.objects.all()
         ]
@@ -122,7 +122,7 @@ class Command(BaseCommand):
         visualization_annotations = get_visualization_annotations_list()
 
         for visualization in visualization_annotations:
-            if self._check_for_duplicates(visualization):
+            if self._has_duplicates(visualization):
                 continue
 
             visualization["tool_type"] = ToolDefinition.VISUALIZATION
@@ -145,7 +145,7 @@ class Command(BaseCommand):
 
         for workflow_engine_uuid in workflows:
             for workflow in workflows[workflow_engine_uuid]:
-                if self._check_for_duplicates(workflow):
+                if self._has_duplicates(workflow):
                     continue
 
                 workflow["galaxy_workflow_id"] = workflow["id"]
