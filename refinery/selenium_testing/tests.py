@@ -31,7 +31,7 @@ class RefinerySeleniumTestBase(SeleniumTestBaseGeneric):
             create_public_group()
 
 
-class UiDeletionTestCase(RefinerySeleniumTestBase):
+class UiDeletionTestCase(RefinerySeleniumTestBase):  # TODO: Replace w/ Cypress
     """Ensure proper deletion of DataSets and Analyses from the UI"""
 
     def test_dataset_deletion(self, total_datasets=2):
