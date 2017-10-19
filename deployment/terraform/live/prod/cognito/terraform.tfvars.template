@@ -1,7 +1,0 @@
-region = "us-east-1"
-
-remote_state_bucket = "refinery-state"
-
-identity_pool_name = "Prod Refinery Platform"
-
-stack_name = "ProdRefineryPlatform"
