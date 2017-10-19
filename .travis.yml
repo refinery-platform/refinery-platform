@@ -1,6 +1,11 @@
 sudo: required
 
 language: python
+addons:
+  firefox: "53.0.3"
+  apt:
+    packages:
+      - xvfb
 cache:
   directories:
     - /home/travis/.cache/pip
@@ -26,6 +31,15 @@ install:
   - npm --version
 
   - pip install -r requirements.txt --quiet
+
+  # Install geckodriver required for selenium testing
+  - GECKODRIVER_VERSION=v0.17.0
+  - TAR=geckodriver-$GECKODRIVER_VERSION-linux64.tar
+  - wget https://github.com/mozilla/geckodriver/releases/download/$GECKODRIVER_VERSION/$TAR.gz
+  - gunzip $TAR.gz
+  - tar -xvf $TAR
+  - chmod a+x geckodriver
+  - export PATH=$PATH:`pwd`
 env:
   global:
     # These env vars are available to every build
