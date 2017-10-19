@@ -16,7 +16,6 @@ class DataSetFactory(factory.django.DjangoModelFactory):
     name = "Test DataSet - {}".format(uuid)
     creation_date = datetime.now()
     modification_date = datetime.now()
-    slug = None
 
 
 class AssayFactory(factory.django.DjangoModelFactory):
