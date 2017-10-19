@@ -46,7 +46,6 @@ angular
      * Refinery modules
      */
     'refineryRouter',
-    'refineryWorkflows',
     'refineryDataSetExplorer',
     'refineryStatistics',
     'refineryProvvis',
