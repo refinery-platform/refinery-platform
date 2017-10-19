@@ -31,8 +31,7 @@
       "metadata-table-import",
       "statistics",
       "tool-launch",
-      "user-file-browser",
-      "workflows"
+      "user-file-browser"
     ],
     "vendor": {
       "css": [
