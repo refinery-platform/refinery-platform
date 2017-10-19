@@ -47,9 +47,6 @@ describe('RefineryDataSetNav.state: unit tests', function () {
       window.getStaticUrl('partials/data-set-nav/partials/data-set-ui-mode-browse.html')
     );
     mockTemplate(
-      window.getStaticUrl('partials/data-set-nav/partials/data-set-ui-mode-visualize.html')
-    );
-    mockTemplate(
       window.getStaticUrl('partials/data-set-nav/partials/data-set-ui-mode-mapping.html')
     );
     mockTemplate(
@@ -97,11 +94,6 @@ describe('RefineryDataSetNav.state: unit tests', function () {
     it('should be "browse" when path is "/files/browse"', function () {
       goTo('/files/browse');
       expect($state.current.name).toEqual('browse');
-    });
-
-    it('should be "visualize" when path is "/files/visualize"', function () {
-      goTo('/files/visualize');
-      expect($state.current.name).toEqual('visualize');
     });
 
     it('should be "analyses" when path is "/analyses"', function () {

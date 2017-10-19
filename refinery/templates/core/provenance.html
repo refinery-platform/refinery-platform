@@ -181,12 +181,6 @@
                      ng-init="$root.mainTabSpanSize='col-md-12'" ng-cloak>
               {% endverbatim %}
 
-                  <div class="row" ng-if="$root.mode==='analyze'">
-                    <div ng-include="'{% static "partials/data-set-nav/partials/data-set-ui-node-mapping.html" %}'"></div>
-                    <div ui-view="data-set-ui-mapping-controls"></div>
-                    <!-- <div ui-view></div> -->
-                  </div>
-
                   <div class="row">
 
                   {% verbatim %}

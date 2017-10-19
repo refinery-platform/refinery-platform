@@ -33,20 +33,6 @@ function refineryDataSetNavConfig (
       true
     )
     .state(
-      'visualize', {
-        templateUrl: function () {
-          // unit tests redefine $window and thus make it unusable here
-          return window.getStaticUrl(
-            'partials/data-set-nav/partials/data-set-ui-mode-visualize.html'
-          );
-        },
-        url: '/files/visualize/',
-        controller: 'refineryDataSetNavVisualizeCtrl'
-      },
-      '^\/provenance\/.*\/$',
-      true
-    )
-    .state(
       'analyses', {
         url: '/analyses/',
         templateUrl: function () {
