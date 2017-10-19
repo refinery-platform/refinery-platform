@@ -47,7 +47,6 @@ angular
     'refineryRouter',
     'refineryWorkflows',
     'refineryNodeMapping',
-    'refineryNodeRelationship',
     'refineryDataSetExplorer',
     'refineryStatistics',
     'refineryProvvis',
