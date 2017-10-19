@@ -86,6 +86,7 @@ class Command(BaseCommand):
                 ToolDefinition.objects.get(
                     name=tool_annotation["name"]
                 ).delete()
+                return False
             else:
                 self.stdout.write(
                     self.style.NOTICE(
