@@ -515,8 +515,19 @@ class ToolDefinitionAPITests(ToolManagerTestBase, APITestCase):
             tool_annotation["workflow_engine_uuid"] = self.workflow_engine.uuid
             create_tool_definition(tool_annotation)
 
+        self.dataset = create_dataset_with_necessary_models()
+        self.dataset.set_owner(self.user)
+
+        self.public_dataset = create_dataset_with_necessary_models()
+        self.public_dataset.share(self.public_group)
+
         # Make reusable requests & responses
-        self.get_request = self.factory.get(self.tool_defs_url_root)
+        self.get_request = self.factory.get(
+            "{}?data_set_uuid={}".format(
+                self.tool_defs_url_root,
+                self.dataset.uuid
+            )
+        )
         force_authenticate(self.get_request, self.user)
         self.get_response = self.tool_defs_view(self.get_request)
 
@@ -524,28 +535,24 @@ class ToolDefinitionAPITests(ToolManagerTestBase, APITestCase):
 
         self.delete_request = self.factory.delete(
             urljoin(self.tool_defs_url_root, self.tool_json['uuid']))
-        force_authenticate(self.delete_request, self.user)
         self.delete_response = self.tool_defs_view(self.delete_request)
         self.put_request = self.factory.put(
             self.tool_defs_url_root,
             data=self.tool_json,
             format="json"
         )
-        force_authenticate(self.put_request, self.user)
         self.put_response = self.tool_defs_view(self.put_request)
         self.post_request = self.factory.post(
             self.tool_defs_url_root,
             data=self.tool_json,
             format="json"
         )
-        force_authenticate(self.post_request, self.user)
         self.post_response = self.tool_defs_view(self.post_request)
         self.options_request = self.factory.options(
             self.tool_defs_url_root,
             data=self.tool_json,
             format="json"
         )
-        force_authenticate(self.options_request, self.user)
         self.options_response = self.tool_defs_view(self.options_request)
 
     def test_tool_definitions_exist(self):
@@ -562,14 +569,6 @@ class ToolDefinitionAPITests(ToolManagerTestBase, APITestCase):
             ).count(),
             1
         )
-
-    def test_get_request_authenticated(self):
-        self.assertIsNotNone(self.get_response)
-
-    def test_get_request_no_auth(self):
-        self.get_request = self.factory.get(self.tool_defs_url_root)
-        self.get_response = self.tool_defs_view(self.get_request)
-        self.assertEqual(self.get_response.status_code, 403)
 
     def test_unallowed_http_verbs(self):
         self.assertEqual(
@@ -594,6 +593,66 @@ class ToolDefinitionAPITests(ToolManagerTestBase, APITestCase):
                 elif (tool_definition["tool_type"] ==
                       ToolDefinition.VISUALIZATION):
                     self.assertNotIn("galaxy_workflow_step", parameter.keys())
+
+    def test_request_from_owned_dataset_shows_all_tool_defs(self):
+        self.assertNotEqual(len(self.get_response.data), 0)
+        for tool_definition in self.get_response.data:
+            tool_definition = ToolDefinition.objects.get(
+                uuid=tool_definition["uuid"]
+            )
+            self.assertIn(tool_definition, ToolDefinition.objects.all())
+
+    def test_request_from_public_dataset_shows_vis_tools_only(self):
+        get_request = self.factory.get(
+            "{}?data_set_uuid={}".format(
+                self.tool_defs_url_root,
+                self.public_dataset.uuid
+            )
+        )
+        force_authenticate(get_request, self.user)
+        get_response = self.tool_defs_view(get_request)
+        self.assertNotEqual(len(get_response.data), 0)
+        for tool_definition in get_response.data:
+            tool_definition = ToolDefinition.objects.get(
+                uuid=tool_definition["uuid"]
+            )
+            self.assertIn(
+                tool_definition,
+                ToolDefinition.objects.filter(
+                    tool_type=ToolDefinition.VISUALIZATION
+                )
+            )
+
+    def test_no_query_params_in_get_yields_bad_request(self):
+        get_request = self.factory.get(self.tool_defs_url_root)
+        force_authenticate(get_request, self.user)
+        get_response = self.tool_defs_view(get_request)
+        self.assertEqual(get_response.status_code, 400)
+
+    def test_bad_query_params_in_get_yields_bad_request(self):
+        get_request = self.factory.get(
+            "{}?coffee={}".format(
+                self.tool_defs_url_root,
+                self.dataset.uuid
+            )
+        )
+        force_authenticate(get_request, self.user)
+        get_response = self.tool_defs_view(get_request)
+        self.assertEqual(get_response.status_code, 400)
+
+    def test_missing_dataset_in_get_yields_bad_request(self):
+        dataset_uuid = self.dataset.uuid
+        self.dataset.delete()
+
+        get_request = self.factory.get(
+            "{}?data_set_uuid={}".format(
+                self.tool_defs_url_root,
+                dataset_uuid
+            )
+        )
+        force_authenticate(get_request, self.user)
+        get_response = self.tool_defs_view(get_request)
+        self.assertEqual(get_response.status_code, 400)
 
 
 class ToolDefinitionGenerationTests(ToolManagerTestBase):
