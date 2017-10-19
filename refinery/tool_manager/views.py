@@ -21,7 +21,6 @@ logger = logging.getLogger(__name__)
 
 class ToolDefinitionsViewSet(ModelViewSet):
     """API endpoint that allows for ToolDefinitions to be fetched"""
-    base_name = "tool_definitions"
     serializer_class = ToolDefinitionSerializer
     lookup_field = 'uuid'
     http_method_names = ['get']

@@ -9,7 +9,11 @@ from .views import ToolDefinitionsViewSet, ToolsViewSet
 # DRF url routing
 tool_manager_router = DefaultRouter()
 tool_manager_router.register(r'tools', ToolsViewSet)
-tool_manager_router.register(r'tool_definitions', ToolDefinitionsViewSet)
+tool_manager_router.register(
+    r'tool_definitions',
+    ToolDefinitionsViewSet,
+    base_name="tooldefinition"
+)
 
 url_patterns = Proxy(
     settings.DJANGO_DOCKER_ENGINE_DATA_DIR
