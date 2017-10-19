@@ -5,9 +5,8 @@ from core.management.commands.create_user import init_user
 from core.models import Analysis, DataSet
 from factory_boy.utils import make_analyses_with_single_dataset, make_datasets
 
-from .utils import (MAX_WAIT, SeleniumTestBaseGeneric, assert_body_text,
-                    assert_text_within_id, delete_from_ui, login,
-                    wait_until_class_visible, wait_until_id_clickable,
+from .utils import (MAX_WAIT, SeleniumTestBaseGeneric, assert_text_within_id,
+                    delete_from_ui, login, wait_until_id_clickable,
                     wait_until_id_visible)
 
 
@@ -30,90 +29,6 @@ class RefinerySeleniumTestBase(SeleniumTestBaseGeneric):
 
         if public_group_needed:
             create_public_group()
-
-
-class NoLoginTestCase(RefinerySeleniumTestBase):
-    """
-    Ensure that Refinery looks like it should when there is no currently
-    logged in user
-    """
-
-    # RefinerySeleniumTestBase.setUp(): We don't need to login or
-    # initialize the guest user this time
-    def setUp(self, site_login=True, initialize_guest=True,
-              public_group_needed=False):
-        super(NoLoginTestCase, self).setUp(initialize_guest=False,
-                                           site_login=False)
-
-    def test_login_not_required(self):
-        self.browser.get(self.live_server_url)
-        assert_body_text(
-            self.browser,
-            search_array=['Collaboration', 'Statistics', 'About',
-                          'Register', 'Login', 'Launch Pad', 'Data Sets',
-                          'Analyses', 'Workflows']
-        )
-
-        self.browser.find_element_by_link_text('Statistics').click()
-        assert_body_text(
-            self.browser,
-            search_array=[
-                'Users',
-                'Groups',
-                'Files',
-                'Data Sets',
-                'Workflows',
-                'Projects'
-            ]
-        )
-
-        self.browser.find_element_by_link_text('About').click()
-        assert_body_text(self.browser,
-                         search_array=['Background', 'Contact', 'Funding',
-                                       'Team',
-                                       'Most Recent Code for this Instance'])
-        # TODO: All sections are empty right now
-
-
-class DataSetsPanelTestCase(RefinerySeleniumTestBase):
-    """
-    Ensure that the DataSet upload button and DataSet Preview look like
-    they're behaving normally
-    """
-
-    def test_data_set_preview(self):
-        """Test DataSet Preview"""
-
-        # Create sample Data & refresh page
-        make_analyses_with_single_dataset(5, self.user)
-
-        wait_until_class_visible(self.browser, "title", MAX_WAIT)
-        self.browser.find_elements_by_class_name("title")[0].click()
-
-        search_array = ["SUMMARY", "Description",
-                        "Number of files (total file size)", "Owner",
-                        "ANALYSES", "REFERENCES", "PROTOCOLS",
-                        ]
-        for item in Analysis.objects.filter(name__startswith="Test Analysis"):
-            search_array.append(item.name)
-
-        assert_body_text(self.browser, search_array)
-
-    def test_upload_button(self):
-        """Test Upload button"""
-
-        wait_until_id_clickable(self.browser, "import-button",
-                                MAX_WAIT).click()
-        assert_body_text(
-            self.browser,
-            search_array=[
-                "Data Set Import",
-                "Tabular Metadata",
-                "ISA-Tab Metadata",
-                "PROVIDE METADATA FILE",
-                "Download an example tabular metadata file.",
-                "Must contain column headers in the first row of the table"]
-        )
 
 
 class UiDeletionTestCase(RefinerySeleniumTestBase):
