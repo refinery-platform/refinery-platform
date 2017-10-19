@@ -209,6 +209,10 @@ class ToolManagerTestBase(ToolManagerMocks):
             file_uuid=self.file_store_item.uuid
         )
 
+        self.mock_get_workflows_reference = (
+            "tool_manager.management.commands.generate_tool_definitions"
+            ".get_workflows"
+        )
         self.mock_vis_annotations_reference = (
             "tool_manager.management.commands.generate_tool_definitions"
             ".get_visualization_annotations_list"
@@ -593,6 +597,27 @@ class ToolDefinitionAPITests(ToolManagerTestBase, APITestCase):
 
 
 class ToolDefinitionGenerationTests(ToolManagerTestBase):
+    def setUp(self):
+        super(ToolDefinitionGenerationTests, self).setUp()
+        raw_input_reference = "__builtin__.raw_input"
+        self.raw_input_yes_mock = mock.patch(
+            raw_input_reference,
+            return_value="y"
+        )
+        self.raw_input_no_mock = mock.patch(
+            raw_input_reference,
+            side_effect=["coffee", "n"]
+        )
+        with open(
+            "{}/workflows/galaxy_workflows_valid.json".format(TEST_DATA_PATH)
+        ) as f:
+            self.valid_workflows = json.loads(f.read())
+
+        with open(
+            "{}/workflows/galaxy_workflows_invalid.json".format(TEST_DATA_PATH)
+        ) as f:
+            self.invalid_workflows = json.loads(f.read())
+
     def test_tool_definition_model_str(self):
         with open("{}/visualizations/igv.json".format(TEST_DATA_PATH)) as f:
             tool_annotation = [json.loads(f.read())]
@@ -958,26 +983,11 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
             )
 
     def test_generate_tool_definitions_management_command(self):
-        invalid_workflows = json.loads(
-            open(
-                "{}/workflows/galaxy_workflows_invalid.json".format(
-                    TEST_DATA_PATH
-                )
-            ).read()
-        )
-        valid_workflows = json.loads(
-            open(
-                "{}/workflows/galaxy_workflows_valid.json".format(
-                    TEST_DATA_PATH
-                )
-            ).read()
-        )
-
         with mock.patch(
-            "tool_manager.utils.get_workflows",
+            self.mock_get_workflows_reference,
             side_effect=[
-                {self.workflow_engine.uuid: invalid_workflows},
-                {self.workflow_engine.uuid: valid_workflows}
+                {self.workflow_engine.uuid: self.invalid_workflows},
+                {self.workflow_engine.uuid: self.valid_workflows}
             ]
         ) as get_wf_mock:
             self.assertRaises(
@@ -1006,6 +1016,107 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
                 self.assertEqual(GalaxyParameter.objects.count(), 9)
                 self.assertEqual(Parameter.objects.count(), 10)
                 self.assertEqual(InputFile.objects.count(), 6)
+
+    def test_generate_tool_definitions_overwrites_visualizations_if_forced(
+            self
+    ):
+        self.raw_input_yes_mock.start()
+        with open(
+            "{}/visualizations/igv.json".format(TEST_DATA_PATH)
+        ) as f:
+            vis_tool_annotation = [json.loads(f.read())]
+
+        with mock.patch(
+            self.mock_vis_annotations_reference,
+            side_effect=[vis_tool_annotation] * 2
+        ) as get_vis_list_mock:
+            # Create VisualizationToolDefinition
+            call_command("generate_tool_definitions", visualizations=True)
+            original_ids = [t.id for t in ToolDefinition.objects.all()]
+
+            # Create new VisualizationToolDefinition with --force
+            call_command(
+                "generate_tool_definitions",
+                visualizations=True,
+                force=True
+            )
+            new_ids = [t.id for t in ToolDefinition.objects.all()]
+
+            # Assert that the new visualization tool definitions id's were
+            # incremented
+            self.assertEqual(new_ids, [_id + 1 for _id in original_ids])
+            self.assertEqual(get_vis_list_mock.call_count, 2)
+
+    def test_generate_tool_definitions_overwrites_workflows_if_forced(
+            self
+    ):
+        self.raw_input_yes_mock.start()
+        with mock.patch(
+            self.mock_get_workflows_reference,
+            return_value={self.workflow_engine.uuid: self.valid_workflows}
+        ) as get_wf_mock:
+            # Create WorkflowToolDefinition
+            call_command("generate_tool_definitions", workflows=True)
+            original_ids = [t.id for t in ToolDefinition.objects.all()]
+
+            # Create new WorkflowToolDefinition with --force
+            call_command(
+                "generate_tool_definitions",
+                workflows=True,
+                force=True
+            )
+            new_ids = [t.id for t in ToolDefinition.objects.all()]
+
+            # Assert that the new workflow tool definitions id's were
+            # incremented
+            self.assertEqual(
+                new_ids,
+                sorted([_id + 3 for _id in original_ids])
+            )
+            self.assertEqual(get_wf_mock.call_count, 2)
+
+    def test_generate_tool_definitions_with_force_allows_user_dismissal(
+            self
+    ):
+        self.raw_input_no_mock.start()
+        with mock.patch(
+                self.mock_get_workflows_reference,
+                return_value={self.workflow_engine.uuid: self.valid_workflows}
+        ):
+            with self.assertRaises(SystemExit):
+                # Create WorkflowToolDefinition
+                call_command(
+                    "generate_tool_definitions",
+                    workflows=True,
+                    force=True
+                )
+
+        self.assertEqual(ToolDefinition.objects.count(), 0)
+
+    def test_generate_tool_definitions_command_error_if_get_workflows_fails(
+            self
+    ):
+        with mock.patch(
+            self.mock_get_workflows_reference,
+            side_effect=RuntimeError
+        ):
+            with self.assertRaises(CommandError):
+                call_command("generate_tool_definitions", workflows=True)
+
+    def test_generate_tool_definitions_multiple_times_skips_without_deletion(
+            self
+    ):
+        with mock.patch(
+            self.mock_get_workflows_reference,
+            return_value={self.workflow_engine.uuid: self.valid_workflows}
+        ):
+            call_command("generate_tool_definitions", workflows=True)
+            tool_definitions_a = [t for t in ToolDefinition.objects.all()]
+
+            call_command("generate_tool_definitions", workflows=True)
+            tool_definitions_b = [t for t in ToolDefinition.objects.all()]
+
+        self.assertEqual(tool_definitions_a, tool_definitions_b)
 
     def test_workflow_pair_too_many_inputs(self):
         with open(
