@@ -47,9 +47,9 @@ class Command(BaseCommand):
         Creates ToolDefinitions based off of properly annotated Galaxy
         Workflows and Visualization Tools.
         """
-        force_delete = options["force"]
+        force = options["force"]
 
-        if force_delete:
+        if force:
             result = self._ask_for_confirmation()
             while len(result) < 1 or result[0].lower() not in "yn":
                 result = self._ask_for_confirmation()
@@ -57,14 +57,12 @@ class Command(BaseCommand):
                 return
 
         if not options["visualizations"] and not options["workflows"]:
-            self.generate_tool_definitions(force=force_delete)
+            self.generate_tool_definitions(force=force)
 
         if options["visualizations"]:
-            self.generate_tool_definitions(workflows=False,
-                                           force=force_delete)
+            self.generate_tool_definitions(workflows=False, force=force)
         if options["workflows"]:
-            self.generate_tool_definitions(visualizations=False,
-                                           force=force_delete)
+            self.generate_tool_definitions(visualizations=False, force=force)
 
     @staticmethod
     def _ask_for_confirmation():
@@ -73,14 +71,14 @@ class Command(BaseCommand):
                          "same name as any new ones you you're trying to "
                          "import: [y/n]: ")
 
-    def _check_for_duplicates(self, tool_annotation, force_delete):
+    def _check_for_duplicates(self, tool_annotation, force):
         current_tool_definition_names = [
             t.name for t in ToolDefinition.objects.all()
         ]
         if tool_annotation["name"] in current_tool_definition_names:
-            if force_delete:
+            if force:
                 self.stdout.write(
-                    self.style.NOTICE("Forcing deletion of of `{0}`".format(
+                    self.style.NOTICE("Forcing deletion of of `{}`".format(
                             tool_annotation["name"]))
                 )
                 ToolDefinition.objects.get(
@@ -170,7 +168,8 @@ class Command(BaseCommand):
                         )
                     )
 
-    def parse_workflow_step_annotations(self, workflow):
+    @staticmethod
+    def parse_workflow_step_annotations(workflow):
         """
         Iterate through the workflow's step's annotations and
         append to the `parameters` field so they are
@@ -225,7 +224,8 @@ class Command(BaseCommand):
                             ].append(parameter)
         return workflow
 
-    def _generate_tool_definition(self, annotation):
+    @staticmethod
+    def _generate_tool_definition(annotation):
         try:
             validate_tool_annotation(annotation)
         except RuntimeError as e:
