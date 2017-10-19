@@ -94,6 +94,17 @@ function DashboardIntrosSatoriListGraph (
       );
     }
 
+    function image (name) {
+      return (
+        '<svg>' +
+        '  <use' +
+        '    xmlns:xlink="http://www.w3.org/1999/xlink"' +
+        '    xlink:href="/images/' + name + '">' +
+        '  </use>' +
+        '</svg>'
+      );
+    }
+
 
     self.options = angular.copy(introJsDefaultOptions);
     self.options.steps = [
@@ -155,8 +166,9 @@ function DashboardIntrosSatoriListGraph (
           'related to <em>cancer</em> (see the figure below).<br/><br/>' +
 
           'Note that this does not tell us how many <em>cancer</em> ' +
-          'data sets are available in the repository!' +
-          '<br/><img src="/static/images/intro-js-precision.png" class="m-t-1"/>',
+          'data sets are available in the repository!<br/><br/>' +
+
+          image('intro-js-precision.png'),
         beforeExecutives: function () {
           var el = document.querySelector(
             '#list-graph-wrapper .global-controls .sort-precision'
@@ -183,9 +195,9 @@ function DashboardIntrosSatoriListGraph (
           'data sets, annotated with <em>cancer</em>, have been returned in a ' +
           'search for <em>liver</em> the recall of <em>cancer</em> is 0.75. ' +
           'In other words, 75% of all <em>cancer</em>-related data sets have ' +
-          'been found with the search (See figure below).' +
-          '<br/><img src="/static/images/intro-js-recall.png" class="m-t-1 m-b-1" /><br/>' +
-          '<em>Note: We haven\'t queried for anything so the recall is 1.</em>',
+          'been found with the search (See figure below).<br>/<br/>' +
+          image('intro-js-recall.png') +
+          '<br/><em>Note: We haven\'t queried for anything so the recall is 1.</em>',
         position: 'left',
         beforeExecutives: function () {
           var el = document.querySelector(
