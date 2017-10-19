@@ -44,9 +44,6 @@ describe('RefineryDataSetNav.state: unit tests', function () {
   beforeEach(function () {
     // using window because $window is redefined above
     mockTemplate(
-      window.getStaticUrl('partials/data-set-nav/partials/data-set-ui-mode-analyze.html')
-    );
-    mockTemplate(
       window.getStaticUrl('partials/data-set-nav/partials/data-set-ui-mode-browse.html')
     );
     mockTemplate(
@@ -95,11 +92,6 @@ describe('RefineryDataSetNav.state: unit tests', function () {
     it('should be "files" when path is "/files/"', function () {
       goTo('/files/');
       expect($state.current.name).toEqual('files');
-    });
-
-    it('should be "analyze" when path is "/files/analyze"', function () {
-      goTo('/files/analyze');
-      expect($state.current.name).toEqual('analyze');
     });
 
     it('should be "browse" when path is "/files/browse"', function () {

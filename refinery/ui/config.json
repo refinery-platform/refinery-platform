@@ -17,7 +17,6 @@
   },
   "files": {
     "features": [
-      "analysis-launch",
       "analysis-monitor",
       "chart",
       "collaboration",
