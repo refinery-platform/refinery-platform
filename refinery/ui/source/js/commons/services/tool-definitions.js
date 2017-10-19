@@ -13,7 +13,8 @@
       {
         query: {
           method: 'GET',
-          isArray: true
+          isArray: true,
+          params: { data_set_uuid: window.dataSetUuid }
         }
       }
     );
