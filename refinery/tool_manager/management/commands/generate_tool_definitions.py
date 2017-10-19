@@ -58,12 +58,13 @@ class Command(BaseCommand):
             self._confirmation_loop()
 
         if not options["visualizations"] and not options["workflows"]:
-            self.generate_tool_definitions()
+            self.generate_tool_definitions(workflows=True, visualizations=True)
 
         if options["visualizations"]:
-            self.generate_tool_definitions(workflows=False)
+            self.generate_tool_definitions(visualizations=True)
+
         if options["workflows"]:
-            self.generate_tool_definitions(visualizations=False)
+            self.generate_tool_definitions(workflows=True)
 
     @staticmethod
     def _ask_for_confirmation():
@@ -102,7 +103,7 @@ class Command(BaseCommand):
         if result[0].lower() == "n":
             sys.exit(0)
 
-    def generate_tool_definitions(self, visualizations=True, workflows=True):
+    def generate_tool_definitions(self, visualizations=False, workflows=False):
         """Generate ToolDefinitions if our validation rules pass.
         :param workflows: <Boolean> Whether to generate Workflow-based
         ToolDefinitions or not
