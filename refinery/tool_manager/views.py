@@ -5,8 +5,12 @@ from django.http import HttpResponseBadRequest
 
 from guardian.exceptions import GuardianError
 from guardian.shortcuts import get_objects_for_user
+from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
+
+from core.models import DataSet
 
 from .models import Tool, ToolDefinition
 from .serializers import ToolDefinitionSerializer, ToolSerializer
@@ -18,11 +22,44 @@ logger = logging.getLogger(__name__)
 class ToolDefinitionsViewSet(ModelViewSet):
     """API endpoint that allows for ToolDefinitions to be fetched"""
 
-    queryset = ToolDefinition.objects.all()
     serializer_class = ToolDefinitionSerializer
     lookup_field = 'uuid'
     http_method_names = ['get']
-    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self, **kwargs):
+        if self.request.user.has_perm(
+            'core.share_dataset',
+            kwargs["data_set"]
+        ):
+            return ToolDefinition.objects.all()
+
+        elif self.request.user.has_perm(
+            'core.read_dataset',
+            kwargs["data_set"]
+        ):
+            return ToolDefinition.objects.filter(
+                tool_type=ToolDefinition.VISUALIZATION
+            )
+
+    def list(self, request, *args, **kwargs):
+        try:
+            data_set_uuid = self.request.query_params["data_set_uuid"]
+        except (AttributeError, KeyError) as e:
+            return Response(e, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            data_set = DataSet.objects.get(uuid=data_set_uuid)
+        except (DataSet.DoesNotExist, DataSet.MultipleObjectsReturned) as e:
+            return Response(e, status=status.HTTP_400_BAD_REQUEST)
+
+        queryset = self.get_queryset(data_set=data_set)
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
 
 class ToolsViewSet(ModelViewSet):
