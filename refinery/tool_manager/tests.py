@@ -1094,12 +1094,13 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
                 self.mock_get_workflows_reference,
                 return_value={self.workflow_engine.uuid: valid_workflows}
         ):
-            # Create WorkflowToolDefinition
-            call_command(
-                "generate_tool_definitions",
-                workflows=True,
-                force=True
-            )
+            with self.assertRaises(SystemExit):
+                # Create WorkflowToolDefinition
+                call_command(
+                    "generate_tool_definitions",
+                    workflows=True,
+                    force=True
+                )
 
         self.assertEqual(ToolDefinition.objects.count(), 0)
 
