@@ -44,7 +44,7 @@ env:
   global:
     # These env vars are available to every build
     - PYTHONPATH=$PYTHONPATH:../refinery:../refinery/config
-    - DJANGO_SETTINGS_MODULE=config.settings.dev
+    - DJANGO_SETTINGS_MODULE=config.settings.prod_except_email
     # CYPRESS_RECORD_KEY:
     - secure: oGdTYh3rnPdG7qVGYq3TgVESypir1btO2kmafumtKR6o+FYmMtb09pe+HtiT6Qfv4pDwnYZ2RTYqsTY4h6POigU5j7qQPSsZ5WkhHt9ybFyt/vfo2B95GaAIFt+8LVjTX5TItyw0/PPUCCUluQ1n8k/NCtSfMb0kIT/CuLrg7N8=
 
