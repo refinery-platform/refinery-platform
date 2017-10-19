@@ -209,7 +209,6 @@ INSTALLED_APPS = (
     'file_server',
     'visualization_manager',
     'annotation_server',
-    'selenium_testing',
     'tool_manager',
     'flatblocks',
     'chunked_upload',
@@ -335,11 +334,6 @@ LOGGING = {
             'level': 'ERROR',
             'propagate': False,
         },
-        'selenium': {
-            'handlers': ['console'],
-            'level': 'ERROR',
-            'propagate': False,
-        },
         'visualization_manager': {
             'handlers': ['console'],
             'level': 'DEBUG',
@@ -367,6 +361,8 @@ EMAIL_PORT = get_setting("EMAIL_PORT")
 SERVER_EMAIL = get_setting("SERVER_EMAIL")
 # so managers and admins know Refinery is emailing them
 EMAIL_SUBJECT_PREFIX = get_setting("EMAIL_SUBJECT_PREFIX")
+
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
 # for system stability
 CELERYD_MAX_TASKS_PER_CHILD = get_setting("CELERYD_MAX_TASKS_PER_CHILD")
