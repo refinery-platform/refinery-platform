@@ -146,13 +146,16 @@ function DashboardIntrosSatoriListGraph (
           '<strong>Precision</strong> (highlighted in blue) is defined as ' +
           'the number of retrieved ' +
           'data sets annotated with an ontology term divided by the total ' +
-          'number of retrieved data sets.<br/><br/>E.g., if 6 out of ' +
-          '<strong>retrieved</strong> 12 ' +
+          'number of retrieved data sets.<br/><br/>' +
+
+          'E.g., if 6 out of <strong>retrieved</strong> 12 ' +
           'data sets, annotated with <em>cancer</em>, have been returned in a ' +
           'search for <em>liver</em> than the precision of <em>cancer</em> ' +
           'is 0.5. In other words, half of all retrieved data sets are ' +
-          'related to <em>cancer</em> (see the figure below).<br/>Not that this' +
-          'does not tell us how many <em>cancer</em> data sets are available in the repository!' +
+          'related to <em>cancer</em> (see the figure below).<br/><br/>' +
+
+          'Note that this does not tell us how many <em>cancer</em> ' +
+          'data sets are available in the repository!' +
           '<br/><img src="/static/images/intro-js-precision.png" class="m-t-1"/>',
         beforeExecutives: function () {
           var el = document.querySelector(
