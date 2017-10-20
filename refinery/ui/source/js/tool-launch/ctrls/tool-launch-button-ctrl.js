@@ -17,8 +17,8 @@
     'toolLaunchService',
     'toolSelectService',
     '$uibModal',
-    '$rootScope',
-    '$window'
+    '$rootScope'
+   // '$window'
   ];
 
   function ToolLaunchButtonCtrl (
@@ -28,8 +28,8 @@
     toolSelectService,
 
     $uibModal,
-    $rootScope,
-    $window
+    $rootScope
+   // $window
   ) {
     var vm = this;
     vm.launchTool = launchTool;
@@ -49,10 +49,23 @@
     function launchTool () {
       $rootScope.$broadcast('rf/launchAnalysis');
       toolLaunchService.postToolLaunch().then(function (response) {
-        $window.location.href = response.tool_url;
+       // $window.location.href = response.tool_url;
+
+        $uibModal.open({
+          component: 'aPIResponseModal',
+          resolve: {
+            modalData: function () {
+              return {
+                errorStatus: response.status,
+                errorMsg: response.data,
+                introMsg: 'Success.'
+              };
+            }
+          }
+        });
       }, function (error) {
         $uibModal.open({
-          component: 'errorAPIModal',
+          component: 'aPIResponseModal',
           resolve: {
             modalData: function () {
               return {

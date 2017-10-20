@@ -2,9 +2,9 @@
   'use strict';
   angular
     .module('refineryApp')
-    .component('errorAPIModal', {
+    .component('aPIResponseModal', {
       templateUrl: ['$window', function ($window) {
-        return $window.getStaticUrl('partials/commons/partials/error-api-modal.html');
+        return $window.getStaticUrl('partials/commons/partials/api-response-modal.html');
       }],
       bindings: {
         modalInstance: '<',
