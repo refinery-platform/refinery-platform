@@ -42,7 +42,7 @@ class ToolDefinitionsViewSet(ModelViewSet):
 
     def list(self, request, *args, **kwargs):
         try:
-            data_set_uuid = self.request.query_params["data_set_uuid"]
+            data_set_uuid = self.request.query_params["dataSetUuid"]
         except (AttributeError, KeyError) as e:
             return Response(e, status=status.HTTP_400_BAD_REQUEST)
 

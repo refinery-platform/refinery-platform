@@ -523,7 +523,7 @@ class ToolDefinitionAPITests(ToolManagerTestBase, APITestCase):
 
         # Make reusable requests & responses
         self.get_request = self.factory.get(
-            "{}?data_set_uuid={}".format(
+            "{}?dataSetUuid={}".format(
                 self.tool_defs_url_root,
                 self.dataset.uuid
             )
@@ -604,7 +604,7 @@ class ToolDefinitionAPITests(ToolManagerTestBase, APITestCase):
 
     def test_request_from_public_dataset_shows_vis_tools_only(self):
         get_request = self.factory.get(
-            "{}?data_set_uuid={}".format(
+            "{}?dataSetUuid={}".format(
                 self.tool_defs_url_root,
                 self.public_dataset.uuid
             )
@@ -645,7 +645,7 @@ class ToolDefinitionAPITests(ToolManagerTestBase, APITestCase):
         self.dataset.delete()
 
         get_request = self.factory.get(
-            "{}?data_set_uuid={}".format(
+            "{}?dataSetUuid={}".format(
                 self.tool_defs_url_root,
                 dataset_uuid
             )
@@ -1128,10 +1128,8 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
 
             # Assert that the new workflow tool definitions id's were
             # incremented
-            self.assertEqual(
-                new_ids,
-                sorted([_id + 3 for _id in original_ids])
-            )
+            for original_id in original_ids:
+                self.assertIn(original_id + 3, new_ids)
             self.assertEqual(get_wf_mock.call_count, 2)
 
     def test_generate_tool_definitions_with_force_allows_user_dismissal(
