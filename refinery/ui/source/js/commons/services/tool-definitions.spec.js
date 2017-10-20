@@ -113,7 +113,7 @@
           .expectGET(
             settings.appRoot +
             settings.refineryApiV2 +
-            '/tool_definitions/?data_set_uuid=' + window.dataSetUuid
+            '/tool_definitions/?dataSetUuid='
         ).respond(200, fakeResponse);
       });
     });

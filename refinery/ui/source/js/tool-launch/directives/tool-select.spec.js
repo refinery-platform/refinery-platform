@@ -6,26 +6,28 @@
     beforeEach(module('refineryToolLaunch'));
 
     var directiveElement;
-
+    var mocker;
     beforeEach(inject(function (
       $compile,
       $httpBackend,
       $rootScope,
       settings,
       $templateCache,
-      $window
+      $window,
+      mockParamsFactory
     ) {
       $templateCache.put(
         $window.getStaticUrl('partials/tool-launch/partials/tool-select.html'),
         '<div id="tool-select"></div>'
       );
-
+      mocker = mockParamsFactory;
+      window.dataSetUuid = mocker.generateUuid();
       // Mock api call due to ctrl activate method
       $httpBackend
         .expectGET(
           settings.appRoot +
           settings.refineryApiV2 +
-          '/tool_definitions/?data_set_uuid=' + window.dataSetUuid
+          '/tool_definitions/?dataSetUuid=' + window.dataSetUuid
         ).respond(200, []);
 
       var scope = $rootScope.$new();
