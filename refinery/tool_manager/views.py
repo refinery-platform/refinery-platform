@@ -25,17 +25,15 @@ class ToolDefinitionsViewSet(ModelViewSet):
     lookup_field = 'uuid'
     http_method_names = ['get']
 
-    def get_queryset(self, **kwargs):
-        if self.request.user.has_perm(
-            'core.share_dataset',
-            kwargs["data_set"]
-        ):
+    def __init__(self, **kwargs):
+        super(ToolDefinitionsViewSet, self).__init__(**kwargs)
+        self.data_set = None
+
+    def get_queryset(self):
+        if self.request.user.has_perm('core.share_dataset', self.data_set):
             return ToolDefinition.objects.all()
 
-        elif self.request.user.has_perm(
-            'core.read_dataset',
-            kwargs["data_set"]
-        ):
+        elif self.request.user.has_perm('core.read_dataset', self.data_set):
             return ToolDefinition.objects.filter(
                 tool_type=ToolDefinition.VISUALIZATION
             )
@@ -44,21 +42,20 @@ class ToolDefinitionsViewSet(ModelViewSet):
         try:
             data_set_uuid = self.request.query_params["dataSetUuid"]
         except (AttributeError, KeyError) as e:
-            return Response(e, status=status.HTTP_400_BAD_REQUEST)
-
+            return Response(
+                "Must specify a Dataset UUID: {}".format(e),
+                status=status.HTTP_400_BAD_REQUEST
+            )
         try:
-            data_set = DataSet.objects.get(uuid=data_set_uuid)
+            self.data_set = DataSet.objects.get(uuid=data_set_uuid)
         except (DataSet.DoesNotExist, DataSet.MultipleObjectsReturned) as e:
-            return Response(e, status=status.HTTP_400_BAD_REQUEST)
-
-        queryset = self.get_queryset(data_set=data_set)
-        page = self.paginate_queryset(queryset)
-        if page is not None:
-            serializer = self.get_serializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
-
-        serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)
+            return Response(
+                "Couldn't fetch Dataset with UUID: {} {}".format(
+                    data_set_uuid, e
+                ),
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        return super(ToolDefinitionsViewSet, self).list(request)
 
 
 class ToolsViewSet(ModelViewSet):
