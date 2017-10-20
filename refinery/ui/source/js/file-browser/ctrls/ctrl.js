@@ -68,9 +68,7 @@
     vm.attributeFilter = assayFiltersService.attributeFilter;
     // variable supporting ui-grid dynamic scrolling
     vm.cachePages = 2;
-    vm.canEdit = false;
     vm.checkDataLength = checkDataLength;
-    vm.checkUsersGroupEdit = checkUsersGroupEdit;
     vm.collapsedToolPanel = toolService.isToolPanelCollapsed;
     vm.currentTypes = fileService.currentTypes;
     vm.firstPage = 0;
@@ -115,7 +113,6 @@
     function activate () {
       // Ensure data owner or group permission to modify (run tools)
       checkDataSetOwnership();
-      checkUsersGroupEdit();
       // initialize the dataset and updates ui-grid selection, filters, and url
       initializeDataOnPageLoad();
     }
@@ -154,13 +151,6 @@
     function checkDataSetOwnership () {
       isOwnerService.refreshDataSetOwner().then(function () {
         vm.isOwner = isOwnerService.isOwner;
-      });
-    }
-
-     // Sets boolean for data set ownership
-    function checkUsersGroupEdit () {
-      groupPermService.refreshUsersGroupEdit().then(function () {
-        vm.canEdit = groupPermService.canUsersGroupEdit;
       });
     }
 
