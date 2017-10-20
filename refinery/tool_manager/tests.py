@@ -2796,7 +2796,7 @@ class WorkflowToolLaunchTests(ToolManagerTestBase):
         )
 
 
-class VisualizationToolLaunchTests(ToolManagerTestBase,
+class VisualizationToolLaunchTests(ToolManagerTestBase,  # TODO: Cypress
                                    SeleniumTestBaseGeneric):
     def setUp(self):
         # super() will only ever resolve a single class type for a given method

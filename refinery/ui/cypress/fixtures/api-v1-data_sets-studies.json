@@ -1,0 +1,135 @@
+{
+  "meta": {
+    "limit": 20,
+    "next": null,
+    "offset": 0,
+    "previous": null,
+    "total_count": 1
+  },
+  "objects": [
+    {
+      "description": "Caco-2 human intestinal cells are widely used to investigate epithelial functions, intestinal gene expression, and transcriptional mechanisms of differentiation. To identify cis-regulatory sequences associated with Caco-2 cell differentiation, we evaluated a distinct epigenetic pattern attributed to active enhancer elements, abundant H3K4Me2 and H3K27Ac marks. To verify CDX2 binding at enhancer regions we used ChIP-seq to identify CDX2 binding sites. Dynamic CDX2 occupancy corresponds with condition-specific gene expression and to differential occupancy with other tissue-restricted transcription factors: HNFA in mature cells and GATA6 in progenitors. H3K4me2, CDX2, GATA6, and HNF4A ChIP-seq patterns were mapped in proliferating and 26 day post-confluent (differentiated) Caco-2 intestinal cell lines. To determine association of protein binding with gene expression, Caco-2 expression microarray data (Fleet et al., 2003) were enumerated based on log-fold changes in differentiated over proliferating cells.",
+      "file_name": "s_11610.txt",
+      "id": 580,
+      "identifier": "11610",
+      "investigation_uuid": "c3798da8-22e7-496c-859f-cf20a8cf85c0",
+      "protocols": [
+        {
+          "description": "Caco-2 cells were grown in 10% FBS DMEM and passaged frequently for subconfluent cells or fed every second day for post-confluent differentiated cells. Cells were harvested at 50% confluence (proliferating cells) or 26 days post-confluent (differentiated cells).",
+          "name": "growth protocol",
+          "resource_uri": "/api/v1/protocols/8008df6b-8f03-41e0-8a8a-21e5aca6e71e/"
+        },
+        {
+          "description": "",
+          "name": "treatment protocol",
+          "resource_uri": "/api/v1/protocols/9018963c-e3eb-480e-8195-b301b5ba1f21/"
+        },
+        {
+          "description": "",
+          "name": "sample collection",
+          "resource_uri": "/api/v1/protocols/87ad82f5-9465-4e53-be4d-de9e0cd21b0f/"
+        },
+        {
+          "description": "",
+          "name": "nucleic acid extraction",
+          "resource_uri": "/api/v1/protocols/57351b52-b537-48db-b407-7105dc2bca79/"
+        },
+        {
+          "description": "For transcription factor ChIP, cells were fixed in 1% formaldehyde for 10 minutes at 37 degrees, then washed with cold PBS and scraped into PBS, and resuspended in ChIP lysis buffer and immunoprecipitated and processed as described by Carroll, et al, 2005, PMID: 16009131 and as described in our current work. Libraries were constructed using 10 ng each of ChIP and input DNA from up to 3 pooled experiments were processed for deep sequencing according to manufacturer's instructions (Illumina). Prior to sequencing, qPCR was used to verify that positive and negative control ChIP regions amplified in the linear range.",
+          "name": "library construction",
+          "resource_uri": "/api/v1/protocols/79b131b3-4657-45e7-89cc-61b61d9f74a3/"
+        },
+        {
+          "description": "",
+          "name": "nucleic acid sequencing",
+          "resource_uri": "/api/v1/protocols/a87e0dcf-0617-4076-8647-cbebb6efe5de/"
+        }
+      ],
+      "publications": [
+        {
+          "authors": "Fleet JC, Wang L, Vitek O, Craig BA, Edenberg HJ",
+          "doi": "10.1152/physiolgenomics.00152.2002",
+          "id": 127,
+          "pubmed_id": "12644633",
+          "resource_uri": "/api/v1/publications/127/",
+          "status": "",
+          "status_accession": "",
+          "status_source": "",
+          "title": "Gene expression profiling of Caco-2 BBe cells suggests a role for specific signaling pathways during intestinal differentiation."
+        },
+        {
+          "authors": "Verzi MP, Shin H, H He H, Sulahian R, Meyer CA, Montgomery RK, Fleet JC, Brown M, X Liu S, Shivdasani RA",
+          "doi": "10.1016/j.devcel.2010.10.006",
+          "id": 128,
+          "pubmed_id": "21074721",
+          "resource_uri": "/api/v1/publications/128/",
+          "status": "",
+          "status_accession": "",
+          "status_source": "",
+          "title": "Differentiation-specific histone modifications reveal dynamic chromatin interactions and partners for the intestinal transcription factor CDX2."
+        }
+      ],
+      "release_date": null,
+      "resource_uri": "/api/v1/study/3c469083-a7e2-4709-8ca6-bb289d984072/",
+      "sources": [
+        {
+          "analysis_uuid": null,
+          "assay": null,
+          "attributes": [
+            {
+              "node": "/api/v1/node/c1fcbd80-573d-4059-8042-20d85154abdb/",
+              "subtype": "organism",
+              "type": "Characteristics",
+              "value": "Homo sapiens",
+              "value_accession": "http://purl.obolibrary.org/obo/NCBITaxon_9606",
+              "value_source": "NCBITAXON",
+              "value_unit": ""
+            }
+          ],
+          "file_import_status": null,
+          "file_url": null,
+          "file_uuid": null,
+          "name": "proliferating Caco-2 cells",
+          "parents": [
+            
+          ],
+          "resource_uri": "/api/v1/node/c1fcbd80-573d-4059-8042-20d85154abdb/",
+          "study": "/api/v1/study/3c469083-a7e2-4709-8ca6-bb289d984072/",
+          "subanalysis": null,
+          "type": "Source Name",
+          "uuid": "c1fcbd80-573d-4059-8042-20d85154abdb"
+        },
+        {
+          "analysis_uuid": null,
+          "assay": null,
+          "attributes": [
+            {
+              "node": "/api/v1/node/f8a4f740-9d1d-4ac4-8ed7-59c7f9011f40/",
+              "subtype": "organism",
+              "type": "Characteristics",
+              "value": "Homo sapiens",
+              "value_accession": "http://purl.obolibrary.org/obo/NCBITaxon_9606",
+              "value_source": "NCBITAXON",
+              "value_unit": ""
+            }
+          ],
+          "file_import_status": null,
+          "file_url": null,
+          "file_uuid": null,
+          "name": "differentiated Caco-2 cells",
+          "parents": [
+            
+          ],
+          "resource_uri": "/api/v1/node/f8a4f740-9d1d-4ac4-8ed7-59c7f9011f40/",
+          "study": "/api/v1/study/3c469083-a7e2-4709-8ca6-bb289d984072/",
+          "subanalysis": null,
+          "type": "Source Name",
+          "uuid": "f8a4f740-9d1d-4ac4-8ed7-59c7f9011f40"
+        }
+      ],
+      "submission_date": "2012-01-26",
+      "title": "Transcription factor binding during intestinal cell differentiation [TFB]",
+      "uuid": "3c469083-a7e2-4709-8ca6-bb289d984072"
+    }
+  ]
+}
