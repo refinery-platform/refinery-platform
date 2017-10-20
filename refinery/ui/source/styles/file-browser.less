@@ -98,30 +98,27 @@
     align-items: center;
 }
 
-#data-set-view {
-  padding: 0;
+.dataSetTabContent {
+  padding: 1em;
+}
 
-  /** Files Tab **/
-  #files {
-    padding-left: 5px;
-    padding-right: 5px;
+/** Files Tab **/
+#files {
+  .ui-select-placeholder {
+    display: inline;
+  }
 
-    .ui-select-placeholder {
-      display: inline;
-    }
+  .row.view-control {
+    background-color: @gray-lighter;
+  }
 
-    .row.view-control {
-      background-color: @gray-lighter;
-    }
+  .fa-question {
+    vertical-align: top;
+  }
 
-    .fa-question {
-      vertical-align: top;
-    }
-
-    #config-question-icon {
-      padding-left: .1em;
-      vertical-align: middle;
-    }
+  #config-question-icon {
+    padding-left: .1em;
+    vertical-align: middle;
   }
 }
 
@@ -176,7 +173,6 @@
 // Tool Launch Table
 #tool-launch-panel {
   height: 84vh;
-  margin: 0 0 0 .5em;
   padding: 0 0 0 .5em;
   border: 1px solid #d4d4d4;
   background-color: #f3f3f3;
@@ -287,8 +283,6 @@
 #table-filter {
   height: 81vh;
   max-height: 81vh;
-  margin: 0 0 0 10px;
-  padding: 0;
   border: 1px solid #d4d4d4;
   overflow: auto;
   h3 {
@@ -330,7 +324,6 @@
 }
 
 #tool-panel-show-button {
-  margin: 0 0 0 10px;
   padding-bottom: 10px;
 }
 .solidText {
