@@ -1,0 +1,36 @@
+<span id="analysesCogIcon" class="pointer">
+  <a
+    uib-popover-template="'analysesgloballist.html'"
+    popover-trigger="'outsideClick'"
+    popover-title="Recent Analyses"
+    popover-append-to-body="true"
+    popover-placement="left"
+    popover-class="global-analysis-popover">
+    <span ng-if="$ctrl.analysesRunningGlobalCount > 0">
+      <span class="spinner" id="global-analysis-status-run-div"
+        refinery-tooltip
+        refinery-tooltip-container="body"
+        refinery-tooltip-placement="left"
+        title="View Recent Analyses">
+        <i class="fa fa-cog" id="global-analysis-status-run"></i>
+        {{ $ctrl.analysesRunningGlobalCount }}
+      </span>
+    </span>
+    <span ng-if="$ctrl.analysesRunningGlobalCount == 0">
+      <i class="fa fa-cog" id="global-analysis-status"
+        refinery-tooltip
+        refinery-tooltip-container="body"
+        refinery-tooltip-placement="left"
+        title="View Recent Analyses"></i>
+    </span>
+  </a>
+</span>
+
+
+<!-- Script for popup content in the tool status and analyses icon-->
+<script type="text/ng-template" id="analysesgloballist.html">
+  <div>
+    <rp-analysis-monitor-global-status-popover>
+    </rp-analysis-monitor-global-status-popover>
+  </div>
+</script>

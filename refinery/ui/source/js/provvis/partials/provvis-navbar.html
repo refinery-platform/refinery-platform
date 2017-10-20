@@ -20,15 +20,14 @@
 
     <div id="prov-ctrl-node-labeling-btn-group" class="btn-group">
       <!-- Attributes -->
-      <button id="prov-ctrl-visible-attribute"
-              class="refinery-base btn btn-default dropdown">
-        <a class="btn btn-xs dropdown-toggle"
+      <div id="prov-ctrl-visible-attribute"
+              class="refinery-base dropdown">
+        <button class="btn btn-xs dropdown-toggle"
            data-toggle="dropdown"
-           href="#"
             aria-expanded="true">
           <i class="fa fa-wrench"></i>&nbsp;Attributes&nbsp;<i
             class="fa fa-caret-down"></i>
-        </a>
+        </button>
         <ul id="prov-ctrl-visible-attribute-list"
             class="dropdown-menu scrollable-menu"></ul>
         <script>
@@ -38,7 +37,7 @@
                 e.stopPropagation();
               });
         </script>
-      </button>
+      </div>
     </div>
 
     <label style="display: inline; margin-top: 3px; margin-right: 5px;">

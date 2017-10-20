@@ -7,17 +7,13 @@ import uuid
 from django.conf import settings
 from django.contrib import admin
 from django.db import transaction
-from django.utils import timezone
 
 from bioblend.galaxy.client import ConnectionError
 from django_docker_engine.docker_utils import DockerClientWrapper
 from jsonschema import RefResolver, ValidationError, validate
 
-from analysis_manager.utils import fetch_objects_required_for_analysis
 from core.models import DataSet, Workflow, WorkflowEngine
-from core.utils import get_aware_local_time
-from factory_boy.django_model_factories import (AnalysisFactory,
-                                                FileRelationshipFactory,
+from factory_boy.django_model_factories import (FileRelationshipFactory,
                                                 GalaxyParameterFactory,
                                                 InputFileFactory,
                                                 ParameterFactory,
@@ -232,48 +228,6 @@ def create_tool(tool_launch_configuration, user_instance):
 
     tool.save()
     return tool
-
-
-def create_tool_analysis(validated_analysis_config):
-    """
-    Create an Analysis instance from a validated analysis config with
-    Tool information
-    :param validated_analysis_config: a dict including the necessary
-    information to create an Analysis that has been validated prior by
-    `analysis_manager.utils.validate_analysis_config`
-    :return: an Analysis instance
-    :raises: RuntimeError
-    """
-    common_analysis_objects = (
-        fetch_objects_required_for_analysis(validated_analysis_config)
-    )
-    current_workflow = common_analysis_objects["current_workflow"]
-    data_set = common_analysis_objects["data_set"]
-    user = common_analysis_objects["user"]
-
-    try:
-        tool = WorkflowTool.objects.get(
-            uuid=validated_analysis_config["toolUuid"]
-        )
-    except (WorkflowTool.DoesNotExist,
-            WorkflowTool.MultipleObjectsReturned) as e:
-        raise RuntimeError("Couldn't fetch Tool from UUID: {}".format(e))
-
-    analysis = AnalysisFactory(
-        uuid=str(uuid.uuid4()),
-        summary="Galaxy workflow execution for: {}".format(tool.name),
-        name="{} - {} - {}".format(
-            tool.get_tool_name(),
-            get_aware_local_time().strftime("%Y/%m/%d %H:%M:%S"),
-            tool.get_owner_username().title()
-        ),
-        project=user.profile.catch_all_project,
-        data_set=data_set,
-        workflow=current_workflow,
-        time_start=timezone.now()
-    )
-    analysis.set_owner(user)
-    return analysis
 
 
 @transaction.atomic
@@ -495,7 +449,6 @@ def validate_tool_annotation(annotation_dictionary):
     properly.
     :param annotation_dictionary: dict containing Tool annotation data
     """
-
     with open(
             os.path.join(
                 settings.BASE_DIR,

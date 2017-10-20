@@ -1159,7 +1159,7 @@ def _create_solr_params_from_node_uuids(node_uuids):
     return {
         "q": "django_ct:data_set_manager.node",
         "wt": "json",
-        "fq": "uuid:'{}'".format(" OR ".join(node_uuids))
+        "fq": "uuid:({})".format(" OR ".join(node_uuids))
     }
 
 

@@ -18,5 +18,4 @@ urlpatterns = patterns(
         'get_workflow_data_input_map'),
     url(r'^analysis_cancel/$', 'analysis_cancel'),
     url(r'^run/$', 'run'),
-    url(r'^create_noderelationship/$', 'create_noderelationship'),
 )

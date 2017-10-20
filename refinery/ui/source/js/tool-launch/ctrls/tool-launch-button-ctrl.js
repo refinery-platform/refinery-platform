@@ -17,6 +17,7 @@
     'toolLaunchService',
     'toolSelectService',
     '$uibModal',
+    '$rootScope',
     '$window'
   ];
 
@@ -25,7 +26,9 @@
     $timeout,
     toolLaunchService,
     toolSelectService,
+
     $uibModal,
+    $rootScope,
     $window
   ) {
     var vm = this;
@@ -44,6 +47,7 @@
      * @memberOf refineryToolLaunch.ToolLaunchButtonCtrl
     **/
     function launchTool () {
+      $rootScope.$broadcast('rf/launchAnalysis');
       toolLaunchService.postToolLaunch().then(function (response) {
         $window.location.href = response.tool_url;
       }, function (error) {

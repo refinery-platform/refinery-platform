@@ -572,10 +572,10 @@ var provvisInit = (function () {
       $('<li/>', {
         id: 'prov-ctrl-visible-attribute-list-' + na,
         style: 'padding-left: 5px',
-        html: '<a href="#" class="field-name"><label class="radio" ' +
-          'style="text-align: start;margin-top: 0px;margin-bottom: 0px;">' +
-          '<input type="radio">' +
-          na + '</label></a>'
+        html: '<label class="radio" ' +
+          'style="padding-left: 2em;margin-top: 0px;margin-bottom: 0px;">' +
+          '<input type="radio" name="provvis-attributes">' +
+          na + '</label>'
       }).appendTo('#prov-ctrl-visible-attribute-list');
     });
 

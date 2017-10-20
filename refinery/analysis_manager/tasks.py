@@ -11,10 +11,8 @@ import celery
 from celery.result import TaskSetResult
 from celery.task import Task, task
 from celery.task.sets import TaskSet
-import requests
 
 from core.models import Analysis, AnalysisResult, Workflow
-from data_set_manager.models import Node
 from file_store.models import FileStoreItem
 from file_store.tasks import create, import_file
 import tool_manager
@@ -124,7 +122,6 @@ def _get_analysis_status(analysis_uuid):
         logger.error("Can not retrieve status for analysis '%s': '%s'",
                      analysis, exc)
         run_analysis.update_state(state=celery.states.FAILURE)
-        return
 
 
 def get_taskset_result(task_group_id):
@@ -140,7 +137,6 @@ def _get_workflow_tool(analysis_uuid):
             tool_manager.models.WorkflowTool.MultipleObjectsReturned) as e:
         logger.error("Could not fetch WorkflowTool for this analysis: %s", e)
         run_analysis.update_state(state=celery.states.FAILURE)
-        return
 
 
 def _attach_workflow_outputs(analysis_uuid):
@@ -222,11 +218,10 @@ def _galaxy_file_export(analysis_uuid):
         ).delete()
         galaxy_export_taskset.delete()
         analysis.galaxy_cleanup()
-        return
 
 
 @task()
-def _invoke_tool_based_galaxy_workflow(analysis_uuid):
+def _invoke_galaxy_workflow(analysis_uuid):
     tool = _get_workflow_tool(analysis_uuid)
 
     tool.create_dataset_collection()
@@ -259,14 +254,9 @@ def _refinery_file_import(analysis_uuid):
         logger.info("Starting input file import tasks for analysis '%s'",
                     analysis)
         refinery_import_tasks = []
+        tool = _get_workflow_tool(analysis_uuid)
 
-        if analysis.is_tool_based:
-            tool = _get_workflow_tool(analysis_uuid)
-            input_file_uuid_list = tool.get_input_file_uuid_list()
-        else:
-            input_file_uuid_list = analysis.get_input_file_uuid_list()
-
-        for input_file_uuid in input_file_uuid_list:
+        for input_file_uuid in tool.get_input_file_uuid_list():
             refinery_import_task = import_file.subtask((input_file_uuid,))
             refinery_import_tasks.append(refinery_import_task)
         refinery_import_taskset = TaskSet(
@@ -293,7 +283,6 @@ def _refinery_file_import(analysis_uuid):
         analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
         analysis.send_email()
         refinery_import_taskset.delete()
-        return
 
 
 @task(base=AnalysisHandlerTask, max_retries=None)
@@ -313,76 +302,14 @@ def run_analysis(analysis_uuid):
 
     _get_analysis_status(analysis_uuid)
     _refinery_file_import(analysis_uuid)
-
-    if analysis.is_tool_based:
-        _run_tool_based_galaxy_file_import(analysis_uuid)
-        _run_tool_based_galaxy_workflow(analysis_uuid)
-    else:
-        _run_galaxy_workflow(analysis_uuid)
-
+    _run_galaxy_file_import(analysis_uuid)
+    _run_galaxy_workflow(analysis_uuid)
     _check_galaxy_history_state(analysis_uuid)
     _galaxy_file_export(analysis_uuid)
     _attach_workflow_outputs(analysis_uuid)
 
 
-def _run_galaxy_workflow(analysis_uuid):
-    """
-    Import files into Galaxy and execute Galaxy Workflow
-    """
-    analysis = _get_analysis(analysis_uuid)
-    analysis_status = _get_analysis_status(analysis_uuid)
-
-    if not analysis_status.galaxy_import_task_group_id:
-        logger.debug("Starting analysis execution in Galaxy")
-        try:
-            analysis.prepare_galaxy()
-        except (requests.exceptions.ConnectionError,
-                galaxy.client.ConnectionError):
-            error_msg = "Analysis '{}' failed during preparation in " \
-                        "Galaxy".format(analysis)
-            logger.error(error_msg)
-            analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
-            analysis.send_email()
-            get_taskset_result(
-                analysis_status.refinery_import_task_group_id
-            ).delete()
-            return
-        galaxy_import_tasks = [
-            _start_galaxy_analysis.subtask((analysis.uuid,)),
-        ]
-        galaxy_import_taskset = TaskSet(
-            tasks=galaxy_import_tasks
-        ).apply_async()
-        galaxy_import_taskset.save()
-        analysis_status.galaxy_import_task_group_id = \
-            galaxy_import_taskset.taskset_id
-        analysis_status.set_galaxy_history_state(
-            AnalysisStatus.PROGRESS
-        )
-        run_analysis.retry(countdown=RETRY_INTERVAL)
-
-    # check if data files were successfully imported into Galaxy
-    galaxy_import_taskset = get_taskset_result(
-        analysis_status.galaxy_import_task_group_id
-    )
-    if not galaxy_import_taskset.ready():
-        logger.debug("Analysis '%s' pending in Galaxy", analysis)
-        run_analysis.retry(countdown=RETRY_INTERVAL)
-    elif not galaxy_import_taskset.successful():
-        error_msg = "Analysis '{}' failed in Galaxy".format(analysis)
-        logger.error(error_msg)
-        analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
-        analysis_status.set_galaxy_history_state(AnalysisStatus.ERROR)
-        analysis.send_email()
-        get_taskset_result(
-            analysis_status.refinery_import_task_group_id
-        ).delete()
-        galaxy_import_taskset.delete()
-        analysis.galaxy_cleanup()
-        return
-
-
-def _run_tool_based_galaxy_file_import(analysis_uuid):
+def _run_galaxy_file_import(analysis_uuid):
     analysis = _get_analysis(analysis_uuid)
     analysis_status = _get_analysis_status(analysis_uuid)
     tool = _get_workflow_tool(analysis_uuid)
@@ -429,12 +356,11 @@ def _run_tool_based_galaxy_file_import(analysis_uuid):
         ).delete()
         galaxy_file_import_taskset.delete()
         analysis.galaxy_cleanup()
-        return
     else:
         analysis_status.set_galaxy_import_state(AnalysisStatus.OK)
 
 
-def _run_tool_based_galaxy_workflow(analysis_uuid):
+def _run_galaxy_workflow(analysis_uuid):
     """
     Create DataSetCollection objects in galaxy, and invoke the workflow
     belonging to our tool.
@@ -449,7 +375,7 @@ def _run_tool_based_galaxy_workflow(analysis_uuid):
         tool.update_file_relationships_with_galaxy_history_data()
 
         galaxy_workflow_tasks = [
-            _invoke_tool_based_galaxy_workflow.subtask((analysis_uuid,))
+            _invoke_galaxy_workflow.subtask((analysis_uuid,))
         ]
 
         galaxy_workflow_taskset = TaskSet(
@@ -486,124 +412,18 @@ def _run_tool_based_galaxy_workflow(analysis_uuid):
         return
 
 
-def _import_analysis_in_galaxy(ret_list, library_id, connection):
-    """Take workflow configuration and import files into galaxy
-    assign galaxy_ids to ret_list
-
-    """
-    logger.debug("Uploading analysis input files to Galaxy")
-    for fileset in ret_list:
-        for k in fileset.keys():
-
-            cur_item = fileset[k]
-
-            # getting the current file_uuid from the given node_uuid
-            try:
-                curr_file_uuid = Node.objects.get(
-                    uuid=cur_item['node_uuid']).file_uuid
-            except Node.DoesNotExist:
-                logger.error("Couldn't fetch Node")
-                return None
-
-            try:
-                current_filestore_item = FileStoreItem.objects.get_item(
-                    uuid=curr_file_uuid)
-            except FileStoreItem.DoesNotExist:
-                logger.error("Couldn't fetch FileStoreItem")
-                return None
-
-            # Create url based on filestore_item's location (local file or
-            # external file)
-            file_url = current_filestore_item.get_datafile_url()
-
-            try:
-                file_id = connection.libraries.upload_file_from_url(
-                        library_id, file_url)[0]['id']
-            except (galaxy.client.ConnectionError, IOError) as exc:
-                logger.error("Failed adding file '%s' to Galaxy "
-                             "library '%s': %s",
-                             curr_file_uuid, library_id, exc)
-                raise
-
-            cur_item["id"] = file_id
-
-    return ret_list
-
-
 @task()
-def _start_galaxy_analysis(analysis_uuid):
-    """Import data files into Galaxy and run workflow"""
-    error_msg = "Analysis execution in Galaxy failed: "
-    try:
-        analysis = Analysis.objects.get(uuid=analysis_uuid)
-    except (Analysis.DoesNotExist, Analysis.MultipleObjectsReturned) as exc:
-        error_msg += "can not retrieve analysis with UUID '%s': '%s'"
-        logger.error(error_msg, analysis_uuid, exc)
-        # fail the task?
-        return
-
-    connection = analysis.galaxy_connection()
-
-    # generates same ret_list purely based on analysis object
-    ret_list = analysis.get_config()
-    # NEED TO IMPORT TO GALAXY TO GET GALAXY_IDS
-    try:
-        ret_list = _import_analysis_in_galaxy(
-            ret_list, analysis.library_id, connection)
-    except (RuntimeError, galaxy.client.ConnectionError) as exc:
-        error_msg += "error importing analysis '%s' into Galaxy: %s"
-        logger.error(error_msg, analysis.name, exc.message)
-        analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
-        analysis.galaxy_cleanup()
-        _start_galaxy_analysis.update_state(state=celery.states.FAILURE)
-        return
-
-    try:
-        workflow = connection.workflows.show_workflow(
-            analysis.workflow_galaxy_id)
-    except galaxy.client.ConnectionError:
-        error_msg += "error getting information for workflow '%s' from Galaxy"
-        logger.error(error_msg, analysis.workflow_galaxy_id)
-        analysis.set_status(Analysis.FAILURE_STATUS, error_msg)
-        analysis.galaxy_cleanup()
-        _start_galaxy_analysis.update_state(state=celery.states.FAILURE)
-        return
-
-    ds_map = {}
-    annot_inputs = {}
-    annot_counts = {}
-    # iterate over distinct workflow inputs
-    for data_input in analysis.workflow.data_inputs.all():
-        input_type = data_input.name
-        annot_inputs[input_type] = []
-        annot_counts[input_type] = 0
-    # configure input files
-    for in_key, input_details in workflow['inputs'].iteritems():
-        inType = input_details['label']
-        if inType in annot_inputs:
-            temp_count = annot_counts[inType]
-            winput_id = ret_list[temp_count][inType]['id']
-            annot_counts[inType] = temp_count + 1
-        ds_map[in_key] = {"id": winput_id, "src": "ld"}
-
-    try:
-        connection.workflows.run_workflow(
-            workflow_id=analysis.workflow_galaxy_id,
-            dataset_map=ds_map,
-            history_id=analysis.history_id
-        )
-    except galaxy.client.ConnectionError as exc:
-        error_msg += "error running Galaxy workflow for analysis '%s': %s"
-        logger.error(error_msg, analysis.name, exc.message)
-        _start_galaxy_analysis.update_state(state=celery.states.FAILURE)
-
-
-@task()
-def _tool_based_galaxy_file_import(analysis_uuid, file_store_item_uuid,
-                                   history_dict, library_dict):
+def _galaxy_file_import(analysis_uuid, file_store_item_uuid, history_dict,
+                        library_dict):
     tool = _get_workflow_tool(analysis_uuid)
-
-    file_store_item = FileStoreItem.objects.get(uuid=file_store_item_uuid)
+    try:
+        file_store_item = FileStoreItem.objects.get(uuid=file_store_item_uuid)
+    except (FileStoreItem.DoesNotExist,
+            FileStoreItem.MultipleObjectsReturned) as e:
+        logger.error("Couldn't fetch FileStoreItem from UUID: %s %s",
+                     file_store_item_uuid, e)
+        run_analysis.update_state(state=celery.states.FAILURE)
+        return
     library_dataset_dict = tool.upload_datafile_to_library_from_url(
         library_dict["id"],
         file_store_item.get_datafile_url()
@@ -643,10 +463,9 @@ def _get_galaxy_download_task_ids(analysis):
     task_id_list = []
 
     # retrieving list of files to download for workflow
-    if analysis.is_tool_based:
-        tool = _get_workflow_tool(analysis.uuid)
-        tool.create_workflow_file_downloads()
-        tool.create_analysis_output_node_connections()
+    tool = _get_workflow_tool(analysis.uuid)
+    tool.create_workflow_file_downloads()
+    tool.create_analysis_output_node_connections()
 
     dl_files = analysis.workflow_dl_files
     # creating dictionary based on files to download predetermined by workflow
@@ -677,48 +496,40 @@ def _get_galaxy_download_task_ids(analysis):
         # download file if result state is "ok"
         if results['state'] == 'ok':
             file_type = results["type"]
-            curr_file_id = results['name']
-            if curr_file_id in dl_dict or analysis.is_tool_based:
-                if analysis.is_tool_based:
-                    result_name = "{}.{}".format(results['name'], file_type)
-                else:
-                    curr_dl_dict = dl_dict[curr_file_id]
-                    result_name = curr_dl_dict['filename'] + '.' + file_type
-                # size of file defined by galaxy
-                file_size = results['file_size']
-                # Determining tag if galaxy results should be download through
-                # http or copying files directly to retrieve HTML files as zip
-                # archives via dataset URL
-                if galaxy_instance.local_download and file_type != 'html':
-                    download_url = results['file_name']
-                else:
-                    download_url = urlparse.urljoin(
-                            galaxy_instance.base_url, '/'.join(
-                                    ['datasets', str(results['dataset_id']),
-                                     'display?to_ext=txt']))
-                # workaround to set the correct file type for zip archives of
-                # FastQC HTML reports produced by Galaxy dynamically
-                if file_type == 'html':
-                    file_type = 'zip'
-                # TODO: when changing permanent=True, fix update of % download
-                # of file
-                filestore_uuid = create(
-                    source=download_url,
-                    filetype=file_type
-                )
-                # adding history files to django model
-                temp_file = AnalysisResult(
-                    analysis_uuid=analysis.uuid,
-                    file_store_uuid=filestore_uuid,
-                    file_name=result_name, file_type=file_type)
-                temp_file.save()
-                analysis.results.add(temp_file)
-                analysis.save()
-                # downloading analysis results into file_store
-                # only download files if size is greater than 1
-                if file_size > 0:
-                    task_id = import_file.subtask(
-                            (filestore_uuid, False, file_size))
-                    task_id_list.append(task_id)
+            result_name = "{}.{}".format(results['name'], file_type)
+
+            # size of file defined by galaxy
+            file_size = results['file_size']
+            # Determining tag if galaxy results should be download through
+            # http or copying files directly to retrieve HTML files as zip
+            # archives via dataset URL
+            if galaxy_instance.local_download and file_type != 'html':
+                download_url = results['file_name']
+            else:
+                download_url = urlparse.urljoin(
+                        galaxy_instance.base_url, '/'.join(
+                                ['datasets', str(results['dataset_id']),
+                                 'display?to_ext=txt']))
+            # workaround to set the correct file type for zip archives of
+            # FastQC HTML reports produced by Galaxy dynamically
+            if file_type == 'html':
+                file_type = 'zip'
+            # TODO: when changing permanent=True, fix update of % download
+            # of file
+            filestore_uuid = create(source=download_url, filetype=file_type)
+            # adding history files to django model
+            temp_file = AnalysisResult(
+                analysis_uuid=analysis.uuid,
+                file_store_uuid=filestore_uuid,
+                file_name=result_name, file_type=file_type)
+            temp_file.save()
+            analysis.results.add(temp_file)
+            analysis.save()
+            # downloading analysis results into file_store
+            # only download files if size is greater than 1
+            if file_size > 0:
+                task_id = import_file.subtask(
+                        (filestore_uuid, False, file_size))
+                task_id_list.append(task_id)
 
     return task_id_list

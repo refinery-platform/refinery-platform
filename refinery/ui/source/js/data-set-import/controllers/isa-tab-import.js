@@ -89,6 +89,7 @@
       })
       .catch(function (error) {
         self.isErrored = true;
+        self.errorMessage = error.data;
         self.$log.error(error);
       })
       .finally(function () {
