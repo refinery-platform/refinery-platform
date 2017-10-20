@@ -1,19 +1,37 @@
-<div class="modal-header">
-  <h4>
-    Error Notification
-  </h4>
+<div class="modal-header p-t-1-2 p-b-1-2">
+  <h3 class="{{$ctrl.modalData.textMsgType}}">
+    <a ng-click="$ctrl.closeModal()">
+      <i class="fa fa-times close" aria-hidden="true"></i>
+    </a>
+    <span ng-if="$ctrl.addIcon">
+      <i
+        class="fa"
+        ng-class="$ctrl.modalData.msgType ===
+        'success' ? 'fa-check-circle' : 'fa-exclamation-triangle'"
+        aria-hidden="true"></i>
+    </span>
+    {{ $ctrl.modalData.header }}
+  </h3>
 </div>
 <div class="modal-body">
-  <p>
+  <p class="lead">
     {{$ctrl.modalData.introMsg}}
   </p>
-  <p>
-    The api returned a {{$ctrl.modalData.errorStatus}} status with an error
-    message of <em>{{$ctrl.modalData.errorMsg}}</em>.
-  </p>
+  <div>
+    <p class="small">
+      <ul class="list-unstyled">
+        <li>
+          Status: {{$ctrl.modalData.apiStatus}}
+        </li>
+        <li>
+          Message: {{$ctrl.modalData.apiMsg}}
+        </li>
+      </ul>
+    </p>
+  </div>
 </div>
 <div class="modal-footer">
-  <button class="refiner-base btn btn-default" ng-click="$ctrl.closeModal()">
+  <button class="refinery-base btn btn-default" ng-click="$ctrl.closeModal()">
     Close
   </button>
 </div>
