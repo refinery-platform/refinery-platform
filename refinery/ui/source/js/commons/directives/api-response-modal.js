@@ -10,13 +10,6 @@
         modalInstance: '<',
         resolve: '<'
       },
-      controller: [function () {
-        var vm = this;
-        vm.modalData = vm.resolve.modalData;
-
-        vm.closeModal = function () {
-          vm.modalInstance.close(vm.modalData);
-        };
-      }]
+      controller: 'APIResponseModalCtrl'
     });
 })();

@@ -50,15 +50,17 @@
       $rootScope.$broadcast('rf/launchAnalysis');
       toolLaunchService.postToolLaunch().then(function (response) {
        // $window.location.href = response.tool_url;
-
+        console.log(response);
         $uibModal.open({
           component: 'aPIResponseModal',
           resolve: {
             modalData: function () {
               return {
-                errorStatus: response.status,
-                errorMsg: response.data,
-                introMsg: 'Success.'
+                apiStatus: '200',
+                apiMsg: 'API says something here.',
+                introMsg: 'Some general info you need to know about,' +
+                ' requiring a modal.',
+                header: 'General Info'
               };
             }
           }
@@ -69,9 +71,11 @@
           resolve: {
             modalData: function () {
               return {
-                errorStatus: error.status,
-                errorMsg: error.data,
-                introMsg: 'Unable to launch tool, please try again.'
+                apiStatus: error.status,
+                apiMsg: error.data,
+                msgType: 'danger',
+                introMsg: 'Unable to launch tool, please try again.',
+                header: 'Warning'
               };
             }
           }

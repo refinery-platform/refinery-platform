@@ -20,10 +20,10 @@
   <div>
     <p class="small">
       <ul class="list-unstyled">
-        <li>
+        <li ng-if="$ctrl.modalData.apiStatus.length">
           Status: {{$ctrl.modalData.apiStatus}}
         </li>
-        <li>
+        <li ng-if="$ctrl.modalData.apiMsg.length">
           Message: {{$ctrl.modalData.apiMsg}}
         </li>
       </ul>
