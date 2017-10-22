@@ -20,7 +20,7 @@
   <div>
     <p class="small">
       <ul class="list-unstyled">
-        <li ng-if="$ctrl.modalData.apiStatus.length">
+        <li ng-if="$ctrl.modalData.apiStatus.length || $ctrl.modalData.apiStatus > 0">
           Status: {{$ctrl.modalData.apiStatus}}
         </li>
         <li ng-if="$ctrl.modalData.apiMsg.length">
