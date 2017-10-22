@@ -30,7 +30,6 @@
       msgType: msgTypeOptions[0] // Note a null msgType will leave a black font.
     };
     vm.closeModal = closeModal;
-    // other fields include apiStatus and apiMsg
 
     /*
    * ----------------------------------------------------------------------------
