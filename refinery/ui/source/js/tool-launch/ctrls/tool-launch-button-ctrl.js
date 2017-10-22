@@ -17,8 +17,8 @@
     'toolLaunchService',
     'toolSelectService',
     '$uibModal',
-    '$rootScope'
-   // '$window'
+    '$rootScope',
+    '$window'
   ];
 
   function ToolLaunchButtonCtrl (
@@ -26,10 +26,9 @@
     $timeout,
     toolLaunchService,
     toolSelectService,
-
     $uibModal,
-    $rootScope
-   // $window
+    $rootScope,
+    $window
   ) {
     var vm = this;
     vm.launchTool = launchTool;
@@ -49,25 +48,10 @@
     function launchTool () {
       $rootScope.$broadcast('rf/launchAnalysis');
       toolLaunchService.postToolLaunch().then(function (response) {
-       // $window.location.href = response.tool_url;
-        console.log(response);
-        $uibModal.open({
-          component: 'aPIResponseModal',
-          resolve: {
-            modalData: function () {
-              return {
-                apiStatus: '200',
-                apiMsg: 'API says something here.',
-                introMsg: 'Some general info you need to know about,' +
-                ' requiring a modal.',
-                header: 'General Info'
-              };
-            }
-          }
-        });
+        $window.location.href = response.tool_url;
       }, function (error) {
         $uibModal.open({
-          component: 'aPIResponseModal',
+          component: 'rpApiResponseModal',
           resolve: {
             modalData: function () {
               return {
@@ -75,7 +59,7 @@
                 apiMsg: error.data,
                 msgType: 'danger',
                 introMsg: 'Unable to launch tool, please try again.',
-                header: 'Warning'
+                header: 'Error with Tool Launch'
               };
             }
           }

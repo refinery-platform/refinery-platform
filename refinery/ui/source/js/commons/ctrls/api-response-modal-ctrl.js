@@ -52,11 +52,13 @@
    * ---------------------------------------------------------
    */
     vm.$onInit = function () {
-      // merge the incoming data into the initialized modalData
-      Object.assign(vm.modalData, vm.resolve.modalData);
+      if (!_.isUndefined(vm.resolve) && !_.isUndefined(vm.resolve.modalData)) {
+         // merge the incoming data into the initialized modalData
+        Object.assign(vm.modalData, vm.resolve.modalData);
+      }
 
       // ensure bootstrap classes are used or no class at all
-      if (_.has(vm.resolve.modalData, 'msgType') &&
+      if (_.has(vm.modalData, 'msgType') &&
         _.indexOf(msgTypeOptions, vm.modalData.msgType)) {
         vm.modalData.textMsgType = 'text-' + vm.modalData.msgType;
         if (vm.modalData.msgType !== 'primary') {
