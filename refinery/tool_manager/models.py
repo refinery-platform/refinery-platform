@@ -478,8 +478,9 @@ class VisualizationTool(Tool):
         return tool_parameters
 
     def _get_edited_parameter_value(self, parameter_instance):
-        '''`default_value` here unless a user has updated a value
-        in the launch params'''
+        ''' Return the `default_value` of a Parameter instance here unless a
+        user has updated said Parameter's value in the UI before a Tool was
+        launched'''
         launch_parameters = self._get_launch_parameters()
         edited_parameter_value = launch_parameters.get(
             parameter_instance.uuid
