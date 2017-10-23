@@ -29,6 +29,7 @@
     var vm = this;
     vm.launchTool = launchTool;
     vm.needMoreNodes = needMoreNodes;
+    vm.userIsAnonymous = userIsAnonymous;
 
     /*
    * -----------------------------------------------------------------------------
@@ -57,6 +58,9 @@
     **/
     function needMoreNodes () {
       return toolLaunchService.checkNeedMoreNodes();
+    }
+    function userIsAnonymous () {
+      return toolLaunchService.userIsAnonymous();
     }
   }
 })();

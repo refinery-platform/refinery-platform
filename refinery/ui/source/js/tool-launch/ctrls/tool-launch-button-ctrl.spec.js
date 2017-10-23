@@ -28,5 +28,9 @@
     it('Validation method should exist for views', function () {
       expect(angular.isFunction(ctrl.needMoreNodes)).toBe(true);
     });
+
+    it('userIsAnonymous method should exist for views', function () {
+      expect(angular.isFunction(ctrl.userIsAnonymous)).toBe(true);
+    });
   });
 })();
