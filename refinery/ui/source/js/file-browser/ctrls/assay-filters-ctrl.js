@@ -58,7 +58,6 @@
       // Only on a new page load/new data set do we expect the attribute filters
       // to be empty
 
-      console.log('in the assay filters ctrl');
       if (_.isEmpty(assayFiltersService.attributeFilter)) {
         // Requires waiting for the api response which should update the
         // service's attribute filter and unbind.
@@ -69,11 +68,9 @@
           function () {
             // no need to update filters if there are no url queries
             if (Object.keys($location.search()).length === 0) {
-              console.log('watchedOnce' + Object.keys($location.search()));
               watchOnce();   // unbind watcher
             }
-            if (!_.isEmpty(assayFiltersService.attributeFilter) ||
-                !_.isEmpty(assayFiltersService.analysisFilter)) {
+            if (!_.isEmpty(assayFiltersService.attributeFilter)) {
               updateFiltersFromUrlQuery();
                 // drop panels in ui from query
               vm.updateFilterDOM = true;
