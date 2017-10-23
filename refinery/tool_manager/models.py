@@ -823,9 +823,9 @@ class WorkflowTool(Tool):
         for details on its structure.
         """
         params_dict = {}
-        workflow_parameters = self._get_launch_parameters()
+        launch_parameters = self._get_launch_parameters()
 
-        for galaxy_parameter_uuid in workflow_parameters:
+        for galaxy_parameter_uuid in launch_parameters:
             galaxy_parameter = GalaxyParameter.objects.get(
                 uuid=galaxy_parameter_uuid
             )
@@ -838,7 +838,7 @@ class WorkflowTool(Tool):
 
             params_dict[workflow_step][galaxy_parameter.name] = (
                 galaxy_parameter.cast_param_value_to_proper_type(
-                    workflow_parameters[galaxy_parameter_uuid]
+                    launch_parameters[galaxy_parameter_uuid]
                 )
             )
         return params_dict
