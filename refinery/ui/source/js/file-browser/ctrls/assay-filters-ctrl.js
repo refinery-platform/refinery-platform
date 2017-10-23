@@ -72,11 +72,8 @@
               console.log('watchedOnce' + Object.keys($location.search()));
               watchOnce();   // unbind watcher
             }
-            console.log('attribute Filter' + assayFiltersService.attributeFilter);
-            console.log('analysis Filter' + assayFiltersService.analysisFilter);
-            if (!assayFiltersService.attributeFilter.length ||
-              !assayFiltersService.analysisFilter.length) {
-              console.log('in the iffy with updating stuff');
+            if (!_.isEmpty(assayFiltersService.attributeFilter) ||
+                !_.isEmpty(assayFiltersService.analysisFilter)) {
               updateFiltersFromUrlQuery();
                 // drop panels in ui from query
               vm.updateFilterDOM = true;
