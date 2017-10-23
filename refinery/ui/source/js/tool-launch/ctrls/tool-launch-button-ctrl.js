@@ -58,7 +58,7 @@
                 apiStatus: error.status,
                 apiMsg: error.data,
                 msgType: 'danger',
-                introMsg: 'Unable to launch tool, please try again.',
+                introMsg: 'Unable to launch tool.',
                 header: 'Error with Tool Launch'
               };
             }
