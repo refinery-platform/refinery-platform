@@ -214,6 +214,9 @@ class ToolDefinition(models.Model):
                 "Workflow-based tools don't utilize `extra_directories`"
             )
 
+    def get_parameters(self):
+        return self.parameters.all()
+
 
 @receiver(pre_delete, sender=ToolDefinition)
 def delete_associated_objects(sender, instance, *args, **kwargs):
@@ -329,6 +332,9 @@ class Tool(OwnableResource):
             Node.objects.get(uuid=uuid) for uuid in self.get_input_node_uuids()
         ]
 
+    def _get_launch_parameters(self):
+        return self.get_tool_launch_config()[ToolDefinition.PARAMETERS]
+
     def get_tool_launch_config(self):
         return json.loads(self.tool_launch_configuration)
 
@@ -421,6 +427,7 @@ class VisualizationTool(Tool):
         """
         return {
             self.FILE_RELATIONSHIPS: self.get_file_relationships_urls(),
+            ToolDefinition.PARAMETERS: self._get_visualization_parameters(),
             self.NODE_INFORMATION: self._get_detailed_input_nodes_dict()
         }
 
@@ -453,6 +460,36 @@ class VisualizationTool(Tool):
             settings.DJANGO_DOCKER_ENGINE_BASE_URL,
             self.container_name
         )
+
+    def _get_visualization_parameters(self):
+        tool_parameters = []
+
+        for parameter in self.tool_definition.get_parameters():
+            tool_parameters.append(
+                {
+                    "uuid": parameter.uuid,
+                    "description": parameter.description,
+                    "default_value": parameter.default_value,
+                    "name": parameter.name,
+                    "value": self._get_edited_parameter_value(parameter),
+                    "value_type": parameter.value_type
+                }
+            )
+        return tool_parameters
+
+    def _get_edited_parameter_value(self, parameter_instance):
+        ''' Return the `default_value` of a Parameter instance here unless a
+        user has updated said Parameter's value in the UI before a Tool was
+        launched'''
+        launch_parameters = self._get_launch_parameters()
+        edited_parameter_value = launch_parameters.get(
+            parameter_instance.uuid
+        )
+
+        if edited_parameter_value is not None:
+            return edited_parameter_value
+        else:
+            return parameter_instance.default_value
 
     def launch(self):
         """
@@ -787,9 +824,9 @@ class WorkflowTool(Tool):
         for details on its structure.
         """
         params_dict = {}
-        workflow_parameters = self._get_workflow_parameters()
+        launch_parameters = self._get_launch_parameters()
 
-        for galaxy_parameter_uuid in workflow_parameters:
+        for galaxy_parameter_uuid in launch_parameters:
             galaxy_parameter = GalaxyParameter.objects.get(
                 uuid=galaxy_parameter_uuid
             )
@@ -802,7 +839,7 @@ class WorkflowTool(Tool):
 
             params_dict[workflow_step][galaxy_parameter.name] = (
                 galaxy_parameter.cast_param_value_to_proper_type(
-                    workflow_parameters[galaxy_parameter_uuid]
+                    launch_parameters[galaxy_parameter_uuid]
                 )
             )
         return params_dict
@@ -1085,9 +1122,6 @@ class WorkflowTool(Tool):
 
     def get_workflow_internal_id(self):
         return self.tool_definition.workflow.internal_id
-
-    def _get_workflow_parameters(self):
-        return self.get_tool_launch_config()[ToolDefinition.PARAMETERS]
 
     def _get_workflow_step(self, galaxy_dataset_dict):
         for step in self._get_galaxy_workflow_invocation()["steps"]:

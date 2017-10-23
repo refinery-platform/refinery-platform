@@ -55,7 +55,7 @@ from data_set_manager.models import Assay, Attribute, Node
 from data_set_manager.utils import _create_solr_params_from_node_uuids
 from factory_boy.django_model_factories import (AnnotatedNodeFactory,
                                                 AttributeFactory, NodeFactory,
-                                                ToolFactory)
+                                                ParameterFactory, ToolFactory)
 from factory_boy.utils import create_dataset_with_necessary_models
 from file_store.models import FileStoreItem
 from galaxy_connector.models import Instance
@@ -251,6 +251,13 @@ class ToolManagerTestBase(ToolManagerMocks):
         self.tools_url_root = '/api/v2/tools/'
         self.tool_defs_url_root = '/api/v2/tool_definitions/'
 
+        self.mock_parameter = ParameterFactory(
+            name="Test Param",
+            description="Test Param Description",
+            value_type=Parameter.STRING,
+            default_value="Coffee"
+        )
+
     def tearDown(self):
         # Trigger the pre_delete signal so that datafiles are purged
         FileStoreItem.objects.all().delete()
@@ -264,10 +271,18 @@ class ToolManagerTestBase(ToolManagerMocks):
             self.create_workflow_tool_definition(
                 annotation_file_name=annotation_file_name
             )
+            launch_parameters = {
+                galaxy_param.uuid: galaxy_param.default_value
+                for galaxy_param in GalaxyParameter.objects.all()
+            }
+
         elif tool_type == ToolDefinition.VISUALIZATION:
             self.create_vis_tool_definition(
                 annotation_file_name=annotation_file_name
             )
+            launch_parameters = {
+                self.mock_parameter.uuid: "Edited Value"
+            }
         else:
             raise RuntimeError("Please provide a valid tool_type")
 
@@ -276,20 +291,14 @@ class ToolManagerTestBase(ToolManagerMocks):
                 "dataset_uuid": self.dataset.uuid,
                 "tool_definition_uuid": self.td.uuid,
                 Tool.FILE_RELATIONSHIPS: "[{}]".format(self.node.uuid),
-                ToolDefinition.PARAMETERS: {
-                    galaxy_param.uuid: galaxy_param.default_value
-                    for galaxy_param in GalaxyParameter.objects.all()
-                    }
+                ToolDefinition.PARAMETERS: launch_parameters
             }
         else:
             self.post_data = {
                 "dataset_uuid": self.dataset.uuid,
                 "tool_definition_uuid": self.td.uuid,
                 Tool.FILE_RELATIONSHIPS: file_relationships,
-                ToolDefinition.PARAMETERS: {
-                    galaxy_param.uuid: galaxy_param.default_value
-                    for galaxy_param in GalaxyParameter.objects.all()
-                }
+                ToolDefinition.PARAMETERS: launch_parameters
             }
 
         self.post_request = self.factory.post(
@@ -617,6 +626,8 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
             "{}/workflows/galaxy_workflows_invalid.json".format(TEST_DATA_PATH)
         ) as f:
             self.invalid_workflows = json.loads(f.read())
+
+        self.mock_parameter.delete()
 
     def test_tool_definition_model_str(self):
         with open("{}/visualizations/igv.json".format(TEST_DATA_PATH)) as f:
@@ -1189,6 +1200,10 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
 
 
 class ToolDefinitionTests(ToolManagerTestBase):
+    def setUp(self):
+        super(ToolDefinitionTests, self).setUp()
+        self.mock_parameter.delete()
+
     def test_get_annotation(self):
         self.create_vis_tool_definition(annotation_file_name="igv.json")
         self.assertEqual(self.td.get_annotation(),
@@ -1213,6 +1228,12 @@ class ToolDefinitionTests(ToolManagerTestBase):
         self.assertFalse(
             Workflow.objects.all()[0].is_active
         )
+
+    def test_get_parameters(self):
+        self.create_vis_tool_definition(annotation_file_name="igv.json")
+        tool_parameters = [p for p in self.td.get_parameters()]
+        all_parameters = [p for p in Parameter.objects.all()]
+        self.assertEqual(tool_parameters, all_parameters)
 
 
 class ToolTests(ToolManagerTestBase):
@@ -1371,8 +1392,45 @@ class VisualizationToolTests(ToolManagerTestBase):
                 Tool.FILE_RELATIONSHIPS: file_relationships,
                 VisualizationTool.NODE_INFORMATION:
                     self.tool._get_detailed_input_nodes_dict(),
+                ToolDefinition.PARAMETERS:
+                    self.tool._get_visualization_parameters()
             }
         )
+
+    def test__get_visualization_parameters(self):
+        parameter = self.visualization_tool.tool_definition.get_parameters()[0]
+        self.assertEqual(
+            self.visualization_tool._get_visualization_parameters(),
+            [
+                {
+                    "description": parameter.description,
+                    "default_value": parameter.default_value,
+                    "uuid": parameter.uuid,
+                    "name": parameter.name,
+                    "value": parameter.default_value,
+                    "value_type": parameter.value_type
+                }
+            ]
+        )
+
+    def test__get_edited_parameter_value(self):
+        edited_parameter_value = (
+                self.visualization_tool._get_edited_parameter_value(
+                    self.mock_parameter
+                )
+        )
+        self.assertEqual(edited_parameter_value, "Edited Value")
+
+        parameter = ParameterFactory(
+            name="Test Param",
+            description="Test Param Description",
+            value_type=Parameter.STRING,
+            default_value="Coffee"
+        )
+        non_edited_parameter_value = (
+            self.visualization_tool._get_edited_parameter_value(parameter)
+        )
+        self.assertEqual(non_edited_parameter_value, parameter.default_value)
 
 
 class WorkflowToolTests(ToolManagerTestBase):
@@ -2858,7 +2916,10 @@ class VisualizationToolLaunchTests(ToolManagerTestBase,  # TODO: Cypress
             self.post_data = {
                 "dataset_uuid": self.dataset.uuid,
                 "tool_definition_uuid": self.td.uuid,
-                Tool.FILE_RELATIONSHIPS: str([file_relationships])
+                Tool.FILE_RELATIONSHIPS: str([file_relationships]),
+                ToolDefinition.PARAMETERS: {
+                    self.mock_parameter.uuid: self.mock_parameter.default_value
+                }
             }
 
             self.post_request = self.factory.post(
@@ -2959,6 +3020,19 @@ class VisualizationToolLaunchTests(ToolManagerTestBase,  # TODO: Cypress
                 'hello_world.json',
                 "https://www.example.com/file.txt"
             )
+
+    def test__get_launch_parameters(self):
+        def assertions(tool):
+            self.assertEqual(
+                tool._get_launch_parameters(),
+                tool.get_tool_launch_config()[ToolDefinition.PARAMETERS]
+            )
+
+        self._start_visualization(
+            'igv.json',
+            self.live_server_url + "/tool_manager/test_data/sample.seg",
+            assertions
+        )
 
 
 class ToolLaunchConfigurationTests(ToolManagerTestBase):
