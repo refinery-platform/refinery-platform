@@ -1200,6 +1200,10 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
 
 
 class ToolDefinitionTests(ToolManagerTestBase):
+    def setUp(self):
+        super(ToolDefinitionTests, self).setUp()
+        self.mock_parameter.delete()
+
     def test_get_annotation(self):
         self.create_vis_tool_definition(annotation_file_name="igv.json")
         self.assertEqual(self.td.get_annotation(),
@@ -1224,6 +1228,12 @@ class ToolDefinitionTests(ToolManagerTestBase):
         self.assertFalse(
             Workflow.objects.all()[0].is_active
         )
+
+    def test_get_parameters(self):
+        self.create_vis_tool_definition(annotation_file_name="igv.json")
+        tool_parameters = [p for p in self.td.get_parameters()]
+        all_parameters = [p for p in Parameter.objects.all()]
+        self.assertEqual(tool_parameters, all_parameters)
 
 
 class ToolTests(ToolManagerTestBase):
@@ -3010,6 +3020,19 @@ class VisualizationToolLaunchTests(ToolManagerTestBase,  # TODO: Cypress
                 'hello_world.json',
                 "https://www.example.com/file.txt"
             )
+
+    def test__get_launch_parameters(self):
+        def assertions(tool):
+            self.assertEqual(
+                tool._get_launch_parameters(),
+                tool.get_tool_launch_config()[ToolDefinition.PARAMETERS]
+            )
+
+        self._start_visualization(
+            'igv.json',
+            self.live_server_url + "/tool_manager/test_data/sample.seg",
+            assertions
+        )
 
 
 class ToolLaunchConfigurationTests(ToolManagerTestBase):
