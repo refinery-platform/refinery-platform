@@ -54,7 +54,9 @@
         <div class="panel-body">
           <div ng-repeat="field in attributeObj.facetObj | orderBy: order track by $index">
             <div class="checkbox container"
-                ng-show="field.name.toLowerCase().includes(search.toLowerCase()) || showField(field.name, attributeObj.internal_name, attribute)">
+                ng-show="(search.toLowerCase().length && field.name
+                .toLowerCase().includes(search.toLowerCase())) ||
+                showField(field.name, attributeObj.internal_name, attribute)">
                 <div class="row">
                   <div class="col-xs-1">
                     <input
