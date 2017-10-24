@@ -119,8 +119,8 @@
         vm.setAnalysesGlobalLoadingFlag();
         vm.refreshAnalysesGlobalDetail();
       });
-
-      vm.timerGlobalList = $timeout(vm.updateAnalysesGlobalList, 5000);
+      // refreshes every 30 seconds
+      vm.timerGlobalList = $timeout(vm.updateAnalysesGlobalList, 30000);
     }
 
     /**
