@@ -23,12 +23,24 @@ file_line { "django_settings_module":
   line => "export DJANGO_SETTINGS_MODULE=${django_settings_module}",
 }
 ->
+file { "${django_root}/config/config.json.prev":
+  ensure  => absent
+}
+->
+exec { "/bin/cp ${django_root}/config/config.json ${django_root}/config/config.json.prev":
+  onlyif => "/usr/bin/test -e ${django_root}/config/config.json && ! /usr/bin/test -e ${django_root}/config/config.json.prev"
+}
+->
 file { "${django_root}/config/config.json":
   ensure  => file,
   content => template("${django_root}/config/config.json.erb"),
   owner   => $app_user,
   group   => $app_group,
-  replace => false,
+  replace => true,
+}
+->
+exec { "/usr/bin/diff ${django_root}/config/config.json ${django_root}/config/config.json.prev":
+  onlyif => "/usr/bin/test -e ${django_root}/config/config.json.prev"
 }
 ->
 exec { "migrate":
