@@ -13,6 +13,7 @@
 
   ToolLaunchButtonCtrl.$inject = [
     '$log',
+    'authService',
     'toolLaunchService',
     'toolSelectService',
     '$rootScope',
@@ -21,6 +22,7 @@
 
   function ToolLaunchButtonCtrl (
     $log,
+    authService,
     toolLaunchService,
     toolSelectService,
     $rootScope,
@@ -29,7 +31,12 @@
     var vm = this;
     vm.launchTool = launchTool;
     vm.needMoreNodes = needMoreNodes;
-    vm.userIsAnonymous = userIsAnonymous;
+
+    authService.isAuthenticated().then(
+      function (isAuthenticated) {
+        vm.userIsAnonymous = !isAuthenticated;
+      }
+    );
 
     /*
    * -----------------------------------------------------------------------------
@@ -58,9 +65,6 @@
     **/
     function needMoreNodes () {
       return toolLaunchService.checkNeedMoreNodes();
-    }
-    function userIsAnonymous () {
-      return toolLaunchService.userIsAnonymous();
     }
   }
 })();

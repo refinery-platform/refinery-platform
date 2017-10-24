@@ -36,8 +36,7 @@
       generateFileStr: generateFileStr,
       generateFileTemplate: generateFileTemplate,
       checkNeedMoreNodes: checkNeedMoreNodes,
-      postToolLaunch: postToolLaunch,
-      userIsAnonymous: userIsAnonymous
+      postToolLaunch: postToolLaunch
     };
     return service;
 
@@ -258,15 +257,6 @@
       generateLaunchConfig();
       var tool = toolsService.save(launchConfig);
       return tool.$promise;
-    }
-
-    /**
-     * @name userIsAnonymous
-     * @desc check if the user trying to launch a tool is anonymous or not
-     * @memberOf refineryToolLaunch.ToolLaunchButtonCtrl
-     */
-    function userIsAnonymous () {
-      return $window.user_id === undefined;
     }
   }
 })();
