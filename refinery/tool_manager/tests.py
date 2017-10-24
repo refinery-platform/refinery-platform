@@ -613,11 +613,10 @@ class ToolDefinitionAPITests(ToolManagerTestBase, APITestCase):
         get_response = self.tool_defs_view(get_request)
         self.assertNotEqual(len(get_response.data), 0)
         for tool_definition in get_response.data:
-            tool_definition = ToolDefinition.objects.get(
-                uuid=tool_definition["uuid"]
-            )
             self.assertIn(
-                tool_definition,
+                ToolDefinition.objects.get(
+                    uuid=tool_definition["uuid"]
+                ),
                 ToolDefinition.objects.filter(
                     tool_type=ToolDefinition.VISUALIZATION
                 )
