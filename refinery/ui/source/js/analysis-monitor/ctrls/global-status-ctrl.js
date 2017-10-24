@@ -61,7 +61,7 @@
         vm.launchAnalysisFlag = false;
       });
        // refreshes every 30 seconds
-      vm.timerRunGlobalList = $timeout(vm.updateAnalysesRunningGlobal, 30000);
+      vm.timerRunGlobalList = $timeout(vm.updateAnalysesRunningGlobalCount, 30000);
     }
 
    /*
