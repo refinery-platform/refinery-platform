@@ -14,8 +14,10 @@
   ToolLaunchButtonCtrl.$inject = [
     '$log',
     'authService',
+    '$timeout',
     'toolLaunchService',
     'toolSelectService',
+    '$uibModal',
     '$rootScope',
     '$window'
   ];
@@ -23,8 +25,10 @@
   function ToolLaunchButtonCtrl (
     $log,
     authService,
+    $timeout,
     toolLaunchService,
     toolSelectService,
+    $uibModal,
     $rootScope,
     $window
   ) {
@@ -54,6 +58,20 @@
       toolLaunchService.postToolLaunch().then(function (response) {
         $window.location.href = response.tool_url;
       }, function (error) {
+        $uibModal.open({
+          component: 'rpApiResponseModal',
+          resolve: {
+            modalData: function () {
+              return {
+                apiStatus: error.status,
+                apiMsg: error.data,
+                msgType: 'danger',
+                introMsg: 'Unable to launch tool.',
+                header: 'Error with Tool Launch'
+              };
+            }
+          }
+        });
         $log.error(error);
       });
     }

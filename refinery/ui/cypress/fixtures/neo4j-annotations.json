@@ -1,0 +1,1118 @@
+{
+  "nodes": {
+    "http://purl.obolibrary.org/obo/CHEBI_50860": {
+      "uri": "http://purl.obolibrary.org/obo/CHEBI_50860",
+      "ontId": "CHEBI:50860",
+      "label": "organic molecular entity",
+      "dataSets": {
+        
+      },
+      "parents": {
+        "http://purl.obolibrary.org/obo/CHEBI_33582": true
+      }
+    },
+    "http://purl.obolibrary.org/obo/CHEBI_64709": {
+      "uri": "http://purl.obolibrary.org/obo/CHEBI_64709",
+      "ontId": "CHEBI:64709",
+      "label": "organic acid",
+      "dataSets": {
+        
+      },
+      "parents": {
+        "http://purl.obolibrary.org/obo/CHEBI_50860": true
+      }
+    },
+    "http://purl.obolibrary.org/obo/CHEBI_25384": {
+      "uri": "http://purl.obolibrary.org/obo/CHEBI_25384",
+      "ontId": "CHEBI:25384",
+      "label": "monocarboxylic acid",
+      "dataSets": {
+        
+      },
+      "parents": {
+        "http://purl.obolibrary.org/obo/CHEBI_33575": true
+      }
+    },
+    "http://purl.obolibrary.org/obo/CHEBI_26835": {
+      "uri": "http://purl.obolibrary.org/obo/CHEBI_26835",
+      "ontId": "CHEBI:26835",
+      "label": "sulfur molecular entity",
+      "dataSets": {
+        
+      },
+      "parents": {
+        "http://purl.obolibrary.org/obo/CHEBI_33304": true
+      }
+    },
+    "http://purl.obolibrary.org/obo/CHEBI_47857": {
+      "uri": "http://purl.obolibrary.org/obo/CHEBI_47857",
+      "ontId": "CHEBI:47857",
+      "label": "ureas",
+      "dataSets": {
+        
+      },
+      "parents": {
+        "http://purl.obolibrary.org/obo/CHEBI_33256": true
+      }
+    },
+    "http://purl.obolibrary.org/obo/CHEBI_33304": {
+      "uri": "http://purl.obolibrary.org/obo/CHEBI_33304",
+      "ontId": "CHEBI:33304",
+      "label": "chalcogen molecular entity",
+      "dataSets": {
+        
+      },
+      "parents": {
+        "http://purl.obolibrary.org/obo/CHEBI_33675": true
+      }
+    },
+    "http://purl.obolibrary.org/obo/CHEBI_33256": {
+      "uri": "http://purl.obolibrary.org/obo/CHEBI_33256",
+      "ontId": "CHEBI:33256",
+      "label": "primary amide",
+      "dataSets": {
+        
+      },
+      "parents": {
+        "http://purl.obolibrary.org/obo/CHEBI_32988": true
+      }
+    },
+    "http://purl.obolibrary.org/obo/CHEBI_33575": {
+      "uri": "http://purl.obolibrary.org/obo/CHEBI_33575",
+      "ontId": "CHEBI:33575",
+      "label": "carboxylic acid",
+      "dataSets": {
+        
+      },
+      "parents": {
+        "http://purl.obolibrary.org/obo/CHEBI_64709": true,
+        "http://purl.obolibrary.org/obo/CHEBI_36586": true,
+        "http://purl.obolibrary.org/obo/CHEBI_35605": true
+      }
+    },
+    "http://purl.obolibrary.org/obo/CHEBI_36586": {
+      "uri": "http://purl.obolibrary.org/obo/CHEBI_36586",
+      "ontId": "CHEBI:36586",
+      "label": "carbonyl compound",
+      "dataSets": {
+        
+      },
+      "parents": {
+        "http://purl.obolibrary.org/obo/CHEBI_36587": true,
+        "http://purl.obolibrary.org/obo/CHEBI_36963": true
+      }
+    },
+    "http://purl.obolibrary.org/obo/CHEBI_27171": {
+      "uri": "http://purl.obolibrary.org/obo/CHEBI_27171",
+      "ontId": "CHEBI:27171",
+      "label": "organic heterobicyclic compound",
+      "dataSets": {
+        
+      },
+      "parents": {
+        "http://purl.obolibrary.org/obo/CHEBI_33672": true,
+        "http://purl.obolibrary.org/obo/CHEBI_38166": true
+      }
+    },
+    "http://purl.obolibrary.org/obo/CHEBI_35352": {
+      "uri": "http://purl.obolibrary.org/obo/CHEBI_35352",
+      "ontId": "CHEBI:35352",
+      "label": "organonitrogen compound",
+      "dataSets": {
+        
+      },
+      "parents": {
+        "http://purl.obolibrary.org/obo/CHEBI_51143": true,
+        "http://purl.obolibrary.org/obo/CHEBI_33285": true
+      }
+    },
+    "http://purl.obolibrary.org/obo/CHEBI_36963": {
+      "uri": "http://purl.obolibrary.org/obo/CHEBI_36963",
+      "ontId": "CHEBI:36963",
+      "label": "organooxygen compound",
+      "dataSets": {
+        
+      },
+      "parents": {
+        "http://purl.obolibrary.org/obo/CHEBI_36962": true,
+        "http://purl.obolibrary.org/obo/CHEBI_25806": true
+      }
+    },
+    "http://purl.obolibrary.org/obo/CHEBI_38166": {
+      "uri": "http://purl.obolibrary.org/obo/CHEBI_38166",
+      "ontId": "CHEBI:38166",
+      "label": "organic heteropolycyclic compound",
+      "dataSets": {
+        
+      },
+      "parents": {
+        "http://purl.obolibrary.org/obo/CHEBI_33671": true,
+        "http://purl.obolibrary.org/obo/CHEBI_24532": true
+      }
+    },
+    "http://purl.obolibrary.org/obo/CHEBI_33261": {
+      "uri": "http://purl.obolibrary.org/obo/CHEBI_33261",
+      "ontId": "CHEBI:33261",
+      "label": "organosulfur compound",
+      "dataSets": {
+        
+      },
+      "parents": {
+        "http://purl.obolibrary.org/obo/CHEBI_36962": true,
+        "http://purl.obolibrary.org/obo/CHEBI_26835": true
+      }
+    },
+    "http://purl.obolibrary.org/obo/CHEBI_38106": {
+      "uri": "http://purl.obolibrary.org/obo/CHEBI_38106",
+      "ontId": "CHEBI:38106",
+      "label": "organosulfur heterocyclic compound",
+      "dataSets": {
+        
+      },
+      "parents": {
+        "http://purl.obolibrary.org/obo/CHEBI_33261": true,
+        "http://purl.obolibrary.org/obo/CHEBI_24532": true
+      }
+    },
+    "http://purl.obolibrary.org/obo/CHEBI_25806": {
+      "uri": "http://purl.obolibrary.org/obo/CHEBI_25806",
+      "ontId": "CHEBI:25806",
+      "label": "oxygen molecular entity",
+      "dataSets": {
+        
+      },
+      "parents": {
+        "http://purl.obolibrary.org/obo/CHEBI_33304": true
+      }
+    },
+    "http://purl.obolibrary.org/obo/CHEBI_38101": {
+      "uri": "http://purl.obolibrary.org/obo/CHEBI_38101",
+      "ontId": "CHEBI:38101",
+      "label": "organonitrogen heterocyclic compound",
+      "dataSets": {
+        
+      },
+      "parents": {
+        "http://purl.obolibrary.org/obo/CHEBI_24532": true,
+        "http://purl.obolibrary.org/obo/CHEBI_35352": true
+      }
+    },
+    "http://purl.obolibrary.org/obo/CHEBI_51143": {
+      "uri": "http://purl.obolibrary.org/obo/CHEBI_51143",
+      "ontId": "CHEBI:51143",
+      "label": "nitrogen molecular entity",
+      "dataSets": {
+        
+      },
+      "parents": {
+        "http://purl.obolibrary.org/obo/CHEBI_33302": true
+      }
+    },
+    "http://purl.obolibrary.org/obo/CHEBI_23367": {
+      "uri": "http://purl.obolibrary.org/obo/CHEBI_23367",
+      "ontId": "CHEBI:23367",
+      "label": "molecular entity",
+      "dataSets": {
+        
+      },
+      "parents": {
+        "http://purl.obolibrary.org/obo/CHEBI_24431": true,
+        "http://purl.obolibrary.org/obo/BFO_0000040": true
+      }
+    },
+    "http://purl.obolibrary.org/obo/CHEBI_72695": {
+      "uri": "http://purl.obolibrary.org/obo/CHEBI_72695",
+      "ontId": "CHEBI:72695",
+      "label": "organic molecule",
+      "dataSets": {
+        
+      },
+      "parents": {
+        "http://purl.obolibrary.org/obo/CHEBI_25367": true,
+        "http://purl.obolibrary.org/obo/CHEBI_50860": true
+      }
+    },
+    "http://purl.obolibrary.org/obo/CHEBI_25367": {
+      "uri": "http://purl.obolibrary.org/obo/CHEBI_25367",
+      "ontId": "CHEBI:25367",
+      "label": "molecule",
+      "dataSets": {
+        
+      },
+      "parents": {
+        "http://purl.obolibrary.org/obo/CHEBI_36357": true
+      }
+    },
+    "http://purl.obolibrary.org/obo/CHEBI_33582": {
+      "uri": "http://purl.obolibrary.org/obo/CHEBI_33582",
+      "ontId": "CHEBI:33582",
+      "label": "carbon group molecular entity",
+      "dataSets": {
+        
+      },
+      "parents": {
+        "http://purl.obolibrary.org/obo/CHEBI_33675": true
+      }
+    },
+    "http://purl.obolibrary.org/obo/CHEBI_38295": {
+      "uri": "http://purl.obolibrary.org/obo/CHEBI_38295",
+      "ontId": "CHEBI:38295",
+      "label": "azabicycloalkane",
+      "dataSets": {
+        
+      },
+      "parents": {
+        "http://purl.obolibrary.org/obo/CHEBI_27171": true,
+        "http://purl.obolibrary.org/obo/CHEBI_38101": true
+      }
+    },
+    "http://purl.obolibrary.org/obo/CHEBI_33302": {
+      "uri": "http://purl.obolibrary.org/obo/CHEBI_33302",
+      "ontId": "CHEBI:33302",
+      "label": "pnictogen molecular entity",
+      "dataSets": {
+        
+      },
+      "parents": {
+        "http://purl.obolibrary.org/obo/CHEBI_33675": true
+      }
+    },
+    "http://purl.obolibrary.org/obo/CHEBI_33832": {
+      "uri": "http://purl.obolibrary.org/obo/CHEBI_33832",
+      "ontId": "CHEBI:33832",
+      "label": "organic cyclic compound",
+      "dataSets": {
+        
+      },
+      "parents": {
+        "http://purl.obolibrary.org/obo/CHEBI_72695": true,
+        "http://purl.obolibrary.org/obo/CHEBI_33595": true
+      }
+    },
+    "http://purl.obolibrary.org/obo/CHEBI_33285": {
+      "uri": "http://purl.obolibrary.org/obo/CHEBI_33285",
+      "ontId": "CHEBI:33285",
+      "label": "heteroorganic entity",
+      "dataSets": {
+        
+      },
+      "parents": {
+        "http://purl.obolibrary.org/obo/CHEBI_50860": true
+      }
+    },
+    "http://purl.obolibrary.org/obo/CHEBI_38297": {
+      "uri": "http://purl.obolibrary.org/obo/CHEBI_38297",
+      "ontId": "CHEBI:38297",
+      "label": "thiabicycloalkane",
+      "dataSets": {
+        
+      },
+      "parents": {
+        "http://purl.obolibrary.org/obo/CHEBI_27171": true,
+        "http://purl.obolibrary.org/obo/CHEBI_38106": true
+      }
+    },
+    "http://purl.obolibrary.org/obo/CHEBI_24532": {
+      "uri": "http://purl.obolibrary.org/obo/CHEBI_24532",
+      "ontId": "CHEBI:24532",
+      "label": "organic heterocyclic compound",
+      "dataSets": {
+        
+      },
+      "parents": {
+        "http://purl.obolibrary.org/obo/CHEBI_37577": true,
+        "http://purl.obolibrary.org/obo/CHEBI_5686": true,
+        "http://purl.obolibrary.org/obo/CHEBI_33832": true,
+        "http://purl.obolibrary.org/obo/CHEBI_33285": true
+      }
+    },
+    "http://purl.obolibrary.org/obo/CHEBI_33671": {
+      "uri": "http://purl.obolibrary.org/obo/CHEBI_33671",
+      "ontId": "CHEBI:33671",
+      "label": "heteropolycyclic compound",
+      "dataSets": {
+        
+      },
+      "parents": {
+        "http://purl.obolibrary.org/obo/CHEBI_5686": true,
+        "http://purl.obolibrary.org/obo/CHEBI_33635": true
+      }
+    },
+    "http://purl.obolibrary.org/obo/CHEBI_36357": {
+      "uri": "http://purl.obolibrary.org/obo/CHEBI_36357",
+      "ontId": "CHEBI:36357",
+      "label": "polyatomic entity",
+      "dataSets": {
+        
+      },
+      "parents": {
+        "http://purl.obolibrary.org/obo/CHEBI_23367": true
+      }
+    },
+    "http://purl.obolibrary.org/obo/CHEBI_35605": {
+      "uri": "http://purl.obolibrary.org/obo/CHEBI_35605",
+      "ontId": "CHEBI:35605",
+      "label": "carbon oxoacid",
+      "dataSets": {
+        
+      },
+      "parents": {
+        "http://purl.obolibrary.org/obo/CHEBI_24833": true,
+        "http://purl.obolibrary.org/obo/CHEBI_36963": true
+      }
+    },
+    "http://purl.obolibrary.org/obo/CHEBI_32988": {
+      "uri": "http://purl.obolibrary.org/obo/CHEBI_32988",
+      "ontId": "CHEBI:32988",
+      "label": "amide",
+      "dataSets": {
+        
+      },
+      "parents": {
+        "http://purl.obolibrary.org/obo/CHEBI_51143": true
+      }
+    },
+    "http://purl.obolibrary.org/obo/CHEBI_37577": {
+      "uri": "http://purl.obolibrary.org/obo/CHEBI_37577",
+      "ontId": "CHEBI:37577",
+      "label": "chemical compound",
+      "dataSets": {
+        
+      },
+      "parents": {
+        "http://purl.obolibrary.org/obo/CHEBI_24431": true,
+        "http://purl.obolibrary.org/obo/CHEBI_36357": true
+      }
+    },
+    "http://purl.obolibrary.org/obo/CHEBI_24431": {
+      "uri": "http://purl.obolibrary.org/obo/CHEBI_24431",
+      "ontId": "CHEBI:24431",
+      "label": "chemical entity",
+      "dataSets": {
+        
+      },
+      "parents": {
+        "http://www.ifomis.org/bfo/1.1/snap#MaterialEntity": true,
+        "http://www.w3.org/2002/07/owl#Thing": true
+      }
+    },
+    "http://purl.obolibrary.org/obo/CHEBI_33635": {
+      "uri": "http://purl.obolibrary.org/obo/CHEBI_33635",
+      "ontId": "CHEBI:33635",
+      "label": "polycyclic compound",
+      "dataSets": {
+        
+      },
+      "parents": {
+        "http://purl.obolibrary.org/obo/CHEBI_33595": true
+      }
+    },
+    "http://purl.obolibrary.org/obo/CHEBI_51570": {
+      "uri": "http://purl.obolibrary.org/obo/CHEBI_51570",
+      "ontId": "CHEBI:51570",
+      "label": "biotins",
+      "dataSets": {
+        
+      },
+      "parents": {
+        "http://purl.obolibrary.org/obo/CHEBI_25384": true,
+        "http://purl.obolibrary.org/obo/CHEBI_47857": true,
+        "http://purl.obolibrary.org/obo/CHEBI_38297": true,
+        "http://purl.obolibrary.org/obo/CHEBI_38295": true
+      }
+    },
+    "http://purl.obolibrary.org/obo/CHEBI_36962": {
+      "uri": "http://purl.obolibrary.org/obo/CHEBI_36962",
+      "ontId": "CHEBI:36962",
+      "label": "organochalcogen compound",
+      "dataSets": {
+        
+      },
+      "parents": {
+        "http://purl.obolibrary.org/obo/CHEBI_33304": true,
+        "http://purl.obolibrary.org/obo/CHEBI_33285": true
+      }
+    },
+    "http://purl.obolibrary.org/obo/CHEBI_5686": {
+      "uri": "http://purl.obolibrary.org/obo/CHEBI_5686",
+      "ontId": "CHEBI:5686",
+      "label": "heterocyclic compound",
+      "dataSets": {
+        
+      },
+      "parents": {
+        "http://purl.obolibrary.org/obo/CHEBI_33595": true
+      }
+    },
+    "http://purl.obolibrary.org/obo/CHEBI_33595": {
+      "uri": "http://purl.obolibrary.org/obo/CHEBI_33595",
+      "ontId": "CHEBI:33595",
+      "label": "cyclic compound",
+      "dataSets": {
+        
+      },
+      "parents": {
+        "http://purl.obolibrary.org/obo/CHEBI_25367": true
+      }
+    },
+    "http://purl.obolibrary.org/obo/CHEBI_33672": {
+      "uri": "http://purl.obolibrary.org/obo/CHEBI_33672",
+      "ontId": "CHEBI:33672",
+      "label": "heterobicyclic compound",
+      "dataSets": {
+        
+      },
+      "parents": {
+        "http://purl.obolibrary.org/obo/CHEBI_5686": true,
+        "http://purl.obolibrary.org/obo/CHEBI_33636": true
+      }
+    },
+    "http://purl.obolibrary.org/obo/CHEBI_15956": {
+      "uri": "http://purl.obolibrary.org/obo/CHEBI_15956",
+      "ontId": "CHEBI:15956",
+      "label": "biotin",
+      "dataSets": {
+        "2": true
+      },
+      "parents": {
+        "http://purl.obolibrary.org/obo/REO_0000280": true,
+        "http://purl.obolibrary.org/obo/CHEBI_37577": true,
+        "http://purl.obolibrary.org/obo/CHEBI_51570": true
+      }
+    },
+    "http://purl.obolibrary.org/obo/CHEBI_24651": {
+      "uri": "http://purl.obolibrary.org/obo/CHEBI_24651",
+      "ontId": "CHEBI:24651",
+      "label": "hydroxides",
+      "dataSets": {
+        
+      },
+      "parents": {
+        "http://purl.obolibrary.org/obo/CHEBI_37577": true,
+        "http://purl.obolibrary.org/obo/CHEBI_25806": true,
+        "http://purl.obolibrary.org/obo/CHEBI_33608": true
+      }
+    },
+    "http://purl.obolibrary.org/obo/CHEBI_33636": {
+      "uri": "http://purl.obolibrary.org/obo/CHEBI_33636",
+      "ontId": "CHEBI:33636",
+      "label": "bicyclic compound",
+      "dataSets": {
+        
+      },
+      "parents": {
+        "http://purl.obolibrary.org/obo/CHEBI_33595": true
+      }
+    },
+    "http://purl.obolibrary.org/obo/CHEBI_33579": {
+      "uri": "http://purl.obolibrary.org/obo/CHEBI_33579",
+      "ontId": "CHEBI:33579",
+      "label": "main group molecular entity",
+      "dataSets": {
+        
+      },
+      "parents": {
+        "http://purl.obolibrary.org/obo/CHEBI_23367": true
+      }
+    },
+    "http://purl.obolibrary.org/obo/CHEBI_36587": {
+      "uri": "http://purl.obolibrary.org/obo/CHEBI_36587",
+      "ontId": "CHEBI:36587",
+      "label": "organic oxo compound",
+      "dataSets": {
+        
+      },
+      "parents": {
+        "http://purl.obolibrary.org/obo/CHEBI_72695": true
+      }
+    },
+    "http://purl.obolibrary.org/obo/CHEBI_33608": {
+      "uri": "http://purl.obolibrary.org/obo/CHEBI_33608",
+      "ontId": "CHEBI:33608",
+      "label": "hydrogen molecular entity",
+      "dataSets": {
+        
+      },
+      "parents": {
+        "http://purl.obolibrary.org/obo/CHEBI_33674": true
+      }
+    },
+    "http://purl.obolibrary.org/obo/CHEBI_24833": {
+      "uri": "http://purl.obolibrary.org/obo/CHEBI_24833",
+      "ontId": "CHEBI:24833",
+      "label": "oxoacid",
+      "dataSets": {
+        
+      },
+      "parents": {
+        "http://purl.obolibrary.org/obo/CHEBI_24651": true
+      }
+    },
+    "http://purl.obolibrary.org/obo/CHEBI_33675": {
+      "uri": "http://purl.obolibrary.org/obo/CHEBI_33675",
+      "ontId": "CHEBI:33675",
+      "label": "p-block molecular entity",
+      "dataSets": {
+        
+      },
+      "parents": {
+        "http://purl.obolibrary.org/obo/CHEBI_33579": true
+      }
+    },
+    "http://purl.obolibrary.org/obo/CHEBI_33674": {
+      "uri": "http://purl.obolibrary.org/obo/CHEBI_33674",
+      "ontId": "CHEBI:33674",
+      "label": "s-block molecular entity",
+      "dataSets": {
+        
+      },
+      "parents": {
+        "http://purl.obolibrary.org/obo/CHEBI_33579": true
+      }
+    },
+    "http://purl.obolibrary.org/obo/NCBITaxon_2759": {
+      "uri": "http://purl.obolibrary.org/obo/NCBITaxon_2759",
+      "ontId": "NCBITAXON:2759",
+      "label": "Eukaryota",
+      "dataSets": {
+        
+      },
+      "parents": {
+        "http://purl.obolibrary.org/obo/OBI_0100026": true
+      }
+    },
+    "http://www.ebi.ac.uk/efo/EFO_0000324": {
+      "uri": "http://www.ebi.ac.uk/efo/EFO_0000324",
+      "ontId": "EFO:0000324",
+      "label": "cell type",
+      "dataSets": {
+        
+      },
+      "parents": {
+        "http://www.ifomis.org/bfo/1.1/snap#MaterialEntity": true
+      }
+    },
+    "http://purl.obolibrary.org/obo/CL_0002321": {
+      "uri": "http://purl.obolibrary.org/obo/CL_0002321",
+      "ontId": "CL:0002321",
+      "label": "embryonic cell",
+      "dataSets": {
+        
+      },
+      "parents": {
+        "http://purl.obolibrary.org/obo/CL_0000548": true,
+        "http://www.ebi.ac.uk/efo/EFO_0000324": true
+      }
+    },
+    "http://www.ebi.ac.uk/efo/EFO_0000001": {
+      "uri": "http://www.ebi.ac.uk/efo/EFO_0000001",
+      "ontId": "EFO:0000001",
+      "label": "experimental factor",
+      "dataSets": {
+        
+      },
+      "parents": {
+        "http://www.w3.org/2002/07/owl#Thing": true
+      }
+    },
+    "http://www.ebi.ac.uk/efo/EFO_0002694": {
+      "uri": "http://www.ebi.ac.uk/efo/EFO_0002694",
+      "ontId": "EFO:0002694",
+      "label": "experimental process",
+      "dataSets": {
+        
+      },
+      "parents": {
+        "http://www.ebi.ac.uk/efo/EFO_0004542": true
+      }
+    },
+    "http://purl.obolibrary.org/obo/OBI_0100026": {
+      "uri": "http://purl.obolibrary.org/obo/OBI_0100026",
+      "ontId": "OBI:0100026",
+      "label": "organism",
+      "dataSets": {
+        
+      },
+      "parents": {
+        "http://purl.obolibrary.org/obo/BFO_0000040": true,
+        "http://www.ifomis.org/bfo/1.1/snap#MaterialEntity": true
+      }
+    },
+    "http://purl.obolibrary.org/obo/CL_0000056": {
+      "uri": "http://purl.obolibrary.org/obo/CL_0000056",
+      "ontId": "CL:0000056",
+      "label": "myoblast",
+      "dataSets": {
+        "2": true
+      },
+      "parents": {
+        "http://purl.obolibrary.org/obo/CL_0000680": true,
+        "http://purl.obolibrary.org/obo/CL_0002321": true
+      }
+    },
+    "http://purl.obolibrary.org/obo/GO_0005575": {
+      "uri": "http://purl.obolibrary.org/obo/GO_0005575",
+      "ontId": "GO:0005575",
+      "label": "cellular_component",
+      "dataSets": {
+        
+      },
+      "parents": {
+        "http://purl.obolibrary.org/obo/BFO_0000040": true,
+        "http://www.w3.org/2002/07/owl#Thing": true,
+        "http://purl.obolibrary.org/obo/OBI_0100051": true
+      }
+    },
+    "http://purl.obolibrary.org/obo/CL_0000034": {
+      "uri": "http://purl.obolibrary.org/obo/CL_0000034",
+      "ontId": "CL:0000034",
+      "label": "stem cell",
+      "dataSets": {
+        
+      },
+      "parents": {
+        "http://purl.obolibrary.org/obo/CL_0011115": true,
+        "http://www.ebi.ac.uk/efo/EFO_0000324": true
+      }
+    },
+    "http://purl.obolibrary.org/obo/CL_0002371": {
+      "uri": "http://purl.obolibrary.org/obo/CL_0002371",
+      "ontId": "CL:0002371",
+      "label": "somatic cell",
+      "dataSets": {
+        
+      },
+      "parents": {
+        "http://www.ebi.ac.uk/efo/EFO_0000324": true,
+        "http://purl.obolibrary.org/obo/CL_0000003": true
+      }
+    },
+    "http://www.ifomis.org/bfo/1.1/snap#MaterialEntity": {
+      "uri": "http://www.ifomis.org/bfo/1.1/snap#MaterialEntity",
+      "ontId": "MaterialEntity",
+      "label": "material entity",
+      "dataSets": {
+        
+      },
+      "parents": {
+        "http://www.ebi.ac.uk/efo/EFO_0000001": true
+      }
+    },
+    "http://www.ebi.ac.uk/efo/EFO_0004542": {
+      "uri": "http://www.ebi.ac.uk/efo/EFO_0004542",
+      "ontId": "EFO:0004542",
+      "label": "planned process",
+      "dataSets": {
+        
+      },
+      "parents": {
+        "http://www.ifomis.org/bfo/1.1/span#ProcessualEntity": true
+      }
+    },
+    "http://purl.obolibrary.org/obo/OBI_0100051": {
+      "uri": "http://purl.obolibrary.org/obo/OBI_0100051",
+      "ontId": "OBI:0100051",
+      "label": "specimen",
+      "dataSets": {
+        
+      },
+      "parents": {
+        "http://purl.obolibrary.org/obo/BFO_0000040": true,
+        "http://www.ifomis.org/bfo/1.1/snap#MaterialEntity": true
+      }
+    },
+    "http://purl.obolibrary.org/obo/OBI_0000070": {
+      "uri": "http://purl.obolibrary.org/obo/OBI_0000070",
+      "ontId": "OBI:0000070",
+      "label": "assay",
+      "dataSets": {
+        
+      },
+      "parents": {
+        "http://www.ebi.ac.uk/efo/EFO_0002694": true,
+        "http://purl.obolibrary.org/obo/OBI_0000011": true
+      }
+    },
+    "http://purl.obolibrary.org/obo/NCBITaxon_9606": {
+      "uri": "http://purl.obolibrary.org/obo/NCBITaxon_9606",
+      "ontId": "NCBITAXON:9606",
+      "label": "Homo sapiens",
+      "dataSets": {
+        "2": true
+      },
+      "parents": {
+        "http://purl.obolibrary.org/obo/NCBITaxon_314146": true,
+        "http://purl.obolibrary.org/obo/NCBITaxon_2759": true
+      }
+    },
+    "http://www.ifomis.org/bfo/1.1/span#ProcessualEntity": {
+      "uri": "http://www.ifomis.org/bfo/1.1/span#ProcessualEntity",
+      "ontId": "ProcessualEntity",
+      "label": "process",
+      "dataSets": {
+        
+      },
+      "parents": {
+        "http://www.ebi.ac.uk/efo/EFO_0000001": true
+      }
+    },
+    "http://purl.obolibrary.org/obo/GO_0005623": {
+      "uri": "http://purl.obolibrary.org/obo/GO_0005623",
+      "ontId": "GO:0005623",
+      "label": "cell",
+      "dataSets": {
+        
+      },
+      "parents": {
+        "http://purl.obolibrary.org/obo/GO_0005575": true
+      }
+    },
+    "http://purl.obolibrary.org/obo/CL_0000048": {
+      "uri": "http://purl.obolibrary.org/obo/CL_0000048",
+      "ontId": "CL:0000048",
+      "label": "multi fate stem cell",
+      "dataSets": {
+        
+      },
+      "parents": {
+        "http://purl.obolibrary.org/obo/CL_0002371": true,
+        "http://purl.obolibrary.org/obo/CL_0000034": true
+      }
+    },
+    "http://purl.obolibrary.org/obo/CL_0000055": {
+      "uri": "http://purl.obolibrary.org/obo/CL_0000055",
+      "ontId": "CL:0000055",
+      "label": "non-terminally differentiated cell",
+      "dataSets": {
+        
+      },
+      "parents": {
+        "http://purl.obolibrary.org/obo/CL_0011115": true,
+        "http://www.ebi.ac.uk/efo/EFO_0000324": true
+      }
+    },
+    "http://purl.obolibrary.org/obo/OBI_0000011": {
+      "uri": "http://purl.obolibrary.org/obo/OBI_0000011",
+      "ontId": "OBI:0000011",
+      "label": "planned process",
+      "dataSets": {
+        
+      },
+      "parents": {
+        "http://purl.obolibrary.org/obo/BFO_0000015": true
+      }
+    },
+    "http://purl.obolibrary.org/obo/NCBITaxon_33154": {
+      "uri": "http://purl.obolibrary.org/obo/NCBITaxon_33154",
+      "ontId": "NCBITAXON:33154",
+      "label": "Opisthokonta",
+      "dataSets": {
+        
+      },
+      "parents": {
+        "http://purl.obolibrary.org/obo/NCBITaxon_2759": true
+      }
+    },
+    "http://purl.obolibrary.org/obo/OBI_0000443": {
+      "uri": "http://purl.obolibrary.org/obo/OBI_0000443",
+      "ontId": "OBI:0000443",
+      "label": "analyte assay",
+      "dataSets": {
+        
+      },
+      "parents": {
+        "http://purl.obolibrary.org/obo/OBI_0000070": true
+      }
+    },
+    "http://purl.obolibrary.org/obo/BFO_0000040": {
+      "uri": "http://purl.obolibrary.org/obo/BFO_0000040",
+      "ontId": "BFO:0000040",
+      "label": "material entity",
+      "dataSets": {
+        
+      },
+      "parents": {
+        "http://purl.obolibrary.org/obo/BFO_0000004": true
+      }
+    },
+    "http://purl.obolibrary.org/obo/OBI_0000047": {
+      "uri": "http://purl.obolibrary.org/obo/OBI_0000047",
+      "ontId": "OBI:0000047",
+      "label": "processed material",
+      "dataSets": {
+        
+      },
+      "parents": {
+        "http://purl.obolibrary.org/obo/BFO_0000040": true
+      }
+    },
+    "http://purl.obolibrary.org/obo/OBI_0000424": {
+      "uri": "http://purl.obolibrary.org/obo/OBI_0000424",
+      "ontId": "OBI:0000424",
+      "label": "transcription profiling assay",
+      "dataSets": {
+        "2": true
+      },
+      "parents": {
+        "http://purl.obolibrary.org/obo/OBI_0000443": true
+      }
+    },
+    "http://purl.obolibrary.org/obo/CL_0000000": {
+      "uri": "http://purl.obolibrary.org/obo/CL_0000000",
+      "ontId": "CL:0000000",
+      "label": "cell",
+      "dataSets": {
+        
+      },
+      "parents": {
+        "http://purl.obolibrary.org/obo/GO_0005575": true,
+        "http://purl.obolibrary.org/obo/BFO_0000040": true
+      }
+    },
+    "http://purl.obolibrary.org/obo/CL_0000003": {
+      "uri": "http://purl.obolibrary.org/obo/CL_0000003",
+      "ontId": "CL:0000003",
+      "label": "native cell",
+      "dataSets": {
+        
+      },
+      "parents": {
+        "http://purl.obolibrary.org/obo/GO_0005623": true,
+        "http://purl.obolibrary.org/obo/CL_0000000": true
+      }
+    },
+    "http://purl.obolibrary.org/obo/BFO_0000004": {
+      "uri": "http://purl.obolibrary.org/obo/BFO_0000004",
+      "ontId": "BFO:0000004",
+      "label": "independent continuant",
+      "dataSets": {
+        
+      },
+      "parents": {
+        "http://purl.obolibrary.org/obo/BFO_0000002": true
+      }
+    },
+    "http://purl.obolibrary.org/obo/BFO_0000015": {
+      "uri": "http://purl.obolibrary.org/obo/BFO_0000015",
+      "ontId": "BFO:0000015",
+      "label": "process",
+      "dataSets": {
+        
+      },
+      "parents": {
+        "http://purl.obolibrary.org/obo/BFO_0000003": true
+      }
+    },
+    "http://purl.obolibrary.org/obo/NCBITaxon_32523": {
+      "uri": "http://purl.obolibrary.org/obo/NCBITaxon_32523",
+      "ontId": "NCBITAXON:32523",
+      "label": "Tetrapoda",
+      "dataSets": {
+        
+      },
+      "parents": {
+        "http://purl.obolibrary.org/obo/NCBITaxon_117571": true
+      }
+    },
+    "http://purl.obolibrary.org/obo/NCBITaxon_117571": {
+      "uri": "http://purl.obolibrary.org/obo/NCBITaxon_117571",
+      "ontId": "NCBITAXON:117571",
+      "label": "Euteleostomi",
+      "dataSets": {
+        
+      },
+      "parents": {
+        "http://purl.obolibrary.org/obo/NCBITaxon_7742": true
+      }
+    },
+    "http://purl.obolibrary.org/obo/NCBITaxon_32524": {
+      "uri": "http://purl.obolibrary.org/obo/NCBITaxon_32524",
+      "ontId": "NCBITAXON:32524",
+      "label": "Amniota",
+      "dataSets": {
+        
+      },
+      "parents": {
+        "http://purl.obolibrary.org/obo/NCBITaxon_32523": true
+      }
+    },
+    "http://purl.obolibrary.org/obo/NCBITaxon_314146": {
+      "uri": "http://purl.obolibrary.org/obo/NCBITaxon_314146",
+      "ontId": "NCBITAXON:314146",
+      "label": "Euarchontoglires",
+      "dataSets": {
+        
+      },
+      "parents": {
+        "http://purl.obolibrary.org/obo/NCBITaxon_40674": true
+      }
+    },
+    "http://purl.obolibrary.org/obo/NCBITaxon_40674": {
+      "uri": "http://purl.obolibrary.org/obo/NCBITaxon_40674",
+      "ontId": "NCBITAXON:40674",
+      "label": "Mammalia",
+      "dataSets": {
+        
+      },
+      "parents": {
+        "http://purl.obolibrary.org/obo/NCBITaxon_32524": true
+      }
+    },
+    "http://purl.obolibrary.org/obo/REO_0000280": {
+      "uri": "http://purl.obolibrary.org/obo/REO_0000280",
+      "ontId": "REO:0000280",
+      "label": "molecular label",
+      "dataSets": {
+        
+      },
+      "parents": {
+        "http://purl.obolibrary.org/obo/CHEBI_23367": true
+      }
+    },
+    "http://purl.obolibrary.org/obo/NCBITaxon_33213": {
+      "uri": "http://purl.obolibrary.org/obo/NCBITaxon_33213",
+      "ontId": "NCBITAXON:33213",
+      "label": "Bilateria",
+      "dataSets": {
+        
+      },
+      "parents": {
+        "http://purl.obolibrary.org/obo/NCBITaxon_33154": true
+      }
+    },
+    "http://purl.obolibrary.org/obo/BFO_0000003": {
+      "uri": "http://purl.obolibrary.org/obo/BFO_0000003",
+      "ontId": "BFO:0000003",
+      "label": "occurrent",
+      "dataSets": {
+        
+      },
+      "parents": {
+        "http://purl.obolibrary.org/obo/BFO_0000001": true
+      }
+    },
+    "http://purl.obolibrary.org/obo/BFO_0000002": {
+      "uri": "http://purl.obolibrary.org/obo/BFO_0000002",
+      "ontId": "BFO:0000002",
+      "label": "continuant",
+      "dataSets": {
+        
+      },
+      "parents": {
+        "http://purl.obolibrary.org/obo/BFO_0000001": true
+      }
+    },
+    "http://purl.obolibrary.org/obo/BFO_0000001": {
+      "uri": "http://purl.obolibrary.org/obo/BFO_0000001",
+      "ontId": "BFO:0000001",
+      "label": "entity",
+      "dataSets": {
+        
+      },
+      "parents": {
+        "http://www.w3.org/2002/07/owl#Thing": true
+      }
+    },
+    "http://purl.obolibrary.org/obo/NCBITaxon_7742": {
+      "uri": "http://purl.obolibrary.org/obo/NCBITaxon_7742",
+      "ontId": "NCBITAXON:7742",
+      "label": "Vertebrata <Metazoa>",
+      "dataSets": {
+        
+      },
+      "parents": {
+        "http://purl.obolibrary.org/obo/NCBITaxon_33213": true
+      }
+    },
+    "http://purl.obolibrary.org/obo/OBI_0000079": {
+      "uri": "http://purl.obolibrary.org/obo/OBI_0000079",
+      "ontId": "OBI:0000079",
+      "label": "culture medium",
+      "dataSets": {
+        "2": true
+      },
+      "parents": {
+        "http://purl.obolibrary.org/obo/OBI_0000047": true
+      }
+    },
+    "http://purl.obolibrary.org/obo/CL_0000548": {
+      "uri": "http://purl.obolibrary.org/obo/CL_0000548",
+      "ontId": "CL:0000548",
+      "label": "animal cell",
+      "dataSets": {
+        
+      },
+      "parents": {
+        "http://purl.obolibrary.org/obo/CL_0000255": true
+      }
+    },
+    "http://purl.obolibrary.org/obo/CL_0000355": {
+      "uri": "http://purl.obolibrary.org/obo/CL_0000355",
+      "ontId": "CL:0000355",
+      "label": "multi-potent skeletal muscle stem cell",
+      "dataSets": {
+        "2": true
+      },
+      "parents": {
+        "http://purl.obolibrary.org/obo/CL_0000188": true,
+        "http://purl.obolibrary.org/obo/CL_0000048": true
+      }
+    },
+    "http://purl.obolibrary.org/obo/CL_0000188": {
+      "uri": "http://purl.obolibrary.org/obo/CL_0000188",
+      "ontId": "CL:0000188",
+      "label": "cell of skeletal muscle",
+      "dataSets": {
+        
+      },
+      "parents": {
+        "http://purl.obolibrary.org/obo/CL_0002371": true
+      }
+    },
+    "http://purl.obolibrary.org/obo/CL_0011115": {
+      "uri": "http://purl.obolibrary.org/obo/CL_0011115",
+      "ontId": "CL:0011115",
+      "label": "precursor cell",
+      "dataSets": {
+        
+      },
+      "parents": {
+        "http://purl.obolibrary.org/obo/CL_0000003": true
+      }
+    },
+    "http://purl.obolibrary.org/obo/CL_0000680": {
+      "uri": "http://purl.obolibrary.org/obo/CL_0000680",
+      "ontId": "CL:0000680",
+      "label": "muscle precursor cell",
+      "dataSets": {
+        
+      },
+      "parents": {
+        "http://purl.obolibrary.org/obo/CL_0000055": true,
+        "http://purl.obolibrary.org/obo/CL_0002371": true
+      }
+    },
+    "http://purl.obolibrary.org/obo/CL_0000255": {
+      "uri": "http://purl.obolibrary.org/obo/CL_0000255",
+      "ontId": "CL:0000255",
+      "label": "eukaryotic cell",
+      "dataSets": {
+        
+      },
+      "parents": {
+        "http://purl.obolibrary.org/obo/CL_0000003": true
+      }
+    },
+    "http://www.w3.org/2002/07/owl#Thing": {
+      "uri": "http://www.w3.org/2002/07/owl#Thing",
+      "ontId": "OWL:Thing",
+      "label": "OWL:Thing",
+      "dataSets": {
+        
+      },
+      "parents": {
+        
+      }
+    }
+  }
+}
