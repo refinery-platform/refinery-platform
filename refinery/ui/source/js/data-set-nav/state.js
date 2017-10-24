@@ -46,11 +46,6 @@ function refineryDataSetNavConfig (
 
   refineryUrlRouterProvider
     .otherwise(
-      '/files/browse',
-      '^\/provenance\/.*\/$',
-      true
-    )
-    .otherwise(
       '/files/',
       '^\/data_sets\/.*\/$',
       true
