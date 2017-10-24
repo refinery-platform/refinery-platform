@@ -57,7 +57,6 @@
     function activate () {
       // Only on a new page load/new data set do we expect the attribute filters
       // to be empty
-
       if (_.isEmpty(assayFiltersService.attributeFilter)) {
         // Requires waiting for the api response which should update the
         // service's attribute filter and unbind.
@@ -158,13 +157,14 @@
      * @memberOf refineryFileBrowser.AssayFiltersCtrl
     **/
     function updateFiltersFromUrlQuery () {
-      if (typeof vm.analysisFilter.Analysis !== 'undefined') {
-        vm.refreshSelectedFieldFromQuery(vm.analysisFilter);
+      if (_.has(vm.analysisFilter, 'Analysis')) {
+        vm.refreshSelectedFieldFromQuery(vm.analysisFilter.Analysis);
       }
 
       angular.forEach(vm.attributeFilter, function (attributeObj) {
         vm.refreshSelectedFieldFromQuery(attributeObj);
       });
+
       fileParamService.setParamFilterAttribute(
         selectedFilterService.attributeSelectedFields
       );
