@@ -1257,6 +1257,22 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
             )
             self.assertEqual(ToolDefinition.objects.count(), 0)
 
+    def test_visualization_generation_with_no_image_version_yields_error(self):
+        with open(
+            "{}/visualizations/no_docker_image_version.json".format(
+                TEST_DATA_PATH
+            )
+        ) as f:
+            tool_annotation = [json.loads(f.read())]
+
+        with mock.patch(
+            self.mock_vis_annotations_reference,
+            return_value=tool_annotation
+        ):
+            with self.assertRaises(CommandError) as context:
+                call_command("generate_tool_definitions", visualizations=True)
+            self.assertIn("no specified version", context.exception.message)
+
 
 class ToolDefinitionTests(ToolManagerTestBase):
     def setUp(self):
