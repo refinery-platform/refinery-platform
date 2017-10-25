@@ -177,19 +177,6 @@
                 <div class="row">
                   <div class="tabbable">
                     <div class="tab-content">
-                      <div class="tab-pane fade in" id="table-view-tab">
-                        <dynamic>
-                          <div class="refinery-panel-content">
-                            <div id="solr-table-view" class="scrollable scrollable-floatThead jquery-full-height"></div>
-                          </div>
-                        </dynamic>
-                      </div>
-                      <div class="tab-pane fade in" id="pivot-view-tab">
-                        <div id="pivot-view"></div>
-                        <div id="solr-pivot-matrix">
-                          <!-- the matrix -->
-                        </div>
-                      </div>
                       <div class="tab-pane active fade in"
                            id="provenance-view-tab"
                            style="overflow: hidden;">
@@ -296,8 +283,6 @@
   <script type="text/javascript" src="{% static "js/refinery/core/node_set_manager.js" %}"></script>
   <script type="text/javascript" src="{% static "js/refinery/core/analysis_api_client.js" %}"></script>
   <script type="text/javascript" src="{% static "js/refinery/core/data_set_monitor.js" %}"></script>
-
-  <script type="text/javascript" src="{% static "vendor/floatThead/dist/jquery.floatThead.min.js" %}"></script>
 
   <!-- provenance visualization -->
   <script type="text/javascript" src="{% static "vendor/lodash/lodash.min.js" %}"></script>

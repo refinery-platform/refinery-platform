@@ -87,7 +87,6 @@
         "intro-js/minified/intro.min.js",
         "dagre/dist/dagre.core.min.js",
         "filesize/lib/filesize.min.js",
-        "floatThead/dist/jquery.floatThead.min.js",
         "humanize/humanize.js",
         "ng-file-upload/ng-file-upload.min.js",
         "jquery-file-upload/js/jquery.fileupload-angular.js",
