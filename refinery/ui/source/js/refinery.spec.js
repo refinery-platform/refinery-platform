@@ -67,14 +67,6 @@ describe('RefineryApp.module: unit tests', function () {
       expect(hasModule('refineryRouter')).toEqual(true);
     });
 
-    it('should have "refineryWorkflows" as a dependency', function () {
-      expect(hasModule('refineryWorkflows')).toEqual(true);
-    });
-
-    it('should have "refineryDataSetExplorer" as a dependency', function () {
-      expect(hasModule('refineryDataSetExplorer')).toEqual(true);
-    });
-
     it('should have "refineryStatistics" as a dependency', function () {
       expect(hasModule('refineryStatistics')).toEqual(true);
     });

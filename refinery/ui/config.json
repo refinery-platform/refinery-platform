@@ -22,7 +22,6 @@
       "collaboration",
       "commons",
       "dashboard",
-      "data-set-explorer",
       "data-set-import",
       "data-set-nav",
       "file-browser",
@@ -31,8 +30,7 @@
       "metadata-table-import",
       "statistics",
       "tool-launch",
-      "user-file-browser",
-      "workflows"
+      "user-file-browser"
     ],
     "vendor": {
       "css": [
