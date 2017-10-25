@@ -2,6 +2,7 @@ import StringIO
 import ast
 import json
 import logging
+import os
 import time
 from urlparse import urljoin
 import uuid
@@ -66,7 +67,8 @@ from tool_manager.tasks import django_docker_cleanup
 from .models import (FileRelationship, GalaxyParameter, InputFile, Parameter,
                      Tool, ToolDefinition, VisualizationTool, WorkflowTool)
 from .utils import (FileTypeValidationError, create_tool,
-                    create_tool_definition, validate_tool_annotation,
+                    create_tool_definition, get_visualization_annotations_list,
+                    get_workflows, validate_tool_annotation,
                     validate_tool_launch_configuration,
                     validate_workflow_step_annotation)
 from .views import ToolDefinitionsViewSet, ToolsViewSet
@@ -3313,3 +3315,74 @@ class ToolManagerUtilitiesTests(ToolManagerTestBase):
             str([f.name for f in FileType.objects.all()]),
             file_type_validation_error.message
         )
+
+    def test_get_visualization_annotations_list(self):
+        settings.VISUALIZATION_ANNOTATION_BASE_PATH = os.path.abspath(
+            os.getcwd()
+        )
+        tool_definition_name = "dummy.json"
+        tool_definition = {
+            "is_tool_definition": True
+        }
+        tool_definition_path = os.path.join(
+            settings.VISUALIZATION_ANNOTATION_BASE_PATH,
+            tool_definition_name
+        )
+        with open(tool_definition_path, "w") as f:
+            f.write(json.dumps(tool_definition))
+
+        visualization_annotations = get_visualization_annotations_list()
+        self.assertEqual(
+            visualization_annotations,
+            [
+                {
+                    "is_tool_definition": True
+                }
+            ]
+        )
+        os.remove(tool_definition_name)
+
+    @mock.patch(
+        "bioblend.galaxy.workflows.WorkflowClient.export_workflow_json",
+        return_value="workflow_graph"
+    )
+    @mock.patch(
+        "bioblend.galaxy.workflows.WorkflowClient.show_workflow",
+        return_value={"graph": None}
+    )
+    def test_get_workflows(self, show_workflow_mock, exported_workflow_mock):
+        with mock.patch.object(
+            bioblend.galaxy.workflows.WorkflowClient,
+            "get_workflows",
+            return_value=[{"id": self.GALAXY_ID_MOCK}]
+        ) as bioblend_get_workflows_mock:
+            workflows = get_workflows()
+        self.assertEqual(
+            workflows,
+            {
+                self.workflow_engine.uuid: [
+                    {
+                        "graph": "workflow_graph"
+                    }
+                ]
+            }
+        )
+
+        self.assertTrue(bioblend_get_workflows_mock.called)
+        self.assertTrue(show_workflow_mock.called)
+        self.assertTrue(exported_workflow_mock.called)
+
+    def test_get_workflows_with_connection_error(self):
+        with mock.patch.object(
+            bioblend.galaxy.workflows.WorkflowClient,
+            "get_workflows",
+            side_effect=bioblend.ConnectionError("Bad Connection")
+        ):
+            with self.assertRaises(RuntimeError) as context:
+                get_workflows()
+            self.assertIn(
+                "Unable to retrieve workflows from '{}'".format(
+                    self.workflow_engine.instance.base_url
+                ),
+                context.exception.message
+            )
