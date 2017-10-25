@@ -1,7 +1,7 @@
 'use strict';
 
 describe('RefineryDataSetNav.state: unit tests', function () {
-  var basePath = '/provenance/whatever/';
+  var basePath = '/data_sets/whatever/';
 
   var $location;
   var $state;
@@ -42,36 +42,19 @@ describe('RefineryDataSetNav.state: unit tests', function () {
   });
 
   beforeEach(function () {
-    // using window because $window is redefined above
     mockTemplate(
-      window.getStaticUrl('partials/data-set-nav/partials/data-set-ui-mode-browse.html')
+      window.getStaticUrl('partials/analysis-monitor/views/analyses-tab.html')
     );
     mockTemplate(
-      window.getStaticUrl('partials/data-set-nav/partials/data-set-ui-mode-visualize.html')
+      window.getStaticUrl('partials/file-browser/views/files-tab.html')
     );
     mockTemplate(
-      window.getStaticUrl('partials/data-set-nav/partials/data-set-ui-mode-mapping.html')
-    );
-    mockTemplate(
-      window.getStaticUrl('partials/analysis-monitor/partials/analyses-list.html')
-    );
-    mockTemplate(
-      window.getStaticUrl('partials/file-browser/partials/assay-files.html')
-    );
-    mockTemplate(
-      window.getStaticUrl('partials/data-set-nav/partials/analyses-tab.html')
-    );
-    mockTemplate(
-      window.getStaticUrl('partials/data-set-nav/partials/details-tab.html')
-    );
-    mockTemplate(
-      window.getStaticUrl('partials/data-set-nav/partials/files-tab.html')
+      window.getStaticUrl('partials/data-set-about/views/details-tab.html')
     );
   });
 
   describe('state "/data_set/<UUID>/"', function () {
     beforeEach(function () {
-      basePath = '/provenance/whatever/';
       $window = {
         location: {
           pathname: basePath
@@ -79,14 +62,14 @@ describe('RefineryDataSetNav.state: unit tests', function () {
       };
     });
 
-    it('should be "browse" when path is empty', function () {
+    it('should be "files" when path is empty', function () {
       goTo('');
-      expect($state.current.name).toEqual('browse');
+      expect($state.current.name).toEqual('files');
     });
 
-    it('should be "browse" when path is "/"', function () {
+    it('should be "files" when path is "/"', function () {
       goTo('/');
-      expect($state.current.name).toEqual('browse');
+      expect($state.current.name).toEqual('files');
     });
 
     it('should be "files" when path is "/files/"', function () {
@@ -94,39 +77,19 @@ describe('RefineryDataSetNav.state: unit tests', function () {
       expect($state.current.name).toEqual('files');
     });
 
-    it('should be "browse" when path is "/files/browse"', function () {
-      goTo('/files/browse');
-      expect($state.current.name).toEqual('browse');
-    });
-
-    it('should be "visualize" when path is "/files/visualize"', function () {
-      goTo('/files/visualize');
-      expect($state.current.name).toEqual('visualize');
-    });
-
     it('should be "analyses" when path is "/analyses"', function () {
       goTo('/analyses');
       expect($state.current.name).toEqual('analyses');
     });
 
-    it('should be "attributes" when path is "/attributes"', function () {
-      goTo('/attributes');
-      expect($state.current.name).toEqual('attributes');
+    it('should be "about" when path is "/about"', function () {
+      goTo('/about');
+      expect($state.current.name).toEqual('about');
     });
 
-    it('should be "details" when path is "/details"', function () {
-      goTo('/details');
-      expect($state.current.name).toEqual('details');
-    });
-
-    it('should be "sharing" when path is "/sharing"', function () {
-      goTo('/sharing');
-      expect($state.current.name).toEqual('sharing');
-    });
-
-    it('should be "browse" when path is not existing', function () {
+    it('should be "files" when path is not existing', function () {
       goTo('/someNonExistentUrl');
-      expect($state.current.name).toEqual('browse');
+      expect($state.current.name).toEqual('files');
     });
   });
 });
