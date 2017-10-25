@@ -84,14 +84,6 @@
           }
         }
 
-        function updateIgvButton(button_id) {
-          if (query.getCurrentDocumentCount() <= 0) {
-            $("#" + button_id).addClass("disabled");
-          } else {
-            $("#" + button_id).removeClass("disabled");
-          }
-        }
-
         // =====================================
 
 
@@ -124,8 +116,6 @@
             return;
           }
 
-          tableView = new SolrDocumentTable("solr-table-view", "solrdoctab1", query, client, configurator, documentTableCommands, dataSetMonitor);
-          tableView.setDocumentsPerPage(20);
           analysisView = new SolrAnalysisView("solr-analysis-view", "solranalysis1", query, configurator, analysisViewCommands, dataSetMonitor);
           facetView = new SolrFacetView("solr-facet-view", "solrfacets1", query, configurator, facetViewCommands);
 
@@ -143,7 +133,6 @@
           });
 
           query.setDocumentIndex(0);
-          query.setDocumentCount(tableView.getDocumentsPerPage());
 
           if (pivotMatrixView.getFacet1() === undefined && pivotMatrixView.getFacet2() === undefined) {
 
@@ -222,14 +211,11 @@
           }
 
           if (arguments.query == query) {
-            tableView.render(arguments.response);
 
             analysisView.render(arguments.response);
             facetView.render(arguments.response);
 
             pivotMatrixView.render(arguments.response);
-            updateDownloadButton("submitReposBtn");
-            updateIgvButton("igv-multi-species");
           }
 
           if (pivotMatrixView._matrix === undefined) {
@@ -277,9 +263,6 @@
             dataQueryString = client.createUnpaginatedUrl(dataQuery, SOLR_SELECTION_QUERY);
             annotationQueryString = client.createUnpaginatedUrl(query, SOLR_SELECTION_QUERY);
           }
-
-          // update viewer buttons
-          updateIgvButton("igv-multi-species");
 
           if (REFINERY_REPOSITORY_MODE) {
             updateDownloadButton("submitReposBtn");
@@ -376,10 +359,6 @@
           }
           ;
 
-          if ('undefined' !== typeof(tableView)) {
-            tableView.render(lastSolrResponse);
-          }
-          ;
           client.run(query, SOLR_FULL_QUERY);
         });
 
