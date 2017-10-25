@@ -13,6 +13,7 @@
 
   ToolLaunchButtonCtrl.$inject = [
     '$log',
+    'authService',
     '$timeout',
     'toolLaunchService',
     'toolSelectService',
@@ -23,6 +24,7 @@
 
   function ToolLaunchButtonCtrl (
     $log,
+    authService,
     $timeout,
     toolLaunchService,
     toolSelectService,
@@ -33,6 +35,12 @@
     var vm = this;
     vm.launchTool = launchTool;
     vm.needMoreNodes = needMoreNodes;
+
+    authService.isAuthenticated().then(
+      function (isAuthenticated) {
+        vm.userIsAnonymous = !isAuthenticated;
+      }
+    );
 
     /*
    * -----------------------------------------------------------------------------

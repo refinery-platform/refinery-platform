@@ -1,13 +1,12 @@
 (function () {
   'use strict';
 
-  describe('rpToolLaunchButton component unit test', function () {
+  describe('rpToolLaunchWarning component unit test', function () {
     beforeEach(module('refineryApp'));
     beforeEach(module('refineryToolLaunch'));
 
     var directiveElement;
     var $httpBackend;
-
     beforeEach(inject(function (
       _$httpBackend_,
       $compile,
@@ -16,12 +15,12 @@
       $window
     ) {
       $templateCache.put(
-        $window.getStaticUrl('partials/tool-launch/partials/tool-launch-button.html'),
-        '<button id="tool-launch-button"></button>'
+        $window.getStaticUrl('partials/tool-launch/partials/tool-launch-warning.html'),
+        '<div id="tool-launch-warning"></div>'
       );
       $httpBackend = _$httpBackend_;
       var scope = $rootScope.$new();
-      var template = '<rp-tool-launch-button></rp-tool-launch-button>';
+      var template = '<rp-tool-launch-warning></rp-tool-launch-warning>';
       directiveElement = $compile(template)(scope);
       $httpBackend.whenGET('/api/v1/user_authentication/?format=json').respond(
         {
@@ -36,8 +35,8 @@
     }));
 
     it('generates the appropriate HTML', function () {
-      expect(directiveElement.html()).toContain('tool-launch-button');
-      expect(directiveElement.html()).toContain('</button>');
+      expect(directiveElement.html()).toContain('tool-launch-warning');
+      expect(directiveElement.html()).toContain('</div>');
     });
   });
 })();
