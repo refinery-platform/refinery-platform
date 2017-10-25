@@ -93,7 +93,7 @@
               vm.uiSelectedFields[attributeInternalName][fieldArr[i]] = true;
               // update url with selected fields(filters)
               var encodedAttribute = selectedFilterService
-                .stringifyAndEncodeAttributeObj(attributeInternalName, fieldArr[i]);
+                .stringifyAttributeObj(attributeInternalName, fieldArr[i]);
               selectedFilterService.updateUrlQuery(encodedAttribute, true);
             }
           });
@@ -132,7 +132,7 @@
     function refreshSelectedFieldFromQuery (attributeObj) {
       // stringify/encode attributeInternalName:fieldName for url query comparison
       angular.forEach(attributeObj.facetObj, function (fieldObj) {
-        var encodedField = selectedFilterService.stringifyAndEncodeAttributeObj(
+        var encodedField = selectedFilterService.stringifyAttributeObj(
           attributeObj.internal_name,
           fieldObj.name
         );
