@@ -55,7 +55,7 @@ from data_set_manager.models import Assay, Attribute, Node
 from data_set_manager.utils import _create_solr_params_from_node_uuids
 from factory_boy.django_model_factories import (AnnotatedNodeFactory,
                                                 AttributeFactory, NodeFactory,
-                                                ToolFactory)
+                                                ParameterFactory, ToolFactory)
 from factory_boy.utils import create_dataset_with_necessary_models
 from file_store.models import FileStoreItem
 from galaxy_connector.models import Instance
@@ -209,6 +209,10 @@ class ToolManagerTestBase(ToolManagerMocks):
             file_uuid=self.file_store_item.uuid
         )
 
+        self.mock_get_workflows_reference = (
+            "tool_manager.management.commands.generate_tool_definitions"
+            ".get_workflows"
+        )
         self.mock_vis_annotations_reference = (
             "tool_manager.management.commands.generate_tool_definitions"
             ".get_visualization_annotations_list"
@@ -247,6 +251,13 @@ class ToolManagerTestBase(ToolManagerMocks):
         self.tools_url_root = '/api/v2/tools/'
         self.tool_defs_url_root = '/api/v2/tool_definitions/'
 
+        self.mock_parameter = ParameterFactory(
+            name="Test Param",
+            description="Test Param Description",
+            value_type=Parameter.STRING,
+            default_value="Coffee"
+        )
+
     def tearDown(self):
         # Trigger the pre_delete signal so that datafiles are purged
         FileStoreItem.objects.all().delete()
@@ -260,10 +271,18 @@ class ToolManagerTestBase(ToolManagerMocks):
             self.create_workflow_tool_definition(
                 annotation_file_name=annotation_file_name
             )
+            launch_parameters = {
+                galaxy_param.uuid: galaxy_param.default_value
+                for galaxy_param in GalaxyParameter.objects.all()
+            }
+
         elif tool_type == ToolDefinition.VISUALIZATION:
             self.create_vis_tool_definition(
                 annotation_file_name=annotation_file_name
             )
+            launch_parameters = {
+                self.mock_parameter.uuid: "Edited Value"
+            }
         else:
             raise RuntimeError("Please provide a valid tool_type")
 
@@ -272,20 +291,14 @@ class ToolManagerTestBase(ToolManagerMocks):
                 "dataset_uuid": self.dataset.uuid,
                 "tool_definition_uuid": self.td.uuid,
                 Tool.FILE_RELATIONSHIPS: "[{}]".format(self.node.uuid),
-                ToolDefinition.PARAMETERS: {
-                    galaxy_param.uuid: galaxy_param.default_value
-                    for galaxy_param in GalaxyParameter.objects.all()
-                    }
+                ToolDefinition.PARAMETERS: launch_parameters
             }
         else:
             self.post_data = {
                 "dataset_uuid": self.dataset.uuid,
                 "tool_definition_uuid": self.td.uuid,
                 Tool.FILE_RELATIONSHIPS: file_relationships,
-                ToolDefinition.PARAMETERS: {
-                    galaxy_param.uuid: galaxy_param.default_value
-                    for galaxy_param in GalaxyParameter.objects.all()
-                }
+                ToolDefinition.PARAMETERS: launch_parameters
             }
 
         self.post_request = self.factory.post(
@@ -511,8 +524,19 @@ class ToolDefinitionAPITests(ToolManagerTestBase, APITestCase):
             tool_annotation["workflow_engine_uuid"] = self.workflow_engine.uuid
             create_tool_definition(tool_annotation)
 
+        self.dataset = create_dataset_with_necessary_models()
+        self.dataset.set_owner(self.user)
+
+        self.public_dataset = create_dataset_with_necessary_models()
+        self.public_dataset.share(self.public_group)
+
         # Make reusable requests & responses
-        self.get_request = self.factory.get(self.tool_defs_url_root)
+        self.get_request = self.factory.get(
+            "{}?dataSetUuid={}".format(
+                self.tool_defs_url_root,
+                self.dataset.uuid
+            )
+        )
         force_authenticate(self.get_request, self.user)
         self.get_response = self.tool_defs_view(self.get_request)
 
@@ -520,28 +544,24 @@ class ToolDefinitionAPITests(ToolManagerTestBase, APITestCase):
 
         self.delete_request = self.factory.delete(
             urljoin(self.tool_defs_url_root, self.tool_json['uuid']))
-        force_authenticate(self.delete_request, self.user)
         self.delete_response = self.tool_defs_view(self.delete_request)
         self.put_request = self.factory.put(
             self.tool_defs_url_root,
             data=self.tool_json,
             format="json"
         )
-        force_authenticate(self.put_request, self.user)
         self.put_response = self.tool_defs_view(self.put_request)
         self.post_request = self.factory.post(
             self.tool_defs_url_root,
             data=self.tool_json,
             format="json"
         )
-        force_authenticate(self.post_request, self.user)
         self.post_response = self.tool_defs_view(self.post_request)
         self.options_request = self.factory.options(
             self.tool_defs_url_root,
             data=self.tool_json,
             format="json"
         )
-        force_authenticate(self.options_request, self.user)
         self.options_response = self.tool_defs_view(self.options_request)
 
     def test_tool_definitions_exist(self):
@@ -558,14 +578,6 @@ class ToolDefinitionAPITests(ToolManagerTestBase, APITestCase):
             ).count(),
             1
         )
-
-    def test_get_request_authenticated(self):
-        self.assertIsNotNone(self.get_response)
-
-    def test_get_request_no_auth(self):
-        self.get_request = self.factory.get(self.tool_defs_url_root)
-        self.get_response = self.tool_defs_view(self.get_request)
-        self.assertEqual(self.get_response.status_code, 403)
 
     def test_unallowed_http_verbs(self):
         self.assertEqual(
@@ -591,8 +603,93 @@ class ToolDefinitionAPITests(ToolManagerTestBase, APITestCase):
                       ToolDefinition.VISUALIZATION):
                     self.assertNotIn("galaxy_workflow_step", parameter.keys())
 
+    def test_request_from_owned_dataset_shows_all_tool_defs(self):
+        self.assertNotEqual(len(self.get_response.data), 0)
+        for tool_definition in self.get_response.data:
+            tool_definition = ToolDefinition.objects.get(
+                uuid=tool_definition["uuid"]
+            )
+            self.assertIn(tool_definition, ToolDefinition.objects.all())
+
+    def test_request_from_public_dataset_shows_vis_tools_only(self):
+        get_request = self.factory.get(
+            "{}?dataSetUuid={}".format(
+                self.tool_defs_url_root,
+                self.public_dataset.uuid
+            )
+        )
+        force_authenticate(get_request, self.user)
+        get_response = self.tool_defs_view(get_request)
+        self.assertNotEqual(len(get_response.data), 0)
+        for tool_definition in get_response.data:
+            self.assertIn(
+                ToolDefinition.objects.get(
+                    uuid=tool_definition["uuid"]
+                ),
+                ToolDefinition.objects.filter(
+                    tool_type=ToolDefinition.VISUALIZATION
+                )
+            )
+
+    def test_no_query_params_in_get_yields_bad_request(self):
+        get_request = self.factory.get(self.tool_defs_url_root)
+        force_authenticate(get_request, self.user)
+        get_response = self.tool_defs_view(get_request)
+        self.assertEqual(get_response.status_code, 400)
+        self.assertIn("Must specify a Dataset UUID", get_response.data)
+
+    def test_bad_query_params_in_get_yields_bad_request(self):
+        get_request = self.factory.get(
+            "{}?coffee={}".format(
+                self.tool_defs_url_root,
+                self.dataset.uuid
+            )
+        )
+        force_authenticate(get_request, self.user)
+        get_response = self.tool_defs_view(get_request)
+        self.assertEqual(get_response.status_code, 400)
+        self.assertIn("Must specify a Dataset UUID", get_response.data)
+
+    def test_missing_dataset_in_get_yields_bad_request(self):
+        dataset_uuid = self.dataset.uuid
+        self.dataset.delete()
+
+        get_request = self.factory.get(
+            "{}?dataSetUuid={}".format(
+                self.tool_defs_url_root,
+                dataset_uuid
+            )
+        )
+        force_authenticate(get_request, self.user)
+        get_response = self.tool_defs_view(get_request)
+        self.assertEqual(get_response.status_code, 400)
+        self.assertIn("Couldn't fetch Dataset", get_response.data)
+
 
 class ToolDefinitionGenerationTests(ToolManagerTestBase):
+    def setUp(self):
+        super(ToolDefinitionGenerationTests, self).setUp()
+        raw_input_reference = "__builtin__.raw_input"
+        self.raw_input_yes_mock = mock.patch(
+            raw_input_reference,
+            return_value="y"
+        )
+        self.raw_input_no_mock = mock.patch(
+            raw_input_reference,
+            side_effect=["coffee", "n"]
+        )
+        with open(
+            "{}/workflows/galaxy_workflows_valid.json".format(TEST_DATA_PATH)
+        ) as f:
+            self.valid_workflows = json.loads(f.read())
+
+        with open(
+            "{}/workflows/galaxy_workflows_invalid.json".format(TEST_DATA_PATH)
+        ) as f:
+            self.invalid_workflows = json.loads(f.read())
+
+        self.mock_parameter.delete()
+
     def test_tool_definition_model_str(self):
         with open("{}/visualizations/igv.json".format(TEST_DATA_PATH)) as f:
             tool_annotation = [json.loads(f.read())]
@@ -958,26 +1055,11 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
             )
 
     def test_generate_tool_definitions_management_command(self):
-        invalid_workflows = json.loads(
-            open(
-                "{}/workflows/galaxy_workflows_invalid.json".format(
-                    TEST_DATA_PATH
-                )
-            ).read()
-        )
-        valid_workflows = json.loads(
-            open(
-                "{}/workflows/galaxy_workflows_valid.json".format(
-                    TEST_DATA_PATH
-                )
-            ).read()
-        )
-
         with mock.patch(
-            "tool_manager.utils.get_workflows",
+            self.mock_get_workflows_reference,
             side_effect=[
-                {self.workflow_engine.uuid: invalid_workflows},
-                {self.workflow_engine.uuid: valid_workflows}
+                {self.workflow_engine.uuid: self.invalid_workflows},
+                {self.workflow_engine.uuid: self.valid_workflows}
             ]
         ) as get_wf_mock:
             self.assertRaises(
@@ -1006,6 +1088,105 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
                 self.assertEqual(GalaxyParameter.objects.count(), 9)
                 self.assertEqual(Parameter.objects.count(), 10)
                 self.assertEqual(InputFile.objects.count(), 6)
+
+    def test_generate_tool_definitions_overwrites_visualizations_if_forced(
+            self
+    ):
+        self.raw_input_yes_mock.start()
+        with open(
+            "{}/visualizations/igv.json".format(TEST_DATA_PATH)
+        ) as f:
+            vis_tool_annotation = [json.loads(f.read())]
+
+        with mock.patch(
+            self.mock_vis_annotations_reference,
+            side_effect=[vis_tool_annotation] * 2
+        ) as get_vis_list_mock:
+            # Create VisualizationToolDefinition
+            call_command("generate_tool_definitions", visualizations=True)
+            original_ids = [t.id for t in ToolDefinition.objects.all()]
+
+            # Create new VisualizationToolDefinition with --force
+            call_command(
+                "generate_tool_definitions",
+                visualizations=True,
+                force=True
+            )
+            new_ids = [t.id for t in ToolDefinition.objects.all()]
+
+            # Assert that the new visualization tool definitions id's were
+            # incremented
+            self.assertEqual(new_ids, [_id + 1 for _id in original_ids])
+            self.assertEqual(get_vis_list_mock.call_count, 2)
+
+    def test_generate_tool_definitions_overwrites_workflows_if_forced(
+            self
+    ):
+        self.raw_input_yes_mock.start()
+        with mock.patch(
+            self.mock_get_workflows_reference,
+            return_value={self.workflow_engine.uuid: self.valid_workflows}
+        ) as get_wf_mock:
+            # Create WorkflowToolDefinition
+            call_command("generate_tool_definitions", workflows=True)
+            original_ids = [t.id for t in ToolDefinition.objects.all()]
+
+            # Create new WorkflowToolDefinition with --force
+            call_command(
+                "generate_tool_definitions",
+                workflows=True,
+                force=True
+            )
+            new_ids = [t.id for t in ToolDefinition.objects.all()]
+
+            # Assert that the new workflow tool definitions id's were
+            # incremented
+            for original_id in original_ids:
+                self.assertIn(original_id + 3, new_ids)
+            self.assertEqual(get_wf_mock.call_count, 2)
+
+    def test_generate_tool_definitions_with_force_allows_user_dismissal(
+            self
+    ):
+        self.raw_input_no_mock.start()
+        with mock.patch(
+                self.mock_get_workflows_reference,
+                return_value={self.workflow_engine.uuid: self.valid_workflows}
+        ):
+            with self.assertRaises(SystemExit):
+                # Create WorkflowToolDefinition
+                call_command(
+                    "generate_tool_definitions",
+                    workflows=True,
+                    force=True
+                )
+
+        self.assertEqual(ToolDefinition.objects.count(), 0)
+
+    def test_generate_tool_definitions_command_error_if_get_workflows_fails(
+            self
+    ):
+        with mock.patch(
+            self.mock_get_workflows_reference,
+            side_effect=RuntimeError
+        ):
+            with self.assertRaises(CommandError):
+                call_command("generate_tool_definitions", workflows=True)
+
+    def test_generate_tool_definitions_multiple_times_skips_without_deletion(
+            self
+    ):
+        with mock.patch(
+            self.mock_get_workflows_reference,
+            return_value={self.workflow_engine.uuid: self.valid_workflows}
+        ):
+            call_command("generate_tool_definitions", workflows=True)
+            tool_definitions_a = [t for t in ToolDefinition.objects.all()]
+
+            call_command("generate_tool_definitions", workflows=True)
+            tool_definitions_b = [t for t in ToolDefinition.objects.all()]
+
+        self.assertEqual(tool_definitions_a, tool_definitions_b)
 
     def test_workflow_pair_too_many_inputs(self):
         with open(
@@ -1078,6 +1259,10 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
 
 
 class ToolDefinitionTests(ToolManagerTestBase):
+    def setUp(self):
+        super(ToolDefinitionTests, self).setUp()
+        self.mock_parameter.delete()
+
     def test_get_annotation(self):
         self.create_vis_tool_definition(annotation_file_name="igv.json")
         self.assertEqual(self.td.get_annotation(),
@@ -1102,6 +1287,12 @@ class ToolDefinitionTests(ToolManagerTestBase):
         self.assertFalse(
             Workflow.objects.all()[0].is_active
         )
+
+    def test_get_parameters(self):
+        self.create_vis_tool_definition(annotation_file_name="igv.json")
+        tool_parameters = [p for p in self.td.get_parameters()]
+        all_parameters = [p for p in Parameter.objects.all()]
+        self.assertEqual(tool_parameters, all_parameters)
 
 
 class ToolTests(ToolManagerTestBase):
@@ -1260,8 +1451,45 @@ class VisualizationToolTests(ToolManagerTestBase):
                 Tool.FILE_RELATIONSHIPS: file_relationships,
                 VisualizationTool.NODE_INFORMATION:
                     self.tool._get_detailed_input_nodes_dict(),
+                ToolDefinition.PARAMETERS:
+                    self.tool._get_visualization_parameters()
             }
         )
+
+    def test__get_visualization_parameters(self):
+        parameter = self.visualization_tool.tool_definition.get_parameters()[0]
+        self.assertEqual(
+            self.visualization_tool._get_visualization_parameters(),
+            [
+                {
+                    "description": parameter.description,
+                    "default_value": parameter.default_value,
+                    "uuid": parameter.uuid,
+                    "name": parameter.name,
+                    "value": parameter.default_value,
+                    "value_type": parameter.value_type
+                }
+            ]
+        )
+
+    def test__get_edited_parameter_value(self):
+        edited_parameter_value = (
+                self.visualization_tool._get_edited_parameter_value(
+                    self.mock_parameter
+                )
+        )
+        self.assertEqual(edited_parameter_value, "Edited Value")
+
+        parameter = ParameterFactory(
+            name="Test Param",
+            description="Test Param Description",
+            value_type=Parameter.STRING,
+            default_value="Coffee"
+        )
+        non_edited_parameter_value = (
+            self.visualization_tool._get_edited_parameter_value(parameter)
+        )
+        self.assertEqual(non_edited_parameter_value, parameter.default_value)
 
 
 class WorkflowToolTests(ToolManagerTestBase):
@@ -2685,7 +2913,7 @@ class WorkflowToolLaunchTests(ToolManagerTestBase):
         )
 
 
-class VisualizationToolLaunchTests(ToolManagerTestBase,
+class VisualizationToolLaunchTests(ToolManagerTestBase,  # TODO: Cypress
                                    SeleniumTestBaseGeneric):
     def setUp(self):
         # super() will only ever resolve a single class type for a given method
@@ -2747,7 +2975,10 @@ class VisualizationToolLaunchTests(ToolManagerTestBase,
             self.post_data = {
                 "dataset_uuid": self.dataset.uuid,
                 "tool_definition_uuid": self.td.uuid,
-                Tool.FILE_RELATIONSHIPS: str([file_relationships])
+                Tool.FILE_RELATIONSHIPS: str([file_relationships]),
+                ToolDefinition.PARAMETERS: {
+                    self.mock_parameter.uuid: self.mock_parameter.default_value
+                }
             }
 
             self.post_request = self.factory.post(
@@ -2848,6 +3079,19 @@ class VisualizationToolLaunchTests(ToolManagerTestBase,
                 'hello_world.json',
                 "https://www.example.com/file.txt"
             )
+
+    def test__get_launch_parameters(self):
+        def assertions(tool):
+            self.assertEqual(
+                tool._get_launch_parameters(),
+                tool.get_tool_launch_config()[ToolDefinition.PARAMETERS]
+            )
+
+        self._start_visualization(
+            'igv.json',
+            self.live_server_url + "/tool_manager/test_data/sample.seg",
+            assertions
+        )
 
 
 class ToolLaunchConfigurationTests(ToolManagerTestBase):

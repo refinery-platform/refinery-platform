@@ -157,16 +157,14 @@
      * @memberOf refineryFileBrowser.AssayFiltersCtrl
     **/
     function updateFiltersFromUrlQuery () {
-      var allFilters = {};
-      // Merge attribute and analysis filter data obj
-      angular.copy(vm.attributeFilter, allFilters);
-      if (typeof vm.analysisFilter.Analysis !== 'undefined') {
-        angular.copy(vm.analysisFilter, allFilters.Analysis);
+      if (_.has(vm.analysisFilter, 'Analysis')) {
+        vm.refreshSelectedFieldFromQuery(vm.analysisFilter.Analysis);
       }
 
-      angular.forEach(allFilters, function (attributeObj) {
+      angular.forEach(vm.attributeFilter, function (attributeObj) {
         vm.refreshSelectedFieldFromQuery(attributeObj);
       });
+
       fileParamService.setParamFilterAttribute(
         selectedFilterService.attributeSelectedFields
       );
