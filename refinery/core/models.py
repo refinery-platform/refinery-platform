@@ -1387,6 +1387,15 @@ class Analysis(OwnableResource):
         )
         return quote(json.dumps({analysis_facet_name: self.uuid}))
 
+    def facet_name(self):
+        facet_name = '{}_{}_{}_s'.format(
+            NodeIndex.ANALYSIS_UUID_PREFIX,
+            self.data_set.get_latest_study().id,
+            self.data_set.get_latest_assay().id,
+        )
+
+        return facet_name
+
     def send_email(self):
         """Sends an email when the analysis is finished"""
         # don't mail the user if analysis was canceled
