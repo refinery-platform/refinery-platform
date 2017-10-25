@@ -57,7 +57,7 @@ from factory_boy.django_model_factories import (AnnotatedNodeFactory,
                                                 AttributeFactory, NodeFactory,
                                                 ParameterFactory, ToolFactory)
 from factory_boy.utils import create_dataset_with_necessary_models
-from file_store.models import FileStoreItem
+from file_store.models import FileStoreItem, FileType
 from galaxy_connector.models import Instance
 from selenium_testing.utils import (MAX_WAIT, SeleniumTestBaseGeneric,
                                     wait_until_class_visible)
@@ -65,8 +65,8 @@ from tool_manager.tasks import django_docker_cleanup
 
 from .models import (FileRelationship, GalaxyParameter, InputFile, Parameter,
                      Tool, ToolDefinition, VisualizationTool, WorkflowTool)
-from .utils import (create_tool, create_tool_definition,
-                    validate_tool_annotation,
+from .utils import (FileTypeValidationError, create_tool,
+                    create_tool_definition, validate_tool_annotation,
                     validate_tool_launch_configuration,
                     validate_workflow_step_annotation)
 from .views import ToolDefinitionsViewSet, ToolsViewSet
@@ -3276,3 +3276,20 @@ class ToolLaunchConfigurationTests(ToolManagerTestBase):
             )
         }
         validate_tool_launch_configuration(tool_launch_configuration)
+
+
+class ToolManagerUtilitiesTests(ToolManagerTestBase):
+    def test_file_type_validation_error(self):
+        bad_filetype = "COFFEE"
+        error_message = "FileType `{}` does not exist".format(bad_filetype)
+
+        file_type_validation_error = FileTypeValidationError(
+            bad_filetype,
+            error_message
+        )
+        self.assertIn(bad_filetype, file_type_validation_error.message)
+        self.assertIn(error_message, file_type_validation_error.message)
+        self.assertIn(
+            str([f.name for f in FileType.objects.all()]),
+            file_type_validation_error.message
+        )
