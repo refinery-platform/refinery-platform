@@ -21,6 +21,7 @@ angular
     /*
      * Third party modules
      */
+    'ui.bootstrap',
     'ui.router',
     'ngWebworker',
     'file-model',
@@ -45,10 +46,6 @@ angular
      * Refinery modules
      */
     'refineryRouter',
-    'refineryWorkflows',
-    'refineryNodeMapping',
-    'refineryNodeRelationship',
-    'refineryDataSetExplorer',
     'refineryStatistics',
     'refineryProvvis',
     'refineryDataSetImport',
@@ -60,13 +57,4 @@ angular
     'refineryDataSetAbout',
     'refineryToolLaunch',
     'refineryUserFileBrowser'
-  ])
-  .run(['$', '$rootScope', function ($, $rootScope) {
-    //  trigger from the contents.js when the node selection list has been
-    // updated. Used by node_mapping.js Trigger for analyze tab view to run
-    // analyses status.
-    $(document).on('refinery/updateCurrentNodeSelection', function (e) {
-      $rootScope.$broadcast(e.type);
-      $rootScope.$digest();
-    });
-  }]);
+  ]);
