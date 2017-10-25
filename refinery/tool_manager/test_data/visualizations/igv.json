@@ -8,7 +8,7 @@
     "description": "This visualization does really cool things... with IGV",
     "parameters": [
       {
-        "name": "Genome Build Param",
+        "name": "Genome Build",
         "description": "Genome Build Param description",
         "value_type": "GENOME_BUILD",
         "default_value": "hg19"
