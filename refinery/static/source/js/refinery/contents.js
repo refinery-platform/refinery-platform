@@ -138,9 +138,12 @@
             lastProvVisSolrResponse = arguments.response;
 
             /* Update Provenance Visualization by filtered nodeset. */
-            if (($('.nav-pills li.active a').attr('href').split("#")[1] === 'provenance-view-tab') && provvis.get() instanceof provvisDecl.ProvVis) {
-              provvisRender.update(provvis.get(), arguments.response);
-            }
+            // This needs to be updated with the current selected nodes from
+            // the files tab -- JM
+        //    if (($('.nav-pills li.active a').attr('href').split("#")[1]
+            // === 'provenance-view-tab') && provvis.get() instanceof provvisDecl.ProvVis) {
+          //    provvisRender.update(provvis.get(), arguments.response);
+         //   }
           }
         });
 
