@@ -23,7 +23,6 @@
   var currentStudyId = externalStudyId;
   var currentAssayUuid = externalAssayUuid;
   var currentAssayId = externalAssayId;
-  var currentAnalysisUuid = analysisUuid;
 
   $(document).ready(function () {
     // To avoid generation when in the current file  browser
@@ -33,9 +32,7 @@
 
 
       // event handling
-      var documentTableCommands = new Backbone.Wreqr.Commands();
       var facetViewCommands = new Backbone.Wreqr.Commands();
-      var analysisViewCommands = new Backbone.Wreqr.Commands();
       var pivotMatrixCommands = new Backbone.Wreqr.Commands();
       var clientCommands = new Backbone.Wreqr.Commands();
       var queryCommands = new Backbone.Wreqr.Commands();
@@ -116,7 +113,6 @@
             return;
           }
 
-          analysisView = new SolrAnalysisView("solr-analysis-view", "solranalysis1", query, configurator, analysisViewCommands, dataSetMonitor);
           facetView = new SolrFacetView("solr-facet-view", "solrfacets1", query, configurator, facetViewCommands);
 
           pivotMatrixView = new SolrPivotMatrix("solr-pivot-matrix", "solrpivot1", query, {}, pivotMatrixCommands);
@@ -212,7 +208,6 @@
 
           if (arguments.query == query) {
 
-            analysisView.render(arguments.response);
             facetView.render(arguments.response);
 
             pivotMatrixView.render(arguments.response);
@@ -309,14 +304,6 @@
         });
 
 
-        analysisViewCommands.addHandler(SOLR_ANALYSIS_SELECTION_CLEARED_COMMAND, function (arguments) {
-          //console.log( SOLR_ANALYSIS_SELECTION_CLEARED_COMMAND + ' executed' );
-          //console.log( arguments );
-
-          client.run(query, SOLR_FULL_QUERY);
-        });
-
-
         var facetSelectionUpdated = function (arguments) {
           query.clearDocumentSelection();
           query.setDocumentSelectionBlacklistMode(true);
@@ -339,29 +326,12 @@
 
         facetViewCommands.addHandler(SOLR_FACET_SELECTION_UPDATED_COMMAND, facetSelectionUpdated);
         pivotMatrixCommands.addHandler(SOLR_FACET_SELECTION_UPDATED_COMMAND, facetSelectionUpdated);
-        analysisViewCommands.addHandler(SOLR_ANALYSIS_SELECTION_UPDATED_COMMAND, facetSelectionUpdated);
-
         pivotMatrixCommands.addHandler(SOLR_PIVOT_MATRIX_FACETS_UPDATED_COMMAND, function (arguments) {
           //console.log( SOLR_PIVOT_MATRIX_FACETS_UPDATED_COMMAND + ' executed' );
           //console.log( arguments );
 
           client.run(query, SOLR_FULL_QUERY);
         });
-
-
-        dataSetMonitorCommands.addHandler(DATA_SET_MONITOR_ANALYSES_UPDATED_COMMAND, function (arguments) {
-          // console.log(DATA_SET_MONITOR_ANALYSES_UPDATED_COMMAND + ' executed');
-          // console.log(arguments);
-          // console.log("Updating tables ...");
-          //method is called before the analysisView and tableViews are created
-          if ('undefined' !== typeof(analysisView)) {
-            analysisView.render(lastSolrResponse);
-          }
-          ;
-
-          client.run(query, SOLR_FULL_QUERY);
-        });
-
 
         // ---------------------------
         // node set manager
@@ -626,18 +596,6 @@
       }
     });
     // --- END: set correct CSRF token via cookie ---
-
-    $.ajax({
-      url: '/analysis_manager/repository_run/',
-      type: "POST",
-      dataType: "json",
-      data: {'query': solr_url, 'workflow_choice': the_workflow_uuid, 'study_uuid': $('input[name=study_uuid]').val(),
-          'node_selection': nodeSelection, 'node_selection_blacklist_mode': nodeSelectionBlacklistMode },
-      success: function (result) {
-          // console.log(result);
-          window.location = result;
-      }
-    });
   });
 
 
