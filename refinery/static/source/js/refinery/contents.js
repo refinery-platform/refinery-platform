@@ -3,10 +3,6 @@
 (function () {
 // ---------------------------------
 
-  var MAX_DOWNLOAD_FILES = 20;
-  var MESSAGE_DOWNLOAD_UNAVAILABE = "You have to be logged in<br> and selected " + MAX_DOWNLOAD_FILES + " files or less<br>to create an archive for download.";
-  var MESSAGE_DOWNLOAD_AVAILABLE = "Click to create<br>archive for download<br>of selected files.";
-
   var allowAnnotationDownload = false;
 
   var solrRoot = document.location.protocol + "//" + document.location.host + "/solr/";
@@ -30,7 +26,6 @@
       configurator = new DataSetConfigurator(externalStudyUuid, externalAssayUuid, "configurator-panel", REFINERY_API_BASE_URL, csrf_token);
       configurator.initialize();
 
-      var pivotMatrixCommands = new Backbone.Wreqr.Commands();
       var clientCommands = new Backbone.Wreqr.Commands();
       var queryCommands = new Backbone.Wreqr.Commands();
       var dataSetMonitorCommands = new Backbone.Wreqr.Commands();
@@ -62,21 +57,9 @@
         var annotationQuery = query.clone();
         annotationQuery.addFilter("is_annotation", true);
 
-        var pivotQuery;
-
         var provVisQuery;
 
         // =====================================
-
-        function updateDownloadButton(button_id) {
-          if (query.getCurrentDocumentCount() > MAX_DOWNLOAD_FILES || query.getCurrentDocumentCount() <= 0 || !REFINERY_USER_AUTHENTICATED || ( showAnnotation && !allowAnnotationDownload )) {
-            $("#" + button_id).addClass("disabled");
-            $("#" + button_id).attr("data-original-title", MESSAGE_DOWNLOAD_UNAVAILABE);
-          } else {
-            $("#" + button_id).removeClass("disabled");
-            $("#" + button_id).attr("data-original-title", MESSAGE_DOWNLOAD_AVAILABLE);
-          }
-        }
 
         // =====================================
 
@@ -110,8 +93,7 @@
             return;
           }
 
-          pivotMatrixView = new SolrPivotMatrix("solr-pivot-matrix", "solrpivot1", query, {}, pivotMatrixCommands);
-
+//** PROVVIS QUERY **//
           $(function() {
             if (provvis.get() instanceof provvisDecl.ProvVis === true) {
               provvisRender.update(provvis.get(), lastProvVisSolrResponse);
@@ -124,47 +106,6 @@
           });
 
           query.setDocumentIndex(0);
-
-          if (pivotMatrixView.getFacet1() === undefined && pivotMatrixView.getFacet2() === undefined) {
-
-            var visibleFacets = [];
-            for (var i = 0; i < configurator.state.objects.length; ++i) {
-              var attribute = configurator.state.objects[i];
-              if (attribute.is_facet && attribute.is_exposed && !attribute.is_internal) {
-                visibleFacets.push(attribute.solr_field);
-              }
-            }
-
-            var facetOneInd = 0;
-            //conditional is required because visibleFacets has incorrect
-            // isExposed attributes
-            while (facetOneInd <= visibleFacets.length - 1) {
-              if (!(visibleFacets[facetOneInd].indexOf("ANALYSIS") > -1 ||
-                visibleFacets[facetOneInd].indexOf("WORKFLOW_OUTPUT") > -1)) {
-                pivotMatrixView.setFacet1(visibleFacets[facetOneInd]);
-                break;
-              } else {
-                facetOneInd = facetOneInd + 1;
-              }
-            }
-            ;
-
-            var facetTwoInd = facetOneInd + 1;
-            while (facetTwoInd <= visibleFacets.length - 1) {
-              if (!(visibleFacets[facetTwoInd].indexOf("ANALYSIS") > -1 ||
-                visibleFacets[facetTwoInd].indexOf("WORKFLOW_OUTPUT") > -1)) {
-                pivotMatrixView.setFacet2(visibleFacets[facetTwoInd]);
-                break;
-              } else {
-                facetTwoInd = facetTwoInd + 1;
-              }
-            }
-            ;
-
-            if (pivotMatrixView.getFacet1 !== undefined && pivotMatrixView.getFacet2 !== undefined) {
-              query.setPivots(visibleFacets[facetOneInd], visibleFacets[facetTwoInd]);
-            }
-          }
 
           client.run(query, SOLR_FULL_QUERY);
         });
@@ -196,19 +137,6 @@
           }
 
           lastSolrResponse = arguments.response;
-
-          if (arguments.query == pivotQuery) {
-            pivotMatrixView.updateMatrix(arguments.response)
-          }
-
-          if (arguments.query == query) {
-
-            pivotMatrixView.render(arguments.response);
-          }
-
-          if (pivotMatrixView._matrix === undefined) {
-            pivotMatrixView.updateMatrix(arguments.response);
-          }
 
           if (arguments.query == provVisQuery) {
             /* Set face attributes for nodes in Provenance Visualization.*/
@@ -252,10 +180,6 @@
             annotationQueryString = client.createUnpaginatedUrl(query, SOLR_SELECTION_QUERY);
           }
 
-          if (REFINERY_REPOSITORY_MODE) {
-            updateDownloadButton("submitReposBtn");
-          }
-
         });
 
         documentTableCommands.addHandler(SOLR_DOCUMENT_ORDER_UPDATED_COMMAND, function (arguments) {
@@ -293,12 +217,6 @@
           query.setDocumentSelectionBlacklistMode(true);
           client.run(query, SOLR_FULL_QUERY);
 
-          // clone query to update pivot matrix view
-          pivotQuery = query.clone();
-          pivotQuery.clearFacetSelection(pivotMatrixView.getFacet1());
-          pivotQuery.clearFacetSelection(pivotMatrixView.getFacet2());
-          client.run(pivotQuery, SOLR_FULL_QUERY);
-
           /* ProvVis hook for update. */
           if (provvis.get() instanceof provvisDecl.ProvVis) {
             provVisQuery = query.clone();
@@ -307,14 +225,6 @@
             client.run(provVisQuery, SOLR_FULL_QUERY);
           }
         };
-
-        pivotMatrixCommands.addHandler(SOLR_FACET_SELECTION_UPDATED_COMMAND, facetSelectionUpdated);
-        pivotMatrixCommands.addHandler(SOLR_PIVOT_MATRIX_FACETS_UPDATED_COMMAND, function (arguments) {
-          //console.log( SOLR_PIVOT_MATRIX_FACETS_UPDATED_COMMAND + ' executed' );
-          //console.log( arguments );
-
-          client.run(query, SOLR_FULL_QUERY);
-        });
 
         // ---------------------------
         // node set manager
