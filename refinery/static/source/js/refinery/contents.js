@@ -23,8 +23,6 @@
   $(document).ready(function () {
     // To avoid generation when in the current file  browser
     if (window.location.href.indexOf('provenance') > -1) {
-      configurator = new DataSetConfigurator(externalStudyUuid, externalAssayUuid, "configurator-panel", REFINERY_API_BASE_URL, csrf_token);
-      configurator.initialize();
 
       var clientCommands = new Backbone.Wreqr.Commands();
       var queryCommands = new Backbone.Wreqr.Commands();
@@ -34,16 +32,6 @@
           lastProvVisSolrResponse = null;
 
       var showAnnotation = false;
-
-      configurator.initialize(function () {
-        query = new SolrQuery(configurator, queryCommands);
-        query.initialize();
-
-        if (analysisUuid !== 'None') {
-          query.updateFacetSelection('REFINERY_ANALYSIS_UUID_' + externalStudyId + '_' + externalAssayId + '_s', analysisUuid, true);
-        }
-        else {
-        }
 
         dataSetMonitor = new DataSetMonitor(dataSetUuid, REFINERY_API_BASE_URL, csrf_token, dataSetMonitorCommands);
         dataSetMonitor.initialize();
@@ -286,12 +274,6 @@
         client.initialize(query, false);
         client.initialize(annotationQuery, false);
       });
-
-
-      configurator.getState(function () {
-        // callback
-      });
-
     }
   });
 
