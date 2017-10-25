@@ -3,8 +3,6 @@
 (function () {
 // ---------------------------------
 
-  var allowAnnotationDownload = false;
-
   var solrRoot = document.location.protocol + "//" + document.location.host + "/solr/";
   var solrSelectUrl = solrRoot + "data_set_manager/select/";
   var solrSelectEndpoint = "data_set_manager/select/";
@@ -12,7 +10,6 @@
   var dataSetNodeTypes = ['"Raw Data File"', '"Derived Data File"', '"Array Data File"', '"Derived Array Data File"', '"Array Data Matrix File"', '"Derived Array Data Matrix File"'];
 
   var dataQueryString = undefined;
-  var annotationQueryString = undefined;
 
   var currentStudyUuid = externalStudyUuid;
   var currentStudyId = externalStudyId;
@@ -22,6 +19,9 @@
   $(document).ready(function () {
     // To avoid generation when in the current file  browser
     if (window.location.href.indexOf('provenance') > -1) {
+      // attributes list
+      configurator = new DataSetConfigurator(externalStudyUuid, externalAssayUuid, "configurator-panel", REFINERY_API_BASE_URL, csrf_token);
+      configurator.initialize();
 
       var clientCommands = new Backbone.Wreqr.Commands();
       var queryCommands = new Backbone.Wreqr.Commands();
@@ -32,6 +32,15 @@
 
       var showAnnotation = false;
 
+
+      configurator.initialize(function () {
+        query = new SolrQuery(configurator, queryCommands);
+        query.initialize();
+
+        if (analysisUuid !== 'None') {
+          query.updateFacetSelection('REFINERY_ANALYSIS_UUID_' + externalStudyId + '_' + externalAssayId + '_s', analysisUuid, true);
+        }
+
         dataSetMonitor = new DataSetMonitor(dataSetUuid, REFINERY_API_BASE_URL, csrf_token, dataSetMonitorCommands);
         dataSetMonitor.initialize();
 
@@ -40,9 +49,6 @@
 
         var dataQuery = query.clone();
         dataQuery.addFilter("is_annotation", false);
-
-        var annotationQuery = query.clone();
-        annotationQuery.addFilter("is_annotation", true);
 
         var provVisQuery;
 
@@ -81,7 +87,7 @@
           }
 
 //** PROVVIS QUERY **//
-          $(function() {
+          $(function () {
             if (provvis.get() instanceof provvisDecl.ProvVis === true) {
               provvisRender.update(provvis.get(), lastProvVisSolrResponse);
             } else {
@@ -104,7 +110,6 @@
           // update global query strings
           if (!showAnnotation) {
             dataQueryString = client.createUnpaginatedUrl(query, SOLR_SELECTION_QUERY)
-            annotationQueryString = client.createUnpaginatedUrl(annotationQuery, SOLR_SELECTION_QUERY);
 
             if (nodeSetManager.currentSelectionNodeSet != null) {
               nodeSetManager.currentSelectionNodeSet.solr_query = client.createUrl(query, SOLR_FULL_QUERY);
@@ -120,7 +125,6 @@
           }
           else {
             dataQueryString = client.createUnpaginatedUrl(dataQuery, SOLR_SELECTION_QUERY);
-            annotationQueryString = client.createUnpaginatedUrl(query, SOLR_SELECTION_QUERY);
           }
 
           lastSolrResponse = arguments.response;
@@ -138,65 +142,6 @@
               provvisRender.update(provvis.get(), arguments.response);
             }
           }
-        });
-
-        documentTableCommands.addHandler(SOLR_DOCUMENT_SELECTION_UPDATED_COMMAND, function (arguments) {
-          // console.log(SOLR_DOCUMENT_SELECTION_UPDATED_COMMAND + ' executed');
-          //console.log( arguments );
-
-          // update global query strings
-          if (!showAnnotation) {
-            dataQueryString = client.createUnpaginatedUrl(query, SOLR_SELECTION_QUERY)
-            annotationQueryString = client.createUnpaginatedUrl(annotationQuery, SOLR_SELECTION_QUERY);
-
-            if (nodeSetManager.currentSelectionNodeSet != null) {
-              nodeSetManager.currentSelectionNodeSet.solr_query = client.createUrl(query, SOLR_FULL_QUERY);
-              nodeSetManager.currentSelectionNodeSet.solr_query_components = query.serialize();
-              nodeSetManager.currentSelectionNodeSet.node_count = query.getCurrentDocumentCount();
-              nodeSetManager.updateState(nodeSetManager.currentSelectionNodeSet,
-                function () {
-                  $(document).trigger('refinery/updateCurrentNodeSelection')
-                }
-                //global event to update angularjs nodeSetList
-              );
-              // console.log("Updated current selection node set (document selection).");
-            }
-          }
-          else {
-            dataQueryString = client.createUnpaginatedUrl(dataQuery, SOLR_SELECTION_QUERY);
-            annotationQueryString = client.createUnpaginatedUrl(query, SOLR_SELECTION_QUERY);
-          }
-
-        });
-
-        documentTableCommands.addHandler(SOLR_DOCUMENT_ORDER_UPDATED_COMMAND, function (arguments) {
-          //console.log( SOLR_DOCUMENT_SELECTION_UPDATED_COMMAND + ' executed' );
-          //console.log( arguments );
-
-          client.run(query, SOLR_FULL_QUERY);
-        });
-
-        documentTableCommands.addHandler(SOLR_FIELD_VISIBILITY_UPDATED_COMMAND, function (arguments) {
-          //console.log( SOLR_FIELD_VISIBILITY_UPDATED_COMMAND + ' executed' );
-          //console.log( arguments );
-
-          client.run(query, SOLR_FULL_QUERY);
-        });
-
-
-        documentTableCommands.addHandler(SOLR_DOCUMENT_COUNT_PER_PAGE_UPDATED_COMMAND, function (arguments) {
-          //console.log( SOLR_DOCUMENT_COUNT_PER_PAGE_UPDATED_COMMAND + ' executed' );
-          //console.log( arguments );
-
-          client.run(query, SOLR_FULL_QUERY);
-        });
-
-
-        documentTableCommands.addHandler(SOLR_DOCUMENT_TABLE_PAGE_CHANGED_COMMAND, function (arguments) {
-          //console.log( SOLR_DOCUMENT_TABLE_PAGE_CHANGED_COMMAND + ' executed' );
-          //console.log( arguments );
-
-          client.run(query, SOLR_FULL_QUERY);
         });
 
         var facetSelectionUpdated = function (arguments) {
@@ -245,64 +190,11 @@
             });
           });
         }
-
-
-        // --------------
-        // annotation
-        // --------------
-        $(".annotation-buttons button").click(function () {
-          if ($(this).attr("id") == "annotation-button") {
-            showAnnotation = true;
-            dataQuery = query.clone();
-            query = annotationQuery;
-
-            client.initialize(query, false);
-          }
-          else {
-            showAnnotation = false;
-            annotationQuery = query.clone();
-            query = dataQuery;
-
-            client.initialize(query, false);
-          }
-
-          client.run(query, SOLR_FULL_QUERY);
-        });
-
         // do not reset query before execution (otherwise presets such as analysis UUID are lost)
         client.initialize(query, false);
-        client.initialize(annotationQuery, false);
       });
     }
   });
-
-
-//$(".collapse").collapse("show");
-
-  function createSpeciesModal(aresult) {
-      //console.log("contents.js createSpeciesModal called");
-      var ret_buttons = [];
-
-      for (var species in aresult) {
-          var session_url = aresult[species];
-
-          ret_buttons.push({
-              "label": species,
-              "class": "btn-primary",
-              "url": session_url
-          });
-      }
-
-      return ret_buttons;
-  }
-
-
-  var createCallback = function (url) {
-      return function () {
-          window.open(url);
-      };
-  };
-
 // ---------------------------------
 })();
 // end scope
