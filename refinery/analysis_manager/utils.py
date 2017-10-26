@@ -13,8 +13,7 @@ import jsonschema
 import requests
 from requests.packages.urllib3.exceptions import HTTPError
 
-from core.models import (Analysis, NodeSet, Study, Workflow,
-                         WorkflowDataInputMap)
+from core.models import Analysis, Study, Workflow, WorkflowDataInputMap
 from core.utils import get_aware_local_time
 import tool_manager
 
@@ -236,34 +235,4 @@ def _create_analysis_name(current_workflow):
     return "{} {}".format(
         current_workflow.name,
         get_aware_local_time().strftime("%Y-%m-%d @ %H:%M:%S")
-    )
-
-
-def _fetch_node_set(node_set_uuid):
-    """
-    Fetches a NodeSet instance from a given UUID
-    :param node_set_uuid: UUID String
-    :return: <NodeSet>
-    :raises: RuntimeError
-    """
-    try:
-        return NodeSet.objects.get(uuid=node_set_uuid)
-    except(NodeSet.DoesNotExist, NodeSet.MultipleObjectsReturned) as e:
-        raise RuntimeError(
-            "Couldn't fetch NodeSet from UUID: {} {}".format(node_set_uuid, e)
-        )
-
-
-def _fetch_solr_uuids(nodeset_instance):
-    """
-    Fetches solr_uuids from a given NodeSet instance
-    :param nodeset_instance: <NodeSet> instance
-    :return: list of UUIDs corresponding to Nodes indexed in Solr
-    """
-    curr_node_dict = json.loads(nodeset_instance.solr_query_components)
-    return get_solr_results(
-        nodeset_instance.solr_query,
-        only_uuids=True,
-        selected_mode=curr_node_dict['documentSelectionBlacklistMode'],
-        selected_nodes=curr_node_dict['documentSelection']
     )

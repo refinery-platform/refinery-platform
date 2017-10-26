@@ -15,12 +15,10 @@ import mock
 from analysis_manager.models import AnalysisStatus
 from analysis_manager.tasks import (_check_galaxy_history_state, _get_analysis,
                                     _get_analysis_status, run_analysis)
-from analysis_manager.utils import (_fetch_node_set,
-                                    fetch_objects_required_for_analysis,
+from analysis_manager.utils import (fetch_objects_required_for_analysis,
                                     validate_analysis_config)
 from analysis_manager.views import analysis_status, run
-from core.models import (Analysis, DataSet, NodeSet, Project, Workflow,
-                         WorkflowEngine)
+from core.models import Analysis, DataSet, Project, Workflow, WorkflowEngine
 from data_set_manager.models import Assay
 from factory_boy.utils import (create_dataset_with_necessary_models,
                                make_analyses_with_single_dataset)
@@ -189,20 +187,6 @@ class AnalysisUtilsTests(TestCase):
                 }
             )
             self.assertIn("Couldn't fetch DataSet", context.exception.message)
-
-    def test_fetch_nodeset_valid_uuid(self):
-        nodeset = NodeSet.objects.create(
-            study=self.study,
-            assay=self.assay
-        )
-        self.assertEqual(
-            nodeset,
-            _fetch_node_set(nodeset.uuid)
-        )
-
-    def test_fetch_nodeset_invalid_uuid(self):
-        with self.assertRaises(RuntimeError):
-            _fetch_node_set(str(uuid.uuid4()))
 
 
 class AnalysisViewsTests(AnalysisManagerTestBase, ToolManagerTestBase):
