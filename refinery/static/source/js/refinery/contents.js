@@ -123,9 +123,8 @@
                 });
               //global event to update angularjs nodeSetList);
               // console.log("Updated current selection node set (facet selection).");
-             } *//
-          }
-          else {
+             } **/
+          } else {
             dataQueryString = client.createUnpaginatedUrl(dataQuery, SOLR_SELECTION_QUERY);
           }
 
