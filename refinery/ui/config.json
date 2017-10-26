@@ -17,25 +17,20 @@
   },
   "files": {
     "features": [
-      "analysis-launch",
       "analysis-monitor",
       "chart",
       "collaboration",
       "commons",
       "dashboard",
-      "data-set-explorer",
       "data-set-import",
       "data-set-nav",
       "file-browser",
       "data-set-about",
       "globals",
       "metadata-table-import",
-      "node-mapping",
-      "node-relationship",
       "statistics",
       "tool-launch",
-      "user-file-browser",
-      "workflows"
+      "user-file-browser"
     ],
     "vendor": {
       "css": [
