@@ -8,12 +8,10 @@ from __future__ import absolute_import
 import ast
 from collections import defaultdict
 from datetime import datetime
-import json
 import logging
 import os
 import smtplib
 import socket
-from urllib import quote
 from urlparse import urljoin
 
 from django import forms
@@ -1385,10 +1383,6 @@ class Analysis(OwnableResource):
             self.data_set.get_latest_study().id,
             self.data_set.get_latest_assay().id,
         )
-
-    def data_sets_query(self):
-        analysis_facet_name = self.facet_name()
-        return quote(json.dumps({analysis_facet_name: self.uuid}))
 
     def send_email(self):
         """Sends an email when the analysis is finished"""
