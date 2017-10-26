@@ -1,0 +1,37 @@
+<div class="modal-header p-t-1-2 p-b-1-2">
+  <h3 class="{{$ctrl.modalData.textMsgType}}">
+    <a ng-click="$ctrl.closeModal()">
+      <i class="fa fa-times close" aria-hidden="true"></i>
+    </a>
+    <span ng-if="$ctrl.addIcon">
+      <i
+        class="fa"
+        ng-class="$ctrl.modalData.msgType ===
+        'success' ? 'fa-check-circle' : 'fa-exclamation-triangle'"
+        aria-hidden="true"></i>
+    </span>
+    {{ $ctrl.modalData.header }}
+  </h3>
+</div>
+<div class="modal-body">
+  <p class="lead">
+    {{$ctrl.modalData.introMsg}}
+  </p>
+  <div>
+    <p class="small">
+      <ul class="list-unstyled">
+        <li ng-if="$ctrl.modalData.apiStatus.length || $ctrl.modalData.apiStatus > 0">
+          Status: {{$ctrl.modalData.apiStatus}}
+        </li>
+        <li ng-if="$ctrl.modalData.apiMsg.length">
+          Message: {{$ctrl.modalData.apiMsg}}
+        </li>
+      </ul>
+    </p>
+  </div>
+</div>
+<div class="modal-footer">
+  <button class="refinery-base btn btn-default" ng-click="$ctrl.closeModal()">
+    Close
+  </button>
+</div>

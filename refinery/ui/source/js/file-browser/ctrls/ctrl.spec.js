@@ -34,10 +34,6 @@
       expect(ctrl.isOwner).toEqual(false);
     });
 
-    it('canEdit should exist', function () {
-      expect(ctrl.canEdit).toBeDefined(false);
-    });
-
     it('Data & UI displays variables should exist for views', function () {
       expect(ctrl.assayAttributes).toEqual([]);
       expect(ctrl.collapsedToolPanel).toEqual(true);

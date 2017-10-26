@@ -1,14 +1,13 @@
 <div class="dataSetTabContent" id="files">
   <!-- filters and content  -->
-  <div class="row y-scrollable m-t-1-2 p-t-1">
+  <div class="row y-scrollable">
     <div
-      class="col-lg-3 col-md-3 col-sm-4"
+      class="col-lg-3 col-md-3 col-sm-4 p-r-1"
       ng-if="!FBCtrl.collapsedToolPanel">
         <rp-tool-display></rp-tool-display>
     </div>
-    <div class="col-lg-2 col-md-2 col-sm-3">
+    <div class="col-lg-2 col-md-2 col-sm-3 p-r-1">
       <div class="row"
-        ng-if="FBCtrl.isOwner || FBCtrl.canEdit"
         id="tool-panel-show-button">
 
         <button
@@ -26,7 +25,7 @@
         </button>
 
         <span class="float-right">
-          <span ng-if="FBCtrl.isOwner" class="btn btn-sm">
+          <span ng-if="FBCtrl.isOwner" class="refinery-base btn btn-default btn-sm">
             <i class="fa fa-wrench" rp-assay-files-util-modal></i>
           </span>
           <a
@@ -44,7 +43,7 @@
         </span>
 
       </div>
-      <div class="row" id="table-filter">
+      <div id="table-filter">
         <div id="filter-panel-body">
           <rp-file-browser-assay-filters>
           </rp-file-browser-assay-filters>
