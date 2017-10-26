@@ -106,6 +106,11 @@ class ToolManagerMocks(TestCase):
         ).start()
 
         # Galaxy Library mocks
+        self.create_library_mock = mock.patch.object(
+            LibraryClient,
+            "create_library",
+            return_value=library_dict
+        ).start()
         self.delete_library_mock = mock.patch.object(
             LibraryClient, "delete_library"
         ).start()
@@ -150,9 +155,6 @@ class ToolManagerMocks(TestCase):
         ).start()
         self.create_history_mock = mock.patch.object(
             WorkflowTool, "create_galaxy_history", return_value=history_dict
-        ).start()
-        self.create_library_mock = mock.patch.object(
-            WorkflowTool, "create_galaxy_library", return_value=library_dict
         ).start()
         self.tool_data_mock = mock.patch.object(
             WorkflowTool, "_get_tool_data",
@@ -2372,6 +2374,12 @@ class WorkflowToolTests(ToolManagerTestBase):
         # Assert that the Output file w/ a
         # RenamedDatasetAction in Galaxy was edited
         self.assertEqual(edited_galaxy_datasets[0]["name"], new_dataset_name)
+
+    def test_create_galaxy_library_sets_analysis_library_id(self):
+        self.create_tool(ToolDefinition.WORKFLOW)
+        self.assertIsNone(self.tool.analysis.library_id)
+        self.tool.create_galaxy_library()
+        self.assertEqual(self.tool.analysis.library_id, library_dict["id"])
 
 
 class ToolAPITests(APITestCase, ToolManagerTestBase):
