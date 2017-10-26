@@ -1472,7 +1472,7 @@ class VisualizationToolTests(ToolManagerTestBase):
                         "name": node.name,
                         "type": node.type,
                         "file_uuid": node.file_uuid,
-                        "organism_Characteristics_generic_s": "Mus musculus",
+                        "organism_Characteristics_generic_s": "Mus musculus"
                     }
                 } for node in self.tool._get_input_nodes()
             }
