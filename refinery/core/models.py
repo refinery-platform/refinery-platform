@@ -1379,22 +1379,16 @@ class Analysis(OwnableResource):
             input_file_uuid_list.append(cur_fs_uuid)
         return input_file_uuid_list
 
-    def data_sets_query(self):
-        analysis_facet_name = '{}_{}_{}_s'.format(
-            NodeIndex.ANALYSIS_UUID_PREFIX,
-            self.data_set.get_latest_study().id,
-            self.data_set.get_latest_assay().id,
-        )
-        return quote(json.dumps({analysis_facet_name: self.uuid}))
-
     def facet_name(self):
-        facet_name = '{}_{}_{}_s'.format(
+        return '{}_{}_{}_s'.format(
             NodeIndex.ANALYSIS_UUID_PREFIX,
             self.data_set.get_latest_study().id,
             self.data_set.get_latest_assay().id,
         )
 
-        return facet_name
+    def data_sets_query(self):
+        analysis_facet_name = self.facet_name()
+        return quote(json.dumps({analysis_facet_name: self.uuid}))
 
     def send_email(self):
         """Sends an email when the analysis is finished"""
