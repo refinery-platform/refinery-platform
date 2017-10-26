@@ -64,7 +64,8 @@ from selenium_testing.utils import (MAX_WAIT, SeleniumTestBaseGeneric,
 from tool_manager.tasks import django_docker_cleanup
 
 from .models import (FileRelationship, GalaxyParameter, InputFile, Parameter,
-                     Tool, ToolDefinition, VisualizationTool, WorkflowTool)
+                     Tool, ToolDefinition, VisualizationTool,
+                     VisualizationToolError, WorkflowTool)
 from .utils import (create_tool, create_tool_definition,
                     validate_tool_annotation,
                     validate_tool_launch_configuration,
@@ -3029,12 +3030,12 @@ class VisualizationToolLaunchTests(ToolManagerTestBase,  # TODO: Cypress
                 count=i+1
             )
 
-        with self.assertRaises(AssertionError):
-            # '400 != 200': Not what we really want?
+        with self.assertRaises(VisualizationToolError) as context:
             self._start_visualization(
                 'hello_world.json',
                 "https://www.example.com/file.txt"
             )
+        self.assertIn("Max containers", context.exception.message)
 
     def test__get_launch_parameters(self):
         def assertions(tool):
