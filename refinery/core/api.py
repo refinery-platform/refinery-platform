@@ -41,10 +41,9 @@ from tastypie.resources import ModelResource, Resource
 from tastypie.utils import trailing_slash
 
 from core.models import (Analysis, DataSet, ExtendedGroup, GroupManagement,
-                         Invitation, NodePair, NodeRelationship, NodeSet,
-                         Project, ResourceStatistics, Tutorials,
-                         UserAuthentication, UserProfile, Workflow,
-                         WorkflowInputRelationships)
+                         Invitation, NodePair, NodeSet, Project,
+                         ResourceStatistics, Tutorials, UserAuthentication,
+                         UserProfile, Workflow, WorkflowInputRelationships)
 from core.utils import get_data_sets_annotations, get_resources_for_user
 from data_set_manager.api import (AssayResource, InvestigationResource,
                                   StudyResource)
@@ -1280,31 +1279,6 @@ class NodePairResource(ModelResource):
         # for use with AngularJS $resources: returns newly created object upon
         # POST (in addition to the location response header)
         always_return_data = True
-
-
-class NodeRelationshipResource(ModelResource):
-    name = fields.CharField(attribute='name', null=True)
-    type = fields.CharField(attribute='type', null=True)
-    # , full=True), if you need each attribute for each nodepair
-    node_pairs = fields.ToManyField(NodePairResource, 'node_pairs')
-    study = fields.ToOneField(StudyResource, 'study')
-    assay = fields.ToOneField(AssayResource, 'assay')
-
-    class Meta:
-        detail_allowed_methods = ['get', 'post', 'delete', 'put', 'patch']
-        queryset = NodeRelationship.objects.all().order_by('-is_current',
-                                                           'name')
-        detail_resource_name = 'noderelationship'
-        resource_name = 'noderelationship'
-        detail_uri_name = 'uuid'
-        authentication = SessionAuthentication()
-        authorization = Authorization()
-        # for use with AngularJS $resources: returns newly created object upon
-        # POST (in addition to the location response header)
-        always_return_data = True
-        # fields = ['type', 'study', 'assay', 'node_pairs']
-        ordering = ['is_current', 'name', 'type', 'node_pairs']
-        filtering = {'study': ALL_WITH_RELATIONS, 'assay': ALL_WITH_RELATIONS}
 
 
 class StatisticsResource(Resource):

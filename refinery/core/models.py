@@ -2093,51 +2093,6 @@ class NodePair(models.Model):
     group = models.IntegerField(blank=True, null=True)
 
 
-class NodeRelationship(BaseResource):
-    """A collection of Nodes NodePair, representing connections between data
-    files, i.e. input/chip pairs. Used to define a collection of connections
-    between data files for a specified data set.
-    """
-    #: must refer to type from noderelationshiptype
-    type = models.CharField(max_length=15, choices=NR_TYPES, blank=True)
-    #: references multiple nodepair relationships
-    node_pairs = models.ManyToManyField(NodePair, related_name='node_pairs',
-                                        blank=True, null=True)
-    #: references node_sets that were used to determine this relationship
-    node_set_1 = models.ForeignKey(NodeSet, related_name='node_set_1',
-                                   blank=True, null=True)
-    node_set_2 = models.ForeignKey(NodeSet, related_name='node_set_2',
-                                   blank=True, null=True)
-    study = models.ForeignKey(Study)
-    assay = models.ForeignKey(Assay)
-    # is this the "current mapping" node set for the associated study/assay?
-    is_current = models.BooleanField(default=False)
-
-    def __unicode__(self):
-        return (
-            self.name + ("*" if self.is_current else "") + " - " +
-            str(self.study.title)
-        )
-
-
-def get_current_node_relationship(study_uuid, assay_uuid):
-    """Retrieve current node relationship. Create current node relationship if
-    does not exist.
-    """
-    relationship = None
-
-    try:
-        relationship = NodeRelationship.objects.get_or_create(
-            study__uuid=study_uuid,
-            assay__uuid=assay_uuid,
-            is_current=True
-        )
-    except NodeSet.MultipleObjectsReturned as e:
-        logger.error("%s for %s/assay/%s", e, study_uuid, assay_uuid)
-    finally:
-        return relationship
-
-
 class RefineryLDAPBackend(LDAPBackend):
     """Custom LDAP authentication class"""
 

@@ -13,7 +13,7 @@ import jsonschema
 import requests
 from requests.packages.urllib3.exceptions import HTTPError
 
-from core.models import (Analysis, NodeRelationship, NodeSet, Study, Workflow,
+from core.models import (Analysis, NodeSet, Study, Workflow,
                          WorkflowDataInputMap)
 from core.utils import get_aware_local_time
 import tool_manager
@@ -237,23 +237,6 @@ def _create_analysis_name(current_workflow):
         current_workflow.name,
         get_aware_local_time().strftime("%Y-%m-%d @ %H:%M:%S")
     )
-
-
-def _fetch_node_relationship(node_relationship_uuid):
-    """
-    Fetches a NodeRelationship instance from a given UUID
-    :param node_relationship_uuid: UUID String
-    :return: <NodeRelationship>
-    :raises: RuntimeError
-    """
-    try:
-        return NodeRelationship.objects.get(uuid=node_relationship_uuid)
-    except(NodeRelationship.DoesNotExist,
-           NodeRelationship.MultipleObjectsReturned) as e:
-        raise RuntimeError(
-            "Couldn't fetch NodeRelationship from UUID: {} {}"
-            .format(node_relationship_uuid, e)
-        )
 
 
 def _fetch_node_set(node_set_uuid):
