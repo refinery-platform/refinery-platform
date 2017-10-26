@@ -1703,6 +1703,9 @@ DashboardCtrl.prototype.openDataSetDeleteModal = function (dataSet) {
     'partials/dashboard/partials/dataset-delete-dialog.html'
   );
 
+  console.log('in the open modal');
+  console.log(this.analyses);
+
   this.$uibModal.open({
     backdrop: 'static',
     keyboard: false,
