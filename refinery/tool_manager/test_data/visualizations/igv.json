@@ -4,11 +4,11 @@
   "annotation": {
     "container_input_path": "/var/www/data/input.json",
     "extra_directories": ["/refinery-data"],
-    "image_name": "gehlenborglab/docker_igv_js:igv-1-0-8",
+    "image_name": "gehlenborglab/docker_igv_js:v0.0.3",
     "description": "This visualization does really cool things... with IGV",
     "parameters": [
       {
-        "name": "Genome Build Param",
+        "name": "Genome Build",
         "description": "Genome Build Param description",
         "value_type": "GENOME_BUILD",
         "default_value": "hg19"
