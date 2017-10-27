@@ -3367,7 +3367,7 @@ class ToolManagerUtilitiesTests(ToolManagerTestBase):
                 }
             ]
         )
-        os.remove(tool_definition_name)
+        os.remove(tool_definition_path)
 
     @mock.patch(
         "bioblend.galaxy.workflows.WorkflowClient.export_workflow_json",
