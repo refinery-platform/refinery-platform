@@ -1,34 +1,6 @@
 'use strict';
 /* eslint-disable */
 /**
- * Angular module for the provenance visualization.
- */
-angular
-  .module('refineryProvvis', [])
-  .controller('provvisNavbarController', ['$scope', function ($scope) {
-    $scope.name = 'Navbar';
-  }])
-  .controller('provvisCanvasController', ['$scope', function ($scope) {
-    $scope.name = 'Canvas';
-  }])
-  .directive('provvisNavBar', ['$window', function ($window) {
-    return {
-      templateUrl: function () {
-        return $window.getStaticUrl('partials/provvis/partials/provvis-navbar.html');
-      },
-      restrict: 'A'
-    };
-  }])
-  .directive('provvisCanvas', ['$window', function ($window) {
-    return {
-      templateUrl: function () {
-        return $window.getStaticUrl('partials/provvis/partials/provvis-canvas.html');
-      },
-      restrict: 'A'
-    };
-  }]);
-
-/**
  * The refinery provenance graph visualization.
  *
  * @author sluger Stefan Luger https://github.com/sluger
