@@ -2,6 +2,7 @@ import StringIO
 import ast
 import json
 import logging
+import os
 import time
 from urlparse import urljoin
 import uuid
@@ -57,7 +58,7 @@ from factory_boy.django_model_factories import (AnnotatedNodeFactory,
                                                 AttributeFactory, NodeFactory,
                                                 ParameterFactory, ToolFactory)
 from factory_boy.utils import create_dataset_with_necessary_models
-from file_store.models import FileStoreItem
+from file_store.models import FileStoreItem, FileType
 from galaxy_connector.models import Instance
 from selenium_testing.utils import (MAX_WAIT, SeleniumTestBaseGeneric,
                                     wait_until_class_visible)
@@ -66,8 +67,9 @@ from tool_manager.tasks import django_docker_cleanup
 from .models import (FileRelationship, GalaxyParameter, InputFile, Parameter,
                      Tool, ToolDefinition, VisualizationTool,
                      VisualizationToolError, WorkflowTool)
-from .utils import (create_tool, create_tool_definition,
-                    validate_tool_annotation,
+from .utils import (FileTypeValidationError, create_tool,
+                    create_tool_definition, get_visualization_annotations_list,
+                    get_workflows, validate_tool_annotation,
                     validate_tool_launch_configuration,
                     validate_workflow_step_annotation)
 from .views import ToolDefinitionsViewSet, ToolsViewSet
@@ -1288,6 +1290,47 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
                 visualization_annotation
             )
             self.assertEqual(ToolDefinition.objects.count(), 0)
+
+    def _assert_visualization_tool_def_exception_contents(
+        self,
+        exception,
+        tool_annotation_name,
+        messages
+    ):
+        assert type(messages) == list
+        with open(
+            "{}/visualizations/{}.json".format(
+                TEST_DATA_PATH,
+                tool_annotation_name
+            )
+        ) as f:
+            tool_annotation = [json.loads(f.read())]
+
+        with mock.patch(
+                self.mock_vis_annotations_reference,
+                return_value=tool_annotation
+        ):
+            with self.assertRaises(exception) as context:
+                call_command("generate_tool_definitions", visualizations=True)
+            [self.assertIn(message, context.exception.message)
+             for message in messages]
+
+    def test_visualization_generation_with_no_image_version_yields_error(self):
+        self._assert_visualization_tool_def_exception_contents(
+            CommandError,
+            "no_docker_image_version",
+            ["no specified version"]
+        )
+
+    def test_tool_def_generation_with_bad_filetype_yields_error(self):
+        self._assert_visualization_tool_def_exception_contents(
+            CommandError,
+            "bad_filetype",
+            [
+                "BAD FILETYPE",
+                str([filetype.name for filetype in FileType.objects.all()])
+            ]
+        )
 
 
 class ToolDefinitionTests(ToolManagerTestBase):
@@ -3284,3 +3327,89 @@ class ToolLaunchConfigurationTests(ToolManagerTestBase):
             )
         }
         validate_tool_launch_configuration(tool_launch_configuration)
+
+
+class ToolManagerUtilitiesTests(ToolManagerTestBase):
+    def test_file_type_validation_error(self):
+        bad_filetype = "COFFEE"
+        error_message = "FileType `{}` does not exist".format(bad_filetype)
+
+        file_type_validation_error = FileTypeValidationError(
+            bad_filetype,
+            error_message
+        )
+        self.assertIn(bad_filetype, file_type_validation_error.message)
+        self.assertIn(error_message, file_type_validation_error.message)
+        self.assertIn(
+            str([f.name for f in FileType.objects.all()]),
+            file_type_validation_error.message
+        )
+
+    def test_get_visualization_annotations_list(self):
+        settings.VISUALIZATION_ANNOTATION_BASE_PATH = os.path.dirname(__file__)
+        tool_definition_name = "dummy.json"
+        tool_definition = {
+            "is_tool_definition": True
+        }
+        tool_definition_path = os.path.join(
+            settings.VISUALIZATION_ANNOTATION_BASE_PATH,
+            tool_definition_name
+        )
+        with open(tool_definition_path, "w") as f:
+            f.write(json.dumps(tool_definition))
+
+        visualization_annotations = get_visualization_annotations_list()
+        self.assertEqual(
+            visualization_annotations,
+            [
+                {
+                    "is_tool_definition": True
+                }
+            ]
+        )
+        os.remove(tool_definition_path)
+
+    @mock.patch(
+        "bioblend.galaxy.workflows.WorkflowClient.export_workflow_json",
+        return_value="workflow_graph"
+    )
+    @mock.patch(
+        "bioblend.galaxy.workflows.WorkflowClient.show_workflow",
+        return_value={"graph": None}
+    )
+    def test_get_workflows(self, show_workflow_mock, exported_workflow_mock):
+        with mock.patch.object(
+            bioblend.galaxy.workflows.WorkflowClient,
+            "get_workflows",
+            return_value=[{"id": self.GALAXY_ID_MOCK}]
+        ) as bioblend_get_workflows_mock:
+            workflows = get_workflows()
+        self.assertEqual(
+            workflows,
+            {
+                self.workflow_engine.uuid: [
+                    {
+                        "graph": "workflow_graph"
+                    }
+                ]
+            }
+        )
+
+        self.assertTrue(bioblend_get_workflows_mock.called)
+        self.assertTrue(show_workflow_mock.called)
+        self.assertTrue(exported_workflow_mock.called)
+
+    def test_get_workflows_with_connection_error(self):
+        with mock.patch.object(
+            bioblend.galaxy.workflows.WorkflowClient,
+            "get_workflows",
+            side_effect=bioblend.ConnectionError("Bad Connection")
+        ):
+            with self.assertRaises(RuntimeError) as context:
+                get_workflows()
+            self.assertIn(
+                "Unable to retrieve workflows from '{}'".format(
+                    self.workflow_engine.instance.base_url
+                ),
+                context.exception.message
+            )
