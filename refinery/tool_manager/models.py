@@ -798,9 +798,12 @@ class WorkflowTool(Tool):
 
     @handle_bioblend_exceptions
     def create_galaxy_library(self):
-        return self.galaxy_connection.libraries.create_library(
+        galaxy_library_dict = self.galaxy_connection.libraries.create_library(
             name="Library for: {}".format(self)
         )
+        self.analysis.library_id = galaxy_library_dict["id"]
+        self.analysis.save()
+        return galaxy_library_dict
 
     def _create_workflow_inputs_dict(self):
         """

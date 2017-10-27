@@ -8,12 +8,10 @@ from __future__ import absolute_import
 import ast
 from collections import defaultdict
 from datetime import datetime
-import json
 import logging
 import os
 import smtplib
 import socket
-from urllib import quote
 from urlparse import urljoin
 
 from django import forms
@@ -1379,13 +1377,12 @@ class Analysis(OwnableResource):
             input_file_uuid_list.append(cur_fs_uuid)
         return input_file_uuid_list
 
-    def data_sets_query(self):
-        analysis_facet_name = '{}_{}_{}_s'.format(
+    def facet_name(self):
+        return '{}_{}_{}_s'.format(
             NodeIndex.ANALYSIS_UUID_PREFIX,
             self.data_set.get_latest_study().id,
             self.data_set.get_latest_assay().id,
         )
-        return quote(json.dumps({analysis_facet_name: self.uuid}))
 
     def send_email(self):
         """Sends an email when the analysis is finished"""
@@ -1417,10 +1414,7 @@ class Analysis(OwnableResource):
             # TODO: avoid hardcoding URL protocol
             context_dict['url'] = urljoin(
                 "http://" + site_domain,
-                "data_sets/{}/#/files/?{}".format(
-                    data_set_uuid,
-                    self.data_sets_query()
-                )
+                "data_sets/{}/#/analyses".format(data_set_uuid)
             )
         else:
             email_subj = "[{}] Archive creation failed: {}".format(

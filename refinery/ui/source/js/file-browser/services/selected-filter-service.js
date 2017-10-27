@@ -13,7 +13,7 @@
     vm.addSelectedField = addSelectedField;
     vm.encodeAttributeFields = encodeAttributeFields;
     vm.resetAttributeFilter = resetAttributeFilter;
-    vm.stringifyAndEncodeAttributeObj = stringifyAndEncodeAttributeObj;
+    vm.stringifyAttributeObj = stringifyAttributeObj;
     vm.updateUrlQuery = updateUrlQuery;
     vm.updateSelectedFilters = updateSelectedFilters;
 
@@ -87,9 +87,9 @@
      * @param {string} internalName - attribute internal name,'Month_Characteristics_10_5_s'
      * @param {string} field - fieldName
      */
-    function stringifyAndEncodeAttributeObj (internalName, field) {
+    function stringifyAttributeObj (internalName, field) {
       var attributeFieldSelected = {};
-      attributeFieldSelected[internalName] = $window.encodeURIComponent(field);
+      attributeFieldSelected[internalName] = field;
       return JSON.stringify(attributeFieldSelected);
     }
 
@@ -103,7 +103,7 @@
      * @param {string} field - Field name, 'March'
      */
     function updateSelectedFilters (activeFields, internalName, field) {
-      var encodedSelection = vm.stringifyAndEncodeAttributeObj(internalName, field);
+      var encodedSelection = vm.stringifyAttributeObj(internalName, field);
       // Check if attribute already exists in attributeSelectedFields
       if (activeFields[field] && vm.attributeSelectedFields[internalName]) {
         // checks if selected fields exists in the attibute object

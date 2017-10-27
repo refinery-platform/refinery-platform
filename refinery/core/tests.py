@@ -2,7 +2,6 @@ import json
 import random
 import re
 import string
-from urllib import quote
 from urlparse import urljoin
 
 from django.contrib.auth.models import AnonymousUser, Group, User
@@ -10,7 +9,6 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.utils import timezone
 
-from constants import UUID_RE
 from guardian.shortcuts import assign_perm, get_objects_for_group
 import mock
 import mockcache as memcache
@@ -1553,11 +1551,10 @@ class AnalysisTests(TestCase):
             []
         )
 
-    def test_data_sets_query(self):
+    def test_facet_name(self):
         self.assertRegexpMatches(
-            self.analysis_with_node_analyzed_further.data_sets_query(),
-            quote('{"REFINERY_ANALYSIS_UUID_') + r'\d+_\d+' +
-            quote('_s": "') + UUID_RE + quote('"}')
+            self.analysis_with_node_analyzed_further.facet_name(),
+            'REFINERY_ANALYSIS_UUID_' + r'\d+_\d+' + '_s'
         )
 
     @mock.patch("core.models.index_annotated_nodes_selection")

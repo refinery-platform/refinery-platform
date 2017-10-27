@@ -29,55 +29,51 @@
 
 {% block content %}
   <!-- tab headers -->
-
-<div ng-controller="DataSetNavCtrl" ng-cloak>
-  <div ng-controller="DataSetUiModeCtrl">
-
-    <div class="refinery-panel-tabs">
-      <div class="row">
-        <div class="col-md-9 col-md-offset-3">
-          <ul class="nav nav-tabs float-right" id="tabs">
-            <li ui-sref-active="active" id="filesTab">
-              <a ui-sref="files" class="dataSetTabs">
-                Files
-              </a>
-            </li>
-            <li ui-sref-active="active">
-              <a ui-sref="analyses" id="analyze-tab" class="dataSetTabs">
-                <span ng-controller="AnalysisMonitorCtrl">
-                  <span rp-analysis-monitor-running-tab-icon></span>
-                </span>
-                Analyses
-              </a>
-            </li>
-             <li ui-sref-active="active">
-              <a ui-sref="about" class="dataSetTabs" >
-                Details
-              </a>
-            </li>
-            <li>
-              <a href="/provenance/{{ data_set.uuid }}">Provenance</a>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </div>
-    <div class="refinery-panel refinery-panel-content jquery-full-height
-    handle-overflow" id="data-set-view">
-      {% if data_set %}
-        <!-- tabs -->
-        <form id="sampleForm" method="post" class="form-inline" hidden>
-          {% csrf_token %}
-          <!-- pass study information into the receiving view when posting -->
-          <input type="hidden" name="study_uuid" value="{{ study_uuid }}"/>
-        </form>
-        <!-- Tab views -->
-        <div ui-view></div>
-     {% else %}
-        <p>No valid data set.</p>
-      {% endif %}
+<div class="refinery-panel-tabs">
+  <div class="row">
+    <div class="col-md-9 col-md-offset-3">
+      <ul class="nav nav-tabs float-right" id="tabs">
+        <li ui-sref-active="active" id="filesTab">
+          <a ui-sref="files" class="dataSetTabs">
+            Files
+          </a>
+        </li>
+        <li ui-sref-active="active">
+          <a ui-sref="analyses" id="analyze-tab" class="dataSetTabs">
+            <span ng-controller="AnalysisMonitorCtrl">
+              <span rp-analysis-monitor-running-tab-icon></span>
+            </span>
+            Analyses
+          </a>
+        </li>
+         <li ui-sref-active="active">
+          <a ui-sref="about" class="dataSetTabs" >
+            Details
+          </a>
+        </li>
+        <li>
+          <a href="/provenance/{{ data_set.uuid }}">Provenance</a>
+        </li>
+      </ul>
     </div>
   </div>
+</div>
+
+
+<div class="refinery-panel refinery-panel-content jquery-full-height
+handle-overflow" id="data-set-view">
+  {% if data_set %}
+    <!-- tabs -->
+    <form id="sampleForm" method="post" class="form-inline" hidden>
+      {% csrf_token %}
+      <!-- pass study information into the receiving view when posting -->
+      <input type="hidden" name="study_uuid" value="{{ study_uuid }}"/>
+    </form>
+    <!-- Tab views -->
+    <div ui-view></div>
+ {% else %}
+    <p>No valid data set.</p>
+  {% endif %}
 </div>
 
 {% endblock %}
