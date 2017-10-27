@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="{% static "vendor/select2/select2.css" %}" />
   <link rel="styleSheet" href="{% static "vendor/angular-ui-grid/ui-grid.min.css" %}"/>
   <link rel="stylesheet" href="{% static "vendor/ui-select/dist/select.min.css" %}" />
+
 {% endblock head_html %}
 
 {% block title %} - Data Set
@@ -29,6 +30,7 @@
 
 {% block content %}
   <!-- tab headers -->
+
 
 <div class="refinery-panel-tabs">
   <div class="row">
@@ -88,8 +90,13 @@ handle-overflow" id="data-set-view">
 
   <!-- Refinery libraries -->
   <script type="text/javascript">
+    var REFINERY_BASE_URL = document.location.host;
+    var REFINERY_API_BASE_URL = "/api/v1/";
+    var REFINERY_SOLR_BASE_URL = "{{ REFINERY_SOLR_BASE_URL }}";
     var externalAssayUuid = "{{ assay_uuid }}";
     var externalStudyUuid = "{{ study_uuid }}";
+    var externalAssayId = "{{ assay_id }}";
+    var externalStudyId = "{{ study_id }}";
     var dataSetUuid = "{{ data_set.uuid }}";
     var analysisUuid = "{{ analysis_uuid }}";
 
