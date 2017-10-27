@@ -4035,8 +4035,9 @@ var provvisRender = (function () {
     });
 
     /* TODO: Fix for temporary sidebar overlap. */
+    // 600 is a temp fix for depending on solr-facet-view dom object
     var sidebarOverlap = $('#provenance-sidebar').width() -
-    $('#solr-facet-view').width() -
+    600 -
     parseFloat($('#main-area').css('margin-left').replace('px', ''));
 
 
