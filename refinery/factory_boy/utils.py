@@ -57,14 +57,17 @@ def make_analyses_with_single_dataset(number_to_create, user_instance):
         analysis.save()
 
 
-def create_dataset_with_necessary_models(create_nodes=True):
+def create_dataset_with_necessary_models(
+        create_nodes=True, user=None, slug=None
+):
     """Create Dataset with InvestigationLink, Investigation, Study,
     and Assay"""
     dataset_uuid = str(uuid_builtin.uuid4())
     dataset = DataSetFactory(
         uuid=dataset_uuid,
         title="Test DataSet - {}".format(dataset_uuid),
-        name="Test DataSet - {}".format(dataset_uuid)
+        name="Test DataSet - {}".format(dataset_uuid),
+        slug=slug
     )
 
     investigation_uuid = str(uuid_builtin.uuid4())
@@ -106,5 +109,9 @@ def create_dataset_with_necessary_models(create_nodes=True):
                 node_type=Node.RAW_DATA_FILE,
                 attribute=attribute
             )
+
+    if user is not None:
+        dataset.set_owner(user)
+        dataset.save()
 
     return dataset

@@ -11,13 +11,14 @@
     .module('refineryToolLaunch')
     .factory('toolSelectService', toolSelectService);
 
-  toolSelectService.$inject = ['toolDefinitionsService'];
+  toolSelectService.$inject = ['$window', 'toolDefinitionsService'];
 
-  function toolSelectService (toolDefinitionsService) {
+  function toolSelectService ($window, toolDefinitionsService) {
     var selectedTool = {};
     var toolList = [];
     var isToolInfoCollapsed = true;
     var isToolPanelCollapsed = true;
+    var dataSetUuid = $window.dataSetUuid;
 
     var service = {
       getTools: getTools,
@@ -50,7 +51,11 @@
      * @memberOf refineryToolLaunch.toolSelectService
     **/
     function getTools () {
-      var toolDefs = toolDefinitionsService.query();
+      var params = {
+        dataSetUuid: dataSetUuid
+      };
+
+      var toolDefs = toolDefinitionsService.query(params);
       toolDefs.$promise.then(function (response) {
         angular.copy(response, toolList);
       });

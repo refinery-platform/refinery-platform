@@ -8,7 +8,6 @@ import ast
 from datetime import timedelta
 import json
 import logging
-import re
 from sets import Set
 import uuid
 
@@ -33,7 +32,7 @@ from tastypie.authentication import Authentication, SessionAuthentication
 from tastypie.authorization import Authorization
 from tastypie.bundle import Bundle
 from tastypie.constants import ALL, ALL_WITH_RELATIONS
-from tastypie.exceptions import ImmediateHttpResponse, NotFound, Unauthorized
+from tastypie.exceptions import ImmediateHttpResponse, NotFound
 from tastypie.http import (HttpAccepted, HttpBadRequest, HttpCreated,
                            HttpForbidden, HttpGone, HttpMethodNotAllowed,
                            HttpNoContent, HttpNotFound, HttpUnauthorized)
@@ -41,8 +40,7 @@ from tastypie.resources import ModelResource, Resource
 from tastypie.utils import trailing_slash
 
 from core.models import (Analysis, DataSet, ExtendedGroup, GroupManagement,
-                         Invitation, NodePair, NodeRelationship, NodeSet,
-                         Project, ResourceStatistics, Tutorials,
+                         Invitation, Project, ResourceStatistics, Tutorials,
                          UserAuthentication, UserProfile, Workflow,
                          WorkflowInputRelationships)
 from core.utils import get_data_sets_annotations, get_resources_for_user
@@ -1118,193 +1116,6 @@ class NodeResource(ModelResource):
             bundle.data['file_url'] = file_item.get_datafile_url()
             bundle.data['file_import_status'] = file_item.get_import_status()
         return bundle
-
-        # def get_object_list(self, request):
-        #     """
-        #     Temporarily removed for performance reasons (and not required
-        #     without authorization)
-        #     Get all nodes available to the current user (via dataset)
-        #     Temp workaround due to Node being not Ownable
-        #
-        #     """
-        #     user = request.user
-        #     perm = 'read_%s' % DataSet._meta.module_name
-        #     if (user.is_authenticated()):
-        #         allowed_datasets = get_objects_for_user(user, perm, DataSet)
-        #     else:
-        #         allowed_datasets = get_objects_for_group(
-        #             ExtendedGroup.objects.public_group(), perm, DataSet)
-        #     # get list of node UUIDs that belong to all datasets available to
-        #     # the current user
-        #     all_allowed_studies = []
-        #     for dataset in allowed_datasets:
-        #         dataset_studies = dataset.get_investigation().study_set.all()
-        #         all_allowed_studies.extend(
-        #               [study for study in dataset_studies]
-        #         )
-        #     allowed_nodes = []
-        #     for study in all_allowed_studies:
-        #         allowed_nodes.extend(study.node_set.all().values('uuid'))
-        #     # filter nodes using that list
-        #     return super(NodeResource, self).get_object_list(request).filter(
-        #         uuid__in=[node['uuid'] for node in allowed_nodes])
-
-
-class NodeSetResource(ModelResource):
-    # https://github.com/toastdriven/django-tastypie/pull/538
-    # https://github.com/toastdriven/django-tastypie/issues/526
-    # Once the above has been integrated into a tastypie release branch remove
-    # NodeSetListResource and use "use_in" instead
-    # nodes = fields.ToManyField(NodeResource, 'nodes', use_in="detail" )
-
-    solr_query = fields.CharField(attribute='solr_query', null=True)
-    solr_query_components = fields.CharField(
-        attribute='solr_query_components', null=True)
-    node_count = fields.IntegerField(attribute='node_count', null=True)
-    is_implicit = fields.BooleanField(attribute='is_implicit', default=False)
-    study = fields.ToOneField(StudyResource, 'study')
-    assay = fields.ToOneField(AssayResource, 'assay')
-
-    class Meta:
-        # create node count attribute on the fly - node_count field has to be
-        # defined on resource
-        queryset = NodeSet.objects.all().order_by('-is_current', 'name')
-        resource_name = 'nodeset'
-        detail_uri_name = 'uuid'  # for using UUIDs instead of pk in URIs
-        authentication = SessionAuthentication()
-        authorization = Authorization()
-        fields = [
-            'is_current', 'name', 'summary', 'assay', 'study', 'uuid',
-            'is_implicit', 'node_count', 'solr_query', 'solr_query_components'
-        ]
-        ordering = [
-            'is_current', 'name', 'summary', 'assay', 'study', 'uuid',
-            'is_implicit', 'node_count', 'solr_query', 'solr_query_components'
-        ]
-        allowed_methods = ["get", "post", "put"]
-        filtering = {
-            "study": ALL_WITH_RELATIONS, "assay": ALL_WITH_RELATIONS,
-            "uuid": ALL
-        }
-        # jQuery treats a 201 as an error for data type "JSON"
-        always_return_data = True
-
-    def prepend_urls(self):
-        return [
-            url((r"^(?P<resource_name>%s)/(?P<uuid>" + UUID_RE + r")/$") %
-                self._meta.resource_name,
-                self.wrap_view('dispatch_detail'),
-                name="api_dispatch_detail"),
-        ]
-
-    def obj_create(self, bundle, **kwargs):
-        """Create a new NodeSet instance and assign current user as owner if
-        current user has read permission on the data set referenced by the new
-        NodeSet
-        """
-        # get the Study specified by the UUID in the new NodeSet
-        study_uri = bundle.data['study']
-        match = re.search(
-            UUID_RE,
-            study_uri)
-        study_uuid = match.group()
-        try:
-            study = Study.objects.get(uuid=study_uuid)
-        except Study.DoesNotExist:
-            logger.error("Study '%s' does not exist", study_uuid)
-            self.unauthorized_result(
-                Unauthorized("You are not allowed to create a new NodeSet."))
-        # look up the dataset via InvestigationLink relationship
-        # an investigation is only associated with a single dataset even though
-        # InvestigationLink is a many to many relationship
-        try:
-            dataset = \
-                study.investigation.investigationlink_set.all()[0].data_set
-        except IndexError:
-            logger.error("Data set not found in study '%s'", study.uuid)
-            self.unauthorized_result(
-                Unauthorized("You are not allowed to create a new NodeSet."))
-        permission = "read_%s" % dataset._meta.module_name
-        if not bundle.request.user.has_perm(permission, dataset):
-            self.unauthorized_result(
-                Unauthorized("You are not allowed to create a new NodeSet."))
-        # if user has the read permission on the data set
-        # continue with creating the new NodeSet instance
-        bundle = super(NodeSetResource, self).obj_create(bundle, **kwargs)
-        bundle.obj.set_owner(bundle.request.user)
-        return bundle
-
-
-class NodeSetListResource(ModelResource):
-    study = fields.ToOneField(StudyResource, 'study')
-    assay = fields.ToOneField(AssayResource, 'assay')
-    node_count = fields.IntegerField(attribute='node_count', readonly=True)
-    is_implicit = fields.BooleanField(attribute='is_implicit', default=False)
-
-    class Meta:
-        # create node count attribute on the fly - node_count field has to be
-        # defined on resource
-        queryset = NodeSet.objects.all().order_by('-is_current', 'name')
-        # NG: introduced to get correct resource IDs
-        detail_resource_name = 'nodeset'
-        resource_name = 'nodesetlist'
-        detail_uri_name = 'uuid'  # for using UUIDs instead of pk in URIs
-        authentication = SessionAuthentication()
-        authorization = Authorization()
-        fields = ['is_current', 'name', 'summary', 'assay', 'study', 'uuid']
-        allowed_methods = ["get"]
-        filtering = {"study": ALL_WITH_RELATIONS, "assay": ALL_WITH_RELATIONS}
-        ordering = ['is_current', 'name', 'node_count']
-
-    def dehydrate(self, bundle):
-        # replace resource URI to point to the nodeset resource instead of the
-        # nodesetlist resource
-        bundle.data['resource_uri'] = bundle.data['resource_uri'].replace(
-            self._meta.resource_name, self._meta.detail_resource_name)
-        return bundle
-
-
-class NodePairResource(ModelResource):
-    node1 = fields.ToOneField(NodeResource, 'node1')
-    node2 = fields.ToOneField(NodeResource, 'node2', null=True)
-    group = fields.CharField(attribute='group', null=True)
-
-    class Meta:
-        detail_allowed_methods = ['get', 'post', 'delete', 'put', 'patch']
-        queryset = NodePair.objects.all()
-        detail_resource_name = 'nodepair'
-        resource_name = 'nodepair'
-        detail_uri_name = 'uuid'
-        authentication = SessionAuthentication()
-        authorization = Authorization()
-        # for use with AngularJS $resources: returns newly created object upon
-        # POST (in addition to the location response header)
-        always_return_data = True
-
-
-class NodeRelationshipResource(ModelResource):
-    name = fields.CharField(attribute='name', null=True)
-    type = fields.CharField(attribute='type', null=True)
-    # , full=True), if you need each attribute for each nodepair
-    node_pairs = fields.ToManyField(NodePairResource, 'node_pairs')
-    study = fields.ToOneField(StudyResource, 'study')
-    assay = fields.ToOneField(AssayResource, 'assay')
-
-    class Meta:
-        detail_allowed_methods = ['get', 'post', 'delete', 'put', 'patch']
-        queryset = NodeRelationship.objects.all().order_by('-is_current',
-                                                           'name')
-        detail_resource_name = 'noderelationship'
-        resource_name = 'noderelationship'
-        detail_uri_name = 'uuid'
-        authentication = SessionAuthentication()
-        authorization = Authorization()
-        # for use with AngularJS $resources: returns newly created object upon
-        # POST (in addition to the location response header)
-        always_return_data = True
-        # fields = ['type', 'study', 'assay', 'node_pairs']
-        ordering = ['is_current', 'name', 'type', 'node_pairs']
-        filtering = {'study': ALL_WITH_RELATIONS, 'assay': ALL_WITH_RELATIONS}
 
 
 class StatisticsResource(Resource):

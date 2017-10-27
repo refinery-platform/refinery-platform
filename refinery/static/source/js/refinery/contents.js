@@ -111,7 +111,9 @@
           if (!showAnnotation) {
             dataQueryString = client.createUnpaginatedUrl(query, SOLR_SELECTION_QUERY)
 
-            if (nodeSetManager.currentSelectionNodeSet != null) {
+            /** ##ToDo: Selected nodes info should replace the old
+             nodeSetManager code -JM Oct-2017
+             if (nodeSetManager.currentSelectionNodeSet != null) {
               nodeSetManager.currentSelectionNodeSet.solr_query = client.createUrl(query, SOLR_FULL_QUERY);
               nodeSetManager.currentSelectionNodeSet.solr_query_components = query.serialize();
               nodeSetManager.currentSelectionNodeSet.node_count = query.getCurrentDocumentCount();
@@ -121,9 +123,8 @@
                 });
               //global event to update angularjs nodeSetList);
               // console.log("Updated current selection node set (facet selection).");
-            }
-          }
-          else {
+             } **/
+          } else {
             dataQueryString = client.createUnpaginatedUrl(dataQuery, SOLR_SELECTION_QUERY);
           }
 
@@ -161,38 +162,6 @@
           }
         };
 
-        // ---------------------------
-        // node set manager
-        // ---------------------------
-        nodeSetManager = new NodeSetManager(externalStudyUuid, externalAssayUuid, "node-set-manager-controls", REFINERY_API_BASE_URL, csrf_token);
-        nodeSetManager.initialize();
-
-        if ($("#" + "node-set-manager-controls").length > 0) {
-
-          nodeSetManager.setLoadSelectionCallback(function (nodeSet) {
-            query.deserialize(nodeSet.solr_query_components);
-          });
-
-          nodeSetManager.setSaveSelectionCallback(function () {
-            var solr_query_components = query.serialize();
-            var solr_query = client.createUrl(query, SOLR_FULL_QUERY);
-
-            bootbox.prompt("Enter a Name for the Selection", function (name) {
-              if (name === null) {
-                bootbox.alert("The selection was not saved.");
-              } else {
-                nodeSetManager.postState(name, "Summary for Node Set", solr_query, solr_query_components, query.getCurrentDocumentCount(), function () {
-                  bootbox.alert('The selection was saved as "' + name + '".');
-                  //global event to update angularjs nodeSetList
-                  $(document).trigger('refinery/updateCurrentNodeSelection');
-                  nodeSetManager.getList(function () {
-                    nodeSetManager.renderList()
-                  });
-                });
-              }
-            });
-          });
-        }
         // do not reset query before execution (otherwise presets such as analysis UUID are lost)
         client.initialize(query, false);
       });
