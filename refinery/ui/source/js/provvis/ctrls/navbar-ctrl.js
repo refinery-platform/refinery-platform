@@ -7,8 +7,8 @@
 (function () {
   'use strict';
   angular
-  .module('refineryProvvis')
-  .controller('provvisNavbarController', provvisNavbarController);
+    .module('refineryProvvis')
+    .controller('provvisNavbarController', provvisNavbarController);
 
   provvisNavbarController.$inject = ['$scope'];
 

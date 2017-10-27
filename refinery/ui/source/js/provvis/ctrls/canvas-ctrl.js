@@ -7,8 +7,8 @@
 (function () {
   'use strict';
   angular
-  .module('refineryProvvis')
-  .controller('provvisCanvasController', provvisCanvasController);
+    .module('refineryProvvis')
+    .controller('provvisCanvasController', provvisCanvasController);
 
   provvisCanvasController.$inject = ['$scope'];
 
