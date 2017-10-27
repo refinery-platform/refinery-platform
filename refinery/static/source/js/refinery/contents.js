@@ -74,8 +74,9 @@
 
         // =====================================
 
+        // TODO: This comes from old file browser, and in what's left, download is not supported.
         function updateDownloadButton(button_id) {
-          if (query.getCurrentDocumentCount() > MAX_DOWNLOAD_FILES || query.getCurrentDocumentCount() <= 0 || !REFINERY_USER_AUTHENTICATED || ( showAnnotation && !allowAnnotationDownload )) {
+          if (query.getCurrentDocumentCount() > MAX_DOWNLOAD_FILES || query.getCurrentDocumentCount() <= 0 || ( showAnnotation && !allowAnnotationDownload )) {
             $("#" + button_id).addClass("disabled");
             $("#" + button_id).attr("data-original-title", MESSAGE_DOWNLOAD_UNAVAILABE);
           } else {
@@ -84,6 +85,7 @@
           }
         }
 
+        // TODO: This comes from old file browser, and in what's left, IGV is not supported.
         function updateIgvButton(button_id) {
           if (query.getCurrentDocumentCount() <= 0) {
             $("#" + button_id).addClass("disabled");

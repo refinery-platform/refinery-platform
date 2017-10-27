@@ -98,12 +98,6 @@ handle-overflow" id="data-set-view">
       var REFINERY_REPOSITORY_MODE = false;
     {% endif %}
 
-    {% if user.is_authenticated %}
-      var REFINERY_USER_AUTHENTICATED = true;
-    {% else %}
-      var REFINERY_USER_AUTHENTICATED = false;
-    {% endif %}
-
     var csrf_token = "{{ csrf_token }}";
   </script>
 
