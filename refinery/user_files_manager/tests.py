@@ -53,6 +53,7 @@ class UserFilesUITests(StaticLiveServerTestCase):
         )
         self.assertIn("All Files", response.content)
 
+    @mock.patch('django.conf.settings.USER_FILES_COLUMNS', 'filename,fake')
     def test_csv(self):
         response = requests.get(
             urljoin(
@@ -62,13 +63,13 @@ class UserFilesUITests(StaticLiveServerTestCase):
         )
         self.assertEqual(
             response.content,
-            'url,filename,organism,technology,'
-            'antibody,date,genotype,experimenter\r\n'
+            'url,filename,fake\r\n'
         )
 
 
 class UserFilesViewTests(TestCase):
 
+    @mock.patch('django.conf.settings.USER_FILES_COLUMNS', 'filename,fake')
     def test_user_files_csv(self):
         request = RequestFactory().get('/fake-url')
         request.user = User.objects.create_user(
@@ -94,9 +95,8 @@ class UserFilesViewTests(TestCase):
             response = user_files_csv(request)
             self.assertEqual(
                 response.content,
-                'url,filename,organism,technology,'
-                'antibody,date,genotype,experimenter\r\n'
-                'fake-url,fake-filename,handles-unicode,,,,,\r\n'
+                'url,filename,fake\r\n'
+                'fake-url,fake-filename,\r\n'
             )
 
 
