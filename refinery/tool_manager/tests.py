@@ -1291,27 +1291,18 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
             )
             self.assertEqual(ToolDefinition.objects.count(), 0)
 
-    def test_visualization_generation_with_no_image_version_yields_error(self):
+    def _assert_visualization_tool_def_exception_contents(
+        self,
+        exception,
+        tool_annotation_name,
+        messages
+    ):
+        assert type(messages) == list
         with open(
-            "{}/visualizations/no_docker_image_version.json".format(
-                TEST_DATA_PATH
+            "{}/visualizations/{}.json".format(
+                TEST_DATA_PATH,
+                tool_annotation_name
             )
-        ) as f:
-            tool_annotation = [json.loads(f.read())]
-
-        with mock.patch(
-            self.mock_vis_annotations_reference,
-            return_value=tool_annotation
-        ):
-            with self.assertRaises(CommandError) as context:
-                call_command("generate_tool_definitions", visualizations=True)
-            self.assertIn("no specified version", context.exception.message)
-
-    def test_tool_def_generation_with_bad_filetype_yields_error(self):
-        with open(
-                "{}/visualizations/bad_filetype.json".format(
-                    TEST_DATA_PATH
-                )
         ) as f:
             tool_annotation = [json.loads(f.read())]
 
@@ -1319,13 +1310,27 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
                 self.mock_vis_annotations_reference,
                 return_value=tool_annotation
         ):
-            with self.assertRaises(CommandError) as context:
+            with self.assertRaises(exception) as context:
                 call_command("generate_tool_definitions", visualizations=True)
-            self.assertIn("BAD FILETYPE", context.exception.message)
-            self.assertIn(
-                str([filetype.name for filetype in FileType.objects.all()]),
-                context.exception.message
-            )
+            [self.assertIn(message, context.exception.message)
+             for message in messages]
+
+    def test_visualization_generation_with_no_image_version_yields_error(self):
+        self._assert_visualization_tool_def_exception_contents(
+            CommandError,
+            "no_docker_image_version",
+            ["no specified version"]
+        )
+
+    def test_tool_def_generation_with_bad_filetype_yields_error(self):
+        self._assert_visualization_tool_def_exception_contents(
+            CommandError,
+            "bad_filetype",
+            [
+                "BAD FILETYPE",
+                str([filetype.name for filetype in FileType.objects.all()])
+            ]
+        )
 
 
 class ToolDefinitionTests(ToolManagerTestBase):
