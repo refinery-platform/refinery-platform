@@ -3341,9 +3341,7 @@ class ToolManagerUtilitiesTests(ToolManagerTestBase):
         )
 
     def test_get_visualization_annotations_list(self):
-        settings.VISUALIZATION_ANNOTATION_BASE_PATH = os.path.abspath(
-            os.getcwd()
-        )
+        settings.VISUALIZATION_ANNOTATION_BASE_PATH = os.path.dirname(__file__)
         tool_definition_name = "dummy.json"
         tool_definition = {
             "is_tool_definition": True
