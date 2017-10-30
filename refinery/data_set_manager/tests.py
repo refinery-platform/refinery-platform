@@ -20,6 +20,7 @@ from core.models import Analysis, DataSet, ExtendedGroup, InvestigationLink
 from core.views import NodeViewSet
 import data_set_manager
 from data_set_manager.isa_tab_parser import IsaTabParser, ParserException
+from data_set_manager.single_file_column_parser import SingleFileColumnParser
 from data_set_manager.tasks import parse_isatab
 from factory_boy.utils import make_analyses_with_single_dataset
 from file_store.models import FileStoreItem, generate_file_source_translator
@@ -1958,3 +1959,19 @@ class ProcessISATabViewTests(TestCase):
                 HTTP_X_REQUESTED_WITH='XMLHttpRequest'
             )
         self.unsuccessful_import_assertions()
+
+
+class SingleFileColumnParserTests(TestCase):
+    def test_parser(self):
+        # TODO: set variables
+        metadata_file = None
+        file_source_translator = None
+        source_column_index = None
+        parser = SingleFileColumnParser(
+            metadata_file,
+            file_source_translator,
+            source_column_index
+        )
+        investigation = parser.run()
+        self.assertEqual(investigation, None)
+        # TODO: test
