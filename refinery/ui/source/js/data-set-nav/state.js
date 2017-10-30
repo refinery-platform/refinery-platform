@@ -56,23 +56,6 @@ function refineryDataSetNavConfig (
       );
 
   refineryUrlRouterProvider
-    // code to resolve internal routing within provvis which can't be
-   // routed out (quickly) due to hidden depenencies
-    .otherwise(
-      '/provvis/#provvis-filter-doi-tab/',
-      '^\/data_sets\/.*\/$',
-      true
-    )
-    .otherwise(
-      '/provvis/#provvis-nodeinfo-tab/',
-      '^\/data_sets\/.*\/$',
-      true
-    )
-    .otherwise(
-      '/provvis/#provvis-colorcoding-tab/',
-      '^\/data_sets\/.*\/$',
-      true
-    )
     .otherwise(
       '/files/',
       '^\/data_sets\/.*\/$',
