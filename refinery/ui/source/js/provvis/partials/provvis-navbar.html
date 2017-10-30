@@ -73,8 +73,30 @@
     <label id="prov-ctrl-toggle-fit-label"
            style="margin-right: 20px;">Scale graph</label>
 
-    <a id="help-provenance-button"
-       style="height:20px; width: 20px;">
+    <a
+      id="help-provenance-button"
+      popover-placement="bottom"
+      uib-popover-html="'<div>
+      <div class=refinery-subheader><h4>Node and path specific:</h4></div>
+      <ul class=list-unstyled>
+      <li><strong>(Un)Select</strong> Left click</li>
+      <li><strong>Highlightpredecessors</strong> Left click on left anchor</li>
+      <li><strong>Highlight successors</strong> Left click on right anchor</li>
+      <li><strong>Collapse Node</strong> Left click on enclosing bounding
+      box</li>
+      <li><strong>Expand Node</strong> Double click on node</li></ul>
+      <div class=refinery-subheader>
+      <h4>Global:</h4></div>
+      <ul class=list-unstyled>
+      <li><strong>Clear highlighting</strong> Left click on background</li>
+      <li><strong>Fit graph to screen</strong> Left double click on
+      background</li>
+      </ul><div>'"
+      popover-title="Provenance Visualization Info"
+      popover-trigger="click"
+      popover-append-to-body="true"
+      tabindex="0">
+
       <i class="fa fa-question-circle info-icon icon-only"
          style="font-size: 19px; margin-left: 5px; margin-right: 5px;
          position: relative; top: 3px;"></i>
@@ -86,36 +108,3 @@
     </div>
   </div>
 </div>
-
-<script type="application/javascript">
-    $("#help-provenance-button").click( function(event) {
-    bootbox.alert(
-        "<h3>Provenance Visualization Info</h3>" +
-        "<ul>" +
-        "<li>" +
-        "<div class='refinery-subheader'>" +
-        "<h4>Node and path specific:</h4>" +
-        "</div>" +
-        "</li>" +
-        "</ul>" +
-        "<ul>" +
-        "<li>(Un)Select: Left click</li>" +
-        "<li>Highlight predecessors: Left click on left anchor</li>" +
-        "<li>Highlight successors: Left click on right anchor</li>" +
-        "<li>Collapse Node: Left click on enclosing bounding box</li>" +
-        "<li>Expand Node: Double click on node</li>" +
-        "</ul>" +
-        "<br>" +
-        "<li>" +
-        "<div class='refinery-subheader'>" +
-        "<h4>Global:</h4>" +
-        "</div>" +
-        "</li>" +
-        "<ul>" +
-        "<li>Clear highlighting: Left click on background</li>" +
-        "<li>Fit graph to screen: Left double click on background</li>" +
-        "</ul>" +
-        "</ul>"
-    );
-  });
-</script>
