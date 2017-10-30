@@ -45,7 +45,7 @@ SERVER_EMAIL: "refinery-registration@example.org"
 EMAIL_SUBJECT_PREFIX: "[Refinery] "
 
 # size of the data volume in GB (ignored if a DATA_SNAPSHOT is specified)
-DATA_VOLUME_SIZE: 500
+DATA_VOLUME_SIZE: 1000
 # Type of the Data volume
 # http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSVolumeTypes.html
 DATA_VOLUME_TYPE: "st1"
