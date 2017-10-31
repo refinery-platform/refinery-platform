@@ -77,7 +77,7 @@ handle-overflow" id="data-set-view">
       <input type="hidden" name="study_uuid" value="{{ study_uuid }}"/>
     </form>
     <!-- Tab views -->
-    <div ui-view></div>
+    <div id="main-area-view" ui-view></div>
  {% else %}
     <p>No valid data set.</p>
   {% endif %}
@@ -118,8 +118,6 @@ handle-overflow" id="data-set-view">
 {% endblock %}
 
 {% block script %}
-
-
   <!-- Refinery libraries -->
   <script type="text/javascript">
     var REFINERY_BASE_URL = document.location.host;

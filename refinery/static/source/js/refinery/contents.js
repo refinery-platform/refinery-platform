@@ -11,15 +11,21 @@
 
   var dataQueryString = undefined;
 
-  var currentStudyUuid = externalStudyUuid;
-  var currentStudyId = externalStudyId;
-  var currentAssayUuid = externalAssayUuid;
-  var currentAssayId = externalAssayId;
+  var currentStudyUuid = '';
+  var currentStudyId = '';
+  var currentAssayUuid = '';
+  var currentAssayId = '';
 
   $(document).ready(function () {
-    // To avoid generation when in the current file  browser
-    if (window.location.href.indexOf('provenance') > -1) {
+    // To avoid generation when not in provvis tab
+    if (window.location.href.indexOf('provvis') > -1) {
+
       // attributes list
+      currentStudyUuid = externalStudyUuid;
+      currentStudyId = externalStudyId;
+      currentAssayUuid = externalAssayUuid;
+      currentAssayId = externalAssayId;
+
       configurator = new DataSetConfigurator(externalStudyUuid, externalAssayUuid, "configurator-panel", REFINERY_API_BASE_URL, csrf_token);
       configurator.initialize();
 
