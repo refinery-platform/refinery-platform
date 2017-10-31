@@ -10,6 +10,7 @@ import uuid
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import (InMemoryUploadedFile,
                                             SimpleUploadedFile)
+from django.core.management import call_command
 from django.http import QueryDict
 from django.test import TestCase
 
@@ -1977,13 +1978,27 @@ class SingleFileColumnParserTests(TestCase):
             )
 
     def test_one_line_csv(self):
-        with self.assertRaises(TypeError):  # 'NoneType' object is not iterable
+        with self.assertRaises(TypeError):
+            # 'NoneType' object is not iterable
             self.process_csv('one-line.csv')
         # TODO: Should not error
-        # TODO: Assertions against object created
+        # TODO: Assertions against objects created
 
     def test_two_line_csv(self):
-        with self.assertRaises(RuntimeError):  # "Exponential explosion!"
+        with self.assertRaises(RuntimeError):
+            # "Exponential explosion!"
             self.process_csv('two-line.csv')
         # TODO: Should not error
-        # TODO: Assertions against object created
+        # TODO: Assertions against objects created
+
+
+class ProcessDefaultTableTests(TestCase):
+    def test_command(self):
+        with self.assertRaises(TypeError):
+            # __init__() takes at least 4 arguments (1 given)
+            call_command('process_default_table',
+                         username='guest',
+                         title='foo',
+                         file_name='one-line.csv')
+        # TODO: Should not error
+        # TODO: Assertions against objects created
