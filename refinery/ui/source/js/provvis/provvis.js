@@ -220,11 +220,7 @@ var provvis = (function (  // eslint-disable-line no-unused-vars
 
         /* Initialize canvas dimensions. */
         var width = $('div#provenance-visualization').width() - 10;
-      //  var height = $('div#solr-table-view').height() - 25;
-        /* Data set 2 browser has a new id for data table."*/
-    //    var height = $('#files').height() - 25;
-        var height = 300; // fixing it for now will fix in the provenance
-        // transition next ##TODO JM Oct 2017
+        var height = $('#provenance-view-tab').height() - 25;
 
         /* TODO: Temp fix for sidebar height. */
         $('#provenance-sidebar').css('height', height);
