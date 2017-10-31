@@ -5,7 +5,6 @@ import string
 from urlparse import urljoin
 
 from django.contrib.auth.models import AnonymousUser, Group, User
-from django.core.exceptions import ImproperlyConfigured
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.utils import timezone
@@ -275,14 +274,16 @@ class NodeSetResourceTest(ResourceTestCase):
                                             password=self.password)
 
     def test_xml_request_fails_gracefully(self):
-        # TODO: Make it fail gracefully
-        with self.assertRaises(ImproperlyConfigured):
-            self.api_client.get(
-                '/api/v1/analysis/',
-                format='xml',
-                authentication=self.get_credentials()
-            )
-        # self.assertValidJSONResponse(response)
+        response = self.api_client.get(
+            '/api/v1/analysis/',
+            format='xml',
+            authentication=self.get_credentials()
+        )
+        self.assertValidJSONResponse(response)
+        self.assertEqual(
+            sorted(json.loads(response.content).keys()),
+            ['meta', 'objects']
+        )
 
     def test_get_nodeset(self):
         """Test retrieving an existing NodeSet that belongs to a user who
