@@ -24,6 +24,7 @@ from data_set_manager.isa_tab_parser import IsaTabParser, ParserException
 from data_set_manager.single_file_column_parser import process_metadata_table
 from data_set_manager.tasks import parse_isatab
 from factory_boy.utils import make_analyses_with_single_dataset
+import file_store
 from file_store.models import FileStoreItem, generate_file_source_translator
 
 from .models import (AnnotatedNode, Assay, AttributeOrder, Investigation, Node,
@@ -1984,7 +1985,8 @@ class SingleFileColumnParserTests(TestCase):
         # TODO: Should not error
         # TODO: Assertions against objects created
 
-    def test_two_line_csv(self):
+    @mock.patch.object(file_store.tasks.import_file, "delay")
+    def test_two_line_csv(self, delay_mock):
         with self.assertRaises(RuntimeError):
             # "Exponential explosion!"
             self.process_csv('two-line.csv')
