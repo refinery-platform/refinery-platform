@@ -20,7 +20,7 @@ from core.models import Analysis, DataSet, ExtendedGroup, InvestigationLink
 from core.views import NodeViewSet
 import data_set_manager
 from data_set_manager.isa_tab_parser import IsaTabParser, ParserException
-from data_set_manager.single_file_column_parser import SingleFileColumnParser
+from data_set_manager.single_file_column_parser import process_metadata_table
 from data_set_manager.tasks import parse_isatab
 from factory_boy.utils import make_analyses_with_single_dataset
 from file_store.models import FileStoreItem, generate_file_source_translator
@@ -1962,16 +1962,28 @@ class ProcessISATabViewTests(TestCase):
 
 
 class SingleFileColumnParserTests(TestCase):
-    def test_parser(self):
-        # TODO: set variables
-        metadata_file = None
-        file_source_translator = None
-        source_column_index = None
-        parser = SingleFileColumnParser(
-            metadata_file,
-            file_source_translator,
-            source_column_index
+    def process_csv(self, filename):
+        path = os.path.join(
+            os.path.dirname(__file__),
+            'test-data', 'single-file', filename
         )
-        investigation = parser.run()
-        self.assertEqual(investigation, None)
-        # TODO: test
+        with open(path, 'r') as f:
+            process_metadata_table(
+                username='guest',
+                title='fake',
+                metadata_file=f,
+                source_columns=[0],
+                data_file_column=2,
+            )
+
+    def test_one_line_csv(self):
+        with self.assertRaises(TypeError):  # 'NoneType' object is not iterable
+            self.process_csv('one-line.csv')
+        # TODO: Should not error
+        # TODO: Assertions against object created
+
+    def test_two_line_csv(self):
+        with self.assertRaises(RuntimeError):  # "Exponential explosion!"
+            self.process_csv('two-line.csv')
+        # TODO: Should not error
+        # TODO: Assertions against object created
