@@ -273,18 +273,6 @@ class NodeSetResourceTest(ResourceTestCase):
         return self.api_client.client.login(username=self.username,
                                             password=self.password)
 
-    def test_xml_format_ignored(self):
-        response = self.api_client.get(
-            '/api/v1/analysis/',
-            format='xml',
-            authentication=self.get_credentials()
-        )
-        self.assertValidJSONResponse(response)
-        self.assertEqual(
-            sorted(json.loads(response.content).keys()),
-            ['meta', 'objects']
-        )
-
     def test_get_nodeset(self):
         """Test retrieving an existing NodeSet that belongs to a user who
         created it
@@ -798,6 +786,18 @@ class AnalysisResourceTest(ResourceTestCase):
         return self.api_client.client.login(
             username=self.username,
             password=self.password
+        )
+
+    def test_xml_format_ignored(self):
+        response = self.api_client.get(
+            '/api/v1/analysis/',
+            format='xml',
+            authentication=self.get_credentials()
+        )
+        self.assertValidJSONResponse(response)
+        self.assertEqual(
+            sorted(json.loads(response.content).keys()),
+            ['meta', 'objects']
         )
 
     def test_get_analysis(self):
