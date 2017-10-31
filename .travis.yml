@@ -69,7 +69,7 @@ before_script:
   - npm install -g grunt-cli@0.1.13 bower@1.8.2 --progress false --quiet || ( cat npm-debug.log && false )
   - cd ui
   - npm install --progress false --quiet || ( cat npm-debug.log && false )
-  - bower install --config.interactive=false --quiet | grep -v PhantomJS
+  - bower install --config.interactive=false --quiet
   - cd ../
 
   # Required for cypress tests; TODO: Move to puppet.
@@ -88,7 +88,7 @@ script:
   - flake8 --exclude=migrations,ui ..
 
   - echo 'travis_fold:start:grunt'
-  - pushd ui && grunt test && popd
+  - pushd ui && grunt test | grep -v SUCCESS && popd
   - echo 'travis_fold:end:grunt'
 
   - echo 'travis_fold:start:django-tests'
