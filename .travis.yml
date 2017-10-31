@@ -88,7 +88,7 @@ script:
   - flake8 --exclude=migrations,ui ..
 
   - echo 'travis_fold:start:grunt'
-  - pushd ui && grunt test | grep -v SUCCESS && popd
+  - pushd ui && grunt test && popd # TODO: 600 mostly useless lines of output
   - echo 'travis_fold:end:grunt'
 
   - echo 'travis_fold:start:django-tests'
