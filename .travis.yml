@@ -35,7 +35,7 @@ install:
   # Install geckodriver required for selenium testing
   - GECKODRIVER_VERSION=v0.17.0
   - TAR=geckodriver-$GECKODRIVER_VERSION-linux64.tar
-  - wget https://github.com/mozilla/geckodriver/releases/download/$GECKODRIVER_VERSION/$TAR.gz
+  - wget --no-verbose https://github.com/mozilla/geckodriver/releases/download/$GECKODRIVER_VERSION/$TAR.gz
   - gunzip $TAR.gz
   - tar -xvf $TAR
   - chmod a+x geckodriver
