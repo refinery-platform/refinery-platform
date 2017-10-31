@@ -273,7 +273,7 @@ class NodeSetResourceTest(ResourceTestCase):
         return self.api_client.client.login(username=self.username,
                                             password=self.password)
 
-    def test_xml_request_fails_gracefully(self):
+    def test_xml_format_ignored(self):
         response = self.api_client.get(
             '/api/v1/analysis/',
             format='xml',
