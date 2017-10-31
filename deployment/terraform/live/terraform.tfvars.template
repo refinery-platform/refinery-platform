@@ -1,7 +1,5 @@
 region = "us-east-1"
 
-bucket_name_base = "refinery-dev"
-
 identity_pool_name = "Dev Refinery Platform"
 
 stack_name = "DevRefineryPlatform"
