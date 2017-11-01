@@ -202,9 +202,6 @@ class Study(NodeCollection):
     # TODO: should we support an archive file here? (see ISA-Tab Spec 4.1.3.2)
     file_name = models.TextField()
 
-    def assay_nodes(self):
-        self.node_set(type=Node.ASSAY)
-
     def get_dataset(self):
         investigation_uuid = self.investigation.uuid
         try:

@@ -42,7 +42,18 @@ function refineryDataSetNavConfig (
       },
       '^\/data_sets\/.*\/$',
       true
-    );
+    )
+    .state(
+        'provvis', {
+          url: '/provvis/',
+          templateUrl: function () {
+            // unit tests redefine $window and thus make it unusable here
+            return window.getStaticUrl('partials/provvis/views/provvis-tab.html');
+          },
+        },
+        '^\/data_sets\/.*\/$',
+        true
+      );
 
   refineryUrlRouterProvider
     .otherwise(

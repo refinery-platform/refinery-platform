@@ -11,8 +11,7 @@ from guardian.admin import GuardedModelAdmin
 
 from core.models import (Analysis, AnalysisNodeConnection, AnalysisResult,
                          DataSet, DiskQuota, Download, ExtendedGroup,
-                         InvestigationLink, Invitation, NodePair,
-                         NodeRelationship, NodeSet, Ontology, Project,
+                         InvestigationLink, Invitation, Ontology, Project,
                          SiteProfile, Tutorials, UserProfile, Workflow,
                          WorkflowDataInput, WorkflowDataInputMap,
                          WorkflowEngine, WorkflowFilesDL,
@@ -139,20 +138,6 @@ class ExtendedGroupAdmin(GuardedModelAdmin, ForeignKeyAutocompleteAdmin):
                     'member_list', 'perm_list', 'can_edit']
 
 
-class NodePairAdmin(GuardedModelAdmin, ForeignKeyAutocompleteAdmin):
-    list_display = ['id', 'uuid', 'node1', 'node2', 'group']
-
-
-class NodeRelationshipAdmin(GuardedModelAdmin, ForeignKeyAutocompleteAdmin):
-    list_display = ['__unicode__', 'id', 'type', 'node_set_1',
-                    'node_set_2', 'study', 'assay', 'is_current']
-
-
-class NodeSetAdmin(GuardedModelAdmin, ForeignKeyAutocompleteAdmin):
-    list_display = ['__unicode__', 'id', 'node_count', 'is_implicit',
-                    'study', 'assay', 'is_current']
-
-
 class UserProfileAdmin(GuardedModelAdmin):
     list_display = ['__unicode__', 'id', 'uuid', 'user', 'affiliation',
                     'catch_all_project', 'login_count',
@@ -201,9 +186,6 @@ admin.site.register(Download, DownloadAdmin)
 admin.site.register(AnalysisResult, AnalysisResultAdmin)
 admin.site.register(AnalysisNodeConnection, AnalysisNodeConnectionAdmin)
 admin.site.register(DiskQuota, DiskQuotaAdmin)
-admin.site.register(NodePair, NodePairAdmin)
-admin.site.register(NodeRelationship, NodeRelationshipAdmin)
-admin.site.register(NodeSet, NodeSetAdmin)
 admin.site.register(Invitation, InvitationAdmin)
 admin.site.register(UserProfile, UserProfileAdmin)
 admin.site.register(Tutorials, TutorialsAdmin)

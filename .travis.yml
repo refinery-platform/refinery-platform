@@ -2,7 +2,6 @@ sudo: required
 
 language: python
 addons:
-  firefox: "53.0.3"
   apt:
     packages:
       - xvfb
@@ -32,10 +31,17 @@ install:
 
   - pip install -r requirements.txt --quiet
 
+  # Firefox could be downloaded more simply as a Travis addon...
+  # but the progress meter adds 1000 lines to the log.
+  - FIREFOX_SOURCE_URL='https://download.mozilla.org/?product=firefox-53.0.3&lang=en-US&os=linux64'
+  - wget --no-verbose -O /tmp/firefox-53.0.3.tar.bz2 $FIREFOX_SOURCE_URL
+  - export PATH=$HOME/firefox-53.0.3/firefox:$PATH
+  - firefox --version
+
   # Install geckodriver required for selenium testing
   - GECKODRIVER_VERSION=v0.17.0
   - TAR=geckodriver-$GECKODRIVER_VERSION-linux64.tar
-  - wget https://github.com/mozilla/geckodriver/releases/download/$GECKODRIVER_VERSION/$TAR.gz
+  - wget --no-verbose https://github.com/mozilla/geckodriver/releases/download/$GECKODRIVER_VERSION/$TAR.gz
   - gunzip $TAR.gz
   - tar -xvf $TAR
   - chmod a+x geckodriver
@@ -82,7 +88,12 @@ script:
   - flake8 --exclude=migrations,ui ..
 
   - echo 'travis_fold:start:grunt'
-  - pushd ui && grunt test && popd
+  - pushd ui && grunt test > /tmp/grunt-test.txt && popd
+  # 'grunt test' is too verbose, and there's not a flag to quiet it.
+  # Pipelining the output to grep would confuse grunt's exit status and grep's,
+  # so instead write to a temp file so we can get the abbreviated output,
+  # but ignore the grep status.
+  - grep -v SUCCESS /tmp/grunt-test.txt || true
   - echo 'travis_fold:end:grunt'
 
   - echo 'travis_fold:start:django-tests'
