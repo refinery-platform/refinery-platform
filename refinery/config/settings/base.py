@@ -672,3 +672,5 @@ USER_FILES_COLUMNS = get_setting("USER_FILES_COLUMNS")
 USER_FILES_FACETS = get_setting("USER_FILES_FACETS")
 
 MEDIA_BUCKET = ''  # a placeholder for use in context processor
+
+TASTYPIE_DEFAULT_FORMATS = ['json']
