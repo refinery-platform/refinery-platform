@@ -14,11 +14,9 @@ from tastypie.api import Api
 from config.utils import RouterCombiner
 from core.api import (AnalysisResource, DataSetResource, ExtendedGroupResource,
                       GroupManagementResource, InvitationResource,
-                      NodePairResource, NodeRelationshipResource, NodeResource,
-                      NodeSetListResource, NodeSetResource, ProjectResource,
-                      StatisticsResource, UserAuthenticationResource,
-                      UserProfileResource, WorkflowInputRelationshipsResource,
-                      WorkflowResource)
+                      NodeResource, ProjectResource, StatisticsResource,
+                      UserAuthenticationResource, UserProfileResource,
+                      WorkflowInputRelationshipsResource, WorkflowResource)
 from core.forms import RegistrationFormWithCustomFields
 from core.models import AuthenticationFormUsernameOrEmail, DataSet
 from core.urls import core_router
@@ -53,10 +51,6 @@ v1_api.register(AssayResource())
 v1_api.register(DataSetResource())
 v1_api.register(AttributeOrderResource())
 v1_api.register(NodeResource())
-v1_api.register(NodeSetResource())
-v1_api.register(NodeSetListResource())
-v1_api.register(NodePairResource())
-v1_api.register(NodeRelationshipResource())
 v1_api.register(WorkflowResource())
 v1_api.register(WorkflowInputRelationshipsResource())
 v1_api.register(StatisticsResource())

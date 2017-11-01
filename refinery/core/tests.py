@@ -27,10 +27,9 @@ from .api import AnalysisResource
 from .management.commands.create_user import init_user
 from .models import (INPUT_CONNECTION, OUTPUT_CONNECTION, Analysis,
                      AnalysisNodeConnection, AnalysisResult, DataSet,
-                     ExtendedGroup, InvestigationLink, NodeSet, Project,
-                     Tutorials, UserProfile, Workflow, WorkflowDataInputMap,
-                     WorkflowEngine, create_nodeset, delete_nodeset,
-                     get_nodeset, invalidate_cached_object, update_nodeset)
+                     ExtendedGroup, InvestigationLink, Project, Tutorials,
+                     UserProfile, Workflow, WorkflowDataInputMap,
+                     WorkflowEngine, invalidate_cached_object)
 from .search_indexes import DataSetIndex
 from .utils import (filter_nodes_uuids_in_solr, get_aware_local_time,
                     get_resources_for_user, move_obj_to_front)
@@ -66,146 +65,6 @@ class UserCreateTest(TestCase):
         new_user = User.objects.get(username=self.username)
         self.assertEqual(
             new_user.groups.filter(name=self.public_group_name).count(), 1)
-
-
-class NodeSetTest(TestCase):
-    """Test all NodeSet operations"""
-
-    def setUp(self):
-        self.investigation = Investigation.objects.create()
-        self.study = Study.objects.create(investigation=self.investigation)
-        self.assay = Assay.objects.create(
-            study=self.study)
-        self.query = json.dumps({
-            "facets": {
-                "platform_Characteristics_10_5_s": [],
-                "cell_or_tissue_Characteristics_10_5_s": [],
-                "REFINERY_TYPE_10_5_s": [],
-                "species_Characteristics_10_5_s": [],
-                "treatment_Characteristics_10_5_s": [],
-                "factor_Characteristics_10_5_s": [],
-                "factor_function_Characteristics_10_5_s": [],
-                "data_source_Characteristics_10_5_s": [],
-                "genome_build_Characteristics_10_5_s": [],
-                "REFINERY_FILETYPE_10_5_s": [],
-                "antibody_Characteristics_10_5_s": [],
-                "data_type_Characteristics_10_5_s": [],
-                "lab_Characteristics_10_5_s": []
-            },
-            "nodeSelection": [],
-            "nodeSelectionBlacklistMode": True
-        })
-
-    def test_create_minimal_nodeset(self):
-        """Test adding a new NodeSet with required fields only"""
-        name = 'nodeset'
-        nodeset = create_nodeset(name=name, study=self.study, assay=self.assay)
-        self.assertIsInstance(nodeset, NodeSet)
-        self.assertEqual(nodeset.name, name)
-        self.assertEqual(nodeset.summary, '')
-        self.assertEqual(nodeset.solr_query, '')
-
-    def test_create_full_nodeset(self):
-        """Test adding a new NodeSet with a list of Node instances and summary
-        """
-        name = 'nodeset'
-        summary = 'sample summary'
-        nodeset = create_nodeset(name=name, study=self.study, assay=self.assay,
-                                 summary=summary, solr_query=self.query)
-        self.assertIsInstance(nodeset, NodeSet)
-        self.assertEqual(nodeset.name, name)
-        self.assertEqual(nodeset.summary, summary)
-        self.assertEqual(nodeset.solr_query, self.query)
-
-    def test_get_nodeset_with_valid_uuid(self):
-        """Test retrieving an existing NodeSet instance"""
-        nodeset = NodeSet.objects.create(name='nodeset', study=self.study,
-                                         assay=self.assay)
-        self.assertEqual(get_nodeset(nodeset.uuid), nodeset)
-
-    def test_get_nodeset_with_invalid_uuid(self):
-        """Test retrieving a NodeSet instance that doesn't exist"""
-        self.assertRaises(
-            NodeSet.DoesNotExist, get_nodeset, uuid='Invalid UUID'
-        )
-
-    def test_delete_nodeset_with_valid_uuid(self):
-        """Test deleting an existing NodeSet instance"""
-        nodeset = NodeSet.objects.create(name='nodeset', study=self.study,
-                                         assay=self.assay)
-        delete_nodeset(nodeset.uuid)
-        self.assertRaises(
-            NodeSet.DoesNotExist, NodeSet.objects.get, uuid=nodeset.uuid
-        )
-
-    def test_delete_nodeset_with_invalid_uuid(self):
-        """Test deleting a NodeSet instance that doesn't exist"""
-        self.assertIsNone(delete_nodeset(uuid='Invalid UUID'))
-
-    def test_update_nodeset_name(self):
-        """Test updating NodeSet name"""
-        nodeset = NodeSet.objects.create(name='nodeset', study=self.study,
-                                         assay=self.assay)
-        new_name = 'new nodeset name'
-        update_nodeset(uuid=nodeset.uuid, name=new_name)
-        self.assertEqual(
-            NodeSet.objects.get(uuid=nodeset.uuid).name, new_name
-        )
-
-    def test_update_nodeset_summary(self):
-        """Test updating NodeSet summary"""
-        nodeset = NodeSet.objects.create(name='nodeset', study=self.study,
-                                         assay=self.assay)
-        new_summary = 'new nodeset summary'
-        update_nodeset(uuid=nodeset.uuid, summary=new_summary)
-        self.assertEqual(
-            NodeSet.objects.get(uuid=nodeset.uuid).summary, new_summary)
-
-    def test_update_nodeset_study(self):
-        """Test updating NodeSet study"""
-        nodeset = NodeSet.objects.create(name='nodeset', study=self.study,
-                                         assay=self.assay)
-        new_study = Study.objects.create(investigation=self.investigation)
-        update_nodeset(uuid=nodeset.uuid, study=new_study)
-        self.assertEqual(
-            NodeSet.objects.get(uuid=nodeset.uuid).study, new_study
-        )
-
-    def test_update_nodeset_assay(self):
-        """Test updating NodeSet assay"""
-        nodeset = NodeSet.objects.create(name='nodeset', study=self.study,
-                                         assay=self.assay)
-        new_assay = Assay.objects.create(study=self.study)
-        update_nodeset(uuid=nodeset.uuid, assay=new_assay)
-        self.assertEqual(
-            NodeSet.objects.get(uuid=nodeset.uuid).assay, new_assay
-        )
-
-    def test_update_nodeset_with_solr_query(self):
-        """Test updating NodeSet with a new Solr query"""
-        nodeset = NodeSet.objects.create(name='nodeset', study=self.study,
-                                         assay=self.assay, solr_query='')
-        update_nodeset(uuid=nodeset.uuid, solr_query=self.query)
-        self.assertEqual(
-            NodeSet.objects.get(uuid=nodeset.uuid).solr_query, self.query
-        )
-
-    def test_update_nodeset_with_blank_solr_query(self):
-        """Test deleting Solr query from a NodeSet"""
-        nodeset = NodeSet.objects.create(name='nodeset', study=self.study,
-                                         assay=self.assay,
-                                         solr_query=self.query)
-        new_query = ''
-        update_nodeset(uuid=nodeset.uuid, solr_query=new_query)
-        self.assertEqual(
-            NodeSet.objects.get(uuid=nodeset.uuid).solr_query, new_query
-        )
-
-    def test_update_nodeset_with_invalid_uuid(self):
-        """Test updating a NodeSet instance that doesn't exist"""
-        self.assertRaises(
-            NodeSet.DoesNotExist, update_nodeset, uuid='Invalid UUID'
-        )
 
 
 def make_api_uri(resource_name, resource_id='', sharing=False):

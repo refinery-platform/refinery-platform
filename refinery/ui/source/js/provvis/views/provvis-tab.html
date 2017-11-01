@@ -1,0 +1,31 @@
+ <div class="dataSetTabContent ng-cloak" id="files">
+  <div class="row">
+    <div class="tabbable">
+      <div class="tab-content">
+        <div class="tab-pane active fade in" id="provenance-view-tab" style="overflow: hidden;">
+          <div class="refinery-panel-content">
+            <div id="provenance-visualization">
+              <div id="provvis-nav-bar" ng-controller="provvisNavbarController">
+                <div provvis-nav-bar></div>
+              </div>
+              <div id="provvis-canvas" ng-controller="provvisCanvasController">
+                <div provvis-canvas></div>
+              </div>
+                <!-- the provenance graph -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+ <script type="text/javascript" src="/static/js/refinery/contents.js"></script>
+
+ <script type="text/javascript" src="/static/js/provvis/provvis-helpers.js"></script>
+ <script type="text/javascript" src="/static/js/provvis/provvis-decl.js"></script>
+ <script type="text/javascript" src="/static/js/provvis/provvis-init.js"></script>
+ <script type="text/javascript" src="/static/js/provvis/provvis-layout.js"></script>
+ <script type="text/javascript" src="/static/js/provvis/provvis-motifs.js"></script>
+ <script type="text/javascript" src="/static/js/provvis/provvis-render.js"></script>
+ <script type="text/javascript" src="/static/js/provvis/provvis.js"></script>
