@@ -254,6 +254,20 @@ class LoginResourceTestCase(ResourceTestCase):
         )
 
 
+class ApiResourceTest(LoginResourceTestCase):
+
+    def setUp(self):
+        super(ApiResourceTest, self).setUp()
+
+    def test_xml_format_ignored(self):
+        response = self.api_client.get(
+            '/api/v1/',
+            format='xml',
+            authentication=self.get_credentials()
+        )
+        self.assertValidJSONResponse(response)
+
+
 class NodeSetResourceTest(LoginResourceTestCase):
     """Test NodeSet REST API operations"""
 
@@ -756,7 +770,6 @@ class AnalysisResourceTest(LoginResourceTestCase):
 
     def setUp(self):
         super(AnalysisResourceTest, self).setUp()
-        self.get_credentials()
         self.project = Project.objects.create()
         self.user_catch_all_project = UserProfile.objects.get(
             user=self.user
@@ -769,18 +782,6 @@ class AnalysisResourceTest(LoginResourceTestCase):
         )
         self.workflow = Workflow.objects.create(
             workflow_engine=self.workflow_engine
-        )
-
-    def test_xml_format_ignored(self):
-        response = self.api_client.get(
-            '/api/v1/analysis/',
-            format='xml',
-            authentication=self.get_credentials()
-        )
-        self.assertValidJSONResponse(response)
-        self.assertEqual(
-            sorted(json.loads(response.content).keys()),
-            ['meta', 'objects']
         )
 
     def test_get_analysis(self):
