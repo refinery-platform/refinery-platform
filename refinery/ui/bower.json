@@ -25,6 +25,7 @@
     "angular-ui-router": "0.2.18",
     "angular-ui-scroll": "flekschas/ui-scroll#visible-items",
     "aws-sdk-js": "2.49.0",
+    "bootbox": "4.4.0",
     "bootstrap": "3.3.6",
     "c3": "0.4.11-rc4",
     "d3": "3.5.16",
