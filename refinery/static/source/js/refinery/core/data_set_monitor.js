@@ -16,7 +16,6 @@
  * - DataSetMonitor
  */
 
-DATA_SET_MONITOR_ANALYSES_UPDATED_COMMAND = 'data_set_monitor_analyses_updated';
 
 function DataSetMonitor(
   dataSetUuid, apiBaseUrl, crsfMiddlewareToken, commands) {
@@ -53,7 +52,6 @@ DataSetMonitor.prototype._refreshAnalyses = function() {
   self.analyses = null;
   self._analysisApiClient.getList(function() {
     self.analyses = self._analysisApiClient.list;
-    self._commands.execute(DATA_SET_MONITOR_ANALYSES_UPDATED_COMMAND);
   }, function() {
     // log an error?
   });
