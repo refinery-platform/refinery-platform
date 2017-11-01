@@ -930,10 +930,9 @@
             adapter="dashboard.analysesAdapter">
             <span ng-switch on="analysis.status">
               <span ng-if="SUCCESS">
-                <a
-                ng-href="/data_sets/{{analysis.data_set__uuid}}/#/files/?{{modal.analysis.data_sets_query}}">
-                {{ analysis.name }}
-              </a>
+                <a ng-href='/data_sets/{{analysis.data_set__uuid}}/#/files/?{"{{analysis.facet_name}}":"{{analysis.name}}"}'>
+                  {{ analysis.name }}
+                </a>
               </span>
               <span ng-if="!SUCCESS">
                 <a

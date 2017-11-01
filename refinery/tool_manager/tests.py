@@ -2,6 +2,7 @@ import StringIO
 import ast
 import json
 import logging
+import os
 import time
 from urlparse import urljoin
 import uuid
@@ -57,16 +58,18 @@ from factory_boy.django_model_factories import (AnnotatedNodeFactory,
                                                 AttributeFactory, NodeFactory,
                                                 ParameterFactory, ToolFactory)
 from factory_boy.utils import create_dataset_with_necessary_models
-from file_store.models import FileStoreItem
+from file_store.models import FileStoreItem, FileType
 from galaxy_connector.models import Instance
 from selenium_testing.utils import (MAX_WAIT, SeleniumTestBaseGeneric,
                                     wait_until_class_visible)
 from tool_manager.tasks import django_docker_cleanup
 
 from .models import (FileRelationship, GalaxyParameter, InputFile, Parameter,
-                     Tool, ToolDefinition, VisualizationTool, WorkflowTool)
-from .utils import (create_tool, create_tool_definition,
-                    validate_tool_annotation,
+                     Tool, ToolDefinition, VisualizationTool,
+                     VisualizationToolError, WorkflowTool)
+from .utils import (FileTypeValidationError, create_tool,
+                    create_tool_definition, get_visualization_annotations_list,
+                    get_workflows, validate_tool_annotation,
                     validate_tool_launch_configuration,
                     validate_workflow_step_annotation)
 from .views import ToolDefinitionsViewSet, ToolsViewSet
@@ -105,6 +108,11 @@ class ToolManagerMocks(TestCase):
         ).start()
 
         # Galaxy Library mocks
+        self.create_library_mock = mock.patch.object(
+            LibraryClient,
+            "create_library",
+            return_value=library_dict
+        ).start()
         self.delete_library_mock = mock.patch.object(
             LibraryClient, "delete_library"
         ).start()
@@ -149,9 +157,6 @@ class ToolManagerMocks(TestCase):
         ).start()
         self.create_history_mock = mock.patch.object(
             WorkflowTool, "create_galaxy_history", return_value=history_dict
-        ).start()
-        self.create_library_mock = mock.patch.object(
-            WorkflowTool, "create_galaxy_library", return_value=library_dict
         ).start()
         self.tool_data_mock = mock.patch.object(
             WorkflowTool, "_get_tool_data",
@@ -261,6 +266,37 @@ class ToolManagerTestBase(ToolManagerMocks):
     def tearDown(self):
         # Trigger the pre_delete signal so that datafiles are purged
         FileStoreItem.objects.all().delete()
+
+    def create_solr_mock_response(self, tool):
+        return json.dumps(
+            {
+                "responseHeader": {
+                    "status": 0,
+                    "QTime": 36,
+                    "params": (
+                        _create_solr_params_from_node_uuids(
+                            tool.get_input_node_uuids()
+                        )
+                    )
+                },
+                "response": {
+                    "numFound": len(tool._get_input_nodes()),
+                    "start": 0,
+                    "docs": [
+                        {
+                            "uuid": node.uuid,
+                            "name": node.name,
+                            "type": node.type,
+                            "file_uuid": node.file_uuid,
+                            "organism_Characteristics_generic_s":
+                                "Mus musculus",
+                            "filename_Characteristics_generic_s":
+                                node.get_file_store_item().source
+                        } for node in tool._get_input_nodes()
+                    ]
+                }
+            }
+        )
 
     def create_tool(self,
                     tool_type,
@@ -429,13 +465,11 @@ class ToolManagerTestBase(ToolManagerMocks):
             *[self.make_node() for i in range(0, 4)]
         )
 
-    def make_node(self):
+    def make_node(self, source="http://www.example.com/test_file.txt"):
         test_file = StringIO.StringIO()
 
         test_file.write('Coffee is really great.\n')
-        self.file_store_item = FileStoreItem.objects.create(
-            source="http://www.example.com/test_file.txt"
-        )
+        self.file_store_item = FileStoreItem.objects.create(source=source)
 
         node = NodeFactory(
             name="Node {}".format(uuid.uuid4()),
@@ -1257,6 +1291,47 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
             )
             self.assertEqual(ToolDefinition.objects.count(), 0)
 
+    def _assert_visualization_tool_def_exception_contents(
+        self,
+        exception,
+        tool_annotation_name,
+        messages
+    ):
+        assert type(messages) == list
+        with open(
+            "{}/visualizations/{}.json".format(
+                TEST_DATA_PATH,
+                tool_annotation_name
+            )
+        ) as f:
+            tool_annotation = [json.loads(f.read())]
+
+        with mock.patch(
+                self.mock_vis_annotations_reference,
+                return_value=tool_annotation
+        ):
+            with self.assertRaises(exception) as context:
+                call_command("generate_tool_definitions", visualizations=True)
+            [self.assertIn(message, context.exception.message)
+             for message in messages]
+
+    def test_visualization_generation_with_no_image_version_yields_error(self):
+        self._assert_visualization_tool_def_exception_contents(
+            CommandError,
+            "no_docker_image_version",
+            ["no specified version"]
+        )
+
+    def test_tool_def_generation_with_bad_filetype_yields_error(self):
+        self._assert_visualization_tool_def_exception_contents(
+            CommandError,
+            "bad_filetype",
+            [
+                "BAD FILETYPE",
+                str([filetype.name for filetype in FileType.objects.all()])
+            ]
+        )
+
 
 class ToolDefinitionTests(ToolManagerTestBase):
     def setUp(self):
@@ -1393,31 +1468,9 @@ class VisualizationToolTests(ToolManagerTestBase):
 
         self.search_solr_mock = mock.patch(
             "data_set_manager.utils.search_solr",
-            return_value=json.dumps({
-                "responseHeader": {
-                    "status": 0,
-                    "QTime": 36,
-                    "params": (
-                        _create_solr_params_from_node_uuids(
-                            self.tool.get_input_node_uuids()
-                        )
-                    )
-                },
-                "response": {
-                    "numFound": len(self.tool._get_input_nodes()),
-                    "start": 0,
-                    "docs": [
-                        {
-                            "uuid": node.uuid,
-                            "name": node.name,
-                            "type": node.type,
-                            "file_uuid": node.file_uuid,
-                            "organism_Characteristics_generic_s":
-                                "Mus musculus",
-                        } for node in self.tool._get_input_nodes()
-                    ]
-                }
-            })
+            return_value=self.create_solr_mock_response(
+                self.visualization_tool
+            )
         ).start()
 
     def test_get_detailed_input_nodes_dict(self):
@@ -1435,6 +1488,8 @@ class VisualizationToolTests(ToolManagerTestBase):
                         "type": node.type,
                         "file_uuid": node.file_uuid,
                         "organism_Characteristics_generic_s": "Mus musculus",
+                        "filename_Characteristics_generic_s":
+                            node.get_file_store_item().source
                     }
                 } for node in self.tool._get_input_nodes()
             }
@@ -2363,6 +2418,12 @@ class WorkflowToolTests(ToolManagerTestBase):
         # RenamedDatasetAction in Galaxy was edited
         self.assertEqual(edited_galaxy_datasets[0]["name"], new_dataset_name)
 
+    def test_create_galaxy_library_sets_analysis_library_id(self):
+        self.create_tool(ToolDefinition.WORKFLOW)
+        self.assertIsNone(self.tool.analysis.library_id)
+        self.tool.create_galaxy_library()
+        self.assertEqual(self.tool.analysis.library_id, library_dict["id"])
+
 
 class ToolAPITests(APITestCase, ToolManagerTestBase):
     def test_tools_exist(self):
@@ -2920,6 +2981,11 @@ class VisualizationToolLaunchTests(ToolManagerTestBase,  # TODO: Cypress
         ToolManagerTestBase.setUp(self)
         SeleniumTestBaseGeneric.setUp(self)
 
+        self.sample_igv_file = urljoin(
+            self.live_server_url,
+            "/tool_manager/test_data/sample.seg"
+        )
+
     def tearDown(self):
         # super() will only ever resolve a single class type for a given method
         ToolManagerTestBase.tearDown(self)
@@ -2972,26 +3038,27 @@ class VisualizationToolLaunchTests(ToolManagerTestBase,  # TODO: Cypress
             self.td = ToolDefinition.objects.all()[0]
 
             # Create mock ToolLaunchConfiguration
-            self.post_data = {
+            tool_launch_configuration = {
                 "dataset_uuid": self.dataset.uuid,
                 "tool_definition_uuid": self.td.uuid,
-                Tool.FILE_RELATIONSHIPS: str([file_relationships]),
+                Tool.FILE_RELATIONSHIPS: "[{}]".format(
+                    self.make_node(source=self.sample_igv_file)
+                ),
                 ToolDefinition.PARAMETERS: {
                     self.mock_parameter.uuid: self.mock_parameter.default_value
                 }
             }
-
-            self.post_request = self.factory.post(
-                self.tools_url_root,
-                data=self.post_data,
-                format="json"
+            visualization_tool = create_tool(
+                tool_launch_configuration,
+                self.user
             )
-            force_authenticate(self.post_request, self.user)
-            with mock.patch("tool_manager.models.get_solr_response_json"):
-                post_response = self.tools_view(self.post_request)
-            logger.debug("VisualizationTool response content: %s",
-                         post_response.content)
-            self.assertEqual(post_response.status_code, 200)
+            with mock.patch(
+                "data_set_manager.utils.search_solr",
+                return_value=self.create_solr_mock_response(
+                    visualization_tool
+                )
+            ):
+                visualization_tool.launch()
 
             tools = VisualizationTool.objects.filter(
                 tool_definition__uuid=self.td.uuid
@@ -3020,7 +3087,7 @@ class VisualizationToolLaunchTests(ToolManagerTestBase,  # TODO: Cypress
             time.sleep(15)
 
             wait_until_class_visible(self.browser, "igv-track-label", MAX_WAIT)
-            self.assertEqual(
+            self.assertIn(
                 "sample.seg",
                 self.browser.find_elements_by_class_name(
                     "igv-track-label"
@@ -3029,7 +3096,7 @@ class VisualizationToolLaunchTests(ToolManagerTestBase,  # TODO: Cypress
 
         self._start_visualization(
             'igv.json',
-            self.live_server_url + "/tool_manager/test_data/sample.seg",
+            self.sample_igv_file,
             assertions
         )
 
@@ -3073,12 +3140,12 @@ class VisualizationToolLaunchTests(ToolManagerTestBase,  # TODO: Cypress
                 count=i+1
             )
 
-        with self.assertRaises(AssertionError):
-            # '400 != 200': Not what we really want?
+        with self.assertRaises(VisualizationToolError) as context:
             self._start_visualization(
                 'hello_world.json',
                 "https://www.example.com/file.txt"
             )
+        self.assertIn("Max containers", context.exception.message)
 
     def test__get_launch_parameters(self):
         def assertions(tool):
@@ -3089,7 +3156,7 @@ class VisualizationToolLaunchTests(ToolManagerTestBase,  # TODO: Cypress
 
         self._start_visualization(
             'igv.json',
-            self.live_server_url + "/tool_manager/test_data/sample.seg",
+            self.sample_igv_file,
             assertions
         )
 
@@ -3260,3 +3327,89 @@ class ToolLaunchConfigurationTests(ToolManagerTestBase):
             )
         }
         validate_tool_launch_configuration(tool_launch_configuration)
+
+
+class ToolManagerUtilitiesTests(ToolManagerTestBase):
+    def test_file_type_validation_error(self):
+        bad_filetype = "COFFEE"
+        error_message = "FileType `{}` does not exist".format(bad_filetype)
+
+        file_type_validation_error = FileTypeValidationError(
+            bad_filetype,
+            error_message
+        )
+        self.assertIn(bad_filetype, file_type_validation_error.message)
+        self.assertIn(error_message, file_type_validation_error.message)
+        self.assertIn(
+            str([f.name for f in FileType.objects.all()]),
+            file_type_validation_error.message
+        )
+
+    def test_get_visualization_annotations_list(self):
+        settings.VISUALIZATION_ANNOTATION_BASE_PATH = os.path.dirname(__file__)
+        tool_definition_name = "dummy.json"
+        tool_definition = {
+            "is_tool_definition": True
+        }
+        tool_definition_path = os.path.join(
+            settings.VISUALIZATION_ANNOTATION_BASE_PATH,
+            tool_definition_name
+        )
+        with open(tool_definition_path, "w") as f:
+            f.write(json.dumps(tool_definition))
+
+        visualization_annotations = get_visualization_annotations_list()
+        self.assertEqual(
+            visualization_annotations,
+            [
+                {
+                    "is_tool_definition": True
+                }
+            ]
+        )
+        os.remove(tool_definition_path)
+
+    @mock.patch(
+        "bioblend.galaxy.workflows.WorkflowClient.export_workflow_json",
+        return_value="workflow_graph"
+    )
+    @mock.patch(
+        "bioblend.galaxy.workflows.WorkflowClient.show_workflow",
+        return_value={"graph": None}
+    )
+    def test_get_workflows(self, show_workflow_mock, exported_workflow_mock):
+        with mock.patch.object(
+            bioblend.galaxy.workflows.WorkflowClient,
+            "get_workflows",
+            return_value=[{"id": self.GALAXY_ID_MOCK}]
+        ) as bioblend_get_workflows_mock:
+            workflows = get_workflows()
+        self.assertEqual(
+            workflows,
+            {
+                self.workflow_engine.uuid: [
+                    {
+                        "graph": "workflow_graph"
+                    }
+                ]
+            }
+        )
+
+        self.assertTrue(bioblend_get_workflows_mock.called)
+        self.assertTrue(show_workflow_mock.called)
+        self.assertTrue(exported_workflow_mock.called)
+
+    def test_get_workflows_with_connection_error(self):
+        with mock.patch.object(
+            bioblend.galaxy.workflows.WorkflowClient,
+            "get_workflows",
+            side_effect=bioblend.ConnectionError("Bad Connection")
+        ):
+            with self.assertRaises(RuntimeError) as context:
+                get_workflows()
+            self.assertIn(
+                "Unable to retrieve workflows from '{}'".format(
+                    self.workflow_engine.instance.base_url
+                ),
+                context.exception.message
+            )

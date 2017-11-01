@@ -70,7 +70,7 @@ class Command(BaseCommand):
     def _ask_for_confirmation():
         return raw_input("Are you sure you want to `--force`? This will "
                          "delete any existing ToolDefinitions with the "
-                         "same name as any new ones you you're trying to "
+                         "same name as any new ones you're trying to "
                          "import: [y/n]: ")
 
     def _has_duplicates(self, tool_annotation):
