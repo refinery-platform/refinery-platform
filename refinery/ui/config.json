@@ -65,6 +65,7 @@
         "angular-animate/angular-animate.min.js",
         "angular-bootstrap/ui-bootstrap-tpls.min.js",
         "angular-bootstrap/ui-bootstrap.min.js",
+        "bootbox/bootbox.js",
         "angular-intro-js/build/angular-intro.min.js",
         "angular-local-storage/dist/angular-local-storage.min.js",
         "angular-file-model/angular-file-model.js",
