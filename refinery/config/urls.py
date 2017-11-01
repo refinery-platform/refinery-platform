@@ -5,9 +5,7 @@ from django.conf.urls import include, patterns, url
 from django.conf.urls.static import static
 from django.contrib import admin
 
-from haystack.forms import FacetedSearchForm
 from haystack.query import SearchQuerySet
-from haystack.views import FacetedSearchView
 from registration.backends.default.views import ActivationView
 from tastypie.api import Api
 
@@ -128,16 +126,6 @@ urlpatterns = patterns(
     # NG: tastypie API urls
     url(r'^api/', include(v1_api.urls)),
 
-    # NG: Haystack (searching and querying) urls
-    # url(r'^search/', include('haystack.urls')),
-    url(
-        r'^search/',
-        FacetedSearchView(
-            form_class=FacetedSearchForm,
-            searchqueryset=sqs
-        ),
-        name='search'
-    ),
     user_files_url,
     user_files_csv_url
 
