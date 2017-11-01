@@ -1,6 +1,5 @@
 import json
 import logging
-import os
 import re
 import urllib
 from urlparse import urljoin
@@ -437,54 +436,6 @@ def workflow_engine(request, uuid):
                     status='401')
     return render_to_response('core/workflow_engine.html',
                               {'workflow_engine': workflow_engine},
-                              context_instance=RequestContext(request))
-
-
-def analyses(request, project_uuid):
-    project = Project.objects.get(uuid=project_uuid)
-    analyses = project.analyses.all()
-    return render_to_response('core/analyses.html',
-                              {"project": project, "analyses": analyses},
-                              context_instance=RequestContext(request))
-
-
-@login_required()
-def analysis(request, analysis_uuid):
-    # TODO: handle DoesNotExist and MultipleObjectsReturned
-    analysis = Analysis.objects.get(uuid=analysis_uuid)
-    # project associated with this Analysis
-    project = analysis.project
-    # list of analysis inputs
-    data_inputs = analysis.workflow_data_input_maps.order_by('pair_id')
-    # list of analysis results
-    analysis_results = analysis.results
-    workflow = analysis.workflow
-    # getting file_store references
-    file_all = []
-    for i in analysis_results.all():
-        file_store_uuid = i.file_store_uuid
-        fs = FileStoreItem.objects.get(uuid=file_store_uuid)
-        file_all.append(fs)
-    # NG: get file_store items for inputs
-    input_filenames = []
-    for workflow_input in data_inputs.all():
-        file_uuid = Node.objects.get(uuid=workflow_input.data_uuid).file_uuid
-        file_store_item = FileStoreItem.objects.get_item(uuid=file_uuid)
-        if file_store_item:
-            file_path = file_store_item.get_absolute_path()
-            if file_path:
-                file_name = os.path.basename(file_path)
-                input_filenames.append(file_name)
-    return render_to_response('core/analysis.html',
-                              {
-                                  "analysis": analysis,
-                                  "analysis_results": analysis_results,
-                                  "inputs": data_inputs,
-                                  "input_filenames": input_filenames,
-                                  "project": project,
-                                  "workflow": workflow,
-                                  "fs_files": file_all
-                              },
                               context_instance=RequestContext(request))
 
 
