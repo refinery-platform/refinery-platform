@@ -230,7 +230,31 @@ def make_api_uri(resource_name, resource_id='', sharing=False):
             return uri
 
 
-class NodeSetResourceTest(ResourceTestCase):
+class LoginResourceTestCase(ResourceTestCase):
+
+    def setUp(self):
+        super(LoginResourceTestCase, self).setUp()
+        self.username = self.password = 'user'
+        self.user = User.objects.create_user(
+            self.username, '', self.password
+        )
+        self.username2 = self.password2 = 'user2'
+        self.user2 = User.objects.create_user(
+            self.username2, '', self.password2
+        )
+        self.get_credentials()
+
+    def get_credentials(self):
+        """Authenticate as self.user"""
+        # workaround required to use SessionAuthentication
+        # http://javaguirre.net/2013/01/29/using-session-authentication-tastypie-tests/
+        return self.api_client.client.login(
+            username=self.username,
+            password=self.password
+        )
+
+
+class NodeSetResourceTest(LoginResourceTestCase):
     """Test NodeSet REST API operations"""
 
     def setUp(self):
@@ -260,18 +284,6 @@ class NodeSetResourceTest(ResourceTestCase):
             "nodeSelection": [],
             "nodeSelectionBlacklistMode": True
         }
-        self.username = self.password = 'user'
-        self.user = User.objects.create_user(self.username, '', self.password)
-        self.username2 = self.password2 = 'user2'
-        self.user2 = User.objects.create_user(self.username2, '',
-                                              self.password2)
-
-    def get_credentials(self):
-        """Authenticate as self.user"""
-        # workaround required to use SessionAuthentication
-        # http://javaguirre.net/2013/01/29/using-session-authentication-tastypie-tests/
-        return self.api_client.client.login(username=self.username,
-                                            password=self.password)
 
     def test_get_nodeset(self):
         """Test retrieving an existing NodeSet that belongs to a user who
@@ -590,7 +602,7 @@ class NodeSetResourceTest(ResourceTestCase):
         self.assertEqual(NodeSet.objects.count(), 1)
 
 
-class NodeSetListResourceTest(ResourceTestCase):
+class NodeSetListResourceTest(LoginResourceTestCase):
     """Test NodeSetListResource REST API operations"""
 
     def setUp(self):
@@ -620,19 +632,7 @@ class NodeSetListResourceTest(ResourceTestCase):
             "nodeSelection": [],
             "nodeSelectionBlacklistMode": True
         }
-        self.username = self.password = 'user'
-        self.user = User.objects.create_user(self.username, '', self.password)
-        self.username2 = self.password2 = 'user2'
-        self.user2 = User.objects.create_user(self.username2, '',
-                                              self.password2)
         self.nodeset_uri = make_api_uri('nodesetlist')
-
-    def get_credentials(self):
-        """Authenticate as self.user"""
-        # workaround required to use SessionAuthentication
-        # http://javaguirre.net/2013/01/29/using-session-authentication-tastypie-tests/
-        return self.api_client.client.login(username=self.username,
-                                            password=self.password)
 
     # Same reason
     # def test_get_nodeset_list(self):
@@ -751,19 +751,11 @@ class NodeSetListResourceTest(ResourceTestCase):
         self.assertEqual(NodeSet.objects.count(), 1)
 
 
-class AnalysisResourceTest(ResourceTestCase):
+class AnalysisResourceTest(LoginResourceTestCase):
     """Test Analysis REST API operations"""
 
     def setUp(self):
         super(AnalysisResourceTest, self).setUp()
-        self.username = self.password = 'user'
-        self.user = User.objects.create_user(
-            self.username, '', self.password
-        )
-        self.username2 = self.password2 = 'user2'
-        self.user2 = User.objects.create_user(
-            self.username2, '', self.password2
-        )
         self.get_credentials()
         self.project = Project.objects.create()
         self.user_catch_all_project = UserProfile.objects.get(
@@ -777,15 +769,6 @@ class AnalysisResourceTest(ResourceTestCase):
         )
         self.workflow = Workflow.objects.create(
             workflow_engine=self.workflow_engine
-        )
-
-    def get_credentials(self):
-        """Authenticate as self.user"""
-        # workaround required to use SessionAuthentication
-        # http://javaguirre.net/2013/01/29/using-session-authentication-tastypie-tests/
-        return self.api_client.client.login(
-            username=self.username,
-            password=self.password
         )
 
     def test_xml_format_ignored(self):
@@ -1899,20 +1882,11 @@ class UserTutorialsTest(TestCase):
         )
 
 
-class DataSetResourceTest(ResourceTestCase):
+class DataSetResourceTest(LoginResourceTestCase):
     """Test DataSet V1 REST API operations"""
 
     def setUp(self):
         super(DataSetResourceTest, self).setUp()
-        self.username = self.password = 'user'
-        self.user = User.objects.create_user(
-            self.username, '', self.password
-        )
-        self.username2 = self.password2 = 'user2'
-        self.user2 = User.objects.create_user(
-            self.username2, '', self.password2
-        )
-        self.get_credentials()
         self.project = Project.objects.create()
         self.user_catch_all_project = UserProfile.objects.get(
             user=self.user
@@ -1936,15 +1910,6 @@ class DataSetResourceTest(ResourceTestCase):
                 data_set=self.dataset,
                 version=1
             )
-
-    def get_credentials(self):
-        """Authenticate as self.user"""
-        # workaround required to use SessionAuthentication
-        # http://javaguirre.net/2013/01/29/using-session-authentication-tastypie-tests/
-        return self.api_client.client.login(
-            username=self.username,
-            password=self.password
-        )
 
     def test_get_dataset(self):
         """Test retrieving an existing Dataset that belongs to a user who
