@@ -10,12 +10,6 @@
 </div>
 {% endblock %}
 
-{% block head_html %}
-<script language="javascript" type="text/javascript" src="{% static "js/bootstrap/js/typeahead.js" %}"></script>
-
-
-{% endblock %}
-
 {% block content %}
     <form method="GET" action=".">
     	<table>
@@ -111,7 +105,9 @@
 <script>
 
 // typeahead based investigation id
-$(document).ready(function() {
+// Commented out this following code. The bootstrap typeahead feature needs
+// to be revisited along with this page. -JM Oct 2017
+/* $(document).ready(function() {
     $("#id_q").typeahead({
 		ajax: {
 			url: "/typeahead/",
@@ -134,7 +130,7 @@ $(document).ready(function() {
             	return data;
         	}
        	}
-    });
+    }); */
 });
 
 </script>
