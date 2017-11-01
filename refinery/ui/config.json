@@ -28,6 +28,7 @@
       "data-set-about",
       "globals",
       "metadata-table-import",
+      "provvis",
       "statistics",
       "tool-launch",
       "user-file-browser"
@@ -87,7 +88,6 @@
         "intro-js/minified/intro.min.js",
         "dagre/dist/dagre.core.min.js",
         "filesize/lib/filesize.min.js",
-        "floatThead/dist/jquery.floatThead.min.js",
         "humanize/humanize.js",
         "ng-file-upload/ng-file-upload.min.js",
         "jquery-file-upload/js/jquery.fileupload-angular.js",
@@ -102,7 +102,6 @@
         "spark-md5/spark-md5.min.js",
         "spectrum/spectrum.js",
         "svgxuse/svgxuse.min.js",
-        "tipsy/src/javascripts/jquery.tipsy.js",
         "aws-sdk-js/dist/aws-sdk.min.js"
       ],
       "maps": [
