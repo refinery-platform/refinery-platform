@@ -690,6 +690,17 @@ a.analysis-header {
     font-size: @base-font-size * 1.15;
   }
 
+  &-tabs .nav-tabs div.linked {
+    background-color: transparent;
+    border: none;
+    margin-right: 0px;
+    padding-top: 2px;
+    padding-bottom: 4px;
+    margin-left: 10px;
+    margin-right: 10px;
+    font-size: @base-font-size * 1.15;
+  }
+
   &-tabs .nav-tabs li.active {
     background-color: @white;
     border-top: 5px solid @gray;
@@ -702,7 +713,15 @@ a.analysis-header {
     border-radius: 0px;
   }
 
+  &-tabs .nav-tabs li.active div.linked:hover {
+    border-radius: 0px;
+  }
+
   &-tabs .nav-tabs li a:hover {
+    border-radius: 0px;
+  }
+
+  &-tabs .nav-tabs li div.linked:hover {
     border-radius: 0px;
   }
 
@@ -712,6 +731,14 @@ a.analysis-header {
     padding-top: 4px;
     padding-bottom: 2px;
   }
+
+  &-tabs .nav-tabs li.active div.linked:hover {
+    background-color: transparent;
+    border: none;
+    padding-top: 4px;
+    padding-bottom: 2px;
+  }
+
 
   .navbar-search {
     display: block;

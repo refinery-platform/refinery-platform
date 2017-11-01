@@ -4035,9 +4035,9 @@ var provvisRender = (function () {
     });
 
     /* TODO: Fix for temporary sidebar overlap. */
+    // removed temp fix for depending on solr-facet-view dom object
     var sidebarOverlap = $('#provenance-sidebar').width() -
-    $('#solr-facet-view').width() -
-    parseFloat($('#main-area').css('margin-left').replace('px', ''));
+    parseFloat($('#main-area-view').css('margin-left').replace('px', ''));
 
 
     var delta = [max[0] - min[0], max[1] - min[1]];
@@ -4168,6 +4168,7 @@ var provvisRender = (function () {
         });
     });
 
+    console.log('in clear node selection error?');
     $('#nodeInfoTitle').html('Select a node: - ');
     $('#nodeInfoTitleLink').html('');
     $('#' + 'provenance-nodeInfo-content').html('');
@@ -4560,6 +4561,7 @@ var provvisRender = (function () {
    * @param selNode Selected node.
    */
   var updateNodeInfoTab = function (selNode) {
+    console.log('in update node info tab error');
     var title = ' - ';
     var titleLink = ' - ';
     var data = Object.create(null);
