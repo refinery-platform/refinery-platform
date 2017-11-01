@@ -1,0 +1,14 @@
+{% if object.accession %}Accession: {{ object.accession }} - {% endif %}
+{% if object.description %}{{ object.description }} - {% endif %}
+{% if object.summary %}{{ object.summary }} - {% endif %}
+{% if object.modification_date %}{{ object.modification_date }} - {% endif %}
+{% if object.creation_date %}{{ object.creation_date }} - {% endif %}
+{% if object.submitter %}{{ object.submitter }} - {% endif %}
+{% if object.measurement %}{{ object.measurement }} - {% endif %}
+{{ object.technology }}
+
+{% if nodes %}
+{% for node in nodes %}
+{{ node.node_name }}: {{ node.attribute_type }} ({{ node.attribute_subtype }}) - {{ node.attribute_value }} ({{ node.attribute_value_unit }})
+{% endfor %}
+{% endif %}
