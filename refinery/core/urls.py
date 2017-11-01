@@ -16,7 +16,6 @@ urlpatterns = patterns(
     'core.views',
     url(r'^$', 'home', name="home"),
     url(r'^about/$', 'about', name="about"),
-    url(r'^contact/$', 'contact', name="contact"),
     url(r'^statistics/$', 'statistics', name="statistics"),
     url(r'^collaboration/$', 'collaboration', name='collaboration'),
     url(r'^group_invite/(?P<token>' + UUID_RE + r')/$',
