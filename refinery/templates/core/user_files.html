@@ -25,7 +25,7 @@
 {% block content %}
   <!-- DIFF: Remove surrounding divs and tabs -->
 
-  <div class="refinery-panel refinery-panel-content jquery-full-height handle-overflow"
+  <div class="refinery-panel refinery-panel-content jquery-full-height"
        id="data-set-view"
        style="overflow-x: hidden;"><!-- TODO: Understand why it is too wide and remove cruft. -->
     <rp-user-file-browser></rp-user-file-browser>
@@ -46,12 +46,6 @@
       var REFINERY_REPOSITORY_MODE = true;
     {% else %}
       var REFINERY_REPOSITORY_MODE = false;
-    {% endif %}
-
-    {% if user.is_authenticated %}
-      var REFINERY_USER_AUTHENTICATED = true;
-    {% else %}
-      var REFINERY_USER_AUTHENTICATED = false;
     {% endif %}
 
     var csrf_token = "{{ csrf_token }}";

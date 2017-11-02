@@ -99,7 +99,7 @@
           var queryFields = Object.keys($location.search());
           for (var ind = 0; ind < allFields.length; ind++) {
             var encodedAttribute = selectedFilterService
-              .stringifyAndEncodeAttributeObj(attributeInternalName, allFields[ind]);
+              .stringifyAttributeObj(attributeInternalName, allFields[ind]);
             if (queryFields.indexOf(encodedAttribute) > -1) {
               var escapeAttributeName = attributeName.replace(/ /g, '-');
               var attributeTitle = angular.element(

@@ -5,7 +5,6 @@ from django.conf.urls import include, patterns, url
 from django.conf.urls.static import static
 from django.contrib import admin
 
-from haystack.query import SearchQuerySet
 from registration.backends.default.views import ActivationView
 from tastypie.api import Api
 
@@ -16,7 +15,7 @@ from core.api import (AnalysisResource, DataSetResource, ExtendedGroupResource,
                       UserAuthenticationResource, UserProfileResource,
                       WorkflowInputRelationshipsResource, WorkflowResource)
 from core.forms import RegistrationFormWithCustomFields
-from core.models import AuthenticationFormUsernameOrEmail, DataSet
+from core.models import AuthenticationFormUsernameOrEmail
 from core.urls import core_router
 from core.views import CustomRegistrationView
 from data_set_manager.api import (AssayResource, AttributeOrderResource,
@@ -31,13 +30,6 @@ from user_files_manager.urls import (user_files_csv_url, user_files_router,
                                      user_files_url)
 
 logger = logging.getLogger(__name__)
-
-# NG: facets for Haystack
-sqs = (SearchQuerySet().using("core")
-                       .models(DataSet)
-                       .facet('measurement')
-                       .facet('technology')
-                       .highlight())
 
 # NG: added for tastypie URL
 v1_api = Api(api_name='v1')

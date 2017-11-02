@@ -76,19 +76,11 @@
               refinery-tooltip-placement="top">
 
             </i>
-          <span ng-switch on="analysis.status">
-              <span ng-if="SUCCESS">
-                <a
-                ng-href="/data_sets/{{modal.dataSet.uuid}}/#/files/?{{modal.analysis.data_sets_query}}">
-                {{ analysis.name }}
+            <span>
+              <a
+              ng-href="/data_sets/{{modal.dataSet.uuid}}/#/analyses/">
+              {{ analysis.name }}
               </a>
-              </span>
-              <span ng-if="!SUCCESS">
-                <a
-                ng-href="/data_sets/{{modal.dataSet.uuid}}/#/analyses/">
-                {{ analysis.name }}
-              </a>
-              </span>
             </span>
 
         </li>
