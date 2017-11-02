@@ -952,8 +952,8 @@ class WorkflowTool(Tool):
     def _get_galaxy_history_dataset_list(self):
         """
         Retrieve a list of Galaxy Datasets from the Galaxy History of our
-        Galaxy Workflow invocation all tool outputs in the Galaxy Workflow
-        editor.
+        Galaxy Workflow invocation corresponding to all tool outputs in the
+        Galaxy Workflow editor.
         """
         galaxy_dataset_list = (
             self.galaxy_connection.histories.show_matching_datasets(
