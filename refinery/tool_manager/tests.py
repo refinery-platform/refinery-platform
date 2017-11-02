@@ -62,6 +62,8 @@ from file_store.models import FileStoreItem, FileType
 from galaxy_connector.models import Instance
 from selenium_testing.utils import (MAX_WAIT, SeleniumTestBaseGeneric,
                                     wait_until_class_visible)
+from tool_manager.management.commands.generate_tool_definitions import \
+    Command as GenerateToolDefinitions
 from tool_manager.tasks import django_docker_cleanup
 
 from .models import (FileRelationship, GalaxyParameter, InputFile, Parameter,
@@ -724,6 +726,16 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
 
         self.mock_parameter.delete()
 
+        self.fake_workflow = {
+            "name": "Test WF",
+            "graph": {
+                "steps": {
+                    "0": {WorkflowTool.WORKFLOW_OUTPUTS: []},
+                    "1": {WorkflowTool.WORKFLOW_OUTPUTS: ["output"]}
+                }
+            }
+        }
+
     def test_tool_definition_model_str(self):
         with open("{}/visualizations/igv.json".format(TEST_DATA_PATH)) as f:
             tool_annotation = [json.loads(f.read())]
@@ -1330,6 +1342,39 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
                 "BAD FILETYPE",
                 str([filetype.name for filetype in FileType.objects.all()])
             ]
+        )
+
+    def test_known_galaxy_one_off_asterisking_error_is_handled(self):
+        workflow_exhibiting_one_off_asterisking_error = self.fake_workflow
+        with self.assertRaises(CommandError) as context:
+            GenerateToolDefinitions().ensure_workflow_outputs_are_present(
+                workflow_exhibiting_one_off_asterisking_error
+            )
+        self.assertIn("asterisked `workflow_outputs`",
+                      context.exception.message)
+
+    def test_ensure_workflow_outputs_are_present_bad_workflow_outputs(self):
+        self.fake_workflow["graph"]["steps"] = {
+            "0": {WorkflowTool.WORKFLOW_OUTPUTS: ["output"]},
+            "1": {WorkflowTool.WORKFLOW_OUTPUTS: []}
+        }
+        workflow_without_outputs_defined = self.fake_workflow
+
+        with self.assertRaises(CommandError) as context:
+            GenerateToolDefinitions().ensure_workflow_outputs_are_present(
+                workflow_without_outputs_defined
+            )
+        self.assertIn("does not have `workflow_outputs` defined",
+                      context.exception.message)
+
+    def test_ensure_workflow_outputs_are_present_good_workflow_outputs(self):
+        self.fake_workflow["graph"]["steps"] = {
+            "0": {WorkflowTool.WORKFLOW_OUTPUTS: ["output"]},
+            "1": {WorkflowTool.WORKFLOW_OUTPUTS: ["output"]}
+        }
+        workflow_with_outputs_defined = self.fake_workflow
+        GenerateToolDefinitions().ensure_workflow_outputs_are_present(
+            workflow_with_outputs_defined
         )
 
 
@@ -3370,7 +3415,7 @@ class ToolManagerUtilitiesTests(ToolManagerTestBase):
         os.remove(tool_definition_path)
 
     @mock.patch(
-        "bioblend.galaxy.workflows.WorkflowClient.export_workflow_json",
+        "bioblend.galaxy.workflows.WorkflowClient.export_workflow_dict",
         return_value="workflow_graph"
     )
     @mock.patch(
