@@ -514,8 +514,8 @@ var provvisInit = (function () {
    * @param solrResponse Facet filter information on node attributes.
    */
   var extractFacetNodeAttributesPrivate = function (solrResponse) {
-    if (solrResponse instanceof SolrResponse) {
-      solrResponse.getDocumentList().forEach(function (d) {
+    if (solrResponse.length) {
+      solrResponse.nodes.forEach(function (d) {
         /* Set facet attributes to all nodes for the subanalysis of the selected
          * node.
          */
@@ -546,9 +546,8 @@ var provvisInit = (function () {
    */
   var createFacetNodeAttributeList = function (solrResponse) {
     /* Extract attributes. */
-    if (solrResponse instanceof SolrResponse &&
-      solrResponse.getDocumentList().length > 0) {
-      var sampleNode = solrResponse.getDocumentList()[0];
+    if (solrResponse.nodes.length) {
+      var sampleNode = solrResponse.nodes[0];
       var rawAttrSet = d3.entries(sampleNode);
 
       rawAttrSet.forEach(function (fa) {

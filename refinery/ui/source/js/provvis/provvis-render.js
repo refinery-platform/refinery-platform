@@ -36,7 +36,7 @@ var provvisRender = (function () {
   var filterMethod = 'timeline';
   var timeLineGradientScale = Object.create(null);
 
-  var lastSolrResponse = Object.create(null);
+  var lastSolrResponse = [];
 
   var selectedNodeSet = d3.map();
 
@@ -6002,7 +6002,7 @@ var provvisRender = (function () {
 
     filterMethod = 'facet';
 
-    if (solrResponse instanceof SolrResponse) {
+    if (solrResponse.nodes.length) {
 
       vis.graph.lNodes = lNodesBAK;
       vis.graph.aNodes = aNodesBAK;
@@ -6012,7 +6012,7 @@ var provvisRender = (function () {
       vis.graph.lLinks = lLinksBAK;
 
       /* Copy filtered nodes. */
-      solrResponse.getDocumentList().forEach(function (d) {
+      solrResponse.nodes.forEach(function (d) {
         selNodes.push(vis.graph.nodeMap.get(d.uuid));
       });
 

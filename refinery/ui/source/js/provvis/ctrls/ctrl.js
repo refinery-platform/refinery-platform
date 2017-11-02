@@ -29,7 +29,7 @@
     var analysesList = [];
     var filesList = [];
 
-    // Ajax calls, grabs the entire analysis list for a particular data set
+    // Ajax calls, grabs the analysis & files promises for a particular data set
     var getData = function () {
       var analysisParams = {
         format: 'json',
@@ -50,7 +50,7 @@
       getData().then(function (response) {
         analysesList = response[0].objects;
         filesList = response[1];
-        console.log('in the then');
+        console.log('in the launchProvvis');
         console.log(analysesList);
         console.log(filesList);
         $window.provvis.run(studyUuid, analysesList, filesList);
