@@ -225,7 +225,8 @@ class Command(BaseCommand):
                 "Workflow outputs to Refinery".format(workflow["name"])
             )
 
-    def parse_workflow_step_annotations(self, workflow):
+    @staticmethod
+    def parse_workflow_step_annotations(workflow):
         """
         Iterate through the workflow's step's annotations and
         append to the `parameters` field so they are
