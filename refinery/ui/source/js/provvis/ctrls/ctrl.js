@@ -23,11 +23,25 @@
     $q,
     $window
   ) {
+    var vm = this;
     var studyUuid = $window.externalStudyUuid;
     var dataSetUuid = $window.dataSetUuid;
     var assayUuid = $window.externalAssayUuid;
     var analysesList = [];
     var solrResponse = {};
+    vm.getData = getData;
+    vm.launchProvvis = launchProvvis;
+
+    activate();
+
+    /*
+     * -----------------------------------------------------------------------------
+     * Methods
+     * -----------------------------------------------------------------------------
+     */
+    function activate () {
+      vm.launchProvvis();
+    }
 
     // Ajax calls, grabs the analysis & files promises for a particular data set
     var getData = function () {
@@ -53,7 +67,5 @@
         $window.provvis.run(studyUuid, analysesList, solrResponse);
       });
     };
-
-    launchProvvis();
   }
 })();

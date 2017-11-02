@@ -466,7 +466,6 @@ var provvis = (function (  // eslint-disable-line no-unused-vars
    */
   return {
     run: function (studyUuid, studyAnalyses, solrResponse) {
-      console.log(' in the running');
       runProvVisPrivate(studyUuid, studyAnalyses, solrResponse);
     },
     update: function (solrResponse) {
