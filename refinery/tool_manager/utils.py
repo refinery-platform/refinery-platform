@@ -379,7 +379,7 @@ def get_workflows():
                     workflow["id"]
                 )
                 workflow_data["graph"] = (
-                    galaxy_connection.workflows.export_workflow_json(
+                    galaxy_connection.workflows.export_workflow_dict(
                         workflow["id"]
                     )
                 )
