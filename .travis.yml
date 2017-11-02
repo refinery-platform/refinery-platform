@@ -88,12 +88,7 @@ script:
   - flake8 --exclude=migrations,ui ..
 
   - echo 'travis_fold:start:grunt'
-  - pushd ui && grunt test > /tmp/grunt-test.txt && popd
-  # 'grunt test' is too verbose, and there's not a flag to quiet it.
-  # Pipelining the output to grep would confuse grunt's exit status and grep's,
-  # so instead write to a temp file so we can get the abbreviated output,
-  # but ignore the grep status.
-  - grep -v SUCCESS /tmp/grunt-test.txt || true
+  - pushd ui && grunt test && popd
   - echo 'travis_fold:end:grunt'
 
   - echo 'travis_fold:start:django-tests'
