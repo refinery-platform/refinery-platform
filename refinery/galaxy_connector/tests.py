@@ -21,23 +21,22 @@ class GalaxyInstanceTests(TestCase):
         )
         self.show_history_mock = mock.patch.object(
             galaxy.histories.HistoryClient,
-            "show_history",
-            return_value=[
-                {
-                    "name": "Test History Content Entry",
-                    "url": "www.example.com/history_content_entry",
-                    "type": "file",
-                    "id": self.GALAXY_DATASET_ID
-                }
-            ]
-
+            "show_history"
         ).start()
         self.show_dataset_mock = mock.patch.object(
             galaxy.histories.HistoryClient,
             "show_dataset"
         ).start()
 
+        self.history_content_entry = {
+            "name": "Test History Content Entry",
+            "url": "www.example.com/history_content_entry",
+            "type": "file",
+            "id": self.GALAXY_DATASET_ID
+        }
+
     def test_get_history_file_list_with_populated_dataset_dict(self):
+        self.show_history_mock.return_value = [self.history_content_entry]
         self.show_dataset_mock.return_value = {
             "file_ext": "bam",
             "state": "ok",
@@ -68,6 +67,7 @@ class GalaxyInstanceTests(TestCase):
         self.assertEqual(history_file["misc_blurb"], self.MISCELLANEOUS_STRING)
 
     def test_get_history_file_list_with_unpopulated_dataset_dict(self):
+        self.show_history_mock.return_value = [self.history_content_entry]
         self.show_dataset_mock.return_value = {}
         history_file_list = self.galaxy_instance.get_history_file_list(
             self.GALAXY_HISTORY_ID
@@ -84,3 +84,21 @@ class GalaxyInstanceTests(TestCase):
         self.assertIsNone(history_file["genome_build"])
         self.assertIsNone(history_file["misc_info"])
         self.assertIsNone(history_file["misc_blurb"])
+
+    def test_no_history_files_if_history_content_entry_has_no_type(self):
+        del self.history_content_entry["type"]
+        self.show_history_mock.return_value = self.history_content_entry
+
+        history_file_list = self.galaxy_instance.get_history_file_list(
+            self.GALAXY_HISTORY_ID
+        )
+        self.assertEqual(len(history_file_list), 0)
+
+    def test_no_history_files_if_history_content_entry_isnt_a_file(self):
+        self.history_content_entry["type"] = "not file"
+        self.show_history_mock.return_value = self.history_content_entry
+
+        history_file_list = self.galaxy_instance.get_history_file_list(
+            self.GALAXY_HISTORY_ID
+        )
+        self.assertEqual(len(history_file_list), 0)
