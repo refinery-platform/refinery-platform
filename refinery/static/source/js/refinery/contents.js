@@ -104,7 +104,6 @@
         client.run(query, SOLR_FULL_QUERY);
       });
 
-
       clientCommands.addHandler(SOLR_QUERY_UPDATED_COMMAND, function (arguments) {
         // console.log(SOLR_QUERY_UPDATED_COMMAND + ' executed');
 
