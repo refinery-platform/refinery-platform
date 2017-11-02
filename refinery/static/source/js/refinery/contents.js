@@ -135,7 +135,8 @@
         if (arguments.query == provVisQuery) {
           /* Set face attributes for nodes in Provenance Visualization.*/
           if (provvis.get() instanceof provvisDecl.ProvVis === false) {
-            provvis.run(currentStudyUuid, dataSetMonitor.analyses.objects, arguments.response);
+     //       provvis.run(currentStudyUuid, dataSetMonitor.analyses.objects,
+            // arguments.response);
           }
 
           lastProvVisSolrResponse = arguments.response;
