@@ -87,7 +87,7 @@ class GalaxyInstanceTests(TestCase):
 
     def test_no_history_files_if_history_content_entry_has_no_type(self):
         del self.history_content_entry["type"]
-        self.show_history_mock.return_value = self.history_content_entry
+        self.show_history_mock.return_value = [self.history_content_entry]
 
         history_file_list = self.galaxy_instance.get_history_file_list(
             self.GALAXY_HISTORY_ID
@@ -95,8 +95,8 @@ class GalaxyInstanceTests(TestCase):
         self.assertEqual(len(history_file_list), 0)
 
     def test_no_history_files_if_history_content_entry_isnt_a_file(self):
-        self.history_content_entry["type"] = "not file"
-        self.show_history_mock.return_value = self.history_content_entry
+        self.history_content_entry["type"] = "not a file"
+        self.show_history_mock.return_value = [self.history_content_entry]
 
         history_file_list = self.galaxy_instance.get_history_file_list(
             self.GALAXY_HISTORY_ID
