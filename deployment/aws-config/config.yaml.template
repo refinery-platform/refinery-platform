@@ -50,6 +50,9 @@ DATA_VOLUME_SIZE: 500
 # http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSVolumeTypes.html
 DATA_VOLUME_TYPE: "st1"
 
+DOCKER_VOLUME_SIZE: 5 # HiGlass image is 2.5G, and containers are also kept here.
+DOCKER_VOLUME_TYPE: "st1"
+
 # The name of the EC2 key pair to use for SSH (must already exist in the AWS account)
 KEY_NAME: "id_rsa"
 

@@ -6,11 +6,32 @@ class refinery::aws {
 
 $fstype = 'ext3'
 
+# This is the block device for the docker image cache.
+# It must match the attachment point for the EC2 EBS volume.
+$docker_block_device = '/dev/xvds'
+
+filesystem { $docker_block_device:
+  ensure => present,
+  fs_type => $fstype,
+}
+->
+# Mountpoint
+file { '/var/lib/docker':
+  ensure => directory,
+}
+->
+mount { '/var/lib/docker':
+  ensure => mounted,
+  device => $docker_block_device,
+  fstype => $fstype,
+  options => 'defaults',
+}
+
 # This is the block device for the external data.
 # It must match the attachment point for the EC2 EBS volume.
-$block_device = '/dev/xvdr'
+$data_block_device = '/dev/xvdr'
 
-filesystem { $block_device:
+filesystem { $data_block_device:
   ensure => present,
   fs_type => $fstype,
 }
@@ -22,7 +43,7 @@ file { '/data':
 ->
 mount { '/data':
   ensure => mounted,
-  device => $block_device,
+  device => $data_block_device,
   fstype => $fstype,
   options => 'defaults',
 }

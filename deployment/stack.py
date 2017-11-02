@@ -160,7 +160,7 @@ def make_template(config, config_yaml):
         core.DeletionPolicy("Snapshot"),
         )
 
-    volume_properties = {
+    data_volume_properties = {
         'Encrypted': True,
         'Size': config['DATA_VOLUME_SIZE'],
         'Tags': load_tags(),
@@ -170,14 +170,29 @@ def make_template(config, config_yaml):
         'VolumeType': config['DATA_VOLUME_TYPE'],
     }
 
+    docker_volume_properties = {
+        'Encrypted': True,
+        'Size': config['DOCKER_VOLUME_SIZE'],
+        'Tags': load_tags(),
+        'AvailabilityZone': functions.get_att(
+            'WebInstance', 'AvailabilityZone'
+        ),
+        'VolumeType': config['DOCKER_VOLUME_TYPE'],
+    }
+
     if 'DATA_SNAPSHOT' in config:
-        volume_properties['SnapshotId'] = config['DATA_SNAPSHOT']
+        data_volume_properties['SnapshotId'] = config['DATA_SNAPSHOT']
 
     # http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-ec2-ebs-volume.html
-    cft.resources.ebs = core.Resource(
+    cft.resources.ebs_data = core.Resource(
         'RefineryData', 'AWS::EC2::Volume',
-        core.Properties(volume_properties),
+        core.Properties(data_volume_properties),
         core.DeletionPolicy("Snapshot"),
+    )
+
+    cft.resources.ebs_docker = core.Resource(
+        'RefineryDocker', 'AWS::EC2::Volume',
+        core.Properties(docker_volume_properties),
     )
 
     cft.resources.ec2_instance = core.Resource(
@@ -351,12 +366,21 @@ def make_template(config, config_yaml):
         })
     )
 
-    cft.resources.mount = core.Resource(
+    cft.resources.mount_data = core.Resource(
         'RefineryVolume', 'AWS::EC2::VolumeAttachment',
         core.Properties({
             'Device': '/dev/xvdr',
             'InstanceId': functions.ref('WebInstance'),
             'VolumeId': functions.ref('RefineryData'),
+        })
+    )
+
+    cft.resources.mount_docker = core.Resource(
+        'RefineryVolume', 'AWS::EC2::VolumeAttachment',
+        core.Properties({
+            'Device': '/dev/xvds',
+            'InstanceId': functions.ref('WebInstance'),
+            'VolumeId': functions.ref('RefineryDocker'),
         })
     )
 
