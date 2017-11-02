@@ -191,6 +191,15 @@ def make_template(config, config_yaml):
             'Monitoring': True,
             'SecurityGroups': [functions.ref("InstanceSecurityGroup")],
             'Tags': instance_tags,
+            'BlockDeviceMappings': [
+                {
+                    'DeviceName': '/dev/sda1',
+                    'Ebs': {
+                        'VolumeSize': '10.5',
+                        # Size was 8G, and HiGlass image takes about 2.5
+                    }
+                }
+            ],
         }),
         core.DependsOn(['RDSInstance']),
     )
