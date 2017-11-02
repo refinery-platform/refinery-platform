@@ -27,7 +27,7 @@
     var dataSetUuid = $window.dataSetUuid;
     var assayUuid = $window.externalAssayUuid;
     var analysesList = [];
-    var filesList = [];
+    var solrResponse = {};
 
     // Ajax calls, grabs the analysis & files promises for a particular data set
     var getData = function () {
@@ -49,11 +49,8 @@
     var launchProvvis = function () {
       getData().then(function (response) {
         analysesList = response[0].objects;
-        filesList = response[1];
-        console.log('in the launchProvvis');
-        console.log(analysesList);
-        console.log(filesList);
-        $window.provvis.run(studyUuid, analysesList, filesList);
+        solrResponse = response[1];
+        $window.provvis.run(studyUuid, analysesList, solrResponse);
       });
     };
 

@@ -36,7 +36,7 @@ var provvisRender = (function () {
   var filterMethod = 'timeline';
   var timeLineGradientScale = Object.create(null);
 
-  var lastSolrResponse = [];
+  var lastSolrResponse = {};
 
   var selectedNodeSet = d3.map();
 
