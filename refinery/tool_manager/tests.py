@@ -166,7 +166,6 @@ class ToolManagerMocks(TestCase):
                 WorkflowTool, "_get_workflow_dict",
                 return_value=galaxy_workflow_dict
         ).start()
-
         self.has_dataset_collection_input_mock_true = mock.patch.object(
             WorkflowTool, "_has_dataset_collection_input", return_value=True
         )
@@ -1902,12 +1901,12 @@ class WorkflowToolTests(ToolManagerTestBase):
             self.assertIn(dataset, galaxy_datasets_list)
         self.assertTrue(galaxy_datasets_list_mock.called)
 
-    def test__get_exposed_workflow_outputs(self):
+    def test__get_exposed_galaxy_datasets(self):
         galaxy_datasets_list_mock = self.galaxy_datasets_list_mock.start()
         self.show_job_mock.side_effect = self.show_job_side_effect
         self.create_tool(ToolDefinition.WORKFLOW)
         all_galaxy_datasets = self.tool._get_galaxy_history_dataset_list()
-        datasets_marked_as_output = self.tool._get_exposed_workflow_outputs()
+        datasets_marked_as_output = self.tool._get_exposed_galaxy_datasets()
         self.assertEqual(len(datasets_marked_as_output), 2)
         self.assertTrue(
             all(

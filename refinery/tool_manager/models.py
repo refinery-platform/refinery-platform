@@ -685,7 +685,7 @@ class WorkflowTool(Tool):
         Create the AnalysisNodeConnection objects corresponding to the output
         Nodes (Derived Data) of a WorkflowTool launch.
         """
-        exposed_workflow_outputs = self._get_exposed_workflow_outputs()
+        exposed_workflow_outputs = self._get_exposed_galaxy_datasets()
         for galaxy_dataset in self._get_galaxy_history_dataset_list():
             AnalysisNodeConnection.objects.create(
                 analysis=self.analysis,
@@ -853,7 +853,7 @@ class WorkflowTool(Tool):
         Datasets in our Galaxy Workflow invocation's History and add them to
         the M2M relation in our WorkflowTool's Analysis.
         """
-        for galaxy_dataset in self._get_exposed_workflow_outputs():
+        for galaxy_dataset in self._get_exposed_galaxy_datasets():
             self.analysis.workflow_dl_files.add(
                 WorkflowFilesDL.objects.create(
                     step_id=self._get_workflow_step(galaxy_dataset),
@@ -968,7 +968,7 @@ class WorkflowTool(Tool):
         ]
         return retained_datasets
 
-    def _get_exposed_workflow_outputs(self):
+    def _get_exposed_galaxy_datasets(self):
         """
         Retrieve all Galaxy Datasets that correspond to an asterisked
         output in the Galaxy workflow editor.
