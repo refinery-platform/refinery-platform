@@ -26,7 +26,9 @@ class Instance(models.Model):
         connection = self.galaxy_connection()
 
         for history_content_entry in connection.histories.show_history(
-                history_id, contents=True):
+                history_id,
+                contents=True
+        ):
 
             if "type" not in history_content_entry:
                 continue
@@ -39,7 +41,9 @@ class Instance(models.Model):
                 "url": history_content_entry["url"]
             }
             history_content = connection.histories.show_dataset(
-                history_id, history_content_entry["id"])
+                history_id,
+                history_content_entry["id"]
+            )
 
             if "file_ext" not in history_content:
                 file_info["type"] = None
