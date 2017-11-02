@@ -18,7 +18,10 @@ PyCharm > Preferences > Languages & Frameworks > Django
 PyCharm > Preferences > Project > Project Interpreter
 
 - From the drop-down beside the selector, pick "Add Remote".
-- In the modal, click the "Vagrant" radio-button, and fill in "Vagrant Instance Folder" with the path to your checkout. "Vagrant Host URL" should be automatically filled in.
+- In the modal, click the "Vagrant" radio-button, 
+    - and fill in "Vagrant Instance Folder" with the path to your checkout.
+    - "Vagrant Host URL" should be automatically filled in.
+    - "Python interpretter path" should be set to `/home/vagrant/.virtualenvs/refinery-platform/bin/python` to match that provided by virtualenv.
 
 ## [Run/Debug Configuration](https://www.jetbrains.com/help/pycharm/run-debug-configuration-django-server.html)
 
