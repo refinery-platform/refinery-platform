@@ -448,8 +448,6 @@ var provvis = (function (  // eslint-disable-line no-unused-vars
    * about attribute filter changed.
    */
   var runProvVisUpdatePrivate = function (solrResponse) {
-    console.log('in run prov vis update private');
-    console.log(vis);
     provvisRender.runRenderUpdate(vis, solrResponse);
   };
 
