@@ -16,7 +16,6 @@ urlpatterns = patterns(
     'core.views',
     url(r'^$', 'home', name="home"),
     url(r'^about/$', 'about', name="about"),
-    url(r'^contact/$', 'contact', name="contact"),
     url(r'^statistics/$', 'statistics', name="statistics"),
     url(r'^collaboration/$', 'collaboration', name='collaboration'),
     url(r'^group_invite/(?P<token>' + UUID_RE + r')/$',
@@ -39,10 +38,6 @@ urlpatterns = patterns(
         'project_slug', name="project_slug"),
     url(r'^projects/(?P<uuid>' + UUID_RE + r')/edit/$',
         'project_edit', name="project_edit"),
-
-    url(r'^analyses/$', 'analyses', name="analyses"),
-    url(r'^analyses/(?P<analysis_uuid>' + UUID_RE + r')/$',
-        'analysis', name="analysis"),
 
     url(r'^data_sets/(?P<data_set_uuid>' + UUID_RE + r')/$',
         'data_set', name="data_set"),
