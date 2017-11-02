@@ -44,7 +44,7 @@
     }
 
     // Ajax calls, grabs the analysis & files promises for a particular data set
-    var getData = function () {
+    function getData () {
       var analysisParams = {
         format: 'json',
         limit: 0,
@@ -58,14 +58,14 @@
       var analysisPromise = analysisService.query(analysisParams).$promise;
       var filesPromise = assayFileService.query(filesParams).$promise;
       return $q.all([analysisPromise, filesPromise]);
-    };
+    }
 
-    var launchProvvis = function () {
+    function launchProvvis () {
       getData().then(function (response) {
         analysesList = response[0].objects;
         solrResponse = response[1];
         $window.provvis.run(studyUuid, analysesList, solrResponse);
       });
-    };
+    }
   }
 })();
