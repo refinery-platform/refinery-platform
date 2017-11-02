@@ -322,20 +322,18 @@ class ToolManagerTestBase(ToolManagerMocks):
         else:
             raise RuntimeError("Please provide a valid tool_type")
 
+        self.post_data = {
+            "dataset_uuid": self.dataset.uuid,
+            "tool_definition_uuid": self.td.uuid,
+            ToolDefinition.PARAMETERS: launch_parameters
+        }
+
         if file_relationships is None:
-            self.post_data = {
-                "dataset_uuid": self.dataset.uuid,
-                "tool_definition_uuid": self.td.uuid,
-                Tool.FILE_RELATIONSHIPS: "[{}]".format(self.node.uuid),
-                ToolDefinition.PARAMETERS: launch_parameters
-            }
+            self.post_data[Tool.FILE_RELATIONSHIPS] = "[{}]".format(
+                self.node.uuid
+            )
         else:
-            self.post_data = {
-                "dataset_uuid": self.dataset.uuid,
-                "tool_definition_uuid": self.td.uuid,
-                Tool.FILE_RELATIONSHIPS: file_relationships,
-                ToolDefinition.PARAMETERS: launch_parameters
-            }
+            self.post_data[Tool.FILE_RELATIONSHIPS] = file_relationships
 
         self.post_request = self.factory.post(
             self.tools_url_root,
