@@ -196,7 +196,7 @@ def make_template(config, config_yaml):
                     'DeviceName': '/dev/sda1',
                     'Ebs': {
                         'VolumeSize': '11',
-                        # Size was 8G, and HiGlass image takes about 2.5, and must be integer.
+                        # Was 8G; HiGlass is 2.5G; Must be an integer
                     }
                 }
             ],
