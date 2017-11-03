@@ -456,9 +456,12 @@ def update_annotated_nodes(
             attrs = _get_unique_parent_attributes(nodes, node_id)
             u_len = len(attrs)
             total_attrs += u_len
-
     if total_attrs == total_unique_attrs * num_nodes_of_type \
-            and num_nodes_of_type > 1:
+            and len([
+                n for n in nodes.values() if n['type'] == 'Sample Name'
+            ]) > 1:
+        # This should exclude CSV imports
+        # TODO: Not happy about this hack at all.
         error_message = (
             "Exponential explosion! Creation of {} annotated nodes for {} "
             "nodes of type {} is stopped!"
