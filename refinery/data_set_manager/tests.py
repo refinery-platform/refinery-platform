@@ -10,6 +10,7 @@ import uuid
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import (InMemoryUploadedFile,
                                             SimpleUploadedFile)
+from django.db.models import Q
 from django.http import QueryDict
 from django.test import TestCase
 
@@ -1404,11 +1405,28 @@ class UtilitiesTests(TestCase):
         )
 
     def test_update_annotated_nodes(self):
+        type = 'Raw Data File'
+
+        nodes_before = AnnotatedNode.objects.filter(Q(
+            study__uuid=self.study.uuid,
+            assay__uuid=self.assay.uuid,
+            node_type=type
+        ))
+        self.assertEqual(len(nodes_before), 0)
+
         data_set_manager.utils.update_annotated_nodes(
-            'Raw Data File',
+            type,
             study_uuid=self.study.uuid,
             assay_uuid=self.assay.uuid,
             update=True)
+
+        nodes_after = AnnotatedNode.objects.filter(Q(
+            study__uuid=self.study.uuid,
+            assay__uuid=self.assay.uuid,
+            node_type=type
+        ))
+        self.assertEqual(len(nodes_after), 0)
+        # TODO: Is this the behavior we expect?
 
 
 class NodeClassMethodTests(TestCase):
