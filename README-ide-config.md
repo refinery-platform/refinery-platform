@@ -44,4 +44,4 @@ workon refinery-platform
 grunt watch
 ```
 
-And finally, remember that you won't see JS changes without at page reload.
+And finally, remember that you won't see JS changes without a page reload.
