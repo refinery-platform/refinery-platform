@@ -264,6 +264,8 @@ class ToolManagerTestBase(ToolManagerMocks):
             value_type=Parameter.STRING,
             default_value="Coffee"
         )
+        self.BAD_WORKFLOW_OUTPUTS = {WorkflowTool.WORKFLOW_OUTPUTS: []}
+        self.GOOD_WORKFLOW_OUTPUTS = {WorkflowTool.WORKFLOW_OUTPUTS: [True]}
 
     def tearDown(self):
         # Trigger the pre_delete signal so that datafiles are purged
@@ -727,13 +729,8 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
         self.mock_parameter.delete()
 
         self.fake_workflow = {
-            "name": "Test WF",
-            "graph": {
-                "steps": {
-                    "0": {WorkflowTool.WORKFLOW_OUTPUTS: []},
-                    "1": {WorkflowTool.WORKFLOW_OUTPUTS: ["output"]}
-                }
-            }
+            "name": "Fake WF",
+            "graph": {"steps": {}}
         }
 
     def test_tool_definition_model_str(self):
@@ -1345,7 +1342,12 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
         )
 
     def test_known_galaxy_one_off_asterisking_error_is_handled(self):
+        self.fake_workflow["graph"]["steps"] = {
+            "0": self.BAD_WORKFLOW_OUTPUTS,
+            "1": self.GOOD_WORKFLOW_OUTPUTS
+        }
         workflow_exhibiting_one_off_asterisking_error = self.fake_workflow
+
         with self.assertRaises(CommandError) as context:
             GenerateToolDefinitions().ensure_workflow_outputs_are_present(
                 workflow_exhibiting_one_off_asterisking_error
@@ -1355,8 +1357,8 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
 
     def test_ensure_workflow_outputs_are_present_bad_workflow_outputs(self):
         self.fake_workflow["graph"]["steps"] = {
-            "0": {WorkflowTool.WORKFLOW_OUTPUTS: ["output"]},
-            "1": {WorkflowTool.WORKFLOW_OUTPUTS: []}
+            "0": self.GOOD_WORKFLOW_OUTPUTS,
+            "1": self.BAD_WORKFLOW_OUTPUTS
         }
         workflow_without_outputs_defined = self.fake_workflow
 
@@ -1369,8 +1371,8 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
 
     def test_ensure_workflow_outputs_are_present_good_workflow_outputs(self):
         self.fake_workflow["graph"]["steps"] = {
-            "0": {WorkflowTool.WORKFLOW_OUTPUTS: ["output"]},
-            "1": {WorkflowTool.WORKFLOW_OUTPUTS: ["output"]}
+            "0": self.GOOD_WORKFLOW_OUTPUTS,
+            "1": self.GOOD_WORKFLOW_OUTPUTS
         }
         workflow_with_outputs_defined = self.fake_workflow
         GenerateToolDefinitions().ensure_workflow_outputs_are_present(
