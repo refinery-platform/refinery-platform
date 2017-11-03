@@ -23,7 +23,6 @@ from data_set_manager.isa_tab_parser import IsaTabParser, ParserException
 from data_set_manager.single_file_column_parser import process_metadata_table
 from data_set_manager.tasks import parse_isatab
 from factory_boy.utils import make_analyses_with_single_dataset
-import file_store
 from file_store.models import FileStoreItem, generate_file_source_translator
 
 from .models import (AnnotatedNode, Assay, AttributeOrder, Investigation, Node,
@@ -1404,6 +1403,13 @@ class UtilitiesTest(TestCase):
             }
         )
 
+    # def test_update_annotated_nodes(self):
+    #     data_set_manager.utils.update_annotated_nodes(
+    #         'Raw Data File',
+    #         study_uuid=self.study.uuid,
+    #         assay_uuid=self.assay.uuid,
+    #         update=True)
+
 
 class NodeClassMethodTests(TestCase):
     def setUp(self):
@@ -1978,16 +1984,9 @@ class SingleFileColumnParserTests(TestCase):
             )
 
     def test_one_line_csv(self):
-        with self.assertRaises(TypeError):
-            # 'NoneType' object is not iterable
-            self.process_csv('one-line.csv')
-        # TODO: Should not error
-        # TODO: Assertions against objects created
+        dataset = self.process_csv('one-line.csv')
+        self.assertEqual(dataset, None)  # TODO
 
-    @mock.patch.object(file_store.tasks.import_file, "delay")
-    def test_two_line_csv(self, delay_mock):
-        with self.assertRaises(RuntimeError):
-            # "Exponential explosion!"
-            self.process_csv('two-line.csv')
-        # TODO: Should not error
-        # TODO: Assertions against objects created
+    def test_two_line_csv(self):
+        dataset = self.process_csv('two-line.csv')
+        self.assertEqual(dataset, None)  # TODO
