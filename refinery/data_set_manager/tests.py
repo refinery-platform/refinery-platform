@@ -356,7 +356,7 @@ class AssaysAttributesAPITests(APITestCase):
         self.client.logout()
 
 
-class UtilitiesTest(TestCase):
+class UtilitiesTests(TestCase):
 
     def setUp(self):
         self.user1 = User.objects.create_user("ownerJane", '', 'test1234')
@@ -1403,12 +1403,12 @@ class UtilitiesTest(TestCase):
             }
         )
 
-    # def test_update_annotated_nodes(self):
-    #     data_set_manager.utils.update_annotated_nodes(
-    #         'Raw Data File',
-    #         study_uuid=self.study.uuid,
-    #         assay_uuid=self.assay.uuid,
-    #         update=True)
+    def test_update_annotated_nodes(self):
+        data_set_manager.utils.update_annotated_nodes(
+            'Raw Data File',
+            study_uuid=self.study.uuid,
+            assay_uuid=self.assay.uuid,
+            update=True)
 
 
 class NodeClassMethodTests(TestCase):
