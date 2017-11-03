@@ -1993,18 +1993,25 @@ class SingleFileColumnParserTests(TestCase):
             'test-data', 'single-file', filename
         )
         with open(path, 'r') as f:
-            process_metadata_table(
+            dataset_uuid = process_metadata_table(
                 username='guest',
                 title='fake',
                 metadata_file=f,
                 source_columns=[0],
                 data_file_column=2,
             )
+        return DataSet.objects.get(uuid=dataset_uuid)
+
+    def assert_expected_nodes(self, dataset, node_count):
+        assays = dataset.get_assays()
+        self.assertEqual(len(assays), 1)
+        data_nodes = Node.objects.filter(assay=assays[0], type='Raw Data File')
+        self.assertEqual(len(data_nodes), node_count)
 
     def test_one_line_csv(self):
         dataset = self.process_csv('one-line.csv')
-        self.assertEqual(dataset, None)  # TODO
+        self.assert_expected_nodes(dataset, 1)
 
     def test_two_line_csv(self):
         dataset = self.process_csv('two-line.csv')
-        self.assertEqual(dataset, None)  # TODO
+        self.assert_expected_nodes(dataset, 2)
