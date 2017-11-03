@@ -13,12 +13,7 @@
         "latest_workflow_uuid": "813cc65e-c7f3-4877-b9a8-f9d67d6db7ce",
         "model_class": "StoredWorkflow",
         "name": "Test LIST:LIST:PAIR",
-        "graph": {
-                "steps": {
-                    "0": {"workflow_outputs": ["output"]},
-                    "1": {"workflow_outputs": []}
-                }
-            },
+        "graph": {"steps": []},
         "owner": "scott",
         "published": false,
         "steps": {
@@ -161,12 +156,7 @@
         "latest_workflow_uuid": "1f1df3df-c414-46df-b189-0cd9e0228c4d",
         "model_class": "StoredWorkflow",
         "name": "Test LIST",
-        "graph": {
-                "steps": {
-                    "0": {"workflow_outputs": ["output"]},
-                    "1": {"workflow_outputs": []}
-                }
-            },
+        "graph": {"steps": []},
         "owner": "scott",
         "published": false,
         "steps": {
@@ -309,12 +299,7 @@
         "latest_workflow_uuid": "90bd7f14-8efa-419d-beee-aab7f7925048",
         "model_class": "StoredWorkflow",
         "name": "Test LIST:PAIR",
-        "graph": {
-                "steps": {
-                    "0": {"workflow_outputs": ["output"]},
-                    "1": {"workflow_outputs": []}
-                }
-            },
+        "graph": {"steps": []},
         "owner": "scott",
         "published": false,
         "steps": {
