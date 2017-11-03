@@ -25,6 +25,7 @@ from data_set_manager.single_file_column_parser import process_metadata_table
 from data_set_manager.tasks import parse_isatab
 from factory_boy.utils import make_analyses_with_single_dataset
 from file_store.models import FileStoreItem, generate_file_source_translator
+from file_store.tasks import import_file
 
 from .models import (AnnotatedNode, Assay, AttributeOrder, Investigation, Node,
                      Study)
@@ -2008,10 +2009,12 @@ class SingleFileColumnParserTests(TestCase):
         data_nodes = Node.objects.filter(assay=assays[0], type='Raw Data File')
         self.assertEqual(len(data_nodes), node_count)
 
-    def test_one_line_csv(self):
+    @mock.patch.object(import_file, "delay")
+    def test_one_line_csv(self, delay_mock):
         dataset = self.process_csv('one-line.csv')
         self.assert_expected_nodes(dataset, 1)
 
-    def test_two_line_csv(self):
+    @mock.patch.object(import_file, "delay")
+    def test_two_line_csv(self, delay_mock):
         dataset = self.process_csv('two-line.csv')
         self.assert_expected_nodes(dataset, 2)
