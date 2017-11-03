@@ -34,3 +34,14 @@ Run > Run... > Edit Configurations...
 - Add "DJANGO_SETTINGS_MODULE=config.settings.gdev".
 - Add "PYTHON_PATH=/home/vagrant/.virtualenvs/refinery-platform/lib/python2.7/site-packages"
 - Confirm that "Python interpreter" has picked up the Vagrant Python.
+
+For `gdev` to be effective, `grunt watch` must be running:
+
+```
+vagrant ssh
+cd /vagrant/ui
+workon refinery-platform
+grunt watch
+```
+
+And finally, remember that you won't see JS changes without at page reload.
