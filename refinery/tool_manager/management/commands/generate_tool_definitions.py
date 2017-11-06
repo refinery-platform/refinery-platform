@@ -172,9 +172,7 @@ class Command(BaseCommand):
                 workflow["workflow_engine_uuid"] = workflow_engine_uuid
 
                 workflow = self.parse_workflow_step_annotations(workflow)
-
                 self.ensure_workflow_outputs_are_present(workflow)
-
                 self._generate_tool_definition(workflow)
 
                 self.stdout.write(
