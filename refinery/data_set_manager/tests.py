@@ -1799,6 +1799,12 @@ class IsaTabTestBase(TestCase):
         logging.getLogger(
             "data_set_manager.isa_tab_parser"
         ).setLevel(logging.ERROR)
+
+        # no need to update Solr index in tests
+        mock.patch(
+            "data_set_manager.search_indexes.NodeIndex.update_object"
+        ).start()
+
         test_user = "test_user"
         self.user = User.objects.create_user(test_user)
         self.user.set_password(test_user)
