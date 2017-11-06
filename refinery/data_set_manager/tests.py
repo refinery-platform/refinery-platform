@@ -15,6 +15,7 @@ from django.db.models import Q
 from django.http import QueryDict
 from django.test import TestCase
 
+from haystack.exceptions import SkipDocument
 import mock
 from rest_framework.test import APIClient, APIRequestFactory, APITestCase
 
@@ -1739,7 +1740,8 @@ class NodeIndexTests(APITestCase):
             assay=assay,
             study=study,
             file_uuid=self.file_store_item.uuid,
-            name='http://example.com/fake.txt'
+            name='http://example.com/fake.txt',
+            type='Raw Data File'
         )
 
         self.data_set_uuid = data_set.uuid
@@ -1752,6 +1754,11 @@ class NodeIndexTests(APITestCase):
 
     def tearDown(self):
         FileStoreItem.objects.all().delete()
+
+    def test_skip_types(self):
+        self.node.type = 'Unknown File Type'
+        with self.assertRaises(SkipDocument):
+            NodeIndex().prepare(self.node)
 
     def test_prepare(self):
         data = NodeIndex().prepare(self.node)
@@ -1781,7 +1788,7 @@ class NodeIndexTests(APITestCase):
                 'REFINERY_FILETYPE_#_#_s': None,
                 'REFINERY_NAME_#_#_s': 'http://example.com/fake.txt',
                 'REFINERY_SUBANALYSIS_#_#_s': -1,
-                'REFINERY_TYPE_#_#_s': u'',
+                'REFINERY_TYPE_#_#_s': u'Raw Data File',
                 'REFINERY_WORKFLOW_OUTPUT_#_#_s': 'N/A',
                 'analysis_uuid': None,
                 'assay_uuid': self.assay_uuid,
@@ -1805,7 +1812,7 @@ class NodeIndexTests(APITestCase):
                 'technology_Characteristics_generic_s': 'whizbang',
                 'technology_accession_Characteristics_generic_s': '',
                 'technology_source_Characteristics_generic_s': '',
-                'type': u'',
+                'type': u'Raw Data File',
                 'uuid': self.node_uuid,
                 'workflow_output': None
             }
