@@ -1,6 +1,7 @@
 from StringIO import StringIO
 import contextlib
 import json
+import logging
 import os
 import re
 import shutil
@@ -1820,14 +1821,30 @@ def temporary_directory(*args, **kwargs):
         shutil.rmtree(d)
 
 
-class IsaTabParserTests(TestCase):
+class IsaTabTestBase(TestCase):
     def setUp(self):
-        self.username = 'coffee_lover'
-        self.password = 'coffeecoffee'
-        self.user = User.objects.create_user(
-            self.username, '', self.password
-        )
+        logging.getLogger(
+            "data_set_manager.isa_tab_parser"
+        ).setLevel(logging.ERROR)
 
+        # no need to update Solr index in tests
+        mock.patch(
+            "data_set_manager.search_indexes.NodeIndex.update_object"
+        ).start()
+
+        test_user = "test_user"
+        self.user = User.objects.create_user(test_user)
+        self.user.set_password(test_user)
+        self.user.save()
+        self.isa_tab_import_url = "/data_set_manager/import/isa-tab-form/"
+        is_logged_in = self.client.login(
+            username=self.user.username,
+            password=test_user
+        )
+        self.assertTrue(is_logged_in)
+
+
+class IsaTabParserTests(IsaTabTestBase):
     def failed_isatab_assertions(self):
         self.assertEqual(DataSet.objects.count(), 0)
         self.assertEqual(AnnotatedNode.objects.count(), 0)
@@ -1933,19 +1950,7 @@ class IsaTabParserTests(TestCase):
         self.failed_isatab_assertions()
 
 
-class ProcessISATabViewTests(TestCase):
-    def setUp(self):
-        test_user = "test_user"
-        self.user = User.objects.create_user(test_user)
-        self.user.set_password(test_user)
-        self.user.save()
-        self.isa_tab_import_url = "/data_set_manager/import/isa-tab-form/"
-        is_logged_in = self.client.login(
-            username=self.user.username,
-            password=test_user
-        )
-        self.assertTrue(is_logged_in)
-
+class ProcessISATabViewTests(IsaTabTestBase):
     def tearDown(self):
         FileStoreItem.objects.all().delete()
 
