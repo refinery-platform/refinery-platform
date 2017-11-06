@@ -128,12 +128,6 @@ class UserFilesUtilsTests(TestCase):
                          '%2Ctype'
                          '%2Cdjango_id'
                          '%2CREFINERY_DOWNLOAD_URL_s',
-                         'fq=type%3A%28%22Raw Data File%22 '
-                         'OR %22Derived Data File%22 '
-                         'OR %22Array Data File%22 '
-                         'OR %22Derived Array Data File%22 '
-                         'OR %22Array Data Matrix File%22 '
-                         'OR%22Derived Array Data Matrix File%22%29',
                          'fq=is_annotation%3Afalse',
                          'start=0',
                          'rows=10000000',
