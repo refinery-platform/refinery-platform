@@ -10,6 +10,7 @@ import uuid
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import (InMemoryUploadedFile,
                                             SimpleUploadedFile)
+from django.db.models import Q
 from django.http import QueryDict
 from django.test import TestCase
 
@@ -20,9 +21,11 @@ from core.models import Analysis, DataSet, ExtendedGroup, InvestigationLink
 from core.views import NodeViewSet
 import data_set_manager
 from data_set_manager.isa_tab_parser import IsaTabParser, ParserException
+from data_set_manager.single_file_column_parser import process_metadata_table
 from data_set_manager.tasks import parse_isatab
 from factory_boy.utils import make_analyses_with_single_dataset
 from file_store.models import FileStoreItem, generate_file_source_translator
+from file_store.tasks import import_file
 
 from .models import (AnnotatedNode, Assay, AttributeOrder, Investigation, Node,
                      Study)
@@ -355,7 +358,7 @@ class AssaysAttributesAPITests(APITestCase):
         self.client.logout()
 
 
-class UtilitiesTest(TestCase):
+class UtilitiesTests(TestCase):
 
     def setUp(self):
         self.user1 = User.objects.create_user("ownerJane", '', 'test1234')
@@ -1402,6 +1405,30 @@ class UtilitiesTest(TestCase):
             }
         )
 
+    def test_update_annotated_nodes(self):
+        type = 'Raw Data File'
+
+        nodes_before = AnnotatedNode.objects.filter(Q(
+            study__uuid=self.study.uuid,
+            assay__uuid=self.assay.uuid,
+            node_type=type
+        ))
+        self.assertEqual(len(nodes_before), 0)
+
+        data_set_manager.utils.update_annotated_nodes(
+            type,
+            study_uuid=self.study.uuid,
+            assay_uuid=self.assay.uuid,
+            update=True)
+
+        nodes_after = AnnotatedNode.objects.filter(Q(
+            study__uuid=self.study.uuid,
+            assay__uuid=self.assay.uuid,
+            node_type=type
+        ))
+        self.assertEqual(len(nodes_after), 0)
+        # TODO: Is this the behavior we expect?
+
 
 class NodeClassMethodTests(TestCase):
     def setUp(self):
@@ -1958,3 +1985,36 @@ class ProcessISATabViewTests(TestCase):
                 HTTP_X_REQUESTED_WITH='XMLHttpRequest'
             )
         self.unsuccessful_import_assertions()
+
+
+class SingleFileColumnParserTests(TestCase):
+    def process_csv(self, filename):
+        path = os.path.join(
+            os.path.dirname(__file__),
+            'test-data', 'single-file', filename
+        )
+        with open(path, 'r') as f:
+            dataset_uuid = process_metadata_table(
+                username='guest',
+                title='fake',
+                metadata_file=f,
+                source_columns=[0],
+                data_file_column=2,
+            )
+        return DataSet.objects.get(uuid=dataset_uuid)
+
+    def assert_expected_nodes(self, dataset, node_count):
+        assays = dataset.get_assays()
+        self.assertEqual(len(assays), 1)
+        data_nodes = Node.objects.filter(assay=assays[0], type='Raw Data File')
+        self.assertEqual(len(data_nodes), node_count)
+
+    @mock.patch.object(import_file, "delay")
+    def test_one_line_csv(self, delay_mock):
+        dataset = self.process_csv('one-line.csv')
+        self.assert_expected_nodes(dataset, 1)
+
+    @mock.patch.object(import_file, "delay")
+    def test_two_line_csv(self, delay_mock):
+        dataset = self.process_csv('two-line.csv')
+        self.assert_expected_nodes(dataset, 2)
