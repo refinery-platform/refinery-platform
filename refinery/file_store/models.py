@@ -372,7 +372,6 @@ class FileStoreItem(models.Model):
                         pass
 
             self.save()
-            logger.info("File type is set to '%s'", f)
             return True
 
         except Exception as e:
