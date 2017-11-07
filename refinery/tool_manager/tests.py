@@ -1349,35 +1349,53 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
         workflow_exhibiting_one_off_asterisking_error = self.fake_workflow
 
         with self.assertRaises(CommandError) as context:
-            GenerateToolDefinitions().ensure_workflow_outputs_are_present(
+            GenerateToolDefinitions()._has_workflow_outputs(
                 workflow_exhibiting_one_off_asterisking_error
             )
         self.assertIn("asterisked `workflow_outputs`",
                       context.exception.message)
 
-    def test_ensure_workflow_outputs_are_present_bad_workflow_outputs(self):
+    def test__has_workflow_outputs_bad_workflow_outputs(self):
         self.fake_workflow["graph"]["steps"] = {
             "0": self.GOOD_WORKFLOW_OUTPUTS,
             "1": self.BAD_WORKFLOW_OUTPUTS
         }
         workflow_without_outputs_defined = self.fake_workflow
 
-        with self.assertRaises(CommandError) as context:
-            GenerateToolDefinitions().ensure_workflow_outputs_are_present(
+        self.assertFalse(
+            GenerateToolDefinitions()._has_workflow_outputs(
                 workflow_without_outputs_defined
             )
-        self.assertIn("does not have `workflow_outputs` defined",
-                      context.exception.message)
+        )
 
-    def test_ensure_workflow_outputs_are_present_good_workflow_outputs(self):
+    def test__has_workflow_outputs_good_workflow_outputs(self):
         self.fake_workflow["graph"]["steps"] = {
             "0": self.GOOD_WORKFLOW_OUTPUTS,
             "1": self.GOOD_WORKFLOW_OUTPUTS
         }
         workflow_with_outputs_defined = self.fake_workflow
-        GenerateToolDefinitions().ensure_workflow_outputs_are_present(
+        GenerateToolDefinitions()._has_workflow_outputs(
             workflow_with_outputs_defined
         )
+
+    @mock.patch.object(
+        GenerateToolDefinitions,
+        "_has_workflow_outputs",
+        return_value=False
+    )
+    def test_generate_workflows_without_outputs_raises_exception(
+            self,
+            _are_workflow_outputs_present_mock
+    ):
+        with mock.patch(
+            self.mock_get_workflows_reference,
+            return_value={self.workflow_engine.uuid: self.valid_workflows}
+        ):
+            with self.assertRaises(CommandError) as context:
+                GenerateToolDefinitions()._generate_workflows()
+        self.assertIn("does not have `workflow_outputs`",
+                      context.exception.message)
+        self.assertTrue(_are_workflow_outputs_present_mock.called)
 
 
 class ToolDefinitionTests(ToolManagerTestBase):
