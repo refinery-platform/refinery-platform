@@ -1,112 +1,12 @@
-// workaround for missing AWS::Cognito::IdentityPoolRoleAttachment
-// https://github.com/terraform-providers/terraform-provider-aws/issues/232
-resource "aws_cloudformation_stack" "identities" {
-  name         = "${var.stack_name}Identity"
-  capabilities = ["CAPABILITY_IAM"]
-
-  template_body = <<STACK
-{
-  "Description": "Refinery Platform federated identities",
-  "Resources": {
-    "IdentityPool": {
-      "Type": "AWS::Cognito::IdentityPool",
-      "Properties": {
-        "IdentityPoolName": "${var.identity_pool_name}",
-        "DeveloperProviderName": "login.refinery",
-        "AllowUnauthenticatedIdentities": false
-      }
-    },
-    "CognitoS3UploadRole": {
-      "Type": "AWS::IAM::Role",
-      "Properties": {
-        "AssumeRolePolicyDocument": {
-          "Version": "2012-10-17",
-          "Statement": [
-            {
-              "Effect": "Allow",
-              "Principal": {
-                "Federated": "cognito-identity.amazonaws.com"
-              },
-              "Action": "sts:AssumeRoleWithWebIdentity",
-              "Condition": {
-                "StringEquals": {
-                  "cognito-identity.amazonaws.com:aud": {
-                    "Ref": "IdentityPool"
-                  }
-                },
-                "ForAnyValue:StringLike": {
-                  "cognito-identity.amazonaws.com:amr": "authenticated"
-                }
-              }
-            }
-          ]
-        },
-        "Policies": [
-          {
-            "PolicyName": "AuthenticatedS3UploadPolicy",
-            "PolicyDocument": {
-              "Version": "2012-10-17",
-              "Statement": [
-                {
-                  "Effect": "Allow",
-                  "Action": [
-                    "cognito-identity:*"
-                  ],
-                  "Resource": "*"
-                },
-                {
-                  "Action": [
-                    "s3:PutObject",
-                    "s3:AbortMultipartUpload"
-                  ],
-                  "Effect": "Allow",
-                  "Resource": "arn:aws:s3:::${var.upload_bucket_name}/uploads/$${cognito-identity.amazonaws.com:sub}/*"
-                }
-              ]
-            }
-          }
-        ]
-      }
-    },
-    "IdentityPoolAuthenticatedRoleAttachment": {
-      "Type": "AWS::Cognito::IdentityPoolRoleAttachment",
-      "Properties": {
-        "IdentityPoolId": {
-          "Ref": "IdentityPool"
-        },
-        "Roles": {
-          "authenticated": {
-            "Fn::GetAtt": [ "CognitoS3UploadRole", "Arn" ]
-          }
-        }
-      }
-    }
-  },
-  "Outputs": {
-    "IdentityPoolId": {
-      "Description": "Cognito identity pool ID",
-      "Value": {
-        "Ref": "IdentityPool"
-      },
-      "Export": {
-        "Name": "${var.stack_name}IdentityPoolId"
-      }
-    }
-  }
-}
-STACK
-}
-
-/*
-resource "aws_cognito_identity_pool" "idp" {
+resource "aws_cognito_identity_pool" "refinery" {
   identity_pool_name               = "${var.identity_pool_name}"
   allow_unauthenticated_identities = false
-  developer_provider_name          = "refinery.login"
+  developer_provider_name          = "login.refinery"
 }
 
 resource "aws_iam_role" "upload_role" {
   description = "Allows users with identities in Cognito pool to upload files directly into S3"
-  name_prefix = "RefineryProdUploadRole-"
+  name_prefix = "${var.iam_resource_name_prefix}-"
 
   assume_role_policy = <<EOF
 {
@@ -120,7 +20,7 @@ resource "aws_iam_role" "upload_role" {
       "Action": "sts:AssumeRoleWithWebIdentity",
       "Condition": {
         "StringEquals": {
-          "cognito-identity.amazonaws.com:aud": "${aws_cognito_identity_pool.idp.id}"
+          "cognito-identity.amazonaws.com:aud": "${aws_cognito_identity_pool.refinery.id}"
         },
         "ForAnyValue:StringLike": {
           "cognito-identity.amazonaws.com:amr": "authenticated"
@@ -133,6 +33,8 @@ EOF
 }
 
 resource "aws_iam_role_policy" "upload_access_policy" {
+  name_prefix = "${var.iam_resource_name_prefix}-"
+
   role = "${aws_iam_role.upload_role.id}"
 
   policy = <<EOF
@@ -152,10 +54,17 @@ resource "aws_iam_role_policy" "upload_access_policy" {
         "s3:AbortMultipartUpload"
       ],
       "Effect": "Allow",
-      "Resource": "arn:aws:s3:::${data.terraform_remote_state.object_store.upload_bucket_name}/uploads/$${cognito-identity.amazonaws.com:sub}/*"
+      "Resource": "arn:aws:s3:::${var.upload_bucket_name}/uploads/$${cognito-identity.amazonaws.com:sub}/*"
     }
   ]
 }
 EOF
 }
-*/
+
+resource "aws_cognito_identity_pool_roles_attachment" "refinery_authenticated" {
+  identity_pool_id = "${aws_cognito_identity_pool.refinery.id}"
+
+  roles = {
+    "authenticated" = "${aws_iam_role.upload_role.arn}"
+  }
+}

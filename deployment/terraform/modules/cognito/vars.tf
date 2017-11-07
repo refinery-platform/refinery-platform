@@ -7,7 +7,6 @@ variable "upload_bucket_name" {
   description = "Name of the data file upload bucket"
 }
 
-// temp workaround, must match STACK_NAME in deployment/aws-config/config.yaml
-variable "stack_name" {
-  description = "Name prefix of the CloudFormation stack for Cognito resources"
+variable "iam_resource_name_prefix" {
+  description = "Name prefix of the S3 upload role"
 }

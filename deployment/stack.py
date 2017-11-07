@@ -316,13 +316,10 @@ def make_template(config, config_yaml):
                                         "${AWS::Region}:${AWS::AccountId}:"
                                         "identitypool/${PoolId}",
                                         {
-                                            "PoolId": {
-                                                "Fn::ImportValue": {
-                                                    "Fn::Sub":
-                                                        "${AWS::StackName}"
-                                                        "IdentityPoolId"
-                                                }
-                                            }
+                                            "PoolId":
+                                                config[
+                                                    'COGNITO_IDENTITY_POOL_ID'
+                                                ]
                                         }
                                     ]
                                 }

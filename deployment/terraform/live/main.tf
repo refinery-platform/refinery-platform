@@ -19,8 +19,8 @@ module "object_storage" {
 }
 
 module "identity_pool" {
-  source             = "../modules/cognito"
-  identity_pool_name = "${var.identity_pool_name}"
-  upload_bucket_name = "${module.object_storage.upload_bucket_name}"
-  stack_name         = "${var.stack_name}"
+  source                   = "../modules/cognito"
+  identity_pool_name       = "${var.identity_pool_name}"
+  upload_bucket_name       = "${module.object_storage.upload_bucket_name}"
+  iam_resource_name_prefix = "${terraform.workspace}"
 }
