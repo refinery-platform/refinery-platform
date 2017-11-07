@@ -10,7 +10,6 @@
   angular
     .module('refineryProvvis')
     .component('rpProvvisTimelineView', {
-    //  controller: 'InputControlCtrl',
       templateUrl: ['$window', function ($window) {
         return $window.getStaticUrl('partials/provvis/partials/timeline-view.html');
       }]

@@ -10,7 +10,6 @@
   angular
     .module('refineryProvvis')
     .component('rpProvvisDoiView', {
-    //  controller: 'InputControlCtrl',
       templateUrl: ['$window', function ($window) {
         return $window.getStaticUrl('partials/provvis/partials/doi-view.html');
       }]
