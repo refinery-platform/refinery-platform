@@ -191,6 +191,15 @@ def make_template(config, config_yaml):
             'Monitoring': True,
             'SecurityGroups': [functions.ref("InstanceSecurityGroup")],
             'Tags': instance_tags,
+            'BlockDeviceMappings': [
+                {
+                    'DeviceName': '/dev/sda1',
+                    'Ebs': {
+                        'VolumeSize': '11',
+                        # Was 8G; HiGlass is 2.5G; Must be an integer
+                    }
+                }
+            ],
         }),
         core.DependsOn(['RDSInstance']),
     )
