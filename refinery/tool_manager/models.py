@@ -563,6 +563,7 @@ class WorkflowTool(Tool):
     PAIRED = "paired"
     REVERSE = "reverse"
     TOOL_ID = "tool_id"
+    WORKFLOW_OUTPUTS = "workflow_outputs"
 
     class Meta:
         verbose_name = "workflowtool"
@@ -996,7 +997,9 @@ class WorkflowTool(Tool):
                 )
                 workflow_step_output_names = [
                     workflow_output["output_name"] for workflow_output in
-                    workflow_steps_dict[workflow_step_key]["workflow_outputs"]
+                    workflow_steps_dict[workflow_step_key][
+                        self.WORKFLOW_OUTPUTS
+                    ]
                 ]
                 if creating_job_output_name in workflow_step_output_names:
                     exposed_galaxy_datasets.append(galaxy_dataset)

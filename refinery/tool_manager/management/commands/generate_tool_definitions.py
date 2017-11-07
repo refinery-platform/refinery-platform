@@ -4,7 +4,7 @@ import sys
 
 from django.core.management.base import BaseCommand, CommandError
 
-from ...models import ToolDefinition
+from ...models import ToolDefinition, WorkflowTool
 from ...utils import (ANNOTATION_ERROR_MESSAGE, create_tool_definition,
                       get_visualization_annotations_list, get_workflows,
                       validate_tool_annotation,
@@ -130,8 +130,7 @@ class Command(BaseCommand):
 
             self.stdout.write(
                 self.style.WARNING(
-                    "Generated ToolDefinition for: "
-                    "Visualization: `{}`".format(
+                    "Generated ToolDefinition for: Visualization: `{}`".format(
                         visualization["name"]
                     )
                 )
@@ -169,6 +168,20 @@ class Command(BaseCommand):
                 workflow["workflow_engine_uuid"] = workflow_engine_uuid
 
                 workflow = self.parse_workflow_step_annotations(workflow)
+
+                if not self._has_workflow_outputs(workflow):
+                    raise CommandError(
+                        "Workflow: {} does not have `workflow_outputs` "
+                        "defined. Please follow the instructions here: "
+                        "https://github.com/refinery-platform/"
+                        "refinery-platform/wiki/"
+                        "Annotating-&-Importing-Refinery-Tools"
+                        "#exposing-galaxy-workflow-outputs-to-refinery "
+                        "to expose Workflow outputs to Refinery".format(
+                            workflow["name"]
+                        )
+                    )
+
                 self._generate_tool_definition(workflow)
 
                 self.stdout.write(
@@ -177,6 +190,46 @@ class Command(BaseCommand):
                         .format(workflow["name"])
                     )
                 )
+
+    @staticmethod
+    def _has_workflow_outputs(workflow):
+        """
+        Assert that the given `workflow` has `workflow_outputs` properly
+        defined
+        :param workflow: dict containing a Galaxy Workflow's information
+        :raises: CommandError
+        :returns: Boolean
+        """
+        # assume that there are no defined `workflow_outputs` until we can
+        # assert otherwise
+        workflow_outputs = False
+
+        workflow_steps = workflow["graph"]["steps"]
+        for step_index in workflow_steps:
+            step_has_workflow_outputs = False
+
+            if workflow_steps[step_index].get(WorkflowTool.WORKFLOW_OUTPUTS):
+                step_has_workflow_outputs = True
+
+            if step_index == "0":
+                if not step_has_workflow_outputs:
+                    raise CommandError(
+                        "You've encountered a known error when trying to "
+                        "import a Galaxy Workflow from a .ga file that "
+                        "utilizes asterisked `workflow_outputs`. "
+                        "Please follow the instructions here: "
+                        "https://github.com/refinery-platform/"
+                        "refinery-platform/wiki/"
+                        "Troubleshooting#generate-tooldefinitions "
+                        "to resolve this error."
+                    )
+                # The 0th step's workflow_output isn't User-defined and
+                # shouldn't be considered  when setting
+                # `self.has_workflow_outputs`
+                continue
+            if step_has_workflow_outputs:
+                workflow_outputs = True
+        return workflow_outputs
 
     @staticmethod
     def parse_workflow_step_annotations(workflow):
