@@ -18,7 +18,7 @@
         '<div id=change-layers-view></div>'
       );
       scope = $rootScope.$new();
-      var template = '<rp-change-layers-view></rp-change-layers-view>';
+      var template = '<rp-provvis-change-layers-view></rp-provvis-change-layers-view>';
 
       directiveElement = $compile(template)(scope);
       scope.$digest();
