@@ -15,7 +15,7 @@
     ) {
       $templateCache.put(
         $window.getStaticUrl('partials/provvis/partials/change-layers-view.html'),
-        '<div id=provvis-doi-view></div>'
+        '<div id=change-layers-view></div>'
       );
       scope = $rootScope.$new();
       var template = '<rp-change-layers-view></rp-change-layers-view>';
