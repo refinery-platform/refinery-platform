@@ -16,16 +16,13 @@ class GalaxyInstanceTests(TestCase):
         self.MISCELLANEOUS_STRING = "Coffee is tasty"
 
         self.galaxy_instance = Instance.objects.create(
-            base_url="www.example.com",
-            api_key=str(uuid.uuid4()),
+            base_url="www.example.com", api_key=str(uuid.uuid4()),
         )
         self.show_history_mock = mock.patch.object(
-            galaxy.histories.HistoryClient,
-            "show_history"
+            galaxy.histories.HistoryClient, "show_history"
         ).start()
         self.show_dataset_mock = mock.patch.object(
-            galaxy.histories.HistoryClient,
-            "show_dataset"
+            galaxy.histories.HistoryClient, "show_dataset"
         ).start()
 
         self.history_content_entry = {

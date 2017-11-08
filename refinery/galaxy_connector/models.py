@@ -27,10 +27,8 @@ class Instance(models.Model):
         history_content_keys = ["state", "file_size", "visible",
                                 "file_name", "genome_build", "misc_info",
                                 "misc_blurb"]
-        history_contents = connection.histories.show_history(
-            history_id,
-            contents=True
-        )
+        history_contents = connection.histories.show_history(history_id,
+                                                             contents=True)
 
         for history_content_entry in history_contents:
             if ("type" not in history_content_entry or
@@ -38,8 +36,7 @@ class Instance(models.Model):
                 continue
 
             history_content = connection.histories.show_dataset(
-                history_id,
-                history_content_entry["id"]
+                history_id, history_content_entry["id"]
             )
 
             file_info = {
