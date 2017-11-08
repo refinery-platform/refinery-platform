@@ -1310,25 +1310,17 @@ class DataSetResourceTest(LoginResourceTestCase):
 
         dataset_uri = make_api_uri("data_sets",
                                    self.dataset.uuid)
-        response = self.api_client.get(
-            dataset_uri,
-            format='json'
-        )
+        response = self.api_client.get(dataset_uri, format='json')
         self.assertValidJSONResponse(response)
         data = self.deserialize(response)
         self.assertEqual(data['uuid'], self.dataset.uuid)
         self.assertEqual(len(data['analyses']), 2)
 
-        sorted_analyses = sorted(
-            data['analyses'],
-            key=lambda x: x["name"]
-        )
+        sorted_analyses = sorted(data['analyses'], key=lambda x: x["name"])
         for analysis in sorted_analyses:
             self.assertTrue(analysis['is_owner'])
-            self.assertEqual(
-                analysis['owner'],
-                UserProfile.objects.get(user=self.user).uuid
-            )
+            self.assertEqual(analysis['owner'],
+                             UserProfile.objects.get(user=self.user).uuid)
         self.assertEqual(sorted_analyses[0]['status'], a1.status)
         self.assertEqual(sorted_analyses[0]['name'], a1.name)
         self.assertEqual(sorted_analyses[0]['uuid'], a1.uuid)
