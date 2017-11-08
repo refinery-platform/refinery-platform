@@ -2,7 +2,7 @@ terraform {
   required_version = "~> 0.10"
 
   backend "s3" {
-    key                  = "storage/terraform.tfstate"
+    key                  = "terraform.tfstate"
     workspace_key_prefix = "sites"
   }
 }
