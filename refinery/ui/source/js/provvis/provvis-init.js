@@ -514,7 +514,7 @@ var provvisInit = (function () {
    * @param solrResponse Facet filter information on node attributes.
    */
   var extractFacetNodeAttributesPrivate = function (solrResponse) {
-    if (solrResponse.length) {
+    if (!_.isEmpty(solrResponse)) {
       solrResponse.nodes.forEach(function (d) {
         /* Set facet attributes to all nodes for the subanalysis of the selected
          * node.
