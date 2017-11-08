@@ -1310,26 +1310,23 @@ class DataSetResourceTest(LoginResourceTestCase):
 
         dataset_uri = make_api_uri("data_sets",
                                    self.dataset.uuid)
-        response = self.api_client.get(
-            dataset_uri,
-            format='json'
-        )
+        response = self.api_client.get(dataset_uri, format='json')
         self.assertValidJSONResponse(response)
         data = self.deserialize(response)
         self.assertEqual(data['uuid'], self.dataset.uuid)
-        self.assertIsNotNone(data['analyses'])
         self.assertEqual(len(data['analyses']), 2)
 
-        self.assertIsNotNone(data['analyses'][0]['is_owner'])
-        self.assertTrue(data['analyses'][0]['is_owner'])
-        self.assertIsNotNone(data['analyses'][0]['owner'])
-        self.assertEqual(
-            data['analyses'][0]['owner'],
-            UserProfile.objects.get(user=self.user).uuid
-        )
-        self.assertEqual(data['analyses'][0]['status'], a2.status)
-        self.assertEqual(data['analyses'][0]['name'], a2.name)
-        self.assertEqual(data['analyses'][0]['uuid'], a2.uuid)
+        sorted_analyses = sorted(data['analyses'], key=lambda x: x["name"])
+        for analysis in sorted_analyses:
+            self.assertTrue(analysis['is_owner'])
+            self.assertEqual(analysis['owner'],
+                             UserProfile.objects.get(user=self.user).uuid)
+        self.assertEqual(sorted_analyses[0]['status'], a1.status)
+        self.assertEqual(sorted_analyses[0]['name'], a1.name)
+        self.assertEqual(sorted_analyses[0]['uuid'], a1.uuid)
+        self.assertEqual(sorted_analyses[1]['status'], a2.status)
+        self.assertEqual(sorted_analyses[1]['name'], a2.name)
+        self.assertEqual(sorted_analyses[1]['uuid'], a2.uuid)
 
     def test_get_dataset_expecting_no_analyses(self):
         dataset_uri = make_api_uri("data_sets",
