@@ -1035,26 +1035,19 @@ class OpenIDToken(APIView):
             return api_error_response(
                 message, status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-        # retrieve Cognito identity pool ID using pool name
-        identity_pool_id = ''
-        for identity_pool in response['IdentityPools']:
-            if (identity_pool['IdentityPoolName'] ==
-                    settings.COGNITO_IDENTITY_POOL_NAME):
-                identity_pool_id = identity_pool['IdentityPoolId']
         try:
             token = client.get_open_id_token_for_developer_identity(
-                IdentityPoolId=identity_pool_id,
-                Logins={
-                    settings.COGNITO_DEVELOPER_PROVIDER_NAME:
-                        request.user.username
-                }
+                IdentityPoolId=settings.COGNITO_IDENTITY_POOL_ID,
+                Logins={'login.refinery': request.user.username}
             )
         except (botocore.exceptions.ClientError,
                 botocore.exceptions.ParamValidationError) as exc:
-            message = ("Could not obtain OpenID token for user '{}' in "
-                       "IdentityPoolId '{}': {}".format(
-                        request.user.username, identity_pool_id, exc
-                        ))
+            message =\
+                "Could not obtain OpenID token for " \
+                "user '{}' in Identity Pool '{}': {}".format(
+                    request.user.username, settings.COGNITO_IDENTITY_POOL_ID,
+                    exc
+                )
             logger.error(message)
             return api_error_response(
                 message, status.HTTP_500_INTERNAL_SERVER_ERROR
