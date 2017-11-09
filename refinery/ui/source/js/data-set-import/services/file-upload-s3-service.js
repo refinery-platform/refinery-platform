@@ -30,7 +30,7 @@
         Logins: { 'cognito-identity.amazonaws.com': response.Token }
       });
       vm.s3obj = new AWS.S3({
-        params: { Bucket: settings.djangoApp.mediaBucket, maxRetries: 10 },
+        params: { Bucket: settings.djangoApp.uploadBucket, maxRetries: 10 },
         httpOptions: { timeout: 360000 }
       });
       AWS.config.credentials.getPromise().then(function () {
@@ -70,8 +70,8 @@
       var params;
       try {
         params = {
-          Bucket: settings.djangoApp.mediaBucket,
-          Key: 'uploads' + '/' + AWS.config.credentials.identityId + '/' + file.name,
+          Bucket: settings.djangoApp.uploadBucket,
+          Key: AWS.config.credentials.identityId + '/' + file.name,
           ContentType: file.type,
           Body: file
         };

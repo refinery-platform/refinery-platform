@@ -65,6 +65,7 @@ def extra_context(context):
         "SATORI_DEMO": settings.SATORI_DEMO,
         "STATIC_URL": settings.STATIC_URL,
         "MEDIA_BUCKET": settings.MEDIA_BUCKET,
+        "UPLOAD_BUCKET": settings.UPLOAD_BUCKET,
         "REFINERY_DEPLOYMENT_PLATFORM": settings.REFINERY_DEPLOYMENT_PLATFORM,
         "USER_FILES_COLUMNS": settings.USER_FILES_COLUMNS
     }
