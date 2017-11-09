@@ -39,7 +39,7 @@ For `gdev` to be effective, `grunt watch` must be running:
 
 ```
 vagrant ssh
-cd /vagrant/ui
+cd /vagrant/refinery/ui
 workon refinery-platform
 grunt watch
 ```
