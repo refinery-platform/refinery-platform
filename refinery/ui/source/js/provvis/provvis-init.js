@@ -514,8 +514,8 @@ var provvisInit = (function () {
    * @param solrResponse Facet filter information on node attributes.
    */
   var extractFacetNodeAttributesPrivate = function (solrResponse) {
-    if (solrResponse instanceof SolrResponse) {
-      solrResponse.getDocumentList().forEach(function (d) {
+    if (solrResponse.nodes.length) {
+      solrResponse.nodes.forEach(function (d) {
         /* Set facet attributes to all nodes for the subanalysis of the selected
          * node.
          */
@@ -546,9 +546,8 @@ var provvisInit = (function () {
    */
   var createFacetNodeAttributeList = function (solrResponse) {
     /* Extract attributes. */
-    if (solrResponse instanceof SolrResponse &&
-      solrResponse.getDocumentList().length > 0) {
-      var sampleNode = solrResponse.getDocumentList()[0];
+    if (solrResponse.nodes.length) {
+      var sampleNode = solrResponse.nodes[0];
       var rawAttrSet = d3.entries(sampleNode);
 
       rawAttrSet.forEach(function (fa) {
@@ -651,6 +650,23 @@ var provvisInit = (function () {
   return {
     run: function (data, analysesData, solrResponse) {
       return runInitPrivate(data, analysesData, solrResponse);
+    },
+    reset: function () {
+      /* Initialize node-link arrays. */
+      dataset = {};
+      nodes = [];
+      links = [];
+      aLinks = [];
+      iNodes = [];
+      oNodes = [];
+      aNodes = [];
+      saNodes = [];
+      nodeMap = d3.map();
+      analysisWorkflowMap = d3.map();
+      workflowData = d3.map();
+      analysisData = d3.map();
+      nodeData = d3.map();
+      nodeAttributeList = [];
     }
   };
 }());
