@@ -29,6 +29,8 @@ S3_BUCKET_NAME_BASE: "refinery"
 
 # Constraint: [\w]+ (must be unique within AWS account)
 COGNITO_IDENTITY_POOL_NAME: "Refinery Platform"
+# Get from Terraform output
+COGNITO_IDENTITY_POOL_ID: ""
 # Constraint: [\w._-]+
 COGNITO_DEVELOPER_PROVIDER_NAME: "login.refinery"
 
