@@ -56,7 +56,7 @@
             Details
           </a>
         </li>
-        <li ui-sref-active="active">
+        <li ui-sref-active="active" id="provvis-tab-li">
            <a ui-sref="provvis" class="dataSetTabs" >
             Provenance
           </a>
@@ -98,6 +98,14 @@
   <script type="text/javascript" src="{% static "js/refinery/data_set_manager/data_set_configurator.js" %}"></script>
   <script type="text/javascript" src="{% static "js/refinery/core/analysis_api_client.js" %}"></script>
   <script type="text/javascript" src="{% static "js/refinery/core/data_set_monitor.js" %}"></script>
+
+  <script type="text/javascript" src="{% static "js/provvis/provvis-helpers.js"  %}"></script>
+  <script type="text/javascript" src="{% static "js/provvis/provvis-decl.js"  %}"></script>
+  <script type="text/javascript" src="{% static "js/provvis/provvis-init.js"  %}"></script>
+  <script type="text/javascript" src="{% static "js/provvis/provvis-layout.js" %}"></script>
+  <script type="text/javascript" src="{% static "js/provvis/provvis-motifs.js" %}"></script>
+  <script type="text/javascript" src="{% static "js/provvis/provvis-render.js" %}"></script>
+  <script type="text/javascript" src="{% static "js/provvis/provvis.js" %}"></script>
 
   <!-- provenance visualization -->
   <script type="text/javascript" src="{% static "vendor/lodash/lodash.min.js" %}"></script>
