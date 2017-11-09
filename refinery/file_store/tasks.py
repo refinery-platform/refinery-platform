@@ -338,14 +338,15 @@ def download_file(url, target_path, file_size=1):
                 percent_done = localfilesize * 100. / remotefilesize
             else:
                 percent_done = 0
-            import_file.update_state(
-                state="PROGRESS",
-                meta={
-                    "percent_done": "%3.2f%%" % percent_done,
-                    "current": localfilesize,
-                    "total": remotefilesize
-                }
-            )
+                # TODO Remove this entirely, no associated import_file task?
+                import_file.update_state(
+                    state="PROGRESS",
+                    meta={
+                        "percent_done": "%3.2f%%" % percent_done,
+                        "current": localfilesize,
+                        "total": remotefilesize
+                    }
+                )
         # cleanup
         # TODO: delete temp file if download failed
         destination.flush()
