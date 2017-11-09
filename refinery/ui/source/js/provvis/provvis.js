@@ -392,6 +392,7 @@ var provvis = (function (  // eslint-disable-line no-unused-vars
         // }
 
         /* Uncomment in development mode. */
+
         vis.graph = provvisInit.run(data, analysesData, solrResponse);
         vis.graph.bclgNodes = provvisLayout.run(vis.graph, vis.cell);
         provvisMotifs.run(vis.graph, layerMethod);
@@ -471,6 +472,9 @@ var provvis = (function (  // eslint-disable-line no-unused-vars
     },
     get: function () {
       return getProvVisPrivate();
+    },
+    resetVis: function () {
+      vis = {};
     }
   };
 }(
