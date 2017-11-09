@@ -1020,21 +1020,7 @@ class OpenIDToken(APIView):
             return api_error_response(
                 message, status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-        try:
-            # 60 results is the highest allowed value
-            response = client.list_identity_pools(MaxResults=60)
-        except botocore.exceptions.NoCredentialsError as exc:
-            message = "Server AWS configuration is incorrect: {}".format(exc)
-            logger.error(message)
-            return api_error_response(
-                message, status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-        except botocore.exceptions.ClientError as exc:
-            message = "Error retrieving Cognito identity pools: {}".format(exc)
-            logger.error(message)
-            return api_error_response(
-                message, status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+
         try:
             token = client.get_open_id_token_for_developer_identity(
                 IdentityPoolId=settings.COGNITO_IDENTITY_POOL_ID,
