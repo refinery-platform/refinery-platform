@@ -2000,6 +2000,7 @@ class ProcessISATabViewLiveServerTests(ProcessISATabViewTestBase,
                                        LiveServerTestCase):
     @mock.patch.object(data_set_manager.views.import_file, "delay")
     def test_post_good_isa_tab_url(self, delay_mock):
+        original_media_root = settings.MEDIA_ROOT
         settings.MEDIA_ROOT = os.path.join(
             settings.BASE_DIR,
             "refinery/data_set_manager/test-data/"
@@ -2008,6 +2009,7 @@ class ProcessISATabViewLiveServerTests(ProcessISATabViewTestBase,
         good_isa_tab_url = urljoin(media_url, "rfc-test.zip")
         self.post_isa_tab(isa_tab_url=good_isa_tab_url)
         self.successful_import_assertions()
+        settings.MEDIA_ROOT = original_media_root
 
 
 class SingleFileColumnParserTests(TestCase):
