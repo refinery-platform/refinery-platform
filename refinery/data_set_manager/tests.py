@@ -6,14 +6,16 @@ import os
 import re
 import shutil
 import tempfile
+from urlparse import urljoin
 import uuid
 
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import (InMemoryUploadedFile,
                                             SimpleUploadedFile)
 from django.db.models import Q
 from django.http import QueryDict
-from django.test import TestCase
+from django.test import LiveServerTestCase, TestCase
 
 import mock
 from rest_framework.test import APIClient, APIRequestFactory, APITestCase
@@ -1843,6 +1845,9 @@ class IsaTabTestBase(TestCase):
         )
         self.assertTrue(is_logged_in)
 
+    def tearDown(self):
+        FileStoreItem.objects.all().delete()
+
 
 class IsaTabParserTests(IsaTabTestBase):
     def failed_isatab_assertions(self):
@@ -1950,9 +1955,16 @@ class IsaTabParserTests(IsaTabTestBase):
         self.failed_isatab_assertions()
 
 
-class ProcessISATabViewTests(IsaTabTestBase):
-    def tearDown(self):
-        FileStoreItem.objects.all().delete()
+class ProcessISATabViewTestBase(IsaTabTestBase):
+    def post_isa_tab(self, isa_tab_url=None, isa_tab_file=None):
+        self.client.post(
+            self.isa_tab_import_url,
+            data={
+                "isa_tab_url": isa_tab_url,
+                "isa_tab_file": isa_tab_file
+            },
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest'
+        )
 
     def successful_import_assertions(self):
         self.assertEqual(DataSet.objects.count(), 1)
@@ -1966,30 +1978,37 @@ class ProcessISATabViewTests(IsaTabTestBase):
         self.assertEqual(Investigation.objects.count(), 0)
         self.assertEqual(Assay.objects.count(), 0)
 
+
+class ProcessISATabViewTests(ProcessISATabViewTestBase):
     @mock.patch.object(data_set_manager.views.import_file, "delay")
     def test_post_good_isa_tab_file(self, delay_mock):
         with open('data_set_manager/test-data/rfc-test.zip') as good_isa:
-            self.client.post(
-                self.isa_tab_import_url,
-                data={
-                    "isa_tab_url": None,
-                    "isa_tab_file": good_isa
-                },
-                HTTP_X_REQUESTED_WITH='XMLHttpRequest'
-            )
+            self.post_isa_tab(isa_tab_file=good_isa)
         self.successful_import_assertions()
 
     def test_post_bad_isa_tab_file(self):
         with open('data_set_manager/test-data/HideLabBrokenA.zip') as bad_isa:
-            self.client.post(
-                self.isa_tab_import_url,
-                data={
-                    "isa_tab_url": None,
-                    "isa_tab_file": bad_isa
-                },
-                HTTP_X_REQUESTED_WITH='XMLHttpRequest'
-            )
+            self.post_isa_tab(isa_tab_file=bad_isa)
         self.unsuccessful_import_assertions()
+
+    def test_post_bad_isa_tab_url(self):
+        self.post_isa_tab(isa_tab_url="non-existant-file")
+        self.unsuccessful_import_assertions()
+
+
+class ProcessISATabViewLiveServerTests(ProcessISATabViewTestBase,
+                                       LiveServerTestCase):
+    @mock.patch.object(data_set_manager.views.import_file, "delay")
+    def test_post_good_isa_tab_url(self, delay_mock):
+        media_root_path = os.path.join(
+            settings.BASE_DIR,
+            "refinery/data_set_manager/test-data/"
+        )
+        with self.settings(MEDIA_ROOT=media_root_path):
+            media_url = urljoin(self.live_server_url, settings.MEDIA_URL)
+            good_isa_tab_url = urljoin(media_url, "rfc-test.zip")
+            self.post_isa_tab(isa_tab_url=good_isa_tab_url)
+        self.successful_import_assertions()
 
 
 class SingleFileColumnParserTests(TestCase):
