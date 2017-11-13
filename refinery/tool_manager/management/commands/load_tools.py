@@ -1,18 +1,20 @@
 import json
 from optparse import make_option
+import os
 import sys
 
 from django.core.management.base import BaseCommand, CommandError
 
+import requests
+
 from ...models import ToolDefinition, WorkflowTool
 from ...utils import (ANNOTATION_ERROR_MESSAGE, create_tool_definition,
-                      get_visualization_annotations_list, get_workflows,
-                      validate_tool_annotation,
+                      get_workflows, validate_tool_annotation,
                       validate_workflow_step_annotation)
 
 
 class Command(BaseCommand):
-    help = "Creates Tool Definitions."
+    help = "Loads tool definitions from the registry"
     """
     Name: handle
     Description:
@@ -57,14 +59,11 @@ class Command(BaseCommand):
         if self.force:
             self._confirmation_loop()
 
-        if not options["visualizations"] and not options["workflows"]:
-            self.generate_tool_definitions(workflows=True, visualizations=True)
-
-        if options["visualizations"]:
-            self.generate_tool_definitions(visualizations=True)
-
         if options["workflows"]:
-            self.generate_tool_definitions(workflows=True)
+            self._generate_workflows()
+
+        else:
+            self._load_visualization_definitions(args)
 
     @staticmethod
     def _ask_for_confirmation():
@@ -104,22 +103,21 @@ class Command(BaseCommand):
         if result[0].lower() == "n":
             sys.exit(0)
 
-    def generate_tool_definitions(self, visualizations=False, workflows=False):
-        """Generate ToolDefinitions if our validation rules pass.
-        :param workflows: <Boolean> Whether to generate Workflow-based
-        ToolDefinitions or not
-        :param visualizations: <Boolean> Whether to generate
-        Visualization-based  ToolDefinitions or not
-        """
-        self.stdout.write(self.style.WARNING("Generating ToolDefinitions"))
-
-        if visualizations:
-            self._generate_visualizations()
-        if workflows:
-            self._generate_workflows()
-
-    def _generate_visualizations(self):
-        visualization_annotations = get_visualization_annotations_list()
+    def _load_visualization_definitions(self, names):
+        visualization_annotations = []
+        for name in names:
+            if os.path.exists(name):
+                with open(name) as f:
+                    annotation = json.loads(f.read())
+            else:
+                url = 'https://raw.githubusercontent.com/' + \
+                    'refinery-platform/visualization-tools/' + \
+                    'master/tool-annotations/' + name + '.json'
+                response = requests.get(url)
+                response.raise_for_status()
+                annotation = response.json()
+            # TODO: Error message?
+            visualization_annotations.append(annotation)
 
         for visualization in visualization_annotations:
             if self._has_duplicates(visualization):

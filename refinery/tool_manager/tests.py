@@ -2,7 +2,6 @@ import StringIO
 import ast
 import json
 import logging
-import os
 import time
 from urlparse import urljoin
 import uuid
@@ -70,8 +69,8 @@ from .models import (FileRelationship, GalaxyParameter, InputFile, Parameter,
                      Tool, ToolDefinition, VisualizationTool,
                      VisualizationToolError, WorkflowTool)
 from .utils import (FileTypeValidationError, create_tool,
-                    create_tool_definition, get_visualization_annotations_list,
-                    get_workflows, validate_tool_annotation,
+                    create_tool_definition, get_workflows,
+                    validate_tool_annotation,
                     validate_tool_launch_configuration,
                     validate_workflow_step_annotation)
 from .views import ToolDefinitionsViewSet, ToolsViewSet
@@ -3409,30 +3408,6 @@ class ToolManagerUtilitiesTests(ToolManagerTestBase):
             str([f.name for f in FileType.objects.all()]),
             file_type_validation_error.message
         )
-
-    def test_get_visualization_annotations_list(self):
-        settings.VISUALIZATION_ANNOTATION_BASE_PATH = os.path.dirname(__file__)
-        tool_definition_name = "dummy.json"
-        tool_definition = {
-            "is_tool_definition": True
-        }
-        tool_definition_path = os.path.join(
-            settings.VISUALIZATION_ANNOTATION_BASE_PATH,
-            tool_definition_name
-        )
-        with open(tool_definition_path, "w") as f:
-            f.write(json.dumps(tool_definition))
-
-        visualization_annotations = get_visualization_annotations_list()
-        self.assertEqual(
-            visualization_annotations,
-            [
-                {
-                    "is_tool_definition": True
-                }
-            ]
-        )
-        os.remove(tool_definition_path)
 
     @mock.patch(
         "bioblend.galaxy.workflows.WorkflowClient.export_workflow_dict",
