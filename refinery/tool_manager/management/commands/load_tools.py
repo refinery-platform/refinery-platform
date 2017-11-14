@@ -14,21 +14,10 @@ from ...utils import (ANNOTATION_ERROR_MESSAGE, create_tool_definition,
 
 
 class Command(BaseCommand):
-    help = "Loads tool definitions from the registry"
-    """
-    Name: handle
-    Description:
-    main program; run the command
-    """
+    help = "Loads visualization tool definitions "
+    "or generates workflow tool definitions"
 
     option_list = BaseCommand.option_list + (
-        make_option(
-            '--visualizations',
-            action='store_true',
-            dest='visualizations',
-            help='Generate ToolDefinitions for properly annotated '
-                 'Visualization tools'
-        ),
         make_option(
             '--workflows',
             action='store_true',
@@ -54,14 +43,20 @@ class Command(BaseCommand):
         Creates ToolDefinitions based off of properly annotated Galaxy
         Workflows and Visualization Tools.
         """
+        is_workflow_mode = options["workflows"]
+        if not args and not is_workflow_mode:
+            self.stdout.write(
+                'List visualizations to load, or specify --workflows'
+            )
+            exit(1)
+
         self.force = options["force"]
 
         if self.force:
             self._confirmation_loop()
 
-        if options["workflows"]:
+        if is_workflow_mode:
             self._generate_workflows()
-
         else:
             self._load_visualization_definitions(args)
 
@@ -89,9 +84,10 @@ class Command(BaseCommand):
             else:
                 self.stdout.write(
                     self.style.NOTICE(
-                        "Skipping creation of `{0}` since "
-                        "ToolDefinition with name: `{0}` "
-                        "already exists.".format(tool_annotation["name"])
+                        "Skipping '{0}': It already exists. "
+                        "Add '--force' to override.".format(
+                            tool_annotation["name"]
+                        )
                     )
                 )
                 return True
@@ -103,7 +99,7 @@ class Command(BaseCommand):
         if result[0].lower() == "n":
             sys.exit(0)
 
-    def _load_visualization_definitions(self, names):
+    def _load_visualization_definitions(self, names, branch='master'):
         visualization_annotations = []
         for name in names:
             if os.path.exists(name):
@@ -112,11 +108,16 @@ class Command(BaseCommand):
             else:
                 url = 'https://raw.githubusercontent.com/' + \
                     'refinery-platform/visualization-tools/' + \
-                    'master/tool-annotations/' + name + '.json'
+                    branch + '/tool-annotations/' + name + '.json'
                 response = requests.get(url)
+                if response.status_code != 200:
+                    raise StandardError(
+                        '"{}" not a file and "{}" not a good URL'.format(
+                            name, url
+                        )
+                    )
                 response.raise_for_status()
                 annotation = response.json()
-            # TODO: Error message?
             visualization_annotations.append(annotation)
 
         for visualization in visualization_annotations:
