@@ -3193,19 +3193,13 @@ class ToolLaunchConfigurationTests(ToolManagerTestBase):
     def setUp(self):
         super(ToolLaunchConfigurationTests, self).setUp()
 
-        with open(
-            "{}/visualizations/higlass.json".format(TEST_DATA_PATH)
-        ) as f:
-            tool_annotation = [json.loads(f.read())]
+        # TODO: Better to make this igv like the others?
+        # Not sure if container is loaded.
+        visualizations = [TEST_DATA_PATH + "/visualizations/higlass.json"]
+        call_command("load_tools", visualizations=visualizations)
 
-        with mock.patch(
-            self.mock_vis_annotations_reference, return_value=tool_annotation
-        ) as mocked_method:
-            call_command("load_tools", visualizations=True)
-
-            self.assertTrue(mocked_method.called)
-            self.assertEqual(ToolDefinition.objects.count(), 1)
-            self.td = ToolDefinition.objects.all()[0]
+        self.assertEqual(ToolDefinition.objects.count(), 1)
+        self.td = ToolDefinition.objects.all()[0]
 
     def test_invalid_TLC_bad_json(self):
         tool_launch_configuration = "This isn't valid JSON"

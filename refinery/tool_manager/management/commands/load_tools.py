@@ -56,6 +56,10 @@ class Command(BaseCommand):
         Creates ToolDefinitions based off of properly annotated Galaxy
         Workflows and Visualization Tools.
         """
+        if args:
+            raise CommandError(
+                'Unrecognized arguments: ' + ' '.join(args)
+            )
         visualizations = options["visualizations"]
         is_workflow_mode = options["workflows"]
         if not visualizations and not is_workflow_mode:
