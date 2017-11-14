@@ -14,10 +14,17 @@ from ...utils import (ANNOTATION_ERROR_MESSAGE, create_tool_definition,
 
 
 class Command(BaseCommand):
-    help = "Loads visualization tool definitions "
-    "or generates workflow tool definitions"
+    help = "Loads visualization tool definitions " + \
+           "or generates workflow tool definitions"
 
     option_list = BaseCommand.option_list + (
+        make_option(
+            '--visualizations',
+            action='store',
+            dest='visualizations',
+            help='Generate ToolDefinitions for visualizations, '
+                 'either by filename, or from the registry'
+        ),
         make_option(
             '--workflows',
             action='store_true',
@@ -38,17 +45,26 @@ class Command(BaseCommand):
         super(Command, self).__init__()
         self.force = False
 
+    def warn(self, message):
+        self.stderr.write(
+            self.style.WARNING(message)
+        )
+
     def handle(self, *args, **options):
         """
         Creates ToolDefinitions based off of properly annotated Galaxy
         Workflows and Visualization Tools.
         """
+        visualizations = options["visualizations"]
         is_workflow_mode = options["workflows"]
-        if not args and not is_workflow_mode:
-            self.stdout.write(
-                'List visualizations to load, or specify --workflows'
+        if not visualizations and not is_workflow_mode:
+            raise CommandError(
+                'Either --workflows or --visualizations is required'
             )
-            exit(1)
+        if visualizations and is_workflow_mode:
+            raise CommandError(
+                '--workflows and --visualizations are mutually exclusive'
+            )
 
         self.force = options["force"]
 
@@ -58,7 +74,7 @@ class Command(BaseCommand):
         if is_workflow_mode:
             self._generate_workflows()
         else:
-            self._load_visualization_definitions(args)
+            self._load_visualization_definitions(visualizations)
 
     @staticmethod
     def _ask_for_confirmation():
@@ -73,21 +89,18 @@ class Command(BaseCommand):
         ]
         if tool_annotation["name"] in current_tool_definition_names:
             if self.force:
-                self.stdout.write(
-                    self.style.NOTICE("Forcing deletion of of `{}`".format(
-                            tool_annotation["name"]))
+                self.warn("Forcing deletion of of `{}`".format(
+                    tool_annotation["name"])
                 )
                 ToolDefinition.objects.get(
                     name=tool_annotation["name"]
                 ).delete()
                 return False
             else:
-                self.stdout.write(
-                    self.style.NOTICE(
-                        "Skipping '{0}': It already exists. "
-                        "Add '--force' to override.".format(
-                            tool_annotation["name"]
-                        )
+                self.warn(
+                    "Skipping '{0}': It already exists. "
+                    "Add '--force' to override.".format(
+                        tool_annotation["name"]
                     )
                 )
                 return True
@@ -111,8 +124,8 @@ class Command(BaseCommand):
                     branch + '/tool-annotations/' + name + '.json'
                 response = requests.get(url)
                 if response.status_code != 200:
-                    raise StandardError(
-                        '"{}" not a file and "{}" not a good URL'.format(
+                    raise CommandError(
+                        '"{}" not a file and "{}" not a valid URL'.format(
                             name, url
                         )
                     )
@@ -126,11 +139,9 @@ class Command(BaseCommand):
             visualization["tool_type"] = ToolDefinition.VISUALIZATION
             self._generate_tool_definition(visualization)
 
-            self.stdout.write(
-                self.style.WARNING(
-                    "Generated ToolDefinition for: Visualization: `{}`".format(
-                        visualization["name"]
-                    )
+            self.warn(
+                "Generated ToolDefinition for: Visualization: `{}`".format(
+                    visualization["name"]
                 )
             )
 
@@ -182,11 +193,9 @@ class Command(BaseCommand):
 
                 self._generate_tool_definition(workflow)
 
-                self.stdout.write(
-                    self.style.WARNING(
-                        "Generated ToolDefinition for Workflow: `{}`"
-                        .format(workflow["name"])
-                    )
+                self.warn(
+                    "Generated ToolDefinition for Workflow: `{}`"
+                    .format(workflow["name"])
                 )
 
     @staticmethod
