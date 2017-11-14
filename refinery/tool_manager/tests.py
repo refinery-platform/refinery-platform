@@ -3193,9 +3193,7 @@ class ToolLaunchConfigurationTests(ToolManagerTestBase):
     def setUp(self):
         super(ToolLaunchConfigurationTests, self).setUp()
 
-        # TODO: Better to make this igv like the others?
-        # Not sure if container is loaded.
-        visualizations = [TEST_DATA_PATH + "/visualizations/higlass.json"]
+        visualizations = [TEST_DATA_PATH + "/visualizations/igv.json"]
         call_command("load_tools", visualizations=visualizations)
 
         self.assertEqual(ToolDefinition.objects.count(), 1)
