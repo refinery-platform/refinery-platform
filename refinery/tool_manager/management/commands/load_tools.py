@@ -116,7 +116,6 @@ class Command(BaseCommand):
                             name, url
                         )
                     )
-                response.raise_for_status()
                 annotation = response.json()
             visualization_annotations.append(annotation)
 
