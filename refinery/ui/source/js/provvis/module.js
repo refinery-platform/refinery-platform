@@ -8,5 +8,5 @@
   'use strict';
 
   angular
-    .module('refineryProvvis', ['refineryAnalysisMonitor', 'refineryFileBrowser']);
+    .module('refineryProvvis', []);
 })();
