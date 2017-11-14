@@ -1107,12 +1107,11 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
             self.load_visualizations()
 
             self.assertEqual(get_wf_mock.call_count, 1)
-            # TODO: Make sure these are stable and test them
-            # self.assertEqual(ToolDefinition.objects.count(), 1)
-            # self.assertEqual(FileRelationship.objects.count(), 7)
-            # self.assertEqual(GalaxyParameter.objects.count(), 9)
-            # self.assertEqual(Parameter.objects.count(), 10)
-            # self.assertEqual(InputFile.objects.count(), 6)
+            self.assertEqual(ToolDefinition.objects.count(), 1)
+            self.assertEqual(FileRelationship.objects.count(), 1)
+            self.assertEqual(GalaxyParameter.objects.count(), 0)
+            self.assertEqual(Parameter.objects.count(), 1)
+            self.assertEqual(InputFile.objects.count(), 1)
 
     def test_load_tools_overwrites_visualizations_if_forced(
             self
