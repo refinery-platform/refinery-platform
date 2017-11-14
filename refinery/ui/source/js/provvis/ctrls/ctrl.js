@@ -13,6 +13,7 @@
   ProvvisController.$inject = [
     'analysisService',
     'assayFileService',
+    'provvisInitService',
     'd3',
     '$',
     '$q',
@@ -22,6 +23,7 @@
   function ProvvisController (
     analysisService,
     assayFileService,
+    provvisInitService,
     d3,
     $,
     $q,
@@ -38,7 +40,8 @@
 
     var vis = Object.create(null);
     var provvisDecl = $window.provvisDecl;
-    var provvisInit = $window.provvisInit;
+    var provvisInit = provvisInitService;
+   // var provvisInit = $window.provvisInit;
     var provvisLayout = $window.provvisLayout;
     var provvisMotifs = $window.provvisMotifs;
     var provvisRender = $window.provvisRender;
@@ -101,6 +104,7 @@
    * @param solrResponse Facet filter information on node attributes.
    */
     var runProvVisPrivate = function (studyUuid, studyAnalyses, solrResponse) {
+      console.log('runProvVisPrivate');
       showProvvisLoaderIcon();
 
       /* Only allow one instance of ProvVis. */
@@ -113,8 +117,6 @@
 
         /* Parse json. */
         d3.json(url, function (error, data) {
-          console.log('in run ProvVisPrivate data');
-          console.log(data);
           /* Declare d3 specific properties. */
           var zoom = Object.create(null);
           var canvas = Object.create(null);
@@ -277,7 +279,8 @@
           /* Production mode exception handling. */
           // try {
           //   /* Extract graph data. */
-          //   vis.graph = provvisInit.run(data, analysesData, solrResponse);
+          //   vis.graph = provvisInit.initGraph(data,
+          // analysesData, solrResponse);
           //   try {
           //     /* Compute layout. */
           //     vis.graph.bclgNodes = provvisLayout.run(vis.graph, vis.cell);
@@ -315,7 +318,7 @@
           // }
 
           /* Uncomment in development mode. */
-          vis.graph = provvisInit.run(data, analysesData, solrResponse);
+          vis.graph = provvisInit.initGraph(data, analysesData, solrResponse);
           vis.graph.bclgNodes = provvisLayout.run(vis.graph, vis.cell);
           provvisMotifs.run(vis.graph, layerMethod);
           provvisRender.run(vis);
