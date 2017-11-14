@@ -62,23 +62,18 @@ class Command(BaseCommand):
             )
         visualizations = options["visualizations"]
         is_workflow_mode = options["workflows"]
-        if not visualizations and not is_workflow_mode:
+        if not (visualizations or is_workflow_mode):
             raise CommandError(
                 'Either --workflows or --visualizations is required'
-            )
-        if visualizations and is_workflow_mode:
-            raise CommandError(
-                '--workflows and --visualizations are mutually exclusive'
             )
 
         self.force = options["force"]
 
         if self.force:
             self._confirmation_loop()
-
         if is_workflow_mode:
             self._generate_workflows()
-        else:
+        if visualizations:
             self._load_visualization_definitions(visualizations)
 
     @staticmethod
