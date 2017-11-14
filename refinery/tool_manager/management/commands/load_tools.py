@@ -20,7 +20,8 @@ class Command(BaseCommand):
     option_list = BaseCommand.option_list + (
         make_option(
             '--visualizations',
-            action='store',
+            # TODO: In Python 3, nargs='+' is supported
+            action='append',
             dest='visualizations',
             help='Generate ToolDefinitions for visualizations, '
                  'either by filename, or from the registry'
