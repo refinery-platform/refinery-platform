@@ -1099,54 +1099,37 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
             )
 
             self.assertEqual(ToolDefinition.objects.count(), 0)
-            with open(
-                "{}/visualizations/igv.json".format(TEST_DATA_PATH)
-            ) as f:
-                tool_annotation = [json.loads(f.read())]
+            visualizations = [TEST_DATA_PATH + "/visualizations/igv.json"]
+            call_command("load_tools", visualizations=visualizations)
 
-            with mock.patch(
-                self.mock_vis_annotations_reference,
-                return_value=tool_annotation
-            ) as get_vis_list_mock:
-                call_command("load_tools")
-
-                self.assertEqual(get_wf_mock.call_count, 2)
-                self.assertEqual(get_vis_list_mock.call_count, 1)
-                self.assertEqual(ToolDefinition.objects.count(), 4)
-                self.assertEqual(FileRelationship.objects.count(), 7)
-                self.assertEqual(GalaxyParameter.objects.count(), 9)
-                self.assertEqual(Parameter.objects.count(), 10)
-                self.assertEqual(InputFile.objects.count(), 6)
+            self.assertEqual(get_wf_mock.call_count, 1)
+            self.assertEqual(ToolDefinition.objects.count(), 4)
+            self.assertEqual(FileRelationship.objects.count(), 7)
+            self.assertEqual(GalaxyParameter.objects.count(), 9)
+            self.assertEqual(Parameter.objects.count(), 10)
+            self.assertEqual(InputFile.objects.count(), 6)
 
     def test_load_tools_overwrites_visualizations_if_forced(
             self
     ):
         self.raw_input_yes_mock.start()
-        with open(
-            "{}/visualizations/igv.json".format(TEST_DATA_PATH)
-        ) as f:
-            vis_tool_annotation = [json.loads(f.read())]
+        visualizations = ["{}/visualizations/igv.json".format(TEST_DATA_PATH)]
 
-        with mock.patch(
-            self.mock_vis_annotations_reference,
-            side_effect=[vis_tool_annotation] * 2
-        ) as get_vis_list_mock:
-            # Create VisualizationToolDefinition
-            call_command("load_tools", visualizations=True)
-            original_ids = [t.id for t in ToolDefinition.objects.all()]
+        # Create VisualizationToolDefinition
+        call_command("load_tools", visualizations=visualizations)
+        original_ids = [t.id for t in ToolDefinition.objects.all()]
 
-            # Create new VisualizationToolDefinition with --force
-            call_command(
-                "load_tools",
-                visualizations=True,
-                force=True
-            )
-            new_ids = [t.id for t in ToolDefinition.objects.all()]
+        # Create new VisualizationToolDefinition with --force
+        call_command(
+            "load_tools",
+            visualizations=visualizations,
+            force=True
+        )
+        new_ids = [t.id for t in ToolDefinition.objects.all()]
 
-            # Assert that the new visualization tool definitions id's were
-            # incremented
-            self.assertEqual(new_ids, [_id + 1 for _id in original_ids])
-            self.assertEqual(get_vis_list_mock.call_count, 2)
+        # Assert that the new visualization tool definitions id's were
+        # incremented
+        self.assertEqual(new_ids, [_id + 1 for _id in original_ids])
 
     def test_load_tools_overwrites_workflows_if_forced(
             self
@@ -1293,22 +1276,16 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
         messages
     ):
         assert type(messages) == list
-        with open(
+        visualizations = [
             "{}/visualizations/{}.json".format(
                 TEST_DATA_PATH,
                 tool_annotation_name
             )
-        ) as f:
-            tool_annotation = [json.loads(f.read())]
-
-        with mock.patch(
-                self.mock_vis_annotations_reference,
-                return_value=tool_annotation
-        ):
-            with self.assertRaises(exception) as context:
-                call_command("load_tools", visualizations=True)
-            [self.assertIn(message, context.exception.message)
-             for message in messages]
+        ]
+        with self.assertRaises(exception) as context:
+            call_command("load_tools", visualizations=visualizations)
+        [self.assertIn(message, context.exception.message)
+         for message in messages]
 
     def test_visualization_generation_with_no_image_version_yields_error(self):
         self._assert_visualization_tool_def_exception_contents(
