@@ -262,6 +262,12 @@ class ToolManagerTestBase(ToolManagerMocks):
         self.BAD_WORKFLOW_OUTPUTS = {WorkflowTool.WORKFLOW_OUTPUTS: []}
         self.GOOD_WORKFLOW_OUTPUTS = {WorkflowTool.WORKFLOW_OUTPUTS: [True]}
 
+    def load_visualizations(self):
+        # TODO: More mocking, so Docker image is not downloaded
+        visualizations = ["{}/visualizations/igv.json".format(TEST_DATA_PATH)]
+        call_command("load_tools", visualizations=visualizations)
+        return visualizations
+
     def tearDown(self):
         # Trigger the pre_delete signal so that datafiles are purged
         FileStoreItem.objects.all().delete()
@@ -729,8 +735,7 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
         }
 
     def test_tool_definition_model_str(self):
-        visualizations = ["{}/visualizations/igv.json".format(TEST_DATA_PATH)]
-        call_command("load_tools", visualizations=visualizations)
+        self.load_visualizations()
         td = ToolDefinition.objects.all()[0]
         self.assertEqual(
             td.__str__(),
@@ -1099,8 +1104,7 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
             )
 
             self.assertEqual(ToolDefinition.objects.count(), 0)
-            visualizations = [TEST_DATA_PATH + "/visualizations/igv.json"]
-            call_command("load_tools", visualizations=visualizations)
+            self.load_visualizations()
 
             self.assertEqual(get_wf_mock.call_count, 1)
             self.assertEqual(ToolDefinition.objects.count(), 4)
@@ -1113,10 +1117,7 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
             self
     ):
         self.raw_input_yes_mock.start()
-        visualizations = ["{}/visualizations/igv.json".format(TEST_DATA_PATH)]
-
-        # Create VisualizationToolDefinition
-        call_command("load_tools", visualizations=visualizations)
+        visualizations = self.load_visualizations()
         original_ids = [t.id for t in ToolDefinition.objects.all()]
 
         # Create new VisualizationToolDefinition with --force
@@ -3193,8 +3194,7 @@ class ToolLaunchConfigurationTests(ToolManagerTestBase):
     def setUp(self):
         super(ToolLaunchConfigurationTests, self).setUp()
 
-        visualizations = [TEST_DATA_PATH + "/visualizations/igv.json"]
-        call_command("load_tools", visualizations=visualizations)
+        self.load_visualizations()
 
         self.assertEqual(ToolDefinition.objects.count(), 1)
         self.td = ToolDefinition.objects.all()[0]
