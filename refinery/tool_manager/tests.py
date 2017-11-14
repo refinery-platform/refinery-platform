@@ -66,9 +66,9 @@ from tool_manager.management.commands.generate_tool_definitions import \
     Command as GenerateToolDefinitions
 from tool_manager.tasks import django_docker_cleanup
 
-from .models import (FileRelationship, GalaxyParameter, InputFile, Parameter,
-                     Tool, ToolDefinition, VisualizationTool,
-                     VisualizationToolError, WorkflowTool)
+from .models import (FileRelationship, GalaxyAssistant, GalaxyParameter,
+                     InputFile, Parameter, Tool, ToolDefinition,
+                     VisualizationTool, VisualizationToolError, WorkflowTool)
 from .utils import (FileTypeValidationError, create_tool,
                     create_tool_definition, get_visualization_annotations_list,
                     get_workflows, validate_tool_annotation,
@@ -158,15 +158,15 @@ class ToolManagerMocks(TestCase):
             return_value=celery.result.TaskSetResult(str(uuid.uuid4()))
         ).start()
         self.create_history_mock = mock.patch.object(
-            WorkflowTool, "create_galaxy_history", return_value=history_dict
+            GalaxyAssistant, "create_galaxy_history", return_value=history_dict
         ).start()
         self.tool_data_mock = mock.patch.object(
-            WorkflowTool, "_get_tool_data",
+            GalaxyAssistant, "_get_tool_data",
             return_value=galaxy_tool_data
         ).start()
         self.get_workflow_dict_mock = mock.patch.object(
-                WorkflowTool, "_get_workflow_dict",
-                return_value=galaxy_workflow_dict
+            GalaxyAssistant, "_get_workflow_dict",
+            return_value=galaxy_workflow_dict
         ).start()
 
         self.has_dataset_collection_input_mock_true = mock.patch.object(
