@@ -61,8 +61,8 @@ from file_store.models import FileStoreItem, FileType
 from galaxy_connector.models import Instance
 from selenium_testing.utils import (MAX_WAIT, SeleniumTestBaseGeneric,
                                     wait_until_class_visible)
-from tool_manager.management.commands.generate_tool_definitions import \
-    Command as GenerateToolDefinitions
+from tool_manager.management.commands.load_tools import \
+    Command as LoadToolsCommand
 from tool_manager.tasks import django_docker_cleanup
 
 from .models import (FileRelationship, GalaxyParameter, InputFile, Parameter,
@@ -216,12 +216,8 @@ class ToolManagerTestBase(ToolManagerMocks):
         )
 
         self.mock_get_workflows_reference = (
-            "tool_manager.management.commands.generate_tool_definitions"
+            "tool_manager.management.commands.load_tools"
             ".get_workflows"
-        )
-        self.mock_vis_annotations_reference = (
-            "tool_manager.management.commands.generate_tool_definitions"
-            ".get_visualization_annotations_list"
         )
 
         self.username = 'coffee_lover'
@@ -733,17 +729,8 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
         }
 
     def test_tool_definition_model_str(self):
-        with open("{}/visualizations/igv.json".format(TEST_DATA_PATH)) as f:
-            tool_annotation = [json.loads(f.read())]
-
-        with mock.patch(
-                self.mock_vis_annotations_reference,
-                return_value=tool_annotation
-        ) as mocked_method:
-            call_command("generate_tool_definitions", visualizations=True)
-
-            self.assertTrue(mocked_method.called)
-
+        visualizations = ["{}/visualizations/igv.json".format(TEST_DATA_PATH)]
+        call_command("load_tools", visualizations=visualizations)
         td = ToolDefinition.objects.all()[0]
         self.assertEqual(
             td.__str__(),
@@ -1096,7 +1083,7 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
                 workflow_step_annotation
             )
 
-    def test_generate_tool_definitions_management_command(self):
+    def test_load_tools_management_command(self):
         with mock.patch(
             self.mock_get_workflows_reference,
             side_effect=[
@@ -1107,7 +1094,7 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
             self.assertRaises(
                 CommandError,
                 call_command,
-                "generate_tool_definitions",
+                "load_tools",
                 workflows=True
             )
 
@@ -1121,7 +1108,7 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
                 self.mock_vis_annotations_reference,
                 return_value=tool_annotation
             ) as get_vis_list_mock:
-                call_command("generate_tool_definitions")
+                call_command("load_tools")
 
                 self.assertEqual(get_wf_mock.call_count, 2)
                 self.assertEqual(get_vis_list_mock.call_count, 1)
@@ -1131,7 +1118,7 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
                 self.assertEqual(Parameter.objects.count(), 10)
                 self.assertEqual(InputFile.objects.count(), 6)
 
-    def test_generate_tool_definitions_overwrites_visualizations_if_forced(
+    def test_load_tools_overwrites_visualizations_if_forced(
             self
     ):
         self.raw_input_yes_mock.start()
@@ -1145,12 +1132,12 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
             side_effect=[vis_tool_annotation] * 2
         ) as get_vis_list_mock:
             # Create VisualizationToolDefinition
-            call_command("generate_tool_definitions", visualizations=True)
+            call_command("load_tools", visualizations=True)
             original_ids = [t.id for t in ToolDefinition.objects.all()]
 
             # Create new VisualizationToolDefinition with --force
             call_command(
-                "generate_tool_definitions",
+                "load_tools",
                 visualizations=True,
                 force=True
             )
@@ -1161,7 +1148,7 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
             self.assertEqual(new_ids, [_id + 1 for _id in original_ids])
             self.assertEqual(get_vis_list_mock.call_count, 2)
 
-    def test_generate_tool_definitions_overwrites_workflows_if_forced(
+    def test_load_tools_overwrites_workflows_if_forced(
             self
     ):
         self.raw_input_yes_mock.start()
@@ -1170,12 +1157,12 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
             return_value={self.workflow_engine.uuid: self.valid_workflows}
         ) as get_wf_mock:
             # Create WorkflowToolDefinition
-            call_command("generate_tool_definitions", workflows=True)
+            call_command("load_tools", workflows=True)
             original_ids = [t.id for t in ToolDefinition.objects.all()]
 
             # Create new WorkflowToolDefinition with --force
             call_command(
-                "generate_tool_definitions",
+                "load_tools",
                 workflows=True,
                 force=True
             )
@@ -1187,7 +1174,7 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
                 self.assertIn(original_id + 3, new_ids)
             self.assertEqual(get_wf_mock.call_count, 2)
 
-    def test_generate_tool_definitions_with_force_allows_user_dismissal(
+    def test_load_tools_with_force_allows_user_dismissal(
             self
     ):
         self.raw_input_no_mock.start()
@@ -1198,14 +1185,14 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
             with self.assertRaises(SystemExit):
                 # Create WorkflowToolDefinition
                 call_command(
-                    "generate_tool_definitions",
+                    "load_tools",
                     workflows=True,
                     force=True
                 )
 
         self.assertEqual(ToolDefinition.objects.count(), 0)
 
-    def test_generate_tool_definitions_command_error_if_get_workflows_fails(
+    def test_load_tools_command_error_if_get_workflows_fails(
             self
     ):
         with mock.patch(
@@ -1213,19 +1200,19 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
             side_effect=RuntimeError
         ):
             with self.assertRaises(CommandError):
-                call_command("generate_tool_definitions", workflows=True)
+                call_command("load_tools", workflows=True)
 
-    def test_generate_tool_definitions_multiple_times_skips_without_deletion(
+    def test_load_tools_multiple_times_skips_without_deletion(
             self
     ):
         with mock.patch(
             self.mock_get_workflows_reference,
             return_value={self.workflow_engine.uuid: self.valid_workflows}
         ):
-            call_command("generate_tool_definitions", workflows=True)
+            call_command("load_tools", workflows=True)
             tool_definitions_a = [t for t in ToolDefinition.objects.all()]
 
-            call_command("generate_tool_definitions", workflows=True)
+            call_command("load_tools", workflows=True)
             tool_definitions_b = [t for t in ToolDefinition.objects.all()]
 
         self.assertEqual(tool_definitions_a, tool_definitions_b)
@@ -1319,7 +1306,7 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
                 return_value=tool_annotation
         ):
             with self.assertRaises(exception) as context:
-                call_command("generate_tool_definitions", visualizations=True)
+                call_command("load_tools", visualizations=True)
             [self.assertIn(message, context.exception.message)
              for message in messages]
 
@@ -1348,7 +1335,7 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
         workflow_exhibiting_one_off_asterisking_error = self.fake_workflow
 
         with self.assertRaises(CommandError) as context:
-            GenerateToolDefinitions()._has_workflow_outputs(
+            LoadToolsCommand()._has_workflow_outputs(
                 workflow_exhibiting_one_off_asterisking_error
             )
         self.assertIn("asterisked `workflow_outputs`",
@@ -1362,7 +1349,7 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
         workflow_without_outputs_defined = self.fake_workflow
 
         self.assertFalse(
-            GenerateToolDefinitions()._has_workflow_outputs(
+            LoadToolsCommand()._has_workflow_outputs(
                 workflow_without_outputs_defined
             )
         )
@@ -1373,12 +1360,12 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
             "1": self.GOOD_WORKFLOW_OUTPUTS
         }
         workflow_with_outputs_defined = self.fake_workflow
-        GenerateToolDefinitions()._has_workflow_outputs(
+        LoadToolsCommand()._has_workflow_outputs(
             workflow_with_outputs_defined
         )
 
     @mock.patch.object(
-        GenerateToolDefinitions,
+        LoadToolsCommand,
         "_has_workflow_outputs",
         return_value=False
     )
@@ -1391,7 +1378,7 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
             return_value={self.workflow_engine.uuid: self.valid_workflows}
         ):
             with self.assertRaises(CommandError) as context:
-                GenerateToolDefinitions()._generate_workflows()
+                LoadToolsCommand()._generate_workflows()
         self.assertIn("does not have `workflow_outputs`",
                       context.exception.message)
         self.assertTrue(_are_workflow_outputs_present_mock.called)
@@ -3095,7 +3082,7 @@ class VisualizationToolLaunchTests(ToolManagerTestBase,  # TODO: Cypress
             return_value=tool_annotation
         ) as mocked_method:
             if count == 1:
-                call_command("generate_tool_definitions", visualizations=True)
+                call_command("load_tools", visualizations=True)
                 self.assertTrue(mocked_method.called)
 
             self.assertEqual(ToolDefinition.objects.count(), 1)
@@ -3237,7 +3224,7 @@ class ToolLaunchConfigurationTests(ToolManagerTestBase):
         with mock.patch(
             self.mock_vis_annotations_reference, return_value=tool_annotation
         ) as mocked_method:
-            call_command("generate_tool_definitions", visualizations=True)
+            call_command("load_tools", visualizations=True)
 
             self.assertTrue(mocked_method.called)
             self.assertEqual(ToolDefinition.objects.count(), 1)
