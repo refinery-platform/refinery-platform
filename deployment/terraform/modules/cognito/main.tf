@@ -54,7 +54,7 @@ resource "aws_iam_role_policy" "upload_access_policy" {
         "s3:AbortMultipartUpload"
       ],
       "Effect": "Allow",
-      "Resource": "arn:aws:s3:::${var.upload_bucket_name}/uploads/$${cognito-identity.amazonaws.com:sub}/*"
+      "Resource": "arn:aws:s3:::${var.upload_bucket_name}/$${cognito-identity.amazonaws.com:sub}/*"
     }
   ]
 }
