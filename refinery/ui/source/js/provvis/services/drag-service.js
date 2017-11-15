@@ -1,0 +1,129 @@
+/**
+ * Provvis Draw Links Service
+ * @namespace provvisDrawLinksService
+ * @desc Service for drawing links
+ * @memberOf refineryApp.refineryProvvis
+ */
+(function () {
+  'use strict';
+  angular
+    .module('refineryProvvis')
+    .factory('provvisDragService', provvisDragService);
+
+  provvisDragService.$inject = [
+    'd3',
+    'provvisBoxCoordsService',
+    'provvisDeclService',
+    'provvisDrawLinksService',
+    'provvisPartsService',
+    'provvisTooltipService',
+    'provvisUpdateRenderService'
+  ];
+
+  function provvisDragService (
+    d3,
+    provvisBoxCoordsService,
+    provvisDeclService,
+    provvisDrawLinksService,
+    provvisPartsService,
+    provvisTooltipService,
+    provvisUpdateRenderService
+  ) {
+    var coordsService = provvisBoxCoordsService;
+    var linkService = provvisDrawLinksService;
+    var partsService = provvisPartsService;
+    var provvisDecl = provvisDeclService;
+    var tooltipService = provvisTooltipService;
+    var updateService = provvisUpdateRenderService;
+
+    var service = {
+      dragStart: dragStart,
+      dragging: dragging,
+      dragEnd: dragEnd,
+      applyDragBehavior: applyDragBehavior
+    };
+
+    return service;
+    /*
+     *-----------------------
+     * Method Definitions
+     * ----------------------
+     */
+      /**
+   * Drag start listener support for nodes.
+   */
+    function dragStart () {
+      d3.event.sourceEvent.stopPropagation();
+    }
+
+    /**
+     * Drag listener.
+     * @param n Node object.
+     */
+    function dragging (n) {
+      var self = d3.select(this);
+
+      /* While dragging, hide tooltips. */
+      tooltipService.hideTooltip();
+
+      var deltaY = d3.event.y - n.y;
+
+      /* Set coords. */
+      n.x = d3.event.x;
+      n.y = d3.event.y;
+
+      /* Drag selected node. */
+      updateService.updateNode(self, n, d3.event.x, d3.event.y);
+
+      /* Drag adjacent links. */
+      linkService.updateLink(n);
+
+      if (n instanceof provvisDecl.Layer) {
+        n.children.values().forEach(function (an) {
+          an.x = n.x - (coordsService.getABBoxCoords(an, 0).x.max -
+            coordsService.getABBoxCoords(an, 0).x.min) / 2 + partsService.vis.cell.width / 2;
+          an.y += deltaY;
+          updateService.updateNode(d3.select('#gNodeId-' + an.autoId), an, an.x, an.y);
+          linkService.updateLink(an);
+        });
+      }
+
+      partsService.draggingActive = true;
+    }
+
+    /**
+     * Drag end listener.
+     */
+    function dragEnd (n) {
+      if (partsService.draggingActive) {
+        var self = d3.select(this);
+
+        /* Update node and adjacent links. */
+        updateService.updateNodeAndLink(n, self);
+
+        /* Prevent other mouseevents during dragging. */
+        setTimeout(function () {
+          partsService.draggingActive = false;
+        }, 200);
+      }
+    }
+
+    /**
+     * Sets the drag events for nodes.
+     * @param nodeType The dom nodeset to allow dragging.
+     */
+    function applyDragBehavior (domDragSet) {
+      /* Drag and drop node enabled. */
+      var drag = d3.behavior.drag()
+        .origin(function (d) {
+          return d;
+        })
+        .on('dragstart', dragStart)
+        .on('drag', dragging)
+        .on('dragend', dragEnd);
+
+      /* Invoke dragging behavior on nodes. */
+      domDragSet.call(drag);
+    }
+  }
+})();
