@@ -198,7 +198,7 @@
 
       dagreService.dagreDynamicLayerLayout(vis.graph);
 
-      if (provvisHelpers.fitToWindow) {
+      if (partsService.fitToWindow) {
         provvisHelpers.fitGraphToWindow(partsService.nodeLinkTransitionTime);
       }
 
