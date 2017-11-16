@@ -17,7 +17,7 @@
       });
     }));
 
-    it('Tool Display ctrl should exist', function () {
+    it('refineryProvvis ctrl should exist', function () {
       expect(ctrl).toBeDefined();
     });
   });
