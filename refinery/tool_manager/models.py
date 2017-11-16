@@ -535,7 +535,170 @@ def handle_bioblend_exceptions(func):
     return func_wrapper
 
 
-class WorkflowTool(Tool):
+class GalaxyAssistant:
+    @handle_bioblend_exceptions
+    def create_dataset_collection(self):
+        """
+        Creates a Galaxy DatasetCollection based off of the collection
+        description returned by:
+        `WorkflowTool._create_collection_description()`
+        """
+        collection_info = (
+            self.galaxy_connection.histories.create_dataset_collection(
+                history_id=self.galaxy_import_history_id,
+                collection_description=self._create_collection_description()
+            )
+        )
+        self.update_galaxy_data(self.COLLECTION_INFO, collection_info)
+
+    @handle_bioblend_exceptions
+    def create_galaxy_history(self):
+        return self.galaxy_connection.histories.create_history(
+            name="History for: {}".format(self)
+        )
+
+    @handle_bioblend_exceptions
+    def create_galaxy_library(self):
+        galaxy_library_dict = self.galaxy_connection.libraries.create_library(
+            name="Library for: {}".format(self)
+        )
+        self.analysis.library_id = galaxy_library_dict["id"]
+        self.analysis.save()
+        return galaxy_library_dict
+
+    @handle_bioblend_exceptions
+    def _get_galaxy_dataset_job(self, galaxy_dataset_dict):
+        return self.galaxy_connection.jobs.show_job(
+            galaxy_dataset_dict[self.CREATING_JOB]
+        )
+
+    @handle_bioblend_exceptions
+    def _get_galaxy_history_dataset_list(self):
+        """
+        Retrieve a list of Galaxy Datasets from the Galaxy History of our
+        Galaxy Workflow invocation all tool outputs in the Galaxy Workflow
+        editor.
+        """
+        galaxy_dataset_list = (
+            self.galaxy_connection.histories.show_matching_datasets(
+                self.galaxy_workflow_history_id
+            )
+        )
+        retained_datasets = [
+            self._update_galaxy_dataset_name(galaxy_dataset)
+            for galaxy_dataset in galaxy_dataset_list
+            if not galaxy_dataset["purged"] and
+            self._get_workflow_step(galaxy_dataset) > 0
+            ]
+        return retained_datasets
+
+    @handle_bioblend_exceptions
+    def _get_galaxy_dataset_provenance(self, galaxy_dataset_dict):
+        return self.galaxy_connection.histories.show_dataset_provenance(
+            self.galaxy_workflow_history_id,
+            galaxy_dataset_dict["id"],
+            follow=True
+        )
+
+    @handle_bioblend_exceptions
+    def _get_galaxy_workflow_invocation(self):
+        """
+        Fetch our Galaxy Workflow's invocation data.
+        """
+        return self.galaxy_connection.workflows.show_invocation(
+            self.galaxy_workflow_history_id,
+            self.get_galaxy_dict()[self.GALAXY_WORKFLOW_INVOCATION_DATA]["id"]
+        )
+
+    @handle_bioblend_exceptions
+    def _get_refinery_input_file_id(self, galaxy_dataset_dict):
+        """
+        Retrieve the Galaxy Dataset id corresponding to the Refinery file
+        that a Derived Dataset ultimately came from.
+        This is done through a combination of WorkflowTools keeping track of
+        which FileStoreItems correspond to which Datasets in our
+        Galaxy History
+        (see WorkflowTool._update_galaxy_to_refinery_file_mapping_list),
+        and utilizing `bioblend.galaxy.histories.show_dataset_provenance` in a
+        recursive manner to trace back to where any derived data came from.
+        :param galaxy_dataset_dict: dict containing information about a
+        Galaxy Dataset
+        :return: id of the Galaxy Dataset corresponding to our
+        `galaxy_dataset_dict`s Refinery input file
+        """
+        job_inputs = self.galaxy_connection.jobs.show_job(
+            self._get_galaxy_dataset_provenance(galaxy_dataset_dict)["job_id"]
+        )["inputs"]
+
+        for key in job_inputs.keys():
+            galaxy_dataset = job_inputs[key]
+            galaxy_dataset_provenance = self._get_galaxy_dataset_provenance(
+                galaxy_dataset
+            )
+            # If we reach a point where the tool in the provenance is an
+            # `upload` tool, we can tell which Refinery FileStoreItem our
+            # derived dataset came from
+            if "upload" in galaxy_dataset_provenance[self.TOOL_ID]:
+                return galaxy_dataset["id"]
+            else:
+                # Recursive call
+                return self._get_refinery_input_file_id(galaxy_dataset)
+
+    @handle_bioblend_exceptions
+    def _get_tool_data(self, workflow_step):
+        return self.galaxy_connection.tools.show_tool(
+            self.galaxy_connection.workflows.show_workflow(
+                self.get_workflow_internal_id()
+            )["steps"][workflow_step][self.TOOL_ID],
+            io_details=True
+        )
+
+    @handle_bioblend_exceptions
+    def _get_workflow_dict(self):
+        return self.galaxy_connection.workflows.export_workflow_dict(
+            self.get_workflow_internal_id()
+        )
+
+    @handle_bioblend_exceptions
+    def import_library_dataset_to_history(self, history_id,
+                                          library_dataset_id):
+        """
+        Import a Galaxy DataSet from a Data Library into a History
+        :param history_id: UUID string of the Galaxy History to interact with
+        :param library_dataset_id: UUID string of the Galaxy Library DataSet
+         to interact with
+        """
+        return self.galaxy_connection.histories.upload_dataset_from_library(
+            history_id,
+            library_dataset_id
+        )
+
+    @handle_bioblend_exceptions
+    def invoke_workflow(self):
+        """Invoke a WorflowTool's Galaxy Workflow"""
+        return self.galaxy_connection.workflows.invoke_workflow(
+            self.get_workflow_internal_id(),
+            history_name="Workflow Run for {} {}".format(self.name, self.uuid),
+            inputs=self._create_workflow_inputs_dict(),
+            params=self._create_workflow_parameters_dict()
+        )
+
+    @handle_bioblend_exceptions
+    def upload_datafile_to_library_from_url(self, library_id, datafile_url):
+        """
+        Upload file from Refinery into a Galaxy Data Library from a
+        specified url
+        :param library_id: UUID string of the Galaxy Library to interact with
+        :param datafile_url: <String> Full url pointing to a Refinery
+        FileStoreItem datafile's source.
+        """
+        return self.galaxy_connection.libraries.upload_file_from_url(
+            library_id,
+            datafile_url
+        )
+
+
+class WorkflowTool(Tool, GalaxyAssistant):
     """
     WorkflowTools are Tools that are specific to
     launching and monitoring Galaxy Workflows
@@ -776,36 +939,6 @@ class WorkflowTool(Tool):
 
         return self._associate_collection_elements(galaxy_element_list)
 
-    @handle_bioblend_exceptions
-    def create_dataset_collection(self):
-        """
-        Creates a Galaxy DatasetCollection based off of the collection
-        description returned by:
-        `WorkflowTool._create_collection_description()`
-        """
-        collection_info = (
-            self.galaxy_connection.histories.create_dataset_collection(
-                history_id=self.galaxy_import_history_id,
-                collection_description=self._create_collection_description()
-            )
-        )
-        self.update_galaxy_data(self.COLLECTION_INFO, collection_info)
-
-    @handle_bioblend_exceptions
-    def create_galaxy_history(self):
-        return self.galaxy_connection.histories.create_history(
-            name="History for: {}".format(self)
-        )
-
-    @handle_bioblend_exceptions
-    def create_galaxy_library(self):
-        galaxy_library_dict = self.galaxy_connection.libraries.create_library(
-            name="Library for: {}".format(self)
-        )
-        self.analysis.library_id = galaxy_library_dict["id"]
-        self.analysis.save()
-        return galaxy_library_dict
-
     def _create_workflow_inputs_dict(self):
         """
         Create and return the inputs dict expected from bioblend. See here:
@@ -927,12 +1060,6 @@ class WorkflowTool(Tool):
             else self.INPUT_DATASET
         )
 
-    @handle_bioblend_exceptions
-    def _get_galaxy_dataset_job(self, galaxy_dataset_dict):
-        return self.galaxy_connection.jobs.show_job(
-            galaxy_dataset_dict[self.CREATING_JOB]
-        )
-
     @staticmethod
     def _get_galaxy_dataset_filename(galaxy_dataset_dict):
         return "{}.{}".format(
@@ -948,26 +1075,6 @@ class WorkflowTool(Tool):
             self.get_tool_launch_config(
             )[self.GALAXY_DATA][self.FILE_RELATIONSHIPS_GALAXY]
         )
-
-    @handle_bioblend_exceptions
-    def _get_galaxy_history_dataset_list(self):
-        """
-        Retrieve a list of Galaxy Datasets from the Galaxy History of our
-        Galaxy Workflow invocation all tool outputs in the Galaxy Workflow
-        editor.
-        """
-        galaxy_dataset_list = (
-            self.galaxy_connection.histories.show_matching_datasets(
-                self.galaxy_workflow_history_id
-            )
-        )
-        retained_datasets = [
-            self._update_galaxy_dataset_name(galaxy_dataset)
-            for galaxy_dataset in galaxy_dataset_list
-            if not galaxy_dataset["purged"] and
-            self._get_workflow_step(galaxy_dataset) > 0
-        ]
-        return retained_datasets
 
     def _get_exposed_workflow_outputs(self):
         """
@@ -1025,67 +1132,6 @@ class WorkflowTool(Tool):
             ) for file_store_item_uuid in self.get_input_file_uuid_list()
         ]
 
-    @handle_bioblend_exceptions
-    def _get_galaxy_dataset_provenance(self, galaxy_dataset_dict):
-        return self.galaxy_connection.histories.show_dataset_provenance(
-            self.galaxy_workflow_history_id,
-            galaxy_dataset_dict["id"],
-            follow=True
-        )
-
-    @handle_bioblend_exceptions
-    def _get_galaxy_workflow_invocation(self):
-        """
-        Fetch our Galaxy Workflow's invocation data.
-        """
-        return self.galaxy_connection.workflows.show_invocation(
-            self.galaxy_workflow_history_id,
-            self.get_galaxy_dict()[self.GALAXY_WORKFLOW_INVOCATION_DATA]["id"]
-        )
-
-    @handle_bioblend_exceptions
-    def _get_refinery_input_file_id(self, galaxy_dataset_dict):
-        """
-        Retrieve the Galaxy Dataset id corresponding to the Refinery file
-        that a Derived Dataset ultimately came from.
-        This is done through a combination of WorkflowTools keeping track of
-        which FileStoreItems correspond to which Datasets in our
-        Galaxy History
-        (see WorkflowTool._update_galaxy_to_refinery_file_mapping_list),
-        and utilizing `bioblend.galaxy.histories.show_dataset_provenance` in a
-        recursive manner to trace back to where any derived data came from.
-        :param galaxy_dataset_dict: dict containing information about a
-        Galaxy Dataset
-        :return: id of the Galaxy Dataset corresponding to our
-        `galaxy_dataset_dict`s Refinery input file
-        """
-        job_inputs = self.galaxy_connection.jobs.show_job(
-            self._get_galaxy_dataset_provenance(galaxy_dataset_dict)["job_id"]
-        )["inputs"]
-
-        for key in job_inputs.keys():
-            galaxy_dataset = job_inputs[key]
-            galaxy_dataset_provenance = self._get_galaxy_dataset_provenance(
-                galaxy_dataset
-            )
-            # If we reach a point where the tool in the provenance is an
-            # `upload` tool, we can tell which Refinery FileStoreItem our
-            # derived dataset came from
-            if "upload" in galaxy_dataset_provenance[self.TOOL_ID]:
-                return galaxy_dataset["id"]
-            else:
-                # Recursive call
-                return self._get_refinery_input_file_id(galaxy_dataset)
-
-    @handle_bioblend_exceptions
-    def _get_tool_data(self, workflow_step):
-        return self.galaxy_connection.tools.show_tool(
-            self.galaxy_connection.workflows.show_workflow(
-                self.get_workflow_internal_id()
-            )["steps"][workflow_step][self.TOOL_ID],
-            io_details=True
-        )
-
     def _get_tool_inputs_dict(self, workflow_step):
         """
         Retrieve the valid input parameters for the Galaxy tool in our current
@@ -1097,7 +1143,7 @@ class WorkflowTool(Tool):
         tool_data_inputs = [
             param for param in tool_data["inputs"]
             if param["type"] not in ["data", "data_collection"]
-        ]
+            ]
         # The information from bioblend is returned as unicode strings,
         # but we need to cast to the proper types to invoke the workflow
         # with edited parameters
@@ -1119,12 +1165,6 @@ class WorkflowTool(Tool):
 
             tool_inputs_dict[input_dict["name"]] = proper_parameter_value
         return tool_inputs_dict
-
-    @handle_bioblend_exceptions
-    def _get_workflow_dict(self):
-        return self.galaxy_connection.workflows.export_workflow_dict(
-            self.get_workflow_internal_id()
-        )
 
     def get_workflow_internal_id(self):
         return self.tool_definition.workflow.internal_id
@@ -1174,30 +1214,6 @@ class WorkflowTool(Tool):
         """
         workflow_input_type = self._get_workflow_dict()["steps"]["0"]["type"]
         return workflow_input_type == self.DATA_COLLECTION_INPUT
-
-    @handle_bioblend_exceptions
-    def import_library_dataset_to_history(self, history_id,
-                                          library_dataset_id):
-        """
-        Import a Galaxy DataSet from a Data Library into a History
-        :param history_id: UUID string of the Galaxy History to interact with
-        :param library_dataset_id: UUID string of the Galaxy Library DataSet
-         to interact with
-        """
-        return self.galaxy_connection.histories.upload_dataset_from_library(
-            history_id,
-            library_dataset_id
-        )
-
-    @handle_bioblend_exceptions
-    def invoke_workflow(self):
-        """Invoke a WorflowTool's Galaxy Workflow"""
-        return self.galaxy_connection.workflows.invoke_workflow(
-            self.get_workflow_internal_id(),
-            history_name="Workflow Run for {} {}".format(self.name, self.uuid),
-            inputs=self._create_workflow_inputs_dict(),
-            params=self._create_workflow_parameters_dict()
-        )
 
     def launch(self):
         """
@@ -1341,20 +1357,6 @@ class WorkflowTool(Tool):
                     ]["action_arguments"]["newname"]
                 )
         return galaxy_dataset_dict
-
-    @handle_bioblend_exceptions
-    def upload_datafile_to_library_from_url(self, library_id, datafile_url):
-        """
-        Upload file from Refinery into a Galaxy Data Library from a
-        specified url
-        :param library_id: UUID string of the Galaxy Library to interact with
-        :param datafile_url: <String> Full url pointing to a Refinery
-        FileStoreItem datafile's source.
-        """
-        return self.galaxy_connection.libraries.upload_file_from_url(
-            library_id,
-            datafile_url
-        )
 
 
 @receiver(pre_delete, sender=VisualizationTool)
