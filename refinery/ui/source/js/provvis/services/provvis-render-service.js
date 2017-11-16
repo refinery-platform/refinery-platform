@@ -36,7 +36,6 @@
   function provvisRenderService (
     provvisAnalysisTimelineService,
     provvisDagreLayoutService,
-    provvisDeclService,
     provvisDragService,
     provvisDrawColorCodingService,
     provvisDrawDOIService,
@@ -67,7 +66,6 @@
     var highlightService = provvisHighlightService;
     var nodeSelectionService = provvisNodeSelectionService;
     var partsService = provvisPartsService;
-    var provvisDecl = provvisDeclService;
     var timelineService = provvisAnalysisTimelineService;
     var toolbarService = provvisToolbarService;
     var tooltipService = provvisTooltipService;
@@ -78,55 +76,24 @@
     var width = 0;
     var depth = 0;
 
-    var timeColorScale = Object.create(null);
-    var filterMethod = 'timeline';
-    var timeLineGradientScale = Object.create(null);
+    var filterMethod = partsService.filterMethod;
+    var timeLineGradientScale = partsService.timeLineGradientScale;
 
     var lastSolrResponse = {};
 
-    var selectedNodeSet = d3.map();
+    var draggingActive = partsService.draggingActive;
 
-    var draggingActive = false;
-
-    var scaleFactor = 0.75;
-
-    var layoutCols = d3.map();
-
-    var linkStyle = 'bezier1';
-
-    var colorStrokes = '#136382';
-    var colorHighlight = '#ed7407';
-
-    var fitToWindow = true;
-
-    var doiDiffScale = Object.create(null);
+    var linkStyle = partsService.linkStyle;
 
     var doiAutoUpdate = partsService.doiAutoUpdate;
-
-    /* Simple tooltips by NG. */
-    var tooltip = d3.select('body')
-      .append('div')
-      .attr('class', 'refinery-tooltip')
-      .style('position', 'absolute')
-      .style('z-index', '10')
-      .style('visibility', 'hidden');
 
     var service = {
       analysisWorflowMap: analysisWorkflowMap,
       width: width,
       depth: depth,
-      timeColorScale: timeColorScale,
       filterMethod: filterMethod,
       timeLineGradientScale: timeLineGradientScale,
       lastSolrResponse: lastSolrResponse,
-      selectedNodeSet: selectedNodeSet,
-      layoutCols: layoutCols,
-      colorStrokes: colorStrokes,
-      colorHighlight: colorHighlight,
-      fitToWindow: fitToWindow,
-      doiDiffScale: doiDiffScale,
-      tooltip: tooltip,
-      getWfNameByNode: getWfNameByNode,
       runRender: runRender
     };
 
@@ -137,7 +104,6 @@
      * ----------------------
      */
     function runRender (provVis) {
-      partsService.initializeDomObj();
       /* Save vis object to module scope. */
       angular.copy(provVis, partsService.vis);
       angular.copy(provVis.cell, partsService.cell);
@@ -157,10 +123,12 @@
       width = vis.graph.l.width;
       depth = vis.graph.l.depth;
 
-      timeColorScale = timelineService.createAnalysistimeColorScale(
+      var timeColorScale = timelineService.createAnalysistimeColorScale(
         vis.graph.aNodes,
         ['white', 'black']
       );
+      angular.copy(timeColorScale, partsService.timeColorScale);
+
       doiService.initDoiTimeComponent(vis.graph.aNodes);
 
       /* Init all nodes filtered. */
@@ -194,12 +162,7 @@
       vis.canvas.append('g').classed({
         analyses: true
       });
-      updateAnalysis.updateAnalysisNodes(
-        vis,
-        scaleFactor,
-        cell,
-        timeColorScale
-      );
+      updateAnalysis.updateAnalysisNodes(vis, cell);
 
       /* Draw subanalysis nodes. */
       drawService.drawSubanalysisNodes();
@@ -251,25 +214,6 @@
       );
     }
 
-
-      /**
-   * Get workflow name string.
-   * @param n Node of type BaseNode.
-   * @returns {string} The name string.
-   */
-    function getWfNameByNode (n) {
-      var vis = partsService.vis;
-      var wfName = 'dataset';
-      var an = n;
-      while (!(an instanceof provvisDecl.Analysis)) {
-        an = an.parent;
-      }
-      if (typeof vis.graph.workflowData.get(an.wfUuid) !== 'undefined') {
-        wfName = vis.graph.workflowData.get(an.wfUuid).name;
-      }
-      return wfName.toString();
-    }
-
       /* TODO: Recompute layout only after all nodes were collapsed/expanded. */
 
     /**
@@ -285,7 +229,7 @@
 
       /* Handle click separation on nodes. */
       var domNodesetClickTimeout;
-      partsService.domNodeset.on('mousedown', function (d) {
+      partsService.domNodeset.on('mousedown', function () {
         if (d3.event.defaultPrevented) {
           return;
         }
@@ -294,7 +238,7 @@
 
         /* Click event is executed after 100ms unless the double click event
          below clears the click event timeout.*/
-        domNodesetClickTimeout = setTimeout(function () {
+        domNodesetClickTimeout = setTimeout(function (d) {
           if (!draggingActive) {
             nodeSelectionService.handleNodeSelection(d);
             updateService.updateNodeInfoTab(d);
