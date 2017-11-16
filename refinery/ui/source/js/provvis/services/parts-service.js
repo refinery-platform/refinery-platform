@@ -61,6 +61,14 @@
     var doiDiffScale = Object.create(null);
     var selectedNodeSet = d3.map();
 
+       /* Simple tooltips by NG. */
+    var tooltip = d3.select('body')
+      .append('div')
+      .attr('class', 'refinery-tooltip')
+      .style('position', 'absolute')
+      .style('z-index', '10')
+      .style('visibility', 'hidden');
+
     var service = {
       aBBox: aBBox,
       aLink: aLink,
@@ -99,7 +107,8 @@
       subanalysis: subanalysis,
       timeColorScale: timeColorScale,
       timeLineGradientScale: timeLineGradientScale,
-      vis: vis,
+      tooltip: tooltip,
+      vis: vis
     };
 
     return service;
