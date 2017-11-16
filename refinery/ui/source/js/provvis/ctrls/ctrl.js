@@ -13,7 +13,12 @@
   ProvvisController.$inject = [
     'analysisService',
     'assayFileService',
+    'provvisDeclService',
     'provvisInitService',
+    'provvisLayerService',
+    'provvisMotifsService',
+    'provvisPartsService',
+    'provvisRenderService',
     'd3',
     '$',
     '$q',
@@ -23,7 +28,12 @@
   function ProvvisController (
     analysisService,
     assayFileService,
+    provvisDeclService,
     provvisInitService,
+    provvisLayerService,
+    provvisMotifsService,
+    provvisPartsService,
+    provvisRenderService,
     d3,
     $,
     $q,
@@ -38,14 +48,15 @@
     vm.getData = getData;
     vm.launchProvvis = launchProvvis;
 
-    var vis = Object.create(null);
-    var provvisDecl = $window.provvisDecl;
+  //  var vis = Object.create(null);
+    var partsService = provvisPartsService;
+    var provvisDecl = provvisDeclService;
     var provvisInit = provvisInitService;
-   // var provvisInit = $window.provvisInit;
-    var provvisLayout = $window.provvisLayout;
-    var provvisMotifs = $window.provvisMotifs;
-    var provvisRender = $window.provvisRender;
+    var provvisLayout = provvisLayerService;
+    var provvisMotifs = provvisMotifsService;
+    var provvisRender = provvisRenderService;
 
+    var vis = partsService.vis;
     activate();
 
     /*
@@ -319,7 +330,7 @@
 
           /* Uncomment in development mode. */
           vis.graph = provvisInit.initGraph(data, analysesData, solrResponse);
-          vis.graph.bclgNodes = provvisLayout.run(vis.graph, vis.cell);
+          vis.graph.bclgNodes = provvisLayout.runLayer(vis.graph, vis.cell);
           provvisMotifs.run(vis.graph, layerMethod);
           provvisRender.run(vis);
           hideProvvisLoaderIcon();
@@ -349,10 +360,10 @@
               provvisDecl.DoiFactors.set('diff', 0.2, true);
 
               /* Discover and and inject motifs. */
-              provvisMotifs.run(vis.graph, layerMethod);
+              provvisMotifs.runMotifs(vis.graph, layerMethod);
 
               /* Render graph. */
-              provvisRender.run(vis);
+              provvisRender.runRender(vis);
 
               hideProvvisLoaderIcon();
             });
