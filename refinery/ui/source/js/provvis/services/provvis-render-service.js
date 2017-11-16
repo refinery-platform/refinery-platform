@@ -12,7 +12,6 @@
 
   provvisRenderService.$inject = [
     'provvisAnalysisTimelineService',
-    'provvisDagreLayoutService',
     'provvisDeclService',
     'provvisDragService',
     'provvisDrawColorCodingService',
@@ -35,7 +34,6 @@
 
   function provvisRenderService (
     provvisAnalysisTimelineService,
-    provvisDagreLayoutService,
     provvisDragService,
     provvisDrawColorCodingService,
     provvisDrawDOIService,
@@ -55,7 +53,6 @@
     $log
   ) {
     var collapseService = provvisHandleCollapseService;
-    var dagreService = provvisDagreLayoutService;
     var doiService = provvisInitDOIService;
     var dragService = provvisDragService;
     var drawColorService = provvisDrawColorCodingService;
@@ -71,6 +68,8 @@
     var tooltipService = provvisTooltipService;
     var updateAnalysis = provvisUpdateAnalysisService;
     var updateService = provvisUpdateRenderService;
+
+    var dagreService = updateService.dagreService;
 
     var analysisWorkflowMap = d3.map();
     var width = 0;
