@@ -60,6 +60,7 @@
 
     var doiDiffScale = Object.create(null);
     var selectedNodeSet = d3.map();
+    var lastSolrResponse = {};
 
        /* Simple tooltips by NG. */
     var tooltip = d3.select('body')
@@ -87,6 +88,7 @@
       filterMethod: filterMethod,
       fitToWindow: fitToWindow,
       hLink: hLink,
+      lastSolrResponse: lastSolrResponse,
       layer: layer,
       layoutCols: layoutCols,
       lBBox: lBBox,

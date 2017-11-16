@@ -79,8 +79,6 @@
     var filterMethod = partsService.filterMethod;
     var timeLineGradientScale = partsService.timeLineGradientScale;
 
-    var lastSolrResponse = {};
-
     var draggingActive = partsService.draggingActive;
 
     var linkStyle = partsService.linkStyle;
@@ -93,7 +91,6 @@
       depth: depth,
       filterMethod: filterMethod,
       timeLineGradientScale: timeLineGradientScale,
-      lastSolrResponse: lastSolrResponse,
       runRender: runRender
     };
 
