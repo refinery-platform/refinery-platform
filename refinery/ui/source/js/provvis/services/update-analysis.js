@@ -27,6 +27,7 @@
     var linkService = provvisDrawLinksService;
     var partsService = provvisPartsService;
     var provvisHelpers = provvisHelpersService;
+
     var service = {
       updateAnalysisLinks: updateAnalysisLinks,
       updateAnalysisNodes: updateAnalysisNodes
@@ -42,7 +43,7 @@
      * Update analysis links.
      * @param graph The provenance graph.
      */
-    function updateAnalysisLinks (vis, filterAction, linkStyle) {
+    function updateAnalysisLinks (vis, linkStyle) {
       /* Data join. */
       var graph = vis.graph;
       var ahl = vis.canvas.select('g.aHLinks').selectAll('.hLink')
@@ -54,7 +55,7 @@
           hLink: true
         })
         .classed('blendedLink', function () {
-          return filterAction === 'blend';
+          return partsService.filterAction === 'blend';
         })
         .classed('filteredLink', function (l) { return l.filtered; })
         .classed('hiddenLink', function (l) { return !l.highlighted; })
@@ -74,7 +75,7 @@
         }
         return drawType;
       }).classed('blendedLink', function (l) {
-        return !l.filtered && filterAction === 'blend';
+        return !l.filtered && partsService.filterAction === 'blend';
       }).classed('filteredLink', function (l) {
         return l.filtered;
       }).classed('hiddenLink', function (l) {
@@ -99,7 +100,7 @@
         .append('path')
         .classed({ link: true, aLink: true })
         .classed('blendedLink', function (l) {
-          return !l.filtered && filterAction === 'blend';
+          return !l.filtered && partsService.filterAction === 'blend';
         }).classed('filteredLink', function (l) {
           return l.filtered;
         }).classed('hiddenLink', function (l) {
@@ -122,7 +123,7 @@
         }
         return drawType;
       }).classed('blendedLink', function (l) {
-        return !l.filtered && filterAction === 'blend';
+        return !l.filtered && partsService.filterAction === 'blend';
       }).classed('filteredLink', function (l) {
         return l.filtered;
       }).classed('hiddenLink', function (l) {
@@ -144,12 +145,9 @@
     /**
      * Draw analysis nodes.
      */
-    function updateAnalysisNodes (
-      vis,
-      scaleFactor,
-      cell,
-      timeColorScale
-    ) {
+    function updateAnalysisNodes (vis, cell) {
+      var timeColorScale = partsService.timeColorScale;
+      var scaleFactor = partsService.scaleFactor;
       /* Data join. */
       var lAnalysis = d3.select('g.analyses').selectAll('.analysis')
         .data(vis.graph.aNodes.sort(function (a, b) {
