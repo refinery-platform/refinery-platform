@@ -12,18 +12,18 @@
 
   provvisHelpersService.$inject = [
     '$',
-    'proovisBoxCoordsService',
+    'provvisBoxCoordsService',
     'provvisDeclService',
     'provvisPartsService'
   ];
 
   function provvisHelpersService (
     $,
-    proovisBoxCoordsService,
+    provvisBoxCoordsService,
     provvisDeclService,
     provvisPartsService
   ) {
-    var coordsService = proovisBoxCoordsService;
+    var coordsService = provvisBoxCoordsService;
     var provvisDecl = provvisDeclService;
     var partsService = provvisPartsService;
 
