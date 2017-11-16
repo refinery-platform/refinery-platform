@@ -11,22 +11,22 @@
 
   provvisDagreLayoutService.$inject = [
     'provvisBoxCoordsService',
+    'provvisDrawLinksService',
     'provvisPartsService',
-    'provvisUpdateRenderService',
     'd3',
     'dagre'
   ];
 
   function provvisDagreLayoutService (
     provvisBoxCoordsService,
+    provvisDrawLinksService,
     provvisPartsService,
-    provvisUpdateRenderService,
     d3,
     dagre
   ) {
     var coordService = provvisBoxCoordsService;
+    var linksService = provvisDrawLinksService;
     var partsService = provvisPartsService;
-    var updateService = provvisUpdateRenderService;
 
     var service = {
       dagreDynamicLayerLayout: dagreDynamicLayerLayout,
@@ -101,7 +101,7 @@
               accY += (coordService.getABBoxCoords(an, 0).y.max -
               coordService.getABBoxCoords(an, 0).y.min);
 
-              updateService.updateNodeAndLink(an, d3.select('#gNodeId-' + an.autoId));
+              linksService.updateNodeAndLink(an, d3.select('#gNodeId-' + an.autoId));
               d3.select('#BBoxId-' + ln.autoId).classed('hiddenBBox', false);
               d3.select('#BBoxId-' + an.autoId).classed('hiddenBBox', false);
             } else {
@@ -293,7 +293,7 @@
 
       /* Update graph dom elements. */
       vis.graph.lNodes.values().forEach(function (ln) {
-        updateService.updateNodeAndLink(ln, d3.select('#gNodeId-' + ln.autoId));
+        linksService.updateNodeAndLink(ln, d3.select('#gNodeId-' + ln.autoId));
       });
 
       /* Reorder node columns by y-coords. */
@@ -365,7 +365,7 @@
           return d.key === ln.autoId.toString();
         })[0].value.y - curHeight / 2;
 
-        updateService.updateNodeAndLink(ln, d3.select('#gNodeId-' + ln.autoId));
+        linksService.updateNodeAndLink(ln, d3.select('#gNodeId-' + ln.autoId));
       });
     }
   }

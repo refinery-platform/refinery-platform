@@ -14,18 +14,18 @@
     'd3',
     'provvisHelpersService',
     'provvisPartsService',
-    'provvisUpdateRenderService'
+    'provvisHandleCollapseService'
   ];
 
   function provvisInitDOIService (
     d3,
     provvisHelpersService,
     provvisPartsService,
-    provvisUpdateRenderService
+    provvisHandleCollapseService
   ) {
     var partsService = provvisPartsService;
     var provvisHelpers = provvisHelpersService;
-    var updateService = provvisUpdateRenderService;
+    var collapseService = provvisHandleCollapseService;
 
     var service = {
       initDoiFilterComponent: initDoiFilterComponent,
@@ -165,7 +165,7 @@
           });
         });
       });
-      updateService.updateNodeDoi();
+      collapseService.updateNodeDoi();
     }
   }
 })();

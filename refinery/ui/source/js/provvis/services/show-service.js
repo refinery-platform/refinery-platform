@@ -12,20 +12,23 @@
 
   provvisShowService.$inject = [
     'provvisBoxCoordsService',
+    'provvisDrawLinksService',
     'provvisHelpersService',
-    'provvisUpdateRenderService',
-    'provvisPartsService'];
+    'provvisPartsService',
+    'provvisUpdateNodeLinksService'
+  ];
 
   function provvisShowService (
     provvisBoxCoordsService,
+    provvisDrawLinksService,
     provvisHelpersService,
-    provvisUpdateRenderService,
-    provvisPartsService
+    provvisPartsService,
+    provvisUpdateNodeLinksService
   ) {
     var coordsService = provvisBoxCoordsService;
     var provvisHelpers = provvisHelpersService;
     var partsService = provvisPartsService;
-    var updateService = provvisUpdateRenderService;
+    var updateNodeLink = provvisUpdateNodeLinksService;
 
     var service = {
       showAllAnalyses: showAllAnalyses,
@@ -77,7 +80,7 @@
         }).forEach(function (san, i) {
           san.y = i * vis.cell.height;
           san.x = 0;
-          updateService.updateNode(d3.select('#gNodeId-' + san.autoId), san, san.x, san.y);
+          updateNodeLink.updateNode(d3.select('#gNodeId-' + san.autoId), san, san.x, san.y);
         });
       });
       aNode.classed('hiddenNode', false);
@@ -153,7 +156,7 @@
         }).forEach(function (san, i) {
           san.y = i * vis.cell.height;
           san.x = 0;
-          updateService.updateNode(d3.select('#gNodeId-' + san.autoId), san, san.x, san.y);
+          updateNodeLink.updateNode(d3.select('#gNodeId-' + san.autoId), san, san.x, san.y);
         });
       });
 
@@ -216,7 +219,7 @@
         }).forEach(function (san, i) {
           san.y = i * vis.cell.height;
           san.x = 0;
-          updateService.updateNode(d3.select('#gNodeId-' + san.autoId), san, san.x, san.y);
+          updateNodeLink.updateNode(d3.select('#gNodeId-' + san.autoId), san, san.x, san.y);
         });
 
         /* Adjust analysis bounding box. */
@@ -317,7 +320,7 @@
             yOffset += (wfBBoxCoords.y.max - wfBBoxCoords.y.min);
             san.x = 0;
             /* TODO: May cause problems. Revise! */
-            updateService.updateNode(d3.select('#gNodeId-' + san.autoId), san, san.x, san.y);
+            updateNodeLink.updateNode(d3.select('#gNodeId-' + san.autoId), san, san.x, san.y);
           });
         } else {
           /* Adjust subanalysis coords. */
@@ -328,7 +331,7 @@
             san.y = i * (wfBBoxCoords.y.max - wfBBoxCoords.y.min);
             san.x = 0;
             /* TODO: May cause problems. Revise! */
-            updateService.updateNode(d3.select('#gNodeId-' + san.autoId), san, san.x, san.y);
+            updateNodeLink.updateNode(d3.select('#gNodeId-' + san.autoId), san, san.x, san.y);
           });
         }
 

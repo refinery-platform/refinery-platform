@@ -11,6 +11,7 @@
     .factory('provvisAnalysisTimelineService', provvisAnalysisTimelineService);
 
   provvisAnalysisTimelineService.$inject = [
+    'd3',
     'provvisDagreLayoutService',
     'provvisDrawLinksService',
     'provvisHelpersService',
@@ -18,11 +19,11 @@
     'provvisPartsService',
     'provvisUpdateAnalysisService',
     'provvisUpdateLayerService',
-    'provvisUpdateRenderService',
-    'd3'
+    'provvisUpdateNodeLinksService'
   ];
 
   function provvisAnalysisTimelineService (
+    d3,
     provvisDagreLayoutService,
     provvisDrawLinksService,
     provvisHelpersService,
@@ -30,8 +31,7 @@
     provvisPartsService,
     provvisUpdateAnalysisService,
     provvisUpdateLayerService,
-    provvisUpdateRenderService,
-    d3
+    provvisUpdateNodeLinksService
   ) {
     var dagreService = provvisDagreLayoutService;
     var doiService = provvisInitDOIService;
@@ -40,7 +40,7 @@
     var provvisHelpers = provvisHelpersService;
     var updateAnalysis = provvisUpdateAnalysisService;
     var updateLayers = provvisUpdateLayerService;
-    var updateService = provvisUpdateRenderService;
+    var updateNodeLink = provvisUpdateNodeLinksService;
 
     var service = {
       createAnalysistimeColorScale: createAnalysistimeColorScale,
@@ -202,16 +202,16 @@
         provvisHelpers.fitGraphToWindow(partsService.nodeLinkTransitionTime);
       }
 
-      updateService.updateNodeFilter();
-      updateService.updateLinkFilter();
+      drawService.updateNodeFilter();
+      updateNodeLink.updateLinkFilter();
       updateAnalysis.updateAnalysisLinks(vis.graph);
       updateLayers.updateLayerLinks(vis.graph.lLinks);
 
       vis.graph.aNodes.forEach(function (an) {
-        drawService.updateLink(an);
+        updateNodeLink.updateLink(an);
       });
       vis.graph.lNodes.values().forEach(function (ln) {
-        drawService.updateLink(ln);
+        updateNodeLink.updateLink(ln);
       });
 
       /* TODO: Temporarily enabled. */

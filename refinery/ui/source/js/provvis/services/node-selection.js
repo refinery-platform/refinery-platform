@@ -13,7 +13,6 @@
   provvisNodeSelectionService.$inject = [
     '$',
     'd3',
-    '$log',
     'provvisInitDOIService',
     'provvisHelpersService',
     'provvisPartsService'
@@ -22,7 +21,6 @@
   function provvisNodeSelectionService (
     $,
     d3,
-    $log,
     provvisInitDOIService,
     provvisHelpersService,
     provvisPartsService
@@ -57,7 +55,6 @@
           });
       });
 
-      $log('in clear node selection error?');
       $('#nodeInfoTitle').html('Select a node: - ');
       $('#nodeInfoTitleLink').html('');
       $('#' + 'provenance-nodeInfo-content').html('');

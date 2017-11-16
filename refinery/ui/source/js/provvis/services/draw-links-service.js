@@ -38,8 +38,7 @@
       drawNodes: drawNodes,
       drawStraightLink: drawStraightLink,
       drawSubanalysisLinks: drawSubanalysisLinks,
-      drawSubanalysisNodes: drawSubanalysisNodes,
-      updateLink: updateLink
+      drawSubanalysisNodes: drawSubanalysisNodes
     };
 
     return service;
@@ -393,96 +392,6 @@
       var pathSegment = ' M' + srcX + ',' + srcY;
       pathSegment = pathSegment.concat(' L' + tarX + ',' + tarY);
       return pathSegment;
-    }
-
-      /**
-       * Update link through translation while dragging or on dragend.
-       * @param n Node object element.
-       */
-    function updateLink (n) {
-      var draggingActive = partsService.draggingActive;
-      var linkStyle = partsService.linkStyle;
-      var nodeLinkTransitionTime = partsService.nodeLinkTransitionTime;
-      var predLinks = d3.map();
-      var succLinks = d3.map();
-
-      /* Get layer and/or analysis links. */
-      switch (n.nodeType) {  // eslint-disable-line default-case
-        case 'layer':
-          n.predLinks.values().forEach(function (pl) {
-            predLinks.set(pl.autoId, pl);
-          });
-          n.succLinks.values().forEach(function (sl) {
-            succLinks.set(sl.autoId, sl);
-          });
-          n.children.values().forEach(function (an) {
-            an.predLinks.values().forEach(function (pl) {
-              predLinks.set(pl.autoId, pl);
-            });
-            an.succLinks.values().forEach(function (sl) {
-              succLinks.set(sl.autoId, sl);
-            });
-          });
-          break;
-        case 'analysis':
-          n.predLinks.values().forEach(function (pl) {
-            predLinks.set(pl.autoId, pl);
-          });
-          n.succLinks.values().forEach(function (sl) {
-            succLinks.set(sl.autoId, sl);
-          });
-          break;
-      }
-
-      /* Get input links and update coordinates for x2 and y2. */
-      predLinks.values().forEach(function (l) {
-        d3.selectAll('#linkId-' + l.autoId + ', #hLinkId-' + l.autoId)
-          .classed('link-transition', true)
-          .transition()
-          .duration(draggingActive ? 0 : nodeLinkTransitionTime)
-          .attr('d', function () {
-            var srcCoords = coordsService.getVisibleNodeCoords(l.source);
-            var tarCoords = coordsService.getVisibleNodeCoords(l.target);
-
-            if (linkStyle === 'bezier1') {
-              return drawBezierLink(l, srcCoords.x, srcCoords.y, tarCoords.x,
-                tarCoords.y);
-            } else { // eslint-disable-line no-else-return
-              return drawStraightLink(l, srcCoords.x, srcCoords.y, tarCoords.x,
-                tarCoords.y);
-            }
-          });
-
-        setTimeout(function () {
-          d3.selectAll('#linkId-' + l.autoId + ', #hLinkId-' + l.autoId)
-            .classed('link-transition', false);
-        }, nodeLinkTransitionTime);
-      });
-
-      /* Get output links and update coordinates for x1 and y1. */
-      succLinks.values().forEach(function (l) {
-        d3.selectAll('#linkId-' + l.autoId + ', #hLinkId-' + l.autoId)
-          .classed('link-transition', true)
-          .transition()
-          .duration(draggingActive ? 0 : nodeLinkTransitionTime)
-          .attr('d', function (l) { // eslint-disable-line no-shadow
-            var tarCoords = coordsService.getVisibleNodeCoords(l.target);
-            var srcCoords = coordsService.getVisibleNodeCoords(l.source);
-
-            if (linkStyle === 'bezier1') {
-              return drawBezierLink(l, srcCoords.x, srcCoords.y, tarCoords.x,
-                tarCoords.y);
-            } else { // eslint-disable-line no-else-return
-              return drawStraightLink(l, srcCoords.x, srcCoords.y, tarCoords.x,
-                tarCoords.y);
-            }
-          });
-
-        setTimeout(function () {
-          d3.selectAll('#linkId-' + l.autoId + ', #hLinkId-' + l.autoId)
-            .classed('link-transition', false);
-        }, nodeLinkTransitionTime);
-      });
     }
 
         /**

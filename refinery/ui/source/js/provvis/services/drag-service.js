@@ -14,27 +14,24 @@
     'd3',
     'provvisBoxCoordsService',
     'provvisDeclService',
-    'provvisDrawLinksService',
     'provvisPartsService',
     'provvisTooltipService',
-    'provvisUpdateRenderService'
+    'provvisUpdateNodeLinksService'
   ];
 
   function provvisDragService (
     d3,
     provvisBoxCoordsService,
     provvisDeclService,
-    provvisDrawLinksService,
     provvisPartsService,
     provvisTooltipService,
-    provvisUpdateRenderService
+    provvisUpdateNodeLinksService
   ) {
     var coordsService = provvisBoxCoordsService;
-    var linkService = provvisDrawLinksService;
     var partsService = provvisPartsService;
     var provvisDecl = provvisDeclService;
     var tooltipService = provvisTooltipService;
-    var updateService = provvisUpdateRenderService;
+    var updateNodeLink = provvisUpdateNodeLinksService;
 
     var service = {
       dragStart: dragStart,
@@ -73,18 +70,18 @@
       n.y = d3.event.y;
 
       /* Drag selected node. */
-      updateService.updateNode(self, n, d3.event.x, d3.event.y);
+      updateNodeLink.updateNode(self, n, d3.event.x, d3.event.y);
 
       /* Drag adjacent links. */
-      linkService.updateLink(n);
+      updateNodeLink.updateLink(n);
 
       if (n instanceof provvisDecl.Layer) {
         n.children.values().forEach(function (an) {
           an.x = n.x - (coordsService.getABBoxCoords(an, 0).x.max -
             coordsService.getABBoxCoords(an, 0).x.min) / 2 + partsService.vis.cell.width / 2;
           an.y += deltaY;
-          updateService.updateNode(d3.select('#gNodeId-' + an.autoId), an, an.x, an.y);
-          linkService.updateLink(an);
+          updateNodeLink.updateNode(d3.select('#gNodeId-' + an.autoId), an, an.x, an.y);
+          updateNodeLink.updateLink(an);
         });
       }
 
@@ -99,7 +96,7 @@
         var self = d3.select(this);
 
         /* Update node and adjacent links. */
-        updateService.updateNodeAndLink(n, self);
+        updateNodeLink.updateNodeAndLink(n, self);
 
         /* Prevent other mouseevents during dragging. */
         setTimeout(function () {

@@ -10,15 +10,16 @@
     .module('refineryProvvis')
     .factory('provvisInitService', provvisInitService);
 
-  provvisInitService.$inject = ['$', '_', '$log', '$window'];
+  provvisInitService.$inject = ['$', '_', '$log', '$window', 'provvisDeclService'];
 
   function provvisInitService (
     $,
     _,
     $log,
-    $window
+    $window,
+    provvisDeclService
   ) {
-    var provvisDecl = $window.provvisDecl;
+    var provvisDecl = provvisDeclService;
 
     /* Initialize node-link arrays. */
     var dataset = Object.create(null);
@@ -399,7 +400,7 @@
    * @returns {provvisDecl.Link} New Link object.
    */
     function createLink (lId, source, target) {
-      return new provvisDecl.Link(lId, source, target, true);
+      return provvisDecl.Link(lId, source, target, true); // eslint-disable-line new-cap
     }
 
     /**
@@ -425,7 +426,8 @@
         nodeName = n.name;
       }
 
-      return new provvisDecl.Node(id, type, Object.create(null), true, nodeName,
+      // eslint-disable-next-line new-cap
+      return provvisDecl.Node(id, type, Object.create(null), true, nodeName,
         n.type, study, assay, parents, analysis, n.subanalysis, n.uuid,
         n.file_url);
     }
@@ -537,7 +539,7 @@
       var lId = 0;
 
       nodes.forEach(function (n) {
-        if (typeof n.uuid !== 'undefined') {
+        if (typeof n !== 'undefined' && typeof n.uuid !== 'undefined') {
           if (typeof n.parents !== 'undefined') {
             /* For each parent entry. */
             n.parents.forEach(function (puuid) { /* n -> target; p -> source */
@@ -546,16 +548,16 @@
                 links.push(createLink(lId, nodeMap.get(puuid), n));
                 lId++;
               } else {
-                $log('ERROR: Dataset might be corrupt - parent: ' + puuid +
+                $log.error('ERROR: Dataset might be corrupt - parent: ' + puuid +
                   ' of node with uuid: ' + n.uuid + ' does not exist.');
               }
             });
           } else {
-            $log('Error: Parents array of node with uuid: ' + n.uuid +
+            $log.error('Error: Parents array of node with uuid: ' + n.uuid +
               ' is undefined!');
           }
         } else {
-          $log('Error: Node uuid is undefined!');
+          $log.error('Error: Node uuid is undefined!');
         }
       });
     }

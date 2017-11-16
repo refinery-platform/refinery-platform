@@ -88,7 +88,7 @@
       BaseNode.numInstances = (BaseNode.numInstances || 0) + 1;
       this.autoId = BaseNode.numInstances;
 
-      this.doi = new DoiComponents(this);
+      this.doi = DoiComponents.DoiComponents(this); // eslint-disable-line new-cap
       this.selected = false;
       this.filtered = true;
     }

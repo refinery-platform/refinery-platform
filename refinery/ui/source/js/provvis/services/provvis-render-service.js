@@ -11,7 +11,10 @@
     .factory('provvisRenderService', provvisRenderService);
 
   provvisRenderService.$inject = [
+    'd3',
+    '$log',
     'provvisAnalysisTimelineService',
+    'provvisDagreLayoutService',
     'provvisDeclService',
     'provvisDragService',
     'provvisDrawColorCodingService',
@@ -27,13 +30,15 @@
     'provvisToolbarService',
     'provvisTooltipService',
     'provvisUpdateAnalysisService',
-    'provvisUpdateRenderService',
-    'd3',
-    '$log'
+    'provvisUpdateNodeLinksService',
+    'provvisUpdateRenderService'
   ];
 
   function provvisRenderService (
+    d3,
+    $log,
     provvisAnalysisTimelineService,
+    provvisDagreLayoutService,
     provvisDragService,
     provvisDrawColorCodingService,
     provvisDrawDOIService,
@@ -48,11 +53,11 @@
     provvisToolbarService,
     provvisTooltipService,
     provvisUpdateAnalysisService,
-    provvisUpdateRenderService,
-    d3,
-    $log
+    provvisUpdateNodeLinksService,
+    provvisUpdateRenderService
   ) {
     var collapseService = provvisHandleCollapseService;
+    var dagreService = provvisDagreLayoutService;
     var doiService = provvisInitDOIService;
     var dragService = provvisDragService;
     var drawColorService = provvisDrawColorCodingService;
@@ -67,9 +72,8 @@
     var toolbarService = provvisToolbarService;
     var tooltipService = provvisTooltipService;
     var updateAnalysis = provvisUpdateAnalysisService;
+    var updateNodeLink = provvisUpdateNodeLinksService;
     var updateService = provvisUpdateRenderService;
-
-    var dagreService = updateService.dagreService;
 
     var analysisWorkflowMap = d3.map();
     var width = 0;
@@ -183,9 +187,9 @@
       vis.graph.aNodes.forEach(function (an) {
         collapseService.handleCollapseExpandNode(an, 'c', 'auto');
       });
-      updateService.updateNodeFilter();
-      updateService.updateLinkFilter();
-      updateService.updateNodeDoi();
+      updateNodeLink.updateNodeFilter();
+      updateNodeLink.updateLinkFilter();
+      collapseService.updateNodeDoi();
 
       /* Draw timeline view. */
       drawTimelineService.drawTimelineView(vis);
