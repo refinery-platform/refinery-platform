@@ -14,8 +14,7 @@ from core.models import (Analysis, AnalysisNodeConnection, AnalysisResult,
                          InvestigationLink, Invitation, Ontology, Project,
                          SiteProfile, Tutorials, UserProfile, Workflow,
                          WorkflowDataInput, WorkflowDataInputMap,
-                         WorkflowEngine, WorkflowFilesDL,
-                         WorkflowInputRelationships)
+                         WorkflowEngine, WorkflowInputRelationships)
 from core.utils import admin_ui_deletion
 
 
@@ -42,10 +41,6 @@ class WorkflowDataInputMapAdmin(GuardedModelAdmin):
 
 class WorkflowDataInputAdmin(GuardedModelAdmin):
     list_display = ['__unicode__', 'id', 'name', 'internal_id']
-
-
-class WorkflowFilesDlAdmin(GuardedModelAdmin, ForeignKeyAutocompleteAdmin):
-    list_display = ['__unicode__', 'id', 'step_id', 'pair_id', 'filename']
 
 
 class WorkflowAdmin(GuardedModelAdmin, ForeignKeyAutocompleteAdmin):
@@ -177,7 +172,6 @@ admin.site.register(Project, ProjectAdmin)
 admin.site.register(DataSet, DataSetAdmin)
 admin.site.register(InvestigationLink, InvestigationLinkAdmin)
 admin.site.register(Workflow, WorkflowAdmin)
-admin.site.register(WorkflowFilesDL, WorkflowFilesDlAdmin)
 admin.site.register(WorkflowEngine, WorkflowEngineAdmin)
 admin.site.register(WorkflowDataInput, WorkflowDataInputAdmin)
 admin.site.register(WorkflowDataInputMap, WorkflowDataInputMapAdmin)
