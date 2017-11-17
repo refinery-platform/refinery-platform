@@ -2929,9 +2929,14 @@ class WorkflowToolLaunchTests(ToolManagerTestBase):
         self.assertTrue(send_email_mock.called)
         self.assertTrue(galaxy_cleanup_mock.called)
 
-    def test_galaxy_cleanup_methods_are_called_on_analysis_failure(self):
-        settings.REFINERY_GALAXY_ANALYSIS_CLEANUP = "always"
+    def galaxy_cleanup_assertions(self):
+        self.assertFalse(self.delete_workflow_mock.called)
+        self.assertTrue(self.delete_history_mock.called)
+        self.assertTrue(self.delete_library_mock.called)
 
+        self.assertEqual(self.delete_history_mock.call_count, 2)
+
+    def create_tool_with_analysis(self):
         self.create_tool(ToolDefinition.WORKFLOW)
 
         self.tool.update_galaxy_data(
@@ -2944,16 +2949,28 @@ class WorkflowToolLaunchTests(ToolManagerTestBase):
         self.tool.analysis.library_id = self.GALAXY_ID_MOCK
         self.tool.analysis.save()
 
-        self.tool.analysis.cancel()
+    def test_galaxy_cleanup_methods_are_called_on_analysis_failure(self):
+        settings.REFINERY_GALAXY_ANALYSIS_CLEANUP = "always"
 
+        self.create_tool_with_analysis()
+        self.tool.analysis.galaxy_cleanup()
+        self.galaxy_cleanup_assertions()
+
+    def test_galaxy_cleanup_is_always_called_for_cancelled_analyses(self):
+        settings.REFINERY_GALAXY_ANALYSIS_CLEANUP = "invalid cleanup value"
+
+        self.create_tool_with_analysis()
+        self.tool.analysis.cancel()
         self.assertEqual(self.tool.analysis.status, Analysis.FAILURE_STATUS)
         self.assertTrue(self.tool.analysis.canceled)
+        self.galaxy_cleanup_assertions()
 
-        self.assertFalse(self.delete_workflow_mock.called)
-        self.assertTrue(self.delete_history_mock.called)
-        self.assertTrue(self.delete_library_mock.called)
+    def test_galaxy_cleanup_is_always_called_for_deleted_analyses(self):
+        settings.REFINERY_GALAXY_ANALYSIS_CLEANUP = "invalid cleanup value"
 
-        self.assertEqual(self.delete_history_mock.call_count, 2)
+        self.create_tool_with_analysis()
+        self.tool.analysis.delete()
+        self.galaxy_cleanup_assertions()
 
     @mock.patch.object(WorkflowClient, "invoke_workflow",
                        side_effect=bioblend.ConnectionError("Bad connection"))
@@ -2980,13 +2997,8 @@ class WorkflowToolLaunchTests(ToolManagerTestBase):
         self.tool.analysis.save()
 
         self.tool.invoke_workflow()
+        self.galaxy_cleanup_assertions()
 
-        self.assertEqual(self.tool.analysis.status, Analysis.FAILURE_STATUS)
-        self.assertFalse(self.delete_workflow_mock.called)
-
-        self.assertTrue(self.delete_history_mock.called)
-        self.assertTrue(self.delete_library_mock.called)
-        self.assertEqual(self.delete_history_mock.call_count, 2)
         self.assertTrue(invoke_workflow_mock.called)
         self.assertTrue(self.tool_data_mock.called)
 
