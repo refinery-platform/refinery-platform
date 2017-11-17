@@ -1309,17 +1309,22 @@ class Analysis(OwnableResource):
 
         return history['percent_complete']
 
-    def galaxy_cleanup(self):
-        """Determine when/if Galaxy libraries, workflows and histories are
-        to be deleted based on the value of
-        global setting: REFINERY_GALAXY_ANALYSIS_CLEANUP"""
+    def galaxy_cleanup(self, force_cleanup=False):
+        """
+        Delete Galaxy libraries, and histories based on the value of
+        global setting: REFINERY_GALAXY_ANALYSIS_CLEANUP
+        :param force_cleanup: Boolean: Whether or not to override the
+        REFINERY_GALAXY_ANALYSIS_CLEANUP setting
+        """
+        galaxy_cleanup = settings.REFINERY_GALAXY_ANALYSIS_CLEANUP
+        galaxy_cleanup_states = [
+            force_cleanup,
+            galaxy_cleanup == 'always',
+            galaxy_cleanup == 'on_success' and
+            self.get_status() == self.SUCCESS_STATUS
+        ]
 
-        cleanup = settings.REFINERY_GALAXY_ANALYSIS_CLEANUP
-
-        if (cleanup == 'always' or
-                cleanup == 'on_success' and
-                self.get_status() == self.SUCCESS_STATUS):
-
+        if any(cleanup_state for cleanup_state in galaxy_cleanup_states):
             connection = self.galaxy_connection()
             error_msg = "Error deleting Galaxy %s for analysis '%s': %s"
 
