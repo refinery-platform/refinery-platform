@@ -88,7 +88,7 @@
       BaseNode.numInstances = (BaseNode.numInstances || 0) + 1;
       this.autoId = BaseNode.numInstances;
 
-      this.doi = DoiComponents.DoiComponents(this); // eslint-disable-line new-cap
+      this.doi = new DoiComponents.DoiComponents(this); // eslint-disable-line new-cap
       this.selected = false;
       this.filtered = true;
     }
@@ -111,6 +111,7 @@
      * @param fileUrl
      * @constructor
      */
+
     function Node (id, nodeType, parent, hidden, name, fileType, study,
       assay, parents, analysis, subanalysis, uuid, fileUrl) {
       BaseNode.call(this, id, nodeType, parent, hidden);
@@ -127,12 +128,10 @@
       this.fileUrl = fileUrl;
 
       this.attributes = d3.map();
-
-      BaseNode(id, nodeType, parent, hidden);  // eslint-disable-line new-cap
     }
 
- //   Node.prototype = Object.create(BaseNode.prototype);
- //   Node.prototype.constructor = Node;
+    Node.prototype = Object.create(BaseNode.prototype); // eslint-disable-line no-unreachable
+    Node.prototype.constructor = Node; // eslint-disable-line no-unreachable
 
     /**
      * Constructor function for the analysis node data structure.
@@ -179,10 +178,11 @@
       };
 
       BaseNode(id, 'analysis', parent, hidden);  // eslint-disable-line new-cap
+      return analysis;
     }
 
-  //  Analysis.prototype = Object.create(BaseNode.prototype);
-  //  Analysis.prototype.constructor = Analysis;
+    Analysis.prototype = Object.create(BaseNode.prototype); // eslint-disable-line no-unreachable
+    Analysis.prototype.constructor = Analysis; // eslint-disable-line no-unreachable
 
     /**
      * Constructor function for the subanalysis node data structure.
@@ -206,8 +206,8 @@
       BaseNode(id, subanalysis, parent, hidden);  // eslint-disable-line new-cap
     }
 
-  //  Subanalysis.prototype = Object.create(BaseNode.prototype);
- //   Subanalysis.prototype.constructor = Subanalysis;
+    Subanalysis.prototype = Object.create(BaseNode.prototype); // eslint-disable-line no-unreachable
+    Subanalysis.prototype.constructor = Subanalysis; // eslint-disable-line no-unreachable
 
     /**
      * Constructor function for the motif data structure.
@@ -248,8 +248,8 @@
       BaseNode(id, 'layer', parent, hidden); // eslint-disable-line new-cap
     }
 
- //   Layer.prototype = Object.create(BaseNode.prototype);
- //   Layer.prototype.constructor = Layer;
+    Layer.prototype = Object.create(BaseNode.prototype); // eslint-disable-line no-unreachable
+    Layer.prototype.constructor = Layer; // eslint-disable-line no-unreachable
 
     /**
      * Constructor function for the link data structure.
