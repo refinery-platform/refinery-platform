@@ -6,7 +6,7 @@ from .models import FileExtension, FileStoreItem, FileType
 
 
 class FileStoreItemAdmin(admin.ModelAdmin):
-    exclude = ('import_task_id',)
+    readonly_fields = ('import_task_id',)
 
     list_display = ['id', 'datafile', 'uuid', 'source', 'sharename',
                     'filetype', 'import_task_id', 'created', 'updated']
