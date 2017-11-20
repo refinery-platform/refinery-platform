@@ -50,7 +50,7 @@ from analysis_manager.tasks import (_galaxy_file_import,
                                     _run_galaxy_workflow, run_analysis)
 from core.models import (INPUT_CONNECTION, OUTPUT_CONNECTION, Analysis,
                          AnalysisNodeConnection, AnalysisResult, ExtendedGroup,
-                         Project, Workflow, WorkflowEngine, WorkflowFilesDL)
+                         Project, Workflow, WorkflowEngine)
 from data_set_manager.models import Assay, Attribute, Node
 from data_set_manager.utils import _create_solr_params_from_node_uuids
 from factory_boy.django_model_factories import (AnnotatedNodeFactory,
@@ -1886,36 +1886,6 @@ class WorkflowToolTests(ToolManagerTestBase):
             }
         )
 
-    def test_create_workflow_file_downloads(self):
-        galaxy_datasets_list_mock = self.galaxy_datasets_list_mock.start()
-        self.get_history_file_list_same_names_mock.start()
-        self.show_job_mock.side_effect = self.show_job_side_effect
-        self.create_tool(ToolDefinition.WORKFLOW)
-        self.tool.create_workflow_file_downloads()
-        self.assertEqual(WorkflowFilesDL.objects.count(), 2)
-        for workflow_file_dl in WorkflowFilesDL.objects.all():
-            self.assertTrue(workflow_file_dl.filename.startswith(
-                "Refinery test tool"
-            ))
-            self.assertTrue(workflow_file_dl.filename.endswith(".txt"))
-        self.assertTrue(self.galaxy_workflow_show_invocation_mock.called)
-        self.assertTrue(galaxy_datasets_list_mock.called)
-
-    def test_create_workflow_file_downloads_same_names(self):
-        galaxy_datasets_list_mock = (
-            self.galaxy_datasets_list_same_names_mock.start()
-        )
-        self.get_history_file_list_mock.start()
-        self.show_job_mock.side_effect = self.show_job_side_effect
-        self.create_tool(ToolDefinition.WORKFLOW)
-        self.tool.create_workflow_file_downloads()
-        self.assertEqual(WorkflowFilesDL.objects.count(), 2)
-        for workflow_file_dl in WorkflowFilesDL.objects.all():
-            logger.debug(workflow_file_dl.filename)
-            self.assertEqual(workflow_file_dl.filename, "Output file.txt")
-        self.assertTrue(self.galaxy_workflow_show_invocation_mock.called)
-        self.assertTrue(galaxy_datasets_list_mock.called)
-
     def test__get_galaxy_dataset_filename(self):
         self.create_tool(ToolDefinition.WORKFLOW)
         galaxy_datasets_list_mock = self.galaxy_datasets_list_mock.start()
@@ -1968,10 +1938,6 @@ class WorkflowToolTests(ToolManagerTestBase):
         self.assertTrue(get_history_file_list_mock.called)
 
         self.assertEqual(AnalysisResult.objects.count(), 3)
-
-        # There will be one less WorkflowFilesDL because one of our mock
-        # datasets has been "purged"
-        self.assertEqual(WorkflowFilesDL.objects.count(), 2)
         self.assertEqual(
             AnalysisResult.objects.count(),
             self.tool.analysis.results.all().count()
