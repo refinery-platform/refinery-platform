@@ -80,3 +80,13 @@ codekit-config.json
 # to be moved into refinery/ui
 refinery/static/styles/css/font-awesome*.css
 refinery/static/styles/css/refinery-style*.css
+
+### Terraform template
+# Compiled files
+*.tfstate
+*.tfstate.*.backup
+*.tfstate.backup
+# Module directory
+.terraform/
+# Variable values for development
+terraform.tfvars

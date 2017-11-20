@@ -114,8 +114,8 @@ def generate_file_source_translator(username=None, base_path=None,
 
         # process relative path
         if identity_id:
-            source = "s3://{}/uploads/{}/{}".format(
-                settings.MEDIA_BUCKET, identity_id, source
+            source = "s3://{}/{}/{}".format(
+                settings.UPLOAD_BUCKET, identity_id, source
             )
         elif base_path:
             source = os.path.join(base_path, source)
@@ -372,7 +372,6 @@ class FileStoreItem(models.Model):
                         pass
 
             self.save()
-            logger.info("File type is set to '%s'", f)
             return True
 
         except Exception as e:

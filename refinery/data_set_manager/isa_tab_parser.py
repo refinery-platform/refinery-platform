@@ -377,8 +377,8 @@ class IsaTabParser:
                 elif self.is_protocol_reference(headers[-len(row)]):
                     self._parse_protocol_reference(headers, row)
                 else:
-                    logger.error(
-                        "Unexpected element " + headers[-len(row)] + " when "
+                    logger.warning(
+                        "Unexpected element `" + headers[-len(row)] + "` when "
                         "parsing node in line " +
                         str(self._current_reader.line_num) + ", column " +
                         str(len(headers) - len(row)) + ".")

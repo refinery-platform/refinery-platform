@@ -597,14 +597,12 @@ class CheckDataFilesView(View):
             identity_id=identity_id
         )
 
+        uploaded_s3_key_list = []
         if settings.REFINERY_DEPLOYMENT_PLATFORM == 'aws':
             # get a list of all uploaded S3 objects for the user
-            uploaded_s3_key_list = []
             s3 = boto3.resource('s3')
-            s3_bucket = s3.Bucket(settings.MEDIA_BUCKET)
-            for s3_object in s3_bucket.objects.filter(
-                    Prefix='uploads/{}'.format(identity_id)
-            ):
+            s3_bucket = s3.Bucket(settings.UPLOAD_BUCKET)
+            for s3_object in s3_bucket.objects.filter(Prefix=identity_id):
                 uploaded_s3_key_list.append(s3_object.key)
 
         for input_file_path in input_file_list:

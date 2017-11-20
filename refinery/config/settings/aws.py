@@ -19,12 +19,10 @@ INSTALLED_APPS += (
 )
 STATIC_BUCKET = get_setting('S3_BUCKET_NAME_BASE') + '-static'
 MEDIA_BUCKET = get_setting('S3_BUCKET_NAME_BASE') + '-media'
+UPLOAD_BUCKET = get_setting('S3_BUCKET_NAME_BASE') + '-upload'
 STATIC_URL = 'https://{}.s3.amazonaws.com/'.format(STATIC_BUCKET)
 STATICFILES_STORAGE = 'config.utils_aws.S3StaticStorage'
-COGNITO_IDENTITY_POOL_NAME = get_setting('COGNITO_IDENTITY_POOL_NAME')
-COGNITO_DEVELOPER_PROVIDER_NAME = get_setting(
-    'COGNITO_DEVELOPER_PROVIDER_NAME'
-)
+COGNITO_IDENTITY_POOL_ID = get_setting('COGNITO_IDENTITY_POOL_ID')
 
 # Refinery
 REFINERY_DEPLOYMENT_PLATFORM = 'aws'
