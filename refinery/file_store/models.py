@@ -29,6 +29,7 @@ from django.utils.deconstruct import deconstructible
 from celery.result import AsyncResult
 from celery.task.control import revoke
 from django_extensions.db.fields import UUIDField
+from storages.backends.s3boto3 import S3Boto3Storage
 
 import core
 
@@ -224,17 +225,17 @@ class SymlinkedFileSystemStorage(FileSystemStorage):
         return os.path.lexists(self.path(name))
 
 
-class FileStoreItem(models.Model):
-    '''Represents data files on disk.
+class S3MediaStorage(S3Boto3Storage):
+    """Django media (user data) files storage"""
+    bucket_name = settings.MEDIA_BUCKET
+    custom_domain = settings.MEDIA_BUCKET + '.s3.amazonaws.com'
 
-    '''
+
+class FileStoreItem(models.Model):
+    """Represents data files on disk"""
     #: file on disk
-    datafile = models.FileField(
-        upload_to=file_path,
-        storage=SymlinkedFileSystemStorage(),
-        blank=True,
-        max_length=1024
-    )
+    datafile = models.FileField(upload_to=file_path, blank=True,
+                                max_length=1024)
     #: unique ID
     uuid = UUIDField(unique=True, auto=True)
     #: source URL or absolute file system path
@@ -258,7 +259,7 @@ class FileStoreItem(models.Model):
     objects = _FileStoreItemManager()
 
     def __unicode__(self):
-        return self.uuid + ' - ' + self.datafile.name
+        return self.datafile.name
 
     def get_absolute_path(self):
         """Compute the absolute path to the data file.

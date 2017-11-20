@@ -18,6 +18,7 @@ class FileStoreItemAdmin(admin.ModelAdmin):
         '''
         if os.path.isabs(obj.source) and not obj.is_local():
             obj.symlink_datafile()
+        super(FileStoreItemAdmin, self).save_model(request, obj, form, change)
 
 
 class FileTypeAdmin(admin.ModelAdmin):
