@@ -1,4 +1,3 @@
-import glob
 import json
 import logging
 import os
@@ -324,23 +323,6 @@ def create_file_relationship_nesting(workflow_annotation,
             file_relationship.file_relationship.add(
                 file_relationships[index + 1]
             )
-
-
-def get_visualization_annotations_list():
-    """
-    Generate a list of available visualization annotations from all currently
-    available JSON representations of Vis Tools underneath the
-    Refinery VISUALIZATION_ANNOTATION_BASE_PATH
-    :return: list of visualization dicts
-    """
-    visualization_annotations = []
-    for annotation_file in glob.glob(
-        "{}/*.json".format(settings.VISUALIZATION_ANNOTATION_BASE_PATH)
-    ):
-        with open(annotation_file) as f:
-            visualization_annotations.append(json.loads(f.read()))
-
-    return visualization_annotations
 
 
 def get_workflows():

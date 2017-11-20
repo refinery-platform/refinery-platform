@@ -650,8 +650,6 @@ TEST_RUNNER = "django.test.runner.DiscoverRunner"
 TEST_NON_SERIALIZED_APPS = ['core', 'django.contrib.contenttypes',
                             'django.contrib.auth']
 
-VISUALIZATION_ANNOTATION_BASE_PATH = "tool_manager/visualization_annotations"
-
 # To avoid Port conflicts between LiveServerTestCases
 # https://docs.djangoproject.com/en/1.7/topics/testing/tools/#liveservertestcase
 os.environ["DJANGO_LIVE_TEST_SERVER_ADDRESS"] = "localhost:10000-12000"
@@ -671,5 +669,6 @@ USER_FILES_COLUMNS = get_setting("USER_FILES_COLUMNS")
 USER_FILES_FACETS = get_setting("USER_FILES_FACETS")
 
 MEDIA_BUCKET = ''  # a placeholder for use in context processor
+UPLOAD_BUCKET = ''  # a placeholder for use in context processor
 
 TASTYPIE_DEFAULT_FORMATS = ['json']
