@@ -43,10 +43,10 @@ def load_tags():
     if 'owner' not in tags:
         tags['owner'] = os.popen("git config --get user.email").read().rstrip()
 
-    for k, v in tags.items():
+    # Get rid of tags that have None as a value.
+    for k, v in list(tags.items()):
         if v is None:
-            raise RuntimeError(
-                "None is not legal, in tag {!r}".format(k))
+            del tags[k]
 
     return [{'Key': k, 'Value': v} for k, v in tags.items()]
 
