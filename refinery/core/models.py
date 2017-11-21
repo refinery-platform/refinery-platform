@@ -1330,8 +1330,8 @@ class Analysis(OwnableResource):
                         "and workflows related to the execution of Analysis "
                         "with UUID: %s", self.uuid)
 
-            self.galaxy_instance().delete_library(self.library_id)
-            self.galaxy_instance().delete_history(self.history_id)
+            self.galaxy_instance().delete_library(self.library_id, self.name)
+            self.galaxy_instance().delete_history(self.history_id, self.name)
 
             try:
                 tool = tool_manager.models.WorkflowTool.objects.get(
@@ -1344,7 +1344,8 @@ class Analysis(OwnableResource):
                 logger.error("Could not properly fetch Tool: %s", e)
             else:
                 self.galaxy_instance().delete_history(
-                    tool.galaxy_import_history_id
+                    tool.galaxy_import_history_id,
+                    self.name
                 )
 
     def cancel(self):
