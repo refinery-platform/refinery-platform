@@ -225,9 +225,7 @@ class SymlinkedFileSystemStorage(FileSystemStorage):
 
 
 class FileStoreItem(models.Model):
-    '''Represents data files on disk.
-
-    '''
+    """Represents data files on disk"""
     #: file on disk
     datafile = models.FileField(
         upload_to=file_path,
@@ -236,16 +234,16 @@ class FileStoreItem(models.Model):
         max_length=1024
     )
     #: unique ID
-    uuid = UUIDField(unique=True, auto=True)
+    uuid = UUIDField()
     #: source URL or absolute file system path
     source = models.CharField(max_length=1024)
     #: optional subdirectory inside the file store that contains the files of a
     # particular group
     sharename = models.CharField(max_length=20, blank=True)
     #: type of the file
-    filetype = models.ForeignKey(FileType, null=True)
+    filetype = models.ForeignKey(FileType, blank=True, null=True)
     #: file import task ID
-    import_task_id = UUIDField(blank=True)
+    import_task_id = UUIDField(auto=False, blank=True)
     # Date created
     created = models.DateTimeField(auto_now_add=True,
                                    default=timezone.now,
@@ -258,7 +256,12 @@ class FileStoreItem(models.Model):
     objects = _FileStoreItemManager()
 
     def __unicode__(self):
-        return self.uuid + ' - ' + self.datafile.name
+        if self.datafile.name:
+            return self.datafile.name
+        elif self.uuid:
+            return self.uuid
+        else:
+            return self.source
 
     def get_absolute_path(self):
         """Compute the absolute path to the data file.
