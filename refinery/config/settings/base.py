@@ -674,3 +674,6 @@ MEDIA_BUCKET = ''  # a placeholder for use in context processor
 UPLOAD_BUCKET = ''  # a placeholder for use in context processor
 
 TASTYPIE_DEFAULT_FORMATS = ['json']
+
+# temporary feature toggle for using S3 as user data file storage backend
+REFINERY_S3_USER_DATA = get_setting('REFINERY_S3_USER_DATA', default=False)
