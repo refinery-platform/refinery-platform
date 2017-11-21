@@ -4,10 +4,10 @@ Created on May 4, 2012
 @author: nils
 '''
 
+import ast
 from datetime import timedelta
 import json
 import logging
-import re
 from sets import Set
 import uuid
 
@@ -23,7 +23,7 @@ from django.forms import ValidationError
 from django.template import Context, loader
 from django.utils import timezone
 
-from fadapa import Fadapa
+from constants import UUID_RE
 from guardian.models import GroupObjectPermission
 from guardian.shortcuts import get_objects_for_group, get_objects_for_user
 from guardian.utils import get_anonymous_user
@@ -32,18 +32,17 @@ from tastypie.authentication import Authentication, SessionAuthentication
 from tastypie.authorization import Authorization
 from tastypie.bundle import Bundle
 from tastypie.constants import ALL, ALL_WITH_RELATIONS
-from tastypie.exceptions import ImmediateHttpResponse, NotFound, Unauthorized
+from tastypie.exceptions import ImmediateHttpResponse, NotFound
 from tastypie.http import (HttpAccepted, HttpBadRequest, HttpCreated,
                            HttpForbidden, HttpGone, HttpMethodNotAllowed,
                            HttpNoContent, HttpNotFound, HttpUnauthorized)
 from tastypie.resources import ModelResource, Resource
 from tastypie.utils import trailing_slash
 
-from core.models import (Analysis, DataSet, ExtendedGroup, FastQC,
-                         GroupManagement, Invitation, NodePair,
-                         NodeRelationship, NodeSet, Project,
-                         ResourceStatistics, Tutorials, UserAuthentication,
-                         UserProfile, Workflow, WorkflowInputRelationships)
+from core.models import (Analysis, DataSet, ExtendedGroup, GroupManagement,
+                         Invitation, Project, ResourceStatistics, Tutorials,
+                         UserAuthentication, UserProfile, Workflow,
+                         WorkflowInputRelationships)
 from core.utils import get_data_sets_annotations, get_resources_for_user
 from data_set_manager.api import (AssayResource, InvestigationResource,
                                   StudyResource)
@@ -56,7 +55,6 @@ signer = Signer()
 
 # Specifically made for descendants of SharableResource.
 class SharableResourceAPIInterface(object):
-    uuid_regex = '[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}'
 
     def __init__(self, res_type):
         self.res_type = res_type
@@ -293,7 +291,7 @@ class SharableResourceAPIInterface(object):
     def prepend_urls(self):
         return [
             url(r'^(?P<resource_name>%s)/(?P<uuid>%s)/sharing/$' %
-                (self._meta.resource_name, self.uuid_regex),
+                (self._meta.resource_name, UUID_RE),
                 self.wrap_view('res_sharing'),
                 name='api_%s_sharing' % (self._meta.resource_name)),
             url(r'^(?P<resource_name>%s)/sharing/$' %
@@ -463,7 +461,6 @@ class UserProfileResource(ModelResource):
 
 class DataSetResource(SharableResourceAPIInterface, ModelResource):
     id_regex = '[0-9]+'
-    uuid_regex = '[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}'
     share_list = fields.ListField(attribute='share_list', null=True)
     public = fields.BooleanField(attribute='public', null=True)
     is_owner = fields.BooleanField(attribute='is_owner', null=True)
@@ -501,6 +498,7 @@ class DataSetResource(SharableResourceAPIInterface, ModelResource):
 
         if isa_archive:
             bundle.data["isa_archive"] = isa_archive.uuid
+            bundle.data["isa_archive_url"] = isa_archive.get_datafile_url()
 
         if pre_isa_archive:
             bundle.data["pre_isa_archive"] = pre_isa_archive.uuid
@@ -588,7 +586,7 @@ class DataSetResource(SharableResourceAPIInterface, ModelResource):
                 ),
             url(r'^(?P<resource_name>%s)/(?P<uuid>%s)/investigation%s$' % (
                     self._meta.resource_name,
-                    self.uuid_regex,
+                    UUID_RE,
                     trailing_slash()
                 ),
                 self.wrap_view('get_investigation'),
@@ -597,7 +595,7 @@ class DataSetResource(SharableResourceAPIInterface, ModelResource):
                 ),
             url(r'^(?P<resource_name>%s)/(?P<uuid>%s)/studies%s$' % (
                     self._meta.resource_name,
-                    self.uuid_regex,
+                    UUID_RE,
                     trailing_slash()
                 ),
                 self.wrap_view('get_studies'),
@@ -606,7 +604,7 @@ class DataSetResource(SharableResourceAPIInterface, ModelResource):
                 )),
             url(r'^(?P<resource_name>%s)/(?P<uuid>%s)/assays%s$' % (
                     self._meta.resource_name,
-                    self.uuid_regex,
+                    UUID_RE,
                     trailing_slash()
                 ),
                 self.wrap_view('get_assays'),
@@ -615,7 +613,7 @@ class DataSetResource(SharableResourceAPIInterface, ModelResource):
                 )),
             url(r'^(?P<resource_name>%s)/(?P<uuid>%s)/analyses%s$' % (
                     self._meta.resource_name,
-                    self.uuid_regex,
+                    UUID_RE,
                     trailing_slash()
                 ),
                 self.wrap_view('get_analyses'),
@@ -625,8 +623,8 @@ class DataSetResource(SharableResourceAPIInterface, ModelResource):
             url(r'^(?P<resource_name>%s)/(?P<uuid>%s)/studies/'
                 r'(?P<study_uuid>%s)/assays%s$' % (
                     self._meta.resource_name,
-                    self.uuid_regex,
-                    self.uuid_regex,
+                    UUID_RE,
+                    UUID_RE,
                     trailing_slash()
                 ),
                 self.wrap_view('get_study_assays'),
@@ -977,7 +975,8 @@ class AnalysisResource(ModelResource):
             'modification_date', 'history_id', 'library_id', 'name',
             'workflow__uuid', 'resource_uri', 'status', 'time_end',
             'time_start', 'uuid', 'workflow_galaxy_id', 'workflow_steps_num',
-            'workflow_copy', 'owner', 'is_owner'
+            'workflow_copy', 'owner', 'is_owner',
+            'facet_name'
         ]
 
         filtering = {
@@ -990,6 +989,9 @@ class AnalysisResource(ModelResource):
         ordering = ['name', 'creation_date', 'time_start', 'time_end']
 
     def dehydrate(self, bundle):
+        bundle.data['facet_name'] = bundle.obj.facet_name()
+
+        # owner
         bundle.data['is_owner'] = False
         owner = bundle.obj.get_owner()
         if owner:
@@ -1001,9 +1003,24 @@ class AnalysisResource(ModelResource):
                     bundle.data['is_owner'] = True
             except:
                 bundle.data['owner'] = None
-
         else:
             bundle.data['owner'] = None
+
+        workflow_dict = None
+        try:
+            workflow_dict = ast.literal_eval(bundle.data['workflow_copy'])
+        except ValueError, e:
+            # TODO: Remove this and just let any errors bubble up.
+            # I don't think I should do that at this moment because
+            # I shouldn't make production any fussier about values
+            # in DB than it is right now.
+            logger.warn(
+                '%s: Cannot parse workflow as python repr: %s',
+                e, bundle.data['workflow_copy']
+            )
+        if workflow_dict:
+            workflow_json = json.dumps(workflow_dict)
+            bundle.data['workflow_json'] = workflow_json
 
         return bundle
 
@@ -1022,6 +1039,11 @@ class AnalysisResource(ModelResource):
         return Analysis.objects.filter(
             data_set__in=allowed_datasets.values_list("id", flat=True)
         )
+
+    def alter_list_data_to_serialize(self, request, data):
+        if request.GET.get('meta_only'):
+            return {'meta': data['meta']}
+        return data
 
 
 class NodeResource(ModelResource):
@@ -1070,9 +1092,7 @@ class NodeResource(ModelResource):
 
     def prepend_urls(self):
         return [
-            url(r"^(?P<resource_name>%s)/(?P<uuid>"
-                r"[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}"
-                r")/$" %
+            url((r"^(?P<resource_name>%s)/(?P<uuid>" + UUID_RE + r")/$") %
                 self._meta.resource_name,
                 self.wrap_view('dispatch_detail'),
                 name="api_dispatch_detail"),
@@ -1096,195 +1116,6 @@ class NodeResource(ModelResource):
             bundle.data['file_url'] = file_item.get_datafile_url()
             bundle.data['file_import_status'] = file_item.get_import_status()
         return bundle
-
-        # def get_object_list(self, request):
-        #     """
-        #     Temporarily removed for performance reasons (and not required
-        #     without authorization)
-        #     Get all nodes available to the current user (via dataset)
-        #     Temp workaround due to Node being not Ownable
-        #
-        #     """
-        #     user = request.user
-        #     perm = 'read_%s' % DataSet._meta.module_name
-        #     if (user.is_authenticated()):
-        #         allowed_datasets = get_objects_for_user(user, perm, DataSet)
-        #     else:
-        #         allowed_datasets = get_objects_for_group(
-        #             ExtendedGroup.objects.public_group(), perm, DataSet)
-        #     # get list of node UUIDs that belong to all datasets available to
-        #     # the current user
-        #     all_allowed_studies = []
-        #     for dataset in allowed_datasets:
-        #         dataset_studies = dataset.get_investigation().study_set.all()
-        #         all_allowed_studies.extend(
-        #               [study for study in dataset_studies]
-        #         )
-        #     allowed_nodes = []
-        #     for study in all_allowed_studies:
-        #         allowed_nodes.extend(study.node_set.all().values('uuid'))
-        #     # filter nodes using that list
-        #     return super(NodeResource, self).get_object_list(request).filter(
-        #         uuid__in=[node['uuid'] for node in allowed_nodes])
-
-
-class NodeSetResource(ModelResource):
-    # https://github.com/toastdriven/django-tastypie/pull/538
-    # https://github.com/toastdriven/django-tastypie/issues/526
-    # Once the above has been integrated into a tastypie release branch remove
-    # NodeSetListResource and use "use_in" instead
-    # nodes = fields.ToManyField(NodeResource, 'nodes', use_in="detail" )
-
-    solr_query = fields.CharField(attribute='solr_query', null=True)
-    solr_query_components = fields.CharField(
-        attribute='solr_query_components', null=True)
-    node_count = fields.IntegerField(attribute='node_count', null=True)
-    is_implicit = fields.BooleanField(attribute='is_implicit', default=False)
-    study = fields.ToOneField(StudyResource, 'study')
-    assay = fields.ToOneField(AssayResource, 'assay')
-
-    class Meta:
-        # create node count attribute on the fly - node_count field has to be
-        # defined on resource
-        queryset = NodeSet.objects.all().order_by('-is_current', 'name')
-        resource_name = 'nodeset'
-        detail_uri_name = 'uuid'  # for using UUIDs instead of pk in URIs
-        authentication = SessionAuthentication()
-        authorization = Authorization()
-        fields = [
-            'is_current', 'name', 'summary', 'assay', 'study', 'uuid',
-            'is_implicit', 'node_count', 'solr_query', 'solr_query_components'
-        ]
-        ordering = [
-            'is_current', 'name', 'summary', 'assay', 'study', 'uuid',
-            'is_implicit', 'node_count', 'solr_query', 'solr_query_components'
-        ]
-        allowed_methods = ["get", "post", "put"]
-        filtering = {
-            "study": ALL_WITH_RELATIONS, "assay": ALL_WITH_RELATIONS,
-            "uuid": ALL
-        }
-        # jQuery treats a 201 as an error for data type "JSON"
-        always_return_data = True
-
-    def prepend_urls(self):
-        return [
-            url(r"^(?P<resource_name>%s)/(?P<uuid>"
-                r"[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}"
-                r")/$" %
-                self._meta.resource_name,
-                self.wrap_view('dispatch_detail'),
-                name="api_dispatch_detail"),
-        ]
-
-    def obj_create(self, bundle, **kwargs):
-        """Create a new NodeSet instance and assign current user as owner if
-        current user has read permission on the data set referenced by the new
-        NodeSet
-        """
-        # get the Study specified by the UUID in the new NodeSet
-        study_uri = bundle.data['study']
-        match = re.search(
-            '[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}',
-            study_uri)
-        study_uuid = match.group()
-        try:
-            study = Study.objects.get(uuid=study_uuid)
-        except Study.DoesNotExist:
-            logger.error("Study '%s' does not exist", study_uuid)
-            self.unauthorized_result(
-                Unauthorized("You are not allowed to create a new NodeSet."))
-        # look up the dataset via InvestigationLink relationship
-        # an investigation is only associated with a single dataset even though
-        # InvestigationLink is a many to many relationship
-        try:
-            dataset = \
-                study.investigation.investigationlink_set.all()[0].data_set
-        except IndexError:
-            logger.error("Data set not found in study '%s'", study.uuid)
-            self.unauthorized_result(
-                Unauthorized("You are not allowed to create a new NodeSet."))
-        permission = "read_%s" % dataset._meta.module_name
-        if not bundle.request.user.has_perm(permission, dataset):
-            self.unauthorized_result(
-                Unauthorized("You are not allowed to create a new NodeSet."))
-        # if user has the read permission on the data set
-        # continue with creating the new NodeSet instance
-        bundle = super(NodeSetResource, self).obj_create(bundle, **kwargs)
-        bundle.obj.set_owner(bundle.request.user)
-        return bundle
-
-
-class NodeSetListResource(ModelResource):
-    study = fields.ToOneField(StudyResource, 'study')
-    assay = fields.ToOneField(AssayResource, 'assay')
-    node_count = fields.IntegerField(attribute='node_count', readonly=True)
-    is_implicit = fields.BooleanField(attribute='is_implicit', default=False)
-
-    class Meta:
-        # create node count attribute on the fly - node_count field has to be
-        # defined on resource
-        queryset = NodeSet.objects.all().order_by('-is_current', 'name')
-        # NG: introduced to get correct resource IDs
-        detail_resource_name = 'nodeset'
-        resource_name = 'nodesetlist'
-        detail_uri_name = 'uuid'  # for using UUIDs instead of pk in URIs
-        authentication = SessionAuthentication()
-        authorization = Authorization()
-        fields = ['is_current', 'name', 'summary', 'assay', 'study', 'uuid']
-        allowed_methods = ["get"]
-        filtering = {"study": ALL_WITH_RELATIONS, "assay": ALL_WITH_RELATIONS}
-        ordering = ['is_current', 'name', 'node_count']
-
-    def dehydrate(self, bundle):
-        # replace resource URI to point to the nodeset resource instead of the
-        # nodesetlist resource
-        bundle.data['resource_uri'] = bundle.data['resource_uri'].replace(
-            self._meta.resource_name, self._meta.detail_resource_name)
-        return bundle
-
-
-class NodePairResource(ModelResource):
-    node1 = fields.ToOneField(NodeResource, 'node1')
-    node2 = fields.ToOneField(NodeResource, 'node2', null=True)
-    group = fields.CharField(attribute='group', null=True)
-
-    class Meta:
-        detail_allowed_methods = ['get', 'post', 'delete', 'put', 'patch']
-        queryset = NodePair.objects.all()
-        detail_resource_name = 'nodepair'
-        resource_name = 'nodepair'
-        detail_uri_name = 'uuid'
-        authentication = SessionAuthentication()
-        authorization = Authorization()
-        # for use with AngularJS $resources: returns newly created object upon
-        # POST (in addition to the location response header)
-        always_return_data = True
-
-
-class NodeRelationshipResource(ModelResource):
-    name = fields.CharField(attribute='name', null=True)
-    type = fields.CharField(attribute='type', null=True)
-    # , full=True), if you need each attribute for each nodepair
-    node_pairs = fields.ToManyField(NodePairResource, 'node_pairs')
-    study = fields.ToOneField(StudyResource, 'study')
-    assay = fields.ToOneField(AssayResource, 'assay')
-
-    class Meta:
-        detail_allowed_methods = ['get', 'post', 'delete', 'put', 'patch']
-        queryset = NodeRelationship.objects.all().order_by('-is_current',
-                                                           'name')
-        detail_resource_name = 'noderelationship'
-        resource_name = 'noderelationship'
-        detail_uri_name = 'uuid'
-        authentication = SessionAuthentication()
-        authorization = Authorization()
-        # for use with AngularJS $resources: returns newly created object upon
-        # POST (in addition to the location response header)
-        always_return_data = True
-        # fields = ['type', 'study', 'assay', 'node_pairs']
-        ordering = ['is_current', 'name', 'type', 'node_pairs']
-        filtering = {'study': ALL_WITH_RELATIONS, 'assay': ALL_WITH_RELATIONS}
 
 
 class StatisticsResource(Resource):
@@ -2082,13 +1913,10 @@ class ExtendedGroupResource(ModelResource):
             url(r'^extended_groups/members/$',
                 self.wrap_view('ext_groups_members_list'),
                 name='api_ext_group_members_list'),
-            url(r'^extended_groups/(?P<uuid>'
-                r'[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}'
-                r')/members/$',
+            url(r'^extended_groups/(?P<uuid>' + UUID_RE + r')/members/$',
                 self.wrap_view('ext_groups_members_basic'),
                 name='api_ext_group_members_basic'),
-            url(r'^extended_groups/(?P<uuid>'
-                r'[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}'
+            url(r'^extended_groups/(?P<uuid>' + UUID_RE +
                 r')/members/(?P<user_id>[0-9]+)/$',
                 self.wrap_view('ext_groups_members_detail'),
                 name='api_ext_group_members_detail'),
@@ -2221,93 +2049,3 @@ class ExtendedGroupResource(ModelResource):
             )
         else:
             return HttpMethodNotAllowed()
-
-
-# TODO: modify to be backed by a DB eventually.
-class FastQCResource(Resource):
-    data = fields.DictField(attribute='data', null=True)
-
-    class Meta:
-        resource_name = 'fastqc'
-        object_class = FastQC
-        detail_uri_name = 'analysis_uuid'
-        authentication = SessionAuthentication()
-
-    def is_float(self, value):
-        try:
-            float(value)
-            return True
-        except:
-            return False
-
-    def obj_get(self, bundle, **kwargs):
-        analysis = Analysis.objects.get(uuid=kwargs['analysis_uuid'])
-
-        if not analysis:
-            return HttpNotFound('Analysis not found')
-
-        analysis_results = analysis.results.all()
-
-        # For now assume fastqc files have a .txt extension.
-        fastqc_file_list = filter(
-            lambda f: '.txt' in f.file_name, analysis_results)
-
-        if len(fastqc_file_list) == 0:
-            return HttpNotFound("Unable to find matching FastQC file")
-
-        # Pick the first one because there's only supposed to be one.
-        fastqc_file = FileStoreItem.objects.get(
-            uuid=fastqc_file_list[0].file_store_uuid)
-
-        if not fastqc_file:
-            return HttpNotFound(
-                "Unable to find matching FastQC file in File Store")
-
-        fastqc_file_obj = fastqc_file.get_file_object()
-        fadapa_input = fastqc_file_obj.read().splitlines()
-
-        parser = Fadapa(fadapa_input)
-
-        tmp_dict = {'Summary': {}}
-
-        for i in parser.summary()[1:]:
-            tmp_dict['Summary'][i[0].lower().replace(' ', '_')] = {
-                'title': i[0],
-                'result': i[1]
-            }
-            parsed_data = []
-
-            try:
-                parsed_data = parser.clean_data(i[0])
-            except:
-                logger.warn(
-                    "No data found for " + i[0] + " in file " +
-                    fastqc_file_list[0].file_store_uuid
-                )
-
-            clean_data = []
-
-            for row in parsed_data:
-                clean_data.append(row[0:1] + map(
-                    lambda d:
-                    float(d) if self.is_float(d) else d,
-                    row[1:]))
-
-            tmp_dict[i[0]] = clean_data
-
-        # Modify the 'Basic Statistics' module if it exists.
-        if tmp_dict.get('Basic Statistics'):
-            mod = {}
-
-            for i in tmp_dict['Basic Statistics']:
-                mod[i[0]] = i[1]
-
-            tmp_dict['Basic Statistics'] = mod
-
-        # Rename to friendly format dict keys.
-        new = {}
-
-        for key in tmp_dict:
-            new[key.lower().replace(' ', '_')] = tmp_dict[key]
-
-        return FastQC(new)

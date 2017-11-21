@@ -20,16 +20,16 @@ from tastypie.test import ResourceTestCase
 from analysis_manager.models import AnalysisStatus
 from data_set_manager.models import Assay, Contact, Investigation, Node, Study
 from factory_boy.utils import create_dataset_with_necessary_models
-from file_store.models import FileStoreItem
+from file_store.models import FileStoreItem, FileType
 from galaxy_connector.models import Instance
 
 from .api import AnalysisResource
 from .management.commands.create_user import init_user
-from .models import (Analysis, AnalysisNodeConnection, DataSet, ExtendedGroup,
-                     InvestigationLink, NodeSet, Project, Tutorials,
+from .models import (INPUT_CONNECTION, OUTPUT_CONNECTION, Analysis,
+                     AnalysisNodeConnection, AnalysisResult, DataSet,
+                     ExtendedGroup, InvestigationLink, Project, Tutorials,
                      UserProfile, Workflow, WorkflowDataInputMap,
-                     WorkflowEngine, create_nodeset, delete_nodeset,
-                     get_nodeset, invalidate_cached_object, update_nodeset)
+                     WorkflowEngine, invalidate_cached_object)
 from .search_indexes import DataSetIndex
 from .utils import (filter_nodes_uuids_in_solr, get_aware_local_time,
                     get_resources_for_user, move_obj_to_front)
@@ -67,146 +67,6 @@ class UserCreateTest(TestCase):
             new_user.groups.filter(name=self.public_group_name).count(), 1)
 
 
-class NodeSetTest(TestCase):
-    """Test all NodeSet operations"""
-
-    def setUp(self):
-        self.investigation = Investigation.objects.create()
-        self.study = Study.objects.create(investigation=self.investigation)
-        self.assay = Assay.objects.create(
-            study=self.study)
-        self.query = json.dumps({
-            "facets": {
-                "platform_Characteristics_10_5_s": [],
-                "cell_or_tissue_Characteristics_10_5_s": [],
-                "REFINERY_TYPE_10_5_s": [],
-                "species_Characteristics_10_5_s": [],
-                "treatment_Characteristics_10_5_s": [],
-                "factor_Characteristics_10_5_s": [],
-                "factor_function_Characteristics_10_5_s": [],
-                "data_source_Characteristics_10_5_s": [],
-                "genome_build_Characteristics_10_5_s": [],
-                "REFINERY_FILETYPE_10_5_s": [],
-                "antibody_Characteristics_10_5_s": [],
-                "data_type_Characteristics_10_5_s": [],
-                "lab_Characteristics_10_5_s": []
-            },
-            "nodeSelection": [],
-            "nodeSelectionBlacklistMode": True
-        })
-
-    def test_create_minimal_nodeset(self):
-        """Test adding a new NodeSet with required fields only"""
-        name = 'nodeset'
-        nodeset = create_nodeset(name=name, study=self.study, assay=self.assay)
-        self.assertIsInstance(nodeset, NodeSet)
-        self.assertEqual(nodeset.name, name)
-        self.assertEqual(nodeset.summary, '')
-        self.assertEqual(nodeset.solr_query, '')
-
-    def test_create_full_nodeset(self):
-        """Test adding a new NodeSet with a list of Node instances and summary
-        """
-        name = 'nodeset'
-        summary = 'sample summary'
-        nodeset = create_nodeset(name=name, study=self.study, assay=self.assay,
-                                 summary=summary, solr_query=self.query)
-        self.assertIsInstance(nodeset, NodeSet)
-        self.assertEqual(nodeset.name, name)
-        self.assertEqual(nodeset.summary, summary)
-        self.assertEqual(nodeset.solr_query, self.query)
-
-    def test_get_nodeset_with_valid_uuid(self):
-        """Test retrieving an existing NodeSet instance"""
-        nodeset = NodeSet.objects.create(name='nodeset', study=self.study,
-                                         assay=self.assay)
-        self.assertEqual(get_nodeset(nodeset.uuid), nodeset)
-
-    def test_get_nodeset_with_invalid_uuid(self):
-        """Test retrieving a NodeSet instance that doesn't exist"""
-        self.assertRaises(
-            NodeSet.DoesNotExist, get_nodeset, uuid='Invalid UUID'
-        )
-
-    def test_delete_nodeset_with_valid_uuid(self):
-        """Test deleting an existing NodeSet instance"""
-        nodeset = NodeSet.objects.create(name='nodeset', study=self.study,
-                                         assay=self.assay)
-        delete_nodeset(nodeset.uuid)
-        self.assertRaises(
-            NodeSet.DoesNotExist, NodeSet.objects.get, uuid=nodeset.uuid
-        )
-
-    def test_delete_nodeset_with_invalid_uuid(self):
-        """Test deleting a NodeSet instance that doesn't exist"""
-        self.assertIsNone(delete_nodeset(uuid='Invalid UUID'))
-
-    def test_update_nodeset_name(self):
-        """Test updating NodeSet name"""
-        nodeset = NodeSet.objects.create(name='nodeset', study=self.study,
-                                         assay=self.assay)
-        new_name = 'new nodeset name'
-        update_nodeset(uuid=nodeset.uuid, name=new_name)
-        self.assertEqual(
-            NodeSet.objects.get(uuid=nodeset.uuid).name, new_name
-        )
-
-    def test_update_nodeset_summary(self):
-        """Test updating NodeSet summary"""
-        nodeset = NodeSet.objects.create(name='nodeset', study=self.study,
-                                         assay=self.assay)
-        new_summary = 'new nodeset summary'
-        update_nodeset(uuid=nodeset.uuid, summary=new_summary)
-        self.assertEqual(
-            NodeSet.objects.get(uuid=nodeset.uuid).summary, new_summary)
-
-    def test_update_nodeset_study(self):
-        """Test updating NodeSet study"""
-        nodeset = NodeSet.objects.create(name='nodeset', study=self.study,
-                                         assay=self.assay)
-        new_study = Study.objects.create(investigation=self.investigation)
-        update_nodeset(uuid=nodeset.uuid, study=new_study)
-        self.assertEqual(
-            NodeSet.objects.get(uuid=nodeset.uuid).study, new_study
-        )
-
-    def test_update_nodeset_assay(self):
-        """Test updating NodeSet assay"""
-        nodeset = NodeSet.objects.create(name='nodeset', study=self.study,
-                                         assay=self.assay)
-        new_assay = Assay.objects.create(study=self.study)
-        update_nodeset(uuid=nodeset.uuid, assay=new_assay)
-        self.assertEqual(
-            NodeSet.objects.get(uuid=nodeset.uuid).assay, new_assay
-        )
-
-    def test_update_nodeset_with_solr_query(self):
-        """Test updating NodeSet with a new Solr query"""
-        nodeset = NodeSet.objects.create(name='nodeset', study=self.study,
-                                         assay=self.assay, solr_query='')
-        update_nodeset(uuid=nodeset.uuid, solr_query=self.query)
-        self.assertEqual(
-            NodeSet.objects.get(uuid=nodeset.uuid).solr_query, self.query
-        )
-
-    def test_update_nodeset_with_blank_solr_query(self):
-        """Test deleting Solr query from a NodeSet"""
-        nodeset = NodeSet.objects.create(name='nodeset', study=self.study,
-                                         assay=self.assay,
-                                         solr_query=self.query)
-        new_query = ''
-        update_nodeset(uuid=nodeset.uuid, solr_query=new_query)
-        self.assertEqual(
-            NodeSet.objects.get(uuid=nodeset.uuid).solr_query, new_query
-        )
-
-    def test_update_nodeset_with_invalid_uuid(self):
-        """Test updating a NodeSet instance that doesn't exist"""
-        self.assertRaises(
-            NodeSet.DoesNotExist, update_nodeset, uuid='Invalid UUID'
-        )
-
-
 def make_api_uri(resource_name, resource_id='', sharing=False):
     """Helper function to build Tastypie REST URIs"""
     base_url = '/api/v1'
@@ -229,532 +89,10 @@ def make_api_uri(resource_name, resource_id='', sharing=False):
             return uri
 
 
-class NodeSetResourceTest(ResourceTestCase):
-    """Test NodeSet REST API operations"""
+class LoginResourceTestCase(ResourceTestCase):
 
     def setUp(self):
-        super(NodeSetResourceTest, self).setUp()
-        self.investigation = Investigation.objects.create()
-        self.study = Study.objects.create(investigation=self.investigation)
-        self.assay = Assay.objects.create(study=self.study)
-        self.investigation2 = Investigation.objects.create()
-        self.study2 = Study.objects.create(investigation=self.investigation)
-        self.assay2 = Assay.objects.create(study=self.study2)
-        self.query = {
-            "facets": {
-                "platform_Characteristics_10_5_s": [],
-                "cell_or_tissue_Characteristics_10_5_s": [],
-                "REFINERY_TYPE_10_5_s": [],
-                "species_Characteristics_10_5_s": [],
-                "treatment_Characteristics_10_5_s": [],
-                "factor_Characteristics_10_5_s": [],
-                "factor_function_Characteristics_10_5_s": [],
-                "data_source_Characteristics_10_5_s": [],
-                "genome_build_Characteristics_10_5_s": [],
-                "REFINERY_FILETYPE_10_5_s": [],
-                "antibody_Characteristics_10_5_s": [],
-                "data_type_Characteristics_10_5_s": [],
-                "lab_Characteristics_10_5_s": []
-            },
-            "nodeSelection": [],
-            "nodeSelectionBlacklistMode": True
-        }
-        self.username = self.password = 'user'
-        self.user = User.objects.create_user(self.username, '', self.password)
-        self.username2 = self.password2 = 'user2'
-        self.user2 = User.objects.create_user(self.username2, '',
-                                              self.password2)
-
-    def get_credentials(self):
-        """Authenticate as self.user"""
-        # workaround required to use SessionAuthentication
-        # http://javaguirre.net/2013/01/29/using-session-authentication-tastypie-tests/
-        return self.api_client.client.login(username=self.username,
-                                            password=self.password)
-
-    def test_get_nodeset(self):
-        """Test retrieving an existing NodeSet that belongs to a user who
-        created it
-        """
-        nodeset = NodeSet.objects.create(
-            name='ns',
-            study=self.study,
-            assay=self.assay,
-            solr_query=json.dumps(self.query))
-        assign_perm("read_%s" % nodeset._meta.module_name, self.user, nodeset)
-        nodeset_uri = make_api_uri('nodeset', nodeset.uuid)
-        response = self.api_client.get(
-            nodeset_uri,
-            format='json',
-            authentication=self.get_credentials()
-        )
-        self.assertValidJSONResponse(response)
-        keys = ['name', 'summary', 'assay', 'study', 'uuid', 'is_implicit',
-                'node_count', 'solr_query', 'solr_query_components',
-                'resource_uri', 'is_current']
-        self.assertKeys(self.deserialize(response), keys)
-
-    # Test fails because the API doesn't authorize users.
-    # def test_get_nodeset_list(self):
-    #     """Test retrieving a list of NodeSets that belong to a user who
-    #     created them
-    #     """
-    #     nodeset1 = NodeSet.objects.create(
-    #         name='ns1',
-    #         study=self.study,
-    #         assay=self.assay,
-    #         solr_query=json.dumps(self.query)
-    #     )
-    #     # nodeset1.set_owner(self.user)
-    #     assign_perm(
-    #         "read_%s" % nodeset1._meta.module_name,
-    #         self.user,
-    #         nodeset1
-    #     )
-    #     nodeset2 = NodeSet.objects.create(
-    #         name='ns2',
-    #         study=self.study,
-    #         assay=self.assay,
-    #         solr_query=json.dumps(self.query)
-    #     )
-    #     # nodeset2.set_owner(self.user2)
-    #     assign_perm(
-    #         "read_%s" % nodeset2._meta.module_name,
-    #         self.user2,
-    #         nodeset2
-    #     )
-    #     nodeset_uri = make_api_uri('nodeset')
-    #     self.api_client.client.logout()
-    #     response = self.api_client.get(
-    #         nodeset_uri,
-    #         format='json',
-    #         authentication=self.get_credentials()
-    #     )
-    #     self.assertValidJSONResponse(response)
-    #     data = self.deserialize(response)['objects']
-    #     self.assertEqual(len(data), 1)
-    #     self.assertEqual(data[0]['name'], nodeset1.name)
-
-    def test_get_nodeset_list_for_given_study_and_assay(self):
-        """Test retrieving a list of NodeSets for given study and assay"""
-        nodeset1 = NodeSet.objects.create(
-            name='ns1', study=self.study, assay=self.assay,
-            solr_query=json.dumps(self.query))
-        assign_perm(
-            "read_%s" % nodeset1._meta.module_name, self.user, nodeset1
-        )
-        nodeset2 = NodeSet.objects.create(
-            name='ns2', study=self.study2, assay=self.assay2,
-            solr_query=json.dumps(self.query))
-        assign_perm(
-            "read_%s" % nodeset2._meta.module_name, self.user2, nodeset2
-        )
-        nodeset_uri = make_api_uri('nodeset')
-        response = self.api_client.get(nodeset_uri, format='json',
-                                       authentication=self.get_credentials(),
-                                       data={'study__uuid': self.study.uuid,
-                                             'assay__uuid': self.assay.uuid})
-        self.assertValidJSONResponse(response)
-        data = self.deserialize(response)['objects']
-        self.assertEqual(len(data), 1)
-        self.assertEqual(data[0]['name'], nodeset1.name)
-
-    def test_get_sorted_nodeset_list(self):
-        """Get a list of NodeSets with sorting params applied
-        (e.g., order_by=name)
-        """
-        nodeset1 = NodeSet.objects.create(
-            name='ns1', study=self.study, assay=self.assay,
-            solr_query=json.dumps(self.query))
-        assign_perm(
-            "read_%s" % nodeset1._meta.module_name, self.user, nodeset1
-        )
-        nodeset2 = NodeSet.objects.create(
-            name='ns2', study=self.study2, assay=self.assay2,
-            solr_query=json.dumps(self.query))
-        assign_perm(
-            "read_%s" % nodeset2._meta.module_name, self.user, nodeset2
-        )
-        nodeset_uri = make_api_uri('nodeset')
-        response = self.api_client.get(nodeset_uri, format='json',
-                                       authentication=self.get_credentials(),
-                                       data={'order_by': 'name'})
-        self.assertValidJSONResponse(response)
-        data = self.deserialize(response)['objects']
-        self.assertEqual(len(data), 2)
-        self.assertEqual(data[0]['name'], nodeset1.name)
-
-    def test_get_empty_nodeset_list(self):
-        """Test retrieving a list of NodeSets when none exist"""
-        nodeset_uri = make_api_uri('nodeset')
-        response = self.api_client.get(nodeset_uri, format='json',
-                                       authentication=self.get_credentials())
-        self.assertValidJSONResponse(response)
-        data = self.deserialize(response)['objects']
-        self.assertEqual(len(data), 0)
-
-    def test_get_nodeset_without_login(self):
-        """Test retrieving an existing NodeSet without logging in"""
-        nodeset = NodeSet.objects.create(
-            name='ns', study=self.study, assay=self.assay,
-            solr_query=json.dumps(self.query))
-        assign_perm("read_%s" % nodeset._meta.module_name, self.user, nodeset)
-        nodeset_uri = make_api_uri('nodeset', nodeset.uuid)
-        response = self.api_client.get(nodeset_uri, format='json')
-        self.assertHttpUnauthorized(response)
-
-    def test_get_nodeset_list_without_login(self):
-        """Test retrieving a list of NodeSets without logging in"""
-        nodeset1 = NodeSet.objects.create(
-            name='ns1', study=self.study, assay=self.assay,
-            solr_query=json.dumps(self.query))
-        assign_perm(
-            "read_%s" % nodeset1._meta.module_name, self.user, nodeset1)
-        nodeset2 = NodeSet.objects.create(
-            name='ns2', study=self.study, assay=self.assay,
-            solr_query=json.dumps(self.query))
-        assign_perm(
-            "read_%s" % nodeset2._meta.module_name, self.user2, nodeset2
-        )
-        nodeset_uri = make_api_uri('nodeset')
-        response = self.api_client.get(nodeset_uri, format='json')
-        self.assertHttpUnauthorized(response)
-
-    # See https://github.com/refinery-platform/refinery-platform/issues/586
-    # def test_get_nodeset_without_owner(self):
-    #     """Test retrieving an existing NodeSet that belongs to no one.
-    #     """
-    #     nodeset = NodeSet.objects.create(
-    #         name='nodeset',
-    #         study=self.study,
-    #         assay=self.assay,
-    #         solr_query=json.dumps(self.query)
-    #     )
-    #     nodeset_uri = make_api_uri('nodeset', nodeset.uuid)
-    #     response = self.api_client.get(
-    #         nodeset_uri,
-    #         format='json',
-    #         authentication=self.get_credentials()
-    #     )
-    #     self.assertHttpNotFound(response)
-
-    # See https://github.com/refinery-platform/refinery-platform/issues/586
-    # def test_get_nodeset_without_permission(self):
-    #     """Test retrieving an existing NodeSet that belongs to a different
-    #     user
-    #     """
-    #     nodeset = NodeSet.objects.create(
-    #         name='nodeset',
-    #         study=self.study,
-    #         assay=self.assay,
-    #         solr_query=json.dumps(self.query)
-    #     )
-    #     assign_perm(
-    #         "read_%s" % nodeset._meta.module_name, self.user2, nodeset
-    #     )
-    #     nodeset_uri = make_api_uri('nodeset', nodeset.uuid)
-    #     response = self.api_client.get(
-    #         nodeset_uri,
-    #         format='json',
-    #         authentication=self.get_credentials()
-    #     )
-    #     self.assertHttpNotFound(response)
-
-    def test_get_nodeset_with_invalid_uuid(self):
-        """Test retrieving a NodeSet instance that doesn't exist"""
-        nodeset = NodeSet.objects.create(
-            name='nodeset', study=self.study, assay=self.assay,
-            solr_query=json.dumps(self.query))
-        assign_perm("read_%s" % nodeset._meta.module_name, self.user, nodeset)
-        nodeset_uri = make_api_uri('nodeset', 'Invalid UUID')
-        response = self.api_client.get(nodeset_uri, format='json',
-                                       authentication=self.get_credentials())
-        self.assertHttpNotFound(response)
-
-    def test_create_minimal_nodeset(self):
-        """Test adding a new NodeSet with required fields only"""
-        dataset = DataSet.objects.create()
-        InvestigationLink.objects.create(data_set=dataset,
-                                         investigation=self.investigation)
-        assign_perm("read_%s" % dataset._meta.module_name, self.user, dataset)
-        nodeset_data = {
-            'name': 'nodeset1',
-            'study': make_api_uri('study', self.study.uuid),
-            'assay': make_api_uri('assay', self.assay.uuid),
-            'is_implicit': True
-        }
-        nodeset_uri = make_api_uri('nodeset')
-
-        self.assertEqual(NodeSet.objects.count(), 0)
-        response = self.api_client.post(nodeset_uri, format='json',
-                                        data=nodeset_data,
-                                        authentication=self.get_credentials())
-        self.assertHttpCreated(response)
-        self.assertEqual(NodeSet.objects.count(), 1)
-        nodeset = NodeSet.objects.get(name=nodeset_data['name'])
-        self.assertEqual(nodeset.get_owner(), self.user)
-
-    def test_create_minimal_nodeset_without_login(self):
-        """Test adding a new NodeSet without logging in"""
-        self.assertEqual(NodeSet.objects.count(), 0)
-        nodeset_data = {
-            'name': 'nodeset1',
-            'study': make_api_uri('study', self.study.uuid),
-            'assay': make_api_uri('assay', self.assay.uuid),
-            'is_implicit': True
-        }
-        nodeset_uri = make_api_uri('nodeset')
-        response = self.api_client.post(nodeset_uri, format='json',
-                                        data=nodeset_data)
-        self.assertHttpUnauthorized(response)
-        self.assertEqual(NodeSet.objects.count(), 0)
-
-    def test_create_minimal_nodeset_without_permission(self):
-        """Test adding a new NodeSet by a user that doesn't have read_dataset
-        permission on the linked dataset object.
-        """
-        self.assertEqual(NodeSet.objects.count(), 0)
-        nodeset_data = {
-            'name': 'nodeset1',
-            'study': make_api_uri('study', self.study.uuid),
-            'assay': make_api_uri('assay', self.assay.uuid),
-            'is_implicit': True
-        }
-        nodeset_uri = make_api_uri('nodeset')
-        response = self.api_client.post(nodeset_uri, format='json',
-                                        data=nodeset_data,
-                                        authentication=self.get_credentials())
-        self.assertHttpUnauthorized(response)
-        self.assertEqual(NodeSet.objects.count(), 0)
-
-    def test_update_nodeset(self):
-        """Test updating an existing NodeSet instance with new data"""
-        nodeset = NodeSet.objects.create(name='nodeset', study=self.study,
-                                         assay=self.assay)
-        self.assertEqual(NodeSet.objects.count(), 1)
-        self.assertEqual(nodeset.name, 'nodeset')
-        self.assertFalse(nodeset.is_implicit)
-        assign_perm(
-            "change_%s" % nodeset._meta.module_name, self.user, nodeset)
-
-        new_nodeset_data = {'name': 'new_nodeset', 'is_implicit': True}
-        nodeset_uri = make_api_uri('nodeset', nodeset.uuid)
-        self.api_client.put(nodeset_uri, format='json', data=new_nodeset_data,
-                            authentication=self.get_credentials())
-        self.assertEqual(NodeSet.objects.count(), 1)
-        nodeset = NodeSet.objects.get(uuid=nodeset.uuid)
-        self.assertEqual(nodeset.name, 'new_nodeset')
-        self.assertTrue(nodeset.is_implicit)
-
-    # def test_update_failure_nodeset(self):
-    #     """Test failing update for an existing NodeSet instance when the user
-    #     has no change permission.
-    #     """
-    #     nodeset = NodeSet.objects.create(
-    #         name='nodeset',
-    #         study=self.study,
-    #         assay=self.assay
-    #     )
-    #     self.assertEqual(NodeSet.objects.count(), 1)
-    #     self.assertEqual(nodeset.name, 'nodeset')
-    #     self.assertFalse(nodeset.is_implicit)
-    #     nodeset.set_owner(self.user2)
-    #     new_nodeset_data = {'name': 'new_nodeset', 'is_implicit': True}
-    #     nodeset_uri = make_api_uri('nodeset', nodeset.uuid)
-    #     response = self.api_client.put(
-    #         nodeset_uri,
-    #         format='json',
-    #         data=new_nodeset_data,
-    #         authentication=self.get_credentials()
-    #     )
-    #     self.assertHttpUnauthorized(response)
-    #     self.assertEqual(NodeSet.objects.count(), 1)
-    #     nodeset = NodeSet.objects.get(uuid=nodeset.uuid)
-    #     self.assertEqual(nodeset.name, 'nodeset')
-    #     self.assertFalse(nodeset.is_implicit)
-
-    def test_delete_nodeset(self):
-        """Test deleting an existing NodeSet instance"""
-        nodeset = NodeSet.objects.create(name='nodeset', study=self.study,
-                                         assay=self.assay)
-        self.assertEqual(NodeSet.objects.count(), 1)
-        assign_perm(
-            "delete_%s" % nodeset._meta.module_name, self.user, nodeset
-        )
-        nodeset_uri = make_api_uri('nodeset', nodeset.uuid)
-        response = self.api_client.delete(
-            nodeset_uri, format='json', authentication=self.get_credentials()
-        )
-        self.assertHttpMethodNotAllowed(response)
-        self.assertEqual(NodeSet.objects.count(), 1)
-
-
-class NodeSetListResourceTest(ResourceTestCase):
-    """Test NodeSetListResource REST API operations"""
-
-    def setUp(self):
-        super(NodeSetListResourceTest, self).setUp()
-        self.investigation = Investigation.objects.create()
-        self.study = Study.objects.create(investigation=self.investigation)
-        self.assay = Assay.objects.create(study=self.study)
-        self.investigation2 = Investigation.objects.create()
-        self.study2 = Study.objects.create(investigation=self.investigation)
-        self.assay2 = Assay.objects.create(study=self.study2)
-        self.query = {
-            "facets": {
-                "platform_Characteristics_10_5_s": [],
-                "cell_or_tissue_Characteristics_10_5_s": [],
-                "REFINERY_TYPE_10_5_s": [],
-                "species_Characteristics_10_5_s": [],
-                "treatment_Characteristics_10_5_s": [],
-                "factor_Characteristics_10_5_s": [],
-                "factor_function_Characteristics_10_5_s": [],
-                "data_source_Characteristics_10_5_s": [],
-                "genome_build_Characteristics_10_5_s": [],
-                "REFINERY_FILETYPE_10_5_s": [],
-                "antibody_Characteristics_10_5_s": [],
-                "data_type_Characteristics_10_5_s": [],
-                "lab_Characteristics_10_5_s": []
-            },
-            "nodeSelection": [],
-            "nodeSelectionBlacklistMode": True
-        }
-        self.username = self.password = 'user'
-        self.user = User.objects.create_user(self.username, '', self.password)
-        self.username2 = self.password2 = 'user2'
-        self.user2 = User.objects.create_user(self.username2, '',
-                                              self.password2)
-        self.nodeset_uri = make_api_uri('nodesetlist')
-
-    def get_credentials(self):
-        """Authenticate as self.user"""
-        # workaround required to use SessionAuthentication
-        # http://javaguirre.net/2013/01/29/using-session-authentication-tastypie-tests/
-        return self.api_client.client.login(username=self.username,
-                                            password=self.password)
-
-    # Same reason
-    # def test_get_nodeset_list(self):
-    #     """Test retrieving a list of NodeSets that belong to a user who
-    #     created them
-    #     """
-    #     nodeset1 = NodeSet.objects.create(
-    #         name='ns1',
-    #         study=self.study,
-    #         assay=self.assay,
-    #         node_count=1,
-    #         is_implicit=True,
-    #         solr_query=json.dumps(self.query)
-    #     )
-    #     assign_perm(
-    #         "read_%s" % nodeset1._meta.module_name,
-    #         self.user,
-    #         nodeset1
-    #     )
-    #     nodeset2 = NodeSet.objects.create(
-    #         name='ns2',
-    #         study=self.study2,
-    #         assay=self.assay2,
-    #         node_count=1,
-    #         is_implicit=True,
-    #         solr_query=json.dumps(self.query)
-    #     )
-    #     assign_perm(
-    #         "read_%s" % nodeset2._meta.module_name,
-    #         self.user2,
-    #         nodeset2
-    #     )
-    #     response = self.api_client.get(
-    #         self.nodeset_uri,
-    #         format='json',
-    #         authentication=self.get_credentials()
-    #     )
-    #     self.assertValidJSONResponse(response)
-    #     data = self.deserialize(response)['objects']
-    #     self.assertEqual(len(data), 1)
-    #     self.assertEqual(data[0]['name'], nodeset1.name)
-
-    def test_get_sorted_nodeset_list(self):
-        """Get a list of NodeSets with sorting params applied
-        (e.g., order_by=name)
-        """
-        nodeset1 = NodeSet.objects.create(
-            name='ns1', study=self.study, assay=self.assay, node_count=1,
-            solr_query=json.dumps(self.query))
-        assign_perm(
-            "read_%s" % nodeset1._meta.module_name, self.user, nodeset1
-        )
-        nodeset2 = NodeSet.objects.create(
-            name='ns2', study=self.study2, assay=self.assay2, node_count=1,
-            solr_query=json.dumps(self.query))
-        assign_perm(
-            "read_%s" % nodeset2._meta.module_name, self.user, nodeset2
-        )
-        response = self.api_client.get(self.nodeset_uri, format='json',
-                                       authentication=self.get_credentials(),
-                                       data={'order_by': 'name'})
-        self.assertValidJSONResponse(response)
-        data = self.deserialize(response)['objects']
-        self.assertEqual(len(data), 2)
-        self.assertEqual(data[0]['name'], nodeset1.name)
-
-    def test_get_nodeset_list_for_given_study_and_assay(self):
-        """Test retrieving a list of NodeSets for given study and assay"""
-        nodeset1 = NodeSet.objects.create(
-            name='ns1', study=self.study, assay=self.assay, node_count=1,
-            solr_query=json.dumps(self.query))
-        assign_perm(
-            "read_%s" % nodeset1._meta.module_name, self.user, nodeset1
-        )
-        nodeset2 = NodeSet.objects.create(
-            name='ns2', study=self.study2, assay=self.assay2, node_count=1,
-            solr_query=json.dumps(self.query))
-        assign_perm(
-            "read_%s" % nodeset2._meta.module_name, self.user2, nodeset2
-        )
-        response = self.api_client.get(self.nodeset_uri, format='json',
-                                       authentication=self.get_credentials(),
-                                       data={'study__uuid': self.study.uuid,
-                                             'assay__uuid': self.assay.uuid})
-        self.assertValidJSONResponse(response)
-        data = self.deserialize(response)['objects']
-        self.assertEqual(len(data), 1)
-        self.assertEqual(data[0]['name'], nodeset1.name)
-
-    def test_get_empty_nodeset_list(self):
-        """Test retrieving a list of NodeSets when none exist"""
-        response = self.api_client.get(self.nodeset_uri, format='json',
-                                       authentication=self.get_credentials())
-        self.assertValidJSONResponse(response)
-        data = self.deserialize(response)['objects']
-        self.assertEqual(len(data), 0)
-
-    def test_get_nodeset_list_without_login(self):
-        """Test retrieving a list of NodeSets without logging in"""
-        response = self.api_client.get(self.nodeset_uri, format='json')
-        self.assertHttpUnauthorized(response)
-
-    def test_delete_nodeset_list(self):
-        """Test deleting a list of NodeSets"""
-        nodeset = NodeSet.objects.create(
-            name='nodeset', study=self.study, assay=self.assay)
-        self.assertEqual(NodeSet.objects.count(), 1)
-        assign_perm(
-            "delete_%s" % nodeset._meta.module_name, self.user, nodeset
-        )
-        response = self.api_client.delete(
-            self.nodeset_uri, format='json',
-            authentication=self.get_credentials()
-        )
-        self.assertHttpMethodNotAllowed(response)
-        self.assertEqual(NodeSet.objects.count(), 1)
-
-
-class AnalysisResourceTest(ResourceTestCase):
-    """Test Analysis REST API operations"""
-
-    def setUp(self):
-        super(AnalysisResourceTest, self).setUp()
+        super(LoginResourceTestCase, self).setUp()
         self.username = self.password = 'user'
         self.user = User.objects.create_user(
             self.username, '', self.password
@@ -764,19 +102,6 @@ class AnalysisResourceTest(ResourceTestCase):
             self.username2, '', self.password2
         )
         self.get_credentials()
-        self.project = Project.objects.create()
-        self.user_catch_all_project = UserProfile.objects.get(
-            user=self.user
-        ).catch_all_project
-        self.dataset = DataSet.objects.create()
-        self.dataset2 = DataSet.objects.create()
-        self.galaxy_instance = Instance.objects.create()
-        self.workflow_engine = WorkflowEngine.objects.create(
-            instance=self.galaxy_instance
-        )
-        self.workflow = Workflow.objects.create(
-            workflow_engine=self.workflow_engine
-        )
 
     def get_credentials(self):
         """Authenticate as self.user"""
@@ -787,6 +112,40 @@ class AnalysisResourceTest(ResourceTestCase):
             password=self.password
         )
 
+
+class ApiResourceTest(LoginResourceTestCase):
+
+    def setUp(self):
+        super(ApiResourceTest, self).setUp()
+
+    def test_xml_format_ignored(self):
+        response = self.api_client.get(
+            '/api/v1/',
+            format='xml',
+            authentication=self.get_credentials()
+        )
+        self.assertValidJSONResponse(response)
+
+
+class AnalysisResourceTest(LoginResourceTestCase):
+    """Test Analysis REST API operations"""
+
+    def setUp(self):
+        super(AnalysisResourceTest, self).setUp()
+        self.project = Project.objects.create()
+        self.user_catch_all_project = UserProfile.objects.get(
+            user=self.user
+        ).catch_all_project
+        self.dataset = create_dataset_with_necessary_models()
+        self.dataset2 = create_dataset_with_necessary_models()
+        self.galaxy_instance = Instance.objects.create()
+        self.workflow_engine = WorkflowEngine.objects.create(
+            instance=self.galaxy_instance
+        )
+        self.workflow = Workflow.objects.create(
+            workflow_engine=self.workflow_engine
+        )
+
     def test_get_analysis(self):
         """Test retrieving an existing Analysis that belongs to a user who
         created it
@@ -794,12 +153,15 @@ class AnalysisResourceTest(ResourceTestCase):
 
         self.dataset.set_owner(self.user)
 
+        workflow_dict = {'a': True}
+        workflow_as_repr = repr(workflow_dict)
         analysis = Analysis.objects.create(
             name='bla',
             summary='keks',
             project=self.user_catch_all_project,
             data_set=self.dataset,
-            workflow=self.workflow
+            workflow=self.workflow,
+            workflow_copy=workflow_as_repr
         )
         analysis.set_owner(self.user)
         analysis_uri = make_api_uri(Analysis._meta.module_name, analysis.uuid)
@@ -809,8 +171,16 @@ class AnalysisResourceTest(ResourceTestCase):
         )
         self.assertValidJSONResponse(response)
         data = self.deserialize(response)
-        self.assertKeys(data, AnalysisResource.Meta.fields)
+
+        expected_keys = set(AnalysisResource.Meta.fields)
+        expected_keys.add(u'workflow_json')
+
+        self.assertEqual(set(data.keys()), expected_keys)
         self.assertEqual(data['uuid'], analysis.uuid)
+
+        workflow_as_json = json.dumps(workflow_dict)
+        self.assertNotEqual(workflow_as_json, workflow_as_repr)
+        self.assertEqual(data['workflow_json'], workflow_as_json)
 
     def test_get_analysis_list(self):
         """Test retrieving a list of Analysis instances that belong to a user
@@ -1345,12 +715,15 @@ class AnalysisTests(TestCase):
         self.workflow1 = Workflow.objects.create(
             name="Workflow1", workflow_engine=self.workflow_engine)
 
+        text_filetype = FileType.objects.get(name="TXT")
+
         # Create FileStoreItems
         self.file_store_item = FileStoreItem.objects.create(
             datafile=SimpleUploadedFile(
                 'test_file.txt',
                 'Coffee is delicious!'
-            )
+            ),
+            filetype=text_filetype
         )
         self.file_store_item1 = FileStoreItem.objects.create(
             datafile=SimpleUploadedFile(
@@ -1410,6 +783,7 @@ class AnalysisTests(TestCase):
         self.node = Node.objects.create(
             assay=self.assay,
             study=self.study,
+            name="test_node",
             analysis_uuid=self.analysis.uuid,
             file_uuid=self.file_store_item.uuid
         )
@@ -1429,17 +803,51 @@ class AnalysisTests(TestCase):
             workflow_data_input_name="input 2",
             data_uuid=self.node2.uuid
         )
+        self.node_filename = "{}.{}".format(
+            self.node.name,
+            self.node.get_file_store_item().get_file_extension()
+        )
 
         # Create AnalysisNodeConnections
-        self.analysis_node_connection = \
-            AnalysisNodeConnection.objects.create(analysis=self.analysis,
-                                                  node=self.node, step=1,
-                                                  direction="out")
-        self.analysis_node_connection_with_node_analyzed_further = \
+        self.analysis_node_connection_a = (
+            AnalysisNodeConnection.objects.create(
+                analysis=self.analysis,
+                node=self.node,
+                step=1,
+                filename=self.node_filename,
+                direction=OUTPUT_CONNECTION,
+                is_refinery_file=True,
+                galaxy_dataset_name="Galaxy File Name"
+            )
+        )
+        self.analysis_node_connection_b = (
+            AnalysisNodeConnection.objects.create(
+                analysis=self.analysis,
+                node=self.node,
+                step=2,
+                filename=self.node_filename,
+                direction=OUTPUT_CONNECTION,
+                is_refinery_file=False
+            )
+        )
+        self.analysis_node_connection_c = (
+            AnalysisNodeConnection.objects.create(
+                analysis=self.analysis,
+                node=self.node,
+                step=3,
+                filename=self.node_filename,
+                direction=OUTPUT_CONNECTION,
+                is_refinery_file=True
+            )
+        )
+        self.analysis_node_connection_with_node_analyzed_further = (
             AnalysisNodeConnection.objects.create(
                 analysis=self.analysis_with_node_analyzed_further,
-                node=self.node2, step=2,
-                direction="in")
+                node=self.node2,
+                step=0,
+                direction=INPUT_CONNECTION
+            )
+        )
 
         # Add wf_data_input_maps to Analysis M2M relationship
         self.analysis.workflow_data_input_maps.add(self.wf_data_input_map,
@@ -1474,7 +882,7 @@ class AnalysisTests(TestCase):
         self.analysis_status.galaxy_import_progress = 96
 
         self.assertEqual(
-            self.analysis_status.tool_based_galaxy_file_import_state(),
+            self.analysis_status.galaxy_file_import_state(),
             [
                 {
                     'state': self.analysis_status.galaxy_import_state,
@@ -1488,7 +896,7 @@ class AnalysisTests(TestCase):
         self.analysis_status.galaxy_import_progress = 96
 
         self.assertEqual(
-            self.analysis_status.tool_based_galaxy_file_import_state(),
+            self.analysis_status.galaxy_file_import_state(),
             []
         )
 
@@ -1497,9 +905,93 @@ class AnalysisTests(TestCase):
         self.analysis_status.galaxy_import_state = AnalysisStatus.PROGRESS
 
         self.assertEqual(
-            self.analysis_status.tool_based_galaxy_file_import_state(),
+            self.analysis_status.galaxy_file_import_state(),
             []
         )
+
+    def test_facet_name(self):
+        self.assertRegexpMatches(
+            self.analysis_with_node_analyzed_further.facet_name(),
+            'REFINERY_ANALYSIS_UUID_' + r'\d+_\d+' + '_s'
+        )
+
+    @mock.patch("core.models.index_annotated_nodes_selection")
+    @mock.patch.object(Analysis, "rename_results")
+    def test__prepare_annotated_nodes_calls_methods_in_proper_order(
+            self,
+            rename_results_mock,
+            index_annotated_nodes_selection_mock
+    ):
+        mock_manager = mock.Mock()
+        mock_manager.attach_mock(rename_results_mock, "rename_results_mock")
+        mock_manager.attach_mock(index_annotated_nodes_selection_mock,
+                                 "index_annotated_nodes_selection_mock")
+
+        self.analysis._prepare_annotated_nodes(node_uuids=None)
+
+        # Assert that `rename_results` is called before
+        # `index_annotated_nodes_selection`
+        self.assertEqual(
+            mock_manager.mock_calls,
+            [
+                mock.call.rename_results_mock(),
+                mock.call.index_annotated_nodes_selection_mock(None)
+            ]
+        )
+
+    def test___get_output_connection_to_analysis_result_mapping(self):
+        common_params = {
+            "analysis_uuid": self.analysis.uuid,
+            "file_store_uuid": self.node.file_uuid,
+            "file_name": self.node_filename,
+            "file_type": self.node.get_file_store_item().filetype
+        }
+        analysis_result_0 = AnalysisResult.objects.create(**common_params)
+        AnalysisResult.objects.create(**common_params)
+        analysis_result_1 = AnalysisResult.objects.create(**common_params)
+
+        output_mapping = (
+            self.analysis._get_output_connection_to_analysis_result_mapping()
+        )
+        self.assertEqual(
+            output_mapping,
+            [
+                (self.analysis_node_connection_c, analysis_result_0),
+                (self.analysis_node_connection_b, None),
+                (self.analysis_node_connection_a, analysis_result_1)
+            ]
+        )
+
+    def test_analysis_node_connection_input_id(self):
+        self.assertEqual(
+            self.analysis_node_connection_a.get_input_connection_id(),
+            "{}_{}".format(self.analysis_node_connection_a.step,
+                           self.analysis_node_connection_a.filename)
+        )
+
+    def test_analysis_node_connection_output_id(self):
+        self.assertEqual(
+            self.analysis_node_connection_a.get_output_connection_id(),
+            "{}_{}".format(self.analysis_node_connection_a.step,
+                           self.analysis_node_connection_a.name)
+        )
+
+    def test__create_derived_data_file_node(self):
+        derived_data_file_node = self.analysis._create_derived_data_file_node(
+            self.study,
+            self.assay,
+            self.analysis_node_connection_a
+        )
+        self.assertEqual(derived_data_file_node.name, "Galaxy File Name")
+        self.assertEqual(derived_data_file_node.study, self.study)
+        self.assertEqual(derived_data_file_node.assay, self.assay)
+        self.assertEqual(derived_data_file_node.type, Node.DERIVED_DATA_FILE)
+        self.assertEqual(derived_data_file_node.analysis_uuid,
+                         self.analysis.uuid)
+        self.assertEqual(derived_data_file_node.subanalysis,
+                         self.analysis_node_connection_a.subanalysis)
+        self.assertEqual(derived_data_file_node.workflow_output,
+                         self.analysis_node_connection_a.name)
 
 
 class UtilitiesTest(TestCase):
@@ -1753,20 +1245,11 @@ class UserTutorialsTest(TestCase):
         )
 
 
-class DataSetResourceTest(ResourceTestCase):
+class DataSetResourceTest(LoginResourceTestCase):
     """Test DataSet V1 REST API operations"""
 
     def setUp(self):
         super(DataSetResourceTest, self).setUp()
-        self.username = self.password = 'user'
-        self.user = User.objects.create_user(
-            self.username, '', self.password
-        )
-        self.username2 = self.password2 = 'user2'
-        self.user2 = User.objects.create_user(
-            self.username2, '', self.password2
-        )
-        self.get_credentials()
         self.project = Project.objects.create()
         self.user_catch_all_project = UserProfile.objects.get(
             user=self.user
@@ -1790,15 +1273,6 @@ class DataSetResourceTest(ResourceTestCase):
                 data_set=self.dataset,
                 version=1
             )
-
-    def get_credentials(self):
-        """Authenticate as self.user"""
-        # workaround required to use SessionAuthentication
-        # http://javaguirre.net/2013/01/29/using-session-authentication-tastypie-tests/
-        return self.api_client.client.login(
-            username=self.username,
-            password=self.password
-        )
 
     def test_get_dataset(self):
         """Test retrieving an existing Dataset that belongs to a user who
@@ -1836,26 +1310,23 @@ class DataSetResourceTest(ResourceTestCase):
 
         dataset_uri = make_api_uri("data_sets",
                                    self.dataset.uuid)
-        response = self.api_client.get(
-            dataset_uri,
-            format='json'
-        )
+        response = self.api_client.get(dataset_uri, format='json')
         self.assertValidJSONResponse(response)
         data = self.deserialize(response)
         self.assertEqual(data['uuid'], self.dataset.uuid)
-        self.assertIsNotNone(data['analyses'])
         self.assertEqual(len(data['analyses']), 2)
 
-        self.assertIsNotNone(data['analyses'][0]['is_owner'])
-        self.assertTrue(data['analyses'][0]['is_owner'])
-        self.assertIsNotNone(data['analyses'][0]['owner'])
-        self.assertEqual(
-            data['analyses'][0]['owner'],
-            UserProfile.objects.get(user=self.user).uuid
-        )
-        self.assertEqual(data['analyses'][0]['status'], a2.status)
-        self.assertEqual(data['analyses'][0]['name'], a2.name)
-        self.assertEqual(data['analyses'][0]['uuid'], a2.uuid)
+        sorted_analyses = sorted(data['analyses'], key=lambda x: x["name"])
+        for analysis in sorted_analyses:
+            self.assertTrue(analysis['is_owner'])
+            self.assertEqual(analysis['owner'],
+                             UserProfile.objects.get(user=self.user).uuid)
+        self.assertEqual(sorted_analyses[0]['status'], a1.status)
+        self.assertEqual(sorted_analyses[0]['name'], a1.name)
+        self.assertEqual(sorted_analyses[0]['uuid'], a1.uuid)
+        self.assertEqual(sorted_analyses[1]['status'], a2.status)
+        self.assertEqual(sorted_analyses[1]['name'], a2.name)
+        self.assertEqual(sorted_analyses[1]['uuid'], a2.uuid)
 
     def test_get_dataset_expecting_no_analyses(self):
         dataset_uri = make_api_uri("data_sets",
@@ -1986,6 +1457,14 @@ class DataSetTests(TestCase):
         self.node4 = Node.objects.create(
             name="n4", assay=self.assay, study=self.study)
 
+    def test_get_studies(self):
+        studies = self.dataset.get_studies()
+        self.assertEqual(len(studies), 1)
+
+    def test_get_assays(self):
+        assays = self.dataset.get_assays()
+        self.assertEqual(len(assays), 1)
+
     def test_get_file_store_items(self):
         file_store_items = self.dataset.get_file_store_items()
         self.assertEqual(len(file_store_items), 3)
@@ -2001,7 +1480,7 @@ class DataSetTests(TestCase):
 
     def test_neo4j_called_on_post_save(self):
         with mock.patch(
-            "core.models.update_annotation_sets_neo4j"
+            "core.models.async_update_annotation_sets_neo4j"
         ) as neo4j_mock:
             self.dataset.save()
             self.assertTrue(neo4j_mock.called)

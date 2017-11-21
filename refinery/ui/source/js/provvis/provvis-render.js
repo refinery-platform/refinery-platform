@@ -14,7 +14,7 @@ var provvisRender = (function () {
   var aNode = Object.create(null);
   var saNode = Object.create(null);
   var node = Object.create(null);
-  var domNodeset = [];
+  var domNodeset = []; // should be updated with selected nodes
   var link = Object.create(null);
   var aLink = Object.create(null);
   var saLink = Object.create(null);
@@ -4035,9 +4035,9 @@ var provvisRender = (function () {
     });
 
     /* TODO: Fix for temporary sidebar overlap. */
+    // removed temp fix for depending on solr-facet-view dom object
     var sidebarOverlap = $('#provenance-sidebar').width() -
-    $('#solr-facet-view').width() -
-    parseFloat($('#main-area').css('margin-left').replace('px', ''));
+    parseFloat($('#main-area-view').css('margin-left').replace('px', ''));
 
 
     var delta = [max[0] - min[0], max[1] - min[1]];
@@ -6000,7 +6000,7 @@ var provvisRender = (function () {
 
     filterMethod = 'facet';
 
-    if (solrResponse instanceof SolrResponse) {
+    if (solrResponse.nodes.length) {
 
       vis.graph.lNodes = lNodesBAK;
       vis.graph.aNodes = aNodesBAK;
@@ -6010,7 +6010,7 @@ var provvisRender = (function () {
       vis.graph.lLinks = lLinksBAK;
 
       /* Copy filtered nodes. */
-      solrResponse.getDocumentList().forEach(function (d) {
+      solrResponse.nodes.forEach(function (d) {
         selNodes.push(vis.graph.nodeMap.get(d.uuid));
       });
 

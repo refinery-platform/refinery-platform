@@ -8,9 +8,11 @@ import json
 import logging
 import os
 import shutil
+import traceback
 import urlparse
 
 from django import forms
+from django.conf import settings
 from django.core.urlresolvers import reverse
 from django.http import (Http404, HttpResponse, HttpResponseBadRequest,
                          HttpResponseRedirect, HttpResponseServerError)
@@ -18,6 +20,7 @@ from django.shortcuts import render, render_to_response
 from django.template import RequestContext
 from django.views.generic import View
 
+import boto3
 from chunked_upload.models import ChunkedUpload
 from chunked_upload.views import ChunkedUploadCompleteView, ChunkedUploadView
 from rest_framework import status
@@ -26,8 +29,10 @@ from rest_framework.views import APIView
 
 from core.models import DataSet, get_user_import_dir
 from core.utils import get_full_url
-from file_store.models import generate_file_source_translator, get_temp_dir
-from file_store.tasks import DownloadError, download_file
+from data_set_manager.isa_tab_parser import ParserException
+from file_store.models import (generate_file_source_translator, get_temp_dir,
+                               parse_s3_url)
+from file_store.tasks import DownloadError, download_file, import_file
 
 from .models import Assay, AttributeOrder, Study
 from .serializers import AssaySerializer, AttributeOrderSerializer
@@ -42,6 +47,8 @@ logger = logging.getLogger(__name__)
 
 
 # Data set import
+PARSER_ERROR_MESSAGE = "Improperly structured ISA-Tab file: "
+PARSER_UNEXPECTED_ERROR_MESSAGE = "ISA-Tab import Failure: "
 
 
 class DataSetImportView(View):
@@ -84,6 +91,8 @@ class TakeOwnershipOfPublicDatasetView(View):
         from_old_template = False
 
         if 'isa_tab_url' in request.POST:
+            # TODO: I think isa_tab_url is already a full url,
+            # making this redundant.
             full_isa_tab_url = get_full_url(request.POST['isa_tab_url'])
             from_old_template = True
         else:
@@ -108,8 +117,9 @@ class TakeOwnershipOfPublicDatasetView(View):
                 return HttpResponseBadRequest(err_msg)
 
             try:
-                full_isa_tab_url = get_full_url(DataSet.objects.get(
-                    uuid=data_set_uuid).get_isa_archive().get_datafile_url())
+                full_isa_tab_url = DataSet.objects.get(
+                    uuid=data_set_uuid
+                ).get_isa_archive().get_datafile_url()
             except (DataSet.DoesNotExist, DataSet.MultipleObjectsReturned,
                     Exception) as e:
                 err_msg = "Something went wrong"
@@ -191,8 +201,30 @@ class ProcessISATabView(View):
             response.delete_cookie(self.isa_tab_cookie_name)
             return response
         logger.debug("Temp file name: '%s'", temp_file_path)
-        dataset_uuid = parse_isatab.delay(request.user.username, False,
-                                          temp_file_path).get()[0]
+        try:
+            dataset_uuid = parse_isatab(
+                request.user.username,
+                False,
+                temp_file_path
+            )
+        except ParserException as e:
+            error_message = "{} {}".format(
+                PARSER_ERROR_MESSAGE,
+                e.message
+            )
+            logger.error(error_message)
+            return HttpResponseBadRequest(error_message)
+        except Exception as e:
+            error_message = "{} {}".format(
+                PARSER_UNEXPECTED_ERROR_MESSAGE,
+                traceback.format_exc(e)
+            )
+            logger.error(error_message)
+            return HttpResponseBadRequest(
+                PARSER_UNEXPECTED_ERROR_MESSAGE +
+                e.message
+            )
+
         # TODO: exception handling
         os.unlink(temp_file_path)
         if dataset_uuid:
@@ -230,56 +262,79 @@ class ProcessISATabView(View):
 
             if url:
                 response = self.import_by_url(url)
-                if not response['success']:
-                    if request.is_ajax():
-                        return HttpResponse(
-                            json.dumps({
-                                'error': response.message
-                            }),
-                            content_type='application/json'
-                        )
-
-                    return render_to_response(
-                        self.template_name,
-                        context_instance=RequestContext(
-                            request,
-                            {
-                                'form': form,
-                                'error': response.message
-                            }
-                        )
-                    )
             else:
-                response = self.import_by_file(f)
-                if not response['success']:
-                    if request.is_ajax():
-                        return HttpResponse(
-                            json.dumps({
-                                'error': response.message
-                            }),
-                            content_type='application/json'
-                        )
-
-                    return render_to_response(
-                        self.template_name,
-                        context_instance=RequestContext(
-                            request,
-                            {
-                                'form': form,
-                                'error': response.message
-                            }
-                        )
+                try:
+                    response = self.import_by_file(f)
+                except Exception as e:
+                    logger.error(traceback.format_exc(e))
+                    return HttpResponseBadRequest(
+                       "{} {}".format(
+                        PARSER_UNEXPECTED_ERROR_MESSAGE, e)
                     )
+
+            # get AWS Cognito identity ID
+            if settings.REFINERY_DEPLOYMENT_PLATFORM == 'aws':
+                try:
+                    identity_id = request.POST.get('identity_id')
+                except (KeyError, ValueError):
+                    error_msg = 'identity_id is missing'
+                    error = {'error_message': error_msg}
+                    if request.is_ajax():
+                        return HttpResponseBadRequest(
+                            json.dumps({'error': error_msg}),
+                            'application/json'
+                        )
+                    else:
+                        return render(request, self.template_name, error)
+            else:
+                identity_id = None
+
+            if not response['success']:
+                if request.is_ajax():
+                    return HttpResponseBadRequest(
+                        json.dumps({'error': response["message"]}),
+                        content_type='application/json'
+                    )
+                return render_to_response(
+                    self.template_name,
+                    context_instance=RequestContext(
+                        request,
+                        {
+                            'form': form,
+                            'error': response["message"]
+                        }
+                    )
+                )
 
             logger.debug(
                 "Temp file name: '%s'", response['data']['temp_file_path']
             )
 
-            dataset_uuid = (parse_isatab.delay(
-                request.user.username,
-                False,
-                response['data']['temp_file_path']
-            ).get())[0]
+            try:
+                parse_isatab_invocation = parse_isatab(
+                    request.user.username,
+                    False,
+                    response['data']['temp_file_path'],
+                    identity_id=identity_id
+                )
+            except ParserException as e:
+                error_message = "{} {}".format(
+                    PARSER_ERROR_MESSAGE,
+                    e.message
+                )
+                logger.error(error_message)
+                return HttpResponseBadRequest(error_message)
+            except Exception as e:
+                error_message = "{} {}".format(
+                    PARSER_UNEXPECTED_ERROR_MESSAGE,
+                    traceback.format_exc(e)
+                )
+                logger.error(error_message)
+                return HttpResponseBadRequest(
+                    "{} {}".format(PARSER_UNEXPECTED_ERROR_MESSAGE, e)
+                )
+            else:
+                dataset_uuid = parse_isatab_invocation
 
             try:
                 os.unlink(response['data']['temp_file_path'])
@@ -289,48 +344,47 @@ class ProcessISATabView(View):
                     response['data']['temp_file_path'], e
                 )
 
+            # import data files
             if dataset_uuid:
+                try:
+                    dataset = DataSet.objects.get(uuid=dataset_uuid)
+                except (DataSet.DoesNotExist, DataSet.MultipleObjectsReturned):
+                    logger.error(
+                        "Cannot import data files for data set UUID '%s'",
+                        dataset_uuid
+                    )
+                else:
+                    # start importing uploaded data files
+                    for file_store_item in dataset.get_file_store_items():
+                        if file_store_item.source.startswith(
+                            (settings.REFINERY_DATA_IMPORT_DIR, 's3://')
+                        ):
+                            import_file.delay(file_store_item.uuid)
+
                 if request.is_ajax():
                     return HttpResponse(
                         json.dumps({
                             'success': 'Data set imported',
-                            'data': {
-                                'new_data_set_uuid': dataset_uuid
-                            }
+                            'data': {'new_data_set_uuid': dataset_uuid}
                         }),
                         content_type='application/json'
                     )
-
                 return HttpResponseRedirect(
                     reverse(self.success_view_name, args=[dataset_uuid])
                 )
             else:
                 error = 'Problem parsing ISA-Tab file'
                 if request.is_ajax():
-                    return HttpResponse(
-                        json.dumps({
-                            'error': error
-                        }),
-                        content_type='application/json'
-                    )
-
-                context = RequestContext(
-                    request,
-                    {
-                        'form': form,
-                        'error': error
-                    }
-                )
-                return render_to_response(
-                    self.template_name,
-                    context_instance=context
-                )
+                    return HttpResponse(json.dumps({'error': error}),
+                                        content_type='application/json')
+                context = RequestContext(request, {'form': form,
+                                                   'error': error})
+                return render_to_response(self.template_name,
+                                          context_instance=context)
         else:  # submitted form is not valid
             context = RequestContext(request, {'form': form})
-            return render_to_response(
-                self.template_name,
-                context_instance=context
-            )
+            return render_to_response(self.template_name,
+                                      context_instance=context)
 
     def import_by_file(self, file):
         temp_file_path = os.path.join(get_temp_dir(), file.name)
@@ -452,6 +506,21 @@ class ProcessMetadataTableView(View):
             column.replace('string:', '') for column in source_column_index
         ]
 
+        if settings.REFINERY_DEPLOYMENT_PLATFORM == 'aws':
+            try:
+                identity_id = request.POST.get('identity_id')
+            except (KeyError, ValueError):
+                error_msg = 'identity_id is missing'
+                error = {'error_message': error_msg}
+                if request.is_ajax():
+                    return HttpResponseBadRequest(
+                        json.dumps({'error': error_msg}), 'application/json'
+                    )
+                else:
+                    return render(request, self.template_name, error)
+        else:
+            identity_id = None
+
         try:
             dataset_uuid = process_metadata_table(
                 username=request.user.username,
@@ -472,7 +541,8 @@ class ProcessMetadataTableView(View):
                 delimiter=request.POST.get('delimiter'),
                 custom_delimiter_string=request.POST.get(
                     'custom_delimiter_string', False
-                )
+                ),
+                identity_id=identity_id
             )
         except Exception as error_msg:
             error = {'error_message': error_msg}
@@ -503,29 +573,53 @@ class CheckDataFilesView(View):
         if not request.is_ajax() or not request.body:
             return HttpResponseBadRequest()
 
-        file_data = json.loads(request.body)
         try:
-            base_path = file_data["base_path"]
+            file_data = json.loads(request.body)
+        except ValueError:
+            return HttpResponseBadRequest()
+        try:
+            input_file_list = file_data['list']
         except KeyError:
-            base_path = ""
+            return HttpResponseBadRequest()
+
+        try:
+            base_path = file_data['base_path']
+        except KeyError:
+            base_path = None
+        try:
+            identity_id = file_data['identity_id']
+        except KeyError:
+            identity_id = None
 
         bad_file_list = []
         translate_file_source = generate_file_source_translator(
-            username=request.user.username, base_path=base_path)
-        # check if files are available
-        try:
-            for file_path in file_data["list"]:
-                # Explicitly check if file_path here is a string or unicode
-                # string
-                if not isinstance(file_path, unicode):
-                    bad_file_list.append(file_path)
-                else:
-                    file_path = translate_file_source(file_path)
-                    if not os.path.exists(file_path):
-                        bad_file_list.append(file_path)
-                logger.debug("Checked file path: '%s'", file_path)
-        except KeyError:  # if there's no list provided
-            return HttpResponseBadRequest()
+            username=request.user.username, base_path=base_path,
+            identity_id=identity_id
+        )
+
+        uploaded_s3_key_list = []
+        if settings.REFINERY_DEPLOYMENT_PLATFORM == 'aws':
+            # get a list of all uploaded S3 objects for the user
+            s3 = boto3.resource('s3')
+            s3_bucket = s3.Bucket(settings.UPLOAD_BUCKET)
+            for s3_object in s3_bucket.objects.filter(Prefix=identity_id):
+                uploaded_s3_key_list.append(s3_object.key)
+
+        for input_file_path in input_file_list:
+            if not isinstance(input_file_path, unicode):
+                bad_file_list.append(input_file_path)
+            else:
+                input_file_path = translate_file_source(input_file_path)
+                if settings.REFINERY_DEPLOYMENT_PLATFORM == 'aws':
+                    # check if S3 object key exists
+                    bucket_name, key = parse_s3_url(input_file_path)
+                    if key not in uploaded_s3_key_list:
+                        bad_file_list.append(os.path.basename(key))
+                else:  # POSIX file system
+                    if not os.path.exists(input_file_path):
+                        bad_file_list.append(input_file_path)
+            logger.debug("Checked file path: '%s'", input_file_path)
+
         # prefix output to protect from JSON vulnerability (stripped by
         # Angular)
         return HttpResponse(")]}',\n" + json.dumps(bad_file_list),

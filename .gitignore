@@ -64,6 +64,8 @@ codekit-config.json
 /refinery/ui/.tmp/
 /refinery/ui/coverage/
 /refinery/ui/docs/
+/refinery/ui/cypress/screenshots/
+/refinery/ui/cypress/videos/
 /isa-tab/
 /import/
 /static/
@@ -78,3 +80,13 @@ codekit-config.json
 # to be moved into refinery/ui
 refinery/static/styles/css/font-awesome*.css
 refinery/static/styles/css/refinery-style*.css
+
+### Terraform template
+# Compiled files
+*.tfstate
+*.tfstate.*.backup
+*.tfstate.backup
+# Module directory
+.terraform/
+# Variable values for development
+terraform.tfvars

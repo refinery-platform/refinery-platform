@@ -3,9 +3,12 @@ Created on May 29, 2012
 
 @author: nils
 '''
+import csv
 import hashlib
 import json
 import logging
+import shutil
+import tempfile
 import time
 import urlparse
 
@@ -448,17 +451,17 @@ def update_annotated_nodes(
         total_unique_attrs += len(
             nodes[node_id]["attributes"]
         )
-
         if node["type"] == node_type:
             num_nodes_of_type += 1
-
             attrs = _get_unique_parent_attributes(nodes, node_id)
-
             u_len = len(attrs)
-
             total_attrs += u_len
-
-    if total_attrs / num_nodes_of_type == total_unique_attrs:
+    if total_attrs == total_unique_attrs * num_nodes_of_type \
+            and len([
+                n for n in nodes.values() if n['type'] == 'Sample Name'
+            ]) > 1:
+        # This should exclude CSV imports
+        # TODO: Not happy about this hack at all.
         error_message = (
             "Exponential explosion! Creation of {} annotated nodes for {} "
             "nodes of type {} is stopped!"
@@ -560,7 +563,6 @@ def _add_annotated_nodes(
 
     if len(bulk_list) > 0:
         AnnotatedNode.objects.bulk_create(bulk_list)
-        bulk_list = []
 
     end = time.time()
 
@@ -670,12 +672,15 @@ def generate_solr_params(params, assay_uuids, facets_from_config=False):
 
     if facets_from_config:
         # Twice as many facets as necessary, but easier than the alternative.
-        facet_template = '&facet.field={0}_Characteristics_generic_s' + \
-                   '&facet.field={0}_Factor_Value_generic_s'
+        facet_template = '&facet.field={0}_Characteristics{1}' + \
+                   '&facet.field={0}_Factor_Value{1}'
         solr_params += ''.join(
-            [facet_template.format(s) for s
-             in settings.USER_FILES_FACETS.split(",")])
-        solr_params += '&fl=*_generic_s,name,*_uuid,type,django_id'
+            [facet_template.format(s, NodeIndex.GENERIC_SUFFIX) for s
+             in settings.USER_FILES_FACETS.split(",")]
+        )
+        solr_params += '&fl=*{},name,*_uuid,type,django_id,{}'.format(
+            NodeIndex.GENERIC_SUFFIX, NodeIndex.DOWNLOAD_URL
+        )
     elif facet_field:
         facet_field = facet_field.split(',')
         facet_field = insert_facet_field_filter(facet_filter, facet_field)
@@ -779,7 +784,7 @@ def is_field_in_hidden_list(field):
                      'assay_uuid', 'type', 'is_annotation', 'species',
                      'genome_build', 'name', 'django_ct']
 
-    if field in hidden_fields:
+    if field in hidden_fields or NodeIndex.GENERIC_SUFFIX in field:
         return True
     else:
         return False
@@ -1091,3 +1096,80 @@ def get_file_url_from_node_uuid(node_uuid):
             )
         else:
             return core.utils.get_full_url(url)
+
+
+def fix_last_column(file):
+    """If the header has empty columns in it, then it will delete this and
+    corresponding columns in the rows; returns 0 or 1 based on whether it
+    failed or was successful, respectively
+    Parameters:
+    file: name of file to fix
+    """
+    # TODO: exception handling for file operations (IOError)
+    logger.info("trying to fix the last column if necessary")
+    # FIXME: use context manager to handle file opening and closing
+    reader = csv.reader(open(file, 'rU'), dialect='excel-tab')
+    tempfilename = tempfile.NamedTemporaryFile().name
+    writer = csv.writer(open(tempfilename, 'wb'), dialect='excel-tab')
+    # check that all rows have the same length
+    header = reader.next()
+    header_length = len(header)
+    num_empty_cols = 0  # number of empty header columns
+    # TODO: throw exception if there is an empty field in the header between
+    # two non-empty fields
+    for item in header:
+        if not item.strip():
+            num_empty_cols += 1
+    # write the file
+    writer.writerow(header[:-num_empty_cols])
+    if num_empty_cols > 0:  # if there are empty header columns
+        logger.info("Empty columns in header present, attempting to fix...")
+        # check that all the rows are the same length
+        line = 0
+        for row in reader:
+            line += 1
+            if len(row) < header_length - num_empty_cols:
+                logger.error(
+                    "Line " + str(line) + " in the file had fewer fields than "
+                    "the header.")
+                return False
+            # check that all the end columns that are supposed to be empty are
+            i = 0
+            if len(row) > len(header) - num_empty_cols:
+                while i < num_empty_cols:
+                    i += 1
+                    check_item = row[-i].strip()
+                    if check_item:  # item not empty
+                        logger.error(
+                            "Found a value in " + str(line) +
+                            " where an empty column was expected.")
+                        return False
+                writer.writerow(row[:-num_empty_cols])
+            else:
+                writer.writerow(row)
+        shutil.move(tempfilename, file)
+    return True
+
+
+def _create_solr_params_from_node_uuids(node_uuids):
+    """
+    Create and return a dict containing the proper Solr params to query
+    for the information of many Nodes
+    """
+    return {
+        "q": "django_ct:data_set_manager.node",
+        "wt": "json",
+        "fq": "uuid:({})".format(" OR ".join(node_uuids))
+    }
+
+
+def get_solr_response_json(node_uuids):
+    """
+    Fetch the information indexed within Solr for many Nodes and return
+    it as JSON
+    """
+    solr_response = search_solr(
+        _create_solr_params_from_node_uuids(node_uuids),
+        'data_set_manager'
+    )
+    return format_solr_response(solr_response)

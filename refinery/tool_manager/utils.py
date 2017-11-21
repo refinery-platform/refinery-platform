@@ -1,4 +1,3 @@
-import glob
 import json
 import logging
 import os
@@ -7,19 +6,15 @@ import uuid
 from django.conf import settings
 from django.contrib import admin
 from django.db import transaction
-from django.utils import timezone
 
 from bioblend.galaxy.client import ConnectionError
 from django_docker_engine.docker_utils import DockerClientWrapper
 from jsonschema import RefResolver, ValidationError, validate
 
-from analysis_manager.utils import fetch_objects_required_for_analysis
 from core.models import DataSet, Workflow, WorkflowEngine
-from factory_boy.django_model_factories import (AnalysisFactory,
-                                                FileRelationshipFactory,
+from factory_boy.django_model_factories import (FileRelationshipFactory,
                                                 GalaxyParameterFactory,
                                                 InputFileFactory,
-                                                OutputFileFactory,
                                                 ParameterFactory,
                                                 ToolDefinitionFactory,
                                                 VisualizationToolFactory,
@@ -31,8 +26,10 @@ from .models import Tool, ToolDefinition, WorkflowTool
 
 logger = logging.getLogger(__name__)
 ANNOTATION_ERROR_MESSAGE = (
-    "Tool not properly annotated. Please read: http://bit.ly/2nalk6w for "
-    "examples and more information on how to properly annotate your tools."
+    "Tool not properly annotated. For examples and more information "
+    "on how to properly annotate your tools, please read "
+    "https://github.com/refinery-platform/refinery-platform/wiki/"
+    "Annotating-&-Importing-Refinery-Tools#importing-refinery-tools"
 )
 # Allow JSON Schema to find the JSON pointers we define in our schemas
 JSON_SCHEMA_FILE_RESOLVER = RefResolver(
@@ -73,49 +70,24 @@ class FileTypeValidationError(RuntimeError):
         super(FileTypeValidationError, self).__init__(error_message)
 
 
-def create_and_associate_output_files(tool_definition, output_files):
-    for output_file in output_files:
-        try:
-            filetype = FileType.objects.get(
-                name=output_file["filetype"]["name"]
-            )
-        except (FileType.DoesNotExist,
-                FileType.MultipleObjectsReturned) as e:
-            raise FileTypeValidationError(
-                output_file["filetype"]["name"],
-                e
-            )
-        else:
-            tool_definition.output_files.add(
-                OutputFileFactory(
-                    name=output_file["name"],
-                    description=output_file["description"],
-                    filetype=filetype
-                )
-            )
-
-
 def create_and_associate_parameters(tool_definition, parameters):
     for parameter in parameters:
+        common_params = {
+            "name": parameter["name"],
+            "description": parameter["description"],
+            "value_type": parameter["value_type"],
+            "default_value": parameter["default_value"],
+        }
+
         if tool_definition.tool_type == ToolDefinition.WORKFLOW:
             tool_definition.parameters.add(
                 GalaxyParameterFactory(
-                    name=parameter["name"],
-                    description=parameter["description"],
-                    value_type=parameter["value_type"],
-                    default_value=parameter["default_value"],
-                    galaxy_workflow_step=parameter["galaxy_workflow_step"]
+                    galaxy_workflow_step=parameter["galaxy_workflow_step"],
+                    **common_params
                 )
             )
         if tool_definition.tool_type == ToolDefinition.VISUALIZATION:
-            tool_definition.parameters.add(
-                ParameterFactory(
-                    name=parameter["name"],
-                    description=parameter["description"],
-                    value_type=parameter["value_type"],
-                    default_value=parameter["default_value"],
-                )
-            )
+            tool_definition.parameters.add(ParameterFactory(**common_params))
 
 
 @transaction.atomic
@@ -179,18 +151,16 @@ def create_tool_definition(annotation_data):
             logger.debug(
                 "Pulling Docker image: %s", tool_definition.image_name
             )
-            DockerClientWrapper().pull(image_name, version=version)
+            DockerClientWrapper(
+                settings.DJANGO_DOCKER_ENGINE_DATA_DIR
+            ).pull(image_name, version=version)
 
     tool_definition.annotation = json.dumps(annotation)
     tool_definition.save()
 
-    create_and_associate_output_files(
-        tool_definition,
-        annotation["output_files"]
-    )
     create_and_associate_parameters(
         tool_definition,
-        annotation["parameters"]
+        annotation[ToolDefinition.PARAMETERS]
     )
 
     return tool_definition
@@ -225,9 +195,9 @@ def create_tool(tool_launch_configuration, user_instance):
     if tool_type == ToolDefinition.WORKFLOW:
         tool_launch_configuration[WorkflowTool.GALAXY_DATA] = {
             WorkflowTool.FILE_RELATIONSHIPS_GALAXY:
-                tool_launch_configuration[Tool.FILE_RELATIONSHIPS]
+                tool_launch_configuration[Tool.FILE_RELATIONSHIPS],
+            WorkflowTool.GALAXY_TO_REFINERY_MAPPING_LIST: []
         }
-        # Add updated Tool launch config info to common_tool_params dict
         common_tool_params[Tool.TOOL_LAUNCH_CONFIGURATION] = json.dumps(
             tool_launch_configuration
         )
@@ -259,48 +229,6 @@ def create_tool(tool_launch_configuration, user_instance):
     return tool
 
 
-def create_tool_analysis(validated_analysis_config):
-    """
-    Create an Analysis instance from a validated analysis config with
-    Tool information
-    :param validated_analysis_config: a dict including the necessary
-    information to create an Analysis that has been validated prior by
-    `analysis_manager.utils.validate_analysis_config`
-    :return: an Analysis instance
-    :raises: RuntimeError
-    """
-
-    # Input list for running analysis
-    common_analysis_objects = (
-        fetch_objects_required_for_analysis(
-            validated_analysis_config
-        )
-    )
-    name = validated_analysis_config["name"]
-    current_workflow = common_analysis_objects["current_workflow"]
-    data_set = common_analysis_objects["data_set"]
-    user = common_analysis_objects["user"]
-
-    try:
-        tool = Tool.objects.get(
-            uuid=validated_analysis_config["toolUuid"]
-        )
-    except (Tool.DoesNotExist, Tool.MultipleObjectsReturned) as e:
-        raise RuntimeError("Couldn't fetch Tool from UUID: {}".format(e))
-
-    analysis = AnalysisFactory(
-        uuid=str(uuid.uuid4()),
-        summary="Analysis run for: {}".format(tool),
-        name=name,
-        project=user.profile.catch_all_project,
-        data_set=data_set,
-        workflow=current_workflow,
-        time_start=timezone.now()
-    )
-    analysis.set_owner(user)
-    return analysis
-
-
 @transaction.atomic
 def create_file_relationship_nesting(workflow_annotation,
                                      file_relationships=None):
@@ -322,7 +250,7 @@ def create_file_relationship_nesting(workflow_annotation,
     # One may think: "why not just have `file_relationships=[]` in the
     # method signature?" But this [utilizing mutable arguments] is a
     # common Python "gotcha". Especially in the context of recursive methods.
-    # It's illustrated well here: http://bit.ly/21b5Axg
+    # http://docs.python-guide.org/en/latest/writing/gotchas/#mutable-default-arguments
     if not file_relationships:
         file_relationships = []
 
@@ -397,23 +325,6 @@ def create_file_relationship_nesting(workflow_annotation,
             )
 
 
-def get_visualization_annotations_list():
-    """
-    Generate a list of available visualization annotations from all currently
-    available JSON representations of Vis Tools underneath the
-    Refinery VISUALIZATION_ANNOTATION_BASE_PATH
-    :return: list of visualization dicts
-    """
-    visualization_annotations = []
-    for annotation_file in glob.glob(
-        "{}/*.json".format(settings.VISUALIZATION_ANNOTATION_BASE_PATH)
-    ):
-        with open(annotation_file) as f:
-            visualization_annotations.append(json.loads(f.read()))
-
-    return visualization_annotations
-
-
 def get_workflows():
     """
     Generate a dict mapping available WorkflowEngine UUIDs to a list
@@ -450,7 +361,7 @@ def get_workflows():
                     workflow["id"]
                 )
                 workflow_data["graph"] = (
-                    galaxy_connection.workflows.export_workflow_json(
+                    galaxy_connection.workflows.export_workflow_dict(
                         workflow["id"]
                     )
                 )
@@ -494,14 +405,17 @@ def parse_file_relationship_nesting(nested_structure, nesting_dict=None,
         raise RuntimeError(
             "LIST/PAIR structure is not balanced {}".format(nesting_contents)
         )
-    if nesting_types == {str}:
+    if nesting_types in [{str}, {unicode}]:
         # If we reach a nesting level with all `str` we can return
         return
 
-    if nesting_types not in [{list}, {tuple}]:
+    valid_types = [{list}, {tuple}]
+    if nesting_types not in valid_types:
         raise RuntimeError(
-            "The `file_relationships` defined didn't yield a valid "
-            "LIST/PAIR nesting. {}".format(nesting_contents)
+            "The 'file_relationships' {} type {} "
+            "is not a valid LIST/PAIR nesting: {}".format(
+                nesting_contents, nesting_types, valid_types
+            )
         )
 
     nesting_level += 1
@@ -517,7 +431,6 @@ def validate_tool_annotation(annotation_dictionary):
     properly.
     :param annotation_dictionary: dict containing Tool annotation data
     """
-
     with open(
             os.path.join(
                 settings.BASE_DIR,
@@ -536,7 +449,11 @@ def validate_tool_annotation(annotation_dictionary):
         )
     except ValidationError as e:
         raise RuntimeError(
-            "{}{}".format(ANNOTATION_ERROR_MESSAGE, e)
+            "{}\n\n{}\n\n{}".format(
+                ANNOTATION_ERROR_MESSAGE,
+                e.message,
+                ["{}".format(err.message) for err in e.context]
+            )
         )
 
 

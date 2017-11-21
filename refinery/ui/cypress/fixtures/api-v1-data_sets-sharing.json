@@ -1,0 +1,14 @@
+{
+  "owner": "9bf8da15-9688-4965-aa69-9ed4c31fef83",
+  "share_list": [
+    {
+      "group_id": 189,
+      "group_name": "group_1508275589185",
+      "group_uuid": "9acd285d-2599-4c13-a51f-b42551904cb3",
+      "perms": {
+        "change": false,
+        "read": false
+      }
+    }
+  ]
+}

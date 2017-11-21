@@ -65,7 +65,6 @@
           name: 'List of Lists',
           value_type: 'LIST'
         },
-        output_files: [],
         parameters: [],
         uuid: 'a55a238d-df29-4990-a7ef-1d18142192d2',
         name: 'Test workflow: LIST:LIST:PAIR',
@@ -93,7 +92,6 @@
           name: 'Flat list of N Samples',
           value_type: 'LIST'
         },
-        output_files: [],
         parameters: [],
         uuid: 'ac81f921-bcc8-47ea-898a-043aa26ce076',
         name: 'Test Workflow: LISTS',
@@ -115,7 +113,7 @@
           .expectGET(
             settings.appRoot +
             settings.refineryApiV2 +
-            '/tool_definitions/'
+            '/tool_definitions/?dataSetUuid='
         ).respond(200, fakeResponse);
       });
     });

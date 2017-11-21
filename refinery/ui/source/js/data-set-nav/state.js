@@ -9,104 +9,12 @@ function refineryDataSetNavConfig (
         url: '/files/',
         templateUrl: function () {
           // unit tests redefine $window and thus make it unusable here
-          return window.getStaticUrl(
-            'partials/data-set-nav/partials/data-set-ui-mode-browse.html'
-          );
-        },
-        controller: 'refineryDataSetNavFilesCtrl'
-      },
-      '^\/data_sets\/.*\/$',
-      true
-    )
-    .state(
-      'browse', {
-        url: '/files/browse',
-        templateUrl: function () {
-          // unit tests redefine $window and thus make it unusable here
-          return window.getStaticUrl(
-            'partials/data-set-nav/partials/data-set-ui-mode-browse.html'
-          );
-        },
-        controller: 'refineryDataSetNavFilesBrowseCtrl'
-      },
-      '^\/data_sets\/.*\/$',
-      true
-    )
-    .state(
-      'analyze', {
-        url: '/files/analyze/',
-        templateUrl: function () {
-          // unit tests redefine $window and thus make it unusable here
-          return window.getStaticUrl(
-            'partials/data-set-nav/partials/data-set-ui-mode-analyze.html'
-          );
-        },
-        controller: 'refineryDataSetNavAnalyzeCtrl'
-      },
-      '^\/data_sets\/.*\/$',
-      true
-    )
-    .state(
-      'visualize', {
-        templateUrl: function () {
-          // unit tests redefine $window and thus make it unusable here
-          return window.getStaticUrl(
-            'partials/data-set-nav/partials/data-set-ui-mode-visualize.html'
-          );
-        },
-        url: '/files/visualize/',
-        controller: 'refineryDataSetNavVisualizeCtrl'
-      },
-      '^\/data_sets\/.*\/$',
-      true
-    )
-    .state(
-      'analyses', {
-        url: '/analyses/',
-        templateUrl: function () {
-          // unit tests redefine $window and thus make it unusable here
-          return window.getStaticUrl('partials/analysis-monitor/partials/analyses-list.html');
-        },
-        controller: 'refineryDataSetNavBlueprintCtrl'
-      },
-      '^\/data_sets\/.*\/$',
-      true
-    )
-    .state(
-      'attributes', {
-        url: '/attributes/',
-        controller: 'refineryDataSetNavBlueprintCtrl'
-      },
-      '^\/data_sets\/.*\/$',
-      true
-    )
-    .state(
-      'details', {
-        url: '/details/',
-        controller: 'refineryDataSetNavBlueprintCtrl'
-      },
-      '^\/data_sets\/.*\/$',
-      true
-    )
-    .state(
-      'sharing', {
-        url: '/sharing/',
-        controller: 'refineryDataSetNavBlueprintCtrl'
-      },
-      '^\/data_sets\/.*\/$',
-      true
-    )
-    .state(
-      'files', {
-        url: '/files/',
-        templateUrl: function () {
-          // unit tests redefine $window and thus make it unusable here
           return window.getStaticUrl('partials/file-browser/views/files-tab.html');
         },
         controller: 'FileBrowserCtrl',
         controllerAs: 'FBCtrl'
       },
-      '^\/data_sets2\/.*\/$',
+      '^\/data_sets\/.*\/$',
       true
     )
     .state(
@@ -119,7 +27,7 @@ function refineryDataSetNavConfig (
         controller: 'AnalysisMonitorCtrl',
         controllerAs: 'AMCtrl'
       },
-      '^\/data_sets2\/.*\/$',
+      '^\/data_sets\/.*\/$',
       true
     )
     .state(
@@ -132,19 +40,26 @@ function refineryDataSetNavConfig (
         controller: 'AboutDetailsCtrl',
         controllerAs: 'ADCtrl'
       },
-      '^\/data_sets2\/.*\/$',
-      true
-    );
-
-  refineryUrlRouterProvider
-    .otherwise(
-      '/files/browse',
       '^\/data_sets\/.*\/$',
       true
     )
+    .state(
+        'provvis', {
+          url: '/provvis/',
+          templateUrl: function () {
+            // unit tests redefine $window and thus make it unusable here
+            return window.getStaticUrl('partials/provvis/views/provvis-tab.html');
+          },
+          controller: 'ProvvisTempCtrl'
+        },
+        '^\/data_sets\/.*\/$',
+        true
+      );
+
+  refineryUrlRouterProvider
     .otherwise(
       '/files/',
-      '^\/data_sets2\/.*\/$',
+      '^\/data_sets\/.*\/$',
       true
   );
 }

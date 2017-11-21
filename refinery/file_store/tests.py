@@ -1,5 +1,3 @@
-"""This file contains tests for file_store.models and file_store.tasks
-"""
 import os
 from urlparse import urljoin
 
@@ -11,12 +9,10 @@ from django.test import SimpleTestCase, TestCase
 import mock
 from rest_framework.test import APIRequestFactory, APITestCase
 
-from core.utils import get_full_url
-
-from .models import (FILE_STORE_TEMP_DIR, FileExtension, FileStoreItem,
-                     FileType, SymlinkedFileSystemStorage, file_path,
-                     generate_file_source_translator, get_file_object,
-                     get_temp_dir)
+from .models import (FileExtension, FileStoreItem, FileType,
+                     SymlinkedFileSystemStorage, file_path,
+                     generate_file_source_translator, get_extension_from_path,
+                     get_file_object, get_temp_dir, parse_s3_url)
 from .serializers import FileStoreItemSerializer
 from .views import FileStoreItems
 
@@ -83,7 +79,7 @@ class FileStoreModuleTest(TestCase):
 
     def test_get_temp_dir(self):
         """Check that the file store temp dir is reported correctly"""
-        self.assertEqual(get_temp_dir(), FILE_STORE_TEMP_DIR)
+        self.assertEqual(get_temp_dir(), settings.FILE_STORE_TEMP_DIR)
 
     def test_get_file_object(self):
         """Check if the correct file is opened"""
@@ -104,15 +100,22 @@ class FileStoreModuleTest(TestCase):
         # check if an expected object is returned
         self.assertEqual(file_object, mock.sentinel.file_object)
 
+    def test_get_extension_from_path(self):
+        extension = get_extension_from_path(self.path_source)
+        self.assertEqual(extension, '.dat')
+
+    def test_parse_s3_url(self):
+        bucket_name, key = parse_s3_url('s3://bucket-name/key')
+        self.assertEqual(bucket_name, 'bucket-name')
+        self.assertEqual(key, 'key')
+
 
 class FileStoreItemTest(TestCase):
     """FileStoreItem methods test"""
 
     def setUp(self):
-        self.tdf_filetype = FileType.objects.get(
-            name="TDF")
-        self.tdf_fileextension = FileExtension.objects.get(
-            name='tdf')
+        self.tdf_filetype = FileType.objects.get(name="TDF")
+        self.tdf_fileextension = FileExtension.objects.get(name='tdf')
 
         self.filename = 'test_file.idf'
         self.sharename = 'labname'
@@ -134,7 +137,7 @@ class FileStoreItemTest(TestCase):
         )
 
         self.assertEqual(
-            get_full_url(local_file.get_datafile_url()),
+            local_file.get_datafile_url(),
             '{}://{}{}'.format(
                 settings.REFINERY_URL_SCHEME,
                 Site.objects.get_current().domain,
@@ -151,7 +154,7 @@ class FileStoreItemTest(TestCase):
             source=self.url_source,
             sharename=self.sharename
         )
-        self.assertEqual(get_full_url(item_from_url.get_datafile_url()),
+        self.assertEqual(item_from_url.get_datafile_url(),
                          item_from_url.source)
 
     def test_get_file_type(self):
@@ -402,8 +405,6 @@ class FileStoreItemsAPITests(APITestCase):
 
 
 class SymlinkedFileSystemStorageTest(SimpleTestCase):
-    """SymlinkedFileSystemStorage test"""
-
     def setUp(self):
         self.symlinked_storage = SymlinkedFileSystemStorage()
 

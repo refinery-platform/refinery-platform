@@ -28,6 +28,14 @@
       controller: 'AssayFiltersCtrl',
       controllerAs: 'ASCtrl',
       link: function (scope, element, attrs, ctrl) {
+        scope.isDropped = function (attributeName) {
+          var escapeAttributeName = attributeName.replace(/ /g, '-');
+          var attributeTitle = angular.element(
+            document.querySelector('#attribute-panel-' + escapeAttributeName)
+          );
+          return attributeTitle.hasClass('fa-caret-right');
+        };
+
         // ng-click event for attribute filter panels
         // Event is custom because when a filter is selected, it continues to
         // show even though the panel is collapsed
@@ -91,7 +99,7 @@
           var queryFields = Object.keys($location.search());
           for (var ind = 0; ind < allFields.length; ind++) {
             var encodedAttribute = selectedFilterService
-              .stringifyAndEncodeAttributeObj(attributeInternalName, allFields[ind]);
+              .stringifyAttributeObj(attributeInternalName, allFields[ind]);
             if (queryFields.indexOf(encodedAttribute) > -1) {
               var escapeAttributeName = attributeName.replace(/ /g, '-');
               var attributeTitle = angular.element(

@@ -5,23 +5,17 @@ from django.conf.urls import include, patterns, url
 from django.conf.urls.static import static
 from django.contrib import admin
 
-from haystack.forms import FacetedSearchForm
-from haystack.query import SearchQuerySet
-from haystack.views import FacetedSearchView
 from registration.backends.default.views import ActivationView
 from tastypie.api import Api
 
 from config.utils import RouterCombiner
 from core.api import (AnalysisResource, DataSetResource, ExtendedGroupResource,
-                      FastQCResource, GroupManagementResource,
-                      InvitationResource, NodePairResource,
-                      NodeRelationshipResource, NodeResource,
-                      NodeSetListResource, NodeSetResource, ProjectResource,
-                      StatisticsResource, UserAuthenticationResource,
-                      UserProfileResource, WorkflowInputRelationshipsResource,
-                      WorkflowResource)
+                      GroupManagementResource, InvitationResource,
+                      NodeResource, ProjectResource, StatisticsResource,
+                      UserAuthenticationResource, UserProfileResource,
+                      WorkflowInputRelationshipsResource, WorkflowResource)
 from core.forms import RegistrationFormWithCustomFields
-from core.models import AuthenticationFormUsernameOrEmail, DataSet
+from core.models import AuthenticationFormUsernameOrEmail
 from core.urls import core_router
 from core.views import CustomRegistrationView
 from data_set_manager.api import (AssayResource, AttributeOrderResource,
@@ -37,13 +31,6 @@ from user_files_manager.urls import (user_files_csv_url, user_files_router,
 
 logger = logging.getLogger(__name__)
 
-# NG: facets for Haystack
-sqs = (SearchQuerySet().using("core")
-                       .models(DataSet)
-                       .facet('measurement')
-                       .facet('technology')
-                       .highlight())
-
 # NG: added for tastypie URL
 v1_api = Api(api_name='v1')
 
@@ -54,10 +41,6 @@ v1_api.register(AssayResource())
 v1_api.register(DataSetResource())
 v1_api.register(AttributeOrderResource())
 v1_api.register(NodeResource())
-v1_api.register(NodeSetResource())
-v1_api.register(NodeSetListResource())
-v1_api.register(NodePairResource())
-v1_api.register(NodeRelationshipResource())
 v1_api.register(WorkflowResource())
 v1_api.register(WorkflowInputRelationshipsResource())
 v1_api.register(StatisticsResource())
@@ -71,7 +54,6 @@ v1_api.register(ProtocolReferenceParameterResource())
 v1_api.register(PublicationResource())
 v1_api.register(AttributeResource())
 v1_api.register(ExtendedGroupResource())
-v1_api.register(FastQCResource())
 v1_api.register(UserProfileResource())
 
 
@@ -136,16 +118,6 @@ urlpatterns = patterns(
     # NG: tastypie API urls
     url(r'^api/', include(v1_api.urls)),
 
-    # NG: Haystack (searching and querying) urls
-    # url(r'^search/', include('haystack.urls')),
-    url(
-        r'^search/',
-        FacetedSearchView(
-            form_class=FacetedSearchForm,
-            searchqueryset=sqs
-        ),
-        name='search'
-    ),
     user_files_url,
     user_files_csv_url
 

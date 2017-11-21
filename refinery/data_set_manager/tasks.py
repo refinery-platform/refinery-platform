@@ -1,4 +1,3 @@
-import csv
 from datetime import date
 import errno
 import glob
@@ -8,10 +7,8 @@ import re
 import shutil
 import string
 import subprocess
-import sys
 import tempfile
 import time
-import traceback
 
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -25,14 +22,15 @@ import requests
 from requests.exceptions import HTTPError
 
 from core.models import DataSet, ExtendedGroup, FileStoreItem
-from core.utils import (add_data_set_to_neo4j, update_annotation_sets_neo4j,
+from core.utils import (add_data_set_to_neo4j,
+                        async_update_annotation_sets_neo4j,
                         update_data_set_index)
-from file_store.models import FileExtension
+from file_store.models import FileExtension, generate_file_source_translator
 
 from .isa_tab_parser import IsaTabParser
 from .models import Investigation, Node, initialize_attribute_order
-from .utils import (calculate_checksum, get_node_types, index_annotated_nodes,
-                    update_annotated_nodes)
+from .utils import (calculate_checksum, fix_last_column, get_node_types,
+                    index_annotated_nodes, update_annotated_nodes)
 
 logger = logging.getLogger(__name__)
 
@@ -127,59 +125,6 @@ def download_http_file(url, out_dir, accession, new_name=None,
                 status += chr(8) * (len(status) + 1)
                 logger.debug(status)
         f.close()
-
-
-def fix_last_col(file):
-    """If the header has empty columns in it, then it will delete this and
-    corresponding columns in the rows; returns 0 or 1 based on whether it
-    failed or was successful, respectively
-    Parameters:
-    file: name of file to fix
-    """
-    # TODO: exception handling for file operations (IOError)
-    logger.info("trying to fix the last column if necessary")
-    # FIXME: use context manager to handle file opening and closing
-    reader = csv.reader(open(file, 'rU'), dialect='excel-tab')
-    tempfilename = tempfile.NamedTemporaryFile().name
-    writer = csv.writer(open(tempfilename, 'wb'), dialect='excel-tab')
-    # check that all rows have the same length
-    header = reader.next()
-    header_length = len(header)
-    num_empty_cols = 0  # number of empty header columns
-    # TODO: throw exception if there is an empty field in the header between
-    # two non-empty fields
-    for item in header:
-        if not item.strip():
-            num_empty_cols += 1
-    # write the file
-    writer.writerow(header[:-num_empty_cols])
-    if num_empty_cols > 0:  # if there are empty header columns
-        logger.info("Empty columns in header present, attempting to fix...")
-        # check that all the rows are the same length
-        line = 0
-        for row in reader:
-            line += 1
-            if len(row) < header_length - num_empty_cols:
-                logger.error(
-                    "Line " + str(line) + " in the file had fewer fields than "
-                    "the header.")
-                return False
-            # check that all the end columns that are supposed to be empty are
-            i = 0
-            if len(row) > len(header) - num_empty_cols:
-                while i < num_empty_cols:
-                    i += 1
-                    check_item = row[-i].strip()
-                    if check_item:  # item not empty
-                        logger.error(
-                            "Found a value in " + str(line) +
-                            " where an empty column was expected.")
-                        return False
-                writer.writerow(row[:-num_empty_cols])
-            else:
-                writer.writerow(row)
-        shutil.move(tempfilename, file)
-    return True
 
 
 def zip_converted_files(accession, isatab_zip_loc, preisatab_zip_loc):
@@ -292,11 +237,11 @@ def convert_to_isatab(accession, isatab_zip_loc, preisatab_zip_loc):
         assay_files = glob.glob("%s/a_*.txt" % base_dir)
         for study_file in study_files:
             logging.info("fixing last columns in study file if needed")
-            if not fix_last_col(study_file):
+            if not fix_last_column(study_file):
                 return "Could not fix study file for %s" % accession
         for assay_file in assay_files:
             logging.info("fixing last columns in assay file if needed")
-            if not fix_last_col(assay_file):
+            if not fix_last_column(assay_file):
                 return "Could not fix assay file for %s" % accession
         zip_converted_files(accession, isatab_zip_loc, preisatab_zip_loc)
     shutil.rmtree(base_dir)
@@ -339,57 +284,56 @@ def create_dataset(investigation_uuid, username, identifier=None, title=None,
             "password 'test'", username, username)
         # user doesn't exist
         user = User.objects.create_user(username, "", "test")
-    if investigation_uuid is not None:
-        # TODO: make sure this is used everywhere
-        annotate_nodes(investigation_uuid)
-        dataset = None
-        investigation = Investigation.objects.get(uuid=investigation_uuid)
-        if identifier is None:
-            identifier = investigation.get_identifier()
-        if title is None:
-            title = investigation.get_title()
-        if dataset_name is None:
-            dataset_name = "%s: %s" % (identifier, title)
+    if investigation_uuid is None:
+        return None  # TODO: make sure this is never happens
+    annotate_nodes(investigation_uuid)
+    dataset = None
+    investigation = Investigation.objects.get(uuid=investigation_uuid)
+    if identifier is None:
+        identifier = investigation.get_identifier()
+    if title is None:
+        title = investigation.get_title()
+    if dataset_name is None:
+        dataset_name = "%s: %s" % (identifier, title)
 
-        logger.info(
-            "create_dataset: title = %s, identifer = %s, dataset_name = '%s'",
-            title, identifier, dataset_name)
+    logger.info(
+        "create_dataset: title = %s, identifer = %s, dataset_name = '%s'",
+        title, identifier, dataset_name)
 
-        datasets = DataSet.objects.filter(name=dataset_name)
-        # check if the investigation already exists
-        if len(datasets):  # if not 0, update dataset with new investigation
-            """go through datasets until you find one with the correct owner"""
-            for ds in datasets:
-                own = ds.get_owner()
-                if own == user:
-                    ds.update_investigation(investigation,
-                                            "updated %s" % date.today())
-                    logger.info("create_dataset: Updated data set %s", ds.name)
-                    dataset = ds
-                    break
-        # create a new dataset if doesn't exist already for this user
-        if not dataset:
-            dataset = DataSet.objects.create(name=dataset_name)
-            dataset.set_investigation(investigation)
-            dataset.set_owner(user)
-            dataset.accession = identifier
-            dataset.title = title
-            logger.info("create_dataset: Created data set '%s'", dataset_name)
-        if public:
-            public_group = ExtendedGroup.objects.public_group()
-            dataset.share(public_group)
-        # set dataset slug
-        dataset.slug = slug
-        # calculate total number of files and total number of bytes
-        dataset.file_size = dataset.get_file_size()
-        dataset.file_count = dataset.get_file_count()
-        dataset.save()
-        # Finally index data set
-        update_data_set_index(dataset)
-        add_data_set_to_neo4j(dataset, user.id)
-        update_annotation_sets_neo4j()
-        return dataset.uuid
-    return None
+    datasets = DataSet.objects.filter(name=dataset_name)
+    # check if the investigation already exists
+    if len(datasets):  # if not 0, update dataset with new investigation
+        """go through datasets until you find one with the correct owner"""
+        for ds in datasets:
+            own = ds.get_owner()
+            if own == user:
+                ds.update_investigation(investigation,
+                                        "updated %s" % date.today())
+                logger.info("create_dataset: Updated data set %s", ds.name)
+                dataset = ds
+                break
+    # create a new dataset if doesn't exist already for this user
+    if not dataset:
+        dataset = DataSet.objects.create(name=dataset_name)
+        dataset.set_investigation(investigation)
+        dataset.set_owner(user)
+        dataset.accession = identifier
+        dataset.title = title
+        logger.info("create_dataset: Created data set '%s'", dataset_name)
+    if public:
+        public_group = ExtendedGroup.objects.public_group()
+        dataset.share(public_group)
+    # set dataset slug
+    dataset.slug = slug
+    # calculate total number of files and total number of bytes
+    dataset.file_size = dataset.get_file_size()
+    dataset.file_count = dataset.get_file_count()
+    dataset.save()
+    # Finally index data set
+    update_data_set_index(dataset)
+    add_data_set_to_neo4j(dataset, user.id)
+    async_update_annotation_sets_neo4j()
+    return dataset.uuid
 
 
 @task()
@@ -427,16 +371,9 @@ def annotate_nodes(investigation_uuid):
 
 
 @task()
-def parse_isatab(
-    username,
-    public,
-    path,
-    additional_raw_data_file_extension=None,
-    isa_archive=None,
-    pre_isa_archive=None,
-    file_base_path=None,
-    overwrite=False
-):
+def parse_isatab(username, public, path, identity_id=None,
+                 additional_raw_data_file_extension=None, isa_archive=None,
+                 pre_isa_archive=None, file_base_path=None, overwrite=False):
     """parses in an ISA-TAB file to create database entries and creates or
     updates a dataset for the investigation to belong to; returns the dataset
     UUID or None if something went wrong. Use like this: parse_isatab(username,
@@ -453,22 +390,26 @@ def parse_isatab(
     pre_isa_archive: optional copy of files that were converted to ISA-Tab
     file_base_path: if your file locations are relative paths, this is the base
     """
-    p = IsaTabParser()
-    p.additional_raw_data_file_extension = additional_raw_data_file_extension
-    p.file_base_path = file_base_path
+    file_source_translator = generate_file_source_translator(
+        username=username, base_path=file_base_path, identity_id=identity_id
+    )
+    parser = IsaTabParser(
+        file_source_translator=file_source_translator,
+        additional_raw_data_file_extension=additional_raw_data_file_extension,
+    )
     """Get the study title and investigation id and see if anything is in the
     database and if so compare the checksum
     """
     # 1. First check whether the user exists
     try:
         user = User.objects.get(username__exact=username)
-    except:
+    except (User.DoesNotExist, User.MultipleObjectsReturned):
         user = None
     # 2. If user exists we need to quickly get the dataset title to see if its
     # already in the DB
     if user:
         checksum = None
-        (identifier, title) = p.get_dataset_name(path)
+        (identifier, title) = parser.get_dataset_name(path)
         if identifier is None or title is None:
             datasets = []
         else:
@@ -495,11 +436,13 @@ def parse_isatab(
                                 logger.info("Get file: %s",
                                             fileStoreItem.get_absolute_path())
                                 checksum = calculate_checksum(
-                                    fileStoreItem.get_file_object())
-                            except IOError as e:
+                                    fileStoreItem.get_file_object()
+                                )
+                            except IOError as exc:
                                 logger.error(
-                                    "Original isatab archive wasn't found. "
-                                    "Error: '%s'", e)
+                                    "Original ISA-tab archive wasn't found. "
+                                    "Error: '%s'", exc
+                                )
         # 4. Finally if we got a checksum for an existing file, we calculate
         # the checksum for the new file and compare them
         if checksum:
@@ -507,41 +450,21 @@ def parse_isatab(
             # TODO: error handling
             with open(path, 'rb') as f:
                 new_checksum = calculate_checksum(f)
-            if (checksum == new_checksum):
+            if checksum == new_checksum:
                 # Checksums are identical so we can skip this file.
                 logger.info("The checksum of both files is the same: %s",
                             checksum)
-                return (
-                    investigation.investigationlink_set.all()[0].data_set.uuid,
-                    os.path.basename(path),
-                    True)
-    try:
-        with transaction.atomic():
-            investigation = p.run(
-                path,
-                isa_archive=isa_archive,
-                preisa_archive=pre_isa_archive
-            )
-            data_uuid = create_dataset(
-                investigation.uuid,
-                username,
-                public=public
-            )
-            return data_uuid, os.path.basename(path), False
-    except:  # prints the error message without breaking things
-        logger.error("*** print_tb:")
-        exc_type, exc_value, exc_traceback = sys.exc_info()
-        logger.error(traceback.print_tb(exc_traceback, file=sys.stdout))
-        logger.error("*** print_exception:")
-        logger.error(
-            traceback.print_exception(
-                exc_type,
-                exc_value,
-                exc_traceback,
-                file=sys.stdout
-            )
+                return \
+                    investigation.investigationlink_set.all()[0].data_set.uuid
+
+    with transaction.atomic():
+        investigation = parser.run(
+            path, isa_archive=isa_archive, preisa_archive=pre_isa_archive
         )
-    return None, os.path.basename(path), False
+        data_uuid = create_dataset(
+            investigation.uuid, username, public=public
+        )
+        return data_uuid
 
 
 @task()
@@ -605,7 +528,7 @@ def generate_bam_index(auxiliary_file_store_item_uuid, datafile_path):
     # Try and fetch the bam_index FileExtension
     # NOTE: that we are not handling the normal errors for an orm.get()s below
     # because we want the task from which this function is called within to
-    # fail if we can't get what we want http://bit.ly/1KSbazM
+    # fail if we can't get what we want.
     bam_index_file_extension = FileExtension.objects.get(name="bai").name
     auxiliary_file_store_item = FileStoreItem.objects.get(
         uuid=auxiliary_file_store_item_uuid)

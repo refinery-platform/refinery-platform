@@ -6,26 +6,55 @@
   .controller('UserFileBrowserFiltersCtrl', UserFileBrowserFiltersCtrl);
 
   UserFileBrowserFiltersCtrl.$inject = [
+    '$location',
     '$log',
     '$q',
     'gridOptionsService',
     'userFileBrowserFactory',
-    'userFileFiltersService'
+    'userFileFiltersService',
+    'userFileSortsService'
   ];
 
-  function UserFileBrowserFiltersCtrl ($log, $q,
+  function UserFileBrowserFiltersCtrl ($location, $log, $q,
                                        gridOptionsService,
                                        userFileBrowserFactory,
-                                       userFileFiltersService) {
+                                       userFileFiltersService,
+                                       userFileSortsService) {
     var vm = this;
 
     vm.togglePanel = function (attribute) {
-      vm.hidden[attribute] = ! vm.hidden[attribute];
+      vm.foldedDown[attribute] = ! vm.foldedDown[attribute];
     };
 
-    vm.hidden = {};
+    vm.foldedDown = {};
+    vm.isDown = function (attribute, search) {
+      var attributeObj = vm.attributeFilters[attribute];
+      return vm.foldedDown[attribute] ||
+          attributeObj.lowerCaseNames.includes(search.toLowerCase()) && search.length;
+    };
+
+    vm.filterIsSet = function (attribute, value) {
+      var attr = userFileFiltersService[attribute];
+      return angular.isObject(attr) && attr.indexOf(value) >= 0;
+    };
 
     vm.filterUpdate = function (attribute, value) {
+      var set = filterSet(attribute, value);
+      $location.search(attribute, set);
+
+      getUserFiles().then(function (solr) {
+        // TODO: Should there be something that wraps up this "then"? It is repeated.
+        vm.attributeFilters =
+          userFileBrowserFactory.createFilters(solr.facet_field_counts);
+        gridOptionsService.data = userFileBrowserFactory.createData(solr.nodes);
+        promise.resolve();
+      }, function () {
+        $log.error('/files/ request failed');
+        promise.reject();
+      });
+    };
+
+    function filterSet (attribute, value) {
       if (typeof userFileFiltersService[attribute] === 'undefined') {
         userFileFiltersService[attribute] = []; // Init empty set
       }
@@ -42,26 +71,42 @@
         // Add to list
         set.push(value);
       }
+      return set;
+    }
 
-      getUserFiles().then(function (solr) {
-        // TODO: Should there be something that wraps up this "then"? It is repeated.
-        // gridOptionsService.columnDefs = userFileBrowserFactory.createColumnDefs();
-        gridOptionsService.data = userFileBrowserFactory.createData(solr.nodes);
-        promise.resolve();
-      }, function () {
-        $log.error('/user/files/ request failed');
-        promise.reject();
-      });
-    };
+    var sort;
+    var direction;
+    angular.forEach($location.search(), function (values, key) {
+      if (key === 'sort') {
+        sort = values;
+      } else if (key === 'direction') {
+        direction = values;
+      } else {
+        if (typeof values === 'string') {
+          filterSet(key, values);
+        } else {
+          angular.forEach(values, function (value) {
+            filterSet(key, value);
+          });
+        }
+      }
+    });
+    if (angular.isString(sort) && angular.isString(direction)) {
+      userFileSortsService.fields[0] = {
+        name: sort,
+        direction: direction
+      };
+    }
 
     var promise = $q.defer();
     var getUserFiles = userFileBrowserFactory.getUserFiles;
+
     getUserFiles().then(function (solr) {
       vm.attributeFilters =
           userFileBrowserFactory.createFilters(solr.facet_field_counts);
       promise.resolve();
     }, function () {
-      $log.error('/user/files/ request failed');
+      $log.error('/files/ request failed');
       promise.reject();
     });
   }

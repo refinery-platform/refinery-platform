@@ -13,11 +13,10 @@ FILE_STORE_DIR setting - main file store directory
 Example: FILE_STORE_DIR = 'files'
 
 """
-
 import logging
 import os
 import re
-from urlparse import urljoin
+import urlparse
 
 from django.conf import settings
 from django.core.files.storage import FileSystemStorage
@@ -37,51 +36,25 @@ logger = logging.getLogger(__name__)
 
 
 def _mkdir(path):
-    """Create directory given absolute file system path.
-    Does not create intermediate dirs if they don't exist.
+    """Create directory given absolute file system path
+    Does not create intermediate dirs if they don't exist, raises RuntimeError
 
-    :param path: Absolute file system path.
-    :type path: str.
-    :returns: bool -- True if directory was created, False if it wasn't.
+    :param path: Absolute file system path
+    :type path: str
     """
-    logger.debug("Creating directory '%s'", path)
-    try:
-        os.mkdir(path)
-    except OSError as e:
-        logger.error("Error creating directory '%s': %s", path, e)
-        return False
-    logger.info("Created directory '%s'", path)
-    return True
+    if not os.path.isdir(path):
+        try:
+            os.mkdir(path)
+        except OSError as exc:
+            logger.error("Error creating directory '%s': %s", path, exc)
+            raise RuntimeError()
+        else:
+            logger.info("Created directory '%s'", path)
 
 
-# configure and create file store directories
-if not settings.FILE_STORE_DIR:
-    settings.FILE_STORE_DIR = 'file_store'  # relative to MEDIA_ROOT
-
-# absolute path to the file store root dir
-FILE_STORE_BASE_DIR = os.path.join(settings.MEDIA_ROOT,
-                                   settings.FILE_STORE_DIR)
-# create this directory in case it doesn't exist
-if not os.path.isdir(FILE_STORE_BASE_DIR):
-    _mkdir(FILE_STORE_BASE_DIR)
-
-# temp dir should be located on the same file system as the base dir
-FILE_STORE_TEMP_DIR = os.path.join(FILE_STORE_BASE_DIR, 'temp')
-# create this directory in case it doesn't exist
-if not os.path.isdir(FILE_STORE_TEMP_DIR):
-    _mkdir(FILE_STORE_TEMP_DIR)
-
-# To make sure we can move uploaded files into file store quickly instead of
-# copying
-if not settings.FILE_UPLOAD_TEMP_DIR:
-    settings.FILE_UPLOAD_TEMP_DIR = FILE_STORE_TEMP_DIR
-# To keep uploaded files always on disk
-if not settings.FILE_UPLOAD_MAX_MEMORY_SIZE:
-    settings.FILE_UPLOAD_MAX_MEMORY_SIZE = 0
-
-# http://stackoverflow.com/q/4832626
-FILE_STORE_BASE_URL = \
-    urljoin(settings.MEDIA_URL, settings.FILE_STORE_DIR) + '/'
+# create data storage directories
+_mkdir(settings.FILE_STORE_BASE_DIR)
+_mkdir(settings.FILE_STORE_TEMP_DIR)
 
 
 def file_path(instance, filename):
@@ -120,11 +93,13 @@ def map_source(source):
     return source
 
 
-def generate_file_source_translator(username='', base_path=''):
+def generate_file_source_translator(username=None, base_path=None,
+                                    identity_id=None):
     """Generate file source reference translator function based on username or
-    base_path
+    base_path or AWS Cognito identity ID
     username: user's subdirectory in settings.REFINERY_DATA_IMPORT_DIR
     base_path: absolute path to prepend to source if source is relative
+    identity_id: AWS Cognito identity ID of the current user
     """
 
     def translate(source):
@@ -132,11 +107,17 @@ def generate_file_source_translator(username='', base_path=''):
         source: URL, absolute or relative file system path
         """
         source = map_source(source.strip())
+
         # ignore URLs and absolute file paths
         if core.utils.is_url(source) or os.path.isabs(source):
             return source
+
         # process relative path
-        if base_path:
+        if identity_id:
+            source = "s3://{}/{}/{}".format(
+                settings.UPLOAD_BUCKET, identity_id, source
+            )
+        elif base_path:
             source = os.path.join(base_path, source)
         elif username:
             source = os.path.join(
@@ -201,8 +182,8 @@ class _FileStoreItemManager(models.Manager):
         item.set_filetype(filetype)
 
         # symlink if source is a file system path outside of the import dir
-        if (os.path.isabs(item.source) and settings.
-                REFINERY_DATA_IMPORT_DIR not in item.source):
+        if (os.path.isabs(item.source) and
+                settings.REFINERY_DATA_IMPORT_DIR not in item.source):
             item.symlink_datafile()
 
         return item
@@ -228,15 +209,14 @@ class _FileStoreItemManager(models.Manager):
 
 @deconstructible
 class SymlinkedFileSystemStorage(FileSystemStorage):
-    """Custom file system storage class with support for symlinked files.
-    """
+    """Custom file system storage class with support for symlinked files"""
 
     # Allow for SymlinkedFileSystemStorage to be settings-agnostic
     # SEE: http://stackoverflow.com/a/32349636/6031066
     def __init__(self):
         super(SymlinkedFileSystemStorage, self).__init__(
-            location=FILE_STORE_BASE_DIR,
-            base_url=FILE_STORE_BASE_URL
+            location=settings.FILE_STORE_BASE_DIR,
+            base_url=settings.FILE_STORE_BASE_URL
         )
 
     def exists(self, name):
@@ -392,7 +372,6 @@ class FileStoreItem(models.Model):
                         pass
 
             self.save()
-            logger.info("File type is set to '%s'", f)
             return True
 
         except Exception as e:
@@ -435,7 +414,7 @@ class FileStoreItem(models.Model):
         :returns: bool -- True if deletion succeeded, False otherwise.
         """
         if self.datafile:
-            logger.debug("Deleting datafile '%s'", self.datafile.name)
+            logger.info("Deleting datafile '%s'", self.datafile.name)
             try:
                 self.datafile.delete()
             except OSError as e:
@@ -466,8 +445,8 @@ class FileStoreItem(models.Model):
             new_rel_path = self.datafile.storage.get_available_name(
                 file_path(self, name)
             )
-            new_abs_path = os.path.join(FILE_STORE_BASE_DIR, new_rel_path)
-
+            new_abs_path = os.path.join(settings.FILE_STORE_BASE_DIR,
+                                        new_rel_path)
             # rename the physical file
             if _rename_file_on_disk(self.datafile.path, new_abs_path):
                 # update the model with new path
@@ -495,9 +474,10 @@ class FileStoreItem(models.Model):
         if os.path.isfile(self.source):
             # construct symlink target path based on source file name
             rel_dst_path = self.datafile.storage.get_available_name(
-                file_path(self, os.path.basename(self.source)))
-            abs_dst_path = os.path.join(FILE_STORE_BASE_DIR, rel_dst_path)
-
+                file_path(self, os.path.basename(self.source))
+            )
+            abs_dst_path = os.path.join(settings.FILE_STORE_BASE_DIR,
+                                        rel_dst_path)
             # create symlink
             if _symlink_file_on_disk(self.source, abs_dst_path):
                 # update the model with the symlink path
@@ -519,19 +499,16 @@ class FileStoreItem(models.Model):
         :type self: A FileStoreItem instance
         :returns: A url for the given FileStoreItem or None
         """
-
         if self.is_local():
-            return self.datafile.url
-        else:
-            # data file doesn't exist on disk
-            if os.path.isabs(self.source):
-                # source is a file system path
-                logger.error("File not found at '%s'",
-                             self.datafile.name)
+            return core.utils.get_full_url(self.datafile.url)
+
+        if core.utils.is_url(self.source):
+            if self.source.startswith('s3://'):
                 return None
-            else:
-                # source is a URL
-                return self.source
+            return self.source
+
+        logger.error("File not found at '%s'", self.datafile.name)
+        return None
 
     def get_import_status(self):
         """Return file import task state"""
@@ -544,7 +521,7 @@ class FileStoreItem(models.Model):
         NOTE: That if you simply revoke() a task without the `terminate` ==
         True, said task will try to restart upon a Worker restart.
 
-        See: http://bit.ly/2di038U or http://bit.ly/1qb8763
+        http://docs.celeryproject.org/en/latest/userguide/workers.html#revoke-revoking-tasks
         """
         try:
             revoke(self.import_task_id, terminate=True)
@@ -582,12 +559,11 @@ def is_permanent(uuid):
 
 
 def get_temp_dir():
-    '''Return the absolute path to the file store temp dir.
+    """Return the absolute path to the file store temp dir.
 
     :returns: str -- absolute path to the file store temp dir.
-
-    '''
-    return FILE_STORE_TEMP_DIR
+    """
+    return settings.FILE_STORE_TEMP_DIR
 
 
 def get_file_extension(uuid):
@@ -652,7 +628,6 @@ def _delete_datafile(sender, **kwargs):
 
     """
     item = kwargs.get('instance')
-    logger.debug("Deleting FileStoreItem with UUID '%s'", item.uuid)
     item.delete_datafile()
 
 
@@ -720,17 +695,16 @@ def _rename_file_on_disk(current_path, new_path):
 
 
 def get_extension_from_path(path):
-    '''Return file extension given its file system path.
+    """Return file extension given its file system path
 
-    :returns: str -- File extension preceeded by a period.
-
-    '''
+    :returns: str -- File extension preceded by a period.
+    """
     return os.path.splitext(path)[-1]
 
 
-class FileStoreCache:
-    '''
-    LRU file cache
-    '''
-    # doubly-linked list or heapq
-    pass
+def parse_s3_url(url):
+    """Return a tuple containing S3 bucket name and object key given S3
+    protocol URL (s3://bucket-name/key)
+    """
+    result = urlparse.urlparse(url)
+    return result.netloc, result.path[1:]  # strip leading slash

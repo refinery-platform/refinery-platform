@@ -15,6 +15,7 @@ import requests
 from requests.exceptions import HTTPError
 
 import core
+from core.utils import skip_if_test_run
 import data_set_manager
 from file_store.models import FileStoreItem
 
@@ -200,9 +201,6 @@ class Study(NodeCollection):
     investigation = models.ForeignKey(Investigation)
     # TODO: should we support an archive file here? (see ISA-Tab Spec 4.1.3.2)
     file_name = models.TextField()
-
-    def assay_nodes(self):
-        self.node_set(type=Node.ASSAY)
 
     def get_dataset(self):
         investigation_uuid = self.investigation.uuid
@@ -428,7 +426,7 @@ class Node(models.Model):
     analysis_uuid = UUIDField(default=None, blank=True, null=True, auto=False)
     is_auxiliary_node = models.BooleanField(default=False)
     subanalysis = models.IntegerField(null=True, blank=False)
-    workflow_output = models.CharField(null=True, blank=False, max_length=100)
+    workflow_output = models.CharField(null=True, blank=False, max_length=500)
 
     def __unicode__(self):
         return unicode(self.type) + ": " + unicode(self.name) + " (" +\
@@ -445,6 +443,16 @@ class Node(models.Model):
         node.parents.add(self)
         node.save()
         return self
+
+    def get_analysis(self):
+        try:
+            return core.models.Analysis.objects.get(uuid=self.analysis_uuid)
+        except core.models.Analysis.DoesNotExist:
+            return None
+        except core.models.Analysis.MultipleObjectsReturned as e:
+            logger.error("Multiple Analyses found for Node with UUID: %s %s",
+                         self.uuid, e)
+            return None
 
     def _get_derived_node_types(self):
         """
@@ -467,6 +475,9 @@ class Node(models.Model):
         Node types which are "derived"
         """
         return self.type in self._get_derived_node_types()
+
+    def is_orphan(self):
+        return self.parents.count() == 0
 
     def get_analysis_node_connections(self):
         return core.models.AnalysisNodeConnection.objects.filter(node=self)
@@ -504,7 +515,7 @@ class Node(models.Model):
             # (<Node_object>, Boolean: <created>)
             # So, if this Node is newly created, we will associate it as a
             # child to its parent, otherwise nothing happens
-            # See here for reference: http://bit.ly/2bL0PH5
+            # https://docs.djangoproject.com/en/1.10/ref/models/querysets/#get-or-create
             node_object = node[0]
             is_newly_created_node = node[1]
 
@@ -861,6 +872,7 @@ def _is_facet_attribute(attribute, study, assay):
     return (attribute_values / items) < ratio
 
 
+@skip_if_test_run
 def initialize_attribute_order(study, assay):
     """Initializes the AttributeOrder table after all nodes for the given study
     and assay have been indexed by Solr.

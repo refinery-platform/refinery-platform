@@ -1,21 +1,24 @@
+import json
 import logging
 from urlparse import urljoin
 
 from django.contrib.auth.models import User
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from django.http import QueryDict
-from django.test import TestCase
+from django.test import RequestFactory, TestCase
 
 from guardian.utils import get_anonymous_user
+import mock
 import requests
 from rest_framework.test import (APIRequestFactory, APITestCase,
                                  force_authenticate)
 
 from data_set_manager.models import Assay
+from data_set_manager.search_indexes import NodeIndex
 from factory_boy.utils import create_dataset_with_necessary_models
 
 from .utils import generate_solr_params_for_user
-from .views import UserFiles
+from .views import UserFiles, user_files_csv
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +27,7 @@ class UserFilesAPITests(APITestCase):
     def setUp(self):
         self.factory = APIRequestFactory()
         self.view = UserFiles.as_view()
-        self.url_root = '/api/v2/user/files/'
+        self.url_root = '/api/v2/files/'
         self.user = get_anonymous_user()
 
     def test_get(self):
@@ -41,14 +44,60 @@ class UserFilesAPITests(APITestCase):
 
 
 class UserFilesUITests(StaticLiveServerTestCase):
-    def test_get(self):
+    def test_ui(self):
         response = requests.get(
             urljoin(
                 self.live_server_url,
-                'user/files/'
+                'files/'
             )
         )
         self.assertIn("All Files", response.content)
+
+    @mock.patch('django.conf.settings.USER_FILES_COLUMNS', 'filename,fake')
+    def test_csv(self):
+        response = requests.get(
+            urljoin(
+                self.live_server_url,
+                'files_download'
+            )
+        )
+        self.assertEqual(
+            response.content,
+            'url,filename,fake\r\n'
+        )
+
+
+class UserFilesViewTests(TestCase):
+
+    @mock.patch('django.conf.settings.USER_FILES_COLUMNS', 'filename,fake')
+    def test_user_files_csv(self):
+        request = RequestFactory().get('/fake-url')
+        request.user = User.objects.create_user(
+            'testuser', 'test@example.com', 'password')
+        mock_doc = {
+            NodeIndex.DOWNLOAD_URL:
+                'fake-url',
+            'filename_Characteristics' + NodeIndex.GENERIC_SUFFIX:
+                'fake-filename',
+            'organism_Factor_Value' + NodeIndex.GENERIC_SUFFIX:
+                u'handles\u2013unicode'
+            # Just want to exercise "_Characteristics" and "_Factor_Value":
+            # Doesn't matter if the names are backwards.
+        }
+        with mock.patch(
+            'user_files_manager.views._get_solr',
+            return_value=json.dumps({
+                'response': {
+                    'docs': [mock_doc]
+                }
+            })
+        ):
+            response = user_files_csv(request)
+            self.assertEqual(
+                response.content,
+                'url,filename,fake\r\n'
+                'fake-url,fake-filename,\r\n'
+            )
 
 
 class UserFilesUtilsTests(TestCase):
@@ -77,7 +126,8 @@ class UserFilesUtilsTests(TestCase):
                          '%2Cname'
                          '%2C%2A_uuid'
                          '%2Ctype'
-                         '%2Cdjango_id',
+                         '%2Cdjango_id'
+                         '%2CREFINERY_DOWNLOAD_URL_s',
                          'fq=type%3A%28%22Raw Data File%22 '
                          'OR %22Derived Data File%22 '
                          'OR %22Array Data File%22 '

@@ -228,68 +228,36 @@ border: none;
 }
 
 //Global analyses status icon/popover
-#analyses-popover {
-  .popover {
-    position: absolute;
-    display: block;
-    top: 20px !important;
-    right: 0 !important;
-    max-width: 450px;
-    z-index: 1010;
-    padding: 1px;
-    text-align: left;
-  }
+.global-analysis-popover {
+  position: absolute;
+  display: block;
+  top: 20px !important;
+  right: 0 !important;
+  max-width: 450px;
+  padding: 1px;
+  text-align: left;
+
  .popover.left .arrow:after, .arrow {
-      display: none;
-    }
+   display: none;
+ }
 }
 
 #global-analysis-status-run-div {
   cursor:pointer;
 }
 
-.analyses-global-text-icon {
-  display: inline-block;
-  float:left;
-  text-align: left;
-  width: 25px;
-}
-
-.analyses-global-text {
-  display: inline-block;
-  width: 375px;
-}
-
-.analysis-running-percentage {
-  display: inline-block;
-  width: 25px;
-  max-width: 25px;
-  text-align: center;
-}
-
 ul#analyses-popover {
   font-size: .9em;
-  list-style-type: none;
-  margin: 0 0 10px 0;
-  padding: 0px;
-  li {
-    padding: 0;
-    margin: 0;
-    width: 450px;
-  }
+  padding: 0;
 }
 
-a#analyses-popover-links {
+a.analyses-popover-links {
   color: #136382;
   font-weight: normal;
 }
 
-a#analyses-popover-links:hover, a:focus {
+a.analyses-popover-links:hover, a:focus {
   color:#09303f;
-}
-
-.tooltip-inner {
-    max-width: 275px;
 }
 
 .fa-check-circle.analyses-status {
@@ -388,6 +356,7 @@ a.close.analysis-alert {
 
 #collapse-analysis-run {
   cursor: pointer;
+  text-decoration: none;
 }
 
 .analysis-cancel-col {
@@ -721,6 +690,17 @@ a.analysis-header {
     font-size: @base-font-size * 1.15;
   }
 
+  &-tabs .nav-tabs div.linked {
+    background-color: transparent;
+    border: none;
+    margin-right: 0px;
+    padding-top: 2px;
+    padding-bottom: 4px;
+    margin-left: 10px;
+    margin-right: 10px;
+    font-size: @base-font-size * 1.15;
+  }
+
   &-tabs .nav-tabs li.active {
     background-color: @white;
     border-top: 5px solid @gray;
@@ -733,7 +713,15 @@ a.analysis-header {
     border-radius: 0px;
   }
 
+  &-tabs .nav-tabs li.active div.linked:hover {
+    border-radius: 0px;
+  }
+
   &-tabs .nav-tabs li a:hover {
+    border-radius: 0px;
+  }
+
+  &-tabs .nav-tabs li div.linked:hover {
     border-radius: 0px;
   }
 
@@ -743,6 +731,14 @@ a.analysis-header {
     padding-top: 4px;
     padding-bottom: 2px;
   }
+
+  &-tabs .nav-tabs li.active div.linked:hover {
+    background-color: transparent;
+    border: none;
+    padding-top: 4px;
+    padding-bottom: 2px;
+  }
+
 
   .navbar-search {
     display: block;
@@ -1531,29 +1527,6 @@ ul.badge-list {
 
 .active-group {
   background-color: darken(@gray-lighter, 5%);
-}
-
-.fastqc-box {
-  color: rgba(0, 0, 0, 1);
-  fill: yellow;
-  stroke: rgba(0, 0, 0, 1);
-}
-
-.fastqc-box-axis line, .fastqc-box-axis path {
-    fill: none;
-    stroke: black;
-    shape-rendering: crispEdges;
-}
-
-.fastqc-chart-drawspace {
-  position: relative;
-  height: 100%;
-  width: 100%;
-
-  svg {
-    width: 100%;
-    height: 100%;
-  }
 }
 
 .horizontal-list li {

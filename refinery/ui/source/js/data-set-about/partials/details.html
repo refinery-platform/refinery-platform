@@ -1,6 +1,10 @@
-<div class="refinery-header">
-  <div class="refinery-header-left">
-    <h3>{{ ADCtrl.dataSet.accession }}: {{ ADCtrl.dataSet.title }}</h3>
+<div class="refinery-header row">
+  <div class="refinery-header-left col-md-12">
+
+    <h3>
+      {{ ADCtrl.dataSet.accession }}<span ng-if="ADCtrl.dataSet.title &&
+      ADCtrl.dataSet.accession">:</span> {{ ADCtrl.dataSet.title }}
+    </h3>
     <span ng-if="ADCtrl.dataSet.is_owner">
       <a
         ng-click="ADCtrl.isCollapsed.title = !ADCtrl.isCollapsed.title"
@@ -12,23 +16,28 @@
   <div
     id="dataSetAccession"
     uib-collapse="ADCtrl.isCollapsed.title">
-    <div class="vertical-align">
+    <div class="vertical-align p-t-1-2">
       <form
         ng-submit="ADCtrl.updateDataSet(
-        'accession', ADCtrl.updatedField.accession
+        'accession', ADCtrl.editedDataSet.accession
         )"
         name="dataSetAccessionForm"
-        class="navbar-form text-align-center float-left">
-      <input
-        autofocus
-        type="text"
-        name="dataSetAccession"
-        class="form-control"
-        placeholder="update accession"
-        ng-model="ADCtrl.updatedField.accession"
-        ng-minlength="3"
-        ng-maxlength="32"
-        required>
+        class="p-r-1-2 col-md-4">
+        <div class="form-group" ng-class='{"has-warning":!dataSetAccessionForm.$valid}'>
+          <label class="control-label" for="dataSetAccessionInput">
+            Edit Accession
+          </label>
+          <input
+            autofocus
+            type="text"
+            id="dataSetAccessionInput"
+            name="dataSetAccession"
+            class="form-control"
+            ng-model="ADCtrl.editedDataSet.accession"
+            ng-minlength="3"
+            ng-maxlength="32"
+            required>
+        </div>
       </form>
 
       <button
@@ -41,16 +50,18 @@
         type="submit"
         class="btn btn-xs btn-primary"
         ng-click="ADCtrl.updateDataSet(
-        'accession', ADCtrl.updatedField.accession)"
-        ng-disabled="!dataSetAccessionForm.$valid">
+        'accession', ADCtrl.editedDataSet.accession)"
+        ng-disabled="!dataSetAccessionForm.$valid ||
+        ADCtrl.editedDataSet.accession == ADCtrl.dataSet.accession">
         Save
       </button>
+
       <span
         class='p-l-1-2 text-warning'
         ng-show="dataSetAccessionForm.dataSetAccession.$error.minlength ||
         dataSetAccessionForm.dataSetAccession.$error.required">
         <i class="fa fa-warning" aria-hidden="true"></i>
-        Accession must be 3 characters long.
+        Accession must be <strong>at least</strong> 3 characters long.
       </span>
       <span
         class='p-l-1-2 text-warning'
@@ -64,22 +75,27 @@
   <div
     id="dataSetTitle"
     uib-collapse="ADCtrl.isCollapsed.title">
-    <div class="vertical-align">
+    <div class="vertical-align p-t-1-2">
       <form
-        ng-submit="ADCtrl.updateDataSet('title', ADCtrl.updatedField.title)"
+        ng-submit="ADCtrl.updateDataSet('title', ADCtrl.editedDataSet.title)"
         name="dataSetTitleForm"
-        class="navbar-form text-align-center float-left">
-      <input
-        autofocus
-        type="text"
-        name="dataSetTitle"
-        class="form-control"
-        placeholder="update data set title"
-        ng-model="ADCtrl.updatedField.title"
-        ng-minlength="3"
-        ng-maxlength="250"
-        required>
-      </form>
+        class="p-r-1-2 col-md-4">
+        <div class="form-group" ng-class='{"has-warning":!dataSetTitleForm.$valid}'>
+          <label class="control-label" for="dataSetTitleInput">
+            Edit Title
+          </label>
+          <input
+            autofocus
+            type="text"
+            id="dataSetTitleInput"
+            name="dataSetTitle"
+            class="form-control"
+            ng-model="ADCtrl.editedDataSet.title"
+            ng-minlength="3"
+            ng-maxlength="250"
+            required>
+          </div>
+        </form>
 
       <button
         type="button"
@@ -90,8 +106,9 @@
       <button
         type="submit"
         class="btn btn-xs btn-primary"
-        ng-click="ADCtrl.updateDataSet('title', ADCtrl.updatedField.title)"
-        ng-disabled="!dataSetTitleForm.$valid">
+        ng-click="ADCtrl.updateDataSet('title', ADCtrl.editedDataSet.title)"
+        ng-disabled="!dataSetTitleForm.$valid ||
+        ADCtrl.editedDataSet.title == ADCtrl.dataSet.title">
         Save
       </button>
       <span
@@ -99,7 +116,7 @@
         ng-show="dataSetTitleForm.dataSetTitle.$error.minlength ||
         dataSetTitleForm.dataSetTitle.$error.required">
         <i class="fa fa-warning" aria-hidden="true"></i>
-        Title must be 3 characters long.
+        Title must be <strong>at least</strong> 3 characters long.
       </span>
       <span
         class='p-l-1-2 text-warning'
@@ -128,21 +145,26 @@
      None provided.
   </div>
 <div id="dataSetSummary" uib-collapse="ADCtrl.isCollapsed.summary">
-  <div class="vertical-align">
+  <div class="vertical-align p-t-1-2">
     <form
-      ng-submit="ADCtrl.updateDataSet('summary', ADCtrl.updatedField.summary)"
+      ng-submit="ADCtrl.updateDataSet('summary', ADCtrl.editedDataSet.summary)"
       name="dataSetSummaryForm"
-      class="navbar-form text-align-center float-left">
-      <textarea
-        autofocus
-        name="dataSetSummary"
-        class="form-control"
-        placeholder="update data set summary"
-        ng-model="ADCtrl.updatedField.summary"
-        ng-minlength="3"
-        ng-maxlength="1000"
-        required>
-      </textarea>
+      class="p-r-1-2 col-md-4">
+      <div class="form-group" ng-class='{"has-warning":!dataSetSummaryForm.$valid}'>
+        <label class="control-label" for="dataSetSummaryInput">
+          Edit Summary
+        </label>
+        <textarea
+          autofocus
+          id="dataSetSummaryInput"
+          name="dataSetSummary"
+          class="form-control"
+          ng-model="ADCtrl.editedDataSet.summary"
+          ng-minlength="3"
+          ng-maxlength="1000"
+          required>
+        </textarea>
+      </div>
     </form>
 
     <button
@@ -154,8 +176,9 @@
     <button
       type="submit"
       class="btn btn-xs btn-primary"
-      ng-click="ADCtrl.updateDataSet('summary', ADCtrl.updatedField.summary)"
-      ng-disabled="!dataSetSummaryForm.$valid">
+      ng-click="ADCtrl.updateDataSet('summary', ADCtrl.editedDataSet.summary)"
+      ng-disabled="!dataSetSummaryForm.$valid ||
+      ADCtrl.editedDataSet.summary == ADCtrl.dataSet.summary">
       Save
     </button>
     <span
@@ -163,7 +186,7 @@
       ng-show="dataSetSummaryForm.dataSetSummary.$error.minlength ||
       dataSetSummaryForm.dataSetSummary.$error.required">
       <i class="fa fa-warning" aria-hidden="true"></i>
-      Summary must be 3 characters long.
+      Summary must be <strong>at least</strong> 3 characters long.
     </span>
     <span
       class='p-l-1-2 text-warning'
@@ -192,21 +215,26 @@
   </div>
 
 <div id="dataSetDescription" uib-collapse="ADCtrl.isCollapsed.description">
-  <div class="vertical-align">
+  <div class="vertical-align p-t-1-2">
     <form
-      ng-submit="ADCtrl.updateDataSet('description', ADCtrl.updatedField.description)"
+      ng-submit="ADCtrl.updateDataSet('description', ADCtrl.editedDataSet.description)"
       name="dataSetDescriptionForm"
-      class="navbar-form text-align-center float-left">
-      <textarea
-        autofocus
-        name="dataSetDescription"
-        class="form-control"
-        placeholder="update data set description"
-        ng-model="ADCtrl.updatedField.description"
-        ng-minlength="3"
-        ng-maxlength="5000"
-        required>
-      </textarea>
+      class="p-r-1-2 col-md-4">
+      <div class="form-group" ng-class='{"has-warning":!dataSetDescriptionForm.$valid}'>
+        <label class="control-label" for="dataSetDescriptionInput">
+          Edit Description
+        </label>
+        <textarea
+          autofocus
+          id="dataSetDescriptionInput"
+          name="dataSetDescription"
+          class="form-control"
+          ng-model="ADCtrl.editedDataSet.description"
+          ng-minlength="3"
+          ng-maxlength="5000"
+          required>
+        </textarea>
+      </div>
     </form>
 
     <button
@@ -218,8 +246,9 @@
     <button
       type="submit"
       class="btn btn-xs btn-primary"
-      ng-click="ADCtrl.updateDataSet('description', ADCtrl.updatedField.description)"
-      ng-disabled="!dataSetDescriptionForm.$valid">
+      ng-click="ADCtrl.updateDataSet('description', ADCtrl.editedDataSet.description)"
+      ng-disabled="!dataSetDescriptionForm.$valid ||
+      ADCtrl.editedDataSet.description == ADCtrl.dataSet.description">
       Save
     </button>
     <span
@@ -227,7 +256,7 @@
       ng-show="dataSetDescriptionForm.dataSetDescription.$error.minlength ||
       dataSetDescriptioForm.dataSetDescription.$error.required">
       <i class="fa fa-warning" aria-hidden="true"></i>
-      Description must be 3 characters long.
+      Description must be <strong> at least</strong> 3 characters long.
     </span>
     <span
       class='p-l-1-2 text-warning'
@@ -255,21 +284,26 @@
    None provided.
 </div>
 <div id="dataSetSlug" uib-collapse="ADCtrl.isCollapsed.slug">
-  <div class="vertical-align">
+  <div class="vertical-align p-t-1-2">
     <form
-      ng-submit="ADCtrl.updateDataSet('slug', ADCtrl.updatedField.slug)"
+      ng-submit="ADCtrl.updateDataSet('slug', ADCtrl.editedDataSet.slug)"
       name="dataSetSlugForm"
-      class="navbar-form text-align-center float-left">
-      <input
-        type="text"
-        autofocus
-        name="dataSetSlug"
-        class="form-control"
-        placeholder="update data set slug"
-        ng-model="ADCtrl.updatedField.slug"
-        ng-minlength="3"
-        ng-maxlength="250"
-        required>
+      class="p-r-1-2 col-md-4">
+      <div class="form-group" ng-class='{"has-warning":!dataSetSlugForm.$valid}'>
+        <label class="control-label" for="dataSetSlugInput">
+          Edit Shortcut Name
+        </label>
+        <input
+          type="text"
+          autofocus
+          id="dataSetSlugInput"
+          name="dataSetSlug"
+          class="form-control"
+          ng-model="ADCtrl.editedDataSet.slug"
+          ng-minlength="3"
+          ng-maxlength="250"
+          required>
+        </div>
     </form>
 
     <button
@@ -281,8 +315,9 @@
     <button
       type="submit"
       class="btn btn-xs btn-primary"
-      ng-click="ADCtrl.updateDataSet('slug', ADCtrl.updatedField.slug)"
-      ng-disabled="!dataSetSlugForm.$valid">
+      ng-click="ADCtrl.updateDataSet('slug', ADCtrl.editedDataSet.slug)"
+      ng-disabled="!dataSetSlugForm.$valid ||
+      ADCtrl.editedDataSet.slug == ADCtrl.dataSet.slug">
       Save
     </button>
     <span
@@ -290,7 +325,7 @@
       ng-show="dataSetSlugForm.dataSetSlug.$error.minlength ||
       dataSetSlugForm.dataSetSlug.$error.required">
       <i class="fa fa-warning" aria-hidden="true"></i>
-      Shortcut name must be 3 characters long.
+      Shortcut name must be <strong>at least</strong> 3 characters long.
     </span>
     <span
       class='p-l-1-2 text-warning'
@@ -356,7 +391,7 @@
 </span>
 <div ng-if="ADCtrl.dataSet.isa_archive">
 <p>
-   <a href="{{ADCtrl.fileStoreItem.datafile && ADCtrl.fileStoreItem.datafile}}">
+   <a href="{{ADCtrl.fileStoreItem.datafile}}">
     {{ADCtrl.fileStoreItem.datafile | isaArchiveName}}
   </a>
     - {{ADCtrl.fileStoreItem.file_size | fileSizeFormat}}
@@ -370,7 +405,7 @@
     - {{ADCtrl.fileStoreItem.file_size | fileSizeFormat}}
   </p>
 </div>
-<div ng-if="!(ADCtrl.dataSet.isa_archive || ADCtrl.dataSet.pre_isa_archive)">
+<div ng-if="!(ADCtrl.dataSet.isa_archive || ADCtrl.dataSet.pre_isa_archive && ADCtrl.fileStoreItem.datafile)">
 <p class="emphasized">Not available.</p>
 </div>
 
@@ -379,9 +414,9 @@
 </span>
 <p>
   {{ ADCtrl.dataSet.file_count }} files
-  <div ng-if="ADCtrl.dataSet.file_size > 0">
-   - {{ ADCtrl.dataSet.file_size | fileSizeFormat }}
-  </div>
+  <span ng-if="ADCtrl.dataSet.file_size > 0">
+   using {{ ADCtrl.dataSet.file_size | fileSizeFormat }}
+  </span>
 </p>
 
 <div class="refinery-header">
@@ -391,6 +426,24 @@
 </div>
 <p>
   Current version <span class="emphasized">{{ ADCtrl.dataSet.version }}</span>.
-  Data set created <span class="emphasized">{{ ADCtrl.dataSet.creation_date }}</span>.
-  Last modified <span class="emphasized">{{ ADCtrl.dataSet.modification_date }}</span>.
+  Data set created <span class="emphasized">{{ ADCtrl.dataSet.creation_date | date:'medium' }}</span>.
+  Last modified <span class="emphasized">{{ ADCtrl.dataSet.modification_date | date:'medium' }}</span>.
 </p>
+<form id="isaTabImportForm" enctype="multipart/form-data" action="/data_set_manager/import/take_ownership/" method="post"
+      ng-if="ADCtrl.dataSet.isa_archive && ADCtrl.dataSet.public && !ADCtrl.dataSet.is_owner && ADCtrl.loggedIn">
+    <!-- TODO: check if logged in: anonymous user can not import -->
+    <input type="hidden" name="csrfmiddlewaretoken" value="{{ ADCtrl.csrfToken }}" />
+    <input type="hidden" name="isa_tab_url" value="{{ ADCtrl.dataSet.isa_archive_url }}" />
+    <input class="refinery-base btn btn-important"
+          id="isa-import-button" type="submit" value="Import into own space"/>
+    <a
+        popover-placement="right"
+        uib-popover-html="'Analyses run on a data set becomes part of the data set: For this reason you can not
+        run analyses on a data set you do not own. However, you are free to create your own copy of the original data set.'"
+        popover-title="Import this data set into your own space"
+        popover-trigger="focus"
+        popover-append-to-body="true"
+        tabindex="0">
+        <i class="fa fa-question-circle info-icon icon-only"></i>
+    </a>
+</form>
