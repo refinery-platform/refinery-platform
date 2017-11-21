@@ -135,6 +135,7 @@
       al.exit().remove();
 
       /* Set dom elements. */
+
       partsService.aLink = d3.selectAll('.aLink');
     //  angular.copy(d3.selectAll('.aLink'), partsService.aLink);
       partsService.link = d3.selectAll('.link');

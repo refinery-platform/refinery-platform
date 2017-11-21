@@ -303,7 +303,7 @@
       });
 
       lGlyph.each(function (ln) {  // eslint-disable-line no-shadow
-        if (provvisHelpers.getLayerSuccCount.getLayerSuccCount(ln) > 0) {
+        if (provvisHelpers.getLayerSuccCount(ln) > 0) {
           d3.select(this).append('g').classed({
             grAnchor: true
           }).append('path')
@@ -335,14 +335,14 @@
       });
 
       lGlyph.each(function (ln) {  // eslint-disable-line no-shadow
-        if (provvisHelpers.getLayerSuccCount.getLayerSuccCount(ln) > 1) {
+        if (provvisHelpers.getLayerSuccCount(ln) > 1) {
           d3.select(this).select('g.grAnchor').append('text')
             .attr('transform', function () {
               return 'translate(' + (2.8 * scaleFactor * vis.radius) + ',' +
                 0.5 + ')';
             })
             .text(function () {
-              return provvisHelpers.getLayerSuccCount.getLayerSuccCount(ln);
+              return provvisHelpers.getLayerSuccCount(ln);
             }).attr('class', 'lLabel');
         }
       });
