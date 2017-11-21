@@ -1,6 +1,12 @@
+import logging
+
 from django.db import models
 
 from bioblend import galaxy
+
+logger = logging.getLogger(__name__)
+
+error_msg = "Error deleting Galaxy %s for analysis '%s': %s"
 
 
 class Instance(models.Model):
@@ -53,3 +59,16 @@ class Instance(models.Model):
 
             files.append(file_info)
         return files
+
+    def delete_history(self, history_id):
+        try:
+            self.galaxy_connection().histories.delete_history(history_id,
+                                                              purge=True)
+        except galaxy.client.ConnectionError as e:
+            logger.error(error_msg, 'history', self.name, e.message)
+
+    def delete_library(self, library_id):
+        try:
+            self.galaxy_connection().libraries.delete_library(library_id)
+        except galaxy.client.ConnectionError as e:
+            logger.error(error_msg, 'library', self.name, e.message)

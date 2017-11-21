@@ -1279,8 +1279,11 @@ class Analysis(OwnableResource):
     def running(self):
         return self.get_status() == self.RUNNING_STATUS
 
+    def galaxy_instance(self):
+        return self.workflow.workflow_engine.instance
+
     def galaxy_connection(self):
-        return self.workflow.workflow_engine.instance.galaxy_connection()
+        return self.galaxy_instance().galaxy_connection()
 
     def galaxy_progress(self):
         """Return analysis progress in Galaxy"""
@@ -1309,34 +1312,26 @@ class Analysis(OwnableResource):
 
         return history['percent_complete']
 
-    def galaxy_cleanup(self, force_cleanup=False):
+    def galaxy_cleanup(self):
         """
         Delete Galaxy libraries, and histories based on the value of
         global setting: REFINERY_GALAXY_ANALYSIS_CLEANUP
-        :param force_cleanup: Boolean: Whether or not to override the
-        REFINERY_GALAXY_ANALYSIS_CLEANUP setting
         """
         galaxy_cleanup = settings.REFINERY_GALAXY_ANALYSIS_CLEANUP
         galaxy_cleanup_states = [
-            force_cleanup,
+            self.canceled,
             galaxy_cleanup == 'always',
             galaxy_cleanup == 'on_success' and
             self.get_status() == self.SUCCESS_STATUS
         ]
 
         if any(cleanup_state for cleanup_state in galaxy_cleanup_states):
-            connection = self.galaxy_connection()
-            error_msg = "Error deleting Galaxy %s for analysis '%s': %s"
-
             logger.info("Purging galaxy of libraries, histories, "
                         "and workflows related to the execution of Analysis "
                         "with UUID: %s", self.uuid)
 
-            if self.library_id:
-                try:
-                    connection.libraries.delete_library(self.library_id)
-                except galaxy.client.ConnectionError as e:
-                    logger.error(error_msg, 'library', self.name, e.message)
+            self.galaxy_instance().delete_library(self.library_id)
+            self.galaxy_instance().delete_history(self.history_id)
 
             try:
                 tool = tool_manager.models.WorkflowTool.objects.get(
@@ -1348,28 +1343,16 @@ class Analysis(OwnableResource):
             ) as e:
                 logger.error("Could not properly fetch Tool: %s", e)
             else:
-                if tool.galaxy_import_history_id:
-                    try:
-                        connection.histories.delete_history(
-                            tool.galaxy_import_history_id,
-                            purge=True
-                        )
-                    except galaxy.client.ConnectionError as e:
-                        logger.error(error_msg, 'history', self.name,
-                                     e.message)
-            if self.history_id:
-                try:
-                    connection.histories.delete_history(self.history_id,
-                                                        purge=True)
-                except galaxy.client.ConnectionError as e:
-                    logger.error(error_msg, 'history', self.name, e.message)
+                self.galaxy_instance().delete_history(
+                    tool.galaxy_import_history_id
+                )
 
     def cancel(self):
         """Mark analysis as cancelled"""
         self.canceled = True
         self.set_status(Analysis.FAILURE_STATUS, "Cancelled at user's request")
         # jobs in a running workflow are stopped by deleting its history
-        self.galaxy_cleanup(force_cleanup=True)
+        self.galaxy_cleanup()
 
     def get_input_file_uuid_list(self):
         """Return a list of all input file UUIDs"""
