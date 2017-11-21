@@ -88,8 +88,7 @@
       ahl.exit().remove();
 
       /* Set dom elements. */
-    // hLink = d3.selectAll('.hLink');
-      angular.copy(d3.selectAll('.hLink'), partsService.hLink);
+      partsService.hLink = d3.selectAll('.hLink');
 
       /* Data join */
       var al = vis.canvas.select('g.aLinks').selectAll('.link')
@@ -136,17 +135,16 @@
       al.exit().remove();
 
       /* Set dom elements. */
-     // aLink = d3.selectAll('.aLink');
-      angular.copy(d3.selectAll('.aLink'), partsService.aLink);
-     // link = d3.selectAll('.link');
-      angular.copy(d3.selectAll('.Link'), partsService.link);
+      partsService.aLink = d3.selectAll('.aLink');
+    //  angular.copy(d3.selectAll('.aLink'), partsService.aLink);
+      partsService.link = d3.selectAll('.link');
+    //  angular.copy(d3.selectAll('.Link'), partsService.link);
     }
 
     /**
      * Draw analysis nodes.
      */
     function updateAnalysisNodes (vis, cell) {
-      var timeColorScale = partsService.timeColorScale;
       var scaleFactor = partsService.scaleFactor;
       /* Data join. */
       var lAnalysis = d3.select('g.analyses').selectAll('.analysis')
@@ -163,7 +161,7 @@
       anUpdate.attr('transform', function (d) {
         return 'translate(' + d.x + ',' + d.y + ')';
       }).style('fill', function (d) {
-        return timeColorScale(provvisHelpers.parseISOTimeFormat(d.start));
+        return partsService.timeColorScale(provvisHelpers.parseISOTimeFormat(d.start));
       });
 
       /* Add a clip-path to restrict labels within the cell area. */
@@ -346,7 +344,7 @@
       anEnter.attr('transform', function (d) {
         return 'translate(' + d.x + ',' + d.y + ')';
       }).style('fill', function (d) {
-        return timeColorScale(provvisHelpers.parseISOTimeFormat(d.start));
+        return partsService.timeColorScale(provvisHelpers.parseISOTimeFormat(d.start));
       });
 
       /* Add a clip-path to restrict labels within the cell area. */
@@ -564,8 +562,8 @@
         .classed('an-node-type-icon', true)
         .style({
           fill: function (an) {
-            return timeColorScale(provvisHelpers.parseISOTimeFormat(an.start)) < '#888888' ?
-              '#ffffff' : '#000000';
+            return partsService.timeColorScale(provvisHelpers
+              .parseISOTimeFormat(an.start)) < '#888888' ? '#ffffff' : '#000000';
           }
         });
 
@@ -578,8 +576,8 @@
         }).attr('class', 'anLabel glyphNumeral')
         .style({
           fill: function (an) {
-            return timeColorScale(provvisHelpers.parseISOTimeFormat(an.start)) < '#888888' ?
-              '#ffffff' : '#000000';
+            return partsService.timeColorScale(provvisHelpers
+              .parseISOTimeFormat(an.start)) < '#888888' ? '#ffffff' : '#000000';
           }
         });
 

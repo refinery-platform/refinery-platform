@@ -103,7 +103,7 @@
       ln.exit().remove();
 
       /* Set dom elements. */
-      angular.copy(vis.canvas.select('g.lLinks').selectAll('.link'), partsService.lLink);
+      partsService.lLink = vis.canvas.select('g.lLinks').selectAll('.link');
     }
 
     /**
@@ -114,7 +114,6 @@
       var cell = partsService.cell;
       var lBBox = partsService.lBBox;
       var scaleFactor = partsService.scaleFactor;
-      var timeColorScale = partsService.timeColorScale;
       var vis = partsService.vis;
 
       /* Data join. */
@@ -151,7 +150,7 @@
           var latestDate = d3.min(l.children.values(), function (d) {
             return d.start;
           });
-          return timeColorScale(provvisHelpers.parseISOTimeFormat(latestDate));
+          return partsService.timeColorScale(provvisHelpers.parseISOTimeFormat(latestDate));
         })
         .attr('stop-opacity', 1);
 
@@ -161,7 +160,7 @@
           var earliestDate = d3.max(l.children.values(), function (d) {
             return d.start;
           });
-          return timeColorScale(provvisHelpers.parseISOTimeFormat(earliestDate));
+          return partsService.timeColorScale(provvisHelpers.parseISOTimeFormat(earliestDate));
         })
         .attr('stop-opacity', 1);
 
@@ -390,8 +389,8 @@
             var latestDate = d3.min(l.children.values(), function (d) {
               return d.start;
             });
-            return timeColorScale(provvisHelpers.parseISOTimeFormat(latestDate)) < '#888888' ?
-              '#ffffff' : '#000000';
+            return partsService.timeColorScale(provvisHelpers
+              .parseISOTimeFormat(latestDate)) < '#888888' ? '#ffffff' : '#000000';
           }
         });
 
@@ -407,8 +406,8 @@
             var latestDate = d3.min(l.children.values(), function (d) {
               return d.start;
             });
-            return timeColorScale(provvisHelpers.parseISOTimeFormat(latestDate)) < '#888888' ?
-              '#ffffff' : '#000000';
+            return partsService.timeColorScale(provvisHelpers
+              .parseISOTimeFormat(latestDate)) < '#888888' ? '#ffffff' : '#000000';
           }
         });
 

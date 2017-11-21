@@ -258,7 +258,7 @@
         var lNode = partsService.lNode;
         var node = partsService.node;
         var saNode = partsService.saNode;
-        var timeColorScale = partsService.timeColorScale;
+     //   var timeColorScale = partsService.timeColorScale;
 
         switch (checkedColor) {   // eslint-disable-line default-case
           case 'none':
@@ -288,44 +288,45 @@
                 var latestDate = d3.min(l.children.values(), function (d) {
                   return d.start;
                 });
-                return timeColorScale(provvisHelpers.parseISOTimeFormat(latestDate)) <
-                '#888888' ? '#ffffff' : '#000000';
+                return partsService.timeColorScale(provvisHelpers
+                  .parseISOTimeFormat(latestDate)) < '#888888' ? '#ffffff' : '#000000';
               }
             });
 
             aNode.select('.glyph').selectAll('rect, circle')
               .style('fill', function (d) {
-                return timeColorScale(provvisHelpers.parseISOTimeFormat(d.start));
+                return partsService.timeColorScale(provvisHelpers.parseISOTimeFormat(d.start));
               });
             aNode.selectAll('.anLabel, .anwfLabel, .an-node-type-icon').style({
               fill: function (an) {
-                return timeColorScale(provvisHelpers.parseISOTimeFormat(an.start)) <
-                '#888888' ? '#ffffff' : '#000000';
+                return partsService.timeColorScale(provvisHelpers
+                  .parseISOTimeFormat(an.start)) < '#888888' ? '#ffffff' : '#000000';
               }
             });
 
 
             saNode.select('.glyph').selectAll('rect, circle')
               .style('fill', function (d) {
-                return timeColorScale(provvisHelpers.parseISOTimeFormat(d.parent.start));
+                return partsService.timeColorScale(provvisHelpers
+                  .parseISOTimeFormat(d.parent.start));
               });
             saNode.selectAll('.sanLabel, .sanwfLabel, .san-node-type-icon')
               .style({
                 fill: function (san) {
-                  return timeColorScale(provvisHelpers.parseISOTimeFormat(san.parent.start)) <
-                  '#888888' ? '#ffffff' : '#000000';
+                  return partsService.timeColorScale(provvisHelpers
+                    .parseISOTimeFormat(san.parent.start)) < '#888888' ? '#ffffff' : '#000000';
                 }
               });
 
             node.select('.glyph').selectAll('rect, circle')
               .style('fill', function (d) {
-                return timeColorScale(
+                return partsService.timeColorScale(
                   provvisHelpers.parseISOTimeFormat(d.parent.parent.start));
               });
             node.selectAll('.stored-node-type-icon').style({
               fill: function (n) {
-                return timeColorScale(provvisHelpers.parseISOTimeFormat(n.parent.parent.start)) <
-                '#888888' ? '#ffffff' : '#000000';
+                return partsService.timeColorScale(provvisHelpers
+                  .parseISOTimeFormat(n.parent.parent.start)) < '#888888' ? '#ffffff' : '#000000';
               }
             });
             break;

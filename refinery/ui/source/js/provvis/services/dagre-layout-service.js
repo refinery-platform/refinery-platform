@@ -10,23 +10,23 @@
     .factory('provvisDagreLayoutService', provvisDagreLayoutService);
 
   provvisDagreLayoutService.$inject = [
-    'provvisBoxCoordsService',
-    'provvisDrawLinksService',
-    'provvisPartsService',
     'd3',
-    'dagre'
+    'dagre',
+    'provvisBoxCoordsService',
+    'provvisPartsService',
+    'provvisUpdateNodeLinksService'
   ];
 
   function provvisDagreLayoutService (
-    provvisBoxCoordsService,
-    provvisDrawLinksService,
-    provvisPartsService,
     d3,
-    dagre
+    dagre,
+    provvisBoxCoordsService,
+    provvisPartsService,
+    provvisUpdateNodeLinksService
   ) {
     var coordService = provvisBoxCoordsService;
-    var linksService = provvisDrawLinksService;
     var partsService = provvisPartsService;
+    var updateNodeLink = provvisUpdateNodeLinksService;
 
     var service = {
       dagreDynamicLayerLayout: dagreDynamicLayerLayout,
@@ -101,7 +101,7 @@
               accY += (coordService.getABBoxCoords(an, 0).y.max -
               coordService.getABBoxCoords(an, 0).y.min);
 
-              linksService.updateNodeAndLink(an, d3.select('#gNodeId-' + an.autoId));
+              updateNodeLink.updateNodeAndLink(an, d3.select('#gNodeId-' + an.autoId));
               d3.select('#BBoxId-' + ln.autoId).classed('hiddenBBox', false);
               d3.select('#BBoxId-' + an.autoId).classed('hiddenBBox', false);
             } else {
@@ -293,7 +293,7 @@
 
       /* Update graph dom elements. */
       vis.graph.lNodes.values().forEach(function (ln) {
-        linksService.updateNodeAndLink(ln, d3.select('#gNodeId-' + ln.autoId));
+        updateNodeLink.updateNodeAndLink(ln, d3.select('#gNodeId-' + ln.autoId));
       });
 
       /* Reorder node columns by y-coords. */
@@ -365,7 +365,7 @@
           return d.key === ln.autoId.toString();
         })[0].value.y - curHeight / 2;
 
-        linksService.updateNodeAndLink(ln, d3.select('#gNodeId-' + ln.autoId));
+        updateNodeLink.updateNodeAndLink(ln, d3.select('#gNodeId-' + ln.autoId));
       });
     }
   }

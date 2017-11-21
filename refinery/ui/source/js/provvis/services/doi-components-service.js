@@ -20,15 +20,7 @@
     var DoiFactors = provvisDeclDoiFactors;
 
     var service = {
-      computeMinMax: computeMinMax,
-      computeWeightedSum: computeWeightedSum,
-      DoiComponents: DoiComponents,
-      filteredChanged: filteredChanged,
-      highlightedChanged: highlightedChanged,
-      initLayerDiffComponent: initLayerDiffComponent,
-      initTimeComponent: initTimeComponent,
-      selectedChanged: selectedChanged
-
+      DoiComponents: DoiComponents
     };
 
     return service;
@@ -115,72 +107,72 @@
        * single DOI component values.
        */
       this.doiWeightedSum = -1;
-    }
 
-     /**
-     * Look up filtered attribute for encapsulating node.
-     * A node is within the filter results.
-     */
-    function filteredChanged () {
-      this.doiFiltered = this.node.filtered ? 1 : 0.5;
-      this.computeWeightedSum();
-    }
+       /**
+       * Look up filtered attribute for encapsulating node.
+       * A node is within the filter results.
+       */
+      this.filteredChanged = function () {
+        this.doiFiltered = this.node.filtered ? 1 : 0.5;
+        this.computeWeightedSum();
+      };
 
-    /**
-     * A node can be selected for further actions or detailed information.
-     */
-    function selectedChanged () {
-      this.doiSelected = this.node.selected ? 1 : 0;
-      this.computeWeightedSum();
-    }
+      /**
+       * A node can be selected for further actions or detailed information.
+       */
+      this.selectedChanged = function () {
+        this.doiSelected = this.node.selected ? 1 : 0;
+        this.computeWeightedSum();
+      };
 
-    /**
-     * A path containing nodes may be highlighted.
-     */
-    function highlightedChanged () {
-      this.doiHighlighted = this.node.highlighted ? 1 : 0;
-      this.computeWeightedSum();
-    }
+      /**
+       * A path containing nodes may be highlighted.
+       */
+      this.highlightedChanged = function () {
+        this.doiHighlighted = this.node.highlighted ? 1 : 0;
+        this.computeWeightedSum();
+      };
 
-    /**
-     * Based on the time frame, calculate component weight.
-     * @param factor The analysis start time scaled between 0 and 1.
-     */
-    function initTimeComponent (factor) {
-      this.doiTime = factor;
-      this.computeWeightedSum();
-    }
+      /**
+       * Based on the time frame, calculate component weight.
+       * @param factor The analysis start time scaled between 0 and 1.
+       */
+      this.initTimeComponent = function (factor) {
+        this.doiTime = factor;
+        this.computeWeightedSum();
+      };
 
-    /**
-     * Based on amount of nodes with a diff within a layer, calculate component
-     * weight.
-     * @param factor The accumulated diffs scaled between 0 and 1.
-     */
-    function initLayerDiffComponent (factor) {
-      this.doiLayerDiff = factor;
-      this.computeWeightedSum();
-    }
+      /**
+       * Based on amount of nodes with a diff within a layer, calculate component
+       * weight.
+       * @param factor The accumulated diffs scaled between 0 and 1.
+       */
+      this.initLayerDiffComponent = function (factor) {
+        this.doiLayerDiff = factor;
+        this.computeWeightedSum();
+      };
 
-    /**
-     * Calculates the dominant doi component.
-     */
-    function computeMinMax () {
-      /* TODO: Based on heuristics, find dominant component.*/
-      this.doiMinMax = -1;
-    }
+      /**
+       * Calculates the dominant doi component.
+       */
+      this.computeMinMax = function () {
+        /* TODO: Based on heuristics, find dominant component.*/
+        this.doiMinMax = -1;
+      };
 
-    /**
-     * Calculates a weighted doi value among all doi components considering
-     * component weights.
-     */
-    function computeWeightedSum () {
-      this.doiWeightedSum = (
-      this.doiFiltered * DoiFactors.factors.filtered.value +
-      this.doiSelected * DoiFactors.factors.selected.value +
-      this.doiHighlighted * DoiFactors.factors.highlighted.value +
-      this.doiTime * DoiFactors.factors.time.value +
-      this.doiLayerDiff * DoiFactors.factors.diff.value
+      /**
+       * Calculates a weighted doi value among all doi components considering
+       * component weights.
+       */
+      this.computeWeightedSum = function () {
+        this.doiWeightedSum = (
+          this.doiFiltered * DoiFactors.factors.filtered.value +
+          this.doiSelected * DoiFactors.factors.selected.value +
+          this.doiHighlighted * DoiFactors.factors.highlighted.value +
+          this.doiTime * DoiFactors.factors.time.value +
+          this.doiLayerDiff * DoiFactors.factors.diff.value
         ).toFixed(2);
+      };
     }
   }
 })();

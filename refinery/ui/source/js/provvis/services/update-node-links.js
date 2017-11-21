@@ -162,12 +162,12 @@
       updateNode(self, n, n.x, n.y);
 
       /* Align adjacent links. */
-      linksService.updateLink(n);
+      updateLink(n);
 
       if (n instanceof provvisDecl.Layer) {
         n.children.values().forEach(function (an) {
           updateNode(d3.select('#gNodeId-' + an.autoId), an, an.x, an.y);
-          linksService.updateLink(an);
+          updateLink(an);
         });
       }
     }

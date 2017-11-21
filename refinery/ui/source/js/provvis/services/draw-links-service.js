@@ -195,7 +195,6 @@
       var node = partsService.node;
       var scaleFactor = partsService.scaleFactor;
       var subanalysis = partsService.subanalysis;
-      var timeColorScale = partsService.timeColorScale;
       var vis = partsService.vis;
 
       subanalysis.each(function (san) { // eslint-disable-line no-shadow
@@ -366,7 +365,7 @@
                 .classed('stored-node-type-icon', true)
                 .style({
                   fill: function (n) {
-                    return timeColorScale(provvisHelpers.parseISOTimeFormat(
+                    return partsService.timeColorScale(provvisHelpers.parseISOTimeFormat(
                       n.parent.parent.start)) < '#888888' ?
                       '#ffffff' : '#000000';
                   }
@@ -502,7 +501,6 @@
       var cell = partsService.cell;
       var scaleFactor = partsService.scaleFactor;
       var subanalysis = partsService.subanalysis;
-      var timeColorScale = partsService.timeColorScale;
 
       analysis.each(function (an) {
         /* Data join. */
@@ -710,8 +708,8 @@
             }).classed('san-node-type-icon', true)
             .style({
               fill: function (san) { // eslint-disable-line no-shadow
-                return timeColorScale(provvisHelpers.parseISOTimeFormat(san.parent.start)) <
-                '#888888' ? '#ffffff' : '#000000';
+                return partsService.timeColorScale(provvisHelpers
+                  .parseISOTimeFormat(san.parent.start)) < '#888888' ? '#ffffff' : '#000000';
               }
             });
 
@@ -726,8 +724,8 @@
             }).attr('class', 'sanLabel glyphNumeral')
             .style({
               fill: function (san) { // eslint-disable-line no-shadow
-                return timeColorScale(provvisHelpers.parseISOTimeFormat(san.parent.start)) <
-                '#888888' ? '#ffffff' : '#000000';
+                return partsService.timeColorScale(provvisHelpers
+                  .parseISOTimeFormat(san.parent.start)) < '#888888' ? '#ffffff' : '#000000';
               }
             });
         });

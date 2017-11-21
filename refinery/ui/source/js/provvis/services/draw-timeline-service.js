@@ -39,7 +39,6 @@
    */
     function drawTimelineView (vis) {
       var aNodesBAK = partsService.aNodesBAK;
-      var timeColorScale = partsService.timeColorScale;
       var timeLineGradientScale = partsService.timeLineGradientScale;
       var svg = d3.select('#provenance-timeline-view').select('svg').append('g')
         .append('g').attr('transform', function () {
@@ -58,8 +57,8 @@
         .range([0, tlHeight - 10]);
 
       timeLineGradientScale = d3.time.scale()
-        .domain([Date.parse(timeColorScale.domain()[0]),
-          Date.parse(timeColorScale.domain()[1])])
+        .domain([Date.parse(partsService.timeColorScale.domain()[0]),
+          Date.parse(partsService.timeColorScale.domain()[1])])
         .range([0, tlWidth])
         .nice();
 
