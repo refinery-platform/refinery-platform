@@ -74,8 +74,9 @@ def import_file(uuid, refresh=False, file_size=0):
         return None
 
     # save task ID for looking up file import status
-    item.import_task_id = import_file.request.id
-    item.save()
+    if import_file.request.id:  # workaround when called not as task
+        item.import_task_id = import_file.request.id
+        item.save()
 
     # if file is ready to be used then return it,
     # otherwise delete it if update is requested
