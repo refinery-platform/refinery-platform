@@ -80,7 +80,7 @@ def file_path(instance, filename):
     # replace parentheses with underscores in the filename since
     # Galaxy doesn't process names with parentheses in them
     filename = re.sub('[()]', '_', filename)
-    return os.path.join(instance.sharename, dir1, dir2, filename)
+    return os.path.join(dir1, dir2, filename)
 
 
 def map_source(source):
@@ -154,14 +154,8 @@ class FileExtension(models.Model):
 class _FileStoreItemManager(models.Manager):
     """Custom model manager to handle creation and retrieval of FileStoreItems
     """
-
-    def create_item(self, source, sharename='', filetype=''):
-        """A "constructor" for FileStoreItem.
-
-        :param source: URL or absolute file system path to a file.
-        :type source: str.
-        :returns: FileStoreItem -- if success, None if failure.
-        """
+    def create_item(self, source, filetype=''):
+        """A "constructor" for FileStoreItem"""
         # If we are generating an auxiliary file, we cannot assign a
         # `source` yet since the file is being generated. We still want the
         # benfeit of being able to track it's task state, so we will need to
@@ -170,7 +164,7 @@ class _FileStoreItemManager(models.Manager):
 
         if source == 'auxiliary_file':
             logger.debug("Creating an auxiliary FileStoreItem")
-            item = self.create(sharename=sharename, filetype=filetype)
+            item = self.create(filetype=filetype)
             return item
 
         # it doesn't make sense to create a FileStoreItem without a file source
@@ -178,7 +172,7 @@ class _FileStoreItemManager(models.Manager):
             logger.error("Source is required but was not provided")
             return None
 
-        item = self.create(source=map_source(source), sharename=sharename)
+        item = self.create(source=map_source(source))
 
         item.set_filetype(filetype)
 
@@ -240,9 +234,6 @@ class FileStoreItem(models.Model):
     uuid = UUIDField()
     #: source URL or absolute file system path
     source = models.CharField(max_length=1024)
-    #: optional subdirectory inside the file store that contains the files of a
-    # particular group
-    sharename = models.CharField(max_length=20, blank=True)
     #: type of the file
     filetype = models.ForeignKey(FileType, blank=True, null=True)
     #: file import task ID

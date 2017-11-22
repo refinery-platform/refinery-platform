@@ -22,32 +22,24 @@ class FileStoreModuleTest(TestCase):
 
     def setUp(self):
         self.filename = 'test_file.dat'
-        self.sharename = 'labname'
 
         # create FileStoreItem instances without any disk operations
         self.path_source = os.path.join('/example/path', self.filename)
         self.item_from_path = FileStoreItem.objects.create(
-            datafile=SimpleUploadedFile(
-                self.filename,
-                'Coffee is delicious!'
-            ),
-            source=self.path_source,
-            sharename=self.sharename
+            datafile=SimpleUploadedFile(self.filename, 'Coffee is delicious!'),
+            source=self.path_source
         )
         self.url_source = urljoin('http://example.org/', self.filename)
         self.item_from_url = FileStoreItem.objects.create(
-            source=self.url_source,
-            sharename=self.sharename
+            source=self.url_source
         )
 
     def test_file_path(self):
         """Check that the file store path contains share name and file name"""
         # TODO: replace with assertRegexpMatches()?
         path = file_path(self.item_from_url, self.filename)
-        self.assertIn(self.sharename, path)
         self.assertIn(self.filename, path)
         path = file_path(self.item_from_path, self.filename)
-        self.assertIn(self.sharename, path)
         self.assertIn(self.filename, path)
 
     def test_file_path_parens(self):
@@ -58,23 +50,14 @@ class FileStoreModuleTest(TestCase):
         new_filename = 'Kc.dMi-2_Q4443_.wig_5.tdf'
         path_source = os.path.join('/example/path', filename)
         item_from_path = FileStoreItem.objects.create(
-            datafile=SimpleUploadedFile(
-                self.filename,
-                'Coffee is delicious!'
-            ),
-            source=path_source,
-            sharename=self.sharename
+            datafile=SimpleUploadedFile(self.filename, 'Coffee is delicious!'),
+            source=path_source
         )
         url_source = urljoin('http://example.org/', filename)
-        item_from_url = FileStoreItem.objects.create(
-            source=url_source,
-            sharename=self.sharename
-        )
+        item_from_url = FileStoreItem.objects.create(source=url_source)
         path = file_path(item_from_url, filename)
-        self.assertIn(self.sharename, path)
         self.assertIn(new_filename, path)
         path = file_path(item_from_path, filename)
-        self.assertIn(self.sharename, path)
         self.assertIn(new_filename, path)
 
     def test_get_temp_dir(self):
@@ -118,7 +101,6 @@ class FileStoreItemTest(TestCase):
         self.tdf_fileextension = FileExtension.objects.get(name='tdf')
 
         self.filename = 'test_file.idf'
-        self.sharename = 'labname'
         self.path_source = os.path.join('/example/path', self.filename)
         self.url_source = urljoin('http://example.org/', self.filename)
 
@@ -128,12 +110,8 @@ class FileStoreItemTest(TestCase):
         """
         # create FileStoreItem instances without any disk operations
         local_file = FileStoreItem.objects.create(
-            datafile=SimpleUploadedFile(
-                self.filename,
-                'Coffee is delicious!'
-            ),
-            source=self.path_source,
-            sharename=self.sharename
+            datafile=SimpleUploadedFile(self.filename, 'Coffee is delicious!'),
+            source=self.path_source
         )
 
         self.assertEqual(
@@ -150,10 +128,7 @@ class FileStoreItemTest(TestCase):
         imported
         """
         # create FileStoreItem instances without any disk operations
-        item_from_url = FileStoreItem.objects.create(
-            source=self.url_source,
-            sharename=self.sharename
-        )
+        item_from_url = FileStoreItem.objects.create(source=self.url_source)
         self.assertEqual(item_from_url.get_datafile_url(),
                          item_from_url.source)
 
@@ -164,16 +139,13 @@ class FileStoreItemTest(TestCase):
 
         item_from_path = FileStoreItem.objects.create(
             datafile=SimpleUploadedFile(
-                'test_file.bb',
-                'Coffee is delicious!'
+                'test_file.bb', 'Coffee is delicious!'
             ),
             source=self.path_source,
-            sharename=self.sharename,
             filetype=self.bigbed_filetype
         )
         item_from_url = FileStoreItem.objects.create(
             source=self.url_source,
-            sharename=self.sharename,
             filetype=self.bigbed_filetype
         )
         self.assertEqual(item_from_path.get_filetype(), self.bigbed_filetype)
@@ -181,21 +153,13 @@ class FileStoreItemTest(TestCase):
 
     def test_set_valid_file_type(self):
         """Check that a valid file type is set correctly"""
-        self.wig_filetype = FileType.objects.get(
-            name="WIG")
+        self.wig_filetype = FileType.objects.get(name="WIG")
         self.wig_fileextension = \
             FileExtension.objects.get(filetype=self.wig_filetype)
-        item_from_path = FileStoreItem.objects.create(
-            source=self.url_source,
-            sharename=self.sharename
-        )
+        item_from_path = FileStoreItem.objects.create(source=self.url_source)
         item_from_url = FileStoreItem.objects.create(
-            datafile=SimpleUploadedFile(
-                self.filename,
-                'Coffee is delicious!'
-            ),
-            source=self.path_source,
-            sharename=self.sharename
+            datafile=SimpleUploadedFile(self.filename, 'Coffee is delicious!'),
+            source=self.path_source
         )
         self.assertTrue(item_from_path.set_filetype(self.wig_filetype))
         self.assertNotEqual(item_from_path.filetype, self.wig_filetype)
@@ -205,33 +169,19 @@ class FileStoreItemTest(TestCase):
     def test_set_unknown_file_type(self):
         """Check that an unknown file type is not set"""
         item_from_url = FileStoreItem.objects.create(
-            datafile=SimpleUploadedFile(
-                self.filename,
-                'Coffee is delicious!'
-            ),
-            source=self.path_source,
-            sharename=self.sharename
+            datafile=SimpleUploadedFile(self.filename, 'Coffee is delicious!'),
+            source=self.path_source
         )
-        item_from_path = FileStoreItem.objects.create(
-            source=self.url_source,
-            sharename=self.sharename
-        )
+        item_from_path = FileStoreItem.objects.create(source=self.url_source)
         self.assertIsNone(item_from_url.filetype)
         self.assertIsNone(item_from_path.filetype)
 
     def test_set_file_type_automatically(self):
         """Check that a file type is set automatically"""
-        item_from_url = FileStoreItem.objects.create(
-            source=self.url_source,
-            sharename=self.sharename
-        )
+        item_from_url = FileStoreItem.objects.create(source=self.url_source)
         item_from_path = FileStoreItem.objects.create(
-            datafile=SimpleUploadedFile(
-                self.filename,
-                'Coffee is delicious!'
-            ),
-            source=self.path_source,
-            sharename=self.sharename
+            datafile=SimpleUploadedFile(self.filename, 'Coffee is delicious!'),
+            source=self.path_source
         )
         item_from_path.set_filetype()
         self.assertTrue(item_from_path.filetype,
@@ -243,17 +193,10 @@ class FileStoreItemTest(TestCase):
     def test_get_file_extension(self):
         """Check that the correct FileExtension is returned"""
         # create FileStoreItem instances without any disk operations
-        item_from_url = FileStoreItem.objects.create(
-            source=self.url_source,
-            sharename=self.sharename
-        )
+        item_from_url = FileStoreItem.objects.create(source=self.url_source)
         item_from_path = FileStoreItem.objects.create(
-            datafile=SimpleUploadedFile(
-                self.filename,
-                'Coffee is delicious!'
-            ),
-            source=self.path_source,
-            sharename=self.sharename
+            datafile=SimpleUploadedFile(self.filename, 'Coffee is delicious!'),
+            source=self.path_source
         )
 
         item_from_url.set_filetype()
@@ -271,7 +214,6 @@ class FileStoreItemManagerTest(TestCase):
 
     def setUp(self):
         self.filename = 'test_file.tdf'
-        self.sharename = 'labname'
         self.path_prefix = '/example/local/path/'
         self.path_source = os.path.join(self.path_prefix, self.filename)
         self.url_prefix = 'http://example.org/web/path/'
@@ -283,12 +225,8 @@ class FileStoreItemManagerTest(TestCase):
         """
         settings.REFINERY_FILE_SOURCE_MAP = {self.url_prefix: self.path_prefix}
         item = FileStoreItem.objects.create(
-            datafile=SimpleUploadedFile(
-                self.filename,
-                'Coffee is delicious!'
-            ),
-            source=self.path_source,
-            sharename=self.sharename
+            datafile=SimpleUploadedFile(self.filename, 'Coffee is delicious!'),
+            source=self.path_source
         )
         self.assertEqual(item.source, self.path_source)
 
@@ -297,18 +235,11 @@ class FileStoreItemManagerTest(TestCase):
         instances
         """
         settings.REFINERY_FILE_SOURCE_MAP = {}
-        item = FileStoreItem.objects.create(
-            source=self.url_source,
-            sharename=self.sharename
-        )
+        item = FileStoreItem.objects.create(source=self.url_source)
         self.assertEqual(item.source, self.url_source)
         item = FileStoreItem.objects.create(
-            datafile=SimpleUploadedFile(
-                self.filename,
-                'Coffee is delicious!'
-            ),
-            source=self.path_source,
-            sharename=self.sharename
+            datafile=SimpleUploadedFile(self.filename, 'Coffee is delicious!'),
+            source=self.path_source
         )
         self.assertEqual(item.source, self.path_source)
 
@@ -368,7 +299,8 @@ class FileStoreItemsAPITests(APITestCase):
         # create FileStoreItem instances without any disk operations
         self.url_source = 'http://example.org/test_file.dat'
         self.item_from_url = FileStoreItem.objects.create(
-            source=self.url_source, sharename='labname')
+            source=self.url_source
+        )
         self.view = FileStoreItems.as_view()
         self.valid_uuid = self.item_from_url.uuid
         self.url_root = '/api/v2/file_store_items/'
