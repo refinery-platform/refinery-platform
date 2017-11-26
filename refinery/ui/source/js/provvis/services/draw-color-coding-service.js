@@ -254,11 +254,10 @@
      */
       var switchColorScheme = function (checkedColor) {
         var aNode = partsService.aNode;
-        var domNodeset = partsService.domNodeSet;
+        var domNodeset = partsService.domNodeset;
         var lNode = partsService.lNode;
         var node = partsService.node;
         var saNode = partsService.saNode;
-     //   var timeColorScale = partsService.timeColorScale;
 
         switch (checkedColor) {   // eslint-disable-line default-case
           case 'none':
