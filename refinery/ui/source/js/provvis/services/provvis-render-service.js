@@ -31,8 +31,7 @@
     'provvisTooltipService',
     'provvisUpdateAnalysisService',
     'provvisUpdateLayerService',
-    'provvisUpdateNodeLinksService',
-    'provvisUpdateRenderService'
+    'provvisUpdateNodeLinksService'
   ];
 
   function provvisRenderService (
@@ -56,8 +55,7 @@
     provvisTooltipService,
     provvisUpdateAnalysisService,
     provvisUpdateLayerService,
-    provvisUpdateNodeLinksService,
-    provvisUpdateRenderService
+    provvisUpdateNodeLinksService
   ) {
     var collapseService = provvisHandleCollapseService;
     var dagreService = provvisDagreLayoutService;
@@ -77,7 +75,6 @@
     var updateAnalysis = provvisUpdateAnalysisService;
     var updateLayer = provvisUpdateLayerService;
     var updateNodeLink = provvisUpdateNodeLinksService;
-    var updateService = provvisUpdateRenderService;
 
     var analysisWorkflowMap = d3.map();
     var width = 0;
@@ -226,7 +223,7 @@
 
       /* Handle click separation on nodes. */
       var domNodesetClickTimeout;
-      domNodeset.on('mousedown', function () {
+      domNodeset.on('mousedown', function (d) {
         if (d3.event.defaultPrevented) {
           return;
         }
@@ -235,10 +232,10 @@
 
         /* Click event is executed after 100ms unless the double click event
          below clears the click event timeout.*/
-        domNodesetClickTimeout = setTimeout(function (d) {
+        domNodesetClickTimeout = setTimeout(function () {
           if (!draggingActive) {
             nodeSelectionService.handleNodeSelection(d);
-            updateService.updateNodeInfoTab(d);
+            updateNodeLink.updateNodeInfoTab(d);
           }
         }, 200);
       });
