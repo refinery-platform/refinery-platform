@@ -61,6 +61,7 @@
     var doiDiffScale = Object.create(null);
     var selectedNodeSet = d3.map();
     var lastSolrResponse = {};
+    var scaleFactor = 0.75;
 
        /* Simple tooltips by NG. */
     var tooltip = d3.select('body')
@@ -105,6 +106,7 @@
       saLink: saLink,
       saNode: saNode,
       saNodesBAK: saNodesBAK,
+      scaleFactor: scaleFactor,
       selectedNodeSet: selectedNodeSet,
       subanalysis: subanalysis,
       timeColorScale: timeColorScale,

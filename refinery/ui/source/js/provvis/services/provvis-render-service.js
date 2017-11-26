@@ -11,11 +11,11 @@
     .factory('provvisRenderService', provvisRenderService);
 
   provvisRenderService.$inject = [
+    '$',
     'd3',
     '$log',
     'provvisAnalysisTimelineService',
     'provvisDagreLayoutService',
-    'provvisDeclService',
     'provvisDragService',
     'provvisDrawColorCodingService',
     'provvisDrawDOIService',
@@ -30,11 +30,13 @@
     'provvisToolbarService',
     'provvisTooltipService',
     'provvisUpdateAnalysisService',
+    'provvisUpdateLayerService',
     'provvisUpdateNodeLinksService',
     'provvisUpdateRenderService'
   ];
 
   function provvisRenderService (
+    $,
     d3,
     $log,
     provvisAnalysisTimelineService,
@@ -53,6 +55,7 @@
     provvisToolbarService,
     provvisTooltipService,
     provvisUpdateAnalysisService,
+    provvisUpdateLayerService,
     provvisUpdateNodeLinksService,
     provvisUpdateRenderService
   ) {
@@ -72,6 +75,7 @@
     var toolbarService = provvisToolbarService;
     var tooltipService = provvisTooltipService;
     var updateAnalysis = provvisUpdateAnalysisService;
+    var updateLayer = provvisUpdateLayerService;
     var updateNodeLink = provvisUpdateNodeLinksService;
     var updateService = provvisUpdateRenderService;
 
@@ -103,31 +107,27 @@
      * Method Definitions
      * ----------------------
      */
-    function runRender (provVis) {
+    function runRender (vis) {
       /* Save vis object to module scope. */
-      angular.copy(provVis, partsService.vis);
-      angular.copy(provVis.cell, partsService.cell);
 
-      var vis = partsService.vis;
-      var cell = partsService.cell;
+      var cell = vis.cell;
 
-      angular.copy(vis.graph.lNodes, partsService.lNodesBAK);
-      angular.copy(vis.graph.aNodes, partsService.aNodesBAK);
-      angular.copy(vis.graph.saNodes, partsService.saNodesBAK);
-      angular.copy(vis.graph.nodes, partsService.nodesBAK);
-      angular.copy(vis.graph.lLinks, partsService.lLinksBAK);
-      angular.copy(vis.graph.aLinks, partsService.lLinksBAK);
+      partsService.lNodesBAK = vis.graph.lNodes;
+      partsService.aNodesBAK = vis.graph.aNodes;
+      partsService.saNodesBAK = vis.graph.saNodes;
+      partsService.nodesBAK = vis.graph.nodes;
+      partsService.lLinksBAK = vis.graph.lLinks;
+      partsService.lLinksBAK = vis.graph.aLinks;
 
       analysisWorkflowMap = vis.graph.analysisWorkflowMap;
 
       width = vis.graph.l.width;
       depth = vis.graph.l.depth;
 
-      var timeColorScale = timelineService.createAnalysistimeColorScale(
+      partsService.timeColorScale = timelineService.createAnalysistimeColorScale(
         vis.graph.aNodes,
         ['white', 'black']
       );
-      angular.copy(timeColorScale, partsService.timeColorScale);
 
       doiService.initDoiTimeComponent(vis.graph.aNodes);
 
@@ -155,8 +155,9 @@
       vis.canvas.append('g').classed({
         layers: true
       });
-      updateService.updateLayerLinks(vis.graph.lLinks);
-      updateService.updateLayerNodes(vis.graph.lNodes);
+
+      updateLayer.updateLayerLinks(vis.graph.lLinks);
+      updateLayer.updateLayerNodes(vis.graph.lNodes);
 
       /* Draw analysis nodes. */
       vis.canvas.append('g').classed({
@@ -171,10 +172,8 @@
       drawService.drawNodes();
 
       /* Concat aNode, saNode and node. */
-      angular.copy(
-        provvisHelpers
-          .concatDomClassElements(['lNode', 'aNode', 'saNode', 'node']),
-        partsService.domNodeSet
+      partsService.domNodeset = provvisHelpers.concatDomClassElements(
+        ['lNode', 'aNode', 'saNode', 'node']
       );
     //  domNodeset = provvisHelpers.concatDomClassElements(['lNode',
       // 'aNode', 'saNode', 'node']);
@@ -189,7 +188,8 @@
       });
       updateNodeLink.updateNodeFilter();
       updateNodeLink.updateLinkFilter();
-      collapseService.updateNodeDoi();
+
+      collapseService.updateNodeDoi(partsService.domNodeset);
 
       /* Draw timeline view. */
       drawTimelineService.drawTimelineView(vis);
@@ -201,12 +201,11 @@
       drawColorService.drawColorcodingView();
 
       /* Event listeners. */
-      handleEvents(vis.graph);
+      handleEvents(vis.graph, partsService.domNodeset);
 
       /* Set initial graph position. */
       provvisHelpers.fitGraphToWindow(0);
-      /* console.log(vis.graph); */
-      $log(
+      $log.info(
         'Graph has ' + vis.graph.nodes.length + ' files and tools, '
         + vis.graph.links.length + ' Links, ' + vis.graph.saNodes.length +
         ' Analysis Groups, ' + vis.graph.aNodes.length + ' analyses, and '
@@ -220,7 +219,7 @@
      * Handle events.
      * @param graph Provenance graph object.
      */
-    function handleEvents (graph) {
+    function handleEvents (graph, domNodeset) {
       var saBBox = partsService.saBBox;
       var aBBox = partsService.aBBox;
       var lBBox = partsService.lBBox;
@@ -229,7 +228,7 @@
 
       /* Handle click separation on nodes. */
       var domNodesetClickTimeout;
-      partsService.domNodeset.on('mousedown', function () {
+      domNodeset.on('mousedown', function () {
         if (d3.event.defaultPrevented) {
           return;
         }
@@ -246,7 +245,7 @@
         }, 200);
       });
 
-      partsService.domNodeset.on('dblclick', function (d) {
+      domNodeset.on('dblclick', function (d) {
         if (d3.event.defaultPrevented) {
           return;
         }

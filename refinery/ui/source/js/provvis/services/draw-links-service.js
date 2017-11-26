@@ -732,13 +732,13 @@
       });
 
       /* Set dom elements. */
-      angular.copy(d3.selectAll('.saNode'), partsService.saNode);
-      angular.copy(d3.selectAll('.subanalysis'), partsService.subanalysis);
-      angular.copy(d3.selectAll('.saBBox'), partsService.saBBox);
+      partsService.saNode = d3.selectAll('.saNode');
+      partsService.subanalysis = d3.selectAll('.subanalysis');
+      partsService.saBBox = d3.selectAll('.saBBox');
 
-      angular.copy(d3.selectAll('.saLink'), partsService.saLink);
-      angular.copy(d3.selectAll('.link'), partsService.link);
-      angular.copy(d3.selectAll('.hLink'), partsService.hLink);
+      partsService.saLink = d3.selectAll('.saLink');
+      partsService.link = d3.selectAll('.link');
+      partsService.hLink = d3.selectAll('.hLink');
     }
   }
 })();

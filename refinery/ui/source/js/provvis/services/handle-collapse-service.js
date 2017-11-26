@@ -62,6 +62,7 @@
       var cell = partsService.cell;
       var scaleFactor = partsService.scaleFactor;
       var vis = partsService.vis;
+
       var trigger = inTrigger;
 
       if (typeof trigger === 'undefined') {
@@ -437,7 +438,7 @@
     /**
      * On doi change, update node doi labels.
      */
-    function updateNodeDoi () {
+    function updateNodeDoi (domNodeset) {
       /**
        * Helper function to check whether every parent node is hidden.
        * @param n BaseNode
@@ -459,7 +460,7 @@
       };
 
       /* Update node doi label. */
-      partsService.domNodeset.select('.nodeDoiLabel').text(function (d) {
+      domNodeset.select('.nodeDoiLabel').text(function (d) {
         return d.doi.doiWeightedSum;
       });
 

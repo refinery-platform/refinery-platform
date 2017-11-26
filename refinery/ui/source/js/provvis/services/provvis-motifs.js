@@ -11,11 +11,13 @@
     .factory('provvisMotifsService', provvisMotifsService);
 
   provvisMotifsService.$inject = [
+    '_',
     'provvisDeclService',
     'provvisHelpersService'
   ];
 
   function provvisMotifsService (
+    _,
     provvisDeclService,
     provvisHelpersService
   ) {
@@ -41,11 +43,12 @@
      * @param layerMethod Strict or weak layering, changing the condition analyses
      * are layered together.
      */
-    function runMotifs (graph, layerMethod) {
-      cleanLayerAnalysisMapping(graph);
+    function runMotifs (tempGraph, layerMethod) {
+      var graph = tempGraph;
+      graph = cleanLayerAnalysisMapping(graph);
       graph.lNodes = createLayerNodes(graph, layerMethod);
-      createLayerAnalysisMapping(graph);
-      computeAnalysisMotifDiff(graph);
+      graph = createLayerAnalysisMapping(graph);
+      graph = computeAnalysisMotifDiff(graph);
     }
     /**
      * Module for motif discovery and injection.
@@ -103,6 +106,7 @@
 
           /* Create new motif. */
           if (!foundMotif) {
+            // eslint-disable-line new-cap
             var motif = new provvisDecl.Motif();
             an.predLinks.values().forEach(function (pl) {
               motif.preds.set(pl.source.autoId, pl.source);
@@ -135,6 +139,7 @@
 
           /* Create new layer. */
           if (!(layers[i].has(keyStr + '-' + an.motif.autoId))) {
+            // eslint-disable-line new-cap
             layer = new provvisDecl.Layer(layerId, an.motif, graph, false);
             layer.children.set(an.autoId, an);
             an.layer = layer;
@@ -238,6 +243,7 @@
       var linkId = 0;
       graph.lNodes.values().forEach(function (pl) {
         pl.succs.values().forEach(function (sl) {
+          // eslint-disable-line new-cap
           var layerLink = new provvisDecl.Link(linkId, pl, sl, pl.hidden ||
             sl.hidden);
           graph.lLinks.set(layerLink.autoId, layerLink);
@@ -246,6 +252,7 @@
           linkId++;
         });
       });
+      return graph;
     }
 
     /**
@@ -260,13 +267,14 @@
       }).forEach(function (an) {
         /* TODO: Fix as some new layers with a single analysis may have the motif
          * of the last layer created. */
-        if (an.parent.children.size() !== 1) {
+        if (_.has(an.parent, 'children') && an.parent.children.size() !== 1) {
           an.motifDiff.numSubanalyses = an.children.size() -
             an.motif.numSubanalyses;
           an.motifDiff.numIns = an.predLinks.size() - an.motif.numIns;
           an.motifDiff.numOuts = an.succLinks.size() - an.motif.numOuts;
         }
       });
+      return graph;
     }
 
     /**
@@ -287,6 +295,7 @@
       });
       graph.lNodes = d3.map();
       graph.lLinks = d3.map();
+      return graph;
     }
   }
 })();

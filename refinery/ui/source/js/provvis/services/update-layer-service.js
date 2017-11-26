@@ -254,7 +254,6 @@
             return an.hidden;
           }
         });
-
       lEnter.append('g').classed({
         children: true
       });
@@ -424,9 +423,9 @@
       ln.exit().remove();
 
       /* Set dom elements. */
-      angular.copy(vis.canvas.select('g.layers').selectAll('.layer'), partsService.layer);
-      angular.copy(d3.selectAll('.lNode'), partsService.lNode);
-      angular.copy(d3.selectAll('.lBBox'), partsService.lBBox);
+      partsService.layer = vis.canvas.select('g.layers').selectAll('.layer');
+      partsService.lNode = d3.selectAll('.lNode');
+      partsService.lBBox = d3.selectAll('.lBBox');
     }
   }
 })();

@@ -89,7 +89,7 @@
       /* Create node attribute list. */
       createFacetNodeAttributeList(solrResponse);
 
-      /* Create graph. */
+      /* Create graph. */ // eslint-disable-next-line new-cap
       var graph = new provvisDecl.ProvGraph(dataset, nodes, links, aLinks, iNodes,
         oNodes, aNodes, saNodes, analysisWorkflowMap, nodeMap, analysisData,
         workflowData, nodeData);
@@ -156,7 +156,7 @@
       } else if (initTime.created.length === 26) {
         initTime.created = initTime.created.substr(0, initTime.created.length - 3);
       }
-
+      // eslint-disable-line new-cap
       return new provvisDecl.Analysis(i, Object.create(null), true, a.uuid,
         a.workflow__uuid, i, initTime.start, initTime.end, initTime.created);
     }
@@ -400,7 +400,7 @@
    * @returns {provvisDecl.Link} New Link object.
    */
     function createLink (lId, source, target) {
-      return provvisDecl.Link(lId, source, target, true); // eslint-disable-line new-cap
+      return new provvisDecl.Link(lId, source, target, true); // eslint-disable-line new-cap
     }
 
     /**
@@ -427,7 +427,7 @@
       }
 
       // eslint-disable-next-line new-cap
-      return provvisDecl.Node(id, type, Object.create(null), true, nodeName,
+      return new provvisDecl.Node(id, type, Object.create(null), true, nodeName,
         n.type, study, assay, parents, analysis, n.subanalysis, n.uuid,
         n.file_url);
     }
@@ -440,6 +440,7 @@
    * @returns {provvisDecl.Subanalysis} New Subanalysis object.
    */
     function createSubanalysisNode (sanId, an, subanalysis) {
+      // eslint-disable-line new-cap
       return new provvisDecl.Subanalysis(sanId, an, true, subanalysis);
     }
 
@@ -487,7 +488,7 @@
       /* Fix to remove Z at the end of the date string. */
       initDate = initDate.substr(0, initDate.length - 1);
 
-      /* Create analysis for dataset. */
+      /* Create analysis for dataset. */ // eslint-disable-line new-cap
       dataset = new provvisDecl.Analysis(0, Object.create(null), true, 'dataset',
         'dataset', 0, initDate, initDate, initDate);
       aNodes.push(dataset);

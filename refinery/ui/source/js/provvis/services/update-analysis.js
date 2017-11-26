@@ -589,12 +589,9 @@
 //      analysis = vis.canvas.select('g.analyses').selectAll('.analysis');
   //    aNode = d3.selectAll('.aNode');
   //    aBBox = d3.selectAll('.aBBox');
-      angular.copy(
-        vis.canvas.select('g.analyses').selectAll('.analysis'),
-        partsService.analysis
-      );
-      angular.copy(d3.selectAll('.aNode'), partsService.aNode);
-      angular.copy(d3.selectAll('.aBBox'), partsService.aBBox);
+      partsService.analysis = vis.canvas.select('g.analyses').selectAll('.analysis');
+      partsService.aNode = d3.selectAll('.aNode');
+      partsService.aBBox = d3.selectAll('.aBBox');
     }
   }
 })();

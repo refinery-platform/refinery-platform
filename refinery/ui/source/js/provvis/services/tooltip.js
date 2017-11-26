@@ -50,6 +50,7 @@
       var saNode = partsService.saNode;
       var scaleFactor = partsService.scaleFactor;
       var vis = partsService.vis;
+
       /**
        * Helper function for tooltip creation.
        * @param key Property name.

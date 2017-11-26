@@ -115,7 +115,6 @@
    * @param solrResponse Facet filter information on node attributes.
    */
     var runProvVisPrivate = function (studyUuid, studyAnalyses, solrResponse) {
-      console.log('runProvVisPrivate');
       showProvvisLoaderIcon();
 
       /* Only allow one instance of ProvVis. */
@@ -163,15 +162,16 @@
           /* TODO: Temp fix for sidebar max height. */
           $('#provvis-sidebar-content').css('max-height', height - 13);
 
-          var scaleFactor = 0.75;
+          var scaleFactor = partsService.scaleFactor;
 
           var layerMethod = 'weak';
           /* weak | strict */
 
           /* Create vis and add graph. */
-          vis = new provvisDecl.ProvVis('provenance-visualization', zoom, data, url,
+          partsService.vis = new provvisDecl.ProvVis('provenance-visualization', zoom, data, url,
             canvas, rect, margin, width, height, r, color, graph, cell,
             layerMethod);
+          vis = partsService.vis;
 
           /* Geometric zoom. */
           var redraw = function () {
@@ -331,8 +331,10 @@
           /* Uncomment in development mode. */
           vis.graph = provvisInit.initGraph(data, analysesData, solrResponse);
           vis.graph.bclgNodes = provvisLayout.runLayer(vis.graph, vis.cell);
-          provvisMotifs.run(vis.graph, layerMethod);
-          provvisRender.run(vis);
+          provvisMotifs.runMotifs(vis.graph, layerMethod);
+          angular.copy(vis.cell, partsService.cell);
+
+          provvisRender.runRender(vis);
           hideProvvisLoaderIcon();
 
           try {
