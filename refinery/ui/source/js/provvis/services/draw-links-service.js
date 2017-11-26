@@ -376,6 +376,8 @@
       });
       /* Set node dom element. */
       node = d3.selectAll('.node');
+
+      return node;
     }
 
     /**

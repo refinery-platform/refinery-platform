@@ -169,14 +169,12 @@
       drawService.drawSubanalysisNodes();
 
       /* Draw nodes. */
-      drawService.drawNodes();
+      partsService.node = drawService.drawNodes();
 
       /* Concat aNode, saNode and node. */
       partsService.domNodeset = provvisHelpers.concatDomClassElements(
         ['lNode', 'aNode', 'saNode', 'node']
       );
-    //  domNodeset = provvisHelpers.concatDomClassElements(['lNode',
-      // 'aNode', 'saNode', 'node']);
 
       /* Add dragging behavior to nodes. */
       dragService.applyDragBehavior(partsService.layer);
