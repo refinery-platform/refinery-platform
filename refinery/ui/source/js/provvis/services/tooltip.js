@@ -71,7 +71,7 @@
         d.attributes.forEach(function (key, value) {
           ttStr += createHTMLKeyValuePair(key, value) + '<br>';
         });
-        provvisHelpers.showTooltip(ttStr, event);
+        showTooltip(ttStr, event);
         /* self.classed("mouseoverNode", true); */
         d.parent.parent.parent.children.values().forEach(function (sibling) {
           d3.select('#BBoxId-' + sibling.autoId).style('stroke-opacity', 0.3);
