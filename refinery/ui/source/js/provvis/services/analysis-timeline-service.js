@@ -13,7 +13,6 @@
   provvisAnalysisTimelineService.$inject = [
     'd3',
     'provvisDagreLayoutService',
-    'provvisDrawLinksService',
     'provvisHelpersService',
     'provvisInitDOIService',
     'provvisPartsService',
@@ -25,7 +24,6 @@
   function provvisAnalysisTimelineService (
     d3,
     provvisDagreLayoutService,
-    provvisDrawLinksService,
     provvisHelpersService,
     provvisInitDOIService,
     provvisPartsService,
@@ -35,7 +33,6 @@
   ) {
     var dagreService = provvisDagreLayoutService;
     var doiService = provvisInitDOIService;
-    var drawService = provvisDrawLinksService;
     var partsService = provvisPartsService;
     var provvisHelpers = provvisHelpersService;
     var updateAnalysis = provvisUpdateAnalysisService;
@@ -89,7 +86,7 @@
       vis.graph.saNodes = partsService.saNodesBAK;
       vis.graph.nodes = partsService.nodesBAK;
       vis.graph.aLinks = partsService.aLinksBAK;
-      vis.graph.lLinks = partsService.lLinksBAK;
+     // vis.graph.lLinks = partsService.lLinksBAK;
 
       var selAnalyses = vis.graph.aNodes.filter(function (an) {
         upperTimeThreshold.setSeconds(upperTimeThreshold.getSeconds() + 1);
@@ -202,9 +199,9 @@
         provvisHelpers.fitGraphToWindow(partsService.nodeLinkTransitionTime);
       }
 
-      drawService.updateNodeFilter();
+      updateNodeLink.updateNodeFilter();
       updateNodeLink.updateLinkFilter();
-      updateAnalysis.updateAnalysisLinks(vis.graph);
+      updateAnalysis.updateAnalysisLinks(vis, partsService.linkStyle);
       updateLayers.updateLayerLinks(vis.graph.lLinks);
 
       vis.graph.aNodes.forEach(function (an) {

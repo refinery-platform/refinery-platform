@@ -55,7 +55,6 @@
       var y = d3.scale.linear()
         .domain([5, 0])
         .range([0, tlHeight - 10]);
-
       timeLineGradientScale = d3.time.scale()
         .domain([Date.parse(partsService.timeColorScale.domain()[0]),
           Date.parse(partsService.timeColorScale.domain()[1])])

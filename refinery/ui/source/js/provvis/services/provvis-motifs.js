@@ -43,12 +43,11 @@
      * @param layerMethod Strict or weak layering, changing the condition analyses
      * are layered together.
      */
-    function runMotifs (tempGraph, layerMethod) {
-      var graph = tempGraph;
-      graph = cleanLayerAnalysisMapping(graph);
+    function runMotifs (graph, layerMethod) {
+      cleanLayerAnalysisMapping(graph);
       graph.lNodes = createLayerNodes(graph, layerMethod);
-      graph = createLayerAnalysisMapping(graph);
-      graph = computeAnalysisMotifDiff(graph);
+      createLayerAnalysisMapping(graph);
+      computeAnalysisMotifDiff(graph);
     }
     /**
      * Module for motif discovery and injection.
@@ -252,7 +251,6 @@
           linkId++;
         });
       });
-      return graph;
     }
 
     /**
@@ -274,7 +272,6 @@
           an.motifDiff.numOuts = an.succLinks.size() - an.motif.numOuts;
         }
       });
-      return graph;
     }
 
     /**
@@ -295,7 +292,6 @@
       });
       graph.lNodes = d3.map();
       graph.lLinks = d3.map();
-      return graph;
     }
   }
 })();
