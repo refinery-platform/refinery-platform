@@ -14,6 +14,7 @@
     '$',
     'd3',
     '$log',
+    '$timeout',
     'provvisAnalysisTimelineService',
     'provvisDagreLayoutService',
     'provvisDragService',
@@ -38,6 +39,7 @@
     $,
     d3,
     $log,
+    $timeout,
     provvisAnalysisTimelineService,
     provvisDagreLayoutService,
     provvisDragService,
@@ -114,7 +116,7 @@
       partsService.saNodesBAK = vis.graph.saNodes;
       partsService.nodesBAK = vis.graph.nodes;
       partsService.lLinksBAK = vis.graph.lLinks;
-      partsService.lLinksBAK = vis.graph.aLinks;
+      partsService.aLinksBAK = vis.graph.aLinks;
 
       analysisWorkflowMap = vis.graph.analysisWorkflowMap;
 
@@ -187,7 +189,10 @@
       collapseService.updateNodeDoi(partsService.domNodeset);
 
       /* Draw timeline view. */
-      drawTimelineService.drawTimelineView(vis);
+      // timeout, JM bug fix due to dom generation
+      $timeout(function () {
+        drawTimelineService.drawTimelineView(vis);
+      }, 0);
 
       /* Draw doi view. */
       drawDOI.drawDoiView();

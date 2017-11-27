@@ -86,7 +86,7 @@
       vis.graph.saNodes = partsService.saNodesBAK;
       vis.graph.nodes = partsService.nodesBAK;
       vis.graph.aLinks = partsService.aLinksBAK;
-     // vis.graph.lLinks = partsService.lLinksBAK;
+      vis.graph.lLinks = partsService.lLinksBAK;
 
       var selAnalyses = vis.graph.aNodes.filter(function (an) {
         upperTimeThreshold.setSeconds(upperTimeThreshold.getSeconds() + 1);

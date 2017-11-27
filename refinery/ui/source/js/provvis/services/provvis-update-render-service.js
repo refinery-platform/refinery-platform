@@ -61,12 +61,12 @@
       partsService.filterMethod = 'facet';
 
       if (solrResponse.nodes.length) {
-        angular.copy(vis.graph.lNodes, partsService.lNodesBAK);
-        angular.copy(vis.graph.aNodes, partsService.aNodesBAK);
-        angular.copy(vis.graph.saNodes, partsService.saNodesBAK);
-        angular.copy(vis.graph.nodes, partsService.nodesBAK);
-        angular.copy(vis.graph.aLinks, partsService.aLinksBAK);
-        angular.copy(vis.graph.lLinks, partsService.lLinksBAK);
+        vis.graph.lNodes = partsService.lNodesBAK;
+        vis.graph.aNodes = partsService.aNodesBAK;
+        vis.graph.saNodes = partsService.saNodesBAK;
+        vis.graph.nodes = partsService.nodesBAK;
+        vis.graph.aLinks = partsService.aLinksBAK;
+        vis.graph.lLinks = partsService.lLinksBAK;
 
         /* Copy filtered nodes. */
         solrResponse.nodes.forEach(function (d) {
