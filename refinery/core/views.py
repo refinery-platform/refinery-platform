@@ -1,6 +1,5 @@
 import json
 import logging
-import os
 import re
 import urllib
 from urlparse import urljoin
@@ -67,11 +66,6 @@ def home(request):
 def about(request):
     return render_to_response('core/about.html',
                               {'site_name': get_current_site(request).name},
-                              context_instance=RequestContext(request))
-
-
-def contact(request):
-    return render_to_response('core/contact.html', {},
                               context_instance=RequestContext(request))
 
 
@@ -294,76 +288,6 @@ def project_edit(request, uuid):
                               context_instance=RequestContext(request))
 
 
-def provenance_slug(request, slug):
-    d = get_object_or_404(DataSet, slug=slug)
-    return provenance(request, d.uuid)
-
-
-def provenance(request, data_set_uuid, analysis_uuid=None):
-    data_set = get_object_or_404(DataSet, uuid=data_set_uuid)
-    public_group = ExtendedGroup.objects.public_group()
-
-    if not request.user.has_perm('core.read_dataset', data_set):
-        if 'read_dataset' not in get_perms(public_group, data_set):
-            if request.user.is_authenticated():
-                return HttpResponseForbidden(
-                    custom_error_page(request, '403.html',
-                                      {user: request.user,
-                                       'msg': "view this data set"}))
-            else:
-                return HttpResponse(
-                    custom_error_page(request, '401.html',
-                                      {'msg': "view this data set"}),
-                    status='401')
-    # get studies
-    investigation = data_set.get_investigation()
-    studies = investigation.study_set.all()
-    # If repository mode, only return workflows tagged for the repository
-    if (settings.REFINERY_REPOSITORY_MODE):
-        workflows = Workflow.objects.filter(show_in_repository_mode=True)
-    else:
-        workflows = Workflow.objects.all()
-
-    study_uuid = studies[0].uuid
-    # used for solr field postfixes: FIELDNAME_STUDYID_ASSAY_ID_FIELDTYPE
-    study_id = studies[0].id
-    assay_uuid = studies[0].assay_set.all()[0].uuid
-    # used for solr field postfixes: FIELDNAME_STUDYID_ASSAY_ID_FIELDTYPE
-    assay_id = studies[0].assay_set.all()[0].id
-    # TODO: catch errors
-    isatab_archive = None
-    pre_isatab_archive = None
-    try:
-        if investigation.isarchive_file is not None:
-            isatab_archive = FileStoreItem.objects.get(
-                uuid=investigation.isarchive_file)
-    except FileStoreItem.DoesNotExist:
-        pass
-    try:
-        if investigation.pre_isarchive_file is not None:
-            pre_isatab_archive = FileStoreItem.objects.get(
-                uuid=investigation.pre_isarchive_file)
-    except FileStoreItem.DoesNotExist:
-        pass
-    return render_to_response(
-        'core/provenance.html',
-        {
-            "data_set": data_set,
-            "analysis_uuid": analysis_uuid,
-            "studies": studies,
-            "study_uuid": study_uuid,
-            "study_id": study_id,
-            "assay_uuid": assay_uuid,
-            "assay_id": assay_id,
-            "has_change_dataset_permission": 'change_dataset' in get_perms(
-                request.user, data_set),
-            "workflows": workflows,
-            "isatab_archive": isatab_archive,
-            "pre_isatab_archive": pre_isatab_archive,
-        },
-        context_instance=RequestContext(request))
-
-
 def data_set_slug(request, slug):
     d = get_object_or_404(DataSet, slug=slug)
     return data_set(request, d.uuid)
@@ -512,54 +436,6 @@ def workflow_engine(request, uuid):
                     status='401')
     return render_to_response('core/workflow_engine.html',
                               {'workflow_engine': workflow_engine},
-                              context_instance=RequestContext(request))
-
-
-def analyses(request, project_uuid):
-    project = Project.objects.get(uuid=project_uuid)
-    analyses = project.analyses.all()
-    return render_to_response('core/analyses.html',
-                              {"project": project, "analyses": analyses},
-                              context_instance=RequestContext(request))
-
-
-@login_required()
-def analysis(request, analysis_uuid):
-    # TODO: handle DoesNotExist and MultipleObjectsReturned
-    analysis = Analysis.objects.get(uuid=analysis_uuid)
-    # project associated with this Analysis
-    project = analysis.project
-    # list of analysis inputs
-    data_inputs = analysis.workflow_data_input_maps.order_by('pair_id')
-    # list of analysis results
-    analysis_results = analysis.results
-    workflow = analysis.workflow
-    # getting file_store references
-    file_all = []
-    for i in analysis_results.all():
-        file_store_uuid = i.file_store_uuid
-        fs = FileStoreItem.objects.get(uuid=file_store_uuid)
-        file_all.append(fs)
-    # NG: get file_store items for inputs
-    input_filenames = []
-    for workflow_input in data_inputs.all():
-        file_uuid = Node.objects.get(uuid=workflow_input.data_uuid).file_uuid
-        file_store_item = FileStoreItem.objects.get_item(uuid=file_uuid)
-        if file_store_item:
-            file_path = file_store_item.get_absolute_path()
-            if file_path:
-                file_name = os.path.basename(file_path)
-                input_filenames.append(file_name)
-    return render_to_response('core/analysis.html',
-                              {
-                                  "analysis": analysis,
-                                  "analysis_results": analysis_results,
-                                  "inputs": data_inputs,
-                                  "input_filenames": input_filenames,
-                                  "project": project,
-                                  "workflow": workflow,
-                                  "fs_files": file_all
-                              },
                               context_instance=RequestContext(request))
 
 

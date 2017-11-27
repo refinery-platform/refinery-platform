@@ -368,6 +368,8 @@ SERVER_EMAIL = get_setting("SERVER_EMAIL")
 # so managers and admins know Refinery is emailing them
 EMAIL_SUBJECT_PREFIX = get_setting("EMAIL_SUBJECT_PREFIX")
 
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+
 # for system stability
 CELERYD_MAX_TASKS_PER_CHILD = get_setting("CELERYD_MAX_TASKS_PER_CHILD")
 CELERY_ROUTES = {"file_store.tasks.import_file": {"queue": "file_import"}}
@@ -516,7 +518,6 @@ REFINERY_EXTERNAL_AUTH_MESSAGE = get_setting("REFINERY_EXTERNAL_AUTH_MESSAGE")
 
 """
 # external tool status settings
-INTERVAL_BETWEEN_CHECKS = get_setting("INTERVAL_BETWEEN_CHECKS")
 TIMEOUT = get_setting("TIMEOUT")
 """
 
@@ -644,25 +645,22 @@ AUTO_LOGIN = get_setting("AUTO_LOGIN", local_settings, [])
 TEST_RUNNER = "django.test.runner.DiscoverRunner"
 
 # Required for pre-Django 1.9 TransactionTestCases utilizing
-# `serialized_rollback` to function properly http://bit.ly/2l5gR30
+# `serialized_rollback` to function properly.
+# https://code.djangoproject.com/ticket/23727#comment:13
 TEST_NON_SERIALIZED_APPS = ['core', 'django.contrib.contenttypes',
                             'django.contrib.auth']
 
 VISUALIZATION_ANNOTATION_BASE_PATH = "tool_manager/visualization_annotations"
 
-# To avoid Port conflicts between LiveServerTestCases http://bit.ly/2pb64KN
+# To avoid Port conflicts between LiveServerTestCases
+# https://docs.djangoproject.com/en/1.7/topics/testing/tools/#liveservertestcase
 os.environ["DJANGO_LIVE_TEST_SERVER_ADDRESS"] = "localhost:10000-12000"
 
 DJANGO_DOCKER_ENGINE_MAX_CONTAINERS = 10
 DJANGO_DOCKER_ENGINE_BASE_URL = "visualizations"
 # Time in seconds to wait before killing unused visualization
 DJANGO_DOCKER_ENGINE_SECONDS_INACTIVE = 60 * 60
-# Location of DjangoDockerEngine proxy logging
 DJANGO_DOCKER_ENGINE_DATA_DIR = get_setting("DJANGO_DOCKER_ENGINE_DATA_DIR")
-PROXY_LOG = os.path.join(
-    DJANGO_DOCKER_ENGINE_DATA_DIR,
-    'django-docker-engine.log'
-)
 
 REFINERY_DEPLOYMENT_PLATFORM = "vagrant"
 
@@ -673,3 +671,5 @@ USER_FILES_COLUMNS = get_setting("USER_FILES_COLUMNS")
 USER_FILES_FACETS = get_setting("USER_FILES_FACETS")
 
 MEDIA_BUCKET = ''  # a placeholder for use in context processor
+
+TASTYPIE_DEFAULT_FORMATS = ['json']

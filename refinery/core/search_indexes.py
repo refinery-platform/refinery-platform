@@ -12,7 +12,7 @@ from django.template.context import Context
 
 from haystack import indexes
 
-from data_set_manager.models import AnnotatedNode, Node
+import data_set_manager
 
 logger = logging.getLogger(__name__)
 
@@ -90,7 +90,8 @@ class DataSetIndex(indexes.SearchIndex, indexes.Indexable):
                 )
 
         # Cast to `list` looks redundant, but MultiValueField stores sets
-        # improperly, introducing a search bug. See: http://bit.ly/2pZLE5c
+        # improperly, introducing a search bug.
+        # https://github.com/refinery-platform/refinery-platform/pull/1716#discussion_r115339987
         return list(set(submitters))
 
     def prepare_measurement(self, object):
@@ -107,7 +108,8 @@ class DataSetIndex(indexes.SearchIndex, indexes.Indexable):
                 measurements.append(assay.measurement)
 
         # Cast to `list` looks redundant, but MultiValueField stores sets
-        # improperly, introducing a search bug. See: http://bit.ly/2pZLE5c
+        # improperly, introducing a search bug.
+        # https://github.com/refinery-platform/refinery-platform/pull/1716#discussion_r115339987
         return list(set(measurements))
 
     def prepare_technology(self, object):
@@ -124,7 +126,8 @@ class DataSetIndex(indexes.SearchIndex, indexes.Indexable):
                 technologies.append(assay.technology)
 
         # Cast to `list` looks redundant, but MultiValueField stores sets
-        # improperly, introducing a search bug. See: http://bit.ly/2pZLE5c
+        # improperly, introducing a search bug.
+        # https://github.com/refinery-platform/refinery-platform/pull/1716#discussion_r115339987
         return list(set(technologies))
 
     # from:
@@ -141,17 +144,19 @@ class DataSetIndex(indexes.SearchIndex, indexes.Indexable):
             for study in studies:
                 assays = study.assay_set.all()
                 for assay in assays:
-                    nodes += list(AnnotatedNode.objects.filter(
-                        study__uuid=study.uuid,
-                        assay__uuid=assay.uuid,
-                        node_type__in=Node.FILES
-                    ).distinct(
-                        'node_name',
-                        'attribute_type',
-                        'attribute_subtype',
-                        'attribute_value',
-                        'attribute_value_unit'
-                    ))
+                    nodes += list(
+                        data_set_manager.models.AnnotatedNode.objects.filter(
+                            study__uuid=study.uuid,
+                            assay__uuid=assay.uuid,
+                            node_type__in=data_set_manager.models.Node.FILES
+                        ).distinct(
+                            'node_name',
+                            'attribute_type',
+                            'attribute_subtype',
+                            'attribute_value',
+                            'attribute_value_unit'
+                        )
+                    )
 
             # perform the template processing to render the
             # text field with *all* of our node data visible for indexing

@@ -1,32 +1,33 @@
 <div class="dataSetTabContent" id="files">
   <!-- filters and content  -->
-  <div class="row y-scrollable m-t-1-2 p-t-1">
+  <div class="row y-scrollable">
     <div
-      class="col-lg-3 col-md-3 col-sm-4"
+      class="col-lg-3 col-md-3 col-sm-4 p-r-1"
       ng-if="!FBCtrl.collapsedToolPanel">
         <rp-tool-display></rp-tool-display>
     </div>
-    <div class="col-lg-2 col-md-2 col-sm-3">
+    <div class="col-lg-2 col-md-2 col-sm-3 p-r-1">
       <div class="row"
-        ng-if="FBCtrl.isOwner || FBCtrl.canEdit"
         id="tool-panel-show-button">
+
         <button
           class="btn btn-primary btn-sm"
           data-target="#tool-launch-panel"
           ng-click="FBCtrl.toggleToolPanel()">
-        <span ng-if="FBCtrl.collapsedToolPanel">
-          <i class="fa fa-angle-double-right" aria-hidden="true"></i>
-           Show Tool Panel
-        </span>
-        <span ng-if="!FBCtrl.collapsedToolPanel">
-          <i class="fa fa-angle-double-left" aria-hidden="true"></i>
-           Hide Tool Panel
-        </span>
+          <span ng-if="FBCtrl.collapsedToolPanel">
+            <i class="fa fa-angle-double-left" aria-hidden="true"></i>
+             Show Tool Panel
+          </span>
+          <span ng-if="!FBCtrl.collapsedToolPanel">
+            <i class="fa fa-angle-double-right" aria-hidden="true"></i>
+             Hide Tool Panel
+          </span>
         </button>
-        <span ng-if="FBCtrl.isOwner" class="float-right">
-          <i class="fa fa-wrench fa-border" rp-assay-files-util-modal>
-           <span class="font-awesome-text">Config</span>
-          </i>
+
+        <span class="float-right">
+          <span ng-if="FBCtrl.isOwner" class="refinery-base btn btn-default btn-sm" rp-assay-files-util-modal>
+            <i class="fa fa-wrench"></i>
+          </span>
           <a
             id="help-view-selector"
             popover-placement="right"
@@ -40,8 +41,9 @@
               id="config-question-icon"></i>
           </a>
         </span>
+
       </div>
-      <div class="row" id="table-filter">
+      <div id="table-filter" class="row">
         <div id="filter-panel-body">
           <rp-file-browser-assay-filters>
           </rp-file-browser-assay-filters>

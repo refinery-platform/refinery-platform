@@ -13,20 +13,34 @@
 
   ToolLaunchButtonCtrl.$inject = [
     '$log',
+    'authService',
+    '$timeout',
     'toolLaunchService',
     'toolSelectService',
+    '$uibModal',
+    '$rootScope',
     '$window'
   ];
 
   function ToolLaunchButtonCtrl (
     $log,
+    authService,
+    $timeout,
     toolLaunchService,
     toolSelectService,
+    $uibModal,
+    $rootScope,
     $window
   ) {
     var vm = this;
     vm.launchTool = launchTool;
     vm.needMoreNodes = needMoreNodes;
+
+    authService.isAuthenticated().then(
+      function (isAuthenticated) {
+        vm.userIsAnonymous = !isAuthenticated;
+      }
+    );
 
     /*
    * -----------------------------------------------------------------------------
@@ -40,9 +54,24 @@
      * @memberOf refineryToolLaunch.ToolLaunchButtonCtrl
     **/
     function launchTool () {
+      $rootScope.$broadcast('rf/launchAnalysis');
       toolLaunchService.postToolLaunch().then(function (response) {
         $window.location.href = response.tool_url;
       }, function (error) {
+        $uibModal.open({
+          component: 'rpApiResponseModal',
+          resolve: {
+            modalData: function () {
+              return {
+                apiStatus: error.status,
+                apiMsg: error.data,
+                msgType: 'danger',
+                introMsg: 'Unable to launch tool.',
+                header: 'Error with Tool Launch'
+              };
+            }
+          }
+        });
         $log.error(error);
       });
     }

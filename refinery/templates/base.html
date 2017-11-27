@@ -170,11 +170,14 @@
           data-placement="left" title="Log In" href="{{login_url}}?next={% if request.path %}{% ifnotequal registration_url request.path %}{% ifnotequal login_url request.path %}{{ request.path|safe }}{% else %}{% url "home" %}{% endifnotequal %}{% else %}{% url "home" %}{% endifnotequal %}{% else %}{% url "home" %}{% endif %}">Login</a>
         {% endif %}
         &nbsp;&nbsp;|&nbsp;&nbsp;
-        <span id="analyses-popover">
-      <a tabindex=8 rp-analysis-monitor-global-list-status-popover
-        title="Recent Analyses">
-         <span rp-analysis-monitor-global-list-status></span>
-        </a>
+        <span>
+          <a rp-analysis-monitor-global-status-tooltip-hider
+            tabindex=8>
+             <span>
+               <rp-analysis-monitor-global-status>
+               </rp-analysis-monitor-global-status>
+             </span>
+          </a>
       </span>
       </div>
       <div class="collapse navbar-collapse" id="navbarMain"
@@ -238,20 +241,11 @@
     {% endblock %}
   </div>
 
-  <!-- Script for popup content in the tool status and analyses icon-->
-  <script type="text/ng-template" id="analysesgloballist.html">
-    <rp-analysis-monitor-global-list-status-popover-details>
-    </rp-analysis-monitor-global-list-status-popover-details>
-  </script>
-  <script type="text/ng-template" id="analysislaunchmodal.html">
-    <rp-analysis-launch-modal-detail>
-    </rp-analysis-launch-modal-detail>
-  </script>
-
   <!-- 3rd party libraries -->
   <script src="{% static "vendor/jquery/dist/jquery.min.js" %}"></script>
   <script src="{% static "js/jquery-ui/jquery-ui-1.10.0.custom.min.js" %}"></script>
   <script src="{% static "vendor/bootstrap/dist/js/bootstrap.min.js" %}"></script>
+  <script src="{% static "vendor/bootbox/bootbox.js" %}"></script>
   <script src="{% static "vendor/intro-js/minified/intro.min.js" %}"></script>
   <script src="{% static "vendor/angular/angular.min.js" %}"></script>
   <script src="{% static "vendor/angular-intro-js/build/angular-intro.min.js" %}"></script>
@@ -298,16 +292,11 @@
   <script src="{% static "js/refinery-controller.js" %}"></script>
   <script src="{% static "js/globals.js" %}"></script>
   <script src="{% static "js/commons.js" %}"></script>
-  <script src="{% static "js/analysis-launch.js" %}"></script>
   <script src="{% static "js/analysis-monitor.js" %}"></script>
   <script src="{% static "js/file-browser.js" %}"></script>
-  <script src="{% static "js/node-mapping.js" %}"></script>
-  <script src="{% static "js/workflows.js" %}"></script>
   <script src="{% static "js/data-set-nav.js" %}"></script>
-  <script src="{% static "js/node-relationship.js" %}"></script>
-  <script src="{% static "js/data-set-explorer.js" %}"></script>
   <script src="{% static "js/statistics.js" %}"></script>
-  <script src="{% static "js/provvis/provvis.js" %}"></script>
+  <script src="{% static "js/provvis.js" %}"></script>
   <script src="{% static "js/dashboard.js" %}"></script>
   <script src="{% static "js/collaboration.js" %}"></script>
   <script src="{% static "js/data-set-about.js" %}"></script>

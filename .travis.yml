@@ -1,12 +1,14 @@
 sudo: required
 
 language: python
-cache: pip
 addons:
-  firefox: "53.0.3"
   apt:
     packages:
       - xvfb
+cache:
+  directories:
+    - /home/travis/.cache/pip
+    - /home/travis/.cypress/Cypress
 
 python:
   - 2.7
@@ -28,10 +30,18 @@ install:
   - npm --version
 
   - pip install -r requirements.txt --quiet
+
+  # Firefox could be downloaded more simply as a Travis addon...
+  # but the progress meter adds 1000 lines to the log.
+  - FIREFOX_SOURCE_URL='https://download.mozilla.org/?product=firefox-53.0.3&lang=en-US&os=linux64'
+  - wget --no-verbose -O /tmp/firefox-53.0.3.tar.bz2 $FIREFOX_SOURCE_URL
+  - export PATH=$HOME/firefox-53.0.3/firefox:$PATH
+  - firefox --version
+
   # Install geckodriver required for selenium testing
   - GECKODRIVER_VERSION=v0.17.0
   - TAR=geckodriver-$GECKODRIVER_VERSION-linux64.tar
-  - wget https://github.com/mozilla/geckodriver/releases/download/$GECKODRIVER_VERSION/$TAR.gz
+  - wget --no-verbose https://github.com/mozilla/geckodriver/releases/download/$GECKODRIVER_VERSION/$TAR.gz
   - gunzip $TAR.gz
   - tar -xvf $TAR
   - chmod a+x geckodriver
@@ -41,6 +51,8 @@ env:
     # These env vars are available to every build
     - PYTHONPATH=$PYTHONPATH:../refinery:../refinery/config
     - DJANGO_SETTINGS_MODULE=config.settings.prod
+    # CYPRESS_RECORD_KEY:
+    - secure: oGdTYh3rnPdG7qVGYq3TgVESypir1btO2kmafumtKR6o+FYmMtb09pe+HtiT6Qfv4pDwnYZ2RTYqsTY4h6POigU5j7qQPSsZ5WkhHt9ybFyt/vfo2B95GaAIFt+8LVjTX5TItyw0/PPUCCUluQ1n8k/NCtSfMb0kIT/CuLrg7N8=
 
 before_script:
   # Vagrant is not used on travis: This user is just for the database.
@@ -54,11 +66,20 @@ before_script:
 # See http://www.stuartellis.eu/articles/erb/#running-erb-from-the-command-line
   - erb config/config.json.erb > config/config.json
   - python manage.py migrate --noinput
-  - npm install -g grunt-cli@0.1.13 bower@1.7.7 --progress false --quiet || ( cat npm-debug.log && false )
+  - npm install -g grunt-cli@0.1.13 bower@1.8.2 --progress false --quiet || ( cat npm-debug.log && false )
   - cd ui
   - npm install --progress false --quiet || ( cat npm-debug.log && false )
   - bower install --config.interactive=false --quiet
   - cd ../
+
+  # Required for cypress tests; TODO: Move to puppet.
+  # TODO: Start up solr (and neo4j?)
+  - python manage.py loaddata guest.json
+  - python manage.py activate_user guest
+  - python manage.py add_users_to_public_group
+  - pushd ui && grunt make && popd
+  - python manage.py collectstatic --noinput -v 0
+  - python manage.py runserver --insecure --settings config.settings.dev 2>&1 | grep -v 200 &
 script:
   - set -e # Any error will cause travis to exit early and report a failure.
 
@@ -67,12 +88,16 @@ script:
   - flake8 --exclude=migrations,ui ..
 
   - echo 'travis_fold:start:grunt'
-  - pushd ui && grunt && popd
+  - pushd ui && grunt test && popd
   - echo 'travis_fold:end:grunt'
 
   - echo 'travis_fold:start:django-tests'
   - coverage run manage.py test
   - echo 'travis_fold:end:django-tests'
+
+  - echo 'travis_fold:start:cypress'
+  - pushd ui && node_modules/.bin/cypress run --record && popd
+  - echo 'travis_fold:end:cypress'
 
   - set +e # Currently, codecov does not always exit with 0, but that should not cause travis to fail.
 

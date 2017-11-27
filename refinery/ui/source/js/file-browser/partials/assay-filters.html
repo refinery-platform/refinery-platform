@@ -7,24 +7,44 @@
         Attribute Filter
       </h2>
     </div>
+    <div class="refinery-subheader m-t-1">
+      <input ng-model="search" ng-init="search = ''" style="width: 100%;" placeholder="search...">
+    </div>
     <div
       ng-repeat="(attribute, attributeObj) in ASCtrl.attributeFilter track by $index"
-      ng-init="attributeIndex = $index">
+      ng-init="attributeIndex = $index; order = '-count'">
       <div class="panel panel-default">
         <div class="panel-heading" role="tab">
           <h4 class="panel-title">
-          <div
-            role="button"
-            data-toggle="collapse"
-            data-parent="#attribute-filter"
-            ng-click="dropAttributePanel($event, attribute, attributeObj)"
-            aria-expanded="true"
-            aria-controls="{{ attribute }}">
-             <i class="fa fa-caret-right fa-pull-left"
-              id="attribute-panel-{{attribute | replaceWhiteSpaceWithHyphen}}"
-              aria-hidden="true"></i>
-             {{ attribute }} &nbsp; ({{ attributeObj.facetObj.length }})
-          </div>
+
+            <span
+              role="button"
+              data-toggle="collapse"
+              data-parent="#attribute-filter"
+              ng-click="dropAttributePanel($event, attribute, attributeObj)"
+              aria-expanded="true"
+              aria-controls="{{ attribute }}">
+               <i class="fa fa-caret-right fa-pull-left"
+                id="attribute-panel-{{attribute | replaceWhiteSpaceWithHyphen}}"
+                aria-hidden="true"></i>
+               {{ attribute }} &nbsp; ({{ attributeObj.facetObj.length }})
+            </span>
+
+            <span ng-hide="isDropped(attribute, search)">
+              <button
+                ng-click="order = 'name'"
+                ng-hide="order == 'name'"
+                class="btn btn-xs">
+                <i class="fa fa-sort-alpha-asc" aria-hidden="true"></i>
+              </button>
+              <button
+                ng-click="order = '-count'"
+                ng-hide="order == '-count'"
+                class="btn btn-xs">
+                <i class="fa fa-sort-numeric-desc" aria-hidden="true"></i>
+              </button>
+            </span>
+
           </h4>
         </div>
       <div id="{{attribute | replaceWhiteSpaceWithHyphen}}"
@@ -32,9 +52,10 @@
         role="tabpanel"
         aria-labelledby="{{ attribute }}">
         <div class="panel-body">
-          <div ng-repeat="field in attributeObj.facetObj track by $index">
+          <div ng-repeat="field in attributeObj.facetObj | orderBy: order track by $index">
             <div class="checkbox container"
-                ng-show="showField(field.name, attributeObj.internal_name, attribute)">
+                ng-show="(search.length && field.name.toLowerCase().includes(search.toLowerCase()))
+                 || showField(field.name, attributeObj.internal_name, attribute)">
                 <div class="row">
                   <div class="col-xs-1">
                     <input
@@ -47,9 +68,7 @@
                   <div class="col-xs-8">
                     <label for="{{ field.name | replaceWhiteSpaceWithHyphen
                       }}-{{ $index }}">
-                      <span>
-                        {{ field.name }}
-                      </span>
+                      <span ng-bind-html="field.name | highlight:search"></span>
                     </label>
                   </div>
                   <div class="col-xs-3">

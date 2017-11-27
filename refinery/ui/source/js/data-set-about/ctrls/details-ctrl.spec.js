@@ -32,7 +32,7 @@ describe('Controller: DetailsCtrl', function () {
     expect(ctrl.isCollapsed).toEqual({
       title: true, summary: true, description: true, slug: true
     });
-    expect(ctrl.updatedField).toEqual({});
+    expect(ctrl.editedDataSet).toEqual({});
   });
 
   describe('RefreshDataSetStats', function () {

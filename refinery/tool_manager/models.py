@@ -21,14 +21,15 @@ from django_extensions.db.fields import UUIDField
 from docker.errors import APIError
 
 from analysis_manager.models import AnalysisStatus
-from analysis_manager.tasks import (_tool_based_galaxy_file_import,
-                                    get_taskset_result, run_analysis)
+from analysis_manager.tasks import (_galaxy_file_import, get_taskset_result,
+                                    run_analysis)
 from analysis_manager.utils import create_analysis, validate_analysis_config
 from core.models import (INPUT_CONNECTION, OUTPUT_CONNECTION, Analysis,
                          AnalysisNodeConnection, DataSet, OwnableResource,
                          Workflow, WorkflowFilesDL)
 from data_set_manager.models import Node
-from data_set_manager.utils import get_file_url_from_node_uuid
+from data_set_manager.utils import (get_file_url_from_node_uuid,
+                                    get_solr_response_json)
 from file_store.models import FileType
 
 logger = logging.getLogger(__name__)
@@ -213,6 +214,9 @@ class ToolDefinition(models.Model):
                 "Workflow-based tools don't utilize `extra_directories`"
             )
 
+    def get_parameters(self):
+        return self.parameters.all()
+
 
 @receiver(pre_delete, sender=ToolDefinition)
 def delete_associated_objects(sender, instance, *args, **kwargs):
@@ -316,14 +320,20 @@ class Tool(OwnableResource):
         node_uuids = re.findall(UUID_RE, self.get_file_relationships())
         return node_uuids
 
-    def get_relative_container_url(self):
+    def _get_input_nodes(self):
         """
-        Construct & return the relative url of our Tool's container
+        Return a list of Node objects corresponding to the Node UUIDs we
+        receive from the front-end when a WorkflowTool is launched.
+
+        NOTE: There is no exception handling here since this method is
+        within the scope of an atomic transaction.
         """
-        return "/{}/{}".format(
-            settings.DJANGO_DOCKER_ENGINE_BASE_URL,
-            self.container_name
-        )
+        return [
+            Node.objects.get(uuid=uuid) for uuid in self.get_input_node_uuids()
+        ]
+
+    def _get_launch_parameters(self):
+        return self.get_tool_launch_config()[ToolDefinition.PARAMETERS]
 
     def get_tool_launch_config(self):
         return json.loads(self.tool_launch_configuration)
@@ -344,10 +354,10 @@ class Tool(OwnableResource):
         """
         return {
             "name": "{}".format(self),
-            "studyUuid": self.dataset.get_latest_study().uuid,
-            "toolUuid": self.uuid,
+            "study_uuid": self.dataset.get_latest_study().uuid,
+            "tool_uuid": self.uuid,
             "user_id": self.get_owner().id,
-            "workflowUuid": self.tool_definition.workflow.uuid
+            "workflow_uuid": self.tool_definition.workflow.uuid
         }
 
     def launch(self):
@@ -400,12 +410,86 @@ class VisualizationTool(Tool):
     VisualizationTools are Tools that are specific to
     launching and monitoring Dockerized visualizations
     """
+    FILE_URL = "file_url"
+    NODE_INFORMATION = "node_info"
+    NODE_SOLR_INFO = "node_solr_info"
 
     class Meta:
         verbose_name = "visualizationtool"
         permissions = (
             ('read_%s' % verbose_name, 'Can read %s' % verbose_name),
         )
+
+    def _create_container_input_dict(self):
+        """
+        Creat a dictionary containing information that Dockerized
+        Visualizations will have access to
+        """
+        return {
+            self.FILE_RELATIONSHIPS: self.get_file_relationships_urls(),
+            ToolDefinition.PARAMETERS: self._get_visualization_parameters(),
+            self.NODE_INFORMATION: self._get_detailed_input_nodes_dict()
+        }
+
+    def _get_detailed_input_nodes_dict(self):
+        """
+        Create and return a dict with detailed information about all of our
+        Tool's input Nodes.
+
+        This detailed info contains:
+            - Whatever we have in our Solr index for a given Node
+            - A full url pointing to our Node's FileStoreItem's datafile
+        """
+        solr_response_json = get_solr_response_json(
+            self.get_input_node_uuids()
+        )
+        node_info = {
+            node["uuid"]: {
+                self.NODE_SOLR_INFO: node,
+                self.FILE_URL: get_file_url_from_node_uuid(node["uuid"])
+            }
+            for node in solr_response_json["nodes"]
+        }
+        return node_info
+
+    def get_relative_container_url(self):
+        """
+        Construct & return the relative url of our Tool's container
+        """
+        return "/{}/{}".format(
+            settings.DJANGO_DOCKER_ENGINE_BASE_URL,
+            self.container_name
+        )
+
+    def _get_visualization_parameters(self):
+        tool_parameters = []
+
+        for parameter in self.tool_definition.get_parameters():
+            tool_parameters.append(
+                {
+                    "uuid": parameter.uuid,
+                    "description": parameter.description,
+                    "default_value": parameter.default_value,
+                    "name": parameter.name,
+                    "value": self._get_edited_parameter_value(parameter),
+                    "value_type": parameter.value_type
+                }
+            )
+        return tool_parameters
+
+    def _get_edited_parameter_value(self, parameter_instance):
+        ''' Return the `default_value` of a Parameter instance here unless a
+        user has updated said Parameter's value in the UI before a Tool was
+        launched'''
+        launch_parameters = self._get_launch_parameters()
+        edited_parameter_value = launch_parameters.get(
+            parameter_instance.uuid
+        )
+
+        if edited_parameter_value is not None:
+            return edited_parameter_value
+        else:
+            return parameter_instance.default_value
 
     def launch(self):
         """
@@ -419,16 +503,13 @@ class VisualizationTool(Tool):
         max_containers = settings.DJANGO_DOCKER_ENGINE_MAX_CONTAINERS
         if len(client.list()) >= max_containers:
             raise VisualizationToolError('Max containers')
+
         container = DockerContainerSpec(
             image_name=self.tool_definition.image_name,
             container_name=self.container_name,
             labels={self.uuid: ToolDefinition.VISUALIZATION},
-            container_input_path=(
-                self.tool_definition.container_input_path
-            ),
-            input={
-                self.FILE_RELATIONSHIPS: self.get_file_relationships_urls()
-            },
+            container_input_path=self.tool_definition.container_input_path,
+            input=self._create_container_input_dict(),
             extra_directories=self.tool_definition.get_extra_directories()
         )
 
@@ -482,6 +563,7 @@ class WorkflowTool(Tool):
     PAIRED = "paired"
     REVERSE = "reverse"
     TOOL_ID = "tool_id"
+    WORKFLOW_OUTPUTS = "workflow_outputs"
 
     class Meta:
         verbose_name = "workflowtool"
@@ -614,7 +696,8 @@ class WorkflowTool(Tool):
                 step=self._get_workflow_step(galaxy_dataset),
                 filename=self._get_galaxy_dataset_filename(galaxy_dataset),
                 filetype=galaxy_dataset["file_ext"],
-                is_refinery_file=galaxy_dataset in exposed_workflow_outputs
+                is_refinery_file=galaxy_dataset in exposed_workflow_outputs,
+                galaxy_dataset_name=galaxy_dataset["name"]
             )
 
     def _create_collection_description(self):
@@ -716,9 +799,12 @@ class WorkflowTool(Tool):
 
     @handle_bioblend_exceptions
     def create_galaxy_library(self):
-        return self.galaxy_connection.libraries.create_library(
+        galaxy_library_dict = self.galaxy_connection.libraries.create_library(
             name="Library for: {}".format(self)
         )
+        self.analysis.library_id = galaxy_library_dict["id"]
+        self.analysis.save()
+        return galaxy_library_dict
 
     def _create_workflow_inputs_dict(self):
         """
@@ -742,9 +828,9 @@ class WorkflowTool(Tool):
         for details on its structure.
         """
         params_dict = {}
-        workflow_parameters = self._get_workflow_parameters()
+        launch_parameters = self._get_launch_parameters()
 
-        for galaxy_parameter_uuid in workflow_parameters:
+        for galaxy_parameter_uuid in launch_parameters:
             galaxy_parameter = GalaxyParameter.objects.get(
                 uuid=galaxy_parameter_uuid
             )
@@ -757,7 +843,7 @@ class WorkflowTool(Tool):
 
             params_dict[workflow_step][galaxy_parameter.name] = (
                 galaxy_parameter.cast_param_value_to_proper_type(
-                    workflow_parameters[galaxy_parameter_uuid]
+                    launch_parameters[galaxy_parameter_uuid]
                 )
             )
         return params_dict
@@ -876,7 +962,8 @@ class WorkflowTool(Tool):
             )
         )
         retained_datasets = [
-            galaxy_dataset for galaxy_dataset in galaxy_dataset_list
+            self._update_galaxy_dataset_name(galaxy_dataset)
+            for galaxy_dataset in galaxy_dataset_list
             if not galaxy_dataset["purged"] and
             self._get_workflow_step(galaxy_dataset) > 0
         ]
@@ -910,7 +997,9 @@ class WorkflowTool(Tool):
                 )
                 workflow_step_output_names = [
                     workflow_output["output_name"] for workflow_output in
-                    workflow_steps_dict[workflow_step_key]["workflow_outputs"]
+                    workflow_steps_dict[workflow_step_key][
+                        self.WORKFLOW_OUTPUTS
+                    ]
                 ]
                 if creating_job_output_name in workflow_step_output_names:
                     exposed_galaxy_datasets.append(galaxy_dataset)
@@ -924,11 +1013,9 @@ class WorkflowTool(Tool):
         return self.get_tool_launch_config()[self.GALAXY_DATA]
 
     def get_galaxy_import_tasks(self):
-        """
-        Create and return a list of _tool_based_galaxy_file_import() tasks
-        """
+        """Create and return a list of _galaxy_file_import() tasks"""
         return [
-            _tool_based_galaxy_file_import.subtask(
+            _galaxy_file_import.subtask(
                 (
                     self.analysis.uuid,
                     file_store_item_uuid,
@@ -936,7 +1023,7 @@ class WorkflowTool(Tool):
                     self.get_galaxy_dict()[self.GALAXY_LIBRARY_DICT],
                 )
             ) for file_store_item_uuid in self.get_input_file_uuid_list()
-            ]
+        ]
 
     @handle_bioblend_exceptions
     def _get_galaxy_dataset_provenance(self, galaxy_dataset_dict):
@@ -955,18 +1042,6 @@ class WorkflowTool(Tool):
             self.galaxy_workflow_history_id,
             self.get_galaxy_dict()[self.GALAXY_WORKFLOW_INVOCATION_DATA]["id"]
         )
-
-    def _get_input_nodes(self):
-        """
-        Return a list of Node objects corresponding to the Node UUIDs we
-        receive from the front-end when a WorkflowTool is launched.
-
-        NOTE: There is no exception handling here since this method is
-        within the scope of an atomic transaction.
-        """
-        return [
-            Node.objects.get(uuid=uuid) for uuid in self.get_input_node_uuids()
-            ]
 
     @handle_bioblend_exceptions
     def _get_refinery_input_file_id(self, galaxy_dataset_dict):
@@ -1053,9 +1128,6 @@ class WorkflowTool(Tool):
 
     def get_workflow_internal_id(self):
         return self.tool_definition.workflow.internal_id
-
-    def _get_workflow_parameters(self):
-        return self.get_tool_launch_config()[ToolDefinition.PARAMETERS]
 
     def _get_workflow_step(self, galaxy_dataset_dict):
         for step in self._get_galaxy_workflow_invocation()["steps"]:
@@ -1240,6 +1312,35 @@ class WorkflowTool(Tool):
             self.GALAXY_TO_REFINERY_MAPPING_LIST,
             galaxy_to_refinery_mapping_list
         )
+
+    def _update_galaxy_dataset_name(self, galaxy_dataset_dict):
+        """
+        Update the name of a Galaxy Dataset if any Galaxy
+        RenameDatasetActions are detected for it
+        :param galaxy_dataset_dict: dict containing information about a
+        Galaxy Dataset
+        :return: galaxy_dataset_dict with an updated 'name' if a
+        RenameDatasetAction was detected, otherwise the original galaxy
+        dataset is returned
+        """
+        workflow_steps = self._get_workflow_dict()["steps"]
+        workflow_step_number = str(
+            self._get_workflow_step(galaxy_dataset_dict)
+        )
+        post_job_actions = workflow_steps[workflow_step_number].get(
+            "post_job_actions"
+        )
+        if post_job_actions:
+            rename_dataset_key = (
+                "RenameDatasetAction{}".format(galaxy_dataset_dict["name"])
+            )
+            if rename_dataset_key in post_job_actions.keys():
+                galaxy_dataset_dict["name"] = (
+                    post_job_actions[
+                        rename_dataset_key
+                    ]["action_arguments"]["newname"]
+                )
+        return galaxy_dataset_dict
 
     @handle_bioblend_exceptions
     def upload_datafile_to_library_from_url(self, library_id, datafile_url):

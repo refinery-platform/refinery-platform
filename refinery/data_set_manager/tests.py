@@ -1,26 +1,41 @@
 from StringIO import StringIO
+import contextlib
 import json
+import logging
+import os
 import re
+import shutil
+import tempfile
+from urlparse import urljoin
+import uuid
 
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import (InMemoryUploadedFile,
                                             SimpleUploadedFile)
+from django.db.models import Q
 from django.http import QueryDict
-from django.test import TestCase
+from django.test import LiveServerTestCase, TestCase
 
+import mock
 from rest_framework.test import APIClient, APIRequestFactory, APITestCase
 
 from core.models import Analysis, DataSet, ExtendedGroup, InvestigationLink
 from core.views import NodeViewSet
+import data_set_manager
+from data_set_manager.isa_tab_parser import IsaTabParser, ParserException
+from data_set_manager.single_file_column_parser import process_metadata_table
 from data_set_manager.tasks import parse_isatab
 from factory_boy.utils import make_analyses_with_single_dataset
-from file_store.models import FileStoreItem
+from file_store.models import FileStoreItem, generate_file_source_translator
+from file_store.tasks import import_file
 
-from .models import (AnnotatedNode, Assay, Attribute, AttributeOrder,
-                     Investigation, Node, Study)
+from .models import (AnnotatedNode, Assay, AttributeOrder, Investigation, Node,
+                     Study)
 from .search_indexes import NodeIndex
 from .serializers import AttributeOrderSerializer
-from .utils import (create_facet_filter_query, customize_attribute_response,
+from .utils import (_create_solr_params_from_node_uuids,
+                    create_facet_filter_query, customize_attribute_response,
                     escape_character_solr, format_solr_response,
                     generate_facet_fields_query,
                     generate_filtered_facet_fields,
@@ -346,7 +361,7 @@ class AssaysAttributesAPITests(APITestCase):
         self.client.logout()
 
 
-class UtilitiesTest(TestCase):
+class UtilitiesTests(TestCase):
 
     def setUp(self):
         self.user1 = User.objects.create_user("ownerJane", '', 'test1234')
@@ -1381,6 +1396,42 @@ class UtilitiesTest(TestCase):
                 context.exception.message
             )
 
+    def test__create_solr_params_from_node_uuids(self):
+        fake_node_uuids = [str(uuid.uuid4()), str(uuid.uuid4())]
+        node_solr_params = _create_solr_params_from_node_uuids(fake_node_uuids)
+        self.assertEqual(
+            node_solr_params,
+            {
+                "q": "django_ct:data_set_manager.node",
+                "wt": "json",
+                "fq": "uuid:({})".format(" OR ".join(fake_node_uuids))
+            }
+        )
+
+    def test_update_annotated_nodes(self):
+        type = 'Raw Data File'
+
+        nodes_before = AnnotatedNode.objects.filter(Q(
+            study__uuid=self.study.uuid,
+            assay__uuid=self.assay.uuid,
+            node_type=type
+        ))
+        self.assertEqual(len(nodes_before), 0)
+
+        data_set_manager.utils.update_annotated_nodes(
+            type,
+            study_uuid=self.study.uuid,
+            assay_uuid=self.assay.uuid,
+            update=True)
+
+        nodes_after = AnnotatedNode.objects.filter(Q(
+            study__uuid=self.study.uuid,
+            assay__uuid=self.assay.uuid,
+            node_type=type
+        ))
+        self.assertEqual(len(nodes_after), 0)
+        # TODO: Is this the behavior we expect?
+
 
 class NodeClassMethodTests(TestCase):
     def setUp(self):
@@ -1672,6 +1723,7 @@ class NodeIndexTests(APITestCase):
         study = Study.objects.create(investigation=investigation)
         assay = Assay.objects.create(study=study, technology='whizbang')
 
+        # None of the details of the test_file except name matter for the test
         test_file = StringIO()
         test_file.write('Coffee is great.\n')
         self.file_store_item = FileStoreItem.objects.create(
@@ -1697,13 +1749,6 @@ class NodeIndexTests(APITestCase):
         self.study_uuid = study.uuid
         self.file_uuid = self.file_store_item.uuid
         self.node_uuid = self.node.uuid
-
-        Attribute.objects.create(
-            node=self.node,
-            type=Attribute.CHARACTERISTICS,
-            subtype='fake subtype',
-            value='fake value'
-        )
 
         self.maxDiff = None
 
@@ -1769,34 +1814,231 @@ class NodeIndexTests(APITestCase):
         )
 
 
-class AnnotatedNodeExplosionTestCase(TestCase):
+@contextlib.contextmanager
+def temporary_directory(*args, **kwargs):
+    d = tempfile.mkdtemp(*args, **kwargs)
+    try:
+        yield d
+    finally:
+        shutil.rmtree(d)
+
+
+class IsaTabTestBase(TestCase):
     def setUp(self):
-        self.username = 'coffee_lover'
-        self.password = 'coffeecoffee'
-        self.user = User.objects.create_user(
-            self.username,
-            '',
-            self.password
+        logging.getLogger(
+            "data_set_manager.isa_tab_parser"
+        ).setLevel(logging.ERROR)
+
+        # no need to update Solr index in tests
+        mock.patch(
+            "data_set_manager.search_indexes.NodeIndex.update_object"
+        ).start()
+
+        test_user = "test_user"
+        self.user = User.objects.create_user(test_user)
+        self.user.set_password(test_user)
+        self.user.save()
+        self.isa_tab_import_url = "/data_set_manager/import/isa-tab-form/"
+        is_logged_in = self.client.login(
+            username=self.user.username,
+            password=test_user
         )
+        self.assertTrue(is_logged_in)
+
+    def tearDown(self):
+        FileStoreItem.objects.all().delete()
+
+
+class IsaTabParserTests(IsaTabTestBase):
+    def failed_isatab_assertions(self):
+        self.assertEqual(DataSet.objects.count(), 0)
+        self.assertEqual(AnnotatedNode.objects.count(), 0)
+        self.assertEqual(Node.objects.count(), 0)
+        self.assertEqual(FileStoreItem.objects.count(), 0)
+        self.assertEqual(Investigation.objects.count(), 0)
+
+    def parse(self, dir_name):
+        parent = os.path.dirname(os.path.abspath(__file__))
+        file_source_translator = generate_file_source_translator(
+            username=self.user.username
+        )
+        dir = os.path.join(parent, 'test-data', dir_name)
+        return IsaTabParser(
+            file_source_translator=file_source_translator
+        ).run(dir)
+
+    def test_empty(self):
+        with temporary_directory() as tmp:
+            with self.assertRaises(ParserException):
+                self.parse(tmp)
+
+    def test_minimal(self):
+        investigation = self.parse('minimal')
+
+        studies = investigation.study_set.all()
+        self.assertEqual(len(studies), 1)
+
+        assays = studies[0].assay_set.all()
+        self.assertEqual(len(assays), 1)
+
+    def test_mising_investigation(self):
+        with self.assertRaises(ParserException):
+            self.parse('missing-investigation')
+
+    def test_mising_study(self):
+        with self.assertRaises(IOError):
+            self.parse('missing-study')
+
+    def test_mising_assay(self):
+        with self.assertRaises(IOError):
+            self.parse('missing-assay')
+
+    def test_multiple_investigation(self):
+        # TODO: I think this should fail?
+        self.parse('multiple-investigation')
+
+    def test_multiple_study(self):
+        investigation = self.parse('multiple-study')
+
+        studies = investigation.study_set.all()
+        self.assertEqual(len(studies), 2)
+
+        assays0 = studies[0].assay_set.all()
+        self.assertEqual(len(assays0), 1)
+
+        assays1 = studies[1].assay_set.all()
+        self.assertEqual(len(assays1), 1)
+
+    def test_multiple_study_missing_assay(self):
+        with self.assertRaises(IOError):
+            self.parse('multiple-study-missing-assay')
+
+    def test_multiple_assay(self):
+        investigation = self.parse('multiple-assay')
+
+        studies = investigation.study_set.all()
+        self.assertEqual(len(studies), 1)
+
+        assays = studies[0].assay_set.all()
+        self.assertEqual(len(assays), 2)
 
     def test_metabolights_isatab_wont_import_with_rollback_a(self):
-        parse_isatab(
-            self.user.username,
-            True,
-            "refinery/data_set_manager/test-data/MTBLS1.zip"
+        with self.assertRaises(RuntimeError) as context:
+            parse_isatab(self.user.username, False,
+                         "data_set_manager/test-data/MTBLS1.zip")
+        self.failed_isatab_assertions()
+        self.assertIn(
+            "Exponential explosion",
+            context.exception.message
         )
-        self.assertEqual(DataSet.objects.count(), 0)
-        self.assertEqual(AnnotatedNode.objects.count(), 0)
-        self.assertEqual(Node.objects.count(), 0)
-        self.assertEqual(FileStoreItem.objects.count(), 0)
 
     def test_metabolights_isatab_wont_import_with_rollback_b(self):
-        parse_isatab(
-            self.user.username,
-            True,
-            "refinery/data_set_manager/test-data/MTBLS112.zip"
+        with self.assertRaises(RuntimeError) as context:
+            parse_isatab(self.user.username, False,
+                         "data_set_manager/test-data/MTBLS112.zip")
+        self.failed_isatab_assertions()
+        self.assertIn(
+            "Exponential explosion",
+            context.exception.message
         )
+
+    def test_bad_isatab_rollback_from_parser_exception_a(self):
+        with self.assertRaises(IOError):
+            parse_isatab(self.user.username, False,
+                         "data_set_manager/test-data/HideLabBrokenA.zip")
+        self.failed_isatab_assertions()
+
+    def test_bad_isatab_rollback_from_parser_exception_b(self):
+        with self.assertRaises(IOError):
+            parse_isatab(self.user.username, False,
+                         "data_set_manager/test-data/HideLabBrokenB.zip")
+        self.failed_isatab_assertions()
+
+
+class ProcessISATabViewTestBase(IsaTabTestBase):
+    def post_isa_tab(self, isa_tab_url=None, isa_tab_file=None):
+        self.client.post(
+            self.isa_tab_import_url,
+            data={
+                "isa_tab_url": isa_tab_url,
+                "isa_tab_file": isa_tab_file
+            },
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest'
+        )
+
+    def successful_import_assertions(self):
+        self.assertEqual(DataSet.objects.count(), 1)
+        self.assertEqual(Study.objects.count(), 1)
+        self.assertEqual(Investigation.objects.count(), 1)
+        self.assertEqual(Assay.objects.count(), 1)
+
+    def unsuccessful_import_assertions(self):
         self.assertEqual(DataSet.objects.count(), 0)
-        self.assertEqual(AnnotatedNode.objects.count(), 0)
-        self.assertEqual(Node.objects.count(), 0)
-        self.assertEqual(FileStoreItem.objects.count(), 0)
+        self.assertEqual(Study.objects.count(), 0)
+        self.assertEqual(Investigation.objects.count(), 0)
+        self.assertEqual(Assay.objects.count(), 0)
+
+
+class ProcessISATabViewTests(ProcessISATabViewTestBase):
+    @mock.patch.object(data_set_manager.views.import_file, "delay")
+    def test_post_good_isa_tab_file(self, delay_mock):
+        with open('data_set_manager/test-data/rfc-test.zip') as good_isa:
+            self.post_isa_tab(isa_tab_file=good_isa)
+        self.successful_import_assertions()
+
+    def test_post_bad_isa_tab_file(self):
+        with open('data_set_manager/test-data/HideLabBrokenA.zip') as bad_isa:
+            self.post_isa_tab(isa_tab_file=bad_isa)
+        self.unsuccessful_import_assertions()
+
+    def test_post_bad_isa_tab_url(self):
+        self.post_isa_tab(isa_tab_url="non-existant-file")
+        self.unsuccessful_import_assertions()
+
+
+class ProcessISATabViewLiveServerTests(ProcessISATabViewTestBase,
+                                       LiveServerTestCase):
+    @mock.patch.object(data_set_manager.views.import_file, "delay")
+    def test_post_good_isa_tab_url(self, delay_mock):
+        media_root_path = os.path.join(
+            settings.BASE_DIR,
+            "refinery/data_set_manager/test-data/"
+        )
+        with self.settings(MEDIA_ROOT=media_root_path):
+            media_url = urljoin(self.live_server_url, settings.MEDIA_URL)
+            good_isa_tab_url = urljoin(media_url, "rfc-test.zip")
+            self.post_isa_tab(isa_tab_url=good_isa_tab_url)
+        self.successful_import_assertions()
+
+
+class SingleFileColumnParserTests(TestCase):
+    def process_csv(self, filename):
+        path = os.path.join(
+            os.path.dirname(__file__),
+            'test-data', 'single-file', filename
+        )
+        with open(path, 'r') as f:
+            dataset_uuid = process_metadata_table(
+                username='guest',
+                title='fake',
+                metadata_file=f,
+                source_columns=[0],
+                data_file_column=2,
+            )
+        return DataSet.objects.get(uuid=dataset_uuid)
+
+    def assert_expected_nodes(self, dataset, node_count):
+        assays = dataset.get_assays()
+        self.assertEqual(len(assays), 1)
+        data_nodes = Node.objects.filter(assay=assays[0], type='Raw Data File')
+        self.assertEqual(len(data_nodes), node_count)
+
+    @mock.patch.object(import_file, "delay")
+    def test_one_line_csv(self, delay_mock):
+        dataset = self.process_csv('one-line.csv')
+        self.assert_expected_nodes(dataset, 1)
+
+    @mock.patch.object(import_file, "delay")
+    def test_two_line_csv(self, delay_mock):
+        dataset = self.process_csv('two-line.csv')
+        self.assert_expected_nodes(dataset, 2)

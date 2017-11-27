@@ -15,6 +15,7 @@ function AboutDetailsCtrl (
   vm.assays = dataSetAboutFactory.assays;
   vm.dataSet = dataSetAboutFactory.dataSet;
   vm.dataSetUuid = $window.dataSetUuid;
+  vm.editedDataSet = {};
   vm.fileStoreItem = dataSetAboutFactory.fileStoreItem;
   vm.isCollapsed = {
     title: true,
@@ -23,10 +24,9 @@ function AboutDetailsCtrl (
     slug: true
   };
   vm.studies = dataSetAboutFactory.studies;
-  vm.updatedField = {};
 
   vm.cancel = function (fieldName) {
-    vm.updatedField[fieldName] = '';
+    vm.editedDataSet[fieldName] = '';
     vm.isCollapsed[fieldName] = true;
   };
 
@@ -35,6 +35,8 @@ function AboutDetailsCtrl (
       .getDataSet(vm.dataSetUuid)
       .then(function () {
         vm.dataSet = dataSetAboutFactory.dataSet;
+        // initialize the edited dataset, avoids updating while user edits
+        angular.copy(vm.dataSet, vm.editedDataSet);
         // grab meta-data info
         if (dataSetAboutFactory.dataSet.isa_archive) {
           vm.refreshFileStoreItem(dataSetAboutFactory.dataSet.isa_archive);

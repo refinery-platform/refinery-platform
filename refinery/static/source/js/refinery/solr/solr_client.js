@@ -63,20 +63,9 @@ SolrClient.prototype.initialize = function ( query, resetQuery, callback ) {
 
 			SOLR_ERROR_TRIGGER += 1;
 			if (SOLR_ERROR_TRIGGER > 1){
-				bootbox.alert(
-            	"<h3 style='color:red;'>Error: 500</h3>" +
-            	"<p>" +
-           	 	"It looks like one or more services are not running." +
-            	"</p>" +
-				"<p>" +
-				"Please contact your " +
-				"<a href='mailto:" +
-				admins +
-				"?Subject=Refinery%20Error' target='_top'>System Administrator</a>" +
-				".</p>"
-        );
+				console.error('Error: 500, It looks like one or more services are' +
+					' not running.');
 			}
-
         }
 		},
 
@@ -112,23 +101,9 @@ SolrClient.prototype.run = function ( query, queryComponents, callback ) {
 		statusCode: {
         500: function() {
 			if (SOLR_ERROR_TRIGGER == 0) {
-
-        	bootbox.alert(
-            	"<h3 style='color:red;'>Error: 500</h3>" +
-            	"<p>" +
-           	 	"It looks like one or more services are not running." +
-            	"</p>" +
-				"<p>" +
-				"Please contact your " +
-				"<a href='mailto:" +
-				admins +
-				"?Subject=Refinery%20Error' target='_top'>System Administrator</a>" +
-				".</p>"
-        );
+				console.error('Error: 500, It looks like one or more services are' +
+					' not running.');
 				SOLR_ERROR_TRIGGER+=1;
-
-
-
 			}
         }
     },

@@ -7,10 +7,8 @@ import re
 import shutil
 import string
 import subprocess
-import sys
 import tempfile
 import time
-import traceback
 
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -24,7 +22,8 @@ import requests
 from requests.exceptions import HTTPError
 
 from core.models import DataSet, ExtendedGroup, FileStoreItem
-from core.utils import (add_data_set_to_neo4j, update_annotation_sets_neo4j,
+from core.utils import (add_data_set_to_neo4j,
+                        async_update_annotation_sets_neo4j,
                         update_data_set_index)
 from file_store.models import FileExtension, generate_file_source_translator
 
@@ -285,57 +284,56 @@ def create_dataset(investigation_uuid, username, identifier=None, title=None,
             "password 'test'", username, username)
         # user doesn't exist
         user = User.objects.create_user(username, "", "test")
-    if investigation_uuid is not None:
-        # TODO: make sure this is used everywhere
-        annotate_nodes(investigation_uuid)
-        dataset = None
-        investigation = Investigation.objects.get(uuid=investigation_uuid)
-        if identifier is None:
-            identifier = investigation.get_identifier()
-        if title is None:
-            title = investigation.get_title()
-        if dataset_name is None:
-            dataset_name = "%s: %s" % (identifier, title)
+    if investigation_uuid is None:
+        return None  # TODO: make sure this is never happens
+    annotate_nodes(investigation_uuid)
+    dataset = None
+    investigation = Investigation.objects.get(uuid=investigation_uuid)
+    if identifier is None:
+        identifier = investigation.get_identifier()
+    if title is None:
+        title = investigation.get_title()
+    if dataset_name is None:
+        dataset_name = "%s: %s" % (identifier, title)
 
-        logger.info(
-            "create_dataset: title = %s, identifer = %s, dataset_name = '%s'",
-            title, identifier, dataset_name)
+    logger.info(
+        "create_dataset: title = %s, identifer = %s, dataset_name = '%s'",
+        title, identifier, dataset_name)
 
-        datasets = DataSet.objects.filter(name=dataset_name)
-        # check if the investigation already exists
-        if len(datasets):  # if not 0, update dataset with new investigation
-            """go through datasets until you find one with the correct owner"""
-            for ds in datasets:
-                own = ds.get_owner()
-                if own == user:
-                    ds.update_investigation(investigation,
-                                            "updated %s" % date.today())
-                    logger.info("create_dataset: Updated data set %s", ds.name)
-                    dataset = ds
-                    break
-        # create a new dataset if doesn't exist already for this user
-        if not dataset:
-            dataset = DataSet.objects.create(name=dataset_name)
-            dataset.set_investigation(investigation)
-            dataset.set_owner(user)
-            dataset.accession = identifier
-            dataset.title = title
-            logger.info("create_dataset: Created data set '%s'", dataset_name)
-        if public:
-            public_group = ExtendedGroup.objects.public_group()
-            dataset.share(public_group)
-        # set dataset slug
-        dataset.slug = slug
-        # calculate total number of files and total number of bytes
-        dataset.file_size = dataset.get_file_size()
-        dataset.file_count = dataset.get_file_count()
-        dataset.save()
-        # Finally index data set
-        update_data_set_index(dataset)
-        add_data_set_to_neo4j(dataset, user.id)
-        update_annotation_sets_neo4j()
-        return dataset.uuid
-    return None
+    datasets = DataSet.objects.filter(name=dataset_name)
+    # check if the investigation already exists
+    if len(datasets):  # if not 0, update dataset with new investigation
+        """go through datasets until you find one with the correct owner"""
+        for ds in datasets:
+            own = ds.get_owner()
+            if own == user:
+                ds.update_investigation(investigation,
+                                        "updated %s" % date.today())
+                logger.info("create_dataset: Updated data set %s", ds.name)
+                dataset = ds
+                break
+    # create a new dataset if doesn't exist already for this user
+    if not dataset:
+        dataset = DataSet.objects.create(name=dataset_name)
+        dataset.set_investigation(investigation)
+        dataset.set_owner(user)
+        dataset.accession = identifier
+        dataset.title = title
+        logger.info("create_dataset: Created data set '%s'", dataset_name)
+    if public:
+        public_group = ExtendedGroup.objects.public_group()
+        dataset.share(public_group)
+    # set dataset slug
+    dataset.slug = slug
+    # calculate total number of files and total number of bytes
+    dataset.file_size = dataset.get_file_size()
+    dataset.file_count = dataset.get_file_count()
+    dataset.save()
+    # Finally index data set
+    update_data_set_index(dataset)
+    add_data_set_to_neo4j(dataset, user.id)
+    async_update_annotation_sets_neo4j()
+    return dataset.uuid
 
 
 @task()
@@ -458,24 +456,15 @@ def parse_isatab(username, public, path, identity_id=None,
                             checksum)
                 return \
                     investigation.investigationlink_set.all()[0].data_set.uuid
-    try:
-        with transaction.atomic():
-            investigation = parser.run(
-                path, isa_archive=isa_archive, preisa_archive=pre_isa_archive
-            )
-            data_uuid = create_dataset(
-                investigation.uuid, username, public=public
-            )
-            return data_uuid
-    except:  # prints the error message without breaking things
-        exc_type, exc_value, exc_traceback = sys.exc_info()
-        logger.error(traceback.print_tb(exc_traceback, file=sys.stdout))
-        logger.error(
-            traceback.print_exception(
-                exc_type, exc_value, exc_traceback, file=sys.stdout
-            )
+
+    with transaction.atomic():
+        investigation = parser.run(
+            path, isa_archive=isa_archive, preisa_archive=pre_isa_archive
         )
-    return None
+        data_uuid = create_dataset(
+            investigation.uuid, username, public=public
+        )
+        return data_uuid
 
 
 @task()
@@ -539,7 +528,7 @@ def generate_bam_index(auxiliary_file_store_item_uuid, datafile_path):
     # Try and fetch the bam_index FileExtension
     # NOTE: that we are not handling the normal errors for an orm.get()s below
     # because we want the task from which this function is called within to
-    # fail if we can't get what we want http://bit.ly/1KSbazM
+    # fail if we can't get what we want.
     bam_index_file_extension = FileExtension.objects.get(name="bai").name
     auxiliary_file_store_item = FileStoreItem.objects.get(
         uuid=auxiliary_file_store_item_uuid)

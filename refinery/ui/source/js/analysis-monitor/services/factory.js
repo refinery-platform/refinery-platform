@@ -13,6 +13,7 @@ function analysisMonitorFactory (
   var analysesGlobalList = [];
   var analysesRunningGlobalList = [];
   var analysesDetail = {};
+  var docCount = {}; // meta data for document count
 
   var initializeAnalysesDetail = function (uuid) {
     analysesDetail[uuid] = {
@@ -132,7 +133,11 @@ function analysisMonitorFactory (
 
     var analysis = analysisService.query(params);
     analysis.$promise.then(function (response) {
-      processAnalysesList(response.objects, params);
+      if ('meta_only' in params) {
+        docCount[params.status__in] = response.meta.total_count;
+      } else {
+        processAnalysesList(response.objects, params);
+      }
     });
 
     return analysis.$promise;
@@ -215,7 +220,8 @@ function analysisMonitorFactory (
     analysesGlobalList: analysesGlobalList,
     analysesDetail: analysesDetail,
     analysesRunningList: analysesRunningList,
-    analysesRunningGlobalList: analysesRunningGlobalList
+    analysesRunningGlobalList: analysesRunningGlobalList,
+    docCount: docCount
   };
 }
 

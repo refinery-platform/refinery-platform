@@ -451,17 +451,17 @@ def update_annotated_nodes(
         total_unique_attrs += len(
             nodes[node_id]["attributes"]
         )
-
         if node["type"] == node_type:
             num_nodes_of_type += 1
-
             attrs = _get_unique_parent_attributes(nodes, node_id)
-
             u_len = len(attrs)
-
             total_attrs += u_len
-
-    if total_attrs / num_nodes_of_type == total_unique_attrs:
+    if total_attrs == total_unique_attrs * num_nodes_of_type \
+            and len([
+                n for n in nodes.values() if n['type'] == 'Sample Name'
+            ]) > 1:
+        # This should exclude CSV imports
+        # TODO: Not happy about this hack at all.
         error_message = (
             "Exponential explosion! Creation of {} annotated nodes for {} "
             "nodes of type {} is stopped!"
@@ -1149,3 +1149,27 @@ def fix_last_column(file):
                 writer.writerow(row)
         shutil.move(tempfilename, file)
     return True
+
+
+def _create_solr_params_from_node_uuids(node_uuids):
+    """
+    Create and return a dict containing the proper Solr params to query
+    for the information of many Nodes
+    """
+    return {
+        "q": "django_ct:data_set_manager.node",
+        "wt": "json",
+        "fq": "uuid:({})".format(" OR ".join(node_uuids))
+    }
+
+
+def get_solr_response_json(node_uuids):
+    """
+    Fetch the information indexed within Solr for many Nodes and return
+    it as JSON
+    """
+    solr_response = search_solr(
+        _create_solr_params_from_node_uuids(node_uuids),
+        'data_set_manager'
+    )
+    return format_solr_response(solr_response)

@@ -272,30 +272,7 @@ var provvisInit = (function () {
   var extractWorkflows = function (analysesData) {
     analysesData.forEach(function (a) {
       /* Prepare for json format. */
-      var prepareJSON = function (wfCpy) {
-        var text = wfCpy.replace(/u'/g, '"');
-        text = text.replace(/\'/g, '"');
-        text = text.replace(/\sNone/g, ' "None"');
-        text = text.replace(/\\n/g, '');
-        text = text.replace(/\\/g, '');
-        text = text.replace(/\"{\"/g, '{"');
-        text = text.replace(/}\"/g, '}');
-        text = text.replace(/\"\"(\S+)\"\"/g, '"$1"');
-
-        /* Eliminate __xxxx__ parameters. */
-        text = text.replace(/\"__(\S*)__\":\s{1}\d*(,\s{1})?/g, '');
-        text = text.replace(/,\s{1}null/g, '');
-        text = text.replace(/null,/g, '');  // TODO: temp fix
-        text = text.replace(/,\s{1}}/g, '}');
-
-        return text;
-      };
-
-      /* Transform to JSON object. */
-      var text = prepareJSON(a.workflow_copy);
-      var wfData = JSON.parse(text);
-      var wfObj = wfData;
-      workflowData.set(a.workflow__uuid, wfObj);
+      workflowData.set(a.workflow__uuid, JSON.parse(a.workflow_json));
     });
   };
 
@@ -537,8 +514,8 @@ var provvisInit = (function () {
    * @param solrResponse Facet filter information on node attributes.
    */
   var extractFacetNodeAttributesPrivate = function (solrResponse) {
-    if (solrResponse instanceof SolrResponse) {
-      solrResponse.getDocumentList().forEach(function (d) {
+    if (solrResponse.nodes.length) {
+      solrResponse.nodes.forEach(function (d) {
         /* Set facet attributes to all nodes for the subanalysis of the selected
          * node.
          */
@@ -569,9 +546,8 @@ var provvisInit = (function () {
    */
   var createFacetNodeAttributeList = function (solrResponse) {
     /* Extract attributes. */
-    if (solrResponse instanceof SolrResponse &&
-      solrResponse.getDocumentList().length > 0) {
-      var sampleNode = solrResponse.getDocumentList()[0];
+    if (solrResponse.nodes.length) {
+      var sampleNode = solrResponse.nodes[0];
       var rawAttrSet = d3.entries(sampleNode);
 
       rawAttrSet.forEach(function (fa) {
@@ -595,10 +571,10 @@ var provvisInit = (function () {
       $('<li/>', {
         id: 'prov-ctrl-visible-attribute-list-' + na,
         style: 'padding-left: 5px',
-        html: '<a href="#" class="field-name"><label class="radio" ' +
-          'style="text-align: start;margin-top: 0px;margin-bottom: 0px;">' +
-          '<input type="radio">' +
-          na + '</label></a>'
+        html: '<label class="radio" ' +
+          'style="padding-left: 2em;margin-top: 0px;margin-bottom: 0px;">' +
+          '<input type="radio" name="provvis-attributes">' +
+          na + '</label>'
       }).appendTo('#prov-ctrl-visible-attribute-list');
     });
 
@@ -674,6 +650,23 @@ var provvisInit = (function () {
   return {
     run: function (data, analysesData, solrResponse) {
       return runInitPrivate(data, analysesData, solrResponse);
+    },
+    reset: function () {
+      /* Initialize node-link arrays. */
+      dataset = {};
+      nodes = [];
+      links = [];
+      aLinks = [];
+      iNodes = [];
+      oNodes = [];
+      aNodes = [];
+      saNodes = [];
+      nodeMap = d3.map();
+      analysisWorkflowMap = d3.map();
+      workflowData = d3.map();
+      analysisData = d3.map();
+      nodeData = d3.map();
+      nodeAttributeList = [];
     }
   };
 }());

@@ -1,0 +1,10 @@
+Source Name	Characteristics[Author]	Term Source REF	Term Accession Number	Characteristics[Title]	Term Source REF	Term Accession Number	Characteristics[Month]	Term Source REF	Term Accession Number	Characteristics[Year]	Term Source REF	Term Accession Number	Sample Name
+RFC111	Crocker			Pressure from the Chairman			March			1971			RFC111_document
+RFC134	Vezza			Network Graphics meeting			April			1971			RFC134_document
+RFC86	Crocker			Proposal for a Network Standard Format for a Data Stream to Control Graphics Display			January			1971			RFC86_document
+RFC94	Harslem/Heafner			Some thoughts on Network Graphics			February			1971			RFC94_document
+RFC125	McConnell			Response to RFC 86: Proposal for Network Standard Format for a Graphics Data Stream			April			1971			RFC125_document
+RFC126	McConnell			Graphics Facilities at Ames Research Center			April			1971			RFC126_document
+RFC174	Postel/Cerf			UCLA - Computer Science Graphics Overview			June			1971			RFC174_document
+RFC177	McConnell			Device independent graphical display description			June			1971			RFC177_document
+RFC178	Cotton			Network graphic attention handling			June			1971			RFC178_document

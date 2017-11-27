@@ -7,17 +7,13 @@ import uuid
 from django.conf import settings
 from django.contrib import admin
 from django.db import transaction
-from django.utils import timezone
 
 from bioblend.galaxy.client import ConnectionError
 from django_docker_engine.docker_utils import DockerClientWrapper
 from jsonschema import RefResolver, ValidationError, validate
 
-from analysis_manager.utils import fetch_objects_required_for_analysis
 from core.models import DataSet, Workflow, WorkflowEngine
-from core.utils import get_aware_local_time
-from factory_boy.django_model_factories import (AnalysisFactory,
-                                                FileRelationshipFactory,
+from factory_boy.django_model_factories import (FileRelationshipFactory,
                                                 GalaxyParameterFactory,
                                                 InputFileFactory,
                                                 ParameterFactory,
@@ -31,8 +27,10 @@ from .models import Tool, ToolDefinition, WorkflowTool
 
 logger = logging.getLogger(__name__)
 ANNOTATION_ERROR_MESSAGE = (
-    "Tool not properly annotated. Please read: http://bit.ly/2nalk6w for "
-    "examples and more information on how to properly annotate your tools."
+    "Tool not properly annotated. For examples and more information "
+    "on how to properly annotate your tools, please read "
+    "https://github.com/refinery-platform/refinery-platform/wiki/"
+    "Annotating-&-Importing-Refinery-Tools#importing-refinery-tools"
 )
 # Allow JSON Schema to find the JSON pointers we define in our schemas
 JSON_SCHEMA_FILE_RESOLVER = RefResolver(
@@ -75,25 +73,22 @@ class FileTypeValidationError(RuntimeError):
 
 def create_and_associate_parameters(tool_definition, parameters):
     for parameter in parameters:
+        common_params = {
+            "name": parameter["name"],
+            "description": parameter["description"],
+            "value_type": parameter["value_type"],
+            "default_value": parameter["default_value"],
+        }
+
         if tool_definition.tool_type == ToolDefinition.WORKFLOW:
             tool_definition.parameters.add(
                 GalaxyParameterFactory(
-                    name=parameter["name"],
-                    description=parameter["description"],
-                    value_type=parameter["value_type"],
-                    default_value=parameter["default_value"],
-                    galaxy_workflow_step=parameter["galaxy_workflow_step"]
+                    galaxy_workflow_step=parameter["galaxy_workflow_step"],
+                    **common_params
                 )
             )
         if tool_definition.tool_type == ToolDefinition.VISUALIZATION:
-            tool_definition.parameters.add(
-                ParameterFactory(
-                    name=parameter["name"],
-                    description=parameter["description"],
-                    value_type=parameter["value_type"],
-                    default_value=parameter["default_value"],
-                )
-            )
+            tool_definition.parameters.add(ParameterFactory(**common_params))
 
 
 @transaction.atomic
@@ -235,48 +230,6 @@ def create_tool(tool_launch_configuration, user_instance):
     return tool
 
 
-def create_tool_analysis(validated_analysis_config):
-    """
-    Create an Analysis instance from a validated analysis config with
-    Tool information
-    :param validated_analysis_config: a dict including the necessary
-    information to create an Analysis that has been validated prior by
-    `analysis_manager.utils.validate_analysis_config`
-    :return: an Analysis instance
-    :raises: RuntimeError
-    """
-    common_analysis_objects = (
-        fetch_objects_required_for_analysis(validated_analysis_config)
-    )
-    current_workflow = common_analysis_objects["current_workflow"]
-    data_set = common_analysis_objects["data_set"]
-    user = common_analysis_objects["user"]
-
-    try:
-        tool = WorkflowTool.objects.get(
-            uuid=validated_analysis_config["toolUuid"]
-        )
-    except (WorkflowTool.DoesNotExist,
-            WorkflowTool.MultipleObjectsReturned) as e:
-        raise RuntimeError("Couldn't fetch Tool from UUID: {}".format(e))
-
-    analysis = AnalysisFactory(
-        uuid=str(uuid.uuid4()),
-        summary="Galaxy workflow execution for: {}".format(tool.name),
-        name="{} - {} - {}".format(
-            tool.get_tool_name(),
-            get_aware_local_time().strftime("%Y/%m/%d %H:%M:%S"),
-            tool.get_owner_username().title()
-        ),
-        project=user.profile.catch_all_project,
-        data_set=data_set,
-        workflow=current_workflow,
-        time_start=timezone.now()
-    )
-    analysis.set_owner(user)
-    return analysis
-
-
 @transaction.atomic
 def create_file_relationship_nesting(workflow_annotation,
                                      file_relationships=None):
@@ -298,7 +251,7 @@ def create_file_relationship_nesting(workflow_annotation,
     # One may think: "why not just have `file_relationships=[]` in the
     # method signature?" But this [utilizing mutable arguments] is a
     # common Python "gotcha". Especially in the context of recursive methods.
-    # It's illustrated well here: http://bit.ly/21b5Axg
+    # http://docs.python-guide.org/en/latest/writing/gotchas/#mutable-default-arguments
     if not file_relationships:
         file_relationships = []
 
@@ -426,7 +379,7 @@ def get_workflows():
                     workflow["id"]
                 )
                 workflow_data["graph"] = (
-                    galaxy_connection.workflows.export_workflow_json(
+                    galaxy_connection.workflows.export_workflow_dict(
                         workflow["id"]
                     )
                 )
@@ -470,8 +423,7 @@ def parse_file_relationship_nesting(nested_structure, nesting_dict=None,
         raise RuntimeError(
             "LIST/PAIR structure is not balanced {}".format(nesting_contents)
         )
-    # TODO: If it's a unicode instead of str, it breaks. Too fragile?
-    if nesting_types == {str}:
+    if nesting_types in [{str}, {unicode}]:
         # If we reach a nesting level with all `str` we can return
         return
 
@@ -497,7 +449,6 @@ def validate_tool_annotation(annotation_dictionary):
     properly.
     :param annotation_dictionary: dict containing Tool annotation data
     """
-
     with open(
             os.path.join(
                 settings.BASE_DIR,
