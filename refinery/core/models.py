@@ -512,6 +512,7 @@ class DataSet(SharableResource):
         verbose_name = "dataset"
         permissions = (
             ('read_%s' % verbose_name, 'Can read %s' % verbose_name),
+            ('read_meta_%s' % verbose_name, 'Can read meta %s' % verbose_name),
             ('share_%s' % verbose_name, 'Can share %s' % verbose_name),
         )
 
