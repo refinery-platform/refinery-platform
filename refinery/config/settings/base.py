@@ -110,6 +110,8 @@ if not os.path.isabs(MEDIA_ROOT):
 # Examples: "http://media.lawrence.com/media/", "http://example.com/media/"
 MEDIA_URL = get_setting("MEDIA_URL")
 
+DEFAULT_FILE_STORAGE = 'file_store.models.SymlinkedFileSystemStorage'
+
 # Absolute path to the directory static files should be collected to.
 # Don't put anything in this directory yourself; store your static files
 # in apps' "static/" subdirectories and in STATICFILES_DIRS.
@@ -672,3 +674,6 @@ MEDIA_BUCKET = ''  # a placeholder for use in context processor
 UPLOAD_BUCKET = ''  # a placeholder for use in context processor
 
 TASTYPIE_DEFAULT_FORMATS = ['json']
+
+# temporary feature toggle for using S3 as user data file storage backend
+REFINERY_S3_USER_DATA = get_setting('REFINERY_S3_USER_DATA', default=False)
