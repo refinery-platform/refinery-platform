@@ -74,12 +74,16 @@ class SharableResourceAPIInterface(object):
 
     def get_perms(self, res, group):
         # Default values.
-        perms = {'read': False, 'change': False}
+        perms = {'read': False, 'read_meta': False, 'change': False}
 
         # Find matching ones if available.
         for i in res.get_groups():
             if i['group'].group_ptr.id == group.id:
-                perms = {'read': i['read'], 'change': i['change']}
+                perms = {
+                    'read': i['read'],
+                    'read_meta': i['read_meta'],
+                    'change': i['change']
+                }
 
         return perms
 
@@ -729,7 +733,25 @@ class DataSetResource(SharableResourceAPIInterface, ModelResource):
         except:
             user_uuid = None
 
-        if ds and request.user.has_perm('core.read_dataset', ds):
+        if ds and request.user.has_perm('core.read_meta_dataset', ds):
+            return_obj['accession'] = ds.accession
+            return_obj['accession_source'] = ds.accession_source
+            return_obj['creation_date'] = ds.creation_date
+            return_obj['description'] = ds.description
+            return_obj['file_count'] = ds.file_count
+            return_obj['file_size'] = ds.file_size
+            return_obj['id'] = ds.id
+            return_obj['is_owner'] = is_owner
+            return_obj['is_shared'] = groups.count() > 0
+            return_obj['modification_date'] = ds.modification_date
+            return_obj['owner'] = user_uuid if is_owner else None
+            return_obj['public'] = is_public
+            return_obj['share_list'] = None
+            return_obj['slug'] = ds.slug
+            return_obj['summary'] = ds.summary
+            return_obj['title'] = ds.title
+            return_obj['uuid'] = ds.uuid
+        elif ds and request.user.has_perm('core.read_dataset', ds):
             return_obj['accession'] = ds.accession
             return_obj['accession_source'] = ds.accession_source
             return_obj['creation_date'] = ds.creation_date
@@ -1262,6 +1284,7 @@ class GroupManagementResource(Resource):
             'name': res.name,
             'type': res._meta.object_name,
             'read': False,
+            'read_meta': False,
             'change': False
         }
 
@@ -1269,13 +1292,14 @@ class GroupManagementResource(Resource):
         for i in res.get_groups():
             if i['group'].group_ptr.id == group.id:
                 perms['read'] = i['read']
+                perms['read_meta'] = i['read_meta']
                 perms['change'] = i['change']
 
         return perms
 
     def get_perm_list(self, group):
         dataset_perms = filter(
-            lambda r: r['read'],
+            lambda r: r['read_meta'],
             map(lambda r: self.get_perms(r, group), DataSet.objects.all()))
         project_perms = filter(
             lambda r: r['read'],

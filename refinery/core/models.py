@@ -310,6 +310,7 @@ class OwnableResource(BaseResource):
     def set_owner(self, user):
         assign_perm("add_%s" % self._meta.verbose_name, user, self)
         assign_perm("read_%s" % self._meta.verbose_name, user, self)
+        assign_perm("read_meta_%s" % self._meta.verbose_name, user, self)
         assign_perm("delete_%s" % self._meta.verbose_name, user, self)
         assign_perm("change_%s" % self._meta.verbose_name, user, self)
 
@@ -360,8 +361,9 @@ class SharableResource(OwnableResource):
         assign_perm("share_%s" % self._meta.verbose_name, user, self)
 
     """
-    Sharing defaults to grants read and add permission,
-    readmetaonly removes add and read all permissions
+    readmetaonly is applicable to dataset models otherwise it defaults to false
+    Sharing defaults to grants read all and add permission,
+    readonly false and readmetaonly removes add and read all permissions
     Change permission toggled by values of the readonly flag and readmetaonly
     """
 
@@ -388,7 +390,7 @@ class SharableResource(OwnableResource):
         remove_perm('share_%s' % self._meta.verbose_name, group, self)
 
     # TODO: clean this up
-    def get_groups(self, changeonly=False, readonly=False):
+    def get_groups(self, changeonly=False, readonly=False, readmetaonly=False):
         permissions = get_groups_with_perms(self, attach_perms=True)
 
         groups = []
@@ -400,11 +402,15 @@ class SharableResource(OwnableResource):
             group["id"] = group["group"].id
             group["change"] = False
             group["read"] = False
+            group["read_meta"] = False
             for permission in permission_list:
                 if permission.startswith("change"):
                     group["change"] = True
-                if permission.startswith("read"):
+                if permission.startswith("read") and \
+                        not permission.startswith("read_meta"):
                     group["read"] = True
+                if permission.startswith("read_meta"):
+                    group["read_meta"] = True
             if group["change"] and readonly:
                 continue
             if group["read"] and changeonly:
@@ -413,7 +419,12 @@ class SharableResource(OwnableResource):
 
         return groups
 
-    def get_group_ids(self, changeonly=False, readonly=False):
+    def get_group_ids(
+            self,
+            changeonly=False,
+            readonly=False,
+            readmetaonly=False
+    ):
         groups = get_groups_with_perms(self)
 
         ids = []
@@ -432,9 +443,11 @@ class SharableResource(OwnableResource):
                 for permission in permission_list:
                     if permission.startswith("change"):
                         return True
-                    if permission.startswith("read"):
+                    if permission.startswith("read") and \
+                            not permission.startswith("read_meta"):
                         return True
-
+                    if permission.startswith("read_meta"):
+                        return True
         return False
 
     class Meta:
@@ -770,8 +783,8 @@ class DataSet(SharableResource):
                 AttributeError) as e:
             logger.debug("Couldn't fetch FileStoreItem: %s", e)
 
-    def share(self, group, readonly=True):
-        super(DataSet, self).share(group, readonly)
+    def share(self, group, readonly=False, readmetaonly=True):
+        super(DataSet, self).share(group, readonly, readmetaonly)
         update_data_set_index(self)
         invalidate_cached_object(self)
         user_ids = map(lambda user: user.id, group.user_set.all())
