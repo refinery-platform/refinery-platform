@@ -360,21 +360,28 @@ class SharableResource(OwnableResource):
         assign_perm("share_%s" % self._meta.verbose_name, user, self)
 
     """
-    Sharing something always grants read and add permission
-    Change permission toggled by the value of the readonly flag
+    Sharing defaults to grants read and add permission,
+    readmetaonly removes add and read all permissions
+    Change permission toggled by values of the readonly flag and readmetaonly
     """
 
-    def share(self, group, readonly=True):
+    def share(self, group, readonly=True, readmetaonly=False):
         assign_perm('read_%s' % self._meta.verbose_name, group, self)
+        assign_perm('read_meta_%s' % self._meta.verbose_name, group, self)
         assign_perm('add_%s' % self._meta.verbose_name, group, self)
         remove_perm('change_%s' % self._meta.verbose_name, group, self)
         remove_perm('share_%s' % self._meta.verbose_name, group, self)
         remove_perm('delete_%s' % self._meta.verbose_name, group, self)
-        if not readonly:
+        if not readonly and readmetaonly:
+            assign_perm('read_meta_%s' % self._meta.verbose_name, group, self)
+            remove_perm('read_%s' % self._meta.verbose_name, group, self)
+            remove_perm('add_%s' % self._meta.verbose_name, group, self)
+        if not readonly and not readmetaonly:
             assign_perm('change_%s' % self._meta.verbose_name, group, self)
 
     def unshare(self, group):
         remove_perm('read_%s' % self._meta.verbose_name, group, self)
+        remove_perm('read_meta_%s' % self._meta.verbose_name, group, self)
         remove_perm('change_%s' % self._meta.verbose_name, group, self)
         remove_perm('add_%s' % self._meta.verbose_name, group, self)
         remove_perm('delete_%s' % self._meta.verbose_name, group, self)
