@@ -697,12 +697,10 @@ def generate_solr_params(
             assay__uuid__in=assay_uuids  # TODO: Confirm this syntax
         )
         attributes = AttributeOrderSerializer(attributes_str, many=True)
-        culled_attributes = attributes.data
-        for facet_name in exclude_facets:
-            for data in culled_attributes:
-                if (data.get('solr_field').startswith(facet_name)):
-                    culled_attributes.remove(data)
-                    break
+        culled_attributes = cull_attributes_from_db_list(
+            attributes.data,
+            exclude_facets
+        )
         facet_field_obj = generate_filtered_facet_fields(culled_attributes)
         facet_field = facet_field_obj.get('facet_field')
         facet_field = insert_facet_field_filter(facet_filter, facet_field)
@@ -731,6 +729,16 @@ def generate_solr_params(
     encoded_solr_params = urlquote(url, safe='\\=&! ')
 
     return encoded_solr_params
+
+
+def cull_attributes_from_db_list(attribute_list, remove_facets):
+    culled_attributes = attribute_list
+    for facet_name in remove_facets:
+        for data in culled_attributes:
+            if (data.get('solr_field').startswith(facet_name)):
+                culled_attributes.remove(data)
+                break
+    return culled_attributes
 
 
 def insert_facet_field_filter(facet_filter, facet_field_arr):
