@@ -15,7 +15,8 @@ angular
           },
           params: { // TODO: I believe params should be inside query?
             limit: 'limit',
-            offset: 'offset'
+            offset: 'offset',
+            data_set_uuid: ''
           }
         }
       );
