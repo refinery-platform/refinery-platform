@@ -608,7 +608,7 @@ def _index_annotated_nodes(node_type, study_uuid, assay_uuid=None,
     logger.info("%s nodes indexed in %s", str(counter), str(end - start))
 
 
-def generate_solr_params_for_assay(params, assay_uuid):
+def generate_solr_params_for_assay(params, assay_uuid, exclude_facets=[]):
     """Creates the encoded solr params requiring only an assay.
     Keyword Argument
         params -- python dict or QueryDict
@@ -624,10 +624,15 @@ def generate_solr_params_for_assay(params, assay_uuid):
         sort - Ordering include field name, whitespace, & asc or desc.
         fq - filter query
      """
-    return generate_solr_params(params, assay_uuids=[assay_uuid])
+    return generate_solr_params(params, [assay_uuid], False, exclude_facets)
 
 
-def generate_solr_params(params, assay_uuids, facets_from_config=False):
+def generate_solr_params(
+        params,
+        assay_uuids,
+        facets_from_config=False,
+        exclude_facets=[]
+):
     """
     Either returns a solr url parameter string,
     or None if assay_uuids is empty.
@@ -692,7 +697,13 @@ def generate_solr_params(params, assay_uuids, facets_from_config=False):
             assay__uuid__in=assay_uuids  # TODO: Confirm this syntax
         )
         attributes = AttributeOrderSerializer(attributes_str, many=True)
-        facet_field_obj = generate_filtered_facet_fields(attributes.data)
+        culled_attributes = attributes.data
+        for facet_name in exclude_facets:
+            for data in culled_attributes:
+                if (data.get('solr_field').startswith(facet_name)):
+                    culled_attributes.remove(data)
+                    break
+        facet_field_obj = generate_filtered_facet_fields(culled_attributes)
         facet_field = facet_field_obj.get('facet_field')
         facet_field = insert_facet_field_filter(facet_filter, facet_field)
         field_limit = ','.join(facet_field_obj.get('field_limit'))
