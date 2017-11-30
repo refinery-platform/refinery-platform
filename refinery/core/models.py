@@ -1343,10 +1343,15 @@ class Analysis(OwnableResource):
             ) as e:
                 logger.error("Could not properly fetch Tool: %s", e)
             else:
-                self.galaxy_instance().delete_history(
-                    tool.galaxy_import_history_id,
-                    self.name
-                )
+                try:
+                    import_history_id = tool.galaxy_import_history_id
+                except KeyError:
+                    logger.info("Tool hasn't interacted with Galaxy yet")
+                else:
+                    self.galaxy_instance().delete_history(
+                        import_history_id,
+                        self.name
+                    )
 
     def cancel(self):
         """Mark analysis as cancelled"""

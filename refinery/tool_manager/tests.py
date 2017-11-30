@@ -2929,12 +2929,15 @@ class WorkflowToolLaunchTests(ToolManagerTestBase):
         self.assertTrue(send_email_mock.called)
         self.assertTrue(galaxy_cleanup_mock.called)
 
-    def galaxy_cleanup_assertions(self):
+    def galaxy_cleanup_assertions(self, delete_history_mock_call_count=2):
         self.assertFalse(self.delete_workflow_mock.called)
         self.assertTrue(self.delete_history_mock.called)
         self.assertTrue(self.delete_library_mock.called)
 
-        self.assertEqual(self.delete_history_mock.call_count, 2)
+        self.assertEqual(
+            self.delete_history_mock.call_count,
+            delete_history_mock_call_count
+        )
 
     def create_tool_with_analysis(self):
         self.create_tool(ToolDefinition.WORKFLOW)
@@ -2971,6 +2974,31 @@ class WorkflowToolLaunchTests(ToolManagerTestBase):
         self.create_tool_with_analysis()
         self.tool.analysis.delete()
         self.galaxy_cleanup_assertions()
+
+    def test_analysis_deletion_works_for_tools_that_havent_reached_galaxy_yet(
+            self
+    ):
+        settings.REFINERY_GALAXY_ANALYSIS_CLEANUP = "invalid cleanup value"
+        self.create_tool_with_analysis()
+
+        # Simulate a WorkflowTool that hasn't talked to Galaxy yet
+        self.tool.analysis.history_id = None
+        self.tool.analysis.library_id = None
+        self.tool.analysis.save()
+
+        with mock.patch.object(
+                WorkflowTool,
+                "get_galaxy_dict",
+                return_value={}
+        ):
+            self.tool.analysis.delete()
+
+        self.galaxy_cleanup_assertions(delete_history_mock_call_count=1)
+
+        with self.assertRaises(WorkflowTool.DoesNotExist):
+            WorkflowTool.objects.get(uuid=self.tool.uuid)
+        with self.assertRaises(Analysis.DoesNotExist):
+            Analysis.objects.get(uuid=self.tool.analysis.uuid)
 
     @mock.patch.object(WorkflowClient, "invoke_workflow",
                        side_effect=bioblend.ConnectionError("Bad connection"))
