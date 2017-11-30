@@ -1342,6 +1342,7 @@ class Analysis(OwnableResource):
                 tool_manager.models.WorkflowTool.MultipleObjectsReturned
             ) as e:
                 logger.error("Could not properly fetch Tool: %s", e)
+                return
             try:
                 import_history_id = tool.galaxy_import_history_id
             except KeyError:
