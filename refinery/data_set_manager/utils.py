@@ -631,8 +631,7 @@ def generate_solr_params(
         params,
         assay_uuids,
         facets_from_config=False,
-        exclude_facets=[]
-):
+        exclude_facets=[]):
     """
     Either returns a solr url parameter string,
     or None if assay_uuids is empty.
@@ -697,7 +696,7 @@ def generate_solr_params(
             assay__uuid__in=assay_uuids  # TODO: Confirm this syntax
         )
         attributes = AttributeOrderSerializer(attributes_str, many=True)
-        culled_attributes = cull_attributes_from_db_list(
+        culled_attributes = cull_attributes_from_list(
             attributes.data,
             exclude_facets
         )
@@ -731,7 +730,12 @@ def generate_solr_params(
     return encoded_solr_params
 
 
-def cull_attributes_from_db_list(attribute_list, remove_facets):
+def cull_attributes_from_list(attribute_list, remove_facets):
+    """Helper method which will remove the first matching attribute from the
+    AttributeOrder based on the solr_field name.
+    Keyword Argument
+        attribute_list -- AttributeOrder list
+        remove_facets -- list of solr_field names"""
     culled_attributes = attribute_list
     for facet_name in remove_facets:
         for data in culled_attributes:
