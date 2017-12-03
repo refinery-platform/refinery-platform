@@ -310,7 +310,6 @@ class OwnableResource(BaseResource):
     def set_owner(self, user):
         assign_perm("add_%s" % self._meta.verbose_name, user, self)
         assign_perm("read_%s" % self._meta.verbose_name, user, self)
-        assign_perm("read_meta_%s" % self._meta.verbose_name, user, self)
         assign_perm("delete_%s" % self._meta.verbose_name, user, self)
         assign_perm("change_%s" % self._meta.verbose_name, user, self)
 
@@ -367,23 +366,17 @@ class SharableResource(OwnableResource):
     Change permission toggled by values of the readonly flag and readmetaonly
     """
 
-    def share(self, group, readonly=True, readmetaonly=False):
+    def share(self, group, readonly=True):
         assign_perm('read_%s' % self._meta.verbose_name, group, self)
-        assign_perm('read_meta_%s' % self._meta.verbose_name, group, self)
         assign_perm('add_%s' % self._meta.verbose_name, group, self)
         remove_perm('change_%s' % self._meta.verbose_name, group, self)
         remove_perm('share_%s' % self._meta.verbose_name, group, self)
         remove_perm('delete_%s' % self._meta.verbose_name, group, self)
-        if not readonly and readmetaonly:
-            assign_perm('read_meta_%s' % self._meta.verbose_name, group, self)
-            remove_perm('read_%s' % self._meta.verbose_name, group, self)
-            remove_perm('add_%s' % self._meta.verbose_name, group, self)
-        if not readonly and not readmetaonly:
+        if not readonly:
             assign_perm('change_%s' % self._meta.verbose_name, group, self)
 
     def unshare(self, group):
         remove_perm('read_%s' % self._meta.verbose_name, group, self)
-        remove_perm('read_meta_%s' % self._meta.verbose_name, group, self)
         remove_perm('change_%s' % self._meta.verbose_name, group, self)
         remove_perm('add_%s' % self._meta.verbose_name, group, self)
         remove_perm('delete_%s' % self._meta.verbose_name, group, self)
@@ -783,8 +776,18 @@ class DataSet(SharableResource):
                 AttributeError) as e:
             logger.debug("Couldn't fetch FileStoreItem: %s", e)
 
-    def share(self, group, readonly=False, readmetaonly=True):
-        super(DataSet, self).share(group, readonly, readmetaonly)
+    def share(self, group, readonly=True, readmetaonly=True):
+        # handles change and read-all
+        super(DataSet, self).share(group, readonly)
+        assign_perm('read_meta_%s' % self._meta.verbose_name, group, self)
+
+        # read meta only case, super reads as edit
+        if not readonly and readmetaonly:
+            assign_perm('read_meta_%s' % self._meta.verbose_name, group, self)
+            remove_perm('read_%s' % self._meta.verbose_name, group, self)
+            remove_perm('add_%s' % self._meta.verbose_name, group, self)
+            remove_perm('change_%s' % self._meta.verbose_name, group, self)
+
         update_data_set_index(self)
         invalidate_cached_object(self)
         user_ids = map(lambda user: user.id, group.user_set.all())
@@ -800,13 +803,16 @@ class DataSet(SharableResource):
 
     def unshare(self, group):
         super(DataSet, self).unshare(group)
+        remove_perm('read_meta_%s' % self._meta.verbose_name, group, self)
+
         update_data_set_index(self)
         # Need to check if the users of the group that is unshared still have
         # access via other groups or by ownership
         users = group.user_set.all()
         user_ids = []
         for user in users:
-            if not user.has_perm('core.read_dataset', DataSet):
+            if not user.has_perm('core.read_dataset', DataSet) or \
+                    not user.has_perm('core.read_meta_dataset', DataSet):
                 user_ids.append(user.id)
 
         # We need to give the anonymous user read access too.
