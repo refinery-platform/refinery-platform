@@ -74,14 +74,13 @@ class SharableResourceAPIInterface(object):
 
     def get_perms(self, res, group):
         # Default values.
-        perms = {'read': False, 'read_meta': False, 'change': False}
+        perms = {'read': False, 'change': False}
 
         # Find matching ones if available.
         for i in res.get_groups():
             if i['group'].group_ptr.id == group.id:
                 perms = {
                     'read': i['read'],
-                    'read_meta': i['read_meta'],
                     'change': i['change']
                 }
 
@@ -1267,7 +1266,6 @@ class GroupManagementResource(Resource):
             'name': res.name,
             'type': res._meta.object_name,
             'read': False,
-            'read_meta': False,
             'change': False
         }
 
@@ -1275,7 +1273,6 @@ class GroupManagementResource(Resource):
         for i in res.get_groups():
             if i['group'].group_ptr.id == group.id:
                 perms['read'] = i['read']
-                perms['read_meta'] = i['read_meta']
                 perms['change'] = i['change']
 
         return perms

@@ -360,10 +360,8 @@ class SharableResource(OwnableResource):
         assign_perm("share_%s" % self._meta.verbose_name, user, self)
 
     """
-    readmetaonly is applicable to dataset models otherwise it defaults to false
-    Sharing defaults to grants read all and add permission,
-    readonly false and readmetaonly removes add and read all permissions
-    Change permission toggled by values of the readonly flag and readmetaonly
+    Sharing something always grants read and add permission
+    Change permission toggled by the value of the readonly flag
     """
 
     def share(self, group, readonly=True):
@@ -383,7 +381,7 @@ class SharableResource(OwnableResource):
         remove_perm('share_%s' % self._meta.verbose_name, group, self)
 
     # TODO: clean this up
-    def get_groups(self, changeonly=False, readonly=False, readmetaonly=False):
+    def get_groups(self, changeonly=False, readonly=False):
         permissions = get_groups_with_perms(self, attach_perms=True)
 
         groups = []
@@ -395,15 +393,11 @@ class SharableResource(OwnableResource):
             group["id"] = group["group"].id
             group["change"] = False
             group["read"] = False
-            group["read_meta"] = False
             for permission in permission_list:
                 if permission.startswith("change"):
                     group["change"] = True
-                if permission.startswith("read") and \
-                        not permission.startswith("read_meta"):
+                if permission.startswith("read"):
                     group["read"] = True
-                if permission.startswith("read_meta"):
-                    group["read_meta"] = True
             if group["change"] and readonly:
                 continue
             if group["read"] and changeonly:
@@ -436,10 +430,7 @@ class SharableResource(OwnableResource):
                 for permission in permission_list:
                     if permission.startswith("change"):
                         return True
-                    if permission.startswith("read") and \
-                            not permission.startswith("read_meta"):
-                        return True
-                    if permission.startswith("read_meta"):
+                    if permission.startswith("read"):
                         return True
         return False
 
