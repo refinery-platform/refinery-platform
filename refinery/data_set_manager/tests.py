@@ -17,6 +17,7 @@ from django.db.models import Q
 from django.http import QueryDict
 from django.test import LiveServerTestCase, TestCase
 
+from guardian.shortcuts import assign_perm
 import mock
 from rest_framework.test import APIClient, APIRequestFactory, APITestCase
 
@@ -26,7 +27,8 @@ import data_set_manager
 from data_set_manager.isa_tab_parser import IsaTabParser, ParserException
 from data_set_manager.single_file_column_parser import process_metadata_table
 from data_set_manager.tasks import parse_isatab
-from factory_boy.utils import make_analyses_with_single_dataset
+from factory_boy.utils import (create_dataset_with_necessary_models,
+                               make_analyses_with_single_dataset)
 from file_store.models import FileStoreItem, generate_file_source_translator
 from file_store.tasks import import_file
 
@@ -35,16 +37,16 @@ from .models import (AnnotatedNode, Assay, AttributeOrder, Investigation, Node,
 from .search_indexes import NodeIndex
 from .serializers import AttributeOrderSerializer
 from .utils import (_create_solr_params_from_node_uuids,
-                    create_facet_filter_query, customize_attribute_response,
-                    escape_character_solr, format_solr_response,
-                    generate_facet_fields_query,
+                    create_facet_filter_query, cull_attributes_from_list,
+                    customize_attribute_response, escape_character_solr,
+                    format_solr_response, generate_facet_fields_query,
                     generate_filtered_facet_fields,
                     generate_solr_params_for_assay,
                     get_file_url_from_node_uuid, get_owner_from_assay,
                     hide_fields_from_list, initialize_attribute_order_ranks,
                     insert_facet_field_filter, is_field_in_hidden_list,
                     objectify_facet_field_counts, update_attribute_order_ranks)
-from .views import Assays, AssaysAttributes
+from .views import Assays, AssaysAttributes, AssaysFiles
 
 
 class AssaysAPITests(APITestCase):
@@ -361,14 +363,137 @@ class AssaysAttributesAPITests(APITestCase):
         self.client.logout()
 
 
+class AssaysFilesAPITests(APITestCase):
+
+    def setUp(self):
+        self.user_owner = 'owner'
+        self.user_guest = 'guest'
+        self.fake_password = 'test1234'
+        self.data_set = create_dataset_with_necessary_models()
+        self.user1 = User.objects.create_user(self.user_owner,
+                                              '',
+                                              self.fake_password)
+        self.user2 = User.objects.create_user(self.user_guest,
+                                              '',
+                                              self.fake_password)
+        self.data_set.set_owner(self.user1)
+        investigation = Investigation.objects.create()
+        self.investigation_link = \
+            InvestigationLink.objects.create(investigation=investigation,
+                                             data_set=self.data_set,
+                                             version=1)
+
+        study = Study.objects.create(file_name='test_filename123.txt',
+                                     title='Study Title Test',
+                                     investigation=investigation)
+
+        assay = Assay.objects.create(
+                study=study,
+                measurement='transcription factor binding site',
+                measurement_accession='http://www.testurl.org/testID',
+                measurement_source='OBI',
+                technology='nucleotide sequencing',
+                technology_accession='test info',
+                technology_source='test source',
+                platform='Genome Analyzer II',
+                file_name='test_assay_filename.txt',
+                )
+        self.valid_uuid = assay.uuid
+        self.view = AssaysFiles.as_view()
+        self.invalid_uuid = "0xxx000x-00xx-000x-xx00-x00x00x00x0x"
+        self.invalid_format_uuid = "xxxxxxxx"
+        self.url = "/api/v2/assays/%s/files/"
+        APIRequestFactory()
+        self.client = APIClient()
+
+    def tearDown(self):
+        Assay.objects.all().delete()
+        Study.objects.all().delete()
+        InvestigationLink.objects.all().delete()
+        Investigation.objects.all().delete()
+        DataSet.objects.all().delete()
+
+    def test_get_from_owner_with_valid_params(self):
+        self.client.login(username=self.user_owner,
+                          password=self.fake_password)
+        uuid = self.valid_uuid
+        params = {
+            'limit': 0,
+            'data_set_uuid': self.data_set.uuid
+        }
+
+        response = self.client.get(self.url % uuid, params)
+        self.assertEqual(response.status_code, 200)
+
+    def test_get_from_owner_invalid_params(self):
+        self.client.login(username=self.user_owner,
+                          password=self.fake_password)
+
+        uuid = self.valid_uuid
+        params = {
+            'limit': 0,
+            'data_set_uuid': ''
+        }
+        response = self.client.get(self.url % uuid, params)
+        self.assertEqual(response.status_code, 400)
+        self.client.logout()
+
+    def test_get_from_user_no_perms(self):
+        self.client.login(username=self.user_guest,
+                          password=self.fake_password)
+
+        uuid = self.valid_uuid
+        params = {
+            'limit': 0,
+            'data_set_uuid': self.data_set.uuid
+        }
+        response = self.client.get(self.url % uuid, params)
+        self.assertEqual(response.status_code, 401)
+        self.client.logout()
+
+    def test_get_from_user_with_read_perms(self):
+        self.client.login(username=self.user_guest,
+                          password=self.fake_password)
+        assign_perm(
+            'read_%s' % DataSet._meta.module_name,
+            self.user2,
+            self.data_set
+        )
+        uuid = self.valid_uuid
+        params = {
+            'limit': 0,
+            'data_set_uuid': self.data_set.uuid
+        }
+        response = self.client.get(self.url % uuid, params)
+        self.assertEqual(response.status_code, 200)
+        self.client.logout()
+
+    def test_get_from_user_with_read_meta_perms(self):
+        self.client.login(username=self.user_guest,
+                          password=self.fake_password)
+        assign_perm(
+            'read_meta_%s' % DataSet._meta.module_name,
+            self.user2,
+            self.data_set
+        )
+
+        uuid = self.valid_uuid
+        params = {
+            'limit': 0,
+            'data_set_uuid': self.data_set.uuid
+        }
+        response = self.client.get(self.url % uuid, params)
+        self.assertEqual(response.status_code, 200)
+        self.client.logout()
+
+
 class UtilitiesTests(TestCase):
 
     def setUp(self):
         self.user1 = User.objects.create_user("ownerJane", '', 'test1234')
         self.user1.save()
         investigation = Investigation.objects.create()
-        data_set = DataSet.objects.create(
-                title="Test DataSet")
+        data_set = DataSet.objects.create(title="Test DataSet")
         InvestigationLink.objects.create(data_set=data_set,
                                          investigation=investigation)
         data_set.set_owner(self.user1)
@@ -831,6 +956,26 @@ class UtilitiesTests(TestCase):
                          '&facet=true'
                          '&facet.limit=-1'.format(
                                  self.valid_uuid))
+
+    def test_cull_attributes_from_list(self):
+        new_attribute_list = cull_attributes_from_list(
+           self.new_attribute_order_array,
+           [
+               self.new_attribute_order_array[0].get('solr_field'),
+               self.new_attribute_order_array[1].get('solr_field'),
+               self.new_attribute_order_array[2].get('solr_field')])
+        self.assertDictEqual(
+            new_attribute_list[0],
+            self.new_attribute_order_array[3])
+
+    def test_cull_attributes_from_list_with_empty_list_returns_list(self):
+        new_attribute_list = cull_attributes_from_list(
+            self.new_attribute_order_array,
+            [])
+        self.assetDictEqual(new_attribute_list[0],
+                            self.new_attribute_order_array[0])
+        self.assertEqual(len(new_attribute_list),
+                         len(self.new_attribute_order_array))
 
     def test_generate_filtered_facet_fields(self):
         attribute_orders = AttributeOrder.objects.filter(
