@@ -972,8 +972,8 @@ class UtilitiesTests(TestCase):
         new_attribute_list = cull_attributes_from_list(
             self.new_attribute_order_array,
             [])
-        self.assetDictEqual(new_attribute_list[0],
-                            self.new_attribute_order_array[0])
+        self.assertDictEqual(new_attribute_list[0],
+                             self.new_attribute_order_array[0])
         self.assertEqual(len(new_attribute_list),
                          len(self.new_attribute_order_array))
 

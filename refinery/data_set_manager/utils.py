@@ -736,7 +736,7 @@ def cull_attributes_from_list(attribute_list, remove_facets):
     Keyword Argument
         attribute_list -- AttributeOrder list
         remove_facets -- list of solr_field names"""
-    culled_attributes = attribute_list
+    culled_attributes = attribute_list[:]
     for facet_name in remove_facets:
         for data in culled_attributes:
             if (data.get('solr_field').startswith(facet_name)):
