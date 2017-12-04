@@ -30,6 +30,7 @@
               <th>Group</th>
               <th>None</th>
               <th>Read-only</th>
+              <th>Read-meta-only</th>
               <th>Modify</th>
             </tr>
           </thead>
@@ -50,6 +51,12 @@
                 <input
                   type="radio"
                   value="read"
+                  ng-model="group.permission">
+              </td>
+              <td>
+                <input
+                  type="radio"
+                  value="read_meta"
                   ng-model="group.permission">
               </td>
               <td ng-if="group.id !== 100">

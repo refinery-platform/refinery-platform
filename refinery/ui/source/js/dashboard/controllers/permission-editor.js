@@ -22,14 +22,22 @@ function PermissionEditorCtrl (
   this.permissionLevel = {
     none: {
       read: false,
+      read_meta: false,
       change: false
     },
     read: {
       read: true,
+      read_meta: true,
+      change: false
+    },
+    read_meta: {
+      read: false,
+      read_meta: true,
       change: false
     },
     edit: {
       read: true,
+      read_meta: true,
       change: true
     }
   };
