@@ -46,7 +46,7 @@ from .utils import (_create_solr_params_from_node_uuids,
                     hide_fields_from_list, initialize_attribute_order_ranks,
                     insert_facet_field_filter, is_field_in_hidden_list,
                     objectify_facet_field_counts, update_attribute_order_ranks)
-from .views import Assays, AssaysAttributes, AssaysFiles
+from .views import Assays, AssaysAttributes
 
 
 class AssaysAPITests(APITestCase):
@@ -399,11 +399,9 @@ class AssaysFilesAPITests(APITestCase):
                 file_name='test_assay_filename.txt',
                 )
         self.valid_uuid = assay.uuid
-        self.view = AssaysFiles.as_view()
         self.invalid_uuid = "0xxx000x-00xx-000x-xx00-x00x00x00x0x"
-        self.invalid_format_uuid = "xxxxxxxx"
         self.url = "/api/v2/assays/%s/files/"
-        APIRequestFactory()
+        self.non_meta_attributes = ['REFINERY_DOWNLOAD_URL', 'REFINERY_NAME']
         self.client = APIClient()
 
     def tearDown(self):
@@ -413,9 +411,16 @@ class AssaysFilesAPITests(APITestCase):
         Investigation.objects.all().delete()
         DataSet.objects.all().delete()
 
-    def test_get_from_owner_with_valid_params(self):
+    @mock.patch('data_set_manager.views.generate_solr_params_for_assay')
+    @mock.patch('data_set_manager.views.search_solr')
+    @mock.patch('data_set_manager.views.format_solr_response')
+    def test_get_from_owner_with_valid_params(self,
+                                              mock_format,
+                                              mock_search,
+                                              mock_generate):
         self.client.login(username=self.user_owner,
                           password=self.fake_password)
+        mock_format.return_value = {'status': 200}
         uuid = self.valid_uuid
         params = {
             'limit': 0,
@@ -432,13 +437,19 @@ class AssaysFilesAPITests(APITestCase):
         uuid = self.valid_uuid
         params = {
             'limit': 0,
-            'data_set_uuid': ''
+            'data_set_uuid': self.invalid_uuid
         }
         response = self.client.get(self.url % uuid, params)
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, 404)
         self.client.logout()
 
-    def test_get_from_user_no_perms(self):
+    @mock.patch('data_set_manager.views.generate_solr_params_for_assay')
+    @mock.patch('data_set_manager.views.search_solr')
+    @mock.patch('data_set_manager.views.format_solr_response')
+    def test_get_from_user_no_perms(self,
+                                    mock_format,
+                                    mock_search,
+                                    mock_generate):
         self.client.login(username=self.user_guest,
                           password=self.fake_password)
 
@@ -448,10 +459,20 @@ class AssaysFilesAPITests(APITestCase):
             'data_set_uuid': self.data_set.uuid
         }
         response = self.client.get(self.url % uuid, params)
+        self.assertFalse(mock_format.called)
+        self.assertFalse(mock_search.called)
+        self.assertFalse(mock_generate.called)
         self.assertEqual(response.status_code, 401)
         self.client.logout()
 
-    def test_get_from_user_with_read_perms(self):
+    @mock.patch('data_set_manager.views.generate_solr_params_for_assay')
+    @mock.patch('data_set_manager.views.search_solr')
+    @mock.patch('data_set_manager.views.format_solr_response')
+    def test_get_from_user_with_read_perms(self,
+                                           mock_format,
+                                           mock_search,
+                                           mock_generate):
+        mock_format.return_value = {'status': 200}
         self.client.login(username=self.user_guest,
                           password=self.fake_password)
         assign_perm(
@@ -461,14 +482,26 @@ class AssaysFilesAPITests(APITestCase):
         )
         uuid = self.valid_uuid
         params = {
-            'limit': 0,
+            'limit': '0',
             'data_set_uuid': self.data_set.uuid
         }
         response = self.client.get(self.url % uuid, params)
+        self.assertTrue(mock_format.called)
+        self.assertTrue(mock_search.called)
+        qdict = QueryDict('', mutable=True)
+        qdict.update(params)
+        mock_generate.assert_called_once_with(qdict, uuid)
         self.assertEqual(response.status_code, 200)
         self.client.logout()
 
-    def test_get_from_user_with_read_meta_perms(self):
+    @mock.patch('data_set_manager.views.generate_solr_params_for_assay')
+    @mock.patch('data_set_manager.views.search_solr')
+    @mock.patch('data_set_manager.views.format_solr_response')
+    def test_get_from_user_with_read_meta_perms(self,
+                                                mock_format,
+                                                mock_search,
+                                                mock_generate):
+        mock_format.return_value = {'status': 200}
         self.client.login(username=self.user_guest,
                           password=self.fake_password)
         assign_perm(
@@ -479,10 +512,17 @@ class AssaysFilesAPITests(APITestCase):
 
         uuid = self.valid_uuid
         params = {
-            'limit': 0,
+            'limit': '0',
             'data_set_uuid': self.data_set.uuid
         }
         response = self.client.get(self.url % uuid, params)
+        self.assertTrue(mock_format.called)
+        self.assertTrue(mock_search.called)
+        qdict = QueryDict('', mutable=True)
+        qdict.update(params)
+        mock_generate.assert_called_once_with(qdict,
+                                              uuid,
+                                              self.non_meta_attributes)
         self.assertEqual(response.status_code, 200)
         self.client.logout()
 
