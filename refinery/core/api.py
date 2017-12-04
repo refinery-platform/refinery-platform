@@ -342,13 +342,13 @@ class SharableResourceAPIInterface(object):
             for i in new_share_list:
                 group = self.get_group(int(i['id']))
                 can_read = i['read']
-                can_read_meta = i['read_meta']
                 can_change = i['change']
                 is_read_only = can_read and not can_change
-                should_share = can_read or can_change or can_read_meta
+                read_meta = can_change or can_read or i['read_meta']
+                should_share = can_read or can_change or read_meta
 
                 if should_share:
-                    res.share(group, is_read_only, can_read_meta)
+                    res.share(group, is_read_only, read_meta)
 
             return HttpAccepted()
         else:
