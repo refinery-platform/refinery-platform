@@ -267,7 +267,7 @@ def delete_input_files_and_file_relationships(sender, instance, *args,
 
 
 class ToolManager(models.Manager):
-    def get_query_set(self):
+    def get_queryset(self):
         return VisualizationTool.objects.all() | WorkflowTool.objects.all()
 
 
