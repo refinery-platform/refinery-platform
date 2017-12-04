@@ -232,7 +232,7 @@ SESSION_ENGINE = "django.contrib.sessions.backends.cached_db"
 
 LOGGING = {
     'version': 1,
-    'disable_existing_loggers': True,
+    'disable_existing_loggers': False,
     'root': {
         'level': 'DEBUG',
         'handlers': ['console'],
@@ -256,101 +256,39 @@ LOGGING = {
             'class': 'django.utils.log.AdminEmailHandler'
         },
         'console': {
-            'level': get_setting("LOG_LEVEL"),
+            'level': get_setting("REFINERY_LOG_LEVEL"),
             'class': 'logging.StreamHandler',
             'formatter': 'default'
         },
     },
     'loggers': {
-        'django.request': {
-            'handlers': ['console', 'mail_admins'],
-            'level': 'ERROR',
-            'propagate': True,
+        'django': {
+            'level': 'WARNING',
+            'handlers': ['mail_admins'],
         },
-        'django.db.backends': {
-            'level': 'ERROR',
-            'handlers': ['console'],
-            'propagate': False,
+        'boto3': {
+            'level': 'INFO',
         },
-        'analysis_manager': {
-            'handlers': ['console'],
-            'level': 'DEBUG',
-            'propagate': False,
-        },
-        'annotation_server': {
-            'handlers': ['console'],
-            'level': 'DEBUG',
-            'propagate': False,
-        },
-        'core': {
-            'level': 'DEBUG',
-            'handlers': ['console'],
-            'propagate': False,
-        },
-        'data_set_manager': {
-            'level': 'DEBUG',
-            'handlers': ['console'],
-            'propagate': False,
+        'botocore': {
+            'level': 'INFO',
         },
         'docker': {
             'level': 'ERROR',
-            'handlers': ['console'],
-            'propagate': False,
         },
         'easyprocess': {
-            'handlers': ['console'],
             'level': 'ERROR',
-            'propagate': False,
         },
         'factory': {
-            'handlers': ['console'],
             'level': 'ERROR',
-            'propagate': False,
-        },
-        'file_server': {
-            'handlers': ['console'],
-            'level': 'DEBUG',
-            'propagate': False,
-        },
-        'file_store': {
-            'handlers': ['console'],
-            'level': 'DEBUG',
-            'propagate': False,
-        },
-        'galaxy_connector': {
-            'handlers': ['console'],
-            'level': 'DEBUG',
-            'propagate': False,
         },
         'httpproxy': {
             'level': 'ERROR',
-            'handlers': ['console'],
-            'propagate': False,
-        },
-        'isa_tab_parser': {
-            'level': 'DEBUG',
-            'handlers': ['console'],
-            'propagate': False,
         },
         'requests': {
-            'handlers': ['console'],
             'level': 'ERROR',
-            'propagate': False,
         },
         'selenium': {
-            'handlers': ['console'],
             'level': 'ERROR',
-            'propagate': False,
-        },
-        'visualization_manager': {
-            'handlers': ['console'],
-            'level': 'DEBUG',
-            'propagate': False,
-        },
-        'workflow_manager': {
-            'handlers': ['console'],
-            'level': 'DEBUG',
-            'propagate': False,
         },
     },
 }
@@ -375,6 +313,8 @@ EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 # for system stability
 CELERYD_MAX_TASKS_PER_CHILD = get_setting("CELERYD_MAX_TASKS_PER_CHILD")
 CELERY_ROUTES = {"file_store.tasks.import_file": {"queue": "file_import"}}
+# TODO: restrict to CELERY_TASK_SERIALIZER
+CELERY_ACCEPT_CONTENT = ['pickle', 'json', 'msgpack', 'yaml']
 
 # TODO: Does this belong here or in config.json.erb?
 CELERYBEAT_SCHEDULE = {
@@ -383,7 +323,6 @@ CELERYBEAT_SCHEDULE = {
         'schedule': timedelta(seconds=30)
     },
 }
-
 
 CHUNKED_UPLOAD_ABSTRACT_MODEL = False
 
