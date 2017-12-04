@@ -485,7 +485,7 @@ class DataSetQuerySet(models.query.QuerySet):
 
 
 class DataSetManager(models.Manager):
-    def get_query_set(self):
+    def get_queryset(self):
         return DataSetQuerySet(self.model, using=self._db)
 
 
@@ -934,7 +934,7 @@ class WorkflowQuerySet(models.query.QuerySet):
 
 
 class WorkflowManager(models.Manager):
-    def get_query_set(self):
+    def get_queryset(self):
         return WorkflowQuerySet(self.model, using=self._db)
 
 
@@ -1108,7 +1108,7 @@ class AnalysisQuerySet(models.query.QuerySet):
 
 
 class AnalysisManager(models.Manager):
-    def get_query_set(self):
+    def get_queryset(self):
         return AnalysisQuerySet(self.model, using=self._db)
 
 
