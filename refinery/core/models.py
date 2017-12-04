@@ -312,6 +312,8 @@ class OwnableResource(BaseResource):
         assign_perm("read_%s" % self._meta.verbose_name, user, self)
         assign_perm("delete_%s" % self._meta.verbose_name, user, self)
         assign_perm("change_%s" % self._meta.verbose_name, user, self)
+        if self._meta.verbose_name == 'dataset':
+            assign_perm("read_meta_%s" % self._meta.verbose_name, user, self)
 
     def get_owner(self):
         # ownership is determined by "add" permission
@@ -381,7 +383,7 @@ class SharableResource(OwnableResource):
         remove_perm('share_%s' % self._meta.verbose_name, group, self)
 
     # TODO: clean this up
-    def get_groups(self, changeonly=False, readonly=False):
+    def get_groups(self, changeonly=False, readonly=False, readmeta=False):
         permissions = get_groups_with_perms(self, attach_perms=True)
 
         groups = []
@@ -398,6 +400,8 @@ class SharableResource(OwnableResource):
                     group["change"] = True
                 if permission.startswith("read"):
                     group["read"] = True
+                if permission.startswith("read_meta"):
+                    group["read_meta"] = True
             if group["change"] and readonly:
                 continue
             if group["read"] and changeonly:
@@ -410,7 +414,7 @@ class SharableResource(OwnableResource):
             self,
             changeonly=False,
             readonly=False,
-            readmetaonly=False
+            readmeta=False
     ):
         groups = get_groups_with_perms(self)
 
@@ -430,7 +434,10 @@ class SharableResource(OwnableResource):
                 for permission in permission_list:
                     if permission.startswith("change"):
                         return True
-                    if permission.startswith("read"):
+                    if permission.startswith("read") and \
+                            not permission.startswith("read_meta"):
+                        return True
+                    if permission.startswith("read_meta"):
                         return True
         return False
 
@@ -767,13 +774,13 @@ class DataSet(SharableResource):
                 AttributeError) as e:
             logger.debug("Couldn't fetch FileStoreItem: %s", e)
 
-    def share(self, group, readonly=True, readmetaonly=True):
+    def share(self, group, readonly=True, readmeta=True):
         # handles change and read-all
         super(DataSet, self).share(group, readonly)
         assign_perm('read_meta_%s' % self._meta.verbose_name, group, self)
 
         # read meta only case, super reads as edit
-        if not readonly and readmetaonly:
+        if not readonly and readmeta:
             assign_perm('read_meta_%s' % self._meta.verbose_name, group, self)
             remove_perm('read_%s' % self._meta.verbose_name, group, self)
             remove_perm('add_%s' % self._meta.verbose_name, group, self)

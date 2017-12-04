@@ -79,10 +79,9 @@ class SharableResourceAPIInterface(object):
         # Find matching ones if available.
         for i in res.get_groups():
             if i['group'].group_ptr.id == group.id:
-                perms = {
-                    'read': i['read'],
-                    'change': i['change']
-                }
+                perms = {'read': i['read'], 'change': i['change']}
+            if self.res_type._meta.verbose_name == 'dataset':
+                perms['read_meta'] = i['read_meta']
 
         return perms
 
@@ -316,7 +315,7 @@ class SharableResourceAPIInterface(object):
 
         if request.method == 'GET':
             # user has read permissions
-            if not user.has_perm('core.read_dataset', res):
+            if not user.has_perm('core.read_meta_dataset', res):
                 return HttpUnauthorized()
             kwargs['sharing'] = True
             mod_res = self.transform_res_list(user, [res], request, **kwargs)
@@ -343,12 +342,13 @@ class SharableResourceAPIInterface(object):
             for i in new_share_list:
                 group = self.get_group(int(i['id']))
                 can_read = i['read']
+                can_read_meta = i['read_meta']
                 can_change = i['change']
                 is_read_only = can_read and not can_change
-                should_share = can_read or can_change
+                should_share = can_read or can_change or can_read_meta
 
                 if should_share:
-                    res.share(group, is_read_only)
+                    res.share(group, is_read_only, can_read_meta)
 
             return HttpAccepted()
         else:
@@ -657,7 +657,7 @@ class DataSetResource(SharableResourceAPIInterface, ModelResource):
 
             if group:
                 obj_list = list(get_objects_for_group(
-                    group, 'core.read_dataset'
+                    group, 'core.read_meta_dataset'
                 ))
 
         return obj_list
@@ -700,7 +700,8 @@ class DataSetResource(SharableResourceAPIInterface, ModelResource):
         return SharableResourceAPIInterface.obj_create(self, bundle, **kwargs)
 
     def get_all_ids(self, request, **kwargs):
-        data_sets = get_objects_for_user(request.user, 'core.read_dataset')
+        data_sets = get_objects_for_user(request.user,
+                                         'core.read_meta_dataset')
         return self.create_response(
             request,
             {
@@ -732,8 +733,7 @@ class DataSetResource(SharableResourceAPIInterface, ModelResource):
         except:
             user_uuid = None
 
-        if ds and (request.user.has_perm('core.read_dataset', ds) or
-                   request.user.has_perm('core.read_meta_dataset', ds)):
+        if ds and request.user.has_perm('core.read_meta_dataset', ds):
             return_obj['accession'] = ds.accession
             return_obj['accession_source'] = ds.accession_source
             return_obj['creation_date'] = ds.creation_date
