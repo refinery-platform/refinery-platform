@@ -47,13 +47,16 @@ function permissionService (sharingService) {
    * @return  {String}         Permission's name.
    */
   vm.getPermissionLevel = function (perms) {
-    if (perms.read === false) {
+    if (perms.read_meta === false) {
       return 'none';
     }
     if (perms.change === true) {
       return 'edit';
     }
-    return 'read';
+    if (perms.read) {
+      return 'read';
+    }
+    return 'read_meta';
   };
 }
 
