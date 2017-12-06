@@ -730,17 +730,17 @@ def generate_solr_params(
     return encoded_solr_params
 
 
-def cull_attributes_from_list(attribute_list, attributes_to_remove):
+def cull_attributes_from_list(attribute_list, attribute_names_to_remove):
     """Helper method which will remove the first matching attribute from the
     AttributeOrder based on the solr_field name.
     Keyword Argument
         attribute_list -- AttributeOrder list
-        remove_facets -- list of solr_field names"""
+        attribute_names_to_remove -- list of solr_field names"""
     culled_attributes = attribute_list[:]
-    for facet_name in attributes_to_remove:
-        for data in culled_attributes:
-            if (data.get('solr_field').startswith(facet_name)):
-                culled_attributes.remove(data)
+    for name in attribute_names_to_remove:
+        for attribute_obj in culled_attributes:
+            if (attribute_obj.get('solr_field').startswith(name)):
+                culled_attributes.remove(attribute_obj)
                 break
     return culled_attributes
 

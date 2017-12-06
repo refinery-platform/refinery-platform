@@ -401,11 +401,10 @@ class SharableResource(OwnableResource):
             for permission in permission_list:
                 if permission.startswith("change"):
                     group["change"] = True
-                if permission.startswith("read") and not \
-                        permission.startswith("read_meta"):
-                    group["read"] = True
-                if permission.startswith("read_meta"):
+                elif permission.startswith("read_meta"):
                     group["read_meta"] = True
+                elif permission.startswith("read"):
+                    group["read"] = True
 
             if group["change"] and readonly:
                 continue
@@ -434,10 +433,7 @@ class SharableResource(OwnableResource):
                 for permission in permission_list:
                     if permission.startswith("change"):
                         return True
-                    if permission.startswith("read") and \
-                            not permission.startswith("read_meta"):
-                        return True
-                    if permission.startswith("read_meta"):
+                    if permission.startswith("read"):  # read_meta & read
                         return True
         return False
 
