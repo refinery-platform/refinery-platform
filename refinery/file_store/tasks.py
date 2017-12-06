@@ -26,13 +26,11 @@ logger = logging.getLogger(__name__)
 
 
 @task()
-def create(source, sharename='', filetype='', file_size=1):
+def create(source, filetype=''):
     """Create a FileStoreItem instance and return its UUID
     Important: source must be either an absolute file system path or a URL
     :param source: URL or absolute file system path to a file.
     :type source: str.
-    :param sharename: Group share name.
-    :type sharename: str.
     :param filetype: File extension
     :type filetype: str.
     :param file_size: For cases when the remote site specified by source URL
@@ -44,8 +42,7 @@ def create(source, sharename='', filetype='', file_size=1):
     # TODO: move to file_store/models.py since it's never used as a task
     logger.info("Creating FileStoreItem using source '%s'", source)
 
-    item = FileStoreItem.objects.create_item(
-        source=source, sharename=sharename, filetype=filetype)
+    item = FileStoreItem.objects.create_item(source=source, filetype=filetype)
     if not item:
         logger.error("Failed to create FileStoreItem using source '%s'",
                      source)
@@ -74,8 +71,9 @@ def import_file(uuid, refresh=False, file_size=0):
         return None
 
     # save task ID for looking up file import status
-    item.import_task_id = import_file.request.id
-    item.save()
+    if import_file.request.id:  # workaround when called not as task
+        item.import_task_id = import_file.request.id
+        item.save()
 
     # if file is ready to be used then return it,
     # otherwise delete it if update is requested

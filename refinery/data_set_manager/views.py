@@ -544,14 +544,12 @@ class ProcessMetadataTableView(View):
                 ),
                 identity_id=identity_id
             )
-        except Exception as error_msg:
-            error = {'error_message': error_msg}
+        except Exception as exc:
+            logger.error(exc, exc_info=True)
+            error = {'error_message': repr(exc)}
             if request.is_ajax():
                 return HttpResponseServerError(
-                    # TODO: make sure error_msg is JSON serializable, e.g.:
-                    # TypeError: IndexError('list index out of range',)
-                    # is not JSON serializable
-                    json.dumps({'error': error_msg}), 'application/json'
+                    json.dumps({'error': repr(exc)}), 'application/json'
                 )
             else:
                 return render(request, self.template_name, error)

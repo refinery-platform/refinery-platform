@@ -964,7 +964,7 @@ class AnalysisResource(ModelResource):
 
     class Meta:
         queryset = Analysis.objects.all()
-        resource_name = Analysis._meta.module_name
+        resource_name = Analysis._meta.model_name
         detail_uri_name = 'uuid'  # for using UUIDs instead of pk in URIs
         # required for public data set access by anonymous users
         authentication = Authentication()
@@ -1009,14 +1009,14 @@ class AnalysisResource(ModelResource):
         workflow_dict = None
         try:
             workflow_dict = ast.literal_eval(bundle.data['workflow_copy'])
-        except ValueError, e:
+        except ValueError as exc:
             # TODO: Remove this and just let any errors bubble up.
             # I don't think I should do that at this moment because
             # I shouldn't make production any fussier about values
             # in DB than it is right now.
             logger.warn(
                 '%s: Cannot parse workflow as python repr: %s',
-                e, bundle.data['workflow_copy']
+                exc, bundle.data['workflow_copy']
             )
         if workflow_dict:
             workflow_json = json.dumps(workflow_dict)
@@ -1026,16 +1026,13 @@ class AnalysisResource(ModelResource):
 
     def get_object_list(self, request, **kwargs):
         user = request.user
-        perm = 'read_%s' % DataSet._meta.module_name
-        if (user.is_authenticated()):
+        perm = 'read_%s' % DataSet._meta.model_name
+        if user.is_authenticated():
             allowed_datasets = get_objects_for_user(user, perm, DataSet)
         else:
             allowed_datasets = get_objects_for_group(
-                ExtendedGroup.objects.public_group(),
-                perm,
-                DataSet
+                ExtendedGroup.objects.public_group(), perm, DataSet
             )
-
         return Analysis.objects.filter(
             data_set__in=allowed_datasets.values_list("id", flat=True)
         )

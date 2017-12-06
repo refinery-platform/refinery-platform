@@ -26,8 +26,4 @@ resource "aws_s3_bucket" "uploaded_files" {
 resource "aws_s3_bucket" "media_files" {
   acl    = "public-read"
   bucket = "${var.bucket_name_base}-media"
-
-  lifecycle {
-    prevent_destroy = true
-  }
 }
