@@ -423,7 +423,7 @@ class AssaysFilesAPITests(APITestCase):
         mock_format.return_value = {'status': 200}
         uuid = self.valid_uuid
         params = {
-            'limit': 0,
+            'limit': '0',
             'data_set_uuid': self.data_set.uuid
         }
         response = self.client.get(self.url % uuid, params)
