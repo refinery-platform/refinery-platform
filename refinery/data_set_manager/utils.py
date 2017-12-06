@@ -3,6 +3,7 @@ Created on May 29, 2012
 
 @author: nils
 '''
+import copy
 import csv
 import hashlib
 import json
@@ -736,7 +737,7 @@ def cull_attributes_from_list(attribute_list, attribute_names_to_remove):
     Keyword Argument
         attribute_list -- AttributeOrder list
         attribute_names_to_remove -- list of solr_field names"""
-    culled_attributes = attribute_list[:]
+    culled_attributes = copy.copy(attribute_list)
     for name in attribute_names_to_remove:
         for attribute_obj in culled_attributes:
             if (attribute_obj.get('solr_field').startswith(name)):
