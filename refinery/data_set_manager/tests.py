@@ -405,6 +405,7 @@ class AssaysFilesAPITests(APITestCase):
         self.client = APIClient()
 
     def tearDown(self):
+        self.client.logout()
         Assay.objects.all().delete()
         Study.objects.all().delete()
         InvestigationLink.objects.all().delete()
@@ -443,7 +444,6 @@ class AssaysFilesAPITests(APITestCase):
                   'data_set_uuid': self.invalid_uuid}
         response = self.client.get(self.url % uuid, params)
         self.assertEqual(response.status_code, 404)
-        self.client.logout()
 
     @mock.patch('data_set_manager.views.generate_solr_params_for_assay')
     @mock.patch('data_set_manager.views.search_solr')
@@ -465,7 +465,6 @@ class AssaysFilesAPITests(APITestCase):
         self.assertFalse(mock_search.called)
         self.assertFalse(mock_generate.called)
         self.assertEqual(response.status_code, 401)
-        self.client.logout()
 
     @mock.patch('data_set_manager.views.generate_solr_params_for_assay')
     @mock.patch('data_set_manager.views.search_solr')
@@ -490,7 +489,6 @@ class AssaysFilesAPITests(APITestCase):
         qdict.update(params)
         mock_generate.assert_called_once_with(qdict, uuid)
         self.assertEqual(response.status_code, 200)
-        self.client.logout()
 
     @mock.patch('data_set_manager.views.generate_solr_params_for_assay')
     @mock.patch('data_set_manager.views.search_solr')
@@ -518,7 +516,6 @@ class AssaysFilesAPITests(APITestCase):
                                               uuid,
                                               self.non_meta_attributes)
         self.assertEqual(response.status_code, 200)
-        self.client.logout()
 
 
 class UtilitiesTests(TestCase):
