@@ -18,7 +18,7 @@ describe('Not logged in', function() {
 
     cy.visible('No data sets available.');
     cy.visible('No analyses available.');
-    cy.visible('No workflows available.');
+   // cy.visible('No workflows available.');
 
     cy.get('#global-analysis-status').should('visible').click();
     cy.visible('Recent Analyses');
