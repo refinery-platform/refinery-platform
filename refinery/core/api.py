@@ -350,10 +350,10 @@ class SharableResourceAPIInterface(object):
                 # datasets handled seperate due to object-level perm
                 if self.res_type._meta.verbose_name == 'dataset':
                     is_read_meta_only = False
-                    if not should_share and i['read_meta']:
+                    if not should_share and i['read_meta']:  # read_meta only
                         is_read_meta_only = i['read_meta']
                         should_share = is_read_meta_only
-                    if should_share:
+                    if should_share:  # read, read_meta, or change
                         res.share(group, is_read_only, is_read_meta_only)
                 elif should_share:
                     res.share(group, is_read_only)
