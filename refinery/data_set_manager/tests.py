@@ -439,10 +439,8 @@ class AssaysFilesAPITests(APITestCase):
                           password=self.fake_password)
 
         uuid = self.valid_uuid
-        params = {
-            'limit': 0,
-            'data_set_uuid': self.invalid_uuid
-        }
+        params = {'limit': 0,
+                  'data_set_uuid': self.invalid_uuid}
         response = self.client.get(self.url % uuid, params)
         self.assertEqual(response.status_code, 404)
         self.client.logout()
@@ -479,16 +477,12 @@ class AssaysFilesAPITests(APITestCase):
         mock_format.return_value = {'status': 200}
         self.client.login(username=self.user_guest,
                           password=self.fake_password)
-        assign_perm(
-            'read_%s' % DataSet._meta.module_name,
-            self.user2,
-            self.data_set
-        )
+        assign_perm('read_%s' % DataSet._meta.module_name,
+                    self.user2,
+                    self.data_set)
         uuid = self.valid_uuid
-        params = {
-            'limit': '0',
-            'data_set_uuid': self.data_set.uuid
-        }
+        params = {'limit': '0',
+                  'data_set_uuid': self.data_set.uuid}
         response = self.client.get(self.url % uuid, params)
         self.assertTrue(mock_format.called)
         self.assertTrue(mock_search.called)
@@ -508,17 +502,13 @@ class AssaysFilesAPITests(APITestCase):
         mock_format.return_value = {'status': 200}
         self.client.login(username=self.user_guest,
                           password=self.fake_password)
-        assign_perm(
-            'read_meta_%s' % DataSet._meta.module_name,
-            self.user2,
-            self.data_set
-        )
+        assign_perm('read_meta_%s' % DataSet._meta.module_name,
+                    self.user2,
+                    self.data_set)
 
         uuid = self.valid_uuid
-        params = {
-            'limit': '0',
-            'data_set_uuid': self.data_set.uuid
-        }
+        params = {'limit': '0',
+                  'data_set_uuid': self.data_set.uuid}
         response = self.client.get(self.url % uuid, params)
         self.assertTrue(mock_format.called)
         self.assertTrue(mock_search.called)
@@ -1004,18 +994,18 @@ class UtilitiesTests(TestCase):
     def test_cull_attributes_from_list(self):
         new_attribute_list = cull_attributes_from_list(
            self.new_attribute_order_array,
-           [
-               self.new_attribute_order_array[0].get('solr_field'),
-               self.new_attribute_order_array[1].get('solr_field'),
-               self.new_attribute_order_array[2].get('solr_field')])
-        self.assertDictEqual(
-            new_attribute_list[0],
-            self.new_attribute_order_array[3])
+           [self.new_attribute_order_array[0].get('solr_field'),
+            self.new_attribute_order_array[1].get('solr_field'),
+            self.new_attribute_order_array[2].get('solr_field')]
+        )
+        self.assertDictEqual(new_attribute_list[0],
+                             self.new_attribute_order_array[3])
 
     def test_cull_attributes_from_list_with_empty_list_returns_list(self):
         new_attribute_list = cull_attributes_from_list(
             self.new_attribute_order_array,
-            [])
+            []
+        )
         self.assertDictEqual(new_attribute_list[0],
                              self.new_attribute_order_array[0])
         self.assertEqual(len(new_attribute_list),
