@@ -11,12 +11,12 @@ angular
         },
         {
           query: {
-            method: 'GET',
-            params: {
-              limit: 'limit',
-              offset: 'offset',
-              data_set_uuid: ''
-            }
+            method: 'GET'
+          },
+          params: {
+            limit: 'limit',
+            offset: 'offset',
+            data_set_uuid: ''
           }
         }
       );
