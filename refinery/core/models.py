@@ -411,10 +411,6 @@ class SharableResource(OwnableResource):
                 continue
             if group["read"] and changeonly:
                 continue
-            if group["read"] and readmetaonly:
-                continue
-            if group["change"] and readmetaonly:
-                continue
             groups.append(group)
 
         return groups

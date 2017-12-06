@@ -82,8 +82,8 @@ class SharableResourceAPIInterface(object):
         for i in res.get_groups():
             if i['group'].group_ptr.id == group.id:
                 perms = {'read': i['read'], 'change': i['change']}
-            if self.res_type._meta.verbose_name == 'dataset':
-                perms['read_meta'] = i['read_meta']
+                if self.res_type._meta.verbose_name == 'dataset':
+                    perms['read_meta'] = i['read_meta']
 
         return perms
 
@@ -173,7 +173,7 @@ class SharableResourceAPIInterface(object):
             public_res_set = Set(
                 get_objects_for_group(
                     ExtendedGroup.objects.public_group(),
-                    'core.read_%s' %
+                    'core.read_meta_%s' %
                     self.res_type._meta.verbose_name).values_list("id",
                                                                   flat=True))
 
@@ -354,7 +354,7 @@ class SharableResourceAPIInterface(object):
                         should_share = is_read_meta_only
                     if should_share:
                         res.share(group, is_read_only, is_read_meta_only)
-                if should_share:
+                elif should_share:
                     res.share(group, is_read_only)
 
             return HttpAccepted()
