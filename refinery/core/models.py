@@ -809,8 +809,7 @@ class DataSet(SharableResource):
         users = group.user_set.all()
         user_ids = []
         for user in users:
-            if not user.has_perm('core.read_dataset', DataSet) or \
-                    not user.has_perm('core.read_meta_dataset', DataSet):
+            if not user.has_perm('core.read_meta_dataset', DataSet):
                 user_ids.append(user.id)
 
         # We need to give the anonymous user read access too.
