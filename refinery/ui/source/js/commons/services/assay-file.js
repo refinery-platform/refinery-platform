@@ -14,9 +14,8 @@ angular
             method: 'GET'
           },
           params: {
-            limit: 'limit',
-            offset: 'offset',
-            data_set_uuid: ''
+            limit: 0,
+            offset: 0
           }
         }
       );
