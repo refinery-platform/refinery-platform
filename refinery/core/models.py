@@ -415,12 +415,7 @@ class SharableResource(OwnableResource):
 
         return groups
 
-    def get_group_ids(
-            self,
-            changeonly=False,
-            readonly=False,
-            readmeta=False
-    ):
+    def get_group_ids(self, changeonly=False, readonly=False):
         groups = get_groups_with_perms(self)
 
         ids = []
