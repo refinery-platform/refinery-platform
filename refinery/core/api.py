@@ -75,6 +75,8 @@ class SharableResourceAPIInterface(object):
     def get_perms(self, res, group):
         # Default values.
         perms = {'read': False, 'change': False}
+        if self.res_type._meta.verbose_name == 'dataset':
+            perms['read_meta'] = False
 
         # Find matching ones if available.
         for i in res.get_groups():
@@ -330,7 +332,6 @@ class SharableResourceAPIInterface(object):
                 return HttpUnauthorized()
             data = json.loads(request.body)
             new_share_list = data['share_list']
-
             groups_shared_with = map(
                 lambda g: g['group'].group_ptr,
                 res.get_groups())
@@ -344,11 +345,17 @@ class SharableResourceAPIInterface(object):
                 can_read = i['read']
                 can_change = i['change']
                 is_read_only = can_read and not can_change
-                read_meta = can_change or can_read or i['read_meta']
-                should_share = can_read or can_change or read_meta
+                should_share = can_read or can_change
 
+                if self.res_type._meta.verbose_name == 'dataset':
+                    is_read_meta_only = False  # only for data sets
+                    if not should_share and i['read_meta']:
+                        is_read_meta_only = i['read_meta']
+                        should_share = is_read_meta_only
+                    if should_share:
+                        res.share(group, is_read_only, is_read_meta_only)
                 if should_share:
-                    res.share(group, is_read_only, read_meta)
+                    res.share(group, is_read_only)
 
             return HttpAccepted()
         else:
@@ -1269,11 +1276,16 @@ class GroupManagementResource(Resource):
             'change': False
         }
 
+        if self.res_type._meta.verbose_name == 'dataset':
+            perms['read_meta'] = False
+
         # Find matching perms if available.
         for i in res.get_groups():
             if i['group'].group_ptr.id == group.id:
                 perms['read'] = i['read']
                 perms['change'] = i['change']
+                if self.res_type._meta.verbose_name == 'dataset':
+                    perms['read_meta'] = i['read_meta']
 
         return perms
 

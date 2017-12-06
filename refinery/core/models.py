@@ -383,7 +383,7 @@ class SharableResource(OwnableResource):
         remove_perm('share_%s' % self._meta.verbose_name, group, self)
 
     # TODO: clean this up
-    def get_groups(self, changeonly=False, readonly=False, readmeta=False):
+    def get_groups(self, changeonly=False, readonly=False, readmetaonly=False):
         permissions = get_groups_with_perms(self, attach_perms=True)
 
         groups = []
@@ -395,16 +395,25 @@ class SharableResource(OwnableResource):
             group["id"] = group["group"].id
             group["change"] = False
             group["read"] = False
+            if self._meta.verbose_name == 'dataset':
+                group["read_meta"] = False
+
             for permission in permission_list:
                 if permission.startswith("change"):
                     group["change"] = True
-                if permission.startswith("read"):
+                if permission.startswith("read") and not \
+                        permission.startswith("read_meta"):
                     group["read"] = True
                 if permission.startswith("read_meta"):
                     group["read_meta"] = True
+
             if group["change"] and readonly:
                 continue
             if group["read"] and changeonly:
+                continue
+            if group["read"] and readmetaonly:
+                continue
+            if group["change"] and readmetaonly:
                 continue
             groups.append(group)
 
@@ -774,14 +783,14 @@ class DataSet(SharableResource):
                 AttributeError) as e:
             logger.debug("Couldn't fetch FileStoreItem: %s", e)
 
-    def share(self, group, readonly=True, readmeta=True):
-        # handles change and read-all
+    def share(self, group, readonly=True, readmetaonly=False):
+        # change: !readonly & !readmetaonly, read: readonly & !readmetaonly
         super(DataSet, self).share(group, readonly)
         assign_perm('read_meta_%s' % self._meta.verbose_name, group, self)
 
-        # read meta only case, super reads as edit
-        if not readonly and readmeta:
-            assign_perm('read_meta_%s' % self._meta.verbose_name, group, self)
+        # read_meta only case; super reads as edit and is fixed here because
+        # it only applies to data set
+        if not readonly and readmetaonly:
             remove_perm('read_%s' % self._meta.verbose_name, group, self)
             remove_perm('add_%s' % self._meta.verbose_name, group, self)
             remove_perm('change_%s' % self._meta.verbose_name, group, self)
