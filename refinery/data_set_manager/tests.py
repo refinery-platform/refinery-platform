@@ -426,14 +426,15 @@ class AssaysFilesAPITests(APITestCase):
             'limit': 0,
             'data_set_uuid': self.data_set.uuid
         }
-
         response = self.client.get(self.url % uuid, params)
+        self.assertTrue(mock_format.called)
+        self.assertTrue(mock_search.called)
+        qdict = QueryDict('', mutable=True)
+        qdict.update(params)
+        mock_generate.assert_called_once_with(qdict, uuid)
         self.assertEqual(response.status_code, 200)
 
-    def test_get_from_owner_invalid_params(self,
-                                           mock_format,
-                                           mock_search,
-                                           mock_generate):
+    def test_get_from_owner_invalid_params(self):
         self.client.login(username=self.user_owner,
                           password=self.fake_password)
 
@@ -443,11 +444,6 @@ class AssaysFilesAPITests(APITestCase):
             'data_set_uuid': self.invalid_uuid
         }
         response = self.client.get(self.url % uuid, params)
-        self.assertTrue(mock_format.called)
-        self.assertTrue(mock_search.called)
-        qdict = QueryDict('', mutable=True)
-        qdict.update(params)
-        mock_generate.assert_called_once_with(qdict, uuid)
         self.assertEqual(response.status_code, 404)
         self.client.logout()
 
