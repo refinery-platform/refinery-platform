@@ -61,6 +61,7 @@ class Instance(models.Model):
         return files
 
     def delete_history(self, history_id, analysis_name):
+        logger.debug("Deleting Galaxy history for Analysis: %s", analysis_name)
         try:
             self.galaxy_connection().histories.delete_history(history_id,
                                                               purge=True)
@@ -68,6 +69,7 @@ class Instance(models.Model):
             logger.error(error_msg, 'history', analysis_name, e.message)
 
     def delete_library(self, library_id, analysis_name):
+        logger.debug("Deleting Galaxy library for Analysis: %s", analysis_name)
         try:
             self.galaxy_connection().libraries.delete_library(library_id)
         except galaxy.client.ConnectionError as e:

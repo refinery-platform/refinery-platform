@@ -86,7 +86,7 @@ class GalaxyInstanceFactory(factory.django.DjangoModelFactory):
     """Minimal representation of a GalaxyInstance"""
     class Meta:
         model = "galaxy_connector.Instance"
-    base_url = "http://www.example.com/galaxy"
+    # base_url = "http://www.example.com/galaxy"
 
 
 class WorkflowEngineFactory(factory.django.DjangoModelFactory):
