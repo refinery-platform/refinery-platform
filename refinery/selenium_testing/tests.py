@@ -1,5 +1,3 @@
-import logging
-
 from django.contrib.auth.models import User
 
 from core.management.commands.create_public_group import create_public_group
@@ -10,8 +8,6 @@ from factory_boy.utils import make_analyses_with_single_dataset, make_datasets
 from .utils import (MAX_WAIT, SeleniumTestBaseGeneric, assert_text_within_id,
                     delete_from_ui, login, wait_until_id_clickable,
                     wait_until_id_visible)
-
-logger = logging.getLogger(__name__)
 
 
 class RefinerySeleniumTestBase(SeleniumTestBaseGeneric):
@@ -55,7 +51,7 @@ class UiDeletionTestCase(RefinerySeleniumTestBase):  # TODO: Replace w/ Cypress
 
     def test_analysis_deletion(self, total_analyses=2):
         """Delete some analyses and make sure the UI updates properly"""
-        logger.debug("Starting Analysis UI Deletion")
+
         # Create sample Data
         make_analyses_with_single_dataset(total_analyses, self.user)
 
