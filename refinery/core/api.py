@@ -347,8 +347,9 @@ class SharableResourceAPIInterface(object):
                 is_read_only = can_read and not can_change
                 should_share = can_read or can_change
 
+                # datasets handled seperate due to object-level perm
                 if self.res_type._meta.verbose_name == 'dataset':
-                    is_read_meta_only = False  # only for data sets
+                    is_read_meta_only = False
                     if not should_share and i['read_meta']:
                         is_read_meta_only = i['read_meta']
                         should_share = is_read_meta_only
