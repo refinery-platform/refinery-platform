@@ -30,7 +30,7 @@ def copy_file(orig_uuid):
     else:
         try:
             newfile_uuid = create(
-                orig_fsi.source, orig_fsi.sharename, orig_fsi.filetype,
+                orig_fsi.source, orig_fsi.filetype,
                 permanent=is_permanent(orig_uuid)
             )
             import_file(newfile_uuid, refresh=True)

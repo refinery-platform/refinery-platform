@@ -8,8 +8,8 @@ from .models import FileExtension, FileStoreItem, FileType
 class FileStoreItemAdmin(admin.ModelAdmin):
     readonly_fields = ('import_task_id',)
 
-    list_display = ['id', 'datafile', 'uuid', 'source', 'sharename',
-                    'filetype', 'import_task_id', 'created', 'updated']
+    list_display = ['id', 'datafile', 'uuid', 'source', 'filetype',
+                    'import_task_id', 'created', 'updated']
 
     def save_model(self, request, obj, form, change):
         """Symlink if source is a local file"""

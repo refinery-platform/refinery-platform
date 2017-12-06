@@ -492,7 +492,7 @@ class DataSetQuerySet(models.query.QuerySet):
 
 
 class DataSetManager(models.Manager):
-    def get_query_set(self):
+    def get_queryset(self):
         return DataSetQuerySet(self.model, using=self._db)
 
 
@@ -954,7 +954,7 @@ class WorkflowQuerySet(models.query.QuerySet):
 
 
 class WorkflowManager(models.Manager):
-    def get_query_set(self):
+    def get_queryset(self):
         return WorkflowQuerySet(self.model, using=self._db)
 
 
@@ -1128,7 +1128,7 @@ class AnalysisQuerySet(models.query.QuerySet):
 
 
 class AnalysisManager(models.Manager):
-    def get_query_set(self):
+    def get_queryset(self):
         return AnalysisQuerySet(self.model, using=self._db)
 
 
@@ -1362,11 +1362,14 @@ class Analysis(OwnableResource):
                 tool_manager.models.WorkflowTool.MultipleObjectsReturned
             ) as e:
                 logger.error("Could not properly fetch Tool: %s", e)
-            else:
-                self.galaxy_instance().delete_history(
-                    tool.galaxy_import_history_id,
-                    self.name
-                )
+                return
+            try:
+                import_history_id = tool.galaxy_import_history_id
+            except KeyError:
+                logger.info("Tool hasn't interacted with Galaxy yet")
+                return
+
+            self.galaxy_instance().delete_history(import_history_id, self.name)
 
     def cancel(self):
         """Mark analysis as cancelled"""
