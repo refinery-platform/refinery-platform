@@ -573,7 +573,11 @@ class WorkflowTool(Tool):
 
     @property
     def galaxy_connection(self):
-        return self.analysis.galaxy_connection()
+        return self.galaxy_instance.galaxy_connection()
+
+    @property
+    def galaxy_instance(self):
+        return self.analysis.workflow.workflow_engine.instance
 
     @property
     def galaxy_collection_type(self, nesting_string=""):
