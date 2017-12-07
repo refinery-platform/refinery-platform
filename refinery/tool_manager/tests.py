@@ -2434,6 +2434,13 @@ class WorkflowToolTests(ToolManagerTestBase):
         self.tool.create_galaxy_library()
         self.assertEqual(self.tool.analysis.library_id, library_dict["id"])
 
+    def test_that_tool_analysis_has_proper_ownership(self):
+        self.create_tool(ToolDefinition.WORKFLOW)
+        self.assertEqual(
+            self.tool.get_owner(),
+            self.tool.analysis.get_owner()
+        )
+
 
 class ToolAPITests(APITestCase, ToolManagerTestBase):
     def test_tools_exist(self):
