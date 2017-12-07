@@ -325,56 +325,6 @@ galaxy_workflow_invocation = {
     u'id': u'ddaca2bad6847b13'
 }
 
-galaxy_history_download_list = [
-    {
-        u'name': u'Refinery test tool LIST - N on data 4',
-        u'state': u'ok', u'file_size': 211,
-        u'dataset_id': u'8ee788c99983ff96', u'type': u'txt',
-        u'uuid': u'8adc43a1-e075-4ad5-be6a-b9791532b801'
-    },
-    {
-        u'name': u'Refinery test tool LIST - N on data 3',
-        u'state': u'ok', u'file_size': 211,
-        u'dataset_id': u'14bb1cdaa43f5769', u'type': u'txt',
-        u'uuid': u'5b5625c7-3c28-4542-b9c5-2ca9cee301b0'
-
-    },
-    {
-        u'name': u'Refinery test tool LIST - N on data 2',
-        u'state': u'ok', u'file_size': 714,
-        u'dataset_id': u'953f3a3e2982a4fa', u'type': u'txt',
-        u'uuid': u'db331eb4-313a-47e0-9998-0e4aa03786d4'
-
-    }
-]
-galaxy_history_download_list_same_names = [
-    {
-        u'name': u'Output file',
-        u'state': u'ok', u'file_size': 211,
-        u'dataset_id': u'8ee788c99983ff96', u'type': u'txt',
-        u'uuid': u'adc43a1-4ad5-e075-be6a-b9791532b8018'
-
-    },
-    {
-        u'name': u'Output file',
-        u'state': u'ok',
-        u'file_size': 211,
-        u'dataset_id': u'14bb1cdaa43f5769',
-        u'type': u'txt',
-        u'uuid': u'adc43a1-e075-4ad5-be6a-b9791532b8018'
-
-    },
-    {
-        u'name': u'Output file',
-        u'state': u'ok',
-        u'file_size': 714,
-        u'dataset_id': u'953f3a3e2982a4fa',
-        u'type': u'txt',
-        u'uuid': u'adc43a1-4ad5-e075-be6a-b9791532b8018'
-
-    }
-]
-
 galaxy_tool_data = {
     u'inputs': [
         {u'type': u'data', u'name': u'input_file'},
@@ -496,3 +446,61 @@ galaxy_dataset_provenance_1 = {
     u'id': u'37c9a40e10ec0927',
     u'uuid': u'c006a9f8-d045-4ca9-898b-f9824d8b7064'
 }
+
+
+def create_galaxy_history_content_entry(**kwargs):
+    return dict(
+        {
+            u'history_content_type': u'dataset',
+            u'history_id': u'16049f285897632e',
+            u'deleted': False,
+            u'visible': False,
+            u'type': u'file'
+        },
+        **kwargs
+    )
+
+
+galaxy_history_contents = [
+    create_galaxy_history_content_entry(
+        name=u'Refinery test tool LIST - N on data 4',
+        extension=u'txt',
+        type_id=u'dataset-323a8090ca61e992',
+        id=u'323a8090ca61e992',
+        state=u'ok',
+        hid=1,
+        url=u'/api/histories/16049f285897632e/contents/323a8090ca61e992',
+        dataset_id=u'gergg34g34g44',
+        purged=False
+    ),
+    create_galaxy_history_content_entry(
+        name=u'Refinery test tool LIST - N on data 3',
+        extension=u'txt',
+        type_id=u'dataset-a05aafa4cb14c422',
+        id=u'a05aafa4cb14c422',
+        state=u'ok',
+        hid=2,
+        url=u'/api/histories/16049f285897632e/contents/a05aafa4cb14c422',
+        dataset_id=u'34g34g34g3g34g3',
+        purged=False
+    ),
+    create_galaxy_history_content_entry(
+        history_content_type=u'dataset_collection',
+        name=u'List collection',
+        populated=True,
+        visible=True,
+        collection_type=u'list',
+        hid=3,
+        url=u'/api/histories/16049f285897632e/contents/dataset_collections/'
+            u'1cb420fddc70d60d',
+        type=u'collection',
+        id=u'1cb420fddc70d60d',
+        populated_state=u'ok'
+    )
+]
+
+galaxy_history_contents_same_names = [
+    dict(history_content_entry, name="Output file")
+    for history_content_entry in galaxy_history_contents
+    if not history_content_entry.get("history_content_type")
+]
