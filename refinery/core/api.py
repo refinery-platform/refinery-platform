@@ -75,11 +75,15 @@ class SharableResourceAPIInterface(object):
     def get_perms(self, res, group):
         # Default values.
         perms = {'read': False, 'change': False}
+        if self.res_type._meta.verbose_name == 'dataset':
+            perms['read_meta'] = False
 
         # Find matching ones if available.
         for i in res.get_groups():
             if i['group'].group_ptr.id == group.id:
                 perms = {'read': i['read'], 'change': i['change']}
+                if self.res_type._meta.verbose_name == 'dataset':
+                    perms['read_meta'] = i['read_meta']
 
         return perms
 
@@ -316,7 +320,7 @@ class SharableResourceAPIInterface(object):
 
         if request.method == 'GET':
             # user has read permissions
-            if not user.has_perm('core.read_dataset', res):
+            if not user.has_perm('core.read_meta_dataset', res):
                 return HttpUnauthorized()
             kwargs['sharing'] = True
             mod_res = self.transform_res_list(user, [res], request, **kwargs)
@@ -347,7 +351,15 @@ class SharableResourceAPIInterface(object):
                 is_read_only = can_read and not can_change
                 should_share = can_read or can_change
 
-                if should_share:
+                # datasets handled seperate due to object-level perm
+                if self.res_type._meta.verbose_name == 'dataset':
+                    is_read_meta_only = False
+                    if not should_share and i['read_meta']:  # read_meta only
+                        is_read_meta_only = i['read_meta']
+                        should_share = is_read_meta_only
+                    if should_share:  # read, read_meta, or change
+                        res.share(group, is_read_only, is_read_meta_only)
+                elif should_share:
                     res.share(group, is_read_only)
 
             return HttpAccepted()
@@ -657,7 +669,7 @@ class DataSetResource(SharableResourceAPIInterface, ModelResource):
 
             if group:
                 obj_list = list(get_objects_for_group(
-                    group, 'core.read_dataset'
+                    group, 'core.read_meta_dataset'
                 ))
 
         return obj_list
@@ -700,7 +712,8 @@ class DataSetResource(SharableResourceAPIInterface, ModelResource):
         return SharableResourceAPIInterface.obj_create(self, bundle, **kwargs)
 
     def get_all_ids(self, request, **kwargs):
-        data_sets = get_objects_for_user(request.user, 'core.read_dataset')
+        data_sets = get_objects_for_user(request.user,
+                                         'core.read_meta_dataset')
         return self.create_response(
             request,
             {
@@ -732,7 +745,7 @@ class DataSetResource(SharableResourceAPIInterface, ModelResource):
         except:
             user_uuid = None
 
-        if ds and request.user.has_perm('core.read_dataset', ds):
+        if ds and request.user.has_perm('core.read_meta_dataset', ds):
             return_obj['accession'] = ds.accession
             return_obj['accession_source'] = ds.accession_source
             return_obj['creation_date'] = ds.creation_date
@@ -967,7 +980,7 @@ class AnalysisResource(ModelResource):
 
     class Meta:
         queryset = Analysis.objects.all()
-        resource_name = Analysis._meta.module_name
+        resource_name = Analysis._meta.model_name
         detail_uri_name = 'uuid'  # for using UUIDs instead of pk in URIs
         # required for public data set access by anonymous users
         authentication = Authentication()
@@ -1012,14 +1025,14 @@ class AnalysisResource(ModelResource):
         workflow_dict = None
         try:
             workflow_dict = ast.literal_eval(bundle.data['workflow_copy'])
-        except ValueError, e:
+        except ValueError, exc:
             # TODO: Remove this and just let any errors bubble up.
             # I don't think I should do that at this moment because
             # I shouldn't make production any fussier about values
             # in DB than it is right now.
             logger.warn(
                 '%s: Cannot parse workflow as python repr: %s',
-                e, bundle.data['workflow_copy']
+                exc, bundle.data['workflow_copy']
             )
         if workflow_dict:
             workflow_json = json.dumps(workflow_dict)
@@ -1029,14 +1042,12 @@ class AnalysisResource(ModelResource):
 
     def get_object_list(self, request, **kwargs):
         user = request.user
-        perm = 'read_%s' % DataSet._meta.module_name
+        perm = 'read_%s' % DataSet._meta.model_name
         if (user.is_authenticated()):
             allowed_datasets = get_objects_for_user(user, perm, DataSet)
         else:
             allowed_datasets = get_objects_for_group(
-                ExtendedGroup.objects.public_group(),
-                perm,
-                DataSet
+                ExtendedGroup.objects.public_group(), perm, DataSet
             )
 
         return Analysis.objects.filter(
@@ -1268,17 +1279,22 @@ class GroupManagementResource(Resource):
             'change': False
         }
 
+        if self.res_type._meta.verbose_name == 'dataset':
+            perms['read_meta'] = False
+
         # Find matching perms if available.
         for i in res.get_groups():
             if i['group'].group_ptr.id == group.id:
                 perms['read'] = i['read']
                 perms['change'] = i['change']
+                if self.res_type._meta.verbose_name == 'dataset':
+                    perms['read_meta'] = i['read_meta']
 
         return perms
 
     def get_perm_list(self, group):
         dataset_perms = filter(
-            lambda r: r['read'],
+            lambda r: r['read_meta'],
             map(lambda r: self.get_perms(r, group), DataSet.objects.all()))
         project_perms = filter(
             lambda r: r['read'],
