@@ -2434,6 +2434,19 @@ class WorkflowToolTests(ToolManagerTestBase):
         self.tool.create_galaxy_library()
         self.assertEqual(self.tool.analysis.library_id, library_dict["id"])
 
+    def test_get_galaxy_dataset_download_list(self):
+        self.galaxy_datasets_list_mock.start()
+        self.show_job_mock.side_effect = [galaxy_job_a, galaxy_job_a,
+                                          galaxy_job_b, galaxy_job_b,
+                                          galaxy_job_a, galaxy_job_a]
+        self.show_dataset_mock.side_effect = galaxy_datasets_list
+
+        self.create_tool(ToolDefinition.WORKFLOW)
+        self.assertEqual(
+            len(self.tool.get_galaxy_dataset_download_list()),
+            2
+        )
+
     def test__get_creating_job_output_name(self):
         self.show_job_mock.side_effect = [galaxy_job_a, galaxy_job_b]
         self.create_tool(ToolDefinition.WORKFLOW)
