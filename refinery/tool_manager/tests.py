@@ -30,8 +30,8 @@ from test_data.galaxy_mocks import (galaxy_dataset_provenance_0,
                                     galaxy_dataset_provenance_1,
                                     galaxy_datasets_list,
                                     galaxy_datasets_list_same_output_names,
-                                    galaxy_history_download_list,
-                                    galaxy_history_download_list_same_names,
+                                    galaxy_history_contents,
+                                    galaxy_history_contents_same_names,
                                     galaxy_job_a, galaxy_job_b,
                                     galaxy_tool_data, galaxy_workflow_dict,
                                     galaxy_workflow_dict_collection,
@@ -102,6 +102,13 @@ class ToolManagerMocks(TestCase):
         self.show_dataset_provenance_mock = mock.patch.object(
             HistoryClient, "show_dataset_provenance"
         ).start()
+        self.show_history_mock = mock.patch.object(
+            HistoryClient, "show_history",
+            return_value=galaxy_history_contents
+        ).start()
+        self.show_dataset_mock = mock.patch.object(
+            HistoryClient, "show_dataset",
+        ).start()
 
         # Galaxy Job mocks
         self.show_job_mock = mock.patch.object(
@@ -140,16 +147,6 @@ class ToolManagerMocks(TestCase):
             "analysis_manager.tasks.get_taskset_result",
             return_value=celery.result.TaskSetResult(str(uuid.uuid4()))
         ).start()
-
-        # galaxy_connector mocks
-        self.get_history_file_list_mock = mock.patch.object(
-            Instance, "get_history_file_list",
-            return_value=galaxy_history_download_list
-        )
-        self.get_history_file_list_same_names_mock = mock.patch.object(
-            Instance, "get_history_file_list",
-            return_value=galaxy_history_download_list_same_names
-        )
 
         # tool_manager mocks
         self.get_taskset_result_mock = mock.patch(
@@ -1929,24 +1926,14 @@ class WorkflowToolTests(ToolManagerTestBase):
         self.assertTrue(galaxy_datasets_list_mock.called)
 
     def test__get_galaxy_download_tasks(self):
-        get_history_file_list_mock = self.get_history_file_list_mock.start()
-        galaxy_datasets_list_mock = self.galaxy_datasets_list_mock.start()
-        self.show_dataset_provenance_mock.side_effect = (
-            self.show_dataset_provenance_side_effect * 3
-        )
-        self.show_job_mock.side_effect = self.show_job_side_effect * 4
-        self.create_tool(ToolDefinition.WORKFLOW)
-        task_id_list = _get_galaxy_download_task_ids(self.tool.analysis)
-        self.assertTrue(self.galaxy_workflow_show_invocation_mock.called)
-        self.assertTrue(galaxy_datasets_list_mock.called)
-        self.assertTrue(get_history_file_list_mock.called)
+        task_id_list = self._get_galaxy_download_task_ids_wrapper()
 
-        self.assertEqual(AnalysisResult.objects.count(), 3)
+        self.assertEqual(AnalysisResult.objects.count(), 2)
         self.assertEqual(
             AnalysisResult.objects.count(),
             self.tool.analysis.results.all().count()
         )
-        self.assertEqual(len(task_id_list), 3)
+        self.assertEqual(len(task_id_list), 2)
         for task_id in task_id_list:
             self.assertRegexpMatches(str(task_id), UUID_RE)
 
@@ -2282,51 +2269,90 @@ class WorkflowToolTests(ToolManagerTestBase):
             )
             self.assertFalse(analysis_node_connections[index].is_refinery_file)
 
-    def test_attach_outputs_dataset_dsc(self):
-        self.show_dataset_provenance_mock.side_effect = (
-            self.show_dataset_provenance_side_effect * 3
-        )
-        self.show_job_mock.side_effect = self.show_job_side_effect * 4
-        self.has_dataset_collection_input_mock_true.start()
-        self.galaxy_datasets_list_mock.start()
-        self.get_history_file_list_mock.start()
-        with mock.patch.object(
-            WorkflowTool, "_get_workflow_dict",
-            return_value=galaxy_workflow_dict_collection
-        ) as galaxy_workflow_dict_collection_mock:
-            self.create_tool(ToolDefinition.WORKFLOW)
-            _get_galaxy_download_task_ids(self.tool.analysis)
-            self.tool.analysis.attach_outputs_dataset()
-            self.assertTrue(galaxy_workflow_dict_collection_mock.called)
-            self._assert_analysis_node_connection_outputs_validity()
-        self.assertEqual(self.show_dataset_provenance_mock.call_count, 8)
+    def _create_analysis_node_connections_wrapper(self):
+        self.show_job_mock.side_effect = self.show_job_side_effect * 3
+        self.tool.create_analysis_output_node_connections()
 
-    def test_attach_outputs_dataset_non_dsc(self):
+    def _get_galaxy_download_list_wrapper(self,
+                                          datasets_have_same_names=False):
+        self.show_job_mock.side_effect = [galaxy_job_a, galaxy_job_a,
+                                          galaxy_job_b, galaxy_job_b,
+                                          galaxy_job_a, galaxy_job_a]
+        if datasets_have_same_names:
+            self.show_dataset_mock.side_effect = (
+                galaxy_datasets_list_same_output_names
+            )
+        else:
+            self.show_dataset_mock.side_effect = galaxy_datasets_list
+
+        return self.tool.get_galaxy_dataset_download_list()
+
+    def _get_galaxy_download_task_ids_wrapper(
+        self,
+        datasets_have_same_names=False,
+        tool_is_data_set_collection_based=False
+    ):
+        if datasets_have_same_names:
+            self.galaxy_datasets_list_same_names_mock.start()
+            self.show_history_mock.return_value = (
+                galaxy_history_contents_same_names
+            )
+        else:
+            self.galaxy_datasets_list_mock.start()
+
+        if tool_is_data_set_collection_based:
+            mock.patch.object(
+                WorkflowTool, "_get_workflow_dict",
+                return_value=galaxy_workflow_dict_collection
+            ).start()
+            self.has_dataset_collection_input_mock_true.start()
+        else:
+            self.has_dataset_collection_input_mock_false.start()
+
+        self.create_tool(ToolDefinition.WORKFLOW)
         self.show_dataset_provenance_mock.side_effect = (
             self.show_dataset_provenance_side_effect * 3
         )
-        self.show_job_mock.side_effect = self.show_job_side_effect * 4
-        self.galaxy_datasets_list_mock.start()
-        self.get_history_file_list_mock.start()
-        self.has_dataset_collection_input_mock_false.start()
-        self.create_tool(ToolDefinition.WORKFLOW)
-        _get_galaxy_download_task_ids(self.tool.analysis)
-        self.tool.analysis.attach_outputs_dataset()
+
+        self._create_analysis_node_connections_wrapper()
+        download_list = self._get_galaxy_download_list_wrapper(
+            datasets_have_same_names=datasets_have_same_names
+        )
+
+        mock.patch(
+            "tool_manager.models.WorkflowTool."
+            "create_analysis_output_node_connections"
+        ).start()
+        mock.patch(
+            "tool_manager.models.WorkflowTool"
+            ".get_galaxy_dataset_download_list",
+            return_value=download_list
+        ).start()
+
+        return _get_galaxy_download_task_ids(self.tool.analysis)
+
+    def _attach_outputs_dataset_assertions(self):
         self._assert_analysis_node_connection_outputs_validity()
         self.assertEqual(self.show_dataset_provenance_mock.call_count, 8)
 
+    def test_attach_outputs_dataset_dsc(self):
+        self._get_galaxy_download_task_ids_wrapper(
+            tool_is_data_set_collection_based=True
+        )
+        self.tool.analysis.attach_outputs_dataset()
+        self._attach_outputs_dataset_assertions()
+
+    def test_attach_outputs_dataset_non_dsc(self):
+        self._get_galaxy_download_task_ids_wrapper()
+        self.tool.analysis.attach_outputs_dataset()
+        self._attach_outputs_dataset_assertions()
+
     def test_attach_outputs_dataset_same_name_workflow_results(self):
-        self.galaxy_datasets_list_same_names_mock.start()
-        same_name_galaxy_history_datasets_mock = (
-            self.get_history_file_list_same_names_mock.start()
+        self._get_galaxy_download_task_ids_wrapper(
+            datasets_have_same_names=True
         )
-        self.show_dataset_provenance_mock.side_effect = (
-            self.show_dataset_provenance_side_effect * 3
-        )
-        self.show_job_mock.side_effect = self.show_job_side_effect * 4
-        self.has_dataset_collection_input_mock_false.start()
-        self.create_tool(ToolDefinition.WORKFLOW)
-        _get_galaxy_download_task_ids(self.tool.analysis)
+        self.tool.analysis.attach_outputs_dataset()
+
         output_connections = AnalysisNodeConnection.objects.filter(
             analysis=self.tool.analysis,
             direction=OUTPUT_CONNECTION
@@ -2342,22 +2368,10 @@ class WorkflowToolTests(ToolManagerTestBase):
                 file_name=output_connection_filename
             )
             self.assertGreater(analysis_results.count(), 1)
-        self.tool.analysis.attach_outputs_dataset()
-        self.assertTrue(same_name_galaxy_history_datasets_mock.called)
-        self._assert_analysis_node_connection_outputs_validity()
-        self.assertEqual(self.show_dataset_provenance_mock.call_count, 8)
+        self._attach_outputs_dataset_assertions()
 
     def test_attach_outputs_dataset_makes_proper_node_inheritance_chain(self):
-        self.galaxy_datasets_list_mock.start()
-        self.get_history_file_list_mock.start()
-        self.has_dataset_collection_input_mock_false.start()
-        self.show_dataset_provenance_mock.side_effect = (
-            self.show_dataset_provenance_side_effect * 3
-        )
-        self.show_job_mock.side_effect = self.show_job_side_effect * 4
-
-        self.create_tool(ToolDefinition.WORKFLOW)
-        _get_galaxy_download_task_ids(self.tool.analysis)
+        self._get_galaxy_download_task_ids_wrapper()
 
         exposed_output_connections = AnalysisNodeConnection.objects.filter(
             analysis=self.tool.analysis,
