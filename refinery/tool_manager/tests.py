@@ -2434,6 +2434,41 @@ class WorkflowToolTests(ToolManagerTestBase):
         self.tool.create_galaxy_library()
         self.assertEqual(self.tool.analysis.library_id, library_dict["id"])
 
+    def test__get_creating_job_output_name(self):
+        self.show_job_mock.side_effect = [galaxy_job_a, galaxy_job_b]
+        self.create_tool(ToolDefinition.WORKFLOW)
+
+        creating_job_output_name_a = self.tool._get_creating_job_output_name(
+            galaxy_datasets_list[0]
+        )
+        creating_job_output_name_b = self.tool._get_creating_job_output_name(
+            galaxy_datasets_list[1]
+        )
+        self.assertIsNotNone(galaxy_job_a["outputs"].get(
+                creating_job_output_name_a
+            )
+        )
+        self.assertIsNotNone(galaxy_job_b["outputs"].get(
+                creating_job_output_name_b
+            )
+        )
+
+    def test__get_creating_job_output_name_reliance(self):
+        self.show_job_mock.side_effect = [galaxy_job_a]
+        self.create_tool(ToolDefinition.WORKFLOW)
+
+        with self.assertRaises(AssertionError) as context:
+            self.tool._get_creating_job_output_name(
+                {
+                    "uuid": str(uuid.uuid4()),
+                    WorkflowTool.CREATING_JOB: ""
+                 }
+            )
+        self.assertIn(
+            "There should be one creating job output name",
+            context.exception.message
+        )
+
     def test_that_tool_analysis_has_proper_ownership(self):
         self.create_tool(ToolDefinition.WORKFLOW)
         self.assertEqual(
