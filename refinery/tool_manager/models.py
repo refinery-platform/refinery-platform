@@ -1143,7 +1143,7 @@ class WorkflowTool(Tool):
             galaxy_dataset_dict["uuid"]
         ]
         assert len(workflow_step_output_name) == 1, (
-            "There should only be one creating job output name for a "
+            "There should be one creating job output name for a "
             "Galaxy dataset. There were: {}".format(
                 len(workflow_step_output_name)
             )
