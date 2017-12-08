@@ -500,39 +500,6 @@ galaxy_history_contents = [
 ]
 
 galaxy_history_contents_same_names = [
-    create_galaxy_history_content_entry(
-        name=u'Output file',
-        extension=u'txt',
-        type_id=u'dataset-323a8090ca61e992',
-        id=u'323a8090ca61e992',
-        state=u'ok',
-        hid=1,
-        url=u'/api/histories/16049f285897632e/contents/323a8090ca61e992',
-        dataset_id=u'gergg34g34g44',
-        purged=False
-    ),
-    create_galaxy_history_content_entry(
-        name=u'Output file',
-        extension=u'txt',
-        type_id=u'dataset-a05aafa4cb14c422',
-        id=u'a05aafa4cb14c422',
-        state=u'ok',
-        hid=2,
-        url=u'/api/histories/16049f285897632e/contents/a05aafa4cb14c422',
-        dataset_id=u'34g34g34g3g34g3',
-        purged=False
-    ),
-    create_galaxy_history_content_entry(
-        history_content_type=u'dataset_collection',
-        name=u'List collection',
-        populated=True,
-        visible=True,
-        collection_type=u'list',
-        hid=3,
-        url=u'/api/histories/16049f285897632e/contents/dataset_collections/'
-            u'1cb420fddc70d60d',
-        type=u'collection',
-        id=u'1cb420fddc70d60d',
-        populated_state=u'ok'
-    )
+    dict(item, name="Output file") for item in galaxy_history_contents
+    if item.get("history_content_type") == "dataset"
 ]
