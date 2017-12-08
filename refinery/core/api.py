@@ -43,7 +43,8 @@ from core.models import (Analysis, DataSet, ExtendedGroup, GroupManagement,
                          Invitation, Project, ResourceStatistics, Tutorials,
                          UserAuthentication, UserProfile, Workflow,
                          WorkflowInputRelationships)
-from core.utils import get_data_sets_annotations, get_resources_for_user
+from core.utils import (get_data_sets_annotations, get_resources_for_user,
+                        which_default_read_perm)
 from data_set_manager.api import (AssayResource, InvestigationResource,
                                   StudyResource)
 from data_set_manager.models import Attribute, Node, Study
@@ -170,15 +171,11 @@ class SharableResourceAPIInterface(object):
                     self.res_type._meta.verbose_name).values_list("id",
                                                                   flat=True))
 
-            min_public_perm = 'core.read_%s'
-            if self.res_type._meta.verbose_name == 'dataset':
-                min_public_perm = 'core.read_meta_%s'
             public_res_set = Set(
                 get_objects_for_group(
                     ExtendedGroup.objects.public_group(),
-                    min_public_perm %
-                    self.res_type._meta.verbose_name).values_list("id",
-                                                                  flat=True))
+                    which_default_read_perm(self.res_type._meta.verbose_name)
+                ).values_list("id", flat=True))
 
             # Get content type, needed to map Guardian group permission.
             content_type = ContentType.objects.get(model='dataset')

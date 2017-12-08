@@ -32,7 +32,8 @@ from .models import (INPUT_CONNECTION, OUTPUT_CONNECTION, Analysis,
                      WorkflowEngine, invalidate_cached_object)
 from .search_indexes import DataSetIndex
 from .utils import (filter_nodes_uuids_in_solr, get_aware_local_time,
-                    get_resources_for_user, move_obj_to_front)
+                    get_resources_for_user, move_obj_to_front,
+                    which_default_read_perm)
 from .views import AnalysesViewSet, DataSetsViewSet
 
 cache = memcache.Client(["127.0.0.1:11211"])
@@ -1225,6 +1226,14 @@ class UtilitiesTest(TestCase):
                                                              'Selection')
         self.assertEqual(response_arr[0].get('name'),
                          nodes_list[0].get('name'))
+
+    def test_which_default_read_perm_for_dataset(self):
+        self.assertEqual(which_default_read_perm('dataset'),
+                         'core.read_meta_dataset')
+
+    def test_which_default_read_perm_for_analysis(self):
+        self.assertEqual(which_default_read_perm('analysis'),
+                         'core.read_analysis')
 
 
 class UserTutorialsTest(TestCase):
