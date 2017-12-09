@@ -74,7 +74,8 @@
 
       var filesParams = {
         uuid: _assayUuid,
-        offset: 0
+        offset: 0,
+        data_set__uuid: _dataSetUuid
       };
       var analysisPromise = analysisService.query(analysisParams).$promise;
       var filesPromise = assayFileService.query(filesParams).$promise;
