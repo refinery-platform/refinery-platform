@@ -1,7 +1,7 @@
 /**
  * Permission Editor Modal Ctrl
  * @namespace rpPermissionEditorModal
- * @desc Common modal component used on dashboard and file browser, per data set
+ * @desc Permission editor modal component shared by file browser and dashboard
  * @memberOf refineryApp
  */
 (function () {
