@@ -356,10 +356,7 @@ DataSetPreviewCtrl.prototype.loadData = function (dataSetUuid) {
 DataSetPreviewCtrl.prototype.openPermissionEditor = function () {
   var that = this;
   this.$uibModal.open({
-    templateUrl: function () {
-      return that.$window.getStaticUrl('partials/dashboard/partials/permission-dialog.html');
-    },
-    controller: 'PermissionEditorCtrl as modal',
+    component: 'rpPermissionEditorModal',
     resolve: {
       config: function () {
         return {
