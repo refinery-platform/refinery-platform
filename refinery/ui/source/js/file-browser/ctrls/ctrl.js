@@ -17,6 +17,8 @@
     '$q',
     '$scope',
     '$timeout',
+    '$uibModal',
+    '$window',
     'uiGridConstants',
     '_',
     'assayFiltersService',
@@ -38,6 +40,8 @@
     $q,
     $scope,
     $timeout,
+    $uibModal,
+    $window,
     uiGridConstants,
     _,
     assayFiltersService,
@@ -53,6 +57,7 @@
     activeNodeService,
     toolSelectService
   ) {
+    var dataSetUuid = $window.dataSetUuid;
     var fileService = fileRelationshipService;
     var maxFileRequest = fileBrowserSettings.maxFileRequest;
     var nodesService = activeNodeService;
@@ -96,6 +101,7 @@
     vm.inputFileTypeColor = fileService.inputFileTypeColor;
     vm.lastPage = 0;  // variable supporting ui-grid dynamic scrolling
     vm.nodeSelectCollection = fileService.nodeSelectCollection;
+    vm.openPermissionEditor = openPermissionEditor;
     vm.openSelectionPopover = openSelectionPopover;
     vm.refreshAssayFiles = refreshAssayFiles;
     vm.reset = reset;
@@ -223,6 +229,20 @@
         vm.gridApi.core.on.sortChanged(null, vm.sortChanged);
         vm.sortChanged(vm.gridApi.grid, [vm.gridOptions.columnDefs[1]]);
       }
+    }
+
+    function openPermissionEditor () {
+      $uibModal.open({
+        component: 'rpPermissionEditorModal',
+        resolve: {
+          config: function () {
+            return {
+              model: 'data_sets',
+              uuid: dataSetUuid
+            };
+          }
+        }
+      });
     }
 
     /** vm method to open the selection popover and disable all popovers, so

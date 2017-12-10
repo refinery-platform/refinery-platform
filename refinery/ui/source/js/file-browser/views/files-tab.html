@@ -25,8 +25,14 @@
         </button>
 
         <span class="float-right">
+          <span
+            ng-if="FBCtrl.isOwner"
+            class="refinery-base btn btn-default btn-sm"
+            ng-click="FBCtrl.openPermissionEditor()">
+            <i class="fa fa-share-square-o"></i> Share
+          </span>
           <span ng-if="FBCtrl.isOwner" class="refinery-base btn btn-default btn-sm" rp-assay-files-util-modal>
-            <i class="fa fa-wrench"></i>
+            <i class="fa fa-wrench"></i> Config
           </span>
           <a
             id="help-view-selector"
