@@ -368,6 +368,7 @@ DataSetPreviewCtrl.prototype.openPermissionEditor = function () {
   }).result.catch(function () {
     // refresh data when user dismisses by clicking on the background
     that.permissionService.getPermissions(that._currentUuid);
+    that.dashboardDataSetsReloadService.reload(true);
   });
 };
 
