@@ -36,7 +36,6 @@
     var assayAttributeOrder = [];
     var assayFilesTotalItems = {};
     var customColumnNames = [];
-    var nodeUrl = {};
     var csrfToken = $window.csrf_token;
     var maxFileRequest = fileBrowserSettings.maxFileRequest;
 
@@ -61,14 +60,6 @@
     * Method Definitions
     * ----------------------
     */
-    // Adds the file_url to the assay files array
-    function addNodeDetailtoAssayFiles () {
-      angular.forEach(assayFiles, function (facetObj) {
-        getNodeDetails(facetObj.uuid).then(function () {
-          facetObj.Url = nodeUrl;
-        });
-      });
-    }
 
         // populates the ui-grid columns variable
     function createColumnDefs () {
@@ -91,9 +82,9 @@
           cellTooltip: true,
           enableHiding: false
         };
-        if (columnName === 'Url') {
+        if (columnName === 'Download') {
           // Url requires a custom template for downloading links
-          tempCustomColumnNames.push(setCustomUrlColumn(columnName));
+          tempCustomColumnNames.push(setCustomUrlColumn(attribute));
         } else if (columnName === 'Input Groups') {
           // Input Groups requires a custom template for downloading links
           tempCustomColumnNames.push(setCustomInputGroupsColumn(columnName));
@@ -127,29 +118,6 @@
       }
     }
 
-    function getNodeDetails (nodeUuid) {
-      var params = {
-        uuid: nodeUuid
-      };
-
-      var nodeFile = nodeService.query(params);
-      nodeFile.$promise.then(function (response) {
-        nodeUrl = response.file_url;
-      });
-      return nodeFile.$promise;
-    }
-
-    // In an array of objects, removes an object with a display_name of 'uuid'
-    function hideUuidAttribute (arrayOfObjs) {
-      for (var i = arrayOfObjs.length - 1; i >= 0; i--) {
-        if (arrayOfObjs[i].display_name === 'uuid') {
-          arrayOfObjs.splice(i, 1);
-          break;
-        }
-      }
-      return arrayOfObjs;
-    }
-
     function getAssayFiles (unencodeParams, scrollDirection) {
       var params = {};
       var additionalAssayFiles = [];
@@ -163,13 +131,16 @@
 
       var assayFile = assayFileService.query(params);
       assayFile.$promise.then(function (response) {
-        /** Api returns uuid field, which is needed to retrieve the
-         *  download file_url for nodeset api. It should be hidden in the data
-         *  table first **/
-        var culledAttributes = hideUuidAttribute(response.attributes);
-        angular.copy(culledAttributes, assayAttributes);
+        angular.copy(response.attributes, assayAttributes);
         // Add file_download column first
-        assayAttributes.unshift({ display_name: 'Url', internal_name: 'Url' });
+
+        for (var i = 0; i < assayAttributes.length; i++) {
+          if (assayAttributes[i].internal_name === 'REFINERY_DOWNLOAD_URL_s') {
+            // remove from current position and add to the front
+            assayAttributes.splice(0, 0, (assayAttributes.splice(i, 1)[0]));
+            break;
+          }
+        }
         assayAttributes.unshift({ display_name: 'Input Groups', internal_name: 'InputGroups' });
         assayAttributes.unshift({ display_name: 'Selection', internal_name: 'Selection' });
 
@@ -189,7 +160,6 @@
         } else {
           angular.copy(assayFiles.concat(additionalAssayFiles), assayFiles);
         }
-        addNodeDetailtoAssayFiles();
         assayFiltersService.generateFilters(response.attributes, response.facet_field_counts);
       }, function (error) {
         $log.error(error);
@@ -204,8 +174,7 @@
 
       var assayAttribute = assayAttributeService.query(params);
       assayAttribute.$promise.then(function (response) {
-        var culledResponseData = hideUuidAttribute(response);
-        var sortedResponse = sortArrayOfObj(culledResponseData);
+        var sortedResponse = sortArrayOfObj(response);
         angular.copy(sortedResponse, assayAttributeOrder);
       }, function (error) {
         $log.error(error);
@@ -302,7 +271,7 @@
      * Helper method for file download column, requires unique template & fields.
      * @param {string} _columnName - column name
      */
-    function setCustomUrlColumn (_columnName) {
+    function setCustomUrlColumn (urlAttribute) {
       var _cellTemplate = '<div class="ngCellText text-align-center ui-grid-cell-contents"' +
             'ng-class="col.colIndex()">' +
             '<div ng-if="COL_FIELD" title="Download File \{{COL_FIELD}}\">' +
@@ -315,8 +284,8 @@
             '</div>';
 
       return {
-        name: _columnName,
-        field: _columnName,
+        name: urlAttribute.internal_name,
+        field: urlAttribute.internal_name,
         cellTooltip: true,
         width: 4 + '%',
         displayName: '',
