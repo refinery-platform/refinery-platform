@@ -118,6 +118,18 @@
       }
     }
 
+    // In an array of objects, removes an object with a display_name of 'uuid'
+    function hideUuidAttribute (arrayOfObjs) {
+      for (var i = arrayOfObjs.length - 1; i >= 0; i--) {
+        if (arrayOfObjs[i].display_name === 'uuid') {
+          arrayOfObjs.splice(i, 1);
+          break;
+        }
+      }
+      return arrayOfObjs;
+    }
+
+
     function getAssayFiles (unencodeParams, scrollDirection) {
       var params = {};
       var additionalAssayFiles = [];
@@ -131,9 +143,12 @@
 
       var assayFile = assayFileService.query(params);
       assayFile.$promise.then(function (response) {
-        angular.copy(response.attributes, assayAttributes);
-        // Add file_download column first
+        /** Api returns uuid field, which is needed to select rows. It should be
+         *  hidden in the data table first **/
+        var culledAttributes = hideUuidAttribute(response.attributes);
+        angular.copy(culledAttributes, assayAttributes);
 
+       // Add file_download column first
         for (var i = 0; i < assayAttributes.length; i++) {
           if (assayAttributes[i].internal_name === 'REFINERY_DOWNLOAD_URL_s') {
             // remove from current position and add to the front
