@@ -24,8 +24,7 @@ tutorial_settings_file_path = os.path.join(
     'refinery/config/tutorial_steps.json'
 )
 
-override_path = os.path.join(BASE_DIR,
-                             'refinery/config/override-config.yaml')
+override_path = os.path.join(BASE_DIR, 'refinery/config/override-config.yaml')
 
 # load config.json
 try:
@@ -34,7 +33,6 @@ try:
 except IOError as e:
     error_msg = "Could not open '{}': {}".format(local_settings_file_path, e)
     raise ImproperlyConfigured(error_msg)
-
 
 # load tutorial_steps.json
 try:
@@ -313,14 +311,15 @@ EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 # for system stability
 CELERYD_MAX_TASKS_PER_CHILD = get_setting("CELERYD_MAX_TASKS_PER_CHILD")
 CELERY_ROUTES = {"file_store.tasks.import_file": {"queue": "file_import"}}
-# TODO: restrict to CELERY_TASK_SERIALIZER
-CELERY_ACCEPT_CONTENT = ['pickle', 'json', 'msgpack', 'yaml']
-
+CELERY_ACCEPT_CONTENT = ['pickle']
 # TODO: Does this belong here or in config.json.erb?
 CELERYBEAT_SCHEDULE = {
     'django_docker_cleanup': {
         'task': 'tool_manager.tasks.django_docker_cleanup',
-        'schedule': timedelta(seconds=30)
+        'schedule': timedelta(seconds=30),
+        'options': {
+            'expires': 20,  # seconds
+        }
     },
 }
 
