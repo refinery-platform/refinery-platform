@@ -50,7 +50,7 @@ function dataSetAboutFactory (
   var filterDataSetGroups = function (allGroups) {
     var filteredGroupList = [];
     for (var i = 0; i < allGroups.length; i++) {
-      if (allGroups[i].perms.read || allGroups[i].perms.write) {
+      if (allGroups[i].perms.read_meta || allGroups[i].perms.read || allGroups[i].perms.change) {
         filteredGroupList.push(allGroups[i]);
       }
     }
