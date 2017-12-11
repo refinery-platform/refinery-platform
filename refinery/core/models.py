@@ -1719,11 +1719,11 @@ class Analysis(OwnableResource):
         # AnalysisResults
         for output_connections in distinct_filenames_map.values():
             for index, output_connection in enumerate(output_connections):
-                analysis_result = AnalysisResult.objects.filter(
-                    analysis_uuid=self.uuid,
-                    file_name=output_connection.filename
-                )[index]
                 if output_connection.is_refinery_file:
+                    analysis_result = AnalysisResult.objects.filter(
+                        analysis_uuid=self.uuid,
+                        file_name=output_connection.filename
+                    )[index]
                     output_connections_to_analysis_results.append(
                         (output_connection, analysis_result)
                     )
