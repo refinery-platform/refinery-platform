@@ -19,7 +19,6 @@ from tastypie.test import ResourceTestCase
 
 from analysis_manager.models import AnalysisStatus
 from data_set_manager.models import Assay, Contact, Investigation, Node, Study
-from factory_boy.django_model_factories import GalaxyInstanceFactory
 from factory_boy.utils import create_dataset_with_necessary_models
 from file_store.models import FileStoreItem, FileType
 from galaxy_connector.models import Instance
@@ -703,7 +702,7 @@ class AnalysisTests(TestCase):
         self.project1 = Project.objects.create()
 
         # Create a galaxy Instance
-        self.galaxy_instance = GalaxyInstanceFactory()
+        self.galaxy_instance = Instance.objects.create()
 
         # Create a WorkflowEngine
         self.workflow_engine = WorkflowEngine.objects.create(
@@ -1883,7 +1882,7 @@ class AnalysisApiV2Tests(APITestCase):
                                              self.password)
         self.project = Project.objects.create()
 
-        self.galaxy_instance = GalaxyInstanceFactory()
+        self.galaxy_instance = Instance.objects.create()
         self.workflow_engine = WorkflowEngine.objects.create(
             instance=self.galaxy_instance
         )
