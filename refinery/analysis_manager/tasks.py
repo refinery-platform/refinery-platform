@@ -469,9 +469,7 @@ def _get_galaxy_download_task_ids(analysis):
     galaxy_instance = analysis.workflow.workflow_engine.instance
 
     try:
-        download_list = galaxy_instance.get_history_file_list(
-            analysis.history_id
-        )
+        download_list = tool.get_galaxy_dataset_download_list()
     except galaxy.client.ConnectionError as exc:
         error_msg = (
             "Error downloading Galaxy history files for analysis '%s': %s"

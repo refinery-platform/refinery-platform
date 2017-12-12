@@ -924,7 +924,7 @@ class AnalysisTests(TestCase):
             ]
         )
 
-    def test___get_output_connection_to_analysis_result_mapping(self):
+    def create_analysis_results(self, include_faulty_result=False):
         common_params = {
             "analysis_uuid": self.analysis.uuid,
             "file_store_uuid": self.node.file_uuid,
@@ -932,12 +932,27 @@ class AnalysisTests(TestCase):
             "file_type": self.node.get_file_store_item().filetype
         }
         analysis_result_0 = AnalysisResult.objects.create(**common_params)
-        AnalysisResult.objects.create(**common_params)
+
+        if include_faulty_result:
+            # This analysis result has a filename that doesn't correspond to
+            #  any specified AnalysisNodeConnection Output filenames
+            AnalysisResult.objects.create(
+                **dict(common_params, file_name="Bad Filename")
+            )
+        else:
+            AnalysisResult.objects.create(**common_params)
+
         analysis_result_1 = AnalysisResult.objects.create(**common_params)
+
+        return analysis_result_0, analysis_result_1
+
+    def test___get_output_connection_to_analysis_result_mapping(self):
+        analysis_result_0, analysis_result_1 = self.create_analysis_results()
 
         output_mapping = (
             self.analysis._get_output_connection_to_analysis_result_mapping()
         )
+
         self.assertEqual(
             output_mapping,
             [
@@ -946,6 +961,14 @@ class AnalysisTests(TestCase):
                 (self.analysis_node_connection_a, analysis_result_1)
             ]
         )
+
+    def test___get_output_connection_to_analysis_result_mapping_failure_state(
+        self
+    ):
+        self.create_analysis_results(include_faulty_result=True)
+
+        with self.assertRaises(IndexError):
+            self.analysis._get_output_connection_to_analysis_result_mapping()
 
     def test_analysis_node_connection_input_id(self):
         self.assertEqual(

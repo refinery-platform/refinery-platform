@@ -573,7 +573,11 @@ class WorkflowTool(Tool):
 
     @property
     def galaxy_connection(self):
-        return self.analysis.galaxy_connection()
+        return self.galaxy_instance.galaxy_connection()
+
+    @property
+    def galaxy_instance(self):
+        return self.analysis.workflow.workflow_engine.instance
 
     @property
     def galaxy_collection_type(self, nesting_string=""):
@@ -658,6 +662,7 @@ class WorkflowTool(Tool):
         workflow_dict = self._get_workflow_dict()
         self.analysis.workflow_copy = workflow_dict
         self.analysis.workflow_steps_num = len(workflow_dict["steps"].keys())
+        self.analysis.set_owner(self.get_owner())
         self.analysis.save()
 
         AnalysisStatus.objects.create(analysis=analysis)
@@ -686,7 +691,7 @@ class WorkflowTool(Tool):
         Create the AnalysisNodeConnection objects corresponding to the output
         Nodes (Derived Data) of a WorkflowTool launch.
         """
-        exposed_workflow_outputs = self._get_exposed_workflow_outputs()
+        exposed_workflow_outputs = self._get_exposed_galaxy_datasets()
         for galaxy_dataset in self._get_galaxy_history_dataset_list():
             AnalysisNodeConnection.objects.create(
                 analysis=self.analysis,
@@ -912,6 +917,29 @@ class WorkflowTool(Tool):
         )
 
     @handle_bioblend_exceptions
+    def get_galaxy_dataset_download_list(self):
+        """
+        Return a list of dicts containing information about Galaxy Datasets
+        in our Workflow invocation's history if said Datasets correspond to a
+        user-defined `workflow_output`.
+        """
+        exposed_galaxy_datasets = self._get_exposed_galaxy_datasets()
+        exposed_galaxy_dataset_ids = [
+            galaxy_dataset["id"] for galaxy_dataset in exposed_galaxy_datasets
+        ]
+
+        history_file_list = self.galaxy_instance.get_history_file_list(
+            self.analysis.history_id
+        )
+        retained_download_list = [
+            galaxy_dataset for galaxy_dataset in history_file_list
+            if galaxy_dataset["dataset_id"] in exposed_galaxy_dataset_ids
+        ]
+        assert len(retained_download_list) >= 1, \
+            "There should be at least one dataset to download from Galaxy."
+        return retained_download_list
+
+    @handle_bioblend_exceptions
     def _get_galaxy_dataset_job(self, galaxy_dataset_dict):
         return self.galaxy_connection.jobs.show_job(
             galaxy_dataset_dict[self.CREATING_JOB]
@@ -937,8 +965,8 @@ class WorkflowTool(Tool):
     def _get_galaxy_history_dataset_list(self):
         """
         Retrieve a list of Galaxy Datasets from the Galaxy History of our
-        Galaxy Workflow invocation all tool outputs in the Galaxy Workflow
-        editor.
+        Galaxy Workflow invocation corresponding to all tool outputs in the
+        Galaxy Workflow editor.
         """
         galaxy_dataset_list = (
             self.galaxy_connection.histories.show_matching_datasets(
@@ -953,7 +981,7 @@ class WorkflowTool(Tool):
         ]
         return retained_datasets
 
-    def _get_exposed_workflow_outputs(self):
+    def _get_exposed_galaxy_datasets(self):
         """
         Retrieve all Galaxy Datasets that correspond to an asterisked
         output in the Galaxy workflow editor.
@@ -1143,7 +1171,7 @@ class WorkflowTool(Tool):
             galaxy_dataset_dict["uuid"]
         ]
         assert len(workflow_step_output_name) == 1, (
-            "There should only be one creating job output name for a "
+            "There should be one creating job output name for a "
             "Galaxy dataset. There were: {}".format(
                 len(workflow_step_output_name)
             )
