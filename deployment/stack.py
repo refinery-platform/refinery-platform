@@ -183,7 +183,7 @@ def make_template(config, config_yaml):
     # Used to choose an AMI given a Region, and a host OS.
     cft.mappings.ami = core.Mapping(
         'Image',
-        {'us-east-1': {'ubuntu1404':  'ami-d05e75b8'}})
+        {'us-east-1': {'ubuntu1404':  'ami-8d9e1cf7'}})
 
     cft.resources.ec2_instance = core.Resource(
         'WebInstance', 'AWS::EC2::Instance',
