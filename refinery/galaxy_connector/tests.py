@@ -30,6 +30,9 @@ class GalaxyInstanceTests(TestCase):
             "id": self.GALAXY_DATASET_ID
         }
 
+    def tearDown(self):
+        mock.patch.stopall()
+
     def test_get_history_file_list_with_populated_dataset_dict(self):
         self.show_history_mock.return_value = [self.history_content_entry]
         self.show_dataset_mock.return_value = {

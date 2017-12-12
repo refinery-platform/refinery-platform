@@ -36,6 +36,7 @@ exec { "migrate":
   environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
   user        => $app_user,
   group       => $app_group,
+  logoutput   => true,
   require     => [
     Class['::refinery::python'],
     Class['::refinery::postgresql']
