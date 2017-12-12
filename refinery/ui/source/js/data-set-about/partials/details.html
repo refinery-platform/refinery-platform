@@ -386,7 +386,9 @@
   </span>
 </div>
 
-<span class="refinery-subheader">
+<span
+  class="refinery-subheader"
+  ng-if="ADCtrl.userPerms === 'read' || ADCtrl.userPerms === 'change'">
   <h3>Meta Data</h3>
 </span>
 <div ng-if="ADCtrl.dataSet.isa_archive">
