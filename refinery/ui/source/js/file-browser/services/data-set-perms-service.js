@@ -13,7 +13,7 @@
     vm.dataSetSharing = {};
     vm.groupList = [];
     vm.owner = '';
-    vm.refreshDataSetPerms = refreshDataSetPerms;
+    vm.getDataSetSharing = getDataSetSharing;
     vm.userPerms = 'none';
 
     /*
@@ -32,7 +32,7 @@
       return filteredGroupList;
     };
 
-    function refreshDataSetPerms () {
+    function getDataSetSharing () {
       var params = {
         uuid: dataSetUuid,
         model: 'data_sets'

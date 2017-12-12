@@ -46,6 +46,7 @@ angular
   .module('refineryDataSetAbout')
   .controller('AboutSharingCtrl',
   [
+    'dataSetPermsService',
     'userService',
     '$scope',
     '$location',

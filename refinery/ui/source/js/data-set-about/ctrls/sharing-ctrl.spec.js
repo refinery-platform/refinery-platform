@@ -4,7 +4,6 @@ describe('Controller: AboutSharingCtrl', function () {
   var ctrl;
   var scope;
   var factory;
-  var $controller;
   var fakeUuid;
   var mocker;
 
@@ -12,17 +11,16 @@ describe('Controller: AboutSharingCtrl', function () {
   beforeEach(module('refineryDataSetAbout'));
   beforeEach(inject(function (
     $rootScope,
-    _$controller_,
-    _dataSetAboutFactory_,
-    _mockParamsFactory_
+    $controller,
+    dataSetPermsService,
+    mockParamsFactory
   ) {
     scope = $rootScope.$new();
-    $controller = _$controller_;
     ctrl = $controller('AboutSharingCtrl', {
       $scope: scope
     });
-    factory = _dataSetAboutFactory_;
-    mocker = _mockParamsFactory_;
+    factory = dataSetPermsService;
+    mocker = mockParamsFactory;
     fakeUuid = mocker.generateUuid();
   }));
 
