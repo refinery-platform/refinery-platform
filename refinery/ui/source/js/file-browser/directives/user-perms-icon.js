@@ -9,7 +9,7 @@
   angular
     .module('refineryFileBrowser')
     .component('rpUserPermsIcon', {
-      controller: 'userPermsIconCtrl',
+      controller: 'UserPermsIconCtrl',
       templateUrl: ['$window', function ($window) {
         return $window.getStaticUrl('partials/file-browser/partials/user-perms-icon.html');
       }]
