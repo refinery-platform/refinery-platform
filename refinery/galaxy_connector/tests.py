@@ -5,7 +5,7 @@ from django.test import TestCase
 from bioblend import galaxy
 import mock
 
-from galaxy_connector.models import Instance
+from factory_boy.django_model_factories import GalaxyInstanceFactory
 
 
 class GalaxyInstanceTests(TestCase):
@@ -15,9 +15,7 @@ class GalaxyInstanceTests(TestCase):
         self.GALAXY_DATASET_FILESIZE = 1024
         self.MISCELLANEOUS_STRING = "Coffee is tasty"
 
-        self.galaxy_instance = Instance.objects.create(
-            base_url="www.example.com", api_key=str(uuid.uuid4()),
-        )
+        self.galaxy_instance = GalaxyInstanceFactory(api_key=str(uuid.uuid4()))
         self.show_history_mock = mock.patch.object(
             galaxy.histories.HistoryClient, "show_history"
         ).start()
@@ -31,6 +29,9 @@ class GalaxyInstanceTests(TestCase):
             "type": "file",
             "id": self.GALAXY_DATASET_ID
         }
+
+    def tearDown(self):
+        mock.patch.stopall()
 
     def test_get_history_file_list_with_populated_dataset_dict(self):
         self.show_history_mock.return_value = [self.history_content_entry]
