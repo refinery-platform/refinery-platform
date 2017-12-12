@@ -271,6 +271,7 @@ class ToolManagerTestBase(ToolManagerMocks):
     def tearDown(self):
         # Trigger the pre_delete signal so that datafiles are purged
         FileStoreItem.objects.all().delete()
+        super(ToolManagerTestBase, self).tearDown()
 
     def create_solr_mock_response(self, tool):
         return json.dumps(
