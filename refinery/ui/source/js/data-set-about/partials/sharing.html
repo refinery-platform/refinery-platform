@@ -28,45 +28,43 @@
     <h4>Groups</h4>
   </div>
   <p>
-  <div ng-repeat="group in ASCtrl.groupList track by $index">
-    <a href="/groups/{{group.group_uuid}}">{{ group.group_name }}</a>&nbsp;
-    <span ng-if="group.perms.read_meta && !group.perms.read && !group.perms.change">
-       <span
-         class="fa-stack"
-         refinery-tooltip
-         refinery-tooltip-container="body"
-         refinery-tooltip-placement="right"
-         title="Read-meta-only permissions: group members can view
-         the data set's meta data.">
-        <i class="fa fa-eye fa-stack-1x fa-stack-right-corner"></i>
-        <i class="fa fa-file-o fa-stack-1-25x"></i>
-       </span>
-    </span>
-    <span ng-if="group.perms.read && !group.perms.change">
-       <span
-         class="fa-stack"
-         refinery-tooltip
-         refinery-tooltip-container="body"
-         refinery-tooltip-placement="right"
-         title="Read permissions: group members can view the data set and
-         download the meta data.">
-        <i class="fa fa-eye fa-stack-1x fa-stack-right-corner"></i>
-        <i class="fa fa-file-text-o fa-stack-1-25x"></i>
-       </span>
-    </span>
-    <span ng-if="group.perms.change">
-       <span
-         class="fa-stack"
-         refinery-tooltip
-         refinery-tooltip-container="body"
-         refinery-tooltip-placement="right"
-         title="Modify permissions: group members can view and edit the data
-         set and download the meta data.">
-        <i class="fa fa-pencil fa-stack-1x fa-stack-right-corner"></i>
-        <i class="fa fa-file-text-o fa-stack-1-25x"></i>
-       </span>
-    </span>
-  </div>
+    <div ng-repeat="group in ASCtrl.groupList track by $index">
+      <a href="/groups/{{group.group_uuid}}">{{ group.group_name }}</a>&nbsp;
+      <span ng-if="group.perms.read_meta && !group.perms.read && !group.perms.change">
+         <span
+           class="fa-stack"
+           refinery-tooltip
+           refinery-tooltip-container="body"
+           refinery-tooltip-placement="right"
+           title="Read-meta-only: group members can only view
+           the data set's meta data.">
+          <i class="fa fa-eye fa-stack-1x fa-stack-right-corner"></i>
+          <i class="fa fa-file-o fa-stack-1-25x"></i>
+         </span>
+      </span>
+      <span ng-if="group.perms.read && !group.perms.change">
+         <span
+           class="fa-stack"
+           refinery-tooltip
+           refinery-tooltip-container="body"
+           refinery-tooltip-placement="right"
+           title="Read: group members can view the data set.">
+          <i class="fa fa-eye fa-stack-1x fa-stack-right-corner"></i>
+          <i class="fa fa-file-text-o fa-stack-1-25x"></i>
+         </span>
+      </span>
+      <span ng-if="group.perms.change">
+         <span
+           class="fa-stack"
+           refinery-tooltip
+           refinery-tooltip-container="body"
+           refinery-tooltip-placement="right"
+           title="Modify: group members can view and edit the data set.">
+          <i class="fa fa-pencil fa-stack-1x fa-stack-right-corner"></i>
+          <i class="fa fa-file-text-o fa-stack-1-25x"></i>
+         </span>
+      </span>
+    </div>
   </p>
 </div>
 
