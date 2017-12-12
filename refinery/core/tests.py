@@ -164,7 +164,7 @@ class AnalysisResourceTest(LoginResourceTestCase):
             workflow_copy=workflow_as_repr
         )
         analysis.set_owner(self.user)
-        analysis_uri = make_api_uri(Analysis._meta.module_name, analysis.uuid)
+        analysis_uri = make_api_uri(Analysis._meta.model_name, analysis.uuid)
         response = self.api_client.get(
             analysis_uri,
             format='json'
@@ -197,9 +197,7 @@ class AnalysisResourceTest(LoginResourceTestCase):
             workflow=self.workflow
         )
         assign_perm(
-            'read_%s' % Analysis._meta.module_name,
-            self.user,
-            analysis1
+            'read_%s' % Analysis._meta.model_name, self.user, analysis1
         )
         analysis2 = Analysis.objects.create(
             name='a2',
@@ -209,15 +207,10 @@ class AnalysisResourceTest(LoginResourceTestCase):
             workflow=self.workflow
         )
         assign_perm(
-            'read_%s' % Analysis._meta.module_name,
-            self.user,
-            analysis2
+            'read_%s' % Analysis._meta.model_name, self.user, analysis2
         )
-        analysis_uri = make_api_uri(Analysis._meta.module_name)
-        response = self.api_client.get(
-            analysis_uri,
-            format='json'
-        )
+        analysis_uri = make_api_uri(Analysis._meta.model_name)
+        response = self.api_client.get(analysis_uri, format='json')
         self.assertValidJSONResponse(response)
         data = self.deserialize(response)['objects']
         self.assertEqual(len(data), 2)
@@ -234,7 +227,7 @@ class AnalysisResourceTest(LoginResourceTestCase):
             workflow=self.workflow
         )
         analysis.set_owner(self.user)
-        analysis_uri = make_api_uri(Analysis._meta.module_name, analysis.uuid)
+        analysis_uri = make_api_uri(Analysis._meta.model_name, analysis.uuid)
         response = self.api_client.get(analysis_uri, format='json')
         self.assertHttpNotFound(response)
 
@@ -250,11 +243,8 @@ class AnalysisResourceTest(LoginResourceTestCase):
             workflow=self.workflow
         )
         analysis.set_owner(self.user2)
-        analysis_uri = make_api_uri(Analysis._meta.module_name, analysis.uuid)
-        response = self.api_client.get(
-            analysis_uri,
-            format='json'
-        )
+        analysis_uri = make_api_uri(Analysis._meta.model_name, analysis.uuid)
+        response = self.api_client.get(analysis_uri, format='json')
         self.assertHttpNotFound(response)
 
     def test_get_analysis_with_invalid_uuid(self):
@@ -264,9 +254,9 @@ class AnalysisResourceTest(LoginResourceTestCase):
                                            data_set=self.dataset,
                                            workflow=self.workflow)
         assign_perm(
-            "read_%s" % Analysis._meta.module_name, self.user, analysis
+            "read_%s" % Analysis._meta.model_name, self.user, analysis
         )
-        analysis_uri = make_api_uri(Analysis._meta.module_name, 'Invalid UUID')
+        analysis_uri = make_api_uri(Analysis._meta.model_name, 'Invalid UUID')
         response = self.api_client.get(analysis_uri, format='json',
                                        authentication=self.get_credentials())
         self.assertHttpNotFound(response)
@@ -290,10 +280,9 @@ class AnalysisResourceTest(LoginResourceTestCase):
             workflow=self.workflow
         )
         analysis2.set_owner(self.user)
-        analysis_uri = make_api_uri(Analysis._meta.module_name)
+        analysis_uri = make_api_uri(Analysis._meta.model_name)
         response = self.api_client.get(
-            analysis_uri,
-            format='json',
+            analysis_uri, format='json',
             data={'data_set__uuid': self.dataset.uuid}
         )
         self.assertValidJSONResponse(response)
@@ -321,7 +310,7 @@ class AnalysisResourceTest(LoginResourceTestCase):
             workflow=self.workflow
         )
         analysis2.set_owner(self.user)
-        analysis_uri = make_api_uri(Analysis._meta.module_name)
+        analysis_uri = make_api_uri(Analysis._meta.model_name)
         response = self.api_client.get(
             analysis_uri,
             format='json',
@@ -334,7 +323,7 @@ class AnalysisResourceTest(LoginResourceTestCase):
 
     def test_get_empty_analysis_list(self):
         """Test retrieving a list of Analysis instances when none exist"""
-        analysis_uri = make_api_uri(Analysis._meta.module_name)
+        analysis_uri = make_api_uri(Analysis._meta.model_name)
         response = self.api_client.get(analysis_uri, format='json',
                                        authentication=self.get_credentials())
         self.assertValidJSONResponse(response)
@@ -348,12 +337,10 @@ class AnalysisResourceTest(LoginResourceTestCase):
                                            workflow=self.workflow)
         self.assertEqual(Analysis.objects.count(), 1)
         assign_perm(
-            "delete_%s" % Analysis._meta.module_name,
-            self.user,
-            analysis
+            "delete_%s" % Analysis._meta.model_name, self.user, analysis
         )
 
-        analysis_uri = make_api_uri(Analysis._meta.module_name, analysis.uuid)
+        analysis_uri = make_api_uri(Analysis._meta.model_name, analysis.uuid)
         response = self.api_client.delete(
             analysis_uri, format='json', authentication=self.get_credentials()
         )
@@ -367,11 +354,9 @@ class AnalysisResourceTest(LoginResourceTestCase):
                                            workflow=self.workflow)
         self.assertEqual(Analysis.objects.count(), 1)
         assign_perm(
-            "delete_%s" % Analysis._meta.module_name,
-            self.user,
-            analysis
+            "delete_%s" % Analysis._meta.model_name, self.user, analysis
         )
-        analysis_uri = make_api_uri(Analysis._meta.module_name, analysis.uuid)
+        analysis_uri = make_api_uri(Analysis._meta.model_name, analysis.uuid)
         response = self.api_client.delete(analysis_uri, format='json')
         self.assertHttpMethodNotAllowed(response)
         self.assertEqual(Analysis.objects.count(), 1)
