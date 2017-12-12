@@ -177,6 +177,9 @@ class ToolManagerMocks(TestCase):
             WorkflowTool, "_has_dataset_collection_input", return_value=False
         )
 
+    def tearDown(self):
+        mock.patch.stopall()
+
 
 class ToolManagerTestBase(ToolManagerMocks):
     # Some members in assertions are truncated if they are too long, but we
