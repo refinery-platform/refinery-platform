@@ -54,8 +54,10 @@ from core.models import (INPUT_CONNECTION, OUTPUT_CONNECTION, Analysis,
 from data_set_manager.models import Assay, Attribute, Node
 from data_set_manager.utils import _create_solr_params_from_node_uuids
 from factory_boy.django_model_factories import (AnnotatedNodeFactory,
-                                                AttributeFactory, NodeFactory,
-                                                ParameterFactory, ToolFactory)
+                                                AttributeFactory,
+                                                GalaxyInstanceFactory,
+                                                NodeFactory, ParameterFactory,
+                                                ToolFactory)
 from factory_boy.utils import create_dataset_with_necessary_models
 from file_store.models import FileStoreItem, FileType
 from galaxy_connector.models import Instance
@@ -186,9 +188,7 @@ class ToolManagerTestBase(ToolManagerMocks):
         super(ToolManagerTestBase, self).setUp()
 
         self.public_group = ExtendedGroup.objects.public_group()
-        self.galaxy_instance = Instance.objects.create(
-            base_url="http://www.example.com/galaxy"
-        )
+        self.galaxy_instance = GalaxyInstanceFactory()
         self.workflow_engine = WorkflowEngine.objects.create(
             instance=self.galaxy_instance
         )
@@ -270,6 +270,7 @@ class ToolManagerTestBase(ToolManagerMocks):
     def tearDown(self):
         # Trigger the pre_delete signal so that datafiles are purged
         FileStoreItem.objects.all().delete()
+        super(ToolManagerTestBase, self).tearDown()
 
     def create_solr_mock_response(self, tool):
         return json.dumps(
