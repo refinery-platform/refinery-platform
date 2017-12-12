@@ -60,7 +60,6 @@ from factory_boy.django_model_factories import (AnnotatedNodeFactory,
                                                 ToolFactory)
 from factory_boy.utils import create_dataset_with_necessary_models
 from file_store.models import FileStoreItem, FileType
-from galaxy_connector.models import Instance
 from selenium_testing.utils import (MAX_WAIT, SeleniumTestBaseGeneric,
                                     wait_until_class_visible)
 from tool_manager.management.commands.load_tools import \
