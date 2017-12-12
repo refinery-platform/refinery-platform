@@ -321,9 +321,20 @@ class SharableResourceAPIInterface(object):
                 return HttpUnauthorized()
             kwargs['sharing'] = True
             mod_res = self.transform_res_list(user, [res], request, **kwargs)
+
+            if request.user.has_perm('core.change_dataset', res):
+                user_perms = 'change'
+            elif request.user.has_perm('core.read_dataset', res):
+                user_perms = 'read'
+            elif request.user.has_perm('core.read_meta_dataset', res):
+                user_perms = 'read_meta'
+            else:
+                user_perms = 'none'
+
             perm_obj = {
                 'owner': mod_res[0].owner,
-                'share_list': mod_res[0].share_list
+                'share_list': mod_res[0].share_list,
+                'user_perms': user_perms
             }
             return self.build_response(request, perm_obj, **kwargs)
         elif request.method == 'PUT':
