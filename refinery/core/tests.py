@@ -22,7 +22,6 @@ from data_set_manager.models import Assay, Contact, Investigation, Node, Study
 from factory_boy.django_model_factories import GalaxyInstanceFactory
 from factory_boy.utils import create_dataset_with_necessary_models
 from file_store.models import FileStoreItem, FileType
-from galaxy_connector.models import Instance
 
 from .api import AnalysisResource
 from .management.commands.create_user import init_user
@@ -139,7 +138,7 @@ class AnalysisResourceTest(LoginResourceTestCase):
         ).catch_all_project
         self.dataset = create_dataset_with_necessary_models()
         self.dataset2 = create_dataset_with_necessary_models()
-        self.galaxy_instance = Instance.objects.create()
+        self.galaxy_instance = GalaxyInstanceFactory()
         self.workflow_engine = WorkflowEngine.objects.create(
             instance=self.galaxy_instance
         )
@@ -574,7 +573,7 @@ class WorkflowDeletionTest(TestCase):
             self.username, '', self.password
         )
         self.project = Project.objects.create()
-        self.galaxy_instance = Instance.objects.create()
+        self.galaxy_instance = GalaxyInstanceFactory()
         self.workflow_engine = WorkflowEngine.objects.create(
             instance=self.galaxy_instance
         )
@@ -622,7 +621,7 @@ class DataSetDeletionTest(TestCase):
             self.username, '', self.password
         )
         self.project = Project.objects.create()
-        self.galaxy_instance = Instance.objects.create()
+        self.galaxy_instance = GalaxyInstanceFactory()
         self.isa_archive_file = FileStoreItem.objects.create(
             datafile=SimpleUploadedFile(
                 'test_file.zip',
@@ -1280,7 +1279,7 @@ class DataSetResourceTest(LoginResourceTestCase):
         ).catch_all_project
         self.dataset = DataSet.objects.create(name="Dataset 1")
         self.dataset2 = DataSet.objects.create(name="Dataset 2")
-        self.galaxy_instance = Instance.objects.create()
+        self.galaxy_instance = GalaxyInstanceFactory()
         self.workflow_engine = WorkflowEngine.objects.create(
             instance=self.galaxy_instance
         )
@@ -1422,7 +1421,7 @@ class DataSetTests(TestCase):
         ).catch_all_project
         self.dataset = DataSet.objects.create()
         self.dataset2 = DataSet.objects.create()
-        self.galaxy_instance = Instance.objects.create()
+        self.galaxy_instance = GalaxyInstanceFactory()
         self.workflow_engine = WorkflowEngine.objects.create(
             instance=self.galaxy_instance
         )
