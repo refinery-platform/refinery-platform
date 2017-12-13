@@ -96,9 +96,11 @@
         });
     }
     vm.$onInit = function () {
-      permissionService.getPermissions(vm.resolve.config.uuid).then(function () {
-        vm.permissions = permissionService.permissions;
-      });
+      if (!_.isEmpty(vm.resolve) && vm.resolve.config.uuid) {
+        permissionService.getPermissions(vm.resolve.config.uuid).then(function () {
+          vm.permissions = permissionService.permissions;
+        });
+      }
     };
   }
 })();

@@ -17,7 +17,7 @@
     ) {
       $templateCache.put(
         $window.getStaticUrl('partials/analysis-monitor/partials/global-status.html'),
-        '<div id="global-status"></div>'
+        '<div id="global-status""></div>'
       );
 
       // Mock api call due to ctrl $init method

@@ -9,6 +9,7 @@
 
     beforeEach(inject(function (
       $compile,
+      $httpBackend,
       $rootScope,
       $templateCache,
       $window
@@ -17,6 +18,10 @@
         $window.getStaticUrl('partials/file-browser/partials/user-perms-icon.html'),
         '<div id="user-perms-icon"></div>'
       );
+      $httpBackend
+        .whenGET('/api/v1/data_sets/' + $window.dataSetUuid + '/sharing/?format=json')
+        .respond(200);
+
       var scope = $rootScope.$new();
       var template = '<rp-user-perms-icon></rp-user-perms-icon>';
       directiveElement = $compile(template)(scope);

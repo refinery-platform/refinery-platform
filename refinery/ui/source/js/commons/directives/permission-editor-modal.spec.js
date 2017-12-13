@@ -5,12 +5,16 @@
     beforeEach(module('refineryApp'));
 
     var directiveElement;
+    var vm = this;
+    vm.resolve = {
+      config: true
+    };
 
     beforeEach(inject(function (
       $compile,
-      $controller,
       $rootScope,
       $templateCache,
+      $uibModal,
       $window
     ) {
       $templateCache.put(
