@@ -3,6 +3,10 @@
 ## [v1.6.1.1](https://github.com/refinery-platform/refinery-platform/tree/v1.6.1.1) (2017-12-13)
 [Full Changelog](https://github.com/refinery-platform/refinery-platform/compare/v1.6.1...v1.6.1.1)
 
+**Merged pull requests:**
+
+- Hotfix 1.6.1.1 [\#2428](https://github.com/refinery-platform/refinery-platform/pull/2428) ([scottx611x](https://github.com/scottx611x))
+
 ## [v1.6.1](https://github.com/refinery-platform/refinery-platform/tree/v1.6.1) (2017-11-07)
 [Full Changelog](https://github.com/refinery-platform/refinery-platform/compare/v1.6.0...v1.6.1)
 
