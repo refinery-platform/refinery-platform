@@ -31,23 +31,23 @@
     // Used as a shorthand to avoid complicated permission checking in `ngRepeat`
     vm.permissionLevel = {
       none: {
-        read: false,
         read_meta: false,
+        read: false,
         change: false
       },
       read_meta: {
-        read: false,
         read_meta: true,
+        read: false,
         change: false
       },
       read: {
-        read: true,
         read_meta: true,
+        read: true,
         change: false
       },
       edit: {
-        read: true,
         read_meta: true,
+        read: true,
         change: true
       }
     };
