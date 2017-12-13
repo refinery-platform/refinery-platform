@@ -373,3 +373,14 @@ ul.plain {
 .fa-stack-0-8x {
   font-size: .8em;
 }
+
+// Resolves space issue for the share and config buttons
+@media screen and (min-width: 1700px) {
+  #share-button-text:after {
+    content: 'Share';
+  }
+
+  #config-button-text:after {
+    content: 'Config';
+  }
+}
