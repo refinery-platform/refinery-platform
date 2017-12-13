@@ -1922,26 +1922,6 @@ class IsaTabParserTests(IsaTabTestBase):
         assays = studies[0].assay_set.all()
         self.assertEqual(len(assays), 2)
 
-    def test_metabolights_isatab_wont_import_with_rollback_a(self):
-        with self.assertRaises(RuntimeError) as context:
-            parse_isatab(self.user.username, False,
-                         "data_set_manager/test-data/MTBLS1.zip")
-        self.failed_isatab_assertions()
-        self.assertIn(
-            "Exponential explosion",
-            context.exception.message
-        )
-
-    def test_metabolights_isatab_wont_import_with_rollback_b(self):
-        with self.assertRaises(RuntimeError) as context:
-            parse_isatab(self.user.username, False,
-                         "data_set_manager/test-data/MTBLS112.zip")
-        self.failed_isatab_assertions()
-        self.assertIn(
-            "Exponential explosion",
-            context.exception.message
-        )
-
     def test_bad_isatab_rollback_from_parser_exception_a(self):
         with self.assertRaises(IOError):
             parse_isatab(self.user.username, False,
