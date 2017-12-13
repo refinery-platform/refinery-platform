@@ -183,6 +183,9 @@ def make_template(config, config_yaml):
     # Used to choose an AMI given a Region, and a host OS.
     cft.mappings.ami = core.Mapping(
         'Image',
+        # Selected using https://cloud-images.ubuntu.com/locator/ec2/
+        # amd64 hvm:ebs Release 20171115.1
+        # Ubuntu 14.04.5 LTS (confirmed by logging in!)
         {'us-east-1': {'ubuntu1404':  'ami-8d9e1cf7'}})
 
     cft.resources.ec2_instance = core.Resource(
