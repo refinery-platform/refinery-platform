@@ -29,6 +29,7 @@
             <tr>
               <th>Group</th>
               <th>None</th>
+              <th>Read-meta-only</th>
               <th>Read-only</th>
               <th>Modify</th>
             </tr>
@@ -44,6 +45,12 @@
                 <input
                   type="radio"
                   value="none"
+                  ng-model="group.permission">
+              </td>
+              <td>
+                <input
+                  type="radio"
+                  value="read_meta"
                   ng-model="group.permission">
               </td>
               <td>

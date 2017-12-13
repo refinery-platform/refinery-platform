@@ -1005,5 +1005,11 @@ def get_resources_for_user(user, resource_type):
     return get_objects_for_user(
         user if user.is_authenticated()
         else get_anonymous_user(),
-        'core.read_%s' % resource_type
+        which_default_read_perm(resource_type)
     )
+
+
+def which_default_read_perm(resource_type):
+    if resource_type == 'dataset':
+        return 'core.read_meta_dataset'
+    return 'core.read_%s' % resource_type

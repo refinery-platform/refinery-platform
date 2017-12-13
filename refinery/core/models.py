@@ -312,6 +312,8 @@ class OwnableResource(BaseResource):
         assign_perm("read_%s" % self._meta.verbose_name, user, self)
         assign_perm("delete_%s" % self._meta.verbose_name, user, self)
         assign_perm("change_%s" % self._meta.verbose_name, user, self)
+        if self._meta.verbose_name == 'dataset':
+            assign_perm("read_meta_%s" % self._meta.verbose_name, user, self)
 
     def get_owner(self):
         # ownership is determined by "add" permission
@@ -381,7 +383,7 @@ class SharableResource(OwnableResource):
         remove_perm('share_%s' % self._meta.verbose_name, group, self)
 
     # TODO: clean this up
-    def get_groups(self, changeonly=False, readonly=False):
+    def get_groups(self, changeonly=False, readonly=False, readmetaonly=False):
         permissions = get_groups_with_perms(self, attach_perms=True)
 
         groups = []
@@ -393,11 +395,17 @@ class SharableResource(OwnableResource):
             group["id"] = group["group"].id
             group["change"] = False
             group["read"] = False
+            if self._meta.verbose_name == 'dataset':
+                group["read_meta"] = False
+
             for permission in permission_list:
                 if permission.startswith("change"):
                     group["change"] = True
-                if permission.startswith("read"):
+                elif permission.startswith("read_meta"):
+                    group["read_meta"] = True
+                elif permission.startswith("read"):
                     group["read"] = True
+
             if group["change"] and readonly:
                 continue
             if group["read"] and changeonly:
@@ -425,9 +433,8 @@ class SharableResource(OwnableResource):
                 for permission in permission_list:
                     if permission.startswith("change"):
                         return True
-                    if permission.startswith("read"):
+                    if permission.startswith("read"):  # read_meta & read
                         return True
-
         return False
 
     class Meta:
@@ -512,6 +519,7 @@ class DataSet(SharableResource):
         verbose_name = "dataset"
         permissions = (
             ('read_%s' % verbose_name, 'Can read %s' % verbose_name),
+            ('read_meta_%s' % verbose_name, 'Can read meta %s' % verbose_name),
             ('share_%s' % verbose_name, 'Can share %s' % verbose_name),
         )
 
@@ -762,8 +770,18 @@ class DataSet(SharableResource):
                 AttributeError) as e:
             logger.debug("Couldn't fetch FileStoreItem: %s", e)
 
-    def share(self, group, readonly=True):
+    def share(self, group, readonly=True, readmetaonly=False):
+        # change: !readonly & !readmetaonly, read: readonly & !readmetaonly
         super(DataSet, self).share(group, readonly)
+        assign_perm('read_meta_%s' % self._meta.verbose_name, group, self)
+
+        # read_meta only case; super reads as edit and is fixed here because
+        # it only applies to data set
+        if not readonly and readmetaonly:
+            remove_perm('read_%s' % self._meta.verbose_name, group, self)
+            remove_perm('add_%s' % self._meta.verbose_name, group, self)
+            remove_perm('change_%s' % self._meta.verbose_name, group, self)
+
         update_data_set_index(self)
         invalidate_cached_object(self)
         user_ids = map(lambda user: user.id, group.user_set.all())
@@ -779,13 +797,15 @@ class DataSet(SharableResource):
 
     def unshare(self, group):
         super(DataSet, self).unshare(group)
+        remove_perm('read_meta_%s' % self._meta.verbose_name, group, self)
+
         update_data_set_index(self)
         # Need to check if the users of the group that is unshared still have
         # access via other groups or by ownership
         users = group.user_set.all()
         user_ids = []
         for user in users:
-            if not user.has_perm('core.read_dataset', DataSet):
+            if not user.has_perm('core.read_meta_dataset', DataSet):
                 user_ids.append(user.id)
 
         # We need to give the anonymous user read access too.

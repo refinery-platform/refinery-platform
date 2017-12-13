@@ -16,18 +16,19 @@ from django.conf import settings
 from django.core.urlresolvers import reverse
 from django.http import (Http404, HttpResponse, HttpResponseBadRequest,
                          HttpResponseRedirect, HttpResponseServerError)
-from django.shortcuts import render, render_to_response
+from django.shortcuts import get_object_or_404, render, render_to_response
 from django.template import RequestContext
 from django.views.generic import View
 
 import boto3
 from chunked_upload.models import ChunkedUpload
 from chunked_upload.views import ChunkedUploadCompleteView, ChunkedUploadView
+from guardian.shortcuts import get_perms
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from core.models import DataSet, get_user_import_dir
+from core.models import DataSet, ExtendedGroup, get_user_import_dir
 from core.utils import get_full_url
 from data_set_manager.isa_tab_parser import ParserException
 from file_store.models import (generate_file_source_translator, get_temp_dir,
@@ -806,18 +807,45 @@ class AssaysFiles(APIView):
               description: Order node response with field name asc/desc
               type: string
               paramType: query
+            - name: data_set_uuid
+              description: data set uuid required to check for perms
+              type: string
+              paramType: query
     ...
     """
 
     def get(self, request, uuid, format=None):
 
         params = request.query_params
+        data_set_uuid = params.get('data_set_uuid', None)
+        # requires data_set_uuid to check perms
+        if data_set_uuid:
+            data_set = get_object_or_404(DataSet, uuid=data_set_uuid)
+            public_group = ExtendedGroup.objects.public_group()
 
-        solr_params = generate_solr_params_for_assay(params, uuid)
-        solr_response = search_solr(solr_params, 'data_set_manager')
-        solr_response_json = format_solr_response(solr_response)
+            if request.user.has_perm('core.read_dataset', data_set) or \
+                    'read_dataset' in get_perms(public_group, data_set):
+                solr_params = generate_solr_params_for_assay(params, uuid)
+            elif request.user.has_perm('core.read_meta_dataset', data_set) or \
+                    'read_meta_dataset' in get_perms(public_group, data_set):
+                solr_params = generate_solr_params_for_assay(
+                    params,
+                    uuid,
+                    ['REFINERY_DOWNLOAD_URL', 'REFINERY_NAME']
+                )
+            else:
+                message = 'User does not have read permissions.'
+                return Response(message, status=status.HTTP_401_UNAUTHORIZED)
 
-        return Response(solr_response_json)
+            solr_response = search_solr(solr_params, 'data_set_manager')
+            solr_response_json = format_solr_response(solr_response)
+
+            return Response(solr_response_json)
+        else:
+            return Response(
+                'Requires data set uuid.',
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
 
 class AssaysAttributes(APIView):
