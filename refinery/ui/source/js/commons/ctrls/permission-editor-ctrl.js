@@ -72,11 +72,9 @@
 
       this.isSaving = true;
 
-      for (var i = 0, len = vm.permissions.groups.length; i < len; i++) {
-        accessList.push(_.assign({
-          id: vm.permissions.groups[i].id
-        }, vm.permissionLevel[vm.permissions.groups[i].permission]));
-      }
+      _.forEach(vm.permissions.groups, function (group) {
+        accessList.push(_.assign({ id: group.id }, vm.permissionLevel[group.permission]));
+      });
 
       sharingService
         .update({
