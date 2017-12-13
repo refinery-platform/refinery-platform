@@ -229,6 +229,8 @@
       }
     }
 
+    /** view method to open the permissions modal component, in commons
+     *  directive*/
     function openPermissionEditor () {
       $uibModal.open({
         component: 'rpPermissionEditorModal',
