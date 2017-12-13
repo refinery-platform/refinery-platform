@@ -3,6 +3,7 @@
 function DataSetPreviewCtrl (
   $log,
   $q,
+  $scope,
   $window,
   _,
   $uibModal,
@@ -17,6 +18,7 @@ function DataSetPreviewCtrl (
   analysisService,
   dashboardDataSetPreviewService,
   dashboardExpandablePanelService,
+  dataSetPermsService,
   dataSetTakeOwnershipService,
   dashboardDataSetsReloadService,
   filesize,
@@ -39,6 +41,7 @@ function DataSetPreviewCtrl (
   this.analysisService = analysisService;
   this.dashboardDataSetPreviewService = dashboardDataSetPreviewService;
   this.dashboardExpandablePanelService = dashboardExpandablePanelService;
+  this.dataSetPermsService = dataSetPermsService;
   this.dataSetTakeOwnershipService = dataSetTakeOwnershipService;
   this.dashboardDataSetsReloadService = dashboardDataSetsReloadService;
   this.permissionService = permissionService;
@@ -60,6 +63,9 @@ function DataSetPreviewCtrl (
   this.descLength = this.settings.dashboard.preview.defaultLengthDescription;
 
   this.maxAnalyses = this.settings.dashboard.preview.maxAnalyses;
+
+  // used to check perms regarding the import into own space button
+  this.userPerms = 'none';
 }
 
 Object.defineProperty(
@@ -308,6 +314,7 @@ DataSetPreviewCtrl.prototype.loadCitation = function (
  * @param   {String}  dataSetUuid  UUID if data set to be previewed.
  */
 DataSetPreviewCtrl.prototype.loadData = function (dataSetUuid) {
+  var that = this;
   this.importDataSetStarted = false;
   this.loading = true;
   this.permissionsLoading = true;
@@ -318,6 +325,13 @@ DataSetPreviewCtrl.prototype.loadData = function (dataSetUuid) {
   var assays = this.getAssay(dataSetUuid);
   var analyses = this.getAnalysis(dataSetUuid);
   var permissions;
+
+  console.log(dataSetUuid);
+  if (dataSetUuid) {
+    this.dataSetPermsService.getDataSetSharing(dataSetUuid).then(function (response) {
+      that.userPerms = response.user_perms;
+    });
+  }
 
   permissions = this.user.isAuthenticated()
     .then(function (authenticated) {
@@ -422,6 +436,7 @@ angular
   .controller('DataSetPreviewCtrl', [
     '$log',
     '$q',
+    '$scope',
     '$window',
     '_',
     '$uibModal',
@@ -436,6 +451,7 @@ angular
     'analysisService',
     'dashboardDataSetPreviewService',
     'dashboardExpandablePanelService',
+    'dataSetPermsService',
     'dataSetTakeOwnershipService',
     'dashboardDataSetsReloadService',
     'filesize',

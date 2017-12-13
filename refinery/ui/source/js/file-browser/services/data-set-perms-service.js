@@ -5,10 +5,9 @@
     .module('refineryFileBrowser')
     .service('dataSetPermsService', dataSetPermsService);
 
-  dataSetPermsService.$inject = ['$window', 'sharingService'];
+  dataSetPermsService.$inject = ['sharingService'];
 
-  function dataSetPermsService ($window, sharingService) {
-    var dataSetUuid = $window.dataSetUuid;
+  function dataSetPermsService (sharingService) {
     var vm = this;
     vm.dataSetSharing = {};
     vm.groupList = [];
@@ -32,7 +31,7 @@
       return filteredGroupList;
     };
 
-    function getDataSetSharing () {
+    function getDataSetSharing (dataSetUuid) {
       var params = {
         uuid: dataSetUuid,
         model: 'data_sets'
