@@ -2024,6 +2024,7 @@ class IsaTabTestBase(TestCase):
         self.assertTrue(is_logged_in)
 
     def tearDown(self):
+        mock.patch.stopall()
         FileStoreItem.objects.all().delete()
 
 

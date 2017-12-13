@@ -1074,19 +1074,6 @@ class Project(SharableResource):
         )
 
 
-class WorkflowFilesDL(models.Model):
-    step_id = models.TextField()
-    pair_id = models.TextField()
-    filename = models.TextField()
-
-    def __unicode__(self):
-        return (
-            str(self.step_id) + " <-> " +
-            str(self.pair_id) + "<->" +
-            self.filename
-        )
-
-
 class WorkflowDataInputMap(models.Model):
     workflow_data_input_name = models.CharField(max_length=200)
     data_uuid = UUIDField(auto=False)
@@ -1155,7 +1142,6 @@ class Analysis(OwnableResource):
     workflow_galaxy_id = models.TextField(blank=True, null=True)
     library_id = models.TextField(blank=True, null=True)
     results = models.ManyToManyField(AnalysisResult, blank=True)
-    workflow_dl_files = models.ManyToManyField(WorkflowFilesDL, blank=True)
     time_start = models.DateTimeField(blank=True, null=True)
     time_end = models.DateTimeField(blank=True, null=True)
     status = models.TextField(default=INITIALIZED_STATUS,
@@ -1753,18 +1739,15 @@ class Analysis(OwnableResource):
         # AnalysisResults
         for output_connections in distinct_filenames_map.values():
             for index, output_connection in enumerate(output_connections):
-                analysis_result = AnalysisResult.objects.filter(
-                    analysis_uuid=self.uuid,
-                    file_name=output_connection.filename
-                )[index]
+                analysis_result = None
                 if output_connection.is_refinery_file:
-                    output_connections_to_analysis_results.append(
-                        (output_connection, analysis_result)
-                    )
-                else:
-                    output_connections_to_analysis_results.append(
-                        (output_connection, None)
-                    )
+                    analysis_result = AnalysisResult.objects.filter(
+                        analysis_uuid=self.uuid,
+                        file_name=output_connection.filename
+                    )[index]
+                output_connections_to_analysis_results.append(
+                    (output_connection, analysis_result)
+                )
         return output_connections_to_analysis_results
 
     def _create_derived_data_file_node(self, study,

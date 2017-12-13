@@ -19,9 +19,9 @@ from tastypie.test import ResourceTestCase
 
 from analysis_manager.models import AnalysisStatus
 from data_set_manager.models import Assay, Contact, Investigation, Node, Study
+from factory_boy.django_model_factories import GalaxyInstanceFactory
 from factory_boy.utils import create_dataset_with_necessary_models
 from file_store.models import FileStoreItem, FileType
-from galaxy_connector.models import Instance
 
 from .api import AnalysisResource
 from .management.commands.create_user import init_user
@@ -139,7 +139,7 @@ class AnalysisResourceTest(LoginResourceTestCase):
         ).catch_all_project
         self.dataset = create_dataset_with_necessary_models()
         self.dataset2 = create_dataset_with_necessary_models()
-        self.galaxy_instance = Instance.objects.create()
+        self.galaxy_instance = GalaxyInstanceFactory()
         self.workflow_engine = WorkflowEngine.objects.create(
             instance=self.galaxy_instance
         )
@@ -165,7 +165,7 @@ class AnalysisResourceTest(LoginResourceTestCase):
             workflow_copy=workflow_as_repr
         )
         analysis.set_owner(self.user)
-        analysis_uri = make_api_uri(Analysis._meta.module_name, analysis.uuid)
+        analysis_uri = make_api_uri(Analysis._meta.model_name, analysis.uuid)
         response = self.api_client.get(
             analysis_uri,
             format='json'
@@ -198,9 +198,7 @@ class AnalysisResourceTest(LoginResourceTestCase):
             workflow=self.workflow
         )
         assign_perm(
-            'read_%s' % Analysis._meta.module_name,
-            self.user,
-            analysis1
+            'read_%s' % Analysis._meta.model_name, self.user, analysis1
         )
         analysis2 = Analysis.objects.create(
             name='a2',
@@ -210,15 +208,10 @@ class AnalysisResourceTest(LoginResourceTestCase):
             workflow=self.workflow
         )
         assign_perm(
-            'read_%s' % Analysis._meta.module_name,
-            self.user,
-            analysis2
+            'read_%s' % Analysis._meta.model_name, self.user, analysis2
         )
-        analysis_uri = make_api_uri(Analysis._meta.module_name)
-        response = self.api_client.get(
-            analysis_uri,
-            format='json'
-        )
+        analysis_uri = make_api_uri(Analysis._meta.model_name)
+        response = self.api_client.get(analysis_uri, format='json')
         self.assertValidJSONResponse(response)
         data = self.deserialize(response)['objects']
         self.assertEqual(len(data), 2)
@@ -235,7 +228,7 @@ class AnalysisResourceTest(LoginResourceTestCase):
             workflow=self.workflow
         )
         analysis.set_owner(self.user)
-        analysis_uri = make_api_uri(Analysis._meta.module_name, analysis.uuid)
+        analysis_uri = make_api_uri(Analysis._meta.model_name, analysis.uuid)
         response = self.api_client.get(analysis_uri, format='json')
         self.assertHttpNotFound(response)
 
@@ -251,11 +244,8 @@ class AnalysisResourceTest(LoginResourceTestCase):
             workflow=self.workflow
         )
         analysis.set_owner(self.user2)
-        analysis_uri = make_api_uri(Analysis._meta.module_name, analysis.uuid)
-        response = self.api_client.get(
-            analysis_uri,
-            format='json'
-        )
+        analysis_uri = make_api_uri(Analysis._meta.model_name, analysis.uuid)
+        response = self.api_client.get(analysis_uri, format='json')
         self.assertHttpNotFound(response)
 
     def test_get_analysis_with_invalid_uuid(self):
@@ -265,9 +255,9 @@ class AnalysisResourceTest(LoginResourceTestCase):
                                            data_set=self.dataset,
                                            workflow=self.workflow)
         assign_perm(
-            "read_%s" % Analysis._meta.module_name, self.user, analysis
+            "read_%s" % Analysis._meta.model_name, self.user, analysis
         )
-        analysis_uri = make_api_uri(Analysis._meta.module_name, 'Invalid UUID')
+        analysis_uri = make_api_uri(Analysis._meta.model_name, 'Invalid UUID')
         response = self.api_client.get(analysis_uri, format='json',
                                        authentication=self.get_credentials())
         self.assertHttpNotFound(response)
@@ -291,10 +281,9 @@ class AnalysisResourceTest(LoginResourceTestCase):
             workflow=self.workflow
         )
         analysis2.set_owner(self.user)
-        analysis_uri = make_api_uri(Analysis._meta.module_name)
+        analysis_uri = make_api_uri(Analysis._meta.model_name)
         response = self.api_client.get(
-            analysis_uri,
-            format='json',
+            analysis_uri, format='json',
             data={'data_set__uuid': self.dataset.uuid}
         )
         self.assertValidJSONResponse(response)
@@ -322,7 +311,7 @@ class AnalysisResourceTest(LoginResourceTestCase):
             workflow=self.workflow
         )
         analysis2.set_owner(self.user)
-        analysis_uri = make_api_uri(Analysis._meta.module_name)
+        analysis_uri = make_api_uri(Analysis._meta.model_name)
         response = self.api_client.get(
             analysis_uri,
             format='json',
@@ -335,7 +324,7 @@ class AnalysisResourceTest(LoginResourceTestCase):
 
     def test_get_empty_analysis_list(self):
         """Test retrieving a list of Analysis instances when none exist"""
-        analysis_uri = make_api_uri(Analysis._meta.module_name)
+        analysis_uri = make_api_uri(Analysis._meta.model_name)
         response = self.api_client.get(analysis_uri, format='json',
                                        authentication=self.get_credentials())
         self.assertValidJSONResponse(response)
@@ -349,12 +338,10 @@ class AnalysisResourceTest(LoginResourceTestCase):
                                            workflow=self.workflow)
         self.assertEqual(Analysis.objects.count(), 1)
         assign_perm(
-            "delete_%s" % Analysis._meta.module_name,
-            self.user,
-            analysis
+            "delete_%s" % Analysis._meta.model_name, self.user, analysis
         )
 
-        analysis_uri = make_api_uri(Analysis._meta.module_name, analysis.uuid)
+        analysis_uri = make_api_uri(Analysis._meta.model_name, analysis.uuid)
         response = self.api_client.delete(
             analysis_uri, format='json', authentication=self.get_credentials()
         )
@@ -368,11 +355,9 @@ class AnalysisResourceTest(LoginResourceTestCase):
                                            workflow=self.workflow)
         self.assertEqual(Analysis.objects.count(), 1)
         assign_perm(
-            "delete_%s" % Analysis._meta.module_name,
-            self.user,
-            analysis
+            "delete_%s" % Analysis._meta.model_name, self.user, analysis
         )
-        analysis_uri = make_api_uri(Analysis._meta.module_name, analysis.uuid)
+        analysis_uri = make_api_uri(Analysis._meta.model_name, analysis.uuid)
         response = self.api_client.delete(analysis_uri, format='json')
         self.assertHttpMethodNotAllowed(response)
         self.assertEqual(Analysis.objects.count(), 1)
@@ -574,7 +559,7 @@ class WorkflowDeletionTest(TestCase):
             self.username, '', self.password
         )
         self.project = Project.objects.create()
-        self.galaxy_instance = Instance.objects.create()
+        self.galaxy_instance = GalaxyInstanceFactory()
         self.workflow_engine = WorkflowEngine.objects.create(
             instance=self.galaxy_instance
         )
@@ -622,7 +607,7 @@ class DataSetDeletionTest(TestCase):
             self.username, '', self.password
         )
         self.project = Project.objects.create()
-        self.galaxy_instance = Instance.objects.create()
+        self.galaxy_instance = GalaxyInstanceFactory()
         self.isa_archive_file = FileStoreItem.objects.create(
             datafile=SimpleUploadedFile(
                 'test_file.zip',
@@ -703,7 +688,7 @@ class AnalysisTests(TestCase):
         self.project1 = Project.objects.create()
 
         # Create a galaxy Instance
-        self.galaxy_instance = Instance.objects.create()
+        self.galaxy_instance = GalaxyInstanceFactory()
 
         # Create a WorkflowEngine
         self.workflow_engine = WorkflowEngine.objects.create(
@@ -940,7 +925,7 @@ class AnalysisTests(TestCase):
             ]
         )
 
-    def test___get_output_connection_to_analysis_result_mapping(self):
+    def create_analysis_results(self, include_faulty_result=False):
         common_params = {
             "analysis_uuid": self.analysis.uuid,
             "file_store_uuid": self.node.file_uuid,
@@ -948,12 +933,27 @@ class AnalysisTests(TestCase):
             "file_type": self.node.get_file_store_item().filetype
         }
         analysis_result_0 = AnalysisResult.objects.create(**common_params)
-        AnalysisResult.objects.create(**common_params)
+
+        if include_faulty_result:
+            # This analysis result has a filename that doesn't correspond to
+            #  any specified AnalysisNodeConnection Output filenames
+            AnalysisResult.objects.create(
+                **dict(common_params, file_name="Bad Filename")
+            )
+        else:
+            AnalysisResult.objects.create(**common_params)
+
         analysis_result_1 = AnalysisResult.objects.create(**common_params)
+
+        return analysis_result_0, analysis_result_1
+
+    def test___get_output_connection_to_analysis_result_mapping(self):
+        analysis_result_0, analysis_result_1 = self.create_analysis_results()
 
         output_mapping = (
             self.analysis._get_output_connection_to_analysis_result_mapping()
         )
+
         self.assertEqual(
             output_mapping,
             [
@@ -962,6 +962,14 @@ class AnalysisTests(TestCase):
                 (self.analysis_node_connection_a, analysis_result_1)
             ]
         )
+
+    def test___get_output_connection_to_analysis_result_mapping_failure_state(
+        self
+    ):
+        self.create_analysis_results(include_faulty_result=True)
+
+        with self.assertRaises(IndexError):
+            self.analysis._get_output_connection_to_analysis_result_mapping()
 
     def test_analysis_node_connection_input_id(self):
         self.assertEqual(
@@ -1265,7 +1273,7 @@ class DataSetResourceTest(LoginResourceTestCase):
         ).catch_all_project
         self.dataset = DataSet.objects.create(name="Dataset 1")
         self.dataset2 = DataSet.objects.create(name="Dataset 2")
-        self.galaxy_instance = Instance.objects.create()
+        self.galaxy_instance = GalaxyInstanceFactory()
         self.workflow_engine = WorkflowEngine.objects.create(
             instance=self.galaxy_instance
         )
@@ -1407,7 +1415,7 @@ class DataSetTests(TestCase):
         ).catch_all_project
         self.dataset = DataSet.objects.create()
         self.dataset2 = DataSet.objects.create()
-        self.galaxy_instance = Instance.objects.create()
+        self.galaxy_instance = GalaxyInstanceFactory()
         self.workflow_engine = WorkflowEngine.objects.create(
             instance=self.galaxy_instance
         )
@@ -1868,7 +1876,7 @@ class AnalysisApiV2Tests(APITestCase):
                                              self.password)
         self.project = Project.objects.create()
 
-        self.galaxy_instance = Instance.objects.create()
+        self.galaxy_instance = GalaxyInstanceFactory()
         self.workflow_engine = WorkflowEngine.objects.create(
             instance=self.galaxy_instance
         )
