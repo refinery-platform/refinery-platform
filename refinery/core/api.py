@@ -1022,7 +1022,7 @@ class AnalysisResource(ModelResource):
         workflow_dict = None
         try:
             workflow_dict = ast.literal_eval(bundle.data['workflow_copy'])
-        except ValueError, exc:
+        except ValueError as exc:
             # TODO: Remove this and just let any errors bubble up.
             # I don't think I should do that at this moment because
             # I shouldn't make production any fussier about values
@@ -1040,13 +1040,12 @@ class AnalysisResource(ModelResource):
     def get_object_list(self, request, **kwargs):
         user = request.user
         perm = 'read_%s' % DataSet._meta.model_name
-        if (user.is_authenticated()):
+        if user.is_authenticated():
             allowed_datasets = get_objects_for_user(user, perm, DataSet)
         else:
             allowed_datasets = get_objects_for_group(
                 ExtendedGroup.objects.public_group(), perm, DataSet
             )
-
         return Analysis.objects.filter(
             data_set__in=allowed_datasets.values_list("id", flat=True)
         )
