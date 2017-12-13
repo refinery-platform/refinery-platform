@@ -95,5 +95,10 @@
           that.isSaving = false;
         });
     }
+    vm.$onInit = function () {
+      permissionService.getPermissions(vm.resolve.config.uuid).then(function () {
+        vm.permissions = permissionService.permissions;
+      });
+    };
   }
 })();
