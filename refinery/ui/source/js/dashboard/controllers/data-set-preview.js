@@ -13,7 +13,6 @@ function DataSetPreviewCtrl (
   studyService,
   dataSetAssayService,
   dataSetService,
-  sharingService,
   citationService,
   analysisService,
   dashboardDataSetPreviewService,
@@ -36,7 +35,6 @@ function DataSetPreviewCtrl (
   this.studyService = studyService;
   this.assayService = dataSetAssayService;
   this.dataSetService = dataSetService;
-  this.sharingService = sharingService;
   this.citationService = citationService;
   this.analysisService = analysisService;
   this.dashboardDataSetPreviewService = dashboardDataSetPreviewService;
@@ -434,7 +432,6 @@ angular
     'studyService',
     'dataSetAssayService',
     'dataSetService',
-    'sharingService',
     'citationService',
     'analysisService',
     'dashboardDataSetPreviewService',
