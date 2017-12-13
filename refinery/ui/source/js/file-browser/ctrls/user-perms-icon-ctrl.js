@@ -38,7 +38,7 @@
         vm.userPerms = response.user_perms;
       });
 
-      $scope.$watchCollection(
+      $scope.$watch(
         function () {
           return permsService.userPerms;
         },
