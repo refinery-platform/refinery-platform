@@ -386,7 +386,9 @@
   </span>
 </div>
 
-<span class="refinery-subheader">
+<span
+  class="refinery-subheader"
+  ng-if="ADCtrl.userPerms === 'read' || ADCtrl.userPerms === 'change'">
   <h3>Meta Data</h3>
 </span>
 <div ng-if="ADCtrl.dataSet.isa_archive">
@@ -419,6 +421,8 @@
   </span>
 </p>
 
+<rp-data-set-about-sharing></rp-data-set-about-sharing>
+
 <div class="refinery-header">
   <span class="refinery-header-left">
     <h3>History</h3>
@@ -430,7 +434,7 @@
   Last modified <span class="emphasized">{{ ADCtrl.dataSet.modification_date | date:'medium' }}</span>.
 </p>
 <form id="isaTabImportForm" enctype="multipart/form-data" action="/data_set_manager/import/take_ownership/" method="post"
-      ng-if="ADCtrl.dataSet.isa_archive && ADCtrl.dataSet.public && !ADCtrl.dataSet.is_owner && ADCtrl.loggedIn">
+      ng-if="ADCtrl.userPerms === 'read' || ADCtrl.userPerms === 'change'">
     <!-- TODO: check if logged in: anonymous user can not import -->
     <input type="hidden" name="csrfmiddlewaretoken" value="{{ ADCtrl.csrfToken }}" />
     <input type="hidden" name="isa_tab_url" value="{{ ADCtrl.dataSet.isa_archive_url }}" />

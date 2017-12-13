@@ -321,9 +321,20 @@ class SharableResourceAPIInterface(object):
                 return HttpUnauthorized()
             kwargs['sharing'] = True
             mod_res = self.transform_res_list(user, [res], request, **kwargs)
+
+            if request.user.has_perm('core.change_dataset', res):
+                user_perms = 'change'
+            elif request.user.has_perm('core.read_dataset', res):
+                user_perms = 'read'
+            elif request.user.has_perm('core.read_meta_dataset', res):
+                user_perms = 'read_meta'
+            else:
+                user_perms = 'none'
+
             perm_obj = {
                 'owner': mod_res[0].owner,
-                'share_list': mod_res[0].share_list
+                'share_list': mod_res[0].share_list,
+                'user_perms': user_perms
             }
             return self.build_response(request, perm_obj, **kwargs)
         elif request.method == 'PUT':
@@ -1022,7 +1033,7 @@ class AnalysisResource(ModelResource):
         workflow_dict = None
         try:
             workflow_dict = ast.literal_eval(bundle.data['workflow_copy'])
-        except ValueError as exc:
+        except ValueError, exc:
             # TODO: Remove this and just let any errors bubble up.
             # I don't think I should do that at this moment because
             # I shouldn't make production any fussier about values
@@ -1040,12 +1051,13 @@ class AnalysisResource(ModelResource):
     def get_object_list(self, request, **kwargs):
         user = request.user
         perm = 'read_%s' % DataSet._meta.model_name
-        if user.is_authenticated():
+        if (user.is_authenticated()):
             allowed_datasets = get_objects_for_user(user, perm, DataSet)
         else:
             allowed_datasets = get_objects_for_group(
                 ExtendedGroup.objects.public_group(), perm, DataSet
             )
+
         return Analysis.objects.filter(
             data_set__in=allowed_datasets.values_list("id", flat=True)
         )

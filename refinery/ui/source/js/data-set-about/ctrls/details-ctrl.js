@@ -6,6 +6,7 @@ function AboutDetailsCtrl (
   $scope,
   $window,
   dataSetAboutFactory,
+  dataSetPermsService,
   fileRelationshipService
   ) {
   var vm = this;
@@ -24,6 +25,7 @@ function AboutDetailsCtrl (
     slug: true
   };
   vm.studies = dataSetAboutFactory.studies;
+  vm.userPerms = dataSetPermsService.userPerms;
 
   vm.cancel = function (fieldName) {
     vm.editedDataSet[fieldName] = '';
@@ -96,6 +98,15 @@ function AboutDetailsCtrl (
     });
   };
 
+  $scope.$watchCollection(
+    function () {
+      return dataSetPermsService.userPerms;
+    },
+    function () {
+      vm.userPerms = dataSetPermsService.userPerms;
+    }
+  );
+
   vm.refreshDataSetStats();
   vm.refreshStudies();
     // Close ui-grid popover when tabbing
@@ -111,6 +122,7 @@ angular
     '$scope',
     '$window',
     'dataSetAboutFactory',
+    'dataSetPermsService',
     'fileRelationshipService',
     AboutDetailsCtrl
   ]);

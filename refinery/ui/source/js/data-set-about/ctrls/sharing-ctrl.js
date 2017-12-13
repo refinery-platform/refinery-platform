@@ -1,7 +1,7 @@
 'use strict';
 
 function AboutSharingCtrl (
-  dataSetAboutFactory,
+  dataSetPermsService,
   userService,
   $scope,
   $location,
@@ -10,18 +10,18 @@ function AboutSharingCtrl (
   _
   ) {
   var vm = this;
-  vm.dataSetSharing = dataSetAboutFactory.dataSetSharing;
-  vm.groupList = dataSetAboutFactory.groupList;
+  vm.dataSetSharing = dataSetPermsService.dataSetSharing;
+  vm.groupList = dataSetPermsService.groupList;
   vm.ownerName = '';
 
   vm.refreshDataSetSharing = function () {
     var dataSetUuid = $window.dataSetUuid;
 
-    dataSetAboutFactory
+    dataSetPermsService
       .getDataSetSharing(dataSetUuid)
       .then(function () {
-        vm.dataSetSharing = dataSetAboutFactory.dataSetSharing;
-        vm.groupList = dataSetAboutFactory.groupList;
+        vm.dataSetSharing = dataSetPermsService.dataSetSharing;
+        vm.groupList = dataSetPermsService.groupList;
         vm.refreshOwnerName(vm.dataSetSharing.owner);
       }, function (error) {
         $log.error(error);
@@ -46,7 +46,7 @@ angular
   .module('refineryDataSetAbout')
   .controller('AboutSharingCtrl',
   [
-    'dataSetAboutFactory',
+    'dataSetPermsService',
     'userService',
     '$scope',
     '$location',
