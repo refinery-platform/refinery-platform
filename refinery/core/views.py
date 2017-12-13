@@ -297,8 +297,8 @@ def data_set(request, data_set_uuid, analysis_uuid=None):
     data_set = get_object_or_404(DataSet, uuid=data_set_uuid)
     public_group = ExtendedGroup.objects.public_group()
 
-    if not request.user.has_perm('core.read_dataset', data_set):
-        if 'read_dataset' not in get_perms(public_group, data_set):
+    if not request.user.has_perm('core.read_meta_dataset', data_set):
+        if 'read_meta_dataset' not in get_perms(public_group, data_set):
             if request.user.is_authenticated():
                 return HttpResponseForbidden(
                     custom_error_page(request, '403.html',
