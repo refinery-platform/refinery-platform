@@ -326,7 +326,6 @@ DataSetPreviewCtrl.prototype.loadData = function (dataSetUuid) {
   var analyses = this.getAnalysis(dataSetUuid);
   var permissions;
 
-  console.log(dataSetUuid);
   if (dataSetUuid) {
     this.dataSetPermsService.getDataSetSharing(dataSetUuid).then(function (response) {
       that.userPerms = response.user_perms;
