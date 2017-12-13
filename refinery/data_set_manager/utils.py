@@ -464,11 +464,10 @@ def update_annotated_nodes(
         # TODO: Not happy about this hack at all.
         error_message = (
             "Exponential explosion! Creation of {} annotated nodes for {} "
-            "nodes of type {} is stopped!"
+            "nodes of type {}"
         ).format(total_attrs, num_nodes_of_type, node_type)
 
         logger.error(error_message)
-        raise RuntimeError(error_message)
 
     for node_id, node in nodes.iteritems():
         if node["type"] == node_type:
