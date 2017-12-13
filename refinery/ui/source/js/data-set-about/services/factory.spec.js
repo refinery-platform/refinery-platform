@@ -20,9 +20,7 @@ describe('Data Set About Factory', function () {
     expect(factory).toBeDefined();
     expect(factory.assays).toEqual([]);
     expect(factory.dataSet).toEqual({ });
-    expect(factory.dataSetSharing).toEqual({ });
     expect(factory.fileStoreItem).toEqual({ });
-    expect(factory.groupList).toEqual([]);
     expect(factory.investigation).toEqual({ });
     expect(factory.isaTab).toEqual({ });
     expect(factory.studies).toEqual([]);
@@ -236,75 +234,6 @@ describe('Data Set About Factory', function () {
       rootScope.$apply();
       expect(typeof response.then).toEqual('function');
       expect(successData).toEqual(assayResult);
-    });
-  });
-
-  describe('getDataSharingSet', function () {
-    var dataSetSharingResult;
-
-    beforeEach(inject(function (
-      sharingService,
-      _$q_,
-      _$rootScope_
-    ) {
-      $q = _$q_;
-      dataSetSharingResult = {
-        accession: 'Test 1',
-        accession_source: null,
-        creation_date: '2016-05-12T08:43:30.362877',
-        description: '',
-        file_count: 62,
-        file_size: 75234,
-        id: 5,
-        is_owner: true,
-        is_shared: false,
-        isa_archive: '89774554-c1c4-459f-af3a-059de6eaffdf',
-        modification_date: '2016-05-27T09:33:18.696246',
-        name: 'Test 1: Request for Comments (RFC) Test',
-        owner: '5377caec-0e4f-4de5-9db5-3214b6ef0857',
-        public: false,
-        resource_uri: '/api/v1/data_sets/db03efb7-cf01-4840-bcb2-7b023efc290c/',
-        share_list: [
-          {
-            group_id: 100,
-            group_name: 'Public',
-            perms: {
-              change: false,
-              read: false
-            }
-          }
-        ],
-        slug: null,
-        summary: '',
-        title: 'Request for Comments (RFC) Test',
-        uuid: mocker.generateUuid()
-      };
-      spyOn(sharingService, 'query').and.callFake(function () {
-        deferred = $q.defer();
-        deferred.resolve(dataSetSharingResult);
-        return {
-          $promise: deferred.promise
-        };
-      });
-
-      rootScope = _$rootScope_;
-    }));
-
-    it('getDataSetSharing is a method', function () {
-      expect(angular.isFunction(factory.getDataSetSharing)).toBe(true);
-    });
-
-    it('getDataSetSharing returns a promise', function () {
-      var successData;
-      var response = factory.getDataSetSharing({
-        uuid: fakeUuid,
-        model: 'data_sets'
-      }).then(function (responseData) {
-        successData = responseData;
-      });
-      rootScope.$apply();
-      expect(typeof response.then).toEqual('function');
-      expect(successData).toEqual(dataSetSharingResult);
     });
   });
 });
