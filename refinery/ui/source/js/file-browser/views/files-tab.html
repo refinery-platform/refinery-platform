@@ -13,7 +13,11 @@
         <button
           class="btn btn-primary btn-sm"
           data-target="#tool-launch-panel"
-          ng-click="FBCtrl.toggleToolPanel()">
+          ng-click="FBCtrl.toggleToolPanel()"
+          refinery-tooltip
+          refinery-tooltip-container="body"
+          refinery-tooltip-placement="bottom"
+          title="Show tool panel to launch analysis and visualization tools">
           <span ng-if="FBCtrl.collapsedToolPanel">
             <i class="fa fa-angle-double-left" aria-hidden="true"></i>
              Show Tool Panel
@@ -24,9 +28,28 @@
           </span>
         </button>
 
-        <span class="float-right">
-          <span ng-if="FBCtrl.isOwner" class="refinery-base btn btn-default btn-sm" rp-assay-files-util-modal>
+        <span class="float-right content">
+          <span
+            ng-if="FBCtrl.isOwner"
+            class="refinery-base btn btn-default btn-sm"
+            ng-click="FBCtrl.openPermissionEditor()"
+            refinery-tooltip
+            refinery-tooltip-container="body"
+            refinery-tooltip-placement="bottom"
+            title="Update the data set's permissions">
+            <i class="fa fa-share-square-o"></i>
+            <span id="share-button-text"></span>
+          </span>
+          <span
+            ng-if="FBCtrl.isOwner"
+            class="refinery-base btn btn-default btn-sm m-l-1-4"
+            rp-assay-files-util-modal
+            refinery-tooltip
+            refinery-tooltip-container="body"
+            refinery-tooltip-placement="bottom"
+            title="Update the data set's configuration.">
             <i class="fa fa-wrench"></i>
+            <span id="config-button-text"></span>
           </span>
           <a
             id="help-view-selector"

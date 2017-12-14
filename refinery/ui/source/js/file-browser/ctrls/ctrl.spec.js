@@ -64,5 +64,19 @@
         expect(ctrl.collapsedToolPanel).toEqual(false);
       });
     });
+
+    describe('openPermissionEditor', function () {
+      var mockUibModal;
+      beforeEach(inject(function ($uibModal) {
+        mockUibModal = spyOn($uibModal, 'open');
+      }));
+      it('openPermissionEditor is method', function () {
+        expect(angular.isFunction(ctrl.openPermissionEditor)).toBe(true);
+      });
+      it('openPermissionEditor opens a new modal', function () {
+        ctrl.openPermissionEditor();
+        expect(mockUibModal).toHaveBeenCalled();
+      });
+    });
   });
 })();
