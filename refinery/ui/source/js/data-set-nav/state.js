@@ -31,6 +31,18 @@ function refineryDataSetNavConfig (
       true
     )
     .state(
+      'visualizations', {
+        url: '/visualizations/',
+        templateUrl: function () {
+          return window.getStaticUrl('partials/data-set-visualization/visualizations-tab.html');
+        },
+        controller: 'DataSetVisualizationCtrl',
+        controllerAs: 'VisCtrl'
+      },
+      '^\/data_sets\/.*\/$',
+      true
+    )
+    .state(
       'about', {
         url: '/about/',
         templateUrl: function () {
