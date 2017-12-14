@@ -5,6 +5,13 @@
     "refinery_type": "analysis",
     "description": "This has bad `file_relationship` nesting!",
     "parameters": [],
+    "output_files": [
+      {
+        "filetype": {"name": "FASTQ"},
+        "name": "Cool Input File",
+        "description": "Cool Input File Description"
+      }
+    ],
     "file_relationship": {
       "value_type": "LIST",
       "name": "List of Lists",

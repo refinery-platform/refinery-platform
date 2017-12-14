@@ -5,6 +5,13 @@
     "refinery_type": "analysis",
     "description": "This workflow annotation doesn't have enough input_files!",
     "parameters": [],
+    "output_files": [
+      {
+        "filetype": {"name": "FASTQ"},
+        "name": "Cool Input File",
+        "description": "Cool Input File Description"
+      }
+    ],
     "file_relationship": {
       "file_relationship": {},
       "value_type": "LIST",
