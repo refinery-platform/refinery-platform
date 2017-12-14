@@ -6,6 +6,7 @@
         "name",
         "description",
         "file_relationship",
+        "output_files",
         "parameters"
       ],
       "properties": {
@@ -17,6 +18,13 @@
         },
         "file_relationship": {
           "$ref": "FileRelationship.json#"
+        },
+        "output_files": {
+          "type": "array",
+          "items": {
+            "$ref": "OutputFile.json#"
+          },
+          "minItems": 1
         },
         "parameters": {
           "type": "array",
@@ -49,6 +57,12 @@
         },
         "file_relationship": {
           "$ref": "FileRelationship.json#"
+        },
+        "output_files": {
+          "type": "array",
+          "items": {
+            "$ref": "OutputFile.json#"
+          }
         },
         "parameters": {
           "type": "array",

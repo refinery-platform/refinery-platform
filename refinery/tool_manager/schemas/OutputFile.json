@@ -16,6 +16,9 @@
     "filetype": {
       "type": "object",
       "$ref": "FileType.json#"
+    },
+    "is_merged": {
+      "type": "boolean"
     }
   }
 }
