@@ -2,12 +2,16 @@ from django.contrib import admin
 
 from guardian.admin import GuardedModelAdmin
 
-from .models import (FileRelationship, GalaxyParameter, InputFile, Parameter,
-                     Tool, ToolDefinition)
+from .models import (FileRelationship, GalaxyParameter, InputFile, OutputFile,
+                     Parameter, Tool, ToolDefinition)
 from .utils import AdminFieldPopulator
 
 
 class FileRelationshipAdmin(AdminFieldPopulator):
+    pass
+
+
+class OutputFileAdmin(AdminFieldPopulator):
     pass
 
 
@@ -32,6 +36,7 @@ class ToolAdmin(AdminFieldPopulator, GuardedModelAdmin):
 
 
 admin.site.register(FileRelationship, FileRelationshipAdmin)
+admin.site.register(OutputFile, OutputFileAdmin)
 admin.site.register(InputFile, InputFileAdmin)
 admin.site.register(ToolDefinition, ToolDefinitionAdmin)
 admin.site.register(Parameter, ParameterAdmin)
