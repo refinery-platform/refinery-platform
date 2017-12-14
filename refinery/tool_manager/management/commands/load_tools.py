@@ -169,8 +169,10 @@ class Command(BaseCommand):
                             "valid JSON: {}".format(workflow["name"], e)
                         )
 
-                # Include `parameters` key in our workflow annotation
+                # Include `parameters` and `output_files` as keys in our
+                # workflow annotation
                 workflow["annotation"][ToolDefinition.PARAMETERS] = []
+                workflow["annotation"][ToolDefinition.OUTPUT_FILES] = []
 
                 # Workflows need to know about their associated
                 # WorkflowEngines
@@ -242,56 +244,79 @@ class Command(BaseCommand):
     def parse_workflow_step_annotations(workflow):
         """
         Iterate through the workflow's step's annotations and
-        append to the `parameters` field so they are
+        append to the `parameters` and `output_files` fields so they are
         included in the validation of this workflow's annotation data
         :param workflow: dict containing a workflow's information
-        :return: `workflow` dict with updated annotation info for `parameters`
+        :return: `workflow` dict with updated annotation info for
+        `parameters` and `output_files`
         """
         for step_index in workflow["steps"]:
             step = workflow["steps"][step_index]
 
-            if step["annotation"]:
-                try:
-                    step_annotation = json.loads(step["annotation"])
-                except ValueError as e:
-                    raise CommandError(
-                        "Workflow: `{}`'s Step: {}'s annotation data"
-                        " is not valid JSON: {}".format(
-                            workflow["name"],
-                            step_index,
-                            e
-                        )
+            if not step["annotation"]:
+                continue
+
+            try:
+                step_annotation = json.loads(step["annotation"])
+            except ValueError as e:
+                raise CommandError(
+                    "Workflow: `{}`'s Step: {}'s annotation data"
+                    " is not valid JSON: {}".format(
+                        workflow["name"],
+                        step_index,
+                        e
                     )
-                try:
-                    validate_workflow_step_annotation(step_annotation)
-                except RuntimeError as e:
-                    raise CommandError(
-                        "{} {}".format(ANNOTATION_ERROR_MESSAGE, e)
-                    )
-                try:
-                    parameters = step_annotation[ToolDefinition.PARAMETERS]
-                except KeyError:
-                    # `parameters` aren't required for each workflow step
-                    pass
-                else:
-                    for parameter in parameters:
-                        # Check User-defined parameters in
-                        # annotation data against the available
-                        # parameters of the Workflow step's `tool_inputs`
-                        if parameter["name"] not in step["tool_inputs"]:
-                            raise CommandError(
-                                "{} is not a valid parameter for {}. \n"
-                                "Valid parameters are: {}".format(
-                                    parameter["name"],
-                                    step["tool_id"],
-                                    step["tool_inputs"]
-                                )
+                )
+            try:
+                validate_workflow_step_annotation(step_annotation)
+            except RuntimeError as e:
+                raise CommandError(
+                    "{} {}".format(ANNOTATION_ERROR_MESSAGE, e)
+                )
+            parameters = step_annotation.get(ToolDefinition.PARAMETERS)
+            if parameters:
+                for parameter in parameters:
+                    # Check User-defined parameters in
+                    # annotation data against the available
+                    # parameters of the Workflow step's `tool_inputs`
+                    if parameter["name"] not in step["tool_inputs"]:
+                        raise CommandError(
+                            "{} is not a valid parameter for {}. \n"
+                            "Valid parameters are: {}".format(
+                                parameter["name"],
+                                step["tool_id"],
+                                step["tool_inputs"]
                             )
-                        else:
-                            parameter["galaxy_workflow_step"] = int(step_index)
-                            workflow["annotation"][
-                                ToolDefinition.PARAMETERS
-                            ].append(parameter)
+                        )
+                    else:
+                        parameter["galaxy_workflow_step"] = int(step_index)
+                        workflow["annotation"][
+                            ToolDefinition.PARAMETERS
+                        ].append(parameter)
+
+            output_files = step_annotation.get(ToolDefinition.OUTPUT_FILES)
+            if output_files:
+                for output_file in output_files:
+                    # Check User-defined output_files in annotation data
+                    # against the available output_file  of the Workflow
+                    # step's `tool_inputs`
+                    valid_output_names = [
+                        step["input_steps"][key]["step_output"]
+                        for key in step["input_steps"].iterkeys()
+                    ]
+                    if output_file["name"] not in valid_output_names:
+                        raise CommandError(
+                            "`{}` is not a valid output file for {}. "
+                            "Valid ouput_file  names are: {}".format(
+                                output_file["name"],
+                                step["tool_id"],
+                                valid_output_names
+                            )
+                        )
+                    else:
+                        workflow["annotation"]["output_files"].append(
+                            output_file
+                        )
         return workflow
 
     @staticmethod
@@ -310,5 +335,5 @@ class Command(BaseCommand):
             raise CommandError(
                 "Creation of ToolDefinition failed. Database "
                 "rolled back to its state before this "
-                "ToolDefinition's attempted creation: {}".format(e)
+                "ToolDefinition's attempted creation: {}".format(e.message)
             )
