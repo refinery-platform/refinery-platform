@@ -134,6 +134,21 @@ class FileRelationship(models.Model):
         return "{}: {} - {}".format(self.value_type, self.name, self.uuid)
 
 
+class OutputFile(models.Model):
+    """
+    An Output file describes a file and allowed Refinery FileType(s) that we
+    will associate with a tool as its expected output(s)
+    """
+    uuid = UUIDField(unique=True, auto=True)
+    name = models.TextField(max_length=100)
+    description = models.TextField(max_length=500)
+    filetype = models.ForeignKey(FileType)
+    is_merged = models.BooleanField(default=False)
+
+    def __str__(self):
+        return "{}: {} {}".format(self.name, self.filetype, self.uuid)
+
+
 class InputFile(models.Model):
     """
     An Input file describes a file and allowed Refinery FileType(s) that we
@@ -160,6 +175,7 @@ class ToolDefinition(models.Model):
     outputs, and input file structuring.
     """
 
+    OUTPUT_FILES = "output_files"
     PARAMETERS = "parameters"
     WORKFLOW = 'WORKFLOW'
     VISUALIZATION = 'VISUALIZATION'
@@ -173,6 +189,7 @@ class ToolDefinition(models.Model):
     description = models.TextField(max_length=500)
     tool_type = models.CharField(max_length=100, choices=TOOL_TYPES)
     file_relationship = models.ForeignKey(FileRelationship)
+    output_files = models.ManyToManyField(OutputFile)
     parameters = models.ManyToManyField(Parameter)
     image_name = models.CharField(max_length=255, blank=True)
     container_input_path = models.CharField(
@@ -229,6 +246,10 @@ def delete_associated_objects(sender, instance, *args, **kwargs):
     parameters = instance.parameters.all()
     for parameter in parameters:
         parameter.delete()
+
+    output_files = instance.output_files.all()
+    for output_file in output_files:
+        output_file.delete()
 
     # Set any associated Workflows to be inactive
     # this will remove the Workflow entries from the UI, but won't delete
