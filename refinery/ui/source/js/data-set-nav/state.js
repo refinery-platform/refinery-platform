@@ -34,7 +34,7 @@ function refineryDataSetNavConfig (
       'visualizations', {
         url: '/visualizations/',
         templateUrl: function () {
-          return window.getStaticUrl('partials/data-set-visualization/visualizations-tab.html');
+          return window.getStaticUrl('partials/data-set-visualization/visualization-tab.html');
         }
       },
       '^\/data_sets\/.*\/$',

@@ -8,11 +8,11 @@
   'use strict';
   angular
     .module('refineryDataSetVisualization')
-    .factory('visualizationsService', visualizationsService);
+    .factory('visualizationService', visualizationService);
 
-  visualizationsService.$inject = ['_', 'humanize', 'toolsService'];
+  visualizationService.$inject = ['_', 'humanize', 'toolsService'];
 
-  function visualizationsService (
+  function visualizationService (
     _,
     humanize,
     toolsService
@@ -25,6 +25,9 @@
     var service = {
       getVisualizations: getVisualizations,
       visualizations: visualizations
+    };
+    var params = {
+      tool_type: 'visualization'
     };
 
     return service;
@@ -40,7 +43,9 @@
      * @memberOf refineryToolLaunch.toolParamsService
      * @param {object} tool - select tool object, includes property parameters
     **/
-    function getVisualizations (params) {
+    function getVisualizations (dataSetUuid) {
+      params.data_set_uuid = dataSetUuid;
+
       var toolRequest = toolsService.query(params);
       toolRequest.$promise.then(function (response) {
         angular.copy(addElapseAndHumanTime(response), visualizations);
@@ -51,7 +56,6 @@
     // process responses from api
     function addElapseAndHumanTime (toolList) {
       for (var j = 0; j < toolList.length; j++) {
-        console.log(toolList[j]);
         if (_.has(toolList[j], 'creation_date')) {
           toolList[j].humanizeStartTime = humanizeTimeObj(toolList[j].creation_date);
         }
@@ -59,8 +63,8 @@
       return toolList;
     }
 
+    // Move to seperate service (used by analysis monitoring)
     function humanizeTimeObj (param) {
-      console.log(param);
       var a = param.split(/[^0-9]/);
       var testDate = Date.UTC(a[0], a[1] - 1, a[2], a[3], a[4], a[5]);
       var curDate = new Date().getTimezoneOffset() * 60 * 1000;

@@ -11,25 +11,21 @@
     .module('refineryDataSetVisualization')
     .controller('DataSetVisualizationCtrl', DataSetVisualizationCtrl);
 
-  DataSetVisualizationCtrl.$inject = ['$window', 'visualizationsService'];
+  DataSetVisualizationCtrl.$inject = ['$window', 'visualizationService'];
 
   function DataSetVisualizationCtrl (
     $window,
-    visualizationsService
+    visualizationService
   ) {
-    var visService = visualizationsService;
+    var visService = visualizationService;
     var vm = this;
     vm.visLoadingFlag = 'LOADING';
     vm.visualizations = visService.visualizations;
-    console.log('i am the main ctrl');
-    var params = {
-      data_set_uuid: $window.dataSetUuid,
-      tool_type: 'visualization'
-    };
+
     refreshVisualizations();
 
     function refreshVisualizations () {
-      visService.getVisualizations(params).then(function () {
+      visService.getVisualizations($window.dataSetUuid).then(function () {
         vm.visualizations = visService.visualizations;
         vm.visLoadingFlag = 'DONE';
       });
