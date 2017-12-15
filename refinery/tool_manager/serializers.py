@@ -75,7 +75,7 @@ class ToolDefinitionSerializer(serializers.ModelSerializer):
 
 class ToolSerializer(serializers.ModelSerializer):
     is_running = BooleanField()  # this maps to Tool.is_running()
-    owner = JSONField(source="_get_owner_as_json")
+    owner = JSONField(source="_get_owner_as_dict")
 
     class Meta:
         model = Tool

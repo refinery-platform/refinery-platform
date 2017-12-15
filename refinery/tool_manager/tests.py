@@ -2671,7 +2671,7 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
         for tool in self.get_response.data:
             self.assertEqual(
                 tool["owner"],
-                self.tool._get_owner_as_json()
+                self.tool._get_owner_as_dict()
             )
 
 
