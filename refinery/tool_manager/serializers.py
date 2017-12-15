@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from rest_framework.fields import BooleanField
 from rest_framework_recursive.fields import RecursiveField
 
 from file_store.models import FileType
@@ -73,6 +74,8 @@ class ToolDefinitionSerializer(serializers.ModelSerializer):
 
 
 class ToolSerializer(serializers.ModelSerializer):
+    is_running = BooleanField()  # this maps to Tool.is_running()
+
     class Meta:
         model = Tool
         exclude = ["id"]
