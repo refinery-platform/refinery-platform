@@ -1,1 +1,15 @@
-Here is the visualization tab. Lots of things go here.
+
+<div class="dataSetTabContent" id="analyses">
+  <div class="refinery-header row">
+    <div class="refinery-header-left col-md-12">
+        <h3>Visualizations</h3>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-12">
+      <ul ng-repeat="vis in VisCtrl.visualizations">
+        <li>{{ vis.name }}</li>
+      </ul>
+    </div>
+  </div>
+</div>
