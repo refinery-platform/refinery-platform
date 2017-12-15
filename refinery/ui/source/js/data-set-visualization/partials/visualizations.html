@@ -10,71 +10,41 @@
   <span ng-switch-default>
     <div class="row analysis-header">
       <div class="col-md-1 analysis-icon" id="header">
-        <a class="analysis-header" ng-click="order('status')">
+        <a class="analysis-header">
           <strong>Status</strong>
-          <span class="sortorder" ng-show="predicate === 'status'"
-            ng-class="{reverse:reverse}">
+          <span>
              <i ng-class="analysisIcon"></i>
           </span>
         </a>
       </div>
-
       <div class="col-md-5 analysis-name">
         <a class="analysis-header" ng-click="order('name')">
           <strong>Name</strong>
-          <span class="sortorder" ng-show="predicate === 'name'" ng-class="{reverse:reverse}">
-            <i ng-class="analysisIcon"></i>
-          </span>
         </a>
       </div>
 
       <div class="col-md-1">
-       <a class="analysis-header" ng-click="order('time_start')">
-         <strong>Start Time</strong>
-         <span class="sortorder" ng-show="predicate === 'time_start'"
-           ng-class="{reverse:reverse}">
-            <i ng-class="analysisIcon"></i>
+       <a class="analysis-header">
+         <strong>Creation Time</strong>
          </span>
        </a>
       </div>
-
-      <div class="col-md-1">
-        <a class="analysis-header" ng-click="order('elapseTime')">
-          <strong>Elapsed Time</strong>
-          <span class="sortorder" ng-show="predicate === 'elapseTime'"
-            ng-class="{reverse:reverse}">
-             <i ng-class="analysisIcon"></i>
-          </span>
-        </a>
-      </div>
-
-      <div class="col-md-1">
-        <a class="analysis-header" ng-click="order('time_end')">
-          <strong>End Time</strong>
-          <span class="sortorder" ng-show="predicate === 'time_end'"
-            ng-class="{reverse:reverse}">
-             <i ng-class="analysisIcon"></i>
-          </span>
-        </a>
-      </div>
-
-      <div class="col-md-2">
+      <div class="col-md-4">
         <strong>Owner Name</strong>
       </div>
 
     </div>
 
     <ul class="analysesList">
-      <li class="analysesListItems" ng-repeat="vis in $ctrl.visualizations |
-      orderBy:predicate:reverse">
+      <li class="analysesListItems" ng-repeat="vis in $ctrl.visualizations">
         <div class="row">
           <div class="col-md-1 analysis-icon">
             <span class="spinner">
-              <i class="analyses-status"
+              <i class="{{"success" | analysisStatusIcon}}  analyses-status"
                  refinery-tooltip
                  refinery-tooltip-container="body"
                  refinery-tooltip-placement="bottom"
-                 title="{{ 'success' | analysisStatusTitle }}">
+                 title="{{ 'Success' | analysisStatusTitle }}">
               </i>
             </span>
           </div>
@@ -83,25 +53,13 @@
           </div>
 
           <div class="col-md-1">
-         <!--   <span rp-analysis-monitor-start-time-tooltip>-->
-              {{vis.creation_date }}
-            <!--</span>-->
+            {{vis.humanizeStartTime }}
           </div>
-
-          <div class="col-md-1">
-            Elapse Time
-          </div>
-
-          <div class="col-md-1">
-            End Time
-            </span>
-          </div>
-           <div class="col-md-2">
-            <!-- <span rp-analysis-owner-name>
+           <div class="col-md-4">
               <a ng-href="/users/{{ analysis.owner }}">
                 {{ ownerName }}
               </a>
-             </span>-->
+             </span>
           </div>
 
         </div>
