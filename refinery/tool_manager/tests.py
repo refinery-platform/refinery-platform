@@ -260,6 +260,11 @@ class ToolManagerTestBase(ToolManagerMocks):
         self.BAD_WORKFLOW_OUTPUTS = {WorkflowTool.WORKFLOW_OUTPUTS: []}
         self.GOOD_WORKFLOW_OUTPUTS = {WorkflowTool.WORKFLOW_OUTPUTS: [True]}
 
+        self.django_docker_cleanup_wait_time = 1
+        settings.DJANGO_DOCKER_ENGINE_SECONDS_INACTIVE = (
+            self.django_docker_cleanup_wait_time
+        )
+
     def load_visualizations(self):
         # TODO: More mocking, so Docker image is not downloaded
         visualizations = ["{}/visualizations/igv.json".format(TEST_DATA_PATH)]
@@ -305,7 +310,8 @@ class ToolManagerTestBase(ToolManagerMocks):
     def create_tool(self,
                     tool_type,
                     file_relationships=None,
-                    annotation_file_name=None):
+                    annotation_file_name=None,
+                    start_vis_container=False):
 
         if tool_type == ToolDefinition.WORKFLOW:
             self.create_workflow_tool_definition(
@@ -347,19 +353,20 @@ class ToolManagerTestBase(ToolManagerMocks):
         force_authenticate(self.post_request, self.user)
 
         # Mock the spinning up of containers
+        run_container_mock = mock.patch(
+            "django_docker_engine.docker_utils.DockerClientWrapper.run"
+        )
+
         if tool_type == ToolDefinition.VISUALIZATION:
-            with mock.patch(
-                "django_docker_engine.docker_utils.DockerClientWrapper.run"
-            ) as run_mock:
-                with mock.patch(
-                    "tool_manager.models.get_solr_response_json"
-                ):
-                    self.post_response = self.tools_view(self.post_request)
+            with mock.patch("tool_manager.models.get_solr_response_json"):
+                if not start_vis_container:
+                    run_container_mock.start()
+
+                self.post_response = self.tools_view(self.post_request)
                 logger.debug(
                     "Visualization tool launch response: %s",
                     self.post_response.content
                 )
-                self.assertTrue(run_mock.called)
 
             self.tool = VisualizationTool.objects.get(
                 tool_definition__uuid=self.td.uuid
@@ -384,9 +391,7 @@ class ToolManagerTestBase(ToolManagerMocks):
                 {"id": self.GALAXY_ID_MOCK}
             )
 
-        self.get_request = self.factory.get(self.tools_url_root)
-        force_authenticate(self.get_request, self.user)
-        self.get_response = self.tools_view(self.get_request)
+        self._make_tools_get_request()
         self.tool_json = self.get_response.data[0]
         self.delete_request = self.factory.delete(
                 urljoin(self.tools_url_root, self.tool_json['uuid']))
@@ -467,6 +472,11 @@ class ToolManagerTestBase(ToolManagerMocks):
             *[self.make_node() for i in range(0, 4)]
         )
 
+    def _django_docker_engine_cleanup_wrapper(self):
+        time.sleep(self.django_docker_cleanup_wait_time * 2)
+        django_docker_cleanup()
+        time.sleep(self.django_docker_cleanup_wait_time * 2)
+
     def make_node(self, source="http://www.example.com/test_file.txt"):
         test_file = StringIO.StringIO()
 
@@ -533,6 +543,11 @@ class ToolManagerTestBase(ToolManagerMocks):
     def test_create_valid_tool(self):
         with self.assertRaises(RuntimeError):
             self.create_tool("Coffee is not a valid tool type")
+
+    def _make_tools_get_request(self):
+        self.get_request = self.factory.get(self.tools_url_root)
+        force_authenticate(self.get_request, self.user)
+        self.get_response = self.tools_view(self.get_request)
 
 
 class ToolDefinitionAPITests(ToolManagerTestBase, APITestCase):
@@ -2609,10 +2624,42 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
         self.create_tool(ToolDefinition.WORKFLOW)
         self.create_tool(ToolDefinition.VISUALIZATION)
 
-        self.get_request = self.factory.get(self.tools_url_root)
-        force_authenticate(self.get_request, self.user)
-        self.get_response = self.tools_view(self.get_request)
+        self._make_tools_get_request()
         self.assertEqual(len(self.get_response.data), 2)
+
+    def test_visualiztion_running_status_in_response(self):
+        self.create_tool(
+            ToolDefinition.VISUALIZATION,
+            start_vis_container=True
+        )
+
+        self._make_tools_get_request()
+        self.assertEqual(len(self.get_response.data), 1)
+
+        self.assertTrue(self.get_response.data[0]["is_running"])
+
+        self._django_docker_engine_cleanup_wrapper()
+
+        self._make_tools_get_request()
+        self.assertEqual(len(self.get_response.data), 1)
+
+        self.assertFalse(self.get_response.data[0]["is_running"])
+
+    def test_workflow_running_status_in_response(self):
+        self.create_tool(ToolDefinition.WORKFLOW)
+        self.tool.analysis.set_status(Analysis.RUNNING_STATUS)
+
+        self._make_tools_get_request()
+        self.assertEqual(len(self.get_response.data), 1)
+
+        self.assertTrue(self.get_response.data[0]["is_running"])
+
+        self.tool.analysis.set_status(Analysis.SUCCESS_STATUS)
+
+        self._make_tools_get_request()
+        self.assertEqual(len(self.get_response.data), 1)
+
+        self.assertFalse(self.get_response.data[0]["is_running"])
 
 
 class WorkflowToolLaunchTests(ToolManagerTestBase):
@@ -3212,12 +3259,14 @@ class VisualizationToolLaunchTests(ToolManagerTestBase,  # TODO: Cypress
             )
             client.lookup_container_url(tool.container_name)
 
-            time.sleep(wait_time * 2)
-            django_docker_cleanup()
-            time.sleep(wait_time * 2)
+            self.assertTrue(tool.is_running())
+
+            self._django_docker_engine_cleanup_wrapper()
 
             with self.assertRaises(NotFound):
                 client.lookup_container_url(tool.container_name)
+
+            self.assertFalse(tool.is_running())
 
         self._start_visualization(
             'hello_world.json',
