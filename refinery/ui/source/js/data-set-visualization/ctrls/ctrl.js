@@ -19,6 +19,7 @@
   ) {
     var visService = visualizationsService;
     var vm = this;
+    vm.visLoadingFlag = 'LOADING';
     vm.visualizations = visService.visualizations;
     console.log('i am the main ctrl');
     var params = {
@@ -29,9 +30,8 @@
 
     function refreshVisualizations () {
       visService.getVisualizations(params).then(function () {
-        console.log('in the ctrl promise');
         vm.visualizations = visService.visualizations;
-        console.log(vm.visualizations);
+        vm.visLoadingFlag = 'DONE';
       });
     }
   }

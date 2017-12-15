@@ -66,37 +66,42 @@
 
     <ul class="analysesList">
       <li class="analysesListItems" ng-repeat="vis in $ctrl.visualizations |
-       orderBy:predicate:reverse |
-       analysisMonitorOffset:currentPage*itemsPerPage |
-       limitTo: itemsPerPage track by analysis.uuid">
-       {{ vis }}
+      orderBy:predicate:reverse">
         <div class="row">
           <div class="col-md-1 analysis-icon">
-          </div>
-          <div class="col-md-5 analysis-name">
-            {{ analysis.name }}
-           </div>
-
-          <div class="col-md-1">
-            something here
+            <span class="spinner">
+              <i class="analyses-status"
+                 refinery-tooltip
+                 refinery-tooltip-container="body"
+                 refinery-tooltip-placement="bottom"
+                 title="{{ 'success' | analysisStatusTitle }}">
+              </i>
             </span>
           </div>
-
-          <div class="col-md-1">
-            {{analysis.elapseTime | analysisMonitorFormatMilliTime}}
+          <div class="col-md-5 analysis-name">
+            {{ vis.name }}
           </div>
 
           <div class="col-md-1">
-            <span rp-analysis-monitor-end-time-tooltip>
-               {{analysis.humanizeEndTime }}
+         <!--   <span rp-analysis-monitor-start-time-tooltip>-->
+              {{vis.creation_date }}
+            <!--</span>-->
+          </div>
+
+          <div class="col-md-1">
+            Elapse Time
+          </div>
+
+          <div class="col-md-1">
+            End Time
             </span>
           </div>
            <div class="col-md-2">
-             <span rp-analysis-owner-name>
+            <!-- <span rp-analysis-owner-name>
               <a ng-href="/users/{{ analysis.owner }}">
                 {{ ownerName }}
               </a>
-             </span>
+             </span>-->
           </div>
 
         </div>
@@ -106,7 +111,7 @@
     <br>
     <br>
 
-    <div ng-if="$ctrl.visualizationList.length > itemsPerPage">
+    <div ng-if="$ctrl.visualizations.length > itemsPerPage">
       <ul class="pagination analyses">
         <li ng-class="prevPageDisabled()">
           <a ng-click="prevPage()">«</a>
