@@ -406,18 +406,16 @@ class Tool(OwnableResource):
 
     def is_running(self):
         if self.get_tool_type() == ToolDefinition.WORKFLOW:
-            return (
-                True if self.analysis.get_status() == Analysis.RUNNING_STATUS
-                else False
-            )
+            return True if self.analysis.running() else False
         else:
             try:
                 self._django_docker_client.lookup_container_url(
                     self.container_name
                 )
-                return True
             except NotFound:
                 return False
+            else:
+                return True
 
 
 class VisualizationToolError(StandardError):
