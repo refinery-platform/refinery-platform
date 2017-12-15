@@ -18,7 +18,7 @@ from constants import UUID_RE
 from django_docker_engine.docker_utils import (DockerClientWrapper,
                                                DockerContainerSpec)
 from django_extensions.db.fields import UUIDField
-from docker.errors import APIError
+from docker.errors import APIError, NotFound
 
 from analysis_manager.models import AnalysisStatus
 from analysis_manager.tasks import (_galaxy_file_import, get_taskset_result,
@@ -303,6 +303,10 @@ class Tool(OwnableResource):
     def __str__(self):
         return "Tool: {}".format(self.get_tool_name())
 
+    @property
+    def _django_docker_client(self):
+        return DockerClientWrapper(settings.DJANGO_DOCKER_ENGINE_DATA_DIR)
+
     def get_input_file_uuid_list(self):
         # Tools can't be created without the `file_uuid_list` existing so no
         # KeyError is being caught
@@ -400,6 +404,21 @@ class Tool(OwnableResource):
             )
         self.set_tool_launch_config(tool_launch_config)
 
+    def is_running(self):
+        if self.get_tool_type() == ToolDefinition.WORKFLOW:
+            return (
+                True if self.analysis.get_status() == Analysis.RUNNING_STATUS
+                else False
+            )
+        else:
+            try:
+                self._django_docker_client.lookup_container_url(
+                    self.container_name
+                )
+                return True
+            except NotFound:
+                return False
+
 
 class VisualizationToolError(StandardError):
     pass
@@ -430,6 +449,11 @@ class VisualizationTool(Tool):
             ToolDefinition.PARAMETERS: self._get_visualization_parameters(),
             self.NODE_INFORMATION: self._get_detailed_input_nodes_dict()
         }
+
+    def _check_max_running_containers(self):
+        max_containers = settings.DJANGO_DOCKER_ENGINE_MAX_CONTAINERS
+        if len(self._django_docker_client.list()) >= max_containers:
+            raise VisualizationToolError('Max containers')
 
     def _get_detailed_input_nodes_dict(self):
         """
@@ -499,10 +523,7 @@ class VisualizationTool(Tool):
         launched container's url
             - <HttpResponseBadRequest>, <HttpServerError>
         """
-        client = DockerClientWrapper(settings.DJANGO_DOCKER_ENGINE_DATA_DIR)
-        max_containers = settings.DJANGO_DOCKER_ENGINE_MAX_CONTAINERS
-        if len(client.list()) >= max_containers:
-            raise VisualizationToolError('Max containers')
+        self._check_max_running_containers()
 
         container = DockerContainerSpec(
             image_name=self.tool_definition.image_name,
@@ -513,7 +534,7 @@ class VisualizationTool(Tool):
             extra_directories=self.tool_definition.get_extra_directories()
         )
 
-        client.run(container)
+        self._django_docker_client.run(container)
 
         return JsonResponse({Tool.TOOL_URL: self.get_relative_container_url()})
 
