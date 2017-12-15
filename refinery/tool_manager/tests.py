@@ -2661,6 +2661,19 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
 
         self.assertFalse(self.get_response.data[0]["is_running"])
 
+    def test_owner_info_is_returned(self):
+        self.create_tool(ToolDefinition.WORKFLOW)
+        self.create_tool(ToolDefinition.VISUALIZATION)
+
+        self._make_tools_get_request()
+        self.assertEqual(len(self.get_response.data), 2)
+
+        for tool in self.get_response.data:
+            self.assertEqual(
+                tool["owner"],
+                self.tool._get_owner_as_json()
+            )
+
 
 class WorkflowToolLaunchTests(ToolManagerTestBase):
     tasks_mock = "analysis_manager.tasks"
