@@ -19,15 +19,33 @@
   ) {
     var visService = visualizationService;
     var vm = this;
-    vm.visLoadingFlag = 'LOADING';
     vm.visualizations = visService.visualizations;
+    activate();
+    /*
+     * -----------------------------------------------------------------------------
+     * Methods
+     * -----------------------------------------------------------------------------
+     */
+    function activate () {
+      if (!visService.visualizations.length && vm.visLoadingFlag !== 'EMPTY') {
+        vm.visLoadingFlag = 'LOADING';
+        refreshVisualizations();
+      }
+    }
 
-    refreshVisualizations();
-
+     /**
+     * @name refreshVisualizations
+     * @desc  Updates the visualization list
+     * @memberOf refineryDataSetVisualization.DataSetVisualizationCtrl
+    **/
     function refreshVisualizations () {
       visService.getVisualizations($window.dataSetUuid).then(function () {
         vm.visualizations = visService.visualizations;
-        vm.visLoadingFlag = 'DONE';
+        if (!vm.visualizations.length) {
+          vm.visLoadingFlag = 'EMPTY';
+        } else {
+          vm.visLoadingFlag = 'DONE';
+        }
       });
     }
   }

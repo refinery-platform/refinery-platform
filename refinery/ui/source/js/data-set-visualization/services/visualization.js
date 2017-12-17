@@ -45,16 +45,15 @@
     **/
     function getVisualizations (dataSetUuid) {
       params.data_set_uuid = dataSetUuid;
-
       var toolRequest = toolsService.query(params);
       toolRequest.$promise.then(function (response) {
-        angular.copy(addElapseAndHumanTime(response), visualizations);
+        angular.copy(addHumanTime(response), visualizations);
       });
       return toolRequest.$promise;
     }
 
     // process responses from api
-    function addElapseAndHumanTime (toolList) {
+    function addHumanTime (toolList) {
       for (var j = 0; j < toolList.length; j++) {
         if (_.has(toolList[j], 'creation_date')) {
           toolList[j].humanizeCreateTime = timeService
