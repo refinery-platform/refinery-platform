@@ -10,11 +10,11 @@
     .module('refineryDataSetVisualization')
     .factory('visualizationService', visualizationService);
 
-  visualizationService.$inject = ['_', 'humanize', 'toolsService'];
+  visualizationService.$inject = ['_', 'timeService', 'toolsService'];
 
   function visualizationService (
     _,
-    humanize,
+    timeService,
     toolsService
   ) {
     /**
@@ -57,21 +57,11 @@
     function addElapseAndHumanTime (toolList) {
       for (var j = 0; j < toolList.length; j++) {
         if (_.has(toolList[j], 'creation_date')) {
-          toolList[j].humanizeStartTime = humanizeTimeObj(toolList[j].creation_date);
+          toolList[j].humanizeCreateTime = timeService
+            .humanizeTimeObj(toolList[j].creation_date);
         }
       }
       return toolList;
-    }
-
-    // Move to seperate service (used by analysis monitoring)
-    function humanizeTimeObj (param) {
-      var a = param.split(/[^0-9]/);
-      var testDate = Date.UTC(a[0], a[1] - 1, a[2], a[3], a[4], a[5]);
-      var curDate = new Date().getTimezoneOffset() * 60 * 1000;
-      var offsetDate = testDate + curDate;
-      var unixtime = offsetDate / 1000;
-
-      return humanize.relativeTime(unixtime);
     }
   }
 })();
