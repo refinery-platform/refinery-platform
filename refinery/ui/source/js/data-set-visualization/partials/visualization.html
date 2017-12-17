@@ -40,20 +40,30 @@
         <div class="row">
           <div class="col-md-1 analysis-icon">
             <span class="spinner">
-              <i class="{{"success" | analysisStatusIcon}}  analyses-status"
+              <span ng-if="$ctrl.vis.isRunning">
+                <i class="fa fa-cog analyses-status"
                  refinery-tooltip
                  refinery-tooltip-container="body"
                  refinery-tooltip-placement="bottom"
-                 title="{{ 'Success' | analysisStatusTitle }}">
-              </i>
-            </span>
+                 title="Visualization is running.">
+                </i>
+              </span>
+              <span ng-if="!$ctrl.vis.isRunning">
+                <i class="fa fa-pause-circle-o analyses-status"
+                 refinery-tooltip
+                 refinery-tooltip-container="body"
+                 refinery-tooltip-placement="bottom"
+                 title="Visualization is paused.">
+                </i>
+              </span>
           </div>
+          </span>
           <div class="col-md-5 analysis-name">
             {{ vis.name }}
           </div>
 
           <div class="col-md-1">
-            {{vis.humanizeStartTime }}
+            {{vis.humanizeCreateTime }}
           </div>
            <div class="col-md-4">
               <a ng-href="/users/{{ analysis.owner }}">

@@ -52,7 +52,6 @@
       var curDate = new Date().getTimezoneOffset() * 60 * 1000;
       var offsetDate = testDate + curDate;
       var unixtime = offsetDate / 1000;
-
       return humanize.relativeTime(unixtime);
     }
   }
