@@ -5,7 +5,6 @@ import re
 import uuid
 
 from django.conf import settings
-from django.core import serializers
 from django.db import models
 from django.db.models.signals import post_delete, pre_delete
 from django.dispatch import receiver
@@ -308,10 +307,17 @@ class Tool(OwnableResource):
     def _django_docker_client(self):
         return DockerClientWrapper(settings.DJANGO_DOCKER_ENGINE_DATA_DIR)
 
-    def _get_owner_as_dict(self):
-        return json.loads(
-            serializers.serialize("json", [self.get_owner()])
-        )[0]["fields"]
+    @property
+    def relaunch_url(self):
+        return "/api/v2/tools/{}/relaunch/".format(self.uuid)
+
+    def _get_owner_info_as_dict(self):
+        user = self.get_owner()
+        return {
+            "username": user.username,
+            "full_name": "{} {}".format(user.first_name, user.last_name),
+            "user_profile_uuid": user.profile.uuid
+        }
 
     def get_input_file_uuid_list(self):
         # Tools can't be created without the `file_uuid_list` existing so no
