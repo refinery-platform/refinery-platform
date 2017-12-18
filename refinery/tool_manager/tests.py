@@ -2739,32 +2739,31 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
             )
 
     def test_vis_tool_can_be_relaunched(self):
-        self.create_tool(ToolDefinition.VISUALIZATION)
-        self._django_docker_engine_cleanup_wrapper()
-
+        self.create_tool(ToolDefinition.VISUALIZATION,
+                         start_vis_container=True)
         assign_perm('core.read_dataset', self.user, self.tool.dataset)
+
         self._make_tools_get_request()
-        self.assertEqual(len(self.get_response.data), 1)
-        self.assertFalse(self.get_response.data[0]["is_running"])
+        self.assertTrue(self.tool.is_running())
+
+        # Remove Container
+        self._django_docker_engine_cleanup_wrapper()
+        self.assertFalse(self.tool.is_running())
 
         # Relaunch Tool
         get_request = self.factory.get(self.tool.relaunch_url)
         force_authenticate(get_request, self.user)
-
-        with mock.patch(
-            "django_docker_engine.docker_utils.DockerClientWrapper.run"
-        ) as run_container_mock:
+        with mock.patch("tool_manager.models.get_solr_response_json"):
             get_response = self.tool_relaunch_view(
                 get_request,
                 uuid=self.tool.uuid
             )
-
         self.assertEqual(get_response.status_code, 200)
         self.assertEqual(
             json.loads(get_response.content),
             {Tool.TOOL_URL: self.tool.get_relative_container_url()}
         )
-        self.assertTrue(run_container_mock.called)
+        self.assertTrue(self.tool.is_running())
 
     def test_relaunch_failure_no_auth(self):
         self.create_tool(ToolDefinition.VISUALIZATION)
