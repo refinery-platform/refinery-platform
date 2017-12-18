@@ -422,6 +422,15 @@ class Tool(OwnableResource):
         except NotFound:
             return False
 
+    def get_relative_container_url(self):
+        """
+        Construct & return the relative url of our Tool's container
+        """
+        return "/{}/{}".format(
+            settings.DJANGO_DOCKER_ENGINE_BASE_URL,
+            self.container_name
+        )
+
 
 class VisualizationToolError(StandardError):
     pass
@@ -478,15 +487,6 @@ class VisualizationTool(Tool):
             for node in solr_response_json["nodes"]
         }
         return node_info
-
-    def get_relative_container_url(self):
-        """
-        Construct & return the relative url of our Tool's container
-        """
-        return "/{}/{}".format(
-            settings.DJANGO_DOCKER_ENGINE_BASE_URL,
-            self.container_name
-        )
 
     def _get_visualization_parameters(self):
         tool_parameters = []
