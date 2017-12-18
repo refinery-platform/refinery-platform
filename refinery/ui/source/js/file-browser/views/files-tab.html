@@ -13,11 +13,7 @@
         <button
           class="btn btn-primary btn-sm"
           data-target="#tool-launch-panel"
-          ng-click="FBCtrl.toggleToolPanel()"
-          refinery-tooltip
-          refinery-tooltip-container="body"
-          refinery-tooltip-placement="bottom"
-          title="Show tool panel to launch analysis and visualization tools">
+          ng-click="FBCtrl.toggleToolPanel()">
           <span ng-if="FBCtrl.collapsedToolPanel">
             <i class="fa fa-angle-double-left" aria-hidden="true"></i>
              Show Tool Panel
@@ -51,18 +47,6 @@
             <i class="fa fa-wrench"></i>
             <span id="config-button-text"></span>
           </span>
-          <a
-            id="help-view-selector"
-            popover-placement="right"
-            uib-popover="The collection of files in this data set can be displayed using different representations."
-            popover-title="Select File Display Mode"
-            popover-trigger="focus"
-            popover-append-to-body="true"
-            tabindex="0">
-            <i
-              class="fa fa-question-circle info-icon icon-only"
-              id="config-question-icon"></i>
-          </a>
         </span>
 
       </div>
