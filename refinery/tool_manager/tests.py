@@ -23,6 +23,7 @@ import celery
 from constants import UUID_RE
 from django_docker_engine.docker_utils import DockerClientWrapper
 from docker.errors import NotFound
+from guardian.shortcuts import assign_perm, remove_perm
 import mock
 from rest_framework.test import (APIRequestFactory, APITestCase,
                                  force_authenticate)
@@ -247,6 +248,7 @@ class ToolManagerTestBase(ToolManagerMocks):
                 'post': 'create'
             }
         )
+        self.tool_relaunch_view = ToolsViewSet.as_view({"get": "relaunch"})
 
         self.tools_url_root = '/api/v2/tools/'
         self.tool_defs_url_root = '/api/v2/tool_definitions/'
@@ -1498,6 +1500,65 @@ class ToolTests(ToolManagerTestBase):
 
         self.assertEqual(context.exception.message, tool.LAUNCH_WARNING)
 
+    def test__get_owner_info_as_dict(self):
+        self.create_tool(ToolDefinition.VISUALIZATION)
+        self._make_tools_get_request()
+
+        self.assertEqual(
+            self.get_response.data[0]["owner"],
+            {
+                "username": self.user.username,
+                "full_name": "{} {}".format(
+                    self.user.first_name,
+                    self.user.last_name
+                ),
+                "user_profile_uuid": self.user.profile.uuid
+            }
+        )
+
+    def test_relaunch_url(self):
+        self.create_tool(ToolDefinition.VISUALIZATION)
+        self.assertEqual(
+            self.tool.relaunch_url,
+            "/api/v2/tools/{}/relaunch/".format(self.tool.uuid)
+        )
+
+    def test_get_relative_container_url(self):
+        self.create_tool(ToolDefinition.VISUALIZATION)
+        self.assertEqual(
+            self.tool.get_relative_container_url(),
+            "/{}/{}".format(
+                settings.DJANGO_DOCKER_ENGINE_BASE_URL,
+                self.tool.container_name
+            )
+        )
+
+    def test_is_workflow(self):
+        self.create_tool(ToolDefinition.WORKFLOW)
+        self.assertTrue(self.tool.is_workflow())
+        self.assertFalse(self.tool.is_visualization())
+
+    def test_is_visualization(self):
+        self.create_tool(ToolDefinition.VISUALIZATION)
+        self.assertTrue(self.tool.is_visualization())
+        self.assertFalse(self.tool.is_workflow())
+
+    def test_visualization_is_running(self):
+        self.create_tool(
+            ToolDefinition.VISUALIZATION,
+            start_vis_container=True
+        )
+        self.assertTrue(self.tool.is_running())
+        self._django_docker_engine_cleanup_wrapper()
+        self.assertFalse(self.tool.is_running())
+
+    def test_workflow_is_running(self):
+        self.create_tool(ToolDefinition.WORKFLOW)
+        self.tool.analysis.set_status(Analysis.RUNNING_STATUS)
+        self.assertTrue(self.tool.is_running())
+        self.tool.analysis.set_status(Analysis.SUCCESS_STATUS)
+        self.assertFalse(self.tool.is_running())
+
 
 class VisualizationToolTests(ToolManagerTestBase):
     def setUp(self):
@@ -2671,7 +2732,115 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
         for tool in self.get_response.data:
             self.assertEqual(
                 tool["owner"],
-                self.tool._get_owner_as_dict()
+                self.tool._get_owner_info_as_dict()
+            )
+
+    def test_vis_tool_can_be_relaunched(self):
+        self.create_tool(ToolDefinition.VISUALIZATION,
+                         start_vis_container=True)
+        self._django_docker_engine_cleanup_wrapper()
+
+        assign_perm('core.read_dataset', self.user, self.tool.dataset)
+        self._make_tools_get_request()
+        self.assertEqual(len(self.get_response.data), 1)
+        self.assertFalse(self.get_response.data[0]["is_running"])
+
+        # Relaunch Tool
+        get_request = self.factory.get(self.tool.relaunch_url)
+        force_authenticate(get_request, self.user)
+        get_response = self.tool_relaunch_view(get_request,
+                                               uuid=self.tool.uuid)
+
+        self.assertEqual(get_response.status_code, 200)
+        self.assertEqual(
+            json.loads(get_response.content),
+            {Tool.TOOL_URL: self.tool.get_relative_container_url()}
+        )
+        self.assertTrue(self.tool.is_running())
+
+    def test_relaunch_failure_no_uuid_present(self):
+        self.create_tool(ToolDefinition.VISUALIZATION)
+        get_request = self.factory.get(self.tool.relaunch_url)
+        force_authenticate(get_request, self.user)
+        get_response = self.tool_relaunch_view(get_request)
+        self.assertEqual(get_response.status_code, 400)
+        self.assertIn("Relaunching requires a Tool uuid",
+                      get_response.content)
+
+    def test_relaunch_failure_tool_doesnt_exist(self):
+        self.create_tool(ToolDefinition.VISUALIZATION)
+        tool_uuid = self.tool.uuid
+        relaunch_url = self.tool.relaunch_url
+        self.tool.delete()
+
+        get_request = self.factory.get(relaunch_url)
+        force_authenticate(get_request, self.user)
+        get_response = self.tool_relaunch_view(get_request, uuid=tool_uuid)
+        self.assertEqual(get_response.status_code, 400)
+        self.assertIn("Couldn't retrieve VisualizationTool",
+                      get_response.content)
+
+    def test_relaunch_failure_insufficient_user_perms(self):
+        self.create_tool(ToolDefinition.VISUALIZATION)
+        get_request = self.factory.get(self.tool.relaunch_url)
+        remove_perm('core.read_dataset', self.user, self.tool.dataset)
+
+        force_authenticate(get_request, self.user)
+        get_response = self.tool_relaunch_view(
+            get_request,
+            uuid=self.tool.uuid
+        )
+        self.assertEqual(get_response.status_code, 400)
+        self.assertIn("not have sufficient permissions",
+                      get_response.content)
+
+    def test_relaunch_failure_tool_already_running(self):
+        self.create_tool(ToolDefinition.VISUALIZATION,
+                         start_vis_container=True)
+        assign_perm('core.read_dataset', self.user, self.tool.dataset)
+        get_request = self.factory.get(self.tool.relaunch_url)
+        force_authenticate(get_request, self.user)
+        get_response = self.tool_relaunch_view(
+            get_request,
+            uuid=self.tool.uuid
+        )
+        self.assertEqual(get_response.status_code, 400)
+        self.assertIn("Can't relaunch a Tool that is currently running",
+                      get_response.content)
+
+    def test_workflow_tool_disallows_relaunch(self):
+        self.create_tool(ToolDefinition.WORKFLOW)
+        get_request = self.factory.get(self.tool.relaunch_url)
+        force_authenticate(get_request, self.user)
+        get_response = self.tool_relaunch_view(
+            get_request,
+            uuid=self.tool.uuid
+        )
+        self.assertEqual(get_response.status_code, 400)
+        self.assertIn("Couldn't retrieve VisualizationTool",
+                      get_response.content)
+
+    def test_api_response_has_proper_fields_present(self):
+        self.create_tool(ToolDefinition.VISUALIZATION)
+        self._make_tools_get_request()
+        self.assertEqual(len(self.get_response.data), 1)
+
+        expected_response_fields = {
+            'container_name': self.tool.container_name,
+            'container_url': self.tool.get_relative_container_url(),
+            'dataset': self.tool.dataset.pk,
+            'is_running': self.tool.is_running(),
+            'name': self.tool.name,
+            'owner': self.tool._get_owner_info_as_dict(),
+            'relaunch_url': self.tool.relaunch_url,
+            'tool_definition': self.tool.tool_definition.pk,
+            'uuid': self.tool.uuid
+        }
+
+        for key in expected_response_fields.keys():
+            self.assertEqual(
+                dict(self.get_response.data[0])[key],
+                expected_response_fields[key]
             )
 
 
@@ -2682,7 +2851,7 @@ class WorkflowToolLaunchTests(ToolManagerTestBase):
         self.create_tool(ToolDefinition.WORKFLOW)
 
         self.assertEqual(self.tool.get_owner(), self.user)
-        self.assertEqual(self.tool.get_tool_type(), ToolDefinition.WORKFLOW)
+        self.assertTrue(self.tool.is_workflow())
         self.assertEqual(
             ast.literal_eval(self.tool.analysis.workflow_copy),
             galaxy_workflow_dict
@@ -3220,10 +3389,7 @@ class VisualizationToolLaunchTests(ToolManagerTestBase,  # TODO: Cypress
             self.assertEqual(len(tools), count)
         last_tool = tools.last()
         self.assertEqual(last_tool.get_owner(), self.user)
-        self.assertEqual(
-            last_tool.get_tool_type(),
-            ToolDefinition.VISUALIZATION
-        )
+        self.assertTrue(last_tool.is_visualization())
 
         if assertions:
             assertions(last_tool)
