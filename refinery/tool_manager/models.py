@@ -411,7 +411,7 @@ class Tool(OwnableResource):
         self.set_tool_launch_config(tool_launch_config)
 
     def is_running(self):
-        if self.get_tool_type() == ToolDefinition.WORKFLOW:
+        if self.is_workflow():
             return True if self.analysis.running() else False
 
         try:
@@ -421,6 +421,12 @@ class Tool(OwnableResource):
             return True
         except NotFound:
             return False
+
+    def is_visualization(self):
+        return self.get_tool_type() == ToolDefinition.VISUALIZATION
+
+    def is_workflow(self):
+        return self.get_tool_type() == ToolDefinition.WORKFLOW
 
     def get_relative_container_url(self):
         """
