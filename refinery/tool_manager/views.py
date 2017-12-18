@@ -5,13 +5,14 @@ from django.http import HttpResponseBadRequest
 
 from guardian.shortcuts import get_objects_for_user
 from rest_framework import status
+from rest_framework.decorators import detail_route
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
 from core.models import DataSet
 
-from .models import Tool, ToolDefinition
+from .models import Tool, ToolDefinition, VisualizationTool
 from .serializers import ToolDefinitionSerializer, ToolSerializer
 from .utils import create_tool, validate_tool_launch_configuration
 
@@ -89,6 +90,7 @@ class ToolsViewSet(ModelViewSet):
         """
         Create and launch a Tool upon successful validation checks
         """
+
         try:
             validate_tool_launch_configuration(request.data)
         except RuntimeError as e:
@@ -103,3 +105,34 @@ class ToolsViewSet(ModelViewSet):
             except Exception as e:
                 logger.error(e)
                 return HttpResponseBadRequest(e)
+
+    @detail_route(methods=['get'])
+    def relaunch(self, request, *args, **kwargs):
+        tool_uuid = kwargs.get("uuid")
+        if not tool_uuid:
+            return HttpResponseBadRequest("Relaunching requires a Tool uuid")
+
+        try:
+            tool = VisualizationTool.objects.get(uuid=tool_uuid)
+        except (VisualizationTool.DoesNotExist,
+                VisualizationTool.MultipleObjectsReturned) as e:
+            return HttpResponseBadRequest(
+                "Couldn't retrieve VisualizationTool with UUID: {}, {}".format(
+                    tool_uuid, e
+                )
+            )
+
+        if not request.user.has_perm('core.read_dataset', tool.dataset):
+            return HttpResponseBadRequest(
+                "Requesting User does not have sufficient permissions to "
+                "relaunch Tool with uuid: {}".format(tool_uuid)
+            )
+
+        if tool.is_running():
+            return HttpResponseBadRequest("Can't relaunch a Tool that is "
+                                          "currently running")
+        try:
+            return tool.launch()
+        except Exception as e:
+            logger.error(e)
+            return HttpResponseBadRequest(e)
