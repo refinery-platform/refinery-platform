@@ -2761,6 +2761,12 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
         )
         self.assertTrue(self.tool.is_running())
 
+    def test_relaunch_failure_no_auth(self):
+        self.create_tool(ToolDefinition.VISUALIZATION)
+        get_request = self.factory.get(self.tool.relaunch_url)
+        get_response = self.tool_relaunch_view(get_request)
+        self.assertEqual(get_response.status_code, 403)
+
     def test_relaunch_failure_no_uuid_present(self):
         self.create_tool(ToolDefinition.VISUALIZATION)
         get_request = self.factory.get(self.tool.relaunch_url)
