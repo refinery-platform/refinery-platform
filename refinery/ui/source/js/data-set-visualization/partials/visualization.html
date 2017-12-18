@@ -66,12 +66,16 @@
             {{vis.humanizeCreateTime }}
           </div>
            <div class="col-md-4">
-              <a ng-href="/users/{{ analysis.owner }}">
-                {{ ownerName }}
+              <a ng-href="/users/{{ $ctrl.vis.owner.user_profile_uuid }}">
+                <span ng-if="$ctrl.vis.owner.full_name.length">
+                  {{ $ctrl.vis.owner.full_name }}
+                </span>
+                 <span ng-if="!$ctrl.vis.owner.full_name.length">
+                  {{ $ctrl.vis.owner.username }}
+                </span>
               </a>
              </span>
           </div>
-
         </div>
       </li>
     </ul>
