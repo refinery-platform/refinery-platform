@@ -2739,8 +2739,7 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
             )
 
     def test_vis_tool_can_be_relaunched(self):
-        self.create_tool(ToolDefinition.VISUALIZATION,
-                         start_vis_container=True)
+        self.create_tool(ToolDefinition.VISUALIZATION)
         self._django_docker_engine_cleanup_wrapper()
 
         assign_perm('core.read_dataset', self.user, self.tool.dataset)
@@ -2751,15 +2750,21 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
         # Relaunch Tool
         get_request = self.factory.get(self.tool.relaunch_url)
         force_authenticate(get_request, self.user)
-        get_response = self.tool_relaunch_view(get_request,
-                                               uuid=self.tool.uuid)
+
+        with mock.patch(
+            "django_docker_engine.docker_utils.DockerClientWrapper.run"
+        ) as run_container_mock:
+            get_response = self.tool_relaunch_view(
+                get_request,
+                uuid=self.tool.uuid
+            )
 
         self.assertEqual(get_response.status_code, 200)
         self.assertEqual(
             json.loads(get_response.content),
             {Tool.TOOL_URL: self.tool.get_relative_container_url()}
         )
-        self.assertTrue(self.tool.is_running())
+        self.assertTrue(run_container_mock.called)
 
     def test_relaunch_failure_no_auth(self):
         self.create_tool(ToolDefinition.VISUALIZATION)
