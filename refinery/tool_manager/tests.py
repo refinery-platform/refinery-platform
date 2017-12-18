@@ -276,6 +276,9 @@ class ToolManagerTestBase(ToolManagerMocks):
     def tearDown(self):
         # Trigger the pre_delete signal so that datafiles are purged
         FileStoreItem.objects.all().delete()
+        # Remove any running containers
+        with self.settings(DJANGO_DOCKER_ENGINE_SECONDS_INACTIVE=0):
+            django_docker_cleanup()
         super(ToolManagerTestBase, self).tearDown()
 
     def create_solr_mock_response(self, tool):
