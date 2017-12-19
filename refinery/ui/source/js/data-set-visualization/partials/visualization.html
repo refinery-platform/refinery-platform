@@ -66,15 +66,15 @@
             {{vis.humanizeCreateTime }}
           </div>
            <div class="col-md-4">
-              <a ng-href="/users/{{ $ctrl.vis.owner.user_profile_uuid }}">
-                <span ng-if="$ctrl.vis.owner.full_name.length">
-                  {{ $ctrl.vis.owner.full_name }}
+              <a ng-href="/users/{{ vis.owner.user_profile_uuid }}">
+                <!-- avoid error with white spaces or single letter names-->
+                <span ng-if="vis.owner.full_name.length > 2">
+                  {{ vis.owner.full_name }}
                 </span>
-                 <span ng-if="!$ctrl.vis.owner.full_name.length">
-                  {{ $ctrl.vis.owner.username }}
+                <span ng-if="!vis.owner.full_name.length < 2">
+                  {{ vis.owner.username }}
                 </span>
               </a>
-             </span>
           </div>
         </div>
       </li>
