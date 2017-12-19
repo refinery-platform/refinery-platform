@@ -109,12 +109,10 @@ def import_file(uuid, refresh=False, file_size=0):
             logger.debug("Downloading file from '%s'", item.source)
             try:
                 uploaded_object.download_fileobj(download)
-            except botocore.exceptions.ClientError:
-                logger.error("Failed to download '%s'", item.source)
-                import_file.update_state(
-                    state=celery.states.FAILURE,
-                    meta='Failed to import uploaded file'
-                )
+            except botocore.exceptions.ClientError as exc:
+                logger.error("Failed to download '%s': %s", item.source, exc)
+                import_file.update_state(state=celery.states.FAILURE,
+                                         meta='Failed to import uploaded file')
                 return None
             logger.debug("Saving downloaded file '%s'", download.name)
             item.datafile.save(os.path.basename(key), File(download))
