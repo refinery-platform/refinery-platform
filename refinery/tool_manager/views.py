@@ -1,8 +1,9 @@
 import logging
 
 from django.db import transaction
-from django.http import HttpResponseBadRequest
+from django.http import HttpResponseBadRequest, HttpResponseForbidden
 
+from guardian.shortcuts import get_objects_for_user
 from rest_framework import status
 from rest_framework.decorators import detail_route
 from rest_framework.permissions import IsAuthenticated
@@ -11,14 +12,41 @@ from rest_framework.viewsets import ModelViewSet
 
 from core.models import DataSet
 
-from .models import Tool, ToolDefinition, VisualizationTool, WorkflowTool
+from .models import Tool, ToolDefinition, VisualizationTool
 from .serializers import ToolDefinitionSerializer, ToolSerializer
 from .utils import create_tool, validate_tool_launch_configuration
 
 logger = logging.getLogger(__name__)
 
 
-class ToolDefinitionsViewSet(ModelViewSet):
+class ToolManagerViewSetBase(ModelViewSet):
+    def __init__(self, **kwargs):
+        super(ToolManagerViewSetBase, self).__init__(**kwargs)
+        self.data_set = None
+
+    def list(self, request, *args, **kwargs):
+        try:
+            data_set_uuid = self.request.query_params[
+                kwargs["data_set_uuid_lookup_name"]
+            ]
+        except (AttributeError, KeyError) as e:
+            return Response(
+                "Must specify a Dataset UUID: {}".format(e),
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        try:
+            self.data_set = DataSet.objects.get(uuid=data_set_uuid)
+        except (DataSet.DoesNotExist, DataSet.MultipleObjectsReturned) as e:
+            return Response(
+                "Couldn't fetch Dataset with UUID: {} {}".format(
+                    data_set_uuid, e
+                ),
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        return super(ToolManagerViewSetBase, self).list(request)
+
+
+class ToolDefinitionsViewSet(ToolManagerViewSetBase):
     """API endpoint that allows for ToolDefinitions to be fetched"""
     serializer_class = ToolDefinitionSerializer
     lookup_field = 'uuid'
@@ -26,7 +54,6 @@ class ToolDefinitionsViewSet(ModelViewSet):
 
     def __init__(self, **kwargs):
         super(ToolDefinitionsViewSet, self).__init__(**kwargs)
-        self.data_set = None
 
     def get_queryset(self):
         if self.request.user.has_perm('core.share_dataset', self.data_set):
@@ -38,26 +65,13 @@ class ToolDefinitionsViewSet(ModelViewSet):
             )
 
     def list(self, request, *args, **kwargs):
-        try:
-            data_set_uuid = self.request.query_params["dataSetUuid"]
-        except (AttributeError, KeyError) as e:
-            return Response(
-                "Must specify a Dataset UUID: {}".format(e),
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        try:
-            self.data_set = DataSet.objects.get(uuid=data_set_uuid)
-        except (DataSet.DoesNotExist, DataSet.MultipleObjectsReturned) as e:
-            return Response(
-                "Couldn't fetch Dataset with UUID: {} {}".format(
-                    data_set_uuid, e
-                ),
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        return super(ToolDefinitionsViewSet, self).list(request)
+        return super(ToolDefinitionsViewSet, self).list(
+            request,
+            data_set_uuid_lookup_name="dataSetUuid"
+        )
 
 
-class ToolsViewSet(ModelViewSet):
+class ToolsViewSet(ToolManagerViewSetBase):
     """API endpoint that allows for Tools to be fetched and launched"""
     queryset = Tool.objects.all()
     serializer_class = ToolSerializer
@@ -65,24 +79,17 @@ class ToolsViewSet(ModelViewSet):
     http_method_names = ['get', 'post']
     permission_classes = [IsAuthenticated]
 
+    def __init__(self, **kwargs):
+        super(ToolsViewSet, self).__init__(**kwargs)
+        self.user_tools = []
+        self.visualization_tools = None
+        self.workflow_tools = None
+
     def list(self, request, *args, **kwargs):
-        try:
-            data_set_uuid = self.request.query_params["data_set_uuid"]
-        except (AttributeError, KeyError) as e:
-            return Response(
-                "Must specify a Dataset UUID: {}".format(e),
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        try:
-            self.data_set = DataSet.objects.get(uuid=data_set_uuid)
-        except (DataSet.DoesNotExist, DataSet.MultipleObjectsReturned) as e:
-            return Response(
-                "Couldn't fetch Dataset with UUID: {} {}".format(
-                    data_set_uuid, e
-                ),
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        return super(ToolsViewSet, self).list(request)
+        return super(ToolsViewSet, self).list(
+            request,
+            data_set_uuid_lookup_name="data_set_uuid"
+        )
 
     def get_queryset(self):
         """
@@ -90,27 +97,31 @@ class ToolsViewSet(ModelViewSet):
         authenticated user has read permissions on.
         """
         if self.request.user.has_perm('core.read_meta_dataset', self.data_set):
-            data_set_tools = Tool.objects.filter(dataset=self.data_set)
+            self.visualization_tools = get_objects_for_user(
+                self.request.user,
+                "tool_manager.read_visualizationtool"
+            )
+            self.workflow_tools = get_objects_for_user(
+                self.request.user,
+                "tool_manager.read_workflowtool"
+            )
+            self.user_tools.extend(self.visualization_tools)
+            self.user_tools.extend(self.workflow_tools)
+
         else:
-            return Response(
+            return HttpResponseForbidden(
                 "Unauthorized for data set uuid: {}".format(
-                    self.request.query_params.get("data_set_uuid")),
-                status=status.HTTP_401_UNAUTHORIZED
+                    self.data_set.uuid
+                )
             )
 
         tool_type = self.request.query_params.get("tool_type")
 
         if not tool_type:
-            return data_set_tools
+            return self.user_tools
 
-        # owns children
-        if tool_type == 'visualization':
-            vis_queryset = VisualizationTool.objects.all()
-            return [tool for tool in vis_queryset
-                    if tool.get_tool_type() == ToolDefinition.VISUALIZATION]
-        else:
-            return [tool for tool in WorkflowTool.objects.all()
-                    if tool.get_tool_type() == ToolDefinition.WORKFLOW]
+        return self.visualization_tools \
+            if tool_type == 'visualization' else self.workflow_tools
 
     def create(self, request, *args, **kwargs):
         """
