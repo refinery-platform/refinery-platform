@@ -318,6 +318,8 @@ class ToolManagerTestBase(ToolManagerMocks):
                     annotation_file_name=None,
                     start_vis_container=False):
 
+        assign_perm('core.read_meta_dataset', self.user, self.dataset)
+
         if tool_type == ToolDefinition.WORKFLOW:
             self.create_workflow_tool_definition(
                 annotation_file_name=annotation_file_name
