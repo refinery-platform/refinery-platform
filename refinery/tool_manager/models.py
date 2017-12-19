@@ -912,23 +912,25 @@ class WorkflowTool(Tool):
         Galaxy Dataset
         :return: <int> corresponding to said Galaxy Dataset's analysis group
         """
+
         refinery_input_file_id = self._get_refinery_input_file_id(
             galaxy_dataset_dict
         )
         refinery_to_galaxy_file_mappings = self._get_galaxy_file_mapping_list()
 
-        analysis_groups = [
-            refinery_to_galaxy_file_map[self.ANALYSIS_GROUP]
-            for refinery_to_galaxy_file_map in refinery_to_galaxy_file_mappings
+        if self._has_merged_outputs(galaxy_dataset_dict):
+            analysis_group_numbers = [
+                refinery_to_galaxy_file_map[self.ANALYSIS_GROUP]
+                for refinery_to_galaxy_file_map in
+                refinery_to_galaxy_file_mappings
+            ]
+            return ", ".join(sorted(analysis_group_numbers))
+
+        for refinery_to_galaxy_file_map in refinery_to_galaxy_file_mappings:
             if refinery_input_file_id == refinery_to_galaxy_file_map[
                 self.GALAXY_DATASET_HISTORY_ID
-            ]
-        ]
-        assert len(list(set(analysis_groups))) == 1, (
-            "`analysis_groups` should only contain a single element."
-        )
-        analysis_group = analysis_groups[0]
-        return analysis_group
+            ]:
+                return refinery_to_galaxy_file_map[self.ANALYSIS_GROUP]
 
     def _get_analysis_node_connection_input_filename(self):
         return (
@@ -1004,8 +1006,8 @@ class WorkflowTool(Tool):
 
     def _get_exposed_galaxy_datasets(self):
         """
-        Retrieve all Galaxy Datasets that correspond to an asterisked
-        output in the Galaxy workflow editor.
+        Retrieve all Galaxy Datasets that correspond to a properly annotated
+        output step in the Galaxy workflow editor.
 
         https://galaxyproject.org/learn/advanced-workflow
         /basic-editing/#hidden_datasets
@@ -1021,22 +1023,20 @@ class WorkflowTool(Tool):
             # `tool_id` corresponds to the descriptive name of a galaxy
             # tool. Not a UUID-like string like one may think
             if "upload" not in creating_job["tool_id"]:
-                workflow_step_key = str(
-                    self._get_workflow_step(galaxy_dataset)
-                )
-                workflow_steps_dict = self._get_workflow_dict()["steps"]
                 creating_job_output_name = (
                     self._get_creating_job_output_name(galaxy_dataset)
                 )
-                workflow_step_output_names = [
-                    workflow_output["output_name"] for workflow_output in
-                    workflow_steps_dict[workflow_step_key][
-                        self.WORKFLOW_OUTPUTS
-                    ]
-                ]
-                if creating_job_output_name in workflow_step_output_names:
+                if creating_job_output_name in self.get_exposed_output_names():
                     exposed_galaxy_datasets.append(galaxy_dataset)
         return exposed_galaxy_datasets
+
+    def get_exposed_output_files(self):
+        return [output_file for
+                output_file in self.tool_definition.output_files.all()]
+
+    def get_exposed_output_names(self):
+        return [output_file.name
+                for output_file in self.get_exposed_output_files()]
 
     def get_galaxy_dict(self):
         """
@@ -1207,6 +1207,12 @@ class WorkflowTool(Tool):
         """
         workflow_input_type = self._get_workflow_dict()["steps"]["0"]["type"]
         return workflow_input_type == self.DATA_COLLECTION_INPUT
+
+    def _has_merged_outputs(self, galaxy_dataset_dict):
+        return True if galaxy_dataset_dict["name"] in [
+            output_file.name for output_file in self.get_exposed_output_files()
+            if output_file.is_merged
+        ] else False
 
     @handle_bioblend_exceptions
     def import_library_dataset_to_history(self, history_id,
