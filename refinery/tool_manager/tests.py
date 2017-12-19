@@ -1522,7 +1522,7 @@ class VisualizationToolTests(ToolManagerTestBase):
         )
         self.assertTrue(self.search_solr_mock.called)
 
-    def test__create_input_dict(self):
+    def test__create_container_input_dict(self):
         tool_input_dict = self.tool._create_container_input_dict()
         file_relationships = self.tool.get_file_relationships_urls()
 
@@ -1533,7 +1533,9 @@ class VisualizationToolTests(ToolManagerTestBase):
                 VisualizationTool.NODE_INFORMATION:
                     self.tool._get_detailed_input_nodes_dict(),
                 ToolDefinition.PARAMETERS:
-                    self.tool._get_visualization_parameters()
+                    self.tool._get_visualization_parameters(),
+                ToolDefinition.EXTRA_DIRECTORIES:
+                    self.tool.tool_definition.get_extra_directories()
             }
         )
 
@@ -3506,11 +3508,9 @@ class ParameterTests(ToolManagerTestBase):
                 default_value="Coffee"
             )
             self.assertEqual(
-                str,
-                type(
-                    parameter.cast_param_value_to_proper_type(
-                        parameter.default_value
-                    )
+                parameter.default_value,
+                parameter.cast_param_value_to_proper_type(
+                    parameter.default_value
                 )
             )
 
@@ -3522,11 +3522,9 @@ class ParameterTests(ToolManagerTestBase):
             default_value="1"
         )
         self.assertEqual(
-            int,
-            type(
-                parameter.cast_param_value_to_proper_type(
-                    parameter.default_value
-                )
+            1,
+            parameter.cast_param_value_to_proper_type(
+                parameter.default_value
             )
         )
 
@@ -3538,10 +3536,8 @@ class ParameterTests(ToolManagerTestBase):
             default_value="1.0"
         )
         self.assertEqual(
-            float,
-            type(
-                parameter.cast_param_value_to_proper_type(
-                    parameter.default_value
-                )
+            1.0,
+            parameter.cast_param_value_to_proper_type(
+                parameter.default_value
             )
         )
