@@ -87,7 +87,7 @@ class Parameter(models.Model):
         if self.value_type in self.STRING_TYPES:
             return str(parameter_value)
         elif self.value_type == self.BOOLEAN:
-            return bool(parameter_value)
+            return parameter_value.lower() == "true"
         elif self.value_type == self.INTEGER:
             return int(parameter_value)
         elif self.value_type == self.FLOAT:
@@ -469,9 +469,13 @@ class VisualizationTool(Tool):
                 {
                     "uuid": parameter.uuid,
                     "description": parameter.description,
-                    "default_value": parameter.default_value,
+                    "default_value": parameter.cast_param_value_to_proper_type(
+                        parameter.default_value
+                    ),
                     "name": parameter.name,
-                    "value": self._get_edited_parameter_value(parameter),
+                    "value": parameter.cast_param_value_to_proper_type(
+                        self._get_edited_parameter_value(parameter)
+                    ),
                     "value_type": parameter.value_type
                 }
             )
