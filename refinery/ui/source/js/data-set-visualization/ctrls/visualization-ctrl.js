@@ -11,14 +11,25 @@
     .module('refineryDataSetVisualization')
     .controller('DataSetVisualizationCtrl', DataSetVisualizationCtrl);
 
-  DataSetVisualizationCtrl.$inject = ['$window', 'visualizationService'];
+  DataSetVisualizationCtrl.$inject = [
+    '$http',
+    '$log',
+    '$window',
+    'settings',
+    'visualizationService'
+  ];
 
   function DataSetVisualizationCtrl (
+    $http,
+    $log,
     $window,
+    settings,
     visualizationService
   ) {
     var visService = visualizationService;
     var vm = this;
+    vm.isOwner = isOwner;
+    vm.relaunchTool = relaunchTool;
     vm.visualizations = visService.visualizations;
     activate();
     /*
@@ -31,6 +42,19 @@
         vm.visLoadingFlag = 'LOADING';
         refreshVisualizations();
       }
+    }
+
+    function relaunchTool (relaunchAddress) {
+      $http.get(relaunchAddress)
+        .then(function (response) {
+          $window.location.href = response.data.tool_url;
+        }, function (error) {
+          $log.error(error);
+        });
+    }
+
+    function isOwner (visOwnerUuid) {
+      return visOwnerUuid === settings.djangoApp.userprofileUUID;
     }
 
      /**

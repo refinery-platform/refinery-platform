@@ -29,10 +29,11 @@
          </span>
        </a>
       </div>
-      <div class="col-md-4">
+      <div class="col-md-2">
         <strong>Owner Name</strong>
       </div>
-
+      <div class="col-md-2">
+      </div>
     </div>
 
     <ul class="analysesList">
@@ -40,19 +41,19 @@
         <div class="row">
           <div class="col-md-1 analysis-icon">
             <span class="spinner">
-              <span ng-if="$ctrl.vis.isRunning">
+              <span ng-if="vis.is_running">
                 <i class="fa fa-cog analyses-status"
                  refinery-tooltip
                  refinery-tooltip-container="body"
-                 refinery-tooltip-placement="bottom"
+                 refinery-tooltip-placement="right"
                  title="Visualization is running.">
                 </i>
               </span>
-              <span ng-if="!$ctrl.vis.isRunning">
+              <span ng-if="!vis.is_running">
                 <i class="fa fa-pause-circle-o analyses-status"
                  refinery-tooltip
                  refinery-tooltip-container="body"
-                 refinery-tooltip-placement="bottom"
+                 refinery-tooltip-placement="right"
                  title="Visualization is paused.">
                 </i>
               </span>
@@ -65,7 +66,7 @@
           <div class="col-md-1">
             {{vis.humanizeCreateTime }}
           </div>
-           <div class="col-md-4">
+           <div class="col-md-2">
               <a ng-href="/users/{{ vis.owner.user_profile_uuid }}">
                 <!-- avoid error with white spaces or single letter names-->
                 <span ng-if="vis.owner.full_name.length > 2">
@@ -75,6 +76,24 @@
                   {{ vis.owner.username }}
                 </span>
               </a>
+          </div>
+           <div class="col-md-2">
+              <span ng-if="$ctrl.isOwner(vis.owner.user_profile_uuid)">
+                <span ng-if="!vis.is_running">
+                  <button
+                    class="btn btn-primary btn-xs"
+                    ng-click="$ctrl.relaunchTool(vis.relaunch_url)">
+                    Relaunch
+                  </button>
+                </span>
+                <span ng-if="vis.is_running">
+                  <a
+                    class="refinery-base btn btn-default btn-xs"
+                    ng-href="{{ vis.container_url }}">
+                    View
+                  </a>
+                </span>
+              </span>
           </div>
         </div>
       </li>
