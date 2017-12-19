@@ -551,12 +551,15 @@ class ToolManagerTestBase(ToolManagerMocks):
         with self.assertRaises(RuntimeError):
             self.create_tool("Coffee is not a valid tool type")
 
-    def _make_tools_get_request(self):
+    def _make_tools_get_request(self, user=None):
         self.get_request = self.factory.get(
             self.tools_url_root,
             data={"data_set_uuid": self.dataset.uuid}
         )
-        force_authenticate(self.get_request, self.user)
+        force_authenticate(
+            self.get_request,
+            self.user if not user else user
+        )
         self.get_response = self.tools_view(self.get_request)
 
 
@@ -2594,15 +2597,14 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
         self.get_response = self.tools_view(self.get_request)
         self.assertEqual(self.get_response.status_code, 403)
 
-    def test_get_request_tools_owned_by_user(self):
+    def test_get_request_tools_owned_by_another_user(self):
         # Creates a valid Tool for self.user
         self.create_tool(ToolDefinition.VISUALIZATION)
 
         # Try to GET the aforementioned Tool, and assert that another user
         # can't do so
-        force_authenticate(self.get_request, self.user2)
-        self.get_response = self.tools_view(self.get_request)
-        self.assertEqual(len(self.get_response.data), 0)
+        self._make_tools_get_request(user=self.user2)
+        self.assertEqual(self.get_response.status_code, 401)
 
     def test_unallowed_http_verbs(self):
         self.create_tool(ToolDefinition.WORKFLOW)
