@@ -1,7 +1,7 @@
 import logging
 
 from django.db import transaction
-from django.http import HttpResponseBadRequest, HttpResponseForbidden
+from django.http import HttpResponseBadRequest
 
 from guardian.shortcuts import get_objects_for_user
 from rest_framework import status
@@ -23,6 +23,9 @@ class ToolManagerViewSetBase(ModelViewSet):
     def __init__(self, **kwargs):
         super(ToolManagerViewSetBase, self).__init__(**kwargs)
         self.data_set = None
+        self.user_tools = []
+        self.visualization_tools = None
+        self.workflow_tools = None
 
     def list(self, request, *args, **kwargs):
         try:
@@ -43,6 +46,25 @@ class ToolManagerViewSetBase(ModelViewSet):
                 ),
                 status=status.HTTP_400_BAD_REQUEST
             )
+        if self.request.user.has_perm('core.read_meta_dataset', self.data_set):
+            self.visualization_tools = get_objects_for_user(
+                self.request.user,
+                "tool_manager.read_visualizationtool"
+            )
+            self.workflow_tools = get_objects_for_user(
+                self.request.user,
+                "tool_manager.read_workflowtool"
+            )
+            self.user_tools.extend(self.visualization_tools)
+            self.user_tools.extend(self.workflow_tools)
+
+        else:
+            return Response(
+                "Unauthorized for data set uuid: {}".format(
+                    self.data_set.uuid
+                ),
+                status=status.HTTP_401_UNAUTHORIZED
+            )
         return super(ToolManagerViewSetBase, self).list(request)
 
 
@@ -51,9 +73,6 @@ class ToolDefinitionsViewSet(ToolManagerViewSetBase):
     serializer_class = ToolDefinitionSerializer
     lookup_field = 'uuid'
     http_method_names = ['get']
-
-    def __init__(self, **kwargs):
-        super(ToolDefinitionsViewSet, self).__init__(**kwargs)
 
     def get_queryset(self):
         if self.request.user.has_perm('core.share_dataset', self.data_set):
@@ -79,12 +98,6 @@ class ToolsViewSet(ToolManagerViewSetBase):
     http_method_names = ['get', 'post']
     permission_classes = [IsAuthenticated]
 
-    def __init__(self, **kwargs):
-        super(ToolsViewSet, self).__init__(**kwargs)
-        self.user_tools = []
-        self.visualization_tools = None
-        self.workflow_tools = None
-
     def list(self, request, *args, **kwargs):
         return super(ToolsViewSet, self).list(
             request,
@@ -96,25 +109,6 @@ class ToolsViewSet(ToolManagerViewSetBase):
         This view returns a list of all the Tools that the currently
         authenticated user has read permissions on.
         """
-        if self.request.user.has_perm('core.read_meta_dataset', self.data_set):
-            self.visualization_tools = get_objects_for_user(
-                self.request.user,
-                "tool_manager.read_visualizationtool"
-            )
-            self.workflow_tools = get_objects_for_user(
-                self.request.user,
-                "tool_manager.read_workflowtool"
-            )
-            self.user_tools.extend(self.visualization_tools)
-            self.user_tools.extend(self.workflow_tools)
-
-        else:
-            return HttpResponseForbidden(
-                "Unauthorized for data set uuid: {}".format(
-                    self.data_set.uuid
-                )
-            )
-
         tool_type = self.request.query_params.get("tool_type")
 
         if not tool_type:
