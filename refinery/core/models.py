@@ -50,7 +50,7 @@ from data_set_manager.models import (Assay, Investigation, Node,
 from data_set_manager.search_indexes import NodeIndex
 from data_set_manager.utils import (add_annotated_nodes_selection,
                                     index_annotated_nodes_selection)
-from file_store.models import FileStoreItem, FileType, get_file_size
+from file_store.models import FileStoreItem, FileType
 from file_store.tasks import rename
 from galaxy_connector.galaxy_workflow import create_expanded_workflow_graph
 from galaxy_connector.models import Instance
@@ -705,9 +705,7 @@ class DataSet(SharableResource):
         )
 
     def get_assays(self, version=None):
-        return Assay.objects.filter(
-            study=self.get_studies(version)
-        )
+        return Assay.objects.filter(study=self.get_studies(version))
 
     def get_file_count(self):
         """Returns the number of files in the data set"""
@@ -720,51 +718,34 @@ class DataSet(SharableResource):
                 .filter(study=study.id, file_uuid__isnull=False)
                 .count()
             )
-
         return file_count
 
     def get_file_size(self):
         """Returns the disk space in bytes used by all files in the data set"""
         investigation = self.get_investigation()
-        file_size = 0
-
-        for study in investigation.study_set.all():
-            files = Node.objects.filter(
-                study=study.id, file_uuid__isnull=False).values("file_uuid")
-            for file in files:
-                size = get_file_size(
-                    file["file_uuid"], report_symlinks=True)
-                file_size += size
-
-        return file_size
+        file_uuids = Node.objects.filter(
+            study__in=investigation.study_set.all(), file_uuid__isnull=False
+        ).values_list('file_uuid', flat=True)
+        file_items = FileStoreItem.objects.filter(uuid__in=file_uuids)
+        return sum([item.get_file_size() for item in file_items])
 
     def get_isa_archive(self):
-        """
-        Returns the isa_archive that was used to create the
-        DataSet
-        """
+        """Returns the isa_archive that was used to create the DataSet"""
         investigation = self.get_investigation()
-
         try:
-            return FileStoreItem.objects.get(
-                uuid=investigation.isarchive_file)
-
+            return FileStoreItem.objects.get(uuid=investigation.isarchive_file)
         except (FileStoreItem.DoesNotExist,
                 FileStoreItem.MultipleObjectsReturned,
                 AttributeError) as e:
             logger.debug("Couldn't fetch FileStoreItem: %s", e)
 
     def get_pre_isa_archive(self):
-        """
-        Returns the pre_isa_archive that was used to create the
-        DataSet
-        """
+        """Returns the pre_isa_archive that was used to create the DataSet"""
         investigation = self.get_investigation()
-
         try:
             return FileStoreItem.objects.get(
-                    uuid=investigation.pre_isarchive_file)
-
+                uuid=investigation.pre_isarchive_file
+            )
         except (FileStoreItem.DoesNotExist,
                 FileStoreItem.MultipleObjectsReturned,
                 AttributeError) as e:

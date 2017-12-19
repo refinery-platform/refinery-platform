@@ -835,41 +835,26 @@ def invalidate_cached_object(instance, is_test=False):
 
 
 def get_full_url(relative_url):
-    """ Creates a full url (including hostname) from a given relative url
-    :param relative_url: Relative url to build a full url from
-    :type  relative_url: String.
-    :returns A fully constructed url from the Site model's domain, the Django
-    setting: REFINERY_URL_SCHEME, and the passed in relative url or None if
-    something breaks
     """
-
-    # If url passed in is already a full url, simply return that
+    Creates a full URL (including hostname) from a given relative URL
+    :param relative_url: A relative URL.
+    :type  relative_url: String.
+    :returns A full URL constructed using the current Site domain and
+    REFINERY_URL_SCHEME Django setting or None in case of errors.
+    """
     if is_url(relative_url):
         return relative_url
 
-    # Being defensive is good
     try:
         current_site = Site.objects.get_current()
     except Site.DoesNotExist:
-        logger.error(
-            "Cannot provide a full URL: no Sites configured or "
-            "SITE_ID is not set correctly")
+        logger.error("Can not construct a full URL: no Sites configured or "
+                     "SITE_ID is invalid")
         return None
 
-    try:
-        url_scheme = settings.REFINERY_URL_SCHEME
-    except AttributeError:
-        logger.error(
-            "Couldnt fetch the 'REFINERY_URL_SCHEME' Django setting. Is it "
-            "set properly???")
-        return None
-
-    # Construct the url
-    full_url = '{}://{}{}'.format(
-        url_scheme, current_site.domain, relative_url
+    return "{}://{}{}".format(
+        settings.REFINERY_URL_SCHEME, current_site.domain, relative_url
     )
-
-    return full_url
 
 
 def is_url(string):
