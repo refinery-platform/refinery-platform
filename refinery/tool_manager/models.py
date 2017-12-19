@@ -87,7 +87,7 @@ class Parameter(models.Model):
         if self.value_type in self.STRING_TYPES:
             return str(parameter_value)
         elif self.value_type == self.BOOLEAN:
-            return parameter_value.lower() == "true"
+            return parameter_value
         elif self.value_type == self.INTEGER:
             return int(parameter_value)
         elif self.value_type == self.FLOAT:
@@ -516,9 +516,12 @@ class VisualizationTool(Tool):
                         parameter.default_value
                     ),
                     "name": parameter.name,
-                    "value": parameter.cast_param_value_to_proper_type(
-                        self._get_edited_parameter_value(parameter)
-                    ),
+                    "value":
+                        self.get_relative_container_url() + "/"
+                        if parameter.name == "api_prefix" else
+                        parameter.cast_param_value_to_proper_type(
+                            self._get_edited_parameter_value(parameter)
+                        ),
                     "value_type": parameter.value_type
                 }
             )
