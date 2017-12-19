@@ -550,7 +550,10 @@ class ToolManagerTestBase(ToolManagerMocks):
             self.create_tool("Coffee is not a valid tool type")
 
     def _make_tools_get_request(self):
-        self.get_request = self.factory.get(self.tools_url_root)
+        self.get_request = self.factory.get(
+            self.tools_url_root,
+            data={"data_set_uuid": self.dataset.uuid}
+        )
         force_authenticate(self.get_request, self.user)
         self.get_response = self.tools_view(self.get_request)
 
