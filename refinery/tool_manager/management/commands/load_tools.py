@@ -7,7 +7,7 @@ from django.core.management.base import BaseCommand, CommandError
 
 import requests
 
-from ...models import ToolDefinition, WorkflowTool
+from ...models import ToolDefinition
 from ...utils import (ANNOTATION_ERROR_MESSAGE, create_tool_definition,
                       get_workflows, validate_tool_annotation,
                       validate_workflow_step_annotation)
@@ -206,39 +206,9 @@ class Command(BaseCommand):
         Assert that the given `workflow` has `workflow_outputs` properly
         defined
         :param workflow: dict containing a Galaxy Workflow's information
-        :raises: CommandError
         :returns: Boolean
         """
-        # assume that there are no defined `workflow_outputs` until we can
-        # assert otherwise
-        workflow_outputs = False
-
-        workflow_steps = workflow["graph"]["steps"]
-        for step_index in workflow_steps:
-            step_has_workflow_outputs = False
-
-            if workflow_steps[step_index].get(WorkflowTool.WORKFLOW_OUTPUTS):
-                step_has_workflow_outputs = True
-
-            if step_index == "0":
-                if not step_has_workflow_outputs:
-                    raise CommandError(
-                        "You've encountered a known error when trying to "
-                        "import a Galaxy Workflow from a .ga file that "
-                        "utilizes asterisked `workflow_outputs`. "
-                        "Please follow the instructions here: "
-                        "https://github.com/refinery-platform/"
-                        "refinery-platform/wiki/"
-                        "Troubleshooting#generate-tooldefinitions "
-                        "to resolve this error."
-                    )
-                # The 0th step's workflow_output isn't User-defined and
-                # shouldn't be considered  when setting
-                # `self.has_workflow_outputs`
-                continue
-            if step_has_workflow_outputs:
-                workflow_outputs = True
-        return workflow_outputs
+        return True if workflow["annotation"]["output_files"] else False
 
     @staticmethod
     def parse_workflow_step_annotations(workflow):
@@ -273,6 +243,7 @@ class Command(BaseCommand):
                 raise CommandError(
                     "{} {}".format(ANNOTATION_ERROR_MESSAGE, e)
                 )
+
             parameters = step_annotation.get(ToolDefinition.PARAMETERS)
             if parameters:
                 for parameter in parameters:
