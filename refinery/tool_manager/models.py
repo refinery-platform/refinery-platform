@@ -431,10 +431,8 @@ class VisualizationTool(Tool):
             self.FILE_RELATIONSHIPS: self.get_file_relationships_urls(),
             ToolDefinition.PARAMETERS: self._get_visualization_parameters(),
             self.NODE_INFORMATION: self._get_detailed_input_nodes_dict(),
-            ToolDefinition.EXTRA_DIRECTORIES: (
+            ToolDefinition.EXTRA_DIRECTORIES:
                 self.tool_definition.get_extra_directories()
-            )
-
         }
 
     def _get_detailed_input_nodes_dict(self):
