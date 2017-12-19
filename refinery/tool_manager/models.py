@@ -87,7 +87,7 @@ class Parameter(models.Model):
         if self.value_type in self.STRING_TYPES:
             return str(parameter_value)
         elif self.value_type == self.BOOLEAN:
-            return True if parameter_value.lower() == "true" else False
+            return parameter_value.lower() == "true"
         elif self.value_type == self.INTEGER:
             return int(parameter_value)
         elif self.value_type == self.FLOAT:

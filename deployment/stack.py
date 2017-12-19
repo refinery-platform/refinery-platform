@@ -195,8 +195,9 @@ def make_template(config, config_yaml):
                 {
                     'DeviceName': '/dev/sda1',
                     'Ebs': {
-                        'VolumeSize': '11',
                         # Was 8G; HiGlass is 2.5G; Must be an integer
+                        'VolumeSize': '11',
+                        'VolumeType': 'gp2',
                     }
                 }
             ],
