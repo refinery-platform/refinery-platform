@@ -159,7 +159,7 @@ class ToolDefinition(models.Model):
     Visualizations, Other) will need to know about their expected inputs,
     outputs, and input file structuring.
     """
-
+    EXTRA_DIRECTORIES = "extra_directories"
     PARAMETERS = "parameters"
     WORKFLOW = 'WORKFLOW'
     VISUALIZATION = 'VISUALIZATION'
@@ -204,14 +204,16 @@ class ToolDefinition(models.Model):
         """
         if self.tool_type == ToolDefinition.VISUALIZATION:
             try:
-                return self.get_annotation()["extra_directories"]
+                return self.get_annotation()[self.EXTRA_DIRECTORIES]
             except KeyError:
                 logger.error("ToolDefinition: %s's annotation is missing its "
-                             "`extra_directories` key.", self.name)
+                             "`%s` key.", self.name, self.EXTRA_DIRECTORIES)
                 raise
         else:
             raise NotImplementedError(
-                "Workflow-based tools don't utilize `extra_directories`"
+                "Workflow-based tools don't utilize `{}`".format(
+                    self.EXTRA_DIRECTORIES
+                )
             )
 
     def get_parameters(self):
@@ -428,7 +430,11 @@ class VisualizationTool(Tool):
         return {
             self.FILE_RELATIONSHIPS: self.get_file_relationships_urls(),
             ToolDefinition.PARAMETERS: self._get_visualization_parameters(),
-            self.NODE_INFORMATION: self._get_detailed_input_nodes_dict()
+            self.NODE_INFORMATION: self._get_detailed_input_nodes_dict(),
+            ToolDefinition.EXTRA_DIRECTORIES: (
+                self.tool_definition.get_extra_directories()
+            )
+
         }
 
     def _get_detailed_input_nodes_dict(self):
