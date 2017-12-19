@@ -418,7 +418,7 @@ class Tool(OwnableResource):
 
     def is_running(self):
         if self.is_workflow():
-            return True if self.analysis.running() else False
+            return self.analysis.running()
 
         try:
             self._django_docker_client.lookup_container_url(
