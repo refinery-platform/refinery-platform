@@ -1005,7 +1005,8 @@ def get_resources_for_user(user, resource_type):
     return get_objects_for_user(
         user if user.is_authenticated()
         else get_anonymous_user(),
-        which_default_read_perm(resource_type)
+        which_default_read_perm(resource_type),
+        accept_global_perms=accept_global_perms(resource_type)
     )
 
 
@@ -1013,3 +1014,11 @@ def which_default_read_perm(resource_type):
     if resource_type == 'dataset':
         return 'core.read_meta_dataset'
     return 'core.read_%s' % resource_type
+
+
+# False, accept_global_perms will be ignored, which means that only object
+# permissions will be checked.
+def accept_global_perms(resource_type):
+    if resource_type == 'dataset':
+        return False
+    return True
