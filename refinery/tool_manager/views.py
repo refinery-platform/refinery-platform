@@ -11,7 +11,7 @@ from rest_framework.viewsets import ModelViewSet
 
 from core.models import DataSet
 
-from .models import Tool, ToolDefinition, VisualizationTool
+from .models import Tool, ToolDefinition, VisualizationTool, WorkflowTool
 from .serializers import ToolDefinitionSerializer, ToolSerializer
 from .utils import create_tool, validate_tool_launch_configuration
 
@@ -103,11 +103,13 @@ class ToolsViewSet(ModelViewSet):
         if not tool_type:
             return data_set_tools
 
+        # owns children
         if tool_type == 'visualization':
-            return [tool for tool in data_set_tools
+            vis_queryset = VisualizationTool.objects.all()
+            return [tool for tool in vis_queryset
                     if tool.get_tool_type() == ToolDefinition.VISUALIZATION]
         else:
-            return [tool for tool in data_set_tools
+            return [tool for tool in WorkflowTool.objects.all()
                     if tool.get_tool_type() == ToolDefinition.WORKFLOW]
 
     def create(self, request, *args, **kwargs):
