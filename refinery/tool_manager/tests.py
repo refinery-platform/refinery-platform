@@ -3473,3 +3473,75 @@ class ToolManagerUtilitiesTests(ToolManagerTestBase):
                 ),
                 context.exception.message
             )
+
+
+class ParameterTests(ToolManagerTestBase):
+    def test_cast_param_value_to_proper_type_bool(self):
+        parameter = ParameterFactory(
+            name="Bool Param",
+            description="Boolean Parameter",
+            value_type=Parameter.BOOLEAN,
+            default_value="False"
+        )
+        self.assertFalse(
+            parameter.cast_param_value_to_proper_type(parameter.default_value)
+        )
+
+        parameter = ParameterFactory(
+            name="Bool Param",
+            description="Boolean Parameter",
+            value_type=Parameter.BOOLEAN,
+            default_value="True"
+        )
+        self.assertTrue(
+            parameter.cast_param_value_to_proper_type(parameter.default_value)
+        )
+
+    def test_cast_param_value_to_proper_type_string(self):
+        for string_type in Parameter.STRING_TYPES:
+            parameter = ParameterFactory(
+                name="String Param",
+                description="String Parameter",
+                value_type=string_type,
+                default_value="Coffee"
+            )
+            self.assertEqual(
+                str,
+                type(
+                    parameter.cast_param_value_to_proper_type(
+                        parameter.default_value
+                    )
+                )
+            )
+
+    def test_cast_param_value_to_proper_type_int(self):
+        parameter = ParameterFactory(
+            name="Int Param",
+            description="Integer Parameter",
+            value_type=Parameter.INTEGER,
+            default_value="1"
+        )
+        self.assertEqual(
+            int,
+            type(
+                parameter.cast_param_value_to_proper_type(
+                    parameter.default_value
+                )
+            )
+        )
+
+    def test_cast_param_value_to_proper_type_float(self):
+        parameter = ParameterFactory(
+            name="Float Param",
+            description="Float Parameter",
+            value_type=Parameter.FLOAT,
+            default_value="1.0"
+        )
+        self.assertEqual(
+            float,
+            type(
+                parameter.cast_param_value_to_proper_type(
+                    parameter.default_value
+                )
+            )
+        )
