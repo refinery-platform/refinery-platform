@@ -1,3 +1,9 @@
+GALAXY_OUTPUT_NAMES = [
+    "Refinery test tool LIST - N on data 4",
+    "Refinery test tool LIST - N on data 3",
+    "Output file"
+]
+
 history_dict = {
     u'contents_url': u'/api/histories/9b5c597dcbb59371/contents',
     u'id': u'9b5c597dcbb59371',
@@ -61,22 +67,22 @@ galaxy_workflow_dict = {
             },
             u'workflow_outputs': [
                 {
-                    u'output_name': u'Refinery test tool LIST - N on data 4',
+                    u'output_name': GALAXY_OUTPUT_NAMES[0],
                     u'uuid': u'8adc43a1-e075-4ad5-be6a-b9791532b801',
                 },
                 {
-                    u'output_name': u'Output file',
+                    u'output_name': GALAXY_OUTPUT_NAMES[2],
                     u'uuid': u'adc43a1-e075-4ad5-be6a-b9791532b8018',
                 }
             ],
             u'outputs': [
                 {
                     u'type': u'txt',
-                    u'name': u'Refinery test tool LIST - N on data 4'
+                    u'name': GALAXY_OUTPUT_NAMES[0]
                 },
                 {
                     u'type': u'txt',
-                    u'name': u'Output file'
+                    u'name': GALAXY_OUTPUT_NAMES[2]
                 }
             ],
             u'name': u'Refinery test tool LIST - N - 1',
@@ -91,28 +97,28 @@ galaxy_workflow_dict = {
             u'id': 2,
             u'input_connections': {
                 u'input_name': {
-                    u'output_name': u'Refinery test tool LIST - N on data 4',
+                    u'output_name': GALAXY_OUTPUT_NAMES[0],
                     u'id': 1
                 }
             },
             u'workflow_outputs': [
                 {
-                    u'output_name': u'Refinery test tool LIST - N on data 3',
+                    u'output_name': GALAXY_OUTPUT_NAMES[1],
                     u'uuid': u'5b5625c7-3c28-4542-b9c5-2ca9cee301b0',
                 },
                 {
-                    u'output_name': u'Output file',
+                    u'output_name': GALAXY_OUTPUT_NAMES[2],
                     u'uuid': u'adc43a1-4ad5-e075-be6a-b9791532b8018',
                 }
             ],
             u'outputs': [
                 {
                     u'type': u'txt',
-                    u'name': u'Refinery test tool LIST - N on data 3'
+                    u'name': GALAXY_OUTPUT_NAMES[1]
                 },
                 {
                     u'type': u'txt',
-                    u'name': u'Output file'
+                    u'name': GALAXY_OUTPUT_NAMES[2]
                 }
             ],
             u'name': u'Refinery test tool LIST - N - 2',
@@ -150,22 +156,22 @@ galaxy_workflow_dict_collection = {
             },
             u'workflow_outputs': [
                 {
-                    u'output_name': u'Refinery test tool LIST - N on data 4',
+                    u'output_name': GALAXY_OUTPUT_NAMES[0],
                     u'uuid': u'8adc43a1-e075-4ad5-be6a-b9791532b801',
                 },
                 {
-                    u'output_name': u'Output file',
+                    u'output_name': GALAXY_OUTPUT_NAMES[2],
                     u'uuid': u'adc43a1-e075-4ad5-be6a-b9791532b8018',
                 }
             ],
             u'outputs': [
                 {
                     u'type': u'txt',
-                    u'name': u'Refinery test tool LIST - N on data 4'
+                    u'name': GALAXY_OUTPUT_NAMES[0]
                 },
                 {
                     u'type': u'txt',
-                    u'name': u'Output file'
+                    u'name': GALAXY_OUTPUT_NAMES[2]
                 }
             ],
             u'name': u'Refinery test tool LIST - N - 1',
@@ -180,28 +186,28 @@ galaxy_workflow_dict_collection = {
             u'id': 2,
             u'input_connections': {
                 u'input_name': {
-                    u'output_name': u'Refinery test tool LIST - N on data 4',
+                    u'output_name': GALAXY_OUTPUT_NAMES[0],
                     u'id': 1
                 }
             },
             u'workflow_outputs': [
                 {
-                    u'output_name': u'Refinery test tool LIST - N on data 3',
+                    u'output_name': GALAXY_OUTPUT_NAMES[1],
                     u'uuid': u'5b5625c7-3c28-4542-b9c5-2ca9cee301b0',
                 },
                 {
-                    u'output_name': u'Output file',
+                    u'output_name': GALAXY_OUTPUT_NAMES[2],
                     u'uuid': u'adc43a1-4ad5-e075-be6a-b9791532b8018',
                 }
             ],
             u'outputs': [
                 {
                     u'type': u'txt',
-                    u'name': u'Refinery test tool LIST - N on data 3'
+                    u'name': GALAXY_OUTPUT_NAMES[1]
                 },
                 {
                     u'type': u'txt',
-                    u'name': u'Output file'
+                    u'name': GALAXY_OUTPUT_NAMES[2]
                 }
             ],
             u'name': u'Refinery test tool LIST - N - 2',
@@ -234,7 +240,7 @@ galaxy_datasets_list = [
         u'id': u'd32aba4ae7b4124a',
         u'state': u'ok',
         u'history_id': u'67ce804af6ec796b',
-        u'name': u'Refinery test tool LIST - N on data 4',
+        u'name': GALAXY_OUTPUT_NAMES[0],
         u'file_ext': u'txt',
         u'url': u'/api/histories/67ce804af6ec796b/contents/d32aba4ae7b4124a',
         u'purged': False,
@@ -247,7 +253,7 @@ galaxy_datasets_list = [
         u'id': u'd22aba4ae7b4124a',
         u'state': u'ok',
         u'history_id': u'67ce804af6ec796b',
-        u'name': u'Refinery test tool LIST - N on data 3',
+        u'name': GALAXY_OUTPUT_NAMES[1],
         u'file_ext': u'txt',
         u'url': u'/api/histories/67ce804af6ec796b/contents/d32aba4ae7b4124a',
         u'purged': False,
@@ -276,7 +282,7 @@ galaxy_datasets_list_same_output_names = [
         u'id': u'd32aba4ae7b4124a',
         u'state': u'ok',
         u'history_id': u'67ce804af6ec796b',
-        u'name': u'Output file',
+        u'name': GALAXY_OUTPUT_NAMES[2],
         u'file_ext': u'txt',
         u'url': u'/api/histories/67ce804af6ec796b/contents/d32aba4ae7b4124a',
         u'purged': False,
@@ -289,7 +295,7 @@ galaxy_datasets_list_same_output_names = [
         u'id': u'd22aba4ae7b4124a',
         u'state': u'ok',
         u'history_id': u'67ce804af6ec796b',
-        u'name': u'Output file',
+        u'name': GALAXY_OUTPUT_NAMES[2],
         u'file_ext': u'txt',
         u'url': u'/api/histories/67ce804af6ec796b/contents/d32aba4ae7b4124a',
         u'purged': False,
@@ -302,7 +308,7 @@ galaxy_datasets_list_same_output_names = [
         u'id': u'd32aba4ae7b4124a',
         u'state': u'ok',
         u'history_id': u'67ce804af6ec796b',
-        u'name': u'Output file',
+        u'name': GALAXY_OUTPUT_NAMES[2],
         u'file_ext': u'txt',
         u'url': u'/api/histories/67ce804af6ec796b/contents/d32aba4ae7b4124a',
         u'purged': True,
@@ -348,11 +354,11 @@ galaxy_job_a = {
         }
     },
     u'outputs': {
-        u'Refinery test tool LIST - N on data 4': {
+        GALAXY_OUTPUT_NAMES[0]: {
             u'src': u'hda',
             u'uuid': u'8adc43a1-e075-4ad5-be6a-b9791532b801'
         },
-        u'Output file': {
+        GALAXY_OUTPUT_NAMES[2]: {
             u'src': u'hda',
             u'uuid': u'adc43a1-4ad5-e075-be6a-b9791532b8018'
         }
@@ -383,11 +389,11 @@ galaxy_job_b = {
         }
     },
     u'outputs': {
-        u'Refinery test tool LIST - N on data 3': {
+        GALAXY_OUTPUT_NAMES[1]: {
             u'src': u'hda',
             u'uuid': u'5b5625c7-3c28-4542-b9c5-2ca9cee301b0'
         },
-        u'Output file': {
+        GALAXY_OUTPUT_NAMES[2]: {
             u'src': u'hda',
             u'uuid': u'adc43a1-e075-4ad5-be6a-b9791532b8018'
         }
@@ -463,7 +469,7 @@ def create_galaxy_history_content_entry(**kwargs):
 
 galaxy_history_contents = [
     create_galaxy_history_content_entry(
-        name=u'Refinery test tool LIST - N on data 4',
+        name=GALAXY_OUTPUT_NAMES[0],
         extension=u'txt',
         type_id=u'dataset-323a8090ca61e992',
         id=u'323a8090ca61e992',
@@ -474,7 +480,7 @@ galaxy_history_contents = [
         purged=False
     ),
     create_galaxy_history_content_entry(
-        name=u'Refinery test tool LIST - N on data 3',
+        name=GALAXY_OUTPUT_NAMES[1],
         extension=u'txt',
         type_id=u'dataset-a05aafa4cb14c422',
         id=u'a05aafa4cb14c422',
@@ -500,6 +506,6 @@ galaxy_history_contents = [
 ]
 
 galaxy_history_contents_same_names = [
-    dict(item, name="Output file") for item in galaxy_history_contents
+    dict(item, name=GALAXY_OUTPUT_NAMES[2]) for item in galaxy_history_contents
     if item.get("history_content_type") == "dataset"
 ]

@@ -26,7 +26,8 @@ from docker.errors import NotFound
 import mock
 from rest_framework.test import (APIRequestFactory, APITestCase,
                                  force_authenticate)
-from test_data.galaxy_mocks import (galaxy_dataset_provenance_0,
+from test_data.galaxy_mocks import (GALAXY_OUTPUT_NAMES,
+                                    galaxy_dataset_provenance_0,
                                     galaxy_dataset_provenance_1,
                                     galaxy_datasets_list,
                                     galaxy_datasets_list_same_output_names,
@@ -726,11 +727,6 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
 
         self.mock_parameter.delete()
 
-        self.fake_workflow = {
-            "name": "Fake WF",
-            "graph": {"steps": {}}
-        }
-
     def test_tool_definition_model_str(self):
         self.load_visualizations()
         td = ToolDefinition.objects.all()[0]
@@ -815,7 +811,7 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
             self.td.file_relationship.file_relationship.count(),
             0
         )
-        self.assertEqual(self.td.output_files.count(), 4)
+        self.assertEqual(self.td.output_files.count(), 3)
         self.assertEqual(self.td.file_relationship.input_files.count(), 1)
         self.assertIsNotNone(self.td.workflow)
 
@@ -1004,7 +1000,7 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
         self.assertEqual(GalaxyParameter.objects.count(), 13)
         self.assertEqual(Parameter.objects.count(), 13)
         self.assertEqual(InputFile.objects.count(), 3)
-        self.assertEqual(OutputFile.objects.count(), 5)
+        self.assertEqual(OutputFile.objects.count(), 4)
         td2.delete()
 
         self.assertEqual(ToolDefinition.objects.count(), 1)
@@ -1012,7 +1008,7 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
         self.assertEqual(GalaxyParameter.objects.count(), 7)
         self.assertEqual(Parameter.objects.count(), 7)
         self.assertEqual(InputFile.objects.count(), 1)
-        self.assertEqual(OutputFile.objects.count(), 4)
+        self.assertEqual(OutputFile.objects.count(), 3)
         td3.delete()
 
         self._deleted_tool_definition_assertions()
@@ -1304,26 +1300,12 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
             ]
         )
 
-    def test_known_galaxy_one_off_asterisking_error_is_handled(self):
-        self.fake_workflow["graph"]["steps"] = {
-            "0": self.BAD_WORKFLOW_OUTPUTS,
-            "1": self.GOOD_WORKFLOW_OUTPUTS
-        }
-        workflow_exhibiting_one_off_asterisking_error = self.fake_workflow
-
-        with self.assertRaises(CommandError) as context:
-            LoadToolsCommand()._has_workflow_outputs(
-                workflow_exhibiting_one_off_asterisking_error
-            )
-        self.assertIn("asterisked `workflow_outputs`",
-                      context.exception.message)
-
     def test__has_workflow_outputs_bad_workflow_outputs(self):
-        self.fake_workflow["graph"]["steps"] = {
-            "0": self.GOOD_WORKFLOW_OUTPUTS,
-            "1": self.BAD_WORKFLOW_OUTPUTS
+        workflow_without_outputs_defined = {
+            "annotation": {
+                "output_files": []
+            }
         }
-        workflow_without_outputs_defined = self.fake_workflow
 
         self.assertFalse(
             LoadToolsCommand()._has_workflow_outputs(
@@ -1332,11 +1314,11 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
         )
 
     def test__has_workflow_outputs_good_workflow_outputs(self):
-        self.fake_workflow["graph"]["steps"] = {
-            "0": self.GOOD_WORKFLOW_OUTPUTS,
-            "1": self.GOOD_WORKFLOW_OUTPUTS
+        workflow_with_outputs_defined = {
+            "annotation": {
+                "output_files": [{"name": "Cool Output file"}]
+            }
         }
-        workflow_with_outputs_defined = self.fake_workflow
         LoadToolsCommand()._has_workflow_outputs(
             workflow_with_outputs_defined
         )
@@ -2433,13 +2415,14 @@ class WorkflowToolTests(ToolManagerTestBase):
         new_dataset_name = "COFFEE"
         workflow_step = 1
         workflow_dict = galaxy_workflow_dict
+        output_name = GALAXY_OUTPUT_NAMES[0]
         workflow_dict["steps"][str(workflow_step)]["post_job_actions"] = {
-            "RenameDatasetActionRefinery test tool LIST - N on data 4": {
+            "RenameDatasetAction{}".format(output_name): {
                 "action_arguments": {
                     "newname": new_dataset_name
                 },
                 "action_type": "RenameDatasetAction",
-                "output_name": "Refinery test tool LIST - N on data 4"
+                "output_name": output_name
             }
         }
         self.get_workflow_dict_mock.return_value = workflow_dict
@@ -2516,6 +2499,13 @@ class WorkflowToolTests(ToolManagerTestBase):
         self.assertEqual(
             self.tool.get_owner(),
             self.tool.analysis.get_owner()
+        )
+
+    def test_get_exposed_output_names(self):
+        self.create_tool(ToolDefinition.WORKFLOW)
+        self.assertEqual(
+            GALAXY_OUTPUT_NAMES,
+            self.tool.get_exposed_output_names()
         )
 
 

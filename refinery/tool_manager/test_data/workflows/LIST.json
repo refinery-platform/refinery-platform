@@ -59,23 +59,18 @@
     "output_files": [
       {
         "filetype": {"name": "FASTQ"},
-        "name": "Cool Output File1",
+        "name": "Refinery test tool LIST - N on data 4",
         "description": "Cool Output File1 Description"
       },
       {
         "filetype": {"name": "BAM"},
-        "name": "Cool Output File2",
+        "name": "Refinery test tool LIST - N on data 3",
         "description": "Cool Output File2 Description"
       },
       {
         "filetype": {"name": "TXT"},
-        "name": "Cool Output File3",
+        "name": "Output file",
         "description": "Cool Output File3 Description"
-      },
-      {
-        "filetype": {"name": "PDF"},
-        "name": "Cool Output File4",
-        "description": "Cool Output File4 Description"
       }
     ],
     "file_relationship": {
