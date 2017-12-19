@@ -3508,11 +3508,9 @@ class ParameterTests(ToolManagerTestBase):
                 default_value="Coffee"
             )
             self.assertEqual(
-                str,
-                type(
-                    parameter.cast_param_value_to_proper_type(
-                        parameter.default_value
-                    )
+                parameter.default_value,
+                parameter.cast_param_value_to_proper_type(
+                    parameter.default_value
                 )
             )
 
@@ -3524,11 +3522,9 @@ class ParameterTests(ToolManagerTestBase):
             default_value="1"
         )
         self.assertEqual(
-            int,
-            type(
-                parameter.cast_param_value_to_proper_type(
-                    parameter.default_value
-                )
+            1,
+            parameter.cast_param_value_to_proper_type(
+                parameter.default_value
             )
         )
 
@@ -3540,10 +3536,8 @@ class ParameterTests(ToolManagerTestBase):
             default_value="1.0"
         )
         self.assertEqual(
-            float,
-            type(
-                parameter.cast_param_value_to_proper_type(
-                    parameter.default_value
-                )
+            1.0,
+            parameter.cast_param_value_to_proper_type(
+                parameter.default_value
             )
         )
