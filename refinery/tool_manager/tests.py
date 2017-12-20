@@ -2896,6 +2896,10 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
 
         self._make_tools_get_request(self.user)
         self.assertEqual(len(self.get_response.data), vis_tools_to_create)
+        self.assertNotIn(
+            new_tool.uuid,
+            [tool["uuid"] for tool in self.get_response.data]
+        )
 
 
 class WorkflowToolLaunchTests(ToolManagerTestBase):
