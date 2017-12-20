@@ -7,6 +7,7 @@ from guardian.shortcuts import get_objects_for_user
 from rest_framework import status
 from rest_framework.decorators import detail_route
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
 from core.models import DataSet
@@ -51,7 +52,7 @@ class ToolManagerViewSetBase(ModelViewSet):
                 self._get_tools_launched_on_requested_dataset("workflow")
             self.user_tools.extend(self.workflow_tools)
         else:
-            return HttpResponseBadRequest(
+            return Response(
                 "User is not authorized to access DataSet with UUID: {}"
                 .format(self.data_set.uuid),
                 status.HTTP_401_UNAUTHORIZED
