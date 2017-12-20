@@ -72,7 +72,7 @@
                 <span ng-if="vis.owner.full_name.length > 2">
                   {{ vis.owner.full_name }}
                 </span>
-                <span ng-if="!(vis.owner.full_name.length < 2)">
+                <span ng-if="vis.owner.full_name.length <== 2">
                   {{ vis.owner.username }}
                 </span>
               </a>
