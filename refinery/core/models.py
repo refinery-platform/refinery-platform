@@ -727,7 +727,9 @@ class DataSet(SharableResource):
             study__in=investigation.study_set.all(), file_uuid__isnull=False
         ).values_list('file_uuid', flat=True)
         file_items = FileStoreItem.objects.filter(uuid__in=file_uuids)
-        return sum([item.get_file_size() for item in file_items])
+        return sum(
+            [item.get_file_size(report_symlinks=True) for item in file_items]
+        )
 
     def get_isa_archive(self):
         """Returns the isa_archive that was used to create the DataSet"""
