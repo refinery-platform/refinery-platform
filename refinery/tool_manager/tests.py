@@ -314,14 +314,18 @@ class ToolManagerTestBase(ToolManagerMocks):
 
     def create_tool(self,
                     tool_type,
+                    create_unique_name=False,
                     file_relationships=None,
                     annotation_file_name=None,
-                    start_vis_container=False):
+                    start_vis_container=False,
+                    user_owns_dataset=True):
 
-        assign_perm('core.read_meta_dataset', self.user, self.dataset)
+        if user_owns_dataset:
+            assign_perm('core.read_meta_dataset', self.user, self.dataset)
 
         if tool_type == ToolDefinition.WORKFLOW:
             self.create_workflow_tool_definition(
+                create_unique_name=create_unique_name,
                 annotation_file_name=annotation_file_name
             )
             launch_parameters = {
@@ -331,6 +335,7 @@ class ToolManagerTestBase(ToolManagerMocks):
 
         elif tool_type == ToolDefinition.VISUALIZATION:
             self.create_vis_tool_definition(
+                create_unique_name=create_unique_name,
                 annotation_file_name=annotation_file_name
             )
             launch_parameters = {
@@ -421,7 +426,8 @@ class ToolManagerTestBase(ToolManagerMocks):
 
         return self.tool
 
-    def create_vis_tool_definition(self, annotation_file_name=None):
+    def create_vis_tool_definition(self, annotation_file_name=None,
+                                   create_unique_name=False):
         if annotation_file_name:
             self.tool_annotation = "{}/visualizations/{}".format(
                 TEST_DATA_PATH,
@@ -432,17 +438,22 @@ class ToolManagerTestBase(ToolManagerMocks):
                 TEST_DATA_PATH
             )
         with open(self.tool_annotation) as f:
-            self.tool_annotation_json = json.loads(f.read())
+            self.tool_annotation_dict = json.loads(f.read())
+
+        if create_unique_name:
+            self.tool_annotation_dict["name"] = (
+                self.tool_annotation_dict["name"] + str(uuid.uuid4()))
 
         # Don't pull down images in tests
         with mock.patch(
             "django_docker_engine.docker_utils.DockerClientWrapper.pull",
             return_value=None
         ) as pull_mock:
-            self.td = create_tool_definition(self.tool_annotation_json)
+            self.td = create_tool_definition(self.tool_annotation_dict)
             self.assertTrue(pull_mock.called)
 
-    def create_workflow_tool_definition(self, annotation_file_name=None):
+    def create_workflow_tool_definition(self, annotation_file_name=None,
+                                        create_unique_name=False):
         if annotation_file_name:
             self.tool_annotation = "{}/workflows/{}".format(
                 TEST_DATA_PATH,
@@ -458,6 +469,10 @@ class ToolManagerTestBase(ToolManagerMocks):
             self.tool_annotation_data["workflow_engine_uuid"] = (
                 self.workflow_engine.uuid
             )
+            if create_unique_name:
+                self.tool_annotation_data["name"] = (
+                    self.tool_annotation_data["name"] + str(uuid.uuid4())
+                )
             self.td = create_tool_definition(self.tool_annotation_data)
 
     def create_mock_file_relationships(self):
@@ -700,7 +715,7 @@ class ToolDefinitionAPITests(ToolManagerTestBase, APITestCase):
         force_authenticate(get_request, self.user)
         get_response = self.tool_defs_view(get_request)
         self.assertEqual(get_response.status_code, 400)
-        self.assertIn("Must specify a Dataset UUID", get_response.data)
+        self.assertIn("Must specify a Dataset UUID", get_response.content)
 
     def test_bad_query_params_in_get_yields_bad_request(self):
         get_request = self.factory.get(
@@ -712,7 +727,7 @@ class ToolDefinitionAPITests(ToolManagerTestBase, APITestCase):
         force_authenticate(get_request, self.user)
         get_response = self.tool_defs_view(get_request)
         self.assertEqual(get_response.status_code, 400)
-        self.assertIn("Must specify a Dataset UUID", get_response.data)
+        self.assertIn("Must specify a Dataset UUID", get_response.content)
 
     def test_missing_dataset_in_get_yields_bad_request(self):
         dataset_uuid = self.dataset.uuid
@@ -727,7 +742,7 @@ class ToolDefinitionAPITests(ToolManagerTestBase, APITestCase):
         force_authenticate(get_request, self.user)
         get_response = self.tool_defs_view(get_request)
         self.assertEqual(get_response.status_code, 400)
-        self.assertIn("Couldn't fetch Dataset", get_response.data)
+        self.assertIn("Couldn't fetch Dataset", get_response.content)
 
 
 class ToolDefinitionGenerationTests(ToolManagerTestBase):
@@ -1395,7 +1410,7 @@ class ToolDefinitionTests(ToolManagerTestBase):
     def test_get_annotation(self):
         self.create_vis_tool_definition(annotation_file_name="igv.json")
         self.assertEqual(self.td.get_annotation(),
-                         self.tool_annotation_json["annotation"])
+                         self.tool_annotation_dict["annotation"])
 
     def test_get_extra_directories_vis_tool_def(self):
         self.create_vis_tool_definition()
@@ -2786,7 +2801,7 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
         force_authenticate(get_request, self.user)
         get_response = self.tool_relaunch_view(get_request)
         self.assertEqual(get_response.status_code, 400)
-        self.assertIn("Relaunching requires a Tool uuid",
+        self.assertIn("Relaunching a Tool requires a Tool UUID",
                       get_response.content)
 
     def test_relaunch_failure_tool_doesnt_exist(self):
@@ -2812,7 +2827,7 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
             get_request,
             uuid=self.tool.uuid
         )
-        self.assertEqual(get_response.status_code, 400)
+        self.assertEqual(get_response.status_code, 403)
         self.assertIn("not have sufficient permissions",
                       get_response.content)
 
@@ -2864,6 +2879,23 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
                 dict(self.get_response.data[0])[key],
                 expected_response_fields[key]
             )
+
+    def test_vis_tools_returned_are_from_a_single_dataset(self):
+        vis_tools_to_create = 3
+        for i in xrange(vis_tools_to_create):
+            self.create_tool(ToolDefinition.VISUALIZATION,
+                             create_unique_name=True)
+
+        # Create another Vis Tool with a separate Dataset
+        new_tool = self.create_tool(ToolDefinition.VISUALIZATION,
+                                    create_unique_name=True,
+                                    user_owns_dataset=False)
+        new_dataset = create_dataset_with_necessary_models(create_nodes=False)
+        new_tool.dataset = new_dataset
+        new_tool.save()
+
+        self._make_tools_get_request(self.user)
+        self.assertEqual(len(self.get_response.data), vis_tools_to_create)
 
 
 class WorkflowToolLaunchTests(ToolManagerTestBase):
