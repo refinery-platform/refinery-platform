@@ -442,7 +442,8 @@ class ToolManagerTestBase(ToolManagerMocks):
 
         if create_unique_name:
             self.tool_annotation_dict["name"] = (
-                self.tool_annotation_dict["name"] + str(uuid.uuid4()))
+                self.tool_annotation_dict["name"] + str(uuid.uuid4())
+            )
 
         # Don't pull down images in tests
         with mock.patch(
