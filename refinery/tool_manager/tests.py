@@ -2922,12 +2922,16 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
     def test_vis_tools_returned_with_tool_type_request_param(self):
         self._create_workflow_and_vis_tools()
         self._make_tools_get_request(tool_type=ToolDefinition.VISUALIZATION)
-        self._assert_get_response_contains(VisualizationTool.objects.all())
+        self._assert_get_response_contains(
+            VisualizationTool.objects.filter(dataset=self.dataset)
+        )
 
     def test_workflow_tools_returned_with_tool_type_request_param(self):
         self._create_workflow_and_vis_tools()
         self._make_tools_get_request(tool_type=ToolDefinition.WORKFLOW)
-        self._assert_get_response_contains(WorkflowTool.objects.all())
+        self._assert_get_response_contains(
+            WorkflowTool.objects.filter(dataset=self.dataset)
+        )
 
     def test_get_with_invalid_tool_type_request_param(self):
         self._create_workflow_and_vis_tools()
