@@ -15,6 +15,8 @@ from bioblend.galaxy.dataset_collections import (CollectionDescription,
                                                  CollectionElement,
                                                  HistoryDatasetElement)
 from constants import UUID_RE
+from django_docker_engine.container_managers.docker_engine import \
+    ExpectedPortMissing
 from django_docker_engine.docker_utils import (DockerClientWrapper,
                                                DockerContainerSpec)
 from django_extensions.db.fields import UUIDField
@@ -427,7 +429,7 @@ class Tool(OwnableResource):
                 self.container_name
             )
             return True
-        except NotFound:
+        except (ExpectedPortMissing, NotFound):
             return False
 
     def is_visualization(self):
