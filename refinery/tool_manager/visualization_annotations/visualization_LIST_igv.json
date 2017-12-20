@@ -1,0 +1,33 @@
+{
+  "name": "IGV",
+  "tool_type": "VISUALIZATION",
+  "annotation": {
+    "container_input_path": "/var/www/data/input.json",
+    "extra_directories": ["/refinery-data"],
+    "image_name": "gehlenborglab/docker_igv_js:igv-1-0-8",
+    "description": "This visualization does really cool things... with IGV",
+    "parameters": [],
+    "output_files":[],
+    "file_relationship": {
+      "file_relationship": {},
+      "value_type": "LIST",
+      "name": "Flat list of N Samples",
+      "input_files": [
+        {
+          "allowed_filetypes": [
+            {"name": "BED"},
+            {"name": "GFF"},
+            {"name": "WIG"},
+            {"name": "BIGWIG"},
+            {"name": "BEDGRAPH"},
+            {"name": "BAM"},
+            {"name": "VCF"},
+            {"name": "SEG"}
+          ],
+          "name": "Cool Input File",
+          "description": "Cool Input File Description"
+        }
+      ]
+    }
+  }
+}
