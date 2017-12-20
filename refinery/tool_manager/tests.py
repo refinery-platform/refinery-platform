@@ -567,10 +567,14 @@ class ToolManagerTestBase(ToolManagerMocks):
         with self.assertRaises(RuntimeError):
             self.create_tool("Coffee is not a valid tool type")
 
-    def _make_tools_get_request(self, user=None):
+    def _make_tools_get_request(self, user=None, tool_type=None):
+        request_params = {"data_set_uuid": self.dataset.uuid}
+        if tool_type:
+            request_params = dict(tool_type=tool_type, **request_params)
+
         self.get_request = self.factory.get(
             self.tools_url_root,
-            data={"data_set_uuid": self.dataset.uuid}
+            data=request_params
         )
         force_authenticate(
             self.get_request,
@@ -2901,6 +2905,34 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
             new_tool.uuid,
             [tool["uuid"] for tool in self.get_response.data]
         )
+
+    def _create_workflow_and_vis_tools(self, number_to_create=2):
+        for i in xrange(number_to_create):
+            self.create_tool(ToolDefinition.VISUALIZATION,
+                             create_unique_name=True)
+            self.create_tool(ToolDefinition.WORKFLOW,
+                             create_unique_name=True)
+
+    def _assert_get_response_contains(self, tool_list):
+        self.assertEqual(
+            [tool.uuid for tool in tool_list],
+            [tool["uuid"] for tool in self.get_response.data]
+        )
+
+    def test_vis_tools_returned_with_tool_type_request_param(self):
+        self._create_workflow_and_vis_tools()
+        self._make_tools_get_request(tool_type=ToolDefinition.VISUALIZATION)
+        self._assert_get_response_contains(VisualizationTool.objects.all())
+
+    def test_workflow_tools_returned_with_tool_type_request_param(self):
+        self._create_workflow_and_vis_tools()
+        self._make_tools_get_request(tool_type=ToolDefinition.WORKFLOW)
+        self._assert_get_response_contains(WorkflowTool.objects.all())
+
+    def test_get_with_invalid_tool_type_request_param(self):
+        self._create_workflow_and_vis_tools()
+        self._make_tools_get_request(tool_type="coffee")
+        self.assertEqual(self.get_response.data, [])
 
 
 class WorkflowToolLaunchTests(ToolManagerTestBase):
