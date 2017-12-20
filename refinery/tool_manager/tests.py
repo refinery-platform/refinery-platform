@@ -715,7 +715,7 @@ class ToolDefinitionAPITests(ToolManagerTestBase, APITestCase):
         force_authenticate(get_request, self.user)
         get_response = self.tool_defs_view(get_request)
         self.assertEqual(get_response.status_code, 400)
-        self.assertIn("Must specify a Dataset UUID", get_response.content)
+        self.assertIn("Must specify a DataSet UUID", get_response.content)
 
     def test_bad_query_params_in_get_yields_bad_request(self):
         get_request = self.factory.get(
@@ -727,7 +727,7 @@ class ToolDefinitionAPITests(ToolManagerTestBase, APITestCase):
         force_authenticate(get_request, self.user)
         get_response = self.tool_defs_view(get_request)
         self.assertEqual(get_response.status_code, 400)
-        self.assertIn("Must specify a Dataset UUID", get_response.content)
+        self.assertIn("Must specify a DataSet UUID", get_response.content)
 
     def test_missing_dataset_in_get_yields_bad_request(self):
         dataset_uuid = self.dataset.uuid
@@ -742,7 +742,7 @@ class ToolDefinitionAPITests(ToolManagerTestBase, APITestCase):
         force_authenticate(get_request, self.user)
         get_response = self.tool_defs_view(get_request)
         self.assertEqual(get_response.status_code, 400)
-        self.assertIn("Couldn't fetch Dataset", get_response.content)
+        self.assertIn("Couldn't fetch DataSet", get_response.content)
 
 
 class ToolDefinitionGenerationTests(ToolManagerTestBase):
