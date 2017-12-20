@@ -3725,67 +3725,62 @@ class ToolManagerUtilitiesTests(ToolManagerTestBase):
             )
 
 
-class ParameterTests(ToolManagerTestBase):
+class ParameterTests(TestCase):
     def test_cast_param_value_to_proper_type_bool(self):
-        parameter = ParameterFactory(
-            name="Bool Param",
-            description="Boolean Parameter",
-            value_type=Parameter.BOOLEAN,
-            default_value="False"
-        )
-        self.assertFalse(
-            parameter.cast_param_value_to_proper_type(parameter.default_value)
-        )
-
-        parameter = ParameterFactory(
-            name="Bool Param",
-            description="Boolean Parameter",
-            value_type=Parameter.BOOLEAN,
-            default_value="True"
-        )
-        self.assertTrue(
-            parameter.cast_param_value_to_proper_type(parameter.default_value)
-        )
+        test_bools = [True, False]
+        for index, test_bool in enumerate(test_bools):
+            parameter = ParameterFactory(
+                name="Bool Param",
+                description="Boolean Parameter",
+                value_type=Parameter.BOOLEAN,
+                default_value=str(test_bool)
+            )
+            for element in [parameter.default_value, test_bools[index]]:
+                self.assertEqual(
+                    test_bools[index],
+                    parameter.cast_param_value_to_proper_type(element)
+                )
 
     def test_cast_param_value_to_proper_type_string(self):
+        test_string = "Coffee"
         for string_type in Parameter.STRING_TYPES:
             parameter = ParameterFactory(
                 name="String Param",
                 description="String Parameter",
                 value_type=string_type,
-                default_value="Coffee"
+                default_value=test_string
             )
             self.assertEqual(
-                parameter.default_value,
+                test_string,
                 parameter.cast_param_value_to_proper_type(
                     parameter.default_value
                 )
             )
 
     def test_cast_param_value_to_proper_type_int(self):
+        test_int = 1
         parameter = ParameterFactory(
             name="Int Param",
             description="Integer Parameter",
             value_type=Parameter.INTEGER,
-            default_value="1"
+            default_value=str(test_int)
         )
-        self.assertEqual(
-            1,
-            parameter.cast_param_value_to_proper_type(
-                parameter.default_value
+        for element in [parameter.default_value, test_int]:
+            self.assertEqual(
+                test_int,
+                parameter.cast_param_value_to_proper_type(element)
             )
-        )
 
     def test_cast_param_value_to_proper_type_float(self):
+        test_float = 1.37
         parameter = ParameterFactory(
             name="Float Param",
             description="Float Parameter",
             value_type=Parameter.FLOAT,
-            default_value="1.0"
+            default_value=str(test_float)
         )
-        self.assertEqual(
-            1.0,
-            parameter.cast_param_value_to_proper_type(
-                parameter.default_value
+        for element in [parameter.default_value, test_float]:
+            self.assertEqual(
+                test_float,
+                parameter.cast_param_value_to_proper_type(element)
             )
-        )
