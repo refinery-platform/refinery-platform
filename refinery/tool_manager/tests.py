@@ -318,9 +318,9 @@ class ToolManagerTestBase(ToolManagerMocks):
                     file_relationships=None,
                     annotation_file_name=None,
                     start_vis_container=False,
-                    user_owns_dataset=True):
+                    user_has_dataset_read_meta_access=True):
 
-        if user_owns_dataset:
+        if user_has_dataset_read_meta_access:
             assign_perm('core.read_meta_dataset', self.user, self.dataset)
 
         if tool_type == ToolDefinition.WORKFLOW:
@@ -2890,7 +2890,7 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
         # Create another Vis Tool with a separate Dataset
         new_tool = self.create_tool(ToolDefinition.VISUALIZATION,
                                     create_unique_name=True,
-                                    user_owns_dataset=False)
+                                    user_has_dataset_read_meta_access=False)
         new_dataset = create_dataset_with_necessary_models(create_nodes=False)
         new_tool.dataset = new_dataset
         new_tool.save()
