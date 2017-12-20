@@ -45,9 +45,11 @@ class ToolManagerViewSetBase(ModelViewSet):
         if self.request.user.has_perm('core.read_meta_dataset', self.data_set):
             self.visualization_tools = \
                 self._get_tools_launched_on_requested_dataset("visualization")
+            self.user_tools.extend(self.visualization_tools)
+
             self.workflow_tools = \
                 self._get_tools_launched_on_requested_dataset("workflow")
-
+            self.user_tools.extend(self.workflow_tools)
         else:
             return HttpResponseBadRequest(
                 "User is not authorized to access DataSet with UUID: {}"
@@ -61,7 +63,6 @@ class ToolManagerViewSetBase(ModelViewSet):
             self.request.user,
             "tool_manager.read_{}tool".format(tool_type)
         ).filter(dataset=self.data_set)
-        self.user_tools.extend(tools)
         return tools
 
 
