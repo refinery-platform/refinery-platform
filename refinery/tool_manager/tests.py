@@ -2767,7 +2767,7 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
                 self.tool._get_owner_info_as_dict()
             )
 
-    def test_vis_tool_can_be_relaunched(self):
+    def _relaunch_tool_wrapper(self, fail_intentionally_on_relaunch=False):
         self.create_tool(ToolDefinition.VISUALIZATION,
                          start_vis_container=True)
         assign_perm('core.read_dataset', self.user, self.tool.dataset)
@@ -2780,16 +2780,25 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
         self.assertFalse(self.tool.is_running())
 
         # Relaunch Tool
+        if fail_intentionally_on_relaunch:
+            mock.patch(
+                "tool_manager.models.VisualizationTool.launch",
+                side_effect=Exception("Something Broke on Tool Relaunch")
+            ).start()
+
         get_request = self.factory.get(self.tool.relaunch_url)
         force_authenticate(get_request, self.user)
         with mock.patch("tool_manager.models.get_solr_response_json"):
-            get_response = self.tool_relaunch_view(
+            self.get_response = self.tool_relaunch_view(
                 get_request,
                 uuid=self.tool.uuid
             )
-        self.assertEqual(get_response.status_code, 200)
+
+    def test_vis_tool_can_be_relaunched(self):
+        self._relaunch_tool_wrapper()
+        self.assertEqual(self.get_response.status_code, 200)
         self.assertEqual(
-            json.loads(get_response.content),
+            json.loads(self.get_response.content),
             {Tool.TOOL_URL: self.tool.get_relative_container_url()}
         )
         self.assertTrue(self.tool.is_running())
@@ -2884,6 +2893,15 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
                 dict(self.get_response.data[0])[key],
                 expected_response_fields[key]
             )
+
+    def test_failing_relaunch_is_handled(self):
+            self._relaunch_tool_wrapper(fail_intentionally_on_relaunch=True)
+            self.assertEqual(self.get_response.status_code, 500)
+            self.assertIn(
+                "Something Broke on Tool Relaunch",
+                self.get_response.content
+            )
+            self.assertFalse(self.tool.is_running())
 
 
 class WorkflowToolLaunchTests(ToolManagerTestBase):
