@@ -30,12 +30,6 @@
         expect(mockService).toHaveBeenCalled();
       });
     });
-
-    describe('getTimeStamp', function () {
-      it('getTimeStamp is a method', function () {
-        expect(angular.isFunction(service.getTimeStamp)).toBe(true);
-      });
-    });
   });
 })();
 
