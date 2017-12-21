@@ -208,7 +208,7 @@ class Command(BaseCommand):
         :param workflow: dict containing a Galaxy Workflow's information
         :returns: Boolean
         """
-        return True if workflow["annotation"]["output_files"] else False
+        return bool(workflow["annotation"]["output_files"])
 
     @staticmethod
     def parse_workflow_step_annotations(workflow):
