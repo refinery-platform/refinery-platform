@@ -23,6 +23,7 @@ import celery
 from constants import UUID_RE
 from django_docker_engine.docker_utils import DockerClientWrapper
 from docker.errors import NotFound
+from guardian.shortcuts import assign_perm, remove_perm
 import mock
 from rest_framework.test import (APIRequestFactory, APITestCase,
                                  force_authenticate)
@@ -248,6 +249,7 @@ class ToolManagerTestBase(ToolManagerMocks):
                 'post': 'create'
             }
         )
+        self.tool_relaunch_view = ToolsViewSet.as_view({"get": "relaunch"})
 
         self.tools_url_root = '/api/v2/tools/'
         self.tool_defs_url_root = '/api/v2/tool_definitions/'
@@ -261,6 +263,11 @@ class ToolManagerTestBase(ToolManagerMocks):
         self.BAD_WORKFLOW_OUTPUTS = {WorkflowTool.WORKFLOW_OUTPUTS: []}
         self.GOOD_WORKFLOW_OUTPUTS = {WorkflowTool.WORKFLOW_OUTPUTS: [True]}
 
+        self.django_docker_cleanup_wait_time = 1
+        settings.DJANGO_DOCKER_ENGINE_SECONDS_INACTIVE = (
+            self.django_docker_cleanup_wait_time
+        )
+
     def load_visualizations(self):
         # TODO: More mocking, so Docker image is not downloaded
         visualizations = ["{}/visualizations/igv.json".format(TEST_DATA_PATH)]
@@ -270,6 +277,9 @@ class ToolManagerTestBase(ToolManagerMocks):
     def tearDown(self):
         # Trigger the pre_delete signal so that datafiles are purged
         FileStoreItem.objects.all().delete()
+        # Remove any running containers
+        with self.settings(DJANGO_DOCKER_ENGINE_SECONDS_INACTIVE=0):
+            django_docker_cleanup()
         super(ToolManagerTestBase, self).tearDown()
 
     def create_solr_mock_response(self, tool):
@@ -306,7 +316,10 @@ class ToolManagerTestBase(ToolManagerMocks):
     def create_tool(self,
                     tool_type,
                     file_relationships=None,
-                    annotation_file_name=None):
+                    annotation_file_name=None,
+                    start_vis_container=False):
+
+        assign_perm('core.read_meta_dataset', self.user, self.dataset)
 
         if tool_type == ToolDefinition.WORKFLOW:
             self.create_workflow_tool_definition(
@@ -348,19 +361,20 @@ class ToolManagerTestBase(ToolManagerMocks):
         force_authenticate(self.post_request, self.user)
 
         # Mock the spinning up of containers
+        run_container_mock = mock.patch(
+            "django_docker_engine.docker_utils.DockerClientWrapper.run"
+        )
+
         if tool_type == ToolDefinition.VISUALIZATION:
-            with mock.patch(
-                "django_docker_engine.docker_utils.DockerClientWrapper.run"
-            ) as run_mock:
-                with mock.patch(
-                    "tool_manager.models.get_solr_response_json"
-                ):
-                    self.post_response = self.tools_view(self.post_request)
+            with mock.patch("tool_manager.models.get_solr_response_json"):
+                if not start_vis_container:
+                    run_container_mock.start()
+
+                self.post_response = self.tools_view(self.post_request)
                 logger.debug(
                     "Visualization tool launch response: %s",
                     self.post_response.content
                 )
-                self.assertTrue(run_mock.called)
 
             self.tool = VisualizationTool.objects.get(
                 tool_definition__uuid=self.td.uuid
@@ -385,9 +399,7 @@ class ToolManagerTestBase(ToolManagerMocks):
                 {"id": self.GALAXY_ID_MOCK}
             )
 
-        self.get_request = self.factory.get(self.tools_url_root)
-        force_authenticate(self.get_request, self.user)
-        self.get_response = self.tools_view(self.get_request)
+        self._make_tools_get_request()
         self.tool_json = self.get_response.data[0]
         self.delete_request = self.factory.delete(
                 urljoin(self.tools_url_root, self.tool_json['uuid']))
@@ -468,6 +480,11 @@ class ToolManagerTestBase(ToolManagerMocks):
             *[self.make_node() for i in range(0, 4)]
         )
 
+    def _django_docker_engine_cleanup_wrapper(self):
+        time.sleep(self.django_docker_cleanup_wait_time * 2)
+        django_docker_cleanup()
+        time.sleep(self.django_docker_cleanup_wait_time * 2)
+
     def make_node(self, source="http://www.example.com/test_file.txt"):
         test_file = StringIO.StringIO()
 
@@ -534,6 +551,17 @@ class ToolManagerTestBase(ToolManagerMocks):
     def test_create_valid_tool(self):
         with self.assertRaises(RuntimeError):
             self.create_tool("Coffee is not a valid tool type")
+
+    def _make_tools_get_request(self, user=None):
+        self.get_request = self.factory.get(
+            self.tools_url_root,
+            data={"data_set_uuid": self.dataset.uuid}
+        )
+        force_authenticate(
+            self.get_request,
+            self.user if not user else user
+        )
+        self.get_response = self.tools_view(self.get_request)
 
 
 class ToolDefinitionAPITests(ToolManagerTestBase, APITestCase):
@@ -1495,6 +1523,65 @@ class ToolTests(ToolManagerTestBase):
 
         self.assertEqual(context.exception.message, tool.LAUNCH_WARNING)
 
+    def test__get_owner_info_as_dict(self):
+        self.create_tool(ToolDefinition.VISUALIZATION)
+        self._make_tools_get_request()
+
+        self.assertEqual(
+            self.get_response.data[0]["owner"],
+            {
+                "username": self.user.username,
+                "full_name": "{} {}".format(
+                    self.user.first_name,
+                    self.user.last_name
+                ),
+                "user_profile_uuid": self.user.profile.uuid
+            }
+        )
+
+    def test_relaunch_url(self):
+        self.create_tool(ToolDefinition.VISUALIZATION)
+        self.assertEqual(
+            self.tool.relaunch_url,
+            "/api/v2/tools/{}/relaunch/".format(self.tool.uuid)
+        )
+
+    def test_get_relative_container_url(self):
+        self.create_tool(ToolDefinition.VISUALIZATION)
+        self.assertEqual(
+            self.tool.get_relative_container_url(),
+            "/{}/{}".format(
+                settings.DJANGO_DOCKER_ENGINE_BASE_URL,
+                self.tool.container_name
+            )
+        )
+
+    def test_is_workflow(self):
+        self.create_tool(ToolDefinition.WORKFLOW)
+        self.assertTrue(self.tool.is_workflow())
+        self.assertFalse(self.tool.is_visualization())
+
+    def test_is_visualization(self):
+        self.create_tool(ToolDefinition.VISUALIZATION)
+        self.assertTrue(self.tool.is_visualization())
+        self.assertFalse(self.tool.is_workflow())
+
+    def test_visualization_is_running(self):
+        self.create_tool(
+            ToolDefinition.VISUALIZATION,
+            start_vis_container=True
+        )
+        self.assertTrue(self.tool.is_running())
+        self._django_docker_engine_cleanup_wrapper()
+        self.assertFalse(self.tool.is_running())
+
+    def test_workflow_is_running(self):
+        self.create_tool(ToolDefinition.WORKFLOW)
+        self.tool.analysis.set_status(Analysis.RUNNING_STATUS)
+        self.assertTrue(self.tool.is_running())
+        self.tool.analysis.set_status(Analysis.SUCCESS_STATUS)
+        self.assertFalse(self.tool.is_running())
+
 
 class VisualizationToolTests(ToolManagerTestBase):
     def setUp(self):
@@ -1534,7 +1621,7 @@ class VisualizationToolTests(ToolManagerTestBase):
         )
         self.assertTrue(self.search_solr_mock.called)
 
-    def test__create_input_dict(self):
+    def test__create_container_input_dict(self):
         tool_input_dict = self.tool._create_container_input_dict()
         file_relationships = self.tool.get_file_relationships_urls()
 
@@ -1545,7 +1632,9 @@ class VisualizationToolTests(ToolManagerTestBase):
                 VisualizationTool.NODE_INFORMATION:
                     self.tool._get_detailed_input_nodes_dict(),
                 ToolDefinition.PARAMETERS:
-                    self.tool._get_visualization_parameters()
+                    self.tool._get_visualization_parameters(),
+                ToolDefinition.EXTRA_DIRECTORIES:
+                    self.tool.tool_definition.get_extra_directories()
             }
         )
 
@@ -2530,15 +2619,14 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
         self.get_response = self.tools_view(self.get_request)
         self.assertEqual(self.get_response.status_code, 403)
 
-    def test_get_request_tools_owned_by_user(self):
+    def test_get_request_tools_owned_by_another_user(self):
         # Creates a valid Tool for self.user
         self.create_tool(ToolDefinition.VISUALIZATION)
 
         # Try to GET the aforementioned Tool, and assert that another user
         # can't do so
-        force_authenticate(self.get_request, self.user2)
-        self.get_response = self.tools_view(self.get_request)
-        self.assertEqual(len(self.get_response.data), 0)
+        self._make_tools_get_request(user=self.user2)
+        self.assertEqual(self.get_response.status_code, 401)
 
     def test_unallowed_http_verbs(self):
         self.create_tool(ToolDefinition.WORKFLOW)
@@ -2629,10 +2717,173 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
         self.create_tool(ToolDefinition.WORKFLOW)
         self.create_tool(ToolDefinition.VISUALIZATION)
 
-        self.get_request = self.factory.get(self.tools_url_root)
-        force_authenticate(self.get_request, self.user)
-        self.get_response = self.tools_view(self.get_request)
+        self._make_tools_get_request()
         self.assertEqual(len(self.get_response.data), 2)
+
+    def test_visualiztion_running_status_in_response(self):
+        self.create_tool(
+            ToolDefinition.VISUALIZATION,
+            start_vis_container=True
+        )
+
+        self._make_tools_get_request()
+        self.assertEqual(len(self.get_response.data), 1)
+
+        self.assertTrue(self.get_response.data[0]["is_running"])
+
+        self._django_docker_engine_cleanup_wrapper()
+
+        self._make_tools_get_request()
+        self.assertEqual(len(self.get_response.data), 1)
+
+        self.assertFalse(self.get_response.data[0]["is_running"])
+
+    def test_workflow_running_status_in_response(self):
+        self.create_tool(ToolDefinition.WORKFLOW)
+        self.tool.analysis.set_status(Analysis.RUNNING_STATUS)
+
+        self._make_tools_get_request()
+        self.assertEqual(len(self.get_response.data), 1)
+
+        self.assertTrue(self.get_response.data[0]["is_running"])
+
+        self.tool.analysis.set_status(Analysis.SUCCESS_STATUS)
+
+        self._make_tools_get_request()
+        self.assertEqual(len(self.get_response.data), 1)
+
+        self.assertFalse(self.get_response.data[0]["is_running"])
+
+    def test_owner_info_is_returned(self):
+        self.create_tool(ToolDefinition.WORKFLOW)
+        self.create_tool(ToolDefinition.VISUALIZATION)
+
+        self._make_tools_get_request()
+        self.assertEqual(len(self.get_response.data), 2)
+
+        for tool in self.get_response.data:
+            self.assertEqual(
+                tool["owner"],
+                self.tool._get_owner_info_as_dict()
+            )
+
+    def test_vis_tool_can_be_relaunched(self):
+        self.create_tool(ToolDefinition.VISUALIZATION,
+                         start_vis_container=True)
+        assign_perm('core.read_dataset', self.user, self.tool.dataset)
+
+        self._make_tools_get_request()
+        self.assertTrue(self.tool.is_running())
+
+        # Remove Container
+        self._django_docker_engine_cleanup_wrapper()
+        self.assertFalse(self.tool.is_running())
+
+        # Relaunch Tool
+        get_request = self.factory.get(self.tool.relaunch_url)
+        force_authenticate(get_request, self.user)
+        with mock.patch("tool_manager.models.get_solr_response_json"):
+            get_response = self.tool_relaunch_view(
+                get_request,
+                uuid=self.tool.uuid
+            )
+        self.assertEqual(get_response.status_code, 200)
+        self.assertEqual(
+            json.loads(get_response.content),
+            {Tool.TOOL_URL: self.tool.get_relative_container_url()}
+        )
+        self.assertTrue(self.tool.is_running())
+
+    def test_relaunch_failure_no_auth(self):
+        self.create_tool(ToolDefinition.VISUALIZATION)
+        get_request = self.factory.get(self.tool.relaunch_url)
+        get_response = self.tool_relaunch_view(get_request)
+        self.assertEqual(get_response.status_code, 403)
+
+    def test_relaunch_failure_no_uuid_present(self):
+        self.create_tool(ToolDefinition.VISUALIZATION)
+        get_request = self.factory.get(self.tool.relaunch_url)
+        force_authenticate(get_request, self.user)
+        get_response = self.tool_relaunch_view(get_request)
+        self.assertEqual(get_response.status_code, 400)
+        self.assertIn("Relaunching requires a Tool uuid",
+                      get_response.content)
+
+    def test_relaunch_failure_tool_doesnt_exist(self):
+        self.create_tool(ToolDefinition.VISUALIZATION)
+        tool_uuid = self.tool.uuid
+        relaunch_url = self.tool.relaunch_url
+        self.tool.delete()
+
+        get_request = self.factory.get(relaunch_url)
+        force_authenticate(get_request, self.user)
+        get_response = self.tool_relaunch_view(get_request, uuid=tool_uuid)
+        self.assertEqual(get_response.status_code, 400)
+        self.assertIn("Couldn't retrieve VisualizationTool",
+                      get_response.content)
+
+    def test_relaunch_failure_insufficient_user_perms(self):
+        self.create_tool(ToolDefinition.VISUALIZATION)
+        get_request = self.factory.get(self.tool.relaunch_url)
+        remove_perm('core.read_dataset', self.user, self.tool.dataset)
+
+        force_authenticate(get_request, self.user)
+        get_response = self.tool_relaunch_view(
+            get_request,
+            uuid=self.tool.uuid
+        )
+        self.assertEqual(get_response.status_code, 400)
+        self.assertIn("not have sufficient permissions",
+                      get_response.content)
+
+    def test_relaunch_failure_tool_already_running(self):
+        self.create_tool(ToolDefinition.VISUALIZATION,
+                         start_vis_container=True)
+        assign_perm('core.read_dataset', self.user, self.tool.dataset)
+        get_request = self.factory.get(self.tool.relaunch_url)
+        force_authenticate(get_request, self.user)
+        get_response = self.tool_relaunch_view(
+            get_request,
+            uuid=self.tool.uuid
+        )
+        self.assertEqual(get_response.status_code, 400)
+        self.assertIn("Can't relaunch a Tool that is currently running",
+                      get_response.content)
+
+    def test_workflow_tool_disallows_relaunch(self):
+        self.create_tool(ToolDefinition.WORKFLOW)
+        get_request = self.factory.get(self.tool.relaunch_url)
+        force_authenticate(get_request, self.user)
+        get_response = self.tool_relaunch_view(
+            get_request,
+            uuid=self.tool.uuid
+        )
+        self.assertEqual(get_response.status_code, 400)
+        self.assertIn("Couldn't retrieve VisualizationTool",
+                      get_response.content)
+
+    def test_api_response_has_proper_fields_present(self):
+        self.create_tool(ToolDefinition.VISUALIZATION)
+        self._make_tools_get_request()
+        self.assertEqual(len(self.get_response.data), 1)
+
+        expected_response_fields = {
+            'container_name': self.tool.container_name,
+            'container_url': self.tool.get_relative_container_url(),
+            'dataset': self.tool.dataset.pk,
+            'is_running': self.tool.is_running(),
+            'name': self.tool.name,
+            'owner': self.tool._get_owner_info_as_dict(),
+            'relaunch_url': self.tool.relaunch_url,
+            'tool_definition': self.tool.tool_definition.pk,
+            'uuid': self.tool.uuid
+        }
+
+        for key in expected_response_fields.keys():
+            self.assertEqual(
+                dict(self.get_response.data[0])[key],
+                expected_response_fields[key]
+            )
 
 
 class WorkflowToolLaunchTests(ToolManagerTestBase):
@@ -2642,7 +2893,7 @@ class WorkflowToolLaunchTests(ToolManagerTestBase):
         self.create_tool(ToolDefinition.WORKFLOW)
 
         self.assertEqual(self.tool.get_owner(), self.user)
-        self.assertEqual(self.tool.get_tool_type(), ToolDefinition.WORKFLOW)
+        self.assertTrue(self.tool.is_workflow())
         self.assertEqual(
             ast.literal_eval(self.tool.analysis.workflow_copy),
             galaxy_workflow_dict
@@ -3180,10 +3431,7 @@ class VisualizationToolLaunchTests(ToolManagerTestBase,  # TODO: Cypress
             self.assertEqual(len(tools), count)
         last_tool = tools.last()
         self.assertEqual(last_tool.get_owner(), self.user)
-        self.assertEqual(
-            last_tool.get_tool_type(),
-            ToolDefinition.VISUALIZATION
-        )
+        self.assertTrue(last_tool.is_visualization())
 
         if assertions:
             assertions(last_tool)
@@ -3232,12 +3480,14 @@ class VisualizationToolLaunchTests(ToolManagerTestBase,  # TODO: Cypress
             )
             client.lookup_container_url(tool.container_name)
 
-            time.sleep(wait_time * 2)
-            django_docker_cleanup()
-            time.sleep(wait_time * 2)
+            self.assertTrue(tool.is_running())
+
+            self._django_docker_engine_cleanup_wrapper()
 
             with self.assertRaises(NotFound):
                 client.lookup_container_url(tool.container_name)
+
+            self.assertFalse(tool.is_running())
 
         self._start_visualization(
             'hello_world.json',
@@ -3493,3 +3743,69 @@ class ToolManagerUtilitiesTests(ToolManagerTestBase):
                 ),
                 context.exception.message
             )
+
+
+class ParameterTests(ToolManagerTestBase):
+    def test_cast_param_value_to_proper_type_bool(self):
+        parameter = ParameterFactory(
+            name="Bool Param",
+            description="Boolean Parameter",
+            value_type=Parameter.BOOLEAN,
+            default_value="False"
+        )
+        self.assertFalse(
+            parameter.cast_param_value_to_proper_type(parameter.default_value)
+        )
+
+        parameter = ParameterFactory(
+            name="Bool Param",
+            description="Boolean Parameter",
+            value_type=Parameter.BOOLEAN,
+            default_value="True"
+        )
+        self.assertTrue(
+            parameter.cast_param_value_to_proper_type(parameter.default_value)
+        )
+
+    def test_cast_param_value_to_proper_type_string(self):
+        for string_type in Parameter.STRING_TYPES:
+            parameter = ParameterFactory(
+                name="String Param",
+                description="String Parameter",
+                value_type=string_type,
+                default_value="Coffee"
+            )
+            self.assertEqual(
+                parameter.default_value,
+                parameter.cast_param_value_to_proper_type(
+                    parameter.default_value
+                )
+            )
+
+    def test_cast_param_value_to_proper_type_int(self):
+        parameter = ParameterFactory(
+            name="Int Param",
+            description="Integer Parameter",
+            value_type=Parameter.INTEGER,
+            default_value="1"
+        )
+        self.assertEqual(
+            1,
+            parameter.cast_param_value_to_proper_type(
+                parameter.default_value
+            )
+        )
+
+    def test_cast_param_value_to_proper_type_float(self):
+        parameter = ParameterFactory(
+            name="Float Param",
+            description="Float Parameter",
+            value_type=Parameter.FLOAT,
+            default_value="1.0"
+        )
+        self.assertEqual(
+            1.0,
+            parameter.cast_param_value_to_proper_type(
+                parameter.default_value
+            )
+        )

@@ -1050,7 +1050,7 @@ class AnalysisResource(ModelResource):
 
     def get_object_list(self, request, **kwargs):
         user = request.user
-        perm = 'read_%s' % DataSet._meta.model_name
+        perm = 'read_meta_%s' % DataSet._meta.model_name
         if (user.is_authenticated()):
             allowed_datasets = get_objects_for_user(user, perm, DataSet)
         else:

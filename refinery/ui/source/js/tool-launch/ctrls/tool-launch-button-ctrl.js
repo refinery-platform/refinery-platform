@@ -18,6 +18,7 @@
     'toolLaunchService',
     'toolSelectService',
     '$uibModal',
+    'visualizationService',
     '$rootScope',
     '$window'
   ];
@@ -29,6 +30,7 @@
     toolLaunchService,
     toolSelectService,
     $uibModal,
+    visualizationService,
     $rootScope,
     $window
   ) {
@@ -54,9 +56,13 @@
      * @memberOf refineryToolLaunch.ToolLaunchButtonCtrl
     **/
     function launchTool () {
-      $rootScope.$broadcast('rf/launchAnalysis');
       toolLaunchService.postToolLaunch().then(function (response) {
         $window.location.href = response.tool_url;
+        if (response.tool_url.indexOf('/visualizations/') > -1) {
+          visualizationService.getVisualizations($window.dataSetUuid);
+        } else {
+          $rootScope.$broadcast('rf/launchAnalysis');
+        }
       }, function (error) {
         $uibModal.open({
           component: 'rpApiResponseModal',

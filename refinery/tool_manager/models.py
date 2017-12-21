@@ -18,7 +18,7 @@ from constants import UUID_RE
 from django_docker_engine.docker_utils import (DockerClientWrapper,
                                                DockerContainerSpec)
 from django_extensions.db.fields import UUIDField
-from docker.errors import APIError
+from docker.errors import APIError, NotFound
 
 from analysis_manager.models import AnalysisStatus
 from analysis_manager.tasks import (_galaxy_file_import, get_taskset_result,
@@ -87,7 +87,7 @@ class Parameter(models.Model):
         if self.value_type in self.STRING_TYPES:
             return str(parameter_value)
         elif self.value_type == self.BOOLEAN:
-            return bool(parameter_value)
+            return parameter_value.lower() == "true"
         elif self.value_type == self.INTEGER:
             return int(parameter_value)
         elif self.value_type == self.FLOAT:
@@ -174,8 +174,8 @@ class ToolDefinition(models.Model):
     Visualizations, Other) will need to know about their expected inputs,
     outputs, and input file structuring.
     """
-
     OUTPUT_FILES = "output_files"
+    EXTRA_DIRECTORIES = "extra_directories"
     PARAMETERS = "parameters"
     WORKFLOW = 'WORKFLOW'
     VISUALIZATION = 'VISUALIZATION'
@@ -221,14 +221,16 @@ class ToolDefinition(models.Model):
         """
         if self.tool_type == ToolDefinition.VISUALIZATION:
             try:
-                return self.get_annotation()["extra_directories"]
+                return self.get_annotation()[self.EXTRA_DIRECTORIES]
             except KeyError:
                 logger.error("ToolDefinition: %s's annotation is missing its "
-                             "`extra_directories` key.", self.name)
+                             "`%s` key.", self.name, self.EXTRA_DIRECTORIES)
                 raise
         else:
             raise NotImplementedError(
-                "Workflow-based tools don't utilize `extra_directories`"
+                "Workflow-based tools don't utilize `{}`".format(
+                    self.EXTRA_DIRECTORIES
+                )
             )
 
     def get_parameters(self):
@@ -323,6 +325,22 @@ class Tool(OwnableResource):
 
     def __str__(self):
         return "Tool: {}".format(self.get_tool_name())
+
+    @property
+    def _django_docker_client(self):
+        return DockerClientWrapper(settings.DJANGO_DOCKER_ENGINE_DATA_DIR)
+
+    @property
+    def relaunch_url(self):
+        return "/api/v2/tools/{}/relaunch/".format(self.uuid)
+
+    def _get_owner_info_as_dict(self):
+        user = self.get_owner()
+        return {
+            "username": user.username,
+            "full_name": "{} {}".format(user.first_name, user.last_name),
+            "user_profile_uuid": user.profile.uuid
+        }
 
     def get_input_file_uuid_list(self):
         # Tools can't be created without the `file_uuid_list` existing so no
@@ -421,6 +439,33 @@ class Tool(OwnableResource):
             )
         self.set_tool_launch_config(tool_launch_config)
 
+    def is_running(self):
+        if self.is_workflow():
+            return self.analysis.running()
+
+        try:
+            self._django_docker_client.lookup_container_url(
+                self.container_name
+            )
+            return True
+        except NotFound:
+            return False
+
+    def is_visualization(self):
+        return self.get_tool_type() == ToolDefinition.VISUALIZATION
+
+    def is_workflow(self):
+        return self.get_tool_type() == ToolDefinition.WORKFLOW
+
+    def get_relative_container_url(self):
+        """
+        Construct & return the relative url of our Tool's container
+        """
+        return "/{}/{}".format(
+            settings.DJANGO_DOCKER_ENGINE_BASE_URL,
+            self.container_name
+        )
+
 
 class VisualizationToolError(StandardError):
     pass
@@ -449,8 +494,15 @@ class VisualizationTool(Tool):
         return {
             self.FILE_RELATIONSHIPS: self.get_file_relationships_urls(),
             ToolDefinition.PARAMETERS: self._get_visualization_parameters(),
-            self.NODE_INFORMATION: self._get_detailed_input_nodes_dict()
+            self.NODE_INFORMATION: self._get_detailed_input_nodes_dict(),
+            ToolDefinition.EXTRA_DIRECTORIES:
+                self.tool_definition.get_extra_directories()
         }
+
+    def _check_max_running_containers(self):
+        max_containers = settings.DJANGO_DOCKER_ENGINE_MAX_CONTAINERS
+        if len(self._django_docker_client.list()) >= max_containers:
+            raise VisualizationToolError('Max containers')
 
     def _get_detailed_input_nodes_dict(self):
         """
@@ -473,15 +525,6 @@ class VisualizationTool(Tool):
         }
         return node_info
 
-    def get_relative_container_url(self):
-        """
-        Construct & return the relative url of our Tool's container
-        """
-        return "/{}/{}".format(
-            settings.DJANGO_DOCKER_ENGINE_BASE_URL,
-            self.container_name
-        )
-
     def _get_visualization_parameters(self):
         tool_parameters = []
 
@@ -490,9 +533,13 @@ class VisualizationTool(Tool):
                 {
                     "uuid": parameter.uuid,
                     "description": parameter.description,
-                    "default_value": parameter.default_value,
+                    "default_value": parameter.cast_param_value_to_proper_type(
+                        parameter.default_value
+                    ),
                     "name": parameter.name,
-                    "value": self._get_edited_parameter_value(parameter),
+                    "value": parameter.cast_param_value_to_proper_type(
+                        self._get_edited_parameter_value(parameter)
+                    ),
                     "value_type": parameter.value_type
                 }
             )
@@ -520,10 +567,7 @@ class VisualizationTool(Tool):
         launched container's url
             - <HttpResponseBadRequest>, <HttpServerError>
         """
-        client = DockerClientWrapper(settings.DJANGO_DOCKER_ENGINE_DATA_DIR)
-        max_containers = settings.DJANGO_DOCKER_ENGINE_MAX_CONTAINERS
-        if len(client.list()) >= max_containers:
-            raise VisualizationToolError('Max containers')
+        self._check_max_running_containers()
 
         container = DockerContainerSpec(
             image_name=self.tool_definition.image_name,
@@ -534,7 +578,7 @@ class VisualizationTool(Tool):
             extra_directories=self.tool_definition.get_extra_directories()
         )
 
-        client.run(container)
+        self._django_docker_client.run(container)
 
         return JsonResponse({Tool.TOOL_URL: self.get_relative_container_url()})
 

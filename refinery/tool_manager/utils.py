@@ -211,7 +211,7 @@ def create_tool(tool_launch_configuration, user_instance):
     )
 
     tool_type = tool_definition.tool_type
-    tool_name = "{}-launch".format(tool_definition.name)
+    tool_name = tool_definition.name
 
     common_tool_params = {
         "name": tool_name,
