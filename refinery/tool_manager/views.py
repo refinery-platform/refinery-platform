@@ -1,7 +1,7 @@
 import logging
 
 from django.db import transaction
-from django.http import HttpResponseBadRequest
+from django.http import HttpResponseBadRequest, HttpResponseServerError
 
 from guardian.shortcuts import get_objects_for_user
 from rest_framework import status
@@ -166,4 +166,4 @@ class ToolsViewSet(ToolManagerViewSetBase):
             return tool.launch()
         except Exception as e:
             logger.error(e)
-            return HttpResponseBadRequest(e)
+            return HttpResponseServerError(e)
