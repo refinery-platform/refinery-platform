@@ -15,6 +15,8 @@ from bioblend.galaxy.dataset_collections import (CollectionDescription,
                                                  CollectionElement,
                                                  HistoryDatasetElement)
 from constants import UUID_RE
+from django_docker_engine.container_managers.docker_engine import \
+    ExpectedPortMissing
 from django_docker_engine.docker_utils import (DockerClientWrapper,
                                                DockerContainerSpec)
 from django_extensions.db.fields import UUIDField
@@ -82,12 +84,15 @@ class Parameter(models.Model):
 
     def cast_param_value_to_proper_type(self, parameter_value):
         """Parameter values from the Tool Launch Configuration are all
-        strings, but the invocation of Galaxy workflows expects these values
+        strings, but the invocation of Tools expect these values
         to be of a certain type."""
         if self.value_type in self.STRING_TYPES:
             return str(parameter_value)
         elif self.value_type == self.BOOLEAN:
-            return parameter_value.lower() == "true"
+            if type(parameter_value) == bool:
+                return parameter_value
+            else:
+                return parameter_value.lower() == "true"
         elif self.value_type == self.INTEGER:
             return int(parameter_value)
         elif self.value_type == self.FLOAT:
@@ -427,7 +432,7 @@ class Tool(OwnableResource):
                 self.container_name
             )
             return True
-        except NotFound:
+        except (ExpectedPortMissing, NotFound):
             return False
 
     def is_visualization(self):
