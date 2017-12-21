@@ -315,14 +315,18 @@ class ToolManagerTestBase(ToolManagerMocks):
 
     def create_tool(self,
                     tool_type,
+                    create_unique_name=False,
                     file_relationships=None,
                     annotation_file_name=None,
-                    start_vis_container=False):
+                    start_vis_container=False,
+                    user_has_dataset_read_meta_access=True):
 
-        assign_perm('core.read_meta_dataset', self.user, self.dataset)
+        if user_has_dataset_read_meta_access:
+            assign_perm('core.read_meta_dataset', self.user, self.dataset)
 
         if tool_type == ToolDefinition.WORKFLOW:
             self.create_workflow_tool_definition(
+                create_unique_name=create_unique_name,
                 annotation_file_name=annotation_file_name
             )
             launch_parameters = {
@@ -332,6 +336,7 @@ class ToolManagerTestBase(ToolManagerMocks):
 
         elif tool_type == ToolDefinition.VISUALIZATION:
             self.create_vis_tool_definition(
+                create_unique_name=create_unique_name,
                 annotation_file_name=annotation_file_name
             )
             launch_parameters = {
@@ -422,7 +427,8 @@ class ToolManagerTestBase(ToolManagerMocks):
 
         return self.tool
 
-    def create_vis_tool_definition(self, annotation_file_name=None):
+    def create_vis_tool_definition(self, annotation_file_name=None,
+                                   create_unique_name=False):
         if annotation_file_name:
             self.tool_annotation = "{}/visualizations/{}".format(
                 TEST_DATA_PATH,
@@ -433,17 +439,23 @@ class ToolManagerTestBase(ToolManagerMocks):
                 TEST_DATA_PATH
             )
         with open(self.tool_annotation) as f:
-            self.tool_annotation_json = json.loads(f.read())
+            self.tool_annotation_dict = json.loads(f.read())
+
+        if create_unique_name:
+            self.tool_annotation_dict["name"] = (
+                self.tool_annotation_dict["name"] + str(uuid.uuid4())
+            )
 
         # Don't pull down images in tests
         with mock.patch(
             "django_docker_engine.docker_utils.DockerClientWrapper.pull",
             return_value=None
         ) as pull_mock:
-            self.td = create_tool_definition(self.tool_annotation_json)
+            self.td = create_tool_definition(self.tool_annotation_dict)
             self.assertTrue(pull_mock.called)
 
-    def create_workflow_tool_definition(self, annotation_file_name=None):
+    def create_workflow_tool_definition(self, annotation_file_name=None,
+                                        create_unique_name=False):
         if annotation_file_name:
             self.tool_annotation = "{}/workflows/{}".format(
                 TEST_DATA_PATH,
@@ -459,6 +471,10 @@ class ToolManagerTestBase(ToolManagerMocks):
             self.tool_annotation_data["workflow_engine_uuid"] = (
                 self.workflow_engine.uuid
             )
+            if create_unique_name:
+                self.tool_annotation_data["name"] = (
+                    self.tool_annotation_data["name"] + str(uuid.uuid4())
+                )
             self.td = create_tool_definition(self.tool_annotation_data)
 
     def create_mock_file_relationships(self):
@@ -552,10 +568,14 @@ class ToolManagerTestBase(ToolManagerMocks):
         with self.assertRaises(RuntimeError):
             self.create_tool("Coffee is not a valid tool type")
 
-    def _make_tools_get_request(self, user=None):
+    def _make_tools_get_request(self, user=None, tool_type=None):
+        request_params = {"data_set_uuid": self.dataset.uuid}
+        if tool_type:
+            request_params = dict(tool_type=tool_type, **request_params)
+
         self.get_request = self.factory.get(
             self.tools_url_root,
-            data={"data_set_uuid": self.dataset.uuid}
+            data=request_params
         )
         force_authenticate(
             self.get_request,
@@ -701,7 +721,7 @@ class ToolDefinitionAPITests(ToolManagerTestBase, APITestCase):
         force_authenticate(get_request, self.user)
         get_response = self.tool_defs_view(get_request)
         self.assertEqual(get_response.status_code, 400)
-        self.assertIn("Must specify a Dataset UUID", get_response.data)
+        self.assertIn("Must specify a DataSet UUID", get_response.content)
 
     def test_bad_query_params_in_get_yields_bad_request(self):
         get_request = self.factory.get(
@@ -713,7 +733,7 @@ class ToolDefinitionAPITests(ToolManagerTestBase, APITestCase):
         force_authenticate(get_request, self.user)
         get_response = self.tool_defs_view(get_request)
         self.assertEqual(get_response.status_code, 400)
-        self.assertIn("Must specify a Dataset UUID", get_response.data)
+        self.assertIn("Must specify a DataSet UUID", get_response.content)
 
     def test_missing_dataset_in_get_yields_bad_request(self):
         dataset_uuid = self.dataset.uuid
@@ -728,7 +748,7 @@ class ToolDefinitionAPITests(ToolManagerTestBase, APITestCase):
         force_authenticate(get_request, self.user)
         get_response = self.tool_defs_view(get_request)
         self.assertEqual(get_response.status_code, 400)
-        self.assertIn("Couldn't fetch Dataset", get_response.data)
+        self.assertIn("Couldn't fetch DataSet", get_response.content)
 
 
 class ToolDefinitionGenerationTests(ToolManagerTestBase):
@@ -1407,7 +1427,7 @@ class ToolDefinitionTests(ToolManagerTestBase):
     def test_get_annotation(self):
         self.create_vis_tool_definition(annotation_file_name="igv.json")
         self.assertEqual(self.td.get_annotation(),
-                         self.tool_annotation_json["annotation"])
+                         self.tool_annotation_dict["annotation"])
 
     def test_get_extra_directories_vis_tool_def(self):
         self.create_vis_tool_definition()
@@ -2815,7 +2835,7 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
         force_authenticate(get_request, self.user)
         get_response = self.tool_relaunch_view(get_request)
         self.assertEqual(get_response.status_code, 400)
-        self.assertIn("Relaunching requires a Tool uuid",
+        self.assertIn("Relaunching a Tool requires a Tool UUID",
                       get_response.content)
 
     def test_relaunch_failure_tool_doesnt_exist(self):
@@ -2841,7 +2861,7 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
             get_request,
             uuid=self.tool.uuid
         )
-        self.assertEqual(get_response.status_code, 400)
+        self.assertEqual(get_response.status_code, 403)
         self.assertIn("not have sufficient permissions",
                       get_response.content)
 
@@ -2902,6 +2922,59 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
                 self.get_response.content
             )
             self.assertFalse(self.tool.is_running())
+
+    def test_vis_tools_returned_are_from_a_single_dataset(self):
+        vis_tools_to_create = 3
+        for i in xrange(vis_tools_to_create):
+            self.create_tool(ToolDefinition.VISUALIZATION,
+                             create_unique_name=True)
+
+        # Create another Vis Tool with a separate Dataset
+        new_tool = self.create_tool(ToolDefinition.VISUALIZATION,
+                                    create_unique_name=True,
+                                    user_has_dataset_read_meta_access=False)
+        new_dataset = create_dataset_with_necessary_models(create_nodes=False)
+        new_tool.dataset = new_dataset
+        new_tool.save()
+
+        self._make_tools_get_request(self.user)
+        self.assertEqual(len(self.get_response.data), vis_tools_to_create)
+        self.assertNotIn(
+            new_tool.uuid,
+            [tool["uuid"] for tool in self.get_response.data]
+        )
+
+    def _create_workflow_and_vis_tools(self, number_to_create=2):
+        for i in xrange(number_to_create):
+            self.create_tool(ToolDefinition.VISUALIZATION,
+                             create_unique_name=True)
+            self.create_tool(ToolDefinition.WORKFLOW,
+                             create_unique_name=True)
+
+    def _assert_get_response_contains(self, tool_list):
+        self.assertEqual(
+            [tool.uuid for tool in tool_list],
+            [tool["uuid"] for tool in self.get_response.data]
+        )
+
+    def test_vis_tools_returned_with_tool_type_request_param(self):
+        self._create_workflow_and_vis_tools()
+        self._make_tools_get_request(tool_type=ToolDefinition.VISUALIZATION)
+        self._assert_get_response_contains(
+            VisualizationTool.objects.filter(dataset=self.dataset)
+        )
+
+    def test_workflow_tools_returned_with_tool_type_request_param(self):
+        self._create_workflow_and_vis_tools()
+        self._make_tools_get_request(tool_type=ToolDefinition.WORKFLOW)
+        self._assert_get_response_contains(
+            WorkflowTool.objects.filter(dataset=self.dataset)
+        )
+
+    def test_get_with_invalid_tool_type_request_param(self):
+        self._create_workflow_and_vis_tools()
+        self._make_tools_get_request(tool_type="coffee")
+        self.assertEqual(self.get_response.data, [])
 
 
 class WorkflowToolLaunchTests(ToolManagerTestBase):
@@ -3763,67 +3836,62 @@ class ToolManagerUtilitiesTests(ToolManagerTestBase):
             )
 
 
-class ParameterTests(ToolManagerTestBase):
+class ParameterTests(TestCase):
     def test_cast_param_value_to_proper_type_bool(self):
-        parameter = ParameterFactory(
-            name="Bool Param",
-            description="Boolean Parameter",
-            value_type=Parameter.BOOLEAN,
-            default_value="False"
-        )
-        self.assertFalse(
-            parameter.cast_param_value_to_proper_type(parameter.default_value)
-        )
-
-        parameter = ParameterFactory(
-            name="Bool Param",
-            description="Boolean Parameter",
-            value_type=Parameter.BOOLEAN,
-            default_value="True"
-        )
-        self.assertTrue(
-            parameter.cast_param_value_to_proper_type(parameter.default_value)
-        )
+        test_bools = [True, False]
+        for index, test_bool in enumerate(test_bools):
+            parameter = ParameterFactory(
+                name="Bool Param",
+                description="Boolean Parameter",
+                value_type=Parameter.BOOLEAN,
+                default_value=str(test_bool)
+            )
+            for element in [parameter.default_value, test_bools[index]]:
+                self.assertEqual(
+                    test_bools[index],
+                    parameter.cast_param_value_to_proper_type(element)
+                )
 
     def test_cast_param_value_to_proper_type_string(self):
+        test_string = "Coffee"
         for string_type in Parameter.STRING_TYPES:
             parameter = ParameterFactory(
                 name="String Param",
                 description="String Parameter",
                 value_type=string_type,
-                default_value="Coffee"
+                default_value=test_string
             )
             self.assertEqual(
-                parameter.default_value,
+                test_string,
                 parameter.cast_param_value_to_proper_type(
                     parameter.default_value
                 )
             )
 
     def test_cast_param_value_to_proper_type_int(self):
+        test_int = 1
         parameter = ParameterFactory(
             name="Int Param",
             description="Integer Parameter",
             value_type=Parameter.INTEGER,
-            default_value="1"
+            default_value=str(test_int)
         )
-        self.assertEqual(
-            1,
-            parameter.cast_param_value_to_proper_type(
-                parameter.default_value
+        for element in [parameter.default_value, test_int]:
+            self.assertEqual(
+                test_int,
+                parameter.cast_param_value_to_proper_type(element)
             )
-        )
 
     def test_cast_param_value_to_proper_type_float(self):
+        test_float = 1.37
         parameter = ParameterFactory(
             name="Float Param",
             description="Float Parameter",
             value_type=Parameter.FLOAT,
-            default_value="1.0"
+            default_value=str(test_float)
         )
-        self.assertEqual(
-            1.0,
-            parameter.cast_param_value_to_proper_type(
-                parameter.default_value
+        for element in [parameter.default_value, test_float]:
+            self.assertEqual(
+                test_float,
+                parameter.cast_param_value_to_proper_type(element)
             )
-        )
