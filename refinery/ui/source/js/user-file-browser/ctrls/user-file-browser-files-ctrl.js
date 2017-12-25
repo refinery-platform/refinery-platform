@@ -69,11 +69,19 @@
     };
 
     gridOptionsService.appScopeProvider = vm;
-    vm.downloadFilterQuery = function () {
+    vm.downloadCsvQuery = function () {
       return $httpParamSerializer({
         fq: userFileParamsService.fq(),
         sort: userFileParamsService.sort()
       });
+    };
+    vm.downloadCsvPath = function () {
+      return '/files_download?' + vm.downloadCsvQuery();
+    };
+    vm.downloadCsvUrl = function () {
+      return $location.protocol() + '://'
+          + $location.host() + ':' + $location.port()
+          + vm.downloadCsvPath();
     };
     vm.gridOptions = gridOptionsService;
     vm.gridOptions.onRegisterApi = function (api) {

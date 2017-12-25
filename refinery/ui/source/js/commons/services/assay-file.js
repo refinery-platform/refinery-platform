@@ -13,9 +13,9 @@ angular
           query: {
             method: 'GET'
           },
-          params: { // TODO: I believe params should be inside query?
-            limit: 'limit',
-            offset: 'offset'
+          params: {
+            limit: 0,
+            offset: 0
           }
         }
       );

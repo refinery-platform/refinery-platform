@@ -165,7 +165,7 @@ def report_missing_keys(config):
     """
 
     required = ['KEY_NAME', 'RDS_SUPERUSER_PASSWORD',
-                'S3_BUCKET_NAME_BASE',
+                'S3_BUCKET_NAME_BASE', 'COGNITO_IDENTITY_POOL_ID',
                 'SITE_NAME', 'SITE_URL', 'STACK_NAME']
     bad = []
     for key in required:

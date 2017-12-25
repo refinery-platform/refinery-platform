@@ -24,8 +24,7 @@ tutorial_settings_file_path = os.path.join(
     'refinery/config/tutorial_steps.json'
 )
 
-override_path = os.path.join(BASE_DIR,
-                             'refinery/config/override-config.yaml')
+override_path = os.path.join(BASE_DIR, 'refinery/config/override-config.yaml')
 
 # load config.json
 try:
@@ -34,7 +33,6 @@ try:
 except IOError as e:
     error_msg = "Could not open '{}': {}".format(local_settings_file_path, e)
     raise ImproperlyConfigured(error_msg)
-
 
 # load tutorial_steps.json
 try:
@@ -109,6 +107,8 @@ if not os.path.isabs(MEDIA_ROOT):
 # trailing slash.
 # Examples: "http://media.lawrence.com/media/", "http://example.com/media/"
 MEDIA_URL = get_setting("MEDIA_URL")
+
+DEFAULT_FILE_STORAGE = 'file_store.models.SymlinkedFileSystemStorage'
 
 # Absolute path to the directory static files should be collected to.
 # Don't put anything in this directory yourself; store your static files
@@ -230,7 +230,7 @@ SESSION_ENGINE = "django.contrib.sessions.backends.cached_db"
 
 LOGGING = {
     'version': 1,
-    'disable_existing_loggers': True,
+    'disable_existing_loggers': False,
     'root': {
         'level': 'DEBUG',
         'handlers': ['console'],
@@ -254,101 +254,39 @@ LOGGING = {
             'class': 'django.utils.log.AdminEmailHandler'
         },
         'console': {
-            'level': get_setting("LOG_LEVEL"),
+            'level': get_setting("REFINERY_LOG_LEVEL"),
             'class': 'logging.StreamHandler',
             'formatter': 'default'
         },
     },
     'loggers': {
-        'django.request': {
-            'handlers': ['console', 'mail_admins'],
-            'level': 'ERROR',
-            'propagate': True,
+        'django': {
+            'level': 'WARNING',
+            'handlers': ['mail_admins'],
         },
-        'django.db.backends': {
-            'level': 'ERROR',
-            'handlers': ['console'],
-            'propagate': False,
+        'boto3': {
+            'level': 'INFO',
         },
-        'analysis_manager': {
-            'handlers': ['console'],
-            'level': 'DEBUG',
-            'propagate': False,
-        },
-        'annotation_server': {
-            'handlers': ['console'],
-            'level': 'DEBUG',
-            'propagate': False,
-        },
-        'core': {
-            'level': 'DEBUG',
-            'handlers': ['console'],
-            'propagate': False,
-        },
-        'data_set_manager': {
-            'level': 'DEBUG',
-            'handlers': ['console'],
-            'propagate': False,
+        'botocore': {
+            'level': 'INFO',
         },
         'docker': {
             'level': 'ERROR',
-            'handlers': ['console'],
-            'propagate': False,
         },
         'easyprocess': {
-            'handlers': ['console'],
             'level': 'ERROR',
-            'propagate': False,
         },
         'factory': {
-            'handlers': ['console'],
             'level': 'ERROR',
-            'propagate': False,
-        },
-        'file_server': {
-            'handlers': ['console'],
-            'level': 'DEBUG',
-            'propagate': False,
-        },
-        'file_store': {
-            'handlers': ['console'],
-            'level': 'DEBUG',
-            'propagate': False,
-        },
-        'galaxy_connector': {
-            'handlers': ['console'],
-            'level': 'DEBUG',
-            'propagate': False,
         },
         'httpproxy': {
             'level': 'ERROR',
-            'handlers': ['console'],
-            'propagate': False,
-        },
-        'isa_tab_parser': {
-            'level': 'DEBUG',
-            'handlers': ['console'],
-            'propagate': False,
         },
         'requests': {
-            'handlers': ['console'],
             'level': 'ERROR',
-            'propagate': False,
         },
         'selenium': {
-            'handlers': ['console'],
             'level': 'ERROR',
-            'propagate': False,
-        },
-        'visualization_manager': {
-            'handlers': ['console'],
-            'level': 'DEBUG',
-            'propagate': False,
-        },
-        'workflow_manager': {
-            'handlers': ['console'],
-            'level': 'DEBUG',
-            'propagate': False,
         },
     },
 }
@@ -373,15 +311,17 @@ EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 # for system stability
 CELERYD_MAX_TASKS_PER_CHILD = get_setting("CELERYD_MAX_TASKS_PER_CHILD")
 CELERY_ROUTES = {"file_store.tasks.import_file": {"queue": "file_import"}}
-
+CELERY_ACCEPT_CONTENT = ['pickle']
 # TODO: Does this belong here or in config.json.erb?
 CELERYBEAT_SCHEDULE = {
     'django_docker_cleanup': {
         'task': 'tool_manager.tasks.django_docker_cleanup',
-        'schedule': timedelta(seconds=30)
+        'schedule': timedelta(seconds=30),
+        'options': {
+            'expires': 20,  # seconds
+        }
     },
 }
-
 
 CHUNKED_UPLOAD_ABSTRACT_MODEL = False
 
@@ -518,7 +458,6 @@ REFINERY_EXTERNAL_AUTH_MESSAGE = get_setting("REFINERY_EXTERNAL_AUTH_MESSAGE")
 
 """
 # external tool status settings
-INTERVAL_BETWEEN_CHECKS = get_setting("INTERVAL_BETWEEN_CHECKS")
 TIMEOUT = get_setting("TIMEOUT")
 """
 
@@ -651,8 +590,6 @@ TEST_RUNNER = "django.test.runner.DiscoverRunner"
 TEST_NON_SERIALIZED_APPS = ['core', 'django.contrib.contenttypes',
                             'django.contrib.auth']
 
-VISUALIZATION_ANNOTATION_BASE_PATH = "tool_manager/visualization_annotations"
-
 # To avoid Port conflicts between LiveServerTestCases
 # https://docs.djangoproject.com/en/1.7/topics/testing/tools/#liveservertestcase
 os.environ["DJANGO_LIVE_TEST_SERVER_ADDRESS"] = "localhost:10000-12000"
@@ -672,5 +609,9 @@ USER_FILES_COLUMNS = get_setting("USER_FILES_COLUMNS")
 USER_FILES_FACETS = get_setting("USER_FILES_FACETS")
 
 MEDIA_BUCKET = ''  # a placeholder for use in context processor
+UPLOAD_BUCKET = ''  # a placeholder for use in context processor
 
 TASTYPIE_DEFAULT_FORMATS = ['json']
+
+# temporary feature toggle for using S3 as user data file storage backend
+REFINERY_S3_USER_DATA = get_setting('REFINERY_S3_USER_DATA', default=False)

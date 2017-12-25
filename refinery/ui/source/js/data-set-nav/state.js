@@ -31,6 +31,16 @@ function refineryDataSetNavConfig (
       true
     )
     .state(
+      'visualizations', {
+        url: '/visualizations/',
+        templateUrl: function () {
+          return window.getStaticUrl('partials/data-set-visualization/visualization-tab.html');
+        }
+      },
+      '^\/data_sets\/.*\/$',
+      true
+    )
+    .state(
       'about', {
         url: '/about/',
         templateUrl: function () {

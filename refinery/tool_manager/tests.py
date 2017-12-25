@@ -2,7 +2,6 @@ import StringIO
 import ast
 import json
 import logging
-import os
 import time
 from urlparse import urljoin
 import uuid
@@ -24,6 +23,7 @@ import celery
 from constants import UUID_RE
 from django_docker_engine.docker_utils import DockerClientWrapper
 from docker.errors import NotFound
+from guardian.shortcuts import assign_perm, remove_perm
 import mock
 from rest_framework.test import (APIRequestFactory, APITestCase,
                                  force_authenticate)
@@ -31,8 +31,8 @@ from test_data.galaxy_mocks import (galaxy_dataset_provenance_0,
                                     galaxy_dataset_provenance_1,
                                     galaxy_datasets_list,
                                     galaxy_datasets_list_same_output_names,
-                                    galaxy_history_download_list,
-                                    galaxy_history_download_list_same_names,
+                                    galaxy_history_contents,
+                                    galaxy_history_contents_same_names,
                                     galaxy_job_a, galaxy_job_b,
                                     galaxy_tool_data, galaxy_workflow_dict,
                                     galaxy_workflow_dict_collection,
@@ -51,25 +51,28 @@ from analysis_manager.tasks import (_galaxy_file_import,
                                     _run_galaxy_workflow, run_analysis)
 from core.models import (INPUT_CONNECTION, OUTPUT_CONNECTION, Analysis,
                          AnalysisNodeConnection, AnalysisResult, ExtendedGroup,
-                         Project, Workflow, WorkflowEngine, WorkflowFilesDL)
+                         Project, Workflow, WorkflowEngine)
 from data_set_manager.models import Assay, Attribute, Node
 from data_set_manager.utils import _create_solr_params_from_node_uuids
 from factory_boy.django_model_factories import (AnnotatedNodeFactory,
-                                                AttributeFactory, NodeFactory,
-                                                ParameterFactory, ToolFactory)
+                                                AttributeFactory,
+                                                GalaxyInstanceFactory,
+                                                NodeFactory, ParameterFactory,
+                                                ToolFactory)
 from factory_boy.utils import create_dataset_with_necessary_models
 from file_store.models import FileStoreItem, FileType
-from galaxy_connector.models import Instance
 from selenium_testing.utils import (MAX_WAIT, SeleniumTestBaseGeneric,
                                     wait_until_class_visible)
+from tool_manager.management.commands.load_tools import \
+    Command as LoadToolsCommand
 from tool_manager.tasks import django_docker_cleanup
 
 from .models import (FileRelationship, GalaxyParameter, InputFile, Parameter,
                      Tool, ToolDefinition, VisualizationTool,
                      VisualizationToolError, WorkflowTool)
 from .utils import (FileTypeValidationError, create_tool,
-                    create_tool_definition, get_visualization_annotations_list,
-                    get_workflows, validate_tool_annotation,
+                    create_tool_definition, get_workflows,
+                    validate_tool_annotation,
                     validate_tool_launch_configuration,
                     validate_workflow_step_annotation)
 from .views import ToolDefinitionsViewSet, ToolsViewSet
@@ -100,6 +103,13 @@ class ToolManagerMocks(TestCase):
         ).start()
         self.show_dataset_provenance_mock = mock.patch.object(
             HistoryClient, "show_dataset_provenance"
+        ).start()
+        self.show_history_mock = mock.patch.object(
+            HistoryClient, "show_history",
+            return_value=galaxy_history_contents
+        ).start()
+        self.show_dataset_mock = mock.patch.object(
+            HistoryClient, "show_dataset",
         ).start()
 
         # Galaxy Job mocks
@@ -140,16 +150,6 @@ class ToolManagerMocks(TestCase):
             return_value=celery.result.TaskSetResult(str(uuid.uuid4()))
         ).start()
 
-        # galaxy_connector mocks
-        self.get_history_file_list_mock = mock.patch.object(
-            Instance, "get_history_file_list",
-            return_value=galaxy_history_download_list
-        )
-        self.get_history_file_list_same_names_mock = mock.patch.object(
-            Instance, "get_history_file_list",
-            return_value=galaxy_history_download_list_same_names
-        )
-
         # tool_manager mocks
         self.get_taskset_result_mock = mock.patch(
             "tool_manager.models.get_taskset_result",
@@ -166,13 +166,15 @@ class ToolManagerMocks(TestCase):
                 WorkflowTool, "_get_workflow_dict",
                 return_value=galaxy_workflow_dict
         ).start()
-
         self.has_dataset_collection_input_mock_true = mock.patch.object(
             WorkflowTool, "_has_dataset_collection_input", return_value=True
         )
         self.has_dataset_collection_input_mock_false = mock.patch.object(
             WorkflowTool, "_has_dataset_collection_input", return_value=False
         )
+
+    def tearDown(self):
+        mock.patch.stopall()
 
 
 class ToolManagerTestBase(ToolManagerMocks):
@@ -186,9 +188,7 @@ class ToolManagerTestBase(ToolManagerMocks):
         super(ToolManagerTestBase, self).setUp()
 
         self.public_group = ExtendedGroup.objects.public_group()
-        self.galaxy_instance = Instance.objects.create(
-            base_url="http://www.example.com/galaxy"
-        )
+        self.galaxy_instance = GalaxyInstanceFactory()
         self.workflow_engine = WorkflowEngine.objects.create(
             instance=self.galaxy_instance
         )
@@ -215,12 +215,8 @@ class ToolManagerTestBase(ToolManagerMocks):
         )
 
         self.mock_get_workflows_reference = (
-            "tool_manager.management.commands.generate_tool_definitions"
+            "tool_manager.management.commands.load_tools"
             ".get_workflows"
-        )
-        self.mock_vis_annotations_reference = (
-            "tool_manager.management.commands.generate_tool_definitions"
-            ".get_visualization_annotations_list"
         )
 
         self.username = 'coffee_lover'
@@ -252,6 +248,7 @@ class ToolManagerTestBase(ToolManagerMocks):
                 'post': 'create'
             }
         )
+        self.tool_relaunch_view = ToolsViewSet.as_view({"get": "relaunch"})
 
         self.tools_url_root = '/api/v2/tools/'
         self.tool_defs_url_root = '/api/v2/tool_definitions/'
@@ -262,10 +259,27 @@ class ToolManagerTestBase(ToolManagerMocks):
             value_type=Parameter.STRING,
             default_value="Coffee"
         )
+        self.BAD_WORKFLOW_OUTPUTS = {WorkflowTool.WORKFLOW_OUTPUTS: []}
+        self.GOOD_WORKFLOW_OUTPUTS = {WorkflowTool.WORKFLOW_OUTPUTS: [True]}
+
+        self.django_docker_cleanup_wait_time = 1
+        settings.DJANGO_DOCKER_ENGINE_SECONDS_INACTIVE = (
+            self.django_docker_cleanup_wait_time
+        )
+
+    def load_visualizations(self):
+        # TODO: More mocking, so Docker image is not downloaded
+        visualizations = ["{}/visualizations/igv.json".format(TEST_DATA_PATH)]
+        call_command("load_tools", visualizations=visualizations)
+        return visualizations
 
     def tearDown(self):
         # Trigger the pre_delete signal so that datafiles are purged
         FileStoreItem.objects.all().delete()
+        # Remove any running containers
+        with self.settings(DJANGO_DOCKER_ENGINE_SECONDS_INACTIVE=0):
+            django_docker_cleanup()
+        super(ToolManagerTestBase, self).tearDown()
 
     def create_solr_mock_response(self, tool):
         return json.dumps(
@@ -300,11 +314,18 @@ class ToolManagerTestBase(ToolManagerMocks):
 
     def create_tool(self,
                     tool_type,
+                    create_unique_name=False,
                     file_relationships=None,
-                    annotation_file_name=None):
+                    annotation_file_name=None,
+                    start_vis_container=False,
+                    user_has_dataset_read_meta_access=True):
+
+        if user_has_dataset_read_meta_access:
+            assign_perm('core.read_meta_dataset', self.user, self.dataset)
 
         if tool_type == ToolDefinition.WORKFLOW:
             self.create_workflow_tool_definition(
+                create_unique_name=create_unique_name,
                 annotation_file_name=annotation_file_name
             )
             launch_parameters = {
@@ -314,6 +335,7 @@ class ToolManagerTestBase(ToolManagerMocks):
 
         elif tool_type == ToolDefinition.VISUALIZATION:
             self.create_vis_tool_definition(
+                create_unique_name=create_unique_name,
                 annotation_file_name=annotation_file_name
             )
             launch_parameters = {
@@ -322,20 +344,18 @@ class ToolManagerTestBase(ToolManagerMocks):
         else:
             raise RuntimeError("Please provide a valid tool_type")
 
+        self.post_data = {
+            "dataset_uuid": self.dataset.uuid,
+            "tool_definition_uuid": self.td.uuid,
+            ToolDefinition.PARAMETERS: launch_parameters
+        }
+
         if file_relationships is None:
-            self.post_data = {
-                "dataset_uuid": self.dataset.uuid,
-                "tool_definition_uuid": self.td.uuid,
-                Tool.FILE_RELATIONSHIPS: "[{}]".format(self.node.uuid),
-                ToolDefinition.PARAMETERS: launch_parameters
-            }
+            self.post_data[Tool.FILE_RELATIONSHIPS] = "[{}]".format(
+                self.node.uuid
+            )
         else:
-            self.post_data = {
-                "dataset_uuid": self.dataset.uuid,
-                "tool_definition_uuid": self.td.uuid,
-                Tool.FILE_RELATIONSHIPS: file_relationships,
-                ToolDefinition.PARAMETERS: launch_parameters
-            }
+            self.post_data[Tool.FILE_RELATIONSHIPS] = file_relationships
 
         self.post_request = self.factory.post(
             self.tools_url_root,
@@ -345,19 +365,20 @@ class ToolManagerTestBase(ToolManagerMocks):
         force_authenticate(self.post_request, self.user)
 
         # Mock the spinning up of containers
+        run_container_mock = mock.patch(
+            "django_docker_engine.docker_utils.DockerClientWrapper.run"
+        )
+
         if tool_type == ToolDefinition.VISUALIZATION:
-            with mock.patch(
-                "django_docker_engine.docker_utils.DockerClientWrapper.run"
-            ) as run_mock:
-                with mock.patch(
-                    "tool_manager.models.get_solr_response_json"
-                ):
-                    self.post_response = self.tools_view(self.post_request)
+            with mock.patch("tool_manager.models.get_solr_response_json"):
+                if not start_vis_container:
+                    run_container_mock.start()
+
+                self.post_response = self.tools_view(self.post_request)
                 logger.debug(
                     "Visualization tool launch response: %s",
                     self.post_response.content
                 )
-                self.assertTrue(run_mock.called)
 
             self.tool = VisualizationTool.objects.get(
                 tool_definition__uuid=self.td.uuid
@@ -382,9 +403,7 @@ class ToolManagerTestBase(ToolManagerMocks):
                 {"id": self.GALAXY_ID_MOCK}
             )
 
-        self.get_request = self.factory.get(self.tools_url_root)
-        force_authenticate(self.get_request, self.user)
-        self.get_response = self.tools_view(self.get_request)
+        self._make_tools_get_request()
         self.tool_json = self.get_response.data[0]
         self.delete_request = self.factory.delete(
                 urljoin(self.tools_url_root, self.tool_json['uuid']))
@@ -407,7 +426,8 @@ class ToolManagerTestBase(ToolManagerMocks):
 
         return self.tool
 
-    def create_vis_tool_definition(self, annotation_file_name=None):
+    def create_vis_tool_definition(self, annotation_file_name=None,
+                                   create_unique_name=False):
         if annotation_file_name:
             self.tool_annotation = "{}/visualizations/{}".format(
                 TEST_DATA_PATH,
@@ -418,17 +438,23 @@ class ToolManagerTestBase(ToolManagerMocks):
                 TEST_DATA_PATH
             )
         with open(self.tool_annotation) as f:
-            self.tool_annotation_json = json.loads(f.read())
+            self.tool_annotation_dict = json.loads(f.read())
+
+        if create_unique_name:
+            self.tool_annotation_dict["name"] = (
+                self.tool_annotation_dict["name"] + str(uuid.uuid4())
+            )
 
         # Don't pull down images in tests
         with mock.patch(
             "django_docker_engine.docker_utils.DockerClientWrapper.pull",
             return_value=None
         ) as pull_mock:
-            self.td = create_tool_definition(self.tool_annotation_json)
+            self.td = create_tool_definition(self.tool_annotation_dict)
             self.assertTrue(pull_mock.called)
 
-    def create_workflow_tool_definition(self, annotation_file_name=None):
+    def create_workflow_tool_definition(self, annotation_file_name=None,
+                                        create_unique_name=False):
         if annotation_file_name:
             self.tool_annotation = "{}/workflows/{}".format(
                 TEST_DATA_PATH,
@@ -444,6 +470,10 @@ class ToolManagerTestBase(ToolManagerMocks):
             self.tool_annotation_data["workflow_engine_uuid"] = (
                 self.workflow_engine.uuid
             )
+            if create_unique_name:
+                self.tool_annotation_data["name"] = (
+                    self.tool_annotation_data["name"] + str(uuid.uuid4())
+                )
             self.td = create_tool_definition(self.tool_annotation_data)
 
     def create_mock_file_relationships(self):
@@ -464,6 +494,11 @@ class ToolManagerTestBase(ToolManagerMocks):
         self.PAIR_LIST = "([{}, {}], [{}, {}])".format(
             *[self.make_node() for i in range(0, 4)]
         )
+
+    def _django_docker_engine_cleanup_wrapper(self):
+        time.sleep(self.django_docker_cleanup_wait_time * 2)
+        django_docker_cleanup()
+        time.sleep(self.django_docker_cleanup_wait_time * 2)
 
     def make_node(self, source="http://www.example.com/test_file.txt"):
         test_file = StringIO.StringIO()
@@ -531,6 +566,21 @@ class ToolManagerTestBase(ToolManagerMocks):
     def test_create_valid_tool(self):
         with self.assertRaises(RuntimeError):
             self.create_tool("Coffee is not a valid tool type")
+
+    def _make_tools_get_request(self, user=None, tool_type=None):
+        request_params = {"data_set_uuid": self.dataset.uuid}
+        if tool_type:
+            request_params = dict(tool_type=tool_type, **request_params)
+
+        self.get_request = self.factory.get(
+            self.tools_url_root,
+            data=request_params
+        )
+        force_authenticate(
+            self.get_request,
+            self.user if not user else user
+        )
+        self.get_response = self.tools_view(self.get_request)
 
 
 class ToolDefinitionAPITests(ToolManagerTestBase, APITestCase):
@@ -670,7 +720,7 @@ class ToolDefinitionAPITests(ToolManagerTestBase, APITestCase):
         force_authenticate(get_request, self.user)
         get_response = self.tool_defs_view(get_request)
         self.assertEqual(get_response.status_code, 400)
-        self.assertIn("Must specify a Dataset UUID", get_response.data)
+        self.assertIn("Must specify a DataSet UUID", get_response.content)
 
     def test_bad_query_params_in_get_yields_bad_request(self):
         get_request = self.factory.get(
@@ -682,7 +732,7 @@ class ToolDefinitionAPITests(ToolManagerTestBase, APITestCase):
         force_authenticate(get_request, self.user)
         get_response = self.tool_defs_view(get_request)
         self.assertEqual(get_response.status_code, 400)
-        self.assertIn("Must specify a Dataset UUID", get_response.data)
+        self.assertIn("Must specify a DataSet UUID", get_response.content)
 
     def test_missing_dataset_in_get_yields_bad_request(self):
         dataset_uuid = self.dataset.uuid
@@ -697,7 +747,7 @@ class ToolDefinitionAPITests(ToolManagerTestBase, APITestCase):
         force_authenticate(get_request, self.user)
         get_response = self.tool_defs_view(get_request)
         self.assertEqual(get_response.status_code, 400)
-        self.assertIn("Couldn't fetch Dataset", get_response.data)
+        self.assertIn("Couldn't fetch DataSet", get_response.content)
 
 
 class ToolDefinitionGenerationTests(ToolManagerTestBase):
@@ -724,18 +774,13 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
 
         self.mock_parameter.delete()
 
+        self.fake_workflow = {
+            "name": "Fake WF",
+            "graph": {"steps": {}}
+        }
+
     def test_tool_definition_model_str(self):
-        with open("{}/visualizations/igv.json".format(TEST_DATA_PATH)) as f:
-            tool_annotation = [json.loads(f.read())]
-
-        with mock.patch(
-                self.mock_vis_annotations_reference,
-                return_value=tool_annotation
-        ) as mocked_method:
-            call_command("generate_tool_definitions", visualizations=True)
-
-            self.assertTrue(mocked_method.called)
-
+        self.load_visualizations()
         td = ToolDefinition.objects.all()[0]
         self.assertEqual(
             td.__str__(),
@@ -1088,7 +1133,7 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
                 workflow_step_annotation
             )
 
-    def test_generate_tool_definitions_management_command(self):
+    def test_load_tools_management_command(self):
         with mock.patch(
             self.mock_get_workflows_reference,
             side_effect=[
@@ -1099,61 +1144,40 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
             self.assertRaises(
                 CommandError,
                 call_command,
-                "generate_tool_definitions",
+                "load_tools",
                 workflows=True
             )
 
             self.assertEqual(ToolDefinition.objects.count(), 0)
-            with open(
-                "{}/visualizations/igv.json".format(TEST_DATA_PATH)
-            ) as f:
-                tool_annotation = [json.loads(f.read())]
+            self.load_visualizations()
 
-            with mock.patch(
-                self.mock_vis_annotations_reference,
-                return_value=tool_annotation
-            ) as get_vis_list_mock:
-                call_command("generate_tool_definitions")
+            self.assertEqual(get_wf_mock.call_count, 1)
+            self.assertEqual(ToolDefinition.objects.count(), 1)
+            self.assertEqual(FileRelationship.objects.count(), 1)
+            self.assertEqual(GalaxyParameter.objects.count(), 0)
+            self.assertEqual(Parameter.objects.count(), 1)
+            self.assertEqual(InputFile.objects.count(), 1)
 
-                self.assertEqual(get_wf_mock.call_count, 2)
-                self.assertEqual(get_vis_list_mock.call_count, 1)
-                self.assertEqual(ToolDefinition.objects.count(), 4)
-                self.assertEqual(FileRelationship.objects.count(), 7)
-                self.assertEqual(GalaxyParameter.objects.count(), 9)
-                self.assertEqual(Parameter.objects.count(), 10)
-                self.assertEqual(InputFile.objects.count(), 6)
-
-    def test_generate_tool_definitions_overwrites_visualizations_if_forced(
+    def test_load_tools_overwrites_visualizations_if_forced(
             self
     ):
         self.raw_input_yes_mock.start()
-        with open(
-            "{}/visualizations/igv.json".format(TEST_DATA_PATH)
-        ) as f:
-            vis_tool_annotation = [json.loads(f.read())]
+        visualizations = self.load_visualizations()
+        original_ids = [t.id for t in ToolDefinition.objects.all()]
 
-        with mock.patch(
-            self.mock_vis_annotations_reference,
-            side_effect=[vis_tool_annotation] * 2
-        ) as get_vis_list_mock:
-            # Create VisualizationToolDefinition
-            call_command("generate_tool_definitions", visualizations=True)
-            original_ids = [t.id for t in ToolDefinition.objects.all()]
+        # Create new VisualizationToolDefinition with --force
+        call_command(
+            "load_tools",
+            visualizations=visualizations,
+            force=True
+        )
+        new_ids = [t.id for t in ToolDefinition.objects.all()]
 
-            # Create new VisualizationToolDefinition with --force
-            call_command(
-                "generate_tool_definitions",
-                visualizations=True,
-                force=True
-            )
-            new_ids = [t.id for t in ToolDefinition.objects.all()]
+        # Assert that the new visualization tool definitions id's were
+        # incremented
+        self.assertEqual(new_ids, [_id + 1 for _id in original_ids])
 
-            # Assert that the new visualization tool definitions id's were
-            # incremented
-            self.assertEqual(new_ids, [_id + 1 for _id in original_ids])
-            self.assertEqual(get_vis_list_mock.call_count, 2)
-
-    def test_generate_tool_definitions_overwrites_workflows_if_forced(
+    def test_load_tools_overwrites_workflows_if_forced(
             self
     ):
         self.raw_input_yes_mock.start()
@@ -1162,12 +1186,12 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
             return_value={self.workflow_engine.uuid: self.valid_workflows}
         ) as get_wf_mock:
             # Create WorkflowToolDefinition
-            call_command("generate_tool_definitions", workflows=True)
+            call_command("load_tools", workflows=True)
             original_ids = [t.id for t in ToolDefinition.objects.all()]
 
             # Create new WorkflowToolDefinition with --force
             call_command(
-                "generate_tool_definitions",
+                "load_tools",
                 workflows=True,
                 force=True
             )
@@ -1179,7 +1203,7 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
                 self.assertIn(original_id + 3, new_ids)
             self.assertEqual(get_wf_mock.call_count, 2)
 
-    def test_generate_tool_definitions_with_force_allows_user_dismissal(
+    def test_load_tools_with_force_allows_user_dismissal(
             self
     ):
         self.raw_input_no_mock.start()
@@ -1190,14 +1214,14 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
             with self.assertRaises(SystemExit):
                 # Create WorkflowToolDefinition
                 call_command(
-                    "generate_tool_definitions",
+                    "load_tools",
                     workflows=True,
                     force=True
                 )
 
         self.assertEqual(ToolDefinition.objects.count(), 0)
 
-    def test_generate_tool_definitions_command_error_if_get_workflows_fails(
+    def test_load_tools_command_error_if_get_workflows_fails(
             self
     ):
         with mock.patch(
@@ -1205,19 +1229,19 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
             side_effect=RuntimeError
         ):
             with self.assertRaises(CommandError):
-                call_command("generate_tool_definitions", workflows=True)
+                call_command("load_tools", workflows=True)
 
-    def test_generate_tool_definitions_multiple_times_skips_without_deletion(
+    def test_load_tools_multiple_times_skips_without_deletion(
             self
     ):
         with mock.patch(
             self.mock_get_workflows_reference,
             return_value={self.workflow_engine.uuid: self.valid_workflows}
         ):
-            call_command("generate_tool_definitions", workflows=True)
+            call_command("load_tools", workflows=True)
             tool_definitions_a = [t for t in ToolDefinition.objects.all()]
 
-            call_command("generate_tool_definitions", workflows=True)
+            call_command("load_tools", workflows=True)
             tool_definitions_b = [t for t in ToolDefinition.objects.all()]
 
         self.assertEqual(tool_definitions_a, tool_definitions_b)
@@ -1298,22 +1322,16 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
         messages
     ):
         assert type(messages) == list
-        with open(
+        visualizations = [
             "{}/visualizations/{}.json".format(
                 TEST_DATA_PATH,
                 tool_annotation_name
             )
-        ) as f:
-            tool_annotation = [json.loads(f.read())]
-
-        with mock.patch(
-                self.mock_vis_annotations_reference,
-                return_value=tool_annotation
-        ):
-            with self.assertRaises(exception) as context:
-                call_command("generate_tool_definitions", visualizations=True)
-            [self.assertIn(message, context.exception.message)
-             for message in messages]
+        ]
+        with self.assertRaises(exception) as context:
+            call_command("load_tools", visualizations=visualizations)
+        [self.assertIn(message, context.exception.message)
+         for message in messages]
 
     def test_visualization_generation_with_no_image_version_yields_error(self):
         self._assert_visualization_tool_def_exception_contents(
@@ -1332,6 +1350,62 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
             ]
         )
 
+    def test_known_galaxy_one_off_asterisking_error_is_handled(self):
+        self.fake_workflow["graph"]["steps"] = {
+            "0": self.BAD_WORKFLOW_OUTPUTS,
+            "1": self.GOOD_WORKFLOW_OUTPUTS
+        }
+        workflow_exhibiting_one_off_asterisking_error = self.fake_workflow
+
+        with self.assertRaises(CommandError) as context:
+            LoadToolsCommand()._has_workflow_outputs(
+                workflow_exhibiting_one_off_asterisking_error
+            )
+        self.assertIn("asterisked `workflow_outputs`",
+                      context.exception.message)
+
+    def test__has_workflow_outputs_bad_workflow_outputs(self):
+        self.fake_workflow["graph"]["steps"] = {
+            "0": self.GOOD_WORKFLOW_OUTPUTS,
+            "1": self.BAD_WORKFLOW_OUTPUTS
+        }
+        workflow_without_outputs_defined = self.fake_workflow
+
+        self.assertFalse(
+            LoadToolsCommand()._has_workflow_outputs(
+                workflow_without_outputs_defined
+            )
+        )
+
+    def test__has_workflow_outputs_good_workflow_outputs(self):
+        self.fake_workflow["graph"]["steps"] = {
+            "0": self.GOOD_WORKFLOW_OUTPUTS,
+            "1": self.GOOD_WORKFLOW_OUTPUTS
+        }
+        workflow_with_outputs_defined = self.fake_workflow
+        LoadToolsCommand()._has_workflow_outputs(
+            workflow_with_outputs_defined
+        )
+
+    @mock.patch.object(
+        LoadToolsCommand,
+        "_has_workflow_outputs",
+        return_value=False
+    )
+    def test_generate_workflows_without_outputs_raises_exception(
+            self,
+            _are_workflow_outputs_present_mock
+    ):
+        with mock.patch(
+            self.mock_get_workflows_reference,
+            return_value={self.workflow_engine.uuid: self.valid_workflows}
+        ):
+            with self.assertRaises(CommandError) as context:
+                LoadToolsCommand()._generate_workflows()
+        self.assertIn("does not have `workflow_outputs`",
+                      context.exception.message)
+        self.assertTrue(_are_workflow_outputs_present_mock.called)
+
 
 class ToolDefinitionTests(ToolManagerTestBase):
     def setUp(self):
@@ -1341,7 +1415,7 @@ class ToolDefinitionTests(ToolManagerTestBase):
     def test_get_annotation(self):
         self.create_vis_tool_definition(annotation_file_name="igv.json")
         self.assertEqual(self.td.get_annotation(),
-                         self.tool_annotation_json["annotation"])
+                         self.tool_annotation_dict["annotation"])
 
     def test_get_extra_directories_vis_tool_def(self):
         self.create_vis_tool_definition()
@@ -1457,6 +1531,65 @@ class ToolTests(ToolManagerTestBase):
 
         self.assertEqual(context.exception.message, tool.LAUNCH_WARNING)
 
+    def test__get_owner_info_as_dict(self):
+        self.create_tool(ToolDefinition.VISUALIZATION)
+        self._make_tools_get_request()
+
+        self.assertEqual(
+            self.get_response.data[0]["owner"],
+            {
+                "username": self.user.username,
+                "full_name": "{} {}".format(
+                    self.user.first_name,
+                    self.user.last_name
+                ),
+                "user_profile_uuid": self.user.profile.uuid
+            }
+        )
+
+    def test_relaunch_url(self):
+        self.create_tool(ToolDefinition.VISUALIZATION)
+        self.assertEqual(
+            self.tool.relaunch_url,
+            "/api/v2/tools/{}/relaunch/".format(self.tool.uuid)
+        )
+
+    def test_get_relative_container_url(self):
+        self.create_tool(ToolDefinition.VISUALIZATION)
+        self.assertEqual(
+            self.tool.get_relative_container_url(),
+            "/{}/{}".format(
+                settings.DJANGO_DOCKER_ENGINE_BASE_URL,
+                self.tool.container_name
+            )
+        )
+
+    def test_is_workflow(self):
+        self.create_tool(ToolDefinition.WORKFLOW)
+        self.assertTrue(self.tool.is_workflow())
+        self.assertFalse(self.tool.is_visualization())
+
+    def test_is_visualization(self):
+        self.create_tool(ToolDefinition.VISUALIZATION)
+        self.assertTrue(self.tool.is_visualization())
+        self.assertFalse(self.tool.is_workflow())
+
+    def test_visualization_is_running(self):
+        self.create_tool(
+            ToolDefinition.VISUALIZATION,
+            start_vis_container=True
+        )
+        self.assertTrue(self.tool.is_running())
+        self._django_docker_engine_cleanup_wrapper()
+        self.assertFalse(self.tool.is_running())
+
+    def test_workflow_is_running(self):
+        self.create_tool(ToolDefinition.WORKFLOW)
+        self.tool.analysis.set_status(Analysis.RUNNING_STATUS)
+        self.assertTrue(self.tool.is_running())
+        self.tool.analysis.set_status(Analysis.SUCCESS_STATUS)
+        self.assertFalse(self.tool.is_running())
+
 
 class VisualizationToolTests(ToolManagerTestBase):
     def setUp(self):
@@ -1496,7 +1629,7 @@ class VisualizationToolTests(ToolManagerTestBase):
         )
         self.assertTrue(self.search_solr_mock.called)
 
-    def test__create_input_dict(self):
+    def test__create_container_input_dict(self):
         tool_input_dict = self.tool._create_container_input_dict()
         file_relationships = self.tool.get_file_relationships_urls()
 
@@ -1507,7 +1640,9 @@ class VisualizationToolTests(ToolManagerTestBase):
                 VisualizationTool.NODE_INFORMATION:
                     self.tool._get_detailed_input_nodes_dict(),
                 ToolDefinition.PARAMETERS:
-                    self.tool._get_visualization_parameters()
+                    self.tool._get_visualization_parameters(),
+                ToolDefinition.EXTRA_DIRECTORIES:
+                    self.tool.tool_definition.get_extra_directories()
             }
         )
 
@@ -1860,36 +1995,6 @@ class WorkflowToolTests(ToolManagerTestBase):
             }
         )
 
-    def test_create_workflow_file_downloads(self):
-        galaxy_datasets_list_mock = self.galaxy_datasets_list_mock.start()
-        self.get_history_file_list_same_names_mock.start()
-        self.show_job_mock.side_effect = self.show_job_side_effect
-        self.create_tool(ToolDefinition.WORKFLOW)
-        self.tool.create_workflow_file_downloads()
-        self.assertEqual(WorkflowFilesDL.objects.count(), 2)
-        for workflow_file_dl in WorkflowFilesDL.objects.all():
-            self.assertTrue(workflow_file_dl.filename.startswith(
-                "Refinery test tool"
-            ))
-            self.assertTrue(workflow_file_dl.filename.endswith(".txt"))
-        self.assertTrue(self.galaxy_workflow_show_invocation_mock.called)
-        self.assertTrue(galaxy_datasets_list_mock.called)
-
-    def test_create_workflow_file_downloads_same_names(self):
-        galaxy_datasets_list_mock = (
-            self.galaxy_datasets_list_same_names_mock.start()
-        )
-        self.get_history_file_list_mock.start()
-        self.show_job_mock.side_effect = self.show_job_side_effect
-        self.create_tool(ToolDefinition.WORKFLOW)
-        self.tool.create_workflow_file_downloads()
-        self.assertEqual(WorkflowFilesDL.objects.count(), 2)
-        for workflow_file_dl in WorkflowFilesDL.objects.all():
-            logger.debug(workflow_file_dl.filename)
-            self.assertEqual(workflow_file_dl.filename, "Output file.txt")
-        self.assertTrue(self.galaxy_workflow_show_invocation_mock.called)
-        self.assertTrue(galaxy_datasets_list_mock.called)
-
     def test__get_galaxy_dataset_filename(self):
         self.create_tool(ToolDefinition.WORKFLOW)
         galaxy_datasets_list_mock = self.galaxy_datasets_list_mock.start()
@@ -1904,12 +2009,12 @@ class WorkflowToolTests(ToolManagerTestBase):
             self.assertIn(dataset, galaxy_datasets_list)
         self.assertTrue(galaxy_datasets_list_mock.called)
 
-    def test__get_exposed_workflow_outputs(self):
+    def test__get_exposed_galaxy_datasets(self):
         galaxy_datasets_list_mock = self.galaxy_datasets_list_mock.start()
         self.show_job_mock.side_effect = self.show_job_side_effect
         self.create_tool(ToolDefinition.WORKFLOW)
         all_galaxy_datasets = self.tool._get_galaxy_history_dataset_list()
-        datasets_marked_as_output = self.tool._get_exposed_workflow_outputs()
+        datasets_marked_as_output = self.tool._get_exposed_galaxy_datasets()
         self.assertEqual(len(datasets_marked_as_output), 2)
         self.assertTrue(
             all(
@@ -1929,28 +2034,14 @@ class WorkflowToolTests(ToolManagerTestBase):
         self.assertTrue(galaxy_datasets_list_mock.called)
 
     def test__get_galaxy_download_tasks(self):
-        get_history_file_list_mock = self.get_history_file_list_mock.start()
-        galaxy_datasets_list_mock = self.galaxy_datasets_list_mock.start()
-        self.show_dataset_provenance_mock.side_effect = (
-            self.show_dataset_provenance_side_effect * 3
-        )
-        self.show_job_mock.side_effect = self.show_job_side_effect * 4
-        self.create_tool(ToolDefinition.WORKFLOW)
-        task_id_list = _get_galaxy_download_task_ids(self.tool.analysis)
-        self.assertTrue(self.galaxy_workflow_show_invocation_mock.called)
-        self.assertTrue(galaxy_datasets_list_mock.called)
-        self.assertTrue(get_history_file_list_mock.called)
+        task_id_list = self._get_galaxy_download_task_ids_wrapper()
 
-        self.assertEqual(AnalysisResult.objects.count(), 3)
-
-        # There will be one less WorkflowFilesDL because one of our mock
-        # datasets has been "purged"
-        self.assertEqual(WorkflowFilesDL.objects.count(), 2)
+        self.assertEqual(AnalysisResult.objects.count(), 2)
         self.assertEqual(
             AnalysisResult.objects.count(),
             self.tool.analysis.results.all().count()
         )
-        self.assertEqual(len(task_id_list), 3)
+        self.assertEqual(len(task_id_list), 2)
         for task_id in task_id_list:
             self.assertRegexpMatches(str(task_id), UUID_RE)
 
@@ -2286,51 +2377,90 @@ class WorkflowToolTests(ToolManagerTestBase):
             )
             self.assertFalse(analysis_node_connections[index].is_refinery_file)
 
-    def test_attach_outputs_dataset_dsc(self):
-        self.show_dataset_provenance_mock.side_effect = (
-            self.show_dataset_provenance_side_effect * 3
-        )
-        self.show_job_mock.side_effect = self.show_job_side_effect * 4
-        self.has_dataset_collection_input_mock_true.start()
-        self.galaxy_datasets_list_mock.start()
-        self.get_history_file_list_mock.start()
-        with mock.patch.object(
-            WorkflowTool, "_get_workflow_dict",
-            return_value=galaxy_workflow_dict_collection
-        ) as galaxy_workflow_dict_collection_mock:
-            self.create_tool(ToolDefinition.WORKFLOW)
-            _get_galaxy_download_task_ids(self.tool.analysis)
-            self.tool.analysis.attach_outputs_dataset()
-            self.assertTrue(galaxy_workflow_dict_collection_mock.called)
-            self._assert_analysis_node_connection_outputs_validity()
-        self.assertEqual(self.show_dataset_provenance_mock.call_count, 8)
+    def _create_analysis_node_connections_wrapper(self):
+        self.show_job_mock.side_effect = self.show_job_side_effect * 3
+        self.tool.create_analysis_output_node_connections()
 
-    def test_attach_outputs_dataset_non_dsc(self):
+    def _get_galaxy_download_list_wrapper(self,
+                                          datasets_have_same_names=False):
+        self.show_job_mock.side_effect = [galaxy_job_a, galaxy_job_a,
+                                          galaxy_job_b, galaxy_job_b,
+                                          galaxy_job_a, galaxy_job_a]
+        if datasets_have_same_names:
+            self.show_dataset_mock.side_effect = (
+                galaxy_datasets_list_same_output_names
+            )
+        else:
+            self.show_dataset_mock.side_effect = galaxy_datasets_list
+
+        return self.tool.get_galaxy_dataset_download_list()
+
+    def _get_galaxy_download_task_ids_wrapper(
+        self,
+        datasets_have_same_names=False,
+        tool_is_data_set_collection_based=False
+    ):
+        if datasets_have_same_names:
+            self.galaxy_datasets_list_same_names_mock.start()
+            self.show_history_mock.return_value = (
+                galaxy_history_contents_same_names
+            )
+        else:
+            self.galaxy_datasets_list_mock.start()
+
+        if tool_is_data_set_collection_based:
+            mock.patch.object(
+                WorkflowTool, "_get_workflow_dict",
+                return_value=galaxy_workflow_dict_collection
+            ).start()
+            self.has_dataset_collection_input_mock_true.start()
+        else:
+            self.has_dataset_collection_input_mock_false.start()
+
+        self.create_tool(ToolDefinition.WORKFLOW)
         self.show_dataset_provenance_mock.side_effect = (
             self.show_dataset_provenance_side_effect * 3
         )
-        self.show_job_mock.side_effect = self.show_job_side_effect * 4
-        self.galaxy_datasets_list_mock.start()
-        self.get_history_file_list_mock.start()
-        self.has_dataset_collection_input_mock_false.start()
-        self.create_tool(ToolDefinition.WORKFLOW)
-        _get_galaxy_download_task_ids(self.tool.analysis)
-        self.tool.analysis.attach_outputs_dataset()
+
+        self._create_analysis_node_connections_wrapper()
+        download_list = self._get_galaxy_download_list_wrapper(
+            datasets_have_same_names=datasets_have_same_names
+        )
+
+        mock.patch(
+            "tool_manager.models.WorkflowTool."
+            "create_analysis_output_node_connections"
+        ).start()
+        mock.patch(
+            "tool_manager.models.WorkflowTool"
+            ".get_galaxy_dataset_download_list",
+            return_value=download_list
+        ).start()
+
+        return _get_galaxy_download_task_ids(self.tool.analysis)
+
+    def _attach_outputs_dataset_assertions(self):
         self._assert_analysis_node_connection_outputs_validity()
         self.assertEqual(self.show_dataset_provenance_mock.call_count, 8)
 
+    def test_attach_outputs_dataset_dsc(self):
+        self._get_galaxy_download_task_ids_wrapper(
+            tool_is_data_set_collection_based=True
+        )
+        self.tool.analysis.attach_outputs_dataset()
+        self._attach_outputs_dataset_assertions()
+
+    def test_attach_outputs_dataset_non_dsc(self):
+        self._get_galaxy_download_task_ids_wrapper()
+        self.tool.analysis.attach_outputs_dataset()
+        self._attach_outputs_dataset_assertions()
+
     def test_attach_outputs_dataset_same_name_workflow_results(self):
-        self.galaxy_datasets_list_same_names_mock.start()
-        same_name_galaxy_history_datasets_mock = (
-            self.get_history_file_list_same_names_mock.start()
+        self._get_galaxy_download_task_ids_wrapper(
+            datasets_have_same_names=True
         )
-        self.show_dataset_provenance_mock.side_effect = (
-            self.show_dataset_provenance_side_effect * 3
-        )
-        self.show_job_mock.side_effect = self.show_job_side_effect * 4
-        self.has_dataset_collection_input_mock_false.start()
-        self.create_tool(ToolDefinition.WORKFLOW)
-        _get_galaxy_download_task_ids(self.tool.analysis)
+        self.tool.analysis.attach_outputs_dataset()
+
         output_connections = AnalysisNodeConnection.objects.filter(
             analysis=self.tool.analysis,
             direction=OUTPUT_CONNECTION
@@ -2346,22 +2476,10 @@ class WorkflowToolTests(ToolManagerTestBase):
                 file_name=output_connection_filename
             )
             self.assertGreater(analysis_results.count(), 1)
-        self.tool.analysis.attach_outputs_dataset()
-        self.assertTrue(same_name_galaxy_history_datasets_mock.called)
-        self._assert_analysis_node_connection_outputs_validity()
-        self.assertEqual(self.show_dataset_provenance_mock.call_count, 8)
+        self._attach_outputs_dataset_assertions()
 
     def test_attach_outputs_dataset_makes_proper_node_inheritance_chain(self):
-        self.galaxy_datasets_list_mock.start()
-        self.get_history_file_list_mock.start()
-        self.has_dataset_collection_input_mock_false.start()
-        self.show_dataset_provenance_mock.side_effect = (
-            self.show_dataset_provenance_side_effect * 3
-        )
-        self.show_job_mock.side_effect = self.show_job_side_effect * 4
-
-        self.create_tool(ToolDefinition.WORKFLOW)
-        _get_galaxy_download_task_ids(self.tool.analysis)
+        self._get_galaxy_download_task_ids_wrapper()
 
         exposed_output_connections = AnalysisNodeConnection.objects.filter(
             analysis=self.tool.analysis,
@@ -2424,6 +2542,61 @@ class WorkflowToolTests(ToolManagerTestBase):
         self.tool.create_galaxy_library()
         self.assertEqual(self.tool.analysis.library_id, library_dict["id"])
 
+    def test_get_galaxy_dataset_download_list(self):
+        self.galaxy_datasets_list_mock.start()
+        self.show_job_mock.side_effect = [galaxy_job_a, galaxy_job_a,
+                                          galaxy_job_b, galaxy_job_b,
+                                          galaxy_job_a, galaxy_job_a]
+        self.show_dataset_mock.side_effect = galaxy_datasets_list
+
+        self.create_tool(ToolDefinition.WORKFLOW)
+        self.assertEqual(
+            len(self.tool.get_galaxy_dataset_download_list()),
+            2
+        )
+
+    def test__get_creating_job_output_name(self):
+        self.show_job_mock.side_effect = [galaxy_job_a, galaxy_job_b]
+        self.create_tool(ToolDefinition.WORKFLOW)
+
+        creating_job_output_name_a = self.tool._get_creating_job_output_name(
+            galaxy_datasets_list[0]
+        )
+        creating_job_output_name_b = self.tool._get_creating_job_output_name(
+            galaxy_datasets_list[1]
+        )
+        self.assertIsNotNone(galaxy_job_a["outputs"].get(
+                creating_job_output_name_a
+            )
+        )
+        self.assertIsNotNone(galaxy_job_b["outputs"].get(
+                creating_job_output_name_b
+            )
+        )
+
+    def test__get_creating_job_output_name_reliance(self):
+        self.show_job_mock.side_effect = [galaxy_job_a]
+        self.create_tool(ToolDefinition.WORKFLOW)
+
+        with self.assertRaises(AssertionError) as context:
+            self.tool._get_creating_job_output_name(
+                {
+                    "uuid": str(uuid.uuid4()),
+                    WorkflowTool.CREATING_JOB: ""
+                 }
+            )
+        self.assertIn(
+            "There should be one creating job output name",
+            context.exception.message
+        )
+
+    def test_that_tool_analysis_has_proper_ownership(self):
+        self.create_tool(ToolDefinition.WORKFLOW)
+        self.assertEqual(
+            self.tool.get_owner(),
+            self.tool.analysis.get_owner()
+        )
+
 
 class ToolAPITests(APITestCase, ToolManagerTestBase):
     def test_tools_exist(self):
@@ -2446,15 +2619,14 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
         self.get_response = self.tools_view(self.get_request)
         self.assertEqual(self.get_response.status_code, 403)
 
-    def test_get_request_tools_owned_by_user(self):
+    def test_get_request_tools_owned_by_another_user(self):
         # Creates a valid Tool for self.user
         self.create_tool(ToolDefinition.VISUALIZATION)
 
         # Try to GET the aforementioned Tool, and assert that another user
         # can't do so
-        force_authenticate(self.get_request, self.user2)
-        self.get_response = self.tools_view(self.get_request)
-        self.assertEqual(len(self.get_response.data), 0)
+        self._make_tools_get_request(user=self.user2)
+        self.assertEqual(self.get_response.status_code, 401)
 
     def test_unallowed_http_verbs(self):
         self.create_tool(ToolDefinition.WORKFLOW)
@@ -2545,10 +2717,226 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
         self.create_tool(ToolDefinition.WORKFLOW)
         self.create_tool(ToolDefinition.VISUALIZATION)
 
-        self.get_request = self.factory.get(self.tools_url_root)
-        force_authenticate(self.get_request, self.user)
-        self.get_response = self.tools_view(self.get_request)
+        self._make_tools_get_request()
         self.assertEqual(len(self.get_response.data), 2)
+
+    def test_visualiztion_running_status_in_response(self):
+        self.create_tool(
+            ToolDefinition.VISUALIZATION,
+            start_vis_container=True
+        )
+
+        self._make_tools_get_request()
+        self.assertEqual(len(self.get_response.data), 1)
+
+        self.assertTrue(self.get_response.data[0]["is_running"])
+
+        self._django_docker_engine_cleanup_wrapper()
+
+        self._make_tools_get_request()
+        self.assertEqual(len(self.get_response.data), 1)
+
+        self.assertFalse(self.get_response.data[0]["is_running"])
+
+    def test_workflow_running_status_in_response(self):
+        self.create_tool(ToolDefinition.WORKFLOW)
+        self.tool.analysis.set_status(Analysis.RUNNING_STATUS)
+
+        self._make_tools_get_request()
+        self.assertEqual(len(self.get_response.data), 1)
+
+        self.assertTrue(self.get_response.data[0]["is_running"])
+
+        self.tool.analysis.set_status(Analysis.SUCCESS_STATUS)
+
+        self._make_tools_get_request()
+        self.assertEqual(len(self.get_response.data), 1)
+
+        self.assertFalse(self.get_response.data[0]["is_running"])
+
+    def test_owner_info_is_returned(self):
+        self.create_tool(ToolDefinition.WORKFLOW)
+        self.create_tool(ToolDefinition.VISUALIZATION)
+
+        self._make_tools_get_request()
+        self.assertEqual(len(self.get_response.data), 2)
+
+        for tool in self.get_response.data:
+            self.assertEqual(
+                tool["owner"],
+                self.tool._get_owner_info_as_dict()
+            )
+
+    def test_vis_tool_can_be_relaunched(self):
+        self.create_tool(ToolDefinition.VISUALIZATION,
+                         start_vis_container=True)
+        assign_perm('core.read_dataset', self.user, self.tool.dataset)
+
+        self._make_tools_get_request()
+        self.assertTrue(self.tool.is_running())
+
+        # Remove Container
+        self._django_docker_engine_cleanup_wrapper()
+        self.assertFalse(self.tool.is_running())
+
+        # Relaunch Tool
+        get_request = self.factory.get(self.tool.relaunch_url)
+        force_authenticate(get_request, self.user)
+        with mock.patch("tool_manager.models.get_solr_response_json"):
+            get_response = self.tool_relaunch_view(
+                get_request,
+                uuid=self.tool.uuid
+            )
+        self.assertEqual(get_response.status_code, 200)
+        self.assertEqual(
+            json.loads(get_response.content),
+            {Tool.TOOL_URL: self.tool.get_relative_container_url()}
+        )
+        self.assertTrue(self.tool.is_running())
+
+    def test_relaunch_failure_no_auth(self):
+        self.create_tool(ToolDefinition.VISUALIZATION)
+        get_request = self.factory.get(self.tool.relaunch_url)
+        get_response = self.tool_relaunch_view(get_request)
+        self.assertEqual(get_response.status_code, 403)
+
+    def test_relaunch_failure_no_uuid_present(self):
+        self.create_tool(ToolDefinition.VISUALIZATION)
+        get_request = self.factory.get(self.tool.relaunch_url)
+        force_authenticate(get_request, self.user)
+        get_response = self.tool_relaunch_view(get_request)
+        self.assertEqual(get_response.status_code, 400)
+        self.assertIn("Relaunching a Tool requires a Tool UUID",
+                      get_response.content)
+
+    def test_relaunch_failure_tool_doesnt_exist(self):
+        self.create_tool(ToolDefinition.VISUALIZATION)
+        tool_uuid = self.tool.uuid
+        relaunch_url = self.tool.relaunch_url
+        self.tool.delete()
+
+        get_request = self.factory.get(relaunch_url)
+        force_authenticate(get_request, self.user)
+        get_response = self.tool_relaunch_view(get_request, uuid=tool_uuid)
+        self.assertEqual(get_response.status_code, 400)
+        self.assertIn("Couldn't retrieve VisualizationTool",
+                      get_response.content)
+
+    def test_relaunch_failure_insufficient_user_perms(self):
+        self.create_tool(ToolDefinition.VISUALIZATION)
+        get_request = self.factory.get(self.tool.relaunch_url)
+        remove_perm('core.read_dataset', self.user, self.tool.dataset)
+
+        force_authenticate(get_request, self.user)
+        get_response = self.tool_relaunch_view(
+            get_request,
+            uuid=self.tool.uuid
+        )
+        self.assertEqual(get_response.status_code, 403)
+        self.assertIn("not have sufficient permissions",
+                      get_response.content)
+
+    def test_relaunch_failure_tool_already_running(self):
+        self.create_tool(ToolDefinition.VISUALIZATION,
+                         start_vis_container=True)
+        assign_perm('core.read_dataset', self.user, self.tool.dataset)
+        get_request = self.factory.get(self.tool.relaunch_url)
+        force_authenticate(get_request, self.user)
+        get_response = self.tool_relaunch_view(
+            get_request,
+            uuid=self.tool.uuid
+        )
+        self.assertEqual(get_response.status_code, 400)
+        self.assertIn("Can't relaunch a Tool that is currently running",
+                      get_response.content)
+
+    def test_workflow_tool_disallows_relaunch(self):
+        self.create_tool(ToolDefinition.WORKFLOW)
+        get_request = self.factory.get(self.tool.relaunch_url)
+        force_authenticate(get_request, self.user)
+        get_response = self.tool_relaunch_view(
+            get_request,
+            uuid=self.tool.uuid
+        )
+        self.assertEqual(get_response.status_code, 400)
+        self.assertIn("Couldn't retrieve VisualizationTool",
+                      get_response.content)
+
+    def test_api_response_has_proper_fields_present(self):
+        self.create_tool(ToolDefinition.VISUALIZATION)
+        self._make_tools_get_request()
+        self.assertEqual(len(self.get_response.data), 1)
+
+        expected_response_fields = {
+            'container_name': self.tool.container_name,
+            'container_url': self.tool.get_relative_container_url(),
+            'dataset': self.tool.dataset.pk,
+            'is_running': self.tool.is_running(),
+            'name': self.tool.name,
+            'owner': self.tool._get_owner_info_as_dict(),
+            'relaunch_url': self.tool.relaunch_url,
+            'tool_definition': self.tool.tool_definition.pk,
+            'uuid': self.tool.uuid
+        }
+
+        for key in expected_response_fields.keys():
+            self.assertEqual(
+                dict(self.get_response.data[0])[key],
+                expected_response_fields[key]
+            )
+
+    def test_vis_tools_returned_are_from_a_single_dataset(self):
+        vis_tools_to_create = 3
+        for i in xrange(vis_tools_to_create):
+            self.create_tool(ToolDefinition.VISUALIZATION,
+                             create_unique_name=True)
+
+        # Create another Vis Tool with a separate Dataset
+        new_tool = self.create_tool(ToolDefinition.VISUALIZATION,
+                                    create_unique_name=True,
+                                    user_has_dataset_read_meta_access=False)
+        new_dataset = create_dataset_with_necessary_models(create_nodes=False)
+        new_tool.dataset = new_dataset
+        new_tool.save()
+
+        self._make_tools_get_request(self.user)
+        self.assertEqual(len(self.get_response.data), vis_tools_to_create)
+        self.assertNotIn(
+            new_tool.uuid,
+            [tool["uuid"] for tool in self.get_response.data]
+        )
+
+    def _create_workflow_and_vis_tools(self, number_to_create=2):
+        for i in xrange(number_to_create):
+            self.create_tool(ToolDefinition.VISUALIZATION,
+                             create_unique_name=True)
+            self.create_tool(ToolDefinition.WORKFLOW,
+                             create_unique_name=True)
+
+    def _assert_get_response_contains(self, tool_list):
+        self.assertEqual(
+            [tool.uuid for tool in tool_list],
+            [tool["uuid"] for tool in self.get_response.data]
+        )
+
+    def test_vis_tools_returned_with_tool_type_request_param(self):
+        self._create_workflow_and_vis_tools()
+        self._make_tools_get_request(tool_type=ToolDefinition.VISUALIZATION)
+        self._assert_get_response_contains(
+            VisualizationTool.objects.filter(dataset=self.dataset)
+        )
+
+    def test_workflow_tools_returned_with_tool_type_request_param(self):
+        self._create_workflow_and_vis_tools()
+        self._make_tools_get_request(tool_type=ToolDefinition.WORKFLOW)
+        self._assert_get_response_contains(
+            WorkflowTool.objects.filter(dataset=self.dataset)
+        )
+
+    def test_get_with_invalid_tool_type_request_param(self):
+        self._create_workflow_and_vis_tools()
+        self._make_tools_get_request(tool_type="coffee")
+        self.assertEqual(self.get_response.data, [])
 
 
 class WorkflowToolLaunchTests(ToolManagerTestBase):
@@ -2558,7 +2946,7 @@ class WorkflowToolLaunchTests(ToolManagerTestBase):
         self.create_tool(ToolDefinition.WORKFLOW)
 
         self.assertEqual(self.tool.get_owner(), self.user)
-        self.assertEqual(self.tool.get_tool_type(), ToolDefinition.WORKFLOW)
+        self.assertTrue(self.tool.is_workflow())
         self.assertEqual(
             ast.literal_eval(self.tool.analysis.workflow_copy),
             galaxy_workflow_dict
@@ -2900,9 +3288,17 @@ class WorkflowToolLaunchTests(ToolManagerTestBase):
         self.assertTrue(send_email_mock.called)
         self.assertTrue(galaxy_cleanup_mock.called)
 
-    def test_galaxy_cleanup_methods_are_called_on_analysis_failure(self):
-        settings.REFINERY_GALAXY_ANALYSIS_CLEANUP = "always"
+    def galaxy_cleanup_assertions(self, delete_history_mock_call_count=2):
+        self.assertFalse(self.delete_workflow_mock.called)
+        self.assertTrue(self.delete_history_mock.called)
+        self.assertTrue(self.delete_library_mock.called)
 
+        self.assertEqual(
+            self.delete_history_mock.call_count,
+            delete_history_mock_call_count
+        )
+
+    def create_tool_with_analysis(self):
         self.create_tool(ToolDefinition.WORKFLOW)
 
         self.tool.update_galaxy_data(
@@ -2915,16 +3311,53 @@ class WorkflowToolLaunchTests(ToolManagerTestBase):
         self.tool.analysis.library_id = self.GALAXY_ID_MOCK
         self.tool.analysis.save()
 
-        self.tool.analysis.cancel()
+    def test_galaxy_cleanup_methods_are_called_on_analysis_failure(self):
+        settings.REFINERY_GALAXY_ANALYSIS_CLEANUP = "always"
 
+        self.create_tool_with_analysis()
+        self.tool.analysis.galaxy_cleanup()
+        self.galaxy_cleanup_assertions()
+
+    def test_galaxy_cleanup_is_always_called_for_cancelled_analyses(self):
+        settings.REFINERY_GALAXY_ANALYSIS_CLEANUP = "invalid cleanup value"
+
+        self.create_tool_with_analysis()
+        self.tool.analysis.cancel()
         self.assertEqual(self.tool.analysis.status, Analysis.FAILURE_STATUS)
         self.assertTrue(self.tool.analysis.canceled)
+        self.galaxy_cleanup_assertions()
 
-        self.assertFalse(self.delete_workflow_mock.called)
-        self.assertTrue(self.delete_history_mock.called)
-        self.assertTrue(self.delete_library_mock.called)
+    def test_galaxy_cleanup_is_always_called_for_deleted_analyses(self):
+        settings.REFINERY_GALAXY_ANALYSIS_CLEANUP = "invalid cleanup value"
 
-        self.assertEqual(self.delete_history_mock.call_count, 2)
+        self.create_tool_with_analysis()
+        self.tool.analysis.delete()
+        self.galaxy_cleanup_assertions()
+
+    def test_analysis_deletion_works_for_tools_that_havent_reached_galaxy_yet(
+            self
+    ):
+        settings.REFINERY_GALAXY_ANALYSIS_CLEANUP = "invalid cleanup value"
+        self.create_tool_with_analysis()
+
+        # Simulate a WorkflowTool that hasn't talked to Galaxy yet
+        self.tool.analysis.history_id = None
+        self.tool.analysis.library_id = None
+        self.tool.analysis.save()
+
+        with mock.patch.object(
+                WorkflowTool,
+                "get_galaxy_dict",
+                return_value={}
+        ):
+            self.tool.analysis.delete()
+
+        self.galaxy_cleanup_assertions(delete_history_mock_call_count=1)
+
+        with self.assertRaises(WorkflowTool.DoesNotExist):
+            WorkflowTool.objects.get(uuid=self.tool.uuid)
+        with self.assertRaises(Analysis.DoesNotExist):
+            Analysis.objects.get(uuid=self.tool.analysis.uuid)
 
     @mock.patch.object(WorkflowClient, "invoke_workflow",
                        side_effect=bioblend.ConnectionError("Bad connection"))
@@ -2951,13 +3384,8 @@ class WorkflowToolLaunchTests(ToolManagerTestBase):
         self.tool.analysis.save()
 
         self.tool.invoke_workflow()
+        self.galaxy_cleanup_assertions()
 
-        self.assertEqual(self.tool.analysis.status, Analysis.FAILURE_STATUS)
-        self.assertFalse(self.delete_workflow_mock.called)
-
-        self.assertTrue(self.delete_history_mock.called)
-        self.assertTrue(self.delete_library_mock.called)
-        self.assertEqual(self.delete_history_mock.call_count, 2)
         self.assertTrue(invoke_workflow_mock.called)
         self.assertTrue(self.tool_data_mock.called)
 
@@ -3021,59 +3449,45 @@ class VisualizationToolLaunchTests(ToolManagerTestBase,  # TODO: Cypress
             self, json_name, file_relationships,
             assertions=None, count=1
     ):
-        with open(
-            "{}/visualizations/{}".format(TEST_DATA_PATH, json_name)
-        ) as f:
-            tool_annotation = [json.loads(f.read())]
+        self.load_visualizations()
 
-        with mock.patch(
-            self.mock_vis_annotations_reference,
-            return_value=tool_annotation
-        ) as mocked_method:
-            if count == 1:
-                call_command("generate_tool_definitions", visualizations=True)
-                self.assertTrue(mocked_method.called)
+        self.assertEqual(ToolDefinition.objects.count(), 1)
+        self.td = ToolDefinition.objects.all()[0]
 
-            self.assertEqual(ToolDefinition.objects.count(), 1)
-            self.td = ToolDefinition.objects.all()[0]
-
-            # Create mock ToolLaunchConfiguration
-            tool_launch_configuration = {
-                "dataset_uuid": self.dataset.uuid,
-                "tool_definition_uuid": self.td.uuid,
-                Tool.FILE_RELATIONSHIPS: "[{}]".format(
-                    self.make_node(source=self.sample_igv_file)
-                ),
-                ToolDefinition.PARAMETERS: {
-                    self.mock_parameter.uuid: self.mock_parameter.default_value
-                }
+        # Create mock ToolLaunchConfiguration
+        tool_launch_configuration = {
+            "dataset_uuid": self.dataset.uuid,
+            "tool_definition_uuid": self.td.uuid,
+            Tool.FILE_RELATIONSHIPS: "[{}]".format(
+                self.make_node(source=self.sample_igv_file)
+            ),
+            ToolDefinition.PARAMETERS: {
+                self.mock_parameter.uuid: self.mock_parameter.default_value
             }
-            visualization_tool = create_tool(
-                tool_launch_configuration,
-                self.user
+        }
+        visualization_tool = create_tool(
+            tool_launch_configuration,
+            self.user
+        )
+        with mock.patch(
+            "data_set_manager.utils.search_solr",
+            return_value=self.create_solr_mock_response(
+                visualization_tool
             )
-            with mock.patch(
-                "data_set_manager.utils.search_solr",
-                return_value=self.create_solr_mock_response(
-                    visualization_tool
-                )
-            ):
-                visualization_tool.launch()
+        ):
+            visualization_tool.launch()
 
-            tools = VisualizationTool.objects.filter(
-                tool_definition__uuid=self.td.uuid
-            )
-            if count:
-                self.assertEqual(len(tools), count)
-            last_tool = tools.last()
-            self.assertEqual(last_tool.get_owner(), self.user)
-            self.assertEqual(
-                last_tool.get_tool_type(),
-                ToolDefinition.VISUALIZATION
-            )
+        tools = VisualizationTool.objects.filter(
+            tool_definition__uuid=self.td.uuid
+        )
+        if count:
+            self.assertEqual(len(tools), count)
+        last_tool = tools.last()
+        self.assertEqual(last_tool.get_owner(), self.user)
+        self.assertTrue(last_tool.is_visualization())
 
-            if assertions:
-                assertions(last_tool)
+        if assertions:
+            assertions(last_tool)
 
     def test_IGV(self):
         def assertions(tool):
@@ -3119,12 +3533,14 @@ class VisualizationToolLaunchTests(ToolManagerTestBase,  # TODO: Cypress
             )
             client.lookup_container_url(tool.container_name)
 
-            time.sleep(wait_time * 2)
-            django_docker_cleanup()
-            time.sleep(wait_time * 2)
+            self.assertTrue(tool.is_running())
+
+            self._django_docker_engine_cleanup_wrapper()
 
             with self.assertRaises(NotFound):
                 client.lookup_container_url(tool.container_name)
+
+            self.assertFalse(tool.is_running())
 
         self._start_visualization(
             'hello_world.json',
@@ -3165,19 +3581,10 @@ class ToolLaunchConfigurationTests(ToolManagerTestBase):
     def setUp(self):
         super(ToolLaunchConfigurationTests, self).setUp()
 
-        with open(
-            "{}/visualizations/higlass.json".format(TEST_DATA_PATH)
-        ) as f:
-            tool_annotation = [json.loads(f.read())]
+        self.load_visualizations()
 
-        with mock.patch(
-            self.mock_vis_annotations_reference, return_value=tool_annotation
-        ) as mocked_method:
-            call_command("generate_tool_definitions", visualizations=True)
-
-            self.assertTrue(mocked_method.called)
-            self.assertEqual(ToolDefinition.objects.count(), 1)
-            self.td = ToolDefinition.objects.all()[0]
+        self.assertEqual(ToolDefinition.objects.count(), 1)
+        self.td = ToolDefinition.objects.all()[0]
 
     def test_invalid_TLC_bad_json(self):
         tool_launch_configuration = "This isn't valid JSON"
@@ -3345,32 +3752,8 @@ class ToolManagerUtilitiesTests(ToolManagerTestBase):
             file_type_validation_error.message
         )
 
-    def test_get_visualization_annotations_list(self):
-        settings.VISUALIZATION_ANNOTATION_BASE_PATH = os.path.dirname(__file__)
-        tool_definition_name = "dummy.json"
-        tool_definition = {
-            "is_tool_definition": True
-        }
-        tool_definition_path = os.path.join(
-            settings.VISUALIZATION_ANNOTATION_BASE_PATH,
-            tool_definition_name
-        )
-        with open(tool_definition_path, "w") as f:
-            f.write(json.dumps(tool_definition))
-
-        visualization_annotations = get_visualization_annotations_list()
-        self.assertEqual(
-            visualization_annotations,
-            [
-                {
-                    "is_tool_definition": True
-                }
-            ]
-        )
-        os.remove(tool_definition_path)
-
     @mock.patch(
-        "bioblend.galaxy.workflows.WorkflowClient.export_workflow_json",
+        "bioblend.galaxy.workflows.WorkflowClient.export_workflow_dict",
         return_value="workflow_graph"
     )
     @mock.patch(
@@ -3412,4 +3795,65 @@ class ToolManagerUtilitiesTests(ToolManagerTestBase):
                     self.workflow_engine.instance.base_url
                 ),
                 context.exception.message
+            )
+
+
+class ParameterTests(TestCase):
+    def test_cast_param_value_to_proper_type_bool(self):
+        test_bools = [True, False]
+        for index, test_bool in enumerate(test_bools):
+            parameter = ParameterFactory(
+                name="Bool Param",
+                description="Boolean Parameter",
+                value_type=Parameter.BOOLEAN,
+                default_value=str(test_bool)
+            )
+            for element in [parameter.default_value, test_bools[index]]:
+                self.assertEqual(
+                    test_bools[index],
+                    parameter.cast_param_value_to_proper_type(element)
+                )
+
+    def test_cast_param_value_to_proper_type_string(self):
+        test_string = "Coffee"
+        for string_type in Parameter.STRING_TYPES:
+            parameter = ParameterFactory(
+                name="String Param",
+                description="String Parameter",
+                value_type=string_type,
+                default_value=test_string
+            )
+            self.assertEqual(
+                test_string,
+                parameter.cast_param_value_to_proper_type(
+                    parameter.default_value
+                )
+            )
+
+    def test_cast_param_value_to_proper_type_int(self):
+        test_int = 1
+        parameter = ParameterFactory(
+            name="Int Param",
+            description="Integer Parameter",
+            value_type=Parameter.INTEGER,
+            default_value=str(test_int)
+        )
+        for element in [parameter.default_value, test_int]:
+            self.assertEqual(
+                test_int,
+                parameter.cast_param_value_to_proper_type(element)
+            )
+
+    def test_cast_param_value_to_proper_type_float(self):
+        test_float = 1.37
+        parameter = ParameterFactory(
+            name="Float Param",
+            description="Float Parameter",
+            value_type=Parameter.FLOAT,
+            default_value=str(test_float)
+        )
+        for element in [parameter.default_value, test_float]:
+            self.assertEqual(
+                test_float,
+                parameter.cast_param_value_to_proper_type(element)
             )

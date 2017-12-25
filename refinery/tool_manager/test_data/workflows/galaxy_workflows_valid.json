@@ -8,7 +8,12 @@
             }
         },
         "name": "Test LIST:PAIR",
-        "graph": "",
+        "graph": {
+                "steps": {
+                    "0": {"workflow_outputs": ["output"]},
+                    "1": {"workflow_outputs": ["output"]}
+                }
+            },
         "tags": [],
         "deleted": false,
         "latest_workflow_uuid": "24a18c35-c6f1-46f0-8d1d-8087c16ffb06",
@@ -129,7 +134,12 @@
             }
         },
         "name": "Test LIST:LIST:PAIR",
-        "graph": "",
+        "graph": {
+                "steps": {
+                    "0": {"workflow_outputs": ["output"]},
+                    "1": {"workflow_outputs": ["output"]}
+                }
+            },
         "tags": [],
         "deleted": false,
         "latest_workflow_uuid": "140abad6-d580-4c71-8df6-b847496c9c9b",
@@ -272,7 +282,12 @@
             }
         },
         "name": "Test LIST",
-        "graph": "",
+        "graph": {
+                "steps": {
+                    "0": {"workflow_outputs": ["output"]},
+                    "1": {"workflow_outputs": ["output"]}
+                }
+            },
         "tags": [],
         "deleted": false,
         "latest_workflow_uuid": "b8cf5701-eb4a-4fea-a20a-3097e11955e8",

@@ -325,7 +325,7 @@ class IsaTabParser:
                 # create the nodes for the data file in this row
                 file_path = self.file_source_translator(node_name)
                 file_store_item = FileStoreItem.objects.create_item(
-                    source=file_path, sharename='', filetype=''
+                    source=file_path, filetype=''
                 )
                 if file_store_item:
                     node.file_uuid = file_store_item.uuid
@@ -377,8 +377,8 @@ class IsaTabParser:
                 elif self.is_protocol_reference(headers[-len(row)]):
                     self._parse_protocol_reference(headers, row)
                 else:
-                    logger.error(
-                        "Unexpected element " + headers[-len(row)] + " when "
+                    logger.warning(
+                        "Unexpected element `" + headers[-len(row)] + "` when "
                         "parsing node in line " +
                         str(self._current_reader.line_num) + ", column " +
                         str(len(headers) - len(row)) + ".")

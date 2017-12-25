@@ -3,6 +3,7 @@ Created on May 29, 2012
 
 @author: nils
 '''
+import copy
 import csv
 import hashlib
 import json
@@ -451,24 +452,23 @@ def update_annotated_nodes(
         total_unique_attrs += len(
             nodes[node_id]["attributes"]
         )
-
         if node["type"] == node_type:
             num_nodes_of_type += 1
-
             attrs = _get_unique_parent_attributes(nodes, node_id)
-
             u_len = len(attrs)
-
             total_attrs += u_len
-
-    if total_attrs / num_nodes_of_type == total_unique_attrs:
+    if total_attrs == total_unique_attrs * num_nodes_of_type \
+            and len([
+                n for n in nodes.values() if n['type'] == 'Sample Name'
+            ]) > 1:
+        # This should exclude CSV imports
+        # TODO: Not happy about this hack at all.
         error_message = (
             "Exponential explosion! Creation of {} annotated nodes for {} "
-            "nodes of type {} is stopped!"
+            "nodes of type {}"
         ).format(total_attrs, num_nodes_of_type, node_type)
 
         logger.error(error_message)
-        raise RuntimeError(error_message)
 
     for node_id, node in nodes.iteritems():
         if node["type"] == node_type:
@@ -608,7 +608,7 @@ def _index_annotated_nodes(node_type, study_uuid, assay_uuid=None,
     logger.info("%s nodes indexed in %s", str(counter), str(end - start))
 
 
-def generate_solr_params_for_assay(params, assay_uuid):
+def generate_solr_params_for_assay(params, assay_uuid, exclude_facets=[]):
     """Creates the encoded solr params requiring only an assay.
     Keyword Argument
         params -- python dict or QueryDict
@@ -624,10 +624,14 @@ def generate_solr_params_for_assay(params, assay_uuid):
         sort - Ordering include field name, whitespace, & asc or desc.
         fq - filter query
      """
-    return generate_solr_params(params, assay_uuids=[assay_uuid])
+    return generate_solr_params(params, [assay_uuid], False, exclude_facets)
 
 
-def generate_solr_params(params, assay_uuids, facets_from_config=False):
+def generate_solr_params(
+        params,
+        assay_uuids,
+        facets_from_config=False,
+        exclude_facets=[]):
     """
     Either returns a solr url parameter string,
     or None if assay_uuids is empty.
@@ -692,7 +696,11 @@ def generate_solr_params(params, assay_uuids, facets_from_config=False):
             assay__uuid__in=assay_uuids  # TODO: Confirm this syntax
         )
         attributes = AttributeOrderSerializer(attributes_str, many=True)
-        facet_field_obj = generate_filtered_facet_fields(attributes.data)
+        culled_attributes = cull_attributes_from_list(
+            attributes.data,
+            exclude_facets
+        )
+        facet_field_obj = generate_filtered_facet_fields(culled_attributes)
         facet_field = facet_field_obj.get('facet_field')
         facet_field = insert_facet_field_filter(facet_filter, facet_field)
         field_limit = ','.join(facet_field_obj.get('field_limit'))
@@ -720,6 +728,21 @@ def generate_solr_params(params, assay_uuids, facets_from_config=False):
     encoded_solr_params = urlquote(url, safe='\\=&! ')
 
     return encoded_solr_params
+
+
+def cull_attributes_from_list(attribute_list, attribute_names_to_remove):
+    """Helper method which will remove the first matching attribute from the
+    AttributeOrder based on the solr_field name.
+    Keyword Argument
+        attribute_list -- AttributeOrder list
+        attribute_names_to_remove -- list of solr_field names"""
+    culled_attributes = copy.copy(attribute_list)
+    for name in attribute_names_to_remove:
+        for attribute_obj in culled_attributes:
+            if (attribute_obj.get('solr_field').startswith(name)):
+                culled_attributes.remove(attribute_obj)
+                break
+    return culled_attributes
 
 
 def insert_facet_field_filter(facet_filter, facet_field_arr):

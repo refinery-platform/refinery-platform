@@ -6,7 +6,7 @@ function analysisMonitorFactory (
   $window,
   analysisService,
   analysisDetailService,
-  humanize
+  timeService
 ) {
   var analysesList = [];
   var analysesRunningList = [];
@@ -37,15 +37,6 @@ function analysisMonitorFactory (
     };
   };
 
-  var humanizeTimeObj = function (param) {
-    var a = param.split(/[^0-9]/);
-    var testDate = Date.UTC(a[0], a[1] - 1, a[2], a[3], a[4], a[5]);
-    var curDate = new Date().getTimezoneOffset() * 60 * 1000;
-    var offsetDate = testDate + curDate;
-    var unixtime = offsetDate / 1000;
-
-    return humanize.relativeTime(unixtime);
-  };
   // Helper method checking if object is defined
   var isObjDefined = function (data) {
     if (data !== undefined && data !== null) {
@@ -106,10 +97,14 @@ function analysisMonitorFactory (
     for (var j = 0; j < analysesList.length; j++) {
       analysesList[j].elapseTime = createElapseTime(analysesList[j]);
       if (isObjDefined(analysesList[j].time_start)) {
-        analysesList[j].humanizeStartTime = humanizeTimeObj(analysesList[j].time_start);
+        analysesList[j].humanizeStartTime = timeService.humanizeTimeObj(
+          analysesList[j].time_start
+        );
       }
       if (isObjDefined(analysesList[j].time_end)) {
-        analysesList[j].humanizeEndTime = humanizeTimeObj(analysesList[j].time_end);
+        analysesList[j].humanizeEndTime = timeService.humanizeTimeObj(
+          analysesList[j].time_end
+        );
       }
     }
   };
@@ -233,6 +228,6 @@ angular
     '$window',
     'analysisService',
     'analysisDetailService',
-    'humanize',
+    'timeService',
     analysisMonitorFactory
   ]);

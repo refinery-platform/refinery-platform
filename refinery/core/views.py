@@ -297,8 +297,8 @@ def data_set(request, data_set_uuid, analysis_uuid=None):
     data_set = get_object_or_404(DataSet, uuid=data_set_uuid)
     public_group = ExtendedGroup.objects.public_group()
 
-    if not request.user.has_perm('core.read_dataset', data_set):
-        if 'read_dataset' not in get_perms(public_group, data_set):
+    if not request.user.has_perm('core.read_meta_dataset', data_set):
+        if 'read_meta_dataset' not in get_perms(public_group, data_set):
             if request.user.is_authenticated():
                 return HttpResponseForbidden(
                     custom_error_page(request, '403.html',
@@ -1020,41 +1020,20 @@ class OpenIDToken(APIView):
             return api_error_response(
                 message, status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-        try:
-            # 60 results is the highest allowed value
-            response = client.list_identity_pools(MaxResults=60)
-        except botocore.exceptions.NoCredentialsError as exc:
-            message = "Server AWS configuration is incorrect: {}".format(exc)
-            logger.error(message)
-            return api_error_response(
-                message, status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-        except botocore.exceptions.ClientError as exc:
-            message = "Error retrieving Cognito identity pools: {}".format(exc)
-            logger.error(message)
-            return api_error_response(
-                message, status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-        # retrieve Cognito identity pool ID using pool name
-        identity_pool_id = ''
-        for identity_pool in response['IdentityPools']:
-            if (identity_pool['IdentityPoolName'] ==
-                    settings.COGNITO_IDENTITY_POOL_NAME):
-                identity_pool_id = identity_pool['IdentityPoolId']
+
         try:
             token = client.get_open_id_token_for_developer_identity(
-                IdentityPoolId=identity_pool_id,
-                Logins={
-                    settings.COGNITO_DEVELOPER_PROVIDER_NAME:
-                        request.user.username
-                }
+                IdentityPoolId=settings.COGNITO_IDENTITY_POOL_ID,
+                Logins={'login.refinery': request.user.username}
             )
         except (botocore.exceptions.ClientError,
                 botocore.exceptions.ParamValidationError) as exc:
-            message = ("Could not obtain OpenID token for user '{}' in "
-                       "IdentityPoolId '{}': {}".format(
-                        request.user.username, identity_pool_id, exc
-                        ))
+            message =\
+                "Could not obtain OpenID token for " \
+                "user '{}' in Identity Pool '{}': {}".format(
+                    request.user.username, settings.COGNITO_IDENTITY_POOL_ID,
+                    exc
+                )
             logger.error(message)
             return api_error_response(
                 message, status.HTTP_500_INTERNAL_SERVER_ERROR
