@@ -1,7 +1,7 @@
 /**
- * Provvis Draw Links Service
+ * provvis Show Service
  * @namespace provvisShowService
- * @desc Service for drawing links
+ * @desc Service for showing different dom elements
  * @memberOf refineryApp.refineryProvvis
  */
 (function () {

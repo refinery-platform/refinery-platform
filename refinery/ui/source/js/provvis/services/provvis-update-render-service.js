@@ -1,7 +1,7 @@
 /**
  * provvis Update Render Service
  * @namespace provvisUpdateRenderService
- * @desc Service for drawing links
+ * @desc Service for updating the provvis render graph
  * @memberOf refineryApp.refineryProvvis
  */
 (function () {

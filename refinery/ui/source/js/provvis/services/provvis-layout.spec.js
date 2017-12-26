@@ -1,24 +1,24 @@
 (function () {
   'use strict';
 
-  describe('provvis Init Service', function () {
+  describe('provvis Layer Service', function () {
     var service;
 
     beforeEach(module('refineryApp'));
     beforeEach(module('refineryProvvis'));
     beforeEach(inject(function (
-      provvisInitService
+      provvisLayerService
     ) {
-      service = provvisInitService;
+      service = provvisLayerService;
     }));
 
     it('service and variables should exist', function () {
       expect(service).toBeDefined();
     });
 
-    describe('initGraph', function () {
-      it('initGraph is a method', function () {
-        expect(angular.isFunction(service.initGraph)).toBe(true);
+    describe('runLayer', function () {
+      it('runLayer is a method', function () {
+        expect(angular.isFunction(service.runLayer)).toBe(true);
       });
     });
   });

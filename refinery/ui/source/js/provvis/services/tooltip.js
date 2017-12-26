@@ -1,7 +1,7 @@
 /**
- * Provvis Draw Links Service
+ * provvis Tooltip Service
  * @namespace provvisTooltipService
- * @desc Service for drawing links
+ * @desc Service for drawing tooltips and hiding/showing tooltips
  * @memberOf refineryApp.refineryProvvis
  */
 (function () {

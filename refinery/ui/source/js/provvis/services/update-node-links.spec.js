@@ -5,7 +5,7 @@
     var service;
 
     beforeEach(module('refineryApp'));
-    beforeEach(module('refineryToolLaunch'));
+    beforeEach(module('refineryProvvis'));
     beforeEach(inject(function (
       provvisUpdateNodeLinksService
     ) {

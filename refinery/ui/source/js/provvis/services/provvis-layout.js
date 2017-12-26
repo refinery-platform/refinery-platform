@@ -1,7 +1,7 @@
 /**
- * Provvis Init Service
- * @namespace provvisInitService
- * @desc Service to init provvis
+ * provvis Layer Service
+ * @namespace provvisLayerService
+ * @desc Main layout module function
  * @memberOf refineryApp.refineryProvvis
  */
 (function () {
@@ -18,7 +18,6 @@
   ) {
     var provvisDecl = provvisDeclService;
 
-    /* Initialize node-link arrays. */
     var service = {
       runLayer: runLayer
     };

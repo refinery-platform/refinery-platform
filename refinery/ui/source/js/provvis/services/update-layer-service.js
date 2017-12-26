@@ -1,7 +1,7 @@
 /**
  * Provvis Update Layer Service
  * @namespace provvisUpdateLayerService
- * @desc Service for drawing links
+ * @desc Service for updating layer links and layer nodes
  * @memberOf refineryApp.refineryProvvis
  */
 (function () {

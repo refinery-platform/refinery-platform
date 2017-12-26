@@ -1,7 +1,7 @@
 /**
- * Provvis Draw Links Service
- * @namespace provvisDrawLinksService
- * @desc Service for drawing links
+ * provvis Toolbar Service
+ * @namespace provvisToolbarService
+ * @desc Service for handling the toolbar interactions
  * @memberOf refineryApp.refineryProvvis
  */
 (function () {

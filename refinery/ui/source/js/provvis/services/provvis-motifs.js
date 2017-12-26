@@ -1,7 +1,7 @@
 /**
- * Provvis Init Service
- * @namespace provvisInitService
- * @desc Service to init provvis
+ * provvis Motifs Service
+ * @namespace provvisMotifsService
+ * @desc Main motif discovery and injection module function
  * @memberOf refineryApp.refineryProvvis
  */
 (function () {
@@ -23,8 +23,6 @@
   ) {
     var provvisDecl = provvisDeclService;
     var provvisHelpers = provvisHelpersService;
-
-    /* Initialize node-link arrays. */
 
     var service = {
       runMotifs: runMotifs

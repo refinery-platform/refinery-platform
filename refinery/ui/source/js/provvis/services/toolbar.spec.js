@@ -1,24 +1,25 @@
 (function () {
   'use strict';
 
-  describe('provvis Init Service', function () {
+  describe('provvis Tooltip Service', function () {
     var service;
 
     beforeEach(module('refineryApp'));
     beforeEach(module('refineryProvvis'));
     beforeEach(inject(function (
-      provvisInitService
+      provvisToolbarService
     ) {
-      service = provvisInitService;
+      service = provvisToolbarService;
     }));
 
     it('service and variables should exist', function () {
       expect(service).toBeDefined();
     });
 
-    describe('initGraph', function () {
-      it('initGraph is a method', function () {
-        expect(angular.isFunction(service.initGraph)).toBe(true);
+
+    describe('handleToolbar', function () {
+      it('handleToolbar is a method', function () {
+        expect(angular.isFunction(service.handleToolbar)).toBe(true);
       });
     });
   });

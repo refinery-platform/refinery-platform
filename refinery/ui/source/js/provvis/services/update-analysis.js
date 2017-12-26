@@ -1,7 +1,7 @@
 /**
- * Provvis Draw Links Service
+ * provvis Update Analysis Service
  * @namespace provvisUpdateAnalysisService
- * @desc Service for drawing links
+ * @desc Service for updating analysis nodes and links
  * @memberOf refineryApp.refineryProvvis
  */
 (function () {

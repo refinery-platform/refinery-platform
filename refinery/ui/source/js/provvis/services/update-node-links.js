@@ -1,7 +1,7 @@
 /**
- * Provvis Draw Links Service
- * @namespace provvisDrawLinksService
- * @desc Service for drawing links
+ * provvis Update Node Links Service
+ * @namespace provvisUpdateNodeLinksService
+ * @desc Service for updating the dom components (node, link, info)
  * @memberOf refineryApp.refineryProvvis
  */
 (function () {
@@ -45,10 +45,10 @@
      * Method Definitions
      * ----------------------
      */
-      /**
-       * Update link through translation while dragging or on dragend.
-       * @param n Node object element.
-       */
+    /**
+     * Update link through translation while dragging or on dragend.
+     * @param n Node object element.
+     */
     function updateLink (n) {
       var draggingActive = partsService.draggingActive;
       var linkStyle = partsService.linkStyle;

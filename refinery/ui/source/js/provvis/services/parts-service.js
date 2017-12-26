@@ -1,7 +1,7 @@
 /**
  * Provvis Parts Service
- * @namespace provvisDrawLinksService
- * @desc Service for drawing links
+ * @namespace provvisPartsService
+ * @desc Service for maintaining provvis parts
  * @memberOf refineryApp.refineryProvvis
  */
 (function () {
