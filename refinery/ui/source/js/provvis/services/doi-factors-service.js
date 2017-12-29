@@ -1,7 +1,7 @@
 /**
- * Provvis Draw Links Service
- * @namespace provvisDrawLinksService
- * @desc Service for drawing links
+ * provvis Decl Doi Factors
+ * @namespace provvisDeclDoiFactors
+ * @desc Service for initializing doi factors
  * @memberOf refineryApp.refineryProvvis
  */
 (function () {

@@ -1,7 +1,7 @@
 /**
- * Provvis Draw Links Service
- * @namespace provvisDrawLinksService
- * @desc Service for drawing links
+ * provvis Draw Color Coding Service
+ * @namespace provvisDrawColorCodingService
+ * @desc Service for color coding views
  * @memberOf refineryApp.refineryProvvis
  */
 (function () {

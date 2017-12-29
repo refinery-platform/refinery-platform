@@ -1,7 +1,7 @@
 /**
- * Provvis Draw Links Service
- * @namespace provvisDrawLinksService
- * @desc Service for drawing links
+ * provvis Draw Timeline Service
+ * @namespace provvisDrawTimelineService
+ * @desc Service for drawing the timeline views
  * @memberOf refineryApp.refineryProvvis
  */
 (function () {

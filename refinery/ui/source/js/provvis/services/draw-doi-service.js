@@ -1,7 +1,7 @@
 /**
  * provvis Draw DOI Service
  * @namespace provvisDrawDOIService
- * @desc Service for drawing links
+ * @desc Service for drawing DOI view
  * @memberOf refineryApp.refineryProvvis
  */
 (function () {

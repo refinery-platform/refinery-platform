@@ -1,7 +1,7 @@
 /**
- * Provvis Draw Links Service
- * @namespace provvisDrawLinksService
- * @desc Service for drawing links
+ * provvis Handle Collapse Service
+ * @namespace provvisHandleCollapseService
+ * @desc Service for handling the collapse and updating node doi
  * @memberOf refineryApp.refineryProvvis
  */
 (function () {
