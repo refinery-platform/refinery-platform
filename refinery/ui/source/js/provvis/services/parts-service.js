@@ -18,6 +18,7 @@
     var colorStrokes = '#136382';
     var nodeLinkTransitionTime = 1000;
     var doiAutoUpdate = false;
+    var scaleFactor = 0.75;
 
     var vis = Object.create(null);
     var cell = Object.create(null);
@@ -28,6 +29,7 @@
     var saNode = Object.create(null);
     var node = Object.create(null);
     var domNodeset = []; // should be updated with selected nodes
+    var selectedNodeSet = d3.map();
     var link = Object.create(null);
     var aLink = Object.create(null);
     var saLink = Object.create(null);
@@ -59,9 +61,7 @@
     var timeLineGradientScale = Object.create(null);
 
     var doiDiffScale = Object.create(null);
-    var selectedNodeSet = d3.map();
     var lastSolrResponse = {};
-    var scaleFactor = 0.75;
 
        /* Simple tooltips by NG. */
     var tooltip = d3.select('body')
