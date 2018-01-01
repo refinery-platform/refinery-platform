@@ -2,13 +2,19 @@
   'use strict';
 
   describe('provvis Decl Service', function () {
+    var D3;
+    var doiCompService;
     var service;
 
     beforeEach(module('refineryApp'));
     beforeEach(module('refineryProvvis'));
     beforeEach(inject(function (
+      d3,
+      provvisDeclDoiComponents,
       provvisDeclService
     ) {
+      D3 = d3;
+      doiCompService = provvisDeclDoiComponents;
       service = provvisDeclService;
     }));
 
@@ -23,8 +29,58 @@
     });
 
     describe('BaseNode', function () {
+      var id = 1;
+      var nodeType = 'base';
+      var parent = {};
+      var hidden = false;
+      var nodeObj;
+
+      beforeEach(function () {
+        nodeObj = new service.BaseNode(id, nodeType, parent, hidden);
+      });
+
       it('BaseNode is a method', function () {
         expect(angular.isFunction(service.BaseNode)).toBe(true);
+      });
+
+      it('BaseNode is a constructor function', function () {
+        expect(nodeObj instanceof service.BaseNode).toBe(true);
+      });
+
+      it('Returns the correct set properties', function () {
+        expect(nodeObj.id).toEqual(id);
+        expect(nodeObj.nodeType).toEqual(nodeType);
+        expect(nodeObj.parent).toEqual(parent);
+        expect(nodeObj.hidden).toEqual(hidden);
+        expect(nodeObj.selected).toEqual(false);
+        expect(nodeObj.filtered).toEqual(true);
+      });
+
+      it('Initializes correct properties', function () {
+        expect(nodeObj.preds).toEqual(D3.map());
+        expect(nodeObj.succs).toEqual(D3.map());
+        expect(nodeObj.predLinks).toEqual(D3.map());
+        expect(nodeObj.succLinks).toEqual(D3.map());
+        expect(nodeObj.children).toEqual(D3.map());
+        expect(nodeObj.x).toEqual(0);
+        expect(nodeObj.y).toEqual(0);
+      });
+
+      it('Initializes correct layout specific properties', function () {
+        expect(nodeObj.l.width).toEqual(0);
+        expect(nodeObj.l.depth).toEqual(0);
+        expect(nodeObj.l.bcOrder).toEqual(-1);
+        expect(nodeObj.l.ts.removed).toEqual(false);
+      });
+
+      it('Initializes doiComponent', function () {
+        expect(nodeObj.doi instanceof doiCompService.DoiComponents).toEqual(true);
+      });
+
+      it('Tracks number of instances correctly', function () {
+        expect(service.BaseNode.numInstances).toEqual(1);
+        new service.BaseNode(3, nodeType, parent, hidden);
+        expect(service.BaseNode.numInstances).toEqual(2);
       });
     });
 
