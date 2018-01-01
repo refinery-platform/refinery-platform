@@ -178,7 +178,6 @@
       };
 
       BaseNode(id, 'analysis', parent, hidden);  // eslint-disable-line new-cap
-      return analysis;
     }
 
     Analysis.prototype = Object.create(BaseNode.prototype); // eslint-disable-line no-unreachable
