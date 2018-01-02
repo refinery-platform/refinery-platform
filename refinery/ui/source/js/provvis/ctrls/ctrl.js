@@ -46,7 +46,6 @@
     var _dataSetUuid = $window.dataSetUuid;
     var _assayUuid = $window.externalAssayUuid;
     var analysesList = [];
-  //  var solrResponse = {};
     vm.getData = getData;
     vm.launchProvvis = launchProvvis;
 
