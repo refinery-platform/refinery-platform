@@ -4,6 +4,7 @@
   describe('provvis Decl Service', function () {
     var D3;
     var doiCompService;
+    var doiFactorService;
     var mocker;
     var service;
 
@@ -13,16 +14,26 @@
       d3,
       mockParamsFactory,
       provvisDeclDoiComponents,
-      provvisDeclService
+      provvisDeclService,
+      provvisDeclDoiFactors
     ) {
       D3 = d3;
       doiCompService = provvisDeclDoiComponents;
+      doiFactorService = provvisDeclDoiFactors;
       mocker = mockParamsFactory;
       service = provvisDeclService;
     }));
 
     it('service and variables should exist', function () {
       expect(service).toBeDefined();
+    });
+
+    it('wraps and returns provvis Decl Doi Components', function () {
+      expect(service.DoiComponents).toBeDefined(doiCompService);
+    });
+
+    it('wraps and returns provvis Decl Doi Factors', function () {
+      expect(service.DoiFactors).toBeDefined(doiFactorService);
     });
 
     describe('Analysis', function () {
