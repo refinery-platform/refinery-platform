@@ -1,5 +1,9 @@
 @import "variables.less";
 
+#data-set-view {
+  height: 100vh !important;
+}
+
 /*From data_set2.html, double c*/
 .facet-value-list td {
   padding: 2px;
@@ -342,5 +346,41 @@ ul.plain {
 .refinery-subheader {
   h4 {
     text-transform: none !important;
+  }
+}
+
+.perm-tab-icon {
+  .fa-stack {
+    line-height: 1em !important; // override FontAwesome defaults for tab
+    height: 1em !important;
+    width: 1em !important;
+  }
+  .fa-stack-right-corner {
+    position: absolute;
+    top: 9px;
+    left: 7px !important;
+  }
+}
+
+.perm-details-icon {
+  .fa-stack-right-corner {
+    position: absolute;
+    top: 6px;
+    left: -2px !important;
+  }
+}
+
+.fa-stack-0-8x {
+  font-size: .8em;
+}
+
+// Resolves space issue for the share and config buttons
+@media screen and (min-width: 1700px) {
+  #share-button-text:after {
+    content: 'Share';
+  }
+
+  #config-button-text:after {
+    content: 'Config';
   }
 }

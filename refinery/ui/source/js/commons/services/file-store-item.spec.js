@@ -12,7 +12,6 @@ describe('Common.service.fileStoreItem: unit tests', function () {
     datafile: '/media/file_store/94/70/rfc-test_4_LYaeGAD.zip',
     uuid: fakeUuid,
     source: '/vagrant/media/file_store/temp/rfc-test_4.zip',
-    sharename: '',
     import_task_id: '2638d2de-0ed3-439f-be74-d4631be0a58a',
     created: '2016-05-12T12:43:27.363785Z',
     updated: '2016-05-12T12:43:27.392864Z'

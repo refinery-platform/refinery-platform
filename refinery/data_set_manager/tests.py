@@ -6,16 +6,20 @@ import os
 import re
 import shutil
 import tempfile
+from urlparse import urljoin
 import uuid
 
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import (InMemoryUploadedFile,
                                             SimpleUploadedFile)
 from django.db.models import Q
 from django.http import QueryDict
-from django.test import TestCase
+from django.test import LiveServerTestCase, TestCase
 
+from guardian.shortcuts import assign_perm
 from haystack.exceptions import SkipDocument
+
 import mock
 from rest_framework.test import APIClient, APIRequestFactory, APITestCase
 
@@ -25,7 +29,8 @@ import data_set_manager
 from data_set_manager.isa_tab_parser import IsaTabParser, ParserException
 from data_set_manager.single_file_column_parser import process_metadata_table
 from data_set_manager.tasks import parse_isatab
-from factory_boy.utils import make_analyses_with_single_dataset
+from factory_boy.utils import (create_dataset_with_necessary_models,
+                               make_analyses_with_single_dataset)
 from file_store.models import FileStoreItem, generate_file_source_translator
 from file_store.tasks import import_file
 
@@ -34,9 +39,9 @@ from .models import (AnnotatedNode, Assay, AttributeOrder, Investigation, Node,
 from .search_indexes import NodeIndex
 from .serializers import AttributeOrderSerializer
 from .utils import (_create_solr_params_from_node_uuids,
-                    create_facet_filter_query, customize_attribute_response,
-                    escape_character_solr, format_solr_response,
-                    generate_facet_fields_query,
+                    create_facet_filter_query, cull_attributes_from_list,
+                    customize_attribute_response, escape_character_solr,
+                    format_solr_response, generate_facet_fields_query,
                     generate_filtered_facet_fields,
                     generate_solr_params_for_assay,
                     get_file_url_from_node_uuid, get_owner_from_assay,
@@ -360,14 +365,168 @@ class AssaysAttributesAPITests(APITestCase):
         self.client.logout()
 
 
+class AssaysFilesAPITests(APITestCase):
+
+    def setUp(self):
+        self.user_owner = 'owner'
+        self.user_guest = 'guest'
+        self.fake_password = 'test1234'
+        self.data_set = create_dataset_with_necessary_models()
+        self.user1 = User.objects.create_user(self.user_owner,
+                                              '',
+                                              self.fake_password)
+        self.user2 = User.objects.create_user(self.user_guest,
+                                              '',
+                                              self.fake_password)
+        self.data_set.set_owner(self.user1)
+        investigation = Investigation.objects.create()
+        self.investigation_link = \
+            InvestigationLink.objects.create(investigation=investigation,
+                                             data_set=self.data_set,
+                                             version=1)
+
+        study = Study.objects.create(file_name='test_filename123.txt',
+                                     title='Study Title Test',
+                                     investigation=investigation)
+
+        assay = Assay.objects.create(
+                study=study,
+                measurement='transcription factor binding site',
+                measurement_accession='http://www.testurl.org/testID',
+                measurement_source='OBI',
+                technology='nucleotide sequencing',
+                technology_accession='test info',
+                technology_source='test source',
+                platform='Genome Analyzer II',
+                file_name='test_assay_filename.txt',
+                )
+        self.valid_uuid = assay.uuid
+        self.invalid_uuid = "0xxx000x-00xx-000x-xx00-x00x00x00x0x"
+        self.url = "/api/v2/assays/%s/files/"
+        self.non_meta_attributes = ['REFINERY_DOWNLOAD_URL', 'REFINERY_NAME']
+        self.client = APIClient()
+
+    def tearDown(self):
+        self.client.logout()
+        Assay.objects.all().delete()
+        Study.objects.all().delete()
+        InvestigationLink.objects.all().delete()
+        Investigation.objects.all().delete()
+        DataSet.objects.all().delete()
+
+    @mock.patch('data_set_manager.views.generate_solr_params_for_assay')
+    @mock.patch('data_set_manager.views.search_solr')
+    @mock.patch('data_set_manager.views.format_solr_response')
+    def test_get_from_owner_with_valid_params(self,
+                                              mock_format,
+                                              mock_search,
+                                              mock_generate):
+        self.client.login(username=self.user_owner,
+                          password=self.fake_password)
+        mock_format.return_value = {'status': 200}
+        uuid = self.valid_uuid
+        params = {
+            'limit': '0',
+            'data_set_uuid': self.data_set.uuid
+        }
+        response = self.client.get(self.url % uuid, params)
+        self.assertTrue(mock_format.called)
+        self.assertTrue(mock_search.called)
+        qdict = QueryDict('', mutable=True)
+        qdict.update(params)
+        mock_generate.assert_called_once_with(qdict, uuid)
+        self.assertEqual(response.status_code, 200)
+
+    def test_get_from_owner_invalid_params(self):
+        self.client.login(username=self.user_owner,
+                          password=self.fake_password)
+
+        uuid = self.valid_uuid
+        params = {'limit': 0,
+                  'data_set_uuid': self.invalid_uuid}
+        response = self.client.get(self.url % uuid, params)
+        self.assertEqual(response.status_code, 404)
+
+    @mock.patch('data_set_manager.views.generate_solr_params_for_assay')
+    @mock.patch('data_set_manager.views.search_solr')
+    @mock.patch('data_set_manager.views.format_solr_response')
+    def test_get_from_user_no_perms(self,
+                                    mock_format,
+                                    mock_search,
+                                    mock_generate):
+        self.client.login(username=self.user_guest,
+                          password=self.fake_password)
+
+        uuid = self.valid_uuid
+        params = {
+            'limit': 0,
+            'data_set_uuid': self.data_set.uuid
+        }
+        response = self.client.get(self.url % uuid, params)
+        self.assertFalse(mock_format.called)
+        self.assertFalse(mock_search.called)
+        self.assertFalse(mock_generate.called)
+        self.assertEqual(response.status_code, 401)
+
+    @mock.patch('data_set_manager.views.generate_solr_params_for_assay')
+    @mock.patch('data_set_manager.views.search_solr')
+    @mock.patch('data_set_manager.views.format_solr_response')
+    def test_get_from_user_with_read_perms(self,
+                                           mock_format,
+                                           mock_search,
+                                           mock_generate):
+        mock_format.return_value = {'status': 200}
+        self.client.login(username=self.user_guest,
+                          password=self.fake_password)
+        assign_perm('read_%s' % DataSet._meta.module_name,
+                    self.user2,
+                    self.data_set)
+        uuid = self.valid_uuid
+        params = {'limit': '0',
+                  'data_set_uuid': self.data_set.uuid}
+        response = self.client.get(self.url % uuid, params)
+        self.assertTrue(mock_format.called)
+        self.assertTrue(mock_search.called)
+        qdict = QueryDict('', mutable=True)
+        qdict.update(params)
+        mock_generate.assert_called_once_with(qdict, uuid)
+        self.assertEqual(response.status_code, 200)
+
+    @mock.patch('data_set_manager.views.generate_solr_params_for_assay')
+    @mock.patch('data_set_manager.views.search_solr')
+    @mock.patch('data_set_manager.views.format_solr_response')
+    def test_get_from_user_with_read_meta_perms(self,
+                                                mock_format,
+                                                mock_search,
+                                                mock_generate):
+        mock_format.return_value = {'status': 200}
+        self.client.login(username=self.user_guest,
+                          password=self.fake_password)
+        assign_perm('read_meta_%s' % DataSet._meta.module_name,
+                    self.user2,
+                    self.data_set)
+
+        uuid = self.valid_uuid
+        params = {'limit': '0',
+                  'data_set_uuid': self.data_set.uuid}
+        response = self.client.get(self.url % uuid, params)
+        self.assertTrue(mock_format.called)
+        self.assertTrue(mock_search.called)
+        qdict = QueryDict('', mutable=True)
+        qdict.update(params)
+        mock_generate.assert_called_once_with(qdict,
+                                              uuid,
+                                              self.non_meta_attributes)
+        self.assertEqual(response.status_code, 200)
+
+
 class UtilitiesTests(TestCase):
 
     def setUp(self):
         self.user1 = User.objects.create_user("ownerJane", '', 'test1234')
         self.user1.save()
         investigation = Investigation.objects.create()
-        data_set = DataSet.objects.create(
-                title="Test DataSet")
+        data_set = DataSet.objects.create(title="Test DataSet")
         InvestigationLink.objects.create(data_set=data_set,
                                          investigation=investigation)
         data_set.set_owner(self.user1)
@@ -818,6 +977,26 @@ class UtilitiesTests(TestCase):
                          '&facet=true'
                          '&facet.limit=-1'.format(
                                  self.valid_uuid))
+
+    def test_cull_attributes_from_list(self):
+        new_attribute_list = cull_attributes_from_list(
+           self.new_attribute_order_array,
+           [self.new_attribute_order_array[0].get('solr_field'),
+            self.new_attribute_order_array[1].get('solr_field'),
+            self.new_attribute_order_array[2].get('solr_field')]
+        )
+        self.assertDictEqual(new_attribute_list[0],
+                             self.new_attribute_order_array[3])
+
+    def test_cull_attributes_from_list_with_empty_list_returns_list(self):
+        new_attribute_list = cull_attributes_from_list(
+            self.new_attribute_order_array,
+            []
+        )
+        self.assertDictEqual(new_attribute_list[0],
+                             self.new_attribute_order_array[0])
+        self.assertEqual(len(new_attribute_list),
+                         len(self.new_attribute_order_array))
 
     def test_generate_filtered_facet_fields(self):
         attribute_orders = AttributeOrder.objects.filter(
@@ -1359,7 +1538,9 @@ class UtilitiesTests(TestCase):
         attribute_list = AttributeOrder.objects.filter(assay=self.assay)
         self.assertItemsEqual(old_attribute_list, attribute_list)
 
-    def test_get_file_url_from_node_uuid_good_uuid(self):
+    @mock.patch("data_set_manager.utils.core.utils.get_full_url")
+    def test_get_file_url_from_node_uuid_good_uuid(self, mock_get_url):
+        mock_get_url.return_value = "test_file_a.txt"
         self.assertIn(
             "test_file_a.txt",
             get_file_url_from_node_uuid(self.node_a.uuid),
@@ -1838,6 +2019,10 @@ class IsaTabTestBase(TestCase):
         )
         self.assertTrue(is_logged_in)
 
+    def tearDown(self):
+        mock.patch.stopall()
+        FileStoreItem.objects.all().delete()
+
 
 class IsaTabParserTests(IsaTabTestBase):
     def failed_isatab_assertions(self):
@@ -1912,26 +2097,6 @@ class IsaTabParserTests(IsaTabTestBase):
         assays = studies[0].assay_set.all()
         self.assertEqual(len(assays), 2)
 
-    def test_metabolights_isatab_wont_import_with_rollback_a(self):
-        with self.assertRaises(RuntimeError) as context:
-            parse_isatab(self.user.username, False,
-                         "data_set_manager/test-data/MTBLS1.zip")
-        self.failed_isatab_assertions()
-        self.assertIn(
-            "Exponential explosion",
-            context.exception.message
-        )
-
-    def test_metabolights_isatab_wont_import_with_rollback_b(self):
-        with self.assertRaises(RuntimeError) as context:
-            parse_isatab(self.user.username, False,
-                         "data_set_manager/test-data/MTBLS112.zip")
-        self.failed_isatab_assertions()
-        self.assertIn(
-            "Exponential explosion",
-            context.exception.message
-        )
-
     def test_bad_isatab_rollback_from_parser_exception_a(self):
         with self.assertRaises(IOError):
             parse_isatab(self.user.username, False,
@@ -1945,9 +2110,16 @@ class IsaTabParserTests(IsaTabTestBase):
         self.failed_isatab_assertions()
 
 
-class ProcessISATabViewTests(IsaTabTestBase):
-    def tearDown(self):
-        FileStoreItem.objects.all().delete()
+class ProcessISATabViewTestBase(IsaTabTestBase):
+    def post_isa_tab(self, isa_tab_url=None, isa_tab_file=None):
+        self.client.post(
+            self.isa_tab_import_url,
+            data={
+                "isa_tab_url": isa_tab_url,
+                "isa_tab_file": isa_tab_file
+            },
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest'
+        )
 
     def successful_import_assertions(self):
         self.assertEqual(DataSet.objects.count(), 1)
@@ -1961,30 +2133,37 @@ class ProcessISATabViewTests(IsaTabTestBase):
         self.assertEqual(Investigation.objects.count(), 0)
         self.assertEqual(Assay.objects.count(), 0)
 
+
+class ProcessISATabViewTests(ProcessISATabViewTestBase):
     @mock.patch.object(data_set_manager.views.import_file, "delay")
     def test_post_good_isa_tab_file(self, delay_mock):
         with open('data_set_manager/test-data/rfc-test.zip') as good_isa:
-            self.client.post(
-                self.isa_tab_import_url,
-                data={
-                    "isa_tab_url": None,
-                    "isa_tab_file": good_isa
-                },
-                HTTP_X_REQUESTED_WITH='XMLHttpRequest'
-            )
+            self.post_isa_tab(isa_tab_file=good_isa)
         self.successful_import_assertions()
 
     def test_post_bad_isa_tab_file(self):
         with open('data_set_manager/test-data/HideLabBrokenA.zip') as bad_isa:
-            self.client.post(
-                self.isa_tab_import_url,
-                data={
-                    "isa_tab_url": None,
-                    "isa_tab_file": bad_isa
-                },
-                HTTP_X_REQUESTED_WITH='XMLHttpRequest'
-            )
+            self.post_isa_tab(isa_tab_file=bad_isa)
         self.unsuccessful_import_assertions()
+
+    def test_post_bad_isa_tab_url(self):
+        self.post_isa_tab(isa_tab_url="non-existant-file")
+        self.unsuccessful_import_assertions()
+
+
+class ProcessISATabViewLiveServerTests(ProcessISATabViewTestBase,
+                                       LiveServerTestCase):
+    @mock.patch.object(data_set_manager.views.import_file, "delay")
+    def test_post_good_isa_tab_url(self, delay_mock):
+        media_root_path = os.path.join(
+            settings.BASE_DIR,
+            "refinery/data_set_manager/test-data/"
+        )
+        with self.settings(MEDIA_ROOT=media_root_path):
+            media_url = urljoin(self.live_server_url, settings.MEDIA_URL)
+            good_isa_tab_url = urljoin(media_url, "rfc-test.zip")
+            self.post_isa_tab(isa_tab_url=good_isa_tab_url)
+        self.successful_import_assertions()
 
 
 class SingleFileColumnParserTests(TestCase):

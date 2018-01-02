@@ -50,7 +50,7 @@ from data_set_manager.models import (Assay, Investigation, Node,
 from data_set_manager.search_indexes import NodeIndex
 from data_set_manager.utils import (add_annotated_nodes_selection,
                                     index_annotated_nodes_selection)
-from file_store.models import FileStoreItem, FileType, get_file_size
+from file_store.models import FileStoreItem, FileType
 from file_store.tasks import rename
 from galaxy_connector.galaxy_workflow import create_expanded_workflow_graph
 from galaxy_connector.models import Instance
@@ -312,6 +312,8 @@ class OwnableResource(BaseResource):
         assign_perm("read_%s" % self._meta.verbose_name, user, self)
         assign_perm("delete_%s" % self._meta.verbose_name, user, self)
         assign_perm("change_%s" % self._meta.verbose_name, user, self)
+        if self._meta.verbose_name == 'dataset':
+            assign_perm("read_meta_%s" % self._meta.verbose_name, user, self)
 
     def get_owner(self):
         # ownership is determined by "add" permission
@@ -381,7 +383,7 @@ class SharableResource(OwnableResource):
         remove_perm('share_%s' % self._meta.verbose_name, group, self)
 
     # TODO: clean this up
-    def get_groups(self, changeonly=False, readonly=False):
+    def get_groups(self, changeonly=False, readonly=False, readmetaonly=False):
         permissions = get_groups_with_perms(self, attach_perms=True)
 
         groups = []
@@ -393,11 +395,17 @@ class SharableResource(OwnableResource):
             group["id"] = group["group"].id
             group["change"] = False
             group["read"] = False
+            if self._meta.verbose_name == 'dataset':
+                group["read_meta"] = False
+
             for permission in permission_list:
                 if permission.startswith("change"):
                     group["change"] = True
-                if permission.startswith("read"):
+                elif permission.startswith("read_meta"):
+                    group["read_meta"] = True
+                elif permission.startswith("read"):
                     group["read"] = True
+
             if group["change"] and readonly:
                 continue
             if group["read"] and changeonly:
@@ -425,9 +433,8 @@ class SharableResource(OwnableResource):
                 for permission in permission_list:
                     if permission.startswith("change"):
                         return True
-                    if permission.startswith("read"):
+                    if permission.startswith("read"):  # read_meta & read
                         return True
-
         return False
 
     class Meta:
@@ -485,7 +492,7 @@ class DataSetQuerySet(models.query.QuerySet):
 
 
 class DataSetManager(models.Manager):
-    def get_query_set(self):
+    def get_queryset(self):
         return DataSetQuerySet(self.model, using=self._db)
 
 
@@ -512,6 +519,7 @@ class DataSet(SharableResource):
         verbose_name = "dataset"
         permissions = (
             ('read_%s' % verbose_name, 'Can read %s' % verbose_name),
+            ('read_meta_%s' % verbose_name, 'Can read meta %s' % verbose_name),
             ('share_%s' % verbose_name, 'Can share %s' % verbose_name),
         )
 
@@ -697,9 +705,7 @@ class DataSet(SharableResource):
         )
 
     def get_assays(self, version=None):
-        return Assay.objects.filter(
-            study=self.get_studies(version)
-        )
+        return Assay.objects.filter(study=self.get_studies(version))
 
     def get_file_count(self):
         """Returns the number of files in the data set"""
@@ -712,58 +718,53 @@ class DataSet(SharableResource):
                 .filter(study=study.id, file_uuid__isnull=False)
                 .count()
             )
-
         return file_count
 
     def get_file_size(self):
         """Returns the disk space in bytes used by all files in the data set"""
         investigation = self.get_investigation()
-        file_size = 0
-
-        for study in investigation.study_set.all():
-            files = Node.objects.filter(
-                study=study.id, file_uuid__isnull=False).values("file_uuid")
-            for file in files:
-                size = get_file_size(
-                    file["file_uuid"], report_symlinks=True)
-                file_size += size
-
-        return file_size
+        file_uuids = Node.objects.filter(
+            study__in=investigation.study_set.all(), file_uuid__isnull=False
+        ).values_list('file_uuid', flat=True)
+        file_items = FileStoreItem.objects.filter(uuid__in=file_uuids)
+        return sum(
+            [item.get_file_size(report_symlinks=True) for item in file_items]
+        )
 
     def get_isa_archive(self):
-        """
-        Returns the isa_archive that was used to create the
-        DataSet
-        """
+        """Returns the isa_archive that was used to create the DataSet"""
         investigation = self.get_investigation()
-
         try:
-            return FileStoreItem.objects.get(
-                uuid=investigation.isarchive_file)
-
+            return FileStoreItem.objects.get(uuid=investigation.isarchive_file)
         except (FileStoreItem.DoesNotExist,
                 FileStoreItem.MultipleObjectsReturned,
                 AttributeError) as e:
             logger.debug("Couldn't fetch FileStoreItem: %s", e)
 
     def get_pre_isa_archive(self):
-        """
-        Returns the pre_isa_archive that was used to create the
-        DataSet
-        """
+        """Returns the pre_isa_archive that was used to create the DataSet"""
         investigation = self.get_investigation()
-
         try:
             return FileStoreItem.objects.get(
-                    uuid=investigation.pre_isarchive_file)
-
+                uuid=investigation.pre_isarchive_file
+            )
         except (FileStoreItem.DoesNotExist,
                 FileStoreItem.MultipleObjectsReturned,
                 AttributeError) as e:
             logger.debug("Couldn't fetch FileStoreItem: %s", e)
 
-    def share(self, group, readonly=True):
+    def share(self, group, readonly=True, readmetaonly=False):
+        # change: !readonly & !readmetaonly, read: readonly & !readmetaonly
         super(DataSet, self).share(group, readonly)
+        assign_perm('read_meta_%s' % self._meta.verbose_name, group, self)
+
+        # read_meta only case; super reads as edit and is fixed here because
+        # it only applies to data set
+        if not readonly and readmetaonly:
+            remove_perm('read_%s' % self._meta.verbose_name, group, self)
+            remove_perm('add_%s' % self._meta.verbose_name, group, self)
+            remove_perm('change_%s' % self._meta.verbose_name, group, self)
+
         update_data_set_index(self)
         invalidate_cached_object(self)
         user_ids = map(lambda user: user.id, group.user_set.all())
@@ -779,13 +780,15 @@ class DataSet(SharableResource):
 
     def unshare(self, group):
         super(DataSet, self).unshare(group)
+        remove_perm('read_meta_%s' % self._meta.verbose_name, group, self)
+
         update_data_set_index(self)
         # Need to check if the users of the group that is unshared still have
         # access via other groups or by ownership
         users = group.user_set.all()
         user_ids = []
         for user in users:
-            if not user.has_perm('core.read_dataset', DataSet):
+            if not user.has_perm('core.read_meta_dataset', DataSet):
                 user_ids.append(user.id)
 
         # We need to give the anonymous user read access too.
@@ -934,7 +937,7 @@ class WorkflowQuerySet(models.query.QuerySet):
 
 
 class WorkflowManager(models.Manager):
-    def get_query_set(self):
+    def get_queryset(self):
         return WorkflowQuerySet(self.model, using=self._db)
 
 
@@ -1054,19 +1057,6 @@ class Project(SharableResource):
         )
 
 
-class WorkflowFilesDL(models.Model):
-    step_id = models.TextField()
-    pair_id = models.TextField()
-    filename = models.TextField()
-
-    def __unicode__(self):
-        return (
-            str(self.step_id) + " <-> " +
-            str(self.pair_id) + "<->" +
-            self.filename
-        )
-
-
 class WorkflowDataInputMap(models.Model):
     workflow_data_input_name = models.CharField(max_length=200)
     data_uuid = UUIDField(auto=False)
@@ -1108,7 +1098,7 @@ class AnalysisQuerySet(models.query.QuerySet):
 
 
 class AnalysisManager(models.Manager):
-    def get_query_set(self):
+    def get_queryset(self):
         return AnalysisQuerySet(self.model, using=self._db)
 
 
@@ -1135,7 +1125,6 @@ class Analysis(OwnableResource):
     workflow_galaxy_id = models.TextField(blank=True, null=True)
     library_id = models.TextField(blank=True, null=True)
     results = models.ManyToManyField(AnalysisResult, blank=True)
-    workflow_dl_files = models.ManyToManyField(WorkflowFilesDL, blank=True)
     time_start = models.DateTimeField(blank=True, null=True)
     time_end = models.DateTimeField(blank=True, null=True)
     status = models.TextField(default=INITIALIZED_STATUS,
@@ -1279,8 +1268,11 @@ class Analysis(OwnableResource):
     def running(self):
         return self.get_status() == self.RUNNING_STATUS
 
+    def galaxy_instance(self):
+        return self.workflow.workflow_engine.instance
+
     def galaxy_connection(self):
-        return self.workflow.workflow_engine.instance.galaxy_connection()
+        return self.galaxy_instance().galaxy_connection()
 
     def galaxy_progress(self):
         """Return analysis progress in Galaxy"""
@@ -1310,28 +1302,25 @@ class Analysis(OwnableResource):
         return history['percent_complete']
 
     def galaxy_cleanup(self):
-        """Determine when/if Galaxy libraries, workflows and histories are
-        to be deleted based on the value of
-        global setting: REFINERY_GALAXY_ANALYSIS_CLEANUP"""
+        """
+        Delete Galaxy libraries, and histories based on the value of
+        global setting: REFINERY_GALAXY_ANALYSIS_CLEANUP
+        """
+        galaxy_cleanup = settings.REFINERY_GALAXY_ANALYSIS_CLEANUP
+        galaxy_cleanup_states = [
+            self.canceled,
+            galaxy_cleanup == 'always',
+            galaxy_cleanup == 'on_success' and
+            self.get_status() == self.SUCCESS_STATUS
+        ]
 
-        cleanup = settings.REFINERY_GALAXY_ANALYSIS_CLEANUP
-
-        if (cleanup == 'always' or
-                cleanup == 'on_success' and
-                self.get_status() == self.SUCCESS_STATUS):
-
-            connection = self.galaxy_connection()
-            error_msg = "Error deleting Galaxy %s for analysis '%s': %s"
-
+        if any(cleanup_state for cleanup_state in galaxy_cleanup_states):
             logger.info("Purging galaxy of libraries, histories, "
                         "and workflows related to the execution of Analysis "
                         "with UUID: %s", self.uuid)
 
-            if self.library_id:
-                try:
-                    connection.libraries.delete_library(self.library_id)
-                except galaxy.client.ConnectionError as e:
-                    logger.error(error_msg, 'library', self.name, e.message)
+            self.galaxy_instance().delete_library(self.library_id, self.name)
+            self.galaxy_instance().delete_history(self.history_id, self.name)
 
             try:
                 tool = tool_manager.models.WorkflowTool.objects.get(
@@ -1342,22 +1331,14 @@ class Analysis(OwnableResource):
                 tool_manager.models.WorkflowTool.MultipleObjectsReturned
             ) as e:
                 logger.error("Could not properly fetch Tool: %s", e)
-            else:
-                if tool.galaxy_import_history_id:
-                    try:
-                        connection.histories.delete_history(
-                            tool.galaxy_import_history_id,
-                            purge=True
-                        )
-                    except galaxy.client.ConnectionError as e:
-                        logger.error(error_msg, 'history', self.name,
-                                     e.message)
-            if self.history_id:
-                try:
-                    connection.histories.delete_history(self.history_id,
-                                                        purge=True)
-                except galaxy.client.ConnectionError as e:
-                    logger.error(error_msg, 'history', self.name, e.message)
+                return
+            try:
+                import_history_id = tool.galaxy_import_history_id
+            except KeyError:
+                logger.info("Tool hasn't interacted with Galaxy yet")
+                return
+
+            self.galaxy_instance().delete_history(import_history_id, self.name)
 
     def cancel(self):
         """Mark analysis as cancelled"""
@@ -1741,18 +1722,15 @@ class Analysis(OwnableResource):
         # AnalysisResults
         for output_connections in distinct_filenames_map.values():
             for index, output_connection in enumerate(output_connections):
-                analysis_result = AnalysisResult.objects.filter(
-                    analysis_uuid=self.uuid,
-                    file_name=output_connection.filename
-                )[index]
+                analysis_result = None
                 if output_connection.is_refinery_file:
-                    output_connections_to_analysis_results.append(
-                        (output_connection, analysis_result)
-                    )
-                else:
-                    output_connections_to_analysis_results.append(
-                        (output_connection, None)
-                    )
+                    analysis_result = AnalysisResult.objects.filter(
+                        analysis_uuid=self.uuid,
+                        file_name=output_connection.filename
+                    )[index]
+                output_connections_to_analysis_results.append(
+                    (output_connection, analysis_result)
+                )
         return output_connections_to_analysis_results
 
     def _create_derived_data_file_node(self, study,

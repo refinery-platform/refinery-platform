@@ -4168,7 +4168,6 @@ var provvisRender = (function () {
         });
     });
 
-    console.log('in clear node selection error?');
     $('#nodeInfoTitle').html('Select a node: - ');
     $('#nodeInfoTitleLink').html('');
     $('#' + 'provenance-nodeInfo-content').html('');
@@ -4561,7 +4560,6 @@ var provvisRender = (function () {
    * @param selNode Selected node.
    */
   var updateNodeInfoTab = function (selNode) {
-    console.log('in update node info tab error');
     var title = ' - ';
     var titleLink = ' - ';
     var data = Object.create(null);
@@ -6002,7 +6000,7 @@ var provvisRender = (function () {
 
     filterMethod = 'facet';
 
-    if (solrResponse instanceof SolrResponse) {
+    if (solrResponse.nodes.length) {
 
       vis.graph.lNodes = lNodesBAK;
       vis.graph.aNodes = aNodesBAK;
@@ -6012,7 +6010,7 @@ var provvisRender = (function () {
       vis.graph.lLinks = lLinksBAK;
 
       /* Copy filtered nodes. */
-      solrResponse.getDocumentList().forEach(function (d) {
+      solrResponse.nodes.forEach(function (d) {
         selNodes.push(vis.graph.nodeMap.get(d.uuid));
       });
 

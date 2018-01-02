@@ -62,7 +62,9 @@
         <button
           class="btn clickable spinnable"
           title="Import this shared data set into your own space to run analyses"
-          ng-if="!preview.dataSetDetails.is_owner && preview.dataSetDetails.isa_archive && app.settings.djangoApp.userId != undefined"
+          ng-if="!preview.dataSetDetails.is_owner && preview.dataSetDetails
+          .isa_archive && app.settings.djangoApp.userId != undefined &&
+          (preview.userPerms === 'change' || preview.userPerms === 'read')"
           ng-class="{
             'disabled': preview.importStatus[preview.dataSetUuid].isDataSetReImporting,
             'btn-success': preview.importStatus[preview.dataSetUuid].isDataSetReImportSuccess,

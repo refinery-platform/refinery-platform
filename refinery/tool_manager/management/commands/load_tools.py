@@ -1,31 +1,30 @@
 import json
 from optparse import make_option
+import os
 import sys
 
 from django.core.management.base import BaseCommand, CommandError
 
-from ...models import ToolDefinition
+import requests
+
+from ...models import ToolDefinition, WorkflowTool
 from ...utils import (ANNOTATION_ERROR_MESSAGE, create_tool_definition,
-                      get_visualization_annotations_list, get_workflows,
-                      validate_tool_annotation,
+                      get_workflows, validate_tool_annotation,
                       validate_workflow_step_annotation)
 
 
 class Command(BaseCommand):
-    help = "Creates Tool Definitions."
-    """
-    Name: handle
-    Description:
-    main program; run the command
-    """
+    help = "Loads visualization tool definitions " + \
+           "or generates workflow tool definitions"
 
     option_list = BaseCommand.option_list + (
         make_option(
             '--visualizations',
-            action='store_true',
+            # TODO: In Python 3, nargs='+' is supported
+            action='append',
             dest='visualizations',
-            help='Generate ToolDefinitions for properly annotated '
-                 'Visualization tools'
+            help='Generate ToolDefinitions for visualizations, '
+                 'either by filename, or from the registry'
         ),
         make_option(
             '--workflows',
@@ -47,24 +46,35 @@ class Command(BaseCommand):
         super(Command, self).__init__()
         self.force = False
 
+    def warn(self, message):
+        self.stderr.write(
+            self.style.WARNING(message)
+        )
+
     def handle(self, *args, **options):
         """
         Creates ToolDefinitions based off of properly annotated Galaxy
         Workflows and Visualization Tools.
         """
+        if args:
+            raise CommandError(
+                'Unrecognized arguments: ' + ' '.join(args)
+            )
+        visualizations = options["visualizations"]
+        is_workflow_mode = options["workflows"]
+        if not (visualizations or is_workflow_mode):
+            raise CommandError(
+                'Either --workflows or --visualizations is required'
+            )
+
         self.force = options["force"]
 
         if self.force:
             self._confirmation_loop()
-
-        if not options["visualizations"] and not options["workflows"]:
-            self.generate_tool_definitions(workflows=True, visualizations=True)
-
-        if options["visualizations"]:
-            self.generate_tool_definitions(visualizations=True)
-
-        if options["workflows"]:
-            self.generate_tool_definitions(workflows=True)
+        if is_workflow_mode:
+            self._generate_workflows()
+        if visualizations:
+            self._load_visualization_definitions(visualizations)
 
     @staticmethod
     def _ask_for_confirmation():
@@ -79,20 +89,18 @@ class Command(BaseCommand):
         ]
         if tool_annotation["name"] in current_tool_definition_names:
             if self.force:
-                self.stdout.write(
-                    self.style.NOTICE("Forcing deletion of of `{}`".format(
-                            tool_annotation["name"]))
+                self.warn("Forcing deletion of of `{}`".format(
+                    tool_annotation["name"])
                 )
                 ToolDefinition.objects.get(
                     name=tool_annotation["name"]
                 ).delete()
                 return False
             else:
-                self.stdout.write(
-                    self.style.NOTICE(
-                        "Skipping creation of `{0}` since "
-                        "ToolDefinition with name: `{0}` "
-                        "already exists.".format(tool_annotation["name"])
+                self.warn(
+                    "Skipping '{0}': It already exists. "
+                    "Add '--force' to override.".format(
+                        tool_annotation["name"]
                     )
                 )
                 return True
@@ -104,22 +112,25 @@ class Command(BaseCommand):
         if result[0].lower() == "n":
             sys.exit(0)
 
-    def generate_tool_definitions(self, visualizations=False, workflows=False):
-        """Generate ToolDefinitions if our validation rules pass.
-        :param workflows: <Boolean> Whether to generate Workflow-based
-        ToolDefinitions or not
-        :param visualizations: <Boolean> Whether to generate
-        Visualization-based  ToolDefinitions or not
-        """
-        self.stdout.write(self.style.WARNING("Generating ToolDefinitions"))
-
-        if visualizations:
-            self._generate_visualizations()
-        if workflows:
-            self._generate_workflows()
-
-    def _generate_visualizations(self):
-        visualization_annotations = get_visualization_annotations_list()
+    def _load_visualization_definitions(self, names, branch='master'):
+        visualization_annotations = []
+        for name in names:
+            if os.path.exists(name):
+                with open(name) as f:
+                    annotation = json.loads(f.read())
+            else:
+                url = 'https://raw.githubusercontent.com/' + \
+                    'refinery-platform/visualization-tools/' + \
+                    branch + '/tool-annotations/' + name + '.json'
+                response = requests.get(url)
+                if response.status_code != 200:
+                    raise CommandError(
+                        '"{}" not a file and "{}" not a valid URL'.format(
+                            name, url
+                        )
+                    )
+                annotation = response.json()
+            visualization_annotations.append(annotation)
 
         for visualization in visualization_annotations:
             if self._has_duplicates(visualization):
@@ -128,12 +139,9 @@ class Command(BaseCommand):
             visualization["tool_type"] = ToolDefinition.VISUALIZATION
             self._generate_tool_definition(visualization)
 
-            self.stdout.write(
-                self.style.WARNING(
-                    "Generated ToolDefinition for: "
-                    "Visualization: `{}`".format(
-                        visualization["name"]
-                    )
+            self.warn(
+                "Generated ToolDefinition for: Visualization: `{}`".format(
+                    visualization["name"]
                 )
             )
 
@@ -169,14 +177,66 @@ class Command(BaseCommand):
                 workflow["workflow_engine_uuid"] = workflow_engine_uuid
 
                 workflow = self.parse_workflow_step_annotations(workflow)
+
+                if not self._has_workflow_outputs(workflow):
+                    raise CommandError(
+                        "Workflow: {} does not have `workflow_outputs` "
+                        "defined. Please follow the instructions here: "
+                        "https://github.com/refinery-platform/"
+                        "refinery-platform/wiki/"
+                        "Annotating-&-Importing-Refinery-Tools"
+                        "#exposing-galaxy-workflow-outputs-to-refinery "
+                        "to expose Workflow outputs to Refinery".format(
+                            workflow["name"]
+                        )
+                    )
+
                 self._generate_tool_definition(workflow)
 
-                self.stdout.write(
-                    self.style.WARNING(
-                        "Generated ToolDefinition for Workflow: `{}`"
-                        .format(workflow["name"])
-                    )
+                self.warn(
+                    "Generated ToolDefinition for Workflow: `{}`"
+                    .format(workflow["name"])
                 )
+
+    @staticmethod
+    def _has_workflow_outputs(workflow):
+        """
+        Assert that the given `workflow` has `workflow_outputs` properly
+        defined
+        :param workflow: dict containing a Galaxy Workflow's information
+        :raises: CommandError
+        :returns: Boolean
+        """
+        # assume that there are no defined `workflow_outputs` until we can
+        # assert otherwise
+        workflow_outputs = False
+
+        workflow_steps = workflow["graph"]["steps"]
+        for step_index in workflow_steps:
+            step_has_workflow_outputs = False
+
+            if workflow_steps[step_index].get(WorkflowTool.WORKFLOW_OUTPUTS):
+                step_has_workflow_outputs = True
+
+            if step_index == "0":
+                if not step_has_workflow_outputs:
+                    raise CommandError(
+                        "You've encountered a known error when trying to "
+                        "import a Galaxy Workflow from a .ga file that "
+                        "utilizes asterisked `workflow_outputs`. "
+                        "Please follow the instructions here: "
+                        "https://github.com/refinery-platform/"
+                        "refinery-platform/wiki/"
+                        "Troubleshooting#generate-tooldefinitions "
+                        "to resolve this error."
+                    )
+                # The 0th step's workflow_output isn't User-defined and
+                # shouldn't be considered  when setting
+                # `self.has_workflow_outputs`
+                continue
+            if step_has_workflow_outputs:
+                workflow_outputs = True
+        return workflow_outputs
 
     @staticmethod
     def parse_workflow_step_annotations(workflow):

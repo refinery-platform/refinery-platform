@@ -29,7 +29,7 @@ priority = 995
 
 [program:worker1]
 ; minimum of four processes required to avoid problems with monitoring tasks
-command = python %(here)s/manage.py celeryd -c 4 -Q celery --events
+command = python %(here)s/manage.py celeryd -c 4 -Q celery -E -n worker1.%%h
 environment = PATH="<%= @virtualenv %>/bin"
 stdout_logfile = %(here)s/log/celeryd-w1.log
 stdout_logfile_maxbytes = 5MB
@@ -47,7 +47,7 @@ priority = 995
 
 [program:worker2]
 ; limits concurrency of file imports to one to avoid overloading system IO
-command = python %(here)s/manage.py celeryd -c 1 -Q file_import --events
+command = python %(here)s/manage.py celeryd -c 1 -Q file_import -E -n worker2.%%h
 environment = PATH="<%= @virtualenv %>/bin"
 stdout_logfile = %(here)s/log/celeryd-w2.log
 stdout_logfile_maxbytes = 5MB

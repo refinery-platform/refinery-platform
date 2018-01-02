@@ -40,7 +40,7 @@
       <ul class="nav nav-tabs float-right" id="tabs">
         <li ui-sref-active="active" id="filesTab">
           <a ui-sref="files" class="dataSetTabs">
-            Files
+            <rp-user-perms-icon></rp-user-perms-icon> Files
           </a>
         </li>
         <li ui-sref-active="active">
@@ -49,6 +49,11 @@
               <span rp-analysis-monitor-running-tab-icon></span>
             </span>
             Analyses
+          </a>
+        </li>
+        <li ui-sref-active="active">
+          <a ui-sref="visualizations" class="dataSetTabs" >
+            Visualizations
           </a>
         </li>
          <li ui-sref-active="active">
@@ -98,6 +103,14 @@
   <script type="text/javascript" src="{% static "js/refinery/data_set_manager/data_set_configurator.js" %}"></script>
   <script type="text/javascript" src="{% static "js/refinery/core/analysis_api_client.js" %}"></script>
   <script type="text/javascript" src="{% static "js/refinery/core/data_set_monitor.js" %}"></script>
+
+  <script type="text/javascript" src="{% static "js/provvis/provvis-helpers.js"  %}"></script>
+  <script type="text/javascript" src="{% static "js/provvis/provvis-decl.js"  %}"></script>
+  <script type="text/javascript" src="{% static "js/provvis/provvis-init.js"  %}"></script>
+  <script type="text/javascript" src="{% static "js/provvis/provvis-layout.js" %}"></script>
+  <script type="text/javascript" src="{% static "js/provvis/provvis-motifs.js" %}"></script>
+  <script type="text/javascript" src="{% static "js/provvis/provvis-render.js" %}"></script>
+  <script type="text/javascript" src="{% static "js/provvis/provvis.js" %}"></script>
 
   <!-- provenance visualization -->
   <script type="text/javascript" src="{% static "vendor/lodash/lodash.min.js" %}"></script>
