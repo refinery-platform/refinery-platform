@@ -10,6 +10,7 @@ import re
 from django.conf import settings
 
 from haystack import indexes
+from haystack.exceptions import SkipDocument
 
 from file_store.models import FileStoreItem
 
@@ -71,6 +72,8 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
     # https://groups.google.com/forum/?fromgroups#!topic/django-haystack/g39QjTkN-Yg
     # http://stackoverflow.com/questions/7399871/django-haystack-sort-results-by-title
     def prepare(self, object):
+        if object.type not in Node.INDEXED_FILES:
+            raise SkipDocument()
 
         data = super(NodeIndex, self).prepare(object)
         annotations = AnnotatedNode.objects.filter(node=object)
