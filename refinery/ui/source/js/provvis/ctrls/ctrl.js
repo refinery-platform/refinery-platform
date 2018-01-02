@@ -22,6 +22,7 @@
     'd3',
     '$',
     '$q',
+    '$scope',
     '$window'
   ];
 
@@ -37,6 +38,7 @@
     d3,
     $,
     $q,
+    $scope,
     $window
   ) {
     var vm = this;
@@ -56,7 +58,7 @@
     var provvisMotifs = provvisMotifsService;
     var provvisRender = provvisRenderService;
 
-    var vis = partsService.vis;
+    var vis = Object.create(null);
     activate();
 
     /*
@@ -78,7 +80,8 @@
 
       var filesParams = {
         uuid: _assayUuid,
-        offset: 0
+        offset: 0,
+        data_set_uuid: _dataSetUuid
       };
       var analysisPromise = analysisService.query(analysisParams).$promise;
       var filesPromise = assayFileService.query(filesParams).$promise;
@@ -376,5 +379,16 @@
         });
       }
     };
+
+    /*
+     * -----------------------------------------------------------------------------
+     * Watchers
+     * -----------------------------------------------------------------------------
+     */
+    $scope.$on('$destroy', function () {
+      if (vis instanceof provvisDecl.ProvVis) {
+        provvisInit.reset();
+      }
+    });
   }
 })();

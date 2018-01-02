@@ -38,7 +38,8 @@
     var nodeAttributeList = [];
 
     var service = {
-      initGraph: initGraph
+      initGraph: initGraph,
+      reset: reset
     };
 
     return service;
@@ -672,6 +673,26 @@
       graph.aNodes.forEach(function (an) {
         an.parent = graph;
       });
+    }
+
+  /**
+   * Method to reset graph properties
+   */
+    function reset () {
+      dataset = {};
+      nodes = [];
+      links = [];
+      aLinks = [];
+      iNodes = [];
+      oNodes = [];
+      aNodes = [];
+      saNodes = [];
+      nodeMap = d3.map();
+      analysisWorkflowMap = d3.map();
+      workflowData = d3.map();
+      analysisData = d3.map();
+      nodeData = d3.map();
+      nodeAttributeList = [];
     }
   }
 })();

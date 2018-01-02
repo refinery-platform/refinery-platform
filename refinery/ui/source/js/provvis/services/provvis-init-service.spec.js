@@ -21,6 +21,12 @@
         expect(angular.isFunction(service.initGraph)).toBe(true);
       });
     });
+
+    describe('reset', function () {
+      it('reset is a method', function () {
+        expect(angular.isFunction(service.reset)).toBe(true);
+      });
+    });
   });
 })();
 
