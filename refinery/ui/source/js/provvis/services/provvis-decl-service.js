@@ -176,8 +176,6 @@
         wfUuid: this.wfUuid,
         numSubanalyses: 0
       };
-
-      BaseNode(id, 'analysis', parent, hidden);  // eslint-disable-line new-cap
     }
 
     Analysis.prototype = Object.create(BaseNode.prototype); // eslint-disable-line no-unreachable
@@ -201,8 +199,6 @@
       this.inputs = d3.map();
       this.outputs = d3.map();
       this.links = d3.map();
-
-      BaseNode(id, subanalysis, parent, hidden);  // eslint-disable-line new-cap
     }
 
     Subanalysis.prototype = Object.create(BaseNode.prototype); // eslint-disable-line no-unreachable
@@ -243,8 +239,7 @@
 
       this.motif = motif;
       this.wfName = '';
-
-      BaseNode(id, 'layer', parent, hidden); // eslint-disable-line new-cap
+      this.constructor = Layer;
     }
 
     Layer.prototype = Object.create(BaseNode.prototype); // eslint-disable-line no-unreachable
