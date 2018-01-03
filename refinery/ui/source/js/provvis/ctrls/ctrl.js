@@ -48,6 +48,7 @@
     var analysesList = [];
     vm.getData = getData;
     vm.launchProvvis = launchProvvis;
+    vm.isGraphReady = false;
 
   //  var vis = Object.create(null);
     var partsService = provvisPartsService;
@@ -96,28 +97,13 @@
     }
 
     /**
-     * Display a spinning loader icon div while the provenance
-     * visualization is loading.
-     */
-    var showProvvisLoaderIcon = function () {
-      $('#provvis-loader').css('display', 'inline-block');
-    };
-
-  /**+
-   * Hide the loader icon again.
-   */
-    var hideProvvisLoaderIcon = function () {
-      $('#provvis-loader').css('display', 'none');
-    };
-
-    /**
    * Refinery injection for the provenance visualization.
    * @param studyUuid The serialized unique identifier referencing a study.
    * @param studyAnalyses Analyses objects from the refinery scope.
    * @param solrResponse Facet filter information on node attributes.
    */
     var runProvVisPrivate = function (studyUuid, studyAnalyses, solrResponse) {
-      showProvvisLoaderIcon();
+      vm.isGraphReady = false;
 
       /* Only allow one instance of ProvVis. */
       if (vis instanceof provvisDecl.ProvVis === false) {
@@ -337,44 +323,7 @@
           angular.copy(vis.cell, partsService.cell);
 
           provvisRender.runRender(vis);
-          hideProvvisLoaderIcon();
-
-          try {
-            /* TODO: Refine to only redraw affected canvas components. */
-            /* Switch filter action. */
-            $('#prov-layering-method').on('click', '.btn', function () {
-              layerMethod = $(this).children().prop('value');
-
-              showProvvisLoaderIcon();
-
-              $('.aHLinks').remove();
-              $('.aLinks').remove();
-              $('.lLinks').remove();
-              $('.lLink').remove();
-              $('.layers').remove();
-              $('.analyses').remove();
-
-              $('#provenance-timeline-view').children().remove();
-              $('#provenance-doi-view').children().remove();
-
-              provvisDecl.DoiFactors.set('filtered', 0.2, true);
-              provvisDecl.DoiFactors.set('selected', 0.2, true);
-              provvisDecl.DoiFactors.set('highlighted', 0.2, true);
-              provvisDecl.DoiFactors.set('time', 0.2, true);
-              provvisDecl.DoiFactors.set('diff', 0.2, true);
-
-              /* Discover and and inject motifs. */
-              provvisMotifs.runMotifs(vis.graph, layerMethod);
-
-              /* Render graph. */
-              provvisRender.runRender(vis);
-
-              hideProvvisLoaderIcon();
-            });
-          } catch (err) {
-            document.getElementById('provenance-canvas')
-              .innerHTML += 'Layering Error: ' + err.message + '<br>';
-          }
+          vm.isGraphReady = true;
         });
       }
     };
