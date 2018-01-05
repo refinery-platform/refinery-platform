@@ -1636,6 +1636,8 @@ class VisualizationToolTests(ToolManagerTestBase):
         self.assertEqual(
             tool_input_dict,
             {
+                VisualizationTool.API_PREFIX:
+                    self.tool.get_relative_container_url() + "/",
                 Tool.FILE_RELATIONSHIPS: file_relationships,
                 VisualizationTool.NODE_INFORMATION:
                     self.tool._get_detailed_input_nodes_dict(),

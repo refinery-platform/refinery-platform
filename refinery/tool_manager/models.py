@@ -460,6 +460,7 @@ class VisualizationTool(Tool):
     VisualizationTools are Tools that are specific to
     launching and monitoring Dockerized visualizations
     """
+    API_PREFIX = "api_prefix"
     FILE_URL = "file_url"
     NODE_INFORMATION = "node_info"
     NODE_SOLR_INFO = "node_solr_info"
@@ -476,6 +477,7 @@ class VisualizationTool(Tool):
         Visualizations will have access to
         """
         return {
+            self.API_PREFIX: self.get_relative_container_url() + "/",
             self.FILE_RELATIONSHIPS: self.get_file_relationships_urls(),
             ToolDefinition.PARAMETERS: self._get_visualization_parameters(),
             self.NODE_INFORMATION: self._get_detailed_input_nodes_dict(),
@@ -521,12 +523,9 @@ class VisualizationTool(Tool):
                         parameter.default_value
                     ),
                     "name": parameter.name,
-                    "value":
-                        self.get_relative_container_url() + "/"
-                        if parameter.name == "api_prefix" else
-                        parameter.cast_param_value_to_proper_type(
-                            self._get_edited_parameter_value(parameter)
-                        ),
+                    "value": parameter.cast_param_value_to_proper_type(
+                        self._get_edited_parameter_value(parameter)
+                    ),
                     "value_type": parameter.value_type
                 }
             )
