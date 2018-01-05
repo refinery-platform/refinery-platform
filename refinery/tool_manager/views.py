@@ -112,6 +112,7 @@ class ToolsViewSet(ToolManagerViewSetBase):
 
         if not tool_type:
             return self.user_tools
+
         tool_types_to_tools = {
             ToolDefinition.VISUALIZATION.lower(): self.visualization_tools,
             ToolDefinition.WORKFLOW.lower(): self.workflow_tools
