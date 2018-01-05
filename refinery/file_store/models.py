@@ -77,7 +77,6 @@ def file_path(instance, filename):
     # provides 256 * 256 = 65536 of possible directory combinations
     dir1 = "{:0>2x}".format(hashcode & mask)
     dir2 = "{:0>2x}".format((hashcode >> 8) & mask)
-    # replace parentheses with underscores in the filename since
     # Galaxy doesn't process names with parentheses in them
     filename = re.sub('[()]', '_', filename)
     return os.path.join(dir1, dir2, filename)
@@ -223,6 +222,7 @@ class S3MediaStorage(S3Boto3Storage):
     """Django media (user data) files storage"""
     bucket_name = settings.MEDIA_BUCKET
     custom_domain = settings.MEDIA_BUCKET + '.s3.amazonaws.com'
+    file_overwrite = False
 
 
 class FileStoreItem(models.Model):
@@ -258,7 +258,8 @@ class FileStoreItem(models.Model):
             return self.source
 
     def get_absolute_path(self):
-        """Compute the absolute path to the data file.
+        """
+        Construct the absolute path to the data file.
         :returns: str -- the absolute path to the data file or None if the file
         does not exist on disk.
         """
@@ -389,12 +390,11 @@ class FileStoreItem(models.Model):
             return False
 
     def is_local(self):
-        '''Check if the datafile can be used as a file object.
-
+        """
+        Checks if the datafile can be used as a file object.
         :returns: bool -- True if the datafile can be used as a file object,
             False otherwise.
-
-        '''
+        """
         path = self.get_absolute_path()
         if path:
             try:
@@ -490,12 +490,7 @@ class FileStoreItem(models.Model):
             return False
 
     def get_datafile_url(self):
-        """ This returns the url for a given FileStoreItem. If the FileStoreItem
-        `is_local` then the url is constructed using the get_full_url method.
-        :param self: the FileStoreItem that we want a url for
-        :type self: A FileStoreItem instance
-        :returns: A url for the given FileStoreItem or None
-        """
+        """Returns the URL of the datafile"""
         if self.is_local():
             return core.utils.get_full_url(self.datafile.url)
 
@@ -530,73 +525,9 @@ class FileStoreItem(models.Model):
             )
 
 
-def is_local(uuid):
-    """Check if this FileStoreItem can be used as a file object
-    :param uuid: UUID of a FileStoreItem
-    :type uuid: str.
-    :returns: bool -- True if yes, False if no.
-    """
-    try:
-        item = FileStoreItem.objects.get(uuid=uuid)
-    except FileStoreItem.DoesNotExist:
-        logger.error("FileStoreItem with UUID %s does not exist", uuid)
-        return False
-
-    return item.is_local()
-
-
-def is_permanent(uuid):
-    '''Check if FileStoreItem instance is referenced in the cache.
-
-    :param uuid: UUID of a FileStoreItem.
-    :type uuid: str.
-
-    '''
-    return True
-
-
 def get_temp_dir():
-    """Return the absolute path to the file store temp dir.
-
-    :returns: str -- absolute path to the file store temp dir.
-    """
+    """Return the absolute path to the file store temp dir"""
     return settings.FILE_STORE_TEMP_DIR
-
-
-def get_file_extension(uuid):
-    '''Return file extension of the file specified by UUID.
-
-    :param uuid: UUID of a FileStoreItem.
-    :type uuid: str.
-    :returns: str -- extension of the data file.
-
-    '''
-    try:
-        item = FileStoreItem.objects.get(uuid=uuid)
-    except FileStoreItem.DoesNotExist:
-        logger.error("FileStoreItem with UUID %s does not exist", uuid)
-        return None
-
-    return item.get_file_extension()
-
-
-def get_file_size(uuid, report_symlinks=False):
-    '''Return size of the file specified by UUID.
-
-    :param uuid: UUID of a FileStoreItem.
-    :type uuid: UUID.
-    :param report_symlinks: report the size of symlinked files or not.
-    :type report_symlink: bool.
-    :returns: int -- size of the file on disk.
-
-    '''
-    try:
-        item = FileStoreItem.objects.get(uuid=uuid)
-    except FileStoreItem.DoesNotExist:
-        logger.error("FileStoreItem with UUID %s does not exist", uuid)
-        return None
-
-    return item.get_file_size(report_symlinks=report_symlinks)
 
 
 def get_file_object(file_name):

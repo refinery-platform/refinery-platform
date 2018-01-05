@@ -7,7 +7,7 @@ from celery.task import task
 
 from data_set_manager.models import Investigation, Study
 from data_set_manager.tasks import annotate_nodes
-from file_store.models import FileStoreItem, is_permanent
+from file_store.models import FileStoreItem
 from file_store.tasks import create, import_file
 
 from .models import DataSet, InvestigationLink
@@ -16,7 +16,8 @@ logger = logging.getLogger(__name__)
 
 
 def copy_file(orig_uuid):
-    """Helper function that copies a file if given the original file's UUID
+    """
+    Creates a copy of a FileStoreItem with the given UUID
     :param orig_uuid: UUID of file to copy.
     :type orig_uuid: str.
     :returns: UUID of newly copied file.
@@ -26,13 +27,11 @@ def copy_file(orig_uuid):
         orig_fsi = FileStoreItem.objects.get(uuid=orig_uuid)
     except(FileStoreItem.DoesNotExist,
            FileStoreItem.MultipleObjectsReturned)as e:
-        logger.error("Couldn't properly fetch FileStoreItem: %s", e)
+        logger.error("Failed to copy FileStoreItem with UUID '%s': %s",
+                     orig_uuid, e)
     else:
         try:
-            newfile_uuid = create(
-                orig_fsi.source, orig_fsi.filetype,
-                permanent=is_permanent(orig_uuid)
-            )
+            newfile_uuid = create(orig_fsi.source, orig_fsi.filetype)
             import_file(newfile_uuid, refresh=True)
         except AttributeError:
             pass

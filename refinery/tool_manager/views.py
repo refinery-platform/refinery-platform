@@ -1,7 +1,7 @@
 import logging
 
 from django.db import transaction
-from django.http import HttpResponseBadRequest
+from django.http import HttpResponseBadRequest, HttpResponseForbidden
 
 from guardian.shortcuts import get_objects_for_user
 from rest_framework import status
@@ -33,39 +33,38 @@ class ToolManagerViewSetBase(ModelViewSet):
                 kwargs["data_set_uuid_lookup_name"]
             ]
         except (AttributeError, KeyError) as e:
-            return Response(
-                "Must specify a Dataset UUID: {}".format(e),
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            return HttpResponseBadRequest("Must specify a DataSet "
+                                          "UUID: {}".format(e))
+
         try:
             self.data_set = DataSet.objects.get(uuid=data_set_uuid)
         except (DataSet.DoesNotExist, DataSet.MultipleObjectsReturned) as e:
-            return Response(
-                "Couldn't fetch Dataset with UUID: {} {}".format(
-                    data_set_uuid, e
-                ),
-                status=status.HTTP_400_BAD_REQUEST
+            return HttpResponseBadRequest(
+                "Couldn't fetch DataSet with UUID: {} {}"
+                .format(data_set_uuid, e)
             )
         if self.request.user.has_perm('core.read_meta_dataset', self.data_set):
-            self.visualization_tools = get_objects_for_user(
-                self.request.user,
-                "tool_manager.read_visualizationtool"
-            )
-            self.workflow_tools = get_objects_for_user(
-                self.request.user,
-                "tool_manager.read_workflowtool"
-            )
+            self.visualization_tools = \
+                self._get_tools_launched_on_requested_dataset("visualization")
             self.user_tools.extend(self.visualization_tools)
-            self.user_tools.extend(self.workflow_tools)
 
+            self.workflow_tools = \
+                self._get_tools_launched_on_requested_dataset("workflow")
+            self.user_tools.extend(self.workflow_tools)
         else:
             return Response(
-                "Unauthorized for data set uuid: {}".format(
-                    self.data_set.uuid
-                ),
-                status=status.HTTP_401_UNAUTHORIZED
+                "User is not authorized to access DataSet with UUID: {}"
+                .format(self.data_set.uuid),
+                status.HTTP_401_UNAUTHORIZED
             )
         return super(ToolManagerViewSetBase, self).list(request)
+
+    def _get_tools_launched_on_requested_dataset(self, tool_type):
+        tools = get_objects_for_user(
+            self.request.user,
+            "tool_manager.read_{}tool".format(tool_type)
+        ).filter(dataset=self.data_set)
+        return tools
 
 
 class ToolDefinitionsViewSet(ToolManagerViewSetBase):
@@ -114,8 +113,12 @@ class ToolsViewSet(ToolManagerViewSetBase):
         if not tool_type:
             return self.user_tools
 
-        return self.visualization_tools \
-            if tool_type == 'visualization' else self.workflow_tools
+        tool_types_to_tools = {
+            ToolDefinition.VISUALIZATION.lower(): self.visualization_tools,
+            ToolDefinition.WORKFLOW.lower(): self.workflow_tools
+        }
+        # get_queryset should return an iterable
+        return tool_types_to_tools.get(tool_type.lower()) or []
 
     def create(self, request, *args, **kwargs):
         """
@@ -125,7 +128,8 @@ class ToolsViewSet(ToolManagerViewSetBase):
         try:
             validate_tool_launch_configuration(request.data)
         except RuntimeError as e:
-            return HttpResponseBadRequest(e)
+            return HttpResponseBadRequest("Invalid tool launch "
+                                          "configuration: {}".format(e))
         else:
             tool_launch_configuration = request.data
             try:
@@ -141,20 +145,19 @@ class ToolsViewSet(ToolManagerViewSetBase):
     def relaunch(self, request, *args, **kwargs):
         tool_uuid = kwargs.get("uuid")
         if not tool_uuid:
-            return HttpResponseBadRequest("Relaunching requires a Tool uuid")
-
+            return HttpResponseBadRequest("Relaunching a Tool requires a Tool "
+                                          "UUID")
         try:
             tool = VisualizationTool.objects.get(uuid=tool_uuid)
         except (VisualizationTool.DoesNotExist,
                 VisualizationTool.MultipleObjectsReturned) as e:
             return HttpResponseBadRequest(
-                "Couldn't retrieve VisualizationTool with UUID: {}, {}".format(
-                    tool_uuid, e
-                )
+                "Couldn't retrieve VisualizationTool with UUID: {}, {}"
+                .format(tool_uuid, e)
             )
 
         if not request.user.has_perm('core.read_dataset', tool.dataset):
-            return HttpResponseBadRequest(
+            return HttpResponseForbidden(
                 "Requesting User does not have sufficient permissions to "
                 "relaunch Tool with uuid: {}".format(tool_uuid)
             )
