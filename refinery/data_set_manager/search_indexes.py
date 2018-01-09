@@ -126,6 +126,7 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
                     data[key].add(value)
                 else:
                     data[key].add("N/A")
+
         # iterate over all keys in data and join sets into strings
         for key, value in data.iteritems():
             if type(value) is set:
@@ -139,10 +140,17 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
             logger.error("Couldn't properly fetch FileStoreItem: %s", e)
             file_store_item = None
 
+        # set download url, dependent on whether file has completed uploading
+        if file_store_item is None:
+            download_url = ''
+        elif file_store_item.get_import_status() == 'PENDING':
+            download_url = 'N/A'
+        else:
+            download_url = file_store_item.get_datafile_url()
+
         data.update({
             NodeIndex.DOWNLOAD_URL:
-                '' if file_store_item is None
-                else file_store_item.get_datafile_url(),
+                download_url,
             NodeIndex.TYPE_PREFIX + id_suffix:
                 object.type,
             NodeIndex.NAME_PREFIX + id_suffix:
