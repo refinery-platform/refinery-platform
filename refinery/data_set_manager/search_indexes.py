@@ -143,10 +143,12 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
         # set download url, dependent on whether file has completed uploading
         if file_store_item is None:
             download_url = ''
-        elif file_store_item.get_import_status() == 'PENDING':
-            download_url = 'N/A'
         else:
             download_url = file_store_item.get_datafile_url()
+        # for isatabs, datafile_url is generated independent of import complete
+        if download_url is None \
+                and file_store_item.get_import_status() == 'PENDING':
+            download_url = 'N/A'
 
         data.update({
             NodeIndex.DOWNLOAD_URL:
