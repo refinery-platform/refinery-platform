@@ -289,11 +289,14 @@
     function setCustomUrlColumn (urlAttribute) {
       var _cellTemplate = '<div class="ngCellText text-align-center ui-grid-cell-contents"' +
             'ng-class="col.colIndex()">' +
-            '<div ng-if="COL_FIELD" title="Download File \{{COL_FIELD}}\">' +
+            '<div ng-if="grid.appScope.isFileImporting(COL_FIELD)" ' +
+            'title="Importing file in progress.">' +
+            '<i class="fa fa-refresh"></i></div>' +
+            '<div ng-if="COL_FIELD && !grid.appScope.isFileImporting(COL_FIELD)" ' +
+            'title="Download File \{{COL_FIELD}}\">' +
             '<a href="{{COL_FIELD}}" target="_blank">' +
             '<i class="fa fa-arrow-circle-o-down"></i></a></div>' +
-            '<div ng-if="!COL_FIELD"' +
-              'title="File not available for download">' +
+            '<div ng-if="!COL_FIELD" title="File not available for download">' +
             '<i class="fa fa-bolt"></i>' +
             '</div>' +
             '</div>';
@@ -307,7 +310,7 @@
         enableFiltering: false,
         enableSorting: false,
         enableColumnMenu: false,
-        enableColumnResizing: false,
+        enableColumnResizing: true,
         cellTemplate: _cellTemplate
       };
     }

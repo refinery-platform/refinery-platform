@@ -95,6 +95,7 @@
       showGridFooter: true,
       useExternalSorting: true
     };
+    vm.isFileImporting = isFileImporting;
     vm.isOwner = false;
     vm.inputFileTypeColor = fileService.inputFileTypeColor;
     vm.lastPage = 0;  // variable supporting ui-grid dynamic scrolling
@@ -227,6 +228,11 @@
         vm.gridApi.core.on.sortChanged(null, vm.sortChanged);
         vm.sortChanged(vm.gridApi.grid, [vm.gridOptions.columnDefs[1]]);
       }
+    }
+
+    // helper view method for UI-Grid data
+    function isFileImporting (field) {
+      return field === 'N/A';
     }
 
     /** view method to open the permissions modal component, in commons
