@@ -9,6 +9,7 @@ import re
 
 from django.conf import settings
 
+from celery.states import SUCCESS
 from haystack import indexes
 from haystack.exceptions import SkipDocument
 
@@ -134,21 +135,24 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
 
         try:
             file_store_item = FileStoreItem.objects.get(
-                uuid=object.file_uuid)
+                uuid=object.file_uuid
+            )
         except(FileStoreItem.DoesNotExist,
                FileStoreItem.MultipleObjectsReturned) as e:
             logger.error("Couldn't properly fetch FileStoreItem: %s", e)
             file_store_item = None
-
-        # set download url, dependent on whether file has completed uploading
-        if file_store_item is None:
-            download_url = ''
+            download_url = "N/A"
         else:
-            download_url = file_store_item.get_datafile_url()
-        # for isatabs, datafile_url is generated independent of import complete
-        if download_url is None \
-                and file_store_item.get_import_status() == 'PENDING':
-            download_url = 'N/A'
+            if file_store_item.get_import_status() == SUCCESS:
+                # A file import task can be successful, yet yield no datafile.
+                # Ex: One has a metadata file referencing local files and
+                # only uploads a subset of them.
+                download_url = file_store_item.get_datafile_url() if \
+                    file_store_item.datafile else "N/A"
+            elif not file_store_item.is_local():
+                download_url = file_store_item.get_datafile_url()
+            else:
+                download_url = "PENDING"
 
         data.update({
             NodeIndex.DOWNLOAD_URL:
