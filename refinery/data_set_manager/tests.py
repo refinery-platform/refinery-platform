@@ -19,8 +19,8 @@ from django.test import LiveServerTestCase, TestCase
 
 from guardian.shortcuts import assign_perm
 from haystack.exceptions import SkipDocument
-
 import mock
+from mock import ANY
 from rest_framework.test import APIClient, APIRequestFactory, APITestCase
 
 from core.models import Analysis, DataSet, ExtendedGroup, InvestigationLink
@@ -2140,6 +2140,14 @@ class ProcessISATabViewTests(ProcessISATabViewTestBase):
         with open('data_set_manager/test-data/rfc-test.zip') as good_isa:
             self.post_isa_tab(isa_tab_file=good_isa)
         self.successful_import_assertions()
+
+    def test_node_index_update_object_called_with_proper_args(self):
+        with open('data_set_manager/test-data/rfc-test.zip') as good_isa:
+            self.post_isa_tab(isa_tab_file=good_isa)
+        self.update_node_index_mock.assert_called_with(
+            ANY,
+            using="data_set_manager"
+        )
 
     def test_post_bad_isa_tab_file(self):
         with open('data_set_manager/test-data/HideLabBrokenA.zip') as bad_isa:
