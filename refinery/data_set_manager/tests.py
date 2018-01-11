@@ -17,6 +17,7 @@ from django.db.models import Q
 from django.http import QueryDict
 from django.test import LiveServerTestCase, TestCase
 
+from celery.states import PENDING
 from guardian.shortcuts import assign_perm
 from haystack.exceptions import SkipDocument
 import mock
@@ -1929,8 +1930,9 @@ class NodeIndexTests(APITestCase):
         with self.assertRaises(SkipDocument):
             NodeIndex().prepare(self.node)
 
-    def test_prepare(self):
-        data = NodeIndex().prepare(self.node)
+    def _prepare_index(self, node, expected_download_url=None,
+                       expected_filetype=None):
+        data = NodeIndex().prepare(node)
         data = dict(
             (
                 re.sub(r'\d+', '#', key),
@@ -1942,19 +1944,12 @@ class NodeIndexTests(APITestCase):
             )
             for (key, value) in data.items()
         )
-        self.assertRegexpMatches(
-            data['REFINERY_DOWNLOAD_URL_s'],
-            r'^http://example.com/media/file_store/.+/test_file.+txt$'
-            # There may or may not be a suffix on "test_file",
-            # depending on environment. Don't make it too strict!
-        )
         self.assertEqual(
             data,
             {
                 'REFINERY_ANALYSIS_UUID_#_#_s': 'N/A',
-                'REFINERY_DOWNLOAD_URL_s':
-                    self.file_store_item.get_datafile_url(),
-                'REFINERY_FILETYPE_#_#_s': None,
+                'REFINERY_DOWNLOAD_URL_s': expected_download_url,
+                'REFINERY_FILETYPE_#_#_s': expected_filetype,
                 'REFINERY_NAME_#_#_s': 'http://example.com/fake.txt',
                 'REFINERY_SUBANALYSIS_#_#_s': -1,
                 'REFINERY_TYPE_#_#_s': u'Raw Data File',
@@ -1986,6 +1981,59 @@ class NodeIndexTests(APITestCase):
                 'workflow_output': None
             }
         )
+        return data
+
+    def test_prepare_node_good_datafile(self):
+        self.file_store_item.import_task_id = str(uuid.uuid4())
+        self.file_store_item.save()
+
+        with mock.patch.object(
+                FileStoreItem,
+                "get_import_status",
+                return_value="SUCCESS"
+        ) as get_import_status_mock:
+            index_data = self._prepare_index(
+                self.node,
+                expected_download_url=self.file_store_item.get_datafile_url()
+            )
+        self.assertTrue(get_import_status_mock.called)
+        self.assertRegexpMatches(
+            index_data['REFINERY_DOWNLOAD_URL_s'],
+            r'^http://example.com/media/file_store/.+/test_file.+txt$'
+            # There may or may not be a suffix on "test_file",
+            # depending on environment. Don't make it too strict!
+        )
+
+    def test_prepare_node_missing_datafile(self):
+        self.file_store_item.datafile.delete()
+        self.file_store_item.save()
+        with mock.patch.object(
+                FileStoreItem,
+                "get_import_status",
+                return_value="SUCCESS"
+        ) as get_import_status_mock:
+            self._prepare_index(self.node, expected_download_url="N/A")
+            self.assertTrue(get_import_status_mock.called)
+
+    def test_prepare_node_pending_file_import_task(self):
+        self.file_store_item.import_task_id = str(uuid.uuid4())
+        self.file_store_item.save()
+
+        with mock.patch.object(
+            FileStoreItem,
+            "get_import_status",
+            return_value="PENDING"
+        ) as get_import_status_mock:
+            self._prepare_index(self.node, expected_download_url=PENDING)
+            self.assertTrue(get_import_status_mock.called)
+
+    def test_prepare_node_no_file_store_item(self):
+        self.file_store_item.delete()
+        self._prepare_index(
+            self.node,
+            expected_download_url="N/A",
+            expected_filetype=""
+        )
 
 
 @contextlib.contextmanager
@@ -2004,7 +2052,7 @@ class IsaTabTestBase(TestCase):
         ).setLevel(logging.ERROR)
 
         # no need to update Solr index in tests
-        mock.patch(
+        self.update_node_index_mock = mock.patch(
             "data_set_manager.search_indexes.NodeIndex.update_object"
         ).start()
 
