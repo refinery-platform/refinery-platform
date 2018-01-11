@@ -1984,9 +1984,6 @@ class NodeIndexTests(APITestCase):
         return data
 
     def test_prepare_node_good_datafile(self):
-        self.file_store_item.import_task_id = str(uuid.uuid4())
-        self.file_store_item.save()
-
         with mock.patch.object(
                 FileStoreItem,
                 "get_import_status",
@@ -2016,13 +2013,10 @@ class NodeIndexTests(APITestCase):
             self.assertTrue(get_import_status_mock.called)
 
     def test_prepare_node_pending_file_import_task(self):
-        self.file_store_item.import_task_id = str(uuid.uuid4())
-        self.file_store_item.save()
-
         with mock.patch.object(
             FileStoreItem,
             "get_import_status",
-            return_value="PENDING"
+            return_value=PENDING
         ) as get_import_status_mock:
             self._prepare_index(self.node, expected_download_url=PENDING)
             self.assertTrue(get_import_status_mock.called)
