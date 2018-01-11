@@ -84,11 +84,11 @@
         expect(angular.isFunction(ctrl.isFileImporting)).toBe(true);
       });
 
-      it('returns true for N/A', function () {
-        expect(ctrl.isFileImporting('N/A')).toEqual(true);
+      it('returns true for PENDING', function () {
+        expect(ctrl.isFileImporting('PENDING')).toEqual(true);
       });
 
-      it('returns false for !N/A', function () {
+      it('returns false for !PENDING', function () {
         expect(ctrl.isFileImporting('www.fake.com')).toEqual(false);
       });
     });

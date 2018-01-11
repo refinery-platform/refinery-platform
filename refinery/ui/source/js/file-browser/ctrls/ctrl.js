@@ -232,7 +232,7 @@
 
     // helper view method for UI-Grid data
     function isFileImporting (field) {
-      return field === 'N/A';
+      return field === 'PENDING';
     }
 
     /** view method to open the permissions modal component, in commons
