@@ -2001,6 +2001,16 @@ class NodeIndexTests(APITestCase):
             # depending on environment. Don't make it too strict!
         )
 
+    def test_prepare_node_remote_datafile_source(self):
+        self.file_store_item.datafile.delete()
+        self.file_store_item.source = "http://www.example.com/test.txt"
+        self.file_store_item.save()
+
+        self._prepare_index(
+            self.node,
+            expected_download_url=self.file_store_item.get_datafile_url()
+        )
+
     def test_prepare_node_missing_datafile(self):
         self.file_store_item.datafile.delete()
         self.file_store_item.save()
