@@ -93,7 +93,7 @@ def import_file(uuid, refresh=False, file_size=0):
                 item.datafile.save(os.path.basename(item.source), File(f))
         except IOError:
             logger.error("Could not open file: %s", item.source)
-            return None
+            return item.uuid
         if item.source.startswith(settings.REFINERY_DATA_IMPORT_DIR):
             try:
                 os.unlink(item.source)
