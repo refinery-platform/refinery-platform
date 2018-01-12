@@ -78,19 +78,5 @@
         expect(mockUibModal).toHaveBeenCalled();
       });
     });
-
-    describe('isFileImporting', function () {
-      it('isFileImporting is method', function () {
-        expect(angular.isFunction(ctrl.isFileImporting)).toBe(true);
-      });
-
-      it('returns true for PENDING', function () {
-        expect(ctrl.isFileImporting('PENDING')).toEqual(true);
-      });
-
-      it('returns false for !PENDING', function () {
-        expect(ctrl.isFileImporting('www.fake.com')).toEqual(false);
-      });
-    });
   });
 })();

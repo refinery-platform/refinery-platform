@@ -36,17 +36,26 @@
     */
 
     function createColumnDefs () {
+      var _cellTemplate = '<div class="ngCellText text-align-center ui-grid-cell-contents"' +
+            'ng-class="col.colIndex()">' +
+            '<div ng-if="COL_FIELD===\'pending\'  ' +
+            'title="Importing file in progress.">' +
+            '<i class="fa fa-refresh"></i></div>' +
+            '<div ng-if="COL_FIELD!==\'pending\' ' +
+            '&& COL_FIELD!==\'N/A\'" ' +
+            'title="Download File \{{COL_FIELD}}\">' +
+            '<a href="{{COL_FIELD}}" target="_blank">' +
+            '<i class="fa fa-arrow-clock-o"></i></a></div>' +
+            '<div ng-if="COL_FIELD===\'N/A\'" ' +
+            'title="File not available for download">' +
+            '<i class="fa fa-bolt"></i>' +
+            '</div>' +
+            '</div>';
       var defs = [
            { field: 'REFINERY_DOWNLOAD_URL_s',
             enableSorting: false,
             displayName: '',
-            cellTemplate:
-                '<div class="ui-grid-cell-contents" >' +
-                '<a href="{{grid.getCellValue(row, col)}}" target="_blank" ' +
-                    'ng-show="grid.getCellValue(row, col)">' +
-                '<i class="fa fa-arrow-circle-o-down"></i>' +
-                '</a>' +
-                '</div>',
+            cellTemplate: _cellTemplate,
             width: 30 },
           { field: 'data_set_uuid',
             enableSorting: false,
