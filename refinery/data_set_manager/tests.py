@@ -1984,16 +1984,10 @@ class NodeIndexTests(APITestCase):
         return data
 
     def test_prepare_node_good_datafile(self):
-        with mock.patch.object(
-                FileStoreItem,
-                "get_import_status",
-                return_value="SUCCESS"
-        ) as get_import_status_mock:
-            index_data = self._prepare_index(
-                self.node,
-                expected_download_url=self.file_store_item.get_datafile_url()
-            )
-        self.assertTrue(get_import_status_mock.called)
+        index_data = self._prepare_index(
+            self.node,
+            expected_download_url=self.file_store_item.get_datafile_url()
+        )
         self.assertRegexpMatches(
             index_data['REFINERY_DOWNLOAD_URL_s'],
             r'^http://example.com/media/file_store/.+/test_file.+txt$'
@@ -2023,13 +2017,9 @@ class NodeIndexTests(APITestCase):
             self.assertTrue(get_import_status_mock.called)
 
     def test_prepare_node_pending_file_import_task(self):
-        with mock.patch.object(
-            FileStoreItem,
-            "get_import_status",
-            return_value=PENDING
-        ) as get_import_status_mock:
-            self._prepare_index(self.node, expected_download_url=PENDING)
-            self.assertTrue(get_import_status_mock.called)
+        self.file_store_item.datafile.delete()
+        self.file_store_item.save()
+        self._prepare_index(self.node, expected_download_url=PENDING)
 
     def test_prepare_node_no_file_store_item(self):
         self.file_store_item.delete()
@@ -2193,7 +2183,9 @@ class ProcessISATabViewTests(ProcessISATabViewTestBase):
             self.post_isa_tab(isa_tab_file=good_isa)
         self.successful_import_assertions()
 
-    def test_node_index_update_object_called_with_proper_args(self):
+    @mock.patch.object(data_set_manager.views.import_file, "delay")
+    def test_node_index_update_object_called_with_proper_args(self,
+                                                              delay_mock):
         with open('data_set_manager/test-data/rfc-test.zip') as good_isa:
             self.post_isa_tab(isa_tab_file=good_isa)
         self.update_node_index_mock.assert_called_with(
