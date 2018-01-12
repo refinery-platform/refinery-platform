@@ -22,6 +22,7 @@
     'uiGridConstants',
     '_',
     'assayFiltersService',
+    'dataSetPermsService',
     'fileBrowserFactory',
     'fileBrowserSettings',
     'fileParamService',
@@ -44,6 +45,7 @@
     uiGridConstants,
     _,
     assayFiltersService,
+    dataSetPermsService,
     fileBrowserFactory,
     fileBrowserSettings,
     fileParamService,
@@ -60,6 +62,7 @@
     var maxFileRequest = fileBrowserSettings.maxFileRequest;
     var nodesService = activeNodeService;
     var paramService = fileParamService;
+    var permsService = dataSetPermsService;
     var toolService = toolSelectService;
     var vm = this;
     vm.activeNodeRow = nodesService.activeNodeRow;
@@ -107,6 +110,7 @@
     vm.sortChanged = sortChanged;
     vm.toggleToolPanel = toggleToolPanel;
     vm.totalPages = 1;  // variable supporting ui-grid dynamic scrolling
+    vm.userPerms = permsService.userPerms;
 
     activate();
     /*
@@ -453,6 +457,15 @@
           toggleToolColumn();
         }
       }
+    );
+
+    $scope.$watch(
+        function () {
+          return permsService.userPerms;
+        },
+        function () {
+          vm.userPerms = permsService.userPerms;
+        }
     );
   }
 })();
