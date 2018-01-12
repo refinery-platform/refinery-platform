@@ -143,15 +143,11 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
             file_store_item = None
             download_url = "N/A"
         else:
-            if file_store_item.get_import_status() == SUCCESS:
-                # A file import task can be successful, yet yield no datafile.
-                # Ex: One has a metadata file referencing local files and
-                # only uploads a subset of them.
-                download_url = file_store_item.get_datafile_url() if \
-                    file_store_item.datafile else "N/A"
-            elif not file_store_item.is_local():
-                download_url = file_store_item.get_datafile_url()
-            else:
+            download_url = file_store_item.get_datafile_url()
+            if download_url is None and file_store_item.get_import_status() \
+                    == SUCCESS:
+                download_url = "N/A"
+            elif download_url is None:
                 download_url = "PENDING"
 
         data.update({
