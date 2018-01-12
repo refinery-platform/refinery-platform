@@ -312,7 +312,7 @@
         enableFiltering: false,
         enableSorting: false,
         enableColumnMenu: false,
-        enableColumnResizing: true,
+        enableColumnResizing: false,
         cellTemplate: _cellTemplate
       };
     }
