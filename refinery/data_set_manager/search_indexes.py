@@ -9,7 +9,7 @@ import re
 
 from django.conf import settings
 
-from celery.states import SUCCESS
+from celery.states import PENDING, SUCCESS
 from haystack import indexes
 from haystack.exceptions import SkipDocument
 
@@ -144,11 +144,11 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
             download_url = "N/A"
         else:
             download_url = file_store_item.get_datafile_url()
-            if download_url is None and file_store_item.get_import_status() \
-                    == SUCCESS:
-                download_url = "N/A"
-            elif download_url is None:
-                download_url = "PENDING"
+            if download_url is None:
+                download_url = (
+                    "N/A" if file_store_item.get_import_status() == SUCCESS
+                    else PENDING
+                )
 
         data.update({
             NodeIndex.DOWNLOAD_URL:
