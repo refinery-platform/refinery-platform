@@ -296,7 +296,7 @@
             '&& COL_FIELD != \'N/A\'" ' +
             'title="Download File \{{COL_FIELD}}\">' +
             '<a href="{{COL_FIELD}}" target="_blank">' +
-            '<i class="fa fa-arrow-circle-o"></i></a></div>' +
+            '<i class="fa fa-arrow-circle-o-down"></i></a></div>' +
             '<div ng-if="COL_FIELD == \'N/A\'" ' +
             'title="File not available for download">' +
             '<i class="fa fa-bolt"></i>' +
