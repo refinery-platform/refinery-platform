@@ -38,10 +38,10 @@
     function createColumnDefs () {
       var _cellTemplate = '<div class="ngCellText text-align-center ui-grid-cell-contents"' +
             'ng-class="col.colIndex()">' +
-            '<div ng-if="COL_FIELD===\'pending\'  ' +
+            '<div ng-if="COL_FIELD===\'PENDING\'  ' +
             'title="Importing file in progress.">' +
             '<i class="fa fa-refresh"></i></div>' +
-            '<div ng-if="COL_FIELD!==\'pending\' ' +
+            '<div ng-if="COL_FIELD!==\'PENDING\' ' +
             '&& COL_FIELD!==\'N/A\'" ' +
             'title="Download File \{{COL_FIELD}}\">' +
             '<a href="{{COL_FIELD}}" target="_blank">' +
