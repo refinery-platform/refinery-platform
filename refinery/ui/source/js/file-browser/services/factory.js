@@ -289,7 +289,7 @@
     function setCustomUrlColumn (urlAttribute) {
       var _cellTemplate = '<div class="ngCellText text-align-center ui-grid-cell-contents"' +
             'ng-class="col.colIndex()">' +
-            '<div ng-if="COL_FIELD == \'PENDING\'  ' +
+            '<div ng-if="COL_FIELD == \'PENDING\'"  ' +
             'title="Importing file in progress.">' +
             '<i class="fa fa-clock-o"></i></div>' +
             '<div ng-if="COL_FIELD != \'PENDING\' ' +
