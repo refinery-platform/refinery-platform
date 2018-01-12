@@ -17,7 +17,7 @@ from django.db.models import Q
 from django.http import QueryDict
 from django.test import LiveServerTestCase, TestCase
 
-from celery.states import PENDING
+from celery.states import PENDING, STARTED, SUCCESS
 from guardian.shortcuts import assign_perm
 from haystack.exceptions import SkipDocument
 import mock
@@ -1713,7 +1713,7 @@ class NodeClassMethodTests(TestCase):
             self.filestore_item.uuid)
         auxiliary = Node.objects.get(uuid=self.node.get_children()[0])
         state = auxiliary.get_auxiliary_file_generation_task_state()
-        self.assertIn(state, ['PENDING', 'STARTING', 'SUCCESS'])
+        self.assertIn(state, [PENDING, STARTED, SUCCESS])
         # Values from:
         # http://docs.celeryproject.org/en/latest/_modules/celery/result.html#AsyncResult
 
@@ -2011,7 +2011,7 @@ class NodeIndexTests(APITestCase):
         with mock.patch.object(
                 FileStoreItem,
                 "get_import_status",
-                return_value="SUCCESS"
+                return_value=SUCCESS
         ) as get_import_status_mock:
             self._prepare_index(self.node, expected_download_url="N/A")
             self.assertTrue(get_import_status_mock.called)
