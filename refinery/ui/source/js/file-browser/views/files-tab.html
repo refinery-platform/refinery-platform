@@ -9,21 +9,21 @@
     <div class="col-lg-2 col-md-2 col-sm-3 p-r-1">
       <div class="row"
         id="tool-panel-show-button">
-
-        <button
-          class="btn btn-primary btn-sm"
-          data-target="#tool-launch-panel"
-          ng-click="FBCtrl.toggleToolPanel()">
-          <span ng-if="FBCtrl.collapsedToolPanel">
-            <i class="fa fa-angle-double-left" aria-hidden="true"></i>
-             Show Tool Panel
-          </span>
-          <span ng-if="!FBCtrl.collapsedToolPanel">
-            <i class="fa fa-angle-double-right" aria-hidden="true"></i>
-             Hide Tool Panel
-          </span>
-        </button>
-
+        <span ng-if="FBCtrl.userPerms == 'read' || FBCtrl.userPerms == 'change'">
+          <button
+            class="btn btn-primary btn-sm"
+            data-target="#tool-launch-panel"
+            ng-click="FBCtrl.toggleToolPanel()">
+            <span ng-if="FBCtrl.collapsedToolPanel">
+              <i class="fa fa-angle-double-left" aria-hidden="true"></i>
+               Show Tool Panel
+            </span>
+            <span ng-if="!FBCtrl.collapsedToolPanel">
+              <i class="fa fa-angle-double-right" aria-hidden="true"></i>
+               Hide Tool Panel
+            </span>
+          </button>
+        </span>
         <span class="float-right content">
           <span
             ng-if="FBCtrl.isOwner"
