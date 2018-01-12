@@ -2219,6 +2219,12 @@ class ProcessISATabViewLiveServerTests(ProcessISATabViewTestBase,
 
 
 class SingleFileColumnParserTests(TestCase):
+    def setUp(self):
+        self.import_file_mock = mock.patch.object(import_file, "delay").start()
+
+    def tearDown(self):
+        mock.patch.stopall()
+
     def process_csv(self, filename):
         path = os.path.join(
             os.path.dirname(__file__),
@@ -2240,12 +2246,19 @@ class SingleFileColumnParserTests(TestCase):
         data_nodes = Node.objects.filter(assay=assays[0], type='Raw Data File')
         self.assertEqual(len(data_nodes), node_count)
 
-    @mock.patch.object(import_file, "delay")
-    def test_one_line_csv(self, delay_mock):
+    def test_one_line_csv(self):
         dataset = self.process_csv('one-line.csv')
         self.assert_expected_nodes(dataset, 1)
 
-    @mock.patch.object(import_file, "delay")
-    def test_two_line_csv(self, delay_mock):
+    def test_two_line_csv(self):
         dataset = self.process_csv('two-line.csv')
         self.assert_expected_nodes(dataset, 2)
+
+    def test_reindex_triggered_for_nodes_missing_datafiles(self):
+        with mock.patch(
+            "data_set_manager.search_indexes.NodeIndex.update_object"
+        ) as update_object_mock:
+            dataset = self.process_csv('two-line-local.csv')
+
+        self.assert_expected_nodes(dataset, 2)
+        self.assertEqual(2, update_object_mock.call_count)
