@@ -9,6 +9,7 @@ import re
 
 from django.conf import settings
 
+from celery.states import PENDING, SUCCESS
 from haystack import indexes
 from haystack.exceptions import SkipDocument
 
@@ -126,6 +127,7 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
                     data[key].add(value)
                 else:
                     data[key].add("N/A")
+
         # iterate over all keys in data and join sets into strings
         for key, value in data.iteritems():
             if type(value) is set:
@@ -133,16 +135,24 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
 
         try:
             file_store_item = FileStoreItem.objects.get(
-                uuid=object.file_uuid)
+                uuid=object.file_uuid
+            )
         except(FileStoreItem.DoesNotExist,
                FileStoreItem.MultipleObjectsReturned) as e:
             logger.error("Couldn't properly fetch FileStoreItem: %s", e)
             file_store_item = None
+            download_url = "N/A"
+        else:
+            download_url = file_store_item.get_datafile_url()
+            if download_url is None:
+                download_url = (
+                    "N/A" if file_store_item.get_import_status() == SUCCESS
+                    else PENDING
+                )
 
         data.update({
             NodeIndex.DOWNLOAD_URL:
-                '' if file_store_item is None
-                else file_store_item.get_datafile_url(),
+                download_url,
             NodeIndex.TYPE_PREFIX + id_suffix:
                 object.type,
             NodeIndex.NAME_PREFIX + id_suffix:
