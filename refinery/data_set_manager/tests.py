@@ -2288,3 +2288,11 @@ class UpdateMissingAttributeOrderTests(TestMigrations):
                 solr_field=NodeIndex.DOWNLOAD_URL
             ).count()
         )
+        for attribute_order in AttributeOrder.objects.all():
+            self.assertTrue(attribute_order.is_exposed)
+            self.assertTrue(attribute_order.is_active)
+            self.assertFalse(attribute_order.is_facet)
+            self.assertFalse(attribute_order.is_internal)
+            self.assertEqual(0, attribute_order.rank)
+            self.assertEqual(NodeIndex.DOWNLOAD_URL,
+                             attribute_order.solr_field)
