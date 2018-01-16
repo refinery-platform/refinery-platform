@@ -29,22 +29,10 @@ def update_read_meta_dataset_permissions(apps, schema_editor):
                     assign_perm("core.read_meta_dataset", obj, dataset)
 
 
-def remove_read_meta_dataset_permissions(apps, schema_editor):
-    """
-    Removes the `read_meta_dataset` permission from Datasets that existed in
-    the system with the `read_dataset` and `read_meta_dataset` permission
-    """
-    for dataset in DataSet.objects.all():
-        for queryset in [User.objects.all(), Group.objects.all()]:
-            for obj in queryset:
-                permission_checker = ObjectPermissionChecker(obj)
-                permissions_that_allow_removal = [
-                    permission_checker.has_perm("core.read_dataset", dataset),
-                    permission_checker.has_perm("core.read_meta_dataset",
-                                                dataset)
-                ]
-                if all(permissions_that_allow_removal):
-                    remove_perm("core.read_meta_dataset", obj, dataset)
+def noop(apps, schema_editor):
+    return None  # Newer Django's > 1.8 have a migrations.RunPython.noop to
+    # be able to move backwards in migrations yet have a data migration's
+    # results remain
 
 
 class Migration(migrations.Migration):
@@ -53,6 +41,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(update_read_meta_dataset_permissions,
-                             remove_read_meta_dataset_permissions),
+        migrations.RunPython(update_read_meta_dataset_permissions, noop),
     ]
