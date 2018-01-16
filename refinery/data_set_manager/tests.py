@@ -25,6 +25,7 @@ from mock import ANY
 from rest_framework.test import APIClient, APIRequestFactory, APITestCase
 
 from core.models import Analysis, DataSet, ExtendedGroup, InvestigationLink
+from core.tests import TestMigrations
 from core.views import NodeViewSet
 import data_set_manager
 from data_set_manager.isa_tab_parser import IsaTabParser, ParserException
@@ -2262,3 +2263,29 @@ class SingleFileColumnParserTests(TestCase):
 
         self.assert_expected_nodes(dataset, 2)
         self.assertEqual(2, update_object_mock.call_count)
+
+
+class AnnotateExistingNodesTests(TestMigrations):
+    migrate_from = '0004_auto_20171211_1145'
+    migrate_to = '0005_annotate_existing_nodes'
+
+    def setUp(self):
+        self.annotate_nodes_mock = mock.patch(
+            "data_set_manager.tasks.annotate_nodes"
+        ).start()
+        super(AnnotateExistingNodesTests, self).setUp()
+
+    def tearDown(self):
+        super(AnnotateExistingNodesTests, self).tearDown()
+        mock.patch.stopall()
+
+    def setUpBeforeMigration(self, apps):
+        self.data_sets_to_create = 5
+        for i in xrange(self.data_sets_to_create):
+            create_dataset_with_necessary_models()
+
+    def test_annotate_nodes_called(self):
+        self.assertEqual(
+            self.data_sets_to_create,
+            self.annotate_nodes_mock.call_count
+        )
