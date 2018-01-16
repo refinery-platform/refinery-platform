@@ -355,16 +355,16 @@ def annotate_nodes(investigation_uuid):
                 files_only=True,
                 filter_set=Node.FILES
             )
-            if node_types is not None:
-                for node_type in node_types:
-                    update_annotated_nodes(
-                        node_type,
-                        study.uuid,
-                        assay.uuid,
-                        update=True
-                    )
 
-                    index_annotated_nodes(node_type, study.uuid, assay.uuid)
+            for node_type in node_types:
+                update_annotated_nodes(
+                    node_type,
+                    study.uuid,
+                    assay.uuid,
+                    update=True
+                )
+
+                index_annotated_nodes(node_type, study.uuid, assay.uuid)
 
             # initialize attribute order for this assay
             initialize_attribute_order(study, assay)

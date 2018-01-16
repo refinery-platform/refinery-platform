@@ -855,7 +855,7 @@ def _query_solr(study, assay, attribute=None):
     # logger.debug('Query results: %s', results)
 
     if results['response']['numFound'] == 0:
-        raise data_set_manager.utils.SolrQueryError('No solr results found.')
+        raise ValueError('No results.')
 
     return results
 
