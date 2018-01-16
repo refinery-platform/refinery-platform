@@ -93,7 +93,7 @@ def import_file(uuid, refresh=False, file_size=0):
                 item.datafile.save(os.path.basename(item.source), File(f))
         except IOError:
             logger.error("Could not open file: %s", item.source)
-            return None
+            return item.uuid
         if item.source.startswith(settings.REFINERY_DATA_IMPORT_DIR):
             try:
                 os.unlink(item.source)
@@ -245,7 +245,7 @@ def update_solr_index(**kwargs):
     except (Node.DoesNotExist, Node.MultipleObjectsReturned) as exc:
         logger.error("Couldn't retrieve Node: %s", exc)
     else:
-        NodeIndex().update_object(node)
+        NodeIndex().update_object(node, using="data_set_manager")
 
 
 @task_success.connect(sender=import_file)
