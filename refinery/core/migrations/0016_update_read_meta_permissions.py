@@ -30,7 +30,7 @@ def update_read_meta_dataset_permissions(apps, schema_editor):
 
 
 def noop(apps, schema_editor):
-    return None  # Newer Django's > 1.8 have a migrations.RunPython.noop to
+    return None  # Newer Django's >= 1.8 have a migrations.RunPython.noop to
     # be able to move backwards in migrations yet have a data migration's
     # results remain
 
