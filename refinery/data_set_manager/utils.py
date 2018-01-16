@@ -1188,3 +1188,7 @@ def get_solr_response_json(node_uuids):
         'data_set_manager'
     )
     return format_solr_response(solr_response)
+
+
+class SolrQueryError(RuntimeError):
+    pass

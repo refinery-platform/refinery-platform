@@ -6,6 +6,7 @@ from django.db import models, migrations
 from requests import ConnectionError
 
 import data_set_manager.tasks
+import data_set_manager.utils
 
 logger = logging.getLogger(__name__)
 
@@ -19,6 +20,10 @@ def annotate_existing_nodes(apps, schema_editor):
         except ConnectionError:  # Expected during CI runs
             logger.error(
                 "Could not connect to Solr while updating AnnotatedNodes"
+            )
+        except data_set_manager.utils.SolrQueryError as e:
+            logger.error(
+                "Something went wrong while querying Solr: %", e
             )
 
 
