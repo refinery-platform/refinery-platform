@@ -273,11 +273,6 @@ def delete_input_files_and_file_relationships(sender, instance, *args,
         file_relationship.delete()
 
 
-class ToolManager(models.Manager):
-    def get_queryset(self):
-        return VisualizationTool.objects.all() | WorkflowTool.objects.all()
-
-
 class Tool(OwnableResource):
     """
     A Tool is a representation of the information it will take to launch
