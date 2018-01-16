@@ -637,13 +637,6 @@ def generate_solr_params(
     or None if assay_uuids is empty.
     """
 
-    file_types = 'fq=type:("Raw Data File" OR ' \
-                 '"Derived Data File" OR ' \
-                 '"Array Data File" OR ' \
-                 '"Derived Array Data File" OR ' \
-                 '"Array Data Matrix File" OR' \
-                 '"Derived Array Data Matrix File")'
-
     is_annotation = params.get('is_annotation', 'false')
     facet_count = params.get('include_facet_count', 'true')
     start = params.get('offset', '0')
@@ -657,8 +650,7 @@ def generate_solr_params(
     facet_filter = params.get('filter_attribute', None)
 
     fixed_solr_params = \
-        '&'.join([file_types,
-                  'fq=is_annotation:%s' % is_annotation,
+        '&'.join(['fq=is_annotation:%s' % is_annotation,
                   'start=%s' % start,
                   'rows=%s' % row,
                   'q=django_ct:data_set_manager.node&wt=json',
