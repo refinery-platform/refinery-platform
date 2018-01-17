@@ -165,7 +165,7 @@
           });
         });
       });
-      collapseService.updateNodeDoi();
+      collapseService.updateNodeDoi(partsService.domNodeset);
     }
   }
 })();
