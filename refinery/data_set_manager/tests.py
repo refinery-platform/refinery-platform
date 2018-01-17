@@ -25,6 +25,7 @@ from mock import ANY
 from rest_framework.test import APIClient, APIRequestFactory, APITestCase
 
 from core.models import Analysis, DataSet, ExtendedGroup, InvestigationLink
+from core.tests import TestMigrations
 from core.views import NodeViewSet
 import data_set_manager
 from data_set_manager.isa_tab_parser import IsaTabParser, ParserException
@@ -2262,3 +2263,36 @@ class SingleFileColumnParserTests(TestCase):
 
         self.assert_expected_nodes(dataset, 2)
         self.assertEqual(2, update_object_mock.call_count)
+
+
+class UpdateMissingAttributeOrderTests(TestMigrations):
+    migrate_from = '0004_auto_20171211_1145'
+    migrate_to = '0005_update_attribute_orders'
+
+    def setUpBeforeMigration(self, apps):
+        self.datasets_to_create = 3
+        for i in xrange(self.datasets_to_create):
+            create_dataset_with_necessary_models()
+
+        self.assertEqual(
+            0,
+            AttributeOrder.objects.filter(
+                solr_field=NodeIndex.DOWNLOAD_URL
+            ).count()
+        )
+
+    def test_attribute_orders_created(self):
+        self.assertEqual(
+            self.datasets_to_create,
+            AttributeOrder.objects.filter(
+                solr_field=NodeIndex.DOWNLOAD_URL
+            ).count()
+        )
+        for attribute_order in AttributeOrder.objects.all():
+            self.assertTrue(attribute_order.is_exposed)
+            self.assertTrue(attribute_order.is_active)
+            self.assertFalse(attribute_order.is_facet)
+            self.assertFalse(attribute_order.is_internal)
+            self.assertEqual(0, attribute_order.rank)
+            self.assertEqual(NodeIndex.DOWNLOAD_URL,
+                             attribute_order.solr_field)
