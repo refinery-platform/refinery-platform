@@ -97,7 +97,7 @@ class Command(BaseCommand):
                     species_column=options['species_column'],
                     genome_build_column=options['genome_build_column'],
                     annotation_column=options['annotation_column'],
-                    slug=options['slug'], is_public=options['is_public'])
+                    is_public=options['is_public'])
         except IOError as exc:
             raise CommandError("Could not open file '%s': %s" %
                                options['file_name'], exc)
