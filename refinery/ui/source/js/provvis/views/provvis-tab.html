@@ -7,6 +7,14 @@
             <div id="provenance-visualization">
               <div id="provvis-nav-bar" ng-controller="provvisNavbarController">
                 <div provvis-nav-bar></div>
+                <span
+                  ng-if="!provCtrl.isGraphReady"
+                  id="provvis-loader"
+                  class="text-center">
+                    <span id="provvis-loader-icon"
+                      class="refinery-spinner analyses-view"></span>
+                  &nbsp;<em>Loading graph......</em>
+                </span>
               </div>
               <div id="provvis-canvas" ng-controller="provvisCanvasController">
                 <div provvis-canvas></div>

@@ -60,7 +60,8 @@ function refineryDataSetNavConfig (
             // unit tests redefine $window and thus make it unusable here
             return window.getStaticUrl('partials/provvis/views/provvis-tab.html');
           },
-          controller: 'ProvvisTempCtrl'
+          controller: 'ProvvisController',
+          controllerAs: 'provCtrl'
         },
         '^\/data_sets\/.*\/$',
         true

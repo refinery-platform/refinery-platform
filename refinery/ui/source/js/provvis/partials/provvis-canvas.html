@@ -36,18 +36,24 @@
            class="refinery-panel refinery-panel-content scrollable tab-content">
         <div class="tab-pane active"
              id="provvis-filter-doi-tab">
-          <div id="provenance-timeline-view"></div>
+          <div id="provenance-timeline-view">
+            <rp-provvis-timeline-view></rp-provvis-timeline-view>
+          </div>
           <div id="provenance-doi-view"
-               style="margin-top: 30px; width: 100%;"></div>
+               style="margin-top: 30px; width: 100%;">
+            <rp-provvis-doi-view></rp-provvis-doi-view>
+          </div>
           <div id="provenance-layer-change-view"
-               style="margin-top: 30px; width: 100%;"></div>
+               style="margin-top: 30px; width: 100%;">
+            <rp-provvis-change-layers-view></rp-provvis-change-layers-view>
+          </div>
         </div>
         <div class="tab-pane"
              id="provvis-nodeinfo-tab">
           <div class="nodeInfoHeader">
             <h3 id="nodeInfoTitle">
               Select a node: - </h3>
-            <a id="nodeInfoTitleLink"></a>
+            <span id="nodeInfoTitleLink"></span>
           </div>
           <div id="provenance-nodeInfo-content"></div>
         </div>
