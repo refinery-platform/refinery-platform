@@ -17,6 +17,5 @@
 
     var vm = this;
     vm.provView = 'Layers';
-    vm.radioModel = 'Left';
   }
 })();
