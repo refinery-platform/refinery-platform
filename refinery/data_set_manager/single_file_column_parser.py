@@ -297,7 +297,6 @@ def process_metadata_table(
     annotation_column=None,
     sample_column=None,
     assay_column=None,
-    slug=None,
     is_public=False,
     delimiter="comma",
     custom_delimiter_string=",",
@@ -326,8 +325,6 @@ def process_metadata_table(
     :type genome_build_column: int
     :param annotation_column: annotation column index
     :type annotation_column: int
-    :param slug: dataset name shortcut
-    :type slug: str
     :param is_public: is dataset available to public
     :type is_public: bool
     :returns: UUID of the new dataset
@@ -371,12 +368,6 @@ def process_metadata_table(
     except (TypeError, ValueError):
         assay_column = None
     try:
-        if slug:
-            slug = str(slug)
-    except ValueError:
-        slug = None
-
-    try:
         delimiter = str(delimiter)
     except ValueError:
         delimiter = "comma"
@@ -415,4 +406,4 @@ def process_metadata_table(
 
     return create_dataset(
         investigation_uuid=investigation.uuid, username=username,
-        dataset_name=title, slug=slug, public=is_public)
+        dataset_name=title, public=is_public)
