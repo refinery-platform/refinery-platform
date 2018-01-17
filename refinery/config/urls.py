@@ -18,7 +18,7 @@ from core.forms import RegistrationFormWithCustomFields
 from core.models import AuthenticationFormUsernameOrEmail
 from core.urls import core_router
 from core.views import CustomRegistrationView
-from data_set_manager.api import (InvestigationResource,
+from data_set_manager.api import (AssayResource, InvestigationResource,
                                   ProtocolReferenceParameterResource,
                                   ProtocolReferenceResource, ProtocolResource,
                                   PublicationResource, StudyResource)
@@ -36,6 +36,7 @@ v1_api = Api(api_name='v1')
 v1_api.register(AnalysisResource())
 v1_api.register(ProjectResource())
 v1_api.register(StudyResource())
+v1_api.register(AssayResource())
 v1_api.register(DataSetResource())
 v1_api.register(NodeResource())
 v1_api.register(WorkflowResource())

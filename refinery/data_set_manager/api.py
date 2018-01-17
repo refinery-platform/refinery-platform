@@ -8,7 +8,7 @@ from tastypie import fields
 from tastypie.constants import ALL
 from tastypie.resources import ModelResource
 
-from .models import (Investigation, Node, Protocol, ProtocolReference,
+from .models import (Assay, Investigation, Node, Protocol, ProtocolReference,
                      ProtocolReferenceParameter, Publication, Study)
 
 
@@ -137,5 +137,23 @@ class StudyResource(ModelResource):
         filtering = {
             'uuid': ALL,
             'investigation_uuid': ALL
+        }
+        # fields = ["uuid"]
+
+
+class AssayResource(ModelResource):
+    study_uuid = fields.CharField(
+        attribute='study__uuid',
+        use_in='all'
+    )
+
+    class Meta:
+        queryset = Assay.objects.all()
+        detail_uri_name = 'uuid'    # for using UUIDs instead of pk in URIs
+        allowed_methods = ['get']
+        resource_name = 'assay'
+        filtering = {
+            'uuid': ALL,
+            'study_uuid': ALL
         }
         # fields = ["uuid"]
