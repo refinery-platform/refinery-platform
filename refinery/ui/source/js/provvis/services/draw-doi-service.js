@@ -218,7 +218,7 @@
 
       $('<a/>', {
         id: 'prov-doi-view-reset',
-        href: '#',
+        href: '#/provvis',
         html: 'Redistribute',
         style: 'width: 25px; position: absolute; left: 90px; top: ' +
           parseInt((10 - doiFactors.length) / 2 * 30 +
