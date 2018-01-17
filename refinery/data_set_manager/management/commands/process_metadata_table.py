@@ -47,10 +47,6 @@ class Command(BaseCommand):
                     help='base path of your data file paths if using relative '
                          'locations'
                     ),
-        make_option('--slug', action='store', type='string', default=None,
-                    help='shortcut name for dataset URL; can only contain '
-                         'alpha-numeric characters and \'_\''
-                    ),
         make_option('--species_column', action='store', type='int',
                     default=None,
                     help='column containing species names or ids'
