@@ -312,9 +312,6 @@ MetadataTableImportCtrl.prototype.startImport = function () {
   if (self.genomeBuildColumn) {
     formData.append('genome_build_column', self.genomeBuildColumn);
   }
-  if (self.slug) {
-    formData.append('slug', self.slug);
-  }
   if (self.dataFilePermanent) {
     formData.append('data_file_permanent', self.dataFilePermanent);
   }
