@@ -20,5 +20,9 @@
     it('refineryProvvis ctrl should exist', function () {
       expect(ctrl).toBeDefined();
     });
+
+    it('Data & UI displays variables should exist for views', function () {
+      expect(ctrl.isGraphReady).toEqual(false);
+    });
   });
 })();

@@ -23,6 +23,7 @@
 
     it('Data & UI displays variables should exist for views', function () {
       expect(scope.name).toEqual('Navbar');
+      expect(ctrl.provView).toEqual('Layers');
     });
   });
 })();
