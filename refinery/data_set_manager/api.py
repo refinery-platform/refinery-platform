@@ -5,38 +5,11 @@ Created on Nov 29, 2012
 '''
 
 from tastypie import fields
-from tastypie.authentication import Authentication
-from tastypie.authorization import Authorization
-from tastypie.constants import ALL, ALL_WITH_RELATIONS
+from tastypie.constants import ALL
 from tastypie.resources import ModelResource
 
-from .models import (Assay, Attribute, AttributeOrder, Investigation, Node,
-                     Protocol, ProtocolReference, ProtocolReferenceParameter,
-                     Publication, Study)
-
-
-class AttributeResource(ModelResource):
-    node = fields.ForeignKey('core.api.NodeResource', 'node', use_in='all')
-
-    class Meta:
-        queryset = Attribute.objects.all()
-        detail_uri_name = 'id'
-        allowed_methods = ['get']
-        resource_name = 'attributes'
-        include_resource_uri = False
-        filtering = {
-            'node': ALL_WITH_RELATIONS,
-            'type': ALL,
-            'value_accession': ALL,
-        }
-        fields = [
-            'subtype',
-            'type',
-            'value',
-            'value_accession',
-            'value_source',
-            'value_unit'
-        ]
+from .models import (Assay, Investigation, Node, Protocol, ProtocolReference,
+                     ProtocolReferenceParameter, Publication, Study)
 
 
 class InvestigationResource(ModelResource):
@@ -184,25 +157,3 @@ class AssayResource(ModelResource):
             'study_uuid': ALL
         }
         # fields = ["uuid"]
-
-
-class AttributeOrderResource(ModelResource):
-    study = fields.ToOneField(StudyResource, "study")
-    assay = fields.ToOneField(AssayResource, "assay")
-
-    class Meta:
-        queryset = AttributeOrder.objects.all().order_by("rank")
-        allowed_methods = ["get", "patch", "put", "post"]
-
-        # TODO: replace with session or api key authentication and internal
-        # authorization
-        authentication = Authentication()
-        authorization = Authorization()
-        filtering = {
-            "study": ALL_WITH_RELATIONS,
-            "assay": ALL_WITH_RELATIONS,
-            "subtype": ALL,
-            "is_exposed": ALL,
-            "is_internal": ALL
-        }
-        excludes = []
