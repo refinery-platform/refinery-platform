@@ -14,5 +14,9 @@
 
   function provvisNavbarController ($scope) {
     $scope.name = 'Navbar';
+
+    var vm = this;
+    vm.provView = 'Layers';
+    vm.radioModel = 'Left';
   }
 })();

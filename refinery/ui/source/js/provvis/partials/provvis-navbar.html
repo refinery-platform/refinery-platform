@@ -1,21 +1,34 @@
-<div ng-controller="provvisNavbarController">
+<div ng-controller="provvisNavbarController as $ctrl">
   <div id="provenance-controls">
     <div id="prov-ctrl-node-btn-group" class="btn-group">
-      <button id="prov-ctrl-layers-click" class="btn btn-xs btn-primary">
+      <label
+        id="prov-ctrl-layers-click"
+        class="btn btn-xs btn-primary"
+        ng-model="$ctrl.provView"
+        uib-btn-radio="'Layers'">
         <i class="fa fa-bars"></i>&nbsp;Layers
-      </button>
-      <button id="prov-ctrl-analyses-click"
-              class="btn btn-xs btn-primary"><i
-          class="fa fa-cogs"></i>&nbsp;Analyses
-      </button>
-      <button id="prov-ctrl-subanalyses-click"
-              class="btn btn-xs btn-primary"><i
-          class="fa fa-cog"></i>&nbsp;Analysis Groups
-      </button>
-      <button id="prov-ctrl-workflows-click"
-              class="btn btn-xs btn-primary"><i
-          class="fa fa-sitemap rotate-icon-90"></i>&nbsp;Workflows
-      </button>
+      </label>
+      <label
+        id="prov-ctrl-analyses-click"
+        class="btn btn-xs btn-primary"
+        ng-model="$ctrl.provView"
+        uib-btn-radio="'Analyses'">
+        <i class="fa fa-cogs"></i>&nbsp;Analyses
+      </label>
+      <label
+        id="prov-ctrl-subanalyses-click"
+        class="btn btn-xs btn-primary"
+        ng-model="$ctrl.provView"
+        uib-btn-radio="'Analysis-Groups'">
+        <i class="fa fa-cog"></i>&nbsp;Analysis Groups
+      </label>
+      <label
+        id="prov-ctrl-workflows-click"
+        class="btn btn-xs btn-primary"
+        ng-model="$ctrl.provView"
+        uib-btn-radio="'Workflows'">
+        <i class="fa fa-sitemap rotate-icon-90"></i>&nbsp;Workflows
+      </label>
     </div>
 
     <div id="prov-ctrl-node-labeling-btn-group" class="btn-group">
