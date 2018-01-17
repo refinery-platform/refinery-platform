@@ -4,12 +4,16 @@ import re
 import string
 from urlparse import urljoin
 
+from django.apps import apps
 from django.contrib.auth.models import AnonymousUser, Group, User
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.db import connection
+from django.db.migrations.executor import MigrationExecutor
 from django.test import TestCase
 from django.utils import timezone
 
-from guardian.shortcuts import assign_perm, get_objects_for_group
+from guardian.core import ObjectPermissionChecker
+from guardian.shortcuts import assign_perm, get_objects_for_group, remove_perm
 import mock
 import mockcache as memcache
 from rest_framework.test import (APIClient, APIRequestFactory, APITestCase,
@@ -2103,3 +2107,81 @@ class CoreIndexTests(TestCase):
             self.good_dataset
         )
         self.assertEqual(prepared_description, "This is a great DataSet")
+
+
+class TestMigrations(TestCase):
+    """
+    Useful test class for testing Django Data migrations
+
+    From https://www.caktusgroup.com/blog/2016/02/02/
+    writing-unit-tests-django-migrations/
+    """
+    @property
+    def app(self):
+        return apps.get_containing_app_config(type(self).__module__).name
+
+    migrate_from = None
+    migrate_to = None
+
+    def setUp(self):
+        assert self.migrate_from and self.migrate_to, \
+            "TestCase '{}' must define migrate_from and migrate_to properties"\
+            .format(type(self).__name__)
+        self.migrate_from = [(self.app, self.migrate_from)]
+        self.migrate_to = [(self.app, self.migrate_to)]
+        executor = MigrationExecutor(connection)
+        old_apps = executor.loader.project_state(self.migrate_from).apps
+
+        # Reverse to the original migration
+        executor.migrate(self.migrate_from)
+
+        self.setUpBeforeMigration(old_apps)
+
+        # Run the migration to test
+        executor = MigrationExecutor(connection)
+        executor.loader.build_graph()  # reload.
+        executor.migrate(self.migrate_to)
+
+        self.apps = executor.loader.project_state(self.migrate_to).apps
+
+    def setUpBeforeMigration(self, apps):
+        pass
+
+
+class DataSetPermissionsUpdateTests(TestMigrations):
+    migrate_from = '0015_auto_20171213_1429'
+    migrate_to = '0016_update_read_meta_permissions'
+
+    def setUpBeforeMigration(self, apps):
+        self.public_group = ExtendedGroup.objects.public_group()
+        self.user_a = User.objects.create_user("user_a", "", "user_a")
+        self.user_b = User.objects.create_user("user_b", "", "user_b")
+
+        self.dataset_a = create_dataset_with_necessary_models(user=self.user_a)
+        self.dataset_b = create_dataset_with_necessary_models()
+        self.dataset_b.share(self.public_group)
+
+        # Emulate state of DataSets existing prior to the read_meta_dataset
+        # permission addition
+        for obj in [self.user_a, self.user_b, self.public_group]:
+            for dataset in DataSet.objects.all():
+                remove_perm("core.read_meta_dataset", obj, dataset)
+
+    def _check_permission(self, obj, dataset,
+                          permission="core.read_meta_dataset"):
+        return ObjectPermissionChecker(obj).has_perm(permission,  dataset)
+
+    def test_read_meta_permissions_assigned(self):
+        # Assert that self.user is the only one with the "read_meta_dataset"
+        # perm on self.dataset_a
+        self.assertTrue(self._check_permission(self.user_a, self.dataset_a))
+        self.assertFalse(self._check_permission(self.user_b, self.dataset_a))
+        self.assertFalse(self._check_permission(self.public_group,
+                                                self.dataset_a))
+
+        # Assert that all users and groups have the "read_meta_dataset" perm on
+        # self.dataset_b
+        self.assertTrue(self._check_permission(self.public_group,
+                                               self.dataset_b))
+        self.assertTrue(self._check_permission(self.user_a, self.dataset_b))
+        self.assertTrue(self._check_permission(self.user_b, self.dataset_b))

@@ -17,13 +17,15 @@ from django.db.models import Q
 from django.http import QueryDict
 from django.test import LiveServerTestCase, TestCase
 
+from celery.states import PENDING, STARTED, SUCCESS
 from guardian.shortcuts import assign_perm
 from haystack.exceptions import SkipDocument
-
 import mock
+from mock import ANY
 from rest_framework.test import APIClient, APIRequestFactory, APITestCase
 
 from core.models import Analysis, DataSet, ExtendedGroup, InvestigationLink
+from core.tests import TestMigrations
 from core.views import NodeViewSet
 import data_set_manager
 from data_set_manager.isa_tab_parser import IsaTabParser, ParserException
@@ -1712,7 +1714,7 @@ class NodeClassMethodTests(TestCase):
             self.filestore_item.uuid)
         auxiliary = Node.objects.get(uuid=self.node.get_children()[0])
         state = auxiliary.get_auxiliary_file_generation_task_state()
-        self.assertIn(state, ['PENDING', 'STARTING', 'SUCCESS'])
+        self.assertIn(state, [PENDING, STARTED, SUCCESS])
         # Values from:
         # http://docs.celeryproject.org/en/latest/_modules/celery/result.html#AsyncResult
 
@@ -1929,8 +1931,9 @@ class NodeIndexTests(APITestCase):
         with self.assertRaises(SkipDocument):
             NodeIndex().prepare(self.node)
 
-    def test_prepare(self):
-        data = NodeIndex().prepare(self.node)
+    def _prepare_index(self, node, expected_download_url=None,
+                       expected_filetype=None):
+        data = NodeIndex().prepare(node)
         data = dict(
             (
                 re.sub(r'\d+', '#', key),
@@ -1942,19 +1945,12 @@ class NodeIndexTests(APITestCase):
             )
             for (key, value) in data.items()
         )
-        self.assertRegexpMatches(
-            data['REFINERY_DOWNLOAD_URL_s'],
-            r'^http://example.com/media/file_store/.+/test_file.+txt$'
-            # There may or may not be a suffix on "test_file",
-            # depending on environment. Don't make it too strict!
-        )
         self.assertEqual(
             data,
             {
                 'REFINERY_ANALYSIS_UUID_#_#_s': 'N/A',
-                'REFINERY_DOWNLOAD_URL_s':
-                    self.file_store_item.get_datafile_url(),
-                'REFINERY_FILETYPE_#_#_s': None,
+                'REFINERY_DOWNLOAD_URL_s': expected_download_url,
+                'REFINERY_FILETYPE_#_#_s': expected_filetype,
                 'REFINERY_NAME_#_#_s': 'http://example.com/fake.txt',
                 'REFINERY_SUBANALYSIS_#_#_s': -1,
                 'REFINERY_TYPE_#_#_s': u'Raw Data File',
@@ -1986,6 +1982,53 @@ class NodeIndexTests(APITestCase):
                 'workflow_output': None
             }
         )
+        return data
+
+    def test_prepare_node_good_datafile(self):
+        index_data = self._prepare_index(
+            self.node,
+            expected_download_url=self.file_store_item.get_datafile_url()
+        )
+        self.assertRegexpMatches(
+            index_data['REFINERY_DOWNLOAD_URL_s'],
+            r'^http://example.com/media/file_store/.+/test_file.+txt$'
+            # There may or may not be a suffix on "test_file",
+            # depending on environment. Don't make it too strict!
+        )
+
+    def test_prepare_node_remote_datafile_source(self):
+        self.file_store_item.datafile.delete()
+        self.file_store_item.source = "http://www.example.com/test.txt"
+        self.file_store_item.save()
+
+        self._prepare_index(
+            self.node,
+            expected_download_url=self.file_store_item.get_datafile_url()
+        )
+
+    def test_prepare_node_missing_datafile(self):
+        self.file_store_item.datafile.delete()
+        self.file_store_item.save()
+        with mock.patch.object(
+                FileStoreItem,
+                "get_import_status",
+                return_value=SUCCESS
+        ) as get_import_status_mock:
+            self._prepare_index(self.node, expected_download_url="N/A")
+            self.assertTrue(get_import_status_mock.called)
+
+    def test_prepare_node_pending_file_import_task(self):
+        self.file_store_item.datafile.delete()
+        self.file_store_item.save()
+        self._prepare_index(self.node, expected_download_url=PENDING)
+
+    def test_prepare_node_no_file_store_item(self):
+        self.file_store_item.delete()
+        self._prepare_index(
+            self.node,
+            expected_download_url="N/A",
+            expected_filetype=""
+        )
 
 
 @contextlib.contextmanager
@@ -2004,7 +2047,7 @@ class IsaTabTestBase(TestCase):
         ).setLevel(logging.ERROR)
 
         # no need to update Solr index in tests
-        mock.patch(
+        self.update_node_index_mock = mock.patch(
             "data_set_manager.search_indexes.NodeIndex.update_object"
         ).start()
 
@@ -2141,6 +2184,16 @@ class ProcessISATabViewTests(ProcessISATabViewTestBase):
             self.post_isa_tab(isa_tab_file=good_isa)
         self.successful_import_assertions()
 
+    @mock.patch.object(data_set_manager.views.import_file, "delay")
+    def test_node_index_update_object_called_with_proper_args(self,
+                                                              delay_mock):
+        with open('data_set_manager/test-data/rfc-test.zip') as good_isa:
+            self.post_isa_tab(isa_tab_file=good_isa)
+        self.update_node_index_mock.assert_called_with(
+            ANY,
+            using="data_set_manager"
+        )
+
     def test_post_bad_isa_tab_file(self):
         with open('data_set_manager/test-data/HideLabBrokenA.zip') as bad_isa:
             self.post_isa_tab(isa_tab_file=bad_isa)
@@ -2167,6 +2220,12 @@ class ProcessISATabViewLiveServerTests(ProcessISATabViewTestBase,
 
 
 class SingleFileColumnParserTests(TestCase):
+    def setUp(self):
+        self.import_file_mock = mock.patch.object(import_file, "delay").start()
+
+    def tearDown(self):
+        mock.patch.stopall()
+
     def process_csv(self, filename):
         path = os.path.join(
             os.path.dirname(__file__),
@@ -2188,12 +2247,52 @@ class SingleFileColumnParserTests(TestCase):
         data_nodes = Node.objects.filter(assay=assays[0], type='Raw Data File')
         self.assertEqual(len(data_nodes), node_count)
 
-    @mock.patch.object(import_file, "delay")
-    def test_one_line_csv(self, delay_mock):
+    def test_one_line_csv(self):
         dataset = self.process_csv('one-line.csv')
         self.assert_expected_nodes(dataset, 1)
 
-    @mock.patch.object(import_file, "delay")
-    def test_two_line_csv(self, delay_mock):
+    def test_two_line_csv(self):
         dataset = self.process_csv('two-line.csv')
         self.assert_expected_nodes(dataset, 2)
+
+    def test_reindex_triggered_for_nodes_missing_datafiles(self):
+        with mock.patch(
+            "data_set_manager.search_indexes.NodeIndex.update_object"
+        ) as update_object_mock:
+            dataset = self.process_csv('two-line-local.csv')
+
+        self.assert_expected_nodes(dataset, 2)
+        self.assertEqual(2, update_object_mock.call_count)
+
+
+class UpdateMissingAttributeOrderTests(TestMigrations):
+    migrate_from = '0004_auto_20171211_1145'
+    migrate_to = '0005_update_attribute_orders'
+
+    def setUpBeforeMigration(self, apps):
+        self.datasets_to_create = 3
+        for i in xrange(self.datasets_to_create):
+            create_dataset_with_necessary_models()
+
+        self.assertEqual(
+            0,
+            AttributeOrder.objects.filter(
+                solr_field=NodeIndex.DOWNLOAD_URL
+            ).count()
+        )
+
+    def test_attribute_orders_created(self):
+        self.assertEqual(
+            self.datasets_to_create,
+            AttributeOrder.objects.filter(
+                solr_field=NodeIndex.DOWNLOAD_URL
+            ).count()
+        )
+        for attribute_order in AttributeOrder.objects.all():
+            self.assertTrue(attribute_order.is_exposed)
+            self.assertTrue(attribute_order.is_active)
+            self.assertFalse(attribute_order.is_facet)
+            self.assertFalse(attribute_order.is_internal)
+            self.assertEqual(0, attribute_order.rank)
+            self.assertEqual(NodeIndex.DOWNLOAD_URL,
+                             attribute_order.solr_field)
