@@ -18,6 +18,7 @@ from django.http import QueryDict
 from django.test import LiveServerTestCase, TestCase
 
 from celery.states import PENDING, STARTED, SUCCESS
+from constants import NOT_AVAILABLE
 from djcelery.models import TaskMeta
 from guardian.shortcuts import assign_perm
 from haystack.exceptions import SkipDocument
@@ -2005,7 +2006,6 @@ class NodeIndexTests(APITestCase):
         self.file_store_item.datafile.delete()
         self.file_store_item.source = "http://www.example.com/test.txt"
         self.file_store_item.save()
-
         self._prepare_index(
             self.node,
             expected_download_url=self.file_store_item.get_datafile_url()
@@ -2019,7 +2019,7 @@ class NodeIndexTests(APITestCase):
                 "get_import_status",
                 return_value=SUCCESS
         ) as get_import_status_mock:
-            self._prepare_index(self.node, expected_download_url="N/A")
+            self._prepare_index(self.node, expected_download_url=NOT_AVAILABLE)
             self.assertTrue(get_import_status_mock.called)
 
     def test_prepare_node_pending_file_import_task(self):
@@ -2031,13 +2031,13 @@ class NodeIndexTests(APITestCase):
         self.file_store_item.delete()
         self._prepare_index(
             self.node,
-            expected_download_url="N/A",
+            expected_download_url=NOT_AVAILABLE,
             expected_filetype=""
         )
 
     def test_prepare_node_no_file_import_task(self):
         self.import_task.delete()
-        self._prepare_index(self.node, expected_download_url="N/A")
+        self._prepare_index(self.node, expected_download_url=NOT_AVAILABLE)
 
 
 @contextlib.contextmanager

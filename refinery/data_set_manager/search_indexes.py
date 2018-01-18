@@ -10,6 +10,7 @@ import re
 from django.conf import settings
 
 from celery.states import PENDING, SUCCESS
+from constants import NOT_AVAILABLE
 from djcelery.models import TaskMeta
 from haystack import indexes
 from haystack.exceptions import SkipDocument
@@ -127,7 +128,7 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
                 if value != "":
                     data[key].add(value)
                 else:
-                    data[key].add("N/A")
+                    data[key].add(NOT_AVAILABLE)
 
         # iterate over all keys in data and join sets into strings
         for key, value in data.iteritems():
@@ -142,7 +143,7 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
                FileStoreItem.MultipleObjectsReturned) as e:
             logger.error("Couldn't properly fetch FileStoreItem: %s", e)
             file_store_item = None
-            download_url = "N/A"
+            download_url = NOT_AVAILABLE
         else:
             download_url = file_store_item.get_datafile_url()
             if download_url is None:
@@ -173,13 +174,13 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
                 "" if file_store_item is None
                 else file_store_item.get_filetype(),
             NodeIndex.ANALYSIS_UUID_PREFIX + id_suffix:
-                "N/A" if object.get_analysis() is None
+                NOT_AVAILABLE if object.get_analysis() is None
                 else object.get_analysis().name,
             NodeIndex.SUBANALYSIS_PREFIX + id_suffix:
                 (-1 if object.subanalysis is None  # TODO: upgrade flake8
                  else object.subanalysis),         # and remove parentheses
             NodeIndex.WORKFLOW_OUTPUT_PREFIX + id_suffix:
-                "N/A" if object.workflow_output is None
+                NOT_AVAILABLE if object.workflow_output is None
                 else object.workflow_output
         })
 
