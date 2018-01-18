@@ -147,10 +147,13 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
         else:
             download_url = file_store_item.get_datafile_url()
             if download_url is None:
-                download_url = (
-                    "N/A" if file_store_item.get_import_status() == SUCCESS
-                    else PENDING
-                )
+                if file_store_item.get_import_status() == SUCCESS:
+                    download_url = NOT_AVAILABLE
+                    if file_store_item.source.startswith("s3://") and \
+                            file_store_item.datafile is None:
+                        download_url = NOT_AVAILABLE
+                else:
+                    download_url = PENDING
 
             # The underlying Celery code in FileStoreItem.get_import_status()
             # makes an assumption that a result is "probably" PENDING even
@@ -161,7 +164,7 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
             try:
                 TaskMeta.objects.get(task_id=file_store_item.import_task_id)
             except TaskMeta.DoesNotExist:
-                download_url = "N/A"
+                download_url = NOT_AVAILABLE
 
         data.update({
             NodeIndex.DOWNLOAD_URL:
