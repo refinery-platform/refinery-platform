@@ -5,11 +5,36 @@ Created on Nov 29, 2012
 '''
 
 from tastypie import fields
-from tastypie.constants import ALL
+from tastypie.constants import ALL, ALL_WITH_RELATIONS
 from tastypie.resources import ModelResource
 
-from .models import (Assay, Investigation, Node, Protocol, ProtocolReference,
-                     ProtocolReferenceParameter, Publication, Study)
+from .models import (Assay, Attribute, Investigation, Node, Protocol,
+                     ProtocolReference, ProtocolReferenceParameter,
+                     Publication, Study)
+
+
+class AttributeResource(ModelResource):
+    node = fields.ForeignKey('core.api.NodeResource', 'node', use_in='all')
+
+    class Meta:
+        queryset = Attribute.objects.all()
+        detail_uri_name = 'id'
+        allowed_methods = ['get']
+        resource_name = 'attributes'
+        include_resource_uri = False
+        filtering = {
+            'node': ALL_WITH_RELATIONS,
+            'type': ALL,
+            'value_accession': ALL,
+        }
+        fields = [
+            'subtype',
+            'type',
+            'value',
+            'value_accession',
+            'value_source',
+            'value_unit'
+        ]
 
 
 class InvestigationResource(ModelResource):
