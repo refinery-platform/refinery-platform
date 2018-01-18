@@ -18,6 +18,7 @@ from django.http import QueryDict
 from django.test import LiveServerTestCase, TestCase
 
 from celery.states import PENDING, STARTED, SUCCESS
+from djcelery.models import TaskMeta
 from guardian.shortcuts import assign_perm
 from haystack.exceptions import SkipDocument
 import mock
@@ -1904,7 +1905,11 @@ class NodeIndexTests(APITestCase):
                 content_type='text/plain',
                 size=len(test_file.getvalue()),
                 charset='utf-8'
-            )
+            ),
+            import_task_id=str(uuid.uuid4())
+        )
+        self.import_task = TaskMeta.objects.create(
+            task_id=self.file_store_item.import_task_id
         )
 
         self.node = Node.objects.create(
@@ -2029,6 +2034,10 @@ class NodeIndexTests(APITestCase):
             expected_download_url="N/A",
             expected_filetype=""
         )
+
+    def test_prepare_node_no_file_import_task(self):
+        self.import_task.delete()
+        self._prepare_index(self.node, expected_download_url="N/A")
 
 
 @contextlib.contextmanager
