@@ -181,14 +181,6 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
                                  "with UUID: %s", file_store_item.uuid)
                     download_url = PENDING
 
-                if (file_store_item.source.startswith("s3://") and
-                        not file_store_item.datafile.name):
-                    logger.debug(
-                        "No datafile for FileStoreItem with UUID: %s",
-                        file_store_item.uuid
-                    )
-                    download_url = NOT_AVAILABLE
-
         data.update({
             NodeIndex.DOWNLOAD_URL:
                 download_url,
