@@ -2042,6 +2042,13 @@ class NodeIndexTests(APITestCase):
         ):
             self._prepare_index(self.node, expected_download_url=NOT_AVAILABLE)
 
+    def test_prepare_node_no_file_import_task_id_yet(self):
+        self.file_store_item.datafile.delete()
+        self.file_store_item.import_task_id = ""
+        self.file_store_item.save()
+        self.import_task.delete()
+        self._prepare_index(self.node, expected_download_url=PENDING)
+
     def test_prepare_node_no_file_store_item(self):
         self.file_store_item.delete()
         self._prepare_index(
