@@ -241,6 +241,8 @@ def import_file(uuid, refresh=False, file_size=0):
 def update_solr_index(**kwargs):
     file_store_item_uuid = kwargs['result']
     try:
+        logger.debug("Fetching Node for FileStoreItem with UUID: %s",
+                     file_store_item_uuid)
         node = Node.objects.get(file_uuid=file_store_item_uuid)
     except (Node.DoesNotExist, Node.MultipleObjectsReturned) as exc:
         logger.error("Couldn't retrieve Node: %s", exc)
