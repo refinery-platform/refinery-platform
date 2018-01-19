@@ -192,7 +192,7 @@ class SharableResourceAPIInterface(object):
                 setattr(
                     res,
                     'owner',
-                    user_uuid if is_owner else None
+                    res.get_owner().profile.uuid
                 )
                 setattr(
                     res,
