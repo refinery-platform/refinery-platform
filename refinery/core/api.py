@@ -189,10 +189,11 @@ class SharableResourceAPIInterface(object):
             for res in res_list:
                 is_owner = res.id in owned_res_set
                 setattr(res, 'is_owner', is_owner)
+                owner = res.get_owner()
                 setattr(
                     res,
                     'owner',
-                    res.get_owner().profile.uuid
+                    owner.profile.uuid if owner is not None else owner
                 )
                 setattr(
                     res,
