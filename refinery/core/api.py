@@ -334,6 +334,7 @@ class SharableResourceAPIInterface(object):
 
             perm_obj = {
                 'owner': mod_res[0].owner,
+                'is_owner': mod_res[0].is_owner,
                 'share_list': mod_res[0].share_list,
                 'user_perms': user_perms
             }
