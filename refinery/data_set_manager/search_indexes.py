@@ -148,6 +148,11 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
             download_url = file_store_item.get_datafile_url()
             if download_url is None:
                 if file_store_item.import_task_id:
+                    logger.debug(
+                        "FileStoreItem with UUID: %s has import_task_id: %s",
+                        file_store_item.uuid,
+                        file_store_item.import_task_id
+                    )
                     # The underlying Celery code in
                     # FileStoreItem.get_import_status() makes an assumption
                     # that a result is "probably" PENDING even if it can't
@@ -163,14 +168,25 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
                                 task_id=file_store_item.import_task_id
                             )
                         except TaskMeta.DoesNotExist:
+                            logger.error(
+                                "No file_import task for FileStoreItem with "
+                                "UUID: %s",
+                                file_store_item.uuid
+                            )
                             download_url = NOT_AVAILABLE
                         else:
                             download_url = PENDING
                 else:
+                    logger.debug("No import_task_id for FileStoreItem with "
+                                 "UUID: %s", file_store_item.uuid)
                     download_url = PENDING
 
                 if (file_store_item.source.startswith("s3://") and
                         not file_store_item.datafile.name):
+                    logger.debug(
+                        "No datafile for FileStoreItem with UUID: %s",
+                        file_store_item.uuid
+                    )
                     download_url = NOT_AVAILABLE
 
         data.update({
