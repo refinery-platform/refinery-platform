@@ -160,12 +160,13 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
                     # https://github.com/celery/celery/blob/v3.1.20/celery/
                     # backends/amqp.py#L192-L193 So we double check here to
                     # make sure said assumption holds up
-                    try:
-                        TaskMeta.objects.get(
-                            task_id=file_store_item.import_task_id
-                        )
-                    except TaskMeta.DoesNotExist:
-                        download_url = NOT_AVAILABLE
+                    if file_store_item.import_task_id:
+                        try:
+                            TaskMeta.objects.get(
+                                task_id=file_store_item.import_task_id
+                            )
+                        except TaskMeta.DoesNotExist:
+                            download_url = NOT_AVAILABLE
 
         data.update({
             NodeIndex.DOWNLOAD_URL:
