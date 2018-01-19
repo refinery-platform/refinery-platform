@@ -113,7 +113,7 @@ def import_file(uuid, refresh=False, file_size=0):
                 logger.error("Failed to download '%s': %s", item.source, exc)
                 import_file.update_state(state=celery.states.FAILURE,
                                          meta='Failed to import uploaded file')
-                return None
+                return item.uuid
             logger.debug("Saving downloaded file '%s'", download.name)
             item.datafile.save(os.path.basename(key), File(download))
             logger.debug("Saved downloaded file to '%s'", item.datafile.name)
