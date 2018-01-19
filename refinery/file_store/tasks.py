@@ -245,6 +245,7 @@ def update_solr_index(**kwargs):
     except (Node.DoesNotExist, Node.MultipleObjectsReturned) as exc:
         logger.error("Couldn't retrieve Node: %s", exc)
     else:
+        logger.debug("Updating Solr index for Node with UUID: %s", node.uuid)
         NodeIndex().update_object(node, using="data_set_manager")
 
 
