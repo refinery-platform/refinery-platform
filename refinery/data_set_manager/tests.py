@@ -2008,24 +2008,39 @@ class NodeIndexTests(APITestCase):
         self.file_store_item.save()
         self._prepare_index(
             self.node,
-            expected_download_url=self.file_store_item.get_datafile_url()
+            expected_download_url=self.file_store_item.source
         )
 
     def test_prepare_node_missing_datafile(self):
         self.file_store_item.datafile.delete()
         self.file_store_item.save()
         with mock.patch.object(
-                FileStoreItem,
-                "get_import_status",
-                return_value=SUCCESS
+            FileStoreItem,
+            "get_import_status",
+            return_value=SUCCESS
         ) as get_import_status_mock:
             self._prepare_index(self.node, expected_download_url=NOT_AVAILABLE)
             self.assertTrue(get_import_status_mock.called)
 
-    def test_prepare_node_pending_file_import_task(self):
+    def test_prepare_node_pending_yet_existing_file_import_task(self):
         self.file_store_item.datafile.delete()
         self.file_store_item.save()
-        self._prepare_index(self.node, expected_download_url=PENDING)
+        with mock.patch.object(
+            FileStoreItem,
+            "get_import_status",
+            return_value=PENDING
+        ):
+            self._prepare_index(self.node, expected_download_url=PENDING)
+
+    def test_prepare_node_pending_non_existent_file_import_task(self):
+        self.import_task.delete()
+        self.file_store_item.datafile.delete()
+        with mock.patch.object(
+            FileStoreItem,
+            "get_import_status",
+            return_value=PENDING
+        ):
+            self._prepare_index(self.node, expected_download_url=NOT_AVAILABLE)
 
     def test_prepare_node_no_file_store_item(self):
         self.file_store_item.delete()
@@ -2034,10 +2049,6 @@ class NodeIndexTests(APITestCase):
             expected_download_url=NOT_AVAILABLE,
             expected_filetype=""
         )
-
-    def test_prepare_node_no_file_import_task(self):
-        self.import_task.delete()
-        self._prepare_index(self.node, expected_download_url=NOT_AVAILABLE)
 
     def test_prepare_node_s3_file_store_item_source_no_datafile(self):
         self.file_store_item.datafile.delete()
@@ -2050,7 +2061,7 @@ class NodeIndexTests(APITestCase):
         ):
             self._prepare_index(self.node, expected_download_url=NOT_AVAILABLE)
 
-    def test_prepare_node_s3_file_store_item_source(self):
+    def test_prepare_node_s3_file_store_item_source_with_datafile(self):
         self.file_store_item.source = "s3://test/test.txt"
         self.file_store_item.save()
         self._prepare_index(
