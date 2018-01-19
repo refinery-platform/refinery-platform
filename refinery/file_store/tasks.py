@@ -239,6 +239,9 @@ def import_file(uuid, refresh=False, file_size=0):
 
 @task_success.connect(sender=import_file)
 def update_solr_index(**kwargs):
+    # NOTE: Celery docs suggest to access these fields through kwargs as the
+    # structure of celery signal handlers changes often
+    # http://docs.celeryproject.org/en/3.1/userguide/signals.html#basics
     file_store_item_uuid = kwargs['result']
     try:
         logger.debug("Fetching Node for FileStoreItem with UUID: %s",
@@ -249,19 +252,6 @@ def update_solr_index(**kwargs):
     else:
         logger.debug("Updating Solr index for Node with UUID: %s", node.uuid)
         NodeIndex().update_object(node, using="data_set_manager")
-
-
-@task_success.connect(sender=import_file)
-def begin_auxiliary_node_generation(**kwargs):
-    # NOTE: Celery docs suggest to access these fields through kwargs as the
-    # structure of celery signal handlers changes often
-    # http://docs.celeryproject.org/en/3.1/userguide/signals.html#basics
-    file_store_item_uuid = kwargs['result']
-    try:
-        node = Node.objects.get(file_uuid=file_store_item_uuid)
-    except (Node.DoesNotExist, Node.MultipleObjectsReturned) as exc:
-        logger.error("Couldn't retrieve Node: %s", exc)
-    else:
         node.run_generate_auxiliary_node_task()
 
 
