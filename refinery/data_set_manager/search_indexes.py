@@ -153,16 +153,16 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
                         file_store_item.uuid,
                         file_store_item.import_task_id
                     )
-                    # The underlying Celery code in
-                    # FileStoreItem.get_import_status() makes an assumption
-                    # that a result is "probably" PENDING even if it can't
-                    # find an associated Task. See:
-                    # https://github.com/celery/celery/blob/v3.1.20/celery/
-                    # backends/amqp.py#L192-L193 So we double check here to
-                    # make sure said assumption holds up
                     if file_store_item.get_import_status() == SUCCESS:
                         download_url = NOT_AVAILABLE
                     else:
+                        # The underlying Celery code in
+                        # FileStoreItem.get_import_status() makes an assumption
+                        # that a result is "probably" PENDING even if it can't
+                        # find an associated Task. See:
+                        # https://github.com/celery/celery/blob/v3.1.20/celery/
+                        # backends/amqp.py#L192-L193 So we double check here to
+                        # make sure said assumption holds up
                         try:
                             TaskMeta.objects.get(
                                 task_id=file_store_item.import_task_id
