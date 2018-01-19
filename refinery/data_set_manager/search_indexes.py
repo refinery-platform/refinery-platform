@@ -168,7 +168,7 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
                                 task_id=file_store_item.import_task_id
                             )
                         except TaskMeta.DoesNotExist:
-                            logger.error(
+                            logger.debug(
                                 "No file_import task for FileStoreItem with "
                                 "UUID: %s",
                                 file_store_item.uuid
