@@ -2035,12 +2035,7 @@ class NodeIndexTests(APITestCase):
     def test_prepare_node_pending_non_existent_file_import_task(self):
         self.import_task.delete()
         self.file_store_item.datafile.delete()
-        with mock.patch.object(
-            FileStoreItem,
-            "get_import_status",
-            return_value=PENDING
-        ):
-            self._prepare_index(self.node, expected_download_url=NOT_AVAILABLE)
+        self._prepare_index(self.node, expected_download_url=NOT_AVAILABLE)
 
     def test_prepare_node_no_file_import_task_id_yet(self):
         self.file_store_item.datafile.delete()
