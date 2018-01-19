@@ -149,7 +149,7 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
             if download_url is None:
                 if (file_store_item.get_import_status() == SUCCESS or
                     file_store_item.source.startswith("s3://") and
-                        file_store_item.datafile is None):
+                        not file_store_item.datafile.name):
                     download_url = NOT_AVAILABLE
                 else:
                     download_url = PENDING
