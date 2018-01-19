@@ -9,7 +9,7 @@ import re
 
 from django.conf import settings
 
-from celery.states import PENDING, SUCCESS
+from celery.states import PENDING, SUCCESS, UNREADY_STATES
 from constants import NOT_AVAILABLE
 from djcelery.models import TaskMeta
 from haystack import indexes
@@ -147,10 +147,10 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
         else:
             download_url = file_store_item.get_datafile_url()
             if download_url is None:
-                if file_store_item.get_import_status() == SUCCESS:
+                import_status = file_store_item.get_import_status()
+                if import_status == SUCCESS:
                     download_url = NOT_AVAILABLE
-                else:
-                    download_url = PENDING
+                elif import_status in UNREADY_STATES:
                     # The underlying Celery code in
                     # FileStoreItem.get_import_status() makes an assumption
                     # that a result is "probably" PENDING even if it can't
@@ -165,10 +165,16 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
                             )
                         except TaskMeta.DoesNotExist:
                             download_url = NOT_AVAILABLE
+                        else:
+                            download_url = PENDING
+                    else:
+                        download_url = PENDING
 
                     if (file_store_item.source.startswith("s3://") and
                             not file_store_item.datafile.name):
                         download_url = NOT_AVAILABLE
+                else:
+                    download_url = NOT_AVAILABLE
 
         data.update({
             NodeIndex.DOWNLOAD_URL:
