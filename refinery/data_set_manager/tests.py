@@ -2305,6 +2305,15 @@ class SingleFileColumnParserTests(TestCase):
         self.assert_expected_nodes(dataset, 2)
         self.assertEqual(2, update_object_mock.call_count)
 
+    def test_reindex_triggered_for_s3_nodes_missing_datafiles(self):
+        with mock.patch(
+                "data_set_manager.search_indexes.NodeIndex.update_object"
+        ) as update_object_mock:
+            dataset = self.process_csv('two-line-s3.csv')
+
+        self.assert_expected_nodes(dataset, 2)
+        self.assertEqual(2, update_object_mock.call_count)
+
 
 class UpdateMissingAttributeOrderTests(TestMigrations):
     migrate_from = '0004_auto_20171211_1145'
