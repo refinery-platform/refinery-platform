@@ -2076,6 +2076,12 @@ class NodeIndexTests(APITestCase):
             expected_download_url=self.file_store_item.get_datafile_url()
         )
 
+    def test_prepare_node_s3_file_store_item_source_no_datafile_name(self):
+        self.file_store_item.datafile.name = u''
+        self.file_store_item.source = "s3://test/test.txt"
+        self.file_store_item.save()
+        self._prepare_index(self.node, expected_download_url=NOT_AVAILABLE)
+
 
 @contextlib.contextmanager
 def temporary_directory(*args, **kwargs):
