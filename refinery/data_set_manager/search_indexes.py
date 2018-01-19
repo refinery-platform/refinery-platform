@@ -147,9 +147,7 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
         else:
             download_url = file_store_item.get_datafile_url()
             if download_url is None:
-                if (file_store_item.get_import_status() == SUCCESS or
-                    file_store_item.source.startswith("s3://") and
-                        not file_store_item.datafile.name):
+                if file_store_item.get_import_status() == SUCCESS:
                     download_url = NOT_AVAILABLE
                 else:
                     download_url = PENDING
@@ -167,6 +165,10 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
                             )
                         except TaskMeta.DoesNotExist:
                             download_url = NOT_AVAILABLE
+
+                    if (file_store_item.source.startswith("s3://") and
+                            not file_store_item.datafile.name):
+                        download_url = NOT_AVAILABLE
 
         data.update({
             NodeIndex.DOWNLOAD_URL:
