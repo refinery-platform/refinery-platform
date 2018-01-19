@@ -177,8 +177,8 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
                         else:
                             download_url = PENDING
                 else:
-                    logger.debug("No import_task_id for FileStoreItem with "
-                                 "UUID: %s", file_store_item.uuid)
+                    logger.debug("No import_task_id yet for FileStoreItem "
+                                 "with UUID: %s", file_store_item.uuid)
                     download_url = PENDING
 
                 if (file_store_item.source.startswith("s3://") and
