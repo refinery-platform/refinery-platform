@@ -78,18 +78,18 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
             raise SkipDocument()
 
         try:
-            analysis_node_connection = \
-                core.models.AnalysisNodeConnection.objects.get(node=node)
+            core.models.AnalysisNodeConnection.objects.get(
+                node=node,
+                is_refinery_file=False,
+                direction=core.models.OUTPUT_CONNECTION
+            )
         except (core.models.AnalysisNodeConnection.DoesNotExist,
                 core.models.AnalysisNodeConnection.MultipleObjectsReturned):
             # Not all Nodes will have an AnalysisNodeConnection
             # and that's okay
             pass
         else:
-            if (not analysis_node_connection.is_refinery_file and
-                    analysis_node_connection.direction ==
-                    core.models.OUTPUT_CONNECTION):
-                raise SkipDocument()
+            raise SkipDocument()
 
     # dynamic fields:
     # https://groups.google.com/forum/?fromgroups#!topic/django-haystack/g39QjTkN-Yg
