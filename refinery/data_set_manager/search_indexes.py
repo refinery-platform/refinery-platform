@@ -10,9 +10,12 @@ import re
 from django.conf import settings
 
 from celery.states import PENDING, SUCCESS
+from constants import NOT_AVAILABLE
+from djcelery.models import TaskMeta
 from haystack import indexes
 from haystack.exceptions import SkipDocument
 
+import core
 from file_store.models import FileStoreItem
 
 from .models import AnnotatedNode, Assay, Node
@@ -69,32 +72,50 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
                     data[key].add(assay_attr)
         return data
 
+    @staticmethod
+    def _check_skip_indexing_conditions(node):
+        if node.type not in Node.INDEXED_FILES:
+            raise SkipDocument()
+
+        try:
+            core.models.AnalysisNodeConnection.objects.get(
+                node=node,
+                is_refinery_file=False,
+                direction=core.models.OUTPUT_CONNECTION
+            )
+        except (core.models.AnalysisNodeConnection.DoesNotExist,
+                core.models.AnalysisNodeConnection.MultipleObjectsReturned):
+            # Not all Nodes will have an AnalysisNodeConnection
+            # and that's okay
+            pass
+        else:
+            raise SkipDocument()
+
     # dynamic fields:
     # https://groups.google.com/forum/?fromgroups#!topic/django-haystack/g39QjTkN-Yg
     # http://stackoverflow.com/questions/7399871/django-haystack-sort-results-by-title
-    def prepare(self, object):
-        if object.type not in Node.INDEXED_FILES:
-            raise SkipDocument()
+    def prepare(self, node):
+        self._check_skip_indexing_conditions(node)
 
-        data = super(NodeIndex, self).prepare(object)
-        annotations = AnnotatedNode.objects.filter(node=object)
-        id_suffix = str(object.study.id)
+        data = super(NodeIndex, self).prepare(node)
+        annotations = AnnotatedNode.objects.filter(node=node)
+        id_suffix = str(node.study.id)
 
         try:
-            data_set = object.study.get_dataset()
+            data_set = node.study.get_dataset()
             data['data_set_uuid'] = data_set.uuid
         except RuntimeError as e:
             logger.warn(e)
 
-        if object.assay is not None:
-            id_suffix += "_" + str(object.assay.id)
+        if node.assay is not None:
+            id_suffix += "_" + str(node.assay.id)
 
         id_suffix = "_" + id_suffix + "_s"
 
         data['filename_Characteristics' + NodeIndex.GENERIC_SUFFIX] = \
             re.sub(r'.*/', '', data['name'])
 
-        data.update(self._assay_data(object))
+        data.update(self._assay_data(node))
 
         # create dynamic fields for each attribute
         for annotation in annotations:
@@ -126,7 +147,7 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
                 if value != "":
                     data[key].add(value)
                 else:
-                    data[key].add("N/A")
+                    data[key].add(NOT_AVAILABLE)
 
         # iterate over all keys in data and join sets into strings
         for key, value in data.iteritems():
@@ -135,40 +156,69 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
 
         try:
             file_store_item = FileStoreItem.objects.get(
-                uuid=object.file_uuid
+                uuid=node.file_uuid
             )
         except(FileStoreItem.DoesNotExist,
                FileStoreItem.MultipleObjectsReturned) as e:
             logger.error("Couldn't properly fetch FileStoreItem: %s", e)
             file_store_item = None
-            download_url = "N/A"
+            download_url = NOT_AVAILABLE
         else:
             download_url = file_store_item.get_datafile_url()
             if download_url is None:
-                download_url = (
-                    "N/A" if file_store_item.get_import_status() == SUCCESS
-                    else PENDING
-                )
+                if not file_store_item.import_task_id:
+                    logger.debug("No import_task_id yet for FileStoreItem "
+                                 "with UUID: %s", file_store_item.uuid)
+                    download_url = PENDING
+                else:
+                    logger.debug(
+                        "FileStoreItem with UUID: %s has import_task_id: %s",
+                        file_store_item.uuid,
+                        file_store_item.import_task_id
+                    )
+                    if file_store_item.get_import_status() == SUCCESS:
+                        download_url = NOT_AVAILABLE
+                    else:
+                        # The underlying Celery code in
+                        # FileStoreItem.get_import_status() makes an assumption
+                        # that a result is "probably" PENDING even if it can't
+                        # find an associated Task. See:
+                        # https://github.com/celery/celery/blob/v3.1.20/celery/
+                        # backends/amqp.py#L192-L193 So we double check here to
+                        # make sure said assumption holds up
+                        try:
+                            TaskMeta.objects.get(
+                                task_id=file_store_item.import_task_id
+                            )
+                        except TaskMeta.DoesNotExist:
+                            logger.debug(
+                                "No file_import task for FileStoreItem with "
+                                "UUID: %s",
+                                file_store_item.uuid
+                            )
+                            download_url = NOT_AVAILABLE
+                        else:
+                            download_url = PENDING
 
         data.update({
             NodeIndex.DOWNLOAD_URL:
                 download_url,
             NodeIndex.TYPE_PREFIX + id_suffix:
-                object.type,
+                node.type,
             NodeIndex.NAME_PREFIX + id_suffix:
-                object.name,
+                node.name,
             NodeIndex.FILETYPE_PREFIX + id_suffix:
                 "" if file_store_item is None
                 else file_store_item.get_filetype(),
             NodeIndex.ANALYSIS_UUID_PREFIX + id_suffix:
-                "N/A" if object.get_analysis() is None
-                else object.get_analysis().name,
+                NOT_AVAILABLE if node.get_analysis() is None
+                else node.get_analysis().name,
             NodeIndex.SUBANALYSIS_PREFIX + id_suffix:
-                (-1 if object.subanalysis is None  # TODO: upgrade flake8
-                 else object.subanalysis),         # and remove parentheses
+                (-1 if node.subanalysis is None  # TODO: upgrade flake8
+                 else node.subanalysis),         # and remove parentheses
             NodeIndex.WORKFLOW_OUTPUT_PREFIX + id_suffix:
-                "N/A" if object.workflow_output is None
-                else object.workflow_output
+                NOT_AVAILABLE if node.workflow_output is None
+                else node.workflow_output
         })
 
         return data

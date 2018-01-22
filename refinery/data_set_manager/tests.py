@@ -18,13 +18,17 @@ from django.http import QueryDict
 from django.test import LiveServerTestCase, TestCase
 
 from celery.states import PENDING, STARTED, SUCCESS
+from constants import NOT_AVAILABLE
+from djcelery.models import TaskMeta
 from guardian.shortcuts import assign_perm
 from haystack.exceptions import SkipDocument
 import mock
 from mock import ANY
 from rest_framework.test import APIClient, APIRequestFactory, APITestCase
 
-from core.models import Analysis, DataSet, ExtendedGroup, InvestigationLink
+from core.models import (INPUT_CONNECTION, OUTPUT_CONNECTION, Analysis,
+                         AnalysisNodeConnection, DataSet, ExtendedGroup,
+                         InvestigationLink)
 from core.tests import TestMigrations
 from core.views import NodeViewSet
 import data_set_manager
@@ -1904,7 +1908,11 @@ class NodeIndexTests(APITestCase):
                 content_type='text/plain',
                 size=len(test_file.getvalue()),
                 charset='utf-8'
-            )
+            ),
+            import_task_id=str(uuid.uuid4())
+        )
+        self.import_task = TaskMeta.objects.create(
+            task_id=self.file_store_item.import_task_id
         )
 
         self.node = Node.objects.create(
@@ -1931,8 +1939,7 @@ class NodeIndexTests(APITestCase):
         with self.assertRaises(SkipDocument):
             NodeIndex().prepare(self.node)
 
-    def _prepare_index(self, node, expected_download_url=None,
-                       expected_filetype=None):
+    def _prepare_node_index(self, node):
         data = NodeIndex().prepare(node)
         data = dict(
             (
@@ -1945,8 +1952,14 @@ class NodeIndexTests(APITestCase):
             )
             for (key, value) in data.items()
         )
+        return data
+
+    def _assert_node_index_prepared_correctly(self,
+                                              data_to_be_indexed,
+                                              expected_download_url=None,
+                                              expected_filetype=None):
         self.assertEqual(
-            data,
+            data_to_be_indexed,
             {
                 'REFINERY_ANALYSIS_UUID_#_#_s': 'N/A',
                 'REFINERY_DOWNLOAD_URL_s': expected_download_url,
@@ -1982,15 +1995,15 @@ class NodeIndexTests(APITestCase):
                 'workflow_output': None
             }
         )
-        return data
 
     def test_prepare_node_good_datafile(self):
-        index_data = self._prepare_index(
-            self.node,
+        data_to_be_indexed = self._prepare_node_index(self.node)
+        self._assert_node_index_prepared_correctly(
+            data_to_be_indexed,
             expected_download_url=self.file_store_item.get_datafile_url()
         )
         self.assertRegexpMatches(
-            index_data['REFINERY_DOWNLOAD_URL_s'],
+            data_to_be_indexed['REFINERY_DOWNLOAD_URL_s'],
             r'^http://example.com/media/file_store/.+/test_file.+txt$'
             # There may or may not be a suffix on "test_file",
             # depending on environment. Don't make it too strict!
@@ -2000,34 +2013,132 @@ class NodeIndexTests(APITestCase):
         self.file_store_item.datafile.delete()
         self.file_store_item.source = "http://www.example.com/test.txt"
         self.file_store_item.save()
-
-        self._prepare_index(
-            self.node,
-            expected_download_url=self.file_store_item.get_datafile_url()
+        self._assert_node_index_prepared_correctly(
+            self._prepare_node_index(self.node),
+            expected_download_url=self.file_store_item.source
         )
 
     def test_prepare_node_missing_datafile(self):
         self.file_store_item.datafile.delete()
         self.file_store_item.save()
         with mock.patch.object(
-                FileStoreItem,
-                "get_import_status",
-                return_value=SUCCESS
+            FileStoreItem,
+            "get_import_status",
+            return_value=SUCCESS
         ) as get_import_status_mock:
-            self._prepare_index(self.node, expected_download_url="N/A")
+            self._assert_node_index_prepared_correctly(
+                self._prepare_node_index(self.node),
+                expected_download_url=NOT_AVAILABLE
+            )
             self.assertTrue(get_import_status_mock.called)
 
-    def test_prepare_node_pending_file_import_task(self):
+    def test_prepare_node_pending_yet_existing_file_import_task(self):
         self.file_store_item.datafile.delete()
         self.file_store_item.save()
-        self._prepare_index(self.node, expected_download_url=PENDING)
+        with mock.patch.object(
+            FileStoreItem,
+            "get_import_status",
+            return_value=PENDING
+        ):
+            self._assert_node_index_prepared_correctly(
+                self._prepare_node_index(self.node),
+                expected_download_url=PENDING
+            )
+
+    def test_prepare_node_pending_non_existent_file_import_task(self):
+        self.import_task.delete()
+        self.file_store_item.datafile.delete()
+        self._assert_node_index_prepared_correctly(
+            self._prepare_node_index(self.node),
+            expected_download_url=NOT_AVAILABLE
+        )
+
+    def test_prepare_node_no_file_import_task_id_yet(self):
+        self.file_store_item.datafile.delete()
+        self.file_store_item.import_task_id = ""
+        self.file_store_item.save()
+        self.import_task.delete()
+        self._assert_node_index_prepared_correctly(
+            self._prepare_node_index(self.node),
+            expected_download_url=PENDING
+        )
 
     def test_prepare_node_no_file_store_item(self):
         self.file_store_item.delete()
-        self._prepare_index(
-            self.node,
-            expected_download_url="N/A",
+        self._assert_node_index_prepared_correctly(
+            self._prepare_node_index(self.node),
+            expected_download_url=NOT_AVAILABLE,
             expected_filetype=""
+        )
+
+    def test_prepare_node_s3_file_store_item_source_no_datafile(self):
+        self.file_store_item.datafile.delete()
+        self.file_store_item.source = "s3://test/test.txt"
+        self.file_store_item.save()
+        with mock.patch.object(
+            FileStoreItem,
+            "get_import_status",
+            return_value=SUCCESS
+        ):
+            self._assert_node_index_prepared_correctly(
+                self._prepare_node_index(self.node),
+                expected_download_url=NOT_AVAILABLE
+            )
+
+    def test_prepare_node_s3_file_store_item_source_with_datafile(self):
+        self.file_store_item.source = "s3://test/test.txt"
+        self.file_store_item.save()
+        self._assert_node_index_prepared_correctly(
+            self._prepare_node_index(self.node),
+            expected_download_url=self.file_store_item.get_datafile_url()
+        )
+
+    def _create_analysis_node_connection(self, direction, is_refinery_file):
+        user = User.objects.create_user("test", "", "test")
+        make_analyses_with_single_dataset(1, user)
+
+        AnalysisNodeConnection.objects.create(
+            analysis=Analysis.objects.first(),
+            node=self.node,
+            direction=direction,
+            step=1,
+            name="{} Analysis Node Connection".format(direction),
+            filename="test.txt",
+            is_refinery_file=is_refinery_file
+        )
+
+    def test_prepare_node_with_non_exposed_input_node_connection_isnt_skipped(
+            self
+    ):
+        self._create_analysis_node_connection(INPUT_CONNECTION, False)
+        self._assert_node_index_prepared_correctly(
+            self._prepare_node_index(self.node),
+            expected_download_url=self.file_store_item.get_datafile_url()
+        )
+
+    def test_prepare_node_with_exposed_input_node_connection_isnt_skipped(
+            self
+    ):
+        self._create_analysis_node_connection(INPUT_CONNECTION, True)
+        self._assert_node_index_prepared_correctly(
+            self._prepare_node_index(self.node),
+            expected_download_url=self.file_store_item.get_datafile_url()
+        )
+
+    def test_prepare_node_with_non_exposed_output_node_connection_is_skipped(
+            self
+    ):
+        self._create_analysis_node_connection(OUTPUT_CONNECTION, False)
+        with self.assertRaises(SkipDocument):
+            self._prepare_node_index(self.node)
+
+    def test_prepare_node_with_exposed_output_node_connection_isnt_skipped(
+        self
+    ):
+        self._create_analysis_node_connection(OUTPUT_CONNECTION, True)
+        self._assert_node_index_prepared_correctly(
+            self._prepare_node_index(self.node),
+            expected_download_url=self.file_store_item.get_datafile_url()
         )
 
 
@@ -2260,6 +2371,15 @@ class SingleFileColumnParserTests(TestCase):
             "data_set_manager.search_indexes.NodeIndex.update_object"
         ) as update_object_mock:
             dataset = self.process_csv('two-line-local.csv')
+
+        self.assert_expected_nodes(dataset, 2)
+        self.assertEqual(2, update_object_mock.call_count)
+
+    def test_reindex_triggered_for_s3_nodes_missing_datafiles(self):
+        with mock.patch(
+                "data_set_manager.search_indexes.NodeIndex.update_object"
+        ) as update_object_mock:
+            dataset = self.process_csv('two-line-s3.csv')
 
         self.assert_expected_nodes(dataset, 2)
         self.assertEqual(2, update_object_mock.call_count)

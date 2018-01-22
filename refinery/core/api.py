@@ -189,10 +189,11 @@ class SharableResourceAPIInterface(object):
             for res in res_list:
                 is_owner = res.id in owned_res_set
                 setattr(res, 'is_owner', is_owner)
+                owner = res.get_owner()
                 setattr(
                     res,
                     'owner',
-                    user_uuid if is_owner else None
+                    owner.profile.uuid if owner is not None else owner
                 )
                 setattr(
                     res,
@@ -333,6 +334,7 @@ class SharableResourceAPIInterface(object):
 
             perm_obj = {
                 'owner': mod_res[0].owner,
+                'is_owner': mod_res[0].is_owner,
                 'share_list': mod_res[0].share_list,
                 'user_perms': user_perms
             }
