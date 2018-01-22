@@ -94,28 +94,28 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
     # dynamic fields:
     # https://groups.google.com/forum/?fromgroups#!topic/django-haystack/g39QjTkN-Yg
     # http://stackoverflow.com/questions/7399871/django-haystack-sort-results-by-title
-    def prepare(self, object):
-        self._check_skip_indexing_conditions(object)
+    def prepare(self, node):
+        self._check_skip_indexing_conditions(node)
 
-        data = super(NodeIndex, self).prepare(object)
-        annotations = AnnotatedNode.objects.filter(node=object)
-        id_suffix = str(object.study.id)
+        data = super(NodeIndex, self).prepare(node)
+        annotations = AnnotatedNode.objects.filter(node=node)
+        id_suffix = str(node.study.id)
 
         try:
-            data_set = object.study.get_dataset()
+            data_set = node.study.get_dataset()
             data['data_set_uuid'] = data_set.uuid
         except RuntimeError as e:
             logger.warn(e)
 
-        if object.assay is not None:
-            id_suffix += "_" + str(object.assay.id)
+        if node.assay is not None:
+            id_suffix += "_" + str(node.assay.id)
 
         id_suffix = "_" + id_suffix + "_s"
 
         data['filename_Characteristics' + NodeIndex.GENERIC_SUFFIX] = \
             re.sub(r'.*/', '', data['name'])
 
-        data.update(self._assay_data(object))
+        data.update(self._assay_data(node))
 
         # create dynamic fields for each attribute
         for annotation in annotations:
@@ -156,7 +156,7 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
 
         try:
             file_store_item = FileStoreItem.objects.get(
-                uuid=object.file_uuid
+                uuid=node.file_uuid
             )
         except(FileStoreItem.DoesNotExist,
                FileStoreItem.MultipleObjectsReturned) as e:
@@ -204,21 +204,21 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
             NodeIndex.DOWNLOAD_URL:
                 download_url,
             NodeIndex.TYPE_PREFIX + id_suffix:
-                object.type,
+                node.type,
             NodeIndex.NAME_PREFIX + id_suffix:
-                object.name,
+                node.name,
             NodeIndex.FILETYPE_PREFIX + id_suffix:
                 "" if file_store_item is None
                 else file_store_item.get_filetype(),
             NodeIndex.ANALYSIS_UUID_PREFIX + id_suffix:
-                NOT_AVAILABLE if object.get_analysis() is None
-                else object.get_analysis().name,
+                NOT_AVAILABLE if node.get_analysis() is None
+                else node.get_analysis().name,
             NodeIndex.SUBANALYSIS_PREFIX + id_suffix:
-                (-1 if object.subanalysis is None  # TODO: upgrade flake8
-                 else object.subanalysis),         # and remove parentheses
+                (-1 if node.subanalysis is None  # TODO: upgrade flake8
+                 else node.subanalysis),         # and remove parentheses
             NodeIndex.WORKFLOW_OUTPUT_PREFIX + id_suffix:
-                NOT_AVAILABLE if object.workflow_output is None
-                else object.workflow_output
+                NOT_AVAILABLE if node.workflow_output is None
+                else node.workflow_output
         })
 
         return data
