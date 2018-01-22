@@ -26,7 +26,9 @@ import mock
 from mock import ANY
 from rest_framework.test import APIClient, APIRequestFactory, APITestCase
 
-from core.models import Analysis, DataSet, ExtendedGroup, InvestigationLink
+from core.models import (INPUT_CONNECTION, OUTPUT_CONNECTION, Analysis,
+                         AnalysisNodeConnection, DataSet, ExtendedGroup,
+                         InvestigationLink)
 from core.tests import TestMigrations
 from core.views import NodeViewSet
 import data_set_manager
@@ -2082,6 +2084,59 @@ class NodeIndexTests(APITestCase):
     def test_prepare_node_s3_file_store_item_source_with_datafile(self):
         self.file_store_item.source = "s3://test/test.txt"
         self.file_store_item.save()
+        self._assert_valid_node_index_preparation(
+            self.node,
+            expected_download_url=self.file_store_item.get_datafile_url()
+        )
+
+    def _create_analysis_node_connection(self, direction=OUTPUT_CONNECTION,
+                                         is_refinery_file=True):
+        make_analyses_with_single_dataset(
+            1,
+            User.objects.create_user("test", "", "test")
+        )
+        AnalysisNodeConnection.objects.create(
+            analysis=Analysis.objects.first(),
+            node=self.node,
+            direction=direction,
+            step=1,
+            name="{} Analysis Node Connection".format(direction),
+            filename="test.txt",
+            is_refinery_file=is_refinery_file
+        )
+
+    def test_prepare_node_with_non_exposed_input_node_connection_isnt_skipped(
+            self
+    ):
+        self._create_analysis_node_connection(
+            direction=INPUT_CONNECTION,
+            is_refinery_file=False
+        )
+        self._assert_valid_node_index_preparation(
+            self.node,
+            expected_download_url=self.file_store_item.get_datafile_url()
+        )
+
+    def test_prepare_node_with_exposed_input_node_connection_isnt_skipped(
+            self
+    ):
+        self._create_analysis_node_connection(direction=INPUT_CONNECTION)
+        self._assert_valid_node_index_preparation(
+            self.node,
+            expected_download_url=self.file_store_item.get_datafile_url()
+        )
+
+    def test_prepare_node_with_non_exposed_output_node_connection_is_skipped(
+        self
+    ):
+        self._create_analysis_node_connection(is_refinery_file=False)
+        with self.assertRaises(SkipDocument):
+            self._assert_valid_node_index_preparation(self.node)
+
+    def test_prepare_node_with_exposed_output_node_connection_isnt_skipped(
+            self
+    ):
+        self._create_analysis_node_connection()
         self._assert_valid_node_index_preparation(
             self.node,
             expected_download_url=self.file_store_item.get_datafile_url()
