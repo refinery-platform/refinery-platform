@@ -2091,10 +2091,9 @@ class NodeIndexTests(APITestCase):
 
     def _create_analysis_node_connection(self, direction=OUTPUT_CONNECTION,
                                          is_refinery_file=True):
-        make_analyses_with_single_dataset(
-            1,
-            User.objects.create_user("test", "", "test")
-        )
+        user = User.objects.create_user("test", "", "test")
+        make_analyses_with_single_dataset(1, user)
+
         AnalysisNodeConnection.objects.create(
             analysis=Analysis.objects.first(),
             node=self.node,
@@ -2127,14 +2126,14 @@ class NodeIndexTests(APITestCase):
         )
 
     def test_prepare_node_with_non_exposed_output_node_connection_is_skipped(
-        self
+            self
     ):
         self._create_analysis_node_connection(is_refinery_file=False)
         with self.assertRaises(SkipDocument):
             self._assert_valid_node_index_preparation(self.node)
 
     def test_prepare_node_with_exposed_output_node_connection_isnt_skipped(
-            self
+        self
     ):
         self._create_analysis_node_connection()
         self._assert_valid_node_index_preparation(
