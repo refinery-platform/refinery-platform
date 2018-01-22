@@ -12,7 +12,7 @@ function AboutSharingCtrl (
   var vm = this;
   vm.dataSetSharing = dataSetPermsService.dataSetSharing;
   vm.groupList = dataSetPermsService.groupList;
-  vm.ownerName = '';
+  vm.ownerName = dataSetPermsService.ownerName;
 
   vm.refreshDataSetSharing = function () {
     var dataSetUuid = $window.dataSetUuid;
@@ -31,10 +31,11 @@ function AboutSharingCtrl (
   vm.refreshOwnerName = function (userUuid) {
     userService.get(userUuid).then(function (response) {
       if (_.has(response, 'fullName') && response.fullName) {
-        vm.ownerName = response.fullName;
+        dataSetPermsService.ownerName = response.fullName;
       } else if (_.has(response, 'userName') && response.userName) {
-        vm.ownerName = response.userName;
+        dataSetPermsService.ownerName = response.userName;
       }
+      vm.ownerName = dataSetPermsService.ownerName;
     });
   };
 
