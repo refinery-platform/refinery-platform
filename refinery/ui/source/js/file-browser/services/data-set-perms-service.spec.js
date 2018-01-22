@@ -25,6 +25,7 @@
       expect(factory.dataSetSharing).toEqual({});
       expect(factory.groupList).toEqual([]);
       expect(factory.owner).toEqual('');
+      expect(factory.ownerName).toEqual('');
     });
 
     describe('refreshDataSetPerms', function () {
