@@ -147,7 +147,11 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
         else:
             download_url = file_store_item.get_datafile_url()
             if download_url is None:
-                if file_store_item.import_task_id:
+                if not file_store_item.import_task_id:
+                    logger.debug("No import_task_id yet for FileStoreItem "
+                                 "with UUID: %s", file_store_item.uuid)
+                    download_url = PENDING
+                else:
                     logger.debug(
                         "FileStoreItem with UUID: %s has import_task_id: %s",
                         file_store_item.uuid,
@@ -176,10 +180,6 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
                             download_url = NOT_AVAILABLE
                         else:
                             download_url = PENDING
-                else:
-                    logger.debug("No import_task_id yet for FileStoreItem "
-                                 "with UUID: %s", file_store_item.uuid)
-                    download_url = PENDING
 
         data.update({
             NodeIndex.DOWNLOAD_URL:
