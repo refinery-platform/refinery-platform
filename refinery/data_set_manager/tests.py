@@ -1939,9 +1939,7 @@ class NodeIndexTests(APITestCase):
         with self.assertRaises(SkipDocument):
             NodeIndex().prepare(self.node)
 
-    def _assert_valid_node_index_preparation(self,
-                                             node, expected_download_url=None,
-                                             expected_filetype=None):
+    def _prepare_node_index(self, node):
         data = NodeIndex().prepare(node)
         data = dict(
             (
@@ -1954,8 +1952,14 @@ class NodeIndexTests(APITestCase):
             )
             for (key, value) in data.items()
         )
+        return data
+
+    def _assert_node_index_prepared_correctly(self,
+                                              data_to_be_indexed,
+                                              expected_download_url=None,
+                                              expected_filetype=None):
         self.assertEqual(
-            data,
+            data_to_be_indexed,
             {
                 'REFINERY_ANALYSIS_UUID_#_#_s': 'N/A',
                 'REFINERY_DOWNLOAD_URL_s': expected_download_url,
@@ -1991,15 +1995,15 @@ class NodeIndexTests(APITestCase):
                 'workflow_output': None
             }
         )
-        return data
 
     def test_prepare_node_good_datafile(self):
-        index_data = self._assert_valid_node_index_preparation(
-            self.node,
+        data_to_be_indexed = self._prepare_node_index(self.node)
+        self._assert_node_index_prepared_correctly(
+            data_to_be_indexed,
             expected_download_url=self.file_store_item.get_datafile_url()
         )
         self.assertRegexpMatches(
-            index_data['REFINERY_DOWNLOAD_URL_s'],
+            data_to_be_indexed['REFINERY_DOWNLOAD_URL_s'],
             r'^http://example.com/media/file_store/.+/test_file.+txt$'
             # There may or may not be a suffix on "test_file",
             # depending on environment. Don't make it too strict!
@@ -2009,8 +2013,8 @@ class NodeIndexTests(APITestCase):
         self.file_store_item.datafile.delete()
         self.file_store_item.source = "http://www.example.com/test.txt"
         self.file_store_item.save()
-        self._assert_valid_node_index_preparation(
-            self.node,
+        self._assert_node_index_prepared_correctly(
+            self._prepare_node_index(self.node),
             expected_download_url=self.file_store_item.source
         )
 
@@ -2022,8 +2026,8 @@ class NodeIndexTests(APITestCase):
             "get_import_status",
             return_value=SUCCESS
         ) as get_import_status_mock:
-            self._assert_valid_node_index_preparation(
-                self.node,
+            self._assert_node_index_prepared_correctly(
+                self._prepare_node_index(self.node),
                 expected_download_url=NOT_AVAILABLE
             )
             self.assertTrue(get_import_status_mock.called)
@@ -2036,16 +2040,16 @@ class NodeIndexTests(APITestCase):
             "get_import_status",
             return_value=PENDING
         ):
-            self._assert_valid_node_index_preparation(
-                self.node,
+            self._assert_node_index_prepared_correctly(
+                self._prepare_node_index(self.node),
                 expected_download_url=PENDING
             )
 
     def test_prepare_node_pending_non_existent_file_import_task(self):
         self.import_task.delete()
         self.file_store_item.datafile.delete()
-        self._assert_valid_node_index_preparation(
-            self.node,
+        self._assert_node_index_prepared_correctly(
+            self._prepare_node_index(self.node),
             expected_download_url=NOT_AVAILABLE
         )
 
@@ -2054,15 +2058,15 @@ class NodeIndexTests(APITestCase):
         self.file_store_item.import_task_id = ""
         self.file_store_item.save()
         self.import_task.delete()
-        self._assert_valid_node_index_preparation(
-            self.node,
+        self._assert_node_index_prepared_correctly(
+            self._prepare_node_index(self.node),
             expected_download_url=PENDING
         )
 
     def test_prepare_node_no_file_store_item(self):
         self.file_store_item.delete()
-        self._assert_valid_node_index_preparation(
-            self.node,
+        self._assert_node_index_prepared_correctly(
+            self._prepare_node_index(self.node),
             expected_download_url=NOT_AVAILABLE,
             expected_filetype=""
         )
@@ -2076,21 +2080,20 @@ class NodeIndexTests(APITestCase):
             "get_import_status",
             return_value=SUCCESS
         ):
-            self._assert_valid_node_index_preparation(
-                self.node,
+            self._assert_node_index_prepared_correctly(
+                self._prepare_node_index(self.node),
                 expected_download_url=NOT_AVAILABLE
             )
 
     def test_prepare_node_s3_file_store_item_source_with_datafile(self):
         self.file_store_item.source = "s3://test/test.txt"
         self.file_store_item.save()
-        self._assert_valid_node_index_preparation(
-            self.node,
+        self._assert_node_index_prepared_correctly(
+            self._prepare_node_index(self.node),
             expected_download_url=self.file_store_item.get_datafile_url()
         )
 
-    def _create_analysis_node_connection(self, direction=OUTPUT_CONNECTION,
-                                         is_refinery_file=True):
+    def _create_analysis_node_connection(self, direction, is_refinery_file):
         user = User.objects.create_user("test", "", "test")
         make_analyses_with_single_dataset(1, user)
 
@@ -2107,37 +2110,34 @@ class NodeIndexTests(APITestCase):
     def test_prepare_node_with_non_exposed_input_node_connection_isnt_skipped(
             self
     ):
-        self._create_analysis_node_connection(
-            direction=INPUT_CONNECTION,
-            is_refinery_file=False
-        )
-        self._assert_valid_node_index_preparation(
-            self.node,
+        self._create_analysis_node_connection(INPUT_CONNECTION, False)
+        self._assert_node_index_prepared_correctly(
+            self._prepare_node_index(self.node),
             expected_download_url=self.file_store_item.get_datafile_url()
         )
 
     def test_prepare_node_with_exposed_input_node_connection_isnt_skipped(
             self
     ):
-        self._create_analysis_node_connection(direction=INPUT_CONNECTION)
-        self._assert_valid_node_index_preparation(
-            self.node,
+        self._create_analysis_node_connection(INPUT_CONNECTION, True)
+        self._assert_node_index_prepared_correctly(
+            self._prepare_node_index(self.node),
             expected_download_url=self.file_store_item.get_datafile_url()
         )
 
     def test_prepare_node_with_non_exposed_output_node_connection_is_skipped(
             self
     ):
-        self._create_analysis_node_connection(is_refinery_file=False)
+        self._create_analysis_node_connection(OUTPUT_CONNECTION, False)
         with self.assertRaises(SkipDocument):
-            self._assert_valid_node_index_preparation(self.node)
+            self._prepare_node_index(self.node)
 
     def test_prepare_node_with_exposed_output_node_connection_isnt_skipped(
         self
     ):
-        self._create_analysis_node_connection()
-        self._assert_valid_node_index_preparation(
-            self.node,
+        self._create_analysis_node_connection(OUTPUT_CONNECTION, True)
+        self._assert_node_index_prepared_correctly(
+            self._prepare_node_index(self.node),
             expected_download_url=self.file_store_item.get_datafile_url()
         )
 
