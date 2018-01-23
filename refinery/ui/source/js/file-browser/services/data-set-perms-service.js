@@ -12,6 +12,7 @@
     vm.dataSetSharing = {};
     vm.groupList = [];
     vm.owner = '';
+    vm.ownerName = '';
     vm.getDataSetSharing = getDataSetSharing;
     vm.userPerms = 'none';
 

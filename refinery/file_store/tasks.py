@@ -113,7 +113,7 @@ def import_file(uuid, refresh=False, file_size=0):
                 logger.error("Failed to download '%s': %s", item.source, exc)
                 import_file.update_state(state=celery.states.FAILURE,
                                          meta='Failed to import uploaded file')
-                return None
+                return item.uuid
             logger.debug("Saving downloaded file '%s'", download.name)
             item.datafile.save(os.path.basename(key), File(download))
             logger.debug("Saved downloaded file to '%s'", item.datafile.name)
@@ -239,12 +239,18 @@ def import_file(uuid, refresh=False, file_size=0):
 
 @task_success.connect(sender=import_file)
 def update_solr_index(**kwargs):
+    # NOTE: Celery docs suggest to access these fields through kwargs as the
+    # structure of celery signal handlers changes often
+    # http://docs.celeryproject.org/en/3.1/userguide/signals.html#basics
     file_store_item_uuid = kwargs['result']
     try:
+        logger.debug("Fetching Node for FileStoreItem with UUID: %s",
+                     file_store_item_uuid)
         node = Node.objects.get(file_uuid=file_store_item_uuid)
     except (Node.DoesNotExist, Node.MultipleObjectsReturned) as exc:
         logger.error("Couldn't retrieve Node: %s", exc)
     else:
+        logger.debug("Updating Solr index for Node with UUID: %s", node.uuid)
         NodeIndex().update_object(node, using="data_set_manager")
 
 

@@ -18,8 +18,8 @@ from core.forms import RegistrationFormWithCustomFields
 from core.models import AuthenticationFormUsernameOrEmail
 from core.urls import core_router
 from core.views import CustomRegistrationView
-from data_set_manager.api import (AssayResource, AttributeOrderResource,
-                                  AttributeResource, InvestigationResource,
+from data_set_manager.api import (AssayResource, AttributeResource,
+                                  InvestigationResource,
                                   ProtocolReferenceParameterResource,
                                   ProtocolReferenceResource, ProtocolResource,
                                   PublicationResource, StudyResource)
@@ -39,7 +39,6 @@ v1_api.register(ProjectResource())
 v1_api.register(StudyResource())
 v1_api.register(AssayResource())
 v1_api.register(DataSetResource())
-v1_api.register(AttributeOrderResource())
 v1_api.register(NodeResource())
 v1_api.register(WorkflowResource())
 v1_api.register(WorkflowInputRelationshipsResource())

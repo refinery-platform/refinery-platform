@@ -47,10 +47,6 @@ class Command(BaseCommand):
                     help='base path of your data file paths if using relative '
                          'locations'
                     ),
-        make_option('--slug', action='store', type='string', default=None,
-                    help='shortcut name for dataset URL; can only contain '
-                         'alpha-numeric characters and \'_\''
-                    ),
         make_option('--species_column', action='store', type='int',
                     default=None,
                     help='column containing species names or ids'
@@ -97,7 +93,7 @@ class Command(BaseCommand):
                     species_column=options['species_column'],
                     genome_build_column=options['genome_build_column'],
                     annotation_column=options['annotation_column'],
-                    slug=options['slug'], is_public=options['is_public'])
+                    is_public=options['is_public'])
         except IOError as exc:
             raise CommandError("Could not open file '%s': %s" %
                                options['file_name'], exc)

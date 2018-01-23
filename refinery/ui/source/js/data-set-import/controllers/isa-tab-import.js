@@ -17,6 +17,11 @@
     this.isaTabImportApi = isaTabImportApi;
     this.settings = settings;
     this.showFileUpload = false;
+
+    // Helper method to exit out of error alert
+    this.closeError = function () {
+      this.isErrored = false;
+    };
   }
 
   Object.defineProperty(
