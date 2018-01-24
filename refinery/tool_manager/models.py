@@ -15,10 +15,12 @@ from bioblend.galaxy.dataset_collections import (CollectionDescription,
                                                  CollectionElement,
                                                  HistoryDatasetElement)
 from constants import UUID_RE
+from django_docker_engine.container_managers.docker_engine import \
+    ExpectedPortMissing
 from django_docker_engine.docker_utils import (DockerClientWrapper,
                                                DockerContainerSpec)
 from django_extensions.db.fields import UUIDField
-from docker.errors import APIError
+from docker.errors import APIError, NotFound
 
 from analysis_manager.models import AnalysisStatus
 from analysis_manager.tasks import (_galaxy_file_import, get_taskset_result,
@@ -26,7 +28,7 @@ from analysis_manager.tasks import (_galaxy_file_import, get_taskset_result,
 from analysis_manager.utils import create_analysis, validate_analysis_config
 from core.models import (INPUT_CONNECTION, OUTPUT_CONNECTION, Analysis,
                          AnalysisNodeConnection, DataSet, OwnableResource,
-                         Workflow, WorkflowFilesDL)
+                         Workflow)
 from data_set_manager.models import Node
 from data_set_manager.utils import (get_file_url_from_node_uuid,
                                     get_solr_response_json)
@@ -82,12 +84,15 @@ class Parameter(models.Model):
 
     def cast_param_value_to_proper_type(self, parameter_value):
         """Parameter values from the Tool Launch Configuration are all
-        strings, but the invocation of Galaxy workflows expects these values
+        strings, but the invocation of Tools expect these values
         to be of a certain type."""
         if self.value_type in self.STRING_TYPES:
             return str(parameter_value)
         elif self.value_type == self.BOOLEAN:
-            return bool(parameter_value)
+            if type(parameter_value) == bool:
+                return parameter_value
+            else:
+                return parameter_value.lower() == "true"
         elif self.value_type == self.INTEGER:
             return int(parameter_value)
         elif self.value_type == self.FLOAT:
@@ -159,7 +164,7 @@ class ToolDefinition(models.Model):
     Visualizations, Other) will need to know about their expected inputs,
     outputs, and input file structuring.
     """
-
+    EXTRA_DIRECTORIES = "extra_directories"
     PARAMETERS = "parameters"
     WORKFLOW = 'WORKFLOW'
     VISUALIZATION = 'VISUALIZATION'
@@ -204,14 +209,16 @@ class ToolDefinition(models.Model):
         """
         if self.tool_type == ToolDefinition.VISUALIZATION:
             try:
-                return self.get_annotation()["extra_directories"]
+                return self.get_annotation()[self.EXTRA_DIRECTORIES]
             except KeyError:
                 logger.error("ToolDefinition: %s's annotation is missing its "
-                             "`extra_directories` key.", self.name)
+                             "`%s` key.", self.name, self.EXTRA_DIRECTORIES)
                 raise
         else:
             raise NotImplementedError(
-                "Workflow-based tools don't utilize `extra_directories`"
+                "Workflow-based tools don't utilize `{}`".format(
+                    self.EXTRA_DIRECTORIES
+                )
             )
 
     def get_parameters(self):
@@ -266,11 +273,6 @@ def delete_input_files_and_file_relationships(sender, instance, *args,
         file_relationship.delete()
 
 
-class ToolManager(models.Manager):
-    def get_query_set(self):
-        return VisualizationTool.objects.all() | WorkflowTool.objects.all()
-
-
 class Tool(OwnableResource):
     """
     A Tool is a representation of the information it will take to launch
@@ -302,6 +304,22 @@ class Tool(OwnableResource):
 
     def __str__(self):
         return "Tool: {}".format(self.get_tool_name())
+
+    @property
+    def _django_docker_client(self):
+        return DockerClientWrapper(settings.DJANGO_DOCKER_ENGINE_DATA_DIR)
+
+    @property
+    def relaunch_url(self):
+        return "/api/v2/tools/{}/relaunch/".format(self.uuid)
+
+    def _get_owner_info_as_dict(self):
+        user = self.get_owner()
+        return {
+            "username": user.username,
+            "full_name": "{} {}".format(user.first_name, user.last_name),
+            "user_profile_uuid": user.profile.uuid
+        }
 
     def get_input_file_uuid_list(self):
         # Tools can't be created without the `file_uuid_list` existing so no
@@ -400,6 +418,33 @@ class Tool(OwnableResource):
             )
         self.set_tool_launch_config(tool_launch_config)
 
+    def is_running(self):
+        if self.is_workflow():
+            return self.analysis.running()
+
+        try:
+            self._django_docker_client.lookup_container_url(
+                self.container_name
+            )
+            return True
+        except (ExpectedPortMissing, NotFound):
+            return False
+
+    def is_visualization(self):
+        return self.get_tool_type() == ToolDefinition.VISUALIZATION
+
+    def is_workflow(self):
+        return self.get_tool_type() == ToolDefinition.WORKFLOW
+
+    def get_relative_container_url(self):
+        """
+        Construct & return the relative url of our Tool's container
+        """
+        return "/{}/{}".format(
+            settings.DJANGO_DOCKER_ENGINE_BASE_URL,
+            self.container_name
+        )
+
 
 class VisualizationToolError(StandardError):
     pass
@@ -410,6 +455,7 @@ class VisualizationTool(Tool):
     VisualizationTools are Tools that are specific to
     launching and monitoring Dockerized visualizations
     """
+    API_PREFIX = "api_prefix"
     FILE_URL = "file_url"
     NODE_INFORMATION = "node_info"
     NODE_SOLR_INFO = "node_solr_info"
@@ -426,10 +472,18 @@ class VisualizationTool(Tool):
         Visualizations will have access to
         """
         return {
+            self.API_PREFIX: self.get_relative_container_url() + "/",
             self.FILE_RELATIONSHIPS: self.get_file_relationships_urls(),
             ToolDefinition.PARAMETERS: self._get_visualization_parameters(),
-            self.NODE_INFORMATION: self._get_detailed_input_nodes_dict()
+            self.NODE_INFORMATION: self._get_detailed_input_nodes_dict(),
+            ToolDefinition.EXTRA_DIRECTORIES:
+                self.tool_definition.get_extra_directories()
         }
+
+    def _check_max_running_containers(self):
+        max_containers = settings.DJANGO_DOCKER_ENGINE_MAX_CONTAINERS
+        if len(self._django_docker_client.list()) >= max_containers:
+            raise VisualizationToolError('Max containers')
 
     def _get_detailed_input_nodes_dict(self):
         """
@@ -452,15 +506,6 @@ class VisualizationTool(Tool):
         }
         return node_info
 
-    def get_relative_container_url(self):
-        """
-        Construct & return the relative url of our Tool's container
-        """
-        return "/{}/{}".format(
-            settings.DJANGO_DOCKER_ENGINE_BASE_URL,
-            self.container_name
-        )
-
     def _get_visualization_parameters(self):
         tool_parameters = []
 
@@ -469,9 +514,13 @@ class VisualizationTool(Tool):
                 {
                     "uuid": parameter.uuid,
                     "description": parameter.description,
-                    "default_value": parameter.default_value,
+                    "default_value": parameter.cast_param_value_to_proper_type(
+                        parameter.default_value
+                    ),
                     "name": parameter.name,
-                    "value": self._get_edited_parameter_value(parameter),
+                    "value": parameter.cast_param_value_to_proper_type(
+                        self._get_edited_parameter_value(parameter)
+                    ),
                     "value_type": parameter.value_type
                 }
             )
@@ -499,10 +548,7 @@ class VisualizationTool(Tool):
         launched container's url
             - <HttpResponseBadRequest>, <HttpServerError>
         """
-        client = DockerClientWrapper(settings.DJANGO_DOCKER_ENGINE_DATA_DIR)
-        max_containers = settings.DJANGO_DOCKER_ENGINE_MAX_CONTAINERS
-        if len(client.list()) >= max_containers:
-            raise VisualizationToolError('Max containers')
+        self._check_max_running_containers()
 
         container = DockerContainerSpec(
             image_name=self.tool_definition.image_name,
@@ -513,7 +559,7 @@ class VisualizationTool(Tool):
             extra_directories=self.tool_definition.get_extra_directories()
         )
 
-        client.run(container)
+        self._django_docker_client.run(container)
 
         return JsonResponse({Tool.TOOL_URL: self.get_relative_container_url()})
 
@@ -573,7 +619,11 @@ class WorkflowTool(Tool):
 
     @property
     def galaxy_connection(self):
-        return self.analysis.galaxy_connection()
+        return self.galaxy_instance.galaxy_connection()
+
+    @property
+    def galaxy_instance(self):
+        return self.analysis.workflow.workflow_engine.instance
 
     @property
     def galaxy_collection_type(self, nesting_string=""):
@@ -658,6 +708,7 @@ class WorkflowTool(Tool):
         workflow_dict = self._get_workflow_dict()
         self.analysis.workflow_copy = workflow_dict
         self.analysis.workflow_steps_num = len(workflow_dict["steps"].keys())
+        self.analysis.set_owner(self.get_owner())
         self.analysis.save()
 
         AnalysisStatus.objects.create(analysis=analysis)
@@ -686,7 +737,7 @@ class WorkflowTool(Tool):
         Create the AnalysisNodeConnection objects corresponding to the output
         Nodes (Derived Data) of a WorkflowTool launch.
         """
-        exposed_workflow_outputs = self._get_exposed_workflow_outputs()
+        exposed_workflow_outputs = self._get_exposed_galaxy_datasets()
         for galaxy_dataset in self._get_galaxy_history_dataset_list():
             AnalysisNodeConnection.objects.create(
                 analysis=self.analysis,
@@ -848,22 +899,6 @@ class WorkflowTool(Tool):
             )
         return params_dict
 
-    def create_workflow_file_downloads(self):
-        """
-        Create the proper WorkflowFilesDL objects from the list of Galaxy
-        Datasets in our Galaxy Workflow invocation's History and add them to
-        the M2M relation in our WorkflowTool's Analysis.
-        """
-        for galaxy_dataset in self._get_exposed_workflow_outputs():
-            self.analysis.workflow_dl_files.add(
-                WorkflowFilesDL.objects.create(
-                    step_id=self._get_workflow_step(galaxy_dataset),
-                    filename=self._get_galaxy_dataset_filename(galaxy_dataset)
-                )
-            )
-
-        self.analysis.save()
-
     def _flatten_file_relationships_nesting(self, nesting=None,
                                             structure=None):
         """
@@ -928,6 +963,29 @@ class WorkflowTool(Tool):
         )
 
     @handle_bioblend_exceptions
+    def get_galaxy_dataset_download_list(self):
+        """
+        Return a list of dicts containing information about Galaxy Datasets
+        in our Workflow invocation's history if said Datasets correspond to a
+        user-defined `workflow_output`.
+        """
+        exposed_galaxy_datasets = self._get_exposed_galaxy_datasets()
+        exposed_galaxy_dataset_ids = [
+            galaxy_dataset["id"] for galaxy_dataset in exposed_galaxy_datasets
+        ]
+
+        history_file_list = self.galaxy_instance.get_history_file_list(
+            self.analysis.history_id
+        )
+        retained_download_list = [
+            galaxy_dataset for galaxy_dataset in history_file_list
+            if galaxy_dataset["dataset_id"] in exposed_galaxy_dataset_ids
+        ]
+        assert len(retained_download_list) >= 1, \
+            "There should be at least one dataset to download from Galaxy."
+        return retained_download_list
+
+    @handle_bioblend_exceptions
     def _get_galaxy_dataset_job(self, galaxy_dataset_dict):
         return self.galaxy_connection.jobs.show_job(
             galaxy_dataset_dict[self.CREATING_JOB]
@@ -953,8 +1011,8 @@ class WorkflowTool(Tool):
     def _get_galaxy_history_dataset_list(self):
         """
         Retrieve a list of Galaxy Datasets from the Galaxy History of our
-        Galaxy Workflow invocation all tool outputs in the Galaxy Workflow
-        editor.
+        Galaxy Workflow invocation corresponding to all tool outputs in the
+        Galaxy Workflow editor.
         """
         galaxy_dataset_list = (
             self.galaxy_connection.histories.show_matching_datasets(
@@ -969,7 +1027,7 @@ class WorkflowTool(Tool):
         ]
         return retained_datasets
 
-    def _get_exposed_workflow_outputs(self):
+    def _get_exposed_galaxy_datasets(self):
         """
         Retrieve all Galaxy Datasets that correspond to an asterisked
         output in the Galaxy workflow editor.
@@ -1159,7 +1217,7 @@ class WorkflowTool(Tool):
             galaxy_dataset_dict["uuid"]
         ]
         assert len(workflow_step_output_name) == 1, (
-            "There should only be one creating job output name for a "
+            "There should be one creating job output name for a "
             "Galaxy dataset. There were: {}".format(
                 len(workflow_step_output_name)
             )

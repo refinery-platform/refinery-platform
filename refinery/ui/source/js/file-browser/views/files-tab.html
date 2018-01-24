@@ -9,37 +9,44 @@
     <div class="col-lg-2 col-md-2 col-sm-3 p-r-1">
       <div class="row"
         id="tool-panel-show-button">
-
-        <button
-          class="btn btn-primary btn-sm"
-          data-target="#tool-launch-panel"
-          ng-click="FBCtrl.toggleToolPanel()">
-          <span ng-if="FBCtrl.collapsedToolPanel">
-            <i class="fa fa-angle-double-left" aria-hidden="true"></i>
-             Show Tool Panel
+        <span ng-if="FBCtrl.userPerms == 'read' || FBCtrl.userPerms == 'change'">
+          <button
+            class="btn btn-primary btn-sm"
+            data-target="#tool-launch-panel"
+            ng-click="FBCtrl.toggleToolPanel()">
+            <span ng-if="FBCtrl.collapsedToolPanel">
+              <i class="fa fa-angle-double-left" aria-hidden="true"></i>
+               Show Tool Panel
+            </span>
+            <span ng-if="!FBCtrl.collapsedToolPanel">
+              <i class="fa fa-angle-double-right" aria-hidden="true"></i>
+               Hide Tool Panel
+            </span>
+          </button>
+        </span>
+        <span class="float-right content">
+          <span
+            ng-if="FBCtrl.isOwner"
+            class="refinery-base btn btn-default btn-sm"
+            ng-click="FBCtrl.openPermissionEditor()"
+            refinery-tooltip
+            refinery-tooltip-container="body"
+            refinery-tooltip-placement="bottom"
+            title="Update the data set's permissions">
+            <i class="fa fa-share-square-o"></i>
+            <span id="share-button-text"></span>
           </span>
-          <span ng-if="!FBCtrl.collapsedToolPanel">
-            <i class="fa fa-angle-double-right" aria-hidden="true"></i>
-             Hide Tool Panel
-          </span>
-        </button>
-
-        <span class="float-right">
-          <span ng-if="FBCtrl.isOwner" class="refinery-base btn btn-default btn-sm" rp-assay-files-util-modal>
+          <span
+            ng-if="FBCtrl.isOwner"
+            class="refinery-base btn btn-default btn-sm m-l-1-4"
+            rp-assay-files-util-modal
+            refinery-tooltip
+            refinery-tooltip-container="body"
+            refinery-tooltip-placement="bottom"
+            title="Update the data set's configuration.">
             <i class="fa fa-wrench"></i>
+            <span id="config-button-text"></span>
           </span>
-          <a
-            id="help-view-selector"
-            popover-placement="right"
-            uib-popover="The collection of files in this data set can be displayed using different representations."
-            popover-title="Select File Display Mode"
-            popover-trigger="focus"
-            popover-append-to-body="true"
-            tabindex="0">
-            <i
-              class="fa fa-question-circle info-icon icon-only"
-              id="config-question-icon"></i>
-          </a>
         </span>
 
       </div>

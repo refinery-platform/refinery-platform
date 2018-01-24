@@ -17,6 +17,7 @@
     // params for the assays api
     var fileParam = {
       uuid: $window.externalAssayUuid,
+      data_set_uuid: $window.dataSetUuid,
       offset: 0
     };
 

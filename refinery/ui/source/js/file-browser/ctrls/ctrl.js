@@ -17,15 +17,17 @@
     '$q',
     '$scope',
     '$timeout',
+    '$uibModal',
+    '$window',
     'uiGridConstants',
     '_',
     'assayFiltersService',
+    'dataSetPermsService',
     'fileBrowserFactory',
     'fileBrowserSettings',
     'fileParamService',
     'filesLoadingService',
     'fileRelationshipService',
-    'groupPermService',
     'isOwnerService',
     'resetGridService',
     'selectedFilterService',
@@ -38,25 +40,29 @@
     $q,
     $scope,
     $timeout,
+    $uibModal,
+    $window,
     uiGridConstants,
     _,
     assayFiltersService,
+    dataSetPermsService,
     fileBrowserFactory,
     fileBrowserSettings,
     fileParamService,
     filesLoadingService,
     fileRelationshipService,
-    groupPermService,
     isOwnerService,
     resetGridService,
     selectedFilterService,
     activeNodeService,
     toolSelectService
   ) {
+    var dataSetUuid = $window.dataSetUuid;
     var fileService = fileRelationshipService;
     var maxFileRequest = fileBrowserSettings.maxFileRequest;
     var nodesService = activeNodeService;
     var paramService = fileParamService;
+    var permsService = dataSetPermsService;
     var toolService = toolSelectService;
     var vm = this;
     vm.activeNodeRow = nodesService.activeNodeRow;
@@ -96,6 +102,7 @@
     vm.inputFileTypeColor = fileService.inputFileTypeColor;
     vm.lastPage = 0;  // variable supporting ui-grid dynamic scrolling
     vm.nodeSelectCollection = fileService.nodeSelectCollection;
+    vm.openPermissionEditor = openPermissionEditor;
     vm.openSelectionPopover = openSelectionPopover;
     vm.refreshAssayFiles = refreshAssayFiles;
     vm.reset = reset;
@@ -103,6 +110,7 @@
     vm.sortChanged = sortChanged;
     vm.toggleToolPanel = toggleToolPanel;
     vm.totalPages = 1;  // variable supporting ui-grid dynamic scrolling
+    vm.userPerms = permsService.userPerms;
 
     activate();
     /*
@@ -223,6 +231,22 @@
         vm.gridApi.core.on.sortChanged(null, vm.sortChanged);
         vm.sortChanged(vm.gridApi.grid, [vm.gridOptions.columnDefs[1]]);
       }
+    }
+
+    /** view method to open the permissions modal component, in commons
+     *  directive*/
+    function openPermissionEditor () {
+      $uibModal.open({
+        component: 'rpPermissionEditorModal',
+        resolve: {
+          config: function () {
+            return {
+              model: 'data_sets',
+              uuid: dataSetUuid
+            };
+          }
+        }
+      });
     }
 
     /** vm method to open the selection popover and disable all popovers, so
@@ -433,6 +457,15 @@
           toggleToolColumn();
         }
       }
+    );
+
+    $scope.$watch(
+        function () {
+          return permsService.userPerms;
+        },
+        function () {
+          vm.userPerms = permsService.userPerms;
+        }
     );
   }
 })();

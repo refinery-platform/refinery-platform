@@ -1,6 +1,12 @@
+import logging
+
 from django.db import models
 
 from bioblend import galaxy
+
+logger = logging.getLogger(__name__)
+
+error_msg = "Error deleting Galaxy %s for analysis '%s': %s"
 
 
 class Instance(models.Model):
@@ -24,68 +30,45 @@ class Instance(models.Model):
         """
         files = []
         connection = self.galaxy_connection()
+        history_content_keys = ["state", "file_size", "visible",
+                                "file_name", "genome_build", "misc_info",
+                                "misc_blurb"]
+        history_contents = connection.histories.show_history(history_id,
+                                                             contents=True)
 
-        for history_content_entry in connection.histories.show_history(
-                history_id, contents=True):
-
-            if "type" not in history_content_entry:
+        for history_content_entry in history_contents:
+            if ("type" not in history_content_entry or
+                    history_content_entry["type"] != "file"):
                 continue
 
-            if history_content_entry["type"] != "file":
-                continue
+            history_content = connection.histories.show_dataset(
+                history_id, history_content_entry["id"]
+            )
 
             file_info = {
                 "name": history_content_entry["name"],
-                "url": history_content_entry["url"]
+                "url": history_content_entry["url"],
+                "type": history_content.get("file_ext"),
+                "dataset_id": history_content.get("id")
             }
-            history_content = connection.histories.show_dataset(
-                history_id, history_content_entry["id"])
 
-            if "file_ext" not in history_content:
-                file_info["type"] = None
-            else:
-                file_info["type"] = history_content["file_ext"]
-
-            if "state" not in history_content:
-                file_info["state"] = None
-            else:
-                file_info["state"] = history_content["state"]
-
-            if "id" not in history_content:
-                file_info["dataset_id"] = None
-            else:
-                file_info["dataset_id"] = history_content["id"]
-
-            if "file_size" not in history_content:
-                file_info["file_size"] = None
-            else:
-                file_info["file_size"] = history_content["file_size"]
-
-            if "visible" not in history_content:
-                file_info["visible"] = None
-            else:
-                file_info["visible"] = history_content["visible"]
-
-            if "file_name" not in history_content:
-                file_info["file_name"] = None
-            else:
-                file_info["file_name"] = history_content["file_name"]
-
-            if "genome_build" not in history_content:
-                file_info["genome_build"] = None
-            else:
-                file_info["genome_build"] = history_content["genome_build"]
-
-            if "misc_info" not in history_content:
-                file_info["misc_info"] = None
-            else:
-                file_info["misc_info"] = history_content["misc_info"]
-
-            if "misc_blurb" not in history_content:
-                file_info["misc_blurb"] = None
-            else:
-                file_info["misc_blurb"] = history_content["misc_blurb"]
+            for history_content_key in history_content_keys:
+                file_info[history_content_key] = history_content.get(
+                    history_content_key
+                )
 
             files.append(file_info)
-
         return files
+
+    def delete_history(self, history_id, analysis_name):
+        try:
+            self.galaxy_connection().histories.delete_history(history_id,
+                                                              purge=True)
+        except galaxy.client.ConnectionError as e:
+            logger.error(error_msg, 'history', analysis_name, e.message)
+
+    def delete_library(self, library_id, analysis_name):
+        try:
+            self.galaxy_connection().libraries.delete_library(library_id)
+        except galaxy.client.ConnectionError as e:
+            logger.error(error_msg, 'library', analysis_name, e.message)

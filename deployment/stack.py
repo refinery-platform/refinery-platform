@@ -195,8 +195,9 @@ def make_template(config, config_yaml):
                 {
                     'DeviceName': '/dev/sda1',
                     'Ebs': {
-                        'VolumeSize': '11',
                         # Was 8G; HiGlass is 2.5G; Must be an integer
+                        'VolumeSize': '11',
+                        'VolumeType': 'gp2',
                     }
                 }
             ],
@@ -325,13 +326,10 @@ def make_template(config, config_yaml):
                                         "${AWS::Region}:${AWS::AccountId}:"
                                         "identitypool/${PoolId}",
                                         {
-                                            "PoolId": {
-                                                "Fn::ImportValue": {
-                                                    "Fn::Sub":
-                                                        "${AWS::StackName}"
-                                                        "StorageIdentityPoolId"
-                                                }
-                                            }
+                                            "PoolId":
+                                                config[
+                                                    'COGNITO_IDENTITY_POOL_ID'
+                                                ]
                                         }
                                     ]
                                 }

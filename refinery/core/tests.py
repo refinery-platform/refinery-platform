@@ -4,12 +4,16 @@ import re
 import string
 from urlparse import urljoin
 
+from django.apps import apps
 from django.contrib.auth.models import AnonymousUser, Group, User
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.db import connection
+from django.db.migrations.executor import MigrationExecutor
 from django.test import TestCase
 from django.utils import timezone
 
-from guardian.shortcuts import assign_perm, get_objects_for_group
+from guardian.core import ObjectPermissionChecker
+from guardian.shortcuts import assign_perm, get_objects_for_group, remove_perm
 import mock
 import mockcache as memcache
 from rest_framework.test import (APIClient, APIRequestFactory, APITestCase,
@@ -19,9 +23,9 @@ from tastypie.test import ResourceTestCase
 
 from analysis_manager.models import AnalysisStatus
 from data_set_manager.models import Assay, Contact, Investigation, Node, Study
+from factory_boy.django_model_factories import GalaxyInstanceFactory
 from factory_boy.utils import create_dataset_with_necessary_models
 from file_store.models import FileStoreItem, FileType
-from galaxy_connector.models import Instance
 
 from .api import AnalysisResource
 from .management.commands.create_user import init_user
@@ -32,7 +36,8 @@ from .models import (INPUT_CONNECTION, OUTPUT_CONNECTION, Analysis,
                      WorkflowEngine, invalidate_cached_object)
 from .search_indexes import DataSetIndex
 from .utils import (filter_nodes_uuids_in_solr, get_aware_local_time,
-                    get_resources_for_user, move_obj_to_front)
+                    get_resources_for_user, move_obj_to_front,
+                    which_default_read_perm)
 from .views import AnalysesViewSet, DataSetsViewSet
 
 cache = memcache.Client(["127.0.0.1:11211"])
@@ -138,7 +143,7 @@ class AnalysisResourceTest(LoginResourceTestCase):
         ).catch_all_project
         self.dataset = create_dataset_with_necessary_models()
         self.dataset2 = create_dataset_with_necessary_models()
-        self.galaxy_instance = Instance.objects.create()
+        self.galaxy_instance = GalaxyInstanceFactory()
         self.workflow_engine = WorkflowEngine.objects.create(
             instance=self.galaxy_instance
         )
@@ -164,7 +169,7 @@ class AnalysisResourceTest(LoginResourceTestCase):
             workflow_copy=workflow_as_repr
         )
         analysis.set_owner(self.user)
-        analysis_uri = make_api_uri(Analysis._meta.module_name, analysis.uuid)
+        analysis_uri = make_api_uri(Analysis._meta.model_name, analysis.uuid)
         response = self.api_client.get(
             analysis_uri,
             format='json'
@@ -197,9 +202,7 @@ class AnalysisResourceTest(LoginResourceTestCase):
             workflow=self.workflow
         )
         assign_perm(
-            'read_%s' % Analysis._meta.module_name,
-            self.user,
-            analysis1
+            'read_%s' % Analysis._meta.model_name, self.user, analysis1
         )
         analysis2 = Analysis.objects.create(
             name='a2',
@@ -209,15 +212,10 @@ class AnalysisResourceTest(LoginResourceTestCase):
             workflow=self.workflow
         )
         assign_perm(
-            'read_%s' % Analysis._meta.module_name,
-            self.user,
-            analysis2
+            'read_%s' % Analysis._meta.model_name, self.user, analysis2
         )
-        analysis_uri = make_api_uri(Analysis._meta.module_name)
-        response = self.api_client.get(
-            analysis_uri,
-            format='json'
-        )
+        analysis_uri = make_api_uri(Analysis._meta.model_name)
+        response = self.api_client.get(analysis_uri, format='json')
         self.assertValidJSONResponse(response)
         data = self.deserialize(response)['objects']
         self.assertEqual(len(data), 2)
@@ -234,7 +232,7 @@ class AnalysisResourceTest(LoginResourceTestCase):
             workflow=self.workflow
         )
         analysis.set_owner(self.user)
-        analysis_uri = make_api_uri(Analysis._meta.module_name, analysis.uuid)
+        analysis_uri = make_api_uri(Analysis._meta.model_name, analysis.uuid)
         response = self.api_client.get(analysis_uri, format='json')
         self.assertHttpNotFound(response)
 
@@ -250,11 +248,8 @@ class AnalysisResourceTest(LoginResourceTestCase):
             workflow=self.workflow
         )
         analysis.set_owner(self.user2)
-        analysis_uri = make_api_uri(Analysis._meta.module_name, analysis.uuid)
-        response = self.api_client.get(
-            analysis_uri,
-            format='json'
-        )
+        analysis_uri = make_api_uri(Analysis._meta.model_name, analysis.uuid)
+        response = self.api_client.get(analysis_uri, format='json')
         self.assertHttpNotFound(response)
 
     def test_get_analysis_with_invalid_uuid(self):
@@ -264,9 +259,9 @@ class AnalysisResourceTest(LoginResourceTestCase):
                                            data_set=self.dataset,
                                            workflow=self.workflow)
         assign_perm(
-            "read_%s" % Analysis._meta.module_name, self.user, analysis
+            "read_%s" % Analysis._meta.model_name, self.user, analysis
         )
-        analysis_uri = make_api_uri(Analysis._meta.module_name, 'Invalid UUID')
+        analysis_uri = make_api_uri(Analysis._meta.model_name, 'Invalid UUID')
         response = self.api_client.get(analysis_uri, format='json',
                                        authentication=self.get_credentials())
         self.assertHttpNotFound(response)
@@ -290,10 +285,9 @@ class AnalysisResourceTest(LoginResourceTestCase):
             workflow=self.workflow
         )
         analysis2.set_owner(self.user)
-        analysis_uri = make_api_uri(Analysis._meta.module_name)
+        analysis_uri = make_api_uri(Analysis._meta.model_name)
         response = self.api_client.get(
-            analysis_uri,
-            format='json',
+            analysis_uri, format='json',
             data={'data_set__uuid': self.dataset.uuid}
         )
         self.assertValidJSONResponse(response)
@@ -321,7 +315,7 @@ class AnalysisResourceTest(LoginResourceTestCase):
             workflow=self.workflow
         )
         analysis2.set_owner(self.user)
-        analysis_uri = make_api_uri(Analysis._meta.module_name)
+        analysis_uri = make_api_uri(Analysis._meta.model_name)
         response = self.api_client.get(
             analysis_uri,
             format='json',
@@ -334,7 +328,7 @@ class AnalysisResourceTest(LoginResourceTestCase):
 
     def test_get_empty_analysis_list(self):
         """Test retrieving a list of Analysis instances when none exist"""
-        analysis_uri = make_api_uri(Analysis._meta.module_name)
+        analysis_uri = make_api_uri(Analysis._meta.model_name)
         response = self.api_client.get(analysis_uri, format='json',
                                        authentication=self.get_credentials())
         self.assertValidJSONResponse(response)
@@ -348,12 +342,10 @@ class AnalysisResourceTest(LoginResourceTestCase):
                                            workflow=self.workflow)
         self.assertEqual(Analysis.objects.count(), 1)
         assign_perm(
-            "delete_%s" % Analysis._meta.module_name,
-            self.user,
-            analysis
+            "delete_%s" % Analysis._meta.model_name, self.user, analysis
         )
 
-        analysis_uri = make_api_uri(Analysis._meta.module_name, analysis.uuid)
+        analysis_uri = make_api_uri(Analysis._meta.model_name, analysis.uuid)
         response = self.api_client.delete(
             analysis_uri, format='json', authentication=self.get_credentials()
         )
@@ -367,11 +359,9 @@ class AnalysisResourceTest(LoginResourceTestCase):
                                            workflow=self.workflow)
         self.assertEqual(Analysis.objects.count(), 1)
         assign_perm(
-            "delete_%s" % Analysis._meta.module_name,
-            self.user,
-            analysis
+            "delete_%s" % Analysis._meta.model_name, self.user, analysis
         )
-        analysis_uri = make_api_uri(Analysis._meta.module_name, analysis.uuid)
+        analysis_uri = make_api_uri(Analysis._meta.model_name, analysis.uuid)
         response = self.api_client.delete(analysis_uri, format='json')
         self.assertHttpMethodNotAllowed(response)
         self.assertEqual(Analysis.objects.count(), 1)
@@ -573,7 +563,7 @@ class WorkflowDeletionTest(TestCase):
             self.username, '', self.password
         )
         self.project = Project.objects.create()
-        self.galaxy_instance = Instance.objects.create()
+        self.galaxy_instance = GalaxyInstanceFactory()
         self.workflow_engine = WorkflowEngine.objects.create(
             instance=self.galaxy_instance
         )
@@ -621,7 +611,7 @@ class DataSetDeletionTest(TestCase):
             self.username, '', self.password
         )
         self.project = Project.objects.create()
-        self.galaxy_instance = Instance.objects.create()
+        self.galaxy_instance = GalaxyInstanceFactory()
         self.isa_archive_file = FileStoreItem.objects.create(
             datafile=SimpleUploadedFile(
                 'test_file.zip',
@@ -702,7 +692,7 @@ class AnalysisTests(TestCase):
         self.project1 = Project.objects.create()
 
         # Create a galaxy Instance
-        self.galaxy_instance = Instance.objects.create()
+        self.galaxy_instance = GalaxyInstanceFactory()
 
         # Create a WorkflowEngine
         self.workflow_engine = WorkflowEngine.objects.create(
@@ -939,7 +929,7 @@ class AnalysisTests(TestCase):
             ]
         )
 
-    def test___get_output_connection_to_analysis_result_mapping(self):
+    def create_analysis_results(self, include_faulty_result=False):
         common_params = {
             "analysis_uuid": self.analysis.uuid,
             "file_store_uuid": self.node.file_uuid,
@@ -947,12 +937,27 @@ class AnalysisTests(TestCase):
             "file_type": self.node.get_file_store_item().filetype
         }
         analysis_result_0 = AnalysisResult.objects.create(**common_params)
-        AnalysisResult.objects.create(**common_params)
+
+        if include_faulty_result:
+            # This analysis result has a filename that doesn't correspond to
+            #  any specified AnalysisNodeConnection Output filenames
+            AnalysisResult.objects.create(
+                **dict(common_params, file_name="Bad Filename")
+            )
+        else:
+            AnalysisResult.objects.create(**common_params)
+
         analysis_result_1 = AnalysisResult.objects.create(**common_params)
+
+        return analysis_result_0, analysis_result_1
+
+    def test___get_output_connection_to_analysis_result_mapping(self):
+        analysis_result_0, analysis_result_1 = self.create_analysis_results()
 
         output_mapping = (
             self.analysis._get_output_connection_to_analysis_result_mapping()
         )
+
         self.assertEqual(
             output_mapping,
             [
@@ -961,6 +966,14 @@ class AnalysisTests(TestCase):
                 (self.analysis_node_connection_a, analysis_result_1)
             ]
         )
+
+    def test___get_output_connection_to_analysis_result_mapping_failure_state(
+        self
+    ):
+        self.create_analysis_results(include_faulty_result=True)
+
+        with self.assertRaises(IndexError):
+            self.analysis._get_output_connection_to_analysis_result_mapping()
 
     def test_analysis_node_connection_input_id(self):
         self.assertEqual(
@@ -1226,6 +1239,14 @@ class UtilitiesTest(TestCase):
         self.assertEqual(response_arr[0].get('name'),
                          nodes_list[0].get('name'))
 
+    def test_which_default_read_perm_for_dataset(self):
+        self.assertEqual(which_default_read_perm('dataset'),
+                         'core.read_meta_dataset')
+
+    def test_which_default_read_perm_for_analysis(self):
+        self.assertEqual(which_default_read_perm('analysis'),
+                         'core.read_analysis')
+
 
 class UserTutorialsTest(TestCase):
     """
@@ -1256,7 +1277,7 @@ class DataSetResourceTest(LoginResourceTestCase):
         ).catch_all_project
         self.dataset = DataSet.objects.create(name="Dataset 1")
         self.dataset2 = DataSet.objects.create(name="Dataset 2")
-        self.galaxy_instance = Instance.objects.create()
+        self.galaxy_instance = GalaxyInstanceFactory()
         self.workflow_engine = WorkflowEngine.objects.create(
             instance=self.galaxy_instance
         )
@@ -1310,26 +1331,23 @@ class DataSetResourceTest(LoginResourceTestCase):
 
         dataset_uri = make_api_uri("data_sets",
                                    self.dataset.uuid)
-        response = self.api_client.get(
-            dataset_uri,
-            format='json'
-        )
+        response = self.api_client.get(dataset_uri, format='json')
         self.assertValidJSONResponse(response)
         data = self.deserialize(response)
         self.assertEqual(data['uuid'], self.dataset.uuid)
-        self.assertIsNotNone(data['analyses'])
         self.assertEqual(len(data['analyses']), 2)
 
-        self.assertIsNotNone(data['analyses'][0]['is_owner'])
-        self.assertTrue(data['analyses'][0]['is_owner'])
-        self.assertIsNotNone(data['analyses'][0]['owner'])
-        self.assertEqual(
-            data['analyses'][0]['owner'],
-            UserProfile.objects.get(user=self.user).uuid
-        )
-        self.assertEqual(data['analyses'][0]['status'], a2.status)
-        self.assertEqual(data['analyses'][0]['name'], a2.name)
-        self.assertEqual(data['analyses'][0]['uuid'], a2.uuid)
+        sorted_analyses = sorted(data['analyses'], key=lambda x: x["name"])
+        for analysis in sorted_analyses:
+            self.assertTrue(analysis['is_owner'])
+            self.assertEqual(analysis['owner'],
+                             UserProfile.objects.get(user=self.user).uuid)
+        self.assertEqual(sorted_analyses[0]['status'], a1.status)
+        self.assertEqual(sorted_analyses[0]['name'], a1.name)
+        self.assertEqual(sorted_analyses[0]['uuid'], a1.uuid)
+        self.assertEqual(sorted_analyses[1]['status'], a2.status)
+        self.assertEqual(sorted_analyses[1]['name'], a2.name)
+        self.assertEqual(sorted_analyses[1]['uuid'], a2.uuid)
 
     def test_get_dataset_expecting_no_analyses(self):
         dataset_uri = make_api_uri("data_sets",
@@ -1401,7 +1419,7 @@ class DataSetTests(TestCase):
         ).catch_all_project
         self.dataset = DataSet.objects.create()
         self.dataset2 = DataSet.objects.create()
-        self.galaxy_instance = Instance.objects.create()
+        self.galaxy_instance = GalaxyInstanceFactory()
         self.workflow_engine = WorkflowEngine.objects.create(
             instance=self.galaxy_instance
         )
@@ -1862,7 +1880,7 @@ class AnalysisApiV2Tests(APITestCase):
                                              self.password)
         self.project = Project.objects.create()
 
-        self.galaxy_instance = Instance.objects.create()
+        self.galaxy_instance = GalaxyInstanceFactory()
         self.workflow_engine = WorkflowEngine.objects.create(
             instance=self.galaxy_instance
         )
@@ -2089,3 +2107,81 @@ class CoreIndexTests(TestCase):
             self.good_dataset
         )
         self.assertEqual(prepared_description, "This is a great DataSet")
+
+
+class TestMigrations(TestCase):
+    """
+    Useful test class for testing Django Data migrations
+
+    From https://www.caktusgroup.com/blog/2016/02/02/
+    writing-unit-tests-django-migrations/
+    """
+    @property
+    def app(self):
+        return apps.get_containing_app_config(type(self).__module__).name
+
+    migrate_from = None
+    migrate_to = None
+
+    def setUp(self):
+        assert self.migrate_from and self.migrate_to, \
+            "TestCase '{}' must define migrate_from and migrate_to properties"\
+            .format(type(self).__name__)
+        self.migrate_from = [(self.app, self.migrate_from)]
+        self.migrate_to = [(self.app, self.migrate_to)]
+        executor = MigrationExecutor(connection)
+        old_apps = executor.loader.project_state(self.migrate_from).apps
+
+        # Reverse to the original migration
+        executor.migrate(self.migrate_from)
+
+        self.setUpBeforeMigration(old_apps)
+
+        # Run the migration to test
+        executor = MigrationExecutor(connection)
+        executor.loader.build_graph()  # reload.
+        executor.migrate(self.migrate_to)
+
+        self.apps = executor.loader.project_state(self.migrate_to).apps
+
+    def setUpBeforeMigration(self, apps):
+        pass
+
+
+class DataSetPermissionsUpdateTests(TestMigrations):
+    migrate_from = '0015_auto_20171213_1429'
+    migrate_to = '0016_update_read_meta_permissions'
+
+    def setUpBeforeMigration(self, apps):
+        self.public_group = ExtendedGroup.objects.public_group()
+        self.user_a = User.objects.create_user("user_a", "", "user_a")
+        self.user_b = User.objects.create_user("user_b", "", "user_b")
+
+        self.dataset_a = create_dataset_with_necessary_models(user=self.user_a)
+        self.dataset_b = create_dataset_with_necessary_models()
+        self.dataset_b.share(self.public_group)
+
+        # Emulate state of DataSets existing prior to the read_meta_dataset
+        # permission addition
+        for obj in [self.user_a, self.user_b, self.public_group]:
+            for dataset in DataSet.objects.all():
+                remove_perm("core.read_meta_dataset", obj, dataset)
+
+    def _check_permission(self, obj, dataset,
+                          permission="core.read_meta_dataset"):
+        return ObjectPermissionChecker(obj).has_perm(permission,  dataset)
+
+    def test_read_meta_permissions_assigned(self):
+        # Assert that self.user is the only one with the "read_meta_dataset"
+        # perm on self.dataset_a
+        self.assertTrue(self._check_permission(self.user_a, self.dataset_a))
+        self.assertFalse(self._check_permission(self.user_b, self.dataset_a))
+        self.assertFalse(self._check_permission(self.public_group,
+                                                self.dataset_a))
+
+        # Assert that all users and groups have the "read_meta_dataset" perm on
+        # self.dataset_b
+        self.assertTrue(self._check_permission(self.public_group,
+                                               self.dataset_b))
+        self.assertTrue(self._check_permission(self.user_a, self.dataset_b))
+        self.assertTrue(self._check_permission(self.user_b, self.dataset_b))

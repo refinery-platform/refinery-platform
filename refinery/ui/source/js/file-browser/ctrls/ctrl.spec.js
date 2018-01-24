@@ -3,6 +3,7 @@
 
   describe('Controller: FileBrowserCtrl', function () {
     var ctrl;
+    var permsService;
     var scope;
     var toolService;
 
@@ -12,6 +13,7 @@
       $controller,
       $rootScope,
       $window,
+      dataSetPermsService,
       fileBrowserFactory,
       mockParamsFactory,
       selectedFilterService,
@@ -21,12 +23,22 @@
       ctrl = $controller('FileBrowserCtrl', {
         $scope: scope
       });
+      permsService = dataSetPermsService;
       toolService = toolSelectService;
       $window.externalAssayUuid = mockParamsFactory.generateUuid();
     }));
 
     it('FileBrowserCtrl ctrl should exist', function () {
       expect(ctrl).toBeDefined();
+    });
+
+    it('view models variables should should be defined', function () {
+      expect(ctrl.userPerms).toEqual(permsService.userPerms);
+      expect(ctrl.cachePages).toEqual(2);
+      expect(ctrl.firstPage).toEqual(0);
+      expect(ctrl.lastPage).toEqual(0);
+      expect(ctrl.totalPages).toEqual(1);
+      expect(ctrl.isOwner).toEqual(false);
     });
 
     // test variable existence
@@ -62,6 +74,20 @@
       it('toggleToolPanel sets collapsedToolPanel to false', function () {
         ctrl.toggleToolPanel();
         expect(ctrl.collapsedToolPanel).toEqual(false);
+      });
+    });
+
+    describe('openPermissionEditor', function () {
+      var mockUibModal;
+      beforeEach(inject(function ($uibModal) {
+        mockUibModal = spyOn($uibModal, 'open');
+      }));
+      it('openPermissionEditor is method', function () {
+        expect(angular.isFunction(ctrl.openPermissionEditor)).toBe(true);
+      });
+      it('openPermissionEditor opens a new modal', function () {
+        ctrl.openPermissionEditor();
+        expect(mockUibModal).toHaveBeenCalled();
       });
     });
   });

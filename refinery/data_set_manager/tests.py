@@ -17,16 +17,26 @@ from django.db.models import Q
 from django.http import QueryDict
 from django.test import LiveServerTestCase, TestCase
 
+from celery.states import PENDING, STARTED, SUCCESS
+from constants import NOT_AVAILABLE
+from djcelery.models import TaskMeta
+from guardian.shortcuts import assign_perm
+from haystack.exceptions import SkipDocument
 import mock
+from mock import ANY
 from rest_framework.test import APIClient, APIRequestFactory, APITestCase
 
-from core.models import Analysis, DataSet, ExtendedGroup, InvestigationLink
+from core.models import (INPUT_CONNECTION, OUTPUT_CONNECTION, Analysis,
+                         AnalysisNodeConnection, DataSet, ExtendedGroup,
+                         InvestigationLink)
+from core.tests import TestMigrations
 from core.views import NodeViewSet
 import data_set_manager
 from data_set_manager.isa_tab_parser import IsaTabParser, ParserException
 from data_set_manager.single_file_column_parser import process_metadata_table
 from data_set_manager.tasks import parse_isatab
-from factory_boy.utils import make_analyses_with_single_dataset
+from factory_boy.utils import (create_dataset_with_necessary_models,
+                               make_analyses_with_single_dataset)
 from file_store.models import FileStoreItem, generate_file_source_translator
 from file_store.tasks import import_file
 
@@ -35,9 +45,9 @@ from .models import (AnnotatedNode, Assay, AttributeOrder, Investigation, Node,
 from .search_indexes import NodeIndex
 from .serializers import AttributeOrderSerializer
 from .utils import (_create_solr_params_from_node_uuids,
-                    create_facet_filter_query, customize_attribute_response,
-                    escape_character_solr, format_solr_response,
-                    generate_facet_fields_query,
+                    create_facet_filter_query, cull_attributes_from_list,
+                    customize_attribute_response, escape_character_solr,
+                    format_solr_response, generate_facet_fields_query,
                     generate_filtered_facet_fields,
                     generate_solr_params_for_assay,
                     get_file_url_from_node_uuid, get_owner_from_assay,
@@ -361,14 +371,168 @@ class AssaysAttributesAPITests(APITestCase):
         self.client.logout()
 
 
+class AssaysFilesAPITests(APITestCase):
+
+    def setUp(self):
+        self.user_owner = 'owner'
+        self.user_guest = 'guest'
+        self.fake_password = 'test1234'
+        self.data_set = create_dataset_with_necessary_models()
+        self.user1 = User.objects.create_user(self.user_owner,
+                                              '',
+                                              self.fake_password)
+        self.user2 = User.objects.create_user(self.user_guest,
+                                              '',
+                                              self.fake_password)
+        self.data_set.set_owner(self.user1)
+        investigation = Investigation.objects.create()
+        self.investigation_link = \
+            InvestigationLink.objects.create(investigation=investigation,
+                                             data_set=self.data_set,
+                                             version=1)
+
+        study = Study.objects.create(file_name='test_filename123.txt',
+                                     title='Study Title Test',
+                                     investigation=investigation)
+
+        assay = Assay.objects.create(
+                study=study,
+                measurement='transcription factor binding site',
+                measurement_accession='http://www.testurl.org/testID',
+                measurement_source='OBI',
+                technology='nucleotide sequencing',
+                technology_accession='test info',
+                technology_source='test source',
+                platform='Genome Analyzer II',
+                file_name='test_assay_filename.txt',
+                )
+        self.valid_uuid = assay.uuid
+        self.invalid_uuid = "0xxx000x-00xx-000x-xx00-x00x00x00x0x"
+        self.url = "/api/v2/assays/%s/files/"
+        self.non_meta_attributes = ['REFINERY_DOWNLOAD_URL', 'REFINERY_NAME']
+        self.client = APIClient()
+
+    def tearDown(self):
+        self.client.logout()
+        Assay.objects.all().delete()
+        Study.objects.all().delete()
+        InvestigationLink.objects.all().delete()
+        Investigation.objects.all().delete()
+        DataSet.objects.all().delete()
+
+    @mock.patch('data_set_manager.views.generate_solr_params_for_assay')
+    @mock.patch('data_set_manager.views.search_solr')
+    @mock.patch('data_set_manager.views.format_solr_response')
+    def test_get_from_owner_with_valid_params(self,
+                                              mock_format,
+                                              mock_search,
+                                              mock_generate):
+        self.client.login(username=self.user_owner,
+                          password=self.fake_password)
+        mock_format.return_value = {'status': 200}
+        uuid = self.valid_uuid
+        params = {
+            'limit': '0',
+            'data_set_uuid': self.data_set.uuid
+        }
+        response = self.client.get(self.url % uuid, params)
+        self.assertTrue(mock_format.called)
+        self.assertTrue(mock_search.called)
+        qdict = QueryDict('', mutable=True)
+        qdict.update(params)
+        mock_generate.assert_called_once_with(qdict, uuid)
+        self.assertEqual(response.status_code, 200)
+
+    def test_get_from_owner_invalid_params(self):
+        self.client.login(username=self.user_owner,
+                          password=self.fake_password)
+
+        uuid = self.valid_uuid
+        params = {'limit': 0,
+                  'data_set_uuid': self.invalid_uuid}
+        response = self.client.get(self.url % uuid, params)
+        self.assertEqual(response.status_code, 404)
+
+    @mock.patch('data_set_manager.views.generate_solr_params_for_assay')
+    @mock.patch('data_set_manager.views.search_solr')
+    @mock.patch('data_set_manager.views.format_solr_response')
+    def test_get_from_user_no_perms(self,
+                                    mock_format,
+                                    mock_search,
+                                    mock_generate):
+        self.client.login(username=self.user_guest,
+                          password=self.fake_password)
+
+        uuid = self.valid_uuid
+        params = {
+            'limit': 0,
+            'data_set_uuid': self.data_set.uuid
+        }
+        response = self.client.get(self.url % uuid, params)
+        self.assertFalse(mock_format.called)
+        self.assertFalse(mock_search.called)
+        self.assertFalse(mock_generate.called)
+        self.assertEqual(response.status_code, 401)
+
+    @mock.patch('data_set_manager.views.generate_solr_params_for_assay')
+    @mock.patch('data_set_manager.views.search_solr')
+    @mock.patch('data_set_manager.views.format_solr_response')
+    def test_get_from_user_with_read_perms(self,
+                                           mock_format,
+                                           mock_search,
+                                           mock_generate):
+        mock_format.return_value = {'status': 200}
+        self.client.login(username=self.user_guest,
+                          password=self.fake_password)
+        assign_perm('read_%s' % DataSet._meta.module_name,
+                    self.user2,
+                    self.data_set)
+        uuid = self.valid_uuid
+        params = {'limit': '0',
+                  'data_set_uuid': self.data_set.uuid}
+        response = self.client.get(self.url % uuid, params)
+        self.assertTrue(mock_format.called)
+        self.assertTrue(mock_search.called)
+        qdict = QueryDict('', mutable=True)
+        qdict.update(params)
+        mock_generate.assert_called_once_with(qdict, uuid)
+        self.assertEqual(response.status_code, 200)
+
+    @mock.patch('data_set_manager.views.generate_solr_params_for_assay')
+    @mock.patch('data_set_manager.views.search_solr')
+    @mock.patch('data_set_manager.views.format_solr_response')
+    def test_get_from_user_with_read_meta_perms(self,
+                                                mock_format,
+                                                mock_search,
+                                                mock_generate):
+        mock_format.return_value = {'status': 200}
+        self.client.login(username=self.user_guest,
+                          password=self.fake_password)
+        assign_perm('read_meta_%s' % DataSet._meta.module_name,
+                    self.user2,
+                    self.data_set)
+
+        uuid = self.valid_uuid
+        params = {'limit': '0',
+                  'data_set_uuid': self.data_set.uuid}
+        response = self.client.get(self.url % uuid, params)
+        self.assertTrue(mock_format.called)
+        self.assertTrue(mock_search.called)
+        qdict = QueryDict('', mutable=True)
+        qdict.update(params)
+        mock_generate.assert_called_once_with(qdict,
+                                              uuid,
+                                              self.non_meta_attributes)
+        self.assertEqual(response.status_code, 200)
+
+
 class UtilitiesTests(TestCase):
 
     def setUp(self):
         self.user1 = User.objects.create_user("ownerJane", '', 'test1234')
         self.user1.save()
         investigation = Investigation.objects.create()
-        data_set = DataSet.objects.create(
-                title="Test DataSet")
+        data_set = DataSet.objects.create(title="Test DataSet")
         InvestigationLink.objects.create(data_set=data_set,
                                          investigation=investigation)
         data_set.set_owner(self.user1)
@@ -781,12 +945,6 @@ class UtilitiesTests(TestCase):
                          'Cell Line%2C'
                          'Type%2C'
                          'Group Name'
-                         '&fq=type%3A%28%22Raw Data File%22 '
-                         'OR %22Derived Data File%22 '
-                         'OR %22Array Data File%22 '
-                         'OR %22Derived Array Data File%22 '
-                         'OR %22Array Data Matrix File%22 '
-                         'OR%22Derived Array Data Matrix File%22%29'
                          '&fq=is_annotation%3Afalse'
                          '&start=0'
                          '&rows=10000000'
@@ -817,12 +975,6 @@ class UtilitiesTests(TestCase):
                          '&facet.field=horse'
                          '&fl=cats%2Cmouse%2Cdog%2Chorse'
                          '&facet.pivot=cats%2Cmouse'
-                         '&fq=type%3A%28%22Raw Data File%22 '
-                         'OR %22Derived Data File%22 '
-                         'OR %22Array Data File%22 '
-                         'OR %22Derived Array Data File%22 '
-                         'OR %22Array Data Matrix File%22 '
-                         'OR%22Derived Array Data Matrix File%22%29'
                          '&fq=is_annotation%3Atrue'
                          '&start=2'
                          '&rows=7'
@@ -831,6 +983,26 @@ class UtilitiesTests(TestCase):
                          '&facet=true'
                          '&facet.limit=-1'.format(
                                  self.valid_uuid))
+
+    def test_cull_attributes_from_list(self):
+        new_attribute_list = cull_attributes_from_list(
+           self.new_attribute_order_array,
+           [self.new_attribute_order_array[0].get('solr_field'),
+            self.new_attribute_order_array[1].get('solr_field'),
+            self.new_attribute_order_array[2].get('solr_field')]
+        )
+        self.assertDictEqual(new_attribute_list[0],
+                             self.new_attribute_order_array[3])
+
+    def test_cull_attributes_from_list_with_empty_list_returns_list(self):
+        new_attribute_list = cull_attributes_from_list(
+            self.new_attribute_order_array,
+            []
+        )
+        self.assertDictEqual(new_attribute_list[0],
+                             self.new_attribute_order_array[0])
+        self.assertEqual(len(new_attribute_list),
+                         len(self.new_attribute_order_array))
 
     def test_generate_filtered_facet_fields(self):
         attribute_orders = AttributeOrder.objects.filter(
@@ -1372,7 +1544,9 @@ class UtilitiesTests(TestCase):
         attribute_list = AttributeOrder.objects.filter(assay=self.assay)
         self.assertItemsEqual(old_attribute_list, attribute_list)
 
-    def test_get_file_url_from_node_uuid_good_uuid(self):
+    @mock.patch("data_set_manager.utils.core.utils.get_full_url")
+    def test_get_file_url_from_node_uuid_good_uuid(self, mock_get_url):
+        mock_get_url.return_value = "test_file_a.txt"
         self.assertIn(
             "test_file_a.txt",
             get_file_url_from_node_uuid(self.node_a.uuid),
@@ -1544,7 +1718,7 @@ class NodeClassMethodTests(TestCase):
             self.filestore_item.uuid)
         auxiliary = Node.objects.get(uuid=self.node.get_children()[0])
         state = auxiliary.get_auxiliary_file_generation_task_state()
-        self.assertIn(state, ['PENDING', 'STARTING', 'SUCCESS'])
+        self.assertIn(state, [PENDING, STARTED, SUCCESS])
         # Values from:
         # http://docs.celeryproject.org/en/latest/_modules/celery/result.html#AsyncResult
 
@@ -1734,14 +1908,19 @@ class NodeIndexTests(APITestCase):
                 content_type='text/plain',
                 size=len(test_file.getvalue()),
                 charset='utf-8'
-            )
+            ),
+            import_task_id=str(uuid.uuid4())
+        )
+        self.import_task = TaskMeta.objects.create(
+            task_id=self.file_store_item.import_task_id
         )
 
         self.node = Node.objects.create(
             assay=assay,
             study=study,
             file_uuid=self.file_store_item.uuid,
-            name='http://example.com/fake.txt'
+            name='http://example.com/fake.txt',
+            type='Raw Data File'
         )
 
         self.data_set_uuid = data_set.uuid
@@ -1755,8 +1934,13 @@ class NodeIndexTests(APITestCase):
     def tearDown(self):
         FileStoreItem.objects.all().delete()
 
-    def test_prepare(self):
-        data = NodeIndex().prepare(self.node)
+    def test_skip_types(self):
+        self.node.type = 'Unknown File Type'
+        with self.assertRaises(SkipDocument):
+            NodeIndex().prepare(self.node)
+
+    def _prepare_node_index(self, node):
+        data = NodeIndex().prepare(node)
         data = dict(
             (
                 re.sub(r'\d+', '#', key),
@@ -1768,22 +1952,21 @@ class NodeIndexTests(APITestCase):
             )
             for (key, value) in data.items()
         )
-        self.assertRegexpMatches(
-            data['REFINERY_DOWNLOAD_URL_s'],
-            r'^http://example.com/media/file_store/.+/test_file.+txt$'
-            # There may or may not be a suffix on "test_file",
-            # depending on environment. Don't make it too strict!
-        )
+        return data
+
+    def _assert_node_index_prepared_correctly(self,
+                                              data_to_be_indexed,
+                                              expected_download_url=None,
+                                              expected_filetype=None):
         self.assertEqual(
-            data,
+            data_to_be_indexed,
             {
                 'REFINERY_ANALYSIS_UUID_#_#_s': 'N/A',
-                'REFINERY_DOWNLOAD_URL_s':
-                    self.file_store_item.get_datafile_url(),
-                'REFINERY_FILETYPE_#_#_s': None,
+                'REFINERY_DOWNLOAD_URL_s': expected_download_url,
+                'REFINERY_FILETYPE_#_#_s': expected_filetype,
                 'REFINERY_NAME_#_#_s': 'http://example.com/fake.txt',
                 'REFINERY_SUBANALYSIS_#_#_s': -1,
-                'REFINERY_TYPE_#_#_s': u'',
+                'REFINERY_TYPE_#_#_s': u'Raw Data File',
                 'REFINERY_WORKFLOW_OUTPUT_#_#_s': 'N/A',
                 'analysis_uuid': None,
                 'assay_uuid': self.assay_uuid,
@@ -1807,10 +1990,155 @@ class NodeIndexTests(APITestCase):
                 'technology_Characteristics_generic_s': 'whizbang',
                 'technology_accession_Characteristics_generic_s': '',
                 'technology_source_Characteristics_generic_s': '',
-                'type': u'',
+                'type': u'Raw Data File',
                 'uuid': self.node_uuid,
                 'workflow_output': None
             }
+        )
+
+    def test_prepare_node_good_datafile(self):
+        data_to_be_indexed = self._prepare_node_index(self.node)
+        self._assert_node_index_prepared_correctly(
+            data_to_be_indexed,
+            expected_download_url=self.file_store_item.get_datafile_url()
+        )
+        self.assertRegexpMatches(
+            data_to_be_indexed['REFINERY_DOWNLOAD_URL_s'],
+            r'^http://example.com/media/file_store/.+/test_file.+txt$'
+            # There may or may not be a suffix on "test_file",
+            # depending on environment. Don't make it too strict!
+        )
+
+    def test_prepare_node_remote_datafile_source(self):
+        self.file_store_item.datafile.delete()
+        self.file_store_item.source = "http://www.example.com/test.txt"
+        self.file_store_item.save()
+        self._assert_node_index_prepared_correctly(
+            self._prepare_node_index(self.node),
+            expected_download_url=self.file_store_item.source
+        )
+
+    def test_prepare_node_missing_datafile(self):
+        self.file_store_item.datafile.delete()
+        self.file_store_item.save()
+        with mock.patch.object(
+            FileStoreItem,
+            "get_import_status",
+            return_value=SUCCESS
+        ) as get_import_status_mock:
+            self._assert_node_index_prepared_correctly(
+                self._prepare_node_index(self.node),
+                expected_download_url=NOT_AVAILABLE
+            )
+            self.assertTrue(get_import_status_mock.called)
+
+    def test_prepare_node_pending_yet_existing_file_import_task(self):
+        self.file_store_item.datafile.delete()
+        self.file_store_item.save()
+        with mock.patch.object(
+            FileStoreItem,
+            "get_import_status",
+            return_value=PENDING
+        ):
+            self._assert_node_index_prepared_correctly(
+                self._prepare_node_index(self.node),
+                expected_download_url=PENDING
+            )
+
+    def test_prepare_node_pending_non_existent_file_import_task(self):
+        self.import_task.delete()
+        self.file_store_item.datafile.delete()
+        self._assert_node_index_prepared_correctly(
+            self._prepare_node_index(self.node),
+            expected_download_url=NOT_AVAILABLE
+        )
+
+    def test_prepare_node_no_file_import_task_id_yet(self):
+        self.file_store_item.datafile.delete()
+        self.file_store_item.import_task_id = ""
+        self.file_store_item.save()
+        self.import_task.delete()
+        self._assert_node_index_prepared_correctly(
+            self._prepare_node_index(self.node),
+            expected_download_url=PENDING
+        )
+
+    def test_prepare_node_no_file_store_item(self):
+        self.file_store_item.delete()
+        self._assert_node_index_prepared_correctly(
+            self._prepare_node_index(self.node),
+            expected_download_url=NOT_AVAILABLE,
+            expected_filetype=""
+        )
+
+    def test_prepare_node_s3_file_store_item_source_no_datafile(self):
+        self.file_store_item.datafile.delete()
+        self.file_store_item.source = "s3://test/test.txt"
+        self.file_store_item.save()
+        with mock.patch.object(
+            FileStoreItem,
+            "get_import_status",
+            return_value=SUCCESS
+        ):
+            self._assert_node_index_prepared_correctly(
+                self._prepare_node_index(self.node),
+                expected_download_url=NOT_AVAILABLE
+            )
+
+    def test_prepare_node_s3_file_store_item_source_with_datafile(self):
+        self.file_store_item.source = "s3://test/test.txt"
+        self.file_store_item.save()
+        self._assert_node_index_prepared_correctly(
+            self._prepare_node_index(self.node),
+            expected_download_url=self.file_store_item.get_datafile_url()
+        )
+
+    def _create_analysis_node_connection(self, direction, is_refinery_file):
+        user = User.objects.create_user("test", "", "test")
+        make_analyses_with_single_dataset(1, user)
+
+        AnalysisNodeConnection.objects.create(
+            analysis=Analysis.objects.first(),
+            node=self.node,
+            direction=direction,
+            step=1,
+            name="{} Analysis Node Connection".format(direction),
+            filename="test.txt",
+            is_refinery_file=is_refinery_file
+        )
+
+    def test_prepare_node_with_non_exposed_input_node_connection_isnt_skipped(
+            self
+    ):
+        self._create_analysis_node_connection(INPUT_CONNECTION, False)
+        self._assert_node_index_prepared_correctly(
+            self._prepare_node_index(self.node),
+            expected_download_url=self.file_store_item.get_datafile_url()
+        )
+
+    def test_prepare_node_with_exposed_input_node_connection_isnt_skipped(
+            self
+    ):
+        self._create_analysis_node_connection(INPUT_CONNECTION, True)
+        self._assert_node_index_prepared_correctly(
+            self._prepare_node_index(self.node),
+            expected_download_url=self.file_store_item.get_datafile_url()
+        )
+
+    def test_prepare_node_with_non_exposed_output_node_connection_is_skipped(
+            self
+    ):
+        self._create_analysis_node_connection(OUTPUT_CONNECTION, False)
+        with self.assertRaises(SkipDocument):
+            self._prepare_node_index(self.node)
+
+    def test_prepare_node_with_exposed_output_node_connection_isnt_skipped(
+        self
+    ):
+        self._create_analysis_node_connection(OUTPUT_CONNECTION, True)
+        self._assert_node_index_prepared_correctly(
+            self._prepare_node_index(self.node),
+            expected_download_url=self.file_store_item.get_datafile_url()
         )
 
 
@@ -1830,7 +2158,7 @@ class IsaTabTestBase(TestCase):
         ).setLevel(logging.ERROR)
 
         # no need to update Solr index in tests
-        mock.patch(
+        self.update_node_index_mock = mock.patch(
             "data_set_manager.search_indexes.NodeIndex.update_object"
         ).start()
 
@@ -1846,6 +2174,7 @@ class IsaTabTestBase(TestCase):
         self.assertTrue(is_logged_in)
 
     def tearDown(self):
+        mock.patch.stopall()
         FileStoreItem.objects.all().delete()
 
 
@@ -1966,6 +2295,16 @@ class ProcessISATabViewTests(ProcessISATabViewTestBase):
             self.post_isa_tab(isa_tab_file=good_isa)
         self.successful_import_assertions()
 
+    @mock.patch.object(data_set_manager.views.import_file, "delay")
+    def test_node_index_update_object_called_with_proper_args(self,
+                                                              delay_mock):
+        with open('data_set_manager/test-data/rfc-test.zip') as good_isa:
+            self.post_isa_tab(isa_tab_file=good_isa)
+        self.update_node_index_mock.assert_called_with(
+            ANY,
+            using="data_set_manager"
+        )
+
     def test_post_bad_isa_tab_file(self):
         with open('data_set_manager/test-data/HideLabBrokenA.zip') as bad_isa:
             self.post_isa_tab(isa_tab_file=bad_isa)
@@ -1992,6 +2331,12 @@ class ProcessISATabViewLiveServerTests(ProcessISATabViewTestBase,
 
 
 class SingleFileColumnParserTests(TestCase):
+    def setUp(self):
+        self.import_file_mock = mock.patch.object(import_file, "delay").start()
+
+    def tearDown(self):
+        mock.patch.stopall()
+
     def process_csv(self, filename):
         path = os.path.join(
             os.path.dirname(__file__),
@@ -2013,12 +2358,61 @@ class SingleFileColumnParserTests(TestCase):
         data_nodes = Node.objects.filter(assay=assays[0], type='Raw Data File')
         self.assertEqual(len(data_nodes), node_count)
 
-    @mock.patch.object(import_file, "delay")
-    def test_one_line_csv(self, delay_mock):
+    def test_one_line_csv(self):
         dataset = self.process_csv('one-line.csv')
         self.assert_expected_nodes(dataset, 1)
 
-    @mock.patch.object(import_file, "delay")
-    def test_two_line_csv(self, delay_mock):
+    def test_two_line_csv(self):
         dataset = self.process_csv('two-line.csv')
         self.assert_expected_nodes(dataset, 2)
+
+    def test_reindex_triggered_for_nodes_missing_datafiles(self):
+        with mock.patch(
+            "data_set_manager.search_indexes.NodeIndex.update_object"
+        ) as update_object_mock:
+            dataset = self.process_csv('two-line-local.csv')
+
+        self.assert_expected_nodes(dataset, 2)
+        self.assertEqual(2, update_object_mock.call_count)
+
+    def test_reindex_triggered_for_s3_nodes_missing_datafiles(self):
+        with mock.patch(
+                "data_set_manager.search_indexes.NodeIndex.update_object"
+        ) as update_object_mock:
+            dataset = self.process_csv('two-line-s3.csv')
+
+        self.assert_expected_nodes(dataset, 2)
+        self.assertEqual(2, update_object_mock.call_count)
+
+
+class UpdateMissingAttributeOrderTests(TestMigrations):
+    migrate_from = '0004_auto_20171211_1145'
+    migrate_to = '0005_update_attribute_orders'
+
+    def setUpBeforeMigration(self, apps):
+        self.datasets_to_create = 3
+        for i in xrange(self.datasets_to_create):
+            create_dataset_with_necessary_models()
+
+        self.assertEqual(
+            0,
+            AttributeOrder.objects.filter(
+                solr_field=NodeIndex.DOWNLOAD_URL
+            ).count()
+        )
+
+    def test_attribute_orders_created(self):
+        self.assertEqual(
+            self.datasets_to_create,
+            AttributeOrder.objects.filter(
+                solr_field=NodeIndex.DOWNLOAD_URL
+            ).count()
+        )
+        for attribute_order in AttributeOrder.objects.all():
+            self.assertTrue(attribute_order.is_exposed)
+            self.assertTrue(attribute_order.is_active)
+            self.assertFalse(attribute_order.is_facet)
+            self.assertFalse(attribute_order.is_internal)
+            self.assertEqual(0, attribute_order.rank)
+            self.assertEqual(NodeIndex.DOWNLOAD_URL,
+                             attribute_order.solr_field)

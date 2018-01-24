@@ -1,7 +1,7 @@
 'use strict';
 
 function AboutSharingCtrl (
-  dataSetAboutFactory,
+  dataSetPermsService,
   userService,
   $scope,
   $location,
@@ -10,18 +10,18 @@ function AboutSharingCtrl (
   _
   ) {
   var vm = this;
-  vm.dataSetSharing = dataSetAboutFactory.dataSetSharing;
-  vm.groupList = dataSetAboutFactory.groupList;
-  vm.ownerName = '';
+  vm.dataSetSharing = dataSetPermsService.dataSetSharing;
+  vm.groupList = dataSetPermsService.groupList;
+  vm.ownerName = dataSetPermsService.ownerName;
 
   vm.refreshDataSetSharing = function () {
     var dataSetUuid = $window.dataSetUuid;
 
-    dataSetAboutFactory
+    dataSetPermsService
       .getDataSetSharing(dataSetUuid)
       .then(function () {
-        vm.dataSetSharing = dataSetAboutFactory.dataSetSharing;
-        vm.groupList = dataSetAboutFactory.groupList;
+        vm.dataSetSharing = dataSetPermsService.dataSetSharing;
+        vm.groupList = dataSetPermsService.groupList;
         vm.refreshOwnerName(vm.dataSetSharing.owner);
       }, function (error) {
         $log.error(error);
@@ -31,10 +31,11 @@ function AboutSharingCtrl (
   vm.refreshOwnerName = function (userUuid) {
     userService.get(userUuid).then(function (response) {
       if (_.has(response, 'fullName') && response.fullName) {
-        vm.ownerName = response.fullName;
+        dataSetPermsService.ownerName = response.fullName;
       } else if (_.has(response, 'userName') && response.userName) {
-        vm.ownerName = response.userName;
+        dataSetPermsService.ownerName = response.userName;
       }
+      vm.ownerName = dataSetPermsService.ownerName;
     });
   };
 
@@ -46,7 +47,7 @@ angular
   .module('refineryDataSetAbout')
   .controller('AboutSharingCtrl',
   [
-    'dataSetAboutFactory',
+    'dataSetPermsService',
     'userService',
     '$scope',
     '$location',

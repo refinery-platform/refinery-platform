@@ -230,7 +230,7 @@
                 popover-placement="right"
                 uib-popover="This will be shown in the data set browser."
                 popover-title="Title"
-                popover-trigger="focus"
+                popover-trigger="'outsideClick'"
                 popover-append-to-body="true"
                 tabindex="0">
                   <i class="fa fa-question-circle info-icon icon-only"></i>
@@ -265,7 +265,7 @@
                 and concatenated to create unique source names. At least one
                 column needs to be selected."
                 popover-title="Sample Identifier"
-                popover-trigger="focus"
+                popover-trigger="'outsideClick'"
                 popover-append-to-body="true"
                 tabindex="0">
                   <i class="fa fa-question-circle info-icon icon-only"></i>
@@ -293,7 +293,7 @@
                 uib-popover="File names must not contain a path. If URLs are
                 provided, they have to be publicly accessible."
                 popover-title="Data File Column"
-                popover-trigger="focus"
+                popover-trigger="'outsideClick'"
                 popover-append-to-body="true"
                 tabindex="0">
                   <i class="fa fa-question-circle info-icon icon-only"></i>
@@ -323,45 +323,11 @@
                 NCBI Taxonomy database.</a> For example, for human samples Human,
                 Homo sapiens, or H. sapiens can be used.'"
                 popover-title="Species Column"
-                popover-trigger="focus"
+                popover-trigger="'outsideClick'"
                 popover-append-to-body="true"
                 tabindex="0">
                   <i class="fa fa-question-circle info-icon icon-only"></i>
               </a>
-            </div>
-          </div>
-
-          <div>
-            <div class="refinery-subheader m-t-1">
-              <h1>Publishing</h1>
-            </div>
-            <div class="row m-t-1-4 m-b-1-4">
-              <div class="col-sm-6 col-md-3 col-lg-2">
-                URL Shortcut
-              </div>
-              <div class="col-sm-6 col-md-3 col-lg-2">
-                <input
-                  type="text"
-                  class="width-95"
-                  name="slug"
-                  ng-model="metadataTable.slug"
-                  ng-pattern="urlShortcutRegex">
-              </div>
-              <div class="col-sm-12 col-md-6 col-lg-8">
-                Shortcut name to access the data set via a direct URL.
-                <a
-                  popover-placement="right"
-                  uib-popover="Can only contain alphanumeric characters and '_'.
-                  A data set with the shortcut my_experiment would be
-                  accessible under http://stemcellcommons
-                  .org/data_sets/my_experiment."
-                  popover-title="URL Shortcut"
-                  popover-trigger="focus"
-                  popover-append-to-body="true"
-                  tabindex="0">
-                    <i class="fa fa-question-circle info-icon icon-only"></i>
-                </a>
-              </div>
             </div>
           </div>
 
@@ -402,7 +368,7 @@
                      BAM data file. If URLs are provided, they have to be
                      publicly accessible."
                     popover-title="Auxiliary File Column"
-                    popover-trigger="focus"
+                    popover-trigger="'outsideClick'"
                     popover-append-to-body="true"
                     tabindex="0">
                       <i class="fa fa-question-circle info-icon icon-only"></i>
@@ -432,7 +398,7 @@
                     indicate whether the data file in this row should be
                     treated as an annotation file rather than a data file."
                     popover-title="Annotation Column"
-                    popover-trigger="focus"
+                    popover-trigger="'outsideClick'"
                     popover-append-to-body="true"
                     tabindex="0">
                     <i class="fa fa-question-circle info-icon icon-only"></i>
@@ -480,7 +446,7 @@
                     set. If not selected, such files will only be imported
                     into the system when used for analysis."
                     popover-title="Import Now"
-                    popover-trigger="focus"
+                    popover-trigger="'outsideClick'"
                     popover-append-to-body="true"
                     tabindex="0">
                       <i class="fa fa-question-circle info-icon icon-only"></i>
@@ -522,7 +488,7 @@
                   <strong>No</strong> if the <strong>Data File Column</strong>
                   contains URLs of remote files already uploaded elsewhere.'"
                   popover-title="Upload Local Data Files"
-                  popover-trigger="focus"
+                  popover-trigger="'outsideClick'"
                   popover-append-to-body="true"
                   tabindex="0">
                       <i class="fa fa-question-circle info-icon icon-only"></i>
@@ -541,7 +507,7 @@
                     uib-popover="Use this button to check that you have
                     successfully uploaded all of your data files."
                     popover-title="Check Data Files"
-                    popover-trigger="focus"
+                    popover-trigger="'outsideClick'"
                     popover-append-to-body="true"
                     tabindex="0">
                         <i class="fa fa-question-circle info-icon icon-only"></i>

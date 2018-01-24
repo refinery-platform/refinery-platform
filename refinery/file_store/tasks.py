@@ -26,13 +26,11 @@ logger = logging.getLogger(__name__)
 
 
 @task()
-def create(source, sharename='', filetype='', file_size=1):
+def create(source, filetype=''):
     """Create a FileStoreItem instance and return its UUID
     Important: source must be either an absolute file system path or a URL
     :param source: URL or absolute file system path to a file.
     :type source: str.
-    :param sharename: Group share name.
-    :type sharename: str.
     :param filetype: File extension
     :type filetype: str.
     :param file_size: For cases when the remote site specified by source URL
@@ -44,8 +42,7 @@ def create(source, sharename='', filetype='', file_size=1):
     # TODO: move to file_store/models.py since it's never used as a task
     logger.info("Creating FileStoreItem using source '%s'", source)
 
-    item = FileStoreItem.objects.create_item(
-        source=source, sharename=sharename, filetype=filetype)
+    item = FileStoreItem.objects.create_item(source=source, filetype=filetype)
     if not item:
         logger.error("Failed to create FileStoreItem using source '%s'",
                      source)
@@ -74,8 +71,9 @@ def import_file(uuid, refresh=False, file_size=0):
         return None
 
     # save task ID for looking up file import status
-    item.import_task_id = import_file.request.id
-    item.save()
+    if import_file.request.id:  # workaround when called not as task
+        item.import_task_id = import_file.request.id
+        item.save()
 
     # if file is ready to be used then return it,
     # otherwise delete it if update is requested
@@ -95,7 +93,7 @@ def import_file(uuid, refresh=False, file_size=0):
                 item.datafile.save(os.path.basename(item.source), File(f))
         except IOError:
             logger.error("Could not open file: %s", item.source)
-            return None
+            return item.uuid
         if item.source.startswith(settings.REFINERY_DATA_IMPORT_DIR):
             try:
                 os.unlink(item.source)
@@ -111,13 +109,11 @@ def import_file(uuid, refresh=False, file_size=0):
             logger.debug("Downloading file from '%s'", item.source)
             try:
                 uploaded_object.download_fileobj(download)
-            except botocore.exceptions.ClientError:
-                logger.error("Failed to download '%s'", item.source)
-                import_file.update_state(
-                    state=celery.states.FAILURE,
-                    meta='Failed to import uploaded file'
-                )
-                return None
+            except botocore.exceptions.ClientError as exc:
+                logger.error("Failed to download '%s': %s", item.source, exc)
+                import_file.update_state(state=celery.states.FAILURE,
+                                         meta='Failed to import uploaded file')
+                return item.uuid
             logger.debug("Saving downloaded file '%s'", download.name)
             item.datafile.save(os.path.basename(key), File(download))
             logger.debug("Saved downloaded file to '%s'", item.datafile.name)
@@ -243,13 +239,19 @@ def import_file(uuid, refresh=False, file_size=0):
 
 @task_success.connect(sender=import_file)
 def update_solr_index(**kwargs):
+    # NOTE: Celery docs suggest to access these fields through kwargs as the
+    # structure of celery signal handlers changes often
+    # http://docs.celeryproject.org/en/3.1/userguide/signals.html#basics
     file_store_item_uuid = kwargs['result']
     try:
+        logger.debug("Fetching Node for FileStoreItem with UUID: %s",
+                     file_store_item_uuid)
         node = Node.objects.get(file_uuid=file_store_item_uuid)
     except (Node.DoesNotExist, Node.MultipleObjectsReturned) as exc:
         logger.error("Couldn't retrieve Node: %s", exc)
     else:
-        NodeIndex().update_object(node)
+        logger.debug("Updating Solr index for Node with UUID: %s", node.uuid)
+        NodeIndex().update_object(node, using="data_set_manager")
 
 
 @task_success.connect(sender=import_file)

@@ -20,9 +20,9 @@ from analysis_manager.utils import (fetch_objects_required_for_analysis,
 from analysis_manager.views import analysis_status, run
 from core.models import Analysis, DataSet, Project, Workflow, WorkflowEngine
 from data_set_manager.models import Assay
+from factory_boy.django_model_factories import GalaxyInstanceFactory
 from factory_boy.utils import (create_dataset_with_necessary_models,
                                make_analyses_with_single_dataset)
-from galaxy_connector.models import Instance
 from tool_manager.models import ToolDefinition
 from tool_manager.tests import ToolManagerTestBase
 
@@ -106,7 +106,7 @@ class AnalysisUtilsTests(TestCase):
     different types of valid analysis configs
     """
     def setUp(self):
-        self.galaxy_instance = Instance.objects.create()
+        self.galaxy_instance = GalaxyInstanceFactory()
         self.workflow_engine = WorkflowEngine.objects.create(
             instance=self.galaxy_instance
         )

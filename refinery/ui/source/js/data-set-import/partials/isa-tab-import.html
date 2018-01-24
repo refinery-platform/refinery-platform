@@ -31,7 +31,17 @@
         ng-if="isaTabImport.isErrored">
         <div class="text-centered">
           <i class="fa fa-exclamation-triangle" aria-hidden="true"></i>
-          {{ isaTabImport.errorMessage }}
+          <span ng-if="isaTabImport.errorMessage">
+             {{ isaTabImport.errorMessage }}
+          </span>
+            <span ng-if="!isaTabImport.errorMessage">
+              Import of this data set failed.
+          </span>
+          <p>
+            <a class="pointer" ng-click="isaTabImport.closeError()">
+              Return to IsaTab Import Form
+            </a>
+          </p>
         </div>
       </div>
 
@@ -50,7 +60,7 @@
           ng-if="isaTabImport.file"
           ng-click="isaTabImport.clearFile()">
           <i
-            class="fa fa-times-circle"
+            class="refinery-warning fa fa-times-circle"
             aria-hidden="true"
             title="Clear selected file"
             refinery-tooltip
