@@ -1262,7 +1262,9 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
             fake_registry_tool_names
         )
 
-        with self.settings(REFINERY_VISUALIZATION_REGISTRY="blah"):
+        with self.settings(
+                REFINERY_VISUALIZATION_REGISTRY="http://www.example.com"
+        ):
             with self.assertRaises(CommandError) as context:
                 self.load_visualizations(visualizations=[fake_vis_tool_name])
                 self.assertTrue(get_available_vis_tool_names_mock.called)
