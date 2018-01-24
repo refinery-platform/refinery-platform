@@ -7,7 +7,7 @@ Created on April 6, 2012
 import logging
 
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404
 
 from core.models import Workflow, WorkflowEngine
@@ -27,10 +27,10 @@ def import_workflows(request):
         logger.debug("Engine: " + engine.name + " - " +
                      str(new_workflow_count) + ' workflows after.')
         workflows += new_workflow_count
-    return HttpResponse(str(workflows) + ' workflows imported.')
+    return HttpResponse(str(workflows) + ' workflows imported.', )
 
 
 def download_workflow(request, workflow_uuid):
     """Returns a specified workflow_id as a dictionary object."""
     workflow = get_object_or_404(Workflow, uuid=workflow_uuid)
-    return HttpResponse(workflow.graph)
+    return JsonResponse(workflow.graph)
