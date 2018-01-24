@@ -49,6 +49,11 @@ class Command(BaseCommand):
         super(Command, self).__init__()
         self.force = False
         self.visualization_registry_branch = "master"
+        self.raw_registry_url = \
+            settings.REFINERY_VISUALIZATION_REGISTRY.replace(
+                "github",
+                "raw.githubusercontent"
+            )
 
     def warn(self, message):
         self.stderr.write(
@@ -124,9 +129,8 @@ class Command(BaseCommand):
                 with open(name) as f:
                     annotation = json.loads(f.read())
             else:
-                raw_asset_url = (
-                    'https://raw.githubusercontent.com/'
-                    'refinery-platform/visualization-tools/' +
+                raw_asset_url = urljoin(
+                    self.raw_registry_url,
                     self.visualization_registry_branch +
                     '/tool-annotations/' + name + '.json'
                 )
