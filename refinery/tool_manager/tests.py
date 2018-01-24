@@ -267,12 +267,11 @@ class ToolManagerTestBase(ToolManagerMocks):
             self.django_docker_cleanup_wait_time
         )
 
-    def load_visualizations(self, visualizations=None):
+    def load_visualizations(
+        self,
+        visualizations=["{}/visualizations/igv.json".format(TEST_DATA_PATH)]
+    ):
         # TODO: More mocking, so Docker image is not downloaded
-        if visualizations is None:
-            visualizations = [
-                "{}/visualizations/igv.json".format(TEST_DATA_PATH)
-            ]
         call_command("load_tools", visualizations=visualizations)
         return visualizations
 
