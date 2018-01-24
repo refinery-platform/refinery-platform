@@ -1,7 +1,9 @@
 import json
 from optparse import make_option
 import os
+import re
 import sys
+from urlparse import urljoin
 
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
@@ -207,12 +209,15 @@ class Command(BaseCommand):
                     .format(workflow["name"])
                 )
 
-    @staticmethod
-    def _get_available_visualization_tool_registry_names():
+    def _get_available_visualization_tool_registry_names(self):
         try:
             response = requests.get(
-                "https://api.github.com/repos/refinery-platform/"
-                "visualization-tools/contents/tool-annotations/"
+                urljoin(
+                    settings.REFINERY_VISUALIZATION_TOOL_REGISTRY_URL,
+                    "tree/{}/tool-annotations".format(
+                        self.visualization_registry_branch
+                    )
+                )
             )
         except requests.exceptions.RequestException as e:
             raise CommandError(
@@ -225,9 +230,13 @@ class Command(BaseCommand):
         else:
             return ", ".join(
                 [
-                    tool_annotation["name"].replace(".json", "")
-                    for tool_annotation in response.json()
+                    tool_name.split("/")[1].replace(".json", "")
+                    for tool_name in re.findall(
+                        r"tool-annotations/.+?\.json",
+                        response.content
+                    )
                 ]
+
             )
 
     @staticmethod
