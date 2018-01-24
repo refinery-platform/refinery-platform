@@ -267,9 +267,11 @@ class ToolManagerTestBase(ToolManagerMocks):
             self.django_docker_cleanup_wait_time
         )
 
-    def load_visualizations(self):
+    def load_visualizations(
+        self,
+        visualizations=["{}/visualizations/igv.json".format(TEST_DATA_PATH)]
+    ):
         # TODO: More mocking, so Docker image is not downloaded
-        visualizations = ["{}/visualizations/igv.json".format(TEST_DATA_PATH)]
         call_command("load_tools", visualizations=visualizations)
         return visualizations
 
@@ -1245,6 +1247,35 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
             tool_definitions_b = [t for t in ToolDefinition.objects.all()]
 
         self.assertEqual(tool_definitions_a, tool_definitions_b)
+
+    @mock.patch.object(
+        LoadToolsCommand,
+        "_get_available_visualization_tool_registry_names"
+    )
+    def test_load_tools_error_message_yields_vis_registry_info(
+            self,
+            get_available_vis_tool_names_mock
+    ):
+        fake_registry_tool_names = "a, b, c, d"
+        fake_vis_tool_name = "coffee"
+        get_available_vis_tool_names_mock.return_value = (
+            fake_registry_tool_names
+        )
+
+        with self.settings(
+                REFINERY_VISUALIZATION_REGISTRY="http://www.example.com"
+        ):
+            with self.assertRaises(CommandError) as context:
+                self.load_visualizations(visualizations=[fake_vis_tool_name])
+                self.assertTrue(get_available_vis_tool_names_mock.called)
+            self.assertIn(
+                "Available Visualization Tools from the Registry ({}) are: {}"
+                .format(
+                    settings.REFINERY_VISUALIZATION_REGISTRY,
+                    fake_registry_tool_names
+                ),
+                context.exception.message
+            )
 
     def test_workflow_pair_too_many_inputs(self):
         with open(
@@ -3414,6 +3445,10 @@ class VisualizationToolLaunchTests(ToolManagerTestBase,  # TODO: Cypress
             self.live_server_url,
             "/tool_manager/test_data/sample.seg"
         )
+        mock.patch.object(
+            LoadToolsCommand,
+            "_get_available_visualization_tool_registry_names",
+        ).start()
 
     def tearDown(self):
         # super() will only ever resolve a single class type for a given method
@@ -3550,18 +3585,17 @@ class VisualizationToolLaunchTests(ToolManagerTestBase,  # TODO: Cypress
         )
 
     def test_max_containers(self):
-        for i in xrange(settings.DJANGO_DOCKER_ENGINE_MAX_CONTAINERS):
+        with self.settings(DJANGO_DOCKER_ENGINE_MAX_CONTAINERS=1):
             self._start_visualization(
                 'hello_world.json',
                 "https://www.example.com/file.txt",
-                count=i+1
+                count=settings.DJANGO_DOCKER_ENGINE_MAX_CONTAINERS
             )
-
-        with self.assertRaises(VisualizationToolError) as context:
-            self._start_visualization(
-                'hello_world.json',
-                "https://www.example.com/file.txt"
-            )
+            with self.assertRaises(VisualizationToolError) as context:
+                self._start_visualization(
+                    'hello_world.json',
+                    "https://www.example.com/file.txt",
+                )
         self.assertIn("Max containers", context.exception.message)
 
     def test__get_launch_parameters(self):
