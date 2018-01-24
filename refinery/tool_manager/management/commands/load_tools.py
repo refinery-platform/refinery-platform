@@ -3,6 +3,7 @@ from optparse import make_option
 import os
 import sys
 
+from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 
 import requests
@@ -114,6 +115,9 @@ class Command(BaseCommand):
 
     def _load_visualization_definitions(self, names, branch='master'):
         visualization_annotations = []
+        availible_registry_tool_names = \
+            self._get_available_visualization_tool_registry_names()
+
         for name in names:
             if os.path.exists(name):
                 with open(name) as f:
@@ -125,8 +129,13 @@ class Command(BaseCommand):
                 response = requests.get(url)
                 if response.status_code != 200:
                     raise CommandError(
-                        '"{}" not a file and "{}" not a valid URL'.format(
-                            name, url
+                        '"{}" not a local file and "{}" does not point to'
+                        ' a valid Visualization Tool Registry URL.\n '
+                        'Available Visualization Tools from the '
+                        'Registry ({}) are: {}'.format(
+                            name, url,
+                            settings.REFINERY_VISUALIZATION_TOOL_REGISTRY_URL,
+                            availible_registry_tool_names
                         )
                     )
                 annotation = response.json()
@@ -197,6 +206,29 @@ class Command(BaseCommand):
                     "Generated ToolDefinition for Workflow: `{}`"
                     .format(workflow["name"])
                 )
+
+    @staticmethod
+    def _get_available_visualization_tool_registry_names():
+        try:
+            response = requests.get(
+                "https://api.github.com/repos/refinery-platform/"
+                "visualization-tools/contents/tool-annotations/"
+            )
+        except requests.exceptions.RequestException as e:
+            raise CommandError(
+                "Unable to fetch Visualization Tools from the Registry "
+                "({}): {}".format(
+                    settings.REFINERY_VISUALIZATION_TOOL_REGISTRY_URL,
+                    e
+                )
+            )
+        else:
+            return ", ".join(
+                [
+                    tool_annotation["name"].replace(".json", "")
+                    for tool_annotation in response.json()
+                ]
+            )
 
     @staticmethod
     def _has_workflow_outputs(workflow):
