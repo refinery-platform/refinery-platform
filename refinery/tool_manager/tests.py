@@ -3444,6 +3444,10 @@ class VisualizationToolLaunchTests(ToolManagerTestBase,  # TODO: Cypress
             self.live_server_url,
             "/tool_manager/test_data/sample.seg"
         )
+        mock.patch.object(
+            LoadToolsCommand,
+            "_get_available_visualization_tool_registry_names",
+        ).start()
 
     def tearDown(self):
         # super() will only ever resolve a single class type for a given method
