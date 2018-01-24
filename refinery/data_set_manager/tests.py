@@ -484,7 +484,7 @@ class AssaysFilesAPITests(APITestCase):
         mock_format.return_value = {'status': 200}
         self.client.login(username=self.user_guest,
                           password=self.fake_password)
-        assign_perm('read_%s' % DataSet._meta.module_name,
+        assign_perm('read_%s' % DataSet.model_name,
                     self.user2,
                     self.data_set)
         uuid = self.valid_uuid
@@ -508,7 +508,7 @@ class AssaysFilesAPITests(APITestCase):
         mock_format.return_value = {'status': 200}
         self.client.login(username=self.user_guest,
                           password=self.fake_password)
-        assign_perm('read_meta_%s' % DataSet._meta.module_name,
+        assign_perm('read_meta_%s' % DataSet.model_name,
                     self.user2,
                     self.data_set)
 
