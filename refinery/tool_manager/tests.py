@@ -1263,14 +1263,14 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
             fake_registry_tool_names
         )
 
-        with self.settings(REFINERY_VISUALIZATION_TOOL_REGISTRY_URL="blah"):
+        with self.settings(REFINERY_VISUALIZATION_REGISTRY="blah"):
             with self.assertRaises(CommandError) as context:
                 self.load_visualizations(visualizations=[fake_vis_tool_name])
                 self.assertTrue(get_available_vis_tool_names_mock.called)
             self.assertIn(
                 "Available Visualization Tools from the Registry ({}) are: {}"
                 .format(
-                    settings.REFINERY_VISUALIZATION_TOOL_REGISTRY_URL,
+                    settings.REFINERY_VISUALIZATION_REGISTRY,
                     fake_registry_tool_names
                 ),
                 context.exception.message

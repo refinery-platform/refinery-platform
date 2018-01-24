@@ -140,7 +140,7 @@ class Command(BaseCommand):
                         'Available Visualization Tools from the '
                         'Registry ({}) are: {}'.format(
                             name, raw_asset_url,
-                            settings.REFINERY_VISUALIZATION_TOOL_REGISTRY_URL,
+                            settings.REFINERY_VISUALIZATION_REGISTRY,
                             availible_registry_tool_names
                         )
                     )
@@ -217,7 +217,7 @@ class Command(BaseCommand):
         try:
             response = requests.get(
                 urljoin(
-                    settings.REFINERY_VISUALIZATION_TOOL_REGISTRY_URL,
+                    settings.REFINERY_VISUALIZATION_REGISTRY,
                     "tree/{}/tool-annotations".format(
                         self.visualization_registry_branch
                     )
