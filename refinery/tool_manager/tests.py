@@ -267,9 +267,12 @@ class ToolManagerTestBase(ToolManagerMocks):
             self.django_docker_cleanup_wait_time
         )
 
-    def load_visualizations(self):
+    def load_visualizations(self, visualizations=None):
         # TODO: More mocking, so Docker image is not downloaded
-        visualizations = ["{}/visualizations/igv.json".format(TEST_DATA_PATH)]
+        if visualizations is None:
+            visualizations = [
+                "{}/visualizations/igv.json".format(TEST_DATA_PATH)
+            ]
         call_command("load_tools", visualizations=visualizations)
         return visualizations
 
@@ -1245,6 +1248,33 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
             tool_definitions_b = [t for t in ToolDefinition.objects.all()]
 
         self.assertEqual(tool_definitions_a, tool_definitions_b)
+
+    @mock.patch.object(
+        LoadToolsCommand,
+        "_get_available_visualization_tool_registry_names"
+    )
+    def test_load_tools_error_message_yields_vis_registry_info(
+            self,
+            get_available_vis_tool_names_mock
+    ):
+        fake_registry_tool_names = "a, b, c, d"
+        fake_vis_tool_name = "coffee"
+        get_available_vis_tool_names_mock.return_value = (
+            fake_registry_tool_names
+        )
+
+        with self.settings(REFINERY_VISUALIZATION_TOOL_REGISTRY_URL="blah"):
+            with self.assertRaises(CommandError) as context:
+                self.load_visualizations(visualizations=[fake_vis_tool_name])
+                self.assertTrue(get_available_vis_tool_names_mock.called)
+            self.assertIn(
+                "Available Visualization Tools from the Registry ({}) are: {}"
+                .format(
+                    settings.REFINERY_VISUALIZATION_TOOL_REGISTRY_URL,
+                    fake_registry_tool_names
+                ),
+                context.exception.message
+            )
 
     def test_workflow_pair_too_many_inputs(self):
         with open(
