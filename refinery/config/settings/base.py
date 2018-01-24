@@ -178,12 +178,12 @@ TEMPLATE_DIRS = (
 
 # NOTE: the order of INSTALLED_APPS matters in some instances.
 INSTALLED_APPS = (
+    'django.contrib.auth',
     'registration',
     'core',
     'data_set_manager',
     'guardian',
     'django.contrib.contenttypes',
-    'django.contrib.auth',
     'django.contrib.sessions',
     'django.contrib.sites',
     'django.contrib.messages',
@@ -615,3 +615,6 @@ TASTYPIE_DEFAULT_FORMATS = ['json']
 
 # temporary feature toggle for using S3 as user data file storage backend
 REFINERY_S3_USER_DATA = get_setting('REFINERY_S3_USER_DATA', default=False)
+
+# ALLOWED_HOSTS required in 1.8.16 to prevent a DNS rebinding attack.
+ALLOWED_HOSTS = get_setting("ALLOWED_HOSTS")  # NOQA: F405
