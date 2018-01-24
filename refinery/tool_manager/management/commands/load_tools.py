@@ -226,22 +226,11 @@ class Command(BaseCommand):
         except requests.exceptions.RequestException as e:
             raise CommandError(
                 "Unable to fetch Visualization Tools from the Registry "
-                "({}): {}".format(
-                    settings.REFINERY_VISUALIZATION_TOOL_REGISTRY_URL,
-                    e
-                )
+                "({}): {}".format(settings.REFINERY_VISUALIZATION_REGISTRY, e)
             )
-        else:
-            return ", ".join(
-                [
-                    tool_name.split("/")[1].replace(".json", "")
-                    for tool_name in re.findall(
-                        r"tool-annotations/.+?\.json",
-                        response.content
-                    )
-                ]
-
-            )
+        return ', '.join(
+            re.findall(r"tool-annotations/(.+?)\.json",  response.content)
+        )
 
     @staticmethod
     def _has_workflow_outputs(workflow):
