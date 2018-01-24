@@ -3580,18 +3580,17 @@ class VisualizationToolLaunchTests(ToolManagerTestBase,  # TODO: Cypress
         )
 
     def test_max_containers(self):
-        for i in xrange(settings.DJANGO_DOCKER_ENGINE_MAX_CONTAINERS):
+        with self.settings(DJANGO_DOCKER_ENGINE_MAX_CONTAINERS=1):
             self._start_visualization(
                 'hello_world.json',
                 "https://www.example.com/file.txt",
-                count=i+1
+                count=settings.DJANGO_DOCKER_ENGINE_MAX_CONTAINERS
             )
-
-        with self.assertRaises(VisualizationToolError) as context:
-            self._start_visualization(
-                'hello_world.json',
-                "https://www.example.com/file.txt"
-            )
+            with self.assertRaises(VisualizationToolError) as context:
+                self._start_visualization(
+                    'hello_world.json',
+                    "https://www.example.com/file.txt",
+                )
         self.assertIn("Max containers", context.exception.message)
 
     def test__get_launch_parameters(self):
