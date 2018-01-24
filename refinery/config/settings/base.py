@@ -615,3 +615,6 @@ TASTYPIE_DEFAULT_FORMATS = ['json']
 
 # temporary feature toggle for using S3 as user data file storage backend
 REFINERY_S3_USER_DATA = get_setting('REFINERY_S3_USER_DATA', default=False)
+
+REFINERY_VISUALIZATION_TOOL_REGISTRY_URL = \
+    "https://github.com/refinery-platform/visualization-tools/"
