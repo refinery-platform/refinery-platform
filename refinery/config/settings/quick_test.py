@@ -5,7 +5,7 @@
 # Speeds up test runs by skipping migrations
 # Disables logging to provide a clean output of test results
 
-# Usage: manage.py test --settings=config.settings.test
+# Usage: manage.py test --settings=config.settings.quick_test
 
 from .base import *  # NOQA
 
