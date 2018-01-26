@@ -16,7 +16,6 @@ from ...utils import SUPPORTED_GENOMES
 # Helper command to deal with additional annotation tracks not available from
 # UCSC genome browser
 #
-# TODO: Should we import annotation files into file_server?
 # how to cleanup directories used to store and download files
 
 logger = logging.getLogger(__name__)

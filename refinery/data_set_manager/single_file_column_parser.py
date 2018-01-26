@@ -10,7 +10,6 @@ import operator
 from django.conf import settings
 
 from annotation_server.models import Taxon, species_to_taxon_id
-import file_server
 from file_store.models import FileStoreItem, generate_file_source_translator
 from file_store.tasks import create, import_file
 
@@ -215,9 +214,6 @@ class SingleFileColumnParser:
                 data_files.append(auxiliary_file_uuid)
             else:
                 auxiliary_file_uuid = None
-            # add files to file server
-            # TODO: add error handling in case of None values for UUIDs
-            file_server.models.add(data_file_uuid, auxiliary_file_uuid)
             # create nodes if file was successfully created
             # source node
             source_name = self._create_name(
