@@ -4,7 +4,7 @@ import logging
 
 from django.db import connection
 from django.db.models import Q
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 
 from .utils import GAP_REGIONS, MAPPABILITY_THEORETICAL, SUPPORTED_GENOMES
 
@@ -27,7 +27,7 @@ def search_genes(request, genome, search_string):
                  'cdsEnd', 'exonCount', 'exonStarts', 'exonEnds')
 
         data = ValuesQuerySetToDict(curr_vals)
-        return HttpResponse(data, 'application/json')
+        return JsonResponse(data)
     return HttpResponse(status=400)
 
 
@@ -64,7 +64,7 @@ def get_length(request, genome):
         current_table = globals()[genome + "_ChromInfo"]
         data = ValuesQuerySetToDict(
             current_table.objects.values('chrom', 'size'))
-        return HttpResponse(data, 'application/json')
+        return JsonResponse(data)
     return HttpResponse(status=400)
 
 
@@ -78,7 +78,7 @@ def get_chrom_length(request, genome, chrom):
         curr_vals = current_table.objects.filter(chrom__iexact=chrom).values(
             'chrom', 'size')
         data = ValuesQuerySetToDict(curr_vals)
-        return HttpResponse(data, 'application/json')
+        return JsonResponse(data)
     return HttpResponse(status=400)
 
     # TODO: return genome lengths according to chrom order i.e. 1,2,3 etc.
@@ -94,7 +94,7 @@ def get_cytoband(request, genome, chrom):
         curr_vals = current_table.objects.filter(chrom__iexact=chrom).values(
             'chrom', 'chromStart', 'chromEnd', 'name', 'gieStain')
         data = ValuesQuerySetToDict(curr_vals)
-        return HttpResponse(data, 'application/json')
+        return JsonResponse(data)
     return HttpResponse(status=400)
 
 
@@ -111,7 +111,7 @@ def get_genes(request, genome, chrom, start, end):
         ).values('name', 'chrom', 'strand', 'txStart', 'txEnd', 'cdsStart',
                  'cdsEnd', 'exonCount', 'exonStarts', 'exonEnds')
         data = ValuesQuerySetToDict(curr_vals)
-        return HttpResponse(data, 'application/json')
+        return JsonResponse(data)
     return HttpResponse(status=400)
 
 
@@ -127,7 +127,7 @@ def get_gc(request, genome, chrom, start, end):
             Q(position__range=(start, end)),
         ).values('chrom', 'position', 'value')
         data = ValuesQuerySetToDict(curr_vals)
-        return HttpResponse(data, 'application/json')
+        return JsonResponse(data)
     return HttpResponse(status=400)
 
 
@@ -145,7 +145,7 @@ def get_maptheo(request, genome, chrom, start, end):
             Q(chromStart__range=(start, end)) | Q(chromEnd__range=(start, end))
         ).values('chrom', 'chromStart', 'chromEnd')
         data = ValuesQuerySetToDict(curr_vals)
-        return HttpResponse(data, 'application/json')
+        return JsonResponse(data)
     return HttpResponse(status=400)
 
 
@@ -162,7 +162,7 @@ def get_mapemp(request, genome, chrom, start, end):
             Q(chromStart__range=(start, end)) | Q(chromEnd__range=(start, end))
         ).values('chrom', 'chromStart', 'chromEnd')
         data = ValuesQuerySetToDict(curr_vals)
-        return HttpResponse(data, 'application/json')
+        return JsonResponse(data)
     return HttpResponse(status=400)
 
 
@@ -178,7 +178,7 @@ def get_conservation(request, genome, chrom, start, end):
             Q(position__range=(start, end)),
         ).values('chrom', 'position', 'value')
         data = ValuesQuerySetToDict(curr_vals)
-        return HttpResponse(data, 'application/json')
+        return JsonResponse(data)
     return HttpResponse(status=400)
 
 
@@ -197,7 +197,7 @@ def get_gapregion(request, genome, chrom, start, end):
         ).values('bin', 'chromStart', 'chromEnd', 'ix', 'n', 'size', 'type',
                  'bridge')
         data = ValuesQuerySetToDict(curr_vals)
-        return HttpResponse(data, 'application/json')
+        return JsonResponse(data)
     return HttpResponse(status=400)
 
 
