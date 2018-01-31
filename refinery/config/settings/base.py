@@ -618,6 +618,3 @@ REFINERY_S3_USER_DATA = get_setting('REFINERY_S3_USER_DATA', default=False)
 
 # ALLOWED_HOSTS required in 1.8.16 to prevent a DNS rebinding attack.
 ALLOWED_HOSTS = get_setting("ALLOWED_HOSTS")  # NOQA: F405
-
-# https://github.com/juliomalegria/django-chunked-upload/issues/7
-CHUNKED_UPLOAD_ABSTRACT_MODEL = False
