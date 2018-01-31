@@ -2167,11 +2167,7 @@ class IsaTabTestBase(TestCase):
         self.user.set_password(test_user)
         self.user.save()
         self.isa_tab_import_url = "/data_set_manager/import/isa-tab-form/"
-        is_logged_in = self.client.login(
-            username=self.user.username,
-            password=test_user
-        )
-        self.assertTrue(is_logged_in)
+        self.client.login(username=self.user.username, password=test_user)
 
     def tearDown(self):
         mock.patch.stopall()
