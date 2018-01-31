@@ -282,6 +282,12 @@ LOGGING = {
         'httpproxy': {
             'level': 'ERROR',
         },
+        'httpstream': {  # dependency of py2neo
+            'level': 'INFO',
+        },
+        'pysolr': {
+            'level': 'INFO',
+        },
         'requests': {
             'level': 'ERROR',
         },
