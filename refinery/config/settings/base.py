@@ -178,14 +178,14 @@ TEMPLATE_DIRS = (
 
 # NOTE: the order of INSTALLED_APPS matters in some instances.
 INSTALLED_APPS = (
-    'django.contrib.auth',
+    'django.contrib.sites',
     'registration',
+    'django.contrib.auth',
     'core',
     'data_set_manager',
     'guardian',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
-    'django.contrib.sites',
     'django.contrib.messages',
     'django.contrib.staticfiles',
     # Uncomment the next line to enable the admin:
