@@ -1010,12 +1010,10 @@ class IsaTabParser:
                 "file \"" + investigation_file_name + "\""
             )
         # 5. assign ISA-Tab archive and pre-ISA-Tab archive if present
-        try:
+        if isa_archive:
             self._current_investigation.isarchive_file = create(isa_archive)
             import_file(self._current_investigation.isarchive_file,
                         refresh=True)
-        except:
-            pass
 
         if preisa_archive:
             self._current_investigation.pre_isarchive_file = \
