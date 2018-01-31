@@ -145,7 +145,7 @@ def get_workflow_data_input_map(request, workflow_uuid):
         return JsonResponse(curr_workflow.data_inputs.all(),
                             content_type='application/javascript')
     else:
-        return HttpResponse(curr_workflow.data_inputs.all())
+        return JsonResponse(curr_workflow.data_inputs.all())
 
 
 def run(request):
