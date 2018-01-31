@@ -14,7 +14,8 @@ from django.core.exceptions import ImproperlyConfigured
 from django.core.urlresolvers import reverse
 from django.http import (HttpResponse, HttpResponseBadRequest,
                          HttpResponseForbidden, HttpResponseNotFound,
-                         HttpResponseRedirect, HttpResponseServerError)
+                         HttpResponseRedirect, HttpResponseServerError,
+                         JsonResponse)
 from django.shortcuts import get_object_or_404, redirect, render_to_response
 from django.template import RequestContext, loader
 from django.views.decorators.gzip import gzip_page
@@ -552,9 +553,7 @@ def solr_core_search(request):
             if annotations:
                 response['response']['annotations'] = annotation_data
 
-            response = json.dumps(response)
-
-    return HttpResponse(response, content_type='application/json')
+    return JsonResponse(response)
 
 
 def solr_select(request, core):
@@ -578,7 +577,7 @@ def solr_select(request, core):
         response = json.dumps({})
     else:
         response = full_response.content
-    return HttpResponse(response, content_type='application/json')
+    return JsonResponse(response)
 
 
 def solr_igv(request):
@@ -634,8 +633,7 @@ def solr_igv(request):
         logger.debug("session_urls")
         logger.debug(json.dumps(session_urls, indent=4))
 
-        return HttpResponse(json.dumps(session_urls),
-                            content_type='application/json')
+        return JsonResponse(session_urls)
 
 
 def samples_solr(request, ds_uuid, study_uuid, assay_uuid):
@@ -705,10 +703,7 @@ def pubmed_abstract(request, id):
     except ExpatError:
         return HttpResponse('Service currently unavailable', status=503)
 
-    return HttpResponse(
-        json.dumps(response_dict),
-        content_type='application/json'
-    )
+    return JsonResponse(response_dict)
 
 
 def pubmed_search(request, term):
