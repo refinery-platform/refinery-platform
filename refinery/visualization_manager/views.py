@@ -9,8 +9,6 @@ from annotation_server.models import (genome_build_to_species,
                                       taxon_id_to_genome_build)
 from annotation_server.utils import SUPPORTED_GENOMES
 from data_set_manager.models import Node
-from file_server.models import get_aux_file_item
-from file_server.views import profile_viewer
 from file_store.models import FileStoreItem
 from file_store.tasks import create, import_file, rename
 
@@ -46,13 +44,6 @@ def igv_session(request):
     logger.info("IGV sessions: " + "; ".join(igv_urls))
     # redirects to java webstart application
     return redirect(igv_urls[0])
-
-
-def profile_viewer_session(request):
-    query = request.GET.copy()
-    uuid = query["uuid"]
-    return profile_viewer(request, uuid=uuid, start_location=1,
-                          end_location=200000000, sequence_name="chr1")
 
 
 def create_igv_session(genome, uuids, is_file_uuid=False):
@@ -535,16 +526,6 @@ def get_file_name(nodeuuid, samp_file=None, is_file_uuid=False):
                 FileStoreItem.MultipleObjectsReturned) as e:
             logger.error("Could not fetch FileStoreItem from %s: %s",
                          nodeuuid, e)
-    else:
-        try:
-            # checking to see if it has a file_server item
-            temp_fs = get_aux_file_item(curr_file_uuid)
-        except Exception as e:
-            logger.error("Could not fetch aux_file_item from %s: %s",
-                         curr_file_uuid, e)
-
-    # If no associated file_server auxiliary file then use main data file for
-    # IGV
     if temp_fs is None:
         # getting file information based on file_uuids
         try:

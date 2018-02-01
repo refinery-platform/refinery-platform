@@ -282,6 +282,12 @@ LOGGING = {
         'httpproxy': {
             'level': 'ERROR',
         },
+        'httpstream': {  # dependency of py2neo
+            'level': 'INFO',
+        },
+        'pysolr': {
+            'level': 'INFO',
+        },
         'requests': {
             'level': 'ERROR',
         },
@@ -615,3 +621,6 @@ TASTYPIE_DEFAULT_FORMATS = ['json']
 
 # temporary feature toggle for using S3 as user data file storage backend
 REFINERY_S3_USER_DATA = get_setting('REFINERY_S3_USER_DATA', default=False)
+
+REFINERY_VISUALIZATION_REGISTRY = \
+    "https://github.com/refinery-platform/visualization-tools/"
