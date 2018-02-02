@@ -176,18 +176,6 @@ class AnalysisUtilsTests(TestCase):
             )
             self.assertIn("Couldn't fetch User", context.exception.message)
 
-    def test_fetch_objects_required_for_analyses_bad_dataset(self):
-        self.dataset.delete()
-        with self.assertRaises(RuntimeError) as context:
-            fetch_objects_required_for_analysis(
-                {
-                    "study_uuid": self.study.uuid,
-                    "user_id": self.user.id,
-                    "workflow_uuid": self.workflow.uuid
-                }
-            )
-            self.assertIn("Couldn't fetch DataSet", context.exception.message)
-
 
 class AnalysisViewsTests(AnalysisManagerTestBase, ToolManagerTestBase):
     """
