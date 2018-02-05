@@ -414,11 +414,7 @@ class AssaysFilesAPITests(APITestCase):
 
     def tearDown(self):
         self.client.logout()
-        Assay.objects.all().delete()
-        Study.objects.all().delete()
-        InvestigationLink.objects.all().delete()
-        Investigation.objects.all().delete()
-        DataSet.objects.all().delete()
+        super(AssaysFilesAPITests, self).tearDown()
 
     @mock.patch('data_set_manager.views.generate_solr_params_for_assay')
     @mock.patch('data_set_manager.views.search_solr')
@@ -484,7 +480,7 @@ class AssaysFilesAPITests(APITestCase):
         mock_format.return_value = {'status': 200}
         self.client.login(username=self.user_guest,
                           password=self.fake_password)
-        assign_perm('read_%s' % DataSet.model_name,
+        assign_perm('read_%s' % DataSet._meta.model_name,
                     self.user2,
                     self.data_set)
         uuid = self.valid_uuid
@@ -508,7 +504,7 @@ class AssaysFilesAPITests(APITestCase):
         mock_format.return_value = {'status': 200}
         self.client.login(username=self.user_guest,
                           password=self.fake_password)
-        assign_perm('read_meta_%s' % DataSet.model_name,
+        assign_perm('read_meta_%s' % DataSet._meta.model_name,
                     self.user2,
                     self.data_set)
 

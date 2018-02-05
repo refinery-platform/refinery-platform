@@ -735,8 +735,7 @@ class ToolDefinitionAPITests(ToolManagerTestBase, APITestCase):
         self.assertIn("Must specify a DataSet UUID", get_response.content)
 
     def test_missing_dataset_in_get_yields_bad_request(self):
-        dataset_uuid = self.dataset.uuid
-        self.dataset.delete()
+        dataset_uuid = str(uuid.uuid4())
 
         get_request = self.factory.get(
             "{}?dataSetUuid={}".format(
