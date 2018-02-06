@@ -27,7 +27,7 @@ def import_workflows(request):
         logger.debug("Engine: " + engine.name + " - " +
                      str(new_workflow_count) + ' workflows after.')
         workflows += new_workflow_count
-    return HttpResponse(str(workflows) + ' workflows imported.', )
+    return HttpResponse(str(workflows) + ' workflows imported.')
 
 
 def download_workflow(request, workflow_uuid):
