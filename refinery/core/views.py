@@ -574,10 +574,10 @@ def solr_select(request, core):
             full_response.raise_for_status()
     except HTTPError as e:
         logger.error(e)
-        response = json.dumps({})
+        return JsonResponse({})
     else:
-        response = full_response.content
-    return JsonResponse(response)
+        return HttpResponse(full_response.content,
+                            content_type='application/json')
 
 
 def solr_igv(request):
