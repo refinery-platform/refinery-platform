@@ -656,8 +656,9 @@ class DataSetDeletionTest(TestCase):
             self, mock_get_links
     ):
         self.assertIsNotNone(
-            DataSet.objects.get(name="dataset_without_analysis"))
-        mock_get_links.return_value = []
+            DataSet.objects.get(name="dataset_without_analysis"),
+            return_value=[]
+        )
         self.dataset_without_analysis.delete()
         self.assertRaises(
             DataSet.DoesNotExist,
@@ -673,16 +674,14 @@ class DataSetDeletionTest(TestCase):
                           DataSet.objects.get,
                           name="dataset_with_analysis")
 
-    @mock.patch('core.models.DataSet.get_investigation_links')
+    @mock.patch('core.models.DataSet.get_investigation_links', return_value=[])
     def test_isa_archive_deletion(self, mock_get_links):
-        mock_get_links.return_value = []
         self.assertIsNotNone(self.dataset_without_analysis.get_isa_archive())
         self.dataset_without_analysis.delete()
         self.assertIsNone(self.dataset_without_analysis.get_isa_archive())
 
-    @mock.patch('core.models.DataSet.get_investigation_links')
+    @mock.patch('core.models.DataSet.get_investigation_links', return_value=[])
     def test_pre_isa_archive_deletion(self, mock_get_links):
-        mock_get_links.return_value = []
         self.assertIsNotNone(
             self.dataset_without_analysis.get_pre_isa_archive())
         self.dataset_without_analysis.delete()

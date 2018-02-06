@@ -179,7 +179,7 @@ TEMPLATE_DIRS = (
 # NOTE: the order of INSTALLED_APPS matters in some instances.
 INSTALLED_APPS = (
     'django.contrib.sites',
-    'registration',
+    'registration',  # docs: should be immediately above 'django.contrib.auth'
     'django.contrib.auth',
     'core',
     'data_set_manager',

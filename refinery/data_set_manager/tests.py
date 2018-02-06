@@ -1540,9 +1540,9 @@ class UtilitiesTests(TestCase):
         attribute_list = AttributeOrder.objects.filter(assay=self.assay)
         self.assertItemsEqual(old_attribute_list, attribute_list)
 
-    @mock.patch("data_set_manager.utils.core.utils.get_full_url")
+    @mock.patch("data_set_manager.utils.core.utils.get_full_url",
+                return_value="test_file_a.txt")
     def test_get_file_url_from_node_uuid_good_uuid(self, mock_get_url):
-        mock_get_url.return_value = "test_file_a.txt"
         self.assertIn(
             "test_file_a.txt",
             get_file_url_from_node_uuid(self.node_a.uuid),
