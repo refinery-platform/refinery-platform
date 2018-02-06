@@ -926,7 +926,7 @@ class AnalysesViewSet(APIView):
 
 class CustomRegistrationView(RegistrationView):
 
-    def register(self, request, **cleaned_data):
+    def register(self, request):
         """
         Given a username, email address, password, first name, last name,
         and affiliation, register a new user account, which will initially
@@ -951,12 +951,12 @@ class CustomRegistrationView(RegistrationView):
         class of this backend as the sender.
 
         """
-        username = cleaned_data['username']
-        email = cleaned_data['email']
-        password = cleaned_data['password1']
-        first_name = cleaned_data['first_name']
-        last_name = cleaned_data['last_name']
-        affiliation = cleaned_data['affiliation']
+        username = request.cleaned_data['username']
+        email = request.cleaned_data['email']
+        password = request.cleaned_data['password1']
+        first_name = request.cleaned_data['first_name']
+        last_name = request.cleaned_data['last_name']
+        affiliation = request.cleaned_data['affiliation']
 
         if Site._meta.installed:
             site = Site.objects.get_current()
@@ -974,7 +974,7 @@ class CustomRegistrationView(RegistrationView):
                                      request=request)
         return new_user
 
-    def get_success_url(self, request, user):
+    def get_success_url(self, user):
         """
         Return the name of the URL to redirect to after successful
         user registration.
