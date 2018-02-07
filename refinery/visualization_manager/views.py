@@ -5,8 +5,7 @@ from xml.dom.minidom import Document
 
 from django.shortcuts import redirect
 
-from annotation_server.models import (genome_build_to_species,
-                                      taxon_id_to_genome_build)
+from annotation_server.models import taxon_id_to_genome_build
 from annotation_server.utils import SUPPORTED_GENOMES
 from data_set_manager.models import Node
 from file_server.models import get_aux_file_item
@@ -155,74 +154,6 @@ def results_igv(request):
     # NEED SPECIES
     igv_url = create_igv_session("mm9", uuids, is_file_uuid=True)
     return redirect(igv_url)
-
-
-def igv_multi_species(solr_results, solr_annot=None):
-    """Takes input solr results, identifies multiple species
-    :param solr_results: dictionary of solr results
-    :type solr_results: dictionary
-    :returns:
-    """
-    logger.debug("visualization_manager.views.igv_multi_species called")
-
-    unique_annot = None
-
-    fields = str(solr_results["responseHeader"]["params"]["fl"]).split(',')
-
-    unique_species, unique_species_num = get_unique_species(solr_results)
-    if solr_annot:
-        unique_annot, unique_annot_num = get_unique_species(solr_annot)
-
-    # 1. check to see how many species are selected?
-    # move this to visualization_manager.utils
-    # 2. look for genome_build
-    # then look for species to resolve for default genome build
-    # 3. Create sample information file
-    # i.e. http://www.broadinstitute.org/igvdata/exampleFiles/gbm_session.xml
-    # http://igv.broadinstitute.org/data/hg18/tcga/gbm/gbmsubtypes/sampleTable.txt.gz
-    # 4. generate igv files for each species, including phenotype data + paths
-    # generated from uuid's
-
-    ui_results = {'species_count': unique_species_num, 'species': {}}
-
-    for k, v in unique_species.items():
-        if solr_annot is not None and solr_annot["response"]["numFound"] > 0:
-            sample_file = add_igv_samples(fields, unique_species[k]['solr'],
-                                          unique_annot[k]['solr'])
-        else:
-            sample_file = add_igv_samples(fields, unique_species[k]['solr'])
-
-        logger.debug('Sample File: ' + sample_file)
-
-        # if node_uuids generated for given species
-        # generate igv session file
-        if "node_uuid" in v:
-            # adding default species name to key information
-            species_id, taxon_id = genome_build_to_species(k)
-            if species_id:
-                species_id = species_id.split()
-                species_id = species_id[0][0] + '. ' + species_id[1]
-
-            # if annotation contains species
-            if (solr_annot is not None and solr_annot["response"][
-                                           "numFound"] > 0):
-                if k in unique_annot:
-                    temp_url = create_igv_session_annot(
-                        k, unique_species[k], annot_uuids=unique_annot[k],
-                        samp_file=sample_file)
-            else:
-                temp_url = create_igv_session_annot(k, unique_species[k],
-                                                    annot_uuids=None,
-                                                    samp_file=sample_file)
-
-            if species_id:
-                ui_results['species'][species_id + ' (' + k + ')'] = temp_url
-            else:
-                ui_results['species'][k] = temp_url
-
-    # 5. reflect buttons in the bootbox modal in UI
-    # change genome_build keys to include species name
-    return ui_results
 
 
 def get_unique_species(docs):
