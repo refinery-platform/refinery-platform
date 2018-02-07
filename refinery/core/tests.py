@@ -1553,7 +1553,7 @@ class DataSetTests(TestCase):
         self.assertEqual(len(self.dataset.get_nodes()), 0)
 
     def test_get_nodes_uuids_only(self):
-        node_uuids = Node.objects.all().values_list("uuid")
+        node_uuids = Node.objects.all().values_list("uuid", flat=True)
         self.assertGreater(node_uuids.count(), 0)
         [
             self.assertIn(node_uuid, self.dataset.get_nodes(uuids_only=True))
