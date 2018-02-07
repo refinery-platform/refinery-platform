@@ -207,7 +207,6 @@ INSTALLED_APPS = (
     'workflow_manager',
     'file_store',
     'file_server',
-    'visualization_manager',
     'annotation_server',
     'selenium_testing',
     'tool_manager',
