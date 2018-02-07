@@ -14,6 +14,8 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='chunkedupload',
             name='status',
-            field=models.PositiveSmallIntegerField(default=1, choices=[(1, 'Uploading'), (2, 'Complete')]),
+            field=models.PositiveSmallIntegerField(
+                default=1, choices=[(1, 'Uploading'), (2, 'Complete')]
+            ),
         ),
     ]
