@@ -573,7 +573,7 @@ def solr_select(request, core):
         if ("Pivot Facet needs at least one field name"
                 not in full_response.content):
             full_response.raise_for_status()
-    except HTTPError as e:
+    except (HTTPError, ValueError) as e:
         logger.error(e)
         return JsonResponse({})
     else:
