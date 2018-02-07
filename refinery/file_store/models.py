@@ -238,11 +238,9 @@ class FileStoreItem(models.Model):
     #: file import task ID
     import_task_id = UUIDField(auto=False, blank=True)
     # Date created
-    created = models.DateTimeField(auto_now_add=True,
-                                   blank=True)
+    created = models.DateTimeField(auto_now_add=True)
     # Date updated
-    updated = models.DateTimeField(auto_now=True,
-                                   blank=True)
+    updated = models.DateTimeField(auto_now=True)
 
     objects = _FileStoreItemManager()
 
