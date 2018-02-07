@@ -563,6 +563,7 @@ def solr_select(request, core):
     data = request.GET.urlencode()
     try:
         full_response = requests.get(url, params=data)
+        response_dict = json.loads(full_response.content)
         # FIXME:
         # Solr sends back an additional 400 here in the data_sets 1 filebrowser
         # when there is only one row defined in the metadata since
@@ -576,8 +577,7 @@ def solr_select(request, core):
         logger.error(e)
         return JsonResponse({})
     else:
-        return HttpResponse(full_response.content,
-                            content_type='application/json')
+        return JsonResponse(response_dict)
 
 
 def solr_igv(request):
