@@ -120,6 +120,8 @@ class UserFilesUtilsTests(TestCase):
                          'facet.field=antibody_Factor_Value_generic_s',
                          'facet.field=genotype_Characteristics_generic_s',
                          'facet.field=genotype_Factor_Value_generic_s',
+                         'facet.field=cell_type_Characteristics_generic_s',
+                         'facet.field=cell_type_Factor_Value_generic_s',
                          'facet.field=experimenter_Characteristics_generic_s',
                          'facet.field=experimenter_Factor_Value_generic_s',
                          'fl=%2A_generic_s'
