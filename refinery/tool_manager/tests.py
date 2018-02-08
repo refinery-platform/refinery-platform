@@ -283,11 +283,7 @@ class ToolManagerTestBase(ToolManagerMocks):
             django_docker_cleanup()
         super(ToolManagerTestBase, self).tearDown()
 
-    def create_solr_mock_response(self, tool, all_dataset_nodes=False):
-        nodes = (
-            tool.dataset.get_nodes() if all_dataset_nodes else
-            tool._get_input_nodes()
-        )
+    def create_solr_mock_response(self, nodes):
         node_uuids = [n.uuid for n in nodes]
         return json.dumps(
             {
@@ -1634,7 +1630,7 @@ class VisualizationToolTests(ToolManagerTestBase):
         self.search_solr_mock = mock.patch(
             "data_set_manager.utils.search_solr",
             return_value=self.create_solr_mock_response(
-                self.visualization_tool
+                self.visualization_tool._get_input_nodes()
             )
         ).start()
 
@@ -1668,8 +1664,7 @@ class VisualizationToolTests(ToolManagerTestBase):
 
     def test_get_detailed_input_nodes_dict_all_dataset_nodes(self):
         self.search_solr_mock.return_value = self.create_solr_mock_response(
-            self.tool,
-            all_dataset_nodes=True
+            self.tool.dataset.get_nodes()
         )
         all_dataset_nodes_meta_info = self.tool._get_detailed_nodes_dict(
             self.tool.dataset.get_node_uuids()
@@ -3535,7 +3530,7 @@ class VisualizationToolLaunchTests(ToolManagerTestBase,  # TODO: Cypress
         with mock.patch(
             "data_set_manager.utils.search_solr",
             return_value=self.create_solr_mock_response(
-                visualization_tool
+                visualization_tool._get_input_nodes()
             )
         ):
             visualization_tool.launch()
