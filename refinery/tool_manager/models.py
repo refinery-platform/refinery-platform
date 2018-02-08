@@ -479,6 +479,8 @@ class VisualizationTool(Tool):
             self.INPUT_NODE_INFORMATION: self._get_detailed_nodes_dict(
                 self.get_input_node_uuids()
             ),
+            # TODO: adding all of a DataSet's Node info seems excessive. Would
+            #  be great if we had a VisualizationTool using all of this info
             self.ALL_NODE_INFORMATION: self._get_detailed_nodes_dict(
                 self.dataset.get_node_uuids()
             ),
