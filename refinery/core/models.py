@@ -833,12 +833,14 @@ class DataSet(SharableResource):
         else:
             return False
 
-    def get_nodes(self, uuids_only=False):
-        nodes = Node.objects.filter(
+    def get_nodes(self):
+        return Node.objects.filter(
             assay=self.get_latest_assay(),
             study=self.get_latest_study()
         )
-        return nodes.values_list('uuid', flat=True) if uuids_only else nodes
+
+    def get_node_uuids(self):
+        return self.get_nodes().values_list('uuid', flat=True)
 
 
 @receiver(pre_delete, sender=DataSet)
