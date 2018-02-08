@@ -1552,17 +1552,17 @@ class DataSetTests(TestCase):
         Node.objects.all().delete()
         self.assertQuerysetEqual(self.dataset.get_nodes(), [])
 
-    def test_get_nodes_uuids_only(self):
+    def test_get_node_uuids(self):
         node_uuids = Node.objects.all().values_list("uuid", flat=True)
         self.assertGreater(node_uuids.count(), 0)
         [
-            self.assertIn(node_uuid, self.dataset.get_nodes(uuids_only=True))
+            self.assertIn(node_uuid, self.dataset.get_node_uuids())
             for node_uuid in node_uuids
         ]
 
-    def test_get_nodes_uuids_only_no_nodes_available(self):
+    def test_get_node_uuids_no_nodes_available(self):
         Node.objects.all().delete()
-        self.assertQuerysetEqual(self.dataset.get_nodes(uuids_only=True), [])
+        self.assertQuerysetEqual(self.dataset.get_node_uuids(), [])
 
 
 class DataSetApiV2Tests(APITestCase):
