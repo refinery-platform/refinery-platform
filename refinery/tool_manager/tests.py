@@ -1657,7 +1657,9 @@ class VisualizationToolTests(ToolManagerTestBase):
         }
 
     def test_get_detailed_input_nodes_dict(self):
-        input_nodes_meta_info = self.tool._get_detailed_nodes_dict()
+        input_nodes_meta_info = self.tool._get_detailed_nodes_dict(
+            self.tool.get_input_node_uuids()
+        )
         self.assertEqual(
             input_nodes_meta_info,
             self._create_detailed_nodes_dict(self.tool._get_input_nodes())
@@ -1670,7 +1672,7 @@ class VisualizationToolTests(ToolManagerTestBase):
             all_dataset_nodes=True
         )
         all_dataset_nodes_meta_info = self.tool._get_detailed_nodes_dict(
-            fetch_all_nodes=True
+            self.tool.dataset.get_node_uuids()
         )
         self.assertEqual(
             all_dataset_nodes_meta_info,
@@ -1689,9 +1691,13 @@ class VisualizationToolTests(ToolManagerTestBase):
                     self.tool.get_relative_container_url() + "/",
                 Tool.FILE_RELATIONSHIPS: file_relationships,
                 VisualizationTool.INPUT_NODE_INFORMATION:
-                    self.tool._get_detailed_nodes_dict(),
+                    self.tool._get_detailed_nodes_dict(
+                        self.tool.get_input_node_uuids()
+                    ),
                 VisualizationTool.ALL_NODE_INFORMATION:
-                    self.tool._get_detailed_nodes_dict(fetch_all_nodes=True),
+                    self.tool._get_detailed_nodes_dict(
+                        self.tool.dataset.get_node_uuids()
+                    ),
                 ToolDefinition.PARAMETERS:
                     self.tool._get_visualization_parameters(),
                 ToolDefinition.EXTRA_DIRECTORIES:

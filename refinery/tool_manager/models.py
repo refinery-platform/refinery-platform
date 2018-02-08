@@ -476,9 +476,11 @@ class VisualizationTool(Tool):
             self.API_PREFIX: self.get_relative_container_url() + "/",
             self.FILE_RELATIONSHIPS: self.get_file_relationships_urls(),
             ToolDefinition.PARAMETERS: self._get_visualization_parameters(),
-            self.INPUT_NODE_INFORMATION: self._get_detailed_nodes_dict(),
+            self.INPUT_NODE_INFORMATION: self._get_detailed_nodes_dict(
+                self.get_input_node_uuids()
+            ),
             self.ALL_NODE_INFORMATION: self._get_detailed_nodes_dict(
-                fetch_all_nodes=True
+                self.dataset.get_node_uuids()
             ),
             ToolDefinition.EXTRA_DIRECTORIES:
                 self.tool_definition.get_extra_directories()
@@ -489,21 +491,16 @@ class VisualizationTool(Tool):
         if len(self._django_docker_client.list()) >= max_containers:
             raise VisualizationToolError('Max containers')
 
-    def _get_detailed_nodes_dict(self, fetch_all_nodes=False):
+    def _get_detailed_nodes_dict(self, node_uuid_list):
         """
         Create and return a dict with detailed information about all of our
-        Tool's input Nodes. If `fetch_all_nodes` == True then we construct
-        the resulting dict from all nodes in our Tool's DataSet, not the
-        input nodes to the Tool alone.
+        Nodes corresponding to the UUIDs in the given `node_uuid_list`.
 
         This detailed info contains:
             - Whatever we have in our Solr index for a given Node
             - A full url pointing to our Node's FileStoreItem's datafile
         """
-        solr_response_json = get_solr_response_json(
-            self.dataset.get_nodes(uuids_only=True) if fetch_all_nodes
-            else self.get_input_node_uuids()
-        )
+        solr_response_json = get_solr_response_json(node_uuid_list)
         node_info = {
             node["uuid"]: {
                 self.NODE_SOLR_INFO: node,
