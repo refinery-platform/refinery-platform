@@ -1550,7 +1550,10 @@ class DataSetTests(TestCase):
 
     def test_get_nodes_no_nodes_available(self):
         Node.objects.all().delete()
-        self.assertEqual(len(self.dataset.get_nodes()), 0)
+        self.assertEqual(
+            self.dataset.get_nodes(),
+            []  # empty QuerySet
+        )
 
     def test_get_nodes_uuids_only(self):
         node_uuids = Node.objects.all().values_list("uuid", flat=True)
@@ -1562,7 +1565,10 @@ class DataSetTests(TestCase):
 
     def test_get_nodes_uuids_only_no_nodes_available(self):
         Node.objects.all().delete()
-        self.assertEqual(len(self.dataset.get_nodes(uuids_only=True)), 0)
+        self.assertEqual(
+            self.dataset.get_nodes(uuids_only=True),
+            []  # empty QuerySet
+        )
 
 
 class DataSetApiV2Tests(APITestCase):
