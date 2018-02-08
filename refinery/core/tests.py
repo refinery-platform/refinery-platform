@@ -1546,7 +1546,8 @@ class DataSetTests(TestCase):
     def test_get_nodes(self):
         nodes = Node.objects.all()
         self.assertGreater(nodes.count(), 0)
-        [self.assertIn(node, self.dataset.get_nodes()) for node in nodes]
+        for node in self.dataset.get_nodes():
+            self.assertIn(node, nodes)
 
     def test_get_nodes_no_nodes_available(self):
         Node.objects.all().delete()
@@ -1555,10 +1556,8 @@ class DataSetTests(TestCase):
     def test_get_node_uuids(self):
         node_uuids = Node.objects.all().values_list("uuid", flat=True)
         self.assertGreater(node_uuids.count(), 0)
-        [
-            self.assertIn(node_uuid, self.dataset.get_node_uuids())
-            for node_uuid in node_uuids
-        ]
+        for node_uuid in self.dataset.get_node_uuids():
+            self.assertIn(node_uuid, node_uuids)
 
     def test_get_node_uuids_no_nodes_available(self):
         Node.objects.all().delete()
