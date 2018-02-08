@@ -215,7 +215,8 @@ class AnalysisResourceTest(LoginResourceTestCase):
             'read_%s' % Analysis._meta.model_name, self.user, analysis2
         )
         analysis_uri = make_api_uri(Analysis._meta.model_name)
-        response = self.api_client.get(analysis_uri, format='json')
+        response = self.api_client.get(analysis_uri, format='json',
+                                       data={'order_by': '-name'})
         self.assertValidJSONResponse(response)
         data = self.deserialize(response)['objects']
         self.assertEqual(len(data), 2)
