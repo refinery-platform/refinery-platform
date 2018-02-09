@@ -283,20 +283,17 @@ class ToolManagerTestBase(ToolManagerMocks):
             django_docker_cleanup()
         super(ToolManagerTestBase, self).tearDown()
 
-    def create_solr_mock_response(self, tool):
+    def create_solr_mock_response(self, nodes):
+        node_uuids = [n.uuid for n in nodes]
         return json.dumps(
             {
                 "responseHeader": {
                     "status": 0,
                     "QTime": 36,
-                    "params": (
-                        _create_solr_params_from_node_uuids(
-                            tool.get_input_node_uuids()
-                        )
-                    )
+                    "params": _create_solr_params_from_node_uuids(node_uuids)
                 },
                 "response": {
-                    "numFound": len(tool._get_input_nodes()),
+                    "numFound": len(node_uuids),
                     "start": 0,
                     "docs": [
                         {
@@ -308,7 +305,7 @@ class ToolManagerTestBase(ToolManagerMocks):
                                 "Mus musculus",
                             "filename_Characteristics_generic_s":
                                 node.get_file_store_item().source
-                        } for node in tool._get_input_nodes()
+                        } for node in nodes
                     ]
                 }
             }
@@ -1633,30 +1630,48 @@ class VisualizationToolTests(ToolManagerTestBase):
         self.search_solr_mock = mock.patch(
             "data_set_manager.utils.search_solr",
             return_value=self.create_solr_mock_response(
-                self.visualization_tool
+                self.visualization_tool._get_input_nodes()
             )
         ).start()
 
+    def _create_detailed_nodes_dict(self, nodes):
+        return {
+            node.uuid: {
+                'file_url': (
+                    self.node.get_file_store_item().get_datafile_url()
+                ),
+                VisualizationTool.NODE_SOLR_INFO: {
+                    "uuid": node.uuid,
+                    "name": node.name,
+                    "type": node.type,
+                    "file_uuid": node.file_uuid,
+                    "organism_Characteristics_generic_s": "Mus musculus",
+                    "filename_Characteristics_generic_s":
+                        node.get_file_store_item().source
+                }
+            } for node in nodes
+        }
+
     def test_get_detailed_input_nodes_dict(self):
-        input_nodes_meta_info = self.tool._get_detailed_input_nodes_dict()
+        input_nodes_meta_info = self.tool._get_detailed_nodes_dict(
+            self.tool.get_input_node_uuids()
+        )
         self.assertEqual(
             input_nodes_meta_info,
-            {
-                node.uuid: {
-                    'file_url': (
-                        self.node.get_file_store_item().get_datafile_url()
-                    ),
-                    VisualizationTool.NODE_SOLR_INFO: {
-                        "uuid": node.uuid,
-                        "name": node.name,
-                        "type": node.type,
-                        "file_uuid": node.file_uuid,
-                        "organism_Characteristics_generic_s": "Mus musculus",
-                        "filename_Characteristics_generic_s":
-                            node.get_file_store_item().source
-                    }
-                } for node in self.tool._get_input_nodes()
-            }
+            self._create_detailed_nodes_dict(self.tool._get_input_nodes())
+        )
+        self.assertTrue(self.search_solr_mock.called)
+
+    def test_get_detailed_input_nodes_dict_all_dataset_nodes(self):
+        self.search_solr_mock.return_value = self.create_solr_mock_response(
+            self.tool.dataset.get_nodes()
+        )
+        all_dataset_nodes_meta_info = self.tool._get_detailed_nodes_dict(
+            self.tool.dataset.get_node_uuids()
+        )
+        self.assertEqual(
+            all_dataset_nodes_meta_info,
+            self._create_detailed_nodes_dict(self.tool.dataset.get_nodes())
         )
         self.assertTrue(self.search_solr_mock.called)
 
@@ -1670,14 +1685,21 @@ class VisualizationToolTests(ToolManagerTestBase):
                 VisualizationTool.API_PREFIX:
                     self.tool.get_relative_container_url() + "/",
                 Tool.FILE_RELATIONSHIPS: file_relationships,
-                VisualizationTool.NODE_INFORMATION:
-                    self.tool._get_detailed_input_nodes_dict(),
+                VisualizationTool.INPUT_NODE_INFORMATION:
+                    self.tool._get_detailed_nodes_dict(
+                        self.tool.get_input_node_uuids()
+                    ),
+                VisualizationTool.ALL_NODE_INFORMATION:
+                    self.tool._get_detailed_nodes_dict(
+                        self.tool.dataset.get_node_uuids()
+                    ),
                 ToolDefinition.PARAMETERS:
                     self.tool._get_visualization_parameters(),
                 ToolDefinition.EXTRA_DIRECTORIES:
                     self.tool.tool_definition.get_extra_directories()
             }
         )
+        self.assertTrue(self.search_solr_mock.called)
 
     def test__get_visualization_parameters(self):
         parameter = self.visualization_tool.tool_definition.get_parameters()[0]
@@ -3508,7 +3530,7 @@ class VisualizationToolLaunchTests(ToolManagerTestBase,  # TODO: Cypress
         with mock.patch(
             "data_set_manager.utils.search_solr",
             return_value=self.create_solr_mock_response(
-                visualization_tool
+                visualization_tool._get_input_nodes()
             )
         ):
             visualization_tool.launch()

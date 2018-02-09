@@ -457,8 +457,9 @@ class VisualizationTool(Tool):
     """
     API_PREFIX = "api_prefix"
     FILE_URL = "file_url"
-    NODE_INFORMATION = "node_info"
+    INPUT_NODE_INFORMATION = "node_info"
     NODE_SOLR_INFO = "node_solr_info"
+    ALL_NODE_INFORMATION = "all_node_info"
 
     class Meta:
         verbose_name = "visualizationtool"
@@ -475,7 +476,14 @@ class VisualizationTool(Tool):
             self.API_PREFIX: self.get_relative_container_url() + "/",
             self.FILE_RELATIONSHIPS: self.get_file_relationships_urls(),
             ToolDefinition.PARAMETERS: self._get_visualization_parameters(),
-            self.NODE_INFORMATION: self._get_detailed_input_nodes_dict(),
+            self.INPUT_NODE_INFORMATION: self._get_detailed_nodes_dict(
+                self.get_input_node_uuids()
+            ),
+            # TODO: adding all of a DataSet's Node info seems excessive. Would
+            #  be great if we had a VisualizationTool using all of this info
+            self.ALL_NODE_INFORMATION: self._get_detailed_nodes_dict(
+                self.dataset.get_node_uuids()
+            ),
             ToolDefinition.EXTRA_DIRECTORIES:
                 self.tool_definition.get_extra_directories()
         }
@@ -485,18 +493,16 @@ class VisualizationTool(Tool):
         if len(self._django_docker_client.list()) >= max_containers:
             raise VisualizationToolError('Max containers')
 
-    def _get_detailed_input_nodes_dict(self):
+    def _get_detailed_nodes_dict(self, node_uuid_list):
         """
         Create and return a dict with detailed information about all of our
-        Tool's input Nodes.
+        Nodes corresponding to the UUIDs in the given `node_uuid_list`.
 
         This detailed info contains:
             - Whatever we have in our Solr index for a given Node
             - A full url pointing to our Node's FileStoreItem's datafile
         """
-        solr_response_json = get_solr_response_json(
-            self.get_input_node_uuids()
-        )
+        solr_response_json = get_solr_response_json(node_uuid_list)
         node_info = {
             node["uuid"]: {
                 self.NODE_SOLR_INFO: node,
