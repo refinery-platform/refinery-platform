@@ -65,7 +65,6 @@ urlpatterns = patterns(
     url(r'^workflow_manager/', include('workflow_manager.urls')),
     url(r'^analysis_manager/', include('analysis_manager.urls')),
     url(r'^data_set_manager/', include('data_set_manager.urls')),
-    url(r'^visualization_manager/', include('visualization_manager.urls')),
     url(r'^file_server/', include('file_server.urls')),
     url(r'^tasks/', include('djcelery.urls')),
     url(r'^docs/', include('rest_framework_swagger.urls')),
