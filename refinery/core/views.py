@@ -35,12 +35,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 import xmltodict
 
-from analysis_manager.utils import get_solr_results
-from annotation_server.models import GenomeBuild
 from data_set_manager.models import Node
-from data_set_manager.utils import generate_solr_params_for_assay
 from file_store.models import FileStoreItem
-from visualization_manager.views import igv_multi_species
 
 from .forms import ProjectForm, UserForm, UserProfileForm, WorkflowForm
 from .models import (Analysis, CustomRegistrationProfile, DataSet,
@@ -578,62 +574,6 @@ def solr_select(request, core):
         return JsonResponse({})
     else:
         return JsonResponse(response_dict)
-
-
-def solr_igv(request):
-    """Function for taking solr request url.
-    Removes pagination, facets from input query to create multiple
-    :param request: Django HttpRequest object including solr query
-    :type source: HttpRequest object.
-    :returns:
-    """
-
-    # copy querydict to make it editable
-    if request.is_ajax():
-        igv_config = json.loads(request.body)
-
-        logger.debug(json.dumps(igv_config, indent=4))
-
-        logger.debug('IGV data query: ' + str(igv_config['query']))
-        logger.debug('IGV annotation query: ' + str(igv_config['annotation']))
-
-        if igv_config['query'] is None:
-            # generate solr_query method
-            # assay uuid
-            solr_query = generate_solr_params_for_assay(
-                {},
-                igv_config['assay_uuid']
-            )
-            url_path = '/'.join(["data_set_manager", "select"])
-            url = urljoin(settings.REFINERY_SOLR_BASE_URL, url_path)
-            igv_config['query'] = ''.join([url, '/?', solr_query])
-
-        # attributes associated with node selection from interface
-        node_selection_blacklist_mode = igv_config[
-            'node_selection_blacklist_mode']
-        node_selection = igv_config['node_selection']
-
-        solr_results = get_solr_results(
-            igv_config['query'], selected_mode=node_selection_blacklist_mode,
-            selected_nodes=node_selection)
-
-        if igv_config['annotation'] is not None:
-            solr_annot = get_solr_results(igv_config['annotation'])
-        else:
-            solr_annot = None
-        # if solr query returns results
-        if solr_results:
-            try:
-                session_urls = igv_multi_species(solr_results, solr_annot)
-            except GenomeBuild.DoesNotExist:
-                logger.error(
-                    "Provided genome build cannot be found in the database.")
-                session_urls = "Couldn't find the provided genome build."
-
-        logger.debug("session_urls")
-        logger.debug(json.dumps(session_urls, indent=4))
-
-        return JsonResponse(session_urls)
 
 
 def samples_solr(request, ds_uuid, study_uuid, assay_uuid):

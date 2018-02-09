@@ -116,5 +116,5 @@ class Command(BaseCommand):
                     taxon.save()
                     sys.stdout.write("%s created." % taxon)
                 except IntegrityError:
-                    transaction.rollback_unless_managed()
+                    transaction.rollback()
                     sys.stdout.write("Duplicate Value %s" % taxon)
