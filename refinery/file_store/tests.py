@@ -4,15 +4,16 @@ from urlparse import urljoin
 from django.conf import settings
 from django.contrib.sites.models import Site
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.test import SimpleTestCase, TestCase
+from django.db.models import FileField
+from django.test import SimpleTestCase, TestCase, override_settings
 
 import mock
 from rest_framework.test import APIRequestFactory, APITestCase
 
 from .models import (FileExtension, FileStoreItem, FileType,
                      SymlinkedFileSystemStorage, file_path,
-                     generate_file_source_translator, get_extension_from_path,
-                     get_file_object, get_temp_dir, parse_s3_url)
+                     generate_file_source_translator, _get_extension_from_path,
+                     get_file_object, get_temp_dir, _map_source, parse_s3_url)
 from .serializers import FileStoreItemSerializer
 from .views import FileStoreItems
 
@@ -24,12 +25,14 @@ class FileStoreModuleTest(TestCase):
         self.filename = 'test_file.dat'
 
         # create FileStoreItem instances without any disk operations
-        self.path_source = os.path.join('/example/path', self.filename)
+        self.path_prefix = '/example/path/'
+        self.path_source = os.path.join(self.path_prefix, self.filename)
         self.item_from_path = FileStoreItem.objects.create(
             datafile=SimpleUploadedFile(self.filename, 'Coffee is delicious!'),
             source=self.path_source
         )
-        self.url_source = urljoin('http://example.org/', self.filename)
+        self.url_prefix = 'http://example.org/'
+        self.url_source = urljoin(self.url_prefix, self.filename)
         self.item_from_url = FileStoreItem.objects.create(
             source=self.url_source
         )
@@ -83,45 +86,72 @@ class FileStoreModuleTest(TestCase):
         # check if an expected object is returned
         self.assertEqual(file_object, mock.sentinel.file_object)
 
-    def test_get_extension_from_path(self):
-        extension = get_extension_from_path(self.path_source)
-        self.assertEqual(extension, '.dat')
+    def test_get_extension_from_file(self):
+        self.assertEqual(_get_extension_from_path('test.fastq'), 'fastq')
+
+    def test_get_multi_extension_from_file(self):
+        self.assertEqual(_get_extension_from_path('test.fastq.gz'), 'fastq.gz')
+
+    def test_get_blank_extension_from_file(self):
+        self.assertEqual(_get_extension_from_path('test'), '')
+
+    def test_get_extension_from_url(self):
+        self.assertEqual(
+            _get_extension_from_path('http://example.org/test.fastq'), 'fastq'
+        )
+
+    def test_get_multi_extension_from_url(self):
+        self.assertEqual(
+            _get_extension_from_path('http://example.org/test.fastq.gz'),
+            'fastq.gz'
+        )
+
+    def test_get_blank_extension_from_url(self):
+        self.assertEqual(_get_extension_from_path('http://example.org/test'),
+                         '')
 
     def test_parse_s3_url(self):
         bucket_name, key = parse_s3_url('s3://bucket-name/key')
         self.assertEqual(bucket_name, 'bucket-name')
         self.assertEqual(key, 'key')
 
+    @override_settings(REFINERY_FILE_SOURCE_MAP={})
+    def test_mapping_with_empty_file_source_map(self):
+        self.assertEqual(_map_source(self.url_source), self.url_source)
+
+    def test_file_source_map(self):
+        with override_settings(
+                REFINERY_FILE_SOURCE_MAP={self.url_prefix: self.path_prefix}
+        ):
+            self.assertEqual(_map_source(self.url_source), self.path_source)
+
 
 class FileStoreItemTest(TestCase):
-    """FileStoreItem methods test"""
 
     def setUp(self):
-        self.tdf_filetype = FileType.objects.get(name="TDF")
-        self.tdf_fileextension = FileExtension.objects.get(name='tdf')
-
-        self.filename = 'test_file.idf'
+        # TODO: replace with create() when migrations are no longer required
+        self.tdf_filetype = FileType.objects.get_or_create(name='TDF')[0]
+        self.tdf_fileextension = FileExtension.objects.get_or_create(
+            name='tdf', filetype=self.tdf_filetype
+        )[0]
+        self.filename = 'test_file.tdf'
         self.path_source = os.path.join('/example/path', self.filename)
         self.url_source = urljoin('http://example.org/', self.filename)
 
+    @override_settings(REFINERY_URL_SCHEME='http', MEDIA_URL='/media/')
+    @mock.patch.object(FileStoreItem, 'is_local',
+                       mock.MagicMock(return_value=True))
     def test_get_full_url_local_file(self):
-        """Check if the full URL is properly returned for files that exist
-        in Refinery
-        """
-        # create FileStoreItem instances without any disk operations
-        local_file = FileStoreItem.objects.create(
-            datafile=SimpleUploadedFile(self.filename, 'Coffee is delicious!'),
-            source=self.path_source
-        )
-
-        self.assertEqual(
-            local_file.get_datafile_url(),
-            '{}://{}{}'.format(
-                settings.REFINERY_URL_SCHEME,
-                Site.objects.get_current().domain,
-                local_file.datafile.url
-            )
-        )
+        file_mock = mock.MagicMock(spec=FileField)
+        # file_mock.path = mock.MagicMock()
+        file_mock.url = 'test.fastq'
+        from django.core.files.storage import FileSystemStorage
+        file_mock.storage = mock.MagicMock(spec=FileSystemStorage)
+        file_mock.storage.exists = mock.MagicMock(return_value=True)
+        item = FileStoreItem()
+        item.datafile = file_mock
+        self.assertEqual(item.get_datafile_url(),
+                         'http://example.com/test.fastq')
 
     def test_get_full_url_remote_file(self):
         """Check if the source URL is returned for files that have not been
@@ -134,47 +164,15 @@ class FileStoreItemTest(TestCase):
 
     def test_get_file_type(self):
         """Check that the correct file type is returned"""
-        self.bigbed_filetype = FileType.objects.get(name="BIGBED")
-        self.bigbed_fileextension = FileExtension.objects.get(name="bb")
-
         item_from_path = FileStoreItem.objects.create(
-            datafile=SimpleUploadedFile(
-                'test_file.bb', 'Coffee is delicious!'
-            ),
-            source=self.path_source,
-            filetype=self.bigbed_filetype
-        )
-        item_from_url = FileStoreItem.objects.create(
-            source=self.url_source,
-            filetype=self.bigbed_filetype
-        )
-        self.assertEqual(item_from_path.get_filetype(), self.bigbed_filetype)
-        self.assertEqual(item_from_url.get_filetype(), self.bigbed_filetype)
-
-    def test_set_valid_file_type(self):
-        """Check that a valid file type is set correctly"""
-        self.wig_filetype = FileType.objects.get(name="WIG")
-        self.wig_fileextension = \
-            FileExtension.objects.get(filetype=self.wig_filetype)
-        item_from_path = FileStoreItem.objects.create(source=self.url_source)
-        item_from_url = FileStoreItem.objects.create(
             datafile=SimpleUploadedFile(self.filename, 'Coffee is delicious!'),
-            source=self.path_source
+            source=self.path_source, filetype=self.tdf_filetype
         )
-        self.assertTrue(item_from_path.set_filetype(self.wig_filetype))
-        self.assertNotEqual(item_from_path.filetype, self.wig_filetype)
-        self.assertTrue(item_from_url.set_filetype(self.wig_filetype))
-        self.assertNotEqual(item_from_url.filetype, self.wig_filetype)
-
-    def test_set_unknown_file_type(self):
-        """Check that an unknown file type is not set"""
         item_from_url = FileStoreItem.objects.create(
-            datafile=SimpleUploadedFile(self.filename, 'Coffee is delicious!'),
-            source=self.path_source
+            source=self.url_source, filetype=self.tdf_filetype
         )
-        item_from_path = FileStoreItem.objects.create(source=self.url_source)
-        self.assertIsNone(item_from_url.filetype)
-        self.assertIsNone(item_from_path.filetype)
+        self.assertEqual(item_from_path.get_filetype(), self.tdf_filetype)
+        self.assertEqual(item_from_url.get_filetype(), self.tdf_filetype)
 
     def test_set_file_type_automatically(self):
         """Check that a file type is set automatically"""
@@ -190,23 +188,16 @@ class FileStoreItemTest(TestCase):
         self.assertTrue(item_from_url.filetype,
                         os.path.splitext(self.filename)[1])
 
-    def test_get_file_extension(self):
-        """Check that the correct FileExtension is returned"""
-        # create FileStoreItem instances without any disk operations
-        item_from_url = FileStoreItem.objects.create(source=self.url_source)
-        item_from_path = FileStoreItem.objects.create(
-            datafile=SimpleUploadedFile(self.filename, 'Coffee is delicious!'),
-            source=self.path_source
-        )
+    def test_get_extension_from_local_file(self):
+        file_mock = mock.MagicMock(spec=FileField)
+        type(file_mock).name = mock.PropertyMock(return_value='test.fastq')
+        item = FileStoreItem()
+        item.datafile = file_mock
+        self.assertEqual(item.get_file_extension(), 'fastq')
 
-        item_from_url.set_filetype()
-        item_from_path.set_filetype()
-
-        self.assertEqual(item_from_path.get_file_extension(),
-                         self.filename.split(".")[-1])
-        # data file doesn't exist on disk and source is a URL
-        self.assertEqual(item_from_url.get_file_extension(),
-                         self.filename.split(".")[-1])
+    def test_get_extension_from_remote_file(self):
+        item = FileStoreItem(source='http://example.org/test.fastq')
+        self.assertEqual(item.get_file_extension(), 'fastq')
 
 
 class FileStoreItemManagerTest(TestCase):
@@ -244,6 +235,8 @@ class FileStoreItemManagerTest(TestCase):
         self.assertEqual(item.source, self.path_source)
 
 
+@override_settings(REFINERY_DATA_IMPORT_DIR='/import/path',
+                   REFINERY_FILE_SOURCE_MAP={})
 class FileSourceTranslationTest(TestCase):
     def setUp(self):
         self.username = 'guest'
@@ -254,39 +247,53 @@ class FileSourceTranslationTest(TestCase):
         self.url_prefix = 'http://example.org/web/path/'
         self.url_source = urljoin(self.url_prefix, self.filename)
 
-    def test_translate_with_map(self):
-        settings.REFINERY_FILE_SOURCE_MAP = {self.url_prefix: '/new/path/'}
-        translate_file_source = generate_file_source_translator()
-        source = translate_file_source(self.url_source)
-        self.assertEqual(source, os.path.join('/new/path/', self.filename))
+    def test_translate_from_url_with_source_map(self):
+        with override_settings(
+                REFINERY_FILE_SOURCE_MAP={self.url_prefix: '/new/path/'}
+        ):
+            translate_file_source = generate_file_source_translator()
+        self.assertEqual(translate_file_source(self.url_source),
+                         self.url_source)
 
     def test_translate_from_url(self):
         translate_file_source = generate_file_source_translator()
-        source = translate_file_source(self.url_source)
-        self.assertEqual(source, self.url_source)
+        self.assertEqual(translate_file_source(self.url_source),
+                         self.url_source)
 
     def test_translate_from_absolute_path(self):
         translate_file_source = generate_file_source_translator()
-        source = translate_file_source(self.abs_path_source)
-        self.assertEqual(source, self.abs_path_source)
+        self.assertEqual(translate_file_source(self.abs_path_source),
+                         self.abs_path_source)
 
     def test_translate_from_relative_path_with_base_bath(self):
-        translate_file_source = \
-            generate_file_source_translator(base_path=self.base_path)
-        source = translate_file_source(self.rel_path_source)
-        self.assertEqual(source,
+        translate_file_source = generate_file_source_translator(
+            base_path=self.base_path
+        )
+        self.assertEqual(translate_file_source(self.rel_path_source),
                          os.path.join(self.base_path, self.rel_path_source))
 
-    def test_translate_from_relative_path_without_base_path(self):
-        translate_file_source = \
-            generate_file_source_translator(username=self.username)
-        source = translate_file_source(self.rel_path_source)
-        self.assertEqual(source, os.path.join(
-            settings.REFINERY_DATA_IMPORT_DIR,
-            self.username,
-            self.rel_path_source))
+    def test_translate_from_relative_path_with_username(self):
+        translate_file_source = generate_file_source_translator(
+            username=self.username
+        )
+        self.assertEqual(translate_file_source(self.rel_path_source),
+                         os.path.join(settings.REFINERY_DATA_IMPORT_DIR,
+                                      self.username, self.rel_path_source))
 
-    def test_translate_from_relative_path_without_username_or_base_path(self):
+    @override_settings(UPLOAD_BUCKET='refinery-upload')
+    def test_translate_from_relative_path_with_cognito_identity_id(self):
+        identity_id = 'us-east-1:7cdaf40f-4c4f-4130-9d45-ae8ca56d67e4'
+        translate_file_source = generate_file_source_translator(
+            identity_id=identity_id
+        )
+        self.assertEqual(
+            translate_file_source(self.rel_path_source),
+            "s3://{}/{}/{}".format(
+                settings.UPLOAD_BUCKET, identity_id, self.rel_path_source
+            )
+        )
+
+    def test_translate_from_relative_path_with_no_args(self):
         translate_file_source = generate_file_source_translator()
         with self.assertRaises(ValueError):
             translate_file_source(self.rel_path_source)

@@ -1,6 +1,4 @@
 """
-file_store module
-
 * Manages all data files
 * Downloads files from external repositories (by URL)
 * Manage the import cache/public data space
@@ -10,9 +8,8 @@ Requirements:
 FILE_STORE_DIR setting - main file store directory
 * must be a subdirectory of MEDIA_ROOT
 * must be writeable by the Django server
-Example: FILE_STORE_DIR = 'files'
-
 """
+
 import logging
 import os
 import re
@@ -82,21 +79,21 @@ def file_path(instance, filename):
     return os.path.join(dir1, dir2, filename)
 
 
-def map_source(source):
-    """convert URLs to file system paths by applying file source map"""
+def _map_source(source):
+    """Convert URLs to file system paths by applying file source map"""
     for pattern, replacement in \
             settings.REFINERY_FILE_SOURCE_MAP.iteritems():
         translated_source = re.sub(pattern, replacement, source)
-        if source != translated_source:
-            source = translated_source
-            break
+        if translated_source != source:
+            return translated_source
     return source
 
 
 def generate_file_source_translator(username=None, base_path=None,
                                     identity_id=None):
-    """Generate file source reference translator function based on username or
-    base_path or AWS Cognito identity ID
+    """Generate a relative source path translator function based on username
+    or base path or AWS Cognito identity ID
+
     username: user's subdirectory in settings.REFINERY_DATA_IMPORT_DIR
     base_path: absolute path to prepend to source if source is relative
     identity_id: AWS Cognito identity ID of the current user
@@ -104,15 +101,16 @@ def generate_file_source_translator(username=None, base_path=None,
 
     def translate(source):
         """Convert file source to absolute path
+
         source: URL, absolute or relative file system path
         """
-        source = map_source(source.strip())
-
-        # ignore URLs and absolute file paths
-        if core.utils.is_url(source) or os.path.isabs(source):
+        # ignore URLs and absolute file system paths as a failsafe
+        if core.utils.is_absolute_url(source) or os.path.isabs(source):
             return source
 
         # process relative path
+        # if REFINERY_DEPLOYMENT_PLATFORM = 'aws' and REFINERY_S3_USER_DATA
+        # use settings.COGNITO_IDENTITY_POOL_ID
         if identity_id:
             source = "s3://{}/{}/{}".format(
                 settings.UPLOAD_BUCKET, identity_id, source
@@ -155,23 +153,7 @@ class _FileStoreItemManager(models.Manager):
     """
     def create_item(self, source, filetype=''):
         """A "constructor" for FileStoreItem"""
-        # If we are generating an auxiliary file, we cannot assign a
-        # `source` yet since the file is being generated. We still want the
-        # benfeit of being able to track it's task state, so we will need to
-        #  create an `empty` FileStoreItem instance and utilize it's
-        # import_task_id field
-
-        if source == 'auxiliary_file':
-            logger.debug("Creating an auxiliary FileStoreItem")
-            item = self.create(filetype=filetype)
-            return item
-
-        # it doesn't make sense to create a FileStoreItem without a file source
-        if not source:
-            logger.error("Source is required but was not provided")
-            return None
-
-        item = self.create(source=map_source(source))
+        item = self.create(source=_map_source(source))
 
         item.set_filetype(filetype)
 
@@ -226,26 +208,17 @@ class S3MediaStorage(S3Boto3Storage):
 
 
 class FileStoreItem(models.Model):
-    """Represents data files on disk"""
-    #: file on disk
+    """Represents all data files"""
     datafile = models.FileField(upload_to=file_path, blank=True,
                                 max_length=1024)
-    #: unique ID
-    uuid = UUIDField()
-    #: source URL or absolute file system path
-    source = models.CharField(max_length=1024)
-    #: type of the file
+    uuid = UUIDField()  # auto-generated unique ID
+    # URL, absolute file system path, or blank if source is a blob or similar
+    source = models.CharField(blank=True, max_length=1024)
     filetype = models.ForeignKey(FileType, blank=True, null=True)
-    #: file import task ID
+    # ID of Celery task used for importing the data file
     import_task_id = UUIDField(auto=False, blank=True)
-    # Date created
-    created = models.DateTimeField(auto_now_add=True,
-                                   default=timezone.now,
-                                   blank=True)
-    # Date updated
-    updated = models.DateTimeField(auto_now=True,
-                                   default=timezone.now,
-                                   blank=True)
+    created = models.DateTimeField(auto_now_add=True, default=timezone.now)
+    updated = models.DateTimeField(auto_now=True, default=timezone.now)
 
     objects = _FileStoreItemManager()
 
@@ -254,8 +227,24 @@ class FileStoreItem(models.Model):
             return self.datafile.name
         elif self.uuid:
             return self.uuid
-        else:
+        else:  # UUID will not be available until instance is saved once
             return self.source
+
+    def save(self, *args, **kwargs):
+        self.source = _map_source(self.source)
+        # set file type using file extension
+        try:
+            extension = FileExtension.objects.get(
+                name=self.get_file_extension()
+            )
+        except (FileExtension.DoesNotExist,
+                FileExtension.MultipleObjectsReturned) as exc:
+            # save + raise RuntimeError instead to prevent spurious log errors?
+            logger.warn("Could not assign type to file '%s' using extension "
+                        "'%s': %s", self, self.get_file_extension(), exc)
+        else:
+            self.filetype = extension.filetype
+        super(FileStoreItem, self).save(*args, **kwargs)
 
     def get_absolute_path(self):
         """
@@ -285,18 +274,10 @@ class FileStoreItem(models.Model):
             return 0
 
     def get_file_extension(self):
-        '''Return extension of the file on disk or from the source.
-
-        :returns: str -- file extension that begins with a period.
-
-        '''
-        try:
-
-            return FileExtension.objects.get(filetype=self.filetype).name
-        except (FileExtension.DoesNotExist,
-                FileExtension.MultipleObjectsReturned) as e:
-            logger.error("Error while trying to fetch FileExtension %s", e)
-            return None
+        """Return extension of the file on disk or from the source"""
+        if self.datafile.name:
+            return _get_extension_from_path(self.datafile.name)
+        return _get_extension_from_path(self.source)
 
     def get_file_object(self):
         '''Open data file.
@@ -490,14 +471,16 @@ class FileStoreItem(models.Model):
             return False
 
     def get_datafile_url(self):
-        """Returns the URL of the datafile"""
-        if self.is_local():
-            return core.utils.get_full_url(self.datafile.url)
-
-        if core.utils.is_url(self.source):
-            if self.source.startswith('s3://'):
-                return None
-            return self.source
+        """Returns relative of absolute URL of the datafile depending on file
+        availability and MEDIA_URL setting
+        """
+        try:
+            return self.datafile.url
+        except ValueError:
+            if core.utils.is_absolute_url(self.source):
+                if self.source.startswith('s3://'):
+                    return None
+                return self.source
 
         logger.error("File not found at '%s'", self.datafile.name)
         return None
@@ -549,14 +532,12 @@ def get_file_object(file_name):
 
 
 @receiver(pre_delete, sender=FileStoreItem)
-def _delete_datafile(sender, **kwargs):
-    """Delete the FileStoreItem datafile when model is deleted.
-    Signal handler is required because QuerySet delete() method does a bulk
-    delete and does not call any delete() methods on the models.
-
+def _delete_datafile(sender, instance, **kwargs):
+    """Delete the FileStoreItem datafile when model is deleted
+    Signal handler is required because QuerySet bulk delete does not call
+    delete() method on the models
     """
-    item = kwargs.get('instance')
-    item.delete_datafile()
+    instance.delete_datafile()
 
 
 def _symlink_file_on_disk(source, target):
@@ -622,12 +603,14 @@ def _rename_file_on_disk(current_path, new_path):
     return True
 
 
-def get_extension_from_path(path):
-    """Return file extension given its file system path
-
-    :returns: str -- File extension preceded by a period.
-    """
-    return os.path.splitext(path)[-1]
+def _get_extension_from_path(path):
+    """Return file extension given a file name, file system path, or URL"""
+    file_name_parts = os.path.basename(path).split('.')
+    if len(file_name_parts) == 1:  # no periods in file name
+        return ''
+    if len(file_name_parts) > 2:  # two or more periods in file name
+        return '.'.join(file_name_parts[-2:])
+    return file_name_parts[-1]
 
 
 def parse_s3_url(url):

@@ -1544,7 +1544,7 @@ class UtilitiesTests(TestCase):
         attribute_list = AttributeOrder.objects.filter(assay=self.assay)
         self.assertItemsEqual(old_attribute_list, attribute_list)
 
-    @mock.patch("data_set_manager.utils.core.utils.get_full_url")
+    @mock.patch("data_set_manager.utils.core.utils.get_absolute_url")
     def test_get_file_url_from_node_uuid_good_uuid(self, mock_get_url):
         mock_get_url.return_value = "test_file_a.txt"
         self.assertIn(
@@ -2004,7 +2004,7 @@ class NodeIndexTests(APITestCase):
         )
         self.assertRegexpMatches(
             data_to_be_indexed['REFINERY_DOWNLOAD_URL_s'],
-            r'^http://example.com/media/file_store/.+/test_file.+txt$'
+            r'^/media/file_store/.+/test_file.+txt$'
             # There may or may not be a suffix on "test_file",
             # depending on environment. Don't make it too strict!
         )

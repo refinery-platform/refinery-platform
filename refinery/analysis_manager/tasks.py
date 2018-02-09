@@ -12,6 +12,7 @@ from celery.result import TaskSetResult
 from celery.task import Task, task
 from celery.task.sets import TaskSet
 
+import core
 from core.models import Analysis, AnalysisResult, Workflow
 from file_store.models import FileStoreItem
 from file_store.tasks import create, import_file
@@ -426,7 +427,7 @@ def _galaxy_file_import(analysis_uuid, file_store_item_uuid, history_dict,
         return
     library_dataset_dict = tool.upload_datafile_to_library_from_url(
         library_dict["id"],
-        file_store_item.get_datafile_url()
+        core.utils.get_absolute_url(file_store_item.get_datafile_url())
     )
     history_dataset_dict = tool.import_library_dataset_to_history(
         history_dict["id"],

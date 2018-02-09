@@ -29,7 +29,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from core.models import DataSet, ExtendedGroup, get_user_import_dir
-from core.utils import get_full_url
+from core.utils import get_absolute_url
 from data_set_manager.isa_tab_parser import ParserException
 from file_store.models import (generate_file_source_translator, get_temp_dir,
                                parse_s3_url)
@@ -94,7 +94,7 @@ class TakeOwnershipOfPublicDatasetView(View):
         if 'isa_tab_url' in request.POST:
             # TODO: I think isa_tab_url is already a full url,
             # making this redundant.
-            full_isa_tab_url = get_full_url(request.POST['isa_tab_url'])
+            full_isa_tab_url = get_absolute_url(request.POST['isa_tab_url'])
             from_old_template = True
         else:
             request_body = request.body
@@ -130,13 +130,13 @@ class TakeOwnershipOfPublicDatasetView(View):
         if from_old_template:
             # Redirect to process_isa_tab view
             response = HttpResponseRedirect(
-                get_full_url(reverse('process_isa_tab'))
+                get_absolute_url(reverse('process_isa_tab'))
             )
         else:
             # Redirect to process_isa_tab view with arg 'ajax' if request is
             #  not coming from old Django Template
             response = HttpResponseRedirect(
-                get_full_url(reverse('process_isa_tab', args=['ajax']))
+                get_absolute_url(reverse('process_isa_tab', args=['ajax']))
             )
 
         # set cookie

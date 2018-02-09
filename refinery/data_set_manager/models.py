@@ -604,8 +604,7 @@ class Node(models.Model):
 
             # Create an empty FileStoreItem (we do the datafile association
             # within the generate_auxiliary_file task
-            auxiliary_file_store_item = FileStoreItem.objects.create(
-                source='auxiliary_file')
+            auxiliary_file_store_item = FileStoreItem.objects.create()
 
             auxiliary_node = self._create_and_associate_auxiliary_node(
                 auxiliary_file_store_item.uuid)
