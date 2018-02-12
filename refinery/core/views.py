@@ -559,7 +559,6 @@ def solr_select(request, core):
     data = request.GET.urlencode()
     try:
         full_response = requests.get(url, params=data)
-        response_dict = json.loads(full_response.content)
         # FIXME:
         # Solr sends back an additional 400 here in the data_sets 1 filebrowser
         # when there is only one row defined in the metadata since
@@ -569,11 +568,16 @@ def solr_select(request, core):
         if ("Pivot Facet needs at least one field name"
                 not in full_response.content):
             full_response.raise_for_status()
-    except (HTTPError, ValueError) as e:
+    except HTTPError as e:
         logger.error(e)
-        return JsonResponse({})
     else:
-        return JsonResponse(response_dict)
+        try:
+            response_dict = json.loads(full_response.content)
+            return JsonResponse(response_dict)
+        except ValueError as e:
+            logger.error(e)
+
+    return JsonResponse({})
 
 
 def samples_solr(request, ds_uuid, study_uuid, assay_uuid):
