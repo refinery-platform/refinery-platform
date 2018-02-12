@@ -17,12 +17,22 @@ class Command(BaseCommand):
     Description:
     main program; run the command
     """
-    def handle(self, username, password, email, first_name, last_name,
-               affiliation, is_active=False, **options):
+
+    def add_arguments(self, parser):
+        parser.add_argument('username')
+        parser.add_argument('password')
+        parser.add_argument('email')
+        parser.add_argument('first_name')
+        parser.add_argument('last_name')
+        parser.add_argument('affiliation')
+        parser.add_argument('is_active', default=False)
+
+    def handle(self, *args, **options):
         """Create a user account for Refinery (user is inactive).
         """
 
         # delete if exists
+        username = options['username']
         user_object = User.objects.filter(username__exact=username)
         if len(user_object) > 0:
             error_msg = "User {} already exists. " \
@@ -32,8 +42,14 @@ class Command(BaseCommand):
             return
 
         init_user(
-            username, password, email, first_name, last_name, affiliation,
-            is_active=bool(is_active))
+            username,
+            options['password'],
+            options['email'],
+            options['first_name'],
+            options['last_name'],
+            options['affiliation'],
+            bool(options['is_active'])
+        )
 
 
 def init_user(username, password, email, first_name, last_name, affiliation,
