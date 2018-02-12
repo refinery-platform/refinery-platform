@@ -24,3 +24,7 @@ module "identity_pool" {
   upload_bucket_name       = "${module.object_storage.upload_bucket_name}"
   iam_resource_name_prefix = "${terraform.workspace}"
 }
+
+module "docker_host" {
+  source = "../modules/docker_host"
+}
