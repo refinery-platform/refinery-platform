@@ -616,7 +616,7 @@ TASTYPIE_DEFAULT_FORMATS = ['json']
 REFINERY_S3_USER_DATA = get_setting('REFINERY_S3_USER_DATA', default=False)
 
 # ALLOWED_HOSTS required in 1.8.16 to prevent a DNS rebinding attack.
-ALLOWED_HOSTS = get_setting("ALLOWED_HOSTS")  # NOQA: F405
+ALLOWED_HOSTS = get_setting("ALLOWED_HOSTS")
 
 MIGRATION_MODULES = {
     'chunked_upload': 'dependency_migrations.chunked_upload'
