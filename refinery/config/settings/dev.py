@@ -7,6 +7,6 @@ TEMPLATE_DEBUG = DEBUG
 
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
-INSTALLED_APPS += (
+INSTALLED_APPS += (  # NOQA: F405
     'django_extensions',
 )

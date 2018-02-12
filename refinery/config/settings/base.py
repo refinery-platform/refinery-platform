@@ -178,14 +178,14 @@ TEMPLATE_DIRS = (
 
 # NOTE: the order of INSTALLED_APPS matters in some instances.
 INSTALLED_APPS = (
-    'registration',
+    'django.contrib.sites',
+    'registration',  # docs: should be immediately above 'django.contrib.auth'
+    'django.contrib.auth',
     'core',
     'data_set_manager',
     'guardian',
     'django.contrib.contenttypes',
-    'django.contrib.auth',
     'django.contrib.sessions',
-    'django.contrib.sites',
     'django.contrib.messages',
     'django.contrib.staticfiles',
     # Uncomment the next line to enable the admin:
@@ -207,7 +207,6 @@ INSTALLED_APPS = (
     'workflow_manager',
     'file_store',
     'file_server',
-    'visualization_manager',
     'annotation_server',
     'selenium_testing',
     'tool_manager',
@@ -615,3 +614,10 @@ TASTYPIE_DEFAULT_FORMATS = ['json']
 
 # temporary feature toggle for using S3 as user data file storage backend
 REFINERY_S3_USER_DATA = get_setting('REFINERY_S3_USER_DATA', default=False)
+
+# ALLOWED_HOSTS required in 1.8.16 to prevent a DNS rebinding attack.
+ALLOWED_HOSTS = get_setting("ALLOWED_HOSTS")
+
+MIGRATION_MODULES = {
+    'chunked_upload': 'dependency_migrations.chunked_upload'
+}

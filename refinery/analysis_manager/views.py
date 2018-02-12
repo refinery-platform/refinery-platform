@@ -4,11 +4,10 @@ from urlparse import urlparse
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.core import serializers
 from django.core.urlresolvers import reverse
 from django.http import (HttpResponse, HttpResponseBadRequest,
                          HttpResponseForbidden, HttpResponseNotAllowed,
-                         HttpResponseServerError)
+                         HttpResponseServerError, JsonResponse)
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 
@@ -75,8 +74,7 @@ def analysis_status(request, uuid):
         }
         logger.debug("Analysis status for '%s': %s",
                      analysis.name, json.dumps(ret_json))
-        return HttpResponse(json.dumps(ret_json, indent=4),
-                            content_type='application/javascript')
+        return JsonResponse(ret_json, content_type='application/javascript')
     return render_to_response(
         'analysis_manager/analysis_status.html',
         {'uuid': uuid, 'status': status, 'analysis': analysis},
@@ -133,10 +131,8 @@ def update_workflows(request):
             workflows += new_workflow_count
         # getting updated available workflows
         workflows = Workflow.objects.all()
-        json_serializer = serializers.get_serializer("json")()
-        return HttpResponse(
-            json_serializer.serialize(workflows, ensure_ascii=False),
-            content_type='application/javascript')
+
+        return JsonResponse(workflows, content_type='application/javascript')
     return HttpResponse(status=400)
 
 
@@ -145,11 +141,11 @@ def get_workflow_data_input_map(request, workflow_uuid):
     workflow_uuid
     """
     curr_workflow = Workflow.objects.filter(uuid=workflow_uuid)[0]
-    data = serializers.serialize('json', curr_workflow.data_inputs.all())
     if request.is_ajax():
-        return HttpResponse(data, content_type='application/javascript')
+        return JsonResponse(curr_workflow.data_inputs.all(),
+                            content_type='application/javascript')
     else:
-        return HttpResponse(data, content_type='application/json')
+        return JsonResponse(curr_workflow.data_inputs.all())
 
 
 def run(request):
