@@ -13,20 +13,24 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument(
-            '--username', action='store', type='string',
+            '--username',
+            action='store',
             help='(Required) username of the owner of this data set'
         )
         parser.add_argument(
-            '--title', action='store', type='string',
+            '--title',
+            action='store',
             help='(Required) name of this data set'
         )
         parser.add_argument(
-            '--file_name', action='store', type='string',
+            '--file_name',
+            action='store',
             help='(Required) absolute path to the file being parsed'
         )
         parser.add_argument(
-            '--source_column_index', '--source_column',
-            action='store', type='string',
+            '--source_column_index',
+            '--source_column',
+            action='store',
             help='(Required) list of column indices to be used for source '
                  'grouping (comma-separated, no spaces)\n'
                  'Values in the columns indicated by the list of '
@@ -43,7 +47,9 @@ class Command(BaseCommand):
                  'with this sample'
         )
         parser.add_argument(
-            '--auxiliary_file_column', action='store', type='int',
+            '--auxiliary_file_column',
+            action='store',
+            type='int',
             default=None,
             help='column index of the input file that contains the '
                  'path to an auxiliary file (e.g. for visualization) '
@@ -52,7 +58,6 @@ class Command(BaseCommand):
         parser.add_argument(
             '--base_path',
             action='store',
-            type='string',
             default=None,
             help='base path of your data file paths if using relative '
                  'locations'
