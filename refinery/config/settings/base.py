@@ -281,6 +281,12 @@ LOGGING = {
         'httpproxy': {
             'level': 'ERROR',
         },
+        'httpstream': {  # dependency of py2neo
+            'level': 'INFO',
+        },
+        'pysolr': {
+            'level': 'INFO',
+        },
         'requests': {
             'level': 'ERROR',
         },
@@ -621,3 +627,5 @@ ALLOWED_HOSTS = get_setting("ALLOWED_HOSTS")
 MIGRATION_MODULES = {
     'chunked_upload': 'dependency_migrations.chunked_upload'
 }
+REFINERY_VISUALIZATION_REGISTRY = \
+    "https://github.com/refinery-platform/visualization-tools/"

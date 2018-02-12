@@ -1,8 +1,11 @@
 import json
 from optparse import make_option
 import os
+import re
 import sys
+from urlparse import urljoin
 
+from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 
 import requests
@@ -45,6 +48,12 @@ class Command(BaseCommand):
     def __init__(self):
         super(Command, self).__init__()
         self.force = False
+        self.visualization_registry_branch = "master"
+        self.raw_registry_url = \
+            settings.REFINERY_VISUALIZATION_REGISTRY.replace(
+                "github",
+                "raw.githubusercontent"
+            )
 
     def warn(self, message):
         self.stderr.write(
@@ -112,21 +121,31 @@ class Command(BaseCommand):
         if result[0].lower() == "n":
             sys.exit(0)
 
-    def _load_visualization_definitions(self, names, branch='master'):
+    def _load_visualization_definitions(self, names):
         visualization_annotations = []
+
         for name in names:
             if os.path.exists(name):
                 with open(name) as f:
                     annotation = json.loads(f.read())
             else:
-                url = 'https://raw.githubusercontent.com/' + \
-                    'refinery-platform/visualization-tools/' + \
-                    branch + '/tool-annotations/' + name + '.json'
-                response = requests.get(url)
+                raw_asset_url = urljoin(
+                    self.raw_registry_url,
+                    self.visualization_registry_branch +
+                    '/tool-annotations/' + name + '.json'
+                )
+                response = requests.get(raw_asset_url)
                 if response.status_code != 200:
+                    availible_registry_tool_names = \
+                        self._get_available_visualization_tool_registry_names()
                     raise CommandError(
-                        '"{}" not a file and "{}" not a valid URL'.format(
-                            name, url
+                        '"{}" not a local file path and "{}" does not point to'
+                        ' a valid Visualization Tool Registry URL.\n '
+                        'Available Visualization Tools from the '
+                        'Registry ({}) are: {}'.format(
+                            name, raw_asset_url,
+                            settings.REFINERY_VISUALIZATION_REGISTRY,
+                            availible_registry_tool_names
                         )
                     )
                 annotation = response.json()
@@ -197,6 +216,25 @@ class Command(BaseCommand):
                     "Generated ToolDefinition for Workflow: `{}`"
                     .format(workflow["name"])
                 )
+
+    def _get_available_visualization_tool_registry_names(self):
+        try:
+            response = requests.get(
+                urljoin(
+                    settings.REFINERY_VISUALIZATION_REGISTRY,
+                    "tree/{}/tool-annotations".format(
+                        self.visualization_registry_branch
+                    )
+                )
+            )
+        except requests.exceptions.RequestException as e:
+            raise CommandError(
+                "Unable to fetch Visualization Tools from the Registry "
+                "({}): {}".format(settings.REFINERY_VISUALIZATION_REGISTRY, e)
+            )
+        return ', '.join(
+            re.findall(r"tool-annotations/(.+?)\.json",  response.content)
+        )
 
     @staticmethod
     def _has_workflow_outputs(workflow):

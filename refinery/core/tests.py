@@ -215,7 +215,8 @@ class AnalysisResourceTest(LoginResourceTestCase):
             'read_%s' % Analysis._meta.model_name, self.user, analysis2
         )
         analysis_uri = make_api_uri(Analysis._meta.model_name)
-        response = self.api_client.get(analysis_uri, format='json')
+        response = self.api_client.get(analysis_uri, format='json',
+                                       data={'order_by': '-name'})
         self.assertValidJSONResponse(response)
         data = self.deserialize(response)['objects']
         self.assertEqual(len(data), 2)
@@ -1550,6 +1551,26 @@ class DataSetTests(TestCase):
         with self.assertRaises(RuntimeError) as context:
             dataset.get_latest_study()
             self.assertIn("Couldn't fetch Study", context.exception.message)
+
+    def test_get_nodes(self):
+        nodes = Node.objects.all()
+        self.assertGreater(nodes.count(), 0)
+        for node in self.dataset.get_nodes():
+            self.assertIn(node, nodes)
+
+    def test_get_nodes_no_nodes_available(self):
+        Node.objects.all().delete()
+        self.assertQuerysetEqual(self.dataset.get_nodes(), [])
+
+    def test_get_node_uuids(self):
+        node_uuids = Node.objects.all().values_list("uuid", flat=True)
+        self.assertGreater(node_uuids.count(), 0)
+        for node_uuid in self.dataset.get_node_uuids():
+            self.assertIn(node_uuid, node_uuids)
+
+    def test_get_node_uuids_no_nodes_available(self):
+        Node.objects.all().delete()
+        self.assertQuerysetEqual(self.dataset.get_node_uuids(), [])
 
 
 class DataSetApiV2Tests(APITestCase):
