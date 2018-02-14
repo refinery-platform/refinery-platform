@@ -86,6 +86,3 @@ RDS_ROLE: "refinery"
 
 # The instance type for the EC2 instance
 # FIXED to "m3.medium"
-
-# Redirects all non-HTTPS requests to HTTPS, False is default.
-SECURE_SSL_REDIRECT = True
