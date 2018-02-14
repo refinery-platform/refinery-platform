@@ -19,7 +19,7 @@ class Command(BaseCommand):
     Provides user with the Size of the FileStore
     """
 
-    def handle(self, *args, **kwargs):
+    def handle(self, *args, **options):
         # Format the FileStore size from bytes
         def sizeof_fmt(num, suffix='B'):
             for unit in ['', 'K', 'M', 'G', 'T', 'P', 'E', 'Z']:

@@ -151,8 +151,7 @@ def group_invite(request, token):
 
 def custom_error_page(request, template, context_dict):
     temp_loader = loader.get_template(template)
-    context = RequestContext(request, context_dict)
-    return temp_loader.render(context)
+    return temp_loader.render(context_dict, request)
 
 
 @login_required()

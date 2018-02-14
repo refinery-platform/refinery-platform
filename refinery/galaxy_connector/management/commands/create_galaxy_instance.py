@@ -1,7 +1,6 @@
 from __future__ import absolute_import
 
 import logging
-from optparse import make_option
 
 from django.core.management.base import BaseCommand, CommandError
 
@@ -14,27 +13,27 @@ class Command(BaseCommand):
     args = "<base_url> <api_key>"
     help = "Creates a new Galaxy instance."
 
-    option_list = BaseCommand.option_list + (
-        make_option('--file_name',
-                    action='store',
-                    type='string'
-                    ),
-        make_option('--description',
-                    action='store',
-                    type='string',
-                    default=""
-                    ),
-        make_option('--api_url',
-                    action='store',
-                    type='string',
-                    default="api"
-                    ),
-        make_option('--data_url',
-                    action='store',
-                    type='string',
-                    default="datasets"
-                    ),
-    )
+    def add_arguments(self, parser):
+        parser.add_argument(
+            '--file_name',
+            action='store'
+        )
+        parser.add_argument(
+            '--description',
+            action='store',
+            default=""
+        )
+        parser.add_argument(
+            '--api_url',
+            action='store',
+            default="api"
+        )
+        parser.add_argument(
+            '--data_url',
+            action='store',
+            default="datasets"
+        )
+
     """
     Name: handle
     Description:
