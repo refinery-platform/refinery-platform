@@ -28,3 +28,7 @@ module "identity_pool" {
 module "docker_host" {
   source = "../modules/docker_host"
 }
+
+module "vpc" {
+  source = "../modules/vpc"
+}
