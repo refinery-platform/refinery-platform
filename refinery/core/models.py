@@ -52,7 +52,6 @@ from data_set_manager.utils import (add_annotated_nodes_selection,
                                     index_annotated_nodes_selection)
 from file_store.models import FileStoreItem, FileType
 from file_store.tasks import rename
-from galaxy_connector.galaxy_workflow import create_expanded_workflow_graph
 from galaxy_connector.models import Instance
 import tool_manager
 
@@ -1518,7 +1517,7 @@ class Analysis(OwnableResource):
             direction=INPUT_CONNECTION
         ).first().node.assay
         # 1. read workflow into graph
-        graph = create_expanded_workflow_graph(
+        graph = tool_manager.utils.create_expanded_workflow_graph(
             ast.literal_eval(self.workflow_copy)
         )
         # 2. create data transformation nodes for all tool nodes
