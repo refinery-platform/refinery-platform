@@ -21,7 +21,7 @@ resource "aws_vpc" "main" {
 
 resource "aws_security_group" "allow_docker" {
   name        = "${var.security_group_name}"
-  description = "Allow connection to docker engine from within the VPC"
+  description = "Allow connection to docker engine from within VPC"
   vpc_id      = "${aws_vpc.main.id}"
 
   ingress {
