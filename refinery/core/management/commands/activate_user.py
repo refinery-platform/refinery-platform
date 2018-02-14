@@ -1,7 +1,6 @@
 '''
 Copied from create_user.py by drj on 2016-03-21
 '''
-
 from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand
 

@@ -30,7 +30,7 @@ from django.db.models.fields import IntegerField
 from django.db.models.signals import post_delete, post_save, pre_delete
 from django.dispatch import receiver
 from django.forms import ValidationError
-from django.template import Context, loader
+from django.template import loader
 from django.template.loader import render_to_string
 from django.utils import timezone
 
@@ -1447,9 +1447,8 @@ class Analysis(OwnableResource):
             temp_loader = loader.get_template(
                 'analysis_manager/analysis_email_full.txt')
 
-        context = Context(context_dict)
         try:
-            user.email_user(email_subj, temp_loader.render(context))
+            user.email_user(email_subj, temp_loader.render(context_dict))
         except smtplib.SMTPException as exc:
             logger.error("Error sending email to '%s' for analysis '%s': %s",
                          user.email, name, exc)
