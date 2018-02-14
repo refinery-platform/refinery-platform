@@ -9,15 +9,12 @@ import logging
 
 import networkx as nx
 
-import tool_manager
-
 logger = logging.getLogger(__name__)
 
 
 def create_expanded_workflow_graph(galaxy_workflow_dict):
     graph = nx.MultiDiGraph()
     steps = galaxy_workflow_dict["steps"]
-    galaxy_input_types = tool_manager.models.WorkflowTool.GALAXY_INPUT_TYPES
 
     # iterate over steps to create nodes
     for current_node_id, step in steps.iteritems():
@@ -46,10 +43,13 @@ def create_expanded_workflow_graph(galaxy_workflow_dict):
             parent_node_id = input_connection["id"]
             # test if parent node is a tool node or an input node to pick the
             # right name for the outgoing edge
-            if graph.node[parent_node_id]['type'] in galaxy_input_types:
-                parent_node_output_name = (
-                    steps[str(parent_node_id)]['inputs'][0]['name']
-                )
+            if parent_node_id == 0:
+                # Workflows created in Galaxy >= 17.05 don't return
+                # data about the "inputs" of their input step anymore,
+                # which makes sense. We still need this info to complete
+                # our workflow graph structure though
+                parent_step = steps[str(parent_node_id)]
+                parent_node_output_name = parent_step["name"].title()
             else:
                 parent_node_output_name = input_connection['output_name']
             edge_output_id = "{}_{}".format(
