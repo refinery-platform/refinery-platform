@@ -10,7 +10,7 @@ from django.db import transaction
 from bioblend.galaxy.client import ConnectionError
 from django_docker_engine.docker_utils import DockerClientWrapper
 from jsonschema import RefResolver, ValidationError, validate
-import networkx as nx
+import networkx
 
 from core.models import DataSet, Workflow, WorkflowEngine
 from factory_boy.django_model_factories import (FileRelationshipFactory,
@@ -511,7 +511,7 @@ def validate_tool_launch_configuration(tool_launch_config):
 
 
 def create_expanded_workflow_graph(galaxy_workflow_dict):
-    graph = nx.MultiDiGraph()
+    graph = networkx.MultiDiGraph()
     steps = galaxy_workflow_dict["steps"]
 
     # iterate over steps to create nodes
