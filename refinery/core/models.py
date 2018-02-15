@@ -1653,10 +1653,7 @@ class Analysis(OwnableResource):
         ]
         for data_transformation_node in data_transformation_nodes:
             # TODO: incorporate subanalysis id in tool name???
-            node_name = "{}_{}".format(
-                data_transformation_node['tool_id'],
-                data_transformation_node['name']
-            )
+            node_name = "{tool_id}_{name}".format(**data_transformation_node)
             data_transformation_node['node'] = (
                 Node.objects.create(
                     study=self.get_input_node_study(),
