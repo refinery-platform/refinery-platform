@@ -903,26 +903,6 @@ class WorkflowEngine(OwnableResource, ManageableResource):
         )
 
 
-class DiskQuota(SharableResource, ManageableResource):
-    # quota is given in bytes
-    maximum = models.IntegerField()
-    current = models.IntegerField()
-
-    def __unicode__(self):
-        return (
-            self.name + " - Quota: " + str(
-                self.current / (1024 * 1024 * 1024)) +
-            " of " + str(self.maximum / (1024 * 1024 * 1024)) + "GB available"
-        )
-
-    class Meta:
-        verbose_name = "diskquota"
-        permissions = (
-            ('read_%s' % verbose_name, 'Can read %s' % verbose_name),
-            ('share_%s' % verbose_name, 'Can share %s' % verbose_name),
-        )
-
-
 class WorkflowInputRelationships(models.Model):
     """Defines relationships between inputs based on the input string
     assoicated with each workflow i.e refinery_relationship=[{"category":"1-1",
