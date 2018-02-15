@@ -1689,9 +1689,8 @@ class Analysis(OwnableResource):
         output_connection_to_analysis_result_mapping = (
             self._get_output_connection_to_analysis_result_mapping()
         )
-        output_mappings = output_connection_to_analysis_result_mapping
-
-        for output_connection, analysis_result in output_mappings:
+        for output_connection, analysis_result in \
+                output_connection_to_analysis_result_mapping:
             derived_data_file_node = self._create_derived_data_file_node(
                 self.get_input_node_study(),
                 self.get_input_node_assay(),
