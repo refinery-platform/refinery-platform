@@ -117,11 +117,6 @@ class AnalysisAdmin(GuardedModelAdmin):
     actions = [delete_selected]
 
 
-class DiskQuotaAdmin(GuardedModelAdmin):
-    list_display = ['__unicode__', 'id', 'name', 'summary', 'maximum',
-                    'current']
-
-
 class DownloadAdmin(GuardedModelAdmin, ForeignKeyAutocompleteAdmin):
     list_display = ['__unicode__', 'id', 'data_set', 'analysis',
                     'file_store_item']
