@@ -1161,7 +1161,7 @@ class Analysis(OwnableResource):
         )
         ordering = ['-time_end', '-time_start']
 
-    def get_workflow_graph(self):
+    def get_expanded_workflow_graph(self):
         return tool_manager.utils.create_expanded_workflow_graph(
             ast.literal_eval(self.workflow_copy)
         )
@@ -1512,7 +1512,9 @@ class Analysis(OwnableResource):
 
     def attach_derived_nodes_to_dataset(self):
         graph_with_data_transformation_nodes = (
-            self._create_data_transformation_nodes(self.get_workflow_graph())
+            self._create_data_transformation_nodes(
+                self.get_expanded_workflow_graph()
+            )
         )
         graph_with_input_nodes_linked = (
             self._link_input_nodes_to_data_transformation_nodes(
