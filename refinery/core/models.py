@@ -1827,10 +1827,12 @@ class AnalysisNodeConnection(models.Model):
                                            max_length=250)
 
     def __unicode__(self):
-        return (
-            self.direction + ": " +
-            str(self.step) + "_" +
-            self.name + " (" + str(self.is_refinery_file) + ")"
+        return "{}: {}_{} ({}) {}".format(
+            self.direction,
+            self.step,
+            self.name,
+            self.is_refinery_file,
+            self.filetype
         )
 
     def get_input_connection_id(self):
