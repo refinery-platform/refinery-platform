@@ -1734,29 +1734,28 @@ class Analysis(OwnableResource):
         a. attach output node to source data transformation node
         b. attach output node to target data transformation node
         (if exists)"""
-        if len(graph.edges([output_connection.step])) > 0:
-            for edge in graph.edges_iter([output_connection.step]):
-                output_id = output_connection.get_output_connection_id()
+        for edge in graph.edges_iter([output_connection.step]):
+            output_id = output_connection.get_output_connection_id()
 
-                if graph[edge[0]][edge[1]]['output_id'] == output_id:
-                    input_node_id = edge[0]
-                    output_node_id = edge[1]
+            if graph[edge[0]][edge[1]]['output_id'] == output_id:
+                input_node_id = edge[0]
+                output_node_id = edge[1]
 
-                    data_transformation_input_node = (
-                        graph.node[input_node_id]['node']
-                    )
-                    data_transformation_output_node = (
-                        graph.node[output_node_id]['node']
-                    )
-                    data_transformation_input_node.add_child(
-                        derived_data_file_node
-                    )
-                    derived_data_file_node.add_child(
-                        data_transformation_output_node
-                    )
-                    # TODO: here we could add a (Refinery internal)
-                    # attribute to the derived data file node to
-                    # indicate which output of the tool it corresponds to
+                data_transformation_input_node = \
+                    graph.node[input_node_id]['node']
+
+                data_transformation_output_node = \
+                    graph.node[output_node_id]['node']
+
+                data_transformation_input_node.add_child(
+                    derived_data_file_node
+                )
+                derived_data_file_node.add_child(
+                    data_transformation_output_node
+                )
+                # TODO: here we could add a (Refinery internal)
+                # attribute to the derived data file node to
+                # indicate which output of the tool it corresponds to
 
         # connect outputs that are not inputs for any data transformation
         if (output_connection.is_refinery_file and
