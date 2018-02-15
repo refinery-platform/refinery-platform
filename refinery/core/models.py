@@ -1678,9 +1678,8 @@ class Analysis(OwnableResource):
 
                 if graph[edge[0]][edge[1]]['output_id'] == input_id:
                     input_node_id = edge[1]
-                    data_transformation_node = (
+                    data_transformation_node = \
                         graph.node[input_node_id]['node']
-                    )
                     input_connection.node.add_child(data_transformation_node)
         return graph
 
