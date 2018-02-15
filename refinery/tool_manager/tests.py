@@ -2494,27 +2494,27 @@ class WorkflowToolTests(ToolManagerTestBase):
 
         return _get_galaxy_download_task_ids(self.tool.analysis)
 
-    def _attach_outputs_dataset_assertions(self):
+    def _attach_derived_nodes_to_dataset_assertions(self):
         self._assert_analysis_node_connection_outputs_validity()
         self.assertEqual(self.show_dataset_provenance_mock.call_count, 8)
 
-    def test_attach_outputs_dataset_dsc(self):
+    def test_attach_derived_nodes_to_dataset_dsc(self):
         self._get_galaxy_download_task_ids_wrapper(
             tool_is_data_set_collection_based=True
         )
-        self.tool.analysis.attach_outputs_dataset()
-        self._attach_outputs_dataset_assertions()
+        self.tool.analysis.attach_derived_nodes_to_dataset()
+        self._attach_derived_nodes_to_dataset_assertions()
 
-    def test_attach_outputs_dataset_non_dsc(self):
+    def test_attach_derived_nodes_to_dataset_non_dsc(self):
         self._get_galaxy_download_task_ids_wrapper()
-        self.tool.analysis.attach_outputs_dataset()
-        self._attach_outputs_dataset_assertions()
+        self.tool.analysis.attach_derived_nodes_to_dataset()
+        self._attach_derived_nodes_to_dataset_assertions()
 
-    def test_attach_outputs_dataset_same_name_workflow_results(self):
+    def test_attach_derived_nodes_to_dataset_same_name_workflow_results(self):
         self._get_galaxy_download_task_ids_wrapper(
             datasets_have_same_names=True
         )
-        self.tool.analysis.attach_outputs_dataset()
+        self.tool.analysis.attach_derived_nodes_to_dataset()
 
         output_connections = AnalysisNodeConnection.objects.filter(
             analysis=self.tool.analysis,
@@ -2531,9 +2531,9 @@ class WorkflowToolTests(ToolManagerTestBase):
                 file_name=output_connection_filename
             )
             self.assertGreater(analysis_results.count(), 1)
-        self._attach_outputs_dataset_assertions()
+        self._attach_derived_nodes_to_dataset_assertions()
 
-    def test_attach_outputs_dataset_makes_proper_node_inheritance_chain(self):
+    def test_attach_derived_nodes_to_dataset_proper_node_inheritance(self):
         self._get_galaxy_download_task_ids_wrapper()
 
         exposed_output_connections = AnalysisNodeConnection.objects.filter(
@@ -2546,7 +2546,7 @@ class WorkflowToolTests(ToolManagerTestBase):
         for output_connection in exposed_output_connections:
             self.assertIsNone(output_connection.node)
 
-        self.tool.analysis.attach_outputs_dataset()
+        self.tool.analysis.attach_derived_nodes_to_dataset()
 
         # Have to fetch again here since AnalysisNodeConnections have been
         # updated
