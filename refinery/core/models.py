@@ -1699,10 +1699,9 @@ class Analysis(OwnableResource):
             if output_connection.is_refinery_file:
                 # retrieve uuid of corresponding output file if exists
                 logger.info(
-                    "Results for '%s' and %s.%s: %s",
+                    "Results for '%s' and %s: %s",
                     self.uuid,
                     output_connection,
-                    output_connection.filetype,
                     analysis_result
                 )
                 derived_data_file_node.file_uuid = (
