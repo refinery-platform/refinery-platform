@@ -1,3 +1,3 @@
 output "docker_hostname" {
-  value = "TODO"
+  value = "${aws_instance.docker_host.public_ip}"
 }
