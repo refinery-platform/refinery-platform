@@ -30,13 +30,25 @@
     var promise = $q.defer();
     var getUserFiles = userFileBrowserFactory.getUserFiles;
     getUserFiles().then(function (solr) {
+      console.log('grrrr');
+      console.log(solr.facet_field_counts);
       gridOptionsService.columnDefs = userFileBrowserFactory.createColumnDefs();
+      console.log(gridOptionsService.columnDefs);
+      hideEmptyCol(solr.facet_field_counts);
       gridOptionsService.data = userFileBrowserFactory.createData(solr.nodes);
       promise.resolve();
     }, function () {
       $log.error('/files/ request failed');
       promise.reject();
     });
+
+    function hideEmptyCol (facetCountObj) {
+      facetCountObj.forEach(function (counts, facetName) {
+        if (!counts.length) {
+          console.log(facetName);
+        }
+      });
+    }
 
     vm.sortChanged = function (grid, sortColumns) {
       var sortUrlParam = 'sort';
