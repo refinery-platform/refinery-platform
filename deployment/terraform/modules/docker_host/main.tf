@@ -1,15 +1,3 @@
-variable "security_group_id" {
-  type = "string"
-  default = "my_security_group_id"
-}
-
-variable "security_group_name" {
-  type = "string"
-  default = "allow_docker"
-}
-
-variable "vpc_id" {}
-
 resource "aws_security_group" "allow_docker" {
   name        = "${var.security_group_name}"
   description = "Allow connection to docker engine from within VPC"
