@@ -6,6 +6,7 @@ import subprocess
 import urlparse
 
 from django.core.exceptions import ImproperlyConfigured
+from django.core.files.storage import FileSystemStorage
 
 import djcelery
 import yaml
@@ -330,6 +331,8 @@ CELERYBEAT_SCHEDULE = {
 }
 
 CHUNKED_UPLOAD_ABSTRACT_MODEL = False
+# keep chunked uploads outside the file_store directory
+CHUNKED_UPLOAD_STORAGE_CLASS = FileSystemStorage
 
 # === Refinery Settings ===
 
