@@ -1,8 +1,3 @@
-variable "cidr_block" {
-  type = "string"
-  default = "10.0.0.0/16"
-}
-
 variable "security_group_id" {
   type = "string"
   default = "my_security_group_id"
@@ -13,16 +8,12 @@ variable "security_group_name" {
   default = "allow_docker"
 }
 
-
-
-resource "aws_vpc" "main" {
-  cidr_block = "${var.cidr_block}"
-}
+variable "vpc_id" {}
 
 resource "aws_security_group" "allow_docker" {
   name        = "${var.security_group_name}"
   description = "Allow connection to docker engine from within VPC"
-  vpc_id      = "${aws_vpc.main.id}"
+  vpc_id      = "${var.vpc_id}"
 
   ingress {
     from_port   = 0
