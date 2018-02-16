@@ -8,5 +8,5 @@ variable "identity_pool_name" {
 
 variable "cidr_block" {
   type = "string"
-  default = "10.0.0.0/16"
+  default = "172.16.0.0/16"
 }
