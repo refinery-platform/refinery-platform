@@ -27,4 +27,11 @@ module "identity_pool" {
 
 module "docker_host" {
   source = "../modules/docker_host"
+  cidr_block = "${var.cidr_block}"
+  vpc_id = "${module.vpc.vpc_id}"
+}
+
+module "vpc" {
+  source = "../modules/vpc"
+  cidr_block = "${var.cidr_block}"
 }
