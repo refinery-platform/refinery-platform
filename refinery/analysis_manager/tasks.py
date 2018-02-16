@@ -149,7 +149,7 @@ def _attach_workflow_outputs(analysis_uuid):
     analysis_status = _get_analysis_status(analysis_uuid)
 
     if analysis.workflow.type == Workflow.ANALYSIS_TYPE:
-        analysis.attach_outputs_dataset()
+        analysis.attach_derived_nodes_to_dataset()
     elif analysis.workflow.type == Workflow.DOWNLOAD_TYPE:
         analysis.attach_outputs_downloads()
     else:

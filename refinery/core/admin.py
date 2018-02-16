@@ -9,13 +9,12 @@ from django.contrib import admin
 from django_extensions.admin import ForeignKeyAutocompleteAdmin
 from guardian.admin import GuardedModelAdmin
 
-from core.models import (Analysis, AnalysisNodeConnection, AnalysisResult,
-                         DataSet, DiskQuota, Download, ExtendedGroup,
-                         InvestigationLink, Invitation, Ontology, Project,
-                         SiteProfile, Tutorials, UserProfile, Workflow,
-                         WorkflowDataInput, WorkflowDataInputMap,
-                         WorkflowEngine, WorkflowInputRelationships)
-from core.utils import admin_ui_deletion
+from .models import (Analysis, AnalysisNodeConnection, AnalysisResult, DataSet,
+                     Download, ExtendedGroup, InvestigationLink, Invitation,
+                     Ontology, Project, SiteProfile, Tutorials, UserProfile,
+                     Workflow, WorkflowDataInput, WorkflowDataInputMap,
+                     WorkflowEngine, WorkflowInputRelationships)
+from .utils import admin_ui_deletion
 
 
 class AnalysisNodeConnectionAdmin(ForeignKeyAutocompleteAdmin):
@@ -118,11 +117,6 @@ class AnalysisAdmin(GuardedModelAdmin):
     actions = [delete_selected]
 
 
-class DiskQuotaAdmin(GuardedModelAdmin):
-    list_display = ['__unicode__', 'id', 'name', 'summary', 'maximum',
-                    'current']
-
-
 class DownloadAdmin(GuardedModelAdmin, ForeignKeyAutocompleteAdmin):
     list_display = ['__unicode__', 'id', 'data_set', 'analysis',
                     'file_store_item']
@@ -179,7 +173,6 @@ admin.site.register(Analysis, AnalysisAdmin)
 admin.site.register(Download, DownloadAdmin)
 admin.site.register(AnalysisResult, AnalysisResultAdmin)
 admin.site.register(AnalysisNodeConnection, AnalysisNodeConnectionAdmin)
-admin.site.register(DiskQuota, DiskQuotaAdmin)
 admin.site.register(Invitation, InvitationAdmin)
 admin.site.register(UserProfile, UserProfileAdmin)
 admin.site.register(Tutorials, TutorialsAdmin)

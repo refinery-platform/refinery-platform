@@ -1546,6 +1546,26 @@ class DataSetTests(TestCase):
             dataset.get_latest_study()
             self.assertIn("Couldn't fetch Study", context.exception.message)
 
+    def test_get_nodes(self):
+        nodes = Node.objects.all()
+        self.assertGreater(nodes.count(), 0)
+        for node in self.dataset.get_nodes():
+            self.assertIn(node, nodes)
+
+    def test_get_nodes_no_nodes_available(self):
+        Node.objects.all().delete()
+        self.assertQuerysetEqual(self.dataset.get_nodes(), [])
+
+    def test_get_node_uuids(self):
+        node_uuids = Node.objects.all().values_list("uuid", flat=True)
+        self.assertGreater(node_uuids.count(), 0)
+        for node_uuid in self.dataset.get_node_uuids():
+            self.assertIn(node_uuid, node_uuids)
+
+    def test_get_node_uuids_no_nodes_available(self):
+        Node.objects.all().delete()
+        self.assertQuerysetEqual(self.dataset.get_node_uuids(), [])
+
 
 class DataSetApiV2Tests(APITestCase):
 
