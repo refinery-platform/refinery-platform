@@ -689,6 +689,7 @@ class ChunkedFileUploadCompleteView(ChunkedUploadCompleteView):
             logger.error(
                 "Error moving uploaded file to user's import directory: %s",
                 exc)
+        chunked_upload.delete()
 
     def get_response_data(self, chunked_upload, request):
         message = "You have successfully uploaded {}".format(
