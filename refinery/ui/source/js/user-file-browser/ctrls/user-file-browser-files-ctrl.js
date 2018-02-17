@@ -10,6 +10,7 @@
     '$location',
     '$log',
     '$q',
+    '_',
     'userFileBrowserFactory',
     'userFileParamsService',
     'userFileSortsService',
@@ -21,6 +22,7 @@
       $location,
       $log,
       $q,
+      _,
       userFileBrowserFactory,
       userFileParamsService,
       userFileSortsService,
@@ -30,11 +32,9 @@
     var promise = $q.defer();
     var getUserFiles = userFileBrowserFactory.getUserFiles;
     getUserFiles().then(function (solr) {
-      console.log('grrrr');
-      console.log(solr.facet_field_counts);
-      gridOptionsService.columnDefs = userFileBrowserFactory.createColumnDefs();
-      console.log(gridOptionsService.columnDefs);
-      hideEmptyCol(solr.facet_field_counts);
+      gridOptionsService.columnDefs = userFileBrowserFactory.createColumnDefs(
+        hideEmptyCol(solr.facet_field_counts)
+      );
       gridOptionsService.data = userFileBrowserFactory.createData(solr.nodes);
       promise.resolve();
     }, function () {
@@ -42,12 +42,15 @@
       promise.reject();
     });
 
+    // temp solution to handle empty columns until backend is updated to
+    // avoid sending attributes with no fields
     function hideEmptyCol (facetCountObj) {
-      facetCountObj.forEach(function (counts, facetName) {
+      _.each(facetCountObj, function (counts, facetName) {
         if (!counts.length) {
-          console.log(facetName);
+          delete facetCountObj[facetName];
         }
       });
+      return _.keys(facetCountObj);
     }
 
     vm.sortChanged = function (grid, sortColumns) {

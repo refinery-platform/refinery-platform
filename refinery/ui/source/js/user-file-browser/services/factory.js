@@ -35,7 +35,7 @@
     * ----------------------
     */
 
-    function createColumnDefs () {
+    function createColumnDefs (culledAttributes) {
       var _cellTemplate = '<div class="ngCellText text-align-center ui-grid-cell-contents"' +
             'ng-class="col.colIndex()">' +
             '<div ng-if="COL_FIELD == \'PENDING\'"  ' +
@@ -68,8 +68,13 @@
                   '</a>' +
                 '</div>',
             width: 30 }];
+      // temp solution to handle empty columns until backend is updated to
+      // avoid sending attributes with no fields
+      var validateAttributeStr = culledAttributes.join('');
       settings.djangoApp.userFilesColumns.forEach(function (column) {
-        defs.push({ field: column });
+        if (validateAttributeStr.indexOf(column) > -1) {
+          defs.push({ field: column });
+        }
       });
       return defs;
     }
