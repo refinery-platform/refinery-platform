@@ -33,7 +33,7 @@
     var getUserFiles = userFileBrowserFactory.getUserFiles;
     getUserFiles().then(function (solr) {
       gridOptionsService.columnDefs = userFileBrowserFactory.createColumnDefs(
-        hideEmptyCol(solr.facet_field_counts)
+        cullEmptyAttributes(solr.facet_field_counts)
       );
       gridOptionsService.data = userFileBrowserFactory.createData(solr.nodes);
       promise.resolve();
@@ -42,9 +42,8 @@
       promise.reject();
     });
 
-    // temp solution to handle empty columns until backend is updated to
-    // avoid sending attributes with no fields
-    function hideEmptyCol (facetCountObj) {
+    // helper method to cull out attributes with no fields
+    function cullEmptyAttributes (facetCountObj) {
       _.each(facetCountObj, function (counts, facetName) {
         if (!counts.length) {
           delete facetCountObj[facetName];
