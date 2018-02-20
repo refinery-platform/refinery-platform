@@ -8,12 +8,14 @@
   userFileBrowserFactory.$inject = [
     '$log',
     'settings',
+    '_',
     'userFileService'
   ];
 
   function userFileBrowserFactory (
     $log,
     settings,
+    _,
     userFileService
     ) {
     var service = {
@@ -70,9 +72,9 @@
             width: 30 }];
       // temp solution to handle empty columns until backend is updated to
       // avoid sending attributes with no fields
-      var validateAttributeStr = culledAttributes.join('');
+      var attributeStr = culledAttributes.join(',');
       settings.djangoApp.userFilesColumns.forEach(function (column) {
-        if (validateAttributeStr.indexOf(column) > -1) {
+        if (_.includes(attributeStr, column)) {
           defs.push({ field: column });
         }
       });

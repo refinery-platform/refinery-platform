@@ -49,7 +49,7 @@
           delete facetCountObj[facetName];
         }
       });
-      return _.keys(facetCountObj);
+      return _.keys(facetCountObj).concat('filename', 'date');
     }
 
     vm.sortChanged = function (grid, sortColumns) {
