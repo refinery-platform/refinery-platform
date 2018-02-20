@@ -14,6 +14,9 @@ class Command(BaseCommand):
     Description:
     main program; run the command
     """
+    def add_arguments(self, parser):
+        parser.add_argument('refinery_instance_name')
+        parser.add_argument('refinery_base_url')
 
     def handle(self, *args, **options):
         try:
@@ -25,10 +28,6 @@ class Command(BaseCommand):
             )
         else:
             set_up_site_name(refinery_instance_name, refinery_base_url)
-
-    def add_arguments(self, parser):
-        parser.add_argument('refinery_instance_name')
-        parser.add_argument('refinery_base_url')
 
 
 def set_up_site_name(refinery_instance_name, refinery_base_url):

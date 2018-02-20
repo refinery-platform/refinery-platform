@@ -2267,3 +2267,31 @@ class TestManagementCommands(TestCase):
         neo4j interactions """
         with mock.patch.object(ImportAnnotationsCommand, "handle"):
             call_command("import_annotations", "-c")
+
+    def test_create_workflow_engine(self):
+        galaxy_instance = GalaxyInstanceFactory()
+        call_command(
+            "create_workflowengine",
+            str(galaxy_instance.id),
+            ExtendedGroup.objects.public_group().name
+        )
+        self.assertIsNotNone(
+            WorkflowEngine.objects.get(instance=galaxy_instance)
+        )
+
+    def test_create_workflow_engine_bad_galaxy_instance(self):
+        with self.assertRaises(CommandError):
+            call_command(
+                "create_workflowengine",
+                str(123),
+                ExtendedGroup.objects.public_group().name
+            )
+
+    def test_create_workflow_engine_bad_group_name(self):
+        galaxy_instance = GalaxyInstanceFactory()
+        with self.assertRaises(CommandError):
+            call_command(
+                "create_workflowengine",
+                str(galaxy_instance.id),
+                "non-existent group name"
+            )
