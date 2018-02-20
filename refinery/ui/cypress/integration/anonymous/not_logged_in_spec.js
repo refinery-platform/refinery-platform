@@ -57,9 +57,9 @@ describe('Not logged in', function() {
     cy.visible_btn('List').click();
 
     cy.visible('Filename');
-    // cy.visible('Organism');
-    // cy.visible('Technology');
-    // cy.visible('Antibody');
+    cy.visible('Organism');
+    cy.visible('Technology');
+    cy.visible('Antibody');
     cy.visible('Date');
     // cy.visible('Genotype');
   });
