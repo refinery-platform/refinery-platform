@@ -2247,5 +2247,14 @@ class TestManagementCommands(TestCase):
         user = User.objects.get(username="guest")
         self.assertFalse(self._user_in_public_group(user))
 
-        call_command('add_users_to_public_group')
+        call_command("add_users_to_public_group")
         self.assertTrue(self._user_in_public_group(user))
+
+    def test_activate_user(self):
+        guest_username = "guest"
+        call_command("loaddata", "guest.json")
+        user = User.objects.get(username=guest_username)
+        self.assertFalse(user.is_active)
+
+        call_command("activate_user", guest_username)
+        self.assertTrue(user.is_active)
