@@ -2231,3 +2231,21 @@ class TestManagementCommands(TestCase):
     def test_set_up_site_name_failure(self):
         with self.assertRaises(CommandError):
             call_command('set_up_site_name')
+
+    def _user_in_public_group(self, user_instance):
+        return bool(
+            user_instance.groups.filter(
+                name=ExtendedGroup.objects.public_group().name
+            ).count()
+        )
+
+    def test_add_users_to_public_group(self):
+        # We have a post-save hook on User for this functionality, but this
+        # doesn't apply when we create the super/guest user with 'loaddata'
+        # where save() is never actually called
+        call_command("loaddata", "guest.json")
+        user = User.objects.get(username="guest")
+        self.assertFalse(self._user_in_public_group(user))
+
+        call_command('add_users_to_public_group')
+        self.assertTrue(self._user_in_public_group(user))
