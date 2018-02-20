@@ -6,7 +6,9 @@ from urlparse import urljoin
 
 from django.apps import apps
 from django.contrib.auth.models import AnonymousUser, Group, User
+from django.contrib.sites.models import Site
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.core.management import CommandError, call_command
 from django.db import connection
 from django.db.migrations.executor import MigrationExecutor
 from django.test import TestCase
@@ -2214,3 +2216,18 @@ class DataSetPermissionsUpdateTests(TestMigrations):
                                                self.dataset_b))
         self.assertTrue(self._check_permission(self.user_a, self.dataset_b))
         self.assertTrue(self._check_permission(self.user_b, self.dataset_b))
+
+
+class TestManagementCommands(TestCase):
+    def test_set_up_site_name(self):
+        site_name = "Refinery Test"
+        domain = "www.example.com"
+        call_command('set_up_site_name', site_name, domain)
+
+        self.assertIsNotNone(
+            Site.objects.get(domain=domain, name=site_name)
+        )
+
+    def test_set_up_site_name_failure(self):
+        with self.assertRaises(CommandError):
+            call_command('set_up_site_name')
