@@ -24,20 +24,25 @@ class Command(BaseCommand):
     Description:
     main program; run the command
     """
+    def add_arguments(self, parser):
+        parser.add_argument('galaxy_instance_id', type=int)
+        parser.add_argument('group_name')
+
     def handle(self, *args, **options):
         """This function creates a workflow engine and assigns it to the
         specified group
         """
         try:
-            instance = Instance.objects.get(id=args[0])
+            instance = Instance.objects.get(id=options['galaxy_instance_id'])
         except IndexError:
             raise CommandError("Please provide a Galaxy instance ID")
         except Instance.DoesNotExist:
             raise CommandError(
-                "Unable to retrieve Galaxy instance with id '%d'" % args[0])
+                "Unable to retrieve Galaxy instance with id '%d'" %
+                options['galaxy_instance_id'])
         # get *manager* group for indicated group
         try:
-            group_name = args[1]
+            group_name = options['group_name']
         except IndexError:
             raise CommandError("Please provide a group name")
         try:

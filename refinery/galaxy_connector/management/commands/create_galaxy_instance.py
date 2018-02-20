@@ -10,10 +10,11 @@ logger = logging.getLogger(__name__)
 
 
 class Command(BaseCommand):
-    args = "<base_url> <api_key>"
     help = "Creates a new Galaxy instance."
 
     def add_arguments(self, parser):
+        parser.add_argument('base_url')
+        parser.add_argument('api_key')
         parser.add_argument(
             '--file_name',
             action='store'
@@ -42,11 +43,11 @@ class Command(BaseCommand):
     """
     def handle(self, *args, **options):
         try:
-            base_url = args[0]
+            base_url = options['base_url']
         except IndexError:
             raise CommandError("Please provide a base URL for Galaxy instance")
         try:
-            api_key = args[1]
+            api_key = options['api_key']
         except IndexError:
             raise CommandError("Please provide an API key")
         instance_count = Instance.objects.filter(
