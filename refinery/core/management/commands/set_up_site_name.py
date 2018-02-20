@@ -2,7 +2,7 @@ import sys
 
 from django.conf import settings
 from django.contrib.sites.models import Site
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 
 
 class Command(BaseCommand):
@@ -17,14 +17,18 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         try:
-            refinery_instance_name = args[0]
-            refinery_base_url = args[1]
+            refinery_instance_name = options['refinery_instance_name']
+            refinery_base_url = options['refinery_base_url']
         except:
-            sys.stdout.write("Insufficient arguments provided:\n%s" %
-                             self.help)
-            sys.exit(2)
+            raise CommandError(
+                "Insufficient arguments provided:\n {}".format(self.help)
+            )
+        else:
+            set_up_site_name(refinery_instance_name, refinery_base_url)
 
-        set_up_site_name(refinery_instance_name, refinery_base_url)
+    def add_arguments(self, parser):
+        parser.add_argument('refinery_instance_name')
+        parser.add_argument('refinery_base_url')
 
 
 def set_up_site_name(refinery_instance_name, refinery_base_url):
