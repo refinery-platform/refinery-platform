@@ -2,9 +2,9 @@ import os
 from urlparse import urljoin
 
 from django.conf import settings
-from django.contrib.sites.models import Site
+from django.core.files import File
+from django.core.files.storage import Storage
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.db.models import FileField
 from django.test import SimpleTestCase, TestCase, override_settings
 
 import mock
@@ -12,8 +12,9 @@ from rest_framework.test import APIRequestFactory, APITestCase
 
 from .models import (FileExtension, FileStoreItem, FileType,
                      SymlinkedFileSystemStorage, file_path,
-                     generate_file_source_translator, _get_extension_from_path,
-                     get_file_object, get_temp_dir, _map_source, parse_s3_url)
+                     generate_file_source_translator,
+                     _get_extension_from_string, get_file_object, get_temp_dir,
+                     _map_source, parse_s3_url)
 from .serializers import FileStoreItemSerializer
 from .views import FileStoreItems
 
@@ -87,27 +88,29 @@ class FileStoreModuleTest(TestCase):
         self.assertEqual(file_object, mock.sentinel.file_object)
 
     def test_get_extension_from_file(self):
-        self.assertEqual(_get_extension_from_path('test.fastq'), 'fastq')
+        self.assertEqual(_get_extension_from_string('test.fastq'), 'fastq')
 
     def test_get_multi_extension_from_file(self):
-        self.assertEqual(_get_extension_from_path('test.fastq.gz'), 'fastq.gz')
+        self.assertEqual(_get_extension_from_string('test.fastq.gz'),
+                         'fastq.gz')
 
     def test_get_blank_extension_from_file(self):
-        self.assertEqual(_get_extension_from_path('test'), '')
+        self.assertEqual(_get_extension_from_string('test'), '')
 
     def test_get_extension_from_url(self):
         self.assertEqual(
-            _get_extension_from_path('http://example.org/test.fastq'), 'fastq'
+            _get_extension_from_string('http://example.org/test.fastq'),
+            'fastq'
         )
 
     def test_get_multi_extension_from_url(self):
         self.assertEqual(
-            _get_extension_from_path('http://example.org/test.fastq.gz'),
+            _get_extension_from_string('http://example.org/test.fastq.gz'),
             'fastq.gz'
         )
 
     def test_get_blank_extension_from_url(self):
-        self.assertEqual(_get_extension_from_path('http://example.org/test'),
+        self.assertEqual(_get_extension_from_string('http://example.org/test'),
                          '')
 
     def test_parse_s3_url(self):
@@ -130,72 +133,61 @@ class FileStoreItemTest(TestCase):
 
     def setUp(self):
         # TODO: replace with create() when migrations are no longer required
-        self.tdf_filetype = FileType.objects.get_or_create(name='TDF')[0]
-        self.tdf_fileextension = FileExtension.objects.get_or_create(
-            name='tdf', filetype=self.tdf_filetype
+        self.file_type = FileType.objects.get_or_create(name='TDF')[0]
+        self.file_extension = FileExtension.objects.get_or_create(
+            name='tdf', filetype=self.file_type
         )[0]
-        self.filename = 'test_file.tdf'
-        self.path_source = os.path.join('/example/path', self.filename)
-        self.url_source = urljoin('http://example.org/', self.filename)
+        self.file_name = 'test_file.tdf'
+        self.path_source = os.path.join('/example/path', self.file_name)
+        self.url_source = urljoin('http://example.org/', self.file_name)
 
-    @override_settings(REFINERY_URL_SCHEME='http', MEDIA_URL='/media/')
-    @mock.patch.object(FileStoreItem, 'is_local',
-                       mock.MagicMock(return_value=True))
-    def test_get_full_url_local_file(self):
-        file_mock = mock.MagicMock(spec=FileField)
-        # file_mock.path = mock.MagicMock()
-        file_mock.url = 'test.fastq'
-        from django.core.files.storage import FileSystemStorage
-        file_mock.storage = mock.MagicMock(spec=FileSystemStorage)
-        file_mock.storage.exists = mock.MagicMock(return_value=True)
+    def test_get_local_file_url(self):
+        file_mock = mock.MagicMock(spec=File)
+        file_mock.name = 'test.fastq'
         item = FileStoreItem()
         item.datafile = file_mock
-        self.assertEqual(item.get_datafile_url(),
-                         'http://example.com/test.fastq')
+        storage_mock = mock.MagicMock(spec=Storage)
+        storage_mock.url = mock.MagicMock()
+        storage_mock.url.return_value = '/media/file_store/test.fastq'
+        with mock.patch('django.core.files.storage.default_storage._wrapped',
+                        storage_mock):
+            self.assertEqual(item.get_datafile_url(), storage_mock.url())
 
-    def test_get_full_url_remote_file(self):
-        """Check if the source URL is returned for files that have not been
-        imported
-        """
-        # create FileStoreItem instances without any disk operations
-        item_from_url = FileStoreItem.objects.create(source=self.url_source)
-        self.assertEqual(item_from_url.get_datafile_url(),
-                         item_from_url.source)
+    def test_get_remote_file_url(self):
+        item = FileStoreItem(source=self.url_source)
+        self.assertEqual(item.get_datafile_url(), item.source)
 
-    def test_get_file_type(self):
-        """Check that the correct file type is returned"""
-        item_from_path = FileStoreItem.objects.create(
-            datafile=SimpleUploadedFile(self.filename, 'Coffee is delicious!'),
-            source=self.path_source, filetype=self.tdf_filetype
-        )
-        item_from_url = FileStoreItem.objects.create(
-            source=self.url_source, filetype=self.tdf_filetype
-        )
-        self.assertEqual(item_from_path.get_filetype(), self.tdf_filetype)
-        self.assertEqual(item_from_url.get_filetype(), self.tdf_filetype)
+    def test_get_local_file_type(self):
+        item = FileStoreItem(source=self.path_source, filetype=self.file_type)
+        self.assertEqual(item.get_filetype(), self.file_type)
 
-    def test_set_file_type_automatically(self):
-        """Check that a file type is set automatically"""
-        item_from_url = FileStoreItem.objects.create(source=self.url_source)
-        item_from_path = FileStoreItem.objects.create(
-            datafile=SimpleUploadedFile(self.filename, 'Coffee is delicious!'),
-            source=self.path_source
-        )
-        item_from_path.set_filetype()
-        self.assertTrue(item_from_path.filetype,
-                        os.path.splitext(self.filename)[1])
-        item_from_url.set_filetype()
-        self.assertTrue(item_from_url.filetype,
-                        os.path.splitext(self.filename)[1])
+    def test_get_remote_file_type(self):
+        item = FileStoreItem(source=self.url_source, filetype=self.file_type)
+        self.assertEqual(item.get_filetype(), self.file_type)
 
-    def test_get_extension_from_local_file(self):
-        file_mock = mock.MagicMock(spec=FileField)
-        type(file_mock).name = mock.PropertyMock(return_value='test.fastq')
+    def test_set_remote_file_type(self):
+        item = FileStoreItem.objects.create(source=self.url_source)
+        self.assertTrue(item.filetype, self.file_type)
+
+    def test_set_local_file_type(self):
+        file_mock = mock.MagicMock(spec=File)
+        file_mock.name = self.file_name
         item = FileStoreItem()
         item.datafile = file_mock
-        self.assertEqual(item.get_file_extension(), 'fastq')
+        # https://joeray.me/mocking-files-and-file-storage-for-testing-django-models.html
+        with mock.patch('django.core.files.storage.default_storage._wrapped',
+                        mock.MagicMock(spec=Storage)):
+            item.save()
+        self.assertTrue(item.filetype, self.file_type)
 
-    def test_get_extension_from_remote_file(self):
+    def test_get_local_file_extension(self):
+        file_mock = mock.MagicMock(spec=File)
+        file_mock.name = self.file_name
+        item = FileStoreItem()
+        item.datafile = file_mock
+        self.assertEqual(item.get_file_extension(), 'tdf')
+
+    def test_get_remote_file_extension(self):
         item = FileStoreItem(source='http://example.org/test.fastq')
         self.assertEqual(item.get_file_extension(), 'fastq')
 

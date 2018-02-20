@@ -239,7 +239,6 @@ class FileStoreItem(models.Model):
             )
         except (FileExtension.DoesNotExist,
                 FileExtension.MultipleObjectsReturned) as exc:
-            # save + raise RuntimeError instead to prevent spurious log errors?
             logger.warn("Could not assign type to file '%s' using extension "
                         "'%s': %s", self, self.get_file_extension(), exc)
         else:
@@ -276,8 +275,8 @@ class FileStoreItem(models.Model):
     def get_file_extension(self):
         """Return extension of the file on disk or from the source"""
         if self.datafile.name:
-            return _get_extension_from_path(self.datafile.name)
-        return _get_extension_from_path(self.source)
+            return _get_extension_from_string(self.datafile.name)
+        return _get_extension_from_string(self.source)
 
     def get_file_object(self):
         '''Open data file.
@@ -294,11 +293,7 @@ class FileStoreItem(models.Model):
             return None
 
     def get_filetype(self):
-        """Retrieve the type of the datafile.
-
-        :returns: FileType object.
-
-        """
+        """Retrieve the type of the datafile (a FileType object)"""
         return self.filetype
 
     def set_filetype(self, filetype=''):
@@ -603,7 +598,7 @@ def _rename_file_on_disk(current_path, new_path):
     return True
 
 
-def _get_extension_from_path(path):
+def _get_extension_from_string(path):
     """Return file extension given a file name, file system path, or URL"""
     file_name_parts = os.path.basename(path).split('.')
     if len(file_name_parts) == 1:  # no periods in file name
