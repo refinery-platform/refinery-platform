@@ -5,12 +5,11 @@
   "objects": [
     {
       "id": 28,
-      "measurement": null,
-      "technology": null,
-      "filename": null,
-      "date_submitted": null,
-      "antibody": null,
-      "organism": null,
+      "technology": "nucleotide_sequencing",
+      "date_submitted": "2018-01-15",
+      "antibody": "Ezh2",
+      "organism": "Mus musculus",
+      "genotype": "WT",
       "uuid": "7c532f21-d4c4-40da-83c4-9a72ade5c80f"
     }
   ]
