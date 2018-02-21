@@ -1888,29 +1888,35 @@ class NodeIndexTests(APITestCase):
     def setUp(self):
         data_set = DataSet.objects.create()
         investigation = Investigation.objects.create()
-
-        InvestigationLink.objects.create(
-            investigation=investigation,
-            data_set=data_set
-        )
-
+        InvestigationLink.objects.create(investigation=investigation,
+                                         data_set=data_set)
         study = Study.objects.create(investigation=investigation)
         assay = Assay.objects.create(study=study, technology='whizbang')
 
+        self.file_store_item = FileStoreItem()
+        self.file_store_item.import_task_id = str(uuid.uuid4())
+        self.file_store_item.save()
+        # from django.core.files.storage import Storage
+        # storage_mock = mock.MagicMock(spec=Storage)
+        # storage_mock.url = mock.MagicMock(name='url')
+        # storage_mock.url.return_value = '/media/file_store/test_file.txt'
+        # with mock.patch('django.core.files.storage.default_storage._wrapped',
+        #                 storage_mock):
+
         # None of the details of the test_file except name matter for the test
-        test_file = StringIO()
-        test_file.write('Coffee is great.\n')
-        self.file_store_item = FileStoreItem.objects.create(
-            datafile=InMemoryUploadedFile(
-                test_file,
-                field_name='tempfile',
-                name='test_file.txt',
-                content_type='text/plain',
-                size=len(test_file.getvalue()),
-                charset='utf-8'
-            ),
-            import_task_id=str(uuid.uuid4())
-        )
+        # test_file = StringIO()
+        # test_file.write('Coffee is great.\n')
+        # self.file_store_item = FileStoreItem.objects.create(
+        #     datafile=InMemoryUploadedFile(
+        #         test_file,
+        #         field_name='tempfile',
+        #         name='test_file.txt',
+        #         content_type='text/plain',
+        #         size=len(test_file.getvalue()),
+        #         charset='utf-8'
+        #     ),
+        #     import_task_id=str(uuid.uuid4())
+        # )
         self.import_task = TaskMeta.objects.create(
             task_id=self.file_store_item.import_task_id
         )
@@ -1966,7 +1972,7 @@ class NodeIndexTests(APITestCase):
                 'REFINERY_FILETYPE_#_#_s': expected_filetype,
                 'REFINERY_NAME_#_#_s': 'http://example.com/fake.txt',
                 'REFINERY_SUBANALYSIS_#_#_s': -1,
-                'REFINERY_TYPE_#_#_s': u'Raw Data File',
+                'REFINERY_TYPE_#_#_s': 'Raw Data File',
                 'REFINERY_WORKFLOW_OUTPUT_#_#_s': 'N/A',
                 'analysis_uuid': None,
                 'assay_uuid': self.assay_uuid,
@@ -1996,50 +2002,25 @@ class NodeIndexTests(APITestCase):
             }
         )
 
-    def test_prepare_node_good_datafile(self):
-        data_to_be_indexed = self._prepare_node_index(self.node)
-        self._assert_node_index_prepared_correctly(
-            data_to_be_indexed,
-            expected_download_url=self.file_store_item.get_datafile_url()
-        )
-        self.assertRegexpMatches(
-            data_to_be_indexed['REFINERY_DOWNLOAD_URL_s'],
-            r'^/media/file_store/.+/test_file.+txt$'
-            # There may or may not be a suffix on "test_file",
-            # depending on environment. Don't make it too strict!
-        )
+    def test_prepare_node_with_valid_datafile(self):
+        with mock.patch.object(FileStoreItem, 'get_datafile_url',
+                               return_value='/media/file_store/test_file.txt'):
+            self._assert_node_index_prepared_correctly(
+                self._prepare_node_index(self.node),
+                expected_download_url=self.file_store_item.get_datafile_url()
+            )
 
     def test_prepare_node_remote_datafile_source(self):
-        self.file_store_item.datafile.delete()
-        self.file_store_item.source = "http://www.example.com/test.txt"
+        self.file_store_item.source = "http://www.example.org/test.txt"
         self.file_store_item.save()
         self._assert_node_index_prepared_correctly(
             self._prepare_node_index(self.node),
             expected_download_url=self.file_store_item.source
         )
 
-    def test_prepare_node_missing_datafile(self):
-        self.file_store_item.datafile.delete()
-        self.file_store_item.save()
-        with mock.patch.object(
-            FileStoreItem,
-            "get_import_status",
-            return_value=SUCCESS
-        ) as get_import_status_mock:
-            self._assert_node_index_prepared_correctly(
-                self._prepare_node_index(self.node),
-                expected_download_url=NOT_AVAILABLE
-            )
-            self.assertTrue(get_import_status_mock.called)
-
     def test_prepare_node_pending_yet_existing_file_import_task(self):
-        self.file_store_item.datafile.delete()
-        self.file_store_item.save()
-        with mock.patch.object(
-            FileStoreItem,
-            "get_import_status",
-            return_value=PENDING
-        ):
+        with mock.patch.object(FileStoreItem, 'get_import_status',
+                               return_value=PENDING):
             self._assert_node_index_prepared_correctly(
                 self._prepare_node_index(self.node),
                 expected_download_url=PENDING
@@ -2047,51 +2028,47 @@ class NodeIndexTests(APITestCase):
 
     def test_prepare_node_pending_non_existent_file_import_task(self):
         self.import_task.delete()
-        self.file_store_item.datafile.delete()
-        self._assert_node_index_prepared_correctly(
-            self._prepare_node_index(self.node),
-            expected_download_url=NOT_AVAILABLE
-        )
+        with mock.patch.object(FileStoreItem, 'get_datafile_url',
+                               return_value=None):
+            self._assert_node_index_prepared_correctly(
+                self._prepare_node_index(self.node),
+                expected_download_url=NOT_AVAILABLE
+            )
 
     def test_prepare_node_no_file_import_task_id_yet(self):
-        self.file_store_item.datafile.delete()
         self.file_store_item.import_task_id = ""
         self.file_store_item.save()
         self.import_task.delete()
         self._assert_node_index_prepared_correctly(
-            self._prepare_node_index(self.node),
-            expected_download_url=PENDING
+            self._prepare_node_index(self.node), expected_download_url=PENDING
         )
 
     def test_prepare_node_no_file_store_item(self):
         self.file_store_item.delete()
         self._assert_node_index_prepared_correctly(
             self._prepare_node_index(self.node),
-            expected_download_url=NOT_AVAILABLE,
-            expected_filetype=""
+            expected_download_url=NOT_AVAILABLE, expected_filetype=""
         )
 
     def test_prepare_node_s3_file_store_item_source_no_datafile(self):
-        self.file_store_item.datafile.delete()
-        self.file_store_item.source = "s3://test/test.txt"
+        self.file_store_item.source = 's3://test/test.txt'
         self.file_store_item.save()
-        with mock.patch.object(
-            FileStoreItem,
-            "get_import_status",
-            return_value=SUCCESS
-        ):
+        with mock.patch.object(FileStoreItem, 'get_import_status',
+                               return_value=SUCCESS):
             self._assert_node_index_prepared_correctly(
                 self._prepare_node_index(self.node),
                 expected_download_url=NOT_AVAILABLE
             )
 
     def test_prepare_node_s3_file_store_item_source_with_datafile(self):
-        self.file_store_item.source = "s3://test/test.txt"
+        self.file_store_item.source = 's3://test/test.txt'
         self.file_store_item.save()
-        self._assert_node_index_prepared_correctly(
-            self._prepare_node_index(self.node),
-            expected_download_url=self.file_store_item.get_datafile_url()
-        )
+        with mock.patch.object(FileStoreItem, 'get_datafile_url',
+                               return_value='/media/file_store/test.txt'):
+            self._assert_node_index_prepared_correctly(
+                self._prepare_node_index(self.node),
+                expected_download_url=self.file_store_item.get_datafile_url()
+            )
 
     def _create_analysis_node_connection(self, direction, is_refinery_file):
         user = User.objects.create_user("test", "", "test")
