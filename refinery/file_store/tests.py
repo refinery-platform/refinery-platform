@@ -20,71 +20,33 @@ from .views import FileStoreItems
 
 
 class FileStoreModuleTest(TestCase):
-    """File store module functions test"""
 
     def setUp(self):
         self.filename = 'test_file.dat'
-
-        # create FileStoreItem instances without any disk operations
         self.path_prefix = '/example/path/'
         self.path_source = os.path.join(self.path_prefix, self.filename)
-        self.item_from_path = FileStoreItem.objects.create(
-            datafile=SimpleUploadedFile(self.filename, 'Coffee is delicious!'),
-            source=self.path_source
-        )
         self.url_prefix = 'http://example.org/'
         self.url_source = urljoin(self.url_prefix, self.filename)
-        self.item_from_url = FileStoreItem.objects.create(
-            source=self.url_source
-        )
 
     def test_file_path(self):
-        """Check that the file store path contains share name and file name"""
-        # TODO: replace with assertRegexpMatches()?
-        path = file_path(self.item_from_url, self.filename)
-        self.assertIn(self.filename, path)
-        path = file_path(self.item_from_path, self.filename)
-        self.assertIn(self.filename, path)
+        path = file_path(FileStoreItem(), 'test.fastq')
+        self.assertIn('test.fastq', path)
 
-    def test_file_path_parens(self):
-        """Check if the parentheses are replaced with underscores in the file
-        name
-        """
+    def test_file_path_underscore_replacement(self):
         filename = 'Kc.dMi-2(Q4443).wig_5.tdf'
         new_filename = 'Kc.dMi-2_Q4443_.wig_5.tdf'
-        path_source = os.path.join('/example/path', filename)
-        item_from_path = FileStoreItem.objects.create(
-            datafile=SimpleUploadedFile(self.filename, 'Coffee is delicious!'),
-            source=path_source
-        )
-        url_source = urljoin('http://example.org/', filename)
-        item_from_url = FileStoreItem.objects.create(source=url_source)
-        path = file_path(item_from_url, filename)
+        path = file_path(FileStoreItem(), filename)
         self.assertIn(new_filename, path)
-        path = file_path(item_from_path, filename)
-        self.assertIn(new_filename, path)
+        self.assertNotIn(filename, path)
 
     def test_get_temp_dir(self):
-        """Check that the file store temp dir is reported correctly"""
         self.assertEqual(get_temp_dir(), settings.FILE_STORE_TEMP_DIR)
 
-    def test_get_file_object(self):
-        """Check if the correct file is opened"""
-        m = mock.MagicMock(spec=file, return_value=mock.sentinel.file_object)
-        with mock.patch('__builtin__.open', m):
-            file_object = get_file_object(self.path_source)
-        m.assert_called_once_with(self.path_source, 'rb')
-        # check if an expected object is returned
-        self.assertEqual(file_object, mock.sentinel.file_object)
-
-    @mock.patch('__builtin__.open', spec=file)
-    def test_get_file_object_2(self, m):
-        """Decorator version of the test_get_file_obejct()"""
-        m.return_value = mock.sentinel.file_object
-        # check if the correct file is opened
+    @mock.patch('__builtin__.open', new_callable=mock.mock_open)
+    def test_get_file_object(self, mock_file_open):
+        mock_file_open.return_value = mock.sentinel.file_object
         file_object = get_file_object(self.path_source)
-        m.assert_called_once_with(self.path_source, 'rb')
-        # check if an expected object is returned
+        mock_file_open.assert_called_once_with(self.path_source, 'rb')
         self.assertEqual(file_object, mock.sentinel.file_object)
 
     def test_get_extension_from_file(self):

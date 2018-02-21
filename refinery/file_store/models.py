@@ -279,17 +279,13 @@ class FileStoreItem(models.Model):
         return _get_extension_from_string(self.source)
 
     def get_file_object(self):
-        '''Open data file.
-
-        :returns: file object -- or None if failed to open data file.
-
-        '''
+        """Return file object for the data file or None if failed to open"""
         try:
             # FieldFile.open() and File.open() don't return file objects, so
             # accessing it directly
             return self.datafile.file.file  # FileStoreItem.FieldFile.File.file
-        except ValueError as e:
-            logger.error("%s [%s]", e.message, self.uuid)
+        except ValueError as exc:
+            logger.error("Error opening %s: %s", self.datafile, exc)
             return None
 
     def get_filetype(self):
