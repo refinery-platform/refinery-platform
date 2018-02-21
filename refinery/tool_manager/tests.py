@@ -2668,12 +2668,6 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
         self.create_tool(ToolDefinition.VISUALIZATION)
         self.assertIsNotNone(self.get_response)
 
-    def test_get_request_no_auth(self):
-        self.create_tool(ToolDefinition.WORKFLOW)
-        self.get_request = self.factory.get(self.tools_url_root)
-        self.get_response = self.tools_view(self.get_request)
-        self.assertEqual(self.get_response.status_code, 403)
-
     def test_get_request_tools_owned_by_another_user(self):
         # Creates a valid Tool for self.user
         self.create_tool(ToolDefinition.VISUALIZATION)
@@ -2847,12 +2841,6 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
             {Tool.TOOL_URL: self.tool.get_relative_container_url()}
         )
         self.assertTrue(self.tool.is_running())
-
-    def test_relaunch_failure_no_auth(self):
-        self.create_tool(ToolDefinition.VISUALIZATION)
-        get_request = self.factory.get(self.tool.relaunch_url)
-        get_response = self.tool_relaunch_view(get_request)
-        self.assertEqual(get_response.status_code, 403)
 
     def test_relaunch_failure_no_uuid_present(self):
         self.create_tool(ToolDefinition.VISUALIZATION)
