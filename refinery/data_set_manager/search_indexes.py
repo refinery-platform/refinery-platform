@@ -155,9 +155,7 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
                 data[key] = " + ".join(sorted(value))
 
         try:
-            file_store_item = FileStoreItem.objects.get(
-                uuid=node.file_uuid
-            )
+            file_store_item = FileStoreItem.objects.get(uuid=node.file_uuid)
         except(FileStoreItem.DoesNotExist,
                FileStoreItem.MultipleObjectsReturned) as e:
             logger.error("Couldn't properly fetch FileStoreItem: %s", e)

@@ -109,7 +109,8 @@ class FileStoreItemTest(TestCase):
         storage_mock.url.return_value = '/media/file_store/test.fastq'
         with mock.patch('django.core.files.storage.default_storage._wrapped',
                         storage_mock):
-            self.assertEqual(item.get_datafile_url(), storage_mock.url())
+            self.assertEqual(item.get_datafile_url(),
+                             '/media/file_store/test.fastq')
 
     def test_get_remote_file_url(self):
         item = FileStoreItem(source=self.url_source)
