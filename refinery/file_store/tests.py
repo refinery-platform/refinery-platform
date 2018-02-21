@@ -21,13 +21,6 @@ from .views import FileStoreItems
 
 class FileStoreModuleTest(TestCase):
 
-    def setUp(self):
-        self.filename = 'test_file.dat'
-        self.path_prefix = '/example/path/'
-        self.path_source = os.path.join(self.path_prefix, self.filename)
-        self.url_prefix = 'http://example.org/'
-        self.url_source = urljoin(self.url_prefix, self.filename)
-
     def test_file_path(self):
         path = file_path(FileStoreItem(), 'test.fastq')
         self.assertIn('test.fastq', path)
@@ -45,8 +38,9 @@ class FileStoreModuleTest(TestCase):
     @mock.patch('__builtin__.open', new_callable=mock.mock_open)
     def test_get_file_object(self, mock_file_open):
         mock_file_open.return_value = mock.sentinel.file_object
-        file_object = get_file_object(self.path_source)
-        mock_file_open.assert_called_once_with(self.path_source, 'rb')
+        file_object = get_file_object('/example/path/test_file.dat')
+        mock_file_open.assert_called_once_with('/example/path/test_file.dat',
+                                               'rb')
         self.assertEqual(file_object, mock.sentinel.file_object)
 
     def test_get_extension_from_file(self):
@@ -82,13 +76,15 @@ class FileStoreModuleTest(TestCase):
 
     @override_settings(REFINERY_FILE_SOURCE_MAP={})
     def test_mapping_with_empty_file_source_map(self):
-        self.assertEqual(_map_source(self.url_source), self.url_source)
+        self.assertEqual(_map_source('http://example.org/test_file.dat'),
+                         'http://example.org/test_file.dat')
 
+    @override_settings(
+        REFINERY_FILE_SOURCE_MAP={'http://example.org/': '/example/path/'}
+    )
     def test_file_source_map(self):
-        with override_settings(
-                REFINERY_FILE_SOURCE_MAP={self.url_prefix: self.path_prefix}
-        ):
-            self.assertEqual(_map_source(self.url_source), self.path_source)
+        self.assertEqual(_map_source('http://example.org/test_file.dat'),
+                         '/example/path/test_file.dat')
 
 
 class FileStoreItemTest(TestCase):
