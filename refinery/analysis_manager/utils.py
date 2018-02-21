@@ -1,17 +1,13 @@
 import json
 import logging
 import os
-import re
 import uuid
 
 from django.conf import settings
 from django.contrib.auth.models import User
-from django.http import HttpResponseServerError
 from django.utils import timezone
 
 import jsonschema
-import requests
-from requests.packages.urllib3.exceptions import HTTPError
 
 from core.models import Analysis, Study, Workflow, WorkflowDataInputMap
 from core.utils import get_aware_local_time
@@ -100,84 +96,6 @@ def fetch_objects_required_for_analysis(validated_analysis_config):
         "current_workflow": current_workflow,
         "data_set": data_set,
     }
-
-
-def get_solr_results(query, facets=False, jsonp=False, annotation=False,
-                     only_uuids=False, selected_mode=True,
-                     selected_nodes=None):
-    """Helper function for taking solr request url.
-    Removes facet requests, converts to json, from input solr query
-    :param query: solr http query string
-    :type query: string
-    :param facets: Removes facet query from solr query string
-    :type facets: boolean
-    :param jsonp: Removes JSONP query from solr query string
-    :type jsonp: boolean
-    :param only_uuids: Returns list of file_uuids from all solr results
-    :type only_uuids: boolean
-    :param selected_mode: UI selection mode (blacklist or whitelist)
-    :type selected_mode: boolean
-    :param selected_nodes: List of UUIDS to remove from the solr query
-    :type selected_nodes: array
-    :returns: dictionary of current solr results
-    """
-    if not facets:
-        # replacing facets w/ false
-        query = query.replace('facet=true', 'facet=false')
-    if not jsonp:
-        # ensuring json not jsonp response
-        query = query.replace('&json.wrf=?', '')
-    if annotation:
-        # changing annotation
-        query = query.replace('is_annotation:false', 'is_annotation:true')
-    # Checks for limit on solr query
-    # replaces i.e. '&rows=20' to '&rows=10000'
-    m_obj = re.search(r"&rows=(\d+)", query)
-    if m_obj:
-        # TODO: replace 10000 with settings parameter for max solr results
-        replace_rows_str = '&rows=' + str(10000)
-        query = query.replace(m_obj.group(), replace_rows_str)
-
-    try:
-        # opening solr query results
-        results = requests.get(query, stream=True)
-        results.raise_for_status()
-    except HTTPError as e:
-        logger.error(e)
-        return HttpResponseServerError(e)
-
-    # converting results into json for python
-    results = json.loads(results.content)
-
-    # IF list of nodes to remove from query exists
-    if selected_nodes:
-        # need to iterate over list backwards to properly delete from a list
-        for i in xrange(len(results["response"]["docs"]) - 1, -1, -1):
-            node = results["response"]["docs"][i]
-
-            # blacklist mode (remove uuid's from solr query)
-            if selected_mode:
-                if 'uuid' in node:
-                    # if the current node should be removed from the results
-                    if node['uuid'] in selected_nodes:
-                        del results["response"]["docs"][i]
-                        # num_found -= 1
-            # whitelist mode (add's uuids from solr query)
-            else:
-                if 'uuid' in node:
-                    # if the current node should be removed from the results
-                    if node['uuid'] not in selected_nodes:
-                        del results["response"]["docs"][i]
-                        # num_found += 1
-    # Will return only list of file_uuids
-    if only_uuids:
-        ret_file_uuids = []
-        solr_results = results["response"]["docs"]
-        for res in solr_results:
-            ret_file_uuids.append(res["uuid"])
-        return ret_file_uuids
-
-    return results
 
 
 def validate_analysis_config(analysis_config):

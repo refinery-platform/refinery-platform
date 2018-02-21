@@ -734,8 +734,7 @@ class ToolDefinitionAPITests(ToolManagerTestBase, APITestCase):
         self.assertIn("Must specify a DataSet UUID", get_response.content)
 
     def test_missing_dataset_in_get_yields_bad_request(self):
-        dataset_uuid = self.dataset.uuid
-        self.dataset.delete()
+        dataset_uuid = str(uuid.uuid4())
 
         get_request = self.factory.get(
             "{}?dataSetUuid={}".format(
@@ -3472,12 +3471,10 @@ class VisualizationToolLaunchTests(ToolManagerTestBase,  # TODO: Cypress
         self.create_vis_tool_definition()
 
         self.post_data = {
-            "dataset_uuid": self.dataset.uuid,
+            "dataset_uuid": str(uuid.uuid4()),
             "tool_definition_uuid": self.td.uuid,
             Tool.FILE_RELATIONSHIPS: str(["www.example.com/cool_file.txt"])
         }
-
-        self.dataset.delete()
 
         self.post_request = self.factory.post(
             self.tools_url_root,

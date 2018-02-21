@@ -20,7 +20,7 @@ from django.core.cache import cache
 from django.core.mail import EmailMessage
 from django.core.signing import Signer
 from django.forms import ValidationError
-from django.template import Context, loader
+from django.template import loader
 from django.utils import timezone
 
 from constants import UUID_RE
@@ -1746,7 +1746,7 @@ class InvitationResource(ModelResource):
         }
         email = EmailMessage(
             subject,
-            temp_loader.render(Context(context_dict)),
+            temp_loader.render(context_dict),
             to=[invitation.recipient_email]
         )
         email.send()

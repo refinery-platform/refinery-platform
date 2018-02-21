@@ -1,4 +1,5 @@
 from django.contrib.auth.models import User
+from django.contrib.contenttypes.models import ContentType
 
 from core.management.commands.create_public_group import create_public_group
 from core.management.commands.create_user import init_user
@@ -16,6 +17,11 @@ class RefinerySeleniumTestBase(SeleniumTestBaseGeneric):
     """
     def setUp(self, site_login=True, initialize_guest=True,
               public_group_needed=True):
+
+        # recommended solution to an auth_permission error, though doc says
+        # we probably won't need to call it since django will call it
+        # automatically when needed
+        ContentType.objects.clear_cache()
 
         super(RefinerySeleniumTestBase, self).setUp()
 

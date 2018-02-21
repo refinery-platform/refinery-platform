@@ -6,7 +6,9 @@ from urlparse import urljoin
 
 from django.apps import apps
 from django.contrib.auth.models import AnonymousUser, Group, User
+from django.contrib.sites.models import Site
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.core.management import CommandError, call_command
 from django.db import connection
 from django.db.migrations.executor import MigrationExecutor
 from django.test import TestCase
@@ -29,6 +31,8 @@ from file_store.models import FileStoreItem, FileType
 
 from .api import AnalysisResource
 from .management.commands.create_user import init_user
+from .management.commands.import_annotations import \
+    Command as ImportAnnotationsCommand
 from .models import (INPUT_CONNECTION, OUTPUT_CONNECTION, Analysis,
                      AnalysisNodeConnection, AnalysisResult, DataSet,
                      ExtendedGroup, InvestigationLink, Project, Tutorials,
@@ -652,13 +656,19 @@ class DataSetDeletionTest(TestCase):
         )
         self.analysis.set_owner(self.user)
 
-    def test_verify_dataset_deletion_if_no_analysis_run_upon_it(self):
+    @mock.patch('core.models.DataSet.get_investigation_links', return_value=[])
+    def test_verify_dataset_deletion_if_no_analysis_run_upon_it(
+            self, mock_get_links
+    ):
         self.assertIsNotNone(
-            DataSet.objects.get(name="dataset_without_analysis"))
+            DataSet.objects.get(name="dataset_without_analysis")
+        )
         self.dataset_without_analysis.delete()
-        self.assertRaises(DataSet.DoesNotExist,
-                          DataSet.objects.get,
-                          name="dataset_without_analysis")
+        self.assertRaises(
+            DataSet.DoesNotExist,
+            DataSet.objects.get,
+            name="dataset_without_analysis"
+        )
 
     def test_verify_dataset_deletion_if_analysis_run_upon_it(self):
         self.assertIsNotNone(
@@ -668,12 +678,14 @@ class DataSetDeletionTest(TestCase):
                           DataSet.objects.get,
                           name="dataset_with_analysis")
 
-    def test_isa_archive_deletion(self):
+    @mock.patch('core.models.DataSet.get_investigation_links', return_value=[])
+    def test_isa_archive_deletion(self, mock_get_links):
         self.assertIsNotNone(self.dataset_without_analysis.get_isa_archive())
         self.dataset_without_analysis.delete()
         self.assertIsNone(self.dataset_without_analysis.get_isa_archive())
 
-    def test_pre_isa_archive_deletion(self):
+    @mock.patch('core.models.DataSet.get_investigation_links', return_value=[])
+    def test_pre_isa_archive_deletion(self, mock_get_links):
         self.assertIsNotNone(
             self.dataset_without_analysis.get_pre_isa_archive())
         self.dataset_without_analysis.delete()
@@ -2206,3 +2218,80 @@ class DataSetPermissionsUpdateTests(TestMigrations):
                                                self.dataset_b))
         self.assertTrue(self._check_permission(self.user_a, self.dataset_b))
         self.assertTrue(self._check_permission(self.user_b, self.dataset_b))
+
+
+class TestManagementCommands(TestCase):
+    def test_set_up_site_name(self):
+        site_name = "Refinery Test"
+        domain = "www.example.com"
+        call_command('set_up_site_name', site_name, domain)
+
+        self.assertIsNotNone(
+            Site.objects.get(domain=domain, name=site_name)
+        )
+
+    def test_set_up_site_name_failure(self):
+        with self.assertRaises(CommandError):
+            call_command('set_up_site_name')
+
+    def _user_in_public_group(self, user_instance):
+        return bool(
+            user_instance.groups.filter(
+                name=ExtendedGroup.objects.public_group().name
+            ).count()
+        )
+
+    def test_add_users_to_public_group(self):
+        # We have a post-save hook on User for this functionality, but this
+        # doesn't apply when we create the super/guest user with 'loaddata'
+        # where save() is never actually called
+        call_command("loaddata", "guest.json")
+        user = User.objects.get(username="guest")
+        self.assertFalse(self._user_in_public_group(user))
+
+        call_command("add_users_to_public_group")
+        self.assertTrue(self._user_in_public_group(user))
+
+    def test_activate_user(self):
+        guest_username = "guest"
+        call_command("loaddata", "guest.json")
+        user = User.objects.get(username=guest_username)
+        self.assertFalse(user.is_active)
+
+        call_command("activate_user", guest_username)
+        self.assertTrue(User.objects.get(username=guest_username).is_active)
+
+    def test_import_annotations(self):
+        """ We just care about this in the context of the optparse -> argparse
+        upgrade for Django 1.8 and don't necessarily want to test the
+        neo4j interactions """
+        with mock.patch.object(ImportAnnotationsCommand, "handle"):
+            call_command("import_annotations", "-c")
+
+    def test_create_workflow_engine(self):
+        galaxy_instance = GalaxyInstanceFactory()
+        call_command(
+            "create_workflowengine",
+            str(galaxy_instance.id),
+            ExtendedGroup.objects.public_group().name
+        )
+        self.assertIsNotNone(
+            WorkflowEngine.objects.get(instance=galaxy_instance)
+        )
+
+    def test_create_workflow_engine_bad_galaxy_instance(self):
+        with self.assertRaises(CommandError):
+            call_command(
+                "create_workflowengine",
+                str(123),
+                ExtendedGroup.objects.public_group().name
+            )
+
+    def test_create_workflow_engine_bad_group_name(self):
+        galaxy_instance = GalaxyInstanceFactory()
+        with self.assertRaises(CommandError):
+            call_command(
+                "create_workflowengine",
+                str(galaxy_instance.id),
+                "non-existent group name"
+            )
