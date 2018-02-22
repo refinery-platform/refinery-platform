@@ -113,7 +113,7 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
         id_suffix = "_" + id_suffix + "_s"
 
         data['filename_Characteristics' + NodeIndex.GENERIC_SUFFIX] = \
-            re.sub(r'.*/', '', data['name'])
+            data['name']
 
         data.update(self._assay_data(node))
 
