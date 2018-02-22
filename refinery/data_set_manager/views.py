@@ -15,7 +15,8 @@ from django import forms
 from django.conf import settings
 from django.core.urlresolvers import reverse
 from django.http import (Http404, HttpResponse, HttpResponseBadRequest,
-                         HttpResponseRedirect, HttpResponseServerError)
+                         HttpResponseRedirect, HttpResponseServerError,
+                         JsonResponse)
 from django.shortcuts import get_object_or_404, render, render_to_response
 from django.template import RequestContext
 from django.views.generic import View
@@ -230,10 +231,7 @@ class ProcessISATabView(View):
         os.unlink(temp_file_path)
         if dataset_uuid:
             if 'ajax' in kwargs and kwargs['ajax']:
-                return HttpResponse(
-                    json.dumps({'new_data_set_uuid': dataset_uuid}),
-                    'application/json'
-                )
+                return JsonResponse({'new_data_set_uuid': dataset_uuid})
             else:
                 response = HttpResponseRedirect(
                     reverse(self.success_view_name, args=(dataset_uuid,)))
@@ -363,21 +361,17 @@ class ProcessISATabView(View):
                             import_file.delay(file_store_item.uuid)
 
                 if request.is_ajax():
-                    return HttpResponse(
-                        json.dumps({
-                            'success': 'Data set imported',
-                            'data': {'new_data_set_uuid': dataset_uuid}
-                        }),
-                        content_type='application/json'
-                    )
+                    return JsonResponse({
+                        'success': 'Data set imported',
+                        'data': {'new_data_set_uuid': dataset_uuid}
+                    })
                 return HttpResponseRedirect(
                     reverse(self.success_view_name, args=[dataset_uuid])
                 )
             else:
                 error = 'Problem parsing ISA-Tab file'
                 if request.is_ajax():
-                    return HttpResponse(json.dumps({'error': error}),
-                                        content_type='application/json')
+                    return JsonResponse({'error': error})
                 context = RequestContext(request, {'form': form,
                                                    'error': error})
                 return render_to_response(self.template_name,
@@ -555,10 +549,7 @@ class ProcessMetadataTableView(View):
                 return render(request, self.template_name, error)
 
         if request.is_ajax():
-            return HttpResponse(
-                json.dumps({'new_data_set_uuid': dataset_uuid}),
-                content_type='application/json'
-            )
+            return JsonResponse({'new_data_set_uuid': dataset_uuid})
         else:
             return HttpResponseRedirect(
                 reverse(self.success_view_name, args=(dataset_uuid,))
@@ -653,9 +644,8 @@ class ChunkedFileUploadCompleteView(ChunkedUploadCompleteView):
                                           'application/json')
 
         chunked.delete()
-        return HttpResponse(json.dumps({'status': 'Successfully deleted.',
-                                        'upload_id': upload_id}),
-                            'application/json')
+        return JsonResponse({'status': 'Successfully deleted.',
+                             'upload_id': upload_id})
 
     def on_completion(self, uploaded_file, request):
         """Move file to the user's import directory"""

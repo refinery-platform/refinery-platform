@@ -136,7 +136,7 @@ def update_refinery():
         run("pip install -r {refinery_project_dir}/requirements.txt"
             .format(**env))
         run("find . -name '*.pyc' -delete")
-        run("{refinery_app_dir}/manage.py migrate --noinput"
+        run("{refinery_app_dir}/manage.py migrate --noinput --fake-initial"
             .format(**env))
         run("{refinery_app_dir}/manage.py collectstatic --clear --noinput"
             .format(**env))
@@ -164,7 +164,8 @@ def relaunch_refinery(dependencies=False, migrations=False):
                 .format(**env))
         run("find . -name '*.pyc' -delete")
         if migrations:
-            run("{refinery_app_dir}/manage.py migrate --noinput".format(**env))
+            run("{refinery_app_dir}/manage.py migrate --noinput "
+                "--fake-initial".format(**env))
         run("{refinery_app_dir}/manage.py collectstatic --noinput"
             .format(**env))
         run("supervisorctl restart all")

@@ -1,5 +1,4 @@
 import json
-from optparse import make_option
 import os
 import re
 import sys
@@ -20,30 +19,29 @@ class Command(BaseCommand):
     help = "Loads visualization tool definitions " + \
            "or generates workflow tool definitions"
 
-    option_list = BaseCommand.option_list + (
-        make_option(
+    def add_arguments(self, parser):
+        parser.add_argument(
             '--visualizations',
             # TODO: In Python 3, nargs='+' is supported
             action='append',
             dest='visualizations',
             help='Generate ToolDefinitions for visualizations, '
                  'either by filename, or from the registry'
-        ),
-        make_option(
+        )
+        parser.add_argument(
             '--workflows',
             action='store_true',
             dest='workflows',
             help='Generate ToolDefinitions for properly annotated '
                  'Galaxy-based Workflows'
-        ),
-        make_option(
+        )
+        parser.add_argument(
             '--force',
             action='store_true',
             dest='force',
             help='Overwrite ToolDefinitions with the same names instead of '
                  'skipping their creation'
         )
-    )
 
     def __init__(self):
         super(Command, self).__init__()

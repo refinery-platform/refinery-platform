@@ -32,7 +32,7 @@ file { "${django_root}/config/config.json":
 }
 ->
 exec { "migrate":
-  command     => "${virtualenv}/bin/python ${django_root}/manage.py migrate --noinput",
+  command     => "${virtualenv}/bin/python ${django_root}/manage.py migrate --noinput --fake-initial",
   environment => ["DJANGO_SETTINGS_MODULE=${django_settings_module}"],
   user        => $app_user,
   group       => $app_group,
