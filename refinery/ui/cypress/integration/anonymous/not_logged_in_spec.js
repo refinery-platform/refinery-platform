@@ -56,10 +56,10 @@ describe('Not logged in', function() {
     cy.visit('/');
     cy.visible_btn('List').click();
 
-    cy.visible('Organism');
-    cy.visible('Technology');
-    cy.visible('Antibody');
-    cy.visible('Date');
-    cy.visible('Genotype');
+     cy.visible('Organism');
+     cy.visible('Technology');
+     cy.visible('Antibody');
+     cy.visible('Date');
+     cy.visible('Genotype');
   });
 });
