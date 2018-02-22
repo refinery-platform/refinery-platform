@@ -49,7 +49,8 @@
           delete facetCountObj[facetName];
         }
       });
-      return _.keys(facetCountObj).concat('filename', 'date');
+
+      return _.keys(facetCountObj).concat('date', 'sample_name', 'local_path');
     }
 
     vm.sortChanged = function (grid, sortColumns) {

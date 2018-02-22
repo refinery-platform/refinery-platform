@@ -55,11 +55,7 @@ describe('Not logged in', function() {
   it('Has list', function() {
     cy.visit('/');
     cy.visible_btn('List').click();
-
-     cy.visible('Organism');
-     cy.visible('Technology');
-     cy.visible('Antibody');
+    // add sample_name and local_path
      cy.visible('Date');
-     cy.visible('Genotype');
   });
 });
