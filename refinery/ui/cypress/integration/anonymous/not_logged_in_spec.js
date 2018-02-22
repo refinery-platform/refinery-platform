@@ -56,6 +56,8 @@ describe('Not logged in', function() {
     cy.visit('/');
     cy.visible_btn('List').click();
     // add sample_name and local_path
-     cy.visible('Date');
+    cy.visible('Date Submitted');
+    cy.visible('Sample Name');
+    cy.visible('Filename');
   });
 });
