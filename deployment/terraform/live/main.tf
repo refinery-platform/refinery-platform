@@ -9,8 +9,7 @@ terraform {
 
 provider "aws" {
   version = "~> 1.0"
-
-  region = "${var.region}"
+  region  = "${var.region}"
 }
 
 module "object_storage" {
@@ -26,12 +25,13 @@ module "identity_pool" {
 }
 
 module "docker_host" {
-  source = "../modules/docker_host"
-  cidr_block = "${var.cidr_block}"
-  vpc_id = "${module.vpc.vpc_id}"
+  source              = "../modules/docker_host"
+  cidr_block          = "${var.cidr_block}"
+  vpc_id              = "${module.vpc.vpc_id}"
+  security_group_name = "${terraform.workspace}-docker"
 }
 
 module "vpc" {
-  source = "../modules/vpc"
-  cidr_block = "${var.cidr_block}"
+  source              = "../modules/vpc"
+  cidr_block          = "${var.cidr_block}"
 }
