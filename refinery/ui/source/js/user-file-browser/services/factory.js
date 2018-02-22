@@ -66,7 +66,7 @@
                 '<div class="ui-grid-cell-contents" >' +
                   '<a href="/data_sets/{{grid.getCellValue(row, col)}}' +
                            '/#/files/">' +
-                    '<i class="fa fa-table"></i>' +
+                    '<i class="fa fa-folder-open-o"></i>' +
                   '</a>' +
                 '</div>',
             width: 30 }];
