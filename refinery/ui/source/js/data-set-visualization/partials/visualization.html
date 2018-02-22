@@ -1,5 +1,7 @@
 <div ng-switch on="$ctrl.visLoadingFlag">
-
+  <span ng-switch-when="ERROR">
+    <em>Error loading visualizations. </em>
+  </span>
   <span ng-switch-when="EMPTY">
     <em>No visualizations performed. </em>
   </span>
@@ -72,7 +74,7 @@
                 <span ng-if="vis.owner.full_name.length > 2">
                   {{ vis.owner.full_name }}
                 </span>
-                <span ng-if="vis.owner.full_name.length <== 2">
+                <span ng-if="vis.owner.full_name.length <= 2">
                   {{ vis.owner.username }}
                 </span>
               </a>

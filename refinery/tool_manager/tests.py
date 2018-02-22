@@ -734,8 +734,7 @@ class ToolDefinitionAPITests(ToolManagerTestBase, APITestCase):
         self.assertIn("Must specify a DataSet UUID", get_response.content)
 
     def test_missing_dataset_in_get_yields_bad_request(self):
-        dataset_uuid = self.dataset.uuid
-        self.dataset.delete()
+        dataset_uuid = str(uuid.uuid4())
 
         get_request = self.factory.get(
             "{}?dataSetUuid={}".format(
@@ -2668,12 +2667,6 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
         self.create_tool(ToolDefinition.VISUALIZATION)
         self.assertIsNotNone(self.get_response)
 
-    def test_get_request_no_auth(self):
-        self.create_tool(ToolDefinition.WORKFLOW)
-        self.get_request = self.factory.get(self.tools_url_root)
-        self.get_response = self.tools_view(self.get_request)
-        self.assertEqual(self.get_response.status_code, 403)
-
     def test_get_request_tools_owned_by_another_user(self):
         # Creates a valid Tool for self.user
         self.create_tool(ToolDefinition.VISUALIZATION)
@@ -2847,12 +2840,6 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
             {Tool.TOOL_URL: self.tool.get_relative_container_url()}
         )
         self.assertTrue(self.tool.is_running())
-
-    def test_relaunch_failure_no_auth(self):
-        self.create_tool(ToolDefinition.VISUALIZATION)
-        get_request = self.factory.get(self.tool.relaunch_url)
-        get_response = self.tool_relaunch_view(get_request)
-        self.assertEqual(get_response.status_code, 403)
 
     def test_relaunch_failure_no_uuid_present(self):
         self.create_tool(ToolDefinition.VISUALIZATION)
@@ -3484,12 +3471,10 @@ class VisualizationToolLaunchTests(ToolManagerTestBase,  # TODO: Cypress
         self.create_vis_tool_definition()
 
         self.post_data = {
-            "dataset_uuid": self.dataset.uuid,
+            "dataset_uuid": str(uuid.uuid4()),
             "tool_definition_uuid": self.td.uuid,
             Tool.FILE_RELATIONSHIPS: str(["www.example.com/cool_file.txt"])
         }
-
-        self.dataset.delete()
 
         self.post_request = self.factory.post(
             self.tools_url_root,

@@ -139,23 +139,37 @@ STATICFILES_FINDERS = (
 # Make sure to set this to a random string in production
 SECRET_KEY = get_setting("SECRET_KEY")
 
-# List of callables that know how to import templates from various sources.
-TEMPLATE_LOADERS = (
-    'django.template.loaders.filesystem.Loader',
-    'django.template.loaders.app_directories.Loader',
-    # 'django.template.loaders.eggs.Loader',
-)
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [
+            os.path.join(BASE_DIR, "refinery/templates"),
+            # Put strings here, like "/home/html/django_templates" or
+            # "C:/www/django/templates".
+            # Always use forward slashes, even on Windows.
+            # Don't forget to use absolute paths, not relative paths.
+        ],
+        'OPTIONS': {
+            'loaders': (
+                'django.template.loaders.filesystem.Loader',
+                'django.template.loaders.app_directories.Loader',
+                # 'django.template.loaders.eggs.Loader',
+            ),
+            'context_processors': [
+                'core.context_processors.extra_context',
+                'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.template.context_processors.debug',
+                'django.template.context_processors.i18n',
+                'django.template.context_processors.media',
+                'django.template.context_processors.static',
+                'django.template.context_processors.tz',
+                'django.contrib.messages.context_processors.messages',
+            ],
+        },
+    },
+]
 
-TEMPLATE_CONTEXT_PROCESSORS = (
-    'django.core.context_processors.debug',
-    'django.core.context_processors.i18n',
-    'django.core.context_processors.media',
-    'django.core.context_processors.static',
-    'django.contrib.auth.context_processors.auth',
-    'django.contrib.messages.context_processors.messages',
-    "core.context_processors.extra_context",
-    "django.core.context_processors.request",
-)
 
 MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
@@ -169,24 +183,16 @@ MIDDLEWARE_CLASSES = (
 
 ROOT_URLCONF = 'config.urls'
 
-TEMPLATE_DIRS = (
-    os.path.join(BASE_DIR, "refinery/templates"),
-    # Put strings here, like "/home/html/django_templates" or
-    # "C:/www/django/templates".
-    # Always use forward slashes, even on Windows.
-    # Don't forget to use absolute paths, not relative paths.
-)
-
 # NOTE: the order of INSTALLED_APPS matters in some instances.
 INSTALLED_APPS = (
-    'registration',
+    'django.contrib.sites',
+    'registration',  # docs: should be immediately above 'django.contrib.auth'
+    'django.contrib.auth',
     'core',
     'data_set_manager',
     'guardian',
     'django.contrib.contenttypes',
-    'django.contrib.auth',
     'django.contrib.sessions',
-    'django.contrib.sites',
     'django.contrib.messages',
     'django.contrib.staticfiles',
     # Uncomment the next line to enable the admin:
@@ -208,7 +214,6 @@ INSTALLED_APPS = (
     'workflow_manager',
     'file_store',
     'file_server',
-    'visualization_manager',
     'annotation_server',
     'selenium_testing',
     'tool_manager',
@@ -625,5 +630,11 @@ TASTYPIE_DEFAULT_FORMATS = ['json']
 # temporary feature toggle for using S3 as user data file storage backend
 REFINERY_S3_USER_DATA = get_setting('REFINERY_S3_USER_DATA', default=False)
 
+# ALLOWED_HOSTS required in 1.8.16 to prevent a DNS rebinding attack.
+ALLOWED_HOSTS = get_setting("ALLOWED_HOSTS")
+
+MIGRATION_MODULES = {
+    'chunked_upload': 'dependency_migrations.chunked_upload'
+}
 REFINERY_VISUALIZATION_REGISTRY = \
     "https://github.com/refinery-platform/visualization-tools/"

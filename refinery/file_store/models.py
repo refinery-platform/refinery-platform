@@ -20,7 +20,6 @@ from django.core.files.storage import FileSystemStorage
 from django.db import models
 from django.db.models.signals import pre_delete
 from django.dispatch import receiver
-from django.utils import timezone
 from django.utils.deconstruct import deconstructible
 
 from celery.result import AsyncResult
@@ -217,8 +216,10 @@ class FileStoreItem(models.Model):
     filetype = models.ForeignKey(FileType, blank=True, null=True)
     # ID of Celery task used for importing the data file
     import_task_id = UUIDField(auto=False, blank=True)
-    created = models.DateTimeField(auto_now_add=True, default=timezone.now)
-    updated = models.DateTimeField(auto_now=True, default=timezone.now)
+    # Date created
+    created = models.DateTimeField(auto_now_add=True)
+    # Date updated
+    updated = models.DateTimeField(auto_now=True)
 
     objects = _FileStoreItemManager()
 

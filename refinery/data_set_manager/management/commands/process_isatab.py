@@ -2,7 +2,6 @@ from __future__ import absolute_import
 
 from collections import OrderedDict
 import logging
-from optparse import make_option
 import os
 import re
 import sys
@@ -24,29 +23,29 @@ class Command(BaseCommand):
     --public --file_base_path <base path if file locations are relative>
     --overwrite]\n
     """
-    option_list = BaseCommand.option_list + (
-        make_option(
+
+    def add_arguments(self, parser):
+        parser.add_argumenet(
             '--base_pre_isa_dir',
             action='store',
             type='string'
-        ),
-        make_option(
+        )
+        parser.add_argumenet(
             '--file_base_path',
             action='store',
             type='string',
             default=None
-        ),
-        make_option(
+        )
+        parser.add_argumenet(
             '--public',
             action='store_true',
             default=False
-        ),
-        make_option(
+        )
+        parser.add_argumenet(
             '--overwrite',
             action='store_true',
             default=False
         )
-    )
 
     """
     Name: handle
