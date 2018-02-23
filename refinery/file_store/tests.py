@@ -108,6 +108,7 @@ class FileStoreItemTest(TestCase):
         storage_mock = mock.MagicMock(spec=Storage)
         storage_mock.url = mock.MagicMock()
         storage_mock.url.return_value = '/media/file_store/test.fastq'
+        # https://joeray.me/mocking-files-and-file-storage-for-testing-django-models.html
         with mock.patch('django.core.files.storage.default_storage._wrapped',
                         storage_mock):
             self.assertEqual(item.get_datafile_url(),
@@ -130,15 +131,13 @@ class FileStoreItemTest(TestCase):
         self.assertTrue(item.filetype, self.file_type)
 
     def test_set_local_file_type(self):
-        file_mock = mock.MagicMock(spec=File)
-        file_mock.name = self.file_name
-        item = FileStoreItem()
-        item.datafile = file_mock
         # https://joeray.me/mocking-files-and-file-storage-for-testing-django-models.html
         with mock.patch('django.core.files.storage.default_storage._wrapped',
                         mock.MagicMock(spec=Storage)):
-            item.save()
-        self.assertTrue(item.filetype, self.file_type)
+            with mock.patch.object(FileStoreItem, 'get_file_extension',
+                                   return_value=self.file_extension):
+                item = FileStoreItem.objects.create()
+            self.assertTrue(item.filetype, self.file_type)
 
     def test_get_local_file_extension(self):
         file_mock = mock.MagicMock(spec=File)
