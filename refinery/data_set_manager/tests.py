@@ -2007,11 +2007,12 @@ class NodeIndexTests(APITestCase):
             )
 
     def test_prepare_node_remote_datafile_source(self):
-        self.file_store_item.source = "http://www.example.org/test.txt"
+        self.file_store_item.source = u'http://www.example.org/test.txt'
         self.file_store_item.save()
         self._assert_node_index_prepared_correctly(
             self._prepare_node_index(self.node),
-            expected_download_url=self.file_store_item.source
+            expected_download_url=self.file_store_item.source,
+            expected_filetype=self.file_store_item.filetype
         )
 
     def test_prepare_node_pending_yet_existing_file_import_task(self):
@@ -2053,7 +2054,8 @@ class NodeIndexTests(APITestCase):
                                return_value=SUCCESS):
             self._assert_node_index_prepared_correctly(
                 self._prepare_node_index(self.node),
-                expected_download_url=NOT_AVAILABLE
+                expected_download_url=NOT_AVAILABLE,
+                expected_filetype=self.file_store_item.filetype
             )
 
     def test_prepare_node_s3_file_store_item_source_with_datafile(self):
@@ -2063,7 +2065,8 @@ class NodeIndexTests(APITestCase):
                                return_value='/media/file_store/test.txt'):
             self._assert_node_index_prepared_correctly(
                 self._prepare_node_index(self.node),
-                expected_download_url=self.file_store_item.get_datafile_url()
+                expected_download_url=self.file_store_item.get_datafile_url(),
+                expected_filetype=self.file_store_item.filetype
             )
 
     def _create_analysis_node_connection(self, direction, is_refinery_file):
@@ -2083,20 +2086,24 @@ class NodeIndexTests(APITestCase):
     def test_prepare_node_with_non_exposed_input_node_connection_isnt_skipped(
             self
     ):
-        self._create_analysis_node_connection(INPUT_CONNECTION, False)
-        self._assert_node_index_prepared_correctly(
-            self._prepare_node_index(self.node),
-            expected_download_url=self.file_store_item.get_datafile_url()
-        )
+        with mock.patch.object(FileStoreItem, 'get_datafile_url',
+                               return_value='/media/file_store/test_file.txt'):
+            self._create_analysis_node_connection(INPUT_CONNECTION, False)
+            self._assert_node_index_prepared_correctly(
+                self._prepare_node_index(self.node),
+                expected_download_url=self.file_store_item.get_datafile_url()
+            )
 
     def test_prepare_node_with_exposed_input_node_connection_isnt_skipped(
             self
     ):
-        self._create_analysis_node_connection(INPUT_CONNECTION, True)
-        self._assert_node_index_prepared_correctly(
-            self._prepare_node_index(self.node),
-            expected_download_url=self.file_store_item.get_datafile_url()
-        )
+        with mock.patch.object(FileStoreItem, 'get_datafile_url',
+                               return_value='/media/file_store/test_file.txt'):
+            self._create_analysis_node_connection(INPUT_CONNECTION, True)
+            self._assert_node_index_prepared_correctly(
+                self._prepare_node_index(self.node),
+                expected_download_url=self.file_store_item.get_datafile_url()
+            )
 
     def test_prepare_node_with_non_exposed_output_node_connection_is_skipped(
             self
@@ -2108,11 +2115,13 @@ class NodeIndexTests(APITestCase):
     def test_prepare_node_with_exposed_output_node_connection_isnt_skipped(
         self
     ):
-        self._create_analysis_node_connection(OUTPUT_CONNECTION, True)
-        self._assert_node_index_prepared_correctly(
-            self._prepare_node_index(self.node),
-            expected_download_url=self.file_store_item.get_datafile_url()
-        )
+        with mock.patch.object(FileStoreItem, 'get_datafile_url',
+                               return_value='/media/file_store/test_file.txt'):
+            self._create_analysis_node_connection(OUTPUT_CONNECTION, True)
+            self._assert_node_index_prepared_correctly(
+                self._prepare_node_index(self.node),
+                expected_download_url=self.file_store_item.get_datafile_url()
+            )
 
 
 @contextlib.contextmanager
