@@ -41,7 +41,7 @@ url_patterns = Proxy(
         <img width='150' src="https://user-images.githubusercontent.com/730388/36614998-b24d66ea-18ac-11e8-82f9-75542932b452.gif">
         </div>
         </main>
-    ''' # noqa
+    '''  # noqa
 ).url_patterns()
 django_docker_engine_url = url(
     r'^{}/'.format(settings.DJANGO_DOCKER_ENGINE_BASE_URL),
