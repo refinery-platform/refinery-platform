@@ -463,7 +463,7 @@ class FileStoreItem(models.Model):
             return False
 
     def get_datafile_url(self):
-        """Returns relative of absolute URL of the datafile depending on file
+        """Returns relative or absolute URL of the datafile depending on file
         availability and MEDIA_URL setting
         """
         try:
@@ -602,7 +602,7 @@ def _get_extension_from_string(path):
         return ''
     if len(file_name_parts) > 2:  # two or more periods in file name
         return '.'.join(file_name_parts[-2:])
-    return file_name_parts[-1]
+    return file_name_parts[-1]  # one period in file name
 
 
 def parse_s3_url(url):
