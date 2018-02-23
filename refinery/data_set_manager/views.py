@@ -119,14 +119,16 @@ class TakeOwnershipOfPublicDatasetView(View):
                 return HttpResponseBadRequest(err_msg)
 
             try:
-                full_isa_tab_url = DataSet.objects.get(
-                    uuid=data_set_uuid
-                ).get_isa_archive().get_datafile_url()
+                data_set = DataSet.objects.get(uuid=data_set_uuid)
             except (DataSet.DoesNotExist, DataSet.MultipleObjectsReturned,
-                    Exception) as e:
+                    Exception) as exc:
                 err_msg = "Something went wrong"
-                logger.error("%s: %s" % (err_msg, e))
+                logger.error("%s: %s" % (err_msg, exc))
                 return HttpResponseBadRequest("%s." % err_msg)
+            else:
+                full_isa_tab_url = get_absolute_url(
+                    data_set.get_isa_archive().get_datafile_url()
+                )
 
         if from_old_template:
             # Redirect to process_isa_tab view
