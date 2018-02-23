@@ -1,4 +1,10 @@
 {
+	"output_files": [{
+		"description": "test tool out description",
+		"filetype": {
+			"name": "TXT"
+		}
+	}],
 	"parameters": [
 		{
 			"description": "Whether or not to include an empty output file.",

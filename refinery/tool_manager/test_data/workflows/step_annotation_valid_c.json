@@ -1,2 +1,9 @@
 {
+	"output_files": [
+	  {
+        "filetype": {"name": "FASTQ"},
+        "name": "Cool Output File1",
+        "description": "Cool Output File1 Description"
+      }
+	]
 }

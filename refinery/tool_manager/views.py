@@ -1,7 +1,8 @@
 import logging
 
 from django.db import transaction
-from django.http import HttpResponseBadRequest, HttpResponseForbidden
+from django.http import (HttpResponseBadRequest, HttpResponseForbidden,
+                         HttpResponseServerError)
 
 from rest_framework import status
 from rest_framework.decorators import detail_route
@@ -163,4 +164,4 @@ class ToolsViewSet(ToolManagerViewSetBase):
             return tool.launch()
         except Exception as e:
             logger.error(e)
-            return HttpResponseBadRequest(e)
+            return HttpResponseServerError(e)

@@ -16,6 +16,7 @@ from core.models import DataSet, Workflow, WorkflowEngine
 from factory_boy.django_model_factories import (FileRelationshipFactory,
                                                 GalaxyParameterFactory,
                                                 InputFileFactory,
+                                                OutputFileFactory,
                                                 ParameterFactory,
                                                 ToolDefinitionFactory,
                                                 VisualizationToolFactory,
@@ -91,6 +92,29 @@ def create_and_associate_parameters(tool_definition, parameters):
             tool_definition.parameters.add(ParameterFactory(**common_params))
 
 
+def create_and_associate_output_files(tool_definition, output_files):
+    for output_file in output_files:
+        try:
+            filetype = FileType.objects.get(
+                name=output_file["filetype"]["name"]
+            )
+        except (FileType.DoesNotExist,
+                FileType.MultipleObjectsReturned) as e:
+            raise FileTypeValidationError(
+                output_file["filetype"]["name"],
+                e
+            )
+        else:
+            tool_definition.output_files.add(
+                OutputFileFactory(
+                    name=output_file["name"],
+                    description=output_file["description"],
+                    filetype=filetype,
+                    is_merged=bool(output_file.get("is_merged"))
+                )
+            )
+
+
 @transaction.atomic
 def create_tool_definition(annotation_data):
     """
@@ -131,6 +155,11 @@ def create_tool_definition(annotation_data):
             workflow=workflow,
             **common_tool_definition_params
         )
+        create_and_associate_output_files(
+            tool_definition,
+            annotation[ToolDefinition.OUTPUT_FILES]
+        )
+
     elif tool_type == ToolDefinition.VISUALIZATION:
         tool_definition = ToolDefinitionFactory(
             image_name=annotation["image_name"],
@@ -163,7 +192,6 @@ def create_tool_definition(annotation_data):
         tool_definition,
         annotation[ToolDefinition.PARAMETERS]
     )
-
     return tool_definition
 
 

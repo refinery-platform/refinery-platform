@@ -56,6 +56,23 @@
         "galaxy_workflow_step": 5
       }
     ],
+    "output_files": [
+      {
+        "filetype": {"name": "FASTQ"},
+        "name": "Refinery test tool LIST - N on data 4",
+        "description": "Cool Output File1 Description"
+      },
+      {
+        "filetype": {"name": "BAM"},
+        "name": "Refinery test tool LIST - N on data 3",
+        "description": "Cool Output File2 Description"
+      },
+      {
+        "filetype": {"name": "TXT"},
+        "name": "Output file",
+        "description": "Cool Output File3 Description"
+      }
+    ],
     "file_relationship": {
       "file_relationship": {},
       "value_type": "LIST",
