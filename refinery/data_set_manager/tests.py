@@ -1892,27 +1892,7 @@ class NodeIndexTests(APITestCase):
         self.file_store_item = FileStoreItem()
         self.file_store_item.import_task_id = str(uuid.uuid4())
         self.file_store_item.save()
-        # from django.core.files.storage import Storage
-        # storage_mock = mock.MagicMock(spec=Storage)
-        # storage_mock.url = mock.MagicMock(name='url')
-        # storage_mock.url.return_value = '/media/file_store/test_file.txt'
-        # with mock.patch('django.core.files.storage.default_storage._wrapped',
-        #                 storage_mock):
 
-        # None of the details of the test_file except name matter for the test
-        # test_file = StringIO()
-        # test_file.write('Coffee is great.\n')
-        # self.file_store_item = FileStoreItem.objects.create(
-        #     datafile=InMemoryUploadedFile(
-        #         test_file,
-        #         field_name='tempfile',
-        #         name='test_file.txt',
-        #         content_type='text/plain',
-        #         size=len(test_file.getvalue()),
-        #         charset='utf-8'
-        #     ),
-        #     import_task_id=str(uuid.uuid4())
-        # )
         self.import_task = TaskMeta.objects.create(
             task_id=self.file_store_item.import_task_id
         )
