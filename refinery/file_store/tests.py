@@ -1,5 +1,6 @@
 import os
 from urlparse import urljoin
+import uuid
 
 from django.conf import settings
 from django.core.files import File
@@ -233,7 +234,7 @@ class FileSourceTranslationTest(TestCase):
 
     @override_settings(UPLOAD_BUCKET='refinery-upload')
     def test_translate_from_relative_path_with_cognito_identity_id(self):
-        identity_id = 'us-east-1:7cdaf40f-4c4f-4130-9d45-ae8ca56d67e4'
+        identity_id = 'us-east-1:{}'.format(uuid.uuid4())
         translate_file_source = generate_file_source_translator(
             identity_id=identity_id
         )
