@@ -1457,26 +1457,29 @@ class Analysis(OwnableResource):
             # workaround for FastQC reports downloaded from Galaxy as zip
             # archives
             (root, ext) = os.path.splitext(new_file_name)
-            item = FileStoreItem.objects.get_item(uuid=result.file_store_uuid)
-            if ext == '.html':
-                try:
-                    zipfile = FileType.objects.get(name="ZIP")
-                except (FileType.DoesNotExist,
-                        FileType.MultipleObjectsReturned) as exc:
-                    logger.error("Error renaming HTML to zip: %s", exc)
-                else:
-                    if item.get_filetype() == zipfile:
-                        new_file_name = ''.join([root, '.zip'])
-            renamed_file_store_item_uuid = rename(
-                result.file_store_uuid,
-                new_file_name
-            )
+            try:
+                item = FileStoreItem.objects.get(uuid=result.file_store_uuid)
+            except (FileStoreItem.DoesNotExist,
+                    FileStoreItem.MultipleObjectsReturned) as exc:
+                logger.error("Error renaming HTML file '%s' to zip: %s",
+                             result.file_store_uuid, exc)
+            else:
+                if ext == '.html':
+                    try:
+                        zipfile = FileType.objects.get(name="ZIP")
+                    except (FileType.DoesNotExist,
+                            FileType.MultipleObjectsReturned) as exc:
+                        logger.error("Error renaming HTML to zip: %s", exc)
+                    else:
+                        if item.get_filetype() == zipfile:
+                            new_file_name = ''.join([root, '.zip'])
+                renamed_file_store_item_uuid = rename(result.file_store_uuid,
+                                                      new_file_name)
 
             # Try to generate an auxiliary node for visualization purposes
             # NOTE: We have to do this after renaming happens because before
             #  renaming, said FileStoreItems's datafile field does not point
             #  to an actual file
-
             file_store_item_uuid = (
                 renamed_file_store_item_uuid if
                 renamed_file_store_item_uuid else result.file_store_uuid

@@ -147,41 +147,6 @@ class FileExtension(models.Model):
         return self.name
 
 
-class _FileStoreItemManager(models.Manager):
-    """Custom model manager to handle creation and retrieval of FileStoreItems
-    """
-    def create_item(self, source, filetype=''):
-        """A "constructor" for FileStoreItem"""
-        item = self.create(source=_map_source(source))
-
-        item.set_filetype(filetype)
-
-        # symlink if source is a file system path outside of the import dir
-        if (os.path.isabs(item.source) and
-                settings.REFINERY_DATA_IMPORT_DIR not in item.source):
-            item.symlink_datafile()
-
-        return item
-
-    def get_item(self, uuid):
-        """Handles potential exceptions when retrieving a FileStoreItem
-        :param uuid: UUID of a FileStoreItem.
-        :type uuid: str.
-        :returns: FileStoreItem -- model instance if exactly one match is
-        found, None otherwise.
-        """
-        try:
-            item = FileStoreItem.objects.get(uuid=uuid)
-        except FileStoreItem.DoesNotExist:
-            logger.warn("FileStoreItem with UUID '%s' does not exist", uuid)
-            return None
-        except FileStoreItem.MultipleObjectsReturned:
-            logger.warn("More than one FileStoreItem matched UUID '%s'", uuid)
-            return None
-
-        return item
-
-
 @deconstructible
 class SymlinkedFileSystemStorage(FileSystemStorage):
     """Custom file system storage class with support for symlinked files"""
@@ -221,8 +186,6 @@ class FileStoreItem(models.Model):
     # Date updated
     updated = models.DateTimeField(auto_now=True)
 
-    objects = _FileStoreItemManager()
-
     def __unicode__(self):
         if self.datafile.name:
             return self.datafile.name
@@ -244,6 +207,11 @@ class FileStoreItem(models.Model):
                         "'%s': %s", self, self.get_file_extension(), exc)
         else:
             self.filetype = extension.filetype
+
+        if (not self.is_local() and os.path.isabs(self.source) and
+                settings.REFINERY_DATA_IMPORT_DIR not in self.source):
+            self.symlink_datafile()
+
         super(FileStoreItem, self).save(*args, **kwargs)
 
     def get_absolute_path(self):
