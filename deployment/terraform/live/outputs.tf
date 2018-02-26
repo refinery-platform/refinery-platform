@@ -9,3 +9,7 @@ output "identity_pool_id" {
 output "docker_hostname" {
   value = "${module.docker_host.docker_hostname}"
 }
+
+output "refinery_hostname" {
+  value = "${module.refinery_host.refinery_hostname}"
+}
