@@ -112,8 +112,10 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
 
         id_suffix = "_" + id_suffix + "_s"
 
-        data['filename_Characteristics' + NodeIndex.GENERIC_SUFFIX] = \
-            re.sub(r'.*/', '', data['name'])
+        # User files gets pre-defined attributes for now.
+        data['filename_Characteristics' + NodeIndex.GENERIC_SUFFIX] = node.name
+
+        data['filetype_Characteristics' + NodeIndex.GENERIC_SUFFIX] = node.type
 
         data.update(self._assay_data(node))
 

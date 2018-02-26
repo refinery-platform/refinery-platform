@@ -10,6 +10,7 @@
     '$location',
     '$log',
     '$q',
+    '_',
     'userFileBrowserFactory',
     'userFileParamsService',
     'userFileSortsService',
@@ -21,6 +22,7 @@
       $location,
       $log,
       $q,
+      _,
       userFileBrowserFactory,
       userFileParamsService,
       userFileSortsService,
@@ -30,13 +32,26 @@
     var promise = $q.defer();
     var getUserFiles = userFileBrowserFactory.getUserFiles;
     getUserFiles().then(function (solr) {
-      gridOptionsService.columnDefs = userFileBrowserFactory.createColumnDefs();
+      gridOptionsService.columnDefs = userFileBrowserFactory.createColumnDefs(
+        cullEmptyAttributes(solr.facet_field_counts)
+      );
       gridOptionsService.data = userFileBrowserFactory.createData(solr.nodes);
       promise.resolve();
     }, function () {
       $log.error('/files/ request failed');
       promise.reject();
     });
+
+    // helper method to cull out attributes with no fields
+    function cullEmptyAttributes (facetCountObj) {
+      _.each(facetCountObj, function (counts, facetName) {
+        if (!counts.length) {
+          delete facetCountObj[facetName];
+        }
+      });
+
+      return _.keys(facetCountObj).concat('date_submitted', 'sample_name', 'filename');
+    }
 
     vm.sortChanged = function (grid, sortColumns) {
       var sortUrlParam = 'sort';

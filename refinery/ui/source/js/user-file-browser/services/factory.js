@@ -8,12 +8,14 @@
   userFileBrowserFactory.$inject = [
     '$log',
     'settings',
+    '_',
     'userFileService'
   ];
 
   function userFileBrowserFactory (
     $log,
     settings,
+    _,
     userFileService
     ) {
     var service = {
@@ -35,7 +37,7 @@
     * ----------------------
     */
 
-    function createColumnDefs () {
+    function createColumnDefs (culledAttributes) {
       var _cellTemplate = '<div class="ngCellText text-align-center ui-grid-cell-contents"' +
             'ng-class="col.colIndex()">' +
             '<div ng-if="COL_FIELD == \'PENDING\'"  ' +
@@ -64,12 +66,17 @@
                 '<div class="ui-grid-cell-contents" >' +
                   '<a href="/data_sets/{{grid.getCellValue(row, col)}}' +
                            '/#/files/">' +
-                    '<i class="fa fa-table"></i>' +
+                    '<i class="fa fa-folder-open-o"></i>' +
                   '</a>' +
                 '</div>',
             width: 30 }];
+      // temp solution to handle empty columns until backend is updated to
+      // avoid sending attributes with no fields
+      var attributeStr = culledAttributes.join(',');
       settings.djangoApp.userFilesColumns.forEach(function (column) {
-        defs.push({ field: column });
+        if (_.includes(attributeStr, column)) {
+          defs.push({ field: column });
+        }
       });
       return defs;
     }

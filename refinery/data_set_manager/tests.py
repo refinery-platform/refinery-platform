@@ -1970,7 +1970,9 @@ class NodeIndexTests(APITestCase):
                 u'django_ct': u'data_set_manager.node',
                 u'django_id': u'#',
                 'file_uuid': self.file_uuid,
-                'filename_Characteristics_generic_s': u'fake.txt',
+                'filename_Characteristics_generic_s':
+                    u'http://example.com/fake.txt',
+                'filetype_Characteristics_generic_s': 'Raw Data File',
                 'genome_build': None,
                 u'id': u'data_set_manager.node.#',
                 'is_annotation': False,
@@ -1983,6 +1985,7 @@ class NodeIndexTests(APITestCase):
                 'study_uuid': self.study_uuid,
                 'subanalysis': None,
                 'text': u'',
+                'type': u'Raw Data File',
                 'technology_Characteristics_generic_s': 'whizbang',
                 'technology_accession_Characteristics_generic_s': '',
                 'technology_source_Characteristics_generic_s': '',
