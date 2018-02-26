@@ -12,7 +12,7 @@ resource "aws_subnet" "public_subnet" {
   vpc_id                  = "${aws_vpc.vpc.id}"
   cidr_block              = "${var.public_cidr_block}"
   availability_zone       = "${var.availability_zone}"
-  map_public_ip_on_launch = false
+  map_public_ip_on_launch = true
 
   tags {
     label = "refinery" # TODO: Do we need tags?

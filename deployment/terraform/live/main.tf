@@ -32,6 +32,15 @@ module "docker_host" {
   security_group_name = "${terraform.workspace}-docker"
 }
 
+module "refinery_host" {
+  source              = "../modules/refinery_host"
+  public_cidr_block   = "${var.public_cidr_block}"
+  public_subnet_id   = "${module.vpc.public_subnet_id}"
+  vpc_id              = "${module.vpc.vpc_id}"
+  security_group_name = "${terraform.workspace}-refinery"
+  refinery_host_count = "${var.refinery_host_count}"
+}
+
 module "vpc" {
   source             = "../modules/vpc"
   vpc_cidr_block     = "${var.vpc_cidr_block}"
