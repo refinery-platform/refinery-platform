@@ -500,41 +500,26 @@ def _delete_datafile(sender, instance, **kwargs):
     instance.delete_datafile()
 
 
-def _symlink_file_on_disk(source, target):
-    '''Symlink source path to target path creating intermediate directories if
-    they don't exist.
+def _symlink_file_on_disk(source, link_name):
+    """Create a symbolic link pointing to source path named link_name"""
+    link_dir = os.path.dirname(link_name)
 
-    :param source: absolute file system path of the source file.
-    :type source: str.
-    :param target: absolute file system path of the symlink.
-    :type source: str.
-    :returns: bool - True if symlinking succeeded, False if failed.
-
-    '''
-    target_dir = os.path.dirname(target)
-
-    # create intermediate dirs if they don't already exist
-    if not os.path.isdir(target_dir):
+    # create intermediate dirs if they do not already exist
+    if not os.path.isdir(link_dir):
         try:
-            os.makedirs(target_dir)
-        except OSError as e:
-            logger.error(
-                "Error creating file store directory. "
-                "OSError: [Errno %s], file name: %s, error: %s",
-                target_dir, e.errno, e.filename, e.strerror)
+            os.makedirs(link_dir)
+        except OSError as exc:
+            logger.error("Error creating directory '%s': %s", link_dir, exc)
             return False
 
-    # create symlink
+    # create symbolic link
     try:
-        os.symlink(source, target)
-    except OSError as e:
-        logger.error(
-            "Error creating file store symlink. "
-            "OSError: [Errno %s], file name: %s, error: %s",
-            e.errno, e.filename, e.strerror)
+        os.symlink(source, link_name)
+    except OSError as exc:
+        logger.error("Error creating symlink '%s': %s", link_name, exc)
         return False
 
-    logger.debug("Symlinked %s to %s", source, target)
+    logger.debug("Created symlink '%s' to '%s'", link_name, source)
     return True
 
 
