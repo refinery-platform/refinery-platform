@@ -112,11 +112,6 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
 
         id_suffix = "_" + id_suffix + "_s"
 
-        data['filename_Characteristics' + NodeIndex.GENERIC_SUFFIX] = \
-            data['name']
-
-        data.update(self._assay_data(node))
-
         # create dynamic fields for each attribute
         for annotation in annotations:
             name = annotation.attribute_type
@@ -220,5 +215,14 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
                 NOT_AVAILABLE if node.workflow_output is None
                 else node.workflow_output
         })
+
+        # User files gets pre-defined attributes for now.
+        data['filename_Characteristics' + NodeIndex.GENERIC_SUFFIX] = \
+            data['name']
+
+        data['filetype_Characteristics' + NodeIndex.GENERIC_SUFFIX] = \
+            data['type']
+
+        data.update(self._assay_data(node))
 
         return data
