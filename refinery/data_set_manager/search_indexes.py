@@ -207,7 +207,7 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
                 node.name,
             NodeIndex.FILETYPE_PREFIX + id_suffix:
                 "" if file_store_item is None
-                else file_store_item.get_filetype(),
+                else file_store_item.filetype,
             NodeIndex.ANALYSIS_UUID_PREFIX + id_suffix:
                 NOT_AVAILABLE if node.get_analysis() is None
                 else node.get_analysis().name,

@@ -1466,12 +1466,12 @@ class Analysis(OwnableResource):
             else:
                 if ext == '.html':
                     try:
-                        zipfile = FileType.objects.get(name="ZIP")
+                        zipfile = FileType.objects.get(name='ZIP')
                     except (FileType.DoesNotExist,
                             FileType.MultipleObjectsReturned) as exc:
                         logger.error("Error renaming HTML to zip: %s", exc)
                     else:
-                        if item.get_filetype() == zipfile:
+                        if item.filetype == zipfile:
                             new_file_name = ''.join([root, '.zip'])
                 renamed_file_store_item_uuid = rename(result.file_store_uuid,
                                                       new_file_name)

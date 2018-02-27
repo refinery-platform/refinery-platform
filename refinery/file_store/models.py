@@ -198,16 +198,12 @@ class FileStoreItem(models.Model):
         self.source = _map_source(self.source)
         # set file type using file extension
         try:
-            extension = FileExtension.objects.get(
-                name=self.get_file_extension()
-            )
-        except (FileExtension.DoesNotExist,
-                FileExtension.MultipleObjectsReturned) as exc:
-            logger.warn("Could not assign type to file '%s' using extension "
-                        "'%s': %s", self, self.get_file_extension(), exc)
+            extension = self.get_file_extension()
+        except RuntimeError as exc:
+            logger.warn("Could not assign type to file '%s': %s", self, exc)
         else:
             self.filetype = extension.filetype
-
+        # symlink datafile if necessary
         if (not self.is_local() and os.path.isabs(self.source) and
                 settings.REFINERY_DATA_IMPORT_DIR not in self.source):
             self._symlink_datafile()
@@ -242,10 +238,22 @@ class FileStoreItem(models.Model):
             return 0
 
     def get_file_extension(self):
-        """Return extension of the file on disk or from the source"""
+        """Return extension object based on datafile name or source"""
         if self.datafile.name:
-            return _get_extension_from_string(self.datafile.name)
-        return _get_extension_from_string(self.source)
+            extension = _get_extension_from_string(self.datafile.name)
+        else:
+            extension = _get_extension_from_string(self.source)
+        try:
+            return FileExtension.objects.get(name=extension)
+        except FileExtension.DoesNotExist:
+            extension_parts = extension.split('.')
+            try:
+                return FileExtension.objects.get(name=extension_parts[-1])
+            except (FileExtension.DoesNotExist,
+                    FileExtension.MultipleObjectsReturned) as exc:
+                raise RuntimeError(exc)
+        except FileExtension.MultipleObjectsReturned as exc:
+            raise RuntimeError(exc)
 
     def get_file_object(self):
         """Return file object for the data file or None if failed to open"""
@@ -256,67 +264,6 @@ class FileStoreItem(models.Model):
         except ValueError as exc:
             logger.error("Error opening %s: %s", self.datafile, exc)
             return None
-
-    def get_filetype(self):
-        """Retrieve the type of the datafile (a FileType object)"""
-        return self.filetype
-
-    def set_filetype(self, filetype=''):
-        """Assign the type of the datafile.
-        Only existing types allowed as arguments.
-
-        :param filetype: requested file type.
-        :type filetype: str.
-        :returns: True if success, False if failure.
-
-        """
-        # make sure the file type is valid before assigning it to model field
-
-        all_known_extensions = [e.name for e in
-                                FileExtension.objects.all()]
-
-        # If filetype argument is one that we know of great, Else we try to
-        # guess
-
-        if filetype in all_known_extensions:
-            f = filetype
-        else:
-            f = str(self.source.rpartition("/")[-1]).split('.', 1)[-1]
-
-        f = f.lower()
-
-        # Set the filetype of the FileStoreItem instance, if we still dont
-        # know the filetype after our guess earlier, we try to split on a
-        # '.' again etc. If we fail, the filetype is set to unknown
-        try:
-            if f in all_known_extensions:
-                self.filetype = FileType.objects.get(
-                    description=FileExtension.objects.get(name=f).filetype)
-            else:
-                f = f.split('.', 2)[-1]
-                if f in all_known_extensions:
-                    self.filetype = FileType.objects.get(
-                        description=FileExtension.objects.get(
-                            name=f).filetype)
-                else:
-                    f = f.rpartition(".")[-1]
-                    if f in all_known_extensions:
-                        self.filetype = FileType.objects.get(
-                            description=FileExtension.objects.get(
-                                name=f).filetype)
-                    else:
-                        # If we cannot assign a filetype after all of this,
-                        # we let the filetype associated with the filestore
-                        # item be null
-                        pass
-
-            self.save()
-            return True
-
-        except Exception as e:
-            logger.error("Couldn't save:%s with extension: %s, %s" % (self,
-                                                                      f, e))
-            return False
 
     def is_symlinked(self):
         '''Check if the data file is a symlink.

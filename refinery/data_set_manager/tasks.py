@@ -473,7 +473,4 @@ def generate_bam_index(auxiliary_file_store_item_uuid, datafile_path):
     # Map source field of FileStoreItem to path of newly created bam index file
     auxiliary_file_store_item.source = "{}.{}".format(
         datafile_path, bam_index_file_extension)
-
-    auxiliary_file_store_item.set_filetype(bam_index_file_extension)
-    auxiliary_file_store_item._symlink_datafile()
     auxiliary_file_store_item.save()

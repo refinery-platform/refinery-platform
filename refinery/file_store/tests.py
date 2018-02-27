@@ -118,17 +118,15 @@ class FileStoreItemTest(TestCase):
         item = FileStoreItem(source=self.url_source)
         self.assertEqual(item.get_datafile_url(), item.source)
 
-    def test_get_local_file_type(self):
-        item = FileStoreItem(source=self.path_source, filetype=self.file_type)
-        self.assertEqual(item.get_filetype(), self.file_type)
-
-    def test_get_remote_file_type(self):
-        item = FileStoreItem(source=self.url_source, filetype=self.file_type)
-        self.assertEqual(item.get_filetype(), self.file_type)
-
     def test_set_remote_file_type(self):
         item = FileStoreItem.objects.create(source=self.url_source)
-        self.assertTrue(item.filetype, self.file_type)
+        self.assertEqual(item.filetype, self.file_type)
+
+    def test_set_remote_file_type_with_multiple_period_file_name(self):
+        item = FileStoreItem.objects.create(
+            source='http://example.org/test.name.tdf'
+        )
+        self.assertEqual(item.filetype, self.file_type)
 
     def test_set_local_file_type(self):
         # https://joeray.me/mocking-files-and-file-storage-for-testing-django-models.html
@@ -144,11 +142,28 @@ class FileStoreItemTest(TestCase):
         file_mock.name = self.file_name
         item = FileStoreItem()
         item.datafile = file_mock
-        self.assertEqual(item.get_file_extension(), 'tdf')
+        self.assertEqual(item.get_file_extension(), self.file_extension)
 
     def test_get_remote_file_extension(self):
-        item = FileStoreItem(source='http://example.org/test.fastq')
-        self.assertEqual(item.get_file_extension(), 'fastq')
+        item = FileStoreItem(source=self.url_source)
+        self.assertEqual(item.get_file_extension(), self.file_extension)
+
+    def test_get_remote_file_multi_extension(self):
+        # TODO: replace with create() when migrations are no longer required
+        file_type = FileType.objects.get_or_create(name='FASTQ.GZ')[0]
+        file_extension = FileExtension.objects.get_or_create(
+            name='fastq.gz', filetype=file_type
+        )[0]
+        item = FileStoreItem(source='http://example.org/test.fastq.gz')
+        self.assertEqual(item.get_file_extension(), file_extension)
+
+    def test_get_remote_file_extension_with_multiple_period_file_name(self):
+        item = FileStoreItem(source='http://example.org/test.name.tdf')
+        self.assertEqual(item.get_file_extension(), self.file_extension)
+
+    def test_get_invalid_remote_file_extension(self):
+        item = FileStoreItem(source='http://example.org/test.name.invalid')
+        self.assertRaises(RuntimeError, item.get_file_extension)
 
 
 class FileStoreItemManagerTest(TestCase):
