@@ -361,17 +361,12 @@ class FileStoreItem(models.Model):
             return False
 
     def rename_datafile(self, name):
-        """Change name of the data file.
+        """Change name of the data file
         New name may not be the same as the requested name in case of conflict
-        with an existing file.
-
-        :param name: new data file name.
-        :type name: str.
-        :returns: str -- new name if renaming succeeded, None otherwise.
-
+        with an existing file
         """
-        logger.debug("Renaming datafile %s to %s", self.datafile.name, name)
-
+        logger.debug("Renaming datafile '%s' to '%s'",
+                     self.datafile.name, name)
         if self.is_local():
             # obtain a new path based on requested name
             new_rel_path = self.datafile.storage.get_available_name(
@@ -379,16 +374,13 @@ class FileStoreItem(models.Model):
             )
             new_abs_path = os.path.join(settings.FILE_STORE_BASE_DIR,
                                         new_rel_path)
-            # rename the physical file
             if _rename_file_on_disk(self.datafile.path, new_abs_path):
-                # update the model with new path
                 self.datafile.name = new_rel_path
-                # TODO: update FileField only: update_fields=['name']
                 self.save()
-                logger.info("Datafile renamed")
                 return os.path.basename(self.datafile.name)
             else:
-                logger.error("Renaming failed")
+                logger.error("Renaming datafile '%s' failed",
+                             self.datafile.name)
                 return None
         else:
             logger.error("Datafile does not exist")
