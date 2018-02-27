@@ -18,7 +18,7 @@ tool_manager_router.register(
 url_patterns = Proxy(
     settings.DJANGO_DOCKER_ENGINE_DATA_DIR,
     please_wait_title='Please wait...',
-    please_wait_body='''
+    please_wait_body_html='''
         <style>
         body {
           font-family: "Source Sans Pro",Helvetica,Arial,sans-serif;
