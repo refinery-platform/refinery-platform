@@ -475,7 +475,5 @@ def generate_bam_index(auxiliary_file_store_item_uuid, datafile_path):
         datafile_path, bam_index_file_extension)
 
     auxiliary_file_store_item.set_filetype(bam_index_file_extension)
+    auxiliary_file_store_item._symlink_datafile()
     auxiliary_file_store_item.save()
-
-    # Symlink the newly created bam index datafile
-    auxiliary_file_store_item.symlink_datafile()

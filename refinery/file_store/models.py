@@ -210,7 +210,7 @@ class FileStoreItem(models.Model):
 
         if (not self.is_local() and os.path.isabs(self.source) and
                 settings.REFINERY_DATA_IMPORT_DIR not in self.source):
-            self.symlink_datafile()
+            self._symlink_datafile()
 
         super(FileStoreItem, self).save(*args, **kwargs)
 
@@ -331,19 +331,13 @@ class FileStoreItem(models.Model):
             return False
 
     def is_local(self):
-        """
-        Checks if the datafile can be used as a file object.
-        :returns: bool -- True if the datafile can be used as a file object,
-            False otherwise.
-        """
-        path = self.get_absolute_path()
-        if path:
-            try:
-                return os.path.isfile(path)
-            except ValueError:
-                logger.error("'%s' is not a file", path)
-            except TypeError:
-                logger.error("Path must be a string")
+        """Check if the datafile is a regular file"""
+        try:
+            return os.path.isfile(self.get_absolute_path())
+        except ValueError:
+            logger.error("'%s' is not a file", self.get_absolute_path())
+        except TypeError:  # no datafile available or file does not exist
+            pass
         return False
 
     def delete_datafile(self):
@@ -400,14 +394,9 @@ class FileStoreItem(models.Model):
             logger.error("Datafile does not exist")
             return None
 
-    def symlink_datafile(self):
-        """Create a symlink to the file pointed by source.
-        Does not check that the source is an absolute file system path.
-
-        :returns: bool -- True if success, False if failure.
-
-        """
-        logger.debug("Symlinking datafile to %s", self.source)
+    def _symlink_datafile(self):
+        """Create a symlink to the file pointed by source"""
+        logger.debug("Symlinking datafile to '%s'", self.source)
 
         if os.path.isfile(self.source):
             # construct symlink target path based on source file name
@@ -420,7 +409,6 @@ class FileStoreItem(models.Model):
             if _symlink_file_on_disk(self.source, abs_dst_path):
                 # update the model with the symlink path
                 self.datafile.name = rel_dst_path
-                self.save()
                 logger.debug("Datafile symlinked")
                 return True
             else:
