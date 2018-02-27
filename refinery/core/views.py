@@ -29,6 +29,7 @@ from registration.views import RegistrationView
 import requests
 from requests.exceptions import HTTPError
 from rest_framework import authentication, status, viewsets
+from rest_framework.decorators import detail_route
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
@@ -757,7 +758,16 @@ class WorkflowViewSet(viewsets.ModelViewSet):
     """API endpoint that allows Workflows to be viewed"""
     queryset = Workflow.objects.all()
     serializer_class = WorkflowSerializer
+    lookup_field = 'uuid'
     http_method_names = ['get']
+
+    @detail_route(methods=['get'])
+    def download_workflow(self, request, *args, **kwargs):
+        workflow = get_object_or_404(
+            Workflow,
+            uuid=kwargs.get("uuid")
+        )
+        return HttpResponse(workflow.graph)
 
 
 class NodeViewSet(viewsets.ModelViewSet):
