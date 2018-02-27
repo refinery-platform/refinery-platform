@@ -31,6 +31,10 @@ resource "aws_instance" "refinery_host" {
   instance_type          = "t2.micro"
   key_name               = "mccalluc"
   vpc_security_group_ids = ["${aws_security_group.allow_ssh.id}"]
+
+  tags {
+    Name = "terraform demo host"
+  }
 }
 
 #resource "aws_key_pair" "mccalluc" {

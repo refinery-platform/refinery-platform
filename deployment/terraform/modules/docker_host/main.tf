@@ -34,4 +34,8 @@ resource "aws_instance" "docker_host" {
   subnet_id              = "${var.private_subnet_id}"
   instance_type          = "t2.micro"
   vpc_security_group_ids = ["${aws_security_group.allow_docker.id}"]
+
+  tags {
+    Name = "terraform docker host"
+  }
 }
