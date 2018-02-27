@@ -642,12 +642,11 @@ def generate_solr_params(
     start = params.get('offset', '0')
     # row number suggested by solr docs, since there's no unlimited option
     row = params.get('limit', '10000000')
-    # TODO: Is there a reason for the explicit Nones below?
-    field_limit = params.get('attributes', None)
-    facet_field = params.get('facets', None)
-    facet_pivot = params.get('pivots', None)
-    sort = params.get('sort', None)
-    facet_filter = params.get('filter_attribute', None)
+    field_limit = params.get('attributes')
+    facet_field = params.get('facets')
+    facet_pivot = params.get('pivots')
+    sort = params.get('sort')
+    facet_filter = params.get('filter_attribute')
 
     fixed_solr_params = \
         '&'.join(['fq=is_annotation:%s' % is_annotation,
