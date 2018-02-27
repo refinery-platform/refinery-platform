@@ -50,7 +50,7 @@
         }
       });
 
-      return _.keys(facetCountObj).concat('date_submitted', 'sample_name', 'filename');
+      return _.keys(facetCountObj).concat('date_submitted', 'type', 'sample_name', 'name');
     }
 
     vm.sortChanged = function (grid, sortColumns) {

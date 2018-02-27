@@ -112,8 +112,6 @@ class UserFilesUtilsTests(TestCase):
         query = generate_solr_params_for_user(QueryDict({}), user.id)
         self.assertEqual(str(query).split('&'), [
                          'fq=assay_uuid%3A%28{}%29'.format(assay_uuid),
-                         'facet.field=filetype_Characteristics_generic_s',
-                         'facet.field=filetype_Factor_Value_generic_s',
                          'facet.field=organism_Characteristics_generic_s',
                          'facet.field=organism_Factor_Value_generic_s',
                          'facet.field=technology_Characteristics_generic_s',
@@ -126,6 +124,7 @@ class UserFilesUtilsTests(TestCase):
                          'facet.field=antibody_Factor_Value_generic_s',
                          'facet.field=experimenter_Characteristics_generic_s',
                          'facet.field=experimenter_Factor_Value_generic_s',
+                         'facet.field=type',
                          'fl=%2A_generic_s'
                          '%2Cname'
                          '%2C%2A_uuid'
