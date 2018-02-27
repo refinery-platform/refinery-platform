@@ -131,7 +131,7 @@ class FileRelationship(models.Model):
     # See: https://docs.djangoproject.com/en/1.7/ref/models/fields/#django
     # .db.models.ManyToManyField.symmetrical
     file_relationship = models.ManyToManyField(
-        "self", symmetrical=False, null=True, blank=True)
+        "self", symmetrical=False, blank=True)
 
     input_files = models.ManyToManyField("InputFile")
 
