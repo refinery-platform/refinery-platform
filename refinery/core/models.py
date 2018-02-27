@@ -2173,19 +2173,19 @@ def _baseresource_save(sender, instance, **kwargs):
     invalidate_cached_object(instance)
 
 
-@receiver_subclasses(pre_delete, NodeCollection,
-                     "nodecollection_pre_delete")
+@receiver_subclasses(pre_delete, NodeCollection, 'nodecollection_pre_delete')
 def _nodecollection_delete(sender, instance, **kwargs):
-    '''
-        This finds all subclasses related to a DataSet's NodeCollections and
-        handles the deletion of all FileStoreItems related to the DataSet
-    '''
+    """Finds all subclasses related to a DataSet's NodeCollections and deletes
+    all FileStoreItem instances associated with the DataSet
+    """
     nodes = Node.objects.filter(study=instance)
     for node in nodes:
         try:
             FileStoreItem.objects.get(uuid=node.file_uuid).delete()
-        except Exception as e:
-            logger.debug("Could not delete FileStoreItem:%s" % str(e))
+        except (FileStoreItem.DoesNotExist,
+                FileStoreItem.MultipleObjectsReturned) as exc:
+            logger.debug("Could not delete FileStoreItem with UUID '%s': %s",
+                         node.uuid, exc)
 
 
 class AuthenticationFormUsernameOrEmail(AuthenticationForm):
