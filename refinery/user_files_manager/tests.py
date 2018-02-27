@@ -3,6 +3,7 @@ import logging
 from urlparse import urljoin
 
 from django.contrib.auth.models import User
+from django.contrib.contenttypes.models import ContentType
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from django.http import QueryDict
 from django.test import RequestFactory, TestCase
@@ -44,6 +45,12 @@ class UserFilesAPITests(APITestCase):
 
 
 class UserFilesUITests(StaticLiveServerTestCase):
+    def setUp(self):
+        # recommended solution to an auth_permission error, though doc says
+        # we probably won't need to call it since django will call it
+        # automatically when needed
+        ContentType.objects.clear_cache()
+
     def test_ui(self):
         response = requests.get(
             urljoin(
