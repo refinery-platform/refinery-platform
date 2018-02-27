@@ -102,10 +102,9 @@ class UserFilesViewTests(TestCase):
 
 class UserFilesUtilsTests(TestCase):
 
-    @override_settings(
-        USER_FILES_FACETS=
-        "filetype,organism,technology,genotype,cell_type,antibody,experimenter"
-    )
+    @override_settings(USER_FILES_FACETS="filetype,organism,technology,"
+                                         "genotype,cell_type,antibody,"
+                                         "experimenter")
     def test_generate_solr_params_for_user(self):
         user = User.objects.create_user(
             'testuser', 'test@example.com', 'password')
