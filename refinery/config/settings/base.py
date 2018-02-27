@@ -211,7 +211,6 @@ INSTALLED_APPS = (
     'djangular',
     'galaxy_connector',
     'analysis_manager',
-    'workflow_manager',
     'file_store',
     'file_server',
     'annotation_server',
