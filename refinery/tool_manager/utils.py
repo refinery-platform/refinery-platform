@@ -568,5 +568,4 @@ def create_expanded_workflow_graph(galaxy_workflow_dict):
 
 
 def user_has_access_to_tool(user, tool):
-    return \
-        False if not user.has_perm('core.read_dataset', tool.dataset) else True
+    return user.has_perm('core.read_dataset', tool.dataset)
