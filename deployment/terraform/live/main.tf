@@ -42,6 +42,7 @@ module "refinery_host" {
   security_group_name = "${terraform.workspace}-refinery"
   refinery_host_count = "${var.refinery_host_count}"
   key_name            = "${var.key_name}"
+  docker_hostname     = "${module.docker_host.docker_hostname}"
 }
 
 module "vpc" {

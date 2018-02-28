@@ -31,6 +31,14 @@ resource "aws_instance" "refinery_host" {
   instance_type          = "t2.micro"
   key_name               = "${var.key_name}"
   vpc_security_group_ids = ["${aws_security_group.allow_ssh.id}"]
+  user_data              = <<EOF
+#!/bin/bash
+set -o errexit
+set -o verbose
+sudo apt-get update
+sudo apt -yq install docker.io
+echo 'export DOCKER_HOST=tcp://${var.docker_hostname}:2376' >> ~ubuntu/.bashrc
+EOF
 
   tags {
     Name = "${var.name} (terraform demo host)"

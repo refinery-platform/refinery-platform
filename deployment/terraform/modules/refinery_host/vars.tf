@@ -5,3 +5,4 @@ variable "public_subnet_id" {}
 variable "refinery_host_count" {}
 variable "name" {}
 variable "key_name" {}
+variable "docker_hostname" {}

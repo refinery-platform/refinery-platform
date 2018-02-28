@@ -34,6 +34,13 @@ resource "aws_instance" "docker_host" {
   subnet_id              = "${var.private_subnet_id}"
   instance_type          = "t2.micro"
   vpc_security_group_ids = ["${aws_security_group.allow_docker.id}"]
+  user_data              = <<EOF
+#!/bin/bash
+set -o errexit
+set -o verbose
+sudo apt-get update
+sudo apt -yq install docker.io
+EOF
 
   tags {
     Name = "${var.name} (terraform docker host)"
