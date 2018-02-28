@@ -25,11 +25,6 @@ variable "name" {
 # a CIDR block of the same range or larger. However, you can associate a CIDR
 # block of 10.0.0.0/25 or smaller.
 
-variable "route_cidr_block" {
-  type = "string"
-  default = "10.0.0.0/16"
-}
-
 variable "vpc_cidr_block" {
   type = "string"
   default = "10.0.0.0/24"

@@ -47,7 +47,6 @@ module "refinery_host" {
 module "vpc" {
   source             = "../modules/vpc"
   name               = "${var.name}"
-  route_cidr_block   = "${var.route_cidr_block}"
   vpc_cidr_block     = "${var.vpc_cidr_block}"
   public_cidr_block  = "${var.public_cidr_block}"
   private_cidr_block = "${var.private_cidr_block}"
