@@ -14,7 +14,7 @@ provider "aws" {
 
 module "object_storage" {
   source           = "../modules/s3"
-  bucket_name_base = "${terraform.workspace}-mccalluc"
+  bucket_name_base = "${terraform.workspace}-${var.name}"
 }
 
 module "identity_pool" {
@@ -26,6 +26,7 @@ module "identity_pool" {
 
 module "docker_host" {
   source              = "../modules/docker_host"
+  name                = "${var.name}"
   private_cidr_block  = "${var.private_cidr_block}"
   private_subnet_id   = "${module.vpc.private_subnet_id}"
   vpc_id              = "${module.vpc.vpc_id}"
@@ -34,6 +35,7 @@ module "docker_host" {
 
 module "refinery_host" {
   source              = "../modules/refinery_host"
+  name                = "${var.name}"
   public_cidr_block   = "${var.public_cidr_block}"
   public_subnet_id    = "${module.vpc.public_subnet_id}"
   vpc_id              = "${module.vpc.vpc_id}"
@@ -43,6 +45,8 @@ module "refinery_host" {
 
 module "vpc" {
   source             = "../modules/vpc"
+  name               = "${var.name}"
+  route_cidr_block   = "${var.route_cidr_block}"
   vpc_cidr_block     = "${var.vpc_cidr_block}"
   public_cidr_block  = "${var.public_cidr_block}"
   private_cidr_block = "${var.private_cidr_block}"

@@ -36,6 +36,6 @@ resource "aws_instance" "docker_host" {
   vpc_security_group_ids = ["${aws_security_group.allow_docker.id}"]
 
   tags {
-    Name = "terraform docker host"
+    Name = "${var.name} (terraform docker host)"
   }
 }

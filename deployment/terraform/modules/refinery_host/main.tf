@@ -19,7 +19,7 @@ resource "aws_security_group" "allow_ssh" {
   }
 
   tags {
-    Name = "${var.security_group_name}"
+    Name = "${var.name} (terraform)"
   }
 }
 
@@ -33,7 +33,7 @@ resource "aws_instance" "refinery_host" {
   vpc_security_group_ids = ["${aws_security_group.allow_ssh.id}"]
 
   tags {
-    Name = "terraform demo host"
+    Name = "${var.name} (terraform demo host)"
   }
 }
 
