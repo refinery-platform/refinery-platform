@@ -762,12 +762,10 @@ class WorkflowViewSet(viewsets.ModelViewSet):
     http_method_names = ['get']
 
     @detail_route(methods=['get'])
-    def download_workflow(self, request, *args, **kwargs):
-        workflow = get_object_or_404(
-            Workflow,
-            uuid=kwargs.get("uuid")
+    def graph(self, request, *args, **kwargs):
+        return HttpResponse(
+            get_object_or_404(Workflow, uuid=kwargs.get("uuid")).graph
         )
-        return HttpResponse(workflow.graph)
 
 
 class NodeViewSet(viewsets.ModelViewSet):

@@ -2080,7 +2080,7 @@ class WorkflowApiV2Tests(APIV2TestCase):
         self.mock_workflow_graph = "{is_test_workflow_graph: true}"
         super(WorkflowApiV2Tests, self).setUp(
             api_base_name="workflows/",
-            view=WorkflowViewSet.as_view({"get": "download_workflow"})
+            view=WorkflowViewSet.as_view({"get": "graph"})
         )
         self.workflow = WorkflowFactory(
             graph=self.mock_workflow_graph,
@@ -2089,12 +2089,12 @@ class WorkflowApiV2Tests(APIV2TestCase):
             )
         )
 
-    def test_download_workflow(self):
-        download_workflow_url = urljoin(
+    def test_get_workflow_graph(self):
+        workflow_graph_url = urljoin(
             self.url_root,
-            "<uuid>/download_workflow/"
+            "<uuid>/graph/"
         )
-        get_request = self.factory.get(download_workflow_url)
+        get_request = self.factory.get(workflow_graph_url)
         get_response = self.get_response = self.view(
             get_request,
             uuid=self.workflow.uuid
