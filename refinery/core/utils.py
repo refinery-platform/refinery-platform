@@ -854,9 +854,7 @@ def get_absolute_url(string):
 
 
 def is_absolute_url(string):
-    if string and '://' in string:
-        return True
-    return False
+    return string and '://' in string
 
 
 def get_aware_local_time():
