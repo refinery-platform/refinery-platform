@@ -2987,7 +2987,7 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
             assign_perm('core.read_dataset', self.user, self.tool.dataset)
 
         # Need to set_password() to be able to login. Otherwise
-        # usr.password in the hash representation which is not what the
+        # user.password is the hash representation which is not what the
         # login() expects
         temp_password = "password"
         self.user.set_password(temp_password)
