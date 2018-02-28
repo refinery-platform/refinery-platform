@@ -565,3 +565,8 @@ def create_expanded_workflow_graph(galaxy_workflow_dict):
             )
             graph[parent_node_id][current_node_id]['input_id'] = edge_input_id
     return graph
+
+
+def user_has_access_to_tool(user, tool):
+    return \
+        False if not user.has_perm('core.read_dataset', tool.dataset) else True
