@@ -156,8 +156,9 @@ class ToolsViewSet(ToolManagerViewSetBase):
 
         if not user_has_access_to_tool(request.user, tool):
             return HttpResponseForbidden(
-                "Requesting User does not have sufficient permissions to "
-                "relaunch Tool with uuid: {}".format(tool_uuid)
+                 "User does not have permission to view Tool: {}".format(
+                     tool_uuid
+                 )
             )
 
         if tool.is_running():
@@ -212,8 +213,9 @@ class AutoRelaunchProxy(Proxy, object):
         )
         if not user_has_access_to_tool(request.user, visualization_tool):
             return HttpResponseForbidden(
-                "Requesting User does not have sufficient permissions to "
-                "view Tool with uuid: {}".format(visualization_tool.uuid)
+                "User does not have permission to view Tool: {}".format(
+                    visualization_tool.uuid
+                )
             )
 
         if not visualization_tool.is_running():
