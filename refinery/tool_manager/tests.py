@@ -2874,7 +2874,7 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
             uuid=self.tool.uuid
         )
         self.assertEqual(get_response.status_code, 403)
-        self.assertIn("not have sufficient permissions",
+        self.assertIn("User does not have permission",
                       get_response.content)
 
     def test_relaunch_failure_tool_already_running(self):
