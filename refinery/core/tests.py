@@ -25,7 +25,9 @@ from tastypie.test import ResourceTestCase
 
 from analysis_manager.models import AnalysisStatus
 from data_set_manager.models import Assay, Contact, Investigation, Node, Study
-from factory_boy.django_model_factories import GalaxyInstanceFactory
+from factory_boy.django_model_factories import (GalaxyInstanceFactory,
+                                                WorkflowEngineFactory,
+                                                WorkflowFactory)
 from factory_boy.utils import create_dataset_with_necessary_models
 from file_store.models import FileStoreItem, FileType
 
@@ -42,7 +44,7 @@ from .search_indexes import DataSetIndex
 from .utils import (filter_nodes_uuids_in_solr, get_aware_local_time,
                     get_resources_for_user, move_obj_to_front,
                     which_default_read_perm)
-from .views import AnalysesViewSet, DataSetsViewSet
+from .views import AnalysesViewSet, DataSetsViewSet, WorkflowViewSet
 
 cache = memcache.Client(["127.0.0.1:11211"])
 
@@ -1577,14 +1579,8 @@ class DataSetTests(TestCase):
         self.assertQuerysetEqual(self.dataset.get_node_uuids(), [])
 
 
-class DataSetApiV2Tests(APITestCase):
-
-    def create_rand_str(self, count):
-        return ''.join(
-            random.choice(string.ascii_lowercase) for _ in xrange(count)
-        )
-
-    def setUp(self):
+class APIV2TestCase(APITestCase):
+    def setUp(self, **kwargs):
         self.public_group_name = ExtendedGroup.objects.public_group().name
         self.username = 'coffee_lover'
         self.password = 'coffeecoffee'
@@ -1593,9 +1589,23 @@ class DataSetApiV2Tests(APITestCase):
 
         self.factory = APIRequestFactory()
         self.client = APIClient()
-        self.view = DataSetsViewSet.as_view()
+        self.url_root = '/api/v2/{}'.format(kwargs.get("api_base_name"))
+        self.view = kwargs.get("view")
 
-        self.url_root = '/api/v2/data_sets/'
+        self.client.login(username=self.username, password=self.password)
+
+
+class DataSetApiV2Tests(APIV2TestCase):
+    def create_rand_str(self, count):
+        return ''.join(
+            random.choice(string.ascii_lowercase) for _ in xrange(count)
+        )
+
+    def setUp(self):
+        super(DataSetApiV2Tests, self).setUp(
+            api_base_name="datasets/",
+            view=DataSetsViewSet.as_view()
+        )
 
         # Create Datasets
         self.dataset = DataSet.objects.create(
@@ -1634,8 +1644,6 @@ class DataSetApiV2Tests(APITestCase):
             "auxiliary_file_generation_task_state": None,
             "ready_for_igv_detail_view": None
         }])
-
-        self.client.login(username=self.username, password=self.password)
 
         # Make reusable requests & responses
         self.get_request = self.factory.get(self.url_root)
@@ -1903,14 +1911,13 @@ class DataSetApiV2Tests(APITestCase):
         self.assertEqual(patch_response.data.get('title'), new_title)
 
 
-class AnalysisApiV2Tests(APITestCase):
+class AnalysisApiV2Tests(APIV2TestCase):
 
     def setUp(self):
-        self.public_group_name = ExtendedGroup.objects.public_group().name
-        self.username = 'coffee_lover'
-        self.password = 'coffeecoffee'
-        self.user = User.objects.create_user(self.username, '',
-                                             self.password)
+        super(AnalysisApiV2Tests, self).setUp(
+            api_base_name="analyses/",
+            view=AnalysesViewSet.as_view()
+        )
         self.project = Project.objects.create()
 
         self.galaxy_instance = GalaxyInstanceFactory()
@@ -1920,11 +1927,6 @@ class AnalysisApiV2Tests(APITestCase):
         self.workflow = Workflow.objects.create(
             workflow_engine=self.workflow_engine
         )
-        self.factory = APIRequestFactory()
-        self.client = APIClient()
-        self.view = AnalysesViewSet.as_view()
-
-        self.url_root = '/api/v2/analyses/'
 
         # Create Datasets
         self.dataset = DataSet.objects.create(name="coffee dataset")
@@ -2071,6 +2073,33 @@ class AnalysisApiV2Tests(APITestCase):
         self.assertEqual(self.delete_response.status_code, 404)
 
         self.assertEqual(Analysis.objects.all().count(), 1)
+
+
+class WorkflowApiV2Tests(APIV2TestCase):
+    def setUp(self):
+        self.mock_workflow_graph = "{is_test_workflow_graph: true}"
+        super(WorkflowApiV2Tests, self).setUp(
+            api_base_name="workflows/",
+            view=WorkflowViewSet.as_view({"get": "graph"})
+        )
+        self.workflow = WorkflowFactory(
+            graph=self.mock_workflow_graph,
+            workflow_engine=WorkflowEngineFactory(
+                instance=GalaxyInstanceFactory()
+            )
+        )
+
+    def test_get_workflow_graph(self):
+        workflow_graph_url = urljoin(
+            self.url_root,
+            "<uuid>/graph/"
+        )
+        get_request = self.factory.get(workflow_graph_url)
+        get_response = self.get_response = self.view(
+            get_request,
+            uuid=self.workflow.uuid
+        )
+        self.assertEqual(get_response.content, self.mock_workflow_graph)
 
 
 class CoreIndexTests(TestCase):
