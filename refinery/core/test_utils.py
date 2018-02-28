@@ -20,10 +20,6 @@ class TestIsAbsoluteURL(TestCase):
         self.assertFalse(is_absolute_url(None))
         self.assertFalse(is_absolute_url(''))
 
-    def test_get_absolute_url_with_absolute_url(self):
-        self.assertEqual(get_absolute_url('http://example.org'),
-                         'http://example.org')
-
 
 @override_settings(REFINERY_URL_SCHEME='http')
 class TestGetAbsoluteURL(TestCase):
