@@ -170,7 +170,7 @@ class ToolsViewSet(ToolManagerViewSetBase):
             return HttpResponseBadRequest(e)
 
 
-class VisualizationToolProxy(Proxy, object):
+class AutoRelaunchProxy(Proxy, object):
     """
     Wrapper around Django-Docker-Engine Proxy to allow for VisualizationTools
     that had been launched previously to have persisting urls even after
@@ -178,7 +178,7 @@ class VisualizationToolProxy(Proxy, object):
     manually relaunch (although that remains an option).
     """
     def __init__(self):
-        super(VisualizationToolProxy, self).__init__(
+        super(AutoRelaunchProxy, self).__init__(
             settings.DJANGO_DOCKER_ENGINE_DATA_DIR,
             please_wait_title='Please wait...',
             please_wait_body_html='''
@@ -219,7 +219,7 @@ class VisualizationToolProxy(Proxy, object):
         if not visualization_tool.is_running():
             visualization_tool.launch()
 
-        return super(VisualizationToolProxy, self)._proxy_view(
+        return super(AutoRelaunchProxy, self)._proxy_view(
             request,
             container_name,
             url
