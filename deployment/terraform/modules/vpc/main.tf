@@ -4,7 +4,7 @@ resource "aws_vpc" "vpc" {
   enable_dns_hostnames = true
 
   tags {
-    label = "refinery" # TODO: Do we need tags?
+    Name = "terraform"
   }
 }
 
@@ -15,7 +15,7 @@ resource "aws_subnet" "public_subnet" {
   map_public_ip_on_launch = true
 
   tags {
-    label = "refinery" # TODO: Do we need tags?
+    Name = "terraform public"
   }
 }
 
@@ -25,6 +25,38 @@ resource "aws_subnet" "private_subnet" {
   availability_zone       = "${var.availability_zone}"
 
   tags {
-    label = "refinery" # TODO: Do we need tags?
+    Name = "terraform private"
+  }
+}
+
+resource "aws_internet_gateway" "public_gateway" {
+  vpc_id = "${aws_vpc.vpc.id}"
+  tags {
+    Name = "terraform public"
+  }
+}
+
+resource "aws_internet_gateway" "egress_gateway" {
+  vpc_id = "${aws_vpc.vpc.id}"
+  tags {
+    Name = "terraform egress"
+  }
+}
+
+resource "aws_route_table" "route_table" {
+  vpc_id = "${aws_vpc.vpc.id}"
+
+  route {
+    cidr_block = "${var.public_cidr_block}"
+    gateway_id = "${aws_internet_gateway.public_gateway.id}"
+  }
+
+  route {
+    cidr_block = "${var.private_cidr_block}"
+    egress_only_gateway_id = "${aws_internet_gateway.egress_gateway.id}"
+  }
+
+  tags {
+    Name = "terraform"
   }
 }
