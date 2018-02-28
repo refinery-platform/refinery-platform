@@ -72,7 +72,7 @@ from .models import (FileRelationship, GalaxyParameter, InputFile, Parameter,
                      VisualizationToolError, WorkflowTool)
 from .utils import (FileTypeValidationError, create_tool,
                     create_tool_definition, get_workflows,
-                    validate_tool_annotation,
+                    user_has_access_to_tool, validate_tool_annotation,
                     validate_tool_launch_configuration,
                     validate_workflow_step_annotation)
 from .views import ToolDefinitionsViewSet, ToolsViewSet
@@ -2979,6 +2979,38 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
         self._make_tools_get_request(tool_type="coffee")
         self.assertEqual(self.get_response.data, [])
 
+    def _test_launch_vis_container(self, user_has_permission=True):
+        self.create_tool(ToolDefinition.VISUALIZATION)
+        self.assertFalse(self.tool.is_running())
+
+        if user_has_permission:
+            assign_perm('core.read_dataset', self.user, self.tool.dataset)
+
+        # Need to set_password() to be able to login. Otherwise
+        # usr.password in the hash representation which is not what the
+        # login() expects
+        temp_password = "password"
+        self.user.set_password(temp_password)
+        self.user.save()
+        self.client.login(username=self.user.username,
+                          password=temp_password)
+
+        with mock.patch.object(VisualizationTool, "launch") as launch_mock:
+            get_response = self.client.get(
+                "{}/".format(self.tool.get_relative_container_url())
+            )
+        if user_has_permission:
+            self.assertTrue(launch_mock.called)
+        else:
+            self.assertEqual(get_response.status_code, 403)
+            self.assertFalse(launch_mock.called)
+
+    def test_vis_tool_url_after_container_removed_relaunches(self):
+        self._test_launch_vis_container()
+
+    def test_vis_tool_url_user_without_permission(self):
+        self._test_launch_vis_container(user_has_permission=False)
+
 
 class WorkflowToolLaunchTests(ToolManagerTestBase):
     tasks_mock = "analysis_manager.tasks"
@@ -3838,6 +3870,12 @@ class ToolManagerUtilitiesTests(ToolManagerTestBase):
                 ),
                 context.exception.message
             )
+
+    def test_user_has_access_to_tool(self):
+        self.create_tool(ToolDefinition.VISUALIZATION)
+        assign_perm('core.read_dataset', self.user, self.tool.dataset)
+        self.assertTrue(user_has_access_to_tool(self.user, self.tool))
+        self.assertFalse(user_has_access_to_tool(self.user2, self.tool))
 
 
 class ParameterTests(TestCase):
