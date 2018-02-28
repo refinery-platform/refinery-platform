@@ -210,7 +210,7 @@ class VisualizationToolProxy(Proxy, object):
             VisualizationTool,
             container_name=container_name
         )
-        if not user_has_access_to_tool(request.user, VisualizationTool):
+        if not user_has_access_to_tool(request.user, visualization_tool):
             return HttpResponseForbidden(
                 "Requesting User does not have sufficient permissions to "
                 "view Tool with uuid: {}".format(visualization_tool.uuid)
