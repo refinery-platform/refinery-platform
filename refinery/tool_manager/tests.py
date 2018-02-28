@@ -61,8 +61,6 @@ from factory_boy.django_model_factories import (AnnotatedNodeFactory,
                                                 ToolFactory)
 from factory_boy.utils import create_dataset_with_necessary_models
 from file_store.models import FileStoreItem, FileType
-from selenium_testing.utils import (MAX_WAIT, SeleniumTestBaseGeneric,
-                                    wait_until_class_visible)
 from tool_manager.management.commands.load_tools import \
     Command as LoadToolsCommand
 from tool_manager.tasks import django_docker_cleanup
@@ -3475,26 +3473,19 @@ class WorkflowToolLaunchTests(ToolManagerTestBase):
         )
 
 
-class VisualizationToolLaunchTests(ToolManagerTestBase,  # TODO: Cypress
-                                   SeleniumTestBaseGeneric):
+class VisualizationToolLaunchTests(ToolManagerTestBase):
     def setUp(self):
-        # super() will only ever resolve a single class type for a given method
-        ToolManagerTestBase.setUp(self)
-        SeleniumTestBaseGeneric.setUp(self)
+        super(VisualizationToolLaunchTests, self).setUp()
 
-        self.sample_igv_file = urljoin(
-            self.live_server_url,
-            "/tool_manager/test_data/sample.seg"
-        )
+        self.sample_igv_file_url = "http://www.example.com/sample.seg"
+
         mock.patch.object(
             LoadToolsCommand,
             "_get_available_visualization_tool_registry_names",
         ).start()
 
     def tearDown(self):
-        # super() will only ever resolve a single class type for a given method
-        ToolManagerTestBase.tearDown(self)
-        SeleniumTestBaseGeneric.tearDown(self)
+        super(VisualizationToolLaunchTests, self).tearDown()
 
         # Explicitly call delete() to purge any containers we spun up
         Tool.objects.all().delete()
@@ -3534,7 +3525,7 @@ class VisualizationToolLaunchTests(ToolManagerTestBase,  # TODO: Cypress
             "dataset_uuid": self.dataset.uuid,
             "tool_definition_uuid": self.td.uuid,
             Tool.FILE_RELATIONSHIPS: "[{}]".format(
-                self.make_node(source=self.sample_igv_file)
+                self.make_node(source=self.sample_igv_file_url)
             ),
             ToolDefinition.PARAMETERS: {
                 self.mock_parameter.uuid: self.mock_parameter.default_value
@@ -3565,28 +3556,9 @@ class VisualizationToolLaunchTests(ToolManagerTestBase,  # TODO: Cypress
             assertions(last_tool)
 
     def test_IGV(self):
-        def assertions(tool):
-            # Check to see if IGV shows what we want
-            igv_url = urljoin(
-                self.live_server_url,
-                tool.get_relative_container_url()
-            )
-
-            self.browser.get(igv_url)
-            time.sleep(15)
-
-            wait_until_class_visible(self.browser, "igv-track-label", MAX_WAIT)
-            self.assertIn(
-                "sample.seg",
-                self.browser.find_elements_by_class_name(
-                    "igv-track-label"
-                )[0].text
-            )
-
         self._start_visualization(
             'igv.json',
-            self.sample_igv_file,
-            assertions
+            self.sample_igv_file_url
         )
 
     def test_HiGlass(self):
@@ -3646,7 +3618,7 @@ class VisualizationToolLaunchTests(ToolManagerTestBase,  # TODO: Cypress
 
         self._start_visualization(
             'igv.json',
-            self.sample_igv_file,
+            self.sample_igv_file_url,
             assertions
         )
 
