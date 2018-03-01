@@ -673,7 +673,7 @@ def generate_solr_params(
                                       '_Characteristics',
                                       NodeIndex.GENERIC_SUFFIX]))
             facet_arr.append(''.join([facet,
-                                      '_Factor_Value_',
+                                      '_Factor_Value',
                                       NodeIndex.GENERIC_SUFFIX]))
 
         facet_field = insert_facet_field_filter(facet_filter, facet_arr)
