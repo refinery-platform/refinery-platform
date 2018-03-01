@@ -667,22 +667,16 @@ def generate_solr_params(
 
     if facets_from_config:
         # Twice as many facets as necessary, but easier than the alternative.
-        facet_arr = []
-        for facet in settings.USER_FILES_FACETS.split(","):
-            facet_arr.append(''.join([facet,
-                                      '_Characteristics',
-                                      NodeIndex.GENERIC_SUFFIX]))
-            facet_arr.append(''.join([facet,
-                                      '_Factor_Value',
-                                      NodeIndex.GENERIC_SUFFIX]))
+        facet_template = '&facet.field={0}_Characteristics{1}' \
+                         '&facet.field={0}_Factor_Value{1}'
+        facet_field = ''.join(
+            [facet_template.format(s, NodeIndex.GENERIC_SUFFIX) for s
+             in settings.USER_FILES_FACETS.split(",")]
+        )
+        solr_params += '&fl=*{},name,*_uuid,type,django_id,{}'.format(
+            NodeIndex.GENERIC_SUFFIX, NodeIndex.DOWNLOAD_URL)
 
-        facet_field = insert_facet_field_filter(facet_filter, facet_arr)
-        split_facet_fields = generate_facet_fields_query(facet_field)
-        solr_params = ''.join([solr_params, split_facet_fields])
-        solr_params += '&fl=*{},name,*_uuid,' \
-                       'django_id,{}'.format(NodeIndex.GENERIC_SUFFIX,
-                                             NodeIndex.DOWNLOAD_URL)
-    elif facet_field:
+    if facet_field:
         facet_field = facet_field.split(',')
         facet_field = insert_facet_field_filter(facet_filter, facet_field)
         split_facet_fields = generate_facet_fields_query(facet_field)
