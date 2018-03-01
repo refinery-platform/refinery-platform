@@ -115,7 +115,7 @@ class UserFilesUtilsTests(TestCase):
                          'fl=%2A_generic_s'
                          '%2Cname'
                          '%2C%2A_uuid'
-                         '%2Ctype%2C'
+                         '%2Ctype'
                          '%2Cdjango_id'
                          '%2CREFINERY_DOWNLOAD_URL_s',
                          'facet.field=filetype_Characteristics_generic_s',
