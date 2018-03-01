@@ -98,7 +98,8 @@
                 { name: 'cat', count: 2 },
                 { name: 'dog', count: 4 }
               ],
-              lowerCaseNames: ' mouse cat mouse dog' // This is ok: Just used for substring search.
+              lowerCaseNames: ' mouse cat mouse dog', // This is ok: Just used for substring search.
+              internalName: 'organism_Factor_Value_generic_s'
             }
           }
         );
