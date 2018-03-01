@@ -112,7 +112,6 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
 
         id_suffix = "_" + id_suffix + "_s"
 
-        data['filetype_Characteristics' + NodeIndex.GENERIC_SUFFIX] = ""
         try:
             file_store_item = FileStoreItem.objects.get(
                 uuid=node.file_uuid

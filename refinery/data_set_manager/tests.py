@@ -1970,13 +1970,21 @@ class NodeIndexTests(APITestCase):
                 u'django_ct': u'data_set_manager.node',
                 u'django_id': u'#',
                 'file_uuid': self.file_uuid,
+                'filetype_Characteristics_generic_s': None,
                 'genome_build': None,
                 u'id': u'data_set_manager.node.#',
                 'is_annotation': False,
+                'measurement_Characteristics_generic_s': '',
+                'measurement_accession_Characteristics_generic_s': '',
+                'measurement_source_Characteristics_generic_s': '',
                 'name': u'http://example.com/fake.txt',
+                'platform_Characteristics_generic_s': '',
                 'species': None,
                 'study_uuid': self.study_uuid,
                 'subanalysis': None,
+                'technology_Characteristics_generic_s': 'whizbang',
+                'technology_accession_Characteristics_generic_s': '',
+                'technology_source_Characteristics_generic_s': '',
                 'text': u'',
                 'type': u'Raw Data File',
                 'uuid': self.node_uuid,
@@ -2049,14 +2057,6 @@ class NodeIndexTests(APITestCase):
         self._assert_node_index_prepared_correctly(
             self._prepare_node_index(self.node),
             expected_download_url=PENDING
-        )
-
-    def test_prepare_node_no_file_store_item(self):
-        self.file_store_item.delete()
-        self._assert_node_index_prepared_correctly(
-            self._prepare_node_index(self.node),
-            expected_download_url=NOT_AVAILABLE,
-            expected_filetype=""
         )
 
     def test_prepare_node_s3_file_store_item_source_no_datafile(self):

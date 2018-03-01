@@ -124,11 +124,12 @@ class UserFilesUtilsTests(TestCase):
                          'facet.field=antibody_Factor_Value_generic_s',
                          'facet.field=experimenter_Characteristics_generic_s',
                          'facet.field=experimenter_Factor_Value_generic_s',
+                         'facet.field=filetype_Characteristics_generic_s',
+                         'facet.field=filetype_Factor_Value_generic_s',
                          'facet.field=type',
                          'fl=%2A_generic_s'
                          '%2Cname'
                          '%2C%2A_uuid'
-                         '%2Ctype'
                          '%2Cdjango_id'
                          '%2CREFINERY_DOWNLOAD_URL_s',
                          'fq=is_annotation%3Afalse',
