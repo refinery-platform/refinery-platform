@@ -1,10 +1,13 @@
 import logging
 
+from django.conf import settings
 from django.db import transaction
 from django.http import HttpResponseBadRequest, HttpResponseForbidden
 
+from django_docker_engine.proxy import Proxy
 from rest_framework import status
 from rest_framework.decorators import detail_route
+from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
@@ -12,7 +15,8 @@ from core.models import DataSet
 
 from .models import Tool, ToolDefinition, VisualizationTool, WorkflowTool
 from .serializers import ToolDefinitionSerializer, ToolSerializer
-from .utils import create_tool, validate_tool_launch_configuration
+from .utils import (create_tool, user_has_access_to_tool,
+                    validate_tool_launch_configuration)
 
 logger = logging.getLogger(__name__)
 
@@ -150,10 +154,11 @@ class ToolsViewSet(ToolManagerViewSetBase):
                 .format(tool_uuid, e)
             )
 
-        if not request.user.has_perm('core.read_dataset', tool.dataset):
+        if not user_has_access_to_tool(request.user, tool):
             return HttpResponseForbidden(
-                "Requesting User does not have sufficient permissions to "
-                "relaunch Tool with uuid: {}".format(tool_uuid)
+                 "User does not have permission to view Tool: {}".format(
+                     tool_uuid
+                 )
             )
 
         if tool.is_running():
@@ -164,3 +169,60 @@ class ToolsViewSet(ToolManagerViewSetBase):
         except Exception as e:
             logger.error(e)
             return HttpResponseBadRequest(e)
+
+
+class AutoRelaunchProxy(Proxy, object):
+    """
+    Wrapper around Django-Docker-Engine Proxy to allow for VisualizationTools
+    that had been launched previously to have persisting urls even after
+    their containers hve been destroyed, rather than relying on users to
+    manually relaunch (although that remains an option).
+    """
+    def __init__(self):
+        super(AutoRelaunchProxy, self).__init__(
+            settings.DJANGO_DOCKER_ENGINE_DATA_DIR,
+            please_wait_title='Please wait...',
+            please_wait_body_html='''
+                <style>
+                body {{
+                  font-family: "Source Sans Pro",Helvetica,Arial,sans-serif;
+                  font-size: 40pt;
+                  text-align: center;
+                }}
+                div {{
+                  position: absolute;
+                  top: 50%;
+                  left: 50%;
+                  margin-right: -50%;
+                  transform: translate(-50%, -50%)
+                }}
+                </style>
+
+                <div>
+                <img src="{0}/logo.svg" width='150'>
+                <p>Please wait...</p>
+                <img src="{0}/spinner.gif">
+                </div>
+            '''.format(settings.STATIC_URL + 'images')
+        )
+
+    def _proxy_view(self, request, container_name, url):
+        visualization_tool = get_object_or_404(
+            VisualizationTool,
+            container_name=container_name
+        )
+        if not user_has_access_to_tool(request.user, visualization_tool):
+            return HttpResponseForbidden(
+                "User does not have permission to view Tool: {}".format(
+                    visualization_tool.uuid
+                )
+            )
+
+        if not visualization_tool.is_running():
+            visualization_tool.launch()
+
+        return super(AutoRelaunchProxy, self)._proxy_view(
+            request,
+            container_name,
+            url
+        )
