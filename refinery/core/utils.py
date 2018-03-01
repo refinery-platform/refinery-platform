@@ -3,7 +3,7 @@ from __future__ import absolute_import
 import ast
 import logging
 import sys
-from urlparse import urljoin, urlparse
+from urlparse import urljoin
 
 from django.conf import settings
 from django.contrib import messages
@@ -834,16 +834,12 @@ def invalidate_cached_object(instance, is_test=False):
         return mc
 
 
-def get_full_url(relative_url):
+def get_absolute_url(string):
+    """Creates an absolute URL from a relative URL using the current Site
+    domain and REFINERY_URL_SCHEME Django setting
     """
-    Creates a full URL (including hostname) from a given relative URL
-    :param relative_url: A relative URL.
-    :type  relative_url: String.
-    :returns A full URL constructed using the current Site domain and
-    REFINERY_URL_SCHEME Django setting or None in case of errors.
-    """
-    if is_url(relative_url):
-        return relative_url
+    if not string or is_absolute_url(string):
+        return string
 
     try:
         current_site = Site.objects.get_current()
@@ -853,13 +849,12 @@ def get_full_url(relative_url):
         return None
 
     return "{}://{}{}".format(
-        settings.REFINERY_URL_SCHEME, current_site.domain, relative_url
+        settings.REFINERY_URL_SCHEME, current_site.domain, string
     )
 
 
-def is_url(string):
-    """Check if a given string is a URL"""
-    return urlparse(string).scheme != ""
+def is_absolute_url(string):
+    return string and '://' in string
 
 
 def get_aware_local_time():

@@ -6,7 +6,7 @@ from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from django.http import QueryDict
-from django.test import RequestFactory, TestCase
+from django.test import RequestFactory, TestCase, override_settings
 
 from guardian.utils import get_anonymous_user
 import mock
@@ -109,6 +109,9 @@ class UserFilesViewTests(TestCase):
 
 class UserFilesUtilsTests(TestCase):
 
+    @override_settings(USER_FILES_FACETS="filetype,organism,technology,"
+                                         "genotype,cell_type,antibody,"
+                                         "experimenter")
     def test_generate_solr_params_for_user(self):
         user = User.objects.create_user(
             'testuser', 'test@example.com', 'password')
@@ -117,7 +120,7 @@ class UserFilesUtilsTests(TestCase):
         assay_uuid = Assay.objects.get(study=dataset.get_latest_study()).uuid
 
         query = generate_solr_params_for_user(QueryDict({}), user.id)
-        self.assertEqual(str(query).split('&'), [
+        self.assertItemsEqual(str(query).split('&'), [
                          'fq=assay_uuid%3A%28{}%29'.format(assay_uuid),
                          'facet.field=filetype_Characteristics_generic_s',
                          'facet.field=filetype_Factor_Value_generic_s',
