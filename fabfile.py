@@ -14,7 +14,7 @@ Requirements:
 
 import os
 
-from fabric.api import env, execute, local, run, sudo
+from fabric.api import env, execute, run, sudo
 from fabric.context_managers import cd, prefix, shell_env
 from fabric.contrib.files import sed
 from fabric.decorators import task, with_settings
