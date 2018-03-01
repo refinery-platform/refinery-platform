@@ -159,6 +159,7 @@
             };
           }
           filters[display].lowerCaseNames += ' ' + lowerCaseNames;
+          filters[display].internalName = key;
           _mergeAndAddNameCounts(filters[display].facetObj, facetObj);
         }
       });

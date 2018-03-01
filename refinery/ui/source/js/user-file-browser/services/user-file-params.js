@@ -5,30 +5,25 @@
     .factory('userFileParamsService', userFileParamsService);
 
   userFileParamsService.$inject = [
+    '_',
+    'selectedFilterService',
     'userFileFiltersService',
     'userFileSortsService'
   ];
 
   function userFileParamsService (
+      _,
+      selectedFilterService,
       userFileFiltersService,
       userFileSortsService
   ) {
     var characterSuffix = '_Characteristics_generic_s';
     var factorSuffix = '_Factor_Value_generic_s';
+
     var params = {
       limit: 100, // Default is 100,000. Immutability make it hard in python.
-      fq: function () {
-        var filters = Object.keys(userFileFiltersService).map(function (key) {
-          var values = userFileFiltersService[key];
-          // TODO: escaping!
-          var orValues = values.map(function (value) {
-            return '(' +
-                key + characterSuffix + ':"' + value + '" OR ' +
-                key + factorSuffix + ':"' + value + '")';
-          }).join(' OR ');
-          return '(' + orValues + ')';
-        });
-        return filters.join(' AND ');
+      filter_attribute: function () {
+        return selectedFilterService.encodeAttributeFields(angular.copy(userFileFiltersService));
       },
       sort: function () {
         return userFileSortsService.fields.map(function (field) {

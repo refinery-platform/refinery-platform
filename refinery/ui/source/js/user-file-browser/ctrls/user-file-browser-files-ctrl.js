@@ -50,7 +50,7 @@
         }
       });
 
-      return _.keys(facetCountObj).concat('date_submitted', 'type', 'sample_name', 'name');
+      return _.keys(facetCountObj).concat('date_submitted', 'sample_name', 'name');
     }
 
     vm.sortChanged = function (grid, sortColumns) {
@@ -86,7 +86,7 @@
     gridOptionsService.appScopeProvider = vm;
     vm.downloadCsvQuery = function () {
       return $httpParamSerializer({
-        fq: userFileParamsService.fq(),
+      //  fq: userFileParamsService.fq(),
         sort: userFileParamsService.sort()
       });
     };

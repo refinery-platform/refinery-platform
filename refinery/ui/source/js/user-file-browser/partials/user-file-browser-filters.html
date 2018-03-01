@@ -48,8 +48,8 @@
                         <input
                           type="checkbox"
                           name="optionsCheckboxes"
-                          ng-click="$ctrl.filterUpdate(attribute, field.name)"
-                          ng-checked="$ctrl.filterIsSet(attribute, field.name)"
+                          ng-click="$ctrl.filterUpdate(attributeObj.internalName, field.name)"
+                          ng-checked="$ctrl.filterIsSet(attributeObj.internalName, field.name)"
                           id="{{ field.name | replaceWhiteSpaceWithHyphen }}-{{ $index }}">
                       </div>
                       <div class="col-xs-8">
