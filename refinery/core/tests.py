@@ -1338,14 +1338,36 @@ class DataSetResourceTest(LoginResourceTestCase):
     def test_list_response_yields_complete_datasets_only(self):
         # DataSets that aren't fully created will not be displayed in the
         # list api response
-        self.dataset.set_owner(self.user)
-        self.dataset2.set_owner(self.user)
-
         resp = self.api_client.get(make_api_uri('data_sets'), format='json')
         self.assertValidJSONResponse(resp)
         data = json.loads(resp.content)
         self.assertEqual(data["meta"]["total_count"], 1)
-        self.assertEqual(data["objects"][0]["name"], self.dataset.name)
+        self.assertEqual(data["objects"][0]["name"], self.tabular_dataset.name)
+
+    def test_isatab_based_dataset_specifics_in_response(self):
+        data = self.deserialize(
+            self.api_client.get(
+                make_api_uri("data_sets", self.isatab_dataset.uuid),
+                format='json'
+            )
+        )
+        isa_archive_file_store_item = \
+            self.isatab_dataset.get_metadata_as_file_store_item()
+        self.assertEqual(data["isa_archive"], isa_archive_file_store_item.uuid)
+        self.assertEqual(data["isa_archive_url"],
+                         isa_archive_file_store_item.get_datafile_url())
+
+    def test_tabular_dataset_specifics_in_response(self):
+        data = self.deserialize(
+            self.api_client.get(
+                make_api_uri("data_sets", self.tabular_dataset.uuid),
+                format='json'
+            )
+        )
+        pre_isa_archive_file_store_item = \
+            self.tabular_dataset.get_metadata_as_file_store_item()
+        self.assertEqual(data["pre_isa_archive"],
+                         pre_isa_archive_file_store_item.uuid)
 
 
 class DataSetTests(TestCase):
