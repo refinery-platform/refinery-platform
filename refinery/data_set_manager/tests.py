@@ -1956,7 +1956,7 @@ class NodeIndexTests(APITestCase):
                 u'django_ct': u'data_set_manager.node',
                 u'django_id': u'#',
                 'file_uuid': self.file_uuid,
-                'filetype_Characteristics_generic_s': None,
+                'filetype_Characteristics_generic_s': expected_filetype,
                 'genome_build': None,
                 u'id': u'data_set_manager.node.#',
                 'is_annotation': False,
@@ -2024,7 +2024,7 @@ class NodeIndexTests(APITestCase):
         self.file_store_item.delete()
         self._assert_node_index_prepared_correctly(
             self._prepare_node_index(self.node),
-            expected_download_url=NOT_AVAILABLE, expected_filetype=""
+            expected_download_url=NOT_AVAILABLE, expected_filetype=''
         )
 
     def test_prepare_node_s3_file_store_item_source_no_datafile(self):

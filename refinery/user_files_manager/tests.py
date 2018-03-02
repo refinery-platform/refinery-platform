@@ -60,7 +60,7 @@ class UserFilesUITests(StaticLiveServerTestCase):
         )
         self.assertIn("All Files", response.content)
 
-    @mock.patch('django.conf.settings.USER_FILES_COLUMNS', 'filename,fake')
+    @mock.patch('django.conf.settings.USER_FILES_COLUMNS', 'name,fake')
     def test_csv(self):
         response = requests.get(
             urljoin(
@@ -70,7 +70,7 @@ class UserFilesUITests(StaticLiveServerTestCase):
         )
         self.assertEqual(
             response.content,
-            'url,filename,fake\r\n'
+            'url,name,fake\r\n'
         )
 
 

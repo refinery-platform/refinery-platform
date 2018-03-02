@@ -119,11 +119,10 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
             logger.error("Couldn't properly fetch FileStoreItem: %s", e)
             file_store_item = None
             download_url = NOT_AVAILABLE
+            data['filetype_Characteristics' + NodeIndex.GENERIC_SUFFIX] = ''
         else:
             data['filetype_Characteristics' + NodeIndex.GENERIC_SUFFIX] = \
-                file_store_item.get_filetype()
-            data.update(self._assay_data(node))
-
+                file_store_item.filetype
             download_url = file_store_item.get_datafile_url()
             if download_url is None:
                 if not file_store_item.import_task_id:
@@ -159,6 +158,8 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
                             download_url = NOT_AVAILABLE
                         else:
                             download_url = PENDING
+
+        data.update(self._assay_data(node))
 
         # create dynamic fields for each attribute
         for annotation in annotations:
