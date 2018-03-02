@@ -24,11 +24,14 @@ from tastypie.exceptions import NotFound
 from tastypie.test import ResourceTestCase
 
 from analysis_manager.models import AnalysisStatus
-from data_set_manager.models import Assay, Contact, Investigation, Node, Study
+from data_set_manager.models import (AnnotatedNode, Assay, Contact,
+                                     Investigation, Node, NodeCollection,
+                                     Study)
 from factory_boy.django_model_factories import (GalaxyInstanceFactory,
                                                 WorkflowEngineFactory,
                                                 WorkflowFactory)
-from factory_boy.utils import create_dataset_with_necessary_models
+from factory_boy.utils import (create_dataset_with_necessary_models,
+                               make_analyses_with_single_dataset)
 from file_store.models import FileStoreItem, FileType
 
 from .api import AnalysisResource
@@ -36,9 +39,9 @@ from .management.commands.create_user import init_user
 from .management.commands.import_annotations import \
     Command as ImportAnnotationsCommand
 from .models import (INPUT_CONNECTION, OUTPUT_CONNECTION, Analysis,
-                     AnalysisNodeConnection, AnalysisResult, DataSet,
-                     ExtendedGroup, InvestigationLink, Project, Tutorials,
-                     UserProfile, Workflow, WorkflowDataInputMap,
+                     AnalysisNodeConnection, AnalysisResult, BaseResource,
+                     DataSet, ExtendedGroup, InvestigationLink, Project,
+                     Tutorials, UserProfile, Workflow, WorkflowDataInputMap,
                      WorkflowEngine, invalidate_cached_object)
 from .search_indexes import DataSetIndex
 from .utils import (filter_nodes_uuids_in_solr, get_aware_local_time,
@@ -611,87 +614,46 @@ class WorkflowDeletionTest(TestCase):
 
 class DataSetDeletionTest(TestCase):
     """Testing for the deletion of Datasets"""
-
     def setUp(self):
+        self.models_to_be_removed = [
+            Analysis,
+            AnnotatedNode,
+            Assay,
+            DataSet,
+            FileStoreItem,
+            Investigation,
+            InvestigationLink,
+            Node,
+            NodeCollection,
+            Study
+        ]
         self.username = self.password = 'user'
         self.user = User.objects.create_user(
             self.username, '', self.password
         )
-        self.project = Project.objects.create()
-        self.galaxy_instance = GalaxyInstanceFactory()
-        self.isa_archive_file = FileStoreItem.objects.create(
-            datafile=SimpleUploadedFile(
-                'test_file.zip',
-                'Coffee is delicious!')
-        )
-        self.pre_isa_archive_file = FileStoreItem.objects.create(
-            datafile=SimpleUploadedFile(
-                'test_file.txt',
-                'Coffee is delicious!')
-        )
-        self.investigation = Investigation.objects.create(
-                isarchive_file=self.isa_archive_file.uuid,
-                pre_isarchive_file=self.pre_isa_archive_file.uuid
+        self.analyses, self.dataset = \
+            make_analyses_with_single_dataset(
+                1,
+                self.user
             )
 
-        self.workflow_engine = WorkflowEngine.objects.create(
-            instance=self.galaxy_instance
-        )
-        self.workflow = Workflow.objects.create(
-            name="Workflow1", workflow_engine=self.workflow_engine)
-        self.dataset_with_analysis = DataSet.objects.create(
-            name="dataset_with_analysis")
-        self.dataset_without_analysis = \
-            DataSet.objects.create(name="dataset_without_analysis")
-        self.investigation_link = \
-            InvestigationLink.objects.create(
-                investigation=self.investigation,
-                data_set=self.dataset_without_analysis)
+    def _assert_related_objects_exist(self):
+        for model in self.models_to_be_removed:
+            self.assertNotEqual(model.objects.count(), 0)
 
-        self.analysis = Analysis.objects.create(
-            name='bla',
-            summary='keks',
-            project=self.project,
-            data_set=self.dataset_with_analysis,
-            workflow=self.workflow,
-            status="SUCCESS"
-        )
-        self.analysis.set_owner(self.user)
+    def _assert_related_objects_removed(self):
+        for model in self.models_to_be_removed:
+            self.assertEqual(model.objects.count(), 0)
 
-    @mock.patch('core.models.DataSet.get_investigation_links', return_value=[])
-    def test_verify_dataset_deletion_if_no_analysis_run_upon_it(
-            self, mock_get_links
-    ):
-        self.assertIsNotNone(
-            DataSet.objects.get(name="dataset_without_analysis")
-        )
-        self.dataset_without_analysis.delete()
-        self.assertRaises(
-            DataSet.DoesNotExist,
-            DataSet.objects.get,
-            name="dataset_without_analysis"
-        )
+    def test_transaction_rollback_on_delete_failure(self):
+        with mock.patch.object(BaseResource, "delete", side_effect=Exception):
+            self.dataset.delete()
+        self._assert_related_objects_exist()
 
-    def test_verify_dataset_deletion_if_analysis_run_upon_it(self):
-        self.assertIsNotNone(
-            DataSet.objects.get(name="dataset_with_analysis"))
-        self.dataset_with_analysis.delete()
-        self.assertRaises(DataSet.DoesNotExist,
-                          DataSet.objects.get,
-                          name="dataset_with_analysis")
-
-    @mock.patch('core.models.DataSet.get_investigation_links', return_value=[])
-    def test_isa_archive_deletion(self, mock_get_links):
-        self.assertIsNotNone(self.dataset_without_analysis.get_isa_archive())
-        self.dataset_without_analysis.delete()
-        self.assertIsNone(self.dataset_without_analysis.get_isa_archive())
-
-    @mock.patch('core.models.DataSet.get_investigation_links', return_value=[])
-    def test_pre_isa_archive_deletion(self, mock_get_links):
-        self.assertIsNotNone(
-            self.dataset_without_analysis.get_pre_isa_archive())
-        self.dataset_without_analysis.delete()
-        self.assertIsNone(self.dataset_without_analysis.get_pre_isa_archive())
+    def test_dataset_deletion_removes_related_objects(self):
+        self._assert_related_objects_exist()
+        self.dataset.delete()
+        self._assert_related_objects_removed()
 
 
 class AnalysisTests(TestCase):
