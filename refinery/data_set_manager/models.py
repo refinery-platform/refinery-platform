@@ -154,6 +154,33 @@ class Investigation(NodeCollection):
     pre_isarchive_file = UUIDField(blank=True, null=True, auto=False)
 
     """easily retrieves the proper NodeCollection fields"""
+
+    @property
+    def is_isatab_based(self):
+        return True if self.isa_archive else False
+
+    @property
+    def isa_archive(self):
+        try:
+            return FileStoreItem.objects.get(uuid=self.isarchive_file)
+        except (FileStoreItem.DoesNotExist,
+                FileStoreItem.MultipleObjectsReturned) as e:
+            logger.error(
+                "Couldn't fetch Investigation: %s's FileStoreItem from UUID: "
+                "%s %s", self, self.isarchive_file, e
+            )
+
+    @property
+    def pre_isa_archive(self):
+        try:
+            return FileStoreItem.objects.get(uuid=self.pre_isarchive_file)
+        except (FileStoreItem.DoesNotExist,
+                FileStoreItem.MultipleObjectsReturned) as e:
+            logger.error(
+                "Couldn't fetch Investigation: %s's FileStoreItem from UUID: "
+                "%s %s", self, self.pre_isarchive_file, e
+            )
+
     def get_identifier(self):
         if (self.identifier is None) or (self.identifier.strip() == ""):
             # if there's no investigation identifier, then there's only 1 study
