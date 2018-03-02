@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -o errexit
 
+# This has no role in our current production deployment, but it does make
+# clear what is necessary for a public facing machine to talk to a docker host.
+
 die () {
     echo >&2 "$@"
     exit 1

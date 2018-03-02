@@ -14,7 +14,7 @@ provider "aws" {
 
 module "object_storage" {
   source           = "../modules/s3"
-  bucket_name_base = "${terraform.workspace}-${var.name}"
+  bucket_name_base = "${terraform.workspace}"
 }
 
 module "identity_pool" {
