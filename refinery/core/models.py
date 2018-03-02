@@ -552,21 +552,17 @@ class DataSet(SharableResource):
         pre_isa_archive associated with the DataSet if one exists.
         """
 
-        related_investigation_links = self.get_investigation_links()
-
-        for investigation_link in related_investigation_links:
-            node_collection = investigation_link.get_node_collection()
-            try:
-                node_collection.delete()
-            except Exception as e:
-                logger.error("Couldn't delete NodeCollection: %s", e)
-
         # terminate any running file import tasks
         for file_store_item in self.get_file_store_items():
             file_store_item.terminate_file_import_task()
 
+        related_investigation_links = self.get_investigation_links()
+
         try:
-            super(DataSet, self).delete()
+            with transaction.atomic():
+                for investigation_link in related_investigation_links:
+                    investigation_link.get_node_collection().delete()
+                super(DataSet, self).delete()
         except Exception as exc:
             return False, "DataSet {} could not be deleted: {}".format(
                 self.name, exc)
@@ -720,27 +716,15 @@ class DataSet(SharableResource):
             [item.get_file_size(report_symlinks=True) for item in file_items]
         )
 
-    def get_isa_archive(self):
-        """Returns the isa_archive that was used to create the DataSet"""
+    def get_metadata_as_file_store_item(self):
+        """Returns the FileStoreItem pointing to the isa/pre_isa archive that
+        was used to create the DataSet"""
         investigation = self.get_investigation()
-        try:
-            return FileStoreItem.objects.get(uuid=investigation.isarchive_file)
-        except (FileStoreItem.DoesNotExist,
-                FileStoreItem.MultipleObjectsReturned,
-                AttributeError) as e:
-            logger.debug("Couldn't fetch FileStoreItem: %s", e)
-
-    def get_pre_isa_archive(self):
-        """Returns the pre_isa_archive that was used to create the DataSet"""
-        investigation = self.get_investigation()
-        try:
-            return FileStoreItem.objects.get(
-                uuid=investigation.pre_isarchive_file
+        if investigation is not None:
+            return (
+                investigation.isa_archive if investigation.is_isatab_based
+                else investigation.pre_isa_archive
             )
-        except (FileStoreItem.DoesNotExist,
-                FileStoreItem.MultipleObjectsReturned,
-                AttributeError) as e:
-            logger.debug("Couldn't fetch FileStoreItem: %s", e)
 
     def share(self, group, readonly=True, readmetaonly=False):
         # change: !readonly & !readmetaonly, read: readonly & !readmetaonly
@@ -863,12 +847,7 @@ class InvestigationLink(models.Model):
         return retstr
 
     def get_node_collection(self):
-        try:
-            return NodeCollection.objects.get(
-                uuid=self.investigation.uuid)
-        except (NodeCollection.DoesNotExist,
-                NodeCollection.MultipleObjectsReturned) as e:
-            logger.error("Could not fetch NodeCollection: %s", e)
+        return NodeCollection.objects.get(uuid=self.investigation.uuid)
 
 
 class WorkflowDataInput(models.Model):
@@ -2168,14 +2147,12 @@ def _nodecollection_delete(sender, instance, **kwargs):
     """Finds all subclasses related to a DataSet's NodeCollections and deletes
     all FileStoreItem instances associated with the DataSet
     """
-    nodes = Node.objects.filter(study=instance)
-    for node in nodes:
-        try:
-            FileStoreItem.objects.get(uuid=node.file_uuid).delete()
-        except (FileStoreItem.DoesNotExist,
-                FileStoreItem.MultipleObjectsReturned) as exc:
-            logger.debug("Could not delete FileStoreItem with UUID '%s': %s",
-                         node.uuid, exc)
+    if type(instance) == Study:
+        nodes = Node.objects.filter(study=instance)
+        for node in nodes:
+            if node.file_uuid:
+                FileStoreItem.objects.get(uuid=node.file_uuid).delete()
+            node.delete()
 
 
 class AuthenticationFormUsernameOrEmail(AuthenticationForm):
