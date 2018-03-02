@@ -17,13 +17,13 @@ resource "aws_security_group" "allow_docker" {
     cidr_blocks = ["${var.vpc_cidr_block}"]
   }
 
-  ingress {
-    # Just for debugging TODO: Remove?
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = ["${var.vpc_cidr_block}"]
-  }
+  #ingress {
+  #  # Just for debugging TODO: Remove?
+  #  from_port   = 22
+  #  to_port     = 22
+  #  protocol    = "tcp"
+  #  cidr_blocks = ["${var.vpc_cidr_block}"]
+  #}
 
   egress {  # Implicit with AWS, but Terraform requires that it be explicit:
     from_port   = 0
@@ -56,7 +56,7 @@ sudo service docker restart
 EOF
 
   # systemd config based on https://success.docker.com/article/How_do_I_enable_the_remote_API_for_dockerd
-  
+
   tags {
     Name = "${var.name} (terraform docker host)"
   }

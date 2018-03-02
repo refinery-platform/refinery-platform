@@ -29,6 +29,8 @@ docker info | grep Name  # Ditto, but with dashes
 docker ps                # All docker commands should work
 
 # If there's a problem:
+# Uncomment the port 22 ingress in docker_host/main.tf, and re-apply.
+# Then:
 scp -i ~/.ssh/$KEY.pem ~/.ssh/$KEY.pem ubuntu@$REFINERY_HOST:$KEY.pem
 ssh ubuntu@$REFINERY_HOST -i ~/.ssh/$KEY.pem
 ssh ubuntu@$DOCKER_HOST -i $KEY.pem
