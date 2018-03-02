@@ -552,16 +552,6 @@ class DataSet(SharableResource):
         pre_isa_archive associated with the DataSet if one exists.
         """
 
-        try:
-            self.get_isa_archive().delete()
-        except AttributeError as e:
-            logger.debug("DataSet has no isa_archive to delete: %s", e)
-
-        try:
-            self.get_pre_isa_archive().delete()
-        except AttributeError as e:
-            logger.debug("DataSet has no pre_isa_archive to delete: %s", e)
-
         related_investigation_links = self.get_investigation_links()
 
         for investigation_link in related_investigation_links:
