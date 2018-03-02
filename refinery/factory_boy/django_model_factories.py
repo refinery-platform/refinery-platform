@@ -175,3 +175,10 @@ class FileExtensionFactory(factory.django.DjangoModelFactory):
     """Minimal representation of a FileExtension"""
     class Meta:
         model = "file_store.FileExtension"
+
+
+class FileStoreItemFactory(factory.django.DjangoModelFactory):
+    """Minimal representation of a FileStoreItem"""
+
+    class Meta:
+        model = "file_store.FileStoreItem"

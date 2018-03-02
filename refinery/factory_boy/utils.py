@@ -1,11 +1,11 @@
-from datetime import datetime
 import uuid as uuid_builtin
 
-from core.models import Analysis, DataSet, Node
+from core.models import Analysis, DataSet
 from factory_boy.django_model_factories import (AnalysisFactory,
                                                 AnnotatedNodeFactory,
                                                 AssayFactory, AttributeFactory,
                                                 DataSetFactory,
+                                                FileStoreItemFactory,
                                                 GalaxyInstanceFactory,
                                                 InvestigationFactory,
                                                 InvestigationLinkFactory,
@@ -34,7 +34,7 @@ def make_analyses_with_single_dataset(number_to_create, user_instance):
     workflow = WorkflowFactory(uuid=str(uuid_builtin.uuid4()),
                                workflow_engine=workflow_engine)
     project = ProjectFactory(is_catch_all=True)
-    dataset = create_dataset_with_necessary_models()
+    dataset = create_dataset_with_necessary_models(user=user_instance)
 
     while number_to_create:
         analysis_uuid = str(uuid_builtin.uuid4())
@@ -48,17 +48,16 @@ def make_analyses_with_single_dataset(number_to_create, user_instance):
 
         number_to_create -= 1
 
-    for dataset in DataSet.objects.all():
-        dataset.set_owner(user_instance)
-        dataset.save()
-
+    analyses = Analysis.objects.all()
     for analysis in Analysis.objects.all():
         analysis.set_owner(user_instance)
         analysis.save()
 
+    return analyses, dataset
+
 
 def create_dataset_with_necessary_models(
-        create_nodes=True, user=None, slug=None
+        create_nodes=True, is_isatab_based=False, user=None, slug=None
 ):
     """Create Dataset with InvestigationLink, Investigation, Study,
     and Assay"""
@@ -70,14 +69,18 @@ def create_dataset_with_necessary_models(
         slug=slug
     )
 
-    investigation_uuid = str(uuid_builtin.uuid4())
-    investigation = InvestigationFactory(uuid=investigation_uuid)
+    file_store_item = FileStoreItemFactory(
+        uuid=str(uuid_builtin.uuid4()),
+        source="http://www.example.com/test.{}".format(
+            "zip" if is_isatab_based else "csv"
+        )
+    )
 
-    InvestigationLinkFactory(
-        data_set=dataset,
-        investigation=investigation,
-        version=1,
-        date=datetime.now()
+    investigation_uuid = str(uuid_builtin.uuid4())
+    investigation = InvestigationFactory(
+        uuid=investigation_uuid,
+        isarchive_file=file_store_item.uuid if is_isatab_based else None,
+        pre_isarchive_file=None if is_isatab_based else file_store_item.uuid
     )
 
     study_uuid = str(uuid_builtin.uuid4())
@@ -85,6 +88,17 @@ def create_dataset_with_necessary_models(
         uuid=study_uuid,
         investigation=investigation,
         description="This is a great DataSet"
+    )
+
+    InvestigationLinkFactory(
+        data_set=dataset,
+        investigation=investigation,
+        version=1
+    )
+
+    NodeFactory(
+        study=study,
+        file_uuid=file_store_item.uuid
     )
 
     assay_uuid = str(uuid_builtin.uuid4())
@@ -95,8 +109,14 @@ def create_dataset_with_necessary_models(
 
     if create_nodes:
         for i in xrange(2):
+            file_store_item_uuid = str(uuid_builtin.uuid4())
+            file_store_item = FileStoreItemFactory(
+                uuid=file_store_item_uuid,
+                source="http://www.example.com/test{}.txt".format(i)
+            )
             node = NodeFactory(
-                study=study
+                study=study,
+                file_uuid=file_store_item.uuid
             )
             attribute = AttributeFactory(
                 node=node
@@ -106,7 +126,7 @@ def create_dataset_with_necessary_models(
                 assay=assay,
                 node=node,
                 node_name='AnnotatedNode-{}'.format(i),
-                node_type=Node.RAW_DATA_FILE,
+                node_type=node.type,
                 attribute=attribute
             )
 
