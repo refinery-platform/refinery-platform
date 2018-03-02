@@ -111,7 +111,7 @@
       var filters = Object.keys(userFileFiltersService).map(function (internalName) {
         var fields = userFileFiltersService[internalName];
         var queryStr = fields.map(function (field) {
-          return '(' + internalName + ':' + field + ')';
+          return '(' + internalName + ':' + '"' + field + '")';
         }).join(' OR ');
         return ('(') + queryStr + (')');
       });
