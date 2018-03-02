@@ -1252,99 +1252,71 @@ class DataSetResourceTest(LoginResourceTestCase):
         self.user_catch_all_project = UserProfile.objects.get(
             user=self.user
         ).catch_all_project
-        self.dataset = DataSet.objects.create(name="Dataset 1")
-        self.dataset2 = DataSet.objects.create(name="Dataset 2")
-        self.galaxy_instance = GalaxyInstanceFactory()
-        self.workflow_engine = WorkflowEngine.objects.create(
-            instance=self.galaxy_instance
+        self.tabular_dataset = create_dataset_with_necessary_models(
+            user=self.user
         )
-        self.workflow = Workflow.objects.create(
-            workflow_engine=self.workflow_engine
+        self.isatab_dataset = create_dataset_with_necessary_models(
+            user=self.user2,
+            is_isatab_based=True
         )
-        self.investigation = Investigation.objects.create()
-        self.study = Study.objects.create(investigation=self.investigation)
-        self.assay = Assay.objects.create(
-            study=self.study)
-        self.investigation_link = \
-            InvestigationLink.objects.create(
-                investigation=self.investigation,
-                data_set=self.dataset,
-                version=1
-            )
+        self.incomplete_dataset = create_dataset_with_necessary_models(
+            user=self.user
+        )
+        # Delete InvestigationLink to simulate a Dataset that hasn't finished
+        # being created
+        self.incomplete_dataset.get_latest_investigation_link().delete()
 
     def test_get_dataset(self):
         """Test retrieving an existing Dataset that belongs to a user who
         created it
         """
-
-        self.dataset.set_owner(self.user)
-
-        dataset_uri = make_api_uri(
-            "data_sets", self.dataset.uuid)
+        dataset_uri = make_api_uri("data_sets", self.tabular_dataset.uuid)
         response = self.api_client.get(
             dataset_uri,
             format='json'
         )
         self.assertValidJSONResponse(response)
         data = self.deserialize(response)
-        self.assertEqual(data['uuid'], self.dataset.uuid)
+        self.assertEqual(data['uuid'], self.tabular_dataset.uuid)
 
     def test_get_dataset_expecting_analyses(self):
-        a1 = Analysis.objects.create(
-            name='a1',
-            project=self.user_catch_all_project,
-            data_set=self.dataset,
-            workflow=self.workflow
-        )
-        a2 = Analysis.objects.create(
-            name='a2',
-            project=self.user_catch_all_project,
-            data_set=self.dataset,
-            workflow=self.workflow
+        analyses_to_create = 2
+        analyses, dataset = make_analyses_with_single_dataset(
+            analyses_to_create,
+            self.user
         )
 
-        a1.set_owner(self.user)
-        a2.set_owner(self.user)
-
-        dataset_uri = make_api_uri("data_sets",
-                                   self.dataset.uuid)
+        dataset_uri = make_api_uri("data_sets", dataset.uuid)
         response = self.api_client.get(dataset_uri, format='json')
         self.assertValidJSONResponse(response)
         data = self.deserialize(response)
-        self.assertEqual(data['uuid'], self.dataset.uuid)
-        self.assertEqual(len(data['analyses']), 2)
+        self.assertEqual(data['uuid'], dataset.uuid)
+        self.assertEqual(len(data['analyses']), analyses_to_create)
 
-        sorted_analyses = sorted(data['analyses'], key=lambda x: x["name"])
-        for analysis in sorted_analyses:
+        for analysis in data['analyses']:
             self.assertTrue(analysis['is_owner'])
             self.assertEqual(analysis['owner'],
                              UserProfile.objects.get(user=self.user).uuid)
-        self.assertEqual(sorted_analyses[0]['status'], a1.status)
-        self.assertEqual(sorted_analyses[0]['name'], a1.name)
-        self.assertEqual(sorted_analyses[0]['uuid'], a1.uuid)
-        self.assertEqual(sorted_analyses[1]['status'], a2.status)
-        self.assertEqual(sorted_analyses[1]['name'], a2.name)
-        self.assertEqual(sorted_analyses[1]['uuid'], a2.uuid)
+            self.assertIsNotNone(analysis.get('status'))
+            self.assertIsNotNone(analysis.get('name'))
+            self.assertIsNotNone(analysis.get('uuid'))
 
     def test_get_dataset_expecting_no_analyses(self):
-        dataset_uri = make_api_uri("data_sets",
-                                   self.dataset.uuid)
+        dataset_uri = make_api_uri("data_sets", self.tabular_dataset.uuid)
         response = self.api_client.get(
             dataset_uri,
             format='json'
         )
         self.assertValidJSONResponse(response)
         data = self.deserialize(response)
-        self.assertEqual(data['uuid'], self.dataset.uuid)
+        self.assertEqual(data['uuid'], self.tabular_dataset.uuid)
         self.assertEqual(data['analyses'], [])
 
     def test_detail_response_with_complete_dataset(self):
         # Properly created DataSets will have version information
-        self.dataset.set_owner(self.user)
-
         dataset_uri = make_api_uri(
             "data_sets",
-            self.dataset.uuid
+            self.tabular_dataset.uuid
         )
         response = self.api_client.get(
             dataset_uri,
@@ -1356,11 +1328,9 @@ class DataSetResourceTest(LoginResourceTestCase):
 
     def test_detail_response_yields_error_if_incomplete_dataset(self):
         # DataSets that aren't fully created will yield informative errors
-        self.dataset2.set_owner(self.user)
-
         dataset_uri = make_api_uri(
             "data_sets",
-            self.dataset2.uuid
+            self.incomplete_dataset.uuid
         )
         with self.assertRaises(NotFound):
             self.api_client.get(dataset_uri, format='json')
