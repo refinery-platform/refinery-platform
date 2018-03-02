@@ -1108,7 +1108,7 @@ def get_file_url_from_node_uuid(node_uuid):
                 )
             )
         else:
-            return core.utils.get_full_url(url)
+            return core.utils.get_absolute_url(url)
 
 
 def fix_last_column(file):

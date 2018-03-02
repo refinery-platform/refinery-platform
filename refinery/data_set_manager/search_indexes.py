@@ -113,9 +113,7 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
         id_suffix = "_" + id_suffix + "_s"
 
         try:
-            file_store_item = FileStoreItem.objects.get(
-                uuid=node.file_uuid
-            )
+            file_store_item = FileStoreItem.objects.get(uuid=node.file_uuid)
         except(FileStoreItem.DoesNotExist,
                FileStoreItem.MultipleObjectsReturned) as e:
             logger.error("Couldn't properly fetch FileStoreItem: %s", e)
@@ -208,7 +206,7 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
                 node.name,
             NodeIndex.FILETYPE_PREFIX + id_suffix:
                 "" if file_store_item is None
-                else file_store_item.get_filetype(),
+                else file_store_item.filetype,
             NodeIndex.ANALYSIS_UUID_PREFIX + id_suffix:
                 NOT_AVAILABLE if node.get_analysis() is None
                 else node.get_analysis().name,

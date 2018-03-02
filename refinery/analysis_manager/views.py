@@ -11,9 +11,8 @@ from django.http import (HttpResponse, HttpResponseBadRequest,
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 
-from core.models import Analysis, Workflow, WorkflowEngine
+from core.models import Analysis, Workflow
 from core.views import custom_error_page
-from workflow_manager.tasks import get_workflows
 
 from .models import AnalysisStatus
 from .tasks import run_analysis
@@ -114,26 +113,6 @@ def analysis_cancel(request):
         else:
             return HttpResponseForbidden()  # 403
     return HttpResponseNotAllowed(['POST'])  # 405
-
-
-def update_workflows(request):
-    """ajax function for updating available workflows from galaxy"""
-    logger.debug("analysis_manager.views.update_workflows")
-    if request.is_ajax():
-        workflow_engines = WorkflowEngine.objects.all()
-        workflows = 0
-        for engine in workflow_engines:
-            # function for updating workflows from galaxy instance
-            get_workflows(engine)
-            new_workflow_count = engine.workflow_set.all().count()
-            logger.debug("Engine: %s - %s workflows after",
-                         engine.name, str(new_workflow_count))
-            workflows += new_workflow_count
-        # getting updated available workflows
-        workflows = Workflow.objects.all()
-
-        return JsonResponse(workflows, content_type='application/javascript')
-    return HttpResponse(status=400)
 
 
 def get_workflow_data_input_map(request, workflow_uuid):

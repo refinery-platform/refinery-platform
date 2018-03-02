@@ -1,10 +1,9 @@
 from django.conf import settings
 from django.conf.urls import include, url
 
-from django_docker_engine.proxy import Proxy
 from rest_framework.routers import DefaultRouter
 
-from .views import ToolDefinitionsViewSet, ToolsViewSet
+from .views import AutoRelaunchProxy, ToolDefinitionsViewSet, ToolsViewSet
 
 # DRF url routing
 tool_manager_router = DefaultRouter()
@@ -15,12 +14,7 @@ tool_manager_router.register(
     base_name="tooldefinition"
 )
 
-url_patterns = Proxy(
-    settings.DJANGO_DOCKER_ENGINE_DATA_DIR
-    # please_wait_title='optional title'
-    # please_wait_body='optional html body'
-).url_patterns()
 django_docker_engine_url = url(
     r'^{}/'.format(settings.DJANGO_DOCKER_ENGINE_BASE_URL),
-    include(url_patterns)
+    include(AutoRelaunchProxy().url_patterns())
 )
