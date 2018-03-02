@@ -2377,3 +2377,26 @@ class UpdateMissingAttributeOrderTests(TestMigrations):
             self.assertEqual(0, attribute_order.rank)
             self.assertEqual(NodeIndex.DOWNLOAD_URL,
                              attribute_order.solr_field)
+
+
+class InvestigationTests(TestCase):
+    def setUp(self):
+        self.isa_tab_dataset = create_dataset_with_necessary_models(
+            is_isatab_based=True
+        )
+        self.tabular_dataset = create_dataset_with_necessary_models()
+
+    def test_isa_archive_deletion(self):
+        self.assertIsNotNone(
+            self.isa_tab_dataset.get_metadata_as_file_store_item())
+        self.isa_tab_dataset.get_investigation().delete()
+        self.assertIsNone(
+            self.isa_tab_dataset.get_metadata_as_file_store_item())
+
+    def test_pre_isa_archive_deletion(self):
+
+        self.assertIsNotNone(
+            self.tabular_dataset.get_metadata_as_file_store_item())
+        self.tabular_dataset.get_investigation().delete()
+        self.assertIsNone(
+            self.tabular_dataset.get_metadata_as_file_store_item())
