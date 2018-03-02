@@ -667,9 +667,8 @@ def generate_solr_params(
 
     if facets_from_config:
         # Twice as many facets as necessary, but easier than the alternative.
-        facet_template = '&facet.field={0}_Characteristics{1}' \
-                         '&facet.field={0}_Factor_Value{1}'
-        facet_field = ''.join(
+        facet_template = '{0}_Characteristics{1},{0}_Factor_Value{1}'
+        facet_field = ','.join(
             [facet_template.format(s, NodeIndex.GENERIC_SUFFIX) for s
              in settings.USER_FILES_FACETS.split(",")]
         )

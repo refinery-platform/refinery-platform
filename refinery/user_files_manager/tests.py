@@ -110,6 +110,7 @@ class UserFilesUtilsTests(TestCase):
         assay_uuid = Assay.objects.get(study=dataset.get_latest_study()).uuid
 
         query = generate_solr_params_for_user(QueryDict({}), user.id)
+
         self.assertEqual(str(query).split('&'), [
                          'fq=assay_uuid%3A%28{}%29'.format(assay_uuid),
                          'fl=%2A_generic_s'
