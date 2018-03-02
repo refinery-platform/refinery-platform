@@ -11,8 +11,8 @@ resource "aws_security_group" "allow_ssh" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  egress {  # Implicit with AWS, but Terraform requires that it be explicit:
-    from_port   = 0
+  egress {
+    from_port   = 0             # Implicit with AWS, but Terraform requires that it be explicit:
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
@@ -31,7 +31,8 @@ resource "aws_instance" "refinery_host" {
   instance_type          = "t2.micro"
   key_name               = "${var.key_name}"
   vpc_security_group_ids = ["${aws_security_group.allow_ssh.id}"]
-  user_data              = <<EOF
+
+  user_data = <<EOF
 #!/bin/bash
 set -o errexit
 set -o verbose

@@ -26,22 +26,22 @@ variable "name" {
 # block of 10.0.0.0/25 or smaller.
 
 variable "vpc_cidr_block" {
-  type = "string"
+  type    = "string"
   default = "10.0.0.0/24"
 }
 
 variable "public_cidr_block" {
-  type = "string"
+  type    = "string"
   default = "10.0.0.0/25"
 }
 
 variable "private_cidr_block" {
-  type = "string"
+  type    = "string"
   default = "10.0.0.128/25"
 }
 
 variable "refinery_host_count" {
-  type = "string"
+  type    = "string"
   default = "0"
 }
 

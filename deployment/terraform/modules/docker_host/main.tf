@@ -25,13 +25,12 @@ resource "aws_security_group" "allow_docker" {
   #  cidr_blocks = ["${var.vpc_cidr_block}"]
   #}
 
-  egress {  # Implicit with AWS, but Terraform requires that it be explicit:
-    from_port   = 0
+  egress {
+    from_port   = 0             # Implicit with AWS, but Terraform requires that it be explicit:
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
-
   tags {
     Name = "${var.security_group_name}"
   }
@@ -43,7 +42,8 @@ resource "aws_instance" "docker_host" {
   instance_type          = "t2.micro"
   vpc_security_group_ids = ["${aws_security_group.allow_docker.id}"]
   key_name               = "${var.key_name}"
-  user_data              = <<EOF
+
+  user_data = <<EOF
 #!/bin/bash
 set -o errexit
 set -o verbose

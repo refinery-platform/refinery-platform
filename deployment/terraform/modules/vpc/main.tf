@@ -20,9 +20,9 @@ resource "aws_subnet" "public_subnet" {
 }
 
 resource "aws_subnet" "private_subnet" {
-  vpc_id                  = "${aws_vpc.vpc.id}"
-  cidr_block              = "${var.private_cidr_block}"
-  availability_zone       = "${var.availability_zone}"
+  vpc_id            = "${aws_vpc.vpc.id}"
+  cidr_block        = "${var.private_cidr_block}"
+  availability_zone = "${var.availability_zone}"
 
   tags {
     Name = "${var.name} (terraform private)"
@@ -31,6 +31,7 @@ resource "aws_subnet" "private_subnet" {
 
 resource "aws_internet_gateway" "public_gateway" {
   vpc_id = "${aws_vpc.vpc.id}"
+
   tags {
     Name = "${var.name} (terraform)"
   }
