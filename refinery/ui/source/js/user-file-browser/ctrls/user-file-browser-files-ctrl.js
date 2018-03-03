@@ -87,7 +87,6 @@
 
     gridOptionsService.appScopeProvider = vm;
     vm.downloadCsvQuery = function () {
-      console.log(createFacetQuery());
       return $httpParamSerializer({
         fq: createFacetQuery(),
         sort: userFileParamsService.sort()
