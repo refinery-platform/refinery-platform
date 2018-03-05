@@ -1505,6 +1505,10 @@ class DataSetTests(TestCase):
         Node.objects.all().delete()
         self.assertQuerysetEqual(self.isa_tab_dataset.get_node_uuids(), [])
 
+    def test_is_isatab_based(self):
+        self.assertTrue(self.isa_tab_dataset.is_isatab_based)
+        self.assertFalse(self.tabular_dataset.is_isatab_based)
+
 
 class APIV2TestCase(APITestCase):
     def setUp(self, **kwargs):

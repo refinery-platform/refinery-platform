@@ -2389,10 +2389,6 @@ class InvestigationTests(TestCase):
         self.tabular_dataset = create_dataset_with_necessary_models()
         self.tabular_investigation = self.tabular_dataset.get_investigation()
 
-    def test_is_isatab_based(self):
-        self.assertTrue(self.isa_tab_investigation.is_isatab_based)
-        self.assertFalse(self.tabular_investigation.is_isatab_based)
-
     def test_isa_archive(self):
         self.assertIsNotNone(self.isa_tab_investigation.isa_archive)
         self.assertIsNone(self.tabular_investigation.isa_archive)
