@@ -1505,6 +1505,14 @@ class DataSetTests(TestCase):
         Node.objects.all().delete()
         self.assertQuerysetEqual(self.isa_tab_dataset.get_node_uuids(), [])
 
+    def test_get_metadata_as_file_store_item(self):
+        self.assertIsNotNone(
+            self.isa_tab_dataset.get_metadata_as_file_store_item()
+        )
+        self.assertIsNotNone(
+            self.tabular_dataset.get_metadata_as_file_store_item()
+        )
+
     def test_is_isatab_based(self):
         self.assertTrue(self.isa_tab_dataset.is_isatab_based)
         self.assertFalse(self.tabular_dataset.is_isatab_based)
