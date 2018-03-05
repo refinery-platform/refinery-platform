@@ -523,34 +523,8 @@ class DataSet(SharableResource):
         super(DataSet, self).save(*args, **kwargs)
 
     def delete(self, **kwargs):
-        """
-        Overrides the DataSet model's delete method.
-
-        Deletes NodeCollection and related object based on uuid of
-        Investigations linked to the DataSet.
-        This deletes Studys, Assays and Investigations in
-        addition to the related objects detected by Django.
-
-        This method will also delete the isa_archive or
-        pre_isa_archive associated with the DataSet if one exists.
-        """
-
-        # terminate any running file import tasks
-        for file_store_item in self.get_file_store_items():
-            file_store_item.terminate_file_import_task()
-
-        related_investigation_links = self.get_investigation_links()
-
         try:
-            with transaction.atomic():
-                # delete FileStoreItem and datafile corresponding to the
-                # metadata file used to generate the DataSet
-                self.get_metadata_as_file_store_item().delete()
-
-                for investigation_link in related_investigation_links:
-                    investigation_link.get_node_collection().delete()
-
-                super(DataSet, self).delete()
+            super(DataSet, self).delete()
         except Exception as exc:
             return False, "DataSet {} could not be deleted: {}".format(
                 self.name, exc)
@@ -806,6 +780,29 @@ class DataSet(SharableResource):
 
 @receiver(pre_delete, sender=DataSet)
 def _dataset_delete(sender, instance, *args, **kwargs):
+    """
+    Removes a DataSet's related objects upon deletion being triggered.
+    Having these extra checks is favored within a signal so that this logic
+    is picked up on bulk deletes as well.
+
+    See: https://docs.djangoproject.com/en/1.8/topics/db/models/
+    #overriding-model-methods
+    """
+
+    # terminate any running file import tasks
+    for file_store_item in instance.get_file_store_items():
+        file_store_item.terminate_file_import_task()
+
+    related_investigation_links = instance.get_investigation_links()
+
+    with transaction.atomic():
+        # delete FileStoreItem and datafile corresponding to the
+        # metadata file used to generate the DataSet
+        instance.get_metadata_as_file_store_item().delete()
+
+        for investigation_link in related_investigation_links:
+            investigation_link.get_node_collection().delete()
+
     delete_data_set_index(instance)
     delete_data_set_neo4j(instance.uuid)
     async_update_annotation_sets_neo4j()
