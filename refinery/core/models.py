@@ -779,7 +779,7 @@ class DataSet(SharableResource):
 
     @property
     def is_isatab_based(self):
-        return True if self.get_investigation().isa_archive else False
+        return bool(self.get_investigation().isa_archive)
 
 
 @receiver(pre_delete, sender=DataSet)
