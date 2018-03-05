@@ -489,7 +489,7 @@ class CachingTest(TestCase):
         )
         self.public_group_name = ExtendedGroup.objects.public_group().name
         for index, item in enumerate(range(0, 6)):
-            DataSet.objects.create(slug="TestSlug%d" % index)
+            create_dataset_with_necessary_models(slug="TestSlug%d" % index)
         # Adding to cache
         cache.add("{}-DataSet".format(self.user.id), DataSet.objects.all())
 
@@ -1585,28 +1585,8 @@ class DataSetApiV2Tests(APIV2TestCase):
         )
 
         # Create Datasets
-        self.dataset = DataSet.objects.create(
-            name="coffee dataset",
-            title="coffee dataset"
-        )
-        self.dataset2 = DataSet.objects.create(
-            name="cool dataset",
-            title="cool dataset"
-        )
-
-        # Set Data Sets Owner
-        self.dataset.set_owner(self.user)
-        self.dataset2.set_owner(self.user)
-
-        # Create Investigation/InvestigationLinks for the DataSets
-        self.investigation = Investigation.objects.create()
-
-        # Create Studys and Assays
-        self.study = Study.objects.create(investigation=self.investigation)
-        self.assay = Assay.objects.create(study=self.study)
-
-        # Create Nodes
-        self.node = Node.objects.create(assay=self.assay, study=self.study)
+        self.dataset = create_dataset_with_necessary_models(user=self.user)
+        self.dataset2 = create_dataset_with_necessary_models(user=self.user)
 
         self.node_json = json.dumps([{
             "uuid": "cfb31cca-4f58-4ef0-b1e2-4469c804bf73",
