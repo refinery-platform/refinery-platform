@@ -518,12 +518,10 @@ class DataSetResource(SharableResourceAPIInterface, ModelResource):
             except:
                 pass
 
-        investigation = bundle.obj.get_investigation()
-        if investigation is not None:
             metadata_file_store_item = \
                 bundle.obj.get_metadata_as_file_store_item()
 
-            if investigation.is_isatab_based:
+            if bundle.obj.is_isatab_based:
                 bundle.data["isa_archive"] = metadata_file_store_item.uuid
                 bundle.data["isa_archive_url"] = \
                     metadata_file_store_item.get_datafile_url()

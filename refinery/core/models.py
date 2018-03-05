@@ -682,11 +682,10 @@ class DataSet(SharableResource):
         """Returns the FileStoreItem pointing to the isa/pre_isa archive that
         was used to create the DataSet"""
         investigation = self.get_investigation()
-        if investigation is not None:
-            return (
-                investigation.isa_archive if investigation.is_isatab_based
-                else investigation.pre_isa_archive
-            )
+        return (
+            investigation.isa_archive if self.is_isatab_based
+            else investigation.pre_isa_archive
+        )
 
     def share(self, group, readonly=True, readmetaonly=False):
         # change: !readonly & !readmetaonly, read: readonly & !readmetaonly
@@ -776,6 +775,10 @@ class DataSet(SharableResource):
 
     def get_node_uuids(self):
         return self.get_nodes().values_list('uuid', flat=True)
+
+    @property
+    def is_isatab_based(self):
+        return True if self.get_investigation().isa_archive else False
 
 
 @receiver(pre_delete, sender=DataSet)

@@ -157,11 +157,11 @@ class Investigation(NodeCollection):
 
     @property
     def isa_archive(self):
-        self._get_file_store_item(self.isarchive_file)
+        return self._get_file_store_item(self.isarchive_file)
 
     @property
     def pre_isa_archive(self):
-        self._get_file_store_item(self.pre_isarchive_file)
+        return self._get_file_store_item(self.pre_isarchive_file)
 
     def _get_file_store_item(self, file_store_item_uuid):
         try:
