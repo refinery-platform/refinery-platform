@@ -57,7 +57,8 @@ def make_analyses_with_single_dataset(number_to_create, user_instance):
 
 
 def create_dataset_with_necessary_models(
-        create_nodes=True, is_isatab_based=False, user=None, slug=None
+        create_nodes=True, is_isatab_based=False, user=None, slug=None,
+        latest_version=1
 ):
     """Create Dataset with InvestigationLink, Investigation, Study,
     and Assay"""
@@ -69,42 +70,16 @@ def create_dataset_with_necessary_models(
         slug=slug
     )
 
-    file_store_item = FileStoreItemFactory(
-        uuid=str(uuid_builtin.uuid4()),
-        source="http://www.example.com/test.{}".format(
-            "zip" if is_isatab_based else "csv"
-        )
-    )
-
-    investigation_uuid = str(uuid_builtin.uuid4())
-    investigation = InvestigationFactory(
-        uuid=investigation_uuid,
-        isarchive_file=file_store_item.uuid if is_isatab_based else None,
-        pre_isarchive_file=None if is_isatab_based else file_store_item.uuid,
-        identifier="{}: Investigation identifier".format(dataset),
-        description="{}: Investigation description".format(dataset),
-        title="{}: Investigation title".format(dataset)
-    )
-
-    study_uuid = str(uuid_builtin.uuid4())
-    study = StudyFactory(
-        uuid=study_uuid,
-        investigation=investigation,
-        identifier="{}: Study identifier".format(dataset),
-        description="{}: Study description".format(dataset),
-        title="{}: Study title".format(dataset)
-    )
-
-    InvestigationLinkFactory(
-        data_set=dataset,
-        investigation=investigation,
-        version=1
+    latest_study = _create_dataset_objects(
+        dataset,
+        is_isatab_based,
+        latest_version
     )
 
     assay_uuid = str(uuid_builtin.uuid4())
     assay = AssayFactory(
         uuid=assay_uuid,
-        study=study
+        study=latest_study
     )
 
     if create_nodes:
@@ -115,14 +90,14 @@ def create_dataset_with_necessary_models(
                 source="http://www.example.com/test{}.txt".format(i)
             )
             node = NodeFactory(
-                study=study,
+                study=latest_study,
                 file_uuid=file_store_item.uuid
             )
             attribute = AttributeFactory(
                 node=node
             )
             AnnotatedNodeFactory(
-                study=study,
+                study=latest_study,
                 assay=assay,
                 node=node,
                 node_name='AnnotatedNode-{}'.format(i),
@@ -135,3 +110,39 @@ def create_dataset_with_necessary_models(
         dataset.save()
 
     return dataset
+
+
+def _create_dataset_objects(dataset, is_isatab_based, latest_version):
+    for i in xrange(1, latest_version+1):
+        file_store_item = FileStoreItemFactory(
+            uuid=str(uuid_builtin.uuid4()),
+            source="http://www.example.com/test.{}".format(
+                "zip" if is_isatab_based else "csv"
+            )
+        )
+        investigation_uuid = str(uuid_builtin.uuid4())
+        investigation = InvestigationFactory(
+            uuid=investigation_uuid,
+            isarchive_file=file_store_item.uuid if is_isatab_based else None,
+            pre_isarchive_file=(
+                None if is_isatab_based else file_store_item.uuid
+            ),
+            identifier="{}: Investigation identifier".format(dataset),
+            description="{}: Investigation description".format(dataset),
+            title="{}: Investigation title".format(dataset)
+        )
+
+        study_uuid = str(uuid_builtin.uuid4())
+        study = StudyFactory(
+            uuid=study_uuid,
+            investigation=investigation,
+            identifier="{}: Study identifier".format(dataset),
+            description="{}: Study description".format(dataset),
+            title="{}: Study title".format(dataset)
+        )
+        InvestigationLinkFactory(
+            data_set=dataset,
+            investigation=investigation,
+            version=i
+        )
+    return study

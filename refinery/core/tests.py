@@ -1409,151 +1409,101 @@ class DataSetTests(TestCase):
         self.user_catch_all_project = UserProfile.objects.get(
             user=self.user
         ).catch_all_project
-        self.dataset = DataSet.objects.create()
-        self.dataset2 = DataSet.objects.create()
-        self.galaxy_instance = GalaxyInstanceFactory()
-        self.workflow_engine = WorkflowEngine.objects.create(
-            instance=self.galaxy_instance
-        )
-        self.workflow = Workflow.objects.create(
-            workflow_engine=self.workflow_engine
-        )
-        self.investigation = Investigation.objects.create()
-        self.latest_investigation = Investigation.objects.create()
 
-        self.study = Study.objects.create(
-            investigation=self.latest_investigation
+        self.isa_tab_dataset = create_dataset_with_necessary_models(
+            is_isatab_based=True,
+            user=self.user
         )
-        self.assay = Assay.objects.create(
-            study=self.study
+        self.latest_tabular_dataset_version = 3
+        self.tabular_dataset = create_dataset_with_necessary_models(
+            user=self.user2,
+            latest_version=self.latest_tabular_dataset_version
         )
-        self.investigation_link = InvestigationLink.objects.create(
-            investigation=self.investigation,
-            data_set=self.dataset,
-            version=1
+        self.incomplete_dataset = create_dataset_with_necessary_models(
+            user=self.user
         )
-        self.latest_investigation_link = InvestigationLink.objects.create(
-            investigation=self.latest_investigation,
-            data_set=self.dataset,
-            version=2
-        )
-
-        self.file_store_item = FileStoreItem.objects.create(
-            datafile=SimpleUploadedFile(
-                'test_file.txt',
-                'Coffee is delicious!'
-            )
-        )
-        self.file_store_item1 = FileStoreItem.objects.create(
-            datafile=SimpleUploadedFile(
-                'test_file.txt',
-                'Coffee is delicious!'
-            )
-        )
-        self.file_store_item2 = FileStoreItem.objects.create(
-            datafile=SimpleUploadedFile(
-                'test_file.txt',
-                'Coffee is delicious!'
-            )
-        )
-        self.node = Node.objects.create(
-            name="n0", assay=self.assay, study=self.study,
-            file_uuid=self.file_store_item.uuid)
-        self.node1 = Node.objects.create(
-            name="n1", assay=self.assay, study=self.study,
-            file_uuid=self.file_store_item1.uuid)
-        self.node2 = Node.objects.create(
-            name="n2", assay=self.assay, study=self.study,
-            file_uuid=self.file_store_item2.uuid)
-        self.node3 = Node.objects.create(
-            name="n3", assay=self.assay, study=self.study)
-        self.node4 = Node.objects.create(
-            name="n4", assay=self.assay, study=self.study)
+        # Delete InvestigationLink to simulate a Dataset that hasn't finished
+        # being created
+        self.incomplete_dataset.get_latest_investigation_link().delete()
 
     def test_get_studies(self):
-        studies = self.dataset.get_studies()
+        studies = self.isa_tab_dataset.get_studies()
         self.assertEqual(len(studies), 1)
 
     def test_get_assays(self):
-        assays = self.dataset.get_assays()
+        assays = self.isa_tab_dataset.get_assays()
         self.assertEqual(len(assays), 1)
 
     def test_get_file_store_items(self):
-        file_store_items = self.dataset.get_file_store_items()
+        file_store_items = self.isa_tab_dataset.get_file_store_items()
         self.assertEqual(len(file_store_items), 3)
-        self.assertIn(self.file_store_item, file_store_items)
-        self.assertIn(self.file_store_item1, file_store_items)
-        self.assertIn(self.file_store_item2, file_store_items)
 
     def test_dataset_complete(self):
-        self.assertTrue(self.dataset.is_valid())
+        self.assertTrue(self.isa_tab_dataset.is_valid())
 
     def test_dataset_incomplete(self):
-        self.assertFalse(self.dataset2.is_valid())
+        self.assertFalse(self.incomplete_dataset.is_valid())
 
     def test_neo4j_called_on_post_save(self):
         with mock.patch(
             "core.models.async_update_annotation_sets_neo4j"
         ) as neo4j_mock:
-            self.dataset.save()
+            self.isa_tab_dataset.save()
             self.assertTrue(neo4j_mock.called)
 
     def test_solr_called_on_post_save(self):
         with mock.patch(
             "core.models.update_data_set_index"
         ) as solr_mock:
-            self.dataset.save()
+            self.isa_tab_dataset.save()
             self.assertTrue(solr_mock.called)
 
     def test_get_latest_investigation_link(self):
         self.assertEqual(
-            self.dataset.get_latest_investigation_link(),
-            self.latest_investigation_link
+            self.tabular_dataset.get_latest_investigation_link().version,
+            self.latest_tabular_dataset_version
         )
 
     def test_get_latest_investigation(self):
         self.assertEqual(
-            self.dataset.get_latest_investigation_link().investigation,
-            self.latest_investigation
+            self.isa_tab_dataset.get_latest_investigation_link().investigation,
+            self.isa_tab_dataset.get_investigation()
         )
 
     def test_get_latest_study(self):
-        dataset = create_dataset_with_necessary_models()
         self.assertEqual(
-            dataset.get_latest_study(),
+            self.isa_tab_dataset.get_latest_study(),
             Study.objects.get(
-                investigation=(
-                    dataset.get_latest_investigation_link().investigation
-                )
+                investigation=self.isa_tab_dataset.
+                get_latest_investigation_link().investigation
             )
         )
 
     def test_get_latest_study_no_studies(self):
-        dataset = create_dataset_with_necessary_models()
-        dataset.get_latest_study().delete()
+        self.isa_tab_dataset.get_latest_study().delete()
         with self.assertRaises(RuntimeError) as context:
-            dataset.get_latest_study()
+            self.isa_tab_dataset.get_latest_study()
             self.assertIn("Couldn't fetch Study", context.exception.message)
 
     def test_get_nodes(self):
         nodes = Node.objects.all()
         self.assertGreater(nodes.count(), 0)
-        for node in self.dataset.get_nodes():
+        for node in self.isa_tab_dataset.get_nodes():
             self.assertIn(node, nodes)
 
     def test_get_nodes_no_nodes_available(self):
         Node.objects.all().delete()
-        self.assertQuerysetEqual(self.dataset.get_nodes(), [])
+        self.assertQuerysetEqual(self.isa_tab_dataset.get_nodes(), [])
 
     def test_get_node_uuids(self):
         node_uuids = Node.objects.all().values_list("uuid", flat=True)
         self.assertGreater(node_uuids.count(), 0)
-        for node_uuid in self.dataset.get_node_uuids():
+        for node_uuid in self.isa_tab_dataset.get_node_uuids():
             self.assertIn(node_uuid, node_uuids)
 
     def test_get_node_uuids_no_nodes_available(self):
         Node.objects.all().delete()
-        self.assertQuerysetEqual(self.dataset.get_node_uuids(), [])
+        self.assertQuerysetEqual(self.isa_tab_dataset.get_node_uuids(), [])
 
 
 class APIV2TestCase(APITestCase):
