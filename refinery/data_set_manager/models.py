@@ -468,6 +468,12 @@ class Node(models.Model):
                "species: " + unicode(self.species) +\
                ", genome build: " + unicode(self.genome_build) + ")"
 
+    def delete(self, **kwargs):
+        # remove a Node's FileStoreItem upon deletion, if one exists
+        if self.file_uuid:
+            FileStoreItem.objects.get(uuid=self.file_uuid).delete()
+        super(Node, self).delete()
+
     def add_child(self, node):
         if node is None:
             return None

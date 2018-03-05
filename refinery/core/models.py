@@ -2157,8 +2157,6 @@ def _nodecollection_delete(sender, instance, **kwargs):
     if type(instance) == Study:
         nodes = Node.objects.filter(study=instance)
         for node in nodes:
-            if node.file_uuid:
-                FileStoreItem.objects.get(uuid=node.file_uuid).delete()
             node.delete()
 
 
