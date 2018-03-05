@@ -754,6 +754,7 @@ class DataSet(SharableResource):
                        FileStoreItem.MultipleObjectsReturned) as e:
                     logger.error("Error while fetching FileStoreItem: %s", e)
 
+        file_store_items.append(self.get_metadata_as_file_store_item())
         return file_store_items
 
     def is_valid(self):
