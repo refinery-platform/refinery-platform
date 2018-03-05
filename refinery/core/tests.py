@@ -655,6 +655,22 @@ class DataSetDeletionTest(TestCase):
         self.dataset.delete()
         self._assert_related_objects_removed()
 
+    def test_isa_archive_deletion(self):
+        isatab_dataset = create_dataset_with_necessary_models(
+            is_isatab_based=True)
+        isatab_file_store_item_uuid = \
+            isatab_dataset.get_metadata_as_file_store_item().uuid
+        isatab_dataset.delete()
+        with self.assertRaises(FileStoreItem.DoesNotExist):
+            FileStoreItem.objects.get(uuid=isatab_file_store_item_uuid)
+
+    def test_pre_isa_archive_deletion(self):
+        tabular_file_store_item_uuid = \
+            self.dataset.get_metadata_as_file_store_item().uuid
+        self.dataset.delete()
+        with self.assertRaises(FileStoreItem.DoesNotExist):
+            FileStoreItem.objects.get(uuid=tabular_file_store_item_uuid)
+
 
 class AnalysisTests(TestCase):
     def setUp(self):
