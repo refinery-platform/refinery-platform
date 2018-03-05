@@ -2384,19 +2384,49 @@ class InvestigationTests(TestCase):
         self.isa_tab_dataset = create_dataset_with_necessary_models(
             is_isatab_based=True
         )
+        self.isa_tab_investigation = self.isa_tab_dataset.get_investigation()
+
         self.tabular_dataset = create_dataset_with_necessary_models()
+        self.tabular_investigation = self.tabular_dataset.get_investigation()
 
-    def test_isa_archive_deletion(self):
-        self.assertIsNotNone(
-            self.isa_tab_dataset.get_metadata_as_file_store_item())
-        self.isa_tab_dataset.get_investigation().delete()
-        self.assertIsNone(
-            self.isa_tab_dataset.get_metadata_as_file_store_item())
+    def test_is_isatab_based(self):
+        self.assertTrue(self.isa_tab_investigation.is_isatab_based)
+        self.assertFalse(self.tabular_investigation.is_isatab_based)
 
-    def test_pre_isa_archive_deletion(self):
+    def test_isa_archive(self):
+        self.assertIsNotNone(self.isa_tab_investigation.isa_archive)
+        self.assertIsNone(self.tabular_investigation.isa_archive)
 
-        self.assertIsNotNone(
-            self.tabular_dataset.get_metadata_as_file_store_item())
-        self.tabular_dataset.get_investigation().delete()
-        self.assertIsNone(
-            self.tabular_dataset.get_metadata_as_file_store_item())
+    def test_pre_isa_archive(self):
+        self.assertIsNone(self.isa_tab_investigation.pre_isa_archive)
+        self.assertIsNotNone(self.tabular_investigation.pre_isa_archive)
+
+    def test_get_identifier(self):
+        self.assertEqual(self.isa_tab_investigation.get_identifier(),
+                         self.isa_tab_investigation.identifier)
+
+    def test_get_identifier_no_identifier(self):
+        # Investigations without identifiers should resort to using the
+        # info from their Study
+        self.isa_tab_investigation.identifier = None
+        self.isa_tab_investigation.save()
+        self.assertEqual(self.isa_tab_investigation.get_identifier(),
+                         self.isa_tab_dataset.get_latest_study().identifier)
+
+    def test_get_description(self):
+        self.assertEqual(self.isa_tab_investigation.get_description(),
+                         self.isa_tab_investigation.description)
+
+    def test_get_description_no_description(self):
+        # Investigations without descriptions should resort to using the
+        # info from their Study
+        self.isa_tab_investigation.description = None
+        self.isa_tab_investigation.save()
+        self.assertEqual(self.isa_tab_investigation.get_description(),
+                         self.isa_tab_dataset.get_latest_study().description)
+
+    def test_get_study_count(self):
+        self.assertEqual(self.isa_tab_investigation.get_study_count(), 1)
+
+    def test_get_assay_count(self):
+        self.assertEqual(self.isa_tab_investigation.get_assay_count(), 1)
