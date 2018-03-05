@@ -114,8 +114,9 @@ def create_dataset_with_necessary_models(
 
 def _create_dataset_objects(dataset, is_isatab_based, latest_version):
     for i in xrange(1, latest_version+1):
+        file_store_item_uuid = str(uuid_builtin.uuid4())
         file_store_item = FileStoreItemFactory(
-            uuid=str(uuid_builtin.uuid4()),
+            uuid=file_store_item_uuid,
             source="http://www.example.com/test.{}".format(
                 "zip" if is_isatab_based else "csv"
             )
