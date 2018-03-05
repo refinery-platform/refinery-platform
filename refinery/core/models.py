@@ -480,21 +480,6 @@ class ManageableResource(models.Model):
         abstract = True
 
 
-class DataSetQuerySet(models.query.QuerySet):
-    def delete(self):
-        for instance in self:
-            try:
-                instance.delete()
-            except Exception as e:
-                return False, "Something unexpected happened. DataSet: {} " \
-                              "could not be deleted. {}".format(self, e)
-
-
-class DataSetManager(models.Manager):
-    def get_queryset(self):
-        return DataSetQuerySet(self.model, using=self._db)
-
-
 class DataSet(SharableResource):
     UNTITLED_DATA_SET_TITLE = "Untitled data set"
 
@@ -511,8 +496,6 @@ class DataSet(SharableResource):
     accession_source = models.CharField(max_length=128, blank=True, null=True)
     # actual title of the dataset
     title = models.CharField(max_length=250, default=UNTITLED_DATA_SET_TITLE)
-
-    objects = DataSetManager()
 
     class Meta:
         verbose_name = "dataset"
