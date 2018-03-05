@@ -112,7 +112,7 @@
           if (!angular.isDefined(filters[display])) {
             filters[display] = {
               facetObj: [],
-              lowerCaseNames: '',
+              lowerCaseNames: ''
             };
           }
           filters[display].lowerCaseNames += ' ' + lowerCaseNames;
