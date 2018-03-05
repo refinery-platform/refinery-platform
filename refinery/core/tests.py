@@ -2122,7 +2122,10 @@ class CoreIndexTests(TestCase):
         prepared_description = self.dataset_index.prepare_description(
             self.good_dataset
         )
-        self.assertEqual(prepared_description, "This is a great DataSet")
+        self.assertEqual(
+            prepared_description,
+            self.good_dataset.get_investigation().get_description()
+        )
 
 
 class TestMigrations(TestCase):
