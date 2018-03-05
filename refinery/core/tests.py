@@ -655,6 +655,13 @@ class DataSetDeletionTest(TestCase):
         self.dataset.delete()
         self._assert_related_objects_removed()
 
+    def test_dataset_bulk_deletion_removes_related_objects(self):
+        # make a second DataSet
+        create_dataset_with_necessary_models(is_isatab_based=True)
+        self._assert_related_objects_exist()
+        DataSet.objects.all().delete()
+        self._assert_related_objects_removed()
+
     def test_isa_archive_deletion(self):
         isatab_dataset = create_dataset_with_necessary_models(
             is_isatab_based=True)
