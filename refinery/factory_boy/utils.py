@@ -80,14 +80,19 @@ def create_dataset_with_necessary_models(
     investigation = InvestigationFactory(
         uuid=investigation_uuid,
         isarchive_file=file_store_item.uuid if is_isatab_based else None,
-        pre_isarchive_file=None if is_isatab_based else file_store_item.uuid
+        pre_isarchive_file=None if is_isatab_based else file_store_item.uuid,
+        identifier="{}: Investigation identifier".format(dataset),
+        description="{}: Investigation description".format(dataset),
+        title="{}: Investigation title".format(dataset)
     )
 
     study_uuid = str(uuid_builtin.uuid4())
     study = StudyFactory(
         uuid=study_uuid,
         investigation=investigation,
-        description="This is a great DataSet"
+        identifier="{}: Study identifier".format(dataset),
+        description="{}: Study description".format(dataset),
+        title="{}: Study title".format(dataset)
     )
 
     InvestigationLinkFactory(
