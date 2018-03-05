@@ -101,11 +101,6 @@ def create_dataset_with_necessary_models(
         version=1
     )
 
-    NodeFactory(
-        study=study,
-        file_uuid=file_store_item.uuid
-    )
-
     assay_uuid = str(uuid_builtin.uuid4())
     assay = AssayFactory(
         uuid=assay_uuid,
