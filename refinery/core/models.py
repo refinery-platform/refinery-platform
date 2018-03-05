@@ -560,8 +560,13 @@ class DataSet(SharableResource):
 
         try:
             with transaction.atomic():
+                # delete FileStoreItem and datafile corresponding to the
+                # metadata file used to generate the DataSet
+                self.get_metadata_as_file_store_item().delete()
+
                 for investigation_link in related_investigation_links:
                     investigation_link.get_node_collection().delete()
+
                 super(DataSet, self).delete()
         except Exception as exc:
             return False, "DataSet {} could not be deleted: {}".format(
