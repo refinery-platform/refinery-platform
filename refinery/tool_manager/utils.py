@@ -569,3 +569,11 @@ def create_expanded_workflow_graph(galaxy_workflow_dict):
 
 def user_has_access_to_tool(user, tool):
     return user.has_perm('core.read_dataset', tool.dataset)
+
+
+def get_workflow_tool(analysis_uuid):
+    try:
+        return WorkflowTool.objects.get(analysis__uuid=analysis_uuid)
+    except (WorkflowTool.DoesNotExist,
+            WorkflowTool.MultipleObjectsReturned) as e:
+        logger.error("Could not fetch WorkflowTool for this analysis: %s", e)
