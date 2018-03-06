@@ -109,7 +109,7 @@ if not os.path.isabs(MEDIA_ROOT):
 # Examples: "http://media.lawrence.com/media/", "http://example.com/media/"
 MEDIA_URL = get_setting("MEDIA_URL")
 
-DEFAULT_FILE_STORAGE = 'file_store.models.SymlinkedFileSystemStorage'
+DEFAULT_FILE_STORAGE = 'file_store.utils.SymlinkedFileSystemStorage'
 
 # Absolute path to the directory static files should be collected to.
 # Don't put anything in this directory yourself; store your static files

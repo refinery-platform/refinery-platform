@@ -5,19 +5,14 @@ import uuid
 from django.conf import settings
 from django.core.files import File
 from django.core.files.storage import Storage
-from django.core.files.uploadedfile import SimpleUploadedFile
-from django.test import SimpleTestCase, TestCase, override_settings
+from django.test import TestCase, override_settings
 
 import mock
-from rest_framework.test import APIRequestFactory, APITestCase
 
-from .models import (FileExtension, FileStoreItem, FileType,
-                     SymlinkedFileSystemStorage, file_path,
+from .models import (FileExtension, FileStoreItem, FileType, file_path,
                      generate_file_source_translator,
                      _get_extension_from_string, get_file_object, get_temp_dir,
                      _map_source, parse_s3_url)
-from .serializers import FileStoreItemSerializer
-from .views import FileStoreItems
 
 
 class FileStoreModuleTest(TestCase):
@@ -165,39 +160,25 @@ class FileStoreItemTest(TestCase):
         item = FileStoreItem(source='http://example.org/test.name.invalid')
         self.assertRaises(RuntimeError, item.get_file_extension)
 
-
-class FileStoreItemManagerTest(TestCase):
-    """FileStoreItemManager methods test"""
-
-    def setUp(self):
-        self.filename = 'test_file.tdf'
-        self.path_prefix = '/example/local/path/'
-        self.path_source = os.path.join(self.path_prefix, self.filename)
-        self.url_prefix = 'http://example.org/web/path/'
-        self.url_source = urljoin(self.url_prefix, self.filename)
-
     def test_file_source_map_translation(self):
-        """Test translation from URL to file system path when creating a new
-        instance
-        """
-        settings.REFINERY_FILE_SOURCE_MAP = {self.url_prefix: self.path_prefix}
-        item = FileStoreItem.objects.create(
-            datafile=SimpleUploadedFile(self.filename, 'Coffee is delicious!'),
-            source=self.path_source
-        )
-        self.assertEqual(item.source, self.path_source)
+        with override_settings(
+                REFINERY_FILE_SOURCE_MAP={
+                    'http://example.org/web/path/': '/new/path/'
+                }
+        ):
+            item = FileStoreItem.objects.create(
+                source='http://example.org/web/path/' + self.file_name
+            )
+            self.assertEqual(item.source, '/new/path/' + self.file_name)
 
-    def test_empty_file_source_map_translation(self):
-        """Test that empty map doesn't affect creating new FileStoreItem
-        instances
-        """
-        settings.REFINERY_FILE_SOURCE_MAP = {}
+    @override_settings(REFINERY_FILE_SOURCE_MAP={})
+    def test_empty_file_source_map_translation_with_url_source(self):
         item = FileStoreItem.objects.create(source=self.url_source)
         self.assertEqual(item.source, self.url_source)
-        item = FileStoreItem.objects.create(
-            datafile=SimpleUploadedFile(self.filename, 'Coffee is delicious!'),
-            source=self.path_source
-        )
+
+    @override_settings(REFINERY_FILE_SOURCE_MAP={})
+    def test_empty_file_source_map_translation_with_path_source(self):
+        item = FileStoreItem.objects.create(source=self.path_source)
         self.assertEqual(item.source, self.path_source)
 
 
@@ -263,63 +244,3 @@ class FileSourceTranslationTest(TestCase):
         translate_file_source = generate_file_source_translator()
         with self.assertRaises(ValueError):
             translate_file_source(self.rel_path_source)
-
-
-class FileStoreItemsAPITests(APITestCase):
-
-    def setUp(self):
-        self.factory = APIRequestFactory()
-        # create FileStoreItem instances without any disk operations
-        self.url_source = 'http://example.org/test_file.dat'
-        self.item_from_url = FileStoreItem.objects.create(
-            source=self.url_source
-        )
-        self.view = FileStoreItems.as_view()
-        self.valid_uuid = self.item_from_url.uuid
-        self.url_root = '/api/v2/file_store_items/'
-        self.invalid_uuid = "0xxx000x-00xx-000x-xx00-x00x00x00x0x"
-        self.invalid_format_uuid = "xxxxxxxx"
-
-    def test_get_valid(self):
-        # valid_uuid
-        file_store_item_obj = FileStoreItem.objects.get(
-            uuid=self.item_from_url.uuid)
-        expected_response = FileStoreItemSerializer(file_store_item_obj)
-        request = self.factory.get('%s/%s/' % (self.url_root, self.valid_uuid))
-        response = self.view(request, self.valid_uuid)
-        self.assertEqual(response.status_code, 200)
-
-        responseKeys = response.data.keys()
-        for field in responseKeys:
-            self.assertEqual(response.data[field],
-                             expected_response.data[field])
-
-    def test_get_invalid(self):
-        # invalid_uuid
-        request = self.factory.get('%s/%s/' % (self.url_root,
-                                               self.invalid_uuid))
-        response = self.view(request, self.invalid_uuid)
-        self.assertEqual(response.status_code, 404)
-
-    def test_get_invalid_format(self):
-        # invalid_format_uuid
-        request = self.factory.get('%s/%s/'
-                                   % (self.url_root, self.invalid_format_uuid))
-        response = self.view(request, self.invalid_format_uuid)
-        self.assertEqual(response.status_code, 404)
-
-
-class SymlinkedFileSystemStorageTest(SimpleTestCase):
-    def setUp(self):
-        self.symlinked_storage = SymlinkedFileSystemStorage()
-
-    def test_symlinked_storage(self):
-        self.assertIsNotNone(self.symlinked_storage)
-        self.assertEqual(
-            self.symlinked_storage.base_url,
-            urljoin(settings.MEDIA_URL, settings.FILE_STORE_DIR) + "/"
-        )
-        self.assertEqual(
-            self.symlinked_storage.location,
-            os.path.join(settings.MEDIA_ROOT, settings.FILE_STORE_DIR)
-        )
