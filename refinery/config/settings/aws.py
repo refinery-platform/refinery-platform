@@ -25,7 +25,7 @@ STATIC_URL = 'https://{}.s3.amazonaws.com/'.format(STATIC_BUCKET)
 
 STATICFILES_STORAGE = 'config.utils_aws.S3StaticStorage'
 if REFINERY_S3_USER_DATA:
-    DEFAULT_FILE_STORAGE = 'file_store.models.S3MediaStorage'
+    DEFAULT_FILE_STORAGE = 'file_store.utils.S3MediaStorage'
 
 COGNITO_IDENTITY_POOL_ID = get_setting('COGNITO_IDENTITY_POOL_ID')
 
