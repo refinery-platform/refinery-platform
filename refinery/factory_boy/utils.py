@@ -49,7 +49,7 @@ def make_analyses_with_single_dataset(number_to_create, user_instance):
         number_to_create -= 1
 
     analyses = Analysis.objects.all()
-    for analysis in Analysis.objects.all():
+    for analysis in analyses:
         analysis.set_owner(user_instance)
         analysis.save()
 
