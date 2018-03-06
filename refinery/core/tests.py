@@ -862,13 +862,6 @@ class AnalysisTests(TestCase):
         self.assertIsNotNone(Analysis.objects.get(
             name='analysis_with_node_analyzed_further'))
 
-    def test_terminate_file_import_tasks(self):
-        with mock.patch(
-            "file_store.models.FileStoreItem.terminate_file_import_task"
-        ) as terminate_mock:
-            self.analysis.terminate_file_import_tasks()
-            self.assertEqual(terminate_mock.call_count, 2)
-
     def test_galaxy_tool_file_import_state_returns_data_when_it_should(self):
         self.analysis_status.galaxy_import_state = AnalysisStatus.PROGRESS
         self.analysis_status.galaxy_import_progress = 96
