@@ -9,7 +9,7 @@ from django.utils import timezone
 
 import jsonschema
 
-from core.models import Analysis, Study, Workflow, WorkflowDataInputMap
+from core.models import Analysis, Study, Workflow
 from core.utils import get_aware_local_time
 import tool_manager
 
@@ -118,30 +118,6 @@ def validate_analysis_config(analysis_config):
         raise RuntimeError(
             "Analysis Configuration is invalid: {}".format(e)
         )
-
-
-def _associate_workflow_data_inputs(analysis, current_workflow, solr_uuids):
-    """
-    Associate data inputs with the Analysis through the WorkflowDatainputMap
-    model
-    :param analysis: an Analysis instance
-    :param current_workflow: <Workflow> instance
-    :param solr_uuids: List of UUIDs corresponding to Node's file_uuids
-    """
-    # getting distinct workflow inputs
-    workflow_data_inputs = current_workflow.data_inputs.all()[0]
-
-    # NEED TO GET LIST OF FILE_UUIDS from solr query
-    count = 0
-    for file_uuid in solr_uuids:
-        count += 1
-        temp_input = WorkflowDataInputMap.objects.create(
-            workflow_data_input_name=workflow_data_inputs.name,
-            data_uuid=file_uuid,
-            pair_id=count
-        )
-        analysis.workflow_data_input_maps.add(temp_input)
-        analysis.save()
 
 
 def _create_analysis_name(current_workflow):

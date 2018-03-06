@@ -38,8 +38,8 @@ from .management.commands.import_annotations import \
 from .models import (INPUT_CONNECTION, OUTPUT_CONNECTION, Analysis,
                      AnalysisNodeConnection, AnalysisResult, DataSet,
                      ExtendedGroup, InvestigationLink, Project, Tutorials,
-                     UserProfile, Workflow, WorkflowDataInputMap,
-                     WorkflowEngine, invalidate_cached_object)
+                     UserProfile, Workflow, WorkflowEngine,
+                     invalidate_cached_object)
 from .search_indexes import DataSetIndex
 from .utils import (filter_nodes_uuids_in_solr, get_aware_local_time,
                     get_resources_for_user, move_obj_to_front,
@@ -799,15 +799,6 @@ class AnalysisTests(TestCase):
             file_uuid=self.file_store_item1.uuid
         )
 
-        # Create WorkflowDataInputMaps
-        self.wf_data_input_map = WorkflowDataInputMap.objects.create(
-            workflow_data_input_name="input 1",
-            data_uuid=self.node.uuid
-        )
-        self.wf_data_input_map2 = WorkflowDataInputMap.objects.create(
-            workflow_data_input_name="input 2",
-            data_uuid=self.node2.uuid
-        )
         self.node_filename = "{}.{}".format(
             self.node.name,
             self.node.get_file_store_item().get_file_extension()
@@ -853,10 +844,6 @@ class AnalysisTests(TestCase):
                 direction=INPUT_CONNECTION
             )
         )
-
-        # Add wf_data_input_maps to Analysis M2M relationship
-        self.analysis.workflow_data_input_maps.add(self.wf_data_input_map,
-                                                   self.wf_data_input_map2)
 
     def test_verify_analysis_deletion_if_nodes_not_analyzed_further(self):
         # Try to delete Analysis with a Node that has an
