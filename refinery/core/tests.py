@@ -922,6 +922,11 @@ class AnalysisTests(TestCase):
         self.assertIsNotNone(Analysis.objects.get(
             name='analysis_with_node_analyzed_further'))
 
+    def test_has_nodes_used_in_downstream_analyses(self):
+        self.assertTrue(self.analysis_with_node_analyzed_further
+                        .has_nodes_used_in_downstream_analyses())
+        self.assertFalse(self.analysis.has_nodes_used_in_downstream_analyses())
+
     def test_galaxy_tool_file_import_state_returns_data_when_it_should(self):
         self.analysis_status.galaxy_import_state = AnalysisStatus.PROGRESS
         self.analysis_status.galaxy_import_progress = 96
