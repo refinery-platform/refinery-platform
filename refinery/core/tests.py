@@ -632,18 +632,6 @@ class CoreDeletionTestBase(object):
 class DataSetDeletionTest(CoreDeletionTestBase, TestCase):
     """Testing for the deletion of Datasets"""
     def setUp(self):
-        self.models_to_be_removed = [
-            Analysis,
-            AnnotatedNode,
-            Assay,
-            DataSet,
-            FileStoreItem,
-            Investigation,
-            InvestigationLink,
-            Node,
-            NodeCollection,
-            Study
-        ]
         self.username = self.password = 'user'
         self.user = User.objects.create_user(
             self.username, '', self.password
@@ -655,12 +643,28 @@ class DataSetDeletionTest(CoreDeletionTestBase, TestCase):
             )
 
     def _assert_related_objects_exist(self):
-        for model in self.models_to_be_removed:
-            self.assertNotEqual(model.objects.count(), 0)
+        self.assertGreater(Analysis.objects.count(), 0)
+        self.assertGreater(AnnotatedNode.objects.count(), 0)
+        self.assertGreater(Assay.objects.count(), 0)
+        self.assertGreater(DataSet.objects.count(), 0)
+        self.assertGreater(FileStoreItem.objects.count(), 0)
+        self.assertGreater(Investigation.objects.count(), 0)
+        self.assertGreater(InvestigationLink.objects.count(), 0)
+        self.assertGreater(Node.objects.count(), 0)
+        self.assertGreater(NodeCollection.objects.count(), 0)
+        self.assertGreater(Study.objects.count(), 0)
 
     def _assert_related_objects_removed(self):
-        for model in self.models_to_be_removed:
-            self.assertEqual(model.objects.count(), 0)
+        self.assertEqual(Analysis.objects.count(), 0)
+        self.assertEqual(AnnotatedNode.objects.count(), 0)
+        self.assertEqual(Assay.objects.count(), 0)
+        self.assertEqual(DataSet.objects.count(), 0)
+        self.assertEqual(FileStoreItem.objects.count(), 0)
+        self.assertEqual(Investigation.objects.count(), 0)
+        self.assertEqual(InvestigationLink.objects.count(), 0)
+        self.assertEqual(Node.objects.count(), 0)
+        self.assertEqual(NodeCollection.objects.count(), 0)
+        self.assertEqual(Study.objects.count(), 0)
 
     def test_transaction_rollback_on_delete_failure(self):
         with mock.patch.object(BaseResource, "delete", side_effect=Exception):
