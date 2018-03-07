@@ -612,7 +612,24 @@ class WorkflowDeletionTest(TestCase):
                           name="workflow_not_used_by_analyses")
 
 
-class DataSetDeletionTest(TestCase):
+class CoreDeletionTestBase(object):
+    def _assert_related_objects_exist(self):
+        raise NotImplementedError()
+
+    def _assert_related_objects_removed(self):
+        raise NotImplementedError()
+
+    def test_transaction_rollback_on_delete_failure(self):
+        raise NotImplementedError()
+
+    def test_deletion_removes_related_objects(self):
+        raise NotImplementedError()
+
+    def test_bulk_deletion_removes_related_objects(self):
+        raise NotImplementedError()
+
+
+class DataSetDeletionTest(CoreDeletionTestBase, TestCase):
     """Testing for the deletion of Datasets"""
     def setUp(self):
         self.models_to_be_removed = [
@@ -650,12 +667,12 @@ class DataSetDeletionTest(TestCase):
             self.dataset.delete()
         self._assert_related_objects_exist()
 
-    def test_dataset_deletion_removes_related_objects(self):
+    def test_deletion_removes_related_objects(self):
         self._assert_related_objects_exist()
         self.dataset.delete()
         self._assert_related_objects_removed()
 
-    def test_dataset_bulk_deletion_removes_related_objects(self):
+    def test_bulk_deletion_removes_related_objects(self):
         # make a second DataSet
         create_dataset_with_necessary_models(is_isatab_based=True)
         self._assert_related_objects_exist()
@@ -664,7 +681,8 @@ class DataSetDeletionTest(TestCase):
 
     def test_isa_archive_deletion(self):
         isatab_dataset = create_dataset_with_necessary_models(
-            is_isatab_based=True)
+            is_isatab_based=True
+        )
         isatab_file_store_item_uuid = \
             isatab_dataset.get_metadata_as_file_store_item().uuid
         isatab_dataset.delete()
