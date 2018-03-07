@@ -701,6 +701,59 @@ class DataSetDeletionTest(CoreDeletionTestBase, TestCase):
             FileStoreItem.objects.get(uuid=tabular_file_store_item_uuid)
 
 
+class AnalysisDeletionTest(CoreDeletionTestBase, TestCase):
+    """Testing for the deletion of Analyses"""
+    def setUp(self):
+        self.username = self.password = 'user'
+        self.user = User.objects.create_user(
+            self.username, '', self.password
+        )
+        self.analyses, self.dataset = \
+            make_analyses_with_single_dataset(
+                1,
+                self.user
+            )
+        self.analysis = self.analyses[0]
+
+    def _assert_related_objects_exist(self):
+        self.assertGreater(Analysis.objects.count(), 0)
+        self.assertGreater(AnalysisNodeConnection.objects.count(), 0)
+        self.assertGreater(AnalysisResult.objects.count(), 0)
+        self.assertGreater(AnalysisStatus.objects.count(), 0)
+        self.assertGreater(Node.objects.count(), 0)
+
+    def _assert_related_objects_removed(self):
+        self.assertEqual(Analysis.objects.count(), 0)
+        self.assertEqual(AnalysisNodeConnection.objects.count(), 0)
+        self.assertEqual(AnalysisResult.objects.count(), 0)
+        self.assertEqual(AnalysisStatus.objects.count(), 0)
+
+        # analysis deletion should only remove derived Nodes
+        total_dataset_nodes = \
+            sum([d.get_nodes().count() for d in DataSet.objects.all()])
+        total_nodes = Node.objects.count()
+
+        self.assertGreater(total_dataset_nodes, 0)
+        self.assertEqual(total_dataset_nodes, total_nodes)
+
+    def test_transaction_rollback_on_delete_failure(self):
+        with mock.patch.object(BaseResource, "delete", side_effect=Exception):
+            self.analysis.delete()
+        self._assert_related_objects_exist()
+
+    def test_deletion_removes_related_objects(self):
+        self._assert_related_objects_exist()
+        self.analysis.delete()
+        self._assert_related_objects_removed()
+
+    def test_bulk_deletion_removes_related_objects(self):
+        # make a second Analysis
+        make_analyses_with_single_dataset(1, self.user)
+        self._assert_related_objects_exist()
+        Analysis.objects.all().delete()
+        self._assert_related_objects_removed()
+
+
 class AnalysisTests(TestCase):
     def setUp(self):
         # Create a user
