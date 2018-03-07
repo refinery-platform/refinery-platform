@@ -1632,15 +1632,23 @@ class Analysis(OwnableResource):
 
 @receiver(pre_delete, sender=Analysis)
 def _analysis_delete(sender, instance, *args, **kwargs):
-        with transaction.atomic():
-            instance.cancel()
-            # Delete associated AnalysisResults
-            instance.get_analysis_results().delete()
-            # Delete Nodes Associated w/ the Analysis
-            instance.get_nodes().delete()
+    """
+    Removes an Analyses's related objects upon deletion being triggered.
+    Having these extra checks is favored within a signal so that this logic
+    is picked up on bulk deletes as well.
 
-        # Optimize Solr's index to get rid of any traces of the Analysis
-        instance.optimize_solr_index()
+    See: https://docs.djangoproject.com/en/1.8/topics/db/models/
+    #overriding-model-methods
+    """
+    with transaction.atomic():
+        instance.cancel()
+        # Delete associated AnalysisResults
+        instance.get_analysis_results().delete()
+        # Delete Nodes Associated w/ the Analysis
+        instance.get_nodes().delete()
+
+    # Optimize Solr's index to get rid of any traces of the Analysis
+    instance.optimize_solr_index()
 
 
 #: Defining available relationship types
