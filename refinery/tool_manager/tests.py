@@ -1615,6 +1615,14 @@ class ToolTests(ToolManagerTestBase):
         self.tool.analysis.set_status(Analysis.SUCCESS_STATUS)
         self.assertFalse(self.tool.is_running())
 
+    def test_terminate_file_import_tasks(self):
+        with mock.patch(
+            "file_store.models.FileStoreItem.terminate_file_import_task"
+        ) as terminate_mock:
+            self.create_tool(ToolDefinition.WORKFLOW)
+            self.tool.analysis.terminate_file_import_tasks()
+            self.assertEqual(terminate_mock.call_count, 1)
+
 
 class VisualizationToolTests(ToolManagerTestBase):
     def setUp(self):
