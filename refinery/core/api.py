@@ -20,7 +20,7 @@ from django.core.cache import cache
 from django.core.mail import EmailMessage
 from django.core.signing import Signer
 from django.forms import ValidationError
-from django.template import Context, loader
+from django.template import loader
 from django.utils import timezone
 
 from constants import UUID_RE
@@ -41,8 +41,7 @@ from tastypie.utils import trailing_slash
 
 from core.models import (Analysis, DataSet, ExtendedGroup, GroupManagement,
                          Invitation, Project, ResourceStatistics, Tutorials,
-                         UserAuthentication, UserProfile, Workflow,
-                         WorkflowInputRelationships)
+                         UserAuthentication, UserProfile, Workflow)
 from core.utils import (get_data_sets_annotations, get_resources_for_user,
                         which_default_read_perm)
 from data_set_manager.api import (AssayResource, InvestigationResource,
@@ -872,9 +871,6 @@ class DataSetResource(SharableResourceAPIInterface, ModelResource):
 
 
 class WorkflowResource(ModelResource, SharableResourceAPIInterface):
-    input_relationships = fields.ToManyField(
-        "core.api.WorkflowInputRelationshipsResource", 'input_relationships',
-        full=True)
     share_list = fields.ListField(attribute='share_list', null=True)
     public = fields.BooleanField(attribute='public', null=True)
     is_owner = fields.BooleanField(attribute='is_owner', null=True)
@@ -948,15 +944,6 @@ class WorkflowResource(ModelResource, SharableResourceAPIInterface):
         bundle.data['galaxy_instance_identifier'] = \
             bundle.obj.workflow_engine.instance.api_key
         return bundle
-
-
-class WorkflowInputRelationshipsResource(ModelResource):
-    class Meta:
-        queryset = WorkflowInputRelationships.objects.all()
-        detail_resource_name = 'workflowrelationships'
-        resource_name = 'workflowrelationships'
-        # detail_uri_name = 'uuid'
-        fields = ['category', 'set1', 'set2', 'workflow']
 
 
 class AnalysisResource(ModelResource):
@@ -1746,7 +1733,7 @@ class InvitationResource(ModelResource):
         }
         email = EmailMessage(
             subject,
-            temp_loader.render(Context(context_dict)),
+            temp_loader.render(context_dict),
             to=[invitation.recipient_email]
         )
         email.send()

@@ -6,7 +6,9 @@ from urlparse import urljoin
 
 from django.apps import apps
 from django.contrib.auth.models import AnonymousUser, Group, User
+from django.contrib.sites.models import Site
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.core.management import CommandError, call_command
 from django.db import connection
 from django.db.migrations.executor import MigrationExecutor
 from django.test import TestCase
@@ -23,22 +25,26 @@ from tastypie.test import ResourceTestCase
 
 from analysis_manager.models import AnalysisStatus
 from data_set_manager.models import Assay, Contact, Investigation, Node, Study
-from factory_boy.django_model_factories import GalaxyInstanceFactory
+from factory_boy.django_model_factories import (GalaxyInstanceFactory,
+                                                WorkflowEngineFactory,
+                                                WorkflowFactory)
 from factory_boy.utils import create_dataset_with_necessary_models
 from file_store.models import FileStoreItem, FileType
 
 from .api import AnalysisResource
 from .management.commands.create_user import init_user
+from .management.commands.import_annotations import \
+    Command as ImportAnnotationsCommand
 from .models import (INPUT_CONNECTION, OUTPUT_CONNECTION, Analysis,
                      AnalysisNodeConnection, AnalysisResult, DataSet,
                      ExtendedGroup, InvestigationLink, Project, Tutorials,
-                     UserProfile, Workflow, WorkflowDataInputMap,
-                     WorkflowEngine, invalidate_cached_object)
+                     UserProfile, Workflow, WorkflowEngine,
+                     invalidate_cached_object)
 from .search_indexes import DataSetIndex
 from .utils import (filter_nodes_uuids_in_solr, get_aware_local_time,
                     get_resources_for_user, move_obj_to_front,
                     which_default_read_perm)
-from .views import AnalysesViewSet, DataSetsViewSet
+from .views import AnalysesViewSet, DataSetsViewSet, WorkflowViewSet
 
 cache = memcache.Client(["127.0.0.1:11211"])
 
@@ -652,13 +658,19 @@ class DataSetDeletionTest(TestCase):
         )
         self.analysis.set_owner(self.user)
 
-    def test_verify_dataset_deletion_if_no_analysis_run_upon_it(self):
+    @mock.patch('core.models.DataSet.get_investigation_links', return_value=[])
+    def test_verify_dataset_deletion_if_no_analysis_run_upon_it(
+            self, mock_get_links
+    ):
         self.assertIsNotNone(
-            DataSet.objects.get(name="dataset_without_analysis"))
+            DataSet.objects.get(name="dataset_without_analysis")
+        )
         self.dataset_without_analysis.delete()
-        self.assertRaises(DataSet.DoesNotExist,
-                          DataSet.objects.get,
-                          name="dataset_without_analysis")
+        self.assertRaises(
+            DataSet.DoesNotExist,
+            DataSet.objects.get,
+            name="dataset_without_analysis"
+        )
 
     def test_verify_dataset_deletion_if_analysis_run_upon_it(self):
         self.assertIsNotNone(
@@ -668,12 +680,14 @@ class DataSetDeletionTest(TestCase):
                           DataSet.objects.get,
                           name="dataset_with_analysis")
 
-    def test_isa_archive_deletion(self):
+    @mock.patch('core.models.DataSet.get_investigation_links', return_value=[])
+    def test_isa_archive_deletion(self, mock_get_links):
         self.assertIsNotNone(self.dataset_without_analysis.get_isa_archive())
         self.dataset_without_analysis.delete()
         self.assertIsNone(self.dataset_without_analysis.get_isa_archive())
 
-    def test_pre_isa_archive_deletion(self):
+    @mock.patch('core.models.DataSet.get_investigation_links', return_value=[])
+    def test_pre_isa_archive_deletion(self, mock_get_links):
         self.assertIsNotNone(
             self.dataset_without_analysis.get_pre_isa_archive())
         self.dataset_without_analysis.delete()
@@ -785,15 +799,6 @@ class AnalysisTests(TestCase):
             file_uuid=self.file_store_item1.uuid
         )
 
-        # Create WorkflowDataInputMaps
-        self.wf_data_input_map = WorkflowDataInputMap.objects.create(
-            workflow_data_input_name="input 1",
-            data_uuid=self.node.uuid
-        )
-        self.wf_data_input_map2 = WorkflowDataInputMap.objects.create(
-            workflow_data_input_name="input 2",
-            data_uuid=self.node2.uuid
-        )
         self.node_filename = "{}.{}".format(
             self.node.name,
             self.node.get_file_store_item().get_file_extension()
@@ -840,10 +845,6 @@ class AnalysisTests(TestCase):
             )
         )
 
-        # Add wf_data_input_maps to Analysis M2M relationship
-        self.analysis.workflow_data_input_maps.add(self.wf_data_input_map,
-                                                   self.wf_data_input_map2)
-
     def test_verify_analysis_deletion_if_nodes_not_analyzed_further(self):
         # Try to delete Analysis with a Node that has an
         # AnalysisNodeConnection with direction == 'out'
@@ -860,13 +861,6 @@ class AnalysisTests(TestCase):
         self.analysis_with_node_analyzed_further.delete()
         self.assertIsNotNone(Analysis.objects.get(
             name='analysis_with_node_analyzed_further'))
-
-    def test_terminate_file_import_tasks(self):
-        with mock.patch(
-            "file_store.models.FileStoreItem.terminate_file_import_task"
-        ) as terminate_mock:
-            self.analysis.terminate_file_import_tasks()
-            self.assertEqual(terminate_mock.call_count, 2)
 
     def test_galaxy_tool_file_import_state_returns_data_when_it_should(self):
         self.analysis_status.galaxy_import_state = AnalysisStatus.PROGRESS
@@ -1565,14 +1559,8 @@ class DataSetTests(TestCase):
         self.assertQuerysetEqual(self.dataset.get_node_uuids(), [])
 
 
-class DataSetApiV2Tests(APITestCase):
-
-    def create_rand_str(self, count):
-        return ''.join(
-            random.choice(string.ascii_lowercase) for _ in xrange(count)
-        )
-
-    def setUp(self):
+class APIV2TestCase(APITestCase):
+    def setUp(self, **kwargs):
         self.public_group_name = ExtendedGroup.objects.public_group().name
         self.username = 'coffee_lover'
         self.password = 'coffeecoffee'
@@ -1581,9 +1569,23 @@ class DataSetApiV2Tests(APITestCase):
 
         self.factory = APIRequestFactory()
         self.client = APIClient()
-        self.view = DataSetsViewSet.as_view()
+        self.url_root = '/api/v2/{}'.format(kwargs.get("api_base_name"))
+        self.view = kwargs.get("view")
 
-        self.url_root = '/api/v2/data_sets/'
+        self.client.login(username=self.username, password=self.password)
+
+
+class DataSetApiV2Tests(APIV2TestCase):
+    def create_rand_str(self, count):
+        return ''.join(
+            random.choice(string.ascii_lowercase) for _ in xrange(count)
+        )
+
+    def setUp(self):
+        super(DataSetApiV2Tests, self).setUp(
+            api_base_name="datasets/",
+            view=DataSetsViewSet.as_view()
+        )
 
         # Create Datasets
         self.dataset = DataSet.objects.create(
@@ -1622,8 +1624,6 @@ class DataSetApiV2Tests(APITestCase):
             "auxiliary_file_generation_task_state": None,
             "ready_for_igv_detail_view": None
         }])
-
-        self.client.login(username=self.username, password=self.password)
 
         # Make reusable requests & responses
         self.get_request = self.factory.get(self.url_root)
@@ -1891,14 +1891,13 @@ class DataSetApiV2Tests(APITestCase):
         self.assertEqual(patch_response.data.get('title'), new_title)
 
 
-class AnalysisApiV2Tests(APITestCase):
+class AnalysisApiV2Tests(APIV2TestCase):
 
     def setUp(self):
-        self.public_group_name = ExtendedGroup.objects.public_group().name
-        self.username = 'coffee_lover'
-        self.password = 'coffeecoffee'
-        self.user = User.objects.create_user(self.username, '',
-                                             self.password)
+        super(AnalysisApiV2Tests, self).setUp(
+            api_base_name="analyses/",
+            view=AnalysesViewSet.as_view()
+        )
         self.project = Project.objects.create()
 
         self.galaxy_instance = GalaxyInstanceFactory()
@@ -1908,11 +1907,6 @@ class AnalysisApiV2Tests(APITestCase):
         self.workflow = Workflow.objects.create(
             workflow_engine=self.workflow_engine
         )
-        self.factory = APIRequestFactory()
-        self.client = APIClient()
-        self.view = AnalysesViewSet.as_view()
-
-        self.url_root = '/api/v2/analyses/'
 
         # Create Datasets
         self.dataset = DataSet.objects.create(name="coffee dataset")
@@ -2061,6 +2055,33 @@ class AnalysisApiV2Tests(APITestCase):
         self.assertEqual(Analysis.objects.all().count(), 1)
 
 
+class WorkflowApiV2Tests(APIV2TestCase):
+    def setUp(self):
+        self.mock_workflow_graph = "{is_test_workflow_graph: true}"
+        super(WorkflowApiV2Tests, self).setUp(
+            api_base_name="workflows/",
+            view=WorkflowViewSet.as_view({"get": "graph"})
+        )
+        self.workflow = WorkflowFactory(
+            graph=self.mock_workflow_graph,
+            workflow_engine=WorkflowEngineFactory(
+                instance=GalaxyInstanceFactory()
+            )
+        )
+
+    def test_get_workflow_graph(self):
+        workflow_graph_url = urljoin(
+            self.url_root,
+            "<uuid>/graph/"
+        )
+        get_request = self.factory.get(workflow_graph_url)
+        get_response = self.get_response = self.view(
+            get_request,
+            uuid=self.workflow.uuid
+        )
+        self.assertEqual(get_response.content, self.mock_workflow_graph)
+
+
 class CoreIndexTests(TestCase):
     def setUp(self):
         self.dataset_index = DataSetIndex()
@@ -2206,3 +2227,80 @@ class DataSetPermissionsUpdateTests(TestMigrations):
                                                self.dataset_b))
         self.assertTrue(self._check_permission(self.user_a, self.dataset_b))
         self.assertTrue(self._check_permission(self.user_b, self.dataset_b))
+
+
+class TestManagementCommands(TestCase):
+    def test_set_up_site_name(self):
+        site_name = "Refinery Test"
+        domain = "www.example.com"
+        call_command('set_up_site_name', site_name, domain)
+
+        self.assertIsNotNone(
+            Site.objects.get(domain=domain, name=site_name)
+        )
+
+    def test_set_up_site_name_failure(self):
+        with self.assertRaises(CommandError):
+            call_command('set_up_site_name')
+
+    def _user_in_public_group(self, user_instance):
+        return bool(
+            user_instance.groups.filter(
+                name=ExtendedGroup.objects.public_group().name
+            ).count()
+        )
+
+    def test_add_users_to_public_group(self):
+        # We have a post-save hook on User for this functionality, but this
+        # doesn't apply when we create the super/guest user with 'loaddata'
+        # where save() is never actually called
+        call_command("loaddata", "guest.json")
+        user = User.objects.get(username="guest")
+        self.assertFalse(self._user_in_public_group(user))
+
+        call_command("add_users_to_public_group")
+        self.assertTrue(self._user_in_public_group(user))
+
+    def test_activate_user(self):
+        guest_username = "guest"
+        call_command("loaddata", "guest.json")
+        user = User.objects.get(username=guest_username)
+        self.assertFalse(user.is_active)
+
+        call_command("activate_user", guest_username)
+        self.assertTrue(User.objects.get(username=guest_username).is_active)
+
+    def test_import_annotations(self):
+        """ We just care about this in the context of the optparse -> argparse
+        upgrade for Django 1.8 and don't necessarily want to test the
+        neo4j interactions """
+        with mock.patch.object(ImportAnnotationsCommand, "handle"):
+            call_command("import_annotations", "-c")
+
+    def test_create_workflow_engine(self):
+        galaxy_instance = GalaxyInstanceFactory()
+        call_command(
+            "create_workflowengine",
+            str(galaxy_instance.id),
+            ExtendedGroup.objects.public_group().name
+        )
+        self.assertIsNotNone(
+            WorkflowEngine.objects.get(instance=galaxy_instance)
+        )
+
+    def test_create_workflow_engine_bad_galaxy_instance(self):
+        with self.assertRaises(CommandError):
+            call_command(
+                "create_workflowengine",
+                str(123),
+                ExtendedGroup.objects.public_group().name
+            )
+
+    def test_create_workflow_engine_bad_group_name(self):
+        galaxy_instance = GalaxyInstanceFactory()
+        with self.assertRaises(CommandError):
+            call_command(
+                "create_workflowengine",
+                str(galaxy_instance.id),
+                "non-existent group name"
+            )

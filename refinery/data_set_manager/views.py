@@ -15,7 +15,8 @@ from django import forms
 from django.conf import settings
 from django.core.urlresolvers import reverse
 from django.http import (Http404, HttpResponse, HttpResponseBadRequest,
-                         HttpResponseRedirect, HttpResponseServerError)
+                         HttpResponseRedirect, HttpResponseServerError,
+                         JsonResponse)
 from django.shortcuts import get_object_or_404, render, render_to_response
 from django.template import RequestContext
 from django.views.generic import View
@@ -29,7 +30,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from core.models import DataSet, ExtendedGroup, get_user_import_dir
-from core.utils import get_full_url
+from core.utils import get_absolute_url
 from data_set_manager.isa_tab_parser import ParserException
 from file_store.models import (generate_file_source_translator, get_temp_dir,
                                parse_s3_url)
@@ -94,7 +95,7 @@ class TakeOwnershipOfPublicDatasetView(View):
         if 'isa_tab_url' in request.POST:
             # TODO: I think isa_tab_url is already a full url,
             # making this redundant.
-            full_isa_tab_url = get_full_url(request.POST['isa_tab_url'])
+            full_isa_tab_url = get_absolute_url(request.POST['isa_tab_url'])
             from_old_template = True
         else:
             request_body = request.body
@@ -118,25 +119,27 @@ class TakeOwnershipOfPublicDatasetView(View):
                 return HttpResponseBadRequest(err_msg)
 
             try:
-                full_isa_tab_url = DataSet.objects.get(
-                    uuid=data_set_uuid
-                ).get_isa_archive().get_datafile_url()
+                data_set = DataSet.objects.get(uuid=data_set_uuid)
             except (DataSet.DoesNotExist, DataSet.MultipleObjectsReturned,
-                    Exception) as e:
+                    Exception) as exc:
                 err_msg = "Something went wrong"
-                logger.error("%s: %s" % (err_msg, e))
+                logger.error("%s: %s" % (err_msg, exc))
                 return HttpResponseBadRequest("%s." % err_msg)
+            else:
+                full_isa_tab_url = get_absolute_url(
+                    data_set.get_isa_archive().get_datafile_url()
+                )
 
         if from_old_template:
             # Redirect to process_isa_tab view
             response = HttpResponseRedirect(
-                get_full_url(reverse('process_isa_tab'))
+                get_absolute_url(reverse('process_isa_tab'))
             )
         else:
             # Redirect to process_isa_tab view with arg 'ajax' if request is
             #  not coming from old Django Template
             response = HttpResponseRedirect(
-                get_full_url(reverse('process_isa_tab', args=['ajax']))
+                get_absolute_url(reverse('process_isa_tab', args=['ajax']))
             )
 
         # set cookie
@@ -230,10 +233,7 @@ class ProcessISATabView(View):
         os.unlink(temp_file_path)
         if dataset_uuid:
             if 'ajax' in kwargs and kwargs['ajax']:
-                return HttpResponse(
-                    json.dumps({'new_data_set_uuid': dataset_uuid}),
-                    'application/json'
-                )
+                return JsonResponse({'new_data_set_uuid': dataset_uuid})
             else:
                 response = HttpResponseRedirect(
                     reverse(self.success_view_name, args=(dataset_uuid,)))
@@ -363,21 +363,17 @@ class ProcessISATabView(View):
                             import_file.delay(file_store_item.uuid)
 
                 if request.is_ajax():
-                    return HttpResponse(
-                        json.dumps({
-                            'success': 'Data set imported',
-                            'data': {'new_data_set_uuid': dataset_uuid}
-                        }),
-                        content_type='application/json'
-                    )
+                    return JsonResponse({
+                        'success': 'Data set imported',
+                        'data': {'new_data_set_uuid': dataset_uuid}
+                    })
                 return HttpResponseRedirect(
                     reverse(self.success_view_name, args=[dataset_uuid])
                 )
             else:
                 error = 'Problem parsing ISA-Tab file'
                 if request.is_ajax():
-                    return HttpResponse(json.dumps({'error': error}),
-                                        content_type='application/json')
+                    return JsonResponse({'error': error})
                 context = RequestContext(request, {'form': form,
                                                    'error': error})
                 return render_to_response(self.template_name,
@@ -555,10 +551,7 @@ class ProcessMetadataTableView(View):
                 return render(request, self.template_name, error)
 
         if request.is_ajax():
-            return HttpResponse(
-                json.dumps({'new_data_set_uuid': dataset_uuid}),
-                content_type='application/json'
-            )
+            return JsonResponse({'new_data_set_uuid': dataset_uuid})
         else:
             return HttpResponseRedirect(
                 reverse(self.success_view_name, args=(dataset_uuid,))
@@ -653,9 +646,8 @@ class ChunkedFileUploadCompleteView(ChunkedUploadCompleteView):
                                           'application/json')
 
         chunked.delete()
-        return HttpResponse(json.dumps({'status': 'Successfully deleted.',
-                                        'upload_id': upload_id}),
-                            'application/json')
+        return JsonResponse({'status': 'Successfully deleted.',
+                             'upload_id': upload_id})
 
     def on_completion(self, uploaded_file, request):
         """Move file to the user's import directory"""
@@ -689,6 +681,7 @@ class ChunkedFileUploadCompleteView(ChunkedUploadCompleteView):
             logger.error(
                 "Error moving uploaded file to user's import directory: %s",
                 exc)
+        chunked_upload.delete()
 
     def get_response_data(self, chunked_upload, request):
         message = "You have successfully uploaded {}".format(

@@ -112,8 +112,52 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
 
         id_suffix = "_" + id_suffix + "_s"
 
-        data['filename_Characteristics' + NodeIndex.GENERIC_SUFFIX] = \
-            re.sub(r'.*/', '', data['name'])
+        try:
+            file_store_item = FileStoreItem.objects.get(uuid=node.file_uuid)
+        except(FileStoreItem.DoesNotExist,
+               FileStoreItem.MultipleObjectsReturned) as e:
+            logger.error("Couldn't properly fetch FileStoreItem: %s", e)
+            file_store_item = None
+            download_url = NOT_AVAILABLE
+            data['filetype_Characteristics' + NodeIndex.GENERIC_SUFFIX] = ''
+        else:
+            data['filetype_Characteristics' + NodeIndex.GENERIC_SUFFIX] = \
+                file_store_item.filetype
+            download_url = file_store_item.get_datafile_url()
+            if download_url is None:
+                if not file_store_item.import_task_id:
+                    logger.debug("No import_task_id yet for FileStoreItem "
+                                 "with UUID: %s", file_store_item.uuid)
+                    download_url = PENDING
+                else:
+                    logger.debug(
+                        "FileStoreItem with UUID: %s has import_task_id: %s",
+                        file_store_item.uuid,
+                        file_store_item.import_task_id
+                    )
+                    if file_store_item.get_import_status() == SUCCESS:
+                        download_url = NOT_AVAILABLE
+                    else:
+                        # The underlying Celery code in
+                        # FileStoreItem.get_import_status() makes an assumption
+                        # that a result is "probably" PENDING even if it can't
+                        # find an associated Task. See:
+                        # https://github.com/celery/celery/blob/v3.1.20/celery/
+                        # backends/amqp.py#L192-L193 So we double check here to
+                        # make sure said assumption holds up
+                        try:
+                            TaskMeta.objects.get(
+                                task_id=file_store_item.import_task_id
+                            )
+                        except TaskMeta.DoesNotExist:
+                            logger.debug(
+                                "No file_import task for FileStoreItem with "
+                                "UUID: %s",
+                                file_store_item.uuid
+                            )
+                            download_url = NOT_AVAILABLE
+                        else:
+                            download_url = PENDING
 
         data.update(self._assay_data(node))
 
@@ -154,52 +198,6 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
             if type(value) is set:
                 data[key] = " + ".join(sorted(value))
 
-        try:
-            file_store_item = FileStoreItem.objects.get(
-                uuid=node.file_uuid
-            )
-        except(FileStoreItem.DoesNotExist,
-               FileStoreItem.MultipleObjectsReturned) as e:
-            logger.error("Couldn't properly fetch FileStoreItem: %s", e)
-            file_store_item = None
-            download_url = NOT_AVAILABLE
-        else:
-            download_url = file_store_item.get_datafile_url()
-            if download_url is None:
-                if not file_store_item.import_task_id:
-                    logger.debug("No import_task_id yet for FileStoreItem "
-                                 "with UUID: %s", file_store_item.uuid)
-                    download_url = PENDING
-                else:
-                    logger.debug(
-                        "FileStoreItem with UUID: %s has import_task_id: %s",
-                        file_store_item.uuid,
-                        file_store_item.import_task_id
-                    )
-                    if file_store_item.get_import_status() == SUCCESS:
-                        download_url = NOT_AVAILABLE
-                    else:
-                        # The underlying Celery code in
-                        # FileStoreItem.get_import_status() makes an assumption
-                        # that a result is "probably" PENDING even if it can't
-                        # find an associated Task. See:
-                        # https://github.com/celery/celery/blob/v3.1.20/celery/
-                        # backends/amqp.py#L192-L193 So we double check here to
-                        # make sure said assumption holds up
-                        try:
-                            TaskMeta.objects.get(
-                                task_id=file_store_item.import_task_id
-                            )
-                        except TaskMeta.DoesNotExist:
-                            logger.debug(
-                                "No file_import task for FileStoreItem with "
-                                "UUID: %s",
-                                file_store_item.uuid
-                            )
-                            download_url = NOT_AVAILABLE
-                        else:
-                            download_url = PENDING
-
         data.update({
             NodeIndex.DOWNLOAD_URL:
                 download_url,
@@ -209,7 +207,7 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
                 node.name,
             NodeIndex.FILETYPE_PREFIX + id_suffix:
                 "" if file_store_item is None
-                else file_store_item.get_filetype(),
+                else file_store_item.filetype,
             NodeIndex.ANALYSIS_UUID_PREFIX + id_suffix:
                 NOT_AVAILABLE if node.get_analysis() is None
                 else node.get_analysis().name,

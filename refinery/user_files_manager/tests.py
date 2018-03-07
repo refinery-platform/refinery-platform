@@ -3,9 +3,10 @@ import logging
 from urlparse import urljoin
 
 from django.contrib.auth.models import User
+from django.contrib.contenttypes.models import ContentType
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from django.http import QueryDict
-from django.test import RequestFactory, TestCase
+from django.test import RequestFactory, TestCase, override_settings
 
 from guardian.utils import get_anonymous_user
 import mock
@@ -44,6 +45,12 @@ class UserFilesAPITests(APITestCase):
 
 
 class UserFilesUITests(StaticLiveServerTestCase):
+    def setUp(self):
+        # recommended solution to an auth_permission error, though doc says
+        # we probably won't need to call it since django will call it
+        # automatically when needed
+        ContentType.objects.clear_cache()
+
     def test_ui(self):
         response = requests.get(
             urljoin(
@@ -53,7 +60,7 @@ class UserFilesUITests(StaticLiveServerTestCase):
         )
         self.assertIn("All Files", response.content)
 
-    @mock.patch('django.conf.settings.USER_FILES_COLUMNS', 'filename,fake')
+    @mock.patch('django.conf.settings.USER_FILES_COLUMNS', 'name,fake')
     def test_csv(self):
         response = requests.get(
             urljoin(
@@ -63,7 +70,7 @@ class UserFilesUITests(StaticLiveServerTestCase):
         )
         self.assertEqual(
             response.content,
-            'url,filename,fake\r\n'
+            'url,name,fake\r\n'
         )
 
 
@@ -102,6 +109,9 @@ class UserFilesViewTests(TestCase):
 
 class UserFilesUtilsTests(TestCase):
 
+    @override_settings(USER_FILES_FACETS="filetype,organism,technology,"
+                                         "genotype,cell_type,antibody,"
+                                         "experimenter")
     def test_generate_solr_params_for_user(self):
         user = User.objects.create_user(
             'testuser', 'test@example.com', 'password')
@@ -110,24 +120,28 @@ class UserFilesUtilsTests(TestCase):
         assay_uuid = Assay.objects.get(study=dataset.get_latest_study()).uuid
 
         query = generate_solr_params_for_user(QueryDict({}), user.id)
-        self.assertEqual(str(query).split('&'), [
+        self.assertItemsEqual(str(query).split('&'), [
                          'fq=assay_uuid%3A%28{}%29'.format(assay_uuid),
-                         'facet.field=organism_Characteristics_generic_s',
-                         'facet.field=organism_Factor_Value_generic_s',
-                         'facet.field=technology_Characteristics_generic_s',
-                         'facet.field=technology_Factor_Value_generic_s',
-                         'facet.field=antibody_Characteristics_generic_s',
-                         'facet.field=antibody_Factor_Value_generic_s',
-                         'facet.field=genotype_Characteristics_generic_s',
-                         'facet.field=genotype_Factor_Value_generic_s',
-                         'facet.field=experimenter_Characteristics_generic_s',
-                         'facet.field=experimenter_Factor_Value_generic_s',
                          'fl=%2A_generic_s'
                          '%2Cname'
                          '%2C%2A_uuid'
                          '%2Ctype'
                          '%2Cdjango_id'
                          '%2CREFINERY_DOWNLOAD_URL_s',
+                         'facet.field=filetype_Characteristics_generic_s',
+                         'facet.field=filetype_Factor_Value_generic_s',
+                         'facet.field=organism_Characteristics_generic_s',
+                         'facet.field=organism_Factor_Value_generic_s',
+                         'facet.field=technology_Characteristics_generic_s',
+                         'facet.field=technology_Factor_Value_generic_s',
+                         'facet.field=genotype_Characteristics_generic_s',
+                         'facet.field=genotype_Factor_Value_generic_s',
+                         'facet.field=cell_type_Characteristics_generic_s',
+                         'facet.field=cell_type_Factor_Value_generic_s',
+                         'facet.field=antibody_Characteristics_generic_s',
+                         'facet.field=antibody_Factor_Value_generic_s',
+                         'facet.field=experimenter_Characteristics_generic_s',
+                         'facet.field=experimenter_Factor_Value_generic_s',
                          'fq=is_annotation%3Afalse',
                          'start=0',
                          'rows=10000000',

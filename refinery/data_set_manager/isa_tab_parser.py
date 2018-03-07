@@ -324,8 +324,8 @@ class IsaTabParser:
                     node_name is not ""):
                 # create the nodes for the data file in this row
                 file_path = self.file_source_translator(node_name)
-                file_store_item = FileStoreItem.objects.create_item(
-                    source=file_path, filetype=''
+                file_store_item = FileStoreItem.objects.create(
+                    source=file_path
                 )
                 if file_store_item:
                     node.file_uuid = file_store_item.uuid

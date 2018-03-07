@@ -131,7 +131,7 @@ class FileRelationship(models.Model):
     # See: https://docs.djangoproject.com/en/1.7/ref/models/fields/#django
     # .db.models.ManyToManyField.symmetrical
     file_relationship = models.ManyToManyField(
-        "self", symmetrical=False, null=True, blank=True)
+        "self", symmetrical=False, blank=True)
 
     input_files = models.ManyToManyField("InputFile")
 
@@ -595,7 +595,6 @@ class WorkflowTool(Tool):
     ANALYSIS_GROUP = "analysis_group"
     COLLECTION_INFO = "collection_info"
     CREATING_JOB = "creating_job"
-    DATA_INPUT = "data_input"
     DATA_COLLECTION_INPUT = "data_collection_input"
     FILE_RELATIONSHIPS_GALAXY = "{}_galaxy".format(Tool.FILE_RELATIONSHIPS)
     FILE_RELATIONSHIPS_NESTING = "file_relationships_nesting"
@@ -603,7 +602,6 @@ class WorkflowTool(Tool):
     GALAXY_DATA = "galaxy_data"
     GALAXY_DATASET_HISTORY_ID = "galaxy_dataset_history_id"
     GALAXY_IMPORT_HISTORY_DICT = "import_history_dict"
-    GALAXY_INPUT_TYPES = [DATA_INPUT, DATA_COLLECTION_INPUT]
     GALAXY_LIBRARY_DICT = "library_dict"
     GALAXY_WORKFLOW_INVOCATION_DATA = "galaxy_workflow_invocation_data"
     GALAXY_TO_REFINERY_MAPPING_LIST = "galaxy_to_refinery_mapping_list"

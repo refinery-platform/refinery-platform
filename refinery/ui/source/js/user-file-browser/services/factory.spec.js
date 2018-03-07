@@ -42,42 +42,6 @@
     });
 
     describe('createFilters', function () {
-      describe('utils', function () {
-        it('_mergeAndAddObject', function () {
-          var a = { a: 1 };
-          var b = { a: 2, b: 3 };
-          factory._mergeAndAddObject(a, b);
-          expect(a).toEqual({
-            a: 3,
-            b: 3
-          });
-        });
-        it('_objectToNameCount', function () {
-          expect(factory._objectToNameCount({
-            a: 1
-          })).toEqual([{
-            name: 'a',
-            count: 1
-          }]);
-        });
-        it('_nameCountToObject', function () {
-          expect(factory._nameCountToObject([{
-            name: 'a',
-            count: 1
-          }])).toEqual({
-            a: 1
-          });
-        });
-        it('_mergeAndAddNameCounts', function () {
-          var a = [{ name: 'a', count: 1 }];
-          var b = [{ name: 'a', count: 2 }, { name: 'b', count: 3 }];
-          factory._mergeAndAddNameCounts(a, b);
-          expect(a).toEqual([
-            { name: 'a', count: 3 },
-            { name: 'b', count: 3 }
-          ]);
-        });
-      });
       it('handles duplicates', function () {
         expect(factory.createFilters(
           {
@@ -94,9 +58,10 @@
           {
             organism: {
               facetObj: [
-                { name: 'mouse', count: 4 },
-                { name: 'cat', count: 2 },
-                { name: 'dog', count: 4 }
+                { name: 'mouse', count: 1, assocAttribute: 'organism_Characteristics_generic_s' },
+                { name: 'cat', count: 2, assocAttribute: 'organism_Characteristics_generic_s' },
+                { name: 'mouse', count: 3, assocAttribute: 'organism_Factor_Value_generic_s' },
+                { name: 'dog', count: 4, assocAttribute: 'organism_Factor_Value_generic_s' }
               ],
               lowerCaseNames: ' mouse cat mouse dog' // This is ok: Just used for substring search.
             }

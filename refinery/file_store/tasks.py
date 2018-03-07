@@ -42,7 +42,7 @@ def create(source, filetype=''):
     # TODO: move to file_store/models.py since it's never used as a task
     logger.info("Creating FileStoreItem using source '%s'", source)
 
-    item = FileStoreItem.objects.create_item(source=source, filetype=filetype)
+    item = FileStoreItem.objects.create(source=source)
     if not item:
         logger.error("Failed to create FileStoreItem using source '%s'",
                      source)
@@ -65,9 +65,12 @@ def import_file(uuid, refresh=False, file_size=0):
     """
     logger.debug("Importing FileStoreItem with UUID '%s'", uuid)
 
-    item = FileStoreItem.objects.get_item(uuid=uuid)
-    if not item:
-        logger.error("FileStoreItem with UUID '%s' not found", uuid)
+    try:
+        item = FileStoreItem.objects.get(uuid=uuid)
+    except (FileStoreItem.DoesNotExist,
+            FileStoreItem.MultipleObjectsReturned) as exc:
+        logger.error("Error importing FileStoreItem with UUID '%s': %s",
+                     uuid, exc)
         return None
 
     # save task ID for looking up file import status
@@ -280,12 +283,14 @@ def rename(uuid, name):
     :returns: FileStoreItem UUID or None if there
         was an error.
     """
-
     try:
-        item = FileStoreItem.objects.get_item(uuid=uuid)
-    except FileStoreItem.DoesNotExist:
-        logger.error("Failed to rename FileStoreItem with UUID '%s'", uuid)
+        item = FileStoreItem.objects.get(uuid=uuid)
+    except (FileStoreItem.DoesNotExist,
+            FileStoreItem.MultipleObjectsReturned) as exc:
+        logger.error("Failed to rename FileStoreItem with UUID '%s': %s",
+                     uuid, exc)
         return None
+
     if item.rename_datafile(name):
         return item.uuid
     else:

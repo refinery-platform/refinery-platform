@@ -9,13 +9,11 @@ from django.contrib import admin
 from django_extensions.admin import ForeignKeyAutocompleteAdmin
 from guardian.admin import GuardedModelAdmin
 
-from core.models import (Analysis, AnalysisNodeConnection, AnalysisResult,
-                         DataSet, DiskQuota, Download, ExtendedGroup,
-                         InvestigationLink, Invitation, Ontology, Project,
-                         SiteProfile, Tutorials, UserProfile, Workflow,
-                         WorkflowDataInput, WorkflowDataInputMap,
-                         WorkflowEngine, WorkflowInputRelationships)
-from core.utils import admin_ui_deletion
+from .models import (Analysis, AnalysisNodeConnection, AnalysisResult, DataSet,
+                     Download, ExtendedGroup, InvestigationLink, Invitation,
+                     Ontology, Project, SiteProfile, Tutorials, UserProfile,
+                     Workflow, WorkflowEngine)
+from .utils import admin_ui_deletion
 
 
 class AnalysisNodeConnectionAdmin(ForeignKeyAutocompleteAdmin):
@@ -32,15 +30,6 @@ class AnalysisResultAdmin(ForeignKeyAutocompleteAdmin):
 
 class ProjectAdmin(GuardedModelAdmin):
     list_display = ['__unicode__', 'id', 'is_catch_all']
-
-
-class WorkflowDataInputMapAdmin(GuardedModelAdmin):
-    list_display = ['__unicode__', 'id', 'workflow_data_input_name',
-                    'data_uuid', 'pair_id']
-
-
-class WorkflowDataInputAdmin(GuardedModelAdmin):
-    list_display = ['__unicode__', 'id', 'name', 'internal_id']
 
 
 class WorkflowAdmin(GuardedModelAdmin, ForeignKeyAutocompleteAdmin):
@@ -66,10 +55,6 @@ class WorkflowAdmin(GuardedModelAdmin, ForeignKeyAutocompleteAdmin):
     delete_selected.short_description = "Delete selected Workflows"
     actions = [delete_selected, hide_selected_workflows,
                show_selected_workflows]
-
-
-class WorkflowInputRelationshipsAdmin(GuardedModelAdmin):
-    list_display = ['__unicode__', 'id', 'category', 'set1', 'set2']
 
 
 class WorkflowEngineAdmin(GuardedModelAdmin, ForeignKeyAutocompleteAdmin):
@@ -116,11 +101,6 @@ class AnalysisAdmin(GuardedModelAdmin):
 
     delete_selected.short_description = "Delete selected Analyses"
     actions = [delete_selected]
-
-
-class DiskQuotaAdmin(GuardedModelAdmin):
-    list_display = ['__unicode__', 'id', 'name', 'summary', 'maximum',
-                    'current']
 
 
 class DownloadAdmin(GuardedModelAdmin, ForeignKeyAutocompleteAdmin):
@@ -173,17 +153,12 @@ admin.site.register(DataSet, DataSetAdmin)
 admin.site.register(InvestigationLink, InvestigationLinkAdmin)
 admin.site.register(Workflow, WorkflowAdmin)
 admin.site.register(WorkflowEngine, WorkflowEngineAdmin)
-admin.site.register(WorkflowDataInput, WorkflowDataInputAdmin)
-admin.site.register(WorkflowDataInputMap, WorkflowDataInputMapAdmin)
 admin.site.register(Analysis, AnalysisAdmin)
 admin.site.register(Download, DownloadAdmin)
 admin.site.register(AnalysisResult, AnalysisResultAdmin)
 admin.site.register(AnalysisNodeConnection, AnalysisNodeConnectionAdmin)
-admin.site.register(DiskQuota, DiskQuotaAdmin)
 admin.site.register(Invitation, InvitationAdmin)
 admin.site.register(UserProfile, UserProfileAdmin)
 admin.site.register(Tutorials, TutorialsAdmin)
-admin.site.register(WorkflowInputRelationships,
-                    WorkflowInputRelationshipsAdmin)
 admin.site.register(Ontology, OntologyAdmin)
 admin.site.register(SiteProfile, SiteProfileAdmin)

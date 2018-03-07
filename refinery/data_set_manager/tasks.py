@@ -58,75 +58,6 @@ def delete_external_file(file_path):
         raise
 
 
-@task()
-def download_http_file(url, out_dir, accession, new_name=None,
-                       galaxy_file_size=None, as_task=True):
-    """downloads a file from a given URL
-    Parameters:
-    url: URL for the file being downloaded
-    out_dir: base directory where file is being downloaded
-    accession: name of directory that will house the downloaded file, in this
-    case, the investigation accession
-    """
-    # directory where file downloads
-    out_dir = os.path.join(out_dir, accession)
-    logger.info("data_set_manager.download_http_file called")
-    # make super-directory (out_dir/accession) if it doesn't exist
-    create_dir(out_dir)
-    if new_name is None:
-        file_name = url.split('/')[-1]  # get the file name
-        # path where file download
-        file_path = os.path.join(out_dir, file_name)
-    else:
-        file_name = new_name
-        file_path = os.path.join(out_dir, new_name)
-
-    logger.info("file_path: %s\n" % file_path)
-    logger.info("file_name: %s\n" % file_name)
-    logger.info("out_dir: %s\n" % out_dir)
-    logger.info("url: %s\n" % url)
-
-    if not os.path.exists(file_path):
-        try:
-            response = requests.get(url, stream=True)
-            response.raise_for_status()
-        except HTTPError as e:
-            logger.error(e)
-        # FIXME: use context manager to open the file
-        f = open(file_path, 'wb')
-        if galaxy_file_size is None:
-            meta = response.headers
-            logger.info("meta: %s\n", meta)
-            file_size = int(meta.getheaders("Content-Length")[0])
-        else:
-            file_size = galaxy_file_size
-
-        logger.info("Downloading: %s Bytes: %s", file_name, file_size)
-        file_size_dl = 0
-        block_sz = 8192
-        while True:
-            buffer = response.raw.read(block_sz)
-            if not buffer:
-                break
-            file_size_dl += len(buffer)
-            f.write(buffer)
-            downloaded = file_size_dl * 100. / file_size
-            if as_task:
-                download_http_file.update_state(
-                    state="PROGRESS",
-                    meta={
-                        "percent_done": "%3.2f%%" % (downloaded),
-                        'current': file_size_dl,
-                        'total': file_size
-                    }
-                )
-            else:
-                status = r"%10d  [%3.2f%%]" % (file_size_dl, downloaded)
-                status += chr(8) * (len(status) + 1)
-                logger.debug(status)
-        f.close()
-
-
 def zip_converted_files(accession, isatab_zip_loc, preisatab_zip_loc):
     """zips up the isatab and pre-isatab files from MAGE-Tab conversion
     Parameters:
@@ -542,9 +473,4 @@ def generate_bam_index(auxiliary_file_store_item_uuid, datafile_path):
     # Map source field of FileStoreItem to path of newly created bam index file
     auxiliary_file_store_item.source = "{}.{}".format(
         datafile_path, bam_index_file_extension)
-
-    auxiliary_file_store_item.set_filetype(bam_index_file_extension)
     auxiliary_file_store_item.save()
-
-    # Symlink the newly created bam index datafile
-    auxiliary_file_store_item.symlink_datafile()

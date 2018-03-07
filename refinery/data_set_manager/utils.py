@@ -642,12 +642,11 @@ def generate_solr_params(
     start = params.get('offset', '0')
     # row number suggested by solr docs, since there's no unlimited option
     row = params.get('limit', '10000000')
-    # TODO: Is there a reason for the explicit Nones below?
-    field_limit = params.get('attributes', None)
-    facet_field = params.get('facets', None)
-    facet_pivot = params.get('pivots', None)
-    sort = params.get('sort', None)
-    facet_filter = params.get('filter_attribute', None)
+    field_limit = params.get('attributes')
+    facet_field = params.get('facets')
+    facet_pivot = params.get('pivots')
+    sort = params.get('sort')
+    facet_filter = params.get('filter_attribute')
 
     fixed_solr_params = \
         '&'.join(['fq=is_annotation:%s' % is_annotation,
@@ -668,16 +667,15 @@ def generate_solr_params(
 
     if facets_from_config:
         # Twice as many facets as necessary, but easier than the alternative.
-        facet_template = '&facet.field={0}_Characteristics{1}' + \
-                   '&facet.field={0}_Factor_Value{1}'
-        solr_params += ''.join(
+        facet_template = '{0}_Characteristics{1},{0}_Factor_Value{1}'
+        facet_field = ','.join(
             [facet_template.format(s, NodeIndex.GENERIC_SUFFIX) for s
              in settings.USER_FILES_FACETS.split(",")]
         )
         solr_params += '&fl=*{},name,*_uuid,type,django_id,{}'.format(
-            NodeIndex.GENERIC_SUFFIX, NodeIndex.DOWNLOAD_URL
-        )
-    elif facet_field:
+            NodeIndex.GENERIC_SUFFIX, NodeIndex.DOWNLOAD_URL)
+
+    if facet_field:
         facet_field = facet_field.split(',')
         facet_field = insert_facet_field_filter(facet_filter, facet_field)
         split_facet_fields = generate_facet_fields_query(facet_field)
@@ -1110,7 +1108,7 @@ def get_file_url_from_node_uuid(node_uuid):
                 )
             )
         else:
-            return core.utils.get_full_url(url)
+            return core.utils.get_absolute_url(url)
 
 
 def fix_last_column(file):
