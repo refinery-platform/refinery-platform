@@ -58,6 +58,6 @@ describe('Not logged in', function() {
 
     cy.visible('Date Submitted');
     cy.visible('Sample Name');
-    cy.visible('Filename');
+    cy.visible('Name');
   });
 });

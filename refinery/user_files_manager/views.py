@@ -43,6 +43,7 @@ def user_files_csv(request):
             possibly_unicode = (
                 doc.get(col + '_Characteristics_generic_s') or
                 doc.get(col + '_Factor_Value_generic_s') or
+                doc.get(col) or
                 ''
             )
             row.append(unidecode(possibly_unicode))

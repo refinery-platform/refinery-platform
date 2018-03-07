@@ -16,16 +16,13 @@ import re
 import urlparse
 
 from django.conf import settings
-from django.core.files.storage import FileSystemStorage
 from django.db import models
 from django.db.models.signals import pre_delete
 from django.dispatch import receiver
-from django.utils.deconstruct import deconstructible
 
 from celery.result import AsyncResult
 from celery.task.control import revoke
 from django_extensions.db.fields import UUIDField
-from storages.backends.s3boto3 import S3Boto3Storage
 
 import core
 
@@ -145,30 +142,6 @@ class FileExtension(models.Model):
 
     def __unicode__(self):
         return self.name
-
-
-@deconstructible
-class SymlinkedFileSystemStorage(FileSystemStorage):
-    """Custom file system storage class with support for symlinked files"""
-
-    # Allow for SymlinkedFileSystemStorage to be settings-agnostic
-    # SEE: http://stackoverflow.com/a/32349636/6031066
-    def __init__(self):
-        super(SymlinkedFileSystemStorage, self).__init__(
-            location=settings.FILE_STORE_BASE_DIR,
-            base_url=settings.FILE_STORE_BASE_URL
-        )
-
-    def exists(self, name):
-        # takes broken symlinks into account
-        return os.path.lexists(self.path(name))
-
-
-class S3MediaStorage(S3Boto3Storage):
-    """Django media (user data) files storage"""
-    bucket_name = settings.MEDIA_BUCKET
-    custom_domain = settings.MEDIA_BUCKET + '.s3.amazonaws.com'
-    file_overwrite = False
 
 
 class FileStoreItem(models.Model):

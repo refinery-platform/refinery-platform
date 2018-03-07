@@ -130,14 +130,11 @@ def get_taskset_result(task_group_id):
 
 
 def _get_workflow_tool(analysis_uuid):
-    try:
-        return tool_manager.models.WorkflowTool.objects.get(
-            analysis__uuid=analysis_uuid
-        )
-    except (tool_manager.models.WorkflowTool.DoesNotExist,
-            tool_manager.models.WorkflowTool.MultipleObjectsReturned) as e:
-        logger.error("Could not fetch WorkflowTool for this analysis: %s", e)
+    workflow_tool = tool_manager.utils.get_workflow_tool(analysis_uuid)
+    if workflow_tool is None:
         run_analysis.update_state(state=celery.states.FAILURE)
+    else:
+        return workflow_tool
 
 
 def _attach_workflow_outputs(analysis_uuid):
