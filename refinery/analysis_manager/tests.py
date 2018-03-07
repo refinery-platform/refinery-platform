@@ -18,7 +18,7 @@ from analysis_manager.tasks import (_check_galaxy_history_state, _get_analysis,
 from analysis_manager.utils import (fetch_objects_required_for_analysis,
                                     validate_analysis_config)
 from analysis_manager.views import analysis_status, run
-from core.models import Analysis, DataSet, Project, Workflow, WorkflowEngine
+from core.models import Analysis, Project, Workflow, WorkflowEngine
 from data_set_manager.models import Assay
 from factory_boy.django_model_factories import GalaxyInstanceFactory
 from factory_boy.utils import (create_dataset_with_necessary_models,
@@ -33,14 +33,15 @@ class AnalysisManagerTestBase(TestCase):
         self.password = 'coffeecoffee'
         self.user = User.objects.create_user(self.username, '', self.password)
 
-        make_analyses_with_single_dataset(1, self.user)
-
-        self.analysis = Analysis.objects.all()[0]
-        self.analysis_status = AnalysisStatus.objects.create(
-            analysis=self.analysis
+        analyses, self.dataset = make_analyses_with_single_dataset(
+            1,
+            self.user
         )
 
-        self.dataset = DataSet.objects.all()[0]
+        self.analysis = analyses[0]
+        self.analysis_status = AnalysisStatus.objects.get(
+            analysis=self.analysis
+        )
 
 
 class AnalysisConfigTests(TestCase):
