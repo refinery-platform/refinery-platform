@@ -202,6 +202,7 @@ def make_template(config, config_yaml):
                     }
                 }
             ],
+            "SubnetId": config['PUBLIC_SUBNET_ID_A']
         }),
         core.DependsOn(['RDSInstance']),
     )
