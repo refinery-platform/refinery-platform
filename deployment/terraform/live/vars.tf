@@ -45,6 +45,11 @@ variable "refinery_host_count" {
   default = "0"
 }
 
+//variable "refinery_host_count" {
+//  type    = "string"
+//  default = "0"
+//}
+
 variable "key_name" {
   type = "string"
 }
