@@ -392,6 +392,7 @@ def make_template(config, config_yaml):
                     "CidrIp": "0.0.0.0/0",
                 },
             ],
+            'VpcId': config['VPC_ID'],
         })
     )
 
