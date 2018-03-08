@@ -190,7 +190,9 @@ def make_template(config, config_yaml):
             'KeyName': config['KEY_NAME'],
             'IamInstanceProfile': functions.ref('WebInstanceProfile'),
             'Monitoring': True,
-            'SecurityGroups': [functions.ref("InstanceSecurityGroup")],
+            'SecurityGroupIds': [
+                functions.get_att('InstanceSecurityGroup', 'GroupId')
+            ],
             'Tags': instance_tags,
             'BlockDeviceMappings': [
                 {
