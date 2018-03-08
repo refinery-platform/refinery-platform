@@ -431,6 +431,7 @@ def make_template(config, config_yaml):
                         'ELBSecurityGroup', 'GroupId'),
                 },
             ],
+            'VpcId': config['VPC_ID'],
         })
     )
 
