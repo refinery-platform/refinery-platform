@@ -30,19 +30,19 @@ variable "vpc_cidr_block" {
   default = "10.0.0.0/24"
 }
 
-variable "public_cidr_block" {
+variable "public_cidr_block_a" {
   type    = "string"
-  default = "10.0.0.0/25"
+  default = "10.0.0.0/26"
+}
+
+variable "public_cidr_block_b" {
+  type    = "string"
+  default = "10.0.0.64/26"
 }
 
 variable "private_cidr_block" {
   type    = "string"
   default = "10.0.0.128/25"
-}
-
-variable "refinery_host_count" {
-  type    = "string"
-  default = "0"
 }
 
 //variable "refinery_host_count" {
