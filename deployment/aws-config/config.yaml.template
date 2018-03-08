@@ -30,9 +30,15 @@ S3_BUCKET_NAME_BASE: "refinery"
 # Get from Terraform output
 COGNITO_IDENTITY_POOL_ID: ""
 
-# Get Docker IP from terraform, and make a URL like:
-#   tcp://1.2.3.4:2376
+# Get Docker hostname address from terraform output
 DOCKER_HOST: ""
+
+# Get VPC id from terraform output
+VPC_ID: ""
+
+# Get Public Subnet ids from terraform output
+PUBLIC_SUBNET_ID_A: ""
+PUBLIC_SUBNET_ID_B: ""
 
 # AWS ARN for the TLS certifcate to be used for HTTPS connections
 # TLS_CERTIFICATE: "arn:aws:acm:--region--:--accountnumber--:certificate/--id--"
