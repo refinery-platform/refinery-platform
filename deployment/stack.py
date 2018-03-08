@@ -458,6 +458,7 @@ def make_template(config, config_yaml):
                         'InstanceSecurityGroup', 'GroupId'),
                 },
             ],
+            'VpcId': config['VPC_ID'],
         })
     )
 
