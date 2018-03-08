@@ -520,9 +520,6 @@ def make_template(config, config_yaml):
                 'S3BucketName': config['S3_LOG_BUCKET'],
                 # 'S3BucketPrefix' unused
             },
-            'AvailabilityZones': [
-                functions.get_att('WebInstance', 'AvailabilityZone')
-            ],
             'ConnectionSettings': {
                 'IdleTimeout': 1800  # seconds
             },
@@ -538,6 +535,18 @@ def make_template(config, config_yaml):
             'Listeners': listeners,
             'SecurityGroups': [
                 functions.get_att('ELBSecurityGroup', 'GroupId')],
+            # Again, I'm not sure why DBSubnetGroup needs the two subnets in
+            #  different AZ's, but I don;t think we really need
+            # PUBLIC_SUBNET_ID_B other than to allow DBSubnetGroup to be
+            # created
+            # We used to have: AvailabilityZones set, but
+            # "You can specify the AvailabilityZones or Subnets property,
+            # but not both" & "For load balancers that are in a VPC,
+            # specify the Subnets property."
+            # See: https://docs.aws.amazon.com/AWSCloudFormation/latest/
+            # UserGuide/aws-properties-ec2-elb.html
+            # #cfn-ec2-elb-availabilityzones
+            'Subnets': [config["PUBLIC_SUBNET_ID_A"]],
             'Tags': load_tags(),
         })
     cft.parameters.add(
