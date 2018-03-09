@@ -13,7 +13,7 @@ from core.api import (AnalysisResource, DataSetResource, ExtendedGroupResource,
                       GroupManagementResource, InvitationResource,
                       NodeResource, ProjectResource, StatisticsResource,
                       UserAuthenticationResource, UserProfileResource,
-                      WorkflowInputRelationshipsResource, WorkflowResource)
+                      WorkflowResource)
 from core.forms import RegistrationFormWithCustomFields
 from core.models import AuthenticationFormUsernameOrEmail
 from core.urls import core_router
@@ -41,7 +41,6 @@ v1_api.register(AssayResource())
 v1_api.register(DataSetResource())
 v1_api.register(NodeResource())
 v1_api.register(WorkflowResource())
-v1_api.register(WorkflowInputRelationshipsResource())
 v1_api.register(StatisticsResource())
 v1_api.register(GroupManagementResource())
 v1_api.register(UserAuthenticationResource())

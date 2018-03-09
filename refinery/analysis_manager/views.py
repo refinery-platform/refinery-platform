@@ -11,7 +11,7 @@ from django.http import (HttpResponse, HttpResponseBadRequest,
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 
-from core.models import Analysis, Workflow
+from core.models import Analysis
 from core.views import custom_error_page
 
 from .models import AnalysisStatus
@@ -113,18 +113,6 @@ def analysis_cancel(request):
         else:
             return HttpResponseForbidden()  # 403
     return HttpResponseNotAllowed(['POST'])  # 405
-
-
-def get_workflow_data_input_map(request, workflow_uuid):
-    """Function for AJAX returning WorkflowDataInputMap for a specified
-    workflow_uuid
-    """
-    curr_workflow = Workflow.objects.filter(uuid=workflow_uuid)[0]
-    if request.is_ajax():
-        return JsonResponse(curr_workflow.data_inputs.all(),
-                            content_type='application/javascript')
-    else:
-        return JsonResponse(curr_workflow.data_inputs.all())
 
 
 def run(request):

@@ -60,7 +60,7 @@ class UserFilesUITests(StaticLiveServerTestCase):
         )
         self.assertIn("All Files", response.content)
 
-    @mock.patch('django.conf.settings.USER_FILES_COLUMNS', 'filename,fake')
+    @mock.patch('django.conf.settings.USER_FILES_COLUMNS', 'name,fake')
     def test_csv(self):
         response = requests.get(
             urljoin(
@@ -70,7 +70,7 @@ class UserFilesUITests(StaticLiveServerTestCase):
         )
         self.assertEqual(
             response.content,
-            'url,filename,fake\r\n'
+            'url,name,fake\r\n'
         )
 
 
@@ -122,6 +122,12 @@ class UserFilesUtilsTests(TestCase):
         query = generate_solr_params_for_user(QueryDict({}), user.id)
         self.assertItemsEqual(str(query).split('&'), [
                          'fq=assay_uuid%3A%28{}%29'.format(assay_uuid),
+                         'fl=%2A_generic_s'
+                         '%2Cname'
+                         '%2C%2A_uuid'
+                         '%2Ctype'
+                         '%2Cdjango_id'
+                         '%2CREFINERY_DOWNLOAD_URL_s',
                          'facet.field=filetype_Characteristics_generic_s',
                          'facet.field=filetype_Factor_Value_generic_s',
                          'facet.field=organism_Characteristics_generic_s',
@@ -136,12 +142,6 @@ class UserFilesUtilsTests(TestCase):
                          'facet.field=antibody_Factor_Value_generic_s',
                          'facet.field=experimenter_Characteristics_generic_s',
                          'facet.field=experimenter_Factor_Value_generic_s',
-                         'fl=%2A_generic_s'
-                         '%2Cname'
-                         '%2C%2A_uuid'
-                         '%2Ctype'
-                         '%2Cdjango_id'
-                         '%2CREFINERY_DOWNLOAD_URL_s',
                          'fq=is_annotation%3Afalse',
                          'start=0',
                          'rows=10000000',
