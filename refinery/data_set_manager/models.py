@@ -241,6 +241,13 @@ class Study(NodeCollection):
         return unicode(self.identifier) + ": " + unicode(self.title)
 
 
+@receiver(pre_delete, sender=Study)
+def _study_delete(sender, instance, **kwargs):
+    nodes = Node.objects.filter(study=instance)
+    for node in nodes:
+        node.delete()
+
+
 class Design(models.Model):
     """Study Design Descriptor (ISA-Tab Spec 4.1.3.2)"""
     study = models.ForeignKey(Study)

@@ -2057,19 +2057,6 @@ def _baseresource_save(sender, instance, **kwargs):
     invalidate_cached_object(instance)
 
 
-@receiver_subclasses(pre_delete, NodeCollection, 'nodecollection_pre_delete')
-def _nodecollection_delete(sender, instance, **kwargs):
-    """Finds all subclasses related to a DataSet's NodeCollections and deletes
-    all FileStoreItem instances associated with the DataSet
-    """
-    # Investigations are NodeCollections as well, but they get removed when
-    # a Study does due to the ForeignKey rel. between the two
-    if type(instance) == Study:
-        nodes = Node.objects.filter(study=instance)
-        for node in nodes:
-            node.delete()
-
-
 class AuthenticationFormUsernameOrEmail(AuthenticationForm):
     def clean_username(self):
         username = self.data['username']
