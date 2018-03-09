@@ -96,9 +96,17 @@ class FileStoreItemTest(TestCase):
         self.path_source = os.path.join('/example/path', self.file_name)
         self.url_source = urljoin('http://example.org/', self.file_name)
 
-    def test_get_remote_file_url(self):
+    def test_get_remote_file_url_with_url_source(self):
         item = FileStoreItem(source=self.url_source)
         self.assertEqual(item.get_datafile_url(), self.url_source)
+
+    def test_get_remote_file_url_with_path_source(self):
+        item = FileStoreItem(source=self.path_source)
+        self.assertEqual(item.get_datafile_url(), None)
+
+    def test_get_remote_file_url_with_s3_source(self):
+        item = FileStoreItem(source='s3://upload-bucket-name/key-name')
+        self.assertEqual(item.get_datafile_url(), None)
 
     def test_set_remote_file_type(self):
         item = FileStoreItem.objects.create(source=self.url_source)
