@@ -243,9 +243,7 @@ class Study(NodeCollection):
 
 @receiver(pre_delete, sender=Study)
 def _study_delete(sender, instance, **kwargs):
-    nodes = Node.objects.filter(study=instance)
-    for node in nodes:
-        node.delete()
+    Node.objects.filter(study=instance).delete()
 
 
 class Design(models.Model):
