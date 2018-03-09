@@ -243,6 +243,14 @@ class Study(NodeCollection):
 
 @receiver(pre_delete, sender=Study)
 def _study_delete(sender, instance, **kwargs):
+    """
+    Removes a Study's related objects upon deletion being triggered.
+    Having these extra checks is favored within a signal so that this logic
+    is picked up on bulk deletes as well.
+
+    See: https://docs.djangoproject.com/en/1.8/topics/db/models/
+    #overriding-model-methods
+    """
     Node.objects.filter(study=instance).delete()
 
 
@@ -656,6 +664,15 @@ class Node(models.Model):
 
 @receiver(pre_delete, sender=Node)
 def _node_delete(sender, instance, *args, **kwargs):
+    """
+    Removes a Node's related objects upon deletion being triggered.
+    Having these extra checks is favored within a signal so that this logic
+    is picked up on bulk deletes as well.
+
+    See: https://docs.djangoproject.com/en/1.8/topics/db/models/
+    #overriding-model-methods
+    """
+
     # remove a Node's FileStoreItem upon deletion, if one exists
     file_store_item = instance.get_file_store_item()
     if file_store_item is not None:
