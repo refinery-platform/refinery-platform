@@ -165,7 +165,7 @@ class FileStoreItemLocalFileTest(TestCase):
         self.item.is_local = mock.MagicMock(return_value=True)
 
     @override_storage()
-    @override_settings(MEDIA_ROOT='')
+    @override_settings(MEDIA_URL='')
     def test_get_local_file_url(self):
         self.item.datafile.save(self.file_name, ContentFile(''))
         self.assertEqual(self.item.get_datafile_url(),
