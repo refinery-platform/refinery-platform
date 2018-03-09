@@ -8,6 +8,8 @@ import logging
 
 from django.conf import settings
 from django.db import models
+from django.db.models.signals import pre_delete
+from django.dispatch import receiver
 
 from celery.result import AsyncResult
 from django_extensions.db.fields import UUIDField
@@ -237,6 +239,13 @@ class Study(NodeCollection):
 
     def __unicode__(self):
         return unicode(self.identifier) + ": " + unicode(self.title)
+
+
+@receiver(pre_delete, sender=Study)
+def _study_delete(sender, instance, **kwargs):
+    nodes = Node.objects.filter(study=instance)
+    for node in nodes:
+        node.delete()
 
 
 class Design(models.Model):
