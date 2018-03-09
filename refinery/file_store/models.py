@@ -348,7 +348,7 @@ class FileStoreItem(models.Model):
         except ValueError:
             if core.utils.is_absolute_url(self.source):
                 if self.source.startswith('s3://'):
-                    return None
+                    return None  # file is in the UPLOAD_BUCKET
                 return self.source
         logger.error("File not found at '%s'", self.datafile.name)
         return None
