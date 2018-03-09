@@ -118,7 +118,7 @@ def update_refinery():
     """Perform full update of a Refinery Platform instance"""
     puts("Updating Refinery")
     with cd(env.refinery_project_dir):
-        # update current branch in Vagrant VM, otherwise checkout custom branch
+        # if in Vagrant update current branch, otherwise checkout custom branch
         if env.project_user != 'vagrant':
             run("git checkout {branch}".format(**env))
         # avoid explaining automatic merge commits with both new and old git
