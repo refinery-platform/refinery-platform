@@ -196,7 +196,7 @@ class FileStoreItem(models.Model):
                     self.pk, exc
                 )
             else:
-                old_instance.delete_datafile(save_model=False)
+                old_instance.delete_datafile(save_instance=False)
 
         super(FileStoreItem, self).save(*args, **kwargs)
 
@@ -277,12 +277,12 @@ class FileStoreItem(models.Model):
             pass
         return False
 
-    def delete_datafile(self, save_model=True):
+    def delete_datafile(self, save_instance=True):
         """Delete datafile on disk and clears all attributes on the field"""
         if self.datafile:
             logger.debug("Deleting datafile '%s'", self.datafile.name)
             try:
-                self.datafile.delete(save=save_model)
+                self.datafile.delete(save=save_instance)
             except OSError as exc:
                 logger.error("Error deleting file '%s': %s",
                              self.datafile.name, exc)
@@ -406,7 +406,7 @@ def _delete_datafile(sender, instance, **kwargs):
     Signal handler is required because QuerySet bulk delete does not call
     delete() method on the models
     """
-    instance.delete_datafile(save_model=False)
+    instance.delete_datafile(save_instance=False)
 
 
 def _symlink_file_on_disk(source, link_name):
