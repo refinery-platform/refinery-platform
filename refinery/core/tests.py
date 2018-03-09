@@ -729,14 +729,6 @@ class AnalysisDeletionTest(TestCase):
         self.assertGreater(AnalysisStatus.objects.count(), 0)
         self.assertGreater(Node.objects.count(), 0)
 
-        # analysis deletion should only remove derived Nodes
-        total_dataset_nodes = \
-            sum([d.get_nodes().count() for d in DataSet.objects.all()])
-        total_nodes = Node.objects.count()
-
-        self.assertGreater(total_dataset_nodes, 0)
-        self.assertEqual(total_dataset_nodes, total_nodes)
-
     def test_analysis_deletion_removes_related_objects(self):
         self.analysis.delete()
 
