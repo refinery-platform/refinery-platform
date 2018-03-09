@@ -1,6 +1,8 @@
 from django.contrib.auth.models import User
 
-from core.utils import get_resources_for_user
+from guardian.shortcuts import get_objects_for_user
+
+from core.utils import accept_global_perms
 from data_set_manager.models import Assay, Study
 from data_set_manager.utils import generate_solr_params
 
@@ -27,7 +29,13 @@ def generate_solr_params_for_user(params, user_id):
     except User.DoesNotExist:
         user = User.get_anonymous()
 
-    datasets = get_resources_for_user(user, "dataset")
+    # will update to allow users to view read_meta datasets then we can
+    # update to use get_resources_for_user method in core/utils
+    datasets = get_objects_for_user(user,
+                                    'core.read_dataset',
+                                    accept_global_perms=accept_global_perms(
+                                        'dataset'
+                                    ))
 
     assay_uuids = []
     for dataset in datasets:
