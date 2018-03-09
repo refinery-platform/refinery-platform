@@ -17,7 +17,7 @@ import urlparse
 
 from django.conf import settings
 from django.db import models
-from django.db.models.signals import post_delete
+from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 
 from celery.result import AsyncResult
@@ -170,15 +170,6 @@ class FileStoreItem(models.Model):
     def save(self, *args, **kwargs):
         self.source = _map_source(self.source)
 
-        # set file type using file extension
-        try:
-            extension = self.get_file_extension()
-        except RuntimeError as exc:
-            logger.warn("Could not assign type to file '%s': %s",
-                        self, exc)
-        else:
-            self.filetype = extension.filetype
-
         if self.datafile:
             # symlink datafile if necessary
             if (not self.is_local() and os.path.isabs(self.source) and
@@ -199,6 +190,18 @@ class FileStoreItem(models.Model):
                 old_instance.delete_datafile(save_instance=False)
 
         super(FileStoreItem, self).save(*args, **kwargs)
+
+    def set_filetype(self, file_extension):
+        """Set file type given a file extension"""
+        try:
+            extension = FileExtension.objects.get(name=file_extension)
+        except (FileExtension.DoesNotExist,
+                FileExtension.MultipleObjectsReturned) as exc:
+            logger.warn("Could not assign type to file '%s' using extension"
+                        "'%s': %s", self, file_extension, exc)
+        else:
+            self.filetype = extension.filetype
+            self.save()
 
     def get_absolute_path(self):
         """
@@ -236,9 +239,9 @@ class FileStoreItem(models.Model):
         try:
             return FileExtension.objects.get(name=extension)
         except FileExtension.DoesNotExist:
-            extension_parts = extension.split('.')
+            extension = _get_extension_from_string(extension)
             try:
-                return FileExtension.objects.get(name=extension_parts[-1])
+                return FileExtension.objects.get(name=extension)
             except (FileExtension.DoesNotExist,
                     FileExtension.MultipleObjectsReturned) as exc:
                 raise RuntimeError(exc)
@@ -397,6 +400,19 @@ def get_file_object(file_name):
             file_name, e.errno, e.strerror
         )
         return None
+
+
+@receiver(post_save, sender=FileStoreItem)
+def _set_filetype(sender, instance, created, **kwargs):
+    """Set file type using file extension"""
+    if created:
+        try:
+            extension = instance.get_file_extension()
+        except RuntimeError as exc:
+            logger.warn("Could not assign type to file '%s': %s",
+                        instance, exc)
+        else:
+            instance.filetype = extension.filetype
 
 
 # post_delete is safer than pre_delete
