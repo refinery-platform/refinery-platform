@@ -13,7 +13,7 @@ from core.api import (AnalysisResource, DataSetResource, ExtendedGroupResource,
                       GroupManagementResource, InvitationResource,
                       NodeResource, ProjectResource, StatisticsResource,
                       UserAuthenticationResource, UserProfileResource,
-                      WorkflowInputRelationshipsResource, WorkflowResource)
+                      WorkflowResource)
 from core.forms import RegistrationFormWithCustomFields
 from core.models import AuthenticationFormUsernameOrEmail
 from core.urls import core_router
@@ -41,7 +41,6 @@ v1_api.register(AssayResource())
 v1_api.register(DataSetResource())
 v1_api.register(NodeResource())
 v1_api.register(WorkflowResource())
-v1_api.register(WorkflowInputRelationshipsResource())
 v1_api.register(StatisticsResource())
 v1_api.register(GroupManagementResource())
 v1_api.register(UserAuthenticationResource())
@@ -62,7 +61,6 @@ urlpatterns = patterns(
     # links in core urls
     url(r'^', include('core.urls')),
     url(r'^annotation_server/', include('annotation_server.urls')),
-    url(r'^workflow_manager/', include('workflow_manager.urls')),
     url(r'^analysis_manager/', include('analysis_manager.urls')),
     url(r'^data_set_manager/', include('data_set_manager.urls')),
     url(r'^tasks/', include('djcelery.urls')),

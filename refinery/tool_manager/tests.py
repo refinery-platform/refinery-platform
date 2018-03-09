@@ -61,8 +61,6 @@ from factory_boy.django_model_factories import (AnnotatedNodeFactory,
                                                 ToolFactory)
 from factory_boy.utils import create_dataset_with_necessary_models
 from file_store.models import FileStoreItem, FileType
-from selenium_testing.utils import (MAX_WAIT, SeleniumTestBaseGeneric,
-                                    wait_until_class_visible)
 from tool_manager.management.commands.load_tools import \
     Command as LoadToolsCommand
 from tool_manager.tasks import django_docker_cleanup
@@ -72,7 +70,7 @@ from .models import (FileRelationship, GalaxyParameter, InputFile, Parameter,
                      VisualizationToolError, WorkflowTool)
 from .utils import (FileTypeValidationError, create_tool,
                     create_tool_definition, get_workflows,
-                    validate_tool_annotation,
+                    user_has_access_to_tool, validate_tool_annotation,
                     validate_tool_launch_configuration,
                     validate_workflow_step_annotation)
 from .views import ToolDefinitionsViewSet, ToolsViewSet
@@ -1617,6 +1615,14 @@ class ToolTests(ToolManagerTestBase):
         self.tool.analysis.set_status(Analysis.SUCCESS_STATUS)
         self.assertFalse(self.tool.is_running())
 
+    def test_terminate_file_import_tasks(self):
+        with mock.patch(
+            "file_store.models.FileStoreItem.terminate_file_import_task"
+        ) as terminate_mock:
+            self.create_tool(ToolDefinition.WORKFLOW)
+            self.tool.analysis.terminate_file_import_tasks()
+            self.assertEqual(terminate_mock.call_count, 1)
+
 
 class VisualizationToolTests(ToolManagerTestBase):
     def setUp(self):
@@ -2874,7 +2880,7 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
             uuid=self.tool.uuid
         )
         self.assertEqual(get_response.status_code, 403)
-        self.assertIn("not have sufficient permissions",
+        self.assertIn("User does not have permission",
                       get_response.content)
 
     def test_relaunch_failure_tool_already_running(self):
@@ -2978,6 +2984,38 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
         self._create_workflow_and_vis_tools()
         self._make_tools_get_request(tool_type="coffee")
         self.assertEqual(self.get_response.data, [])
+
+    def _test_launch_vis_container(self, user_has_permission=True):
+        self.create_tool(ToolDefinition.VISUALIZATION)
+        self.assertFalse(self.tool.is_running())
+
+        if user_has_permission:
+            assign_perm('core.read_dataset', self.user, self.tool.dataset)
+
+        # Need to set_password() to be able to login. Otherwise
+        # user.password is the hash representation which is not what the
+        # login() expects
+        temp_password = "password"
+        self.user.set_password(temp_password)
+        self.user.save()
+        self.client.login(username=self.user.username,
+                          password=temp_password)
+
+        with mock.patch.object(VisualizationTool, "launch") as launch_mock:
+            get_response = self.client.get(
+                "{}/".format(self.tool.get_relative_container_url())
+            )
+        if user_has_permission:
+            self.assertTrue(launch_mock.called)
+        else:
+            self.assertEqual(get_response.status_code, 403)
+            self.assertFalse(launch_mock.called)
+
+    def test_vis_tool_url_after_container_removed_relaunches(self):
+        self._test_launch_vis_container()
+
+    def test_vis_tool_url_user_without_permission(self):
+        self._test_launch_vis_container(user_has_permission=False)
 
 
 class WorkflowToolLaunchTests(ToolManagerTestBase):
@@ -3443,26 +3481,19 @@ class WorkflowToolLaunchTests(ToolManagerTestBase):
         )
 
 
-class VisualizationToolLaunchTests(ToolManagerTestBase,  # TODO: Cypress
-                                   SeleniumTestBaseGeneric):
+class VisualizationToolLaunchTests(ToolManagerTestBase):
     def setUp(self):
-        # super() will only ever resolve a single class type for a given method
-        ToolManagerTestBase.setUp(self)
-        SeleniumTestBaseGeneric.setUp(self)
+        super(VisualizationToolLaunchTests, self).setUp()
 
-        self.sample_igv_file = urljoin(
-            self.live_server_url,
-            "/tool_manager/test_data/sample.seg"
-        )
+        self.sample_igv_file_url = "http://www.example.com/sample.seg"
+
         mock.patch.object(
             LoadToolsCommand,
             "_get_available_visualization_tool_registry_names",
         ).start()
 
     def tearDown(self):
-        # super() will only ever resolve a single class type for a given method
-        ToolManagerTestBase.tearDown(self)
-        SeleniumTestBaseGeneric.tearDown(self)
+        super(VisualizationToolLaunchTests, self).tearDown()
 
         # Explicitly call delete() to purge any containers we spun up
         Tool.objects.all().delete()
@@ -3502,7 +3533,7 @@ class VisualizationToolLaunchTests(ToolManagerTestBase,  # TODO: Cypress
             "dataset_uuid": self.dataset.uuid,
             "tool_definition_uuid": self.td.uuid,
             Tool.FILE_RELATIONSHIPS: "[{}]".format(
-                self.make_node(source=self.sample_igv_file)
+                self.make_node(source=self.sample_igv_file_url)
             ),
             ToolDefinition.PARAMETERS: {
                 self.mock_parameter.uuid: self.mock_parameter.default_value
@@ -3533,28 +3564,9 @@ class VisualizationToolLaunchTests(ToolManagerTestBase,  # TODO: Cypress
             assertions(last_tool)
 
     def test_IGV(self):
-        def assertions(tool):
-            # Check to see if IGV shows what we want
-            igv_url = urljoin(
-                self.live_server_url,
-                tool.get_relative_container_url()
-            )
-
-            self.browser.get(igv_url)
-            time.sleep(15)
-
-            wait_until_class_visible(self.browser, "igv-track-label", MAX_WAIT)
-            self.assertIn(
-                "sample.seg",
-                self.browser.find_elements_by_class_name(
-                    "igv-track-label"
-                )[0].text
-            )
-
         self._start_visualization(
             'igv.json',
-            self.sample_igv_file,
-            assertions
+            self.sample_igv_file_url
         )
 
     def test_HiGlass(self):
@@ -3614,7 +3626,7 @@ class VisualizationToolLaunchTests(ToolManagerTestBase,  # TODO: Cypress
 
         self._start_visualization(
             'igv.json',
-            self.sample_igv_file,
+            self.sample_igv_file_url,
             assertions
         )
 
@@ -3838,6 +3850,12 @@ class ToolManagerUtilitiesTests(ToolManagerTestBase):
                 ),
                 context.exception.message
             )
+
+    def test_user_has_access_to_tool(self):
+        self.create_tool(ToolDefinition.VISUALIZATION)
+        assign_perm('core.read_dataset', self.user, self.tool.dataset)
+        self.assertTrue(user_has_access_to_tool(self.user, self.tool))
+        self.assertFalse(user_has_access_to_tool(self.user2, self.tool))
 
 
 class ParameterTests(TestCase):

@@ -595,17 +595,16 @@ class Node(models.Model):
         file_store_item = self.get_file_store_item()
 
         # Check if we pass the logic to generate aux. Files/Nodes
-        if (file_store_item.filetype.used_for_visualization and
-            file_store_item.is_local() and
+        if (file_store_item and file_store_item.filetype and
+                file_store_item.filetype.used_for_visualization and
+                file_store_item.is_local() and
                 settings.REFINERY_AUXILIARY_FILE_GENERATION ==
                 "on_file_import"):
-
             datafile_path = file_store_item.get_absolute_path()
 
             # Create an empty FileStoreItem (we do the datafile association
             # within the generate_auxiliary_file task
-            auxiliary_file_store_item = FileStoreItem.objects.create(
-                source='auxiliary_file')
+            auxiliary_file_store_item = FileStoreItem.objects.create()
 
             auxiliary_node = self._create_and_associate_auxiliary_node(
                 auxiliary_file_store_item.uuid)

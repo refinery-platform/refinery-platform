@@ -13,9 +13,6 @@ urlpatterns = patterns(
     url(r'^$', 'index'),
     url(r'^(?P<uuid>' + UUID_RE + r')/$',
         'analysis_status', name="analysis-status"),
-    url(r'^update_workflows/$', 'update_workflows'),
-    url(r'^workflow_inputs/(?P<workflow_uuid>' + UUID_RE + r')/$',
-        'get_workflow_data_input_map'),
     url(r'^analysis_cancel/$', 'analysis_cancel'),
     url(r'^run/$', 'run'),
 )

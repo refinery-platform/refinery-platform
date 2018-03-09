@@ -881,14 +881,6 @@ class InvestigationLink(models.Model):
             logger.error("Could not fetch NodeCollection: %s", e)
 
 
-class WorkflowDataInput(models.Model):
-    name = models.CharField(max_length=200)
-    internal_id = models.IntegerField()
-
-    def __unicode__(self):
-        return self.name + " (" + str(self.internal_id) + ")"
-
-
 class WorkflowEngine(OwnableResource, ManageableResource):
     # TODO: remove Galaxy dependency
     instance = models.ForeignKey(Instance, blank=True)
@@ -900,21 +892,6 @@ class WorkflowEngine(OwnableResource, ManageableResource):
         verbose_name = "workflowengine"
         permissions = (
             ('read_%s' % verbose_name, 'Can read %s' % verbose_name),
-        )
-
-
-class WorkflowInputRelationships(models.Model):
-    """Defines relationships between inputs based on the input string
-    assoicated with each workflow i.e refinery_relationship=[{"category":"1-1",
-    "set1":"input_file", "set2":"exp_file"}]
-    """
-    category = models.CharField(max_length=15, choices=NR_TYPES, blank=True)
-    set1 = models.CharField(max_length=50)
-    set2 = models.CharField(max_length=50, blank=True, null=True)
-
-    def __unicode__(self):
-        return (
-            str(self.category) + " - " + str(self.set1) + "," + str(self.set2)
         )
 
 
@@ -944,15 +921,9 @@ class Workflow(SharableResource, ManageableResource):
             "download list."
         ),
     )
-
-    data_inputs = models.ManyToManyField(WorkflowDataInput, blank=True)
     internal_id = models.CharField(max_length=50)
     workflow_engine = models.ForeignKey(WorkflowEngine)
     show_in_repository_mode = models.BooleanField(default=False)
-    input_relationships = models.ManyToManyField(
-        WorkflowInputRelationships,
-        blank=True
-    )
     is_active = models.BooleanField(default=False, null=False, blank=False)
     type = models.CharField(
         default=ANALYSIS_TYPE,
@@ -1006,26 +977,14 @@ class Workflow(SharableResource, ManageableResource):
             return False, deletion_error_message
 
         else:
-            # If an Analysis hasn't been run on said Workflow delete
-            # WorkflowDataInputs and WorkflowInputRelationships if they exist
-            try:
-                self.data_inputs.remove()
-            except Exception as e:
-                logger.error(
-                    "Could not delete WorkflowDataInput: %s", e)
-            try:
-                self.input_relationships.remove()
-            except Exception as e:
-                logger.error(
-                    "Could not delete WorkflowInputRelationship: %s", e)
-
             super(Workflow, self).delete()
 
             # Return a "truthy" value here so that the admin ui knows if the
             # deletion succeeded or not as well as the proper message to
             # display to the end user
             return True, "Workflow: {} was deleted successfully".format(
-                self.name)
+                self.name
+            )
 
 
 class Project(SharableResource):
@@ -1043,15 +1002,6 @@ class Project(SharableResource):
             ('read_%s' % verbose_name, 'Can read %s' % verbose_name),
             ('share_%s' % verbose_name, 'Can share %s' % verbose_name),
         )
-
-
-class WorkflowDataInputMap(models.Model):
-    workflow_data_input_name = models.CharField(max_length=200)
-    data_uuid = UUIDField(auto=False)
-    pair_id = models.IntegerField(blank=True, null=True)
-
-    def __unicode__(self):
-        return str(self.workflow_data_input_name) + " <-> " + self.data_uuid
 
 
 class AnalysisResult(models.Model):
@@ -1105,8 +1055,6 @@ class Analysis(OwnableResource):
     project = models.ForeignKey(Project, related_name="analyses")
     data_set = models.ForeignKey(DataSet, blank=True)
     workflow = models.ForeignKey(Workflow, blank=True)
-    workflow_data_input_maps = models.ManyToManyField(WorkflowDataInputMap,
-                                                      blank=True)
     workflow_steps_num = models.IntegerField(blank=True, null=True)
     workflow_copy = models.TextField(blank=True, null=True)
     history_id = models.TextField(blank=True, null=True)
@@ -1157,9 +1105,8 @@ class Analysis(OwnableResource):
         2. Delete AnalysisResults
         3. Optimize Solr's index to reflect that
         4. Delete the Nodes
-        5. Continue on to delete the Analysis,
-        WorkflowFilesDls, WorkflowDataInputMaps,
-        AnalysisNodeConnections, and AnalysisStatus'
+        5. Continue on to delete the Analysis, AnalysisNodeConnections,
+        and AnalysisStatus'
         """
 
         delete = True
@@ -1340,16 +1287,6 @@ class Analysis(OwnableResource):
         # jobs in a running workflow are stopped by deleting its history
         self.galaxy_cleanup()
 
-    def get_input_file_uuid_list(self):
-        """Return a list of all input file UUIDs"""
-        input_file_uuid_list = []
-        for files in self.workflow_data_input_maps.all():
-            cur_node_uuid = files.data_uuid
-            cur_fs_uuid = Node.objects.get(
-                uuid=cur_node_uuid).file_uuid
-            input_file_uuid_list.append(cur_fs_uuid)
-        return input_file_uuid_list
-
     def facet_name(self):
         return '{}_{}_{}_s'.format(
             NodeIndex.ANALYSIS_UUID_PREFIX,
@@ -1457,26 +1394,29 @@ class Analysis(OwnableResource):
             # workaround for FastQC reports downloaded from Galaxy as zip
             # archives
             (root, ext) = os.path.splitext(new_file_name)
-            item = FileStoreItem.objects.get_item(uuid=result.file_store_uuid)
-            if ext == '.html':
-                try:
-                    zipfile = FileType.objects.get(name="ZIP")
-                except (FileType.DoesNotExist,
-                        FileType.MultipleObjectsReturned) as exc:
-                    logger.error("Error renaming HTML to zip: %s", exc)
-                else:
-                    if item.get_filetype() == zipfile:
-                        new_file_name = ''.join([root, '.zip'])
-            renamed_file_store_item_uuid = rename(
-                result.file_store_uuid,
-                new_file_name
-            )
+            try:
+                item = FileStoreItem.objects.get(uuid=result.file_store_uuid)
+            except (FileStoreItem.DoesNotExist,
+                    FileStoreItem.MultipleObjectsReturned) as exc:
+                logger.error("Error renaming HTML file '%s' to zip: %s",
+                             result.file_store_uuid, exc)
+            else:
+                if ext == '.html':
+                    try:
+                        zipfile = FileType.objects.get(name='ZIP')
+                    except (FileType.DoesNotExist,
+                            FileType.MultipleObjectsReturned) as exc:
+                        logger.error("Error renaming HTML to zip: %s", exc)
+                    else:
+                        if item.filetype == zipfile:
+                            new_file_name = ''.join([root, '.zip'])
+                renamed_file_store_item_uuid = rename(result.file_store_uuid,
+                                                      new_file_name)
 
             # Try to generate an auxiliary node for visualization purposes
             # NOTE: We have to do this after renaming happens because before
             #  renaming, said FileStoreItems's datafile field does not point
             #  to an actual file
-
             file_store_item_uuid = (
                 renamed_file_store_item_uuid if
                 renamed_file_store_item_uuid else result.file_store_uuid
@@ -1530,20 +1470,21 @@ class Analysis(OwnableResource):
         Gathers all UUIDs of FileStoreItems used as inputs for the Analysis,
         and trys to terminate their import_file tasks if possible
         """
-        file_store_item_uuids = self.get_input_file_uuid_list()
-
-        for uuid in file_store_item_uuids:
-            try:
-                file_store_item = FileStoreItem.objects.get(uuid=uuid)
-            except (FileStoreItem.DoesNotExist,
-                    FileStoreItem.MultipleObjectsReturned) as e:
-                logger.error(
-                    "Couldn't properly fetch FileStoreItem with UUID: %s %s",
-                    uuid,
-                    e
-                )
-            else:
-                file_store_item.terminate_file_import_task()
+        workflow_tool = tool_manager.utils.get_workflow_tool(self.uuid)
+        if workflow_tool is not None:
+            for uuid in workflow_tool.get_input_file_uuid_list():
+                try:
+                    file_store_item = FileStoreItem.objects.get(uuid=uuid)
+                except (FileStoreItem.DoesNotExist,
+                        FileStoreItem.MultipleObjectsReturned) as e:
+                    logger.error(
+                        "Couldn't properly fetch "
+                        "FileStoreItem with UUID: %s %s",
+                        uuid,
+                        e
+                    )
+                else:
+                    file_store_item.terminate_file_import_task()
 
     def _prepare_annotated_nodes(self, node_uuids):
         """
@@ -2170,19 +2111,19 @@ def _baseresource_save(sender, instance, **kwargs):
     invalidate_cached_object(instance)
 
 
-@receiver_subclasses(pre_delete, NodeCollection,
-                     "nodecollection_pre_delete")
+@receiver_subclasses(pre_delete, NodeCollection, 'nodecollection_pre_delete')
 def _nodecollection_delete(sender, instance, **kwargs):
-    '''
-        This finds all subclasses related to a DataSet's NodeCollections and
-        handles the deletion of all FileStoreItems related to the DataSet
-    '''
+    """Finds all subclasses related to a DataSet's NodeCollections and deletes
+    all FileStoreItem instances associated with the DataSet
+    """
     nodes = Node.objects.filter(study=instance)
     for node in nodes:
         try:
             FileStoreItem.objects.get(uuid=node.file_uuid).delete()
-        except Exception as e:
-            logger.debug("Could not delete FileStoreItem:%s" % str(e))
+        except (FileStoreItem.DoesNotExist,
+                FileStoreItem.MultipleObjectsReturned) as exc:
+            logger.debug("Could not delete FileStoreItem with UUID '%s': %s",
+                         node.uuid, exc)
 
 
 class AuthenticationFormUsernameOrEmail(AuthenticationForm):

@@ -12,6 +12,7 @@
     '$q',
     '_',
     'userFileBrowserFactory',
+    'userFileFiltersService',
     'userFileParamsService',
     'userFileSortsService',
     'gridOptionsService'
@@ -24,6 +25,7 @@
       $q,
       _,
       userFileBrowserFactory,
+      userFileFiltersService,
       userFileParamsService,
       userFileSortsService,
       gridOptionsService
@@ -50,7 +52,7 @@
         }
       });
 
-      return _.keys(facetCountObj).concat('date_submitted', 'sample_name', 'filename');
+      return _.keys(facetCountObj).concat('date_submitted', 'sample_name', 'name');
     }
 
     vm.sortChanged = function (grid, sortColumns) {
@@ -86,7 +88,7 @@
     gridOptionsService.appScopeProvider = vm;
     vm.downloadCsvQuery = function () {
       return $httpParamSerializer({
-        fq: userFileParamsService.fq(),
+        fq: createFacetQuery(),
         sort: userFileParamsService.sort()
       });
     };
@@ -95,13 +97,25 @@
     };
     vm.downloadCsvUrl = function () {
       return $location.protocol() + '://'
-          + $location.host() + ':' + $location.port()
-          + vm.downloadCsvPath();
+        + $location.host() + ':' + $location.port()
+        + vm.downloadCsvPath();
     };
     vm.gridOptions = gridOptionsService;
     vm.gridOptions.onRegisterApi = function (api) {
       api.core.on.sortChanged(null, vm.sortChanged);
     };
+
+    // helper method to create facet query for solr
+    function createFacetQuery () {
+      var filters = Object.keys(userFileFiltersService).map(function (internalName) {
+        var fields = userFileFiltersService[internalName];
+        var queryStr = fields.map(function (field) {
+          return '(' + internalName + ':' + '"' + field + '")';
+        }).join(' OR ');
+        return ('(') + queryStr + (')');
+      });
+      return filters.join(' AND ');
+    }
   }
 })();
 
