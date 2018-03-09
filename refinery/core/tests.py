@@ -703,9 +703,7 @@ class AnalysisDeletionTest(TestCase):
     """Testing for the deletion of Analyses"""
     def setUp(self):
         self.username = self.password = 'user'
-        self.user = User.objects.create_user(
-            self.username, '', self.password
-        )
+        self.user = User.objects.create_user(self.username, '', self.password)
         self.analyses, self.dataset = \
             make_analyses_with_single_dataset(
                 1,
