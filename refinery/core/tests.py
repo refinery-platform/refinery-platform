@@ -719,7 +719,7 @@ class AnalysisDeletionTest(TestCase):
         self.assertGreater(AnalysisStatus.objects.count(), 0)
         self.assertGreater(Node.objects.count(), 0)
 
-    def test_transaction_rollback_on_delete_failure(self):
+    def test_transaction_rollback_on_analysis_delete_failure(self):
         with mock.patch.object(BaseResource, "delete", side_effect=Exception):
             self.analysis.delete()
 
@@ -736,7 +736,7 @@ class AnalysisDeletionTest(TestCase):
         self.assertGreater(total_dataset_nodes, 0)
         self.assertEqual(total_dataset_nodes, total_nodes)
 
-    def test_deletion_removes_related_objects(self):
+    def test_analysis_deletion_removes_related_objects(self):
         self.analysis.delete()
 
         self.assertEqual(Analysis.objects.count(), 0)
@@ -752,7 +752,7 @@ class AnalysisDeletionTest(TestCase):
         self.assertGreater(total_dataset_nodes, 0)
         self.assertEqual(total_dataset_nodes, total_nodes)
 
-    def test_bulk_deletion_removes_related_objects(self):
+    def test_analysis_bulk_deletion_removes_related_objects(self):
         # make a second Analysis
         make_analyses_with_single_dataset(1, self.user)
         Analysis.objects.all().delete()
