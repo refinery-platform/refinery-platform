@@ -640,16 +640,16 @@ class DataSetDeletionTest(TestCase):
         with mock.patch.object(BaseResource, "delete", side_effect=Exception):
             self.dataset.delete()
 
-        self.assertEqual(Analysis.objects.count(), 0)
-        self.assertEqual(AnnotatedNode.objects.count(), 0)
-        self.assertEqual(Assay.objects.count(), 0)
-        self.assertEqual(DataSet.objects.count(), 0)
-        self.assertEqual(FileStoreItem.objects.count(), 0)
-        self.assertEqual(Investigation.objects.count(), 0)
-        self.assertEqual(InvestigationLink.objects.count(), 0)
-        self.assertEqual(Node.objects.count(), 0)
-        self.assertEqual(NodeCollection.objects.count(), 0)
-        self.assertEqual(Study.objects.count(), 0)
+        self.assertGreater(Analysis.objects.count(), 0)
+        self.assertGreater(AnnotatedNode.objects.count(), 0)
+        self.assertGreater(Assay.objects.count(), 0)
+        self.assertGreater(DataSet.objects.count(), 0)
+        self.assertGreater(FileStoreItem.objects.count(), 0)
+        self.assertGreater(Investigation.objects.count(), 0)
+        self.assertGreater(InvestigationLink.objects.count(), 0)
+        self.assertGreater(Node.objects.count(), 0)
+        self.assertGreater(NodeCollection.objects.count(), 0)
+        self.assertGreater(Study.objects.count(), 0)
 
     def test_dataset_deletion_removes_related_objects(self):
         self.dataset.delete()
@@ -723,10 +723,11 @@ class AnalysisDeletionTest(TestCase):
         with mock.patch.object(BaseResource, "delete", side_effect=Exception):
             self.analysis.delete()
 
-        self.assertEqual(Analysis.objects.count(), 0)
-        self.assertEqual(AnalysisNodeConnection.objects.count(), 0)
-        self.assertEqual(AnalysisResult.objects.count(), 0)
-        self.assertEqual(AnalysisStatus.objects.count(), 0)
+        self.assertGreater(Analysis.objects.count(), 0)
+        self.assertGreater(AnalysisNodeConnection.objects.count(), 0)
+        self.assertGreater(AnalysisResult.objects.count(), 0)
+        self.assertGreater(AnalysisStatus.objects.count(), 0)
+        self.assertGreater(Node.objects.count(), 0)
 
         # analysis deletion should only remove derived Nodes
         total_dataset_nodes = \
