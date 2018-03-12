@@ -10,12 +10,10 @@ output "vpc_id" {
   value = "${module.vpc.vpc_id}"
 }
 
-output "public_subnet_id_a" {
-  value = "${module.vpc.public_subnet_id_a}"
+output "public_subnet_id" {
+  value = "${module.vpc.public_subnet_id}"
 }
 
-output "public_subnet_id_b" {
-  value = "${module.vpc.public_subnet_id_b}"
 }
 
 output "docker_hostname" {
