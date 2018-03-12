@@ -580,22 +580,6 @@ def solr_select(request, core):
     return JsonResponse({})
 
 
-def samples_solr(request, ds_uuid, study_uuid, assay_uuid):
-    logger.debug("core.views.samples_solr called")
-    data_set = get_object_or_404(DataSet, uuid=ds_uuid)
-    workflows = Workflow.objects.all()
-    # TODO: retrieve from Django settings
-    solr_url = 'http://127.0.0.1:8983'
-
-    return render_to_response('core/samples_solr.html',
-                              {'workflows': workflows,
-                               'data_set': data_set,
-                               'study_uuid': study_uuid,
-                               'assay_uuid': assay_uuid,
-                               'solr_url': solr_url},
-                              context_instance=RequestContext(request))
-
-
 def doi(request, id):
     """Forwarding requests to DOI's API"""
     # Decode URL and replace dollar signs by forward slashes
