@@ -14,7 +14,7 @@ from celery.task.sets import TaskSet
 
 import core
 from core.models import Analysis, AnalysisResult, Workflow
-from file_store.models import FileStoreItem, FileType
+from file_store.models import FileStoreItem, FileExtension
 from file_store.tasks import import_file
 import tool_manager
 
@@ -502,12 +502,16 @@ def _get_galaxy_download_task_ids(analysis):
             # FastQC HTML reports produced by Galaxy dynamically
             if file_extension == 'html':
                 file_extension = 'zip'
-                try:
-                    file_store_item.filetype = FileType.objects.get(name='ZIP')
-                except (FileType.DoesNotExist,
-                        FileType.MultipleObjectsReturned) as exc:
-                    logger.error("Could not assign ZIP file type to Galaxy "
-                                 "analysis result '%s': %s", download_url, exc)
+            # assign file type manually since it cannot be inferred from source
+            try:
+                extension = FileExtension.objects.get(name=file_extension)
+            except (FileExtension.DoesNotExist,
+                    FileExtension.MultipleObjectsReturned) as exc:
+                logger.warn("Could not assign type to file '%s' using "
+                            "extension '%s': %s", file_store_item,
+                            file_extension, exc)
+            else:
+                file_store_item.filetype = extension.filetype
 
             file_store_item.save()
 
