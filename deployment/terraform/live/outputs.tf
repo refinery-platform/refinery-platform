@@ -18,3 +18,6 @@ output "docker_hostname" {
   value = "${module.docker_host.docker_hostname}"
 }
 
+output "rds_db_subnet_group_name" {
+  value = "${module.rds.rds_db_subnet_group_name}"
+}
