@@ -55,3 +55,10 @@ module "vpc" {
   private_cidr_block = "${var.private_cidr_block}"
   availability_zone  = "${var.availability_zone}"
 }
+
+module "rds" {
+  source               = "../modules/rds"
+  name                 = "${terraform.workspace} rds"
+  private_subnet_a = "${module.vpc.private_subnet_a_id}"
+  private_subnet_b = "${var.private_cidr_block_b}"
+}
