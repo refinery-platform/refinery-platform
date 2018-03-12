@@ -36,7 +36,7 @@ DOCKER_HOST: ""
 # Get VPC id from terraform output
 VPC_ID: ""
 
-# Get Public Subnet ids from terraform output
+# Get Public Subnet id from terraform output
 PUBLIC_SUBNET_ID: ""
 
 # Get RDS DB Subnet Group Name from terraform output
