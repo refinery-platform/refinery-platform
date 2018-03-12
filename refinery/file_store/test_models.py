@@ -112,6 +112,12 @@ class FileStoreItemTest(TestCase):
         item = FileStoreItem.objects.create(source=self.url_source)
         self.assertEqual(item.filetype, self.file_type)
 
+    def test_set_remote_file_type_override(self):
+        zip_file_type = FileType.objects.get_or_create(name='ZIP')[0]
+        item = FileStoreItem.objects.create(source=self.url_source,
+                                            filetype=zip_file_type)
+        self.assertEqual(item.filetype, zip_file_type)
+
     def test_set_remote_file_type_with_multiple_period_file_name(self):
         item = FileStoreItem.objects.create(
             source='http://example.org/test.name.tdf'
@@ -183,6 +189,13 @@ class FileStoreItemLocalFileTest(TestCase):
     def test_set_local_file_type(self):
         self.item.datafile.save(self.file_name, ContentFile(''))
         self.assertEqual(self.item.filetype, self.file_type)
+
+    @override_storage()
+    def test_set_remote_file_type_override(self):
+        zip_file_type = FileType.objects.get_or_create(name='ZIP')[0]
+        self.item.filetype = zip_file_type
+        self.item.datafile.save(self.file_name, ContentFile(''))
+        self.assertEqual(self.item.filetype, zip_file_type)
 
     @override_storage()
     def test_get_local_file_extension(self):

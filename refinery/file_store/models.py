@@ -191,18 +191,6 @@ class FileStoreItem(models.Model):
 
         super(FileStoreItem, self).save(*args, **kwargs)
 
-    def set_filetype(self, file_extension):
-        """Set file type given a file extension"""
-        try:
-            extension = FileExtension.objects.get(name=file_extension)
-        except (FileExtension.DoesNotExist,
-                FileExtension.MultipleObjectsReturned) as exc:
-            logger.warn("Could not assign type to file '%s' using extension"
-                        "'%s': %s", self, file_extension, exc)
-        else:
-            self.filetype = extension.filetype
-            self.save()
-
     def get_absolute_path(self):
         """
         Construct the absolute path to the data file.
@@ -404,8 +392,8 @@ def get_file_object(file_name):
 
 @receiver(post_save, sender=FileStoreItem)
 def _set_filetype(sender, instance, created, **kwargs):
-    """Set file type using file extension"""
-    if created:
+    """Set file type using file extension if no file type provided"""
+    if created and not instance.filetype:
         try:
             extension = instance.get_file_extension()
         except RuntimeError as exc:
