@@ -9,11 +9,11 @@ variable "availability_zone_a" {
 
 variable "identity_pool_name" {
   description = "Cognito federated identity pool name"
+}
 variable "availability_zone_b" {
   default = "us-east-1b"
 }
 
-}
 
 # https://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Subnets.html#vpc-subnet-basics
 #
