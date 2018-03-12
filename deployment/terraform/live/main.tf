@@ -36,13 +36,13 @@ module "docker_host" {
 
 
 module "vpc" {
-  source             = "../modules/vpc"
   name               = "${var.name}"
   vpc_cidr_block     = "${var.vpc_cidr_block}"
-  public_cidr_block_a  = "${var.public_cidr_block_a}"
-  public_cidr_block_b  = "${var.public_cidr_block_b}"
-  private_cidr_block = "${var.private_cidr_block}"
   availability_zone  = "${var.availability_zone}"
+  source               = "../modules/vpc"
+  public_cidr_block    = "${var.public_cidr_block}"
+  private_cidr_block_a = "${var.private_cidr_block_a}"
+  private_cidr_block_b = "${var.private_cidr_block_b}"
 }
 
 module "rds" {

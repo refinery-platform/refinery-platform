@@ -1,7 +1,7 @@
 variable "vpc_cidr_block" {}
-variable "private_cidr_block" {}
-variable "public_cidr_block_a" {}
-variable "public_cidr_block_b" {}
+variable "private_cidr_block_a" {}
+variable "private_cidr_block_b" {}
+variable "public_cidr_block" {}
 variable "availability_zone" {}
 variable "availability_zone_a" {
   default = "us-east-1a"
