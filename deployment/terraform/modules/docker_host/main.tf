@@ -41,8 +41,6 @@ resource "aws_instance" "docker_host" {
   subnet_id              = "${var.private_subnet_id}"
   instance_type          = "t2.micro"
   vpc_security_group_ids = ["${aws_security_group.allow_docker.id}"]
-  key_name               = "${terraform.workspace}"
-
   user_data = <<EOF
 #!/bin/bash
 set -o errexit
@@ -58,6 +56,6 @@ EOF
   # systemd config based on https://success.docker.com/article/How_do_I_enable_the_remote_API_for_dockerd
 
   tags {
-    Name = "${var.name} (terraform docker host)"
+    Name = "${terraform.workspace} (terraform docker host)"
   }
 }

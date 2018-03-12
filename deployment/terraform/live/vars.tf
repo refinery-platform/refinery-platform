@@ -45,7 +45,3 @@ variable "private_cidr_block_b" {
   type    = "string"
   default = "10.0.0.128/25"
 }
-
-variable "key_name" {
-  type = "string"
-}
