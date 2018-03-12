@@ -21,7 +21,3 @@ output "public_subnet_id_b" {
 output "docker_hostname" {
   value = "tcp://${module.docker_host.docker_hostname}:2376"
 }
-
-//output "refinery_hostname" {
-//  value = "${module.refinery_host.refinery_hostname}"
-//}

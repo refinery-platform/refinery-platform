@@ -34,17 +34,6 @@ module "docker_host" {
   key_name            = "${var.key_name}"
 }
 
-//module "refinery_host" {
-//  source              = "../modules/refinery_host"
-//  name                = "${var.name}"
-//  public_cidr_block   = "${var.public_cidr_block}"
-//  public_subnet_id    = "${module.vpc.public_subnet_id}"
-//  vpc_id              = "${module.vpc.vpc_id}"
-//  security_group_name = "${terraform.workspace}-refinery"
-//  refinery_host_count = "${var.refinery_host_count}"
-//  key_name            = "${var.key_name}"
-//  docker_hostname     = "${module.docker_host.docker_hostname}"
-//}
 
 module "vpc" {
   source             = "../modules/vpc"
