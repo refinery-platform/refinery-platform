@@ -7,11 +7,12 @@ variable "availability_zone_a" {
   default = "us-east-1a"
 }
 
-variable "identity_pool_name" {
-  description = "Cognito federated identity pool name"
-}
 variable "availability_zone_b" {
   default = "us-east-1b"
+}
+
+variable "identity_pool_name" {
+  description = "Cognito federated identity pool name"
 }
 
 
