@@ -15,7 +15,7 @@ resource "aws_subnet" "public_subnet" {
   map_public_ip_on_launch = true
 
   tags {
-    Name = "${terraform.workspace} (terraform public a)"
+    Name = "${terraform.workspace} (terraform public subnet)"
   }
 }
 
