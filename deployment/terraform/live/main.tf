@@ -26,7 +26,7 @@ module "identity_pool" {
 
 module "docker_host" {
   source              = "../modules/docker_host"
-  name                = "${var.name}"
+  name                = "${terraform.workspace} docker_host"
   vpc_cidr_block      = "${var.vpc_cidr_block}"
   private_subnet_id   = "${module.vpc.private_subnet_id}"
   vpc_id              = "${module.vpc.vpc_id}"
@@ -36,10 +36,10 @@ module "docker_host" {
 
 
 module "vpc" {
-  name               = "${var.name}"
   vpc_cidr_block     = "${var.vpc_cidr_block}"
   availability_zone  = "${var.availability_zone}"
   source               = "../modules/vpc"
+  name                 = "${terraform.workspace} vpc"
   public_cidr_block    = "${var.public_cidr_block}"
   private_cidr_block_a = "${var.private_cidr_block_a}"
   private_cidr_block_b = "${var.private_cidr_block_b}"

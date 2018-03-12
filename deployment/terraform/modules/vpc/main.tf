@@ -4,7 +4,7 @@ resource "aws_vpc" "vpc" {
   enable_dns_hostnames = true
 
   tags {
-    Name = "${var.name} (terraform)"
+    Name = "${terraform.workspace} (terraform)"
   }
 }
 
@@ -15,7 +15,7 @@ resource "aws_subnet" "public_subnet" {
   map_public_ip_on_launch = true
 
   tags {
-    Name = "${var.name} (terraform public a)"
+    Name = "${terraform.workspace} (terraform public a)"
   }
 }
 
@@ -25,7 +25,7 @@ resource "aws_subnet" "private_subnet_a" {
   availability_zone = "${var.availability_zone_a}"
 
   tags {
-    Name = "${var.name} (terraform public b)"
+    Name = "${terraform.workspace} (terraform private subnet a)"
   }
 }
 
@@ -36,7 +36,7 @@ resource "aws_subnet" "private_subnet_b" {
   map_public_ip_on_launch = true
 
   tags {
-    Name = "${var.name} (terraform private)"
+    Name = "${terraform.workspace} (terraform private subnet b)"
   }
 }
 
@@ -44,7 +44,7 @@ resource "aws_internet_gateway" "public_gateway" {
   vpc_id = "${aws_vpc.vpc.id}"
 
   tags {
-    Name = "${var.name} (terraform)"
+    Name = "${terraform.workspace} (terraform)"
   }
 }
 
@@ -57,7 +57,7 @@ resource "aws_route_table" "route_table" {
   }
 
   tags {
-    Name = "${var.name} (terraform public)"
+    Name = "${terraform.workspace} (terraform public)"
   }
 }
 
@@ -86,7 +86,7 @@ resource "aws_route_table" "private_route_table" {
   }
 
   tags {
-    Name = "${var.name} (terraform nat)"
+    Name = "${terraform.workspace} (terraform nat)"
   }
 }
 

@@ -41,7 +41,7 @@ resource "aws_instance" "docker_host" {
   subnet_id              = "${var.private_subnet_id}"
   instance_type          = "t2.micro"
   vpc_security_group_ids = ["${aws_security_group.allow_docker.id}"]
-  key_name               = "${var.key_name}"
+  key_name               = "${terraform.workspace}"
 
   user_data = <<EOF
 #!/bin/bash

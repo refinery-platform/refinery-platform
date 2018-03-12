@@ -13,8 +13,6 @@ variable "availability_zone_b" {
   default = "us-east-1b"
 }
 
-variable "name" {
-  description = "Resource names based on this, plus additional distinguishing information"
 }
 
 # https://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Subnets.html#vpc-subnet-basics
