@@ -14,8 +14,7 @@ output "public_subnet_id" {
   value = "${module.vpc.public_subnet_id}"
 }
 
+output "docker_hostname" {
+  value = "${module.docker_host.docker_hostname}"
 }
 
-output "docker_hostname" {
-  value = "tcp://${module.docker_host.docker_hostname}:2376"
-}

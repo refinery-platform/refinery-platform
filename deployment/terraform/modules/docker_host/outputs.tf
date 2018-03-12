@@ -1,3 +1,3 @@
 output "docker_hostname" {
-  value = "${aws_instance.docker_host.private_ip}"
+  value = "tcp://${aws_instance.docker_host.private_ip}:2376"
 }
