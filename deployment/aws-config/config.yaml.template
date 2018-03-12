@@ -37,8 +37,10 @@ DOCKER_HOST: ""
 VPC_ID: ""
 
 # Get Public Subnet ids from terraform output
-PUBLIC_SUBNET_ID_A: ""
-PUBLIC_SUBNET_ID_B: ""
+PUBLIC_SUBNET_ID: ""
+
+# Get RDS DB Subnet Group Name from terraform output
+RDS_DB_SUBNET_GROUP_NAME: ""
 
 # AWS ARN for the TLS certifcate to be used for HTTPS connections
 # TLS_CERTIFICATE: "arn:aws:acm:--region--:--accountnumber--:certificate/--id--"

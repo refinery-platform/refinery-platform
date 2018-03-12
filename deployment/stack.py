@@ -138,11 +138,7 @@ def make_template(config, config_yaml):
         "CopyTagsToSnapshot": True,
         "DBInstanceClass": "db.t2.small",       # todo:?
         "DBInstanceIdentifier": config['RDS_NAME'],
-
-        # I think theres a better way to fetch this name,
-        # but functions.get_att('RDSSubnetGroup', 'DBSubnetGroupName')
-        # didn't work. Copy/Paste for now
-        "DBSubnetGroupName": "RDS Subnet Group",
+        "DBSubnetGroupName": config["RDS_DB_SUBNET_GROUP_NAME"],
         "Engine": "postgres",
         "EngineVersion": "9.3.14",
         # "KmsKeyId" ?
@@ -165,22 +161,6 @@ def make_template(config, config_yaml):
         core.Properties(rds_properties),
         core.DeletionPolicy("Snapshot"),
         )
-
-    # AWS Wouldn't let me create this resource without having at least two
-    # Subnets residing in two separate availability zones. We need this to
-    # be able to associate our RDS instance with the VPC encapsulating our
-    # Refinery EC2 and Docker EC2
-    cft.resources.rds_subnet_group = core.Resource(
-        'RDSSubnetGroup', 'AWS::RDS::DBSubnetGroup',
-        core.Properties({
-            "DBSubnetGroupDescription": "Subnet Group for RDS Instance",
-            "DBSubnetGroupName": "RDS Subnet Group",
-            "SubnetIds": [
-                config["PUBLIC_SUBNET_ID_A"],
-                config["PUBLIC_SUBNET_ID_B"]  # this seems unnecessary still
-            ],
-        }),
-    )
 
     volume_properties = {
         'Encrypted': True,
