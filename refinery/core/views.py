@@ -1,6 +1,4 @@
-import json
 import logging
-import re
 import urllib
 from urlparse import urljoin
 from xml.parsers.expat import ExpatError
@@ -436,34 +434,6 @@ def workflow_engine(request, uuid):
                               context_instance=RequestContext(request))
 
 
-def visualize_genome(request):
-    """Provide IGV.js visualization of requested species + file nodes
-
-    Looks up species by name, and data files by node_id,
-    and passes the information to IGV.js.
-    """
-    species = request.GET.get('species')
-    node_ids = request.GET.getlist('node_ids')
-
-    genome = re.search(r'\(([^)]*)\)', species).group(1)
-    # TODO: Better to pass genome id instead of parsing?
-    url_base = "https://s3.amazonaws.com/data.cloud.refinery-platform.org" \
-        + "/data/igv-reference/" + genome + "/"
-    node_ids_json = json.dumps(node_ids)
-
-    return render_to_response(
-        'core/visualize/genome.html',
-        {
-            "fasta_url": url_base + genome + ".fa",
-            "index_url": url_base + genome + ".fa.fai",
-            "cytoband_url": url_base + "cytoBand.txt",
-            "bed_url": url_base + "refGene.bed",
-            "tbi_url": url_base + "refGene.bed.tbi",
-            "node_ids_json": node_ids_json
-        },
-        context_instance=RequestContext(request))
-
-
 def solr_core_search(request):
     """Query Solr's core index for search.
 
@@ -549,7 +519,7 @@ def solr_core_search(request):
             if annotations:
                 response['response']['annotations'] = annotation_data
 
-    return Response(response)
+    return HttpResponse(response, content_type='application/json')
 
 
 def doi(request, id):
