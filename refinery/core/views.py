@@ -44,7 +44,7 @@ from .models import (Analysis, CustomRegistrationProfile, DataSet,
                      ExtendedGroup, Invitation, Ontology, Project, UserProfile,
                      Workflow, WorkflowEngine)
 from .serializers import DataSetSerializer, NodeSerializer, WorkflowSerializer
-from .utils import api_error_response
+from .utils import api_error_response, get_data_sets_annotations
 
 logger = logging.getLogger(__name__)
 
@@ -464,32 +464,92 @@ def visualize_genome(request):
         context_instance=RequestContext(request))
 
 
-def solr_select(request, core):
-    # core format is <name_of_core>
-    # query.GET is a querydict containing all parts of the query
-    url = settings.REFINERY_SOLR_BASE_URL + core + "/select"
-    data = request.GET.urlencode()
+def solr_core_search(request):
+    """Query Solr's core index for search.
+
+    Queries are augmented with user and group information so that no datasets
+    is returned for which the user has no access.
+
+    For visualizing the repository it's important to know all datasets right
+    from the beginning. Because Django and Solr most likely run on the same
+    server, it's better to prefetch all dataset uuid and send them back
+    altogether rather than having to query from the client side twice.
+    """
+    url = settings.REFINERY_SOLR_BASE_URL + "core/select"
+
+    headers = {
+        'Accept': 'application/json'
+    }
+
+    params = request.GET.dict()
+    # Generate access list
+    if not request.user.is_superuser:
+        if request.user.id is None:
+            access = ['g_{}'.format(settings.REFINERY_PUBLIC_GROUP_ID)]
+        else:
+            access = ['u_{}'.format(request.user.id)]
+            for group in request.user.groups.all():
+                access.append('g_{}'.format(group.id))
+        params['fq'] = params['fq'] + ' AND access:({})'.format(
+            ' OR '.join(access))
+
     try:
-        full_response = requests.get(url, params=data)
-        # FIXME:
-        # Solr sends back an additional 400 here in the data_sets 1 filebrowser
-        # when there is only one row defined in the metadata since
-        # full_response.content has no facet_fields. Handling
-        # this one-off case for now since the way data_sets 2 filebrowser
-        # interacts with Solr doesn't produce this extra 400 error
-        if ("Pivot Facet needs at least one field name"
-                not in full_response.content):
-            full_response.raise_for_status()
+        allIds = params['allIds'] in ['1', 'true', 'True']
+    except KeyError:
+        allIds = False
+
+    try:
+        annotations = params['annotations'] in ['1', 'true', 'True']
+    except KeyError:
+        annotations = False
+    try:
+        response = requests.get(url, params=params, headers=headers)
+        response.raise_for_status()
     except HTTPError as e:
         logger.error(e)
-    else:
+
+    if allIds or annotations:
+        # Query for all uuids given the same query. Solr shold be very fast
+        # because we just queried for almost the same information, only limited
+        # in size.
+        all_ids_params = {
+            'defType': params['defType'],
+            'fl': 'dbid',
+            'fq': params['fq'],
+            'q': params['q'],
+            'qf': params['qf'],
+            'rows': 2147483647,
+            'start': 0,
+            'wt': 'json'
+        }
         try:
-            response_dict = json.loads(full_response.content)
-            return JsonResponse(response_dict)
-        except ValueError as e:
+            response_ids = requests.get(
+                url,
+                params=all_ids_params,
+                headers=headers
+            )
+            response_ids.raise_for_status()
+        except HTTPError as e:
             logger.error(e)
 
-    return JsonResponse({})
+        if response_ids.status_code == 200:
+            response_ids = response_ids.json()
+            ids = []
+
+            for ds in response_ids['response']['docs']:
+                ids.append(ds['dbid'])
+
+            annotation_data = get_data_sets_annotations(ids)
+
+            response = response.json()
+
+            if allIds:
+                response['response']['allIds'] = ids
+
+            if annotations:
+                response['response']['annotations'] = annotation_data
+
+    return Response(response)
 
 
 def doi(request, id):
