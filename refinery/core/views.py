@@ -519,6 +519,8 @@ def solr_core_search(request):
             if annotations:
                 response['response']['annotations'] = annotation_data
 
+            return JsonResponse(response)
+
     return HttpResponse(response, content_type='application/json')
 
 
