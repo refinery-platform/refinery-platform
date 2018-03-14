@@ -1,6 +1,4 @@
-import json
 import logging
-import re
 import urllib
 from urlparse import urljoin
 from xml.parsers.expat import ExpatError
@@ -436,34 +434,6 @@ def workflow_engine(request, uuid):
                               context_instance=RequestContext(request))
 
 
-def visualize_genome(request):
-    """Provide IGV.js visualization of requested species + file nodes
-
-    Looks up species by name, and data files by node_id,
-    and passes the information to IGV.js.
-    """
-    species = request.GET.get('species')
-    node_ids = request.GET.getlist('node_ids')
-
-    genome = re.search(r'\(([^)]*)\)', species).group(1)
-    # TODO: Better to pass genome id instead of parsing?
-    url_base = "https://s3.amazonaws.com/data.cloud.refinery-platform.org" \
-        + "/data/igv-reference/" + genome + "/"
-    node_ids_json = json.dumps(node_ids)
-
-    return render_to_response(
-        'core/visualize/genome.html',
-        {
-            "fasta_url": url_base + genome + ".fa",
-            "index_url": url_base + genome + ".fa.fai",
-            "cytoband_url": url_base + "cytoBand.txt",
-            "bed_url": url_base + "refGene.bed",
-            "tbi_url": url_base + "refGene.bed.tbi",
-            "node_ids_json": node_ids_json
-        },
-        context_instance=RequestContext(request))
-
-
 def solr_core_search(request):
     """Query Solr's core index for search.
 
@@ -549,51 +519,9 @@ def solr_core_search(request):
             if annotations:
                 response['response']['annotations'] = annotation_data
 
-    return JsonResponse(response)
+            return JsonResponse(response)
 
-
-def solr_select(request, core):
-    # core format is <name_of_core>
-    # query.GET is a querydict containing all parts of the query
-    url = settings.REFINERY_SOLR_BASE_URL + core + "/select"
-    data = request.GET.urlencode()
-    try:
-        full_response = requests.get(url, params=data)
-        # FIXME:
-        # Solr sends back an additional 400 here in the data_sets 1 filebrowser
-        # when there is only one row defined in the metadata since
-        # full_response.content has no facet_fields. Handling
-        # this one-off case for now since the way data_sets 2 filebrowser
-        # interacts with Solr doesn't produce this extra 400 error
-        if ("Pivot Facet needs at least one field name"
-                not in full_response.content):
-            full_response.raise_for_status()
-    except HTTPError as e:
-        logger.error(e)
-    else:
-        try:
-            response_dict = json.loads(full_response.content)
-            return JsonResponse(response_dict)
-        except ValueError as e:
-            logger.error(e)
-
-    return JsonResponse({})
-
-
-def samples_solr(request, ds_uuid, study_uuid, assay_uuid):
-    logger.debug("core.views.samples_solr called")
-    data_set = get_object_or_404(DataSet, uuid=ds_uuid)
-    workflows = Workflow.objects.all()
-    # TODO: retrieve from Django settings
-    solr_url = 'http://127.0.0.1:8983'
-
-    return render_to_response('core/samples_solr.html',
-                              {'workflows': workflows,
-                               'data_set': data_set,
-                               'study_uuid': study_uuid,
-                               'assay_uuid': assay_uuid,
-                               'solr_url': solr_url},
-                              context_instance=RequestContext(request))
+    return HttpResponse(response, content_type='application/json')
 
 
 def doi(request, id):
