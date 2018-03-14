@@ -24,34 +24,6 @@ from .models import FileStoreItem, file_path, get_temp_dir, parse_s3_url
 logger = logging.getLogger(__name__)
 
 
-@task()
-def create(source, filetype=''):
-    """Create a FileStoreItem instance and return its UUID
-    Important: source must be either an absolute file system path or a URL
-    :param source: URL or absolute file system path to a file.
-    :type source: str.
-    :param filetype: File extension
-    :type filetype: str.
-    :param file_size: For cases when the remote site specified by source URL
-        doesn't provide file size in the HTTP headers.
-    :type file_size: int.
-    :returns: FileStoreItem UUID if success, None if failure.
-
-    """
-    # TODO: move to file_store/models.py since it's never used as a task
-    logger.info("Creating FileStoreItem using source '%s'", source)
-
-    item = FileStoreItem.objects.create(source=source)
-    if not item:
-        logger.error("Failed to create FileStoreItem using source '%s'",
-                     source)
-        return None
-
-    logger.info("FileStoreItem created with UUID %s", item.uuid)
-
-    return item.uuid
-
-
 @task(track_started=True)
 def import_file(uuid, refresh=False, file_size=0):
     """Download or copy file specified by UUID.
