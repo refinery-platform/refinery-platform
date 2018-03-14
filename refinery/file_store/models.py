@@ -125,9 +125,7 @@ def generate_file_source_translator(username=None, base_path=None,
 
 
 class FileType(models.Model):
-    #: name of file extension
     name = models.CharField(unique=True, max_length=50)
-    #: short description of file extension
     description = models.CharField(max_length=250)
     used_for_visualization = models.BooleanField(default=False)
 
@@ -136,7 +134,6 @@ class FileType(models.Model):
 
 
 class FileExtension(models.Model):
-    # file extension associated with the filename
     name = models.CharField(unique=True, max_length=50)
     filetype = models.ForeignKey(FileType)
 
@@ -162,13 +159,23 @@ class FileStoreItem(models.Model):
     def __unicode__(self):
         if self.datafile.name:
             return self.datafile.name
-        elif self.uuid:
-            return self.uuid
-        else:  # UUID will not be available until instance is saved once
+        elif self.source:
             return self.source
+        else:
+            return str(self.uuid)  # UUID is available only after save()
 
     def save(self, *args, **kwargs):
         self.source = _map_source(self.source)
+
+        if not self.filetype:
+            # set file type using file extension
+            try:
+                extension = self.get_file_extension()
+            except RuntimeError as exc:
+                logger.warn("Could not assign type to file '%s': %s",
+                            self, exc)
+            else:
+                self.filetype = extension.filetype
 
         if self.datafile:
             # symlink datafile if necessary
@@ -230,8 +237,11 @@ class FileStoreItem(models.Model):
             extension = _get_extension_from_string(extension)
             try:
                 return FileExtension.objects.get(name=extension)
-            except (FileExtension.DoesNotExist,
-                    FileExtension.MultipleObjectsReturned) as exc:
+            except FileExtension.DoesNotExist as exc:
+                raise RuntimeError(
+                    "Extension '{}' is not valid: {}".format(extension, exc)
+                )
+            except FileExtension.MultipleObjectsReturned as exc:
                 raise RuntimeError(exc)
         except FileExtension.MultipleObjectsReturned as exc:
             raise RuntimeError(exc)
@@ -388,19 +398,6 @@ def get_file_object(file_name):
             file_name, e.errno, e.strerror
         )
         return None
-
-
-@receiver(post_save, sender=FileStoreItem)
-def _set_filetype(sender, instance, created, **kwargs):
-    """Set file type using file extension if no file type provided"""
-    if created and not instance.filetype:
-        try:
-            extension = instance.get_file_extension()
-        except RuntimeError as exc:
-            logger.warn("Could not assign type to file '%s': %s",
-                        instance, exc)
-        else:
-            instance.filetype = extension.filetype
 
 
 # post_delete is safer than pre_delete

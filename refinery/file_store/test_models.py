@@ -88,7 +88,9 @@ class FileStoreItemTest(TestCase):
 
     def setUp(self):
         # TODO: replace with create() when migrations are no longer required
-        self.file_type = FileType.objects.get_or_create(name='TDF')[0]
+        self.file_type = FileType.objects.get_or_create(
+            name='TDF', description='TDF file'
+        )[0]
         self.file_extension = FileExtension.objects.get_or_create(
             name='tdf', filetype=self.file_type
         )[0]
@@ -109,20 +111,30 @@ class FileStoreItemTest(TestCase):
         self.assertEqual(item.get_datafile_url(), None)
 
     def test_set_remote_file_type(self):
-        item = FileStoreItem.objects.create(source=self.url_source)
-        self.assertEqual(item.filetype, self.file_type)
+        new_item = FileStoreItem.objects.create(source=self.url_source)
+        saved_item = FileStoreItem.objects.get(pk=new_item.pk)
+        self.assertEqual(saved_item.filetype, self.file_type)
 
     def test_set_remote_file_type_override(self):
         zip_file_type = FileType.objects.get_or_create(name='ZIP')[0]
-        item = FileStoreItem.objects.create(source=self.url_source,
-                                            filetype=zip_file_type)
-        self.assertEqual(item.filetype, zip_file_type)
+        new_item = FileStoreItem.objects.create(source=self.url_source,
+                                                filetype=zip_file_type)
+        saved_item = FileStoreItem.objects.get(pk=new_item.pk)
+        self.assertEqual(saved_item.filetype, zip_file_type)
+
+    def test_update_remote_file_type(self):
+        new_item = FileStoreItem.objects.create(source=self.url_source)
+        zip_file_type = FileType.objects.get_or_create(name='ZIP')[0]
+        new_item.filetype = zip_file_type
+        new_item.save()
+        saved_item = FileStoreItem.objects.get(pk=new_item.pk)
+        self.assertEqual(saved_item.filetype, zip_file_type)
 
     def test_set_remote_file_type_with_multiple_period_file_name(self):
-        item = FileStoreItem.objects.create(
-            source='http://example.org/test.name.tdf'
-        )
-        self.assertEqual(item.filetype, self.file_type)
+        file_source = 'http://example.org/test.name.tdf'
+        new_item = FileStoreItem.objects.create(source=file_source)
+        saved_item = FileStoreItem.objects.get(pk=new_item.pk)
+        self.assertEqual(saved_item.filetype, self.file_type)
 
     def test_get_remote_file_extension(self):
         item = FileStoreItem(source=self.url_source)
@@ -169,7 +181,10 @@ class FileStoreItemTest(TestCase):
 
 class FileStoreItemLocalFileTest(TestCase):
     def setUp(self):
-        self.file_type = FileType.objects.get_or_create(name='TDF')[0]
+        # TODO: replace with create() when migrations are no longer required
+        self.file_type = FileType.objects.get_or_create(
+            name='TDF', description='TDF file'
+        )[0]
         self.file_extension = FileExtension.objects.get_or_create(
             name='tdf', filetype=self.file_type
         )[0]
@@ -182,25 +197,38 @@ class FileStoreItemLocalFileTest(TestCase):
     @override_settings(MEDIA_URL='')
     def test_get_local_file_url(self):
         self.item.datafile.save(self.file_name, ContentFile(''))
-        self.assertEqual(self.item.get_datafile_url(),
-                         file_path(self.item, self.file_name))
+        saved_item = FileStoreItem.objects.get(pk=self.item.pk)
+        self.assertEqual(saved_item.get_datafile_url(),
+                         file_path(saved_item, self.file_name))
 
     @override_storage()
     def test_set_local_file_type(self):
         self.item.datafile.save(self.file_name, ContentFile(''))
-        self.assertEqual(self.item.filetype, self.file_type)
+        saved_item = FileStoreItem.objects.get(pk=self.item.pk)
+        self.assertEqual(saved_item.filetype, self.file_type)
 
     @override_storage()
-    def test_set_remote_file_type_override(self):
+    def test_set_local_file_type_override(self):
         zip_file_type = FileType.objects.get_or_create(name='ZIP')[0]
         self.item.filetype = zip_file_type
         self.item.datafile.save(self.file_name, ContentFile(''))
-        self.assertEqual(self.item.filetype, zip_file_type)
+        saved_item = FileStoreItem.objects.get(pk=self.item.pk)
+        self.assertEqual(saved_item.filetype, zip_file_type)
+
+    @override_storage()
+    def test_set_local_file_type_update(self):
+        self.item.datafile.save(self.file_name, ContentFile(''))
+        zip_file_type = FileType.objects.get_or_create(name='ZIP')[0]
+        self.item.filetype = zip_file_type
+        self.item.save()
+        saved_item = FileStoreItem.objects.get(pk=self.item.pk)
+        self.assertEqual(saved_item.filetype, zip_file_type)
 
     @override_storage()
     def test_get_local_file_extension(self):
         self.item.datafile.save(self.file_name, ContentFile(''))
-        self.assertEqual(self.item.get_file_extension(), self.file_extension)
+        saved_item = FileStoreItem.objects.get(pk=self.item.pk)
+        self.assertEqual(saved_item.get_file_extension(), self.file_extension)
 
     @override_storage()
     def test_delete_local_file_on_instance_delete(self):
