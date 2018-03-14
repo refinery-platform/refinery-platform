@@ -88,9 +88,7 @@ class FileStoreItemTest(TestCase):
 
     def setUp(self):
         # TODO: replace with create() when migrations are no longer required
-        self.file_type = FileType.objects.get_or_create(
-            name='TDF', description='TDF file'
-        )[0]
+        self.file_type = FileType.objects.get_or_create(name='TDF')[0]
         self.file_extension = FileExtension.objects.get_or_create(
             name='tdf', filetype=self.file_type
         )[0]
@@ -182,9 +180,7 @@ class FileStoreItemTest(TestCase):
 class FileStoreItemLocalFileTest(TestCase):
     def setUp(self):
         # TODO: replace with create() when migrations are no longer required
-        self.file_type = FileType.objects.get_or_create(
-            name='TDF', description='TDF file'
-        )[0]
+        self.file_type = FileType.objects.get_or_create(name='TDF')[0]
         self.file_extension = FileExtension.objects.get_or_create(
             name='tdf', filetype=self.file_type
         )[0]

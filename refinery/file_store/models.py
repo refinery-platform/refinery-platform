@@ -130,7 +130,7 @@ class FileType(models.Model):
     used_for_visualization = models.BooleanField(default=False)
 
     def __unicode__(self):
-        return self.description
+        return self.description if self.description else self.name
 
 
 class FileExtension(models.Model):
