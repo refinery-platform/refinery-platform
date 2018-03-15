@@ -40,6 +40,11 @@ class refinery::apache2 {
     content => "AcceptFilter http none\nAcceptFilter https none",
   }
 
+  # log Django messages only
+  apache::custom_config { 'error-log-format':
+    content => 'ErrorLogFormat "%M"',
+  }
+
   if $::tls_rewrite == 'true' {
     $rewrites = [
       {
