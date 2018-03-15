@@ -26,16 +26,6 @@ module "identity_pool" {
   iam_resource_name_prefix = "${terraform.workspace}"
 }
 
-module "docker_host" {
-  source              = "../modules/docker_host"
-  name                = "${terraform.workspace} docker_host"
-  vpc_cidr_block      = "${var.vpc_cidr_block}"
-  private_subnet_id   = "${module.vpc.private_subnet_a_id}"
-  vpc_id              = "${module.vpc.vpc_id}"
-  security_group_name = "${terraform.workspace}-docker"
-}
-
-
 module "vpc" {
   source               = "../modules/vpc"
   name                 = "${terraform.workspace} vpc"

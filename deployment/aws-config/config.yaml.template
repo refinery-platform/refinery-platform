@@ -34,8 +34,6 @@ S3_BUCKET_NAME_BASE: "refinery"
 # Get from Terraform output (identity_pool_id)
 COGNITO_IDENTITY_POOL_ID: ""
 
-# Get Docker hostname address from terraform output (docker_hostname)
-DOCKER_HOST: ""
 
 # Get VPC id from terraform output (vpc_id)
 VPC_ID: ""
