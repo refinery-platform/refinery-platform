@@ -34,7 +34,7 @@ from core.utils import get_absolute_url
 from data_set_manager.isa_tab_parser import ParserException
 from file_store.models import (generate_file_source_translator, get_temp_dir,
                                parse_s3_url)
-from file_store.tasks import DownloadError, download_file, import_file
+from file_store.tasks import download_file, import_file
 
 from .models import Assay, AttributeOrder, Study
 from .serializers import AssaySerializer, AttributeOrderSerializer
@@ -196,8 +196,8 @@ class ProcessISATabView(View):
         try:
             # TODO: refactor download_file to take file handle instead of path
             download_file(url, temp_file_path)
-        except DownloadError as e:
-            logger.error("Problem downloading ISA-Tab file. %s", e)
+        except RuntimeError as exc:
+            logger.error("Problem downloading ISA-Tab file. %s", exc)
             error = "Problem downloading ISA-Tab file from: '{}'".format(url)
             context = RequestContext(request, {'form': form, 'error': error})
             response = render_to_response(self.template_name,
@@ -419,9 +419,9 @@ class ProcessISATabView(View):
             # TODO: refactor download_file to take file handle instead
             # of path
             download_file(url, temp_file_path)
-        except DownloadError as e:
+        except RuntimeError as exc:
             error_msg = "Problem downloading ISA-Tab file from: " + url
-            logger.error("%s. %s", error_msg, e)
+            logger.error("%s. %s", error_msg, exc)
             return {
                 "success": False,
                 "message": error_msg
