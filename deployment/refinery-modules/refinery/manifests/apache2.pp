@@ -1,9 +1,7 @@
 class refinery::apache2 {
 
-  # must be set to the ELB Idle Timeout value provided in the CloudFormation template
-  # for chunked uploads of large files (MD5 calculation on the server can take a long time)
-  # to be adjusted to a more reasonable value after enabling file uploads to S3
-  $timeout = 1800
+  # must be set to the ELB IdleTimeout value in the CloudFormation template
+  $timeout = 60  # seconds
 
   class { '::apache':
     default_mods           => false,  # to allow declaration of ::apache::mod::reqtimeout below
