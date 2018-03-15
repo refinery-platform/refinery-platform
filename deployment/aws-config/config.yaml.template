@@ -27,20 +27,26 @@ STACK_NAME: "RefineryStack"
 # Constraint: DNS-compliant without periods (".")
 S3_BUCKET_NAME_BASE: "refinery"
 
-# Get from Terraform output
+
+# -------------------------
+# Terraform specific values
+
+# Get from Terraform output (identity_pool_id)
 COGNITO_IDENTITY_POOL_ID: ""
 
-# Get Docker hostname address from terraform output
+# Get Docker hostname address from terraform output (docker_hostname)
 DOCKER_HOST: ""
 
-# Get VPC id from terraform output
+# Get VPC id from terraform output (vpc_id)
 VPC_ID: ""
 
-# Get Public Subnet id from terraform output
+# Get Public Subnet id from terraform output (public_subnet_id)
 PUBLIC_SUBNET_ID: ""
 
-# Get RDS DB Subnet Group Name from terraform output
+# Get RDS DB Subnet Group Name from terraform output (rds_db_subnet_group_name)
 RDS_DB_SUBNET_GROUP_NAME: ""
+
+# -------------------------
 
 # AWS ARN for the TLS certifcate to be used for HTTPS connections
 # TLS_CERTIFICATE: "arn:aws:acm:--region--:--accountnumber--:certificate/--id--"
