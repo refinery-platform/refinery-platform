@@ -496,7 +496,7 @@ def make_template(config, config_yaml):
                 functions.get_att('WebInstance', 'AvailabilityZone')
             ],
             'ConnectionSettings': {
-                'IdleTimeout': 60  # seconds
+                'IdleTimeout': 180  # seconds
             },
             'HealthCheck': {
                 'HealthyThreshold': '2',

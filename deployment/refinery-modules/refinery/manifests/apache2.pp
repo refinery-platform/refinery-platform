@@ -1,7 +1,9 @@
 class refinery::apache2 {
 
   # must be set to the ELB IdleTimeout value in the CloudFormation template
-  $timeout = 60  # seconds
+  # this is higher than the default of 60 to accommodate long synchronous
+  # processing of metadata during data set import
+  $timeout = 180  # seconds
 
   class { '::apache':
     default_mods           => false,  # to allow declaration of ::apache::mod::reqtimeout below
