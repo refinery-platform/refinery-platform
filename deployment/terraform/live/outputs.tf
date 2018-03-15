@@ -14,6 +14,10 @@ output "public_subnet_id" {
   value = "${module.vpc.public_subnet_id}"
 }
 
+output "docker_hostname" {
+  value = "${module.docker_host.docker_hostname}"
+}
+
 output "rds_db_subnet_group_name" {
   value = "${module.rds.rds_db_subnet_group_name}"
 }
