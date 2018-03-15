@@ -9,5 +9,4 @@ variable "upload_bucket_name" {
 variable "iam_resource_name_prefix" {
   description = "Name prefix of the S3 upload role"
 }
-
 variable "name" {}
