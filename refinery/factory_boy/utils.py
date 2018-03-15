@@ -2,21 +2,14 @@ import uuid as uuid_builtin
 
 from core.models import INPUT_CONNECTION, OUTPUT_CONNECTION, Analysis
 from data_set_manager.models import Node
-from factory_boy.django_model_factories import (AnalysisFactory,
-                                                AnalysisNodeConnectionFactory,
-                                                AnalysisResultFactory,
-                                                AnalysisStatusFactory,
-                                                AnnotatedNodeFactory,
-                                                AssayFactory, AttributeFactory,
-                                                DataSetFactory,
-                                                FileStoreItemFactory,
-                                                GalaxyInstanceFactory,
-                                                InvestigationFactory,
-                                                InvestigationLinkFactory,
-                                                NodeFactory, ProjectFactory,
-                                                StudyFactory,
-                                                WorkflowEngineFactory,
-                                                WorkflowFactory)
+from factory_boy.django_model_factories import (
+    AnalysisFactory, AnalysisNodeConnectionFactory, AnalysisResultFactory,
+    AnalysisStatusFactory, AnnotatedNodeFactory, AssayFactory,
+    AttributeFactory, DataSetFactory, FileStoreItemFactory,
+    GalaxyInstanceFactory, InvestigationFactory, InvestigationLinkFactory,
+    NodeFactory, ProjectFactory, StudyFactory, WorkflowEngineFactory,
+    WorkflowFactory
+)
 
 
 def create_analysis(project, dataset, workflow, user_instance):
