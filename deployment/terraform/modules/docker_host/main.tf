@@ -17,14 +17,6 @@ resource "aws_security_group" "allow_docker" {
     cidr_blocks = ["${var.vpc_cidr_block}"]
   }
 
-  #ingress {
-  #  # Just for debugging TODO: Remove?
-  #  from_port   = 22
-  #  to_port     = 22
-  #  protocol    = "tcp"
-  #  cidr_blocks = ["${var.vpc_cidr_block}"]
-  #}
-
   egress {
     from_port   = 0             # Implicit with AWS, but Terraform requires that it be explicit:
     to_port     = 0
