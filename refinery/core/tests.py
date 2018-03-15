@@ -625,18 +625,6 @@ class DataSetDeletionTest(TestCase):
                 self.user
             )
 
-    def _assert_related_objects_removed(self):
-        self.assertEqual(Analysis.objects.count(), 0)
-        self.assertEqual(AnnotatedNode.objects.count(), 0)
-        self.assertEqual(Assay.objects.count(), 0)
-        self.assertEqual(DataSet.objects.count(), 0)
-        self.assertEqual(FileStoreItem.objects.count(), 0)
-        self.assertEqual(Investigation.objects.count(), 0)
-        self.assertEqual(InvestigationLink.objects.count(), 0)
-        self.assertEqual(Node.objects.count(), 0)
-        self.assertEqual(NodeCollection.objects.count(), 0)
-        self.assertEqual(Study.objects.count(), 0)
-
     def test_transaction_rollback_on_dataset_delete_failure(self):
         with mock.patch.object(BaseResource, "delete", side_effect=Exception):
             self.dataset.delete()
@@ -654,13 +642,33 @@ class DataSetDeletionTest(TestCase):
 
     def test_dataset_deletion_removes_related_objects(self):
         self.dataset.delete()
-        self._assert_related_objects_removed()
+
+        self.assertEqual(Analysis.objects.count(), 0)
+        self.assertEqual(AnnotatedNode.objects.count(), 0)
+        self.assertEqual(Assay.objects.count(), 0)
+        self.assertEqual(DataSet.objects.count(), 0)
+        self.assertEqual(FileStoreItem.objects.count(), 0)
+        self.assertEqual(Investigation.objects.count(), 0)
+        self.assertEqual(InvestigationLink.objects.count(), 0)
+        self.assertEqual(Node.objects.count(), 0)
+        self.assertEqual(NodeCollection.objects.count(), 0)
+        self.assertEqual(Study.objects.count(), 0)
 
     def test_dataset_bulk_deletion_removes_related_objects(self):
         # make a second DataSet
         create_dataset_with_necessary_models(is_isatab_based=True)
         DataSet.objects.all().delete()
-        self._assert_related_objects_removed()
+
+        self.assertEqual(Analysis.objects.count(), 0)
+        self.assertEqual(AnnotatedNode.objects.count(), 0)
+        self.assertEqual(Assay.objects.count(), 0)
+        self.assertEqual(DataSet.objects.count(), 0)
+        self.assertEqual(FileStoreItem.objects.count(), 0)
+        self.assertEqual(Investigation.objects.count(), 0)
+        self.assertEqual(InvestigationLink.objects.count(), 0)
+        self.assertEqual(Node.objects.count(), 0)
+        self.assertEqual(NodeCollection.objects.count(), 0)
+        self.assertEqual(Study.objects.count(), 0)
 
     def test_isa_archive_deletion(self):
         isatab_dataset = create_dataset_with_necessary_models(
@@ -692,7 +700,19 @@ class AnalysisDeletionTest(TestCase):
             )
         self.analysis = self.analyses[0]
 
-    def _assert_related_objects_removed(self):
+    def test_transaction_rollback_on_analysis_delete_failure(self):
+        with mock.patch.object(BaseResource, "delete", side_effect=Exception):
+            self.analysis.delete()
+
+        self.assertGreater(Analysis.objects.count(), 0)
+        self.assertGreater(AnalysisNodeConnection.objects.count(), 0)
+        self.assertGreater(AnalysisResult.objects.count(), 0)
+        self.assertGreater(AnalysisStatus.objects.count(), 0)
+        self.assertGreater(Node.objects.count(), 0)
+
+    def test_analysis_deletion_removes_related_objects(self):
+        self.analysis.delete()
+
         self.assertEqual(Analysis.objects.count(), 0)
         self.assertEqual(AnalysisNodeConnection.objects.count(), 0)
         self.assertEqual(AnalysisResult.objects.count(), 0)
@@ -706,25 +726,23 @@ class AnalysisDeletionTest(TestCase):
         self.assertGreater(total_dataset_nodes, 0)
         self.assertEqual(total_dataset_nodes, total_nodes)
 
-    def test_transaction_rollback_on_analysis_delete_failure(self):
-        with mock.patch.object(BaseResource, "delete", side_effect=Exception):
-            self.analysis.delete()
-
-        self.assertGreater(Analysis.objects.count(), 0)
-        self.assertGreater(AnalysisNodeConnection.objects.count(), 0)
-        self.assertGreater(AnalysisResult.objects.count(), 0)
-        self.assertGreater(AnalysisStatus.objects.count(), 0)
-        self.assertGreater(Node.objects.count(), 0)
-
-    def test_analysis_deletion_removes_related_objects(self):
-        self.analysis.delete()
-        self._assert_related_objects_removed()
-
     def test_analysis_bulk_deletion_removes_related_objects(self):
         # make a second Analysis
         make_analyses_with_single_dataset(1, self.user)
         Analysis.objects.all().delete()
-        self._assert_related_objects_removed()
+
+        self.assertEqual(Analysis.objects.count(), 0)
+        self.assertEqual(AnalysisNodeConnection.objects.count(), 0)
+        self.assertEqual(AnalysisResult.objects.count(), 0)
+        self.assertEqual(AnalysisStatus.objects.count(), 0)
+
+        # analysis deletion should only remove derived Nodes
+        total_dataset_nodes = \
+            sum([d.get_nodes().count() for d in DataSet.objects.all()])
+        total_nodes = Node.objects.count()
+
+        self.assertGreater(total_dataset_nodes, 0)
+        self.assertEqual(total_dataset_nodes, total_nodes)
 
 
 class AnalysisTests(TestCase):
