@@ -182,3 +182,24 @@ class FileStoreItemFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = "file_store.FileStoreItem"
+
+
+class AnalysisNodeConnectionFactory(factory.django.DjangoModelFactory):
+    """Minimal representation of an AnalysisNodeConnection"""
+
+    class Meta:
+        model = "core.AnalysisNodeConnection"
+
+
+class AnalysisResultFactory(factory.django.DjangoModelFactory):
+    """Minimal representation of an AnalysisResult"""
+
+    class Meta:
+        model = "core.AnalysisResult"
+
+
+class AnalysisStatusFactory(factory.django.DjangoModelFactory):
+    """Minimal representation of an AnalysisStatus"""
+
+    class Meta:
+        model = "analysis_manager.AnalysisStatus"

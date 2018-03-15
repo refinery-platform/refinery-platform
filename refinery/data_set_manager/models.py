@@ -17,7 +17,7 @@ import requests
 from requests.exceptions import HTTPError
 
 import core
-from core.utils import skip_if_test_run
+from core.utils import delete_analysis_index, skip_if_test_run
 import data_set_manager
 from file_store.models import FileStoreItem
 
@@ -243,9 +243,15 @@ class Study(NodeCollection):
 
 @receiver(pre_delete, sender=Study)
 def _study_delete(sender, instance, **kwargs):
-    nodes = Node.objects.filter(study=instance)
-    for node in nodes:
-        node.delete()
+    """
+    Removes a Study's related objects upon deletion being triggered.
+    Having these extra checks is favored within a signal so that this logic
+    is picked up on bulk deletes as well.
+
+    See: https://docs.djangoproject.com/en/1.8/topics/db/models/
+    #overriding-model-methods
+    """
+    Node.objects.filter(study=instance).delete()
 
 
 class Design(models.Model):
@@ -469,12 +475,6 @@ class Node(models.Model):
                "species: " + unicode(self.species) +\
                ", genome build: " + unicode(self.genome_build) + ")"
 
-    def delete(self, **kwargs):
-        # remove a Node's FileStoreItem upon deletion, if one exists
-        if self.file_uuid:
-            FileStoreItem.objects.get(uuid=self.file_uuid).delete()
-        super(Node, self).delete()
-
     def add_child(self, node):
         if node is None:
             return None
@@ -660,6 +660,25 @@ class Node(models.Model):
             return AsyncResult(self.get_file_store_item().import_task_id).state
         else:
             return None
+
+
+@receiver(pre_delete, sender=Node)
+def _node_delete(sender, instance, *args, **kwargs):
+    """
+    Removes a Node's related objects upon deletion being triggered.
+    Having these extra checks is favored within a signal so that this logic
+    is picked up on bulk deletes as well.
+
+    See: https://docs.djangoproject.com/en/1.8/topics/db/models/
+    #overriding-model-methods
+    """
+
+    # remove a Node's FileStoreItem upon deletion, if one exists
+    file_store_item = instance.get_file_store_item()
+    if file_store_item is not None:
+        file_store_item.delete()
+
+    delete_analysis_index(instance)
 
 
 class Attribute(models.Model):

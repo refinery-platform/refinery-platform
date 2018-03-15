@@ -615,18 +615,6 @@ class WorkflowDeletionTest(TestCase):
 class DataSetDeletionTest(TestCase):
     """Testing for the deletion of Datasets"""
     def setUp(self):
-        self.models_to_be_removed = [
-            Analysis,
-            AnnotatedNode,
-            Assay,
-            DataSet,
-            FileStoreItem,
-            Investigation,
-            InvestigationLink,
-            Node,
-            NodeCollection,
-            Study
-        ]
         self.username = self.password = 'user'
         self.user = User.objects.create_user(
             self.username, '', self.password
@@ -637,34 +625,55 @@ class DataSetDeletionTest(TestCase):
                 self.user
             )
 
-    def _assert_related_objects_exist(self):
-        for model in self.models_to_be_removed:
-            self.assertNotEqual(model.objects.count(), 0)
-
-    def _assert_related_objects_removed(self):
-        for model in self.models_to_be_removed:
-            self.assertEqual(model.objects.count(), 0)
-
-    def test_transaction_rollback_on_delete_failure(self):
+    def test_transaction_rollback_on_dataset_delete_failure(self):
         with mock.patch.object(BaseResource, "delete", side_effect=Exception):
             self.dataset.delete()
-        self._assert_related_objects_exist()
+
+        self.assertGreater(Analysis.objects.count(), 0)
+        self.assertGreater(AnnotatedNode.objects.count(), 0)
+        self.assertGreater(Assay.objects.count(), 0)
+        self.assertGreater(DataSet.objects.count(), 0)
+        self.assertGreater(FileStoreItem.objects.count(), 0)
+        self.assertGreater(Investigation.objects.count(), 0)
+        self.assertGreater(InvestigationLink.objects.count(), 0)
+        self.assertGreater(Node.objects.count(), 0)
+        self.assertGreater(NodeCollection.objects.count(), 0)
+        self.assertGreater(Study.objects.count(), 0)
 
     def test_dataset_deletion_removes_related_objects(self):
-        self._assert_related_objects_exist()
         self.dataset.delete()
-        self._assert_related_objects_removed()
+
+        self.assertEqual(Analysis.objects.count(), 0)
+        self.assertEqual(AnnotatedNode.objects.count(), 0)
+        self.assertEqual(Assay.objects.count(), 0)
+        self.assertEqual(DataSet.objects.count(), 0)
+        self.assertEqual(FileStoreItem.objects.count(), 0)
+        self.assertEqual(Investigation.objects.count(), 0)
+        self.assertEqual(InvestigationLink.objects.count(), 0)
+        self.assertEqual(Node.objects.count(), 0)
+        self.assertEqual(NodeCollection.objects.count(), 0)
+        self.assertEqual(Study.objects.count(), 0)
 
     def test_dataset_bulk_deletion_removes_related_objects(self):
         # make a second DataSet
         create_dataset_with_necessary_models(is_isatab_based=True)
-        self._assert_related_objects_exist()
         DataSet.objects.all().delete()
-        self._assert_related_objects_removed()
+
+        self.assertEqual(Analysis.objects.count(), 0)
+        self.assertEqual(AnnotatedNode.objects.count(), 0)
+        self.assertEqual(Assay.objects.count(), 0)
+        self.assertEqual(DataSet.objects.count(), 0)
+        self.assertEqual(FileStoreItem.objects.count(), 0)
+        self.assertEqual(Investigation.objects.count(), 0)
+        self.assertEqual(InvestigationLink.objects.count(), 0)
+        self.assertEqual(Node.objects.count(), 0)
+        self.assertEqual(NodeCollection.objects.count(), 0)
+        self.assertEqual(Study.objects.count(), 0)
 
     def test_isa_archive_deletion(self):
         isatab_dataset = create_dataset_with_necessary_models(
-            is_isatab_based=True)
+            is_isatab_based=True
+        )
         isatab_file_store_item_uuid = \
             isatab_dataset.get_metadata_as_file_store_item().uuid
         isatab_dataset.delete()
@@ -677,6 +686,63 @@ class DataSetDeletionTest(TestCase):
         self.dataset.delete()
         with self.assertRaises(FileStoreItem.DoesNotExist):
             FileStoreItem.objects.get(uuid=tabular_file_store_item_uuid)
+
+
+class AnalysisDeletionTest(TestCase):
+    """Testing for the deletion of Analyses"""
+    def setUp(self):
+        self.username = self.password = 'user'
+        self.user = User.objects.create_user(self.username, '', self.password)
+        self.analyses, self.dataset = \
+            make_analyses_with_single_dataset(
+                1,
+                self.user
+            )
+        self.analysis = self.analyses[0]
+
+    def test_transaction_rollback_on_analysis_delete_failure(self):
+        with mock.patch.object(BaseResource, "delete", side_effect=Exception):
+            self.analysis.delete()
+
+        self.assertGreater(Analysis.objects.count(), 0)
+        self.assertGreater(AnalysisNodeConnection.objects.count(), 0)
+        self.assertGreater(AnalysisResult.objects.count(), 0)
+        self.assertGreater(AnalysisStatus.objects.count(), 0)
+        self.assertGreater(Node.objects.count(), 0)
+
+    def test_analysis_deletion_removes_related_objects(self):
+        self.analysis.delete()
+
+        self.assertEqual(Analysis.objects.count(), 0)
+        self.assertEqual(AnalysisNodeConnection.objects.count(), 0)
+        self.assertEqual(AnalysisResult.objects.count(), 0)
+        self.assertEqual(AnalysisStatus.objects.count(), 0)
+
+        # analysis deletion should only remove derived Nodes
+        total_dataset_nodes = \
+            sum([d.get_nodes().count() for d in DataSet.objects.all()])
+        total_nodes = Node.objects.count()
+
+        self.assertGreater(total_dataset_nodes, 0)
+        self.assertEqual(total_dataset_nodes, total_nodes)
+
+    def test_analysis_bulk_deletion_removes_related_objects(self):
+        # make a second Analysis
+        make_analyses_with_single_dataset(1, self.user)
+        Analysis.objects.all().delete()
+
+        self.assertEqual(Analysis.objects.count(), 0)
+        self.assertEqual(AnalysisNodeConnection.objects.count(), 0)
+        self.assertEqual(AnalysisResult.objects.count(), 0)
+        self.assertEqual(AnalysisStatus.objects.count(), 0)
+
+        # analysis deletion should only remove derived Nodes
+        total_dataset_nodes = \
+            sum([d.get_nodes().count() for d in DataSet.objects.all()])
+        total_nodes = Node.objects.count()
+
+        self.assertGreater(total_dataset_nodes, 0)
+        self.assertEqual(total_dataset_nodes, total_nodes)
 
 
 class AnalysisTests(TestCase):
@@ -846,6 +912,11 @@ class AnalysisTests(TestCase):
         self.analysis_with_node_analyzed_further.delete()
         self.assertIsNotNone(Analysis.objects.get(
             name='analysis_with_node_analyzed_further'))
+
+    def test_has_nodes_used_in_downstream_analyses(self):
+        self.assertTrue(self.analysis_with_node_analyzed_further
+                        .has_nodes_used_in_downstream_analyses())
+        self.assertFalse(self.analysis.has_nodes_used_in_downstream_analyses())
 
     def test_galaxy_tool_file_import_state_returns_data_when_it_should(self):
         self.analysis_status.galaxy_import_state = AnalysisStatus.PROGRESS

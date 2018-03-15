@@ -1,7 +1,11 @@
 import uuid as uuid_builtin
 
-from core.models import Analysis, DataSet
+from core.models import INPUT_CONNECTION, OUTPUT_CONNECTION, Analysis
+from data_set_manager.models import Node
 from factory_boy.django_model_factories import (AnalysisFactory,
+                                                AnalysisNodeConnectionFactory,
+                                                AnalysisResultFactory,
+                                                AnalysisStatusFactory,
                                                 AnnotatedNodeFactory,
                                                 AssayFactory, AttributeFactory,
                                                 DataSetFactory,
@@ -15,15 +19,59 @@ from factory_boy.django_model_factories import (AnalysisFactory,
                                                 WorkflowFactory)
 
 
-def make_datasets(number_to_create, user_instance):
-    """Create some minimal DataSets"""
-    while number_to_create:
-        create_dataset_with_necessary_models()
-        number_to_create -= 1
+def create_analysis(project, dataset, workflow, user_instance):
+    analysis_uuid = str(uuid_builtin.uuid4())
+    analysis = AnalysisFactory(
+        uuid=analysis_uuid,
+        name="Test Analysis - {}".format(analysis_uuid),
+        project=project,
+        data_set=dataset,
+        workflow=workflow
+    )
+    input_node = dataset.get_nodes().first()
+    AnalysisNodeConnectionFactory(
+        direction=INPUT_CONNECTION,
+        node=input_node,
+        name="Connection to {}".format(input_node),
+        analysis=analysis,
+        step=0,
+        filename="Input filename",
+        is_refinery_file=input_node.get_file_store_item().is_local()
+    )
 
-    for dataset in DataSet.objects.all():
-        dataset.set_owner(user_instance)
-        dataset.save()
+    # create Analysis Output
+    file_store_item_uuid = str(uuid_builtin.uuid4())
+    FileStoreItemFactory(
+        uuid=file_store_item_uuid,
+        source="http://www.example.com/analysis_output.txt"
+    )
+    output_node = NodeFactory(
+        analysis_uuid=analysis_uuid,
+        study=dataset.get_latest_study(),
+        assay=dataset.get_latest_assay(),
+        file_uuid=file_store_item_uuid,
+        type=Node.DERIVED_DATA_FILE
+    )
+
+    AnalysisNodeConnectionFactory(
+        direction=OUTPUT_CONNECTION,
+        node=output_node,
+        name="Connection to {}".format(output_node),
+        analysis=analysis,
+        step=1,
+        filename="Output filename",
+        is_refinery_file=True
+    )
+    AnalysisResultFactory(
+        analysis_uuid=analysis.uuid,
+        file_store_uuid=file_store_item_uuid
+    )
+
+    # create AnalysisStatus
+    AnalysisStatusFactory(analysis=analysis)
+
+    analysis.set_owner(user_instance)
+    analysis.save()
 
 
 def make_analyses_with_single_dataset(number_to_create, user_instance):
@@ -37,23 +85,10 @@ def make_analyses_with_single_dataset(number_to_create, user_instance):
     dataset = create_dataset_with_necessary_models(user=user_instance)
 
     while number_to_create:
-        analysis_uuid = str(uuid_builtin.uuid4())
-        AnalysisFactory(
-            uuid=analysis_uuid,
-            name="Test Analysis - {}".format(analysis_uuid),
-            project=project,
-            data_set=dataset,
-            workflow=workflow
-        )
-
+        create_analysis(project, dataset, workflow, user_instance)
         number_to_create -= 1
 
-    analyses = Analysis.objects.all()
-    for analysis in analyses:
-        analysis.set_owner(user_instance)
-        analysis.save()
-
-    return analyses, dataset
+    return Analysis.objects.all(), dataset
 
 
 def create_dataset_with_necessary_models(
@@ -85,13 +120,15 @@ def create_dataset_with_necessary_models(
     if create_nodes:
         for i in xrange(2):
             file_store_item_uuid = str(uuid_builtin.uuid4())
-            file_store_item = FileStoreItemFactory(
+            FileStoreItemFactory(
                 uuid=file_store_item_uuid,
                 source="http://www.example.com/test{}.txt".format(i)
             )
             node = NodeFactory(
                 study=latest_study,
-                file_uuid=file_store_item.uuid
+                assay=assay,
+                file_uuid=file_store_item_uuid,
+                type=Node.RAW_DATA_FILE
             )
             attribute = AttributeFactory(
                 node=node
