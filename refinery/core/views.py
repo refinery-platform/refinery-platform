@@ -35,7 +35,6 @@ from rest_framework.views import APIView
 import xmltodict
 
 from data_set_manager.models import Node
-from file_store.models import FileStoreItem
 
 from .forms import ProjectForm, UserForm, UserProfileForm, WorkflowForm
 from .models import (Analysis, CustomRegistrationProfile, DataSet,
@@ -319,21 +318,7 @@ def data_set(request, data_set_uuid, analysis_uuid=None):
     assay_uuid = studies[0].assay_set.all()[0].uuid
     # used for solr field postfixes: FIELDNAME_STUDYID_ASSAY_ID_FIELDTYPE
     assay_id = studies[0].assay_set.all()[0].id
-    # TODO: catch errors
-    isatab_archive = None
-    pre_isatab_archive = None
-    try:
-        if investigation.isarchive_file is not None:
-            isatab_archive = FileStoreItem.objects.get(
-                uuid=investigation.isarchive_file)
-    except FileStoreItem.DoesNotExist:
-        pass
-    try:
-        if investigation.pre_isarchive_file is not None:
-            pre_isatab_archive = FileStoreItem.objects.get(
-                uuid=investigation.pre_isarchive_file)
-    except FileStoreItem.DoesNotExist:
-        pass
+
     return render_to_response(
         'core/data_set.html',
         {
@@ -347,8 +332,8 @@ def data_set(request, data_set_uuid, analysis_uuid=None):
             "has_change_dataset_permission": 'change_dataset' in get_perms(
                 request.user, data_set),
             "workflows": workflows,
-            "isatab_archive": isatab_archive,
-            "pre_isatab_archive": pre_isatab_archive,
+            "isatab_archive": investigation.isa_archive,
+            "pre_isatab_archive": investigation.pre_isa_archive,
         },
         context_instance=RequestContext(request))
 
