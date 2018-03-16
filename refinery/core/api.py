@@ -517,15 +517,15 @@ class DataSetResource(SharableResourceAPIInterface, ModelResource):
             except:
                 pass
 
-        isa_archive = bundle.obj.get_isa_archive()
-        pre_isa_archive = bundle.obj.get_pre_isa_archive()
+        metadata_file_store_item = \
+            bundle.obj.get_metadata_as_file_store_item()
 
-        if isa_archive:
-            bundle.data["isa_archive"] = isa_archive.uuid
-            bundle.data["isa_archive_url"] = isa_archive.get_datafile_url()
-
-        if pre_isa_archive:
-            bundle.data["pre_isa_archive"] = pre_isa_archive.uuid
+        if bundle.obj.is_isatab_based:
+            bundle.data["isa_archive"] = metadata_file_store_item.uuid
+            bundle.data["isa_archive_url"] = \
+                metadata_file_store_item.get_datafile_url()
+        else:
+            bundle.data["pre_isa_archive"] = metadata_file_store_item.uuid
 
         analyses = []
         for analysis in bundle.obj.get_analyses():
