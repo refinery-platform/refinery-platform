@@ -10,7 +10,6 @@ from constants import UUID_RE
 
 urlpatterns = patterns(
     'analysis_manager.views',
-    url(r'^$', 'index'),
     url(r'^(?P<uuid>' + UUID_RE + r')/$',
         'analysis_status', name="analysis-status"),
     url(r'^analysis_cancel/$', 'analysis_cancel'),

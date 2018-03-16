@@ -1,69 +1,35 @@
 import json
 import logging
-from urlparse import urlparse
 
-from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.core.urlresolvers import reverse
 from django.http import (HttpResponse, HttpResponseBadRequest,
                          HttpResponseForbidden, HttpResponseNotAllowed,
                          HttpResponseServerError, JsonResponse)
-from django.shortcuts import render_to_response
-from django.template import RequestContext
 
 from core.models import Analysis
-from core.views import custom_error_page
 
 from .models import AnalysisStatus
-from .tasks import run_analysis
-from .utils import create_analysis, validate_analysis_config
 
 logger = logging.getLogger(__name__)
 
 
-def index(request):
-    statuses = AnalysisStatus.objects.all()
-    return render_to_response('analysis_manager/index.html',
-                              {'statuses': statuses},
-                              context_instance=RequestContext(request))
-
-
 def analysis_status(request, uuid):
-    """Returns analysis status in HTML or JSON formats (for AJAX requests)"""
-    # TODO: handle MultipleObjectsReturned exception
-    try:
-        analysis = Analysis.objects.get(uuid=uuid)
-    except Analysis.DoesNotExist:
-        logger.error("Analysis with UUID '%s' does not exist", uuid)
-        return HttpResponse(custom_error_page(request, '404.html', {}),
-                            status='404')
+    """Returns analysis status JSON formats"""
+    if request.method == 'GET':
+        try:
+            analysis = Analysis.objects.get(uuid=uuid)
+        except (Analysis.DoesNotExist,
+                Analysis.MultipleObjectsReturned) as e:
+            logger.error(e)
+            return HttpResponseBadRequest(e)
 
-    # TODO: handle MultipleObjectsReturned exception
-    try:
-        status = AnalysisStatus.objects.get(analysis=analysis)
-    except AnalysisStatus.DoesNotExist:
-        logger.error("AnalysisStatus object does not exist for Analysis '%s'",
-                     analysis.name)
-        return HttpResponse(custom_error_page(request, '500.html', {}),
-                            status='500')
+        try:
+            status = AnalysisStatus.objects.get(analysis=analysis)
+        except (AnalysisStatus.DoesNotExist,
+                AnalysisStatus.MultipleObjectsReturned) as e:
+            logger.error(e)
+            return HttpResponseBadRequest(e)
 
-    # add analysis status message if request came from this view
-    referer_path = urlparse(request.META.get('HTTP_REFERER', '')).path
-    if referer_path == request.path:
-        # clear messages to avoid message duplication
-        storage = messages.get_messages(request)
-        storage.used = True
-        # add analysis status message
-        if analysis.get_status() == Analysis.FAILURE_STATUS:
-            msg = "Analysis '{}' failed. No results were added to your data " \
-                  "set.".format(analysis.name)
-            messages.error(request, msg)
-        elif analysis.get_status() == Analysis.SUCCESS_STATUS:
-            msg = "Analysis '{}' finished successfully. View the results in " \
-                  "the file browser.".format(analysis.name)
-            messages.success(request, msg)
-
-    if request.is_ajax():
         ret_json = {
             'refineryImport': status.refinery_import_state(),
             'galaxyAnalysis': status.galaxy_analysis_state(),
@@ -73,11 +39,8 @@ def analysis_status(request, uuid):
         }
         logger.debug("Analysis status for '%s': %s",
                      analysis.name, json.dumps(ret_json))
-        return JsonResponse(ret_json, content_type='application/javascript')
-    return render_to_response(
-        'analysis_manager/analysis_status.html',
-        {'uuid': uuid, 'status': status, 'analysis': analysis},
-        context_instance=RequestContext(request))
+        return JsonResponse(ret_json)
+    return HttpResponseNotAllowed(['GET'])
 
 
 @login_required
@@ -113,38 +76,3 @@ def analysis_cancel(request):
         else:
             return HttpResponseForbidden()  # 403
     return HttpResponseNotAllowed(['POST'])  # 405
-
-
-def run(request):
-    """Run analysis, return URL of the analysis status page
-    Needs re-factoring
-    """
-    allowed_methods = ['POST']
-    logger.debug("Received request to start analysis")
-
-    if not request.is_ajax():
-        return HttpResponseBadRequest("Not an XMLHttpRequest")
-
-    if request.method not in allowed_methods:
-        return HttpResponseNotAllowed(allowed_methods)
-
-    analysis_config = json.loads(request.body)
-    analysis_config["user_id"] = request.user.id
-
-    try:
-        validate_analysis_config(analysis_config)
-    except RuntimeError as e:
-        return HttpResponseBadRequest(e)
-    else:
-        try:
-            analysis = create_analysis(analysis_config)
-        except RuntimeError as e:
-            return HttpResponseBadRequest(e)
-
-    analysis_status = AnalysisStatus.objects.create(analysis=analysis)
-    analysis_status.save()
-
-    # call function via analysis_manager
-    run_analysis.delay(analysis.uuid)
-
-    return HttpResponse(reverse('analysis-status', args=(analysis.uuid,)))

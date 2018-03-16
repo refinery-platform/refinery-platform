@@ -7,7 +7,6 @@ describe('Common.service.analysisDetail: unit tests', function () {
   var fakeUuid = 'x508x83x-x9xx-4740-x9x7-x7x0x631280x';
   var service;
   var header = {
-    'X-Requested-With': 'XMLHttpRequest',
     Accept: 'application/json,' +
       ' text/plain, */*',
     'Content-Type': 'application/json;charset=utf-8'

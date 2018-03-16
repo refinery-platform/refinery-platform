@@ -1,7 +1,5 @@
 'use strict';
 
-// http.post header needed to be adjusted because django was not recognizing it
-// as an ajax call.
 angular
   .module('refineryApp')
   .factory('analysisDetailService', ['$resource', 'settings',
@@ -14,10 +12,7 @@ angular
         },
         {
           query: {
-            method: 'POST',
-            headers: {
-              'X-Requested-With': 'XMLHttpRequest'
-            }
+            method: 'POST'
           }
         }
       );
