@@ -80,7 +80,7 @@ REFINERY_GOOGLE_ANALYTICS_ID: ""
 
 REFINERY_URL_SCHEME: "http"
 
-USER_FILES_COLUMNS: "sample_name,local_path,filetype,organism,technology,genotype,cell_type,antibody,experimenter,date_submitted"
+USER_FILES_COLUMNS: "name,filetype,sample_name,organism,technology,genotype,cell_type,antibody,experimenter,date_submitted"
 
 # == Rarely changed ==
 

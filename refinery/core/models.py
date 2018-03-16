@@ -56,12 +56,12 @@ from galaxy_connector.models import Instance
 import tool_manager
 
 from .utils import (add_or_update_user_to_neo4j, add_read_access_in_neo4j,
-                    async_update_annotation_sets_neo4j, delete_analysis_index,
-                    delete_data_set_index, delete_data_set_neo4j,
-                    delete_ontology_from_neo4j, delete_user_in_neo4j,
-                    email_admin, invalidate_cached_object,
-                    remove_read_access_in_neo4j, skip_if_test_run,
-                    sync_update_annotation_sets_neo4j, update_data_set_index)
+                    async_update_annotation_sets_neo4j, delete_data_set_index,
+                    delete_data_set_neo4j, delete_ontology_from_neo4j,
+                    delete_user_in_neo4j, email_admin,
+                    invalidate_cached_object, remove_read_access_in_neo4j,
+                    skip_if_test_run, sync_update_annotation_sets_neo4j,
+                    update_data_set_index)
 
 logger = logging.getLogger(__name__)
 
@@ -480,21 +480,6 @@ class ManageableResource(models.Model):
         abstract = True
 
 
-class DataSetQuerySet(models.query.QuerySet):
-    def delete(self):
-        for instance in self:
-            try:
-                instance.delete()
-            except Exception as e:
-                return False, "Something unexpected happened. DataSet: {} " \
-                              "could not be deleted. {}".format(self, e)
-
-
-class DataSetManager(models.Manager):
-    def get_queryset(self):
-        return DataSetQuerySet(self.model, using=self._db)
-
-
 class DataSet(SharableResource):
     UNTITLED_DATA_SET_TITLE = "Untitled data set"
 
@@ -511,8 +496,6 @@ class DataSet(SharableResource):
     accession_source = models.CharField(max_length=128, blank=True, null=True)
     # actual title of the dataset
     title = models.CharField(max_length=250, default=UNTITLED_DATA_SET_TITLE)
-
-    objects = DataSetManager()
 
     class Meta:
         verbose_name = "dataset"
@@ -540,41 +523,6 @@ class DataSet(SharableResource):
         super(DataSet, self).save(*args, **kwargs)
 
     def delete(self, **kwargs):
-        """
-        Overrides the DataSet model's delete method.
-
-        Deletes NodeCollection and related object based on uuid of
-        Investigations linked to the DataSet.
-        This deletes Studys, Assays and Investigations in
-        addition to the related objects detected by Django.
-
-        This method will also delete the isa_archive or
-        pre_isa_archive associated with the DataSet if one exists.
-        """
-
-        try:
-            self.get_isa_archive().delete()
-        except AttributeError as e:
-            logger.debug("DataSet has no isa_archive to delete: %s", e)
-
-        try:
-            self.get_pre_isa_archive().delete()
-        except AttributeError as e:
-            logger.debug("DataSet has no pre_isa_archive to delete: %s", e)
-
-        related_investigation_links = self.get_investigation_links()
-
-        for investigation_link in related_investigation_links:
-            node_collection = investigation_link.get_node_collection()
-            try:
-                node_collection.delete()
-            except Exception as e:
-                logger.error("Couldn't delete NodeCollection: %s", e)
-
-        # terminate any running file import tasks
-        for file_store_item in self.get_file_store_items():
-            file_store_item.terminate_file_import_task()
-
         try:
             super(DataSet, self).delete()
         except Exception as exc:
@@ -730,27 +678,14 @@ class DataSet(SharableResource):
             [item.get_file_size(report_symlinks=True) for item in file_items]
         )
 
-    def get_isa_archive(self):
-        """Returns the isa_archive that was used to create the DataSet"""
+    def get_metadata_as_file_store_item(self):
+        """Returns the FileStoreItem pointing to the isa/pre_isa archive that
+        was used to create the DataSet"""
         investigation = self.get_investigation()
-        try:
-            return FileStoreItem.objects.get(uuid=investigation.isarchive_file)
-        except (FileStoreItem.DoesNotExist,
-                FileStoreItem.MultipleObjectsReturned,
-                AttributeError) as e:
-            logger.debug("Couldn't fetch FileStoreItem: %s", e)
-
-    def get_pre_isa_archive(self):
-        """Returns the pre_isa_archive that was used to create the DataSet"""
-        investigation = self.get_investigation()
-        try:
-            return FileStoreItem.objects.get(
-                uuid=investigation.pre_isarchive_file
-            )
-        except (FileStoreItem.DoesNotExist,
-                FileStoreItem.MultipleObjectsReturned,
-                AttributeError) as e:
-            logger.debug("Couldn't fetch FileStoreItem: %s", e)
+        return (
+            investigation.isa_archive if self.is_isatab_based
+            else investigation.pre_isa_archive
+        )
 
     def share(self, group, readonly=True, readmetaonly=False):
         # change: !readonly & !readmetaonly, read: readonly & !readmetaonly
@@ -819,6 +754,7 @@ class DataSet(SharableResource):
                        FileStoreItem.MultipleObjectsReturned) as e:
                     logger.error("Error while fetching FileStoreItem: %s", e)
 
+        file_store_items.append(self.get_metadata_as_file_store_item())
         return file_store_items
 
     def is_valid(self):
@@ -841,9 +777,36 @@ class DataSet(SharableResource):
     def get_node_uuids(self):
         return self.get_nodes().values_list('uuid', flat=True)
 
+    @property
+    def is_isatab_based(self):
+        return bool(self.get_investigation().isa_archive)
+
 
 @receiver(pre_delete, sender=DataSet)
 def _dataset_delete(sender, instance, *args, **kwargs):
+    """
+    Removes a DataSet's related objects upon deletion being triggered.
+    Having these extra checks is favored within a signal so that this logic
+    is picked up on bulk deletes as well.
+
+    See: https://docs.djangoproject.com/en/1.8/topics/db/models/
+    #overriding-model-methods
+    """
+
+    # terminate any running file import tasks
+    for file_store_item in instance.get_file_store_items():
+        file_store_item.terminate_file_import_task()
+
+    related_investigation_links = instance.get_investigation_links()
+
+    with transaction.atomic():
+        # delete FileStoreItem and datafile corresponding to the
+        # metadata file used to generate the DataSet
+        instance.get_metadata_as_file_store_item().delete()
+
+        for investigation_link in related_investigation_links:
+            investigation_link.get_node_collection().delete()
+
     delete_data_set_index(instance)
     delete_data_set_neo4j(instance.uuid)
     async_update_annotation_sets_neo4j()
@@ -873,12 +836,7 @@ class InvestigationLink(models.Model):
         return retstr
 
     def get_node_collection(self):
-        try:
-            return NodeCollection.objects.get(
-                uuid=self.investigation.uuid)
-        except (NodeCollection.DoesNotExist,
-                NodeCollection.MultipleObjectsReturned) as e:
-            logger.error("Could not fetch NodeCollection: %s", e)
+        return NodeCollection.objects.get(uuid=self.investigation.uuid)
 
 
 class WorkflowEngine(OwnableResource, ManageableResource):
@@ -1029,17 +987,6 @@ class AnalysisResult(models.Model):
         )
 
 
-class AnalysisQuerySet(models.query.QuerySet):
-    def delete(self):
-        for instance in self:
-            instance.delete()
-
-
-class AnalysisManager(models.Manager):
-    def get_queryset(self):
-        return AnalysisQuerySet(self.model, using=self._db)
-
-
 class Analysis(OwnableResource):
     SUCCESS_STATUS = "SUCCESS"
     FAILURE_STATUS = "FAILURE"
@@ -1072,8 +1019,6 @@ class Analysis(OwnableResource):
     # output_nodes = models.ManyToManyField(Nodes, blank=True)
     # protocol = i.e. protocol node created when the analysis is created
 
-    objects = AnalysisManager()
-
     def __str__(self):
         return "{} - {} - {}".format(
             self.name,
@@ -1094,6 +1039,20 @@ class Analysis(OwnableResource):
             ast.literal_eval(self.workflow_copy)
         )
 
+    def has_nodes_used_in_downstream_analyses(self):
+        """
+        Check if any Nodes that are part of an Analysis have been Analyzed
+        further down the line.
+        :return: Boolean
+        """
+        for node in self.get_nodes():
+            analysis_node_connections_for_node = \
+                node.get_analysis_node_connections()
+            for analysis_node_connection in analysis_node_connections_for_node:
+                if analysis_node_connection.direction == 'in':
+                    return True
+        return False
+
     def delete(self, **kwargs):
         """
         Overrides the Analysis model's delete method and checks if
@@ -1108,59 +1067,14 @@ class Analysis(OwnableResource):
         5. Continue on to delete the Analysis, AnalysisNodeConnections,
         and AnalysisStatus'
         """
-
-        delete = True
-        nodes = self.get_nodes()
-
-        for node in nodes:
-
-            analysis_node_connections_for_node = \
-                node.get_analysis_node_connections()
-
-            for analysis_node_connection in analysis_node_connections_for_node:
-                if analysis_node_connection.direction == 'in':
-                    delete = False
-
-        if delete:
-            self.cancel()
-
-            # Delete associated AnalysisResults
-            self.get_analysis_results().delete()
-
-            for node in nodes:
-                # Delete associated FileStoreItems
-                if node.file_uuid:
-                    node.get_file_store_item().delete()
-
-                # Remove Nodes from Solr's Index
-                try:
-                    delete_analysis_index(node)
-                except Exception as e:
-                    logger.debug("No NodeIndex exists in Solr with id "
-                                 "%s:  %s", node.id, e)
-
-            # Optimize Solr's index to get rid of any traces of the Analysis
-            self.optimize_solr_index()
-
-            # Delete Nodes Associated w/ the Analysis
-            nodes.delete()
-
-            super(Analysis, self).delete()
-
-            # Return a "truthy" value here so that the admin ui and
-            # front-end ui knows if the deletion succeeded or not as well as
-            # the proper message to display to the end user
-            return True, "Analysis: {} was deleted successfully".format(
-                self.name)
-
-        else:
-            # Prepare string to be displayed upon a failed deletion
-            deletion_error_message = "Cannot delete Analysis: {} because " \
-                                     "its results have been used to run " \
-                                     "further Analyses. Please delete all " \
-                                     "downstream Analyses before you delete " \
-                                     "this one".format(self.name)
-
+        if self.has_nodes_used_in_downstream_analyses():
+            deletion_error_message = (
+                "Cannot delete Analysis: {} because "
+                "its results have been used to run "
+                "further Analyses. Please delete all "
+                "downstream Analyses before you delete "
+                "this one".format(self.name)
+            )
             logger.error(deletion_error_message)
 
             # Return a "falsey" value here so that the admin ui and
@@ -1168,12 +1082,23 @@ class Analysis(OwnableResource):
             # the proper message to display to the end user
             return False, deletion_error_message
 
+        try:
+            super(Analysis, self).delete()
+        except Exception as exc:
+            return False, "Analysis {} could not be deleted: {}".format(
+                self.name, exc)
+        else:
+            # Return a "truthy" value here so that the admin ui and
+            # front-end ui knows if the deletion succeeded or not as well
+            # as the proper message to  display to the end user
+            return True, "Analysis: {} was deleted successfully".format(
+                self.name)
+
     def get_status(self):
         return self.status
 
     def get_nodes(self):
-        return Node.objects.filter(
-            analysis_uuid=self.uuid)
+        return Node.objects.filter(analysis_uuid=self.uuid)
 
     def get_analysis_results(self):
         return AnalysisResult.objects.filter(analysis_uuid=self.uuid)
@@ -1705,6 +1630,27 @@ class Analysis(OwnableResource):
         self._prepare_annotated_nodes(node_uuids)
 
 
+@receiver(pre_delete, sender=Analysis)
+def _analysis_delete(sender, instance, *args, **kwargs):
+    """
+    Removes an Analyses's related objects upon deletion being triggered.
+    Having these extra checks is favored within a signal so that this logic
+    is picked up on bulk deletes as well.
+
+    See: https://docs.djangoproject.com/en/1.8/topics/db/models/
+    #overriding-model-methods
+    """
+    with transaction.atomic():
+        instance.cancel()
+        # Delete associated AnalysisResults
+        instance.get_analysis_results().delete()
+        # Delete Nodes Associated w/ the Analysis
+        instance.get_nodes().delete()
+
+    # Optimize Solr's index to get rid of any traces of the Analysis
+    instance.optimize_solr_index()
+
+
 #: Defining available relationship types
 INPUT_CONNECTION = 'in'
 OUTPUT_CONNECTION = 'out'
@@ -2109,21 +2055,6 @@ def _baseresource_save(sender, instance, **kwargs):
         BaseResource after being saved
     '''
     invalidate_cached_object(instance)
-
-
-@receiver_subclasses(pre_delete, NodeCollection, 'nodecollection_pre_delete')
-def _nodecollection_delete(sender, instance, **kwargs):
-    """Finds all subclasses related to a DataSet's NodeCollections and deletes
-    all FileStoreItem instances associated with the DataSet
-    """
-    nodes = Node.objects.filter(study=instance)
-    for node in nodes:
-        try:
-            FileStoreItem.objects.get(uuid=node.file_uuid).delete()
-        except (FileStoreItem.DoesNotExist,
-                FileStoreItem.MultipleObjectsReturned) as exc:
-            logger.debug("Could not delete FileStoreItem with UUID '%s': %s",
-                         node.uuid, exc)
 
 
 class AuthenticationFormUsernameOrEmail(AuthenticationForm):
