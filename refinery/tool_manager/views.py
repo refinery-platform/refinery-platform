@@ -196,7 +196,7 @@ class AutoRelaunchProxy(Proxy, object):
     """
     def __init__(self):
         super(AutoRelaunchProxy, self).__init__(
-            settings.DJANGO_DOCKER_ENGINE_DATA_DIR,
+            None,  # TODO: django_docker_engine code should remove need for arg
             please_wait_title='Please wait...',
             please_wait_body_html='''
                 <style>
