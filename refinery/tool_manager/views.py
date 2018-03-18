@@ -2,7 +2,9 @@ import logging
 
 from django.conf import settings
 from django.db import transaction
-from django.http import HttpResponseBadRequest, HttpResponseForbidden
+from django.http import (
+    HttpResponseBadRequest, HttpResponseForbidden, JsonResponse
+)
 
 from django_docker_engine.proxy import Proxy
 from rest_framework import status
@@ -15,8 +17,9 @@ from core.models import DataSet
 
 from .models import Tool, ToolDefinition, VisualizationTool, WorkflowTool
 from .serializers import ToolDefinitionSerializer, ToolSerializer
-from .utils import (create_tool, user_has_access_to_tool,
-                    validate_tool_launch_configuration)
+from .utils import (
+    create_tool, user_has_access_to_tool, validate_tool_launch_configuration
+)
 
 logger = logging.getLogger(__name__)
 
@@ -169,6 +172,19 @@ class ToolsViewSet(ToolManagerViewSetBase):
         except Exception as e:
             logger.error(e)
             return HttpResponseBadRequest(e)
+
+    @detail_route(methods=['get'])
+    def container_input_data(self, request, *args, **kwargs):
+        tool_uuid = kwargs.get("uuid")
+        try:
+            tool = VisualizationTool.objects.get(uuid=tool_uuid)
+        except (VisualizationTool.DoesNotExist,
+                VisualizationTool.MultipleObjectsReturned) as e:
+            return HttpResponseBadRequest(
+                "Couldn't retrieve VisualizationTool with UUID: {}, {}"
+                .format(tool_uuid, e)
+            )
+        return JsonResponse(tool.get_container_input_dict())
 
 
 class AutoRelaunchProxy(Proxy, object):
