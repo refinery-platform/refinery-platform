@@ -17,8 +17,9 @@ from bioblend.galaxy.dataset_collections import (CollectionDescription,
 from constants import UUID_RE
 from django_docker_engine.container_managers.docker_engine import \
     ExpectedPortMissing
-from django_docker_engine.docker_utils import (DockerClientWrapper,
-                                               DockerContainerSpec)
+from django_docker_engine.docker_utils import (DockerClientRunWrapper,
+                                               DockerContainerSpec,
+                                               DockerClientSpec)
 from django_extensions.db.fields import UUIDField
 from docker.errors import APIError, NotFound
 
@@ -29,6 +30,7 @@ from analysis_manager.utils import create_analysis, validate_analysis_config
 from core.models import (INPUT_CONNECTION, OUTPUT_CONNECTION, Analysis,
                          AnalysisNodeConnection, DataSet, OwnableResource,
                          Workflow)
+from core.utils import get_absolute_url
 from data_set_manager.models import Node
 from data_set_manager.utils import (get_file_url_from_node_uuid,
                                     get_solr_response_json)
@@ -306,8 +308,13 @@ class Tool(OwnableResource):
         return "Tool: {}".format(self.get_tool_name())
 
     @property
-    def _django_docker_client(self):
-        return DockerClientWrapper(settings.DJANGO_DOCKER_ENGINE_DATA_DIR)
+    def django_docker_client(self):
+        return DockerClientRunWrapper(
+            DockerClientSpec(
+                settings.DJANGO_DOCKER_ENGINE_DATA_DIR,
+                input_json_url=get_absolute_url(self.container_input_json_url)
+            )
+        )
 
     @property
     def relaunch_url(self):
@@ -490,7 +497,7 @@ class VisualizationTool(Tool):
 
     def _check_max_running_containers(self):
         max_containers = settings.DJANGO_DOCKER_ENGINE_MAX_CONTAINERS
-        if len(self._django_docker_client.list()) >= max_containers:
+        if len(self.django_docker_client.list()) >= max_containers:
             raise VisualizationToolError('Max containers')
 
     def _get_detailed_nodes_dict(self, node_uuid_list):
