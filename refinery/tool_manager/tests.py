@@ -2866,9 +2866,7 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
         get_request = self.factory.get(relaunch_url)
         force_authenticate(get_request, self.user)
         get_response = self.tool_relaunch_view(get_request, uuid=tool_uuid)
-        self.assertEqual(get_response.status_code, 400)
-        self.assertIn("Couldn't retrieve VisualizationTool",
-                      get_response.content)
+        self.assertEqual(get_response.status_code, 404)
 
     def test_relaunch_failure_insufficient_user_perms(self):
         self.create_tool(ToolDefinition.VISUALIZATION)
@@ -2906,9 +2904,7 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
             get_request,
             uuid=self.tool.uuid
         )
-        self.assertEqual(get_response.status_code, 400)
-        self.assertIn("Couldn't retrieve VisualizationTool",
-                      get_response.content)
+        self.assertEqual(get_response.status_code, 404)
 
     def test_api_response_has_proper_fields_present(self):
         self.create_tool(ToolDefinition.VISUALIZATION)
@@ -3038,7 +3034,7 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
             get_request,
             uuid=str(uuid.uuid4())  # uuid doesn't correspond to any Tool
         )
-        self.assertEqual(get_response.status_code, 400)
+        self.assertEqual(get_response.status_code, 404)
 
 
 class WorkflowToolLaunchTests(ToolManagerTestBase):
