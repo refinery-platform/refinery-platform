@@ -244,7 +244,9 @@ class ToolManagerTestBase(ToolManagerMocks):
             }
         )
         self.tool_relaunch_view = ToolsViewSet.as_view({"get": "relaunch"})
-
+        self.tool_container_input_data_view = ToolsViewSet.as_view(
+            {"get": "container_input_data"}
+        )
         self.tools_url_root = '/api/v2/tools/'
         self.tool_defs_url_root = '/api/v2/tool_definitions/'
 
