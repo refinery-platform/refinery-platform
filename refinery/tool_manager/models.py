@@ -494,7 +494,7 @@ class VisualizationTool(Tool):
 
     def get_container_input_dict(self):
         """
-        Creat a dictionary containing information that Dockerized
+        Create a dictionary containing information that Dockerized
         Visualizations will have access to
         """
         return {
