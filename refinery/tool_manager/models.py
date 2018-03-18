@@ -330,7 +330,8 @@ class Tool(OwnableResource):
 
     @property
     def container_input_json_url(self):
-        """Return the url that will expose a Tool's input data (as JSON) on
+        """
+        Return the url that will expose a Tool's input data (as JSON) on
         GET requests
         """
         return urljoin(
