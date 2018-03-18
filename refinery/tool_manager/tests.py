@@ -1678,8 +1678,8 @@ class VisualizationToolTests(ToolManagerTestBase):
         )
         self.assertTrue(self.search_solr_mock.called)
 
-    def test__create_container_input_dict(self):
-        tool_input_dict = self.tool._create_container_input_dict()
+    def test_get_container_input_dict(self):
+        tool_input_dict = self.tool.get_container_input_dict()
         file_relationships = self.tool.get_file_relationships_urls()
 
         self.assertEqual(
