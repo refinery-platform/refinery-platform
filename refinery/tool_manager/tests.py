@@ -10,7 +10,7 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.management import CommandError, call_command
 from django.http import HttpResponseBadRequest
-from django.test import TestCase
+from django.test import TestCase, override_settings
 
 import bioblend
 from bioblend.galaxy.dataset_collections import (
@@ -306,6 +306,7 @@ class ToolManagerTestBase(ToolManagerMocks):
             }
         )
 
+    @override_settings(CELERY_ALWAYS_EAGER=True)
     def create_tool(self,
                     tool_type,
                     create_unique_name=False,
@@ -2817,6 +2818,7 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
                 self.tool._get_owner_info_as_dict()
             )
 
+    @override_settings(CELERY_ALWAYS_EAGER=True)
     def test_vis_tool_can_be_relaunched(self):
         self.create_tool(ToolDefinition.VISUALIZATION,
                          start_vis_container=True)
@@ -3538,6 +3540,7 @@ class VisualizationToolLaunchTests(ToolManagerTestBase):
         self.assertIn("DataSet matching query does not exist.",
                       self.post_response.content)
 
+    @override_settings(CELERY_ALWAYS_EAGER=True)
     def _start_visualization(
             self, json_name, file_relationships,
             assertions=None, count=1
