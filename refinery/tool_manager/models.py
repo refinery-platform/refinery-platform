@@ -1426,9 +1426,7 @@ def remove_tool_container(sender, instance, *args, **kwargs):
     VisualizationTool's launch.
     """
     try:
-        DockerClientWrapper(
-            settings.DJANGO_DOCKER_ENGINE_DATA_DIR
-        ).purge_by_label(instance.uuid)
+        instance.django_docker_client.purge_by_label(instance.uuid)
     except APIError as e:
         logger.error("Couldn't purge container for Tool with UUID: %s %s",
                      instance.uuid, e)
