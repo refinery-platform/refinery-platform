@@ -361,7 +361,7 @@ class ToolManagerTestBase(ToolManagerMocks):
 
         # Mock the spinning up of containers
         run_container_mock = mock.patch(
-            "django_docker_engine.docker_utils.DockerClientWrapper.run"
+            "django_docker_engine.docker_utils.DockerClientRunWrapper.run"
         )
 
         if tool_type == ToolDefinition.VISUALIZATION:
@@ -3605,9 +3605,7 @@ class VisualizationToolLaunchTests(ToolManagerTestBase):
         settings.DJANGO_DOCKER_ENGINE_SECONDS_INACTIVE = wait_time
 
         def assertions(tool):
-            client = DockerClientWrapper(
-                settings.DJANGO_DOCKER_ENGINE_DATA_DIR
-            )
+            client = DockerClientWrapper()
             client.lookup_container_url(tool.container_name)
 
             self.assertTrue(tool.is_running())
