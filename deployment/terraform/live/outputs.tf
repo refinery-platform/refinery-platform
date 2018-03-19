@@ -17,3 +17,7 @@ output "public_subnet_id" {
 output "rds_db_subnet_group_name" {
   value = "${module.rds.rds_db_subnet_group_name}"
 }
+
+output "s3_bucket_name_base" {
+  value = "${terraform.workspace}"
+}

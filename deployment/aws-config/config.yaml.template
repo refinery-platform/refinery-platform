@@ -23,17 +23,11 @@ SITE_URL: "192.168.50.50:8000"
 # Constraint: alphanumeric characters, underscores, periods, and colons
 STACK_NAME: "RefineryStack"
 
-# Prefix for all S3 bucket names (must not be shared among stacks)
-# Constraint: DNS-compliant without periods (".")
-S3_BUCKET_NAME_BASE: "refinery"
-
-
 # -------------------------
 # Terraform specific values
 
 # Get from Terraform output (identity_pool_id)
 COGNITO_IDENTITY_POOL_ID: ""
-
 
 # Get VPC id from terraform output (vpc_id)
 VPC_ID: ""
@@ -43,6 +37,11 @@ PUBLIC_SUBNET_ID: ""
 
 # Get RDS DB Subnet Group Name from terraform output (rds_db_subnet_group_name)
 RDS_DB_SUBNET_GROUP_NAME: ""
+
+# Get S3 bucket name base from terraform output (s3_bucket_name_base)
+# Prefix for all S3 bucket names (must not be shared among stacks)
+# Constraint: DNS-compliant without periods (".")
+S3_BUCKET_NAME_BASE: ""
 
 # -------------------------
 
