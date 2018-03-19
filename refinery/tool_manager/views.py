@@ -148,10 +148,7 @@ class ToolsViewSet(ToolManagerViewSetBase):
         if not tool_uuid:
             return HttpResponseBadRequest("Relaunching a Tool requires a Tool "
                                           "UUID")
-        tool = get_object_or_404(
-            VisualizationTool,
-            uuid=tool_uuid
-        )
+        tool = get_object_or_404(VisualizationTool, uuid=tool_uuid)
 
         if not user_has_access_to_tool(request.user, tool):
             return HttpResponseForbidden(
