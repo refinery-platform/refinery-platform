@@ -169,10 +169,7 @@ class ToolsViewSet(ToolManagerViewSetBase):
     @detail_route(methods=['get'])
     def container_input_data(self, request, *args, **kwargs):
         tool_uuid = kwargs.get("uuid")
-        tool = get_object_or_404(
-            VisualizationTool,
-            uuid=tool_uuid
-        )
+        tool = get_object_or_404(VisualizationTool, uuid=tool_uuid)
         return JsonResponse(tool.get_container_input_dict())
 
 
