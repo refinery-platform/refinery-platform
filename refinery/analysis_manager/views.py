@@ -2,11 +2,14 @@ import json
 import logging
 
 from django.contrib.auth.decorators import login_required
-from django.http import (HttpResponse, HttpResponseBadRequest,
-                         HttpResponseForbidden, HttpResponseNotAllowed,
-                         HttpResponseServerError, JsonResponse)
+from django.http import (
+    HttpResponse, HttpResponseBadRequest, HttpResponseForbidden,
+    HttpResponseNotAllowed, HttpResponseServerError, JsonResponse
+)
 
-from core.models import Analysis
+from guardian.shortcuts import get_perms
+
+from core.models import Analysis, ExtendedGroup
 
 from .models import AnalysisStatus
 
@@ -14,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 
 def analysis_status(request, uuid):
-    """Returns analysis status JSON formats"""
+    """Returns analysis status"""
     if request.method == 'GET':
         try:
             analysis = Analysis.objects.get(uuid=uuid)
@@ -23,23 +26,30 @@ def analysis_status(request, uuid):
             logger.error(e)
             return HttpResponseBadRequest(e)
 
-        try:
-            status = AnalysisStatus.objects.get(analysis=analysis)
-        except (AnalysisStatus.DoesNotExist,
-                AnalysisStatus.MultipleObjectsReturned) as e:
-            logger.error(e)
-            return HttpResponseBadRequest(e)
+        public_group = ExtendedGroup.objects.public_group()
+        if request.user.has_perm('core.read_meta_dataset', analysis.data_set)\
+                or 'read_meta_dataset' in get_perms(public_group,
+                                                    analysis.data_set):
+            try:
+                status = AnalysisStatus.objects.get(analysis=analysis)
+            except (AnalysisStatus.DoesNotExist,
+                    AnalysisStatus.MultipleObjectsReturned) as e:
+                logger.error(e)
+                return HttpResponseBadRequest(e)
 
-        ret_json = {
-            'refineryImport': status.refinery_import_state(),
-            'galaxyAnalysis': status.galaxy_analysis_state(),
-            'galaxyExport': status.galaxy_export_state(),
-            'overall': analysis.get_status(),
-            'galaxyImport': status.galaxy_file_import_state()
-        }
-        logger.debug("Analysis status for '%s': %s",
-                     analysis.name, json.dumps(ret_json))
-        return JsonResponse(ret_json)
+            ret_json = {
+                'refineryImport': status.refinery_import_state(),
+                'galaxyAnalysis': status.galaxy_analysis_state(),
+                'galaxyExport': status.galaxy_export_state(),
+                'overall': analysis.get_status(),
+                'galaxyImport': status.galaxy_file_import_state()
+            }
+            logger.debug("Analysis status for '%s': %s",
+                         analysis.name, json.dumps(ret_json))
+            return JsonResponse(ret_json)
+
+        return HttpResponseForbidden("User is not authorized to access {}"
+                                     .format(analysis))
     return HttpResponseNotAllowed(['GET'])
 
 

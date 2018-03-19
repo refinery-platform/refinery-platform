@@ -12,7 +12,7 @@ angular
         },
         {
           query: {
-            method: 'POST'
+            method: 'GET'
           }
         }
       );
