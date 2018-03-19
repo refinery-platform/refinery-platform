@@ -12,7 +12,7 @@ variable "availability_zone_b" {
 }
 
 variable "identity_pool_name" {
-  description = "Cognito federated identity pool name"
+  description = "Cognito federated identity pool name. Constraints: must be unique within AWS account, [\\w]+"
 }
 
 
