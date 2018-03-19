@@ -2,7 +2,6 @@
   "name": "IGV with a bad filetype specified",
   "tool_type": "VISUALIZATION",
   "annotation": {
-    "container_input_path": "/var/www/data/input.json",
     "extra_directories": ["/refinery-data"],
     "image_name": "gehlenborglab/docker_igv_js:v0.0.3",
     "description": "This visualization does really cool things... with IGV",

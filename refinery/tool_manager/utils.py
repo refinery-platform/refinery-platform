@@ -131,7 +131,6 @@ def create_tool_definition(annotation_data):
     elif tool_type == ToolDefinition.VISUALIZATION:
         tool_definition = ToolDefinitionFactory(
             image_name=annotation["image_name"],
-            container_input_path=annotation["container_input_path"],
             **common_tool_definition_params
         )
 
