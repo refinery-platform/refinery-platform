@@ -589,6 +589,9 @@ class VisualizationTool(Tool):
             - <HttpResponseBadRequest>, <HttpServerError>
         """
         self._check_max_running_containers()
+
+        # Pulls docker image if it doesn't exist yet, and launches container
+        # asynchronously
         start_container.delay(self)
         return JsonResponse({Tool.TOOL_URL: self.get_relative_container_url()})
 
