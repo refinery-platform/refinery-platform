@@ -34,11 +34,12 @@ class AnalysisManagerTestBase(TestCase):
     def setUp(self):
         self.username = 'coffee_tester'
         self.password = 'coffeecoffee'
-        self.user = User.objects.create_user(self.username, '', self.password)
+        self.user_analysis = User.objects.create_user(self.username, '',
+                                                      self.password)
 
         analyses, self.dataset = make_analyses_with_single_dataset(
             1,
-            self.user
+            self.user_analysis
         )
 
         self.analysis = analyses[0]
@@ -205,9 +206,8 @@ class AnalysisViewsTests(AnalysisManagerTestBase, ToolManagerTestBase):
         request = self.request_factory.get(
             self.status_url_root,
             content_type="application/json",
-            HTTP_X_REQUESTED_WITH='XMLHttpRequest'
         )
-        request.user = self.user
+        request.user = self.user_analysis
         response = analysis_status(request, self.analysis.uuid)
         self.assertTrue(file_import_state_mock.called)
 
@@ -235,8 +235,7 @@ class AnalysisViewsTests(AnalysisManagerTestBase, ToolManagerTestBase):
         )
         request = self.request_factory.get(
             self.status_url_root,
-            content_type="application/json",
-            HTTP_X_REQUESTED_WITH='XMLHttpRequest'
+            content_type="application/json"
         )
         request.user = self.user
         response = analysis_status(request, self.tool.analysis.uuid)
