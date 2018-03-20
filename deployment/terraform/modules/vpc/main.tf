@@ -29,9 +29,11 @@ resource "aws_subnet" "private_subnet_a" {
   }
 }
 
-// This subnet currently isn't utilized other than to satisfy the
-// requirements of module.rds.aws_db_subnet_group. It will be utilized once
-// we have a multi-AZ RDS instance
+/*
+This subnet currently isn't utilized other than to satisfy the
+requirements of module.rds.aws_db_subnet_group. It will be utilized once
+we have a multi-AZ RDS instance
+*/
 resource "aws_subnet" "private_subnet_b" {
   vpc_id                  = "${aws_vpc.vpc.id}"
   cidr_block              = "${var.private_cidr_block_b}"
