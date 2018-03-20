@@ -184,9 +184,7 @@ class AnalysisViewsTests(AnalysisManagerTestBase):
     Tests for `analysis_manager.views`
     """
     def setUp(self):
-        # super() will only ever resolve a single class type for a given method
-        AnalysisManagerTestBase.setUp(self)
-
+        super(AnalysisViewsTests, self).setUp()
         self.request_factory = RequestFactory()
         self.status_url_root = "/analysis_manager/{}/".format(
             self.analysis.uuid
