@@ -34,12 +34,11 @@ class AnalysisManagerTestBase(TestCase):
     def setUp(self):
         self.username = 'coffee_tester'
         self.password = 'coffeecoffee'
-        self.user_analysis = User.objects.create_user(self.username, '',
-                                                      self.password)
+        self.user = User.objects.create_user(self.username, '', self.password)
 
         analyses, self.dataset = make_analyses_with_single_dataset(
             1,
-            self.user_analysis
+            self.user
         )
 
         self.analysis = analyses[0]
@@ -189,7 +188,6 @@ class AnalysisViewsTests(AnalysisManagerTestBase, ToolManagerTestBase):
     def setUp(self):
         # super() will only ever resolve a single class type for a given method
         AnalysisManagerTestBase.setUp(self)
-        ToolManagerTestBase.setUp(self)
 
         self.request_factory = RequestFactory()
         self.status_url_root = "/analysis_manager/{}/".format(
@@ -207,7 +205,7 @@ class AnalysisViewsTests(AnalysisManagerTestBase, ToolManagerTestBase):
             self.status_url_root,
             content_type="application/json",
         )
-        request.user = self.user_analysis
+        request.user = self.user
         response = analysis_status(request, self.analysis.uuid)
         self.assertTrue(file_import_state_mock.called)
 
@@ -229,6 +227,7 @@ class AnalysisViewsTests(AnalysisManagerTestBase, ToolManagerTestBase):
             self,
             file_import_state_mock
     ):
+        ToolManagerTestBase.setUp(self)
         self.create_tool(ToolDefinition.WORKFLOW)
         self.status_url_root = "/analysis_manager/{}/".format(
             self.tool.analysis.uuid

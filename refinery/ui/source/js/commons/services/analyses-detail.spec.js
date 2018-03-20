@@ -3,14 +3,9 @@
 describe('Common.service.analysisDetail: unit tests', function () {
   var $httpBackend;
   var $rootScope;
-  var params = '/?format=json';
+  var params = '/';
   var fakeUuid = 'x508x83x-x9xx-4740-x9x7-x7x0x631280x';
   var service;
-  var header = {
-    Accept: 'application/json,' +
-      ' text/plain, */*',
-    'Content-Type': 'application/json;charset=utf-8'
-  };
   var fakeResponse = {
     refineryImport: [{
       status: 'PROGRESS',
@@ -41,13 +36,10 @@ describe('Common.service.analysisDetail: unit tests', function () {
       service = $injector.get('analysisDetailService');
 
       $httpBackend
-        .expectPOST(
+        .expectGET(
           settings.appRoot +
           '/analysis_manager/' +
-          fakeUuid + params, {
-            uuid: fakeUuid
-          },
-          header
+          fakeUuid + params
       ).respond(200, fakeResponse);
     });
   });

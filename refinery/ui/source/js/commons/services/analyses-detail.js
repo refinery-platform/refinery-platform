@@ -7,8 +7,7 @@ angular
       var analysisDetail = $resource(
         settings.appRoot + '/analysis_manager/:uuid/',
         {
-          uuid: '@uuid',
-          format: 'json'
+          uuid: '@uuid'
         },
         {
           query: {
