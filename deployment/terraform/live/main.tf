@@ -15,7 +15,7 @@ provider "aws" {
 module "object_storage" {
   source           = "../modules/s3"
   name             = "${terraform.workspace} object_storage"
-  bucket_name_base = "${terraform.workspace}"
+  bucket_name_base = "${replace(terraform.workspace, "/[^A-Za-z0-9]/", "-")}"
 }
 
 module "identity_pool" {
