@@ -359,22 +359,14 @@ class FileStoreItem(models.Model):
         return AsyncResult(self.import_task_id).state
 
     def terminate_file_import_task(self):
-        """ Trys to terminate a celery file_import task based on a
-        FileStoreItem's import_task_id field.
-
-        NOTE: That if you simply revoke() a task without the `terminate` ==
-        True, said task will try to restart upon a Worker restart.
-
-        http://docs.celeryproject.org/en/latest/userguide/workers.html#revoke-revoking-tasks
-        """
-        try:
-            revoke(self.import_task_id, terminate=True)
-        except Exception as e:
-            logger.debug(
-                "Something went wrong while trying to terminate Task "
-                "with id %s. This is most likely due to there being no current"
-                " file_import task associated. %s", self.import_task_id, e
-            )
+        if self.import_task_id:
+            try:
+                revoke(self.import_task_id, terminate=True)
+            except Exception as exc:
+                logger.error("Error terminating file import task '%s': %s",
+                             self.import_task_id, exc)
+            else:
+                logger.info("Terminated import task for file '%s'", self)
 
 
 def get_temp_dir():
@@ -403,10 +395,11 @@ def get_file_object(file_name):
 # post_delete is safer than pre_delete
 @receiver(post_delete, sender=FileStoreItem)
 def _delete_datafile(sender, instance, **kwargs):
-    """Delete the FileStoreItem datafile when model is deleted
+    """Revoke file import task and delete the datafile when model is deleted
     Signal handler is required because QuerySet bulk delete does not call
     delete() method on the models
     """
+    instance.terminate_file_import_task()
     instance.delete_datafile(save_instance=False)
 
 
