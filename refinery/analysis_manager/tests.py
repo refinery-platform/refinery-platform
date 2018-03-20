@@ -26,8 +26,6 @@ from factory_boy.django_model_factories import GalaxyInstanceFactory
 from factory_boy.utils import (
     create_dataset_with_necessary_models, make_analyses_with_single_dataset
 )
-from tool_manager.models import ToolDefinition
-from tool_manager.tests import ToolManagerTestBase
 
 
 class AnalysisManagerTestBase(TestCase):
@@ -181,7 +179,7 @@ class AnalysisUtilsTests(TestCase):
             self.assertIn("Couldn't fetch User", context.exception.message)
 
 
-class AnalysisViewsTests(AnalysisManagerTestBase, ToolManagerTestBase):
+class AnalysisViewsTests(AnalysisManagerTestBase):
     """
     Tests for `analysis_manager.views`
     """
@@ -195,11 +193,84 @@ class AnalysisViewsTests(AnalysisManagerTestBase, ToolManagerTestBase):
         )
 
     @mock.patch.object(AnalysisStatus,
-                       "galaxy_file_import_state",
-                       return_value="coffee")
-    def test_non_tool_analysis_calls_old_galaxy_file_import_state(
+                       "refinery_import_state",
+                       return_value="SUCCESS")
+    def test_analysis_calls_refinery_import_state(
             self,
-            file_import_state_mock
+            refinery_import_state_mock
+    ):
+        request = self.request_factory.get(
+            self.status_url_root,
+            content_type="application/json",
+        )
+        request.user = self.user
+        analysis_status(request, self.analysis.uuid)
+        self.assertTrue(refinery_import_state_mock.called)
+
+    @mock.patch.object(AnalysisStatus,
+                       "galaxy_analysis_state",
+                       return_value="SUCCESS")
+    def test_analysis_calls_galaxy_analysis_state(
+            self,
+            galaxy_analysis_state_mock
+    ):
+        request = self.request_factory.get(
+            self.status_url_root,
+            content_type="application/json",
+        )
+        request.user = self.user
+        analysis_status(request, self.analysis.uuid)
+        self.assertTrue(galaxy_analysis_state_mock.called)
+
+    @mock.patch.object(AnalysisStatus,
+                       "galaxy_export_state",
+                       return_value="SUCCESS")
+    def test_analysis_calls_galaxy_export_state(
+            self,
+            galaxy_export_state_mock
+    ):
+        request = self.request_factory.get(
+            self.status_url_root,
+            content_type="application/json",
+        )
+        request.user = self.user
+        analysis_status(request, self.analysis.uuid)
+        self.assertTrue(galaxy_export_state_mock.called)
+
+    @mock.patch.object(Analysis,
+                       "get_status",
+                       return_value="SUCCESS")
+    def test_analysis_calls_get_status(
+            self,
+            get_status_mock
+    ):
+        request = self.request_factory.get(
+            self.status_url_root,
+            content_type="application/json",
+        )
+        request.user = self.user
+        analysis_status(request, self.analysis.uuid)
+        self.assertTrue(get_status_mock.called)
+
+    @mock.patch.object(AnalysisStatus,
+                       "galaxy_file_import_state",
+                       return_value="SUCCESS")
+    def test_analysis_calls_galaxy_file_import(
+            self,
+            galaxy_file_import_state_mock
+    ):
+        request = self.request_factory.get(self.status_url_root,
+                                           content_type="application/json")
+        request.user = self.user
+        analysis_status(request, self.analysis.uuid)
+        self.assertTrue(galaxy_file_import_state_mock.called)
+
+    @mock.patch.object(AnalysisStatus,
+                       "galaxy_file_import_state",
+                       return_value="SUCCESS")
+    def test_analysis_returns_galaxy_file_import_state(
+            self,
+            get_status_mock
     ):
         request = self.request_factory.get(
             self.status_url_root,
@@ -207,45 +278,13 @@ class AnalysisViewsTests(AnalysisManagerTestBase, ToolManagerTestBase):
         )
         request.user = self.user
         response = analysis_status(request, self.analysis.uuid)
-        self.assertTrue(file_import_state_mock.called)
 
         self.assertEqual(
             json.loads(response.content),
             {
                 "galaxyAnalysis": [],
                 "refineryImport": [],
-                "galaxyImport": "coffee",
-                "overall": "INITIALIZED",
-                "galaxyExport": []
-            }
-        )
-
-    @mock.patch.object(AnalysisStatus,
-                       "galaxy_file_import_state",
-                       return_value="coffee")
-    def test_tool_analysis_calls_galaxy_file_import_state(
-            self,
-            file_import_state_mock
-    ):
-        ToolManagerTestBase.setUp(self)
-        self.create_tool(ToolDefinition.WORKFLOW)
-        self.status_url_root = "/analysis_manager/{}/".format(
-            self.tool.analysis.uuid
-        )
-        request = self.request_factory.get(
-            self.status_url_root,
-            content_type="application/json"
-        )
-        request.user = self.user
-        response = analysis_status(request, self.tool.analysis.uuid)
-        self.assertTrue(file_import_state_mock.called)
-
-        self.assertEqual(
-            json.loads(response.content),
-            {
-                "galaxyAnalysis": [],
-                "refineryImport": [],
-                "galaxyImport": "coffee",
+                "galaxyImport": "SUCCESS",
                 "overall": "INITIALIZED",
                 "galaxyExport": []
             }
