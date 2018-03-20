@@ -287,12 +287,11 @@ def download_file(url, target_path, file_size=1):
     try:
         response = requests.get(url, stream=True)
         response.raise_for_status()
-    except (HTTPError, requests.exceptions.ConnectionError) as e:
-        logger.error(e)
-        raise DownloadError(
-            "Could not open URL '{}'. Reason: '{}'".format(url, e))
-    except ValueError as e:
-        raise DownloadError("Could not open URL '{}'".format(url, e))
+    except (HTTPError, requests.exceptions.ConnectionError) as exc:
+        logger.error(exc)
+        raise RuntimeError("Could not open URL '{}': {}".format(url, exc))
+    except ValueError as exc:
+        raise RuntimeError("Could not open URL '{}'".format(url, exc))
     else:
         # get remote file size, provide a default value in case
         # Content-Length is missing
@@ -302,8 +301,8 @@ def download_file(url, target_path, file_size=1):
 
     try:
         destination = open(target_path, 'wb+')
-    except IOError as e:
-        raise DownloadError(e)
+    except IOError as exc:
+        raise RuntimeError(exc)
     else:
         # download and save the file
         localfilesize = 0
@@ -332,14 +331,3 @@ def download_file(url, target_path, file_size=1):
 
     response.close()
     logger.debug("Finished downloading")
-
-
-class DownloadError(StandardError):
-    '''Exception raised for download errors
-
-    '''
-    def __init__(self, value):
-        self.value = value
-
-    def __str__(self):
-        return repr(self.value)
