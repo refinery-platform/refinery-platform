@@ -16,10 +16,15 @@ TF_LOG=DEBUG terraform apply
 ```
 
 `terraform apply` will yield outputs that need to be passed along for
-CloudFormation stack creation. You can either fill these values into an
-existing `deployment/aws-config/config.yaml` by hand, or start from scratch
-with ERB:
+CloudFormation stack creation. You can either start from scratch with ERB:
 
 ```shell
-erb deployment/aws-config/config.yaml.erb > deployment/aws-config/config.yaml
+erb ../../aws-config/config.yaml.erb > erb ../../aws-config/config.yaml
+```
+
+Or if you have local tweaks you want to preserve, fill in by hand and then
+diff to make sure you have the right changes:
+
+```shell
+diff <(erb ../../aws-config/config.yaml.erb) ../../aws-config/config.yaml
 ```
