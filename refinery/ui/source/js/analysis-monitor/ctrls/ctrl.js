@@ -28,7 +28,6 @@ function AnalysisMonitorCtrl (
   // analysis list and refreshes details for running analyses.
   vm.updateAnalysesList = function () {
     var param = {
-      format: 'json',
       limit: 0,
       data_set__uuid: $window.dataSetUuid
     };
