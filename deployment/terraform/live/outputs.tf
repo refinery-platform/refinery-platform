@@ -19,5 +19,5 @@ output "rds_db_subnet_group_name" {
 }
 
 output "s3_bucket_name_base" {
-  value = "${terraform.workspace}"
+  value = "${module.object_storage.bucket_name_base}"
 }

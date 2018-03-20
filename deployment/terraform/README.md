@@ -19,7 +19,7 @@ TF_LOG=DEBUG terraform apply
 CloudFormation stack creation. You can either start from scratch with ERB:
 
 ```shell
-erb ../../aws-config/config.yaml.erb > erb ../../aws-config/config.yaml
+erb ../../aws-config/config.yaml.erb > ../../aws-config/config.yaml
 ```
 
 Or if you have local tweaks you want to preserve, fill in by hand and then
