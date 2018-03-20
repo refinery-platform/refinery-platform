@@ -11,10 +11,6 @@ variable "availability_zone_b" {
   default = "us-east-1b"
 }
 
-variable "identity_pool_name" {
-  description = "Cognito federated identity pool name. Constraints: must be unique within AWS account, [\\w]+"
-}
-
 
 # https://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Subnets.html#vpc-subnet-basics
 #

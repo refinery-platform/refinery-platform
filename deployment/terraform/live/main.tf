@@ -21,7 +21,7 @@ module "object_storage" {
 module "identity_pool" {
   source                   = "../modules/cognito"
   name                     = "${terraform.workspace} identity pool"
-  identity_pool_name       = "${var.identity_pool_name}"
+  identity_pool_name       = "${replace(terraform.workspace, "/[^A-Za-z0-9]/", "")}"
   upload_bucket_name       = "${module.object_storage.upload_bucket_name}"
   iam_resource_name_prefix = "${terraform.workspace}"
 }
