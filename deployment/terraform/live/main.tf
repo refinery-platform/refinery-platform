@@ -12,9 +12,13 @@ provider "aws" {
   region  = "${var.region}"
 }
 
+locals {
+  s3_bucket_name_base = "${replace(terraform.workspace, "/[^A-Za-z0-9]/", "-")}"
+}
+
 module "object_storage" {
   source           = "../modules/s3"
-  bucket_name_base = "${replace(terraform.workspace, "/[^A-Za-z0-9]/", "-")}"
+  bucket_name_base = "${local.s3_bucket_name_base}"
 }
 
 module "identity_pool" {
