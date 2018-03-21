@@ -14,9 +14,10 @@ import urlparse
 from django import forms
 from django.conf import settings
 from django.core.urlresolvers import reverse
-from django.http import (Http404, HttpResponse, HttpResponseBadRequest,
-                         HttpResponseRedirect, HttpResponseServerError,
-                         JsonResponse)
+from django.http import (
+    Http404, HttpResponse, HttpResponseBadRequest, HttpResponseForbidden,
+    HttpResponseRedirect, HttpResponseServerError, JsonResponse
+)
 from django.shortcuts import get_object_or_404, render, render_to_response
 from django.template import RequestContext
 from django.views.generic import View
@@ -32,18 +33,21 @@ from rest_framework.views import APIView
 from core.models import DataSet, ExtendedGroup, get_user_import_dir
 from core.utils import get_absolute_url
 from data_set_manager.isa_tab_parser import ParserException
-from file_store.models import (generate_file_source_translator, get_temp_dir,
-                               parse_s3_url)
+from file_store.models import (
+    generate_file_source_translator, get_temp_dir, parse_s3_url
+)
 from file_store.tasks import download_file, import_file
 
 from .models import Assay, AttributeOrder, Study
 from .serializers import AssaySerializer, AttributeOrderSerializer
 from .single_file_column_parser import process_metadata_table
 from .tasks import parse_isatab
-from .utils import (customize_attribute_response, format_solr_response,
-                    generate_solr_params_for_assay, get_owner_from_assay,
-                    initialize_attribute_order_ranks, is_field_in_hidden_list,
-                    search_solr, update_attribute_order_ranks)
+from .utils import (
+    customize_attribute_response, format_solr_response,
+    generate_solr_params_for_assay, get_owner_from_assay,
+    initialize_attribute_order_ranks, is_field_in_hidden_list, search_solr,
+    update_attribute_order_ranks
+)
 
 logger = logging.getLogger(__name__)
 
@@ -90,63 +94,50 @@ class TakeOwnershipOfPublicDatasetView(View):
 
     def post(self, request, *args, **kwargs):
 
-        from_old_template = False
-
-        if 'isa_tab_url' in request.POST:
-            # TODO: I think isa_tab_url is already a full url,
-            # making this redundant.
-            full_isa_tab_url = get_absolute_url(request.POST['isa_tab_url'])
-            from_old_template = True
-        else:
+        try:
             request_body = request.body
-            if not request_body:
-                err_msg = "Neither form data nor a request body has been sent."
-                logger.error(err_msg)
-                return HttpResponseBadRequest(err_msg)
+        except Exception as e:
+            err_msg = "Request body is no valid JSON"
+            logger.error("%s: %s" % (err_msg, e))
+            return HttpResponseBadRequest("%s." % err_msg)
 
-            try:
-                body = json.loads(request_body)
-            except Exception as e:
-                err_msg = "Request body is no valid JSON"
-                logger.error("%s: %s" % (err_msg, e))
-                return HttpResponseBadRequest("%s." % err_msg)
+        try:
+            body = json.loads(request_body)
+        except Exception as e:
+            err_msg = "Request body is no valid JSON"
+            logger.error("%s: %s" % (err_msg, e))
+            return HttpResponseBadRequest("%s." % err_msg)
 
-            if "data_set_uuid" in body:
-                data_set_uuid = body["data_set_uuid"]
-            else:
-                err_msg = "Request body doesn't contain data_set_uuid."
-                logger.error(err_msg)
-                return HttpResponseBadRequest(err_msg)
-
-            try:
-                data_set = DataSet.objects.get(uuid=data_set_uuid)
-            except (DataSet.DoesNotExist, DataSet.MultipleObjectsReturned,
-                    Exception) as exc:
-                err_msg = "Something went wrong"
-                logger.error("%s: %s" % (err_msg, exc))
-                return HttpResponseBadRequest("%s." % err_msg)
-            else:
-                full_isa_tab_url = get_absolute_url(
-                    data_set.get_metadata_as_file_store_item(
-                    ).get_datafile_url()
-                )
-
-        if from_old_template:
-            # Redirect to process_isa_tab view
-            response = HttpResponseRedirect(
-                get_absolute_url(reverse('process_isa_tab'))
-            )
+        if "data_set_uuid" in body:
+            data_set_uuid = body["data_set_uuid"]
         else:
-            # Redirect to process_isa_tab view with arg 'ajax' if request is
-            #  not coming from old Django Template
+            err_msg = "Request body doesn't contain data_set_uuid."
+            logger.error(err_msg)
+            return HttpResponseBadRequest(err_msg)
+
+        try:
+            data_set = DataSet.objects.get(uuid=data_set_uuid)
+        except (DataSet.DoesNotExist, DataSet.MultipleObjectsReturned,
+                Exception) as exc:
+            err_msg = "Something went wrong"
+            logger.error("%s: %s" % (err_msg, exc))
+            return HttpResponseBadRequest("%s." % err_msg)
+
+        public_group = ExtendedGroup.objects.public_group()
+        if request.user.has_perm('core.read_dataset', data_set) \
+                or 'read_dataset' in get_perms(public_group, data_set):
+            full_isa_tab_url = get_absolute_url(
+                data_set.get_metadata_as_file_store_item().get_datafile_url()
+            )
             response = HttpResponseRedirect(
                 get_absolute_url(reverse('process_isa_tab', args=['ajax']))
             )
+            # set cookie
+            response.set_cookie('isa_tab_url', full_isa_tab_url)
+            return response
 
-        # set cookie
-        response.set_cookie('isa_tab_url', full_isa_tab_url)
-
-        return response
+        return HttpResponseForbidden("User is not authorized to access"
+                                     "data set {}".format(data_set_uuid))
 
 
 class ImportISATabFileForm(forms.Form):
