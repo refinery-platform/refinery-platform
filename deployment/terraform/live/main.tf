@@ -26,7 +26,6 @@ module "identity_pool" {
 
 module "vpc" {
   source               = "../modules/vpc"
-  name                 = "${terraform.workspace} vpc"
   vpc_cidr_block       = "${var.vpc_cidr_block}"
   public_cidr_block    = "${var.public_cidr_block}"
   private_cidr_block_a = "${var.private_cidr_block_a}"
