@@ -436,7 +436,8 @@
 <div
   id="isaTabImportForm"
   ng-if="(ADCtrl.userPerms === 'read' || ADCtrl.userPerms === 'change') &&
-  !ADCtrl.dataSet.is_owner && !ADCtrl.dataSet.pre_isa_archive && ADCtrl.loggedIn">
+  !ADCtrl.dataSet.is_owner && ADCtrl.dataSet.pre_isa_archive && && ADCtrl
+  .fileStoreItem.datafile && ADCtrl.loggedIn">
   <button
     id="isa-import-button"
     class="refinery-base btn btn-default"
