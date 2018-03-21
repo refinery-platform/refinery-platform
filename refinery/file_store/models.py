@@ -17,7 +17,7 @@ import urlparse
 
 from django.conf import settings
 from django.db import models
-from django.db.models.signals import pre_delete
+from django.db.models.signals import post_delete
 from django.dispatch import receiver
 
 from celery.result import AsyncResult
@@ -125,18 +125,15 @@ def generate_file_source_translator(username=None, base_path=None,
 
 
 class FileType(models.Model):
-    #: name of file extension
     name = models.CharField(unique=True, max_length=50)
-    #: short description of file extension
     description = models.CharField(max_length=250)
     used_for_visualization = models.BooleanField(default=False)
 
     def __unicode__(self):
-        return self.description
+        return self.description if self.description else self.name
 
 
 class FileExtension(models.Model):
-    # file extension associated with the filename
     name = models.CharField(unique=True, max_length=50)
     filetype = models.ForeignKey(FileType)
 
@@ -162,24 +159,42 @@ class FileStoreItem(models.Model):
     def __unicode__(self):
         if self.datafile.name:
             return self.datafile.name
-        elif self.uuid:
-            return self.uuid
-        else:  # UUID will not be available until instance is saved once
+        elif self.source:
             return self.source
+        else:
+            return str(self.uuid)  # UUID is available only after save()
 
     def save(self, *args, **kwargs):
         self.source = _map_source(self.source)
-        # set file type using file extension
-        try:
-            extension = self.get_file_extension()
-        except RuntimeError as exc:
-            logger.warn("Could not assign type to file '%s': %s", self, exc)
+
+        if not self.filetype:
+            # set file type using file extension
+            try:
+                extension = self.get_file_extension()
+            except RuntimeError as exc:
+                logger.warn("Could not assign type to file '%s': %s",
+                            self, exc)
+            else:
+                self.filetype = extension.filetype
+
+        if self.datafile:
+            # symlink datafile if necessary
+            if (not self.is_local() and os.path.isabs(self.source) and
+                    settings.REFINERY_DATA_IMPORT_DIR not in self.source):
+                self._symlink_datafile()
         else:
-            self.filetype = extension.filetype
-        # symlink datafile if necessary
-        if (not self.is_local() and os.path.isabs(self.source) and
-                settings.REFINERY_DATA_IMPORT_DIR not in self.source):
-            self._symlink_datafile()
+            # delete file
+            try:
+                old_instance = FileStoreItem.objects.get(pk=self.pk)
+            except FileStoreItem.DoesNotExist:
+                pass  # this is a newly created instance
+            except FileStoreItem.MultipleObjectsReturned as exc:
+                logger.critical(
+                    "Error retrieving FileStoreItem with primary key '%s': %s",
+                    self.pk, exc
+                )
+            else:
+                old_instance.delete_datafile(save_instance=False)
 
         super(FileStoreItem, self).save(*args, **kwargs)
 
@@ -219,11 +234,14 @@ class FileStoreItem(models.Model):
         try:
             return FileExtension.objects.get(name=extension)
         except FileExtension.DoesNotExist:
-            extension_parts = extension.split('.')
+            extension = _get_extension_from_string(extension)
             try:
-                return FileExtension.objects.get(name=extension_parts[-1])
-            except (FileExtension.DoesNotExist,
-                    FileExtension.MultipleObjectsReturned) as exc:
+                return FileExtension.objects.get(name=extension)
+            except FileExtension.DoesNotExist as exc:
+                raise RuntimeError(
+                    "Extension '{}' is not valid: {}".format(extension, exc)
+                )
+            except FileExtension.MultipleObjectsReturned as exc:
                 raise RuntimeError(exc)
         except FileExtension.MultipleObjectsReturned as exc:
             raise RuntimeError(exc)
@@ -260,25 +278,17 @@ class FileStoreItem(models.Model):
             pass
         return False
 
-    def delete_datafile(self):
-        """Delete datafile if it exists on disk.
-
-        :returns: bool -- True if deletion succeeded, False otherwise.
-        """
+    def delete_datafile(self, save_instance=True):
+        """Delete datafile on disk and clears all attributes on the field"""
         if self.datafile:
-            logger.info("Deleting datafile '%s'", self.datafile.name)
+            logger.debug("Deleting datafile '%s'", self.datafile.name)
             try:
-                self.datafile.delete()
-            except OSError as e:
-                logger.error(
-                    "Error deleting file. "
-                    "OSError: [Errno: %s], file name: %s, error: %s",
-                    e.errno, e.filename, e.strerror)
+                self.datafile.delete(save=save_instance)
+            except OSError as exc:
+                logger.error("Error deleting file '%s': %s",
+                             self.datafile.name, exc)
                 return False
-            logger.info("Datafile deleted")
-            return True
-        else:  # datafile doesn't exist
-            return False
+            logger.info("Deleted datafile of '%s'", self)
 
     def rename_datafile(self, name):
         """Change name of the data file
@@ -339,9 +349,8 @@ class FileStoreItem(models.Model):
         except ValueError:
             if core.utils.is_absolute_url(self.source):
                 if self.source.startswith('s3://'):
-                    return None
+                    return None  # file is in the UPLOAD_BUCKET
                 return self.source
-
         logger.error("File not found at '%s'", self.datafile.name)
         return None
 
@@ -391,13 +400,14 @@ def get_file_object(file_name):
         return None
 
 
-@receiver(pre_delete, sender=FileStoreItem)
+# post_delete is safer than pre_delete
+@receiver(post_delete, sender=FileStoreItem)
 def _delete_datafile(sender, instance, **kwargs):
     """Delete the FileStoreItem datafile when model is deleted
     Signal handler is required because QuerySet bulk delete does not call
     delete() method on the models
     """
-    instance.delete_datafile()
+    instance.delete_datafile(save_instance=False)
 
 
 def _symlink_file_on_disk(source, link_name):

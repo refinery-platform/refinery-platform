@@ -1,4 +1,3 @@
-
 import logging
 import os
 import stat
@@ -23,34 +22,6 @@ from data_set_manager.search_indexes import NodeIndex
 from .models import FileStoreItem, file_path, get_temp_dir, parse_s3_url
 
 logger = logging.getLogger(__name__)
-
-
-@task()
-def create(source, filetype=''):
-    """Create a FileStoreItem instance and return its UUID
-    Important: source must be either an absolute file system path or a URL
-    :param source: URL or absolute file system path to a file.
-    :type source: str.
-    :param filetype: File extension
-    :type filetype: str.
-    :param file_size: For cases when the remote site specified by source URL
-        doesn't provide file size in the HTTP headers.
-    :type file_size: int.
-    :returns: FileStoreItem UUID if success, None if failure.
-
-    """
-    # TODO: move to file_store/models.py since it's never used as a task
-    logger.info("Creating FileStoreItem using source '%s'", source)
-
-    item = FileStoreItem.objects.create(source=source)
-    if not item:
-        logger.error("Failed to create FileStoreItem using source '%s'",
-                     source)
-        return None
-
-    logger.info("FileStoreItem created with UUID %s", item.uuid)
-
-    return item.uuid
 
 
 @task(track_started=True)
@@ -316,12 +287,11 @@ def download_file(url, target_path, file_size=1):
     try:
         response = requests.get(url, stream=True)
         response.raise_for_status()
-    except (HTTPError, requests.exceptions.ConnectionError) as e:
-        logger.error(e)
-        raise DownloadError(
-            "Could not open URL '{}'. Reason: '{}'".format(url, e))
-    except ValueError as e:
-        raise DownloadError("Could not open URL '{}'".format(url, e))
+    except (HTTPError, requests.exceptions.ConnectionError) as exc:
+        logger.error(exc)
+        raise RuntimeError("Could not open URL '{}': {}".format(url, exc))
+    except ValueError as exc:
+        raise RuntimeError("Could not open URL '{}'".format(url, exc))
     else:
         # get remote file size, provide a default value in case
         # Content-Length is missing
@@ -331,8 +301,8 @@ def download_file(url, target_path, file_size=1):
 
     try:
         destination = open(target_path, 'wb+')
-    except IOError as e:
-        raise DownloadError(e)
+    except IOError as exc:
+        raise RuntimeError(exc)
     else:
         # download and save the file
         localfilesize = 0
@@ -361,14 +331,3 @@ def download_file(url, target_path, file_size=1):
 
     response.close()
     logger.debug("Finished downloading")
-
-
-class DownloadError(StandardError):
-    '''Exception raised for download errors
-
-    '''
-    def __init__(self, value):
-        self.value = value
-
-    def __str__(self):
-        return repr(self.value)

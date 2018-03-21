@@ -17,14 +17,6 @@ resource "aws_security_group" "allow_docker" {
     cidr_blocks = ["${var.vpc_cidr_block}"]
   }
 
-  #ingress {
-  #  # Just for debugging TODO: Remove?
-  #  from_port   = 22
-  #  to_port     = 22
-  #  protocol    = "tcp"
-  #  cidr_blocks = ["${var.vpc_cidr_block}"]
-  #}
-
   egress {
     from_port   = 0             # Implicit with AWS, but Terraform requires that it be explicit:
     to_port     = 0
@@ -41,8 +33,6 @@ resource "aws_instance" "docker_host" {
   subnet_id              = "${var.private_subnet_id}"
   instance_type          = "t2.micro"
   vpc_security_group_ids = ["${aws_security_group.allow_docker.id}"]
-  key_name               = "${var.key_name}"
-
   user_data = <<EOF
 #!/bin/bash
 set -o errexit
@@ -58,6 +48,6 @@ EOF
   # systemd config based on https://success.docker.com/article/How_do_I_enable_the_remote_API_for_dockerd
 
   tags {
-    Name = "${var.name} (terraform docker host)"
+    Name = "${terraform.workspace} (terraform docker host)"
   }
 }

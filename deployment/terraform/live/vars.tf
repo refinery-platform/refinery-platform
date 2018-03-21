@@ -3,17 +3,14 @@ variable "region" {
   default     = "us-east-1"
 }
 
-variable "availability_zone" {
+variable "availability_zone_a" {
   default = "us-east-1a"
 }
 
-variable "identity_pool_name" {
-  description = "Cognito federated identity pool name"
+variable "availability_zone_b" {
+  default = "us-east-1b"
 }
 
-variable "name" {
-  description = "Resource names based on this, plus additional distinguishing information"
-}
 
 # https://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Subnets.html#vpc-subnet-basics
 #
@@ -32,19 +29,15 @@ variable "vpc_cidr_block" {
 
 variable "public_cidr_block" {
   type    = "string"
-  default = "10.0.0.0/25"
-}
-
-variable "private_cidr_block" {
-  type    = "string"
   default = "10.0.0.128/25"
 }
 
-variable "refinery_host_count" {
+variable "private_cidr_block_a" {
   type    = "string"
-  default = "0"
+  default = "10.0.0.64/26"
 }
 
-variable "key_name" {
-  type = "string"
+variable "private_cidr_block_b" {
+  type    = "string"
+  default = "10.0.0.0/26"
 }

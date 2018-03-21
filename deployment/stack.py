@@ -138,6 +138,7 @@ def make_template(config, config_yaml):
         "CopyTagsToSnapshot": True,
         "DBInstanceClass": "db.t2.small",       # todo:?
         "DBInstanceIdentifier": config['RDS_NAME'],
+        "DBSubnetGroupName": config["RDS_DB_SUBNET_GROUP_NAME"],
         "Engine": "postgres",
         "EngineVersion": "9.3.14",
         # "KmsKeyId" ?
@@ -190,7 +191,9 @@ def make_template(config, config_yaml):
             'KeyName': config['KEY_NAME'],
             'IamInstanceProfile': functions.ref('WebInstanceProfile'),
             'Monitoring': True,
-            'SecurityGroups': [functions.ref("InstanceSecurityGroup")],
+            'SecurityGroupIds': [
+                functions.get_att('InstanceSecurityGroup', 'GroupId')
+            ],
             'Tags': instance_tags,
             'BlockDeviceMappings': [
                 {
@@ -202,6 +205,7 @@ def make_template(config, config_yaml):
                     }
                 }
             ],
+            "SubnetId": config['PUBLIC_SUBNET_ID']
         }),
         core.DependsOn(['RDSInstance']),
     )
@@ -392,6 +396,7 @@ def make_template(config, config_yaml):
                     "CidrIp": "0.0.0.0/0",
                 },
             ],
+            'VpcId': config['VPC_ID'],
         })
     )
 
@@ -430,6 +435,7 @@ def make_template(config, config_yaml):
                         'ELBSecurityGroup', 'GroupId'),
                 },
             ],
+            'VpcId': config['VPC_ID'],
         })
     )
 
@@ -456,6 +462,7 @@ def make_template(config, config_yaml):
                         'InstanceSecurityGroup', 'GroupId'),
                 },
             ],
+            'VpcId': config['VPC_ID'],
         })
     )
 
@@ -493,11 +500,8 @@ def make_template(config, config_yaml):
                 'S3BucketName': config['S3_LOG_BUCKET'],
                 # 'S3BucketPrefix' unused
             },
-            'AvailabilityZones': [
-                functions.get_att('WebInstance', 'AvailabilityZone')
-            ],
             'ConnectionSettings': {
-                'IdleTimeout': 1800  # seconds
+                'IdleTimeout': 180  # seconds
             },
             'HealthCheck': {
                 'HealthyThreshold': '2',
@@ -511,6 +515,7 @@ def make_template(config, config_yaml):
             'Listeners': listeners,
             'SecurityGroups': [
                 functions.get_att('ELBSecurityGroup', 'GroupId')],
+            'Subnets': [config["PUBLIC_SUBNET_ID"]],
             'Tags': load_tags(),
         })
     cft.parameters.add(

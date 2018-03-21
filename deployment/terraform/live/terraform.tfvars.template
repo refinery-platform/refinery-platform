@@ -1,3 +1,0 @@
-region = "us-east-1"
-
-identity_pool_name = "Dev Refinery Platform"

@@ -12,46 +12,43 @@ provider "aws" {
   region  = "${var.region}"
 }
 
+locals {
+  s3_bucket_name_base = "${replace(terraform.workspace, "/[^A-Za-z0-9]/", "-")}"
+}
+
 module "object_storage" {
   source           = "../modules/s3"
-  bucket_name_base = "${terraform.workspace}"
+  bucket_name_base = "${local.s3_bucket_name_base}"
 }
 
 module "identity_pool" {
   source                   = "../modules/cognito"
-  identity_pool_name       = "${var.identity_pool_name}"
+  identity_pool_name       = "${replace(terraform.workspace, "/[^A-Za-z0-9_ ]/", " ")}"
   upload_bucket_name       = "${module.object_storage.upload_bucket_name}"
   iam_resource_name_prefix = "${terraform.workspace}"
 }
 
 module "docker_host" {
   source              = "../modules/docker_host"
-  name                = "${var.name}"
+  name                = "${terraform.workspace} docker_host"
   vpc_cidr_block      = "${var.vpc_cidr_block}"
-  private_subnet_id   = "${module.vpc.private_subnet_id}"
+  private_subnet_id   = "${module.vpc.private_subnet_a_id}"
   vpc_id              = "${module.vpc.vpc_id}"
   security_group_name = "${terraform.workspace}-docker"
-  key_name            = "${var.key_name}"
 }
 
-module "refinery_host" {
-  source              = "../modules/refinery_host"
-  name                = "${var.name}"
-  public_cidr_block   = "${var.public_cidr_block}"
-  public_subnet_id    = "${module.vpc.public_subnet_id}"
-  vpc_id              = "${module.vpc.vpc_id}"
-  security_group_name = "${terraform.workspace}-refinery"
-  refinery_host_count = "${var.refinery_host_count}"
-  key_name            = "${var.key_name}"
-  docker_hostname     = "${module.docker_host.docker_hostname}"
-}
 
 module "vpc" {
-  source             = "../modules/vpc"
-  name               = "${var.name}"
-  vpc_cidr_block     = "${var.vpc_cidr_block}"
-  public_cidr_block  = "${var.public_cidr_block}"
-  private_cidr_block = "${var.private_cidr_block}"
-  public_cidr_block  = "${var.public_cidr_block}"
-  availability_zone  = "${var.availability_zone}"
+  source               = "../modules/vpc"
+  vpc_cidr_block       = "${var.vpc_cidr_block}"
+  public_cidr_block    = "${var.public_cidr_block}"
+  private_cidr_block_a = "${var.private_cidr_block_a}"
+  private_cidr_block_b = "${var.private_cidr_block_b}"
+  availability_zone    = "${var.availability_zone_a}"
+}
+
+module "rds" {
+  source           = "../modules/rds"
+  private_subnet_a = "${module.vpc.private_subnet_a_id}"
+  private_subnet_b = "${module.vpc.private_subnet_b_id}"
 }
