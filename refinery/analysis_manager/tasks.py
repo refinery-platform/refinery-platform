@@ -14,8 +14,8 @@ from celery.task.sets import TaskSet
 
 import core
 from core.models import Analysis, AnalysisResult, Workflow
-from file_store.models import FileStoreItem
-from file_store.tasks import create, import_file
+from file_store.models import FileStoreItem, FileExtension
+from file_store.tasks import import_file
 import tool_manager
 
 from .models import AnalysisStatus
@@ -480,41 +480,56 @@ def _get_galaxy_download_task_ids(analysis):
     for results in download_list:
         # download file if result state is "ok"
         if results['state'] == 'ok':
-            file_type = results["type"]
-            result_name = "{}.{}".format(results['name'], file_type)
+            file_extension = results["type"]
+            result_name = "{}.{}".format(results['name'], file_extension)
 
             # size of file defined by galaxy
             file_size = results['file_size']
             # Determining tag if galaxy results should be download through
             # http or copying files directly to retrieve HTML files as zip
             # archives via dataset URL
-            if galaxy_instance.local_download and file_type != 'html':
+            if galaxy_instance.local_download and file_extension != 'html':
                 download_url = results['file_name']
             else:
                 download_url = urlparse.urljoin(
                         galaxy_instance.base_url, '/'.join(
                                 ['datasets', str(results['dataset_id']),
                                  'display?to_ext=txt']))
+
+            file_store_item = FileStoreItem(source=download_url)
+
             # workaround to set the correct file type for zip archives of
             # FastQC HTML reports produced by Galaxy dynamically
-            if file_type == 'html':
-                file_type = 'zip'
-            # TODO: when changing permanent=True, fix update of % download
-            # of file
-            filestore_uuid = create(source=download_url, filetype=file_type)
+            if file_extension == 'html':
+                file_extension = 'zip'
+            # assign file type manually since it cannot be inferred from source
+            try:
+                extension = FileExtension.objects.get(name=file_extension)
+            except (FileExtension.DoesNotExist,
+                    FileExtension.MultipleObjectsReturned) as exc:
+                logger.warn("Could not assign type to file '%s' using "
+                            "extension '%s': %s", file_store_item,
+                            file_extension, exc)
+            else:
+                file_store_item.filetype = extension.filetype
+
+            file_store_item.save()
+
             # adding history files to django model
-            temp_file = AnalysisResult(
-                analysis_uuid=analysis.uuid,
-                file_store_uuid=filestore_uuid,
-                file_name=result_name, file_type=file_type)
+            temp_file = AnalysisResult(analysis_uuid=analysis.uuid,
+                                       file_store_uuid=file_store_item.uuid,
+                                       file_name=result_name,
+                                       file_type=file_extension)
             temp_file.save()
             analysis.results.add(temp_file)
             analysis.save()
+
             # downloading analysis results into file_store
             # only download files if size is greater than 1
             if file_size > 0:
                 task_id = import_file.subtask(
-                        (filestore_uuid, False, file_size))
+                        (file_store_item.uuid, False, file_size)
+                )
                 task_id_list.append(task_id)
 
     return task_id_list

@@ -14,14 +14,12 @@ provider "aws" {
 
 module "object_storage" {
   source           = "../modules/s3"
-  name             = "${terraform.workspace} object_storage"
-  bucket_name_base = "${terraform.workspace}"
+  bucket_name_base = "${replace(terraform.workspace, "/[^A-Za-z0-9]/", "-")}"
 }
 
 module "identity_pool" {
   source                   = "../modules/cognito"
-  name                     = "${terraform.workspace} identity pool"
-  identity_pool_name       = "${var.identity_pool_name}"
+  identity_pool_name       = "${replace(terraform.workspace, "/[^A-Za-z0-9]/", "")}"
   upload_bucket_name       = "${module.object_storage.upload_bucket_name}"
   iam_resource_name_prefix = "${terraform.workspace}"
 }
@@ -38,7 +36,6 @@ module "docker_host" {
 
 module "vpc" {
   source               = "../modules/vpc"
-  name                 = "${terraform.workspace} vpc"
   vpc_cidr_block       = "${var.vpc_cidr_block}"
   public_cidr_block    = "${var.public_cidr_block}"
   private_cidr_block_a = "${var.private_cidr_block_a}"
@@ -48,7 +45,6 @@ module "vpc" {
 
 module "rds" {
   source           = "../modules/rds"
-  name             = "${terraform.workspace} rds"
   private_subnet_a = "${module.vpc.private_subnet_a_id}"
   private_subnet_b = "${module.vpc.private_subnet_b_id}"
 }

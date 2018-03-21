@@ -3,11 +3,12 @@ from urlparse import urljoin
 import uuid
 
 from django.conf import settings
-from django.core.files import File
-from django.core.files.storage import Storage
+from django.core.files.base import ContentFile
+from django.db.models.fields.files import FieldFile
 from django.test import TestCase, override_settings
 
 import mock
+from override_storage import override_storage
 
 from .models import (FileExtension, FileStoreItem, FileType, file_path,
                      generate_file_source_translator,
@@ -95,49 +96,43 @@ class FileStoreItemTest(TestCase):
         self.path_source = os.path.join('/example/path', self.file_name)
         self.url_source = urljoin('http://example.org/', self.file_name)
 
-    def test_get_local_file_url(self):
-        file_mock = mock.MagicMock(spec=File)
-        file_mock.name = 'test.fastq'
-        item = FileStoreItem()
-        item.datafile = file_mock
-        storage_mock = mock.MagicMock(spec=Storage)
-        storage_mock.url = mock.MagicMock()
-        storage_mock.url.return_value = '/media/file_store/test.fastq'
-        # https://joeray.me/mocking-files-and-file-storage-for-testing-django-models.html
-        with mock.patch('django.core.files.storage.default_storage._wrapped',
-                        storage_mock):
-            self.assertEqual(item.get_datafile_url(),
-                             '/media/file_store/test.fastq')
-
-    def test_get_remote_file_url(self):
+    def test_get_remote_file_url_with_url_source(self):
         item = FileStoreItem(source=self.url_source)
-        self.assertEqual(item.get_datafile_url(), item.source)
+        self.assertEqual(item.get_datafile_url(), self.url_source)
+
+    def test_get_remote_file_url_with_path_source(self):
+        item = FileStoreItem(source=self.path_source)
+        self.assertEqual(item.get_datafile_url(), None)
+
+    def test_get_remote_file_url_with_s3_source(self):
+        item = FileStoreItem(source='s3://upload-bucket-name/key-name')
+        self.assertEqual(item.get_datafile_url(), None)
 
     def test_set_remote_file_type(self):
-        item = FileStoreItem.objects.create(source=self.url_source)
-        self.assertEqual(item.filetype, self.file_type)
+        new_item = FileStoreItem.objects.create(source=self.url_source)
+        saved_item = FileStoreItem.objects.get(pk=new_item.pk)
+        self.assertEqual(saved_item.filetype, self.file_type)
+
+    def test_set_remote_file_type_override(self):
+        zip_file_type = FileType.objects.get_or_create(name='ZIP')[0]
+        new_item = FileStoreItem.objects.create(source=self.url_source,
+                                                filetype=zip_file_type)
+        saved_item = FileStoreItem.objects.get(pk=new_item.pk)
+        self.assertEqual(saved_item.filetype, zip_file_type)
+
+    def test_update_remote_file_type(self):
+        new_item = FileStoreItem.objects.create(source=self.url_source)
+        zip_file_type = FileType.objects.get_or_create(name='ZIP')[0]
+        new_item.filetype = zip_file_type
+        new_item.save()
+        saved_item = FileStoreItem.objects.get(pk=new_item.pk)
+        self.assertEqual(saved_item.filetype, zip_file_type)
 
     def test_set_remote_file_type_with_multiple_period_file_name(self):
-        item = FileStoreItem.objects.create(
-            source='http://example.org/test.name.tdf'
-        )
-        self.assertEqual(item.filetype, self.file_type)
-
-    def test_set_local_file_type(self):
-        # https://joeray.me/mocking-files-and-file-storage-for-testing-django-models.html
-        with mock.patch('django.core.files.storage.default_storage._wrapped',
-                        mock.MagicMock(spec=Storage)):
-            with mock.patch.object(FileStoreItem, 'get_file_extension',
-                                   return_value=self.file_extension):
-                item = FileStoreItem.objects.create()
-            self.assertTrue(item.filetype, self.file_type)
-
-    def test_get_local_file_extension(self):
-        file_mock = mock.MagicMock(spec=File)
-        file_mock.name = self.file_name
-        item = FileStoreItem()
-        item.datafile = file_mock
-        self.assertEqual(item.get_file_extension(), self.file_extension)
+        file_source = 'http://example.org/test.name.tdf'
+        new_item = FileStoreItem.objects.create(source=file_source)
+        saved_item = FileStoreItem.objects.get(pk=new_item.pk)
+        self.assertEqual(saved_item.filetype, self.file_type)
 
     def test_get_remote_file_extension(self):
         item = FileStoreItem(source=self.url_source)
@@ -180,6 +175,71 @@ class FileStoreItemTest(TestCase):
     def test_empty_file_source_map_translation_with_path_source(self):
         item = FileStoreItem.objects.create(source=self.path_source)
         self.assertEqual(item.source, self.path_source)
+
+
+class FileStoreItemLocalFileTest(TestCase):
+    def setUp(self):
+        # TODO: replace with create() when migrations are no longer required
+        self.file_type = FileType.objects.get_or_create(name='TDF')[0]
+        self.file_extension = FileExtension.objects.get_or_create(
+            name='tdf', filetype=self.file_type
+        )[0]
+        self.file_name = 'test_file.tdf'
+        self.item = FileStoreItem()
+        # test storage backend does not support absolute paths
+        self.item.is_local = mock.MagicMock(return_value=True)
+
+    @override_storage()
+    @override_settings(MEDIA_URL='')
+    def test_get_local_file_url(self):
+        self.item.datafile.save(self.file_name, ContentFile(''))
+        saved_item = FileStoreItem.objects.get(pk=self.item.pk)
+        self.assertEqual(saved_item.get_datafile_url(),
+                         file_path(saved_item, self.file_name))
+
+    @override_storage()
+    def test_set_local_file_type(self):
+        self.item.datafile.save(self.file_name, ContentFile(''))
+        saved_item = FileStoreItem.objects.get(pk=self.item.pk)
+        self.assertEqual(saved_item.filetype, self.file_type)
+
+    @override_storage()
+    def test_set_local_file_type_override(self):
+        zip_file_type = FileType.objects.get_or_create(name='ZIP')[0]
+        self.item.filetype = zip_file_type
+        self.item.datafile.save(self.file_name, ContentFile(''))
+        saved_item = FileStoreItem.objects.get(pk=self.item.pk)
+        self.assertEqual(saved_item.filetype, zip_file_type)
+
+    @override_storage()
+    def test_set_local_file_type_update(self):
+        self.item.datafile.save(self.file_name, ContentFile(''))
+        zip_file_type = FileType.objects.get_or_create(name='ZIP')[0]
+        self.item.filetype = zip_file_type
+        self.item.save()
+        saved_item = FileStoreItem.objects.get(pk=self.item.pk)
+        self.assertEqual(saved_item.filetype, zip_file_type)
+
+    @override_storage()
+    def test_get_local_file_extension(self):
+        self.item.datafile.save(self.file_name, ContentFile(''))
+        saved_item = FileStoreItem.objects.get(pk=self.item.pk)
+        self.assertEqual(saved_item.get_file_extension(), self.file_extension)
+
+    @override_storage()
+    def test_delete_local_file_on_instance_delete(self):
+        self.item.datafile.save(self.file_name, ContentFile(''))
+        with mock.patch.object(FieldFile, 'delete') as mock_delete:
+            self.item.delete()
+            mock_delete.assert_called_with(save=False)
+
+    @override_storage()
+    def test_delete_local_file_on_instance_update(self):
+        self.item.datafile.save(self.file_name, ContentFile(''))
+        self.item.datafile = ''
+        with mock.patch.object(FieldFile, 'delete') as mock_delete:
+            self.item.save()
+            mock_delete.assert_called_with(save=False)
 
 
 @override_settings(REFINERY_DATA_IMPORT_DIR='/import/path',

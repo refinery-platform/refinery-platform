@@ -11,10 +11,6 @@ variable "availability_zone_b" {
   default = "us-east-1b"
 }
 
-variable "identity_pool_name" {
-  description = "Cognito federated identity pool name"
-}
-
 
 # https://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Subnets.html#vpc-subnet-basics
 #
@@ -33,7 +29,7 @@ variable "vpc_cidr_block" {
 
 variable "public_cidr_block" {
   type    = "string"
-  default = "10.0.0.0/26"
+  default = "10.0.0.128/25"
 }
 
 variable "private_cidr_block_a" {
@@ -43,5 +39,5 @@ variable "private_cidr_block_a" {
 
 variable "private_cidr_block_b" {
   type    = "string"
-  default = "10.0.0.128/25"
+  default = "10.0.0.0/26"
 }

@@ -127,7 +127,8 @@ class TakeOwnershipOfPublicDatasetView(View):
                 return HttpResponseBadRequest("%s." % err_msg)
             else:
                 full_isa_tab_url = get_absolute_url(
-                    data_set.get_isa_archive().get_datafile_url()
+                    data_set.get_metadata_as_file_store_item(
+                    ).get_datafile_url()
                 )
 
         if from_old_template:

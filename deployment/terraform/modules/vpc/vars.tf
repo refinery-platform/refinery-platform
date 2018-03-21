@@ -9,5 +9,3 @@ variable "availability_zone_a" {
 variable "availability_zone_b" {
   default = "us-east-1b"
 }
-
-variable "name" {}

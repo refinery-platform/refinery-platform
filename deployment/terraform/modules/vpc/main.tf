@@ -69,8 +69,6 @@ resource "aws_route_table_association" "public_subnet" {
   route_table_id = "${aws_route_table.route_table.id}"
 }
 
-############
-
 resource "aws_eip" "nat" {
   vpc = true
 }
