@@ -433,7 +433,7 @@
   Last modified <span class="emphasized">{{ ADCtrl.dataSet.modification_date | date:'medium' }}</span>.
 </p>
 <form id="isaTabImportForm" enctype="multipart/form-data" action="/data_set_manager/import/take_ownership/" method="post"
-      ng-if="ADCtrl.userPerms === 'read' || ADCtrl.userPerms === 'change'">
+      ng-if="(ADCtrl.userPerms === 'read' || ADCtrl.userPerms === 'change') && !ADCtrl.dataSet.is_owner">
     <!-- TODO: check if logged in: anonymous user can not import -->
     <input type="hidden" name="csrfmiddlewaretoken" value="{{ ADCtrl.csrfToken }}" />
     <input type="hidden" name="isa_tab_url" value="{{ ADCtrl.dataSet.isa_archive_url }}" />
