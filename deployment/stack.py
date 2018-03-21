@@ -501,7 +501,7 @@ def make_template(config, config_yaml):
                 # 'S3BucketPrefix' unused
             },
             'ConnectionSettings': {
-                'IdleTimeout': 1800  # seconds
+                'IdleTimeout': 180  # seconds
             },
             'HealthCheck': {
                 'HealthyThreshold': '2',
