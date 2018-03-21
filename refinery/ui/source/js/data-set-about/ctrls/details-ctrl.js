@@ -7,12 +7,12 @@ function AboutDetailsCtrl (
   $window,
   dataSetAboutFactory,
   dataSetPermsService,
+  dataSetTakeOwnershipService,
   fileRelationshipService
   ) {
   var vm = this;
   vm.loggedIn = typeof $window.djangoApp !== 'undefined' &&
       typeof $window.djangoApp.userName !== 'undefined';
-  vm.csrfToken = $window.csrf_token;
   vm.assays = dataSetAboutFactory.assays;
   vm.dataSet = dataSetAboutFactory.dataSet;
   vm.dataSetUuid = $window.dataSetUuid;
@@ -30,6 +30,12 @@ function AboutDetailsCtrl (
   vm.cancel = function (fieldName) {
     vm.editedDataSet[fieldName] = '';
     vm.isCollapsed[fieldName] = true;
+  };
+
+  vm.importDataSet = function (dataSetUuid) {
+    dataSetTakeOwnershipService.save({
+      data_set_uuid: dataSetUuid
+    });
   };
 
   vm.refreshDataSetStats = function () {
@@ -123,6 +129,7 @@ angular
     '$window',
     'dataSetAboutFactory',
     'dataSetPermsService',
+    'dataSetTakeOwnershipService',
     'fileRelationshipService',
     AboutDetailsCtrl
   ]);
