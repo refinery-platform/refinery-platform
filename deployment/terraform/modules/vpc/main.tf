@@ -38,7 +38,6 @@ resource "aws_subnet" "private_subnet_b" {
   vpc_id                  = "${aws_vpc.vpc.id}"
   cidr_block              = "${var.private_cidr_block_b}"
   availability_zone       = "${var.availability_zone_b}"
-  map_public_ip_on_launch = true
 
   tags {
     Name = "${terraform.workspace} (terraform private subnet b)"
