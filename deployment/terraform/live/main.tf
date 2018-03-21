@@ -35,7 +35,6 @@ module "vpc" {
 
 module "rds" {
   source           = "../modules/rds"
-  name             = "${terraform.workspace} rds"
   private_subnet_a = "${module.vpc.private_subnet_a_id}"
   private_subnet_b = "${module.vpc.private_subnet_b_id}"
 }
