@@ -432,9 +432,10 @@
   Data set created <span class="emphasized">{{ ADCtrl.dataSet.creation_date | date:'medium' }}</span>.
   Last modified <span class="emphasized">{{ ADCtrl.dataSet.modification_date | date:'medium' }}</span>.
 </p>
+
 <form id="isaTabImportForm" enctype="multipart/form-data" action="/data_set_manager/import/take_ownership/" method="post"
       ng-if="(ADCtrl.userPerms === 'read' || ADCtrl.userPerms === 'change') &&
-      !ADCtrl.dataSet.is_owner && !ADCtrl.dataSet.pre_isa_archive">
+      !ADCtrl.dataSet.is_owner && !ADCtrl.dataSet.pre_isa_archive && ADCtrl.loggedIn">
     <input type="hidden" name="csrfmiddlewaretoken" value="{{ ADCtrl.csrfToken }}" />
     <input type="hidden" name="isa_tab_url" value="{{ ADCtrl.dataSet.isa_archive_url }}" />
     <input class="refinery-base btn btn-default"
