@@ -12,23 +12,38 @@
 # RDS_SNAPSHOT: refinery-web-XXX
 # DATA_SNAPSHOT: snap-XXX
 
-# The password for the Django admin account
+# The password for the Django admin account.
+# If not set here, random string is assigned, and can be found in CloudFormation output
 # ADMIN_PASSWORD: "refinery"
+
+<%
+require 'json'
+require 'ostruct'
+tf_json = JSON.parse(`terraform output --json`)
+tf = OpenStruct.new(Hash[tf_json.map{|k,v| [k,v['value']]}])
+%>
 
 # Name and URL for the site - change these to match your configuration
 SITE_NAME: "Refinery"
-SITE_URL: "192.168.50.50:8000"
+SITE_URL: "<%= tf.s3_bucket_name_base %>.cloud.refinery-platform.org"
 
 # STACK_NAME is used to name the CloudFormation stacks
 # Constraint: alphanumeric characters, underscores, periods, and colons
-STACK_NAME: "RefineryStack"
+STACK_NAME: "<%= tf.s3_bucket_name_base %>"
+
+# -------------------------
+# Terraform specific values
+
+COGNITO_IDENTITY_POOL_ID: "<%= tf.identity_pool_id %>"
+VPC_ID: "<%= tf.vpc_id %>"
+PUBLIC_SUBNET_ID: "<%= tf.public_subnet_id %>"
+RDS_DB_SUBNET_GROUP_NAME: "<%= tf.rds_db_subnet_group_name %>"
 
 # Prefix for all S3 bucket names (must not be shared among stacks)
 # Constraint: DNS-compliant without periods (".")
-S3_BUCKET_NAME_BASE: "refinery"
+S3_BUCKET_NAME_BASE: "<%= tf.s3_bucket_name_base %>"
 
-# Get from Terraform output
-COGNITO_IDENTITY_POOL_ID: ""
+# -------------------------
 
 # AWS ARN for the TLS certifcate to be used for HTTPS connections
 # TLS_CERTIFICATE: "arn:aws:acm:--region--:--accountnumber--:certificate/--id--"
