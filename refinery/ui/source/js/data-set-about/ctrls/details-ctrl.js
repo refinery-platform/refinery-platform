@@ -15,6 +15,7 @@ function AboutDetailsCtrl (
       typeof $window.djangoApp.userName !== 'undefined';
   vm.assays = dataSetAboutFactory.assays;
   vm.dataSet = dataSetAboutFactory.dataSet;
+  vm.dataSetImportStatus = 'NONE';
   vm.dataSetUuid = $window.dataSetUuid;
   vm.editedDataSet = {};
   vm.fileStoreItem = dataSetAboutFactory.fileStoreItem;
@@ -33,8 +34,14 @@ function AboutDetailsCtrl (
   };
 
   vm.importDataSet = function (dataSetUuid) {
+    vm.dataSetImportStatus = 'RUNNING';
     dataSetTakeOwnershipService.save({
       data_set_uuid: dataSetUuid
+    }).$promise.then(function () {
+      vm.dataSetImportStatus = 'SUCCESS';
+    }, function (error) {
+      $log.error(error);
+      vm.dataSetImportStatus = 'FAIL';
     });
   };
 
