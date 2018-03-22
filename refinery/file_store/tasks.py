@@ -53,7 +53,7 @@ def import_file(uuid, refresh=False, file_size=0):
     # otherwise delete it if update is requested
     if item.is_local():
         if refresh:
-            item.delete_datafile()
+            item.datafile.delete()
         else:
             logger.info("File already exists: '%s'", item.get_absolute_path())
             return item.uuid

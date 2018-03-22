@@ -241,6 +241,15 @@ class FileStoreItemLocalFileTest(TestCase):
             self.item.save()
             mock_delete.assert_called_with(save=False)
 
+    @override_storage()
+    def test_terminate_import_task_on_file_delete(self):
+        self.item.datafile.save(self.file_name, ContentFile(''))
+        self.item.terminate_file_import_task = mock.MagicMock(
+            return_value=None)
+        with mock.patch.object(FieldFile, 'delete'):
+            self.item.delete_datafile()
+        self.item.terminate_file_import_task.assert_called_once_with()
+
 
 @override_settings(REFINERY_DATA_IMPORT_DIR='/import/path',
                    REFINERY_FILE_SOURCE_MAP={})

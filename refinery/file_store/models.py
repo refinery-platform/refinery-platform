@@ -20,8 +20,7 @@ from django.db import models
 from django.db.models.signals import post_delete
 from django.dispatch import receiver
 
-from celery.result import AsyncResult
-from celery.task.control import revoke
+import celery
 from django_extensions.db.fields import UUIDField
 
 import core
@@ -279,7 +278,8 @@ class FileStoreItem(models.Model):
         return False
 
     def delete_datafile(self, save_instance=True):
-        """Delete datafile on disk and clears all attributes on the field"""
+        """Delete datafile on disk and cancel file import"""
+        self.terminate_file_import_task()
         if self.datafile:
             logger.debug("Deleting datafile '%s'", self.datafile.name)
             try:
@@ -287,8 +287,8 @@ class FileStoreItem(models.Model):
             except OSError as exc:
                 logger.error("Error deleting file '%s': %s",
                              self.datafile.name, exc)
-                return False
-            logger.info("Deleted datafile of '%s'", self)
+            else:
+                logger.info("Deleted datafile of '%s'", self)
 
     def rename_datafile(self, name):
         """Change name of the data file
@@ -356,17 +356,12 @@ class FileStoreItem(models.Model):
 
     def get_import_status(self):
         """Return file import task state"""
-        return AsyncResult(self.import_task_id).state
+        return celery.result.AsyncResult(self.import_task_id).state
 
     def terminate_file_import_task(self):
-        if self.import_task_id:
-            try:
-                revoke(self.import_task_id, terminate=True)
-            except Exception as exc:
-                logger.error("Error terminating file import task '%s': %s",
-                             self.import_task_id, exc)
-            else:
-                logger.info("Terminated import task for file '%s'", self)
+        logger.info("Terminating import task '%s' for '%s'",
+                    self.import_task_id, self)
+        celery.result.AsyncResult(self.import_task_id).revoke(terminate=True)
 
 
 def get_temp_dir():
@@ -395,11 +390,10 @@ def get_file_object(file_name):
 # post_delete is safer than pre_delete
 @receiver(post_delete, sender=FileStoreItem)
 def _delete_datafile(sender, instance, **kwargs):
-    """Revoke file import task and delete the datafile when model is deleted
+    """Delete the datafile when model is deleted
     Signal handler is required because QuerySet bulk delete does not call
     delete() method on the models
     """
-    instance.terminate_file_import_task()
     instance.delete_datafile(save_instance=False)
 
 
