@@ -3,7 +3,7 @@
 # See https://github.com/refinery-platform/refinery-platform/wiki/AWS for
 # more details
 
-from .prod import *  # NOQA
+from .prod import *  # NOQA 405
 
 # Email
 EMAIL_BACKEND = 'django_smtp_ssl.SSLEmailBackend'
