@@ -15,8 +15,9 @@ from core.models import DataSet
 
 from .models import Tool, ToolDefinition, VisualizationTool, WorkflowTool
 from .serializers import ToolDefinitionSerializer, ToolSerializer
-from .utils import (create_tool, user_has_access_to_tool,
-                    validate_tool_launch_configuration)
+from .utils import (
+    create_tool, user_has_access_to_tool, validate_tool_launch_configuration
+)
 
 logger = logging.getLogger(__name__)
 
@@ -70,7 +71,7 @@ class ToolDefinitionsViewSet(ToolManagerViewSetBase):
     http_method_names = ['get']
 
     def get_queryset(self):
-        if self.request.user.has_perm('core.share_dataset', self.data_set):
+        if self.request.user.has_perm('core.change_dataset', self.data_set):
             return ToolDefinition.objects.all()
 
         elif self.request.user.has_perm('core.read_dataset', self.data_set):
