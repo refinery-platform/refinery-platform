@@ -121,12 +121,13 @@ class FileStoreItemTest(TestCase):
         self.assertEqual(saved_item.filetype, zip_file_type)
 
     def test_update_remote_file_type(self):
-        new_item = FileStoreItem.objects.create(source=self.url_source)
-        zip_file_type = FileType.objects.get_or_create(name='ZIP')[0]
-        new_item.filetype = zip_file_type
-        new_item.save()
-        saved_item = FileStoreItem.objects.get(pk=new_item.pk)
-        self.assertEqual(saved_item.filetype, zip_file_type)
+        with mock.patch('celery.result.AsyncResult'):
+            new_item = FileStoreItem.objects.create(source=self.url_source)
+            zip_file_type = FileType.objects.get_or_create(name='ZIP')[0]
+            new_item.filetype = zip_file_type
+            new_item.save()
+            saved_item = FileStoreItem.objects.get(pk=new_item.pk)
+            self.assertEqual(saved_item.filetype, zip_file_type)
 
     def test_set_remote_file_type_with_multiple_period_file_name(self):
         file_source = 'http://example.org/test.name.tdf'
@@ -228,27 +229,20 @@ class FileStoreItemLocalFileTest(TestCase):
 
     @override_storage()
     def test_delete_local_file_on_instance_delete(self):
-        self.item.datafile.save(self.file_name, ContentFile(''))
-        with mock.patch.object(FieldFile, 'delete') as mock_delete:
-            self.item.delete()
-            mock_delete.assert_called_with(save=False)
+        with mock.patch('celery.result.AsyncResult'):
+            self.item.datafile.save(self.file_name, ContentFile(''))
+            with mock.patch.object(FieldFile, 'delete') as mock_delete:
+                self.item.delete()
+                mock_delete.assert_called_with(save=False)
 
     @override_storage()
     def test_delete_local_file_on_instance_update(self):
-        self.item.datafile.save(self.file_name, ContentFile(''))
-        self.item.datafile = ''
-        with mock.patch.object(FieldFile, 'delete') as mock_delete:
-            self.item.save()
-            mock_delete.assert_called_with(save=False)
-
-    @override_storage()
-    def test_terminate_import_task_on_file_delete(self):
-        self.item.datafile.save(self.file_name, ContentFile(''))
-        self.item.terminate_file_import_task = mock.MagicMock(
-            return_value=None)
-        with mock.patch.object(FieldFile, 'delete'):
-            self.item.delete_datafile()
-        self.item.terminate_file_import_task.assert_called_once_with()
+        with mock.patch('celery.result.AsyncResult'):
+            self.item.datafile.save(self.file_name, ContentFile(''))
+            self.item.datafile = ''
+            with mock.patch.object(FieldFile, 'delete') as mock_delete:
+                self.item.save()
+                mock_delete.assert_called_with(save=False)
 
 
 @override_settings(REFINERY_DATA_IMPORT_DIR='/import/path',

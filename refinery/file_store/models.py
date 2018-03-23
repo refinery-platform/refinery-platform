@@ -359,9 +359,11 @@ class FileStoreItem(models.Model):
         return celery.result.AsyncResult(self.import_task_id).state
 
     def terminate_file_import_task(self):
-        logger.info("Terminating import task '%s' for '%s'",
-                    self.import_task_id, self)
-        celery.result.AsyncResult(self.import_task_id).revoke(terminate=True)
+        if self.import_task_id:
+            logger.info("Terminating import task '%s' for '%s'",
+                        self.import_task_id, self)
+            result = celery.result.AsyncResult(self.import_task_id)
+            result.revoke(terminate=True)
 
 
 def get_temp_dir():

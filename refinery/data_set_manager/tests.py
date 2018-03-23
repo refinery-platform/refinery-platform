@@ -1913,9 +1913,6 @@ class NodeIndexTests(APITestCase):
 
         self.maxDiff = None
 
-    def tearDown(self):
-        FileStoreItem.objects.all().delete()
-
     def test_skip_types(self):
         self.node.type = 'Unknown File Type'
         with self.assertRaises(SkipDocument):
@@ -1988,7 +1985,8 @@ class NodeIndexTests(APITestCase):
 
     def test_prepare_node_remote_datafile_source(self):
         self.file_store_item.source = u'http://www.example.org/test.txt'
-        self.file_store_item.save()
+        with mock.patch('celery.result.AsyncResult'):
+            self.file_store_item.save()
         self._assert_node_index_prepared_correctly(
             self._prepare_node_index(self.node),
             expected_download_url=self.file_store_item.source,
@@ -2014,14 +2012,16 @@ class NodeIndexTests(APITestCase):
 
     def test_prepare_node_no_file_import_task_id_yet(self):
         self.file_store_item.import_task_id = ""
-        self.file_store_item.save()
+        with mock.patch('celery.result.AsyncResult'):
+            self.file_store_item.save()
         self.import_task.delete()
         self._assert_node_index_prepared_correctly(
             self._prepare_node_index(self.node), expected_download_url=PENDING
         )
 
     def test_prepare_node_no_file_store_item(self):
-        self.file_store_item.delete()
+        with mock.patch('celery.result.AsyncResult'):
+            self.file_store_item.delete()
         self._assert_node_index_prepared_correctly(
             self._prepare_node_index(self.node),
             expected_download_url=NOT_AVAILABLE, expected_filetype=''
@@ -2029,7 +2029,8 @@ class NodeIndexTests(APITestCase):
 
     def test_prepare_node_s3_file_store_item_source_no_datafile(self):
         self.file_store_item.source = 's3://test/test.txt'
-        self.file_store_item.save()
+        with mock.patch('celery.result.AsyncResult'):
+            self.file_store_item.save()
         with mock.patch.object(FileStoreItem, 'get_import_status',
                                return_value=SUCCESS):
             self._assert_node_index_prepared_correctly(
@@ -2040,7 +2041,8 @@ class NodeIndexTests(APITestCase):
 
     def test_prepare_node_s3_file_store_item_source_with_datafile(self):
         self.file_store_item.source = 's3://test/test.txt'
-        self.file_store_item.save()
+        with mock.patch('celery.result.AsyncResult'):
+            self.file_store_item.save()
         with mock.patch.object(FileStoreItem, 'get_datafile_url',
                                return_value='/media/file_store/test.txt'):
             self._assert_node_index_prepared_correctly(

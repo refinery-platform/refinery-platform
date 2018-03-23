@@ -729,7 +729,8 @@ class AnalysisDeletionTest(TestCase):
     def test_analysis_bulk_deletion_removes_related_objects(self):
         # make a second Analysis
         make_analyses_with_single_dataset(1, self.user)
-        Analysis.objects.all().delete()
+        with mock.patch('celery.result.AsyncResult'):
+            Analysis.objects.all().delete()
 
         self.assertEqual(Analysis.objects.count(), 0)
         self.assertEqual(AnalysisNodeConnection.objects.count(), 0)
