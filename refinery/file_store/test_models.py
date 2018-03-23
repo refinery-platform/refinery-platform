@@ -307,3 +307,19 @@ class FileSourceTranslationTest(TestCase):
         translate_file_source = generate_file_source_translator()
         with self.assertRaises(ValueError):
             translate_file_source(self.rel_path_source)
+
+
+class FileImportTaskTerminationTest(TestCase):
+    @mock.patch.object(FileStoreItem, 'terminate_file_import_task')
+    def test_terminate_import_task_on_file_store_item_delete(
+            self, mock_terminate_task):
+        item = FileStoreItem.objects.create()
+        item.delete()
+        mock_terminate_task.assert_called_once_with()
+
+    @mock.patch.object(FileStoreItem, 'terminate_file_import_task')
+    def test_terminate_import_task_on_bulk_file_store_item_delete(
+            self, mock_terminate_task):
+        FileStoreItem.objects.create()
+        FileStoreItem.objects.all().delete()
+        mock_terminate_task.assert_called_once_with()
