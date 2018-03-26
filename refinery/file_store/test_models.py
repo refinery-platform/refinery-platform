@@ -310,16 +310,44 @@ class FileSourceTranslationTest(TestCase):
 
 
 class FileImportTaskTerminationTest(TestCase):
-    @mock.patch.object(FileStoreItem, 'terminate_file_import_task')
-    def test_terminate_import_task_on_file_store_item_delete(
-            self, mock_terminate_task):
-        item = FileStoreItem.objects.create()
-        item.delete()
-        mock_terminate_task.assert_called_once_with()
 
-    @mock.patch.object(FileStoreItem, 'terminate_file_import_task')
-    def test_terminate_import_task_on_bulk_file_store_item_delete(
-            self, mock_terminate_task):
-        FileStoreItem.objects.create()
-        FileStoreItem.objects.all().delete()
-        mock_terminate_task.assert_called_once_with()
+    def setUp(self):
+        self.item = FileStoreItem.objects.create()
+
+    def test_terminate_on_file_store_item_delete(self):
+        with mock.patch.object(
+                FileStoreItem, 'terminate_file_import_task'
+        ) as mock_terminate_task:
+            self.item.delete()
+            mock_terminate_task.assert_called_once_with()
+
+    def test_terminate_on_bulk_file_store_item_delete(self):
+        with mock.patch.object(
+                FileStoreItem, 'terminate_file_import_task'
+        ) as mock_terminate_task:
+            FileStoreItem.objects.all().delete()
+            mock_terminate_task.assert_called_once_with()
+
+    @override_storage()
+    def test_terminate_on_save_with_new_datafile(self):
+        with mock.patch.object(
+            FileStoreItem, 'terminate_file_import_task'
+        ) as mock_terminate_task:
+            self.item.datafile.save('test_file.txt', ContentFile(''))
+            mock_terminate_task.assert_called_once_with()
+
+    @override_storage()
+    def test_terminate_on_replace_of_datafile(self):
+        self.item.datafile.save('test_file.txt', ContentFile(''))
+        with mock.patch.object(
+            FileStoreItem, 'terminate_file_import_task'
+        ) as mock_terminate_task:
+            self.item.datafile.save('test_file2.txt', ContentFile(''))
+            mock_terminate_task.assert_called_once_with()
+
+    def test_terminate_on_save_with_no_new_datafile(self):
+        with mock.patch.object(
+            FileStoreItem, 'terminate_file_import_task'
+        ) as mock_terminate_task:
+            self.item.save()
+            mock_terminate_task.assert_not_called()

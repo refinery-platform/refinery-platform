@@ -177,23 +177,23 @@ class FileStoreItem(models.Model):
                 self.filetype = extension.filetype
 
         if self.datafile:
-            # symlink datafile if necessary
-            if (not self.is_local() and os.path.isabs(self.source) and
-                    settings.REFINERY_DATA_IMPORT_DIR not in self.source):
-                self._symlink_datafile()
+            self.terminate_file_import_task()
         else:
-            # delete file
             try:
                 old_instance = FileStoreItem.objects.get(pk=self.pk)
             except FileStoreItem.DoesNotExist:
-                pass  # this is a newly created instance
+                # this is a newly created instance: symlink datafile if needed
+                if (os.path.isabs(self.source) and
+                        settings.REFINERY_DATA_IMPORT_DIR not in self.source):
+                    self._symlink_datafile()
             except FileStoreItem.MultipleObjectsReturned as exc:
                 logger.critical(
                     "Error retrieving FileStoreItem with primary key '%s': %s",
                     self.pk, exc
                 )
             else:
-                old_instance.delete_datafile(save_instance=False)
+                if old_instance.datafile:
+                    old_instance.delete_datafile(save_instance=False)
 
         super(FileStoreItem, self).save(*args, **kwargs)
 
