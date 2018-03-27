@@ -329,7 +329,7 @@ class FileImportTaskTerminationTest(TestCase):
         with mock.patch.object(
             FileStoreItem, 'terminate_file_import_task'
         ) as mock_terminate_task:
-            self.item.datafile.save('test_file.txt', ContentFile(''))
+            self.item.datafile.save('test_file_2.txt', ContentFile(''))
             mock_terminate_task.assert_called_once()
 
     def test_terminate_when_replacing_datafile(self):
@@ -375,4 +375,3 @@ class TestSymlinkDatafile(TestCase):
             FileStoreItem.objects.create(
                 source=settings.REFINERY_DATA_IMPORT_DIR + 'test.txt')
             mock_symlink.assert_not_called()
-
