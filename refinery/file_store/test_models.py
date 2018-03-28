@@ -325,11 +325,10 @@ class FileImportTaskTerminationTest(TestCase):
             mock_terminate_task.assert_called_once()
 
     def test_terminate_when_adding_datafile(self):
-        self.item.datafile.save('test_file.txt', ContentFile(''))
         with mock.patch.object(
             FileStoreItem, 'terminate_file_import_task'
         ) as mock_terminate_task:
-            self.item.datafile.save('test_file_2.txt', ContentFile(''))
+            self.item.datafile.save('test_file.txt', ContentFile(''))
             mock_terminate_task.assert_called_once()
 
     def test_terminate_when_replacing_datafile(self):
@@ -337,7 +336,7 @@ class FileImportTaskTerminationTest(TestCase):
         with mock.patch.object(
             FileStoreItem, 'terminate_file_import_task'
         ) as mock_terminate_task:
-            self.item.datafile.save('test_file2.txt', ContentFile(''))
+            self.item.datafile.save('test_file_2.txt', ContentFile(''))
             mock_terminate_task.assert_called_once()
 
     def test_terminate_on_save_with_no_new_datafile(self):
