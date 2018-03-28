@@ -42,7 +42,7 @@ from .models import (INPUT_CONNECTION, OUTPUT_CONNECTION, Analysis,
                      AnalysisNodeConnection, AnalysisResult, BaseResource,
                      DataSet, ExtendedGroup, InvestigationLink, Project,
                      Tutorials, UserProfile, Workflow, WorkflowEngine,
-                     invalidate_cached_object)
+                     invalidate_cached_object, SiteStatistics)
 from .search_indexes import DataSetIndex
 from .utils import (filter_nodes_uuids_in_solr, get_aware_local_time,
                     get_resources_for_user, move_obj_to_front,
@@ -2297,3 +2297,31 @@ class TestManagementCommands(TestCase):
                 str(galaxy_instance.id),
                 "non-existent group name"
             )
+
+
+class InitialSiteStatisticsCreationTest(TestMigrations):
+    migrate_from = '0019_sitestatistics'
+    migrate_to = '0020_create_initial_site_statistics'
+
+    def setUpBeforeMigration(self, apps):
+        public_group = ExtendedGroup.objects.public_group()
+        self.user_a = User.objects.create_user("user_a", "", "user_a")
+        self.user_b = User.objects.create_user("user_b", "", "user_b")
+        self.client.login(username="user_a", password="user_a")
+        self.client.login(username="user_a", password="user_a")
+        self.dataset_a = create_dataset_with_necessary_models(user=self.user_a)
+        self.dataset_b = create_dataset_with_necessary_models()
+        self.dataset_b.share(public_group)
+
+    def test_initial_site_statistics_created_properly(self):
+        initial_site_statistics = SiteStatistics.objects.last()
+
+        self.assertEqual(initial_site_statistics.datasets_uploaded, 2)
+        self.assertEqual(initial_site_statistics.datasets_shared, 1)
+        self.assertEqual(initial_site_statistics.users_created, 3)
+        self.assertEqual(initial_site_statistics.groups_created, 2)
+        self.assertEqual(initial_site_statistics.unique_user_logins, 1)
+        self.assertEqual(initial_site_statistics.total_user_logins, 2)
+        self.assertEqual(initial_site_statistics.total_workflow_launches, 0)
+        self.assertEqual(
+            initial_site_statistics.total_visualization_launches, 0)
