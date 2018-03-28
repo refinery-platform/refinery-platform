@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% load markup %}
+{% load flatblocks %}
+
+
+{% block title %}
+{{ block.super }} - Dashboard
+{% endblock %}
+
+{% block subheader %}
+<div class="page-header">
+<h1>My Dashboard {{site_name}}</h1>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-8">
+    <div class="refinery-panel refinery-panel-content scrollable jquery-full-height">
+
+				I am the dashboard
+    </div>
+  </div>
+</div>
+{% endblock %}
