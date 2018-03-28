@@ -784,6 +784,10 @@ class DataSet(SharableResource):
     def is_isatab_based(self):
         return bool(self.get_investigation().isa_archive)
 
+    @property
+    def shared(self):  # is_shared breaks a tastypie interal
+        return len(self.get_groups()) > 0
+
 
 @receiver(pre_delete, sender=DataSet)
 def _dataset_delete(sender, instance, *args, **kwargs):
