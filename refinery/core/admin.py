@@ -9,10 +9,14 @@ from django.contrib import admin
 from django_extensions.admin import ForeignKeyAutocompleteAdmin
 from guardian.admin import GuardedModelAdmin
 
-from .models import (Analysis, AnalysisNodeConnection, AnalysisResult, DataSet,
-                     Download, ExtendedGroup, InvestigationLink, Invitation,
-                     Ontology, Project, SiteProfile, Tutorials, UserProfile,
-                     Workflow, WorkflowEngine)
+from tool_manager.utils import AdminFieldPopulator
+
+from .models import (
+    Analysis, AnalysisNodeConnection, AnalysisResult, DataSet, Download,
+    ExtendedGroup, InvestigationLink, Invitation, Ontology, Project,
+    SiteProfile, SiteStatistics, Tutorials, UserProfile, Workflow,
+    WorkflowEngine
+)
 from .utils import admin_ui_deletion
 
 
@@ -147,6 +151,10 @@ class SiteProfileAdmin(GuardedModelAdmin):
     list_display = ['__unicode__', 'site']
 
 
+class SiteStatisticsAdmin(AdminFieldPopulator):
+    pass
+
+
 admin.site.register(ExtendedGroup, ExtendedGroupAdmin)
 admin.site.register(Project, ProjectAdmin)
 admin.site.register(DataSet, DataSetAdmin)
@@ -162,3 +170,4 @@ admin.site.register(UserProfile, UserProfileAdmin)
 admin.site.register(Tutorials, TutorialsAdmin)
 admin.site.register(Ontology, OntologyAdmin)
 admin.site.register(SiteProfile, SiteProfileAdmin)
+admin.site.register(SiteStatistics, SiteStatisticsAdmin)
