@@ -18,35 +18,40 @@ from guardian.core import ObjectPermissionChecker
 from guardian.shortcuts import assign_perm, get_objects_for_group, remove_perm
 import mock
 import mockcache as memcache
-from rest_framework.test import (APIClient, APIRequestFactory, APITestCase,
-                                 force_authenticate)
+from rest_framework.test import (
+    APIClient, APIRequestFactory, APITestCase, force_authenticate
+)
 from tastypie.exceptions import NotFound
 from tastypie.test import ResourceTestCase
 
 from analysis_manager.models import AnalysisStatus
-from data_set_manager.models import (AnnotatedNode, Assay, Contact,
-                                     Investigation, Node, NodeCollection,
-                                     Study)
-from factory_boy.django_model_factories import (GalaxyInstanceFactory,
-                                                WorkflowEngineFactory,
-                                                WorkflowFactory)
-from factory_boy.utils import (create_dataset_with_necessary_models,
-                               make_analyses_with_single_dataset)
+from data_set_manager.models import (
+    AnnotatedNode, Assay, Contact, Investigation, Node, NodeCollection, Study
+)
+from factory_boy.django_model_factories import (
+    GalaxyInstanceFactory, WorkflowEngineFactory, WorkflowFactory
+)
+from factory_boy.utils import (
+    create_dataset_with_necessary_models, create_tool_with_necessary_models,
+    make_analyses_with_single_dataset
+)
 from file_store.models import FileStoreItem, FileType
 
 from .api import AnalysisResource
 from .management.commands.create_user import init_user
 from .management.commands.import_annotations import \
     Command as ImportAnnotationsCommand
-from .models import (INPUT_CONNECTION, OUTPUT_CONNECTION, Analysis,
-                     AnalysisNodeConnection, AnalysisResult, BaseResource,
-                     DataSet, ExtendedGroup, InvestigationLink, Project,
-                     Tutorials, UserProfile, Workflow, WorkflowEngine,
-                     invalidate_cached_object, SiteStatistics)
+from .models import (
+    INPUT_CONNECTION, OUTPUT_CONNECTION, Analysis, AnalysisNodeConnection,
+    AnalysisResult, BaseResource, DataSet, ExtendedGroup, InvestigationLink,
+    Project, SiteStatistics, Tutorials, UserProfile, Workflow, WorkflowEngine,
+    invalidate_cached_object
+)
 from .search_indexes import DataSetIndex
-from .utils import (filter_nodes_uuids_in_solr, get_aware_local_time,
-                    get_resources_for_user, move_obj_to_front,
-                    which_default_read_perm)
+from .utils import (
+    filter_nodes_uuids_in_solr, get_aware_local_time, get_resources_for_user,
+    move_obj_to_front, which_default_read_perm
+)
 from .views import AnalysesViewSet, DataSetsViewSet, WorkflowViewSet
 
 cache = memcache.Client(["127.0.0.1:11211"])
@@ -2325,3 +2330,106 @@ class InitialSiteStatisticsCreationTest(TestMigrations):
         self.assertEqual(initial_site_statistics.total_workflow_launches, 0)
         self.assertEqual(
             initial_site_statistics.total_visualization_launches, 0)
+
+
+class SiteStatisticsTests(TestCase):
+    def setUp(self):
+        public_group = ExtendedGroup.objects.public_group()
+
+        # Simulate a week of user activity
+        user_a = User.objects.create_user("user_a", "", "user_a")
+        self.client.login(username="user_a", password="user_a")
+        self.dataset_a = create_dataset_with_necessary_models(user=user_a)
+        self.dataset_b = create_dataset_with_necessary_models(user=user_a)
+        self.dataset_b.share(public_group)
+        self.site_statistics_a = SiteStatistics.objects.create()
+
+        # Simulate a week where nothing happened
+        self.site_statistics_b = SiteStatistics.objects.create()
+
+        # Simulate another week of user activity
+        user_b = User.objects.create_user("user_b", "", "user_b")
+        user_c = User.objects.create_user("user_c", "", "user_c")
+        self.client.login(username="user_b", password="user_b")
+        self.client.login(username="user_c", password="user_c")
+        self.client.login(username="user_c", password="user_c")
+        self.client.login(username="user_c", password="user_c")
+        self.dataset_c = create_dataset_with_necessary_models(user=user_b)
+        self.dataset_d = create_dataset_with_necessary_models(user=user_b)
+        self.dataset_d.share(public_group)
+        self.dataset_e = create_dataset_with_necessary_models(user=user_c)
+        self.dataset_e.share(public_group)
+        ExtendedGroup.objects.create(name="Test Group")
+        create_tool_with_necessary_models("VISUALIZATION")  # creates a DataSet
+        create_tool_with_necessary_models("WORKFLOW")  # creates a DataSet
+        self.site_statistics_c = SiteStatistics.objects.create()
+
+    def test__get_previous_instance(self):
+        self.assertEqual(self.site_statistics_a._get_previous_instance().id, 1)
+        self.assertEqual(self.site_statistics_b._get_previous_instance(),
+                         self.site_statistics_a)
+        self.assertEqual(self.site_statistics_c._get_previous_instance(),
+                         self.site_statistics_b)
+
+    def test_datasets_uploaded(self):
+        self.assertEqual(self.site_statistics_a.datasets_uploaded, 2)
+        self.assertEqual(self.site_statistics_b.datasets_uploaded, 0)
+        self.assertEqual(self.site_statistics_c.datasets_uploaded, 5)
+
+    def test_datasets_shared(self):
+        self.assertEqual(self.site_statistics_a.datasets_shared, 1)
+        self.assertEqual(self.site_statistics_b.datasets_shared, 0)
+        self.assertEqual(self.site_statistics_c.datasets_shared, 2)
+
+    def test_users_created(self):
+        # + 2 instead of the expected 1 because the emission of
+        # the post_migrate signal creates the AnonymousUser
+        self.assertEqual(
+            self.site_statistics_a.users_created,
+            self.site_statistics_a._get_previous_instance().users_created + 2
+        )
+        self.assertEqual(self.site_statistics_b.users_created, 0)
+        self.assertEqual(
+            self.site_statistics_c.users_created,
+            self.site_statistics_c._get_previous_instance().users_created + 2
+        )
+
+    def test_groups_created(self):
+        self.assertEqual(self.site_statistics_a.groups_created, 0)
+        self.assertEqual(self.site_statistics_b.groups_created, 0)
+
+        # Every Group creation gets a .Managers group as well
+        self.assertEqual(self.site_statistics_c.groups_created, 2)
+
+    def test_unique_user_logins(self):
+        self.assertEqual(self.site_statistics_a.unique_user_logins, 1)
+        self.assertEqual(self.site_statistics_b.unique_user_logins, 0)
+        self.assertEqual(self.site_statistics_c.unique_user_logins, 2)
+
+    def test_total_user_logins(self):
+        self.assertEqual(self.site_statistics_a.total_user_logins, 1)
+        self.assertEqual(self.site_statistics_b.total_user_logins, 0)
+        self.assertEqual(self.site_statistics_c.total_user_logins, 4)
+
+    def test_total_workflow_launches(self):
+        self.assertEqual(self.site_statistics_a.total_workflow_launches, 0)
+        self.assertEqual(self.site_statistics_b.total_workflow_launches, 0)
+        self.assertEqual(self.site_statistics_c.total_workflow_launches, 1)
+
+    def test_total_visualization_launches(self):
+        self.assertEqual(
+            self.site_statistics_a.total_visualization_launches, 0)
+        self.assertEqual(
+            self.site_statistics_b.total_visualization_launches, 0)
+        self.assertEqual(
+            self.site_statistics_c.total_visualization_launches,
+            1
+        )
+
+    def test__get_previous_instance_returns_itself_if_only_instance(self):
+        SiteStatistics.objects.all().delete()
+
+        site_statistics = SiteStatistics.objects.create()
+        self.assertIsNotNone(site_statistics._get_previous_instance())
+        self.assertEqual(site_statistics._get_previous_instance(),
+                         site_statistics)
