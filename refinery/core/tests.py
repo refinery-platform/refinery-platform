@@ -27,6 +27,7 @@ from tastypie.exceptions import NotFound
 from tastypie.test import ResourceTestCase
 
 from analysis_manager.models import AnalysisStatus
+from core.tasks import collect_site_statistics
 from data_set_manager.models import (
     AnnotatedNode, Assay, Contact, Investigation, Node, NodeCollection, Study
 )
@@ -2447,3 +2448,10 @@ class SiteStatisticsTests(TestCase):
                 }
             }
         )
+
+    def test_collect_site_statistics_creates_new_instance(self):
+        initial_site_statistics_count = SiteStatistics.objects.count()
+        with self.settings(CELERY_ALWAYS_EAGER=True):
+            collect_site_statistics()
+        self.assertEqual(initial_site_statistics_count + 1,
+                         SiteStatistics.objects.count())
