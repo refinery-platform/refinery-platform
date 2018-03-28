@@ -325,6 +325,13 @@ CELERY_ROUTES = {"file_store.tasks.import_file": {"queue": "file_import"}}
 CELERY_ACCEPT_CONTENT = ['pickle']
 # TODO: Does this belong here or in config.json.erb?
 CELERYBEAT_SCHEDULE = {
+    'collect_site_statistics': {
+        'task': 'core.tasks.collect_site_statistics',
+        'schedule': timedelta(weeks=1),
+        'options': {
+            'expires': 30,  # seconds
+        }
+    },
     'django_docker_cleanup': {
         'task': 'tool_manager.tasks.django_docker_cleanup',
         'schedule': timedelta(seconds=30),

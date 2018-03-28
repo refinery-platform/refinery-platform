@@ -10,7 +10,7 @@ from data_set_manager.tasks import annotate_nodes
 from file_store.models import FileStoreItem
 from file_store.tasks import import_file
 
-from .models import DataSet, InvestigationLink
+from .models import DataSet, InvestigationLink, SiteStatistics
 
 logger = logging.getLogger(__name__)
 
@@ -220,3 +220,8 @@ def copy_dataset(dataset, owner, versions=None, copy_files=False):
     dataset_copy.save()
 
     return dataset_copy
+
+
+@task()
+def collect_site_statistics():
+    SiteStatistics.objects.create()
