@@ -1,3 +1,4 @@
+from datetime import timedelta
 import json
 import random
 import re
@@ -5,6 +6,7 @@ import string
 from urlparse import urljoin
 
 from django.apps import apps
+from django.conf import settings
 from django.contrib.auth.models import AnonymousUser, Group, User
 from django.contrib.sites.models import Site
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -2433,3 +2435,15 @@ class SiteStatisticsTests(TestCase):
         self.assertIsNotNone(site_statistics._get_previous_instance())
         self.assertEqual(site_statistics._get_previous_instance(),
                          site_statistics)
+
+    def test_periodic_task_is_scheduled_for_weekly_runs(self):
+        self.assertEqual(
+            settings.CELERYBEAT_SCHEDULE["collect_site_statistics"],
+            {
+                'task': 'core.tasks.collect_site_statistics',
+                'schedule': timedelta(weeks=1),
+                'options': {
+                    'expires': 30,  # seconds
+                }
+            }
+        )
