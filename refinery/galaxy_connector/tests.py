@@ -1,11 +1,13 @@
 import uuid
 
+from django.core.management import call_command
 from django.test import TestCase
 
 from bioblend import galaxy
 import mock
 
 from factory_boy.django_model_factories import GalaxyInstanceFactory
+from galaxy_connector.models import Instance
 
 
 class GalaxyInstanceTests(TestCase):
@@ -100,3 +102,21 @@ class GalaxyInstanceTests(TestCase):
             self.GALAXY_HISTORY_ID
         )
         self.assertEqual(len(history_file_list), 0)
+
+
+class TestManagementCommands(TestCase):
+    def test_create_galaxy_instance(self):
+        fake_api_key = str(uuid.uuid4())
+        fake_galaxy_url = "http://www.example.com/galaxy",
+        call_command(
+            "create_galaxy_instance",
+            fake_galaxy_url,
+            fake_api_key
+        )
+
+        self.assertIsNotNone(
+            Instance.objects.get(
+                base_url=fake_galaxy_url,
+                api_key=fake_api_key
+            )
+        )

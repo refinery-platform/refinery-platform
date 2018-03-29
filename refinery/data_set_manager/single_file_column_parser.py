@@ -10,9 +10,8 @@ import operator
 from django.conf import settings
 
 from annotation_server.models import Taxon, species_to_taxon_id
-import file_server
 from file_store.models import FileStoreItem, generate_file_source_translator
-from file_store.tasks import create, import_file
+from file_store.tasks import import_file
 
 from .models import Assay, Attribute, Investigation, Node, Study
 from .tasks import create_dataset
@@ -183,8 +182,9 @@ class SingleFileColumnParser:
                     self.metadata_file.name)
         # FIXME: this will not create a FileStoreItem if self.metadata_file
         # does not exist on disk (e.g., a file object like TemporaryFile)
-        investigation.pre_isarchive_file = create(
-            self.metadata_file.name)
+        file_store_item = \
+            FileStoreItem.objects.create(source=self.metadata_file.name)
+        investigation.pre_isarchive_file = file_store_item.uuid
         import_file(investigation.pre_isarchive_file, refresh=True)
         investigation.save()
 
@@ -203,21 +203,16 @@ class SingleFileColumnParser:
             # add data file to file store
             data_file_path = self.file_source_translator(
                 row[self.file_column_index])
-            data_file_uuid = create(
-                source=data_file_path)
-            data_files.append(data_file_uuid)
+            data_file_item = \
+                FileStoreItem.objects.create(source=data_file_path)
+            data_files.append(data_file_item.uuid)
             # add auxiliary file to file store
             if self.auxiliary_file_column_index:
                 auxiliary_file_path = self.file_source_translator(
                     row[self.auxiliary_file_column_index])
-                auxiliary_file_uuid = create(
-                    source=auxiliary_file_path)
-                data_files.append(auxiliary_file_uuid)
-            else:
-                auxiliary_file_uuid = None
-            # add files to file server
-            # TODO: add error handling in case of None values for UUIDs
-            file_server.models.add(data_file_uuid, auxiliary_file_uuid)
+                auxiliary_file_item = \
+                    FileStoreItem.objects.create(source=auxiliary_file_path)
+                data_files.append(auxiliary_file_item.uuid)
             # create nodes if file was successfully created
             # source node
             source_name = self._create_name(
@@ -239,7 +234,7 @@ class SingleFileColumnParser:
             file_node = Node.objects.create(
                 study=study, assay=assay,
                 name=row[self.file_column_index].strip(),
-                file_uuid=data_file_uuid, type=Node.RAW_DATA_FILE,
+                file_uuid=data_file_item.uuid, type=Node.RAW_DATA_FILE,
                 species=self._get_species(row),
                 genome_build=self._get_genome_build(row),
                 is_annotation=self._is_annotation(row))

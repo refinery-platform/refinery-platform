@@ -14,8 +14,10 @@ import urlparse
 from django import forms
 from django.conf import settings
 from django.core.urlresolvers import reverse
-from django.http import (Http404, HttpResponse, HttpResponseBadRequest,
-                         HttpResponseRedirect, HttpResponseServerError)
+from django.http import (
+    Http404, HttpResponse, HttpResponseBadRequest, HttpResponseForbidden,
+    HttpResponseRedirect, HttpResponseServerError, JsonResponse
+)
 from django.shortcuts import get_object_or_404, render, render_to_response
 from django.template import RequestContext
 from django.views.generic import View
@@ -29,20 +31,23 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from core.models import DataSet, ExtendedGroup, get_user_import_dir
-from core.utils import get_full_url
+from core.utils import get_absolute_url
 from data_set_manager.isa_tab_parser import ParserException
-from file_store.models import (generate_file_source_translator, get_temp_dir,
-                               parse_s3_url)
-from file_store.tasks import DownloadError, download_file, import_file
+from file_store.models import (
+    generate_file_source_translator, get_temp_dir, parse_s3_url
+)
+from file_store.tasks import download_file, import_file
 
 from .models import Assay, AttributeOrder, Study
 from .serializers import AssaySerializer, AttributeOrderSerializer
 from .single_file_column_parser import process_metadata_table
 from .tasks import parse_isatab
-from .utils import (customize_attribute_response, format_solr_response,
-                    generate_solr_params_for_assay, get_owner_from_assay,
-                    initialize_attribute_order_ranks, is_field_in_hidden_list,
-                    search_solr, update_attribute_order_ranks)
+from .utils import (
+    customize_attribute_response, format_solr_response,
+    generate_solr_params_for_assay, get_owner_from_assay,
+    initialize_attribute_order_ranks, is_field_in_hidden_list, search_solr,
+    update_attribute_order_ranks
+)
 
 logger = logging.getLogger(__name__)
 
@@ -89,60 +94,50 @@ class TakeOwnershipOfPublicDatasetView(View):
 
     def post(self, request, *args, **kwargs):
 
-        from_old_template = False
-
-        if 'isa_tab_url' in request.POST:
-            # TODO: I think isa_tab_url is already a full url,
-            # making this redundant.
-            full_isa_tab_url = get_full_url(request.POST['isa_tab_url'])
-            from_old_template = True
-        else:
+        try:
             request_body = request.body
-            if not request_body:
-                err_msg = "Neither form data nor a request body has been sent."
-                logger.error(err_msg)
-                return HttpResponseBadRequest(err_msg)
+        except Exception as e:
+            err_msg = "Request body is no valid JSON"
+            logger.error("%s: %s" % (err_msg, e))
+            return HttpResponseBadRequest("%s." % err_msg)
 
-            try:
-                body = json.loads(request_body)
-            except Exception as e:
-                err_msg = "Request body is no valid JSON"
-                logger.error("%s: %s" % (err_msg, e))
-                return HttpResponseBadRequest("%s." % err_msg)
+        try:
+            body = json.loads(request_body)
+        except Exception as e:
+            err_msg = "Request body is no valid JSON"
+            logger.error("%s: %s" % (err_msg, e))
+            return HttpResponseBadRequest("%s." % err_msg)
 
-            if "data_set_uuid" in body:
-                data_set_uuid = body["data_set_uuid"]
-            else:
-                err_msg = "Request body doesn't contain data_set_uuid."
-                logger.error(err_msg)
-                return HttpResponseBadRequest(err_msg)
-
-            try:
-                full_isa_tab_url = DataSet.objects.get(
-                    uuid=data_set_uuid
-                ).get_isa_archive().get_datafile_url()
-            except (DataSet.DoesNotExist, DataSet.MultipleObjectsReturned,
-                    Exception) as e:
-                err_msg = "Something went wrong"
-                logger.error("%s: %s" % (err_msg, e))
-                return HttpResponseBadRequest("%s." % err_msg)
-
-        if from_old_template:
-            # Redirect to process_isa_tab view
-            response = HttpResponseRedirect(
-                get_full_url(reverse('process_isa_tab'))
-            )
+        if "data_set_uuid" in body:
+            data_set_uuid = body["data_set_uuid"]
         else:
-            # Redirect to process_isa_tab view with arg 'ajax' if request is
-            #  not coming from old Django Template
-            response = HttpResponseRedirect(
-                get_full_url(reverse('process_isa_tab', args=['ajax']))
+            err_msg = "Request body doesn't contain data_set_uuid."
+            logger.error(err_msg)
+            return HttpResponseBadRequest(err_msg)
+
+        try:
+            data_set = DataSet.objects.get(uuid=data_set_uuid)
+        except (DataSet.DoesNotExist, DataSet.MultipleObjectsReturned,
+                Exception) as exc:
+            err_msg = "Something went wrong"
+            logger.error("%s: %s" % (err_msg, exc))
+            return HttpResponseBadRequest("%s." % err_msg)
+
+        public_group = ExtendedGroup.objects.public_group()
+        if request.user.has_perm('core.read_dataset', data_set) \
+                or 'read_dataset' in get_perms(public_group, data_set):
+            full_isa_tab_url = get_absolute_url(
+                data_set.get_metadata_as_file_store_item().get_datafile_url()
             )
+            response = HttpResponseRedirect(
+                get_absolute_url(reverse('process_isa_tab', args=['ajax']))
+            )
+            # set cookie
+            response.set_cookie('isa_tab_url', full_isa_tab_url)
+            return response
 
-        # set cookie
-        response.set_cookie('isa_tab_url', full_isa_tab_url)
-
-        return response
+        return HttpResponseForbidden("User is not authorized to access"
+                                     "data set {}".format(data_set_uuid))
 
 
 class ImportISATabFileForm(forms.Form):
@@ -193,8 +188,8 @@ class ProcessISATabView(View):
         try:
             # TODO: refactor download_file to take file handle instead of path
             download_file(url, temp_file_path)
-        except DownloadError as e:
-            logger.error("Problem downloading ISA-Tab file. %s", e)
+        except RuntimeError as exc:
+            logger.error("Problem downloading ISA-Tab file. %s", exc)
             error = "Problem downloading ISA-Tab file from: '{}'".format(url)
             context = RequestContext(request, {'form': form, 'error': error})
             response = render_to_response(self.template_name,
@@ -230,10 +225,7 @@ class ProcessISATabView(View):
         os.unlink(temp_file_path)
         if dataset_uuid:
             if 'ajax' in kwargs and kwargs['ajax']:
-                return HttpResponse(
-                    json.dumps({'new_data_set_uuid': dataset_uuid}),
-                    'application/json'
-                )
+                return JsonResponse({'new_data_set_uuid': dataset_uuid})
             else:
                 response = HttpResponseRedirect(
                     reverse(self.success_view_name, args=(dataset_uuid,)))
@@ -363,21 +355,17 @@ class ProcessISATabView(View):
                             import_file.delay(file_store_item.uuid)
 
                 if request.is_ajax():
-                    return HttpResponse(
-                        json.dumps({
-                            'success': 'Data set imported',
-                            'data': {'new_data_set_uuid': dataset_uuid}
-                        }),
-                        content_type='application/json'
-                    )
+                    return JsonResponse({
+                        'success': 'Data set imported',
+                        'data': {'new_data_set_uuid': dataset_uuid}
+                    })
                 return HttpResponseRedirect(
                     reverse(self.success_view_name, args=[dataset_uuid])
                 )
             else:
                 error = 'Problem parsing ISA-Tab file'
                 if request.is_ajax():
-                    return HttpResponse(json.dumps({'error': error}),
-                                        content_type='application/json')
+                    return JsonResponse({'error': error})
                 context = RequestContext(request, {'form': form,
                                                    'error': error})
                 return render_to_response(self.template_name,
@@ -423,9 +411,9 @@ class ProcessISATabView(View):
             # TODO: refactor download_file to take file handle instead
             # of path
             download_file(url, temp_file_path)
-        except DownloadError as e:
+        except RuntimeError as exc:
             error_msg = "Problem downloading ISA-Tab file from: " + url
-            logger.error("%s. %s", error_msg, e)
+            logger.error("%s. %s", error_msg, exc)
             return {
                 "success": False,
                 "message": error_msg
@@ -555,10 +543,7 @@ class ProcessMetadataTableView(View):
                 return render(request, self.template_name, error)
 
         if request.is_ajax():
-            return HttpResponse(
-                json.dumps({'new_data_set_uuid': dataset_uuid}),
-                content_type='application/json'
-            )
+            return JsonResponse({'new_data_set_uuid': dataset_uuid})
         else:
             return HttpResponseRedirect(
                 reverse(self.success_view_name, args=(dataset_uuid,))
@@ -653,9 +638,8 @@ class ChunkedFileUploadCompleteView(ChunkedUploadCompleteView):
                                           'application/json')
 
         chunked.delete()
-        return HttpResponse(json.dumps({'status': 'Successfully deleted.',
-                                        'upload_id': upload_id}),
-                            'application/json')
+        return JsonResponse({'status': 'Successfully deleted.',
+                             'upload_id': upload_id})
 
     def on_completion(self, uploaded_file, request):
         """Move file to the user's import directory"""
@@ -689,6 +673,7 @@ class ChunkedFileUploadCompleteView(ChunkedUploadCompleteView):
             logger.error(
                 "Error moving uploaded file to user's import directory: %s",
                 exc)
+        chunked_upload.delete()
 
     def get_response_data(self, chunked_upload, request):
         message = "You have successfully uploaded {}".format(

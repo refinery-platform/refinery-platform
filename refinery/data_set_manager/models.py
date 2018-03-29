@@ -8,6 +8,8 @@ import logging
 
 from django.conf import settings
 from django.db import models
+from django.db.models.signals import pre_delete
+from django.dispatch import receiver
 
 from celery.result import AsyncResult
 from django_extensions.db.fields import UUIDField
@@ -15,7 +17,7 @@ import requests
 from requests.exceptions import HTTPError
 
 import core
-from core.utils import skip_if_test_run
+from core.utils import delete_analysis_index, skip_if_test_run
 import data_set_manager
 from file_store.models import FileStoreItem
 
@@ -154,6 +156,25 @@ class Investigation(NodeCollection):
     pre_isarchive_file = UUIDField(blank=True, null=True, auto=False)
 
     """easily retrieves the proper NodeCollection fields"""
+
+    @property
+    def isa_archive(self):
+        return self._get_file_store_item(self.isarchive_file)
+
+    @property
+    def pre_isa_archive(self):
+        return self._get_file_store_item(self.pre_isarchive_file)
+
+    def _get_file_store_item(self, file_store_item_uuid):
+        try:
+            return FileStoreItem.objects.get(uuid=file_store_item_uuid)
+        except (FileStoreItem.DoesNotExist,
+                FileStoreItem.MultipleObjectsReturned) as e:
+            logger.error(
+                "Couldn't fetch Investigation: %s's FileStoreItem from UUID: "
+                "%s %s", self, file_store_item_uuid, e
+            )
+
     def get_identifier(self):
         if (self.identifier is None) or (self.identifier.strip() == ""):
             # if there's no investigation identifier, then there's only 1 study
@@ -218,6 +239,19 @@ class Study(NodeCollection):
 
     def __unicode__(self):
         return unicode(self.identifier) + ": " + unicode(self.title)
+
+
+@receiver(pre_delete, sender=Study)
+def _study_delete(sender, instance, **kwargs):
+    """
+    Removes a Study's related objects upon deletion being triggered.
+    Having these extra checks is favored within a signal so that this logic
+    is picked up on bulk deletes as well.
+
+    See: https://docs.djangoproject.com/en/1.8/topics/db/models/
+    #overriding-model-methods
+    """
+    Node.objects.filter(study=instance).delete()
 
 
 class Design(models.Model):
@@ -595,17 +629,16 @@ class Node(models.Model):
         file_store_item = self.get_file_store_item()
 
         # Check if we pass the logic to generate aux. Files/Nodes
-        if (file_store_item.filetype.used_for_visualization and
-            file_store_item.is_local() and
+        if (file_store_item and file_store_item.filetype and
+                file_store_item.filetype.used_for_visualization and
+                file_store_item.is_local() and
                 settings.REFINERY_AUXILIARY_FILE_GENERATION ==
                 "on_file_import"):
-
             datafile_path = file_store_item.get_absolute_path()
 
             # Create an empty FileStoreItem (we do the datafile association
             # within the generate_auxiliary_file task
-            auxiliary_file_store_item = FileStoreItem.objects.create(
-                source='auxiliary_file')
+            auxiliary_file_store_item = FileStoreItem.objects.create()
 
             auxiliary_node = self._create_and_associate_auxiliary_node(
                 auxiliary_file_store_item.uuid)
@@ -627,6 +660,25 @@ class Node(models.Model):
             return AsyncResult(self.get_file_store_item().import_task_id).state
         else:
             return None
+
+
+@receiver(pre_delete, sender=Node)
+def _node_delete(sender, instance, *args, **kwargs):
+    """
+    Removes a Node's related objects upon deletion being triggered.
+    Having these extra checks is favored within a signal so that this logic
+    is picked up on bulk deletes as well.
+
+    See: https://docs.djangoproject.com/en/1.8/topics/db/models/
+    #overriding-model-methods
+    """
+
+    # remove a Node's FileStoreItem upon deletion, if one exists
+    file_store_item = instance.get_file_store_item()
+    if file_store_item is not None:
+        file_store_item.delete()
+
+    delete_analysis_index(instance)
 
 
 class Attribute(models.Model):

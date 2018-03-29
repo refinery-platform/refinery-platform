@@ -16,7 +16,7 @@ import tempfile
 from zipfile import ZipFile
 
 from file_store.models import FileStoreItem
-from file_store.tasks import create, import_file
+from file_store.tasks import import_file
 
 from .models import (Assay, Attribute, Contact, Design, Factor, Investigation,
                      Node, Ontology, Protocol, ProtocolReference,
@@ -324,8 +324,8 @@ class IsaTabParser:
                     node_name is not ""):
                 # create the nodes for the data file in this row
                 file_path = self.file_source_translator(node_name)
-                file_store_item = FileStoreItem.objects.create_item(
-                    source=file_path, filetype=''
+                file_store_item = FileStoreItem.objects.create(
+                    source=file_path
                 )
                 if file_store_item:
                     node.file_uuid = file_store_item.uuid
@@ -1010,16 +1010,17 @@ class IsaTabParser:
                 "file \"" + investigation_file_name + "\""
             )
         # 5. assign ISA-Tab archive and pre-ISA-Tab archive if present
-        try:
-            self._current_investigation.isarchive_file = create(isa_archive)
+        if isa_archive:
+            file_store_item = FileStoreItem.objects.create(source=isa_archive)
+            self._current_investigation.isarchive_file = file_store_item.uuid
             import_file(self._current_investigation.isarchive_file,
                         refresh=True)
-        except:
-            pass
 
         if preisa_archive:
+            file_store_item = \
+                FileStoreItem.objects.create(source=preisa_archive)
             self._current_investigation.pre_isarchive_file = \
-                create(preisa_archive)
+                file_store_item.uuid
             import_file(self._current_investigation.pre_isarchive_file,
                         refresh=True)
 

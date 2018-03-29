@@ -1,5 +1,4 @@
 import logging
-from optparse import make_option
 import os
 import sys
 import time
@@ -16,27 +15,26 @@ class Command(BaseCommand):
     identifier will be removed.
     """
 
-    option_list = BaseCommand.option_list + (
-        make_option(
+    def add_arguments(self, parser):
+        parser.add_argument('identifier')
+        parser.add_argument('synonyms')
+        parser.add_argument(
             '-i',
             '--id',
             action='store',
             dest='identifier',
-            type='string',
             help='Synonyms identifier. Used for proper updating or deleting.' +
                  'Note: identifiers are caseinsensitive!' +
                  'E.g. "MyFancyAnimalSynonymCollection" or "MeSH"'
-        ),
-        make_option(
+        )
+        parser.add_argument(
             '-s',
             '--synonyms',
             action='store',
             dest='synonyms',
-            type='string',
             help='Path to a file containing Solr compatible synonyms.'
                  'E.g. /vagrant/transfer/myFancySynonymCollection.txt'
-        ),
-    )
+        )
 
     def handle(self, *args, **options):
         if not settings.SOLR_SYNONYMS:

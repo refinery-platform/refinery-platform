@@ -9,19 +9,26 @@
     '$location',
     '$log',
     '$q',
+    'settings',
     'gridOptionsService',
     'userFileBrowserFactory',
     'userFileFiltersService',
     'userFileSortsService'
   ];
 
-  function UserFileBrowserFiltersCtrl ($location, $log, $q,
-                                       gridOptionsService,
-                                       userFileBrowserFactory,
-                                       userFileFiltersService,
-                                       userFileSortsService) {
+  function UserFileBrowserFiltersCtrl (
+    $location,
+    $log,
+    $q,
+    settings,
+    gridOptionsService,
+    userFileBrowserFactory,
+    userFileFiltersService,
+    userFileSortsService
+  ) {
     var vm = this;
-
+    // sync the attribute filter order with grid column order
+    vm.orderColumns = settings.djangoApp.userFilesColumns;
     vm.togglePanel = function (attribute) {
       vm.foldedDown[attribute] = ! vm.foldedDown[attribute];
     };
@@ -46,6 +53,7 @@
         // TODO: Should there be something that wraps up this "then"? It is repeated.
         vm.attributeFilters =
           userFileBrowserFactory.createFilters(solr.facet_field_counts);
+
         gridOptionsService.data = userFileBrowserFactory.createData(solr.nodes);
         promise.resolve();
       }, function () {
@@ -102,8 +110,7 @@
     var getUserFiles = userFileBrowserFactory.getUserFiles;
 
     getUserFiles().then(function (solr) {
-      vm.attributeFilters =
-          userFileBrowserFactory.createFilters(solr.facet_field_counts);
+      vm.attributeFilters = userFileBrowserFactory.createFilters(solr.facet_field_counts);
       promise.resolve();
     }, function () {
       $log.error('/files/ request failed');

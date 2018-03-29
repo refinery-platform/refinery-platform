@@ -160,7 +160,7 @@
             .expectGET(
                 settings.appRoot +
                 settings.refineryApiV2 +
-                '/files/?fq=&limit=100&sort='
+                '/files/?filter_attribute=%7B%7D&limit=100&sort='
             ).respond(200, fakeResponse);
       });
     });

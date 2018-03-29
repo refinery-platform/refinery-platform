@@ -30,7 +30,7 @@ from django.db.models.fields import IntegerField
 from django.db.models.signals import post_delete, post_save, pre_delete
 from django.dispatch import receiver
 from django.forms import ValidationError
-from django.template import Context, loader
+from django.template import loader
 from django.template.loader import render_to_string
 from django.utils import timezone
 
@@ -52,17 +52,16 @@ from data_set_manager.utils import (add_annotated_nodes_selection,
                                     index_annotated_nodes_selection)
 from file_store.models import FileStoreItem, FileType
 from file_store.tasks import rename
-from galaxy_connector.galaxy_workflow import create_expanded_workflow_graph
 from galaxy_connector.models import Instance
 import tool_manager
 
 from .utils import (add_or_update_user_to_neo4j, add_read_access_in_neo4j,
-                    async_update_annotation_sets_neo4j, delete_analysis_index,
-                    delete_data_set_index, delete_data_set_neo4j,
-                    delete_ontology_from_neo4j, delete_user_in_neo4j,
-                    email_admin, invalidate_cached_object,
-                    remove_read_access_in_neo4j, skip_if_test_run,
-                    sync_update_annotation_sets_neo4j, update_data_set_index)
+                    async_update_annotation_sets_neo4j, delete_data_set_index,
+                    delete_data_set_neo4j, delete_ontology_from_neo4j,
+                    delete_user_in_neo4j, email_admin,
+                    invalidate_cached_object, remove_read_access_in_neo4j,
+                    skip_if_test_run, sync_update_annotation_sets_neo4j,
+                    update_data_set_index)
 
 logger = logging.getLogger(__name__)
 
@@ -481,21 +480,6 @@ class ManageableResource(models.Model):
         abstract = True
 
 
-class DataSetQuerySet(models.query.QuerySet):
-    def delete(self):
-        for instance in self:
-            try:
-                instance.delete()
-            except Exception as e:
-                return False, "Something unexpected happened. DataSet: {} " \
-                              "could not be deleted. {}".format(self, e)
-
-
-class DataSetManager(models.Manager):
-    def get_queryset(self):
-        return DataSetQuerySet(self.model, using=self._db)
-
-
 class DataSet(SharableResource):
     UNTITLED_DATA_SET_TITLE = "Untitled data set"
 
@@ -512,8 +496,6 @@ class DataSet(SharableResource):
     accession_source = models.CharField(max_length=128, blank=True, null=True)
     # actual title of the dataset
     title = models.CharField(max_length=250, default=UNTITLED_DATA_SET_TITLE)
-
-    objects = DataSetManager()
 
     class Meta:
         verbose_name = "dataset"
@@ -541,41 +523,6 @@ class DataSet(SharableResource):
         super(DataSet, self).save(*args, **kwargs)
 
     def delete(self, **kwargs):
-        """
-        Overrides the DataSet model's delete method.
-
-        Deletes NodeCollection and related object based on uuid of
-        Investigations linked to the DataSet.
-        This deletes Studys, Assays and Investigations in
-        addition to the related objects detected by Django.
-
-        This method will also delete the isa_archive or
-        pre_isa_archive associated with the DataSet if one exists.
-        """
-
-        try:
-            self.get_isa_archive().delete()
-        except AttributeError as e:
-            logger.debug("DataSet has no isa_archive to delete: %s", e)
-
-        try:
-            self.get_pre_isa_archive().delete()
-        except AttributeError as e:
-            logger.debug("DataSet has no pre_isa_archive to delete: %s", e)
-
-        related_investigation_links = self.get_investigation_links()
-
-        for investigation_link in related_investigation_links:
-            node_collection = investigation_link.get_node_collection()
-            try:
-                node_collection.delete()
-            except Exception as e:
-                logger.error("Couldn't delete NodeCollection: %s", e)
-
-        # terminate any running file import tasks
-        for file_store_item in self.get_file_store_items():
-            file_store_item.terminate_file_import_task()
-
         try:
             super(DataSet, self).delete()
         except Exception as exc:
@@ -731,27 +678,14 @@ class DataSet(SharableResource):
             [item.get_file_size(report_symlinks=True) for item in file_items]
         )
 
-    def get_isa_archive(self):
-        """Returns the isa_archive that was used to create the DataSet"""
+    def get_metadata_as_file_store_item(self):
+        """Returns the FileStoreItem pointing to the isa/pre_isa archive that
+        was used to create the DataSet"""
         investigation = self.get_investigation()
-        try:
-            return FileStoreItem.objects.get(uuid=investigation.isarchive_file)
-        except (FileStoreItem.DoesNotExist,
-                FileStoreItem.MultipleObjectsReturned,
-                AttributeError) as e:
-            logger.debug("Couldn't fetch FileStoreItem: %s", e)
-
-    def get_pre_isa_archive(self):
-        """Returns the pre_isa_archive that was used to create the DataSet"""
-        investigation = self.get_investigation()
-        try:
-            return FileStoreItem.objects.get(
-                uuid=investigation.pre_isarchive_file
-            )
-        except (FileStoreItem.DoesNotExist,
-                FileStoreItem.MultipleObjectsReturned,
-                AttributeError) as e:
-            logger.debug("Couldn't fetch FileStoreItem: %s", e)
+        return (
+            investigation.isa_archive if self.is_isatab_based
+            else investigation.pre_isa_archive
+        )
 
     def share(self, group, readonly=True, readmetaonly=False):
         # change: !readonly & !readmetaonly, read: readonly & !readmetaonly
@@ -820,6 +754,7 @@ class DataSet(SharableResource):
                        FileStoreItem.MultipleObjectsReturned) as e:
                     logger.error("Error while fetching FileStoreItem: %s", e)
 
+        file_store_items.append(self.get_metadata_as_file_store_item())
         return file_store_items
 
     def is_valid(self):
@@ -833,9 +768,45 @@ class DataSet(SharableResource):
         else:
             return False
 
+    def get_nodes(self):
+        return Node.objects.filter(
+            assay=self.get_latest_assay(),
+            study=self.get_latest_study()
+        )
+
+    def get_node_uuids(self):
+        return self.get_nodes().values_list('uuid', flat=True)
+
+    @property
+    def is_isatab_based(self):
+        return bool(self.get_investigation().isa_archive)
+
 
 @receiver(pre_delete, sender=DataSet)
 def _dataset_delete(sender, instance, *args, **kwargs):
+    """
+    Removes a DataSet's related objects upon deletion being triggered.
+    Having these extra checks is favored within a signal so that this logic
+    is picked up on bulk deletes as well.
+
+    See: https://docs.djangoproject.com/en/1.8/topics/db/models/
+    #overriding-model-methods
+    """
+
+    # terminate any running file import tasks
+    for file_store_item in instance.get_file_store_items():
+        file_store_item.terminate_file_import_task()
+
+    related_investigation_links = instance.get_investigation_links()
+
+    with transaction.atomic():
+        # delete FileStoreItem and datafile corresponding to the
+        # metadata file used to generate the DataSet
+        instance.get_metadata_as_file_store_item().delete()
+
+        for investigation_link in related_investigation_links:
+            investigation_link.get_node_collection().delete()
+
     delete_data_set_index(instance)
     delete_data_set_neo4j(instance.uuid)
     async_update_annotation_sets_neo4j()
@@ -865,20 +836,7 @@ class InvestigationLink(models.Model):
         return retstr
 
     def get_node_collection(self):
-        try:
-            return NodeCollection.objects.get(
-                uuid=self.investigation.uuid)
-        except (NodeCollection.DoesNotExist,
-                NodeCollection.MultipleObjectsReturned) as e:
-            logger.error("Could not fetch NodeCollection: %s", e)
-
-
-class WorkflowDataInput(models.Model):
-    name = models.CharField(max_length=200)
-    internal_id = models.IntegerField()
-
-    def __unicode__(self):
-        return self.name + " (" + str(self.internal_id) + ")"
+        return NodeCollection.objects.get(uuid=self.investigation.uuid)
 
 
 class WorkflowEngine(OwnableResource, ManageableResource):
@@ -892,41 +850,6 @@ class WorkflowEngine(OwnableResource, ManageableResource):
         verbose_name = "workflowengine"
         permissions = (
             ('read_%s' % verbose_name, 'Can read %s' % verbose_name),
-        )
-
-
-class DiskQuota(SharableResource, ManageableResource):
-    # quota is given in bytes
-    maximum = models.IntegerField()
-    current = models.IntegerField()
-
-    def __unicode__(self):
-        return (
-            self.name + " - Quota: " + str(
-                self.current / (1024 * 1024 * 1024)) +
-            " of " + str(self.maximum / (1024 * 1024 * 1024)) + "GB available"
-        )
-
-    class Meta:
-        verbose_name = "diskquota"
-        permissions = (
-            ('read_%s' % verbose_name, 'Can read %s' % verbose_name),
-            ('share_%s' % verbose_name, 'Can share %s' % verbose_name),
-        )
-
-
-class WorkflowInputRelationships(models.Model):
-    """Defines relationships between inputs based on the input string
-    assoicated with each workflow i.e refinery_relationship=[{"category":"1-1",
-    "set1":"input_file", "set2":"exp_file"}]
-    """
-    category = models.CharField(max_length=15, choices=NR_TYPES, blank=True)
-    set1 = models.CharField(max_length=50)
-    set2 = models.CharField(max_length=50, blank=True, null=True)
-
-    def __unicode__(self):
-        return (
-            str(self.category) + " - " + str(self.set1) + "," + str(self.set2)
         )
 
 
@@ -956,15 +879,9 @@ class Workflow(SharableResource, ManageableResource):
             "download list."
         ),
     )
-
-    data_inputs = models.ManyToManyField(WorkflowDataInput, blank=True)
     internal_id = models.CharField(max_length=50)
     workflow_engine = models.ForeignKey(WorkflowEngine)
     show_in_repository_mode = models.BooleanField(default=False)
-    input_relationships = models.ManyToManyField(
-        WorkflowInputRelationships,
-        blank=True
-    )
     is_active = models.BooleanField(default=False, null=False, blank=False)
     type = models.CharField(
         default=ANALYSIS_TYPE,
@@ -1018,26 +935,14 @@ class Workflow(SharableResource, ManageableResource):
             return False, deletion_error_message
 
         else:
-            # If an Analysis hasn't been run on said Workflow delete
-            # WorkflowDataInputs and WorkflowInputRelationships if they exist
-            try:
-                self.data_inputs.remove()
-            except Exception as e:
-                logger.error(
-                    "Could not delete WorkflowDataInput: %s", e)
-            try:
-                self.input_relationships.remove()
-            except Exception as e:
-                logger.error(
-                    "Could not delete WorkflowInputRelationship: %s", e)
-
             super(Workflow, self).delete()
 
             # Return a "truthy" value here so that the admin ui knows if the
             # deletion succeeded or not as well as the proper message to
             # display to the end user
             return True, "Workflow: {} was deleted successfully".format(
-                self.name)
+                self.name
+            )
 
 
 class Project(SharableResource):
@@ -1055,15 +960,6 @@ class Project(SharableResource):
             ('read_%s' % verbose_name, 'Can read %s' % verbose_name),
             ('share_%s' % verbose_name, 'Can share %s' % verbose_name),
         )
-
-
-class WorkflowDataInputMap(models.Model):
-    workflow_data_input_name = models.CharField(max_length=200)
-    data_uuid = UUIDField(auto=False)
-    pair_id = models.IntegerField(blank=True, null=True)
-
-    def __unicode__(self):
-        return str(self.workflow_data_input_name) + " <-> " + self.data_uuid
 
 
 class AnalysisResult(models.Model):
@@ -1091,17 +987,6 @@ class AnalysisResult(models.Model):
         )
 
 
-class AnalysisQuerySet(models.query.QuerySet):
-    def delete(self):
-        for instance in self:
-            instance.delete()
-
-
-class AnalysisManager(models.Manager):
-    def get_queryset(self):
-        return AnalysisQuerySet(self.model, using=self._db)
-
-
 class Analysis(OwnableResource):
     SUCCESS_STATUS = "SUCCESS"
     FAILURE_STATUS = "FAILURE"
@@ -1117,8 +1002,6 @@ class Analysis(OwnableResource):
     project = models.ForeignKey(Project, related_name="analyses")
     data_set = models.ForeignKey(DataSet, blank=True)
     workflow = models.ForeignKey(Workflow, blank=True)
-    workflow_data_input_maps = models.ManyToManyField(WorkflowDataInputMap,
-                                                      blank=True)
     workflow_steps_num = models.IntegerField(blank=True, null=True)
     workflow_copy = models.TextField(blank=True, null=True)
     history_id = models.TextField(blank=True, null=True)
@@ -1136,8 +1019,6 @@ class Analysis(OwnableResource):
     # output_nodes = models.ManyToManyField(Nodes, blank=True)
     # protocol = i.e. protocol node created when the analysis is created
 
-    objects = AnalysisManager()
-
     def __str__(self):
         return "{} - {} - {}".format(
             self.name,
@@ -1153,6 +1034,25 @@ class Analysis(OwnableResource):
         )
         ordering = ['-time_end', '-time_start']
 
+    def get_expanded_workflow_graph(self):
+        return tool_manager.utils.create_expanded_workflow_graph(
+            ast.literal_eval(self.workflow_copy)
+        )
+
+    def has_nodes_used_in_downstream_analyses(self):
+        """
+        Check if any Nodes that are part of an Analysis have been Analyzed
+        further down the line.
+        :return: Boolean
+        """
+        for node in self.get_nodes():
+            analysis_node_connections_for_node = \
+                node.get_analysis_node_connections()
+            for analysis_node_connection in analysis_node_connections_for_node:
+                if analysis_node_connection.direction == 'in':
+                    return True
+        return False
+
     def delete(self, **kwargs):
         """
         Overrides the Analysis model's delete method and checks if
@@ -1164,63 +1064,17 @@ class Analysis(OwnableResource):
         2. Delete AnalysisResults
         3. Optimize Solr's index to reflect that
         4. Delete the Nodes
-        5. Continue on to delete the Analysis,
-        WorkflowFilesDls, WorkflowDataInputMaps,
-        AnalysisNodeConnections, and AnalysisStatus'
+        5. Continue on to delete the Analysis, AnalysisNodeConnections,
+        and AnalysisStatus'
         """
-
-        delete = True
-        nodes = self.get_nodes()
-
-        for node in nodes:
-
-            analysis_node_connections_for_node = \
-                node.get_analysis_node_connections()
-
-            for analysis_node_connection in analysis_node_connections_for_node:
-                if analysis_node_connection.direction == 'in':
-                    delete = False
-
-        if delete:
-            self.cancel()
-
-            # Delete associated AnalysisResults
-            self.get_analysis_results().delete()
-
-            for node in nodes:
-                # Delete associated FileStoreItems
-                if node.file_uuid:
-                    node.get_file_store_item().delete()
-
-                # Remove Nodes from Solr's Index
-                try:
-                    delete_analysis_index(node)
-                except Exception as e:
-                    logger.debug("No NodeIndex exists in Solr with id "
-                                 "%s:  %s", node.id, e)
-
-            # Optimize Solr's index to get rid of any traces of the Analysis
-            self.optimize_solr_index()
-
-            # Delete Nodes Associated w/ the Analysis
-            nodes.delete()
-
-            super(Analysis, self).delete()
-
-            # Return a "truthy" value here so that the admin ui and
-            # front-end ui knows if the deletion succeeded or not as well as
-            # the proper message to display to the end user
-            return True, "Analysis: {} was deleted successfully".format(
-                self.name)
-
-        else:
-            # Prepare string to be displayed upon a failed deletion
-            deletion_error_message = "Cannot delete Analysis: {} because " \
-                                     "its results have been used to run " \
-                                     "further Analyses. Please delete all " \
-                                     "downstream Analyses before you delete " \
-                                     "this one".format(self.name)
-
+        if self.has_nodes_used_in_downstream_analyses():
+            deletion_error_message = (
+                "Cannot delete Analysis: {} because "
+                "its results have been used to run "
+                "further Analyses. Please delete all "
+                "downstream Analyses before you delete "
+                "this one".format(self.name)
+            )
             logger.error(deletion_error_message)
 
             # Return a "falsey" value here so that the admin ui and
@@ -1228,12 +1082,23 @@ class Analysis(OwnableResource):
             # the proper message to display to the end user
             return False, deletion_error_message
 
+        try:
+            super(Analysis, self).delete()
+        except Exception as exc:
+            return False, "Analysis {} could not be deleted: {}".format(
+                self.name, exc)
+        else:
+            # Return a "truthy" value here so that the admin ui and
+            # front-end ui knows if the deletion succeeded or not as well
+            # as the proper message to  display to the end user
+            return True, "Analysis: {} was deleted successfully".format(
+                self.name)
+
     def get_status(self):
         return self.status
 
     def get_nodes(self):
-        return Node.objects.filter(
-            analysis_uuid=self.uuid)
+        return Node.objects.filter(analysis_uuid=self.uuid)
 
     def get_analysis_results(self):
         return AnalysisResult.objects.filter(analysis_uuid=self.uuid)
@@ -1347,16 +1212,6 @@ class Analysis(OwnableResource):
         # jobs in a running workflow are stopped by deleting its history
         self.galaxy_cleanup()
 
-    def get_input_file_uuid_list(self):
-        """Return a list of all input file UUIDs"""
-        input_file_uuid_list = []
-        for files in self.workflow_data_input_maps.all():
-            cur_node_uuid = files.data_uuid
-            cur_fs_uuid = Node.objects.get(
-                uuid=cur_node_uuid).file_uuid
-            input_file_uuid_list.append(cur_fs_uuid)
-        return input_file_uuid_list
-
     def facet_name(self):
         return '{}_{}_{}_s'.format(
             NodeIndex.ANALYSIS_UUID_PREFIX,
@@ -1438,9 +1293,8 @@ class Analysis(OwnableResource):
             temp_loader = loader.get_template(
                 'analysis_manager/analysis_email_full.txt')
 
-        context = Context(context_dict)
         try:
-            user.email_user(email_subj, temp_loader.render(context))
+            user.email_user(email_subj, temp_loader.render(context_dict))
         except smtplib.SMTPException as exc:
             logger.error("Error sending email to '%s' for analysis '%s': %s",
                          user.email, name, exc)
@@ -1465,26 +1319,29 @@ class Analysis(OwnableResource):
             # workaround for FastQC reports downloaded from Galaxy as zip
             # archives
             (root, ext) = os.path.splitext(new_file_name)
-            item = FileStoreItem.objects.get_item(uuid=result.file_store_uuid)
-            if ext == '.html':
-                try:
-                    zipfile = FileType.objects.get(name="ZIP")
-                except (FileType.DoesNotExist,
-                        FileType.MultipleObjectsReturned) as exc:
-                    logger.error("Error renaming HTML to zip: %s", exc)
-                else:
-                    if item.get_filetype() == zipfile:
-                        new_file_name = ''.join([root, '.zip'])
-            renamed_file_store_item_uuid = rename(
-                result.file_store_uuid,
-                new_file_name
-            )
+            try:
+                item = FileStoreItem.objects.get(uuid=result.file_store_uuid)
+            except (FileStoreItem.DoesNotExist,
+                    FileStoreItem.MultipleObjectsReturned) as exc:
+                logger.error("Error renaming HTML file '%s' to zip: %s",
+                             result.file_store_uuid, exc)
+            else:
+                if ext == '.html':
+                    try:
+                        zipfile = FileType.objects.get(name='ZIP')
+                    except (FileType.DoesNotExist,
+                            FileType.MultipleObjectsReturned) as exc:
+                        logger.error("Error renaming HTML to zip: %s", exc)
+                    else:
+                        if item.filetype == zipfile:
+                            new_file_name = ''.join([root, '.zip'])
+                renamed_file_store_item_uuid = rename(result.file_store_uuid,
+                                                      new_file_name)
 
             # Try to generate an auxiliary node for visualization purposes
             # NOTE: We have to do this after renaming happens because before
             #  renaming, said FileStoreItems's datafile field does not point
             #  to an actual file
-
             file_store_item_uuid = (
                 renamed_file_store_item_uuid if
                 renamed_file_store_item_uuid else result.file_store_uuid
@@ -1497,145 +1354,19 @@ class Analysis(OwnableResource):
                 if node.is_derived():
                     node.run_generate_auxiliary_node_task()
 
-    def attach_outputs_dataset(self):
-        # for testing: attach workflow graph and output files to data set graph
-        # 0. get study and assay from the first input node
-        study = AnalysisNodeConnection.objects.filter(
-            analysis=self,
-            direction=INPUT_CONNECTION
-        ).first().node.study
-        assay = AnalysisNodeConnection.objects.filter(
-            analysis=self,
-            direction=INPUT_CONNECTION
-        ).first().node.assay
-        # 1. read workflow into graph
-        graph = create_expanded_workflow_graph(
-            ast.literal_eval(self.workflow_copy)
-        )
-        # 2. create data transformation nodes for all tool nodes
-        data_transformation_nodes = [
-            graph.node[node_id] for node_id in graph.nodes()
-            if graph.node[node_id]['type'] == "tool"
-        ]
-        for data_transformation_node in data_transformation_nodes:
-            # TODO: incorporate subanalysis id in tool name???
-            node_name = "{}_{}".format(
-                data_transformation_node['tool_id'],
-                data_transformation_node['name']
+    def attach_derived_nodes_to_dataset(self):
+        graph_with_data_transformation_nodes = (
+            self._create_data_transformation_nodes(
+                self.get_expanded_workflow_graph()
             )
-            data_transformation_node['node'] = (
-                Node.objects.create(
-                    study=study,
-                    assay=assay,
-                    analysis_uuid=self.uuid,
-                    type=Node.DATA_TRANSFORMATION,
-                    name=node_name
-                )
+        )
+        graph_with_input_nodes_linked = (
+            self._link_input_nodes_to_data_transformation_nodes(
+                graph_with_data_transformation_nodes
             )
-        # 3. create connection from input nodes to first data transformation
-        # nodes (input tool nodes in the graph are skipped)
-        input_node_connections = AnalysisNodeConnection.objects.filter(
-            analysis=self,
-            direction=INPUT_CONNECTION
         )
-        for input_connection in input_node_connections:
-            for edge in graph.edges_iter([input_connection.step]):
-                input_id = input_connection.get_input_connection_id()
-
-                if graph[edge[0]][edge[1]]['output_id'] == input_id:
-                    input_node_id = edge[1]
-                    data_transformation_node = (
-                        graph.node[input_node_id]['node']
-                    )
-                    input_connection.node.add_child(data_transformation_node)
-        # 4. create derived data file nodes for all entries and connect to data
-        # transformation nodes
-        output_connection_to_analysis_result_mapping = (
-            self._get_output_connection_to_analysis_result_mapping()
-        )
-        output_mappings = output_connection_to_analysis_result_mapping
-
-        for output_connection, analysis_result in output_mappings:
-            # create derived data file node
-            derived_data_file_node = self._create_derived_data_file_node(
-                study, assay, output_connection
-            )
-            if output_connection.is_refinery_file:
-                # retrieve uuid of corresponding output file if exists
-                logger.info(
-                    "Results for '%s' and %s.%s: %s",
-                    self.uuid,
-                    output_connection,
-                    output_connection.filetype,
-                    analysis_result
-                )
-                derived_data_file_node.file_uuid = (
-                    analysis_result.file_store_uuid
-                )
-                logger.debug(
-                    "Output file %s ('%s') assigned to node %s ('%s')",
-                    output_connection,
-                    analysis_result.file_store_uuid,
-                    derived_data_file_node.name,
-                    derived_data_file_node.uuid
-                )
-            output_connection.node = derived_data_file_node
-            output_connection.save()
-
-            # get graph edge that corresponds to this output node:
-            # a. attach output node to source data transformation node
-            # b. attach output node to target data transformation node
-            # (if exists)
-            if len(graph.edges([output_connection.step])) > 0:
-                for edge in graph.edges_iter([output_connection.step]):
-                    output_id = output_connection.get_output_connection_id()
-
-                    if graph[edge[0]][edge[1]]['output_id'] == output_id:
-                        input_node_id = edge[0]
-                        output_node_id = edge[1]
-
-                        data_transformation_input_node = (
-                            graph.node[input_node_id]['node']
-                        )
-                        data_transformation_output_node = (
-                            graph.node[output_node_id]['node']
-                        )
-                        data_transformation_input_node.add_child(
-                            derived_data_file_node
-                        )
-                        derived_data_file_node.add_child(
-                            data_transformation_output_node
-                        )
-                        # TODO: here we could add a (Refinery internal)
-                        # attribute to the derived data file node to
-                        # indicate which output of the tool it corresponds to
-
-            # connect outputs that are not inputs for any data transformation
-            if (output_connection.is_refinery_file and
-                    derived_data_file_node.parents.count() == 0):
-                graph.node[output_connection.step]['node'].add_child(
-                    derived_data_file_node
-                )
-            # delete output nodes that are not refinery files and don't have
-            # any children
-            if (not output_connection.is_refinery_file and
-                    derived_data_file_node.children.count() == 0):
-                output_connection.node.delete()
-
-        # 5. create annotated nodes and index new nodes
-        node_uuids = AnalysisNodeConnection.objects.filter(
-            analysis=self,
-            direction=OUTPUT_CONNECTION,
-            is_refinery_file=True
-        ).values_list('node__uuid', flat=True)
-
-        add_annotated_nodes_selection(
-            node_uuids,
-            Node.DERIVED_DATA_FILE,
-            study.uuid,
-            assay.uuid
-        )
-        self._prepare_annotated_nodes(node_uuids)
+        self._create_derived_data_file_nodes(graph_with_input_nodes_linked)
+        self._create_annotated_nodes()
 
     def attach_outputs_downloads(self):
         analysis_results = AnalysisResult.objects.filter(
@@ -1664,20 +1395,21 @@ class Analysis(OwnableResource):
         Gathers all UUIDs of FileStoreItems used as inputs for the Analysis,
         and trys to terminate their import_file tasks if possible
         """
-        file_store_item_uuids = self.get_input_file_uuid_list()
-
-        for uuid in file_store_item_uuids:
-            try:
-                file_store_item = FileStoreItem.objects.get(uuid=uuid)
-            except (FileStoreItem.DoesNotExist,
-                    FileStoreItem.MultipleObjectsReturned) as e:
-                logger.error(
-                    "Couldn't properly fetch FileStoreItem with UUID: %s %s",
-                    uuid,
-                    e
-                )
-            else:
-                file_store_item.terminate_file_import_task()
+        workflow_tool = tool_manager.utils.get_workflow_tool(self.uuid)
+        if workflow_tool is not None:
+            for uuid in workflow_tool.get_input_file_uuid_list():
+                try:
+                    file_store_item = FileStoreItem.objects.get(uuid=uuid)
+                except (FileStoreItem.DoesNotExist,
+                        FileStoreItem.MultipleObjectsReturned) as e:
+                    logger.error(
+                        "Couldn't properly fetch "
+                        "FileStoreItem with UUID: %s %s",
+                        uuid,
+                        e
+                    )
+                else:
+                    file_store_item.terminate_file_import_task()
 
     def _prepare_annotated_nodes(self, node_uuids):
         """
@@ -1745,6 +1477,179 @@ class Analysis(OwnableResource):
             workflow_output=analysis_node_connection.name
         )
 
+    def _get_input_node(self):
+        return AnalysisNodeConnection.objects.filter(
+            analysis=self,
+            direction=INPUT_CONNECTION
+        ).first().node
+
+    def get_input_node_study(self):
+        return self._get_input_node().study
+
+    def get_input_node_assay(self):
+        return self._get_input_node().assay
+
+    def _create_data_transformation_nodes(self, graph):
+        """create data transformation nodes for all Tool nodes"""
+
+        data_transformation_nodes = [
+            graph.node[node_id] for node_id in graph.nodes()
+            if graph.node[node_id]['type'] == "tool"
+        ]
+        for data_transformation_node in data_transformation_nodes:
+            # TODO: incorporate subanalysis id in tool name???
+            node_name = "{tool_id}_{name}".format(**data_transformation_node)
+            data_transformation_node['node'] = (
+                Node.objects.create(
+                    study=self.get_input_node_study(),
+                    assay=self.get_input_node_assay(),
+                    analysis_uuid=self.uuid,
+                    type=Node.DATA_TRANSFORMATION,
+                    name=node_name
+                )
+            )
+        return graph
+
+    def _link_input_nodes_to_data_transformation_nodes(self, graph):
+        """create connection from input nodes to first data transformation
+         nodes (input tool nodes in the graph are skipped)"""
+        input_node_connections = AnalysisNodeConnection.objects.filter(
+            analysis=self,
+            direction=INPUT_CONNECTION
+        )
+        for input_connection in input_node_connections:
+            for edge in graph.edges_iter([input_connection.step]):
+                input_id = input_connection.get_input_connection_id()
+
+                if graph[edge[0]][edge[1]]['output_id'] == input_id:
+                    input_node_id = edge[1]
+                    data_transformation_node = \
+                        graph.node[input_node_id]['node']
+                    input_connection.node.add_child(data_transformation_node)
+        return graph
+
+    def _create_derived_data_file_nodes(self, graph):
+        """create derived data file nodes for all entries and connect to data
+            transformation nodes"""
+        output_connection_to_analysis_result_mapping = (
+            self._get_output_connection_to_analysis_result_mapping()
+        )
+        for output_connection, analysis_result in \
+                output_connection_to_analysis_result_mapping:
+            derived_data_file_node = self._create_derived_data_file_node(
+                self.get_input_node_study(),
+                self.get_input_node_assay(),
+                output_connection
+            )
+            if output_connection.is_refinery_file:
+                # retrieve uuid of corresponding output file if exists
+                logger.info(
+                    "Results for '%s' and %s: %s",
+                    self.uuid,
+                    output_connection,
+                    analysis_result
+                )
+                derived_data_file_node.file_uuid = (
+                    analysis_result.file_store_uuid
+                )
+                logger.debug(
+                    "Output file %s ('%s') assigned to node %s ('%s')",
+                    output_connection,
+                    analysis_result.file_store_uuid,
+                    derived_data_file_node.name,
+                    derived_data_file_node.uuid
+                )
+            output_connection.node = derived_data_file_node
+            output_connection.save()
+
+            self._link_derived_data_file_node_to_data_transformation_node(
+                graph,
+                output_connection,
+                derived_data_file_node
+            )
+
+    def _link_derived_data_file_node_to_data_transformation_node(
+            self,
+            graph,
+            output_connection,
+            derived_data_file_node
+    ):
+        """get graph edge that corresponds to this output node:
+        a. attach output node to source data transformation node
+        b. attach output node to target data transformation node
+        (if exists)"""
+        for edge in graph.edges_iter([output_connection.step]):
+            output_id = output_connection.get_output_connection_id()
+
+            if graph[edge[0]][edge[1]]['output_id'] == output_id:
+                input_node_id = edge[0]
+                output_node_id = edge[1]
+
+                data_transformation_input_node = \
+                    graph.node[input_node_id]['node']
+
+                data_transformation_output_node = \
+                    graph.node[output_node_id]['node']
+
+                data_transformation_input_node.add_child(
+                    derived_data_file_node
+                )
+                derived_data_file_node.add_child(
+                    data_transformation_output_node
+                )
+                # TODO: here we could add a (Refinery internal)
+                # attribute to the derived data file node to
+                # indicate which output of the tool it corresponds to
+
+        # connect outputs that are not inputs for any data transformation
+        if (output_connection.is_refinery_file and
+                derived_data_file_node.parents.count() == 0):
+            graph.node[output_connection.step]['node'].add_child(
+                derived_data_file_node
+            )
+        # delete output nodes that are not refinery files and don't have
+        # any children
+        if (not output_connection.is_refinery_file and
+                derived_data_file_node.children.count() == 0):
+            output_connection.node.delete()
+
+    def _create_annotated_nodes(self):
+        """create and index annotated nodes"""
+        node_uuids = AnalysisNodeConnection.objects.filter(
+            analysis=self,
+            direction=OUTPUT_CONNECTION,
+            is_refinery_file=True
+        ).values_list('node__uuid', flat=True)
+
+        add_annotated_nodes_selection(
+            node_uuids,
+            Node.DERIVED_DATA_FILE,
+            self.get_input_node_study().uuid,
+            self.get_input_node_assay().uuid
+        )
+        self._prepare_annotated_nodes(node_uuids)
+
+
+@receiver(pre_delete, sender=Analysis)
+def _analysis_delete(sender, instance, *args, **kwargs):
+    """
+    Removes an Analyses's related objects upon deletion being triggered.
+    Having these extra checks is favored within a signal so that this logic
+    is picked up on bulk deletes as well.
+
+    See: https://docs.djangoproject.com/en/1.8/topics/db/models/
+    #overriding-model-methods
+    """
+    with transaction.atomic():
+        instance.cancel()
+        # Delete associated AnalysisResults
+        instance.get_analysis_results().delete()
+        # Delete Nodes Associated w/ the Analysis
+        instance.get_nodes().delete()
+
+    # Optimize Solr's index to get rid of any traces of the Analysis
+    instance.optimize_solr_index()
+
 
 #: Defining available relationship types
 INPUT_CONNECTION = 'in'
@@ -1787,10 +1692,12 @@ class AnalysisNodeConnection(models.Model):
                                            max_length=250)
 
     def __unicode__(self):
-        return (
-            self.direction + ": " +
-            str(self.step) + "_" +
-            self.name + " (" + str(self.is_refinery_file) + ")"
+        return "{}: {}_{} ({}) {}".format(
+            self.direction,
+            self.step,
+            self.name,
+            self.is_refinery_file,
+            self.filetype
         )
 
     def get_input_connection_id(self):
@@ -2148,21 +2055,6 @@ def _baseresource_save(sender, instance, **kwargs):
         BaseResource after being saved
     '''
     invalidate_cached_object(instance)
-
-
-@receiver_subclasses(pre_delete, NodeCollection,
-                     "nodecollection_pre_delete")
-def _nodecollection_delete(sender, instance, **kwargs):
-    '''
-        This finds all subclasses related to a DataSet's NodeCollections and
-        handles the deletion of all FileStoreItems related to the DataSet
-    '''
-    nodes = Node.objects.filter(study=instance)
-    for node in nodes:
-        try:
-            FileStoreItem.objects.get(uuid=node.file_uuid).delete()
-        except Exception as e:
-            logger.debug("Could not delete FileStoreItem:%s" % str(e))
 
 
 class AuthenticationFormUsernameOrEmail(AuthenticationForm):

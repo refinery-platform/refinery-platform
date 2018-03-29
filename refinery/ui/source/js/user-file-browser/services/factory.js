@@ -8,23 +8,21 @@
   userFileBrowserFactory.$inject = [
     '$log',
     'settings',
+    '_',
     'userFileService'
   ];
 
   function userFileBrowserFactory (
     $log,
     settings,
+    _,
     userFileService
     ) {
     var service = {
       createColumnDefs: createColumnDefs,
       createData: createData,
       createFilters: createFilters,
-      getUserFiles: getUserFiles,
-      _mergeAndAddObject: _mergeAndAddObject,
-      _objectToNameCount: _objectToNameCount,
-      _nameCountToObject: _nameCountToObject,
-      _mergeAndAddNameCounts: _mergeAndAddNameCounts
+      getUserFiles: getUserFiles
     };
     var URL = 'url';
     return service;
@@ -35,7 +33,7 @@
     * ----------------------
     */
 
-    function createColumnDefs () {
+    function createColumnDefs (culledAttributes) {
       var _cellTemplate = '<div class="ngCellText text-align-center ui-grid-cell-contents"' +
             'ng-class="col.colIndex()">' +
             '<div ng-if="COL_FIELD == \'PENDING\'"  ' +
@@ -64,12 +62,17 @@
                 '<div class="ui-grid-cell-contents" >' +
                   '<a href="/data_sets/{{grid.getCellValue(row, col)}}' +
                            '/#/files/">' +
-                    '<i class="fa fa-table"></i>' +
+                    '<i class="fa fa-folder-open-o"></i>' +
                   '</a>' +
                 '</div>',
             width: 30 }];
+      // temp solution to handle empty columns until backend is updated to
+      // avoid sending attributes with no fields
+      var attributeStr = culledAttributes.join(',');
       settings.djangoApp.userFilesColumns.forEach(function (column) {
-        defs.push({ field: column });
+        if (_.includes(attributeStr, column)) {
+          defs.push({ field: column });
+        }
       });
       return defs;
     }
@@ -95,56 +98,17 @@
       return data;
     }
 
-    function _mergeAndAddObject (target, extra) {
-      Object.keys(extra).forEach(function (key) {
-        if (typeof target[key] === 'undefined') {
-          target[key] = extra[key];
-        } else {
-          target[key] += extra[key];
-        }
-      });
-    }
-
-    function _objectToNameCount (object) {
-      var nc = [];
-      Object.keys(object).forEach(function (key) {
-        nc.push({
-          name: key,
-          count: object[key]
-        });
-      });
-      return nc;
-    }
-
-    function _nameCountToObject (nameCount) {
-      var obj = {};
-      nameCount.forEach(function (nc) {
-        obj[nc.name] = nc.count;
-      });
-      return obj;
-    }
-
-    function _mergeAndAddNameCounts (targetNC, extraNC) {
-      var targetObj = _nameCountToObject(targetNC);
-      var extraObj = _nameCountToObject(extraNC);
-      _mergeAndAddObject(targetObj, extraObj);
-      var newTargetNC = _objectToNameCount(targetObj);
-      targetNC.length = 0;
-      newTargetNC.forEach(function (nc) {
-        targetNC.push(nc);
-      });
-    }
-
     function createFilters (solrFacetCounts) {
       var filters = {};
-      Object.keys(solrFacetCounts).forEach(function (key) {
-        if (solrFacetCounts[key].length > 0) {
-          var facetObj = solrFacetCounts[key];
-          var lowerCaseNames = facetObj.map(function (nameCount) {
+      Object.keys(solrFacetCounts).forEach(function (attributeName) {
+        if (solrFacetCounts[attributeName].length > 0) {
+          // array of facet objs with counts
+          var facetObjArr = solrFacetCounts[attributeName];
+          var lowerCaseNames = facetObjArr.map(function (nameCount) {
             return nameCount.name.toLowerCase();
           }).join(' ');
           // "foo_Characteristic" and "foo_Factor_Value" both map to "foo".
-          var display = mapInternalToDisplay(key);
+          var display = mapInternalToDisplay(attributeName);
           if (!angular.isDefined(filters[display])) {
             filters[display] = {
               facetObj: [],
@@ -152,7 +116,14 @@
             };
           }
           filters[display].lowerCaseNames += ' ' + lowerCaseNames;
-          _mergeAndAddNameCounts(filters[display].facetObj, facetObj);
+
+          // combine 'similar' attribute facets into one, but track internal
+          // names in the facet obj (needed for filtering)
+          facetObjArr.forEach(function (facet) {
+            facetObjArr.assocAttribute = attributeName;
+            facet.assocAttribute = attributeName;
+            filters[display].facetObj.push(facet);
+          });
         }
       });
       return filters;

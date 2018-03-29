@@ -1,7 +1,6 @@
 from __future__ import absolute_import
 
 import logging
-from optparse import make_option
 
 from django.core.management.base import BaseCommand, CommandError
 
@@ -11,30 +10,27 @@ logger = logging.getLogger(__name__)
 
 
 class Command(BaseCommand):
-    args = "<base_url> <api_key>"
     help = "Creates a new Galaxy instance."
 
-    option_list = BaseCommand.option_list + (
-        make_option('--file_name',
-                    action='store',
-                    type='string'
-                    ),
-        make_option('--description',
-                    action='store',
-                    type='string',
-                    default=""
-                    ),
-        make_option('--api_url',
-                    action='store',
-                    type='string',
-                    default="api"
-                    ),
-        make_option('--data_url',
-                    action='store',
-                    type='string',
-                    default="datasets"
-                    ),
-    )
+    def add_arguments(self, parser):
+        parser.add_argument('base_url')
+        parser.add_argument('api_key')
+        parser.add_argument(
+            '--description',
+            action='store',
+            default=""
+        )
+        parser.add_argument(
+            '--api_url',
+            action='store',
+            default="api"
+        )
+        parser.add_argument(
+            '--data_url',
+            action='store',
+            default="datasets"
+        )
+
     """
     Name: handle
     Description:
@@ -43,31 +39,40 @@ class Command(BaseCommand):
     """
     def handle(self, *args, **options):
         try:
-            base_url = args[0]
+            base_url = options['base_url']
         except IndexError:
             raise CommandError("Please provide a base URL for Galaxy instance")
         try:
-            api_key = args[1]
+            api_key = options['api_key']
         except IndexError:
             raise CommandError("Please provide an API key")
         instance_count = Instance.objects.filter(
-            base_url__exact=base_url).count()
+            base_url__exact=base_url
+        ).count()
+
         if instance_count > 0:
-            self.stdout.write("Instance with URL '%s' already exists" %
-                              base_url)
-            logger.error("Instance with URL '%s' already exists", base_url)
+            aready_exists_message = "Instance with URL '{}' already " \
+                                 "exists".format(base_url)
+            self.stdout.write(aready_exists_message)
+            logger.info(aready_exists_message)
             return
+
         instance = Instance.objects.create(base_url=base_url,
                                            api_key=api_key,
                                            data_url=options['data_url'],
                                            api_url=options['api_url'],
                                            description=options['description'])
         if instance is not None:
-            self.stdout.write("Instance '%s -- %s' created" %
-                              base_url, api_key)
-            logger.info("Instance '%s -- %s' created", base_url, api_key)
+            creation_message = "Instance '{} -- {}' created".format(
+                base_url,
+                api_key
+            )
+            self.stdout.write(creation_message)
+            logger.info(creation_message)
         else:
-            self.stdout.write("Unable to create instance '%s -- %s'" %
-                              base_url, api_key)
-            logger.error("Unable to create instance '%s -- %s'",
-                         base_url, api_key)
+            error_message = "Unable to create instance '{} -- {}'".format(
+                base_url,
+                api_key
+            )
+            self.stdout.write(error_message)
+            logger.error(error_message)

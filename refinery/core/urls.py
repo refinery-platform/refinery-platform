@@ -53,11 +53,8 @@ urlpatterns = patterns(
 
     url(r'^workflow_engines/(?P<uuid>' + UUID_RE + r')/$',
         'workflow_engine', name="workflow_engine"),
-    url(r'^visualize/genome/$', 'visualize_genome', name='visualize_genome'),
 
-    url(r'^solr/igv/$', 'solr_igv'),
     url(r'^solr/core/select/$', 'solr_core_search', name="solr_core_search"),
-    url(r'^solr/(?P<core>.+)/select/$', 'solr_select', name="solr_select"),
 
     url(r'^doi/(?P<id>.+)/', 'doi', name="doi"),
 

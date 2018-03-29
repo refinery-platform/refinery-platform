@@ -3,7 +3,6 @@ import uuid
 
 from django.conf import settings
 from django.contrib.auth.models import User
-from django.http import HttpResponseBadRequest, HttpResponseNotAllowed
 from django.test import RequestFactory, TestCase
 
 from bioblend.galaxy.client import ConnectionError
@@ -13,18 +12,20 @@ from guardian.utils import get_anonymous_user
 import mock
 
 from analysis_manager.models import AnalysisStatus
-from analysis_manager.tasks import (_check_galaxy_history_state, _get_analysis,
-                                    _get_analysis_status, run_analysis)
-from analysis_manager.utils import (fetch_objects_required_for_analysis,
-                                    validate_analysis_config)
-from analysis_manager.views import analysis_status, run
-from core.models import Analysis, DataSet, Project, Workflow, WorkflowEngine
+from analysis_manager.tasks import (
+    _check_galaxy_history_state, _get_analysis, _get_analysis_status,
+    run_analysis
+)
+from analysis_manager.utils import (
+    fetch_objects_required_for_analysis, validate_analysis_config
+)
+from analysis_manager.views import analysis_status
+from core.models import Analysis, Project, Workflow, WorkflowEngine
 from data_set_manager.models import Assay
 from factory_boy.django_model_factories import GalaxyInstanceFactory
-from factory_boy.utils import (create_dataset_with_necessary_models,
-                               make_analyses_with_single_dataset)
-from tool_manager.models import ToolDefinition
-from tool_manager.tests import ToolManagerTestBase
+from factory_boy.utils import (
+    create_dataset_with_necessary_models, make_analyses_with_single_dataset
+)
 
 
 class AnalysisManagerTestBase(TestCase):
@@ -33,14 +34,15 @@ class AnalysisManagerTestBase(TestCase):
         self.password = 'coffeecoffee'
         self.user = User.objects.create_user(self.username, '', self.password)
 
-        make_analyses_with_single_dataset(1, self.user)
-
-        self.analysis = Analysis.objects.all()[0]
-        self.analysis_status = AnalysisStatus.objects.create(
-            analysis=self.analysis
+        analyses, self.dataset = make_analyses_with_single_dataset(
+            1,
+            self.user
         )
 
-        self.dataset = DataSet.objects.all()[0]
+        self.analysis = analyses[0]
+        self.analysis_status = AnalysisStatus.objects.get(
+            analysis=self.analysis
+        )
 
 
 class AnalysisConfigTests(TestCase):
@@ -176,181 +178,111 @@ class AnalysisUtilsTests(TestCase):
             )
             self.assertIn("Couldn't fetch User", context.exception.message)
 
-    def test_fetch_objects_required_for_analyses_bad_dataset(self):
-        self.dataset.delete()
-        with self.assertRaises(RuntimeError) as context:
-            fetch_objects_required_for_analysis(
-                {
-                    "study_uuid": self.study.uuid,
-                    "user_id": self.user.id,
-                    "workflow_uuid": self.workflow.uuid
-                }
-            )
-            self.assertIn("Couldn't fetch DataSet", context.exception.message)
 
-
-class AnalysisViewsTests(AnalysisManagerTestBase, ToolManagerTestBase):
+class AnalysisViewsTests(AnalysisManagerTestBase):
     """
     Tests for `analysis_manager.views`
     """
     def setUp(self):
-        # super() will only ever resolve a single class type for a given method
-        AnalysisManagerTestBase.setUp(self)
-        ToolManagerTestBase.setUp(self)
-
+        super(AnalysisViewsTests, self).setUp()
         self.request_factory = RequestFactory()
-        self.run_url_root = "/analysis_manager/run/"
         self.status_url_root = "/analysis_manager/{}/".format(
             self.analysis.uuid
         )
 
-    def test_analysis_run_view_invalid_http_verbs(self):
-        # GET PUT PATCH DELETE etc.
-        response = self.client.get(
-            self.run_url_root,
-            HTTP_X_REQUESTED_WITH='XMLHttpRequest'
-        )
-        self.assertEqual(type(response), HttpResponseNotAllowed)
-
-        response = self.client.delete(
-            self.run_url_root,
-            HTTP_X_REQUESTED_WITH='XMLHttpRequest'
-        )
-        self.assertEqual(type(response), HttpResponseNotAllowed)
-
-        response = self.client.put(
-            self.run_url_root,
-            data={
-                "name": "Valid Tool Analysis Config",
-                "study_uuid": str(uuid.uuid4()),
-                "tool_uuid": str(uuid.uuid4()),
-                "user_id": 1,
-                "workflow_uuid": str(uuid.uuid4())
-            },
-            HTTP_X_REQUESTED_WITH='XMLHttpRequest'
-        )
-        self.assertEqual(type(response), HttpResponseNotAllowed)
-
-        response = self.client.patch(
-            self.run_url_root,
-            data={
-                "name": "Valid Tool Analysis Config",
-                "study_uuid": str(uuid.uuid4()),
-                "tool_uuid": str(uuid.uuid4()),
-                "workflow_uuid": str(uuid.uuid4())
-            },
-            HTTP_X_REQUESTED_WITH='XMLHttpRequest'
-        )
-        self.assertEqual(type(response), HttpResponseNotAllowed)
-
-    def test_analysis_run_view_valid_data(self):
-        with mock.patch(
-            "analysis_manager.views.create_analysis",
-            return_value=self.analysis
-        ) as create_analysis_mock:
-            request = self.request_factory.post(
-                self.run_url_root,
-                json.dumps({
-                    "name": "Valid Tool Analysis Config",
-                    "study_uuid": str(uuid.uuid4()),
-                    "tool_uuid": str(uuid.uuid4()),
-                    "workflow_uuid": str(uuid.uuid4())
-                }),
-                content_type="application/json",
-                HTTP_X_REQUESTED_WITH='XMLHttpRequest'
-            )
-            request.user = self.user
-            with mock.patch.object(
-                    run_analysis, 'delay', side_effect=None
-            ) as task_mock:
-                response = run(request)
-                self.assertTrue(task_mock.called)
-
-            self.assertEqual(
-                response.content,
-                "/analysis_manager/{}/".format(self.analysis.uuid)
-            )
-            self.assertTrue(create_analysis_mock.called)
-
-    def test_analysis_run_view_invalid_data(self):
-        response = self.client.post(
-            self.run_url_root,
-            data=json.dumps({
-                "name": "Valid Tool Analysis Config",
-                "study_uuid": str(uuid.uuid4()),
-                "tool_uuid": str(uuid.uuid4()),
-                "workflow_uuid": str(uuid.uuid4())
-            }),
-            content_type="application/json",
-            HTTP_X_REQUESTED_WITH='XMLHttpRequest'
-        )
-        self.assertEqual(type(response), HttpResponseBadRequest)
-
-    def test_analysis_view_non_ajax_request(self):
-        response = self.client.post(
-            self.run_url_root,
-            data={
-                "name": "Valid Tool Analysis Config",
-                "study_uuid": str(uuid.uuid4()),
-                "tool_uuid": str(uuid.uuid4()),
-                "workflow_uuid": str(uuid.uuid4())
-            }
-        )
-        self.assertEqual(type(response), HttpResponseBadRequest)
-
     @mock.patch.object(AnalysisStatus,
-                       "galaxy_file_import_state",
-                       return_value="coffee")
-    def test_non_tool_analysis_calls_old_galaxy_file_import_state(
+                       "refinery_import_state",
+                       return_value="SUCCESS")
+    def test_analysis_calls_refinery_import_state(
             self,
-            file_import_state_mock
+            refinery_import_state_mock
     ):
         request = self.request_factory.get(
             self.status_url_root,
             content_type="application/json",
-            HTTP_X_REQUESTED_WITH='XMLHttpRequest'
+        )
+        request.user = self.user
+        analysis_status(request, self.analysis.uuid)
+        self.assertTrue(refinery_import_state_mock.called)
+
+    @mock.patch.object(AnalysisStatus,
+                       "galaxy_analysis_state",
+                       return_value="SUCCESS")
+    def test_analysis_calls_galaxy_analysis_state(
+            self,
+            galaxy_analysis_state_mock
+    ):
+        request = self.request_factory.get(
+            self.status_url_root,
+            content_type="application/json",
+        )
+        request.user = self.user
+        analysis_status(request, self.analysis.uuid)
+        self.assertTrue(galaxy_analysis_state_mock.called)
+
+    @mock.patch.object(AnalysisStatus,
+                       "galaxy_export_state",
+                       return_value="SUCCESS")
+    def test_analysis_calls_galaxy_export_state(
+            self,
+            galaxy_export_state_mock
+    ):
+        request = self.request_factory.get(
+            self.status_url_root,
+            content_type="application/json",
+        )
+        request.user = self.user
+        analysis_status(request, self.analysis.uuid)
+        self.assertTrue(galaxy_export_state_mock.called)
+
+    @mock.patch.object(Analysis,
+                       "get_status",
+                       return_value="SUCCESS")
+    def test_analysis_calls_get_status(
+            self,
+            get_status_mock
+    ):
+        request = self.request_factory.get(
+            self.status_url_root,
+            content_type="application/json",
+        )
+        request.user = self.user
+        analysis_status(request, self.analysis.uuid)
+        self.assertTrue(get_status_mock.called)
+
+    @mock.patch.object(AnalysisStatus,
+                       "galaxy_file_import_state",
+                       return_value="SUCCESS")
+    def test_analysis_calls_galaxy_file_import(
+            self,
+            galaxy_file_import_state_mock
+    ):
+        request = self.request_factory.get(self.status_url_root,
+                                           content_type="application/json")
+        request.user = self.user
+        analysis_status(request, self.analysis.uuid)
+        self.assertTrue(galaxy_file_import_state_mock.called)
+
+    @mock.patch.object(AnalysisStatus,
+                       "galaxy_file_import_state",
+                       return_value="SUCCESS")
+    def test_analysis_returns_galaxy_file_import_state(
+            self,
+            get_status_mock
+    ):
+        request = self.request_factory.get(
+            self.status_url_root,
+            content_type="application/json",
         )
         request.user = self.user
         response = analysis_status(request, self.analysis.uuid)
-        self.assertTrue(file_import_state_mock.called)
 
         self.assertEqual(
             json.loads(response.content),
             {
                 "galaxyAnalysis": [],
                 "refineryImport": [],
-                "galaxyImport": "coffee",
-                "overall": "INITIALIZED",
-                "galaxyExport": []
-            }
-        )
-
-    @mock.patch.object(AnalysisStatus,
-                       "galaxy_file_import_state",
-                       return_value="coffee")
-    def test_tool_analysis_calls_galaxy_file_import_state(
-            self,
-            file_import_state_mock
-    ):
-        self.create_tool(ToolDefinition.WORKFLOW)
-        self.status_url_root = "/analysis_manager/{}/".format(
-            self.tool.analysis.uuid
-        )
-        request = self.request_factory.get(
-            self.status_url_root,
-            content_type="application/json",
-            HTTP_X_REQUESTED_WITH='XMLHttpRequest'
-        )
-        request.user = self.user
-        response = analysis_status(request, self.tool.analysis.uuid)
-        self.assertTrue(file_import_state_mock.called)
-
-        self.assertEqual(
-            json.loads(response.content),
-            {
-                "galaxyAnalysis": [],
-                "refineryImport": [],
-                "galaxyImport": "coffee",
+                "galaxyImport": "SUCCESS",
                 "overall": "INITIALIZED",
                 "galaxyExport": []
             }

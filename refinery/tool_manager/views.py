@@ -1,20 +1,22 @@
 import logging
 
+from django.conf import settings
 from django.db import transaction
 from django.http import HttpResponseBadRequest, HttpResponseForbidden
 
-from guardian.shortcuts import get_objects_for_user
+from django_docker_engine.proxy import Proxy
 from rest_framework import status
 from rest_framework.decorators import detail_route
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
 from core.models import DataSet
 
-from .models import Tool, ToolDefinition, VisualizationTool
+from .models import Tool, ToolDefinition, VisualizationTool, WorkflowTool
 from .serializers import ToolDefinitionSerializer, ToolSerializer
-from .utils import create_tool, validate_tool_launch_configuration
+from .utils import (create_tool, user_has_access_to_tool,
+                    validate_tool_launch_configuration)
 
 logger = logging.getLogger(__name__)
 
@@ -45,11 +47,12 @@ class ToolManagerViewSetBase(ModelViewSet):
             )
         if self.request.user.has_perm('core.read_meta_dataset', self.data_set):
             self.visualization_tools = \
-                self._get_tools_launched_on_requested_dataset("visualization")
+                VisualizationTool.objects.filter(dataset=self.data_set)
             self.user_tools.extend(self.visualization_tools)
 
-            self.workflow_tools = \
-                self._get_tools_launched_on_requested_dataset("workflow")
+            self.workflow_tools = WorkflowTool.objects.filter(
+                dataset=self.data_set
+            )
             self.user_tools.extend(self.workflow_tools)
         else:
             return Response(
@@ -58,13 +61,6 @@ class ToolManagerViewSetBase(ModelViewSet):
                 status.HTTP_401_UNAUTHORIZED
             )
         return super(ToolManagerViewSetBase, self).list(request)
-
-    def _get_tools_launched_on_requested_dataset(self, tool_type):
-        tools = get_objects_for_user(
-            self.request.user,
-            "tool_manager.read_{}tool".format(tool_type)
-        ).filter(dataset=self.data_set)
-        return tools
 
 
 class ToolDefinitionsViewSet(ToolManagerViewSetBase):
@@ -95,7 +91,6 @@ class ToolsViewSet(ToolManagerViewSetBase):
     serializer_class = ToolSerializer
     lookup_field = 'uuid'
     http_method_names = ['get', 'post']
-    permission_classes = [IsAuthenticated]
 
     def list(self, request, *args, **kwargs):
         return super(ToolsViewSet, self).list(
@@ -105,20 +100,23 @@ class ToolsViewSet(ToolManagerViewSetBase):
 
     def get_queryset(self):
         """
-        This view returns a list of all the Tools that the currently
-        authenticated user has read permissions on.
+        This view returns a list of all the Tools that the currently user has
+        at least read_meta permissions on.
         """
-        tool_type = self.request.query_params.get("tool_type")
+        if self.request.user.has_perm('core.read_meta_dataset', self.data_set):
+            tool_type = self.request.query_params.get("tool_type")
 
-        if not tool_type:
-            return self.user_tools
+            if not tool_type:
+                return self.user_tools
 
-        tool_types_to_tools = {
-            ToolDefinition.VISUALIZATION.lower(): self.visualization_tools,
-            ToolDefinition.WORKFLOW.lower(): self.workflow_tools
-        }
-        # get_queryset should return an iterable
-        return tool_types_to_tools.get(tool_type.lower()) or []
+            tool_types_to_tools = {
+                ToolDefinition.VISUALIZATION.lower(): self.visualization_tools,
+                ToolDefinition.WORKFLOW.lower(): self.workflow_tools
+            }
+            # get_queryset should return an iterable
+            return tool_types_to_tools.get(tool_type.lower()) or []
+        return Response("User is not authorized to view visualizations.",
+                        status=status.HTTP_401_UNAUTHORIZED)
 
     def create(self, request, *args, **kwargs):
         """
@@ -156,10 +154,11 @@ class ToolsViewSet(ToolManagerViewSetBase):
                 .format(tool_uuid, e)
             )
 
-        if not request.user.has_perm('core.read_dataset', tool.dataset):
+        if not user_has_access_to_tool(request.user, tool):
             return HttpResponseForbidden(
-                "Requesting User does not have sufficient permissions to "
-                "relaunch Tool with uuid: {}".format(tool_uuid)
+                 "User does not have permission to view Tool: {}".format(
+                     tool_uuid
+                 )
             )
 
         if tool.is_running():
@@ -170,3 +169,60 @@ class ToolsViewSet(ToolManagerViewSetBase):
         except Exception as e:
             logger.error(e)
             return HttpResponseBadRequest(e)
+
+
+class AutoRelaunchProxy(Proxy, object):
+    """
+    Wrapper around Django-Docker-Engine Proxy to allow for VisualizationTools
+    that had been launched previously to have persisting urls even after
+    their containers hve been destroyed, rather than relying on users to
+    manually relaunch (although that remains an option).
+    """
+    def __init__(self):
+        super(AutoRelaunchProxy, self).__init__(
+            settings.DJANGO_DOCKER_ENGINE_DATA_DIR,
+            please_wait_title='Please wait...',
+            please_wait_body_html='''
+                <style>
+                body {{
+                  font-family: "Source Sans Pro",Helvetica,Arial,sans-serif;
+                  font-size: 40pt;
+                  text-align: center;
+                }}
+                div {{
+                  position: absolute;
+                  top: 50%;
+                  left: 50%;
+                  margin-right: -50%;
+                  transform: translate(-50%, -50%)
+                }}
+                </style>
+
+                <div>
+                <img src="{0}/logo.svg" width='150'>
+                <p>Please wait...</p>
+                <img src="{0}/spinner.gif">
+                </div>
+            '''.format(settings.STATIC_URL + 'images')
+        )
+
+    def _proxy_view(self, request, container_name, url):
+        visualization_tool = get_object_or_404(
+            VisualizationTool,
+            container_name=container_name
+        )
+        if not user_has_access_to_tool(request.user, visualization_tool):
+            return HttpResponseForbidden(
+                "User does not have permission to view Tool: {}".format(
+                    visualization_tool.uuid
+                )
+            )
+
+        if not visualization_tool.is_running():
+            visualization_tool.launch()
+
+        return super(AutoRelaunchProxy, self)._proxy_view(
+            request,
+            container_name,
+            url
+        )

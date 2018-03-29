@@ -5,13 +5,11 @@ Created on Nov 29, 2012
 '''
 
 from tastypie import fields
-from tastypie.authentication import Authentication
-from tastypie.authorization import Authorization
 from tastypie.constants import ALL, ALL_WITH_RELATIONS
 from tastypie.resources import ModelResource
 
-from .models import (Assay, Attribute, AttributeOrder, Investigation, Node,
-                     Protocol, ProtocolReference, ProtocolReferenceParameter,
+from .models import (Assay, Attribute, Investigation, Node, Protocol,
+                     ProtocolReference, ProtocolReferenceParameter,
                      Publication, Study)
 
 
@@ -184,25 +182,3 @@ class AssayResource(ModelResource):
             'study_uuid': ALL
         }
         # fields = ["uuid"]
-
-
-class AttributeOrderResource(ModelResource):
-    study = fields.ToOneField(StudyResource, "study")
-    assay = fields.ToOneField(AssayResource, "assay")
-
-    class Meta:
-        queryset = AttributeOrder.objects.all().order_by("rank")
-        allowed_methods = ["get", "patch", "put", "post"]
-
-        # TODO: replace with session or api key authentication and internal
-        # authorization
-        authentication = Authentication()
-        authorization = Authorization()
-        filtering = {
-            "study": ALL_WITH_RELATIONS,
-            "assay": ALL_WITH_RELATIONS,
-            "subtype": ALL,
-            "is_exposed": ALL,
-            "is_internal": ALL
-        }
-        excludes = []

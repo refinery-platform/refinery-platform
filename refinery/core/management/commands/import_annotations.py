@@ -1,5 +1,4 @@
 import logging
-from optparse import make_option
 import time
 import urlparse
 
@@ -24,15 +23,14 @@ class Command(BaseCommand):
     help = """Annotate available ontology terms with datasets.
     """
 
-    option_list = BaseCommand.option_list + (
-        make_option(
+    def add_arguments(self, parser):
+        parser.add_argument(
             '-c',
             '--clear',
             action='store_true',
             dest='clear',
             help='Clear annotations before import'
-        ),
-    )
+        )
 
     def push_annotations_to_neo4j(self, annotations):
         # We currently disabled authentication as Neo4J is only accessible

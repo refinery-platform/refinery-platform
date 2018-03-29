@@ -14,7 +14,7 @@ Requirements:
 
 import os
 
-from fabric.api import env, execute, local, run, sudo
+from fabric.api import env, execute, run, sudo
 from fabric.context_managers import cd, prefix, shell_env
 from fabric.contrib.files import sed
 from fabric.decorators import task, with_settings
@@ -39,8 +39,6 @@ def vm():
     env.project_user = "vagrant"    # since it's used as arg for decorators
     env.refinery_project_dir = "/vagrant"
     env.refinery_virtual_env_name = "refinery-platform"
-    # set branch to the one currently checked out
-    env.branch = local('git rev-parse --abbrev-ref HEAD', capture=True)
     setup()
     execute(vagrant)
 
@@ -120,7 +118,9 @@ def update_refinery():
     """Perform full update of a Refinery Platform instance"""
     puts("Updating Refinery")
     with cd(env.refinery_project_dir):
-        run("git checkout {branch}".format(**env))
+        # if in Vagrant update current branch, otherwise checkout custom branch
+        if env.project_user != 'vagrant':
+            run("git checkout {branch}".format(**env))
         # avoid explaining automatic merge commits with both new and old git
         # versions running on different VMs
         # https://raw.githubusercontent.com/gitster/git/master/Documentation/RelNotes/1.7.10.txt
@@ -136,7 +136,7 @@ def update_refinery():
         run("pip install -r {refinery_project_dir}/requirements.txt"
             .format(**env))
         run("find . -name '*.pyc' -delete")
-        run("{refinery_app_dir}/manage.py migrate --noinput"
+        run("{refinery_app_dir}/manage.py migrate --noinput --fake-initial"
             .format(**env))
         run("{refinery_app_dir}/manage.py collectstatic --clear --noinput"
             .format(**env))
@@ -164,7 +164,8 @@ def relaunch_refinery(dependencies=False, migrations=False):
                 .format(**env))
         run("find . -name '*.pyc' -delete")
         if migrations:
-            run("{refinery_app_dir}/manage.py migrate --noinput".format(**env))
+            run("{refinery_app_dir}/manage.py migrate --noinput "
+                "--fake-initial".format(**env))
         run("{refinery_app_dir}/manage.py collectstatic --noinput"
             .format(**env))
         run("supervisorctl restart all")

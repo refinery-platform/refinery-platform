@@ -70,6 +70,8 @@
         } else {
           vm.visLoadingFlag = 'DONE';
         }
+      }, function () {
+        vm.visLoadingFlag = 'ERROR';
       });
     }
   }

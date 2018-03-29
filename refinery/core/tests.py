@@ -6,7 +6,9 @@ from urlparse import urljoin
 
 from django.apps import apps
 from django.contrib.auth.models import AnonymousUser, Group, User
+from django.contrib.sites.models import Site
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.core.management import CommandError, call_command
 from django.db import connection
 from django.db.migrations.executor import MigrationExecutor
 from django.test import TestCase
@@ -22,23 +24,30 @@ from tastypie.exceptions import NotFound
 from tastypie.test import ResourceTestCase
 
 from analysis_manager.models import AnalysisStatus
-from data_set_manager.models import Assay, Contact, Investigation, Node, Study
-from factory_boy.django_model_factories import GalaxyInstanceFactory
-from factory_boy.utils import create_dataset_with_necessary_models
+from data_set_manager.models import (AnnotatedNode, Assay, Contact,
+                                     Investigation, Node, NodeCollection,
+                                     Study)
+from factory_boy.django_model_factories import (GalaxyInstanceFactory,
+                                                WorkflowEngineFactory,
+                                                WorkflowFactory)
+from factory_boy.utils import (create_dataset_with_necessary_models,
+                               make_analyses_with_single_dataset)
 from file_store.models import FileStoreItem, FileType
 
 from .api import AnalysisResource
 from .management.commands.create_user import init_user
+from .management.commands.import_annotations import \
+    Command as ImportAnnotationsCommand
 from .models import (INPUT_CONNECTION, OUTPUT_CONNECTION, Analysis,
-                     AnalysisNodeConnection, AnalysisResult, DataSet,
-                     ExtendedGroup, InvestigationLink, Project, Tutorials,
-                     UserProfile, Workflow, WorkflowDataInputMap,
-                     WorkflowEngine, invalidate_cached_object)
+                     AnalysisNodeConnection, AnalysisResult, BaseResource,
+                     DataSet, ExtendedGroup, InvestigationLink, Project,
+                     Tutorials, UserProfile, Workflow, WorkflowEngine,
+                     invalidate_cached_object)
 from .search_indexes import DataSetIndex
 from .utils import (filter_nodes_uuids_in_solr, get_aware_local_time,
                     get_resources_for_user, move_obj_to_front,
                     which_default_read_perm)
-from .views import AnalysesViewSet, DataSetsViewSet
+from .views import AnalysesViewSet, DataSetsViewSet, WorkflowViewSet
 
 cache = memcache.Client(["127.0.0.1:11211"])
 
@@ -215,7 +224,8 @@ class AnalysisResourceTest(LoginResourceTestCase):
             'read_%s' % Analysis._meta.model_name, self.user, analysis2
         )
         analysis_uri = make_api_uri(Analysis._meta.model_name)
-        response = self.api_client.get(analysis_uri, format='json')
+        response = self.api_client.get(analysis_uri, format='json',
+                                       data={'order_by': '-name'})
         self.assertValidJSONResponse(response)
         data = self.deserialize(response)['objects']
         self.assertEqual(len(data), 2)
@@ -479,7 +489,7 @@ class CachingTest(TestCase):
         )
         self.public_group_name = ExtendedGroup.objects.public_group().name
         for index, item in enumerate(range(0, 6)):
-            DataSet.objects.create(slug="TestSlug%d" % index)
+            create_dataset_with_necessary_models(slug="TestSlug%d" % index)
         # Adding to cache
         cache.add("{}-DataSet".format(self.user.id), DataSet.objects.all())
 
@@ -604,79 +614,135 @@ class WorkflowDeletionTest(TestCase):
 
 class DataSetDeletionTest(TestCase):
     """Testing for the deletion of Datasets"""
-
     def setUp(self):
         self.username = self.password = 'user'
         self.user = User.objects.create_user(
             self.username, '', self.password
         )
-        self.project = Project.objects.create()
-        self.galaxy_instance = GalaxyInstanceFactory()
-        self.isa_archive_file = FileStoreItem.objects.create(
-            datafile=SimpleUploadedFile(
-                'test_file.zip',
-                'Coffee is delicious!')
-        )
-        self.pre_isa_archive_file = FileStoreItem.objects.create(
-            datafile=SimpleUploadedFile(
-                'test_file.txt',
-                'Coffee is delicious!')
-        )
-        self.investigation = Investigation.objects.create(
-                isarchive_file=self.isa_archive_file.uuid,
-                pre_isarchive_file=self.pre_isa_archive_file.uuid
+        self.analyses, self.dataset = \
+            make_analyses_with_single_dataset(
+                1,
+                self.user
             )
 
-        self.workflow_engine = WorkflowEngine.objects.create(
-            instance=self.galaxy_instance
-        )
-        self.workflow = Workflow.objects.create(
-            name="Workflow1", workflow_engine=self.workflow_engine)
-        self.dataset_with_analysis = DataSet.objects.create(
-            name="dataset_with_analysis")
-        self.dataset_without_analysis = \
-            DataSet.objects.create(name="dataset_without_analysis")
-        self.investigation_link = \
-            InvestigationLink.objects.create(
-                investigation=self.investigation,
-                data_set=self.dataset_without_analysis)
+    def test_transaction_rollback_on_dataset_delete_failure(self):
+        with mock.patch.object(BaseResource, "delete", side_effect=Exception):
+            self.dataset.delete()
 
-        self.analysis = Analysis.objects.create(
-            name='bla',
-            summary='keks',
-            project=self.project,
-            data_set=self.dataset_with_analysis,
-            workflow=self.workflow,
-            status="SUCCESS"
-        )
-        self.analysis.set_owner(self.user)
+        self.assertGreater(Analysis.objects.count(), 0)
+        self.assertGreater(AnnotatedNode.objects.count(), 0)
+        self.assertGreater(Assay.objects.count(), 0)
+        self.assertGreater(DataSet.objects.count(), 0)
+        self.assertGreater(FileStoreItem.objects.count(), 0)
+        self.assertGreater(Investigation.objects.count(), 0)
+        self.assertGreater(InvestigationLink.objects.count(), 0)
+        self.assertGreater(Node.objects.count(), 0)
+        self.assertGreater(NodeCollection.objects.count(), 0)
+        self.assertGreater(Study.objects.count(), 0)
 
-    def test_verify_dataset_deletion_if_no_analysis_run_upon_it(self):
-        self.assertIsNotNone(
-            DataSet.objects.get(name="dataset_without_analysis"))
-        self.dataset_without_analysis.delete()
-        self.assertRaises(DataSet.DoesNotExist,
-                          DataSet.objects.get,
-                          name="dataset_without_analysis")
+    def test_dataset_deletion_removes_related_objects(self):
+        self.dataset.delete()
 
-    def test_verify_dataset_deletion_if_analysis_run_upon_it(self):
-        self.assertIsNotNone(
-            DataSet.objects.get(name="dataset_with_analysis"))
-        self.dataset_with_analysis.delete()
-        self.assertRaises(DataSet.DoesNotExist,
-                          DataSet.objects.get,
-                          name="dataset_with_analysis")
+        self.assertEqual(Analysis.objects.count(), 0)
+        self.assertEqual(AnnotatedNode.objects.count(), 0)
+        self.assertEqual(Assay.objects.count(), 0)
+        self.assertEqual(DataSet.objects.count(), 0)
+        self.assertEqual(FileStoreItem.objects.count(), 0)
+        self.assertEqual(Investigation.objects.count(), 0)
+        self.assertEqual(InvestigationLink.objects.count(), 0)
+        self.assertEqual(Node.objects.count(), 0)
+        self.assertEqual(NodeCollection.objects.count(), 0)
+        self.assertEqual(Study.objects.count(), 0)
+
+    def test_dataset_bulk_deletion_removes_related_objects(self):
+        # make a second DataSet
+        create_dataset_with_necessary_models(is_isatab_based=True)
+        DataSet.objects.all().delete()
+
+        self.assertEqual(Analysis.objects.count(), 0)
+        self.assertEqual(AnnotatedNode.objects.count(), 0)
+        self.assertEqual(Assay.objects.count(), 0)
+        self.assertEqual(DataSet.objects.count(), 0)
+        self.assertEqual(FileStoreItem.objects.count(), 0)
+        self.assertEqual(Investigation.objects.count(), 0)
+        self.assertEqual(InvestigationLink.objects.count(), 0)
+        self.assertEqual(Node.objects.count(), 0)
+        self.assertEqual(NodeCollection.objects.count(), 0)
+        self.assertEqual(Study.objects.count(), 0)
 
     def test_isa_archive_deletion(self):
-        self.assertIsNotNone(self.dataset_without_analysis.get_isa_archive())
-        self.dataset_without_analysis.delete()
-        self.assertIsNone(self.dataset_without_analysis.get_isa_archive())
+        isatab_dataset = create_dataset_with_necessary_models(
+            is_isatab_based=True
+        )
+        isatab_file_store_item_uuid = \
+            isatab_dataset.get_metadata_as_file_store_item().uuid
+        isatab_dataset.delete()
+        with self.assertRaises(FileStoreItem.DoesNotExist):
+            FileStoreItem.objects.get(uuid=isatab_file_store_item_uuid)
 
     def test_pre_isa_archive_deletion(self):
-        self.assertIsNotNone(
-            self.dataset_without_analysis.get_pre_isa_archive())
-        self.dataset_without_analysis.delete()
-        self.assertIsNone(self.dataset_without_analysis.get_pre_isa_archive())
+        tabular_file_store_item_uuid = \
+            self.dataset.get_metadata_as_file_store_item().uuid
+        self.dataset.delete()
+        with self.assertRaises(FileStoreItem.DoesNotExist):
+            FileStoreItem.objects.get(uuid=tabular_file_store_item_uuid)
+
+
+class AnalysisDeletionTest(TestCase):
+    """Testing for the deletion of Analyses"""
+    def setUp(self):
+        self.username = self.password = 'user'
+        self.user = User.objects.create_user(self.username, '', self.password)
+        self.analyses, self.dataset = \
+            make_analyses_with_single_dataset(
+                1,
+                self.user
+            )
+        self.analysis = self.analyses[0]
+
+    def test_transaction_rollback_on_analysis_delete_failure(self):
+        with mock.patch.object(BaseResource, "delete", side_effect=Exception):
+            self.analysis.delete()
+
+        self.assertGreater(Analysis.objects.count(), 0)
+        self.assertGreater(AnalysisNodeConnection.objects.count(), 0)
+        self.assertGreater(AnalysisResult.objects.count(), 0)
+        self.assertGreater(AnalysisStatus.objects.count(), 0)
+        self.assertGreater(Node.objects.count(), 0)
+
+    def test_analysis_deletion_removes_related_objects(self):
+        self.analysis.delete()
+
+        self.assertEqual(Analysis.objects.count(), 0)
+        self.assertEqual(AnalysisNodeConnection.objects.count(), 0)
+        self.assertEqual(AnalysisResult.objects.count(), 0)
+        self.assertEqual(AnalysisStatus.objects.count(), 0)
+
+        # analysis deletion should only remove derived Nodes
+        total_dataset_nodes = \
+            sum([d.get_nodes().count() for d in DataSet.objects.all()])
+        total_nodes = Node.objects.count()
+
+        self.assertGreater(total_dataset_nodes, 0)
+        self.assertEqual(total_dataset_nodes, total_nodes)
+
+    def test_analysis_bulk_deletion_removes_related_objects(self):
+        # make a second Analysis
+        make_analyses_with_single_dataset(1, self.user)
+        Analysis.objects.all().delete()
+
+        self.assertEqual(Analysis.objects.count(), 0)
+        self.assertEqual(AnalysisNodeConnection.objects.count(), 0)
+        self.assertEqual(AnalysisResult.objects.count(), 0)
+        self.assertEqual(AnalysisStatus.objects.count(), 0)
+
+        # analysis deletion should only remove derived Nodes
+        total_dataset_nodes = \
+            sum([d.get_nodes().count() for d in DataSet.objects.all()])
+        total_nodes = Node.objects.count()
+
+        self.assertGreater(total_dataset_nodes, 0)
+        self.assertEqual(total_dataset_nodes, total_nodes)
 
 
 class AnalysisTests(TestCase):
@@ -784,15 +850,6 @@ class AnalysisTests(TestCase):
             file_uuid=self.file_store_item1.uuid
         )
 
-        # Create WorkflowDataInputMaps
-        self.wf_data_input_map = WorkflowDataInputMap.objects.create(
-            workflow_data_input_name="input 1",
-            data_uuid=self.node.uuid
-        )
-        self.wf_data_input_map2 = WorkflowDataInputMap.objects.create(
-            workflow_data_input_name="input 2",
-            data_uuid=self.node2.uuid
-        )
         self.node_filename = "{}.{}".format(
             self.node.name,
             self.node.get_file_store_item().get_file_extension()
@@ -839,10 +896,6 @@ class AnalysisTests(TestCase):
             )
         )
 
-        # Add wf_data_input_maps to Analysis M2M relationship
-        self.analysis.workflow_data_input_maps.add(self.wf_data_input_map,
-                                                   self.wf_data_input_map2)
-
     def test_verify_analysis_deletion_if_nodes_not_analyzed_further(self):
         # Try to delete Analysis with a Node that has an
         # AnalysisNodeConnection with direction == 'out'
@@ -860,12 +913,10 @@ class AnalysisTests(TestCase):
         self.assertIsNotNone(Analysis.objects.get(
             name='analysis_with_node_analyzed_further'))
 
-    def test_terminate_file_import_tasks(self):
-        with mock.patch(
-            "file_store.models.FileStoreItem.terminate_file_import_task"
-        ) as terminate_mock:
-            self.analysis.terminate_file_import_tasks()
-            self.assertEqual(terminate_mock.call_count, 2)
+    def test_has_nodes_used_in_downstream_analyses(self):
+        self.assertTrue(self.analysis_with_node_analyzed_further
+                        .has_nodes_used_in_downstream_analyses())
+        self.assertFalse(self.analysis.has_nodes_used_in_downstream_analyses())
 
     def test_galaxy_tool_file_import_state_returns_data_when_it_should(self):
         self.analysis_status.galaxy_import_state = AnalysisStatus.PROGRESS
@@ -1275,99 +1326,71 @@ class DataSetResourceTest(LoginResourceTestCase):
         self.user_catch_all_project = UserProfile.objects.get(
             user=self.user
         ).catch_all_project
-        self.dataset = DataSet.objects.create(name="Dataset 1")
-        self.dataset2 = DataSet.objects.create(name="Dataset 2")
-        self.galaxy_instance = GalaxyInstanceFactory()
-        self.workflow_engine = WorkflowEngine.objects.create(
-            instance=self.galaxy_instance
+        self.tabular_dataset = create_dataset_with_necessary_models(
+            user=self.user
         )
-        self.workflow = Workflow.objects.create(
-            workflow_engine=self.workflow_engine
+        self.isatab_dataset = create_dataset_with_necessary_models(
+            user=self.user2,
+            is_isatab_based=True
         )
-        self.investigation = Investigation.objects.create()
-        self.study = Study.objects.create(investigation=self.investigation)
-        self.assay = Assay.objects.create(
-            study=self.study)
-        self.investigation_link = \
-            InvestigationLink.objects.create(
-                investigation=self.investigation,
-                data_set=self.dataset,
-                version=1
-            )
+        self.incomplete_dataset = create_dataset_with_necessary_models(
+            user=self.user
+        )
+        # Delete InvestigationLink to simulate a Dataset that hasn't finished
+        # being created
+        self.incomplete_dataset.get_latest_investigation_link().delete()
 
     def test_get_dataset(self):
         """Test retrieving an existing Dataset that belongs to a user who
         created it
         """
-
-        self.dataset.set_owner(self.user)
-
-        dataset_uri = make_api_uri(
-            "data_sets", self.dataset.uuid)
+        dataset_uri = make_api_uri("data_sets", self.tabular_dataset.uuid)
         response = self.api_client.get(
             dataset_uri,
             format='json'
         )
         self.assertValidJSONResponse(response)
         data = self.deserialize(response)
-        self.assertEqual(data['uuid'], self.dataset.uuid)
+        self.assertEqual(data['uuid'], self.tabular_dataset.uuid)
 
     def test_get_dataset_expecting_analyses(self):
-        a1 = Analysis.objects.create(
-            name='a1',
-            project=self.user_catch_all_project,
-            data_set=self.dataset,
-            workflow=self.workflow
-        )
-        a2 = Analysis.objects.create(
-            name='a2',
-            project=self.user_catch_all_project,
-            data_set=self.dataset,
-            workflow=self.workflow
+        analyses_to_create = 2
+        analyses, dataset = make_analyses_with_single_dataset(
+            analyses_to_create,
+            self.user
         )
 
-        a1.set_owner(self.user)
-        a2.set_owner(self.user)
-
-        dataset_uri = make_api_uri("data_sets",
-                                   self.dataset.uuid)
+        dataset_uri = make_api_uri("data_sets", dataset.uuid)
         response = self.api_client.get(dataset_uri, format='json')
         self.assertValidJSONResponse(response)
         data = self.deserialize(response)
-        self.assertEqual(data['uuid'], self.dataset.uuid)
-        self.assertEqual(len(data['analyses']), 2)
+        self.assertEqual(data['uuid'], dataset.uuid)
+        self.assertEqual(len(data['analyses']), analyses_to_create)
 
-        sorted_analyses = sorted(data['analyses'], key=lambda x: x["name"])
-        for analysis in sorted_analyses:
+        for analysis in data['analyses']:
             self.assertTrue(analysis['is_owner'])
             self.assertEqual(analysis['owner'],
                              UserProfile.objects.get(user=self.user).uuid)
-        self.assertEqual(sorted_analyses[0]['status'], a1.status)
-        self.assertEqual(sorted_analyses[0]['name'], a1.name)
-        self.assertEqual(sorted_analyses[0]['uuid'], a1.uuid)
-        self.assertEqual(sorted_analyses[1]['status'], a2.status)
-        self.assertEqual(sorted_analyses[1]['name'], a2.name)
-        self.assertEqual(sorted_analyses[1]['uuid'], a2.uuid)
+            self.assertIsNotNone(analysis.get('status'))
+            self.assertIsNotNone(analysis.get('name'))
+            self.assertIsNotNone(analysis.get('uuid'))
 
     def test_get_dataset_expecting_no_analyses(self):
-        dataset_uri = make_api_uri("data_sets",
-                                   self.dataset.uuid)
+        dataset_uri = make_api_uri("data_sets", self.tabular_dataset.uuid)
         response = self.api_client.get(
             dataset_uri,
             format='json'
         )
         self.assertValidJSONResponse(response)
         data = self.deserialize(response)
-        self.assertEqual(data['uuid'], self.dataset.uuid)
+        self.assertEqual(data['uuid'], self.tabular_dataset.uuid)
         self.assertEqual(data['analyses'], [])
 
     def test_detail_response_with_complete_dataset(self):
         # Properly created DataSets will have version information
-        self.dataset.set_owner(self.user)
-
         dataset_uri = make_api_uri(
             "data_sets",
-            self.dataset.uuid
+            self.tabular_dataset.uuid
         )
         response = self.api_client.get(
             dataset_uri,
@@ -1379,11 +1402,9 @@ class DataSetResourceTest(LoginResourceTestCase):
 
     def test_detail_response_yields_error_if_incomplete_dataset(self):
         # DataSets that aren't fully created will yield informative errors
-        self.dataset2.set_owner(self.user)
-
         dataset_uri = make_api_uri(
             "data_sets",
-            self.dataset2.uuid
+            self.incomplete_dataset.uuid
         )
         with self.assertRaises(NotFound):
             self.api_client.get(dataset_uri, format='json')
@@ -1391,14 +1412,36 @@ class DataSetResourceTest(LoginResourceTestCase):
     def test_list_response_yields_complete_datasets_only(self):
         # DataSets that aren't fully created will not be displayed in the
         # list api response
-        self.dataset.set_owner(self.user)
-        self.dataset2.set_owner(self.user)
-
         resp = self.api_client.get(make_api_uri('data_sets'), format='json')
         self.assertValidJSONResponse(resp)
         data = json.loads(resp.content)
         self.assertEqual(data["meta"]["total_count"], 1)
-        self.assertEqual(data["objects"][0]["name"], self.dataset.name)
+        self.assertEqual(data["objects"][0]["name"], self.tabular_dataset.name)
+
+    def test_isatab_based_dataset_specifics_in_response(self):
+        data = self.deserialize(
+            self.api_client.get(
+                make_api_uri("data_sets", self.isatab_dataset.uuid),
+                format='json'
+            )
+        )
+        isa_archive_file_store_item = \
+            self.isatab_dataset.get_metadata_as_file_store_item()
+        self.assertEqual(data["isa_archive"], isa_archive_file_store_item.uuid)
+        self.assertEqual(data["isa_archive_url"],
+                         isa_archive_file_store_item.get_datafile_url())
+
+    def test_tabular_dataset_specifics_in_response(self):
+        data = self.deserialize(
+            self.api_client.get(
+                make_api_uri("data_sets", self.tabular_dataset.uuid),
+                format='json'
+            )
+        )
+        pre_isa_archive_file_store_item = \
+            self.tabular_dataset.get_metadata_as_file_store_item()
+        self.assertEqual(data["pre_isa_archive"],
+                         pre_isa_archive_file_store_item.uuid)
 
 
 class DataSetTests(TestCase):
@@ -1417,141 +1460,117 @@ class DataSetTests(TestCase):
         self.user_catch_all_project = UserProfile.objects.get(
             user=self.user
         ).catch_all_project
-        self.dataset = DataSet.objects.create()
-        self.dataset2 = DataSet.objects.create()
-        self.galaxy_instance = GalaxyInstanceFactory()
-        self.workflow_engine = WorkflowEngine.objects.create(
-            instance=self.galaxy_instance
-        )
-        self.workflow = Workflow.objects.create(
-            workflow_engine=self.workflow_engine
-        )
-        self.investigation = Investigation.objects.create()
-        self.latest_investigation = Investigation.objects.create()
 
-        self.study = Study.objects.create(
-            investigation=self.latest_investigation
+        self.isa_tab_dataset = create_dataset_with_necessary_models(
+            is_isatab_based=True,
+            user=self.user
         )
-        self.assay = Assay.objects.create(
-            study=self.study
+        self.latest_tabular_dataset_version = 3
+        self.tabular_dataset = create_dataset_with_necessary_models(
+            user=self.user2,
+            latest_version=self.latest_tabular_dataset_version
         )
-        self.investigation_link = InvestigationLink.objects.create(
-            investigation=self.investigation,
-            data_set=self.dataset,
-            version=1
+        self.incomplete_dataset = create_dataset_with_necessary_models(
+            user=self.user
         )
-        self.latest_investigation_link = InvestigationLink.objects.create(
-            investigation=self.latest_investigation,
-            data_set=self.dataset,
-            version=2
-        )
-
-        self.file_store_item = FileStoreItem.objects.create(
-            datafile=SimpleUploadedFile(
-                'test_file.txt',
-                'Coffee is delicious!'
-            )
-        )
-        self.file_store_item1 = FileStoreItem.objects.create(
-            datafile=SimpleUploadedFile(
-                'test_file.txt',
-                'Coffee is delicious!'
-            )
-        )
-        self.file_store_item2 = FileStoreItem.objects.create(
-            datafile=SimpleUploadedFile(
-                'test_file.txt',
-                'Coffee is delicious!'
-            )
-        )
-        self.node = Node.objects.create(
-            name="n0", assay=self.assay, study=self.study,
-            file_uuid=self.file_store_item.uuid)
-        self.node1 = Node.objects.create(
-            name="n1", assay=self.assay, study=self.study,
-            file_uuid=self.file_store_item1.uuid)
-        self.node2 = Node.objects.create(
-            name="n2", assay=self.assay, study=self.study,
-            file_uuid=self.file_store_item2.uuid)
-        self.node3 = Node.objects.create(
-            name="n3", assay=self.assay, study=self.study)
-        self.node4 = Node.objects.create(
-            name="n4", assay=self.assay, study=self.study)
+        # Delete InvestigationLink to simulate a Dataset that hasn't finished
+        # being created
+        self.incomplete_dataset.get_latest_investigation_link().delete()
 
     def test_get_studies(self):
-        studies = self.dataset.get_studies()
+        studies = self.isa_tab_dataset.get_studies()
         self.assertEqual(len(studies), 1)
 
     def test_get_assays(self):
-        assays = self.dataset.get_assays()
+        assays = self.isa_tab_dataset.get_assays()
         self.assertEqual(len(assays), 1)
 
     def test_get_file_store_items(self):
-        file_store_items = self.dataset.get_file_store_items()
+        file_store_items = self.isa_tab_dataset.get_file_store_items()
         self.assertEqual(len(file_store_items), 3)
-        self.assertIn(self.file_store_item, file_store_items)
-        self.assertIn(self.file_store_item1, file_store_items)
-        self.assertIn(self.file_store_item2, file_store_items)
 
     def test_dataset_complete(self):
-        self.assertTrue(self.dataset.is_valid())
+        self.assertTrue(self.isa_tab_dataset.is_valid())
 
     def test_dataset_incomplete(self):
-        self.assertFalse(self.dataset2.is_valid())
+        self.assertFalse(self.incomplete_dataset.is_valid())
 
     def test_neo4j_called_on_post_save(self):
         with mock.patch(
             "core.models.async_update_annotation_sets_neo4j"
         ) as neo4j_mock:
-            self.dataset.save()
+            self.isa_tab_dataset.save()
             self.assertTrue(neo4j_mock.called)
 
     def test_solr_called_on_post_save(self):
         with mock.patch(
             "core.models.update_data_set_index"
         ) as solr_mock:
-            self.dataset.save()
+            self.isa_tab_dataset.save()
             self.assertTrue(solr_mock.called)
 
     def test_get_latest_investigation_link(self):
         self.assertEqual(
-            self.dataset.get_latest_investigation_link(),
-            self.latest_investigation_link
+            self.tabular_dataset.get_latest_investigation_link().version,
+            self.latest_tabular_dataset_version
         )
 
     def test_get_latest_investigation(self):
         self.assertEqual(
-            self.dataset.get_latest_investigation_link().investigation,
-            self.latest_investigation
+            self.isa_tab_dataset.get_latest_investigation_link().investigation,
+            self.isa_tab_dataset.get_investigation()
         )
 
     def test_get_latest_study(self):
-        dataset = create_dataset_with_necessary_models()
         self.assertEqual(
-            dataset.get_latest_study(),
+            self.isa_tab_dataset.get_latest_study(),
             Study.objects.get(
-                investigation=(
-                    dataset.get_latest_investigation_link().investigation
-                )
+                investigation=self.isa_tab_dataset.
+                get_latest_investigation_link().investigation
             )
         )
 
     def test_get_latest_study_no_studies(self):
-        dataset = create_dataset_with_necessary_models()
-        dataset.get_latest_study().delete()
+        self.isa_tab_dataset.get_latest_study().delete()
         with self.assertRaises(RuntimeError) as context:
-            dataset.get_latest_study()
+            self.isa_tab_dataset.get_latest_study()
             self.assertIn("Couldn't fetch Study", context.exception.message)
 
+    def test_get_nodes(self):
+        nodes = Node.objects.all()
+        self.assertGreater(nodes.count(), 0)
+        for node in self.isa_tab_dataset.get_nodes():
+            self.assertIn(node, nodes)
 
-class DataSetApiV2Tests(APITestCase):
+    def test_get_nodes_no_nodes_available(self):
+        Node.objects.all().delete()
+        self.assertQuerysetEqual(self.isa_tab_dataset.get_nodes(), [])
 
-    def create_rand_str(self, count):
-        return ''.join(
-            random.choice(string.ascii_lowercase) for _ in xrange(count)
+    def test_get_node_uuids(self):
+        node_uuids = Node.objects.all().values_list("uuid", flat=True)
+        self.assertGreater(node_uuids.count(), 0)
+        for node_uuid in self.isa_tab_dataset.get_node_uuids():
+            self.assertIn(node_uuid, node_uuids)
+
+    def test_get_node_uuids_no_nodes_available(self):
+        Node.objects.all().delete()
+        self.assertQuerysetEqual(self.isa_tab_dataset.get_node_uuids(), [])
+
+    def test_get_metadata_as_file_store_item(self):
+        self.assertIsNotNone(
+            self.isa_tab_dataset.get_metadata_as_file_store_item()
+        )
+        self.assertIsNotNone(
+            self.tabular_dataset.get_metadata_as_file_store_item()
         )
 
-    def setUp(self):
+    def test_is_isatab_based(self):
+        self.assertTrue(self.isa_tab_dataset.is_isatab_based)
+        self.assertFalse(self.tabular_dataset.is_isatab_based)
+
+
+class APIV2TestCase(APITestCase):
+    def setUp(self, **kwargs):
         self.public_group_name = ExtendedGroup.objects.public_group().name
         self.username = 'coffee_lover'
         self.password = 'coffeecoffee'
@@ -1560,33 +1579,27 @@ class DataSetApiV2Tests(APITestCase):
 
         self.factory = APIRequestFactory()
         self.client = APIClient()
-        self.view = DataSetsViewSet.as_view()
+        self.url_root = '/api/v2/{}'.format(kwargs.get("api_base_name"))
+        self.view = kwargs.get("view")
 
-        self.url_root = '/api/v2/data_sets/'
+        self.client.login(username=self.username, password=self.password)
+
+
+class DataSetApiV2Tests(APIV2TestCase):
+    def create_rand_str(self, count):
+        return ''.join(
+            random.choice(string.ascii_lowercase) for _ in xrange(count)
+        )
+
+    def setUp(self):
+        super(DataSetApiV2Tests, self).setUp(
+            api_base_name="datasets/",
+            view=DataSetsViewSet.as_view()
+        )
 
         # Create Datasets
-        self.dataset = DataSet.objects.create(
-            name="coffee dataset",
-            title="coffee dataset"
-        )
-        self.dataset2 = DataSet.objects.create(
-            name="cool dataset",
-            title="cool dataset"
-        )
-
-        # Set Data Sets Owner
-        self.dataset.set_owner(self.user)
-        self.dataset2.set_owner(self.user)
-
-        # Create Investigation/InvestigationLinks for the DataSets
-        self.investigation = Investigation.objects.create()
-
-        # Create Studys and Assays
-        self.study = Study.objects.create(investigation=self.investigation)
-        self.assay = Assay.objects.create(study=self.study)
-
-        # Create Nodes
-        self.node = Node.objects.create(assay=self.assay, study=self.study)
+        self.dataset = create_dataset_with_necessary_models(user=self.user)
+        self.dataset2 = create_dataset_with_necessary_models(user=self.user)
 
         self.node_json = json.dumps([{
             "uuid": "cfb31cca-4f58-4ef0-b1e2-4469c804bf73",
@@ -1601,8 +1614,6 @@ class DataSetApiV2Tests(APITestCase):
             "auxiliary_file_generation_task_state": None,
             "ready_for_igv_detail_view": None
         }])
-
-        self.client.login(username=self.username, password=self.password)
 
         # Make reusable requests & responses
         self.get_request = self.factory.get(self.url_root)
@@ -1870,14 +1881,13 @@ class DataSetApiV2Tests(APITestCase):
         self.assertEqual(patch_response.data.get('title'), new_title)
 
 
-class AnalysisApiV2Tests(APITestCase):
+class AnalysisApiV2Tests(APIV2TestCase):
 
     def setUp(self):
-        self.public_group_name = ExtendedGroup.objects.public_group().name
-        self.username = 'coffee_lover'
-        self.password = 'coffeecoffee'
-        self.user = User.objects.create_user(self.username, '',
-                                             self.password)
+        super(AnalysisApiV2Tests, self).setUp(
+            api_base_name="analyses/",
+            view=AnalysesViewSet.as_view()
+        )
         self.project = Project.objects.create()
 
         self.galaxy_instance = GalaxyInstanceFactory()
@@ -1887,11 +1897,6 @@ class AnalysisApiV2Tests(APITestCase):
         self.workflow = Workflow.objects.create(
             workflow_engine=self.workflow_engine
         )
-        self.factory = APIRequestFactory()
-        self.client = APIClient()
-        self.view = AnalysesViewSet.as_view()
-
-        self.url_root = '/api/v2/analyses/'
 
         # Create Datasets
         self.dataset = DataSet.objects.create(name="coffee dataset")
@@ -2040,6 +2045,33 @@ class AnalysisApiV2Tests(APITestCase):
         self.assertEqual(Analysis.objects.all().count(), 1)
 
 
+class WorkflowApiV2Tests(APIV2TestCase):
+    def setUp(self):
+        self.mock_workflow_graph = "{is_test_workflow_graph: true}"
+        super(WorkflowApiV2Tests, self).setUp(
+            api_base_name="workflows/",
+            view=WorkflowViewSet.as_view({"get": "graph"})
+        )
+        self.workflow = WorkflowFactory(
+            graph=self.mock_workflow_graph,
+            workflow_engine=WorkflowEngineFactory(
+                instance=GalaxyInstanceFactory()
+            )
+        )
+
+    def test_get_workflow_graph(self):
+        workflow_graph_url = urljoin(
+            self.url_root,
+            "<uuid>/graph/"
+        )
+        get_request = self.factory.get(workflow_graph_url)
+        get_response = self.get_response = self.view(
+            get_request,
+            uuid=self.workflow.uuid
+        )
+        self.assertEqual(get_response.content, self.mock_workflow_graph)
+
+
 class CoreIndexTests(TestCase):
     def setUp(self):
         self.dataset_index = DataSetIndex()
@@ -2106,7 +2138,10 @@ class CoreIndexTests(TestCase):
         prepared_description = self.dataset_index.prepare_description(
             self.good_dataset
         )
-        self.assertEqual(prepared_description, "This is a great DataSet")
+        self.assertEqual(
+            prepared_description,
+            self.good_dataset.get_investigation().get_description()
+        )
 
 
 class TestMigrations(TestCase):
@@ -2185,3 +2220,80 @@ class DataSetPermissionsUpdateTests(TestMigrations):
                                                self.dataset_b))
         self.assertTrue(self._check_permission(self.user_a, self.dataset_b))
         self.assertTrue(self._check_permission(self.user_b, self.dataset_b))
+
+
+class TestManagementCommands(TestCase):
+    def test_set_up_site_name(self):
+        site_name = "Refinery Test"
+        domain = "www.example.com"
+        call_command('set_up_site_name', site_name, domain)
+
+        self.assertIsNotNone(
+            Site.objects.get(domain=domain, name=site_name)
+        )
+
+    def test_set_up_site_name_failure(self):
+        with self.assertRaises(CommandError):
+            call_command('set_up_site_name')
+
+    def _user_in_public_group(self, user_instance):
+        return bool(
+            user_instance.groups.filter(
+                name=ExtendedGroup.objects.public_group().name
+            ).count()
+        )
+
+    def test_add_users_to_public_group(self):
+        # We have a post-save hook on User for this functionality, but this
+        # doesn't apply when we create the super/guest user with 'loaddata'
+        # where save() is never actually called
+        call_command("loaddata", "guest.json")
+        user = User.objects.get(username="guest")
+        self.assertFalse(self._user_in_public_group(user))
+
+        call_command("add_users_to_public_group")
+        self.assertTrue(self._user_in_public_group(user))
+
+    def test_activate_user(self):
+        guest_username = "guest"
+        call_command("loaddata", "guest.json")
+        user = User.objects.get(username=guest_username)
+        self.assertFalse(user.is_active)
+
+        call_command("activate_user", guest_username)
+        self.assertTrue(User.objects.get(username=guest_username).is_active)
+
+    def test_import_annotations(self):
+        """ We just care about this in the context of the optparse -> argparse
+        upgrade for Django 1.8 and don't necessarily want to test the
+        neo4j interactions """
+        with mock.patch.object(ImportAnnotationsCommand, "handle"):
+            call_command("import_annotations", "-c")
+
+    def test_create_workflow_engine(self):
+        galaxy_instance = GalaxyInstanceFactory()
+        call_command(
+            "create_workflowengine",
+            str(galaxy_instance.id),
+            ExtendedGroup.objects.public_group().name
+        )
+        self.assertIsNotNone(
+            WorkflowEngine.objects.get(instance=galaxy_instance)
+        )
+
+    def test_create_workflow_engine_bad_galaxy_instance(self):
+        with self.assertRaises(CommandError):
+            call_command(
+                "create_workflowengine",
+                str(123),
+                ExtendedGroup.objects.public_group().name
+            )
+
+    def test_create_workflow_engine_bad_group_name(self):
+        galaxy_instance = GalaxyInstanceFactory()
+        with self.assertRaises(CommandError):
+            call_command(
+                "create_workflowengine",
+                str(galaxy_instance.id),
+                "non-existent group name"
+            )

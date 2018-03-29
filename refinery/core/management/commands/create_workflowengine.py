@@ -16,7 +16,6 @@ logger = logging.getLogger(__name__)
 
 
 class Command(BaseCommand):
-    args = "<Galaxy instance ID> <Group name>"
     help = "Creates a %s workflow engine with the specified Galaxy instance " \
            "and group." % Site.objects.get_current().name
     """
@@ -24,21 +23,27 @@ class Command(BaseCommand):
     Description:
     main program; run the command
     """
+    def add_arguments(self, parser):
+        parser.add_argument('galaxy_instance_id', type=int)
+        parser.add_argument('group_name')
+
     def handle(self, *args, **options):
         """This function creates a workflow engine and assigns it to the
         specified group
         """
         try:
-            instance = Instance.objects.get(id=args[0])
-        except IndexError:
+            instance = Instance.objects.get(id=options["galaxy_instance_id"])
+        except KeyError:
             raise CommandError("Please provide a Galaxy instance ID")
         except Instance.DoesNotExist:
             raise CommandError(
-                "Unable to retrieve Galaxy instance with id '%d'" % args[0])
+                "Unable to retrieve Galaxy instance with id '%s'" %
+                options["galaxy_instance_id"]
+            )
         # get *manager* group for indicated group
         try:
-            group_name = args[1]
-        except IndexError:
+            group_name = options["group_name"]
+        except KeyError:
             raise CommandError("Please provide a group name")
         try:
             manager_group = ExtendedGroup.objects.get(

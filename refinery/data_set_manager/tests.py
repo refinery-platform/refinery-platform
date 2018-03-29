@@ -414,11 +414,7 @@ class AssaysFilesAPITests(APITestCase):
 
     def tearDown(self):
         self.client.logout()
-        Assay.objects.all().delete()
-        Study.objects.all().delete()
-        InvestigationLink.objects.all().delete()
-        Investigation.objects.all().delete()
-        DataSet.objects.all().delete()
+        super(AssaysFilesAPITests, self).tearDown()
 
     @mock.patch('data_set_manager.views.generate_solr_params_for_assay')
     @mock.patch('data_set_manager.views.search_solr')
@@ -484,7 +480,7 @@ class AssaysFilesAPITests(APITestCase):
         mock_format.return_value = {'status': 200}
         self.client.login(username=self.user_guest,
                           password=self.fake_password)
-        assign_perm('read_%s' % DataSet._meta.module_name,
+        assign_perm('read_%s' % DataSet._meta.model_name,
                     self.user2,
                     self.data_set)
         uuid = self.valid_uuid
@@ -508,7 +504,7 @@ class AssaysFilesAPITests(APITestCase):
         mock_format.return_value = {'status': 200}
         self.client.login(username=self.user_guest,
                           password=self.fake_password)
-        assign_perm('read_meta_%s' % DataSet._meta.module_name,
+        assign_perm('read_meta_%s' % DataSet._meta.model_name,
                     self.user2,
                     self.data_set)
 
@@ -1544,7 +1540,7 @@ class UtilitiesTests(TestCase):
         attribute_list = AttributeOrder.objects.filter(assay=self.assay)
         self.assertItemsEqual(old_attribute_list, attribute_list)
 
-    @mock.patch("data_set_manager.utils.core.utils.get_full_url")
+    @mock.patch("data_set_manager.utils.core.utils.get_absolute_url")
     def test_get_file_url_from_node_uuid_good_uuid(self, mock_get_url):
         mock_get_url.return_value = "test_file_a.txt"
         self.assertIn(
@@ -1888,29 +1884,15 @@ class NodeIndexTests(APITestCase):
     def setUp(self):
         data_set = DataSet.objects.create()
         investigation = Investigation.objects.create()
-
-        InvestigationLink.objects.create(
-            investigation=investigation,
-            data_set=data_set
-        )
-
+        InvestigationLink.objects.create(investigation=investigation,
+                                         data_set=data_set)
         study = Study.objects.create(investigation=investigation)
         assay = Assay.objects.create(study=study, technology='whizbang')
 
-        # None of the details of the test_file except name matter for the test
-        test_file = StringIO()
-        test_file.write('Coffee is great.\n')
-        self.file_store_item = FileStoreItem.objects.create(
-            datafile=InMemoryUploadedFile(
-                test_file,
-                field_name='tempfile',
-                name='test_file.txt',
-                content_type='text/plain',
-                size=len(test_file.getvalue()),
-                charset='utf-8'
-            ),
-            import_task_id=str(uuid.uuid4())
-        )
+        self.file_store_item = FileStoreItem()
+        self.file_store_item.import_task_id = str(uuid.uuid4())
+        self.file_store_item.save()
+
         self.import_task = TaskMeta.objects.create(
             task_id=self.file_store_item.import_task_id
         )
@@ -1966,7 +1948,7 @@ class NodeIndexTests(APITestCase):
                 'REFINERY_FILETYPE_#_#_s': expected_filetype,
                 'REFINERY_NAME_#_#_s': 'http://example.com/fake.txt',
                 'REFINERY_SUBANALYSIS_#_#_s': -1,
-                'REFINERY_TYPE_#_#_s': u'Raw Data File',
+                'REFINERY_TYPE_#_#_s': 'Raw Data File',
                 'REFINERY_WORKFLOW_OUTPUT_#_#_s': 'N/A',
                 'analysis_uuid': None,
                 'assay_uuid': self.assay_uuid,
@@ -1974,7 +1956,7 @@ class NodeIndexTests(APITestCase):
                 u'django_ct': u'data_set_manager.node',
                 u'django_id': u'#',
                 'file_uuid': self.file_uuid,
-                'filename_Characteristics_generic_s': u'fake.txt',
+                'filetype_Characteristics_generic_s': expected_filetype,
                 'genome_build': None,
                 u'id': u'data_set_manager.node.#',
                 'is_annotation': False,
@@ -1986,60 +1968,36 @@ class NodeIndexTests(APITestCase):
                 'species': None,
                 'study_uuid': self.study_uuid,
                 'subanalysis': None,
-                'text': u'',
                 'technology_Characteristics_generic_s': 'whizbang',
                 'technology_accession_Characteristics_generic_s': '',
                 'technology_source_Characteristics_generic_s': '',
+                'text': u'',
                 'type': u'Raw Data File',
                 'uuid': self.node_uuid,
                 'workflow_output': None
             }
         )
 
-    def test_prepare_node_good_datafile(self):
-        data_to_be_indexed = self._prepare_node_index(self.node)
-        self._assert_node_index_prepared_correctly(
-            data_to_be_indexed,
-            expected_download_url=self.file_store_item.get_datafile_url()
-        )
-        self.assertRegexpMatches(
-            data_to_be_indexed['REFINERY_DOWNLOAD_URL_s'],
-            r'^http://example.com/media/file_store/.+/test_file.+txt$'
-            # There may or may not be a suffix on "test_file",
-            # depending on environment. Don't make it too strict!
-        )
+    def test_prepare_node_with_valid_datafile(self):
+        with mock.patch.object(FileStoreItem, 'get_datafile_url',
+                               return_value='/media/file_store/test_file.txt'):
+            self._assert_node_index_prepared_correctly(
+                self._prepare_node_index(self.node),
+                expected_download_url=self.file_store_item.get_datafile_url()
+            )
 
     def test_prepare_node_remote_datafile_source(self):
-        self.file_store_item.datafile.delete()
-        self.file_store_item.source = "http://www.example.com/test.txt"
+        self.file_store_item.source = u'http://www.example.org/test.txt'
         self.file_store_item.save()
         self._assert_node_index_prepared_correctly(
             self._prepare_node_index(self.node),
-            expected_download_url=self.file_store_item.source
+            expected_download_url=self.file_store_item.source,
+            expected_filetype=self.file_store_item.filetype
         )
 
-    def test_prepare_node_missing_datafile(self):
-        self.file_store_item.datafile.delete()
-        self.file_store_item.save()
-        with mock.patch.object(
-            FileStoreItem,
-            "get_import_status",
-            return_value=SUCCESS
-        ) as get_import_status_mock:
-            self._assert_node_index_prepared_correctly(
-                self._prepare_node_index(self.node),
-                expected_download_url=NOT_AVAILABLE
-            )
-            self.assertTrue(get_import_status_mock.called)
-
     def test_prepare_node_pending_yet_existing_file_import_task(self):
-        self.file_store_item.datafile.delete()
-        self.file_store_item.save()
-        with mock.patch.object(
-            FileStoreItem,
-            "get_import_status",
-            return_value=PENDING
-        ):
+        with mock.patch.object(FileStoreItem, 'get_import_status',
+                               return_value=PENDING):
             self._assert_node_index_prepared_correctly(
                 self._prepare_node_index(self.node),
                 expected_download_url=PENDING
@@ -2047,51 +2005,49 @@ class NodeIndexTests(APITestCase):
 
     def test_prepare_node_pending_non_existent_file_import_task(self):
         self.import_task.delete()
-        self.file_store_item.datafile.delete()
-        self._assert_node_index_prepared_correctly(
-            self._prepare_node_index(self.node),
-            expected_download_url=NOT_AVAILABLE
-        )
+        with mock.patch.object(FileStoreItem, 'get_datafile_url',
+                               return_value=None):
+            self._assert_node_index_prepared_correctly(
+                self._prepare_node_index(self.node),
+                expected_download_url=NOT_AVAILABLE
+            )
 
     def test_prepare_node_no_file_import_task_id_yet(self):
-        self.file_store_item.datafile.delete()
         self.file_store_item.import_task_id = ""
         self.file_store_item.save()
         self.import_task.delete()
         self._assert_node_index_prepared_correctly(
-            self._prepare_node_index(self.node),
-            expected_download_url=PENDING
+            self._prepare_node_index(self.node), expected_download_url=PENDING
         )
 
     def test_prepare_node_no_file_store_item(self):
         self.file_store_item.delete()
         self._assert_node_index_prepared_correctly(
             self._prepare_node_index(self.node),
-            expected_download_url=NOT_AVAILABLE,
-            expected_filetype=""
+            expected_download_url=NOT_AVAILABLE, expected_filetype=''
         )
 
     def test_prepare_node_s3_file_store_item_source_no_datafile(self):
-        self.file_store_item.datafile.delete()
-        self.file_store_item.source = "s3://test/test.txt"
+        self.file_store_item.source = 's3://test/test.txt'
         self.file_store_item.save()
-        with mock.patch.object(
-            FileStoreItem,
-            "get_import_status",
-            return_value=SUCCESS
-        ):
+        with mock.patch.object(FileStoreItem, 'get_import_status',
+                               return_value=SUCCESS):
             self._assert_node_index_prepared_correctly(
                 self._prepare_node_index(self.node),
-                expected_download_url=NOT_AVAILABLE
+                expected_download_url=NOT_AVAILABLE,
+                expected_filetype=self.file_store_item.filetype
             )
 
     def test_prepare_node_s3_file_store_item_source_with_datafile(self):
-        self.file_store_item.source = "s3://test/test.txt"
+        self.file_store_item.source = 's3://test/test.txt'
         self.file_store_item.save()
-        self._assert_node_index_prepared_correctly(
-            self._prepare_node_index(self.node),
-            expected_download_url=self.file_store_item.get_datafile_url()
-        )
+        with mock.patch.object(FileStoreItem, 'get_datafile_url',
+                               return_value='/media/file_store/test.txt'):
+            self._assert_node_index_prepared_correctly(
+                self._prepare_node_index(self.node),
+                expected_download_url=self.file_store_item.get_datafile_url(),
+                expected_filetype=self.file_store_item.filetype
+            )
 
     def _create_analysis_node_connection(self, direction, is_refinery_file):
         user = User.objects.create_user("test", "", "test")
@@ -2110,20 +2066,24 @@ class NodeIndexTests(APITestCase):
     def test_prepare_node_with_non_exposed_input_node_connection_isnt_skipped(
             self
     ):
-        self._create_analysis_node_connection(INPUT_CONNECTION, False)
-        self._assert_node_index_prepared_correctly(
-            self._prepare_node_index(self.node),
-            expected_download_url=self.file_store_item.get_datafile_url()
-        )
+        with mock.patch.object(FileStoreItem, 'get_datafile_url',
+                               return_value='/media/file_store/test_file.txt'):
+            self._create_analysis_node_connection(INPUT_CONNECTION, False)
+            self._assert_node_index_prepared_correctly(
+                self._prepare_node_index(self.node),
+                expected_download_url=self.file_store_item.get_datafile_url()
+            )
 
     def test_prepare_node_with_exposed_input_node_connection_isnt_skipped(
             self
     ):
-        self._create_analysis_node_connection(INPUT_CONNECTION, True)
-        self._assert_node_index_prepared_correctly(
-            self._prepare_node_index(self.node),
-            expected_download_url=self.file_store_item.get_datafile_url()
-        )
+        with mock.patch.object(FileStoreItem, 'get_datafile_url',
+                               return_value='/media/file_store/test_file.txt'):
+            self._create_analysis_node_connection(INPUT_CONNECTION, True)
+            self._assert_node_index_prepared_correctly(
+                self._prepare_node_index(self.node),
+                expected_download_url=self.file_store_item.get_datafile_url()
+            )
 
     def test_prepare_node_with_non_exposed_output_node_connection_is_skipped(
             self
@@ -2135,11 +2095,13 @@ class NodeIndexTests(APITestCase):
     def test_prepare_node_with_exposed_output_node_connection_isnt_skipped(
         self
     ):
-        self._create_analysis_node_connection(OUTPUT_CONNECTION, True)
-        self._assert_node_index_prepared_correctly(
-            self._prepare_node_index(self.node),
-            expected_download_url=self.file_store_item.get_datafile_url()
-        )
+        with mock.patch.object(FileStoreItem, 'get_datafile_url',
+                               return_value='/media/file_store/test_file.txt'):
+            self._create_analysis_node_connection(OUTPUT_CONNECTION, True)
+            self._assert_node_index_prepared_correctly(
+                self._prepare_node_index(self.node),
+                expected_download_url=self.file_store_item.get_datafile_url()
+            )
 
 
 @contextlib.contextmanager
@@ -2167,11 +2129,7 @@ class IsaTabTestBase(TestCase):
         self.user.set_password(test_user)
         self.user.save()
         self.isa_tab_import_url = "/data_set_manager/import/isa-tab-form/"
-        is_logged_in = self.client.login(
-            username=self.user.username,
-            password=test_user
-        )
-        self.assertTrue(is_logged_in)
+        self.client.login(username=self.user.username, password=test_user)
 
     def tearDown(self):
         mock.patch.stopall()
@@ -2416,3 +2374,52 @@ class UpdateMissingAttributeOrderTests(TestMigrations):
             self.assertEqual(0, attribute_order.rank)
             self.assertEqual(NodeIndex.DOWNLOAD_URL,
                              attribute_order.solr_field)
+
+
+class InvestigationTests(TestCase):
+    def setUp(self):
+        self.isa_tab_dataset = create_dataset_with_necessary_models(
+            is_isatab_based=True
+        )
+        self.isa_tab_investigation = self.isa_tab_dataset.get_investigation()
+
+        self.tabular_dataset = create_dataset_with_necessary_models()
+        self.tabular_investigation = self.tabular_dataset.get_investigation()
+
+    def test_isa_archive(self):
+        self.assertIsNotNone(self.isa_tab_investigation.isa_archive)
+        self.assertIsNone(self.tabular_investigation.isa_archive)
+
+    def test_pre_isa_archive(self):
+        self.assertIsNone(self.isa_tab_investigation.pre_isa_archive)
+        self.assertIsNotNone(self.tabular_investigation.pre_isa_archive)
+
+    def test_get_identifier(self):
+        self.assertEqual(self.isa_tab_investigation.get_identifier(),
+                         self.isa_tab_investigation.identifier)
+
+    def test_get_identifier_no_identifier(self):
+        # Investigations without identifiers should resort to using the
+        # info from their Study
+        self.isa_tab_investigation.identifier = None
+        self.isa_tab_investigation.save()
+        self.assertEqual(self.isa_tab_investigation.get_identifier(),
+                         self.isa_tab_dataset.get_latest_study().identifier)
+
+    def test_get_description(self):
+        self.assertEqual(self.isa_tab_investigation.get_description(),
+                         self.isa_tab_investigation.description)
+
+    def test_get_description_no_description(self):
+        # Investigations without descriptions should resort to using the
+        # info from their Study
+        self.isa_tab_investigation.description = None
+        self.isa_tab_investigation.save()
+        self.assertEqual(self.isa_tab_investigation.get_description(),
+                         self.isa_tab_dataset.get_latest_study().description)
+
+    def test_get_study_count(self):
+        self.assertEqual(self.isa_tab_investigation.get_study_count(), 1)
+
+    def test_get_assay_count(self):
+        self.assertEqual(self.isa_tab_investigation.get_assay_count(), 1)

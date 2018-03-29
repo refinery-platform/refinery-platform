@@ -61,8 +61,6 @@ from factory_boy.django_model_factories import (AnnotatedNodeFactory,
                                                 ToolFactory)
 from factory_boy.utils import create_dataset_with_necessary_models
 from file_store.models import FileStoreItem, FileType
-from selenium_testing.utils import (MAX_WAIT, SeleniumTestBaseGeneric,
-                                    wait_until_class_visible)
 from tool_manager.management.commands.load_tools import \
     Command as LoadToolsCommand
 from tool_manager.tasks import django_docker_cleanup
@@ -72,7 +70,7 @@ from .models import (FileRelationship, GalaxyParameter, InputFile, Parameter,
                      VisualizationToolError, WorkflowTool)
 from .utils import (FileTypeValidationError, create_tool,
                     create_tool_definition, get_workflows,
-                    validate_tool_annotation,
+                    user_has_access_to_tool, validate_tool_annotation,
                     validate_tool_launch_configuration,
                     validate_workflow_step_annotation)
 from .views import ToolDefinitionsViewSet, ToolsViewSet
@@ -267,9 +265,11 @@ class ToolManagerTestBase(ToolManagerMocks):
             self.django_docker_cleanup_wait_time
         )
 
-    def load_visualizations(self):
+    def load_visualizations(
+        self,
+        visualizations=["{}/visualizations/igv.json".format(TEST_DATA_PATH)]
+    ):
         # TODO: More mocking, so Docker image is not downloaded
-        visualizations = ["{}/visualizations/igv.json".format(TEST_DATA_PATH)]
         call_command("load_tools", visualizations=visualizations)
         return visualizations
 
@@ -281,20 +281,17 @@ class ToolManagerTestBase(ToolManagerMocks):
             django_docker_cleanup()
         super(ToolManagerTestBase, self).tearDown()
 
-    def create_solr_mock_response(self, tool):
+    def create_solr_mock_response(self, nodes):
+        node_uuids = [n.uuid for n in nodes]
         return json.dumps(
             {
                 "responseHeader": {
                     "status": 0,
                     "QTime": 36,
-                    "params": (
-                        _create_solr_params_from_node_uuids(
-                            tool.get_input_node_uuids()
-                        )
-                    )
+                    "params": _create_solr_params_from_node_uuids(node_uuids)
                 },
                 "response": {
-                    "numFound": len(tool._get_input_nodes()),
+                    "numFound": len(node_uuids),
                     "start": 0,
                     "docs": [
                         {
@@ -306,7 +303,7 @@ class ToolManagerTestBase(ToolManagerMocks):
                                 "Mus musculus",
                             "filename_Characteristics_generic_s":
                                 node.get_file_store_item().source
-                        } for node in tool._get_input_nodes()
+                        } for node in nodes
                     ]
                 }
             }
@@ -735,8 +732,7 @@ class ToolDefinitionAPITests(ToolManagerTestBase, APITestCase):
         self.assertIn("Must specify a DataSet UUID", get_response.content)
 
     def test_missing_dataset_in_get_yields_bad_request(self):
-        dataset_uuid = self.dataset.uuid
-        self.dataset.delete()
+        dataset_uuid = str(uuid.uuid4())
 
         get_request = self.factory.get(
             "{}?dataSetUuid={}".format(
@@ -1246,6 +1242,35 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
 
         self.assertEqual(tool_definitions_a, tool_definitions_b)
 
+    @mock.patch.object(
+        LoadToolsCommand,
+        "_get_available_visualization_tool_registry_names"
+    )
+    def test_load_tools_error_message_yields_vis_registry_info(
+            self,
+            get_available_vis_tool_names_mock
+    ):
+        fake_registry_tool_names = "a, b, c, d"
+        fake_vis_tool_name = "coffee"
+        get_available_vis_tool_names_mock.return_value = (
+            fake_registry_tool_names
+        )
+
+        with self.settings(
+                REFINERY_VISUALIZATION_REGISTRY="http://www.example.com"
+        ):
+            with self.assertRaises(CommandError) as context:
+                self.load_visualizations(visualizations=[fake_vis_tool_name])
+                self.assertTrue(get_available_vis_tool_names_mock.called)
+            self.assertIn(
+                "Available Visualization Tools from the Registry ({}) are: {}"
+                .format(
+                    settings.REFINERY_VISUALIZATION_REGISTRY,
+                    fake_registry_tool_names
+                ),
+                context.exception.message
+            )
+
     def test_workflow_pair_too_many_inputs(self):
         with open(
             "{}/workflows/PAIR_too_many_inputs.json".format(TEST_DATA_PATH)
@@ -1590,6 +1615,14 @@ class ToolTests(ToolManagerTestBase):
         self.tool.analysis.set_status(Analysis.SUCCESS_STATUS)
         self.assertFalse(self.tool.is_running())
 
+    def test_terminate_file_import_tasks(self):
+        with mock.patch(
+            "file_store.models.FileStoreItem.terminate_file_import_task"
+        ) as terminate_mock:
+            self.create_tool(ToolDefinition.WORKFLOW)
+            self.tool.analysis.terminate_file_import_tasks()
+            self.assertEqual(terminate_mock.call_count, 1)
+
 
 class VisualizationToolTests(ToolManagerTestBase):
     def setUp(self):
@@ -1602,30 +1635,48 @@ class VisualizationToolTests(ToolManagerTestBase):
         self.search_solr_mock = mock.patch(
             "data_set_manager.utils.search_solr",
             return_value=self.create_solr_mock_response(
-                self.visualization_tool
+                self.visualization_tool._get_input_nodes()
             )
         ).start()
 
+    def _create_detailed_nodes_dict(self, nodes):
+        return {
+            node.uuid: {
+                'file_url': (
+                    self.node.get_file_store_item().get_datafile_url()
+                ),
+                VisualizationTool.NODE_SOLR_INFO: {
+                    "uuid": node.uuid,
+                    "name": node.name,
+                    "type": node.type,
+                    "file_uuid": node.file_uuid,
+                    "organism_Characteristics_generic_s": "Mus musculus",
+                    "filename_Characteristics_generic_s":
+                        node.get_file_store_item().source
+                }
+            } for node in nodes
+        }
+
     def test_get_detailed_input_nodes_dict(self):
-        input_nodes_meta_info = self.tool._get_detailed_input_nodes_dict()
+        input_nodes_meta_info = self.tool._get_detailed_nodes_dict(
+            self.tool.get_input_node_uuids()
+        )
         self.assertEqual(
             input_nodes_meta_info,
-            {
-                node.uuid: {
-                    'file_url': (
-                        self.node.get_file_store_item().get_datafile_url()
-                    ),
-                    VisualizationTool.NODE_SOLR_INFO: {
-                        "uuid": node.uuid,
-                        "name": node.name,
-                        "type": node.type,
-                        "file_uuid": node.file_uuid,
-                        "organism_Characteristics_generic_s": "Mus musculus",
-                        "filename_Characteristics_generic_s":
-                            node.get_file_store_item().source
-                    }
-                } for node in self.tool._get_input_nodes()
-            }
+            self._create_detailed_nodes_dict(self.tool._get_input_nodes())
+        )
+        self.assertTrue(self.search_solr_mock.called)
+
+    def test_get_detailed_input_nodes_dict_all_dataset_nodes(self):
+        self.search_solr_mock.return_value = self.create_solr_mock_response(
+            self.tool.dataset.get_nodes()
+        )
+        all_dataset_nodes_meta_info = self.tool._get_detailed_nodes_dict(
+            self.tool.dataset.get_node_uuids()
+        )
+        self.assertEqual(
+            all_dataset_nodes_meta_info,
+            self._create_detailed_nodes_dict(self.tool.dataset.get_nodes())
         )
         self.assertTrue(self.search_solr_mock.called)
 
@@ -1639,14 +1690,21 @@ class VisualizationToolTests(ToolManagerTestBase):
                 VisualizationTool.API_PREFIX:
                     self.tool.get_relative_container_url() + "/",
                 Tool.FILE_RELATIONSHIPS: file_relationships,
-                VisualizationTool.NODE_INFORMATION:
-                    self.tool._get_detailed_input_nodes_dict(),
+                VisualizationTool.INPUT_NODE_INFORMATION:
+                    self.tool._get_detailed_nodes_dict(
+                        self.tool.get_input_node_uuids()
+                    ),
+                VisualizationTool.ALL_NODE_INFORMATION:
+                    self.tool._get_detailed_nodes_dict(
+                        self.tool.dataset.get_node_uuids()
+                    ),
                 ToolDefinition.PARAMETERS:
                     self.tool._get_visualization_parameters(),
                 ToolDefinition.EXTRA_DIRECTORIES:
                     self.tool.tool_definition.get_extra_directories()
             }
         )
+        self.assertTrue(self.search_solr_mock.called)
 
     def test__get_visualization_parameters(self):
         parameter = self.visualization_tool.tool_definition.get_parameters()[0]
@@ -2441,27 +2499,27 @@ class WorkflowToolTests(ToolManagerTestBase):
 
         return _get_galaxy_download_task_ids(self.tool.analysis)
 
-    def _attach_outputs_dataset_assertions(self):
+    def _attach_derived_nodes_to_dataset_assertions(self):
         self._assert_analysis_node_connection_outputs_validity()
         self.assertEqual(self.show_dataset_provenance_mock.call_count, 8)
 
-    def test_attach_outputs_dataset_dsc(self):
+    def test_attach_derived_nodes_to_dataset_dsc(self):
         self._get_galaxy_download_task_ids_wrapper(
             tool_is_data_set_collection_based=True
         )
-        self.tool.analysis.attach_outputs_dataset()
-        self._attach_outputs_dataset_assertions()
+        self.tool.analysis.attach_derived_nodes_to_dataset()
+        self._attach_derived_nodes_to_dataset_assertions()
 
-    def test_attach_outputs_dataset_non_dsc(self):
+    def test_attach_derived_nodes_to_dataset_non_dsc(self):
         self._get_galaxy_download_task_ids_wrapper()
-        self.tool.analysis.attach_outputs_dataset()
-        self._attach_outputs_dataset_assertions()
+        self.tool.analysis.attach_derived_nodes_to_dataset()
+        self._attach_derived_nodes_to_dataset_assertions()
 
-    def test_attach_outputs_dataset_same_name_workflow_results(self):
+    def test_attach_derived_nodes_to_dataset_same_name_workflow_results(self):
         self._get_galaxy_download_task_ids_wrapper(
             datasets_have_same_names=True
         )
-        self.tool.analysis.attach_outputs_dataset()
+        self.tool.analysis.attach_derived_nodes_to_dataset()
 
         output_connections = AnalysisNodeConnection.objects.filter(
             analysis=self.tool.analysis,
@@ -2478,9 +2536,9 @@ class WorkflowToolTests(ToolManagerTestBase):
                 file_name=output_connection_filename
             )
             self.assertGreater(analysis_results.count(), 1)
-        self._attach_outputs_dataset_assertions()
+        self._attach_derived_nodes_to_dataset_assertions()
 
-    def test_attach_outputs_dataset_makes_proper_node_inheritance_chain(self):
+    def test_attach_derived_nodes_to_dataset_proper_node_inheritance(self):
         self._get_galaxy_download_task_ids_wrapper()
 
         exposed_output_connections = AnalysisNodeConnection.objects.filter(
@@ -2493,7 +2551,7 @@ class WorkflowToolTests(ToolManagerTestBase):
         for output_connection in exposed_output_connections:
             self.assertIsNone(output_connection.node)
 
-        self.tool.analysis.attach_outputs_dataset()
+        self.tool.analysis.attach_derived_nodes_to_dataset()
 
         # Have to fetch again here since AnalysisNodeConnections have been
         # updated
@@ -2614,12 +2672,6 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
     def test_get_request_authenticated(self):
         self.create_tool(ToolDefinition.VISUALIZATION)
         self.assertIsNotNone(self.get_response)
-
-    def test_get_request_no_auth(self):
-        self.create_tool(ToolDefinition.WORKFLOW)
-        self.get_request = self.factory.get(self.tools_url_root)
-        self.get_response = self.tools_view(self.get_request)
-        self.assertEqual(self.get_response.status_code, 403)
 
     def test_get_request_tools_owned_by_another_user(self):
         # Creates a valid Tool for self.user
@@ -2795,12 +2847,6 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
         )
         self.assertTrue(self.tool.is_running())
 
-    def test_relaunch_failure_no_auth(self):
-        self.create_tool(ToolDefinition.VISUALIZATION)
-        get_request = self.factory.get(self.tool.relaunch_url)
-        get_response = self.tool_relaunch_view(get_request)
-        self.assertEqual(get_response.status_code, 403)
-
     def test_relaunch_failure_no_uuid_present(self):
         self.create_tool(ToolDefinition.VISUALIZATION)
         get_request = self.factory.get(self.tool.relaunch_url)
@@ -2834,7 +2880,7 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
             uuid=self.tool.uuid
         )
         self.assertEqual(get_response.status_code, 403)
-        self.assertIn("not have sufficient permissions",
+        self.assertIn("User does not have permission",
                       get_response.content)
 
     def test_relaunch_failure_tool_already_running(self):
@@ -2938,6 +2984,38 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
         self._create_workflow_and_vis_tools()
         self._make_tools_get_request(tool_type="coffee")
         self.assertEqual(self.get_response.data, [])
+
+    def _test_launch_vis_container(self, user_has_permission=True):
+        self.create_tool(ToolDefinition.VISUALIZATION)
+        self.assertFalse(self.tool.is_running())
+
+        if user_has_permission:
+            assign_perm('core.read_dataset', self.user, self.tool.dataset)
+
+        # Need to set_password() to be able to login. Otherwise
+        # user.password is the hash representation which is not what the
+        # login() expects
+        temp_password = "password"
+        self.user.set_password(temp_password)
+        self.user.save()
+        self.client.login(username=self.user.username,
+                          password=temp_password)
+
+        with mock.patch.object(VisualizationTool, "launch") as launch_mock:
+            get_response = self.client.get(
+                "{}/".format(self.tool.get_relative_container_url())
+            )
+        if user_has_permission:
+            self.assertTrue(launch_mock.called)
+        else:
+            self.assertEqual(get_response.status_code, 403)
+            self.assertFalse(launch_mock.called)
+
+    def test_vis_tool_url_after_container_removed_relaunches(self):
+        self._test_launch_vis_container()
+
+    def test_vis_tool_url_user_without_permission(self):
+        self._test_launch_vis_container(user_has_permission=False)
 
 
 class WorkflowToolLaunchTests(ToolManagerTestBase):
@@ -3403,22 +3481,19 @@ class WorkflowToolLaunchTests(ToolManagerTestBase):
         )
 
 
-class VisualizationToolLaunchTests(ToolManagerTestBase,  # TODO: Cypress
-                                   SeleniumTestBaseGeneric):
+class VisualizationToolLaunchTests(ToolManagerTestBase):
     def setUp(self):
-        # super() will only ever resolve a single class type for a given method
-        ToolManagerTestBase.setUp(self)
-        SeleniumTestBaseGeneric.setUp(self)
+        super(VisualizationToolLaunchTests, self).setUp()
 
-        self.sample_igv_file = urljoin(
-            self.live_server_url,
-            "/tool_manager/test_data/sample.seg"
-        )
+        self.sample_igv_file_url = "http://www.example.com/sample.seg"
+
+        mock.patch.object(
+            LoadToolsCommand,
+            "_get_available_visualization_tool_registry_names",
+        ).start()
 
     def tearDown(self):
-        # super() will only ever resolve a single class type for a given method
-        ToolManagerTestBase.tearDown(self)
-        SeleniumTestBaseGeneric.tearDown(self)
+        super(VisualizationToolLaunchTests, self).tearDown()
 
         # Explicitly call delete() to purge any containers we spun up
         Tool.objects.all().delete()
@@ -3427,12 +3502,10 @@ class VisualizationToolLaunchTests(ToolManagerTestBase,  # TODO: Cypress
         self.create_vis_tool_definition()
 
         self.post_data = {
-            "dataset_uuid": self.dataset.uuid,
+            "dataset_uuid": str(uuid.uuid4()),
             "tool_definition_uuid": self.td.uuid,
             Tool.FILE_RELATIONSHIPS: str(["www.example.com/cool_file.txt"])
         }
-
-        self.dataset.delete()
 
         self.post_request = self.factory.post(
             self.tools_url_root,
@@ -3460,7 +3533,7 @@ class VisualizationToolLaunchTests(ToolManagerTestBase,  # TODO: Cypress
             "dataset_uuid": self.dataset.uuid,
             "tool_definition_uuid": self.td.uuid,
             Tool.FILE_RELATIONSHIPS: "[{}]".format(
-                self.make_node(source=self.sample_igv_file)
+                self.make_node(source=self.sample_igv_file_url)
             ),
             ToolDefinition.PARAMETERS: {
                 self.mock_parameter.uuid: self.mock_parameter.default_value
@@ -3473,7 +3546,7 @@ class VisualizationToolLaunchTests(ToolManagerTestBase,  # TODO: Cypress
         with mock.patch(
             "data_set_manager.utils.search_solr",
             return_value=self.create_solr_mock_response(
-                visualization_tool
+                visualization_tool._get_input_nodes()
             )
         ):
             visualization_tool.launch()
@@ -3491,28 +3564,9 @@ class VisualizationToolLaunchTests(ToolManagerTestBase,  # TODO: Cypress
             assertions(last_tool)
 
     def test_IGV(self):
-        def assertions(tool):
-            # Check to see if IGV shows what we want
-            igv_url = urljoin(
-                self.live_server_url,
-                tool.get_relative_container_url()
-            )
-
-            self.browser.get(igv_url)
-            time.sleep(15)
-
-            wait_until_class_visible(self.browser, "igv-track-label", MAX_WAIT)
-            self.assertIn(
-                "sample.seg",
-                self.browser.find_elements_by_class_name(
-                    "igv-track-label"
-                )[0].text
-            )
-
         self._start_visualization(
             'igv.json',
-            self.sample_igv_file,
-            assertions
+            self.sample_igv_file_url
         )
 
     def test_HiGlass(self):
@@ -3550,18 +3604,17 @@ class VisualizationToolLaunchTests(ToolManagerTestBase,  # TODO: Cypress
         )
 
     def test_max_containers(self):
-        for i in xrange(settings.DJANGO_DOCKER_ENGINE_MAX_CONTAINERS):
+        with self.settings(DJANGO_DOCKER_ENGINE_MAX_CONTAINERS=1):
             self._start_visualization(
                 'hello_world.json',
                 "https://www.example.com/file.txt",
-                count=i+1
+                count=settings.DJANGO_DOCKER_ENGINE_MAX_CONTAINERS
             )
-
-        with self.assertRaises(VisualizationToolError) as context:
-            self._start_visualization(
-                'hello_world.json',
-                "https://www.example.com/file.txt"
-            )
+            with self.assertRaises(VisualizationToolError) as context:
+                self._start_visualization(
+                    'hello_world.json',
+                    "https://www.example.com/file.txt",
+                )
         self.assertIn("Max containers", context.exception.message)
 
     def test__get_launch_parameters(self):
@@ -3573,7 +3626,7 @@ class VisualizationToolLaunchTests(ToolManagerTestBase,  # TODO: Cypress
 
         self._start_visualization(
             'igv.json',
-            self.sample_igv_file,
+            self.sample_igv_file_url,
             assertions
         )
 
@@ -3797,6 +3850,12 @@ class ToolManagerUtilitiesTests(ToolManagerTestBase):
                 ),
                 context.exception.message
             )
+
+    def test_user_has_access_to_tool(self):
+        self.create_tool(ToolDefinition.VISUALIZATION)
+        assign_perm('core.read_dataset', self.user, self.tool.dataset)
+        self.assertTrue(user_has_access_to_tool(self.user, self.tool))
+        self.assertFalse(user_has_access_to_tool(self.user2, self.tool))
 
 
 class ParameterTests(TestCase):

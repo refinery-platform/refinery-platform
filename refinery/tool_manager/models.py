@@ -131,7 +131,7 @@ class FileRelationship(models.Model):
     # See: https://docs.djangoproject.com/en/1.7/ref/models/fields/#django
     # .db.models.ManyToManyField.symmetrical
     file_relationship = models.ManyToManyField(
-        "self", symmetrical=False, null=True, blank=True)
+        "self", symmetrical=False, blank=True)
 
     input_files = models.ManyToManyField("InputFile")
 
@@ -457,8 +457,9 @@ class VisualizationTool(Tool):
     """
     API_PREFIX = "api_prefix"
     FILE_URL = "file_url"
-    NODE_INFORMATION = "node_info"
+    INPUT_NODE_INFORMATION = "node_info"
     NODE_SOLR_INFO = "node_solr_info"
+    ALL_NODE_INFORMATION = "all_node_info"
 
     class Meta:
         verbose_name = "visualizationtool"
@@ -475,7 +476,14 @@ class VisualizationTool(Tool):
             self.API_PREFIX: self.get_relative_container_url() + "/",
             self.FILE_RELATIONSHIPS: self.get_file_relationships_urls(),
             ToolDefinition.PARAMETERS: self._get_visualization_parameters(),
-            self.NODE_INFORMATION: self._get_detailed_input_nodes_dict(),
+            self.INPUT_NODE_INFORMATION: self._get_detailed_nodes_dict(
+                self.get_input_node_uuids()
+            ),
+            # TODO: adding all of a DataSet's Node info seems excessive. Would
+            #  be great if we had a VisualizationTool using all of this info
+            self.ALL_NODE_INFORMATION: self._get_detailed_nodes_dict(
+                self.dataset.get_node_uuids()
+            ),
             ToolDefinition.EXTRA_DIRECTORIES:
                 self.tool_definition.get_extra_directories()
         }
@@ -485,18 +493,16 @@ class VisualizationTool(Tool):
         if len(self._django_docker_client.list()) >= max_containers:
             raise VisualizationToolError('Max containers')
 
-    def _get_detailed_input_nodes_dict(self):
+    def _get_detailed_nodes_dict(self, node_uuid_list):
         """
         Create and return a dict with detailed information about all of our
-        Tool's input Nodes.
+        Nodes corresponding to the UUIDs in the given `node_uuid_list`.
 
         This detailed info contains:
             - Whatever we have in our Solr index for a given Node
             - A full url pointing to our Node's FileStoreItem's datafile
         """
-        solr_response_json = get_solr_response_json(
-            self.get_input_node_uuids()
-        )
+        solr_response_json = get_solr_response_json(node_uuid_list)
         node_info = {
             node["uuid"]: {
                 self.NODE_SOLR_INFO: node,
@@ -589,7 +595,6 @@ class WorkflowTool(Tool):
     ANALYSIS_GROUP = "analysis_group"
     COLLECTION_INFO = "collection_info"
     CREATING_JOB = "creating_job"
-    DATA_INPUT = "data_input"
     DATA_COLLECTION_INPUT = "data_collection_input"
     FILE_RELATIONSHIPS_GALAXY = "{}_galaxy".format(Tool.FILE_RELATIONSHIPS)
     FILE_RELATIONSHIPS_NESTING = "file_relationships_nesting"
@@ -597,7 +602,6 @@ class WorkflowTool(Tool):
     GALAXY_DATA = "galaxy_data"
     GALAXY_DATASET_HISTORY_ID = "galaxy_dataset_history_id"
     GALAXY_IMPORT_HISTORY_DICT = "import_history_dict"
-    GALAXY_INPUT_TYPES = [DATA_INPUT, DATA_COLLECTION_INPUT]
     GALAXY_LIBRARY_DICT = "library_dict"
     GALAXY_WORKFLOW_INVOCATION_DATA = "galaxy_workflow_invocation_data"
     GALAXY_TO_REFINERY_MAPPING_LIST = "galaxy_to_refinery_mapping_list"

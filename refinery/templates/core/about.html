@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% load markup %}
-{% load flatblock_tags %}
+{% load flatblocks %}
 
 
 {% block title %}
@@ -25,7 +25,7 @@
 
 					<p>
 
-						{% flatblock "about.website.background" evaluated %}
+						{% flatblock "about.website.background" evaluated=True %}
 					</p>
 
 					<div class="refinery-header">
@@ -34,7 +34,7 @@
 						</span>
 					</div>
 					<p>
-						{% flatblock "about.website.contact" evaluated %}
+						{% flatblock "about.website.contact" evaluated=True %}
 					</p>
 
 					<div class="refinery-header">
@@ -43,7 +43,7 @@
 						</span>
 					</div>
 					<p>
-						{% flatblock "about.website.funding" evaluated %}
+						{% flatblock "about.website.funding" evaluated=True %}
 					</p>
 
                     <div class="refinery-header">
@@ -66,7 +66,7 @@
       </div>
 
       <p>
-        {% flatblock "about.website.team" evaluated %}
+        {% flatblock "about.website.team" evaluated=True %}
       </p>
     </div>
   </div>

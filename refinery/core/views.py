@@ -1,6 +1,4 @@
-import json
 import logging
-import re
 import urllib
 from urlparse import urljoin
 from xml.parsers.expat import ExpatError
@@ -14,7 +12,8 @@ from django.core.exceptions import ImproperlyConfigured
 from django.core.urlresolvers import reverse
 from django.http import (HttpResponse, HttpResponseBadRequest,
                          HttpResponseForbidden, HttpResponseNotFound,
-                         HttpResponseRedirect, HttpResponseServerError)
+                         HttpResponseRedirect, HttpResponseServerError,
+                         JsonResponse)
 from django.shortcuts import get_object_or_404, redirect, render_to_response
 from django.template import RequestContext, loader
 from django.views.decorators.gzip import gzip_page
@@ -28,18 +27,14 @@ from registration.views import RegistrationView
 import requests
 from requests.exceptions import HTTPError
 from rest_framework import authentication, status, viewsets
+from rest_framework.decorators import detail_route
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework.views import APIView
 import xmltodict
 
-from analysis_manager.utils import get_solr_results
-from annotation_server.models import GenomeBuild
 from data_set_manager.models import Node
-from data_set_manager.utils import generate_solr_params_for_assay
-from file_store.models import FileStoreItem
-from visualization_manager.views import igv_multi_species
 
 from .forms import ProjectForm, UserForm, UserProfileForm, WorkflowForm
 from .models import (Analysis, CustomRegistrationProfile, DataSet,
@@ -154,8 +149,7 @@ def group_invite(request, token):
 
 def custom_error_page(request, template, context_dict):
     temp_loader = loader.get_template(template)
-    context = RequestContext(request, context_dict)
-    return temp_loader.render(context)
+    return temp_loader.render(context_dict, request)
 
 
 @login_required()
@@ -324,21 +318,7 @@ def data_set(request, data_set_uuid, analysis_uuid=None):
     assay_uuid = studies[0].assay_set.all()[0].uuid
     # used for solr field postfixes: FIELDNAME_STUDYID_ASSAY_ID_FIELDTYPE
     assay_id = studies[0].assay_set.all()[0].id
-    # TODO: catch errors
-    isatab_archive = None
-    pre_isatab_archive = None
-    try:
-        if investigation.isarchive_file is not None:
-            isatab_archive = FileStoreItem.objects.get(
-                uuid=investigation.isarchive_file)
-    except FileStoreItem.DoesNotExist:
-        pass
-    try:
-        if investigation.pre_isarchive_file is not None:
-            pre_isatab_archive = FileStoreItem.objects.get(
-                uuid=investigation.pre_isarchive_file)
-    except FileStoreItem.DoesNotExist:
-        pass
+
     return render_to_response(
         'core/data_set.html',
         {
@@ -352,8 +332,8 @@ def data_set(request, data_set_uuid, analysis_uuid=None):
             "has_change_dataset_permission": 'change_dataset' in get_perms(
                 request.user, data_set),
             "workflows": workflows,
-            "isatab_archive": isatab_archive,
-            "pre_isatab_archive": pre_isatab_archive,
+            "isatab_archive": investigation.isa_archive,
+            "pre_isatab_archive": investigation.pre_isa_archive,
         },
         context_instance=RequestContext(request))
 
@@ -437,34 +417,6 @@ def workflow_engine(request, uuid):
     return render_to_response('core/workflow_engine.html',
                               {'workflow_engine': workflow_engine},
                               context_instance=RequestContext(request))
-
-
-def visualize_genome(request):
-    """Provide IGV.js visualization of requested species + file nodes
-
-    Looks up species by name, and data files by node_id,
-    and passes the information to IGV.js.
-    """
-    species = request.GET.get('species')
-    node_ids = request.GET.getlist('node_ids')
-
-    genome = re.search(r'\(([^)]*)\)', species).group(1)
-    # TODO: Better to pass genome id instead of parsing?
-    url_base = "https://s3.amazonaws.com/data.cloud.refinery-platform.org" \
-        + "/data/igv-reference/" + genome + "/"
-    node_ids_json = json.dumps(node_ids)
-
-    return render_to_response(
-        'core/visualize/genome.html',
-        {
-            "fasta_url": url_base + genome + ".fa",
-            "index_url": url_base + genome + ".fa.fai",
-            "cytoband_url": url_base + "cytoBand.txt",
-            "bed_url": url_base + "refGene.bed",
-            "tbi_url": url_base + "refGene.bed.tbi",
-            "node_ids_json": node_ids_json
-        },
-        context_instance=RequestContext(request))
 
 
 def solr_core_search(request):
@@ -552,106 +504,9 @@ def solr_core_search(request):
             if annotations:
                 response['response']['annotations'] = annotation_data
 
-            response = json.dumps(response)
+            return JsonResponse(response)
 
     return HttpResponse(response, content_type='application/json')
-
-
-def solr_select(request, core):
-    # core format is <name_of_core>
-    # query.GET is a querydict containing all parts of the query
-    url = settings.REFINERY_SOLR_BASE_URL + core + "/select"
-    data = request.GET.urlencode()
-    try:
-        full_response = requests.get(url, params=data)
-        # FIXME:
-        # Solr sends back an additional 400 here in the data_sets 1 filebrowser
-        # when there is only one row defined in the metadata since
-        # full_response.content has no facet_fields. Handling
-        # this one-off case for now since the way data_sets 2 filebrowser
-        # interacts with Solr doesn't produce this extra 400 error
-        if ("Pivot Facet needs at least one field name"
-                not in full_response.content):
-            full_response.raise_for_status()
-    except HTTPError as e:
-        logger.error(e)
-        response = json.dumps({})
-    else:
-        response = full_response.content
-    return HttpResponse(response, content_type='application/json')
-
-
-def solr_igv(request):
-    """Function for taking solr request url.
-    Removes pagination, facets from input query to create multiple
-    :param request: Django HttpRequest object including solr query
-    :type source: HttpRequest object.
-    :returns:
-    """
-
-    # copy querydict to make it editable
-    if request.is_ajax():
-        igv_config = json.loads(request.body)
-
-        logger.debug(json.dumps(igv_config, indent=4))
-
-        logger.debug('IGV data query: ' + str(igv_config['query']))
-        logger.debug('IGV annotation query: ' + str(igv_config['annotation']))
-
-        if igv_config['query'] is None:
-            # generate solr_query method
-            # assay uuid
-            solr_query = generate_solr_params_for_assay(
-                {},
-                igv_config['assay_uuid']
-            )
-            url_path = '/'.join(["data_set_manager", "select"])
-            url = urljoin(settings.REFINERY_SOLR_BASE_URL, url_path)
-            igv_config['query'] = ''.join([url, '/?', solr_query])
-
-        # attributes associated with node selection from interface
-        node_selection_blacklist_mode = igv_config[
-            'node_selection_blacklist_mode']
-        node_selection = igv_config['node_selection']
-
-        solr_results = get_solr_results(
-            igv_config['query'], selected_mode=node_selection_blacklist_mode,
-            selected_nodes=node_selection)
-
-        if igv_config['annotation'] is not None:
-            solr_annot = get_solr_results(igv_config['annotation'])
-        else:
-            solr_annot = None
-        # if solr query returns results
-        if solr_results:
-            try:
-                session_urls = igv_multi_species(solr_results, solr_annot)
-            except GenomeBuild.DoesNotExist:
-                logger.error(
-                    "Provided genome build cannot be found in the database.")
-                session_urls = "Couldn't find the provided genome build."
-
-        logger.debug("session_urls")
-        logger.debug(json.dumps(session_urls, indent=4))
-
-        return HttpResponse(json.dumps(session_urls),
-                            content_type='application/json')
-
-
-def samples_solr(request, ds_uuid, study_uuid, assay_uuid):
-    logger.debug("core.views.samples_solr called")
-    data_set = get_object_or_404(DataSet, uuid=ds_uuid)
-    workflows = Workflow.objects.all()
-    # TODO: retrieve from Django settings
-    solr_url = 'http://127.0.0.1:8983'
-
-    return render_to_response('core/samples_solr.html',
-                              {'workflows': workflows,
-                               'data_set': data_set,
-                               'study_uuid': study_uuid,
-                               'assay_uuid': assay_uuid,
-                               'solr_url': solr_url},
-                              context_instance=RequestContext(request))
 
 
 def doi(request, id):
@@ -705,10 +560,7 @@ def pubmed_abstract(request, id):
     except ExpatError:
         return HttpResponse('Service currently unavailable', status=503)
 
-    return HttpResponse(
-        json.dumps(response_dict),
-        content_type='application/json'
-    )
+    return JsonResponse(response_dict)
 
 
 def pubmed_search(request, term):
@@ -819,7 +671,14 @@ class WorkflowViewSet(viewsets.ModelViewSet):
     """API endpoint that allows Workflows to be viewed"""
     queryset = Workflow.objects.all()
     serializer_class = WorkflowSerializer
+    lookup_field = 'uuid'
     http_method_names = ['get']
+
+    @detail_route(methods=['get'])
+    def graph(self, request, *args, **kwargs):
+        return HttpResponse(
+            get_object_or_404(Workflow, uuid=kwargs.get("uuid")).graph
+        )
 
 
 class NodeViewSet(viewsets.ModelViewSet):
@@ -931,7 +790,7 @@ class AnalysesViewSet(APIView):
 
 class CustomRegistrationView(RegistrationView):
 
-    def register(self, request, **cleaned_data):
+    def register(self, request):
         """
         Given a username, email address, password, first name, last name,
         and affiliation, register a new user account, which will initially
@@ -956,12 +815,12 @@ class CustomRegistrationView(RegistrationView):
         class of this backend as the sender.
 
         """
-        username = cleaned_data['username']
-        email = cleaned_data['email']
-        password = cleaned_data['password1']
-        first_name = cleaned_data['first_name']
-        last_name = cleaned_data['last_name']
-        affiliation = cleaned_data['affiliation']
+        username = request.cleaned_data['username']
+        email = request.cleaned_data['email']
+        password = request.cleaned_data['password1']
+        first_name = request.cleaned_data['first_name']
+        last_name = request.cleaned_data['last_name']
+        affiliation = request.cleaned_data['affiliation']
 
         if Site._meta.installed:
             site = Site.objects.get_current()
@@ -979,7 +838,7 @@ class CustomRegistrationView(RegistrationView):
                                      request=request)
         return new_user
 
-    def get_success_url(self, request, user):
+    def get_success_url(self, user):
         """
         Return the name of the URL to redirect to after successful
         user registration.
