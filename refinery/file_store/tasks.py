@@ -1,4 +1,3 @@
-import logging
 import os
 import stat
 from tempfile import NamedTemporaryFile
@@ -21,7 +20,7 @@ from data_set_manager.search_indexes import NodeIndex
 
 from .models import FileStoreItem, file_path, get_temp_dir, parse_s3_url
 
-logger = logging.getLogger(__name__)
+logger = celery.utils.log.get_task_logger(__name__)
 
 
 @task(track_started=True)
@@ -32,7 +31,6 @@ def import_file(uuid, refresh=False, file_size=0):
     :param file_size: size of the remote file.
     :type file_size: int.
     :returns: FileStoreItem UUID or None if importing failed.
-
     """
     logger.debug("Importing FileStoreItem with UUID '%s'", uuid)
 
@@ -44,37 +42,91 @@ def import_file(uuid, refresh=False, file_size=0):
                      uuid, exc)
         return None
 
+    # exit if an import task is already running for this file
+    result = celery.result.AsyncResult(item.import_task_id)
+    if (result.state in [celery.states.RECEIVED,
+                         celery.states.STARTED,
+                         celery.states.RETRY,
+                         'PROGRESS']):
+        logger.error(
+            "File import is already in progress for '%s' - task ID: '%s'",
+            item, item.import_task_id
+        )
+        return None
+
     # save task ID for looking up file import status
-    if import_file.request.id:  # workaround when called not as task
+    if import_file.request.id:  # to avoid error if called not as task
         item.import_task_id = import_file.request.id
         item.save()
 
-    # if file is ready to be used then return it,
-    # otherwise delete it if update is requested
+    # check if datafile should be updated
     if item.is_local():
         if refresh:
-            item.datafile.delete()
+            logger.info("Data file replacement requested: deleting data file")
+            item.datafile.delete(save=False)
         else:
             logger.info("File already exists: '%s'", item.get_absolute_path())
             return item.uuid
 
     # start the transfer
     if os.path.isabs(item.source):
-        try:
-            with open(item.source, 'r') as f:
-                # TODO: copy file in chunks to display progress report
-                # model is saved by default if FileField.save() is called
-                item.datafile.save(os.path.basename(item.source), File(f))
-        except IOError:
-            logger.error("Could not open file: %s", item.source)
-            return item.uuid
+        if not os.path.exists(item.source):
+            logger.error(
+                "Error moving '%s' into file store: file does not exist",
+                item.source
+            )
+            return
+        # construct file name and absolute path
+        item.datafile.name = item.datafile.storage.get_available_name(
+            file_path(item, os.path.basename(item.source))
+        )
+        file_store_path = os.path.join(settings.FILE_STORE_BASE_DIR,
+                                       item.datafile.name)
         if item.source.startswith(settings.REFINERY_DATA_IMPORT_DIR):
+            # move uploaded file
+            logger.debug("Moving uploaded file '%s' into file store",
+                         item.source)
             try:
-                os.unlink(item.source)
-            except IOError:
-                logger.error("Could not delete uploaded source file '%s'",
-                             item.source)
-        logger.info("File copied from '%s'", item.source)
+                os.renames(item.source, file_store_path)
+            except OSError as exc:
+                logger.error("Error moving '%s' into the file store: %s",
+                             item.source, exc)
+                import_file.update_state(state=celery.states.FAILURE,
+                                         meta='Failed to import uploaded file')
+                # TODO: remove when task is no longer returning a result
+                # http://stackoverflow.com/a/33143545
+                raise celery.exceptions.Ignore()
+            logger.info("Moved uploaded file '%s' into file store",
+                        item.source)
+        else:
+            # copy external file
+            logger.debug("Copying external file '%s' into file store",
+                         item.source)
+            chunk_size = 10 * 1024 * 1024  # 10MB
+            try:
+                with open(item.source, 'rb') as external, \
+                        open(file_store_path, 'wb') as local:
+                    for chunk in iter(lambda: external.read(chunk_size), ''):
+                        local.write(chunk)
+            except IOError as exc:
+                logger.error(
+                    "Error copying external file '%s' into file store: %s",
+                    item.source, exc
+                )
+                try:
+                    os.unlink(file_store_path)
+                except IOError as exc:
+                    logger.debug("Failed to remove local file '%s': %s",
+                                 file_store_path, exc)
+                import_file.update_state(state=celery.states.FAILURE,
+                                         meta='Failed to import external file')
+                # TODO: remove when task is no longer returning a result
+                # http://stackoverflow.com/a/33143545
+                raise celery.exceptions.Ignore()
+            else:
+                logger.info("Copied external file '%s' into file store",
+                            item.source)
+
     elif item.source.startswith('s3://'):
         bucket_name, key = parse_s3_url(item.source)
         s3 = boto3.resource('s3')
@@ -89,12 +141,15 @@ def import_file(uuid, refresh=False, file_size=0):
                                          meta='Failed to import uploaded file')
                 return item.uuid
             logger.debug("Saving downloaded file '%s'", download.name)
-            item.datafile.save(os.path.basename(key), File(download))
-            logger.debug("Saved downloaded file to '%s'", item.datafile.name)
+            # do not save the model here to avoid terminating this task
+            item.datafile.save(os.path.basename(key), File(download),
+                               save=False)
+            logger.info("Saved downloaded file to '%s'", item.datafile.name)
         try:
             s3.Object(bucket_name, key).delete()
         except botocore.exceptions.ClientError:
             logger.error("Failed to delete '%s'", item.source)
+
     else:  # assume that source is a regular URL
         # check if source file can be downloaded
         try:
@@ -102,10 +157,8 @@ def import_file(uuid, refresh=False, file_size=0):
             response.raise_for_status()
         except HTTPError as exc:
             logger.error("Could not open URL '%s': '%s'", item.source, exc)
-            import_file.update_state(
-                state=celery.states.FAILURE,
-                meta='Analysis failed during file import'
-            )
+            import_file.update_state(state=celery.states.FAILURE,
+                                     meta='Analysis failed during file import')
             # ignore the task so no other state is recorded
             # http://stackoverflow.com/a/33143545
             raise celery.exceptions.Ignore()
@@ -186,11 +239,9 @@ def import_file(uuid, refresh=False, file_size=0):
             if not os.path.exists(os.path.dirname(abs_dst_path)):
                 os.makedirs(os.path.dirname(abs_dst_path))
             os.rename(tmpfile.name, abs_dst_path)
-        except OSError as e:
-            logger.error(
-                "Error moving temp file into the file store. "
-                "OSError: %s, file name: %s, error: %s",
-                e.errno, e.filename, e.strerror)
+        except OSError as exc:
+            logger.error("Error moving temp file '%s' into the file store: %s",
+                         tmpfile.name, exc)
             return False
         # temp file is only accessible by the owner by default which prevents
         # access by the web server if it is running as it's own user
@@ -205,8 +256,8 @@ def import_file(uuid, refresh=False, file_size=0):
 
         # assign new path to datafile
         item.datafile.name = rel_dst_path
-        # save the model instance
-        item.save()
+
+    item.save()
 
     return item.uuid
 

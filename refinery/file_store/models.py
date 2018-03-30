@@ -176,24 +176,10 @@ class FileStoreItem(models.Model):
             else:
                 self.filetype = extension.filetype
 
-        if self.datafile:
-            self.terminate_file_import_task()
-        else:
-            try:
-                old_instance = FileStoreItem.objects.get(pk=self.pk)
-            except FileStoreItem.DoesNotExist:
-                # this is a newly created instance: symlink datafile if needed
-                if (os.path.isabs(self.source) and
-                        settings.REFINERY_DATA_IMPORT_DIR not in self.source):
-                    self._symlink_datafile()
-            except FileStoreItem.MultipleObjectsReturned as exc:
-                logger.critical(
-                    "Error retrieving FileStoreItem with primary key '%s': %s",
-                    self.pk, exc
-                )
-            else:
-                if old_instance.datafile:
-                    old_instance.delete_datafile(save_instance=False)
+        # symlink datafile if possible
+        if (not self.datafile and os.path.isabs(self.source) and
+                settings.REFINERY_DATA_IMPORT_DIR not in self.source):
+            self._symlink_datafile()
 
         super(FileStoreItem, self).save(*args, **kwargs)
 
@@ -210,9 +196,8 @@ class FileStoreItem(models.Model):
 
     def get_file_size(self, report_symlinks=False):
         """Return the size of the file in bytes.
-        :param report_symlinks: report the size of symlinked files or not.
-        :type report_symlinks: bool.
-        :returns: int -- file size. Zero if the file is:
+        report_symlinks: report the size of symlinked files or not
+        returns zero if the file is:
         - not local
         - a symlink and report_symlinks=False
         """
@@ -222,6 +207,10 @@ class FileStoreItem(models.Model):
         try:
             return self.datafile.size
         except ValueError:  # file is not local
+            return 0
+        except OSError as exc:
+            # file should be there but it is not
+            logger.critical("Error getting size for '%s': %s", self, exc)
             return 0
 
     def get_file_extension(self):
@@ -281,12 +270,12 @@ class FileStoreItem(models.Model):
         """Delete datafile on disk and cancel file import"""
         self.terminate_file_import_task()
         if self.datafile:
-            logger.debug("Deleting datafile '%s'", self.datafile.name)
+            logger.debug("Deleting datafile '%s'", self.datafile.path)
             try:
                 self.datafile.delete(save=save_instance)
             except OSError as exc:
                 logger.error("Error deleting file '%s': %s",
-                             self.datafile.name, exc)
+                             self.datafile.path, exc)
             else:
                 logger.info("Deleted datafile of '%s'", self)
 
@@ -317,7 +306,9 @@ class FileStoreItem(models.Model):
             return None
 
     def _symlink_datafile(self):
-        """Create a symlink to the file pointed by source"""
+        """Create a symlink to the file pointed by source
+        Note: does not save the model
+        """
         logger.debug("Symlinking datafile to '%s'", self.source)
 
         if os.path.isfile(self.source):
@@ -332,13 +323,10 @@ class FileStoreItem(models.Model):
                 # update the model with the symlink path
                 self.datafile.name = rel_dst_path
                 logger.debug("Datafile symlinked")
-                return True
             else:
                 logger.error("Symlinking failed")
-                return False
         else:
             logger.error("Symlinking failed: source is not a file")
-            return False
 
     def get_datafile_url(self):
         """Returns relative or absolute URL of the datafile depending on file

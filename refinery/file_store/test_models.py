@@ -121,13 +121,12 @@ class FileStoreItemTest(TestCase):
         self.assertEqual(saved_item.filetype, zip_file_type)
 
     def test_update_remote_file_type(self):
-        with mock.patch('celery.result.AsyncResult'):
-            new_item = FileStoreItem.objects.create(source=self.url_source)
-            zip_file_type = FileType.objects.get_or_create(name='ZIP')[0]
-            new_item.filetype = zip_file_type
-            new_item.save()
-            saved_item = FileStoreItem.objects.get(pk=new_item.pk)
-            self.assertEqual(saved_item.filetype, zip_file_type)
+        new_item = FileStoreItem.objects.create(source=self.url_source)
+        zip_file_type = FileType.objects.get_or_create(name='ZIP')[0]
+        new_item.filetype = zip_file_type
+        new_item.save()
+        saved_item = FileStoreItem.objects.get(pk=new_item.pk)
+        self.assertEqual(saved_item.filetype, zip_file_type)
 
     def test_set_remote_file_type_with_multiple_period_file_name(self):
         file_source = 'http://example.org/test.name.tdf'
@@ -190,7 +189,7 @@ class FileStoreItemLocalFileTest(TestCase):
         self.file_name = 'test_file.tdf'
         self.item = FileStoreItem()
         # test storage backend does not support absolute paths
-        self.item.is_local = mock.MagicMock(return_value=True)
+        # self.item.is_local = mock.MagicMock(return_value=True)
 
     @override_settings(MEDIA_URL='')
     def test_get_local_file_url(self):
@@ -225,18 +224,10 @@ class FileStoreItemLocalFileTest(TestCase):
         self.assertEqual(saved_item.get_file_extension(), self.file_extension)
 
     def test_delete_local_file_on_instance_delete(self):
-        with mock.patch('celery.result.AsyncResult'):
-            self.item.datafile.save(self.file_name, ContentFile(''))
+        self.item.datafile.save(self.file_name, ContentFile(''))
+        with mock.patch.object(FieldFile, 'path'):
             with mock.patch.object(FieldFile, 'delete') as mock_delete:
                 self.item.delete()
-                mock_delete.assert_called_with(save=False)
-
-    def test_delete_local_file_on_instance_update(self):
-        with mock.patch('celery.result.AsyncResult'):
-            self.item.datafile.save(self.file_name, ContentFile(''))
-            self.item.datafile = ''
-            with mock.patch.object(FieldFile, 'delete') as mock_delete:
-                self.item.save()
                 mock_delete.assert_called_with(save=False)
 
 
@@ -324,22 +315,7 @@ class FileImportTaskTerminationTest(TestCase):
             FileStoreItem.objects.all().delete()
             mock_terminate_task.assert_called_once()
 
-    def test_terminate_when_adding_datafile(self):
-        with mock.patch.object(
-            FileStoreItem, 'terminate_file_import_task'
-        ) as mock_terminate_task:
-            self.item.datafile.save('test_file.txt', ContentFile(''))
-            mock_terminate_task.assert_called_once()
-
-    def test_terminate_when_replacing_datafile(self):
-        self.item.datafile.save('test_file.txt', ContentFile(''))
-        with mock.patch.object(
-            FileStoreItem, 'terminate_file_import_task'
-        ) as mock_terminate_task:
-            self.item.datafile.save('test_file_2.txt', ContentFile(''))
-            mock_terminate_task.assert_called_once()
-
-    def test_terminate_on_save_with_no_new_datafile(self):
+    def test_no_terminate_on_save_with_no_new_datafile(self):
         with mock.patch.object(
             FileStoreItem, 'terminate_file_import_task'
         ) as mock_terminate_task:
