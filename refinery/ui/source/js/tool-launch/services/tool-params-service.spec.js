@@ -47,7 +47,6 @@
         description: 'Runs FASTQC quality control on a set of FASTQ files.',
         tool_type: 'WORKFLOW',
         image_name: '',
-        container_input_path: '',
         galaxy_workflow_id: 'c0279aab05812500',
         workflow_engine: 1
       };
