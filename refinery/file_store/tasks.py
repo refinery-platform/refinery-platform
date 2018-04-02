@@ -268,15 +268,15 @@ def update_solr_index(**kwargs):
     # structure of celery signal handlers changes often
     # http://docs.celeryproject.org/en/3.1/userguide/signals.html#basics
     file_store_item_uuid = kwargs['result']
+    logger.debug("Retrieving Node for FileStoreItem with UUID '%s'",
+                 file_store_item_uuid)
     try:
-        logger.debug("Fetching Node for FileStoreItem with UUID: %s",
-                     file_store_item_uuid)
         node = Node.objects.get(file_uuid=file_store_item_uuid)
     except (Node.DoesNotExist, Node.MultipleObjectsReturned) as exc:
-        logger.error("Couldn't retrieve Node: %s", exc)
+        logger.error("Could not retrieve Node: %s", exc)
     else:
-        logger.debug("Updating Solr index for Node with UUID: %s", node.uuid)
         NodeIndex().update_object(node, using="data_set_manager")
+        logger.debug("Updated Solr index for Node with UUID '%s'", node.uuid)
 
 
 @task_success.connect(sender=import_file)
