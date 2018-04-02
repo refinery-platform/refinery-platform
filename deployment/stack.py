@@ -93,7 +93,6 @@ def make_template(config, config_yaml):
         "CONFIG_YAML=", base64.b64encode(config_yaml), "\n",
         "CONFIG_JSON=", base64.b64encode(json.dumps(config)), "\n",
         "AWS_DEFAULT_REGION=", functions.ref("AWS::Region"), "\n",
-        "export DOCKER_HOST=", config['DOCKER_HOST'], "\n",
         "RDS_ENDPOINT_ADDRESS=",
         functions.get_att('RDSInstance', 'Endpoint.Address'),
         "\n",
