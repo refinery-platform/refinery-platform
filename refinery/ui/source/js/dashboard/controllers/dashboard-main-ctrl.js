@@ -1,24 +1,25 @@
+/**
+ * Dashboard Main Ctrl
+ * @namespace DashboardMainCtrl
+ * @desc Main controller for the main view, dashboard. Ctrl for parent component
+ * @memberOf refineryApp.refineryDashboard
+ */
 (function () {
   'use strict';
 
-  describe('Controller: Dashboard Main Ctrl', function () {
-    var ctrl;
-    var scope;
+  angular
+    .module('refineryDashboard')
+    .controller('DashboardMainCtrl', DashboardMainCtrl);
 
-    beforeEach(module('refineryApp'));
-    beforeEach(module('refineryDashboard'));
-    beforeEach(inject(function (
-      $rootScope,
-      $controller
-    ) {
-      scope = $rootScope.$new();
-      ctrl = $controller('DashboardMainCtrl', {
-        $scope: scope
-      });
-    }));
+  DashboardMainCtrl.$inject = [];
 
-    it('Dashboard Main ctrl should exist', function () {
-      expect(ctrl).toBeDefined();
-    });
-  });
+  function DashboardMainCtrl () {
+   // var vm = this;
+
+    /*
+    * ---------------------------------------------------------
+    * Watchers
+    * ---------------------------------------------------------
+    */
+  }
 })();
