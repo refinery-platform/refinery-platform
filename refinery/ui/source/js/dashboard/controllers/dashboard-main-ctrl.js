@@ -16,6 +16,12 @@
   function DashboardMainCtrl () {
    // var vm = this;
 
+    activate();
+
+    function activate () {
+      console.log('dashboard-main-ctrl');
+    }
+
     /*
     * ---------------------------------------------------------
     * Watchers

@@ -1,0 +1,46 @@
+<div class="refinery-panel">
+  <div class="refinery-header">
+    <div>
+      <h3>
+        <i class="m-r-1-4 fa fa-database"></i>Data Sets
+      </h3>
+    </div>
+  </div>
+  <div
+    id="data-set-panel"
+    class="refinery-sub-panel">
+    <ul class="list-unstyled">
+      <li ng-repeat="dataSet in $ctrl.dataSets">
+        {{ dataSet.name }}
+      </li>
+    </ul>
+  </div>
+<!--  <div
+    class="refinery-notification"
+    ng-class="{'active': $ctrl.showNotification() }">
+    <div
+      class="refinery-notification-info"
+      ng-show="$ctrl.searchQueryDataSets.length === 1">
+      <strong>Too short!</strong>
+      Enter at least 2 characters to search.
+    </div>
+    <div
+      class="refinery-notification-alert"
+      ng-show="$ctrl.dataSets.total === 0 && $ctrl.searchQueryDataSets.length > 1 && !$ctrl.dataSets.error">
+      <strong>No luck!</strong>
+      No data sets found.
+    </div>
+    <div
+      class="refinery-notification-info"
+      ng-show="$ctrl.dataSets.total === 0 && $ctrl.searchQueryDataSets.length === 0 && !$ctrl.dataSets.error">
+      <strong>Info</strong>
+      No data sets available.
+    </div>
+    <div
+      id="launchpad_warning" class="refinery-notification-error"
+      ng-show="$ctrl.searchQueryDataSets.length > 1 && $ctrl.dataSets.error">
+      <strong>Error: </strong>
+      Please contact your <a ng-href="mailto:{{ app.settings.djangoApp.admins }}?Subject=Refinery%20Error">System Administrator</a>.
+    </div>
+  </div> -->
+</div>
