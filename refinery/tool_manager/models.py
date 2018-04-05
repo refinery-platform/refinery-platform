@@ -488,6 +488,14 @@ class VisualizationTool(Tool):
                 self.tool_definition.get_extra_directories()
         }
 
+    def _check_input_node_limit(self):
+        if len(self.get_input_node_uuids()) > settings.REFINERY_SOLR_DOC_LIMIT:
+            raise VisualizationToolError(
+                'Input Node limit of: {} reached'.format(
+                    settings.REFINERY_SOLR_DOC_LIMIT
+                )
+            )
+
     def _check_max_running_containers(self):
         max_containers = settings.DJANGO_DOCKER_ENGINE_MAX_CONTAINERS
         if len(self._django_docker_client.list()) >= max_containers:
@@ -555,6 +563,7 @@ class VisualizationTool(Tool):
             - <HttpResponseBadRequest>, <HttpServerError>
         """
         self._check_max_running_containers()
+        self._check_input_node_limit()
 
         container = DockerContainerSpec(
             image_name=self.tool_definition.image_name,
