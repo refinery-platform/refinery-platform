@@ -637,3 +637,5 @@ MIGRATION_MODULES = {
 }
 REFINERY_VISUALIZATION_REGISTRY = \
     "https://github.com/refinery-platform/visualization-tools/"
+
+REFINERY_SOLR_DOC_LIMIT = 10000000
