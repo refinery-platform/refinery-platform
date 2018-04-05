@@ -109,6 +109,7 @@ class UserFilesViewTests(TestCase):
 
 class UserFilesUtilsTests(TestCase):
 
+    @override_settings(REFINERY_SOLR_DOC_LIMIT=10)
     @override_settings(USER_FILES_FACETS="filetype,organism,technology,"
                                          "genotype,cell_type,antibody,"
                                          "experimenter")
@@ -144,7 +145,7 @@ class UserFilesUtilsTests(TestCase):
                          'facet.field=experimenter_Factor_Value_generic_s',
                          'fq=is_annotation%3Afalse',
                          'start=0',
-                         'rows=10000000',
+                         'rows=10',
                          'q=django_ct%3Adata_set_manager.node',
                          'wt=json',
                          'facet=true',
