@@ -327,7 +327,7 @@ CELERY_ACCEPT_CONTENT = ['pickle']
 CELERYBEAT_SCHEDULE = {
     'collect_site_statistics': {
         'task': 'core.tasks.collect_site_statistics',
-        'schedule': timedelta(weeks=1),
+        'schedule': timedelta(days=1),
         'options': {
             'expires': 30,  # seconds
         }
