@@ -7,6 +7,58 @@
     </div>
   </div>
   <div
+  id="data-set-panel"
+  class="refinery-sub-panel">
+  <form
+    id="search-interface"
+    class="navbar-search form-group">
+    <i class="fa fa-search"></i>
+    <i class="fa fa-times-circle"
+      ng-if="$ctrl.searchQueryDataSets"
+      ng-click="$ctrl.resetDataSetSearch()"></i>
+    <!--The 'metadata-search' id below is used to define custom
+      styling to address a padding issue observed in Firefox-->
+    <input
+      id="metadata-search"
+      type="text"
+      class="search-query form-control"
+      placeholder="Search"
+      ng-model="$ctrl.searchQueryDataSets"
+      ng-change="$ctrl.searchDataSets($ctrl.searchQueryDataSets)">
+  </form>
+  <div
+    id="data-set-panel-header"
+    class="refinery-panel-header">
+    <div
+      class="refinery-notification"
+      ng-class="{'active': $ctrl.showNotification() }">
+      <div
+        class="refinery-notification-info"
+        ng-show="$ctrl.searchQueryDataSets.length === 1">
+        <strong>Too short!</strong>
+        Enter at least 2 characters to search.
+      </div>
+      <div
+        class="refinery-notification-alert"
+        ng-show="$ctrl.dataSets.total === 0 && $ctrl.searchQueryDataSets.length > 1 && !dashboard.dataSets.error">
+        <strong>No luck!</strong>
+        No data sets found.
+      </div>
+      <div
+        class="refinery-notification-info"
+        ng-show="$ctrl.dataSets.total === 0 && $ctrl.searchQueryDataSets.length === 0 && !dashboard.dataSets.error">
+        <strong>Info</strong>
+        No data sets available.
+      </div>
+      <div
+        id="launchpad_warning" class="refinery-notification-error"
+        ng-show="$ctrl.searchQueryDataSets.length > 1 && $ctrl.dataSets.error">
+        <strong>Error: </strong>
+        Please contact your <a ng-href="mailto:{{ app.settings.djangoApp.admins }}?Subject=Refinery%20Error">System Administrator</a>.
+      </div>
+    </div>
+</div>
+  <div
     id="data-set-panel"
     class="refinery-sub-panel">
     <ul class="list-unstyled">
@@ -15,32 +67,4 @@
       </li>
     </ul>
   </div>
-<!--  <div
-    class="refinery-notification"
-    ng-class="{'active': $ctrl.showNotification() }">
-    <div
-      class="refinery-notification-info"
-      ng-show="$ctrl.searchQueryDataSets.length === 1">
-      <strong>Too short!</strong>
-      Enter at least 2 characters to search.
-    </div>
-    <div
-      class="refinery-notification-alert"
-      ng-show="$ctrl.dataSets.total === 0 && $ctrl.searchQueryDataSets.length > 1 && !$ctrl.dataSets.error">
-      <strong>No luck!</strong>
-      No data sets found.
-    </div>
-    <div
-      class="refinery-notification-info"
-      ng-show="$ctrl.dataSets.total === 0 && $ctrl.searchQueryDataSets.length === 0 && !$ctrl.dataSets.error">
-      <strong>Info</strong>
-      No data sets available.
-    </div>
-    <div
-      id="launchpad_warning" class="refinery-notification-error"
-      ng-show="$ctrl.searchQueryDataSets.length > 1 && $ctrl.dataSets.error">
-      <strong>Error: </strong>
-      Please contact your <a ng-href="mailto:{{ app.settings.djangoApp.admins }}?Subject=Refinery%20Error">System Administrator</a>.
-    </div>
-  </div> -->
 </div>

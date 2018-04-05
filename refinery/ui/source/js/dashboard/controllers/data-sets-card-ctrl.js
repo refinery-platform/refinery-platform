@@ -19,6 +19,9 @@
   ) {
     var vm = this;
     vm.getDataSets = getDataSets;
+    vm.searchQueryDataSets = '';
+    vm.resetDataSetSearch = resetDataSetSearch;
+    vm.showNotifications = showNotifications;
 
     activate();
 
@@ -32,6 +35,14 @@
       }, function (error) {
         $log.error(error);
       });
+    }
+
+    function showNotifications () {
+      console.log('show notifications');
+    }
+
+    function resetDataSetSearch () {
+      console.log('resetDataSetSearch');
     }
 
 
