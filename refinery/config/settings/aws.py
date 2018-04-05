@@ -28,7 +28,6 @@ if REFINERY_S3_USER_DATA:
     DEFAULT_FILE_STORAGE = 'file_store.utils.S3MediaStorage'
 
 COGNITO_IDENTITY_POOL_ID = get_setting('COGNITO_IDENTITY_POOL_ID')
-DOCKER_HOST = get_setting('DOCKER_HOST')
 
 # Refinery
 REFINERY_DEPLOYMENT_PLATFORM = 'aws'
