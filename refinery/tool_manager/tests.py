@@ -10,7 +10,7 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.management import CommandError, call_command
 from django.http import HttpResponseBadRequest
-from django.test import TestCase
+from django.test import TestCase, override_settings
 
 import bioblend
 from bioblend.galaxy.dataset_collections import (CollectionElement,
@@ -3628,6 +3628,22 @@ class VisualizationToolLaunchTests(ToolManagerTestBase):
             'igv.json',
             self.sample_igv_file_url,
             assertions
+        )
+
+    @override_settings(REFINERY_SOLR_DOC_LIMIT=10)
+    def test_input_node_limit(self):
+        tool = self.create_tool(ToolDefinition.VISUALIZATION)
+        tool_launch_config = self.tool.get_tool_launch_config()
+        tool_launch_config[Tool.FILE_RELATIONSHIPS] = str(
+                [uuid.uuid4()] * (10 + 1)
+            )
+        tool.set_tool_launch_config(tool_launch_config)
+        with self.assertRaises(VisualizationToolError) as context:
+            tool.launch()
+
+        self.assertIn(
+            "Input Node limit of: 10 reached",
+            context.exception.message
         )
 
 
