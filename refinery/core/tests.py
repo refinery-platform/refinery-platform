@@ -2327,7 +2327,7 @@ class InitialSiteStatisticsCreationTest(TestMigrations):
         self.assertEqual(initial_site_statistics.datasets_uploaded, 2)
         self.assertEqual(initial_site_statistics.datasets_shared, 1)
         self.assertEqual(initial_site_statistics.users_created, 3)
-        self.assertEqual(initial_site_statistics.groups_created, 2)
+        self.assertEqual(initial_site_statistics.groups_created, 1)
         self.assertEqual(initial_site_statistics.unique_user_logins, 1)
         self.assertEqual(initial_site_statistics.total_user_logins, 2)
         self.assertEqual(initial_site_statistics.total_workflow_launches, 0)
@@ -2400,9 +2400,7 @@ class SiteStatisticsTests(TestCase):
     def test_groups_created(self):
         self.assertEqual(self.site_statistics_a.groups_created, 0)
         self.assertEqual(self.site_statistics_b.groups_created, 0)
-
-        # Every Group creation gets a .Managers group as well
-        self.assertEqual(self.site_statistics_c.groups_created, 2)
+        self.assertEqual(self.site_statistics_c.groups_created, 1)
 
     def test_unique_user_logins(self):
         self.assertEqual(self.site_statistics_a.unique_user_logins, 1)

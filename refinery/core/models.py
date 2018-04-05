@@ -2297,7 +2297,7 @@ class SiteStatistics(models.Model):
         )
 
     def _get_number_of_groups_created(self):
-        return ExtendedGroup.objects.count() - sum(
+        return ExtendedGroup.objects.exclude(manager_group=None).count() - sum(
             [s.groups_created for s in SiteStatistics.objects.all()]
         )
 

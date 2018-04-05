@@ -22,7 +22,7 @@ def create_initial_site_statistics(apps, schema_editor):
             [dataset for dataset in DataSet.objects.all() if dataset.shared]
         ),
         users_created=User.objects.count(),
-        groups_created=ExtendedGroup.objects.count(),
+        groups_created=ExtendedGroup.objects.exclude(manager_group=None).count(),
         unique_user_logins=User.objects.filter(
             last_login__lte=timezone.now()
         ).count(),
