@@ -638,4 +638,5 @@ MIGRATION_MODULES = {
 REFINERY_VISUALIZATION_REGISTRY = \
     "https://github.com/refinery-platform/visualization-tools/"
 
+# The upper bound of documents returned from a Solr query
 REFINERY_SOLR_DOC_LIMIT = 10000000
