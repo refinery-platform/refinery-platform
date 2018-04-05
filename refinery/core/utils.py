@@ -885,7 +885,7 @@ def filter_nodes_uuids_in_solr(assay_uuid, filter_out_uuids=[],
     params = {
         'attributes': 'uuid',
         'facets': 'uuid',
-        'limit': 10000000,
+        'limit': settings.REFINERY_SOLR_DOC_LIMIT,
         'include_facet_count': 'false'
     }
 
