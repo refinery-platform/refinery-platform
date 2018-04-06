@@ -212,7 +212,6 @@ INSTALLED_APPS = (
     'galaxy_connector',
     'analysis_manager',
     'file_store',
-    'file_server',
     'annotation_server',
     'selenium_testing',
     'tool_manager',
