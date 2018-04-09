@@ -15,6 +15,7 @@ from django.db import connection
 from django.utils import timezone
 
 from celery.task import task
+from constants import REFINERY_SOLR_DOC_LIMIT
 from guardian.shortcuts import get_objects_for_user
 from guardian.utils import get_anonymous_user
 import py2neo
@@ -24,7 +25,6 @@ from rest_framework.response import Response
 # These imports go against our coding style guide, but are necessary for the
 #  time being due to mutual import issues
 import core
-from constants import REFINERY_SOLR_DOC_LIMIT
 from core.search_indexes import DataSetIndex
 import data_set_manager
 

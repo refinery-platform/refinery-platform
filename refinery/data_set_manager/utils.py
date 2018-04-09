@@ -17,13 +17,15 @@ from django.conf import settings
 from django.db.models import Q
 from django.utils.http import urlquote, urlunquote
 
+from constants import REFINERY_SOLR_DOC_LIMIT
 import requests
 
 import core
-from constants import REFINERY_SOLR_DOC_LIMIT
 
-from .models import (AnnotatedNode, AnnotatedNodeRegistry, Assay, Attribute,
-                     AttributeOrder, Node, Study)
+from .models import (
+    AnnotatedNode, AnnotatedNodeRegistry, Assay, Attribute, AttributeOrder,
+    Node, Study
+)
 from .search_indexes import NodeIndex
 from .serializers import AttributeOrderSerializer
 

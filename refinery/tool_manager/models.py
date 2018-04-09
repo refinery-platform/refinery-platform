@@ -11,27 +11,32 @@ from django.dispatch import receiver
 from django.http import JsonResponse
 
 import bioblend
-from bioblend.galaxy.dataset_collections import (CollectionDescription,
-                                                 CollectionElement,
-                                                 HistoryDatasetElement)
-from constants import UUID_RE, REFINERY_SOLR_DOC_LIMIT
-from django_docker_engine.container_managers.docker_engine import \
+from bioblend.galaxy.dataset_collections import (
+    CollectionDescription, CollectionElement, HistoryDatasetElement
+)
+from constants import REFINERY_SOLR_DOC_LIMIT, UUID_RE
+from django_docker_engine.container_managers.docker_engine import (
     ExpectedPortMissing
-from django_docker_engine.docker_utils import (DockerClientWrapper,
-                                               DockerContainerSpec)
+)
+from django_docker_engine.docker_utils import (
+    DockerClientWrapper, DockerContainerSpec
+)
 from django_extensions.db.fields import UUIDField
 from docker.errors import APIError, NotFound
 
 from analysis_manager.models import AnalysisStatus
-from analysis_manager.tasks import (_galaxy_file_import, get_taskset_result,
-                                    run_analysis)
+from analysis_manager.tasks import (
+    _galaxy_file_import, get_taskset_result, run_analysis
+)
 from analysis_manager.utils import create_analysis, validate_analysis_config
-from core.models import (INPUT_CONNECTION, OUTPUT_CONNECTION, Analysis,
-                         AnalysisNodeConnection, DataSet, OwnableResource,
-                         Workflow)
+from core.models import (
+    INPUT_CONNECTION, OUTPUT_CONNECTION, Analysis, AnalysisNodeConnection,
+    DataSet, OwnableResource, Workflow
+)
 from data_set_manager.models import Node
-from data_set_manager.utils import (get_file_url_from_node_uuid,
-                                    get_solr_response_json)
+from data_set_manager.utils import (
+    get_file_url_from_node_uuid, get_solr_response_json
+)
 from file_store.models import FileType
 
 logger = logging.getLogger(__name__)

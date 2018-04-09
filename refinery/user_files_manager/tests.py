@@ -8,13 +8,14 @@ from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from django.http import QueryDict
 from django.test import RequestFactory, TestCase, override_settings
 
+from constants import REFINERY_SOLR_DOC_LIMIT
 from guardian.utils import get_anonymous_user
 import mock
 import requests
-from rest_framework.test import (APIRequestFactory, APITestCase,
-                                 force_authenticate)
+from rest_framework.test import (
+    APIRequestFactory, APITestCase, force_authenticate
+)
 
-from constants import REFINERY_SOLR_DOC_LIMIT
 from data_set_manager.models import Assay
 from data_set_manager.search_indexes import NodeIndex
 from factory_boy.utils import create_dataset_with_necessary_models
