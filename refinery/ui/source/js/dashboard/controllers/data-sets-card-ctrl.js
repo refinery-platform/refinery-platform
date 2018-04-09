@@ -82,14 +82,13 @@
       var datasetDeleteDialogUrl = $window.getStaticUrl(
         'partials/dashboard/partials/dataset-delete-dialog.html'
       );
-      $uibModal.open({
+      var modalInstance = $uibModal.open({
         backdrop: 'static',
         keyboard: false,
         templateUrl: datasetDeleteDialogUrl,
         controller: 'DataSetDeleteCtrl as modal',
         resolve: {
           config: function () {
-            console.log('wheres the error');
             return {
               model: 'data_sets',
               uuid: dataSet.uuid
@@ -102,6 +101,11 @@
           analyses: function () { return {}; },
           analysesReloadService: function () { return {}; },
         }
+      });
+
+      modalInstance.result.then(function () {
+        // user confirmed deletion
+        getDataSets();
       });
     }
 
