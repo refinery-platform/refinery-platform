@@ -2391,12 +2391,16 @@ class SiteStatisticsUnitTests(TestCase):
         self.assertEqual(self.site_statistics._get_total_user_logins(), 4)
 
 
+class SiteStatisticsIntegrationTests(TestCase):
+    def setUp(self):
+        test_group = ExtendedGroup.objects.create(name="Test Group A")
+
         # Simulate a day of user activity
         user_a = User.objects.create_user("user_a", "", "user_a")
         self.client.login(username="user_a", password="user_a")
         self.dataset_a = create_dataset_with_necessary_models(user=user_a)
         self.dataset_b = create_dataset_with_necessary_models(user=user_a)
-        self.dataset_b.share(public_group)
+        self.dataset_b.share(test_group)
         self.site_statistics_a = SiteStatistics.objects.create()
         self.site_statistics_a.collect()
 
