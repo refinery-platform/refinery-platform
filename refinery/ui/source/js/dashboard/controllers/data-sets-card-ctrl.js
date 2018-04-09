@@ -13,12 +13,16 @@
 
   DataSetsCardCtrl.$inject = [
     '$log',
+    '$uibModal',
+    '$window',
     'DataSetSearchApi',
     'dataSetService'
   ];
 
   function DataSetsCardCtrl (
     $log,
+    $uibModal,
+    $window,
     DataSetSearchApi,
     dataSetService
   ) {
@@ -26,6 +30,7 @@
     vm.dataSetsAll = [];
     vm.dataSets = [];
     vm.dataSetsError = false;
+    vm.openDataSetDeleteModal = openDataSetDeleteModal;
     vm.getDataSets = getDataSets;
     vm.searchDataSets = searchDataSets;
     vm.searchQueryDataSets = '';
@@ -67,6 +72,40 @@
     function resetDataSetSearch () {
       vm.searchQueryDataSets = '';
       vm.dataSets = vm.dataSetsAll;
+    }
+
+ /*
+ * Open the deletion modal for a given Datset.
+ * @method  openDataSetDeleteModal
+ */
+    function openDataSetDeleteModal (dataSet) {
+      console.log('open data set modal');
+      var datasetDeleteDialogUrl = $window.getStaticUrl(
+        'partials/dashboard/partials/dataset-delete-dialog.html'
+      );
+      console.log(dataSet.uuid);
+      console.log(vm.dataSets);
+
+      console.log('where the error');
+      $uibModal.open({
+        backdrop: 'static',
+        keyboard: false,
+        templateUrl: datasetDeleteDialogUrl,
+        controller: 'DataSetDeleteCtrl as modal',
+        resolve: {
+          config: function () {
+            console.log('wheres the error');
+            return {
+              model: 'data_sets',
+              uuid: dataSet.uuid
+            };
+          },
+          dataSet: dataSet,
+          dataSets: function () { return {}; },
+          analyses: function () { return {}; },
+          analysesReloadService: function () { return {}; },
+        }
+      });
     }
 
 

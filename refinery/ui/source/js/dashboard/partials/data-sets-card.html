@@ -96,13 +96,14 @@
                     <i class="fa fa-calendar-o"></i>
                     {{ dataSet.modification_date }}
                   </li>
-                  <li class="separator">&middot;</li>
+
+                  <li ng-if="dataSet.is_owner" class="separator">&middot;</li>
                   <li>
                     <i
                       class="fa fa-trash-o indicator dataset-delete pointer"
                       title="Delete Dataset"
                       ng-if="dataSet.is_owner"
-                      ng-click="dashboard.openDataSetDeleteModal(dataSet)"
+                      ng-click="$ctrl.openDataSetDeleteModal(dataSet)"
                       refinery-tooltip
                       refinery-tooltip-container="body"
                       refinery-tooltip-placement="right"
