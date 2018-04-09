@@ -14,7 +14,7 @@ import bioblend
 from bioblend.galaxy.dataset_collections import (CollectionDescription,
                                                  CollectionElement,
                                                  HistoryDatasetElement)
-from constants import UUID_RE
+from constants import UUID_RE, REFINERY_SOLR_DOC_LIMIT
 from django_docker_engine.container_managers.docker_engine import \
     ExpectedPortMissing
 from django_docker_engine.docker_utils import (DockerClientWrapper,
@@ -489,10 +489,10 @@ class VisualizationTool(Tool):
         }
 
     def _check_input_node_limit(self):
-        if len(self.get_input_node_uuids()) > settings.REFINERY_SOLR_DOC_LIMIT:
+        if len(self.get_input_node_uuids()) > REFINERY_SOLR_DOC_LIMIT:
             raise VisualizationToolError(
                 'Input Node limit of: {} reached'.format(
-                    settings.REFINERY_SOLR_DOC_LIMIT
+                    REFINERY_SOLR_DOC_LIMIT
                 )
             )
 

@@ -15,10 +15,10 @@ from django.core.files.uploadedfile import (InMemoryUploadedFile,
                                             SimpleUploadedFile)
 from django.db.models import Q
 from django.http import QueryDict
-from django.test import LiveServerTestCase, TestCase, override_settings
+from django.test import LiveServerTestCase, TestCase
 
 from celery.states import PENDING, STARTED, SUCCESS
-from constants import NOT_AVAILABLE
+from constants import NOT_AVAILABLE, REFINERY_SOLR_DOC_LIMIT
 from djcelery.models import TaskMeta
 from guardian.shortcuts import assign_perm
 from haystack.exceptions import SkipDocument
@@ -922,7 +922,6 @@ class UtilitiesTests(TestCase):
         for field in list_not_hidden_field:
             self.assertEqual(is_field_in_hidden_list(field), False)
 
-    @override_settings(REFINERY_SOLR_DOC_LIMIT=10)
     def test_generate_solr_params_no_params(self):
         # empty params
         query = generate_solr_params_for_assay(QueryDict({}), self.valid_uuid)
@@ -944,12 +943,13 @@ class UtilitiesTests(TestCase):
                          'Group Name'
                          '&fq=is_annotation%3Afalse'
                          '&start=0'
-                         '&rows=10'
+                         '&rows={}'
                          '&q=django_ct%3Adata_set_manager.node'
                          '&wt=json'
                          '&facet=true'
                          '&facet.limit=-1'.format(
-                                 self.valid_uuid))
+                             self.valid_uuid, REFINERY_SOLR_DOC_LIMIT
+                         ))
 
     def test_generate_solr_params_for_assay_with_params(self):
         query = generate_solr_params_for_assay(QueryDict({}), self.valid_uuid)
@@ -1567,7 +1567,6 @@ class UtilitiesTests(TestCase):
                 context.exception.message
             )
 
-    @override_settings(REFINERY_SOLR_DOC_LIMIT=10)
     def test__create_solr_params_from_node_uuids(self):
         fake_node_uuids = [str(uuid.uuid4()), str(uuid.uuid4())]
         node_solr_params = _create_solr_params_from_node_uuids(fake_node_uuids)
@@ -1577,7 +1576,7 @@ class UtilitiesTests(TestCase):
                 "q": "django_ct:data_set_manager.node",
                 "wt": "json",
                 "fq": "uuid:({})".format(" OR ".join(fake_node_uuids)),
-                "rows": 10
+                "rows": REFINERY_SOLR_DOC_LIMIT
             }
         )
 
