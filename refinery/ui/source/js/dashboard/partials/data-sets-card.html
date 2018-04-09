@@ -94,7 +94,7 @@
                     refinery-tooltip-container="body"
                     refinery-tooltip-placement="top">
                     <i class="fa fa-calendar-o"></i>
-                    {{ dataSet.modification_date }}
+                    {{ dataSet.modification_date | utcToReadableDate }}
                   </li>
 
                   <li ng-if="dataSet.is_owner" class="separator">&middot;</li>

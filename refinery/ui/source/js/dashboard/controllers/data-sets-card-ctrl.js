@@ -79,14 +79,9 @@
  * @method  openDataSetDeleteModal
  */
     function openDataSetDeleteModal (dataSet) {
-      console.log('open data set modal');
       var datasetDeleteDialogUrl = $window.getStaticUrl(
         'partials/dashboard/partials/dataset-delete-dialog.html'
       );
-      console.log(dataSet.uuid);
-      console.log(vm.dataSets);
-
-      console.log('where the error');
       $uibModal.open({
         backdrop: 'static',
         keyboard: false,
@@ -100,6 +95,8 @@
               uuid: dataSet.uuid
             };
           },
+          // Refactor data set deletion into it's own component (shared) It
+          // should not be responsible for updating another view's cache [JM]
           dataSet: dataSet,
           dataSets: function () { return {}; },
           analyses: function () { return {}; },

@@ -14,9 +14,9 @@ describe('DataSet.search-api: unit tests', function () {
     '  "responseHeader": {' +
     '    "status": 0,' +
     '    "QTime": 139,' +
-    '    "params": {' +
+              '    "params": {' +
     '      "f.description.hl.alternateField": "description",' +
-    '      "fl": "id,uuid,access",' +
+    '      "fl": "dbid,uuid,access,name,modification_date,title",' +
     '      "start": "0",' +
     '      "f.content_auto.hl.alternateField": "title",' +
     '      "hl.maxAlternateFieldLength": "128",' +
@@ -61,7 +61,7 @@ describe('DataSet.search-api: unit tests', function () {
       'f.description.hl.alternateField': 'description',
       'f.title.hl.alternateField': 'title',
       'f.title.hl.fragsize': '0',
-      fl: 'dbid,uuid,access',
+      fl: 'dbid,uuid,access,name,modification_date,title',
       fq: 'django_ct:core.dataset',
       hl: 'true',
       'hl.fl': 'title,description',
