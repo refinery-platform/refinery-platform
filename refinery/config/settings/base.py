@@ -322,8 +322,14 @@ EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 CELERYD_MAX_TASKS_PER_CHILD = get_setting("CELERYD_MAX_TASKS_PER_CHILD")
 CELERY_ROUTES = {"file_store.tasks.import_file": {"queue": "file_import"}}
 CELERY_ACCEPT_CONTENT = ['pickle']
-# TODO: Does this belong here or in config.json.erb?
 CELERYBEAT_SCHEDULE = {
+    'collect_site_statistics': {
+        'task': 'core.tasks.collect_site_statistics',
+        'schedule': timedelta(days=1),
+        'options': {
+            'expires': 30,  # seconds
+        }
+    },
     'django_docker_cleanup': {
         'task': 'tool_manager.tasks.django_docker_cleanup',
         'schedule': timedelta(seconds=30),
