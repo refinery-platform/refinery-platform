@@ -82,8 +82,9 @@ def import_file(uuid, refresh=False, file_size=0):
         )
         file_store_path = os.path.join(settings.FILE_STORE_BASE_DIR,
                                        item.datafile.name)
-        if item.source.startswith(settings.REFINERY_DATA_IMPORT_DIR):
-            # move uploaded file
+        if item.source.startswith((settings.REFINERY_DATA_IMPORT_DIR,
+                                   get_temp_dir())):
+            # move uploaded or temporary file
             logger.debug("Moving uploaded file '%s' into file store",
                          item.source)
             try:

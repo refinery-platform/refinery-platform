@@ -329,14 +329,6 @@ class ProcessISATabView(View):
             else:
                 dataset_uuid = parse_isatab_invocation
 
-            try:
-                os.unlink(response['data']['temp_file_path'])
-            except OSError as e:
-                logger.error(
-                    "Couldn't unlink temporary file: %s %s",
-                    response['data']['temp_file_path'], e
-                )
-
             # import data files
             if dataset_uuid:
                 try:
