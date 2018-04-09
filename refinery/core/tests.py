@@ -2391,6 +2391,7 @@ class SiteStatisticsUnitTests(TestCase):
         self.assertEqual(self.site_statistics._get_total_user_logins(), 4)
 
 
+        # Simulate a day of user activity
         user_a = User.objects.create_user("user_a", "", "user_a")
         self.client.login(username="user_a", password="user_a")
         self.dataset_a = create_dataset_with_necessary_models(user=user_a)
@@ -2399,11 +2400,11 @@ class SiteStatisticsUnitTests(TestCase):
         self.site_statistics_a = SiteStatistics.objects.create()
         self.site_statistics_a.collect()
 
-        # Simulate a week where nothing happened
+        # Simulate a day where nothing happened
         self.site_statistics_b = SiteStatistics.objects.create()
         self.site_statistics_b.collect()
 
-        # Simulate another week of user activity
+        # Simulate another day of user activity
         user_b = User.objects.create_user("user_b", "", "user_b")
         user_c = User.objects.create_user("user_c", "", "user_c")
         self.client.login(username="user_b", password="user_b")
