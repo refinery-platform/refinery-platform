@@ -2432,10 +2432,7 @@ class SiteStatisticsTests(TestCase):
 
     def test__get_previous_instance_returns_itself_if_only_instance(self):
         SiteStatistics.objects.all().delete()
-
         site_statistics = SiteStatistics.objects.create()
-        site_statistics.collect()
-        self.assertIsNotNone(site_statistics._get_previous_instance())
         self.assertEqual(site_statistics._get_previous_instance(),
                          site_statistics)
 
