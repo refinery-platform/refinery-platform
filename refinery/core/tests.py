@@ -2439,7 +2439,7 @@ class SiteStatisticsTests(TestCase):
         self.assertEqual(site_statistics._get_previous_instance(),
                          site_statistics)
 
-    def test_periodic_task_is_scheduled_for_weekly_runs(self):
+    def test_periodic_task_is_scheduled_for_daily_runs(self):
         self.assertEqual(
             settings.CELERYBEAT_SCHEDULE["collect_site_statistics"],
             {
