@@ -18,7 +18,8 @@ from requests.exceptions import (ConnectionError, ContentDecodingError,
 from data_set_manager.models import Node
 from data_set_manager.search_indexes import NodeIndex
 
-from .models import FileStoreItem, file_path, get_temp_dir, parse_s3_url
+from .models import (FileStoreItem, _mkdir, file_path, get_temp_dir,
+                     parse_s3_url)
 
 logger = celery.utils.log.get_task_logger(__name__)
 
@@ -88,7 +89,8 @@ def import_file(uuid, refresh=False, file_size=0):
             logger.debug("Moving uploaded file '%s' into file store",
                          item.source)
             try:
-                os.renames(item.source, file_store_path)
+                _mkdir(os.path.dirname(file_store_path))
+                os.rename(item.source, file_store_path)
             except OSError as exc:
                 logger.error("Error moving '%s' into the file store: %s",
                              item.source, exc)

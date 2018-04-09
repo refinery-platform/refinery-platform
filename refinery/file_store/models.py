@@ -1,7 +1,6 @@
 """
 * Manages all data files
 * Downloads files from external repositories (by URL)
-* Manage the import cache/public data space
 
 Requirements:
 
@@ -10,6 +9,7 @@ FILE_STORE_DIR setting - main file store directory
 * must be writeable by the Django server
 """
 
+import errno
 import logging
 import os
 import re
@@ -29,20 +29,16 @@ logger = logging.getLogger(__name__)
 
 
 def _mkdir(path):
-    """Create directory given absolute file system path
-    Does not create intermediate dirs if they don't exist, raises RuntimeError
-
-    :param path: Absolute file system path
-    :type path: str
-    """
-    if not os.path.isdir(path):
-        try:
-            os.mkdir(path)
-        except OSError as exc:
-            logger.error("Error creating directory '%s': %s", path, exc)
-            raise RuntimeError()
-        else:
-            logger.info("Created directory '%s'", path)
+    """Create directory given absolute file system path"""
+    try:
+        os.makedirs(path)
+    except OSError as exc:
+        # https://stackoverflow.com/a/273227
+        if exc.errno != errno.EEXIST:
+            logger.critical("Error creating directory '%s': %s", path, exc)
+            raise
+    else:
+        logger.info("Created directory '%s'", path)
 
 
 # create data storage directories
