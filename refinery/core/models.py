@@ -2243,10 +2243,10 @@ class SiteStatistics(models.Model):
     def collect(self):
         self.datasets_uploaded = self._get_datasets_uploaded()
         self.datasets_shared = self._get_datasets_shared()
-        self.groups_created = self._get_number_of_groups_created()
+        self.groups_created = self._get_groups_created()
         self.users_created = self._get_users_created()
         self.unique_user_logins = self._get_unique_user_logins()
-        self.total_user_logins = self._get_number_of_total_user_logins()
+        self.total_user_logins = self._get_total_user_logins()
         self.total_workflow_launches = self._get_total_workflow_launches()
         self.total_visualization_launches = \
             self._get_total_visualization_launches()
@@ -2293,11 +2293,14 @@ class SiteStatistics(models.Model):
             date_joined__gte=self._get_previous_instance().run_date
         ).count()
 
-    def _get_number_of_groups_created(self):
+    def _get_groups_created(self):
         return ExtendedGroup.objects.exclude(manager_group=None).count() - sum(
-            [s.groups_created for s in SiteStatistics.objects.all()]
+            s.groups_created for s in SiteStatistics.objects.exclude(
+                id=self.id
+            )
         )
 
-    def _get_number_of_total_user_logins(self):
-        return sum([u.login_count for u in UserProfile.objects.all()]) - \
-               sum([s.total_user_logins for s in SiteStatistics.objects.all()])
+    def _get_total_user_logins(self):
+        return sum(u.login_count for u in UserProfile.objects.all()) - \
+               sum(s.total_user_logins for s in
+                   SiteStatistics.objects.exclude(id=self.id))
