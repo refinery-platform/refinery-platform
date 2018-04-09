@@ -1,78 +1,94 @@
 <div class="refinery-panel">
   <div class="refinery-header">
-    <div>
-      <h3>
-        <i class="m-r-1-4 fa fa-database"></i>Data Sets
-      </h3>
-    </div>
+    <h3>
+      <i class="m-r-1-4 fa fa-database"></i>Data Sets
+      <span class="float-right">
+        <a
+          href="/files/"
+          class="no-underline btn btn-sm">
+          <i class="fa fa-list"></i> List
+        </a>
+        <!--ToDo: check perms first -->
+        <a
+          href="./data_set_manager/import/"
+          class="no-underline btn btn-sm p-l-1-2"
+          id="import-button">
+          <i class="fa fa-plus-circle"></i> Upload
+        </a>
+      </span>
+    </h3>
   </div>
-  <div
-  id="data-set-panel"
-  class="refinery-sub-panel">
-  <div
-    id="search-interface"
-    class="navbar-search form-group"
-    ng-form="metadataSearch"
-    ng-class="{'has-warning': metadataSearch.searchQuery.$error.minlength}">
-    <i class="fa fa-search"></i>
-    <i class="fa fa-times-circle"
-      ng-if="$ctrl.searchQueryDataSets"
-      ng-click="$ctrl.resetDataSetSearch()"></i>
-    <!--The 'metadata-search' id below is used to define custom
-      styling to address a padding issue observed in Firefox-->
-    <input
-      id="metadata-search"
-      type="text"
-      class="search-query form-control"
-      placeholder="Search"
-      ng-model="$ctrl.searchQueryDataSets"
-      ng-change="$ctrl.searchDataSets($ctrl.searchQueryDataSets)"
-      ng-minlength="2"
-      name="searchQuery">
-  </div>
-  <div
-    ng-messages="metadataSearch.searchQuery.$error"
-    role="alert"
-    class="refinery-sub-panel-notice">
-    <div ng-message="minlength" class="text-warning notice">
-      <i class="fa fa-warning" aria-hidden="true"></i>
-      <strong>Too short!</strong>: Enter at least 2 characters to search.
+  <div id="data-set-panel" class="refinery-sub-panel">
+    <div
+      id="search-interface"
+      class="navbar-search form-group"
+      ng-form="metadataSearch"
+      ng-class="{'has-warning': metadataSearch.searchQuery.$error.minlength}">
+      <i class="fa fa-search"></i>
+      <i class="fa fa-times-circle"
+        ng-if="$ctrl.searchQueryDataSets"
+        ng-click="$ctrl.resetDataSetSearch()"></i>
+      <!--The 'metadata-search' id below is used to define custom
+        styling to address a padding issue observed in Firefox-->
+      <input
+        id="metadata-search"
+        type="text"
+        class="search-query form-control"
+        placeholder="Search"
+        ng-model="$ctrl.searchQueryDataSets"
+        ng-change="$ctrl.searchDataSets($ctrl.searchQueryDataSets)"
+        ng-minlength="2"
+        name="searchQuery">
     </div>
     <div
-      ng-show="$ctrl.dataSets.length === 0 && $ctrl.searchQueryDataSets.length > 1 && !$ctrl.dataSetsError"
-      class="text-warning notice">
-      <i class="fa fa-warning" aria-hidden="true"></i>
-      <strong>Info</strong>: No data sets found.
-    </div>
-    <div
-      ng-show="$ctrl.dataSets.length === 0 && $ctrl.searchQueryDataSets.length === 0 && !$ctrl.dataSetsError"
-      class="text-info notice">
-      <strong>Info</strong>: No data sets available.
-    </div>
-    <div
-        id="launchpad_warning"
-        ng-show="$ctrl.searchQueryDataSets.length > 1 && $ctrl.dataSetsError"
-        class="text-error notice">
-        <strong>Error: </strong>
-        Please contact your <a ng-href="mailto:{{ app.settings.djangoApp.admins }}?Subject=Refinery%20Error">System Administrator</a>.
+      id="data-set-panel-header"
+      class="refinery-sub-panel-notice">
+      <div class="refinery-notification">
+        <div
+          ng-messages="metadataSearch.searchQuery.$error"
+          role="alert"
+          class="refinery-sub-panel-notice">
+          <div ng-message="minlength" class="text-warning notice">
+            <i class="fa fa-warning" aria-hidden="true"></i>
+            <strong>Too short!</strong>: Enter at least 2 characters to search.
+          </div>
+          <div
+            ng-show="$ctrl.dataSets.length === 0 && $ctrl.searchQueryDataSets.length > 1 && !$ctrl.dataSetsError"
+            class="text-warning notice">
+            <i class="fa fa-warning" aria-hidden="true"></i>
+            <strong>Info</strong>: No data sets found.
+          </div>
+          <div
+            ng-show="$ctrl.dataSets.length === 0 && $ctrl.searchQueryDataSets.length === 0 && !$ctrl.dataSetsError"
+            class="text-info notice">
+            <strong>Info</strong>: No data sets available.
+          </div>
+          <div
+              id="launchpad_warning"
+              ng-show="$ctrl.searchQueryDataSets.length > 1 && $ctrl.dataSetsError"
+              class="text-error notice">
+              <strong>Error: </strong>
+              Please contact your <a ng-href="mailto:{{ app.settings.djangoApp.admins }}?Subject=Refinery%20Error">System Administrator</a>.
+            </div>
+          </div>
+        </div>
+        <div>
+          <div id="dashboard-total-datasets">
+            <span ng-if="$ctrl.dataSets.length">
+              {{ $ctrl.dataSets.length }} data sets
+            </span>
+          </div>
+        </div>
       </div>
-  </div>
-
-  <div class="refinery-panel-header">
-    <div>
-      <h4 id="total-datasets">
-        <span ng-if="$ctrl.dataSets.length">
-          {{ $ctrl.dataSets.length }} data sets
-        </span>
-      </h4>
     </div>
-  <div
-    id="data-set-panel"
-    class="refinery-sub-panel">
-    <ul class="list-unstyled">
-      <li ng-repeat="dataSet in $ctrl.dataSets">
-        <a href="/data_sets/{{ dataSet.uuid }}">{{ dataSet.title }}</a>
-      </li>
-    </ul>
+    <div id="data-set-list">
+      <div class="refinery-panel-content">
+        <ul class="results list-unstyled">
+          <li ng-repeat="dataSet in $ctrl.dataSets">
+            <a href="/data_sets/{{ dataSet.uuid }}">{{ dataSet.title }}</a>
+          </li>
+        </ul>
+      </div>
+    </div>
   </div>
 </div>
