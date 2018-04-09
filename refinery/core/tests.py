@@ -2417,73 +2417,91 @@ class SiteStatisticsIntegrationTests(TestCase):
         self.client.login(username="user_c", password="user_c")
         self.dataset_c = create_dataset_with_necessary_models(user=user_b)
         self.dataset_d = create_dataset_with_necessary_models(user=user_b)
-        self.dataset_d.share(public_group)
+        self.dataset_d.share(test_group)
         self.dataset_e = create_dataset_with_necessary_models(user=user_c)
-        self.dataset_e.share(public_group)
-        ExtendedGroup.objects.create(name="Test Group")
+        self.dataset_e.share(test_group)
+        ExtendedGroup.objects.create(name="Test Group B")
         create_tool_with_necessary_models("VISUALIZATION")  # creates a DataSet
         create_tool_with_necessary_models("WORKFLOW")  # creates a DataSet
         self.site_statistics_c = SiteStatistics.objects.create()
         self.site_statistics_c.collect()
 
     def test__get_previous_instance(self):
-        self.assertEqual(self.site_statistics_a._get_previous_instance().id, 1)
-        self.assertEqual(self.site_statistics_b._get_previous_instance(),
-                         self.site_statistics_a)
-        self.assertEqual(self.site_statistics_c._get_previous_instance(),
-                         self.site_statistics_b)
+        self.assertEqual(
+            (self.site_statistics_a._get_previous_instance().id,
+             self.site_statistics_b._get_previous_instance().id,
+             self.site_statistics_c._get_previous_instance().id),
+            (SiteStatistics.objects.first().id,
+             self.site_statistics_a.id,
+             self.site_statistics_b.id)
+        )
 
     def test_datasets_uploaded(self):
-        self.assertEqual(self.site_statistics_a.datasets_uploaded, 2)
-        self.assertEqual(self.site_statistics_b.datasets_uploaded, 0)
-        self.assertEqual(self.site_statistics_c.datasets_uploaded, 5)
+        self.assertEqual(
+            (self.site_statistics_a.datasets_uploaded,
+             self.site_statistics_b.datasets_uploaded,
+             self.site_statistics_c.datasets_uploaded),
+            (2, 0, 5)
+        )
 
     def test_datasets_shared(self):
-        self.assertEqual(self.site_statistics_a.datasets_shared, 1)
-        self.assertEqual(self.site_statistics_b.datasets_shared, 0)
-        self.assertEqual(self.site_statistics_c.datasets_shared, 2)
+        self.assertEqual(
+            (self.site_statistics_a.datasets_shared,
+             self.site_statistics_b.datasets_shared,
+             self.site_statistics_c.datasets_shared),
+            (1, 0, 2)
+        )
 
     def test_users_created(self):
-        # + 2 instead of the expected 1 because the emission of
-        # the post_migrate signal creates the AnonymousUser
         self.assertEqual(
-            self.site_statistics_a.users_created,
-            self.site_statistics_a._get_previous_instance().users_created + 2
-        )
-        self.assertEqual(self.site_statistics_b.users_created, 0)
-        self.assertEqual(
-            self.site_statistics_c.users_created,
-            self.site_statistics_c._get_previous_instance().users_created + 2
+            (self.site_statistics_a.users_created,
+             self.site_statistics_b.users_created,
+             self.site_statistics_c.users_created),
+            # + 2 instead of the expected 1 because the emission of
+            # the post_migrate signal creates the AnonymousUser
+            (self.site_statistics_a._get_previous_instance().users_created + 2,
+             0,
+             self.site_statistics_c._get_previous_instance().users_created + 2)
         )
 
     def test_groups_created(self):
-        self.assertEqual(self.site_statistics_a.groups_created, 0)
-        self.assertEqual(self.site_statistics_b.groups_created, 0)
-        self.assertEqual(self.site_statistics_c.groups_created, 1)
+        self.assertEqual(
+            (self.site_statistics_a.groups_created,
+             self.site_statistics_b.groups_created,
+             self.site_statistics_c.groups_created),
+            (1, 0, 1)
+        )
 
     def test_unique_user_logins(self):
-        self.assertEqual(self.site_statistics_a.unique_user_logins, 1)
-        self.assertEqual(self.site_statistics_b.unique_user_logins, 0)
-        self.assertEqual(self.site_statistics_c.unique_user_logins, 2)
+        self.assertEqual(
+            (self.site_statistics_a.unique_user_logins,
+             self.site_statistics_b.unique_user_logins,
+             self.site_statistics_c.unique_user_logins),
+            (1, 0, 2)
+        )
 
     def test_total_user_logins(self):
-        self.assertEqual(self.site_statistics_a.total_user_logins, 1)
-        self.assertEqual(self.site_statistics_b.total_user_logins, 0)
-        self.assertEqual(self.site_statistics_c.total_user_logins, 4)
+        self.assertEqual(
+            (self.site_statistics_a.total_user_logins,
+             self.site_statistics_b.total_user_logins,
+             self.site_statistics_c.total_user_logins),
+            (1, 0, 4)
+        )
 
     def test_total_workflow_launches(self):
-        self.assertEqual(self.site_statistics_a.total_workflow_launches, 0)
-        self.assertEqual(self.site_statistics_b.total_workflow_launches, 0)
-        self.assertEqual(self.site_statistics_c.total_workflow_launches, 1)
+        self.assertEqual(
+            (self.site_statistics_a.total_workflow_launches,
+             self.site_statistics_b.total_workflow_launches,
+             self.site_statistics_c.total_workflow_launches),
+            (0, 0, 1)
+        )
 
     def test_total_visualization_launches(self):
         self.assertEqual(
-            self.site_statistics_a.total_visualization_launches, 0)
-        self.assertEqual(
-            self.site_statistics_b.total_visualization_launches, 0)
-        self.assertEqual(
-            self.site_statistics_c.total_visualization_launches,
-            1
+            (self.site_statistics_a.total_visualization_launches,
+             self.site_statistics_b.total_visualization_launches,
+             self.site_statistics_c.total_visualization_launches),
+            (0, 0, 1)
         )
 
     def test__get_previous_instance_returns_itself_if_only_instance(self):
