@@ -178,7 +178,8 @@ class FileStoreItem(models.Model):
 
         # symlink datafile if possible
         if (not self.datafile and os.path.isabs(self.source) and
-                settings.REFINERY_DATA_IMPORT_DIR not in self.source):
+                settings.REFINERY_DATA_IMPORT_DIR not in self.source and
+                get_temp_dir() not in self.source):
             self._symlink_datafile()
 
         super(FileStoreItem, self).save(*args, **kwargs)
@@ -274,14 +275,14 @@ class FileStoreItem(models.Model):
         """Delete datafile on disk and cancel file import"""
         self.terminate_file_import_task()
         if self.datafile:
-            logger.debug("Deleting datafile '%s'", self.datafile.path)
+            path = self.datafile.path
+            logger.debug("Deleting datafile '%s'", path)
             try:
                 self.datafile.delete(save=save_instance)
             except OSError as exc:
-                logger.error("Error deleting file '%s': %s",
-                             self.datafile.path, exc)
+                logger.error("Error deleting file '%s': %s", path, exc)
             else:
-                logger.info("Deleted datafile of '%s'", self)
+                logger.info("Deleted datafile '%s'", path)
 
     def rename_datafile(self, name):
         """Change name of the data file

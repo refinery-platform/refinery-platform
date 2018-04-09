@@ -188,8 +188,6 @@ class FileStoreItemLocalFileTest(TestCase):
         )[0]
         self.file_name = 'test_file.tdf'
         self.item = FileStoreItem()
-        # test storage backend does not support absolute paths
-        # self.item.is_local = mock.MagicMock(return_value=True)
 
     @override_settings(MEDIA_URL='')
     def test_get_local_file_url(self):
@@ -348,5 +346,5 @@ class TestSymlinkDatafile(TestCase):
         with mock.patch.object(FileStoreItem,
                                '_symlink_datafile') as mock_symlink:
             FileStoreItem.objects.create(
-                source=settings.REFINERY_DATA_IMPORT_DIR + 'test.txt')
+                source=settings.REFINERY_DATA_IMPORT_DIR + '/test.txt')
             mock_symlink.assert_not_called()
