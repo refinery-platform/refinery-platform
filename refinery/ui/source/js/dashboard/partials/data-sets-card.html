@@ -1,4 +1,4 @@
-<div class="refinery-panel">
+<div class="refinery-panel" id="dashboard-data-set-panel">
   <div class="refinery-header">
     <h3>
       <i class="m-r-1-4 fa fa-database"></i>Data Sets
@@ -81,11 +81,35 @@
         </div>
       </div>
     </div>
-    <div id="data-set-list">
+    <div id="dashboard-data-set-list">
       <div class="refinery-panel-content">
         <ul class="results list-unstyled">
           <li ng-repeat="dataSet in $ctrl.dataSets">
             <a href="/data_sets/{{ dataSet.uuid }}">{{ dataSet.title }}</a>
+             <div class="flex-box indicators">
+                <ul class="flex-item-two flex-left no-list-style p-b-1-2">
+                 <li class="indicator"
+                    title="Modification Date"
+                    refinery-tooltip
+                    refinery-tooltip-container="body"
+                    refinery-tooltip-placement="top">
+                    <i class="fa fa-calendar-o"></i>
+                    {{ dataSet.modification_date }}
+                  </li>
+                  <li class="separator">&middot;</li>
+                  <li>
+                    <i
+                      class="fa fa-trash-o indicator dataset-delete pointer"
+                      title="Delete Dataset"
+                      ng-if="dataSet.is_owner"
+                      ng-click="dashboard.openDataSetDeleteModal(dataSet)"
+                      refinery-tooltip
+                      refinery-tooltip-container="body"
+                      refinery-tooltip-placement="right"
+                      refinery-tooltip-hide-on-click="true">
+                    </i>
+                  </li>
+              </div>
           </li>
         </ul>
       </div>

@@ -1798,24 +1798,39 @@ body.repo-mode .refinery-dashboard {
   box-shadow: 2px 0 0 0 #e5e5e5;
 }
 
-.refinery-sub-panel-notice {
-  position: relative;
-  margin: 0 10px;
-  padding: 0;
-  background-color: @white;
-  border: none;
-  div.notice {
-      border-bottom: 1px solid lighten(@gray-light, 25%);
-  }
-}
 
-#dashboard-total-datasets {
-  display: inline-block;
-  margin: 0;
-  padding: 5px 0;
-  color: @gray-light;
-  font-size: 14px;
-  line-height: 1em;
-  border-bottom: 1px solid lighten(@gray-light, 25%)
-  width: 100%;
+#dashboard-data-set-panel {
+  max-height: 60vh;
+
+  #dashboard-total-datasets {
+    display: inline-block;
+    margin: 0;
+    padding: 5px 0;
+    color: @gray-light;
+    font-size: 14px;
+    line-height: 1em;
+    border-bottom: 1px solid lighten(@gray-light, 25%);
+    width: 100%;
+  }
+
+  .refinery-sub-panel-notice {
+    position: relative;
+    margin: 0 10px;
+    padding: 0;
+    background-color: @white;
+    border: none;
+    div.notice {
+        border-bottom: 1px solid lighten(@gray-light, 25%);
+    }
+  }
+
+  #dashboard-data-set-list{
+    overflow: scroll;
+    height: 50vh;
+    div.refinery-panel-content {
+      padding-bottom: 10px;
+      height: 45vh;
+    }
+  }
+
 }
