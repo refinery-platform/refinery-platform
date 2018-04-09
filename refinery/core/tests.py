@@ -852,7 +852,7 @@ class AnalysisTests(TestCase):
 
         self.node_filename = "{}.{}".format(
             self.node.name,
-            self.node.get_file_store_item().get_file_extension()
+            self.node.get_file_store_item().get_extension()
         )
 
         # Create AnalysisNodeConnections
