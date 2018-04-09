@@ -2346,9 +2346,11 @@ class SiteStatisticsTests(TestCase):
         self.dataset_b = create_dataset_with_necessary_models(user=user_a)
         self.dataset_b.share(public_group)
         self.site_statistics_a = SiteStatistics.objects.create()
+        self.site_statistics_a.collect()
 
         # Simulate a week where nothing happened
         self.site_statistics_b = SiteStatistics.objects.create()
+        self.site_statistics_b.collect()
 
         # Simulate another week of user activity
         user_b = User.objects.create_user("user_b", "", "user_b")
@@ -2366,6 +2368,7 @@ class SiteStatisticsTests(TestCase):
         create_tool_with_necessary_models("VISUALIZATION")  # creates a DataSet
         create_tool_with_necessary_models("WORKFLOW")  # creates a DataSet
         self.site_statistics_c = SiteStatistics.objects.create()
+        self.site_statistics_c.collect()
 
     def test__get_previous_instance(self):
         self.assertEqual(self.site_statistics_a._get_previous_instance().id, 1)
@@ -2431,6 +2434,7 @@ class SiteStatisticsTests(TestCase):
         SiteStatistics.objects.all().delete()
 
         site_statistics = SiteStatistics.objects.create()
+        site_statistics.collect()
         self.assertIsNotNone(site_statistics._get_previous_instance())
         self.assertEqual(site_statistics._get_previous_instance(),
                          site_statistics)

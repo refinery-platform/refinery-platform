@@ -224,4 +224,4 @@ def copy_dataset(dataset, owner, versions=None, copy_files=False):
 
 @task()
 def collect_site_statistics():
-    SiteStatistics.objects.create()
+    SiteStatistics.objects.create().collect()

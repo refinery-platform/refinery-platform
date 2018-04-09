@@ -2227,33 +2227,30 @@ class SiteStatistics(models.Model):
     A model to encapsulate various information about a deployed Refinery
     Instance's utilization.
     """
-    datasets_shared = models.IntegerField()
-    datasets_uploaded = models.IntegerField()
-    groups_created = models.IntegerField()
-    run_date = models.DateTimeField()
-    total_user_logins = models.IntegerField()
-    total_visualization_launches = models.IntegerField()
-    total_workflow_launches = models.IntegerField()
-    users_created = models.IntegerField()
-    unique_user_logins = models.IntegerField()
+    datasets_shared = models.IntegerField(default=0)
+    datasets_uploaded = models.IntegerField(default=0)
+    groups_created = models.IntegerField(default=0)
+    run_date = models.DateTimeField(auto_now=True)
+    total_user_logins = models.IntegerField(default=0)
+    total_visualization_launches = models.IntegerField(default=0)
+    total_workflow_launches = models.IntegerField(default=0)
+    users_created = models.IntegerField(default=0)
+    unique_user_logins = models.IntegerField(default=0)
 
     class Meta:
         verbose_name_plural = "site statistics"
 
-    def save(self, force_insert=False, force_update=False, using=None,
-             update_fields=None):
-        self.run_date = timezone.now()
-        self.datasets_uploaded = self._get_datasets_uploaded().count()
-        self.datasets_shared = len(self._get_datasets_shared())
+    def collect(self):
+        self.datasets_uploaded = self._get_datasets_uploaded()
+        self.datasets_shared = self._get_datasets_shared()
         self.groups_created = self._get_number_of_groups_created()
-        self.users_created = self._get_users_created().count()
-        self.unique_user_logins = self._get_unique_user_logins().count()
+        self.users_created = self._get_users_created()
+        self.unique_user_logins = self._get_unique_user_logins()
         self.total_user_logins = self._get_number_of_total_user_logins()
-        self.total_workflow_launches = \
-            self._get_total_workflow_launches().count()
+        self.total_workflow_launches = self._get_total_workflow_launches()
         self.total_visualization_launches = \
-            self._get_total_visualization_launches().count()
-        super(SiteStatistics, self).save()
+            self._get_total_visualization_launches()
+        self.save()
 
     def _get_previous_instance(self):
         previous_instance = SiteStatistics.objects.filter(
@@ -2265,36 +2262,36 @@ class SiteStatistics(models.Model):
         return previous_instance or self
 
     def _get_datasets_shared(self):
-        return [
+        return len([
             dataset for dataset in DataSet.objects.filter(
                 modification_date__gte=self._get_previous_instance().run_date
             ) if dataset.shared
-        ]
+        ])
 
     def _get_datasets_uploaded(self):
         return DataSet.objects.filter(
             creation_date__gte=self._get_previous_instance().run_date
-        )
+        ).count()
 
     def _get_total_visualization_launches(self):
         return tool_manager.models.VisualizationTool.objects.filter(
             creation_date__gte=self._get_previous_instance().run_date
-        )
+        ).count()
 
     def _get_total_workflow_launches(self):
         return tool_manager.models.WorkflowTool.objects.filter(
             creation_date__gte=self._get_previous_instance().run_date
-        )
+        ).count()
 
     def _get_unique_user_logins(self):
         return User.objects.filter(
             last_login__gte=self._get_previous_instance().run_date
-        )
+        ).count()
 
     def _get_users_created(self):
         return User.objects.filter(
             date_joined__gte=self._get_previous_instance().run_date
-        )
+        ).count()
 
     def _get_number_of_groups_created(self):
         return ExtendedGroup.objects.exclude(manager_group=None).count() - sum(
