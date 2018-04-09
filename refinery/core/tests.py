@@ -2335,11 +2335,62 @@ class InitialSiteStatisticsCreationTest(TestMigrations):
             initial_site_statistics.total_visualization_launches, 0)
 
 
-class SiteStatisticsTests(TestCase):
+class SiteStatisticsUnitTests(TestCase):
     def setUp(self):
-        public_group = ExtendedGroup.objects.public_group()
+        # Simulate a day of user activity
+        test_group = ExtendedGroup.objects.create(name="Test Group",
+                                                  is_public=True)
+        user_a = User.objects.create_user("user_a", "", "user_a")
+        user_b = User.objects.create_user("user_b", "", "user_b")
+        self.client.login(username="user_a", password="user_a")
+        self.client.login(username="user_b", password="user_b")
+        self.client.login(username="user_b", password="user_b")
+        self.client.login(username="user_b", password="user_b")
+        create_dataset_with_necessary_models(user=user_a)
+        create_dataset_with_necessary_models(user=user_a).share(test_group)
+        create_dataset_with_necessary_models(user=user_b).share(test_group)
+        create_tool_with_necessary_models("VISUALIZATION")  # creates a DataSet
+        create_tool_with_necessary_models("WORKFLOW")  # creates a DataSet
+        self.site_statistics = SiteStatistics.objects.create()
+        self.site_statistics.collect()
 
-        # Simulate a week of user activity
+    def test__get_previous_instance(self):
+        self.assertNotEqual(self.site_statistics._get_previous_instance(),
+                            self.site_statistics)
+
+    def test__get_datasets_shared(self):
+        self.assertEqual(self.site_statistics._get_datasets_shared(), 2)
+
+    def test__get_datasets_uploaded(self):
+        self.assertEqual(self.site_statistics._get_datasets_uploaded(), 5)
+
+    def test__get_total_visualization_launches(self):
+        self.assertEqual(
+            self.site_statistics._get_total_visualization_launches(),
+            1
+        )
+
+    def test__get_total_workflow_launches(self):
+        self.assertEqual(
+            self.site_statistics._get_total_workflow_launches(),
+            1
+        )
+
+    def test__get_unique_user_logins(self):
+        self.assertEqual(self.site_statistics._get_unique_user_logins(), 2)
+
+    def test__get_users_created(self):
+        # 3 instead of the expected 2 because the emission of
+        # the post_migrate signal creates the AnonymousUser
+        self.assertEqual(self.site_statistics._get_users_created(), 3)
+
+    def test__get_groups_created(self):
+        self.assertEqual(self.site_statistics._get_groups_created(), 1)
+
+    def test__get_total_user_logins(self):
+        self.assertEqual(self.site_statistics._get_total_user_logins(), 4)
+
+
         user_a = User.objects.create_user("user_a", "", "user_a")
         self.client.login(username="user_a", password="user_a")
         self.dataset_a = create_dataset_with_necessary_models(user=user_a)
