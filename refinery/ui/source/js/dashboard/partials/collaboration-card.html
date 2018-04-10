@@ -8,7 +8,32 @@
     </div>
     <div
       id="events-panel"
-      class="refinery-sub-panel">
-       Groups
+      class="refinery-panel-content">
+       <ul class="results list-unstyled">
+         <li ng-repeat="group in $ctrl.userGroups" class="font-awesome-toggle-panel">
+           <a type="button"
+             data-toggle="collapse"
+             data-target="#{{group.uuid}}"
+             aria-expanded="false" aria-controls="collapseOne">
+             &nbsp;{{ group.name }}
+           </a>
+           <div
+             id="{{group.uuid}}"
+             class="collapse"
+             aria-expanded="true"
+             aria-labelledby="headingOne"
+             data-parent="#accordion">
+             <div class="card-body">
+              <ul class="list-unstyled m-l-1  p-l-1">
+                <li ng-repeat="member in group.member_list">
+                  <a ng-href="users/{{ member.uuid }}">
+                    {{ member.first_name }} {{ member.last_name }}
+                  </a>
+                </li>
+              </ul>
+             </div>
+            </div>
+         </li>
+       </ul>
     </div>
   </div>

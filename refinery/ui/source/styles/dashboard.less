@@ -1832,5 +1832,21 @@ body.repo-mode .refinery-dashboard {
       height: 45vh;
     }
   }
+}
 
+.font-awesome-toggle-panel > a {
+  display: block;
+  position: relative;
+}
+
+.font-awesome-toggle-panel > a:after {
+  content: "\f054"; /*fa-chevron-right*/
+  font-family: 'FontAwesome';
+  float: left;
+  font-size: .7em;
+}
+
+.font-awesome-toggle-panel > a[aria-expanded="true"]:after {
+  content: "\f078"; /*fa-chevron-down*/
+  font-size: .7em;
 }
