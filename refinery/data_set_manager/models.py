@@ -21,8 +21,6 @@ from core.utils import delete_analysis_index, skip_if_test_run
 import data_set_manager
 from file_store.models import FileStoreItem
 
-from .genomes import map_species_id_to_default_genome_build
-
 """
 TODO: Refactor import data_set_manager. Importing
 data_set_manager.tasks.generate_auxiliary_file()
@@ -349,27 +347,6 @@ class ProtocolComponent(models.Model):
     type_source = models.TextField(blank=True, null=True)
 
 
-class NodeManager(models.Manager):
-    def genome_builds_for_files(self, file_uuids, default_fallback=True):
-        """Returns a dictionary that groups file nodes based on their genome
-        build information
-        """
-        file_list = Node.objects.filter(file_uuid__in=file_uuids).values(
-            "species", "genome_build", "file_uuid")
-        result = {}
-        for item in file_list:
-            if (item["genome_build"] is None and
-                    item["species"] is not None and
-                    default_fallback is True):
-                item["genome_build"] = map_species_id_to_default_genome_build(
-                    item["species"]
-                )
-            if item["genome_build"] not in result:
-                result[item["genome_build"]] = []
-            result[item["genome_build"]].append(item["file_uuid"])
-        return result
-
-
 class Node(models.Model):
     # allowed node types
     SOURCE = "Source Name"
@@ -444,9 +421,6 @@ class Node(models.Model):
     TYPES = ASSAYS | FILES | {
         SOURCE, SAMPLE, EXTRACT, LABELED_EXTRACT, SCAN, NORMALIZATION,
         DATA_TRANSFORMATION}
-
-    # replace default manager
-    objects = NodeManager()
 
     uuid = UUIDField(unique=True, auto=True)
     study = models.ForeignKey(Study, db_index=True)

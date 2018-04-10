@@ -226,11 +226,8 @@ class FileStoreItem(models.Model):
             return 0
 
     def get_file_extension(self):
-        """Return extension object based on datafile name or source"""
-        if self.datafile.name:
-            extension = _get_extension_from_string(self.datafile.name)
-        else:
-            extension = _get_extension_from_string(self.source)
+        """Return FileExtension object based on datafile name or source"""
+        extension = self.get_extension()
         try:
             return FileExtension.objects.get(name=extension)
         except FileExtension.DoesNotExist:
@@ -245,6 +242,13 @@ class FileStoreItem(models.Model):
                 raise RuntimeError(exc)
         except FileExtension.MultipleObjectsReturned as exc:
             raise RuntimeError(exc)
+
+    def get_extension(self):
+        """Return extension of datafile name or file name in source"""
+        if self.datafile.name:
+            return _get_extension_from_string(self.datafile.name)
+        else:
+            return _get_extension_from_string(self.source)
 
     def get_file_object(self):
         """Return file object for the data file or None if failed to open"""
