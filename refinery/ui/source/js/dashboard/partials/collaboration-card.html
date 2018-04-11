@@ -14,43 +14,62 @@
         <li class="col-md-4 underline-text">Role</li>
         <li class="col-md-2 underline-text">Edit</li>
       </ul>
-       <ul class="results list-unstyled">
-         <span
+       <ul class="list-unstyled">
+         <li
            ng-repeat="group in $ctrl.userGroups"
-           class="font-awesome-toggle-panel col-md-6">
-           <a type="button"
-             data-toggle="collapse"
-             data-target="#{{group.uuid}}"
-             aria-expanded="false" aria-controls="collapseOne">
-             &nbsp;{{ group.name }}
-           </a>
-         <span class="col-md-6">
-           <span ng-if="group.can_edit">
-             <span class="col-md-8">
-               <h4>Manager</h4>
-             </span>
-             <span class="col-md-4">
-               <a ng-click="$ctrl.openGroupEditor(group)">
-                <i class="fa fa-cog"></i>
-               </a>
-             </span>
-           </span>
-           <div
-             id="{{group.uuid}}"
-             class="collapse"
-             aria-expanded="true"
-             aria-labelledby="headingOne"
-             data-parent="#accordion">
-             <div class="card-body">
-                <ul class="list-unstyled m-l-1  p-l-1">
-                  <li ng-repeat="member in group.member_list">
-                    <a ng-href="users/{{ member.uuid }}">
+           class="font-awesome-toggle-panel m-b-1 p-b-1">
+             <a
+               type="button"
+               data-toggle="collapse"
+               ng-class="{'col-md-6': group.can_edit, 'col-md-12': !group.can_edit}"
+               data-target="#{{group.uuid}}"
+               aria-expanded="false" aria-controls="collapseOne">
+               &nbsp;{{ group.name }}
+             </a>
+             <spam ng-if="group.can_edit">
+                <span class="col-md-4">
+                    Manager
+                </span>
+                <span class="col-md-2">
+                  <a ng-click="$ctrl.openGroupEditor(group)">
+                    <i class="fa fa-cog"></i>
+                  </a>
+                </span>
+             </spam>
+         <div
+           id="{{group.uuid}}"
+           class="collapse"
+           aria-expanded="true"
+           aria-labelledby="headingOne"
+           data-parent="#accordion">
+           <div class="card-body">
+              <ul class="list-unstyled m-t-1 p-t-1 m-b-1 m-b-1">
+                <li ng-repeat="member in group.member_list" class="p-t-1-2
+                p-l-1">
+                  <a
+                    ng-href="users/{{ member.uuid }}"
+                    ng-class="{'col-md-6': member.is_manager, 'col-md-12': !member.is_manager}">
+                    <span ng-if="member.last_name">
                       {{ member.first_name }} {{ member.last_name }}
-                    </a>
-                  </li>
-                </ul>
-             </div>
-            </div>
+                    </span>
+                    <span ng-if="!member.last_name">
+                      {{ member.username }}
+                    </span>
+                  </a>
+                  <div ng-if="member.is_manager">
+                    <span class="col-md-4">
+                      Manager
+                    </span>
+                    <span class="col-md-2">
+                      <a ng-click="$ctrl.openGroupEditor(group)">
+                        <i class="fa fa-cog"></i>
+                      </a>
+                    </span>
+                  </div>
+                </li>
+              </ul>
+           </div>
+          </div>
          </li>
        </ul>
     </div>
