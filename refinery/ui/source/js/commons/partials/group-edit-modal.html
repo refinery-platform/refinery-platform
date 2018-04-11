@@ -1,0 +1,51 @@
+<div class="modal-header">
+  <div class="float-right">
+    <a ng-click="$ctrl.close()">
+      <i class="fa fa-times close" aria-hidden="true"></i>
+    </a>
+  </div>
+  <h3 class="text-left">
+    Group Editor
+  </h3>
+</div>
+<div class="modal-body">
+  <table class="table table-hover" id="group-table">
+    <thead>
+      <tr>
+        <th>Group</th>
+      </tr>
+    </thead>
+    <tbody>
+    <tr>
+      <td>
+        {{ $ctrl.group.name }}
+      </td>
+      <td>
+        <button
+          class="refinery-base btn btn-default float-right"
+          ng-click="$ctrl.leaveGroup()"
+          ng-disabled="$ctrl.group.member_list.length===1 || modal.group.can_edit">
+          Leave
+        </button>
+      </td>
+      <td>
+        <button
+          class="refinery-base btn btn-default float-right"
+          ng-click="$ctrl.deleteGroup()"
+          ng-disabled="!$ctrl.group.can_edit">
+          Delete
+        </button>
+      </td>
+    </tr>
+    </tbody>
+  </table>
+</div>
+<div class="modal-footer">
+  <div
+    class='p-t-1-2'
+    ng-show="$ctrl.responseMessage">
+     <div class="alert alert-{{ modal.alertType }} text-center">
+       {{$ctrl.responseMessage}}
+     </div>
+  </div>
+</div>

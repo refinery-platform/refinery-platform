@@ -1802,17 +1802,6 @@ body.repo-mode .refinery-dashboard {
 #dashboard-data-set-panel {
   max-height: 60vh;
 
-  #dashboard-total-datasets {
-    display: inline-block;
-    margin: 0;
-    padding: 5px 0;
-    color: @gray-light;
-    font-size: 14px;
-    line-height: 1em;
-    border-bottom: 1px solid lighten(@gray-light, 25%);
-    width: 100%;
-  }
-
   .refinery-sub-panel-notice {
     position: relative;
     margin: 0 10px;
@@ -1834,19 +1823,38 @@ body.repo-mode .refinery-dashboard {
   }
 }
 
+.card-sub-header {
+  display: inline-block;
+  margin: 0;
+  padding: 5px 0;
+  color: @gray-light;
+  font-size: 14px;
+  line-height: 1em;
+  width: 100%;
+  .underline-text {
+   text-decoration: underline solid lighten(@gray-light, 25%);
+  }
+}
+
+.card-content {
+  position: relative;
+  padding: 5px 3rem 5px 0;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
 .font-awesome-toggle-panel > a {
   display: block;
   position: relative;
 }
 
 .font-awesome-toggle-panel > a:after {
-  content: "\f054"; /*fa-chevron-right*/
+  content: "\f0da"; /*fa-caret-right*/
   font-family: 'FontAwesome';
   float: left;
   font-size: .7em;
 }
 
 .font-awesome-toggle-panel > a[aria-expanded="true"]:after {
-  content: "\f078"; /*fa-chevron-down*/
+  content: "\f0dd"; /*fa-caret-down*/
   font-size: .7em;
 }

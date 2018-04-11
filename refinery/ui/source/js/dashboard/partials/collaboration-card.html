@@ -2,21 +2,39 @@
     <div class="refinery-header">
       <div>
         <h3>
-          <i class="m-r-1-4 fa fa-users"></i> Groups
+          <i class="m-r-1-4 fa fa-users"></i> Collaboration
         </h3>
       </div>
     </div>
     <div
       id="events-panel"
-      class="refinery-panel-content">
+      class="refinery-panel-content card-sub-header">
+      <ul class="list-unstyled p-b-1">
+        <li class="col-md-6 underline-text">Group</li>
+        <li class="col-md-4 underline-text">Role</li>
+        <li class="col-md-2 underline-text">Edit</li>
+      </ul>
        <ul class="results list-unstyled">
-         <li ng-repeat="group in $ctrl.userGroups" class="font-awesome-toggle-panel">
+         <span
+           ng-repeat="group in $ctrl.userGroups"
+           class="font-awesome-toggle-panel col-md-6">
            <a type="button"
              data-toggle="collapse"
              data-target="#{{group.uuid}}"
              aria-expanded="false" aria-controls="collapseOne">
              &nbsp;{{ group.name }}
            </a>
+         <span class="col-md-6">
+           <span ng-if="group.can_edit">
+             <span class="col-md-8">
+               <h4>Manager</h4>
+             </span>
+             <span class="col-md-4">
+               <a ng-click="$ctrl.openGroupEditor(group)">
+                <i class="fa fa-cog"></i>
+               </a>
+             </span>
+           </span>
            <div
              id="{{group.uuid}}"
              class="collapse"
@@ -24,13 +42,13 @@
              aria-labelledby="headingOne"
              data-parent="#accordion">
              <div class="card-body">
-              <ul class="list-unstyled m-l-1  p-l-1">
-                <li ng-repeat="member in group.member_list">
-                  <a ng-href="users/{{ member.uuid }}">
-                    {{ member.first_name }} {{ member.last_name }}
-                  </a>
-                </li>
-              </ul>
+                <ul class="list-unstyled m-l-1  p-l-1">
+                  <li ng-repeat="member in group.member_list">
+                    <a ng-href="users/{{ member.uuid }}">
+                      {{ member.first_name }} {{ member.last_name }}
+                    </a>
+                  </li>
+                </ul>
              </div>
             </div>
          </li>

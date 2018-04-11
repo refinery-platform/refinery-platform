@@ -73,7 +73,7 @@
           </div>
         </div>
         <div>
-          <div id="dashboard-total-datasets">
+          <div id="dashboard-total-datasets" class="card-sub-header">
             <span ng-if="$ctrl.dataSets.length">
               {{ $ctrl.dataSets.length }} data sets
             </span>
@@ -94,7 +94,7 @@
                     refinery-tooltip-container="body"
                     refinery-tooltip-placement="top">
                     <i class="fa fa-calendar-o"></i>
-                    {{ dataSet.modification_date | utcToReadableDate }}
+                    {{ dataSet.modification_date }}
                   </li>
 
                   <li ng-if="dataSet.is_owner" class="separator">&middot;</li>
@@ -103,7 +103,7 @@
                       class="fa fa-trash-o indicator dataset-delete pointer"
                       title="Delete Dataset"
                       ng-if="dataSet.is_owner"
-                      ng-click="$ctrl.openDataSetDeleteModal(dataSet)"
+                      ng-click="dashboard.openDataSetDeleteModal(dataSet)"
                       refinery-tooltip
                       refinery-tooltip-container="body"
                       refinery-tooltip-placement="right"

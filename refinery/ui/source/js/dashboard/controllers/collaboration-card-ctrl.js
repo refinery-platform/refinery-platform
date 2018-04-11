@@ -11,17 +11,18 @@
     .module('refineryDashboard')
     .controller('CollaborationCardCtrl', CollaborationCardCtrl);
 
-  CollaborationCardCtrl.$inject = ['groupMemberService'];
+  CollaborationCardCtrl.$inject = ['$uibModal', 'groupMemberService'];
 
   function CollaborationCardCtrl (
+    $uibModal,
     groupMemberService
   ) {
     var vm = this;
     vm.userGroups = [];
+    vm.openGroupEditor = openGroupEditor;
     activate();
 
     function activate () {
-      console.log('CollaborationCardCtrl-card');
       getGroups();
     }
 
@@ -30,6 +31,19 @@
       groupMemberService.query().$promise.then(function (response) {
         vm.userGroups = response.objects;
         console.log(vm.userGroups);
+      });
+    }
+
+    function openGroupEditor (group) {
+      $uibModal.open({
+        component: 'rpGroupEditModal',
+        resolve: {
+          config: function () {
+            return {
+              group: group
+            };
+          }
+        }
       });
     }
 
