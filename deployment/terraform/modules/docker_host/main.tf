@@ -3,6 +3,8 @@ resource "aws_security_group" "allow_docker" {
   description = "Allow connection to docker engine from within VPC"
   vpc_id      = "${var.vpc_id}"
 
+  # Explicitly set rule for port 2376 since this is the conventional port used
+  # for interacting with docker over tcp
   ingress {
     from_port   = 2376
     to_port     = 2376
