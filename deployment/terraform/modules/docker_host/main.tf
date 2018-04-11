@@ -12,9 +12,11 @@ resource "aws_security_group" "allow_docker" {
     cidr_blocks = ["${var.vpc_cidr_block}"]
   }
 
+  # Allow access on IANA User ports:
+  # https://www.iana.org/assignments/service-names-port-numbers/service-names-port-numbers.xhtml
   ingress {
-    from_port   = 80
-    to_port     = 80
+    from_port   = 1024
+    to_port     = 49151
     protocol    = "tcp"
     cidr_blocks = ["${var.vpc_cidr_block}"]
   }
