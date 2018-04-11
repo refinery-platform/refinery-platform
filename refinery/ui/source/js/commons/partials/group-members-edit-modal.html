@@ -1,6 +1,6 @@
 <div class="modal-header">
   <div class="float-right">
-    <a ng-click="modal.close()">
+    <a ng-click="$ctrl.close()">
       <i class="fa fa-times close" aria-hidden="true"></i>
     </a>
   </div>
@@ -14,34 +14,34 @@
   </h4>
   <div class="row">
     <div class="col-sm-4 col-sm-offset-1 text-left">
-      {{modal.member.username}}
+      {{$ctrl.member.username}}
     </div>
 
     <div class="col-sm-2 col-sm-offset-3">
       <button
         type="button"
         class="refinery-base btn btn-warning"
-        ng-click="modal.remove()"
-        ng-disabled="modal.totalMembers===1">
+        ng-click="$ctrl.remove()"
+        ng-disabled="$ctrl.totalMembers===1">
         Remove
       </button>
     </div>
     <div col-sm-2>
       <button
-        ng-if="modal.member.is_manager"
+        ng-if="$ctrl.member.is_manager"
         type="button"
         class="refinery-base btn btn-default"
-        ng-click="modal.demote()"
-        ng-disabled="modal.totalMembers===1">
+        ng-click="$ctrl.demote()"
+        ng-disabled="$ctrl.totalMembers===1">
         Demote
       </button>
 
       <button
-        ng-if="!modal.member.is_manager"
+        ng-if="!$ctrl.member.is_manager"
         type="button"
         class="refinery-base btn btn-primary"
-        ng-click="modal.promote()"
-        ng-disabled="modal.totalMembers===1">
+        ng-click="$ctrl.promote()"
+        ng-disabled="$ctrl.totalMembers===1">
         Promote
       </button>
     </div>
@@ -50,9 +50,9 @@
 <div class="modal-footer">
    <div
     class='p-t-1-2'
-    ng-show="modal.responseMessage">
-     <div class="alert alert-{{ modal.alertType }} text-center">
-       {{modal.responseMessage}}
+    ng-show="$ctrl.responseMessage">
+     <div class="alert alert-{{ $ctrl.alertType }} text-center">
+       {{$ctrl.responseMessage}}
      </div>
   </div>
 </div>

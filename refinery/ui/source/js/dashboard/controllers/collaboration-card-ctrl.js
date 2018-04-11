@@ -1,6 +1,6 @@
 /**
- * Events Card Ctrl
- * @namespace EventsCardCtrl
+ * Collaboration Card Ctrl
+ * @namespace CollaborationCardCtrl
  * @desc Controller for events card component on dashboard component.
  * @memberOf refineryApp.refineryEventsCardCtrl
  */
@@ -30,7 +30,6 @@
     function getGroups () {
       groupMemberService.query().$promise.then(function (response) {
         vm.userGroups = response.objects;
-        console.log(vm.userGroups);
       });
     }
 

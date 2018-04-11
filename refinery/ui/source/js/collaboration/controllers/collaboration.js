@@ -114,15 +114,13 @@ CollaborationCtrl.prototype.openAddGroup = function () {
 };
 
 CollaborationCtrl.prototype.openGroupEditor = function (group) {
-  var groupsDialogUrl = this.$window.getStaticUrl(
-    'partials/collaboration/partials/collaboration-groups-dialog.html'
-  );
   this.$uibModal.open({
-    templateUrl: groupsDialogUrl,
-    controller: 'GroupEditorCtrl as modal',
+    component: 'rpGroupEditModal',
     resolve: {
-      group: function () {
-        return group;
+      config: function () {
+        return {
+          group: group
+        };
       }
     }
   });
@@ -131,12 +129,16 @@ CollaborationCtrl.prototype.openGroupEditor = function (group) {
 CollaborationCtrl.prototype.openMemberEditor = function (member, totalMembers) {
   this.activeService.setActiveMember(member);
   this.activeService.setTotalMembers(totalMembers);
-  var membersDialogUrl = this.$window.getStaticUrl(
-    'partials/collaboration/partials/collaboration-members-dialog.html'
-  );
   this.$uibModal.open({
-    templateUrl: membersDialogUrl,
-    controller: 'MemberEditorCtrl as modal'
+    component: 'rpGroupMembersEditModal',
+    resolve: {
+      config: function () {
+        return {
+          activeMember: member,
+          totalMember: totalMembers
+        };
+      }
+    }
   });
 };
 
