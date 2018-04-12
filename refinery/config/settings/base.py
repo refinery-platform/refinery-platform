@@ -220,6 +220,7 @@ INSTALLED_APPS = (
     'rest_framework',
     'rest_framework_swagger',
     'django_docker_engine',
+    'httpproxy',
 )
 
 # NG: added for django-guardian
@@ -280,6 +281,9 @@ LOGGING = {
             'level': 'ERROR',
         },
         'factory': {
+            'level': 'ERROR',
+        },
+        'httpproxy': {
             'level': 'ERROR',
         },
         'httpstream': {  # dependency of py2neo
