@@ -11,15 +11,20 @@
     .module('refineryDashboard')
     .controller('CollaborationCardCtrl', CollaborationCardCtrl);
 
-  CollaborationCardCtrl.$inject = ['$uibModal', 'groupMemberService'];
+  CollaborationCardCtrl.$inject = [
+    '$uibModal',
+    'groupDataService',
+    'groupMemberService'];
 
   function CollaborationCardCtrl (
     $uibModal,
+    groupDataService,
     groupMemberService
   ) {
     var vm = this;
     vm.userGroups = [];
     vm.openGroupEditor = openGroupEditor;
+    vm.openGroupMemberEditor = openGroupMemberEditor;
     activate();
 
     function activate () {
@@ -40,6 +45,21 @@
           config: function () {
             return {
               group: group
+            };
+          }
+        }
+      });
+    }
+
+    function openGroupMemberEditor (member, totalMembers, group) {
+      $uibModal.open({
+        component: 'rpGroupMembersEditModal',
+        resolve: {
+          config: function () {
+            return {
+              activeMember: member,
+              activeGroup: group,
+              totalMember: totalMembers
             };
           }
         }

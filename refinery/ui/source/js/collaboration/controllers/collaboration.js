@@ -135,6 +135,7 @@ CollaborationCtrl.prototype.openMemberEditor = function (member, totalMembers) {
       config: function () {
         return {
           activeMember: member,
+          activeGroup: this.groupDataService.activeGroup,
           totalMember: totalMembers
         };
       }

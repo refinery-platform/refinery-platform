@@ -47,8 +47,10 @@
     }
 
     function demote () {
+      console.log('in demote');
+      console.log(vm.resolve.config.activeGroup.manager_group_uuid);
       groupMemberService.remove({
-        uuid: groupDataService.activeGroup.manager_group_uuid,
+        uuid: vm.resolve.config.activeGroup.manager_group_uuid,
         userId: vm.member.user_id
       }).$promise.then(
         function () {
@@ -68,7 +70,7 @@
 
     function promote () {
       groupMemberService.add({
-        uuid: groupDataService.activeGroup.manager_group_uuid,
+        uuid: vm.resolve.config.activeGroup.manager_group_uuid,
         user_id: vm.member.user_id
       }).$promise.then(
         function () {
@@ -87,7 +89,7 @@
 
     function remove () {
       groupMemberService.remove({
-        uuid: groupDataService.activeGroup.uuid,
+        uuid: vm.resolve.config.activeGroup.manager_group_uuid,
         userId: vm.member.user_id
       }).$promise.then(
         function () {
