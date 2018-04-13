@@ -1,4 +1,5 @@
 import logging
+from urllib2 import URLError
 
 from django.conf import settings
 from django.db import transaction
@@ -181,7 +182,7 @@ class AutoRelaunchProxy(Proxy, object):
     manually relaunch (although that remains an option).
     """
     def __init__(self):
-        super(AutoRelaunchProxy, self).__init__(
+        self.proxy = super(AutoRelaunchProxy, self).__init__(
             please_wait_title='Please wait...',
             please_wait_body_html='''
                 <style>
@@ -222,8 +223,9 @@ class AutoRelaunchProxy(Proxy, object):
         if not visualization_tool.is_running():
             visualization_tool.launch()
 
-        return super(AutoRelaunchProxy, self)._proxy_view(
-            request,
-            container_name,
-            url
-        )
+        try:
+            return self.proxy._proxy_view(request, container_name, url)
+        except URLError as e:
+            logger.info('Normal transient error: %s', e)
+            view = self.proxy._please_wait_view_factory().as_view()
+            return view(request)
