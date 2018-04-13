@@ -182,7 +182,7 @@ class AutoRelaunchProxy(Proxy, object):
     manually relaunch (although that remains an option).
     """
     def __init__(self):
-        self.proxy = super(AutoRelaunchProxy, self).__init__(
+        super(AutoRelaunchProxy, self).__init__(
             please_wait_title='Please wait...',
             please_wait_body_html='''
                 <style>
@@ -224,8 +224,10 @@ class AutoRelaunchProxy(Proxy, object):
             visualization_tool.launch()
 
         try:
-            return self.proxy._proxy_view(request, container_name, url)
+            return super(AutoRelaunchProxy, self)._proxy_view(
+                request, container_name, url
+            )
         except URLError as e:
             logger.info('Normal transient error: %s', e)
-            view = self.proxy._please_wait_view_factory().as_view()
+            view = self._please_wait_view_factory().as_view()
             return view(request)
