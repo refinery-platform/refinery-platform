@@ -2,7 +2,6 @@
   "name": "Test LIST Visualization bad extra_directories",
   "tool_type": "VISUALIZATION",
   "annotation": {
-    "container_input_path": "/var/www/html/input.json",
     "image_name": "nginx:1.10.3-alpine",
     "description": "This visualization does really cool things",
     "parameters": [],

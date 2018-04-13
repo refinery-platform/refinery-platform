@@ -13,14 +13,11 @@ from jsonschema import RefResolver, ValidationError, validate
 import networkx
 
 from core.models import DataSet, Workflow, WorkflowEngine
-from factory_boy.django_model_factories import (FileRelationshipFactory,
-                                                GalaxyParameterFactory,
-                                                InputFileFactory,
-                                                ParameterFactory,
-                                                ToolDefinitionFactory,
-                                                VisualizationToolFactory,
-                                                WorkflowFactory,
-                                                WorkflowToolFactory)
+from factory_boy.django_model_factories import (
+    FileRelationshipFactory, GalaxyParameterFactory, InputFileFactory,
+    ParameterFactory, ToolDefinitionFactory, VisualizationToolFactory,
+    WorkflowFactory, WorkflowToolFactory
+)
 from file_store.models import FileType
 
 from .models import Tool, ToolDefinition, WorkflowTool
@@ -134,7 +131,6 @@ def create_tool_definition(annotation_data):
     elif tool_type == ToolDefinition.VISUALIZATION:
         tool_definition = ToolDefinitionFactory(
             image_name=annotation["image_name"],
-            container_input_path=annotation["container_input_path"],
             **common_tool_definition_params
         )
 
@@ -152,9 +148,7 @@ def create_tool_definition(annotation_data):
             logger.debug(
                 "Pulling Docker image: %s", tool_definition.image_name
             )
-            DockerClientWrapper(
-                settings.DJANGO_DOCKER_ENGINE_DATA_DIR
-            ).pull(image_name, version=version)
+            DockerClientWrapper().pull(image_name, version=version)
 
     tool_definition.annotation = json.dumps(annotation)
     tool_definition.save()
