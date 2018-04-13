@@ -1,0 +1,58 @@
+<div class="modal-header">
+  <div class="float-right">
+    <a ng-click="$ctrl.close()">
+      <i class="fa fa-times close" aria-hidden="true"></i>
+    </a>
+  </div>
+  <h3 class="text-left">Add new groups</h3>
+  <p>No two groups in Refinery may have the same name.</p>
+</div>
+<div class="modal-body">
+  <div class='row'>
+    <form
+      ng-submit="$ctrl.createGroup()"
+      name="groupCreationForm"
+      class="navbar-form text-align-center float-left">
+      <input
+        autofocus
+        type="text"
+        class="form-control"
+        name="groupName"
+        placeholder="Group name"
+        ng-model="$ctrl.groupName"
+        ng-minlength="3" required>
+    </form>
+  </div>
+
+  <div
+    class='p-t-1-2 text-warning'
+    ng-show="groupCreationForm.groupName.$error.minlength ||
+    groupCreationForm.groupName.$error.required">
+    <i class="fa fa-warning" aria-hidden="true"></i>
+    Names must be at least 3 characters long.
+  </div>
+
+  <div
+    class='p-t-1-2'
+    ng-show="$ctrl.responseMessage">
+     <div class="alert alert-{{ $ctrl.alertType }} text-center">
+       {{$ctrl.responseMessage}}
+     </div>
+  </div>
+</div>
+
+<div class="modal-footer">
+   <button
+      type="button"
+      class="refinery-base btn btn-default"
+      ng-click="$ctrl.cancel()">
+      Cancel
+    </button>
+    <button
+      type="submit"
+      class="btn btn-primary"
+      ng-click="$ctrl.createGroup()"
+      ng-disabled="!groupCreationForm.$valid">
+      Create group
+    </button>
+</div>

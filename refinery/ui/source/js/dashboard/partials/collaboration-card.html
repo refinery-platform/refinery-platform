@@ -4,6 +4,14 @@
         <h3>
           <i class="m-r-1-4 fa fa-users"></i> Collaboration
         </h3>
+        <span class="p-l-1">
+          <a
+            ng-click="$ctrl.openGroupAdd()"
+            class="no-underline btn priority-button">
+            <i class="fa fa-plus-circle"></i>
+            Add
+          </a>
+        </span>
       </div>
     </div>
     <div
@@ -44,21 +52,22 @@
            data-parent="#accordion">
            <div class="card-body">
               <ul class="list-unstyled m-t-1 p-t-1 m-b-1 m-b-1">
-                <li ng-repeat="member in group.member_list" class="p-t-1 p-b-1p-l-1">
+                <li ng-repeat="member in group.member_list" class="p-t-1">
                   <a
                     ng-href="users/{{ member.uuid }}"
-                    ng-class="{'col-md-6': member.is_manager, 'col-md-12': !member.is_manager}">
+                    ng-class="{'col-md-6': member.is_manager, 'col-md-10': !member.is_manager}">
                     <span ng-if="member.last_name">
+                      <i class="fa fa-user"></i>&nbsp;
                       {{ member.first_name }} {{ member.last_name }}
                     </span>
                     <span ng-if="!member.last_name">
-                      {{ member.username }}
+                       <i class="fa fa-user"></i>&nbsp;{{ member.username }}
                     </span>
                   </a>
                   <span class="col-md-4" ng-if="member.is_manager">
                     Manager
                   </span>
-                  <span ng-class="{'col-md-2': member.is_manager, 'col-md-2 col-md-offset-4': !member.is_manager}">
+                  <span class="member.is_manager col-md-2">
                     <a
                       ng-click="$ctrl.openGroupMemberEditor(member, group.member_list.length, group)">
                       <i class="fa fa-cog"></i>

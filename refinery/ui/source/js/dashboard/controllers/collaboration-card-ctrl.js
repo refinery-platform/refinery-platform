@@ -23,6 +23,7 @@
   ) {
     var vm = this;
     vm.userGroups = [];
+    vm.openGroupAdd = openGroupAdd;
     vm.openGroupEditor = openGroupEditor;
     vm.openGroupMemberEditor = openGroupMemberEditor;
     activate();
@@ -35,6 +36,12 @@
     function getGroups () {
       groupMemberService.query().$promise.then(function (response) {
         vm.userGroups = response.objects;
+      });
+    }
+
+    function openGroupAdd () {
+      $uibModal.open({
+        component: 'rpGroupAddModal'
       });
     }
 
