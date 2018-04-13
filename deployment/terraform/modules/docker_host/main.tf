@@ -35,8 +35,11 @@ resource "aws_security_group" "allow_docker" {
 resource "aws_instance" "docker_host" {
   ami                    = "ami-2757f631"
   subnet_id              = "${var.private_subnet_id}"
-  instance_type          = "t2.micro"
+  instance_type          = "t2.medium"
   vpc_security_group_ids = ["${aws_security_group.allow_docker.id}"]
+  root_block_device {
+    volume_size = "20"
+  }
   user_data = <<EOF
 #!/bin/bash
 set -o errexit
