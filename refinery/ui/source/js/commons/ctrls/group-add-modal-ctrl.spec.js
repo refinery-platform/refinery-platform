@@ -1,15 +1,13 @@
 'use strict';
 
-describe('Controller: AddGroupCtrl', function () {
+describe('Controller: GroupAddModalCtrl', function () {
   var ctrl;
   var scope;
   var $controller;
   var service;
   var $q;
-  var $uibModalInstance = { cancel: function () {}, dismiss: function () {} };
 
   beforeEach(module('refineryApp'));
-  beforeEach(module('refineryCollaboration'));
   beforeEach(inject(function (
     $rootScope,
     _$controller_,
@@ -20,9 +18,8 @@ describe('Controller: AddGroupCtrl', function () {
     service = _groupExtendedService_;
     $controller = _$controller_;
     $q = _$q_;
-    ctrl = $controller('AddGroupCtrl', {
-      $scope: scope,
-      $uibModalInstance: $uibModalInstance
+    ctrl = $controller('GroupAddModalCtrl', {
+      $scope: scope
     });
   }));
 

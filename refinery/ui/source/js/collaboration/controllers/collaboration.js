@@ -104,12 +104,8 @@ CollaborationCtrl.prototype.revokeInvitation = function (invite) {
 // Opening modals:
 
 CollaborationCtrl.prototype.openAddGroup = function () {
-  var addGroupsDialogUrl = this.$window.getStaticUrl(
-    'partials/collaboration/partials/collaboration-addgroups-dialog.html'
-  );
   this.$uibModal.open({
-    templateUrl: addGroupsDialogUrl,
-    controller: 'AddGroupCtrl as modal'
+    component: 'rpGroupAddModal'
   });
 };
 

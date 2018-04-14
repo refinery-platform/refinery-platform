@@ -1,0 +1,62 @@
+<div class="modal-header">
+  <div class="float-right">
+    <a ng-click="$ctrl.close()">
+      <i class="fa fa-times close" aria-hidden="true"></i>
+    </a>
+  </div>
+  <h3 class="text-left">Invite New Member</h3>
+</div>
+<div class="modal-body">
+  <div class="row">
+    <form
+      ng-submit="$ctrl.sendInvite(email)"
+      name="inviteNewMemberForm"
+      class="navbar-form float-left">
+      <input
+        autofocus
+        type="email"
+        class="form-control"
+        placeholder="Recipient email"
+        ng-model="email"
+        name="recipientEmail"
+        required>
+    </form>
+  </div>
+
+  <div
+    class='p-t-1-2 text-warning'
+    ng-show="inviteNewMemberForm.recipientEmail.$error.required">
+    <i class="fa fa-warning" aria-hidden="true"></i>
+      Email address required.
+  </div>
+  <div
+    class='p-t-1-2 text-warning'
+    ng-show="inviteNewMemberForm.recipientEmail.$error.email">
+    <i class="fa fa-warning" aria-hidden="true"></i>
+      Incorrect format for email address: name@example.com
+  </div>
+  <div
+    class='p-t-1-2'
+    ng-show="$ctrl.responseMessage">
+     <div
+       class="alert alert-{{ modal.alertType }} text-center">
+       {{$ctrl.responseMessage}}
+     </div>
+  </div>
+</div>
+
+<div class="modal-footer">
+  <button
+    type="button"
+    class="refinery-base btn btn-default"
+    ng-click="$ctrl.cancel()">
+    Cancel
+  </button>
+  <button
+    type="submit"
+    class="btn btn-primary"
+    ng-click="$ctrl.sendInvite(email)"
+    ng-disabled="!inviteNewMemberForm.$valid">
+    Send Invite
+  </button>
+</div>
