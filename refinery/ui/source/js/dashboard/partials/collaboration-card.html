@@ -9,7 +9,7 @@
             ng-click="$ctrl.openGroupAdd()"
             class="no-underline btn priority-button">
             <i class="fa fa-plus-circle"></i>
-            Add
+            Add Group
           </a>
         </span>
       </div>
@@ -41,6 +41,12 @@
                 <span class="col-md-2">
                   <a ng-click="$ctrl.openGroupEditor(group)">
                     <i class="fa fa-cog"></i>
+                  </a>
+                   <a
+                    href="#/{{ collab.activeGroup.uuid }}/"
+                    ng-click="$ctrl.openGroupMemberAdd()"
+                    class="no-underline">
+                    <i class="fa fa-plus-circle"></i>
                   </a>
                 </span>
              </spam>

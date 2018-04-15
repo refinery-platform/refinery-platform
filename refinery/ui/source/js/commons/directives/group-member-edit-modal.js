@@ -8,14 +8,14 @@
   'use strict';
   angular
     .module('refineryApp')
-    .component('rpGroupMembersEditModal', {
+    .component('rpGroupMemberEditModal', {
       templateUrl: ['$window', function ($window) {
-        return $window.getStaticUrl('partials/commons/partials/group-members-edit-modal.html');
+        return $window.getStaticUrl('partials/commons/partials/group-member-edit-modal.html');
       }],
       bindings: {
         modalInstance: '<',
         resolve: '<'
       },
-      controller: 'GroupMembersEditModalCtrl'
+      controller: 'GroupMemberEditModalCtrl'
     });
 })();

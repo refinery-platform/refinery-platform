@@ -102,7 +102,6 @@ CollaborationCtrl.prototype.revokeInvitation = function (invite) {
 
 
 // Opening modals:
-
 CollaborationCtrl.prototype.openAddGroup = function () {
   this.$uibModal.open({
     component: 'rpGroupAddModal'
@@ -126,7 +125,7 @@ CollaborationCtrl.prototype.openMemberEditor = function (member, totalMembers) {
   this.activeService.setActiveMember(member);
   this.activeService.setTotalMembers(totalMembers);
   this.$uibModal.open({
-    component: 'rpGroupMembersEditModal',
+    component: 'rpGroupMemberEditModal',
     resolve: {
       config: function () {
         return {
@@ -140,12 +139,8 @@ CollaborationCtrl.prototype.openMemberEditor = function (member, totalMembers) {
 };
 
 CollaborationCtrl.prototype.openEmailInvite = function () {
-  var addMembersDialogUrl = this.$window.getStaticUrl(
-    'partials/collaboration/partials/collaboration-addmembers-dialog.html'
-  );
   this.$uibModal.open({
-    templateUrl: addMembersDialogUrl,
-    controller: 'EmailInviteCtrl as modal'
+    component: 'rpGroupMemberAddModal'
   });
 };
 

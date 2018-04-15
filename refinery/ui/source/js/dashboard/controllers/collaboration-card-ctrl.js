@@ -25,6 +25,7 @@
     vm.userGroups = [];
     vm.openGroupAdd = openGroupAdd;
     vm.openGroupEditor = openGroupEditor;
+    vm.openGroupMemberAdd = openGroupMemberAdd;
     vm.openGroupMemberEditor = openGroupMemberEditor;
     activate();
 
@@ -60,7 +61,7 @@
 
     function openGroupMemberEditor (member, totalMembers, group) {
       $uibModal.open({
-        component: 'rpGroupMembersEditModal',
+        component: 'rpGroupMemberEditModal',
         resolve: {
           config: function () {
             return {
@@ -73,10 +74,10 @@
       });
     }
 
-    /*
-    * ---------------------------------------------------------
-    * Watchers
-    * ---------------------------------------------------------
-    */
+    function openGroupMemberAdd () {
+      $uibModal.open({
+        component: 'rpGroupMemberAddModal'
+      });
+    }
   }
 })();

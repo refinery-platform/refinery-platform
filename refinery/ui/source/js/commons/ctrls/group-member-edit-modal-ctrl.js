@@ -10,16 +10,16 @@
 
   angular
     .module('refineryApp')
-    .controller('GroupMembersEditModalCtrl', GroupMembersEditModalCtrl);
+    .controller('GroupMemberEditModalCtrl', GroupMemberEditModalCtrl);
 
-  GroupMembersEditModalCtrl.$inject = [
+  GroupMemberEditModalCtrl.$inject = [
     '$timeout',
     'groupDataService',
     'groupMemberService'
   ];
 
 
-  function GroupMembersEditModalCtrl (
+  function GroupMemberEditModalCtrl (
     $timeout,
     groupDataService,
     groupMemberService
