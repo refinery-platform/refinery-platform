@@ -29,6 +29,7 @@
     vm.demote = demote;
     vm.promote = promote;
     vm.remove = remove;
+    vm.isLoading = false;
 
     vm.alertType = 'info';
     vm.responseMessage = '';
@@ -43,12 +44,11 @@
      */
 
     function close () {
-      vm.modalInstance.dismiss();
+      vm.modalInstance.close(vm.alertType);
     }
 
     function demote () {
-      console.log('in demote');
-      console.log(vm.resolve.config.activeGroup.manager_group_uuid);
+      vm.isLoading = true;
       groupMemberService.remove({
         uuid: vm.resolve.config.activeGroup.manager_group_uuid,
         userId: vm.member.user_id
@@ -57,18 +57,21 @@
           groupDataService.update();
           vm.alertType = 'success';
           vm.responseMessage = 'Successfully demoted member ' + vm.member.username;
+          vm.isLoading = false;
           $timeout(function () {
-            vm.modalInstance.dismiss();
+            vm.modalInstance.close(vm.alertType);
           }, 1500);
         }
       ).catch(function () {
         vm.alertType = 'danger';
         vm.responseMessage = 'Error, could not demote member ' +
           vm.member.username + '. Last member and manager can not leave';
+        vm.isLoading = false;
       });
     }
 
     function promote () {
+      vm.isLoading = true;
       groupMemberService.add({
         uuid: vm.resolve.config.activeGroup.manager_group_uuid,
         user_id: vm.member.user_id
@@ -77,17 +80,20 @@
           groupDataService.update();
           vm.alertType = 'success';
           vm.responseMessage = 'Successfully promoted member ' + vm.member.username;
+          vm.isLoading = false;
           $timeout(function () {
-            vm.modalInstance.dismiss();
+            vm.modalInstance.close(vm.alerType);
           }, 1500);
         }
       ).catch(function () {
         vm.alertType = 'danger';
         vm.responseMessage = 'Error Could not promote member ' + vm.member.username;
+        vm.isLoading = false;
       });
     }
 
     function remove () {
+      vm.isLoading = true;
       groupMemberService.remove({
         uuid: vm.resolve.config.activeGroup.manager_group_uuid,
         userId: vm.member.user_id
@@ -96,14 +102,16 @@
           groupDataService.update();
           vm.alertType = 'success';
           vm.responseMessage = 'Successfully removed member' + vm.member.username;
+          vm.isLoading = false;
           $timeout(function () {
-            vm.modalInstance.dismiss();
+            vm.modalInstance.close(vm.alertType);
           }, 1500);
         }
       ).catch(function () {
         vm.alertType = 'danger';
         vm.responseMessage = 'Error, could not remove member'
           + vm.member.username + '. Last member and manager can not leave';
+        vm.isLoading = false;
       });
     }
   }

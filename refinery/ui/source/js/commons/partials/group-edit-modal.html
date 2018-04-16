@@ -7,45 +7,42 @@
   <h3 class="text-left">
     Group Editor
   </h3>
+  <p>
+    As a manager, you can only leave the group if you are not the last member.
+  </p>
 </div>
 <div class="modal-body">
-  <table class="table table-hover" id="group-table">
-    <thead>
-      <tr>
-        <th>Group</th>
-      </tr>
-    </thead>
-    <tbody>
-    <tr>
-      <td>
-        {{ $ctrl.group.name }}
-      </td>
-      <td>
-        <button
-          class="refinery-base btn btn-default float-right"
-          ng-click="$ctrl.leaveGroup()"
-          ng-disabled="$ctrl.group.member_list.length===1 || modal.group.can_edit">
-          Leave
-        </button>
-      </td>
-      <td>
-        <button
-          class="refinery-base btn btn-default float-right"
-          ng-click="$ctrl.deleteGroup()"
-          ng-disabled="!$ctrl.group.can_edit">
-          Delete
-        </button>
-      </td>
-    </tr>
-    </tbody>
-  </table>
+  <div class="row">
+    <div class="col-sm-4">
+      {{ $ctrl.group.name }}
+    </div>
+    <div class="col-sm-4">
+      <button
+        class="refinery-base btn btn-warning float-right"
+        ng-click="$ctrl.leaveGroup()"
+        ng-disabled="$ctrl.group.member_list.length===1 || $ctrl.group.can_edit || $ctrl.isLoading">
+        Leave
+      </button>
+    </div>
+    <div class="col-sm-4">
+      <button
+        class="refinery-base btn btn-danger float-right"
+        ng-click="$ctrl.deleteGroup()"
+        ng-disabled="!$ctrl.group.can_edit || $ctrl.isLoading">
+        Delete
+      </button>
+    </div>
+  </div>
 </div>
 <div class="modal-footer">
   <div
     class='p-t-1-2'
     ng-show="$ctrl.responseMessage">
-     <div class="alert alert-{{ modal.alertType }} text-center">
+     <div class="alert alert-{{ modal.alertType }} text-left">
        {{$ctrl.responseMessage}}
      </div>
   </div>
+  <button class="refinery-base btn btn-default" ng-click="$ctrl.close()">
+      Close
+  </button>
 </div>

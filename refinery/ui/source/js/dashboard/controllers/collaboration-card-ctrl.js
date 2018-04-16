@@ -2,7 +2,7 @@
  * Collaboration Card Ctrl
  * @namespace CollaborationCardCtrl
  * @desc Controller for events card component on dashboard component.
- * @memberOf refineryApp.refineryEventsCardCtrl
+ * @memberOf refineryApp.CollaborationCardCtrl
  */
 (function () {
   'use strict';
@@ -27,6 +27,7 @@
     vm.openGroupEditor = openGroupEditor;
     vm.openGroupMemberAdd = openGroupMemberAdd;
     vm.openGroupMemberEditor = openGroupMemberEditor;
+
     activate();
 
     function activate () {
@@ -47,7 +48,7 @@
     }
 
     function openGroupEditor (group) {
-      $uibModal.open({
+      var modalInstance = $uibModal.open({
         component: 'rpGroupEditModal',
         resolve: {
           config: function () {
@@ -56,6 +57,15 @@
             };
           }
         }
+      });
+
+      modalInstance.result.then(function (response) {
+        console.log(response);
+        console.log('positive');
+        getGroups();
+      }, function (error) {
+        console.log(error);
+        console.log('error');
       });
     }
 

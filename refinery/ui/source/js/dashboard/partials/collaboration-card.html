@@ -3,15 +3,15 @@
       <div>
         <h3>
           <i class="m-r-1-4 fa fa-users"></i> Collaboration
+          <span class="p-l-1">
+            <a
+              ng-click="$ctrl.openGroupAdd()"
+              class="no-underline btn priority-button">
+              <i class="fa fa-plus-circle"></i>
+              Add Group
+            </a>
+          </span>
         </h3>
-        <span class="p-l-1">
-          <a
-            ng-click="$ctrl.openGroupAdd()"
-            class="no-underline btn priority-button">
-            <i class="fa fa-plus-circle"></i>
-            Add Group
-          </a>
-        </span>
       </div>
     </div>
     <div
@@ -39,7 +39,9 @@
                     Manager
                 </span>
                 <span class="col-md-2">
-                  <a ng-click="$ctrl.openGroupEditor(group)">
+                  <a
+                    ng-click="$ctrl.openGroupEditor(group)"
+                    class="no-underline">
                     <i class="fa fa-cog"></i>
                   </a>
                    <a

@@ -7,7 +7,6 @@ describe('Controller: Email Invite Ctrl', function () {
   var $uibModalInstance = { cancel: function () {}, dismiss: function () {} };
 
   beforeEach(module('refineryApp'));
-  beforeEach(module('refineryCollaboration'));
   beforeEach(inject(function (
     $rootScope,
     _$controller_
