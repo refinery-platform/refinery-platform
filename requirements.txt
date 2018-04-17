@@ -52,7 +52,6 @@ ndg-httpsclient==0.3.2
 networkx==1.7
 pathtools==0.1.2
 poster==0.8.1
-psycopg2==2.4.5
 py2neo==2.0.8
 pyasn1==0.1.9
 pycparser==2.13
