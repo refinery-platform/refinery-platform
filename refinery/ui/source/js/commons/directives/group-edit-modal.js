@@ -2,7 +2,7 @@
  * Group Edit Modal
  * @namespace groupEditModal
  * @desc Edit a group membership modal
- * @memberOf refineryApp.aPIResponseModal
+ * @memberOf refineryApp.rpGroupEditModal
  */
 (function () {
   'use strict';

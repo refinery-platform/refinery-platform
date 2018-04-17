@@ -1,6 +1,6 @@
 'use strict';
 
-describe('Controller: GroupEditodalCtrl', function () {
+describe('Controller: GroupEditModalCtrl', function () {
   var ctrl;
   var idService;
   var memberService;

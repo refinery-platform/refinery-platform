@@ -1,7 +1,7 @@
 /**
- * Group Edit Modal Ctrl
- * @namespace Group Edit Modal Ctrl
- * @desc Main controller for the group edit modal
+ * Group Member Edit Modal Ctrl
+ * @namespace Group Member Edit Modal Ctrl
+ * @desc Component controller for the group member edit modal
  * @memberOf refineryApp
  */
 
@@ -25,15 +25,14 @@
     groupMemberService
   ) {
     var vm = this;
+    vm.alertType = 'info';
     vm.close = close;
     vm.demote = demote;
+    vm.isLoading = false;
+    vm.member = vm.resolve.config.activeMember;
     vm.promote = promote;
     vm.remove = remove;
-    vm.isLoading = false;
-
-    vm.alertType = 'info';
     vm.responseMessage = '';
-    vm.member = vm.resolve.config.activeMember;
     // Total number of members in the active group
     vm.totalMembers = vm.resolve.config.totalMembers;
 
@@ -43,10 +42,20 @@
      * ---------------------------------------------------------
      */
 
+     /**
+     * @name close
+     * @desc  View method to close modals
+     * @memberOf refineryApp.GroupMemberEditModalCtrl. Expects modalInstance inscope
+      ***/
     function close () {
       vm.modalInstance.close(vm.alertType);
     }
 
+     /**
+     * @name demote
+     * @desc  View method for demoted a member from manager
+     * @memberOf refineryApp.GroupMemberEditModalCtrl
+    **/
     function demote () {
       vm.isLoading = true;
       groupMemberService.remove({
@@ -70,6 +79,12 @@
       });
     }
 
+
+     /**
+     * @name promote
+     * @desc  View method for promoting a member to manager
+     * @memberOf refineryApp.GroupMemberEditModalCtrl
+    **/
     function promote () {
       vm.isLoading = true;
       groupMemberService.add({
@@ -92,6 +107,12 @@
       });
     }
 
+
+     /**
+     * @name remove
+     * @desc  View method for removing a member from group
+     * @memberOf refineryApp.GroupMemberEditModalCtrl
+    **/
     function remove () {
       vm.isLoading = true;
       groupMemberService.remove({
