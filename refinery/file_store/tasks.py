@@ -9,7 +9,7 @@ from django.core.files import File
 import boto3
 import botocore
 import celery
-from celery.signals import task_success
+from celery.signals import task_postrun, task_success
 from celery.task import task
 import requests
 from requests.exceptions import (ConnectionError, ContentDecodingError,
@@ -22,16 +22,14 @@ from .models import (FileStoreItem, _mkdir, file_path, get_temp_dir,
                      parse_s3_url)
 
 logger = celery.utils.log.get_task_logger(__name__)
+logger.setLevel(celery.utils.LOG_LEVELS['DEBUG'])
 
 
 @task(track_started=True)
 def import_file(uuid, refresh=False, file_size=0):
-    """Download or copy file specified by UUID.
-    :param refresh: Flag for forcing update of the file.
-    :type refresh: bool.
-    :param file_size: size of the remote file.
-    :type file_size: int.
-    :returns: FileStoreItem UUID or None if importing failed.
+    """Download or copy file specified by UUID
+    refresh: force overwriting the file
+    file_size: size of the remote file
     """
     logger.debug("Importing FileStoreItem with UUID '%s'", uuid)
 
@@ -41,7 +39,10 @@ def import_file(uuid, refresh=False, file_size=0):
             FileStoreItem.MultipleObjectsReturned) as exc:
         logger.error("Error importing FileStoreItem with UUID '%s': %s",
                      uuid, exc)
-        return None
+        import_file.update_state(state=celery.states.FAILURE,
+                                 meta='Failed to import file')
+        # http://stackoverflow.com/a/33143545
+        raise celery.exceptions.Ignore()
 
     # exit if an import task is already running for this file
     result = celery.result.AsyncResult(item.import_task_id)
@@ -53,7 +54,10 @@ def import_file(uuid, refresh=False, file_size=0):
             "File import is already in progress for '%s' - task ID: '%s'",
             item, item.import_task_id
         )
-        return None
+        import_file.update_state(state=celery.states.FAILURE,
+                                 meta='Failed to import file')
+        # http://stackoverflow.com/a/33143545
+        raise celery.exceptions.Ignore()
 
     # save task ID for looking up file import status
     if import_file.request.id:  # to avoid error if called not as task
@@ -67,7 +71,7 @@ def import_file(uuid, refresh=False, file_size=0):
             item.datafile.delete(save=False)
         else:
             logger.info("File already exists: '%s'", item.get_absolute_path())
-            return item.uuid
+            return
 
     # start the transfer
     if os.path.isabs(item.source):
@@ -76,7 +80,11 @@ def import_file(uuid, refresh=False, file_size=0):
                 "Error moving '%s' into file store: file does not exist",
                 item.source
             )
-            return
+            import_file.update_state(state=celery.states.FAILURE,
+                                     meta='Failed to import file')
+            # http://stackoverflow.com/a/33143545
+            raise celery.exceptions.Ignore()
+
         # construct file name and absolute path
         item.datafile.name = item.datafile.storage.get_available_name(
             file_path(item, os.path.basename(item.source))
@@ -96,7 +104,6 @@ def import_file(uuid, refresh=False, file_size=0):
                              item.source, exc)
                 import_file.update_state(state=celery.states.FAILURE,
                                          meta='Failed to import uploaded file')
-                # TODO: remove when task is no longer returning a result
                 # http://stackoverflow.com/a/33143545
                 raise celery.exceptions.Ignore()
             logger.info("Moved uploaded file '%s' into file store",
@@ -123,7 +130,6 @@ def import_file(uuid, refresh=False, file_size=0):
                                  file_store_path, exc)
                 import_file.update_state(state=celery.states.FAILURE,
                                          meta='Failed to import external file')
-                # TODO: remove when task is no longer returning a result
                 # http://stackoverflow.com/a/33143545
                 raise celery.exceptions.Ignore()
             else:
@@ -142,16 +148,16 @@ def import_file(uuid, refresh=False, file_size=0):
                 logger.error("Failed to download '%s': %s", item.source, exc)
                 import_file.update_state(state=celery.states.FAILURE,
                                          meta='Failed to import uploaded file')
-                return item.uuid
+                # http://stackoverflow.com/a/33143545
+                raise celery.exceptions.Ignore()
             logger.debug("Saving downloaded file '%s'", download.name)
-            # do not save the model here to avoid terminating this task
             item.datafile.save(os.path.basename(key), File(download),
-                               save=False)
+                               save=False)  # item is saved below
             logger.info("Saved downloaded file to '%s'", item.datafile.name)
         try:
             s3.Object(bucket_name, key).delete()
-        except botocore.exceptions.ClientError:
-            logger.error("Failed to delete '%s'", item.source)
+        except botocore.exceptions.ClientError as exc:
+            logger.error("Failed to delete '%s': %s", item.source, exc)
 
     else:  # assume that source is a regular URL
         # check if source file can be downloaded
@@ -161,8 +167,7 @@ def import_file(uuid, refresh=False, file_size=0):
         except HTTPError as exc:
             logger.error("Could not open URL '%s': '%s'", item.source, exc)
             import_file.update_state(state=celery.states.FAILURE,
-                                     meta='Analysis failed during file import')
-            # ignore the task so no other state is recorded
+                                     meta='Failed to import file from URL')
             # http://stackoverflow.com/a/33143545
             raise celery.exceptions.Ignore()
         # FIXME: When importing a tabular file into Refinery, there is a
@@ -219,12 +224,9 @@ def import_file(uuid, refresh=False, file_size=0):
                     "File import task has failed. Deleting temporary file..."
                 )
                 tmpfile.delete = True
-                import_file.update_state(
-                    state=celery.states.FAILURE,
-                    meta='Analysis Failed during import_file subtask'
-                )
-                # ignore the task so no other state is recorded
-                # See: http://stackoverflow.com/a/33143545
+                import_file.update_state(state=celery.states.FAILURE,
+                                         meta='Failed to import file from URL')
+                # http://stackoverflow.com/a/33143545
                 raise celery.exceptions.Ignore()
 
         logger.debug("Finished downloading from '%s'", item.source)
@@ -245,7 +247,10 @@ def import_file(uuid, refresh=False, file_size=0):
         except OSError as exc:
             logger.error("Error moving temp file '%s' into the file store: %s",
                          tmpfile.name, exc)
-            return False
+            import_file.update_state(state=celery.states.FAILURE,
+                                     meta='Failed to import file from URL')
+            # http://stackoverflow.com/a/33143545
+            raise celery.exceptions.Ignore()
         # temp file is only accessible by the owner by default which prevents
         # access by the web server if it is running as it's own user
         try:
@@ -256,7 +261,6 @@ def import_file(uuid, refresh=False, file_size=0):
             logger.error("Failed changing permissions on %s", abs_dst_path)
             logger.error("OSError: %s, file name %s, error: %s",
                          e.errno, e.filename, e.strerror)
-
         # assign new path to datafile
         item.datafile.name = rel_dst_path
 
@@ -265,21 +269,25 @@ def import_file(uuid, refresh=False, file_size=0):
     return item.uuid
 
 
-@task_success.connect(sender=import_file)
+@task_postrun.connect(sender=import_file)
 def update_solr_index(**kwargs):
-    # NOTE: Celery docs suggest to access these fields through kwargs as the
-    # structure of celery signal handlers changes often
-    # http://docs.celeryproject.org/en/3.1/userguide/signals.html#basics
-    file_store_item_uuid = kwargs['result']
-    logger.debug("Retrieving Node for FileStoreItem with UUID '%s'",
-                 file_store_item_uuid)
+    """Updates Solr with file import state"""
+    # allow for the use of keyword or positional argument
+    try:
+        file_store_item_uuid = kwargs['kwargs']['uuid']
+    except KeyError:
+        file_store_item_uuid = kwargs['args'][0]
+    logger.debug("File import state for FileStoreItem UUID '%s': '%s'",
+                 file_store_item_uuid, kwargs['state'])
     try:
         node = Node.objects.get(file_uuid=file_store_item_uuid)
     except (Node.DoesNotExist, Node.MultipleObjectsReturned) as exc:
-        logger.error("Could not retrieve Node: %s", exc)
+        logger.error("Could not retrieve Node with file UUID '%s': %s",
+                     file_store_item_uuid, exc)
     else:
         NodeIndex().update_object(node, using="data_set_manager")
-        logger.debug("Updated Solr index for Node with UUID '%s'", node.uuid)
+        logger.info("Updated Solr index with file import state for Node '%s'",
+                    node.uuid)
 
 
 @task_success.connect(sender=import_file)
@@ -300,13 +308,11 @@ def begin_auxiliary_node_generation(**kwargs):
 def rename(uuid, name):
     """Change name of the file on disk and return the updated FileStoreItem
     UUID.
-
     :param uuid: UUID of a FileStoreItem.
     :type uuid: str.
     :param name: New name of the FileStoreItem specified by the UUID.
     :type name: str.
-    :returns: FileStoreItem UUID or None if there
-        was an error.
+    :returns: FileStoreItem UUID or None if there was an error.
     """
     try:
         item = FileStoreItem.objects.get(uuid=uuid)

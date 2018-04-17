@@ -23,6 +23,7 @@ from django.dispatch import receiver
 import celery
 from django_extensions.db.fields import UUIDField
 
+import constants
 import core
 
 logger = logging.getLogger(__name__)
@@ -271,14 +272,14 @@ class FileStoreItem(models.Model):
         """Delete datafile on disk and cancel file import"""
         self.terminate_file_import_task()
         if self.datafile:
-            path = self.datafile.path
-            logger.debug("Deleting datafile '%s'", path)
+            file_name = self.datafile.name
+            logger.debug("Deleting datafile '%s'", file_name)
             try:
                 self.datafile.delete(save=save_instance)
             except OSError as exc:
-                logger.error("Error deleting file '%s': %s", path, exc)
+                logger.error("Error deleting file '%s': %s", file_name, exc)
             else:
-                logger.info("Deleted datafile '%s'", path)
+                logger.info("Deleted datafile '%s'", file_name)
 
     def rename_datafile(self, name):
         """Change name of the data file
@@ -345,6 +346,8 @@ class FileStoreItem(models.Model):
 
     def get_import_status(self):
         """Return file import task state"""
+        if not self.import_task_id:
+            return constants.NOT_AVAILABLE
         return celery.result.AsyncResult(self.import_task_id).state
 
     def terminate_file_import_task(self):
