@@ -47,13 +47,14 @@
       });
     }
 
-    function openGroupEditor (group) {
+    function openGroupEditor (group, member) {
       var modalInstance = $uibModal.open({
         component: 'rpGroupEditModal',
         resolve: {
           config: function () {
             return {
-              group: group
+              group: group,
+              activeMember: member
             };
           }
         }

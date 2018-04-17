@@ -16,7 +16,6 @@
     '$timeout',
     'groupExtendedService',
     'groupMemberService',
-    'authService',
     'sessionService'
   ];
 
@@ -25,52 +24,56 @@
     $timeout,
     groupExtendedService,
     groupMemberService,
-    authService,
     sessionService
   ) {
     var vm = this;
-    vm.alertType = '';
+    vm.alertType = 'info';
     vm.close = close;
-    vm.group = vm.resolve.config.group;
-    vm.responseMessage = '';
-    vm.leaveGroup = leaveGroup;
     vm.deleteGroup = deleteGroup;
+    vm.group = vm.resolve.config.group;
+    vm.leaveGroup = leaveGroup;
+    vm.responseMessage = '';
     /*
      * ---------------------------------------------------------
      * Methods Definitions
      * ---------------------------------------------------------
      */
 
+    /**
+     * @name close
+     * @desc  View method to close modals
+     * @memberOf refineryApp.GroupEditModalCtrl. Expects modalInstance in scope
+    **/
     function close () {
       vm.modalInstance.dismiss();
     }
 
+    /**
+     * @name leaveGroup
+     * @desc  View method for a group member to leave
+     * @memberOf refineryApp.GroupEditModalCtrl
+     * @param {int} depth - group nav index
+    **/
     function leaveGroup () {
-      authService.isAuthenticated().then(function (isAuthenticated) {
-        if (isAuthenticated) {
-          groupMemberService.remove({
-            uuid: vm.resolve.config.group.uuid,
-            userId: sessionService.get('userId')
-          }).$promise.then(function () {
-            vm.alertType = 'success';
-            $timeout(function () {
-              vm.modalInstance.dismiss();
-            }, 1500);
-          }, function () {
-            vm.alertType = 'danger';
-            vm.responseMessage = 'Error leaving group. If last member, delete group.';
-          });
-        } else {
-          vm.alertType = 'danger';
-          vm.responseMessage = 'Error, please log in.';
-        }
-      })
-      .catch(function () {
+      groupMemberService.remove({
+        uuid: vm.resolve.config.group.uuid,
+        userId: sessionService.get('userId')
+      }).$promise.then(function () {
+        vm.alertType = 'success';
+        $timeout(function () {
+          vm.modalInstance.dismiss();
+        }, 1500);
+      }, function () {
         vm.alertType = 'danger';
-        vm.responseMessage = 'Error, please try again.';
+        vm.responseMessage = 'Error leaving group. If last member, delete group.';
       });
     }
 
+    /**
+     * @name deleteGroup
+     * @desc  View method to delete a group.
+     * @memberOf refineryApp.GroupEditModalCtrl
+    **/
     function deleteGroup () {
       groupExtendedService.delete({
         uuid: vm.resolve.config.group.uuid
