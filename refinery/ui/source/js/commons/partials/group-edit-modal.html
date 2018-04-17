@@ -1,48 +1,50 @@
-<div class="modal-header">
-  <div class="float-right">
-    <a ng-click="$ctrl.close()">
-      <i class="fa fa-times close" aria-hidden="true"></i>
-    </a>
+<div class="modal-content">
+  <div class="modal-header">
+      <a class="float-right modal-close" aria-label="Close" ng-click="$ctrl.close()">
+        <i class="fa fa-times" aria-hidden="true"></i>
+      </a>
+    <h3 class="modal-title">
+      Group Editor
+    </h3>
+    <p>
+      If you are the last manager in a group, you must delete the group in
+      order to remove yourself or assign another manager first. If you are the last
+      member in a group, you must delete the group.
+    </p>
   </div>
-  <h3 class="text-left">
-    Group Editor
-  </h3>
-  <p>
-    As a manager, you can only leave the group if you are not the last member.
-  </p>
-</div>
-<div class="modal-body">
-  <div class="row">
-    <div class="col-sm-4">
-      {{ $ctrl.group.name }}
-    </div>
-    <div class="col-sm-4">
-      <button
-        class="refinery-base btn btn-warning float-right"
-        ng-click="$ctrl.leaveGroup()"
-        ng-disabled="$ctrl.group.member_list.length===1 || $ctrl.group.can_edit || $ctrl.isLoading">
-        Leave
-      </button>
-    </div>
-    <div class="col-sm-4">
-      <button
-        class="refinery-base btn btn-danger float-right"
-        ng-click="$ctrl.deleteGroup()"
-        ng-disabled="!$ctrl.group.can_edit || $ctrl.isLoading">
-        Delete
-      </button>
+  <div class="modal-body">
+    <div class="row">
+      <div class="col-sm-4">
+        {{ $ctrl.group.name }}
+      </div>
+      <div class="col-sm-4">
+        <button
+          class="refinery-base btn btn-warning float-right"
+          ng-click="$ctrl.leaveGroup()"
+          ng-disabled="$ctrl.group.member_list.length===1 || $ctrl.group.can_edit || $ctrl.isLoading">
+          Leave
+        </button>
+      </div>
+      <div class="col-sm-4">
+        <button
+          class="refinery-base btn btn-danger float-right"
+          ng-click="$ctrl.deleteGroup()"
+          ng-disabled="!$ctrl.group.can_edit || $ctrl.isLoading">
+          Delete
+        </button>
+      </div>
     </div>
   </div>
-</div>
-<div class="modal-footer">
-  <div
-    class='p-t-1-2'
-    ng-show="$ctrl.responseMessage">
-     <div class="alert alert-{{ modal.alertType }} text-left">
-       {{$ctrl.responseMessage}}
-     </div>
+  <div class="modal-footer">
+    <div
+      class='p-t-1-2'
+      ng-show="$ctrl.responseMessage">
+       <div class="alert alert-{{ modal.alertType }} text-left">
+         {{$ctrl.responseMessage}}
+       </div>
+    </div>
+    <button class="refinery-base btn btn-default" ng-click="$ctrl.close()">
+        Close
+    </button>
   </div>
-  <button class="refinery-base btn btn-default" ng-click="$ctrl.close()">
-      Close
-  </button>
 </div>
