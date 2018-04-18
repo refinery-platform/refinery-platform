@@ -74,7 +74,7 @@
         <span ng-if="collab.activeGroup.can_edit" class="refinery-header-right">
           <a
             href="#/{{ collab.activeGroup.uuid }}/"
-            ng-click="collab.openEmailInvite()"
+            ng-click="collab.openEmailInvite(collab.activeGroup)"
             class="no-underline btn priority-button">
             <i class="fa fa-plus-circle"></i>
             Invite
@@ -108,7 +108,7 @@
                   ng-if="collab.activeGroup.can_edit"
                   ng-href="#/{{collab.activeGroup.uuid}}/"
                   ng-click="collab.openMemberEditor(member, collab
-                  .activeGroup.member_list.length, collab.activeGroup )">
+                  .activeGroup.member_list.length, collab.activeGroup)">
                   <i class="fa fa-cog"></i>
                 </a>
               </td>

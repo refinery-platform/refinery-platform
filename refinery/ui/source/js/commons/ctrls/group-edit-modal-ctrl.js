@@ -13,18 +13,16 @@
     .controller('GroupEditModalCtrl', GroupEditModalCtrl);
 
   GroupEditModalCtrl.$inject = [
-    '$timeout',
+    '$window',
     'groupExtendedService',
     'groupMemberService',
-    'sessionService'
   ];
 
 
   function GroupEditModalCtrl (
-    $timeout,
+    $window,
     groupExtendedService,
-    groupMemberService,
-    sessionService
+    groupMemberService
   ) {
     var vm = this;
     vm.alertType = 'info';
@@ -57,9 +55,7 @@
         uuid: vm.resolve.config.group.uuid
       }).$promise.then(function () {
         vm.alertType = 'success';
-        $timeout(function () {
-          vm.modalInstance.close(vm.alertType);
-        }, 1500);
+        vm.modalInstance.close(vm.alertType);
       }, function () {
         vm.alertType = 'danger';
         vm.responseMessage = 'Group could not be deleted.';
@@ -75,12 +71,10 @@
     function leaveGroup () {
       groupMemberService.remove({
         uuid: vm.resolve.config.group.uuid,
-        userId: sessionService.get('userId')
+        userId: $window.djangoApp.userId
       }).$promise.then(function () {
         vm.alertType = 'success';
-        $timeout(function () {
-          vm.modalInstance.close(vm.alertType);
-        }, 1500);
+        vm.modalInstance.close(vm.alertType);
       }, function () {
         vm.alertType = 'danger';
         vm.responseMessage = 'Error leaving group. If last member, delete group.';

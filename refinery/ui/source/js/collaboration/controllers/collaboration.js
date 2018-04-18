@@ -138,13 +138,13 @@ CollaborationCtrl.prototype.openMemberEditor = function (member, totalMembers, g
   });
 };
 
-CollaborationCtrl.prototype.openEmailInvite = function () {
+CollaborationCtrl.prototype.openEmailInvite = function (group) {
   this.$uibModal.open({
     component: 'rpGroupMemberAddModal',
     resolve: {
       config: function () {
         return {
-          activeGroup: this.groupDataService.activeGroup
+          group: group
         };
       }
     }
