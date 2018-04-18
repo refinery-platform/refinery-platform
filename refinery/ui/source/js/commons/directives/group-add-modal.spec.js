@@ -8,7 +8,6 @@
 
     beforeEach(inject(function (
       $compile,
-      $controller,
       $rootScope,
       $templateCache,
       $window
