@@ -13,12 +13,11 @@
 
   CollaborationCardCtrl.$inject = [
     '$uibModal',
-    'groupDataService',
-    'groupMemberService'];
+    'groupMemberService'
+  ];
 
   function CollaborationCardCtrl (
     $uibModal,
-    groupDataService,
     groupMemberService
   ) {
     var vm = this;
@@ -85,9 +84,16 @@
       });
     }
 
-    function openGroupMemberAdd () {
+    function openGroupMemberAdd (group) {
       $uibModal.open({
-        component: 'rpGroupMemberAddModal'
+        component: 'rpGroupMemberAddModal',
+        resolve: {
+          config: function () {
+            return {
+              group: group
+            };
+          }
+        }
       });
     }
   }

@@ -3,20 +3,18 @@
 describe('Controller: GroupAddModalCtrl', function () {
   var ctrl;
   var scope;
-  var $controller;
   var service;
   var $q;
 
   beforeEach(module('refineryApp'));
   beforeEach(inject(function (
     $rootScope,
-    _$controller_,
-    _groupExtendedService_,
+    $controller,
+    groupExtendedService,
     _$q_
   ) {
     scope = $rootScope.$new();
-    service = _groupExtendedService_;
-    $controller = _$controller_;
+    service = groupExtendedService;
     $q = _$q_;
     ctrl = $controller('GroupAddModalCtrl', {
       $scope: scope

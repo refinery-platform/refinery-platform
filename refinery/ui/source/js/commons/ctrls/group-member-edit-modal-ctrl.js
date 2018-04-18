@@ -41,7 +41,6 @@
      * Methods Definitions
      * ---------------------------------------------------------
      */
-
      /**
      * @name close
      * @desc  View method to close modals

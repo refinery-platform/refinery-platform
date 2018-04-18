@@ -140,7 +140,14 @@ CollaborationCtrl.prototype.openMemberEditor = function (member, totalMembers) {
 
 CollaborationCtrl.prototype.openEmailInvite = function () {
   this.$uibModal.open({
-    component: 'rpGroupMemberAddModal'
+    component: 'rpGroupMemberAddModal',
+    resolve: {
+      config: function () {
+        return {
+          activeGroup: this.groupDataService.activeGroup
+        };
+      }
+    }
   });
 };
 

@@ -13,7 +13,8 @@
         return $window.getStaticUrl('partials/commons/partials/group-member-add-modal.html');
       }],
       bindings: {
-        modalInstance: '<'
+        modalInstance: '<',
+        resolve: '<'
       },
       controller: 'GroupMemberAddModalCtrl'
     });

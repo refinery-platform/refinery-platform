@@ -12,23 +12,54 @@
     .controller('GroupMemberAddModalCtrl', GroupMemberAddModalCtrl);
 
   GroupMemberAddModalCtrl.$inject = [
-    'groupInviteService',
-    'groupDataService',
-    '$timeout',
     '$log',
+    '$timeout',
+    'groupDataService',
+    'groupInviteService'
   ];
 
   function GroupMemberAddModalCtrl (
-    groupInviteService,
-    groupDataService,
+    $log,
     $timeout,
-    $log
+    groupDataService,
+    groupInviteService
   ) {
     var vm = this;
-    vm.responseMessage = '';
     vm.alertType = 'info';
-     // After invite is sent, an alert pops up with following message
-    var generateAlertMessage = function (infoType, email) {
+    vm.cancel = cancel;
+    vm.close = close;
+    vm.responseMessage = '';
+    vm.sendInvite = sendInvite;
+
+    /*
+     * ---------------------------------------------------------
+     * Methods Definitions
+     * ---------------------------------------------------------
+     */
+    /**
+     * @name cancel
+     * @desc  View method to cancel modals, expects modalInstance in scope
+     * @memberOf refineryApp.GroupMemberAddModalCtrl.
+    **/
+    function cancel () {
+      vm.modalInstance.dismiss('cancel');
+    }
+
+    /**
+     * @name close
+     * @desc  View method to cancel modals, expects modalInstance in scope
+     * @memberOf refineryApp.GroupMemberAddModalCtrl.
+    **/
+    function close () {
+      vm.modalInstance.dismiss();
+    }
+
+    /**
+     * @name generateAlertMessage
+     * @desc  helper method to generate api response notification
+     * @memberOf refineryApp.GroupMemberAddModalCtrl.
+    **/
+    function generateAlertMessage (infoType, email) {
       if (infoType === 'success') {
         vm.alertType = 'success';
         vm.responseMessage = 'Successfully sent invitation to ' + email;
@@ -36,13 +67,17 @@
         vm.alertType = 'danger';
         vm.responseMessage = 'Error, invitiation could not be sent to' + email;
       }
-    };
+    }
 
-     // Post email invite to group api
-    vm.sendInvite = function (email) {
+    /**
+     * @name sendInvite
+     * @desc  view method use to send group invite to user
+     * @memberOf refineryApp.GroupMemberAddModalCtrl.
+    **/
+    function sendInvite (email) {
       groupInviteService.send({
         email: email,
-        group_id: groupDataService.activeGroup.id
+        group_id: vm.resolve.config.group.id
       })
       .$promise
       .then(
@@ -58,15 +93,6 @@
           $log.error(error);
         }
       );
-    };
-
-    // UI helper methods to cancel and close modal instance
-    vm.cancel = function () {
-      vm.modalInstance.dismiss('cancel');
-    };
-
-    vm.close = function () {
-      vm.modalInstance.dismiss();
-    };
+    }
   }
 })();

@@ -18,7 +18,8 @@
         '<div id="group-member-add-modal"></div>'
       );
       var scope = $rootScope.$new();
-      var template = '<rp-group-member-add-modal></rp-group-member-add-modal>';
+      var template = '<rp-group-member-add-modal resolve="{config:{}}">' +
+        '</rp-group-member-add-modal>';
       directiveElement = $compile(template)(scope);
       scope.$digest();
     }));
