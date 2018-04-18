@@ -34,9 +34,8 @@ def _mkdir(path):
     try:
         os.makedirs(path)
     except OSError as exc:
-        # https://stackoverflow.com/a/273227
-        if exc.errno != errno.EEXIST:
-            logger.critical("Error creating directory '%s': %s", path, exc)
+        # https://stackoverflow.com/a/14364249
+        if not os.path.isdir(path):
             raise
     else:
         logger.info("Created directory '%s'", path)
