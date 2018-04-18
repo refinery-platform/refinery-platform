@@ -30,12 +30,12 @@ describe('Controller: GroupMemberAddModalCtrl', function () {
   it('Data & UI displays variables should exist for views', function () {
     expect(ctrl.alertType).toEqual('info');
     expect(ctrl.responseMessage).toEqual('');
+    expect(ctrl.form.email).toEqual('');
   });
 
   it('Helper Methods exist', function () {
     expect(angular.isFunction(ctrl.cancel)).toBe(true);
     expect(angular.isFunction(ctrl.close)).toBe(true);
-    expect(angular.isFunction(ctrl.form.email)).toBe('');
   });
 
   describe('Test sendInvite', function () {

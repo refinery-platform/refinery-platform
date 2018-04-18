@@ -51,12 +51,15 @@
     </div>
   </div>
   <div class="modal-footer">
-     <div
+    <div
       class='p-t-1-2'
       ng-show="$ctrl.responseMessage">
-       <div class="alert alert-{{ $ctrl.alertType }} text-center">
-         {{$ctrl.responseMessage}}
+      <div class="alert alert-{{ $ctrl.alertType }} text-center">
+        {{$ctrl.responseMessage}}
        </div>
     </div>
+    <button class="refinery-base btn btn-default" ng-click="$ctrl.close()">
+      Close
+    </button>
   </div>
 </div>

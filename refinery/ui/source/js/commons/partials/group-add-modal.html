@@ -12,12 +12,16 @@
         ng-submit="$ctrl.createGroup()"
         name="groupCreationForm"
         class="navbar-form text-align-center float-left">
+        <label class="refinery-label" for="groupNameInput">
+          Group Name
+        </label>
         <input
           autofocus
+          id="groupNameInput"
           type="text"
           class="form-control"
           name="groupName"
-          placeholder="Group name"
+          placeholder="Unique Name"
           ng-model="$ctrl.groupName"
           ng-minlength="3" required>
       </form>
