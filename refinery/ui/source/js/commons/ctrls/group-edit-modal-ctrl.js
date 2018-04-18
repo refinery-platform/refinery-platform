@@ -44,7 +44,7 @@
      * @memberOf refineryApp.GroupEditModalCtrl.
     **/
     function close () {
-      vm.modalInstance.dismiss();
+      vm.modalInstance.close(vm.alertType);
     }
 
     /**
@@ -58,7 +58,7 @@
       }).$promise.then(function () {
         vm.alertType = 'success';
         $timeout(function () {
-          vm.modalInstance.dismiss();
+          vm.modalInstance.close(vm.alertType);
         }, 1500);
       }, function () {
         vm.alertType = 'danger';
@@ -79,7 +79,7 @@
       }).$promise.then(function () {
         vm.alertType = 'success';
         $timeout(function () {
-          vm.modalInstance.dismiss();
+          vm.modalInstance.close(vm.alertType);
         }, 1500);
       }, function () {
         vm.alertType = 'danger';

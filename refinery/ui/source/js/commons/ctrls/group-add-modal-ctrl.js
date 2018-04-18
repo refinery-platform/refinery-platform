@@ -37,6 +37,24 @@
      * Methods Definitions
      * ---------------------------------------------------------
      */
+    /**
+     * @name cancel
+     * @desc  UI helper methods to cancel and close modal instance
+     * @memberOf refineryApp.GroupAddModalCtrl
+    **/
+    function cancel () {
+      vm.modalInstance.dismiss('cancel');
+    }
+
+     /**
+     * @name close
+     * @desc  View method to close modals
+     * @memberOf refineryApp.GroupAddModalCtrl
+    **/
+    function close () {
+      vm.modalInstance.close(vm.alertType);
+    }
+
      /**
      * @name createGroup
      * @desc  Method which creates a new group
@@ -49,30 +67,12 @@
           groupDataService.update();
           // Automatically dismisses modal
           $timeout(function () {
-            vm.modalInstance.dismiss();
+            vm.modalInstance.close(vm.alertType);
           }, 1500);
         }, function (error) {
           generateAlertMessage('danger', vm.groupName);
           $log.error(error);
         });
-    }
-
-    /**
-     * @name cancel
-     * @desc  UI helper methods to cancel and close modal instance
-     * @memberOf refineryApp.GroupAddModalCtrl
-    **/
-    function cancel () {
-      vm.modalInstance.dismiss('cancel');
-    }
-
-    /**
-     * @name close
-     * @desc  View method to close modals
-     * @memberOf refineryApp.GroupAddModalCtrl
-    **/
-    function close () {
-      vm.modalInstance.dismiss();
     }
 
     /**

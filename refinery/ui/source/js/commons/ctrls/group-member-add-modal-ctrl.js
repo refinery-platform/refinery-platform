@@ -51,7 +51,7 @@
      * @memberOf refineryApp.GroupMemberAddModalCtrl.
     **/
     function close () {
-      vm.modalInstance.dismiss();
+      vm.modalInstance.close(vm.alertType);
     }
 
     /**
@@ -86,7 +86,7 @@
           groupDataService.update();
           // Automatically dismisses modal
           $timeout(function () {
-            vm.modalInstance.dismiss();
+            vm.modalInstance.close(vm.alertType);
           }, 1500);
         }, function (error) {
           generateAlertMessage('danger', email);

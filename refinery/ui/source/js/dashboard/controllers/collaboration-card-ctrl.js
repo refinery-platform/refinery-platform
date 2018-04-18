@@ -41,8 +41,14 @@
     }
 
     function openGroupAdd () {
-      $uibModal.open({
+      var modalInstance = $uibModal.open({
         component: 'rpGroupAddModal'
+      });
+
+      modalInstance.result.then(function (response) {
+        if (response === 'success') {
+          getGroups();
+        }
       });
     }
 
@@ -60,17 +66,14 @@
       });
 
       modalInstance.result.then(function (response) {
-        console.log(response);
-        console.log('positive');
-        getGroups();
-      }, function (error) {
-        console.log(error);
-        console.log('error');
+        if (response === 'success') {
+          getGroups();
+        }
       });
     }
 
     function openGroupMemberEditor (member, totalMembers, group) {
-      $uibModal.open({
+      var modalInstance = $uibModal.open({
         component: 'rpGroupMemberEditModal',
         resolve: {
           config: function () {
@@ -82,10 +85,15 @@
           }
         }
       });
+      modalInstance.result.then(function (response) {
+        if (response === 'success') {
+          getGroups();
+        }
+      });
     }
 
     function openGroupMemberAdd (group) {
-      $uibModal.open({
+      var modalInstance = $uibModal.open({
         component: 'rpGroupMemberAddModal',
         resolve: {
           config: function () {
@@ -93,6 +101,11 @@
               group: group
             };
           }
+        }
+      });
+      modalInstance.result.then(function (response) {
+        if (response === 'success') {
+          getGroups();
         }
       });
     }
