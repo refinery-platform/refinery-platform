@@ -14,6 +14,6 @@ def django_docker_cleanup():
 
 @task()
 def start_container(visualization_tool):
-    visualization_tool.django_docker_client.run(
+    return visualization_tool.django_docker_client.run(
         visualization_tool.create_container_spec()
     )
