@@ -37,7 +37,6 @@
         "file_relationship",
         "parameters",
         "extra_directories",
-        "container_input_path",
         "image_name"
       ],
       "properties": {
@@ -59,9 +58,6 @@
         "tool_type":{
           "type": "string",
           "enum": ["VISUALIZATION"]
-        },
-        "container_input_path": {
-          "type": "string"
         },
         "extra_directories": {
           "type": "array",
