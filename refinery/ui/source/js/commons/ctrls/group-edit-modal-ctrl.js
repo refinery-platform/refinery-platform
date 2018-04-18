@@ -13,16 +13,16 @@
     .controller('GroupEditModalCtrl', GroupEditModalCtrl);
 
   GroupEditModalCtrl.$inject = [
-    '$window',
     'groupExtendedService',
     'groupMemberService',
+    'settings'
   ];
 
 
   function GroupEditModalCtrl (
-    $window,
     groupExtendedService,
-    groupMemberService
+    groupMemberService,
+    settings
   ) {
     var vm = this;
     vm.alertType = 'info';
@@ -71,7 +71,7 @@
     function leaveGroup () {
       groupMemberService.remove({
         uuid: vm.resolve.config.group.uuid,
-        userId: $window.djangoApp.userId
+        userId: settings.djangoApp.userId
       }).$promise.then(function () {
         vm.alertType = 'success';
         vm.modalInstance.close(vm.alertType);

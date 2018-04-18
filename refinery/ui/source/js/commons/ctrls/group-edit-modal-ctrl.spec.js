@@ -2,7 +2,6 @@
 
 describe('Controller: GroupEditModalCtrl', function () {
   var ctrl;
-  var idService;
   var memberService;
   var promise;
   var service;
@@ -10,16 +9,14 @@ describe('Controller: GroupEditModalCtrl', function () {
 
   beforeEach(module('refineryApp'));
   beforeEach(inject(function (
-    $rootScope,
     $componentController,
+    $q,
+    $rootScope,
     groupExtendedService,
     groupMemberService,
-    mockParamsFactory,
-    $q,
-    sessionService
+    mockParamsFactory
   ) {
     scope = $rootScope.$new();
-    idService = sessionService;
     service = groupExtendedService;
     memberService = groupMemberService;
     promise = $q;
@@ -49,7 +46,6 @@ describe('Controller: GroupEditModalCtrl', function () {
     });
 
     it('leaveGroup calls checks authoservice', function () {
-      spyOn(idService, 'get').and.returnValue('5');
       var successResponse = true;
       var leftGroup = false;
       spyOn(memberService, 'remove').and.callFake(function () {
