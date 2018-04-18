@@ -107,7 +107,8 @@
                 <a
                   ng-if="collab.activeGroup.can_edit"
                   ng-href="#/{{collab.activeGroup.uuid}}/"
-                  ng-click="collab.openMemberEditor(member, collab.activeGroup.member_list.length )">
+                  ng-click="collab.openMemberEditor(member, collab
+                  .activeGroup.member_list.length, collab.activeGroup )">
                   <i class="fa fa-cog"></i>
                 </a>
               </td>

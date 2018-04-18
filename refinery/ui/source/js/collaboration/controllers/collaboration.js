@@ -121,7 +121,7 @@ CollaborationCtrl.prototype.openGroupEditor = function (group) {
   });
 };
 
-CollaborationCtrl.prototype.openMemberEditor = function (member, totalMembers) {
+CollaborationCtrl.prototype.openMemberEditor = function (member, totalMembers, group) {
   this.activeService.setActiveMember(member);
   this.activeService.setTotalMembers(totalMembers);
   this.$uibModal.open({
@@ -130,7 +130,7 @@ CollaborationCtrl.prototype.openMemberEditor = function (member, totalMembers) {
       config: function () {
         return {
           activeMember: member,
-          activeGroup: this.groupDataService.activeGroup,
+          activeGroup: group,
           totalMember: totalMembers
         };
       }
