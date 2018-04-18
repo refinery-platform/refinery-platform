@@ -49,14 +49,15 @@
   <button
     type="button"
     class="refinery-base btn btn-default"
-    ng-click="$ctrl.cancel()">
+    ng-click="$ctrl.cancel()"
+    ng-disabled="$ctrl.isLoading">
     Cancel
   </button>
   <button
     type="submit"
     class="btn btn-primary"
     ng-click="$ctrl.sendInvite(email)"
-    ng-disabled="!inviteNewMemberForm.$valid">
+    ng-disabled="!inviteNewMemberForm.$valid || $ctrl.isLoading">
     Send Invite
   </button>
 </div>

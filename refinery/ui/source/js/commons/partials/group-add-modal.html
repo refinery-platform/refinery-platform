@@ -45,14 +45,15 @@
    <button
       type="button"
       class="refinery-base btn btn-default"
-      ng-click="$ctrl.cancel()">
+      ng-click="$ctrl.cancel()"
+      ng-disabled="$ctrl.isLoading">
       Cancel
     </button>
     <button
       type="submit"
       class="btn btn-primary"
       ng-click="$ctrl.createGroup()"
-      ng-disabled="!groupCreationForm.$valid">
+      ng-disabled="!groupCreationForm.$valid || $ctrl.isLoading">
       Create group
     </button>
 </div>

@@ -28,6 +28,7 @@
     vm.alertType = 'info';
     vm.cancel = cancel;
     vm.close = close;
+    vm.isLoading = false;
     vm.responseMessage = '';
     vm.sendInvite = sendInvite;
 
@@ -75,6 +76,7 @@
      * @memberOf refineryApp.GroupMemberAddModalCtrl.
     **/
     function sendInvite (email) {
+      vm.isLoading = true;
       groupInviteService.send({
         email: email,
         group_id: vm.resolve.config.group.id
@@ -86,9 +88,11 @@
           groupDataService.update();
           // Automatically dismisses modal
           $timeout(function () {
+            vm.isLoading = false;
             vm.modalInstance.close(vm.alertType);
           }, 1500);
         }, function (error) {
+          vm.isLoading = false;
           generateAlertMessage('danger', email);
           $log.error(error);
         }

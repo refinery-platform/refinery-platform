@@ -65,8 +65,8 @@
           groupDataService.update();
           vm.alertType = 'success';
           vm.responseMessage = 'Successfully demoted member ' + vm.member.username;
-          vm.isLoading = false;
           $timeout(function () {
+            vm.isLoading = false;
             vm.modalInstance.close(vm.alertType);
           }, 1500);
         }

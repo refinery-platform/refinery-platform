@@ -30,6 +30,7 @@
     vm.cancel = cancel;
     vm.close = close;
     vm.createGroup = createGroup;
+    vm.isLoading = false;
     vm.responseMessage = '';
 
     /*
@@ -61,15 +62,18 @@
      * @memberOf refineryApp.GroupAddModalCtrl
     **/
     function createGroup () {
+      vm.isLoading = true;
       groupExtendedService.create({ name: vm.groupName }).$promise
         .then(function () {
           generateAlertMessage('success', vm.groupName);
           groupDataService.update();
           // Automatically dismisses modal
           $timeout(function () {
+            vm.isLoading = false;
             vm.modalInstance.close(vm.alertType);
           }, 1500);
         }, function (error) {
+          vm.isLoading = false;
           generateAlertMessage('danger', vm.groupName);
           $log.error(error);
         });
