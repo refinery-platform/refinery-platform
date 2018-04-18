@@ -9,7 +9,6 @@ FILE_STORE_DIR setting - main file store directory
 * must be writeable by the Django server
 """
 
-import errno
 import logging
 import os
 import re
@@ -31,10 +30,10 @@ logger = logging.getLogger(__name__)
 
 def _mkdir(path):
     """Create directory given absolute file system path"""
+    # https://stackoverflow.com/a/14364249
     try:
         os.makedirs(path)
-    except OSError as exc:
-        # https://stackoverflow.com/a/14364249
+    except OSError:
         if not os.path.isdir(path):
             raise
     else:

@@ -45,19 +45,17 @@ def import_file(uuid, refresh=False, file_size=0):
         raise celery.exceptions.Ignore()
 
     # exit if an import task is already running for this file
-    result = celery.result.AsyncResult(item.import_task_id)
-    if (result.state in [celery.states.RECEIVED,
-                         celery.states.STARTED,
-                         celery.states.RETRY,
-                         'PROGRESS']):
-        logger.error(
-            "File import is already in progress for '%s' - task ID: '%s'",
-            item, item.import_task_id
-        )
-        import_file.update_state(state=celery.states.FAILURE,
-                                 meta='Failed to import file')
-        # http://stackoverflow.com/a/33143545
-        raise celery.exceptions.Ignore()
+    if item.import_task_id:
+        result = celery.result.AsyncResult(item.import_task_id)
+        if result.state in list(celery.states.UNREADY_STATES) + ['PROGRESS']:
+            logger.error(
+                "File import is already in progress for '%s' - task ID: '%s'",
+                item, item.import_task_id
+            )
+            import_file.update_state(state=celery.states.FAILURE,
+                                     meta='Failed to import file')
+            # http://stackoverflow.com/a/33143545
+            raise celery.exceptions.Ignore()
 
     # save task ID for looking up file import status
     if import_file.request.id:  # to avoid error if called not as task
