@@ -38,7 +38,7 @@
                 <span class="col-md-4">
                     Manager
                 </span>
-                <span class="col-md-2">
+                <span class="col-md-2" ng-show="group.name !== 'Public'">
                   <a
                     ng-click="$ctrl.openGroupEditor(group)"
                     class="no-underline">

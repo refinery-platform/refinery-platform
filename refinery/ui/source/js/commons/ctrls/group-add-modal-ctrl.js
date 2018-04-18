@@ -13,14 +13,12 @@
 
   GroupAddModalCtrl.$inject = [
     '$log',
-    '$timeout',
     'groupDataService',
     'groupExtendedService'
   ];
 
   function GroupAddModalCtrl (
     $log,
-    $timeout,
     groupDataService,
     groupExtendedService
   ) {
@@ -65,13 +63,9 @@
       vm.isLoading = true;
       groupExtendedService.create({ name: vm.groupName }).$promise
         .then(function () {
+          vm.isLoading = false;
           generateAlertMessage('success', vm.groupName);
           groupDataService.update();
-          // Automatically dismisses modal
-          $timeout(function () {
-            vm.isLoading = false;
-            vm.modalInstance.close(vm.alertType);
-          }, 1500);
         }, function (error) {
           vm.isLoading = false;
           generateAlertMessage('danger', vm.groupName);

@@ -13,14 +13,12 @@
 
   GroupMemberAddModalCtrl.$inject = [
     '$log',
-    '$timeout',
     'groupDataService',
     'groupInviteService'
   ];
 
   function GroupMemberAddModalCtrl (
     $log,
-    $timeout,
     groupDataService,
     groupInviteService
   ) {
@@ -28,6 +26,7 @@
     vm.alertType = 'info';
     vm.cancel = cancel;
     vm.close = close;
+    vm.form = { email: '' };
     vm.isLoading = false;
     vm.responseMessage = '';
     vm.sendInvite = sendInvite;
@@ -75,25 +74,23 @@
      * @desc  view method use to send group invite to user
      * @memberOf refineryApp.GroupMemberAddModalCtrl.
     **/
-    function sendInvite (email) {
+    function sendInvite () {
+      vm.responseMessage = '';
       vm.isLoading = true;
       groupInviteService.send({
-        email: email,
+        email: vm.form.email,
         group_id: vm.resolve.config.group.id
       })
       .$promise
       .then(
         function () {
-          generateAlertMessage('success', email);
+          vm.isLoading = false;
+          generateAlertMessage('success', vm.form.email);
           groupDataService.update();
-          // Automatically dismisses modal
-          $timeout(function () {
-            vm.isLoading = false;
-            vm.modalInstance.close(vm.alertType);
-          }, 1500);
+          vm.form.email = '';
         }, function (error) {
           vm.isLoading = false;
-          generateAlertMessage('danger', email);
+          generateAlertMessage('danger', vm.form.email);
           $log.error(error);
         }
       );
