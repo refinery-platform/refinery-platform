@@ -177,7 +177,9 @@ class FileStoreItemTest(TestCase):
         self.assertEqual(item.source, self.path_source)
 
 
+@override_storage()
 class FileStoreItemLocalFileTest(TestCase):
+
     def setUp(self):
         # TODO: replace with create() when migrations are no longer required
         self.file_type = FileType.objects.get_or_create(name='TDF')[0]
@@ -186,10 +188,7 @@ class FileStoreItemLocalFileTest(TestCase):
         )[0]
         self.file_name = 'test_file.tdf'
         self.item = FileStoreItem()
-        # test storage backend does not support absolute paths
-        self.item.is_local = mock.MagicMock(return_value=True)
 
-    @override_storage()
     @override_settings(MEDIA_URL='')
     def test_get_local_file_url(self):
         self.item.datafile.save(self.file_name, ContentFile(''))
@@ -197,13 +196,11 @@ class FileStoreItemLocalFileTest(TestCase):
         self.assertEqual(saved_item.get_datafile_url(),
                          file_path(saved_item, self.file_name))
 
-    @override_storage()
     def test_set_local_file_type(self):
         self.item.datafile.save(self.file_name, ContentFile(''))
         saved_item = FileStoreItem.objects.get(pk=self.item.pk)
         self.assertEqual(saved_item.filetype, self.file_type)
 
-    @override_storage()
     def test_set_local_file_type_override(self):
         zip_file_type = FileType.objects.get_or_create(name='ZIP')[0]
         self.item.filetype = zip_file_type
@@ -211,7 +208,6 @@ class FileStoreItemLocalFileTest(TestCase):
         saved_item = FileStoreItem.objects.get(pk=self.item.pk)
         self.assertEqual(saved_item.filetype, zip_file_type)
 
-    @override_storage()
     def test_set_local_file_type_update(self):
         self.item.datafile.save(self.file_name, ContentFile(''))
         zip_file_type = FileType.objects.get_or_create(name='ZIP')[0]
@@ -220,26 +216,17 @@ class FileStoreItemLocalFileTest(TestCase):
         saved_item = FileStoreItem.objects.get(pk=self.item.pk)
         self.assertEqual(saved_item.filetype, zip_file_type)
 
-    @override_storage()
     def test_get_local_file_extension(self):
         self.item.datafile.save(self.file_name, ContentFile(''))
         saved_item = FileStoreItem.objects.get(pk=self.item.pk)
         self.assertEqual(saved_item.get_file_extension(), self.file_extension)
 
-    @override_storage()
     def test_delete_local_file_on_instance_delete(self):
         self.item.datafile.save(self.file_name, ContentFile(''))
-        with mock.patch.object(FieldFile, 'delete') as mock_delete:
-            self.item.delete()
-            mock_delete.assert_called_with(save=False)
-
-    @override_storage()
-    def test_delete_local_file_on_instance_update(self):
-        self.item.datafile.save(self.file_name, ContentFile(''))
-        self.item.datafile = ''
-        with mock.patch.object(FieldFile, 'delete') as mock_delete:
-            self.item.save()
-            mock_delete.assert_called_with(save=False)
+        with mock.patch.object(FieldFile, 'path'):
+            with mock.patch.object(FieldFile, 'delete') as mock_delete:
+                self.item.delete()
+                mock_delete.assert_called_with(save=False)
 
 
 @override_settings(REFINERY_DATA_IMPORT_DIR='/import/path',
@@ -304,3 +291,60 @@ class FileSourceTranslationTest(TestCase):
         translate_file_source = generate_file_source_translator()
         with self.assertRaises(ValueError):
             translate_file_source(self.rel_path_source)
+
+
+@override_storage()
+class FileImportTaskTerminationTest(TestCase):
+
+    def setUp(self):
+        self.item = FileStoreItem.objects.create()
+
+    def test_terminate_on_file_store_item_delete(self):
+        with mock.patch.object(
+                FileStoreItem, 'terminate_file_import_task'
+        ) as mock_terminate_task:
+            self.item.delete()
+            mock_terminate_task.assert_called_once()
+
+    def test_terminate_on_bulk_file_store_item_delete(self):
+        with mock.patch.object(
+                FileStoreItem, 'terminate_file_import_task'
+        ) as mock_terminate_task:
+            FileStoreItem.objects.all().delete()
+            mock_terminate_task.assert_called_once()
+
+    def test_no_terminate_on_save_with_no_new_datafile(self):
+        with mock.patch.object(
+            FileStoreItem, 'terminate_file_import_task'
+        ) as mock_terminate_task:
+            self.item.save()
+            mock_terminate_task.assert_not_called()
+
+
+@override_settings(REFINERY_DATA_IMPORT_DIR='/import/path')
+class TestSymlinkDatafile(TestCase):
+
+    def test_symlink_new_blank_item(self):
+        with mock.patch.object(FileStoreItem,
+                               '_symlink_datafile') as mock_symlink:
+            FileStoreItem.objects.create()
+            mock_symlink.assert_not_called()
+
+    def test_symlink_new_item_with_path_source(self):
+        with mock.patch.object(FileStoreItem,
+                               '_symlink_datafile') as mock_symlink:
+            FileStoreItem.objects.create(source='/example/path/test.txt')
+            mock_symlink.assert_called_once()
+
+    def test_symlink_new_item_with_url_source(self):
+        with mock.patch.object(FileStoreItem,
+                               '_symlink_datafile') as mock_symlink:
+            FileStoreItem.objects.create(source='https://example.org/test.txt')
+            mock_symlink.assert_not_called()
+
+    def test_symlink_new_item_with_import_dir_path_source(self):
+        with mock.patch.object(FileStoreItem,
+                               '_symlink_datafile') as mock_symlink:
+            FileStoreItem.objects.create(
+                source=settings.REFINERY_DATA_IMPORT_DIR + '/test.txt')
+            mock_symlink.assert_not_called()

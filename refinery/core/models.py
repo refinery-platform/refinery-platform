@@ -799,19 +799,12 @@ def _dataset_delete(sender, instance, *args, **kwargs):
     See: https://docs.djangoproject.com/en/1.8/topics/db/models/
     #overriding-model-methods
     """
-
-    # terminate any running file import tasks
-    for file_store_item in instance.get_file_store_items():
-        file_store_item.terminate_file_import_task()
-
-    related_investigation_links = instance.get_investigation_links()
-
     with transaction.atomic():
         # delete FileStoreItem and datafile corresponding to the
         # metadata file used to generate the DataSet
         instance.get_metadata_as_file_store_item().delete()
 
-        for investigation_link in related_investigation_links:
+        for investigation_link in instance.get_investigation_links():
             investigation_link.get_node_collection().delete()
 
     delete_data_set_index(instance)
