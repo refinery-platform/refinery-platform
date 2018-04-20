@@ -54,7 +54,6 @@ from data_set_manager.utils import (
     add_annotated_nodes_selection, index_annotated_nodes_selection
 )
 from file_store.models import FileStoreItem, FileType
-from file_store.tasks import rename
 from galaxy_connector.models import Instance
 import tool_manager
 
@@ -1314,42 +1313,34 @@ class Analysis(OwnableResource):
         logger.debug("Renaming analysis results")
         # rename file_store items to new name updated from galaxy file_ids
         for result in AnalysisResult.objects.filter(analysis_uuid=self.uuid):
-            # new name to load
-            new_file_name = result.file_name
-            # workaround for FastQC reports downloaded from Galaxy as zip
-            # archives
-            (root, ext) = os.path.splitext(new_file_name)
             try:
                 item = FileStoreItem.objects.get(uuid=result.file_store_uuid)
             except (FileStoreItem.DoesNotExist,
                     FileStoreItem.MultipleObjectsReturned) as exc:
-                logger.error("Error renaming HTML file '%s' to zip: %s",
-                             result.file_store_uuid, exc)
-            else:
-                if ext == '.html':
-                    try:
-                        zipfile = FileType.objects.get(name='ZIP')
-                    except (FileType.DoesNotExist,
-                            FileType.MultipleObjectsReturned) as exc:
-                        logger.error("Error renaming HTML to zip: %s", exc)
-                    else:
-                        if item.filetype == zipfile:
-                            new_file_name = ''.join([root, '.zip'])
-                renamed_file_store_item_uuid = rename(result.file_store_uuid,
-                                                      new_file_name)
+                logger.error("Error renaming analysis result '%s': %s",
+                             result, exc)
+                break
 
-            # Try to generate an auxiliary node for visualization purposes
-            # NOTE: We have to do this after renaming happens because before
-            #  renaming, said FileStoreItems's datafile field does not point
-            #  to an actual file
-            file_store_item_uuid = (
-                renamed_file_store_item_uuid if
-                renamed_file_store_item_uuid else result.file_store_uuid
-            )
+            # workaround for FastQC reports downloaded from Galaxy as zip
+            # archives
+            (root, ext) = os.path.splitext(result.file_name)
+            if ext == '.html':
+                try:
+                    zipfile = FileType.objects.get(name='ZIP')
+                except (FileType.DoesNotExist,
+                        FileType.MultipleObjectsReturned) as exc:
+                    logger.error("Error renaming HTML to zip: %s", exc)
+                else:
+                    if item.filetype == zipfile:
+                        item.rename_datafile(''.join([root, '.zip']))
+            else:
+                item.rename_datafile(result.file_name)
+
             try:
-                node = Node.objects.get(file_uuid=file_store_item_uuid)
-            except (Node.DoesNotExist, Node.MultipleObjectsReturned) as e:
-                logger.error("Error Fetching Node: %s", e)
+                node = Node.objects.get(file_uuid=item.uuid)
+            except (Node.DoesNotExist, Node.MultipleObjectsReturned) as exc:
+                logger.error("Error retrieving Node with file UUID '%s': %s",
+                             exc)
             else:
                 if node.is_derived():
                     node.run_generate_auxiliary_node_task()
