@@ -3,7 +3,6 @@ from django.conf import settings
 from celery.task import task
 from django_docker_engine.docker_utils import DockerClientWrapper
 import docker
-from docker.errors import APIError
 
 
 @task()
@@ -18,7 +17,7 @@ def django_docker_cleanup():
     client.volumes.prune()
 
 
-@task(ignore_result=True, throws=(APIError,))
+@task(ignore_result=True, throws=(docker.errors.APIError,))
 def start_container(visualization_tool):
     """Start a VisualizationTool's container. docker.errors.APIError is
     expected if a VisualizationTool is launched more than once.
