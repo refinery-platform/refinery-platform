@@ -70,12 +70,12 @@ resource "aws_route_table_association" "public_subnet" {
   route_table_id = "${aws_route_table.route_table.id}"
 }
 
-resource "aws_eip" "nat" {
+resource "aws_eip" "docker_nat" {
   vpc = true
 }
 
-resource "aws_nat_gateway" "nat" {
-  allocation_id = "${aws_eip.nat.id}"
+resource "aws_nat_gateway" "docker_nat" {
+  allocation_id = "${aws_eip.docker_nat.id}"
   subnet_id     = "${aws_subnet.public_subnet.id}"
 }
 
@@ -84,7 +84,7 @@ resource "aws_route_table" "private_route_table" {
 
   route {
     cidr_block     = "0.0.0.0/0"
-    nat_gateway_id = "${aws_nat_gateway.nat.id}"
+    nat_gateway_id = "${aws_nat_gateway.docker_nat.id}"
   }
 
   tags {
