@@ -77,6 +77,7 @@ resource "aws_eip" "docker_nat" {
 resource "aws_nat_gateway" "docker_nat" {
   allocation_id = "${aws_eip.docker_nat.id}"
   subnet_id     = "${aws_subnet.public_subnet.id}"
+  depends_on = ["aws_internet_gateway.public_gateway"]
 }
 
 resource "aws_route_table" "private_route_table" {
