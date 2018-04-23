@@ -303,30 +303,6 @@ def begin_auxiliary_node_generation(**kwargs):
 
 
 @task()
-def rename(uuid, name):
-    """Change name of the file on disk and return the updated FileStoreItem
-    UUID.
-    :param uuid: UUID of a FileStoreItem.
-    :type uuid: str.
-    :param name: New name of the FileStoreItem specified by the UUID.
-    :type name: str.
-    :returns: FileStoreItem UUID or None if there was an error.
-    """
-    try:
-        item = FileStoreItem.objects.get(uuid=uuid)
-    except (FileStoreItem.DoesNotExist,
-            FileStoreItem.MultipleObjectsReturned) as exc:
-        logger.error("Failed to rename FileStoreItem with UUID '%s': %s",
-                     uuid, exc)
-        return None
-
-    if item.rename_datafile(name):
-        return item.uuid
-    else:
-        return None
-
-
-@task()
 def download_file(url, target_path, file_size=1):
     '''Download file to target_path from specified URL.
     Raises DonwloadError
