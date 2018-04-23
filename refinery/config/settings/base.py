@@ -317,6 +317,11 @@ EMAIL_SUBJECT_PREFIX = get_setting("EMAIL_SUBJECT_PREFIX")
 
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
+# for external functions called in Celery tasks
+CELERYD_LOG_FORMAT = '%(asctime)s %(levelname)-8s %(name)s:%(lineno)s ' \
+                     '%(funcName)s() - %(message)s'
+CELERYD_TASK_LOG_FORMAT = '%(asctime)s %(levelname)-8s %(name)s:%(lineno)s ' \
+                          '%(funcName)s[%(task_id)s] - %(message)s'
 # for system stability
 CELERYD_MAX_TASKS_PER_CHILD = get_setting("CELERYD_MAX_TASKS_PER_CHILD")
 CELERY_ROUTES = {"file_store.tasks.import_file": {"queue": "file_import"}}
