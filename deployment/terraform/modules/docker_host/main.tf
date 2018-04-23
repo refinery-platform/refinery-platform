@@ -40,7 +40,7 @@ set -o verbose
 sudo apt-get update
 sudo apt -yq install docker.io
 sudo mkdir /lib/systemd/system/docker.service.d
-sudo echo -e '[Service]\nExecStart=\nExecStart=/usr/bin/dockerd -H fd:// -H tcp://0.0.0.0:2375' > /lib/systemd/system/docker.service.d/startup_options.conf
+sudo echo -e '[Service]\nExecStart=\nExecStart=/usr/bin/dockerd -H fd:// -H tcp://0.0.0.0:${var.docker_tcp_port}' > /lib/systemd/system/docker.service.d/startup_options.conf
 sudo systemctl daemon-reload
 sudo service docker restart
 EOF
