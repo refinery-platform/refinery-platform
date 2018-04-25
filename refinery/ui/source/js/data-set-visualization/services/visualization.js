@@ -10,12 +10,11 @@
     .module('refineryDataSetVisualization')
     .factory('visualizationService', visualizationService);
 
-  visualizationService.$inject = ['_', 'humanize', 'timeService', 'toolsService'];
+  visualizationService.$inject = ['_', 'humanize', 'toolsService'];
 
   function visualizationService (
     _,
     humanize,
-    timeService,
     toolsService
   ) {
     /**
