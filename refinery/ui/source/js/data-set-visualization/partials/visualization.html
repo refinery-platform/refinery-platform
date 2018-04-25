@@ -65,7 +65,7 @@
             {{ vis.name }}
           </div>
 
-          <div class="col-md-1">
+          <div class="col-md-2">
             {{vis.humanizeCreateTime }}
           </div>
            <div class="col-md-2">
@@ -91,7 +91,7 @@
                 <span ng-if="vis.is_running">
                   <a
                     class="refinery-base btn btn-default btn-xs"
-                    ng-href="{{ vis.container_url }}">
+                    ng-href="{{ vis.container_url }}" target="_blank">
                     View
                   </a>
                 </span>
