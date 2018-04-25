@@ -2,7 +2,9 @@ import logging
 
 from django.conf import settings
 from django.db import transaction
-from django.http import HttpResponseBadRequest, HttpResponseForbidden
+from django.http import (
+    HttpResponseBadRequest, HttpResponseForbidden, JsonResponse
+)
 
 from django_docker_engine.proxy import Proxy
 from rest_framework import status
@@ -15,8 +17,9 @@ from core.models import DataSet
 
 from .models import Tool, ToolDefinition, VisualizationTool, WorkflowTool
 from .serializers import ToolDefinitionSerializer, ToolSerializer
-from .utils import (create_tool, user_has_access_to_tool,
-                    validate_tool_launch_configuration)
+from .utils import (
+    create_tool, user_has_access_to_tool, validate_tool_launch_configuration
+)
 
 logger = logging.getLogger(__name__)
 
@@ -70,7 +73,7 @@ class ToolDefinitionsViewSet(ToolManagerViewSetBase):
     http_method_names = ['get']
 
     def get_queryset(self):
-        if self.request.user.has_perm('core.share_dataset', self.data_set):
+        if self.request.user.has_perm('core.change_dataset', self.data_set):
             return ToolDefinition.objects.all()
 
         elif self.request.user.has_perm('core.read_dataset', self.data_set):
@@ -145,14 +148,7 @@ class ToolsViewSet(ToolManagerViewSetBase):
         if not tool_uuid:
             return HttpResponseBadRequest("Relaunching a Tool requires a Tool "
                                           "UUID")
-        try:
-            tool = VisualizationTool.objects.get(uuid=tool_uuid)
-        except (VisualizationTool.DoesNotExist,
-                VisualizationTool.MultipleObjectsReturned) as e:
-            return HttpResponseBadRequest(
-                "Couldn't retrieve VisualizationTool with UUID: {}, {}"
-                .format(tool_uuid, e)
-            )
+        tool = get_object_or_404(VisualizationTool, uuid=tool_uuid)
 
         if not user_has_access_to_tool(request.user, tool):
             return HttpResponseForbidden(
@@ -170,6 +166,12 @@ class ToolsViewSet(ToolManagerViewSetBase):
             logger.error(e)
             return HttpResponseBadRequest(e)
 
+    @detail_route(methods=['get'])
+    def container_input_data(self, request, *args, **kwargs):
+        tool_uuid = kwargs.get("uuid")
+        tool = get_object_or_404(VisualizationTool, uuid=tool_uuid)
+        return JsonResponse(tool.get_container_input_dict())
+
 
 class AutoRelaunchProxy(Proxy, object):
     """
@@ -180,7 +182,6 @@ class AutoRelaunchProxy(Proxy, object):
     """
     def __init__(self):
         super(AutoRelaunchProxy, self).__init__(
-            settings.DJANGO_DOCKER_ENGINE_DATA_DIR,
             please_wait_title='Please wait...',
             please_wait_body_html='''
                 <style>

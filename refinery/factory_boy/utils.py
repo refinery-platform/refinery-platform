@@ -5,11 +5,13 @@ from data_set_manager.models import Node
 from factory_boy.django_model_factories import (
     AnalysisFactory, AnalysisNodeConnectionFactory, AnalysisResultFactory,
     AnalysisStatusFactory, AnnotatedNodeFactory, AssayFactory,
-    AttributeFactory, DataSetFactory, FileStoreItemFactory,
-    GalaxyInstanceFactory, InvestigationFactory, InvestigationLinkFactory,
-    NodeFactory, ProjectFactory, StudyFactory, WorkflowEngineFactory,
-    WorkflowFactory
+    AttributeFactory, DataSetFactory, FileRelationshipFactory,
+    FileStoreItemFactory, GalaxyInstanceFactory, InvestigationFactory,
+    InvestigationLinkFactory, NodeFactory, ProjectFactory, StudyFactory,
+    ToolDefinitionFactory, VisualizationToolFactory, WorkflowEngineFactory,
+    WorkflowFactory, WorkflowToolFactory
 )
+from tool_manager.models import ToolDefinition
 
 
 def create_analysis(project, dataset, workflow, user_instance):
@@ -174,3 +176,31 @@ def _create_dataset_objects(dataset, is_isatab_based, latest_version):
             version=i
         )
     return study
+
+
+def create_tool_with_necessary_models(tool_type):
+    """
+    Create a minimal representation of a Visualization/Workflow
+    Tool for use in tests.
+    :param tool_type: The type of tool to create.
+    Must be one of: ["VISUALIZATION", "WORKFLOW"]
+    :returns: WorkflowTool/VisualizationTool instance
+    """
+    if tool_type not in [ToolDefinition.WORKFLOW,
+                         ToolDefinition.VISUALIZATION]:
+        raise RuntimeError("Invalid tool_type")
+
+    tool_type_to_factory_mapping = {
+        ToolDefinition.WORKFLOW: WorkflowToolFactory,
+        ToolDefinition.VISUALIZATION: VisualizationToolFactory
+    }
+    tool_factory = tool_type_to_factory_mapping[tool_type]
+
+    return tool_factory(
+        tool_definition=ToolDefinitionFactory(
+            tool_type=tool_type,
+            name="Test {} Tool: {}".format(tool_type, uuid_builtin.uuid4()),
+            file_relationship=FileRelationshipFactory()
+        ),
+        dataset=create_dataset_with_necessary_models()
+    )
