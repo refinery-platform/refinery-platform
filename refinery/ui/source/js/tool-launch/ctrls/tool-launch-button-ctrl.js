@@ -57,7 +57,7 @@
     **/
     function launchTool () {
       toolLaunchService.postToolLaunch().then(function (response) {
-        $window.location.href = response.tool_url;
+        $window.open(response.tool_url);
         if (response.tool_url.indexOf('/visualizations/') > -1) {
           visualizationService.getVisualizations($window.dataSetUuid);
         } else {
