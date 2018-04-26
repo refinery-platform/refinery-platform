@@ -12,13 +12,13 @@
     .controller('CollaborationCardCtrl', CollaborationCardCtrl);
 
   CollaborationCardCtrl.$inject = [
-    '$uibModal',
-    'groupMemberService'
+    '$scope',
+    '$uibModal'
   ];
 
   function CollaborationCardCtrl (
-    $uibModal,
-    groupMemberService
+    $scope,
+    $uibModal
   ) {
     var vm = this;
     vm.userGroups = [];
@@ -30,14 +30,7 @@
     activate();
 
     function activate () {
-      getGroups();
-    }
 
-    // list of groups a user is a member of
-    function getGroups () {
-      groupMemberService.query().$promise.then(function (response) {
-        vm.userGroups = response.objects;
-      });
     }
 
     function openGroupAdd () {
@@ -47,7 +40,7 @@
 
       modalInstance.result.then(function (response) {
         if (response === 'success') {
-          getGroups();
+          vm.dashboardParentCtrl.getGroups();
         }
       });
     }
@@ -67,7 +60,7 @@
 
       modalInstance.result.then(function (response) {
         if (response === 'success') {
-          getGroups();
+          vm.dashboardParentCtrl.getGroups();
         }
       });
     }
@@ -87,7 +80,7 @@
       });
       modalInstance.result.then(function (response) {
         if (response === 'success') {
-          getGroups();
+          vm.dashboardParentCtrl.getGroups();
         }
       });
     }
@@ -105,9 +98,24 @@
       });
       modalInstance.result.then(function (response) {
         if (response === 'success') {
-          getGroups();
+          vm.dashboardParentCtrl.getGroups();
         }
       });
     }
+     /*
+   * ---------------------------------------------------------
+   * Watchers
+   * ---------------------------------------------------------
+   */
+    vm.$onInit = function () {
+      $scope.$watchCollection(
+        function () {
+          return vm.dashboardParentCtrl.groups;
+        },
+        function () {
+          vm.userGroups = vm.dashboardParentCtrl.groups;
+        }
+      );
+    };
   }
 })();

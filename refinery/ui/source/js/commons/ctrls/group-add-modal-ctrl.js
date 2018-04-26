@@ -25,7 +25,6 @@
     var vm = this;
 
     vm.alertType = 'info';
-    vm.cancel = cancel;
     vm.close = close;
     vm.createGroup = createGroup;
     vm.isLoading = false;
@@ -37,14 +36,6 @@
      * ---------------------------------------------------------
      */
     /**
-     * @name cancel
-     * @desc  UI helper methods to cancel and close modal instance
-     * @memberOf refineryApp.GroupAddModalCtrl
-    **/
-    function cancel () {
-      vm.modalInstance.dismiss('cancel');
-    }
-
      /**
      * @name close
      * @desc  View method to close modals

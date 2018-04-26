@@ -31,7 +31,6 @@ describe('Controller: GroupAddModalCtrl', function () {
   });
 
   it('Helper Methods exist', function () {
-    expect(angular.isFunction(ctrl.cancel)).toBe(true);
     expect(angular.isFunction(ctrl.close)).toBe(true);
   });
 
