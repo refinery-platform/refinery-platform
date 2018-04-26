@@ -34,6 +34,7 @@
     vm.dataSetsError = false;
     vm.filterDataSets = filterDataSets;
     vm.openDataSetDeleteModal = openDataSetDeleteModal;
+    vm.openPermissionEditor = openPermissionEditor;
     vm.getDataSets = getDataSets;
     vm.searchDataSets = searchDataSets;
     vm.searchQueryDataSets = '';
@@ -127,6 +128,22 @@
       modalInstance.result.then(function () {
         // user confirmed deletion
         getDataSets();
+      });
+    }
+
+    /** view method to open the permissions modal component, in commons
+     *  directive*/
+    function openPermissionEditor (dataSetUuid) {
+      $uibModal.open({
+        component: 'rpPermissionEditorModal',
+        resolve: {
+          config: function () {
+            return {
+              model: 'data_sets',
+              uuid: dataSetUuid
+            };
+          }
+        }
       });
     }
    /*

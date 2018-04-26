@@ -146,17 +146,34 @@
                 </li>
                <li ng-if="dataSet.is_owner" class="separator">&middot;</li>
                <li>
-                  <i
-                    class="fa fa-trash-o indicator dataset-delete pointer"
-                    title="Delete Dataset"
-                    ng-if="dataSet.is_owner"
+                 <span
+                    class="refinery-base btn btn-default btn-xs"
                     ng-click="dashboard.openDataSetDeleteModal(dataSet)"
                     refinery-tooltip
                     refinery-tooltip-container="body"
-                    refinery-tooltip-placement="right"
-                    refinery-tooltip-hide-on-click="true">
+                    refinery-tooltip-placement="bottom"
+                    refinery-tooltip-hide-on-click="true
+                    title="Delete data set">
+                  <i
+                    class="fa fa-trash-o pointer"
+                    ng-if="dataSet.is_owner">
                   </i>
+                 Delete
                 </li>
+               <li ng-if="dataSet.is_owner" class="separator">&middot;</li>
+               <li>
+                 <span
+                    ng-if="dataSet.is_owner"
+                    class="refinery-base btn btn-default btn-xs"
+                    ng-click="$ctrl.openPermissionEditor(dataSet.uuid)"
+                    refinery-tooltip
+                    refinery-tooltip-container="body"
+                    refinery-tooltip-placement="bottom"
+                    title="Update the data set's permissions">
+                    <i class="fa fa-share-square-o"></i>
+                    Share
+                  </span>
+               </li>
              </ul>
            </div>
         </li>
