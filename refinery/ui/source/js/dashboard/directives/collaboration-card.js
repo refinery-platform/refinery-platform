@@ -10,6 +10,9 @@
     .module('refineryDashboard')
     .component('rpCollaborationCard', {
       controller: 'CollaborationCardCtrl',
+      require: {
+        dashboardParentCtrl: '^rpDashboard'
+      },
       templateUrl: ['$window', function ($window) {
         return $window.getStaticUrl('partials/dashboard/partials/collaboration-card.html');
       }]

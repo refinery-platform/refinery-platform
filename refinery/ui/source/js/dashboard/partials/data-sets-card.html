@@ -19,26 +19,76 @@
     </h3>
   </div>
   <div id="data-set-panel" class="refinery-sub-panel">
-    <div
-      id="search-interface"
-      class="navbar-search form-group"
-      ng-form="metadataSearch"
-      ng-class="{'has-warning': metadataSearch.searchQuery.$error.minlength}">
-      <i class="fa fa-search"></i>
-      <i class="fa fa-times-circle"
-        ng-if="$ctrl.searchQueryDataSets"
-        ng-click="$ctrl.resetDataSetSearch()"></i>
-      <!--The 'metadata-search' id below is used to define custom
-        styling to address a padding issue observed in Firefox-->
-      <input
-        id="metadata-search"
-        type="text"
-        class="search-query form-control"
-        placeholder="Search"
-        ng-model="$ctrl.searchQueryDataSets"
-        ng-change="$ctrl.searchDataSets($ctrl.searchQueryDataSets)"
-        ng-minlength="2"
-        name="searchQuery">
+    <div class="card-sub-header-fix">
+      <div
+        id="search-interface-dashboard"
+        class="form-group navbar-search col-md-3"
+        ng-form="metadataSearch"
+        ng-class="{'has-warning': metadataSearch.searchQuery.$error.minlength}">
+        <i class="fa fa-search"></i>
+        <i class="fa fa-times-circle"
+          ng-if="$ctrl.searchQueryDataSets"
+          ng-click="$ctrl.resetDataSetSearch()"></i>
+        <!--The 'metadata-search' id below is used to define custom
+          styling to address a padding issue observed in Firefox-->
+        <input
+          id="metadata-search"
+          type="text"
+          class="search-query form-control"
+          placeholder="Search"
+          ng-model="$ctrl.searchQueryDataSets"
+          ng-change="$ctrl.searchDataSets($ctrl.searchQueryDataSets)"
+          ng-minlength="2"
+          name="searchQuery">
+      </div>
+      <div class="col-md-6">
+        <div class="refinery-base btn btn-default float-left"
+          ng-model="$ctrl.groupFilter['owned']"
+          ng-change="$ctrl.filterDataSets('owned')"
+          uib-btn-checkbox>
+          <span ng-if="$ctrl.groupFilter.owned">
+            <i class="fa fa-check"></i>
+          </span>
+          Owned
+        </div>
+        <div class="float-left" uib-dropdown auto-close="outsideClick">
+          <span
+            class="refinery-base btn btn-default"
+            id="btn-append-to-single-button"
+            uib-dropdown-toggle
+            ng-disabled="disabled">
+            <span ng-if="$ctrl.groupFilter.group > 0">
+              <i class="fa fa-check"></i>
+            </span>
+            Groups <i class="fa fa-caret-down"></i>
+          </span>
+          <ul class="dropdown-menu" uib-dropdown-menu role="menu" aria-labelledby="btn-append-to-single-button">
+            <li>
+              <a ng-click="$ctrl.filterDataSets('0')">
+                ----
+              </a>
+            </li>
+            <li ng-repeat="group in $ctrl.groups" role="menuitem">
+              <span ng-if="group.name !== 'Public'">
+                <span ng-if="$ctrl.groupFilter.group === group.id">
+                  <i class="fa fa-check"></i>
+                </span>
+                <a ng-click="$ctrl.filterDataSets(group.id)">{{ group.name }}</a>
+              </span>
+            </li>
+          </ul>
+        </div>
+        <div
+          class="refinery-base btn btn-default float-left"
+          ng-model="$ctrl.groupFilter['public']"
+          ng-change="$ctrl.filterDataSets('public')"
+          uib-btn-checkbox>
+          <span ng-if="$ctrl.groupFilter.public">
+            <i class="fa fa-check"></i>
+          </span>
+          Public
+        </div>
+      </div>
     </div>
     <div
       id="data-set-panel-header"
@@ -69,51 +119,48 @@
               class="text-error notice">
               <strong>Error: </strong>
               Please contact your <a ng-href="mailto:{{ app.settings.djangoApp.admins }}?Subject=Refinery%20Error">System Administrator</a>.
-            </div>
           </div>
         </div>
-        <div>
-          <div id="dashboard-total-datasets" class="card-sub-header">
-            <span ng-if="$ctrl.dataSets.length">
-              {{ $ctrl.dataSets.length }} data sets
-            </span>
-          </div>
-        </div>
+      </div>
+      <div id="dashboard-total-datasets" class="card-sub-header">
+        <span ng-if="$ctrl.dataSets.length">
+          {{ $ctrl.dataSets.length }} data sets
+        </span>
       </div>
     </div>
-    <div id="dashboard-data-set-list">
-      <div class="refinery-panel-content">
-        <ul class="results list-unstyled">
-          <li ng-repeat="dataSet in $ctrl.dataSets">
-            <a href="/data_sets/{{ dataSet.uuid }}">{{ dataSet.title }}</a>
-             <div class="flex-box indicators">
-                <ul class="flex-item-two flex-left no-list-style p-b-1-2">
-                 <li class="indicator"
-                    title="Modification Date"
+  </div>
+  <div id="dashboard-data-set-list">
+    <div class="refinery-panel-content">
+      <ul class="results list-unstyled">
+        <li ng-repeat="dataSet in $ctrl.dataSets">
+          <a href="/data_sets/{{ dataSet.uuid }}">{{ dataSet.title }}</a>
+           <div class="flex-box indicators">
+             <ul class="flex-item-two flex-left no-list-style p-b-1-2">
+               <li class="indicator"
+                  title="Modification Date"
+                  refinery-tooltip
+                  refinery-tooltip-container="body"
+                  refinery-tooltip-placement="top">
+                  <i class="fa fa-calendar-o"></i>
+                  {{ dataSet.modification_date | utcToReadableDate}}
+                </li>
+               <li ng-if="dataSet.is_owner" class="separator">&middot;</li>
+               <li>
+                  <i
+                    class="fa fa-trash-o indicator dataset-delete pointer"
+                    title="Delete Dataset"
+                    ng-if="dataSet.is_owner"
+                    ng-click="dashboard.openDataSetDeleteModal(dataSet)"
                     refinery-tooltip
                     refinery-tooltip-container="body"
-                    refinery-tooltip-placement="top">
-                    <i class="fa fa-calendar-o"></i>
-                    {{ dataSet.modification_date }}
-                  </li>
-
-                  <li ng-if="dataSet.is_owner" class="separator">&middot;</li>
-                  <li>
-                    <i
-                      class="fa fa-trash-o indicator dataset-delete pointer"
-                      title="Delete Dataset"
-                      ng-if="dataSet.is_owner"
-                      ng-click="dashboard.openDataSetDeleteModal(dataSet)"
-                      refinery-tooltip
-                      refinery-tooltip-container="body"
-                      refinery-tooltip-placement="right"
-                      refinery-tooltip-hide-on-click="true">
-                    </i>
-                  </li>
-              </div>
-          </li>
-        </ul>
-      </div>
+                    refinery-tooltip-placement="right"
+                    refinery-tooltip-hide-on-click="true">
+                  </i>
+                </li>
+             </ul>
+           </div>
+        </li>
+      </ul>
     </div>
   </div>
 </div>

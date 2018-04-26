@@ -13,6 +13,7 @@
 
   DataSetsCardCtrl.$inject = [
     '$log',
+    '$scope',
     '$uibModal',
     '$window',
     'DataSetSearchApi',
@@ -21,6 +22,7 @@
 
   function DataSetsCardCtrl (
     $log,
+    $scope,
     $uibModal,
     $window,
     DataSetSearchApi,
@@ -30,20 +32,39 @@
     vm.dataSetsAll = [];
     vm.dataSets = [];
     vm.dataSetsError = false;
+    vm.filterDataSets = filterDataSets;
     vm.openDataSetDeleteModal = openDataSetDeleteModal;
     vm.getDataSets = getDataSets;
     vm.searchDataSets = searchDataSets;
     vm.searchQueryDataSets = '';
     vm.resetDataSetSearch = resetDataSetSearch;
+    vm.groupFilter = {};
+    var params = {};
 
     activate();
+
+    function filterDataSets (permsID) {
+      if (permsID === 'public') {
+        params.public = vm.groupFilter.public ? 'True' : 'False';
+      } else if (permsID === 'owned') {
+        params.owned = vm.groupFilter.owned ? 'True' : 'False';
+      } else if (!permsID) {
+        delete params.group;
+        vm.groupFilter.group = 0;
+      } else {
+        params.group = permsID;
+        vm.groupFilter.group = permsID;
+      }
+      getDataSets();
+    }
 
     function activate () {
       vm.getDataSets();
     }
 
     function getDataSets () {
-      dataSetService.query().$promise.then(function (response) {
+      console.log(params);
+      dataSetService.query(params).$promise.then(function (response) {
         vm.dataSetsAll = response.objects;
         vm.dataSets = vm.dataSetsAll;
         vm.dataSetsError = false;
@@ -108,10 +129,21 @@
         getDataSets();
       });
     }
-    /*
-    * ---------------------------------------------------------
-    * Watchers
-    * ---------------------------------------------------------
-    */
+   /*
+   * ---------------------------------------------------------
+   * Watchers
+   * ---------------------------------------------------------
+   */
+    vm.$onInit = function () {
+      $scope.$watchCollection(
+        function () {
+          return vm.dashboardParentCtrl.groups;
+        },
+        function () {
+          console.log(vm.dashboardParentCtrl.groups);
+          vm.groups = vm.dashboardParentCtrl.groups;
+        }
+      );
+    };
   }
 })();

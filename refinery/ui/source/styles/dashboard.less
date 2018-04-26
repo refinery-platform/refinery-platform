@@ -1803,7 +1803,6 @@ body.repo-mode .refinery-dashboard {
   max-height: 60vh;
 
   .refinery-sub-panel-notice {
-    position: relative;
     margin: 0 10px;
     padding: 0;
     background-color: @white;
@@ -1836,6 +1835,10 @@ body.repo-mode .refinery-dashboard {
   }
 }
 
+.card-sub-header-fix {
+  background-color: @gray-lighter;
+}
+
 .card-content {
   position: relative;
   padding: 5px 3rem 5px 0;
@@ -1857,4 +1860,13 @@ body.repo-mode .refinery-dashboard {
 .font-awesome-toggle-panel > a[aria-expanded="true"]:after {
   content: "\f0dd"; /*fa-caret-down*/
   font-size: .7em;
+}
+
+.width-quarter {
+  width: 25%;
+}
+
+#search-interface-dashboard {
+  width: 30%;
+  float: right;
 }

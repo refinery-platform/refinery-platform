@@ -11,6 +11,9 @@
     .module('refineryDashboard')
     .component('rpDataSetsCard', {
       controller: 'DataSetsCardCtrl',
+      require: {
+        dashboardParentCtrl: '^rpDashboard'
+      },
       templateUrl: ['$window', function ($window) {
         return $window.getStaticUrl('partials/dashboard/partials/data-sets-card.html');
       }]

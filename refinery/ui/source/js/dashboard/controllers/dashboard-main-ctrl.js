@@ -11,15 +11,25 @@
     .module('refineryDashboard')
     .controller('DashboardMainCtrl', DashboardMainCtrl);
 
-  DashboardMainCtrl.$inject = [];
+  DashboardMainCtrl.$inject = ['groupMemberService'];
 
-  function DashboardMainCtrl () {
-   // var vm = this;
+  function DashboardMainCtrl (groupMemberService) {
+    var vm = this;
+    vm.getGroups = getGroups;
 
     activate();
 
     function activate () {
+      getGroups();
       console.log('dashboard-main-ctrl');
+    }
+
+    // list of groups a user is a member of
+    function getGroups () {
+      console.log('calling get groups');
+      groupMemberService.query().$promise.then(function (response) {
+        vm.groups = response.objects;
+      });
     }
 
     /*
