@@ -26,7 +26,7 @@ $django_docker_engine_data_dir = "${data_dir}/django-docker-engine-data"
 $deployment_platform = 'aws'
 
 # set by Facter:
-# $email_host_user, $email_host_password, $site_name, $site_url
+# $email_host_user, $email_host_password, $site_name, $site_url, $docker_host
 
 # See code in refinery-modules/refinery/...
 include refinery
