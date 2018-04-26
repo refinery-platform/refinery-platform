@@ -10,11 +10,11 @@
     .module('refineryDataSetVisualization')
     .factory('visualizationService', visualizationService);
 
-  visualizationService.$inject = ['_', 'timeService', 'toolsService'];
+  visualizationService.$inject = ['_', 'humanize', 'toolsService'];
 
   function visualizationService (
     _,
-    timeService,
+    humanize,
     toolsService
   ) {
     /**
@@ -52,12 +52,17 @@
       return toolRequest.$promise;
     }
 
+    // private method to convert utc to local time unix
+    function utcToLocalUnix (utcTime) {
+      return (new Date(utcTime)) / 1000;
+    }
+
     // process responses from api
     function addHumanTime (toolList) {
       for (var j = 0; j < toolList.length; j++) {
         if (_.has(toolList[j], 'creation_date')) {
-          toolList[j].humanizeCreateTime = timeService
-            .humanizeTimeObj(toolList[j].creation_date);
+          var localTime = utcToLocalUnix(toolList[j].creation_date);
+          toolList[j].humanizeCreateTime = humanize.relativeTime(localTime);
         }
       }
       return toolList;
