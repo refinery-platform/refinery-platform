@@ -4,8 +4,9 @@ import urllib2
 from django.conf import settings
 from django.db import transaction
 from django.http import (
-    HttpResponseBadRequest, HttpResponseForbidden, JsonResponse
+    HttpResponseBadRequest, JsonResponse
 )
+from django.shortcuts import render
 
 from django_docker_engine.proxy import Proxy
 from rest_framework import status
@@ -119,6 +120,7 @@ class ToolsViewSet(ToolManagerViewSetBase):
             }
             # get_queryset should return an iterable
             return tool_types_to_tools.get(tool_type.lower()) or []
+
         return Response("User is not authorized to view visualizations.",
                         status=status.HTTP_401_UNAUTHORIZED)
 
@@ -149,20 +151,24 @@ class ToolsViewSet(ToolManagerViewSetBase):
         if not tool_uuid:
             return HttpResponseBadRequest("Relaunching a Tool requires a Tool "
                                           "UUID")
-        tool = get_object_or_404(VisualizationTool, uuid=tool_uuid)
+        visualization_tool = get_object_or_404(VisualizationTool,
+                                               uuid=tool_uuid)
 
-        if not user_has_access_to_tool(request.user, tool):
-            return HttpResponseForbidden(
-                 "User does not have permission to view Tool: {}".format(
-                     tool_uuid
-                 )
+        if not user_has_access_to_tool(request.user, visualization_tool):
+            return render_vis_tool_user_not_allowed_template(
+                request,
+                visualization_tool.name,
+                "User: {} does not have permission to view Tool: {}".format(
+                    request.user.username,
+                    visualization_tool.uuid
+                )
             )
 
-        if tool.is_running():
+        if visualization_tool.is_running():
             return HttpResponseBadRequest("Can't relaunch a Tool that is "
                                           "currently running")
         try:
-            return tool.launch()
+            return visualization_tool.launch()
         except Exception as e:
             logger.error(e)
             return HttpResponseBadRequest(e)
@@ -214,8 +220,11 @@ class AutoRelaunchProxy(Proxy, object):
             container_name=container_name
         )
         if not user_has_access_to_tool(request.user, visualization_tool):
-            return HttpResponseForbidden(
-                "User does not have permission to view Tool: {}".format(
+            return render_vis_tool_user_not_allowed_template(
+                request,
+                visualization_tool.name,
+                "User: {} does not have permission to view Tool: {}".format(
+                    request.user.username,
                     visualization_tool.uuid
                 )
             )
@@ -231,3 +240,16 @@ class AutoRelaunchProxy(Proxy, object):
             logger.info('Normal transient error: %s', e)
             view = self._please_wait_view_factory().as_view()
             return view(request)
+
+
+def render_vis_tool_user_not_allowed_template(
+    request, visualization_tool_name, message,
+    template="tool_manager/vis-tool-user-not-allowed.html"
+):
+    return render(
+        request, template,
+        {
+            "message": message,
+            "visualization_tool_name": visualization_tool_name
+        }
+    )
