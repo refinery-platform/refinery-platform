@@ -2878,9 +2878,11 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
             get_request,
             uuid=self.tool.uuid
         )
-        self.assertEqual(get_response.status_code, 403)
-        self.assertIn("User does not have permission",
-                      get_response.content)
+        self.assertEqual(get_response.status_code, 200)
+        self.assertTemplateUsed(
+            get_response,
+            'tool_manager/vis-tool-user-not-allowed.html'
+        )
 
     def test_relaunch_failure_tool_already_running(self):
         self.create_tool(ToolDefinition.VISUALIZATION,
@@ -3005,7 +3007,11 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
         if user_has_permission:
             self.assertTrue(launch_mock.called)
         else:
-            self.assertEqual(get_response.status_code, 403)
+            self.assertEqual(get_response.status_code, 200)
+            self.assertTemplateUsed(
+                get_response,
+                'tool_manager/vis-tool-user-not-allowed.html'
+            )
             self.assertFalse(launch_mock.called)
 
     def test_vis_tool_url_after_container_removed_relaunches(self):
