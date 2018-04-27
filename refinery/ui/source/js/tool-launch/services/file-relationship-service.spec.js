@@ -89,7 +89,6 @@
         description: 'Test LIST:LIST:PAIR description',
         tool_type: 'WORKFLOW',
         docker_image_name: '',
-        container_input_path: null,
         galaxy_workflow_id: null,
         workflow_engine: null
       };

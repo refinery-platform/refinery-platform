@@ -47,7 +47,7 @@
     function relaunchTool (relaunchAddress) {
       $http.get(relaunchAddress)
         .then(function (response) {
-          $window.location.href = response.data.tool_url;
+          $window.open(response.data.tool_url);
         }, function (error) {
           $log.error(error);
         });

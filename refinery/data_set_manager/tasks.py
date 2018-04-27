@@ -426,7 +426,7 @@ def generate_auxiliary_file(auxiliary_node, datafile_path,
         # Here we are checking for the FileExtension of the ParentNode's
         # FileStoreItem because we will create auxiliary files based on what
         # said value is
-        if parent_node_file_store_item.get_file_extension().lower() == "bam":
+        if parent_node_file_store_item.get_extension().lower() == "bam":
             generate_bam_index(auxiliary_file_store_item.uuid, datafile_path)
 
         generate_auxiliary_file.update_state(state=celery.states.SUCCESS)

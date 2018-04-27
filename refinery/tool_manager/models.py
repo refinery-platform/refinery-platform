@@ -2,6 +2,7 @@ import ast
 import json
 import logging
 import re
+from urlparse import urljoin
 import uuid
 
 from django.conf import settings
@@ -11,28 +12,36 @@ from django.dispatch import receiver
 from django.http import JsonResponse
 
 import bioblend
-from bioblend.galaxy.dataset_collections import (CollectionDescription,
-                                                 CollectionElement,
-                                                 HistoryDatasetElement)
+from bioblend.galaxy.dataset_collections import (
+    CollectionDescription, CollectionElement, HistoryDatasetElement
+)
 from constants import UUID_RE
-from django_docker_engine.container_managers.docker_engine import \
-    ExpectedPortMissing
-from django_docker_engine.docker_utils import (DockerClientWrapper,
-                                               DockerContainerSpec)
+from django_docker_engine.container_managers.docker_engine import (
+    ExpectedPortMissing, NoPortsOpen
+)
+from django_docker_engine.docker_utils import (
+    DockerClientRunWrapper, DockerClientSpec, DockerContainerSpec
+)
 from django_extensions.db.fields import UUIDField
 from docker.errors import APIError, NotFound
 
 from analysis_manager.models import AnalysisStatus
-from analysis_manager.tasks import (_galaxy_file_import, get_taskset_result,
-                                    run_analysis)
+from analysis_manager.tasks import (
+    _galaxy_file_import, get_taskset_result, run_analysis
+)
 from analysis_manager.utils import create_analysis, validate_analysis_config
-from core.models import (INPUT_CONNECTION, OUTPUT_CONNECTION, Analysis,
-                         AnalysisNodeConnection, DataSet, OwnableResource,
-                         Workflow)
+from core.models import (
+    INPUT_CONNECTION, OUTPUT_CONNECTION, Analysis, AnalysisNodeConnection,
+    DataSet, OwnableResource, Workflow
+)
+from core.utils import get_absolute_url
 from data_set_manager.models import Node
-from data_set_manager.utils import (get_file_url_from_node_uuid,
-                                    get_solr_response_json)
+from data_set_manager.utils import (
+    get_file_url_from_node_uuid, get_solr_response_json
+)
 from file_store.models import FileType
+
+from .tasks import start_container
 
 logger = logging.getLogger(__name__)
 
@@ -180,10 +189,6 @@ class ToolDefinition(models.Model):
     file_relationship = models.ForeignKey(FileRelationship)
     parameters = models.ManyToManyField(Parameter)
     image_name = models.CharField(max_length=255, blank=True)
-    container_input_path = models.CharField(
-        max_length=500,
-        blank=True
-    )
     annotation = models.TextField()
     workflow = models.ForeignKey(Workflow, null=True)
 
@@ -285,6 +290,7 @@ class Tool(OwnableResource):
     REFINERY_FILE_UUID = "refinery_file_uuid"
     TOOL_LAUNCH_CONFIGURATION = "tool_launch_configuration"
     TOOL_URL = "tool_url"
+    TOOL_API_ROOT = "/api/v2/tools/"
 
     dataset = models.ForeignKey(DataSet)
     analysis = models.OneToOneField(Analysis, blank=True, null=True)
@@ -306,12 +312,28 @@ class Tool(OwnableResource):
         return "Tool: {}".format(self.get_tool_name())
 
     @property
-    def _django_docker_client(self):
-        return DockerClientWrapper(settings.DJANGO_DOCKER_ENGINE_DATA_DIR)
+    def django_docker_client(self):
+        return DockerClientRunWrapper(
+            DockerClientSpec(
+                settings.DJANGO_DOCKER_ENGINE_DATA_DIR,
+                input_json_url=get_absolute_url(self.container_input_json_url)
+            )
+        )
 
     @property
     def relaunch_url(self):
-        return "/api/v2/tools/{}/relaunch/".format(self.uuid)
+        return urljoin(self.TOOL_API_ROOT, "{}/relaunch/".format(self.uuid))
+
+    @property
+    def container_input_json_url(self):
+        """
+        Return the url that will expose a Tool's input data (as JSON) on
+        GET requests
+        """
+        return urljoin(
+            self.TOOL_API_ROOT,
+            "{}/container_input_data/".format(self.uuid)
+        )
 
     def _get_owner_info_as_dict(self):
         user = self.get_owner()
@@ -423,11 +445,11 @@ class Tool(OwnableResource):
             return self.analysis.running()
 
         try:
-            self._django_docker_client.lookup_container_url(
+            self.django_docker_client.lookup_container_url(
                 self.container_name
             )
             return True
-        except (ExpectedPortMissing, NotFound):
+        except (ExpectedPortMissing, NotFound, NoPortsOpen):
             return False
 
     def is_visualization(self):
@@ -467,9 +489,9 @@ class VisualizationTool(Tool):
             ('read_%s' % verbose_name, 'Can read %s' % verbose_name),
         )
 
-    def _create_container_input_dict(self):
+    def get_container_input_dict(self):
         """
-        Creat a dictionary containing information that Dockerized
+        Create a dictionary containing information that Dockerized
         Visualizations will have access to
         """
         return {
@@ -488,9 +510,17 @@ class VisualizationTool(Tool):
                 self.tool_definition.get_extra_directories()
         }
 
+    def create_container_spec(self):
+        return DockerContainerSpec(
+            image_name=self.tool_definition.image_name,
+            container_name=self.container_name,
+            labels={self.uuid: ToolDefinition.VISUALIZATION},
+            extra_directories=self.tool_definition.get_extra_directories()
+        )
+
     def _check_max_running_containers(self):
         max_containers = settings.DJANGO_DOCKER_ENGINE_MAX_CONTAINERS
-        if len(self._django_docker_client.list()) >= max_containers:
+        if len(self.django_docker_client.list()) >= max_containers:
             raise VisualizationToolError('Max containers')
 
     def _get_detailed_nodes_dict(self, node_uuid_list):
@@ -556,17 +586,9 @@ class VisualizationTool(Tool):
         """
         self._check_max_running_containers()
 
-        container = DockerContainerSpec(
-            image_name=self.tool_definition.image_name,
-            container_name=self.container_name,
-            labels={self.uuid: ToolDefinition.VISUALIZATION},
-            container_input_path=self.tool_definition.container_input_path,
-            input=self._create_container_input_dict(),
-            extra_directories=self.tool_definition.get_extra_directories()
-        )
-
-        self._django_docker_client.run(container)
-
+        # Pulls docker image if it doesn't exist yet, and launches container
+        # asynchronously
+        start_container.delay(self)
         return JsonResponse({Tool.TOOL_URL: self.get_relative_container_url()})
 
 
@@ -1426,9 +1448,7 @@ def remove_tool_container(sender, instance, *args, **kwargs):
     VisualizationTool's launch.
     """
     try:
-        DockerClientWrapper(
-            settings.DJANGO_DOCKER_ENGINE_DATA_DIR
-        ).purge_by_label(instance.uuid)
+        instance.django_docker_client.purge_by_label(instance.uuid)
     except APIError as e:
         logger.error("Couldn't purge container for Tool with UUID: %s %s",
                      instance.uuid, e)

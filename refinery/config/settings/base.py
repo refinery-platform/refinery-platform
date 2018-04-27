@@ -178,7 +178,6 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    'core.middleware.DatabaseFailureMiddleware',
 )
 
 ROOT_URLCONF = 'config.urls'
@@ -212,7 +211,6 @@ INSTALLED_APPS = (
     'galaxy_connector',
     'analysis_manager',
     'file_store',
-    'file_server',
     'annotation_server',
     'selenium_testing',
     'tool_manager',
@@ -319,12 +317,23 @@ EMAIL_SUBJECT_PREFIX = get_setting("EMAIL_SUBJECT_PREFIX")
 
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
+# for external functions called in Celery tasks
+CELERYD_LOG_FORMAT = '%(asctime)s %(levelname)-8s %(name)s:%(lineno)s ' \
+                     '%(funcName)s() - %(message)s'
+CELERYD_TASK_LOG_FORMAT = '%(asctime)s %(levelname)-8s %(name)s:%(lineno)s ' \
+                          '%(funcName)s[%(task_id)s] - %(message)s'
 # for system stability
 CELERYD_MAX_TASKS_PER_CHILD = get_setting("CELERYD_MAX_TASKS_PER_CHILD")
 CELERY_ROUTES = {"file_store.tasks.import_file": {"queue": "file_import"}}
 CELERY_ACCEPT_CONTENT = ['pickle']
-# TODO: Does this belong here or in config.json.erb?
 CELERYBEAT_SCHEDULE = {
+    'collect_site_statistics': {
+        'task': 'core.tasks.collect_site_statistics',
+        'schedule': timedelta(days=1),
+        'options': {
+            'expires': 30,  # seconds
+        }
+    },
     'django_docker_cleanup': {
         'task': 'tool_manager.tasks.django_docker_cleanup',
         'schedule': timedelta(seconds=30),
