@@ -13,25 +13,24 @@
 
   CollaborationCardCtrl.$inject = [
     '$scope',
-    '$uibModal'
+    '$uibModal',
+    'groupInviteService',
   ];
 
   function CollaborationCardCtrl (
     $scope,
-    $uibModal
+    $uibModal,
+    groupInviteService
   ) {
     var vm = this;
     vm.userGroups = [];
+    vm.invitation = {};
     vm.openGroupAdd = openGroupAdd;
     vm.openGroupEditor = openGroupEditor;
     vm.openGroupMemberAdd = openGroupMemberAdd;
     vm.openGroupMemberEditor = openGroupMemberEditor;
-
-    activate();
-
-    function activate () {
-
-    }
+    vm.resendInvitation = resendInvitation;
+    vm.revokeInvitation = revokeInvitation;
 
     function openGroupAdd () {
       var modalInstance = $uibModal.open({
@@ -102,6 +101,25 @@
         }
       });
     }
+
+    function resendInvitation (tokenUuid) {
+      groupInviteService.resend({
+        token: tokenUuid
+      }).$promise.then(function () {
+        vm.dashboardParentCtrl.getGroups();
+        // alert use to sent mail
+      }).catch(function () {
+        console.log('Invitation sending failed');
+      });
+    }
+
+    function revokeInvitation (tokenUuid) {
+      groupInviteService.revoke({ token: tokenUuid }).$promise.then(function () {
+        vm.dashboardParentCtrl.getGroups();
+      }).catch(function () {
+        console.log('Invitation could not be revoked');
+      });
+    }
      /*
    * ---------------------------------------------------------
    * Watchers
@@ -114,6 +132,17 @@
         },
         function () {
           vm.userGroups = vm.dashboardParentCtrl.groups;
+        }
+      );
+
+      $scope.$watchCollection(
+        function () {
+          return vm.dashboardParentCtrl.groupInvites;
+        },
+        function () {
+          vm.invitations = vm.dashboardParentCtrl.groupInvites;
+          console.log('collab ctrl');
+          console.log(vm.invitations);
         }
       );
     };

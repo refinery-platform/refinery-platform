@@ -47,7 +47,15 @@
                   href="#/{{ collab.activeGroup.uuid }}/"
                   ng-click="$ctrl.openGroupMemberAdd(group)"
                   class="no-underline">
-                  <i class="fa fa-plus-circle"></i>
+                   <span
+                     class="fa-stack"
+                     refinery-tooltip
+                     refinery-tooltip-container="body"
+                     refinery-tooltip-placement="right"
+                     title="Invite user to group">
+                     <i class="fa fa-plus-circle fa-stack-1x fa-stack-right-corner"></i>
+                     <i class="fa fa-user fa-stack-1-25x"></i>&nbsp;
+                   </span>
                 </a>
               </div>
 
@@ -64,11 +72,10 @@
                     ng-href="users/{{ member.uuid }}"
                     ng-class="{'col-md-6': member.is_manager, 'col-md-10': !member.is_manager}">
                     <span ng-if="member.last_name">
-                      <i class="fa fa-user"></i>&nbsp;
                       {{ member.first_name }} {{ member.last_name }}
                     </span>
                     <span ng-if="!member.last_name">
-                       <i class="fa fa-user"></i>&nbsp;{{ member.username }}
+                      {{ member.username }}
                     </span>
                   </a>
                   <span class="col-md-4" ng-if="member.is_manager">
@@ -80,7 +87,20 @@
                       <i class="fa fa-cog"></i>
                     </a>
                   </span>
-                  </div>
+                </li>
+                <li ng-repeat="invite in $ctrl.invitations[group.id]" class="p-t-1">
+                  <span class="col-md-6">
+                    {{ invite.recipient_email }}
+                  </span>
+                  <span ng-if="group.can_edit" class="col-md-offset-3
+                  col-md-3">
+                    <a ng-click="$ctrl.revokeInvitation(invite.token_uuid)">
+                      Revoke
+                    </a>
+                    <a ng-click="$ctrl.resendInvitation(invite.token_uuid)" class="p-l-1">
+                      Resend
+                    </a>
+                  </span>
                 </li>
               </ul>
            </div>
