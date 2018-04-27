@@ -6,7 +6,7 @@ resource "aws_security_group" "allow_docker" {
   # Allow access on IANA User ports:
   # https://www.iana.org/assignments/service-names-port-numbers/service-names-port-numbers.xhtml
   # The canonical port for communication with docker over tcp (2375) is
-  # included within this range
+  # included within this range. Docker containers will recieve a random port within this range.
   ingress {
     from_port   = 1024
     to_port     = 49151
