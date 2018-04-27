@@ -167,8 +167,8 @@ file { "${django_root}/supervisord.conf":
 exec { "supervisord":
   command     => "${virtualenv}/bin/supervisord",
   environment => [
-    "DJANGO_SETTINGS_MODULE=${django_settings_module}",
-    "DOCKER_HOST=${docker_host}"
+    "DJANGO_SETTINGS_MODULE=${::django_settings_module}",
+    "DOCKER_HOST=${::docker_host}"
   ],
   cwd         => $django_root,
   creates     => "/tmp/supervisord.pid",
