@@ -2879,9 +2879,11 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
             uuid=self.tool.uuid
         )
         self.assertEqual(get_response.status_code, 200)
-        self.assertTemplateUsed(
-            get_response,
-            'tool_manager/vis-tool-user-not-allowed.html'
+        self.assertIn(
+            "User: {} does not have permission to view Tool: {}".format(
+                self.user.username, self.tool.uuid
+            ),
+            get_response.content
         )
 
     def test_relaunch_failure_tool_already_running(self):
