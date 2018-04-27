@@ -8,8 +8,3 @@
     hooks:
     -   id: eslint
         files: ui/source/js/.+\.js
-
--   repo: git://github.com/hvdklauw/pre-commit-isort
-    sha: 3cddb8006cd2188e4af72454f2faeec25b040821
-    hooks:
-    -   id: isort
