@@ -1,4 +1,6 @@
 import os
+import random
+import string
 from urlparse import urljoin
 import uuid
 
@@ -17,17 +19,6 @@ from .models import (FileExtension, FileStoreItem, FileType, file_path,
 
 
 class FileStoreModuleTest(TestCase):
-
-    def test_file_path(self):
-        path = file_path(FileStoreItem(), 'test.fastq')
-        self.assertIn('test.fastq', path)
-
-    def test_file_path_underscore_replacement(self):
-        filename = 'Kc.dMi-2(Q4443).wig_5.tdf'
-        new_filename = 'Kc.dMi-2_Q4443_.wig_5.tdf'
-        path = file_path(FileStoreItem(), filename)
-        self.assertIn(new_filename, path)
-        self.assertNotIn(filename, path)
 
     def test_get_temp_dir(self):
         self.assertEqual(get_temp_dir(), settings.FILE_STORE_TEMP_DIR)
@@ -82,6 +73,43 @@ class FileStoreModuleTest(TestCase):
     def test_file_source_map(self):
         self.assertEqual(_map_source('http://example.org/test_file.dat'),
                          '/example/path/test_file.dat')
+
+
+class FilePathTest(TestCase):
+
+    def test_file_path_format(self):
+        path = file_path(FileStoreItem(), 'test.fastq')
+        self.assertEqual(path, '2f/e3/test.fastq')
+
+    def test_leading_dash_removal(self):
+        path = file_path(FileStoreItem(), '-test.fastq')
+        self.assertEqual(path, '5b/85/test.fastq')
+
+    def test_multiple_leading_dash_removal(self):
+        path = file_path(FileStoreItem(), '--test.fastq')
+        self.assertEqual(path, '7b/20/test.fastq')
+
+    def test_max_name_length(self):
+        name = ''.join(random.choice(string.ascii_letters) for _ in range(256))
+        path = file_path(FileStoreItem(), name)
+        self.assertEqual(len(os.path.basename(path)), 255)
+
+    def test_remove_extra_leading_characters_over_max_length(self):
+        name = ''.join(random.choice(string.ascii_letters) for _ in range(256))
+        path = file_path(FileStoreItem(), name)
+        self.assertEqual(os.path.basename(path), name[-255:])
+
+    def test_forward_slash_replacement(self):
+        path = file_path(FileStoreItem(), 'Wig/BedGraph-to-bigWig.bigwig')
+        self.assertIn('Wig_BedGraph-to-bigWig.bigwig', path)
+
+    def test_space_character_replacement(self):
+        path = file_path(FileStoreItem(), 'test file.fastq')
+        self.assertIn('test_file.fastq', path)
+
+    def test_parentheses_replacement(self):
+        path = file_path(FileStoreItem(), 'Kc.dMi-2(Q4443).wig_5.tdf')
+        self.assertIn('Kc.dMi-2_Q4443_.wig_5.tdf', path)
 
 
 class FileStoreItemTest(TestCase):

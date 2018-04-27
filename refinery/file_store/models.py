@@ -12,6 +12,7 @@ FILE_STORE_DIR setting - main file store directory
 import logging
 import os
 import re
+import string
 import urlparse
 
 from django.conf import settings
@@ -47,15 +48,11 @@ _mkdir(settings.FILE_STORE_TEMP_DIR)
 
 def file_path(instance, filename):
     """Construct relative file system path for new file store files relative to
-    FILE_STORE_BASE_DIR.
+    FILE_STORE_BASE_DIR
+    instance: FileStoreItem instance
+    filename: requested filename
     Based on
     http://michaelandrews.typepad.com/the_technical_times/2009/10/creating-a-hashed-directory-structure.html
-
-    :param instance: FileStoreItem instance.
-    :type instance: FileStoreItem.
-    :param filename: requested filename.
-    :type filename: str.
-    :returns: str -- if success, None if failure.
     """
     hashcode = hash(filename)
     mask = 255  # bitmask
@@ -64,8 +61,11 @@ def file_path(instance, filename):
     # provides 256 * 256 = 65536 of possible directory combinations
     dir1 = "{:0>2x}".format(hashcode & mask)
     dir2 = "{:0>2x}".format((hashcode >> 8) & mask)
-    # Galaxy doesn't process names with parentheses in them
-    filename = re.sub('[()]', '_', filename)
+    # make file name compliant with POSIX "fully portable filenames"
+    # max length: 255, allowed character set: [A-Za-z0-9._-]
+    # remove leading '-' characters to make file management easier
+    filename = re.sub('[^A-Za-z0-9._-]', '_',
+                      string.lstrip(filename, '-'))[-255:]
     return os.path.join(dir1, dir2, filename)
 
 
