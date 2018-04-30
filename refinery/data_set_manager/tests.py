@@ -11,9 +11,8 @@ import uuid
 
 from django.conf import settings
 from django.contrib.auth.models import User
-from django.core.files.uploadedfile import (
-    InMemoryUploadedFile, SimpleUploadedFile
-)
+from django.core.files.uploadedfile import (InMemoryUploadedFile,
+                                            SimpleUploadedFile)
 from django.db.models import Q
 from django.http import QueryDict
 from django.test import LiveServerTestCase, TestCase
@@ -36,27 +35,25 @@ import data_set_manager
 from data_set_manager.isa_tab_parser import IsaTabParser, ParserException
 from data_set_manager.single_file_column_parser import process_metadata_table
 from data_set_manager.tasks import parse_isatab
-from factory_boy.utils import (
-    create_dataset_with_necessary_models, make_analyses_with_single_dataset
-)
+from factory_boy.utils import (create_dataset_with_necessary_models,
+                               make_analyses_with_single_dataset)
 from file_store.models import FileStoreItem, generate_file_source_translator
 from file_store.tasks import import_file
 
-from .models import (
-    AnnotatedNode, Assay, AttributeOrder, Investigation, Node, Study
-)
+from .models import (AnnotatedNode, Assay, AttributeOrder, Investigation, Node,
+                     Study)
 from .search_indexes import NodeIndex
 from .serializers import AttributeOrderSerializer
-from .utils import (
-    _create_solr_params_from_node_uuids, create_facet_filter_query,
-    cull_attributes_from_list, customize_attribute_response,
-    escape_character_solr, format_solr_response, generate_facet_fields_query,
-    generate_filtered_facet_fields, generate_solr_params_for_assay,
-    get_file_url_from_node_uuid, get_owner_from_assay, hide_fields_from_list,
-    initialize_attribute_order_ranks, insert_facet_field_filter,
-    is_field_in_hidden_list, objectify_facet_field_counts,
-    update_attribute_order_ranks
-)
+from .utils import (_create_solr_params_from_node_uuids,
+                    create_facet_filter_query, cull_attributes_from_list,
+                    customize_attribute_response, escape_character_solr,
+                    format_solr_response, generate_facet_fields_query,
+                    generate_filtered_facet_fields,
+                    generate_solr_params_for_assay,
+                    get_file_url_from_node_uuid, get_owner_from_assay,
+                    hide_fields_from_list, initialize_attribute_order_ranks,
+                    insert_facet_field_filter, is_field_in_hidden_list,
+                    objectify_facet_field_counts, update_attribute_order_ranks)
 from .views import Assays, AssaysAttributes
 
 

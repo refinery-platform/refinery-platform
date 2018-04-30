@@ -11,9 +11,8 @@ from django.test import RequestFactory, TestCase, override_settings
 from guardian.utils import get_anonymous_user
 import mock
 import requests
-from rest_framework.test import (
-    APIRequestFactory, APITestCase, force_authenticate
-)
+from rest_framework.test import (APIRequestFactory, APITestCase,
+                                 force_authenticate)
 
 import constants
 from data_set_manager.models import Assay

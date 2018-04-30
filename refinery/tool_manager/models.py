@@ -12,28 +12,26 @@ from django.dispatch import receiver
 from django.http import JsonResponse
 
 import bioblend
-from bioblend.galaxy.dataset_collections import (
-    CollectionDescription, CollectionElement, HistoryDatasetElement
-)
+from bioblend.galaxy.dataset_collections import (CollectionDescription,
+                                                 CollectionElement,
+                                                 HistoryDatasetElement)
 from django_docker_engine.container_managers.docker_engine import (
     ExpectedPortMissing, NoPortsOpen
 )
-from django_docker_engine.docker_utils import (
-    DockerClientRunWrapper, DockerClientSpec, DockerContainerSpec
-)
+from django_docker_engine.docker_utils import (DockerClientRunWrapper,
+                                               DockerClientSpec,
+                                               DockerContainerSpec)
 from django_extensions.db.fields import UUIDField
 from docker.errors import APIError, NotFound
 
 from analysis_manager.models import AnalysisStatus
-from analysis_manager.tasks import (
-    _galaxy_file_import, get_taskset_result, run_analysis
-)
+from analysis_manager.tasks import (_galaxy_file_import, get_taskset_result,
+                                    run_analysis)
 from analysis_manager.utils import create_analysis, validate_analysis_config
-from core.models import (
-    INPUT_CONNECTION, OUTPUT_CONNECTION, Analysis, AnalysisNodeConnection,
-    DataSet, OwnableResource, Workflow
-)
 import constants
+from core.models import (INPUT_CONNECTION, OUTPUT_CONNECTION, Analysis,
+                         AnalysisNodeConnection, DataSet, OwnableResource,
+                         Workflow)
 
 from core.utils import get_absolute_url
 from data_set_manager.models import Node
