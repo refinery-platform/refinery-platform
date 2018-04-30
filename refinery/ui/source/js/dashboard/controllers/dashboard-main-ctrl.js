@@ -39,8 +39,6 @@
       groupInviteService.query({
         group_id: groupID
       }).$promise.then(function (data) {
-        console.log('add invite list');
-        console.log(data);
         if (data.objects.length) {
           vm.groupInvites[groupID] = data.objects;
         }

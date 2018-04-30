@@ -144,9 +144,9 @@
                   <i class="fa fa-calendar-o"></i>
                   {{ dataSet.modification_date | utcToReadableDate}}
                 </li>
-               <li class="p-l-1">
-                 <span
-                    class="refinery-base btn btn-default btn-xs"
+               <li><span class="separator">&middot;</span></li>
+               <li>
+                 <a
                     ng-click="dashboard.openDataSetDeleteModal(dataSet)"
                     refinery-tooltip
                     refinery-tooltip-container="body"
@@ -158,11 +158,12 @@
                     ng-if="dataSet.is_owner">
                   </i>
                  Delete
+                 </a>
                 </li>
-               <li class="p-l-1">
-                 <span
+               <li><span class="separator">&middot;</span></li>
+               <li>
+                 <a
                     ng-if="dataSet.is_owner"
-                    class="refinery-base btn btn-default btn-xs"
                     ng-click="$ctrl.openPermissionEditor(dataSet.uuid)"
                     refinery-tooltip
                     refinery-tooltip-container="body"
@@ -170,7 +171,7 @@
                     title="Update the data set's permissions">
                     <i class="fa fa-share-square-o"></i>
                     Share
-                  </span>
+                  </a>
                </li>
              </ul>
            </div>

@@ -141,8 +141,6 @@
         },
         function () {
           vm.invitations = vm.dashboardParentCtrl.groupInvites;
-          console.log('collab ctrl');
-          console.log(vm.invitations);
         }
       );
     };

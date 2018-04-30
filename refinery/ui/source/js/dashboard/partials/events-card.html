@@ -9,6 +9,21 @@
   <div
     id="events-panel"
     class="refinery-sub-panel">
-     - Move events -Another Event
+     <ul>
+       <li ng-repeat="tool in $ctrl.tools">
+         <span ng-if="tool.analysis">
+           <a ng-href="/data_sets/{{ tool.data_set.uuid }}/#/analyses">
+           {{ tool.modification_date | date:"MM/dd/yyyy'at'h:mma":timezone }}
+           <i class="fa fa-cogs"></i>
+         </span>
+         <span ng-if="!tool.analysis">
+           <a ng-href="/data_sets/{{ tool.data_set.uuid }}/#/visualizations">
+           {{ tool.modification_date | date:"MM/dd/yyyy 'at' h:mma":timezone }}
+           <i ng-class="tool.analysis ? 'fa fa-cogs':'fa fa-bar-chart'"></i>
+         </span>
+           {{ tool.name }}
+         </a>
+       </li>
+     </ul>
   </div>
 </div>
