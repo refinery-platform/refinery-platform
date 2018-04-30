@@ -3664,10 +3664,8 @@ class VisualizationToolLaunchTests(ToolManagerTestBase):
             with self.assertRaises(VisualizationToolError) as context:
                 tool.launch()
 
-        self.assertIn(
-            "Input Node limit of: 10 reached",
-            context.exception.message
-        )
+        self.assertIn("Input Node limit of: 10 reached",
+                      context.exception.message)
 
 
 class ToolLaunchConfigurationTests(ToolManagerTestBase):
