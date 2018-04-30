@@ -8,7 +8,6 @@ from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from django.http import QueryDict
 from django.test import RequestFactory, TestCase, override_settings
 
-from constants import REFINERY_SOLR_DOC_LIMIT
 from guardian.utils import get_anonymous_user
 import mock
 import requests
@@ -16,6 +15,7 @@ from rest_framework.test import (
     APIRequestFactory, APITestCase, force_authenticate
 )
 
+import constants
 from data_set_manager.models import Assay
 from data_set_manager.search_indexes import NodeIndex
 from factory_boy.utils import create_dataset_with_necessary_models
@@ -146,7 +146,7 @@ class UserFilesUtilsTests(TestCase):
                          'facet.field=experimenter_Factor_Value_generic_s',
                          'fq=is_annotation%3Afalse',
                          'start=0',
-                         'rows={}'.format(REFINERY_SOLR_DOC_LIMIT),
+                         'rows={}'.format(constants.REFINERY_SOLR_DOC_LIMIT),
                          'q=django_ct%3Adata_set_manager.node',
                          'wt=json',
                          'facet=true',

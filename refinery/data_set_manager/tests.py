@@ -18,7 +18,6 @@ from django.db.models import Q
 from django.http import QueryDict
 from django.test import LiveServerTestCase, TestCase
 
-from constants import NOT_AVAILABLE, REFINERY_SOLR_DOC_LIMIT
 from celery.states import FAILURE, PENDING, STARTED, SUCCESS
 from djcelery.models import TaskMeta
 from guardian.shortcuts import assign_perm
@@ -32,6 +31,7 @@ from core.models import (INPUT_CONNECTION, OUTPUT_CONNECTION, Analysis,
                          InvestigationLink)
 from core.tests import TestMigrations
 from core.views import NodeViewSet
+import constants
 import data_set_manager
 from data_set_manager.isa_tab_parser import IsaTabParser, ParserException
 from data_set_manager.single_file_column_parser import process_metadata_table
@@ -951,7 +951,7 @@ class UtilitiesTests(TestCase):
                          '&wt=json'
                          '&facet=true'
                          '&facet.limit=-1'.format(
-                             self.valid_uuid, REFINERY_SOLR_DOC_LIMIT
+                             self.valid_uuid, constants.REFINERY_SOLR_DOC_LIMIT
                          ))
 
     def test_generate_solr_params_for_assay_with_params(self):
@@ -1579,7 +1579,7 @@ class UtilitiesTests(TestCase):
                 "q": "django_ct:data_set_manager.node",
                 "wt": "json",
                 "fq": "uuid:({})".format(" OR ".join(fake_node_uuids)),
-                "rows": REFINERY_SOLR_DOC_LIMIT
+                "rows": constants.REFINERY_SOLR_DOC_LIMIT
             }
         )
 
@@ -2013,7 +2013,7 @@ class NodeIndexTests(APITestCase):
                                    return_value=FAILURE):
                 self._assert_node_index_prepared_correctly(
                     self._prepare_node_index(self.node),
-                    expected_download_url=NOT_AVAILABLE
+                    expected_download_url=constants.NOT_AVAILABLE
                 )
 
     def test_prepare_node_no_file_import_task_id_yet(self):
@@ -2022,7 +2022,7 @@ class NodeIndexTests(APITestCase):
         self.import_task.delete()
         self._assert_node_index_prepared_correctly(
             self._prepare_node_index(self.node),
-            expected_download_url=NOT_AVAILABLE
+            expected_download_url=constants.NOT_AVAILABLE
         )
 
     def test_prepare_node_no_file_store_item(self):
@@ -2030,7 +2030,7 @@ class NodeIndexTests(APITestCase):
             self.file_store_item.delete()
         self._assert_node_index_prepared_correctly(
             self._prepare_node_index(self.node),
-            expected_download_url=NOT_AVAILABLE, expected_filetype=''
+            expected_download_url=constants.NOT_AVAILABLE, expected_filetype=''
         )
 
     def test_prepare_node_s3_file_store_item_source_no_datafile(self):
@@ -2040,7 +2040,7 @@ class NodeIndexTests(APITestCase):
                                return_value=FAILURE):
             self._assert_node_index_prepared_correctly(
                 self._prepare_node_index(self.node),
-                expected_download_url=NOT_AVAILABLE,
+                expected_download_url=constants.NOT_AVAILABLE,
                 expected_filetype=self.file_store_item.filetype
             )
 

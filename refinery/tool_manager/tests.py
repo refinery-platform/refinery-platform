@@ -3649,7 +3649,7 @@ class VisualizationToolLaunchTests(ToolManagerTestBase):
         )
 
     def test_input_node_limit(self):
-        with mock.patch("tool_manager.models.REFINERY_SOLR_DOC_LIMIT", 10):
+        with mock.patch("constants.REFINERY_SOLR_DOC_LIMIT", 10):
             tool = self.create_tool(ToolDefinition.VISUALIZATION)
             tool_launch_config = self.tool.get_tool_launch_config()
 
