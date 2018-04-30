@@ -10,7 +10,7 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.management import CommandError, call_command
 from django.http import HttpResponseBadRequest
-from django.test import TestCase
+from django.test import TestCase, override_settings
 
 import bioblend
 from bioblend.galaxy.dataset_collections import (
@@ -244,7 +244,9 @@ class ToolManagerTestBase(ToolManagerMocks):
             }
         )
         self.tool_relaunch_view = ToolsViewSet.as_view({"get": "relaunch"})
-
+        self.tool_container_input_data_view = ToolsViewSet.as_view(
+            {"get": "container_input_data"}
+        )
         self.tools_url_root = '/api/v2/tools/'
         self.tool_defs_url_root = '/api/v2/tool_definitions/'
 
@@ -306,6 +308,7 @@ class ToolManagerTestBase(ToolManagerMocks):
             }
         )
 
+    @override_settings(CELERY_ALWAYS_EAGER=True)
     def create_tool(self,
                     tool_type,
                     create_unique_name=False,
@@ -360,7 +363,7 @@ class ToolManagerTestBase(ToolManagerMocks):
 
         # Mock the spinning up of containers
         run_container_mock = mock.patch(
-            "django_docker_engine.docker_utils.DockerClientWrapper.run"
+            "django_docker_engine.docker_utils.DockerClientRunWrapper.run"
         )
 
         if tool_type == ToolDefinition.VISUALIZATION:
@@ -1677,8 +1680,8 @@ class VisualizationToolTests(ToolManagerTestBase):
         )
         self.assertTrue(self.search_solr_mock.called)
 
-    def test__create_container_input_dict(self):
-        tool_input_dict = self.tool._create_container_input_dict()
+    def test_get_container_input_dict(self):
+        tool_input_dict = self.tool.get_container_input_dict()
         file_relationships = self.tool.get_file_relationships_urls()
 
         self.assertEqual(
@@ -2817,6 +2820,7 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
                 self.tool._get_owner_info_as_dict()
             )
 
+    @override_settings(CELERY_ALWAYS_EAGER=True)
     def test_vis_tool_can_be_relaunched(self):
         self.create_tool(ToolDefinition.VISUALIZATION,
                          start_vis_container=True)
@@ -2862,9 +2866,7 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
         get_request = self.factory.get(relaunch_url)
         force_authenticate(get_request, self.user)
         get_response = self.tool_relaunch_view(get_request, uuid=tool_uuid)
-        self.assertEqual(get_response.status_code, 400)
-        self.assertIn("Couldn't retrieve VisualizationTool",
-                      get_response.content)
+        self.assertEqual(get_response.status_code, 404)
 
     def test_relaunch_failure_insufficient_user_perms(self):
         self.create_tool(ToolDefinition.VISUALIZATION)
@@ -2902,9 +2904,7 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
             get_request,
             uuid=self.tool.uuid
         )
-        self.assertEqual(get_response.status_code, 400)
-        self.assertIn("Couldn't retrieve VisualizationTool",
-                      get_response.content)
+        self.assertEqual(get_response.status_code, 404)
 
     def test_api_response_has_proper_fields_present(self):
         self.create_tool(ToolDefinition.VISUALIZATION)
@@ -3013,6 +3013,28 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
 
     def test_vis_tool_url_user_without_permission(self):
         self._test_launch_vis_container(user_has_permission=False)
+
+    def test_get_container_input_data_detail_route(self):
+        self.create_tool(ToolDefinition.VISUALIZATION)
+        get_request = self.factory.get(self.tool.container_input_json_url)
+        with mock.patch("tool_manager.models.get_solr_response_json"):
+            get_response = self.tool_container_input_data_view(
+                get_request,
+                uuid=self.tool.uuid
+            )
+            self.assertEqual(
+                json.loads(get_response.content),
+                self.tool.get_container_input_dict()
+            )
+
+    def test_get_container_input_data_detail_route_bad_uuid(self):
+        self.create_tool(ToolDefinition.VISUALIZATION)
+        get_request = self.factory.get(self.tool.container_input_json_url)
+        get_response = self.tool_container_input_data_view(
+            get_request,
+            uuid=str(uuid.uuid4())  # uuid doesn't correspond to any Tool
+        )
+        self.assertEqual(get_response.status_code, 404)
 
 
 class WorkflowToolLaunchTests(ToolManagerTestBase):
@@ -3516,6 +3538,7 @@ class VisualizationToolLaunchTests(ToolManagerTestBase):
         self.assertIn("DataSet matching query does not exist.",
                       self.post_response.content)
 
+    @override_settings(CELERY_ALWAYS_EAGER=True)
     def _start_visualization(
             self, json_name, file_relationships,
             assertions=None, count=1
@@ -3580,9 +3603,7 @@ class VisualizationToolLaunchTests(ToolManagerTestBase):
         settings.DJANGO_DOCKER_ENGINE_SECONDS_INACTIVE = wait_time
 
         def assertions(tool):
-            client = DockerClientWrapper(
-                settings.DJANGO_DOCKER_ENGINE_DATA_DIR
-            )
+            client = DockerClientWrapper()
             client.lookup_container_url(tool.container_name)
 
             self.assertTrue(tool.is_running())

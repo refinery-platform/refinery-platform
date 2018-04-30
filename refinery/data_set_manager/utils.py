@@ -763,7 +763,7 @@ def create_facet_filter_query(facet_filter_fields):
 
         field_str = escape_character_solr(field_str)
         field_str = field_str.replace('OR', ' OR ')
-        encoded_field_str = urlquote(field_str, safe='\\/+-&|!(){}[]^~*?:"; ')
+        encoded_field_str = urlquote(field_str, safe='\\/+-&|!(){}[]^~*?:";@ ')
 
         query = ''.join([query, '&fq={!tag=', facet, '}',
                          facet, ':(', encoded_field_str, ')'])
@@ -774,7 +774,7 @@ def escape_character_solr(field):
     # This escapes certain characters for solr requests fields
     match = ['\\',  '+', '-', '&', '|', '!', '(', ')',
              '{', '}', '[', ']', '^', '~', '*',
-             '?', ':', '"', ';', ' ', '/']
+             '?', ':', '"', ';', ' ', '/', '@']
 
     for item in match:
         if item in field:

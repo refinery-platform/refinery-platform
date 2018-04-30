@@ -18,8 +18,8 @@ from django.db.models import Q
 from django.http import QueryDict
 from django.test import LiveServerTestCase, TestCase
 
-from celery.states import PENDING, STARTED, SUCCESS
 from constants import NOT_AVAILABLE, REFINERY_SOLR_DOC_LIMIT
+from celery.states import FAILURE, PENDING, STARTED, SUCCESS
 from djcelery.models import TaskMeta
 from guardian.shortcuts import assign_perm
 from haystack.exceptions import SkipDocument
@@ -27,10 +27,9 @@ import mock
 from mock import ANY
 from rest_framework.test import APIClient, APIRequestFactory, APITestCase
 
-from core.models import (
-    INPUT_CONNECTION, OUTPUT_CONNECTION, Analysis, AnalysisNodeConnection,
-    DataSet, ExtendedGroup, InvestigationLink
-)
+from core.models import (INPUT_CONNECTION, OUTPUT_CONNECTION, Analysis,
+                         AnalysisNodeConnection, DataSet, ExtendedGroup,
+                         InvestigationLink)
 from core.tests import TestMigrations
 from core.views import NodeViewSet
 import data_set_manager
@@ -1919,9 +1918,6 @@ class NodeIndexTests(APITestCase):
 
         self.maxDiff = None
 
-    def tearDown(self):
-        FileStoreItem.objects.all().delete()
-
     def test_skip_types(self):
         self.node.type = 'Unknown File Type'
         with self.assertRaises(SkipDocument):
@@ -2013,21 +2009,25 @@ class NodeIndexTests(APITestCase):
         self.import_task.delete()
         with mock.patch.object(FileStoreItem, 'get_datafile_url',
                                return_value=None):
-            self._assert_node_index_prepared_correctly(
-                self._prepare_node_index(self.node),
-                expected_download_url=NOT_AVAILABLE
-            )
+            with mock.patch.object(FileStoreItem, 'get_import_status',
+                                   return_value=FAILURE):
+                self._assert_node_index_prepared_correctly(
+                    self._prepare_node_index(self.node),
+                    expected_download_url=NOT_AVAILABLE
+                )
 
     def test_prepare_node_no_file_import_task_id_yet(self):
         self.file_store_item.import_task_id = ""
         self.file_store_item.save()
         self.import_task.delete()
         self._assert_node_index_prepared_correctly(
-            self._prepare_node_index(self.node), expected_download_url=PENDING
+            self._prepare_node_index(self.node),
+            expected_download_url=NOT_AVAILABLE
         )
 
     def test_prepare_node_no_file_store_item(self):
-        self.file_store_item.delete()
+        with mock.patch('celery.result.AsyncResult'):
+            self.file_store_item.delete()
         self._assert_node_index_prepared_correctly(
             self._prepare_node_index(self.node),
             expected_download_url=NOT_AVAILABLE, expected_filetype=''
@@ -2037,7 +2037,7 @@ class NodeIndexTests(APITestCase):
         self.file_store_item.source = 's3://test/test.txt'
         self.file_store_item.save()
         with mock.patch.object(FileStoreItem, 'get_import_status',
-                               return_value=SUCCESS):
+                               return_value=FAILURE):
             self._assert_node_index_prepared_correctly(
                 self._prepare_node_index(self.node),
                 expected_download_url=NOT_AVAILABLE,

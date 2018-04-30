@@ -70,3 +70,30 @@ resource "aws_route_table_association" "public_subnet" {
   route_table_id = "${aws_route_table.route_table.id}"
 }
 
+resource "aws_eip" "docker_nat" {
+  vpc = true
+}
+
+resource "aws_nat_gateway" "docker_nat" {
+  allocation_id = "${aws_eip.docker_nat.id}"
+  subnet_id     = "${aws_subnet.public_subnet.id}"
+  depends_on = ["aws_internet_gateway.public_gateway"]
+}
+
+resource "aws_route_table" "private_route_table" {
+  vpc_id = "${aws_vpc.vpc.id}"
+
+  route {
+    cidr_block     = "0.0.0.0/0"
+    nat_gateway_id = "${aws_nat_gateway.docker_nat.id}"
+  }
+
+  tags {
+    Name = "${terraform.workspace} (terraform nat)"
+  }
+}
+
+resource "aws_route_table_association" "private_subnet" {
+  subnet_id      = "${aws_subnet.private_subnet_a.id}"
+  route_table_id = "${aws_route_table.private_route_table.id}"
+}
