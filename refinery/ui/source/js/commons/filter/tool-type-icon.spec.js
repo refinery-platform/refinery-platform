@@ -4,7 +4,7 @@
     var filter;
 
     beforeEach(function () {
-      module('refineryToolLaunch');
+      module('refineryApp');
 
       inject(function ($filter) {
         filter = $filter('toolTypeIcon');

@@ -11,18 +11,22 @@
     class="refinery-sub-panel">
      <ul>
        <li ng-repeat="tool in $ctrl.tools">
-         <span ng-if="tool.analysis">
+         <span ng-if="tool.tool_definition === 2">
            <a ng-href="/data_sets/{{ tool.data_set.uuid }}/#/analyses">
-           {{ tool.modification_date | date:"MM/dd/yyyy'at'h:mma":timezone }}
-           <i class="fa fa-cogs"></i>
+             {{ tool.modification_date | date:"MM/dd/yyyy' at 'h:mma":timezone }}
+             <i class="fa fa-cogs"></i>
+             {{ tool.name }} is currently
+             <span ng-show="tool.is_running"> running.</span>
+             <span ng-show="tool.is_running"> running.</span>
+           </a>
          </span>
-         <span ng-if="!tool.analysis">
+         <span ng-if="tool.tool_definition === 1">
            <a ng-href="/data_sets/{{ tool.data_set.uuid }}/#/visualizations">
-           {{ tool.modification_date | date:"MM/dd/yyyy 'at' h:mma":timezone }}
-           <i ng-class="tool.analysis ? 'fa fa-cogs':'fa fa-bar-chart'"></i>
+             {{ tool.modification_date | date:"MM/dd/yyyy 'at' h:mma":timezone }}
+             <i class="fa fa-bar-chart"></i>
+             {{ tool.name }}
+           </a>
          </span>
-           {{ tool.name }}
-         </a>
        </li>
      </ul>
   </div>

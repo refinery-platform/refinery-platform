@@ -9,14 +9,14 @@
   'use strict';
 
   angular
-    .module('refineryToolLaunch')
+    .module('refineryApp')
     .filter('toolTypeIcon', function () {
       return function (param) {
         switch (param) {
           case 'VISUALIZATION':
             return 'fa fa-bar-chart';
           default: // Workflow
-            return 'fa fa-cog';
+            return 'fa fa-cogs';
         }
       };
     });
