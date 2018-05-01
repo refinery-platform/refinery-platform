@@ -113,8 +113,6 @@ class FileExtension(models.Model):
 
 class FileStoreItem(models.Model):
     """Represents all data files"""
-    # datafile = models.FileField(upload_to=file_path, blank=True,
-    #                             max_length=1024)
     datafile = models.FileField(blank=True, max_length=1024)
     uuid = UUIDField()  # auto-generated unique ID
     # URL, absolute file system path, or blank if source is a blob or similar

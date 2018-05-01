@@ -28,7 +28,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='filestoreitem',
             name='datafile',
-            # field=models.FileField(max_length=1024, upload_to=file_store.models.file_path, blank=True),
             field=models.FileField(max_length=1024, blank=True),
             preserve_default=True,
         ),
