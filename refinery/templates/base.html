@@ -129,36 +129,40 @@
         </button>
       </div>
 
-      <div class="navbar-text pull-right">
+      <div class="navbar-text pull-right" id="navbar-right">
        {% if user.is_authenticated %}
          <a
            class="pointer"
            popover-placement="bottom"
            popover-trigger="'outsideClick'"
            uib-popover-template="dynamicPopover.templateUrl">
-            <i class="fa fa-question-circle icon-only"></i>
-            Help
+            <i class="fa fa-question-circle"></i>
+           <span id="help-icon-text">
+              Help
+           </span>
          </a>
          &nbsp;&nbsp;|&nbsp;&nbsp;
       {% endif %}
 
         {% if user.is_authenticated %}
-          <i class="fa fa-user"></i>
-
           <a id="refinery-user" href="{% url "user" user.profile.uuid %}"
              tabindex=5>
-
-          {% if user.first_name != "" or user.last_name != "" %}
-            {{ user.first_name }} {{ user.last_name }}
-          {% else %}
-            {{ user.username }}
-          {% endif %}
+            <i class="fa fa-user"></i>
+            <span id="login-name-icon-text">
+              {% if user.first_name != "" or user.last_name != "" %}
+                {{ user.first_name }} {{ user.last_name }}
+              {% else %}
+                {{ user.username }}
+              {% endif %}
+            </span>
           </a>&nbsp;&nbsp;|&nbsp;&nbsp;
-          <i id="refinery-logout" class="fa fa-sign-out"></i>&nbsp;
           <a href="
            {% url "django.contrib.auth.views.logout" %}?next={% url "home" %}"
           tabindex=6>
-            Logout
+             <i id="refinery-logout" class="fa fa-sign-out icon-only"></i>&nbsp;
+            <span id="logout-icon-text">
+              Logout
+            </span>
           </a>
         {% else %}
           {% url 'registration.views.register' as registration_url %}
@@ -170,8 +174,13 @@
             </a>&nbsp;&nbsp;
           &nbsp;&nbsp;|&nbsp;&nbsp;
           {% endif %}
-          <i id="refinery-login" class="fa fa-sign-in"></i>&nbsp;<a rel="tooltip"
-          data-placement="left" title="Log In" href="{{login_url}}?next={% if request.path %}{% ifnotequal registration_url request.path %}{% ifnotequal login_url request.path %}{{ request.path|safe }}{% else %}{% url "home" %}{% endifnotequal %}{% else %}{% url "home" %}{% endifnotequal %}{% else %}{% url "home" %}{% endif %}">Login</a>
+        <a rel="tooltip" data-placement="left" title="Log In"
+        href="{{login_url}}?next={% if request.path %}{% ifnotequal registration_url request.path %}{% ifnotequal login_url request.path %}{{ request.path|safe }}{% else %}{% url "home" %}{% endifnotequal %}{% else %}{% url "home" %}{% endifnotequal %}{% else %}{% url "home" %}{% endif %}">
+          <i id="refinery-login" class="fa fa-sign-in"></i>&nbsp;
+          <span id="login-icon-text">
+            Login
+          </span>
+      </a>
         {% endif %}
         &nbsp;&nbsp;|&nbsp;&nbsp;
         <span>
