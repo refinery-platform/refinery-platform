@@ -18,8 +18,7 @@ from requests.exceptions import (ConnectionError, ContentDecodingError,
 from data_set_manager.models import Node
 from data_set_manager.search_indexes import NodeIndex
 
-from .models import (FileStoreItem, _mkdir, file_path, get_temp_dir,
-                     parse_s3_url)
+from .models import FileStoreItem, _mkdir, get_temp_dir, parse_s3_url
 
 logger = celery.utils.log.get_task_logger(__name__)
 logger.setLevel(celery.utils.LOG_LEVELS['DEBUG'])
@@ -85,7 +84,7 @@ def import_file(uuid, refresh=False, file_size=0):
 
         # construct file name and absolute path
         item.datafile.name = item.datafile.storage.get_available_name(
-            file_path(item, os.path.basename(item.source))
+            os.path.basename(item.source)
         )
         file_store_path = os.path.join(settings.FILE_STORE_BASE_DIR,
                                        item.datafile.name)
@@ -233,9 +232,7 @@ def import_file(uuid, refresh=False, file_size=0):
         u = urlparse.urlparse(item.source)
         src_file_name = os.path.basename(u.path)
         # construct destination path based on source file name
-        rel_dst_path = item.datafile.storage.get_available_name(
-            file_path(item, src_file_name)
-        )
+        rel_dst_path = item.datafile.storage.get_available_name(src_file_name)
         abs_dst_path = os.path.join(settings.FILE_STORE_BASE_DIR, rel_dst_path)
         # move the temp file into the file store
         try:

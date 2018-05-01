@@ -1,6 +1,4 @@
 import os
-import random
-import string
 from urlparse import urljoin
 import uuid
 
@@ -12,10 +10,10 @@ from django.test import TestCase, override_settings
 import mock
 from override_storage import override_storage
 
-from .models import (FileExtension, FileStoreItem, FileType, file_path,
-                     generate_file_source_translator,
-                     _get_extension_from_string, get_file_object, get_temp_dir,
-                     _map_source, parse_s3_url)
+from .models import (FileExtension, FileStoreItem, FileType,
+                     _get_extension_from_string, _map_source,
+                     generate_file_source_translator, get_file_object,
+                     get_temp_dir, parse_s3_url)
 
 
 class FileStoreModuleTest(TestCase):
@@ -73,43 +71,6 @@ class FileStoreModuleTest(TestCase):
     def test_file_source_map(self):
         self.assertEqual(_map_source('http://example.org/test_file.dat'),
                          '/example/path/test_file.dat')
-
-
-class FilePathTest(TestCase):
-
-    def test_file_path_format(self):
-        path = file_path(FileStoreItem(), 'test.fastq')
-        self.assertEqual(path, '2f/e3/test.fastq')
-
-    def test_leading_dash_removal(self):
-        path = file_path(FileStoreItem(), '-test.fastq')
-        self.assertEqual(path, '5b/85/test.fastq')
-
-    def test_multiple_leading_dash_removal(self):
-        path = file_path(FileStoreItem(), '--test.fastq')
-        self.assertEqual(path, '7b/20/test.fastq')
-
-    def test_max_name_length(self):
-        name = ''.join(random.choice(string.ascii_letters) for _ in range(256))
-        path = file_path(FileStoreItem(), name)
-        self.assertEqual(len(os.path.basename(path)), 255)
-
-    def test_remove_extra_leading_characters_over_max_length(self):
-        name = ''.join(random.choice(string.ascii_letters) for _ in range(256))
-        path = file_path(FileStoreItem(), name)
-        self.assertEqual(os.path.basename(path), name[-255:])
-
-    def test_forward_slash_replacement(self):
-        path = file_path(FileStoreItem(), 'Wig/BedGraph-to-bigWig.bigwig')
-        self.assertIn('Wig_BedGraph-to-bigWig.bigwig', path)
-
-    def test_space_character_replacement(self):
-        path = file_path(FileStoreItem(), 'test file.fastq')
-        self.assertIn('test_file.fastq', path)
-
-    def test_parentheses_replacement(self):
-        path = file_path(FileStoreItem(), 'Kc.dMi-2(Q4443).wig_5.tdf')
-        self.assertIn('Kc.dMi-2_Q4443_.wig_5.tdf', path)
 
 
 class FileStoreItemTest(TestCase):
@@ -222,7 +183,7 @@ class FileStoreItemLocalFileTest(TestCase):
         self.item.datafile.save(self.file_name, ContentFile(''))
         saved_item = FileStoreItem.objects.get(pk=self.item.pk)
         self.assertEqual(saved_item.get_datafile_url(),
-                         file_path(saved_item, self.file_name))
+                         saved_item.datafile.url)
 
     def test_set_local_file_type(self):
         self.item.datafile.save(self.file_name, ContentFile(''))
