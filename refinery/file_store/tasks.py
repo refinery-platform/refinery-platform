@@ -5,6 +5,7 @@ import urlparse
 
 from django.conf import settings
 from django.core.files import File
+from django.core.files.storage import default_storage
 
 import boto3
 import botocore
@@ -83,7 +84,7 @@ def import_file(uuid, refresh=False, file_size=0):
             raise celery.exceptions.Ignore()
 
         # construct file name and absolute path
-        item.datafile.name = item.datafile.storage.get_available_name(
+        item.datafile.name = default_storage.get_name(
             os.path.basename(item.source)
         )
         file_store_path = os.path.join(settings.FILE_STORE_BASE_DIR,
@@ -229,10 +230,9 @@ def import_file(uuid, refresh=False, file_size=0):
         logger.debug("Finished downloading from '%s'", item.source)
 
         # get the file name from URL (remove query string)
-        u = urlparse.urlparse(item.source)
-        src_file_name = os.path.basename(u.path)
+        source_path = urlparse.urlparse(item.source).path
         # construct destination path based on source file name
-        rel_dst_path = item.datafile.storage.get_available_name(src_file_name)
+        rel_dst_path = default_storage.get_name(os.path.basename(source_path))
         abs_dst_path = os.path.join(settings.FILE_STORE_BASE_DIR, rel_dst_path)
         # move the temp file into the file store
         try:

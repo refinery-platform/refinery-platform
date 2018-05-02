@@ -4,6 +4,7 @@ from django.conf import settings
 from django.core.files.storage import FileSystemStorage
 from django.utils.crypto import get_random_string
 from django.utils.deconstruct import deconstructible
+from django.utils.text import get_valid_filename
 
 from storages.backends.s3boto3 import S3Boto3Storage
 
@@ -40,6 +41,10 @@ class SymlinkedFileSystemStorage(FileSystemStorage):
         return os.path.lexists(self.path(name))
 
     def get_available_name(self, name, max_length=None):
+        # remove './' that is added by FileField.get_directory_name() when
+        # upload_to is set to '' by default
+        # TODO: remove this when get_directory_name() is removed in Django 2.0
+        name = os.path.normpath(name)
         # create a hashed directory structure
         hashcode = hash(name)
         mask = 255  # bitmask
@@ -48,11 +53,10 @@ class SymlinkedFileSystemStorage(FileSystemStorage):
         # provides 256 * 256 = 65,536 of possible directory combinations
         dir1 = "{:0>2x}".format(hashcode & mask)
         dir2 = "{:0>2x}".format((hashcode >> 8) & mask)
-        # remove './' that is added by FileField.get_directory_name() when
-        # upload_to is set to '' by default
-        # TODO: remove this when get_directory_name() is removed in Django 2.0
-        name = os.path.normpath(name)
         # remove leading '-' characters to make file management easier
         # limit file name length to 255 to make "fully portable" in POSIX
         name = os.path.join(dir1, dir2, name.lstrip('-')[-255:])
         return super(SymlinkedFileSystemStorage, self).get_available_name(name)
+
+    def get_name(self, name):
+        return self.get_available_name(get_valid_filename(name))

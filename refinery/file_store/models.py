@@ -15,6 +15,7 @@ import re
 import urlparse
 
 from django.conf import settings
+from django.core.files.storage import default_storage
 from django.db import models
 from django.db.models.signals import post_delete
 from django.dispatch import receiver
@@ -263,11 +264,11 @@ class FileStoreItem(models.Model):
                      self.datafile.name, name)
         if self.is_local():
             # obtain a new path based on requested name
-            new_rel_path = self.datafile.storage.get_available_name(name)
-            new_abs_path = os.path.join(settings.FILE_STORE_BASE_DIR,
-                                        new_rel_path)
-            if _rename_file_on_disk(self.datafile.path, new_abs_path):
-                self.datafile.name = new_rel_path
+            new_relative_path = default_storage.get_name(name)
+            new_absolute_path = os.path.join(settings.FILE_STORE_BASE_DIR,
+                                             new_relative_path)
+            if _rename_file_on_disk(self.datafile.path, new_absolute_path):
+                self.datafile.name = new_relative_path
                 self.save()
                 return os.path.basename(self.datafile.name)
             else:
@@ -286,7 +287,7 @@ class FileStoreItem(models.Model):
 
         if os.path.isfile(self.source):
             # construct symlink target path based on source file name
-            rel_dst_path = self.datafile.storage.get_available_name(
+            rel_dst_path = default_storage.get_name(
                 os.path.basename(self.source)
             )
             abs_dst_path = os.path.join(settings.FILE_STORE_BASE_DIR,
