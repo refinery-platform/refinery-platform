@@ -1,19 +1,19 @@
 /**
- * Events Card Ctrl
- * @namespace EventsCardCtrl
- * @desc Controller for events card component on dashboard component.
- * @memberOf refineryApp.refineryEventsCardCtrl
+ * History Card Ctrl
+ * @namespace HistoryCardCtrl
+ * @desc Controller for history card component on dashboard component.
+ * @memberOf refineryApp.refineryHistoryCardCtrl
  */
 (function () {
   'use strict';
 
   angular
     .module('refineryDashboard')
-    .controller('EventsCardCtrl', EventsCardCtrl);
+    .controller('HistoryCardCtrl', HistoryCardCtrl);
 
-  EventsCardCtrl.$inject = ['toolsService'];
+  HistoryCardCtrl.$inject = ['toolsService'];
 
-  function EventsCardCtrl (
+  function HistoryCardCtrl (
     toolsService
   ) {
     var vm = this;
