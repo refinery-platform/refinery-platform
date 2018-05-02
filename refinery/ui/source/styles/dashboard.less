@@ -1799,23 +1799,6 @@ body.repo-mode .refinery-dashboard {
   box-shadow: 2px 0 0 0 #e5e5e5;
 }
 
-.card-sub-header {
-  display: inline-block;
-  margin: 0;
-  padding: 5px 0;
-  color: @gray-light;
-  font-size: 14px;
-  line-height: 1em;
-  width: 100%;
-  .underline-text {
-   text-decoration: underline solid lighten(@gray-light, 25%);
-  }
-}
-
-.card-sub-header-fix {
-  background-color: @gray-lighter;
-}
-
 .card-content {
   position: relative;
   padding: 5px 3rem 5px 0;
@@ -1846,6 +1829,7 @@ body.repo-mode .refinery-dashboard {
 #search-interface-dashboard {
   width: 30%;
   float: right;
+  border: none;
 }
 
 .user-add-icon {
@@ -1867,6 +1851,27 @@ body.repo-mode .refinery-dashboard {
 
 /** Dashboard Alpha -JM **/
 #dashboard-cards {
+  .notification {
+    background-color: @white;
+    text-decoration: underline solid lighten(@gray-light, 25%);
+  }
+
+  .card-sub-header {
+    background-color: @gray-lighter;
+    display: inline-block;
+    margin: 0;
+    padding: 5px 0;
+    color: @gray-light;
+    font-size: 14px;
+    line-height: 1em;
+    width: 100%;
+
+    .btn {
+      float: left;
+      margin-top: 3px;
+    }
+  }
+
   #dashboard-data-set-panel {
     max-height: 50vh;
 
@@ -1885,9 +1890,25 @@ body.repo-mode .refinery-dashboard {
       height: 50vh;
       div.refinery-panel-content {
         padding-bottom: 10px;
-        height: 45vh;
       }
     }
   }
+// /* Small devices (tablets, 768px and up) */
+//  @media (max-width: @screen-sm-min) {
+//      margin-top: 44; // offset the removed sub-nav bar
+//  }
+//
+//  /* Medium devices (desktops, 992px and up) */
+//  @media (min-width: @screen-sm-min) {
+//      margin-top: -36px; // offset the removed sub-nav bar
+//  }
+//
+//  /* Large devices (large desktops, 1200px and up) */
+//  @media (max-width: @screen-lg-min) {
+//   //   margin-top: -36px; // offset the removed sub-nav bar
+//  }
 }
 
+body {
+  margin-top: @navbar-height * 1.2;
+}
