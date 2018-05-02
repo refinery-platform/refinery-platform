@@ -58,23 +58,31 @@
             uib-dropdown-toggle
             ng-disabled="disabled">
             <span ng-if="$ctrl.groupFilter.group > 0">
-              <i class="fa fa-check"></i>
+              <i class="fa fa-check=="></i>
             </span>
             Groups <i class="fa fa-caret-down"></i>
           </span>
-          <ul class="dropdown-menu" uib-dropdown-menu role="menu" aria-labelledby="btn-append-to-single-button">
-            <li>
-              <a ng-click="$ctrl.filterDataSets('0')">
-                ----
-              </a>
+          <ul class="dropdown-menu radio-drop-down" uib-dropdown-menu role="menu"
+            aria-labelledby="btn-append-to-single-button">
+            <li role="menuitem">
+              <label>
+                <input type="radio"
+                  ng-model="$ctrl.groupFilter.selectedName"
+                  ng-change="$ctrl.filterDataSets(0)"
+                  value="All">
+                  All
+              </label>
             </li>
             <li ng-repeat="group in $ctrl.groups" role="menuitem">
-              <span ng-if="group.name !== 'Public'">
-                <span ng-if="$ctrl.groupFilter.group === group.id">
-                  <i class="fa fa-check"></i>
-                </span>
-                <a ng-click="$ctrl.filterDataSets(group.id)">{{ group.name }}</a>
-              </span>
+               <span ng-if="group.name !== 'Public'">
+                  <label>
+                    <input type="radio"
+                      ng-model="$ctrl.groupFilter.selectedName"
+                      ng-change="$ctrl.filterDataSets(group.id)"
+                      value="{{ group.name }}">
+                    {{ group.name }}
+                  </label>
+               </span>
             </li>
           </ul>
         </div>
@@ -133,9 +141,36 @@
     <div class="refinery-panel-content">
       <ul class="results list-unstyled">
         <li ng-repeat="dataSet in $ctrl.dataSets">
-          <a href="/data_sets/{{ dataSet.uuid }}">{{ dataSet.title }}</a>
+          <a href="/data_sets/{{ dataSet.uuid }}">
+            {{ dataSet.title }}&nbsp;
+            <span
+               class="fa-stack file-browser-go-icon"
+               refinery-tooltip
+               refinery-tooltip-container="body"
+               refinery-tooltip-placement="right"
+               title="View data set's files, tools, and details">
+               <i class="fa fa-long-arrow-right fa-stack-1x"></i>
+               <i class="fa fa-folder-o stack-left-center"></i>
+             </span>
+          </a>
            <div class="flex-box indicators">
              <ul class="flex-item-two flex-left no-list-style p-b-1-2">
+               <li ng-if="dataSet.is_owner"
+                 class="indicator"
+                  title="You own this data set"
+                  refinery-tooltip
+                  refinery-tooltip-container="body"
+                  refinery-tooltip-placement="top">
+                  <i class="fa fa-user"></i>
+                </li>
+                <li ng-if="dataSet.public"
+                  class="indicator"
+                  title="Data set is public"
+                  refinery-tooltip
+                  refinery-tooltip-container="body"
+                  refinery-tooltip-placement="top">
+                  <i class="fa fa-globe"></i>
+                </li>
                <li class="indicator"
                   title="Modification Date"
                   refinery-tooltip
@@ -148,13 +183,14 @@
                <li>
                  <a
                     ng-click="dashboard.openDataSetDeleteModal(dataSet)"
+                    class="pointer"
                     refinery-tooltip
                     refinery-tooltip-container="body"
                     refinery-tooltip-placement="bottom"
                     refinery-tooltip-hide-on-click="true
                     title="Delete data set">
                   <i
-                    class="fa fa-trash-o pointer"
+                    class="fa fa-trash-o"
                     ng-if="dataSet.is_owner">
                   </i>
                  Delete

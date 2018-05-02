@@ -39,7 +39,7 @@
     vm.searchDataSets = searchDataSets;
     vm.searchQueryDataSets = '';
     vm.resetDataSetSearch = resetDataSetSearch;
-    vm.groupFilter = {};
+    vm.groupFilter = { selectedName: 'All' };
     var params = {};
 
     activate();
@@ -59,10 +59,8 @@
         }
       } else if (!permsID) {
         delete params.group;
-        vm.groupFilter.group = 0;
       } else {
         params.group = permsID;
-        vm.groupFilter.group = permsID;
       }
       getDataSets();
     }
