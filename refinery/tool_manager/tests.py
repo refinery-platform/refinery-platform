@@ -3653,20 +3653,23 @@ class VisualizationToolLaunchTests(ToolManagerTestBase):
         )
 
     def test_input_node_limit(self):
-        with mock.patch("constants.REFINERY_SOLR_DOC_LIMIT", 10):
-            tool = self.create_tool(ToolDefinition.VISUALIZATION)
-            tool_launch_config = self.tool.get_tool_launch_config()
+        tool = self.create_tool(ToolDefinition.VISUALIZATION)
+        tool_launch_config = self.tool.get_tool_launch_config()
 
-            # Crete one more entry than what REFINERY_SOLR_DOC_LIMIT permits
-            tool_launch_config[Tool.FILE_RELATIONSHIPS] = str(
-                [uuid.uuid4()] * 11
-            )
-            tool.set_tool_launch_config(tool_launch_config)
-            with self.assertRaises(VisualizationToolError) as context:
-                tool.launch()
+        # Crete one more entry than what REFINERY_SOLR_DOC_LIMIT permits
+        tool_launch_config[Tool.FILE_RELATIONSHIPS] = str(
+            [uuid.uuid4()] * (constants.REFINERY_SOLR_DOC_LIMIT + 1)
+        )
+        tool.set_tool_launch_config(tool_launch_config)
+        with self.assertRaises(VisualizationToolError) as context:
+            tool.launch()
 
-        self.assertIn("Input Node limit of: 10 reached",
-                      context.exception.message)
+        self.assertIn(
+            "Input Node limit of: {} reached".format(
+                constants.REFINERY_SOLR_DOC_LIMIT
+            ),
+            context.exception.message
+        )
 
 
 class ToolLaunchConfigurationTests(ToolManagerTestBase):
