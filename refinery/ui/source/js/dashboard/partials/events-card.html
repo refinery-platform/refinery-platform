@@ -15,16 +15,26 @@
            <a ng-href="/data_sets/{{ tool.data_set.uuid }}/#/analyses">
              {{ tool.modification_date | date:"MM/dd/yyyy' at 'h:mma":timezone }}
              <i class="fa fa-cogs"></i>
-             {{ tool.name }} is currently
-             <span ng-show="tool.is_running"> running.</span>
-             <span ng-show="tool.is_running"> running.</span>
+             <span ng-if="tool.full_name">
+               {{ tool.full_name }}
+             </span>
+             <span ng-if="!tool.full_name">
+               {{ tool.username }}
+             </span>
+             launched a visualization tool: {{ tool.name }}.
            </a>
          </span>
          <span ng-if="tool.tool_definition === 1">
            <a ng-href="/data_sets/{{ tool.data_set.uuid }}/#/visualizations">
              {{ tool.modification_date | date:"MM/dd/yyyy 'at' h:mma":timezone }}
              <i class="fa fa-bar-chart"></i>
-             {{ tool.name }}
+              <span ng-if="tool.owner.full_name">
+               {{ tool.owner.full_name }}
+             </span>
+             <span ng-if="!tool.owner.full_name">
+               {{ tool.owner.username }}
+             </span>
+             launched an analysis: {{ tool.name }}
            </a>
          </span>
        </li>

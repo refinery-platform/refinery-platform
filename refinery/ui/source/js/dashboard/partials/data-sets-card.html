@@ -18,8 +18,8 @@
       </span>
     </h3>
   </div>
-  <div id="data-set-panel" class="refinery-sub-panel">
-    <div class="card-sub-header-fix">
+  <div id="" class="refinery-sub-panel">
+    <div class="card-sub-header">
       <div
         id="search-interface-dashboard"
         class="form-group navbar-search col-md-3"
@@ -42,7 +42,7 @@
           name="searchQuery">
       </div>
       <div class="col-md-6">
-        <div class="refinery-base btn btn-default btn-xs float-left"
+        <div class="refinery-base btn btn-default btn-sm"
           ng-model="$ctrl.groupFilter['owned']"
           ng-change="$ctrl.filterDataSets('owned')"
           uib-btn-checkbox>
@@ -53,7 +53,7 @@
         </div>
         <div class="float-left m-l-1" uib-dropdown auto-close="outsideClick">
           <span
-            class="refinery-base btn btn-default btn-xs"
+            class="refinery-base btn btn-default btn-sm"
             id="btn-append-to-single-button"
             uib-dropdown-toggle
             ng-disabled="disabled">
@@ -79,7 +79,7 @@
           </ul>
         </div>
         <div
-          class="refinery-base btn btn-default btn-xs float-left m-l-1"
+          class="refinery-base btn btn-default btn-sm m-l-1"
           ng-model="$ctrl.groupFilter['public']"
           ng-change="$ctrl.filterDataSets('public')"
           uib-btn-checkbox>
@@ -93,7 +93,7 @@
     <div
       id="data-set-panel-header"
       class="refinery-sub-panel-notice">
-      <div class="refinery-notification">
+      <div class="notification">
         <div
           ng-messages="metadataSearch.searchQuery.$error"
           role="alert"
@@ -121,11 +121,11 @@
               Please contact your <a ng-href="mailto:{{ app.settings.djangoApp.admins }}?Subject=Refinery%20Error">System Administrator</a>.
           </div>
         </div>
-      </div>
-      <div id="dashboard-total-datasets" class="card-sub-header">
-        <span ng-if="$ctrl.dataSets.length">
-          {{ $ctrl.dataSets.length }} data sets
-        </span>
+        <div id="dashboard-total-datasets">
+          <span ng-if="$ctrl.dataSets.length">
+            {{ $ctrl.dataSets.length }} data sets
+          </span>
+        </div>
       </div>
     </div>
   </div>

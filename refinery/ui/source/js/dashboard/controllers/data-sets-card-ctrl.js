@@ -46,9 +46,17 @@
 
     function filterDataSets (permsID) {
       if (permsID === 'public') {
-        params.public = vm.groupFilter.public ? 'True' : 'False';
+        if (vm.groupFilter.public) {
+          params.public = 'True';
+        } else {
+          delete params.public;
+        }
       } else if (permsID === 'owned') {
-        params.owned = vm.groupFilter.owned ? 'True' : 'False';
+        if (vm.groupFilter.owned) {
+          params.owned = 'True';
+        } else {
+          delete params.owned;
+        }
       } else if (!permsID) {
         delete params.group;
         vm.groupFilter.group = 0;
