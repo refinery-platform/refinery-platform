@@ -25,12 +25,12 @@ import mock
 from mock import ANY
 from rest_framework.test import APIClient, APIRequestFactory, APITestCase
 
+import constants
 from core.models import (INPUT_CONNECTION, OUTPUT_CONNECTION, Analysis,
                          AnalysisNodeConnection, DataSet, ExtendedGroup,
                          InvestigationLink)
 from core.tests import TestMigrations
 from core.views import NodeViewSet
-import constants
 import data_set_manager
 from data_set_manager.isa_tab_parser import IsaTabParser, ParserException
 from data_set_manager.single_file_column_parser import process_metadata_table

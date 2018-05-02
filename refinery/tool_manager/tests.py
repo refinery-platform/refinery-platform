@@ -20,7 +20,8 @@ from bioblend.galaxy.jobs import JobsClient
 from bioblend.galaxy.libraries import LibraryClient
 from bioblend.galaxy.workflows import WorkflowClient
 import celery
-from constants import UUID_RE
+
+import constants
 from django_docker_engine.docker_utils import DockerClientWrapper
 from docker.errors import NotFound
 from guardian.shortcuts import assign_perm, remove_perm
@@ -2106,7 +2107,7 @@ class WorkflowToolTests(ToolManagerTestBase):
         )
         self.assertEqual(len(task_id_list), 2)
         for task_id in task_id_list:
-            self.assertRegexpMatches(str(task_id), UUID_RE)
+            self.assertRegexpMatches(str(task_id), constants.UUID_RE)
 
         self.assertEqual(self.show_dataset_provenance_mock.call_count, 8)
 
