@@ -98,6 +98,12 @@ class Command(BaseCommand):
             default=False,
             help='flag for whether this data set will be visible to the public'
         )
+        parser.add_argument(
+            '--delimiter',
+            action='store_true',
+            default="tab",
+            help='Delimiter to use for metadata file parsing'
+        )
 
     def handle(self, *args, **options):
         """calls the parsing and insertion functions"""
@@ -120,7 +126,9 @@ class Command(BaseCommand):
                     species_column=options['species_column'],
                     genome_build_column=options['genome_build_column'],
                     annotation_column=options['annotation_column'],
-                    is_public=options['is_public'])
+                    is_public=options['is_public'],
+                    delimiter=options['delimiter']
+                )
         except IOError as exc:
             raise CommandError("Could not open file '%s': %s" %
                                options['file_name'], exc)
