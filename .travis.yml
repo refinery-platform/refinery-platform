@@ -19,6 +19,18 @@ services:
   - docker
 
 install:
+  - echo $TRAVIS_BUILD_DIR
+  - ls $TRAVIS_BUILD_DIR
+  - ls /home/travis/build
+  - ls /home/travis/build/
+  - ls /home/travis/build/refinery-platform/
+  - ls /home/travis/build/refinery-platform/refinery-platform/
+  - ls /home/travis/build/refinery-platform/refinery-platform/refinery/
+  - ls /home/travis/build/refinery-platform/refinery-platform/refinery/data_set_manager/
+  - ls /home/travis/build/refinery-platform/refinery-platform/refinery/data_set_manager/test-data/
+  - ls /home/travis/build/refinery-platform/refinery-platform/refinery/data_set_manager/test-data/single-file/
+  - ls /home/travis/build/refinery-platform/refinery-platform/refinery/data_set_manager/test-data/single-file/two-line-local.csv
+
   - node --version
   - NODE_VERSION=6.11.0
   - nvm install $NODE_VERSION
