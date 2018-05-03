@@ -41,7 +41,7 @@ class Command(BaseCommand):
         parser.add_argument(
             '--data_file_column',
             action='store',
-            type='int',
+            type=int,
             help='(Required) index of the column of the input file that '
                  'contains the path to or the URL of the file associated '
                  'with this sample'
@@ -49,7 +49,7 @@ class Command(BaseCommand):
         parser.add_argument(
             '--auxiliary_file_column',
             action='store',
-            type='int',
+            type=int,
             default=None,
             help='column index of the input file that contains the '
                  'path to an auxiliary file (e.g. for visualization) '
@@ -65,14 +65,14 @@ class Command(BaseCommand):
         parser.add_argument(
             '--species_column',
             action='store',
-            type='int',
+            type=int,
             default=None,
             help='column containing species names or ids'
         )
         parser.add_argument(
             '--annotation_column',
             action='store',
-            type='int',
+            type=int,
             default=None,
             help='column containing boolean flag to indicate whether '
                  'the data file in this row should be treated as an '
@@ -81,7 +81,7 @@ class Command(BaseCommand):
         parser.add_argument(
             '--genome_build_column',
             action='store',
-            type='int',
+            type=int,
             default=None,
             help='column containing genome build ids'
         )
