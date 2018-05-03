@@ -16,7 +16,7 @@ from django.core.files.uploadedfile import (InMemoryUploadedFile,
 from django.core.management import call_command
 from django.db.models import Q
 from django.http import QueryDict
-from django.test import LiveServerTestCase, TestCase
+from django.test import LiveServerTestCase, TestCase, override_settings
 
 from celery.states import FAILURE, PENDING, STARTED, SUCCESS
 from djcelery.models import TaskMeta
@@ -2430,6 +2430,7 @@ class InvestigationTests(TestCase):
 
 
 class TestManagementCommands(TestCase):
+    @override_settings(CELERY_ALWAYS_EAGER=True)
     def test_process_metadata_table(self):
         guest_username = "guest"
         test_data_base_path = "data_set_manager/test-data/single-file"
