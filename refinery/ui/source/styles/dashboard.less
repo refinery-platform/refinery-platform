@@ -1786,8 +1786,8 @@ body.repo-mode .refinery-dashboard {
 }
 
 .separator {
-  padding-left: 0.25rem;
-  padding-right: 0.25rem;
+  padding-left: 0.25em;
+  padding-right: 0.25em;
   color: @gray-lighter;
 }
 
@@ -1805,21 +1805,25 @@ body.repo-mode .refinery-dashboard {
 //  border-top: 1px solid rgba(0, 0, 0, 0.1);
 }
 
-.font-awesome-toggle-panel  > a {
-  display: inline-block;
-  position: relative;
-}
+.font-awesome-toggle-panel {
+  padding-bottom: 1.5em;
+  margin-bottom: 1em;
+  a.toggle-group {
+    display: inline-block;
+    position: relative;
+  }
 
-.font-awesome-toggle-panel > a:after {
-  content: "\f0da"; /*fa-caret-right*/
-  font-family: 'FontAwesome';
-  float: left;
-  font-size: .7em;
-}
+  a.toggle-group:after {
+    content: "\f0da"; /*fa-caret-right*/
+    font-family: 'FontAwesome';
+    float: left;
+    font-size: .7em;
+  }
+  a[aria-expanded="true"].toggle-group:after {
+    content: "\f0dd"; /*fa-caret-down*/
+    font-size: .7em;
 
-.font-awesome-toggle-panel > a[aria-expanded="true"]:after {
-  content: "\f0dd"; /*fa-caret-down*/
-  font-size: .7em;
+  }
 }
 
 .width-quarter {
@@ -1833,27 +1837,52 @@ body.repo-mode .refinery-dashboard {
 }
 
 .user-add-icon {
-  padding-top: .4em;
-  vertical-align: bottom;
-
   .fa-plus-circle {
-    font-size: .6em;
+    font-size: 1em;
     position: absolute;
-    left: -4px;
-    top: 12px;
+    top: 8px;
     text-align: center;
   }
 
   .fa-user-o {
-    font-size: .8em;
+    font-size: 1.1em;
   }
 }
 
 /** Dashboard Alpha -JM **/
 #dashboard-cards {
+  margin-top: -30px;
+  .scrollable {
+      overflow-y: scroll;
+      height: 30vh;
+      &::-webkit-scrollbar {
+        -webkit-appearance: none;
+        width: 7px;
+      }
+
+      &::-webkit-scrollbar-thumb {
+        border-radius: 4px;
+        background-color: rgba(0,0,0,.3);
+        -webkit-box-shadow: 0 0 1px rgba(255,255,255,.5);
+      }
+    }
+
   .notification {
     background-color: @white;
     text-decoration: underline solid lighten(@gray-light, 25%);
+  }
+
+  .file-browser-go-icon {
+    .fa-long-arrow-right {
+      position: absolute;
+      text-align: left;
+      left: -3px;
+      font-size: .8em;
+    }
+
+    .fa-folder-o {
+      font-size: 1.1em;
+    }
   }
 
   .card-sub-header {
@@ -1865,7 +1894,7 @@ body.repo-mode .refinery-dashboard {
     font-size: 14px;
     line-height: 1em;
     width: 100%;
-
+    border-bottom: 1px solid #d5d5d5;
     .btn {
       float: left;
       margin-top: 3px;
@@ -1873,8 +1902,7 @@ body.repo-mode .refinery-dashboard {
   }
 
   #dashboard-data-set-panel {
-    max-height: 50vh;
-
+    height: 48vh;
     .refinery-sub-panel-notice {
       margin: 0 10px;
       padding: 0;
@@ -1886,17 +1914,76 @@ body.repo-mode .refinery-dashboard {
     }
 
     #dashboard-data-set-list {
-      overflow: scroll;
-      height: 50vh;
+      overflow-y: scroll;
+      height: 38vh;
       div.refinery-panel-content {
         padding-bottom: 10px;
       }
+      &::-webkit-scrollbar {
+        -webkit-appearance: none;
+        width: 7px;
+      }
+
+      &::-webkit-scrollbar-thumb {
+        border-radius: 4px;
+        background-color: rgba(0,0,0,.3);
+        -webkit-box-shadow: 0 0 1px rgba(255,255,255,.5);
+      }
     }
   }
-// /* Small devices (tablets, 768px and up) */
-//  @media (max-width: @screen-sm-min) {
-//      margin-top: 44; // offset the removed sub-nav bar
-//  }
+
+  #dashboard-history-card {
+    height: 44vh;
+    ul {
+      height: 40vh;
+    }
+    li.event-item {
+      padding: 0.2em;
+    }
+  }
+
+  #dashboard-collaboration-card {
+    height: 44vh;
+
+    .name-subheader {
+      display: inline-block;
+      margin: 0;
+      padding: 0;
+      font-size: 14px;
+      line-height: 1em;
+      width: 100%;
+      h4 {
+        text-decoration: underline solid #d5d5d5;
+      }
+    }
+
+    #group-main-list{
+      height: 40vh
+    }
+
+    .dashboard-member-list {
+      .border-line {
+        margin: 0.3em 2em 0.8em 2em;
+        border-top: 1px solid @gray-lighter-rgba;
+        transition: all @fast-transition-speed @ease-in-out-cubic;
+      }
+
+      a.member-info {
+        padding-left: 3em;
+      }
+
+      .group-member-manager-text {
+        text-align: left
+      }
+    }
+  }
+
+ /* Small devices (tablets, 768px and up) */
+  @media (max-width: @screen-md-min) {
+     #dashboard-collaboration-card {
+       margin-top: 1.2em;
+     }
+  }
 //
 //  /* Medium devices (desktops, 992px and up) */
 //  @media (min-width: @screen-sm-min) {
@@ -1909,6 +1996,12 @@ body.repo-mode .refinery-dashboard {
 //  }
 }
 
-body {
-  margin-top: @navbar-height * 1.2;
+.radio-drop-down {
+  padding: 0.5em;
+  label {
+    padding: 0.2em 0 0em 0.2em;
+    input {
+      padding-right: .2em;
+    }
+  }
 }

@@ -15,23 +15,26 @@
       </div>
     </div>
     <div
-      id="events-panel"
+      id="group-main-list"
       class="refinery-panel-content">
-      <ul class="list-unstyled p-b-1">
-        <li class="col-md-6 underline-text">Group</li>
-        <li class="col-md-4 underline-text">Role</li>
-        <li class="col-md-2 underline-text">Edit</li>
+      <ul class="list-unstyled name-subheader">
+        <li class="col-md-6"><h4>Group</h4></li>
+        <li class="col-md-4"><h4>Role</h4></li>
+        <li class="col-md-2"><h4>Edit</h4></li>
       </ul>
-       <ul class="list-unstyled scrollable" id="group-main-list">
+      <ul class="list-unstyled scrollable">
          <li
            ng-repeat="group in $ctrl.userGroups"
-           class="font-awesome-toggle-panel m-b-1 p-b-1">
+           class="font-awesome-toggle-panel">
              <a
                type="button"
                data-toggle="collapse"
-               class="col-md-6"
+               class="col-md-6 toggle-group"
                data-target="#{{group.uuid}}"
                aria-expanded="false" aria-controls="collapseOne">
+               <span ng-if="group.name==='Public">
+                 &nbsp;<i class="fa fa-globe"></i>
+               </span>
                &nbsp;{{ group.name }}
              </a>
               <div class="col-md-4">
@@ -65,47 +68,49 @@
            aria-expanded="true"
            aria-labelledby="headingOne"
            data-parent="#accordion">
-           <div class="card-body">
-              <ul class="list-unstyled m-t-1 p-t-1 m-b-1 m-b-1">
-                <li ng-repeat="member in group.member_list" class="p-t-1">
-                  <a
-                    ng-href="users/{{ member.uuid }}"
-                    ng-class="{'col-md-6': member.is_manager, 'col-md-10': !member.is_manager}">
-                    <span ng-if="member.last_name">
-                      {{ member.first_name }} {{ member.last_name }}
-                    </span>
-                    <span ng-if="!member.last_name">
-                      {{ member.username }}
-                    </span>
-                  </a>
-                  <span class="col-md-4" ng-if="member.is_manager">
-                    Manager
-                  </span>
-                  <span ng-if="group.can_edit" class="col-md-2">
-                    <a
-                      ng-click="$ctrl.openGroupMemberEditor(member, group.member_list.length, group)">
-                      <i class="fa fa-cog"></i>
-                    </a>
-                  </span>
-                </li>
-                <li ng-repeat="invite in $ctrl.invitations[group.id]" class="p-t-1">
-                  <span class="col-md-6">
-                    {{ invite.recipient_email }}
-                  </span>
-                  <span ng-if="group.can_edit" class="col-md-offset-3
-                  col-md-3">
-                    <a ng-click="$ctrl.revokeInvitation(invite.token_uuid)">
-                      Revoke
-                    </a>
-                    <a ng-click="$ctrl.resendInvitation(invite.token_uuid)" class="p-l-1">
-                      Resend
-                    </a>
-                  </span>
-                </li>
-              </ul>
-           </div>
-          </div>
-         </li>
-       </ul>
-    </div>
-  </div>
+          <ul class="list-unstyled dashboard-member-list">
+            <li ng-repeat="member in group.member_list">
+              <a
+                ng-href="users/{{ member.uuid }}"
+                class="member-info"
+                ng-class="{'col-md-6': member.is_manager, 'col-md-10': !member.is_manager}">
+                <i class="fa fa-user-o"></i>
+                <span ng-if="member.last_name">
+                  {{ member.first_name }} {{ member.last_name }}
+                </span>
+                <span ng-if="!member.last_name">
+                  {{ member.username }}
+                </span>
+              </a>
+              <span class="col-md-4 group-member-manager-text" ng-if="member.is_manager">
+                Manager
+              </span>
+              <span ng-if="group.can_edit" class="col-md-2 p-l-1">
+                <a
+                  ng-click="$ctrl.openGroupMemberEditor(member, group.member_list.length, group)">
+                  <i class="fa fa-cog"></i>
+                </a>
+              </span>
+              <span class="col-md-11 p-l-1 border-line"></span>
+            </li>
+            <li ng-repeat="invite in $ctrl.invitations[group.id]" class="p-t-1">
+              <span class="col-md-6">
+                {{ invite.recipient_email }}
+              </span>
+              <span ng-if="group.can_edit" class="col-md-offset-3
+              col-md-3">
+                <a ng-click="$ctrl.revokeInvitation(invite.token_uuid)">
+                  Revoke
+                </a>
+                <a ng-click="$ctrl.resendInvitation(invite.token_uuid)" class="p-l-1">
+                  Resend
+                </a>
+              </span>
+              <span class="col-md-11 p-l-1 border-line"></span>
+            </li>
+          </ul>
+       </div>
+      </div>
+     </li>
+   </ul>
+</div>
