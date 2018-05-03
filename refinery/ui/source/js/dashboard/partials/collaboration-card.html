@@ -1,4 +1,4 @@
-<div class="refinery-panel">
+<div class="refinery-panel" id="dashboard-collaboration-card">
     <div class="refinery-header">
       <div>
         <h3>
@@ -6,7 +6,7 @@
           <span class="p-l-1">
             <a
               ng-click="$ctrl.openGroupAdd()"
-              class="no-underline btn priority-button">
+              class="no-underline refinery-base btn priority-button">
               <i class="fa fa-plus-circle"></i>
               Add Group
             </a>
@@ -16,13 +16,13 @@
     </div>
     <div
       id="events-panel"
-      class="refinery-panel-content card-sub-header">
+      class="refinery-panel-content">
       <ul class="list-unstyled p-b-1">
         <li class="col-md-6 underline-text">Group</li>
         <li class="col-md-4 underline-text">Role</li>
         <li class="col-md-2 underline-text">Edit</li>
       </ul>
-       <ul class="list-unstyled">
+       <ul class="list-unstyled scrollable" id="group-main-list">
          <li
            ng-repeat="group in $ctrl.userGroups"
            class="font-awesome-toggle-panel m-b-1 p-b-1">
