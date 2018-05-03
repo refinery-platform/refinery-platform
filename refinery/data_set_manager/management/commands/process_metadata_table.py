@@ -131,7 +131,7 @@ class Command(BaseCommand):
                 )
         except IOError as exc:
             raise CommandError("Could not open file '%s': %s" %
-                               options['file_name'], exc)
+                               (options['file_name'], exc))
         except ValueError as exc:
             raise CommandError(exc)
 
