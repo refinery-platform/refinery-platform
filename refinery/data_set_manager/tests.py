@@ -13,6 +13,7 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import (InMemoryUploadedFile,
                                             SimpleUploadedFile)
+from django.core.management import call_command
 from django.db.models import Q
 from django.http import QueryDict
 from django.test import LiveServerTestCase, TestCase
@@ -2426,3 +2427,31 @@ class InvestigationTests(TestCase):
 
     def test_get_assay_count(self):
         self.assertEqual(self.isa_tab_investigation.get_assay_count(), 1)
+
+
+class TestManagementCommands(TestCase):
+    def test_process_metadata_table(self):
+        guest_username = "guest"
+        test_data_base_path = "data_set_manager/test-data/single-file"
+        call_command(
+            "process_metadata_table",
+            username=guest_username,
+            title="Process Metadata Table Test csv",
+            file_name=test_data_base_path + "/two-line-local.csv",
+            source_column_index="2",
+            data_file_column="2",
+            base_path=test_data_base_path,
+            is_public=True,
+            delimiter="comma"
+        )
+        call_command(
+            "process_metadata_table",
+            username=guest_username,
+            title="Process Metadata Table Test tsv",
+            file_name=test_data_base_path + "/two-line-local.tsv",
+            source_column_index="2",
+            data_file_column="2",
+            base_path=test_data_base_path,
+            is_public=True
+        )
+        self.assertEqual(DataSet.objects.count(), 2)

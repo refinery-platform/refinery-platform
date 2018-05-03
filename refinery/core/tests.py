@@ -2307,31 +2307,6 @@ class TestManagementCommands(TestCase):
                 "non-existent group name"
             )
 
-    def test_process_metadata_table(self):
-        guest_username = "guest"
-        call_command(
-            "process_metadata_table",
-            username=guest_username,
-            title="Process Metadata Table Test csv",
-            file_name="core/test-data/two-line.csv",
-            source_column_index="2",
-            data_file_column="2",
-            base_path="core/test-data/",
-            is_public=True,
-            delimiter="comma"
-        )
-        call_command(
-            "process_metadata_table",
-            username=guest_username,
-            title="Process Metadata Table Test tsv",
-            file_name="core/test-data/two-line.tsv",
-            source_column_index="2",
-            data_file_column="2",
-            base_path="core/test-data/",
-            is_public=True
-        )
-        self.assertEqual(DataSet.objects.count(), 2)
-
 
 class InitialSiteStatisticsCreationTest(TestMigrations):
     migrate_from = '0019_sitestatistics'
