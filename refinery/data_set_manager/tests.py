@@ -2432,11 +2432,10 @@ class InvestigationTests(TestCase):
 class TestManagementCommands(TestCase):
     @override_settings(CELERY_ALWAYS_EAGER=True)
     def test_process_metadata_table(self):
+        os.path.isfile("./data_set_manager/test-data/single-file/two-line"
+                       "-local.csv")
         guest_username = "guest"
-        test_data_base_path = os.path.join(
-            settings.BASE_DIR,
-            "refinery/data_set_manager/test-data/single-file"
-        )
+        test_data_base_path = "./data_set_manager/test-data/single-file"
         call_command(
             "process_metadata_table",
             username=guest_username,
