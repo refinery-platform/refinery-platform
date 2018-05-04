@@ -101,39 +101,37 @@
     <div
       id="data-set-panel-header"
       class="refinery-sub-panel-notice">
-      <div class="notification">
+      <div
+        ng-messages="metadataSearch.searchQuery.$error"
+        role="alert"
+        class="refinery-sub-panel-notice">
+        <div ng-message="minlength" class="text-warning notice">
+          <i class="fa fa-warning" aria-hidden="true"></i>
+          <strong>Too short!</strong>: Enter at least 2 characters to search.
+        </div>
         <div
-          ng-messages="metadataSearch.searchQuery.$error"
-          role="alert"
-          class="refinery-sub-panel-notice">
-          <div ng-message="minlength" class="text-warning notice">
-            <i class="fa fa-warning" aria-hidden="true"></i>
-            <strong>Too short!</strong>: Enter at least 2 characters to search.
-          </div>
-          <div
-            ng-show="$ctrl.dataSets.length === 0 && $ctrl.searchQueryDataSets.length > 1 && !$ctrl.dataSetsError"
-            class="text-warning notice">
-            <i class="fa fa-warning" aria-hidden="true"></i>
-            <strong>Info</strong>: No data sets found.
-          </div>
-          <div
-            ng-show="$ctrl.dataSets.length === 0 && $ctrl.searchQueryDataSets.length === 0 && !$ctrl.dataSetsError"
-            class="text-info notice">
-            <strong>Info</strong>: No data sets available.
-          </div>
-          <div
-              id="launchpad_warning"
-              ng-show="$ctrl.searchQueryDataSets.length > 1 && $ctrl.dataSetsError"
-              class="text-error notice">
-              <strong>Error: </strong>
-              Please contact your <a ng-href="mailto:{{ app.settings.djangoApp.admins }}?Subject=Refinery%20Error">System Administrator</a>.
-          </div>
+          ng-show="$ctrl.dataSets.length === 0 && $ctrl.searchQueryDataSets.length > 1 && !$ctrl.dataSetsError"
+          class="text-warning notice">
+          <i class="fa fa-warning" aria-hidden="true"></i>
+          <strong>Info</strong>: No data sets found.
         </div>
-        <div id="dashboard-total-datasets">
-          <span ng-if="$ctrl.dataSets.length">
-            {{ $ctrl.dataSets.length }} data sets
-          </span>
+        <div
+          ng-show="$ctrl.dataSets.length === 0 && $ctrl.searchQueryDataSets.length === 0 && !$ctrl.dataSetsError"
+          class="text-info notice">
+          <strong>Info</strong>: No data sets available.
         </div>
+        <div
+            id="launchpad_warning"
+            ng-show="$ctrl.searchQueryDataSets.length > 1 && $ctrl.dataSetsError"
+            class="text-error notice">
+            <strong>Error: </strong>
+            Please contact your <a ng-href="mailto:{{ app.settings.djangoApp.admins }}?Subject=Refinery%20Error">System Administrator</a>.
+        </div>
+      </div>
+      <div id="dashboard-total-datasets">
+        <span ng-if="$ctrl.dataSets.length">
+          {{ $ctrl.dataSets.length }} data sets
+        </span>
       </div>
     </div>
   </div>
@@ -141,7 +139,7 @@
     <div class="refinery-panel-content">
       <ul class="results list-unstyled">
         <li ng-repeat="dataSet in $ctrl.dataSets">
-          <a href="/data_sets/{{ dataSet.uuid }}">
+          <a href="/data_sets/{{ dataSet.uuid }}" class="data-set-name">
             {{ dataSet.title }}&nbsp;
             <span
                class="fa-stack file-browser-go-icon"

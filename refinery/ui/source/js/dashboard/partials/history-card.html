@@ -7,7 +7,7 @@
   <div
     id="events-panel"
     class="refinery-panel-content">
-     <ul class="list-unstyled scrollable main-content-list">
+     <ul class="list-unstyled scrollable-list main-content-list">
        <li ng-repeat="tool in $ctrl.tools" class="event-item">
           {{ tool.modification_date | date:"MM/dd/yyyy" }}
          <span class="p-l-1-2" ng-if="tool.tool_definition === 2">

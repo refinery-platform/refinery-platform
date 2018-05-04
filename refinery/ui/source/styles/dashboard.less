@@ -1841,6 +1841,7 @@ body.repo-mode .refinery-dashboard {
     font-size: 1em;
     position: absolute;
     top: 8px;
+    left: 3px;
     text-align: center;
   }
 
@@ -1852,9 +1853,8 @@ body.repo-mode .refinery-dashboard {
 /** Dashboard Alpha -JM **/
 #dashboard-cards {
   margin-top: -30px;
-  .scrollable {
+  .scrollable-list {
       overflow-y: scroll;
-      height: 30vh;
       &::-webkit-scrollbar {
         -webkit-appearance: none;
         width: 7px;
@@ -1901,8 +1901,12 @@ body.repo-mode .refinery-dashboard {
     }
   }
 
+
+  @card-top-half-view: ~"calc((100vh - @{navbar-height})/2)";
+  @card-bottom-half-view: ~"calc(@{card-top-half-view} - 3em)";
+
   #dashboard-data-set-panel {
-    height: 48vh;
+    height: @card-top-half-view;
     .refinery-sub-panel-notice {
       margin: 0 10px;
       padding: 0;
@@ -1915,7 +1919,11 @@ body.repo-mode .refinery-dashboard {
 
     #dashboard-data-set-list {
       overflow-y: scroll;
-      height: 38vh;
+      height:  ~"calc(@{card-top-half-view} - 118px)";
+      padding-left: 0.3em;
+      .data-set-name {
+        font-size: 16px;
+      }
       div.refinery-panel-content {
         padding-bottom: 10px;
       }
@@ -1930,35 +1938,47 @@ body.repo-mode .refinery-dashboard {
         -webkit-box-shadow: 0 0 1px rgba(255,255,255,.5);
       }
     }
+
+    #dashboard-total-datasets {
+      font-size: 16px;
+      border-bottom: 1px solid @gray-lighter-rgba;
+      font-weight: 400px;
+      color: #999;
+      line-height: 1em;
+      padding: 5px 0;
+    }
   }
 
   #dashboard-history-card {
-    height: 44vh;
+    height: @card-bottom-half-view;
     ul {
-      height: 40vh;
+      height: ~"calc(@{card-bottom-half-view} - 40px)";
+      padding-top: 0.2em;
+      font-size: 16px;
     }
     li.event-item {
-      padding: 0.2em;
+      padding: 0.3em .2em 0 .5em;
+      margin-bottom: .9em;
     }
   }
 
   #dashboard-collaboration-card {
-    height: 44vh;
+    height: @card-bottom-half-view;
+    .group-name-header {
+      font-size: 16px
+    }
 
     .name-subheader {
       display: inline-block;
       margin: 0;
       padding: 0;
-      font-size: 14px;
+      font-size: 16px;
       line-height: 1em;
       width: 100%;
-      h4 {
-        text-decoration: underline solid #d5d5d5;
-      }
     }
 
     #group-main-list{
-      height: 40vh
+      height: ~"calc(@{card-bottom-half-view} - 95px)";
     }
 
     .dashboard-member-list {

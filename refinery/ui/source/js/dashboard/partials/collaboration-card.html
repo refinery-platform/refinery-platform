@@ -15,17 +15,17 @@
       </div>
     </div>
     <div
-      id="group-main-list"
       class="refinery-panel-content">
       <ul class="list-unstyled name-subheader">
         <li class="col-md-6"><h4>Group</h4></li>
         <li class="col-md-4"><h4>Role</h4></li>
         <li class="col-md-2"><h4>Edit</h4></li>
       </ul>
-      <ul class="list-unstyled scrollable">
+      <ul class="list-unstyled scrollable-list" id="group-main-list">
          <li
            ng-repeat="group in $ctrl.userGroups"
            class="font-awesome-toggle-panel">
+           <span class="group-name-header">
              <a
                type="button"
                data-toggle="collapse"
@@ -47,7 +47,6 @@
                   <i class="fa fa-cog"></i>
                 </a>
                  <a ng-if="group.can_edit"
-                  href="#/{{ collab.activeGroup.uuid }}/"
                   ng-click="$ctrl.openGroupMemberAdd(group)"
                   class="no-underline">
                    <span
@@ -61,6 +60,7 @@
                    </span>
                 </a>
               </div>
+             </span>
 
          <div
            id="{{group.uuid}}"
@@ -71,7 +71,7 @@
           <ul class="list-unstyled dashboard-member-list">
             <li ng-repeat="member in group.member_list">
               <a
-                ng-href="users/{{ member.uuid }}"
+                ng-href="/users/{{ member.uuid }}"
                 class="member-info"
                 ng-class="{'col-md-6': member.is_manager, 'col-md-10': !member.is_manager}">
                 <i class="fa fa-user-o"></i>
