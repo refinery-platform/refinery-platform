@@ -92,7 +92,7 @@ script:
   - echo 'travis_fold:end:grunt'
 
   - echo 'travis_fold:start:django-tests'
-  - coverage run manage.py test data_set_manager.tests.TestManagementCommands.test_process_metadata_table
+  - coverage run manage.py test
   - echo 'travis_fold:end:django-tests'
 
   - echo 'travis_fold:start:cypress'
