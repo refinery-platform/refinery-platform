@@ -2294,6 +2294,7 @@ class ProcessISATabViewLiveServerTests(ProcessISATabViewTestBase,
         self.successful_import_assertions()
 
 
+@override_storage()
 class SingleFileColumnParserTests(TestCase):
     def setUp(self):
         self.import_file_mock = mock.patch.object(import_file, "delay").start()
