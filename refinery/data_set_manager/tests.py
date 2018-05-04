@@ -2430,6 +2430,38 @@ class InvestigationTests(TestCase):
 
 
 class TestManagementCommands(TestCase):
+    def test_a(self):
+        self.assertEqual(
+            os.listdir(os.getcwd()),
+            ['.coverage', '.coveragerc', '.DS_Store', 'analysis_manager',
+             'annotation_server', 'celerybeat-schedule', 'config',
+             'constants.py', 'constants.pyc', 'core', 'data_set_manager',
+             'dependency_migrations', 'dev-tool.json', 'factory_boy',
+             'file_server', 'file_store', 'galaxy_connector',
+             'geckodriver.log', 'GuardianTastypieAuthz.py', 'higlass.json',
+             'log', 'manage.py', 'middleware.py', 'npm-debug.log',
+             'selenium_testing', 'solr', 'static', 'supervisord.conf',
+             'supervisord.conf.erb', 'templates', 'tool_manager', 'ui',
+             'user_files_manager'],
+
+        )
+
+    def test_b(self):
+        self.assertEqual(
+            os.listdir(os.getcwd() +
+                       "/data_set_manager/test-data/single-file"),
+            ['one-line.csv', 'test1.txt', 'test2.txt', 'two-line-local.csv',
+             'two-line-local.tsv', 'two-line-s3.csv', 'two-line.csv'],
+        )
+
+    def test_c(self):
+        self.assertTrue(
+            os.path.isfile(
+                os.getcwd() +
+                "/data_set_manager/test-data/single-file/two-line-local.csv"
+            )
+        )
+
     @override_settings(CELERY_ALWAYS_EAGER=True)
     def test_process_metadata_table(self):
         guest_username = "guest"
