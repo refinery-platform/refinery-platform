@@ -2434,38 +2434,6 @@ class InvestigationTests(TestCase):
 class TestManagementCommands(TestCase):
     maxDiff = None
 
-    def test_a(self):
-        self.assertEqual(
-            os.listdir(os.getcwd()),
-            ['.coveragerc', 'analysis_manager',
-             'annotation_server', 'celerybeat-schedule', 'config',
-             'constants.py', 'core', 'data_set_manager',
-             'dependency_migrations', 'factory_boy',
-             'file_server', 'file_store', 'galaxy_connector',
-             'GuardianTastypieAuthz.py',
-             'log', 'manage.py', 'middleware.py',
-             'selenium_testing', 'solr', 'static',
-             'supervisord.conf.erb', 'templates', 'tool_manager', 'ui',
-             'user_files_manager'],
-
-        )
-
-    def test_b(self):
-        self.assertEqual(
-            os.listdir(os.getcwd() +
-                       "/data_set_manager/test-data/single-file"),
-            ['one-line.csv', 'test1.txt', 'test2.txt', 'two-line-local.csv',
-             'two-line-local.tsv', 'two-line-s3.csv', 'two-line.csv'],
-        )
-
-    def test_c(self):
-        self.assertTrue(
-            os.path.isfile(
-                os.getcwd() +
-                "/data_set_manager/test-data/single-file/two-line-local.csv"
-            )
-        )
-
     @override_settings(CELERY_ALWAYS_EAGER=True)
     def test_process_metadata_table(self):
         guest_username = "guest"
