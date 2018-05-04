@@ -23,7 +23,7 @@ django-guardian==1.4.1
 django-haystack==2.4.0
 django-markwhat==1.5
 django-picklefield==0.2.0
-django-override-storage==0.1.2
+django-override-storage==0.1.4
 django-registration-redux==1.9
 djangorestframework==3.3.3
 djangorestframework-recursive==0.1.1
