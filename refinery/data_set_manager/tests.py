@@ -2435,14 +2435,14 @@ class TestManagementCommands(TestCase):
     def test_a(self):
         self.assertEqual(
             os.listdir(os.getcwd()),
-            ['.coverage', '.coveragerc', '.DS_Store', 'analysis_manager',
+            ['.coveragerc', 'analysis_manager',
              'annotation_server', 'celerybeat-schedule', 'config',
-             'constants.py', 'constants.pyc', 'core', 'data_set_manager',
-             'dependency_migrations', 'dev-tool.json', 'factory_boy',
+             'constants.py', 'core', 'data_set_manager',
+             'dependency_migrations', 'factory_boy',
              'file_server', 'file_store', 'galaxy_connector',
-             'geckodriver.log', 'GuardianTastypieAuthz.py', 'higlass.json',
-             'log', 'manage.py', 'middleware.py', 'npm-debug.log',
-             'selenium_testing', 'solr', 'static', 'supervisord.conf',
+             'GuardianTastypieAuthz.py',
+             'log', 'manage.py', 'middleware.py',
+             'selenium_testing', 'solr', 'static',
              'supervisord.conf.erb', 'templates', 'tool_manager', 'ui',
              'user_files_manager'],
 
