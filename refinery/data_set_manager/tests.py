@@ -2432,6 +2432,8 @@ class InvestigationTests(TestCase):
 
 
 class TestManagementCommands(TestCase):
+    maxDiff = None
+
     def test_a(self):
         self.assertEqual(
             os.listdir(os.getcwd()),
