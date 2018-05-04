@@ -2432,29 +2432,31 @@ class InvestigationTests(TestCase):
 class TestManagementCommands(TestCase):
     @override_settings(CELERY_ALWAYS_EAGER=True)
     def test_process_metadata_table(self):
-        os.path.isfile("./data_set_manager/test-data/single-file/two-line"
-                       "-local.csv")
         guest_username = "guest"
-        test_data_base_path = "./data_set_manager/test-data/single-file"
-        call_command(
-            "process_metadata_table",
-            username=guest_username,
-            title="Process Metadata Table Test csv",
-            file_name=os.path.join(test_data_base_path, "two-line-local.csv"),
-            source_column_index="2",
-            data_file_column="2",
-            base_path=test_data_base_path,
-            is_public=True,
-            delimiter="comma"
-        )
-        call_command(
-            "process_metadata_table",
-            username=guest_username,
-            title="Process Metadata Table Test tsv",
-            file_name=os.path.join(test_data_base_path, "two-line-local.tsv"),
-            source_column_index="2",
-            data_file_column="2",
-            base_path=test_data_base_path,
-            is_public=True
-        )
+        test_data_base_path = "data_set_manager/test-data/single-file"
+        with open(os.path.join(test_data_base_path, "two-line-local.csv")) \
+                as two_line_csv:
+            call_command(
+                "process_metadata_table",
+                username=guest_username,
+                title="Process Metadata Table Test csv",
+                file_name=two_line_csv.name,
+                source_column_index="2",
+                data_file_column="2",
+                base_path=test_data_base_path,
+                is_public=True,
+                delimiter="comma"
+            )
+        with open(os.path.join(test_data_base_path, "two-line-local.tsv")) \
+                as two_line_tsv:
+            call_command(
+                "process_metadata_table",
+                username=guest_username,
+                title="Process Metadata Table Test tsv",
+                file_name=two_line_tsv.name,
+                source_column_index="2",
+                data_file_column="2",
+                base_path=test_data_base_path,
+                is_public=True
+            )
         self.assertEqual(DataSet.objects.count(), 2)
