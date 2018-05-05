@@ -1,4 +1,4 @@
-<div class="refinery-panel" id="dashboard-data-set-panel">
+<div class="refinery-panel" id="dashboard-data-set-card">
   <div class="refinery-header">
     <h3>
       <i class="m-r-1-4 fa fa-database"></i>Data Sets
@@ -18,7 +18,7 @@
       </span>
     </h3>
   </div>
-  <div id="" class="refinery-sub-panel">
+  <div class="refinery-sub-panel">
     <div class="card-sub-header">
       <div
         id="search-interface-dashboard"
@@ -196,7 +196,10 @@
                 </li>
                <li><span class="separator">&middot;</span></li>
                <li>
+                 Mouse
+                 {{ dataSet.is_owner }}
                  <a
+                    class="pointer"
                     ng-if="dataSet.is_owner"
                     ng-click="$ctrl.openPermissionEditor(dataSet.uuid)"
                     refinery-tooltip
