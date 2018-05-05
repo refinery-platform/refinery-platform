@@ -99,12 +99,10 @@
       </div>
     </div>
     <div
-      id="data-set-panel-header"
       class="refinery-sub-panel-notice">
       <div
         ng-messages="metadataSearch.searchQuery.$error"
-        role="alert"
-        class="refinery-sub-panel-notice">
+        role="alert">
         <div ng-message="minlength" class="text-warning notice">
           <i class="fa fa-warning" aria-hidden="true"></i>
           <strong>Too short!</strong>: Enter at least 2 characters to search.
@@ -177,30 +175,27 @@
                   <i class="fa fa-calendar-o"></i>
                   {{ dataSet.modification_date | utcToReadableDate}}
                 </li>
-               <li><span class="separator">&middot;</span></li>
-               <li>
+               <li ng-if="dataSet.is_owner">
+                 <span class="separator">&middot;</span>
+               </li>
+               <li ng-if="dataSet.is_owner">
                  <a
-                    ng-click="dashboard.openDataSetDeleteModal(dataSet)"
+                    ng-click="$ctrl.openDataSetDeleteModal(dataSet)"
                     class="pointer"
                     refinery-tooltip
                     refinery-tooltip-container="body"
                     refinery-tooltip-placement="bottom"
                     refinery-tooltip-hide-on-click="true
                     title="Delete data set">
-                  <i
-                    class="fa fa-trash-o"
-                    ng-if="dataSet.is_owner">
+                  <i class="fa fa-trash-o">
                   </i>
                  Delete
                  </a>
                 </li>
                <li><span class="separator">&middot;</span></li>
-               <li>
-                 Mouse
-                 {{ dataSet.is_owner }}
+               <li ng-if="dataSet.is_owner">
                  <a
                     class="pointer"
-                    ng-if="dataSet.is_owner"
                     ng-click="$ctrl.openPermissionEditor(dataSet.uuid)"
                     refinery-tooltip
                     refinery-tooltip-container="body"
