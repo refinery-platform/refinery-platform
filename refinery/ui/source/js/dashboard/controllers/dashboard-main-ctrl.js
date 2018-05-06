@@ -13,28 +13,42 @@
 
   DashboardMainCtrl.$inject = ['humanize', '_', 'groupInviteService', 'groupMemberService'];
 
-  function DashboardMainCtrl (humanize, _, groupInviteService, groupMemberService) {
+  function DashboardMainCtrl (
+    humanize,
+    _,
+    groupInviteService,
+    groupMemberService
+  ) {
     var vm = this;
+    vm.getGroups = getGroups;
     vm.groups = [];
     vm.groupInvites = {};
-    vm.getGroups = getGroups;
-
     activate();
 
     function activate () {
       getGroups();
     }
 
-    // list of groups a user is a member of
+    /**
+     * @name getGroups
+     * @desc  VM method used by child components to display groups
+     * @memberOf refineryDashboard.getGroups
+    **/
     function getGroups () {
-      groupMemberService.query().$promise.then(function (response) {
+      var members = groupMemberService.query();
+      members.$promise.then(function (response) {
         vm.groups = response.objects;
         _.each(response.objects, function (group) {
           addInviteList(group.id);
         });
       });
+      return members.$promise;
     }
-
+      /**
+     * @name addInviteList
+     * @desc  Private method used by groups to grab and append the invitee list
+     * @memberOf refineryDashboard.addInviteList
+    **/
     function addInviteList (groupID) {
       groupInviteService.query({
         group_id: groupID
@@ -44,10 +58,5 @@
         }
       });
     }
-    /*
-    * ---------------------------------------------------------
-    * Watchers
-    * ---------------------------------------------------------
-    */
   }
 })();

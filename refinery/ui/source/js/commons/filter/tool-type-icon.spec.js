@@ -20,11 +20,11 @@
     });
 
     it('should return correct status depending on WORKFLOW', function () {
-      expect(filter('WORKFLOW')).toEqual('fa fa-cog');
+      expect(filter('WORKFLOW')).toEqual('fa fa-cogs');
     });
 
     it('should returns workflow by default', function () {
-      expect(filter('ABC')).toEqual('fa fa-cog');
+      expect(filter('ABC')).toEqual('fa fa-cogs');
     });
   });
 })();
