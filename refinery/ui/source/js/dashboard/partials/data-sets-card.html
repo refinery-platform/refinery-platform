@@ -149,7 +149,7 @@
           <span class="refinery-spinner refinery-spinner-inline"></span>
         </h4>
       </div>
-      <ul class="results list-unstyled">
+      <ul class="list-unstyled">
         <li ng-repeat="dataSet in $ctrl.dataSets">
           <a href="/data_sets/{{ dataSet.uuid }}" class="data-set-name">
             {{ dataSet.title }}&nbsp;
@@ -221,6 +221,9 @@
                </li>
              </ul>
            </div>
+          <div class="indicator" id="data-set-description">
+            {{ dataSet.description }}
+          </div>
         </li>
       </ul>
     </div>
