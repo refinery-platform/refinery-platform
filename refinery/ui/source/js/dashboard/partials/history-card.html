@@ -4,9 +4,19 @@
       <i class="m-r-1-4 fa fa-history"></i> History
     </h3>
   </div>
-  <div
-    id="events-panel"
-    class="refinery-panel-content">
+  <div class="refinery-panel-content">
+    <div class="refinery-sub-panel-notice">
+      <div
+        ng-if="$ctrl.isToolsLoading">
+        class="text-info notice">
+        <strong>Info</strong>: No events have occurred.
+      </div>
+    </div>
+    <div ng-if="$ctrl.isToolsLoading">
+      <h4 class="emphasized text-align-center m-t-1-5">
+        <span class="refinery-spinner refinery-spinner-inline"></span>
+      </h4>
+    </div>
      <ul class="list-unstyled scrollable-list main-content-list">
        <li ng-repeat="tool in $ctrl.tools" class="event-item">
           {{ tool.modification_date | date:"MM/dd/yyyy" }}

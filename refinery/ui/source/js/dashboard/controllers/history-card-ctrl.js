@@ -17,6 +17,7 @@
     toolsService
   ) {
     var vm = this;
+    vm.isToolsLoading = true;
     vm.tools = [];
     activate();
 
@@ -27,8 +28,7 @@
     function getUserTools () {
       var toolRequest = toolsService.query();
       toolRequest.$promise.then(function (response) {
-        console.log('get User tools');
-        console.log(response);
+        vm.isToolsLoading = false;
         vm.tools = response;
        // angular.copy(addHumanTime(response), visualizations);
       });

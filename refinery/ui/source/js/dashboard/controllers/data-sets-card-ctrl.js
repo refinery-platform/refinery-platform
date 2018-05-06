@@ -40,6 +40,7 @@
     vm.searchQueryDataSets = '';
     vm.resetDataSetSearch = resetDataSetSearch;
     vm.groupFilter = { selectedName: 'All' };
+    vm.loadingDataSets = true;
     var params = {};
 
     activate();
@@ -70,12 +71,13 @@
     }
 
     function getDataSets () {
-      console.log(params);
       dataSetService.query(params).$promise.then(function (response) {
+        vm.loadingDataSets = false;
         vm.dataSetsAll = response.objects;
         vm.dataSets = vm.dataSetsAll;
         vm.dataSetsError = false;
       }, function (error) {
+        vm.loadingDataSets = false;
         $log.error(error);
         vm.dataSetsError = true;
       });
