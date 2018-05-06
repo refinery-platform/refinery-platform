@@ -2,6 +2,7 @@
  * Data Sets Card Ctrl
  * @namespace DataSetsCardCtrl
  * @desc Controller for data sets card component on dashboard component.
+ * Child component of dashboard component
  * @memberOf refineryApp.refineryDataSetsCardCtrl
  */
 (function () {
@@ -29,52 +30,60 @@
     dataSetService
   ) {
     var vm = this;
-    vm.dataSetsAll = [];
     vm.dataSets = [];
     vm.dataSetsError = false;
     vm.filterDataSets = filterDataSets;
-    vm.openDataSetDeleteModal = openDataSetDeleteModal;
-    vm.openPermissionEditor = openPermissionEditor;
     vm.getDataSets = getDataSets;
-    vm.searchDataSets = searchDataSets;
-    vm.searchQueryDataSets = '';
-    vm.resetDataSetSearch = resetDataSetSearch;
     vm.groupFilter = { selectedName: 'All' };
     vm.loadingDataSets = true;
-    var params = {};
+    vm.openDataSetDeleteModal = openDataSetDeleteModal;
+    vm.openPermissionEditor = openPermissionEditor;
+    vm.params = {};
+    vm.resetDataSetSearch = resetDataSetSearch;
+    vm.searchDataSets = searchDataSets;
+    vm.searchQueryDataSets = '';
 
     activate();
-
-    function filterDataSets (permsID) {
-      if (permsID === 'public') {
-        if (vm.groupFilter.public) {
-          params.public = 'True';
-        } else {
-          delete params.public;
-        }
-      } else if (permsID === 'owned') {
-        if (vm.groupFilter.owned) {
-          params.owned = 'True';
-        } else {
-          delete params.owned;
-        }
-      } else if (!permsID) {
-        delete params.group;
-      } else {
-        params.group = permsID;
-      }
-      getDataSets();
-    }
 
     function activate () {
       vm.getDataSets();
     }
 
+    /**
+     * @name filterDataSets
+     * @desc  View method used to update the params with group and own perms
+     * @memberOf refineryDashboard.DataSetsCardCtrl
+    **/
+    function filterDataSets (permsID) {
+      if (permsID === 'public') {
+        if (vm.groupFilter.public) {
+          vm.params.public = 'True';
+        } else {
+          delete vm.params.public; // public false is unused
+        }
+      } else if (permsID === 'owned') {
+        if (vm.groupFilter.owned) {
+          vm.params.owned = 'True';
+        } else {
+          delete vm.params.owned; // owned false is unused
+        }
+      } else if (!permsID) {
+        delete vm.params.group;
+      } else {
+        vm.params.group = permsID;
+      }
+      getDataSets();
+    }
+
+    /**
+     * @name getDataSets
+     * @desc  View method for updating the data set list
+     * @memberOf refineryDashboard.DataSetsCardCtrl
+    **/
     function getDataSets () {
-      dataSetService.query(params).$promise.then(function (response) {
+      dataSetService.query(vm.params).$promise.then(function (response) {
         vm.loadingDataSets = false;
-        vm.dataSetsAll = response.objects;
-        vm.dataSets = vm.dataSetsAll;
+        vm.dataSets = response.objects;
         vm.dataSetsError = false;
       }, function (error) {
         vm.loadingDataSets = false;
@@ -83,31 +92,11 @@
       });
     }
 
-    function searchDataSets (query) {
-      if (query && query.length > 1) {
-        var apiRequest = new DataSetSearchApi(query);
-        console.log(apiRequest);
-        apiRequest().then(function (response) {
-          vm.dataSets = response.data;
-          vm.dataSetsError = false;
-        }, function (error) {
-          $log.error(error);
-          vm.dataSetsError = true;
-        });
-      } else {
-        vm.dataSets = vm.dataSetsAll;
-      }
-    }
-
-    function resetDataSetSearch () {
-      vm.searchQueryDataSets = '';
-      vm.dataSets = vm.dataSetsAll;
-    }
-
- /*
- * Open the deletion modal for a given Datset.
- * @method  openDataSetDeleteModal
- */
+    /**
+     * @name openDataSetDeleteModal
+     * @desc  Opens deletion modal
+     * @memberOf refineryDashboard.DataSetsCardCtrl
+    **/
     function openDataSetDeleteModal (dataSet) {
       var datasetDeleteDialogUrl = $window.getStaticUrl(
         'partials/dashboard/partials/dataset-delete-dialog.html'
@@ -129,7 +118,7 @@
           dataSet: dataSet,
           dataSets: function () { return {}; },
           analyses: function () { return {}; },
-          analysesReloadService: function () { return {}; },
+          analysesReloadService: function () { return {}; }
         }
       });
 
@@ -139,10 +128,15 @@
       });
     }
 
+    /**
+     * @name openPermissionEditor
+     * @desc  Opens sharing modal (common component)
+     * @memberOf refineryDashboard.DataSetsCardCtrl
+    **/
     /** view method to open the permissions modal component, in commons
      *  directive*/
     function openPermissionEditor (dataSetUuid) {
-      $uibModal.open({
+      var modalInstance = $uibModal.open({
         component: 'rpPermissionEditorModal',
         resolve: {
           config: function () {
@@ -153,6 +147,42 @@
           }
         }
       });
+
+      modalInstance.result.then(function () {
+        console.log('in the update place');
+        // user updates perms
+        getDataSets();
+      });
+    }
+
+    /**
+     * @name resetDataSetSearch
+     * @desc  View method to reset data search query
+     * @memberOf refineryDashboard.DataSetsCardCtrl
+    **/
+    function resetDataSetSearch () {
+      vm.searchQueryDataSets = '';
+      vm.getDataSets();
+    }
+
+    /**
+     * @name searchDataSets
+     * @desc  View method to search and update data sets
+     * @memberOf refineryDashboard.DataSetsCardCtrl
+    **/
+    function searchDataSets (query) {
+      if (query && query.length > 1) {
+        var apiRequest = new DataSetSearchApi(query);
+        apiRequest().then(function (response) {
+          vm.dataSets = response.data;
+          vm.dataSetsError = false;
+        }, function (error) {
+          $log.error(error);
+          vm.dataSetsError = true;
+        });
+      } else {
+        vm.getDataSets();
+      }
     }
    /*
    * ---------------------------------------------------------
@@ -165,7 +195,6 @@
           return vm.dashboardParentCtrl.groups;
         },
         function () {
-          console.log(vm.dashboardParentCtrl.groups);
           vm.groups = vm.dashboardParentCtrl.groups;
         }
       );
