@@ -24,7 +24,6 @@ from guardian.shortcuts import assign_perm
 from haystack.exceptions import SkipDocument
 import mock
 from mock import ANY
-from override_storage import override_storage
 from rest_framework.test import APIClient, APIRequestFactory, APITestCase
 
 import constants
@@ -2118,7 +2117,6 @@ def temporary_directory(*args, **kwargs):
         shutil.rmtree(d)
 
 
-@override_storage()
 class IsaTabTestBase(TestCase):
     def setUp(self):
         logging.getLogger(
@@ -2294,7 +2292,6 @@ class ProcessISATabViewLiveServerTests(ProcessISATabViewTestBase,
         self.successful_import_assertions()
 
 
-@override_storage()
 class SingleFileColumnParserTests(TestCase):
     def setUp(self):
         self.import_file_mock = mock.patch.object(import_file, "delay").start()
