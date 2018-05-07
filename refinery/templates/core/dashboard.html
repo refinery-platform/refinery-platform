@@ -3,13 +3,13 @@
 {% load static from staticfiles %}
 
 {% block title %}
-{{ block.super }} - Dashboard
+  {{ block.super }} - Dashboard
 {% endblock %}
 
 {% block head_html %}
-<link href="{% static 'styles/dashboard.css' %}" rel="stylesheet">
+  <link href="{% static 'styles/dashboard.css' %}" rel="stylesheet">
 {% endblock %}
 
 {% block content %}
-<rp-dashboard></rp-dashboard>
+  <rp-dashboard></rp-dashboard>
 {% endblock %}

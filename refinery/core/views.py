@@ -10,11 +10,10 @@ from django.contrib.auth.models import User
 from django.contrib.sites.models import RequestSite, Site, get_current_site
 from django.core.exceptions import ImproperlyConfigured
 from django.core.urlresolvers import reverse
-from django.http import (
-    HttpResponse, HttpResponseBadRequest, HttpResponseForbidden,
-    HttpResponseNotFound, HttpResponseRedirect, HttpResponseServerError,
-    JsonResponse
-)
+from django.http import (HttpResponse, HttpResponseBadRequest,
+                         HttpResponseForbidden, HttpResponseNotFound,
+                         HttpResponseRedirect, HttpResponseServerError,
+                         JsonResponse)
 from django.shortcuts import get_object_or_404, redirect, render_to_response
 from django.template import RequestContext, loader
 from django.views.decorators.gzip import gzip_page
@@ -38,10 +37,9 @@ import xmltodict
 from data_set_manager.models import Node
 
 from .forms import ProjectForm, UserForm, UserProfileForm, WorkflowForm
-from .models import (
-    Analysis, CustomRegistrationProfile, DataSet, ExtendedGroup, Invitation,
-    Ontology, Project, UserProfile, Workflow, WorkflowEngine
-)
+from .models import (Analysis, CustomRegistrationProfile, DataSet,
+                     ExtendedGroup, Invitation, Ontology, Project,
+                     UserProfile, Workflow, WorkflowEngine)
 from .serializers import DataSetSerializer, NodeSerializer, WorkflowSerializer
 from .utils import api_error_response, get_data_sets_annotations
 
