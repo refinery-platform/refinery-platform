@@ -2433,8 +2433,6 @@ class InvestigationTests(TestCase):
 
 
 class TestManagementCommands(TestCase):
-    maxDiff = None
-
     @override_settings(CELERY_ALWAYS_EAGER=True)
     @override_settings(REFINERY_DATA_IMPORT_DIR="/import")
     def test_process_metadata_table(self):
