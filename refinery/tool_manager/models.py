@@ -12,28 +12,27 @@ from django.dispatch import receiver
 from django.http import JsonResponse
 
 import bioblend
-from bioblend.galaxy.dataset_collections import (
-    CollectionDescription, CollectionElement, HistoryDatasetElement
-)
-from constants import UUID_RE
+from bioblend.galaxy.dataset_collections import (CollectionDescription,
+                                                 CollectionElement,
+                                                 HistoryDatasetElement)
 from django_docker_engine.container_managers.docker_engine import (
     ExpectedPortMissing, NoPortsOpen
 )
-from django_docker_engine.docker_utils import (
-    DockerClientRunWrapper, DockerClientSpec, DockerContainerSpec
-)
+from django_docker_engine.docker_utils import (DockerClientRunWrapper,
+                                               DockerClientSpec,
+                                               DockerContainerSpec)
 from django_extensions.db.fields import UUIDField
 from docker.errors import APIError, NotFound
 
 from analysis_manager.models import AnalysisStatus
-from analysis_manager.tasks import (
-    _galaxy_file_import, get_taskset_result, run_analysis
-)
+from analysis_manager.tasks import (_galaxy_file_import, get_taskset_result,
+                                    run_analysis)
 from analysis_manager.utils import create_analysis, validate_analysis_config
-from core.models import (
-    INPUT_CONNECTION, OUTPUT_CONNECTION, Analysis, AnalysisNodeConnection,
-    DataSet, OwnableResource, Workflow
-)
+import constants
+from core.models import (INPUT_CONNECTION, OUTPUT_CONNECTION, Analysis,
+                         AnalysisNodeConnection, DataSet, OwnableResource,
+                         Workflow)
+
 from core.utils import get_absolute_url
 from data_set_manager.models import Node
 from data_set_manager.utils import (
@@ -357,7 +356,8 @@ class Tool(OwnableResource):
         )
 
     def get_input_node_uuids(self):
-        node_uuids = re.findall(UUID_RE, self.get_file_relationships())
+        node_uuids = re.findall(constants.UUID_RE,
+                                self.get_file_relationships())
         return node_uuids
 
     def _get_input_nodes(self):
@@ -510,6 +510,15 @@ class VisualizationTool(Tool):
                 self.tool_definition.get_extra_directories()
         }
 
+    def _check_input_node_limit(self):
+        if len(self.get_input_node_uuids()) > \
+                constants.REFINERY_SOLR_DOC_LIMIT:
+            raise VisualizationToolError(
+                'Input Node limit of: {} reached'.format(
+                    constants.REFINERY_SOLR_DOC_LIMIT
+                )
+            )
+
     def create_container_spec(self):
         return DockerContainerSpec(
             image_name=self.tool_definition.image_name,
@@ -585,6 +594,7 @@ class VisualizationTool(Tool):
             - <HttpResponseBadRequest>, <HttpServerError>
         """
         self._check_max_running_containers()
+        self._check_input_node_limit()
 
         # Pulls docker image if it doesn't exist yet, and launches container
         # asynchronously

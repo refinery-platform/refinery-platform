@@ -13,63 +13,67 @@ from django.http import HttpResponseBadRequest
 from django.test import TestCase, override_settings
 
 import bioblend
-from bioblend.galaxy.dataset_collections import (
-    CollectionElement, HistoryDatasetElement
-)
+from bioblend.galaxy.dataset_collections import (CollectionElement,
+                                                 HistoryDatasetElement)
 from bioblend.galaxy.histories import HistoryClient
 from bioblend.galaxy.jobs import JobsClient
 from bioblend.galaxy.libraries import LibraryClient
 from bioblend.galaxy.workflows import WorkflowClient
 import celery
-from constants import UUID_RE
+
+import constants
 from django_docker_engine.docker_utils import DockerClientWrapper
 from docker.errors import NotFound
 from guardian.shortcuts import assign_perm, remove_perm
 import mock
-from rest_framework.test import (
-    APIRequestFactory, APITestCase, force_authenticate
-)
-from test_data.galaxy_mocks import (
-    galaxy_dataset_provenance_0, galaxy_dataset_provenance_1,
-    galaxy_datasets_list, galaxy_datasets_list_same_output_names,
-    galaxy_history_contents, galaxy_history_contents_same_names, galaxy_job_a,
-    galaxy_job_b, galaxy_tool_data, galaxy_workflow_dict,
-    galaxy_workflow_dict_collection, galaxy_workflow_invocation,
-    galaxy_workflow_invocation_data, history_dataset_dict, history_dict,
-    library_dataset_dict, library_dict
-)
+from rest_framework.test import (APIRequestFactory, APITestCase,
+                                 force_authenticate)
+from test_data.galaxy_mocks import (galaxy_dataset_provenance_0,
+                                    galaxy_dataset_provenance_1,
+                                    galaxy_datasets_list,
+                                    galaxy_datasets_list_same_output_names,
+                                    galaxy_history_contents,
+                                    galaxy_history_contents_same_names,
+                                    galaxy_job_a, galaxy_job_b,
+                                    galaxy_tool_data, galaxy_workflow_dict,
+                                    galaxy_workflow_dict_collection,
+                                    galaxy_workflow_invocation,
+                                    galaxy_workflow_invocation_data,
+                                    history_dataset_dict, history_dict,
+                                    library_dataset_dict, library_dict)
 
 from analysis_manager.models import AnalysisStatus
-from analysis_manager.tasks import (
-    _galaxy_file_import, _get_galaxy_download_task_ids, _get_workflow_tool,
-    _invoke_galaxy_workflow, _refinery_file_import, _run_galaxy_file_import,
-    _run_galaxy_workflow, run_analysis
-)
-from core.models import (
-    INPUT_CONNECTION, OUTPUT_CONNECTION, Analysis, AnalysisNodeConnection,
-    AnalysisResult, ExtendedGroup, Project, Workflow, WorkflowEngine
-)
+from analysis_manager.tasks import (_galaxy_file_import,
+                                    _get_galaxy_download_task_ids,
+                                    _get_workflow_tool,
+                                    _invoke_galaxy_workflow,
+                                    _refinery_file_import,
+                                    _run_galaxy_file_import,
+                                    _run_galaxy_workflow, run_analysis)
+from core.models import (INPUT_CONNECTION, OUTPUT_CONNECTION, Analysis,
+                         AnalysisNodeConnection, AnalysisResult, ExtendedGroup,
+                         Project, Workflow, WorkflowEngine)
 from data_set_manager.models import Assay, Attribute, Node
 from data_set_manager.utils import _create_solr_params_from_node_uuids
-from factory_boy.django_model_factories import (
-    AnnotatedNodeFactory, AttributeFactory, GalaxyInstanceFactory, NodeFactory,
-    ParameterFactory, ToolFactory
-)
+from factory_boy.django_model_factories import (AnnotatedNodeFactory,
+                                                AttributeFactory,
+                                                GalaxyInstanceFactory,
+                                                NodeFactory, ParameterFactory,
+                                                ToolFactory)
 from factory_boy.utils import create_dataset_with_necessary_models
 from file_store.models import FileStoreItem, FileType
 from tool_manager.management.commands.load_tools import \
     Command as LoadToolsCommand
 from tool_manager.tasks import django_docker_cleanup
 
-from .models import (
-    FileRelationship, GalaxyParameter, InputFile, Parameter, Tool,
-    ToolDefinition, VisualizationTool, VisualizationToolError, WorkflowTool
-)
-from .utils import (
-    FileTypeValidationError, create_tool, create_tool_definition,
-    get_workflows, user_has_access_to_tool, validate_tool_annotation,
-    validate_tool_launch_configuration, validate_workflow_step_annotation
-)
+from .models import (FileRelationship, GalaxyParameter, InputFile, Parameter,
+                     Tool, ToolDefinition, VisualizationTool,
+                     VisualizationToolError, WorkflowTool)
+from .utils import (FileTypeValidationError, create_tool,
+                    create_tool_definition, get_workflows,
+                    user_has_access_to_tool, validate_tool_annotation,
+                    validate_tool_launch_configuration,
+                    validate_workflow_step_annotation)
 from .views import ToolDefinitionsViewSet, ToolsViewSet
 
 logger = logging.getLogger(__name__)
@@ -2103,7 +2107,7 @@ class WorkflowToolTests(ToolManagerTestBase):
         )
         self.assertEqual(len(task_id_list), 2)
         for task_id in task_id_list:
-            self.assertRegexpMatches(str(task_id), UUID_RE)
+            self.assertRegexpMatches(str(task_id), constants.UUID_RE)
 
         self.assertEqual(self.show_dataset_provenance_mock.call_count, 8)
 
@@ -3645,6 +3649,25 @@ class VisualizationToolLaunchTests(ToolManagerTestBase):
             'igv.json',
             self.sample_igv_file_url,
             assertions
+        )
+
+    def test_input_node_limit(self):
+        tool = self.create_tool(ToolDefinition.VISUALIZATION)
+        tool_launch_config = self.tool.get_tool_launch_config()
+
+        # Crete one more entry than what REFINERY_SOLR_DOC_LIMIT permits
+        tool_launch_config[Tool.FILE_RELATIONSHIPS] = str(
+            [uuid.uuid4()] * (constants.REFINERY_SOLR_DOC_LIMIT + 1)
+        )
+        tool.set_tool_launch_config(tool_launch_config)
+        with self.assertRaises(VisualizationToolError) as context:
+            tool.launch()
+
+        self.assertIn(
+            "Input Node limit of: {} reached".format(
+                constants.REFINERY_SOLR_DOC_LIMIT
+            ),
+            context.exception.message
         )
 
 

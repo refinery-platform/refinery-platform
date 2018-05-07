@@ -15,6 +15,7 @@ import re
 import urlparse
 
 from django.conf import settings
+from django.core.files.storage import default_storage
 from django.db import models
 from django.db.models.signals import post_delete
 from django.dispatch import receiver
@@ -43,30 +44,6 @@ def _mkdir(path):
 # create data storage directories
 _mkdir(settings.FILE_STORE_BASE_DIR)
 _mkdir(settings.FILE_STORE_TEMP_DIR)
-
-
-def file_path(instance, filename):
-    """Construct relative file system path for new file store files relative to
-    FILE_STORE_BASE_DIR.
-    Based on
-    http://michaelandrews.typepad.com/the_technical_times/2009/10/creating-a-hashed-directory-structure.html
-
-    :param instance: FileStoreItem instance.
-    :type instance: FileStoreItem.
-    :param filename: requested filename.
-    :type filename: str.
-    :returns: str -- if success, None if failure.
-    """
-    hashcode = hash(filename)
-    mask = 255  # bitmask
-    # use the first and second bytes of the hash code represented as
-    # zero-padded hex numbers as directory names
-    # provides 256 * 256 = 65536 of possible directory combinations
-    dir1 = "{:0>2x}".format(hashcode & mask)
-    dir2 = "{:0>2x}".format((hashcode >> 8) & mask)
-    # Galaxy doesn't process names with parentheses in them
-    filename = re.sub('[()]', '_', filename)
-    return os.path.join(dir1, dir2, filename)
 
 
 def _map_source(source):
@@ -137,8 +114,7 @@ class FileExtension(models.Model):
 
 class FileStoreItem(models.Model):
     """Represents all data files"""
-    datafile = models.FileField(upload_to=file_path, blank=True,
-                                max_length=1024)
+    datafile = models.FileField(blank=True, max_length=1024)
     uuid = UUIDField()  # auto-generated unique ID
     # URL, absolute file system path, or blank if source is a blob or similar
     source = models.CharField(blank=True, max_length=1024)
@@ -288,13 +264,11 @@ class FileStoreItem(models.Model):
                      self.datafile.name, name)
         if self.is_local():
             # obtain a new path based on requested name
-            new_rel_path = self.datafile.storage.get_available_name(
-                file_path(self, name)
-            )
-            new_abs_path = os.path.join(settings.FILE_STORE_BASE_DIR,
-                                        new_rel_path)
-            if _rename_file_on_disk(self.datafile.path, new_abs_path):
-                self.datafile.name = new_rel_path
+            new_relative_path = default_storage.get_name(name)
+            new_absolute_path = os.path.join(settings.FILE_STORE_BASE_DIR,
+                                             new_relative_path)
+            if _rename_file_on_disk(self.datafile.path, new_absolute_path):
+                self.datafile.name = new_relative_path
                 self.save()
                 return os.path.basename(self.datafile.name)
             else:
@@ -313,8 +287,8 @@ class FileStoreItem(models.Model):
 
         if os.path.isfile(self.source):
             # construct symlink target path based on source file name
-            rel_dst_path = self.datafile.storage.get_available_name(
-                file_path(self, os.path.basename(self.source))
+            rel_dst_path = default_storage.get_name(
+                os.path.basename(self.source)
             )
             abs_dst_path = os.path.join(settings.FILE_STORE_BASE_DIR,
                                         rel_dst_path)

@@ -943,12 +943,13 @@ class UtilitiesTests(TestCase):
                          'Group Name'
                          '&fq=is_annotation%3Afalse'
                          '&start=0'
-                         '&rows=10000000'
+                         '&rows={}'
                          '&q=django_ct%3Adata_set_manager.node'
                          '&wt=json'
                          '&facet=true'
                          '&facet.limit=-1'.format(
-                                 self.valid_uuid))
+                             self.valid_uuid, constants.REFINERY_SOLR_DOC_LIMIT
+                         ))
 
     def test_generate_solr_params_for_assay_with_params(self):
         query = generate_solr_params_for_assay(QueryDict({}), self.valid_uuid)
@@ -1574,7 +1575,8 @@ class UtilitiesTests(TestCase):
             {
                 "q": "django_ct:data_set_manager.node",
                 "wt": "json",
-                "fq": "uuid:({})".format(" OR ".join(fake_node_uuids))
+                "fq": "uuid:({})".format(" OR ".join(fake_node_uuids)),
+                "rows": constants.REFINERY_SOLR_DOC_LIMIT
             }
         )
 

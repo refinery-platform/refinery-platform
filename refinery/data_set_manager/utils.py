@@ -19,6 +19,7 @@ from django.utils.http import urlquote, urlunquote
 
 import requests
 
+import constants
 import core
 
 from .models import (
@@ -643,7 +644,7 @@ def generate_solr_params(
     facet_count = params.get('include_facet_count', 'true')
     start = params.get('offset', '0')
     # row number suggested by solr docs, since there's no unlimited option
-    row = params.get('limit', '10000000')
+    row = params.get('limit', str(constants.REFINERY_SOLR_DOC_LIMIT))
     field_limit = params.get('attributes')
     facet_field = params.get('facets')
     facet_pivot = params.get('pivots')
@@ -1174,7 +1175,8 @@ def _create_solr_params_from_node_uuids(node_uuids):
     return {
         "q": "django_ct:data_set_manager.node",
         "wt": "json",
-        "fq": "uuid:({})".format(" OR ".join(node_uuids))
+        "fq": "uuid:({})".format(" OR ".join(node_uuids)),
+        "rows": constants.REFINERY_SOLR_DOC_LIMIT
     }
 
 

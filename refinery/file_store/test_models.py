@@ -10,24 +10,13 @@ from django.test import TestCase, override_settings
 import mock
 from override_storage import override_storage
 
-from .models import (FileExtension, FileStoreItem, FileType, file_path,
-                     generate_file_source_translator,
-                     _get_extension_from_string, get_file_object, get_temp_dir,
-                     _map_source, parse_s3_url)
+from .models import (FileExtension, FileStoreItem, FileType,
+                     _get_extension_from_string, _map_source,
+                     generate_file_source_translator, get_file_object,
+                     get_temp_dir, parse_s3_url)
 
 
 class FileStoreModuleTest(TestCase):
-
-    def test_file_path(self):
-        path = file_path(FileStoreItem(), 'test.fastq')
-        self.assertIn('test.fastq', path)
-
-    def test_file_path_underscore_replacement(self):
-        filename = 'Kc.dMi-2(Q4443).wig_5.tdf'
-        new_filename = 'Kc.dMi-2_Q4443_.wig_5.tdf'
-        path = file_path(FileStoreItem(), filename)
-        self.assertIn(new_filename, path)
-        self.assertNotIn(filename, path)
 
     def test_get_temp_dir(self):
         self.assertEqual(get_temp_dir(), settings.FILE_STORE_TEMP_DIR)
@@ -194,7 +183,7 @@ class FileStoreItemLocalFileTest(TestCase):
         self.item.datafile.save(self.file_name, ContentFile(''))
         saved_item = FileStoreItem.objects.get(pk=self.item.pk)
         self.assertEqual(saved_item.get_datafile_url(),
-                         file_path(saved_item, self.file_name))
+                         saved_item.datafile.url)
 
     def test_set_local_file_type(self):
         self.item.datafile.save(self.file_name, ContentFile(''))
