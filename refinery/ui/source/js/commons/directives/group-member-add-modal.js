@@ -1,7 +1,7 @@
 /**
  * Group Member Add Modal
  * @namespace groupMemberAddModal
- * @desc Edit a group membership modal
+ * @desc Invite a user to join a group component (modal)
  * @memberOf refineryApp.groupMemberAddModal
  */
 (function () {

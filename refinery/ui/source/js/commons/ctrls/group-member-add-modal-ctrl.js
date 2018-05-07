@@ -1,7 +1,7 @@
 /**
  * Group Add Modal Ctrl
  * @namespace Group Add Modal Ctrl
- * @desc Main controller for the group edit modal
+ * @desc Main controller for the adding a new member to a group modal
  * @memberOf refineryApp
  */
 (function () {

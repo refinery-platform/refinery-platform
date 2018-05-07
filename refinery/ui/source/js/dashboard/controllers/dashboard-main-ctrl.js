@@ -11,7 +11,12 @@
     .module('refineryDashboard')
     .controller('DashboardMainCtrl', DashboardMainCtrl);
 
-  DashboardMainCtrl.$inject = ['humanize', '_', 'groupInviteService', 'groupMemberService'];
+  DashboardMainCtrl.$inject = [
+    'humanize',
+    '_',
+    'groupInviteService',
+    'groupMemberService'
+  ];
 
   function DashboardMainCtrl (
     humanize,
@@ -48,6 +53,7 @@
      * @name addInviteList
      * @desc  Private method used by groups to grab and append the invitee list
      * @memberOf refineryDashboard.DashboardMainCtrl
+     * @param {int} groupID - group ID number
     **/
     function addInviteList (groupID) {
       groupInviteService.query({

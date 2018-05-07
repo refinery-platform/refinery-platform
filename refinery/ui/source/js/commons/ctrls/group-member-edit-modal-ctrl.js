@@ -18,7 +18,6 @@
     'groupMemberService'
   ];
 
-
   function GroupMemberEditModalCtrl (
     $timeout,
     groupDataService,
@@ -78,7 +77,6 @@
       });
     }
 
-
      /**
      * @name promote
      * @desc  View method for promoting a member to manager
@@ -105,7 +103,6 @@
         vm.isLoading = false;
       });
     }
-
 
      /**
      * @name remove

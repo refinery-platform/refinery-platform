@@ -14,7 +14,7 @@ describe('DataSet.search-api: unit tests', function () {
     '  "responseHeader": {' +
     '    "status": 0,' +
     '    "QTime": 139,' +
-              '    "params": {' +
+    '    "params": {' +
     '      "f.description.hl.alternateField": "description",' +
     '      "fl": "dbid,uuid,access,name,modification_date,title",' +
     '      "start": "0",' +

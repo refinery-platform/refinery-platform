@@ -53,6 +53,7 @@
      * @name filterDataSets
      * @desc  View method used to update the params with group and own perms
      * @memberOf refineryDashboard.DataSetsCardCtrl
+     * @param {string} permsID - string with the perms name or ID
     **/
     function filterDataSets (permsID) {
       if (permsID === 'public') {
@@ -96,6 +97,7 @@
      * @name openDataSetDeleteModal
      * @desc  Opens deletion modal
      * @memberOf refineryDashboard.DataSetsCardCtrl
+     * @param {obj} dataSet - data set object
     **/
     function openDataSetDeleteModal (dataSet) {
       var datasetDeleteDialogUrl = $window.getStaticUrl(
@@ -132,6 +134,7 @@
      * @name openPermissionEditor
      * @desc  Opens sharing modal (common component)
      * @memberOf refineryDashboard.DataSetsCardCtrl
+     * @param {string} dataSetUuid - data set object uuid
     **/
     /** view method to open the permissions modal component, in commons
      *  directive*/
@@ -167,6 +170,7 @@
      * @name searchDataSets
      * @desc  View method to search and update data sets
      * @memberOf refineryDashboard.DataSetsCardCtrl
+     * @param {string} query - user entered query for data set search
     **/
     function searchDataSets (query) {
       if (query && query.length > 1) {

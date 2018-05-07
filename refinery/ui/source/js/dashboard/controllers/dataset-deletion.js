@@ -37,7 +37,6 @@ DataSetDeleteCtrl.prototype.cancel = function () {
  * Close modal after deletion.
  * @type  {function}
  */
-
 DataSetDeleteCtrl.prototype.close = function () {
   this.deletionMessage = null;
   this.$uibModalInstance.close('close');

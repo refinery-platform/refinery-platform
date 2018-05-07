@@ -18,7 +18,6 @@
     'settings'
   ];
 
-
   function GroupEditModalCtrl (
     groupExtendedService,
     groupMemberService,
