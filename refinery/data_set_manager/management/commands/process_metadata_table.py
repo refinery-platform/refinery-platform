@@ -107,6 +107,7 @@ class Command(BaseCommand):
             '--delimiter',
             action='store',
             default="tab",
+            choices=["tab", "comma", "custom"],
             help='Delimiter to use for metadata file parsing'
         )
 
