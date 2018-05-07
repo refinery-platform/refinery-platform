@@ -111,10 +111,21 @@ class Command(BaseCommand):
             help='Delimiter to use for metadata file parsing'
         )
 
+        parser.add_argument(
+            '--custom_delimiter_string',
+            default="",
+            action='store',
+            help='Custom delimiter string to use for metadata file parsing'
+        )
+
     def handle(self, *args, **options):
         """calls the parsing and insertion functions"""
         source_columns = \
             [x.strip() for x in options['source_column_index'].split(",")]
+
+        if options['delimiter'] == "custom":
+            if not options['custom_delimiter_string']:
+                raise CommandError("custom_delimiter_string was not specified")
         try:
             with open(options['file_name']) as metadata_file:
                 dataset_uuid = process_metadata_table(
@@ -128,7 +139,8 @@ class Command(BaseCommand):
                     genome_build_column=options['genome_build_column'],
                     annotation_column=options['annotation_column'],
                     is_public=options['is_public'],
-                    delimiter=options['delimiter']
+                    delimiter=options['delimiter'],
+                    custom_delimiter_string=options['custom_delimiter_string']
                 )
         except IOError as exc:
             raise CommandError("Could not open file '%s': %s" %
