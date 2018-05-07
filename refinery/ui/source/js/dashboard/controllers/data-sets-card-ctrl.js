@@ -149,8 +149,6 @@
       });
 
       modalInstance.result.then(function () {
-        console.log('in the update place');
-        // user updates perms
         getDataSets();
       });
     }
