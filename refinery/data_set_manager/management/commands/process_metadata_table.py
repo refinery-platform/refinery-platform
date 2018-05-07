@@ -15,17 +15,20 @@ class Command(BaseCommand):
         parser.add_argument(
             '--username',
             action='store',
-            help='(Required) username of the owner of this data set'
+            help='(Required) username of the owner of this data set',
+            required=True
         )
         parser.add_argument(
             '--title',
             action='store',
-            help='(Required) name of this data set'
+            help='(Required) name of this data set',
+            required=True
         )
         parser.add_argument(
             '--file_name',
             action='store',
-            help='(Required) absolute path to the file being parsed'
+            help='(Required) absolute path to the file being parsed',
+            required=True
         )
         parser.add_argument(
             '--source_column_index',
@@ -36,7 +39,8 @@ class Command(BaseCommand):
                  'Values in the columns indicated by the list of '
                  'column indices provided for the '
                  '"source_column_index" will be concatenated to '
-                 'create an identifier for the "source" of the sample'
+                 'create an identifier for the "source" of the sample',
+            required=True
         )
         parser.add_argument(
             '--data_file_column',
@@ -44,7 +48,8 @@ class Command(BaseCommand):
             type=int,
             help='(Required) index of the column of the input file that '
                  'contains the path to or the URL of the file associated '
-                 'with this sample'
+                 'with this sample',
+            required=True
         )
         parser.add_argument(
             '--auxiliary_file_column',
@@ -107,11 +112,6 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         """calls the parsing and insertion functions"""
-        required = ['username', 'title', 'file_name', 'source_column_index',
-                    'data_file_column']
-        for arg in required:
-            if not options[arg]:
-                raise CommandError("%s was not provided" % arg)
         source_columns = \
             [x.strip() for x in options['source_column_index'].split(",")]
         try:
