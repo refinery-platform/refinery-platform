@@ -2436,29 +2436,28 @@ class TestManagementCommands(TestCase):
     def test_process_metadata_table(self):
         guest_username = "guest"
         test_data_base_path = "data_set_manager/test-data/single-file"
-        with open(os.path.join(test_data_base_path, "two-line-local.csv")) \
-                as two_line_csv:
-            call_command(
-                "process_metadata_table",
-                username=guest_username,
-                title="Process Metadata Table Test csv",
-                file_name=two_line_csv.name,
-                source_column_index="2",
-                data_file_column="2",
-                base_path=test_data_base_path,
-                is_public=True,
-                delimiter="comma"
-            )
-        with open(os.path.join(test_data_base_path, "two-line-local.tsv")) \
-                as two_line_tsv:
-            call_command(
-                "process_metadata_table",
-                username=guest_username,
-                title="Process Metadata Table Test tsv",
-                file_name=two_line_tsv.name,
-                source_column_index="2",
-                data_file_column="2",
-                base_path=test_data_base_path,
-                is_public=True
-            )
+        two_line_csv = os.path.join(test_data_base_path, "two-line-local.csv")
+        call_command(
+            "process_metadata_table",
+            username=guest_username,
+            title="Process Metadata Table Test csv",
+            file_name=os.path.abspath(two_line_csv),
+            source_column_index="2",
+            data_file_column="2",
+            base_path=test_data_base_path,
+            is_public=True,
+            delimiter="comma"
+        )
+
+        two_line_tsv = os.path.join(test_data_base_path, "two-line-local.tsv")
+        call_command(
+            "process_metadata_table",
+            username=guest_username,
+            title="Process Metadata Table Test tsv",
+            file_name=os.path.abspath(two_line_tsv),
+            source_column_index="2",
+            data_file_column="2",
+            base_path=test_data_base_path,
+            is_public=True
+        )
         self.assertEqual(DataSet.objects.count(), 2)
