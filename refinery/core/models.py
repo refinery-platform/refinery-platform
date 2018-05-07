@@ -809,7 +809,6 @@ def _dataset_delete(sender, instance, *args, **kwargs):
     delete_data_set_index(instance)
     delete_data_set_neo4j(instance.uuid)
     async_update_annotation_sets_neo4j()
-
     invalidate_cached_object(instance)
 
 
