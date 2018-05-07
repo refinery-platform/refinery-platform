@@ -1,7 +1,7 @@
 (function () {
   'use strict';
 
-  describe('rpDataSetsCard directive unit test', function () {
+  describe('rpCollaborationCard directive unit test', function () {
     beforeEach(module('refineryApp'));
     beforeEach(module('refineryDashboard'));
 
@@ -16,25 +16,19 @@
     ) {
       $templateCache.put(
         $window.getStaticUrl('partials/dashboard/views/dashboard.html'),
-        '<div id="dashboard"><rp-data-sets-card></rp-data-sets-card></div>'
+        '<div id="dashboard"><rp-collaboration-card></rp-collaboration-card></div>'
       );
 
       $templateCache.put(
-        $window.getStaticUrl('partials/dashboard/partials/data-sets-card.html'),
-        '<div id="data-sets-list"></div>'
+        $window.getStaticUrl('partials/dashboard/partials/collaboration-card.html'),
+        '<div id="groups-list"></div>'
       );
+
       $httpBackend
         .expectGET(
           settings.appRoot +
           settings.refineryApi +
           '/extended_groups/members/?format=json&id=id'
-        ).respond(200, []);
-
-      $httpBackend
-        .expectGET(
-          settings.appRoot +
-          settings.refineryApi +
-          '/data_sets/?format=json&order_by=-modification_date'
         ).respond(200, []);
 
       var scope = $rootScope.$new();
@@ -44,7 +38,7 @@
     }));
 
     it('generates the appropriate HTML', function () {
-      expect(directiveElement.html()).toContain('data-sets-list');
+      expect(directiveElement.html()).toContain('groups-list');
       expect(directiveElement.html()).toContain('</div>');
     });
   });

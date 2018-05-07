@@ -1,12 +1,11 @@
 (function () {
   'use strict';
 
-  describe('rpDashboard component unit test', function () {
+  describe('rpHistoryCard directive unit test', function () {
     beforeEach(module('refineryApp'));
     beforeEach(module('refineryDashboard'));
 
     var directiveElement;
-
     beforeEach(inject(function (
       $compile,
       $httpBackend,
@@ -16,25 +15,24 @@
       $window
     ) {
       $templateCache.put(
-        $window.getStaticUrl('partials/dashboard/views/dashboard.html'),
-        '<div id="dashboard"></div>'
+        $window.getStaticUrl('partials/dashboard/partials/history-card.html'),
+        '<div id="tools-list"></div>'
       );
-
       $httpBackend
         .expectGET(
           settings.appRoot +
-          settings.refineryApi +
-          '/extended_groups/members/?format=json&id=id'
+          settings.refineryApiV2 +
+          '/tools/'
         ).respond(200, []);
 
       var scope = $rootScope.$new();
-      var template = '<rp-dashboard></rp-dashboard>';
+      var template = '<rp-history-card></rp-history-card>';
       directiveElement = $compile(template)(scope);
       scope.$digest();
     }));
 
     it('generates the appropriate HTML', function () {
-      expect(directiveElement.html()).toContain('dashboard');
+      expect(directiveElement.html()).toContain('tools-list');
       expect(directiveElement.html()).toContain('</div>');
     });
   });

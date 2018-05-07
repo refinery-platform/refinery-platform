@@ -1,7 +1,7 @@
 /**
  * Collaboration Card  Component
  * @namespace rpCollaborationCard
- * @desc Collboration component on  dashboard.
+ * @desc Child collboration component of dashboard.
  * @memberOf refineryApp.refineryDashboard
  */
 (function () {

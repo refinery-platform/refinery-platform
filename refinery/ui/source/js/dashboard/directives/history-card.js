@@ -1,7 +1,7 @@
 /**
  * History Card Component
  * @namespace rpHistoryCard
- * @desc History component on dashboard.
+ * @desc History card component on dashboard.
  * @memberOf refineryApp.refineryDashboard
  */
 (function () {
