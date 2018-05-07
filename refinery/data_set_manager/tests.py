@@ -2510,6 +2510,6 @@ class TestManagementCommands(TestCase):
                 is_public=True,
                 delimiter="custom"
             )
-        self.assertIn("custom_delimiter_string was not specified't",
+        self.assertIn("custom_delimiter_string was not specified",
                       context.exception.message)
         self.assertEqual(DataSet.objects.count(), 0)
