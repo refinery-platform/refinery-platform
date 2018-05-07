@@ -810,11 +810,14 @@ def _dataset_delete(sender, instance, *args, **kwargs):
     delete_data_set_neo4j(instance.uuid)
     async_update_annotation_sets_neo4j()
 
+    invalidate_cached_object(instance)
+
 
 @receiver(post_save, sender=DataSet)
 def _dataset_saved(sender, instance, *args, **kwargs):
     async_update_annotation_sets_neo4j()
     update_data_set_index(instance)
+    invalidate_cached_object(instance)
 
 
 class InvestigationLink(models.Model):
