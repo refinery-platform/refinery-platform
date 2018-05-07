@@ -2294,7 +2294,7 @@ class ProcessISATabViewLiveServerTests(ProcessISATabViewTestBase,
 
 # This override_settings allows for test-data/ fixtures to be copied into
 # Refinery's file_store on import rather than being moved
-@override_settings(REFINERY_IMPORT_DIR="/import")
+@override_settings(REFINERY_DATA_IMPORT_DIR="/import")
 class SingleFileColumnParserTests(TestCase):
     def setUp(self):
         self.import_file_mock = mock.patch.object(import_file, "delay").start()
@@ -2436,7 +2436,7 @@ class TestManagementCommands(TestCase):
     maxDiff = None
 
     @override_settings(CELERY_ALWAYS_EAGER=True)
-    @override_settings(REFINERY_IMPORT_DIR="/import")
+    @override_settings(REFINERY_DATA_IMPORT_DIR="/import")
     def test_process_metadata_table(self):
         guest_username = "guest"
         test_data_base_path = "data_set_manager/test-data/single-file"
