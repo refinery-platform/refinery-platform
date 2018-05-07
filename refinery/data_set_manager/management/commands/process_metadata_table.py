@@ -105,7 +105,7 @@ class Command(BaseCommand):
         )
         parser.add_argument(
             '--delimiter',
-            action='store_true',
+            action='store',
             default="tab",
             help='Delimiter to use for metadata file parsing'
         )
