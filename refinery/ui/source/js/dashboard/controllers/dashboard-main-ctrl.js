@@ -32,7 +32,7 @@
     /**
      * @name getGroups
      * @desc  VM method used by child components to display groups
-     * @memberOf refineryDashboard.getGroups
+     * @memberOf refineryDashboard.DashboardMainCtrl
     **/
     function getGroups () {
       var members = groupMemberService.query();
@@ -47,7 +47,7 @@
     /**
      * @name addInviteList
      * @desc  Private method used by groups to grab and append the invitee list
-     * @memberOf refineryDashboard.addInviteList
+     * @memberOf refineryDashboard.DashboardMainCtrl
     **/
     function addInviteList (groupID) {
       groupInviteService.query({

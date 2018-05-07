@@ -34,6 +34,11 @@
     vm.resendInvitation = resendInvitation;
     vm.revokeInvitation = revokeInvitation;
 
+    /**
+     * @name openGroupAdd
+     * @desc  VM method open modal to add a new group
+     * @memberOf refineryDashboard.CollaborationCardCtrl
+    **/
     function openGroupAdd () {
       var modalInstance = $uibModal.open({
         component: 'rpGroupAddModal'
@@ -46,6 +51,11 @@
       });
     }
 
+     /**
+     * @name openGroupEditor
+     * @desc  VM method open modal to edit a new group
+     * @memberOf refineryDashboard.CollaborationCardCtrl
+    **/
     function openGroupEditor (group, member) {
       var modalInstance = $uibModal.open({
         component: 'rpGroupEditModal',
@@ -66,6 +76,11 @@
       });
     }
 
+     /**
+     * @name openGroupMemberEditor
+     * @desc  VM method open modal to edit members of a group
+     * @memberOf refineryDashboard.CollaborationCardCtrl
+    **/
     function openGroupMemberEditor (member, totalMembers, group) {
       var modalInstance = $uibModal.open({
         component: 'rpGroupMemberEditModal',
@@ -86,6 +101,11 @@
       });
     }
 
+    /**
+     * @name openGroupMemberAdd
+     * @desc  VM method open modal to add a member of a group
+     * @memberOf refineryDashboard.CollaborationCardCtrl
+    **/
     function openGroupMemberAdd (group) {
       var modalInstance = $uibModal.open({
         component: 'rpGroupMemberAddModal',
@@ -104,6 +124,11 @@
       });
     }
 
+     /**
+     * @name resendInvitation
+     * @desc  VM method to resend an email invite
+     * @memberOf refineryDashboard.CollaborationCardCtrl
+    **/
     function resendInvitation (tokenUuid) {
       groupInviteService.resend({
         token: tokenUuid
@@ -114,6 +139,11 @@
       });
     }
 
+    /**
+     * @name revokeInvitation
+     * @desc  VM method to cancel an user's invite to a group
+     * @memberOf refineryDashboard.CollaborationCardCtrl
+    **/
     function revokeInvitation (tokenUuid) {
       groupInviteService.revoke({ token: tokenUuid }).$promise.then(function () {
         vm.dashboardParentCtrl.getGroups();
