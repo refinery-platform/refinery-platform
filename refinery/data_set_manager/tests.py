@@ -2294,6 +2294,7 @@ class ProcessISATabViewLiveServerTests(ProcessISATabViewTestBase,
 
 # This override_settings allows for test-data/ fixtures to be copied into
 # Refinery's file_store on import rather than being moved
+# See: https://github.com/refinery-platform/refinery-platform/issues/2743
 @override_settings(REFINERY_DATA_IMPORT_DIR="/import")
 class SingleFileColumnParserTests(TestCase):
     def setUp(self):
@@ -2434,6 +2435,9 @@ class InvestigationTests(TestCase):
 
 class TestManagementCommands(TestCase):
     @override_settings(CELERY_ALWAYS_EAGER=True)
+    # This override_settings allows for test-data/ fixtures to be copied into
+    # Refinery's file_store on import rather than being moved
+    # See: https://github.com/refinery-platform/refinery-platform/issues/2743
     @override_settings(REFINERY_DATA_IMPORT_DIR="/import")
     def test_process_metadata_table(self):
         guest_username = "guest"
