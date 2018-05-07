@@ -5,9 +5,8 @@ from rest_framework_recursive.fields import RecursiveField
 from core.serializers import DataSetSerializer
 from file_store.models import FileType
 
-from .models import (
-    FileRelationship, InputFile, Parameter, Tool, ToolDefinition
-)
+from .models import (FileRelationship, InputFile, Parameter, Tool,
+                     ToolDefinition)
 
 
 class FileTypeSerializer(serializers.ModelSerializer):

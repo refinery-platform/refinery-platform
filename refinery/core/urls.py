@@ -9,10 +9,8 @@ from django.conf.urls import patterns, url
 from constants import UUID_RE
 from rest_framework.routers import DefaultRouter
 
-from .views import (
-    AnalysesViewSet, DataSetsViewSet, NodeViewSet, OpenIDToken,
-    WorkflowViewSet
-)
+from .views import (AnalysesViewSet, DataSetsViewSet, NodeViewSet,
+                    OpenIDToken, WorkflowViewSet)
 
 urlpatterns = patterns(
     'core.views',
