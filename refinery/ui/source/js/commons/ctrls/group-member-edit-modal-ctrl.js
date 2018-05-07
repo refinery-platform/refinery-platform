@@ -72,7 +72,7 @@
       ).catch(function () {
         vm.alertType = 'danger';
         vm.responseMessage = 'Error, could not demote member ' +
-          vm.member.username + '. Last member and manager can not leave';
+          vm.member.username + '. Last member and manager can not leave.';
         vm.isLoading = false;
       });
     }
@@ -91,7 +91,7 @@
         function () {
           groupDataService.update();
           vm.alertType = 'success';
-          vm.responseMessage = 'Successfully promoted member ' + vm.member.username;
+          vm.responseMessage = 'Successfully promoted member ' + vm.member.username + '.';
           vm.isLoading = false;
           $timeout(function () {
             vm.modalInstance.close(vm.alerType);
@@ -99,7 +99,7 @@
         }
       ).catch(function () {
         vm.alertType = 'danger';
-        vm.responseMessage = 'Error Could not promote member ' + vm.member.username;
+        vm.responseMessage = 'Error Could not promote member ' + vm.member.username + '.';
         vm.isLoading = false;
       });
     }
@@ -118,7 +118,7 @@
         function () {
           groupDataService.update();
           vm.alertType = 'success';
-          vm.responseMessage = 'Successfully removed member' + vm.member.username;
+          vm.responseMessage = 'Successfully removed member ' + vm.member.username + '.';
           vm.isLoading = false;
           $timeout(function () {
             vm.modalInstance.close(vm.alertType);
@@ -126,8 +126,8 @@
         }
       ).catch(function () {
         vm.alertType = 'danger';
-        vm.responseMessage = 'Error, could not remove member'
-          + vm.member.username + '. Last member and manager can not leave';
+        vm.responseMessage = 'Error, could not remove member '
+          + vm.member.username + '. Last member and manager can not leave.';
         vm.isLoading = false;
       });
     }

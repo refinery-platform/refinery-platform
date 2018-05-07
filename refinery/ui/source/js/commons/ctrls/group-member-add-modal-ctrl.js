@@ -65,7 +65,7 @@
         vm.responseMessage = 'Successfully sent invitation to ' + email;
       } else if (infoType === 'danger') {
         vm.alertType = 'danger';
-        vm.responseMessage = 'Error, invitiation could not be sent to' + email;
+        vm.responseMessage = 'Error, invitiation could not be sent to ' + email;
       }
     }
 
