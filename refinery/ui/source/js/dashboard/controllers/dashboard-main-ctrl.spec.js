@@ -34,6 +34,11 @@
       expect(ctrl).toBeDefined();
     });
 
+    it('Variables should be initialized', function () {
+      expect(ctrl.groups).toEqual([]);
+      expect(ctrl.groupInvites).toEqual({});
+    });
+
     describe('getGroups', function () {
       it('getGroups is a method', function () {
         expect(angular.isFunction(ctrl.getGroups)).toBe(true);

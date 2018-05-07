@@ -44,7 +44,7 @@
       });
       return members.$promise;
     }
-      /**
+    /**
      * @name addInviteList
      * @desc  Private method used by groups to grab and append the invitee list
      * @memberOf refineryDashboard.addInviteList

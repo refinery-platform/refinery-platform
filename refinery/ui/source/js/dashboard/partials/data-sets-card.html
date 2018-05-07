@@ -57,8 +57,8 @@
             id="btn-append-to-single-button"
             uib-dropdown-toggle
             ng-disabled="disabled">
-            <span ng-if="$ctrl.groupFilter.group > 0">
-              <i class="fa fa-check=="></i>
+            <span ng-if="$ctrl.groupFilter.selectedName !== 'All'">
+              <i class="fa fa-check"></i>
             </span>
             Groups <i class="fa fa-caret-down"></i>
           </span>
@@ -206,7 +206,9 @@
                  Delete
                  </a>
                 </li>
-               <li><span class="separator">&middot;</span></li>
+               <li ng-if="dataSet.is_owner">
+                 <span class="separator">&middot;</span>
+               </li>
                <li ng-if="dataSet.is_owner">
                  <a
                     class="pointer"

@@ -33,6 +33,18 @@
       expect(ctrl).toBeDefined();
     });
 
+    it('Variables should be initialized', function () {
+      expect(ctrl.dataSets).toEqual([]);
+      expect(ctrl.groupFilter.selectedName).toEqual('All');
+    });
+
+    it('API related Variables should be initialized', function () {
+      expect(ctrl.dataSetsError).toEqual(false);
+      expect(ctrl.loadingDataSets).toEqual(true);
+      expect(ctrl.params).toEqual({});
+      expect(ctrl.searchQueryDataSets).toEqual('');
+    });
+
     describe('filterDataSets', function () {
       it('filterDataSets is a method', function () {
         expect(angular.isFunction(ctrl.filterDataSets)).toBe(true);

@@ -10,9 +10,9 @@
       $compile,
       $httpBackend,
       $rootScope,
-      settings,
       $templateCache,
-      $window
+      $window,
+      settings
     ) {
       $templateCache.put(
         $window.getStaticUrl('partials/dashboard/views/dashboard.html'),

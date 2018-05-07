@@ -12,12 +12,14 @@
     .controller('CollaborationCardCtrl', CollaborationCardCtrl);
 
   CollaborationCardCtrl.$inject = [
+    '$log',
     '$scope',
     '$uibModal',
     'groupInviteService',
   ];
 
   function CollaborationCardCtrl (
+    $log,
     $scope,
     $uibModal,
     groupInviteService
@@ -107,9 +109,8 @@
         token: tokenUuid
       }).$promise.then(function () {
         vm.dashboardParentCtrl.getGroups();
-        // alert use to sent mail
       }).catch(function () {
-        console.log('Invitation sending failed');
+        $log.error('Invitation sending failed');
       });
     }
 
@@ -117,7 +118,7 @@
       groupInviteService.revoke({ token: tokenUuid }).$promise.then(function () {
         vm.dashboardParentCtrl.getGroups();
       }).catch(function () {
-        console.log('Invitation could not be revoked');
+        $log.error('Invitation could not be revoked');
       });
     }
      /*

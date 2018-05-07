@@ -18,6 +18,7 @@
   ) {
     var vm = this;
     vm.isToolsLoading = true;
+    vm.getUserTools = getUserTools;
     vm.tools = [];
     activate();
 
@@ -25,12 +26,16 @@
       getUserTools();
     }
 
+    /**
+     * @name getUserTools
+     * @desc  View method to get the tools list
+     * @memberOf refineryDashboard.HistoryCardCtrl
+    **/
     function getUserTools () {
       var toolRequest = toolsService.query();
       toolRequest.$promise.then(function (response) {
         vm.isToolsLoading = false;
         vm.tools = response;
-       // angular.copy(addHumanTime(response), visualizations);
       });
     }
 
