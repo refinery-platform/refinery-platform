@@ -126,7 +126,7 @@
       });
       return filters.join(' AND ');
     }
-     // only show the selection and input group column when a tool is selected
+
     $scope.$watchCollection(
       function () {
         return userFileBrowserFactory.dataSetNodes;
