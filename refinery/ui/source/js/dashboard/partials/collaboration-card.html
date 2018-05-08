@@ -27,7 +27,7 @@
            <a
              type="button"
              data-toggle="collapse"
-             class="col-md-6 col-xs-5 toggle-group"
+             class="col-md-6 col-xs-5 toggle-group pointer"
              data-target="#{{group.uuid}}"
              aria-expanded="false" aria-controls="collapseOne">
              <span ng-if="group.name==='Public'">
@@ -38,15 +38,16 @@
             <div class="col-md-4 col-xs-4">
                <span ng-if="group.can_edit">Manager</span>
             </div>
-            <div class="col-md-2 col-xs-3" ng-show="group.name !== 'Public'">
-              <a
+            <div class="col-md-2 col-xs-3">
+              <span ng-show="group.name !== 'Public'">
+                 <a
                 ng-click="$ctrl.openGroupEditor(group)"
-                class="no-underline">
+                class="no-underline pointer p-r-1-2">
                 <i class="fa fa-cog"></i>
               </a>
               <a ng-if="group.can_edit"
                 ng-click="$ctrl.openGroupMemberAdd(group)"
-                class="no-underline">
+                class="no-underline pointer">
                  <span
                    class="fa-stack user-add-icon"
                    refinery-tooltip
@@ -56,6 +57,7 @@
                    <i class="fa fa-plus-circle fa-stack-1x fa-stack-right-corner"></i>
                    <i class="fa fa-user-o"></i>&nbsp;
                  </span>
+              </span>
               </a>
             </div>
          </span>
@@ -86,6 +88,7 @@
                 </span>
                 <span ng-if="group.can_edit" class="col-md-2 col-xs-3">
                   <a
+                    class="pointer"
                     ng-click="$ctrl.openGroupMemberEditor(member, group.member_list.length, group)">
                     <i class="fa fa-cog p-l-1"></i>
                   </a>
@@ -93,16 +96,20 @@
                 <span class="col-md-11 col-xs-offset-1 col-xs-11
                 col-md-offset-1 p-l-1 border-line"></span>
               </li>
-              <li ng-repeat="invite in $ctrl.invitations[group.id]" class="p-t-1">
-                <span class="col-md-6 col-xs-5">
+              <li ng-repeat="invite in $ctrl.invitations[group.id]"
+                class="p-t-1">
+                <span class="col-md-9 col-xs-8 member-info">
                   {{ invite.recipient_email }}
                 </span>
-                <span ng-if="group.can_edit" class="col-md-offset-3
-                col-xs-offset-3 col-md-2 col-xs-3">
-                  <a ng-click="$ctrl.revokeInvitation(invite.token_uuid)">
+                <span ng-if="group.can_edit"
+                  class="invite-actions col-md-3 col-xs-2">
+                  <a class="pointer p-r-1"
+                    ng-click="$ctrl.revokeInvitation(invite.token_uuid)">
                     Revoke
                   </a>
-                  <a ng-click="$ctrl.resendInvitation(invite.token_uuid)" class="p-l-1">
+                  <a class="pointer"
+                    ng-click="$ctrl.resendInvitation(invite.token_uuid)"
+                    class="p-l-1">
                     Resend
                   </a>
                 </span>
