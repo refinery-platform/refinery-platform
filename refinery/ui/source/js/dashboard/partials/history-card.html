@@ -19,7 +19,7 @@
      <ul class="list-unstyled scrollable-list main-content-list">
        <li ng-repeat="tool in $ctrl.tools" class="event-item">
           {{ tool.modification_date | date:"MM/dd/yyyy" }}
-         <span class="p-l-1-2" ng-if="tool.tool_definition === 2">
+         <span class="p-l-1-2" ng-if="tool.analysis">
             <a ng-href="/data_sets/{{ tool.dataset.uuid }}/#/analyses">
              <i class="fa fa-cogs"></i>
              <span ng-if="tool.owner.full_name">
@@ -31,7 +31,7 @@
              launched an analysis: {{ tool.name }}
            </a>
          </span>
-         <span class="p-l-1-2" ng-if="tool.tool_definition === 1">
+         <span class="p-l-1-2" ng-if="!tool.analysis">
            <a ng-href="/data_sets/{{ tool.dataset.uuid }}/#/visualizations">
              <i class="fa fa-bar-chart"></i>
              <span ng-if="tool.owner.full_name">
