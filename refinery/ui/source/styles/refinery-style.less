@@ -540,8 +540,14 @@ a.analysis-header {
   width: 100%;
 }
 
+@media (max-width: @screen-sm-min) {
 
-@media (max-width: @navbar-collapse-width) {
+  #navbar-right {
+    a:hover {
+      text-decoration: none;
+      color: @blue-active;
+    }
+  }
 
   .refinery-base.navbar-default {
 
@@ -1315,12 +1321,26 @@ ul.badge-list {
     }
   }
 }
-@media (max-width: 400px) {
-  body {
-    margin-top: @navbar-height * 3.2;
+
+// Resolves space issue for the share and config buttons
+@media (max-width: 700px) {
+   #dashboard-icon-text {
+    display: none;
+  }
+  #login-icon-text {
+    display: none;
+  }
+  #login-name-icon-text {
+    display: none;
+  }
+  #logout-icon-text {
+    display: none;
+  }
+
+  #help-icon-text {
+    display: none;
   }
 }
-
 /*
  * Handy classes to control basic margin and padding according to the base em
  *
@@ -1799,6 +1819,10 @@ body.is-screenshot-ready {
   vertical-align: bottom;
 }
 
+.align-center {
+  vertical-align: middle;
+}
+
 .info-icon {
   color: @gray-light;
 }
@@ -1910,6 +1934,80 @@ ul.paragraph {
   }
 }
 
+
 .grid_data_set_total {
   border: none;
+
+a.modal-close {
+  color: @gray-lighterish;
+  &:hover {
+    color: @gray-light;
+  }
+}
+
+.refinery-label {
+  padding-right: 1em;
+  color: @gray-light;
+}
+
+
+.reinvite-icon {
+  .fa-stack-right-corner {
+    font-size: .7em;
+    position: absolute;
+    top: 6px;
+  }
+}
+
+/* CHANGING BREAKPOINT OF BOOTSTRAP 3 NAVIGATION BAR*/
+// temp solution until the dashboard is implement with new navbar -jm
+@media (max-width: 1170px) {
+  .navbar-header {
+    float: none;
+  }
+  .navbar-toggle {
+    display: block;
+    background-color: #464646;
+    border: none;
+    padding: 6px 10px 6px 10px;
+    margin-top: 8px;
+    .icon-bar {
+      background-color: @white !important;
+    }
+  }
+  .navbar-collapse {
+    border-top: 1px solid transparent;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.1);
+  }
+  .navbar-collapse.collapse {
+    display: none!important;
+  }
+  .navbar-collapse.collapse.in {
+    display: block!important;
+  }
+  .navbar-nav {
+    float: none!important;
+    margin: 7.5px -15px;
+  }
+  .navbar-nav>li {
+    float: none;
+  }
+  .navbar-nav>li>a {
+    padding-top: 10px;
+    padding-bottom: 10px;
+    color: @white;
+  }
+  .navbar-form {
+    padding: 10px 15px;
+    margin-top: 8px;
+    margin-right: -15px;
+    margin-bottom: 8px;
+    margin-left: -15px;
+    border-top: 1px solid transparent;
+    border-bottom: 1px solid transparent;
+    -webkit-box-shadow: inset 0 1px 0 rgba(255, 255, 255, .1), 0 1px 0 rgba(255, 255, 255, .1);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .1), 0 1px 0 rgba(255, 255, 255, .1);
+    width:auto;
+    float:none!important;
+  }
 }

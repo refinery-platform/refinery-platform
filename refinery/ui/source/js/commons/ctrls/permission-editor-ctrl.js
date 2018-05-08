@@ -85,7 +85,7 @@
         })
         .$promise
         .then(function () {
-          vm.modalInstance.dismiss('saved');
+          vm.modalInstance.close('saved');
         }, function (error) {
           permissionService.getPermissions(vm.resolve.config.uuid);
           $log.error(error);

@@ -64,6 +64,7 @@ from factory_boy.utils import create_dataset_with_necessary_models
 from file_store.models import FileStoreItem, FileType
 from tool_manager.management.commands.load_tools import \
     Command as LoadToolsCommand
+from tool_manager.serializers import ToolDefinitionSerializer
 from tool_manager.tasks import django_docker_cleanup
 
 from .models import (FileRelationship, GalaxyParameter, InputFile, Parameter,
@@ -2918,12 +2919,12 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
         expected_response_fields = {
             'container_name': self.tool.container_name,
             'container_url': self.tool.get_relative_container_url(),
-            'dataset': self.tool.dataset.pk,
             'is_running': self.tool.is_running(),
             'name': self.tool.name,
             'owner': self.tool._get_owner_info_as_dict(),
             'relaunch_url': self.tool.relaunch_url,
-            'tool_definition': self.tool.tool_definition.pk,
+            'tool_definition':
+                ToolDefinitionSerializer(self.tool.tool_definition).data,
             'uuid': self.tool.uuid
         }
 

@@ -97,17 +97,39 @@ class ToolsViewSet(ToolManagerViewSetBase):
     http_method_names = ['get', 'post']
 
     def list(self, request, *args, **kwargs):
-        return super(ToolsViewSet, self).list(
-            request,
-            data_set_uuid_lookup_name="data_set_uuid"
-        )
+        self.data_set_uuid = request.query_params.get('data_set_uuid')
+        if self.data_set_uuid:
+            return super(ToolsViewSet, self).list(
+                request,
+                data_set_uuid_lookup_name="data_set_uuid"
+            )
+        return super(ToolManagerViewSetBase, self).list(request)
 
     def get_queryset(self):
         """
         This view returns a list of all the Tools that the currently user has
         at least read_meta permissions on.
         """
-        if self.request.user.has_perm('core.read_meta_dataset', self.data_set):
+        # returns user's owned tools
+        if not self.data_set_uuid:
+            vis_tools = [v for v in VisualizationTool.objects.all()
+                         if v.get_owner() == self.request.user]
+
+            workflow_tools = [w for w in WorkflowTool.objects.all()
+                              if w.get_owner() == self.request.user]
+
+            tool_type = self.request.query_params.get("tool_type")
+            if tool_type == ToolDefinition.VISUALIZATION.lower():
+                return vis_tools
+            elif tool_type == ToolDefinition.WORKFLOW.lower():
+                return workflow_tools
+            else:
+                user_tools = vis_tools
+                user_tools.extend(workflow_tools)
+                return user_tools
+
+        elif self.request.user.has_perm('core.read_meta_dataset',
+                                        self.data_set):
             tool_type = self.request.query_params.get("tool_type")
 
             if not tool_type:

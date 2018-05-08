@@ -1,28 +1,23 @@
 'use strict';
 
-describe('Controller: AddGroupCtrl', function () {
+describe('Controller: GroupAddModalCtrl', function () {
   var ctrl;
   var scope;
-  var $controller;
   var service;
   var $q;
-  var $uibModalInstance = { cancel: function () {}, dismiss: function () {} };
 
   beforeEach(module('refineryApp'));
-  beforeEach(module('refineryCollaboration'));
   beforeEach(inject(function (
     $rootScope,
-    _$controller_,
-    _groupExtendedService_,
+    $controller,
+    groupExtendedService,
     _$q_
   ) {
     scope = $rootScope.$new();
-    service = _groupExtendedService_;
-    $controller = _$controller_;
+    service = groupExtendedService;
     $q = _$q_;
-    ctrl = $controller('AddGroupCtrl', {
-      $scope: scope,
-      $uibModalInstance: $uibModalInstance
+    ctrl = $controller('GroupAddModalCtrl', {
+      $scope: scope
     });
   }));
 
@@ -36,7 +31,6 @@ describe('Controller: AddGroupCtrl', function () {
   });
 
   it('Helper Methods exist', function () {
-    expect(angular.isFunction(ctrl.cancel)).toBe(true);
     expect(angular.isFunction(ctrl.close)).toBe(true);
   });
 
