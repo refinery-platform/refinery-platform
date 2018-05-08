@@ -24,6 +24,7 @@ from guardian.shortcuts import assign_perm
 from haystack.exceptions import SkipDocument
 import mock
 from mock import ANY
+from override_storage import override_storage
 from rest_framework.test import APIClient, APIRequestFactory, APITestCase
 
 import constants
@@ -2429,6 +2430,7 @@ class InvestigationTests(TestCase):
         self.assertEqual(self.isa_tab_investigation.get_assay_count(), 1)
 
 
+@override_storage()
 @override_settings(CELERY_ALWAYS_EAGER=True)
 class TestManagementCommands(TestCase):
     def setUp(self):
@@ -2445,7 +2447,7 @@ class TestManagementCommands(TestCase):
         self.args.extend(
             [
                 "--title", "Process Metadata Table Test csv",
-                "--file_name", os.path.abspath(two_line_csv),
+                "--file_name", two_line_csv,
             ]
         )
         call_command(
@@ -2463,7 +2465,7 @@ class TestManagementCommands(TestCase):
         self.args.extend(
             [
                 "--title", "Process Metadata Table Test csv",
-                "--file_name", os.path.abspath(two_line_tsv),
+                "--file_name", two_line_tsv,
             ]
         )
         call_command(
@@ -2480,7 +2482,7 @@ class TestManagementCommands(TestCase):
         self.args.extend(
             [
                 "--title", "Process Metadata Table Test custom delimiter",
-                "--file_name", os.path.abspath(two_line_custom),
+                "--file_name", two_line_custom,
             ]
         )
         call_command(
@@ -2499,7 +2501,7 @@ class TestManagementCommands(TestCase):
         self.args.extend(
             [
                 "--title", "Process Metadata Table Test custom delimiter",
-                "--file_name", os.path.abspath(two_line_custom),
+                "--file_name", two_line_custom,
             ]
         )
         with self.assertRaises(CommandError) as context:
