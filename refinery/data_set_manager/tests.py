@@ -13,9 +13,10 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import (InMemoryUploadedFile,
                                             SimpleUploadedFile)
+from django.core.management import call_command, CommandError
 from django.db.models import Q
 from django.http import QueryDict
-from django.test import LiveServerTestCase, TestCase
+from django.test import LiveServerTestCase, TestCase, override_settings
 
 from celery.states import FAILURE, PENDING, STARTED, SUCCESS
 from djcelery.models import TaskMeta
@@ -23,6 +24,7 @@ from guardian.shortcuts import assign_perm
 from haystack.exceptions import SkipDocument
 import mock
 from mock import ANY
+from override_storage import override_storage
 from rest_framework.test import APIClient, APIRequestFactory, APITestCase
 
 import constants
@@ -2426,3 +2428,93 @@ class InvestigationTests(TestCase):
 
     def test_get_assay_count(self):
         self.assertEqual(self.isa_tab_investigation.get_assay_count(), 1)
+
+
+@override_storage()
+@override_settings(CELERY_ALWAYS_EAGER=True)
+class TestManagementCommands(TestCase):
+    def setUp(self):
+        self.test_data_base_path = "data_set_manager/test-data/single-file"
+        self.args = [
+            "--username", "guest",
+            "--source_column_index", "2",
+            "--data_file_column", "2",
+        ]
+
+    def test_process_metadata_table_csv(self):
+        two_line_csv = os.path.join(self.test_data_base_path,
+                                    "two-line-local.csv")
+        self.args.extend(
+            [
+                "--title", "Process Metadata Table Test csv",
+                "--file_name", two_line_csv,
+            ]
+        )
+        call_command(
+            "process_metadata_table",
+            *self.args,
+            base_path=self.test_data_base_path,
+            is_public=True,
+            delimiter="comma"
+        )
+        self.assertEqual(DataSet.objects.count(), 1)
+
+        # One metadata file & two data files referenced in the metadata
+        self.assertEqual(FileStoreItem.objects.count(), 3)
+
+    def test_process_metadata_table_tsv(self):
+        two_line_tsv = os.path.join(self.test_data_base_path,
+                                    "two-line-local.tsv")
+        self.args.extend(
+            [
+                "--title", "Process Metadata Table Test csv",
+                "--file_name", two_line_tsv,
+            ]
+        )
+        call_command(
+            "process_metadata_table",
+            *self.args,
+            base_path=self.test_data_base_path,
+            is_public=True
+        )
+        self.assertEqual(DataSet.objects.count(), 1)
+
+    def test_process_metadata_table_custom_delimiter(self):
+        two_line_custom = os.path.join(self.test_data_base_path,
+                                       "two-line-local.custom")
+        self.args.extend(
+            [
+                "--title", "Process Metadata Table Test custom delimiter",
+                "--file_name", two_line_custom,
+            ]
+        )
+        call_command(
+            "process_metadata_table",
+            *self.args,
+            base_path=self.test_data_base_path,
+            is_public=True,
+            delimiter="custom",
+            custom_delimiter_string="@"
+        )
+        self.assertEqual(DataSet.objects.count(), 1)
+
+    def test_process_metadata_table_custom_delimiter_none_specified(self):
+        two_line_custom = os.path.join(self.test_data_base_path,
+                                       "two-line-local.custom")
+        self.args.extend(
+            [
+                "--title", "Process Metadata Table Test custom delimiter",
+                "--file_name", two_line_custom,
+            ]
+        )
+        with self.assertRaises(CommandError) as context:
+            call_command(
+                "process_metadata_table",
+                *self.args,
+                base_path=self.test_data_base_path,
+                is_public=True,
+                delimiter="custom"
+            )
+        self.assertIn("custom_delimiter_string was not specified",
+                      context.exception.message)
+        self.assertEqual(DataSet.objects.count(), 0)
