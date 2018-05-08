@@ -25,7 +25,8 @@ class DataSetSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = DataSet
-        fields = ['title', 'accession', 'summary', 'description', 'slug']
+        fields = ['title', 'accession', 'summary', 'description', 'slug',
+                  'uuid']
 
     def partial_update(self, instance, validated_data):
         """

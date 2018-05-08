@@ -1,0 +1,49 @@
+<div class="refinery-panel" id="dashboard-history-card">
+  <div class="refinery-header">
+    <h3>
+      <i class="m-r-1-4 fa fa-history"></i> History
+    </h3>
+  </div>
+  <div class="refinery-panel-content">
+    <div  ng-if="!$ctrl.isToolsLoading && !$ctrl.tools.length"
+      class="refinery-sub-panel-notice">
+      <div class="text-info notice">
+        <strong>Info</strong>: No events have occurred.
+      </div>
+    </div>
+    <div ng-if="$ctrl.isToolsLoading">
+      <h4 class="emphasized text-align-center m-t-1-5">
+        <span class="refinery-spinner refinery-spinner-inline"></span>
+      </h4>
+    </div>
+     <ul class="list-unstyled scrollable-list main-content-list">
+       <li ng-repeat="tool in $ctrl.tools" class="event-item">
+          {{ tool.modification_date | date:"MM/dd/yyyy" }}
+         <span class="p-l-1-2" ng-if="tool.tool_definition === 2">
+            <a ng-href="/data_sets/{{ tool.dataset.uuid }}/#/analyses">
+             <i class="fa fa-cogs"></i>
+             <span ng-if="tool.owner.full_name">
+               {{ tool.owner.full_name }}
+             </span>
+             <span ng-if="!tool.owner.full_name">
+               {{ tool.owner.username }}
+             </span>
+             launched an analysis: {{ tool.name }}
+           </a>
+         </span>
+         <span class="p-l-1-2" ng-if="tool.tool_definition === 1">
+           <a ng-href="/data_sets/{{ tool.dataset.uuid }}/#/visualizations">
+             <i class="fa fa-bar-chart"></i>
+             <span ng-if="tool.owner.full_name">
+               {{ tool.owner.full_name }}
+             </span>
+             <span ng-if="!tool.owner.full_name">
+               {{ tool.owner.username }}
+             </span>
+              launched a visualization tool: {{ tool.name }}.
+           </a>
+         </span>
+       </li>
+     </ul>
+  </div>
+</div>

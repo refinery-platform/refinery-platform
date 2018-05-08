@@ -17,7 +17,7 @@ describe('Satori', function() {
     });
     cy.route({
       method: 'GET',
-      url: '/solr/core/select/?allIds=1&defType=edismax&f.description.hl.alternateField=description&f.title.hl.alternateField=title&f.title.hl.fragsize=0&fl=dbid,uuid,access&fq=django_ct:core.dataset&hl=true&hl.fl=title,description&hl.maxAlternateFieldLength=128&hl.simple.post=</em>&hl.simple.pre=<em>&q=co&qf=title^0.5+accession+submitter+text+description&rows=50&start=0&synonyms=false&wt=json',
+      url: '/solr/core/select/?allIds=1&defType=edismax&f.description.hl.alternateField=description&f.title.hl.alternateField=title&f.title.hl.fragsize=0&fl=dbid,uuid,access,name,modification_date,title&fq=django_ct:core.dataset&hl=true&hl.fl=title,description&hl.maxAlternateFieldLength=128&hl.simple.post=</em>&hl.simple.pre=<em>&q=co&qf=title^0.5+accession+submitter+text+description&rows=50&start=0&synonyms=false&wt=json',
       response: '@solr_co'
     })
   }

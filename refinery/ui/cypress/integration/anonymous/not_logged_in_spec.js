@@ -1,5 +1,8 @@
 describe('Not logged in', function() {
+
   it('Has homepage', function() {
+    cy.viewport(1366, 768) //macbook 11"
+
     cy.visit('/');
     //cy.visible('Refinery');
 
@@ -26,6 +29,7 @@ describe('Not logged in', function() {
   });
 
   it('Has statistics', function() {
+    cy.viewport(1366, 768) //macbook 11"
     cy.visit('/');
     cy.visible('Statistics').click();
 
@@ -40,6 +44,7 @@ describe('Not logged in', function() {
   });
 
   it('Has about', function() {
+    cy.viewport(1366, 768) //macbook 11"
     cy.visit('/');
     cy.visible('About').click();
 

@@ -32,7 +32,7 @@
     "d3-v4": "mbostock-bower/d3-bower#4.2.2",
     "d3-tip": "0.6.7",
     "dagre": "0.7.4",
-    "fontawesome": "4.5.0",
+    "fontawesome": "4.7.0",
     "graphlib": "1.0.5",
     "intro-js": "intro.js#2.3.0",
     "humanize": "0.0.9",
