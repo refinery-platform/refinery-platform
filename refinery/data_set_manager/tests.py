@@ -2459,6 +2459,9 @@ class TestManagementCommands(TestCase):
         )
         self.assertEqual(DataSet.objects.count(), 1)
 
+        # One metadata file & two data files referenced in the metadata
+        self.assertEqual(FileStoreItem.objects.count(), 3)
+
     def test_process_metadata_table_tsv(self):
         two_line_tsv = os.path.join(self.test_data_base_path,
                                     "two-line-local.tsv")
