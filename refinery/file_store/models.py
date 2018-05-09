@@ -210,16 +210,6 @@ class FileStoreItem(models.Model):
         else:
             return _get_extension_from_string(self.source)
 
-    def get_file_object(self):
-        """Return file object for the data file or None if failed to open"""
-        try:
-            # FieldFile.open() and File.open() don't return file objects, so
-            # accessing it directly
-            return self.datafile.file.file  # FileStoreItem.FieldFile.File.file
-        except ValueError as exc:
-            logger.error("Error opening %s: %s", self.datafile, exc)
-            return None
-
     def is_symlinked(self):
         '''Check if the data file is a symlink.
 
@@ -333,24 +323,6 @@ class FileStoreItem(models.Model):
 def get_temp_dir():
     """Return the absolute path to the file store temp dir"""
     return settings.FILE_STORE_TEMP_DIR
-
-
-def get_file_object(file_name):
-    '''Open file given its name.
-
-    :param file_name: name of the file.
-    :type file_name: str.
-    :returns: file object -- or None if failed to open file.
-
-    '''
-    try:
-        return open(file_name, 'rb')
-    except IOError as e:
-        logger.error(
-            "Could not open file: %s - error(%s): %s",
-            file_name, e.errno, e.strerror
-        )
-        return None
 
 
 # post_delete is safer than pre_delete

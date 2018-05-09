@@ -364,10 +364,9 @@ def parse_isatab(username, public, path, identity_id=None,
                             uuid=investigation.isarchive_file)
                         if fileStoreItem:
                             try:
-                                logger.info("Get file: %s",
-                                            fileStoreItem.get_absolute_path())
+                                logger.info("Get file: %s", fileStoreItem)
                                 checksum = calculate_checksum(
-                                    fileStoreItem.get_file_object()
+                                    fileStoreItem.datafile
                                 )
                             except IOError as exc:
                                 logger.error(
