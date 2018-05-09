@@ -10,6 +10,7 @@
     '$location',
     '$log',
     '$q',
+    '$scope',
     '_',
     'userFileBrowserFactory',
     'userFileFiltersService',
@@ -23,6 +24,7 @@
       $location,
       $log,
       $q,
+      $scope,
       _,
       userFileBrowserFactory,
       userFileFiltersService,
@@ -31,12 +33,18 @@
       gridOptionsService
   ) {
     var vm = this;
+    vm.nodesCount = userFileBrowserFactory.dataSetNodes.nodesCount;
+    vm.totalNodesCount = userFileBrowserFactory.dataSetNodes.totalNodesCount;
+
     var promise = $q.defer();
     var getUserFiles = userFileBrowserFactory.getUserFiles;
     getUserFiles().then(function (solr) {
       gridOptionsService.columnDefs = userFileBrowserFactory.createColumnDefs(
         cullEmptyAttributes(solr.facet_field_counts)
       );
+      userFileBrowserFactory.dataSetNodes.nodesCount = solr.nodes.length;
+      userFileBrowserFactory.dataSetNodes.totalNodesCount = solr.nodes_count;
+
       gridOptionsService.data = userFileBrowserFactory.createData(solr.nodes);
       promise.resolve();
     }, function () {
@@ -74,6 +82,8 @@
           // TODO: Should there be something that wraps up this "then"? It is repeated.
           // gridOptionsService.columnDefs = userFileBrowserFactory.createColumnDefs();
           gridOptionsService.data = userFileBrowserFactory.createData(solr.nodes);
+          userFileBrowserFactory.dataSetNodes.nodesCount = solr.nodes.length;
+          userFileBrowserFactory.dataSetNodes.totalNodesCount = solr.nodes_count;
           promise.resolve();
         }, function () {
           $log.error('/files/ request failed');
@@ -116,6 +126,16 @@
       });
       return filters.join(' AND ');
     }
+
+    $scope.$watchCollection(
+      function () {
+        return userFileBrowserFactory.dataSetNodes;
+      },
+      function () {
+        vm.nodesCount = userFileBrowserFactory.dataSetNodes.nodesCount;
+        vm.totalNodesCount = userFileBrowserFactory.dataSetNodes.totalNodesCount;
+      }
+    );
   }
 })();
 

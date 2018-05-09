@@ -61,6 +61,11 @@
       ng-class="{'col-lg-7 col-md-7 col-sm-5': !FBCtrl.collapsedToolPanel,
       'col-lg-10 col-md-10 col-sm-9': FBCtrl.collapsedToolPanel}"
       id="main-area">
+      <div class="refinery-subheader grid_data_set_total">
+        <h3 class="p-l-1">
+          {{ FBCtrl.assayFilesTotal }} files
+        </h3>
+      </div>
       <rp-file-browser-assay-files></rp-file-browser-assay-files>
     </div>
   </div>
