@@ -158,7 +158,8 @@ class ToolsViewSet(ToolManagerViewSetBase):
             return render_vis_tool_user_not_allowed_template(
                 request,
                 visualization_tool.name,
-                "User: {} does not have permission to view Tool: {}".format(
+                "User: {} does not have permission to view {}: {}".format(
+                    visualization_tool.name,
                     request.user.username,
                     visualization_tool.uuid
                 )
@@ -223,7 +224,8 @@ class AutoRelaunchProxy(Proxy, object):
             return render_vis_tool_user_not_allowed_template(
                 request,
                 visualization_tool.name,
-                "User: {} does not have permission to view Tool: {}".format(
+                "User: {} does not have permission to view {}: {}".format(
+                    visualization_tool.name,
                     request.user.username,
                     visualization_tool.uuid
                 )
