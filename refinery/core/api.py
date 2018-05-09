@@ -678,15 +678,15 @@ class DataSetResource(SharableResourceAPIInterface, ModelResource):
 
             if group:
                 filtered_obj_list = []
-                all_group_obj = list(get_objects_for_group(
+                group_obj_list = list(get_objects_for_group(
                     group, 'core.read_meta_dataset'
                 ))
-
+                # checking obj_list vs group_obj_list matters, ref in bundle
                 for obj in obj_list:
-                    if obj in all_group_obj:
+                    if obj in group_obj_list:
                         filtered_obj_list.append(obj)
-
                 return filtered_obj_list
+
         return obj_list
 
     def obj_get(self, bundle, **kwargs):
