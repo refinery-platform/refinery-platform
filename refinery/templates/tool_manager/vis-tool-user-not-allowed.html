@@ -5,24 +5,24 @@ Visualization Error
 {% endblock %}
 
 {% block subheader %}
-    <div class="page-header">
-        <h1>{{ visualization_tool_name }}: Error</h1>
-    </div>
+<div class="page-header">
+  <h1>{{ visualization_tool_name }}: Error</h1>
+</div>
 {% endblock %}
 
 {% block content %}
-    <div class="refinery-panel refinery-panel-content scrollable">
-	<div class="row">
-		<div class="refinery-header">
-			<span class="refinery-header-left">
-				<h3>Access Forbidden</h3>
-			</span>
-		</div>
-		<p>
-			{{message}}
-			If you believe you reached this page in error, please contact your
-            <a href='mailto:{{ADMIN_EMAIL}}?Subject=Refinery%20Error' target='_top'>System Administrator</a>.
-		</p>
-	</div>
+<div class="refinery-panel refinery-panel-content scrollable">
+  <div class="row">
+    <div class="refinery-header">
+      <span class="refinery-header-left">
+        <h3>Access Forbidden</h3>
+      </span>
+    </div>
+    <p>
+      {{message}}
+      If you believe you reached this page in error, please contact your
+      <a href='mailto:{{ADMIN_EMAIL}}?Subject=Refinery%20Error' target='_top'>System Administrator</a>.
+    </p>
+  </div>
 </div>
 {% endblock %}
