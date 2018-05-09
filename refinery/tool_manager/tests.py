@@ -2880,8 +2880,8 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
         )
         self.assertEqual(get_response.status_code, 200)
         self.assertIn(
-            "User: {} does not have permission to view Tool: {}".format(
-                self.user.username, self.tool.uuid
+            "User: {} does not have permission to view {}: {}".format(
+                self.user.username, self.tool.name, self.tool.uuid
             ),
             get_response.content
         )
