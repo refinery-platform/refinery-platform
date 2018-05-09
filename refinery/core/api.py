@@ -552,6 +552,20 @@ class DataSetResource(SharableResourceAPIInterface, ModelResource):
 
         investigation_link = bundle.obj.get_latest_investigation_link()
 
+        groups = GroupObjectPermission.objects.filter(
+            object_pk=bundle.obj.id
+        )
+
+        if bundle.obj.public is None:
+            for group in groups:
+                if group.group == ExtendedGroup.objects.public_group():
+                    bundle.data["public"] = True
+
+        if bundle.obj.is_owner is None:
+            bundle.data["is_owner"] = self.request.user.has_perm(
+                'core.share_dataset', bundle.obj
+            )
+
         bundle.data["analyses"] = analyses
         bundle.data["creation_date"] = bundle.obj.creation_date
         bundle.data["date"] = investigation_link.date
@@ -668,6 +682,7 @@ class DataSetResource(SharableResourceAPIInterface, ModelResource):
         return prepend_urls_list
 
     def filter_by_group(self, request, obj_list):
+        self.request = request
         if 'group' in request.GET:
             try:
                 group = ExtendedGroup.objects.get(
