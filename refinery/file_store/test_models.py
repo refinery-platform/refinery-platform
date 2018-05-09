@@ -12,22 +12,14 @@ from override_storage import override_storage
 
 from .models import (FileExtension, FileStoreItem, FileType,
                      _get_extension_from_string, _map_source,
-                     generate_file_source_translator, get_file_object,
-                     get_temp_dir, parse_s3_url)
+                     generate_file_source_translator, get_temp_dir,
+                     parse_s3_url)
 
 
 class FileStoreModuleTest(TestCase):
 
     def test_get_temp_dir(self):
         self.assertEqual(get_temp_dir(), settings.FILE_STORE_TEMP_DIR)
-
-    @mock.patch('__builtin__.open', new_callable=mock.mock_open)
-    def test_get_file_object(self, mock_file_open):
-        mock_file_open.return_value = mock.sentinel.file_object
-        file_object = get_file_object('/example/path/test_file.dat')
-        mock_file_open.assert_called_once_with('/example/path/test_file.dat',
-                                               'rb')
-        self.assertEqual(file_object, mock.sentinel.file_object)
 
     def test_get_extension_from_file(self):
         self.assertEqual(_get_extension_from_string('test.fastq'), 'fastq')
