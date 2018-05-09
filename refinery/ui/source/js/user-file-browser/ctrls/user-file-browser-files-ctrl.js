@@ -83,7 +83,7 @@
           // gridOptionsService.columnDefs = userFileBrowserFactory.createColumnDefs();
           gridOptionsService.data = userFileBrowserFactory.createData(solr.nodes);
           userFileBrowserFactory.dataSetNodes.nodesCount = solr.nodes.length;
-          userFileBrowserFactory.dataSetNodes.nodesCount = solr.nodes_count;
+          userFileBrowserFactory.dataSetNodes.totalNodesCount = solr.nodes_count;
           promise.resolve();
         }, function () {
           $log.error('/files/ request failed');
