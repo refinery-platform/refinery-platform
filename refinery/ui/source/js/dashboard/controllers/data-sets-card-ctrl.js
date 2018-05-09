@@ -64,9 +64,9 @@
         }
       } else if (permsID === 'owned') {
         if (vm.groupFilter.owned) {
-          vm.params.owned = 'True';
+          vm.params.is_owner = 'True';
         } else {
-          delete vm.params.owned; // owned false is unused
+          delete vm.params.is_owner; // owned false is unused
         }
       } else if (!permsID) {
         delete vm.params.group;

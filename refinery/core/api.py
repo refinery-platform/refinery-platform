@@ -677,9 +677,17 @@ class DataSetResource(SharableResourceAPIInterface, ModelResource):
                 group = None
 
             if group:
-                obj_list = list(get_objects_for_group(
+                filtered_obj_list = []
+                group_obj_list = list(get_objects_for_group(
                     group, 'core.read_meta_dataset'
                 ))
+                # The order of checking obj_list instead of
+                # group_obj_list matters. Possible reason is obj_list is
+                # referenced in the bundle data from parent method.
+                for obj in obj_list:
+                    if obj in group_obj_list:
+                        filtered_obj_list.append(obj)
+                return filtered_obj_list
 
         return obj_list
 

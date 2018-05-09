@@ -1,7 +1,7 @@
 (function () {
   'use strict';
 
-  describe('Controller: Dashboard Main Ctrl', function () {
+  describe('Controller: Data Set Card Ctrl', function () {
     var ctrl;
     var mockResponseData;
     var mockService;
@@ -66,14 +66,14 @@
       it('filterDataSets sets params owned field', function () {
         ctrl.groupFilter.owned = true;
         ctrl.filterDataSets('owned');
-        expect(ctrl.params.owned).toEqual('True');
+        expect(ctrl.params.is_owner).toEqual('True');
       });
 
       it('filterDataSets remove params owned field', function () {
         ctrl.groupFilter.owned = false;
-        ctrl.params.owned = 'True';
+        ctrl.params.is_owner = 'True';
         ctrl.filterDataSets('owned');
-        expect(ctrl.params.hasOwnProperty('owned')).toBe(false);
+        expect(ctrl.params.hasOwnProperty('is_owner')).toBe(false);
       });
 
       it('filterDataSets sets params group field', function () {
