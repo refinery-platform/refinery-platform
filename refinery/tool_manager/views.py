@@ -159,8 +159,8 @@ class ToolsViewSet(ToolManagerViewSetBase):
                 request,
                 visualization_tool.name,
                 "User: {} does not have permission to view {}: {}".format(
-                    visualization_tool.name,
                     request.user.username,
+                    visualization_tool.name,
                     visualization_tool.uuid
                 )
             )
@@ -225,8 +225,8 @@ class AutoRelaunchProxy(Proxy, object):
                 request,
                 visualization_tool.name,
                 "User: {} does not have permission to view {}: {}".format(
-                    visualization_tool.name,
                     request.user.username,
+                    visualization_tool.name,
                     visualization_tool.uuid
                 )
             )
