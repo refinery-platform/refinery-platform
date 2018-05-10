@@ -510,53 +510,54 @@ class DataSetResource(SharableResourceAPIInterface, ModelResource):
         }
 
     def dehydrate(self, bundle):
-        if not bundle.data['owner']:
-            owner = bundle.obj.get_owner()
-            try:
-                bundle.data['owner'] = owner.profile.uuid
-            except:
-                pass
-
-        metadata_file_store_item = \
-            bundle.obj.get_metadata_as_file_store_item()
-
-        if bundle.obj.is_isatab_based:
-            bundle.data["isa_archive"] = metadata_file_store_item.uuid
-            bundle.data["isa_archive_url"] = \
-                metadata_file_store_item.get_datafile_url()
-        else:
-            bundle.data["pre_isa_archive"] = metadata_file_store_item.uuid
-
-        analyses = []
-        for analysis in bundle.obj.get_analyses():
-            analysis_dict = {}
-            analysis_dict["uuid"] = analysis.uuid
-            analysis_dict["name"] = analysis.name
-            analysis_dict["status"] = analysis.status
-            analysis_dict['is_owner'] = False
-            owner = analysis.get_owner()
-            if owner:
+        if 'min_response' not in bundle.request.GET:
+            if not bundle.data['owner']:
+                owner = bundle.obj.get_owner()
                 try:
-                    analysis_dict['owner'] = owner.profile.uuid
-                    user = bundle.request.user
-                    if (hasattr(user, 'profile') and
-                       user.profile.uuid == analysis_dict['owner']):
-                        analysis_dict['is_owner'] = True
+                    bundle.data['owner'] = owner.profile.uuid
                 except:
+                    pass
+
+            metadata_file_store_item = \
+                bundle.obj.get_metadata_as_file_store_item()
+
+            if bundle.obj.is_isatab_based:
+                bundle.data["isa_archive"] = metadata_file_store_item.uuid
+                bundle.data["isa_archive_url"] = \
+                    metadata_file_store_item.get_datafile_url()
+            else:
+                bundle.data["pre_isa_archive"] = metadata_file_store_item.uuid
+
+            analyses = []
+            for analysis in bundle.obj.get_analyses():
+                analysis_dict = {}
+                analysis_dict["uuid"] = analysis.uuid
+                analysis_dict["name"] = analysis.name
+                analysis_dict["status"] = analysis.status
+                analysis_dict['is_owner'] = False
+                owner = analysis.get_owner()
+                if owner:
+                    try:
+                        analysis_dict['owner'] = owner.profile.uuid
+                        user = bundle.request.user
+                        if (hasattr(user, 'profile') and
+                           user.profile.uuid == analysis_dict['owner']):
+                            analysis_dict['is_owner'] = True
+                    except:
+                        analysis_dict['owner'] = None
+
+                else:
                     analysis_dict['owner'] = None
 
-            else:
-                analysis_dict['owner'] = None
+                analyses.append(analysis_dict)
 
-            analyses.append(analysis_dict)
+            investigation_link = bundle.obj.get_latest_investigation_link()
 
-        investigation_link = bundle.obj.get_latest_investigation_link()
-
-        bundle.data["analyses"] = analyses
-        bundle.data["creation_date"] = bundle.obj.creation_date
-        bundle.data["date"] = investigation_link.date
-        bundle.data["modification_date"] = bundle.obj.modification_date
-        bundle.data["version"] = investigation_link.version
+            bundle.data["analyses"] = analyses
+            bundle.data["creation_date"] = bundle.obj.creation_date
+            bundle.data["date"] = investigation_link.date
+            bundle.data["modification_date"] = bundle.obj.modification_date
+            bundle.data["version"] = investigation_link.version
 
         return bundle
 
@@ -723,6 +724,7 @@ class DataSetResource(SharableResourceAPIInterface, ModelResource):
     def get_object_list(self, request):
         obj_list = SharableResourceAPIInterface.get_object_list(self, request)
         obj_list = self.filter_by_group(request, obj_list)
+
         return obj_list
 
     def obj_create(self, bundle, **kwargs):
