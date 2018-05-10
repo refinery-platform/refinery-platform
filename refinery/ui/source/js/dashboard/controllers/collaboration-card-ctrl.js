@@ -117,10 +117,8 @@
           }
         }
       });
-      modalInstance.result.then(function (response) {
-        if (response === 'success') {
-          vm.dashboardParentCtrl.getGroups();
-        }
+      modalInstance.result.then(function () {
+        vm.dashboardParentCtrl.getGroups();
       });
     }
 
