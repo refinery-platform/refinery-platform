@@ -38,7 +38,10 @@
     vm.loadingDataSets = true;
     vm.openDataSetDeleteModal = openDataSetDeleteModal;
     vm.openPermissionEditor = openPermissionEditor;
-    vm.params = {};
+    vm.params = {
+      limit: 200,
+      min_response: 'True'
+    };
     vm.resetDataSetSearch = resetDataSetSearch;
     vm.searchDataSets = searchDataSets;
     vm.searchQueryDataSets = '';
