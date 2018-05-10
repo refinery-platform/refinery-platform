@@ -30,7 +30,6 @@
 
     function activate () {
       getGroups();
-      console.log('active');
     }
 
     /**
