@@ -34,7 +34,7 @@
         .expectGET(
           settings.appRoot +
           settings.refineryApi +
-          '/data_sets/?format=json&order_by=-modification_date'
+          '/data_sets/?format=json&limit=200&min_response=True&order_by=-modification_date'
         ).respond(200, []);
 
       var scope = $rootScope.$new();
