@@ -23,6 +23,9 @@ class S3MediaStorage(S3Boto3Storage):
             if not self.exists(name):
                 return name
 
+    def get_name(self, name):
+        return self.get_available_name(get_valid_filename(name))
+
 
 @deconstructible
 class SymlinkedFileSystemStorage(FileSystemStorage):
