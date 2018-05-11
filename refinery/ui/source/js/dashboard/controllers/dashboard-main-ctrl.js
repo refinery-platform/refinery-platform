@@ -13,14 +13,12 @@
 
   DashboardMainCtrl.$inject = [
     'humanize',
-    '_',
     'groupInviteService',
     'groupMemberService'
   ];
 
   function DashboardMainCtrl (
     humanize,
-    _,
     groupInviteService,
     groupMemberService
   ) {
@@ -43,7 +41,7 @@
       var members = groupMemberService.query();
       members.$promise.then(function (response) {
         vm.groups = response.objects;
-        _.each(response.objects, function (group) {
+        vm.groups.forEach(function (group) {
           addInviteList(group.id);
         });
       });

@@ -510,6 +510,10 @@ class DataSetResource(SharableResourceAPIInterface, ModelResource):
         }
 
     def dehydrate(self, bundle):
+        if 'min_response' in bundle.request.GET and\
+                bundle.request.GET.get('min_response'):
+            return bundle
+
         if not bundle.data['owner']:
             owner = bundle.obj.get_owner()
             try:
@@ -723,6 +727,7 @@ class DataSetResource(SharableResourceAPIInterface, ModelResource):
     def get_object_list(self, request):
         obj_list = SharableResourceAPIInterface.get_object_list(self, request)
         obj_list = self.filter_by_group(request, obj_list)
+
         return obj_list
 
     def obj_create(self, bundle, **kwargs):

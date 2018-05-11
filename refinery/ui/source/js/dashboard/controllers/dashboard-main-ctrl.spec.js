@@ -11,17 +11,24 @@
     beforeEach(module('refineryDashboard'));
     beforeEach(inject(function (
       $controller,
+      groupInviteService,
       groupMemberService,
       $q,
       $rootScope
     ) {
       scope = $rootScope.$new();
       groupService = groupMemberService;
-      mockResponseData = [{ name: 'Test Group' }];
+      mockResponseData = { objects: [{ name: 'Test Group' }] };
 
       spyOn(groupService, 'query').and.callFake(function () {
         var deferred = $q.defer();
         deferred.resolve(mockResponseData);
+        return { $promise: deferred.promise };
+      });
+
+      spyOn(groupInviteService, 'query').and.callFake(function () {
+        var deferred = $q.defer();
+        deferred.resolve({ objects: [] });
         return { $promise: deferred.promise };
       });
 
@@ -47,11 +54,11 @@
       it('getGroups returns a promise', function () {
         var successData;
         var response = ctrl.getGroups().then(function (responseData) {
-          successData = responseData[0].name;
+          successData = responseData.objects[0].name;
         });
         scope.$apply();
         expect(typeof response.then).toEqual('function');
-        expect(successData).toEqual(mockResponseData[0].name);
+        expect(successData).toEqual(mockResponseData.objects[0].name);
       });
     });
   });
