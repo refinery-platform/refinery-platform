@@ -16,7 +16,6 @@ import tempfile
 from zipfile import ZipFile
 
 from file_store.models import FileStoreItem
-from file_store.tasks import import_file
 
 from .models import (Assay, Attribute, Contact, Design, Factor, Investigation,
                      Node, Ontology, Protocol, ProtocolReference,
@@ -1013,16 +1012,14 @@ class IsaTabParser:
         if isa_archive:
             file_store_item = FileStoreItem.objects.create(source=isa_archive)
             self._current_investigation.isarchive_file = file_store_item.uuid
-            import_file(self._current_investigation.isarchive_file,
-                        refresh=True)
+            file_store_item.import_file()
 
         if preisa_archive:
             file_store_item = \
                 FileStoreItem.objects.create(source=preisa_archive)
             self._current_investigation.pre_isarchive_file = \
                 file_store_item.uuid
-            import_file(self._current_investigation.pre_isarchive_file,
-                        refresh=True)
+            file_store_item.import_file()
 
         self._current_investigation.save()
         return self._current_investigation
