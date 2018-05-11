@@ -10,13 +10,9 @@
     .module('refineryToolLaunch')
     .factory('toolLaunchStatusService', toolLaunchStatusService);
 
-  toolLaunchStatusService.$inject = ['_'];
-
-  function toolLaunchStatusService (
-    _
-  ) {
+  function toolLaunchStatusService () {
    // var toolLaunches = {}; // objects tracked by tools uuid
-    var toolLaunches = {};
+    var toolLaunches = [];
 
 
     var service = {
@@ -40,21 +36,21 @@
     **/
     function addToolLaunchStatus (toolLaunch, toolStatus) {
       if (toolStatus === 'success') {
-        toolLaunches[toolLaunch.uuid] = {
+        toolLaunches.unshift({
           uuid: toolLaunch.uuid,
           type: toolLaunch.tool_definition.tool_type.toLowerCase(),
           name: toolLaunch.name,
           container_url: toolLaunch.container_url,
-          status: toolStatus
-        };
+          status: toolStatus,
+        });
       } else {
-        toolLaunches[toolLaunch.config.data.tool_definition_uuid] = {
+        toolLaunches.unshift({
           uuid: toolLaunch.config.data.tool_definition_uuid,
           msg: 'Tool launch failed.',
           status: toolStatus,
           apiStatus: toolLaunch.status,
-          apiStatusMsg: toolLaunch.statusText
-        };
+          apiStatusMsg: toolLaunch.statusText,
+        });
       }
     }
 
@@ -65,8 +61,11 @@
      * @param {str} toolLaunchUuid - uuid for tool launch
     **/
     function deleteToolLaunchStatus (toolLaunchUuid) {
-      if (_.has(toolLaunches, toolLaunchUuid)) {
-        delete toolLaunches[toolLaunchUuid];
+      for (var i = 0; i < toolLaunches.length; i++) {
+        if (toolLaunches[i].uuid === toolLaunchUuid) {
+          toolLaunches.splice(i, 1);
+          break;
+        }
       }
     }
   }

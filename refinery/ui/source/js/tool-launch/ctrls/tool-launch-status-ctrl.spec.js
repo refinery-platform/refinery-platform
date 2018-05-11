@@ -35,8 +35,8 @@
       expect(angular.isFunction(ctrl.removeToolLaunch)).toBe(true);
     });
 
-    it('Expect service to have been called', function () {
-      var mockService = spyOn(service.removeToolLaunce);
+    it('RemoveToolLaunch will service to have been called', function () {
+      var mockService = spyOn(ctrl, 'removeToolLaunch');
       ctrl.removeToolLaunch(mockUuid);
       expect(mockService).toHaveBeenCalled();
     });

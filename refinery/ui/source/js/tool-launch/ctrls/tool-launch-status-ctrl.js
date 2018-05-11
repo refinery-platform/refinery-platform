@@ -28,7 +28,6 @@
 
     function removeToolLaunch (toolLaunchUuid) {
       toolLaunchStatusService.deleteToolLaunchStatus(toolLaunchUuid);
-      console.log('close msg');
     }
 
     /*
@@ -43,8 +42,6 @@
           return toolLaunchStatusService.toolLaunches;
         },
         function () {
-          console.log('in watcher tool-launch-status');
-          console.log(toolLaunchStatusService.toolLaunches);
           vm.toolLaunches = toolLaunchStatusService.toolLaunches;
         }
       );
