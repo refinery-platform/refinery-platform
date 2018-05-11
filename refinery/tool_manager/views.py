@@ -192,7 +192,8 @@ class ToolsViewSet(ToolManagerViewSetBase):
                                           "currently running")
         try:
             visualization_tool.launch()
-            return JsonResponse(ToolSerializer(visualization_tool).data)
+            serializer = ToolSerializer(visualization_tool)
+            return JsonResponse(serializer.data)
         except Exception as e:
             logger.error(e)
             return HttpResponseBadRequest(e)
