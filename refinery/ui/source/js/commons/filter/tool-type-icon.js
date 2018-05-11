@@ -16,6 +16,8 @@
         switch (param) {
           case 'VISUALIZATION':
             return 'fa fa-bar-chart';
+          case 'visualization':
+            return 'fa fa-bar-chart';
           default: // Workflow
             return 'fa fa-cogs';
         }

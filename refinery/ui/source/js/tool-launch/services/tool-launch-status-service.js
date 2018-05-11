@@ -16,9 +16,7 @@
     _
   ) {
    // var toolLaunches = {}; // objects tracked by tools uuid
-    var toolLaunches = {
-      x56fscg: { name: 'VisToolName', type: 'analysis', status: 'success', uuid: 's3kjslkjt' }
-    };
+    var toolLaunches = {};
 
 
     var service = {
@@ -40,8 +38,25 @@
      * @param {object} toolLaunch - custom tool launch object requires uuid,
      * tool type, name, and status
     **/
-    function addToolLaunchStatus (toolLaunch) {
-      angular.copy(toolLaunches[toolLaunch.uuid], toolLaunch);
+    function addToolLaunchStatus (toolLaunch, toolStatus) {
+      if (toolStatus === 'success') {
+        toolLaunches[toolLaunch.uuid] = {
+          uuid: toolLaunch.uuid,
+          type: toolLaunch.tool_definition.tool_type.toLowerCase(),
+          name: toolLaunch.name,
+          container_url: toolLaunch.container_url,
+          status: toolStatus
+        };
+      } else {
+        console.log(toolLaunch);
+        toolLaunches[toolLaunch.config.data.tool_definition_uuid] = {
+          uuid: toolLaunch.config.data.tool_definition_uuid,
+          msg: 'Tool launch failed.',
+          status: toolStatus,
+          apiStatus: toolLaunch.status,
+          apiStatusMsg: toolLaunch.statusText
+        };
+      }
     }
 
      /**
@@ -51,7 +66,7 @@
      * @param {str} toolLaunchUuid - uuid for tool launch
     **/
     function deleteToolLaunchStatus (toolLaunchUuid) {
-      if (_.has(toolLaunchUuid, toolLaunches)) {
+      if (_.has(toolLaunches, toolLaunchUuid)) {
         delete toolLaunches[toolLaunchUuid];
       }
     }
