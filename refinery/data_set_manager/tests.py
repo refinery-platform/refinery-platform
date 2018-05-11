@@ -2391,13 +2391,11 @@ class InvestigationTests(TestCase):
         self.tabular_dataset = create_dataset_with_necessary_models()
         self.tabular_investigation = self.tabular_dataset.get_investigation()
 
-    def test_isa_archive(self):
-        self.assertIsNotNone(self.isa_tab_investigation.isa_archive)
-        self.assertIsNone(self.tabular_investigation.isa_archive)
+    def test_get_isa_archive_file_store_item(self):
+        self.assertIsNotNone(self.isa_tab_investigation.get_file_store_item())
 
-    def test_pre_isa_archive(self):
-        self.assertIsNone(self.isa_tab_investigation.pre_isa_archive)
-        self.assertIsNotNone(self.tabular_investigation.pre_isa_archive)
+    def test_get_pre_isa_archive_file_store_item(self):
+        self.assertIsNotNone(self.tabular_investigation.get_file_store_item())
 
     def test_get_identifier(self):
         self.assertEqual(self.isa_tab_investigation.get_identifier(),
