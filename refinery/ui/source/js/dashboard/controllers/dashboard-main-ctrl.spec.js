@@ -5,6 +5,7 @@
     var ctrl;
     var groupService;
     var mockResponseData;
+    var mockMemberData;
     var scope;
 
     beforeEach(module('refineryApp'));
@@ -19,6 +20,7 @@
       scope = $rootScope.$new();
       groupService = groupMemberService;
       mockResponseData = { objects: [{ name: 'Test Group' }] };
+      mockMemberData = { objects: [{ name: 'InvitedMember1' }] };
 
       spyOn(groupService, 'query').and.callFake(function () {
         var deferred = $q.defer();
@@ -26,9 +28,10 @@
         return { $promise: deferred.promise };
       });
 
+
       spyOn(groupInviteService, 'query').and.callFake(function () {
         var deferred = $q.defer();
-        deferred.resolve({ objects: [] });
+        deferred.resolve(mockMemberData);
         return { $promise: deferred.promise };
       });
 
@@ -59,6 +62,18 @@
         scope.$apply();
         expect(typeof response.then).toEqual('function');
         expect(successData).toEqual(mockResponseData.objects[0].name);
+      });
+    });
+
+    describe('addInviteList', function () {
+      it('addInviteList is a method', function () {
+        expect(angular.isFunction(ctrl.addInviteList)).toBe(true);
+      });
+
+      it('addInviteList returns a promise', function () {
+        ctrl.addInviteList(0);
+        scope.$apply();
+        expect(ctrl.groupInvites[0][0].name).toEqual(mockMemberData.objects[0].name);
       });
     });
   });
