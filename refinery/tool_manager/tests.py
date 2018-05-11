@@ -2848,8 +2848,8 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
             )
         self.assertEqual(get_response.status_code, 200)
         self.assertEqual(
-            json.loads(get_response.content),
-            {Tool.TOOL_URL: self.tool.get_relative_container_url()}
+            json.loads(get_response.content)["container_url"],
+            self.tool.get_relative_container_url()
         )
         self.assertTrue(self.tool.is_running())
 
@@ -3065,10 +3065,6 @@ class WorkflowToolLaunchTests(ToolManagerTestBase):
         self.assertEqual(
             self.tool.analysis.workflow_steps_num,
             len(galaxy_workflow_dict["steps"].keys())
-        )
-        self.assertEqual(
-            json.loads(self.post_response.content)[Tool.TOOL_URL],
-            '/data_sets/{}/#/analyses/'.format(self.tool.dataset.uuid)
         )
 
     def test_many_tools_can_be_launched_from_same_dataset(self):

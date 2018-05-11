@@ -9,7 +9,6 @@ from django.conf import settings
 from django.db import models
 from django.db.models.signals import post_delete, pre_delete
 from django.dispatch import receiver
-from django.http import JsonResponse
 
 import bioblend
 from bioblend.galaxy.dataset_collections import (CollectionDescription,
@@ -288,7 +287,6 @@ class Tool(OwnableResource):
     LAUNCH_WARNING = "Subclasses must implement `launch` method"
     REFINERY_FILE_UUID = "refinery_file_uuid"
     TOOL_LAUNCH_CONFIGURATION = "tool_launch_configuration"
-    TOOL_URL = "tool_url"
     TOOL_API_ROOT = "/api/v2/tools/"
 
     dataset = models.ForeignKey(DataSet)
@@ -586,20 +584,13 @@ class VisualizationTool(Tool):
             return parameter_instance.default_value
 
     def launch(self):
-        """
-        Launch a visualization-based Tool
-        :returns:
-            - <JsonResponse> w/ `tool_url` key corresponding to the
-        launched container's url
-            - <HttpResponseBadRequest>, <HttpServerError>
-        """
+        """Launch a visualization-based Tool"""
         self._check_max_running_containers()
         self._check_input_node_limit()
 
         # Pulls docker image if it doesn't exist yet, and launches container
         # asynchronously
         start_container.delay(self)
-        return JsonResponse({Tool.TOOL_URL: self.get_relative_container_url()})
 
 
 def handle_bioblend_exceptions(func):
@@ -1296,9 +1287,6 @@ class WorkflowTool(Tool):
     def launch(self):
         """
         Launch a workflow-based Tool
-        :returns:
-            - <JsonResponse> w/ `tool_url` key corresponding to the url
-            pointing to the Analysis' status page
         :raises: RuntimeError
         """
         analysis = self._create_analysis()
@@ -1306,14 +1294,6 @@ class WorkflowTool(Tool):
 
         # TODO: Might hit race condition if Analysis isn't created in 5 seconds
         run_analysis.apply_async((analysis.uuid,), countdown=5)
-
-        return JsonResponse(
-            {
-                Tool.TOOL_URL: "/data_sets/{}/#/analyses/".format(
-                    self.dataset.uuid
-                )
-            }
-        )
 
     def _parse_file_relationships_nesting(self, *args, **kwargs):
         """
