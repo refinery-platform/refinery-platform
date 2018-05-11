@@ -23,6 +23,7 @@
     groupMemberService
   ) {
     var vm = this;
+    vm.addInviteList = addInviteList;
     vm.getGroups = getGroups;
     vm.groups = [];
     vm.groupInvites = {};
@@ -57,9 +58,7 @@
       groupInviteService.query({
         group_id: groupID
       }).$promise.then(function (data) {
-        if (data.objects.length) {
-          vm.groupInvites[groupID] = data.objects;
-        }
+        vm.groupInvites[groupID] = data.objects;
       });
     }
   }
