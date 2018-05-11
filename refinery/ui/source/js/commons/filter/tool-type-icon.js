@@ -12,7 +12,6 @@
     .module('refineryApp')
     .filter('toolTypeIcon', function () {
       return function (param) {
-     //   console.log(param);
         switch (param) {
           case 'VISUALIZATION':
             return 'fa fa-bar-chart';

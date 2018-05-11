@@ -1,7 +1,7 @@
 /**
  * Tool Launch Status Component
  * @namespace rpToolLaunchStatus
- * @desc Component which displays the status  messages
+ * @desc Component which displays the tool launch status message
  * @memberOf refineryApp.refineryToolLaunch
  */
 (function () {

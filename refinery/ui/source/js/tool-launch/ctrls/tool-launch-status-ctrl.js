@@ -1,8 +1,7 @@
 /**
  * Tool Launch Status Ctrl
- * @namespace ToolParamsCtrl
- * @desc Ctrl for rpToolParams directive, which is the parameter's panel.
- * Include collapsing, displaying parameters, and form for parameters.
+ * @namespace ToolLaunchStatusCtrl
+ * @desc Ctrl for rpToolLaunchStatus component.
  * @memberOf refineryApp.refineryToolLaunch
  */
 (function () {
@@ -26,6 +25,11 @@
     vm.removeToolLaunch = removeToolLaunch;
     vm.toolLaunches = toolLaunchStatusService.toolLaunches;
 
+    /**
+     * @name removeToolLaunch
+     * @desc  VM methods to remove the tool launch status from the list
+     * @memberOf refineryToolLaunch.ToolLaunchStatusCtrl
+    **/
     function removeToolLaunch (toolLaunchUuid) {
       toolLaunchStatusService.deleteToolLaunchStatus(toolLaunchUuid);
     }
