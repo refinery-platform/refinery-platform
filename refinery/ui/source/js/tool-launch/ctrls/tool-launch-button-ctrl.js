@@ -66,7 +66,6 @@
         }
         toolLaunchStatusService.addToolLaunchStatus(response, 'success');
       }, function (error) {
-        console.log('error');
         toolLaunchStatusService.addToolLaunchStatus(error, 'fail');
         $log.error(error);
       });

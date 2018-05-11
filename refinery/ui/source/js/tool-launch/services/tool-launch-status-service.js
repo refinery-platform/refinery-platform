@@ -48,7 +48,6 @@
           status: toolStatus
         };
       } else {
-        console.log(toolLaunch);
         toolLaunches[toolLaunch.config.data.tool_definition_uuid] = {
           uuid: toolLaunch.config.data.tool_definition_uuid,
           msg: 'Tool launch failed.',
