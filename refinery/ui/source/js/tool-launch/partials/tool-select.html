@@ -7,7 +7,7 @@
   theme="select2"
   class="ui-select-drop text-left">
    <ui-select-match placeholder="Select a tool">
-     <i class="{{tool.tool_type|toolTypeIcon}} p-r-1-4" aria-hidden="true"></i>
+     <i class="{{$select.selected.tool_type|toolTypeIcon}} p-r-1-4" aria-hidden="true"></i>
      {{$select.selected.name }}
    </ui-select-match>
   <ui-select-choices
