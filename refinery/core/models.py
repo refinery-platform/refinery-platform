@@ -613,9 +613,9 @@ class DataSet(SharableResource):
         """
         try:
             if version is None:
-                version = InvestigationLink.objects.filter(
-                        data_set=self
-                    ).aggregate(Max("version"))["version__max"]
+                return InvestigationLink.objects.filter(
+                    data_set=self
+                ).latest('date')
 
             return InvestigationLink.objects.get(
                 data_set=self,
@@ -678,15 +678,6 @@ class DataSet(SharableResource):
         file_items = FileStoreItem.objects.filter(uuid__in=file_uuids)
         return sum(
             [item.get_file_size(report_symlinks=True) for item in file_items]
-        )
-
-    def get_metadata_as_file_store_item(self):
-        """Returns the FileStoreItem pointing to the isa/pre_isa archive that
-        was used to create the DataSet"""
-        investigation = self.get_investigation()
-        return (
-            investigation.isa_archive if self.is_isatab_based
-            else investigation.pre_isa_archive
         )
 
     def share(self, group, readonly=True, readmetaonly=False):
@@ -756,19 +747,16 @@ class DataSet(SharableResource):
                        FileStoreItem.MultipleObjectsReturned) as e:
                     logger.error("Error while fetching FileStoreItem: %s", e)
 
-        file_store_items.append(self.get_metadata_as_file_store_item())
+        file_store_items.append(investigation.get_file_store_item())
         return file_store_items
 
     def is_valid(self):
         """
         Helper method to determine if a DataSet is valid.
-        A DataSet is not valid if we can't fetch its latest InvestigationLink
+        A DataSet is not valid if we can't fetch an InvestigationLink for it
         :return: boolean
         """
-        if self.get_latest_investigation_link():
-            return True
-        else:
-            return False
+        return bool(InvestigationLink.objects.filter(data_set=self))
 
     def get_nodes(self):
         return Node.objects.filter(
@@ -778,10 +766,6 @@ class DataSet(SharableResource):
 
     def get_node_uuids(self):
         return self.get_nodes().values_list('uuid', flat=True)
-
-    @property
-    def is_isatab_based(self):
-        return bool(self.get_investigation().isa_archive)
 
     @property
     def shared(self):  # is_shared breaks a tastypie interal
@@ -801,7 +785,7 @@ def _dataset_delete(sender, instance, *args, **kwargs):
     with transaction.atomic():
         # delete FileStoreItem and datafile corresponding to the
         # metadata file used to generate the DataSet
-        instance.get_metadata_as_file_store_item().delete()
+        instance.get_investigation().get_file_store_item().delete()
 
         for investigation_link in instance.get_investigation_links():
             investigation_link.get_node_collection().delete()

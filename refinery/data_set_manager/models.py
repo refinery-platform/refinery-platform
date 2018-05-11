@@ -155,15 +155,17 @@ class Investigation(NodeCollection):
 
     """easily retrieves the proper NodeCollection fields"""
 
-    @property
-    def isa_archive(self):
-        return self._get_file_store_item(self.isarchive_file)
+    def is_isa_tab_based(self):
+        return bool(self.isarchive_file)
 
-    @property
-    def pre_isa_archive(self):
-        return self._get_file_store_item(self.pre_isarchive_file)
-
-    def _get_file_store_item(self, file_store_item_uuid):
+    def get_file_store_item(self):
+        """
+        :return:
+        """
+        file_store_item_uuid = (
+            self.isarchive_file if self.is_isa_tab_based()
+            else self.pre_isarchive_file
+        )
         try:
             return FileStoreItem.objects.get(uuid=file_store_item_uuid)
         except (FileStoreItem.DoesNotExist,

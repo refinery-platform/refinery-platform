@@ -126,8 +126,9 @@ class TakeOwnershipOfPublicDatasetView(View):
         public_group = ExtendedGroup.objects.public_group()
         if request.user.has_perm('core.read_dataset', data_set) \
                 or 'read_dataset' in get_perms(public_group, data_set):
+            investigation = data_set.get_investigation()
             full_isa_tab_url = get_absolute_url(
-                data_set.get_metadata_as_file_store_item().get_datafile_url()
+                investigation.get_file_store_item().get_datafile_url()
             )
             response = HttpResponseRedirect(
                 get_absolute_url(reverse('process_isa_tab', args=['ajax']))
