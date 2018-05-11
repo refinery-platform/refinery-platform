@@ -1,0 +1,38 @@
+<div ng-repeat="toolLaunch in $ctrl.toolLaunches">
+  <div ng-if="toolLaunch.status === 'success'">
+    <div class="alert alert-success text-center">
+      <a
+        class="float-right modal-close"
+        data-dismiss="alert"
+        ng-click="$ctrl.removeToolLaunch(toolLaunch.uuid)">
+        <i class="fa fa-times close" aria-hidden="true"></i>
+      </a>
+       Tool: {{ toolLaunch.name }}
+      {{ toolLaunch.type }} launched successful.
+      <span ng-if="toolLaunch.type == anlaysis">
+        <a href="/analyses">View status on analysis tab.</a>
+      </span>
+         <span ng-if="tool-launch.type == visualization">
+        <a href="/visualizations">View status on analysis tab.</a>
+      </span>
+    </div>
+  </div>
+  <div ng-if="toolLaunch.status === 'fail'">
+    <div class="alert alert-danger text-center">
+      <a
+        class="float-right modal-close"
+        data-dismiss="alert"
+        ng-click="$ctrl.removeToolLaunch(toolLaunch.uuid)">
+        <i class="fa fa-times close" aria-hidden="true"></i>
+      </a>
+      Tool: {{ toolLaunch.name }}
+      {{ toolLaunch.type }} launched failed.
+      <span ng-if="toolLaunch.type == anlaysis">
+        <a href="/analyses">View status on analysis tab.</a>
+      </span>
+         <span ng-if="toolLaunch.type == visualization">
+        <a href="/visualizations">View status on analysis tab.</a>
+      </span>
+    </div>
+  </div>
+</div>
