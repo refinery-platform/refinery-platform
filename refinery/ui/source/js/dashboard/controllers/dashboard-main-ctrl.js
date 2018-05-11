@@ -50,7 +50,7 @@
     }
     /**
      * @name addInviteList
-     * @desc  Private method used by groups to grab and append the invitee list
+     * @desc  VM method used by groups to grab and append the invitee list
      * @memberOf refineryDashboard.DashboardMainCtrl
      * @param {int} groupID - group ID number
     **/
