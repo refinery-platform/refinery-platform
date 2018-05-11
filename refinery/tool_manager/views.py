@@ -3,9 +3,7 @@ import urllib2
 
 from django.conf import settings
 from django.db import transaction
-from django.http import (
-    HttpResponseBadRequest, JsonResponse
-)
+from django.http import (HttpResponseBadRequest, JsonResponse)
 from django.shortcuts import render
 
 from django_docker_engine.proxy import Proxy
@@ -162,7 +160,9 @@ class ToolsViewSet(ToolManagerViewSetBase):
                 with transaction.atomic():
                     tool = create_tool(tool_launch_configuration, request.user)
                     logger.debug("Successfully created Tool: %s", tool.name)
-                    return tool.launch()
+                    tool.launch()
+                    serializer = ToolSerializer(tool)
+                    return JsonResponse(serializer.data)
             except Exception as e:
                 logger.error(e)
                 return HttpResponseBadRequest(e)
@@ -191,7 +191,8 @@ class ToolsViewSet(ToolManagerViewSetBase):
             return HttpResponseBadRequest("Can't relaunch a Tool that is "
                                           "currently running")
         try:
-            return visualization_tool.launch()
+            visualization_tool.launch()
+            return JsonResponse(ToolSerializer(visualization_tool).data)
         except Exception as e:
             logger.error(e)
             return HttpResponseBadRequest(e)
