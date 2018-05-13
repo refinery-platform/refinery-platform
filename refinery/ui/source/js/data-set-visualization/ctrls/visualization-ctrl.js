@@ -30,6 +30,7 @@
     var vm = this;
     vm.isOwner = isOwner;
     vm.relaunchTool = relaunchTool;
+    vm.visRelaunchList = {};
     vm.visualizations = visService.visualizations;
     activate();
     /*
@@ -44,12 +45,16 @@
       }
     }
 
-    function relaunchTool (relaunchAddress) {
-      $http.get(relaunchAddress)
+    function relaunchTool (vis) {
+      vm.visRelaunchList[vis.uuid] = true;
+      $http.get(vis.relaunch_url)
         .then(function (response) {
-          $window.open(response.data.tool_url);
+          console.log(response);
+          refreshVisualizations();
+          vm.visRelaunchList[response.uuid] = false;
         }, function (error) {
           $log.error(error);
+          vm.visRelaunchList[vis.uuid] = false;
         });
     }
 
