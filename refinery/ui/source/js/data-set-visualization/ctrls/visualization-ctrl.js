@@ -49,7 +49,6 @@
       vm.visRelaunchList[vis.uuid] = true;
       $http.get(vis.relaunch_url)
         .then(function (response) {
-          console.log(response);
           refreshVisualizations();
           vm.visRelaunchList[response.uuid] = false;
         }, function (error) {
