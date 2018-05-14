@@ -35,6 +35,7 @@
     vm.filterDataSets = filterDataSets;
     vm.getDataSets = getDataSets;
     vm.groupFilter = { selectedName: 'All' };
+    vm.isFiltersEmpty = isFiltersEmpty;
     vm.loadingDataSets = true;
     vm.openDataSetDeleteModal = openDataSetDeleteModal;
     vm.openPermissionEditor = openPermissionEditor;
@@ -193,6 +194,16 @@
           vm.loadingDataSets = false;
         });
       }
+    }
+
+    // helper function to deal with search vs perms filtering
+    function isFiltersEmpty () {
+      if (vm.groupFilter.selectedName === 'All') {
+        if (vm.groupFilter.public && vm.groupFilter.owned) {
+          return true;
+        }
+      }
+      return false;
     }
    /*
    * ---------------------------------------------------------
