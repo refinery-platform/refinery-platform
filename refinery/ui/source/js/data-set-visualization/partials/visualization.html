@@ -84,9 +84,11 @@
                 <span ng-if="!vis.is_running">
                   <button
                     class="btn btn-primary btn-xs"
-                    ng-click="$ctrl.relaunchTool(vis.relaunch_url)">
+                    ng-disabled="$ctrl.visRelaunchList[vis.uuid]"
+                    ng-click="$ctrl.relaunchTool(vis)">
                     Relaunch
                   </button>
+                  <span ng-show="$ctrl.visRelaunchList[vis.uuid]"><em>Pending</em></span>
                 </span>
                 <span ng-if="vis.is_running">
                   <a
