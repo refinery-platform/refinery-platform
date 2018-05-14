@@ -85,6 +85,7 @@
      * @memberOf refineryDashboard.DataSetsCardCtrl
     **/
     function getDataSets () {
+      vm.loadingDataSets = true;
       dataSetService.query(vm.params).$promise.then(function (response) {
         vm.loadingDataSets = false;
         vm.dataSets = response.objects;
@@ -177,16 +178,17 @@
     **/
     function searchDataSets (query) {
       if (query && query.length > 1) {
+        vm.loadingDataSets = true;
         var apiRequest = new DataSetSearchApi(query);
-        apiRequest().then(function (response) {
+        apiRequest(200).then(function (response) {
           vm.dataSets = response.data;
+          vm.loadingDataSets = false;
           vm.dataSetsError = false;
         }, function (error) {
           $log.error(error);
           vm.dataSetsError = true;
+          vm.loadingDataSets = false;
         });
-      } else {
-        vm.getDataSets();
       }
     }
    /*
