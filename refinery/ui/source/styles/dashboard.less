@@ -2028,11 +2028,21 @@ body.repo-mode .refinery-dashboard {
      #dashboard-collaboration-card {
        margin-top: 1.2em;
      }
-     #dashboard-data-search {
-        width: 75%;
-        display: inline-block;
-        float: left;
+  }
+
+  @media (max-width: @screen-lg-min) {
+    #dashboard-data-set-card {
+      #search-interface-dashboard {
+        #dashboard-data-search {
+          width: 75%;
+          display: inline-block;
+          float: left;
+        }
+        .fa-times {
+          right: 105px;
+        }
       }
+    }
   }
 }
 
