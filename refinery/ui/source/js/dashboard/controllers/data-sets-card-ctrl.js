@@ -86,6 +86,7 @@
     **/
     function getDataSets () {
       vm.loadingDataSets = true;
+      vm.searchQueryDataSets = '';
       dataSetService.query(vm.params).$promise.then(function (response) {
         vm.loadingDataSets = false;
         vm.dataSets = response.objects;
@@ -177,6 +178,8 @@
      * @param {string} query - user entered query for data set search
     **/
     function searchDataSets (query) {
+      // reset perm filter until we can search & check perms
+      vm.groupFilter = { selectedName: 'All' };
       if (query && query.length > 1) {
         vm.loadingDataSets = true;
         var apiRequest = new DataSetSearchApi(query);
