@@ -198,10 +198,9 @@
 
     // helper function to deal with search vs perms filtering
     function isFiltersEmpty () {
-      if (vm.groupFilter.selectedName === 'All') {
-        if (vm.groupFilter.public && vm.groupFilter.owned) {
-          return true;
-        }
+      if (vm.groupFilter.selectedName === 'All' ||
+        vm.groupFilter.public || vm.groupFilter.owned) {
+        return true;
       }
       return false;
     }
