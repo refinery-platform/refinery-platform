@@ -1882,20 +1882,24 @@ body.repo-mode .refinery-dashboard {
     }
 
     #search-interface-dashboard {
-      width: 30%;
       float: right;
       border: none;
+      display: inline-block;
       #dashboard-data-search {
-        width: 90%;
-        display: inline-block;
-        float: left;
+        width: 300px;
+        float: right;
+      }
+      .fa-search {
+          right: 350px;
+          left: unset;
+          position: absolute;
       }
       .btn {
-        float: left;
+        float: right;
         margin: 0 0 0 1em;
       }
       .fa-times-circle {
-        right: 90px;
+        right: 80px;
       }
     }
 
@@ -2028,21 +2032,6 @@ body.repo-mode .refinery-dashboard {
      #dashboard-collaboration-card {
        margin-top: 1.2em;
      }
-  }
-
-  @media (max-width: @screen-lg-min) {
-    #dashboard-data-set-card {
-      #search-interface-dashboard {
-        #dashboard-data-search {
-          width: 75%;
-          display: inline-block;
-          float: left;
-        }
-        .fa-times {
-          right: 105px;
-        }
-      }
-    }
   }
 }
 
