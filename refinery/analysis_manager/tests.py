@@ -301,6 +301,13 @@ class AnalysisRunTests(AnalysisManagerTestBase):
             run_analysis(self.analysis.uuid)
             self.assertTrue(terminate_mock.called)
 
+    def test_file_import_task_termination_on_analysis_cancel(self):
+        with mock.patch(
+            "core.models.Analysis.terminate_file_import_tasks"
+        ) as terminate_mock:
+            self.analysis.cancel()
+            self.assertTrue(terminate_mock.called)
+
     @mock.patch.object(Analysis, "galaxy_progress", side_effect=RuntimeError)
     @mock.patch("analysis_manager.tasks.get_taskset_result")
     @mock.patch("core.models.Analysis.send_email")
