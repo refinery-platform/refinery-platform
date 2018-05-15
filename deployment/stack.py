@@ -186,7 +186,7 @@ def make_template(config, config_yaml):
         'WebInstance', 'AWS::EC2::Instance',
         core.Properties({
             'ImageId': 'ami-d05e75b8',
-            'InstanceType': 'm3.medium',
+            'InstanceType': config['EC2_INSTANCE_TYPE'],
             'UserData': functions.base64(user_data_script),
             'KeyName': config['KEY_NAME'],
             'IamInstanceProfile': functions.ref('WebInstanceProfile'),
