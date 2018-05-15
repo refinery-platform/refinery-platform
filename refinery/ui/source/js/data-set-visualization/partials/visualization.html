@@ -37,7 +37,7 @@
     </div>
 
     <ul class="analysesList">
-      <li class="analysesListItems" ng-repeat="vis in $ctrl.visualizations">
+      <li class="analysesListItems" ng-repeat="vis in $ctrl.visualizations | orderBy: '-creation_date'">
         <div class="row">
           <div class="col-md-1 analysis-icon">
             <span class="spinner">
