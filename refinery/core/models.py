@@ -621,7 +621,9 @@ class DataSet(SharableResource):
                 data_set=self,
                 version=version
             )
-        except:
+        except (InvestigationLink.DoesNotExist,
+                InvestigationLink.MultipleObjectsReturned) as exc:
+            logger.error("Couldn't properly fetch InvestigationLink: %s", exc)
             return None
 
     def get_latest_study(self, version=None):
