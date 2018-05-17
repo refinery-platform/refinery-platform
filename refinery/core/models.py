@@ -768,6 +768,12 @@ class DataSet(SharableResource):
     def shared(self):  # is_shared breaks a tastypie interal
         return len(self.get_groups()) > 0
 
+    def _invalidate_cached_properties(self):
+        try:
+            delattr(self, "is_valid")
+        except AttributeError:
+            pass  # property hasn't been called and cached yet
+
 
 @receiver(pre_delete, sender=DataSet)
 def _dataset_delete(sender, instance, *args, **kwargs):
@@ -799,10 +805,10 @@ def _dataset_saved(sender, instance, *args, **kwargs):
     update_data_set_index(instance)
     invalidate_cached_object(instance)
 
-    # Invalidate cached_property on save
+    # Invalidate cached properties on save
     # See: https://docs.djangoproject.com/en/1.8/ref/utils/
     # #django.utils.functional.cached_property
-    delattr(instance, "is_valid")
+    instance._invalidate_cached_properties()
 
 
 class InvestigationLink(models.Model):
