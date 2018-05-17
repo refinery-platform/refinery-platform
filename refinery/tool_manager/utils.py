@@ -220,6 +220,9 @@ def create_tool(tool_launch_configuration, user_instance):
     else:
         parse_file_relationship_nesting(nesting)
 
+    if tool_launch_configuration.get("display_name"):
+        tool.display_name = tool_launch_configuration["display_name"]
+
     tool.save()
     return tool
 
