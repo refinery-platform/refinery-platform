@@ -806,6 +806,11 @@ def _dataset_saved(sender, instance, *args, **kwargs):
     update_data_set_index(instance)
     invalidate_cached_object(instance)
 
+    # Invalidate cached_property on save
+    # See: https://docs.djangoproject.com/en/1.8/ref/utils/
+    # #django.utils.functional.cached_property
+    delattr(instance, "is_valid")
+
 
 class InvestigationLink(models.Model):
     data_set = models.ForeignKey(DataSet)
