@@ -701,7 +701,7 @@ class DataSetsViewSet(APIView):
     http_method_names = ['get', 'delete', 'patch']
 
     def get(self, request):
-        data_sets = get_resources_for_user(user, 'dataset')
+        data_sets = get_resources_for_user(request.user, 'dataset')
         serializer = DataSetSerializer(data_sets, many=True,
                                        context={'request': request})
         return Response(serializer.data)
@@ -711,7 +711,8 @@ class DataSetsViewSet(APIView):
             return DataSet.objects.get(uuid=uuid)
         except DataSet.DoesNotExist as e:
             logger.error(e)
-            return Response(uuid, status=status.HTTP_404_NOT_FOUND)
+            return\
+                Response(uuid, status=status.HTTP_404_NOT_FOUND)
         except DataSet.MultipleObjectsReturned as e:
             logger.error(e)
             return Response(

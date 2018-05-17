@@ -18,7 +18,7 @@
     '$uibModal',
     '$window',
     'DataSetSearchApi',
-    'dataSetService'
+    'dataSetV2Service'
   ];
 
   function DataSetsCardCtrl (
@@ -27,7 +27,7 @@
     $uibModal,
     $window,
     DataSetSearchApi,
-    dataSetService
+    dataSetV2Service
   ) {
     var vm = this;
     vm.dataSets = [];
@@ -38,10 +38,7 @@
     vm.loadingDataSets = true;
     vm.openDataSetDeleteModal = openDataSetDeleteModal;
     vm.openPermissionEditor = openPermissionEditor;
-    vm.params = {
-      limit: 200,
-      min_response: 'True'
-    };
+    vm.params = {};
     vm.resetDataSetSearch = resetDataSetSearch;
     vm.searchDataSets = searchDataSets;
     vm.searchQueryDataSets = '';
@@ -85,9 +82,9 @@
      * @memberOf refineryDashboard.DataSetsCardCtrl
     **/
     function getDataSets () {
-      dataSetService.query(vm.params).$promise.then(function (response) {
+      dataSetV2Service.query(vm.params).$promise.then(function (response) {
         vm.loadingDataSets = false;
-        vm.dataSets = response.objects;
+        vm.dataSets = response;
         vm.dataSetsError = false;
       }, function (error) {
         vm.loadingDataSets = false;
