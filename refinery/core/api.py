@@ -689,7 +689,7 @@ class DataSetResource(SharableResourceAPIInterface, ModelResource):
                          kwargs["uuid"], e)
             raise NotFound(e)
 
-        if not dataset.is_valid():
+        if not dataset.is_valid:
             raise NotFound(
                 "DataSet with UUID: {} is invalid, and most likely is "
                 "still being created".format(dataset.uuid)
@@ -701,7 +701,7 @@ class DataSetResource(SharableResourceAPIInterface, ModelResource):
 
         valid_datasets = []
         for dataset in datasets:
-            if dataset.is_valid():
+            if dataset.is_valid:
                 valid_datasets.append(dataset)
             else:
                 logger.error(

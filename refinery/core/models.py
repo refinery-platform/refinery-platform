@@ -35,6 +35,7 @@ from django.template.loader import render_to_string
 from django.utils import timezone
 
 from bioblend import galaxy
+from django.utils.functional import cached_property
 from django_auth_ldap.backend import LDAPBackend
 from django_extensions.db.fields import UUIDField
 from guardian.models import UserObjectPermission
@@ -752,6 +753,7 @@ class DataSet(SharableResource):
         file_store_items.append(investigation.get_file_store_item())
         return file_store_items
 
+    @cached_property
     def is_valid(self):
         """
         Helper method to determine if a DataSet is valid.

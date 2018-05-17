@@ -1498,10 +1498,10 @@ class DataSetTests(TestCase):
         self.assertEqual(len(file_store_items), 3)
 
     def test_dataset_complete(self):
-        self.assertTrue(self.isa_tab_dataset.is_valid())
+        self.assertTrue(self.isa_tab_dataset.is_valid)
 
     def test_dataset_incomplete(self):
-        self.assertFalse(self.incomplete_dataset.is_valid())
+        self.assertFalse(self.incomplete_dataset.is_valid)
 
     def test_neo4j_called_on_post_save(self):
         with mock.patch(
