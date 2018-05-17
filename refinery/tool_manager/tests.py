@@ -3855,7 +3855,7 @@ class ToolLaunchConfigurationTests(ToolManagerTestBase):
         }
         validate_tool_launch_configuration(tool_launch_configuration)
 
-    def test_tool_launch_config_with_display_name(self):
+    def test_tool_launch_config_with_custom_display_name(self):
         tool_launch_configuration = {
             "dataset_uuid": self.dataset.uuid,
             "tool_definition_uuid": self.td.uuid,
