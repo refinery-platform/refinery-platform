@@ -25,7 +25,6 @@ from django.contrib.messages import get_messages, info
 from django.contrib.sites.models import Site
 from django.core.mail import send_mail
 from django.db import models, transaction
-from django.db.models import Max
 from django.db.models.fields import IntegerField
 from django.db.models.signals import post_save, pre_delete
 from django.dispatch import receiver
@@ -594,15 +593,9 @@ class DataSet(SharableResource):
         return version + 1
 
     def get_version(self):
-        try:
-            version = (
-                InvestigationLink.objects.filter(
-                    data_set=self
-                ).aggregate(Max("version"))["version__max"]
-            )
-            return version
-        except:
-            return None
+        latest_investigation_link = self.get_latest_investigation_link()
+        if latest_investigation_link is not None:
+            return latest_investigation_link.version
 
     def get_latest_investigation_link(self, version=None):
         """
