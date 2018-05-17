@@ -701,7 +701,6 @@ class DataSetsViewSet(APIView):
     http_method_names = ['get', 'delete', 'patch']
 
     def get(self, request):
-        # params = request.query_params
         data_sets = get_resources_for_user(user, 'dataset')
         serializer = DataSetSerializer(data_sets, many=True,
                                        context={'request': request})
