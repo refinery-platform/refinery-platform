@@ -1580,6 +1580,13 @@ class DataSetTests(TestCase):
             self.tabular_dataset.get_investigation().is_isa_tab_based()
         )
 
+    def test_cached_property_is_invalidated_on_save(self):
+        # Trigger load into cache
+        self.assertTrue(self.tabular_dataset.is_valid)
+        with mock.patch("core.models.delattr") as delattr_mock:
+            self.tabular_dataset.save()
+        delattr_mock.assert_called_with(self.tabular_dataset, "is_valid")
+
 
 class APIV2TestCase(APITestCase):
     def setUp(self, **kwargs):
