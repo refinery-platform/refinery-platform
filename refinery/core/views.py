@@ -41,7 +41,8 @@ from .models import (Analysis, CustomRegistrationProfile, DataSet,
                      ExtendedGroup, Invitation, Ontology, Project,
                      UserProfile, Workflow, WorkflowEngine)
 from .serializers import DataSetSerializer, NodeSerializer, WorkflowSerializer
-from .utils import api_error_response, get_data_sets_annotations
+from .utils import (api_error_response, get_data_sets_annotations,
+                    get_resources_for_user)
 
 logger = logging.getLogger(__name__)
 
@@ -697,7 +698,14 @@ class NodeViewSet(viewsets.ModelViewSet):
 
 class DataSetsViewSet(APIView):
     """API endpoint that allows for DataSets to be deleted"""
-    http_method_names = ['delete', 'patch']
+    http_method_names = ['get', 'delete', 'patch']
+
+    def get(self, request):
+        # params = request.query_params
+        data_sets = get_resources_for_user(user, 'dataset')
+        serializer = DataSetSerializer(data_sets, many=True,
+                                       context={'request': request})
+        return Response(serializer.data)
 
     def get_object(self, uuid):
         try:

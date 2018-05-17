@@ -22,11 +22,26 @@ class DataSetSerializer(serializers.ModelSerializer):
             )]
     )
     description = serializers.CharField(max_length=5000)
+    is_owner = serializers.SerializerMethodField('check_is_owner')
+    public = serializers.SerializerMethodField('check_is_public')
+
+    def check_is_owner(self, data_set):
+        owner = data_set.get_owner()
+        try:
+            user_request = self.context.get('request').user
+        except AttributeError as e:
+            logger.error("Request is missing a user: %s", e)
+            return False
+        return user_request == owner
+
+    def check_is_public(self, data_set):
+        is_public = data_set.is_public()
+        return is_public
 
     class Meta:
         model = DataSet
         fields = ['title', 'accession', 'summary', 'description', 'slug',
-                  'uuid']
+                  'uuid', 'modification_date', 'id', 'is_owner', 'public']
 
     def partial_update(self, instance, validated_data):
         """
