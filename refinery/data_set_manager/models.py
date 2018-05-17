@@ -159,9 +159,7 @@ class Investigation(NodeCollection):
         return bool(self.isarchive_file)
 
     def get_file_store_item(self):
-        """
-        :return:
-        """
+        """Get an Investigation's corresponding FileStoreItem instance"""
         file_store_item_uuid = (
             self.isarchive_file if self.is_isa_tab_based()
             else self.pre_isarchive_file
