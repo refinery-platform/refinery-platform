@@ -1632,6 +1632,14 @@ class ToolTests(ToolManagerTestBase):
             self.tool.analysis.terminate_file_import_tasks()
             self.assertEqual(terminate_mock.call_count, 1)
 
+    def test_tool_launch_has_resonable_default_display_name(self):
+        self.create_tool(tool_type=ToolDefinition.VISUALIZATION)
+        self.assertEqual(self.tool.display_name, "{} {} {}".format(
+            self.tool.name,
+            self.tool.creation_date,
+            self.tool.get_owner().username
+        ))
+
 
 class VisualizationToolTests(ToolManagerTestBase):
     def setUp(self):
