@@ -1091,9 +1091,8 @@ def get_file_url_from_node_uuid(node_uuid):
     we are raising exceptions within to nullify said transaction.
 
     :param node_uuid: Node.uuid
-    :return: a full url pointing to the fetched Node's datafile
-    :raises: RuntimeError if a Node can't be fetched or if a Fetched Node
-    has no file associated with it to build a url from
+    :return: a full url pointing to the fetched Node's datafile or None
+    :raises: RuntimeError if a Node can't be fetched
     """
     try:
         node = Node.objects.get(uuid=node_uuid)
@@ -1103,15 +1102,7 @@ def get_file_url_from_node_uuid(node_uuid):
         )
     else:
         url = node.get_relative_file_store_item_url()
-
-        if url is None:
-            raise RuntimeError(
-                "Node with uuid: {} has no associated file url".format(
-                    node.uuid
-                )
-            )
-        else:
-            return core.utils.get_absolute_url(url)
+        return core.utils.get_absolute_url(url) if url else None
 
 
 def fix_last_column(file):
