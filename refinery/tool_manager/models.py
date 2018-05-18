@@ -431,6 +431,12 @@ class Tool(OwnableResource):
             tool_launch_config[self.FILE_UUID_LIST].append(node.file_uuid)
 
             file_url = get_file_url_from_node_uuid(node_uuid)
+            if file_url is None:
+                raise RuntimeError(
+                    "Node with uuid: {} has no associated file url".format(
+                        node_uuid
+                    )
+                )
             tool_launch_config[self.FILE_RELATIONSHIPS_URLS] = (
                 tool_launch_config[self.FILE_RELATIONSHIPS_URLS].replace(
                     node_uuid, "'{}'".format(file_url)
@@ -492,7 +498,7 @@ class VisualizationTool(Tool):
         Create a dictionary containing information that Dockerized
         Visualizations will have access to
         """
-        return {
+        container_input_dict = {
             self.API_PREFIX: self.get_relative_container_url() + "/",
             self.FILE_RELATIONSHIPS: self.get_file_relationships_urls(),
             ToolDefinition.PARAMETERS: self._get_visualization_parameters(),
@@ -507,6 +513,21 @@ class VisualizationTool(Tool):
             ToolDefinition.EXTRA_DIRECTORIES:
                 self.tool_definition.get_extra_directories()
         }
+
+        self._check_input_node_urls(container_input_dict)
+
+        return container_input_dict
+
+    def _check_input_node_urls(self, container_input_dict):
+        input_node_info = container_input_dict[self.INPUT_NODE_INFORMATION]
+
+        for node_uuid, node_info in input_node_info.iteritems():
+            if node_info[self.FILE_URL] is None:
+                raise RuntimeError(
+                    "Node with uuid: {} has no associated file url".format(
+                        node_uuid
+                    )
+                )
 
     def _check_input_node_limit(self):
         if len(self.get_input_node_uuids()) > \
