@@ -1559,8 +1559,14 @@ class UtilitiesTests(TestCase):
                 context.exception.message
             )
 
-    def test_get_file_url_from_node_uuid_node_with_no_file(self):
+    def test_get_file_url_from_node_uuid_with_no_file(self):
         self.assertIsNone(get_file_url_from_node_uuid(self.node_b.uuid))
+
+    def test_get_file_url_from_node_uuid_with_no_file_url_required(self):
+        with self.assertRaises(RuntimeError) as context:
+            get_file_url_from_node_uuid(self.node_b.uuid,
+                                        require_valid_url=True)
+        self.assertIn("has no associated file url", context.exception.message)
 
     def test__create_solr_params_from_node_uuids(self):
         fake_node_uuids = [str(uuid.uuid4()), str(uuid.uuid4())]
