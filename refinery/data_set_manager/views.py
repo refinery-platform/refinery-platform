@@ -220,9 +220,11 @@ class ProcessISATabView(View):
                 PARSER_UNEXPECTED_ERROR_MESSAGE +
                 e.message
             )
-
-        # TODO: exception handling
-        os.unlink(temp_file_path)
+        try:
+            os.unlink(temp_file_path)
+        except OSError as exc:
+            logger.error("Couldn't unlink ISATab's `temp_file_path`: %s %s",
+                         temp_file_path, exc)
         if dataset_uuid:
             if 'ajax' in kwargs and kwargs['ajax']:
                 return JsonResponse({'new_data_set_uuid': dataset_uuid})
