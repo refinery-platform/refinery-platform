@@ -700,8 +700,65 @@ class DataSetsViewSet(APIView):
     """API endpoint that allows for DataSets to be deleted"""
     http_method_names = ['get', 'delete', 'patch']
 
+    def _is_filtered_data_set(self, data_set, filter):
+        """Helper method which checks if a data set belongs in
+        the filtered set"""
+        group_id = filter.get('group')
+        owned = filter.get('is_owner')
+        public = filter.get('is_public')
+        user = self.request.user
+
+        if not (owned or public or group_id):
+            return False
+        elif owned and public and group_id:
+            if data_set.get_owner() == user and data_set.is_public() and\
+                    get_perms(group_id, data_set):
+                return True
+        elif owned and data_set.get_owner() == user:
+            if filter.is_public and data_set.is_public():
+                return True
+            if group_id and get_perms(group_id, data_set):
+                return True
+        elif public and data_set.is_public():
+            if group_id and get_perms(group_id, data_set):
+                return True
+        elif owned and data_set.get_owner() == user:
+            return True
+        elif public and data_set.is_public():
+            return True
+        elif group_id and get_perms(group_id, data_set):
+            return True
+        return False
+
     def get(self, request):
-        data_sets = get_resources_for_user(request.user, 'dataset')
+        params = request.query_params
+        filters = {
+            'is_owner': params.get('is_owner'),
+            'is_public': params.get('public')
+        }
+        try:
+            filters['group'] = ExtendedGroup.objects.get(
+                id=params.get('group')
+            )
+        except Exception:
+            filters['group'] = None
+
+        query_data_sets = get_resources_for_user(
+            request.user, 'dataset'
+        ).order_by('-modification_date')
+        data_sets = []
+
+        for data_set in query_data_sets:
+            if not data_set.is_valid():
+                logger.warning(
+                    "DataSet with UUID: {} is invalid, and most likely is "
+                    "still being created".format(data_set.uuid)
+                )
+            if self._is_filtered_data_set(data_set, filters):
+                data_sets.append(data_set)
+
+        if not data_sets:
+            data_sets = query_data_sets
         serializer = DataSetSerializer(data_sets, many=True,
                                        context={'request': request})
         return Response(serializer.data)
