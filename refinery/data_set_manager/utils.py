@@ -1084,16 +1084,19 @@ def update_attribute_order_ranks(old_attribute, new_rank):
     return
 
 
-def get_file_url_from_node_uuid(node_uuid):
+def get_file_url_from_node_uuid(node_uuid, require_valid_url=False):
     """
     Fetch the full url pointing to a Node's datafile by passing in a Node UUID.
     NOTE: Since this method is called within the context of a db transaction,
     we are raising exceptions within to nullify said transaction.
 
     :param node_uuid: Node.uuid
-    :return: a full url pointing to the fetched Node's datafile
-    :raises: RuntimeError if a Node can't be fetched or if a Fetched Node
-    has no file associated with it to build a url from
+    :param require_valid_url: boolean
+    :return: a full url pointing to the fetched Node's datafile or None
+    :raises: RuntimeError if a Node can't be fetched or if a valid
+    datafile url was explicitly required and one wasn't available (Ex: We need
+    to check a Tool launch's input Nodes in this manner to ensure a Tool
+    Launch has data file urls to work with)
     """
     try:
         node = Node.objects.get(uuid=node_uuid)
@@ -1103,15 +1106,14 @@ def get_file_url_from_node_uuid(node_uuid):
         )
     else:
         url = node.get_relative_file_store_item_url()
-
-        if url is None:
-            raise RuntimeError(
-                "Node with uuid: {} has no associated file url".format(
-                    node.uuid
+        if require_valid_url:
+            if url is None:
+                raise RuntimeError(
+                    "Node with uuid: {} has no associated file url".format(
+                        node_uuid
+                    )
                 )
-            )
-        else:
-            return core.utils.get_absolute_url(url)
+        return core.utils.get_absolute_url(url) if url else None
 
 
 def fix_last_column(file):

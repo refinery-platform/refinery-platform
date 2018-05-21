@@ -22,7 +22,7 @@
     <div class="card-sub-header">
       <div
         id="search-interface-dashboard"
-        class="form-group navbar-search col-md-3"
+        class="form-group navbar-search col-sm-6 col-xs-12"
         ng-form="metadataSearch"
         ng-class="{'has-warning': metadataSearch.searchQuery.$error.minlength}">
         <i class="fa fa-search"></i>
@@ -31,15 +31,21 @@
           ng-click="$ctrl.resetDataSetSearch()"></i>
         <!--The 'metadata-search' id below is used to define custom
           styling to address a padding issue observed in Firefox-->
-        <input
-          id="metadata-search"
-          type="text"
-          class="search-query form-control"
-          placeholder="Search"
-          ng-model="$ctrl.searchQueryDataSets"
-          ng-change="$ctrl.searchDataSets($ctrl.searchQueryDataSets)"
-          ng-minlength="2"
-          name="searchQuery">
+         <button
+            id="search-interface-dashboard-button"
+            class="refinery-base btn btn-default btn-sm"
+            ng-click="$ctrl.searchDataSets($ctrl.searchQueryDataSets)"
+            ng-disabled="$ctrl.searchQueryDataSets.length < 2">
+            Search
+          </button>
+          <input
+            id="dashboard-data-search"
+            type="text"
+            class="search-query form-control"
+            ng-model="$ctrl.searchQueryDataSets"
+            ng-minlength="2"
+            name="searchQuery"
+            ng-keyup="$event.keyCode == 13 ? $ctrl.searchDataSets($ctrl.searchQueryDataSets) : null">
       </div>
       <div class="col-md-6">
         <div class="refinery-base btn btn-default btn-sm"
@@ -138,6 +144,14 @@
       <div id="dashboard-total-datasets">
         <span ng-if="$ctrl.dataSets.length">
           {{ $ctrl.dataSets.length }} data sets
+        </span>
+        <span ng-if="$ctrl.searchQueryDataSets.length > 0 && $ctrl.isFiltersEmpty()">
+          <button
+            class="refinery-base btn btn-default btn-xs m-l-1-2"
+            ng-click="$ctrl.resetDataSetSearch()">
+            <i class="fa fa-times"></i>
+            Search
+          </button>
         </span>
       </div>
     </div>
