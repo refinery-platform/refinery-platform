@@ -1860,15 +1860,9 @@ body.repo-mode .refinery-dashboard {
     height: @card-top-half-view;
 
     .file-browser-go-icon {
-      .fa-long-arrow-right {
-        position: absolute;
-        text-align: left;
-        left: -3px;
-        font-size: .8em;
-      }
-
-      .fa-folder-o {
-        font-size: 1.1em;
+      .fa-folder-open-o {
+        font-size: 1em;
+        padding-left: .3em;
       }
     }
 
@@ -1925,8 +1919,11 @@ body.repo-mode .refinery-dashboard {
       }
     }
 
-    #data-set-description {
+    .data-set-description {
       color: @gray-light-rgba;
+    }
+
+    .data-set-details {
       border-bottom: 1px solid @gray-lighter-rgba;
     }
   }
