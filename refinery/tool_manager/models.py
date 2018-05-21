@@ -430,7 +430,10 @@ class Tool(OwnableResource):
             # Append file_uuid to list of FileStoreItem UUIDs
             tool_launch_config[self.FILE_UUID_LIST].append(node.file_uuid)
 
-            file_url = get_file_url_from_node_uuid(node_uuid)
+            file_url = get_file_url_from_node_uuid(
+                node_uuid,
+                require_valid_url=True
+            )
             tool_launch_config[self.FILE_RELATIONSHIPS_URLS] = (
                 tool_launch_config[self.FILE_RELATIONSHIPS_URLS].replace(
                     node_uuid, "'{}'".format(file_url)
@@ -497,7 +500,8 @@ class VisualizationTool(Tool):
             self.FILE_RELATIONSHIPS: self.get_file_relationships_urls(),
             ToolDefinition.PARAMETERS: self._get_visualization_parameters(),
             self.INPUT_NODE_INFORMATION: self._get_detailed_nodes_dict(
-                self.get_input_node_uuids()
+                self.get_input_node_uuids(),
+                require_valid_urls=True  # Tool input nodes need valid urls
             ),
             # TODO: adding all of a DataSet's Node info seems excessive. Would
             #  be great if we had a VisualizationTool using all of this info
@@ -530,7 +534,8 @@ class VisualizationTool(Tool):
         if len(self.django_docker_client.list()) >= max_containers:
             raise VisualizationToolError('Max containers')
 
-    def _get_detailed_nodes_dict(self, node_uuid_list):
+    def _get_detailed_nodes_dict(self, node_uuid_list,
+                                 require_valid_urls=False):
         """
         Create and return a dict with detailed information about all of our
         Nodes corresponding to the UUIDs in the given `node_uuid_list`.
@@ -543,7 +548,10 @@ class VisualizationTool(Tool):
         node_info = {
             node["uuid"]: {
                 self.NODE_SOLR_INFO: node,
-                self.FILE_URL: get_file_url_from_node_uuid(node["uuid"])
+                self.FILE_URL: get_file_url_from_node_uuid(
+                    node["uuid"],
+                    require_valid_url=require_valid_urls
+                )
             }
             for node in solr_response_json["nodes"]
         }
