@@ -1872,6 +1872,7 @@ body.repo-mode .refinery-dashboard {
       }
     }
 
+
     #dashboard-total-datasets {
       font-size: 1.15em;
       font-weight: bold;
@@ -1881,9 +1882,25 @@ body.repo-mode .refinery-dashboard {
     }
 
     #search-interface-dashboard {
-      width: 30%;
       float: right;
       border: none;
+      display: inline-block;
+      #dashboard-data-search {
+        width: 300px;
+        float: right;
+      }
+      .fa-search {
+          right: 350px;
+          left: unset;
+          position: absolute;
+      }
+      .btn {
+        float: right;
+        margin: 0 0 0 1em;
+      }
+      .fa-times-circle {
+        right: 80px;
+      }
     }
 
     #dashboard-data-set-list {
@@ -2011,7 +2028,6 @@ body.repo-mode .refinery-dashboard {
     }
   }
 
- /* Small devices (tablets, 768px and up) */
   @media (max-width: @screen-md-min) {
      #dashboard-collaboration-card {
        margin-top: 1.2em;

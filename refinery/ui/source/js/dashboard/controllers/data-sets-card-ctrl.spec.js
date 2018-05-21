@@ -194,13 +194,6 @@
       it('searchDataSets is a method', function () {
         expect(angular.isFunction(ctrl.searchDataSets)).toBe(true);
       });
-
-      it('searchDataSets refreshes data for invalid queries', function () {
-        var mockGetDataSets = spyOn(ctrl, 'getDataSets');
-        expect(mockGetDataSets).not.toHaveBeenCalled();
-        ctrl.searchDataSets('m');
-        expect(mockGetDataSets).toHaveBeenCalled();
-      });
     });
   });
 })();
