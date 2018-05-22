@@ -83,8 +83,8 @@
      * @memberOf refineryDashboard.DataSetsCardCtrl
     **/
     function getDataSets () {
+      vm.loadingDataSets = true;
       dataSetV2Service.query(vm.params).$promise.then(function (response) {
-        vm.loadingDataSets = true;
         vm.searchQueryDataSets = '';
         vm.loadingDataSets = false;
         vm.dataSets = response;
