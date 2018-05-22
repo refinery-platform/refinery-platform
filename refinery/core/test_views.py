@@ -92,8 +92,6 @@ class DataSetApiV2Tests(APIV2TestCase):
         self.assertEqual(
             self.options_response.data['detail'], 'Method "OPTIONS" not '
                                                   'allowed.')
-        self.assertEqual(
-            self.get_response.data['detail'], 'Method "GET" not allowed.')
 
     def test_dataset_delete_successful(self):
 
