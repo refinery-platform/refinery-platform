@@ -1478,12 +1478,6 @@ class DataSetTests(TestCase):
             user=self.user2,
             latest_version=self.latest_tabular_dataset_version
         )
-        self.incomplete_dataset = create_dataset_with_necessary_models(
-            user=self.user
-        )
-        # Delete InvestigationLink to simulate a Dataset that hasn't finished
-        # being created
-        self.incomplete_dataset.get_latest_investigation_link().delete()
 
     def test_get_studies(self):
         studies = self.isa_tab_dataset.get_studies()
@@ -1501,7 +1495,12 @@ class DataSetTests(TestCase):
         self.assertTrue(self.isa_tab_dataset.is_valid)
 
     def test_dataset_incomplete(self):
-        self.assertFalse(self.incomplete_dataset.is_valid)
+        dataset = create_dataset_with_necessary_models(user=self.user)
+        # Delete InvestigationLink to simulate a Dataset that hasn't
+        # finished being created
+        dataset.get_latest_investigation_link().delete()
+        dataset.save()
+        self.assertFalse(dataset.is_valid)
 
     def test_neo4j_called_on_post_save(self):
         with mock.patch(
