@@ -87,7 +87,6 @@
           vm.isLoading = false;
           generateAlertMessage('success', vm.form.email);
           groupDataService.update();
-          vm.form.email = '';
         }, function (error) {
           vm.isLoading = false;
           generateAlertMessage('danger', vm.form.email);
