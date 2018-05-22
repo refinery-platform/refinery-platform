@@ -596,6 +596,7 @@ class DataSet(SharableResource):
         latest_investigation_link = self.get_latest_investigation_link()
         if latest_investigation_link is not None:
             return latest_investigation_link.version
+        return None
 
     def get_latest_investigation_link(self, version=None):
         """
