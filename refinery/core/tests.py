@@ -683,14 +683,14 @@ class DataSetDeletionTest(TestCase):
             is_isatab_based=True
         )
         isatab_file_store_item_uuid = \
-            isatab_dataset.get_metadata_as_file_store_item().uuid
+            isatab_dataset.get_investigation().get_file_store_item().uuid
         isatab_dataset.delete()
         with self.assertRaises(FileStoreItem.DoesNotExist):
             FileStoreItem.objects.get(uuid=isatab_file_store_item_uuid)
 
     def test_pre_isa_archive_deletion(self):
         tabular_file_store_item_uuid = \
-            self.dataset.get_metadata_as_file_store_item().uuid
+            self.dataset.get_investigation().get_file_store_item().uuid
         self.dataset.delete()
         with self.assertRaises(FileStoreItem.DoesNotExist):
             FileStoreItem.objects.get(uuid=tabular_file_store_item_uuid)
@@ -1377,7 +1377,6 @@ class DataSetResourceTest(LoginResourceTestCase):
         self.assertEqual(len(data['analyses']), analyses_to_create)
 
         for analysis in data['analyses']:
-            self.assertTrue(analysis['is_owner'])
             self.assertEqual(analysis['owner'],
                              UserProfile.objects.get(user=self.user).uuid)
             self.assertIsNotNone(analysis.get('status'))
@@ -1435,7 +1434,7 @@ class DataSetResourceTest(LoginResourceTestCase):
             )
         )
         isa_archive_file_store_item = \
-            self.isatab_dataset.get_metadata_as_file_store_item()
+            self.isatab_dataset.get_investigation().get_file_store_item()
         self.assertEqual(data["isa_archive"], isa_archive_file_store_item.uuid)
         self.assertEqual(data["isa_archive_url"],
                          isa_archive_file_store_item.get_datafile_url())
@@ -1448,7 +1447,7 @@ class DataSetResourceTest(LoginResourceTestCase):
             )
         )
         pre_isa_archive_file_store_item = \
-            self.tabular_dataset.get_metadata_as_file_store_item()
+            self.tabular_dataset.get_investigation().get_file_store_item()
         self.assertEqual(data["pre_isa_archive"],
                          pre_isa_archive_file_store_item.uuid)
 
@@ -1479,12 +1478,6 @@ class DataSetTests(TestCase):
             user=self.user2,
             latest_version=self.latest_tabular_dataset_version
         )
-        self.incomplete_dataset = create_dataset_with_necessary_models(
-            user=self.user
-        )
-        # Delete InvestigationLink to simulate a Dataset that hasn't finished
-        # being created
-        self.incomplete_dataset.get_latest_investigation_link().delete()
 
     def test_get_studies(self):
         studies = self.isa_tab_dataset.get_studies()
@@ -1499,10 +1492,15 @@ class DataSetTests(TestCase):
         self.assertEqual(len(file_store_items), 3)
 
     def test_dataset_complete(self):
-        self.assertTrue(self.isa_tab_dataset.is_valid())
+        self.assertTrue(self.isa_tab_dataset.is_valid)
 
     def test_dataset_incomplete(self):
-        self.assertFalse(self.incomplete_dataset.is_valid())
+        dataset = create_dataset_with_necessary_models(user=self.user)
+        # Delete InvestigationLink to simulate a Dataset that hasn't
+        # finished being created
+        dataset.get_latest_investigation_link().delete()
+        dataset.save()
+        self.assertFalse(dataset.is_valid)
 
     def test_neo4j_called_on_post_save(self):
         with mock.patch(
@@ -1567,15 +1565,28 @@ class DataSetTests(TestCase):
 
     def test_get_metadata_as_file_store_item(self):
         self.assertIsNotNone(
-            self.isa_tab_dataset.get_metadata_as_file_store_item()
+            self.isa_tab_dataset.get_investigation().get_file_store_item()
         )
         self.assertIsNotNone(
-            self.tabular_dataset.get_metadata_as_file_store_item()
+            self.tabular_dataset.get_investigation().get_file_store_item()
         )
 
     def test_is_isatab_based(self):
-        self.assertTrue(self.isa_tab_dataset.is_isatab_based)
-        self.assertFalse(self.tabular_dataset.is_isatab_based)
+        self.assertTrue(
+            self.isa_tab_dataset.get_investigation().is_isa_tab_based()
+        )
+        self.assertFalse(
+            self.tabular_dataset.get_investigation().is_isa_tab_based()
+        )
+
+    def test_cached_is_valid_property_is_invalidated_on_save(self):
+        # Trigger load into cache
+        self.assertTrue(self.tabular_dataset.is_valid)
+        with mock.patch(
+            "core.models.DataSet._invalidate_cached_properties"
+        ) as invalidate_cached_props_mock:
+            self.tabular_dataset.save()
+            invalidate_cached_props_mock.assert_called()
 
 
 class APIV2TestCase(APITestCase):
