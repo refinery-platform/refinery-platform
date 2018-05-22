@@ -604,22 +604,23 @@ class DataSet(SharableResource):
         instance. If a version is provided, try to fetch the latest
         InvestigationLink for said version.
         :param version: integer
-        :returns: an InvestigationLink Instance or None if Exception occurs
+        :returns: an InvestigationLink Instance or `None`
         """
-        try:
+        if self.is_valid:
             if version is None:
                 return InvestigationLink.objects.filter(
                     data_set=self
                 ).latest('date')
-
-            return InvestigationLink.objects.get(
-                data_set=self,
-                version=version
-            )
-        except (InvestigationLink.DoesNotExist,
-                InvestigationLink.MultipleObjectsReturned) as exc:
-            logger.error("Couldn't properly fetch InvestigationLink: %s", exc)
-            return None
+            try:
+                return InvestigationLink.objects.get(
+                    data_set=self,
+                    version=version
+                )
+            except (InvestigationLink.DoesNotExist,
+                    InvestigationLink.MultipleObjectsReturned) as exc:
+                logger.error("Couldn't properly fetch InvestigationLink: %s",
+                             exc)
+        return None
 
     def get_latest_study(self, version=None):
         try:
