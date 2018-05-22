@@ -9,13 +9,14 @@ from django.conf.urls import patterns, url
 from constants import UUID_RE
 from rest_framework.routers import DefaultRouter
 
-from .views import (AnalysesViewSet, DataSetsViewSet, NodeViewSet, OpenIDToken,
-                    WorkflowViewSet)
+from .views import (AnalysesViewSet, DataSetsViewSet, NodeViewSet,
+                    OpenIDToken, WorkflowViewSet)
 
 urlpatterns = patterns(
     'core.views',
     url(r'^$', 'home', name="home"),
     url(r'^about/$', 'about', name="about"),
+    url(r'^dashboard/$', 'dashboard', name="dashboard"),
     url(r'^statistics/$', 'statistics', name="statistics"),
     url(r'^collaboration/$', 'collaboration', name='collaboration'),
     url(r'^group_invite/(?P<token>' + UUID_RE + r')/$',

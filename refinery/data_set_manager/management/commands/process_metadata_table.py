@@ -15,17 +15,20 @@ class Command(BaseCommand):
         parser.add_argument(
             '--username',
             action='store',
-            help='(Required) username of the owner of this data set'
+            help='(Required) username of the owner of this data set',
+            required=True
         )
         parser.add_argument(
             '--title',
             action='store',
-            help='(Required) name of this data set'
+            help='(Required) name of this data set',
+            required=True
         )
         parser.add_argument(
             '--file_name',
             action='store',
-            help='(Required) absolute path to the file being parsed'
+            help='(Required) absolute path to the file being parsed',
+            required=True
         )
         parser.add_argument(
             '--source_column_index',
@@ -36,20 +39,22 @@ class Command(BaseCommand):
                  'Values in the columns indicated by the list of '
                  'column indices provided for the '
                  '"source_column_index" will be concatenated to '
-                 'create an identifier for the "source" of the sample'
+                 'create an identifier for the "source" of the sample',
+            required=True
         )
         parser.add_argument(
             '--data_file_column',
             action='store',
-            type='int',
+            type=int,
             help='(Required) index of the column of the input file that '
                  'contains the path to or the URL of the file associated '
-                 'with this sample'
+                 'with this sample',
+            required=True
         )
         parser.add_argument(
             '--auxiliary_file_column',
             action='store',
-            type='int',
+            type=int,
             default=None,
             help='column index of the input file that contains the '
                  'path to an auxiliary file (e.g. for visualization) '
@@ -65,14 +70,14 @@ class Command(BaseCommand):
         parser.add_argument(
             '--species_column',
             action='store',
-            type='int',
+            type=int,
             default=None,
             help='column containing species names or ids'
         )
         parser.add_argument(
             '--annotation_column',
             action='store',
-            type='int',
+            type=int,
             default=None,
             help='column containing boolean flag to indicate whether '
                  'the data file in this row should be treated as an '
@@ -81,7 +86,7 @@ class Command(BaseCommand):
         parser.add_argument(
             '--genome_build_column',
             action='store',
-            type='int',
+            type=int,
             default=None,
             help='column containing genome build ids'
         )
@@ -98,16 +103,29 @@ class Command(BaseCommand):
             default=False,
             help='flag for whether this data set will be visible to the public'
         )
+        parser.add_argument(
+            '--delimiter',
+            action='store',
+            default="tab",
+            choices=["tab", "comma", "custom"],
+            help='Delimiter to use for metadata file parsing'
+        )
+
+        parser.add_argument(
+            '--custom_delimiter_string',
+            default="",
+            action='store',
+            help='Custom delimiter string to use for metadata file parsing'
+        )
 
     def handle(self, *args, **options):
         """calls the parsing and insertion functions"""
-        required = ['username', 'title', 'file_name', 'source_column_index',
-                    'data_file_column']
-        for arg in required:
-            if not options[arg]:
-                raise CommandError("%s was not provided" % arg)
         source_columns = \
             [x.strip() for x in options['source_column_index'].split(",")]
+
+        if options['delimiter'] == "custom":
+            if not options['custom_delimiter_string']:
+                raise CommandError("custom_delimiter_string was not specified")
         try:
             with open(options['file_name']) as metadata_file:
                 dataset_uuid = process_metadata_table(
@@ -120,10 +138,13 @@ class Command(BaseCommand):
                     species_column=options['species_column'],
                     genome_build_column=options['genome_build_column'],
                     annotation_column=options['annotation_column'],
-                    is_public=options['is_public'])
+                    is_public=options['is_public'],
+                    delimiter=options['delimiter'],
+                    custom_delimiter_string=options['custom_delimiter_string']
+                )
         except IOError as exc:
             raise CommandError("Could not open file '%s': %s" %
-                               options['file_name'], exc)
+                               (options['file_name'], exc))
         except ValueError as exc:
             raise CommandError(exc)
 

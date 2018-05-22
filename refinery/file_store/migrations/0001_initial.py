@@ -6,7 +6,6 @@ import django.utils.timezone
 import django_extensions.db.fields
 
 from ..utils import SymlinkedFileSystemStorage
-from ..models import file_path
 
 
 class Migration(migrations.Migration):
@@ -29,9 +28,7 @@ class Migration(migrations.Migration):
             name='FileStoreItem',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('datafile', models.FileField(
-                    storage=SymlinkedFileSystemStorage(), max_length=1024,
-                    upload_to=file_path, blank=True)),
+                ('datafile', models.FileField(storage=SymlinkedFileSystemStorage(), max_length=1024, blank=True)),
                 ('uuid', django_extensions.db.fields.UUIDField(unique=True, max_length=36, editable=False, blank=True)),
                 ('source', models.CharField(max_length=1024)),
                 ('sharename', models.CharField(max_length=20, blank=True)),

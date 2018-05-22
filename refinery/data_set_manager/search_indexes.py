@@ -9,12 +9,11 @@ import re
 
 from django.conf import settings
 
-from celery.states import PENDING, SUCCESS
-from constants import NOT_AVAILABLE
-from djcelery.models import TaskMeta
+import celery
 from haystack import indexes
 from haystack.exceptions import SkipDocument
 
+import constants
 import core
 from file_store.models import FileStoreItem
 
@@ -118,46 +117,17 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
                FileStoreItem.MultipleObjectsReturned) as e:
             logger.error("Couldn't properly fetch FileStoreItem: %s", e)
             file_store_item = None
-            download_url = NOT_AVAILABLE
+            download_url_or_state = constants.NOT_AVAILABLE
             data['filetype_Characteristics' + NodeIndex.GENERIC_SUFFIX] = ''
         else:
             data['filetype_Characteristics' + NodeIndex.GENERIC_SUFFIX] = \
                 file_store_item.filetype
-            download_url = file_store_item.get_datafile_url()
-            if download_url is None:
-                if not file_store_item.import_task_id:
-                    logger.debug("No import_task_id yet for FileStoreItem "
-                                 "with UUID: %s", file_store_item.uuid)
-                    download_url = PENDING
-                else:
-                    logger.debug(
-                        "FileStoreItem with UUID: %s has import_task_id: %s",
-                        file_store_item.uuid,
-                        file_store_item.import_task_id
-                    )
-                    if file_store_item.get_import_status() == SUCCESS:
-                        download_url = NOT_AVAILABLE
-                    else:
-                        # The underlying Celery code in
-                        # FileStoreItem.get_import_status() makes an assumption
-                        # that a result is "probably" PENDING even if it can't
-                        # find an associated Task. See:
-                        # https://github.com/celery/celery/blob/v3.1.20/celery/
-                        # backends/amqp.py#L192-L193 So we double check here to
-                        # make sure said assumption holds up
-                        try:
-                            TaskMeta.objects.get(
-                                task_id=file_store_item.import_task_id
-                            )
-                        except TaskMeta.DoesNotExist:
-                            logger.debug(
-                                "No file_import task for FileStoreItem with "
-                                "UUID: %s",
-                                file_store_item.uuid
-                            )
-                            download_url = NOT_AVAILABLE
-                        else:
-                            download_url = PENDING
+            download_url_or_state = file_store_item.get_datafile_url()
+            if download_url_or_state is None:
+                download_url_or_state = file_store_item.get_import_status()
+                # UI can not handle FAILURE state
+                if download_url_or_state == celery.states.FAILURE:
+                    download_url_or_state = constants.NOT_AVAILABLE
 
         data.update(self._assay_data(node))
 
@@ -191,7 +161,7 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
                 if value != "":
                     data[key].add(value)
                 else:
-                    data[key].add(NOT_AVAILABLE)
+                    data[key].add(constants.NOT_AVAILABLE)
 
         # iterate over all keys in data and join sets into strings
         for key, value in data.iteritems():
@@ -199,23 +169,20 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
                 data[key] = " + ".join(sorted(value))
 
         data.update({
-            NodeIndex.DOWNLOAD_URL:
-                download_url,
-            NodeIndex.TYPE_PREFIX + id_suffix:
-                node.type,
-            NodeIndex.NAME_PREFIX + id_suffix:
-                node.name,
+            NodeIndex.DOWNLOAD_URL: download_url_or_state,
+            NodeIndex.TYPE_PREFIX + id_suffix: node.type,
+            NodeIndex.NAME_PREFIX + id_suffix: node.name,
             NodeIndex.FILETYPE_PREFIX + id_suffix:
                 "" if file_store_item is None
                 else file_store_item.filetype,
             NodeIndex.ANALYSIS_UUID_PREFIX + id_suffix:
-                NOT_AVAILABLE if node.get_analysis() is None
+                constants.NOT_AVAILABLE if node.get_analysis() is None
                 else node.get_analysis().name,
             NodeIndex.SUBANALYSIS_PREFIX + id_suffix:
                 (-1 if node.subanalysis is None  # TODO: upgrade flake8
                  else node.subanalysis),         # and remove parentheses
             NodeIndex.WORKFLOW_OUTPUT_PREFIX + id_suffix:
-                NOT_AVAILABLE if node.workflow_output is None
+                constants.NOT_AVAILABLE if node.workflow_output is None
                 else node.workflow_output
         })
 

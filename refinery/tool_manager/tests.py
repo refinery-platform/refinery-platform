@@ -10,7 +10,7 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.management import CommandError, call_command
 from django.http import HttpResponseBadRequest
-from django.test import TestCase
+from django.test import TestCase, override_settings
 
 import bioblend
 from bioblend.galaxy.dataset_collections import (CollectionElement,
@@ -20,7 +20,8 @@ from bioblend.galaxy.jobs import JobsClient
 from bioblend.galaxy.libraries import LibraryClient
 from bioblend.galaxy.workflows import WorkflowClient
 import celery
-from constants import UUID_RE
+
+import constants
 from django_docker_engine.docker_utils import DockerClientWrapper
 from docker.errors import NotFound
 from guardian.shortcuts import assign_perm, remove_perm
@@ -63,6 +64,7 @@ from factory_boy.utils import create_dataset_with_necessary_models
 from file_store.models import FileStoreItem, FileType
 from tool_manager.management.commands.load_tools import \
     Command as LoadToolsCommand
+from tool_manager.serializers import ToolDefinitionSerializer
 from tool_manager.tasks import django_docker_cleanup
 
 from .models import (FileRelationship, GalaxyParameter, InputFile, Parameter,
@@ -247,7 +249,9 @@ class ToolManagerTestBase(ToolManagerMocks):
             }
         )
         self.tool_relaunch_view = ToolsViewSet.as_view({"get": "relaunch"})
-
+        self.tool_container_input_data_view = ToolsViewSet.as_view(
+            {"get": "container_input_data"}
+        )
         self.tools_url_root = '/api/v2/tools/'
         self.tool_defs_url_root = '/api/v2/tool_definitions/'
 
@@ -309,6 +313,7 @@ class ToolManagerTestBase(ToolManagerMocks):
             }
         )
 
+    @override_settings(CELERY_ALWAYS_EAGER=True)
     def create_tool(self,
                     tool_type,
                     create_unique_name=False,
@@ -363,7 +368,7 @@ class ToolManagerTestBase(ToolManagerMocks):
 
         # Mock the spinning up of containers
         run_container_mock = mock.patch(
-            "django_docker_engine.docker_utils.DockerClientWrapper.run"
+            "django_docker_engine.docker_utils.DockerClientRunWrapper.run"
         )
 
         if tool_type == ToolDefinition.VISUALIZATION:
@@ -1680,8 +1685,8 @@ class VisualizationToolTests(ToolManagerTestBase):
         )
         self.assertTrue(self.search_solr_mock.called)
 
-    def test__create_container_input_dict(self):
-        tool_input_dict = self.tool._create_container_input_dict()
+    def test_get_container_input_dict(self):
+        tool_input_dict = self.tool.get_container_input_dict()
         file_relationships = self.tool.get_file_relationships_urls()
 
         self.assertEqual(
@@ -2103,7 +2108,7 @@ class WorkflowToolTests(ToolManagerTestBase):
         )
         self.assertEqual(len(task_id_list), 2)
         for task_id in task_id_list:
-            self.assertRegexpMatches(str(task_id), UUID_RE)
+            self.assertRegexpMatches(str(task_id), constants.UUID_RE)
 
         self.assertEqual(self.show_dataset_provenance_mock.call_count, 8)
 
@@ -2820,6 +2825,7 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
                 self.tool._get_owner_info_as_dict()
             )
 
+    @override_settings(CELERY_ALWAYS_EAGER=True)
     def test_vis_tool_can_be_relaunched(self):
         self.create_tool(ToolDefinition.VISUALIZATION,
                          start_vis_container=True)
@@ -2842,8 +2848,8 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
             )
         self.assertEqual(get_response.status_code, 200)
         self.assertEqual(
-            json.loads(get_response.content),
-            {Tool.TOOL_URL: self.tool.get_relative_container_url()}
+            json.loads(get_response.content)["container_url"],
+            self.tool.get_relative_container_url()
         )
         self.assertTrue(self.tool.is_running())
 
@@ -2865,9 +2871,7 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
         get_request = self.factory.get(relaunch_url)
         force_authenticate(get_request, self.user)
         get_response = self.tool_relaunch_view(get_request, uuid=tool_uuid)
-        self.assertEqual(get_response.status_code, 400)
-        self.assertIn("Couldn't retrieve VisualizationTool",
-                      get_response.content)
+        self.assertEqual(get_response.status_code, 404)
 
     def test_relaunch_failure_insufficient_user_perms(self):
         self.create_tool(ToolDefinition.VISUALIZATION)
@@ -2879,9 +2883,13 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
             get_request,
             uuid=self.tool.uuid
         )
-        self.assertEqual(get_response.status_code, 403)
-        self.assertIn("User does not have permission",
-                      get_response.content)
+        self.assertEqual(get_response.status_code, 200)
+        self.assertIn(
+            "User: {} does not have permission to view {}: {}".format(
+                self.user.username, self.tool.name, self.tool.uuid
+            ),
+            get_response.content
+        )
 
     def test_relaunch_failure_tool_already_running(self):
         self.create_tool(ToolDefinition.VISUALIZATION,
@@ -2905,9 +2913,7 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
             get_request,
             uuid=self.tool.uuid
         )
-        self.assertEqual(get_response.status_code, 400)
-        self.assertIn("Couldn't retrieve VisualizationTool",
-                      get_response.content)
+        self.assertEqual(get_response.status_code, 404)
 
     def test_api_response_has_proper_fields_present(self):
         self.create_tool(ToolDefinition.VISUALIZATION)
@@ -2917,12 +2923,12 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
         expected_response_fields = {
             'container_name': self.tool.container_name,
             'container_url': self.tool.get_relative_container_url(),
-            'dataset': self.tool.dataset.pk,
             'is_running': self.tool.is_running(),
             'name': self.tool.name,
             'owner': self.tool._get_owner_info_as_dict(),
             'relaunch_url': self.tool.relaunch_url,
-            'tool_definition': self.tool.tool_definition.pk,
+            'tool_definition':
+                ToolDefinitionSerializer(self.tool.tool_definition).data,
             'uuid': self.tool.uuid
         }
 
@@ -3008,7 +3014,11 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
         if user_has_permission:
             self.assertTrue(launch_mock.called)
         else:
-            self.assertEqual(get_response.status_code, 403)
+            self.assertEqual(get_response.status_code, 200)
+            self.assertTemplateUsed(
+                get_response,
+                'tool_manager/vis-tool-user-not-allowed.html'
+            )
             self.assertFalse(launch_mock.called)
 
     def test_vis_tool_url_after_container_removed_relaunches(self):
@@ -3016,6 +3026,28 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
 
     def test_vis_tool_url_user_without_permission(self):
         self._test_launch_vis_container(user_has_permission=False)
+
+    def test_get_container_input_data_detail_route(self):
+        self.create_tool(ToolDefinition.VISUALIZATION)
+        get_request = self.factory.get(self.tool.container_input_json_url)
+        with mock.patch("tool_manager.models.get_solr_response_json"):
+            get_response = self.tool_container_input_data_view(
+                get_request,
+                uuid=self.tool.uuid
+            )
+            self.assertEqual(
+                json.loads(get_response.content),
+                self.tool.get_container_input_dict()
+            )
+
+    def test_get_container_input_data_detail_route_bad_uuid(self):
+        self.create_tool(ToolDefinition.VISUALIZATION)
+        get_request = self.factory.get(self.tool.container_input_json_url)
+        get_response = self.tool_container_input_data_view(
+            get_request,
+            uuid=str(uuid.uuid4())  # uuid doesn't correspond to any Tool
+        )
+        self.assertEqual(get_response.status_code, 404)
 
 
 class WorkflowToolLaunchTests(ToolManagerTestBase):
@@ -3033,10 +3065,6 @@ class WorkflowToolLaunchTests(ToolManagerTestBase):
         self.assertEqual(
             self.tool.analysis.workflow_steps_num,
             len(galaxy_workflow_dict["steps"].keys())
-        )
-        self.assertEqual(
-            json.loads(self.post_response.content)[Tool.TOOL_URL],
-            '/data_sets/{}/#/analyses/'.format(self.tool.dataset.uuid)
         )
 
     def test_many_tools_can_be_launched_from_same_dataset(self):
@@ -3519,6 +3547,7 @@ class VisualizationToolLaunchTests(ToolManagerTestBase):
         self.assertIn("DataSet matching query does not exist.",
                       self.post_response.content)
 
+    @override_settings(CELERY_ALWAYS_EAGER=True)
     def _start_visualization(
             self, json_name, file_relationships,
             assertions=None, count=1
@@ -3583,9 +3612,7 @@ class VisualizationToolLaunchTests(ToolManagerTestBase):
         settings.DJANGO_DOCKER_ENGINE_SECONDS_INACTIVE = wait_time
 
         def assertions(tool):
-            client = DockerClientWrapper(
-                settings.DJANGO_DOCKER_ENGINE_DATA_DIR
-            )
+            client = DockerClientWrapper()
             client.lookup_container_url(tool.container_name)
 
             self.assertTrue(tool.is_running())
@@ -3628,6 +3655,25 @@ class VisualizationToolLaunchTests(ToolManagerTestBase):
             'igv.json',
             self.sample_igv_file_url,
             assertions
+        )
+
+    def test_input_node_limit(self):
+        tool = self.create_tool(ToolDefinition.VISUALIZATION)
+        tool_launch_config = self.tool.get_tool_launch_config()
+
+        # Crete one more entry than what REFINERY_SOLR_DOC_LIMIT permits
+        tool_launch_config[Tool.FILE_RELATIONSHIPS] = str(
+            [uuid.uuid4()] * (constants.REFINERY_SOLR_DOC_LIMIT + 1)
+        )
+        tool.set_tool_launch_config(tool_launch_config)
+        with self.assertRaises(VisualizationToolError) as context:
+            tool.launch()
+
+        self.assertIn(
+            "Input Node limit of: {} reached".format(
+                constants.REFINERY_SOLR_DOC_LIMIT
+            ),
+            context.exception.message
         )
 
 

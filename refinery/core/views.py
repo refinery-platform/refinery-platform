@@ -38,8 +38,8 @@ from data_set_manager.models import Node
 
 from .forms import ProjectForm, UserForm, UserProfileForm, WorkflowForm
 from .models import (Analysis, CustomRegistrationProfile, DataSet,
-                     ExtendedGroup, Invitation, Ontology, Project, UserProfile,
-                     Workflow, WorkflowEngine)
+                     ExtendedGroup, Invitation, Ontology, Project,
+                     UserProfile, Workflow, WorkflowEngine)
 from .serializers import DataSetSerializer, NodeSerializer, WorkflowSerializer
 from .utils import api_error_response, get_data_sets_annotations
 
@@ -66,6 +66,11 @@ def about(request):
 
 def statistics(request):
     return render_to_response('core/statistics.html', {},
+                              context_instance=RequestContext(request))
+
+
+def dashboard(request):
+    return render_to_response('core/dashboard.html', {},
                               context_instance=RequestContext(request))
 
 

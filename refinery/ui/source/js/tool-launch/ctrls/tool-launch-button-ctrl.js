@@ -16,6 +16,7 @@
     'authService',
     '$timeout',
     'toolLaunchService',
+    'toolLaunchStatusService',
     'toolSelectService',
     '$uibModal',
     'visualizationService',
@@ -28,6 +29,7 @@
     authService,
     $timeout,
     toolLaunchService,
+    toolLaunchStatusService,
     toolSelectService,
     $uibModal,
     visualizationService,
@@ -57,27 +59,14 @@
     **/
     function launchTool () {
       toolLaunchService.postToolLaunch().then(function (response) {
-        $window.location.href = response.tool_url;
-        if (response.tool_url.indexOf('/visualizations/') > -1) {
+        if (response.tool_definition.tool_type === 'VISUALIZATION') {
           visualizationService.getVisualizations($window.dataSetUuid);
         } else {
           $rootScope.$broadcast('rf/launchAnalysis');
         }
+        toolLaunchStatusService.addToolLaunchStatus(response, 'success');
       }, function (error) {
-        $uibModal.open({
-          component: 'rpApiResponseModal',
-          resolve: {
-            modalData: function () {
-              return {
-                apiStatus: error.status,
-                apiMsg: error.data,
-                msgType: 'danger',
-                introMsg: 'Unable to launch tool.',
-                header: 'Error with Tool Launch'
-              };
-            }
-          }
-        });
+        toolLaunchStatusService.addToolLaunchStatus(error, 'fail');
         $log.error(error);
       });
     }

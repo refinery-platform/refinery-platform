@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% load static from staticfiles %}
+
+{% block title %}
+  {{ block.super }} - Dashboard
+{% endblock %}
+
+{% block head_html %}
+  <link href="{% static 'styles/dashboard.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+  <rp-dashboard></rp-dashboard>
+{% endblock %}

@@ -1,7 +1,6 @@
 """
 * Manages all data files
 * Downloads files from external repositories (by URL)
-* Manage the import cache/public data space
 
 Requirements:
 
@@ -16,63 +15,35 @@ import re
 import urlparse
 
 from django.conf import settings
+from django.core.files.storage import default_storage
 from django.db import models
 from django.db.models.signals import post_delete
 from django.dispatch import receiver
 
-from celery.result import AsyncResult
-from celery.task.control import revoke
+import celery
 from django_extensions.db.fields import UUIDField
 
+import constants
 import core
 
 logger = logging.getLogger(__name__)
 
 
 def _mkdir(path):
-    """Create directory given absolute file system path
-    Does not create intermediate dirs if they don't exist, raises RuntimeError
-
-    :param path: Absolute file system path
-    :type path: str
-    """
-    if not os.path.isdir(path):
-        try:
-            os.mkdir(path)
-        except OSError as exc:
-            logger.error("Error creating directory '%s': %s", path, exc)
-            raise RuntimeError()
-        else:
-            logger.info("Created directory '%s'", path)
+    """Create directory given absolute file system path"""
+    # https://stackoverflow.com/a/14364249
+    try:
+        os.makedirs(path)
+    except OSError:
+        if not os.path.isdir(path):
+            raise
+    else:
+        logger.info("Created directory '%s'", path)
 
 
 # create data storage directories
 _mkdir(settings.FILE_STORE_BASE_DIR)
 _mkdir(settings.FILE_STORE_TEMP_DIR)
-
-
-def file_path(instance, filename):
-    """Construct relative file system path for new file store files relative to
-    FILE_STORE_BASE_DIR.
-    Based on
-    http://michaelandrews.typepad.com/the_technical_times/2009/10/creating-a-hashed-directory-structure.html
-
-    :param instance: FileStoreItem instance.
-    :type instance: FileStoreItem.
-    :param filename: requested filename.
-    :type filename: str.
-    :returns: str -- if success, None if failure.
-    """
-    hashcode = hash(filename)
-    mask = 255  # bitmask
-    # use the first and second bytes of the hash code represented as
-    # zero-padded hex numbers as directory names
-    # provides 256 * 256 = 65536 of possible directory combinations
-    dir1 = "{:0>2x}".format(hashcode & mask)
-    dir2 = "{:0>2x}".format((hashcode >> 8) & mask)
-    # Galaxy doesn't process names with parentheses in them
-    filename = re.sub('[()]', '_', filename)
-    return os.path.join(dir1, dir2, filename)
 
 
 def _map_source(source):
@@ -143,8 +114,7 @@ class FileExtension(models.Model):
 
 class FileStoreItem(models.Model):
     """Represents all data files"""
-    datafile = models.FileField(upload_to=file_path, blank=True,
-                                max_length=1024)
+    datafile = models.FileField(blank=True, max_length=1024)
     uuid = UUIDField()  # auto-generated unique ID
     # URL, absolute file system path, or blank if source is a blob or similar
     source = models.CharField(blank=True, max_length=1024)
@@ -177,24 +147,11 @@ class FileStoreItem(models.Model):
             else:
                 self.filetype = extension.filetype
 
-        if self.datafile:
-            # symlink datafile if necessary
-            if (not self.is_local() and os.path.isabs(self.source) and
-                    settings.REFINERY_DATA_IMPORT_DIR not in self.source):
-                self._symlink_datafile()
-        else:
-            # delete file
-            try:
-                old_instance = FileStoreItem.objects.get(pk=self.pk)
-            except FileStoreItem.DoesNotExist:
-                pass  # this is a newly created instance
-            except FileStoreItem.MultipleObjectsReturned as exc:
-                logger.critical(
-                    "Error retrieving FileStoreItem with primary key '%s': %s",
-                    self.pk, exc
-                )
-            else:
-                old_instance.delete_datafile(save_instance=False)
+        # symlink datafile if possible
+        if (not self.datafile and os.path.isabs(self.source) and
+                settings.REFINERY_DATA_IMPORT_DIR not in self.source and
+                get_temp_dir() not in self.source):
+            self._symlink_datafile()
 
         super(FileStoreItem, self).save(*args, **kwargs)
 
@@ -211,9 +168,8 @@ class FileStoreItem(models.Model):
 
     def get_file_size(self, report_symlinks=False):
         """Return the size of the file in bytes.
-        :param report_symlinks: report the size of symlinked files or not.
-        :type report_symlinks: bool.
-        :returns: int -- file size. Zero if the file is:
+        report_symlinks: report the size of symlinked files or not
+        returns zero if the file is:
         - not local
         - a symlink and report_symlinks=False
         """
@@ -224,13 +180,14 @@ class FileStoreItem(models.Model):
             return self.datafile.size
         except ValueError:  # file is not local
             return 0
+        except OSError as exc:
+            # file should be there but it is not
+            logger.critical("Error getting size for '%s': %s", self, exc)
+            return 0
 
     def get_file_extension(self):
-        """Return extension object based on datafile name or source"""
-        if self.datafile.name:
-            extension = _get_extension_from_string(self.datafile.name)
-        else:
-            extension = _get_extension_from_string(self.source)
+        """Return FileExtension object based on datafile name or source"""
+        extension = self.get_extension()
         try:
             return FileExtension.objects.get(name=extension)
         except FileExtension.DoesNotExist:
@@ -246,15 +203,12 @@ class FileStoreItem(models.Model):
         except FileExtension.MultipleObjectsReturned as exc:
             raise RuntimeError(exc)
 
-    def get_file_object(self):
-        """Return file object for the data file or None if failed to open"""
-        try:
-            # FieldFile.open() and File.open() don't return file objects, so
-            # accessing it directly
-            return self.datafile.file.file  # FileStoreItem.FieldFile.File.file
-        except ValueError as exc:
-            logger.error("Error opening %s: %s", self.datafile, exc)
-            return None
+    def get_extension(self):
+        """Return extension of datafile name or file name in source"""
+        if self.datafile.name:
+            return _get_extension_from_string(self.datafile.name)
+        else:
+            return _get_extension_from_string(self.source)
 
     def is_symlinked(self):
         '''Check if the data file is a symlink.
@@ -279,16 +233,17 @@ class FileStoreItem(models.Model):
         return False
 
     def delete_datafile(self, save_instance=True):
-        """Delete datafile on disk and clears all attributes on the field"""
+        """Delete datafile on disk and cancel file import"""
+        self.terminate_file_import_task()
         if self.datafile:
-            logger.debug("Deleting datafile '%s'", self.datafile.name)
+            file_name = self.datafile.name
+            logger.debug("Deleting datafile '%s'", file_name)
             try:
                 self.datafile.delete(save=save_instance)
             except OSError as exc:
-                logger.error("Error deleting file '%s': %s",
-                             self.datafile.name, exc)
-                return False
-            logger.info("Deleted datafile of '%s'", self)
+                logger.error("Error deleting file '%s': %s", file_name, exc)
+            else:
+                logger.info("Deleted datafile '%s'", file_name)
 
     def rename_datafile(self, name):
         """Change name of the data file
@@ -299,13 +254,11 @@ class FileStoreItem(models.Model):
                      self.datafile.name, name)
         if self.is_local():
             # obtain a new path based on requested name
-            new_rel_path = self.datafile.storage.get_available_name(
-                file_path(self, name)
-            )
-            new_abs_path = os.path.join(settings.FILE_STORE_BASE_DIR,
-                                        new_rel_path)
-            if _rename_file_on_disk(self.datafile.path, new_abs_path):
-                self.datafile.name = new_rel_path
+            new_relative_path = default_storage.get_name(name)
+            new_absolute_path = os.path.join(settings.FILE_STORE_BASE_DIR,
+                                             new_relative_path)
+            if _rename_file_on_disk(self.datafile.path, new_absolute_path):
+                self.datafile.name = new_relative_path
                 self.save()
                 return os.path.basename(self.datafile.name)
             else:
@@ -317,13 +270,15 @@ class FileStoreItem(models.Model):
             return None
 
     def _symlink_datafile(self):
-        """Create a symlink to the file pointed by source"""
+        """Create a symlink to the file pointed by source
+        Note: does not save the model
+        """
         logger.debug("Symlinking datafile to '%s'", self.source)
 
         if os.path.isfile(self.source):
             # construct symlink target path based on source file name
-            rel_dst_path = self.datafile.storage.get_available_name(
-                file_path(self, os.path.basename(self.source))
+            rel_dst_path = default_storage.get_name(
+                os.path.basename(self.source)
             )
             abs_dst_path = os.path.join(settings.FILE_STORE_BASE_DIR,
                                         rel_dst_path)
@@ -332,13 +287,10 @@ class FileStoreItem(models.Model):
                 # update the model with the symlink path
                 self.datafile.name = rel_dst_path
                 logger.debug("Datafile symlinked")
-                return True
             else:
                 logger.error("Symlinking failed")
-                return False
         else:
             logger.error("Symlinking failed: source is not a file")
-            return False
 
     def get_datafile_url(self):
         """Returns relative or absolute URL of the datafile depending on file
@@ -356,25 +308,16 @@ class FileStoreItem(models.Model):
 
     def get_import_status(self):
         """Return file import task state"""
-        return AsyncResult(self.import_task_id).state
+        if not self.import_task_id:
+            return constants.NOT_AVAILABLE
+        return celery.result.AsyncResult(self.import_task_id).state
 
     def terminate_file_import_task(self):
-        """ Trys to terminate a celery file_import task based on a
-        FileStoreItem's import_task_id field.
-
-        NOTE: That if you simply revoke() a task without the `terminate` ==
-        True, said task will try to restart upon a Worker restart.
-
-        http://docs.celeryproject.org/en/latest/userguide/workers.html#revoke-revoking-tasks
-        """
-        try:
-            revoke(self.import_task_id, terminate=True)
-        except Exception as e:
-            logger.debug(
-                "Something went wrong while trying to terminate Task "
-                "with id %s. This is most likely due to there being no current"
-                " file_import task associated. %s", self.import_task_id, e
-            )
+        if self.import_task_id:
+            logger.info("Terminating import task '%s' for '%s'",
+                        self.import_task_id, self)
+            result = celery.result.AsyncResult(self.import_task_id)
+            result.revoke(terminate=True)
 
 
 def get_temp_dir():
@@ -382,28 +325,10 @@ def get_temp_dir():
     return settings.FILE_STORE_TEMP_DIR
 
 
-def get_file_object(file_name):
-    '''Open file given its name.
-
-    :param file_name: name of the file.
-    :type file_name: str.
-    :returns: file object -- or None if failed to open file.
-
-    '''
-    try:
-        return open(file_name, 'rb')
-    except IOError as e:
-        logger.error(
-            "Could not open file: %s - error(%s): %s",
-            file_name, e.errno, e.strerror
-        )
-        return None
-
-
 # post_delete is safer than pre_delete
 @receiver(post_delete, sender=FileStoreItem)
 def _delete_datafile(sender, instance, **kwargs):
-    """Delete the FileStoreItem datafile when model is deleted
+    """Delete the datafile when model is deleted
     Signal handler is required because QuerySet bulk delete does not call
     delete() method on the models
     """

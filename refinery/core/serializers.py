@@ -25,7 +25,8 @@ class DataSetSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = DataSet
-        fields = ['title', 'accession', 'summary', 'description', 'slug']
+        fields = ['title', 'accession', 'summary', 'description', 'slug',
+                  'uuid']
 
     def partial_update(self, instance, validated_data):
         """
@@ -96,12 +97,12 @@ class NodeSerializer(serializers.HyperlinkedModelSerializer):
 
     def _get_file_extension(self, obj):
         try:
-            return FileStoreItem.objects.get(
-                    uuid=obj.file_uuid).get_file_extension()
+            file_store_item = FileStoreItem.objects.get(uuid=obj.file_uuid)
         except (FileStoreItem.DoesNotExist,
-                FileStoreItem.MultipleObjectsReturned) as e:
-            logger.debug(e)
+                FileStoreItem.MultipleObjectsReturned) as exc:
+            logger.debug(exc)
             return None
+        return file_store_item.get_extension()
 
     def _get_relative_url(self, obj):
         return obj.get_relative_file_store_item_url() or None

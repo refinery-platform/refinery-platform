@@ -14,6 +14,7 @@ import requests
 from rest_framework.test import (APIRequestFactory, APITestCase,
                                  force_authenticate)
 
+import constants
 from data_set_manager.models import Assay
 from data_set_manager.search_indexes import NodeIndex
 from factory_boy.utils import create_dataset_with_necessary_models
@@ -144,7 +145,7 @@ class UserFilesUtilsTests(TestCase):
                          'facet.field=experimenter_Factor_Value_generic_s',
                          'fq=is_annotation%3Afalse',
                          'start=0',
-                         'rows=10000000',
+                         'rows={}'.format(constants.REFINERY_SOLR_DOC_LIMIT),
                          'q=django_ct%3Adata_set_manager.node',
                          'wt=json',
                          'facet=true',

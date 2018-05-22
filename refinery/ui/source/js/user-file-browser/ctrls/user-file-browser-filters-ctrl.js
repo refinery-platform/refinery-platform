@@ -55,6 +55,8 @@
           userFileBrowserFactory.createFilters(solr.facet_field_counts);
 
         gridOptionsService.data = userFileBrowserFactory.createData(solr.nodes);
+        userFileBrowserFactory.dataSetNodes.nodesCount = solr.nodes.length;
+        userFileBrowserFactory.dataSetNodes.totalNodesCount = solr.nodes_count;
         promise.resolve();
       }, function () {
         $log.error('/files/ request failed');

@@ -1,0 +1,48 @@
+<div id='tool-launch-status-mgs'>
+  <div ng-repeat="toolLaunch in $ctrl.toolLaunches">
+    <div ng-if="toolLaunch.status === 'success'">
+      <div class="alert alert-success">
+        <a
+          class="float-right modal-close"
+          data-dismiss="alert"
+          ng-click="$ctrl.removeToolLaunch(toolLaunch.uuid)">
+          <i class="fa fa-times close" aria-hidden="true"></i>
+        </a>
+        <i class="{{toolLaunch.type|toolTypeIcon}} p-r-1-4" aria-hidden="true"></i>
+        {{ toolLaunch.name }} launched successfully.
+        <div ng-if="toolLaunch.type === 'workflow'">
+          <a href="#/analyses">
+            <i class="fa fa-link p-r-1-2"></i>
+            View status on analyses tab.
+          </a>
+        </div>
+        <div ng-if="toolLaunch.type === 'visualization'">
+          <strong>
+            <a ng-href="{{toolLaunch.container_url}}" target="_blank">
+              <i class="fa fa-external-link p-r-1-4"></i>
+              View tool in new tab.
+            </a>
+            <br>
+            <a href="#/visualizations">
+              <i class="fa fa-link p-r-1-4 p-t-1-4"></i>
+              View status on visualizations tab.
+            </a>
+          </strong>
+        </div>
+      </div>
+    </div>
+    <div ng-if="toolLaunch.status === 'fail'">
+      <div class="alert alert-danger">
+        <a
+          class="float-right modal-close"
+          data-dismiss="alert"
+          ng-click="$ctrl.removeToolLaunch(toolLaunch.uuid)">
+          <i class="fa fa-times close" aria-hidden="true"></i>
+        </a>
+       <strong>{{ toolLaunch.msg }}</strong>
+         <br>
+         Status {{ toolLaunch.apiStatus }}, {{ toolLaunch.apiStatusMsg }}
+      </div>
+    </div>
+  </div>
+</div>

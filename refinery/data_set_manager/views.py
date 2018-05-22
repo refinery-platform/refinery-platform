@@ -220,9 +220,11 @@ class ProcessISATabView(View):
                 PARSER_UNEXPECTED_ERROR_MESSAGE +
                 e.message
             )
-
-        # TODO: exception handling
-        os.unlink(temp_file_path)
+        try:
+            os.unlink(temp_file_path)
+        except OSError as exc:
+            logger.error("Couldn't unlink ISATab's `temp_file_path`: %s %s",
+                         temp_file_path, exc)
         if dataset_uuid:
             if 'ajax' in kwargs and kwargs['ajax']:
                 return JsonResponse({'new_data_set_uuid': dataset_uuid})
@@ -328,14 +330,6 @@ class ProcessISATabView(View):
                 )
             else:
                 dataset_uuid = parse_isatab_invocation
-
-            try:
-                os.unlink(response['data']['temp_file_path'])
-            except OSError as e:
-                logger.error(
-                    "Couldn't unlink temporary file: %s %s",
-                    response['data']['temp_file_path'], e
-                )
 
             # import data files
             if dataset_uuid:
@@ -585,12 +579,15 @@ class CheckDataFilesView(View):
             # get a list of all uploaded S3 objects for the user
             s3 = boto3.resource('s3')
             s3_bucket = s3.Bucket(settings.UPLOAD_BUCKET)
+            # TODO: handle ParamValidationError (return error msg in response?)
             for s3_object in s3_bucket.objects.filter(Prefix=identity_id):
                 uploaded_s3_key_list.append(s3_object.key)
 
         for input_file_path in input_file_list:
             if not isinstance(input_file_path, unicode):
                 bad_file_list.append(input_file_path)
+                logger.error("Uploaded file path '%s' is not a string",
+                             input_file_path)
             else:
                 input_file_path = translate_file_source(input_file_path)
                 if settings.REFINERY_DEPLOYMENT_PLATFORM == 'aws':
@@ -598,10 +595,17 @@ class CheckDataFilesView(View):
                     bucket_name, key = parse_s3_url(input_file_path)
                     if key not in uploaded_s3_key_list:
                         bad_file_list.append(os.path.basename(key))
+                        logger.debug("Object key '%s' does not exist in '%s'",
+                                     key, bucket_name)
+                    else:
+                        logger.debug("Object key '%s' exists in '%s'",
+                                     key, bucket_name)
                 else:  # POSIX file system
                     if not os.path.exists(input_file_path):
                         bad_file_list.append(input_file_path)
-            logger.debug("Checked file path: '%s'", input_file_path)
+                        logger.debug("File '%s' does not exist")
+                    else:
+                        logger.debug("File '%s' exists")
 
         # prefix output to protect from JSON vulnerability (stripped by
         # Angular)

@@ -27,7 +27,7 @@ from django.core.mail import send_mail
 from django.db import models, transaction
 from django.db.models import Max
 from django.db.models.fields import IntegerField
-from django.db.models.signals import post_delete, post_save, pre_delete
+from django.db.models.signals import post_save, pre_delete
 from django.dispatch import receiver
 from django.forms import ValidationError
 from django.template import loader
@@ -38,30 +38,32 @@ from bioblend import galaxy
 from django_auth_ldap.backend import LDAPBackend
 from django_extensions.db.fields import UUIDField
 from guardian.models import UserObjectPermission
-from guardian.shortcuts import (assign_perm, get_groups_with_perms,
-                                get_objects_for_group, get_users_with_perms,
-                                remove_perm)
+from guardian.shortcuts import (
+    assign_perm, get_groups_with_perms, get_objects_for_group,
+    get_users_with_perms, remove_perm
+)
 import pysolr
 from registration.models import RegistrationManager, RegistrationProfile
 from registration.signals import user_activated, user_registered
 
-from data_set_manager.models import (Assay, Investigation, Node,
-                                     NodeCollection, Study)
+from data_set_manager.models import (
+    Assay, Investigation, Node, NodeCollection, Study
+)
 from data_set_manager.search_indexes import NodeIndex
-from data_set_manager.utils import (add_annotated_nodes_selection,
-                                    index_annotated_nodes_selection)
+from data_set_manager.utils import (
+    add_annotated_nodes_selection, index_annotated_nodes_selection
+)
 from file_store.models import FileStoreItem, FileType
-from file_store.tasks import rename
 from galaxy_connector.models import Instance
 import tool_manager
 
-from .utils import (add_or_update_user_to_neo4j, add_read_access_in_neo4j,
-                    async_update_annotation_sets_neo4j, delete_data_set_index,
-                    delete_data_set_neo4j, delete_ontology_from_neo4j,
-                    delete_user_in_neo4j, email_admin,
-                    invalidate_cached_object, remove_read_access_in_neo4j,
-                    skip_if_test_run, sync_update_annotation_sets_neo4j,
-                    update_data_set_index)
+from .utils import (
+    add_or_update_user_to_neo4j, add_read_access_in_neo4j,
+    async_update_annotation_sets_neo4j, delete_data_set_index,
+    delete_data_set_neo4j, delete_ontology_from_neo4j, delete_user_in_neo4j,
+    email_admin, invalidate_cached_object, remove_read_access_in_neo4j,
+    skip_if_test_run, sync_update_annotation_sets_neo4j, update_data_set_index
+)
 
 logger = logging.getLogger(__name__)
 
@@ -781,6 +783,10 @@ class DataSet(SharableResource):
     def is_isatab_based(self):
         return bool(self.get_investigation().isa_archive)
 
+    @property
+    def shared(self):  # is_shared breaks a tastypie interal
+        return len(self.get_groups()) > 0
+
 
 @receiver(pre_delete, sender=DataSet)
 def _dataset_delete(sender, instance, *args, **kwargs):
@@ -792,30 +798,25 @@ def _dataset_delete(sender, instance, *args, **kwargs):
     See: https://docs.djangoproject.com/en/1.8/topics/db/models/
     #overriding-model-methods
     """
-
-    # terminate any running file import tasks
-    for file_store_item in instance.get_file_store_items():
-        file_store_item.terminate_file_import_task()
-
-    related_investigation_links = instance.get_investigation_links()
-
     with transaction.atomic():
         # delete FileStoreItem and datafile corresponding to the
         # metadata file used to generate the DataSet
         instance.get_metadata_as_file_store_item().delete()
 
-        for investigation_link in related_investigation_links:
+        for investigation_link in instance.get_investigation_links():
             investigation_link.get_node_collection().delete()
 
     delete_data_set_index(instance)
     delete_data_set_neo4j(instance.uuid)
     async_update_annotation_sets_neo4j()
+    invalidate_cached_object(instance)
 
 
 @receiver(post_save, sender=DataSet)
 def _dataset_saved(sender, instance, *args, **kwargs):
     async_update_annotation_sets_neo4j()
     update_data_set_index(instance)
+    invalidate_cached_object(instance)
 
 
 class InvestigationLink(models.Model):
@@ -1314,42 +1315,34 @@ class Analysis(OwnableResource):
         logger.debug("Renaming analysis results")
         # rename file_store items to new name updated from galaxy file_ids
         for result in AnalysisResult.objects.filter(analysis_uuid=self.uuid):
-            # new name to load
-            new_file_name = result.file_name
-            # workaround for FastQC reports downloaded from Galaxy as zip
-            # archives
-            (root, ext) = os.path.splitext(new_file_name)
             try:
                 item = FileStoreItem.objects.get(uuid=result.file_store_uuid)
             except (FileStoreItem.DoesNotExist,
                     FileStoreItem.MultipleObjectsReturned) as exc:
-                logger.error("Error renaming HTML file '%s' to zip: %s",
-                             result.file_store_uuid, exc)
-            else:
-                if ext == '.html':
-                    try:
-                        zipfile = FileType.objects.get(name='ZIP')
-                    except (FileType.DoesNotExist,
-                            FileType.MultipleObjectsReturned) as exc:
-                        logger.error("Error renaming HTML to zip: %s", exc)
-                    else:
-                        if item.filetype == zipfile:
-                            new_file_name = ''.join([root, '.zip'])
-                renamed_file_store_item_uuid = rename(result.file_store_uuid,
-                                                      new_file_name)
+                logger.error("Error renaming analysis result '%s': %s",
+                             result, exc)
+                break
 
-            # Try to generate an auxiliary node for visualization purposes
-            # NOTE: We have to do this after renaming happens because before
-            #  renaming, said FileStoreItems's datafile field does not point
-            #  to an actual file
-            file_store_item_uuid = (
-                renamed_file_store_item_uuid if
-                renamed_file_store_item_uuid else result.file_store_uuid
-            )
+            # workaround for FastQC reports downloaded from Galaxy as zip
+            # archives
+            (root, ext) = os.path.splitext(result.file_name)
+            if ext == '.html':
+                try:
+                    zipfile = FileType.objects.get(name='ZIP')
+                except (FileType.DoesNotExist,
+                        FileType.MultipleObjectsReturned) as exc:
+                    logger.error("Error renaming HTML to zip: %s", exc)
+                else:
+                    if item.filetype == zipfile:
+                        item.rename_datafile(''.join([root, '.zip']))
+            else:
+                item.rename_datafile(result.file_name)
+
             try:
-                node = Node.objects.get(file_uuid=file_store_item_uuid)
-            except (Node.DoesNotExist, Node.MultipleObjectsReturned) as e:
-                logger.error("Error Fetching Node: %s", e)
+                node = Node.objects.get(file_uuid=item.uuid)
+            except (Node.DoesNotExist, Node.MultipleObjectsReturned) as exc:
+                logger.error("Error retrieving Node with file UUID '%s': %s",
+                             exc)
             else:
                 if node.is_derived():
                     node.run_generate_auxiliary_node_task()
@@ -1999,64 +1992,6 @@ def _ontology_delete(sender, instance, *args, **kwargs):
     delete_ontology_from_neo4j(instance.acronym)
 
 
-# http://web.archive.org/web/20140826013240/http://codeblogging.net/blogs/1/14/
-def get_subclasses(classes, level=0):
-    """
-        Return the list of all subclasses given class (or list of classes) has.
-        Inspired by this question:
-        http://stackoverflow.com/questions/3862310/how-can-i-find-all-
-        subclasses-of-a-given-class-in-python
-    """
-    # for convenience, only one class can can be accepted as argument
-    # converting to list if this is the case
-    if not isinstance(classes, list):
-        classes = [classes]
-
-    if level < len(classes):
-        classes += classes[level].__subclasses__()
-        return get_subclasses(classes, level + 1)
-    else:
-        return classes
-
-
-def receiver_subclasses(signal, sender, dispatch_uid_prefix, **kwargs):
-    """
-    A decorator for connecting receivers and all receiver's subclasses to
-    signals. Used by passing in the signal and keyword arguments to connect::
-        @receiver_subclasses(post_save, sender=MyModel)
-        def signal_receiver(sender, **kwargs):
-            ...
-    """
-
-    def _decorator(func):
-        all_senders = get_subclasses(sender)
-        for snd in all_senders:
-            signal.connect(
-                func, sender=snd, dispatch_uid=dispatch_uid_prefix + '_' +
-                snd.__name__, **kwargs)
-        return func
-
-    return _decorator
-
-
-@receiver_subclasses(post_delete, BaseResource, "baseresource_post_delete")
-def _baseresource_delete(sender, instance, **kwargs):
-    '''
-        Handles the invalidation of cached objects that inherit from
-        BaseResource after being deleted
-    '''
-    invalidate_cached_object(instance)
-
-
-@receiver_subclasses(post_save, BaseResource, "baseresource_post_save")
-def _baseresource_save(sender, instance, **kwargs):
-    '''
-        Handles the invalidation of cached objects that inherit from
-        BaseResource after being saved
-    '''
-    invalidate_cached_object(instance)
-
-
 class AuthenticationFormUsernameOrEmail(AuthenticationForm):
     def clean_username(self):
         username = self.data['username']
@@ -2213,3 +2148,87 @@ class SiteProfile(models.Model):
 
     def __unicode__(self):
         return self.site.name
+
+
+class SiteStatistics(models.Model):
+    """
+    A model to encapsulate various information about a deployed Refinery
+    Instance's utilization.
+    """
+    datasets_shared = models.IntegerField(default=0)
+    datasets_uploaded = models.IntegerField(default=0)
+    groups_created = models.IntegerField(default=0)
+    run_date = models.DateTimeField(auto_now=True)
+    total_user_logins = models.IntegerField(default=0)
+    total_visualization_launches = models.IntegerField(default=0)
+    total_workflow_launches = models.IntegerField(default=0)
+    users_created = models.IntegerField(default=0)
+    unique_user_logins = models.IntegerField(default=0)
+
+    class Meta:
+        verbose_name_plural = "site statistics"
+
+    def collect(self):
+        self.datasets_uploaded = self._get_datasets_uploaded()
+        self.datasets_shared = self._get_datasets_shared()
+        self.groups_created = self._get_groups_created()
+        self.users_created = self._get_users_created()
+        self.unique_user_logins = self._get_unique_user_logins()
+        self.total_user_logins = self._get_total_user_logins()
+        self.total_workflow_launches = self._get_total_workflow_launches()
+        self.total_visualization_launches = \
+            self._get_total_visualization_launches()
+        self.save()
+
+    def _get_previous_instance(self):
+        previous_instance = SiteStatistics.objects.filter(
+            run_date__lt=self.run_date
+        ).order_by('-run_date').first()
+
+        # Return the previous instance by run_date, or the current instance
+        # if a prior one doesn't exist
+        return previous_instance or self
+
+    def _get_datasets_shared(self):
+        return len([
+            dataset for dataset in DataSet.objects.filter(
+                modification_date__gte=self._get_previous_instance().run_date
+            ) if dataset.shared
+        ])
+
+    def _get_datasets_uploaded(self):
+        return DataSet.objects.filter(
+            creation_date__gte=self._get_previous_instance().run_date
+        ).count()
+
+    def _get_total_visualization_launches(self):
+        return tool_manager.models.VisualizationTool.objects.filter(
+            creation_date__gte=self._get_previous_instance().run_date
+        ).count()
+
+    def _get_total_workflow_launches(self):
+        return tool_manager.models.WorkflowTool.objects.filter(
+            creation_date__gte=self._get_previous_instance().run_date
+        ).count()
+
+    def _get_unique_user_logins(self):
+        return User.objects.filter(
+            last_login__gte=self._get_previous_instance().run_date
+        ).count()
+
+    def _get_users_created(self):
+        return User.objects.filter(
+            date_joined__gte=self._get_previous_instance().run_date
+        ).count()
+
+    def _get_groups_created(self):
+        return ExtendedGroup.objects.exclude(manager_group=None).count() - sum(
+            s.groups_created for s in SiteStatistics.objects.exclude(
+                id=self.id
+            )
+        )
+
+    def _get_total_user_logins(self):
+        return sum(u.login_count for u in UserProfile.objects.all()) - \
+               sum(s.total_user_logins for s in
+                   SiteStatistics.objects.exclude(id=self.id))

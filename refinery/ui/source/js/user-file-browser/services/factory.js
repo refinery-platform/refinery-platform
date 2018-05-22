@@ -18,13 +18,20 @@
     _,
     userFileService
     ) {
+    var dataSetNodes = {
+      nodesCount: 0,
+      totalNodesCount: 0
+    };
+    var URL = 'url';
+
     var service = {
       createColumnDefs: createColumnDefs,
       createData: createData,
       createFilters: createFilters,
+      dataSetNodes: dataSetNodes,
       getUserFiles: getUserFiles
     };
-    var URL = 'url';
+
     return service;
 
     /*

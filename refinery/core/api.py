@@ -510,6 +510,10 @@ class DataSetResource(SharableResourceAPIInterface, ModelResource):
         }
 
     def dehydrate(self, bundle):
+        if 'min_response' in bundle.request.GET and\
+                bundle.request.GET.get('min_response'):
+            return bundle
+
         if not bundle.data['owner']:
             owner = bundle.obj.get_owner()
             try:
@@ -677,9 +681,17 @@ class DataSetResource(SharableResourceAPIInterface, ModelResource):
                 group = None
 
             if group:
-                obj_list = list(get_objects_for_group(
+                filtered_obj_list = []
+                group_obj_list = list(get_objects_for_group(
                     group, 'core.read_meta_dataset'
                 ))
+                # The order of checking obj_list instead of
+                # group_obj_list matters. Possible reason is obj_list is
+                # referenced in the bundle data from parent method.
+                for obj in obj_list:
+                    if obj in group_obj_list:
+                        filtered_obj_list.append(obj)
+                return filtered_obj_list
 
         return obj_list
 
@@ -715,6 +727,7 @@ class DataSetResource(SharableResourceAPIInterface, ModelResource):
     def get_object_list(self, request):
         obj_list = SharableResourceAPIInterface.get_object_list(self, request)
         obj_list = self.filter_by_group(request, obj_list)
+
         return obj_list
 
     def obj_create(self, bundle, **kwargs):

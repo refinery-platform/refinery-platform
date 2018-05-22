@@ -13,19 +13,21 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import (InMemoryUploadedFile,
                                             SimpleUploadedFile)
+from django.core.management import call_command, CommandError
 from django.db.models import Q
 from django.http import QueryDict
-from django.test import LiveServerTestCase, TestCase
+from django.test import LiveServerTestCase, TestCase, override_settings
 
-from celery.states import PENDING, STARTED, SUCCESS
-from constants import NOT_AVAILABLE
+from celery.states import FAILURE, PENDING, STARTED, SUCCESS
 from djcelery.models import TaskMeta
 from guardian.shortcuts import assign_perm
 from haystack.exceptions import SkipDocument
 import mock
 from mock import ANY
+from override_storage import override_storage
 from rest_framework.test import APIClient, APIRequestFactory, APITestCase
 
+import constants
 from core.models import (INPUT_CONNECTION, OUTPUT_CONNECTION, Analysis,
                          AnalysisNodeConnection, DataSet, ExtendedGroup,
                          InvestigationLink)
@@ -943,12 +945,13 @@ class UtilitiesTests(TestCase):
                          'Group Name'
                          '&fq=is_annotation%3Afalse'
                          '&start=0'
-                         '&rows=10000000'
+                         '&rows={}'
                          '&q=django_ct%3Adata_set_manager.node'
                          '&wt=json'
                          '&facet=true'
                          '&facet.limit=-1'.format(
-                                 self.valid_uuid))
+                             self.valid_uuid, constants.REFINERY_SOLR_DOC_LIMIT
+                         ))
 
     def test_generate_solr_params_for_assay_with_params(self):
         query = generate_solr_params_for_assay(QueryDict({}), self.valid_uuid)
@@ -1556,15 +1559,14 @@ class UtilitiesTests(TestCase):
                 context.exception.message
             )
 
-    def test_get_file_url_from_node_uuid_node_with_no_file(self):
+    def test_get_file_url_from_node_uuid_with_no_file(self):
+        self.assertIsNone(get_file_url_from_node_uuid(self.node_b.uuid))
+
+    def test_get_file_url_from_node_uuid_with_no_file_url_required(self):
         with self.assertRaises(RuntimeError) as context:
-            get_file_url_from_node_uuid(self.node_b.uuid)
-            self.assertEqual(
-                "Node with uuid: {} has no associated file url".format(
-                    self.node_b.uuid
-                ),
-                context.exception.message
-            )
+            get_file_url_from_node_uuid(self.node_b.uuid,
+                                        require_valid_url=True)
+        self.assertIn("has no associated file url", context.exception.message)
 
     def test__create_solr_params_from_node_uuids(self):
         fake_node_uuids = [str(uuid.uuid4()), str(uuid.uuid4())]
@@ -1574,7 +1576,8 @@ class UtilitiesTests(TestCase):
             {
                 "q": "django_ct:data_set_manager.node",
                 "wt": "json",
-                "fq": "uuid:({})".format(" OR ".join(fake_node_uuids))
+                "fq": "uuid:({})".format(" OR ".join(fake_node_uuids)),
+                "rows": constants.REFINERY_SOLR_DOC_LIMIT
             }
         )
 
@@ -1913,9 +1916,6 @@ class NodeIndexTests(APITestCase):
 
         self.maxDiff = None
 
-    def tearDown(self):
-        FileStoreItem.objects.all().delete()
-
     def test_skip_types(self):
         self.node.type = 'Unknown File Type'
         with self.assertRaises(SkipDocument):
@@ -2007,34 +2007,38 @@ class NodeIndexTests(APITestCase):
         self.import_task.delete()
         with mock.patch.object(FileStoreItem, 'get_datafile_url',
                                return_value=None):
-            self._assert_node_index_prepared_correctly(
-                self._prepare_node_index(self.node),
-                expected_download_url=NOT_AVAILABLE
-            )
+            with mock.patch.object(FileStoreItem, 'get_import_status',
+                                   return_value=FAILURE):
+                self._assert_node_index_prepared_correctly(
+                    self._prepare_node_index(self.node),
+                    expected_download_url=constants.NOT_AVAILABLE
+                )
 
     def test_prepare_node_no_file_import_task_id_yet(self):
         self.file_store_item.import_task_id = ""
         self.file_store_item.save()
         self.import_task.delete()
         self._assert_node_index_prepared_correctly(
-            self._prepare_node_index(self.node), expected_download_url=PENDING
+            self._prepare_node_index(self.node),
+            expected_download_url=constants.NOT_AVAILABLE
         )
 
     def test_prepare_node_no_file_store_item(self):
-        self.file_store_item.delete()
+        with mock.patch('celery.result.AsyncResult'):
+            self.file_store_item.delete()
         self._assert_node_index_prepared_correctly(
             self._prepare_node_index(self.node),
-            expected_download_url=NOT_AVAILABLE, expected_filetype=''
+            expected_download_url=constants.NOT_AVAILABLE, expected_filetype=''
         )
 
     def test_prepare_node_s3_file_store_item_source_no_datafile(self):
         self.file_store_item.source = 's3://test/test.txt'
         self.file_store_item.save()
         with mock.patch.object(FileStoreItem, 'get_import_status',
-                               return_value=SUCCESS):
+                               return_value=FAILURE):
             self._assert_node_index_prepared_correctly(
                 self._prepare_node_index(self.node),
-                expected_download_url=NOT_AVAILABLE,
+                expected_download_url=constants.NOT_AVAILABLE,
                 expected_filetype=self.file_store_item.filetype
             )
 
@@ -2423,3 +2427,93 @@ class InvestigationTests(TestCase):
 
     def test_get_assay_count(self):
         self.assertEqual(self.isa_tab_investigation.get_assay_count(), 1)
+
+
+@override_storage()
+@override_settings(CELERY_ALWAYS_EAGER=True)
+class TestManagementCommands(TestCase):
+    def setUp(self):
+        self.test_data_base_path = "data_set_manager/test-data/single-file"
+        self.args = [
+            "--username", "guest",
+            "--source_column_index", "2",
+            "--data_file_column", "2",
+        ]
+
+    def test_process_metadata_table_csv(self):
+        two_line_csv = os.path.join(self.test_data_base_path,
+                                    "two-line-local.csv")
+        self.args.extend(
+            [
+                "--title", "Process Metadata Table Test csv",
+                "--file_name", two_line_csv,
+            ]
+        )
+        call_command(
+            "process_metadata_table",
+            *self.args,
+            base_path=self.test_data_base_path,
+            is_public=True,
+            delimiter="comma"
+        )
+        self.assertEqual(DataSet.objects.count(), 1)
+
+        # One metadata file & two data files referenced in the metadata
+        self.assertEqual(FileStoreItem.objects.count(), 3)
+
+    def test_process_metadata_table_tsv(self):
+        two_line_tsv = os.path.join(self.test_data_base_path,
+                                    "two-line-local.tsv")
+        self.args.extend(
+            [
+                "--title", "Process Metadata Table Test csv",
+                "--file_name", two_line_tsv,
+            ]
+        )
+        call_command(
+            "process_metadata_table",
+            *self.args,
+            base_path=self.test_data_base_path,
+            is_public=True
+        )
+        self.assertEqual(DataSet.objects.count(), 1)
+
+    def test_process_metadata_table_custom_delimiter(self):
+        two_line_custom = os.path.join(self.test_data_base_path,
+                                       "two-line-local.custom")
+        self.args.extend(
+            [
+                "--title", "Process Metadata Table Test custom delimiter",
+                "--file_name", two_line_custom,
+            ]
+        )
+        call_command(
+            "process_metadata_table",
+            *self.args,
+            base_path=self.test_data_base_path,
+            is_public=True,
+            delimiter="custom",
+            custom_delimiter_string="@"
+        )
+        self.assertEqual(DataSet.objects.count(), 1)
+
+    def test_process_metadata_table_custom_delimiter_none_specified(self):
+        two_line_custom = os.path.join(self.test_data_base_path,
+                                       "two-line-local.custom")
+        self.args.extend(
+            [
+                "--title", "Process Metadata Table Test custom delimiter",
+                "--file_name", two_line_custom,
+            ]
+        )
+        with self.assertRaises(CommandError) as context:
+            call_command(
+                "process_metadata_table",
+                *self.args,
+                base_path=self.test_data_base_path,
+                is_public=True,
+                delimiter="custom"
+            )
+        self.assertIn("custom_delimiter_string was not specified",
+                      context.exception.message)
+        self.assertEqual(DataSet.objects.count(), 0)

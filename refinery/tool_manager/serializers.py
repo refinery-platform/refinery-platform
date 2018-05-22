@@ -2,6 +2,7 @@ from rest_framework import serializers
 from rest_framework.fields import BooleanField, CharField, JSONField
 from rest_framework_recursive.fields import RecursiveField
 
+from core.serializers import DataSetSerializer
 from file_store.models import FileType
 
 from .models import (FileRelationship, InputFile, Parameter, Tool,
@@ -78,6 +79,8 @@ class ToolSerializer(serializers.ModelSerializer):
     owner = JSONField(source="_get_owner_info_as_dict")
     container_url = CharField(source="get_relative_container_url")
     relaunch_url = CharField()  # this maps to Tool.relaunch_url
+    dataset = DataSetSerializer()
+    tool_definition = ToolDefinitionSerializer()
 
     class Meta:
         model = Tool

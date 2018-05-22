@@ -27,16 +27,21 @@
       </div>
     </div>
     <div class="btn-toolbar p-b-1">
-        <a class="refinery-base btn btn-default btn-sm"
-           href="{{ $ctrl.downloadCsvPath() }}">
-            <i class="fa fa-arrow-circle-o-down"></i> Download as CSV
-        </a>
-        <span class="refinery-base btn btn-default btn-sm"
-              data-toggle="modal" data-target="#multi-file-download-modal">
-            <i class="fa fa-arrow-circle-o-down"></i> Download all files
-        </span>
+      <a class="refinery-base btn btn-default btn-sm"
+        href="{{ $ctrl.downloadCsvPath() }}">
+        <i class="fa fa-arrow-circle-o-down"></i> Download as CSV
+      </a>
+      <span class="refinery-base btn btn-default btn-sm"
+            data-toggle="modal" data-target="#multi-file-download-modal">
+          <i class="fa fa-arrow-circle-o-down"></i> Download all files
+      </span>
     </div>
     <div class="m-r-1">
+      <div class="refinery-subheader grid_data_set_total">
+        <h3>
+          {{ $ctrl.nodesCount }} of {{ $ctrl.totalNodesCount }} files
+        </h3>
+      </div>
         <!-- Bootstrap col classes are using the window width, not our inner div.
              #table-filter has a margin-left, so do something similar on the other side -->
         <!-- TODO: Why isn't it full height? -->

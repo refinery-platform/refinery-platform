@@ -1,8 +1,10 @@
 import logging
+import urllib2
 
 from django.conf import settings
 from django.db import transaction
-from django.http import HttpResponseBadRequest, HttpResponseForbidden
+from django.http import (HttpResponseBadRequest, JsonResponse)
+from django.shortcuts import render
 
 from django_docker_engine.proxy import Proxy
 from rest_framework import status
@@ -15,8 +17,9 @@ from core.models import DataSet
 
 from .models import Tool, ToolDefinition, VisualizationTool, WorkflowTool
 from .serializers import ToolDefinitionSerializer, ToolSerializer
-from .utils import (create_tool, user_has_access_to_tool,
-                    validate_tool_launch_configuration)
+from .utils import (
+    create_tool, user_has_access_to_tool, validate_tool_launch_configuration
+)
 
 logger = logging.getLogger(__name__)
 
@@ -70,7 +73,7 @@ class ToolDefinitionsViewSet(ToolManagerViewSetBase):
     http_method_names = ['get']
 
     def get_queryset(self):
-        if self.request.user.has_perm('core.share_dataset', self.data_set):
+        if self.request.user.has_perm('core.change_dataset', self.data_set):
             return ToolDefinition.objects.all()
 
         elif self.request.user.has_perm('core.read_dataset', self.data_set):
@@ -93,17 +96,39 @@ class ToolsViewSet(ToolManagerViewSetBase):
     http_method_names = ['get', 'post']
 
     def list(self, request, *args, **kwargs):
-        return super(ToolsViewSet, self).list(
-            request,
-            data_set_uuid_lookup_name="data_set_uuid"
-        )
+        self.data_set_uuid = request.query_params.get('data_set_uuid')
+        if self.data_set_uuid:
+            return super(ToolsViewSet, self).list(
+                request,
+                data_set_uuid_lookup_name="data_set_uuid"
+            )
+        return super(ToolManagerViewSetBase, self).list(request)
 
     def get_queryset(self):
         """
         This view returns a list of all the Tools that the currently user has
         at least read_meta permissions on.
         """
-        if self.request.user.has_perm('core.read_meta_dataset', self.data_set):
+        # returns user's owned tools
+        if not self.data_set_uuid:
+            vis_tools = [v for v in VisualizationTool.objects.all()
+                         if v.get_owner() == self.request.user]
+
+            workflow_tools = [w for w in WorkflowTool.objects.all()
+                              if w.get_owner() == self.request.user]
+
+            tool_type = self.request.query_params.get("tool_type")
+            if tool_type == ToolDefinition.VISUALIZATION.lower():
+                return vis_tools
+            elif tool_type == ToolDefinition.WORKFLOW.lower():
+                return workflow_tools
+            else:
+                user_tools = vis_tools
+                user_tools.extend(workflow_tools)
+                return user_tools
+
+        elif self.request.user.has_perm('core.read_meta_dataset',
+                                        self.data_set):
             tool_type = self.request.query_params.get("tool_type")
 
             if not tool_type:
@@ -115,6 +140,7 @@ class ToolsViewSet(ToolManagerViewSetBase):
             }
             # get_queryset should return an iterable
             return tool_types_to_tools.get(tool_type.lower()) or []
+
         return Response("User is not authorized to view visualizations.",
                         status=status.HTTP_401_UNAUTHORIZED)
 
@@ -134,7 +160,9 @@ class ToolsViewSet(ToolManagerViewSetBase):
                 with transaction.atomic():
                     tool = create_tool(tool_launch_configuration, request.user)
                     logger.debug("Successfully created Tool: %s", tool.name)
-                    return tool.launch()
+                    tool.launch()
+                    serializer = ToolSerializer(tool)
+                    return JsonResponse(serializer.data)
             except Exception as e:
                 logger.error(e)
                 return HttpResponseBadRequest(e)
@@ -145,30 +173,36 @@ class ToolsViewSet(ToolManagerViewSetBase):
         if not tool_uuid:
             return HttpResponseBadRequest("Relaunching a Tool requires a Tool "
                                           "UUID")
-        try:
-            tool = VisualizationTool.objects.get(uuid=tool_uuid)
-        except (VisualizationTool.DoesNotExist,
-                VisualizationTool.MultipleObjectsReturned) as e:
-            return HttpResponseBadRequest(
-                "Couldn't retrieve VisualizationTool with UUID: {}, {}"
-                .format(tool_uuid, e)
+        visualization_tool = get_object_or_404(VisualizationTool,
+                                               uuid=tool_uuid)
+
+        if not user_has_access_to_tool(request.user, visualization_tool):
+            return render_vis_tool_user_not_allowed_template(
+                request,
+                visualization_tool.name,
+                "User: {} does not have permission to view {}: {}".format(
+                    request.user.username,
+                    visualization_tool.name,
+                    visualization_tool.uuid
+                )
             )
 
-        if not user_has_access_to_tool(request.user, tool):
-            return HttpResponseForbidden(
-                 "User does not have permission to view Tool: {}".format(
-                     tool_uuid
-                 )
-            )
-
-        if tool.is_running():
+        if visualization_tool.is_running():
             return HttpResponseBadRequest("Can't relaunch a Tool that is "
                                           "currently running")
         try:
-            return tool.launch()
+            visualization_tool.launch()
+            serializer = ToolSerializer(visualization_tool)
+            return JsonResponse(serializer.data)
         except Exception as e:
             logger.error(e)
             return HttpResponseBadRequest(e)
+
+    @detail_route(methods=['get'])
+    def container_input_data(self, request, *args, **kwargs):
+        tool_uuid = kwargs.get("uuid")
+        tool = get_object_or_404(VisualizationTool, uuid=tool_uuid)
+        return JsonResponse(tool.get_container_input_dict())
 
 
 class AutoRelaunchProxy(Proxy, object):
@@ -180,7 +214,6 @@ class AutoRelaunchProxy(Proxy, object):
     """
     def __init__(self):
         super(AutoRelaunchProxy, self).__init__(
-            settings.DJANGO_DOCKER_ENGINE_DATA_DIR,
             please_wait_title='Please wait...',
             please_wait_body_html='''
                 <style>
@@ -212,8 +245,12 @@ class AutoRelaunchProxy(Proxy, object):
             container_name=container_name
         )
         if not user_has_access_to_tool(request.user, visualization_tool):
-            return HttpResponseForbidden(
-                "User does not have permission to view Tool: {}".format(
+            return render_vis_tool_user_not_allowed_template(
+                request,
+                visualization_tool.name,
+                "User: {} does not have permission to view {}: {}".format(
+                    request.user.username,
+                    visualization_tool.name,
                     visualization_tool.uuid
                 )
             )
@@ -221,8 +258,24 @@ class AutoRelaunchProxy(Proxy, object):
         if not visualization_tool.is_running():
             visualization_tool.launch()
 
-        return super(AutoRelaunchProxy, self)._proxy_view(
-            request,
-            container_name,
-            url
-        )
+        try:
+            return super(AutoRelaunchProxy, self)._proxy_view(
+                request, container_name, url
+            )
+        except urllib2.URLError as e:
+            logger.info('Normal transient error: %s', e)
+            view = self._please_wait_view_factory().as_view()
+            return view(request)
+
+
+def render_vis_tool_user_not_allowed_template(
+    request, visualization_tool_name, message,
+    template="tool_manager/vis-tool-user-not-allowed.html"
+):
+    return render(
+        request, template,
+        {
+            "message": message,
+            "visualization_tool_name": visualization_tool_name
+        }
+    )

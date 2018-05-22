@@ -102,51 +102,52 @@ CollaborationCtrl.prototype.revokeInvitation = function (invite) {
 
 
 // Opening modals:
-
 CollaborationCtrl.prototype.openAddGroup = function () {
-  var addGroupsDialogUrl = this.$window.getStaticUrl(
-    'partials/collaboration/partials/collaboration-addgroups-dialog.html'
-  );
   this.$uibModal.open({
-    templateUrl: addGroupsDialogUrl,
-    controller: 'AddGroupCtrl as modal'
+    component: 'rpGroupAddModal'
   });
 };
 
 CollaborationCtrl.prototype.openGroupEditor = function (group) {
-  var groupsDialogUrl = this.$window.getStaticUrl(
-    'partials/collaboration/partials/collaboration-groups-dialog.html'
-  );
   this.$uibModal.open({
-    templateUrl: groupsDialogUrl,
-    controller: 'GroupEditorCtrl as modal',
+    component: 'rpGroupEditModal',
     resolve: {
-      group: function () {
-        return group;
+      config: function () {
+        return {
+          group: group
+        };
       }
     }
   });
 };
 
-CollaborationCtrl.prototype.openMemberEditor = function (member, totalMembers) {
+CollaborationCtrl.prototype.openMemberEditor = function (member, totalMembers, group) {
   this.activeService.setActiveMember(member);
   this.activeService.setTotalMembers(totalMembers);
-  var membersDialogUrl = this.$window.getStaticUrl(
-    'partials/collaboration/partials/collaboration-members-dialog.html'
-  );
   this.$uibModal.open({
-    templateUrl: membersDialogUrl,
-    controller: 'MemberEditorCtrl as modal'
+    component: 'rpGroupMemberEditModal',
+    resolve: {
+      config: function () {
+        return {
+          activeMember: member,
+          activeGroup: group,
+          totalMember: totalMembers
+        };
+      }
+    }
   });
 };
 
-CollaborationCtrl.prototype.openEmailInvite = function () {
-  var addMembersDialogUrl = this.$window.getStaticUrl(
-    'partials/collaboration/partials/collaboration-addmembers-dialog.html'
-  );
+CollaborationCtrl.prototype.openEmailInvite = function (group) {
   this.$uibModal.open({
-    templateUrl: addMembersDialogUrl,
-    controller: 'EmailInviteCtrl as modal'
+    component: 'rpGroupMemberAddModal',
+    resolve: {
+      config: function () {
+        return {
+          group: group
+        };
+      }
+    }
   });
 };
 
