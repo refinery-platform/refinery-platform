@@ -22,10 +22,10 @@ class DataSetSerializer(serializers.ModelSerializer):
             )]
     )
     description = serializers.CharField(max_length=5000)
-    is_owner = serializers.SerializerMethodField('check_is_owner')
-    public = serializers.SerializerMethodField('check_is_public')
+    is_owner = serializers.SerializerMethodField('get_is_owner')
+    public = serializers.SerializerMethodField('get_is_public')
 
-    def check_is_owner(self, data_set):
+    def get_is_owner(self, data_set):
         owner = data_set.get_owner()
         try:
             user_request = self.context.get('request').user
@@ -34,7 +34,7 @@ class DataSetSerializer(serializers.ModelSerializer):
             return False
         return user_request == owner
 
-    def check_is_public(self, data_set):
+    def get_is_public(self, data_set):
         is_public = data_set.is_public()
         return is_public
 
