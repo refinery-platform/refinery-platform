@@ -1588,6 +1588,21 @@ class DataSetTests(TestCase):
             self.tabular_dataset.save()
             invalidate_cached_props_mock.assert_called()
 
+    def test_is_pristine_on_pristine_dataset(self):
+        self.assertTrue(self.isa_tab_dataset.is_pristine())
+
+    def test_is_pristine_if_dataset_has_analyses(self):
+        analyses, dataset = make_analyses_with_single_dataset(1, self.user)
+        self.assertFalse(dataset.is_pristine())
+
+    def test_is_pristine_if_dataset_has_visualizations(self):
+        tool = create_tool_with_necessary_models("VISUALIZATION")
+        self.assertFalse(tool.dataset.is_pristine())
+
+    def test_is_pristine_if_dataset_version_has_changed(self):
+        dataset = create_dataset_with_necessary_models(latest_version=2)
+        self.assertFalse(dataset.is_pristine())
+
 
 class APIV2TestCase(APITestCase):
     def setUp(self, **kwargs):
