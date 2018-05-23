@@ -614,10 +614,8 @@ class DataSet(SharableResource):
                 data_set=self
             ).latest('date')
         try:
-            return InvestigationLink.objects.get(
-                data_set=self,
-                version=version
-            )
+            return InvestigationLink.objects.get(data_set=self,
+                                                 version=version)
         except (InvestigationLink.DoesNotExist,
                 InvestigationLink.MultipleObjectsReturned) as exc:
             logger.error("Couldn't properly fetch InvestigationLink: %s", exc)
