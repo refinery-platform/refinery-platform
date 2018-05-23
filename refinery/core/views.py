@@ -699,6 +699,7 @@ class NodeViewSet(viewsets.ModelViewSet):
 class DataSetsViewSet(APIView):
     """API endpoint that allows for DataSets to be deleted"""
     http_method_names = ['get', 'delete', 'patch']
+    lookup_field = 'uuid'
 
     def is_filtered_data_set(self, data_set, filter):
         """
