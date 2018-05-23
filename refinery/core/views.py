@@ -707,7 +707,7 @@ class DataSetsViewSet(APIView):
         :param filter: obj with param info
         :return: boolean
         """
-        user = self.request.get('user')
+        user = self.request.user
         check_own = filter.get('is_owner')
         owner = data_set.get_owner()
         check_public = filter.get('is_public')

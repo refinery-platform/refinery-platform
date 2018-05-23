@@ -5,6 +5,7 @@ from urlparse import urljoin
 
 
 from django.contrib.auth.models import User
+from django.utils.functional import SimpleLazyObject
 
 import mock
 import mockcache as memcache
@@ -375,14 +376,16 @@ class DataSetApiV2Tests(APIV2TestCase):
     def test_is_filtered_data_set_returns_true_for_is_owner(self):
         filter = {'is_owner': True}
         view_set = DataSetsViewSet()
-        view_set.request = {'user': self.user}
+        view_set.request = self.factory.get(self.url_root)
+        view_set.request.user = SimpleLazyObject(lambda: self.user)
         is_filtered = view_set.is_filtered_data_set(self.dataset, filter)
         self.assertTrue(is_filtered)
 
     def test_is_filtered_data_set_returns_false_for_is_owner(self):
         filter = {'is_owner': True}
         view_set = DataSetsViewSet()
-        view_set.request = {'user': None}
+        view_set.request = self.factory.get(self.url_root)
+        view_set.request.user = SimpleLazyObject(lambda: None)
         is_filtered = view_set.is_filtered_data_set(self.dataset, filter)
         self.assertFalse(is_filtered)
 
@@ -390,14 +393,16 @@ class DataSetApiV2Tests(APIV2TestCase):
         filter = {'is_public': True}
         self.dataset.share(ExtendedGroup.objects.public_group())
         view_set = DataSetsViewSet()
-        view_set.request = {'user': self.user}
+        view_set.request = self.factory.get(self.url_root)
+        view_set.request.user = SimpleLazyObject(lambda: self.user)
         is_filtered = view_set.is_filtered_data_set(self.dataset, filter)
         self.assertTrue(is_filtered)
 
     def test_is_filtered_data_set_returns_false_for_public(self):
         filter = {'is_public': True}
         view_set = DataSetsViewSet()
-        view_set.request = {'user': self.user}
+        view_set.request = self.factory.get(self.url_root)
+        view_set.request.user = SimpleLazyObject(lambda: self.user)
         is_filtered = view_set.is_filtered_data_set(self.dataset, filter)
         self.assertFalse(is_filtered)
 
@@ -406,7 +411,8 @@ class DataSetApiV2Tests(APIV2TestCase):
         filter = {'group': group}
         self.dataset.share(group)
         view_set = DataSetsViewSet()
-        view_set.request = {'user': self.user}
+        view_set.request = self.factory.get(self.url_root)
+        view_set.request.user = SimpleLazyObject(lambda: self.user)
         is_filtered = view_set.is_filtered_data_set(self.dataset, filter)
         self.assertTrue(is_filtered)
 
@@ -414,7 +420,8 @@ class DataSetApiV2Tests(APIV2TestCase):
         group = ExtendedGroup.objects.create(name="Test Group", is_public=True)
         filter = {'group': group}
         view_set = DataSetsViewSet()
-        view_set.request = {'user': self.user}
+        view_set.request = self.factory.get(self.url_root)
+        view_set.request.user = SimpleLazyObject(lambda: self.user)
         is_filtered = view_set.is_filtered_data_set(self.dataset, filter)
         self.assertFalse(is_filtered)
 
@@ -424,7 +431,8 @@ class DataSetApiV2Tests(APIV2TestCase):
         filter = {'group': group, 'is_owner': True, 'is_public': True}
         self.dataset.share(group)
         view_set = DataSetsViewSet()
-        view_set.request = {'user': self.user}
+        view_set.request = self.factory.get(self.url_root)
+        view_set.request.user = SimpleLazyObject(lambda: self.user)
         is_filtered = view_set.is_filtered_data_set(self.dataset, filter)
         self.assertTrue(is_filtered)
 
@@ -432,7 +440,8 @@ class DataSetApiV2Tests(APIV2TestCase):
         group = ExtendedGroup.objects.create(name="Test Group", is_public=True)
         filter = {'group': group, 'is_owner': True, 'is_public': True}
         view_set = DataSetsViewSet()
-        view_set.request = {'user': self.user}
+        view_set.request = self.factory.get(self.url_root)
+        view_set.request.user = SimpleLazyObject(lambda: self.user)
         is_filtered = view_set.is_filtered_data_set(self.dataset, filter)
         self.assertFalse(is_filtered)
 
@@ -440,14 +449,16 @@ class DataSetApiV2Tests(APIV2TestCase):
         self.dataset.share(ExtendedGroup.objects.public_group())
         filter = {'is_owner': True, 'is_public': True}
         view_set = DataSetsViewSet()
-        view_set.request = {'user': self.user}
+        view_set.request = self.factory.get(self.url_root)
+        view_set.request.user = SimpleLazyObject(lambda: self.user)
         is_filtered = view_set.is_filtered_data_set(self.dataset, filter)
         self.assertTrue(is_filtered)
 
     def test_is_filtered_data_set_returns_false_for_owned_public(self):
         filter = {'is_owner': True, 'is_public': True}
         view_set = DataSetsViewSet()
-        view_set.request = {'user': self.user}
+        view_set.request = self.factory.get(self.url_root)
+        view_set.request.user = SimpleLazyObject(lambda: None)
         is_filtered = view_set.is_filtered_data_set(self.dataset, filter)
         self.assertFalse(is_filtered)
 
@@ -457,7 +468,8 @@ class DataSetApiV2Tests(APIV2TestCase):
         filter = {'group': group, 'is_owner': True}
         self.dataset.share(group)
         view_set = DataSetsViewSet()
-        view_set.request = {'user': self.user}
+        view_set.request = self.factory.get(self.url_root)
+        view_set.request.user = SimpleLazyObject(lambda: self.user)
         is_filtered = view_set.is_filtered_data_set(self.dataset, filter)
         self.assertTrue(is_filtered)
 
@@ -465,7 +477,8 @@ class DataSetApiV2Tests(APIV2TestCase):
         group = ExtendedGroup.objects.create(name="Test Group", is_public=True)
         filter = {'group': group, 'is_owner': True}
         view_set = DataSetsViewSet()
-        view_set.request = {'user': None}
+        view_set.request = self.factory.get(self.url_root)
+        view_set.request.user = SimpleLazyObject(lambda: self.user)
         is_filtered = view_set.is_filtered_data_set(self.dataset, filter)
         self.assertFalse(is_filtered)
 
@@ -475,7 +488,8 @@ class DataSetApiV2Tests(APIV2TestCase):
         filter = {'group': group, 'is_public': True}
         self.dataset.share(group)
         view_set = DataSetsViewSet()
-        view_set.request = {'user': self.user}
+        view_set.request = self.factory.get(self.url_root)
+        view_set.request.user = SimpleLazyObject(lambda: self.user)
         is_filtered = view_set.is_filtered_data_set(self.dataset, filter)
         self.assertTrue(is_filtered)
 
@@ -483,7 +497,8 @@ class DataSetApiV2Tests(APIV2TestCase):
         group = ExtendedGroup.objects.create(name="Test Group", is_public=True)
         filter = {'group': group, 'is_public': True}
         view_set = DataSetsViewSet()
-        view_set.request = {'user': self.user}
+        view_set.request = self.factory.get(self.url_root)
+        view_set.request.user = SimpleLazyObject(lambda: self.user)
         is_filtered = view_set.is_filtered_data_set(self.dataset, filter)
         self.assertFalse(is_filtered)
 
