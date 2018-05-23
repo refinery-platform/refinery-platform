@@ -751,14 +751,14 @@ class DataSetsViewSet(APIView):
         except Exception:
             filters['group'] = None
 
-        query_data_sets = get_resources_for_user(
+        user_data_sets = get_resources_for_user(
             request.user, 'dataset'
         ).order_by('-modification_date')
         data_sets = []
 
         if filters.get('is_owner') or filters.get('is_public') or \
                 filters.get('group'):
-            for data_set in query_data_sets:
+            for data_set in user_data_sets:
                 if not data_set.is_valid():
                     logger.warning(
                         "DataSet with UUID: {} is invalid, and most likely is "
@@ -767,7 +767,7 @@ class DataSetsViewSet(APIView):
                 if self.is_filtered_data_set(data_set, filters):
                     data_sets.append(data_set)
         else:
-            data_sets = query_data_sets
+            data_sets = user_data_sets
 
         serializer = DataSetSerializer(data_sets, many=True,
                                        context={'request': request})
