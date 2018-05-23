@@ -700,33 +700,40 @@ class DataSetsViewSet(APIView):
     """API endpoint that allows for DataSets to be deleted"""
     http_method_names = ['get', 'delete', 'patch']
 
-    def _is_filtered_data_set(self, data_set, filter):
-        """Helper method which checks if a data set belongs in
-        the filtered set"""
-        group_id = filter.get('group')
-        owned = filter.get('is_owner')
-        public = filter.get('is_public')
-        user = self.request.user
+    def is_filtered_data_set(self, data_set, filter):
+        """
+        Helper method which states whether data set is filtered
+        :param data_set: data set obj
+        :param filter: obj with param info
+        :return: boolean
+        """
+        user = self.request.get('user')
+        check_own = filter.get('is_owner')
+        owner = data_set.get_owner()
+        check_public = filter.get('is_public')
+        is_public = data_set.is_public()
+        group = filter.get('group')
+        group_perms = None
+        if group:
+            group_perms = get_perms(group, data_set)
 
-        if not (owned or public or group_id):
-            return False
-        elif owned and public and group_id:
-            if data_set.get_owner() == user and data_set.is_public() and\
-                    get_perms(group_id, data_set):
+        if check_own and check_public and group:
+            if owner == user and is_public and group_perms:
                 return True
-        elif owned and data_set.get_owner() == user:
-            if filter.is_public and data_set.is_public():
+        elif check_own and check_public:
+            if owner == user and is_public:
                 return True
-            if group_id and get_perms(group_id, data_set):
+        elif check_own and group:
+            if owner == user and group_perms:
                 return True
-        elif public and data_set.is_public():
-            if group_id and get_perms(group_id, data_set):
+        elif check_public and group:
+            if is_public and group_perms:
                 return True
-        elif owned and data_set.get_owner() == user:
+        elif check_own and owner == user:
             return True
-        elif public and data_set.is_public():
+        elif check_public and is_public:
             return True
-        elif group_id and get_perms(group_id, data_set):
+        elif group and group_perms:
             return True
         return False
 
@@ -748,17 +755,19 @@ class DataSetsViewSet(APIView):
         ).order_by('-modification_date')
         data_sets = []
 
-        for data_set in query_data_sets:
-            if not data_set.is_valid():
-                logger.warning(
-                    "DataSet with UUID: {} is invalid, and most likely is "
-                    "still being created".format(data_set.uuid)
-                )
-            if self._is_filtered_data_set(data_set, filters):
-                data_sets.append(data_set)
-
-        if not data_sets:
+        if filters.get('is_owner') or filters.get('is_public') or \
+                filters.get('group'):
+            for data_set in query_data_sets:
+                if not data_set.is_valid():
+                    logger.warning(
+                        "DataSet with UUID: {} is invalid, and most likely is "
+                        "still being created".format(data_set.uuid)
+                    )
+                if self.is_filtered_data_set(data_set, filters):
+                    data_sets.append(data_set)
+        else:
             data_sets = query_data_sets
+
         serializer = DataSetSerializer(data_sets, many=True,
                                        context={'request': request})
         return Response(serializer.data)

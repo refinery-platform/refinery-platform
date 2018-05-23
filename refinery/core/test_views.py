@@ -6,6 +6,7 @@ from urlparse import urljoin
 
 from django.contrib.auth.models import User
 
+import mock
 import mockcache as memcache
 from rest_framework.test import (
     APIClient, APIRequestFactory, APITestCase, force_authenticate
@@ -18,7 +19,6 @@ from factory_boy.utils import create_dataset_with_necessary_models
 
 from .models import (Analysis, DataSet, ExtendedGroup, Project,
                      Workflow, WorkflowEngine)
-
 from .views import AnalysesViewSet, DataSetsViewSet, WorkflowViewSet
 
 cache = memcache.Client(["127.0.0.1:11211"])
@@ -92,6 +92,45 @@ class DataSetApiV2Tests(APIV2TestCase):
         self.assertEqual(
             self.options_response.data['detail'], 'Method "OPTIONS" not '
                                                   'allowed.')
+
+    def test_get_data_set_with_auth(self):
+        self.get_request.user = self.user
+        get_response = self.view(self.get_request)
+        self.assertEqual(len(get_response.data), 2)
+
+    def test_get_data_set_with_anon_user(self):
+        self.assertEqual(len(self.get_response.data), 0)
+
+    @mock.patch('core.views.DataSetsViewSet.is_filtered_data_set')
+    def test_get_data_set_not_call_helper_method(self, mock_is_filtered):
+        self.get_request.user = self.user
+        self.view(self.get_request)
+        self.assertFalse(mock_is_filtered.called)
+
+    @mock.patch('core.views.DataSetsViewSet.is_filtered_data_set')
+    def test_get_data_set_calls_helper_with_owner(self, mock_is_filtered):
+        params = {'is_owner': True}
+        get_request = self.factory.get(self.url_root, params)
+        get_request.user = self.user
+        self.view(get_request)
+        self.assertTrue(mock_is_filtered.called)
+
+    @mock.patch('core.views.DataSetsViewSet.is_filtered_data_set')
+    def test_get_data_set_calls_helper_with_public(self, mock_is_filtered):
+        params = {'public': True}
+        get_request = self.factory.get(self.url_root, params)
+        get_request.user = self.user
+        self.view(get_request)
+        self.assertTrue(mock_is_filtered.called)
+
+    @mock.patch('core.views.DataSetsViewSet.is_filtered_data_set')
+    def test_get_data_set_calls_helper_with_group(self, mock_is_filtered):
+        group = ExtendedGroup.objects.create(name="Test Group", is_public=True)
+        params = {'group': group}
+        get_request = self.factory.get(self.url_root, params)
+        get_request.user = self.user
+        self.view(get_request)
+        self.assertTrue(mock_is_filtered.called)
 
     def test_dataset_delete_successful(self):
 
@@ -332,6 +371,121 @@ class DataSetApiV2Tests(APIV2TestCase):
         patch_response = self.view(patch_request, self.dataset.uuid)
         self.assertEqual(patch_response.status_code, 202)
         self.assertEqual(patch_response.data.get('title'), new_title)
+
+    def test_is_filtered_data_set_returns_true_for_is_owner(self):
+        filter = {'is_owner': True}
+        view_set = DataSetsViewSet()
+        view_set.request = {'user': self.user}
+        is_filtered = view_set.is_filtered_data_set(self.dataset, filter)
+        self.assertTrue(is_filtered)
+
+    def test_is_filtered_data_set_returns_false_for_is_owner(self):
+        filter = {'is_owner': True}
+        view_set = DataSetsViewSet()
+        view_set.request = {'user': None}
+        is_filtered = view_set.is_filtered_data_set(self.dataset, filter)
+        self.assertFalse(is_filtered)
+
+    def test_is_filtered_data_set_returns_true_for_public(self):
+        filter = {'is_public': True}
+        self.dataset.share(ExtendedGroup.objects.public_group())
+        view_set = DataSetsViewSet()
+        view_set.request = {'user': self.user}
+        is_filtered = view_set.is_filtered_data_set(self.dataset, filter)
+        self.assertTrue(is_filtered)
+
+    def test_is_filtered_data_set_returns_false_for_public(self):
+        filter = {'is_public': True}
+        view_set = DataSetsViewSet()
+        view_set.request = {'user': self.user}
+        is_filtered = view_set.is_filtered_data_set(self.dataset, filter)
+        self.assertFalse(is_filtered)
+
+    def test_is_filtered_data_set_returns_true_for_group(self):
+        group = ExtendedGroup.objects.create(name="Test Group", is_public=True)
+        filter = {'group': group}
+        self.dataset.share(group)
+        view_set = DataSetsViewSet()
+        view_set.request = {'user': self.user}
+        is_filtered = view_set.is_filtered_data_set(self.dataset, filter)
+        self.assertTrue(is_filtered)
+
+    def test_is_filtered_data_set_returns_false_for_group(self):
+        group = ExtendedGroup.objects.create(name="Test Group", is_public=True)
+        filter = {'group': group}
+        view_set = DataSetsViewSet()
+        view_set.request = {'user': self.user}
+        is_filtered = view_set.is_filtered_data_set(self.dataset, filter)
+        self.assertFalse(is_filtered)
+
+    def test_is_filtered_data_set_returns_true_for_owned_public_group(self):
+        self.dataset.share(ExtendedGroup.objects.public_group())
+        group = ExtendedGroup.objects.create(name="Test Group", is_public=True)
+        filter = {'group': group, 'is_owner': True, 'is_public': True}
+        self.dataset.share(group)
+        view_set = DataSetsViewSet()
+        view_set.request = {'user': self.user}
+        is_filtered = view_set.is_filtered_data_set(self.dataset, filter)
+        self.assertTrue(is_filtered)
+
+    def test_is_filtered_data_set_returns_false_for_owned_public_group(self):
+        group = ExtendedGroup.objects.create(name="Test Group", is_public=True)
+        filter = {'group': group, 'is_owner': True, 'is_public': True}
+        view_set = DataSetsViewSet()
+        view_set.request = {'user': self.user}
+        is_filtered = view_set.is_filtered_data_set(self.dataset, filter)
+        self.assertFalse(is_filtered)
+
+    def test_is_filtered_data_set_returns_true_for_owned_public(self):
+        self.dataset.share(ExtendedGroup.objects.public_group())
+        filter = {'is_owner': True, 'is_public': True}
+        view_set = DataSetsViewSet()
+        view_set.request = {'user': self.user}
+        is_filtered = view_set.is_filtered_data_set(self.dataset, filter)
+        self.assertTrue(is_filtered)
+
+    def test_is_filtered_data_set_returns_false_for_owned_public(self):
+        filter = {'is_owner': True, 'is_public': True}
+        view_set = DataSetsViewSet()
+        view_set.request = {'user': self.user}
+        is_filtered = view_set.is_filtered_data_set(self.dataset, filter)
+        self.assertFalse(is_filtered)
+
+    def test_is_filtered_data_set_returns_true_for_owned_group(self):
+        self.dataset.share(ExtendedGroup.objects.public_group())
+        group = ExtendedGroup.objects.create(name="Test Group", is_public=True)
+        filter = {'group': group, 'is_owner': True}
+        self.dataset.share(group)
+        view_set = DataSetsViewSet()
+        view_set.request = {'user': self.user}
+        is_filtered = view_set.is_filtered_data_set(self.dataset, filter)
+        self.assertTrue(is_filtered)
+
+    def test_is_filtered_data_set_returns_false_for_owned_group(self):
+        group = ExtendedGroup.objects.create(name="Test Group", is_public=True)
+        filter = {'group': group, 'is_owner': True}
+        view_set = DataSetsViewSet()
+        view_set.request = {'user': None}
+        is_filtered = view_set.is_filtered_data_set(self.dataset, filter)
+        self.assertFalse(is_filtered)
+
+    def test_is_filtered_data_set_returns_true_for_public_group(self):
+        self.dataset.share(ExtendedGroup.objects.public_group())
+        group = ExtendedGroup.objects.create(name="Test Group", is_public=True)
+        filter = {'group': group, 'is_public': True}
+        self.dataset.share(group)
+        view_set = DataSetsViewSet()
+        view_set.request = {'user': self.user}
+        is_filtered = view_set.is_filtered_data_set(self.dataset, filter)
+        self.assertTrue(is_filtered)
+
+    def test_is_filtered_data_set_returns_false_for_public_group(self):
+        group = ExtendedGroup.objects.create(name="Test Group", is_public=True)
+        filter = {'group': group, 'is_public': True}
+        view_set = DataSetsViewSet()
+        view_set.request = {'user': self.user}
+        is_filtered = view_set.is_filtered_data_set(self.dataset, filter)
+        self.assertFalse(is_filtered)
 
 
 class AnalysisApiV2Tests(APIV2TestCase):
