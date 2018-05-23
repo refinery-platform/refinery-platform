@@ -788,10 +788,6 @@ def _dataset_delete(sender, instance, *args, **kwargs):
     #overriding-model-methods
     """
     with transaction.atomic():
-        # delete FileStoreItem and datafile corresponding to the
-        # metadata file used to generate the DataSet
-        instance.get_investigation().get_file_store_item().delete()
-
         for investigation_link in instance.get_investigation_links():
             investigation_link.get_node_collection().delete()
 
