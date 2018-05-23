@@ -126,7 +126,7 @@ class DataSetApiV2Tests(APIV2TestCase):
     @mock.patch('core.views.DataSetsViewSet.is_filtered_data_set')
     def test_get_data_set_calls_helper_with_group(self, mock_is_filtered):
         group = ExtendedGroup.objects.create(name="Test Group", is_public=True)
-        params = {'group': group}
+        params = {'group': group.id}
         get_request = self.factory.get(self.url_root, params)
         get_request.user = self.user
         self.view(get_request)
