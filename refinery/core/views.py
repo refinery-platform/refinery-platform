@@ -777,8 +777,7 @@ class DataSetsViewSet(APIView):
             return DataSet.objects.get(uuid=uuid)
         except DataSet.DoesNotExist as e:
             logger.error(e)
-            return\
-                Response(uuid, status=status.HTTP_404_NOT_FOUND)
+            return Response(uuid, status=status.HTTP_404_NOT_FOUND)
         except DataSet.MultipleObjectsReturned as e:
             logger.error(e)
             return Response(
