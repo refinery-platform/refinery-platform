@@ -35,8 +35,7 @@ class DataSetSerializer(serializers.ModelSerializer):
         return user_request == owner
 
     def get_is_public(self, data_set):
-        is_public = data_set.is_public()
-        return is_public
+        return data_set.is_public()
 
     class Meta:
         model = DataSet
