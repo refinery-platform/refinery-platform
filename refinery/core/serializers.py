@@ -22,8 +22,8 @@ class DataSetSerializer(serializers.ModelSerializer):
             )]
     )
     description = serializers.CharField(max_length=5000)
-    is_owner = serializers.SerializerMethodField('get_is_owner')
-    public = serializers.SerializerMethodField('get_is_public')
+    is_owner = serializers.SerializerMethodField()
+    public = serializers.SerializerMethodField()
 
     def get_is_owner(self, data_set):
         owner = data_set.get_owner()
@@ -34,8 +34,9 @@ class DataSetSerializer(serializers.ModelSerializer):
             return False
         return user_request == owner
 
-    def get_is_public(self, data_set):
-        return data_set.is_public()
+    def get_public(self, data_set):
+        is_public = data_set.is_public()
+        return is_public
 
     class Meta:
         model = DataSet
