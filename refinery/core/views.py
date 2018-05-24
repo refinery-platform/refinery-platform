@@ -338,8 +338,8 @@ def data_set(request, data_set_uuid, analysis_uuid=None):
             "has_change_dataset_permission": 'change_dataset' in get_perms(
                 request.user, data_set),
             "workflows": workflows,
-            "isatab_archive": investigation.isa_archive,
-            "pre_isatab_archive": investigation.pre_isa_archive,
+            "isatab_archive": investigation.get_file_store_item(),
+            "pre_isatab_archive": investigation.get_file_store_item(),
         },
         context_instance=RequestContext(request))
 

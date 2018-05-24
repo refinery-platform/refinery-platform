@@ -521,40 +521,26 @@ class DataSetResource(SharableResourceAPIInterface, ModelResource):
             except:
                 pass
 
-        metadata_file_store_item = \
-            bundle.obj.get_metadata_as_file_store_item()
+        investigation_link = bundle.obj.get_latest_investigation_link()
+        investigation = investigation_link.investigation
+        metadata_file_store_item = investigation.get_file_store_item()
 
-        if bundle.obj.is_isatab_based:
+        if investigation.is_isa_tab_based():
             bundle.data["isa_archive"] = metadata_file_store_item.uuid
             bundle.data["isa_archive_url"] = \
                 metadata_file_store_item.get_datafile_url()
         else:
             bundle.data["pre_isa_archive"] = metadata_file_store_item.uuid
 
-        analyses = []
-        for analysis in bundle.obj.get_analyses():
-            analysis_dict = {}
-            analysis_dict["uuid"] = analysis.uuid
-            analysis_dict["name"] = analysis.name
-            analysis_dict["status"] = analysis.status
-            analysis_dict['is_owner'] = False
-            owner = analysis.get_owner()
-            if owner:
-                try:
-                    analysis_dict['owner'] = owner.profile.uuid
-                    user = bundle.request.user
-                    if (hasattr(user, 'profile') and
-                       user.profile.uuid == analysis_dict['owner']):
-                        analysis_dict['is_owner'] = True
-                except:
-                    analysis_dict['owner'] = None
-
-            else:
-                analysis_dict['owner'] = None
-
-            analyses.append(analysis_dict)
-
-        investigation_link = bundle.obj.get_latest_investigation_link()
+        analyses = [
+            dict(
+                uuid=analysis.uuid,
+                name=analysis.name,
+                status=analysis.status,
+                owner=analysis.get_owner().profile.uuid
+            )
+            for analysis in bundle.obj.get_analyses()
+        ]
 
         bundle.data["analyses"] = analyses
         bundle.data["creation_date"] = bundle.obj.creation_date
@@ -703,7 +689,7 @@ class DataSetResource(SharableResourceAPIInterface, ModelResource):
                          kwargs["uuid"], e)
             raise NotFound(e)
 
-        if not dataset.is_valid():
+        if not dataset.is_valid:
             raise NotFound(
                 "DataSet with UUID: {} is invalid, and most likely is "
                 "still being created".format(dataset.uuid)
@@ -715,7 +701,7 @@ class DataSetResource(SharableResourceAPIInterface, ModelResource):
 
         valid_datasets = []
         for dataset in datasets:
-            if dataset.is_valid():
+            if dataset.is_valid:
                 valid_datasets.append(dataset)
             else:
                 logger.error(
