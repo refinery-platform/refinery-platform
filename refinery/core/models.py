@@ -615,15 +615,15 @@ class DataSet(SharableResource):
                     data_set=self
                 ).latest('date')
             except InvestigationLink.DoesNotExist as exc:
-                logger.error("Couldn't properly fetch "
-                             "latest InvestigationLink: %s", exc)
+                logger.error("Failed to retrieve latest InvestigationLink: %s",
+                             exc)
         try:
             return InvestigationLink.objects.get(data_set=self,
                                                  version=version)
         except (InvestigationLink.DoesNotExist,
                 InvestigationLink.MultipleObjectsReturned) as exc:
-            logger.error("Couldn't properly fetch InvestigationLink with "
-                         "version %s: %s", version, exc)
+            logger.error("Failed to retrieve InvestigationLink with version "
+                         "%s: %s", version, exc)
 
     def get_latest_study(self, version=None):
         try:
