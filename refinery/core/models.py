@@ -784,17 +784,13 @@ class DataSet(SharableResource):
             tool_manager.models.VisualizationTool.objects.filter(dataset=self)
         )
 
-    def is_pristine(self):
+    def is_clean(self):
         """
         Check whether or not any Analyses or Visualizations have been run on
         a DataSet
         :return: boolean
         """
-        if self.get_analyses() or self.has_visualizations() or \
-                self.get_version() > 1:
-            return False
-        else:
-            return True
+        return not (self.get_analyses() or self.has_visualizations())
 
 
 @receiver(pre_delete, sender=DataSet)
