@@ -11,14 +11,14 @@
     beforeEach(module('refineryDashboard'));
     beforeEach(inject(function (
       $controller,
-      dataSetService,
+      dataSetV2Service,
       $q,
       $rootScope
     ) {
       scope = $rootScope.$new();
-      mockResponseData = { objects: { name: 'Test Data Set' } };
+      mockResponseData = [{ name: 'Test Data Set' }];
 
-      mockService = spyOn(dataSetService, 'query').and.callFake(function () {
+      mockService = spyOn(dataSetV2Service, 'query').and.callFake(function () {
         var deferred = $q.defer();
         deferred.resolve(mockResponseData);
         return { $promise: deferred.promise };
@@ -41,7 +41,7 @@
     it('API related Variables should be initialized', function () {
       expect(ctrl.dataSetsError).toEqual(false);
       expect(ctrl.loadingDataSets).toEqual(true);
-      expect(ctrl.params).toEqual({ limit: 200, min_response: 'True' });
+      expect(ctrl.params).toEqual({ });
       expect(ctrl.searchQueryDataSets).toEqual('');
     });
 
@@ -118,7 +118,7 @@
       it('getDataSets updates dataSets variable', function () {
         ctrl.getDataSets();
         scope.$apply();
-        expect(ctrl.dataSets.name).toEqual(mockResponseData.objects.name);
+        expect(ctrl.dataSets[0].name).toEqual(mockResponseData[0].name);
       });
     });
 

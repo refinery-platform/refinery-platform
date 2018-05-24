@@ -204,6 +204,20 @@ class Investigation(NodeCollection):
         return assay_count
 
 
+@receiver(pre_delete, sender=Investigation)
+def _investigation_delete(sender, instance, **kwargs):
+    """
+    Removes an Investigation's associated FileStoreItem upon deletion being
+    triggered.
+    Having these extra checks is favored within a signal so that this logic
+    is picked up on bulk deletes as well.
+
+    See: https://docs.djangoproject.com/en/1.8/topics/db/models/
+    #overriding-model-methods
+    """
+    instance.get_file_store_item().delete()
+
+
 class Ontology(models.Model):
     """Ontology Source Reference (ISA-Tab Spec 4.1.1)"""
     investigation = models.ForeignKey(Investigation)
