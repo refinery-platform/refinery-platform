@@ -316,6 +316,15 @@ class OwnableResource(BaseResource):
         if self._meta.verbose_name == 'dataset':
             assign_perm("read_meta_%s" % self._meta.verbose_name, user, self)
 
+    def transfer_ownership(self, user, new_owner):
+        remove_perm("add_%s" % self._meta.verbose_name, user, self)
+        remove_perm("read_%s" % self._meta.verbose_name, user, self)
+        remove_perm("delete_%s" % self._meta.verbose_name, user, self)
+        remove_perm("change_%s" % self._meta.verbose_name, user, self)
+        if self._meta.verbose_name == 'dataset':
+            remove_perm("read_meta_%s" % self._meta.verbose_name, user, self)
+        self.set_owner(new_owner)
+
     def get_owner(self):
         # ownership is determined by "add" permission
         user_permissions = get_users_with_perms(

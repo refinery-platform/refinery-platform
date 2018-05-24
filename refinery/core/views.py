@@ -820,6 +820,17 @@ class DataSetsViewSet(APIView):
 
         # check edit permission for user
         if self.is_user_authorized(request.user, data_set):
+            current_owner = data_set.get_owner()
+            if request.data.get('transfer_data_set') and current_owner == \
+                    request.user:
+                new_owner_email = request.data.get('new_owner_email')
+                new_owner = User.objects.get(email=new_owner_email)
+                data_set.transfer_ownership(current_owner, new_owner)
+                serializer = DataSetSerializer(data_set,
+                                               context={'request': request})
+                return Response(serializer.data,
+                                status=status.HTTP_202_ACCEPTED)
+
             serializer = DataSetSerializer(
                 data_set, data=request.data, partial=True
             )
