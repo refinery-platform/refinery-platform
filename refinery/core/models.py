@@ -779,6 +779,19 @@ class DataSet(SharableResource):
         except AttributeError:
             pass  # property hasn't been called and cached yet
 
+    def has_visualizations(self):
+        return bool(
+            tool_manager.models.VisualizationTool.objects.filter(dataset=self)
+        )
+
+    def is_clean(self):
+        """
+        Check whether or not any Analyses or Visualizations have been run on
+        a DataSet
+        :return: boolean
+        """
+        return not (self.get_analyses() or self.has_visualizations())
+
 
 @receiver(pre_delete, sender=DataSet)
 def _dataset_delete(sender, instance, *args, **kwargs):

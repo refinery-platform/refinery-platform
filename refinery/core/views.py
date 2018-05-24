@@ -758,7 +758,7 @@ class DataSetsViewSet(APIView):
         if filters.get('is_owner') or filters.get('is_public') or \
                 filters.get('group'):
             for data_set in user_data_sets:
-                if not data_set.is_valid():
+                if not data_set.is_valid:
                     logger.warning(
                         "DataSet with UUID: {} is invalid, and most likely is "
                         "still being created".format(data_set.uuid)
