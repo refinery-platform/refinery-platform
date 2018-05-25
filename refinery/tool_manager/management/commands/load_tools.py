@@ -22,8 +22,7 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument(
             '--visualizations',
-            # TODO: In Python 3, nargs='+' is supported
-            action='append',
+            nargs='+',
             dest='visualizations',
             help='Generate ToolDefinitions for visualizations, '
                  'either by filename, or from the registry'
