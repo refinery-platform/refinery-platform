@@ -820,17 +820,35 @@ class DataSetsViewSet(APIView):
 
         # check edit permission for user
         if self.is_user_authorized(request.user, data_set):
+            # update (transfer) data set's owner
             current_owner = data_set.get_owner()
             if request.data.get('transfer_data_set') and current_owner == \
                     request.user:
                 new_owner_email = request.data.get('new_owner_email')
-                new_owner = User.objects.get(email=new_owner_email)
+                # ToDo: error for non found
+
+                try:
+                    new_owner = User.objects.get(email=new_owner_email)
+                except Exception:
+                    return Response(uuid, status=status.HTTP_404_NOT_FOUND)
                 data_set.transfer_ownership(current_owner, new_owner)
+
+                new_owner_group_ids = new_owner.groups.all().\
+                    values_list('id', flat=True)
+                all_groups_with_ds_access = data_set.get_groups(
+                    readmetaonly=True
+                )
+                for group in all_groups_with_ds_access:
+                    if group.get('id') not in new_owner_group_ids:
+                        data_set.unshare(group)
+
+                # ToDo: list of groups data set is shared with
                 serializer = DataSetSerializer(data_set,
                                                context={'request': request})
                 return Response(serializer.data,
                                 status=status.HTTP_202_ACCEPTED)
 
+            # update data set's fields
             serializer = DataSetSerializer(
                 data_set, data=request.data, partial=True
             )
