@@ -9,6 +9,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib.sites.models import RequestSite, Site, get_current_site
 from django.core.exceptions import ImproperlyConfigured
+from django.core.mail import EmailMessage
 from django.core.urlresolvers import reverse
 from django.http import (HttpResponse, HttpResponseBadRequest,
                          HttpResponseForbidden, HttpResponseNotFound,
@@ -20,7 +21,7 @@ from django.views.decorators.gzip import gzip_page
 
 import boto3
 import botocore
-from guardian.shortcuts import get_perms
+from guardian.shortcuts import get_groups_with_perms, get_perms
 from guardian.utils import get_anonymous_user
 from registration import signals
 from registration.views import RegistrationView
@@ -831,20 +832,64 @@ class DataSetsViewSet(APIView):
                     new_owner = User.objects.get(email=new_owner_email)
                 except Exception:
                     return Response(uuid, status=status.HTTP_404_NOT_FOUND)
-                data_set.transfer_ownership(current_owner, new_owner)
 
                 new_owner_group_ids = new_owner.groups.all().\
                     values_list('id', flat=True)
-                all_groups_with_ds_access = data_set.get_groups(
-                    readmetaonly=True
-                )
-                for group in all_groups_with_ds_access:
-                    if group.get('id') not in new_owner_group_ids:
-                        data_set.unshare(group)
+                # all_groups_with_ds_access = data_set.get_groups(
+                #     readmetaonly=True
+                # )
 
-                # ToDo: list of groups data set is shared with
+                all_groups_with_ds_access = get_groups_with_perms(
+                    data_set, attach_perms=True
+                )
+                # notify removal of data set
+                groups_with_access = []
+                groups_without_access = []
+                current_site = get_current_site(request)
+                for group in all_groups_with_ds_access:
+                    if group.id not in new_owner_group_ids:
+                        data_set.unshare(group)
+                        groups_without_access.append({
+                            'name': group.extendedgroup.name,
+                            'profile': 'http://{}/groups/{}'.format(
+                                current_site,
+                                group.extendedgroup.uuid
+                            )
+                        })
+                    if group.id in new_owner_group_ids:
+                        groups_with_access.append({
+                            'name': group.extendedgroup.name,
+                            'profile': 'http://{}/groups/{}'.format(
+                                current_site,
+                                group.extendedgroup.uuid
+                            )
+                        })
+
+                data_set.transfer_ownership(current_owner, new_owner)
                 serializer = DataSetSerializer(data_set,
                                                context={'request': request})
+                # email new owner
+                subject = "Refinery: Data Set ownership tranfer"
+                temp_loader = loader.get_template(
+                    'core/owner_transfer_notification.txt')
+                context_dict = {
+                    'site': current_site,
+                    'old_owner_name': current_owner.username,
+                    'old_owner_uuid': current_owner.profile.uuid,
+                    'new_owner_name': new_owner.username,
+                    'new_owner_uuid': new_owner.profile.uuid,
+                    'data_set_name': data_set.name,
+                    'data_set_uuid': data_set.uuid,
+                    'groups_with_access': groups_with_access,
+                    'groups_without_access': groups_without_access
+                }
+                email = EmailMessage(
+                    subject,
+                    temp_loader.render(context_dict),
+                    to=[new_owner_email]
+                )
+                email.send()
+
                 return Response(serializer.data,
                                 status=status.HTTP_202_ACCEPTED)
 

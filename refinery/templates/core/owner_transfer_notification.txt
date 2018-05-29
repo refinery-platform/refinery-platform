@@ -1,0 +1,22 @@
+{{ old_owner_name }} has transfered ownership of data set {{ data_set_name }}
+ to {{ new_owner_name }}.
+
+Previous owner profile: http://{{ site }}/users/{{ old_owner_uuid }}/
+
+New owner profile: http://{{ site }}/users/{{ new_owner_uuid }}/
+
+View data_set: http://{{ site }}/data_sets/{{ data_set_uuid }}/
+
+Due to the ownership transfer, group access may have changed.
+
+These groups continue to have access to the data set:
+
+ {% for group_obj in groups_with_access %}
+ Name: {{ group_obj.name }}, Profile: {{ group_obj.profile }}
+ {% endfor %}
+
+These groups have lost access to the data set:
+ {% for group_obj in groups_without_access %}
+ {{ group_obj.name }}
+ {{ group_obj.profile }}
+ {% endfor %}
