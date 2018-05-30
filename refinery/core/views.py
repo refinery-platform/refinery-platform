@@ -869,14 +869,22 @@ class DataSetsViewSet(APIView):
                 serializer = DataSetSerializer(data_set,
                                                context={'request': request})
                 # email new owner
-                subject = "Refinery: Data Set ownership tranfer"
+                subject = "{}: Data Set ownership tranfer".format(
+                   settings.EMAIL_SUBJECT_PREFIX
+                )
+
+                old_owner_name = current_owner.get_full_name() or  \
+                    current_owner.username
+                new_owner_name = new_owner.get_full_name() or  \
+                    new_owner.username
+
                 temp_loader = loader.get_template(
                     'core/owner_transfer_notification.txt')
                 context_dict = {
                     'site': current_site,
-                    'old_owner_name': current_owner.username,
+                    'old_owner_name': old_owner_name,
                     'old_owner_uuid': current_owner.profile.uuid,
-                    'new_owner_name': new_owner.username,
+                    'new_owner_name': new_owner_name,
                     'new_owner_uuid': new_owner.profile.uuid,
                     'data_set_name': data_set.name,
                     'data_set_uuid': data_set.uuid,
@@ -886,7 +894,7 @@ class DataSetsViewSet(APIView):
                 email = EmailMessage(
                     subject,
                     temp_loader.render(context_dict),
-                    to=[new_owner_email]
+                    to=[new_owner_email, current_owner.email]
                 )
                 email.send()
 
