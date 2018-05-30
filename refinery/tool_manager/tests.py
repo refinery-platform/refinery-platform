@@ -3061,6 +3061,30 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
         )
         self.assertEqual(get_response.status_code, 404)
 
+    def test_tool_creation_with_same_display_name_yields_helpful_error(self):
+        display_name = "Test Tool Name"
+        self.create_tool(ToolDefinition.WORKFLOW, display_name=display_name)
+        self.post_data = {
+            "dataset_uuid": self.dataset.uuid,
+            "tool_definition_uuid": self.td.uuid,
+            Tool.FILE_RELATIONSHIPS: str(["www.example.com/cool_file.txt"]),
+            "display_name": display_name
+        }
+        self.post_request = self.factory.post(
+            self.tools_url_root,
+            data=self.post_data,
+            format="json"
+        )
+        force_authenticate(self.post_request, self.user)
+        self.post_response = self.tools_view(self.post_request)
+        self.assertEqual(self.post_response.status_code, 400)
+        self.assertEqual(
+            "A Tool already exists with a display_name of: '{}'".format(
+                display_name
+            ),
+            self.post_response.content
+        )
+
 
 class WorkflowToolLaunchTests(ToolManagerTestBase):
     tasks_mock = "analysis_manager.tasks"
