@@ -339,8 +339,8 @@ def data_set(request, data_set_uuid, analysis_uuid=None):
             "has_change_dataset_permission": 'change_dataset' in get_perms(
                 request.user, data_set),
             "workflows": workflows,
-            "isatab_archive": investigation.isa_archive,
-            "pre_isatab_archive": investigation.pre_isa_archive,
+            "isatab_archive": investigation.get_file_store_item(),
+            "pre_isatab_archive": investigation.get_file_store_item(),
         },
         context_instance=RequestContext(request))
 
@@ -759,7 +759,7 @@ class DataSetsViewSet(APIView):
         if filters.get('is_owner') or filters.get('is_public') or \
                 filters.get('group'):
             for data_set in user_data_sets:
-                if not data_set.is_valid():
+                if not data_set.is_valid:
                     logger.warning(
                         "DataSet with UUID: {} is invalid, and most likely is "
                         "still being created".format(data_set.uuid)

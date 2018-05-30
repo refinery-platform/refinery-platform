@@ -25,7 +25,6 @@ from django.contrib.messages import get_messages, info
 from django.contrib.sites.models import Site
 from django.core.mail import send_mail
 from django.db import models, transaction
-from django.db.models import Max
 from django.db.models.fields import IntegerField
 from django.db.models.signals import post_save, pre_delete
 from django.dispatch import receiver
@@ -35,6 +34,7 @@ from django.template.loader import render_to_string
 from django.utils import timezone
 
 from bioblend import galaxy
+from django.utils.functional import cached_property
 from django_auth_ldap.backend import LDAPBackend
 from django_extensions.db.fields import UUIDField
 from guardian.models import UserObjectPermission
@@ -602,15 +602,10 @@ class DataSet(SharableResource):
         return version + 1
 
     def get_version(self):
-        try:
-            version = (
-                InvestigationLink.objects.filter(
-                    data_set=self
-                ).aggregate(Max("version"))["version__max"]
-            )
-            return version
-        except:
-            return None
+        latest_investigation_link = self.get_latest_investigation_link()
+        if latest_investigation_link is not None:
+            return latest_investigation_link.version
+        return None
 
     def get_latest_investigation_link(self, version=None):
         """
@@ -618,20 +613,26 @@ class DataSet(SharableResource):
         instance. If a version is provided, try to fetch the latest
         InvestigationLink for said version.
         :param version: integer
-        :returns: an InvestigationLink Instance or None if Exception occurs
+        :returns: an InvestigationLink Instance or `None`
         """
-        try:
-            if version is None:
-                version = InvestigationLink.objects.filter(
-                        data_set=self
-                    ).aggregate(Max("version"))["version__max"]
-
-            return InvestigationLink.objects.get(
-                data_set=self,
-                version=version
-            )
-        except:
+        if not self.is_valid:
             return None
+
+        if version is None:
+            try:
+                return InvestigationLink.objects.filter(
+                    data_set=self
+                ).latest('date')
+            except InvestigationLink.DoesNotExist as exc:
+                logger.error("Failed to retrieve latest InvestigationLink: %s",
+                             exc)
+        try:
+            return InvestigationLink.objects.get(data_set=self,
+                                                 version=version)
+        except (InvestigationLink.DoesNotExist,
+                InvestigationLink.MultipleObjectsReturned) as exc:
+            logger.error("Failed to retrieve InvestigationLink with version "
+                         "%s: %s", version, exc)
 
     def get_latest_study(self, version=None):
         try:
@@ -687,15 +688,6 @@ class DataSet(SharableResource):
         file_items = FileStoreItem.objects.filter(uuid__in=file_uuids)
         return sum(
             [item.get_file_size(report_symlinks=True) for item in file_items]
-        )
-
-    def get_metadata_as_file_store_item(self):
-        """Returns the FileStoreItem pointing to the isa/pre_isa archive that
-        was used to create the DataSet"""
-        investigation = self.get_investigation()
-        return (
-            investigation.isa_archive if self.is_isatab_based
-            else investigation.pre_isa_archive
         )
 
     def share(self, group, readonly=True, readmetaonly=False):
@@ -765,19 +757,17 @@ class DataSet(SharableResource):
                        FileStoreItem.MultipleObjectsReturned) as e:
                     logger.error("Error while fetching FileStoreItem: %s", e)
 
-        file_store_items.append(self.get_metadata_as_file_store_item())
+        file_store_items.append(investigation.get_file_store_item())
         return file_store_items
 
+    @cached_property
     def is_valid(self):
         """
         Helper method to determine if a DataSet is valid.
-        A DataSet is not valid if we can't fetch its latest InvestigationLink
+        A DataSet is not valid if we can't fetch an InvestigationLink for it
         :return: boolean
         """
-        if self.get_latest_investigation_link():
-            return True
-        else:
-            return False
+        return bool(InvestigationLink.objects.filter(data_set=self))
 
     def get_nodes(self):
         return Node.objects.filter(
@@ -789,12 +779,27 @@ class DataSet(SharableResource):
         return self.get_nodes().values_list('uuid', flat=True)
 
     @property
-    def is_isatab_based(self):
-        return bool(self.get_investigation().isa_archive)
-
-    @property
     def shared(self):  # is_shared breaks a tastypie interal
         return len(self.get_groups()) > 0
+
+    def _invalidate_cached_properties(self):
+        try:
+            delattr(self, "is_valid")
+        except AttributeError:
+            pass  # property hasn't been called and cached yet
+
+    def has_visualizations(self):
+        return bool(
+            tool_manager.models.VisualizationTool.objects.filter(dataset=self)
+        )
+
+    def is_clean(self):
+        """
+        Check whether or not any Analyses or Visualizations have been run on
+        a DataSet
+        :return: boolean
+        """
+        return not (self.get_analyses() or self.has_visualizations())
 
 
 @receiver(pre_delete, sender=DataSet)
@@ -808,10 +813,6 @@ def _dataset_delete(sender, instance, *args, **kwargs):
     #overriding-model-methods
     """
     with transaction.atomic():
-        # delete FileStoreItem and datafile corresponding to the
-        # metadata file used to generate the DataSet
-        instance.get_metadata_as_file_store_item().delete()
-
         for investigation_link in instance.get_investigation_links():
             investigation_link.get_node_collection().delete()
 
@@ -826,6 +827,11 @@ def _dataset_saved(sender, instance, *args, **kwargs):
     async_update_annotation_sets_neo4j()
     update_data_set_index(instance)
     invalidate_cached_object(instance)
+
+    # Invalidate cached properties on save
+    # See: https://docs.djangoproject.com/en/1.8/ref/utils/
+    # #django.utils.functional.cached_property
+    instance._invalidate_cached_properties()
 
 
 class InvestigationLink(models.Model):

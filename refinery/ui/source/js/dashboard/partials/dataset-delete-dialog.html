@@ -63,18 +63,16 @@
             <i
               class="fa fa-user"
               title="You ran this analysis"
-              ng-if="analysis.is_owner"
+              ng-if="analysis.owner == modal.userProfileUuid"
               refinery-tooltip
               refinery-tooltip-placement="top">
-
             </i>
             <i
               class="fa fa-users icon-shared-in"
               title="Some collaborator ran this analysis"
-              ng-if="!analysis.is_owner"
+              ng-if="analysis.owner != modal.userProfileUuid"
               refinery-tooltip
               refinery-tooltip-placement="top">
-
             </i>
             <span>
               <a
@@ -97,7 +95,7 @@
             <i
               class="fa fa-user"
               title="You ran this analysis"
-              ng-if="analysis.is_owner"
+              ng-if="analysis.owner == modal.userProfileUuid"
               refinery-tooltip
               refinery-tooltip-placement="top">
 
@@ -105,7 +103,7 @@
             <i
               class="fa fa-users icon-shared-in"
               title="Some collaborator ran this analysis"
-              ng-if="!analysis.is_owner"
+              ng-if="!analysis.owner == modal.userProfileUuid"
               refinery-tooltip
               refinery-tooltip-placement="top">
 

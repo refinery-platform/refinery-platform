@@ -155,15 +155,15 @@ class Investigation(NodeCollection):
 
     """easily retrieves the proper NodeCollection fields"""
 
-    @property
-    def isa_archive(self):
-        return self._get_file_store_item(self.isarchive_file)
+    def is_isa_tab_based(self):
+        return bool(self.isarchive_file)
 
-    @property
-    def pre_isa_archive(self):
-        return self._get_file_store_item(self.pre_isarchive_file)
-
-    def _get_file_store_item(self, file_store_item_uuid):
+    def get_file_store_item(self):
+        """Get an Investigation's corresponding FileStoreItem instance"""
+        file_store_item_uuid = (
+            self.isarchive_file if self.is_isa_tab_based()
+            else self.pre_isarchive_file
+        )
         try:
             return FileStoreItem.objects.get(uuid=file_store_item_uuid)
         except (FileStoreItem.DoesNotExist,
@@ -202,6 +202,20 @@ class Investigation(NodeCollection):
             assay_count += study.assay_set.count()
 
         return assay_count
+
+
+@receiver(pre_delete, sender=Investigation)
+def _investigation_delete(sender, instance, **kwargs):
+    """
+    Removes an Investigation's associated FileStoreItem upon deletion being
+    triggered.
+    Having these extra checks is favored within a signal so that this logic
+    is picked up on bulk deletes as well.
+
+    See: https://docs.djangoproject.com/en/1.8/topics/db/models/
+    #overriding-model-methods
+    """
+    instance.get_file_store_item().delete()
 
 
 class Ontology(models.Model):
