@@ -1559,15 +1559,14 @@ class UtilitiesTests(TestCase):
                 context.exception.message
             )
 
-    def test_get_file_url_from_node_uuid_node_with_no_file(self):
+    def test_get_file_url_from_node_uuid_with_no_file(self):
+        self.assertIsNone(get_file_url_from_node_uuid(self.node_b.uuid))
+
+    def test_get_file_url_from_node_uuid_with_no_file_url_required(self):
         with self.assertRaises(RuntimeError) as context:
-            get_file_url_from_node_uuid(self.node_b.uuid)
-            self.assertEqual(
-                "Node with uuid: {} has no associated file url".format(
-                    self.node_b.uuid
-                ),
-                context.exception.message
-            )
+            get_file_url_from_node_uuid(self.node_b.uuid,
+                                        require_valid_url=True)
+        self.assertIn("has no associated file url", context.exception.message)
 
     def test__create_solr_params_from_node_uuids(self):
         fake_node_uuids = [str(uuid.uuid4()), str(uuid.uuid4())]
@@ -2391,13 +2390,11 @@ class InvestigationTests(TestCase):
         self.tabular_dataset = create_dataset_with_necessary_models()
         self.tabular_investigation = self.tabular_dataset.get_investigation()
 
-    def test_isa_archive(self):
-        self.assertIsNotNone(self.isa_tab_investigation.isa_archive)
-        self.assertIsNone(self.tabular_investigation.isa_archive)
+    def test_get_isa_archive_file_store_item(self):
+        self.assertIsNotNone(self.isa_tab_investigation.get_file_store_item())
 
-    def test_pre_isa_archive(self):
-        self.assertIsNone(self.isa_tab_investigation.pre_isa_archive)
-        self.assertIsNotNone(self.tabular_investigation.pre_isa_archive)
+    def test_get_pre_isa_archive_file_store_item(self):
+        self.assertIsNotNone(self.tabular_investigation.get_file_store_item())
 
     def test_get_identifier(self):
         self.assertEqual(self.isa_tab_investigation.get_identifier(),

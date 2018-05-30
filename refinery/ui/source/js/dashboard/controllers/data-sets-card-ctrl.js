@@ -18,7 +18,7 @@
     '$uibModal',
     '$window',
     'DataSetSearchApi',
-    'dataSetService'
+    'dataSetV2Service'
   ];
 
   function DataSetsCardCtrl (
@@ -27,7 +27,7 @@
     $uibModal,
     $window,
     DataSetSearchApi,
-    dataSetService
+    dataSetV2Service
   ) {
     var vm = this;
     vm.dataSets = [];
@@ -35,13 +35,11 @@
     vm.filterDataSets = filterDataSets;
     vm.getDataSets = getDataSets;
     vm.groupFilter = { selectedName: 'All' };
+    vm.isFiltersEmpty = isFiltersEmpty;
     vm.loadingDataSets = true;
     vm.openDataSetDeleteModal = openDataSetDeleteModal;
     vm.openPermissionEditor = openPermissionEditor;
-    vm.params = {
-      limit: 200,
-      min_response: 'True'
-    };
+    vm.params = {};
     vm.resetDataSetSearch = resetDataSetSearch;
     vm.searchDataSets = searchDataSets;
     vm.searchQueryDataSets = '';
@@ -85,9 +83,11 @@
      * @memberOf refineryDashboard.DataSetsCardCtrl
     **/
     function getDataSets () {
-      dataSetService.query(vm.params).$promise.then(function (response) {
+      vm.loadingDataSets = true;
+      dataSetV2Service.query(vm.params).$promise.then(function (response) {
+        vm.searchQueryDataSets = '';
         vm.loadingDataSets = false;
-        vm.dataSets = response.objects;
+        vm.dataSets = response;
         vm.dataSetsError = false;
       }, function (error) {
         vm.loadingDataSets = false;
@@ -176,18 +176,30 @@
      * @param {string} query - user entered query for data set search
     **/
     function searchDataSets (query) {
+      // reset perm filter until we can search & check perms
+      vm.groupFilter = { selectedName: 'All' };
       if (query && query.length > 1) {
+        vm.loadingDataSets = true;
         var apiRequest = new DataSetSearchApi(query);
-        apiRequest().then(function (response) {
+        apiRequest(200).then(function (response) {
           vm.dataSets = response.data;
+          vm.loadingDataSets = false;
           vm.dataSetsError = false;
         }, function (error) {
           $log.error(error);
           vm.dataSetsError = true;
+          vm.loadingDataSets = false;
         });
-      } else {
-        vm.getDataSets();
       }
+    }
+
+    // helper function to deal with search vs perms filtering
+    function isFiltersEmpty () {
+      if (vm.groupFilter.selectedName !== 'All' ||
+        vm.groupFilter.public || vm.groupFilter.owned) {
+        return false;
+      }
+      return true;
     }
    /*
    * ---------------------------------------------------------

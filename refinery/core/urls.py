@@ -76,6 +76,7 @@ core_router = DefaultRouter()
 core_router.register(r'nodes', NodeViewSet)
 core_router.register(r'workflows', WorkflowViewSet)
 core_router.urls.extend([
+    url(r'^data_sets/$', DataSetsViewSet.as_view()),
     url(r'^data_sets/(?P<uuid>' + UUID_RE + r')/$',
         DataSetsViewSet.as_view()),
     url(r'^analyses/(?P<uuid>' + UUID_RE + r')/$',

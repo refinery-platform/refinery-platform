@@ -17,8 +17,8 @@
       </h4>
     </div>
      <ul class="list-unstyled scrollable-list main-content-list">
-       <li ng-repeat="tool in $ctrl.tools" class="event-item">
-          {{ tool.modification_date | date:"MM/dd/yyyy" }}
+       <li ng-repeat="tool in $ctrl.tools | orderBy: '-creation_date'" class="event-item">
+          {{ tool.creation_date | date:"MM/dd/yyyy" }}
          <span class="p-l-1-2" ng-if="tool.tool_definition.tool_type === 'WORKFLOW'">
             <a ng-href="/data_sets/{{ tool.dataset.uuid }}/#/analyses">
              <i class="fa fa-cogs"></i>

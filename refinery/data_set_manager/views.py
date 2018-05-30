@@ -126,8 +126,9 @@ class TakeOwnershipOfPublicDatasetView(View):
         public_group = ExtendedGroup.objects.public_group()
         if request.user.has_perm('core.read_dataset', data_set) \
                 or 'read_dataset' in get_perms(public_group, data_set):
+            investigation = data_set.get_investigation()
             full_isa_tab_url = get_absolute_url(
-                data_set.get_metadata_as_file_store_item().get_datafile_url()
+                investigation.get_file_store_item().get_datafile_url()
             )
             response = HttpResponseRedirect(
                 get_absolute_url(reverse('process_isa_tab', args=['ajax']))
@@ -220,9 +221,11 @@ class ProcessISATabView(View):
                 PARSER_UNEXPECTED_ERROR_MESSAGE +
                 e.message
             )
-
-        # TODO: exception handling
-        os.unlink(temp_file_path)
+        try:
+            os.unlink(temp_file_path)
+        except OSError as exc:
+            logger.error("Couldn't unlink ISATab's `temp_file_path`: %s %s",
+                         temp_file_path, exc)
         if dataset_uuid:
             if 'ajax' in kwargs and kwargs['ajax']:
                 return JsonResponse({'new_data_set_uuid': dataset_uuid})

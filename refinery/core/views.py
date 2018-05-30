@@ -41,7 +41,8 @@ from .models import (Analysis, CustomRegistrationProfile, DataSet,
                      ExtendedGroup, Invitation, Ontology, Project,
                      UserProfile, Workflow, WorkflowEngine)
 from .serializers import DataSetSerializer, NodeSerializer, WorkflowSerializer
-from .utils import api_error_response, get_data_sets_annotations
+from .utils import (api_error_response, get_data_sets_annotations,
+                    get_resources_for_user)
 
 logger = logging.getLogger(__name__)
 
@@ -337,8 +338,8 @@ def data_set(request, data_set_uuid, analysis_uuid=None):
             "has_change_dataset_permission": 'change_dataset' in get_perms(
                 request.user, data_set),
             "workflows": workflows,
-            "isatab_archive": investigation.isa_archive,
-            "pre_isatab_archive": investigation.pre_isa_archive,
+            "isatab_archive": investigation.get_file_store_item(),
+            "pre_isatab_archive": investigation.get_file_store_item(),
         },
         context_instance=RequestContext(request))
 
@@ -697,7 +698,79 @@ class NodeViewSet(viewsets.ModelViewSet):
 
 class DataSetsViewSet(APIView):
     """API endpoint that allows for DataSets to be deleted"""
-    http_method_names = ['delete', 'patch']
+    http_method_names = ['get', 'delete', 'patch']
+
+    def is_filtered_data_set(self, data_set, filter):
+        """
+        Helper method which states whether data set is filtered
+        :param data_set: data set obj
+        :param filter: obj with param info
+        :return: boolean
+        """
+        user = self.request.user
+        check_own = filter.get('is_owner')
+        owner = data_set.get_owner()
+        check_public = filter.get('is_public')
+        is_public = data_set.is_public()
+        group = filter.get('group')
+        group_perms = None
+        if group:
+            group_perms = get_perms(group, data_set)
+
+        if check_own and check_public and group:
+            if owner == user and is_public and group_perms:
+                return True
+        elif check_own and check_public:
+            if owner == user and is_public:
+                return True
+        elif check_own and group:
+            if owner == user and group_perms:
+                return True
+        elif check_public and group:
+            if is_public and group_perms:
+                return True
+        elif check_own and owner == user:
+            return True
+        elif check_public and is_public:
+            return True
+        elif group and group_perms:
+            return True
+        return False
+
+    def get(self, request):
+        params = request.query_params
+        filters = {
+            'is_owner': params.get('is_owner'),
+            'is_public': params.get('public')
+        }
+        try:
+            filters['group'] = ExtendedGroup.objects.get(
+                id=params.get('group')
+            )
+        except Exception:
+            filters['group'] = None
+
+        user_data_sets = get_resources_for_user(
+            request.user, 'dataset'
+        ).order_by('-modification_date')
+        data_sets = []
+
+        if filters.get('is_owner') or filters.get('is_public') or \
+                filters.get('group'):
+            for data_set in user_data_sets:
+                if not data_set.is_valid:
+                    logger.warning(
+                        "DataSet with UUID: {} is invalid, and most likely is "
+                        "still being created".format(data_set.uuid)
+                    )
+                if self.is_filtered_data_set(data_set, filters):
+                    data_sets.append(data_set)
+        else:
+            data_sets = user_data_sets
+
+        serializer = DataSetSerializer(data_sets, many=True,
+                                       context={'request': request})
+        return Response(serializer.data)
 
     def get_object(self, uuid):
         try:
