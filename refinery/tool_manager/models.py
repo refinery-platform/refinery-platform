@@ -298,6 +298,11 @@ class Tool(OwnableResource):
     )
     tool_launch_configuration = models.TextField()
     tool_definition = models.ForeignKey(ToolDefinition)
+    display_name = models.CharField(
+        max_length=250,
+        unique=True,
+        null=True
+    )
 
     class Meta:
         verbose_name = "tool"
