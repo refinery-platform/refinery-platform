@@ -557,12 +557,11 @@ class DataSetApiV2Tests(APIV2TestCase):
         is_filtered = view_set.is_filtered_data_set(self.data_set, filter)
         self.assertFalse(is_filtered)
 
-    @mock.patch('core.views.DataSetsViewSet.update_group_perms')
-    def test_send_tranfer_notification_email_corrent_users(self, mock_update):
+    def test_send_tranfer_notification_email_corrent_users(self):
         new_owner_email = 'new_owner@fake.com'
         new_owner = User.objects.create_user('NewOwner1', new_owner_email,
                                              self.password)
-        groups = {'group_with_access': [], 'gorup_without_access': []}
+        groups = {'group_with_access': [], 'group_without_access': []}
         view_set = DataSetsViewSet()
         view_set.request = self.factory.get(self.url_root)
         view_set.request.user = SimpleLazyObject(lambda: self.user)
@@ -572,12 +571,11 @@ class DataSetApiV2Tests(APIV2TestCase):
                                                          new_owner, groups)
         self.assertEquals(email.to, [new_owner_email, self.user.email])
 
-    @mock.patch('core.views.DataSetsViewSet.update_group_perms')
-    def test_send_tranfer_notification_email_sends_names(self, mock_update):
+    def test_send_tranfer_notification_email_sends_names(self):
         new_owner_email = 'new_owner@fake.com'
         new_owner = User.objects.create_user('NewOwner1', new_owner_email,
                                              self.password)
-        groups = {'group_with_access': [], 'gorup_without_access': []}
+        groups = {'group_with_access': [], 'group_without_access': []}
         view_set = DataSetsViewSet()
         view_set.request = self.factory.get(self.url_root)
         view_set.request.user = SimpleLazyObject(lambda: self.user)
@@ -588,13 +586,12 @@ class DataSetApiV2Tests(APIV2TestCase):
         self.assertIn(self.user.username, email.body)
         self.assertIn(new_owner.username, email.body)
 
-    @mock.patch('core.views.DataSetsViewSet.update_group_perms')
-    def test_send_tranfer_notification_email_sends_profiles(self, mock_update):
+    def test_send_tranfer_notification_email_sends_profiles(self):
         new_owner_email = 'new_owner@fake.com'
         new_owner = User.objects.create_user('NewOwner1',
                                              new_owner_email,
                                              self.password)
-        groups = {'group_with_access': [], 'gorup_without_access': []}
+        groups = {'group_with_access': [], 'group_without_access': []}
         view_set = DataSetsViewSet()
         view_set.request = self.factory.get(self.url_root)
         view_set.request.user = SimpleLazyObject(lambda: self.user)
@@ -614,12 +611,11 @@ class DataSetApiV2Tests(APIV2TestCase):
             ),
             email.body)
 
-    @mock.patch('core.views.DataSetsViewSet.update_group_perms')
-    def test_send_tranfer_notification_email_sends_data_set(self, mock_update):
+    def test_send_tranfer_notification_email_sends_data_set(self):
         new_owner_email = 'new_owner@fake.com'
         new_owner = User.objects.create_user('NewOwner1', new_owner_email,
                                              self.password)
-        groups = {'group_with_access': [], 'gorup_without_access': []}
+        groups = {'group_with_access': [], 'group_without_access': []}
         view_set = DataSetsViewSet()
         view_set.request = self.factory.get(self.url_root)
         view_set.request.user = SimpleLazyObject(lambda: self.user)
@@ -629,6 +625,90 @@ class DataSetApiV2Tests(APIV2TestCase):
                                                          new_owner, groups)
         self.assertIn(self.data_set.name, email.body)
         self.assertIn(self.data_set.uuid, email.body)
+
+    def test_update_group_perms_remove_access(self):
+        new_owner_email = 'new_owner@fake.com'
+        new_owner = User.objects.create_user('NewOwner1', new_owner_email,
+                                             self.password)
+        self.data_set.share(ExtendedGroup.objects.public_group())
+        group_union = ExtendedGroup.objects.create(name="Group Union",
+                                                   is_public=True)
+        group_non_union = ExtendedGroup.objects.create(name="Group Non-Union",
+                                                       is_public=True)
+        self.data_set.share(group_union)
+        group_union.group_ptr.user_set.add(self.user)
+        group_union.group_ptr.user_set.add(new_owner)
+        self.data_set.share(group_non_union)
+        group_non_union.group_ptr.user_set.add(self.user)
+
+        view_set = DataSetsViewSet()
+        view_set.request = self.factory.get(self.url_root)
+        view_set.data_set = SimpleLazyObject(lambda: self.data_set)
+        view_set.current_site = SimpleLazyObject(lambda: 'test_site')
+        groups = view_set.update_group_perms(new_owner)
+
+        self.assertEqual(len(groups.get('groups_without_access')), 1)
+        self.assertEqual(
+            groups.get('groups_without_access')[0].get('name'),
+            group_non_union.extendedgroup.name
+        )
+        self.assertEqual(
+            groups.get('groups_without_access')[0].get('profile'),
+            'http://{}/groups/{}'.format(view_set.current_site,
+                                         group_non_union.extendedgroup.uuid)
+        )
+
+    def test_update_group_perms_retains_access(self):
+        new_owner_email = 'new_owner@fake.com'
+        new_owner = User.objects.create_user('NewOwner1', new_owner_email,
+                                             self.password)
+        self.data_set.share(ExtendedGroup.objects.public_group())
+        group_union = ExtendedGroup.objects.create(name="Group Union",
+                                                   is_public=True)
+        self.data_set.share(group_union)
+        group_union.group_ptr.user_set.add(self.user)
+        group_union.group_ptr.user_set.add(new_owner)
+
+        view_set = DataSetsViewSet()
+        view_set.request = self.factory.get(self.url_root)
+        view_set.data_set = SimpleLazyObject(lambda: self.data_set)
+        view_set.current_site = SimpleLazyObject(lambda: 'test_site')
+        groups = view_set.update_group_perms(new_owner)
+
+        self.assertEqual(len(groups.get('groups_with_access')), 2)
+        self.assertEqual(
+            groups.get('groups_with_access')[0].get('name'),
+            group_union.extendedgroup.name
+        )
+        self.assertEqual(
+            groups.get('groups_with_access')[0].get('profile'),
+            'http://{}/groups/{}'.format(view_set.current_site,
+                                         group_union.extendedgroup.uuid)
+        )
+
+    def test_update_group_perms_retains_public(self):
+        new_owner_email = 'new_owner@fake.com'
+        new_owner = User.objects.create_user('NewOwner1', new_owner_email,
+                                             self.password)
+        group_union_public = ExtendedGroup.objects.public_group()
+        self.data_set.share(group_union_public)
+
+        view_set = DataSetsViewSet()
+        view_set.request = self.factory.get(self.url_root)
+        view_set.data_set = SimpleLazyObject(lambda: self.data_set)
+        view_set.current_site = SimpleLazyObject(lambda: 'test_site')
+        groups = view_set.update_group_perms(new_owner)
+
+        self.assertEqual(len(groups.get('groups_with_access')), 1)
+        self.assertEqual(
+            groups.get('groups_with_access')[0].get('name'),
+            group_union_public.extendedgroup.name
+        )
+        self.assertEqual(
+            groups.get('groups_with_access')[0].get('profile'),
+            'http://{}/groups/{}'.format(view_set.current_site,
+                                         group_union_public.extendedgroup.uuid)
+        )
 
 
 class AnalysisApiV2Tests(APIV2TestCase):

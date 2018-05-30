@@ -913,7 +913,7 @@ class DataSetsViewSet(APIView):
         for group in all_groups_with_ds_access:
             if group.id not in new_owner_group_ids:
                 self.data_set.unshare(group)
-                self.groups_without_access.append({
+                groups_without_access.append({
                     'name': group.extendedgroup.name,
                     'profile': 'http://{}/groups/{}'.format(
                         self.current_site,
@@ -921,7 +921,7 @@ class DataSetsViewSet(APIView):
                     )
                 })
             if group.id in new_owner_group_ids:
-                self.groups_with_access.append({
+                groups_with_access.append({
                     'name': group.extendedgroup.name,
                     'profile': 'http://{}/groups/{}'.format(
                         self.current_site,
