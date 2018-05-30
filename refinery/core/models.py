@@ -287,11 +287,7 @@ class BaseResource(models.Model):
             logger.error("%s with slug: %s already exists",
                          self.__class__.__name__, self.slug)
         else:
-            try:
-                super(BaseResource, self).save(*args, **kwargs)
-            except Exception as e:
-                logger.error("Could not save %s: %s",
-                             self.__class__.__name__, e)
+            super(BaseResource, self).save(*args, **kwargs)
 
     # Overriding delete() method For models that Inherit from BaseResource
     def delete(self, using=None, *args, **kwargs):
