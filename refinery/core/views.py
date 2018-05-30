@@ -817,13 +817,13 @@ class DataSetsViewSet(APIView):
                     return HttpResponseBadRequest(content=dataset_deleted[1])
 
     def patch(self, request, uuid, format=None):
-        data_set = self.get_object(uuid)
+        self.data_set = self.get_object(uuid)
+        self.current_site = get_current_site(request)
 
         # check edit permission for user
-        if self.is_user_authorized(request.user, data_set):
-
+        if self.is_user_authorized(request.user, self.data_set):
             # update data set's owner
-            current_owner = data_set.get_owner()
+            current_owner = self.data_set.get_owner()
             if request.data.get('transfer_data_set') and current_owner == \
                     request.user:
                 new_owner_email = request.data.get('new_owner_email')
@@ -831,18 +831,19 @@ class DataSetsViewSet(APIView):
                     new_owner = User.objects.get(email=new_owner_email)
                 except Exception:
                     return Response(uuid, status=status.HTTP_404_NOT_FOUND)
-                self.send_tranfer_notification_email(current_owner,
-                                                     new_owner, data_set)
-                data_set.transfer_ownership(current_owner, new_owner)
-                serializer = DataSetSerializer(data_set,
-                                               context={'request': request})
 
+                perm_groups = self.update_group_perms(new_owner)
+                self.send_tranfer_notification_email(current_owner,
+                                                     new_owner, perm_groups)
+                self.data_set.transfer_ownership(current_owner, new_owner)
+                serializer = DataSetSerializer(self.data_set,
+                                               context={'request': request})
                 return Response(serializer.data,
                                 status=status.HTTP_202_ACCEPTED)
 
             # update data set's fields
             serializer = DataSetSerializer(
-                data_set, data=request.data, partial=True
+                self.data_set, data=request.data, partial=True
             )
             if serializer.is_valid():
                 serializer.save()
@@ -854,75 +855,82 @@ class DataSetsViewSet(APIView):
             )
         else:
             return Response(
-                data_set, status=status.HTTP_401_UNAUTHORIZED
+                self.data_set, status=status.HTTP_401_UNAUTHORIZED
             )
 
-        def send_tranfer_notification_email(self, old_owner, new_owner,
-                                            data_set):
-            """
-            Helper method which emails the old and new owner of the data set
-            transfer and which groups have access
-            :param old_owner: data set's previous owner obj
-            :param new_owner: data set's new owner obj
-            :param data_set: data set obj
-            """
-            new_owner_group_ids = new_owner.groups.all().\
-                values_list('id', flat=True)
+    def send_tranfer_notification_email(self, old_owner, new_owner,
+                                        perm_groups):
+        """
+        Helper method which emails the old and new owner of the data set
+        transfer and which groups have access
+        :param old_owner: data set's previous owner obj
+        :param new_owner: data set's new owner obj
+        :param perm_groups: obj with two obj of permission groups
+        """
+        subject = "{}: Data Set ownership tranfer".format(
+           settings.EMAIL_SUBJECT_PREFIX
+        )
+        old_owner_name = old_owner.get_full_name() or  \
+            old_owner.username
+        new_owner_name = new_owner.get_full_name() or  \
+            new_owner.username
 
-            all_groups_with_ds_access = get_groups_with_perms(
-                data_set, attach_perms=True
-            )
-            # notify removal of data set
-            groups_with_access = []
-            groups_without_access = []
-            current_site = get_current_site(request)
-            for group in all_groups_with_ds_access:
-                if group.id not in new_owner_group_ids:
-                    data_set.unshare(group)
-                    groups_without_access.append({
-                        'name': group.extendedgroup.name,
-                        'profile': 'http://{}/groups/{}'.format(
-                            current_site,
-                            group.extendedgroup.uuid
-                        )
-                    })
-                if group.id in new_owner_group_ids:
-                    groups_with_access.append({
-                        'name': group.extendedgroup.name,
-                        'profile': 'http://{}/groups/{}'.format(
-                            current_site,
-                            group.extendedgroup.uuid
-                        )
-                    })
+        temp_loader = loader.get_template(
+            'core/owner_transfer_notification.txt')
+        context_dict = {
+            'site': self.current_site,
+            'old_owner_name': old_owner_name,
+            'old_owner_uuid': old_owner.profile.uuid,
+            'new_owner_name': new_owner_name,
+            'new_owner_uuid': new_owner.profile.uuid,
+            'data_set_name': self.data_set.name,
+            'data_set_uuid': self.data_set.uuid,
+            'groups_with_access': perm_groups.get('groups_with_access'),
+            'groups_without_access': perm_groups.get('groups_without_access')
+        }
+        email = EmailMessage(
+            subject,
+            temp_loader.render(context_dict),
+            to=[new_owner.email, old_owner.email]
+        )
+        email.send()
+        return email
 
-            subject = "{}: Data Set ownership tranfer".format(
-               settings.EMAIL_SUBJECT_PREFIX
-            )
+    def update_group_perms(self, new_owner):
+        """
+        Helper method which updates the groups access to the data set based
+        on the new_owner's memberships
+        transfer and which groups have access
+        :param new_owner: data set's new owner obj
+        """
+        new_owner_group_ids = new_owner.groups.all().\
+            values_list('id', flat=True)
+        all_groups_with_ds_access = get_groups_with_perms(
+            self.data_set, attach_perms=True
+        )
+        groups_with_access = []
+        groups_without_access = []
+        for group in all_groups_with_ds_access:
+            if group.id not in new_owner_group_ids:
+                self.data_set.unshare(group)
+                self.groups_without_access.append({
+                    'name': group.extendedgroup.name,
+                    'profile': 'http://{}/groups/{}'.format(
+                        self.current_site,
+                        group.extendedgroup.uuid
+                    )
+                })
+            if group.id in new_owner_group_ids:
+                self.groups_with_access.append({
+                    'name': group.extendedgroup.name,
+                    'profile': 'http://{}/groups/{}'.format(
+                        self.current_site,
+                        group.extendedgroup.uuid
+                    )
+                })
 
-            old_owner_name = old_owner.get_full_name() or  \
-                old_owner.username
-            new_owner_name = new_owner.get_full_name() or  \
-                new_owner.username
-
-            temp_loader = loader.get_template(
-                'core/owner_transfer_notification.txt')
-            context_dict = {
-                'site': current_site,
-                'old_owner_name': old_owner_name,
-                'old_owner_uuid': old_owner.profile.uuid,
-                'new_owner_name': new_owner_name,
-                'new_owner_uuid': new_owner.profile.uuid,
-                'data_set_name': data_set.name,
-                'data_set_uuid': data_set.uuid,
-                'groups_with_access': groups_with_access,
-                'groups_without_access': groups_without_access
-            }
-            email = EmailMessage(
-                subject,
-                temp_loader.render(context_dict),
-                to=[new_owner_email, current_owner.email]
-            )
-            email.send()
+        return {"groups_with_access": groups_with_access,
+                "groups_without_access": groups_without_access}
 
 
 class AnalysesViewSet(APIView):
