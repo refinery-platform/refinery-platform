@@ -833,8 +833,8 @@ class DataSetsViewSet(APIView):
                     return Response(uuid, status=status.HTTP_404_NOT_FOUND)
 
                 perm_groups = self.update_group_perms(new_owner)
-                self.send_tranfer_notification_email(current_owner,
-                                                     new_owner, perm_groups)
+                self.send_transfer_notification_email(current_owner,
+                                                      new_owner, perm_groups)
                 self.data_set.transfer_ownership(current_owner, new_owner)
                 serializer = DataSetSerializer(self.data_set,
                                                context={'request': request})
@@ -858,8 +858,8 @@ class DataSetsViewSet(APIView):
                 self.data_set, status=status.HTTP_401_UNAUTHORIZED
             )
 
-    def send_tranfer_notification_email(self, old_owner, new_owner,
-                                        perm_groups):
+    def send_transfer_notification_email(self, old_owner, new_owner,
+                                         perm_groups):
         """
         Helper method which emails the old and new owner of the data set
         transfer and which groups have access
@@ -867,7 +867,7 @@ class DataSetsViewSet(APIView):
         :param new_owner: data set's new owner obj
         :param perm_groups: obj with two obj of permission groups
         """
-        subject = "{}: Data Set ownership tranfer".format(
+        subject = "{}: Data Set ownership transfer".format(
            settings.EMAIL_SUBJECT_PREFIX
         )
         old_owner_name = old_owner.get_full_name() or  \

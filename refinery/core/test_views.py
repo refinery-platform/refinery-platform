@@ -198,7 +198,7 @@ class DataSetApiV2Tests(APIV2TestCase):
         self.assertEqual(DataSet.objects.all().count(), 1)
 
     @mock.patch('core.views.DataSetsViewSet.update_group_perms')
-    @mock.patch('core.views.DataSetsViewSet.send_tranfer_notification_email')
+    @mock.patch('core.views.DataSetsViewSet.send_transfer_notification_email')
     def test_dataset_patch_success_returns_202(self, mock_update, mock_email):
         new_owner_email = 'new_owner@fake.com'
         User.objects.create_user('NewOwner1', new_owner_email, self.password)
@@ -212,7 +212,7 @@ class DataSetApiV2Tests(APIV2TestCase):
         self.assertEqual(patch_response.status_code, 202)
 
     @mock.patch('core.views.DataSetsViewSet.update_group_perms')
-    @mock.patch('core.views.DataSetsViewSet.send_tranfer_notification_email')
+    @mock.patch('core.views.DataSetsViewSet.send_transfer_notification_email')
     def test_dataset_patch_returns_updated_is_owner(self, mock_update,
                                                     mock_email):
         new_owner_email = 'new_owner@fake.com'
@@ -238,7 +238,7 @@ class DataSetApiV2Tests(APIV2TestCase):
         self.assertEqual(patch_response.status_code, 404)
 
     @mock.patch('core.views.DataSetsViewSet.update_group_perms')
-    @mock.patch('core.views.DataSetsViewSet.send_tranfer_notification_email')
+    @mock.patch('core.views.DataSetsViewSet.send_transfer_notification_email')
     def test_dataset_calls_corrent_mock_methods(self, mock_update, mock_email):
         new_owner_email = 'new_owner@fake.com'
         User.objects.create_user('NewOwner1', new_owner_email, self.password)
@@ -557,7 +557,7 @@ class DataSetApiV2Tests(APIV2TestCase):
         is_filtered = view_set.is_filtered_data_set(self.data_set, filter)
         self.assertFalse(is_filtered)
 
-    def test_send_tranfer_notification_email_corrent_users(self):
+    def test_send_transfer_notification_email_corrent_users(self):
         new_owner_email = 'new_owner@fake.com'
         new_owner = User.objects.create_user('NewOwner1', new_owner_email,
                                              self.password)
@@ -567,11 +567,11 @@ class DataSetApiV2Tests(APIV2TestCase):
         view_set.request.user = SimpleLazyObject(lambda: self.user)
         view_set.data_set = SimpleLazyObject(lambda: self.data_set)
         view_set.current_site = SimpleLazyObject(lambda: 'test_site')
-        email = view_set.send_tranfer_notification_email(self.user,
-                                                         new_owner, groups)
+        email = view_set.send_transfer_notification_email(self.user,
+                                                          new_owner, groups)
         self.assertEquals(email.to, [new_owner_email, self.user.email])
 
-    def test_send_tranfer_notification_email_sends_names(self):
+    def test_send_transfer_notification_email_sends_names(self):
         new_owner_email = 'new_owner@fake.com'
         new_owner = User.objects.create_user('NewOwner1', new_owner_email,
                                              self.password)
@@ -581,12 +581,12 @@ class DataSetApiV2Tests(APIV2TestCase):
         view_set.request.user = SimpleLazyObject(lambda: self.user)
         view_set.data_set = SimpleLazyObject(lambda: self.data_set)
         view_set.current_site = SimpleLazyObject(lambda: 'test_site')
-        email = view_set.send_tranfer_notification_email(self.user,
-                                                         new_owner, groups)
+        email = view_set.send_transfer_notification_email(self.user,
+                                                          new_owner, groups)
         self.assertIn(self.user.username, email.body)
         self.assertIn(new_owner.username, email.body)
 
-    def test_send_tranfer_notification_email_sends_profiles(self):
+    def test_send_transfer_notification_email_sends_profiles(self):
         new_owner_email = 'new_owner@fake.com'
         new_owner = User.objects.create_user('NewOwner1',
                                              new_owner_email,
@@ -597,9 +597,8 @@ class DataSetApiV2Tests(APIV2TestCase):
         view_set.request.user = SimpleLazyObject(lambda: self.user)
         view_set.data_set = SimpleLazyObject(lambda: self.data_set)
         view_set.current_site = SimpleLazyObject(lambda: 'test_site')
-        email = view_set.send_tranfer_notification_email(self.user,
-                                                         new_owner,
-                                                         groups)
+        email = view_set.send_transfer_notification_email(self.user,
+                                                          new_owner, groups)
         self.assertIn(
             'http://{}/users/{}'.format(
                 view_set.current_site, self.user.profile.uuid
@@ -611,7 +610,7 @@ class DataSetApiV2Tests(APIV2TestCase):
             ),
             email.body)
 
-    def test_send_tranfer_notification_email_sends_data_set(self):
+    def test_send_transfer_notification_email_sends_data_set(self):
         new_owner_email = 'new_owner@fake.com'
         new_owner = User.objects.create_user('NewOwner1', new_owner_email,
                                              self.password)
@@ -621,8 +620,8 @@ class DataSetApiV2Tests(APIV2TestCase):
         view_set.request.user = SimpleLazyObject(lambda: self.user)
         view_set.data_set = SimpleLazyObject(lambda: self.data_set)
         view_set.current_site = SimpleLazyObject(lambda: 'test_site')
-        email = view_set.send_tranfer_notification_email(self.user,
-                                                         new_owner, groups)
+        email = view_set.send_transfer_notification_email(self.user,
+                                                          new_owner, groups)
         self.assertIn(self.data_set.name, email.body)
         self.assertIn(self.data_set.uuid, email.body)
 
