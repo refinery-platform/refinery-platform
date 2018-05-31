@@ -67,7 +67,6 @@
         vm.alertType = 'success';
         vm.responseMessage = 'Data set successfully transferred to ' + email;
       } else if (infoType === 'danger') {
-        console.log(error);
         vm.alertType = 'danger';
         if (error.status === 404) {
           vm.responseMessage = email + ' is not associated with any users. ' +
