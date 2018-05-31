@@ -68,7 +68,8 @@
       type="submit"
       class="btn btn-primary"
       ng-click="$ctrl.sendTransferRequest(email)"
-      ng-disabled="!tranferDataSetForm.$valid || $ctrl.isLoading">
+      ng-disabled="!tranferDataSetForm.$valid || $ctrl.isLoading || $ctrl
+      .alertType === 'success'">
       Transfer Ownership
     </button>
   </div>
