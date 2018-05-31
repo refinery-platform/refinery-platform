@@ -3,13 +3,13 @@
  * @namespace DataSetTransferModalCtrl
  * @desc Controller for modal to transfer a data set ownership to another user
  * member to a group modal
- * @memberOf refineryApp
+ * @memberOf refineryDashboard.
  */
 (function () {
   'use strict';
 
   angular
-    .module('refineryApp')
+    .module('refineryDashboard')
     .controller('DataSetTransferModalCtrl', DataSetTransferModalCtrl);
 
   DataSetTransferModalCtrl.$inject = [
@@ -38,7 +38,7 @@
     /**
      * @name cancel
      * @desc  View method to cancel modals, expects modalInstance in scope
-     * @memberOf refineryApp.GroupMemberAddModalCtrl.
+     * @memberOf refineryApp.refineryDashboard.
     **/
     function cancel () {
       vm.modalInstance.dismiss('cancel');
@@ -47,7 +47,7 @@
     /**
      * @name close
      * @desc  View method to cancel modals, expects modalInstance in scope
-     * @memberOf refineryApp.GroupMemberAddModalCtrl.
+     * @memberOf refineryApp.refineryDashboard.
     **/
     function close () {
       vm.modalInstance.close(vm.alertType);
@@ -56,15 +56,22 @@
     /**
      * @name generateAlertMessage
      * @desc  helper method to generate api response notification
-     * @memberOf refineryApp.GroupMemberAddModalCtrl.
+     * @memberOf refineryApp.refineryDashboard.
     **/
-    function generateAlertMessage (infoType, email) {
+    function generateAlertMessage (infoType, email, error) {
       if (infoType === 'success') {
         vm.alertType = 'success';
         vm.responseMessage = 'Data set successfully transferred to ' + email;
       } else if (infoType === 'danger') {
+        console.log(error);
         vm.alertType = 'danger';
-        vm.responseMessage = 'Error, data set could not be transferred to ' + email;
+        if (error.status === 404) {
+          vm.responseMessage = email + ' is not associated with any users. ' +
+            "Check the user's profile for the associated email or invite" +
+            ' new users through the collaboration card.';
+        } else {
+          vm.responseMessage = 'Error, data set could not be transferred to ' + email;
+        }
       }
     }
 
@@ -88,7 +95,7 @@
           generateAlertMessage('success', vm.form.email);
         }, function (error) {
           vm.isLoading = false;
-          generateAlertMessage('danger', vm.form.email);
+          generateAlertMessage('danger', vm.form.email, error);
           $log.error(error);
         }
       );
