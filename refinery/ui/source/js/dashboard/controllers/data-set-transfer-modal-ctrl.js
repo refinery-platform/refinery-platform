@@ -25,6 +25,7 @@
     vm.alertType = 'info';
     vm.cancel = cancel;
     vm.close = close;
+    vm.dataSetTitle = '';
     vm.form = { email: '' };
     vm.isLoading = false;
     vm.responseMessage = '';
@@ -77,7 +78,7 @@
 
     /**
      * @name sendTransferRequest
-     * @desc  view method use to send api to transfer the data set
+     * @desc view method use to send api to transfer the data set
      * @memberOf refineryApp.Dashboard
     **/
     function sendTransferRequest () {
