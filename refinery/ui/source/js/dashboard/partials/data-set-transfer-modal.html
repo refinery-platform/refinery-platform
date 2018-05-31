@@ -23,7 +23,7 @@
         user account.</strong>
       </p>
       <form
-        name="tranferDataSetForm"
+        name="transferDataSetForm"
         class="navbar-form float-left">
          <label class="refinery-label" for="recipientEmail">
           Email of New Owner
@@ -41,13 +41,13 @@
     </div>
     <div
       class='p-t-1-2 text-warning'
-      ng-show="tranferDataSetForm.recipientEmail.$error.required">
+      ng-show="transferDataSetForm.recipientEmail.$error.required">
       <i class="fa fa-warning" aria-hidden="true"></i>
         Email address required.
     </div>
     <div
       class='p-t-1-2 text-warning'
-      ng-show="tranferDataSetForm.recipientEmail.$error.email">
+      ng-show="transferDataSetForm.recipientEmail.$error.email">
       <i class="fa fa-warning" aria-hidden="true"></i>
         Incorrect format for email address: name@example.com
     </div>
@@ -73,7 +73,7 @@
       type="submit"
       class="btn btn-primary"
       ng-click="$ctrl.sendTransferRequest(email)"
-      ng-disabled="!tranferDataSetForm.$valid || $ctrl.isLoading || $ctrl
+      ng-disabled="!transferDataSetForm.$valid || $ctrl.isLoading || $ctrl
       .alertType === 'success'">
       Transfer Ownership
     </button>

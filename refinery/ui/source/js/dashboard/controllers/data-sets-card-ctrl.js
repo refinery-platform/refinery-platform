@@ -136,7 +136,7 @@
 
      /**
      * @name openDataSetTransferModal
-     * @desc  Opens data set tranfer modal
+     * @desc  Opens data set transfer modal
      * @memberOf refineryDashboard.DataSetsCardCtrl
      * @param {obj} dataSet - data set obj
     **/
