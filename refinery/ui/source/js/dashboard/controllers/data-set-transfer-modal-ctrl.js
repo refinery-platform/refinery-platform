@@ -14,12 +14,14 @@
 
   DataSetTransferModalCtrl.$inject = [
     '$log',
-    'dataSetV2Service'
+    'dataSetV2Service',
+    'settings'
   ];
 
   function DataSetTransferModalCtrl (
     $log,
-    dataSetV2Service
+    dataSetV2Service,
+    settings
   ) {
     var vm = this;
     vm.alertType = 'info';
@@ -27,6 +29,7 @@
     vm.close = close;
     vm.dataSetTitle = '';
     vm.form = { email: '' };
+    vm.instanceName = settings.djangoApp.refineryInstanceName;
     vm.isLoading = false;
     vm.responseMessage = '';
     vm.sendTransferRequest = sendTransferRequest;
