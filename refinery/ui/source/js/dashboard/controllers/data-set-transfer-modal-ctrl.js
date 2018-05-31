@@ -80,7 +80,7 @@
 
     /**
      * @name sendTransferRequest
-     * @desc view method use to send api to transfer the data set
+     * @desc view method used to request a data set transfer
      * @memberOf refineryApp.Dashboard
     **/
     function sendTransferRequest () {
@@ -88,7 +88,7 @@
       vm.isLoading = true;
       dataSetV2Service.partial_update({
         new_owner_email: vm.form.email,
-        transfer_data_set: 'True',
+        transfer_data_set: true,
         uuid: vm.resolve.config.uuid
       })
       .$promise
