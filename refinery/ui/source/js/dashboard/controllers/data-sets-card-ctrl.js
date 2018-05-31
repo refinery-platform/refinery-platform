@@ -138,11 +138,9 @@
      * @name openDataSetTransferModal
      * @desc  Opens data set tranfer modal
      * @memberOf refineryDashboard.DataSetsCardCtrl
-     * @param {str} dataSetUuid - data set uuid
+     * @param {obj} dataSet - data set obj
     **/
     function openDataSetTransferModal (dataSet) {
-      console.log('openDataSettransfer');
-      console.log(dataSet);
       var modalInstance = $uibModal.open({
         component: 'rpDataSetTransferModal',
         resolve: {

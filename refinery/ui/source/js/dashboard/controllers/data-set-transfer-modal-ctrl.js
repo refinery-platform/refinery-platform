@@ -3,7 +3,7 @@
  * @namespace DataSetTransferModalCtrl
  * @desc Controller for modal to transfer a data set ownership to another user
  * member to a group modal
- * @memberOf refineryDashboard.
+ * @memberOf refineryDashboard
  */
 (function () {
   'use strict';
