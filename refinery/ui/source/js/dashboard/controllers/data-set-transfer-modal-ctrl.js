@@ -100,5 +100,9 @@
         }
       );
     }
+
+    vm.$onInit = function () {
+      vm.dataSetTitle = vm.resolve.config.title;
+    };
   }
 })();

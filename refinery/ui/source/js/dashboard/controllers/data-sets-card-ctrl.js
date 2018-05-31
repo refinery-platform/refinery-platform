@@ -140,13 +140,16 @@
      * @memberOf refineryDashboard.DataSetsCardCtrl
      * @param {str} dataSetUuid - data set uuid
     **/
-    function openDataSetTransferModal (dataSetUuid) {
+    function openDataSetTransferModal (dataSet) {
+      console.log('openDataSettransfer');
+      console.log(dataSet);
       var modalInstance = $uibModal.open({
         component: 'rpDataSetTransferModal',
         resolve: {
           config: function () {
             return {
-              uuid: dataSetUuid
+              uuid: dataSet.uuid,
+              title: dataSet.title
             };
           }
         }

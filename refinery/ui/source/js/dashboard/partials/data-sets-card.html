@@ -241,14 +241,14 @@
                </li>
                <li ng-if="dataSet.is_owner">
                  <a
-                    ng-click="$ctrl.openDataSetTransferModal(dataSet.uuid)"
+                    ng-click="$ctrl.openDataSetTransferModal(dataSet)"
                     class="pointer"
                     refinery-tooltip
                     refinery-tooltip-container="body"
                     refinery-tooltip-placement="bottom"
                     refinery-tooltip-hide-on-click="true
                     title="Transfer data set ownership">
-                  <i class="fa fa-user-o"></i>
+                  <i class="fa fa-long-arrow-right"></i><i class="fa fa-user-o"></i>
                  Transfer Ownership
                  </a>
                </li>
