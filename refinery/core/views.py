@@ -911,17 +911,17 @@ class DataSetsViewSet(APIView):
         groups_with_access = []
         groups_without_access = []
         for group in all_groups_with_ds_access:
-            if group.id not in new_owner_group_ids:
-                self.data_set.unshare(group)
-                groups_without_access.append({
+            if group.id in new_owner_group_ids:
+                groups_with_access.append({
                     'name': group.extendedgroup.name,
                     'profile': 'http://{}/groups/{}'.format(
                         self.current_site,
                         group.extendedgroup.uuid
                     )
                 })
-            if group.id in new_owner_group_ids:
-                groups_with_access.append({
+            else:
+                self.data_set.unshare(group)
+                groups_without_access.append({
                     'name': group.extendedgroup.name,
                     'profile': 'http://{}/groups/{}'.format(
                         self.current_site,
