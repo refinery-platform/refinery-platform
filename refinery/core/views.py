@@ -832,10 +832,10 @@ class DataSetsViewSet(APIView):
                 except Exception:
                     return Response(uuid, status=status.HTTP_404_NOT_FOUND)
 
+                self.data_set.transfer_ownership(current_owner, new_owner)
                 perm_groups = self.update_group_perms(new_owner)
                 self.send_transfer_notification_email(current_owner,
                                                       new_owner, perm_groups)
-                self.data_set.transfer_ownership(current_owner, new_owner)
                 serializer = DataSetSerializer(self.data_set,
                                                context={'request': request})
                 return Response(serializer.data,
