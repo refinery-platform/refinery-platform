@@ -689,8 +689,8 @@ class DataSetApiV2Tests(APIV2TestCase):
         new_owner_email = 'new_owner@fake.com'
         new_owner = User.objects.create_user('NewOwner1', new_owner_email,
                                              self.password)
-        group_union_public = ExtendedGroup.objects.public_group()
-        self.data_set.share(group_union_public)
+        group_public = ExtendedGroup.objects.public_group()
+        self.data_set.share(group_public)
 
         view_set = DataSetsViewSet()
         view_set.request = self.factory.get(self.url_root)
@@ -701,12 +701,12 @@ class DataSetApiV2Tests(APIV2TestCase):
         self.assertEqual(len(groups.get('groups_with_access')), 1)
         self.assertEqual(
             groups.get('groups_with_access')[0].get('name'),
-            group_union_public.extendedgroup.name
+            group_public.extendedgroup.name
         )
         self.assertEqual(
             groups.get('groups_with_access')[0].get('profile'),
             'http://{}/groups/{}'.format(view_set.current_site,
-                                         group_union_public.extendedgroup.uuid)
+                                         group_public.extendedgroup.uuid)
         )
 
 
