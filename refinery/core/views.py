@@ -11,6 +11,7 @@ from django.contrib.sites.models import RequestSite, Site, get_current_site
 from django.core.exceptions import ImproperlyConfigured
 from django.core.mail import EmailMessage
 from django.core.urlresolvers import reverse
+from django.db import transaction
 from django.http import (HttpResponse, HttpResponseBadRequest,
                          HttpResponseForbidden, HttpResponseNotFound,
                          HttpResponseRedirect, HttpResponseServerError,
@@ -832,8 +833,16 @@ class DataSetsViewSet(APIView):
                 except Exception:
                     return Response(uuid, status=status.HTTP_404_NOT_FOUND)
 
-                self.data_set.transfer_ownership(current_owner, new_owner)
-                perm_groups = self.update_group_perms(new_owner)
+                try:
+                    with transaction.atomic():
+                        self.data_set.transfer_ownership(current_owner,
+                                                         new_owner)
+                        perm_groups = self.update_group_perms(new_owner)
+                except Exception as e:
+                    return Response(
+                        e, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                    )
+
                 self.send_transfer_notification_email(current_owner,
                                                       new_owner, perm_groups)
                 serializer = DataSetSerializer(self.data_set,
