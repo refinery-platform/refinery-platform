@@ -7,6 +7,7 @@ from urlparse import urljoin
 from django.contrib.auth.models import User
 from django.utils.functional import SimpleLazyObject
 
+from guardian.shortcuts import get_groups_with_perms
 import mock
 import mockcache as memcache
 from rest_framework.test import (
@@ -126,7 +127,7 @@ class DataSetApiV2Tests(APIV2TestCase):
 
     @mock.patch('core.views.DataSetsViewSet.is_filtered_data_set')
     def test_get_data_set_calls_helper_with_group(self, mock_is_filtered):
-        group = ExtendedGroup.objects.create(name="Test Group", is_public=True)
+        group = ExtendedGroup.objects.create(name="Test Group")
         params = {'group': group.id}
         get_request = self.factory.get(self.url_root, params)
         get_request.user = self.user
@@ -239,7 +240,7 @@ class DataSetApiV2Tests(APIV2TestCase):
 
     @mock.patch('core.views.DataSetsViewSet.update_group_perms')
     @mock.patch('core.views.DataSetsViewSet.send_transfer_notification_email')
-    def test_dataset_calls_corrent_mock_methods(self, mock_update, mock_email):
+    def test_dataset_calls_current_mock_methods(self, mock_update, mock_email):
         new_owner_email = 'new_owner@fake.com'
         User.objects.create_user('NewOwner1', new_owner_email, self.password)
         patch_request = self.factory.patch(
@@ -251,6 +252,44 @@ class DataSetApiV2Tests(APIV2TestCase):
         self.view(patch_request, self.data_set.uuid)
         self.assertTrue(mock_update.called)
         self.assertTrue(mock_email.called)
+
+    @mock.patch('core.views.DataSetsViewSet.update_group_perms',
+                side_effect=RuntimeError)
+    def test_dataset_patch_fails_and_rollback_owner(self, mock_update):
+        new_owner_email = 'new_owner@fake.com'
+        User.objects.create_user('NewOwner1', new_owner_email, self.password)
+        patch_request = self.factory.patch(
+            urljoin(self.url_root, self.data_set.uuid),
+            {"transfer_data_set": True, "new_owner_email": new_owner_email}
+        )
+        patch_request.user = self.user
+        force_authenticate(patch_request, user=self.user)
+        response = self.view(patch_request, self.data_set.uuid)
+        self.assertEqual(response.status_code, 500)
+        self.assertEqual(self.data_set.get_owner(), self.user)
+
+    @mock.patch('core.views.get_groups_with_perms')
+    def test_dataset_patch_fails_and_rollback_group_perms(self, mock_perms):
+        new_owner_email = 'new_owner@fake.com'
+        User.objects.create_user('NewOwner1', new_owner_email, self.password)
+        group_non_union_0 = ExtendedGroup.objects.create(name="Group 0")
+        group_non_union_1 = ExtendedGroup.objects.create(name="Group 1")
+        self.data_set.share(group_non_union_0)
+        self.data_set.share(group_non_union_1)
+        group_non_union_0.group_ptr.user_set.add(self.user)
+        group_non_union_1.group_ptr.user_set.add(self.user)
+
+        patch_request = self.factory.patch(
+            urljoin(self.url_root, self.data_set.uuid),
+            {"transfer_data_set": True, "new_owner_email": new_owner_email}
+        )
+        # empty object will force the error
+        mock_perms.return_value = [group_non_union_0, group_non_union_1, {}]
+        patch_request.user = self.user
+        force_authenticate(patch_request, user=self.user)
+        response = self.view(patch_request, self.data_set.uuid)
+        self.assertEqual(response.status_code, 500)
+        self.assertEqual(len(get_groups_with_perms(self.data_set)), 2)
 
     # Accession too long
     def test_dataset_patch_accession_fails(self):
@@ -462,7 +501,7 @@ class DataSetApiV2Tests(APIV2TestCase):
         self.assertFalse(is_filtered)
 
     def test_is_filtered_data_set_returns_true_for_group(self):
-        group = ExtendedGroup.objects.create(name="Test Group", is_public=True)
+        group = ExtendedGroup.objects.create(name="Test Group")
         filter = {'group': group}
         self.data_set.share(group)
         view_set = DataSetsViewSet()
@@ -472,7 +511,7 @@ class DataSetApiV2Tests(APIV2TestCase):
         self.assertTrue(is_filtered)
 
     def test_is_filtered_data_set_returns_false_for_group(self):
-        group = ExtendedGroup.objects.create(name="Test Group", is_public=True)
+        group = ExtendedGroup.objects.create(name="Test Group")
         filter = {'group': group}
         view_set = DataSetsViewSet()
         view_set.request = self.factory.get(self.url_root)
@@ -482,7 +521,7 @@ class DataSetApiV2Tests(APIV2TestCase):
 
     def test_is_filtered_data_set_returns_true_for_owned_public_group(self):
         self.data_set.share(ExtendedGroup.objects.public_group())
-        group = ExtendedGroup.objects.create(name="Test Group", is_public=True)
+        group = ExtendedGroup.objects.create(name="Test Group")
         filter = {'group': group, 'is_owner': True, 'is_public': True}
         self.data_set.share(group)
         view_set = DataSetsViewSet()
@@ -492,7 +531,7 @@ class DataSetApiV2Tests(APIV2TestCase):
         self.assertTrue(is_filtered)
 
     def test_is_filtered_data_set_returns_false_for_owned_public_group(self):
-        group = ExtendedGroup.objects.create(name="Test Group", is_public=True)
+        group = ExtendedGroup.objects.create(name="Test Group")
         filter = {'group': group, 'is_owner': True, 'is_public': True}
         view_set = DataSetsViewSet()
         view_set.request = self.factory.get(self.url_root)
@@ -519,7 +558,7 @@ class DataSetApiV2Tests(APIV2TestCase):
 
     def test_is_filtered_data_set_returns_true_for_owned_group(self):
         self.data_set.share(ExtendedGroup.objects.public_group())
-        group = ExtendedGroup.objects.create(name="Test Group", is_public=True)
+        group = ExtendedGroup.objects.create(name="Test Group")
         filter = {'group': group, 'is_owner': True}
         self.data_set.share(group)
         view_set = DataSetsViewSet()
@@ -529,7 +568,7 @@ class DataSetApiV2Tests(APIV2TestCase):
         self.assertTrue(is_filtered)
 
     def test_is_filtered_data_set_returns_false_for_owned_group(self):
-        group = ExtendedGroup.objects.create(name="Test Group", is_public=True)
+        group = ExtendedGroup.objects.create(name="Test Group")
         filter = {'group': group, 'is_owner': True}
         view_set = DataSetsViewSet()
         view_set.request = self.factory.get(self.url_root)
@@ -539,7 +578,7 @@ class DataSetApiV2Tests(APIV2TestCase):
 
     def test_is_filtered_data_set_returns_true_for_public_group(self):
         self.data_set.share(ExtendedGroup.objects.public_group())
-        group = ExtendedGroup.objects.create(name="Test Group", is_public=True)
+        group = ExtendedGroup.objects.create(name="Test Group")
         filter = {'group': group, 'is_public': True}
         self.data_set.share(group)
         view_set = DataSetsViewSet()
@@ -549,7 +588,7 @@ class DataSetApiV2Tests(APIV2TestCase):
         self.assertTrue(is_filtered)
 
     def test_is_filtered_data_set_returns_false_for_public_group(self):
-        group = ExtendedGroup.objects.create(name="Test Group", is_public=True)
+        group = ExtendedGroup.objects.create(name="Test Group")
         filter = {'group': group, 'is_public': True}
         view_set = DataSetsViewSet()
         view_set.request = self.factory.get(self.url_root)
@@ -630,10 +669,8 @@ class DataSetApiV2Tests(APIV2TestCase):
         new_owner = User.objects.create_user('NewOwner1', new_owner_email,
                                              self.password)
         self.data_set.share(ExtendedGroup.objects.public_group())
-        group_union = ExtendedGroup.objects.create(name="Group Union",
-                                                   is_public=True)
-        group_non_union = ExtendedGroup.objects.create(name="Group Non-Union",
-                                                       is_public=True)
+        group_union = ExtendedGroup.objects.create(name="Group Union")
+        group_non_union = ExtendedGroup.objects.create(name="Group Non-Union")
         self.data_set.share(group_union)
         group_union.group_ptr.user_set.add(self.user)
         group_union.group_ptr.user_set.add(new_owner)
@@ -661,9 +698,7 @@ class DataSetApiV2Tests(APIV2TestCase):
         new_owner_email = 'new_owner@fake.com'
         new_owner = User.objects.create_user('NewOwner1', new_owner_email,
                                              self.password)
-        self.data_set.share(ExtendedGroup.objects.public_group())
-        group_union = ExtendedGroup.objects.create(name="Group Union",
-                                                   is_public=True)
+        group_union = ExtendedGroup.objects.create(name="Group Union")
         self.data_set.share(group_union)
         group_union.group_ptr.user_set.add(self.user)
         group_union.group_ptr.user_set.add(new_owner)
@@ -674,7 +709,7 @@ class DataSetApiV2Tests(APIV2TestCase):
         view_set.current_site = SimpleLazyObject(lambda: 'test_site')
         groups = view_set.update_group_perms(new_owner)
 
-        self.assertEqual(len(groups.get('groups_with_access')), 2)
+        self.assertEqual(len(groups.get('groups_with_access')), 1)
         self.assertEqual(
             groups.get('groups_with_access')[0].get('name'),
             group_union.extendedgroup.name
