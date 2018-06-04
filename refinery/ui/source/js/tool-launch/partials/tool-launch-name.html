@@ -1,0 +1,47 @@
+<div
+  class="panel-group"
+  id="tool-info-display"
+  role="tablist"
+  aria-multiselectable="true">
+
+  <div class="panel panel-default">
+    <div
+      id="tool-launch-body"
+      class="panel-collapse"
+      role="tabpanel"
+      aria-labelledby="tool-body">
+      <div class="panel-heading" role="tab">
+        <h4 class="panel-title">
+          {{ $ctrl.toolType }}
+          Name
+          &nbsp
+           <a
+            popover-placement="right"
+            uib-popover="Update the {{ $ctrl.toolType }} display name. The name
+            needs to be unique."
+            popover-title="Display Name"
+            popover-trigger="'outsideClick'"
+            popover-append-to-body="true"
+            tabindex="0">
+              <i class="fa fa-question-circle info-icon icon-only"></i>
+          </a>
+        </h4>
+      </div>
+      <div class="panel-body">
+        <form
+          id="tool-launch-name"
+          name="inviteNewMemberForm"
+          class="navbar-form">
+        <input
+          autofocus
+          type="email"
+          class="form-control"
+          placeholder="{{ $ctrl.selectedTool.name }}-creation_date-{{ $ctrl.userName }}"
+          ng-model="$ctrl.form.name"
+          ng-change="$ctrl.updateToolLaunchName()"
+          name="toolLaunchName">
+      </form>
+      </div>
+    </div>
+  </div>
+</div>
