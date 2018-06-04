@@ -57,7 +57,7 @@
         return toolSelectService.selectedTool;
       },
       function () {
-        if (toolSelectService.selectedTool.length) {
+        if (toolSelectService.selectedTool.tool_type.length) {
           angular.copy(toolSelectService.selectedTool, vm.selectedTool);
           var lCToolType = toolSelectService.selectedTool.tool_type.toLowerCase();
           vm.toolType = lCToolType[0].toUpperCase() + lCToolType.slice(1, lCToolType.length);

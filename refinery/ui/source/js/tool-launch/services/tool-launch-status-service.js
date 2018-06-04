@@ -47,7 +47,7 @@
       } else {
         toolLaunches.unshift({
           uuid: toolLaunch.config.data.tool_definition_uuid,
-          msg: 'Tool launch failed.',
+          msg: toolLaunch.data,
           status: toolStatus,
           apiStatus: toolLaunch.status,
           apiStatusMsg: toolLaunch.statusText,

@@ -34,9 +34,6 @@
           class="navbar-form">
         <input
           autofocus
-          ng-class="{'form-validation-error': toolLaunchNameForm
-          .toolLaunchName.$error.minlength} || toolLaunchNameForm
-          .toolLaunchName.$error.maxlength}"
           class="form-control"
           placeholder="{{ $ctrl.selectedTool.name }}-creation_date-{{ $ctrl.userName }}"
           ng-model="$ctrl.form.name"
