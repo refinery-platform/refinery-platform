@@ -14,6 +14,7 @@
   ToolLaunchNameCtrl.$inject = [
     '$log',
     '$scope',
+    '_',
     'settings',
     'toolParamsService',
     'toolSelectService'
@@ -22,6 +23,7 @@
   function ToolLaunchNameCtrl (
     $log,
     $scope,
+    _,
     settings,
     toolParamsService,
     toolSelectService
@@ -57,7 +59,8 @@
         return toolSelectService.selectedTool;
       },
       function () {
-        if (toolSelectService.selectedTool.tool_type.length) {
+        if (!_.isEmpty(toolSelectService.selectedTool) &&
+          toolSelectService.selectedTool.tool_type.length) {
           angular.copy(toolSelectService.selectedTool, vm.selectedTool);
           var lCToolType = toolSelectService.selectedTool.tool_type.toLowerCase();
           vm.toolType = lCToolType[0].toUpperCase() + lCToolType.slice(1, lCToolType.length);
