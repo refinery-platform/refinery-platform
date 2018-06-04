@@ -10,7 +10,7 @@
         </a>
         <i class="{{toolLaunch.type|toolTypeIcon}} p-r-1-4" aria-hidden="true"></i>
         {{ toolLaunch.display_name }}
-        <span ng-if="!tool.display_name">{{ tool.name }}</span> launched successfully.
+        <span ng-if="!toolLaunch.display_name">{{ toolLaunch.name }}</span> launched successfully.
         <div ng-if="toolLaunch.type === 'workflow'">
           <a href="#/analyses">
             <i class="fa fa-link p-r-1-2"></i>

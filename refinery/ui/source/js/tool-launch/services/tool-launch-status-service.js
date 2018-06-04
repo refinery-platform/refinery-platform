@@ -42,6 +42,7 @@
           name: toolLaunch.name,
           container_url: toolLaunch.container_url,
           status: toolStatus,
+          display_name: toolLaunch.display_name
         });
       } else {
         toolLaunches.unshift({

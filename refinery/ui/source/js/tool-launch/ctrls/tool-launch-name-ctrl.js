@@ -45,7 +45,7 @@
      * @memberOf refineryApp.refineryToolLaunch.
     **/
     function updateToolLaunchName (inputName) {
-      toolParamsService.paramsForm.display_name = inputName;
+      toolParamsService.toolEditForm.display_name = inputName;
     }
   /*
    * ---------------------------------------------------------
