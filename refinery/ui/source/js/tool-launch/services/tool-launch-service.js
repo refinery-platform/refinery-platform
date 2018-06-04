@@ -147,6 +147,8 @@
       launchConfig.tool_definition_uuid = toolService.selectedTool.uuid;
       launchConfig.file_relationships = generateFileStr();
       launchConfig.parameters = paramsService.paramsForm;
+      console.log(paramsService.paramsForm);
+      console.log('in generate');
     }
 
     // helper method which inserts commas between sets )(,][,)[,](

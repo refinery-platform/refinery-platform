@@ -34,11 +34,10 @@
           class="navbar-form">
         <input
           autofocus
-          type="email"
           class="form-control"
           placeholder="{{ $ctrl.selectedTool.name }}-creation_date-{{ $ctrl.userName }}"
           ng-model="$ctrl.form.name"
-          ng-change="$ctrl.updateToolLaunchName()"
+          ng-change="$ctrl.updateToolLaunchName($ctrl.form.name)"
           name="toolLaunchName">
       </form>
       </div>

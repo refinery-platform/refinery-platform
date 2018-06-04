@@ -20,7 +20,7 @@
         </a>
       </div>
       <div class="col-md-5 analysis-name">
-        <a class="analysis-header" ng-click="order('name')">
+        <a class="analysis-header" ng-click="order('display_name')">
           <strong>Name</strong>
         </a>
       </div>
@@ -62,7 +62,8 @@
             </span>
           </div>
           <div class="col-md-5 analysis-name">
-            {{ vis.name }}
+            {{ vis.display_name }}
+            <span ng-if="!tool.display_name">{{ tool.name }}</span>
           </div>
 
           <div class="col-md-2">

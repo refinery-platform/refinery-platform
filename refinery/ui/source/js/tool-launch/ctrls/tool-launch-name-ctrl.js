@@ -44,8 +44,8 @@
      * @desc  view method which updates tool launch name when input changes
      * @memberOf refineryApp.refineryToolLaunch.
     **/
-    function updateToolLaunchName () {
-      toolParamsService.toolParams.display_name = vm.form.name;
+    function updateToolLaunchName (inputName) {
+      toolParamsService.paramsForm.display_name = inputName;
     }
   /*
    * ---------------------------------------------------------
