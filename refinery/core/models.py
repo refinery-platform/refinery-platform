@@ -8,6 +8,7 @@ from __future__ import absolute_import
 import ast
 from collections import defaultdict
 from datetime import datetime
+import json
 import logging
 import os
 import smtplib
@@ -2234,3 +2235,83 @@ class SiteStatistics(models.Model):
         return sum(u.login_count for u in UserProfile.objects.all()) - \
                sum(s.total_user_logins for s in
                    SiteStatistics.objects.exclude(id=self.id))
+
+
+
+class Event(models.Model):
+    # Types
+    CREATE = 'CREATE'
+    UPDATE = 'UPDATE'
+    # DELETE = 'DELETE'
+    # Note: No delete, because when the object in question no longer exists,
+    # no one has any access to it.
+
+    @staticmethod
+    def record_dataset_create(user, dataset):
+        event = Event(dataset=dataset, user=user, type=Event.CREATE)
+        event.save()
+        return event
+
+
+    # Sub-types for both:
+    PERMISSIONS_CHANGE = 'PERMISSIONS_CHANGE'
+    @staticmethod
+    def record_dataset_permissions_change(user, dataset,
+                                           group, old, new):
+        blob = json.dumps({
+            'group_id': group.id,
+            'old': old,
+            'new': new
+        })
+        event = Event(dataset=dataset, user=user, json=blob,
+                      type=Event.UPDATE, sub_type=Event.PERMISSIONS_CHANGE)
+        event.save()
+        return event
+
+
+    # Sub-types for data sets:
+    METADATA_REUPLOAD = 'METADATA_REUPLOAD'
+    FILE_LINK = 'FILE_LINK'
+    METADATA_EDIT = 'METADATA_EDIT'
+    VISUALIZATION_CREATION = 'VISUALIZATION_CREATION'
+    VISUALIZATION_DELETION = 'VISUALIZATION_DELETION'
+    ANALYSIS_CREATION = 'ANALYSIS_CREATION'
+    ANALYSIS_DELETION = 'ANALYSIS_DELETION'
+
+    # Sub-types for groups:
+    INVITATION_SENT = 'INVITATION_SENT'
+    INVITATION_ACCEPTED = 'INVITATION_ACCEPTED'
+    INVITATION_REVOKED = 'INVITATION_REVOKED'
+    INVITATION_RESENT = 'INVITATION_RESENT'
+    USER_PROMOTION = 'USER_PROMOTION'
+    USER_DEMOTION = 'USER_DEMOTION'
+    USER_REMOVAL = 'USER_REMOVAL'
+
+    dataset = models.ForeignKey(DataSet, null=True)
+    group = models.ForeignKey(Group, null=True)
+    user = models.ForeignKey(User)
+    type = models.CharField(max_length=32)
+
+    sub_type = models.CharField(max_length=32)
+    json = models.TextField()
+
+    def __unicode__(self):
+        if self.dataset is not None:
+            name = self.dataset.name
+            if self.type == Event.CREATE:
+                return '{} created data set {}'.format(
+                    self.user, name)
+            if self.type == Event.UPDATE:
+                if self.sub_type == Event.PERMISSIONS_CHANGE:
+                    data = json.loads(self.json)
+                    group = Group.objects.get(pk=data['group_id'])
+                    return '{} changed permission for data set {} ' \
+                           'for group {} from "{}" to "{}"'.format(
+                        self.user, name,
+                        group, data['old'], data['new'])
+            # TODO: More conditions
+        elif self.group is not None:
+            pass
+            # TODO: More conditions
+        else:
+            raise StandardError('Expected either dataset or group')

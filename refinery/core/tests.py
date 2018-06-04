@@ -41,9 +41,9 @@ from .management.commands.import_annotations import \
     Command as ImportAnnotationsCommand
 from .models import (
     INPUT_CONNECTION, OUTPUT_CONNECTION, Analysis, AnalysisNodeConnection,
-    AnalysisResult, BaseResource, DataSet, ExtendedGroup, InvestigationLink,
-    Project, SiteStatistics, Tutorials, UserProfile, Workflow, WorkflowEngine,
-    invalidate_cached_object
+    AnalysisResult, BaseResource, DataSet, Event, ExtendedGroup,
+    InvestigationLink, Project, SiteStatistics, Tutorials, UserProfile,
+    Workflow, WorkflowEngine, invalidate_cached_object
 )
 from .search_indexes import DataSetIndex
 from .utils import (
@@ -2041,3 +2041,31 @@ class SiteStatisticsIntegrationTests(TestCase):
         collect_site_statistics()
         self.assertEqual(initial_site_statistics_count + 1,
                          SiteStatistics.objects.count())
+
+
+class EventTests(TestCase):
+
+    def test_dataset_create(self):
+        user = User.objects.create_user('testuser')
+        dataset = create_dataset_with_necessary_models()
+        event = Event.record_dataset_create(user, dataset)
+        self.assertRegexpMatches(
+            str(event),
+            r'^testuser created data set Test DataSet - [0-9a-f-]+$'
+        )
+
+    def test_dataset_permissions_change(self):
+        user = User.objects.create_user('testuser')
+        dataset = create_dataset_with_necessary_models()
+        group = ExtendedGroup.objects.public_group()
+        event = Event.record_dataset_permissions_change(
+            user, dataset,
+            group=group, old='core.read_meta_dataset', new='core.read_dataset')
+        self.assertRegexpMatches(
+            str(event),
+            r'testuser changed permission for data set Test DataSet - '
+            r'[0-9a-f-]+ for group Public from "core.read_meta_dataset" '
+            r'to "core.read_dataset"'
+        )
+
+
