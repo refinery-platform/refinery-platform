@@ -30,16 +30,33 @@
       <div class="panel-body">
         <form
           id="tool-launch-name"
-          name="inviteNewMemberForm"
+          name="toolLaunchNameForm"
           class="navbar-form">
         <input
           autofocus
+          ng-class="{'form-validation-error': toolLaunchNameForm
+          .toolLaunchName.$error.minlength} || toolLaunchNameForm
+          .toolLaunchName.$error.maxlength}"
           class="form-control"
           placeholder="{{ $ctrl.selectedTool.name }}-creation_date-{{ $ctrl.userName }}"
           ng-model="$ctrl.form.name"
           ng-change="$ctrl.updateToolLaunchName($ctrl.form.name)"
-          name="toolLaunchName">
-      </form>
+          name="toolLaunchName"
+          ng-maxlength="32"
+          ng-minlength="3">
+        </form>
+        <div
+          class='p-t-1-2 text-warning'
+          ng-show="toolLaunchNameForm.toolLaunchName.$error.minlength">
+          <i class="fa fa-warning" aria-hidden="true"></i>
+          Names must be at least 3 characters long.
+        </div>
+       <div
+          class='p-t-1-2 text-warning'
+          ng-show="toolLaunchNameForm.toolLaunchName.$error.maxlength">
+          <i class="fa fa-warning" aria-hidden="true"></i>
+          Names must be shorter than 32 characters long.
+        </div>
       </div>
     </div>
   </div>
