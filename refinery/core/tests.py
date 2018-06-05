@@ -18,6 +18,7 @@ from guardian.shortcuts import assign_perm, get_objects_for_group, remove_perm
 import mock
 import mockcache as memcache
 
+from cuser.middleware import CuserMiddleware
 from tastypie.exceptions import NotFound
 from tastypie.test import ResourceTestCase
 
@@ -2043,23 +2044,24 @@ class SiteStatisticsIntegrationTests(TestCase):
                          SiteStatistics.objects.count())
 
 
-class EventDatasetTests(TestCase):
+class EventTests(TestCase):
+
+    def setUp(self):
+        CuserMiddleware.set_user(User.objects.create_user('testuser'))
 
     def test_dataset_create(self):
-        user = User.objects.create_user('testuser')
         dataset = create_dataset_with_necessary_models()
-        event = Event.record_dataset_create(user, dataset)
+        event = Event.record_dataset_create(dataset)
         self.assertRegexpMatches(
             str(event),
             r'^testuser created data set Test DataSet - [0-9a-f-]+$'
         )
 
     def test_dataset_permissions_change(self):
-        user = User.objects.create_user('testuser')
         dataset = create_dataset_with_necessary_models()
         group = ExtendedGroup.objects.public_group()
         event = Event.record_dataset_permissions_change(
-            user, dataset,
+            dataset,
             group=group, old='core.read_meta_dataset', new='core.read_dataset')
         self.assertRegexpMatches(
             str(event),
@@ -2088,9 +2090,6 @@ class EventDatasetTests(TestCase):
 
     def test_dataset_analysis_deletion(self):
         pass  # TODO
-
-
-class EventGroupTests(TestCase):
 
     def test_group_permissions_change(self):
         pass  # TODO

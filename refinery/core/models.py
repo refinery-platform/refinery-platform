@@ -27,7 +27,7 @@ from django.contrib.sites.models import Site
 from django.core.mail import send_mail
 from django.db import models, transaction
 from django.db.models.fields import IntegerField
-from django.db.models.signals import post_save, pre_delete
+from django.db.models.signals import post_init, post_save, pre_delete
 from django.dispatch import receiver
 from django.forms import ValidationError
 from django.template import loader
@@ -35,6 +35,7 @@ from django.template.loader import render_to_string
 from django.utils import timezone
 
 from bioblend import galaxy
+from cuser.middleware import CuserMiddleware
 from django.utils.functional import cached_property
 from django_auth_ldap.backend import LDAPBackend
 from django_extensions.db.fields import UUIDField
@@ -820,6 +821,11 @@ def _dataset_saved(sender, instance, *args, **kwargs):
     # See: https://docs.djangoproject.com/en/1.8/ref/utils/
     # #django.utils.functional.cached_property
     instance._invalidate_cached_properties()
+
+
+@receiver(post_init, sender=DataSet)
+def _dataset_init(sender, instance):
+    Event.record_dataset_create(instance)
 
 
 class InvestigationLink(models.Model):
@@ -2247,7 +2253,8 @@ class Event(models.Model):
     # no one has any access to it.
 
     @staticmethod
-    def record_dataset_create(user, dataset):
+    def record_dataset_create(dataset):
+        user = CuserMiddleware.get_user()
         event = Event(dataset=dataset, user=user, type=Event.CREATE)
         event.save()
         return event
@@ -2260,8 +2267,9 @@ class Event(models.Model):
     PERMISSIONS_CHANGE = 'PERMISSIONS_CHANGE'
 
     @staticmethod
-    def record_dataset_permissions_change(user, dataset,
+    def record_dataset_permissions_change(dataset,
                                           group, old, new):
+        user = CuserMiddleware.get_user()
         blob = json.dumps({
             'group_id': group.id,
             'old': old,
@@ -2464,7 +2472,7 @@ class Event(models.Model):
 
     dataset = models.ForeignKey(DataSet, null=True)
     group = models.ForeignKey(Group, null=True)
-    user = models.ForeignKey(User)
+    user = models.ForeignKey(User)  # TODO: consider cuser.CurrentUserField
     type = models.CharField(max_length=32)
 
     sub_type = models.CharField(max_length=32)
