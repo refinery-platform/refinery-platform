@@ -61,5 +61,10 @@ class SymlinkedFileSystemStorage(FileSystemStorage):
         name = os.path.join(dir1, dir2, name.lstrip('-')[-255:])
         return super(SymlinkedFileSystemStorage, self).get_available_name(name)
 
+    # custom methods
+
     def get_name(self, name):
         return self.get_available_name(get_valid_filename(name))
+
+    def get_path(self, name):
+        return self.path(self.get_name(name))
