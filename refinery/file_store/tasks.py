@@ -21,14 +21,14 @@ from data_set_manager.models import Node
 from data_set_manager.search_indexes import NodeIndex
 
 from .models import FileStoreItem, _mkdir, get_temp_dir, parse_s3_url
-from .utils import S3MediaStorage, SymlinkedFileSystemStorage
+from .utils import S3MediaStorage, SymlinkedFileSystemStorage, _delete_file
 
 logger = celery.utils.log.get_task_logger(__name__)
 logger.setLevel(celery.utils.LOG_LEVELS['DEBUG'])
 
 
 class ProgressPercentage(object):
-    """Callable for S3 transfer progress tracking"""
+    """Callable for progress monitoring of S3 transfers"""
 
     def __init__(self, filename, task_id):
         self._filename = filename
@@ -68,14 +68,6 @@ def _copy_file_obj(source, destination):
                 'total': source_size
             }
         )
-
-
-def _delete_file(absolute_path):
-    if os.path.exists(absolute_path):
-        try:
-            os.unlink(absolute_path)
-        except OSError as exc:
-            logger.error("Failed to delete '%s': %s", absolute_path, exc)
 
 
 def _copy_file(source_path, destination_path, delete_source=False):

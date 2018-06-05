@@ -1,3 +1,4 @@
+import logging
 import os
 
 from django.conf import settings
@@ -7,6 +8,8 @@ from django.utils.deconstruct import deconstructible
 from django.utils.text import get_valid_filename
 
 from storages.backends.s3boto3 import S3Boto3Storage
+
+logger = logging.getLogger(__name__)
 
 
 class S3MediaStorage(S3Boto3Storage):
@@ -22,6 +25,8 @@ class S3MediaStorage(S3Boto3Storage):
             name = os.path.join(get_random_string(7), name.lstrip('-')[-255:])
             if not self.exists(name):
                 return name
+
+    # custom methods
 
     def get_name(self, name):
         return self.get_available_name(get_valid_filename(name))
@@ -68,3 +73,11 @@ class SymlinkedFileSystemStorage(FileSystemStorage):
 
     def get_path(self, name):
         return self.path(self.get_name(name))
+
+
+def _delete_file(absolute_path):
+    if os.path.exists(absolute_path):
+        try:
+            os.unlink(absolute_path)
+        except OSError as exc:
+            logger.error("Failed to delete '%s': %s", absolute_path, exc)

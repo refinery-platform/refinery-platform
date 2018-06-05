@@ -15,7 +15,6 @@ import re
 import urlparse
 
 from django.conf import settings
-from django.core.files import File
 from django.core.files.storage import default_storage
 from django.db import models
 from django.db.models.signals import post_delete
@@ -204,23 +203,6 @@ class FileStoreItem(models.Model):
             return _get_extension_from_string(self.datafile.name)
         else:
             return _get_extension_from_string(self.source)
-
-    def import_file(self):
-        """Add file specified by source field to file store"""
-        logger.debug("Saving file '%s' to file store", self.source)
-        with open(self.source, 'rb') as external_file:
-            self.datafile.save(os.path.basename(self.source),
-                               File(external_file))
-        logger.info("Saved file to '%s'", self.datafile.name)
-
-        if self.source.startswith((settings.REFINERY_DATA_IMPORT_DIR,
-                                   get_temp_dir())):
-            try:
-                os.unlink(self.source)
-            except IOError as exc:
-                logger.debug("Failed to delete '%s': %s", self.source, exc)
-            else:
-                logger.debug("Deleted source file '%s'", self.source)
 
     def is_symlinked(self):
         '''Check if the data file is a symlink.
