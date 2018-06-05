@@ -824,7 +824,7 @@ def _dataset_saved(sender, instance, *args, **kwargs):
 
 
 @receiver(post_init, sender=DataSet)
-def _dataset_init(sender, instance):
+def _dataset_init(sender, instance, *args, **kwargs):
     Event.record_dataset_create(instance)
 
 
