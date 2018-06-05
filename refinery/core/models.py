@@ -39,7 +39,8 @@ from cuser.middleware import CuserMiddleware
 from django.utils.functional import cached_property
 from django_auth_ldap.backend import LDAPBackend
 from django_extensions.db.fields import UUIDField
-from guardian.models import UserObjectPermission
+
+from guardian.models import UserObjectPermission, GroupObjectPermission
 from guardian.shortcuts import (
     assign_perm, get_groups_with_perms, get_objects_for_group,
     get_users_with_perms, remove_perm
@@ -822,11 +823,12 @@ def _dataset_saved(sender, instance, *args, **kwargs):
     # #django.utils.functional.cached_property
     instance._invalidate_cached_properties()
 
-    # TODO:
-    # Would prefer to have this as a post_init, but at that point it has
-    # not been saved. Perhaps check if an Event already exists for this
-    # object: If not, it is being created...
-    Event.record_dataset_create(instance)
+    # Would prefer to have this as a post_init,
+    # but dataset has not yet been saved at that point.
+    try:
+        Event.objects.get(dataset=instance)
+    except Event.DoesNotExist:
+        Event.record_dataset_create(instance)
 
 
 class InvestigationLink(models.Model):
@@ -2258,7 +2260,6 @@ class Event(models.Model):
         user = CuserMiddleware.get_user()
         event = Event(dataset=dataset, user=user, type=Event.CREATE)
         event.save()
-        return event
 
     def render_dataset_create(self):
         return '{} created data set {}'.format(
@@ -2279,7 +2280,6 @@ class Event(models.Model):
         event = Event(dataset=dataset, user=user, json=blob,
                       type=Event.UPDATE, sub_type=Event.PERMISSIONS_CHANGE)
         event.save()
-        return event
 
     def render_dataset_permissions_change(self):
         data = json.loads(self.json)
@@ -2539,3 +2539,8 @@ class Event(models.Model):
                 'Expected exactly one of dataset and group to be not None, '
                 'instead dataset="{}" and group="{}"'.format(
                     self.dataset, self.group))
+
+# TODO
+# @receiver(post_save, sender=GroupObjectPermission)
+# def _group_permissions_changed(sender, instance, *args, **kwargs):
+#     Event.record_dataset_permissions_change(???)
