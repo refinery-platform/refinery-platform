@@ -2252,12 +2252,16 @@ class Event(models.Model):
         event.save()
         return event
 
+    def render_dataset_create(self):
+        return '{} created data set {}'.format(
+            self.user, self.dataset.name)
 
-    # Sub-types for both:
+    # Sub-types for data sets:
     PERMISSIONS_CHANGE = 'PERMISSIONS_CHANGE'
+
     @staticmethod
     def record_dataset_permissions_change(user, dataset,
-                                           group, old, new):
+                                          group, old, new):
         blob = json.dumps({
             'group_id': group.id,
             'old': old,
@@ -2268,24 +2272,195 @@ class Event(models.Model):
         event.save()
         return event
 
+    def render_dataset_permissions_change(self):
+        data = json.loads(self.json)
+        group = Group.objects.get(pk=data['group_id'])
+        return '{} changed permission for data set {} ' \
+               'for group {} from "{}" to "{}"'.format(
+                    self.user, self.dataset.name,
+                    group, data['old'], data['new'])
 
-    # Sub-types for data sets:
     METADATA_REUPLOAD = 'METADATA_REUPLOAD'
+
+    # TODO:
+    # @staticmethod
+    # def record_dataset_metadata_reupload():
+    #     event = Event()
+    #     event.save()
+    #     return event
+    #
+    # def render_dataset_metadata_reupload(self):
+    #     return '{}'.format(self.user)
+
     FILE_LINK = 'FILE_LINK'
+
+    # TODO:
+    # @staticmethod
+    # def record_dataset_file_link():
+    #     event = Event()
+    #     event.save()
+    #     return event
+    #
+    # def render_dataset_file_link(self):
+    #     return '{}'.format(self.user)
+
     METADATA_EDIT = 'METADATA_EDIT'
+
+    # TODO:
+    # @staticmethod
+    # def record_dataset_metadata_edit():
+    #     event = Event()
+    #     event.save()
+    #     return event
+    #
+    # def render_dataset_metadata_edit(self):
+    #     return '{}'.format(self.user)
+
     VISUALIZATION_CREATION = 'VISUALIZATION_CREATION'
+
+    # TODO:
+    # @staticmethod
+    # def record_dataset_visualization_creation():
+    #     event = Event()
+    #     event.save()
+    #     return event
+    #
+    # def render_dataset_visualization_creation(self):
+    #     return '{}'.format(self.user)
+
     VISUALIZATION_DELETION = 'VISUALIZATION_DELETION'
+
+    # TODO:
+    # @staticmethod
+    # def record_dataset_visualization_deletion():
+    #     event = Event()
+    #     event.save()
+    #     return event
+    #
+    # def render_dataset_visualization_deletion(self):
+    #     return '{}'.format(self.user)
+
     ANALYSIS_CREATION = 'ANALYSIS_CREATION'
+
+    # TODO:
+    # @staticmethod
+    # def record_dataset_analysis_creation():
+    #     event = Event()
+    #     event.save()
+    #     return event
+    #
+    # def render_dataset_analysis_creation(self):
+    #     return '{}'.format(self.user)
+
     ANALYSIS_DELETION = 'ANALYSIS_DELETION'
 
+    # TODO:
+    # @staticmethod
+    # def record_dataset_analysis_deletion():
+    #     event = Event()
+    #     event.save()
+    #     return event
+    #
+    # def render_dataset_analysis_deletion(self):
+    #     return '{}'.format(self.user)
+
     # Sub-types for groups:
+
+    # PERMISSIONS_CHANGE defined above for datasets
+
+    # TODO:
+    # @staticmethod
+    # def record_group_permissions_change():
+    #     event = Event()
+    #     event.save()
+    #     return event
+    #
+    # def render_group_permissions_change(self):
+    #     return '{}'.format(self.user)
+
     INVITATION_SENT = 'INVITATION_SENT'
+
+    # TODO:
+    # @staticmethod
+    # def record_group_invitation_sent():
+    #     event = Event()
+    #     event.save()
+    #     return event
+    #
+    # def render_group_invitation_sent(self):
+    #     return '{}'.format(self.user)
+
     INVITATION_ACCEPTED = 'INVITATION_ACCEPTED'
+
+    # TODO:
+    # @staticmethod
+    # def record_group_invitation_accepted():
+    #     event = Event()
+    #     event.save()
+    #     return event
+    #
+    # def render_group_invitation_accepted(self):
+    #     return '{}'.format(self.user)
+
     INVITATION_REVOKED = 'INVITATION_REVOKED'
+
+    # TODO:
+    # @staticmethod
+    # def record_group_invitation_revoked():
+    #     event = Event()
+    #     event.save()
+    #     return event
+    #
+    # def render_group_invitation_revoked(self):
+    #     return '{}'.format(self.user)
+
     INVITATION_RESENT = 'INVITATION_RESENT'
+
+    # TODO:
+    # @staticmethod
+    # def record_group_invitation_resent():
+    #     event = Event()
+    #     event.save()
+    #     return event
+    #
+    # def render_group_invitation_resent(self):
+    #     return '{}'.format(self.user)
+
     USER_PROMOTION = 'USER_PROMOTION'
+
+    # TODO:
+    # @staticmethod
+    # def record_group_user_promotion():
+    #     event = Event()
+    #     event.save()
+    #     return event
+    #
+    # def render_group_user_promotion(self):
+    #     return '{}'.format(self.user)
+
     USER_DEMOTION = 'USER_DEMOTION'
+
+    # TODO:
+    # @staticmethod
+    # def record_group_user_demotion():
+    #     event = Event()
+    #     event.save()
+    #     return event
+    #
+    # def render_group_user_demotion(self):
+    #     return '{}'.format(self.user)
+
     USER_REMOVAL = 'USER_REMOVAL'
+
+    # TODO:
+    # @staticmethod
+    # def record_group_user_removal():
+    #     event = Event()
+    #     event.save()
+    #     return event
+    #
+    # def render_group_user_removal(self):
+    #     return '{}'.format(self.user)
 
     dataset = models.ForeignKey(DataSet, null=True)
     group = models.ForeignKey(Group, null=True)
@@ -2296,22 +2471,62 @@ class Event(models.Model):
     json = models.TextField()
 
     def __unicode__(self):
-        if self.dataset is not None:
-            name = self.dataset.name
+        if self.dataset is not None and self.group is None:
             if self.type == Event.CREATE:
-                return '{} created data set {}'.format(
-                    self.user, name)
-            if self.type == Event.UPDATE:
+                return self.render_dataset_create()
+            elif self.type == Event.UPDATE:
                 if self.sub_type == Event.PERMISSIONS_CHANGE:
-                    data = json.loads(self.json)
-                    group = Group.objects.get(pk=data['group_id'])
-                    return '{} changed permission for data set {} ' \
-                           'for group {} from "{}" to "{}"'.format(
-                        self.user, name,
-                        group, data['old'], data['new'])
-            # TODO: More conditions
-        elif self.group is not None:
-            pass
-            # TODO: More conditions
+                    return self.render_dataset_permissions_change()
+                elif self.sub_type == Event.METADATA_REUPLOAD:
+                    return self.render_dataset_metadata_reupload()
+                elif self.sub_type == Event.FILE_LINK:
+                    return self.render_dataset_file_link()
+                elif self.sub_type == Event.METADATA_EDIT:
+                    return self.render_dataset_metadata_edit()
+                elif self.sub_type == Event.VISUALIZATION_CREATION:
+                    return self.render_dataset_visualization_creation()
+                elif self.sub_type == Event.VISUALIZATION_DELETION:
+                    return self.render_dataset_visualization_deletion()
+                elif self.sub_type == Event.ANALYSIS_CREATION:
+                    return self.render_dataset_analysis_creation()
+                elif self.sub_type == Event.ANALYSIS_DELETION:
+                    return self.render_dataset_analysis_deletion()
+                else:
+                    raise StandardError(
+                        'Bad event sub-type for dataset: {}'.format(
+                            self.sub_type))
+            else:
+                raise StandardError(
+                    'Bad event type for dataset: {}'.format(self.type))
+        elif self.group is not None and self.dataset is None:
+            if self.type == Event.CREATE:
+                return self.render_group_create()
+            elif self.type == Event.UPDATE:
+                if self.sub_type == Event.PERMISSIONS_CHANGE:
+                    return self.render_group_permissions_change()
+                elif self.sub_type == Event.INVITATION_SENT:
+                    return self.render_group_invitation_sent()
+                elif self.sub_type == Event.INVITATION_ACCEPTED:
+                    return self.render_group_invitation_accepted()
+                elif self.sub_type == Event.INVITATION_REVOKED:
+                    return self.render_group_invitation_revoked()
+                elif self.sub_type == Event.INVITATION_RESENT:
+                    return self.render_group_invitation_resent()
+                elif self.sub_type == Event.USER_PROMOTION:
+                    return self.render_group_user_promotion()
+                elif self.sub_type == Event.USER_DEMOTION:
+                    return self.render_group_user_demotion()
+                elif self.sub_type == Event.USER_REMOVAL:
+                    return self.render_group_user_removal()
+                else:
+                    raise StandardError(
+                        'Bad event sub-type for group: {}'.format(
+                            self.sub_type))
+            else:
+                raise StandardError(
+                    'Bad event type for group: {}'.format(self.type))
         else:
-            raise StandardError('Expected either dataset or group')
+            raise StandardError(
+                'Expected exactly one of dataset and group to be not None, '
+                'instead dataset="{}" and group="{}"'.format(
+                    self.dataset, self.group))

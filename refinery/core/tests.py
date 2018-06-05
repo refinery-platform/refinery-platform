@@ -2043,7 +2043,7 @@ class SiteStatisticsIntegrationTests(TestCase):
                          SiteStatistics.objects.count())
 
 
-class EventTests(TestCase):
+class EventDatasetTests(TestCase):
 
     def test_dataset_create(self):
         user = User.objects.create_user('testuser')
@@ -2068,4 +2068,50 @@ class EventTests(TestCase):
             r'to "core.read_dataset"'
         )
 
+    def test_dataset_metadata_reupload(self):
+        pass  # TODO
 
+    def test_dataset_file_link(self):
+        pass  # TODO
+
+    def test_dataset_metadata_edit(self):
+        pass  # TODO
+
+    def test_dataset_visualization_creation(self):
+        pass  # TODO
+
+    def test_dataset_visualization_deletion(self):
+        pass  # TODO
+
+    def test_dataset_analysis_creation(self):
+        pass  # TODO
+
+    def test_dataset_analysis_deletion(self):
+        pass  # TODO
+
+
+class EventGroupTests(TestCase):
+
+    def test_group_permissions_change(self):
+        pass  # TODO
+
+    def test_group_invitation_sent(self):
+        pass  # TODO
+
+    def test_group_invitation_accepted(self):
+        pass  # TODO
+
+    def test_group_invitation_revoked(self):
+        pass  # TODO
+
+    def test_group_invitation_resent(self):
+        pass  # TODO
+
+    def test_group_user_promotion(self):
+        pass  # TODO
+
+    def test_group_user_demotion(self):
+        pass  # TODO
+
+    def test_group_user_removal(self):
+        pass  # TODO
