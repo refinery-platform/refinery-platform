@@ -32,6 +32,7 @@ from core.models import (INPUT_CONNECTION, OUTPUT_CONNECTION, Analysis,
                          AnalysisNodeConnection, DataSet, OwnableResource,
                          Workflow)
 
+from core.models import Event
 from core.utils import get_absolute_url
 from data_set_manager.models import Node
 from data_set_manager.utils import (
@@ -604,6 +605,9 @@ class VisualizationTool(Tool):
         # Pulls docker image if it doesn't exist yet, and launches container
         # asynchronously
         start_container.delay(self)
+
+        Event.record_dataset_visualization_creation(
+            self.dataset, self.display_name)
 
 
 def handle_bioblend_exceptions(func):

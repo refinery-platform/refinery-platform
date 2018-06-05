@@ -2327,15 +2327,20 @@ class Event(models.Model):
 
     VISUALIZATION_CREATION = 'VISUALIZATION_CREATION'
 
-    # TODO:
-    # @staticmethod
-    # def record_dataset_visualization_creation():
-    #     event = Event()
-    #     event.save()
-    #     return event
-    #
-    # def render_dataset_visualization_creation(self):
-    #     return '{}'.format(self.user)
+    @staticmethod
+    def record_dataset_visualization_creation(dataset, display_name):
+        user = CuserMiddleware.get_user()
+        blob = json.dumps({
+            'display_name': display_name
+        })
+        event = Event(dataset=dataset, user=user, json=blob,
+                      type=Event.UPDATE, sub_type=Event.VISUALIZATION_CREATION)
+        event.save()
+
+    def render_dataset_visualization_creation(self):
+        data = json.loads(self.json)
+        return '{} launched visualization {} on data set {}'.format(
+            self.user, data['display_name'], self.dataset.name)
 
     VISUALIZATION_DELETION = 'VISUALIZATION_DELETION'
 
