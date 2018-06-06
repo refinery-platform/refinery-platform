@@ -1467,7 +1467,7 @@ class WorkflowTool(Tool):
 
 
 @receiver(post_save, sender=WorkflowTool)
-def _visualization_saved(sender, instance, *args, **kwargs):
+def _workflow_saved(sender, instance, *args, **kwargs):
     # TODO: Distinguish creation from modification?
     Event.record_dataset_analysis_creation(
         instance.dataset, instance.display_name
