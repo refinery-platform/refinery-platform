@@ -1,0 +1,26 @@
+{{ old_owner_name }} has transferred ownership of data set {{ data_set_name }}
+ to {{ new_owner_name }}.
+
+View data_set: http://{{ site }}/data_sets/{{ data_set_uuid }}/
+
+{{ old_owner_name}}'s profile: http://{{ site }}/users/{{ old_owner_uuid }}/
+
+{{ new_owner_name }}'s profile: http://{{ site }}/users/{{ new_owner_uuid }}/
+
+Due to the ownership transfer, group access may have changed.
+
+These groups continue to have access to the data set because both the former
+and the new owner of the data set are members of these groups:
+
+ {% for group_obj in groups_with_access %}
+    {{ group_obj.name }} profile: {{ group_obj.profile }}
+ {% endfor %}
+
+These groups have lost access to the data set because the new owner of the
+data set is not a member of these groups:
+ {% for group_obj in groups_without_access %}
+    {{ group_obj.name }} profile: {{ group_obj.profile }}
+ {% endfor %}
+
+To restore access for these groups, the new owner needs to join these groups
+ and share the data set with these groups.

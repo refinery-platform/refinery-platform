@@ -170,6 +170,30 @@
       });
     });
 
+    describe('openDataSetTransferModal', function () {
+      var mockUibModal;
+      var responseFlag = false;
+      beforeEach(inject(function ($uibModal) {
+        mockUibModal = spyOn($uibModal, 'open').and.callFake(function () {
+          return { result: { then: function () { responseFlag = true; } } };
+        });
+      }));
+
+      it('openDataSetTransferModal is method', function () {
+        expect(angular.isFunction(ctrl.openDataSetTransferModal)).toBe(true);
+      });
+
+      it('openDataSetTransferModal opens a new modal', function () {
+        ctrl.openDataSetTransferModal();
+        expect(mockUibModal).toHaveBeenCalled();
+      });
+
+      it('openDataSetTransferModal resolves promise', function () {
+        ctrl.openDataSetTransferModal();
+        expect(responseFlag).toEqual(true);
+      });
+    });
+
     describe('resetDataSetSearch', function () {
       it('resetDataSetSearch is a method', function () {
         expect(angular.isFunction(ctrl.resetDataSetSearch)).toBe(true);
