@@ -7,7 +7,7 @@ import uuid
 
 from django.conf import settings
 from django.db import models
-from django.db.models.signals import post_delete, pre_delete
+from django.db.models.signals import post_delete, post_save, pre_delete
 from django.dispatch import receiver
 
 import bioblend
@@ -606,9 +606,13 @@ class VisualizationTool(Tool):
         # asynchronously
         start_container.delay(self)
 
-        Event.record_dataset_visualization_creation(
-            self.dataset, self.display_name
-        )
+
+@receiver(post_save, sender=VisualizationTool)
+def _visualization_saved(sender, instance, *args, **kwargs):
+    # TODO: Distinguish creation from modification?
+    Event.record_dataset_visualization_creation(
+        instance.dataset, instance.display_name
+    )
 
 
 def handle_bioblend_exceptions(func):
