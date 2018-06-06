@@ -755,6 +755,9 @@ class DataSet(SharableResource):
             file_store_items.append(investigation.get_file_store_item())
         return file_store_items
 
+    def get_local_file_store_items(self):
+        return [f for f in self.get_file_store_items() if f.is_local()]
+
     @cached_property
     def is_valid(self):
         """
