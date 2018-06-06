@@ -2247,6 +2247,17 @@ class SiteStatistics(models.Model):
 
 
 class Event(models.Model):
+    dataset = models.ForeignKey(DataSet, null=True)
+    group = models.ForeignKey(Group, null=True)
+    user = models.ForeignKey(User, null=True)
+    # Null user should not occur in production, but it lets older tests pass.
+    # I feel ambivalent about this.
+    # TODO: Consider cuser.CurrentUserField
+    type = models.CharField(max_length=32)
+
+    sub_type = models.CharField(max_length=32)
+    json = models.TextField()
+
     # Types
     CREATE = 'CREATE'
     UPDATE = 'UPDATE'
@@ -2475,16 +2486,7 @@ class Event(models.Model):
     # def render_group_user_removal(self):
     #     return '{}'.format(self.user)
 
-    dataset = models.ForeignKey(DataSet, null=True)
-    group = models.ForeignKey(Group, null=True)
-    user = models.ForeignKey(User, null=True)
-    # Null user should not occur in production, but it lets older tests pass.
-    # I feel ambivalent about this.
-    # TODO: consider cuser.CurrentUserField
-    type = models.CharField(max_length=32)
 
-    sub_type = models.CharField(max_length=32)
-    json = models.TextField()
 
     def __unicode__(self):
         if self.dataset is not None and self.group is None:
