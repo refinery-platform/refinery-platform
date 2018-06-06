@@ -2268,8 +2268,7 @@ class Event(models.Model):
     @staticmethod
     def record_dataset_create(dataset):
         user = CuserMiddleware.get_user()
-        event = Event(dataset=dataset, user=user, type=Event.CREATE)
-        event.save()
+        Event.objects.create(dataset=dataset, user=user, type=Event.CREATE)
 
     def render_dataset_create(self):
         return '{} created data set {}'.format(
