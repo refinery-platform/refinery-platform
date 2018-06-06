@@ -44,12 +44,22 @@ class RegistrationFormCustomFields(RegistrationForm):
         error_messages={'required': _("You must provide an Affiliation")},
         label=_("Affiliation")
     )
+    spam_filter = forms.CharField(
+        widget=forms.HiddenInput(),
+        required=False
+    )
 
     def clean_last_name(self):
         if self.cleaned_data['last_name'] == self.cleaned_data['first_name']:
             raise ValidationError('First and last name cannot be the same.',
                                   code='invalid_names')
         return self.cleaned_data['last_name']
+
+    def clean_spam_filter(self):
+        if self.cleaned_data['spam_filter']:
+            raise ValidationError('Hidden fields should not be filled.',
+                                  code='invalid')
+        return self.cleaned_data['spam_filter']
 
 
 class RegistrationFormWithCustomFields(

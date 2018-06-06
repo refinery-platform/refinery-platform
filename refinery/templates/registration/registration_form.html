@@ -93,6 +93,11 @@
 			</label>
 			{% endcomment %}
 
+      {% if form.spam_filter.errors %}
+			<p class="errors">{{ form.spam_filter.errors.as_text }}</p>
+			{% endif %}
+			<p>{{ form.spam_filter }}</p>
+
 			<p class="submit"><input class="refinery-base btn btn-default"
         type="submit"
         value="Register"></p>
