@@ -13,8 +13,7 @@ from django.db.migrations.executor import MigrationExecutor
 from django.test import TestCase
 from django.utils import timezone
 
-from guardian.core import ObjectPermissionChecker
-from guardian.shortcuts import assign_perm, get_objects_for_group, remove_perm
+from guardian.shortcuts import assign_perm, get_objects_for_group
 import mock
 import mockcache as memcache
 

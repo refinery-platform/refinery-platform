@@ -2487,8 +2487,6 @@ class Event(models.Model):
     # def render_group_user_removal(self):
     #     return '{}'.format(self.user)
 
-
-
     def __unicode__(self):
         if self.dataset is not None and self.group is None:
             if self.type == Event.CREATE:
