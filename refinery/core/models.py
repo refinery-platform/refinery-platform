@@ -801,6 +801,18 @@ class DataSet(SharableResource):
         """
         return not (self.get_analyses() or self.has_visualizations())
 
+    def get_datafile_names(self, local_datafiles_only=False,
+                           exclude_metadata_file=False):
+        if local_datafiles_only:
+            file_store_items = self.get_local_file_store_items(
+                exclude_metadata_file=exclude_metadata_file
+            )
+        else:
+            file_store_items = self.get_file_store_items(
+                exclude_metadata_file=exclude_metadata_file
+            )
+        return sorted(
+            [os.path.basename(f.source) for f in file_store_items]
         )
 
 
