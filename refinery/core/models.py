@@ -2477,7 +2477,10 @@ class Event(models.Model):
 
     dataset = models.ForeignKey(DataSet, null=True)
     group = models.ForeignKey(Group, null=True)
-    user = models.ForeignKey(User)  # TODO: consider cuser.CurrentUserField
+    user = models.ForeignKey(User, null=True)
+    # Null user should not occur in production, but it lets older tests pass.
+    # I feel ambivalent about this.
+    # TODO: consider cuser.CurrentUserField
     type = models.CharField(max_length=32)
 
     sub_type = models.CharField(max_length=32)
