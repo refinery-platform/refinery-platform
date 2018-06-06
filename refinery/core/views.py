@@ -840,7 +840,7 @@ class DataSetsViewSet(APIView):
                         perm_groups = self.update_group_perms(new_owner)
                 except Exception as e:
                     return Response(
-                        e, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                        e, status=status.HTTP_412_PRECONDITION_FAILED
                     )
 
                 self.send_transfer_notification_email(current_owner,

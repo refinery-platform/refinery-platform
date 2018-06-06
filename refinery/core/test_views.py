@@ -265,7 +265,7 @@ class DataSetApiV2Tests(APIV2TestCase):
         patch_request.user = self.user
         force_authenticate(patch_request, user=self.user)
         response = self.view(patch_request, self.data_set.uuid)
-        self.assertEqual(response.status_code, 500)
+        self.assertEqual(response.status_code, 412)
         self.assertEqual(self.data_set.get_owner(), self.user)
 
     @mock.patch('core.views.get_groups_with_perms')
@@ -288,7 +288,7 @@ class DataSetApiV2Tests(APIV2TestCase):
         patch_request.user = self.user
         force_authenticate(patch_request, user=self.user)
         response = self.view(patch_request, self.data_set.uuid)
-        self.assertEqual(response.status_code, 500)
+        self.assertEqual(response.status_code, 412)
         self.assertEqual(len(get_groups_with_perms(self.data_set)), 2)
 
     # Accession too long
