@@ -607,7 +607,8 @@ class VisualizationTool(Tool):
         start_container.delay(self)
 
         Event.record_dataset_visualization_creation(
-            self.dataset, self.display_name)
+            self.dataset, self.display_name
+        )
 
 
 def handle_bioblend_exceptions(func):

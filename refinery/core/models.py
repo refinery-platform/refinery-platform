@@ -2272,7 +2272,8 @@ class Event(models.Model):
 
     def render_dataset_create(self):
         return '{} created data set {}'.format(
-            self.user, self.dataset.name)
+            self.user, self.dataset.name
+        )
 
     # Sub-types for data sets:
     PERMISSIONS_CHANGE = 'PERMISSIONS_CHANGE'
@@ -2349,7 +2350,8 @@ class Event(models.Model):
     def render_dataset_visualization_creation(self):
         data = json.loads(self.json)
         return '{} launched visualization {} on data set {}'.format(
-            self.user, data['display_name'], self.dataset.name)
+            self.user, data['display_name'], self.dataset.name
+        )
 
     VISUALIZATION_DELETION = 'VISUALIZATION_DELETION'
 
@@ -2511,10 +2513,13 @@ class Event(models.Model):
                 else:
                     raise StandardError(
                         'Bad event sub-type for dataset: {}'.format(
-                            self.sub_type))
+                            self.sub_type
+                        )
+                    )
             else:
                 raise StandardError(
-                    'Bad event type for dataset: {}'.format(self.type))
+                    'Bad event type for dataset: {}'.format(self.type)
+                )
         elif self.group is not None and self.dataset is None:
             if self.type == Event.CREATE:
                 return self.render_group_create()
@@ -2538,15 +2543,20 @@ class Event(models.Model):
                 else:
                     raise StandardError(
                         'Bad event sub-type for group: {}'.format(
-                            self.sub_type))
+                            self.sub_type
+                        )
+                    )
             else:
                 raise StandardError(
-                    'Bad event type for group: {}'.format(self.type))
+                    'Bad event type for group: {}'.format(self.type)
+                )
         else:
             raise StandardError(
                 'Expected exactly one of dataset and group to be not None, '
                 'instead dataset="{}" and group="{}"'.format(
-                    self.dataset, self.group))
+                    self.dataset, self.group
+                )
+            )
 
 # TODO
 # @receiver(post_save, sender=GroupObjectPermission)
