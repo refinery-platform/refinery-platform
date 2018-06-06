@@ -794,11 +794,11 @@ class DataSet(SharableResource):
     def is_clean(self):
         """
         Check whether or not any Analyses or Visualizations have been run on
-        a DataSet, or if a DataSet has been shared
+        a DataSet
         :return: boolean
         """
-        return not any(
-            [self.get_analyses(), self.has_visualizations(), self.shared]
+        return not (self.get_analyses() or self.has_visualizations())
+
         )
 
 
