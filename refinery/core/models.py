@@ -729,7 +729,7 @@ class DataSet(SharableResource):
                 user_ids
             )
 
-    def get_file_store_items(self):
+    def get_file_store_items(self, exclude_metadata_file=False):
         """Returns a list of all data files associated with the data set"""
         file_store_items = []
         investigation = self.get_investigation()
@@ -740,15 +740,19 @@ class DataSet(SharableResource):
             logger.error("Could not fetch Study properly: %s", e)
         else:
             for node in Node.objects.filter(study=study):
-                try:
-                    file_store_items.append(
-                        FileStoreItem.objects.get(uuid=node.file_uuid)
-                    )
-                except(FileStoreItem.DoesNotExist,
-                       FileStoreItem.MultipleObjectsReturned) as e:
-                    logger.error("Error while fetching FileStoreItem: %s", e)
-
-        file_store_items.append(investigation.get_file_store_item())
+                if node.file_uuid:
+                    try:
+                        file_store_items.append(
+                            FileStoreItem.objects.get(uuid=node.file_uuid)
+                        )
+                    except(FileStoreItem.DoesNotExist,
+                           FileStoreItem.MultipleObjectsReturned) as e:
+                        logger.error(
+                            "Error while fetching FileStoreItem for Node "
+                            "with UUID: %s : %s", node.uuid, e
+                        )
+        if not exclude_metadata_file:
+            file_store_items.append(investigation.get_file_store_item())
         return file_store_items
 
     @cached_property
