@@ -815,6 +815,10 @@ class DataSet(SharableResource):
             [os.path.basename(f.source) for f in file_store_items]
         )
 
+    def set_title(self, title):
+        self.title = title
+        self.save()
+
 
 @receiver(pre_delete, sender=DataSet)
 def _dataset_delete(sender, instance, *args, **kwargs):
