@@ -27,7 +27,7 @@ from django.contrib.sites.models import Site
 from django.core.mail import send_mail
 from django.db import models, transaction
 from django.db.models.fields import IntegerField
-from django.db.models.signals import post_init, post_save, pre_delete
+from django.db.models.signals import post_save, pre_delete
 from django.dispatch import receiver
 from django.forms import ValidationError
 from django.template import loader
@@ -40,7 +40,7 @@ from django.utils.functional import cached_property
 from django_auth_ldap.backend import LDAPBackend
 from django_extensions.db.fields import UUIDField
 
-from guardian.models import UserObjectPermission, GroupObjectPermission
+from guardian.models import UserObjectPermission
 from guardian.shortcuts import (
     assign_perm, get_groups_with_perms, get_objects_for_group,
     get_users_with_perms, remove_perm
@@ -2244,7 +2244,6 @@ class SiteStatistics(models.Model):
         return sum(u.login_count for u in UserProfile.objects.all()) - \
                sum(s.total_user_logins for s in
                    SiteStatistics.objects.exclude(id=self.id))
-
 
 
 class Event(models.Model):

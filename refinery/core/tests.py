@@ -1753,7 +1753,6 @@ class DataSetPermissionsUpdateTests(TestMigrations):
         # )
 
 
-
 class TestManagementCommands(TestCase):
     def test_set_up_site_name(self):
         site_name = "Refinery Test"
