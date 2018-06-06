@@ -2021,7 +2021,18 @@ class EventTests(TestCase):
         pass  # TODO
 
     def test_dataset_analysis_creation(self):
-        pass  # TODO
+        create_tool_with_necessary_models("WORKFLOW")
+
+        events = Event.objects.all()
+        self.assertEqual(len(events), 2)
+        self.assertRegexpMatches(
+            str(events[0]),
+            self.pre_re + r'created' + self.post_re
+        )
+        self.assertRegexpMatches(
+            str(events[1]),
+            self.pre_re + r'launched workflow None on' + self.post_re
+        )
 
     def test_dataset_analysis_deletion(self):
         pass  # TODO
