@@ -2247,6 +2247,7 @@ class SiteStatistics(models.Model):
 
 
 class Event(models.Model):
+    datetime = models.DateTimeField(default=timezone.now)
     dataset = models.ForeignKey(DataSet, null=True)
     group = models.ForeignKey(Group, null=True)
     user = models.ForeignKey(User, null=True)
@@ -2271,33 +2272,22 @@ class Event(models.Model):
         Event.objects.create(dataset=dataset, user=user, type=Event.CREATE)
 
     def render_dataset_create(self):
-        return '{} created data set {}'.format(
-            self.user, self.dataset.name
+        return '{:%x %X}: {} created data set {}'.format(
+            self.datetime, self.user, self.dataset.name
         )
 
     # Sub-types for data sets:
     PERMISSIONS_CHANGE = 'PERMISSIONS_CHANGE'
 
-    @staticmethod
-    def record_dataset_permissions_change(dataset,
-                                          group, old, new):
-        user = CuserMiddleware.get_user()
-        blob = json.dumps({
-            'group_id': group.id,
-            'old': old,
-            'new': new
-        })
-        event = Event(dataset=dataset, user=user, json=blob,
-                      type=Event.UPDATE, sub_type=Event.PERMISSIONS_CHANGE)
-        event.save()
-
-    def render_dataset_permissions_change(self):
-        data = json.loads(self.json)
-        group = Group.objects.get(pk=data['group_id'])
-        return '{} changed permission for data set {} ' \
-               'for group {} from "{}" to "{}"'.format(
-                    self.user, self.dataset.name,
-                    group, data['old'], data['new'])
+    # TODO:
+    # @staticmethod
+    # def record_dataset_permissions_change():
+    #     event = Event()
+    #     event.save()
+    #     return event
+    #
+    # def render_dataset_permissions_change(self):
+    #     return '{}'.format(self.user)
 
     METADATA_REUPLOAD = 'METADATA_REUPLOAD'
 
@@ -2349,8 +2339,8 @@ class Event(models.Model):
 
     def render_dataset_visualization_creation(self):
         data = json.loads(self.json)
-        return '{} launched visualization {} on data set {}'.format(
-            self.user, data['display_name'], self.dataset.name
+        return '{:%x %X}: {} launched visualization {} on data set {}'.format(
+            self.datetime, self.user, data['display_name'], self.dataset.name
         )
 
     VISUALIZATION_DELETION = 'VISUALIZATION_DELETION'

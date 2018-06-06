@@ -1987,7 +1987,8 @@ class EventTests(TestCase):
         self.assertEqual(len(events), 1)
         self.assertRegexpMatches(
             str(events[0]),
-            r'^testuser created data set Test DataSet - [0-9a-f-]+$'
+            r'^\d{2}/\d{2}/\d{2} \d{2}:\d{2}:\d{2}: testuser created data set '
+            r'Test DataSet - [0-9a-f-]+$'
         )
 
     # DataSetPermissionsUpdateTests covers dataset_permissions_change.
