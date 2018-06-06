@@ -615,6 +615,19 @@ def _visualization_saved(sender, instance, *args, **kwargs):
     )
 
 
+@receiver(pre_delete, sender=VisualizationTool)
+def remove_tool_container(sender, instance, *args, **kwargs):
+    """
+    Remove the Docker container instance corresponding to a
+    VisualizationTool's launch.
+    """
+    try:
+        instance.django_docker_client.purge_by_label(instance.uuid)
+    except APIError as e:
+        logger.error("Couldn't purge container for Tool with UUID: %s %s",
+                     instance.uuid, e)
+
+
 def handle_bioblend_exceptions(func):
     """Decorator to be used on functions that make calls using bioblend
        Set our Analysis to a FAILURE_STATE if we hit a bioblend ConnectionError
@@ -1451,16 +1464,3 @@ class WorkflowTool(Tool):
             library_id,
             datafile_url
         )
-
-
-@receiver(pre_delete, sender=VisualizationTool)
-def remove_tool_container(sender, instance, *args, **kwargs):
-    """
-    Remove the Docker container instance corresponding to a
-    VisualizationTool's launch.
-    """
-    try:
-        instance.django_docker_client.purge_by_label(instance.uuid)
-    except APIError as e:
-        logger.error("Couldn't purge container for Tool with UUID: %s %s",
-                     instance.uuid, e)
