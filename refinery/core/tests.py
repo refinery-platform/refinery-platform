@@ -2031,7 +2031,7 @@ class EventTests(TestCase):
         )
         self.assertRegexpMatches(
             str(events[1]),
-            self.pre_re + r'launched workflow None on' + self.post_re
+            self.pre_re + r'launched analysis None on' + self.post_re
         )
 
     def test_dataset_analysis_deletion(self):

@@ -1464,3 +1464,11 @@ class WorkflowTool(Tool):
             library_id,
             datafile_url
         )
+
+
+@receiver(post_save, sender=WorkflowTool)
+def _visualization_saved(sender, instance, *args, **kwargs):
+    # TODO: Distinguish creation from modification?
+    Event.record_dataset_analysis_creation(
+        instance.dataset, instance.display_name
+    )
