@@ -1216,4 +1216,3 @@ def associate_datafiles_from_existing_dataset(dataset, investigation):
                 # unintended side-effects
                 prior_file_store_item.datafile = None
                 prior_file_store_item.save()
-
