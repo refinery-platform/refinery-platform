@@ -2014,8 +2014,8 @@ class EventTests(TestCase):
         )
         self.assertRegexpMatches(
             str(events[1]),
-            self.pre_re \
-            + r'launched visualization Test VISUALIZATION Tool: [0-9a-f-]+ on' \
+            self.pre_re
+            + r'launched visualization Test VISUALIZATION Tool: [0-9a-f-]+ on'
             + self.post_re
         )
 
@@ -2033,9 +2033,9 @@ class EventTests(TestCase):
         )
         self.assertRegexpMatches(
             str(events[1]),
-            self.pre_re \
-            + r'launched analysis Test WORKFLOW Tool: [0-9a-f-]+ on' + \
-            self.post_re
+            self.pre_re
+            + r'launched analysis Test WORKFLOW Tool: [0-9a-f-]+ on'
+            + self.post_re
         )
 
     def test_data_set_analysis_deletion(self):
