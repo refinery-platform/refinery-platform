@@ -13,6 +13,8 @@ import mockcache as memcache
 from rest_framework.test import (
     APIClient, APIRequestFactory, APITestCase, force_authenticate
 )
+
+from core.management.commands.create_public_group import create_public_group
 from data_set_manager.models import (Assay, Investigation, Node, Study)
 from factory_boy.django_model_factories import (
     GalaxyInstanceFactory, WorkflowEngineFactory, WorkflowFactory
@@ -939,9 +941,14 @@ class WorkflowApiV2Tests(APIV2TestCase):
 
 class EventApiV2Tests(APIV2TestCase):
     def setUp(self):
+        create_public_group()
+        # Prints a warning and continues if public group already exists.
+        # Necessary if using "--settings=config.settings.quick_test".
+        # TODO: Move to superclass?
+
         super(EventApiV2Tests, self).setUp(
             api_base_name="events/",
-            view=EventViewSet.as_view()  # dict arg?
+            view=EventViewSet.as_view({"get": "list"})
         )
         # Create a dataset?
         # Or log an event directly?
