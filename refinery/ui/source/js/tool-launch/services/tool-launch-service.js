@@ -147,6 +147,9 @@
       launchConfig.tool_definition_uuid = toolService.selectedTool.uuid;
       launchConfig.file_relationships = generateFileStr();
       launchConfig.parameters = paramsService.paramsForm;
+      if (paramsService.toolEditForm.display_name) {
+        launchConfig.display_name = paramsService.toolEditForm.display_name;
+      }
     }
 
     // helper method which inserts commas between sets )(,][,)[,](
