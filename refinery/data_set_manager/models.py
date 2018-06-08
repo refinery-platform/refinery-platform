@@ -3,6 +3,7 @@ Created on May 10, 2012
 
 @author: nils
 '''
+import os
 from datetime import datetime
 import logging
 
@@ -202,6 +203,53 @@ class Investigation(NodeCollection):
             assay_count += study.assay_set.count()
 
         return assay_count
+
+    def get_file_store_items(self, exclude_metadata_file=False,
+                             local_only=False):
+        """
+        Returns a list of all data files associated with an Investigation
+
+        :param exclude_metadata_file: <Boolean> Whether or not to exclude
+        the metadata file used to crete the Investigation from the resulting
+        list
+        :param local_only:  <Boolean> Whether or not to only include
+        FileStoreItems that have been imported into Refinery
+        """
+        file_store_items = []
+
+        try:
+            study = Study.objects.get(investigation=self)
+        except (Study.DoesNotExist, Study.MultipleObjectsReturned) as e:
+            logger.error("Could not fetch Study properly: %s", e)
+        else:
+            for node in Node.objects.filter(study=study):
+                if node.file_uuid:
+                    try:
+                        file_store_items.append(
+                            FileStoreItem.objects.get(uuid=node.file_uuid)
+                        )
+                    except(FileStoreItem.DoesNotExist,
+                           FileStoreItem.MultipleObjectsReturned) as e:
+                        logger.error(
+                            "Error while fetching FileStoreItem for Node "
+                            "with UUID: %s : %s", node.uuid, e
+                        )
+        if not exclude_metadata_file:
+            file_store_items.append(self.get_file_store_item())
+
+        return (
+            [f for f in file_store_items if f.is_local()] if local_only
+            else file_store_items
+        )
+
+    def get_datafile_names(self, local_only=False,
+                           exclude_metadata_file=False):
+        file_store_items = self.get_file_store_items(
+            local_only=local_only, exclude_metadata_file=exclude_metadata_file
+        )
+        return sorted(
+            [os.path.basename(f.source) for f in file_store_items]
+        )
 
 
 @receiver(pre_delete, sender=Investigation)

@@ -729,36 +729,10 @@ class DataSet(SharableResource):
                 user_ids
             )
 
-    def get_file_store_items(self, exclude_metadata_file=False):
-        """Returns a list of all data files associated with the data set"""
-        file_store_items = []
-        investigation = self.get_investigation()
-
-        try:
-            study = Study.objects.get(investigation=investigation)
-        except (Study.DoesNotExist, Study.MultipleObjectsReturned) as e:
-            logger.error("Could not fetch Study properly: %s", e)
-        else:
-            for node in Node.objects.filter(study=study):
-                if node.file_uuid:
-                    try:
-                        file_store_items.append(
-                            FileStoreItem.objects.get(uuid=node.file_uuid)
-                        )
-                    except(FileStoreItem.DoesNotExist,
-                           FileStoreItem.MultipleObjectsReturned) as e:
-                        logger.error(
-                            "Error while fetching FileStoreItem for Node "
-                            "with UUID: %s : %s", node.uuid, e
-                        )
-        if not exclude_metadata_file:
-            file_store_items.append(investigation.get_file_store_item())
-        return file_store_items
-
-    def get_local_file_store_items(self, exclude_metadata_file=False):
-        return [f for f in self.get_file_store_items(
-            exclude_metadata_file=exclude_metadata_file
-        ) if f.is_local()]
+    def get_file_store_items(self):
+        """Get a list of FileStoreItem instances corresponding to a
+        DataSet's latest Investigation"""
+        return self.get_investigation().get_file_store_items()
 
     @cached_property
     def is_valid(self):
