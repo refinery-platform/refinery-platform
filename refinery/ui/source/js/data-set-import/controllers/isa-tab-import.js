@@ -6,10 +6,11 @@
     .controller('IsaTabImportCtrl', IsaTabImportCtrl);
 
   IsaTabImportCtrl.$inject = [
-    '$log', '$rootScope', '$timeout', '$window', 'isaTabImportApi', 'settings'
+    '$log', '$rootScope', '$timeout', '$window', '$location', 'isaTabImportApi', 'settings'
   ];
 
-  function IsaTabImportCtrl ($log, $rootScope, $timeout, $window, isaTabImportApi, settings) {
+  function IsaTabImportCtrl ($log, $rootScope, $timeout, $window, $location,
+                             isaTabImportApi, settings) {
     this.$log = $log;
     this.$rootScope = $rootScope;
     this.$timeout = $timeout;
@@ -17,6 +18,8 @@
     this.isaTabImportApi = isaTabImportApi;
     this.settings = settings;
     this.showFileUpload = false;
+    this.dataSetUUID = $location.search().dataSetUUID;
+    this.isMetaDataRevision = !!this.dataSetUUID;
 
     // Helper method to exit out of error alert
     this.closeError = function () {
@@ -70,7 +73,6 @@
 
   IsaTabImportCtrl.prototype.startImport = function () {
     var self = this;
-
     this.isImporting = true;
 
     var formData = new FormData();
@@ -82,8 +84,12 @@
       formData.append('identity_id', AWS.config.credentials.identityId);
     }
 
+    var queryParams = {};
+    if (this.isMetaDataRevision) {
+      queryParams = { data_set_uuid: this.dataSetUUID };
+    }
     return this.isaTabImportApi
-      .create({}, formData)
+      .create(queryParams, formData)
       .$promise
       .then(function (response) {
         self.importedDataSetUuid = response.data.new_data_set_uuid;
