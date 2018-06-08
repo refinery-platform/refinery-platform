@@ -954,7 +954,18 @@ class EventApiV2Tests(APIV2TestCase):
         # Or log an event directly?
 
     def test_get_event_list(self):
+        create_dataset_with_necessary_models()
         get_request = self.factory.get(urljoin(self.url_root, '/'))
         get_response = self.view(get_request).render()
-        # TODO: Why Do I need render?
-        self.assertEqual(get_response.content, '[]')
+        # TODO: Why do I need render()?
+        self.assertEqual(
+            json.loads(get_response.content),
+            [{
+                "data_set": 1,
+                "group": None,
+                "user": None,
+                "type": "CREATE",
+                "sub_type": "",
+                "json": ""
+            }]
+        )

@@ -170,4 +170,4 @@ class NodeSerializer(serializers.HyperlinkedModelSerializer):
 class EventSerializer(serializers.ModelSerializer):
     class Meta:
         model = Event
-        fields = ['dataset', 'group', 'user', 'type', 'sub_type', 'json']
+        fields = ['data_set', 'group', 'user', 'type', 'sub_type', 'json']
