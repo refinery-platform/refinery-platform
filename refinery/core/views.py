@@ -708,7 +708,7 @@ class EventViewSet(viewsets.ReadOnlyModelViewSet):
     http_method_names = ['get']
 
     def get_queryset(self):
-        datasets = get_objects_for_user(
+        data_sets = get_objects_for_user(
             CuserMiddleware.get_user(),
             'core.read_dataset',
             # TODO: Is accept_global_perms necessary?
@@ -716,7 +716,7 @@ class EventViewSet(viewsets.ReadOnlyModelViewSet):
                 'dataset'
             )
         )
-        return Event.objects.filter(data_set__in=datasets)
+        return Event.objects.filter(data_set__in=data_sets)
 
 
 class DataSetsViewSet(APIView):

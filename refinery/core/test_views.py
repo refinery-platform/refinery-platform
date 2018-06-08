@@ -972,20 +972,23 @@ class EventApiV2Tests(APIV2TestCase):
         user = User.objects.create_user('testuser')
         CuserMiddleware.set_user(user)
 
-        create_tool_with_necessary_models("VISUALIZATION").set_owner(user)
-        create_tool_with_necessary_models("WORKFLOW").set_owner(user)
+        v_tool = create_tool_with_necessary_models("VISUALIZATION")
+        v_tool.dataset.set_owner(user)
+
+        w_tool = create_tool_with_necessary_models("WORKFLOW")
+        w_tool.dataset.set_owner(user)
 
         events = Event.objects.all()
         self.assertEqual(len(events), 4)
 
-        # messages = [str(_) for _ in events]
-        # data_sets = [_.data_set.uuid for _ in events]
-        # display_names = [
-        #     json.loads(_.json).get('display_name') for _ in events
-        # ]
-        # date_times = [
-        #     _.date_time.isoformat().replace('+00:00', 'Z') for _ in events
-        # ]
+        messages = [str(_) for _ in events]
+        data_sets = [_.data_set.uuid for _ in events]
+        display_names = [
+            json.loads(_.json).get('display_name') for _ in events
+        ]
+        date_times = [
+            _.date_time.isoformat().replace('+00:00', 'Z') for _ in events
+        ]
 
         get_request = self.factory.get(urljoin(self.url_root, '/'))
         get_response = self.view(get_request).render()
@@ -994,48 +997,46 @@ class EventApiV2Tests(APIV2TestCase):
         self.maxDiff = None
         self.assertEqual(
             json.loads(get_response.content),
-            []
-            # TODO: Owner should be able to see these...
-            # [
-            #     {
-            #         'date_time': date_times[0],
-            #         'message': messages[0],
-            #         'data_set': data_sets[0],
-            #         'group': None,
-            #         'user': user.username,
-            #         'type': 'CREATE',
-            #         'sub_type': '',
-            #         'json': {}
-            #     },
-            #     {
-            #         'date_time': date_times[1],
-            #         'message': messages[1],
-            #         'data_set': data_sets[1],
-            #         'group': None,
-            #         'user': user.username,
-            #         'type': 'UPDATE',
-            #         'sub_type': 'VISUALIZATION_CREATION',
-            #         'json': {'display_name': display_names[1]}
-            #     },
-            #     {
-            #         'date_time': date_times[2],
-            #         'message': messages[2],
-            #         'data_set': data_sets[2],
-            #         'group': None,
-            #         'user': user.username,
-            #         'type': 'CREATE',
-            #         'sub_type': '',
-            #         'json': {}
-            #     },
-            #     {
-            #         'date_time': date_times[3],
-            #         'message': messages[3],
-            #         'data_set': data_sets[3],
-            #         'group': None,
-            #         'user': user.username,
-            #         'type': 'UPDATE',
-            #         'sub_type': 'ANALYSIS_CREATION',
-            #         'json': {'display_name': display_names[3]}
-            #     }
-            # ]
+            [
+                {
+                    'date_time': date_times[0],
+                    'message': messages[0],
+                    'data_set': data_sets[0],
+                    'group': None,
+                    'user': user.username,
+                    'type': 'CREATE',
+                    'sub_type': '',
+                    'json': {}
+                },
+                {
+                    'date_time': date_times[1],
+                    'message': messages[1],
+                    'data_set': data_sets[1],
+                    'group': None,
+                    'user': user.username,
+                    'type': 'UPDATE',
+                    'sub_type': 'VISUALIZATION_CREATION',
+                    'json': {'display_name': display_names[1]}
+                },
+                {
+                    'date_time': date_times[2],
+                    'message': messages[2],
+                    'data_set': data_sets[2],
+                    'group': None,
+                    'user': user.username,
+                    'type': 'CREATE',
+                    'sub_type': '',
+                    'json': {}
+                },
+                {
+                    'date_time': date_times[3],
+                    'message': messages[3],
+                    'data_set': data_sets[3],
+                    'group': None,
+                    'user': user.username,
+                    'type': 'UPDATE',
+                    'sub_type': 'ANALYSIS_CREATION',
+                    'json': {'display_name': display_names[3]}
+                }
+            ]
         )
