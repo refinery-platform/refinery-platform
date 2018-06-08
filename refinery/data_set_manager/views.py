@@ -65,7 +65,15 @@ class DataSetImportView(View):
 
     def get(self, request, *args, **kwargs):
         form = ImportISATabFileForm()
-        context = RequestContext(request, {'form': form})
+        data_set_name = request.GET.get('dataSetName')
+        context = RequestContext(
+            request,
+            {
+                'form': form,
+                'data_set_name': data_set_name.strip("/") if data_set_name
+                else None
+            }
+        )
         response = render_to_response(self.template_name,
                                       context_instance=context)
         return response
@@ -244,6 +252,7 @@ class ProcessISATabView(View):
 
     def post(self, request, *args, **kwargs):
         form = ImportISATabFileForm(request.POST, request.FILES)
+        existing_dataset_uuid = request.GET.get('data_set_uuid')
 
         if form.is_valid() or request.is_ajax():
             try:
@@ -311,7 +320,8 @@ class ProcessISATabView(View):
                     request.user.username,
                     False,
                     response['data']['temp_file_path'],
-                    identity_id=identity_id
+                    identity_id=identity_id,
+                    existing_dataset_uuid=existing_dataset_uuid
                 )
             except ParserException as e:
                 error_message = "{} {}".format(

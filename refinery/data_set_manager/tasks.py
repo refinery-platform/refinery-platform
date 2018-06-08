@@ -30,7 +30,8 @@ from file_store.models import FileExtension, generate_file_source_translator
 from .isa_tab_parser import IsaTabParser
 from .models import Investigation, Node, initialize_attribute_order
 from .utils import (calculate_checksum, fix_last_column, get_node_types,
-                    index_annotated_nodes, update_annotated_nodes)
+                    index_annotated_nodes, update_annotated_nodes,
+                    associate_datafiles_from_existing_dataset)
 
 logger = logging.getLogger(__name__)
 
@@ -194,7 +195,8 @@ def get_arrayexpress_studies():
 
 @task()
 def create_dataset(investigation_uuid, username, identifier=None, title=None,
-                   dataset_name=None, slug=None, public=False):
+                   dataset_name=None, slug=None, public=False,
+                   meta_data_revision=False):
     """creates (or updates) a dataset with the given investigation and user and
     returns the dataset UUID or None if something went wrong
     Parameters:
@@ -233,7 +235,8 @@ def create_dataset(investigation_uuid, username, identifier=None, title=None,
 
     datasets = DataSet.objects.filter(name=dataset_name)
     # check if the investigation already exists
-    if len(datasets):  # if not 0, update dataset with new investigation
+    if len(datasets) and not meta_data_revision:  # if not 0, update dataset with new
+        # investigation
         """go through datasets until you find one with the correct owner"""
         for ds in datasets:
             own = ds.get_owner()
@@ -260,10 +263,7 @@ def create_dataset(investigation_uuid, username, identifier=None, title=None,
     dataset.file_size = dataset.get_file_size()
     dataset.file_count = dataset.get_file_count()
     dataset.save()
-    # Finally index data set
-    update_data_set_index(dataset)
     add_data_set_to_neo4j(dataset, user.id)
-    async_update_annotation_sets_neo4j()
     return dataset.uuid
 
 
@@ -304,7 +304,8 @@ def annotate_nodes(investigation_uuid):
 @task()
 def parse_isatab(username, public, path, identity_id=None,
                  additional_raw_data_file_extension=None, isa_archive=None,
-                 pre_isa_archive=None, file_base_path=None, overwrite=False):
+                 pre_isa_archive=None, file_base_path=None, overwrite=False,
+                 existing_dataset_uuid=None):
     """parses in an ISA-TAB file to create database entries and creates or
     updates a dataset for the investigation to belong to; returns the dataset
     UUID or None if something went wrong. Use like this: parse_isatab(username,
@@ -320,6 +321,8 @@ def parse_isatab(username, public, path, identity_id=None,
     directory for storage and legacy purposes
     pre_isa_archive: optional copy of files that were converted to ISA-Tab
     file_base_path: if your file locations are relative paths, this is the base
+    existing_dataset_uuid: UUID of an existing DataSet that is getting a
+    metadata revision
     """
     file_source_translator = generate_file_source_translator(
         username=username, base_path=file_base_path, identity_id=identity_id
@@ -347,7 +350,8 @@ def parse_isatab(username, public, path, identity_id=None,
             dataset_title = "%s: %s" % (identifier, title)
             datasets = DataSet.objects.filter(name=dataset_title)
         # check if the investigation already exists
-        if len(datasets):  # if not 0, update dataset with new investigation
+        if len(datasets) and not existing_dataset_uuid:
+            # if not 0, update dataset with new investigation
             # go through datasets until you find one with the correct owner
             for ds in datasets:
                 own = ds.get_owner()
@@ -391,10 +395,17 @@ def parse_isatab(username, public, path, identity_id=None,
         investigation = parser.run(
             path, isa_archive=isa_archive, preisa_archive=pre_isa_archive
         )
-        data_uuid = create_dataset(
-            investigation.uuid, username, public=public
+        if existing_dataset_uuid:
+            _update_existing_dataset_with_revised_investigation(
+                investigation, existing_dataset_uuid
+            )
+            return existing_dataset_uuid
+
+        dataset_uuid = create_dataset(
+            investigation.uuid, username, public=public,
+            meta_data_revision=existing_dataset_uuid
         )
-        return data_uuid
+        return dataset_uuid
 
 
 @task()
@@ -473,3 +484,53 @@ def generate_bam_index(auxiliary_file_store_item_uuid, datafile_path):
     auxiliary_file_store_item.source = "{}.{}".format(
         datafile_path, bam_index_file_extension)
     auxiliary_file_store_item.save()
+
+
+def _update_existing_dataset_with_revised_investigation(new_investigation,
+                                                        existing_dataset_uuid):
+    existing_dataset = DataSet.objects.get(uuid=existing_dataset_uuid)
+    existing_investigation = existing_dataset.get_investigation()
+
+    if not existing_dataset.is_clean():
+        raise RuntimeError("DataSet with UUID: {} is not clean (There have "
+                           "been Analyses or Visualizations performed on it) "
+                           "Remove these objects and try again"
+                           .format(existing_dataset_uuid))
+
+    existing_datafile_names = existing_investigation.get_datafile_names(
+        exclude_metadata_file=True
+    )
+    new_datafile_names = new_investigation.get_datafile_names(
+        exclude_metadata_file=True
+    )
+
+    # Check referenced data file equivalence
+    if existing_datafile_names != new_datafile_names:
+        datafile_names_not_present = list(
+            set(existing_datafile_names) - set(new_datafile_names)
+        )
+        raise RuntimeError(
+            "Data file names don't match between the existing "
+            "DataSet: {} and the new metadata file ({}). The following data "
+            "files aren't referenced in both: {}".format(
+                existing_dataset_uuid,
+                os.path.basename(
+                    new_investigation.get_file_store_item().datafile.name
+                ),
+                ", ".join(datafile_names_not_present)
+            )
+        )
+
+    # Check if existing DataSet's latest Investigation has data files that
+    # have already been uploaded into Refinery
+    associate_datafiles_from_existing_dataset(
+        existing_dataset, new_investigation
+    )
+
+    updated_dataset_title = new_investigation.title
+    existing_dataset.update_investigation(
+        new_investigation,
+        "Metadata Revision: for {}".format(updated_dataset_title)
+    )
+    annotate_nodes(new_investigation.uuid)
+    existing_dataset.set_title(updated_dataset_title)

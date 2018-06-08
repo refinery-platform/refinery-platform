@@ -1192,3 +1192,28 @@ def get_solr_response_json(node_uuids):
         'data_set_manager'
     )
     return format_solr_response(solr_response)
+
+
+def associate_datafiles_from_existing_dataset(dataset, investigation):
+    """
+    Transfer data files from an existing DataSet's FileStoreItems that
+    correspond to data files of the same source in an Investigation's
+    FileStoreItems
+    :param dataset: DataSet instance to transfer datafiles from
+    :param investigation: Investigation instance to transfer data files to
+    """
+    file_store_items_from_existing_dataset = \
+        dataset.get_investigation().get_file_store_items(local_only=True)
+
+    for new_file_store_item in investigation.get_file_store_items():
+        for prior_file_store_item in file_store_items_from_existing_dataset:
+            if prior_file_store_item.source == new_file_store_item.source:
+                new_file_store_item.datafile = prior_file_store_item.datafile
+                new_file_store_item.save()
+                # It's crucial to clear the datafile of the prior
+                # FileStoreItem as well. Otherwise there would be two
+                # references to the same data file which could cause
+                # unintended side-effects
+                prior_file_store_item.datafile = None
+                prior_file_store_item.save()
+
