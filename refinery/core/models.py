@@ -2336,7 +2336,7 @@ class Event(models.Model):
     def render_data_set_visualization_creation(self):
         data = json.loads(self.json)
         return '{:%x %X}: {} launched visualization {} on data set {}'.format(
-            self.datetime, self.user, data['display_name'], self.data_set.name
+            self.date_time, self.user, data['display_name'], self.data_set.name
         )
 
     VISUALIZATION_DELETION = 'VISUALIZATION_DELETION'
@@ -2353,15 +2353,21 @@ class Event(models.Model):
 
     ANALYSIS_CREATION = 'ANALYSIS_CREATION'
 
-    # TODO:
-    # @staticmethod
-    # def record_data_set_analysis_creation():
-    #     event = Event()
-    #     event.save()
-    #     return event
-    #
-    # def render_data_set_analysis_creation(self):
-    #     return '{}'.format(self.user)
+    @staticmethod
+    def record_data_set_analysis_creation(data_set, display_name):
+        user = CuserMiddleware.get_user()
+        blob = json.dumps({
+            'display_name': display_name
+        })
+        event = Event(data_set=data_set, user=user, json=blob,
+                      type=Event.UPDATE, sub_type=Event.ANALYSIS_CREATION)
+        event.save()
+
+    def render_data_set_analysis_creation(self):
+        data = json.loads(self.json)
+        return '{:%x %X}: {} launched analysis {} on data set {}'.format(
+            self.date_time, self.user, data['display_name'], self.data_set.name
+        )
 
     ANALYSIS_DELETION = 'ANALYSIS_DELETION'
 

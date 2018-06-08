@@ -7,7 +7,7 @@ import uuid
 
 from django.conf import settings
 from django.db import models
-from django.db.models.signals import post_delete, pre_delete
+from django.db.models.signals import post_delete, post_save, pre_delete
 from django.dispatch import receiver
 
 import bioblend
@@ -606,9 +606,26 @@ class VisualizationTool(Tool):
         # asynchronously
         start_container.delay(self)
 
-        Event.record_data_set_visualization_creation(
-            self.data_set, self.display_name
-        )
+
+@receiver(post_save, sender=VisualizationTool)
+def _visualization_saved(sender, instance, *args, **kwargs):
+    # TODO: Distinguish creation from modification?
+    Event.record_data_set_visualization_creation(
+        instance.dataset, instance.display_name
+    )
+
+
+@receiver(pre_delete, sender=VisualizationTool)
+def remove_tool_container(sender, instance, *args, **kwargs):
+    """
+    Remove the Docker container instance corresponding to a
+    VisualizationTool's launch.
+    """
+    try:
+        instance.django_docker_client.purge_by_label(instance.uuid)
+    except APIError as e:
+        logger.error("Couldn't purge container for Tool with UUID: %s %s",
+                     instance.uuid, e)
 
 
 def handle_bioblend_exceptions(func):
@@ -1449,14 +1466,9 @@ class WorkflowTool(Tool):
         )
 
 
-@receiver(pre_delete, sender=VisualizationTool)
-def remove_tool_container(sender, instance, *args, **kwargs):
-    """
-    Remove the Docker container instance corresponding to a
-    VisualizationTool's launch.
-    """
-    try:
-        instance.django_docker_client.purge_by_label(instance.uuid)
-    except APIError as e:
-        logger.error("Couldn't purge container for Tool with UUID: %s %s",
-                     instance.uuid, e)
+@receiver(post_save, sender=WorkflowTool)
+def _workflow_saved(sender, instance, *args, **kwargs):
+    # TODO: Distinguish creation from modification?
+    Event.record_data_set_analysis_creation(
+        instance.dataset, instance.display_name
+    )
