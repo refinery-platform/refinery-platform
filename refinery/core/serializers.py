@@ -1,3 +1,4 @@
+import json
 import logging
 
 import celery
@@ -176,6 +177,12 @@ class _StrObjectField(serializers.Field):
         return str(obj)
 
 
+class _DeserializeJSONField(serializers.Field):
+
+    def to_representation(self, obj):
+        return json.loads(obj)
+
+
 class EventSerializer(serializers.ModelSerializer):
     data_set = serializers.SlugRelatedField(
         read_only=True,
@@ -188,6 +195,8 @@ class EventSerializer(serializers.ModelSerializer):
     )
 
     message = _StrObjectField()
+
+    json = _DeserializeJSONField()
 
     class Meta:
         model = Event

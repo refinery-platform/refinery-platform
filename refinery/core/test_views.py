@@ -962,12 +962,12 @@ class EventApiV2Tests(APIV2TestCase):
 
         events = Event.objects.all()
         self.assertEqual(len(events), 4)
+
         messages = [str(_) for _ in events]
         data_sets = [_.data_set.uuid for _ in events]
-        jsons = [_.json for _ in events]
-        # Could get all the other fields, too, but this is the only one
-        # we can only get from the Event object
-        # (and if we shift more rendering to the view, it would disappear).
+        display_names = [
+            json.loads(_.json).get('display_name') for _ in events
+        ]
 
         get_request = self.factory.get(urljoin(self.url_root, '/'))
         get_response = self.view(get_request).render()
@@ -984,7 +984,7 @@ class EventApiV2Tests(APIV2TestCase):
                     'user': user.username,
                     'type': 'CREATE',
                     'sub_type': '',
-                    'json': ''
+                    'json': {}
                 },
                 {
                     'message': messages[1],
@@ -993,7 +993,7 @@ class EventApiV2Tests(APIV2TestCase):
                     'user': user.username,
                     'type': 'UPDATE',
                     'sub_type': 'VISUALIZATION_CREATION',
-                    'json': jsons[1]
+                    'json': {'display_name': display_names[1]}
                 },
                 {
                     'message': messages[2],
@@ -1002,7 +1002,7 @@ class EventApiV2Tests(APIV2TestCase):
                     'user': user.username,
                     'type': 'CREATE',
                     'sub_type': '',
-                    'json': ''
+                    'json': {}
                 },
                 {
                     'message': messages[3],
@@ -1011,7 +1011,7 @@ class EventApiV2Tests(APIV2TestCase):
                     'user': user.username,
                     'type': 'UPDATE',
                     'sub_type': 'ANALYSIS_CREATION',
-                    'json': jsons[3]
+                    'json': {'display_name': display_names[3]}
                 }
             ]
         )
