@@ -244,6 +244,16 @@ class Investigation(NodeCollection):
 
     def get_datafile_names(self, local_only=False,
                            exclude_metadata_file=False):
+        """
+        Returns a list of all data file names associated with an
+        Investigation
+
+        :param exclude_metadata_file: <Boolean> Whether or not to exclude
+        the metadata file used to crete the Investigation from the resulting
+        list
+        :param local_only:  <Boolean> Whether or not to only include data
+        file names of FileStoreItems that have been imported into Refinery
+        """
         file_store_items = self.get_file_store_items(
             local_only=local_only, exclude_metadata_file=exclude_metadata_file
         )
