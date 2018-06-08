@@ -7,6 +7,7 @@ from urlparse import urljoin
 from django.contrib.auth.models import User
 from django.utils.functional import SimpleLazyObject
 
+from cuser.middleware import CuserMiddleware
 from guardian.shortcuts import get_groups_with_perms
 import mock
 import mockcache as memcache
@@ -954,8 +955,12 @@ class EventApiV2Tests(APIV2TestCase):
         # Or log an event directly?
 
     def test_get_event_list(self):
+        user = User.objects.create_user('testuser')
+        CuserMiddleware.set_user(user)
+
         create_dataset_with_necessary_models()
         uuid = DataSet.objects.get(pk=1).uuid
+
         get_request = self.factory.get(urljoin(self.url_root, '/'))
         get_response = self.view(get_request).render()
         # TODO: Why do I need render()?
@@ -964,7 +969,7 @@ class EventApiV2Tests(APIV2TestCase):
             [{
                 u"data_set": uuid,
                 u"group": None,
-                u"user": None,
+                u"user": user.id,
                 u"type": "CREATE",
                 u"sub_type": "",
                 u"json": ""
