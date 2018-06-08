@@ -7,7 +7,7 @@ from rest_framework.validators import UniqueValidator
 from data_set_manager.models import Node
 from file_store.models import FileStoreItem
 
-from .models import DataSet, Workflow
+from .models import DataSet, Event, Workflow
 
 logger = logging.getLogger(__name__)
 
@@ -165,3 +165,9 @@ class NodeSerializer(serializers.HyperlinkedModelSerializer):
             'ready_for_igv_detail_view',
             'file_uuid'
         ]
+
+
+class EventSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Event
+        fields = ['dataset', 'group', 'user', 'type', 'sub_type', 'json']

@@ -21,7 +21,8 @@ from factory_boy.utils import create_dataset_with_necessary_models
 
 from .models import (Analysis, DataSet, ExtendedGroup, Project,
                      Workflow, WorkflowEngine)
-from .views import AnalysesViewSet, DataSetsViewSet, WorkflowViewSet
+from .views import (AnalysesViewSet, DataSetsViewSet, EventViewSet,
+                    WorkflowViewSet)
 
 cache = memcache.Client(["127.0.0.1:11211"])
 
@@ -934,3 +935,16 @@ class WorkflowApiV2Tests(APIV2TestCase):
             uuid=self.workflow.uuid
         )
         self.assertEqual(get_response.content, self.mock_workflow_graph)
+
+
+class EventApiV2Tests(APIV2TestCase):
+    def setUp(self):
+        super(EventApiV2Tests, self).setUp(
+            api_base_name="events/",
+            view=EventViewSet.as_view()  # dict arg?
+        )
+        # Create a dataset?
+        # Or log an event directly?
+
+    def test_get_event_list(self):
+        pass
