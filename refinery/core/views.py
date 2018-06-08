@@ -22,7 +22,9 @@ from django.views.decorators.gzip import gzip_page
 
 import boto3
 import botocore
-from guardian.shortcuts import get_groups_with_perms, get_perms
+from cuser.middleware import CuserMiddleware
+from guardian.shortcuts import (get_groups_with_perms, get_objects_for_user,
+                                get_perms)
 from guardian.utils import get_anonymous_user
 from registration import signals
 from registration.views import RegistrationView
@@ -36,6 +38,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 import xmltodict
 
+from core.utils import accept_global_perms
 from data_set_manager.models import Node
 
 from .forms import ProjectForm, UserForm, UserProfileForm, WorkflowForm
@@ -699,12 +702,21 @@ class NodeViewSet(viewsets.ModelViewSet):
     # permission_classes = (IsAuthenticated,)
 
 
-class EventViewSet(viewsets.ModelViewSet):
+class EventViewSet(viewsets.ReadOnlyModelViewSet):
     """API endpoint that allows Events to be viewed"""
-    queryset = Event.objects.all()
     serializer_class = EventSerializer
-    # Don't think I need a lookup_field?
     http_method_names = ['get']
+
+    def get_queryset(self):
+        datasets = get_objects_for_user(
+            CuserMiddleware.get_user(),
+            'core.read_dataset',
+            # TODO: Is accept_global_perms necessary?
+            accept_global_perms=accept_global_perms(
+                'dataset'
+            )
+        )
+        return Event.objects.filter(data_set__in=datasets)
 
 
 class DataSetsViewSet(APIView):

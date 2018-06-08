@@ -178,7 +178,6 @@ class _StrObjectField(serializers.Field):
 
 
 class _DeserializeJSONField(serializers.Field):
-
     def to_representation(self, obj):
         return json.loads(obj)
 
