@@ -22,7 +22,7 @@ from factory_boy.django_model_factories import (
 )
 from factory_boy.utils import create_dataset_with_necessary_models
 
-from .models import (Analysis, DataSet, ExtendedGroup, Project,
+from .models import (Analysis, DataSet, Event, ExtendedGroup, Project,
                      Workflow, WorkflowEngine)
 from .views import (AnalysesViewSet, DataSetsViewSet, EventViewSet,
                     WorkflowViewSet)
@@ -951,21 +951,27 @@ class EventApiV2Tests(APIV2TestCase):
             api_base_name="events/",
             view=EventViewSet.as_view({"get": "list"})
         )
-        # Create a dataset?
-        # Or log an event directly?
 
     def test_get_event_list(self):
         user = User.objects.create_user('testuser')
         CuserMiddleware.set_user(user)
 
         data_set = create_dataset_with_necessary_models()
+        events = Event.objects.all()
+        self.assertEqual(len(events), 1)
+        message = str(events[0])
+        # Could get all the other fields, too, but this is the only one
+        # we can only get from the Event object
+        # (and if we shift more rendering to the view, it would disappear).
 
         get_request = self.factory.get(urljoin(self.url_root, '/'))
         get_response = self.view(get_request).render()
         # TODO: Why do I need render()?
+
         self.assertEqual(
             json.loads(get_response.content),
             [{
+                u"message": message,
                 u"data_set": data_set.uuid,
                 u"group": None,
                 u"user": user.username,
