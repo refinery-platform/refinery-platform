@@ -954,4 +954,7 @@ class EventApiV2Tests(APIV2TestCase):
         # Or log an event directly?
 
     def test_get_event_list(self):
-        pass
+        get_request = self.factory.get(urljoin(self.url_root, '/'))
+        get_response = self.view(get_request).render()
+        # TODO: Why Do I need render?
+        self.assertEqual(get_response.content, '[]')
