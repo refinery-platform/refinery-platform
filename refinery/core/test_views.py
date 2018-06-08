@@ -20,7 +20,8 @@ from data_set_manager.models import (Assay, Investigation, Node, Study)
 from factory_boy.django_model_factories import (
     GalaxyInstanceFactory, WorkflowEngineFactory, WorkflowFactory
 )
-from factory_boy.utils import create_dataset_with_necessary_models
+from factory_boy.utils import (create_dataset_with_necessary_models,
+                               create_tool_with_necessary_models)
 
 from .models import (Analysis, DataSet, Event, ExtendedGroup, Project,
                      Workflow, WorkflowEngine)
@@ -956,10 +957,14 @@ class EventApiV2Tests(APIV2TestCase):
         user = User.objects.create_user('testuser')
         CuserMiddleware.set_user(user)
 
-        data_set = create_dataset_with_necessary_models()
+        create_tool_with_necessary_models("VISUALIZATION")
+        create_tool_with_necessary_models("WORKFLOW")
+
         events = Event.objects.all()
-        self.assertEqual(len(events), 1)
-        message = str(events[0])
+        self.assertEqual(len(events), 4)
+        messages = [str(_) for _ in events]
+        data_sets = [_.data_set.uuid for _ in events]
+        jsons = [_.json for _ in events]
         # Could get all the other fields, too, but this is the only one
         # we can only get from the Event object
         # (and if we shift more rendering to the view, it would disappear).
@@ -968,15 +973,45 @@ class EventApiV2Tests(APIV2TestCase):
         get_response = self.view(get_request).render()
         # TODO: Why do I need render()?
 
+        self.maxDiff = None
         self.assertEqual(
             json.loads(get_response.content),
-            [{
-                u"message": message,
-                u"data_set": data_set.uuid,
-                u"group": None,
-                u"user": user.username,
-                u"type": "CREATE",
-                u"sub_type": "",
-                u"json": ""
-            }]
+            [
+                {
+                    'message': messages[0],
+                    'data_set': data_sets[0],
+                    'group': None,
+                    'user': user.username,
+                    'type': 'CREATE',
+                    'sub_type': '',
+                    'json': ''
+                },
+                {
+                    'message': messages[1],
+                    'data_set': data_sets[1],
+                    'group': None,
+                    'user': user.username,
+                    'type': 'UPDATE',
+                    'sub_type': 'VISUALIZATION_CREATION',
+                    'json': jsons[1]
+                },
+                {
+                    'message': messages[2],
+                    'data_set': data_sets[2],
+                    'group': None,
+                    'user': user.username,
+                    'type': 'CREATE',
+                    'sub_type': '',
+                    'json': ''
+                },
+                {
+                    'message': messages[3],
+                    'data_set': data_sets[3],
+                    'group': None,
+                    'user': user.username,
+                    'type': 'UPDATE',
+                    'sub_type': 'ANALYSIS_CREATION',
+                    'json': jsons[3]
+                }
+            ]
         )
