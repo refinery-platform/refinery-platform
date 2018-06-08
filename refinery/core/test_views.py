@@ -955,17 +955,18 @@ class EventApiV2Tests(APIV2TestCase):
 
     def test_get_event_list(self):
         create_dataset_with_necessary_models()
+        uuid = DataSet.objects.get(pk=1).uuid
         get_request = self.factory.get(urljoin(self.url_root, '/'))
         get_response = self.view(get_request).render()
         # TODO: Why do I need render()?
         self.assertEqual(
             json.loads(get_response.content),
             [{
-                "data_set": 1,
-                "group": None,
-                "user": None,
-                "type": "CREATE",
-                "sub_type": "",
-                "json": ""
+                u"data_set": uuid,
+                u"group": None,
+                u"user": None,
+                u"type": "CREATE",
+                u"sub_type": "",
+                u"json": ""
             }]
         )

@@ -168,6 +168,11 @@ class NodeSerializer(serializers.HyperlinkedModelSerializer):
 
 
 class EventSerializer(serializers.ModelSerializer):
+    data_set = serializers.SlugRelatedField(
+        read_only=True,
+        slug_field='uuid'
+    )
+
     class Meta:
         model = Event
         fields = ['data_set', 'group', 'user', 'type', 'sub_type', 'json']
