@@ -958,8 +958,7 @@ class EventApiV2Tests(APIV2TestCase):
         user = User.objects.create_user('testuser')
         CuserMiddleware.set_user(user)
 
-        create_dataset_with_necessary_models()
-        uuid = DataSet.objects.get(pk=1).uuid
+        data_set = create_dataset_with_necessary_models()
 
         get_request = self.factory.get(urljoin(self.url_root, '/'))
         get_response = self.view(get_request).render()
@@ -967,9 +966,9 @@ class EventApiV2Tests(APIV2TestCase):
         self.assertEqual(
             json.loads(get_response.content),
             [{
-                u"data_set": uuid,
+                u"data_set": data_set.uuid,
                 u"group": None,
-                u"user": user.id,
+                u"user": user.username,
                 u"type": "CREATE",
                 u"sub_type": "",
                 u"json": ""

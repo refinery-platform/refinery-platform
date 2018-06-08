@@ -173,6 +173,11 @@ class EventSerializer(serializers.ModelSerializer):
         slug_field='uuid'
     )
 
+    user = serializers.SlugRelatedField(
+        read_only=True,
+        slug_field='username'
+    )
+
     class Meta:
         model = Event
         fields = ['data_set', 'group', 'user', 'type', 'sub_type', 'json']
