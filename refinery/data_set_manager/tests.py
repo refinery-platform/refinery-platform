@@ -56,8 +56,7 @@ from .utils import (_create_solr_params_from_node_uuids,
                     get_file_url_from_node_uuid, get_owner_from_assay,
                     hide_fields_from_list, initialize_attribute_order_ranks,
                     insert_facet_field_filter, is_field_in_hidden_list,
-                    objectify_facet_field_counts, update_attribute_order_ranks,
-                    associate_datafiles_from_existing_dataset)
+                    objectify_facet_field_counts, update_attribute_order_ranks)
 from .views import Assays, AssaysAttributes
 
 TEST_DATA_BASE_PATH = "data_set_manager/test-data/"

@@ -22,9 +22,7 @@ import requests
 from requests.exceptions import HTTPError
 
 from core.models import DataSet, ExtendedGroup, FileStoreItem
-from core.utils import (add_data_set_to_neo4j,
-                        async_update_annotation_sets_neo4j,
-                        update_data_set_index)
+from core.utils import add_data_set_to_neo4j
 from file_store.models import FileExtension, generate_file_source_translator
 
 from .isa_tab_parser import IsaTabParser
@@ -235,8 +233,8 @@ def create_dataset(investigation_uuid, username, identifier=None, title=None,
 
     datasets = DataSet.objects.filter(name=dataset_name)
     # check if the investigation already exists
-    if len(datasets) and not meta_data_revision:  # if not 0, update dataset with new
-        # investigation
+    # if not 0, update dataset with new investigation
+    if len(datasets) and not meta_data_revision:
         """go through datasets until you find one with the correct owner"""
         for ds in datasets:
             own = ds.get_owner()
