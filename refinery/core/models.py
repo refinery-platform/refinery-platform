@@ -2500,13 +2500,13 @@ class Event(models.Model):
                     return self.render_dataset_analysis_deletion()
                 else:
                     raise StandardError(
-                        'Bad event sub-type for dataset: {}'.format(
+                        'Invalid event sub-type for dataset: {}'.format(
                             self.sub_type
                         )
                     )
             else:
                 raise StandardError(
-                    'Bad event type for dataset: {}'.format(self.type)
+                    'Invalid event type for dataset: {}'.format(self.type)
                 )
         elif self.group is not None and self.dataset is None:
             if self.type == Event.CREATE:
@@ -2530,13 +2530,13 @@ class Event(models.Model):
                     return self.render_group_user_removal()
                 else:
                     raise StandardError(
-                        'Bad event sub-type for group: {}'.format(
+                        'Invalid event sub-type for group: {}'.format(
                             self.sub_type
                         )
                     )
             else:
                 raise StandardError(
-                    'Bad event type for group: {}'.format(self.type)
+                    'Invalid event type for group: {}'.format(self.type)
                 )
         else:
             raise StandardError(
