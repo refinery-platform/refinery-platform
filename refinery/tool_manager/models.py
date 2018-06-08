@@ -606,8 +606,8 @@ class VisualizationTool(Tool):
         # asynchronously
         start_container.delay(self)
 
-        Event.record_dataset_visualization_creation(
-            self.dataset, self.display_name
+        Event.record_data_set_visualization_creation(
+            self.data_set, self.display_name
         )
 
 

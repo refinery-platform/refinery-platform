@@ -1981,7 +1981,7 @@ class EventTests(TestCase):
     def setUp(self):
         CuserMiddleware.set_user(User.objects.create_user('testuser'))
 
-    def test_dataset_create(self):
+    def test_data_set_create(self):
         create_dataset_with_necessary_models()
         events = Event.objects.all()
         self.assertEqual(len(events), 1)
@@ -1991,27 +1991,27 @@ class EventTests(TestCase):
             r'Test DataSet - [0-9a-f-]+$'
         )
 
-    # DataSetPermissionsUpdateTests covers dataset_permissions_change.
+    # DataSetPermissionsUpdateTests covers data_set_permissions_change.
 
-    def test_dataset_metadata_reupload(self):
+    def test_data_set_metadata_reupload(self):
         pass  # TODO
 
-    def test_dataset_file_link(self):
+    def test_data_set_file_link(self):
         pass  # TODO
 
-    def test_dataset_metadata_edit(self):
+    def test_data_set_metadata_edit(self):
         pass  # TODO
 
-    def test_dataset_visualization_creation(self):
+    def test_data_set_visualization_creation(self):
         pass  # TODO
 
-    def test_dataset_visualization_deletion(self):
+    def test_data_set_visualization_deletion(self):
         pass  # TODO
 
-    def test_dataset_analysis_creation(self):
+    def test_data_set_analysis_creation(self):
         pass  # TODO
 
-    def test_dataset_analysis_deletion(self):
+    def test_data_set_analysis_deletion(self):
         pass  # TODO
 
     def test_group_permissions_change(self):

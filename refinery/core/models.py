@@ -823,8 +823,8 @@ def _dataset_saved(sender, instance, *args, **kwargs):
     # #django.utils.functional.cached_property
     instance._invalidate_cached_properties()
 
-    if not Event.objects.filter(dataset=instance).exists():
-        Event.record_dataset_create(instance)
+    if not Event.objects.filter(data_set=instance).exists():
+        Event.record_data_set_create(instance)
 
 
 class InvestigationLink(models.Model):
@@ -2243,8 +2243,8 @@ class SiteStatistics(models.Model):
 
 
 class Event(models.Model):
-    datetime = models.DateTimeField(default=timezone.now)
-    dataset = models.ForeignKey(DataSet, null=True)
+    date_time = models.DateTimeField(default=timezone.now)
+    data_set = models.ForeignKey(DataSet, null=True)
     group = models.ForeignKey(Group, null=True)
     user = models.ForeignKey(User, null=True)
     # Null user should not occur in production, but it lets older tests pass.
@@ -2263,13 +2263,13 @@ class Event(models.Model):
     # no one has any access to it.
 
     @staticmethod
-    def record_dataset_create(dataset):
+    def record_data_set_create(data_set):
         user = CuserMiddleware.get_user()
-        Event.objects.create(dataset=dataset, user=user, type=Event.CREATE)
+        Event.objects.create(data_set=data_set, user=user, type=Event.CREATE)
 
-    def render_dataset_create(self):
+    def render_data_set_create(self):
         return '{:%x %X}: {} created data set {}'.format(
-            self.datetime, self.user, self.dataset.name
+            self.date_time, self.user, self.data_set.name
         )
 
     # Sub-types for data sets:
@@ -2277,102 +2277,102 @@ class Event(models.Model):
 
     # TODO:
     # @staticmethod
-    # def record_dataset_permissions_change():
+    # def record_data_set_permissions_change():
     #     event = Event()
     #     event.save()
     #     return event
     #
-    # def render_dataset_permissions_change(self):
+    # def render_data_set_permissions_change(self):
     #     return '{}'.format(self.user)
 
     METADATA_REUPLOAD = 'METADATA_REUPLOAD'
 
     # TODO:
     # @staticmethod
-    # def record_dataset_metadata_reupload():
+    # def record_data_set_metadata_reupload():
     #     event = Event()
     #     event.save()
     #     return event
     #
-    # def render_dataset_metadata_reupload(self):
+    # def render_data_set_metadata_reupload(self):
     #     return '{}'.format(self.user)
 
     FILE_LINK = 'FILE_LINK'
 
     # TODO:
     # @staticmethod
-    # def record_dataset_file_link():
+    # def record_data_set_file_link():
     #     event = Event()
     #     event.save()
     #     return event
     #
-    # def render_dataset_file_link(self):
+    # def render_data_set_file_link(self):
     #     return '{}'.format(self.user)
 
     METADATA_EDIT = 'METADATA_EDIT'
 
     # TODO:
     # @staticmethod
-    # def record_dataset_metadata_edit():
+    # def record_data_set_metadata_edit():
     #     event = Event()
     #     event.save()
     #     return event
     #
-    # def render_dataset_metadata_edit(self):
+    # def render_data_set_metadata_edit(self):
     #     return '{}'.format(self.user)
 
     VISUALIZATION_CREATION = 'VISUALIZATION_CREATION'
 
     @staticmethod
-    def record_dataset_visualization_creation(dataset, display_name):
+    def record_data_set_visualization_creation(data_set, display_name):
         user = CuserMiddleware.get_user()
         blob = json.dumps({
             'display_name': display_name
         })
-        event = Event(dataset=dataset, user=user, json=blob,
+        event = Event(data_set=data_set, user=user, json=blob,
                       type=Event.UPDATE, sub_type=Event.VISUALIZATION_CREATION)
         event.save()
 
-    def render_dataset_visualization_creation(self):
+    def render_data_set_visualization_creation(self):
         data = json.loads(self.json)
         return '{:%x %X}: {} launched visualization {} on data set {}'.format(
-            self.datetime, self.user, data['display_name'], self.dataset.name
+            self.datetime, self.user, data['display_name'], self.data_set.name
         )
 
     VISUALIZATION_DELETION = 'VISUALIZATION_DELETION'
 
     # TODO:
     # @staticmethod
-    # def record_dataset_visualization_deletion():
+    # def record_data_set_visualization_deletion():
     #     event = Event()
     #     event.save()
     #     return event
     #
-    # def render_dataset_visualization_deletion(self):
+    # def render_data_set_visualization_deletion(self):
     #     return '{}'.format(self.user)
 
     ANALYSIS_CREATION = 'ANALYSIS_CREATION'
 
     # TODO:
     # @staticmethod
-    # def record_dataset_analysis_creation():
+    # def record_data_set_analysis_creation():
     #     event = Event()
     #     event.save()
     #     return event
     #
-    # def render_dataset_analysis_creation(self):
+    # def render_data_set_analysis_creation(self):
     #     return '{}'.format(self.user)
 
     ANALYSIS_DELETION = 'ANALYSIS_DELETION'
 
     # TODO:
     # @staticmethod
-    # def record_dataset_analysis_deletion():
+    # def record_data_set_analysis_deletion():
     #     event = Event()
     #     event.save()
     #     return event
     #
-    # def render_dataset_analysis_deletion(self):
+    # def render_data_set_analysis_deletion(self):
     #     return '{}'.format(self.user)
 
     # Sub-types for groups:
@@ -2474,37 +2474,37 @@ class Event(models.Model):
     #     return '{}'.format(self.user)
 
     def __unicode__(self):
-        if self.dataset is not None and self.group is None:
+        if self.data_set is not None and self.group is None:
             if self.type == Event.CREATE:
-                return self.render_dataset_create()
+                return self.render_data_set_create()
             elif self.type == Event.UPDATE:
                 if self.sub_type == Event.PERMISSIONS_CHANGE:
-                    return self.render_dataset_permissions_change()
+                    return self.render_data_set_permissions_change()
                 elif self.sub_type == Event.METADATA_REUPLOAD:
-                    return self.render_dataset_metadata_reupload()
+                    return self.render_data_set_metadata_reupload()
                 elif self.sub_type == Event.FILE_LINK:
-                    return self.render_dataset_file_link()
+                    return self.render_data_set_file_link()
                 elif self.sub_type == Event.METADATA_EDIT:
-                    return self.render_dataset_metadata_edit()
+                    return self.render_data_set_metadata_edit()
                 elif self.sub_type == Event.VISUALIZATION_CREATION:
-                    return self.render_dataset_visualization_creation()
+                    return self.render_data_set_visualization_creation()
                 elif self.sub_type == Event.VISUALIZATION_DELETION:
-                    return self.render_dataset_visualization_deletion()
+                    return self.render_data_set_visualization_deletion()
                 elif self.sub_type == Event.ANALYSIS_CREATION:
-                    return self.render_dataset_analysis_creation()
+                    return self.render_data_set_analysis_creation()
                 elif self.sub_type == Event.ANALYSIS_DELETION:
-                    return self.render_dataset_analysis_deletion()
+                    return self.render_data_set_analysis_deletion()
                 else:
                     raise StandardError(
-                        'Invalid event sub-type for dataset: {}'.format(
+                        'Invalid event sub-type for data_set: {}'.format(
                             self.sub_type
                         )
                     )
             else:
                 raise StandardError(
-                    'Invalid event type for dataset: {}'.format(self.type)
+                    'Invalid event type for data_set: {}'.format(self.type)
                 )
-        elif self.group is not None and self.dataset is None:
+        elif self.group is not None and self.data_set is None:
             if self.type == Event.CREATE:
                 return self.render_group_create()
             elif self.type == Event.UPDATE:
@@ -2536,13 +2536,13 @@ class Event(models.Model):
                 )
         else:
             raise StandardError(
-                'Expected exactly one of dataset and group to be not None, '
-                'instead dataset="{}" and group="{}"'.format(
-                    self.dataset, self.group
+                'Expected exactly one of data_set and group to be not None, '
+                'instead data_set="{}" and group="{}"'.format(
+                    self.data_set, self.group
                 )
             )
 
 # TODO
 # @receiver(post_save, sender=GroupObjectPermission)
 # def _group_permissions_changed(sender, instance, *args, **kwargs):
-#     Event.record_dataset_permissions_change(???)
+#     Event.record_data_set_permissions_change(???)
