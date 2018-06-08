@@ -198,8 +198,11 @@ class EventSerializer(serializers.ModelSerializer):
 
     json = _DeserializeJSONField()
 
+    date_time = serializers.DateTimeField()
+
     class Meta:
         model = Event
         fields = [
-            'data_set', 'group', 'user', 'type', 'sub_type', 'json', 'message'
+            'date_time', 'data_set', 'group', 'user',
+            'type', 'sub_type', 'json', 'message'
         ]

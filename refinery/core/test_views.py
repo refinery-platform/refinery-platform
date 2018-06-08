@@ -968,6 +968,9 @@ class EventApiV2Tests(APIV2TestCase):
         display_names = [
             json.loads(_.json).get('display_name') for _ in events
         ]
+        date_times = [
+            _.date_time.isoformat().replace('+00:00', 'Z') for _ in events
+        ]
 
         get_request = self.factory.get(urljoin(self.url_root, '/'))
         get_response = self.view(get_request).render()
@@ -978,6 +981,7 @@ class EventApiV2Tests(APIV2TestCase):
             json.loads(get_response.content),
             [
                 {
+                    'date_time': date_times[0],
                     'message': messages[0],
                     'data_set': data_sets[0],
                     'group': None,
@@ -987,6 +991,7 @@ class EventApiV2Tests(APIV2TestCase):
                     'json': {}
                 },
                 {
+                    'date_time': date_times[1],
                     'message': messages[1],
                     'data_set': data_sets[1],
                     'group': None,
@@ -996,6 +1001,7 @@ class EventApiV2Tests(APIV2TestCase):
                     'json': {'display_name': display_names[1]}
                 },
                 {
+                    'date_time': date_times[2],
                     'message': messages[2],
                     'data_set': data_sets[2],
                     'group': None,
@@ -1005,6 +1011,7 @@ class EventApiV2Tests(APIV2TestCase):
                     'json': {}
                 },
                 {
+                    'date_time': date_times[3],
                     'message': messages[3],
                     'data_set': data_sets[3],
                     'group': None,
