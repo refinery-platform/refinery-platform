@@ -1980,6 +1980,8 @@ class EventTests(TestCase):
 
     def setUp(self):
         CuserMiddleware.set_user(User.objects.create_user('testuser'))
+        self.pre_re = r'^\d{2}/\d{2}/\d{2} \d{2}:\d{2}:\d{2}: testuser '
+        self.post_re = r' data set Test DataSet - [0-9a-f-]+$'
 
     def test_dataset_create(self):
         create_dataset_with_necessary_models()
@@ -1987,8 +1989,7 @@ class EventTests(TestCase):
         self.assertEqual(len(events), 1)
         self.assertRegexpMatches(
             str(events[0]),
-            r'^\d{2}/\d{2}/\d{2} \d{2}:\d{2}:\d{2}: testuser created data set '
-            r'Test DataSet - [0-9a-f-]+$'
+            self.pre_re + r'created data set Test DataSet - [0-9a-f-]+$'
         )
 
     # DataSetPermissionsUpdateTests covers dataset_permissions_change.
@@ -2003,13 +2004,39 @@ class EventTests(TestCase):
         pass  # TODO
 
     def test_dataset_visualization_creation(self):
-        pass  # TODO
+        create_tool_with_necessary_models("VISUALIZATION")
+
+        events = Event.objects.all()
+        self.assertEqual(len(events), 2)
+        self.assertRegexpMatches(
+            str(events[0]),
+            self.pre_re + r'created' + self.post_re
+        )
+        self.assertRegexpMatches(
+            str(events[1]),
+            self.pre_re \
+            + r'launched visualization Test VISUALIZATION Tool: [0-9a-f-]+ on' \
+            + self.post_re
+        )
 
     def test_dataset_visualization_deletion(self):
         pass  # TODO
 
     def test_dataset_analysis_creation(self):
-        pass  # TODO
+        create_tool_with_necessary_models("WORKFLOW")
+
+        events = Event.objects.all()
+        self.assertEqual(len(events), 2)
+        self.assertRegexpMatches(
+            str(events[0]),
+            self.pre_re + r'created' + self.post_re
+        )
+        self.assertRegexpMatches(
+            str(events[1]),
+            self.pre_re \
+            + r'launched analysis Test WORKFLOW Tool: [0-9a-f-]+ on' + \
+            self.post_re
+        )
 
     def test_dataset_analysis_deletion(self):
         pass  # TODO

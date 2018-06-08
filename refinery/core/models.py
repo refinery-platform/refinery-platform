@@ -2357,15 +2357,21 @@ class Event(models.Model):
 
     ANALYSIS_CREATION = 'ANALYSIS_CREATION'
 
-    # TODO:
-    # @staticmethod
-    # def record_dataset_analysis_creation():
-    #     event = Event()
-    #     event.save()
-    #     return event
-    #
-    # def render_dataset_analysis_creation(self):
-    #     return '{}'.format(self.user)
+    @staticmethod
+    def record_dataset_analysis_creation(dataset, display_name):
+        user = CuserMiddleware.get_user()
+        blob = json.dumps({
+            'display_name': display_name
+        })
+        event = Event(dataset=dataset, user=user, json=blob,
+                      type=Event.UPDATE, sub_type=Event.ANALYSIS_CREATION)
+        event.save()
+
+    def render_dataset_analysis_creation(self):
+        data = json.loads(self.json)
+        return '{:%x %X}: {} launched analysis {} on data set {}'.format(
+            self.datetime, self.user, data['display_name'], self.dataset.name
+        )
 
     ANALYSIS_DELETION = 'ANALYSIS_DELETION'
 
