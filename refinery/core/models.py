@@ -823,11 +823,7 @@ def _dataset_saved(sender, instance, *args, **kwargs):
     # #django.utils.functional.cached_property
     instance._invalidate_cached_properties()
 
-    # Would prefer to have this as a post_init,
-    # but dataset has not yet been saved at that point.
-    try:
-        Event.objects.get(dataset=instance)
-    except Event.DoesNotExist:
+    if not Event.objects.filter(dataset=instance).exists():
         Event.record_dataset_create(instance)
 
 
