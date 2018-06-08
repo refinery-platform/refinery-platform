@@ -36,7 +36,8 @@ from core.views import NodeViewSet
 import data_set_manager
 from data_set_manager.isa_tab_parser import IsaTabParser, ParserException
 from data_set_manager.single_file_column_parser import process_metadata_table
-from data_set_manager.tasks import parse_isatab
+from data_set_manager.tasks import parse_isatab, \
+    _update_existing_dataset_with_revised_investigation
 from factory_boy.utils import (create_dataset_with_necessary_models,
                                make_analyses_with_single_dataset)
 from file_store.models import FileStoreItem, generate_file_source_translator
@@ -55,8 +56,13 @@ from .utils import (_create_solr_params_from_node_uuids,
                     get_file_url_from_node_uuid, get_owner_from_assay,
                     hide_fields_from_list, initialize_attribute_order_ranks,
                     insert_facet_field_filter, is_field_in_hidden_list,
-                    objectify_facet_field_counts, update_attribute_order_ranks)
+                    objectify_facet_field_counts, update_attribute_order_ranks,
+                    associate_datafiles_from_existing_dataset)
 from .views import Assays, AssaysAttributes
+
+TEST_DATA_BASE_PATH = "data_set_manager/test-data/"
+
+logger = logging.getLogger(__name__)
 
 
 class AssaysAPITests(APITestCase):
@@ -1605,6 +1611,16 @@ class UtilitiesTests(TestCase):
         self.assertEqual(len(nodes_after), 0)
         # TODO: Is this the behavior we expect?
 
+    def test__update_existing_dataset_with_revised_investigation(self):
+        existing_dataset = create_dataset_with_necessary_models()
+        new_dataset = create_dataset_with_necessary_models()
+        _update_existing_dataset_with_revised_investigation(
+            new_dataset.get_investigation(), existing_dataset.uuid
+        )
+        self.assertEqual(existing_dataset.get_version(), 2)
+        self.assertEqual(existing_dataset.get_investigation(),
+                         new_dataset.get_investigation())
+
 
 class NodeClassMethodTests(TestCase):
     def setUp(self):
@@ -2139,6 +2155,24 @@ class IsaTabTestBase(TestCase):
         mock.patch.stopall()
         FileStoreItem.objects.all().delete()
 
+    def post_isa_tab(self, isa_tab_url=None, isa_tab_file=None,
+                     data_set_uuid=None):
+        post_data = {
+            "isa_tab_url": isa_tab_url,
+            "isa_tab_file": isa_tab_file
+        }
+        url = self.isa_tab_import_url
+        if data_set_uuid is not None:
+            url += "?data_set_uuid={}".format(data_set_uuid)
+
+        logger.debug("ISATab url: %s", url)
+        response = self.client.post(
+            url,
+            data=post_data,
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest'
+        )
+        return response
+
 
 class IsaTabParserTests(IsaTabTestBase):
     def failed_isatab_assertions(self):
@@ -2149,11 +2183,10 @@ class IsaTabParserTests(IsaTabTestBase):
         self.assertEqual(Investigation.objects.count(), 0)
 
     def parse(self, dir_name):
-        parent = os.path.dirname(os.path.abspath(__file__))
         file_source_translator = generate_file_source_translator(
             username=self.user.username
         )
-        dir = os.path.join(parent, 'test-data', dir_name)
+        dir = os.path.join(TEST_DATA_BASE_PATH, dir_name)
         return IsaTabParser(
             file_source_translator=file_source_translator
         ).run(dir)
@@ -2216,27 +2249,19 @@ class IsaTabParserTests(IsaTabTestBase):
     def test_bad_isatab_rollback_from_parser_exception_a(self):
         with self.assertRaises(IOError):
             parse_isatab(self.user.username, False,
-                         "data_set_manager/test-data/HideLabBrokenA.zip")
+                         os.path.join(TEST_DATA_BASE_PATH,
+                                      "HideLabBrokenA.zip"))
         self.failed_isatab_assertions()
 
     def test_bad_isatab_rollback_from_parser_exception_b(self):
         with self.assertRaises(IOError):
             parse_isatab(self.user.username, False,
-                         "data_set_manager/test-data/HideLabBrokenB.zip")
+                         os.path.join(TEST_DATA_BASE_PATH,
+                                      "HideLabBrokenB.zip"))
         self.failed_isatab_assertions()
 
 
 class ProcessISATabViewTestBase(IsaTabTestBase):
-    def post_isa_tab(self, isa_tab_url=None, isa_tab_file=None):
-        self.client.post(
-            self.isa_tab_import_url,
-            data={
-                "isa_tab_url": isa_tab_url,
-                "isa_tab_file": isa_tab_file
-            },
-            HTTP_X_REQUESTED_WITH='XMLHttpRequest'
-        )
-
     def successful_import_assertions(self):
         self.assertEqual(DataSet.objects.count(), 1)
         self.assertEqual(Study.objects.count(), 1)
@@ -2251,16 +2276,52 @@ class ProcessISATabViewTestBase(IsaTabTestBase):
 
 
 class ProcessISATabViewTests(ProcessISATabViewTestBase):
+    def setUp(self):
+        super(ProcessISATabViewTests, self).setUp()
+        self.test_user_directory = os.path.join(
+            TEST_DATA_BASE_PATH, self.user.username
+        )
+        os.mkdir(self.test_user_directory)
+
+    def tearDown(self):
+        super(ProcessISATabViewTests, self).tearDown()
+        shutil.rmtree(self.test_user_directory)
+
     @mock.patch.object(data_set_manager.views.import_file, "delay")
     def test_post_good_isa_tab_file(self, delay_mock):
-        with open('data_set_manager/test-data/rfc-test.zip') as good_isa:
+        with open(
+            os.path.join(TEST_DATA_BASE_PATH, 'rfc-test.zip')
+        ) as good_isa:
             self.post_isa_tab(isa_tab_file=good_isa)
         self.successful_import_assertions()
+
+    @override_settings(
+        CELERY_ALWAYS_EAGER=True,
+        REFINERY_DATA_IMPORT_DIR=os.path.abspath(TEST_DATA_BASE_PATH)
+    )
+    def test_post_good_isa_tab_file_with_datafiles(self):
+        [
+            open(os.path.join(self.test_user_directory, name), "a").close()
+            for name in ["rfc94.txt", "rfc134.txt"]
+        ]
+
+        with open(
+            os.path.join(TEST_DATA_BASE_PATH, 'rfc-test-local.zip')
+        ) as good_isa_referencing_local_files:
+            self.post_isa_tab(isa_tab_file=good_isa_referencing_local_files)
+
+        investigation = DataSet.objects.last().get_investigation()
+        self.assertEqual(DataSet.objects.count(), 1)
+        self.assertEqual(
+            len(investigation.get_file_store_items(local_only=True)), 3
+        )
 
     @mock.patch.object(data_set_manager.views.import_file, "delay")
     def test_node_index_update_object_called_with_proper_args(self,
                                                               delay_mock):
-        with open('data_set_manager/test-data/rfc-test.zip') as good_isa:
+        with open(
+            os.path.join(TEST_DATA_BASE_PATH, 'rfc-test.zip')
+        ) as good_isa:
             self.post_isa_tab(isa_tab_file=good_isa)
         self.update_node_index_mock.assert_called_with(
             ANY,
@@ -2268,13 +2329,114 @@ class ProcessISATabViewTests(ProcessISATabViewTestBase):
         )
 
     def test_post_bad_isa_tab_file(self):
-        with open('data_set_manager/test-data/HideLabBrokenA.zip') as bad_isa:
+        with open(
+            os.path.join(TEST_DATA_BASE_PATH, 'HideLabBrokenA.zip')
+        ) as bad_isa:
             self.post_isa_tab(isa_tab_file=bad_isa)
         self.unsuccessful_import_assertions()
 
     def test_post_bad_isa_tab_url(self):
         self.post_isa_tab(isa_tab_url="non-existant-file")
         self.unsuccessful_import_assertions()
+
+    def test_metadata_revision_works_grammatical_changes_only(self):
+        with open(
+            os.path.join(TEST_DATA_BASE_PATH, 'rfc-test-local.zip')
+        ) as good_isa_referencing_local_files:
+            self.post_isa_tab(isa_tab_file=good_isa_referencing_local_files)
+
+        data_set = DataSet.objects.last()
+
+        self.assertFalse(
+            AnnotatedNode.objects.filter(attribute_value="EDITED")
+        )
+
+        with open(
+            os.path.join(TEST_DATA_BASE_PATH, 'rfc-test-local-edited.zip')
+        ) as isatab_with_revised_metadata:
+            self.post_isa_tab(
+                isa_tab_file=isatab_with_revised_metadata,
+                data_set_uuid=data_set.uuid
+            )
+        self.assertTrue(
+            AnnotatedNode.objects.filter(attribute_value="EDITED")
+        )
+
+    @override_settings(
+        CELERY_ALWAYS_EAGER=True,
+        REFINERY_DATA_IMPORT_DIR=os.path.abspath(TEST_DATA_BASE_PATH)
+    )
+    def test_metadata_revision_works_existing_datafiles_persisted(self):
+        local_data_file_names = ["rfc94.txt", "rfc134.txt"]
+        [
+            open(os.path.join(self.test_user_directory, name), "a").close()
+            for name in local_data_file_names
+        ]
+
+        with open(
+            os.path.join(TEST_DATA_BASE_PATH, 'rfc-test-local.zip')
+        ) as good_isa_referencing_local_files:
+            self.post_isa_tab(isa_tab_file=good_isa_referencing_local_files)
+
+        data_set = DataSet.objects.last()
+
+        with open(
+            os.path.join(TEST_DATA_BASE_PATH, 'rfc-test-local-edited.zip')
+        ) as isatab_with_revised_metadata:
+            self.post_isa_tab(
+                isa_tab_file=isatab_with_revised_metadata,
+                data_set_uuid=data_set.uuid
+            )
+        data_set_count = DataSet.objects.count()
+        revised_data_set = DataSet.objects.last()
+
+        # Assert no new DataSet created
+        self.assertEqual(data_set_count, 1)
+
+        # Assert that DataSet version incremented
+        self.assertEqual(revised_data_set.get_version(), 2)
+
+        # Assert that previously uploaded data file remain accessible
+        investigation = revised_data_set.get_investigation()
+        self.assertEqual(
+            len(investigation.get_file_store_items(local_only=True)), 3
+        )
+
+        for file_store_item in investigation.get_file_store_items(
+            exclude_metadata_file=True, local_only=True
+        ):
+            self.assertIn(os.path.basename(file_store_item.source),
+                          local_data_file_names)
+
+    def test_metadata_revision_fails_with_unclean_dataset(self):
+        analyses, data_set = make_analyses_with_single_dataset(1, self.user)
+        with open(
+            os.path.join(TEST_DATA_BASE_PATH, 'rfc-test.zip')
+        ) as isa_tab_file:
+            response = self.post_isa_tab(
+                isa_tab_file=isa_tab_file, data_set_uuid=data_set.uuid
+            )
+            self.assertEqual(response.status_code, 400)
+            self.assertEqual(
+                response.content,
+                "ISA-Tab import Failure:  DataSet with UUID: {} is not clean "
+                "(There have been Analyses or Visualizations performed on it) "
+                "Remove these objects and try again"
+                .format(data_set.uuid)
+            )
+
+    def test_metadata_revision_fails_datafile_names_dissimilar(self):
+        data_set = create_dataset_with_necessary_models()
+        metadata_file_name = 'rfc-test-local.zip'
+        with open(
+                os.path.join(TEST_DATA_BASE_PATH, metadata_file_name)
+        ) as isa_tab_file_dissimilar_datafile_names:
+            response = self.post_isa_tab(
+                isa_tab_file=isa_tab_file_dissimilar_datafile_names,
+                data_set_uuid=data_set.uuid
+            )
+            self.assertEqual(response.status_code, 400)
+            self.assertIn("Data file names don't match", response.content)
 
 
 class ProcessISATabViewLiveServerTests(ProcessISATabViewTestBase,
@@ -2283,7 +2445,8 @@ class ProcessISATabViewLiveServerTests(ProcessISATabViewTestBase,
     def test_post_good_isa_tab_url(self, delay_mock):
         media_root_path = os.path.join(
             settings.BASE_DIR,
-            "refinery/data_set_manager/test-data/"
+            "refinery",
+            TEST_DATA_BASE_PATH
         )
         with self.settings(MEDIA_ROOT=media_root_path):
             media_url = urljoin(self.live_server_url, settings.MEDIA_URL)
@@ -2301,8 +2464,9 @@ class SingleFileColumnParserTests(TestCase):
 
     def process_csv(self, filename):
         path = os.path.join(
-            os.path.dirname(__file__),
-            'test-data', 'single-file', filename
+            TEST_DATA_BASE_PATH,
+            'single-file',
+            filename
         )
         with open(path, 'r') as f:
             dataset_uuid = process_metadata_table(
@@ -2380,8 +2544,9 @@ class UpdateMissingAttributeOrderTests(TestMigrations):
                              attribute_order.solr_field)
 
 
-class InvestigationTests(TestCase):
+class InvestigationTests(IsaTabTestBase):
     def setUp(self):
+        super(InvestigationTests, self).setUp()
         self.isa_tab_dataset = create_dataset_with_necessary_models(
             is_isatab_based=True
         )
@@ -2426,12 +2591,65 @@ class InvestigationTests(TestCase):
     def test_get_assay_count(self):
         self.assertEqual(self.isa_tab_investigation.get_assay_count(), 1)
 
+    @override_storage()
+    def test_get_datafile_names(self):
+        with open(os.path.join(TEST_DATA_BASE_PATH, "rfc-test.zip")) as isatab:
+            self.post_isa_tab(isa_tab_file=isatab)
+        investigation = DataSet.objects.last().get_investigation()
+        self.assertEqual(
+            investigation.get_datafile_names(),
+            [u'rfc-test.zip', u'rfc111.txt', u'rfc125.txt', u'rfc126.txt',
+             u'rfc134.txt', u'rfc174.txt', u'rfc177.txt', u'rfc178.txt',
+             u'rfc86.txt', u'rfc94.txt']
+        )
+
+    def test_get_datafile_names_local_only(self):
+        with open(os.path.join(TEST_DATA_BASE_PATH, "rfc-test.zip")) as isatab:
+            self.post_isa_tab(isa_tab_file=isatab)
+        investigation = DataSet.objects.last().get_investigation()
+        self.assertEqual(investigation.get_datafile_names(local_only=True),
+                         [u'rfc-test.zip'])
+
+    @override_storage()
+    def test_get_datafile_names_exclude_metadata_file(self):
+        with open(os.path.join(TEST_DATA_BASE_PATH, "rfc-test.zip")) as isatab:
+            self.post_isa_tab(isa_tab_file=isatab)
+        investigation = DataSet.objects.last().get_investigation()
+        self.assertEqual(investigation.get_datafile_names(
+            exclude_metadata_file=True),
+            [u'rfc111.txt', u'rfc125.txt', u'rfc126.txt', u'rfc134.txt',
+             u'rfc174.txt', u'rfc177.txt', u'rfc178.txt', u'rfc86.txt',
+             u'rfc94.txt'])
+
+    @override_storage()
+    def test_get_file_store_items(self):
+        with open(os.path.join(TEST_DATA_BASE_PATH, "rfc-test.zip")) as isatab:
+            self.post_isa_tab(isa_tab_file=isatab)
+        investigation = DataSet.objects.last().get_investigation()
+        self.assertEqual(len(investigation.get_file_store_items()), 10)
+
+    @override_storage()
+    def test_get_file_store_items_exclude_metadata_file(self):
+        with open(os.path.join(TEST_DATA_BASE_PATH, "rfc-test.zip")) as isatab:
+            self.post_isa_tab(isa_tab_file=isatab)
+        investigation = DataSet.objects.last().get_investigation()
+        self.assertEqual(len(investigation.get_file_store_items(
+            exclude_metadata_file=True)), 9)
+
+    def test_get_file_store_items_local_only(self):
+        with open(os.path.join(TEST_DATA_BASE_PATH, "rfc-test.zip")) as isatab:
+            self.post_isa_tab(isa_tab_file=isatab)
+        investigation = DataSet.objects.last().get_investigation()
+        self.assertEqual(len(investigation.get_file_store_items(
+            local_only=True)), 1)
+
 
 @override_storage()
 @override_settings(CELERY_ALWAYS_EAGER=True)
 class TestManagementCommands(TestCase):
     def setUp(self):
-        self.test_data_base_path = "data_set_manager/test-data/single-file"
+        self.test_data_base_path = os.path.join(TEST_DATA_BASE_PATH,
+                                                "single-file")
         self.args = [
             "--username", "guest",
             "--source_column_index", "2",
