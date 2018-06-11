@@ -75,7 +75,7 @@ urlpatterns = patterns(
 core_router = DefaultRouter()
 core_router.register(r'nodes', NodeViewSet)
 core_router.register(r'workflows', WorkflowViewSet)
-core_router.register(r'events', EventViewSet)
+core_router.register(r'events', EventViewSet, base_name='events')
 core_router.urls.extend([
     url(r'^data_sets/$', DataSetsViewSet.as_view()),
     url(r'^data_sets/(?P<uuid>' + UUID_RE + r')/$',
