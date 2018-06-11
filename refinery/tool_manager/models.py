@@ -609,10 +609,10 @@ class VisualizationTool(Tool):
 
 @receiver(post_save, sender=VisualizationTool)
 def _visualization_saved(sender, instance, *args, **kwargs):
-    # TODO: Distinguish creation from modification?
-    Event.record_data_set_visualization_creation(
-        instance.dataset, instance.display_name
-    )
+    if instance.display_name:
+        Event.record_data_set_visualization_creation(
+            instance.dataset, instance.display_name
+        )
 
 
 @receiver(pre_delete, sender=VisualizationTool)
@@ -1468,7 +1468,7 @@ class WorkflowTool(Tool):
 
 @receiver(post_save, sender=WorkflowTool)
 def _workflow_saved(sender, instance, *args, **kwargs):
-    # TODO: Distinguish creation from modification?
-    Event.record_data_set_analysis_creation(
-        instance.dataset, instance.display_name
-    )
+    if instance.display_name:
+        Event.record_data_set_analysis_creation(
+            instance.dataset, instance.display_name
+        )
