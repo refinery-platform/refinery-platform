@@ -39,7 +39,6 @@ from cuser.middleware import CuserMiddleware
 from django.utils.functional import cached_property
 from django_auth_ldap.backend import LDAPBackend
 from django_extensions.db.fields import UUIDField
-
 from guardian.models import UserObjectPermission
 from guardian.shortcuts import (
     assign_perm, get_groups_with_perms, get_objects_for_group,
@@ -2274,7 +2273,9 @@ class Event(models.Model):
     @staticmethod
     def record_data_set_create(data_set):
         user = CuserMiddleware.get_user()
-        Event.objects.create(data_set=data_set, user=user, type=Event.CREATE)
+        Event.objects.create(
+            data_set=data_set, user=user, type=Event.CREATE, json='{}'
+        )
 
     def render_data_set_create(self):
         return '{:%x %X}: {} created data set {}'.format(

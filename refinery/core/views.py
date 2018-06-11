@@ -22,7 +22,9 @@ from django.views.decorators.gzip import gzip_page
 
 import boto3
 import botocore
-from guardian.shortcuts import get_groups_with_perms, get_perms
+from cuser.middleware import CuserMiddleware
+from guardian.shortcuts import (get_groups_with_perms, get_objects_for_user,
+                                get_perms)
 from guardian.utils import get_anonymous_user
 from registration import signals
 from registration.views import RegistrationView
@@ -36,13 +38,15 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 import xmltodict
 
+from core.utils import accept_global_perms
 from data_set_manager.models import Node
 
 from .forms import ProjectForm, UserForm, UserProfileForm, WorkflowForm
-from .models import (Analysis, CustomRegistrationProfile, DataSet,
+from .models import (Analysis, CustomRegistrationProfile, DataSet, Event,
                      ExtendedGroup, Invitation, Ontology, Project,
                      UserProfile, Workflow, WorkflowEngine)
-from .serializers import DataSetSerializer, NodeSerializer, WorkflowSerializer
+from .serializers import (DataSetSerializer, EventSerializer, NodeSerializer,
+                          WorkflowSerializer)
 from .utils import (api_error_response, get_data_sets_annotations,
                     get_resources_for_user)
 
@@ -696,6 +700,23 @@ class NodeViewSet(viewsets.ModelViewSet):
     lookup_field = 'uuid'
     http_method_names = ['get']
     # permission_classes = (IsAuthenticated,)
+
+
+class EventViewSet(viewsets.ReadOnlyModelViewSet):
+    """API endpoint that allows Events to be viewed"""
+    serializer_class = EventSerializer
+    http_method_names = ['get']
+
+    def get_queryset(self):
+        data_sets = get_objects_for_user(
+            CuserMiddleware.get_user(),
+            'core.read_dataset',
+            # TODO: Is accept_global_perms necessary?
+            accept_global_perms=accept_global_perms(
+                'dataset'
+            )
+        )
+        return Event.objects.filter(data_set__in=data_sets)
 
 
 class DataSetsViewSet(APIView):
