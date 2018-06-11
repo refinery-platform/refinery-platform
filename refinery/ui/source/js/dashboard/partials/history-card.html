@@ -28,8 +28,7 @@
              <span ng-if="!tool.owner.full_name">
                {{ tool.owner.username }}
              </span>
-             launched an analysis: {{ tool.display_name }} <span ng-if="!tool
-             .display_name">{{ tool.name }}</span>
+             launched an analysis: {{ tool.name }}
            </a>
          </span>
          <span class="p-l-1-2" ng-if="tool.tool_definition.tool_type === 'VISUALIZATION'">
@@ -41,9 +40,7 @@
              <span ng-if="!tool.owner.full_name">
                {{ tool.owner.username }}
              </span>
-              launched a visualization tool: {{ tool.display_name }} <span
-             ng-if="!tool
-             .display_name">{{ tool.name }}</span>
+              launched a visualization tool: {{ tool.name }}.
            </a>
          </span>
        </li>

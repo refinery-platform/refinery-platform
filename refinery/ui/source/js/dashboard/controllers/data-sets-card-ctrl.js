@@ -38,7 +38,6 @@
     vm.isFiltersEmpty = isFiltersEmpty;
     vm.loadingDataSets = true;
     vm.openDataSetDeleteModal = openDataSetDeleteModal;
-    vm.openDataSetTransferModal = openDataSetTransferModal;
     vm.openPermissionEditor = openPermissionEditor;
     vm.params = {};
     vm.resetDataSetSearch = resetDataSetSearch;
@@ -130,30 +129,6 @@
 
       modalInstance.result.then(function () {
         // user confirmed deletion
-        getDataSets();
-      });
-    }
-
-     /**
-     * @name openDataSetTransferModal
-     * @desc  Opens data set transfer modal
-     * @memberOf refineryDashboard.DataSetsCardCtrl
-     * @param {obj} dataSet - data set obj
-    **/
-    function openDataSetTransferModal (dataSet) {
-      var modalInstance = $uibModal.open({
-        component: 'rpDataSetTransferModal',
-        resolve: {
-          config: function () {
-            return {
-              uuid: dataSet.uuid,
-              title: dataSet.title
-            };
-          }
-        }
-      });
-
-      modalInstance.result.then(function () {
         getDataSets();
       });
     }

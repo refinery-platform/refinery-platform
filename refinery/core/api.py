@@ -1860,7 +1860,7 @@ class ExtendedGroupResource(ModelResource):
                 'last_name': u.last_name,
                 'is_manager': self.user_authorized(u, ext_group)
             },
-            ext_group.user_set.all().filter(is_active=True))
+            ext_group.user_set.all())
 
     # Override ORM methods for customization.
     def obj_get(self, bundle, **kwargs):

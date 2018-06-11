@@ -148,6 +148,7 @@ class ToolsViewSet(ToolManagerViewSetBase):
         """
         Create and launch a Tool upon successful validation checks
         """
+
         try:
             validate_tool_launch_configuration(request.data)
         except RuntimeError as e:

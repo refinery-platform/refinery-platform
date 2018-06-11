@@ -178,7 +178,6 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    'cuser.middleware.CuserMiddleware',
 )
 
 ROOT_URLCONF = 'config.urls'
@@ -221,7 +220,6 @@ INSTALLED_APPS = (
     'rest_framework_swagger',
     'django_docker_engine',
     'httpproxy',
-    'cuser',
 )
 
 # NG: added for django-guardian

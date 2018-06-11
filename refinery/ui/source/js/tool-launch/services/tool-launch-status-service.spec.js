@@ -22,8 +22,7 @@
         config: { data: { tool_definition_uuid: mockUuid } },
         status: '500',
         statusText: 'Server Error',
-        creation_time: Date.now(),
-        data: 'Tool launch failed.'
+        creation_time: Date.now()
       };
       service = toolLaunchStatusService;
     }));

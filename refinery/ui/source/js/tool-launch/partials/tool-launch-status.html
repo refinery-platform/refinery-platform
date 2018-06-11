@@ -9,8 +9,7 @@
           <i class="fa fa-times close" aria-hidden="true"></i>
         </a>
         <i class="{{toolLaunch.type|toolTypeIcon}} p-r-1-4" aria-hidden="true"></i>
-        {{ toolLaunch.display_name }}
-        <span ng-if="!toolLaunch.display_name">{{ toolLaunch.name }}</span> launched successfully.
+        {{ toolLaunch.name }} launched successfully.
         <div ng-if="toolLaunch.type === 'workflow'">
           <a href="#/analyses">
             <i class="fa fa-link p-r-1-2"></i>

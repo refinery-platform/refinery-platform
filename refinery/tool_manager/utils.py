@@ -5,7 +5,7 @@ import uuid
 
 from django.conf import settings
 from django.contrib import admin
-from django.db import transaction, IntegrityError
+from django.db import transaction
 
 from bioblend.galaxy.client import ConnectionError
 from django_docker_engine.docker_utils import DockerClientWrapper
@@ -220,18 +220,7 @@ def create_tool(tool_launch_configuration, user_instance):
     else:
         parse_file_relationship_nesting(nesting)
 
-    display_name = tool_launch_configuration.get("display_name")
-    if not display_name:
-        display_name = "{} {} {}".format(tool.name, tool.creation_date,
-                                         tool.get_owner().username)
-    tool.display_name = display_name
-    try:
-        tool.save()
-    except IntegrityError:
-        raise RuntimeError(
-            "A Tool already exists with a display_name of: '{}'"
-            .format(display_name)
-        )
+    tool.save()
     return tool
 
 

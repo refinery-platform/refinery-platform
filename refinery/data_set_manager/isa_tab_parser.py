@@ -15,9 +15,8 @@ import string
 import tempfile
 from zipfile import ZipFile
 
-from django.core.files import File
-
 from file_store.models import FileStoreItem
+from file_store.tasks import import_file
 
 from .models import (Assay, Attribute, Contact, Design, Factor, Investigation,
                      Node, Ontology, Protocol, ProtocolReference,
@@ -1014,32 +1013,16 @@ class IsaTabParser:
         if isa_archive:
             file_store_item = FileStoreItem.objects.create(source=isa_archive)
             self._current_investigation.isarchive_file = file_store_item.uuid
-            try:
-                with open(isa_archive, 'rb') as isa_archive_obj:
-                    file_store_item.datafile.save(
-                        os.path.basename(isa_archive), File(isa_archive_obj)
-                    )
-            except EnvironmentError as exc:
-                logger.error(
-                    "Failed to save ISA archive '%s' to file store: %s",
-                    isa_archive, exc
-                )
+            import_file(self._current_investigation.isarchive_file,
+                        refresh=True)
 
         if preisa_archive:
             file_store_item = \
                 FileStoreItem.objects.create(source=preisa_archive)
             self._current_investigation.pre_isarchive_file = \
                 file_store_item.uuid
-            try:
-                with open(isa_archive, 'rb') as preisa_archive_obj:
-                    file_store_item.datafile.save(
-                        os.path.basename(isa_archive), File(preisa_archive_obj)
-                    )
-            except EnvironmentError as exc:
-                logger.error(
-                    "Failed to save pre ISA archive '%s' to file store: %s",
-                    preisa_archive, exc
-                )
+            import_file(self._current_investigation.pre_isarchive_file,
+                        refresh=True)
 
         self._current_investigation.save()
         return self._current_investigation

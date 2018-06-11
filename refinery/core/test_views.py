@@ -7,7 +7,6 @@ from urlparse import urljoin
 from django.contrib.auth.models import User
 from django.utils.functional import SimpleLazyObject
 
-from guardian.shortcuts import get_groups_with_perms
 import mock
 import mockcache as memcache
 from rest_framework.test import (
@@ -31,7 +30,7 @@ class APIV2TestCase(APITestCase):
         self.public_group_name = ExtendedGroup.objects.public_group().name
         self.username = 'coffee_lover'
         self.password = 'coffeecoffee'
-        self.user = User.objects.create_user(self.username, 'user@fake.com',
+        self.user = User.objects.create_user(self.username, '',
                                              self.password)
 
         self.factory = APIRequestFactory()
@@ -55,8 +54,8 @@ class DataSetApiV2Tests(APIV2TestCase):
         )
 
         # Create Datasets
-        self.data_set = create_dataset_with_necessary_models(user=self.user)
-        self.data_set_2 = create_dataset_with_necessary_models(user=self.user)
+        self.dataset = create_dataset_with_necessary_models(user=self.user)
+        self.dataset2 = create_dataset_with_necessary_models(user=self.user)
 
         self.node_json = json.dumps([{
             "uuid": "cfb31cca-4f58-4ef0-b1e2-4469c804bf73",
@@ -127,7 +126,7 @@ class DataSetApiV2Tests(APIV2TestCase):
 
     @mock.patch('core.views.DataSetsViewSet.is_filtered_data_set')
     def test_get_data_set_calls_helper_with_group(self, mock_is_filtered):
-        group = ExtendedGroup.objects.create(name="Test Group")
+        group = ExtendedGroup.objects.create(name="Test Group", is_public=True)
         params = {'group': group.id}
         get_request = self.factory.get(self.url_root, params)
         get_request.user = self.user
@@ -139,26 +138,26 @@ class DataSetApiV2Tests(APIV2TestCase):
         self.assertEqual(DataSet.objects.all().count(), 2)
 
         self.delete_request1 = self.factory.delete(
-           urljoin(self.url_root, self.data_set.uuid)
+           urljoin(self.url_root, self.dataset.uuid)
         )
 
         force_authenticate(self.delete_request1, user=self.user)
 
         self.delete_response = self.view(self.delete_request1,
-                                         self.data_set.uuid)
+                                         self.dataset.uuid)
 
         self.assertEqual(self.delete_response.status_code, 200)
 
         self.assertEqual(DataSet.objects.all().count(), 1)
 
         self.delete_request2 = self.factory.delete(
-          urljoin(self.url_root, self.data_set_2.uuid)
+          urljoin(self.url_root, self.dataset2.uuid)
         )
 
         force_authenticate(self.delete_request2, user=self.user)
 
         self.delete_response = self.view(self.delete_request2,
-                                         self.data_set_2.uuid)
+                                         self.dataset2.uuid)
         self.assertEqual(self.delete_response.status_code, 200)
 
         self.assertEqual(DataSet.objects.all().count(), 0)
@@ -167,11 +166,11 @@ class DataSetApiV2Tests(APIV2TestCase):
         self.assertEqual(DataSet.objects.all().count(), 2)
 
         self.delete_request = self.factory.delete(
-           urljoin(self.url_root, self.data_set.uuid)
+           urljoin(self.url_root, self.dataset.uuid)
         )
 
         self.delete_response = self.view(self.delete_request,
-                                         self.data_set.uuid)
+                                         self.dataset.uuid)
 
         self.assertEqual(self.delete_response.status_code, 403)
 
@@ -180,9 +179,9 @@ class DataSetApiV2Tests(APIV2TestCase):
     def test_dataset_delete_not_found(self):
         self.assertEqual(DataSet.objects.all().count(), 2)
 
-        uuid = self.data_set.uuid
+        uuid = self.dataset.uuid
 
-        self.data_set.delete()
+        self.dataset.delete()
 
         self.assertEqual(DataSet.objects.all().count(), 1)
 
@@ -198,108 +197,15 @@ class DataSetApiV2Tests(APIV2TestCase):
 
         self.assertEqual(DataSet.objects.all().count(), 1)
 
-    @mock.patch('core.views.DataSetsViewSet.update_group_perms')
-    @mock.patch('core.views.DataSetsViewSet.send_transfer_notification_email')
-    def test_dataset_patch_success_returns_202(self, mock_update, mock_email):
-        new_owner_email = 'new_owner@fake.com'
-        User.objects.create_user('NewOwner1', new_owner_email, self.password)
-        patch_request = self.factory.patch(
-            urljoin(self.url_root, self.data_set.uuid),
-            {"transfer_data_set": True, "new_owner_email": new_owner_email}
-        )
-        patch_request.user = self.user
-        force_authenticate(patch_request, user=self.user)
-        patch_response = self.view(patch_request, self.data_set.uuid)
-        self.assertEqual(patch_response.status_code, 202)
-
-    @mock.patch('core.views.DataSetsViewSet.update_group_perms')
-    @mock.patch('core.views.DataSetsViewSet.send_transfer_notification_email')
-    def test_dataset_patch_returns_updated_is_owner(self, mock_update,
-                                                    mock_email):
-        new_owner_email = 'new_owner@fake.com'
-        User.objects.create_user('NewOwner1', new_owner_email, self.password)
-        patch_request = self.factory.patch(
-            urljoin(self.url_root, self.data_set.uuid),
-            {"transfer_data_set": True, "new_owner_email": new_owner_email}
-        )
-        patch_request.user = self.user
-        force_authenticate(patch_request, user=self.user)
-        patch_response = self.view(patch_request, self.data_set.uuid)
-        self.assertFalse(patch_response.data.get('is_owner'))
-
-    def test_dataset_patch_fails_not_found_email_returns_404(self):
-        patch_request = self.factory.patch(
-            urljoin(self.url_root, self.data_set.uuid),
-            {"transfer_data_set": True,
-             "new_owner_email": 'not_valid@fake.com'}
-        )
-        patch_request.user = self.user
-        force_authenticate(patch_request, user=self.user)
-        patch_response = self.view(patch_request, self.data_set.uuid)
-        self.assertEqual(patch_response.status_code, 404)
-
-    @mock.patch('core.views.DataSetsViewSet.update_group_perms')
-    @mock.patch('core.views.DataSetsViewSet.send_transfer_notification_email')
-    def test_dataset_calls_current_mock_methods(self, mock_update, mock_email):
-        new_owner_email = 'new_owner@fake.com'
-        User.objects.create_user('NewOwner1', new_owner_email, self.password)
-        patch_request = self.factory.patch(
-            urljoin(self.url_root, self.data_set.uuid),
-            {"transfer_data_set": True, "new_owner_email": new_owner_email}
-        )
-        patch_request.user = self.user
-        force_authenticate(patch_request, user=self.user)
-        self.view(patch_request, self.data_set.uuid)
-        self.assertTrue(mock_update.called)
-        self.assertTrue(mock_email.called)
-
-    @mock.patch('core.views.DataSetsViewSet.update_group_perms',
-                side_effect=RuntimeError)
-    def test_dataset_patch_fails_and_rollback_owner(self, mock_update):
-        new_owner_email = 'new_owner@fake.com'
-        User.objects.create_user('NewOwner1', new_owner_email, self.password)
-        patch_request = self.factory.patch(
-            urljoin(self.url_root, self.data_set.uuid),
-            {"transfer_data_set": True, "new_owner_email": new_owner_email}
-        )
-        patch_request.user = self.user
-        force_authenticate(patch_request, user=self.user)
-        response = self.view(patch_request, self.data_set.uuid)
-        self.assertEqual(response.status_code, 412)
-        self.assertEqual(self.data_set.get_owner(), self.user)
-
-    @mock.patch('core.views.get_groups_with_perms')
-    def test_dataset_patch_fails_and_rollback_group_perms(self, mock_perms):
-        new_owner_email = 'new_owner@fake.com'
-        User.objects.create_user('NewOwner1', new_owner_email, self.password)
-        group_non_union_0 = ExtendedGroup.objects.create(name="Group 0")
-        group_non_union_1 = ExtendedGroup.objects.create(name="Group 1")
-        self.data_set.share(group_non_union_0)
-        self.data_set.share(group_non_union_1)
-        group_non_union_0.group_ptr.user_set.add(self.user)
-        group_non_union_1.group_ptr.user_set.add(self.user)
-
-        patch_request = self.factory.patch(
-            urljoin(self.url_root, self.data_set.uuid),
-            {"transfer_data_set": True, "new_owner_email": new_owner_email}
-        )
-        # empty object will force the error
-        mock_perms.return_value = [group_non_union_0, group_non_union_1, {}]
-        patch_request.user = self.user
-        force_authenticate(patch_request, user=self.user)
-        response = self.view(patch_request, self.data_set.uuid)
-        self.assertEqual(response.status_code, 412)
-        self.assertEqual(len(get_groups_with_perms(self.data_set)), 2)
-
     # Accession too long
     def test_dataset_patch_accession_fails(self):
         new_accession = self.create_rand_str(33)
         patch_request = self.factory.patch(
-            urljoin(self.url_root, self.data_set.uuid),
+            urljoin(self.url_root, self.dataset.uuid),
             {"accession": new_accession}
         )
         force_authenticate(patch_request, user=self.user)
-        patch_response = self.view(patch_request, self.data_set.uuid)
+        patch_response = self.view(patch_request, self.dataset.uuid)
         self.assertEqual(patch_response.status_code, 400)
         self.assertEqual(
             patch_response.data.get('accession')[0],
@@ -309,31 +215,31 @@ class DataSetApiV2Tests(APIV2TestCase):
     def test_dataset_patch_accession_successful(self):
         new_accession = self.create_rand_str(10)
         patch_request = self.factory.patch(
-            urljoin(self.url_root, self.data_set.uuid),
+            urljoin(self.url_root, self.dataset.uuid),
             {"accession": new_accession},
         )
         force_authenticate(patch_request, user=self.user)
-        patch_response = self.view(patch_request, self.data_set.uuid)
+        patch_response = self.view(patch_request, self.dataset.uuid)
         self.assertEqual(patch_response.status_code, 202)
         self.assertEqual(patch_response.data.get('accession'), new_accession)
 
     def test_dataset_patch_auth_fails(self):
         new_description = self.create_rand_str(50)
         patch_request = self.factory.patch(
-            urljoin(self.url_root, self.data_set.uuid),
+            urljoin(self.url_root, self.dataset.uuid),
             {"description": new_description},
         )
-        patch_response = self.view(patch_request, self.data_set.uuid)
+        patch_response = self.view(patch_request, self.dataset.uuid)
         self.assertEqual(patch_response.status_code, 401)
 
     def test_dataset_patch_description_fails(self):
         new_description = self.create_rand_str(5001)
         patch_request = self.factory.patch(
-            urljoin(self.url_root, self.data_set.uuid),
+            urljoin(self.url_root, self.dataset.uuid),
             {"description": new_description},
         )
         force_authenticate(patch_request, user=self.user)
-        patch_response = self.view(patch_request, self.data_set.uuid)
+        patch_response = self.view(patch_request, self.dataset.uuid)
         self.assertEqual(patch_response.status_code, 400)
         self.assertEqual(
             patch_response.data.get('description')[0],
@@ -343,11 +249,11 @@ class DataSetApiV2Tests(APIV2TestCase):
     def test_dataset_patch_description_successful(self):
         new_description = self.create_rand_str(500)
         patch_request = self.factory.patch(
-            urljoin(self.url_root, self.data_set.uuid),
+            urljoin(self.url_root, self.dataset.uuid),
             {"description": new_description},
         )
         force_authenticate(patch_request, user=self.user)
-        patch_response = self.view(patch_request, self.data_set.uuid)
+        patch_response = self.view(patch_request, self.dataset.uuid)
         self.assertEqual(patch_response.status_code, 202)
         self.assertEqual(
             patch_response.data.get('description'), new_description
@@ -357,11 +263,11 @@ class DataSetApiV2Tests(APIV2TestCase):
     def test_dataset_patch_slug_fails(self):
         new_slug = self.create_rand_str(251)
         patch_request = self.factory.patch(
-            urljoin(self.url_root, self.data_set.uuid),
+            urljoin(self.url_root, self.dataset.uuid),
             {"slug": new_slug}
         )
         force_authenticate(patch_request, user=self.user)
-        patch_response = self.view(patch_request, self.data_set.uuid)
+        patch_response = self.view(patch_request, self.dataset.uuid)
         self.assertEqual(patch_response.status_code, 400)
         self.assertEqual(
             patch_response.data.get('slug')[0],
@@ -372,21 +278,21 @@ class DataSetApiV2Tests(APIV2TestCase):
     def test_dataset_patch_slug_fails_unique(self):
         new_slug = self.create_rand_str(10)
         patch_request = self.factory.patch(
-            urljoin(self.url_root, self.data_set.uuid),
+            urljoin(self.url_root, self.dataset.uuid),
             {"slug": new_slug}
         )
         force_authenticate(patch_request, user=self.user)
-        patch_response = self.view(patch_request, self.data_set.uuid)
+        patch_response = self.view(patch_request, self.dataset.uuid)
         self.assertEqual(patch_response.status_code, 202)
         self.assertEqual(patch_response.data.get('slug'), new_slug)
 
         # Duplicate request
         patch_request = self.factory.patch(
-            urljoin(self.url_root, self.data_set_2.uuid),
+            urljoin(self.url_root, self.dataset2.uuid),
             {"slug": new_slug}
         )
         force_authenticate(patch_request, user=self.user)
-        patch_response = self.view(patch_request, self.data_set_2.uuid)
+        patch_response = self.view(patch_request, self.dataset2.uuid)
         self.assertEqual(patch_response.status_code, 400)
         self.assertEqual(
             patch_response.data.get('slug')[0],
@@ -396,22 +302,22 @@ class DataSetApiV2Tests(APIV2TestCase):
     def test_dataset_patch_slug_successful(self):
         new_slug = self.create_rand_str(10)
         patch_request = self.factory.patch(
-            urljoin(self.url_root, self.data_set.uuid),
+            urljoin(self.url_root, self.dataset.uuid),
             {"slug": new_slug},
         )
         force_authenticate(patch_request, user=self.user)
-        patch_response = self.view(patch_request, self.data_set.uuid)
+        patch_response = self.view(patch_request, self.dataset.uuid)
         self.assertEqual(patch_response.status_code, 202)
         self.assertEqual(patch_response.data.get('slug'), new_slug)
 
     def test_dataset_patch_slug_trim_whitespace(self):
         new_slug = '  Test Slug Name  '
         patch_request = self.factory.patch(
-            urljoin(self.url_root, self.data_set.uuid),
+            urljoin(self.url_root, self.dataset.uuid),
             {"slug": new_slug},
         )
         force_authenticate(patch_request, user=self.user)
-        patch_response = self.view(patch_request, self.data_set.uuid)
+        patch_response = self.view(patch_request, self.dataset.uuid)
         self.assertEqual(patch_response.status_code, 202)
         self.assertEqual(patch_response.data.get('slug'), new_slug.strip())
 
@@ -419,11 +325,11 @@ class DataSetApiV2Tests(APIV2TestCase):
     def test_dataset_patch_summary_fails(self):
         new_summary = self.create_rand_str(1001)
         patch_request = self.factory.patch(
-            urljoin(self.url_root, self.data_set.uuid),
+            urljoin(self.url_root, self.dataset.uuid),
             {"summary": new_summary}
         )
         force_authenticate(patch_request, user=self.user)
-        patch_response = self.view(patch_request, self.data_set.uuid)
+        patch_response = self.view(patch_request, self.dataset.uuid)
         self.assertEqual(patch_response.status_code, 400)
         self.assertEqual(
             patch_response.data.get('summary')[0],
@@ -433,11 +339,11 @@ class DataSetApiV2Tests(APIV2TestCase):
     def test_dataset_patch_summary_successful(self):
         new_summary = self.create_rand_str(500)
         patch_request = self.factory.patch(
-            urljoin(self.url_root, self.data_set.uuid),
+            urljoin(self.url_root, self.dataset.uuid),
             {"summary": new_summary},
         )
         force_authenticate(patch_request, user=self.user)
-        patch_response = self.view(patch_request, self.data_set.uuid)
+        patch_response = self.view(patch_request, self.dataset.uuid)
         self.assertEqual(patch_response.status_code, 202)
         self.assertEqual(patch_response.data.get('summary'), new_summary)
 
@@ -445,11 +351,11 @@ class DataSetApiV2Tests(APIV2TestCase):
     def test_dataset_patch_title_fails(self):
         new_title = self.create_rand_str(251)
         patch_request = self.factory.patch(
-            urljoin(self.url_root, self.data_set.uuid),
+            urljoin(self.url_root, self.dataset.uuid),
             {"title": new_title}
         )
         force_authenticate(patch_request, user=self.user)
-        patch_response = self.view(patch_request, self.data_set.uuid)
+        patch_response = self.view(patch_request, self.dataset.uuid)
         self.assertEqual(patch_response.status_code, 400)
         self.assertEqual(
             patch_response.data.get('title')[0],
@@ -457,13 +363,13 @@ class DataSetApiV2Tests(APIV2TestCase):
             )
 
     def test_dataset_patch_title_successful(self):
-        new_title = "decaf coffee data_set"
+        new_title = "decaf coffee dataset"
         patch_request = self.factory.patch(
-            urljoin(self.url_root, self.data_set.uuid),
+            urljoin(self.url_root, self.dataset.uuid),
             {"title": new_title},
         )
         force_authenticate(patch_request, user=self.user)
-        patch_response = self.view(patch_request, self.data_set.uuid)
+        patch_response = self.view(patch_request, self.dataset.uuid)
         self.assertEqual(patch_response.status_code, 202)
         self.assertEqual(patch_response.data.get('title'), new_title)
 
@@ -472,7 +378,7 @@ class DataSetApiV2Tests(APIV2TestCase):
         view_set = DataSetsViewSet()
         view_set.request = self.factory.get(self.url_root)
         view_set.request.user = SimpleLazyObject(lambda: self.user)
-        is_filtered = view_set.is_filtered_data_set(self.data_set, filter)
+        is_filtered = view_set.is_filtered_data_set(self.dataset, filter)
         self.assertTrue(is_filtered)
 
     def test_is_filtered_data_set_returns_false_for_is_owner(self):
@@ -480,16 +386,16 @@ class DataSetApiV2Tests(APIV2TestCase):
         view_set = DataSetsViewSet()
         view_set.request = self.factory.get(self.url_root)
         view_set.request.user = SimpleLazyObject(lambda: None)
-        is_filtered = view_set.is_filtered_data_set(self.data_set, filter)
+        is_filtered = view_set.is_filtered_data_set(self.dataset, filter)
         self.assertFalse(is_filtered)
 
     def test_is_filtered_data_set_returns_true_for_public(self):
         filter = {'is_public': True}
-        self.data_set.share(ExtendedGroup.objects.public_group())
+        self.dataset.share(ExtendedGroup.objects.public_group())
         view_set = DataSetsViewSet()
         view_set.request = self.factory.get(self.url_root)
         view_set.request.user = SimpleLazyObject(lambda: self.user)
-        is_filtered = view_set.is_filtered_data_set(self.data_set, filter)
+        is_filtered = view_set.is_filtered_data_set(self.dataset, filter)
         self.assertTrue(is_filtered)
 
     def test_is_filtered_data_set_returns_false_for_public(self):
@@ -497,55 +403,55 @@ class DataSetApiV2Tests(APIV2TestCase):
         view_set = DataSetsViewSet()
         view_set.request = self.factory.get(self.url_root)
         view_set.request.user = SimpleLazyObject(lambda: self.user)
-        is_filtered = view_set.is_filtered_data_set(self.data_set, filter)
+        is_filtered = view_set.is_filtered_data_set(self.dataset, filter)
         self.assertFalse(is_filtered)
 
     def test_is_filtered_data_set_returns_true_for_group(self):
-        group = ExtendedGroup.objects.create(name="Test Group")
+        group = ExtendedGroup.objects.create(name="Test Group", is_public=True)
         filter = {'group': group}
-        self.data_set.share(group)
+        self.dataset.share(group)
         view_set = DataSetsViewSet()
         view_set.request = self.factory.get(self.url_root)
         view_set.request.user = SimpleLazyObject(lambda: self.user)
-        is_filtered = view_set.is_filtered_data_set(self.data_set, filter)
+        is_filtered = view_set.is_filtered_data_set(self.dataset, filter)
         self.assertTrue(is_filtered)
 
     def test_is_filtered_data_set_returns_false_for_group(self):
-        group = ExtendedGroup.objects.create(name="Test Group")
+        group = ExtendedGroup.objects.create(name="Test Group", is_public=True)
         filter = {'group': group}
         view_set = DataSetsViewSet()
         view_set.request = self.factory.get(self.url_root)
         view_set.request.user = SimpleLazyObject(lambda: self.user)
-        is_filtered = view_set.is_filtered_data_set(self.data_set, filter)
+        is_filtered = view_set.is_filtered_data_set(self.dataset, filter)
         self.assertFalse(is_filtered)
 
     def test_is_filtered_data_set_returns_true_for_owned_public_group(self):
-        self.data_set.share(ExtendedGroup.objects.public_group())
-        group = ExtendedGroup.objects.create(name="Test Group")
+        self.dataset.share(ExtendedGroup.objects.public_group())
+        group = ExtendedGroup.objects.create(name="Test Group", is_public=True)
         filter = {'group': group, 'is_owner': True, 'is_public': True}
-        self.data_set.share(group)
+        self.dataset.share(group)
         view_set = DataSetsViewSet()
         view_set.request = self.factory.get(self.url_root)
         view_set.request.user = SimpleLazyObject(lambda: self.user)
-        is_filtered = view_set.is_filtered_data_set(self.data_set, filter)
+        is_filtered = view_set.is_filtered_data_set(self.dataset, filter)
         self.assertTrue(is_filtered)
 
     def test_is_filtered_data_set_returns_false_for_owned_public_group(self):
-        group = ExtendedGroup.objects.create(name="Test Group")
+        group = ExtendedGroup.objects.create(name="Test Group", is_public=True)
         filter = {'group': group, 'is_owner': True, 'is_public': True}
         view_set = DataSetsViewSet()
         view_set.request = self.factory.get(self.url_root)
         view_set.request.user = SimpleLazyObject(lambda: self.user)
-        is_filtered = view_set.is_filtered_data_set(self.data_set, filter)
+        is_filtered = view_set.is_filtered_data_set(self.dataset, filter)
         self.assertFalse(is_filtered)
 
     def test_is_filtered_data_set_returns_true_for_owned_public(self):
-        self.data_set.share(ExtendedGroup.objects.public_group())
+        self.dataset.share(ExtendedGroup.objects.public_group())
         filter = {'is_owner': True, 'is_public': True}
         view_set = DataSetsViewSet()
         view_set.request = self.factory.get(self.url_root)
         view_set.request.user = SimpleLazyObject(lambda: self.user)
-        is_filtered = view_set.is_filtered_data_set(self.data_set, filter)
+        is_filtered = view_set.is_filtered_data_set(self.dataset, filter)
         self.assertTrue(is_filtered)
 
     def test_is_filtered_data_set_returns_false_for_owned_public(self):
@@ -553,196 +459,48 @@ class DataSetApiV2Tests(APIV2TestCase):
         view_set = DataSetsViewSet()
         view_set.request = self.factory.get(self.url_root)
         view_set.request.user = SimpleLazyObject(lambda: None)
-        is_filtered = view_set.is_filtered_data_set(self.data_set, filter)
+        is_filtered = view_set.is_filtered_data_set(self.dataset, filter)
         self.assertFalse(is_filtered)
 
     def test_is_filtered_data_set_returns_true_for_owned_group(self):
-        self.data_set.share(ExtendedGroup.objects.public_group())
-        group = ExtendedGroup.objects.create(name="Test Group")
+        self.dataset.share(ExtendedGroup.objects.public_group())
+        group = ExtendedGroup.objects.create(name="Test Group", is_public=True)
         filter = {'group': group, 'is_owner': True}
-        self.data_set.share(group)
+        self.dataset.share(group)
         view_set = DataSetsViewSet()
         view_set.request = self.factory.get(self.url_root)
         view_set.request.user = SimpleLazyObject(lambda: self.user)
-        is_filtered = view_set.is_filtered_data_set(self.data_set, filter)
+        is_filtered = view_set.is_filtered_data_set(self.dataset, filter)
         self.assertTrue(is_filtered)
 
     def test_is_filtered_data_set_returns_false_for_owned_group(self):
-        group = ExtendedGroup.objects.create(name="Test Group")
+        group = ExtendedGroup.objects.create(name="Test Group", is_public=True)
         filter = {'group': group, 'is_owner': True}
         view_set = DataSetsViewSet()
         view_set.request = self.factory.get(self.url_root)
         view_set.request.user = SimpleLazyObject(lambda: self.user)
-        is_filtered = view_set.is_filtered_data_set(self.data_set, filter)
+        is_filtered = view_set.is_filtered_data_set(self.dataset, filter)
         self.assertFalse(is_filtered)
 
     def test_is_filtered_data_set_returns_true_for_public_group(self):
-        self.data_set.share(ExtendedGroup.objects.public_group())
-        group = ExtendedGroup.objects.create(name="Test Group")
+        self.dataset.share(ExtendedGroup.objects.public_group())
+        group = ExtendedGroup.objects.create(name="Test Group", is_public=True)
         filter = {'group': group, 'is_public': True}
-        self.data_set.share(group)
+        self.dataset.share(group)
         view_set = DataSetsViewSet()
         view_set.request = self.factory.get(self.url_root)
         view_set.request.user = SimpleLazyObject(lambda: self.user)
-        is_filtered = view_set.is_filtered_data_set(self.data_set, filter)
+        is_filtered = view_set.is_filtered_data_set(self.dataset, filter)
         self.assertTrue(is_filtered)
 
     def test_is_filtered_data_set_returns_false_for_public_group(self):
-        group = ExtendedGroup.objects.create(name="Test Group")
+        group = ExtendedGroup.objects.create(name="Test Group", is_public=True)
         filter = {'group': group, 'is_public': True}
         view_set = DataSetsViewSet()
         view_set.request = self.factory.get(self.url_root)
         view_set.request.user = SimpleLazyObject(lambda: self.user)
-        is_filtered = view_set.is_filtered_data_set(self.data_set, filter)
+        is_filtered = view_set.is_filtered_data_set(self.dataset, filter)
         self.assertFalse(is_filtered)
-
-    def test_send_transfer_notification_email_corrent_users(self):
-        new_owner_email = 'new_owner@fake.com'
-        new_owner = User.objects.create_user('NewOwner1', new_owner_email,
-                                             self.password)
-        groups = {'group_with_access': [], 'group_without_access': []}
-        view_set = DataSetsViewSet()
-        view_set.request = self.factory.get(self.url_root)
-        view_set.request.user = SimpleLazyObject(lambda: self.user)
-        view_set.data_set = SimpleLazyObject(lambda: self.data_set)
-        view_set.current_site = SimpleLazyObject(lambda: 'test_site')
-        email = view_set.send_transfer_notification_email(self.user,
-                                                          new_owner, groups)
-        self.assertEquals(email.to, [new_owner_email, self.user.email])
-
-    def test_send_transfer_notification_email_sends_names(self):
-        new_owner_email = 'new_owner@fake.com'
-        new_owner = User.objects.create_user('NewOwner1', new_owner_email,
-                                             self.password)
-        groups = {'group_with_access': [], 'group_without_access': []}
-        view_set = DataSetsViewSet()
-        view_set.request = self.factory.get(self.url_root)
-        view_set.request.user = SimpleLazyObject(lambda: self.user)
-        view_set.data_set = SimpleLazyObject(lambda: self.data_set)
-        view_set.current_site = SimpleLazyObject(lambda: 'test_site')
-        email = view_set.send_transfer_notification_email(self.user,
-                                                          new_owner, groups)
-        self.assertIn(self.user.username, email.body)
-        self.assertIn(new_owner.username, email.body)
-
-    def test_send_transfer_notification_email_sends_profiles(self):
-        new_owner_email = 'new_owner@fake.com'
-        new_owner = User.objects.create_user('NewOwner1',
-                                             new_owner_email,
-                                             self.password)
-        groups = {'group_with_access': [], 'group_without_access': []}
-        view_set = DataSetsViewSet()
-        view_set.request = self.factory.get(self.url_root)
-        view_set.request.user = SimpleLazyObject(lambda: self.user)
-        view_set.data_set = SimpleLazyObject(lambda: self.data_set)
-        view_set.current_site = SimpleLazyObject(lambda: 'test_site')
-        email = view_set.send_transfer_notification_email(self.user,
-                                                          new_owner, groups)
-        self.assertIn(
-            'http://{}/users/{}'.format(
-                view_set.current_site, self.user.profile.uuid
-            ),
-            email.body)
-        self.assertIn(
-            'http://{}/users/{}'.format(
-                view_set.current_site, new_owner.profile.uuid
-            ),
-            email.body)
-
-    def test_send_transfer_notification_email_sends_data_set(self):
-        new_owner_email = 'new_owner@fake.com'
-        new_owner = User.objects.create_user('NewOwner1', new_owner_email,
-                                             self.password)
-        groups = {'group_with_access': [], 'group_without_access': []}
-        view_set = DataSetsViewSet()
-        view_set.request = self.factory.get(self.url_root)
-        view_set.request.user = SimpleLazyObject(lambda: self.user)
-        view_set.data_set = SimpleLazyObject(lambda: self.data_set)
-        view_set.current_site = SimpleLazyObject(lambda: 'test_site')
-        email = view_set.send_transfer_notification_email(self.user,
-                                                          new_owner, groups)
-        self.assertIn(self.data_set.name, email.body)
-        self.assertIn(self.data_set.uuid, email.body)
-
-    def test_update_group_perms_remove_access(self):
-        new_owner_email = 'new_owner@fake.com'
-        new_owner = User.objects.create_user('NewOwner1', new_owner_email,
-                                             self.password)
-        self.data_set.share(ExtendedGroup.objects.public_group())
-        group_union = ExtendedGroup.objects.create(name="Group Union")
-        group_non_union = ExtendedGroup.objects.create(name="Group Non-Union")
-        self.data_set.share(group_union)
-        group_union.group_ptr.user_set.add(self.user)
-        group_union.group_ptr.user_set.add(new_owner)
-        self.data_set.share(group_non_union)
-        group_non_union.group_ptr.user_set.add(self.user)
-
-        view_set = DataSetsViewSet()
-        view_set.request = self.factory.get(self.url_root)
-        view_set.data_set = SimpleLazyObject(lambda: self.data_set)
-        view_set.current_site = SimpleLazyObject(lambda: 'test_site')
-        groups = view_set.update_group_perms(new_owner)
-
-        self.assertEqual(len(groups.get('groups_without_access')), 1)
-        self.assertEqual(
-            groups.get('groups_without_access')[0].get('name'),
-            group_non_union.extendedgroup.name
-        )
-        self.assertEqual(
-            groups.get('groups_without_access')[0].get('profile'),
-            'http://{}/groups/{}'.format(view_set.current_site,
-                                         group_non_union.extendedgroup.uuid)
-        )
-
-    def test_update_group_perms_retains_access(self):
-        new_owner_email = 'new_owner@fake.com'
-        new_owner = User.objects.create_user('NewOwner1', new_owner_email,
-                                             self.password)
-        group_union = ExtendedGroup.objects.create(name="Group Union")
-        self.data_set.share(group_union)
-        group_union.group_ptr.user_set.add(self.user)
-        group_union.group_ptr.user_set.add(new_owner)
-
-        view_set = DataSetsViewSet()
-        view_set.request = self.factory.get(self.url_root)
-        view_set.data_set = SimpleLazyObject(lambda: self.data_set)
-        view_set.current_site = SimpleLazyObject(lambda: 'test_site')
-        groups = view_set.update_group_perms(new_owner)
-
-        self.assertEqual(len(groups.get('groups_with_access')), 1)
-        self.assertEqual(
-            groups.get('groups_with_access')[0].get('name'),
-            group_union.extendedgroup.name
-        )
-        self.assertEqual(
-            groups.get('groups_with_access')[0].get('profile'),
-            'http://{}/groups/{}'.format(view_set.current_site,
-                                         group_union.extendedgroup.uuid)
-        )
-
-    def test_update_group_perms_retains_public(self):
-        new_owner_email = 'new_owner@fake.com'
-        new_owner = User.objects.create_user('NewOwner1', new_owner_email,
-                                             self.password)
-        group_public = ExtendedGroup.objects.public_group()
-        self.data_set.share(group_public)
-
-        view_set = DataSetsViewSet()
-        view_set.request = self.factory.get(self.url_root)
-        view_set.data_set = SimpleLazyObject(lambda: self.data_set)
-        view_set.current_site = SimpleLazyObject(lambda: 'test_site')
-        groups = view_set.update_group_perms(new_owner)
-
-        self.assertEqual(len(groups.get('groups_with_access')), 1)
-        self.assertEqual(
-            groups.get('groups_with_access')[0].get('name'),
-            group_public.extendedgroup.name
-        )
-        self.assertEqual(
-            groups.get('groups_with_access')[0].get('profile'),
-            'http://{}/groups/{}'.format(view_set.current_site,
-                                         group_public.extendedgroup.uuid)
-        )
 
 
 class AnalysisApiV2Tests(APIV2TestCase):
@@ -763,8 +521,8 @@ class AnalysisApiV2Tests(APIV2TestCase):
         )
 
         # Create Datasets
-        self.data_set = DataSet.objects.create(name="coffee data_set")
-        self.data_set_2 = DataSet.objects.create(name="cool data_set")
+        self.dataset = DataSet.objects.create(name="coffee dataset")
+        self.dataset2 = DataSet.objects.create(name="cool dataset")
 
         # Create Investigation/InvestigationLinks for the DataSets
         self.investigation = Investigation.objects.create()
@@ -778,7 +536,7 @@ class AnalysisApiV2Tests(APIV2TestCase):
             name='Coffee Analysis',
             summary='coffee',
             project=self.project,
-            data_set=self.data_set,
+            data_set=self.dataset,
             workflow=self.workflow
         )
         self.analysis.set_owner(self.user)
@@ -787,7 +545,7 @@ class AnalysisApiV2Tests(APIV2TestCase):
             name='Coffee Analysis2',
             summary='coffee2',
             project=self.project,
-            data_set=self.data_set,
+            data_set=self.dataset,
             workflow=self.workflow
         )
         self.analysis2.set_owner(self.user)

@@ -195,14 +195,12 @@ def create_tool_with_necessary_models(tool_type):
         ToolDefinition.VISUALIZATION: VisualizationToolFactory
     }
     tool_factory = tool_type_to_factory_mapping[tool_type]
-    name = "Test {} Tool: {}".format(tool_type, uuid_builtin.uuid4())
 
     return tool_factory(
         tool_definition=ToolDefinitionFactory(
             tool_type=tool_type,
-            name=name,
+            name="Test {} Tool: {}".format(tool_type, uuid_builtin.uuid4()),
             file_relationship=FileRelationshipFactory()
         ),
-        display_name=name,
         dataset=create_dataset_with_necessary_models()
     )

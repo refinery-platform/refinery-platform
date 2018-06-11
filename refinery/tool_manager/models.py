@@ -7,7 +7,7 @@ import uuid
 
 from django.conf import settings
 from django.db import models
-from django.db.models.signals import post_delete, post_save, pre_delete
+from django.db.models.signals import post_delete, pre_delete
 from django.dispatch import receiver
 
 import bioblend
@@ -32,7 +32,6 @@ from core.models import (INPUT_CONNECTION, OUTPUT_CONNECTION, Analysis,
                          AnalysisNodeConnection, DataSet, OwnableResource,
                          Workflow)
 
-from core.models import Event
 from core.utils import get_absolute_url
 from data_set_manager.models import Node
 from data_set_manager.utils import (
@@ -299,11 +298,6 @@ class Tool(OwnableResource):
     )
     tool_launch_configuration = models.TextField()
     tool_definition = models.ForeignKey(ToolDefinition)
-    display_name = models.CharField(
-        max_length=250,
-        unique=True,
-        null=True
-    )
 
     class Meta:
         verbose_name = "tool"
@@ -605,27 +599,6 @@ class VisualizationTool(Tool):
         # Pulls docker image if it doesn't exist yet, and launches container
         # asynchronously
         start_container.delay(self)
-
-
-@receiver(post_save, sender=VisualizationTool)
-def _visualization_saved(sender, instance, *args, **kwargs):
-    # TODO: Distinguish creation from modification?
-    Event.record_data_set_visualization_creation(
-        instance.dataset, instance.display_name
-    )
-
-
-@receiver(pre_delete, sender=VisualizationTool)
-def remove_tool_container(sender, instance, *args, **kwargs):
-    """
-    Remove the Docker container instance corresponding to a
-    VisualizationTool's launch.
-    """
-    try:
-        instance.django_docker_client.purge_by_label(instance.uuid)
-    except APIError as e:
-        logger.error("Couldn't purge container for Tool with UUID: %s %s",
-                     instance.uuid, e)
 
 
 def handle_bioblend_exceptions(func):
@@ -1466,9 +1439,14 @@ class WorkflowTool(Tool):
         )
 
 
-@receiver(post_save, sender=WorkflowTool)
-def _workflow_saved(sender, instance, *args, **kwargs):
-    # TODO: Distinguish creation from modification?
-    Event.record_data_set_analysis_creation(
-        instance.dataset, instance.display_name
-    )
+@receiver(pre_delete, sender=VisualizationTool)
+def remove_tool_container(sender, instance, *args, **kwargs):
+    """
+    Remove the Docker container instance corresponding to a
+    VisualizationTool's launch.
+    """
+    try:
+        instance.django_docker_client.purge_by_label(instance.uuid)
+    except APIError as e:
+        logger.error("Couldn't purge container for Tool with UUID: %s %s",
+                     instance.uuid, e)

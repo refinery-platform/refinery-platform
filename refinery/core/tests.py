@@ -13,11 +13,11 @@ from django.db.migrations.executor import MigrationExecutor
 from django.test import TestCase
 from django.utils import timezone
 
-from guardian.shortcuts import assign_perm, get_objects_for_group
+from guardian.core import ObjectPermissionChecker
+from guardian.shortcuts import assign_perm, get_objects_for_group, remove_perm
 import mock
 import mockcache as memcache
 
-from cuser.middleware import CuserMiddleware
 from tastypie.exceptions import NotFound
 from tastypie.test import ResourceTestCase
 
@@ -41,9 +41,9 @@ from .management.commands.import_annotations import \
     Command as ImportAnnotationsCommand
 from .models import (
     INPUT_CONNECTION, OUTPUT_CONNECTION, Analysis, AnalysisNodeConnection,
-    AnalysisResult, BaseResource, DataSet, Event, ExtendedGroup,
-    InvestigationLink, Project, SiteStatistics, Tutorials, UserProfile,
-    Workflow, WorkflowEngine, invalidate_cached_object
+    AnalysisResult, BaseResource, DataSet, ExtendedGroup, InvestigationLink,
+    Project, SiteStatistics, Tutorials, UserProfile, Workflow, WorkflowEngine,
+    invalidate_cached_object
 )
 from .search_indexes import DataSetIndex
 from .utils import (
@@ -1711,6 +1711,45 @@ class TestMigrations(TestCase):
         pass
 
 
+class DataSetPermissionsUpdateTests(TestMigrations):
+    migrate_from = '0015_auto_20171213_1429'
+    migrate_to = '0016_update_read_meta_permissions'
+
+    def setUpBeforeMigration(self, apps):
+        self.public_group = ExtendedGroup.objects.public_group()
+        self.user_a = User.objects.create_user("user_a", "", "user_a")
+        self.user_b = User.objects.create_user("user_b", "", "user_b")
+
+        self.dataset_a = create_dataset_with_necessary_models(user=self.user_a)
+        self.dataset_b = create_dataset_with_necessary_models()
+        self.dataset_b.share(self.public_group)
+
+        # Emulate state of DataSets existing prior to the read_meta_dataset
+        # permission addition
+        for obj in [self.user_a, self.user_b, self.public_group]:
+            for dataset in DataSet.objects.all():
+                remove_perm("core.read_meta_dataset", obj, dataset)
+
+    def _check_permission(self, obj, dataset,
+                          permission="core.read_meta_dataset"):
+        return ObjectPermissionChecker(obj).has_perm(permission,  dataset)
+
+    def test_read_meta_permissions_assigned(self):
+        # Assert that self.user is the only one with the "read_meta_dataset"
+        # perm on self.dataset_a
+        self.assertTrue(self._check_permission(self.user_a, self.dataset_a))
+        self.assertFalse(self._check_permission(self.user_b, self.dataset_a))
+        self.assertFalse(self._check_permission(self.public_group,
+                                                self.dataset_a))
+
+        # Assert that all users and groups have the "read_meta_dataset" perm on
+        # self.dataset_b
+        self.assertTrue(self._check_permission(self.public_group,
+                                               self.dataset_b))
+        self.assertTrue(self._check_permission(self.user_a, self.dataset_b))
+        self.assertTrue(self._check_permission(self.user_b, self.dataset_b))
+
+
 class TestManagementCommands(TestCase):
     def test_set_up_site_name(self):
         site_name = "Refinery Test"
@@ -1786,6 +1825,34 @@ class TestManagementCommands(TestCase):
                 str(galaxy_instance.id),
                 "non-existent group name"
             )
+
+
+class InitialSiteStatisticsCreationTest(TestMigrations):
+    migrate_from = '0019_sitestatistics'
+    migrate_to = '0020_create_initial_site_statistics'
+
+    def setUpBeforeMigration(self, apps):
+        public_group = ExtendedGroup.objects.public_group()
+        self.user_a = User.objects.create_user("user_a", "", "user_a")
+        self.user_b = User.objects.create_user("user_b", "", "user_b")
+        self.client.login(username="user_a", password="user_a")
+        self.client.login(username="user_a", password="user_a")
+        self.dataset_a = create_dataset_with_necessary_models(user=self.user_a)
+        self.dataset_b = create_dataset_with_necessary_models()
+        self.dataset_b.share(public_group)
+
+    def test_initial_site_statistics_created_properly(self):
+        initial_site_statistics = SiteStatistics.objects.last()
+
+        self.assertEqual(initial_site_statistics.datasets_uploaded, 2)
+        self.assertEqual(initial_site_statistics.datasets_shared, 1)
+        self.assertEqual(initial_site_statistics.users_created, 3)
+        self.assertEqual(initial_site_statistics.groups_created, 1)
+        self.assertEqual(initial_site_statistics.unique_user_logins, 1)
+        self.assertEqual(initial_site_statistics.total_user_logins, 2)
+        self.assertEqual(initial_site_statistics.total_workflow_launches, 0)
+        self.assertEqual(
+            initial_site_statistics.total_visualization_launches, 0)
 
 
 class SiteStatisticsUnitTests(TestCase):
@@ -1980,93 +2047,3 @@ class SiteStatisticsIntegrationTests(TestCase):
         collect_site_statistics()
         self.assertEqual(initial_site_statistics_count + 1,
                          SiteStatistics.objects.count())
-
-
-class EventTests(TestCase):
-
-    def setUp(self):
-        CuserMiddleware.set_user(User.objects.create_user('testuser'))
-        self.pre_re = r'^\d{2}/\d{2}/\d{2} \d{2}:\d{2}:\d{2}: testuser '
-        self.post_re = r' data set Test DataSet - [0-9a-f-]+$'
-
-    def test_data_set_create(self):
-        create_dataset_with_necessary_models()
-        events = Event.objects.all()
-        self.assertEqual(len(events), 1)
-        self.assertRegexpMatches(
-            str(events[0]),
-            self.pre_re + r'created data set Test DataSet - [0-9a-f-]+$'
-        )
-
-    # DataSetPermissionsUpdateTests covers data_set_permissions_change.
-
-    def test_data_set_metadata_reupload(self):
-        pass  # TODO
-
-    def test_data_set_file_link(self):
-        pass  # TODO
-
-    def test_data_set_metadata_edit(self):
-        pass  # TODO
-
-    def test_data_set_visualization_creation(self):
-        create_tool_with_necessary_models("VISUALIZATION")
-
-        events = Event.objects.all()
-        self.assertEqual(len(events), 2)
-        self.assertRegexpMatches(
-            str(events[0]),
-            self.pre_re + r'created' + self.post_re
-        )
-        self.assertRegexpMatches(
-            str(events[1]),
-            self.pre_re +
-            r'launched visualization Test VISUALIZATION Tool: [0-9a-f-]+ on' +
-            self.post_re
-        )
-
-    def test_data_set_visualization_deletion(self):
-        pass  # TODO
-
-    def test_data_set_analysis_creation(self):
-        create_tool_with_necessary_models("WORKFLOW")
-
-        events = Event.objects.all()
-        self.assertEqual(len(events), 2)
-        self.assertRegexpMatches(
-            str(events[0]),
-            self.pre_re + r'created' + self.post_re
-        )
-        self.assertRegexpMatches(
-            str(events[1]),
-            self.pre_re +
-            r'launched analysis Test WORKFLOW Tool: [0-9a-f-]+ on' +
-            self.post_re
-        )
-
-    def test_data_set_analysis_deletion(self):
-        pass  # TODO
-
-    def test_group_permissions_change(self):
-        pass  # TODO
-
-    def test_group_invitation_sent(self):
-        pass  # TODO
-
-    def test_group_invitation_accepted(self):
-        pass  # TODO
-
-    def test_group_invitation_revoked(self):
-        pass  # TODO
-
-    def test_group_invitation_resent(self):
-        pass  # TODO
-
-    def test_group_user_promotion(self):
-        pass  # TODO
-
-    def test_group_user_demotion(self):
-        pass  # TODO
-
-    def test_group_user_removal(self):
-        pass  # TODO

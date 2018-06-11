@@ -1,7 +1,6 @@
 import os
 import stat
 from tempfile import NamedTemporaryFile
-import threading
 import urlparse
 
 from django.conf import settings
@@ -21,127 +20,9 @@ from data_set_manager.models import Node
 from data_set_manager.search_indexes import NodeIndex
 
 from .models import FileStoreItem, _mkdir, get_temp_dir, parse_s3_url
-from .utils import S3MediaStorage, SymlinkedFileSystemStorage, _delete_file
 
 logger = celery.utils.log.get_task_logger(__name__)
 logger.setLevel(celery.utils.LOG_LEVELS['DEBUG'])
-
-
-class ProgressPercentage(object):
-    """Callable for progress monitoring of S3 transfers"""
-
-    def __init__(self, filename, task_id):
-        self._filename = filename
-        self._task_id = task_id
-        self._size = os.path.getsize(filename)
-        self._seen_so_far = 0
-        self._lock = threading.Lock()
-
-    def __call__(self, bytes_amount):
-        # to simplify we'll assume this is hooked up to a single filename
-        with self._lock:
-            self._seen_so_far += bytes_amount
-            percentage = self._seen_so_far * 100. / self._size
-            import_file.update_state(
-                self._task_id, state='PROGRESS',
-                meta={
-                    'percent_done': '{:.0f}'.format(percentage),
-                    'current': self._seen_so_far,
-                    'total': self._size
-                }
-            )
-
-
-def _copy_file_obj(source, destination):
-    """Copy file object in chunks"""
-    chunk_size = 10 * 1024 * 1024  # 10MB
-    source_size = os.path.getsize(source.name)
-    for chunk in iter(lambda: source.read(chunk_size), ''):
-        destination.write(chunk)
-        destination_size = os.path.getsize(destination.name)
-        percentage = destination_size * 100. / source_size
-        import_file.update_state(
-            state='PROGRESS',
-            meta={
-                'percent_done': '{:.0f}'.format(percentage),
-                'current': destination_size,
-                'total': source_size
-            }
-        )
-
-
-def _copy_file(source_path, destination_path, delete_source=False):
-    """Copy file from one absolute file system path to another"""
-    _mkdir(os.path.dirname(destination_path))
-
-    try:
-        with open(source_path, 'rb') as source, \
-                open(destination_path, 'wb') as destination:
-            _copy_file_obj(source, destination)
-    except IOError as exc:
-        _delete_file(destination_path)
-        raise RuntimeError("Failed to copy '{}' to '{}': {}".format(
-            source_path, destination_path, exc
-        ))
-
-    if delete_source:
-        _delete_file(source_path)
-
-
-def _symlink_file(source_path, link_path):
-    _mkdir(os.path.dirname(link_path))
-    try:
-        os.symlink(source_path, link_path)
-    except OSError as exc:
-        raise RuntimeError("Error creating symlink '%s': %s", link_path, exc)
-
-
-def _import_path_to_path(source_path, symlink=True):
-    """Import file from an absolute file system path into file store"""
-    storage = SymlinkedFileSystemStorage()
-    source_file_name = os.path.basename(source_path)
-    file_store_name = storage.get_name(source_file_name)
-    file_store_path = storage.get_path(source_file_name)
-
-    if source_path.startswith((settings.REFINERY_DATA_IMPORT_DIR,
-                               get_temp_dir())):
-        # move uploaded or temporary file
-        logger.debug("Moving file '%s' into file store", source_path)
-        _copy_file(source_path, file_store_path, delete_source=True)
-        logger.info("Moved file '%s' into file store", source_path)
-    else:
-        if symlink:
-            _symlink_file(source_path, file_store_path)
-            logger.info("Created symlink '%s' to '%s'",
-                        file_store_path, source_path)
-        else:
-            logger.debug("Copying file '%s' into file store", source_path)
-            _copy_file(source_path, file_store_path)
-            logger.info("Copied file '%s' into file store", source_path)
-
-    return file_store_name
-
-
-def _import_path_to_s3(source_path):
-    s3 = boto3.client('s3')
-    storage = S3MediaStorage()
-    file_store_name = storage.get_name(os.path.basename(source_path))
-
-    try:
-        s3.upload_file(source_path, settings.MEDIA_BUCKET, file_store_name,
-                       ExtraArgs={'ACL': 'public-read'},
-                       Callback=ProgressPercentage(source_path,
-                                                   import_file.request.id))
-    except botocore.exceptions.ClientError as exc:
-        s3_url = 's3://' + settings.MEDIA_BUCKET + '/' + file_store_name
-        raise RuntimeError("Error transferring file '%s' to %s: %s",
-                           source_path, s3_url, exc)
-
-    if source_path.startswith((settings.REFINERY_DATA_IMPORT_DIR,
-                               get_temp_dir())):
-        _delete_file(source_path)
-
-    return file_store_name
 
 
 @task(track_started=True)
@@ -192,16 +73,66 @@ def import_file(uuid, refresh=False, file_size=0):
 
     # start the transfer
     if os.path.isabs(item.source):
-        try:
-            if settings.REFINERY_S3_USER_DATA:
-                item.datafile.name = _import_path_to_s3(item.source)
-            else:
-                item.datafile.name = _import_path_to_path(item.source)
-        except RuntimeError as exc:
+        if not os.path.exists(item.source):
+            logger.error(
+                "Error moving '%s' into file store: file does not exist",
+                item.source
+            )
             import_file.update_state(state=celery.states.FAILURE,
-                                     meta=str(exc))
+                                     meta='Failed to import file')
             # http://stackoverflow.com/a/33143545
             raise celery.exceptions.Ignore()
+
+        # construct file name and absolute path
+        item.datafile.name = default_storage.get_name(
+            os.path.basename(item.source)
+        )
+        file_store_path = os.path.join(settings.FILE_STORE_BASE_DIR,
+                                       item.datafile.name)
+        if item.source.startswith((settings.REFINERY_DATA_IMPORT_DIR,
+                                   get_temp_dir())):
+            # move uploaded or temporary file
+            logger.debug("Moving uploaded file '%s' into file store",
+                         item.source)
+            try:
+                _mkdir(os.path.dirname(file_store_path))
+                os.rename(item.source, file_store_path)
+            except OSError as exc:
+                logger.error("Error moving '%s' into the file store: %s",
+                             item.source, exc)
+                import_file.update_state(state=celery.states.FAILURE,
+                                         meta='Failed to import uploaded file')
+                # http://stackoverflow.com/a/33143545
+                raise celery.exceptions.Ignore()
+            logger.info("Moved uploaded file '%s' into file store",
+                        item.source)
+        else:
+            # copy external file
+            logger.debug("Copying external file '%s' into file store",
+                         item.source)
+            chunk_size = 10 * 1024 * 1024  # 10MB
+            try:
+                with open(item.source, 'rb') as external, \
+                        open(file_store_path, 'wb') as local:
+                    for chunk in iter(lambda: external.read(chunk_size), ''):
+                        local.write(chunk)
+            except IOError as exc:
+                logger.error(
+                    "Error copying external file '%s' into file store: %s",
+                    item.source, exc
+                )
+                try:
+                    os.unlink(file_store_path)
+                except IOError as exc:
+                    logger.debug("Failed to remove local file '%s': %s",
+                                 file_store_path, exc)
+                import_file.update_state(state=celery.states.FAILURE,
+                                         meta='Failed to import external file')
+                # http://stackoverflow.com/a/33143545
+                raise celery.exceptions.Ignore()
+            else:
+                logger.info("Copied external file '%s' into file store",
+                            item.source)
 
     elif item.source.startswith('s3://'):
         bucket_name, key = parse_s3_url(item.source)
@@ -341,7 +272,8 @@ def update_solr_index(**kwargs):
         file_store_item_uuid = kwargs['kwargs']['uuid']
     except KeyError:
         file_store_item_uuid = kwargs['args'][0]
-
+    logger.debug("File import state for FileStoreItem UUID '%s': '%s'",
+                 file_store_item_uuid, kwargs['state'])
     try:
         node = Node.objects.get(file_uuid=file_store_item_uuid)
     except (Node.DoesNotExist, Node.MultipleObjectsReturned) as exc:
