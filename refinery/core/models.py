@@ -2261,7 +2261,7 @@ class Event(models.Model):
     type = models.CharField(max_length=32)
 
     sub_type = models.CharField(max_length=32)
-    json = models.TextField()
+    details = models.TextField()
 
     # Types
     CREATE = 'CREATE'
@@ -2269,6 +2269,9 @@ class Event(models.Model):
     # DELETE = 'DELETE'
     # Note: No delete, because when the object in question no longer exists,
     # no one has any access to it.
+
+    def get_details_as_dict(self):
+        return json.loads(self.details)
 
     @staticmethod
     def record_data_set_create(data_set):
@@ -2344,9 +2347,10 @@ class Event(models.Model):
         event.save()
 
     def render_data_set_visualization_creation(self):
-        data = json.loads(self.json)
+        details = self.get_details_as_dict()
         return '{:%x %X}: {} launched visualization {} on data set {}'.format(
-            self.date_time, self.user, data['display_name'], self.data_set.name
+            self.date_time, self.user, details['display_name'],
+            self.data_set.name
         )
 
     VISUALIZATION_DELETION = 'VISUALIZATION_DELETION'
@@ -2374,9 +2378,10 @@ class Event(models.Model):
         event.save()
 
     def render_data_set_analysis_creation(self):
-        data = json.loads(self.json)
+        details = self.get_details_as_dict()
         return '{:%x %X}: {} launched analysis {} on data set {}'.format(
-            self.date_time, self.user, data['display_name'], self.data_set.name
+            self.date_time, self.user, details['display_name'],
+            self.data_set.name
         )
 
     ANALYSIS_DELETION = 'ANALYSIS_DELETION'
