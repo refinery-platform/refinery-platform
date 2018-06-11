@@ -22,7 +22,9 @@ from django.views.decorators.gzip import gzip_page
 
 import boto3
 import botocore
-from guardian.shortcuts import get_groups_with_perms, get_perms
+from guardian.shortcuts import get_groups_with_perms, get_objects_for_user, \
+    get_perms
+
 from guardian.utils import get_anonymous_user
 from registration import signals
 from registration.views import RegistrationView
@@ -705,6 +707,15 @@ class EventViewSet(viewsets.ModelViewSet):
     serializer_class = EventSerializer
     # Don't think I need a lookup_field?
     http_method_names = ['get']
+
+    def list(self, request, *args, **kwargs):
+        data_sets_for_user = get_objects_for_user(
+            request.user, 'core.read_meta_dataset'
+        )
+        # Update queryset to only grab Events that are pertinent to a given
+        # User
+        self.queryset = self.queryset.filter(data_set__in=data_sets_for_user)
+        return super(EventViewSet, self).list(request, *args, **kwargs)
 
 
 class DataSetsViewSet(APIView):
