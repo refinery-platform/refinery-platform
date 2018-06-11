@@ -99,9 +99,8 @@ def _symlink_file(source_path, link_path):
 def _import_path_to_path(source_path, symlink=True):
     """Import file from an absolute file system path into file store"""
     storage = SymlinkedFileSystemStorage()
-    source_file_name = os.path.basename(source_path)
-    file_store_name = storage.get_name(source_file_name)
-    file_store_path = storage.get_path(source_file_name)
+    file_store_name = storage.get_name(os.path.basename(source_path))
+    file_store_path = storage.path(file_store_name)
 
     if source_path.startswith((settings.REFINERY_DATA_IMPORT_DIR,
                                get_temp_dir())):
