@@ -9,6 +9,9 @@
   angular
     .module('refineryFileBrowser')
     .component('rpDataFileDropdown', {
+      bindings: {
+        fileStatus: '='
+      },
       templateUrl: ['$window', function ($window) {
         return $window.getStaticUrl('partials/file-browser/partials/data-file-dropdown.html');
       }]

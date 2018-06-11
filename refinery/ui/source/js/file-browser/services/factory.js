@@ -287,21 +287,18 @@
      * @param {string} _columnName - column name
      */
     function setCustomUrlColumn (urlAttribute) {
-      var _cellTemplate = '<div class="ngCellText text-align-center' +
-        ' ui-grid-cell-contents" ng-class="col.colIndex()">' +
-        '<rp-data-file-dropdown></rp-data-file-dropdown>' +
-        '</div>';
+      var _cellTemplate = '<rp-data-file-dropdown file-status="COL_FIELD"></rp-data-file-dropdown>';
 
       return {
         name: urlAttribute.internal_name,
         field: urlAttribute.internal_name,
         cellTooltip: true,
-        width: 4 + '%',
+        width: 70,
         displayName: '',
         enableFiltering: false,
         enableSorting: false,
         enableColumnMenu: false,
-        enableColumnResizing: false,
+        enableColumnResizing: true,
         cellTemplate: _cellTemplate
       };
     }
