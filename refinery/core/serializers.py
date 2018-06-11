@@ -1,3 +1,4 @@
+import json
 import logging
 
 import celery
@@ -7,7 +8,7 @@ from rest_framework.validators import UniqueValidator
 from data_set_manager.models import Node
 from file_store.models import FileStoreItem
 
-from .models import DataSet, Workflow
+from .models import DataSet, Event, Workflow
 
 logger = logging.getLogger(__name__)
 
@@ -164,4 +165,44 @@ class NodeSerializer(serializers.HyperlinkedModelSerializer):
             'auxiliary_file_generation_task_state',
             'ready_for_igv_detail_view',
             'file_uuid'
+        ]
+
+
+class _StrObjectField(serializers.Field):
+    def get_attribute(self, obj):
+        # Without this, it tries to access a field by the same name.
+        return obj
+
+    def to_representation(self, obj):
+        return str(obj)
+
+
+class _DeserializeJSONField(serializers.Field):
+
+    def to_representation(self, obj):
+        return json.loads(obj)
+
+
+class EventSerializer(serializers.ModelSerializer):
+    data_set = serializers.SlugRelatedField(
+        read_only=True,
+        slug_field='uuid'
+    )
+
+    user = serializers.SlugRelatedField(
+        read_only=True,
+        slug_field='username'
+    )
+
+    message = _StrObjectField()
+
+    json = _DeserializeJSONField()
+
+    date_time = serializers.DateTimeField()
+
+    class Meta:
+        model = Event
+        fields = [
+            'date_time', 'data_set', 'group', 'user',
+            'type', 'sub_type', 'json', 'message'
         ]

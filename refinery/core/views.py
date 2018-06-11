@@ -39,10 +39,11 @@ import xmltodict
 from data_set_manager.models import Node
 
 from .forms import ProjectForm, UserForm, UserProfileForm, WorkflowForm
-from .models import (Analysis, CustomRegistrationProfile, DataSet,
+from .models import (Analysis, CustomRegistrationProfile, DataSet, Event,
                      ExtendedGroup, Invitation, Ontology, Project,
                      UserProfile, Workflow, WorkflowEngine)
-from .serializers import DataSetSerializer, NodeSerializer, WorkflowSerializer
+from .serializers import (DataSetSerializer, EventSerializer, NodeSerializer,
+                          WorkflowSerializer)
 from .utils import (api_error_response, get_data_sets_annotations,
                     get_resources_for_user)
 
@@ -696,6 +697,14 @@ class NodeViewSet(viewsets.ModelViewSet):
     lookup_field = 'uuid'
     http_method_names = ['get']
     # permission_classes = (IsAuthenticated,)
+
+
+class EventViewSet(viewsets.ModelViewSet):
+    """API endpoint that allows Events to be viewed"""
+    queryset = Event.objects.all()
+    serializer_class = EventSerializer
+    # Don't think I need a lookup_field?
+    http_method_names = ['get']
 
 
 class DataSetsViewSet(APIView):
