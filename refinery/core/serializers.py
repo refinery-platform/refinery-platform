@@ -167,28 +167,16 @@ class NodeSerializer(serializers.HyperlinkedModelSerializer):
         ]
 
 
-class _StrObjectField(serializers.Field):
-    def get_attribute(self, obj):
-        # Without this, it tries to access a field by the same name.
-        return obj
-
-    def to_representation(self, obj):
-        return str(obj)
-
-
 class EventSerializer(serializers.ModelSerializer):
     data_set = serializers.SlugRelatedField(
         read_only=True,
         slug_field='uuid'
     )
-
     user = serializers.SlugRelatedField(
         read_only=True,
         slug_field='username'
     )
-
-    message = _StrObjectField()
-
+    message = serializers.SerializerMethodField()
     details = serializers.JSONField(source="get_details_as_dict")
     date_time = serializers.DateTimeField()
 
@@ -198,3 +186,6 @@ class EventSerializer(serializers.ModelSerializer):
             'date_time', 'data_set', 'group', 'user',
             'type', 'sub_type', 'details', 'message'
         ]
+
+    def get_message(self, obj):
+        return str(obj)
