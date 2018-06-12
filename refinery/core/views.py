@@ -705,7 +705,6 @@ class EventViewSet(viewsets.ModelViewSet):
     """API endpoint that allows Events to be viewed"""
     queryset = Event.objects.all()
     serializer_class = EventSerializer
-    # Don't think I need a lookup_field?
     http_method_names = ['get']
 
     def list(self, request, *args, **kwargs):
