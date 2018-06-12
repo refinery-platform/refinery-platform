@@ -287,7 +287,8 @@
      * @param {string} _columnName - column name
      */
     function setCustomUrlColumn (urlAttribute) {
-      var _cellTemplate = '<rp-data-file-dropdown file-status="COL_FIELD"></rp-data-file-dropdown>';
+      var _cellTemplate = '<rp-data-file-dropdown file-status="COL_FIELD" node-obj="row.entity">' +
+        '</rp-data-file-dropdown>';
 
       return {
         name: urlAttribute.internal_name,

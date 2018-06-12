@@ -25,14 +25,14 @@
      * @desc  VM method open modal to add/remove data file
      * @memberOf refineryDashboard.CollaborationCardCtrl
     **/
-    function openDataFileModal (action, nodeUuid) {
+    function openDataFileModal (fileAction, node) {
       var modalInstance = $uibModal.open({
         component: 'rpDataFileEditModal',
         resolve: {
           config: function () {
             return {
-              action: action,
-              nodeUuid: nodeUuid
+              fileAction: fileAction,
+              nodeObj: node
             };
           }
         }
