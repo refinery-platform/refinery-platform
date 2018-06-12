@@ -15,7 +15,6 @@ from rest_framework.test import (
     APIClient, APIRequestFactory, APITestCase, force_authenticate
 )
 
-from core.management.commands.create_public_group import create_public_group
 from data_set_manager.models import (Assay, Investigation, Node, Study)
 from factory_boy.django_model_factories import (
     GalaxyInstanceFactory, WorkflowEngineFactory, WorkflowFactory
@@ -942,41 +941,52 @@ class WorkflowApiV2Tests(APIV2TestCase):
 
 
 class EventApiV2Tests(APIV2TestCase):
-    def setUp(self):
-        create_public_group()
-        # Prints a warning and continues if public group already exists.
-        # Necessary if using "--settings=config.settings.quick_test".
-        # TODO: Move to superclass?
+    maxDiff = None
 
+    def setUp(self):
         super(EventApiV2Tests, self).setUp(
             api_base_name="events/",
             view=EventViewSet.as_view({"get": "list"})
         )
 
-    def test_get_event_list(self):
-        user = User.objects.create_user('testuser')
-        CuserMiddleware.set_user(user)
+    def test_get_event_list_provides_access_control_between_users(self):
+        CuserMiddleware.set_user(self.user)
 
-        create_tool_with_necessary_models("VISUALIZATION")
-        create_tool_with_necessary_models("WORKFLOW")
-
+        # Create objects that trigger Events for "another_user"
+        another_user = User.objects.create_user("Another", "User",
+                                                "another_user@example.com")
+        create_tool_with_necessary_models("VISUALIZATION", user=another_user)
         events = Event.objects.all()
-        self.assertEqual(len(events), 4)
+        self.assertEqual(len(events), 2)
+        get_request = self.factory.get(urljoin(self.url_root, '/'))
 
-        messages = [str(_) for _ in events]
-        data_sets = [_.data_set.uuid for _ in events]
+        # Ensure that request made by "self.user" doesn't return Events from
+        #  "another_user"
+        get_request.user = self.user
+        get_response = self.view(get_request).render()
+        self.assertEqual(json.loads(get_response.content), [])
+
+    def test_get_event_list(self):
+        CuserMiddleware.set_user(self.user)
+        create_tool_with_necessary_models("VISUALIZATION", user=self.user)
+        create_tool_with_necessary_models("WORKFLOW", user=self.user)
+        events = Event.objects.all()
+        self.assertEqual(events.count(), 4)
+
+        messages = [str(event) for event in events]
+        data_sets = [event.data_set.uuid for event in events]
         display_names = [
-            json.loads(_.json).get('display_name') for _ in events
+            event.get_details_as_dict().get('display_name') for event in events
         ]
         date_times = [
-            _.date_time.isoformat().replace('+00:00', 'Z') for _ in events
+            event.date_time.isoformat().replace('+00:00', 'Z') for event in
+            events
         ]
 
         get_request = self.factory.get(urljoin(self.url_root, '/'))
+        get_request.user = self.user
         get_response = self.view(get_request).render()
-        # TODO: Why do I need render()?
 
-        self.maxDiff = None
         self.assertEqual(
             json.loads(get_response.content),
             [
@@ -985,40 +995,40 @@ class EventApiV2Tests(APIV2TestCase):
                     'message': messages[0],
                     'data_set': data_sets[0],
                     'group': None,
-                    'user': user.username,
+                    'user': self.user.username,
                     'type': 'CREATE',
                     'sub_type': '',
-                    'json': {}
+                    'details': {}
                 },
                 {
                     'date_time': date_times[1],
                     'message': messages[1],
                     'data_set': data_sets[1],
                     'group': None,
-                    'user': user.username,
+                    'user': self.user.username,
                     'type': 'UPDATE',
                     'sub_type': 'VISUALIZATION_CREATION',
-                    'json': {'display_name': display_names[1]}
+                    'details': {'display_name': display_names[1]}
                 },
                 {
                     'date_time': date_times[2],
                     'message': messages[2],
                     'data_set': data_sets[2],
                     'group': None,
-                    'user': user.username,
+                    'user': self.user.username,
                     'type': 'CREATE',
                     'sub_type': '',
-                    'json': {}
+                    'details': {}
                 },
                 {
                     'date_time': date_times[3],
                     'message': messages[3],
                     'data_set': data_sets[3],
                     'group': None,
-                    'user': user.username,
+                    'user': self.user.username,
                     'type': 'UPDATE',
                     'sub_type': 'ANALYSIS_CREATION',
-                    'json': {'display_name': display_names[3]}
+                    'details': {'display_name': display_names[3]}
                 }
             ]
         )
