@@ -2277,7 +2277,7 @@ class Event(models.Model):
     def record_data_set_create(data_set):
         user = CuserMiddleware.get_user()
         Event.objects.create(
-            data_set=data_set, user=user, type=Event.CREATE, json='{}'
+            data_set=data_set, user=user, type=Event.CREATE, details='{}'
         )
 
     def render_data_set_create(self):
@@ -2342,7 +2342,7 @@ class Event(models.Model):
         blob = json.dumps({
             'display_name': display_name
         })
-        event = Event(data_set=data_set, user=user, json=blob,
+        event = Event(data_set=data_set, user=user, details=blob,
                       type=Event.UPDATE, sub_type=Event.VISUALIZATION_CREATION)
         event.save()
 
@@ -2373,7 +2373,7 @@ class Event(models.Model):
         blob = json.dumps({
             'display_name': display_name
         })
-        event = Event(data_set=data_set, user=user, json=blob,
+        event = Event(data_set=data_set, user=user, details=blob,
                       type=Event.UPDATE, sub_type=Event.ANALYSIS_CREATION)
         event.save()
 
