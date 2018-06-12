@@ -169,12 +169,10 @@ class NodeSerializer(serializers.HyperlinkedModelSerializer):
 
 class EventSerializer(serializers.ModelSerializer):
     data_set = serializers.SlugRelatedField(
-        read_only=True,
-        slug_field='uuid'
+        read_only=True, slug_field='uuid'
     )
     user = serializers.SlugRelatedField(
-        read_only=True,
-        slug_field='username'
+        read_only=True, slug_field='username'
     )
     message = serializers.SerializerMethodField()
     details = serializers.JSONField(source="get_details_as_dict")
@@ -187,5 +185,6 @@ class EventSerializer(serializers.ModelSerializer):
             'type', 'sub_type', 'details', 'message'
         ]
 
-    def get_message(self, obj):
+    @staticmethod
+    def get_message(obj):
         return str(obj)
