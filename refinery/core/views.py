@@ -708,11 +708,12 @@ class EventViewSet(viewsets.ModelViewSet):
     http_method_names = ['get']
 
     def list(self, request, *args, **kwargs):
+        """Overrides ModelViewSet.list to create an updated queryset based
+        on DataSets that the requesting User has permission to access
+        """
         data_sets_for_user = get_objects_for_user(
             request.user, 'core.read_meta_dataset'
         )
-        # Update queryset to only grab Events that are pertinent to a given
-        # User
         self.queryset = self.queryset.filter(data_set__in=data_sets_for_user)
         return super(EventViewSet, self).list(request, *args, **kwargs)
 
