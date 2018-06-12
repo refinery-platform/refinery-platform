@@ -52,7 +52,7 @@ from analysis_manager.tasks import (_galaxy_file_import,
                                     _run_galaxy_workflow, run_analysis)
 from core.models import (INPUT_CONNECTION, OUTPUT_CONNECTION, Analysis,
                          AnalysisNodeConnection, AnalysisResult, ExtendedGroup,
-                         Project, Workflow, WorkflowEngine)
+                         Event, Project, Workflow, WorkflowEngine)
 from data_set_manager.models import Assay, Attribute, Node
 from data_set_manager.utils import _create_solr_params_from_node_uuids
 from factory_boy.django_model_factories import (AnnotatedNodeFactory,
@@ -60,7 +60,8 @@ from factory_boy.django_model_factories import (AnnotatedNodeFactory,
                                                 GalaxyInstanceFactory,
                                                 NodeFactory, ParameterFactory,
                                                 ToolFactory)
-from factory_boy.utils import create_dataset_with_necessary_models
+from factory_boy.utils import create_dataset_with_necessary_models, \
+    create_tool_with_necessary_models
 from file_store.models import FileStoreItem, FileType
 from tool_manager.management.commands.load_tools import \
     Command as LoadToolsCommand
@@ -3552,6 +3553,12 @@ class WorkflowToolLaunchTests(ToolManagerTestBase):
         )
         self.assertEqual(self.tool.display_name, display_name)
 
+    def test_workflow_tool_creation_triggers_a_single_event(self):
+        Event.objects.all().delete()
+        create_tool_with_necessary_models("WORKFLOW")
+        self.assertEqual(Event.objects.filter(
+            sub_type=Event.ANALYSIS_CREATION).count(), 1)
+
 
 class VisualizationToolLaunchTests(ToolManagerTestBase):
     def setUp(self):
@@ -3727,6 +3734,12 @@ class VisualizationToolLaunchTests(ToolManagerTestBase):
             display_name=display_name
         )
         self.assertEqual(self.tool.display_name, display_name)
+
+    def test_visualization_tool_creation_triggers_a_single_event(self):
+        Event.objects.all().delete()
+        create_tool_with_necessary_models("VISUALIZATION")
+        self.assertEqual(Event.objects.filter(
+            sub_type=Event.VISUALIZATION_CREATION).count(), 1)
 
 
 class ToolLaunchConfigurationTests(ToolManagerTestBase):
