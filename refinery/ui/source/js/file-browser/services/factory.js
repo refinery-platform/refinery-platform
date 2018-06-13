@@ -37,6 +37,7 @@
     var assayFilesTotalItems = {};
     var customColumnNames = [];
     var csrfToken = $window.csrf_token;
+    var attributesNameKey = {}; // links internal_name with display_name
     var maxFileRequest = fileBrowserSettings.maxFileRequest;
 
     var service = {
@@ -44,6 +45,7 @@
       assayAttributeOrder: assayAttributeOrder,
       assayFiles: assayFiles,
       assayFilesTotalItems: assayFilesTotalItems,
+      attributesNameKey: attributesNameKey,
       customColumnNames: customColumnNames,
       createColumnDefs: createColumnDefs,
       getAssayFiles: getAssayFiles,
@@ -60,8 +62,7 @@
     * Method Definitions
     * ----------------------
     */
-
-        // populates the ui-grid columns variable
+    // populates the ui-grid columns variable
     function createColumnDefs () {
       var tempCustomColumnNames = [];
 
@@ -163,6 +164,7 @@
         // column names will throw an error. This prevents duplicates
         for (var ind = 0; ind < assayAttributes.length; ind++) {
           createUniqueDisplayNames(ind);
+          attributesNameKey[assayAttributes[ind].display_name] = assayAttributes[ind].internal_name;
         }
         angular.copy(response.nodes, additionalAssayFiles);
         assayFilesTotalItems.count = response.nodes_count;

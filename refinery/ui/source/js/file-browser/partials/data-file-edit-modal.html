@@ -1,15 +1,29 @@
-<div class="modal-content">
+<div class="modal-content" id="data-file-edit-modal">
   <div class="modal-header">
     <a class="float-right modal-close" ng-click="$ctrl.close()">
       <i class="fa fa-times close" aria-hidden="true"></i>
     </a>
-    <h3 class="modal-title">Add new groups</h3>
-    <p class="p-t-1">No two groups in Refinery may have the same name.</p>
+    <h3 class="modal-title">Data File Edit</h3>
+    <p class="p-t-1">
+      Add a new file or remove an existing data file. Once a data file is
+      removed successfully, the add file option will be enabled. Note, the
+      modal can not be exited will an upload is in progress.
+    </p>
   </div>
   <div class="modal-body">
     <div class='row'>
-     Dance Dance Dance
-    </div>
+      <div class="p-a-1" ng-if="$ctrl.fileAction === 'add'">
+        <rp-file-upload></rp-file-upload>
+      </div>
+      <div class="modal-description p-l-1">
+        <h4>
+          {{ $ctrl.nodeName }}
+          <button
+            ng-disabled="$ctrl.fileAction !== 'replace'"
+            class="btn btn-warning btn-sm m-l-1">
+            <i class="fa fa-trash-o p-r-1-2"></i>Delete</button>
+        </h4>
+      </div>
   </div>
 
   <div class="modal-footer">

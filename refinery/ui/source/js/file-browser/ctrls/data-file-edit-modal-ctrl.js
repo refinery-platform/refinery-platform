@@ -12,11 +12,13 @@
     .controller('DataFileEditModalCtrl', DataFileEditModalCtrl);
 
   DataFileEditModalCtrl.$inject = [
-    '$log'
+    '$log',
+    'fileBrowserFactory'
   ];
 
   function DataFileEditModalCtrl (
-    $log
+    $log,
+    fileBrowserFactory
   ) {
     var vm = this;
 
@@ -84,6 +86,8 @@
    */
     vm.$onInit = function () {
       vm.fileAction = vm.resolve.config.fileAction;
+      var nameInternal = fileBrowserFactory.attributesNameKey.Name;
+      vm.nodeName = vm.resolve.config.nodeObj[nameInternal];
     };
   }
 })();

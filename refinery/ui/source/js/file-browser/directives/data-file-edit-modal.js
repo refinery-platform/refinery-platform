@@ -1,5 +1,5 @@
 /**
- * Group Add Modal
+ * Data File Edit Modal
  * @namespace rpDataFileEditModal
  * @desc Add or remove a data file associated with a node
  * @memberOf refineryApp.fileBrowser
@@ -10,7 +10,7 @@
     .module('refineryFileBrowser')
     .component('rpDataFileEditModal', {
       templateUrl: ['$window', function ($window) {
-        return $window.getStaticUrl('partials/commons/partials/group-add-modal.html');
+        return $window.getStaticUrl('partials/file-browser/partials/data-file-edit-modal.html');
       }],
       bindings: {
         modalInstance: '<',

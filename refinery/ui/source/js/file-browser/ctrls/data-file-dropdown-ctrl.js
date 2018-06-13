@@ -28,6 +28,7 @@
     function openDataFileModal (fileAction, node) {
       var modalInstance = $uibModal.open({
         component: 'rpDataFileEditModal',
+        backdrop: 'static',
         resolve: {
           config: function () {
             return {
