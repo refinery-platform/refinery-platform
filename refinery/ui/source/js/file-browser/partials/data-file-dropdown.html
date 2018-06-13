@@ -2,7 +2,8 @@
   <div ng-if="$ctrl.fileStatus != 'PENDING'">
     <div class="btn-group" uib-dropdown dropdown-append-to-body>
         <button id="split-button" type="button"
-          class="refinery-base btn btn-default btn-xs">
+          class="refinery-base btn btn-default btn-xs"
+          ng-disabled="$ctrl.fileStatus == 'N/A'">
           <span ng-if="$ctrl.fileStatus != 'N/A'" title="Download File {{ $ctrl.fileStatus }}">
             <a ng-href="{{$ctrl.fileStatus}}" target="_blank">
               <i class="fa fa-arrow-circle-o-down fa-lg"></i>
