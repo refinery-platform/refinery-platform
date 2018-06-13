@@ -494,7 +494,6 @@ def _update_existing_dataset_with_revised_investigation(new_investigation,
                            "been Analyses or Visualizations performed on it) "
                            "Remove these objects and try again"
                            .format(existing_dataset_uuid))
-
     existing_datafile_names = existing_investigation.get_datafile_names(
         exclude_metadata_file=True
     )
@@ -524,7 +523,6 @@ def _update_existing_dataset_with_revised_investigation(new_investigation,
     associate_datafiles_from_existing_dataset(
         existing_dataset, new_investigation
     )
-
     updated_dataset_title = new_investigation.title
     existing_dataset.update_investigation(
         new_investigation,
