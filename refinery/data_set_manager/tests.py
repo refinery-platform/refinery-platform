@@ -2337,6 +2337,7 @@ class ProcessISATabViewTests(ProcessISATabViewTestBase):
         self.post_isa_tab(isa_tab_url="non-existant-file")
         self.unsuccessful_import_assertions()
 
+    @override_settings(CELERY_ALWAYS_EAGER=True)
     def test_metadata_revision_works_grammatical_changes_only(self):
         with open(
             os.path.join(TEST_DATA_BASE_PATH, 'rfc-test-local.zip')
