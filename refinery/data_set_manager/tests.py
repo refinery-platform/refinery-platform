@@ -2282,7 +2282,8 @@ class ProcessISATabViewTests(ProcessISATabViewTestBase):
         os.mkdir(self.test_user_directory)
 
     def tearDown(self):
-        super(ProcessISATabViewTests, self).tearDown()
+        with mock.patch.object(FileStoreItem, "terminate_file_import_task"):
+            super(ProcessISATabViewTests, self).tearDown()
         shutil.rmtree(self.test_user_directory)
 
     @mock.patch.object(data_set_manager.views.import_file, "delay")
