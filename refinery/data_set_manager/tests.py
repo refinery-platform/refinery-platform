@@ -2164,7 +2164,6 @@ class IsaTabTestBase(TestCase):
         if data_set_uuid is not None:
             url += "?data_set_uuid={}".format(data_set_uuid)
 
-        logger.debug("ISATab url: %s", url)
         response = self.client.post(
             url,
             data=post_data,
@@ -2590,7 +2589,6 @@ class InvestigationTests(IsaTabTestBase):
     def test_get_assay_count(self):
         self.assertEqual(self.isa_tab_investigation.get_assay_count(), 1)
 
-    @override_storage()
     def test_get_datafile_names(self):
         with open(os.path.join(TEST_DATA_BASE_PATH, "rfc-test.zip")) as isatab:
             self.post_isa_tab(isa_tab_file=isatab)
@@ -2609,7 +2607,6 @@ class InvestigationTests(IsaTabTestBase):
         self.assertEqual(investigation.get_datafile_names(local_only=True),
                          [u'rfc-test.zip'])
 
-    @override_storage()
     def test_get_datafile_names_exclude_metadata_file(self):
         with open(os.path.join(TEST_DATA_BASE_PATH, "rfc-test.zip")) as isatab:
             self.post_isa_tab(isa_tab_file=isatab)
@@ -2620,14 +2617,12 @@ class InvestigationTests(IsaTabTestBase):
              u'rfc174.txt', u'rfc177.txt', u'rfc178.txt', u'rfc86.txt',
              u'rfc94.txt'])
 
-    @override_storage()
     def test_get_file_store_items(self):
         with open(os.path.join(TEST_DATA_BASE_PATH, "rfc-test.zip")) as isatab:
             self.post_isa_tab(isa_tab_file=isatab)
         investigation = DataSet.objects.last().get_investigation()
         self.assertEqual(len(investigation.get_file_store_items()), 10)
 
-    @override_storage()
     def test_get_file_store_items_exclude_metadata_file(self):
         with open(os.path.join(TEST_DATA_BASE_PATH, "rfc-test.zip")) as isatab:
             self.post_isa_tab(isa_tab_file=isatab)
