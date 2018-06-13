@@ -8,6 +8,7 @@ from __future__ import absolute_import
 import ast
 from collections import defaultdict
 from datetime import datetime
+import json
 import logging
 import os
 import smtplib
@@ -34,9 +35,11 @@ from django.template.loader import render_to_string
 from django.utils import timezone
 
 from bioblend import galaxy
+from cuser.middleware import CuserMiddleware
 from django.utils.functional import cached_property
 from django_auth_ldap.backend import LDAPBackend
 from django_extensions.db.fields import UUIDField
+
 from guardian.models import UserObjectPermission
 from guardian.shortcuts import (
     assign_perm, get_groups_with_perms, get_objects_for_group,
@@ -287,11 +290,7 @@ class BaseResource(models.Model):
             logger.error("%s with slug: %s already exists",
                          self.__class__.__name__, self.slug)
         else:
-            try:
-                super(BaseResource, self).save(*args, **kwargs)
-            except Exception as e:
-                logger.error("Could not save %s: %s",
-                             self.__class__.__name__, e)
+            super(BaseResource, self).save(*args, **kwargs)
 
     # Overriding delete() method For models that Inherit from BaseResource
     def delete(self, using=None, *args, **kwargs):
@@ -315,6 +314,15 @@ class OwnableResource(BaseResource):
         assign_perm("change_%s" % self._meta.verbose_name, user, self)
         if self._meta.verbose_name == 'dataset':
             assign_perm("read_meta_%s" % self._meta.verbose_name, user, self)
+
+    def transfer_ownership(self, user, new_owner):
+        remove_perm("add_%s" % self._meta.verbose_name, user, self)
+        remove_perm("read_%s" % self._meta.verbose_name, user, self)
+        remove_perm("delete_%s" % self._meta.verbose_name, user, self)
+        remove_perm("change_%s" % self._meta.verbose_name, user, self)
+        if self._meta.verbose_name == 'dataset':
+            remove_perm("read_meta_%s" % self._meta.verbose_name, user, self)
+        self.set_owner(new_owner)
 
     def get_owner(self):
         # ownership is determined by "add" permission
@@ -810,6 +818,9 @@ def _dataset_saved(sender, instance, *args, **kwargs):
     # See: https://docs.djangoproject.com/en/1.8/ref/utils/
     # #django.utils.functional.cached_property
     instance._invalidate_cached_properties()
+
+    if not Event.objects.filter(data_set=instance).exists():
+        Event.record_data_set_create(instance)
 
 
 class InvestigationLink(models.Model):
@@ -2225,3 +2236,315 @@ class SiteStatistics(models.Model):
         return sum(u.login_count for u in UserProfile.objects.all()) - \
                sum(s.total_user_logins for s in
                    SiteStatistics.objects.exclude(id=self.id))
+
+
+class Event(models.Model):
+    date_time = models.DateTimeField(default=timezone.now)
+    data_set = models.ForeignKey(DataSet, null=True)
+    group = models.ForeignKey(Group, null=True)
+    user = models.ForeignKey(User, null=True)
+    # Null user should not occur in production, but it lets older tests pass.
+    # I feel ambivalent about this.
+    # TODO: Consider cuser.CurrentUserField
+    type = models.CharField(max_length=32)
+
+    sub_type = models.CharField(max_length=32)
+    json = models.TextField()
+
+    # Types
+    CREATE = 'CREATE'
+    UPDATE = 'UPDATE'
+    # DELETE = 'DELETE'
+    # Note: No delete, because when the object in question no longer exists,
+    # no one has any access to it.
+
+    @staticmethod
+    def record_data_set_create(data_set):
+        user = CuserMiddleware.get_user()
+        Event.objects.create(data_set=data_set, user=user, type=Event.CREATE)
+
+    def render_data_set_create(self):
+        return '{:%x %X}: {} created data set {}'.format(
+            self.date_time, self.user, self.data_set.name
+        )
+
+    # Sub-types for data sets:
+    PERMISSIONS_CHANGE = 'PERMISSIONS_CHANGE'
+
+    # TODO:
+    # @staticmethod
+    # def record_data_set_permissions_change():
+    #     event = Event()
+    #     event.save()
+    #     return event
+    #
+    # def render_data_set_permissions_change(self):
+    #     return '{}'.format(self.user)
+
+    METADATA_REUPLOAD = 'METADATA_REUPLOAD'
+
+    # TODO:
+    # @staticmethod
+    # def record_data_set_metadata_reupload():
+    #     event = Event()
+    #     event.save()
+    #     return event
+    #
+    # def render_data_set_metadata_reupload(self):
+    #     return '{}'.format(self.user)
+
+    FILE_LINK = 'FILE_LINK'
+
+    # TODO:
+    # @staticmethod
+    # def record_data_set_file_link():
+    #     event = Event()
+    #     event.save()
+    #     return event
+    #
+    # def render_data_set_file_link(self):
+    #     return '{}'.format(self.user)
+
+    METADATA_EDIT = 'METADATA_EDIT'
+
+    # TODO:
+    # @staticmethod
+    # def record_data_set_metadata_edit():
+    #     event = Event()
+    #     event.save()
+    #     return event
+    #
+    # def render_data_set_metadata_edit(self):
+    #     return '{}'.format(self.user)
+
+    VISUALIZATION_CREATION = 'VISUALIZATION_CREATION'
+
+    @staticmethod
+    def record_data_set_visualization_creation(data_set, display_name):
+        user = CuserMiddleware.get_user()
+        blob = json.dumps({
+            'display_name': display_name
+        })
+        event = Event(data_set=data_set, user=user, json=blob,
+                      type=Event.UPDATE, sub_type=Event.VISUALIZATION_CREATION)
+        event.save()
+
+    def render_data_set_visualization_creation(self):
+        data = json.loads(self.json)
+        return '{:%x %X}: {} launched visualization {} on data set {}'.format(
+            self.date_time, self.user, data['display_name'], self.data_set.name
+        )
+
+    VISUALIZATION_DELETION = 'VISUALIZATION_DELETION'
+
+    # TODO:
+    # @staticmethod
+    # def record_data_set_visualization_deletion():
+    #     event = Event()
+    #     event.save()
+    #     return event
+    #
+    # def render_data_set_visualization_deletion(self):
+    #     return '{}'.format(self.user)
+
+    ANALYSIS_CREATION = 'ANALYSIS_CREATION'
+
+    @staticmethod
+    def record_data_set_analysis_creation(data_set, display_name):
+        user = CuserMiddleware.get_user()
+        blob = json.dumps({
+            'display_name': display_name
+        })
+        event = Event(data_set=data_set, user=user, json=blob,
+                      type=Event.UPDATE, sub_type=Event.ANALYSIS_CREATION)
+        event.save()
+
+    def render_data_set_analysis_creation(self):
+        data = json.loads(self.json)
+        return '{:%x %X}: {} launched analysis {} on data set {}'.format(
+            self.date_time, self.user, data['display_name'], self.data_set.name
+        )
+
+    ANALYSIS_DELETION = 'ANALYSIS_DELETION'
+
+    # TODO:
+    # @staticmethod
+    # def record_data_set_analysis_deletion():
+    #     event = Event()
+    #     event.save()
+    #     return event
+    #
+    # def render_data_set_analysis_deletion(self):
+    #     return '{}'.format(self.user)
+
+    # Sub-types for groups:
+
+    # PERMISSIONS_CHANGE defined above for datasets
+
+    # TODO:
+    # @staticmethod
+    # def record_group_permissions_change():
+    #     event = Event()
+    #     event.save()
+    #     return event
+    #
+    # def render_group_permissions_change(self):
+    #     return '{}'.format(self.user)
+
+    INVITATION_SENT = 'INVITATION_SENT'
+
+    # TODO:
+    # @staticmethod
+    # def record_group_invitation_sent():
+    #     event = Event()
+    #     event.save()
+    #     return event
+    #
+    # def render_group_invitation_sent(self):
+    #     return '{}'.format(self.user)
+
+    INVITATION_ACCEPTED = 'INVITATION_ACCEPTED'
+
+    # TODO:
+    # @staticmethod
+    # def record_group_invitation_accepted():
+    #     event = Event()
+    #     event.save()
+    #     return event
+    #
+    # def render_group_invitation_accepted(self):
+    #     return '{}'.format(self.user)
+
+    INVITATION_REVOKED = 'INVITATION_REVOKED'
+
+    # TODO:
+    # @staticmethod
+    # def record_group_invitation_revoked():
+    #     event = Event()
+    #     event.save()
+    #     return event
+    #
+    # def render_group_invitation_revoked(self):
+    #     return '{}'.format(self.user)
+
+    INVITATION_RESENT = 'INVITATION_RESENT'
+
+    # TODO:
+    # @staticmethod
+    # def record_group_invitation_resent():
+    #     event = Event()
+    #     event.save()
+    #     return event
+    #
+    # def render_group_invitation_resent(self):
+    #     return '{}'.format(self.user)
+
+    USER_PROMOTION = 'USER_PROMOTION'
+
+    # TODO:
+    # @staticmethod
+    # def record_group_user_promotion():
+    #     event = Event()
+    #     event.save()
+    #     return event
+    #
+    # def render_group_user_promotion(self):
+    #     return '{}'.format(self.user)
+
+    USER_DEMOTION = 'USER_DEMOTION'
+
+    # TODO:
+    # @staticmethod
+    # def record_group_user_demotion():
+    #     event = Event()
+    #     event.save()
+    #     return event
+    #
+    # def render_group_user_demotion(self):
+    #     return '{}'.format(self.user)
+
+    USER_REMOVAL = 'USER_REMOVAL'
+
+    # TODO:
+    # @staticmethod
+    # def record_group_user_removal():
+    #     event = Event()
+    #     event.save()
+    #     return event
+    #
+    # def render_group_user_removal(self):
+    #     return '{}'.format(self.user)
+
+    def __unicode__(self):
+        if self.data_set is not None and self.group is None:
+            if self.type == Event.CREATE:
+                return self.render_data_set_create()
+            elif self.type == Event.UPDATE:
+                if self.sub_type == Event.PERMISSIONS_CHANGE:
+                    return self.render_data_set_permissions_change()
+                elif self.sub_type == Event.METADATA_REUPLOAD:
+                    return self.render_data_set_metadata_reupload()
+                elif self.sub_type == Event.FILE_LINK:
+                    return self.render_data_set_file_link()
+                elif self.sub_type == Event.METADATA_EDIT:
+                    return self.render_data_set_metadata_edit()
+                elif self.sub_type == Event.VISUALIZATION_CREATION:
+                    return self.render_data_set_visualization_creation()
+                elif self.sub_type == Event.VISUALIZATION_DELETION:
+                    return self.render_data_set_visualization_deletion()
+                elif self.sub_type == Event.ANALYSIS_CREATION:
+                    return self.render_data_set_analysis_creation()
+                elif self.sub_type == Event.ANALYSIS_DELETION:
+                    return self.render_data_set_analysis_deletion()
+                else:
+                    raise StandardError(
+                        'Invalid event sub-type for data_set: {}'.format(
+                            self.sub_type
+                        )
+                    )
+            else:
+                raise StandardError(
+                    'Invalid event type for data_set: {}'.format(self.type)
+                )
+        elif self.group is not None and self.data_set is None:
+            if self.type == Event.CREATE:
+                return self.render_group_create()
+            elif self.type == Event.UPDATE:
+                if self.sub_type == Event.PERMISSIONS_CHANGE:
+                    return self.render_group_permissions_change()
+                elif self.sub_type == Event.INVITATION_SENT:
+                    return self.render_group_invitation_sent()
+                elif self.sub_type == Event.INVITATION_ACCEPTED:
+                    return self.render_group_invitation_accepted()
+                elif self.sub_type == Event.INVITATION_REVOKED:
+                    return self.render_group_invitation_revoked()
+                elif self.sub_type == Event.INVITATION_RESENT:
+                    return self.render_group_invitation_resent()
+                elif self.sub_type == Event.USER_PROMOTION:
+                    return self.render_group_user_promotion()
+                elif self.sub_type == Event.USER_DEMOTION:
+                    return self.render_group_user_demotion()
+                elif self.sub_type == Event.USER_REMOVAL:
+                    return self.render_group_user_removal()
+                else:
+                    raise StandardError(
+                        'Invalid event sub-type for group: {}'.format(
+                            self.sub_type
+                        )
+                    )
+            else:
+                raise StandardError(
+                    'Invalid event type for group: {}'.format(self.type)
+                )
+        else:
+            raise StandardError(
+                'Expected exactly one of data_set and group to be not None, '
+                'instead data_set="{}" and group="{}"'.format(
+                    self.data_set, self.group
+                )
+            )
+
+# TODO
+# @receiver(post_save, sender=GroupObjectPermission)
+# def _group_permissions_changed(sender, instance, *args, **kwargs):
+#     Event.record_data_set_permissions_change(???)

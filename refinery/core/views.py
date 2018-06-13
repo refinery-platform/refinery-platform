@@ -9,7 +9,9 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib.sites.models import RequestSite, Site, get_current_site
 from django.core.exceptions import ImproperlyConfigured
+from django.core.mail import EmailMessage
 from django.core.urlresolvers import reverse
+from django.db import transaction
 from django.http import (HttpResponse, HttpResponseBadRequest,
                          HttpResponseForbidden, HttpResponseNotFound,
                          HttpResponseRedirect, HttpResponseServerError,
@@ -20,7 +22,7 @@ from django.views.decorators.gzip import gzip_page
 
 import boto3
 import botocore
-from guardian.shortcuts import get_perms
+from guardian.shortcuts import get_groups_with_perms, get_perms
 from guardian.utils import get_anonymous_user
 from registration import signals
 from registration.views import RegistrationView
@@ -816,12 +818,41 @@ class DataSetsViewSet(APIView):
                     return HttpResponseBadRequest(content=dataset_deleted[1])
 
     def patch(self, request, uuid, format=None):
-        data_set = self.get_object(uuid)
+        self.data_set = self.get_object(uuid)
+        self.current_site = get_current_site(request)
 
         # check edit permission for user
-        if self.is_user_authorized(request.user, data_set):
+        if self.is_user_authorized(request.user, self.data_set):
+            # update data set's owner
+            current_owner = self.data_set.get_owner()
+            if request.data.get('transfer_data_set') and current_owner == \
+                    request.user:
+                new_owner_email = request.data.get('new_owner_email')
+                try:
+                    new_owner = User.objects.get(email=new_owner_email)
+                except Exception:
+                    return Response(uuid, status=status.HTTP_404_NOT_FOUND)
+
+                try:
+                    with transaction.atomic():
+                        self.data_set.transfer_ownership(current_owner,
+                                                         new_owner)
+                        perm_groups = self.update_group_perms(new_owner)
+                except Exception as e:
+                    return Response(
+                        e, status=status.HTTP_412_PRECONDITION_FAILED
+                    )
+
+                self.send_transfer_notification_email(current_owner,
+                                                      new_owner, perm_groups)
+                serializer = DataSetSerializer(self.data_set,
+                                               context={'request': request})
+                return Response(serializer.data,
+                                status=status.HTTP_202_ACCEPTED)
+
+            # update data set's fields
             serializer = DataSetSerializer(
-                data_set, data=request.data, partial=True
+                self.data_set, data=request.data, partial=True
             )
             if serializer.is_valid():
                 serializer.save()
@@ -833,8 +864,77 @@ class DataSetsViewSet(APIView):
             )
         else:
             return Response(
-                data_set, status=status.HTTP_401_UNAUTHORIZED
+                self.data_set, status=status.HTTP_401_UNAUTHORIZED
             )
+
+    def send_transfer_notification_email(self, old_owner, new_owner,
+                                         perm_groups):
+        """
+        Helper method which emails the old and new owner of the data set
+        transfer and which groups have access
+        :param old_owner: data set's previous owner obj
+        :param new_owner: data set's new owner obj
+        :param perm_groups: obj with two obj of permission groups
+        """
+        subject = "{}: Data Set ownership transfer".format(
+           settings.EMAIL_SUBJECT_PREFIX
+        )
+        old_owner_name = old_owner.get_full_name() or  \
+            old_owner.username
+        new_owner_name = new_owner.get_full_name() or  \
+            new_owner.username
+
+        temp_loader = loader.get_template(
+            'core/owner_transfer_notification.txt')
+        context_dict = {
+            'site': self.current_site,
+            'old_owner_name': old_owner_name,
+            'old_owner_uuid': old_owner.profile.uuid,
+            'new_owner_name': new_owner_name,
+            'new_owner_uuid': new_owner.profile.uuid,
+            'data_set_name': self.data_set.name,
+            'data_set_uuid': self.data_set.uuid,
+            'groups_with_access': perm_groups.get('groups_with_access'),
+            'groups_without_access': perm_groups.get('groups_without_access')
+        }
+        email = EmailMessage(
+            subject,
+            temp_loader.render(context_dict),
+            to=[new_owner.email, old_owner.email]
+        )
+        email.send()
+        return email
+
+    def update_group_perms(self, new_owner):
+        """
+        Helper method which updates the groups access to the data set based
+        on the new_owner's memberships
+        transfer and which groups have access
+        :param new_owner: data set's new owner obj
+        """
+        new_owner_group_ids = new_owner.groups.all().\
+            values_list('id', flat=True)
+        all_groups_with_ds_access = get_groups_with_perms(
+            self.data_set, attach_perms=True
+        )
+        groups_with_access = []
+        groups_without_access = []
+        for group in all_groups_with_ds_access:
+            group_details = {
+                'name': group.extendedgroup.name,
+                'profile': 'http://{}/groups/{}'.format(
+                    self.current_site,
+                    group.extendedgroup.uuid
+                )
+            }
+            if group.id in new_owner_group_ids:
+                groups_with_access.append(group_details)
+            else:
+                self.data_set.unshare(group)
+                groups_without_access.append(group_details)
+
+        return {"groups_with_access": groups_with_access,
+                "groups_without_access": groups_without_access}
 
 
 class AnalysesViewSet(APIView):

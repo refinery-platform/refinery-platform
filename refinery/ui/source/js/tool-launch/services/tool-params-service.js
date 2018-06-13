@@ -21,6 +21,7 @@
      * @var {object} paramsForm
     */
     var paramsForm = {};
+    var toolEditForm = { display_name: '' };
     /**
      * Variable sourced from selectedTool and used generate Parameters panel
      * @var {array} toolParams
@@ -30,6 +31,7 @@
     var service = {
       paramsForm: paramsForm,
       refreshToolParams: refreshToolParams,
+      toolEditForm: toolEditForm,
       toolParams: toolParams
     };
 
