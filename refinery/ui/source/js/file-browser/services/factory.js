@@ -287,32 +287,18 @@
      * @param {string} _columnName - column name
      */
     function setCustomUrlColumn (urlAttribute) {
-      var _cellTemplate = '<div class="ngCellText text-align-center ui-grid-cell-contents"' +
-            'ng-class="col.colIndex()">' +
-            '<div ng-if="COL_FIELD == \'PENDING\'"  ' +
-            'title="Importing file in progress.">' +
-            '<i class="fa fa-clock-o"></i></div>' +
-            '<div ng-if="COL_FIELD != \'PENDING\' ' +
-            '&& COL_FIELD != \'N/A\'" ' +
-            'title="Download File \{{COL_FIELD}}\">' +
-            '<a href="{{COL_FIELD}}" target="_blank">' +
-            '<i class="fa fa-arrow-circle-o-down"></i></a></div>' +
-            '<div ng-if="COL_FIELD == \'N/A\'" ' +
-            'title="File not available for download">' +
-            '<i class="fa fa-bolt"></i>' +
-            '</div>' +
-            '</div>';
+      var _cellTemplate = '<rp-data-file-dropdown file-status="COL_FIELD"></rp-data-file-dropdown>';
 
       return {
         name: urlAttribute.internal_name,
         field: urlAttribute.internal_name,
         cellTooltip: true,
-        width: 4 + '%',
+        width: 70,
         displayName: '',
         enableFiltering: false,
         enableSorting: false,
         enableColumnMenu: false,
-        enableColumnResizing: false,
+        enableColumnResizing: true,
         cellTemplate: _cellTemplate
       };
     }
