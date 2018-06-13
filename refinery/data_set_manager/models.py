@@ -208,7 +208,6 @@ class Investigation(NodeCollection):
                              local_only=False):
         """
         Returns a list of all data files associated with an Investigation
-
         :param exclude_metadata_file: <Boolean> Whether or not to exclude
         the metadata file used to create the Investigation from the resulting
         list
