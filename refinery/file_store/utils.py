@@ -71,9 +71,6 @@ class SymlinkedFileSystemStorage(FileSystemStorage):
     def get_name(self, name):
         return self.get_available_name(get_valid_filename(name))
 
-    def get_path(self, name):
-        return self.path(self.get_name(name))
-
 
 def _delete_file(absolute_path):
     if os.path.exists(absolute_path):
