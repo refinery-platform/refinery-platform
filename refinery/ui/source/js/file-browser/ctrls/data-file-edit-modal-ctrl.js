@@ -87,6 +87,7 @@
     vm.$onInit = function () {
       vm.fileAction = vm.resolve.config.fileAction;
       var nameInternal = fileBrowserFactory.attributesNameKey.Name;
+      vm.nodeURL = vm.resolve.config.nodeObj.REFINERY_DOWNLOAD_URL_s;
       vm.nodeName = vm.resolve.config.nodeObj[nameInternal];
     };
   }

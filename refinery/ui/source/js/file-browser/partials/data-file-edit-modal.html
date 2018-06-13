@@ -6,24 +6,63 @@
     <h3 class="modal-title">Data File Edit</h3>
     <p class="p-t-1">
       Add a new file or remove an existing data file. Once a data file is
-      removed successfully, the add file option will be enabled. Note, the
-      modal can not be exited will an upload is in progress.
+      removed successfully, the add file option will be enabled. Note, you
+      can not exit the modal while an upload is in progress.
     </p>
   </div>
   <div class="modal-body">
     <div class='row'>
+      <h4 class="p-l-1">
+        Add data file
+      </h4>
       <div class="p-a-1" ng-if="$ctrl.fileAction === 'add'">
         <rp-file-upload></rp-file-upload>
       </div>
-      <div class="modal-description p-l-1">
-        <h4>
-          {{ $ctrl.nodeName }}
-          <button
-            ng-disabled="$ctrl.fileAction !== 'replace'"
-            class="btn btn-warning btn-sm m-l-1">
-            <i class="fa fa-trash-o p-r-1-2"></i>Delete</button>
-        </h4>
+      <!-- mock file-upload template to show a disabled view -->
+      <div class="p-a-1" ng-if="$ctrl.fileAction !== 'add'">
+         <span
+          class="refinery-base btn btn-default btn-sm fileinput-button"
+          ng-disabled='true'>
+          <i class="fa fa-plus"></i>
+          <span>Add files &hellip;</span>
+          <input
+            type="file"
+            class="refinery-base"
+            name="files[]"
+            multiple
+            ng-disabled='true'>
+        </span>
+        <button
+          class="active-group refinery-base btn btn-default btn-sm start"
+          ng-disabled='true'>
+          <i class="fa fa-upload"></i>
+          <span>Start upload</span>
+        </button>
+        <button
+          class="refinery-base btn btn-default btn-sm cancel"
+          ng-disabled='true'>
+          <i class="fa fa-ban"></i>
+          <span>Cancel upload</span>
+        </button
       </div>
+    </div>
+    <div class="modal-description p-l-1 p-b-1">
+      <h4>
+        Remove data file
+      </h4>
+      <div>
+        <span if="$ctrl.nodeURL === 'N/A'">
+          <em> No data file associated with node, {{ $ctrl.nodeName }} </em>
+        </span>
+        <span if="$ctrl.nodeURL !== 'N/A'">
+          {{ REFINERY_DOWNLOAD_URL_s }}
+        </span>
+        <button
+          ng-disabled="$ctrl.fileAction !== 'remove'"
+          class="btn btn-warning btn-sm m-l-1">
+          <i class="fa fa-trash-o p-r-1-2"></i>Delete</button>
+        </div>
+     </div>
   </div>
 
   <div class="modal-footer">
