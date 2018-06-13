@@ -319,8 +319,8 @@ def parse_isatab(username, public, path, identity_id=None,
     directory for storage and legacy purposes
     pre_isa_archive: optional copy of files that were converted to ISA-Tab
     file_base_path: if your file locations are relative paths, this is the base
-    existing_dataset_uuid: UUID of an existing DataSet that is getting a
-    metadata revision
+    existing_dataset_uuid: UUID of an existing DataSet that a metadata revision
+    is to be performed upon
     """
     file_source_translator = generate_file_source_translator(
         username=username, base_path=file_base_path, identity_id=identity_id
@@ -486,6 +486,17 @@ def generate_bam_index(auxiliary_file_store_item_uuid, datafile_path):
 
 def _update_existing_dataset_with_revised_investigation(new_investigation,
                                                         existing_dataset_uuid):
+    """
+    Update an existing DataSet's Investigation with a new Investigation as
+    long as some specific constraints are met.
+    - Said DataSet must be "clean" (No Analyses or Visualizations performed)
+    - No data files can be added or removed between the existing DataSet and
+    new Investigation
+    Any data files that were uploaded prior to this operation will be
+    reassociated and available from the new Investigation
+    :param new_investigation: A newly created Investigation instance
+    :param existing_dataset_uuid: the UUID of an existing DataSet
+    """
     existing_dataset = DataSet.objects.get(uuid=existing_dataset_uuid)
     existing_investigation = existing_dataset.get_investigation()
 
