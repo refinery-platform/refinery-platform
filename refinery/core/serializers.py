@@ -7,7 +7,7 @@ from rest_framework.validators import UniqueValidator
 from data_set_manager.models import Node
 from file_store.models import FileStoreItem
 
-from .models import DataSet, Workflow
+from .models import DataSet, UserProfile, Workflow
 
 logger = logging.getLogger(__name__)
 
@@ -58,6 +58,27 @@ class DataSetSerializer(serializers.ModelSerializer):
         )
         instance.slug = validated_data.get('slug', instance.slug)
 
+        instance.save()
+        return instance
+
+
+class UserProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserProfile
+        fields = ['affiliation']
+
+    def partial_update(self, instance, validated_data):
+        """
+        Update and return an existing `DataSet` instance, given the
+        validated data.
+        """
+        instance.first_name = validated_data.get('first_name',
+                                                 instance.first_name)
+        instance.last_name = validated_data.get('last_name',
+                                                instance.last_name)
+        instance.email = validated_data.get('email', instance.email)
+        instance.affiliation = validated_data.get('affiliation',
+                                                  instance.affiliation)
         instance.save()
         return instance
 

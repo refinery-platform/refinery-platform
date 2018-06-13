@@ -42,7 +42,8 @@ from .forms import ProjectForm, UserForm, UserProfileForm, WorkflowForm
 from .models import (Analysis, CustomRegistrationProfile, DataSet,
                      ExtendedGroup, Invitation, Ontology, Project,
                      UserProfile, Workflow, WorkflowEngine)
-from .serializers import DataSetSerializer, NodeSerializer, WorkflowSerializer
+from .serializers import (DataSetSerializer, NodeSerializer,
+                          UserProfileSerializer, WorkflowSerializer)
 from .utils import (api_error_response, get_data_sets_annotations,
                     get_resources_for_user)
 
@@ -1079,3 +1080,49 @@ class OpenIDToken(APIView):
         token["Region"] = region
 
         return Response(token)
+
+
+class UserProfileViewSet(APIView):
+    """API endpoint that allows for UserProfiles to be edits.
+     ---
+    #YAML
+
+    PATCH:
+        parameters_strategy:
+        form: replace
+        query: merge
+
+        parameters:
+            - name: uuid
+              description: User profile uuid used as an identifier
+              type: string
+              paramType: path
+              required: true
+            - name: affiliation
+              description: University or team associated with
+              type: string
+              paramType: form
+              required: false
+    ...
+    """
+    http_method_names = ["patch"]
+
+    def patch(self, request, uuid):
+        user_profile = UserProfile.objects.get(uuid=uuid)
+        # update data set's fields
+        if not request.user.is_anonymous() and user_profile.uuid == uuid:
+            serializer = UserProfileSerializer(user_profile,
+                                               data=request.data,
+                                               partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(
+                    serializer.data, status=status.HTTP_202_ACCEPTED
+                )
+            return Response(
+                serializer.errors, status=status.HTTP_400_BAD_REQUEST
+            )
+        else:
+            return Response(
+                self.user, status=status.HTTP_401_UNAUTHORIZED
+            )
