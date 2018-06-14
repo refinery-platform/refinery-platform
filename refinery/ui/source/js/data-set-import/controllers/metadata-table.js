@@ -5,6 +5,7 @@ function MetadataTableImportCtrl (
   $rootScope,
   $timeout,
   $window,
+  $location,
   d3,
   $uibModal,
   fileSources,
@@ -42,6 +43,9 @@ function MetadataTableImportCtrl (
   this.closeError = function () {
     this.isErrored = false;
   };
+
+  this.dataSetUUID = $location.search().dataSetUUID;
+  this.isMetaDataRevision = !!this.dataSetUUID;
 }
 
 Object.defineProperty(
@@ -320,8 +324,12 @@ MetadataTableImportCtrl.prototype.startImport = function () {
     formData.append('identity_id', AWS.config.credentials.identityId);
   }
 
+  var queryParams = {};
+  if (this.isMetaDataRevision) {
+    queryParams = { data_set_uuid: this.dataSetUUID };
+  }
   return this.tabularFileImportApi
-    .create({}, formData)
+    .create(queryParams, formData)
     .$promise
     .then(function (response) {
       self.importedDataSetUuid = response.new_data_set_uuid;
@@ -348,6 +356,7 @@ angular
     '$rootScope',
     '$timeout',
     '$window',
+    '$location',
     'd3',
     '$uibModal',
     'fileSources',
