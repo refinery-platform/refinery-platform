@@ -1277,7 +1277,6 @@ def _ensure_revised_investigation_references_existing_datafiles(
     existing_datafile_names, new_datafile_names = (
         investigation.get_datafile_names(exclude_metadata_file=True) for
         investigation in [existing_investigation, revised_investigation]
-
     )
     # Ensure that the names of existing datafiles are a subset of the new ones
     if not set(existing_datafile_names).issubset(set(new_datafile_names)):
