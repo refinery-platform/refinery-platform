@@ -29,7 +29,7 @@ from .isa_tab_parser import IsaTabParser
 from .models import Investigation, Node, initialize_attribute_order
 from .utils import (calculate_checksum, fix_last_column, get_node_types,
                     index_annotated_nodes, update_annotated_nodes,
-                    associate_datafiles_from_existing_dataset)
+                    update_existing_dataset_with_revised_investigation)
 
 logger = logging.getLogger(__name__)
 
@@ -395,7 +395,7 @@ def parse_isatab(username, public, path, identity_id=None,
         )
         if existing_dataset_uuid:
             update_existing_dataset_with_revised_investigation(
-                investigation, existing_dataset_uuid
+                existing_dataset_uuid, investigation
             )
             return existing_dataset_uuid
 
@@ -481,57 +481,3 @@ def generate_bam_index(auxiliary_file_store_item_uuid, datafile_path):
     auxiliary_file_store_item.source = "{}.{}".format(
         datafile_path, bam_index_file_extension)
     auxiliary_file_store_item.save()
-
-
-def update_existing_dataset_with_revised_investigation(new_investigation,
-                                                       existing_dataset_uuid):
-    """
-    Update an existing DataSet's Investigation with a new Investigation as
-    long as some specific constraints are met.
-    - Said DataSet must be "clean" (No Analyses or Visualizations performed)
-    - No data files can be added or removed between the existing DataSet and
-    new Investigation
-    Any data files that were uploaded prior to this operation will be
-    reassociated and available from the new Investigation
-    :param new_investigation: A newly created Investigation instance
-    :param existing_dataset_uuid: the UUID of an existing DataSet
-    """
-    existing_dataset = DataSet.objects.get(uuid=existing_dataset_uuid)
-    existing_investigation = existing_dataset.get_investigation()
-
-    if not existing_dataset.is_clean():
-        raise RuntimeError("DataSet with UUID: {} is not clean (There have "
-                           "been Analyses or Visualizations performed on it) "
-                           "Remove these objects and try again"
-                           .format(existing_dataset_uuid))
-    existing_datafile_names = existing_investigation.get_datafile_names(
-        exclude_metadata_file=True
-    )
-    new_datafile_names = new_investigation.get_datafile_names(
-        exclude_metadata_file=True
-    )
-    # Ensure that the names of existing datafiles are a subset of the new ones
-    if not set(existing_datafile_names).issubset(set(new_datafile_names)):
-        datafile_names_not_present = list(
-            set(existing_datafile_names) - set(new_datafile_names)
-        )
-        raise RuntimeError(
-            "Existing data files from DataSet: {} are not all referenced "
-            "in the revised metadata file. The following data files aren't "
-            "referenced: {}".format(
-                existing_dataset_uuid, ", ".join(datafile_names_not_present)
-            )
-        )
-
-    # Check if existing DataSet's latest Investigation has data files that
-    # have already been uploaded into Refinery
-    associate_datafiles_from_existing_dataset(
-        existing_dataset, new_investigation
-    )
-    updated_dataset_title = new_investigation.title
-    existing_dataset.update_investigation(
-        new_investigation,
-        "Metadata Revision: for {}".format(updated_dataset_title)
-    )
-    annotate_nodes(new_investigation.uuid)
-    existing_dataset.set_title(updated_dataset_title)

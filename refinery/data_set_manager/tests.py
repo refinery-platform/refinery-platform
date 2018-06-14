@@ -36,8 +36,7 @@ from core.views import NodeViewSet
 import data_set_manager
 from data_set_manager.isa_tab_parser import IsaTabParser, ParserException
 from data_set_manager.single_file_column_parser import process_metadata_table
-from data_set_manager.tasks import parse_isatab, \
-    update_existing_dataset_with_revised_investigation
+from data_set_manager.tasks import parse_isatab
 from factory_boy.utils import (create_dataset_with_necessary_models,
                                make_analyses_with_single_dataset)
 from file_store.models import FileStoreItem, generate_file_source_translator
@@ -56,7 +55,8 @@ from .utils import (_create_solr_params_from_node_uuids,
                     get_file_url_from_node_uuid, get_owner_from_assay,
                     hide_fields_from_list, initialize_attribute_order_ranks,
                     insert_facet_field_filter, is_field_in_hidden_list,
-                    objectify_facet_field_counts, update_attribute_order_ranks)
+                    objectify_facet_field_counts, update_attribute_order_ranks,
+                    update_existing_dataset_with_revised_investigation)
 from .views import Assays, AssaysAttributes
 
 TEST_DATA_BASE_PATH = "data_set_manager/test-data/"
@@ -1614,7 +1614,7 @@ class UtilitiesTests(TestCase):
         existing_dataset = create_dataset_with_necessary_models()
         new_dataset = create_dataset_with_necessary_models()
         update_existing_dataset_with_revised_investigation(
-            new_dataset.get_investigation(), existing_dataset.uuid
+            existing_dataset.uuid, new_dataset.get_investigation()
         )
         self.assertEqual(existing_dataset.get_version(), 2)
         self.assertEqual(existing_dataset.get_investigation(),

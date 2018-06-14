@@ -21,6 +21,7 @@ import requests
 
 import constants
 import core
+import data_set_manager
 
 from .models import (
     AnnotatedNode, AnnotatedNodeRegistry, Assay, Attribute, AttributeOrder,
@@ -1194,18 +1195,58 @@ def get_solr_response_json(node_uuids):
     return format_solr_response(solr_response)
 
 
-def associate_datafiles_from_existing_dataset(dataset, investigation):
+def update_existing_dataset_with_revised_investigation(
+        existing_dataset_uuid, revised_investigation
+):
+    """
+    Update an existing DataSet's Investigation with a new Investigation as
+    long as some specific constraints are met.
+    - Said DataSet must be "clean" (No Analyses or Visualizations performed)
+    - No data files can be added or removed between the existing DataSet and
+    new Investigation
+    Any data files that were uploaded prior to this operation will be
+    reassociated and available from the new Investigation
+    :param new_investigation: A newly created Investigation instance
+    :param existing_dataset_uuid: the UUID of an existing DataSet
+    """
+    existing_dataset = core.models.DataSet.objects.get(
+        uuid=existing_dataset_uuid
+    )
+
+    # Check if existing DataSet's latest Investigation has data files that
+    # have already been uploaded into Refinery
+    associate_datafiles_from_existing_dataset(
+        existing_dataset, revised_investigation
+    )
+    updated_dataset_title = revised_investigation.title
+    existing_dataset.update_investigation(
+        revised_investigation,
+        "Metadata Revision: for {}".format(updated_dataset_title)
+    )
+    data_set_manager.tasks.annotate_nodes(revised_investigation.uuid)
+    existing_dataset.set_title(updated_dataset_title)
+
+
+def associate_datafiles_from_existing_dataset(
+        existing_dataset, revised_investigation
+):
     """
     Transfer data files from an existing DataSet's FileStoreItems that
     correspond to data files of the same source in an Investigation's
     FileStoreItems
     :param dataset: DataSet instance to transfer datafiles from
-    :param investigation: Investigation instance to transfer data files to
+    :param new_investigation: Investigation instance to transfer data files to
     """
-    file_store_items_from_existing_dataset = \
-        dataset.get_investigation().get_file_store_items(local_only=True)
+    _check_data_set_cleanliness(existing_dataset)
+    _ensure_revised_investigation_references_existing_datafiles(
+        existing_dataset, revised_investigation
+    )
 
-    for new_file_store_item in investigation.get_file_store_items():
+    existing_investigation = existing_dataset.get_investigation()
+    file_store_items_from_existing_dataset = \
+        existing_investigation.get_file_store_items(local_only=True)
+
+    for new_file_store_item in revised_investigation.get_file_store_items():
         for prior_file_store_item in file_store_items_from_existing_dataset:
             if prior_file_store_item.source == new_file_store_item.source:
                 new_file_store_item.datafile = prior_file_store_item.datafile
@@ -1216,3 +1257,34 @@ def associate_datafiles_from_existing_dataset(dataset, investigation):
                 # unintended side-effects
                 prior_file_store_item.datafile = None
                 prior_file_store_item.save()
+
+
+def _check_data_set_cleanliness(data_set):
+    if not data_set.is_clean():
+        raise RuntimeError("DataSet with UUID: {} is not clean (There have "
+                           "been Analyses or Visualizations performed on it) "
+                           "Remove these objects and try again"
+                           .format(data_set.uuid))
+
+
+def _ensure_revised_investigation_references_existing_datafiles(
+        existing_dataset, revised_investigation
+):
+    existing_investigation = existing_dataset.get_investigation()
+    existing_datafile_names, new_datafile_names = (
+        investigation.get_datafile_names(exclude_metadata_file=True) for
+        investigation in [existing_investigation, revised_investigation]
+
+    )
+    # Ensure that the names of existing datafiles are a subset of the new ones
+    if not set(existing_datafile_names).issubset(set(new_datafile_names)):
+        datafile_names_not_present = list(
+            set(existing_datafile_names) - set(new_datafile_names)
+        )
+        raise RuntimeError(
+            "Existing data files from DataSet: {} are not all referenced "
+            "in the revised metadata file. The following data files aren't "
+            "referenced: {}".format(
+                existing_dataset.uuid, ", ".join(datafile_names_not_present)
+            )
+        )
