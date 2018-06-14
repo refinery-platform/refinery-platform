@@ -44,9 +44,6 @@ urlpatterns = patterns(
     url(r'^import/take_ownership/$',
         login_required(TakeOwnershipOfPublicDatasetView.as_view()),
         name='take_ownership_of_public_dataset'),
-    url(r'^import/take_ownership/$',
-        login_required(TakeOwnershipOfPublicDatasetView.as_view()),
-        name='take_ownership_of_public_dataset'),
     url(r'^add-files/$', login_required(AddFilesToDataSetView.as_view()),
         name='add_files_to_data_set'),
 )
