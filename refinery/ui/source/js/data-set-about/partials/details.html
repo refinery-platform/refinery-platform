@@ -414,6 +414,12 @@
 </div>
 <div ng-if="!(ADCtrl.dataSet.isa_archive || ADCtrl.dataSet.pre_isa_archive && ADCtrl.fileStoreItem.datafile)">
 <p class="emphasized">Not available.</p>
+<a
+  id="import-revised-metadata-button"
+  class="refinery-base btn btn-primary"
+  href="/data_set_manager/import/?dataSetName={{ ADCtrl.dataSet.name }}/#/?dataSetUUID={{ ADCtrl.dataSet.uuid }}">
+  Revise this DataSet's content by uploading a new metadata file
+</a>
 </div>
 
 <span class="refinery-subheader">
