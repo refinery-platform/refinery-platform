@@ -14,7 +14,8 @@ from file_store.models import FileStoreItem, generate_file_source_translator
 from file_store.tasks import import_file
 
 from .models import Assay, Attribute, Investigation, Node, Study
-from .tasks import create_dataset
+from .tasks import create_dataset, \
+    update_existing_dataset_with_revised_investigation
 
 logger = logging.getLogger(__name__)
 
@@ -295,7 +296,8 @@ def process_metadata_table(
     is_public=False,
     delimiter="comma",
     custom_delimiter_string=",",
-    identity_id=None
+    identity_id=None,
+    existing_dataset_uuid=None
 ):
     """Create a dataset given a metadata file object and its description
     :param username: username
@@ -322,6 +324,8 @@ def process_metadata_table(
     :type annotation_column: int
     :param is_public: is dataset available to public
     :type is_public: bool
+    :param  existing_dataset_uuid: UUID of an existing DataSet that a
+    metadata revision is to be performed upon
     :returns: UUID of the new dataset
     """
     try:
@@ -375,8 +379,12 @@ def process_metadata_table(
     data_file_permanent = bool(data_file_permanent)
     is_public = bool(is_public)
     file_source_translator = generate_file_source_translator(
-        username=username, base_path=base_path, identity_id=identity_id)
+        username=username, base_path=base_path, identity_id=identity_id
+    )
 
+    # TODO: From here on should be run within a transaction as to not commit
+    #  things to the db on an import failure, but doing so doesn't allow for
+    #  the association of uploaded datafiles
     parser = SingleFileColumnParser(
         metadata_file=metadata_file,
         file_source_translator=file_source_translator,
@@ -394,11 +402,16 @@ def process_metadata_table(
         delimiter=delimiter,
         custom_delimiter_string=custom_delimiter_string
     )
-
     investigation = parser.run()
     investigation.title = title
     investigation.save()
 
+    if existing_dataset_uuid:
+        update_existing_dataset_with_revised_investigation(
+            investigation, existing_dataset_uuid
+        )
+        return existing_dataset_uuid
     return create_dataset(
         investigation_uuid=investigation.uuid, username=username,
-        dataset_name=title, public=is_public)
+        dataset_name=title, public=is_public
+    )

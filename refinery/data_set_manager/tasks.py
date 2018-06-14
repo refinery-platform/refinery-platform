@@ -394,7 +394,7 @@ def parse_isatab(username, public, path, identity_id=None,
             path, isa_archive=isa_archive, preisa_archive=pre_isa_archive
         )
         if existing_dataset_uuid:
-            _update_existing_dataset_with_revised_investigation(
+            update_existing_dataset_with_revised_investigation(
                 investigation, existing_dataset_uuid
             )
             return existing_dataset_uuid
@@ -483,8 +483,8 @@ def generate_bam_index(auxiliary_file_store_item_uuid, datafile_path):
     auxiliary_file_store_item.save()
 
 
-def _update_existing_dataset_with_revised_investigation(new_investigation,
-                                                        existing_dataset_uuid):
+def update_existing_dataset_with_revised_investigation(new_investigation,
+                                                       existing_dataset_uuid):
     """
     Update an existing DataSet's Investigation with a new Investigation as
     long as some specific constraints are met.
