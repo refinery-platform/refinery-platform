@@ -510,21 +510,16 @@ def update_existing_dataset_with_revised_investigation(new_investigation,
     new_datafile_names = new_investigation.get_datafile_names(
         exclude_metadata_file=True
     )
-
-    # Check referenced data file equivalence
-    if existing_datafile_names != new_datafile_names:
+    # Ensure that the names of existing datafiles are a subset of the new ones
+    if not set(existing_datafile_names).issubset(set(new_datafile_names)):
         datafile_names_not_present = list(
             set(existing_datafile_names) - set(new_datafile_names)
         )
         raise RuntimeError(
-            "Data file names don't match between the existing "
-            "DataSet: {} and the new metadata file ({}). The following data "
-            "files aren't referenced in both: {}".format(
-                existing_dataset_uuid,
-                os.path.basename(
-                    new_investigation.get_file_store_item().datafile.name
-                ),
-                ", ".join(datafile_names_not_present)
+            "Existing data files from DataSet: {} are not all referenced "
+            "in the revised metadata file. The following data files aren't "
+            "referenced: {}".format(
+                existing_dataset_uuid, ", ".join(datafile_names_not_present)
             )
         )
 
