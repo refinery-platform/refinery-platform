@@ -1206,7 +1206,7 @@ def update_existing_dataset_with_revised_investigation(
     new Investigation
     Any data files that were uploaded prior to this operation will be
     reassociated and available from the new Investigation
-    :param new_investigation: A newly created Investigation instance
+    :param revised_investigation: A newly created Investigation instance
     :param existing_dataset_uuid: the UUID of an existing DataSet
     """
     existing_dataset = core.models.DataSet.objects.get(
@@ -1234,8 +1234,9 @@ def associate_datafiles_from_existing_dataset(
     Transfer data files from an existing DataSet's FileStoreItems that
     correspond to data files of the same source in an Investigation's
     FileStoreItems
-    :param dataset: DataSet instance to transfer datafiles from
-    :param new_investigation: Investigation instance to transfer data files to
+    :param existing_dataset: DataSet instance to transfer datafiles from
+    :param revised_investigation: Investigation instance to transfer data files
+     to
     """
     _check_data_set_cleanliness(existing_dataset)
     _ensure_revised_investigation_references_existing_datafiles(
