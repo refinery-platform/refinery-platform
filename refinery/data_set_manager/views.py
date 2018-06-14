@@ -456,6 +456,7 @@ class ProcessMetadataTableView(View):
 
     def post(self, request, *args, **kwargs):
         # Get required params
+        existing_dataset_uuid = request.GET.get('data_set_uuid')
         try:
             metadata_file = request.FILES['file']
             title = request.POST.get('title')
@@ -535,7 +536,8 @@ class ProcessMetadataTableView(View):
                 custom_delimiter_string=request.POST.get(
                     'custom_delimiter_string', False
                 ),
-                identity_id=identity_id
+                identity_id=identity_id,
+                existing_dataset_uuid=existing_dataset_uuid
             )
         except Exception as exc:
             logger.error(exc, exc_info=True)
