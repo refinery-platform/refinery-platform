@@ -400,8 +400,7 @@ def parse_isatab(username, public, path, identity_id=None,
             return existing_dataset_uuid
 
         dataset_uuid = create_dataset(
-            investigation.uuid, username, public=public,
-            is_meta_data_revision=bool(existing_dataset_uuid)
+            investigation.uuid, username, public=public
         )
         return dataset_uuid
 
