@@ -572,13 +572,13 @@ class Node(models.Model):
         Returns the FileStoreItem associated with a given Node or None if
         there isn't one
         """
-        try:
-            return FileStoreItem.objects.get(
-                uuid=self.file_uuid)
-        except (FileStoreItem.DoesNotExist,
-                FileStoreItem.MultipleObjectsReturned) as e:
-            logger.error(e)
-            return None
+        if self.file_uuid:
+            try:
+                return FileStoreItem.objects.get(uuid=self.file_uuid)
+            except (FileStoreItem.DoesNotExist,
+                    FileStoreItem.MultipleObjectsReturned) as e:
+                logger.error(e)
+        return None
 
     def _create_and_associate_auxiliary_node(self, filestore_item_uuid):
             """
