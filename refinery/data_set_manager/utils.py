@@ -14,6 +14,7 @@ import time
 import urlparse
 
 from django.conf import settings
+from django.db import transaction
 from django.db.models import Q
 from django.utils.http import urlquote, urlunquote
 
@@ -1227,6 +1228,7 @@ def update_existing_dataset_with_revised_investigation(
     existing_dataset.set_title(updated_dataset_title)
 
 
+@transaction.atomic()
 def associate_datafiles_from_existing_dataset(
         existing_dataset, revised_investigation
 ):
