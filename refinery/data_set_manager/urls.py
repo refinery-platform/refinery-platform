@@ -11,12 +11,11 @@ from django.views.decorators.csrf import csrf_exempt
 from constants import UUID_RE
 from rest_framework.routers import DefaultRouter
 
-from .views import (
-    Assays, AssaysAttributes, AssaysFiles, CheckDataFilesView,
-    ChunkedFileUploadCompleteView, ChunkedFileUploadView, DataSetImportView,
-    ImportISATabView, ProcessISATabView, ProcessMetadataTableView,
-    TakeOwnershipOfPublicDatasetView
-)
+from .views import (AddFilesToDataSetView, Assays, AssaysAttributes,
+                    AssaysFiles, CheckDataFilesView,
+                    ChunkedFileUploadCompleteView, ChunkedFileUploadView,
+                    DataSetImportView, ImportISATabView, ProcessISATabView,
+                    ProcessMetadataTableView, TakeOwnershipOfPublicDatasetView)
 
 urlpatterns = patterns(
     'data_set_manager.views',
@@ -45,7 +44,11 @@ urlpatterns = patterns(
     url(r'^import/take_ownership/$',
         login_required(TakeOwnershipOfPublicDatasetView.as_view()),
         name='take_ownership_of_public_dataset'),
-
+    url(r'^import/take_ownership/$',
+        login_required(TakeOwnershipOfPublicDatasetView.as_view()),
+        name='take_ownership_of_public_dataset'),
+    url(r'^add-files/$', login_required(AddFilesToDataSetView.as_view()),
+        name='add_files_to_data_set'),
 )
 
 # DRF url routing
