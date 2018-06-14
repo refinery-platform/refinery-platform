@@ -37,7 +37,7 @@ import data_set_manager
 from data_set_manager.isa_tab_parser import IsaTabParser, ParserException
 from data_set_manager.single_file_column_parser import process_metadata_table
 from data_set_manager.tasks import parse_isatab, \
-    _update_existing_dataset_with_revised_investigation
+    update_existing_dataset_with_revised_investigation
 from factory_boy.utils import (create_dataset_with_necessary_models,
                                make_analyses_with_single_dataset)
 from file_store.models import FileStoreItem, generate_file_source_translator
@@ -1613,7 +1613,7 @@ class UtilitiesTests(TestCase):
     def test__update_existing_dataset_with_revised_investigation(self):
         existing_dataset = create_dataset_with_necessary_models()
         new_dataset = create_dataset_with_necessary_models()
-        _update_existing_dataset_with_revised_investigation(
+        update_existing_dataset_with_revised_investigation(
             new_dataset.get_investigation(), existing_dataset.uuid
         )
         self.assertEqual(existing_dataset.get_version(), 2)
@@ -2259,7 +2259,7 @@ class IsaTabParserTests(IsaTabTestBase):
         self.failed_isatab_assertions()
 
 
-class ProcessISATabViewTestBase(IsaTabTestBase):
+class MetadataImportTestBase(IsaTabTestBase):
     def successful_import_assertions(self):
         self.assertEqual(DataSet.objects.count(), 1)
         self.assertEqual(Study.objects.count(), 1)
@@ -2273,7 +2273,7 @@ class ProcessISATabViewTestBase(IsaTabTestBase):
         self.assertEqual(Assay.objects.count(), 0)
 
 
-class ProcessISATabViewTests(ProcessISATabViewTestBase):
+class ProcessISATabViewTests(MetadataImportTestBase):
     def setUp(self):
         super(ProcessISATabViewTests, self).setUp()
         self.test_user_directory = os.path.join(
@@ -2444,7 +2444,7 @@ class ProcessISATabViewTests(ProcessISATabViewTestBase):
             )
 
 
-class ProcessISATabViewLiveServerTests(ProcessISATabViewTestBase,
+class ProcessISATabViewLiveServerTests(MetadataImportTestBase,
                                        LiveServerTestCase):
     @mock.patch.object(data_set_manager.views.import_file, "delay")
     def test_post_good_isa_tab_url(self, delay_mock):
@@ -2457,6 +2457,55 @@ class ProcessISATabViewLiveServerTests(ProcessISATabViewTestBase,
             media_url = urljoin(self.live_server_url, settings.MEDIA_URL)
             good_isa_tab_url = urljoin(media_url, "rfc-test.zip")
             self.post_isa_tab(isa_tab_url=good_isa_tab_url)
+        self.successful_import_assertions()
+
+
+class ProcessMetadataTableViewTests(MetadataImportTestBase):
+    def post_tabular_meta_data_file(self,
+                                    meta_data_file=None,
+                                    data_set_uuid=None,
+                                    user=None,
+                                    title=None,
+                                    data_file_column=None,
+                                    species_column=None,
+                                    source_column_index=None,
+                                    delimiter=None):
+        post_data = {
+            "file": meta_data_file,
+            "title": title,
+            "data_file_column": data_file_column,
+            "species_column": species_column,
+            "source_column_index": source_column_index,
+            "delimiter": delimiter
+        }
+        url = "/data_set_manager/import/metadata-table-form/"
+        if data_set_uuid is not None:
+            url += "?data_set_uuid={}".format(data_set_uuid)
+
+        self.client.login(username=user.username, password=user.password)
+        response = self.client.post(
+            url,
+            data=post_data,
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest'
+        )
+        return response
+
+    @mock.patch.object(data_set_manager.views.import_file, "delay")
+    def test_post_good_tabular_file(self, delay_mock):
+        user = User.objects.create_user("test", password="test")
+        with open(
+                os.path.join(TEST_DATA_BASE_PATH,
+                             'single-file/two-line-local.csv')
+        ) as good_meta_data_file:
+            self.post_tabular_meta_data_file(
+                meta_data_file=good_meta_data_file,
+                user=user,
+                title="Title",
+                data_file_column=2,
+                species_column=1,
+                source_column_index=0,
+                delimiter="comma"
+            )
         self.successful_import_assertions()
 
 
