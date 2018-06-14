@@ -63,22 +63,18 @@ class DataSetSerializer(serializers.ModelSerializer):
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = UserProfile
-        fields = ['affiliation']
+        fields = ['primary_group']
 
     def partial_update(self, instance, validated_data):
         """
-        Update and return an existing `DataSet` instance, given the
+        Update and return an existing `UserProfile` instance, given the
         validated data.
         """
-        instance.first_name = validated_data.get('first_name',
-                                                 instance.first_name)
-        instance.last_name = validated_data.get('last_name',
-                                                instance.last_name)
-        instance.email = validated_data.get('email', instance.email)
-        instance.affiliation = validated_data.get('affiliation',
-                                                  instance.affiliation)
+        instance.primary_group = validated_data.get('primary_group',
+                                                    instance.primary_group)
         instance.save()
         return instance
 

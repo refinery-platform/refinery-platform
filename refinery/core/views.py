@@ -6,7 +6,7 @@ from xml.parsers.expat import ExpatError
 from django.conf import settings
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.models import User
+from django.contrib.auth.models import Group, User
 from django.contrib.sites.models import RequestSite, Site, get_current_site
 from django.core.exceptions import ImproperlyConfigured
 from django.core.mail import EmailMessage
@@ -1098,9 +1098,9 @@ class UserProfileViewSet(APIView):
               type: string
               paramType: path
               required: true
-            - name: affiliation
-              description: University or team associated with
-              type: string
+            - name: primary_group
+              description: group id
+              type: int
               paramType: form
               required: false
     ...
@@ -1108,17 +1108,28 @@ class UserProfileViewSet(APIView):
     http_method_names = ["patch"]
 
     def patch(self, request, uuid):
-        user_profile = UserProfile.objects.get(uuid=uuid)
-        # update data set's fields
-        if not request.user.is_anonymous() and user_profile.uuid == uuid:
-            serializer = UserProfileSerializer(user_profile,
-                                               data=request.data,
-                                               partial=True)
-            if serializer.is_valid():
-                serializer.save()
-                return Response(
-                    serializer.data, status=status.HTTP_202_ACCEPTED
-                )
+        group_id = request.data.get('primary_group')
+        if group_id:
+            try:
+                group = Group.objects.all().get(id=group_id)
+            except (Group.DoesNotExist, Group.MultipleObjectsReturned) as e:
+                Response(e, status=status.HTTP_400_BAD_REQUEST)
+
+        is_member = request.user.id in group.user_set.values_list('id',
+                                                                  flat=True)
+
+        # user must be a member of the group
+        if not request.user.is_anonymous() and is_member:
+            if group.name != 'Public':
+                serializer = UserProfileSerializer(request.user.profile,
+                                                   data=request.data,
+                                                   partial=True)
+
+                if serializer.is_valid():
+                    serializer.save()
+                    return Response(
+                        serializer.data, status=status.HTTP_202_ACCEPTED
+                    )
             return Response(
                 serializer.errors, status=status.HTTP_400_BAD_REQUEST
             )
