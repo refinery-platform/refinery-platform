@@ -2425,7 +2425,7 @@ class ProcessISATabViewTests(ProcessISATabViewTestBase):
                 .format(data_set.uuid)
             )
 
-    def test_metadata_revision_fails_datafile_names_dissimilar(self):
+    def test_metadata_revision_fails_original_datafiles_not_referenced(self):
         data_set = create_dataset_with_necessary_models()
         metadata_file_name = 'rfc-test-local.zip'
         with open(
@@ -2436,7 +2436,12 @@ class ProcessISATabViewTests(ProcessISATabViewTestBase):
                 data_set_uuid=data_set.uuid
             )
             self.assertEqual(response.status_code, 400)
-            self.assertIn("Data file names don't match", response.content)
+            self.assertIn(
+                "Existing data files from DataSet: {} are not all referenced "
+                "in the revised metadata file. The following data files aren't"
+                " referenced: test1.txt, test0.txt".format(data_set.uuid),
+                response.content
+            )
 
 
 class ProcessISATabViewLiveServerTests(ProcessISATabViewTestBase,
