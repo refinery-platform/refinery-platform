@@ -221,18 +221,13 @@ class Investigation(NodeCollection):
         except (Study.DoesNotExist, Study.MultipleObjectsReturned) as e:
             logger.error("Could not fetch Study properly: %s", e)
         else:
-            for node in Node.objects.filter(study=study):
-                if node.file_uuid:
-                    try:
-                        file_store_items.append(
-                            FileStoreItem.objects.get(uuid=node.file_uuid)
-                        )
-                    except(FileStoreItem.DoesNotExist,
-                           FileStoreItem.MultipleObjectsReturned) as e:
-                        logger.error(
-                            "Error while fetching FileStoreItem for Node "
-                            "with UUID: %s : %s", node.uuid, e
-                        )
+            file_store_item_uuids = [
+                node.file_uuid for node in Node.objects.filter(study=study)
+                if node.file_uuid
+            ]
+            file_store_items += list(
+                FileStoreItem.objects.filter(uuid__in=file_store_item_uuids)
+            )
         if not exclude_metadata_file:
             file_store_items.append(self.get_file_store_item())
 
