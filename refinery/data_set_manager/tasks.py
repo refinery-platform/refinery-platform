@@ -193,8 +193,7 @@ def get_arrayexpress_studies():
 
 @task()
 def create_dataset(investigation_uuid, username, identifier=None, title=None,
-                   dataset_name=None, slug=None, public=False,
-                   is_meta_data_revision=False):
+                   dataset_name=None, slug=None, public=False):
     """creates (or updates) a dataset with the given investigation and user and
     returns the dataset UUID or None if something went wrong
     Parameters:
@@ -234,7 +233,7 @@ def create_dataset(investigation_uuid, username, identifier=None, title=None,
     datasets = DataSet.objects.filter(name=dataset_name)
     # check if the investigation already exists
     # if not 0, update dataset with new investigation
-    if len(datasets) and not is_meta_data_revision:
+    if len(datasets):
         """go through datasets until you find one with the correct owner"""
         for ds in datasets:
             own = ds.get_owner()
