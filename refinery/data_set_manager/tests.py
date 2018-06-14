@@ -2763,6 +2763,7 @@ class ProcessMetadataTableViewTests(MetadataImportTestBase):
                 local_data_file_names + local_data_file_names_for_revision
             )
 
+    @override_settings(CELERY_ALWAYS_EAGER=True)
     def test_metadata_revision_fails_with_unclean_dataset(self):
         analyses, data_set = make_analyses_with_single_dataset(1, self.user)
         with open(
@@ -2790,6 +2791,7 @@ class ProcessMetadataTableViewTests(MetadataImportTestBase):
                 }
             )
 
+    @override_settings(CELERY_ALWAYS_EAGER=True)
     def test_metadata_revision_fails_original_datafiles_not_referenced(self):
         data_set = create_dataset_with_necessary_models()
         with open(
