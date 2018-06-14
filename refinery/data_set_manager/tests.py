@@ -2260,6 +2260,18 @@ class IsaTabParserTests(IsaTabTestBase):
 
 
 class MetadataImportTestBase(IsaTabTestBase):
+    def setUp(self):
+        super(MetadataImportTestBase, self).setUp()
+        self.test_user_directory = os.path.join(
+            TEST_DATA_BASE_PATH, self.user.username
+        )
+        os.mkdir(self.test_user_directory)
+
+    def tearDown(self):
+        with mock.patch.object(FileStoreItem, "terminate_file_import_task"):
+            super(MetadataImportTestBase, self).tearDown()
+        shutil.rmtree(self.test_user_directory)
+
     def successful_import_assertions(self):
         self.assertEqual(DataSet.objects.count(), 1)
         self.assertEqual(Study.objects.count(), 1)
@@ -2274,18 +2286,6 @@ class MetadataImportTestBase(IsaTabTestBase):
 
 
 class ProcessISATabViewTests(MetadataImportTestBase):
-    def setUp(self):
-        super(ProcessISATabViewTests, self).setUp()
-        self.test_user_directory = os.path.join(
-            TEST_DATA_BASE_PATH, self.user.username
-        )
-        os.mkdir(self.test_user_directory)
-
-    def tearDown(self):
-        with mock.patch.object(FileStoreItem, "terminate_file_import_task"):
-            super(ProcessISATabViewTests, self).tearDown()
-        shutil.rmtree(self.test_user_directory)
-
     @mock.patch.object(data_set_manager.views.import_file, "delay")
     def test_post_good_isa_tab_file(self, delay_mock):
         with open(
@@ -2408,6 +2408,60 @@ class ProcessISATabViewTests(MetadataImportTestBase):
             self.assertIn(os.path.basename(file_store_item.source),
                           local_data_file_names)
 
+    @override_settings(
+        CELERY_ALWAYS_EAGER=True,
+        REFINERY_DATA_IMPORT_DIR=os.path.abspath(TEST_DATA_BASE_PATH)
+    )
+    def test_metadata_revision_works_datafiles_added_during_revision(self):
+        local_data_file_names = ["rfc94.txt", "rfc134.txt"]
+        [
+            open(os.path.join(self.test_user_directory, name), "a").close()
+            for name in local_data_file_names
+        ]
+
+        with open(
+                os.path.join(TEST_DATA_BASE_PATH, 'rfc-test-local.zip')
+        ) as good_isa_referencing_local_files:
+            self.post_isa_tab(isa_tab_file=good_isa_referencing_local_files)
+
+        data_set = DataSet.objects.last()
+
+        local_data_file_names_for_revision = ["rfc111.txt"]
+        [
+            open(os.path.join(self.test_user_directory, name), "a").close()
+            for name in local_data_file_names_for_revision
+        ]
+
+        with open(
+                os.path.join(TEST_DATA_BASE_PATH, 'rfc-test-local-edited.zip')
+        ) as isatab_with_revised_metadata:
+            self.post_isa_tab(
+                isa_tab_file=isatab_with_revised_metadata,
+                data_set_uuid=data_set.uuid
+            )
+        data_set_count = DataSet.objects.count()
+        revised_data_set = DataSet.objects.last()
+
+        # Assert no new DataSet created
+        self.assertEqual(data_set_count, 1)
+
+        # Assert that DataSet version incremented
+        self.assertEqual(revised_data_set.get_version(), 2)
+
+        # Assert that previously uploaded data file remain accessible
+        investigation = revised_data_set.get_investigation()
+        self.assertEqual(
+            len(investigation.get_file_store_items(local_only=True)), 4
+        )
+
+        for file_store_item in investigation.get_file_store_items(
+                exclude_metadata_file=True, local_only=True
+        ):
+            self.assertIn(
+                os.path.basename(file_store_item.source),
+                local_data_file_names + local_data_file_names_for_revision
+            )
+
     def test_metadata_revision_fails_with_unclean_dataset(self):
         analyses, data_set = make_analyses_with_single_dataset(1, self.user)
         with open(
@@ -2494,6 +2548,53 @@ class ProcessMetadataTableViewTests(MetadataImportTestBase):
     def test_post_good_tabular_file(self, delay_mock):
         user = User.objects.create_user("test", password="test")
         with open(
+            os.path.join(TEST_DATA_BASE_PATH, 'single-file/two-line-local.csv')
+        ) as good_meta_data_file:
+            self.post_tabular_meta_data_file(
+                meta_data_file=good_meta_data_file,
+                user=user,
+                title="Title",
+                data_file_column=2,
+                species_column=1,
+                source_column_index=0,
+                delimiter="comma"
+            )
+        self.successful_import_assertions()
+
+    @override_settings(
+        CELERY_ALWAYS_EAGER=True,
+        REFINERY_DATA_IMPORT_DIR=os.path.abspath(TEST_DATA_BASE_PATH)
+    )
+    def test_post_good_tabular_file_with_datafiles(self):
+        [
+            open(os.path.join(self.test_user_directory, name), "a").close()
+            for name in ["test1.txt", "test2.txt"]
+        ]
+
+        user = User.objects.create_user("test", password="test")
+        with open(
+            os.path.join(TEST_DATA_BASE_PATH, 'single-file/two-line-local.csv')
+        ) as good_meta_data_file:
+            self.post_tabular_meta_data_file(
+                meta_data_file=good_meta_data_file,
+                user=user,
+                title="Title",
+                data_file_column=2,
+                species_column=1,
+                source_column_index=0,
+                delimiter="comma"
+            )
+
+        investigation = DataSet.objects.last().get_investigation()
+        self.assertEqual(DataSet.objects.count(), 1)
+        self.assertEqual(
+            len(investigation.get_file_store_items(local_only=True)), 2
+        )
+
+    @override_settings(CELERY_ALWAYS_EAGER=True)
+    def test_metadata_revision_works_grammatical_changes_only(self):
+        user = User.objects.create_user("test", password="test")
+        with open(
                 os.path.join(TEST_DATA_BASE_PATH,
                              'single-file/two-line-local.csv')
         ) as good_meta_data_file:
@@ -2506,7 +2607,211 @@ class ProcessMetadataTableViewTests(MetadataImportTestBase):
                 source_column_index=0,
                 delimiter="comma"
             )
-        self.successful_import_assertions()
+
+        data_set = DataSet.objects.last()
+
+        self.assertFalse(
+            AnnotatedNode.objects.filter(attribute_value="EDITED")
+        )
+
+        with open(
+                os.path.join(TEST_DATA_BASE_PATH,
+                             'single-file/three-line-local.csv')
+        ) as good_meta_data_file:
+            self.post_tabular_meta_data_file(
+                meta_data_file=good_meta_data_file,
+                data_set_uuid=data_set.uuid,
+                user=user,
+                title="Edited Title",
+                data_file_column=2,
+                species_column=1,
+                source_column_index=0,
+                delimiter="comma"
+            )
+        # Assert no new DataSet created
+        self.assertEqual(DataSet.objects.count(), 1)
+        self.assertTrue(
+            AnnotatedNode.objects.filter(attribute_value="EDITED")
+        )
+
+    @override_settings(
+        CELERY_ALWAYS_EAGER=True,
+        REFINERY_DATA_IMPORT_DIR=os.path.abspath(TEST_DATA_BASE_PATH)
+    )
+    def test_metadata_revision_works_existing_datafiles_persisted(self):
+        local_data_file_names = ["test1.txt", "test2.txt"]
+        [
+            open(os.path.join(self.test_user_directory, name), "a").close()
+            for name in local_data_file_names
+        ]
+
+        user = User.objects.create_user("test", password="test")
+        with open(
+                os.path.join(TEST_DATA_BASE_PATH,
+                             'single-file/two-line-local.csv')
+        ) as good_meta_data_file:
+            self.post_tabular_meta_data_file(
+                meta_data_file=good_meta_data_file,
+                user=user,
+                title="Title",
+                data_file_column=2,
+                species_column=1,
+                source_column_index=0,
+                delimiter="comma"
+            )
+        data_set = DataSet.objects.last()
+
+        with open(
+                os.path.join(TEST_DATA_BASE_PATH,
+                             'single-file/three-line-local.csv')
+        ) as good_meta_data_file:
+            self.post_tabular_meta_data_file(
+                meta_data_file=good_meta_data_file,
+                data_set_uuid=data_set.uuid,
+                user=user,
+                title="Edited Title",
+                data_file_column=2,
+                species_column=1,
+                source_column_index=0,
+                delimiter="comma"
+            )
+        data_set_count = DataSet.objects.count()
+        revised_data_set = DataSet.objects.last()
+
+        # Assert no new DataSet created
+        self.assertEqual(data_set_count, 1)
+
+        # Assert that DataSet version incremented
+        self.assertEqual(revised_data_set.get_version(), 2)
+
+        # Assert that previously uploaded data file remain accessible
+        investigation = revised_data_set.get_investigation()
+        self.assertEqual(
+            len(investigation.get_file_store_items(local_only=True)), 2
+        )
+
+        for file_store_item in investigation.get_file_store_items(
+                exclude_metadata_file=True, local_only=True
+        ):
+            self.assertIn(os.path.basename(file_store_item.source),
+                          local_data_file_names)
+
+    @override_settings(
+        CELERY_ALWAYS_EAGER=True,
+        REFINERY_DATA_IMPORT_DIR=os.path.abspath(TEST_DATA_BASE_PATH)
+    )
+    def test_metadata_revision_works_datafiles_added_during_revision(self):
+        local_data_file_names = ["test1.txt", "test2.txt"]
+        [
+            open(os.path.join(self.test_user_directory, name), "a").close()
+            for name in local_data_file_names
+        ]
+        with open(
+                os.path.join(TEST_DATA_BASE_PATH,
+                             'single-file/two-line-local.csv')
+        ) as good_meta_data_file:
+            self.post_tabular_meta_data_file(
+                meta_data_file=good_meta_data_file,
+                user=self.user,
+                title="Title",
+                data_file_column=2,
+                species_column=1,
+                source_column_index=0,
+                delimiter="comma"
+            )
+        data_set = DataSet.objects.last()
+
+        local_data_file_names_for_revision = ["test3.txt"]
+        [
+            open(os.path.join(self.test_user_directory, name), "a").close()
+            for name in local_data_file_names_for_revision
+        ]
+        with open(
+                os.path.join(TEST_DATA_BASE_PATH,
+                             'single-file/three-line-local.csv')
+        ) as good_meta_data_file:
+            self.post_tabular_meta_data_file(
+                meta_data_file=good_meta_data_file,
+                data_set_uuid=data_set.uuid,
+                user=self.user,
+                title="Edited Title",
+                data_file_column=2,
+                species_column=1,
+                source_column_index=0,
+                delimiter="comma"
+            )
+        data_set_count = DataSet.objects.count()
+        revised_data_set = DataSet.objects.last()
+
+        # Assert no new DataSet created
+        self.assertEqual(data_set_count, 1)
+
+        # Assert that DataSet version incremented
+        self.assertEqual(revised_data_set.get_version(), 2)
+
+        # Assert that all datafiles have been uploaded and associated 2 + 1
+        investigation = revised_data_set.get_investigation()
+        self.assertEqual(
+            len(investigation.get_file_store_items(local_only=True)), 3
+        )
+
+        for file_store_item in investigation.get_file_store_items(
+                exclude_metadata_file=True, local_only=True
+        ):
+            self.assertIn(
+                os.path.basename(file_store_item.source),
+                local_data_file_names + local_data_file_names_for_revision
+            )
+
+    def test_metadata_revision_fails_with_unclean_dataset(self):
+        analyses, data_set = make_analyses_with_single_dataset(1, self.user)
+        with open(
+                os.path.join(TEST_DATA_BASE_PATH,
+                             'single-file/three-line-local.csv')
+        ) as good_meta_data_file:
+            response = self.post_tabular_meta_data_file(
+                meta_data_file=good_meta_data_file,
+                data_set_uuid=data_set.uuid,
+                user=self.user,
+                title="Edited Title",
+                data_file_column=2,
+                species_column=1,
+                source_column_index=0,
+                delimiter="comma"
+            )
+            self.assertEqual(
+                json.loads(response.content),
+                {
+                    "error": (
+                        "DataSet with UUID: {} is not clean (There have been "
+                        "Analyses or Visualizations performed on it) Remove "
+                        "these objects and try again".format(data_set.uuid)
+                    )
+                }
+            )
+
+    def test_metadata_revision_fails_original_datafiles_not_referenced(self):
+        data_set = create_dataset_with_necessary_models()
+        with open(
+                os.path.join(TEST_DATA_BASE_PATH,
+                             'single-file/two-line-s3.csv')
+        ) as good_meta_data_file:
+            response = self.post_tabular_meta_data_file(
+                meta_data_file=good_meta_data_file,
+                data_set_uuid=data_set.uuid,
+                user=self.user,
+                title="Edited Title",
+                data_file_column=2,
+                species_column=1,
+                source_column_index=0,
+                delimiter="comma"
+            )
+            self.assertIn(
+                "Existing data files from DataSet: {} are not all referenced "
+                "in the revised metadata file. The following data files aren't"
+                " referenced: test1.txt, test0.txt".format(data_set.uuid),
+                response.content
+            )
 
 
 class SingleFileColumnParserTests(TestCase):
