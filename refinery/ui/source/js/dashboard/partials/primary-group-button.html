@@ -1,15 +1,13 @@
 <div class="btn-group" uib-dropdown dropdown-append-to-body>
     <button id="split-button" type="button"
-      class="refinery-base btn btn-default btn-xs">
-        <a href="#">
-          Choose Primary Group
-        </a>
+      class="btn btn-primary btn-xs" title="Join a group">
+      Set Primary Group
     </button>
-    <button type="button" class="refinery-base  btn btn-default btn-xs"
-      uib-dropdown-toggle>
+    <button type="button" class="btn btn-primary btn-xs" uib-dropdown-toggle>
       <i class="caret"></i>
       <span class="sr-only">Primary Group</span>
     </button>
+  <span ng-if="!$ctrl.primary_group">
     <ul class="dropdown-menu" uib-dropdown-menu role="menu" aria-labelledby="split-button">
       <li role="menuitem">
         <a>
@@ -23,5 +21,6 @@
         Zebra Lab
       </a></li>
     </ul>
+  </span>
  </div>
 
