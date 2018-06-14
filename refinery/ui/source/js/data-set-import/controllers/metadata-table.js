@@ -46,6 +46,7 @@ function MetadataTableImportCtrl (
 
   this.dataSetUUID = $location.search().dataSetUUID;
   this.isMetaDataRevision = !!this.dataSetUUID;
+  this.importErrorMessage = null;
 }
 
 Object.defineProperty(
@@ -342,6 +343,7 @@ MetadataTableImportCtrl.prototype.startImport = function () {
     })
     .catch(function (error) {
       self.isErrored = true;
+      self.importErrorMessage = error.data.error;
       self.$log.error(error);
     })
     .finally(function () {

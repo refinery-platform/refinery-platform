@@ -542,7 +542,7 @@ class ProcessMetadataTableView(View):
             error = {'error_message': repr(exc)}
             if request.is_ajax():
                 return HttpResponseServerError(
-                    json.dumps({'error': repr(exc)}), 'application/json'
+                    json.dumps({'error': exc.message}), 'application/json'
                 )
             else:
                 return render(request, self.template_name, error)
