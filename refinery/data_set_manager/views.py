@@ -65,7 +65,7 @@ class DataSetImportView(View):
 
     def get(self, request, *args, **kwargs):
         form = ImportISATabFileForm()
-        data_set_name = request.GET.get('dataSetName')
+        data_set_name = request.GET.get('data_set_name')
         context = RequestContext(
             request,
             {

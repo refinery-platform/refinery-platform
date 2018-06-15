@@ -44,7 +44,7 @@ function MetadataTableImportCtrl (
     this.isErrored = false;
   };
 
-  this.dataSetUUID = $location.search().dataSetUUID;
+  this.dataSetUUID = $location.search().data_set_uuid;
   this.isMetaDataRevision = !!this.dataSetUUID;
   this.importErrorMessage = null;
 }

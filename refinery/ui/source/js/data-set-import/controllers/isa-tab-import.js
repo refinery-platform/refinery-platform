@@ -18,7 +18,7 @@
     this.isaTabImportApi = isaTabImportApi;
     this.settings = settings;
     this.showFileUpload = false;
-    this.dataSetUUID = $location.search().dataSetUUID;
+    this.dataSetUUID = $location.search().data_set_uuid;
     this.isMetaDataRevision = !!this.dataSetUUID;
 
     // Helper method to exit out of error alert
