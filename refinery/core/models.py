@@ -633,21 +633,19 @@ class DataSet(SharableResource):
             logger.error("Failed to retrieve InvestigationLink with version "
                          "%s: %s", version, exc)
 
-    def get_latest_study(self, version=None):
-        try:
-            return Study.objects.get(
-                investigation=(
-                    self.get_latest_investigation_link(version).investigation
-                )
-            )
-        except(Study.DoesNotExist, Study.MultipleObjectsReturned) as e:
-            raise RuntimeError("Couldn't properly fetch Study: {}".format(e))
+    def get_latest_study(self):
+        latest_investigation = self.get_investigation()
+        if latest_investigation:
+            return latest_investigation.get_study()
+        else:
+            return None
 
-    def get_latest_assay(self, version=None):
-        try:
-            return Assay.objects.get(study=self.get_latest_study(version))
-        except(Assay.DoesNotExist, Assay.MultipleObjectsReturned) as e:
-            raise RuntimeError("Couldn't properly fetch Assay: {}".format(e))
+    def get_latest_assay(self):
+        latest_investigation = self.get_investigation()
+        if latest_investigation:
+            return latest_investigation.get_assay()
+        else:
+            return None
 
     def get_investigation(self, version=None):
         investigation_link = self.get_latest_investigation_link(version)

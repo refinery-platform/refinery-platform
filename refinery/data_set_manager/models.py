@@ -193,8 +193,20 @@ class Investigation(NodeCollection):
             return study.description
         return self.description
 
+    def get_study(self):
+        try:
+            return Study.objects.get(investigation=self)
+        except(Study.DoesNotExist, Study.MultipleObjectsReturned) as e:
+            raise RuntimeError("Couldn't properly fetch Study: {}".format(e))
+
     def get_study_count(self):
         return self.study_set.count()
+
+    def get_assay(self):
+        try:
+            return Assay.objects.get(study=self.get_study())
+        except(Assay.DoesNotExist, Assay.MultipleObjectsReturned) as e:
+            raise RuntimeError("Couldn't properly fetch Assay: {}".format(e))
 
     def get_assay_count(self):
         studies = self.study_set.all()
@@ -216,18 +228,15 @@ class Investigation(NodeCollection):
         """
         file_store_items = []
 
-        try:
-            study = Study.objects.get(investigation=self)
-        except (Study.DoesNotExist, Study.MultipleObjectsReturned) as e:
-            logger.error("Could not fetch Study properly: %s", e)
-        else:
-            file_store_item_uuids = [
-                node.file_uuid for node in Node.objects.filter(study=study)
-                if node.file_uuid
-            ]
-            file_store_items += list(
-                FileStoreItem.objects.filter(uuid__in=file_store_item_uuids)
+        file_store_item_uuids = [
+            node.file_uuid for node in Node.objects.filter(
+                study=self.get_study()
             )
+            if node.file_uuid
+        ]
+        file_store_items += list(
+            FileStoreItem.objects.filter(uuid__in=file_store_item_uuids)
+        )
         if not exclude_metadata_file:
             file_store_items.append(self.get_file_store_item())
 
