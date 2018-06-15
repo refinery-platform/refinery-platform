@@ -2284,13 +2284,14 @@ class MetadataImportTestBase(IsaTabTestBase):
         self.assertEqual(Investigation.objects.count(), 0)
         self.assertEqual(Assay.objects.count(), 0)
 
+    def get_test_file_path(self, file_name):
+        return os.path.join(TEST_DATA_BASE_PATH, file_name)
+
 
 class ProcessISATabViewTests(MetadataImportTestBase):
     @mock.patch.object(data_set_manager.views.import_file, "delay")
     def test_post_good_isa_tab_file(self, delay_mock):
-        with open(
-            os.path.join(TEST_DATA_BASE_PATH, 'rfc-test.zip')
-        ) as good_isa:
+        with open(self.get_test_file_path('rfc-test.zip')) as good_isa:
             self.post_isa_tab(isa_tab_file=good_isa)
         self.successful_import_assertions()
 
@@ -2299,15 +2300,11 @@ class ProcessISATabViewTests(MetadataImportTestBase):
         REFINERY_DATA_IMPORT_DIR=os.path.abspath(TEST_DATA_BASE_PATH)
     )
     def test_post_good_isa_tab_file_with_datafiles(self):
-        [
+        for name in ["rfc94.txt", "rfc134.txt"]:
             open(os.path.join(self.test_user_directory, name), "a").close()
-            for name in ["rfc94.txt", "rfc134.txt"]
-        ]
 
-        with open(
-            os.path.join(TEST_DATA_BASE_PATH, 'rfc-test-local.zip')
-        ) as good_isa_referencing_local_files:
-            self.post_isa_tab(isa_tab_file=good_isa_referencing_local_files)
+        with open(self.get_test_file_path('rfc-test-local.zip')) as isa_tab:
+            self.post_isa_tab(isa_tab_file=isa_tab)
 
         investigation = DataSet.objects.last().get_investigation()
         self.assertEqual(DataSet.objects.count(), 1)
@@ -2318,19 +2315,15 @@ class ProcessISATabViewTests(MetadataImportTestBase):
     @mock.patch.object(data_set_manager.views.import_file, "delay")
     def test_node_index_update_object_called_with_proper_args(self,
                                                               delay_mock):
-        with open(
-            os.path.join(TEST_DATA_BASE_PATH, 'rfc-test.zip')
-        ) as good_isa:
-            self.post_isa_tab(isa_tab_file=good_isa)
+        with open(self.get_test_file_path('rfc-test.zip')) as isa_tab:
+            self.post_isa_tab(isa_tab_file=isa_tab)
         self.update_node_index_mock.assert_called_with(
             ANY,
             using="data_set_manager"
         )
 
     def test_post_bad_isa_tab_file(self):
-        with open(
-            os.path.join(TEST_DATA_BASE_PATH, 'HideLabBrokenA.zip')
-        ) as bad_isa:
+        with open(self.get_test_file_path('HideLabBrokenA.zip')) as bad_isa:
             self.post_isa_tab(isa_tab_file=bad_isa)
         self.unsuccessful_import_assertions()
 
@@ -2340,24 +2333,16 @@ class ProcessISATabViewTests(MetadataImportTestBase):
 
     @override_settings(CELERY_ALWAYS_EAGER=True)
     def test_metadata_revision_works_grammatical_changes_only(self):
-        with open(
-            os.path.join(TEST_DATA_BASE_PATH, 'rfc-test-local.zip')
-        ) as good_isa_referencing_local_files:
-            self.post_isa_tab(isa_tab_file=good_isa_referencing_local_files)
-
+        with open(self.get_test_file_path('rfc-test-local.zip')) as isa_tab:
+            self.post_isa_tab(isa_tab_file=isa_tab)
         data_set = DataSet.objects.last()
 
         self.assertFalse(
             AnnotatedNode.objects.filter(attribute_value="EDITED")
         )
 
-        with open(
-            os.path.join(TEST_DATA_BASE_PATH, 'rfc-test-local-edited.zip')
-        ) as isatab_with_revised_metadata:
-            self.post_isa_tab(
-                isa_tab_file=isatab_with_revised_metadata,
-                data_set_uuid=data_set.uuid
-            )
+        with open(self.get_test_file_path('rfc-test-local-edited.zip')) as f:
+            self.post_isa_tab(isa_tab_file=f, data_set_uuid=data_set.uuid)
         self.assertTrue(
             AnnotatedNode.objects.filter(attribute_value="EDITED")
         )
@@ -2368,25 +2353,15 @@ class ProcessISATabViewTests(MetadataImportTestBase):
     )
     def test_metadata_revision_works_existing_datafiles_persisted(self):
         local_data_file_names = ["rfc94.txt", "rfc134.txt"]
-        [
+        for name in local_data_file_names:
             open(os.path.join(self.test_user_directory, name), "a").close()
-            for name in local_data_file_names
-        ]
 
-        with open(
-            os.path.join(TEST_DATA_BASE_PATH, 'rfc-test-local.zip')
-        ) as good_isa_referencing_local_files:
-            self.post_isa_tab(isa_tab_file=good_isa_referencing_local_files)
-
+        with open(self.get_test_file_path('rfc-test-local.zip')) as isa_tab:
+            self.post_isa_tab(isa_tab_file=isa_tab)
         data_set = DataSet.objects.last()
 
-        with open(
-            os.path.join(TEST_DATA_BASE_PATH, 'rfc-test-local-edited.zip')
-        ) as isatab_with_revised_metadata:
-            self.post_isa_tab(
-                isa_tab_file=isatab_with_revised_metadata,
-                data_set_uuid=data_set.uuid
-            )
+        with open(self.get_test_file_path('rfc-test-local-edited.zip')) as f:
+            self.post_isa_tab(isa_tab_file=f, data_set_uuid=data_set.uuid)
         data_set_count = DataSet.objects.count()
         revised_data_set = DataSet.objects.last()
 
@@ -2414,31 +2389,19 @@ class ProcessISATabViewTests(MetadataImportTestBase):
     )
     def test_metadata_revision_works_datafiles_added_during_revision(self):
         local_data_file_names = ["rfc94.txt", "rfc134.txt"]
-        [
+        for name in local_data_file_names:
             open(os.path.join(self.test_user_directory, name), "a").close()
-            for name in local_data_file_names
-        ]
 
-        with open(
-                os.path.join(TEST_DATA_BASE_PATH, 'rfc-test-local.zip')
-        ) as good_isa_referencing_local_files:
-            self.post_isa_tab(isa_tab_file=good_isa_referencing_local_files)
-
+        with open(self.get_test_file_path('rfc-test-local.zip')) as isa_tab:
+            self.post_isa_tab(isa_tab_file=isa_tab)
         data_set = DataSet.objects.last()
 
         local_data_file_names_for_revision = ["rfc111.txt"]
-        [
+        for name in local_data_file_names_for_revision:
             open(os.path.join(self.test_user_directory, name), "a").close()
-            for name in local_data_file_names_for_revision
-        ]
 
-        with open(
-                os.path.join(TEST_DATA_BASE_PATH, 'rfc-test-local-edited.zip')
-        ) as isatab_with_revised_metadata:
-            self.post_isa_tab(
-                isa_tab_file=isatab_with_revised_metadata,
-                data_set_uuid=data_set.uuid
-            )
+        with open(self.get_test_file_path('rfc-test-local-edited.zip')) as f:
+            self.post_isa_tab(isa_tab_file=f, data_set_uuid=data_set.uuid)
         data_set_count = DataSet.objects.count()
         revised_data_set = DataSet.objects.last()
 
@@ -2464,9 +2427,7 @@ class ProcessISATabViewTests(MetadataImportTestBase):
 
     def test_metadata_revision_fails_with_unclean_dataset(self):
         analyses, data_set = make_analyses_with_single_dataset(1, self.user)
-        with open(
-            os.path.join(TEST_DATA_BASE_PATH, 'rfc-test.zip')
-        ) as isa_tab_file:
+        with open(self.get_test_file_path('rfc-test.zip')) as isa_tab_file:
             response = self.post_isa_tab(
                 isa_tab_file=isa_tab_file, data_set_uuid=data_set.uuid
             )
@@ -2482,13 +2443,9 @@ class ProcessISATabViewTests(MetadataImportTestBase):
     def test_metadata_revision_fails_original_datafiles_not_referenced(self):
         data_set = create_dataset_with_necessary_models()
         metadata_file_name = 'rfc-test-local.zip'
-        with open(
-                os.path.join(TEST_DATA_BASE_PATH, metadata_file_name)
-        ) as isa_tab_file_dissimilar_datafile_names:
-            response = self.post_isa_tab(
-                isa_tab_file=isa_tab_file_dissimilar_datafile_names,
-                data_set_uuid=data_set.uuid
-            )
+        with open(self.get_test_file_path(metadata_file_name)) as isa_tab:
+            response = self.post_isa_tab(isa_tab_file=isa_tab,
+                                         data_set_uuid=data_set.uuid)
             self.assertEqual(response.status_code, 400)
             self.assertIn(
                 "Existing data files from DataSet: {} are not all referenced "
@@ -2518,12 +2475,11 @@ class ProcessMetadataTableViewTests(MetadataImportTestBase):
     def post_tabular_meta_data_file(self,
                                     meta_data_file=None,
                                     data_set_uuid=None,
-                                    user=None,
-                                    title=None,
-                                    data_file_column=None,
-                                    species_column=None,
-                                    source_column_index=None,
-                                    delimiter=None):
+                                    title="Test Tabular File",
+                                    data_file_column=2,
+                                    species_column=1,
+                                    source_column_index=0,
+                                    delimiter="comma"):
         post_data = {
             "file": meta_data_file,
             "title": title,
@@ -2536,7 +2492,6 @@ class ProcessMetadataTableViewTests(MetadataImportTestBase):
         if data_set_uuid is not None:
             url += "?data_set_uuid={}".format(data_set_uuid)
 
-        self.client.login(username=user.username, password=user.password)
         response = self.client.post(
             url,
             data=post_data,
@@ -2546,18 +2501,11 @@ class ProcessMetadataTableViewTests(MetadataImportTestBase):
 
     @mock.patch.object(data_set_manager.views.import_file, "delay")
     def test_post_good_tabular_file(self, delay_mock):
-        user = User.objects.create_user("test", password="test")
         with open(
-            os.path.join(TEST_DATA_BASE_PATH, 'single-file/two-line-local.csv')
+            self.get_test_file_path('single-file/two-line-local.csv')
         ) as good_meta_data_file:
             self.post_tabular_meta_data_file(
-                meta_data_file=good_meta_data_file,
-                user=user,
-                title="Title",
-                data_file_column=2,
-                species_column=1,
-                source_column_index=0,
-                delimiter="comma"
+                meta_data_file=good_meta_data_file
             )
         self.successful_import_assertions()
 
@@ -2566,23 +2514,14 @@ class ProcessMetadataTableViewTests(MetadataImportTestBase):
         REFINERY_DATA_IMPORT_DIR=os.path.abspath(TEST_DATA_BASE_PATH)
     )
     def test_post_good_tabular_file_with_datafiles(self):
-        [
+        for name in ["test1.txt", "test2.txt"]:
             open(os.path.join(self.test_user_directory, name), "a").close()
-            for name in ["test1.txt", "test2.txt"]
-        ]
 
-        user = User.objects.create_user("test", password="test")
         with open(
             os.path.join(TEST_DATA_BASE_PATH, 'single-file/two-line-local.csv')
         ) as good_meta_data_file:
             self.post_tabular_meta_data_file(
-                meta_data_file=good_meta_data_file,
-                user=user,
-                title="Title",
-                data_file_column=2,
-                species_column=1,
-                source_column_index=0,
-                delimiter="comma"
+                meta_data_file=good_meta_data_file
             )
 
         investigation = DataSet.objects.last().get_investigation()
@@ -2593,40 +2532,22 @@ class ProcessMetadataTableViewTests(MetadataImportTestBase):
 
     @override_settings(CELERY_ALWAYS_EAGER=True)
     def test_metadata_revision_works_grammatical_changes_only(self):
-        user = User.objects.create_user("test", password="test")
         with open(
-                os.path.join(TEST_DATA_BASE_PATH,
-                             'single-file/two-line-local.csv')
+            self.get_test_file_path('single-file/two-line-local.csv')
         ) as good_meta_data_file:
             self.post_tabular_meta_data_file(
-                meta_data_file=good_meta_data_file,
-                user=user,
-                title="Title",
-                data_file_column=2,
-                species_column=1,
-                source_column_index=0,
-                delimiter="comma"
+                meta_data_file=good_meta_data_file
             )
-
         data_set = DataSet.objects.last()
-
         self.assertFalse(
             AnnotatedNode.objects.filter(attribute_value="EDITED")
         )
-
         with open(
-                os.path.join(TEST_DATA_BASE_PATH,
-                             'single-file/three-line-local.csv')
+            self.get_test_file_path('single-file/three-line-local.csv')
         ) as good_meta_data_file:
             self.post_tabular_meta_data_file(
                 meta_data_file=good_meta_data_file,
-                data_set_uuid=data_set.uuid,
-                user=user,
-                title="Edited Title",
-                data_file_column=2,
-                species_column=1,
-                source_column_index=0,
-                delimiter="comma"
+                data_set_uuid=data_set.uuid
             )
         # Assert no new DataSet created
         self.assertEqual(DataSet.objects.count(), 1)
@@ -2640,40 +2561,22 @@ class ProcessMetadataTableViewTests(MetadataImportTestBase):
     )
     def test_metadata_revision_works_existing_datafiles_persisted(self):
         local_data_file_names = ["test1.txt", "test2.txt"]
-        [
+        for name in local_data_file_names:
             open(os.path.join(self.test_user_directory, name), "a").close()
-            for name in local_data_file_names
-        ]
-
-        user = User.objects.create_user("test", password="test")
         with open(
-                os.path.join(TEST_DATA_BASE_PATH,
-                             'single-file/two-line-local.csv')
+            self.get_test_file_path('single-file/two-line-local.csv')
         ) as good_meta_data_file:
             self.post_tabular_meta_data_file(
-                meta_data_file=good_meta_data_file,
-                user=user,
-                title="Title",
-                data_file_column=2,
-                species_column=1,
-                source_column_index=0,
-                delimiter="comma"
+                meta_data_file=good_meta_data_file
             )
         data_set = DataSet.objects.last()
 
         with open(
-                os.path.join(TEST_DATA_BASE_PATH,
-                             'single-file/three-line-local.csv')
+            self.get_test_file_path('single-file/three-line-local.csv')
         ) as good_meta_data_file:
             self.post_tabular_meta_data_file(
                 meta_data_file=good_meta_data_file,
-                data_set_uuid=data_set.uuid,
-                user=user,
-                title="Edited Title",
-                data_file_column=2,
-                species_column=1,
-                source_column_index=0,
-                delimiter="comma"
+                data_set_uuid=data_set.uuid
             )
         data_set_count = DataSet.objects.count()
         revised_data_set = DataSet.objects.last()
@@ -2702,43 +2605,26 @@ class ProcessMetadataTableViewTests(MetadataImportTestBase):
     )
     def test_metadata_revision_works_datafiles_added_during_revision(self):
         local_data_file_names = ["test1.txt", "test2.txt"]
-        [
+        for name in local_data_file_names:
             open(os.path.join(self.test_user_directory, name), "a").close()
-            for name in local_data_file_names
-        ]
+
         with open(
-                os.path.join(TEST_DATA_BASE_PATH,
-                             'single-file/two-line-local.csv')
+            self.get_test_file_path('single-file/two-line-local.csv')
         ) as good_meta_data_file:
             self.post_tabular_meta_data_file(
-                meta_data_file=good_meta_data_file,
-                user=self.user,
-                title="Title",
-                data_file_column=2,
-                species_column=1,
-                source_column_index=0,
-                delimiter="comma"
+                meta_data_file=good_meta_data_file
             )
         data_set = DataSet.objects.last()
 
         local_data_file_names_for_revision = ["test3.txt"]
-        [
+        for name in local_data_file_names_for_revision:
             open(os.path.join(self.test_user_directory, name), "a").close()
-            for name in local_data_file_names_for_revision
-        ]
         with open(
-                os.path.join(TEST_DATA_BASE_PATH,
-                             'single-file/three-line-local.csv')
+            self.get_test_file_path('single-file/three-line-local.csv')
         ) as good_meta_data_file:
             self.post_tabular_meta_data_file(
                 meta_data_file=good_meta_data_file,
-                data_set_uuid=data_set.uuid,
-                user=self.user,
-                title="Edited Title",
-                data_file_column=2,
-                species_column=1,
-                source_column_index=0,
-                delimiter="comma"
+                data_set_uuid=data_set.uuid
             )
         data_set_count = DataSet.objects.count()
         revised_data_set = DataSet.objects.last()
@@ -2767,18 +2653,11 @@ class ProcessMetadataTableViewTests(MetadataImportTestBase):
     def test_metadata_revision_fails_with_unclean_dataset(self):
         analyses, data_set = make_analyses_with_single_dataset(1, self.user)
         with open(
-                os.path.join(TEST_DATA_BASE_PATH,
-                             'single-file/three-line-local.csv')
+            self.get_test_file_path('single-file/three-line-local.csv')
         ) as good_meta_data_file:
             response = self.post_tabular_meta_data_file(
                 meta_data_file=good_meta_data_file,
-                data_set_uuid=data_set.uuid,
-                user=self.user,
-                title="Edited Title",
-                data_file_column=2,
-                species_column=1,
-                source_column_index=0,
-                delimiter="comma"
+                data_set_uuid=data_set.uuid
             )
             self.assertEqual(
                 json.loads(response.content),
@@ -2795,18 +2674,11 @@ class ProcessMetadataTableViewTests(MetadataImportTestBase):
     def test_metadata_revision_fails_original_datafiles_not_referenced(self):
         data_set = create_dataset_with_necessary_models()
         with open(
-                os.path.join(TEST_DATA_BASE_PATH,
-                             'single-file/two-line-s3.csv')
+            self.get_test_file_path('single-file/two-line-s3.csv')
         ) as good_meta_data_file:
             response = self.post_tabular_meta_data_file(
                 meta_data_file=good_meta_data_file,
-                data_set_uuid=data_set.uuid,
-                user=self.user,
-                title="Edited Title",
-                data_file_column=2,
-                species_column=1,
-                source_column_index=0,
-                delimiter="comma"
+                data_set_uuid=data_set.uuid
             )
             self.assertIn(
                 "Existing data files from DataSet: {} are not all referenced "
