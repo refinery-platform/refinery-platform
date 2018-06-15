@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 
 from django.db import migrations
 from django.utils import timezone
+from guardian.shortcuts import get_groups_with_perms
 
 
 def create_initial_site_statistics(apps, schema_editor):
@@ -18,7 +19,8 @@ def create_initial_site_statistics(apps, schema_editor):
         run_date=timezone.now(),
         datasets_uploaded=DataSet.objects.count(),
         datasets_shared=len(
-            [dataset for dataset in DataSet.objects.all() if dataset.shared]
+             [dataset for dataset in DataSet.objects.all() if
+              get_groups_with_perms(dataset)]
         ),
         users_created=User.objects.count(),
         groups_created=ExtendedGroup.objects.exclude(
