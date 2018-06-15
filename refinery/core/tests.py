@@ -1594,8 +1594,7 @@ class DataSetTests(TestCase):
         self.assertFalse(tool.dataset.is_clean())
 
     def test_is_clean_if_dataset_is_shared(self):
-        analyses, dataset = make_analyses_with_single_dataset(1, self.user)
-        analyses.delete()
+        dataset = create_dataset_with_necessary_models()
         dataset.share(ExtendedGroup.objects.public_group())
         self.assertTrue(dataset.is_clean())
 
