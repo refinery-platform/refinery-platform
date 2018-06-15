@@ -15,7 +15,8 @@ from .views import (AddFilesToDataSetView, Assays, AssaysAttributes,
                     AssaysFiles, CheckDataFilesView,
                     ChunkedFileUploadCompleteView, ChunkedFileUploadView,
                     DataSetImportView, ImportISATabView, ProcessISATabView,
-                    ProcessMetadataTableView, TakeOwnershipOfPublicDatasetView)
+                    ProcessMetadataTableView, RemoveFileFromNodeView,
+                    TakeOwnershipOfPublicDatasetView)
 
 urlpatterns = patterns(
     'data_set_manager.views',
@@ -46,6 +47,8 @@ urlpatterns = patterns(
         name='take_ownership_of_public_dataset'),
     url(r'^add-files/$', login_required(AddFilesToDataSetView.as_view()),
         name='add_files_to_data_set'),
+    url(r'^remove-file/$', login_required(RemoveFileFromNodeView.as_view()),
+        name='remove_file_from_node'),
 )
 
 # DRF url routing
