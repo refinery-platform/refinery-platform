@@ -1610,7 +1610,7 @@ class UtilitiesTests(TestCase):
         self.assertEqual(len(nodes_after), 0)
         # TODO: Is this the behavior we expect?
 
-    def test__update_existing_dataset_with_revised_investigation(self):
+    def test_update_existing_dataset_with_revised_investigation(self):
         existing_dataset = create_dataset_with_necessary_models()
         new_dataset = create_dataset_with_necessary_models()
         update_existing_dataset_with_revised_investigation(
@@ -1619,6 +1619,12 @@ class UtilitiesTests(TestCase):
         self.assertEqual(existing_dataset.get_version(), 2)
         self.assertEqual(existing_dataset.get_investigation(),
                          new_dataset.get_investigation())
+        self.assertEqual(
+            existing_dataset.get_latest_investigation_link().message,
+            "Metadata Revision: for {}".format(
+                new_dataset.get_investigation().title
+            )
+        )
 
 
 class NodeClassMethodTests(TestCase):
