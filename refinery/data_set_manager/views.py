@@ -14,10 +14,10 @@ import urlparse
 from django import forms
 from django.conf import settings
 from django.core.urlresolvers import reverse
-from django.http import (
-    Http404, HttpResponse, HttpResponseBadRequest, HttpResponseForbidden,
-    HttpResponseRedirect, HttpResponseServerError, JsonResponse
-)
+from django.http import (Http404, HttpResponse, HttpResponseBadRequest,
+                         HttpResponseForbidden, HttpResponseNotFound,
+                         HttpResponseRedirect, HttpResponseServerError,
+                         JsonResponse)
 from django.shortcuts import get_object_or_404, render, render_to_response
 from django.template import RequestContext
 from django.views.generic import View
@@ -991,3 +991,30 @@ class AssaysAttributes(APIView):
         else:
             message = 'Only owner may edit attribute order.'
             return Response(message, status=status.HTTP_401_UNAUTHORIZED)
+
+
+class AddFilesToDataSetView(View):
+    """Add file(s) to an existing data set from upload directory or bucket"""
+    def post(self, request):
+        try:
+            data_set = DataSet.objects.get(uuid=request.POST['data_set_uuid'])
+        except KeyError:
+            logger.error("Data set UUID was not provided in request")
+            return HttpResponseBadRequest()
+        except DataSet.DoesNotExist:
+            logger.error("Data set with UUID '%s' does not exist",
+                         request.POST.get('data_set_uuid'))
+            return HttpResponseNotFound()
+        except DataSet.MultipleObjectsReturned:
+            logger.critical("Multiple data sets found with UUID '%s'",
+                            request.POST.get('data_set_uuid'))
+            return HttpResponseServerError()
+
+        logger.debug("Adding files to data set '%s'", data_set)
+        for file_store_item in data_set.get_file_store_items():
+            if (file_store_item.source.startswith(
+                    (settings.REFINERY_DATA_IMPORT_DIR, 's3://')
+            )):
+                import_file.delay(file_store_item.uuid)
+
+        return HttpResponse()  # 200
