@@ -68,6 +68,21 @@ class UserProfileSerializer(serializers.ModelSerializer):
         model = UserProfile
         fields = ['primary_group']
 
+    def validate_primary_group(self, group):
+        user = self.context.get('request').user
+        if user.id in group.user_set.values_list('id', flat=True):
+            pass
+        else:
+            raise serializers.ValidationError(
+                'User is not a member of group, %s', group
+            )
+
+        if group.name != 'Public':
+            return group
+        else:
+            raise serializers.ValidationError('Primary group can not be '
+                                              'the Public group')
+
     def partial_update(self, instance, validated_data):
         """
         Update and return an existing `UserProfile` instance, given the
