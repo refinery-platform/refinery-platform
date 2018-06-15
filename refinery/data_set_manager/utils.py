@@ -1203,8 +1203,8 @@ def update_existing_dataset_with_revised_investigation(
     Update an existing DataSet's Investigation with a new Investigation as
     long as some specific constraints are met.
     - Said DataSet must be "clean" (No Analyses or Visualizations performed)
-    - No data files can be added or removed between the existing DataSet and
-    new Investigation
+    - All datafiles from the existing DataSet must be referenced in the new
+    Investigation
     Any data files that were uploaded prior to this operation will be
     reassociated and available from the new Investigation
     :param revised_investigation: A newly created Investigation instance
@@ -1213,9 +1213,6 @@ def update_existing_dataset_with_revised_investigation(
     existing_dataset = core.models.DataSet.objects.get(
         uuid=existing_dataset_uuid
     )
-
-    # Check if existing DataSet's latest Investigation has data files that
-    # have already been uploaded into Refinery
     associate_datafiles_from_existing_dataset(
         existing_dataset, revised_investigation
     )
