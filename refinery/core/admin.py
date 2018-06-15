@@ -13,10 +13,9 @@ from tool_manager.utils import AdminFieldPopulator
 
 from .models import (
     Analysis, AnalysisNodeConnection, AnalysisResult, DataSet, Download,
-    ExtendedGroup, InvestigationLink, Invitation, Ontology, Project,
+    ExtendedGroup, Event, InvestigationLink, Invitation, Ontology, Project,
     SiteProfile, SiteStatistics, Tutorials, UserProfile, Workflow,
-    WorkflowEngine,
-    Event)
+    WorkflowEngine)
 from .utils import admin_ui_deletion
 
 
