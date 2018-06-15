@@ -1010,6 +1010,9 @@ class AddFilesToDataSetView(View):
                             request.POST.get('data_set_uuid'))
             return HttpResponseServerError()
 
+        if request.user != data_set.get_owner():
+            return HttpResponseForbidden()
+
         logger.debug("Adding files to data set '%s'", data_set)
         for file_store_item in data_set.get_file_store_items():
             if (file_store_item.source.startswith(
@@ -1017,4 +1020,4 @@ class AddFilesToDataSetView(View):
             )):
                 import_file.delay(file_store_item.uuid)
 
-        return HttpResponse()  # 200
+        return HttpResponse(status=202)  # Accepted
