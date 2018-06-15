@@ -2431,6 +2431,21 @@ class ProcessISATabViewTests(MetadataImportTestBase):
                 local_data_file_names + local_data_file_names_for_revision
             )
 
+    @override_settings(
+        CELERY_ALWAYS_EAGER=True,
+        REFINERY_DATA_IMPORT_DIR=os.path.abspath(TEST_DATA_BASE_PATH)
+    )
+    def test_metadata_revision_updates_dataset_title(self):
+        with open(self.get_test_file_path('rfc-test-local.zip')) as isa_tab:
+            self.post_isa_tab(isa_tab_file=isa_tab)
+        data_set = DataSet.objects.last()
+        with open(self.get_test_file_path('rfc-test-local-edited.zip')) as f:
+            self.post_isa_tab(isa_tab_file=f, data_set_uuid=data_set.uuid)
+
+        revised_data_set = DataSet.objects.last()
+        self.assertEqual(revised_data_set.title,
+                         'Request for Comments (RFC) Test Edited')
+
     def test_metadata_revision_fails_with_unclean_dataset(self):
         analyses, data_set = make_analyses_with_single_dataset(1, self.user)
         with open(self.get_test_file_path('rfc-test.zip')) as isa_tab_file:
@@ -2654,6 +2669,30 @@ class ProcessMetadataTableViewTests(MetadataImportTestBase):
                 os.path.basename(file_store_item.source),
                 local_data_file_names + local_data_file_names_for_revision
             )
+
+    @override_settings(
+        CELERY_ALWAYS_EAGER=True,
+        REFINERY_DATA_IMPORT_DIR=os.path.abspath(TEST_DATA_BASE_PATH)
+    )
+    def test_metadata_revision_updates_dataset_title(self):
+        with open(
+                self.get_test_file_path('single-file/two-line-local.csv')
+        ) as good_meta_data_file:
+            self.post_tabular_meta_data_file(
+                meta_data_file=good_meta_data_file,
+            )
+        data_set = DataSet.objects.last()
+        with open(
+                self.get_test_file_path('single-file/three-line-local.csv')
+        ) as good_meta_data_file:
+            self.post_tabular_meta_data_file(
+                meta_data_file=good_meta_data_file,
+                data_set_uuid=data_set.uuid,
+                title="New Title"
+            )
+
+        revised_data_set = DataSet.objects.last()
+        self.assertEqual(revised_data_set.title, "New Title")
 
     @override_settings(CELERY_ALWAYS_EAGER=True)
     def test_metadata_revision_fails_with_unclean_dataset(self):
