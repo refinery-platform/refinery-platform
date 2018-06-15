@@ -1,11 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from django.db import models, migrations
+from django.db import migrations
 from django.utils import timezone
-
-
-from core.models import DataSet, UserProfile
 
 
 def create_initial_site_statistics(apps, schema_editor):
@@ -14,6 +11,8 @@ def create_initial_site_statistics(apps, schema_editor):
     ExtendedGroup = apps.get_model("core", "ExtendedGroup")
     WorkflowTool = apps.get_model("tool_manager", "WorkflowTool")
     VisualizationTool = apps.get_model("tool_manager", "VisualizationTool")
+    UserProfile = apps.get_model("core", "UserProfile")
+    DataSet = apps.get_model("core", "DataSet")
 
     SiteStatistics.objects.create(
         run_date=timezone.now(),
@@ -22,7 +21,9 @@ def create_initial_site_statistics(apps, schema_editor):
             [dataset for dataset in DataSet.objects.all() if dataset.shared]
         ),
         users_created=User.objects.count(),
-        groups_created=ExtendedGroup.objects.exclude(manager_group=None).count(),
+        groups_created=ExtendedGroup.objects.exclude(
+            manager_group=None
+        ).count(),
         unique_user_logins=User.objects.filter(
             last_login__lte=timezone.now()
         ).count(),
