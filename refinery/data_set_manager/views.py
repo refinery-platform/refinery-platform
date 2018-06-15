@@ -1021,7 +1021,7 @@ class AddFilesToDataSetView(View):
 
 
 class RemoveFileFromNodeView(View):
-    """Remove file(s) from an existing data set"""
+    """Remove file from a Node instance"""
     def post(self, request):
         try:
             node = Node.objects.get(uuid=request.POST['node_uuid'])
