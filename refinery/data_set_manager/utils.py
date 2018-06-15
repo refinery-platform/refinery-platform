@@ -1196,9 +1196,8 @@ def get_solr_response_json(node_uuids):
     return format_solr_response(solr_response)
 
 
-def update_existing_dataset_with_revised_investigation(
-        existing_dataset_uuid, revised_investigation
-):
+def update_existing_dataset_with_revised_investigation(existing_dataset_uuid,
+                                                       revised_investigation):
     """
     Update an existing DataSet's Investigation with a new Investigation as
     long as some specific constraints are met.
@@ -1226,9 +1225,8 @@ def update_existing_dataset_with_revised_investigation(
 
 
 @transaction.atomic()
-def associate_datafiles_from_existing_dataset(
-        existing_dataset, revised_investigation
-):
+def associate_datafiles_from_existing_dataset(existing_dataset,
+                                              revised_investigation):
     """
     Transfer data files from an existing DataSet's FileStoreItems that
     correspond to data files of the same source in an Investigation's
