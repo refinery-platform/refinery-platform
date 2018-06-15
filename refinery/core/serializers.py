@@ -1,6 +1,7 @@
 import logging
 
 import celery
+from django.conf import settings
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 
@@ -77,7 +78,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
                 'User is not a member of group, %s', group
             )
 
-        if group.name != 'Public':
+        if group.name != settings.REFINERY_PUBLIC_GROUP_NAME:
             return group
         else:
             raise serializers.ValidationError('Primary group can not be '

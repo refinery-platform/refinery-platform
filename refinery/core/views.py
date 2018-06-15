@@ -1083,7 +1083,7 @@ class OpenIDToken(APIView):
 
 
 class UserProfileViewSet(APIView):
-    """API endpoint that allows for UserProfiles to be edits.
+    """API endpoint that allows for UserProfiles to be edited.
      ---
     #YAML
 
@@ -1108,21 +1108,21 @@ class UserProfileViewSet(APIView):
     http_method_names = ["patch"]
 
     def patch(self, request, uuid):
-        if not request.user.is_anonymous():
-            serializer = UserProfileSerializer(request.user.profile,
-                                               data=request.data,
-                                               partial=True,
-                                               context={'request': request})
-
-            if serializer.is_valid():
-                serializer.save()
-                return Response(
-                    serializer.data, status=status.HTTP_202_ACCEPTED
-                )
-            return Response(
-                serializer.errors, status=status.HTTP_400_BAD_REQUEST
-            )
-        else:
+        if request.user.is_anonymous():
             return Response(
                 self.user, status=status.HTTP_401_UNAUTHORIZED
             )
+
+        serializer = UserProfileSerializer(request.user.profile,
+                                           data=request.data,
+                                           partial=True,
+                                           context={'request': request})
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(
+                serializer.data, status=status.HTTP_202_ACCEPTED
+            )
+        return Response(
+            serializer.errors, status=status.HTTP_400_BAD_REQUEST
+        )
