@@ -2388,6 +2388,13 @@ class ProcessISATabViewTests(MetadataImportTestBase):
         ):
             self.assertIn(os.path.basename(file_store_item.source),
                           local_data_file_names)
+        # Assert that the prior Investigation is no longer pointing to local
+        #  datafiles
+        self.assertFalse(
+            data_set.get_investigation(version=1).get_file_store_items(
+                exclude_metadata_file=True, local_only=True
+            )
+        )
 
     @override_settings(
         CELERY_ALWAYS_EAGER=True,
@@ -2619,6 +2626,13 @@ class ProcessMetadataTableViewTests(MetadataImportTestBase):
         ):
             self.assertIn(os.path.basename(file_store_item.source),
                           local_data_file_names)
+        # Assert that the prior Investigation is no longer pointing to local
+        #  datafiles
+        self.assertFalse(
+            data_set.get_investigation(version=1).get_file_store_items(
+                exclude_metadata_file=True, local_only=True
+            )
+        )
 
     @override_settings(
         CELERY_ALWAYS_EAGER=True,
