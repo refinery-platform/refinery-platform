@@ -2635,7 +2635,7 @@ class ProcessMetadataTableViewTests(MetadataImportTestBase):
         # Assert that DataSet version incremented
         self.assertEqual(revised_data_set.get_version(), 2)
 
-        # Assert that all datafiles have been uploaded and associated 2 + 1
+        # Assert that all datafiles have been uploaded and associated
         investigation = revised_data_set.get_investigation()
         self.assertEqual(
             len(investigation.get_file_store_items(local_only=True)), 3
