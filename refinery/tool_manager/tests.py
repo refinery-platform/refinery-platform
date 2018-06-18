@@ -3553,12 +3553,6 @@ class WorkflowToolLaunchTests(ToolManagerTestBase):
         )
         self.assertEqual(self.tool.display_name, display_name)
 
-    def test_workflow_tool_creation_triggers_a_single_event(self):
-        Event.objects.all().delete()
-        create_tool_with_necessary_models("WORKFLOW")
-        self.assertEqual(Event.objects.filter(
-            sub_type=Event.ANALYSIS_CREATION).count(), 1)
-
 
 class VisualizationToolLaunchTests(ToolManagerTestBase):
     def setUp(self):
@@ -3734,12 +3728,6 @@ class VisualizationToolLaunchTests(ToolManagerTestBase):
             display_name=display_name
         )
         self.assertEqual(self.tool.display_name, display_name)
-
-    def test_visualization_tool_creation_triggers_a_single_event(self):
-        Event.objects.all().delete()
-        create_tool_with_necessary_models("VISUALIZATION")
-        self.assertEqual(Event.objects.filter(
-            sub_type=Event.VISUALIZATION_CREATION).count(), 1)
 
 
 class ToolLaunchConfigurationTests(ToolManagerTestBase):
@@ -4052,3 +4040,27 @@ class ParameterTests(TestCase):
                 test_float,
                 parameter.cast_param_value_to_proper_type(element)
             )
+
+
+class ToolEventCreationTests(TestCase):
+    def test_visualization_tool_creation_triggers_a_single_event(self):
+        create_tool_with_necessary_models("VISUALIZATION")
+
+        # A Tool needs a Dataset to be created. Assert that there is one Event
+        # for DataSet creation and one for Tool creation
+        self.assertEqual(Event.objects.count(), 2)
+        self.assertIsNotNone(Event.objects.get(type=Event.CREATE))
+        self.assertIsNotNone(
+            Event.objects.get(sub_type=Event.VISUALIZATION_CREATION)
+        )
+
+    def test_workflow_tool_creation_triggers_a_single_event(self):
+        create_tool_with_necessary_models("WORKFLOW")
+
+        # A Tool needs a Dataset to be created. Assert that there is one Event
+        # for DataSet creation and one for Tool creation
+        self.assertEqual(Event.objects.count(), 2)
+        self.assertIsNotNone(Event.objects.get(type=Event.CREATE))
+        self.assertIsNotNone(
+            Event.objects.get(sub_type=Event.ANALYSIS_CREATION)
+        )
