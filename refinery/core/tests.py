@@ -2073,6 +2073,6 @@ class EventTests(TestCase):
         self.assertEqual(
             event.get_details_as_dict(),
             {
-                u'display_name': u'{}'.format(tool.display_name)
+                u'display_name': tool.display_name
             }
         )
