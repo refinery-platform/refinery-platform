@@ -21,7 +21,8 @@ from factory_boy.utils import create_dataset_with_necessary_models
 
 from .models import (Analysis, DataSet, ExtendedGroup, Project,
                      Workflow, WorkflowEngine)
-from .views import AnalysesViewSet, DataSetsViewSet, WorkflowViewSet
+from .views import (AnalysesViewSet, DataSetsViewSet, UserProfileViewSet,
+                    WorkflowViewSet)
 
 cache = memcache.Client(["127.0.0.1:11211"])
 
@@ -934,3 +935,78 @@ class WorkflowApiV2Tests(APIV2TestCase):
             uuid=self.workflow.uuid
         )
         self.assertEqual(get_response.content, self.mock_workflow_graph)
+
+
+class UserProfileApiV2Tests(APIV2TestCase):
+    def setUp(self, **kwargs):
+        super(UserProfileApiV2Tests, self).setUp(
+            api_base_name="user_profiles/",
+            view=UserProfileViewSet.as_view()
+        )
+        self.user_lm = User.objects.create_user('lab_member',
+                                                'member@fake.com',
+                                                self.password)
+        self.lab_group = ExtendedGroup.objects.create(name="Lab Group")
+        self.non_lab_group = ExtendedGroup.objects.create(name="Test Group")
+        self.lab_group.group_ptr.user_set.add(self.user_lm)
+        self.non_lab_group.group_ptr.user_set.add(self.user)
+
+    def test_patch_primary_group_returns_success_status(self):
+        patch_request = self.factory.patch(
+            urljoin(self.url_root, self.user_lm.profile.uuid),
+            {"primary_group": self.lab_group.id}
+        )
+        patch_request.user = self.user_lm
+        force_authenticate(patch_request, user=self.user_lm)
+        patch_response = self.view(patch_request, self.user_lm.profile.uuid)
+        self.assertEqual(patch_response.status_code, 202)
+
+    def test_patch_primary_group_returns_success_group_id(self):
+        patch_request = self.factory.patch(
+            urljoin(self.url_root, self.user_lm.profile.uuid),
+            {"primary_group": self.lab_group.id}
+        )
+        patch_request.user = self.user_lm
+        force_authenticate(patch_request, user=self.user_lm)
+        patch_response = self.view(patch_request, self.user_lm.profile.uuid)
+        self.assertEqual(patch_response.data.get('primary_group'),
+                         self.lab_group.id)
+
+    def test_patch_primary_group_success_updates_profile(self):
+        patch_request = self.factory.patch(
+            urljoin(self.url_root, self.user_lm.profile.uuid),
+            {"primary_group": self.lab_group.id}
+        )
+        patch_request.user = self.user_lm
+        force_authenticate(patch_request, user=self.user_lm)
+        self.view(patch_request, self.user_lm.profile.uuid)
+        self.assertEqual(self.user_lm.profile.primary_group_id,
+                         self.lab_group.id)
+
+    def test_patch_primary_group_returns_unauthorized_for_anon_user(self):
+        patch_request = self.factory.patch(
+            urljoin(self.url_root, self.user_lm.profile.uuid),
+            {"primary_group": self.lab_group.id}
+        )
+        patch_response = self.view(patch_request, self.user_lm.profile.uuid)
+        self.assertEqual(patch_response.status_code, 401)
+
+    def test_patch_primary_group_returns_bad_request_for_invalid_group(self):
+        patch_request = self.factory.patch(
+            urljoin(self.url_root, self.user_lm.profile.uuid),
+            {"primary_group": 0}
+        )
+        patch_request.user = self.user_lm
+        force_authenticate(patch_request, user=self.user_lm)
+        patch_response = self.view(patch_request, self.user_lm.profile.uuid)
+        self.assertEqual(patch_response.status_code, 400)
+
+    def test_patch_primary_group_returns_bad_request_for_non_member(self):
+        patch_request = self.factory.patch(
+            urljoin(self.url_root, self.user_lm.profile.uuid),
+            {"primary_group": self.non_lab_group.id}
+        )
+        patch_request.user = self.user_lm
+        force_authenticate(patch_request, user=self.user_lm)
+        patch_response = self.view(patch_request, self.user_lm.profile.uuid)
+        self.assertEqual(patch_response.status_code, 400)
