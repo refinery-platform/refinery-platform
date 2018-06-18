@@ -90,6 +90,7 @@ class UserProfile(models.Model):
     uuid = UUIDField(unique=True, auto=True)
     user = models.OneToOneField(User, related_name='profile')
     affiliation = models.CharField(max_length=100, blank=True)
+    primary_group = models.ForeignKey(Group, blank=True, null=True)
     catch_all_project = models.ForeignKey('Project', blank=True, null=True)
     login_count = models.IntegerField(default=0)
 

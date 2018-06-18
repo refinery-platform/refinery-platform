@@ -300,32 +300,3 @@ class FileImportTaskTerminationTest(TestCase):
         ) as mock_terminate_task:
             self.item.save()
             mock_terminate_task.assert_not_called()
-
-
-@override_settings(REFINERY_DATA_IMPORT_DIR='/import/path')
-class TestSymlinkDatafile(TestCase):
-
-    def test_symlink_new_blank_item(self):
-        with mock.patch.object(FileStoreItem,
-                               '_symlink_datafile') as mock_symlink:
-            FileStoreItem.objects.create()
-            mock_symlink.assert_not_called()
-
-    def test_symlink_new_item_with_path_source(self):
-        with mock.patch.object(FileStoreItem,
-                               '_symlink_datafile') as mock_symlink:
-            FileStoreItem.objects.create(source='/example/path/test.txt')
-            mock_symlink.assert_called_once()
-
-    def test_symlink_new_item_with_url_source(self):
-        with mock.patch.object(FileStoreItem,
-                               '_symlink_datafile') as mock_symlink:
-            FileStoreItem.objects.create(source='https://example.org/test.txt')
-            mock_symlink.assert_not_called()
-
-    def test_symlink_new_item_with_import_dir_path_source(self):
-        with mock.patch.object(FileStoreItem,
-                               '_symlink_datafile') as mock_symlink:
-            FileStoreItem.objects.create(
-                source=settings.REFINERY_DATA_IMPORT_DIR + '/test.txt')
-            mock_symlink.assert_not_called()
