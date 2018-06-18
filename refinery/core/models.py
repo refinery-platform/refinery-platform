@@ -39,7 +39,6 @@ from cuser.middleware import CuserMiddleware
 from django.utils.functional import cached_property
 from django_auth_ldap.backend import LDAPBackend
 from django_extensions.db.fields import UUIDField
-
 from guardian.models import UserObjectPermission
 from guardian.shortcuts import (
     assign_perm, get_groups_with_perms, get_objects_for_group,
@@ -2263,7 +2262,7 @@ class Event(models.Model):
     type = models.CharField(max_length=32)
 
     sub_type = models.CharField(max_length=32)
-    json = models.TextField()
+    details = models.TextField()
 
     # Types
     CREATE = 'CREATE'
@@ -2272,10 +2271,15 @@ class Event(models.Model):
     # Note: No delete, because when the object in question no longer exists,
     # no one has any access to it.
 
+    def get_details_as_dict(self):
+        return json.loads(self.details)
+
     @staticmethod
     def record_data_set_create(data_set):
         user = CuserMiddleware.get_user()
-        Event.objects.create(data_set=data_set, user=user, type=Event.CREATE)
+        Event.objects.create(
+            data_set=data_set, user=user, type=Event.CREATE, details='{}'
+        )
 
     def render_data_set_create(self):
         return '{:%x %X}: {} created data set {}'.format(
@@ -2339,14 +2343,15 @@ class Event(models.Model):
         blob = json.dumps({
             'display_name': display_name
         })
-        event = Event(data_set=data_set, user=user, json=blob,
+        event = Event(data_set=data_set, user=user, details=blob,
                       type=Event.UPDATE, sub_type=Event.VISUALIZATION_CREATION)
         event.save()
 
     def render_data_set_visualization_creation(self):
-        data = json.loads(self.json)
+        details = self.get_details_as_dict()
         return '{:%x %X}: {} launched visualization {} on data set {}'.format(
-            self.date_time, self.user, data['display_name'], self.data_set.name
+            self.date_time, self.user, details['display_name'],
+            self.data_set.name
         )
 
     VISUALIZATION_DELETION = 'VISUALIZATION_DELETION'
@@ -2369,14 +2374,15 @@ class Event(models.Model):
         blob = json.dumps({
             'display_name': display_name
         })
-        event = Event(data_set=data_set, user=user, json=blob,
+        event = Event(data_set=data_set, user=user, details=blob,
                       type=Event.UPDATE, sub_type=Event.ANALYSIS_CREATION)
         event.save()
 
     def render_data_set_analysis_creation(self):
-        data = json.loads(self.json)
+        details = self.get_details_as_dict()
         return '{:%x %X}: {} launched analysis {} on data set {}'.format(
-            self.date_time, self.user, data['display_name'], self.data_set.name
+            self.date_time, self.user, details['display_name'],
+            self.data_set.name
         )
 
     ANALYSIS_DELETION = 'ANALYSIS_DELETION'
