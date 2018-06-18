@@ -2272,7 +2272,8 @@ class Event(models.Model):
     # no one has any access to it.
 
     def get_details_as_dict(self):
-        return json.loads(self.details)
+        if self.details:
+            return json.loads(self.details)
 
     @staticmethod
     def record_data_set_create(data_set):
