@@ -950,20 +950,18 @@ class EventApiV2Tests(APIV2TestCase):
         )
 
     def test_get_event_list_provides_access_control_between_users(self):
-        CuserMiddleware.set_user(self.user)
-
         # Create objects that trigger Events for "another_user"
         another_user = User.objects.create_user("Another", "User",
                                                 "another_user@example.com")
         create_tool_with_necessary_models("VISUALIZATION", user=another_user)
         events = Event.objects.all()
         self.assertEqual(len(events), 2)
-        get_request = self.factory.get(urljoin(self.url_root, '/'))
 
-        # Ensure that request made by "self.user" doesn't return Events from
-        #  "another_user"
+        get_request = self.factory.get(urljoin(self.url_root, '/'))
         get_request.user = self.user
         get_response = self.view(get_request).render()
+        # Ensure that request made by "self.user" doesn't return Events from
+        #  "another_user"
         self.assertEqual(json.loads(get_response.content), [])
 
     def test_get_event_list(self):
