@@ -1,4 +1,5 @@
-<div class="btn-group" uib-dropdown dropdown-append-to-body>
+<div ng-if="!$ctrl.primaryGroup" class="float-left">
+  <div class="btn-group" uib-dropdown dropdown-append-to-body>
     <button id="split-button" type="button"
       class="btn btn-primary btn-xs" title="Join a group">
       Set Primary Group
@@ -7,7 +8,6 @@
       <i class="caret"></i>
       <span class="sr-only">Primary Group</span>
     </button>
-  <span ng-if="!$ctrl.primary_group">
     <ul class="dropdown-menu" uib-dropdown-menu role="menu" aria-labelledby="split-button">
       <li role="menuitem">
         <a>
@@ -21,6 +21,25 @@
         Zebra Lab
       </a></li>
     </ul>
-  </span>
  </div>
+</div>
 
+<div ng-if="$ctrl.primaryGroup" class="float-left">
+  <button type="button"
+    class="btn btn-primary btn-xs" title="Join a group">
+    {{ $ctrl.primaryGroup }}
+  </button>
+</div>
+<div class="float-left p-l-1-3">
+  <a
+    popover-placement="right"
+    uib-popover-html="This is your <strong>Primary Group</strong>. Once selected, data
+    sets shared with this group will be displayed by default. To change your Primary Group
+    selection, use the <strong>Collaboration</strong> card."
+    popover-title="Title"
+    popover-trigger="'outsideClick'"
+    popover-append-to-body="true"
+    tabindex="0">
+      <i class="fa fa-question-circle info-icon icon-only"></i>
+  </a>
+</div>
