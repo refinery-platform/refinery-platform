@@ -825,9 +825,12 @@ class DataSet(SharableResource):
         existing_investigation = self.get_investigation()
         file_store_items_from_existing_dataset = \
             existing_investigation.get_file_store_items(local_only=True)
-
+        new_file_store_items = investigation.get_file_store_items()
+        new_sources = [f.source for f in new_file_store_items]
         for prior_file_store_item in file_store_items_from_existing_dataset:
-            for new_file_store_item in investigation.get_file_store_items():
+            if prior_file_store_item.source not in new_sources:
+                prior_file_store_item.delete_datafile()
+            for new_file_store_item in new_file_store_items:
                 if prior_file_store_item.source == new_file_store_item.source:
                     new_file_store_item.datafile = \
                         prior_file_store_item.datafile
