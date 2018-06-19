@@ -1059,23 +1059,17 @@ class AnalysisResource(ModelResource):
 class NodeResource(ModelResource):
     parents = fields.ToManyField('core.api.NodeResource', 'parents')
     study = fields.ToOneField('data_set_manager.api.StudyResource', 'study')
-    assay = fields.ToOneField(
-        'data_set_manager.api.AssayResource', 'assay', null=True
-    )
+    assay = fields.ToOneField('data_set_manager.api.AssayResource', 'assay',
+                              null=True)
     attributes = fields.ToManyField(
         'data_set_manager.api.AttributeResource',
         attribute=lambda bundle: (
             Attribute.objects
             .exclude(value__isnull=True)
             .exclude(value__exact='')
-            .filter(
-                node=bundle.obj,
-                subtype='organism'
-            )
+            .filter(node=bundle.obj, subtype='organism')
         ),
-        use_in='all',
-        full=True,
-        null=True
+        use_in='all', full=True, null=True
     )
 
     class Meta:
@@ -1085,7 +1079,7 @@ class NodeResource(ModelResource):
         # required for public data set access by anonymous users
         authentication = Authentication()
         authorization = Authorization()
-        allowed_methods = ["get"]
+        allowed_methods = ['get']
         fields = [
             'name', 'uuid', 'file_uuid', 'file_url', 'study', 'assay',
             'children', 'type', 'analysis_uuid', 'subanalysis', 'attributes'
