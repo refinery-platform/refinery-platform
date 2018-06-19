@@ -66,12 +66,13 @@ class DataSetImportView(View):
     def get(self, request, *args, **kwargs):
         form = ImportISATabFileForm()
         data_set_name = request.GET.get('data_set_name')
+        if data_set_name:
+            data_set_name = data_set_name.strip("/")
         context = RequestContext(
             request,
             {
                 'form': form,
-                'data_set_name': data_set_name.strip("/") if data_set_name
-                else None
+                'data_set_name': data_set_name
             }
         )
         response = render_to_response(self.template_name,
