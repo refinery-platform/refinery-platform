@@ -2469,7 +2469,7 @@ class ProcessISATabViewTests(MetadataImportTestBase):
             )
 
     def test_metadata_revision_fails_original_datafiles_not_referenced(self):
-        data_set = create_dataset_with_necessary_models()
+        data_set = create_dataset_with_necessary_models(user=self.user)
         metadata_file_name = 'rfc-test-local.zip'
         with open(self.get_test_file_path(metadata_file_name)) as isa_tab:
             response = self.post_isa_tab(isa_tab_file=isa_tab,
@@ -2479,6 +2479,18 @@ class ProcessISATabViewTests(MetadataImportTestBase):
                 "Existing data files from DataSet: {} are not all referenced "
                 "in the revised metadata file. The following data files aren't"
                 " referenced: test1.txt, test0.txt".format(data_set.uuid),
+                response.content
+            )
+
+    def test_metadata_revision_is_only_allowed_if_data_set_owner(self):
+        data_set = create_dataset_with_necessary_models()
+        metadata_file_name = 'rfc-test-local.zip'
+        with open(self.get_test_file_path(metadata_file_name)) as isa_tab:
+            response = self.post_isa_tab(isa_tab_file=isa_tab,
+                                         data_set_uuid=data_set.uuid)
+            self.assertEqual(response.status_code, 403)
+            self.assertIn(
+                "Metadata revision is only allowed for Data Set owners",
                 response.content
             )
 
@@ -2731,7 +2743,7 @@ class ProcessMetadataTableViewTests(MetadataImportTestBase):
 
     @override_settings(CELERY_ALWAYS_EAGER=True)
     def test_metadata_revision_fails_original_datafiles_not_referenced(self):
-        data_set = create_dataset_with_necessary_models()
+        data_set = create_dataset_with_necessary_models(user=self.user)
         with open(
             self.get_test_file_path('single-file/two-line-s3.csv')
         ) as good_meta_data_file:
@@ -2743,6 +2755,21 @@ class ProcessMetadataTableViewTests(MetadataImportTestBase):
                 "Existing data files from DataSet: {} are not all referenced "
                 "in the revised metadata file. The following data files aren't"
                 " referenced: test1.txt, test0.txt".format(data_set.uuid),
+                response.content
+            )
+
+    def test_metadata_revision_is_only_allowed_if_data_set_owner(self):
+        data_set = create_dataset_with_necessary_models()
+        with open(
+            self.get_test_file_path('single-file/two-line-s3.csv')
+        ) as good_meta_data_file:
+            response = self.post_tabular_meta_data_file(
+                meta_data_file=good_meta_data_file,
+                data_set_uuid=data_set.uuid
+            )
+            self.assertEqual(response.status_code, 403)
+            self.assertIn(
+                "Metadata revision is only allowed for Data Set owners",
                 response.content
             )
 
