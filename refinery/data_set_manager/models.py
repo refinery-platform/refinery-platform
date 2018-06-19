@@ -226,15 +226,13 @@ class Investigation(NodeCollection):
         :param local_only:  <Boolean> Whether or not to only include
         FileStoreItems that have been imported into Refinery
         """
-        file_store_items = []
-
         file_store_item_uuids = [
             node.file_uuid for node in Node.objects.filter(
                 study=self.get_study()
             )
             if node.file_uuid
         ]
-        file_store_items += list(
+        file_store_items = list(
             FileStoreItem.objects.filter(uuid__in=file_store_item_uuids)
         )
         if not exclude_metadata_file:
