@@ -88,6 +88,9 @@
                       ng-change="$ctrl.filterDataSets(group.id)"
                       value="{{ group.name }}">
                     {{ group.name }}
+                    <span ng-if="$ctrl.primaryGroupID == group.id">
+                      <i class="fa fa-asterisk"></i>
+                    </span>
                   </label>
                </span>
             </li>

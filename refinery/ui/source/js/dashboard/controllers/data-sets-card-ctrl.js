@@ -18,7 +18,8 @@
     '$uibModal',
     '$window',
     'DataSetSearchApi',
-    'dataSetV2Service'
+    'dataSetV2Service',
+    'settings'
   ];
 
   function DataSetsCardCtrl (
@@ -27,7 +28,8 @@
     $uibModal,
     $window,
     DataSetSearchApi,
-    dataSetV2Service
+    dataSetV2Service,
+    settings
   ) {
     var vm = this;
     vm.dataSets = [];
@@ -41,6 +43,7 @@
     vm.openDataSetTransferModal = openDataSetTransferModal;
     vm.openPermissionEditor = openPermissionEditor;
     vm.params = {};
+    vm.primaryGroupID = settings.djangoApp.userprofilePrimaryGroupID;
     vm.resetDataSetSearch = resetDataSetSearch;
     vm.searchDataSets = searchDataSets;
     vm.searchQueryDataSets = '';
