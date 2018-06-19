@@ -254,6 +254,15 @@ class ProcessISATabView(View):
         form = ImportISATabFileForm(request.POST, request.FILES)
         existing_dataset_uuid = request.GET.get('data_set_uuid')
 
+        if existing_dataset_uuid:
+            # Assert that the User making the request for a metadata
+            # revision owns the DataSet in question
+            data_set_ownership_response = _check_data_set_ownership(
+                request.user, existing_dataset_uuid
+            )
+            if data_set_ownership_response is not None:
+                return data_set_ownership_response
+
         if form.is_valid() or request.is_ajax():
             try:
                 f = form.cleaned_data['isa_tab_file']
@@ -457,6 +466,14 @@ class ProcessMetadataTableView(View):
     def post(self, request, *args, **kwargs):
         # Get required params
         existing_dataset_uuid = request.GET.get('data_set_uuid')
+        if existing_dataset_uuid:
+            # Assert that the User making the request for a metadata
+            # revision owns the DataSet in question
+            data_set_ownership_response = _check_data_set_ownership(
+                request.user, existing_dataset_uuid
+            )
+            if data_set_ownership_response is not None:
+                return data_set_ownership_response
         try:
             metadata_file = request.FILES['file']
             title = request.POST.get('title')
@@ -1033,3 +1050,19 @@ class AddFilesToDataSetView(View):
                 import_file.delay(file_store_item.uuid)
 
         return HttpResponse(status=202)  # Accepted
+
+
+def _check_data_set_ownership(user, data_set_uuid):
+    try:
+        data_set = DataSet.objects.get(uuid=data_set_uuid)
+    except DataSet.DoesNotExist as e:
+        logger.error(e)
+        return HttpResponseBadRequest(e)
+    except DataSet.MultipleObjectsReturned as e:
+        logger.critical(e)
+        return HttpResponseServerError(e)
+    else:
+        if user != data_set.get_owner():
+            return HttpResponseForbidden(
+                "Metadata revision is only allowed for Data Set owners"
+            )
