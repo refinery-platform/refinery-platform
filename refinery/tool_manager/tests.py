@@ -52,7 +52,7 @@ from analysis_manager.tasks import (_galaxy_file_import,
                                     _run_galaxy_workflow, run_analysis)
 from core.models import (INPUT_CONNECTION, OUTPUT_CONNECTION, Analysis,
                          AnalysisNodeConnection, AnalysisResult, ExtendedGroup,
-                         Project, Workflow, WorkflowEngine)
+                         Event, Project, Workflow, WorkflowEngine)
 from data_set_manager.models import Assay, Attribute, Node
 from data_set_manager.utils import _create_solr_params_from_node_uuids
 from factory_boy.django_model_factories import (AnnotatedNodeFactory,
@@ -60,7 +60,8 @@ from factory_boy.django_model_factories import (AnnotatedNodeFactory,
                                                 GalaxyInstanceFactory,
                                                 NodeFactory, ParameterFactory,
                                                 ToolFactory)
-from factory_boy.utils import create_dataset_with_necessary_models
+from factory_boy.utils import create_dataset_with_necessary_models, \
+    create_tool_with_necessary_models
 from file_store.models import FileStoreItem, FileType
 from tool_manager.management.commands.load_tools import \
     Command as LoadToolsCommand
@@ -4039,3 +4040,27 @@ class ParameterTests(TestCase):
                 test_float,
                 parameter.cast_param_value_to_proper_type(element)
             )
+
+
+class ToolEventCreationTests(TestCase):
+    def test_visualization_tool_creation_triggers_a_single_event(self):
+        create_tool_with_necessary_models("VISUALIZATION")
+
+        # A Tool needs a Dataset to be created. Assert that there is one Event
+        # for DataSet creation and one for Tool creation
+        self.assertEqual(Event.objects.count(), 2)
+        self.assertIsNotNone(Event.objects.get(type=Event.CREATE))
+        self.assertIsNotNone(
+            Event.objects.get(sub_type=Event.VISUALIZATION_CREATION)
+        )
+
+    def test_workflow_tool_creation_triggers_a_single_event(self):
+        create_tool_with_necessary_models("WORKFLOW")
+
+        # A Tool needs a Dataset to be created. Assert that there is one Event
+        # for DataSet creation and one for Tool creation
+        self.assertEqual(Event.objects.count(), 2)
+        self.assertIsNotNone(Event.objects.get(type=Event.CREATE))
+        self.assertIsNotNone(
+            Event.objects.get(sub_type=Event.ANALYSIS_CREATION)
+        )

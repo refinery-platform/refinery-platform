@@ -7,21 +7,25 @@ from urlparse import urljoin
 from django.contrib.auth.models import User
 from django.utils.functional import SimpleLazyObject
 
+from cuser.middleware import CuserMiddleware
 from guardian.shortcuts import get_groups_with_perms
 import mock
 import mockcache as memcache
 from rest_framework.test import (
     APIClient, APIRequestFactory, APITestCase, force_authenticate
 )
+
 from data_set_manager.models import (Assay, Investigation, Node, Study)
 from factory_boy.django_model_factories import (
     GalaxyInstanceFactory, WorkflowEngineFactory, WorkflowFactory
 )
-from factory_boy.utils import create_dataset_with_necessary_models
+from factory_boy.utils import (create_dataset_with_necessary_models,
+                               create_tool_with_necessary_models)
 
-from .models import (Analysis, DataSet, ExtendedGroup, Project,
+from .models import (Analysis, DataSet, Event, ExtendedGroup, Project,
                      Workflow, WorkflowEngine)
-from .views import AnalysesViewSet, DataSetsViewSet, WorkflowViewSet
+from .views import (AnalysesViewSet, DataSetsViewSet, EventViewSet,
+                    WorkflowViewSet)
 
 cache = memcache.Client(["127.0.0.1:11211"])
 
@@ -934,3 +938,95 @@ class WorkflowApiV2Tests(APIV2TestCase):
             uuid=self.workflow.uuid
         )
         self.assertEqual(get_response.content, self.mock_workflow_graph)
+
+
+class EventApiV2Tests(APIV2TestCase):
+    maxDiff = None
+
+    def setUp(self):
+        super(EventApiV2Tests, self).setUp(
+            api_base_name="events/",
+            view=EventViewSet.as_view({"get": "list"})
+        )
+
+    def test_get_event_list_provides_access_control_between_users(self):
+        # Create objects that trigger Events for "another_user"
+        another_user = User.objects.create_user("Another", "User",
+                                                "another_user@example.com")
+        create_tool_with_necessary_models("VISUALIZATION", user=another_user)
+        events = Event.objects.all()
+        self.assertEqual(len(events), 2)
+
+        get_request = self.factory.get(urljoin(self.url_root, '/'))
+        get_request.user = self.user
+        get_response = self.view(get_request).render()
+        # Ensure that request made by "self.user" doesn't return Events from
+        #  "another_user"
+        self.assertEqual(json.loads(get_response.content), [])
+
+    def test_get_event_list(self):
+        CuserMiddleware.set_user(self.user)
+        create_tool_with_necessary_models("VISUALIZATION", user=self.user)
+        create_tool_with_necessary_models("WORKFLOW", user=self.user)
+        events = Event.objects.all()
+        self.assertEqual(events.count(), 4)
+
+        messages = [str(event) for event in events]
+        data_sets = [event.data_set.uuid for event in events]
+        display_names = [
+            event.get_details_as_dict().get('display_name') for event in events
+        ]
+        date_times = [
+            event.date_time.isoformat().replace('+00:00', 'Z') for event in
+            events
+        ]
+
+        get_request = self.factory.get(urljoin(self.url_root, '/'))
+        get_request.user = self.user
+        get_response = self.view(get_request).render()
+
+        self.assertEqual(
+            json.loads(get_response.content),
+            [
+                {
+                    'date_time': date_times[0],
+                    'message': messages[0],
+                    'data_set': data_sets[0],
+                    'group': None,
+                    'user': self.user.username,
+                    'type': 'CREATE',
+                    'sub_type': '',
+                    'details': {}
+                },
+                {
+                    'date_time': date_times[1],
+                    'message': messages[1],
+                    'data_set': data_sets[1],
+                    'group': None,
+                    'user': self.user.username,
+                    'type': 'UPDATE',
+                    'sub_type': 'VISUALIZATION_CREATION',
+                    'details': {'display_name': display_names[1]}
+                },
+                {
+                    'date_time': date_times[2],
+                    'message': messages[2],
+                    'data_set': data_sets[2],
+                    'group': None,
+                    'user': self.user.username,
+                    'type': 'CREATE',
+                    'sub_type': '',
+                    'details': {}
+                },
+                {
+                    'date_time': date_times[3],
+                    'message': messages[3],
+                    'data_set': data_sets[3],
+                    'group': None,
+                    'user': self.user.username,
+                    'type': 'UPDATE',
+                    'sub_type': 'ANALYSIS_CREATION',
+                    'details': {'display_name': display_names[3]}
+                }
+            ]
+        )

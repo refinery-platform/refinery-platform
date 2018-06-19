@@ -22,7 +22,9 @@ from django.views.decorators.gzip import gzip_page
 
 import boto3
 import botocore
-from guardian.shortcuts import get_groups_with_perms, get_perms
+from guardian.shortcuts import get_groups_with_perms, get_objects_for_user, \
+    get_perms
+
 from guardian.utils import get_anonymous_user
 from registration import signals
 from registration.views import RegistrationView
@@ -39,10 +41,11 @@ import xmltodict
 from data_set_manager.models import Node
 
 from .forms import ProjectForm, UserForm, UserProfileForm, WorkflowForm
-from .models import (Analysis, CustomRegistrationProfile, DataSet,
+from .models import (Analysis, CustomRegistrationProfile, DataSet, Event,
                      ExtendedGroup, Invitation, Ontology, Project,
                      UserProfile, Workflow, WorkflowEngine)
-from .serializers import DataSetSerializer, NodeSerializer, WorkflowSerializer
+from .serializers import (DataSetSerializer, EventSerializer, NodeSerializer,
+                          UserProfileSerializer, WorkflowSerializer)
 from .utils import (api_error_response, get_data_sets_annotations,
                     get_resources_for_user)
 
@@ -698,6 +701,23 @@ class NodeViewSet(viewsets.ModelViewSet):
     # permission_classes = (IsAuthenticated,)
 
 
+class EventViewSet(viewsets.ModelViewSet):
+    """API endpoint that allows Events to be viewed"""
+    queryset = Event.objects.all()
+    serializer_class = EventSerializer
+    http_method_names = ['get']
+
+    def list(self, request, *args, **kwargs):
+        """Overrides ModelViewSet.list to create an updated queryset based
+        on DataSets that the requesting User has permission to access
+        """
+        data_sets_for_user = get_objects_for_user(
+            request.user, 'core.read_meta_dataset'
+        )
+        self.queryset = self.queryset.filter(data_set__in=data_sets_for_user)
+        return super(EventViewSet, self).list(request, *args, **kwargs)
+
+
 class DataSetsViewSet(APIView):
     """API endpoint that allows for DataSets to be deleted"""
     http_method_names = ['get', 'delete', 'patch']
@@ -1079,3 +1099,49 @@ class OpenIDToken(APIView):
         token["Region"] = region
 
         return Response(token)
+
+
+class UserProfileViewSet(APIView):
+    """API endpoint that allows for UserProfiles to be edited.
+     ---
+    #YAML
+
+    PATCH:
+        parameters_strategy:
+        form: replace
+        query: merge
+
+        parameters:
+            - name: uuid
+              description: User profile uuid used as an identifier
+              type: string
+              paramType: path
+              required: true
+            - name: primary_group
+              description: group id
+              type: int
+              paramType: form
+              required: false
+    ...
+    """
+    http_method_names = ["patch"]
+
+    def patch(self, request, uuid):
+        if request.user.is_anonymous():
+            return Response(
+                self.user, status=status.HTTP_401_UNAUTHORIZED
+            )
+
+        serializer = UserProfileSerializer(request.user.profile,
+                                           data=request.data,
+                                           partial=True,
+                                           context={'request': request})
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(
+                serializer.data, status=status.HTTP_202_ACCEPTED
+            )
+        return Response(
+            serializer.errors, status=status.HTTP_400_BAD_REQUEST
+        )

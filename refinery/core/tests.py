@@ -1984,7 +1984,8 @@ class SiteStatisticsIntegrationTests(TestCase):
 class EventTests(TestCase):
 
     def setUp(self):
-        CuserMiddleware.set_user(User.objects.create_user('testuser'))
+        self.user = User.objects.create_user('testuser')
+        CuserMiddleware.set_user(self.user)
         self.pre_re = r'^\d{2}/\d{2}/\d{2} \d{2}:\d{2}:\d{2}: testuser '
         self.post_re = r' data set Test DataSet - [0-9a-f-]+$'
 
@@ -2069,3 +2070,14 @@ class EventTests(TestCase):
 
     def test_group_user_removal(self):
         pass  # TODO
+
+    def test_get_details_as_dict(self):
+        tool = create_tool_with_necessary_models("VISUALIZATION",
+                                                 user=self.user)
+        event = Event.objects.last()
+        self.assertEqual(
+            event.get_details_as_dict(),
+            {
+                u'display_name': tool.display_name
+            }
+        )
