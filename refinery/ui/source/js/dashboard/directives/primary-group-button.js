@@ -9,6 +9,10 @@
   angular
     .module('refineryDashboard')
     .component('rpPrimaryGroupButton', {
+      controller: 'PrimaryGroupButtonCtrl',
+      require: {
+        filterCtrl: '^rpDataSetsCard'
+      },
       templateUrl: ['$window', function ($window) {
         return $window.getStaticUrl('partials/dashboard/partials/primary-group-button.html');
       }]

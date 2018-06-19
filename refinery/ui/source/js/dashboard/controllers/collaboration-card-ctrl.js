@@ -2,7 +2,7 @@
  * Collaboration Card Ctrl
  * @namespace CollaborationCardCtrl
  * @desc Controller for events card component on dashboard component.
- * @memberOf refineryApp.CollaborationCardCtrl
+ * @memberOf refineryApp.refineryDashboard
  */
 (function () {
   'use strict';

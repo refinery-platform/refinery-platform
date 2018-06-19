@@ -3,7 +3,7 @@
  * @namespace DataSetsCardCtrl
  * @desc Controller for data sets card component on dashboard component.
  * Child component of dashboard component
- * @memberOf refineryApp.refineryDataSetsCardCtrl
+ * @memberOf refineryApp.refineryDashboard
  */
 (function () {
   'use strict';

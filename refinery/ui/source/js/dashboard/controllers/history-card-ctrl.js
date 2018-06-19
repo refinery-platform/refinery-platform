@@ -2,7 +2,7 @@
  * History Card Ctrl
  * @namespace HistoryCardCtrl
  * @desc Controller for history card component on dashboard component.
- * @memberOf refineryApp.refineryHistoryCardCtrl
+ * @memberOf refineryApp.refineryDashboard
  */
 (function () {
   'use strict';
