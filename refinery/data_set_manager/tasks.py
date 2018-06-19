@@ -346,8 +346,8 @@ def parse_isatab(username, public, path, identity_id=None,
             dataset_title = "%s: %s" % (identifier, title)
             datasets = DataSet.objects.filter(name=dataset_title)
         # check if the investigation already exists
+        # if not 0, update dataset with new investigation
         if len(datasets) and not existing_dataset_uuid:
-            # if not 0, update dataset with new investigation
             # go through datasets until you find one with the correct owner
             for ds in datasets:
                 own = ds.get_owner()
