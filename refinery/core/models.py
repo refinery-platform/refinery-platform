@@ -48,6 +48,7 @@ import pysolr
 from registration.models import RegistrationManager, RegistrationProfile
 from registration.signals import user_activated, user_registered
 
+import data_set_manager
 from data_set_manager.models import (
     Assay, Investigation, Node, NodeCollection, Study
 )
@@ -784,6 +785,59 @@ class DataSet(SharableResource):
     def set_title(self, title):
         self.title = title
         self.save()
+
+    def update_with_revised_investigation(self, investigation):
+        """
+        Update an existing DataSet's Investigation with a new Investigation as
+        long as some specific constraints are met.
+        - Said DataSet must be "clean" (No Analyses or Visualizations
+          performed)
+        - All datafiles from the existing DataSet must be referenced in the new
+          Investigation
+        Any data files that were uploaded prior to this operation will be
+        reassociated and available from the new Investigation
+        :param investigation: A newly created Investigation instance
+        """
+        if not self.is_clean():
+            raise RuntimeError(
+                "DataSet with UUID: {} is not clean (There have "
+                "been Analyses or Visualizations performed on it) "
+                "Remove these objects and try again"
+                .format(self.uuid)
+            )
+        self._associate_datafiles_with_investigation(investigation)
+        updated_dataset_title = investigation.title
+        self.update_investigation(
+            investigation,
+            "Metadata Revision: for {}".format(updated_dataset_title)
+        )
+        data_set_manager.tasks.annotate_nodes(investigation.uuid)
+        self.set_title(updated_dataset_title)
+
+    @transaction.atomic()
+    def _associate_datafiles_with_investigation(self, investigation):
+        """
+        Transfer data files from an existing DataSet's FileStoreItems that
+        correspond to data files of the same source in an Investigation's
+        FileStoreItems
+        :param investigation: Investigation instance to transfer data files to
+        """
+        existing_investigation = self.get_investigation()
+        file_store_items_from_existing_dataset = \
+            existing_investigation.get_file_store_items(local_only=True)
+
+        for prior_file_store_item in file_store_items_from_existing_dataset:
+            for new_file_store_item in investigation.get_file_store_items():
+                if prior_file_store_item.source == new_file_store_item.source:
+                    new_file_store_item.datafile = \
+                        prior_file_store_item.datafile
+                    new_file_store_item.save()
+                    # It's crucial to clear the datafile of the prior
+                    # FileStoreItem as well. Otherwise there would be two
+                    # references to the same data file which could cause
+                    # unintended side-effects
+                    prior_file_store_item.datafile = None
+                    prior_file_store_item.save()
 
 
 @receiver(pre_delete, sender=DataSet)

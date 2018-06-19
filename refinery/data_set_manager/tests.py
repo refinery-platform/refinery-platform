@@ -55,8 +55,7 @@ from .utils import (_create_solr_params_from_node_uuids,
                     get_file_url_from_node_uuid, get_owner_from_assay,
                     hide_fields_from_list, initialize_attribute_order_ranks,
                     insert_facet_field_filter, is_field_in_hidden_list,
-                    objectify_facet_field_counts, update_attribute_order_ranks,
-                    update_existing_dataset_with_revised_investigation)
+                    objectify_facet_field_counts, update_attribute_order_ranks)
 from .views import Assays, AssaysAttributes
 
 TEST_DATA_BASE_PATH = "data_set_manager/test-data/"
@@ -1613,8 +1612,8 @@ class UtilitiesTests(TestCase):
     def test_update_existing_dataset_with_revised_investigation(self):
         existing_dataset = create_dataset_with_necessary_models()
         new_dataset = create_dataset_with_necessary_models()
-        update_existing_dataset_with_revised_investigation(
-            existing_dataset.uuid, new_dataset.get_investigation()
+        existing_dataset.update_with_revised_investigation(
+            new_dataset.get_investigation()
         )
         self.assertEqual(existing_dataset.get_version(), 2)
         self.assertEqual(existing_dataset.get_investigation(),
@@ -2468,20 +2467,6 @@ class ProcessISATabViewTests(MetadataImportTestBase):
                 .format(data_set.uuid)
             )
 
-    def test_metadata_revision_fails_original_datafiles_not_referenced(self):
-        data_set = create_dataset_with_necessary_models(user=self.user)
-        metadata_file_name = 'rfc-test-local.zip'
-        with open(self.get_test_file_path(metadata_file_name)) as isa_tab:
-            response = self.post_isa_tab(isa_tab_file=isa_tab,
-                                         data_set_uuid=data_set.uuid)
-            self.assertEqual(response.status_code, 400)
-            self.assertIn(
-                "Existing data files from DataSet: {} are not all referenced "
-                "in the revised metadata file. The following data files aren't"
-                " referenced: test1.txt, test0.txt".format(data_set.uuid),
-                response.content
-            )
-
     def test_metadata_revision_is_only_allowed_if_data_set_owner(self):
         data_set = create_dataset_with_necessary_models()
         metadata_file_name = 'rfc-test-local.zip'
@@ -2739,23 +2724,6 @@ class ProcessMetadataTableViewTests(MetadataImportTestBase):
                         "these objects and try again".format(data_set.uuid)
                     )
                 }
-            )
-
-    @override_settings(CELERY_ALWAYS_EAGER=True)
-    def test_metadata_revision_fails_original_datafiles_not_referenced(self):
-        data_set = create_dataset_with_necessary_models(user=self.user)
-        with open(
-            self.get_test_file_path('single-file/two-line-s3.csv')
-        ) as good_meta_data_file:
-            response = self.post_tabular_meta_data_file(
-                meta_data_file=good_meta_data_file,
-                data_set_uuid=data_set.uuid
-            )
-            self.assertIn(
-                "Existing data files from DataSet: {} are not all referenced "
-                "in the revised metadata file. The following data files aren't"
-                " referenced: test1.txt, test0.txt".format(data_set.uuid),
-                response.content
             )
 
     def test_metadata_revision_is_only_allowed_if_data_set_owner(self):

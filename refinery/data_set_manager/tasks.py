@@ -28,8 +28,7 @@ from file_store.models import FileExtension, generate_file_source_translator
 from .isa_tab_parser import IsaTabParser
 from .models import Investigation, Node, initialize_attribute_order
 from .utils import (calculate_checksum, fix_last_column, get_node_types,
-                    index_annotated_nodes, update_annotated_nodes,
-                    update_existing_dataset_with_revised_investigation)
+                    index_annotated_nodes, update_annotated_nodes)
 
 logger = logging.getLogger(__name__)
 
@@ -393,9 +392,8 @@ def parse_isatab(username, public, path, identity_id=None,
             path, isa_archive=isa_archive, preisa_archive=pre_isa_archive
         )
         if existing_dataset_uuid:
-            update_existing_dataset_with_revised_investigation(
-                existing_dataset_uuid, investigation
-            )
+            data_set = DataSet.objects.get(uuid=existing_dataset_uuid)
+            data_set.update_with_revised_investigation(investigation)
             return existing_dataset_uuid
 
         dataset_uuid = create_dataset(

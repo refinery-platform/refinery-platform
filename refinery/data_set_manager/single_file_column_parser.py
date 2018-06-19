@@ -10,8 +10,7 @@ import operator
 from django.conf import settings
 
 from annotation_server.models import Taxon, species_to_taxon_id
-from data_set_manager.utils import \
-    update_existing_dataset_with_revised_investigation
+from core.models import DataSet
 from file_store.models import FileStoreItem, generate_file_source_translator
 from file_store.tasks import import_file
 
@@ -408,9 +407,8 @@ def process_metadata_table(
     investigation.save()
 
     if existing_dataset_uuid:
-        update_existing_dataset_with_revised_investigation(
-            existing_dataset_uuid, investigation
-        )
+        data_set = DataSet.objects.get(uuid=existing_dataset_uuid)
+        data_set.update_with_revised_investigation(investigation)
         return existing_dataset_uuid
     return create_dataset(
         investigation_uuid=investigation.uuid, username=username,
