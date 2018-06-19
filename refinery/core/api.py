@@ -18,7 +18,6 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.sites.models import get_current_site
 from django.core.cache import cache
 from django.core.mail import EmailMessage
-from django.core.signing import Signer
 from django.forms import ValidationError
 from django.template import loader
 from django.utils import timezone
@@ -50,7 +49,6 @@ from data_set_manager.models import Attribute, Node, Study
 from file_store.models import FileStoreItem
 
 logger = logging.getLogger(__name__)
-signer = Signer()
 
 
 # Specifically made for descendants of SharableResource.
