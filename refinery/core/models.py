@@ -732,7 +732,9 @@ class DataSet(SharableResource):
     def get_file_store_items(self):
         """Get a list of FileStoreItem instances corresponding to a
         DataSet's latest Investigation"""
-        return self.get_investigation().get_file_store_items()
+        latest_investigation = self.get_investigation()
+        if latest_investigation:
+            return latest_investigation.get_file_store_items()
 
     @cached_property
     def is_valid(self):
