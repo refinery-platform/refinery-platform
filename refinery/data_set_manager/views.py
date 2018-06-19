@@ -577,6 +577,21 @@ class ProcessMetadataTableView(View):
 class CheckDataFilesView(View):
     """Check if given files exist, return list of files that don't exist"""
     def post(self, request, *args, **kwargs):
+        existing_dataset_uuid = request.GET.get('data_set_uuid')
+        existing_datafile_names = []
+        if existing_dataset_uuid:
+            try:
+                data_set = DataSet.objects.get(uuid=existing_dataset_uuid)
+            except (DataSet.DoesNotExist, DataSet.MultipleObjectsReturned) \
+                    as e:
+                logger.error(e)
+                return HttpResponseBadRequest(e)
+            else:
+                investigation = data_set.get_investigation()
+                existing_datafile_names = investigation.get_datafile_names(
+                    local_only=True, exclude_metadata_file=True
+                )
+
         if not request.is_ajax() or not request.body:
             return HttpResponseBadRequest()
 
@@ -639,8 +654,22 @@ class CheckDataFilesView(View):
 
         # prefix output to protect from JSON vulnerability (stripped by
         # Angular)
-        return HttpResponse(")]}',\n" + json.dumps(bad_file_list),
-                            content_type="application/json")
+        data_files_not_uploaded = [
+            os.path.basename(file_path) for file_path in bad_file_list if
+            os.path.basename(file_path) not in existing_datafile_names
+        ]
+        data_files_to_be_deleted = [
+            file_name for file_name in existing_datafile_names
+            if file_name not in [
+                os.path.basename(file_path) for file_path in bad_file_list
+            ]
+        ]
+        response_data = {
+            "data_files_not_uploaded": data_files_not_uploaded,
+            "data_files_to_be_deleted": data_files_to_be_deleted
+        }
+
+        return JsonResponse(response_data)
 
 
 class ChunkedFileUploadView(ChunkedUploadView):

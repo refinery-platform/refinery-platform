@@ -6,8 +6,14 @@
     The following files are listed in the <strong>Data File Column</strong>
     of your metadata file, but have not yet been uploaded to Refinery.
   	<ul>
-  		<li ng-repeat="item in modal.config.items track by $index">{{ ::item }}</li>
-	</ul>
+  		<li ng-repeat="item in modal.config.items track by $index">{{ item }}</li>
+	  </ul>
+  </p>
+  <p ng-if="modal.config.isMetaDataRevision && modal.config.itemsToBeDeleted.length > 0">
+    The following data files which have been uploaded prior <strong>will be removed</strong>.
+    <ul>
+  		<li ng-repeat="item in modal.config.itemsToBeDeleted track by $index">{{ item }}</li>
+	  </ul>
   </p>
 </div>
 <div class="modal-footer">
