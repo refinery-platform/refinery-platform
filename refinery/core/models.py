@@ -638,23 +638,16 @@ class DataSet(SharableResource):
         latest_investigation = self.get_investigation()
         if latest_investigation:
             return latest_investigation.get_study()
-        else:
-            return None
 
     def get_latest_assay(self):
         latest_investigation = self.get_investigation()
         if latest_investigation:
             return latest_investigation.get_assay()
-        else:
-            return None
 
     def get_investigation(self, version=None):
         investigation_link = self.get_latest_investigation_link(version)
-
         if investigation_link:
             return investigation_link.investigation
-        else:
-            return None
 
     def get_studies(self, version=None):
         return Study.objects.filter(
