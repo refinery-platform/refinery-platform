@@ -827,15 +827,9 @@ class DataSet(SharableResource):
                 prior_file_store_item.delete_datafile()
             for new_file_store_item in new_file_store_items:
                 if prior_file_store_item.source == new_file_store_item.source:
-                    new_file_store_item.datafile = \
-                        prior_file_store_item.datafile
-                    new_file_store_item.save()
-                    # It's crucial to clear the datafile of the prior
-                    # FileStoreItem as well. Otherwise there would be two
-                    # references to the same data file which could cause
-                    # unintended side-effects
-                    prior_file_store_item.datafile = None
-                    prior_file_store_item.save()
+                    prior_file_store_item.transfer_data_file(
+                        new_file_store_item
+                    )
 
 
 @receiver(pre_delete, sender=DataSet)
