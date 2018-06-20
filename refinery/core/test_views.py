@@ -281,8 +281,8 @@ class DataSetApiV2Tests(APIV2TestCase):
         group_non_union_1 = ExtendedGroup.objects.create(name="Group 1")
         self.data_set.share(group_non_union_0)
         self.data_set.share(group_non_union_1)
-        group_non_union_0.group_ptr.user_set.add(self.user)
-        group_non_union_1.group_ptr.user_set.add(self.user)
+        group_non_union_0.user_set.add(self.user)
+        group_non_union_1.user_set.add(self.user)
 
         patch_request = self.factory.patch(
             urljoin(self.url_root, self.data_set.uuid),
@@ -677,10 +677,10 @@ class DataSetApiV2Tests(APIV2TestCase):
         group_union = ExtendedGroup.objects.create(name="Group Union")
         group_non_union = ExtendedGroup.objects.create(name="Group Non-Union")
         self.data_set.share(group_union)
-        group_union.group_ptr.user_set.add(self.user)
-        group_union.group_ptr.user_set.add(new_owner)
+        group_union.user_set.add(self.user)
+        group_union.user_set.add(new_owner)
         self.data_set.share(group_non_union)
-        group_non_union.group_ptr.user_set.add(self.user)
+        group_non_union.user_set.add(self.user)
 
         view_set = DataSetsViewSet()
         view_set.request = self.factory.get(self.url_root)
@@ -705,8 +705,8 @@ class DataSetApiV2Tests(APIV2TestCase):
                                              self.password)
         group_union = ExtendedGroup.objects.create(name="Group Union")
         self.data_set.share(group_union)
-        group_union.group_ptr.user_set.add(self.user)
-        group_union.group_ptr.user_set.add(new_owner)
+        group_union.user_set.add(self.user)
+        group_union.user_set.add(new_owner)
 
         view_set = DataSetsViewSet()
         view_set.request = self.factory.get(self.url_root)
@@ -952,8 +952,8 @@ class UserProfileApiV2Tests(APIV2TestCase):
                                                 self.password)
         self.lab_group = ExtendedGroup.objects.create(name="Lab Group")
         self.non_lab_group = ExtendedGroup.objects.create(name="Test Group")
-        self.lab_group.group_ptr.user_set.add(self.user_lm)
-        self.non_lab_group.group_ptr.user_set.add(self.user)
+        self.lab_group.user_set.add(self.user_lm)
+        self.non_lab_group.user_set.add(self.user)
 
     def test_patch_primary_group_returns_success_status(self):
         patch_request = self.factory.patch(
