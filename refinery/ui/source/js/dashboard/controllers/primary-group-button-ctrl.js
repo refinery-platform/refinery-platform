@@ -22,8 +22,6 @@
   ) {
     var vm = this;
     vm.filterDataSet = filterDataSet;
-    console.log('in ctrl');
-    console.log(primaryGroupService.primaryGroup);
     vm.primaryGroup = primaryGroupService.primaryGroup;
     vm.primaryGroupButton = { selected: false };
     vm.updatePrimaryGroup = updatePrimaryGroup;
@@ -31,22 +29,18 @@
     function filterDataSet () {
       // toggle
       if (vm.primaryGroupButton.selected) {
+        vm.primaryGroupButton.selected = false;
         vm.filterCtrl.filterDataSets();
         vm.filterCtrl.groupFilter.selectedName = 'All';
-        vm.primaryGroupButton.selected = false;
       } else {
+        vm.primaryGroupButton.selected = true;
         vm.filterCtrl.filterDataSets(vm.primaryGroup.name);
         vm.filterCtrl.groupFilter.selectedName = vm.primaryGroup.name;
-        vm.primaryGroupButton.selected = true;
       }
     }
 
     function updatePrimaryGroup (group) {
-      console.log('entering function');
-      console.log(group);
       primaryGroupService.setPrimaryGroup(group).then(function () {
-        console.log('in the update');
-        console.log(primaryGroupService.primaryGroup);
         vm.primaryGroup = primaryGroupService.primaryGroup;
       });
     }
@@ -64,12 +58,29 @@
           vm.groups = vm.filterCtrl.groups;
         }
       );
+
+      $scope.$watchCollection(
+        function () {
+          return primaryGroupService.primaryGroup;
+        },
+        function () {
+          vm.primaryGroup = primaryGroupService.primaryGroup;
+          if (vm.primaryGroup.id && vm.filterCtrl.groupFilter
+              .selectedName === vm.primaryGroup.name) {
+            vm.primaryGroupButton.selected = true;
+          } else {
+            vm.primaryGroupButton.selected = false;
+          }
+        }
+      );
+
       $scope.$watchCollection(
         function () {
           return vm.filterCtrl.groupFilter;
         },
         function () {
-          if (vm.primaryGroupID && vm.filterCtrl.groupFilter.selectedName === vm.primaryGroup) {
+          if (vm.primaryGroup.id && vm.filterCtrl.groupFilter
+              .selectedName === vm.primaryGroup.name) {
             vm.primaryGroupButton.selected = true;
           } else {
             vm.primaryGroupButton.selected = false;

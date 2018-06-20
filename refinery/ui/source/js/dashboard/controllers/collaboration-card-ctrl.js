@@ -157,8 +157,6 @@
     }
 
     function updatePrimaryGroup (group) {
-      console.log('updatePG');
-      console.log(group);
       primaryGroupService.setPrimaryGroup(group).then(function () {
         vm.primaryGroup = primaryGroupService.primaryGroup;
       });
@@ -192,7 +190,7 @@
           return primaryGroupService.primaryGroup;
         },
         function () {
-          vm.primaryGroup.selected = primaryGroupService.primaryGroup.id;
+          vm.primaryGroup.selected = primaryGroupService.primaryGroup.name;
         }
       );
     };
