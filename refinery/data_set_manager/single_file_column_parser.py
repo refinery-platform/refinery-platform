@@ -297,7 +297,7 @@ def process_metadata_table(
     delimiter="comma",
     custom_delimiter_string=",",
     identity_id=None,
-    existing_dataset_uuid=None
+    existing_data_set_uuid=None
 ):
     """Create a dataset given a metadata file object and its description
     :param username: username
@@ -324,7 +324,7 @@ def process_metadata_table(
     :type annotation_column: int
     :param is_public: is dataset available to public
     :type is_public: bool
-    :param  existing_dataset_uuid: UUID of an existing DataSet that a
+    :param  existing_data_set_uuid: UUID of an existing DataSet that a
     metadata revision is to be performed upon
     :returns: UUID of the new dataset
     """
@@ -406,10 +406,10 @@ def process_metadata_table(
     investigation.title = title
     investigation.save()
 
-    if existing_dataset_uuid:
-        data_set = DataSet.objects.get(uuid=existing_dataset_uuid)
+    if existing_data_set_uuid:
+        data_set = DataSet.objects.get(uuid=existing_data_set_uuid)
         data_set.update_with_revised_investigation(investigation)
-        return existing_dataset_uuid
+        return existing_data_set_uuid
     return create_dataset(
         investigation_uuid=investigation.uuid, username=username,
         dataset_name=title, public=is_public

@@ -800,13 +800,13 @@ class DataSet(SharableResource):
                 .format(self.uuid)
             )
         self._associate_datafiles_with_investigation(investigation)
-        updated_dataset_title = investigation.title
+        updated_data_set_title = investigation.title
         self.update_investigation(
             investigation,
-            "Metadata Revision: for {}".format(updated_dataset_title)
+            "Metadata Revision: for {}".format(updated_data_set_title)
         )
         data_set_manager.tasks.annotate_nodes(investigation.uuid)
-        self.set_title(updated_dataset_title)
+        self.set_title(updated_data_set_title)
 
     @transaction.atomic()
     def _associate_datafiles_with_investigation(self, investigation):
@@ -817,11 +817,11 @@ class DataSet(SharableResource):
         :param investigation: Investigation instance to transfer data files to
         """
         existing_investigation = self.get_investigation()
-        file_store_items_from_existing_dataset = \
+        file_store_items_from_existing_data_set = \
             existing_investigation.get_file_store_items(local_only=True)
         new_file_store_items = investigation.get_file_store_items()
         new_sources = [f.source for f in new_file_store_items]
-        for prior_file_store_item in file_store_items_from_existing_dataset:
+        for prior_file_store_item in file_store_items_from_existing_data_set:
             if prior_file_store_item.source not in new_sources:
                 prior_file_store_item.delete_datafile()
             for new_file_store_item in new_file_store_items:

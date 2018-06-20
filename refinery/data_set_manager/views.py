@@ -253,13 +253,13 @@ class ProcessISATabView(View):
 
     def post(self, request, *args, **kwargs):
         form = ImportISATabFileForm(request.POST, request.FILES)
-        existing_dataset_uuid = request.GET.get('data_set_uuid')
+        existing_data_set_uuid = request.GET.get('data_set_uuid')
 
-        if existing_dataset_uuid:
+        if existing_data_set_uuid:
             # Assert that the User making the request for a metadata
             # revision owns the DataSet in question
             data_set_ownership_response = _check_data_set_ownership(
-                request.user, existing_dataset_uuid
+                request.user, existing_data_set_uuid
             )
             if data_set_ownership_response is not None:
                 return data_set_ownership_response
@@ -331,7 +331,7 @@ class ProcessISATabView(View):
                     False,
                     response['data']['temp_file_path'],
                     identity_id=identity_id,
-                    existing_dataset_uuid=existing_dataset_uuid
+                    existing_data_set_uuid=existing_data_set_uuid
                 )
             except ParserException as e:
                 error_message = "{} {}".format(
@@ -466,12 +466,12 @@ class ProcessMetadataTableView(View):
 
     def post(self, request, *args, **kwargs):
         # Get required params
-        existing_dataset_uuid = request.GET.get('data_set_uuid')
-        if existing_dataset_uuid:
+        existing_data_set_uuid = request.GET.get('data_set_uuid')
+        if existing_data_set_uuid:
             # Assert that the User making the request for a metadata
             # revision owns the DataSet in question
             data_set_ownership_response = _check_data_set_ownership(
-                request.user, existing_dataset_uuid
+                request.user, existing_data_set_uuid
             )
             if data_set_ownership_response is not None:
                 return data_set_ownership_response
@@ -555,7 +555,7 @@ class ProcessMetadataTableView(View):
                     'custom_delimiter_string', False
                 ),
                 identity_id=identity_id,
-                existing_dataset_uuid=existing_dataset_uuid
+                existing_data_set_uuid=existing_data_set_uuid
             )
         except Exception as exc:
             logger.error(exc, exc_info=True)
@@ -578,10 +578,10 @@ class ProcessMetadataTableView(View):
 class CheckDataFilesView(View):
     """Check if given files exist, return list of files that don't exist"""
     def post(self, request, *args, **kwargs):
-        existing_dataset_uuid = request.GET.get('data_set_uuid')
+        existing_data_set_uuid = request.GET.get('data_set_uuid')
         existing_datafile_names = []
-        if existing_dataset_uuid:
-            data_set = get_object_or_404(DataSet, uuid=existing_dataset_uuid)
+        if existing_data_set_uuid:
+            data_set = get_object_or_404(DataSet, uuid=existing_data_set_uuid)
             investigation = data_set.get_investigation()
             existing_datafile_names = investigation.get_datafile_names(
                 local_only=True, exclude_metadata_file=True
