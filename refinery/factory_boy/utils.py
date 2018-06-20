@@ -178,7 +178,7 @@ def _create_dataset_objects(dataset, is_isatab_based, latest_version):
     return study
 
 
-def create_tool_with_necessary_models(tool_type):
+def create_tool_with_necessary_models(tool_type, user=None):
     """
     Create a minimal representation of a Visualization/Workflow
     Tool for use in tests.
@@ -197,12 +197,15 @@ def create_tool_with_necessary_models(tool_type):
     tool_factory = tool_type_to_factory_mapping[tool_type]
     name = "Test {} Tool: {}".format(tool_type, uuid_builtin.uuid4())
 
-    return tool_factory(
+    tool = tool_factory(
         tool_definition=ToolDefinitionFactory(
             tool_type=tool_type,
             name=name,
             file_relationship=FileRelationshipFactory()
         ),
         display_name=name,
-        dataset=create_dataset_with_necessary_models()
+        dataset=create_dataset_with_necessary_models(user=user)
     )
+    if user is not None:
+        tool.set_owner(user)
+    return tool
