@@ -15,16 +15,14 @@
     '$log',
     '$scope',
     '$uibModal',
-    'groupInviteService',
-    'primaryGroupService'
+    'groupInviteService'
   ];
 
   function CollaborationCardCtrl (
     $log,
     $scope,
     $uibModal,
-    groupInviteService,
-    primaryGroupService
+    groupInviteService
   ) {
     var vm = this;
     vm.userGroups = [];
@@ -35,8 +33,6 @@
     vm.openGroupMemberEditor = openGroupMemberEditor;
     vm.resendInvitation = resendInvitation;
     vm.revokeInvitation = revokeInvitation;
-    vm.primaryGroup = { selected: 0 };
-    vm.updatePrimaryGroup = updatePrimaryGroup;
 
     /**
      * @name openGroupAdd
@@ -155,13 +151,7 @@
         $log.error('Invitation could not be revoked');
       });
     }
-
-    function updatePrimaryGroup (group) {
-      primaryGroupService.setPrimaryGroup(group).then(function () {
-        vm.primaryGroup = primaryGroupService.primaryGroup;
-      });
-    }
-     /*
+   /*
    * ---------------------------------------------------------
    * Watchers
    * ---------------------------------------------------------
@@ -182,15 +172,6 @@
         },
         function () {
           vm.invitations = vm.dashboardParentCtrl.groupInvites;
-        }
-      );
-
-      $scope.$watchCollection(
-        function () {
-          return primaryGroupService.primaryGroup;
-        },
-        function () {
-          vm.primaryGroup.selected = primaryGroupService.primaryGroup.name;
         }
       );
     };

@@ -24,31 +24,22 @@
          ng-repeat="group in $ctrl.userGroups"
          class="font-awesome-toggle-panel">
          <span class="group-name-header">
-           <span class="col-md-6 col-xs-5">
-             <span ng-show="group.name!=='Public'">
-               <input type="radio"
-                  ng-model="$ctrl.primaryGroup.selected"
-                  ng-change="$ctrl.updatePrimaryGroup(group)"
-                  value="{{ group.name }}">
-             </span>
+           <a
+             type="button"
+             data-toggle="collapse"
+             class="col-md-6 col-xs-5 toggle-group pointer"
+             data-target="#{{group.uuid}}"
+             aria-expanded="false" aria-controls="collapseOne">
              <span ng-if="group.name==='Public'">
                &nbsp;<i class="fa fa-globe"></i>
              </span>
-             <a
-               type="button"
-               data-toggle="collapse"
-               class="toggle-group pointer"
-               data-target="#{{group.uuid}}"
-               aria-expanded="false" aria-controls="collapseOne">
-               &nbsp;
-                 {{ group.name }}
-             </a>
-           </span>
+             &nbsp;{{ group.name }}
+           </a>
             <div class="col-md-4 col-xs-4">
                <span ng-if="group.can_edit">Manager</span>
             </div>
             <div class="col-md-2 col-xs-3">
-              <span ng-show="group.name!=='Public'">
+              <span ng-show="group.name !== 'Public'">
                  <a
                 ng-click="$ctrl.openGroupEditor(group)"
                 class="no-underline pointer p-r-1-2">
