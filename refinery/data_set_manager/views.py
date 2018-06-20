@@ -648,28 +648,21 @@ class CheckDataFilesView(View):
                                      key, bucket_name)
                 else:  # POSIX file system
                     if not os.path.exists(input_file_path):
-                        bad_file_list.append(input_file_path)
+                        bad_file_list.append(os.path.basename(input_file_path))
                         logger.debug("File '%s' does not exist")
                     else:
                         logger.debug("File '%s' exists")
 
-        # prefix output to protect from JSON vulnerability (stripped by
-        # Angular)
-        data_files_not_uploaded = [
-            os.path.basename(file_path) for file_path in bad_file_list if
-            os.path.basename(file_path) not in existing_datafile_names
-        ]
-        data_files_to_be_deleted = [
-            file_name for file_name in existing_datafile_names
-            if file_name not in [
-                os.path.basename(file_path) for file_path in bad_file_list
-            ]
-        ]
         response_data = {
-            "data_files_not_uploaded": data_files_not_uploaded,
-            "data_files_to_be_deleted": data_files_to_be_deleted
+            "data_files_not_uploaded": [
+                file_name for file_name in bad_file_list
+                if file_name not in existing_datafile_names
+            ],
+            "data_files_to_be_deleted": [
+                file_name for file_name in existing_datafile_names
+                if file_name not in bad_file_list
+            ]
         }
-
         return JsonResponse(response_data)
 
 
