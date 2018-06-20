@@ -19,8 +19,7 @@
     '$window',
     'DataSetSearchApi',
     'dataSetV2Service',
-    'primaryGroupService',
-    'settings'
+    'primaryGroupService'
   ];
 
   function DataSetsCardCtrl (
@@ -30,8 +29,7 @@
     $window,
     DataSetSearchApi,
     dataSetV2Service,
-    primaryGroupService,
-    settings
+    primaryGroupService
   ) {
     var vm = this;
     vm.dataSets = [];
@@ -45,7 +43,7 @@
     vm.openDataSetTransferModal = openDataSetTransferModal;
     vm.openPermissionEditor = openPermissionEditor;
     vm.params = {};
-    vm.primaryGroupID = settings.djangoApp.userprofilePrimaryGroupID;
+    vm.primaryGroupID = primaryGroupService.primaryGroup.id;
     vm.resetDataSetSearch = resetDataSetSearch;
     vm.searchDataSets = searchDataSets;
     vm.searchQueryDataSets = '';
