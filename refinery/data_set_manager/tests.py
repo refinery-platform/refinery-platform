@@ -3137,7 +3137,7 @@ class CheckDataFilesViewTests(MetadataImportTestBase):
             content_type="application/json",
             HTTP_X_REQUESTED_WITH='XMLHttpRequest'
         )
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, 404)
 
     @override_settings(CELERY_ALWAYS_EAGER=True)
     def test_check_datafiles_metadata_revision_subset_uploaded(self):
