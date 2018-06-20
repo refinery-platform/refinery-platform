@@ -91,7 +91,7 @@
         ng-if="metadataTable.isErrored">
         <div class="text-centered">
           <i class="fa fa-exclamation-triangle" aria-hidden="true"></i>
-          <p ng-show="metadataTable.isMetaDataRevision">Metadata Revision of this data set failed.</p>
+          <p ng-show="metadataTable.isMetaDataRevision">Metadata revision of this data set failed.</p>
           <p ng-show="!metadataTable.isMetaDataRevision">Import of this data set failed.</p>
           <p ng-show="metadataTable.importErrorMessage">{{ metadataTable.importErrorMessage }}</p>
           <p ng-show="!metadataTable.importErrorMessage">Please ensure that the structure of your metadata file matches that of the example metadata file</p>
