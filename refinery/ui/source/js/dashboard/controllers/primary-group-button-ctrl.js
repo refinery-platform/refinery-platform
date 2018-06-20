@@ -1,7 +1,7 @@
 /**
  * Primary Group Button Ctrl
  * @namespace PrimaryGroupButtonCtrl
- * @desc Controller for history card component on dashboard component.
+ * @desc Controller for the primary group button component
  * @memberOf refineryApp.refineryDashboard
  */
 (function () {
@@ -56,21 +56,6 @@
         },
         function () {
           vm.groups = vm.filterCtrl.groups;
-        }
-      );
-
-      $scope.$watchCollection(
-        function () {
-          return primaryGroupService.primaryGroup;
-        },
-        function () {
-          vm.primaryGroup = primaryGroupService.primaryGroup;
-          if (vm.primaryGroup.id && vm.filterCtrl.groupFilter
-              .selectedName === vm.primaryGroup.name) {
-            vm.primaryGroupButton.selected = true;
-          } else {
-            vm.primaryGroupButton.selected = false;
-          }
         }
       );
 
