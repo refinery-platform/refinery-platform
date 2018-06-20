@@ -784,13 +784,12 @@ class DataSet(SharableResource):
     def update_with_revised_investigation(self, investigation):
         """
         Update an existing DataSet's Investigation with a new Investigation as
-        long as some specific constraints are met.
-        - Said DataSet must be "clean" (No Analyses or Visualizations
-          performed)
-        - All datafiles from the existing DataSet must be referenced in the new
-          Investigation
-        Any data files that were uploaded prior to this operation will be
-        reassociated and available from the new Investigation
+        long as said DataSet is "clean" (No Analyses or Visualizations
+        performed) Any data files that were uploaded prior to this operation
+        will be reassociated and available from the new Investigation if
+        referenced within the new Investigation's list of data files. If
+        data files that were uploaded prior aren't referenced in the new
+        Investigation's list  of data files they will be deleted.
         :param investigation: A newly created Investigation instance
         """
         if not self.is_clean():
