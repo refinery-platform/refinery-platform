@@ -39,15 +39,15 @@ from tastypie.http import (HttpAccepted, HttpBadRequest, HttpCreated,
 from tastypie.resources import ModelResource, Resource
 from tastypie.utils import trailing_slash
 
-from core.models import (Analysis, DataSet, ExtendedGroup, GroupManagement,
-                         Invitation, Project, ResourceStatistics, Tutorials,
-                         UserAuthentication, UserProfile, Workflow)
-from core.utils import (get_data_sets_annotations, get_resources_for_user,
-                        which_default_read_perm)
 from data_set_manager.api import (AssayResource, InvestigationResource,
                                   StudyResource)
 from data_set_manager.models import Attribute, Node, Study
 from file_store.models import FileStoreItem
+from .models import (Analysis, DataSet, ExtendedGroup, GroupManagement,
+                     Invitation, Project, ResourceStatistics, Tutorials,
+                     UserAuthentication, UserProfile, Workflow)
+from .utils import (get_data_sets_annotations, get_resources_for_user,
+                    which_default_read_perm)
 
 logger = logging.getLogger(__name__)
 signer = Signer()
@@ -1056,8 +1056,19 @@ class AnalysisResource(ModelResource):
         return data
 
 
+class NodeAuthentication(SessionAuthentication):
+    """Allows read access to public data sets by anonymous users"""
+    def is_authenticated(self, request, **kwargs):
+        if request.method == 'GET':
+            return True
+        else:
+            return super(NodeAuthentication, self).is_authenticated(request,
+                                                                    **kwargs)
+
+
 class NodeResource(ModelResource):
     parents = fields.ToManyField('core.api.NodeResource', 'parents')
+    children = fields.ToManyField('core.api.NodeResource', 'children')
     study = fields.ToOneField('data_set_manager.api.StudyResource', 'study')
     assay = fields.ToOneField('data_set_manager.api.AssayResource', 'assay',
                               null=True)
@@ -1077,13 +1088,12 @@ class NodeResource(ModelResource):
         resource_name = 'node'
         detail_uri_name = 'uuid'  # for using UUIDs instead of pk in URIs
         # required for public data set access by anonymous users
-        authentication = Authentication()
+        authentication = NodeAuthentication()
         authorization = Authorization()
-        allowed_methods = ['get']
-        fields = [
-            'name', 'uuid', 'file_uuid', 'file_url', 'study', 'assay',
-            'children', 'type', 'analysis_uuid', 'subanalysis', 'attributes'
-        ]
+        allowed_methods = ['get', 'patch']
+        fields = ['analysis_uuid', 'assay', 'attributes', 'children',
+                  'file_url', 'file_uuid', 'name', 'parents', 'study',
+                  'subanalysis', 'type', 'uuid']
         filtering = {
             'uuid': ALL,
             'study': ALL_WITH_RELATIONS,
