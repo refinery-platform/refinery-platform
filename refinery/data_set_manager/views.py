@@ -581,17 +581,11 @@ class CheckDataFilesView(View):
         existing_dataset_uuid = request.GET.get('data_set_uuid')
         existing_datafile_names = []
         if existing_dataset_uuid:
-            try:
-                data_set = DataSet.objects.get(uuid=existing_dataset_uuid)
-            except (DataSet.DoesNotExist, DataSet.MultipleObjectsReturned) \
-                    as e:
-                logger.error(e)
-                return HttpResponseBadRequest(e)
-            else:
-                investigation = data_set.get_investigation()
-                existing_datafile_names = investigation.get_datafile_names(
-                    local_only=True, exclude_metadata_file=True
-                )
+            data_set = get_object_or_404(DataSet, uuid=existing_dataset_uuid)
+            investigation = data_set.get_investigation()
+            existing_datafile_names = investigation.get_datafile_names(
+                local_only=True, exclude_metadata_file=True
+            )
 
         if not request.is_ajax() or not request.body:
             return HttpResponseBadRequest()
@@ -1076,16 +1070,8 @@ class AddFilesToDataSetView(View):
 
 
 def _check_data_set_ownership(user, data_set_uuid):
-    try:
-        data_set = DataSet.objects.get(uuid=data_set_uuid)
-    except DataSet.DoesNotExist as e:
-        logger.error(e)
-        return HttpResponseBadRequest(e)
-    except DataSet.MultipleObjectsReturned as e:
-        logger.critical(e)
-        return HttpResponseServerError(e)
-    else:
-        if user != data_set.get_owner():
-            return HttpResponseForbidden(
-                "Metadata revision is only allowed for Data Set owners"
-            )
+    data_set = get_object_or_404(DataSet, uuid=data_set_uuid)
+    if user != data_set.get_owner():
+        return HttpResponseForbidden(
+            "Metadata revision is only allowed for Data Set owners"
+        )
