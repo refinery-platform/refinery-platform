@@ -32,9 +32,9 @@
     */
     /**
      * @name setPrimaryGroup
-     * @desc  Deep copy of tool
-     * @memberOf refineryToolLaunch.toolSelectService
-     * @param {obj} tool - api response tool
+     * @desc  Sets the primary group though api service and updates primaryGroup
+     * @memberOf refineryDashboard.primaryGroupService
+     * @param {obj} group - contains group name and id
     **/
     function setPrimaryGroup (group) {
       var userProfile = userProfileV2Service.partial_update({
