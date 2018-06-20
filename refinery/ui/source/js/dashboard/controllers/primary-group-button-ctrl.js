@@ -38,7 +38,7 @@
         vm.filterCtrl.groupFilter.selectedName = 'All';
       } else {
         vm.primaryGroupButton.selected = true;
-        vm.filterCtrl.filterDataSets(vm.primaryGroup.name);
+        vm.filterCtrl.filterDataSets(vm.primaryGroup.id);
         vm.filterCtrl.groupFilter.selectedName = vm.primaryGroup.name;
       }
     }
