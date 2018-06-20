@@ -1,4 +1,4 @@
-<div ng-if="$ctrl.primaryGroup == 'None'" class="float-left">
+<div ng-if="$ctrl.primaryGroup.name == 'None'" class="float-left">
   <div class="btn-group" uib-dropdown dropdown-append-to-body>
     <button id="split-button" type="button"
       class="btn btn-primary btn-xs" title="Join a group">
@@ -12,7 +12,7 @@
       uib-dropdown-menu role="menu"
       aria-labelledby="split-button">
       <li role="menuitem" ng-repeat="group in $ctrl.groups">
-        <a ng-click="$ctrl.setPrimaryGroup(group.id)">
+        <a ng-click="$ctrl.updatePrimaryGroup(group.id)">
          {{ group.name }}
         </a>
       </li>
@@ -20,14 +20,14 @@
  </div>
 </div>
 
-<div ng-if="$ctrl.primaryGroup !== 'None'" class="float-left">
+<div ng-if="$ctrl.primaryGroup.name !== 'None'" class="float-left">
   <button type="button" ng-click="$ctrl.filterDataSet()"
     class="btn btn-primary btn-xs" title="Join a group"
     ng-model="$ctrl.primaryGroupButton.selected">
     <span ng-if="$ctrl.primaryGroupButton.selected">
       <i class="fa fa-check p-r-1-3"></i>
     </span>
-      {{ $ctrl.primaryGroup }}
+      {{ $ctrl.primaryGroup.name }}
   </button>
 </div>
 <div class="float-left p-l-1-3">

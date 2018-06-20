@@ -13,21 +13,18 @@
 
   PrimaryGroupButtonCtrl.$inject = [
     '$scope',
-    'settings',
-    'userProfileV2Service'
+    'primaryGroupService'
   ];
 
   function PrimaryGroupButtonCtrl (
     $scope,
-    settings,
-    userProfileV2Service
+    primaryGroupService
   ) {
     var vm = this;
     vm.filterDataSet = filterDataSet;
-    vm.primaryGroup = settings.djangoApp.userprofilePrimaryGroup;
-    vm.primaryGroupID = settings.djangoApp.userprofilePrimaryGroupID;
+    vm.primaryGroup = primaryGroupService.primaryGroup;
     vm.primaryGroupButton = { selected: false };
-    vm.setPrimaryGroup = setPrimaryGroup;
+    vm.updatePrimaryGroup = updatePrimaryGroup;
 
     function filterDataSet () {
       // toggle
@@ -36,17 +33,15 @@
         vm.filterCtrl.groupFilter.selectedName = 'All';
         vm.primaryGroupButton.selected = false;
       } else {
-        vm.filterCtrl.filterDataSets(vm.primaryGroupID);
-        vm.filterCtrl.groupFilter.selectedName = vm.primaryGroup;
+        vm.filterCtrl.filterDataSets(vm.primaryGroup.name);
+        vm.filterCtrl.groupFilter.selectedName = vm.primaryGroup.name;
         vm.primaryGroupButton.selected = true;
       }
     }
 
-    function setPrimaryGroup (group) {
-      console.log('set primary group');
-      userProfileV2Service.patch({ primary_group: group.id }).then(function () {
-        vm.primaryGroupID = group.id;
-        vm.primaryGroup = group.name;
+    function updatePrimaryGroup (group) {
+      primaryGroupService.setPrimaryGroup(group).then(function () {
+        vm.primaryGroup = primaryGroupService.primaryGroup;
       });
     }
 
@@ -68,7 +63,6 @@
           return vm.filterCtrl.groupFilter;
         },
         function () {
-          console.log(vm.primaryGroupID);
           if (vm.primaryGroupID && vm.filterCtrl.groupFilter.selectedName === vm.primaryGroup) {
             vm.primaryGroupButton.selected = true;
           } else {
