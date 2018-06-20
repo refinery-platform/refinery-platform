@@ -19,6 +19,7 @@
     '$window',
     'DataSetSearchApi',
     'dataSetV2Service',
+    'primaryGroupService',
     'settings'
   ];
 
@@ -29,6 +30,7 @@
     $window,
     DataSetSearchApi,
     dataSetV2Service,
+    primaryGroupService,
     settings
   ) {
     var vm = this;
@@ -241,6 +243,15 @@
         },
         function () {
           vm.groups = vm.dashboardParentCtrl.groups;
+        }
+      );
+
+      $scope.$watchCollection(
+        function () {
+          return primaryGroupService.primaryGroup;
+        },
+        function () {
+          vm.primaryGroupID = primaryGroupService.primaryGroup.id;
         }
       );
     };

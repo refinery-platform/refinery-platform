@@ -22,6 +22,8 @@
   ) {
     var vm = this;
     vm.filterDataSet = filterDataSet;
+    console.log('in ctrl');
+    console.log(primaryGroupService.primaryGroup);
     vm.primaryGroup = primaryGroupService.primaryGroup;
     vm.primaryGroupButton = { selected: false };
     vm.updatePrimaryGroup = updatePrimaryGroup;
@@ -40,7 +42,11 @@
     }
 
     function updatePrimaryGroup (group) {
+      console.log('entering function');
+      console.log(group);
       primaryGroupService.setPrimaryGroup(group).then(function () {
+        console.log('in the update');
+        console.log(primaryGroupService.primaryGroup);
         vm.primaryGroup = primaryGroupService.primaryGroup;
       });
     }

@@ -19,7 +19,6 @@
       id: settings.djangoApp.userprofilePrimaryGroupID
     };
 
-
     var service = {
       primaryGroup: primaryGroup,
       setPrimaryGroup: setPrimaryGroup
@@ -38,10 +37,13 @@
      * @param {obj} tool - api response tool
     **/
     function setPrimaryGroup (group) {
-      var userProfile = userProfileV2Service.patch({
+      var userProfile = userProfileV2Service.partial_update({
+        uuid: settings.djangoApp.userprofileUUID,
         primary_group: group.id
-      }).$promise.then(function (response) {
-        console.log(response);
+      });
+      userProfile.$promise.then(function () {
+        primaryGroup.name = group.name;
+        primaryGroup.id = group.id;
       });
       return userProfile.$promise;
     }

@@ -27,8 +27,8 @@
            <span class="col-md-6 col-xs-5">
              <span ng-show="group.name!=='Public'">
                <input type="radio"
-                  ng-model="$ctrl.groupFilter.selectedName"
-                  ng-change="$ctrl.filterDataSets(group.id)"
+                  ng-model="$ctrl.primaryGroup.selected"
+                  ng-change="$ctrl.updatePrimaryGroup(group)"
                   value="{{ group.id }}">
              </span>
              <span ng-if="group.name==='Public'">

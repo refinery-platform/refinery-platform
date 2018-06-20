@@ -12,9 +12,11 @@
       uib-dropdown-menu role="menu"
       aria-labelledby="split-button">
       <li role="menuitem" ng-repeat="group in $ctrl.groups">
-        <a ng-click="$ctrl.updatePrimaryGroup(group.id)">
-         {{ group.name }}
-        </a>
+        <span ng-if="group.name !== 'Public'">
+          <a ng-click="$ctrl.updatePrimaryGroup(group)">
+           {{ group.name }}
+          </a>
+        </span>
       </li>
     </ul>
  </div>
