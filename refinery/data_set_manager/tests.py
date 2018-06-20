@@ -1610,18 +1610,36 @@ class UtilitiesTests(TestCase):
         # TODO: Is this the behavior we expect?
 
     def test_update_existing_dataset_with_revised_investigation(self):
-        existing_dataset = create_dataset_with_necessary_models()
-        new_dataset = create_dataset_with_necessary_models()
-        existing_dataset.update_with_revised_investigation(
-            new_dataset.get_investigation()
+        existing_data_set = create_dataset_with_necessary_models()
+        new_data_set = create_dataset_with_necessary_models()
+        existing_data_set.update_with_revised_investigation(
+            new_data_set.get_investigation()
         )
-        self.assertEqual(existing_dataset.get_version(), 2)
-        self.assertEqual(existing_dataset.get_investigation(),
-                         new_dataset.get_investigation())
+        self.assertEqual(existing_data_set.get_investigation(),
+                         new_data_set.get_investigation())
+
+    def test_update_existing_data_set_with_revised_investigation_new_version(
+        self
+    ):
+        existing_data_set = create_dataset_with_necessary_models()
+        new_data_set = create_dataset_with_necessary_models()
+        existing_data_set.update_with_revised_investigation(
+            new_data_set.get_investigation()
+        )
+        self.assertEqual(existing_data_set.get_version(), 2)
+
+    def test_update_existing_data_set_with_revised_investigation_new_message(
+        self
+    ):
+        existing_data_set = create_dataset_with_necessary_models()
+        new_data_set = create_dataset_with_necessary_models()
+        existing_data_set.update_with_revised_investigation(
+            new_data_set.get_investigation()
+        )
         self.assertEqual(
-            existing_dataset.get_latest_investigation_link().message,
+            existing_data_set.get_latest_investigation_link().message,
             "Metadata Revision: for {}".format(
-                new_dataset.get_investigation().title
+                new_data_set.get_investigation().title
             )
         )
 
@@ -3131,7 +3149,7 @@ class CheckDataFilesViewTests(MetadataImportTestBase):
             }
         )
 
-    def test_check_datafiles_non_existing_dataset_uuid(self):
+    def test_check_datafiles_non_existing_data_set_uuid(self):
         response = self.client.post(
             "{}?data_set_uuid={}".format(self.check_files_url, uuid.uuid4()),
             content_type="application/json",
