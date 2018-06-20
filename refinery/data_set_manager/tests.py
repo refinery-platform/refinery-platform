@@ -2441,7 +2441,10 @@ class ProcessISATabViewTests(MetadataImportTestBase):
         CELERY_ALWAYS_EAGER=True,
         REFINERY_DATA_IMPORT_DIR=os.path.abspath(TEST_DATA_BASE_PATH)
     )
-    def test_metadata_revision_works_datafiles_removed_during_revision(self):
+    @mock.patch.object(FileStoreItem, "terminate_file_import_task")
+    def test_metadata_revision_works_datafiles_removed_during_revision(
+        self, terminate_file_import_task_mock
+    ):
         local_data_file_names = ["rfc94.txt", "rfc134.txt"]
         for name in local_data_file_names:
             open(os.path.join(self.test_user_directory, name), "a").close()
@@ -2711,13 +2714,15 @@ class ProcessMetadataTableViewTests(MetadataImportTestBase):
         CELERY_ALWAYS_EAGER=True,
         REFINERY_DATA_IMPORT_DIR=os.path.abspath(TEST_DATA_BASE_PATH)
     )
-    def test_metadata_revision_works_datafiles_removed_during_revision(self):
+    @mock.patch.object(FileStoreItem, "terminate_file_import_task")
+    def test_metadata_revision_works_datafiles_removed_during_revision(
+        self, terminate_file_import_task_mock
+    ):
         local_data_file_names = ["test1.txt", "test2.txt"]
         for name in local_data_file_names:
             open(os.path.join(self.test_user_directory, name), "a").close()
-
         with open(
-                self.get_test_file_path('single-file/two-line-local.csv')
+            self.get_test_file_path('single-file/two-line-local.csv')
         ) as good_meta_data_file:
             self.post_tabular_meta_data_file(
                 meta_data_file=good_meta_data_file
