@@ -209,6 +209,16 @@ class FileStoreItemLocalFileTest(TestCase):
                 self.item.delete()
                 mock_delete.assert_called_with(save=False)
 
+    def test_transfer_data_file(self):
+        self.item.datafile.save(self.file_name, ContentFile(''))
+        file_store_item_to_transfer_data_file_to = FileStoreItem()
+        self.assertIsNotNone(self.item.datafile.name)
+        self.item.transfer_data_file(file_store_item_to_transfer_data_file_to)
+        self.assertIsNone(self.item.datafile.name)
+        self.assertIsNotNone(
+            file_store_item_to_transfer_data_file_to.datafile.name
+        )
+
 
 @override_settings(REFINERY_DATA_IMPORT_DIR='/import/path',
                    REFINERY_FILE_SOURCE_MAP={})
