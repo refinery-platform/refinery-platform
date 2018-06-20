@@ -9,7 +9,7 @@
     '$location', '$log', '$rootScope', '$timeout', '$window', 'isaTabImportApi', 'settings'
   ];
 
-  function IsaTabImportCtrl ($log, $rootScope, $timeout, $window, $location,
+  function IsaTabImportCtrl ($location, $log, $rootScope, $timeout, $window,
                              isaTabImportApi, settings) {
     this.$log = $log;
     this.$rootScope = $rootScope;
