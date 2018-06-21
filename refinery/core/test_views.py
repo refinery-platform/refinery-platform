@@ -748,6 +748,18 @@ class DataSetApiV2Tests(APIV2TestCase):
                                          group_public.extendedgroup.uuid)
         )
 
+    def test_get_data_set_is_clean(self):
+        self.get_request.user = self.user
+        get_response = self.view(self.get_request)
+        self.assertTrue(get_response.data[0]["is_clean"])
+
+    def test_get_data_set_is_not_clean(self):
+        # Create a DataSet along with a Visualization Tool
+        create_tool_with_necessary_models("VISUALIZATION", user=self.user)
+        self.get_request.user = self.user
+        get_response = self.view(self.get_request)
+        self.assertFalse(get_response.data[0]["is_clean"])
+
 
 class AnalysisApiV2Tests(APIV2TestCase):
 
