@@ -528,7 +528,7 @@ def doi(request, id):
     # slashes.
     id = urllib.unquote(id).decode('utf8')
     id = id.replace('$', '/')
-    url = "https://dx.doi.org/{id}".format(id=id)
+    url = "https://doi.org/{id}".format(id=id)
     headers = {'Accept': 'application/json'}
 
     try:
