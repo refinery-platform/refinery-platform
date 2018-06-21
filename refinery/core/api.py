@@ -1056,16 +1056,6 @@ class AnalysisResource(ModelResource):
         return data
 
 
-class NodeAuthentication(SessionAuthentication):
-    """Allows read access to public data sets by anonymous users"""
-    def is_authenticated(self, request, **kwargs):
-        if request.method == 'GET':
-            return True
-        else:
-            return super(NodeAuthentication, self).is_authenticated(request,
-                                                                    **kwargs)
-
-
 class NodeResource(ModelResource):
     parents = fields.ToManyField('core.api.NodeResource', 'parents')
     children = fields.ToManyField('core.api.NodeResource', 'children')
@@ -1079,8 +1069,7 @@ class NodeResource(ModelResource):
             .exclude(value__isnull=True)
             .exclude(value__exact='')
             .filter(node=bundle.obj, subtype='organism')
-        ),
-        use_in='all', full=True, null=True
+        ), use_in='all', full=True, null=True
     )
 
     class Meta:
@@ -1088,9 +1077,9 @@ class NodeResource(ModelResource):
         resource_name = 'node'
         detail_uri_name = 'uuid'  # for using UUIDs instead of pk in URIs
         # required for public data set access by anonymous users
-        authentication = NodeAuthentication()
+        authentication = Authentication()
         authorization = Authorization()
-        allowed_methods = ['get', 'patch']
+        allowed_methods = ['get']
         fields = ['analysis_uuid', 'assay', 'attributes', 'children',
                   'file_url', 'file_uuid', 'name', 'parents', 'study',
                   'subanalysis', 'type', 'uuid']

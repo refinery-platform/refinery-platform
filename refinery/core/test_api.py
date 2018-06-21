@@ -389,14 +389,6 @@ class NodeAPITest(LoginResourceTestCase):
         ]
         self.assertItemsEqual(node_fields, expected_fields)
 
-    def test_patch_node(self):
-        new_file_uuid = str(uuid.uuid4())
-        self.api_client.patch(api_uri(NodeResource, self.node.uuid),
-                              data={'file_uuid': new_file_uuid},
-                              authentication=self.get_credentials())
-        updated_node = Node.objects.get(uuid=self.node.uuid)
-        self.assertEqual(updated_node.file_uuid, new_file_uuid)
-
 
 class NodeAPIUnauthenticatedAccessTest(ResourceTestCase):
 
@@ -414,7 +406,7 @@ class NodeAPIUnauthenticatedAccessTest(ResourceTestCase):
         response = self.api_client.patch(
             api_uri(NodeResource, str(uuid.uuid4())), data={}
         )
-        self.assertHttpUnauthorized(response)
+        self.assertHttpMethodNotAllowed(response)
 
     def test_post_node(self):
         response = self.api_client.post(api_uri(NodeResource))
