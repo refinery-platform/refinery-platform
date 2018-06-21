@@ -33,9 +33,8 @@ from rest_framework.views import APIView
 from core.models import DataSet, ExtendedGroup, get_user_import_dir
 from core.utils import get_absolute_url
 from data_set_manager.isa_tab_parser import ParserException
-from data_set_manager.models import Node
-from file_store.models import (FileStoreItem, generate_file_source_translator,
-                               get_temp_dir, parse_s3_url)
+from file_store.models import (generate_file_source_translator, get_temp_dir,
+                               parse_s3_url)
 from file_store.tasks import download_file, import_file
 
 from .models import Assay, AttributeOrder, Study
@@ -1017,42 +1016,4 @@ class AddFilesToDataSetView(View):
             )):
                 import_file.delay(file_store_item.uuid)
 
-        return HttpResponse()  # 200
-
-
-class RemoveFileFromNodeView(View):
-    """Remove file from a Node instance"""
-    def post(self, request):
-        try:
-            node = Node.objects.get(uuid=request.POST['node_uuid'])
-        except KeyError:
-            logger.error("Node UUID was not provided in request")
-            return HttpResponseBadRequest()
-        except Node.DoesNotExist:
-            logger.error("Node with UUID '%s' does not exist",
-                         request.POST.get('node_uuid'))
-            return HttpResponseNotFound()
-        except Node.MultipleObjectsReturned:
-            logger.critical("Multiple Nodes found with UUID '%s'",
-                            request.POST.get('node_uuid'))
-            return HttpResponseServerError()
-
-        if request.user != node.study.get_dataset().get_owner():
-            return HttpResponseForbidden()
-
-        logger.debug("Removing file from Node '%s'", node)
-        try:
-            file_store_item = FileStoreItem.objects.get(uuid=node.file_uuid)
-        except FileStoreItem.DoesNotExist:
-            logger.error("FileStoreItem with UUID '%s' does not exist",
-                         node.file_uuid)
-            return HttpResponseNotFound()
-        except FileStoreItem.MultipleObjectsReturned:
-            logger.critical("Multiple FileStoreItems found with UUID '%s'",
-                            node.file_uuid)
-            return HttpResponseServerError()
-
-        file_store_item.delete()
-        node.file_uuid = None
-        node.save()
         return HttpResponse()  # 200
