@@ -8,7 +8,7 @@ from rest_framework.validators import UniqueValidator
 from data_set_manager.models import Node
 from file_store.models import FileStoreItem
 
-from .models import DataSet, UserProfile, Workflow
+from .models import DataSet, Event, UserProfile, Workflow
 
 logger = logging.getLogger(__name__)
 
@@ -75,7 +75,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
             pass
         else:
             raise serializers.ValidationError(
-                'User is not a member of group, %s', group
+                'User is not a member of group, {}'.format(group)
             )
 
         if group.name != settings.REFINERY_PUBLIC_GROUP_NAME:
@@ -198,3 +198,26 @@ class NodeSerializer(serializers.HyperlinkedModelSerializer):
             'ready_for_igv_detail_view',
             'file_uuid'
         ]
+
+
+class EventSerializer(serializers.ModelSerializer):
+    data_set = serializers.SlugRelatedField(
+        read_only=True, slug_field='uuid'
+    )
+    user = serializers.SlugRelatedField(
+        read_only=True, slug_field='username'
+    )
+    message = serializers.SerializerMethodField()
+    details = serializers.JSONField(source="get_details_as_dict")
+    date_time = serializers.DateTimeField()
+
+    class Meta:
+        model = Event
+        fields = [
+            'date_time', 'data_set', 'group', 'user',
+            'type', 'sub_type', 'details', 'message'
+        ]
+
+    @staticmethod
+    def get_message(obj):
+        return str(obj)
