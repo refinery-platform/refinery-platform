@@ -3,7 +3,7 @@
  * @namespace DataSetsCardCtrl
  * @desc Controller for data sets card component on dashboard component.
  * Child component of dashboard component
- * @memberOf refineryApp.refineryDataSetsCardCtrl
+ * @memberOf refineryApp.refineryDashboard
  */
 (function () {
   'use strict';
@@ -18,7 +18,8 @@
     '$uibModal',
     '$window',
     'DataSetSearchApi',
-    'dataSetV2Service'
+    'dataSetV2Service',
+    'primaryGroupService'
   ];
 
   function DataSetsCardCtrl (
@@ -27,7 +28,8 @@
     $uibModal,
     $window,
     DataSetSearchApi,
-    dataSetV2Service
+    dataSetV2Service,
+    primaryGroupService
   ) {
     var vm = this;
     vm.dataSets = [];
@@ -41,6 +43,7 @@
     vm.openDataSetTransferModal = openDataSetTransferModal;
     vm.openPermissionEditor = openPermissionEditor;
     vm.params = {};
+    vm.primaryGroupID = primaryGroupService.primaryGroup.id;
     vm.resetDataSetSearch = resetDataSetSearch;
     vm.searchDataSets = searchDataSets;
     vm.searchQueryDataSets = '';
@@ -238,6 +241,15 @@
         },
         function () {
           vm.groups = vm.dashboardParentCtrl.groups;
+        }
+      );
+
+      $scope.$watchCollection(
+        function () {
+          return primaryGroupService.primaryGroup;
+        },
+        function () {
+          vm.primaryGroupID = primaryGroupService.primaryGroup.id;
         }
       );
     };
