@@ -75,7 +75,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
             pass
         else:
             raise serializers.ValidationError(
-                'User is not a member of group, %s', group
+                'User is not a member of group, {}'.format(group)
             )
 
         if group.name != settings.REFINERY_PUBLIC_GROUP_NAME:

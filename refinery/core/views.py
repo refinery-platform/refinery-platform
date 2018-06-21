@@ -1129,7 +1129,7 @@ class UserProfileViewSet(APIView):
     def patch(self, request, uuid):
         if request.user.is_anonymous():
             return Response(
-                self.user, status=status.HTTP_401_UNAUTHORIZED
+                self.request.user, status=status.HTTP_401_UNAUTHORIZED
             )
 
         serializer = UserProfileSerializer(request.user.profile,
