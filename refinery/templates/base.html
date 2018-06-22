@@ -30,6 +30,8 @@
       userId: '{{ user.id }}',
       userName: '{{ user.username }}',
       userprofileUUID: '{{ user.profile.uuid|escapejs }}',
+      userprofilePrimaryGroupID: '{{ user.profile.primary_group.id|escapejs }}',
+      userprofilePrimaryGroup: '{{ user.profile.primary_group|escapejs }}',
       launchpad_tut_viewed: `{{ user.profile.has_viewed_launchpad_tut }}`,
       collaboration_tut_viewed: `{{ user.profile.has_viewed_collaboration_tut}}`,
       data_upload_tut_viewed: `{{ user.profile.has_viewed_data_upload_tut}}`,

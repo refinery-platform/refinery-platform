@@ -1,5 +1,4 @@
 from datetime import timedelta
-import json
 import re
 
 from django.apps import apps
@@ -13,43 +12,34 @@ from django.db.migrations.executor import MigrationExecutor
 from django.test import TestCase
 from django.utils import timezone
 
-from guardian.shortcuts import assign_perm, get_objects_for_group
+from cuser.middleware import CuserMiddleware
+from guardian.shortcuts import get_objects_for_group
 import mock
 import mockcache as memcache
 
-from cuser.middleware import CuserMiddleware
-from tastypie.exceptions import NotFound
-from tastypie.test import ResourceTestCase
-
 from analysis_manager.models import AnalysisStatus
-from core.tasks import collect_site_statistics
-from data_set_manager.models import (
-    AnnotatedNode, Assay, Contact, Investigation, Node, NodeCollection, Study
-)
-from factory_boy.django_model_factories import (
-    GalaxyInstanceFactory,
-)
-from factory_boy.utils import (
-    create_dataset_with_necessary_models, create_tool_with_necessary_models,
-    make_analyses_with_single_dataset
-)
+from data_set_manager.models import (AnnotatedNode, Assay, Contact,
+                                     Investigation, Node, NodeCollection,
+                                     Study)
+from factory_boy.django_model_factories import GalaxyInstanceFactory
+from factory_boy.utils import (create_dataset_with_necessary_models,
+                               create_tool_with_necessary_models,
+                               make_analyses_with_single_dataset)
 from file_store.models import FileStoreItem, FileType
 
-from .api import AnalysisResource
 from .management.commands.create_user import init_user
 from .management.commands.import_annotations import \
     Command as ImportAnnotationsCommand
-from .models import (
-    INPUT_CONNECTION, OUTPUT_CONNECTION, Analysis, AnalysisNodeConnection,
-    AnalysisResult, BaseResource, DataSet, Event, ExtendedGroup,
-    InvestigationLink, Project, SiteStatistics, Tutorials, UserProfile,
-    Workflow, WorkflowEngine, invalidate_cached_object
-)
+from .models import (INPUT_CONNECTION, OUTPUT_CONNECTION, Analysis,
+                     AnalysisNodeConnection, AnalysisResult, BaseResource,
+                     DataSet, Event, ExtendedGroup, InvestigationLink, Project,
+                     SiteStatistics, Tutorials, UserProfile, Workflow,
+                     WorkflowEngine, invalidate_cached_object)
 from .search_indexes import DataSetIndex
-from .utils import (
-    filter_nodes_uuids_in_solr, get_aware_local_time, get_resources_for_user,
-    move_obj_to_front, which_default_read_perm
-)
+from .tasks import collect_site_statistics
+from .utils import (filter_nodes_uuids_in_solr, get_aware_local_time,
+                    get_resources_for_user, move_obj_to_front,
+                    which_default_read_perm)
 
 cache = memcache.Client(["127.0.0.1:11211"])
 
@@ -81,302 +71,6 @@ class UserCreateTest(TestCase):
         new_user = User.objects.get(username=self.username)
         self.assertEqual(
             new_user.groups.filter(name=self.public_group_name).count(), 1)
-
-
-def make_api_uri(resource_name, resource_id='', sharing=False):
-    """Helper function to build Tastypie REST URIs"""
-    base_url = '/api/v1'
-    uri = '/'.join([base_url, resource_name]) + '/'
-    uri_with_resource_id = '/'.join([base_url, resource_name, resource_id]) \
-                           + '/'
-
-    def add_sharing(uri):
-        return uri + 'sharing/'
-
-    if resource_id:
-        if sharing:
-            return add_sharing(uri_with_resource_id)
-        else:
-            return uri_with_resource_id
-    else:
-        if sharing:
-            return add_sharing(uri)
-        else:
-            return uri
-
-
-class LoginResourceTestCase(ResourceTestCase):
-
-    def setUp(self):
-        super(LoginResourceTestCase, self).setUp()
-        self.username = self.password = 'user'
-        self.user = User.objects.create_user(
-            self.username, '', self.password
-        )
-        self.username2 = self.password2 = 'user2'
-        self.user2 = User.objects.create_user(
-            self.username2, '', self.password2
-        )
-        self.get_credentials()
-
-    def get_credentials(self):
-        """Authenticate as self.user"""
-        # workaround required to use SessionAuthentication
-        # http://javaguirre.net/2013/01/29/using-session-authentication-tastypie-tests/
-        return self.api_client.client.login(
-            username=self.username,
-            password=self.password
-        )
-
-
-class ApiResourceTest(LoginResourceTestCase):
-
-    def setUp(self):
-        super(ApiResourceTest, self).setUp()
-
-    def test_xml_format_ignored(self):
-        response = self.api_client.get(
-            '/api/v1/',
-            format='xml',
-            authentication=self.get_credentials()
-        )
-        self.assertValidJSONResponse(response)
-
-
-class AnalysisResourceTest(LoginResourceTestCase):
-    """Test Analysis REST API operations"""
-
-    def setUp(self):
-        super(AnalysisResourceTest, self).setUp()
-        self.project = Project.objects.create()
-        self.user_catch_all_project = UserProfile.objects.get(
-            user=self.user
-        ).catch_all_project
-        self.dataset = create_dataset_with_necessary_models()
-        self.dataset2 = create_dataset_with_necessary_models()
-        self.galaxy_instance = GalaxyInstanceFactory()
-        self.workflow_engine = WorkflowEngine.objects.create(
-            instance=self.galaxy_instance
-        )
-        self.workflow = Workflow.objects.create(
-            workflow_engine=self.workflow_engine
-        )
-
-    def test_get_analysis(self):
-        """Test retrieving an existing Analysis that belongs to a user who
-        created it
-        """
-
-        self.dataset.set_owner(self.user)
-
-        workflow_dict = {'a': True}
-        workflow_as_repr = repr(workflow_dict)
-        analysis = Analysis.objects.create(
-            name='bla',
-            summary='keks',
-            project=self.user_catch_all_project,
-            data_set=self.dataset,
-            workflow=self.workflow,
-            workflow_copy=workflow_as_repr
-        )
-        analysis.set_owner(self.user)
-        analysis_uri = make_api_uri(Analysis._meta.model_name, analysis.uuid)
-        response = self.api_client.get(
-            analysis_uri,
-            format='json'
-        )
-        self.assertValidJSONResponse(response)
-        data = self.deserialize(response)
-
-        expected_keys = set(AnalysisResource.Meta.fields)
-        expected_keys.add(u'workflow_json')
-
-        self.assertEqual(set(data.keys()), expected_keys)
-        self.assertEqual(data['uuid'], analysis.uuid)
-
-        workflow_as_json = json.dumps(workflow_dict)
-        self.assertNotEqual(workflow_as_json, workflow_as_repr)
-        self.assertEqual(data['workflow_json'], workflow_as_json)
-
-    def test_get_analysis_list(self):
-        """Test retrieving a list of Analysis instances that belong to a user
-        who created them.
-        """
-
-        self.dataset.set_owner(self.user)
-
-        analysis1 = Analysis.objects.create(
-            name='a1',
-            summary='keks',
-            project=self.user_catch_all_project,
-            data_set=self.dataset,
-            workflow=self.workflow
-        )
-        assign_perm(
-            'read_%s' % Analysis._meta.model_name, self.user, analysis1
-        )
-        analysis2 = Analysis.objects.create(
-            name='a2',
-            summary='keks',
-            project=self.user_catch_all_project,
-            data_set=self.dataset,
-            workflow=self.workflow
-        )
-        assign_perm(
-            'read_%s' % Analysis._meta.model_name, self.user, analysis2
-        )
-        analysis_uri = make_api_uri(Analysis._meta.model_name)
-        response = self.api_client.get(analysis_uri, format='json',
-                                       data={'order_by': '-name'})
-        self.assertValidJSONResponse(response)
-        data = self.deserialize(response)['objects']
-        self.assertEqual(len(data), 2)
-        self.assertEqual(data[0]['name'], analysis2.name)
-
-    def test_get_analysis_without_login(self):
-        """Test retrieving an existing Analysis without logging in"""
-        self.api_client.client.logout()
-        analysis = Analysis.objects.create(
-            name='bla',
-            summary='keks',
-            project=self.project,
-            data_set=self.dataset,
-            workflow=self.workflow
-        )
-        analysis.set_owner(self.user)
-        analysis_uri = make_api_uri(Analysis._meta.model_name, analysis.uuid)
-        response = self.api_client.get(analysis_uri, format='json')
-        self.assertHttpNotFound(response)
-
-    def test_get_analysis_without_permission(self):
-        """Test retrieving an existing Analysis that belongs to a different
-        user
-        """
-        analysis = Analysis.objects.create(
-            name='bla',
-            summary='keks',
-            project=self.project,
-            data_set=self.dataset,
-            workflow=self.workflow
-        )
-        analysis.set_owner(self.user2)
-        analysis_uri = make_api_uri(Analysis._meta.model_name, analysis.uuid)
-        response = self.api_client.get(analysis_uri, format='json')
-        self.assertHttpNotFound(response)
-
-    def test_get_analysis_with_invalid_uuid(self):
-        """Test retrieving an Analysis instance that doesn't exist.
-        """
-        analysis = Analysis.objects.create(project=self.project,
-                                           data_set=self.dataset,
-                                           workflow=self.workflow)
-        assign_perm(
-            "read_%s" % Analysis._meta.model_name, self.user, analysis
-        )
-        analysis_uri = make_api_uri(Analysis._meta.model_name, 'Invalid UUID')
-        response = self.api_client.get(analysis_uri, format='json',
-                                       authentication=self.get_credentials())
-        self.assertHttpNotFound(response)
-
-    def test_get_analysis_list_for_given_dataset(self):
-        """Test retrieving a list of Analysis instances for a given dataset"""
-
-        self.dataset.set_owner(self.user)
-
-        analysis1 = Analysis.objects.create(
-            name='a1',
-            project=self.user_catch_all_project,
-            data_set=self.dataset,
-            workflow=self.workflow
-        )
-        analysis1.set_owner(self.user)
-        analysis2 = Analysis.objects.create(
-            name='a2',
-            project=self.user_catch_all_project,
-            data_set=self.dataset2,
-            workflow=self.workflow
-        )
-        analysis2.set_owner(self.user)
-        analysis_uri = make_api_uri(Analysis._meta.model_name)
-        response = self.api_client.get(
-            analysis_uri, format='json',
-            data={'data_set__uuid': self.dataset.uuid}
-        )
-        self.assertValidJSONResponse(response)
-        data = self.deserialize(response)['objects']
-        self.assertEqual(len(data), 1)
-        self.assertEqual(data[0]['name'], analysis1.name)
-
-    def test_get_sorted_analysis_list(self):
-        """Get a list of Analysis instances with sorting params applied
-        (e.g., order_by=name)
-        """
-        self.dataset.set_owner(self.user)
-        self.dataset2.set_owner(self.user)
-        analysis1 = Analysis.objects.create(
-            name='a1',
-            project=self.user_catch_all_project,
-            data_set=self.dataset,
-            workflow=self.workflow
-        )
-        analysis1.set_owner(self.user)
-        analysis2 = Analysis.objects.create(
-            name='a2',
-            project=self.user_catch_all_project,
-            data_set=self.dataset2,
-            workflow=self.workflow
-        )
-        analysis2.set_owner(self.user)
-        analysis_uri = make_api_uri(Analysis._meta.model_name)
-        response = self.api_client.get(
-            analysis_uri,
-            format='json',
-            data={'order_by': 'name'}
-        )
-        self.assertValidJSONResponse(response)
-        data = self.deserialize(response)['objects']
-        self.assertEqual(len(data), 2)
-        self.assertEqual(data[0]['name'], analysis1.name)
-
-    def test_get_empty_analysis_list(self):
-        """Test retrieving a list of Analysis instances when none exist"""
-        analysis_uri = make_api_uri(Analysis._meta.model_name)
-        response = self.api_client.get(analysis_uri, format='json',
-                                       authentication=self.get_credentials())
-        self.assertValidJSONResponse(response)
-        data = self.deserialize(response)['objects']
-        self.assertEqual(len(data), 0)
-
-    def test_delete_analysis(self):
-        """Test deleting an existing Analysis instance"""
-        analysis = Analysis.objects.create(project=self.project,
-                                           data_set=self.dataset,
-                                           workflow=self.workflow)
-        self.assertEqual(Analysis.objects.count(), 1)
-        assign_perm(
-            "delete_%s" % Analysis._meta.model_name, self.user, analysis
-        )
-
-        analysis_uri = make_api_uri(Analysis._meta.model_name, analysis.uuid)
-        response = self.api_client.delete(
-            analysis_uri, format='json', authentication=self.get_credentials()
-        )
-        self.assertHttpMethodNotAllowed(response)
-        self.assertEqual(Analysis.objects.count(), 1)
-
-    def test_delete_analysis_without_login(self):
-        """Test deleting an existing Analysis instance with logging in"""
-        analysis = Analysis.objects.create(project=self.project,
-                                           data_set=self.dataset,
-                                           workflow=self.workflow)
-        self.assertEqual(Analysis.objects.count(), 1)
-        assign_perm(
-            "delete_%s" % Analysis._meta.model_name, self.user, analysis
-        )
-        analysis_uri = make_api_uri(Analysis._meta.model_name, analysis.uuid)
-        response = self.api_client.delete(analysis_uri, format='json')
-        self.assertHttpMethodNotAllowed(response)
-        self.assertEqual(Analysis.objects.count(), 1)
 
 
 class BaseResourceSlugTest(TestCase):
@@ -1318,132 +1012,6 @@ class UserTutorialsTest(TestCase):
         self.assertIsNotNone(
             Tutorials.objects.get(user_profile=self.userprofile)
         )
-
-
-class DataSetResourceTest(LoginResourceTestCase):
-    """Test DataSet V1 REST API operations"""
-
-    def setUp(self):
-        super(DataSetResourceTest, self).setUp()
-        self.project = Project.objects.create()
-        self.user_catch_all_project = UserProfile.objects.get(
-            user=self.user
-        ).catch_all_project
-        self.tabular_dataset = create_dataset_with_necessary_models(
-            user=self.user
-        )
-        self.isatab_dataset = create_dataset_with_necessary_models(
-            user=self.user2,
-            is_isatab_based=True
-        )
-        self.incomplete_dataset = create_dataset_with_necessary_models(
-            user=self.user
-        )
-        # Delete InvestigationLink to simulate a Dataset that hasn't finished
-        # being created
-        self.incomplete_dataset.get_latest_investigation_link().delete()
-
-    def test_get_dataset(self):
-        """Test retrieving an existing Dataset that belongs to a user who
-        created it
-        """
-        dataset_uri = make_api_uri("data_sets", self.tabular_dataset.uuid)
-        response = self.api_client.get(
-            dataset_uri,
-            format='json'
-        )
-        self.assertValidJSONResponse(response)
-        data = self.deserialize(response)
-        self.assertEqual(data['uuid'], self.tabular_dataset.uuid)
-
-    def test_get_dataset_expecting_analyses(self):
-        analyses_to_create = 2
-        analyses, dataset = make_analyses_with_single_dataset(
-            analyses_to_create,
-            self.user
-        )
-
-        dataset_uri = make_api_uri("data_sets", dataset.uuid)
-        response = self.api_client.get(dataset_uri, format='json')
-        self.assertValidJSONResponse(response)
-        data = self.deserialize(response)
-        self.assertEqual(data['uuid'], dataset.uuid)
-        self.assertEqual(len(data['analyses']), analyses_to_create)
-
-        for analysis in data['analyses']:
-            self.assertEqual(analysis['owner'],
-                             UserProfile.objects.get(user=self.user).uuid)
-            self.assertIsNotNone(analysis.get('status'))
-            self.assertIsNotNone(analysis.get('name'))
-            self.assertIsNotNone(analysis.get('uuid'))
-
-    def test_get_dataset_expecting_no_analyses(self):
-        dataset_uri = make_api_uri("data_sets", self.tabular_dataset.uuid)
-        response = self.api_client.get(
-            dataset_uri,
-            format='json'
-        )
-        self.assertValidJSONResponse(response)
-        data = self.deserialize(response)
-        self.assertEqual(data['uuid'], self.tabular_dataset.uuid)
-        self.assertEqual(data['analyses'], [])
-
-    def test_detail_response_with_complete_dataset(self):
-        # Properly created DataSets will have version information
-        dataset_uri = make_api_uri(
-            "data_sets",
-            self.tabular_dataset.uuid
-        )
-        response = self.api_client.get(
-            dataset_uri,
-            format='json'
-        )
-        data = self.deserialize(response)
-        self.assertEqual(data["version"], 1)
-        self.assertIsNotNone(data["date"])
-
-    def test_detail_response_yields_error_if_incomplete_dataset(self):
-        # DataSets that aren't fully created will yield informative errors
-        dataset_uri = make_api_uri(
-            "data_sets",
-            self.incomplete_dataset.uuid
-        )
-        with self.assertRaises(NotFound):
-            self.api_client.get(dataset_uri, format='json')
-
-    def test_list_response_yields_complete_datasets_only(self):
-        # DataSets that aren't fully created will not be displayed in the
-        # list api response
-        resp = self.api_client.get(make_api_uri('data_sets'), format='json')
-        self.assertValidJSONResponse(resp)
-        data = json.loads(resp.content)
-        self.assertEqual(data["meta"]["total_count"], 1)
-        self.assertEqual(data["objects"][0]["name"], self.tabular_dataset.name)
-
-    def test_isatab_based_dataset_specifics_in_response(self):
-        data = self.deserialize(
-            self.api_client.get(
-                make_api_uri("data_sets", self.isatab_dataset.uuid),
-                format='json'
-            )
-        )
-        isa_archive_file_store_item = \
-            self.isatab_dataset.get_investigation().get_file_store_item()
-        self.assertEqual(data["isa_archive"], isa_archive_file_store_item.uuid)
-        self.assertEqual(data["isa_archive_url"],
-                         isa_archive_file_store_item.get_datafile_url())
-
-    def test_tabular_dataset_specifics_in_response(self):
-        data = self.deserialize(
-            self.api_client.get(
-                make_api_uri("data_sets", self.tabular_dataset.uuid),
-                format='json'
-            )
-        )
-        pre_isa_archive_file_store_item = \
-            self.tabular_dataset.get_investigation().get_file_store_item()
-        self.assertEqual(data["pre_isa_archive"],
-                         pre_isa_archive_file_store_item.uuid)
 
 
 class DataSetTests(TestCase):
