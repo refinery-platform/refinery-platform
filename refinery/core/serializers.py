@@ -25,6 +25,7 @@ class DataSetSerializer(serializers.ModelSerializer):
     description = serializers.CharField(max_length=5000)
     is_owner = serializers.SerializerMethodField()
     public = serializers.SerializerMethodField()
+    is_clean = serializers.SerializerMethodField()
 
     def get_is_owner(self, data_set):
         owner = data_set.get_owner()
@@ -39,10 +40,14 @@ class DataSetSerializer(serializers.ModelSerializer):
         is_public = data_set.is_public()
         return is_public
 
+    def get_is_clean(self, data_set):
+        return data_set.is_clean()
+
     class Meta:
         model = DataSet
         fields = ['title', 'accession', 'summary', 'description', 'slug',
-                  'uuid', 'modification_date', 'id', 'is_owner', 'public']
+                  'uuid', 'modification_date', 'id', 'is_owner', 'public',
+                  'is_clean']
 
     def partial_update(self, instance, validated_data):
         """
