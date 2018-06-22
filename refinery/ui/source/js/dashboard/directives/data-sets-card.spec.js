@@ -24,14 +24,14 @@
         '<div id="data-sets-list"></div>'
       );
       $httpBackend
-        .expectGET(
+        .whenGET(
           settings.appRoot +
           settings.refineryApi +
           '/extended_groups/members/?format=json&id=id'
         ).respond(200, []);
 
       $httpBackend
-        .expectGET(
+        .whenGET(
           settings.appRoot +
           settings.refineryApiV2 +
           '/data_sets/?format=json'
