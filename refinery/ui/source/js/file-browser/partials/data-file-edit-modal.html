@@ -16,7 +16,7 @@
         Add data file
       </h4>
       <div class="p-a-1" ng-if="$ctrl.fileAction === 'add'">
-        <rp-file-upload></rp-file-upload>
+        <rp-file-upload is-node-update="true"></rp-file-upload>
       </div>
       <!-- mock file-upload template to show a disabled view -->
       <div class="p-a-1" ng-if="$ctrl.fileAction !== 'add'">
@@ -25,12 +25,6 @@
           ng-disabled='true'>
           <i class="fa fa-plus"></i>
           <span>Add files &hellip;</span>
-          <input
-            type="file"
-            class="refinery-base"
-            name="files[]"
-            multiple
-            ng-disabled='true'>
         </span>
         <button
           class="active-group refinery-base btn btn-default btn-sm start"

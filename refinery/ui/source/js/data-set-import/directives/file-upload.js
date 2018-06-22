@@ -10,6 +10,10 @@
   function rpFileUpload ($window, settings) {
     return {
       restrict: 'E',
+      bindToController: {
+        isNodeUpdate: '='
+      },
+      controller: 'RefineryFileUploadCtrl as FileCtrl',
       templateUrl: function () {
         if (settings.djangoApp.deploymentPlatform === 'aws') {
           return $window.getStaticUrl('partials/data-set-import/partials/file-upload-s3.html');
