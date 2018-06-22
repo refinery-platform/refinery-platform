@@ -1859,6 +1859,10 @@ body.repo-mode .refinery-dashboard {
   #dashboard-data-set-card {
     height: @card-top-half-view;
 
+    .fa-question-circle {
+      padding-top: 75%;
+    }
+
     .file-browser-go-icon {
       .fa-folder-open-o {
         font-size: 1em;
@@ -2034,10 +2038,15 @@ body.repo-mode .refinery-dashboard {
 
 .radio-drop-down {
   padding: 0.5em;
+  min-width: 200px;
   label {
     padding: 0.2em 0 0em 0.2em;
     input {
       padding-right: .2em;
     }
+  }
+  .fa-asterisk {
+    font-size: .6em;
+    vertical-align: text-top;
   }
 }

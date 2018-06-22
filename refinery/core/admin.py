@@ -13,10 +13,9 @@ from tool_manager.utils import AdminFieldPopulator
 
 from .models import (
     Analysis, AnalysisNodeConnection, AnalysisResult, DataSet, Download,
-    ExtendedGroup, InvestigationLink, Invitation, Ontology, Project,
+    ExtendedGroup, Event, InvestigationLink, Invitation, Ontology, Project,
     SiteProfile, SiteStatistics, Tutorials, UserProfile, Workflow,
-    WorkflowEngine
-)
+    WorkflowEngine)
 from .utils import admin_ui_deletion
 
 
@@ -155,6 +154,10 @@ class SiteStatisticsAdmin(AdminFieldPopulator):
     pass
 
 
+class EventAdmin(AdminFieldPopulator):
+    pass
+
+
 admin.site.register(ExtendedGroup, ExtendedGroupAdmin)
 admin.site.register(Project, ProjectAdmin)
 admin.site.register(DataSet, DataSetAdmin)
@@ -171,3 +174,4 @@ admin.site.register(Tutorials, TutorialsAdmin)
 admin.site.register(Ontology, OntologyAdmin)
 admin.site.register(SiteProfile, SiteProfileAdmin)
 admin.site.register(SiteStatistics, SiteStatisticsAdmin)
+admin.site.register(Event, EventAdmin)

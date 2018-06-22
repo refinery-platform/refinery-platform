@@ -1,13 +1,14 @@
 import logging
 
 import celery
+from django.conf import settings
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 
 from data_set_manager.models import Node
 from file_store.models import FileStoreItem
 
-from .models import DataSet, Workflow
+from .models import DataSet, Event, UserProfile, Workflow
 
 logger = logging.getLogger(__name__)
 
@@ -58,6 +59,38 @@ class DataSetSerializer(serializers.ModelSerializer):
         )
         instance.slug = validated_data.get('slug', instance.slug)
 
+        instance.save()
+        return instance
+
+
+class UserProfileSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = UserProfile
+        fields = ['primary_group']
+
+    def validate_primary_group(self, group):
+        user = self.context.get('request').user
+        if user.id in group.user_set.values_list('id', flat=True):
+            pass
+        else:
+            raise serializers.ValidationError(
+                'User is not a member of group, {}'.format(group)
+            )
+
+        if group.name != settings.REFINERY_PUBLIC_GROUP_NAME:
+            return group
+        else:
+            raise serializers.ValidationError('Primary group can not be '
+                                              'the Public group')
+
+    def partial_update(self, instance, validated_data):
+        """
+        Update and return an existing `UserProfile` instance, given the
+        validated data.
+        """
+        instance.primary_group = validated_data.get('primary_group',
+                                                    instance.primary_group)
         instance.save()
         return instance
 
@@ -165,3 +198,26 @@ class NodeSerializer(serializers.HyperlinkedModelSerializer):
             'ready_for_igv_detail_view',
             'file_uuid'
         ]
+
+
+class EventSerializer(serializers.ModelSerializer):
+    data_set = serializers.SlugRelatedField(
+        read_only=True, slug_field='uuid'
+    )
+    user = serializers.SlugRelatedField(
+        read_only=True, slug_field='username'
+    )
+    message = serializers.SerializerMethodField()
+    details = serializers.JSONField(source="get_details_as_dict")
+    date_time = serializers.DateTimeField()
+
+    class Meta:
+        model = Event
+        fields = [
+            'date_time', 'data_set', 'group', 'user',
+            'type', 'sub_type', 'details', 'message'
+        ]
+
+    @staticmethod
+    def get_message(obj):
+        return str(obj)
