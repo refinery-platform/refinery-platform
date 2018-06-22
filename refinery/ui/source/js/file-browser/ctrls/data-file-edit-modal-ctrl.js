@@ -13,12 +13,14 @@
 
   DataFileEditModalCtrl.$inject = [
     '$log',
-    'fileBrowserFactory'
+    'fileBrowserFactory',
+    'settings'
   ];
 
   function DataFileEditModalCtrl (
     $log,
-    fileBrowserFactory
+    fileBrowserFactory,
+    settings
   ) {
     var vm = this;
 
@@ -29,6 +31,7 @@
     vm.removeFile = removeFile;
     vm.isLoading = false;
     vm.responseMessage = '';
+    vm.useS3 = settings.djangoApp.deploymentPlatform === 'aws';
 
     /*
      * ---------------------------------------------------------

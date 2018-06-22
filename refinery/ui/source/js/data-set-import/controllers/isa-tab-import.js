@@ -17,6 +17,7 @@
     this.isaTabImportApi = isaTabImportApi;
     this.settings = settings;
     this.showFileUpload = false;
+    this.useS3 = settings.djangoApp.deploymentPlatform === 'aws';
 
     // Helper method to exit out of error alert
     this.closeError = function () {

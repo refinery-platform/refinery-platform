@@ -23,6 +23,7 @@ function MetadataTableImportCtrl (
   this.showFileUpload = false;
   this.tabularFileImportApi = tabularFileImportApi;
   this.metadataStatusService = metadataStatusService;
+  this.useS3 = settings.djangoApp.deploymentPlatform === 'aws';
   this.whiteSpaceStripFlag = false;
 
   this.gridOptions = {

@@ -3,11 +3,11 @@
 
   angular
     .module('refineryDataSetImport')
-    .directive('rpFileUpload', rpFileUpload);
+    .directive('rpFileUploadS3', rpFileUploadS3);
 
-  rpFileUpload.$inject = ['$window'];
+  rpFileUploadS3.$inject = ['$window'];
 
-  function rpFileUpload ($window) {
+  function rpFileUploadS3 ($window) {
     return {
       restrict: 'E',
       bindToController: {
@@ -15,7 +15,7 @@
       },
       controller: 'RefineryFileUploadS3Ctrl as FileCtrl',
       templateUrl: function () {
-        return $window.getStaticUrl('partials/data-set-import/partials/file-upload.html');
+        return $window.getStaticUrl('partials/data-set-import/partials/file-upload-s3.html');
       }
     };
   }
