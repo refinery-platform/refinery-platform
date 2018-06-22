@@ -38,15 +38,15 @@ from tastypie.http import (HttpAccepted, HttpBadRequest, HttpCreated,
 from tastypie.resources import ModelResource, Resource
 from tastypie.utils import trailing_slash
 
-from core.models import (Analysis, DataSet, ExtendedGroup, GroupManagement,
-                         Invitation, Project, ResourceStatistics, Tutorials,
-                         UserAuthentication, UserProfile, Workflow)
-from core.utils import (get_data_sets_annotations, get_resources_for_user,
-                        which_default_read_perm)
 from data_set_manager.api import (AssayResource, InvestigationResource,
                                   StudyResource)
 from data_set_manager.models import Attribute, Node, Study
 from file_store.models import FileStoreItem
+from .models import (Analysis, DataSet, ExtendedGroup, GroupManagement,
+                     Invitation, Project, ResourceStatistics, Tutorials,
+                     UserAuthentication, UserProfile, Workflow)
+from .utils import (get_data_sets_annotations, get_resources_for_user,
+                    which_default_read_perm)
 
 logger = logging.getLogger(__name__)
 
@@ -1056,24 +1056,18 @@ class AnalysisResource(ModelResource):
 
 class NodeResource(ModelResource):
     parents = fields.ToManyField('core.api.NodeResource', 'parents')
+    children = fields.ToManyField('core.api.NodeResource', 'children')
     study = fields.ToOneField('data_set_manager.api.StudyResource', 'study')
-    assay = fields.ToOneField(
-        'data_set_manager.api.AssayResource', 'assay', null=True
-    )
+    assay = fields.ToOneField('data_set_manager.api.AssayResource', 'assay',
+                              null=True)
     attributes = fields.ToManyField(
         'data_set_manager.api.AttributeResource',
         attribute=lambda bundle: (
             Attribute.objects
             .exclude(value__isnull=True)
             .exclude(value__exact='')
-            .filter(
-                node=bundle.obj,
-                subtype='organism'
-            )
-        ),
-        use_in='all',
-        full=True,
-        null=True
+            .filter(node=bundle.obj, subtype='organism')
+        ), use_in='all', full=True, null=True
     )
 
     class Meta:
@@ -1083,11 +1077,10 @@ class NodeResource(ModelResource):
         # required for public data set access by anonymous users
         authentication = Authentication()
         authorization = Authorization()
-        allowed_methods = ["get"]
-        fields = [
-            'name', 'uuid', 'file_uuid', 'file_url', 'study', 'assay',
-            'children', 'type', 'analysis_uuid', 'subanalysis', 'attributes'
-        ]
+        allowed_methods = ['get']
+        fields = ['analysis_uuid', 'assay', 'attributes', 'children',
+                  'file_url', 'file_uuid', 'name', 'parents', 'study',
+                  'subanalysis', 'type', 'uuid']
         filtering = {
             'uuid': ALL,
             'study': ALL_WITH_RELATIONS,
