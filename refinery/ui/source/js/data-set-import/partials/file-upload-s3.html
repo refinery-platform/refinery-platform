@@ -85,15 +85,14 @@
               class="active-group refinery-base btn btn-default btn-sm start"
               ng-click="FileCtrl.uploadFile(file)"
               ng-disabled="FileCtrl.isUploadInProgress(file)"
-              ng-hide="FileCtrl.isNodeUpdate">
+            >
               <i class="fa fa-upload"></i>
               <span>Start</span>
             </button>
             <button
               class="refinery-base btn btn-default btn-sm cancel"
               ng-click="FileCtrl.cancelUpload(file)"
-              ng-hide="FileCtrl.isUploadComplete(file)"
-              ng-hide="FileCtrl.isNodeUpdate">
+              ng-hide="FileCtrl.isUploadComplete(file)">
               <i class="fa fa-ban"></i>
               <span>Cancel</span>
             </button>

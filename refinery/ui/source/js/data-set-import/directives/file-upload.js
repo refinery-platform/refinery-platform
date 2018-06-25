@@ -13,7 +13,7 @@
       bindToController: {
         isNodeUpdate: '='
       },
-      controller: 'RefineryFileUploadS3Ctrl as FileCtrl',
+      controller: 'RefineryFileUploadCtrl as FileCtrl',
       templateUrl: function () {
         return $window.getStaticUrl('partials/data-set-import/partials/file-upload.html');
       }
