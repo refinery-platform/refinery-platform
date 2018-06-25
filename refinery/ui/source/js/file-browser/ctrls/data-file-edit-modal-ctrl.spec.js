@@ -9,9 +9,7 @@
     beforeEach(module('refineryFileBrowser'));
     beforeEach(inject(function (
       $componentController,
-      $q,
       $rootScope,
-      mockParamsFactory,
       settings
     ) {
       settings.djangoApp = { deploymentPlatform: '' };
