@@ -24,12 +24,11 @@
   ) {
     var vm = this;
 
+    vm.addFile = addFile;
     vm.alertType = 'info';
     vm.close = close;
-    vm.addFile = addFile;
-    vm.generateAlertMessage = generateAlertMessage;
-    vm.removeFile = removeFile;
     vm.isLoading = false;
+    vm.removeFile = removeFile;
     vm.responseMessage = '';
     vm.useS3 = settings.djangoApp.deploymentPlatform === 'aws';
 
@@ -40,7 +39,7 @@
      */
     /**
      * @name addFile
-     * @desc  Method which add a data file
+     * @desc  View method to add file via service
      * @memberOf refineryApp.addFile
     **/
     function addFile () {
@@ -54,34 +53,18 @@
      * @memberOf refineryApp.GroupAddModalCtrl
     **/
     function close () {
-      $log.info('close');
       vm.modalInstance.close(vm.alertType);
     }
 
      /**
      * @name removeFile
-     * @desc  Method which removes a data file
+     * @desc  View method to remove file via service
      * @memberOf refineryApp.removeFile
     **/
     function removeFile () {
       vm.isLoading = true;
     }
 
-    /**
-     * @name generateAlertMessage
-     * @desc  Helper method which generates api response message
-     * @memberOf refineryApp.GroupAddModalCtrl
-    **/
-    function generateAlertMessage (infoType, groupName) {
-      if (infoType === 'success') {
-        vm.alertType = 'success';
-        vm.responseMessage = 'Successfully created group ' + groupName;
-      } else if (infoType === 'danger') {
-        vm.alertType = 'danger';
-        vm.responseMessage = 'Error creating group. Check for group name' +
-          ' duplication.';
-      }
-    }
       /*
    * ---------------------------------------------------------
    * Watchers
