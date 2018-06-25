@@ -32,7 +32,6 @@
     vm.isLoading = false;
     vm.responseMessage = '';
     vm.useS3 = settings.djangoApp.deploymentPlatform === 'aws';
-    console.log(vm.useS3);
 
     /*
      * ---------------------------------------------------------
