@@ -11,11 +11,12 @@
     .module('refineryFileBrowser')
     .controller('DataFileDropdownCtrl', DataFileDropdownCtrl);
 
-  DataFileDropdownCtrl.$inject = ['$uibModal'];
+  DataFileDropdownCtrl.$inject = ['$uibModal', 'resetGridService'];
 
 
   function DataFileDropdownCtrl (
-    $uibModal
+    $uibModal,
+    resetGridService
   ) {
     var vm = this;
     vm.openDataFileModal = openDataFileModal;
@@ -39,7 +40,9 @@
         }
       });
       modalInstance.result.then(function (response) {
-        console.log(response);
+        if (response === 'success') {
+          resetGridService.setRefreshGridFlag(true);
+        }
       });
     }
   }
