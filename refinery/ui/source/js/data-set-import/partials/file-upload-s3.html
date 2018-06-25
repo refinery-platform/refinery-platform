@@ -13,7 +13,7 @@
         <!-- The fileinput-button span is used to style the file input field as button -->
         <span
           class="refinery-base btn btn-default btn-sm fileinput-button"
-           ng-disabled="FileCtrl.isNodeUpdate && queue.length == 1">
+           ng-disabled="FileCtrl.isNodeUpdate && queue.length >= 1"
           ng-class="{ 'disabled': !FileCtrl.isUploadConfigured() || FileCtrl.areUploadsInProgress() }">
           <i class="fa fa-plus"></i>
           <span ng-if="!FileCtrl.isNodeUpdate">Add files &hellip;</span>
