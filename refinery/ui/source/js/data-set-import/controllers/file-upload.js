@@ -10,6 +10,7 @@ function RefineryFileUploadCtrl (
   $window,
   $,
   chunkedUploadService,
+  fileUpload,
   fileUploadStatusService,
   settings,
   dataSetImportSettings,
@@ -31,6 +32,10 @@ function RefineryFileUploadCtrl (
   var currentChunkIndex = {};
   // objects containing each files chunk length
   var chunkLength = {};
+
+  if (vm.isNodeUpdate) {
+    fileUpload.defaults.url = dataSetImportSettings.addFileUrl;
+  }
 
   // The next function and jQuery call ensure that the `csrftoken` is used for
   // every request. This is needed because the _jQuery file upload_ plugin uses
@@ -318,6 +323,7 @@ angular
     '$window',
     '$',
     'chunkedUploadService',
+    'fileUpload',
     'fileUploadStatusService',
     'settings',
     'dataSetImportSettings',
