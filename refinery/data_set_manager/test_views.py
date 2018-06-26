@@ -5,7 +5,6 @@ from django.contrib.auth.models import User
 
 from rest_framework.test import APIClient, APIRequestFactory, APITestCase
 
-from core.models import ExtendedGroup
 from core.views import NodeViewSet
 from .models import Assay, Investigation, Node, Study
 
@@ -13,26 +12,13 @@ from .models import Assay, Investigation, Node, Study
 class NodeApiV2Tests(APITestCase):
 
     def setUp(self):
-        self.public_group_name = ExtendedGroup.objects.public_group().name
-        self.username = 'coffee_lover'
-        self.password = 'coffeecoffee'
-        self.user = User.objects.create_user(self.username, '',
-                                             self.password)
+        self.username = 'guest'
+        self.password = 'guest'
+        self.user = User.objects.create_user(self.username, '', self.password)
 
-        self.factory = APIRequestFactory()
-        self.client = APIClient()
-        self.view = NodeViewSet.as_view({'get': 'list'})
-
-        self.url_root = '/api/v2/node/'
-
-        # Create Investigation/InvestigationLinks for the DataSets
         self.investigation = Investigation.objects.create()
-
-        # Create Studys and Assays
         self.study = Study.objects.create(investigation=self.investigation)
         self.assay = Assay.objects.create(study=self.study)
-
-        # Create Nodes
         self.node = Node.objects.create(assay=self.assay, study=self.study)
 
         self.node_json = json.dumps([{
@@ -49,28 +35,25 @@ class NodeApiV2Tests(APITestCase):
             "ready_for_igv_detail_view": None
         }])
 
+        self.factory = APIRequestFactory()
+        self.client = APIClient()
+        self.view = NodeViewSet.as_view({'get': 'list'})
         self.client.login(username=self.username, password=self.password)
 
         # Make a reusable request & response
+        self.url_root = '/api/v2/node/'
         self.get_request = self.factory.get(self.url_root)
         self.get_response = self.view(self.get_request)
-        self.put_request = self.factory.put(
-            self.url_root,
-            data=self.node_json,
-            format="json"
-        )
+        self.put_request = self.factory.put(self.url_root, data=self.node_json,
+                                            format='json')
         self.put_response = self.view(self.put_request)
-        self.patch_request = self.factory.patch(
-            self.url_root,
-            data=self.node_json,
-            format="json"
-        )
+        self.patch_request = self.factory.patch(self.url_root,
+                                                data=self.node_json,
+                                                format='json')
         self.patch_response = self.view(self.patch_request)
-        self.options_request = self.factory.options(
-            self.url_root,
-            data=self.node_json,
-            format="json"
-        )
+        self.options_request = self.factory.options(self.url_root,
+                                                    data=self.node_json,
+                                                    format='json')
         self.options_response = self.view(self.options_request)
 
     def test_get_request(self):
@@ -84,13 +67,12 @@ class NodeApiV2Tests(APITestCase):
         self.assertEqual(self.new_get_request.user.id, None)
 
     def test_unallowed_http_verbs(self):
-        self.assertEqual(
-            self.put_response.data['detail'], 'Method "PUT" not allowed.')
-        self.assertEqual(
-            self.patch_response.data['detail'], 'Method "PATCH" not allowed.')
-        self.assertEqual(
-            self.options_response.data['detail'],
-            'Method "OPTIONS" not allowed.')
+        self.assertEqual(self.put_response.data['detail'],
+                         'Method "PUT" not allowed.')
+        self.assertEqual(self.patch_response.data['detail'],
+                         'Method "PATCH" not allowed.')
+        self.assertEqual(self.options_response.data['detail'],
+                         'Method "OPTIONS" not allowed.')
 
     def test_get_children(self):
         self.assertIsNotNone(self.get_response.data)
@@ -127,12 +109,10 @@ class NodeApiV2Tests(APITestCase):
                 '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}'
             )
         )
-
         # Assert that the meaningful response fields from Node api v1 are a
         # subset of the response from Node api v2
         # NOTE: Once we move away from a reliance on Node api v1 some of the
         # tests below can most likely be removed
-
         self.assertTrue('analysis_uuid' in self.get_response.data[0])
         self.assertTrue('assay' in self.get_response.data[0])
         self.assertTrue('file_uuid' in self.get_response.data[0])
