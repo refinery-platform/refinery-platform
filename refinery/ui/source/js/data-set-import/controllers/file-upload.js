@@ -9,6 +9,7 @@ function RefineryFileUploadCtrl (
   $timeout,
   $window,
   $,
+  _,
   chunkedUploadService,
   fileUpload,
   fileUploadStatusService,
@@ -33,9 +34,9 @@ function RefineryFileUploadCtrl (
   // objects containing each files chunk length
   var chunkLength = {};
 
-  if (vm.isNodeUpdate) {
-    fileUpload.defaults.url = dataSetImportSettings.addFileUrl;
-  }
+  // if (vm.isNodeUpdate) {
+  //  fileUpload.defaults.url = dataSetImportSettings.addFileUrl;
+  // }
 
   // The next function and jQuery call ensure that the `csrftoken` is used for
   // every request. This is needed because the _jQuery file upload_ plugin uses
@@ -138,7 +139,7 @@ function RefineryFileUploadCtrl (
       totalNumFilesUploaded++;
       file.uploaded = true; // used by ui to reset progress bars
       vm.fileCache[data.files[0].name].status = 'uploaded';
-      if ($element.fileupload('active') > 0) {
+      if ($('#fileupload').fileupload('active') > 0) {
         vm.overallFileStatus = fileUploadStatusService.setFileUploadStatus('running');
       } else if (totalNumFilesUploaded === totalNumFilesQueued) {
         vm.overallFileStatus = fileUploadStatusService.setFileUploadStatus('none');
@@ -322,6 +323,7 @@ angular
     '$timeout',
     '$window',
     '$',
+    '_',
     'chunkedUploadService',
     'fileUpload',
     'fileUploadStatusService',
