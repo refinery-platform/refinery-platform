@@ -2,7 +2,7 @@
  * Collaboration Card Ctrl
  * @namespace CollaborationCardCtrl
  * @desc Controller for events card component on dashboard component.
- * @memberOf refineryApp.CollaborationCardCtrl
+ * @memberOf refineryApp.refineryDashboard
  */
 (function () {
   'use strict';
@@ -15,7 +15,7 @@
     '$log',
     '$scope',
     '$uibModal',
-    'groupInviteService',
+    'groupInviteService'
   ];
 
   function CollaborationCardCtrl (
@@ -151,7 +151,7 @@
         $log.error('Invitation could not be revoked');
       });
     }
-     /*
+   /*
    * ---------------------------------------------------------
    * Watchers
    * ---------------------------------------------------------

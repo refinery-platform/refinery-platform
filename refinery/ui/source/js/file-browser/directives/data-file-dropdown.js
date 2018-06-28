@@ -10,10 +10,12 @@
     .module('refineryFileBrowser')
     .component('rpDataFileDropdown', {
       bindings: {
-        fileStatus: '='
+        fileStatus: '=',
+        nodeObj: '='
       },
       templateUrl: ['$window', function ($window) {
         return $window.getStaticUrl('partials/file-browser/partials/data-file-dropdown.html');
-      }]
+      }],
+      controller: 'DataFileDropdownCtrl'
     });
 })();

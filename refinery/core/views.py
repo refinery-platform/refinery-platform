@@ -75,6 +75,7 @@ def statistics(request):
                               context_instance=RequestContext(request))
 
 
+@login_required
 def dashboard(request):
     return render_to_response('core/dashboard.html', {},
                               context_instance=RequestContext(request))
@@ -528,7 +529,7 @@ def doi(request, id):
     # slashes.
     id = urllib.unquote(id).decode('utf8')
     id = id.replace('$', '/')
-    url = "https://dx.doi.org/{id}".format(id=id)
+    url = "https://doi.org/{id}".format(id=id)
     headers = {'Accept': 'application/json'}
 
     try:
@@ -1129,7 +1130,7 @@ class UserProfileViewSet(APIView):
     def patch(self, request, uuid):
         if request.user.is_anonymous():
             return Response(
-                self.user, status=status.HTTP_401_UNAUTHORIZED
+                self.request.user, status=status.HTTP_401_UNAUTHORIZED
             )
 
         serializer = UserProfileSerializer(request.user.profile,

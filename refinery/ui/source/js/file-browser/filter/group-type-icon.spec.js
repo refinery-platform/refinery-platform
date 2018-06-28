@@ -1,9 +1,10 @@
 (function () {
   'use strict';
-  describe('Filter: AnalysisStatusIcon', function () {
+  describe('Filter: Group-Type-Icon', function () {
     var filter;
 
     beforeEach(function () {
+      module('refineryApp');
       module('refineryFileBrowser');
 
       inject(function ($filter) {

@@ -514,7 +514,8 @@
                         <i class="fa fa-question-circle info-icon icon-only"></i>
                     </a>
                   </div>
-                <rp-file-upload></rp-file-upload>
+                <rp-file-upload is-node-update="false" ng-if="!metadataTable.useS3"></rp-file-upload>
+                <rp-file-upload-s3 is-node-update="false" ng-if="metadataTable.useS3"></rp-file-upload-s3>
               </div>
             </div>
           </div>

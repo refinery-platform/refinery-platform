@@ -20,6 +20,7 @@
     this.showFileUpload = false;
     this.dataSetUUID = $location.search().data_set_uuid;
     this.isMetaDataRevision = !!this.dataSetUUID;
+    this.useS3 = settings.djangoApp.deploymentPlatform === 'aws';
 
     // Helper method to exit out of error alert
     this.closeError = function () {

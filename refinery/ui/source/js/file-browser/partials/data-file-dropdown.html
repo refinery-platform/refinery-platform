@@ -2,7 +2,8 @@
   <div ng-if="$ctrl.fileStatus != 'PENDING'">
     <div class="btn-group" uib-dropdown dropdown-append-to-body>
         <button id="split-button" type="button"
-          class="refinery-base btn btn-default btn-xs">
+          class="refinery-base btn btn-default btn-xs"
+          ng-disabled="$ctrl.fileStatus == 'N/A'">
           <span ng-if="$ctrl.fileStatus != 'N/A'" title="Download File {{ $ctrl.fileStatus }}">
             <a ng-href="{{$ctrl.fileStatus}}" target="_blank">
               <i class="fa fa-arrow-circle-o-down fa-lg"></i>
@@ -23,12 +24,17 @@
              <i class="fa fa-arrow-circle-o-down p-r-1-2"></i> Download
             </a>
           </li>
-          <li ng-if="$ctrl.fileStatus == 'N/A'" role="menuitem"><a href="#">
-            <i class="fa fa-plus-circle p-r-1-2"></i>Add
-          </a></li>
-          <li ng-if="$ctrl.fileStatus != 'N/A'" role="menuitem"><a href="#">
-            <i class="fa fa-trash p-r-1-2"></i>Remove
-          </a></li>
+          <li>
+          </li>
+          <li ng-if="$ctrl.fileStatus == 'N/A'" role="menuitem">
+            <a ng-click="$ctrl.openDataFileModal('add', $ctrl.nodeObj)">
+              <i class="fa fa-plus-circle p-r-1-2"></i>Add
+            </a></li>
+          <li ng-if="$ctrl.fileStatus != 'N/A'" role="menuitem">
+             <a ng-click="$ctrl.openDataFileModal('remove', $ctrl.nodeObj)">
+              <i class="fa fa-trash p-r-1-2"></i>Remove
+            </a>
+          </li>
         </ul>
      </div>
   </div>

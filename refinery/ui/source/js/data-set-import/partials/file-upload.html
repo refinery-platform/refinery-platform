@@ -1,6 +1,5 @@
 <div id="dataUploadTutorialStep7" class="tab-pane" id="data">
   <form id="fileupload" method="POST" enctype="multipart/form-data"
-        ng-controller="RefineryFileUploadCtrl as FileCtrl"
         data-file-upload="FileCtrl.options"
         ng-class="{'fileupload-processing': processing()}">
 
@@ -15,9 +14,11 @@
         <!-- The fileinput-button span is used to style the file input field as button -->
         <span
           class="refinery-base btn btn-default btn-sm fileinput-button"
-          ng-class="{ 'disabled': disabled }">
+          ng-class="{ 'disabled': disabled }"
+          ng-disabled="FileCtrl.isNodeUpdate && queue.length >= 1">
           <i class="fa fa-plus"></i>
-          <span>Add files &hellip;</span>
+          <span ng-if="!FileCtrl.isNodeUpdate">Add files &hellip;</span>
+          <span ng-if="FileCtrl.isNodeUpdate">Add file</span>
           <input
             type="file"
             class="refinery-base"
@@ -87,7 +88,8 @@
               ng-hide="!file.$submit || FileCtrl.options.autoUpload"
               ng-disabled="file.$state() == 'pending' ||
                  file.$state() == 'rejected' ||
-                 FileCtrl.fileCache[file.name].status != 'queued'">
+                 FileCtrl.fileCache[file.name].status != 'queued'"
+              ng-hide="FileCtrl.isNodeUpdate">
               <i class="fa fa-upload"></i>
               <span>Start</span>
             </button>
@@ -95,7 +97,8 @@
               class="refinery-base btn btn-default btn-sm cancel"
               ng-click="file.$cancel()"
               ng-hide="!file.$cancel"
-              ng-disabled="FileCtrl.fileCache[file.name].status == 'waitingOnMD5'">
+              ng-disabled="FileCtrl.fileCache[file.name].status == 'waitingOnMD5'"
+              ng-hide="FileCtrl.isNodeUpdate">
               <i class="fa fa-ban"></i>
               <span>Cancel</span>
             </button>
