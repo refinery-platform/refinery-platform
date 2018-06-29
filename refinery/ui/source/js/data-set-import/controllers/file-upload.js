@@ -182,7 +182,6 @@ function RefineryFileUploadCtrl (
 
   // API callback when confimation recieved
   var chunkDone = function (event, data) {
-    console.log('chunkDone');
     if (formData.length < 2) {
       formData.push({
         name: 'upload_id',
