@@ -4,7 +4,6 @@
   angular
     .module('refineryDataSetImport')
     .constant('dataSetImportSettings', {
-      addFileUrl: '/data_set_manager/add-files/',
       checkFilesUrl: '/data_set_manager/import/check_files/',
       isaTabImportUrl: '/data_set_manager/import/isa-tab-form/',
       tabularFileImportUrl: '/data_set_manager/import/metadata-table-form/',

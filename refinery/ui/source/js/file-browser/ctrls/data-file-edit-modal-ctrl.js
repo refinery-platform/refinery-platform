@@ -24,7 +24,6 @@
   ) {
     var vm = this;
 
-    vm.addFile = addFile;
     vm.alertType = 'info';
     vm.close = close;
     vm.isLoading = false;
@@ -37,13 +36,6 @@
      * ---------------------------------------------------------
      */
     /**
-     * @name addFile
-     * @desc  View method to add file via service
-     * @memberOf refineryApp.addFile
-    **/
-    function addFile () {
-      vm.isLoading = true;
-    }
 
     /**
      /**
@@ -52,7 +44,7 @@
      * @memberOf refineryApp.GroupAddModalCtrl
     **/
     function close () {
-      vm.modalInstance.close(vm.alertType);
+      vm.modalInstance.close('success');
     }
 
      /**

@@ -10,6 +10,7 @@ function RefineryFileUploadCtrl (
   $window,
   $,
   _,
+  addFileToDataSetService,
   chunkedUploadService,
   fileUpload,
   fileUploadStatusService,
@@ -33,10 +34,6 @@ function RefineryFileUploadCtrl (
   var currentChunkIndex = {};
   // objects containing each files chunk length
   var chunkLength = {};
-
-  // if (vm.isNodeUpdate) {
-  //  fileUpload.defaults.url = dataSetImportSettings.addFileUrl;
-  // }
 
   // The next function and jQuery call ensure that the `csrftoken` is used for
   // every request. This is needed because the _jQuery file upload_ plugin uses
@@ -185,6 +182,7 @@ function RefineryFileUploadCtrl (
 
   // API callback when confimation recieved
   var chunkDone = function (event, data) {
+    console.log('chunkDone');
     if (formData.length < 2) {
       formData.push({
         name: 'upload_id',
@@ -214,6 +212,20 @@ function RefineryFileUploadCtrl (
   };
 
   var uploadAlways = function () {
+    if (vm.isNodeUpdate) {
+      addFileToDataSetService.update({ data_set_uuid: $window.dataSetUuid }).$promise
+        .then(function () {
+          vm.addFileStatus = {
+            status: 'success',
+            msg: 'File successfully added to data set.'
+          };
+        }, function () {
+          vm.addFileStatus = {
+            status: 'fail',
+            msg: 'Error adding file to data set.'
+          };
+        });
+    }
     formData = [];
     /* After uploads, clear formData, including upload_id for the next
      upload. This reset require for mutliple large files
@@ -324,6 +336,7 @@ angular
     '$window',
     '$',
     '_',
+    'addFileToDataSetService',
     'chunkedUploadService',
     'fileUpload',
     'fileUploadStatusService',

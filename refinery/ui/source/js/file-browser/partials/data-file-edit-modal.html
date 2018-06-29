@@ -16,8 +16,16 @@
         Add data file
       </h4>
       <div class="p-a-1" ng-if="$ctrl.fileAction === 'add'">
-        <rp-file-upload-s3 is-node-update="true" ng-if="$ctrl.useS3"></rp-file-upload-s3>
-        <rp-file-upload is-node-update="true" ng-if="!$ctrl.useS3"></rp-file-upload>
+        <rp-file-upload-s3
+          is-node-update="true"
+          file-name="$ctrl.nodeName"
+          ng-if="$ctrl.useS3">
+        </rp-file-upload-s3>
+        <rp-file-upload
+          is-node-update="true"
+          file-name="$ctrl.nodeName"
+          ng-if="!$ctrl.useS3">
+        </rp-file-upload>
       </div>
       <!-- mock file-upload template to show a disabled view -->
       <div class="p-a-1" ng-if="$ctrl.fileAction !== 'add'">
