@@ -994,8 +994,9 @@ class AssaysAttributes(APIView):
 
 class AddFilesToDataSetView(APIView):
     """Add file(s) to an existing data set from upload directory or bucket"""
-    def post(self, request):
+    http_method_names = ['post']
 
+    def post(self, request):
         try:
             data_set = DataSet.objects.get(uuid=request
                                            .data.get('data_set_uuid'))
