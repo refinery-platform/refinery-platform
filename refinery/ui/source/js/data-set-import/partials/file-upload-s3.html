@@ -47,8 +47,8 @@
         ng-if="FileCtrl.isNodeUpdate && FileCtrl.files[0].name !== FileCtrl.fileName
         && FileCtrl.files.length == 1">
          <i class="fa fa-warning" aria-hidden="true"></i>
-         The data set's file name does not match added file name. Cancel
-        upload and add a file with a matching name of
+         The name of the file to add must match the existing filename in
+         the data set. <strong>Cancel upload</strong> and add a file named
         <em>{{ FileCtrl.fileName }}</em>.
       </span>
     </div>
@@ -119,14 +119,14 @@
             </strong>
           </div>
            <div class="v-center" ng-if="FileCtrl.isNodeUpdate">
-             <span class="text-warning" ng-if="FileCtrl.addFileStatus.status=='fail'">
+             <span class="text-warning" ng-if="FileCtrl.addFileStatus=='error'">
                <i class="fa fa-warning" aria-hidden="true"></i>
-               {{ FileCtrl.addFileStatus.msg }}
+               Error adding file to data set.
              </span>
             <span class="text-success"
-              ng-if="file.uploaded && FileCtrl.addFileStatus.status=='success'">
+              ng-if="file.uploaded && FileCtrl.addFileStatus=='success'">
                <i class="fa fa-check-circle success"></i>
-              {{ FileCtrl.addFileStatus.msg }}
+               File successfully added to data set.
             </span>
           </div>
         </div>

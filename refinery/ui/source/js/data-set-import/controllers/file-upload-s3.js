@@ -94,15 +94,9 @@
           if (vm.isNodeUpdate) {
             addFileToDataSetService.update({ data_set_uuid: $window.dataSetUuid }).$promise
               .then(function () {
-                vm.addFileStatus = {
-                  status: 'success',
-                  msg: 'File successfully added to data set.'
-                };
+                vm.addFileStatus = 'success';
               }, function () {
-                vm.addFileStatus = {
-                  status: 'fail',
-                  msg: 'Error adding file to data set.'
-                };
+                vm.addFileStatus = 'error';
               });
           }
           if (vm.multifileUploadInProgress) {
