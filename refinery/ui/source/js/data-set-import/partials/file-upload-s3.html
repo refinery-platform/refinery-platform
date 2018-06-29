@@ -30,7 +30,8 @@
         <button
           class="active-group refinery-base btn btn-default btn-sm start"
           ng-click="FileCtrl.uploadFiles()"
-          ng-disabled="!FileCtrl.areUploadsEnabled()">
+          ng-disabled="!FileCtrl.areUploadsEnabled() || (FileCtrl
+          .isNodeUpdate && FileCtrl.files[0].name !== FileCtrl.fileName)">
             <i class="fa fa-upload"></i>
             <span>Start upload</span>
         </button>
@@ -42,6 +43,14 @@
           <span>Cancel upload</span>
         </button>
       </div>
+      <span class="text-warning"
+        ng-if="FileCtrl.isNodeUpdate && FileCtrl.files[0].name !== FileCtrl.fileName
+        && FileCtrl.files.length == 1">
+         <i class="fa fa-warning" aria-hidden="true"></i>
+         The data set's file name does not match added file name. Cancel
+        upload and add a file with a matching name of
+        <em>{{ FileCtrl.fileName }}</em>.
+      </span>
     </div>
     <!-- The table listing the files available for upload/download -->
     <div class="container-fluid">
@@ -108,6 +117,17 @@
               ng-if="file.$error"
               ng-bind="file.$error">
             </strong>
+          </div>
+           <div class="v-center" ng-if="FileCtrl.isNodeUpdate">
+             <span class="text-warning" ng-if="FileCtrl.addFileStatus.status=='fail'">
+               <i class="fa fa-warning" aria-hidden="true"></i>
+               {{ FileCtrl.addFileStatus.msg }}
+             </span>
+            <span class="text-success"
+              ng-if="file.uploaded && FileCtrl.addFileStatus.status=='success'">
+               <i class="fa fa-check-circle success"></i>
+              {{ FileCtrl.addFileStatus.msg }}
+            </span>
           </div>
         </div>
       </div>

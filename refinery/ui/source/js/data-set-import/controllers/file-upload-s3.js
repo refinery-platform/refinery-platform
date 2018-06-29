@@ -5,9 +5,20 @@
     .module('refineryDataSetImport')
     .controller('RefineryFileUploadS3Ctrl', RefineryFileUploadS3Ctrl);
 
-  RefineryFileUploadS3Ctrl.$inject = ['$log', '$scope', 's3UploadService'];
+  RefineryFileUploadS3Ctrl.$inject = [
+    '$log',
+    '$scope',
+    '$window',
+    'addFileToDataSetService',
+    's3UploadService'
+  ];
 
-  function RefineryFileUploadS3Ctrl ($log, $scope, s3UploadService) {
+  function RefineryFileUploadS3Ctrl (
+    $log,
+    $scope,
+    $window,
+    addFileToDataSetService,
+    s3UploadService) {
     var vm = this;
     vm.files = [];
     vm.multifileUploadInProgress = false;
@@ -80,6 +91,20 @@
       file.managedUpload.promise().then(function () {
         $scope.$apply(function () {
           file.success = true;
+          if (vm.isNodeUpdate) {
+            addFileToDataSetService.update({ data_set_uuid: $window.dataSetUuid }).$promise
+              .then(function () {
+                vm.addFileStatus = {
+                  status: 'success',
+                  msg: 'File successfully added to data set.'
+                };
+              }, function () {
+                vm.addFileStatus = {
+                  status: 'fail',
+                  msg: 'Error adding file to data set.'
+                };
+              });
+          }
           if (vm.multifileUploadInProgress) {
             vm.uploadFiles();
           }

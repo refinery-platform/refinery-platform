@@ -29,8 +29,7 @@
         <button
           class="active-group refinery-base btn btn-default btn-sm start"
           ng-click="submit()"
-          ng-disabled="FileCtrl.numUnfinishedUploads() === 0 ||
-                       processing() ||
+          ng-disabled="FileCtrl.numUnfinishedUploads() === 0 || processing() ||
                       FileCtrl.overallFileStatus != 'queuing' ||
                       (FileCtrl.isNodeUpdate && queue[0].name !== FileCtrl.fileName)">
           <i class="fa fa-upload"></i>
@@ -51,8 +50,7 @@
          The data set's file name does not match added file name. Cancel
         upload and add a file with a matching name of
         <em>{{ FileCtrl.fileName }}</em>.
-       </span>
-
+      </span>
       <!-- Removed global progress state, issue #1300 -->
     </div>
     <!-- The table listing the files available for upload/download -->
