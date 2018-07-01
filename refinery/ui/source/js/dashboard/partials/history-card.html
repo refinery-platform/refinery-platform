@@ -17,9 +17,27 @@
       </h4>
     </div>
      <ul class="list-unstyled scrollable-list main-content-list">
-       <li ng-repeat="event in $ctrl.events | orderBy: '-date_time'"
-           class="event-item">
-          {{ event.message }}
+       <li ng-repeat="event in $ctrl.events | orderBy: '-date_time'" class="event-item">
+         {{ event.date_time | date:"MM/dd/yyyy" }}:
+         <a ng-href="/users/{{ event.user.profile.uuid }}">{{ event.user.first_name }}
+         {{ event.user.last_name }}</a>
+         <span ng-if="event.type == 'CREATE'">
+           created data set: <a ng-href="/data_sets/{{ event.data_set.uuid
+           }}">{{ event.data_set.title }}</a>
+         </span>
+         <span ng-if="event.type == 'UPDATE'">
+           launched
+           <span ng-if="event.subtype == 'VISUALIZATION_CREATION'">
+             visualization <a ng-href="/data_sets/{{ event.data_set.uuid
+             }}/#visualizations">{{ event.details.display_name }}</a>
+           </span>
+           <span ng-if="event.subtype == 'ANALYSIS_CREATION'">
+            an analysis <a ng-href="/data_sets/{{ event.data_set.uuid
+             }}/#analyses">{{ event.details.display_name }}</a>
+           </span>
+           on data set <a ng-href="/data_sets/{{ event.data_set.uuid }}">{{
+           event.data_set.title }}</a>
+         </span>
        </li>
      </ul>
   </div>
