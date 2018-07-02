@@ -46,7 +46,8 @@
         "spectrum/spectrum.css",
         "tipsy/src/stylesheets/tipsy.css",
         "d3-list-graph/dist/listGraph.min.css",
-        "ui-select/dist/select.min.css"
+        "ui-select/dist/select.min.css",
+        "angular-confirm/dist/angular-confirm.min.css"
       ],
       "images": [
         "jquery-file-upload/img/loading.gif",
@@ -104,7 +105,8 @@
         "spark-md5/spark-md5.min.js",
         "spectrum/spectrum.js",
         "svgxuse/svgxuse.min.js",
-        "aws-sdk-js/dist/aws-sdk.min.js"
+        "aws-sdk-js/dist/aws-sdk.min.js",
+        "angular-confirm/dist/angular-confirm.min.js"
       ],
       "maps": [
         "angular/angular.min.js.map",
