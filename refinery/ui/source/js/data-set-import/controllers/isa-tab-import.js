@@ -6,11 +6,12 @@
     .controller('IsaTabImportCtrl', IsaTabImportCtrl);
 
   IsaTabImportCtrl.$inject = [
-    '$location', '$log', '$rootScope', '$timeout', '$window', 'isaTabImportApi', 'settings'
+    '$location', '$log', '$rootScope', '$timeout', '$window', 'isaTabImportApi',
+    'settings', 'importConfirmationService'
   ];
 
   function IsaTabImportCtrl ($location, $log, $rootScope, $timeout, $window,
-                             isaTabImportApi, settings) {
+                             isaTabImportApi, settings, importConfirmationService) {
     this.$log = $log;
     this.$rootScope = $rootScope;
     this.$timeout = $timeout;
@@ -21,6 +22,7 @@
     this.dataSetUUID = $location.search().data_set_uuid;
     this.isMetaDataRevision = !!this.dataSetUUID;
     this.useS3 = settings.djangoApp.deploymentPlatform === 'aws';
+    this.importConfirmation = importConfirmationService;
 
     // Helper method to exit out of error alert
     this.closeError = function () {
@@ -70,6 +72,15 @@
 
   IsaTabImportCtrl.prototype.clearFile = function () {
     this.$rootScope.$broadcast('clearFileInput', 'isaTabFile');
+  };
+
+  IsaTabImportCtrl.prototype.confirmImport = function () {
+    var self = this;
+    if (self.isMetaDataRevision) {
+      self.importConfirmation.showConfirmation(self);
+    } else {
+      self.startImport();
+    }
   };
 
   IsaTabImportCtrl.prototype.startImport = function () {

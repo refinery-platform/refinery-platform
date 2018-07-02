@@ -11,7 +11,8 @@ function MetadataTableImportCtrl (
   fileSources,
   settings,
   tabularFileImportApi,
-  metadataStatusService
+  metadataStatusService,
+  importConfirmationService
 ) {
   this.$log = $log;
   this.$rootScope = $rootScope;
@@ -24,6 +25,7 @@ function MetadataTableImportCtrl (
   this.showFileUpload = false;
   this.tabularFileImportApi = tabularFileImportApi;
   this.metadataStatusService = metadataStatusService;
+  this.importConfirmation = importConfirmationService;
   this.useS3 = settings.djangoApp.deploymentPlatform === 'aws';
   this.whiteSpaceStripFlag = false;
 
@@ -274,6 +276,15 @@ MetadataTableImportCtrl.prototype.checkFiles = function () {
     });
 };
 
+MetadataTableImportCtrl.prototype.confirmImport = function () {
+  var self = this;
+  if (self.isMetaDataRevision) {
+    self.importConfirmation.showConfirmation(self);
+  } else {
+    self.startImport();
+  }
+};
+
 MetadataTableImportCtrl.prototype.startImport = function () {
   var self = this;
 
@@ -371,5 +382,6 @@ angular
     'settings',
     'tabularFileImportApi',
     'metadataStatusService',
+    'importConfirmationService',
     MetadataTableImportCtrl
   ]);
