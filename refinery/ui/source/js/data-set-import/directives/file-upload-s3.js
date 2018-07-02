@@ -11,7 +11,8 @@
     return {
       restrict: 'E',
       bindToController: {
-        isNodeUpdate: '='
+        isNodeUpdate: '=',
+        fileName: '='
       },
       controller: 'RefineryFileUploadS3Ctrl as FileCtrl',
       templateUrl: function () {

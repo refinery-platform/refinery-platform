@@ -33,13 +33,6 @@
     it('Helper Methods exist', function () {
       expect(angular.isFunction(ctrl.close)).toBe(true);
     });
-
-    describe('Test addFile', function () {
-      it('addFile is method', function () {
-        expect(angular.isFunction(ctrl.addFile)).toBe(true);
-      });
-    });
-
     describe('Test removeFile', function () {
       it('removeFile is method', function () {
         expect(angular.isFunction(ctrl.removeFile)).toBe(true);
