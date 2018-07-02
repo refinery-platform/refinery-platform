@@ -800,7 +800,7 @@ class DataSet(SharableResource):
                 .format(self.uuid)
             )
         self._associate_datafiles_with_investigation(investigation)
-        updated_data_set_title = investigation.title
+        updated_data_set_title = investigation.get_title()
         self.update_investigation(
             investigation,
             "Metadata Revision: for {}".format(updated_data_set_title)
