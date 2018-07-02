@@ -1000,9 +1000,6 @@ class AddFilesToDataSetView(APIView):
         try:
             data_set = DataSet.objects.get(uuid=request
                                            .data.get('data_set_uuid'))
-        except KeyError:
-            logger.error("Data set UUID was not provided in request")
-            return HttpResponseBadRequest()
         except DataSet.DoesNotExist:
             logger.error("Data set with UUID '%s' does not exist",
                          request.data.get('data_set_uuid'))
