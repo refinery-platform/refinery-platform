@@ -29,7 +29,6 @@
     vm.close = close;
     vm.isLoading = false;
     vm.removeFile = removeFile;
-    vm.responseMessage = '';
     vm.useS3 = settings.djangoApp.deploymentPlatform === 'aws';
 
     /*
