@@ -21,8 +21,7 @@
 
     /**
      * @name cancel
-     * @desc  vm modal methods used to cancel selecting a new tool to maintain
-     * current launch configs
+     * @desc  vm modal method used to cancel a metadata revision import
      * @memberOf refineryDataSetImport.ImportConfirmationModalCtrl
     **/
     function cancel () {
@@ -31,8 +30,8 @@
 
     /**
      * @name confirm
-     * @desc  vm modal method used to confirm a reset of the tool params and
-     * select a new tool
+     * @desc  vm modal method used to confirm and proceed with a metadata
+     * revision import
      * @memberOf refineryDataSetImport.ImportConfirmationModalCtrl
     **/
     function confirm () {
