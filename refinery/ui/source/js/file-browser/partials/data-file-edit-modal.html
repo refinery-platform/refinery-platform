@@ -3,21 +3,28 @@
     <a class="float-right modal-close" ng-click="$ctrl.close()">
       <i class="fa fa-times close" aria-hidden="true"></i>
     </a>
-    <h3 class="modal-title">Data File Edit</h3>
+    <h3 class="modal-title">Add/Delete File</h3>
     <p class="p-t-1">
-      Add a new file or remove an existing data file. Once a data file is
-      removed successfully, the add file option will be enabled. Note, you
-      can not exit the modal while an upload is in progress.
+      Add a new file or delete an existing file. <strong>Note:</strong> you
+      cannot close this window while an upload is in progress.
     </p>
   </div>
   <div class="modal-body">
     <div class='row'>
       <h4 class="p-l-1">
-        Add data file
+        Add file
       </h4>
       <div class="p-a-1" ng-if="$ctrl.fileAction === 'add'">
-        <rp-file-upload-s3 is-node-update="true" ng-if="$ctrl.useS3"></rp-file-upload-s3>
-        <rp-file-upload is-node-update="true" ng-if="!$ctrl.useS3"></rp-file-upload>
+        <rp-file-upload-s3
+          is-node-update="true"
+          file-name="$ctrl.nodeName"
+          ng-if="$ctrl.useS3">
+        </rp-file-upload-s3>
+        <rp-file-upload
+          is-node-update="true"
+          file-name="$ctrl.nodeName"
+          ng-if="!$ctrl.useS3">
+        </rp-file-upload>
       </div>
       <!-- mock file-upload template to show a disabled view -->
       <div class="p-a-1" ng-if="$ctrl.fileAction !== 'add'">
@@ -43,11 +50,11 @@
     </div>
     <div class="modal-description p-l-1 p-b-1">
       <h4>
-        Remove data file
+        Delete file
       </h4>
       <div>
         <span if="$ctrl.nodeURL === 'N/A'">
-          <em> No data file associated with node, {{ $ctrl.nodeName }} </em>
+          <em> {{ $ctrl.nodeName }} has not been uploaded </em>
         </span>
         <span if="$ctrl.nodeURL !== 'N/A'">
           {{ REFINERY_DOWNLOAD_URL_s }}

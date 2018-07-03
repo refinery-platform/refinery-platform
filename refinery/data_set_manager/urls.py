@@ -43,9 +43,7 @@ urlpatterns = patterns(
         name='api_chunked_upload_complete'),
     url(r'^import/take_ownership/$',
         login_required(TakeOwnershipOfPublicDatasetView.as_view()),
-        name='take_ownership_of_public_dataset'),
-    url(r'^add-files/$', login_required(AddFilesToDataSetView.as_view()),
-        name='add_files_to_data_set'),
+        name='take_ownership_of_public_dataset')
 )
 
 # DRF url routing
@@ -56,4 +54,6 @@ data_set_manager_router.urls.extend([
         AssaysFiles.as_view()),
     url(r'^assays/(?P<uuid>' + UUID_RE + ')/attributes/$',
         AssaysAttributes.as_view()),
+    url(r'^data_set_manager/add-files/$',
+        AddFilesToDataSetView.as_view()),
 ])
