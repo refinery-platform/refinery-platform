@@ -7,6 +7,5 @@ angular
     'ui.grid',
     'ui.grid.edit',
     'ui.grid.resizeColumns',
-    'angular-intro',
-    'cp.ngConfirm'
+    'angular-intro'
   ]);
