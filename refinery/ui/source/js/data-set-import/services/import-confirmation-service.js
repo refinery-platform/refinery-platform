@@ -1,36 +1,34 @@
-'use strict';
+/**
+ * Import Confirmation Service
+ * @namespace ImportConfirmationService
+ * @desc Service for displaying a warning when a User performs a
+ * metadata revision.
+ * @memberOf refineryApp.refineryDataSetImport
+ */
+(function () {
+  'use strict';
 
-function ImportConfirmationService ($ngConfirm) {
-  // If a metadata revision is taking place, we'll warn the user about the
-  // potential for data loss
-  this.showConfirmation = function (parentScope) {
-    $ngConfirm(
-      {
-        title: 'Warning: Potential Datafile Loss',
-        content: 'This metadata revision may remove datafiles that have been' +
-        ' uploaded prior if they are not referenced in the newly revised' +
-        ' metadata file.',
-        buttons: {
-          continueWithImport: {
-            text: 'Continue',
-            btnClass: 'btn-warning',
-            action: function () {
-              parentScope.startImport();
-            }
-          },
-          cancelImport: {
-            text: 'Cancel',
-            btnClass: 'btn-default'
-          }
-        }
-      }
-    );
-  };
-}
+  angular
+    .module('refineryDataSetImport')
+    .service('importConfirmationService', ImportConfirmationService);
 
-angular
-  .module('refineryDataSetImport')
-  .service('importConfirmationService', [
-    '$ngConfirm',
-    ImportConfirmationService
-  ]);
+  ImportConfirmationService.$inject = ['$uibModal', '$window'];
+
+  function ImportConfirmationService ($uibModal, $window) {
+    var vm = this;
+
+    vm.showConfirmation = function (parentScope) {
+      var modalInstance = $uibModal.open({
+        animation: true,
+        templateUrl: $window.getStaticUrl(
+          'partials/data-set-import/partials/import-confirmation.html'
+        ),
+        controller: 'ImportConfirmationModalCtrl as modal'
+      });
+
+      modalInstance.result.then(function () {
+        parentScope.startImport();
+      });
+    };
+  }
+})();
