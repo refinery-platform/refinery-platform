@@ -38,11 +38,13 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 import xmltodict
 
+from data_set_manager.models import Node
+
 from .forms import ProjectForm, UserForm, UserProfileForm, WorkflowForm
 from .models import (Analysis, CustomRegistrationProfile, DataSet, Event,
                      ExtendedGroup, Invitation, Ontology, Project,
                      UserProfile, Workflow, WorkflowEngine)
-from .serializers import (DataSetSerializer, EventSerializer,
+from .serializers import (DataSetSerializer, EventSerializer, NodeSerializer,
                           UserProfileSerializer, WorkflowSerializer)
 from .utils import (api_error_response, get_data_sets_annotations,
                     get_resources_for_user)
@@ -696,7 +698,7 @@ class NodeViewSet(APIView):
      ---
     #YAML
 
-    PATCH:
+    GET:
         parameters_strategy:
         form: replace
         query: merge
@@ -707,15 +709,24 @@ class NodeViewSet(APIView):
               type: string
               paramType: path
               required: true
-            - name: file_uuid
-              description: uuid for the file store item
-              type: string
-              paramType: form
-              required: false
     ...
     """
-    http_method_names = ['get', 'patch']
-    # permission_classes = (IsAuthenticated,)
+    http_method_names = ['get']
+
+    def get(self, request, uuid):
+        try:
+            node = Node.objects.get(uuid=uuid)
+        except Node.DoesNotExist as e:
+            logger.error(e)
+            return Response(uuid, status=status.HTTP_404_NOT_FOUND)
+        except Node.MultipleObjectsReturned as e:
+            logger.error(e)
+            return Response(
+                uuid, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+        serializer = NodeSerializer(node)
+        return Response(serializer.data)
 
 
 class EventViewSet(viewsets.ModelViewSet):
