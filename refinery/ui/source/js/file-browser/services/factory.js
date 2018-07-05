@@ -66,19 +66,13 @@
     function createColumnDefs () {
       var tempCustomColumnNames = [];
 
-      var totalChars = assayAttributes.reduce(function (previousValue, facetObj) {
-        return previousValue + String(facetObj.display_name).length;
-      }, 0);
-
       assayAttributes.forEach(function (attribute) {
         var columnName = attribute.display_name;
-        var columnWidth = columnName.length / totalChars * 100;
-        if (columnWidth < 10) {  // make sure columns are wide enough
-          columnWidth = Math.round(columnWidth * 2);
-        }
+        var columnWidth = columnName.length * 6 + 100;
+
         var colProperty = {
           name: columnName,
-          width: columnWidth + '%',
+          width: columnWidth,
           field: attribute.internal_name,
           cellTooltip: true,
           enableHiding: false
@@ -94,7 +88,7 @@
           tempCustomColumnNames.push(setCustomSelectColumn(columnName));
         } else if (columnName === 'Analysis Group') {
           // Analysis requires a custom template for filtering -1 entries
-          var _cellTemplate = '<div class="ngCellText text-align-center"' +
+          var _cellTemplate = '<div class="ngCellText ui-grid-cell-contents"' +
           'ng-class="col.colIndex()">{{COL_FIELD |' +
             ' analysisGroupNegativeOneWithNA: "Analysis Group"}}</div>';
           colProperty.cellTemplate = _cellTemplate;
@@ -242,7 +236,7 @@
       return {
         name: _columnName,
         field: _columnName,
-        width: 11 + '%',
+        width: 130,
         displayName: 'Input Groups',
         enableFiltering: false,
         enableSorting: false,
@@ -272,7 +266,7 @@
         name: columnName,
         field: columnName,
         cellTooltip: false,
-        width: 4 + '%',
+        width: 50,
         displayName: '',
         enableFiltering: false,
         enableSorting: false,
@@ -296,7 +290,7 @@
         name: urlAttribute.internal_name,
         field: urlAttribute.internal_name,
         cellTooltip: true,
-        width: 70,
+        width: 80,
         displayName: '',
         enableFiltering: false,
         enableSorting: false,
