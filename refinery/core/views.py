@@ -38,13 +38,11 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 import xmltodict
 
-from data_set_manager.models import Node
-
 from .forms import ProjectForm, UserForm, UserProfileForm, WorkflowForm
 from .models import (Analysis, CustomRegistrationProfile, DataSet, Event,
                      ExtendedGroup, Invitation, Ontology, Project,
                      UserProfile, Workflow, WorkflowEngine)
-from .serializers import (DataSetSerializer, EventSerializer, NodeSerializer,
+from .serializers import (DataSetSerializer, EventSerializer,
                           UserProfileSerializer, WorkflowSerializer)
 from .utils import (api_error_response, get_data_sets_annotations,
                     get_resources_for_user)
@@ -693,7 +691,7 @@ class WorkflowViewSet(viewsets.ModelViewSet):
         )
 
 
-class NodeViewSet(viewsets.ModelViewSet):
+class NodeViewSet(APIView):
     """API endpoint that allows Nodes to be viewed".
      ---
     #YAML
@@ -716,9 +714,6 @@ class NodeViewSet(viewsets.ModelViewSet):
               required: false
     ...
     """
-    queryset = Node.objects.all()
-    serializer_class = NodeSerializer
-    lookup_field = 'uuid'
     http_method_names = ['get', 'patch']
     # permission_classes = (IsAuthenticated,)
 

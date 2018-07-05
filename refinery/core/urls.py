@@ -74,7 +74,6 @@ urlpatterns = patterns(
 
 # DRF url routing
 core_router = DefaultRouter()
-core_router.register(r'nodes', NodeViewSet)
 core_router.register(r'workflows', WorkflowViewSet)
 core_router.register(r'events', EventViewSet)
 core_router.urls.extend([
