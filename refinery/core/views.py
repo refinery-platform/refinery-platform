@@ -711,7 +711,7 @@ class NodeViewSet(APIView):
               required: true
     ...
     """
-    http_method_names = ['get']
+    http_method_names = ['get', 'patch']
 
     def get(self, request, uuid):
         try:
@@ -727,6 +727,28 @@ class NodeViewSet(APIView):
 
         serializer = NodeSerializer(node)
         return Response(serializer.data)
+
+    def patch(self, request, uuid):
+        try:
+            node = Node.objects.get(uuid=uuid)
+        except Node.DoesNotExist as e:
+            logger.error(e)
+            return Response(uuid, status=status.HTTP_404_NOT_FOUND)
+        except Node.MultipleObjectsReturned as e:
+            logger.error(e)
+            return Response(
+                uuid, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+        serializer = NodeSerializer(node)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(
+                serializer.data, status=status.HTTP_202_ACCEPTED
+            )
+        return Response(
+            serializer.errors, status=status.HTTP_400_BAD_REQUEST
+        )
 
 
 class EventViewSet(viewsets.ModelViewSet):
