@@ -24,6 +24,9 @@ from factory_boy.utils import (create_dataset_with_necessary_models,
 
 from .models import (Analysis, DataSet, Event, ExtendedGroup, Project,
                      Workflow, WorkflowEngine)
+
+from .serializers import DataSetSerializer, UserSerializer
+
 from .views import (AnalysesViewSet, DataSetsViewSet, EventViewSet,
                     WorkflowViewSet)
 
@@ -972,7 +975,8 @@ class EventApiV2Tests(APIV2TestCase):
         self.assertEqual(events.count(), 4)
 
         messages = [str(event) for event in events]
-        data_sets = [event.data_set.uuid for event in events]
+        data_sets = [DataSet.objects.get(uuid=event.data_set.uuid) for event in
+                     events]
         display_names = [
             event.get_details_as_dict().get('display_name') for event in events
         ]
@@ -991,9 +995,10 @@ class EventApiV2Tests(APIV2TestCase):
                 {
                     'date_time': date_times[0],
                     'message': messages[0],
-                    'data_set': data_sets[0],
+                    'data_set': dict(DataSetSerializer(data_sets[0],
+                                     context={'request': get_request}).data),
                     'group': None,
-                    'user': self.user,
+                    'user': dict(UserSerializer(self.user).data),
                     'type': 'CREATE',
                     'sub_type': '',
                     'details': {}
@@ -1001,9 +1006,10 @@ class EventApiV2Tests(APIV2TestCase):
                 {
                     'date_time': date_times[1],
                     'message': messages[1],
-                    'data_set': data_sets[1],
+                    'data_set': dict(DataSetSerializer(data_sets[1],
+                                     context={'request': get_request}).data),
                     'group': None,
-                    'user': self.user,
+                    'user': dict(UserSerializer(self.user).data),
                     'type': 'UPDATE',
                     'sub_type': 'VISUALIZATION_CREATION',
                     'details': {'display_name': display_names[1]}
@@ -1011,9 +1017,10 @@ class EventApiV2Tests(APIV2TestCase):
                 {
                     'date_time': date_times[2],
                     'message': messages[2],
-                    'data_set': data_sets[2],
+                    'data_set': dict(DataSetSerializer(data_sets[2],
+                                     context={'request': get_request}).data),
                     'group': None,
-                    'user': self.user.username,
+                    'user': dict(UserSerializer(self.user).data),
                     'type': 'CREATE',
                     'sub_type': '',
                     'details': {}
@@ -1021,9 +1028,10 @@ class EventApiV2Tests(APIV2TestCase):
                 {
                     'date_time': date_times[3],
                     'message': messages[3],
-                    'data_set': data_sets[3],
+                    'data_set': dict(DataSetSerializer(data_sets[3],
+                                     context={'request': get_request}).data),
                     'group': None,
-                    'user': self.user,
+                    'user': dict(UserSerializer(self.user).data),
                     'type': 'UPDATE',
                     'sub_type': 'ANALYSIS_CREATION',
                     'details': {'display_name': display_names[3]}
