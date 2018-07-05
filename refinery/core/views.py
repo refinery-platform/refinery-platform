@@ -694,11 +694,32 @@ class WorkflowViewSet(viewsets.ModelViewSet):
 
 
 class NodeViewSet(viewsets.ModelViewSet):
-    """API endpoint that allows Nodes to be viewed"""
+    """API endpoint that allows Nodes to be viewed".
+     ---
+    #YAML
+
+    PATCH:
+        parameters_strategy:
+        form: replace
+        query: merge
+
+        parameters:
+            - name: uuid
+              description: Node uuid used as an identifier
+              type: string
+              paramType: path
+              required: true
+            - name: file_uuid
+              description: uuid for the file store item
+              type: string
+              paramType: form
+              required: false
+    ...
+    """
     queryset = Node.objects.all()
     serializer_class = NodeSerializer
     lookup_field = 'uuid'
-    http_method_names = ['get']
+    http_method_names = ['get', 'patch']
     # permission_classes = (IsAuthenticated,)
 
 
