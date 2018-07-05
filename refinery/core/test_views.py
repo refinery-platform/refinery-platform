@@ -995,10 +995,11 @@ class EventApiV2Tests(APIV2TestCase):
                 {
                     'date_time': date_times[0],
                     'message': messages[0],
-                    'data_set': dict(DataSetSerializer(data_sets[0],
-                                     context={'request': get_request}).data),
+                    'data_set': DataSetSerializer(
+                        data_sets[0], context={'request': get_request}
+                    ).data,
                     'group': None,
-                    'user': dict(UserSerializer(self.user).data),
+                    'user': UserSerializer(self.user).data,
                     'type': 'CREATE',
                     'sub_type': '',
                     'details': {}
@@ -1006,10 +1007,11 @@ class EventApiV2Tests(APIV2TestCase):
                 {
                     'date_time': date_times[1],
                     'message': messages[1],
-                    'data_set': dict(DataSetSerializer(data_sets[1],
-                                     context={'request': get_request}).data),
+                    'data_set': DataSetSerializer(
+                        data_sets[1], context={'request': get_request}
+                    ).data,
                     'group': None,
-                    'user': dict(UserSerializer(self.user).data),
+                    'user': UserSerializer(self.user).data,
                     'type': 'UPDATE',
                     'sub_type': 'VISUALIZATION_CREATION',
                     'details': {'display_name': display_names[1]}
@@ -1017,10 +1019,11 @@ class EventApiV2Tests(APIV2TestCase):
                 {
                     'date_time': date_times[2],
                     'message': messages[2],
-                    'data_set': dict(DataSetSerializer(data_sets[2],
-                                     context={'request': get_request}).data),
+                    'data_set': DataSetSerializer(
+                        data_sets[2], context={'request': get_request}
+                    ).data,
                     'group': None,
-                    'user': dict(UserSerializer(self.user).data),
+                    'user': UserSerializer(self.user).data,
                     'type': 'CREATE',
                     'sub_type': '',
                     'details': {}
@@ -1028,10 +1031,10 @@ class EventApiV2Tests(APIV2TestCase):
                 {
                     'date_time': date_times[3],
                     'message': messages[3],
-                    'data_set': dict(DataSetSerializer(data_sets[3],
-                                     context={'request': get_request}).data),
+                    'data_set': DataSetSerializer(
+                        data_sets[3], context={'request': get_request}).data,
                     'group': None,
-                    'user': dict(UserSerializer(self.user).data),
+                    'user': UserSerializer(self.user).data,
                     'type': 'UPDATE',
                     'sub_type': 'ANALYSIS_CREATION',
                     'details': {'display_name': display_names[3]}
