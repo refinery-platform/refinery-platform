@@ -993,7 +993,7 @@ class EventApiV2Tests(APIV2TestCase):
                     'message': messages[0],
                     'data_set': data_sets[0],
                     'group': None,
-                    'user': self.user.username,
+                    'user': self.user,
                     'type': 'CREATE',
                     'sub_type': '',
                     'details': {}
@@ -1003,7 +1003,7 @@ class EventApiV2Tests(APIV2TestCase):
                     'message': messages[1],
                     'data_set': data_sets[1],
                     'group': None,
-                    'user': self.user.username,
+                    'user': self.user,
                     'type': 'UPDATE',
                     'sub_type': 'VISUALIZATION_CREATION',
                     'details': {'display_name': display_names[1]}
@@ -1023,7 +1023,7 @@ class EventApiV2Tests(APIV2TestCase):
                     'message': messages[3],
                     'data_set': data_sets[3],
                     'group': None,
-                    'user': self.user.username,
+                    'user': self.user,
                     'type': 'UPDATE',
                     'sub_type': 'ANALYSIS_CREATION',
                     'details': {'display_name': display_names[3]}
