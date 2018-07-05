@@ -6,12 +6,12 @@
     .controller('IsaTabImportCtrl', IsaTabImportCtrl);
 
   IsaTabImportCtrl.$inject = [
-    '$location', '$log', '$rootScope', '$timeout', '$window', 'isaTabImportApi',
-    'settings', 'importConfirmationService'
+    '$location', '$log', '$rootScope', '$timeout', '$window', 'importConfirmationService',
+    'isaTabImportApi', 'settings'
   ];
 
   function IsaTabImportCtrl ($location, $log, $rootScope, $timeout, $window,
-                             isaTabImportApi, settings, importConfirmationService) {
+                             importConfirmationService, isaTabImportApi, settings) {
     this.$log = $log;
     this.$rootScope = $rootScope;
     this.$timeout = $timeout;

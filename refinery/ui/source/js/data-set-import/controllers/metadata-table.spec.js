@@ -3,20 +3,20 @@
 
   describe('MetadataTableImportCtrl', function () {
     var ctrl;
-    var importConfirmationService;
     var fileSourcesService;
+    var importConfirmationService;
     var metadataStatusService;
     var tabularFileImportApiService;
 
     beforeEach(function () {
       module('refineryApp');
       module('refineryDataSetImport');
-      inject(function ($controller, $rootScope, _tabularFileImportApi_,
-                       _fileSources_, _metadataStatusService_, _importConfirmationService_) {
-        tabularFileImportApiService = _tabularFileImportApi_;
+      inject(function ($controller, $rootScope, _fileSources_, _importConfirmationService_,
+                       _metadataStatusService_, _tabularFileImportApi_) {
         fileSourcesService = _fileSources_;
-        metadataStatusService = _metadataStatusService_;
         importConfirmationService = _importConfirmationService_;
+        metadataStatusService = _metadataStatusService_;
+        tabularFileImportApiService = _tabularFileImportApi_;
         ctrl = $controller('MetadataTableImportCtrl', { $scope: $rootScope.$new() });
       });
     });
@@ -123,7 +123,7 @@
 
     describe('vm.setImportOption', function () {
       it('setImportOption is method', function () {
-        expect(angular.isFunction(ctrl.closeError)).toBe(true);
+        expect(angular.isFunction(ctrl.setImportOption)).toBe(true);
       });
     });
 
@@ -170,7 +170,7 @@
     });
 
     describe('vm.startImport', function () {
-      it('confirmImport is method', function () {
+      it('startImport is method', function () {
         expect(angular.isFunction(ctrl.startImport)).toBe(true);
       });
     });

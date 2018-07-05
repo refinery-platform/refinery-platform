@@ -9,9 +9,9 @@
     beforeEach(function () {
       module('refineryApp');
       module('refineryDataSetImport');
-      inject(function ($controller, $rootScope, _isaTabImportApi_, _importConfirmationService_) {
-        isaTabImportApiService = _isaTabImportApi_;
+      inject(function ($controller, $rootScope, _importConfirmationService_, _isaTabImportApi_) {
         importConfirmationService = _importConfirmationService_;
+        isaTabImportApiService = _isaTabImportApi_;
         ctrl = $controller('IsaTabImportCtrl', { $scope: $rootScope.$new() });
       });
     });

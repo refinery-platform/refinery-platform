@@ -9,10 +9,10 @@ function MetadataTableImportCtrl (
   d3,
   $uibModal,
   fileSources,
-  settings,
+  importConfirmationService,
   tabularFileImportApi,
   metadataStatusService,
-  importConfirmationService
+  settings
 ) {
   this.$log = $log;
   this.$rootScope = $rootScope;
@@ -23,9 +23,9 @@ function MetadataTableImportCtrl (
   this.fileSources = fileSources;
   this.settings = settings;
   this.showFileUpload = false;
+  this.importConfirmation = importConfirmationService;
   this.tabularFileImportApi = tabularFileImportApi;
   this.metadataStatusService = metadataStatusService;
-  this.importConfirmation = importConfirmationService;
   this.useS3 = settings.djangoApp.deploymentPlatform === 'aws';
   this.whiteSpaceStripFlag = false;
 
@@ -379,9 +379,9 @@ angular
     'd3',
     '$uibModal',
     'fileSources',
-    'settings',
+    'importConfirmationService',
     'tabularFileImportApi',
     'metadataStatusService',
-    'importConfirmationService',
+    'settings',
     MetadataTableImportCtrl
   ]);
