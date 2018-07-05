@@ -197,7 +197,7 @@
       });
 
       it('returns corrent template for analysis group', function () {
-        var analysisGroupTemplate = '<div class="ngCellText text-align-center"' +
+        var analysisGroupTemplate = '<div class="ngCellText ui-grid-cell-contents"' +
           'ng-class="col.colIndex()">{{COL_FIELD |' +
             ' analysisGroupNegativeOneWithNA: "Analysis Group"}}</div>';
         angular.copy(tempAssayAttributes, factory.assayAttributes);
