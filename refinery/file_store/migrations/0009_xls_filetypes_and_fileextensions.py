@@ -7,14 +7,6 @@ def forwards(apps, schema_editor):
     FileType = apps.get_model("file_store", "FileType")
     FileExtension = apps.get_model("file_store", "FileExtension")
 
-    if FileType.objects.count():
-        # Workaround for old-fixture based FileType data messing up
-        # Postgres' id sequence. See article here for similar issue:
-        # https://www.vlent.nl/weblog/2011/05/06/integrityerror-duplicate-key-value-violates-unique-constraint/
-        highest_id = FileType.objects.all().aggregate(Max('id'))["id__max"]
-        with connection.cursor() as cursor:
-            cursor.execute('alter sequence file_store_filetype_id_seq restart with {};'.format(highest_id + 1))
-
     filetypes = [
         FileType(
             description="Excel file",
@@ -33,14 +25,6 @@ def forwards(apps, schema_editor):
             continue
         else:
             filetype.save()
-
-    if FileExtension.objects.count():
-        # Workaround for old-fixture based FileExtension data messing up Postgres' id sequence.
-        # See article here for similar issue:
-        # https://www.vlent.nl/weblog/2011/05/06/integrityerror-duplicate-key-value-violates-unique-constraint/
-        highest_id = FileExtension.objects.all().aggregate(Max('id'))["id__max"]
-        with connection.cursor() as cursor:
-            cursor.execute('alter sequence file_store_fileextension_id_seq restart with {};'.format(highest_id + 1))
 
     file_extensions = [
         FileExtension(
