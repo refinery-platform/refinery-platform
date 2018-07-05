@@ -710,6 +710,24 @@ class NodeViewSet(APIView):
               paramType: path
               required: true
     ...
+
+    PATCH:
+        parameters_strategy:
+        form: replace
+        query: merge
+
+        parameters:
+            - name: uuid
+              description: User profile uuid used as an identifier
+              type: string
+              paramType: path
+              required: true
+            - name: file_uuid
+              description: file store item uuid
+              type: string
+              paramType: form
+              required: false
+    ...
     """
     http_method_names = ['get', 'patch']
 
