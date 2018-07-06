@@ -5,12 +5,13 @@ function MetadataTableImportCtrl (
   $rootScope,
   $timeout,
   $window,
+  $location,
   d3,
   $uibModal,
   fileSources,
-  settings,
   tabularFileImportApi,
-  metadataStatusService
+  metadataStatusService,
+  settings
 ) {
   this.$log = $log;
   this.$rootScope = $rootScope;
@@ -43,6 +44,10 @@ function MetadataTableImportCtrl (
   this.closeError = function () {
     this.isErrored = false;
   };
+
+  this.dataSetUUID = $location.search().data_set_uuid;
+  this.isMetaDataRevision = !!this.dataSetUUID;
+  this.importErrorMessage = null;
 }
 
 Object.defineProperty(
@@ -225,23 +230,28 @@ MetadataTableImportCtrl.prototype.checkFiles = function () {
     fileData.identity_id = AWS.config.credentials.identityId;
   }
 
+  var queryParams = {};
+  if (self.isMetaDataRevision) {
+    queryParams = { data_set_uuid: self.dataSetUUID };
+  }
   self.fileSources
-    .check({}, fileData)
+    .check(queryParams, fileData)
     .$promise
     .then(function (response) {
       var checkFilesDialogConfig;
-
-      if (response.length > 0) {
+      if (response.data_files_not_uploaded.length > 0) {
         checkFilesDialogConfig = {
-          title: 'The following files were not found on the server:',
-          items: response
+          title: 'Data File Information:',
+          items: response.data_files_not_uploaded
         };
       } else {
         checkFilesDialogConfig = {
           title: 'All files were found on the server',
-          items: response
+          items: []
         };
       }
+      checkFilesDialogConfig.isMetaDataRevision = self.isMetaDataRevision;
+      checkFilesDialogConfig.itemsToBeDeleted = response.data_files_to_be_deleted;
 
       self.$uibModal.open({
         templateUrl: function () {
@@ -262,6 +272,16 @@ MetadataTableImportCtrl.prototype.checkFiles = function () {
       var errorMsg = 'Request failed: error ' + status;
       self.$log.error(errorMsg);
     });
+};
+
+MetadataTableImportCtrl.prototype.confirmImport = function () {
+  var self = this;
+  if (self.isMetaDataRevision) {
+    var modalInstance = this.$uibModal.open({ component: 'rpImportConfirmationModal' });
+    modalInstance.result.then(function () { self.startImport(); });
+  } else {
+    self.startImport();
+  }
 };
 
 MetadataTableImportCtrl.prototype.startImport = function () {
@@ -321,8 +341,12 @@ MetadataTableImportCtrl.prototype.startImport = function () {
     formData.append('identity_id', AWS.config.credentials.identityId);
   }
 
+  var queryParams = {};
+  if (this.isMetaDataRevision) {
+    queryParams = { data_set_uuid: this.dataSetUUID };
+  }
   return this.tabularFileImportApi
-    .create({}, formData)
+    .create(queryParams, formData)
     .$promise
     .then(function (response) {
       self.importedDataSetUuid = response.new_data_set_uuid;
@@ -335,6 +359,7 @@ MetadataTableImportCtrl.prototype.startImport = function () {
     })
     .catch(function (error) {
       self.isErrored = true;
+      self.importErrorMessage = error.data.error;
       self.$log.error(error);
     })
     .finally(function () {
@@ -349,11 +374,12 @@ angular
     '$rootScope',
     '$timeout',
     '$window',
+    '$location',
     'd3',
     '$uibModal',
     'fileSources',
-    'settings',
     'tabularFileImportApi',
     'metadataStatusService',
+    'settings',
     MetadataTableImportCtrl
   ]);

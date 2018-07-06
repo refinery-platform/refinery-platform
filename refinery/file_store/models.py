@@ -289,6 +289,21 @@ class FileStoreItem(models.Model):
             result = celery.result.AsyncResult(self.import_task_id)
             result.revoke(terminate=True)
 
+    def transfer_data_file(self, file_store_item):
+        """
+        Transfer the data file of a FileStoreItem to another FileStoreItem
+        :param file_store_item: FileStoreItem instance to transfer the
+        data file to
+        """
+        file_store_item.datafile = self.datafile
+        file_store_item.save()
+        # It's crucial to clear the datafile of the prior
+        # FileStoreItem as well. Otherwise there would be two
+        # references to the same data file which could cause
+        # unintended side-effects
+        self.datafile = None
+        self.save()
+
 
 def get_temp_dir():
     """Return the absolute path to the file store temp dir"""

@@ -166,7 +166,7 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
         # iterate over all keys in data and join sets into strings
         for key, value in data.iteritems():
             if type(value) is set:
-                data[key] = " + ".join(sorted(value))
+                data[key] = " + ".join(str(i) for i in sorted(value))
 
         data.update({
             NodeIndex.DOWNLOAD_URL: download_url_or_state,

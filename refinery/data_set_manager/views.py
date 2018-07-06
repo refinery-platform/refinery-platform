@@ -64,7 +64,16 @@ class DataSetImportView(View):
 
     def get(self, request, *args, **kwargs):
         form = ImportISATabFileForm()
-        context = RequestContext(request, {'form': form})
+        data_set_title = request.GET.get('data_set_title')
+        if data_set_title:
+            data_set_title = data_set_title.strip("/")
+        context = RequestContext(
+            request,
+            {
+                'form': form,
+                'data_set_title': data_set_title
+            }
+        )
         response = render_to_response(self.template_name,
                                       context_instance=context)
         return response
@@ -243,6 +252,16 @@ class ProcessISATabView(View):
 
     def post(self, request, *args, **kwargs):
         form = ImportISATabFileForm(request.POST, request.FILES)
+        existing_data_set_uuid = request.GET.get('data_set_uuid')
+
+        if existing_data_set_uuid:
+            # Assert that the User making the request for a metadata
+            # revision owns the DataSet in question
+            data_set_ownership_response = _check_data_set_ownership(
+                request.user, existing_data_set_uuid
+            )
+            if data_set_ownership_response is not None:
+                return data_set_ownership_response
 
         if form.is_valid() or request.is_ajax():
             try:
@@ -310,7 +329,8 @@ class ProcessISATabView(View):
                     request.user.username,
                     False,
                     response['data']['temp_file_path'],
-                    identity_id=identity_id
+                    identity_id=identity_id,
+                    existing_data_set_uuid=existing_data_set_uuid
                 )
             except ParserException as e:
                 error_message = "{} {}".format(
@@ -445,6 +465,15 @@ class ProcessMetadataTableView(View):
 
     def post(self, request, *args, **kwargs):
         # Get required params
+        existing_data_set_uuid = request.GET.get('data_set_uuid')
+        if existing_data_set_uuid:
+            # Assert that the User making the request for a metadata
+            # revision owns the DataSet in question
+            data_set_ownership_response = _check_data_set_ownership(
+                request.user, existing_data_set_uuid
+            )
+            if data_set_ownership_response is not None:
+                return data_set_ownership_response
         try:
             metadata_file = request.FILES['file']
             title = request.POST.get('title')
@@ -524,14 +553,15 @@ class ProcessMetadataTableView(View):
                 custom_delimiter_string=request.POST.get(
                     'custom_delimiter_string', False
                 ),
-                identity_id=identity_id
+                identity_id=identity_id,
+                existing_data_set_uuid=existing_data_set_uuid
             )
         except Exception as exc:
             logger.error(exc, exc_info=True)
             error = {'error_message': repr(exc)}
             if request.is_ajax():
                 return HttpResponseServerError(
-                    json.dumps({'error': repr(exc)}), 'application/json'
+                    json.dumps({'error': exc.message}), 'application/json'
                 )
             else:
                 return render(request, self.template_name, error)
@@ -547,6 +577,15 @@ class ProcessMetadataTableView(View):
 class CheckDataFilesView(View):
     """Check if given files exist, return list of files that don't exist"""
     def post(self, request, *args, **kwargs):
+        existing_data_set_uuid = request.GET.get('data_set_uuid')
+        existing_datafile_names = []
+        if existing_data_set_uuid:
+            data_set = get_object_or_404(DataSet, uuid=existing_data_set_uuid)
+            investigation = data_set.get_investigation()
+            existing_datafile_names = investigation.get_datafile_names(
+                local_only=True, exclude_metadata_file=True
+            )
+
         if not request.is_ajax() or not request.body:
             return HttpResponseBadRequest()
 
@@ -602,15 +641,22 @@ class CheckDataFilesView(View):
                                      key, bucket_name)
                 else:  # POSIX file system
                     if not os.path.exists(input_file_path):
-                        bad_file_list.append(input_file_path)
+                        bad_file_list.append(os.path.basename(input_file_path))
                         logger.debug("File '%s' does not exist")
                     else:
                         logger.debug("File '%s' exists")
 
-        # prefix output to protect from JSON vulnerability (stripped by
-        # Angular)
-        return HttpResponse(")]}',\n" + json.dumps(bad_file_list),
-                            content_type="application/json")
+        response_data = {
+            "data_files_not_uploaded": [
+                file_name for file_name in bad_file_list
+                if file_name not in existing_datafile_names
+            ],
+            "data_files_to_be_deleted": [
+                file_name for file_name in existing_datafile_names
+                if file_name not in bad_file_list
+            ]
+        }
+        return JsonResponse(response_data)
 
 
 class ChunkedFileUploadView(ChunkedUploadView):
@@ -1020,3 +1066,11 @@ class AddFilesToDataSetView(APIView):
                 import_file.delay(file_store_item.uuid)
 
         return HttpResponse(status=202)  # Accepted
+
+
+def _check_data_set_ownership(user, data_set_uuid):
+    data_set = get_object_or_404(DataSet, uuid=data_set_uuid)
+    if user != data_set.get_owner():
+        return HttpResponseForbidden(
+            "Metadata revision is only allowed for Data Set owners"
+        )

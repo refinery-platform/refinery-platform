@@ -48,6 +48,7 @@ import pysolr
 from registration.models import RegistrationManager, RegistrationProfile
 from registration.signals import user_activated, user_registered
 
+import data_set_manager
 from data_set_manager.models import (
     Assay, Investigation, Node, NodeCollection, Study
 )
@@ -633,29 +634,20 @@ class DataSet(SharableResource):
             logger.error("Failed to retrieve InvestigationLink with version "
                          "%s: %s", version, exc)
 
-    def get_latest_study(self, version=None):
-        try:
-            return Study.objects.get(
-                investigation=(
-                    self.get_latest_investigation_link(version).investigation
-                )
-            )
-        except(Study.DoesNotExist, Study.MultipleObjectsReturned) as e:
-            raise RuntimeError("Couldn't properly fetch Study: {}".format(e))
+    def get_latest_study(self):
+        latest_investigation = self.get_investigation()
+        if latest_investigation:
+            return latest_investigation.get_study()
 
-    def get_latest_assay(self, version=None):
-        try:
-            return Assay.objects.get(study=self.get_latest_study(version))
-        except(Assay.DoesNotExist, Assay.MultipleObjectsReturned) as e:
-            raise RuntimeError("Couldn't properly fetch Assay: {}".format(e))
+    def get_latest_assay(self):
+        latest_investigation = self.get_investigation()
+        if latest_investigation:
+            return latest_investigation.get_assay()
 
     def get_investigation(self, version=None):
         investigation_link = self.get_latest_investigation_link(version)
-
         if investigation_link:
             return investigation_link.investigation
-        else:
-            return None
 
     def get_studies(self, version=None):
         return Study.objects.filter(
@@ -738,26 +730,11 @@ class DataSet(SharableResource):
             )
 
     def get_file_store_items(self):
-        """Returns a list of all data files associated with the data set"""
-        file_store_items = []
-        investigation = self.get_investigation()
-
-        try:
-            study = Study.objects.get(investigation=investigation)
-        except (Study.DoesNotExist, Study.MultipleObjectsReturned) as e:
-            logger.error("Could not fetch Study properly: %s", e)
-        else:
-            for node in Node.objects.filter(study=study):
-                try:
-                    file_store_items.append(
-                        FileStoreItem.objects.get(uuid=node.file_uuid)
-                    )
-                except(FileStoreItem.DoesNotExist,
-                       FileStoreItem.MultipleObjectsReturned) as e:
-                    logger.error("Error while fetching FileStoreItem: %s", e)
-
-        file_store_items.append(investigation.get_file_store_item())
-        return file_store_items
+        """Get a list of FileStoreItem instances corresponding to a
+        DataSet's latest Investigation"""
+        latest_investigation = self.get_investigation()
+        if latest_investigation:
+            return latest_investigation.get_file_store_items()
 
     @cached_property
     def is_valid(self):
@@ -799,6 +776,59 @@ class DataSet(SharableResource):
         :return: boolean
         """
         return not (self.get_analyses() or self.has_visualizations())
+
+    def set_title(self, title):
+        self.title = title
+        self.save()
+
+    def update_with_revised_investigation(self, investigation):
+        """
+        Update an existing DataSet's Investigation with a new Investigation as
+        long as said DataSet is "clean" (No Analyses or Visualizations
+        performed) Any data files that were uploaded prior to this operation
+        will be reassociated and available from the new Investigation if
+        referenced within the new Investigation's list of data files. If
+        data files that were uploaded prior aren't referenced in the new
+        Investigation's list  of data files they will be deleted.
+        :param investigation: A newly created Investigation instance
+        """
+        if not self.is_clean():
+            raise RuntimeError(
+                "DataSet with UUID: {} is not clean (There have "
+                "been Analyses or Visualizations performed on it) "
+                "Remove these objects and try again"
+                .format(self.uuid)
+            )
+        self._associate_datafiles_with_investigation(investigation)
+        updated_data_set_title = investigation.get_title()
+        self.update_investigation(
+            investigation,
+            "Metadata Revision: for {}".format(updated_data_set_title)
+        )
+        data_set_manager.tasks.annotate_nodes(investigation.uuid)
+        self.set_title(updated_data_set_title)
+
+    @transaction.atomic()
+    def _associate_datafiles_with_investigation(self, investigation):
+        """
+        Transfer data files from an existing DataSet's FileStoreItems that
+        correspond to data files of the same source in an Investigation's
+        FileStoreItems
+        :param investigation: Investigation instance to transfer data files to
+        """
+        existing_investigation = self.get_investigation()
+        file_store_items_from_existing_data_set = \
+            existing_investigation.get_file_store_items(local_only=True)
+        new_file_store_items = investigation.get_file_store_items()
+        new_sources = [f.source for f in new_file_store_items]
+        for prior_file_store_item in file_store_items_from_existing_data_set:
+            if prior_file_store_item.source not in new_sources:
+                prior_file_store_item.delete_datafile()
+            for new_file_store_item in new_file_store_items:
+                if prior_file_store_item.source == new_file_store_item.source:
+                    prior_file_store_item.transfer_data_file(
+                        new_file_store_item
+                    )
 
 
 @receiver(pre_delete, sender=DataSet)

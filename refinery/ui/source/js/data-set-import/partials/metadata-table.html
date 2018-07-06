@@ -58,7 +58,8 @@
     </ol>
    </p>
   <div id="dataUploadTutorialStep3" class="refinery-subheader m-t-1">
-    <h1>Provide Metadata File</h1>
+    <h1 ng-show="!metadataTable.isMetaDataRevision">Provide Metadata File</h1>
+    <h1 ng-show="metadataTable.isMetaDataRevision">Provide Revised Metadata File</h1>
   </div>
   <div id="dataUploadTutorialStep4">
     <p>Choose delimiter and then select tabular metadata table.</p>
@@ -90,10 +91,10 @@
         ng-if="metadataTable.isErrored">
         <div class="text-centered">
           <i class="fa fa-exclamation-triangle" aria-hidden="true"></i>
-          <p>
-            Import of this data set failed. Please ensure that the structure
-            of your metadata file matches that of the example metadata file.
-          </p>
+          <p ng-show="metadataTable.isMetaDataRevision">Metadata revision of this data set failed.</p>
+          <p ng-show="!metadataTable.isMetaDataRevision">Import of this data set failed.</p>
+          <p ng-show="metadataTable.importErrorMessage">{{ metadataTable.importErrorMessage }}</p>
+          <p ng-show="!metadataTable.importErrorMessage">Please ensure that the structure of your metadata file matches that of the example metadata file</p>
           <p>
             <a class="pointer" ng-click="metadataTable.closeError()">
            Return to Tabular Metadata Form
@@ -522,7 +523,7 @@
             <div class="col-sm-12 col-md-12 col-lg-12">
               <button
                 class="refinery-base btn btn-primary"
-                ng-click="metadataTable.startImport()"
+                ng-click="metadataTable.confirmImport()"
                 ng-disabled="importMetadataTableForm.$invalid ||
                 metadataTable.areFilesUploading() ||
                 metadataTable.areFilesInQueue()">

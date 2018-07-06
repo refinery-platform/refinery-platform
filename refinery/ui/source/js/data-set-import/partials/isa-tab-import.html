@@ -88,7 +88,8 @@
       </label>
 
       <div class="refinery-subheader m-t-1">
-        <h1>Complete Submission</h1>
+        <h1 ng-show="!isaTabImport.isMetaDataRevision">Complete Submission</h1>
+        <h1 ng-show="isaTabImport.isMetaDataRevision">Complete Metadata Revision Submission</h1>
       </div>
       <div class="row m-t-1-4 m-b-1-4">
         <div class="col-sm-12 col-md-12 col-lg-12">
@@ -122,7 +123,7 @@
       <button
         id="isa-import-button"
         class="block refinery-base btn btn-default"
-        ng-click="isaTabImport.startImport()"
+        ng-click="isaTabImport.confirmImport()"
         ng-if="isaTabImport.file || isaTabImport.urlToFile"
         ng-disabled="isaTabImport.isSuccessfullyImported || !isaTabImport.checkImportOption">
         Start Import

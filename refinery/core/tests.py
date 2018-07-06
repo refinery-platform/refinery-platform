@@ -1161,6 +1161,11 @@ class DataSetTests(TestCase):
         tool = create_tool_with_necessary_models("VISUALIZATION")
         self.assertFalse(tool.dataset.is_clean())
 
+    def test_is_clean_if_data_set_is_shared(self):
+        data_set = create_dataset_with_necessary_models()
+        data_set.share(ExtendedGroup.objects.public_group())
+        self.assertTrue(data_set.is_clean())
+
 
 class CoreIndexTests(TestCase):
     def setUp(self):
