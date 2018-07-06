@@ -7,7 +7,6 @@ from urlparse import urljoin
 from django.contrib.auth.models import User
 from django.utils.functional import SimpleLazyObject
 
-from cuser.middleware import CuserMiddleware
 from guardian.shortcuts import get_groups_with_perms
 import mock
 import mockcache as memcache
@@ -25,10 +24,11 @@ from factory_boy.utils import (create_dataset_with_necessary_models,
 from .models import (Analysis, DataSet, Event, ExtendedGroup, Project,
                      Workflow, WorkflowEngine)
 
+
 from .serializers import DataSetSerializer, UserSerializer
 
 from .views import (AnalysesViewSet, DataSetsViewSet, EventViewSet,
-                    WorkflowViewSet)
+                    UserProfileViewSet, WorkflowViewSet)
 
 cache = memcache.Client(["127.0.0.1:11211"])
 
@@ -283,8 +283,8 @@ class DataSetApiV2Tests(APIV2TestCase):
         group_non_union_1 = ExtendedGroup.objects.create(name="Group 1")
         self.data_set.share(group_non_union_0)
         self.data_set.share(group_non_union_1)
-        group_non_union_0.group_ptr.user_set.add(self.user)
-        group_non_union_1.group_ptr.user_set.add(self.user)
+        group_non_union_0.user_set.add(self.user)
+        group_non_union_1.user_set.add(self.user)
 
         patch_request = self.factory.patch(
             urljoin(self.url_root, self.data_set.uuid),
@@ -679,10 +679,10 @@ class DataSetApiV2Tests(APIV2TestCase):
         group_union = ExtendedGroup.objects.create(name="Group Union")
         group_non_union = ExtendedGroup.objects.create(name="Group Non-Union")
         self.data_set.share(group_union)
-        group_union.group_ptr.user_set.add(self.user)
-        group_union.group_ptr.user_set.add(new_owner)
+        group_union.user_set.add(self.user)
+        group_union.user_set.add(new_owner)
         self.data_set.share(group_non_union)
-        group_non_union.group_ptr.user_set.add(self.user)
+        group_non_union.user_set.add(self.user)
 
         view_set = DataSetsViewSet()
         view_set.request = self.factory.get(self.url_root)
@@ -707,8 +707,8 @@ class DataSetApiV2Tests(APIV2TestCase):
                                              self.password)
         group_union = ExtendedGroup.objects.create(name="Group Union")
         self.data_set.share(group_union)
-        group_union.group_ptr.user_set.add(self.user)
-        group_union.group_ptr.user_set.add(new_owner)
+        group_union.user_set.add(self.user)
+        group_union.user_set.add(new_owner)
 
         view_set = DataSetsViewSet()
         view_set.request = self.factory.get(self.url_root)
@@ -750,6 +750,18 @@ class DataSetApiV2Tests(APIV2TestCase):
             'http://{}/groups/{}'.format(view_set.current_site,
                                          group_public.extendedgroup.uuid)
         )
+
+    def test_get_data_set_is_clean(self):
+        self.get_request.user = self.user
+        get_response = self.view(self.get_request)
+        self.assertTrue(get_response.data[0]["is_clean"])
+
+    def test_get_data_set_is_not_clean(self):
+        # Create a DataSet along with a Visualization Tool
+        create_tool_with_necessary_models("VISUALIZATION", user=self.user)
+        self.get_request.user = self.user
+        get_response = self.view(self.get_request)
+        self.assertFalse(get_response.data[0]["is_clean"])
 
 
 class AnalysisApiV2Tests(APIV2TestCase):
@@ -941,6 +953,81 @@ class WorkflowApiV2Tests(APIV2TestCase):
             uuid=self.workflow.uuid
         )
         self.assertEqual(get_response.content, self.mock_workflow_graph)
+
+
+class UserProfileApiV2Tests(APIV2TestCase):
+    def setUp(self, **kwargs):
+        super(UserProfileApiV2Tests, self).setUp(
+            api_base_name="user_profiles/",
+            view=UserProfileViewSet.as_view()
+        )
+        self.user_lm = User.objects.create_user('lab_member',
+                                                'member@fake.com',
+                                                self.password)
+        self.lab_group = ExtendedGroup.objects.create(name="Lab Group")
+        self.non_lab_group = ExtendedGroup.objects.create(name="Test Group")
+        self.lab_group.user_set.add(self.user_lm)
+        self.non_lab_group.user_set.add(self.user)
+
+    def test_patch_primary_group_returns_success_status(self):
+        patch_request = self.factory.patch(
+            urljoin(self.url_root, self.user_lm.profile.uuid),
+            {"primary_group": self.lab_group.id}
+        )
+        patch_request.user = self.user_lm
+        force_authenticate(patch_request, user=self.user_lm)
+        patch_response = self.view(patch_request, self.user_lm.profile.uuid)
+        self.assertEqual(patch_response.status_code, 202)
+
+    def test_patch_primary_group_returns_success_group_id(self):
+        patch_request = self.factory.patch(
+            urljoin(self.url_root, self.user_lm.profile.uuid),
+            {"primary_group": self.lab_group.id}
+        )
+        patch_request.user = self.user_lm
+        force_authenticate(patch_request, user=self.user_lm)
+        patch_response = self.view(patch_request, self.user_lm.profile.uuid)
+        self.assertEqual(patch_response.data.get('primary_group'),
+                         self.lab_group.id)
+
+    def test_patch_primary_group_success_updates_profile(self):
+        patch_request = self.factory.patch(
+            urljoin(self.url_root, self.user_lm.profile.uuid),
+            {"primary_group": self.lab_group.id}
+        )
+        patch_request.user = self.user_lm
+        force_authenticate(patch_request, user=self.user_lm)
+        self.view(patch_request, self.user_lm.profile.uuid)
+        self.assertEqual(self.user_lm.profile.primary_group_id,
+                         self.lab_group.id)
+
+    def test_patch_primary_group_returns_unauthorized_for_anon_user(self):
+        patch_request = self.factory.patch(
+            urljoin(self.url_root, self.user_lm.profile.uuid),
+            {"primary_group": self.lab_group.id}
+        )
+        patch_response = self.view(patch_request, self.user_lm.profile.uuid)
+        self.assertEqual(patch_response.status_code, 401)
+
+    def test_patch_primary_group_returns_bad_request_for_invalid_group(self):
+        patch_request = self.factory.patch(
+            urljoin(self.url_root, self.user_lm.profile.uuid),
+            {"primary_group": 0}
+        )
+        patch_request.user = self.user_lm
+        force_authenticate(patch_request, user=self.user_lm)
+        patch_response = self.view(patch_request, self.user_lm.profile.uuid)
+        self.assertEqual(patch_response.status_code, 400)
+
+    def test_patch_primary_group_returns_bad_request_for_non_member(self):
+        patch_request = self.factory.patch(
+            urljoin(self.url_root, self.user_lm.profile.uuid),
+            {"primary_group": self.non_lab_group.id}
+        )
+        patch_request.user = self.user_lm
+        force_authenticate(patch_request, user=self.user_lm)
+        patch_response = self.view(patch_request, self.user_lm.profile.uuid)
+        self.assertEqual(patch_response.status_code, 400)
 
 
 class EventApiV2Tests(APIV2TestCase):

@@ -33,9 +33,8 @@ from rest_framework.views import APIView
 from core.models import DataSet, ExtendedGroup, get_user_import_dir
 from core.utils import get_absolute_url
 from data_set_manager.isa_tab_parser import ParserException
-from file_store.models import (
-    generate_file_source_translator, get_temp_dir, parse_s3_url
-)
+from file_store.models import (generate_file_source_translator, get_temp_dir,
+                               parse_s3_url)
 from file_store.tasks import download_file, import_file
 
 from .models import Assay, AttributeOrder, Study
@@ -993,21 +992,21 @@ class AssaysAttributes(APIView):
             return Response(message, status=status.HTTP_401_UNAUTHORIZED)
 
 
-class AddFilesToDataSetView(View):
+class AddFilesToDataSetView(APIView):
     """Add file(s) to an existing data set from upload directory or bucket"""
+    http_method_names = ['post']
+
     def post(self, request):
         try:
-            data_set = DataSet.objects.get(uuid=request.POST['data_set_uuid'])
-        except KeyError:
-            logger.error("Data set UUID was not provided in request")
-            return HttpResponseBadRequest()
+            data_set = DataSet.objects.get(uuid=request
+                                           .data.get('data_set_uuid'))
         except DataSet.DoesNotExist:
             logger.error("Data set with UUID '%s' does not exist",
-                         request.POST.get('data_set_uuid'))
+                         request.data.get('data_set_uuid'))
             return HttpResponseNotFound()
         except DataSet.MultipleObjectsReturned:
             logger.critical("Multiple data sets found with UUID '%s'",
-                            request.POST.get('data_set_uuid'))
+                            request.data.get('data_set_uuid'))
             return HttpResponseServerError()
 
         if request.user != data_set.get_owner():

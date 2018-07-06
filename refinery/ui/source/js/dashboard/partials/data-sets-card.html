@@ -48,6 +48,7 @@
             ng-keyup="$event.keyCode == 13 ? $ctrl.searchDataSets($ctrl.searchQueryDataSets) : null">
       </div>
       <div class="col-md-6">
+        <rp-primary-group-button class="float-left p-r-1"></rp-primary-group-button>
         <div class="refinery-base btn btn-default btn-sm"
           ng-model="$ctrl.groupFilter['owned']"
           ng-change="$ctrl.filterDataSets('owned')"
@@ -87,6 +88,9 @@
                       ng-change="$ctrl.filterDataSets(group.id)"
                       value="{{ group.name }}">
                     {{ group.name }}
+                    <span ng-if="$ctrl.primaryGroupID == group.id">
+                      <i class="fa fa-asterisk"></i>
+                    </span>
                   </label>
                </span>
             </li>

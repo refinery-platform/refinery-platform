@@ -9,6 +9,7 @@ function RefineryFileUploadCtrl (
   $timeout,
   $window,
   $,
+  addFileToDataSetService,
   chunkedUploadService,
   fileUploadStatusService,
   settings,
@@ -133,7 +134,7 @@ function RefineryFileUploadCtrl (
       totalNumFilesUploaded++;
       file.uploaded = true; // used by ui to reset progress bars
       vm.fileCache[data.files[0].name].status = 'uploaded';
-      if ($element.fileupload('active') > 0) {
+      if ($('#fileupload').fileupload('active') > 0) {
         vm.overallFileStatus = fileUploadStatusService.setFileUploadStatus('running');
       } else if (totalNumFilesUploaded === totalNumFilesQueued) {
         vm.overallFileStatus = fileUploadStatusService.setFileUploadStatus('none');
@@ -208,6 +209,14 @@ function RefineryFileUploadCtrl (
   };
 
   var uploadAlways = function () {
+    if (vm.isNodeUpdate) {
+      addFileToDataSetService.update({ data_set_uuid: $window.dataSetUuid }).$promise
+        .then(function () {
+          vm.addFileStatus = 'success';
+        }, function () {
+          vm.addFileStatus = 'error';
+        });
+    }
     formData = [];
     /* After uploads, clear formData, including upload_id for the next
      upload. This reset require for mutliple large files
@@ -317,6 +326,7 @@ angular
     '$timeout',
     '$window',
     '$',
+    'addFileToDataSetService',
     'chunkedUploadService',
     'fileUploadStatusService',
     'settings',

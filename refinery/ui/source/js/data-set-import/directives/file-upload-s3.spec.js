@@ -1,40 +1,41 @@
 (function () {
   'use strict';
 
-  describe('rpDashboard component unit test', function () {
+  describe('rpFileUploadS3 component unit test', function () {
     beforeEach(module('refineryApp'));
-    beforeEach(module('refineryDashboard'));
+    beforeEach(module('refineryDataSetImport'));
 
     var directiveElement;
 
     beforeEach(inject(function (
       $compile,
+      $componentController,
       $httpBackend,
       $rootScope,
-      settings,
       $templateCache,
-      $window
+      $window,
+      settings
     ) {
       $templateCache.put(
-        $window.getStaticUrl('partials/dashboard/views/dashboard.html'),
-        '<div id="dashboard"></div>'
+        $window.getStaticUrl('partials/data-set-import/partials/file-upload-s3.html'),
+        '<div id="file-upload-s3"></div>'
       );
 
       $httpBackend
-        .whenGET(
+        .whenPOST(
           settings.appRoot +
-          settings.refineryApi +
-          '/extended_groups/members/?format=json&id=id'
+          settings.refineryApiV2 +
+          '/openid_token/?format=json'
         ).respond(200, []);
 
       var scope = $rootScope.$new();
-      var template = '<rp-dashboard></rp-dashboard>';
+      var template = '<rp-file-upload-s3></rp-file-upload-s3>';
       directiveElement = $compile(template)(scope);
       scope.$digest();
     }));
 
     it('generates the appropriate HTML', function () {
-      expect(directiveElement.html()).toContain('dashboard');
+      expect(directiveElement.html()).toContain('file-upload-s3');
       expect(directiveElement.html()).toContain('</div>');
     });
   });

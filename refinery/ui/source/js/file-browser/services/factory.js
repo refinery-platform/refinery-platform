@@ -37,6 +37,7 @@
     var assayFilesTotalItems = {};
     var customColumnNames = [];
     var csrfToken = $window.csrf_token;
+    var attributesNameKey = {}; // links internal_name with display_name
     var maxFileRequest = fileBrowserSettings.maxFileRequest;
 
     var service = {
@@ -44,6 +45,7 @@
       assayAttributeOrder: assayAttributeOrder,
       assayFiles: assayFiles,
       assayFilesTotalItems: assayFilesTotalItems,
+      attributesNameKey: attributesNameKey,
       customColumnNames: customColumnNames,
       createColumnDefs: createColumnDefs,
       getAssayFiles: getAssayFiles,
@@ -60,24 +62,17 @@
     * Method Definitions
     * ----------------------
     */
-
-        // populates the ui-grid columns variable
+    // populates the ui-grid columns variable
     function createColumnDefs () {
       var tempCustomColumnNames = [];
 
-      var totalChars = assayAttributes.reduce(function (previousValue, facetObj) {
-        return previousValue + String(facetObj.display_name).length;
-      }, 0);
-
       assayAttributes.forEach(function (attribute) {
         var columnName = attribute.display_name;
-        var columnWidth = columnName.length / totalChars * 100;
-        if (columnWidth < 10) {  // make sure columns are wide enough
-          columnWidth = Math.round(columnWidth * 2);
-        }
+        var columnWidth = columnName.length * 6 + 100;
+
         var colProperty = {
           name: columnName,
-          width: columnWidth + '%',
+          width: columnWidth,
           field: attribute.internal_name,
           cellTooltip: true,
           enableHiding: false
@@ -93,7 +88,7 @@
           tempCustomColumnNames.push(setCustomSelectColumn(columnName));
         } else if (columnName === 'Analysis Group') {
           // Analysis requires a custom template for filtering -1 entries
-          var _cellTemplate = '<div class="ngCellText text-align-center"' +
+          var _cellTemplate = '<div class="ngCellText ui-grid-cell-contents"' +
           'ng-class="col.colIndex()">{{COL_FIELD |' +
             ' analysisGroupNegativeOneWithNA: "Analysis Group"}}</div>';
           colProperty.cellTemplate = _cellTemplate;
@@ -163,6 +158,7 @@
         // column names will throw an error. This prevents duplicates
         for (var ind = 0; ind < assayAttributes.length; ind++) {
           createUniqueDisplayNames(ind);
+          attributesNameKey[assayAttributes[ind].display_name] = assayAttributes[ind].internal_name;
         }
         angular.copy(response.nodes, additionalAssayFiles);
         assayFilesTotalItems.count = response.nodes_count;
@@ -240,7 +236,7 @@
       return {
         name: _columnName,
         field: _columnName,
-        width: 11 + '%',
+        width: 130,
         displayName: 'Input Groups',
         enableFiltering: false,
         enableSorting: false,
@@ -270,7 +266,7 @@
         name: columnName,
         field: columnName,
         cellTooltip: false,
-        width: 4 + '%',
+        width: 50,
         displayName: '',
         enableFiltering: false,
         enableSorting: false,
@@ -287,13 +283,14 @@
      * @param {string} _columnName - column name
      */
     function setCustomUrlColumn (urlAttribute) {
-      var _cellTemplate = '<rp-data-file-dropdown file-status="COL_FIELD"></rp-data-file-dropdown>';
+      var _cellTemplate = '<rp-data-file-dropdown file-status="COL_FIELD" node-obj="row.entity">' +
+        '</rp-data-file-dropdown>';
 
       return {
         name: urlAttribute.internal_name,
         field: urlAttribute.internal_name,
         cellTooltip: true,
-        width: 70,
+        width: 80,
         displayName: '',
         enableFiltering: false,
         enableSorting: false,

@@ -19,7 +19,7 @@
         '<div id="tools-list"></div>'
       );
       $httpBackend
-        .expectGET(
+        .whenGET(
           settings.appRoot +
           settings.refineryApiV2 +
           '/events/'
