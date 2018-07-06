@@ -743,8 +743,8 @@ class NodeViewSet(APIView):
 
     def patch(self, request, uuid):
         node = self.get_object(uuid)
-
         data_set_owner = node.study.get_dataset().get_owner()
+
         if data_set_owner == request.user:
             serializer = NodeSerializer(node, data=request.data, partial=True)
             if serializer.is_valid():
