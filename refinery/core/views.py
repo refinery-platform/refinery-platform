@@ -721,6 +721,14 @@ class NodeViewSet(APIView):
     """
     http_method_names = ['get', 'patch']
 
+    def update_file_store(self, old_uuid, new_uuid):
+        if new_uuid:
+            try:
+                FileStoreItem.objects.get(uuid=old_uuid).delete_datafile()
+            except (FileStoreItem.DoesNotExist,
+                    FileStoreItem.MultipleObjectsReturned) as e:
+                logger.error(e)
+
     def get_object(self, uuid):
         try:
             return Node.objects.get(uuid=uuid)
@@ -752,14 +760,7 @@ class NodeViewSet(APIView):
             serializer = NodeSerializer(node, data=request.data, partial=True)
             if serializer.is_valid():
                 serializer.save()
-
-                try:
-                    FileStoreItem.objects\
-                        .get(uuid=old_file_uuid).delete_datafile()
-                except (FileStoreItem.DoesNotExist,
-                        FileStoreItem.MultipleObjectsReturned) as e:
-                    logger.error(e)
-
+                self.update_file_store(old_file_uuid, node.file_uuid)
                 NodeIndex().update_object(node, using="data_set_manager")
                 return Response(
                     serializer.data, status=status.HTTP_202_ACCEPTED
