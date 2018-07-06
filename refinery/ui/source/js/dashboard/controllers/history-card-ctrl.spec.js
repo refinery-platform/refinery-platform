@@ -10,14 +10,14 @@
     beforeEach(module('refineryDashboard'));
     beforeEach(inject(function (
       $controller,
-      toolsService,
+      eventsService,
       $q,
       $rootScope
     ) {
       scope = $rootScope.$new();
       mockResponseData = [{ name: 'Test tool' }];
 
-      spyOn(toolsService, 'query').and.callFake(function () {
+      spyOn(eventsService, 'query').and.callFake(function () {
         var deferred = $q.defer();
         deferred.resolve(mockResponseData);
         return { $promise: deferred.promise };
@@ -33,26 +33,18 @@
     });
 
     it('variables should be initialized', function () {
-      expect(ctrl.isToolsLoading).toEqual(true);
-      expect(ctrl.tools).toEqual([]);
+      expect(ctrl.events).toEqual([]);
     });
 
-    describe('getUserTools', function () {
-      it('getUserTools is a method', function () {
-        expect(angular.isFunction(ctrl.getUserTools)).toBe(true);
+    describe('getUserEvents', function () {
+      it('getUserEvents is a method', function () {
+        expect(angular.isFunction(ctrl.getUserEvents)).toBe(true);
       });
 
-      it('getUserTools updates tools list', function () {
-        ctrl.getUserTools();
+      it('getUserEvents updates tools list', function () {
+        ctrl.getUserEvents();
         scope.$apply();
-        expect(ctrl.tools[0].name).toEqual(mockResponseData[0].name);
-      });
-
-      it('getUserTools updates isToolLoading variable', function () {
-        expect(ctrl.isToolsLoading).toEqual(true);
-        ctrl.getUserTools();
-        scope.$apply();
-        expect(ctrl.isToolsLoading).toEqual(false);
+        expect(ctrl.events[0].name).toEqual(mockResponseData[0].name);
       });
     });
   });

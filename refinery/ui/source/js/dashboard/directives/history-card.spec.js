@@ -22,7 +22,7 @@
         .expectGET(
           settings.appRoot +
           settings.refineryApiV2 +
-          '/tools/'
+          '/events/'
         ).respond(200, []);
 
       var scope = $rootScope.$new();

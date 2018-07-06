@@ -17,7 +17,7 @@
     eventsService
   ) {
     var vm = this;
-    vm.isEventsLoading = true;
+    vm.isEventsLoading = false;
     vm.getUserEvents = getUserEvents;
     vm.events = [];
     activate();
@@ -32,6 +32,7 @@
      * @memberOf refineryDashboard.HistoryCardCtrl
     **/
     function getUserEvents () {
+      vm.isEventsLoading = true;
       var eventsRequest = eventsService.query();
       eventsRequest.$promise.then(function (response) {
         vm.isEventsLoading = false;
