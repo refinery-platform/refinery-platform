@@ -752,9 +752,7 @@ class NodeViewSet(APIView):
             serializer = NodeSerializer(node)
             return Response(serializer.data)
 
-        return Response(
-                self.node, status=status.HTTP_401_UNAUTHORIZED
-        )
+        return Response(node, status=status.HTTP_401_UNAUTHORIZED)
 
     def patch(self, request, uuid):
         node = self.get_object(uuid)
@@ -771,9 +769,7 @@ class NodeViewSet(APIView):
                 serializer.errors, status=status.HTTP_400_BAD_REQUEST
             )
 
-        return Response(
-                self.node, status=status.HTTP_401_UNAUTHORIZED
-        )
+        return Response(node, status=status.HTTP_401_UNAUTHORIZED)
 
 
 class EventViewSet(viewsets.ModelViewSet):
