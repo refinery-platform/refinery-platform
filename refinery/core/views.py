@@ -744,19 +744,35 @@ class NodeViewSet(APIView):
 
     def get(self, request, uuid):
         node = self.get_object(uuid)
-        serializer = NodeSerializer(node)
-        return Response(serializer.data)
+        data_set = node.study.get_dataset()
+        public_group = ExtendedGroup.objects.public_group()
+
+        if request.user.has_perm('core.read_dataset', data_set) or \
+                'read_dataset' in get_perms(public_group, data_set):
+            serializer = NodeSerializer(node)
+            return Response(serializer.data)
+
+        return Response(
+                self.node, status=status.HTTP_401_UNAUTHORIZED
+        )
 
     def patch(self, request, uuid):
         node = self.get_object(uuid)
-        serializer = NodeSerializer(node)
-        if serializer.is_valid():
-            serializer.save()
+
+        data_set_owner = node.study.get_dataset().get_owner()
+        if data_set_owner == request.user:
+            serializer = NodeSerializer(node, data=request.data, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(
+                    serializer.data, status=status.HTTP_202_ACCEPTED
+                )
             return Response(
-                serializer.data, status=status.HTTP_202_ACCEPTED
+                serializer.errors, status=status.HTTP_400_BAD_REQUEST
             )
+
         return Response(
-            serializer.errors, status=status.HTTP_400_BAD_REQUEST
+                self.node, status=status.HTTP_401_UNAUTHORIZED
         )
 
 
