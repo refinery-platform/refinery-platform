@@ -754,17 +754,13 @@ class NodeViewSet(APIView):
                 serializer.save()
 
                 try:
-                    file_store_item = FileStoreItem.objects.get(
-                        uuid=old_file_uuid
-                    )
+                    FileStoreItem.objects\
+                        .get(uuid=old_file_uuid).delete_datafile()
                 except (FileStoreItem.DoesNotExist,
                         FileStoreItem.MultipleObjectsReturned) as e:
                     logger.error(e)
-                if file_store_item:
-                    file_store_item.delete_datafile()
 
                 NodeIndex().update_object(node, using="data_set_manager")
-
                 return Response(
                     serializer.data, status=status.HTTP_202_ACCEPTED
                 )
