@@ -3,7 +3,7 @@ import random
 import string
 from urlparse import urljoin
 
-
+from cuser.middleware import CuserMiddleware
 from django.contrib.auth.models import User
 from django.utils.functional import SimpleLazyObject
 
