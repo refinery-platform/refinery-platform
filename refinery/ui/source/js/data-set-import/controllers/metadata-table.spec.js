@@ -4,19 +4,17 @@
   describe('MetadataTableImportCtrl', function () {
     var ctrl;
     var fileSourcesService;
-    var importConfirmationService;
-    var metadataStatusService;
+    var metadataStatus;
     var tabularFileImportApiService;
 
     beforeEach(function () {
       module('refineryApp');
       module('refineryDataSetImport');
-      inject(function ($controller, $rootScope, _fileSources_, _importConfirmationService_,
-                       _metadataStatusService_, _tabularFileImportApi_) {
-        fileSourcesService = _fileSources_;
-        importConfirmationService = _importConfirmationService_;
-        metadataStatusService = _metadataStatusService_;
-        tabularFileImportApiService = _tabularFileImportApi_;
+      inject(function ($controller, $rootScope, fileSources,
+                       metadataStatusService, tabularFileImportApi) {
+        fileSourcesService = fileSources;
+        metadataStatus = metadataStatusService;
+        tabularFileImportApiService = tabularFileImportApi;
         ctrl = $controller('MetadataTableImportCtrl', { $scope: $rootScope.$new() });
       });
     });
@@ -57,13 +55,7 @@
 
     describe('vm.metadataStatusService', function () {
       it('should be the metadataStatusService', function () {
-        expect(ctrl.metadataStatusService).toEqual(metadataStatusService);
-      });
-    });
-
-    describe('vm.importConfirmation', function () {
-      it('should be the importConfirmationService', function () {
-        expect(ctrl.importConfirmation).toEqual(importConfirmationService);
+        expect(ctrl.metadataStatusService).toEqual(metadataStatus);
       });
     });
 

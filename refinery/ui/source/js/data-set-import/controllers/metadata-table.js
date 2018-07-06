@@ -9,7 +9,6 @@ function MetadataTableImportCtrl (
   d3,
   $uibModal,
   fileSources,
-  importConfirmationService,
   tabularFileImportApi,
   metadataStatusService,
   settings
@@ -23,7 +22,6 @@ function MetadataTableImportCtrl (
   this.fileSources = fileSources;
   this.settings = settings;
   this.showFileUpload = false;
-  this.importConfirmation = importConfirmationService;
   this.tabularFileImportApi = tabularFileImportApi;
   this.metadataStatusService = metadataStatusService;
   this.useS3 = settings.djangoApp.deploymentPlatform === 'aws';
@@ -279,7 +277,8 @@ MetadataTableImportCtrl.prototype.checkFiles = function () {
 MetadataTableImportCtrl.prototype.confirmImport = function () {
   var self = this;
   if (self.isMetaDataRevision) {
-    self.importConfirmation.showConfirmation(self);
+    var modalInstance = this.$uibModal.open({ component: 'rpImportConfirmationModal' });
+    modalInstance.result.then(function () { self.startImport(); });
   } else {
     self.startImport();
   }
@@ -379,7 +378,6 @@ angular
     'd3',
     '$uibModal',
     'fileSources',
-    'importConfirmationService',
     'tabularFileImportApi',
     'metadataStatusService',
     'settings',

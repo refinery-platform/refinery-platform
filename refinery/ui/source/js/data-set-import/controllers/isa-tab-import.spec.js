@@ -3,15 +3,13 @@
 
   describe('IsaTabImportCtrl', function () {
     var ctrl;
-    var importConfirmationService;
     var isaTabImportApiService;
 
     beforeEach(function () {
       module('refineryApp');
       module('refineryDataSetImport');
-      inject(function ($controller, $rootScope, _importConfirmationService_, _isaTabImportApi_) {
-        importConfirmationService = _importConfirmationService_;
-        isaTabImportApiService = _isaTabImportApi_;
+      inject(function ($controller, $rootScope, isaTabImportApi) {
+        isaTabImportApiService = isaTabImportApi;
         ctrl = $controller('IsaTabImportCtrl', { $scope: $rootScope.$new() });
       });
     });
@@ -41,12 +39,6 @@
     describe('vm.isaTabImportApi', function () {
       it('should be the isaTabImportApiService', function () {
         expect(ctrl.isaTabImportApi).toEqual(isaTabImportApiService);
-      });
-    });
-
-    describe('vm.importConfirmation', function () {
-      it('should be the importConfirmationService', function () {
-        expect(ctrl.importConfirmation).toEqual(importConfirmationService);
       });
     });
 

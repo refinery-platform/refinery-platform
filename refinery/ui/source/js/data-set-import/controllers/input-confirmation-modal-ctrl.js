@@ -12,9 +12,7 @@
     .module('refineryDataSetImport')
     .controller('ImportConfirmationModalCtrl', ImportConfirmationModalCtrl);
 
-  ImportConfirmationModalCtrl.$inject = ['$uibModalInstance'];
-
-  function ImportConfirmationModalCtrl ($uibModalInstance) {
+  function ImportConfirmationModalCtrl () {
     var vm = this;
     vm.cancel = cancel;
     vm.confirm = confirm;
@@ -25,7 +23,7 @@
      * @memberOf refineryDataSetImport.ImportConfirmationModalCtrl
     **/
     function cancel () {
-      $uibModalInstance.dismiss('cancel');
+      vm.modalInstance.dismiss('cancel');
     }
 
     /**
@@ -35,7 +33,7 @@
      * @memberOf refineryDataSetImport.ImportConfirmationModalCtrl
     **/
     function confirm () {
-      $uibModalInstance.close('close');
+      vm.modalInstance.close('close');
     }
   }
 })();

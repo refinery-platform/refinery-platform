@@ -6,23 +6,23 @@
     .controller('IsaTabImportCtrl', IsaTabImportCtrl);
 
   IsaTabImportCtrl.$inject = [
-    '$location', '$log', '$rootScope', '$timeout', '$window', 'importConfirmationService',
+    '$location', '$log', '$rootScope', '$timeout', '$uibModal', '$window',
     'isaTabImportApi', 'settings'
   ];
 
-  function IsaTabImportCtrl ($location, $log, $rootScope, $timeout, $window,
-                             importConfirmationService, isaTabImportApi, settings) {
+  function IsaTabImportCtrl ($location, $log, $rootScope, $timeout, $uibModal, $window,
+                             isaTabImportApi, settings) {
     this.$log = $log;
     this.$rootScope = $rootScope;
     this.$timeout = $timeout;
     this.$window = $window;
+    this.$uibModal = $uibModal;
     this.isaTabImportApi = isaTabImportApi;
     this.settings = settings;
     this.showFileUpload = false;
     this.dataSetUUID = $location.search().data_set_uuid;
     this.isMetaDataRevision = !!this.dataSetUUID;
     this.useS3 = settings.djangoApp.deploymentPlatform === 'aws';
-    this.importConfirmation = importConfirmationService;
 
     // Helper method to exit out of error alert
     this.closeError = function () {
@@ -77,7 +77,8 @@
   IsaTabImportCtrl.prototype.confirmImport = function () {
     var self = this;
     if (self.isMetaDataRevision) {
-      self.importConfirmation.showConfirmation(self);
+      var modalInstance = this.$uibModal.open({ component: 'rpImportConfirmationModal' });
+      modalInstance.result.then(function () { self.startImport(); });
     } else {
       self.startImport();
     }
