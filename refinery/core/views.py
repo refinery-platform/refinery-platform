@@ -699,19 +699,6 @@ class NodeViewSet(APIView):
      ---
     #YAML
 
-    GET:
-        parameters_strategy:
-        form: replace
-        query: merge
-
-        parameters:
-            - name: uuid
-              description: Node uuid used as an identifier
-              type: string
-              paramType: path
-              required: true
-    ...
-
     PATCH:
         parameters_strategy:
         form: replace
@@ -724,7 +711,7 @@ class NodeViewSet(APIView):
               paramType: path
               required: true
             - name: file_uuid
-              description: file store item uuid
+              description: uuid for file store item
               type: string
               paramType: form
               required: false
