@@ -8,7 +8,7 @@ from rest_framework.validators import UniqueValidator
 from data_set_manager.models import Node
 from file_store.models import FileStoreItem
 
-from .models import DataSet, Event, UserProfile, Workflow
+from .models import DataSet, Event, User, UserProfile, Workflow
 
 logger = logging.getLogger(__name__)
 
@@ -72,7 +72,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserProfile
-        fields = ['primary_group']
+        fields = ['primary_group', 'uuid']
 
     def validate_primary_group(self, group):
         user = self.context.get('request').user
@@ -98,6 +98,14 @@ class UserProfileSerializer(serializers.ModelSerializer):
                                                     instance.primary_group)
         instance.save()
         return instance
+
+
+class UserSerializer(serializers.ModelSerializer):
+    profile = UserProfileSerializer()
+
+    class Meta:
+        model = User
+        fields = ['first_name', 'last_name', 'profile', 'username']
 
 
 class WorkflowSerializer(serializers.HyperlinkedModelSerializer):
@@ -206,12 +214,8 @@ class NodeSerializer(serializers.HyperlinkedModelSerializer):
 
 
 class EventSerializer(serializers.ModelSerializer):
-    data_set = serializers.SlugRelatedField(
-        read_only=True, slug_field='uuid'
-    )
-    user = serializers.SlugRelatedField(
-        read_only=True, slug_field='username'
-    )
+    data_set = DataSetSerializer()
+    user = UserSerializer()
     message = serializers.SerializerMethodField()
     details = serializers.JSONField(source="get_details_as_dict")
     date_time = serializers.DateTimeField()
