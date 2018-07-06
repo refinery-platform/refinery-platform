@@ -722,7 +722,7 @@ class NodeViewSet(APIView):
     http_method_names = ['get', 'patch']
 
     def update_file_store(self, old_uuid, new_uuid):
-        if new_uuid:
+        if new_uuid is None:
             try:
                 FileStoreItem.objects.get(uuid=old_uuid).delete_datafile()
             except (FileStoreItem.DoesNotExist,

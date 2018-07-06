@@ -117,7 +117,7 @@ class NodeSerializer(serializers.ModelSerializer):
         fields = ['uuid', 'file_uuid']
 
     def validate_file_uuid(self, file_uuid):
-        if file_uuid:
+        if file_uuid is not None:
             raise serializers.ValidationError(
                 'API does not support adding file store uuids.'
             )
