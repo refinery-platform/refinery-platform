@@ -12,7 +12,7 @@ from django.core.exceptions import ImproperlyConfigured
 from django.core.mail import EmailMessage
 from django.core.urlresolvers import reverse
 from django.db import transaction
-from django.http import (HttpResponse, HttpResponseBadRequest,
+from django.http import (Http404, HttpResponse, HttpResponseBadRequest,
                          HttpResponseForbidden, HttpResponseNotFound,
                          HttpResponseRedirect, HttpResponseServerError,
                          JsonResponse)
@@ -32,6 +32,7 @@ import requests
 from requests.exceptions import HTTPError
 from rest_framework import authentication, status, viewsets
 from rest_framework.decorators import detail_route
+from rest_framework.exceptions import APIException
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
@@ -731,33 +732,23 @@ class NodeViewSet(APIView):
     """
     http_method_names = ['get', 'patch']
 
-    def get(self, request, uuid):
+    def get_object(self, uuid):
         try:
-            node = Node.objects.get(uuid=uuid)
+            return Node.objects.get(uuid=uuid)
         except Node.DoesNotExist as e:
             logger.error(e)
-            return Response(uuid, status=status.HTTP_404_NOT_FOUND)
+            raise Http404
         except Node.MultipleObjectsReturned as e:
             logger.error(e)
-            return Response(
-                uuid, status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+            raise APIException("Multiple objects returned.")
 
+    def get(self, request, uuid):
+        node = self.get_object(uuid)
         serializer = NodeSerializer(node)
         return Response(serializer.data)
 
     def patch(self, request, uuid):
-        try:
-            node = Node.objects.get(uuid=uuid)
-        except Node.DoesNotExist as e:
-            logger.error(e)
-            return Response(uuid, status=status.HTTP_404_NOT_FOUND)
-        except Node.MultipleObjectsReturned as e:
-            logger.error(e)
-            return Response(
-                uuid, status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-
+        node = self.get_object(uuid)
         serializer = NodeSerializer(node)
         if serializer.is_valid():
             serializer.save()
@@ -867,12 +858,10 @@ class DataSetsViewSet(APIView):
             return DataSet.objects.get(uuid=uuid)
         except DataSet.DoesNotExist as e:
             logger.error(e)
-            return Response(uuid, status=status.HTTP_404_NOT_FOUND)
+            raise Http404
         except DataSet.MultipleObjectsReturned as e:
             logger.error(e)
-            return Response(
-                uuid, status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+            raise APIException("Multiple objects returned.")
 
     def is_user_authorized(self, user, data_set):
         if (not user.is_authenticated() or

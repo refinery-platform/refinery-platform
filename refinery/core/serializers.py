@@ -115,7 +115,7 @@ class NodeSerializer(serializers.ModelSerializer):
 
     def partial_update(self, instance, validated_data):
         """
-        Update and return an existing `UserProfile` instance, given the
+        Update and return an existing `Node` instance, given the
         validated data.
         """
         instance.file_uuid = validated_data.get('file_uuid',
