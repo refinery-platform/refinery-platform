@@ -108,17 +108,19 @@ class WorkflowSerializer(serializers.HyperlinkedModelSerializer):
 
 
 class NodeSerializer(serializers.ModelSerializer):
+    file_uuid = serializers.CharField(max_length=36,
+                                      required=False,
+                                      allow_null=True)
 
     class Meta:
         model = Node
         fields = ['uuid', 'file_uuid']
 
     def validate_file_uuid(self, file_uuid):
-        if file_uuid != 'None':
+        if file_uuid:
             raise serializers.ValidationError(
                 'API does not support adding file store uuids.'
             )
-        file_uuid = None
         pass
 
     def partial_update(self, instance, validated_data):
