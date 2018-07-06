@@ -113,6 +113,14 @@ class NodeSerializer(serializers.ModelSerializer):
         model = Node
         fields = ['uuid', 'file_uuid']
 
+    def validate_file_uuid(self, file_uuid):
+        if file_uuid != 'None':
+            raise serializers.ValidationError(
+                'API does not support adding file store uuids.'
+            )
+        file_uuid = None
+        pass
+
     def partial_update(self, instance, validated_data):
         """
         Update and return an existing `Node` instance, given the
@@ -120,6 +128,7 @@ class NodeSerializer(serializers.ModelSerializer):
         """
         instance.file_uuid = validated_data.get('file_uuid',
                                                 instance.file_uuid)
+
         instance.save()
         return instance
 

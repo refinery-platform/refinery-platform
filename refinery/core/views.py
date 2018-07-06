@@ -40,6 +40,8 @@ from rest_framework.views import APIView
 import xmltodict
 
 from data_set_manager.models import Node
+from data_set_manager.search_indexes import NodeIndex
+from file_store.models import FileStoreItem
 
 from .forms import ProjectForm, UserForm, UserProfileForm, WorkflowForm
 from .models import (Analysis, CustomRegistrationProfile, DataSet, Event,
@@ -743,12 +745,26 @@ class NodeViewSet(APIView):
 
     def patch(self, request, uuid):
         node = self.get_object(uuid)
+        old_file_uuid = node.file_uuid
         data_set_owner = node.study.get_dataset().get_owner()
 
         if data_set_owner == request.user:
             serializer = NodeSerializer(node, data=request.data, partial=True)
             if serializer.is_valid():
                 serializer.save()
+
+                try:
+                    file_store_item = FileStoreItem.objects.get(
+                        uuid=old_file_uuid
+                    )
+                except (FileStoreItem.DoesNotExist,
+                        FileStoreItem.MultipleObjectsReturned) as e:
+                    logger.error(e)
+                if file_store_item:
+                    file_store_item.delete_datafile()
+
+                NodeIndex().update_object(node, using="data_set_manager")
+
                 return Response(
                     serializer.data, status=status.HTTP_202_ACCEPTED
                 )
@@ -756,7 +772,7 @@ class NodeViewSet(APIView):
                 serializer.errors, status=status.HTTP_400_BAD_REQUEST
             )
 
-        return Response(node, status=status.HTTP_401_UNAUTHORIZED)
+        return Response(uuid, status=status.HTTP_401_UNAUTHORIZED)
 
 
 class EventViewSet(viewsets.ModelViewSet):
