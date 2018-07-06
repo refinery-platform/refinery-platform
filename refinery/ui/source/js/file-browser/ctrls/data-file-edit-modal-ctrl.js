@@ -57,7 +57,7 @@
     function removeFile () {
       nodesV2Service.partial_update({
         uuid: vm.resolve.config.nodeObj.uuid,
-        file_uuid: 'None'
+        file_uuid: null
       }).$promise.then(function (response) {
         console.log(response);
       });
