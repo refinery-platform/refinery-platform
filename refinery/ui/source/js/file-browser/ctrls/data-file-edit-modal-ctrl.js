@@ -55,11 +55,18 @@
      * @memberOf refineryApp.removeFile
     **/
     function removeFile () {
+      vm.isLoading = true;
       nodesV2Service.partial_update({
         uuid: vm.resolve.config.nodeObj.uuid,
         file_uuid: null
-      }).$promise.then(function (response) {
-        console.log(response);
+      }).$promise.then(function () {
+        vm.isLoading = false;
+        vm.alertType = 'success';
+        vm.responseMessage = 'File successfully deleted.';
+      }, function () {
+        vm.isLoading = false;
+        vm.alertType = 'danger';
+        vm.responseMessage = 'Error deleted file.';
       });
     }
 
