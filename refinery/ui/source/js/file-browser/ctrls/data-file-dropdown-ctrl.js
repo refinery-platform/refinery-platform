@@ -11,11 +11,18 @@
     .module('refineryFileBrowser')
     .controller('DataFileDropdownCtrl', DataFileDropdownCtrl);
 
-  DataFileDropdownCtrl.$inject = ['$uibModal', 'resetGridService'];
+  DataFileDropdownCtrl.$inject = [
+    '$scope',
+    '$uibModal',
+    'isOwnerService',
+    'resetGridService'
+  ];
 
 
   function DataFileDropdownCtrl (
+    $scope,
     $uibModal,
+    isOwnerService,
     resetGridService
   ) {
     var vm = this;
@@ -45,5 +52,16 @@
         }
       });
     }
+
+    vm.$onInit = function () {
+      $scope.$watch(
+        function () {
+          return isOwnerService.isOwner;
+        },
+        function () {
+          vm.isOwner = isOwnerService.isOwner;
+        }
+      );
+    };
   }
 })();
