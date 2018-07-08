@@ -18,6 +18,9 @@
   <div class="modal-body">
     <div class='row'>
       <div class="p-a-1" ng-if="$ctrl.fileAction === 'add'">
+        <p>
+          <em>{{ $ctrl.nodeName }}</em>
+        </p>
         <rp-file-upload-s3
           is-node-update="true"
           file-name="$ctrl.nodeName"
