@@ -38,12 +38,7 @@
       expect(ctrl.firstPage).toEqual(0);
       expect(ctrl.lastPage).toEqual(0);
       expect(ctrl.totalPages).toEqual(1);
-      expect(ctrl.isOwner).toEqual(false);
-    });
-
-    // test variable existence
-    it('isOwner should exist', function () {
-      expect(ctrl.isOwner).toEqual(false);
+      expect(ctrl.dataSet).toEqual({});
     });
 
     it('Data & UI displays variables should exist for views', function () {

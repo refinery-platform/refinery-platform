@@ -14,7 +14,7 @@
   DataFileDropdownCtrl.$inject = [
     '$scope',
     '$uibModal',
-    'isOwnerService',
+    'dataSetPropsService',
     'resetGridService'
   ];
 
@@ -22,7 +22,7 @@
   function DataFileDropdownCtrl (
     $scope,
     $uibModal,
-    isOwnerService,
+    dataSetPropsService,
     resetGridService
   ) {
     var vm = this;
@@ -54,12 +54,12 @@
     }
 
     vm.$onInit = function () {
-      $scope.$watch(
+      $scope.$watchCollection(
         function () {
-          return isOwnerService.isOwner;
+          return dataSetPropsService.dataSet;
         },
         function () {
-          vm.dataSet = isOwnerService.dataSet;
+          vm.dataSet = dataSetPropsService.dataSet;
         }
       );
     };

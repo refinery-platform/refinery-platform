@@ -3,21 +3,21 @@
 
   angular
     .module('refineryFileBrowser')
-    .service('isOwnerService', isOwnerService);
+    .service('dataSetPropsService', dataSetPropsService);
 
-  isOwnerService.$inject = ['$window', 'dataSetService'];
+  dataSetPropsService.$inject = ['$window', 'dataSetService'];
 
-  function isOwnerService ($window, dataSetService) {
+  function dataSetPropsService ($window, dataSetService) {
     var vm = this;
     vm.dataSet = {};
-    vm.refreshDataSetOwner = refreshDataSetOwner;
+    vm.refreshDataSet = refreshDataSet;
 
     /*
      *-----------------------
      * Method Definitions
      * ----------------------
      */
-    function refreshDataSetOwner () {
+    function refreshDataSet () {
       var params = { uuid: $window.dataSetUuid };
       var dataSet = dataSetService.query(params);
       dataSet.$promise.then(function (response) {

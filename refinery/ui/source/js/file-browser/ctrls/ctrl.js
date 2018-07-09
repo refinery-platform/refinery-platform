@@ -23,12 +23,12 @@
     '_',
     'assayFiltersService',
     'dataSetPermsService',
+    'dataSetPropsService',
     'fileBrowserFactory',
     'fileBrowserSettings',
     'fileParamService',
     'filesLoadingService',
     'fileRelationshipService',
-    'isOwnerService',
     'resetGridService',
     'selectedFilterService',
     'activeNodeService',
@@ -46,12 +46,12 @@
     _,
     assayFiltersService,
     dataSetPermsService,
+    dataSetPropsService,
     fileBrowserFactory,
     fileBrowserSettings,
     fileParamService,
     filesLoadingService,
     fileRelationshipService,
-    isOwnerService,
     resetGridService,
     selectedFilterService,
     activeNodeService,
@@ -77,6 +77,7 @@
     vm.checkDataLength = checkDataLength;
     vm.collapsedToolPanel = toolService.isToolPanelCollapsed;
     vm.currentTypes = fileService.currentTypes;
+    vm.dataSet = {};
     vm.firstPage = 0;
     vm.getDataDown = getDataDown;
     vm.getDataUp = getDataUp;
@@ -98,7 +99,6 @@
       showGridFooter: true,
       useExternalSorting: true
     };
-    vm.isOwner = false;
     vm.inputFileTypeColor = fileService.inputFileTypeColor;
     vm.lastPage = 0;  // variable supporting ui-grid dynamic scrolling
     vm.nodeSelectCollection = fileService.nodeSelectCollection;
@@ -120,7 +120,7 @@
      */
     function activate () {
       // Ensure data owner or group permission to modify (run tools)
-      checkDataSetOwnership();
+      refreshDataSetProps();
       // initialize the dataset and updates ui-grid selection, filters, and url
       initializeDataOnPageLoad();
     }
@@ -155,11 +155,10 @@
       }
     }
 
-    // Sets boolean for data set ownership
-    function checkDataSetOwnership () {
-      isOwnerService.refreshDataSetOwner().then(function () {
-        vm.dataSet = isOwnerService.dataSet;
-        console.log(vm.dataSet);
+    // Gets the data set properties
+    function refreshDataSetProps () {
+      dataSetPropsService.refreshDataSet().then(function () {
+        vm.dataSet = dataSetPropsService.dataSet;
       });
     }
 
