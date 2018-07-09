@@ -158,7 +158,8 @@
     // Sets boolean for data set ownership
     function checkDataSetOwnership () {
       isOwnerService.refreshDataSetOwner().then(function () {
-        vm.isOwner = isOwnerService.isOwner;
+        vm.dataSet = isOwnerService.dataSet;
+        console.log(vm.dataSet);
       });
     }
 
