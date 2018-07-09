@@ -14,12 +14,14 @@
   DataFileEditModalCtrl.$inject = [
     '$log',
     'fileBrowserFactory',
+    'nodesV2Service',
     'settings'
   ];
 
   function DataFileEditModalCtrl (
     $log,
     fileBrowserFactory,
+    nodesV2Service,
     settings
   ) {
     var vm = this;
@@ -54,6 +56,18 @@
     **/
     function removeFile () {
       vm.isLoading = true;
+      nodesV2Service.partial_update({
+        uuid: vm.resolve.config.nodeObj.uuid,
+        file_uuid: null
+      }).$promise.then(function () {
+        vm.isLoading = false;
+        vm.alertType = 'success';
+        vm.responseMessage = 'File successfully deleted.';
+      }, function () {
+        vm.isLoading = false;
+        vm.alertType = 'danger';
+        vm.responseMessage = 'Error deleted file.';
+      });
     }
 
       /*

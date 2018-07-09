@@ -12,7 +12,7 @@ from django.core.exceptions import ImproperlyConfigured
 from django.core.mail import EmailMessage
 from django.core.urlresolvers import reverse
 from django.db import transaction
-from django.http import (HttpResponse, HttpResponseBadRequest,
+from django.http import (Http404, HttpResponse, HttpResponseBadRequest,
                          HttpResponseForbidden, HttpResponseNotFound,
                          HttpResponseRedirect, HttpResponseServerError,
                          JsonResponse)
@@ -32,6 +32,7 @@ import requests
 from requests.exceptions import HTTPError
 from rest_framework import authentication, status, viewsets
 from rest_framework.decorators import detail_route
+from rest_framework.exceptions import APIException
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
@@ -39,6 +40,8 @@ from rest_framework.views import APIView
 import xmltodict
 
 from data_set_manager.models import Node
+from data_set_manager.search_indexes import NodeIndex
+from file_store.models import FileStoreItem
 
 from .forms import ProjectForm, UserForm, UserProfileForm, WorkflowForm
 from .models import (Analysis, CustomRegistrationProfile, DataSet, Event,
@@ -693,13 +696,80 @@ class WorkflowViewSet(viewsets.ModelViewSet):
         )
 
 
-class NodeViewSet(viewsets.ModelViewSet):
-    """API endpoint that allows Nodes to be viewed"""
-    queryset = Node.objects.all()
-    serializer_class = NodeSerializer
-    lookup_field = 'uuid'
-    http_method_names = ['get']
-    # permission_classes = (IsAuthenticated,)
+class NodeViewSet(APIView):
+    """API endpoint that allows Nodes to be viewed".
+     ---
+    #YAML
+
+    PATCH:
+        parameters_strategy:
+        form: replace
+        query: merge
+
+        parameters:
+            - name: uuid
+              description: User profile uuid used as an identifier
+              type: string
+              paramType: path
+              required: true
+            - name: file_uuid
+              description: uuid for file store item
+              type: string
+              paramType: form
+              required: false
+    ...
+    """
+    http_method_names = ['get', 'patch']
+
+    def update_file_store(self, old_uuid, new_uuid):
+        if new_uuid is None:
+            try:
+                FileStoreItem.objects.get(uuid=old_uuid).delete_datafile()
+            except (FileStoreItem.DoesNotExist,
+                    FileStoreItem.MultipleObjectsReturned) as e:
+                logger.error(e)
+
+    def get_object(self, uuid):
+        try:
+            return Node.objects.get(uuid=uuid)
+        except Node.DoesNotExist as e:
+            logger.error(e)
+            raise Http404
+        except Node.MultipleObjectsReturned as e:
+            logger.error(e)
+            raise APIException("Multiple objects returned.")
+
+    def get(self, request, uuid):
+        node = self.get_object(uuid)
+        data_set = node.study.get_dataset()
+        public_group = ExtendedGroup.objects.public_group()
+
+        if request.user.has_perm('core.read_dataset', data_set) or \
+                'read_dataset' in get_perms(public_group, data_set):
+            serializer = NodeSerializer(node)
+            return Response(serializer.data)
+
+        return Response(node, status=status.HTTP_401_UNAUTHORIZED)
+
+    def patch(self, request, uuid):
+        node = self.get_object(uuid)
+        old_file_uuid = node.file_uuid
+        data_set_owner = node.study.get_dataset().get_owner()
+
+        if data_set_owner == request.user:
+            serializer = NodeSerializer(node, data=request.data, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                self.update_file_store(old_file_uuid, node.file_uuid)
+                NodeIndex().update_object(node, using="data_set_manager")
+                return Response(
+                    serializer.data, status=status.HTTP_202_ACCEPTED
+                )
+            return Response(
+                serializer.errors, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        return Response(uuid, status=status.HTTP_401_UNAUTHORIZED)
 
 
 class EventViewSet(viewsets.ModelViewSet):
@@ -800,12 +870,10 @@ class DataSetsViewSet(APIView):
             return DataSet.objects.get(uuid=uuid)
         except DataSet.DoesNotExist as e:
             logger.error(e)
-            return Response(uuid, status=status.HTTP_404_NOT_FOUND)
+            raise Http404
         except DataSet.MultipleObjectsReturned as e:
             logger.error(e)
-            return Response(
-                uuid, status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+            raise APIException("Multiple objects returned.")
 
     def is_user_authorized(self, user, data_set):
         if (not user.is_authenticated() or
