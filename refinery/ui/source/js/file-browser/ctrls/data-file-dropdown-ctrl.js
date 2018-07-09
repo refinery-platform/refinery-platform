@@ -59,7 +59,7 @@
           return isOwnerService.isOwner;
         },
         function () {
-          vm.isOwner = isOwnerService.isOwner;
+          vm.dataSet = isOwnerService.dataSet;
         }
       );
     };
