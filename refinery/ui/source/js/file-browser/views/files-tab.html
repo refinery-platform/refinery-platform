@@ -26,7 +26,7 @@
         </span>
         <span class="float-right content">
           <span
-            ng-if="FBCtrl.isOwner"
+            ng-if="FBCtrl.dataSet.is_owner"
             class="refinery-base btn btn-default btn-sm"
             ng-click="FBCtrl.openPermissionEditor()"
             refinery-tooltip
@@ -37,7 +37,7 @@
             <span id="share-button-text"></span>
           </span>
           <span
-            ng-if="FBCtrl.isOwner"
+            ng-if="FBCtrl.dataSet.is_owner"
             class="refinery-base btn btn-default btn-sm m-l-1-4"
             rp-assay-files-util-modal
             refinery-tooltip
@@ -65,6 +65,38 @@
         <h3 class="p-l-1">
           {{ FBCtrl.assayFilesTotal }} files
         </h3>
+        <span class="p-l-1"
+          ng-if="FBCtrl.dataSet.isa_archive.length && FBCtrl.dataSet.is_owner">
+          <a
+            ng-disabled="!FBCtrl.dataSet.is_clean"
+            class="refinery-base btn btn-default btn-xs header-button"
+            ng-href="/data_set_manager/import/?data_set_title={{ FBCtrl.dataSet
+            .title }}/#/isa-tab-import?data_set_uuid={{ FBCtrl.dataSetUuid }}">
+            Revise Metadata
+          </a>
+        </span>
+        <span class="p-l-1"
+          ng-if="FBCtrl.dataSet.pre_isa_archive.length && FBCtrl.dataSet.is_owner">
+          <a
+            ng-disabled="!FBCtrl.dataSet.is_clean"
+            class="refinery-base btn btn-default btn-xs header-button"
+            ng-href="/data_set_manager/import/?data_set_title={{ FBCtrl.dataSet
+            .title }}/#/?data_set_uuid={{ FBCtrl.dataSetUuid }}">
+            Revise Metadata
+          </a>
+        </span>
+        <span class="p-l-1-3" ng-if="FBCtrl.dataSet.is_owner">
+          <a
+            popover-placement="right"
+            uib-popover-html="'Redirects to the Data Set Upload page where you
+            can upload revised metadata. <strong>Note:</strong> Once you have
+            run an analysis or visualization on a data set, its metadata can no longer be revised.'"
+            popover-title="Revise Metadata"
+            popover-trigger="'outsideClick'"
+            popover-append-to-body="true">
+              <i class="fa fa-question-circle info-icon icon-only"></i>
+          </a>
+        </span>
       </div>
       <rp-file-browser-assay-files></rp-file-browser-assay-files>
     </div>

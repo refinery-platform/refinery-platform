@@ -14,7 +14,7 @@
           </span>
         </button>
         <button type="button" class="refinery-base  btn btn-default btn-xs"
-          ng-disabled="$ctrl.fileStatus == 'N/A' && !$ctrl.isOwner"
+          ng-disabled="$ctrl.fileStatus == 'N/A' && !$ctrl.dataSet.is_owner"
           uib-dropdown-toggle>
           <i class="caret"></i>
           <span class="sr-only">File Download</span>
@@ -28,13 +28,13 @@
           <li>
           </li>
           <li
-            ng-if="$ctrl.fileStatus == 'N/A' && $ctrl.isOwner"
+            ng-if="$ctrl.fileStatus == 'N/A' && $ctrl.dataSet.is_owner && $ctrl.dataSet.is_clean"
             role="menuitem">
             <a ng-click="$ctrl.openDataFileModal('add', $ctrl.nodeObj)">
               <i class="fa fa-plus-circle p-r-1-2"></i>Add
             </a></li>
           <li
-            ng-if="$ctrl.fileStatus != 'N/A' && $ctrl.isOwner"
+            ng-if="$ctrl.fileStatus != 'N/A' && $ctrl.dataSet.is_owner && $ctrl.dataSet.is_clean"
             role="menuitem">
              <a ng-click="$ctrl.openDataFileModal('remove', $ctrl.nodeObj)">
               <i class="fa fa-trash p-r-1-2"></i>Remove

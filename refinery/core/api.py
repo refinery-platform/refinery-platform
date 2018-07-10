@@ -545,6 +545,7 @@ class DataSetResource(SharableResourceAPIInterface, ModelResource):
         bundle.data["date"] = investigation_link.date
         bundle.data["modification_date"] = bundle.obj.modification_date
         bundle.data["version"] = investigation_link.version
+        bundle.data["is_clean"] = bundle.obj.is_clean()
 
         return bundle
 
