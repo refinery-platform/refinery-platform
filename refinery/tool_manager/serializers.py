@@ -12,7 +12,7 @@ from .models import (FileRelationship, InputFile, Parameter, Tool,
 class FileTypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = FileType
-        exclude = ("id")
+        exclude = ["id"]
 
 
 class ParameterSerializer(serializers.ModelSerializer):
@@ -24,7 +24,7 @@ class ParameterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Parameter
-        exclude = ("id")
+        exclude = ["id"]
 
     def _get_galaxy_workflow_step(self, obj):
         return obj.get_galaxy_workflow_step()
@@ -47,7 +47,7 @@ class InputFileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = InputFile
-        exclude = ("id")
+        exclude = ["id"]
 
 
 class FileRelationshipSerializer(serializers.ModelSerializer):
@@ -62,7 +62,7 @@ class FileRelationshipSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = FileRelationship
-        exclude = ("id")
+        exclude = ["id"]
 
 
 class ToolDefinitionSerializer(serializers.ModelSerializer):
@@ -71,7 +71,7 @@ class ToolDefinitionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ToolDefinition
-        exclude = ("id")
+        exclude = ["id"]
 
 
 class ToolSerializer(serializers.ModelSerializer):
@@ -84,4 +84,4 @@ class ToolSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Tool
-        exclude = ("id")
+        exclude = ["id"]
