@@ -43,9 +43,9 @@ class DataSetSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = DataSet
-        fields = ['title', 'accession', 'summary', 'description', 'slug',
+        fields = ('title', 'accession', 'summary', 'description', 'slug',
                   'uuid', 'modification_date', 'id', 'is_owner', 'public',
-                  'is_clean']
+                  'is_clean')
 
     def partial_update(self, instance, validated_data):
         """
@@ -70,7 +70,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserProfile
-        fields = ['primary_group', 'uuid']
+        fields = ('primary_group', 'uuid')
 
     def validate_primary_group(self, group):
         user = self.context.get('request').user
@@ -103,7 +103,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['first_name', 'last_name', 'profile', 'username']
+        fields = ('first_name', 'last_name', 'profile', 'username')
 
 
 class WorkflowSerializer(serializers.HyperlinkedModelSerializer):
@@ -122,7 +122,7 @@ class NodeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Node
-        fields = ['uuid', 'file_uuid']
+        fields = ('uuid', 'file_uuid')
 
     def validate_file_uuid(self, file_uuid):
         if file_uuid is not None:
@@ -152,10 +152,10 @@ class EventSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Event
-        fields = [
+        fields = (
             'date_time', 'data_set', 'group', 'user',
             'type', 'sub_type', 'details', 'message'
-        ]
+        )
 
     @staticmethod
     def get_message(obj):
