@@ -26,7 +26,7 @@
         </span>
         <span class="float-right content">
           <span
-            ng-if="FBCtrl.isOwner"
+            ng-if="FBCtrl.dataSet.is_owner"
             class="refinery-base btn btn-default btn-sm"
             ng-click="FBCtrl.openPermissionEditor()"
             refinery-tooltip
@@ -37,7 +37,7 @@
             <span id="share-button-text"></span>
           </span>
           <span
-            ng-if="FBCtrl.isOwner"
+            ng-if="FBCtrl.dataSet.is_owner"
             class="refinery-base btn btn-default btn-sm m-l-1-4"
             rp-assay-files-util-modal
             refinery-tooltip

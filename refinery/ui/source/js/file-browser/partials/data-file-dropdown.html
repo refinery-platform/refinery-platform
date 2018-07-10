@@ -14,7 +14,7 @@
           </span>
         </button>
         <button type="button" class="refinery-base  btn btn-default btn-xs"
-          ng-disabled="$ctrl.fileStatus == 'N/A' && !$ctrl.isOwner"
+          ng-disabled="$ctrl.fileStatus == 'N/A' && !$ctrl.dataSet.is_owner"
           uib-dropdown-toggle>
           <i class="caret"></i>
           <span class="sr-only">File Download</span>
