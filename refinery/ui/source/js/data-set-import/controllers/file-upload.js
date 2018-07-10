@@ -141,6 +141,14 @@ function RefineryFileUploadCtrl (
       } else {
         vm.overallFileStatus = fileUploadStatusService.setFileUploadStatus('queuing');
       }
+      if (vm.isNodeUpdate) {
+        addFileToDataSetService.update({ data_set_uuid: $window.dataSetUuid }).$promise
+          .then(function () {
+            vm.addFileStatus = 'success';
+          }, function () {
+            vm.addFileStatus = 'error';
+          });
+      }
 
       $timeout(function () {
         // Fritz: I am not sure why we need to wait 100ms instead of 0ms
@@ -209,14 +217,6 @@ function RefineryFileUploadCtrl (
   };
 
   var uploadAlways = function () {
-    if (vm.isNodeUpdate) {
-      addFileToDataSetService.update({ data_set_uuid: $window.dataSetUuid }).$promise
-        .then(function () {
-          vm.addFileStatus = 'success';
-        }, function () {
-          vm.addFileStatus = 'error';
-        });
-    }
     formData = [];
     /* After uploads, clear formData, including upload_id for the next
      upload. This reset require for mutliple large files
