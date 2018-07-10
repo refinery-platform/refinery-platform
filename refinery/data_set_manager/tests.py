@@ -1922,7 +1922,7 @@ class NodeIndexTests(APITestCase):
         self.import_task.delete()
         self._assert_node_index_prepared_correctly(
             self._prepare_node_index(self.node),
-            expected_download_url=constants.NOT_AVAILABLE
+            expected_download_url=PENDING
         )
 
     def test_prepare_node_no_file_store_item(self):
