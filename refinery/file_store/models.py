@@ -282,6 +282,13 @@ class FileStoreItem(models.Model):
             return constants.NOT_AVAILABLE
         return celery.result.AsyncResult(self.import_task_id).state
 
+    def delete_file_import_task(self):
+        """Delete file import task on disk"""
+        if self.import_task_id:
+            # delete celery import task?
+            self.import_task_id = ''
+            self.save()
+
     def terminate_file_import_task(self):
         if self.import_task_id:
             logger.info("Terminating import task '%s' for '%s'",
