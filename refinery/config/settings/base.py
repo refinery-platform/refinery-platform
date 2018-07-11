@@ -220,7 +220,7 @@ INSTALLED_APPS = (
     'rest_framework',
     'rest_framework_swagger',
     'django_docker_engine',
-    'httpproxy',
+    'revproxy',
     'cuser',
 )
 
