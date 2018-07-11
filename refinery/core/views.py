@@ -724,10 +724,11 @@ class NodeViewSet(APIView):
     def update_file_store(self, old_uuid, new_uuid):
         if new_uuid is None:
             try:
-                FileStoreItem.objects.get(uuid=old_uuid).delete_datafile()
+                file_store_item = FileStoreItem.objects.get(uuid=old_uuid)
             except (FileStoreItem.DoesNotExist,
                     FileStoreItem.MultipleObjectsReturned) as e:
                 logger.error(e)
+            file_store_item.delete_datafile()
 
     def get_object(self, uuid):
         try:
@@ -749,7 +750,7 @@ class NodeViewSet(APIView):
             serializer = NodeSerializer(node)
             return Response(serializer.data)
 
-        return Response(node, status=status.HTTP_401_UNAUTHORIZED)
+        return Response(uuid, status=status.HTTP_401_UNAUTHORIZED)
 
     def patch(self, request, uuid):
         node = self.get_object(uuid)
@@ -759,9 +760,9 @@ class NodeViewSet(APIView):
         if data_set_owner == request.user:
             serializer = NodeSerializer(node, data=request.data, partial=True)
             if serializer.is_valid():
-                serializer.save()
                 self.update_file_store(old_file_uuid, node.file_uuid)
                 NodeIndex().update_object(node, using="data_set_manager")
+                serializer.save()
                 return Response(
                     serializer.data, status=status.HTTP_202_ACCEPTED
                 )
@@ -953,7 +954,7 @@ class DataSetsViewSet(APIView):
             )
         else:
             return Response(
-                self.data_set, status=status.HTTP_401_UNAUTHORIZED
+                uuid, status=status.HTTP_401_UNAUTHORIZED
             )
 
     def send_transfer_notification_email(self, old_owner, new_owner,
