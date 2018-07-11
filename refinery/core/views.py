@@ -752,7 +752,7 @@ class NodeViewSet(APIView):
             serializer = NodeSerializer(node)
             return Response(serializer.data)
 
-        return Response(node, status=status.HTTP_401_UNAUTHORIZED)
+        return Response(uuid, status=status.HTTP_401_UNAUTHORIZED)
 
     def patch(self, request, uuid):
         node = self.get_object(uuid)
@@ -952,7 +952,7 @@ class DataSetsViewSet(APIView):
             )
         else:
             return Response(
-                self.data_set, status=status.HTTP_401_UNAUTHORIZED
+                uuid, status=status.HTTP_401_UNAUTHORIZED
             )
 
     def send_transfer_notification_email(self, old_owner, new_owner,
