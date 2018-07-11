@@ -180,8 +180,9 @@ def _get_download_url_or_import_state(file_store_item):
         download_url = file_store_item.get_datafile_url()
         if download_url is None:
             import_state = file_store_item.get_import_status()
-            # We've reached a celery "READY STATE" without a valid download url
             if import_state in celery.states.READY_STATES:
+                # Here we've reached a celery "READY STATE" without a valid
+                # download url
                 import_state = constants.NOT_AVAILABLE
             else:
                 import_state = celery.states.PENDING
