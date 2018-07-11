@@ -724,10 +724,13 @@ class NodeViewSet(APIView):
     def update_file_store(self, old_uuid, new_uuid):
         if new_uuid is None:
             try:
-                FileStoreItem.objects.get(uuid=old_uuid).delete_datafile()
+                file_store_item = FileStoreItem.objects.get(uuid=old_uuid)
             except (FileStoreItem.DoesNotExist,
                     FileStoreItem.MultipleObjectsReturned) as e:
                 logger.error(e)
+            if file_store_item:
+                file_store_item.delete_datafile()
+                file_store_item.delete_file_import_task()
 
     def get_object(self, uuid):
         try:
@@ -753,20 +756,16 @@ class NodeViewSet(APIView):
 
     def patch(self, request, uuid):
         node = self.get_object(uuid)
-        old_file_uuid = node.file_uuid
+        new_file_uuid = request.data.get('file_uuid')
         data_set_owner = node.study.get_dataset().get_owner()
 
         if data_set_owner == request.user:
-            serializer = NodeSerializer(node, data=request.data, partial=True)
-            if serializer.is_valid():
-                serializer.save()
-                self.update_file_store(old_file_uuid, node.file_uuid)
-                NodeIndex().update_object(node, using="data_set_manager")
-                return Response(
-                    serializer.data, status=status.HTTP_202_ACCEPTED
-                )
+            # to remove the data file, we need to delete it and update index,
+            #  the file store item uuid should remain
+            self.update_file_store(node.file_uuid, new_file_uuid)
+            NodeIndex().update_object(node, using="data_set_manager")
             return Response(
-                serializer.errors, status=status.HTTP_400_BAD_REQUEST
+                NodeSerializer(node).data, status=status.HTTP_202_ACCEPTED
             )
 
         return Response(uuid, status=status.HTTP_401_UNAUTHORIZED)
