@@ -158,6 +158,9 @@
 
       modalInstance.result.then(function () {
         getDataSets();
+      }, function () {
+        // when modal is dismissed
+        getDataSets();
       });
     }
 
