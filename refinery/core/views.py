@@ -730,7 +730,6 @@ class NodeViewSet(APIView):
                 logger.error(e)
             if file_store_item:
                 file_store_item.delete_datafile()
-                file_store_item.delete_file_import_task()
 
     def get_object(self, uuid):
         try:
