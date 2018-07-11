@@ -65,7 +65,8 @@
         <h3 class="p-l-1">
           {{ FBCtrl.assayFilesTotal }} files
         </h3>
-        <span class="p-l-1 banned"
+        <span class="p-l-1"
+          ng-class="{banned: !FBCtrl.dataSet.is_clean}"
           ng-if="FBCtrl.dataSet.isa_archive.length && FBCtrl.dataSet.is_owner">
           <a
             ng-class="{disabledLink: !FBCtrl.dataSet.is_clean}"
@@ -76,6 +77,7 @@
           </a>
         </span>
         <span class="p-l-1"
+          ng-class="{banned: !FBCtrl.dataSet.is_clean}"
           ng-if="FBCtrl.dataSet.pre_isa_archive.length && FBCtrl.dataSet.is_owner">
           <a
             ng-class="{disabledLink: !FBCtrl.dataSet.is_clean}"

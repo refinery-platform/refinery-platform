@@ -1,6 +1,8 @@
 <div class="modal-content" id="data-file-edit-modal">
   <div class="modal-header">
-    <a class="float-right modal-close" ng-click="$ctrl.close()">
+    <a class="float-right modal-close"
+      ng-class="{disabledLink: $ctrl.fileStatus == 'running' || $ctrl.isLoading}"
+      ng-click="$ctrl.close()">
       <i class="fa fa-times close" aria-hidden="true"></i>
     </a>
     <h3 class="modal-title" ng-if="$ctrl.fileAction === 'add'">Add File</h3>
@@ -61,7 +63,7 @@
         type="button"
         class="refinery-base btn btn-default"
         ng-click="$ctrl.close()"
-        ng-disabled="$ctrl.isLoading">
+        ng-disabled="$ctrl.isLoading || $ctrl.fileStatus == 'running'">
         Close
       </button>
   </div>
