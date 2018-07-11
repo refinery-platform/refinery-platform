@@ -13,14 +13,18 @@
 
   DataFileEditModalCtrl.$inject = [
     '$log',
+    '$scope',
     'fileBrowserFactory',
+    'fileUploadStatusService',
     'nodesV2Service',
     'settings'
   ];
 
   function DataFileEditModalCtrl (
     $log,
+    $scope,
     fileBrowserFactory,
+    fileUploadStatusService,
     nodesV2Service,
     settings
   ) {
@@ -80,6 +84,15 @@
       var nameInternal = fileBrowserFactory.attributesNameKey.Name;
       vm.nodeURL = vm.resolve.config.nodeObj.REFINERY_DOWNLOAD_URL_s;
       vm.nodeName = vm.resolve.config.nodeObj[nameInternal];
+
+      $scope.$watch(
+        function () {
+          return fileUploadStatusService.fileUploadStatus;
+        },
+        function (fileStatus) {
+          vm.fileStatus = fileStatus;
+        }
+      );
     };
   }
 })();
