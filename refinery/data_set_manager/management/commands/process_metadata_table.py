@@ -127,24 +127,21 @@ class Command(BaseCommand):
             if not options['custom_delimiter_string']:
                 raise CommandError("custom_delimiter_string was not specified")
         try:
-            with open(options['file_name']) as metadata_file:
-                dataset_uuid = process_metadata_table(
-                    username=options['username'], title=options['title'],
-                    metadata_file=metadata_file, source_columns=source_columns,
-                    data_file_column=options['data_file_column'],
-                    auxiliary_file_column=options['auxiliary_file_column'],
-                    base_path=options['base_path'],
-                    data_file_permanent=options['data_file_permanent'],
-                    species_column=options['species_column'],
-                    genome_build_column=options['genome_build_column'],
-                    annotation_column=options['annotation_column'],
-                    is_public=options['is_public'],
-                    delimiter=options['delimiter'],
-                    custom_delimiter_string=options['custom_delimiter_string']
-                )
-        except IOError as exc:
-            raise CommandError("Could not open file '%s': %s" %
-                               (options['file_name'], exc))
+            dataset_uuid = process_metadata_table(
+                username=options['username'], title=options['title'],
+                metadata_file_path=options['file_name'],
+                source_columns=source_columns,
+                data_file_column=options['data_file_column'],
+                auxiliary_file_column=options['auxiliary_file_column'],
+                base_path=options['base_path'],
+                data_file_permanent=options['data_file_permanent'],
+                species_column=options['species_column'],
+                genome_build_column=options['genome_build_column'],
+                annotation_column=options['annotation_column'],
+                is_public=options['is_public'],
+                delimiter=options['delimiter'],
+                custom_delimiter_string=options['custom_delimiter_string']
+            )
         except ValueError as exc:
             raise CommandError(exc)
 

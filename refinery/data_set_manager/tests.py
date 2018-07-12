@@ -2178,30 +2178,32 @@ class MetadataImportTestBase(IsaTabTestBase):
         return os.path.join(TEST_DATA_BASE_PATH, file_name)
 
     def post_tabular_meta_data_file(self,
-                                    meta_data_file=None,
+                                    meta_data_file_path=None,
                                     data_set_uuid=None,
                                     title="Test Tabular File",
                                     data_file_column=2,
                                     species_column=1,
                                     source_column_index=0,
                                     delimiter="comma"):
-        post_data = {
-            "file": meta_data_file,
-            "title": title,
-            "data_file_column": data_file_column,
-            "species_column": species_column,
-            "source_column_index": source_column_index,
-            "delimiter": delimiter
-        }
-        url = "/data_set_manager/import/metadata-table-form/"
-        if data_set_uuid is not None:
-            url += "?data_set_uuid={}".format(data_set_uuid)
+        with open(meta_data_file_path) as f:
+            post_data = {
+                "file": f,
+                "file_name": os.path.basename(meta_data_file_path),
+                "title": title,
+                "data_file_column": data_file_column,
+                "species_column": species_column,
+                "source_column_index": source_column_index,
+                "delimiter": delimiter
+            }
+            url = "/data_set_manager/import/metadata-table-form/"
+            if data_set_uuid is not None:
+                url += "?data_set_uuid={}".format(data_set_uuid)
 
-        response = self.client.post(
-            url,
-            data=post_data,
-            HTTP_X_REQUESTED_WITH='XMLHttpRequest'
-        )
+            response = self.client.post(
+                url,
+                data=post_data,
+                HTTP_X_REQUESTED_WITH='XMLHttpRequest'
+            )
         return response
 
 
@@ -2425,51 +2427,45 @@ class ProcessISATabViewLiveServerTests(MetadataImportTestBase,
 class ProcessMetadataTableViewTests(MetadataImportTestBase):
     @mock.patch.object(data_set_manager.views.import_file, "delay")
     def test_post_good_tabular_file(self, delay_mock):
-        with open(
-            self.get_test_file_path('single-file/two-line-local.csv')
-        ) as good_meta_data_file:
-            self.post_tabular_meta_data_file(
-                meta_data_file=good_meta_data_file
+        self.post_tabular_meta_data_file(
+            meta_data_file_path=self.get_test_file_path(
+                'single-file/two-line-local.csv'
             )
+        )
         self.successful_import_assertions()
 
     @override_settings(CELERY_ALWAYS_EAGER=True)
     def test_post_good_tabular_file_with_datafiles(self):
         for name in ["test1.txt", "test2.txt"]:
             open(os.path.join(self.test_user_directory, name), "a").close()
-
-        with open(
-            os.path.join(TEST_DATA_BASE_PATH, 'single-file/two-line-local.csv')
-        ) as good_meta_data_file:
-            self.post_tabular_meta_data_file(
-                meta_data_file=good_meta_data_file
+        self.post_tabular_meta_data_file(
+            meta_data_file_path=self.get_test_file_path(
+                'single-file/two-line-local.csv'
             )
-
+        )
         investigation = DataSet.objects.last().get_investigation()
         self.assertEqual(DataSet.objects.count(), 1)
         self.assertEqual(
-            len(investigation.get_file_store_items(local_only=True)), 2
+            len(investigation.get_file_store_items(local_only=True)), 3
         )
 
     @override_settings(CELERY_ALWAYS_EAGER=True)
     def test_metadata_revision_works_grammatical_changes_only(self):
-        with open(
-            self.get_test_file_path('single-file/two-line-local.csv')
-        ) as good_meta_data_file:
-            self.post_tabular_meta_data_file(
-                meta_data_file=good_meta_data_file
+        self.post_tabular_meta_data_file(
+            meta_data_file_path=self.get_test_file_path(
+                'single-file/two-line-local.csv'
             )
+        )
         data_set = DataSet.objects.last()
         self.assertFalse(
             AnnotatedNode.objects.filter(attribute_value="EDITED")
         )
-        with open(
-            self.get_test_file_path('single-file/three-line-local.csv')
-        ) as good_meta_data_file:
-            self.post_tabular_meta_data_file(
-                meta_data_file=good_meta_data_file,
-                data_set_uuid=data_set.uuid
-            )
+        self.post_tabular_meta_data_file(
+            meta_data_file_path=self.get_test_file_path(
+                'single-file/three-line-local.csv'
+            ),
+            data_set_uuid=data_set.uuid
+        )
         # Assert no new DataSet created
         self.assertEqual(DataSet.objects.count(), 1)
         self.assertTrue(
@@ -2481,21 +2477,18 @@ class ProcessMetadataTableViewTests(MetadataImportTestBase):
         local_data_file_names = ["test1.txt", "test2.txt"]
         for name in local_data_file_names:
             open(os.path.join(self.test_user_directory, name), "a").close()
-        with open(
-            self.get_test_file_path('single-file/two-line-local.csv')
-        ) as good_meta_data_file:
-            self.post_tabular_meta_data_file(
-                meta_data_file=good_meta_data_file
+        self.post_tabular_meta_data_file(
+            meta_data_file_path=self.get_test_file_path(
+                'single-file/two-line-local.csv'
             )
+        )
         data_set = DataSet.objects.last()
-
-        with open(
-            self.get_test_file_path('single-file/three-line-local.csv')
-        ) as good_meta_data_file:
-            self.post_tabular_meta_data_file(
-                meta_data_file=good_meta_data_file,
-                data_set_uuid=data_set.uuid
-            )
+        self.post_tabular_meta_data_file(
+            meta_data_file_path=self.get_test_file_path(
+                'single-file/three-line-local.csv'
+            ),
+            data_set_uuid=data_set.uuid
+        )
         data_set_count = DataSet.objects.count()
         revised_data_set = DataSet.objects.last()
 
@@ -2508,7 +2501,7 @@ class ProcessMetadataTableViewTests(MetadataImportTestBase):
         # Assert that previously uploaded data file remain accessible
         investigation = revised_data_set.get_investigation()
         self.assertEqual(
-            len(investigation.get_file_store_items(local_only=True)), 2
+            len(investigation.get_file_store_items(local_only=True)), 3
         )
 
         for file_store_item in investigation.get_file_store_items(
@@ -2530,24 +2523,22 @@ class ProcessMetadataTableViewTests(MetadataImportTestBase):
         for name in local_data_file_names:
             open(os.path.join(self.test_user_directory, name), "a").close()
 
-        with open(
-            self.get_test_file_path('single-file/two-line-local.csv')
-        ) as good_meta_data_file:
-            self.post_tabular_meta_data_file(
-                meta_data_file=good_meta_data_file
+        self.post_tabular_meta_data_file(
+            meta_data_file_path=self.get_test_file_path(
+                'single-file/two-line-local.csv'
             )
+        )
         data_set = DataSet.objects.last()
 
         local_data_file_names_for_revision = ["test3.txt"]
         for name in local_data_file_names_for_revision:
             open(os.path.join(self.test_user_directory, name), "a").close()
-        with open(
-            self.get_test_file_path('single-file/three-line-local.csv')
-        ) as good_meta_data_file:
-            self.post_tabular_meta_data_file(
-                meta_data_file=good_meta_data_file,
-                data_set_uuid=data_set.uuid
-            )
+        self.post_tabular_meta_data_file(
+            meta_data_file_path=self.get_test_file_path(
+                'single-file/three-line-local.csv'
+            ),
+            data_set_uuid=data_set.uuid
+        )
         data_set_count = DataSet.objects.count()
         revised_data_set = DataSet.objects.last()
 
@@ -2560,7 +2551,7 @@ class ProcessMetadataTableViewTests(MetadataImportTestBase):
         # Assert that all datafiles have been uploaded and associated
         investigation = revised_data_set.get_investigation()
         self.assertEqual(
-            len(investigation.get_file_store_items(local_only=True)), 3
+            len(investigation.get_file_store_items(local_only=True)), 4
         )
 
         for file_store_item in investigation.get_file_store_items(
@@ -2579,20 +2570,18 @@ class ProcessMetadataTableViewTests(MetadataImportTestBase):
         local_data_file_names = ["test1.txt", "test2.txt"]
         for name in local_data_file_names:
             open(os.path.join(self.test_user_directory, name), "a").close()
-        with open(
-            self.get_test_file_path('single-file/two-line-local.csv')
-        ) as good_meta_data_file:
-            self.post_tabular_meta_data_file(
-                meta_data_file=good_meta_data_file
+        self.post_tabular_meta_data_file(
+            meta_data_file_path=self.get_test_file_path(
+                'single-file/two-line-local.csv'
             )
+        )
         data_set = DataSet.objects.last()
-        with open(
-            self.get_test_file_path('single-file/one-line.csv')
-        ) as good_meta_data_file:
-            self.post_tabular_meta_data_file(
-                meta_data_file=good_meta_data_file,
-                data_set_uuid=data_set.uuid
-            )
+        self.post_tabular_meta_data_file(
+            meta_data_file_path=self.get_test_file_path(
+                'single-file/one-line.csv'
+            ),
+            data_set_uuid=data_set.uuid
+        )
         revised_data_set = DataSet.objects.last()
 
         # Assert that previously uploaded data files are removed
@@ -2604,21 +2593,19 @@ class ProcessMetadataTableViewTests(MetadataImportTestBase):
 
     @override_settings(CELERY_ALWAYS_EAGER=True)
     def test_metadata_revision_updates_dataset_title(self):
-        with open(
-                self.get_test_file_path('single-file/two-line-local.csv')
-        ) as good_meta_data_file:
-            self.post_tabular_meta_data_file(
-                meta_data_file=good_meta_data_file,
-            )
+        self.post_tabular_meta_data_file(
+            meta_data_file_path=self.get_test_file_path(
+                'single-file/two-line-local.csv'
+            ),
+        )
         data_set = DataSet.objects.last()
-        with open(
-                self.get_test_file_path('single-file/three-line-local.csv')
-        ) as good_meta_data_file:
-            self.post_tabular_meta_data_file(
-                meta_data_file=good_meta_data_file,
-                data_set_uuid=data_set.uuid,
-                title="New Title"
-            )
+        self.post_tabular_meta_data_file(
+            meta_data_file_path=self.get_test_file_path(
+                'single-file/three-line-local.csv'
+            ),
+            data_set_uuid=data_set.uuid,
+            title="New Title"
+        )
 
         revised_data_set = DataSet.objects.last()
         self.assertEqual(revised_data_set.title, "New Title")
@@ -2626,38 +2613,36 @@ class ProcessMetadataTableViewTests(MetadataImportTestBase):
     @override_settings(CELERY_ALWAYS_EAGER=True)
     def test_metadata_revision_fails_with_unclean_dataset(self):
         analyses, data_set = make_analyses_with_single_dataset(1, self.user)
-        with open(
-            self.get_test_file_path('single-file/three-line-local.csv')
-        ) as good_meta_data_file:
-            response = self.post_tabular_meta_data_file(
-                meta_data_file=good_meta_data_file,
+        response = self.post_tabular_meta_data_file(
+                meta_data_file_path=self.get_test_file_path(
+                    'single-file/three-line-local.csv'
+                ),
                 data_set_uuid=data_set.uuid
             )
-            self.assertEqual(
-                json.loads(response.content),
-                {
-                    "error": (
-                        "DataSet with UUID: {} is not clean (There have been "
-                        "Analyses or Visualizations performed on it) Remove "
-                        "these objects and try again".format(data_set.uuid)
-                    )
-                }
-            )
+        self.assertEqual(
+            json.loads(response.content),
+            {
+                "error": (
+                    "DataSet with UUID: {} is not clean (There have been "
+                    "Analyses or Visualizations performed on it) Remove "
+                    "these objects and try again".format(data_set.uuid)
+                )
+            }
+        )
 
     def test_metadata_revision_is_only_allowed_if_data_set_owner(self):
         data_set = create_dataset_with_necessary_models()
-        with open(
-            self.get_test_file_path('single-file/two-line-s3.csv')
-        ) as good_meta_data_file:
-            response = self.post_tabular_meta_data_file(
-                meta_data_file=good_meta_data_file,
-                data_set_uuid=data_set.uuid
-            )
-            self.assertEqual(response.status_code, 403)
-            self.assertIn(
-                "Metadata revision is only allowed for Data Set owners",
-                response.content
-            )
+        response = self.post_tabular_meta_data_file(
+            meta_data_file_path=self.get_test_file_path(
+                'single-file/two-line-s3.csv'
+            ),
+            data_set_uuid=data_set.uuid
+        )
+        self.assertEqual(response.status_code, 403)
+        self.assertIn(
+            "Metadata revision is only allowed for Data Set owners",
+            response.content
+        )
 
 
 class SingleFileColumnParserTests(TestCase):
@@ -2673,14 +2658,14 @@ class SingleFileColumnParserTests(TestCase):
             'single-file',
             filename
         )
-        with open(path, 'r') as f:
-            dataset_uuid = process_metadata_table(
-                username='guest',
-                title='fake',
-                metadata_file=f,
-                source_columns=[0],
-                data_file_column=2,
-            )
+
+        dataset_uuid = process_metadata_table(
+            username='guest',
+            title='fake',
+            metadata_file_path=path,
+            source_columns=[0],
+            data_file_column=2,
+        )
         return DataSet.objects.get(uuid=dataset_uuid)
 
     def assert_expected_nodes(self, dataset, node_count):
@@ -3024,11 +3009,11 @@ class CheckDataFilesViewTests(MetadataImportTestBase):
     @override_settings(CELERY_ALWAYS_EAGER=True)
     def test_check_datafiles_metadata_revision_subset_uploaded(self):
         open(os.path.join(self.test_user_directory, "test1.txt"), "a").close()
-
-        with open(
-            self.get_test_file_path("single-file/two-line-local.csv")
-        ) as meta_data_file:
-            self.post_tabular_meta_data_file(meta_data_file=meta_data_file)
+        self.post_tabular_meta_data_file(
+            meta_data_file_path=self.get_test_file_path(
+                "single-file/two-line-local.csv"
+            )
+        )
 
         data_set = DataSet.objects.last()
         response = self.client.post(
@@ -3048,10 +3033,11 @@ class CheckDataFilesViewTests(MetadataImportTestBase):
     @override_settings(CELERY_ALWAYS_EAGER=True)
     def test_check_datafiles_metadata_revision_files_will_be_deleted(self):
         open(os.path.join(self.test_user_directory, "test1.txt"), "a").close()
-        with open(
-            self.get_test_file_path("single-file/two-line-local.csv")
-        ) as meta_data_file:
-            self.post_tabular_meta_data_file(meta_data_file=meta_data_file)
+        self.post_tabular_meta_data_file(
+            meta_data_file_path=self.get_test_file_path(
+                "single-file/two-line-local.csv"
+            )
+        )
 
         data_set = DataSet.objects.last()
         response = self.client.post(

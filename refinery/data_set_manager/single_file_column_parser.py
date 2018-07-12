@@ -282,7 +282,7 @@ class SingleFileColumnParser:
 def process_metadata_table(
     username,
     title,
-    metadata_file,
+    metadata_file_path,
     source_columns,
     data_file_column,
     auxiliary_file_column=None,
@@ -304,8 +304,8 @@ def process_metadata_table(
     :type username: str
     :param title: dataset name
     :type title: str
-    :param metadata_file: metadata file in tab-delimited format
-    :type metadata_file: file
+    :param metadata_file_path: tab-delimited metadata file path
+    :type metadata_file_path: str
     :param source_columns: a list of source column indices
     :type source_columns: list of ints
     :param data_file_column: data file column index
@@ -386,7 +386,7 @@ def process_metadata_table(
     #  things to the db on an import failure, but doing so doesn't allow for
     #  the association of uploaded datafiles
     parser = SingleFileColumnParser(
-        metadata_file=metadata_file,
+        metadata_file_path=metadata_file_path,
         file_source_translator=file_source_translator,
         source_column_index=source_columns,
         data_file_column_index=data_file_column,
