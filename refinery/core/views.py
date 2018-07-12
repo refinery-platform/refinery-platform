@@ -721,16 +721,6 @@ class NodeViewSet(APIView):
     """
     http_method_names = ['get', 'patch']
 
-    def update_file_store(self, old_uuid, new_uuid):
-        if new_uuid is None:
-            try:
-                file_store_item = FileStoreItem.objects.get(uuid=old_uuid)
-            except (FileStoreItem.DoesNotExist,
-                    FileStoreItem.MultipleObjectsReturned) as e:
-                logger.error(e)
-            if file_store_item:
-                file_store_item.delete_datafile()
-
     def get_object(self, uuid):
         try:
             return Node.objects.get(uuid=uuid)
@@ -756,12 +746,22 @@ class NodeViewSet(APIView):
     def patch(self, request, uuid):
         node = self.get_object(uuid)
         new_file_uuid = request.data.get('file_uuid')
-        data_set_owner = node.study.get_dataset().get_owner()
+        data_set = node.study.get_dataset()
 
-        if data_set_owner == request.user:
+        if data_set.get_owner() == request.user:
             # to remove the data file, we need to delete it and update index,
             #  the file store item uuid should remain
-            self.update_file_store(node.file_uuid, new_file_uuid)
+            if new_file_uuid is None:
+                try:
+                    file_store_item = FileStoreItem.objects.get(
+                        uuid=node.file_uuid
+                    )
+                except (FileStoreItem.DoesNotExist,
+                        FileStoreItem.MultipleObjectsReturned) as e:
+                    logger.error(e)
+                else:
+                    file_store_item.delete_datafile()
+
             NodeIndex().update_object(node, using="data_set_manager")
             return Response(
                 NodeSerializer(node).data, status=status.HTTP_202_ACCEPTED
