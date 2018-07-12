@@ -59,6 +59,7 @@ describe('Satori', function() {
       cy.get('#data-set-list .locked').visible(target_title);
       cy.get('#data-set-list').invisible(other_title);
     });
+  });
 
   describe('Data sets list', function() {
     it('Solr search', function() {
