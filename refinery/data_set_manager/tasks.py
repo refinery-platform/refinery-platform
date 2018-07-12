@@ -215,7 +215,7 @@ def create_dataset(investigation_uuid, username, identifier=None, title=None,
         user = User.objects.create_user(username, "", "test")
     if investigation_uuid is None:
         return None  # TODO: make sure this is never happens
-    annotate_nodes(investigation_uuid)
+
     dataset = None
     investigation = Investigation.objects.get(uuid=investigation_uuid)
     if identifier is None:
@@ -253,6 +253,7 @@ def create_dataset(investigation_uuid, username, identifier=None, title=None,
     if public:
         public_group = ExtendedGroup.objects.public_group()
         dataset.share(public_group)
+    annotate_nodes(investigation_uuid)
     # set dataset slug
     dataset.slug = slug
     # calculate total number of files and total number of bytes

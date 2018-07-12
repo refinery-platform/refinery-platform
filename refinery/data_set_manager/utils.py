@@ -796,9 +796,9 @@ def hide_fields_from_list(facet_obj):
 
 
 def is_field_in_hidden_list(field):
-    hidden_fields = ['id', 'django_id', 'file_uuid', 'study_uuid',
-                     'assay_uuid', 'type', 'is_annotation', 'species',
-                     'genome_build', 'name', 'django_ct']
+    hidden_fields = ['id', 'data_set_uuid', 'django_id', 'file_uuid',
+                     'study_uuid', 'assay_uuid', 'type', 'is_annotation',
+                     'species', 'genome_build', 'name', 'django_ct']
 
     if field in hidden_fields or NodeIndex.GENERIC_SUFFIX in field:
         return True
