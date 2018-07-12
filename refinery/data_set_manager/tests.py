@@ -2450,7 +2450,10 @@ class ProcessMetadataTableViewTests(MetadataImportTestBase):
         )
 
     @override_settings(CELERY_ALWAYS_EAGER=True)
-    def test_metadata_revision_works_grammatical_changes_only(self):
+    @mock.patch.object(FileStoreItem, "terminate_file_import_task")
+    def test_metadata_revision_works_grammatical_changes_only(
+        self, terminate_file_import_task_mock
+    ):
         self.post_tabular_meta_data_file(
             meta_data_file_path=self.get_test_file_path(
                 'single-file/two-line-local.csv'
@@ -2473,7 +2476,10 @@ class ProcessMetadataTableViewTests(MetadataImportTestBase):
         )
 
     @override_settings(CELERY_ALWAYS_EAGER=True)
-    def test_metadata_revision_works_existing_datafiles_persisted(self):
+    @mock.patch.object(FileStoreItem, "terminate_file_import_task")
+    def test_metadata_revision_works_existing_datafiles_persisted(
+        self, terminate_file_import_task_mock
+    ):
         local_data_file_names = ["test1.txt", "test2.txt"]
         for name in local_data_file_names:
             open(os.path.join(self.test_user_directory, name), "a").close()
@@ -2518,7 +2524,10 @@ class ProcessMetadataTableViewTests(MetadataImportTestBase):
         )
 
     @override_settings(CELERY_ALWAYS_EAGER=True)
-    def test_metadata_revision_works_datafiles_added_during_revision(self):
+    @mock.patch.object(FileStoreItem, "terminate_file_import_task")
+    def test_metadata_revision_works_datafiles_added_during_revision(
+        self, terminate_file_import_task_mock
+    ):
         local_data_file_names = ["test1.txt", "test2.txt"]
         for name in local_data_file_names:
             open(os.path.join(self.test_user_directory, name), "a").close()
@@ -2592,7 +2601,10 @@ class ProcessMetadataTableViewTests(MetadataImportTestBase):
         )
 
     @override_settings(CELERY_ALWAYS_EAGER=True)
-    def test_metadata_revision_updates_dataset_title(self):
+    @mock.patch.object(FileStoreItem, "terminate_file_import_task")
+    def test_metadata_revision_updates_dataset_title(
+        self, terminate_file_import_task_mock
+    ):
         self.post_tabular_meta_data_file(
             meta_data_file_path=self.get_test_file_path(
                 'single-file/two-line-local.csv'
