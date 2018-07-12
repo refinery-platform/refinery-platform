@@ -33,6 +33,7 @@ from rest_framework.views import APIView
 from core.models import DataSet, ExtendedGroup, get_user_import_dir
 from core.utils import get_absolute_url
 from data_set_manager.isa_tab_parser import ParserException
+from data_set_manager.search_indexes import NodeIndex
 from file_store.models import (generate_file_source_translator, get_temp_dir,
                                parse_s3_url)
 from file_store.tasks import download_file, import_file
@@ -1059,11 +1060,19 @@ class AddFilesToDataSetView(APIView):
             return HttpResponseForbidden()
 
         logger.debug("Adding files to data set '%s'", data_set)
-        for file_store_item in data_set.get_file_store_items():
-            if (file_store_item.source.startswith(
-                    (settings.REFINERY_DATA_IMPORT_DIR, 's3://')
-            )):
-                import_file.delay(file_store_item.uuid)
+        for node in data_set.get_nodes():
+            file_store_item = node.get_file_store_item()
+            if file_store_item is not None:
+                if not file_store_item.datafile.name:
+                    # Put Node into PENDING state in the UI
+                    file_store_item.import_task_id = ""
+                    file_store_item.save()
+                    NodeIndex().update_object(node, using="data_set_manager")
+
+                    if (file_store_item.source.startswith(
+                        (settings.REFINERY_DATA_IMPORT_DIR, 's3://')
+                    )):
+                        import_file.delay(file_store_item.uuid)
 
         return HttpResponse(status=202)  # Accepted
 
