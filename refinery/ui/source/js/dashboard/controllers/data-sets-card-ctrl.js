@@ -156,9 +156,12 @@
         }
       });
 
-      modalInstance.result.then(function () {
-        getDataSets();
-      });
+      modalInstance.result.then(
+        function () {},
+        function () {
+          // when modal is closed
+          getDataSets();
+        });
     }
 
     /**
