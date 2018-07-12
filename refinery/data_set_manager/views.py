@@ -278,7 +278,7 @@ class ProcessISATabView(View):
                 response = self.import_by_url(url)
             else:
                 try:
-                    response = self.import_by_file(f)
+                    response = import_by_file(f)
                 except Exception as e:
                     logger.error(traceback.format_exc(e))
                     return HttpResponseBadRequest(
@@ -389,32 +389,6 @@ class ProcessISATabView(View):
             return render_to_response(self.template_name,
                                       context_instance=context)
 
-    def import_by_file(self, file):
-        temp_file_path = os.path.join(get_temp_dir(), file.name)
-        try:
-            handle_uploaded_file(file, temp_file_path)
-        except IOError as e:
-            error_msg = "Error writing ISA-Tab file to disk"
-            logger.error(
-                "%s. IOError: %s, file name: %s, error: %s.",
-                error_msg,
-                e.errno,
-                e.filename,
-                e.strerror
-            )
-            return {
-                "success": False,
-                "message": error_msg
-            }
-
-        return {
-            "success": True,
-            "message": "File imported.",
-            "data": {
-                "temp_file_path": temp_file_path
-            }
-        }
-
     def import_by_url(self, url):
         # TODO: replace with chain
         # http://docs.celeryproject.org/en/latest/userguide/tasks.html#task-synchronous-subtasks
@@ -440,6 +414,33 @@ class ProcessISATabView(View):
                 "temp_file_path": temp_file_path
             }
         }
+
+
+def import_by_file(file):
+    temp_file_path = os.path.join(get_temp_dir(), file.name)
+    try:
+        handle_uploaded_file(file, temp_file_path)
+    except IOError as e:
+        error_msg = "Error writing file to disk"
+        logger.error(
+            "%s. IOError: %s, file name: %s, error: %s.",
+            error_msg,
+            e.errno,
+            e.filename,
+            e.strerror
+        )
+        return {
+            "success": False,
+            "message": error_msg
+        }
+
+    return {
+        "success": True,
+        "message": "File imported.",
+        "data": {
+            "temp_file_path": temp_file_path
+        }
+    }
 
 
 def handle_uploaded_file(source_file, target_path):
