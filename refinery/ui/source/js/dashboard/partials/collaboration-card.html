@@ -68,7 +68,7 @@
            aria-labelledby="headingOne"
            data-parent="#accordion">
             <ul class="list-unstyled dashboard-member-list">
-              <li ng-repeat="member in group.member_list">
+              <li ng-repeat="member in group.member_list | orderBy: last_name">
                 <a
                   ng-href="/users/{{ member.uuid }}"
                   class="member-info"
