@@ -38,7 +38,7 @@ class SingleFileColumnParser:
     """
     def __init__(
         self,
-        metadata_file,
+        metadata_file_path,
         file_source_translator,
         source_column_index,
         data_file_column_index=-1,
@@ -63,19 +63,22 @@ class SingleFileColumnParser:
         if delimiter == "custom":
             self.delimiter = custom_delimiter_string
 
-        # metadata file object
-        self.metadata_file = metadata_file
-        self.metadata_file.seek(0)
-        try:
-            # need to use splitlines() to avoid potential newline errors
-            # http://madebyknight.com/handling-csv-uploads-in-django/
-            self.metadata_reader = csv.reader(
-                self.metadata_file.read().splitlines(),
-                dialect="excel-tab",
-                delimiter=self.delimiter)
-        except csv.Error:
-            logger.exception("Unable to read file %s", str(self.metadata_file))
-            raise
+        self.metadata_file_path = metadata_file_path
+        with open(metadata_file_path) as f:
+            self.metadata_file = f
+            self.metadata_file.seek(0)
+            try:
+                # need to use splitlines() to avoid potential newline errors
+                # http://madebyknight.com/handling-csv-uploads-in-django/
+                self.metadata_reader = csv.reader(
+                    self.metadata_file.read().splitlines(),
+                    dialect="excel-tab",
+                    delimiter=self.delimiter)
+            except csv.Error:
+                logger.exception("Unable to read file %s", str(
+                    self.metadata_file
+                ))
+                raise
         # compute number of columns
         self.headers = self.metadata_reader.next()
         self.num_columns = len(self.headers)
