@@ -19,6 +19,7 @@ from django.contrib.sites.models import get_current_site
 from django.core.cache import cache
 from django.core.mail import EmailMessage
 from django.forms import ValidationError
+from django.db.models import Q
 from django.template import loader
 from django.utils import timezone
 
@@ -1852,9 +1853,8 @@ class ExtendedGroupResource(ModelResource):
                 'last_name': u.last_name,
                 'is_manager': self.user_authorized(u, ext_group)
             },
-            ext_group.user_set.all().exclude(
-                is_active=False, username='AnonymousUser'
-            )
+            ext_group.user_set.all().exclude(Q(is_active=False) |
+                                             Q(username='AnonymousUser'))
         )
 
     # Override ORM methods for customization.
