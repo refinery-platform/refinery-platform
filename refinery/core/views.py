@@ -748,6 +748,13 @@ class NodeViewSet(APIView):
         new_file_uuid = request.data.get('file_uuid')
         data_set = node.study.get_dataset()
 
+        if not data_set.is_clean():
+            return Response(
+                'Files cannot be removed once an analysis or visualization '
+                'have ran on a data set ',
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
         if data_set.get_owner() == request.user:
             # to remove the data file, we need to delete it and update index,
             #  the file store item uuid should remain
