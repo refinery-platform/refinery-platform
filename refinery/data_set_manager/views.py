@@ -476,8 +476,9 @@ class ProcessMetadataTableView(View):
             if data_set_ownership_response is not None:
                 return data_set_ownership_response
         try:
-            metadata_file = request.FILES['file']
             title = request.POST.get('title')
+            metadata_file = request.FILES['file']
+            metadata_file.name = request.POST.get('file_name')
             data_file_column = request.POST.get('data_file_column')
         except (KeyError, ValueError):
             error_msg = 'Required parameters are missing'
@@ -488,7 +489,13 @@ class ProcessMetadataTableView(View):
                 )
             else:
                 return render(request, self.template_name, error)
-
+        else:
+            response = import_by_file(metadata_file)
+            if not response["success"]:
+                error_message = response["message"]
+                logger.error(error_message)
+                raise RuntimeError(error_message)
+            metadata_file_path = response["data"]["temp_file_path"]
         try:
             source_column_index = request.POST.getlist('source_column_index')
         except TypeError as error_msg:
@@ -538,7 +545,7 @@ class ProcessMetadataTableView(View):
             dataset_uuid = process_metadata_table(
                 username=request.user.username,
                 title=title,
-                metadata_file=metadata_file,
+                metadata_file_path=metadata_file_path,
                 source_columns=source_column_index,
                 data_file_column=data_file_column,
                 auxiliary_file_column=request.POST.get('aux_file_column'),
@@ -643,9 +650,11 @@ class CheckDataFilesView(View):
                 else:  # POSIX file system
                     if not os.path.exists(input_file_path):
                         bad_file_list.append(os.path.basename(input_file_path))
-                        logger.debug("File '%s' does not exist")
+                        logger.debug(
+                            "File '%s' does not exist", input_file_path
+                        )
                     else:
-                        logger.debug("File '%s' exists")
+                        logger.debug("File '%s' exists", input_file_path)
 
         response_data = {
             "data_files_not_uploaded": [
