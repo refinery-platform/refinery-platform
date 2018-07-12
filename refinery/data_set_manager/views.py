@@ -1064,14 +1064,16 @@ class AddFilesToDataSetView(APIView):
             file_store_item = node.get_file_store_item()
             if file_store_item is not None:
                 if not file_store_item.datafile.name:
-                    # Put Node into PENDING state in the UI
-                    file_store_item.import_task_id = ""
-                    file_store_item.save()
-                    NodeIndex().update_object(node, using="data_set_manager")
-
                     if (file_store_item.source.startswith(
                         (settings.REFINERY_DATA_IMPORT_DIR, 's3://')
                     )):
+                        # Put Node into PENDING state in the UI by removing
+                        # the associated FileStoreItem's import_task_id and
+                        # updating said Node's Solr index entry
+                        file_store_item.import_task_id = ""
+                        file_store_item.save()
+                        NodeIndex().update_object(node,
+                                                  using="data_set_manager")
                         import_file.delay(file_store_item.uuid)
 
         return HttpResponse(status=202)  # Accepted
