@@ -29,6 +29,7 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
     SUBANALYSIS_PREFIX = "REFINERY_SUBANALYSIS"
     FILETYPE_PREFIX = "REFINERY_FILETYPE"
     DOWNLOAD_URL = "REFINERY_DOWNLOAD_URL_s"
+    DATAFILE = "REFINERY_DATAFILE_s"
 
     text = indexes.CharField(document=True, use_template=True)
     uuid = indexes.CharField(model_attr='uuid')
@@ -153,6 +154,7 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
 
         filetype = "" if file_store_item is None else file_store_item.filetype
         data.update({
+            NodeIndex.DATAFILE: node.get_file_store_item().datafile,
             NodeIndex.DOWNLOAD_URL: _get_download_url_or_import_state(
                 file_store_item
             ),
