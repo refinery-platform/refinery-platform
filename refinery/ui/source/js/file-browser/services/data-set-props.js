@@ -21,6 +21,7 @@
       var params = { uuid: $window.dataSetUuid };
       var dataSet = dataSetService.query(params);
       dataSet.$promise.then(function (response) {
+        console.log(response);
         vm.dataSet = response.objects[0];
       });
       return dataSet.$promise;
