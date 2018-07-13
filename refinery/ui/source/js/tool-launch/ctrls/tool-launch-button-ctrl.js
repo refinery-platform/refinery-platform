@@ -15,6 +15,7 @@
     '$log',
     'authService',
     '$timeout',
+    'dataSetPropsService',
     'toolLaunchService',
     'toolLaunchStatusService',
     'toolSelectService',
@@ -28,6 +29,7 @@
     $log,
     authService,
     $timeout,
+    dataSetPropsService,
     toolLaunchService,
     toolLaunchStatusService,
     toolSelectService,
@@ -59,6 +61,7 @@
     **/
     function launchTool () {
       toolLaunchService.postToolLaunch().then(function (response) {
+        dataSetPropsService.refreshDataSet();
         if (response.tool_definition.tool_type === 'VISUALIZATION') {
           visualizationService.getVisualizations($window.dataSetUuid);
         } else {

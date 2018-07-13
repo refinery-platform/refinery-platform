@@ -467,5 +467,15 @@
           vm.userPerms = permsService.userPerms;
         }
     );
+
+    // needed for after a tool_launch and a dataset is not clean
+    $scope.$watchCollection(
+        function () {
+          return dataSetPropsService.dataSet;
+        },
+        function (dataSet) {
+          vm.dataSet = dataSet;
+        }
+    );
   }
 })();

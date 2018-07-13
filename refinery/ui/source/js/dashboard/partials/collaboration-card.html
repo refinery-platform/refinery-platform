@@ -23,7 +23,7 @@
       <li
          ng-repeat="group in $ctrl.userGroups"
          class="font-awesome-toggle-panel">
-         <span class="group-name-header">
+         <div class="group-name-header">
            <a
              type="button"
              data-toggle="collapse"
@@ -32,35 +32,38 @@
              aria-expanded="false" aria-controls="collapseOne">
              <span ng-if="group.name==='Public'">
                &nbsp;<i class="fa fa-globe"></i>
+                &nbsp;{{ group.name }}
              </span>
-             &nbsp;{{ group.name }}
+             <span ng-if="group.name!=='Public'">
+                &nbsp;{{ group.name }}
+             </span>
            </a>
             <div class="col-md-4 col-xs-4">
                <span ng-if="group.can_edit">Manager</span>
+               <span ng-if="!group.can_edit"> &nbsp;</span>
             </div>
             <div class="col-md-2 col-xs-3">
-              <span ng-show="group.name !== 'Public'">
-                 <a
-                ng-click="$ctrl.openGroupEditor(group)"
-                class="no-underline pointer p-r-1-2">
-                <i class="fa fa-cog"></i>
-              </a>
-              <a ng-if="group.can_edit"
-                ng-click="$ctrl.openGroupMemberAdd(group)"
-                class="no-underline pointer">
-                 <span
-                   class="fa-stack user-add-icon"
-                   refinery-tooltip
-                   refinery-tooltip-container="body"
-                   refinery-tooltip-placement="right"
-                   title="Invite user to group">
-                   <i class="fa fa-plus-circle fa-stack-1x fa-stack-right-corner"></i>
-                   <i class="fa fa-user-o"></i>&nbsp;
-                 </span>
+              <span ng-if="group.name !== 'Public'">
+                <a
+                  ng-click="$ctrl.openGroupEditor(group)"
+                  class="no-underline pointer p-r-1-2">
+                  <i class="fa fa-cog"></i>
+                </a>
+                <a ng-if="group.can_edit" ng-click="$ctrl.openGroupMemberAdd(group)" class="no-underline pointer">
+                   <span
+                     class="fa-stack user-add-icon"
+                     refinery-tooltip
+                     refinery-tooltip-container="body"
+                     refinery-tooltip-placement="right"
+                     title="Invite user to group">
+                     <i class="fa fa-plus-circle fa-stack-1x fa-stack-right-corner"></i>
+                     <i class="fa fa-user-o"></i>&nbsp;
+                   </span>
+                </a>
               </span>
-              </a>
+              <span ng-if="group.name==='Public'"> &nbsp;</span>
             </div>
-         </span>
+         </div>
          <div
            id="{{group.uuid}}"
            class="collapse"
@@ -68,7 +71,7 @@
            aria-labelledby="headingOne"
            data-parent="#accordion">
             <ul class="list-unstyled dashboard-member-list">
-              <li ng-repeat="member in group.member_list">
+              <li ng-repeat="member in group.member_list | orderBy: 'last_name'">
                 <a
                   ng-href="/users/{{ member.uuid }}"
                   class="member-info"
