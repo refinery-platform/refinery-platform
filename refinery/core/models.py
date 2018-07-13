@@ -95,13 +95,11 @@ class UserProfile(models.Model):
     catch_all_project = models.ForeignKey('Project', blank=True, null=True)
     login_count = models.IntegerField(default=0)
 
-    def __unicode__(self):
-        return (
-            self.user.first_name + " " +
-            self.user.last_name + " (" +
-            self.affiliation + "): " +
-            self.user.email
-        )
+    def __str__(self):
+        return "{} {} ({}): {}".format(self.user.first_name,
+                                       self.user.last_name,
+                                       self.affiliation,
+                                       self.user.email)
 
     def has_viewed_launchpad_tut(self):
         return Tutorials.objects.get(
