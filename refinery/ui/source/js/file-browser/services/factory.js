@@ -93,9 +93,7 @@
             ' analysisGroupNegativeOneWithNA: "Analysis Group"}}</div>';
           colProperty.cellTemplate = _cellTemplate;
           tempCustomColumnNames.push(colProperty);
-        } else if (columnName === 'Datafile') {
-          colProperty.visible = false;
-        } else {
+        } else if (columnName !== 'Datafile') {
           tempCustomColumnNames.push(colProperty);
         }
       });
