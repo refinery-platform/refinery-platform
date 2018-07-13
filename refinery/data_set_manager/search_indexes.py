@@ -152,8 +152,8 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
             if type(value) is set:
                 data[key] = " + ".join(str(i) for i in sorted(value))
 
-        filetype = "" if file_store_item is None else file_store_item.filetype
         datafile = "" if file_store_item is None else file_store_item.datafile
+        filetype = "" if file_store_item is None else file_store_item.filetype
 
         data.update({
             NodeIndex.DATAFILE: datafile,
