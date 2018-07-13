@@ -153,8 +153,10 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
                 data[key] = " + ".join(str(i) for i in sorted(value))
 
         filetype = "" if file_store_item is None else file_store_item.filetype
+        datafile = "" if file_store_item is None else file_store_item.datafile
+
         data.update({
-            NodeIndex.DATAFILE: node.get_file_store_item().datafile,
+            NodeIndex.DATAFILE: datafile,
             NodeIndex.DOWNLOAD_URL: _get_download_url_or_import_state(
                 file_store_item
             ),
