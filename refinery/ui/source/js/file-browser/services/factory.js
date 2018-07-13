@@ -291,7 +291,7 @@
         field: urlAttribute.internal_name,
         cellTooltip: true,
         width: 80,
-        displayName: '',
+        displayName: 'File',
         enableFiltering: false,
         enableSorting: false,
         enableColumnMenu: false,
