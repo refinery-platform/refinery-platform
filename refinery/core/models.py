@@ -4,7 +4,6 @@ Created on Feb 20, 2012
 @author: nils
 '''
 from __future__ import absolute_import
-from __future__ import unicode_literals
 
 import ast
 from collections import defaultdict
@@ -34,7 +33,6 @@ from django.forms import ValidationError
 from django.template import loader
 from django.template.loader import render_to_string
 from django.utils import timezone
-from django.utils.encoding import python_2_unicode_compatible
 
 from bioblend import galaxy
 from cuser.middleware import CuserMiddleware
@@ -85,7 +83,6 @@ NR_TYPES = (
 )
 
 
-@python_2_unicode_compatible
 class UserProfile(models.Model):
     """Extend Django user model:
     https://docs.djangoproject.com/en/1.7/topics/auth/customizing/#extending-the-existing-user-model
@@ -98,7 +95,7 @@ class UserProfile(models.Model):
     catch_all_project = models.ForeignKey('Project', blank=True, null=True)
     login_count = models.IntegerField(default=0)
 
-    def __str__(self):
+    def __unicode__(self):
         return "{} {} ({}): {}".format(self.user.first_name,
                                        self.user.last_name,
                                        self.affiliation,
