@@ -97,10 +97,10 @@ class UserProfile(models.Model):
 
     def __unicode__(self):
         return (
-            str(self.user.first_name) + " " +
-            str(self.user.last_name) + " (" +
-            str(self.affiliation) + "): " +
-            str(self.user.email)
+            self.user.first_name + " " +
+            self.user.last_name + " (" +
+            self.affiliation + "): " +
+            self.user.email
         )
 
     def has_viewed_launchpad_tut(self):
