@@ -751,7 +751,7 @@ class NodeViewSet(APIView):
         if not data_set.is_clean():
             return Response(
                 'Files cannot be removed once an analysis or visualization '
-                'have ran on a data set ',
+                'has ran on a data set ',
                 status=status.HTTP_400_BAD_REQUEST
             )
 
