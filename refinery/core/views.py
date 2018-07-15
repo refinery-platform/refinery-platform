@@ -771,7 +771,7 @@ class NodeViewSet(APIView):
 
             NodeIndex().update_object(node, using="data_set_manager")
             return Response(
-                NodeSerializer(node).data, status=status.HTTP_202_ACCEPTED
+                NodeSerializer(node).data, status=status.HTTP_200_OK
             )
 
         return Response(uuid, status=status.HTTP_401_UNAUTHORIZED)
