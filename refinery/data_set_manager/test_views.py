@@ -18,7 +18,7 @@ class AddFilesToDataSetViewTests(APITestCase):
 
         self.factory = APIRequestFactory()
         self.client = APIClient()
-        self.url_root = '/api/v2/data_set_manager/add-files/'
+        self.url_root = '/api/v2/data_set_manager/add-file/'
         self.view = AddFileToNodeView.as_view()
         self.client.login(username=self.username, password=self.password)
 
@@ -58,3 +58,23 @@ class AddFilesToDataSetViewTests(APITestCase):
         force_authenticate(self.post_request, user=self.user)
         post_response = self.view(self.post_request)
         self.assertEqual(post_response.status_code, 202)
+
+    def test_post_returns_400_for_node_not_associated_with_dataset(self):
+        another_dataset = create_dataset_with_necessary_models()
+        another_node = another_dataset.get_nodes()[0]
+
+        # POST with a node_uuid that isn't one of self.dataset's nodes
+        post_request = self.factory.post(
+            self.url_root,
+            data={
+                'data_set_uuid': self.data_set.uuid,
+                'node_uuid': another_node.uuid
+            },
+            format="json"
+        )
+        post_request.user = self.user
+        force_authenticate(post_request, user=self.user)
+        post_response = self.view(post_request)
+        self.assertEqual(post_response.status_code, 400)
+        self.assertEqual(post_response.content,
+                         "Node is not associated with the given DataSet")
