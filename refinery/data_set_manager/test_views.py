@@ -24,10 +24,14 @@ class AddFilesToDataSetViewTests(APITestCase):
 
         # Create Datasets
         self.data_set = create_dataset_with_necessary_models(user=self.user)
+        self.node = self.data_set.get_nodes()[0]
 
         self.post_request = self.factory.post(
             self.url_root,
-            data={'data_set_uuid': self.data_set.uuid},
+            data={
+                'data_set_uuid': self.data_set.uuid,
+                'node_uuid': self.node.uuid
+            },
             format="json"
         )
 
