@@ -92,7 +92,10 @@
         $scope.$apply(function () {
           file.success = true;
           if (vm.isNodeUpdate) {
-            addFileToDataSetService.update({ data_set_uuid: $window.dataSetUuid }).$promise
+            addFileToDataSetService.update({
+              data_set_uuid: $window.dataSetUuid,
+              node_uuid: vm.nodeUuid
+            }).$promise
               .then(function () {
                 vm.addFileStatus = 'success';
               }, function () {
