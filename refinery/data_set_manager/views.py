@@ -6,7 +6,6 @@ Created on May 11, 2012
 
 import json
 import logging
-
 import os
 import shutil
 import traceback
