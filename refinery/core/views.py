@@ -40,6 +40,7 @@ from rest_framework.views import APIView
 import xmltodict
 
 from data_set_manager.models import Node
+from data_set_manager.search_indexes import NodeIndex
 from file_store.models import FileStoreItem
 
 from .forms import ProjectForm, UserForm, UserProfileForm, WorkflowForm
