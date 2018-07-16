@@ -59,27 +59,6 @@ describe('Satori', function() {
       cy.get('#data-set-list .locked').visible(target_title);
       cy.get('#data-set-list').invisible(other_title);
     });
-
-    it('Sorts nodes in list graph by name', function() {
-      fixtures_and_routes();
-
-      cy.visit('/');
-      cy.visible_btn('Explore').click();
-
-      cy.get('#list-graph-wrapper').visible('Name').click();
-      cy.get('#list-graph-wrapper').get('.sort-name .icon-sort-desc.visible');
-      cy.get('#list-graph-wrapper').visible('No annotations').click(); // Last node, alphabetically.
-      cy.get('#list-graph-wrapper').visible('Lock').click();
-      cy.get('.node.lock-directly').invoke('attr','transform').should('contain', ', 0)');
-      // Other nodes will have non-zero vertical translations.
-
-      cy.get('#list-graph-wrapper').visible('Name').click();
-      cy.get('#list-graph-wrapper').get('.sort-name .icon-sort-asc.visible');
-      cy.get('#list-graph-wrapper').visible('Biotin').click(); // First node, alphabetically.
-      cy.get('#list-graph-wrapper').visible('Lock').click();
-      cy.get('.node.lock-directly').invoke('attr','transform').should('contain', ', 0)');
-      // ... and now this one has zero vertical translation.
-    });
   });
 
   describe('Data sets list', function() {

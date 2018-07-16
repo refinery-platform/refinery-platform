@@ -21,7 +21,7 @@
     <div class='row'>
       <div class="p-a-1" ng-if="$ctrl.fileAction === 'add'">
         <p>
-          <em>{{ $ctrl.nodeName }}</em>
+           Reference file name:<strong> {{ $ctrl.nodeName }}</strong>
         </p>
         <rp-file-upload-s3
           is-node-update="true"
@@ -38,7 +38,7 @@
       </div>
       <div class="p-l-1 p-b-1" ng-if="$ctrl.fileAction==='remove'">
         <span if="$ctrl.nodeURL === 'N/A'">
-          <em> {{ $ctrl.nodeName }} </em>
+          Reference file name: <strong>{{ $ctrl.nodeName }}</strong>
         </span>
         <span if="$ctrl.nodeURL !== 'N/A'">
           {{ REFINERY_DOWNLOAD_URL_s }}
