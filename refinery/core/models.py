@@ -96,12 +96,8 @@ class UserProfile(models.Model):
     login_count = models.IntegerField(default=0)
 
     def __unicode__(self):
-        return (
-            str(self.user.first_name) + " " +
-            str(self.user.last_name) + " (" +
-            str(self.affiliation) + "): " +
-            str(self.user.email)
-        )
+        return self.user.first_name + " " + self.user.last_name + \
+               " (" + self.affiliation + "): " + self.user.email
 
     def has_viewed_launchpad_tut(self):
         return Tutorials.objects.get(
