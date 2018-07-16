@@ -20,8 +20,6 @@
       },
       {
        /* update: Add file to data set node
-            @params: data_set_uuid (req)
-            type: string
             @params: node_uuid (req)
             type: string
        */

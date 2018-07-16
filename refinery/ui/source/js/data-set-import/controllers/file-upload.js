@@ -143,7 +143,6 @@ function RefineryFileUploadCtrl (
       }
       if (vm.isNodeUpdate) {
         addFileToDataSetService.update({
-          data_set_uuid: $window.dataSetUuid,
           node_uuid: vm.nodeUuid
         }).$promise
           .then(function () {

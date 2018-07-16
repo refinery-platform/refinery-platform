@@ -1044,27 +1044,22 @@ class AddFileToNodeView(APIView):
 
     def post(self, request):
         try:
-            data_set = DataSet.objects.get(uuid=request
-                                           .data.get('data_set_uuid'))
-        except DataSet.DoesNotExist:
-            logger.error("Data set with UUID '%s' does not exist",
-                         request.data.get('data_set_uuid'))
+            node_uuid = request.data["node_uuid"]
+        except KeyError:
+            return HttpResponseBadRequest("`node_uuid` required")
+        try:
+            node = Node.objects.get(uuid=node_uuid)
+        except Node.DoesNotExist:
+            logger.error("Node with UUID '%s' does not exist", node_uuid)
             return HttpResponseNotFound()
         except DataSet.MultipleObjectsReturned:
-            logger.critical("Multiple data sets found with UUID '%s'",
-                            request.data.get('data_set_uuid'))
+            logger.critical("Multiple Nodes found with UUID '%s'", node_uuid)
             return HttpResponseServerError()
 
-        if request.user != data_set.get_owner():
+        if request.user != node.study.get_dataset().get_owner():
             return HttpResponseForbidden()
 
-        logger.debug("Adding files to data set '%s'", data_set)
-        node = get_object_or_404(Node, uuid=request.data.get('node_uuid'))
-
-        if node not in data_set.get_nodes():
-            return HttpResponseBadRequest(
-                "Node is not associated with the given DataSet"
-            )
+        logger.debug("Adding file to Node '%s'", node)
 
         file_store_item = node.get_file_store_item()
         if (file_store_item and not file_store_item.datafile and

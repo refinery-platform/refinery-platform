@@ -9,7 +9,7 @@ from factory_boy.utils import create_dataset_with_necessary_models
 from .views import AddFileToNodeView
 
 
-class AddFilesToDataSetViewTests(APITestCase):
+class AddFileToNodeViewTests(APITestCase):
     def setUp(self):
         self.username = 'guest_user'
         self.password = User.objects.make_random_password()
@@ -28,17 +28,14 @@ class AddFilesToDataSetViewTests(APITestCase):
 
         self.post_request = self.factory.post(
             self.url_root,
-            data={
-                'data_set_uuid': self.data_set.uuid,
-                'node_uuid': self.node.uuid
-            },
+            data={'node_uuid': self.node.uuid},
             format="json"
         )
 
     def test_post_returns_404_invalid_uuid(self):
         post_request = self.factory.post(
             self.url_root,
-            data={'data_set_uuid': uuid.uuid4()},
+            data={'node_uuid': uuid.uuid4()},
             format="json"
         )
         post_response = self.view(post_request)
@@ -59,22 +56,13 @@ class AddFilesToDataSetViewTests(APITestCase):
         post_response = self.view(self.post_request)
         self.assertEqual(post_response.status_code, 202)
 
-    def test_post_returns_400_for_node_not_associated_with_dataset(self):
-        another_dataset = create_dataset_with_necessary_models()
-        another_node = another_dataset.get_nodes()[0]
-
-        # POST with a node_uuid that isn't one of self.dataset's nodes
+    def test_post_returns_400_node_uuid_not_present(self):
         post_request = self.factory.post(
             self.url_root,
-            data={
-                'data_set_uuid': self.data_set.uuid,
-                'node_uuid': another_node.uuid
-            },
+            data={},
             format="json"
         )
         post_request.user = self.user
         force_authenticate(post_request, user=self.user)
         post_response = self.view(post_request)
         self.assertEqual(post_response.status_code, 400)
-        self.assertEqual(post_response.content,
-                         "Node is not associated with the given DataSet")
