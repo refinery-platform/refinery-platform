@@ -18,7 +18,6 @@ from requests.exceptions import (ConnectionError, ContentDecodingError,
                                  HTTPError)
 
 from data_set_manager.models import Node
-from data_set_manager.search_indexes import NodeIndex
 
 from .models import FileStoreItem, _mkdir, get_temp_dir, parse_s3_url
 from .utils import S3MediaStorage, SymlinkedFileSystemStorage, _delete_file
@@ -347,7 +346,7 @@ def update_solr_index(**kwargs):
         logger.error("Could not retrieve Node with file UUID '%s': %s",
                      file_store_item_uuid, exc)
     else:
-        NodeIndex().update_object(node, using="data_set_manager")
+        node.update_solr_index()
         logger.info("Updated Solr index with file import state for Node '%s'",
                     node.uuid)
 

@@ -708,6 +708,11 @@ class Node(models.Model):
         else:
             return None
 
+    def update_solr_index(self):
+        data_set_manager.search_indexes.NodeIndex().update_object(
+            self, using="data_set_manager"
+        )
+
 
 @receiver(pre_delete, sender=Node)
 def _node_delete(sender, instance, *args, **kwargs):

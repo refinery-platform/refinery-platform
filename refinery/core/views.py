@@ -40,7 +40,6 @@ from rest_framework.views import APIView
 import xmltodict
 
 from data_set_manager.models import Node
-from data_set_manager.search_indexes import NodeIndex
 from file_store.models import FileStoreItem
 
 from .forms import ProjectForm, UserForm, UserProfileForm, WorkflowForm
@@ -761,7 +760,7 @@ class NodeViewSet(APIView):
             serializer = NodeSerializer(node, data=request.data, partial=True)
             if serializer.is_valid():
                 self.update_file_store(old_file_uuid, node.file_uuid)
-                NodeIndex().update_object(node, using="data_set_manager")
+                node.update_solr_index()
                 serializer.save()
                 return Response(
                     serializer.data, status=status.HTTP_202_ACCEPTED
