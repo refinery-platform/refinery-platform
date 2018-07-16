@@ -34,7 +34,8 @@
               <i class="fa fa-plus-circle p-r-1-2"></i>Add
             </a></li>
           <li
-            ng-if="$ctrl.fileStatus != 'N/A' && $ctrl.dataSet.is_owner && $ctrl.dataSet.is_clean"
+            ng-if="$ctrl.fileStatus != 'N/A' && $ctrl.dataSet.is_owner &&
+            $ctrl.dataSet.is_clean && $ctrl.nodeObj.REFINERY_DATAFILE_s.length"
             role="menuitem">
              <a ng-click="$ctrl.openDataFileModal('remove', $ctrl.nodeObj)">
               <i class="fa fa-trash p-r-1-2"></i>Remove
