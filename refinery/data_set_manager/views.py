@@ -6,6 +6,8 @@ Created on May 11, 2012
 
 import json
 import logging
+
+import celery
 import os
 import shutil
 import traceback
@@ -33,12 +35,11 @@ from rest_framework.views import APIView
 from core.models import DataSet, ExtendedGroup, get_user_import_dir
 from core.utils import get_absolute_url
 from data_set_manager.isa_tab_parser import ParserException
-from data_set_manager.search_indexes import NodeIndex
 from file_store.models import (generate_file_source_translator, get_temp_dir,
                                parse_s3_url)
 from file_store.tasks import download_file, import_file
 
-from .models import Assay, AttributeOrder, Study
+from .models import Assay, AttributeOrder, Node, Study
 from .serializers import AssaySerializer, AttributeOrderSerializer
 from .single_file_column_parser import process_metadata_table
 from .tasks import parse_isatab
@@ -1060,21 +1061,22 @@ class AddFilesToDataSetView(APIView):
             return HttpResponseForbidden()
 
         logger.debug("Adding files to data set '%s'", data_set)
-        for node in data_set.get_nodes():
-            file_store_item = node.get_file_store_item()
-            if file_store_item is not None:
-                if not file_store_item.datafile.name:
-                    if (file_store_item.source.startswith(
-                        (settings.REFINERY_DATA_IMPORT_DIR, 's3://')
-                    )):
-                        # Put Node into PENDING state in the UI by removing
-                        # the associated FileStoreItem's import_task_id and
-                        # updating said Node's Solr index entry
-                        file_store_item.import_task_id = ""
-                        file_store_item.save()
-                        NodeIndex().update_object(node,
-                                                  using="data_set_manager")
-                        import_file.delay(file_store_item.uuid)
+        node = get_object_or_404(Node, uuid=request.data.get('node_uuid'))
+        file_store_item = node.get_file_store_item()
+        if (file_store_item and not file_store_item.datafile and
+                file_store_item.source.startswith(
+                    (settings.REFINERY_DATA_IMPORT_DIR, 's3://')
+                )):
+            # Put Node into PENDING state in the UI by updating it's
+            # FileStoreItem's import task state to "PENDING" and then
+            # updating said Node's Solr index entry
+            import_file.update_state(
+                task_id=file_store_item.import_task_id,
+                state=celery.states.PENDING,
+                meta="FileBrowser UI data file addition"
+            )
+            node.update_solr_index()
+            import_file.delay(file_store_item.uuid)
 
         return HttpResponse(status=202)  # Accepted
 
