@@ -6,7 +6,7 @@ from rest_framework.test import (APIClient, APIRequestFactory, APITestCase,
                                  force_authenticate)
 from factory_boy.utils import create_dataset_with_necessary_models
 
-from .views import AddFilesToDataSetView
+from .views import AddFileToNodeView
 
 
 class AddFilesToDataSetViewTests(APITestCase):
@@ -19,7 +19,7 @@ class AddFilesToDataSetViewTests(APITestCase):
         self.factory = APIRequestFactory()
         self.client = APIClient()
         self.url_root = '/api/v2/data_set_manager/add-files/'
-        self.view = AddFilesToDataSetView.as_view()
+        self.view = AddFileToNodeView.as_view()
         self.client.login(username=self.username, password=self.password)
 
         # Create Datasets

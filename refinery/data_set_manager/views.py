@@ -1039,7 +1039,7 @@ class AssaysAttributes(APIView):
             return Response(message, status=status.HTTP_401_UNAUTHORIZED)
 
 
-class AddFilesToDataSetView(APIView):
+class AddFileToNodeView(APIView):
     """Add file(s) to an existing data set from upload directory or bucket"""
     http_method_names = ['post']
 
