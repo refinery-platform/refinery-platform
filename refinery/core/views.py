@@ -40,7 +40,6 @@ from rest_framework.views import APIView
 import xmltodict
 
 from data_set_manager.models import Node
-from data_set_manager.search_indexes import NodeIndex
 from file_store.models import FileStoreItem
 
 from .forms import ProjectForm, UserForm, UserProfileForm, WorkflowForm
@@ -769,7 +768,7 @@ class NodeViewSet(APIView):
                 else:
                     file_store_item.delete_datafile()
 
-            NodeIndex().update_object(node, using="data_set_manager")
+            node.update_solr_index()
             return Response(
                 NodeSerializer(node).data, status=status.HTTP_200_OK
             )
