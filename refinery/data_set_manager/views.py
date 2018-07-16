@@ -1061,6 +1061,12 @@ class AddFileToNodeView(APIView):
 
         logger.debug("Adding files to data set '%s'", data_set)
         node = get_object_or_404(Node, uuid=request.data.get('node_uuid'))
+
+        if node not in data_set.get_nodes():
+            return HttpResponseBadRequest(
+                "Node is not associated with the given DataSet"
+            )
+
         file_store_item = node.get_file_store_item()
         if (file_store_item and not file_store_item.datafile and
                 file_store_item.source.startswith(
