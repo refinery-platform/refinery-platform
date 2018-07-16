@@ -823,6 +823,9 @@ def generate_filtered_facet_fields(attributes):
     for (rank, field) in weighted_facet_list:
         field_limit_list.append(field.get("solr_field"))
 
+    # add refinery_datafile_s index here
+    field_limit_list.insert(0, unicode(NodeIndex.DATAFILE, "utf-8"))
+
     return {'facet_field': facet_field,
             'field_limit': field_limit_list}
 
