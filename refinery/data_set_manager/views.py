@@ -7,7 +7,6 @@ Created on May 11, 2012
 import json
 import logging
 
-import celery
 import os
 import shutil
 import traceback
@@ -1067,14 +1066,12 @@ class AddFilesToDataSetView(APIView):
                 file_store_item.source.startswith(
                     (settings.REFINERY_DATA_IMPORT_DIR, 's3://')
                 )):
-            # Put Node into PENDING state in the UI by updating it's
-            # FileStoreItem's import task state to "PENDING" and then
-            # updating said Node's Solr index entry
-            import_file.update_state(
-                task_id=file_store_item.import_task_id,
-                state=celery.states.PENDING,
-                meta="FileBrowser UI data file addition"
-            )
+            # Remove the FileStoreItem's import_task_id to treat it as a
+            # brand new import_file task when called below.
+            # We then have to update its Node's Solr index entry, so the
+            # updated file import status is available in the UI.
+            file_store_item.import_task_id = ""
+            file_store_item.save()
             node.update_solr_index()
             import_file.delay(file_store_item.uuid)
 
