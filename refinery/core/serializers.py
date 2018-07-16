@@ -1,13 +1,12 @@
 import logging
 
-import celery
+from django.conf import settings
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 
 from data_set_manager.models import Node
-from file_store.models import FileStoreItem
 
-from .models import DataSet, Workflow
+from .models import DataSet, Event, User, UserProfile, Workflow
 
 logger = logging.getLogger(__name__)
 
@@ -22,11 +21,31 @@ class DataSetSerializer(serializers.ModelSerializer):
             )]
     )
     description = serializers.CharField(max_length=5000)
+    is_owner = serializers.SerializerMethodField()
+    public = serializers.SerializerMethodField()
+    is_clean = serializers.SerializerMethodField()
+
+    def get_is_owner(self, data_set):
+        owner = data_set.get_owner()
+        try:
+            user_request = self.context.get('request').user
+        except AttributeError as e:
+            logger.error("Request is missing a user: %s", e)
+            return False
+        return user_request == owner
+
+    def get_public(self, data_set):
+        is_public = data_set.is_public()
+        return is_public
+
+    def get_is_clean(self, data_set):
+        return data_set.is_clean()
 
     class Meta:
         model = DataSet
-        fields = ['title', 'accession', 'summary', 'description', 'slug',
-                  'uuid']
+        fields = ('title', 'accession', 'summary', 'description', 'slug',
+                  'uuid', 'modification_date', 'id', 'is_owner', 'public',
+                  'is_clean')
 
     def partial_update(self, instance, validated_data):
         """
@@ -47,6 +66,46 @@ class DataSetSerializer(serializers.ModelSerializer):
         return instance
 
 
+class UserProfileSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = UserProfile
+        fields = ('primary_group', 'uuid')
+
+    def validate_primary_group(self, group):
+        user = self.context.get('request').user
+        if user.id in group.user_set.values_list('id', flat=True):
+            pass
+        else:
+            raise serializers.ValidationError(
+                'User is not a member of group, {}'.format(group)
+            )
+
+        if group.name != settings.REFINERY_PUBLIC_GROUP_NAME:
+            return group
+        else:
+            raise serializers.ValidationError('Primary group can not be '
+                                              'the Public group')
+
+    def partial_update(self, instance, validated_data):
+        """
+        Update and return an existing `UserProfile` instance, given the
+        validated data.
+        """
+        instance.primary_group = validated_data.get('primary_group',
+                                                    instance.primary_group)
+        instance.save()
+        return instance
+
+
+class UserSerializer(serializers.ModelSerializer):
+    profile = UserProfileSerializer()
+
+    class Meta:
+        model = User
+        fields = ('first_name', 'last_name', 'profile', 'username')
+
+
 class WorkflowSerializer(serializers.HyperlinkedModelSerializer):
     instance = serializers.HyperlinkedIdentityField(
         view_name='workflow-detail')
@@ -56,97 +115,48 @@ class WorkflowSerializer(serializers.HyperlinkedModelSerializer):
         model = Workflow
 
 
-class NodeSerializer(serializers.HyperlinkedModelSerializer):
-    assay = serializers.StringRelatedField()
-    study = serializers.StringRelatedField()
-    child_nodes = serializers.SerializerMethodField('_get_children')
-    parent_nodes = serializers.SerializerMethodField('_get_parents')
-    auxiliary_nodes = serializers.SerializerMethodField('_get_aux_nodes')
-    auxiliary_file_generation_task_state = serializers.SerializerMethodField(
-                '_get_aux_node_task_state'
-            )
-    file_extension = serializers.SerializerMethodField(
-        '_get_file_extension')
-    relative_file_store_item_url = serializers.SerializerMethodField(
-        '_get_relative_url')
-    ready_for_igv_detail_view = serializers.SerializerMethodField(
-     '_ready_for_igv_detail_view')
-    is_auxiliary_node = serializers.SerializerMethodField(
-     '_is_auxiliary_node')
-
-    def _get_children(self, obj):
-        return obj.get_children()
-
-    def _get_parents(self, obj):
-        return obj.get_parents()
-
-    def _get_aux_nodes(self, obj):
-        aux_nodes = obj.get_auxiliary_nodes()
-        urls = []
-        for uuid in aux_nodes:
-            try:
-                node = Node.objects.get(uuid=uuid)
-                urls.append(node.get_relative_file_store_item_url())
-            except (Node.DoesNotExist,
-                    Node.MultipleObjectsReturned) as e:
-                logger.debug(e)
-        return urls
-
-    def _get_aux_node_task_state(self, obj):
-        return obj.get_auxiliary_file_generation_task_state()
-
-    def _get_file_extension(self, obj):
-        try:
-            file_store_item = FileStoreItem.objects.get(uuid=obj.file_uuid)
-        except (FileStoreItem.DoesNotExist,
-                FileStoreItem.MultipleObjectsReturned) as exc:
-            logger.debug(exc)
-            return None
-        return file_store_item.get_extension()
-
-    def _get_relative_url(self, obj):
-        return obj.get_relative_file_store_item_url() or None
-
-    def _ready_for_igv_detail_view(self, obj):
-        if not obj.is_auxiliary_node:
-            ready_for_igv_detail_view = True
-            for item in obj.get_auxiliary_nodes():
-                try:
-                    node = Node.objects.get(uuid=item)
-                except (Node.DoesNotExist,
-                        Node.MultipleObjectsReturned) \
-                        as e:
-                    logger.error(e)
-                    return False
-
-                state = node.get_auxiliary_file_generation_task_state()
-                if not state == celery.states.SUCCESS:
-                    ready_for_igv_detail_view = False
-
-            return ready_for_igv_detail_view
-        else:
-            return None
-
-    def _is_auxiliary_node(self, obj):
-        return obj.is_auxiliary_node
+class NodeSerializer(serializers.ModelSerializer):
+    file_uuid = serializers.CharField(max_length=36,
+                                      required=False,
+                                      allow_null=True)
 
     class Meta:
         model = Node
-        fields = [
-            'uuid',
-            'name',
-            'type',
-            'analysis_uuid',
-            'subanalysis',
-            'assay',
-            'study',
-            'relative_file_store_item_url',
-            'parent_nodes',
-            'child_nodes',
-            'auxiliary_nodes',
-            'is_auxiliary_node',
-            'file_extension',
-            'auxiliary_file_generation_task_state',
-            'ready_for_igv_detail_view',
-            'file_uuid'
-        ]
+        fields = ('uuid', 'file_uuid')
+
+    def validate_file_uuid(self, file_uuid):
+        if file_uuid is not None:
+            raise serializers.ValidationError(
+                'API does not support adding file store uuids.'
+            )
+        pass
+
+    def partial_update(self, instance, validated_data):
+        """
+        Update and return an existing `Node` instance, given the
+        validated data.
+        """
+        instance.file_uuid = validated_data.get('file_uuid',
+                                                instance.file_uuid)
+
+        instance.save()
+        return instance
+
+
+class EventSerializer(serializers.ModelSerializer):
+    data_set = DataSetSerializer()
+    user = UserSerializer()
+    message = serializers.SerializerMethodField()
+    details = serializers.JSONField(source="get_details_as_dict")
+    date_time = serializers.DateTimeField()
+
+    class Meta:
+        model = Event
+        fields = (
+            'date_time', 'data_set', 'group', 'user',
+            'type', 'sub_type', 'details', 'message'
+        )
+
+    @staticmethod
+    def get_message(obj):
+        return str(obj)

@@ -8,6 +8,7 @@ from __future__ import absolute_import
 import ast
 from collections import defaultdict
 from datetime import datetime
+import json
 import logging
 import os
 import smtplib
@@ -25,7 +26,6 @@ from django.contrib.messages import get_messages, info
 from django.contrib.sites.models import Site
 from django.core.mail import send_mail
 from django.db import models, transaction
-from django.db.models import Max
 from django.db.models.fields import IntegerField
 from django.db.models.signals import post_save, pre_delete
 from django.dispatch import receiver
@@ -35,6 +35,8 @@ from django.template.loader import render_to_string
 from django.utils import timezone
 
 from bioblend import galaxy
+from cuser.middleware import CuserMiddleware
+from django.utils.functional import cached_property
 from django_auth_ldap.backend import LDAPBackend
 from django_extensions.db.fields import UUIDField
 from guardian.models import UserObjectPermission
@@ -46,6 +48,7 @@ import pysolr
 from registration.models import RegistrationManager, RegistrationProfile
 from registration.signals import user_activated, user_registered
 
+import data_set_manager
 from data_set_manager.models import (
     Assay, Investigation, Node, NodeCollection, Study
 )
@@ -88,6 +91,7 @@ class UserProfile(models.Model):
     uuid = UUIDField(unique=True, auto=True)
     user = models.OneToOneField(User, related_name='profile')
     affiliation = models.CharField(max_length=100, blank=True)
+    primary_group = models.ForeignKey(Group, blank=True, null=True)
     catch_all_project = models.ForeignKey('Project', blank=True, null=True)
     login_count = models.IntegerField(default=0)
 
@@ -287,11 +291,7 @@ class BaseResource(models.Model):
             logger.error("%s with slug: %s already exists",
                          self.__class__.__name__, self.slug)
         else:
-            try:
-                super(BaseResource, self).save(*args, **kwargs)
-            except Exception as e:
-                logger.error("Could not save %s: %s",
-                             self.__class__.__name__, e)
+            super(BaseResource, self).save(*args, **kwargs)
 
     # Overriding delete() method For models that Inherit from BaseResource
     def delete(self, using=None, *args, **kwargs):
@@ -315,6 +315,15 @@ class OwnableResource(BaseResource):
         assign_perm("change_%s" % self._meta.verbose_name, user, self)
         if self._meta.verbose_name == 'dataset':
             assign_perm("read_meta_%s" % self._meta.verbose_name, user, self)
+
+    def transfer_ownership(self, user, new_owner):
+        remove_perm("add_%s" % self._meta.verbose_name, user, self)
+        remove_perm("read_%s" % self._meta.verbose_name, user, self)
+        remove_perm("delete_%s" % self._meta.verbose_name, user, self)
+        remove_perm("change_%s" % self._meta.verbose_name, user, self)
+        if self._meta.verbose_name == 'dataset':
+            remove_perm("read_meta_%s" % self._meta.verbose_name, user, self)
+        self.set_owner(new_owner)
 
     def get_owner(self):
         # ownership is determined by "add" permission
@@ -593,15 +602,10 @@ class DataSet(SharableResource):
         return version + 1
 
     def get_version(self):
-        try:
-            version = (
-                InvestigationLink.objects.filter(
-                    data_set=self
-                ).aggregate(Max("version"))["version__max"]
-            )
-            return version
-        except:
-            return None
+        latest_investigation_link = self.get_latest_investigation_link()
+        if latest_investigation_link is not None:
+            return latest_investigation_link.version
+        return None
 
     def get_latest_investigation_link(self, version=None):
         """
@@ -609,44 +613,41 @@ class DataSet(SharableResource):
         instance. If a version is provided, try to fetch the latest
         InvestigationLink for said version.
         :param version: integer
-        :returns: an InvestigationLink Instance or None if Exception occurs
+        :returns: an InvestigationLink Instance or `None`
         """
-        try:
-            if version is None:
-                version = InvestigationLink.objects.filter(
-                        data_set=self
-                    ).aggregate(Max("version"))["version__max"]
-
-            return InvestigationLink.objects.get(
-                data_set=self,
-                version=version
-            )
-        except:
+        if not self.is_valid:
             return None
 
-    def get_latest_study(self, version=None):
+        if version is None:
+            try:
+                return InvestigationLink.objects.filter(
+                    data_set=self
+                ).latest('date')
+            except InvestigationLink.DoesNotExist as exc:
+                logger.error("Failed to retrieve latest InvestigationLink: %s",
+                             exc)
         try:
-            return Study.objects.get(
-                investigation=(
-                    self.get_latest_investigation_link(version).investigation
-                )
-            )
-        except(Study.DoesNotExist, Study.MultipleObjectsReturned) as e:
-            raise RuntimeError("Couldn't properly fetch Study: {}".format(e))
+            return InvestigationLink.objects.get(data_set=self,
+                                                 version=version)
+        except (InvestigationLink.DoesNotExist,
+                InvestigationLink.MultipleObjectsReturned) as exc:
+            logger.error("Failed to retrieve InvestigationLink with version "
+                         "%s: %s", version, exc)
 
-    def get_latest_assay(self, version=None):
-        try:
-            return Assay.objects.get(study=self.get_latest_study(version))
-        except(Assay.DoesNotExist, Assay.MultipleObjectsReturned) as e:
-            raise RuntimeError("Couldn't properly fetch Assay: {}".format(e))
+    def get_latest_study(self):
+        latest_investigation = self.get_investigation()
+        if latest_investigation:
+            return latest_investigation.get_study()
+
+    def get_latest_assay(self):
+        latest_investigation = self.get_investigation()
+        if latest_investigation:
+            return latest_investigation.get_assay()
 
     def get_investigation(self, version=None):
         investigation_link = self.get_latest_investigation_link(version)
-
         if investigation_link:
             return investigation_link.investigation
-        else:
-            return None
 
     def get_studies(self, version=None):
         return Study.objects.filter(
@@ -678,15 +679,6 @@ class DataSet(SharableResource):
         file_items = FileStoreItem.objects.filter(uuid__in=file_uuids)
         return sum(
             [item.get_file_size(report_symlinks=True) for item in file_items]
-        )
-
-    def get_metadata_as_file_store_item(self):
-        """Returns the FileStoreItem pointing to the isa/pre_isa archive that
-        was used to create the DataSet"""
-        investigation = self.get_investigation()
-        return (
-            investigation.isa_archive if self.is_isatab_based
-            else investigation.pre_isa_archive
         )
 
     def share(self, group, readonly=True, readmetaonly=False):
@@ -738,37 +730,20 @@ class DataSet(SharableResource):
             )
 
     def get_file_store_items(self):
-        """Returns a list of all data files associated with the data set"""
-        file_store_items = []
-        investigation = self.get_investigation()
+        """Get a list of FileStoreItem instances corresponding to a
+        DataSet's latest Investigation"""
+        latest_investigation = self.get_investigation()
+        if latest_investigation:
+            return latest_investigation.get_file_store_items()
 
-        try:
-            study = Study.objects.get(investigation=investigation)
-        except (Study.DoesNotExist, Study.MultipleObjectsReturned) as e:
-            logger.error("Could not fetch Study properly: %s", e)
-        else:
-            for node in Node.objects.filter(study=study):
-                try:
-                    file_store_items.append(
-                        FileStoreItem.objects.get(uuid=node.file_uuid)
-                    )
-                except(FileStoreItem.DoesNotExist,
-                       FileStoreItem.MultipleObjectsReturned) as e:
-                    logger.error("Error while fetching FileStoreItem: %s", e)
-
-        file_store_items.append(self.get_metadata_as_file_store_item())
-        return file_store_items
-
+    @cached_property
     def is_valid(self):
         """
         Helper method to determine if a DataSet is valid.
-        A DataSet is not valid if we can't fetch its latest InvestigationLink
+        A DataSet is not valid if we can't fetch an InvestigationLink for it
         :return: boolean
         """
-        if self.get_latest_investigation_link():
-            return True
-        else:
-            return False
+        return bool(InvestigationLink.objects.filter(data_set=self))
 
     def get_nodes(self):
         return Node.objects.filter(
@@ -780,12 +755,80 @@ class DataSet(SharableResource):
         return self.get_nodes().values_list('uuid', flat=True)
 
     @property
-    def is_isatab_based(self):
-        return bool(self.get_investigation().isa_archive)
-
-    @property
     def shared(self):  # is_shared breaks a tastypie interal
         return len(self.get_groups()) > 0
+
+    def _invalidate_cached_properties(self):
+        try:
+            delattr(self, "is_valid")
+        except AttributeError:
+            pass  # property hasn't been called and cached yet
+
+    def has_visualizations(self):
+        return bool(
+            tool_manager.models.VisualizationTool.objects.filter(dataset=self)
+        )
+
+    def is_clean(self):
+        """
+        Check whether or not any Analyses or Visualizations have been run on
+        a DataSet
+        :return: boolean
+        """
+        return not (self.get_analyses() or self.has_visualizations())
+
+    def set_title(self, title):
+        self.title = title
+        self.save()
+
+    def update_with_revised_investigation(self, investigation):
+        """
+        Update an existing DataSet's Investigation with a new Investigation as
+        long as said DataSet is "clean" (No Analyses or Visualizations
+        performed) Any data files that were uploaded prior to this operation
+        will be reassociated and available from the new Investigation if
+        referenced within the new Investigation's list of data files. If
+        data files that were uploaded prior aren't referenced in the new
+        Investigation's list  of data files they will be deleted.
+        :param investigation: A newly created Investigation instance
+        """
+        if not self.is_clean():
+            raise RuntimeError(
+                "DataSet with UUID: {} is not clean (There have "
+                "been Analyses or Visualizations performed on it) "
+                "Remove these objects and try again"
+                .format(self.uuid)
+            )
+        self._associate_datafiles_with_investigation(investigation)
+        updated_data_set_title = investigation.get_title()
+        self.update_investigation(
+            investigation,
+            "Metadata Revision: for {}".format(updated_data_set_title)
+        )
+        data_set_manager.tasks.annotate_nodes(investigation.uuid)
+        self.set_title(updated_data_set_title)
+
+    @transaction.atomic()
+    def _associate_datafiles_with_investigation(self, investigation):
+        """
+        Transfer data files from an existing DataSet's FileStoreItems that
+        correspond to data files of the same source in an Investigation's
+        FileStoreItems
+        :param investigation: Investigation instance to transfer data files to
+        """
+        existing_investigation = self.get_investigation()
+        file_store_items_from_existing_data_set = \
+            existing_investigation.get_file_store_items(local_only=True)
+        new_file_store_items = investigation.get_file_store_items()
+        new_sources = [f.source for f in new_file_store_items]
+        for prior_file_store_item in file_store_items_from_existing_data_set:
+            if prior_file_store_item.source not in new_sources:
+                prior_file_store_item.delete_datafile()
+            for new_file_store_item in new_file_store_items:
+                if prior_file_store_item.source == new_file_store_item.source:
+                    prior_file_store_item.transfer_data_file(
+                        new_file_store_item
+                    )
 
 
 @receiver(pre_delete, sender=DataSet)
@@ -799,10 +842,6 @@ def _dataset_delete(sender, instance, *args, **kwargs):
     #overriding-model-methods
     """
     with transaction.atomic():
-        # delete FileStoreItem and datafile corresponding to the
-        # metadata file used to generate the DataSet
-        instance.get_metadata_as_file_store_item().delete()
-
         for investigation_link in instance.get_investigation_links():
             investigation_link.get_node_collection().delete()
 
@@ -817,6 +856,14 @@ def _dataset_saved(sender, instance, *args, **kwargs):
     async_update_annotation_sets_neo4j()
     update_data_set_index(instance)
     invalidate_cached_object(instance)
+
+    # Invalidate cached properties on save
+    # See: https://docs.djangoproject.com/en/1.8/ref/utils/
+    # #django.utils.functional.cached_property
+    instance._invalidate_cached_properties()
+
+    if not Event.objects.filter(data_set=instance).exists():
+        Event.record_data_set_create(instance)
 
 
 class InvestigationLink(models.Model):
@@ -2232,3 +2279,323 @@ class SiteStatistics(models.Model):
         return sum(u.login_count for u in UserProfile.objects.all()) - \
                sum(s.total_user_logins for s in
                    SiteStatistics.objects.exclude(id=self.id))
+
+
+class Event(models.Model):
+    date_time = models.DateTimeField(default=timezone.now)
+    data_set = models.ForeignKey(DataSet, null=True)
+    group = models.ForeignKey(Group, null=True)
+    user = models.ForeignKey(User, null=True)
+    # Null user should not occur in production, but it lets older tests pass.
+    # I feel ambivalent about this.
+    # TODO: Consider cuser.CurrentUserField
+    type = models.CharField(max_length=32)
+
+    sub_type = models.CharField(max_length=32)
+    details = models.TextField()
+
+    # Types
+    CREATE = 'CREATE'
+    UPDATE = 'UPDATE'
+    # DELETE = 'DELETE'
+    # Note: No delete, because when the object in question no longer exists,
+    # no one has any access to it.
+
+    def get_details_as_dict(self):
+        if self.details:
+            return json.loads(self.details)
+
+    @staticmethod
+    def record_data_set_create(data_set):
+        user = CuserMiddleware.get_user()
+        Event.objects.create(
+            data_set=data_set, user=user, type=Event.CREATE, details='{}'
+        )
+
+    def render_data_set_create(self):
+        return '{:%x %X}: {} created data set {}'.format(
+            self.date_time, self.user, self.data_set.name
+        )
+
+    # Sub-types for data sets:
+    PERMISSIONS_CHANGE = 'PERMISSIONS_CHANGE'
+
+    # TODO:
+    # @staticmethod
+    # def record_data_set_permissions_change():
+    #     event = Event()
+    #     event.save()
+    #     return event
+    #
+    # def render_data_set_permissions_change(self):
+    #     return '{}'.format(self.user)
+
+    METADATA_REUPLOAD = 'METADATA_REUPLOAD'
+
+    # TODO:
+    # @staticmethod
+    # def record_data_set_metadata_reupload():
+    #     event = Event()
+    #     event.save()
+    #     return event
+    #
+    # def render_data_set_metadata_reupload(self):
+    #     return '{}'.format(self.user)
+
+    FILE_LINK = 'FILE_LINK'
+
+    # TODO:
+    # @staticmethod
+    # def record_data_set_file_link():
+    #     event = Event()
+    #     event.save()
+    #     return event
+    #
+    # def render_data_set_file_link(self):
+    #     return '{}'.format(self.user)
+
+    METADATA_EDIT = 'METADATA_EDIT'
+
+    # TODO:
+    # @staticmethod
+    # def record_data_set_metadata_edit():
+    #     event = Event()
+    #     event.save()
+    #     return event
+    #
+    # def render_data_set_metadata_edit(self):
+    #     return '{}'.format(self.user)
+
+    VISUALIZATION_CREATION = 'VISUALIZATION_CREATION'
+
+    @staticmethod
+    def record_data_set_visualization_creation(data_set, display_name):
+        user = CuserMiddleware.get_user()
+        blob = json.dumps({
+            'display_name': display_name
+        })
+        event = Event(data_set=data_set, user=user, details=blob,
+                      type=Event.UPDATE, sub_type=Event.VISUALIZATION_CREATION)
+        event.save()
+
+    def render_data_set_visualization_creation(self):
+        details = self.get_details_as_dict()
+        return '{:%x %X}: {} launched visualization {} on data set {}'.format(
+            self.date_time, self.user, details['display_name'],
+            self.data_set.name
+        )
+
+    VISUALIZATION_DELETION = 'VISUALIZATION_DELETION'
+
+    # TODO:
+    # @staticmethod
+    # def record_data_set_visualization_deletion():
+    #     event = Event()
+    #     event.save()
+    #     return event
+    #
+    # def render_data_set_visualization_deletion(self):
+    #     return '{}'.format(self.user)
+
+    ANALYSIS_CREATION = 'ANALYSIS_CREATION'
+
+    @staticmethod
+    def record_data_set_analysis_creation(data_set, display_name):
+        user = CuserMiddleware.get_user()
+        blob = json.dumps({
+            'display_name': display_name
+        })
+        event = Event(data_set=data_set, user=user, details=blob,
+                      type=Event.UPDATE, sub_type=Event.ANALYSIS_CREATION)
+        event.save()
+
+    def render_data_set_analysis_creation(self):
+        details = self.get_details_as_dict()
+        return '{:%x %X}: {} launched analysis {} on data set {}'.format(
+            self.date_time, self.user, details['display_name'],
+            self.data_set.name
+        )
+
+    ANALYSIS_DELETION = 'ANALYSIS_DELETION'
+
+    # TODO:
+    # @staticmethod
+    # def record_data_set_analysis_deletion():
+    #     event = Event()
+    #     event.save()
+    #     return event
+    #
+    # def render_data_set_analysis_deletion(self):
+    #     return '{}'.format(self.user)
+
+    # Sub-types for groups:
+
+    # PERMISSIONS_CHANGE defined above for datasets
+
+    # TODO:
+    # @staticmethod
+    # def record_group_permissions_change():
+    #     event = Event()
+    #     event.save()
+    #     return event
+    #
+    # def render_group_permissions_change(self):
+    #     return '{}'.format(self.user)
+
+    INVITATION_SENT = 'INVITATION_SENT'
+
+    # TODO:
+    # @staticmethod
+    # def record_group_invitation_sent():
+    #     event = Event()
+    #     event.save()
+    #     return event
+    #
+    # def render_group_invitation_sent(self):
+    #     return '{}'.format(self.user)
+
+    INVITATION_ACCEPTED = 'INVITATION_ACCEPTED'
+
+    # TODO:
+    # @staticmethod
+    # def record_group_invitation_accepted():
+    #     event = Event()
+    #     event.save()
+    #     return event
+    #
+    # def render_group_invitation_accepted(self):
+    #     return '{}'.format(self.user)
+
+    INVITATION_REVOKED = 'INVITATION_REVOKED'
+
+    # TODO:
+    # @staticmethod
+    # def record_group_invitation_revoked():
+    #     event = Event()
+    #     event.save()
+    #     return event
+    #
+    # def render_group_invitation_revoked(self):
+    #     return '{}'.format(self.user)
+
+    INVITATION_RESENT = 'INVITATION_RESENT'
+
+    # TODO:
+    # @staticmethod
+    # def record_group_invitation_resent():
+    #     event = Event()
+    #     event.save()
+    #     return event
+    #
+    # def render_group_invitation_resent(self):
+    #     return '{}'.format(self.user)
+
+    USER_PROMOTION = 'USER_PROMOTION'
+
+    # TODO:
+    # @staticmethod
+    # def record_group_user_promotion():
+    #     event = Event()
+    #     event.save()
+    #     return event
+    #
+    # def render_group_user_promotion(self):
+    #     return '{}'.format(self.user)
+
+    USER_DEMOTION = 'USER_DEMOTION'
+
+    # TODO:
+    # @staticmethod
+    # def record_group_user_demotion():
+    #     event = Event()
+    #     event.save()
+    #     return event
+    #
+    # def render_group_user_demotion(self):
+    #     return '{}'.format(self.user)
+
+    USER_REMOVAL = 'USER_REMOVAL'
+
+    # TODO:
+    # @staticmethod
+    # def record_group_user_removal():
+    #     event = Event()
+    #     event.save()
+    #     return event
+    #
+    # def render_group_user_removal(self):
+    #     return '{}'.format(self.user)
+
+    def __unicode__(self):
+        if self.data_set is not None and self.group is None:
+            if self.type == Event.CREATE:
+                return self.render_data_set_create()
+            elif self.type == Event.UPDATE:
+                if self.sub_type == Event.PERMISSIONS_CHANGE:
+                    return self.render_data_set_permissions_change()
+                elif self.sub_type == Event.METADATA_REUPLOAD:
+                    return self.render_data_set_metadata_reupload()
+                elif self.sub_type == Event.FILE_LINK:
+                    return self.render_data_set_file_link()
+                elif self.sub_type == Event.METADATA_EDIT:
+                    return self.render_data_set_metadata_edit()
+                elif self.sub_type == Event.VISUALIZATION_CREATION:
+                    return self.render_data_set_visualization_creation()
+                elif self.sub_type == Event.VISUALIZATION_DELETION:
+                    return self.render_data_set_visualization_deletion()
+                elif self.sub_type == Event.ANALYSIS_CREATION:
+                    return self.render_data_set_analysis_creation()
+                elif self.sub_type == Event.ANALYSIS_DELETION:
+                    return self.render_data_set_analysis_deletion()
+                else:
+                    raise StandardError(
+                        'Invalid event sub-type for data_set: {}'.format(
+                            self.sub_type
+                        )
+                    )
+            else:
+                raise StandardError(
+                    'Invalid event type for data_set: {}'.format(self.type)
+                )
+        elif self.group is not None and self.data_set is None:
+            if self.type == Event.CREATE:
+                return self.render_group_create()
+            elif self.type == Event.UPDATE:
+                if self.sub_type == Event.PERMISSIONS_CHANGE:
+                    return self.render_group_permissions_change()
+                elif self.sub_type == Event.INVITATION_SENT:
+                    return self.render_group_invitation_sent()
+                elif self.sub_type == Event.INVITATION_ACCEPTED:
+                    return self.render_group_invitation_accepted()
+                elif self.sub_type == Event.INVITATION_REVOKED:
+                    return self.render_group_invitation_revoked()
+                elif self.sub_type == Event.INVITATION_RESENT:
+                    return self.render_group_invitation_resent()
+                elif self.sub_type == Event.USER_PROMOTION:
+                    return self.render_group_user_promotion()
+                elif self.sub_type == Event.USER_DEMOTION:
+                    return self.render_group_user_demotion()
+                elif self.sub_type == Event.USER_REMOVAL:
+                    return self.render_group_user_removal()
+                else:
+                    raise StandardError(
+                        'Invalid event sub-type for group: {}'.format(
+                            self.sub_type
+                        )
+                    )
+            else:
+                raise StandardError(
+                    'Invalid event type for group: {}'.format(self.type)
+                )
+        else:
+            raise StandardError(
+                'Expected exactly one of data_set and group to be not None, '
+                'instead data_set="{}" and group="{}"'.format(
+                    self.data_set, self.group
+                )
+            )
+
+# TODO
+# @receiver(post_save, sender=GroupObjectPermission)
+# def _group_permissions_changed(sender, instance, *args, **kwargs):
+#     Event.record_data_set_permissions_change(???)

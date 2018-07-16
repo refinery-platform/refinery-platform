@@ -150,7 +150,7 @@ angular
 
         // Check if DOI
         var matches = reference.match(
-          /^(http:\/\/dx\.doi\.org\/)?(doi:\s?)?(10\.[0-9]+\/[a-zA-Z0-9\.\/]+)$/
+          /^(https?:\/\/(dx\.)?doi\.org\/)?(doi:\s?)?(10\.[0-9]+\/[a-zA-Z0-9\.\/]+)$/
         );
         if (matches !== null) {
           // Query the DOI API

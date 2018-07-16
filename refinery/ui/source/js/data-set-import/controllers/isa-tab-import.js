@@ -6,17 +6,23 @@
     .controller('IsaTabImportCtrl', IsaTabImportCtrl);
 
   IsaTabImportCtrl.$inject = [
-    '$log', '$rootScope', '$timeout', '$window', 'isaTabImportApi', 'settings'
+    '$location', '$log', '$rootScope', '$timeout', '$uibModal', '$window',
+    'isaTabImportApi', 'settings'
   ];
 
-  function IsaTabImportCtrl ($log, $rootScope, $timeout, $window, isaTabImportApi, settings) {
+  function IsaTabImportCtrl ($location, $log, $rootScope, $timeout, $uibModal, $window,
+                             isaTabImportApi, settings) {
     this.$log = $log;
     this.$rootScope = $rootScope;
     this.$timeout = $timeout;
     this.$window = $window;
+    this.$uibModal = $uibModal;
     this.isaTabImportApi = isaTabImportApi;
     this.settings = settings;
     this.showFileUpload = false;
+    this.dataSetUUID = $location.search().data_set_uuid;
+    this.isMetaDataRevision = !!this.dataSetUUID;
+    this.useS3 = settings.djangoApp.deploymentPlatform === 'aws';
 
     // Helper method to exit out of error alert
     this.closeError = function () {
@@ -68,9 +74,18 @@
     this.$rootScope.$broadcast('clearFileInput', 'isaTabFile');
   };
 
+  IsaTabImportCtrl.prototype.confirmImport = function () {
+    var self = this;
+    if (self.isMetaDataRevision) {
+      var modalInstance = this.$uibModal.open({ component: 'rpImportConfirmationModal' });
+      modalInstance.result.then(function () { self.startImport(); });
+    } else {
+      self.startImport();
+    }
+  };
+
   IsaTabImportCtrl.prototype.startImport = function () {
     var self = this;
-
     this.isImporting = true;
 
     var formData = new FormData();
@@ -82,8 +97,12 @@
       formData.append('identity_id', AWS.config.credentials.identityId);
     }
 
+    var queryParams = {};
+    if (this.isMetaDataRevision) {
+      queryParams = { data_set_uuid: this.dataSetUUID };
+    }
     return this.isaTabImportApi
-      .create({}, formData)
+      .create(queryParams, formData)
       .$promise
       .then(function (response) {
         self.importedDataSetUuid = response.data.new_data_set_uuid;

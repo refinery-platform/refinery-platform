@@ -2,6 +2,7 @@
 
 function DataSetDeleteCtrl (
   $log,
+  settings,
   $uibModalInstance,
   _,
   deletionService,
@@ -22,6 +23,7 @@ function DataSetDeleteCtrl (
   this.deletionService = deletionService;
   this.analysesReloadService = analysesReloadService;
   this.dashboardDataSetsReloadService = dashboardDataSetsReloadService;
+  this.userProfileUuid = settings.djangoApp.userprofileUUID;
 }
 
 /**
@@ -52,6 +54,7 @@ DataSetDeleteCtrl.prototype.delete = function () {
   vm.isDeleting = true;
   vm.deletionMessage = null;
   vm.deleteSuccessful = false;
+  vm.userProfileUuid = this.userProfileUuid;
 
   this
     .deletionService
@@ -80,6 +83,7 @@ angular
   .module('refineryDashboard')
   .controller('DataSetDeleteCtrl', [
     '$log',
+    'settings',
     '$uibModalInstance',
     '_',
     'deletionService',

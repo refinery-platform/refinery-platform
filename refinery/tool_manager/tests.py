@@ -52,7 +52,7 @@ from analysis_manager.tasks import (_galaxy_file_import,
                                     _run_galaxy_workflow, run_analysis)
 from core.models import (INPUT_CONNECTION, OUTPUT_CONNECTION, Analysis,
                          AnalysisNodeConnection, AnalysisResult, ExtendedGroup,
-                         Project, Workflow, WorkflowEngine)
+                         Event, Project, Workflow, WorkflowEngine)
 from data_set_manager.models import Assay, Attribute, Node
 from data_set_manager.utils import _create_solr_params_from_node_uuids
 from factory_boy.django_model_factories import (AnnotatedNodeFactory,
@@ -60,7 +60,8 @@ from factory_boy.django_model_factories import (AnnotatedNodeFactory,
                                                 GalaxyInstanceFactory,
                                                 NodeFactory, ParameterFactory,
                                                 ToolFactory)
-from factory_boy.utils import create_dataset_with_necessary_models
+from factory_boy.utils import create_dataset_with_necessary_models, \
+    create_tool_with_necessary_models
 from file_store.models import FileStoreItem, FileType
 from tool_manager.management.commands.load_tools import \
     Command as LoadToolsCommand
@@ -320,7 +321,8 @@ class ToolManagerTestBase(ToolManagerMocks):
                     file_relationships=None,
                     annotation_file_name=None,
                     start_vis_container=False,
-                    user_has_dataset_read_meta_access=True):
+                    user_has_dataset_read_meta_access=True,
+                    display_name=None):
 
         if user_has_dataset_read_meta_access:
             assign_perm('core.read_meta_dataset', self.user, self.dataset)
@@ -351,6 +353,9 @@ class ToolManagerTestBase(ToolManagerMocks):
             "tool_definition_uuid": self.td.uuid,
             ToolDefinition.PARAMETERS: launch_parameters
         }
+
+        if display_name is not None:
+            self.post_data["display_name"] = display_name
 
         if file_relationships is None:
             self.post_data[Tool.FILE_RELATIONSHIPS] = "[{}]".format(
@@ -1627,6 +1632,14 @@ class ToolTests(ToolManagerTestBase):
             self.create_tool(ToolDefinition.WORKFLOW)
             self.tool.analysis.terminate_file_import_tasks()
             self.assertEqual(terminate_mock.call_count, 1)
+
+    def test_tool_launch_has_resonable_default_display_name(self):
+        self.create_tool(tool_type=ToolDefinition.VISUALIZATION)
+        self.assertEqual(self.tool.display_name, "{} {} {}".format(
+            self.tool.name,
+            self.tool.creation_date,
+            self.tool.get_owner().username
+        ))
 
 
 class VisualizationToolTests(ToolManagerTestBase):
@@ -3049,6 +3062,30 @@ class ToolAPITests(APITestCase, ToolManagerTestBase):
         )
         self.assertEqual(get_response.status_code, 404)
 
+    def test_tool_creation_with_same_display_name_yields_helpful_error(self):
+        display_name = "Test Tool Name"
+        self.create_tool(ToolDefinition.WORKFLOW, display_name=display_name)
+        self.post_data = {
+            "dataset_uuid": self.dataset.uuid,
+            "tool_definition_uuid": self.td.uuid,
+            Tool.FILE_RELATIONSHIPS: str(["www.example.com/cool_file.txt"]),
+            "display_name": display_name
+        }
+        self.post_request = self.factory.post(
+            self.tools_url_root,
+            data=self.post_data,
+            format="json"
+        )
+        force_authenticate(self.post_request, self.user)
+        self.post_response = self.tools_view(self.post_request)
+        self.assertEqual(self.post_response.status_code, 400)
+        self.assertEqual(
+            "A Tool already exists with a display_name of: '{}'".format(
+                display_name
+            ),
+            self.post_response.content
+        )
+
 
 class WorkflowToolLaunchTests(ToolManagerTestBase):
     tasks_mock = "analysis_manager.tasks"
@@ -3508,6 +3545,14 @@ class WorkflowToolLaunchTests(ToolManagerTestBase):
             r'\d{4}\/\d{2}\/\d{1,2}\s\d{1,2}:\d{2}:\d{2}'
         )
 
+    def test_workflow_tool_creation_with_custom_display_name(self):
+        display_name = "Test Workflow Custom Name"
+        self.create_tool(
+            tool_type=ToolDefinition.WORKFLOW,
+            display_name=display_name
+        )
+        self.assertEqual(self.tool.display_name, display_name)
+
 
 class VisualizationToolLaunchTests(ToolManagerTestBase):
     def setUp(self):
@@ -3676,6 +3721,14 @@ class VisualizationToolLaunchTests(ToolManagerTestBase):
             context.exception.message
         )
 
+    def test_visualization_tool_creation_with_custom_display_name(self):
+        display_name = "Test Visualization Custom Name"
+        self.create_tool(
+            tool_type=ToolDefinition.VISUALIZATION,
+            display_name=display_name
+        )
+        self.assertEqual(self.tool.display_name, display_name)
+
 
 class ToolLaunchConfigurationTests(ToolManagerTestBase):
     def setUp(self):
@@ -3835,6 +3888,30 @@ class ToolLaunchConfigurationTests(ToolManagerTestBase):
         }
         validate_tool_launch_configuration(tool_launch_configuration)
 
+    def test_tool_launch_config_with_custom_display_name(self):
+        tool_launch_configuration = {
+            "dataset_uuid": self.dataset.uuid,
+            "tool_definition_uuid": self.td.uuid,
+            Tool.FILE_RELATIONSHIPS: str(
+                (["coffee", "coffee"], ["coffee", "coffee"])
+            ),
+            "display_name": "Test Tool"
+        }
+        validate_tool_launch_configuration(tool_launch_configuration)
+
+    def test_tool_launch_config_with_non_string_display_name_fails(self):
+        tool_launch_configuration = {
+            "dataset_uuid": self.dataset.uuid,
+            "tool_definition_uuid": self.td.uuid,
+            Tool.FILE_RELATIONSHIPS: str(
+                (["coffee", "coffee"], ["coffee", "coffee"])
+            ),
+            "display_name": 12345678
+        }
+        with self.assertRaises(RuntimeError) as context:
+            validate_tool_launch_configuration(tool_launch_configuration)
+        self.assertIn("is not of type u'string'", context.exception.message)
+
 
 class ToolManagerUtilitiesTests(ToolManagerTestBase):
     def test_file_type_validation_error(self):
@@ -3963,3 +4040,27 @@ class ParameterTests(TestCase):
                 test_float,
                 parameter.cast_param_value_to_proper_type(element)
             )
+
+
+class ToolEventCreationTests(TestCase):
+    def test_visualization_tool_creation_triggers_a_single_event(self):
+        create_tool_with_necessary_models("VISUALIZATION")
+
+        # A Tool needs a Dataset to be created. Assert that there is one Event
+        # for DataSet creation and one for Tool creation
+        self.assertEqual(Event.objects.count(), 2)
+        self.assertIsNotNone(Event.objects.get(type=Event.CREATE))
+        self.assertIsNotNone(
+            Event.objects.get(sub_type=Event.VISUALIZATION_CREATION)
+        )
+
+    def test_workflow_tool_creation_triggers_a_single_event(self):
+        create_tool_with_necessary_models("WORKFLOW")
+
+        # A Tool needs a Dataset to be created. Assert that there is one Event
+        # for DataSet creation and one for Tool creation
+        self.assertEqual(Event.objects.count(), 2)
+        self.assertIsNotNone(Event.objects.get(type=Event.CREATE))
+        self.assertIsNotNone(
+            Event.objects.get(sub_type=Event.ANALYSIS_CREATION)
+        )

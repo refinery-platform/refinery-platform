@@ -15,6 +15,7 @@ Django==1.8.18
 django-auth-ldap==1.2.6
 django-celery==3.1.17
 django-chunked-upload==1.1.0
+django-cuser==2017.3.16
 django-debug-toolbar==1.4
 django-docker-engine==0.0.42.2
 django-extensions==1.6.7

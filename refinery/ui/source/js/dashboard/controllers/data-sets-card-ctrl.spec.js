@@ -11,14 +11,14 @@
     beforeEach(module('refineryDashboard'));
     beforeEach(inject(function (
       $controller,
-      dataSetService,
+      dataSetV2Service,
       $q,
       $rootScope
     ) {
       scope = $rootScope.$new();
-      mockResponseData = { objects: { name: 'Test Data Set' } };
+      mockResponseData = [{ name: 'Test Data Set' }];
 
-      mockService = spyOn(dataSetService, 'query').and.callFake(function () {
+      mockService = spyOn(dataSetV2Service, 'query').and.callFake(function () {
         var deferred = $q.defer();
         deferred.resolve(mockResponseData);
         return { $promise: deferred.promise };
@@ -41,7 +41,7 @@
     it('API related Variables should be initialized', function () {
       expect(ctrl.dataSetsError).toEqual(false);
       expect(ctrl.loadingDataSets).toEqual(true);
-      expect(ctrl.params).toEqual({ limit: 200, min_response: 'True' });
+      expect(ctrl.params).toEqual({ });
       expect(ctrl.searchQueryDataSets).toEqual('');
     });
 
@@ -118,7 +118,7 @@
       it('getDataSets updates dataSets variable', function () {
         ctrl.getDataSets();
         scope.$apply();
-        expect(ctrl.dataSets.name).toEqual(mockResponseData.objects.name);
+        expect(ctrl.dataSets[0].name).toEqual(mockResponseData[0].name);
       });
     });
 
@@ -170,6 +170,30 @@
       });
     });
 
+    describe('openDataSetTransferModal', function () {
+      var mockUibModal;
+      var responseFlag = false;
+      beforeEach(inject(function ($uibModal) {
+        mockUibModal = spyOn($uibModal, 'open').and.callFake(function () {
+          return { result: { then: function () { responseFlag = true; } } };
+        });
+      }));
+
+      it('openDataSetTransferModal is method', function () {
+        expect(angular.isFunction(ctrl.openDataSetTransferModal)).toBe(true);
+      });
+
+      it('openDataSetTransferModal opens a new modal', function () {
+        ctrl.openDataSetTransferModal();
+        expect(mockUibModal).toHaveBeenCalled();
+      });
+
+      it('openDataSetTransferModal resolves promise', function () {
+        ctrl.openDataSetTransferModal();
+        expect(responseFlag).toEqual(true);
+      });
+    });
+
     describe('resetDataSetSearch', function () {
       it('resetDataSetSearch is a method', function () {
         expect(angular.isFunction(ctrl.resetDataSetSearch)).toBe(true);
@@ -193,13 +217,6 @@
     describe('searchDataSets', function () {
       it('searchDataSets is a method', function () {
         expect(angular.isFunction(ctrl.searchDataSets)).toBe(true);
-      });
-
-      it('searchDataSets refreshes data for invalid queries', function () {
-        var mockGetDataSets = spyOn(ctrl, 'getDataSets');
-        expect(mockGetDataSets).not.toHaveBeenCalled();
-        ctrl.searchDataSets('m');
-        expect(mockGetDataSets).toHaveBeenCalled();
       });
     });
   });

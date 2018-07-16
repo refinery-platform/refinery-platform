@@ -209,6 +209,16 @@ class FileStoreItemLocalFileTest(TestCase):
                 self.item.delete()
                 mock_delete.assert_called_with(save=False)
 
+    def test_transfer_data_file(self):
+        self.item.datafile.save(self.file_name, ContentFile(''))
+        file_store_item_to_transfer_data_file_to = FileStoreItem()
+        self.assertIsNotNone(self.item.datafile.name)
+        self.item.transfer_data_file(file_store_item_to_transfer_data_file_to)
+        self.assertIsNone(self.item.datafile.name)
+        self.assertIsNotNone(
+            file_store_item_to_transfer_data_file_to.datafile.name
+        )
+
 
 @override_settings(REFINERY_DATA_IMPORT_DIR='/import/path',
                    REFINERY_FILE_SOURCE_MAP={})
@@ -300,32 +310,3 @@ class FileImportTaskTerminationTest(TestCase):
         ) as mock_terminate_task:
             self.item.save()
             mock_terminate_task.assert_not_called()
-
-
-@override_settings(REFINERY_DATA_IMPORT_DIR='/import/path')
-class TestSymlinkDatafile(TestCase):
-
-    def test_symlink_new_blank_item(self):
-        with mock.patch.object(FileStoreItem,
-                               '_symlink_datafile') as mock_symlink:
-            FileStoreItem.objects.create()
-            mock_symlink.assert_not_called()
-
-    def test_symlink_new_item_with_path_source(self):
-        with mock.patch.object(FileStoreItem,
-                               '_symlink_datafile') as mock_symlink:
-            FileStoreItem.objects.create(source='/example/path/test.txt')
-            mock_symlink.assert_called_once()
-
-    def test_symlink_new_item_with_url_source(self):
-        with mock.patch.object(FileStoreItem,
-                               '_symlink_datafile') as mock_symlink:
-            FileStoreItem.objects.create(source='https://example.org/test.txt')
-            mock_symlink.assert_not_called()
-
-    def test_symlink_new_item_with_import_dir_path_source(self):
-        with mock.patch.object(FileStoreItem,
-                               '_symlink_datafile') as mock_symlink:
-            FileStoreItem.objects.create(
-                source=settings.REFINERY_DATA_IMPORT_DIR + '/test.txt')
-            mock_symlink.assert_not_called()

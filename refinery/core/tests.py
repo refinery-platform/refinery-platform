@@ -1,9 +1,5 @@
 from datetime import timedelta
-import json
-import random
 import re
-import string
-from urlparse import urljoin
 
 from django.apps import apps
 from django.conf import settings
@@ -16,46 +12,34 @@ from django.db.migrations.executor import MigrationExecutor
 from django.test import TestCase
 from django.utils import timezone
 
-from guardian.core import ObjectPermissionChecker
-from guardian.shortcuts import assign_perm, get_objects_for_group, remove_perm
+from cuser.middleware import CuserMiddleware
+from guardian.shortcuts import get_objects_for_group
 import mock
 import mockcache as memcache
-from rest_framework.test import (
-    APIClient, APIRequestFactory, APITestCase, force_authenticate
-)
-from tastypie.exceptions import NotFound
-from tastypie.test import ResourceTestCase
 
 from analysis_manager.models import AnalysisStatus
-from core.tasks import collect_site_statistics
-from data_set_manager.models import (
-    AnnotatedNode, Assay, Contact, Investigation, Node, NodeCollection, Study
-)
-from factory_boy.django_model_factories import (
-    GalaxyInstanceFactory, WorkflowEngineFactory, WorkflowFactory
-)
-from factory_boy.utils import (
-    create_dataset_with_necessary_models, create_tool_with_necessary_models,
-    make_analyses_with_single_dataset
-)
+from data_set_manager.models import (AnnotatedNode, Assay, Contact,
+                                     Investigation, Node, NodeCollection,
+                                     Study)
+from factory_boy.django_model_factories import GalaxyInstanceFactory
+from factory_boy.utils import (create_dataset_with_necessary_models,
+                               create_tool_with_necessary_models,
+                               make_analyses_with_single_dataset)
 from file_store.models import FileStoreItem, FileType
 
-from .api import AnalysisResource
 from .management.commands.create_user import init_user
 from .management.commands.import_annotations import \
     Command as ImportAnnotationsCommand
-from .models import (
-    INPUT_CONNECTION, OUTPUT_CONNECTION, Analysis, AnalysisNodeConnection,
-    AnalysisResult, BaseResource, DataSet, ExtendedGroup, InvestigationLink,
-    Project, SiteStatistics, Tutorials, UserProfile, Workflow, WorkflowEngine,
-    invalidate_cached_object
-)
+from .models import (INPUT_CONNECTION, OUTPUT_CONNECTION, Analysis,
+                     AnalysisNodeConnection, AnalysisResult, BaseResource,
+                     DataSet, Event, ExtendedGroup, InvestigationLink, Project,
+                     SiteStatistics, Tutorials, UserProfile, Workflow,
+                     WorkflowEngine, invalidate_cached_object)
 from .search_indexes import DataSetIndex
-from .utils import (
-    filter_nodes_uuids_in_solr, get_aware_local_time, get_resources_for_user,
-    move_obj_to_front, which_default_read_perm
-)
-from .views import AnalysesViewSet, DataSetsViewSet, WorkflowViewSet
+from .tasks import collect_site_statistics
+from .utils import (filter_nodes_uuids_in_solr, get_aware_local_time,
+                    get_resources_for_user, move_obj_to_front,
+                    which_default_read_perm)
 
 cache = memcache.Client(["127.0.0.1:11211"])
 
@@ -87,302 +71,6 @@ class UserCreateTest(TestCase):
         new_user = User.objects.get(username=self.username)
         self.assertEqual(
             new_user.groups.filter(name=self.public_group_name).count(), 1)
-
-
-def make_api_uri(resource_name, resource_id='', sharing=False):
-    """Helper function to build Tastypie REST URIs"""
-    base_url = '/api/v1'
-    uri = '/'.join([base_url, resource_name]) + '/'
-    uri_with_resource_id = '/'.join([base_url, resource_name, resource_id]) \
-                           + '/'
-
-    def add_sharing(uri):
-        return uri + 'sharing/'
-
-    if resource_id:
-        if sharing:
-            return add_sharing(uri_with_resource_id)
-        else:
-            return uri_with_resource_id
-    else:
-        if sharing:
-            return add_sharing(uri)
-        else:
-            return uri
-
-
-class LoginResourceTestCase(ResourceTestCase):
-
-    def setUp(self):
-        super(LoginResourceTestCase, self).setUp()
-        self.username = self.password = 'user'
-        self.user = User.objects.create_user(
-            self.username, '', self.password
-        )
-        self.username2 = self.password2 = 'user2'
-        self.user2 = User.objects.create_user(
-            self.username2, '', self.password2
-        )
-        self.get_credentials()
-
-    def get_credentials(self):
-        """Authenticate as self.user"""
-        # workaround required to use SessionAuthentication
-        # http://javaguirre.net/2013/01/29/using-session-authentication-tastypie-tests/
-        return self.api_client.client.login(
-            username=self.username,
-            password=self.password
-        )
-
-
-class ApiResourceTest(LoginResourceTestCase):
-
-    def setUp(self):
-        super(ApiResourceTest, self).setUp()
-
-    def test_xml_format_ignored(self):
-        response = self.api_client.get(
-            '/api/v1/',
-            format='xml',
-            authentication=self.get_credentials()
-        )
-        self.assertValidJSONResponse(response)
-
-
-class AnalysisResourceTest(LoginResourceTestCase):
-    """Test Analysis REST API operations"""
-
-    def setUp(self):
-        super(AnalysisResourceTest, self).setUp()
-        self.project = Project.objects.create()
-        self.user_catch_all_project = UserProfile.objects.get(
-            user=self.user
-        ).catch_all_project
-        self.dataset = create_dataset_with_necessary_models()
-        self.dataset2 = create_dataset_with_necessary_models()
-        self.galaxy_instance = GalaxyInstanceFactory()
-        self.workflow_engine = WorkflowEngine.objects.create(
-            instance=self.galaxy_instance
-        )
-        self.workflow = Workflow.objects.create(
-            workflow_engine=self.workflow_engine
-        )
-
-    def test_get_analysis(self):
-        """Test retrieving an existing Analysis that belongs to a user who
-        created it
-        """
-
-        self.dataset.set_owner(self.user)
-
-        workflow_dict = {'a': True}
-        workflow_as_repr = repr(workflow_dict)
-        analysis = Analysis.objects.create(
-            name='bla',
-            summary='keks',
-            project=self.user_catch_all_project,
-            data_set=self.dataset,
-            workflow=self.workflow,
-            workflow_copy=workflow_as_repr
-        )
-        analysis.set_owner(self.user)
-        analysis_uri = make_api_uri(Analysis._meta.model_name, analysis.uuid)
-        response = self.api_client.get(
-            analysis_uri,
-            format='json'
-        )
-        self.assertValidJSONResponse(response)
-        data = self.deserialize(response)
-
-        expected_keys = set(AnalysisResource.Meta.fields)
-        expected_keys.add(u'workflow_json')
-
-        self.assertEqual(set(data.keys()), expected_keys)
-        self.assertEqual(data['uuid'], analysis.uuid)
-
-        workflow_as_json = json.dumps(workflow_dict)
-        self.assertNotEqual(workflow_as_json, workflow_as_repr)
-        self.assertEqual(data['workflow_json'], workflow_as_json)
-
-    def test_get_analysis_list(self):
-        """Test retrieving a list of Analysis instances that belong to a user
-        who created them.
-        """
-
-        self.dataset.set_owner(self.user)
-
-        analysis1 = Analysis.objects.create(
-            name='a1',
-            summary='keks',
-            project=self.user_catch_all_project,
-            data_set=self.dataset,
-            workflow=self.workflow
-        )
-        assign_perm(
-            'read_%s' % Analysis._meta.model_name, self.user, analysis1
-        )
-        analysis2 = Analysis.objects.create(
-            name='a2',
-            summary='keks',
-            project=self.user_catch_all_project,
-            data_set=self.dataset,
-            workflow=self.workflow
-        )
-        assign_perm(
-            'read_%s' % Analysis._meta.model_name, self.user, analysis2
-        )
-        analysis_uri = make_api_uri(Analysis._meta.model_name)
-        response = self.api_client.get(analysis_uri, format='json',
-                                       data={'order_by': '-name'})
-        self.assertValidJSONResponse(response)
-        data = self.deserialize(response)['objects']
-        self.assertEqual(len(data), 2)
-        self.assertEqual(data[0]['name'], analysis2.name)
-
-    def test_get_analysis_without_login(self):
-        """Test retrieving an existing Analysis without logging in"""
-        self.api_client.client.logout()
-        analysis = Analysis.objects.create(
-            name='bla',
-            summary='keks',
-            project=self.project,
-            data_set=self.dataset,
-            workflow=self.workflow
-        )
-        analysis.set_owner(self.user)
-        analysis_uri = make_api_uri(Analysis._meta.model_name, analysis.uuid)
-        response = self.api_client.get(analysis_uri, format='json')
-        self.assertHttpNotFound(response)
-
-    def test_get_analysis_without_permission(self):
-        """Test retrieving an existing Analysis that belongs to a different
-        user
-        """
-        analysis = Analysis.objects.create(
-            name='bla',
-            summary='keks',
-            project=self.project,
-            data_set=self.dataset,
-            workflow=self.workflow
-        )
-        analysis.set_owner(self.user2)
-        analysis_uri = make_api_uri(Analysis._meta.model_name, analysis.uuid)
-        response = self.api_client.get(analysis_uri, format='json')
-        self.assertHttpNotFound(response)
-
-    def test_get_analysis_with_invalid_uuid(self):
-        """Test retrieving an Analysis instance that doesn't exist.
-        """
-        analysis = Analysis.objects.create(project=self.project,
-                                           data_set=self.dataset,
-                                           workflow=self.workflow)
-        assign_perm(
-            "read_%s" % Analysis._meta.model_name, self.user, analysis
-        )
-        analysis_uri = make_api_uri(Analysis._meta.model_name, 'Invalid UUID')
-        response = self.api_client.get(analysis_uri, format='json',
-                                       authentication=self.get_credentials())
-        self.assertHttpNotFound(response)
-
-    def test_get_analysis_list_for_given_dataset(self):
-        """Test retrieving a list of Analysis instances for a given dataset"""
-
-        self.dataset.set_owner(self.user)
-
-        analysis1 = Analysis.objects.create(
-            name='a1',
-            project=self.user_catch_all_project,
-            data_set=self.dataset,
-            workflow=self.workflow
-        )
-        analysis1.set_owner(self.user)
-        analysis2 = Analysis.objects.create(
-            name='a2',
-            project=self.user_catch_all_project,
-            data_set=self.dataset2,
-            workflow=self.workflow
-        )
-        analysis2.set_owner(self.user)
-        analysis_uri = make_api_uri(Analysis._meta.model_name)
-        response = self.api_client.get(
-            analysis_uri, format='json',
-            data={'data_set__uuid': self.dataset.uuid}
-        )
-        self.assertValidJSONResponse(response)
-        data = self.deserialize(response)['objects']
-        self.assertEqual(len(data), 1)
-        self.assertEqual(data[0]['name'], analysis1.name)
-
-    def test_get_sorted_analysis_list(self):
-        """Get a list of Analysis instances with sorting params applied
-        (e.g., order_by=name)
-        """
-        self.dataset.set_owner(self.user)
-        self.dataset2.set_owner(self.user)
-        analysis1 = Analysis.objects.create(
-            name='a1',
-            project=self.user_catch_all_project,
-            data_set=self.dataset,
-            workflow=self.workflow
-        )
-        analysis1.set_owner(self.user)
-        analysis2 = Analysis.objects.create(
-            name='a2',
-            project=self.user_catch_all_project,
-            data_set=self.dataset2,
-            workflow=self.workflow
-        )
-        analysis2.set_owner(self.user)
-        analysis_uri = make_api_uri(Analysis._meta.model_name)
-        response = self.api_client.get(
-            analysis_uri,
-            format='json',
-            data={'order_by': 'name'}
-        )
-        self.assertValidJSONResponse(response)
-        data = self.deserialize(response)['objects']
-        self.assertEqual(len(data), 2)
-        self.assertEqual(data[0]['name'], analysis1.name)
-
-    def test_get_empty_analysis_list(self):
-        """Test retrieving a list of Analysis instances when none exist"""
-        analysis_uri = make_api_uri(Analysis._meta.model_name)
-        response = self.api_client.get(analysis_uri, format='json',
-                                       authentication=self.get_credentials())
-        self.assertValidJSONResponse(response)
-        data = self.deserialize(response)['objects']
-        self.assertEqual(len(data), 0)
-
-    def test_delete_analysis(self):
-        """Test deleting an existing Analysis instance"""
-        analysis = Analysis.objects.create(project=self.project,
-                                           data_set=self.dataset,
-                                           workflow=self.workflow)
-        self.assertEqual(Analysis.objects.count(), 1)
-        assign_perm(
-            "delete_%s" % Analysis._meta.model_name, self.user, analysis
-        )
-
-        analysis_uri = make_api_uri(Analysis._meta.model_name, analysis.uuid)
-        response = self.api_client.delete(
-            analysis_uri, format='json', authentication=self.get_credentials()
-        )
-        self.assertHttpMethodNotAllowed(response)
-        self.assertEqual(Analysis.objects.count(), 1)
-
-    def test_delete_analysis_without_login(self):
-        """Test deleting an existing Analysis instance with logging in"""
-        analysis = Analysis.objects.create(project=self.project,
-                                           data_set=self.dataset,
-                                           workflow=self.workflow)
-        self.assertEqual(Analysis.objects.count(), 1)
-        assign_perm(
-            "delete_%s" % Analysis._meta.model_name, self.user, analysis
-        )
-        analysis_uri = make_api_uri(Analysis._meta.model_name, analysis.uuid)
-        response = self.api_client.delete(analysis_uri, format='json')
-        self.assertHttpMethodNotAllowed(response)
-        self.assertEqual(Analysis.objects.count(), 1)
 
 
 class BaseResourceSlugTest(TestCase):
@@ -683,14 +371,14 @@ class DataSetDeletionTest(TestCase):
             is_isatab_based=True
         )
         isatab_file_store_item_uuid = \
-            isatab_dataset.get_metadata_as_file_store_item().uuid
+            isatab_dataset.get_investigation().get_file_store_item().uuid
         isatab_dataset.delete()
         with self.assertRaises(FileStoreItem.DoesNotExist):
             FileStoreItem.objects.get(uuid=isatab_file_store_item_uuid)
 
     def test_pre_isa_archive_deletion(self):
         tabular_file_store_item_uuid = \
-            self.dataset.get_metadata_as_file_store_item().uuid
+            self.dataset.get_investigation().get_file_store_item().uuid
         self.dataset.delete()
         with self.assertRaises(FileStoreItem.DoesNotExist):
             FileStoreItem.objects.get(uuid=tabular_file_store_item_uuid)
@@ -1326,133 +1014,6 @@ class UserTutorialsTest(TestCase):
         )
 
 
-class DataSetResourceTest(LoginResourceTestCase):
-    """Test DataSet V1 REST API operations"""
-
-    def setUp(self):
-        super(DataSetResourceTest, self).setUp()
-        self.project = Project.objects.create()
-        self.user_catch_all_project = UserProfile.objects.get(
-            user=self.user
-        ).catch_all_project
-        self.tabular_dataset = create_dataset_with_necessary_models(
-            user=self.user
-        )
-        self.isatab_dataset = create_dataset_with_necessary_models(
-            user=self.user2,
-            is_isatab_based=True
-        )
-        self.incomplete_dataset = create_dataset_with_necessary_models(
-            user=self.user
-        )
-        # Delete InvestigationLink to simulate a Dataset that hasn't finished
-        # being created
-        self.incomplete_dataset.get_latest_investigation_link().delete()
-
-    def test_get_dataset(self):
-        """Test retrieving an existing Dataset that belongs to a user who
-        created it
-        """
-        dataset_uri = make_api_uri("data_sets", self.tabular_dataset.uuid)
-        response = self.api_client.get(
-            dataset_uri,
-            format='json'
-        )
-        self.assertValidJSONResponse(response)
-        data = self.deserialize(response)
-        self.assertEqual(data['uuid'], self.tabular_dataset.uuid)
-
-    def test_get_dataset_expecting_analyses(self):
-        analyses_to_create = 2
-        analyses, dataset = make_analyses_with_single_dataset(
-            analyses_to_create,
-            self.user
-        )
-
-        dataset_uri = make_api_uri("data_sets", dataset.uuid)
-        response = self.api_client.get(dataset_uri, format='json')
-        self.assertValidJSONResponse(response)
-        data = self.deserialize(response)
-        self.assertEqual(data['uuid'], dataset.uuid)
-        self.assertEqual(len(data['analyses']), analyses_to_create)
-
-        for analysis in data['analyses']:
-            self.assertTrue(analysis['is_owner'])
-            self.assertEqual(analysis['owner'],
-                             UserProfile.objects.get(user=self.user).uuid)
-            self.assertIsNotNone(analysis.get('status'))
-            self.assertIsNotNone(analysis.get('name'))
-            self.assertIsNotNone(analysis.get('uuid'))
-
-    def test_get_dataset_expecting_no_analyses(self):
-        dataset_uri = make_api_uri("data_sets", self.tabular_dataset.uuid)
-        response = self.api_client.get(
-            dataset_uri,
-            format='json'
-        )
-        self.assertValidJSONResponse(response)
-        data = self.deserialize(response)
-        self.assertEqual(data['uuid'], self.tabular_dataset.uuid)
-        self.assertEqual(data['analyses'], [])
-
-    def test_detail_response_with_complete_dataset(self):
-        # Properly created DataSets will have version information
-        dataset_uri = make_api_uri(
-            "data_sets",
-            self.tabular_dataset.uuid
-        )
-        response = self.api_client.get(
-            dataset_uri,
-            format='json'
-        )
-        data = self.deserialize(response)
-        self.assertEqual(data["version"], 1)
-        self.assertIsNotNone(data["date"])
-
-    def test_detail_response_yields_error_if_incomplete_dataset(self):
-        # DataSets that aren't fully created will yield informative errors
-        dataset_uri = make_api_uri(
-            "data_sets",
-            self.incomplete_dataset.uuid
-        )
-        with self.assertRaises(NotFound):
-            self.api_client.get(dataset_uri, format='json')
-
-    def test_list_response_yields_complete_datasets_only(self):
-        # DataSets that aren't fully created will not be displayed in the
-        # list api response
-        resp = self.api_client.get(make_api_uri('data_sets'), format='json')
-        self.assertValidJSONResponse(resp)
-        data = json.loads(resp.content)
-        self.assertEqual(data["meta"]["total_count"], 1)
-        self.assertEqual(data["objects"][0]["name"], self.tabular_dataset.name)
-
-    def test_isatab_based_dataset_specifics_in_response(self):
-        data = self.deserialize(
-            self.api_client.get(
-                make_api_uri("data_sets", self.isatab_dataset.uuid),
-                format='json'
-            )
-        )
-        isa_archive_file_store_item = \
-            self.isatab_dataset.get_metadata_as_file_store_item()
-        self.assertEqual(data["isa_archive"], isa_archive_file_store_item.uuid)
-        self.assertEqual(data["isa_archive_url"],
-                         isa_archive_file_store_item.get_datafile_url())
-
-    def test_tabular_dataset_specifics_in_response(self):
-        data = self.deserialize(
-            self.api_client.get(
-                make_api_uri("data_sets", self.tabular_dataset.uuid),
-                format='json'
-            )
-        )
-        pre_isa_archive_file_store_item = \
-            self.tabular_dataset.get_metadata_as_file_store_item()
-        self.assertEqual(data["pre_isa_archive"],
-                         pre_isa_archive_file_store_item.uuid)
-
-
 class DataSetTests(TestCase):
     """ Testing of the DataSet model"""
 
@@ -1479,12 +1040,6 @@ class DataSetTests(TestCase):
             user=self.user2,
             latest_version=self.latest_tabular_dataset_version
         )
-        self.incomplete_dataset = create_dataset_with_necessary_models(
-            user=self.user
-        )
-        # Delete InvestigationLink to simulate a Dataset that hasn't finished
-        # being created
-        self.incomplete_dataset.get_latest_investigation_link().delete()
 
     def test_get_studies(self):
         studies = self.isa_tab_dataset.get_studies()
@@ -1499,10 +1054,15 @@ class DataSetTests(TestCase):
         self.assertEqual(len(file_store_items), 3)
 
     def test_dataset_complete(self):
-        self.assertTrue(self.isa_tab_dataset.is_valid())
+        self.assertTrue(self.isa_tab_dataset.is_valid)
 
     def test_dataset_incomplete(self):
-        self.assertFalse(self.incomplete_dataset.is_valid())
+        dataset = create_dataset_with_necessary_models(user=self.user)
+        # Delete InvestigationLink to simulate a Dataset that hasn't
+        # finished being created
+        dataset.get_latest_investigation_link().delete()
+        dataset.save()
+        self.assertFalse(dataset.is_valid)
 
     def test_neo4j_called_on_post_save(self):
         with mock.patch(
@@ -1567,518 +1127,44 @@ class DataSetTests(TestCase):
 
     def test_get_metadata_as_file_store_item(self):
         self.assertIsNotNone(
-            self.isa_tab_dataset.get_metadata_as_file_store_item()
+            self.isa_tab_dataset.get_investigation().get_file_store_item()
         )
         self.assertIsNotNone(
-            self.tabular_dataset.get_metadata_as_file_store_item()
+            self.tabular_dataset.get_investigation().get_file_store_item()
         )
 
     def test_is_isatab_based(self):
-        self.assertTrue(self.isa_tab_dataset.is_isatab_based)
-        self.assertFalse(self.tabular_dataset.is_isatab_based)
-
-
-class APIV2TestCase(APITestCase):
-    def setUp(self, **kwargs):
-        self.public_group_name = ExtendedGroup.objects.public_group().name
-        self.username = 'coffee_lover'
-        self.password = 'coffeecoffee'
-        self.user = User.objects.create_user(self.username, '',
-                                             self.password)
-
-        self.factory = APIRequestFactory()
-        self.client = APIClient()
-        self.url_root = '/api/v2/{}'.format(kwargs.get("api_base_name"))
-        self.view = kwargs.get("view")
-
-        self.client.login(username=self.username, password=self.password)
-
-
-class DataSetApiV2Tests(APIV2TestCase):
-    def create_rand_str(self, count):
-        return ''.join(
-            random.choice(string.ascii_lowercase) for _ in xrange(count)
+        self.assertTrue(
+            self.isa_tab_dataset.get_investigation().is_isa_tab_based()
+        )
+        self.assertFalse(
+            self.tabular_dataset.get_investigation().is_isa_tab_based()
         )
 
-    def setUp(self):
-        super(DataSetApiV2Tests, self).setUp(
-            api_base_name="datasets/",
-            view=DataSetsViewSet.as_view()
-        )
-
-        # Create Datasets
-        self.dataset = create_dataset_with_necessary_models(user=self.user)
-        self.dataset2 = create_dataset_with_necessary_models(user=self.user)
-
-        self.node_json = json.dumps([{
-            "uuid": "cfb31cca-4f58-4ef0-b1e2-4469c804bf73",
-            "relative_file_store_item_url": None,
-            "parent_nodes": [],
-            "child_nodes": [
-                "1d9ee2ee-d804-4458-93b9-b1fb9a08a2c8"
-            ],
-            "auxiliary_nodes": [],
-            "is_auxiliary_node": False,
-            "file_extension": None,
-            "auxiliary_file_generation_task_state": None,
-            "ready_for_igv_detail_view": None
-        }])
-
-        # Make reusable requests & responses
-        self.get_request = self.factory.get(self.url_root)
-        self.get_response = self.view(self.get_request)
-        self.put_request = self.factory.put(
-            self.url_root,
-            data=self.node_json,
-            format="json"
-        )
-        self.put_response = self.view(self.put_request)
-        self.options_request = self.factory.options(
-            self.url_root,
-            data=self.node_json,
-            format="json"
-        )
-        self.options_response = self.view(self.options_request)
-
-    def test_unallowed_http_verbs(self):
-        self.assertEqual(
-            self.put_response.data['detail'], 'Method "PUT" not allowed.')
-        self.assertEqual(
-            self.options_response.data['detail'], 'Method "OPTIONS" not '
-                                                  'allowed.')
-        self.assertEqual(
-            self.get_response.data['detail'], 'Method "GET" not allowed.')
-
-    def test_dataset_delete_successful(self):
-
-        self.assertEqual(DataSet.objects.all().count(), 2)
-
-        self.delete_request1 = self.factory.delete(
-           urljoin(self.url_root, self.dataset.uuid)
-        )
-
-        force_authenticate(self.delete_request1, user=self.user)
-
-        self.delete_response = self.view(self.delete_request1,
-                                         self.dataset.uuid)
-
-        self.assertEqual(self.delete_response.status_code, 200)
-
-        self.assertEqual(DataSet.objects.all().count(), 1)
-
-        self.delete_request2 = self.factory.delete(
-          urljoin(self.url_root, self.dataset2.uuid)
-        )
-
-        force_authenticate(self.delete_request2, user=self.user)
-
-        self.delete_response = self.view(self.delete_request2,
-                                         self.dataset2.uuid)
-        self.assertEqual(self.delete_response.status_code, 200)
-
-        self.assertEqual(DataSet.objects.all().count(), 0)
-
-    def test_dataset_delete_no_auth(self):
-        self.assertEqual(DataSet.objects.all().count(), 2)
-
-        self.delete_request = self.factory.delete(
-           urljoin(self.url_root, self.dataset.uuid)
-        )
-
-        self.delete_response = self.view(self.delete_request,
-                                         self.dataset.uuid)
-
-        self.assertEqual(self.delete_response.status_code, 403)
-
-        self.assertEqual(DataSet.objects.all().count(), 2)
-
-    def test_dataset_delete_not_found(self):
-        self.assertEqual(DataSet.objects.all().count(), 2)
-
-        uuid = self.dataset.uuid
-
-        self.dataset.delete()
-
-        self.assertEqual(DataSet.objects.all().count(), 1)
-
-        self.delete_request = self.factory.delete(
-           urljoin(self.url_root, uuid)
-        )
-        force_authenticate(self.delete_request, user=self.user)
-
-        self.delete_response = self.view(self.delete_request,
-                                         uuid)
-
-        self.assertEqual(self.delete_response.status_code, 404)
-
-        self.assertEqual(DataSet.objects.all().count(), 1)
-
-    # Accession too long
-    def test_dataset_patch_accession_fails(self):
-        new_accession = self.create_rand_str(33)
-        patch_request = self.factory.patch(
-            urljoin(self.url_root, self.dataset.uuid),
-            {"accession": new_accession}
-        )
-        force_authenticate(patch_request, user=self.user)
-        patch_response = self.view(patch_request, self.dataset.uuid)
-        self.assertEqual(patch_response.status_code, 400)
-        self.assertEqual(
-            patch_response.data.get('accession')[0],
-            'Ensure this field has no more than 32 characters.'
-        )
-
-    def test_dataset_patch_accession_successful(self):
-        new_accession = self.create_rand_str(10)
-        patch_request = self.factory.patch(
-            urljoin(self.url_root, self.dataset.uuid),
-            {"accession": new_accession},
-        )
-        force_authenticate(patch_request, user=self.user)
-        patch_response = self.view(patch_request, self.dataset.uuid)
-        self.assertEqual(patch_response.status_code, 202)
-        self.assertEqual(patch_response.data.get('accession'), new_accession)
-
-    def test_dataset_patch_auth_fails(self):
-        new_description = self.create_rand_str(50)
-        patch_request = self.factory.patch(
-            urljoin(self.url_root, self.dataset.uuid),
-            {"description": new_description},
-        )
-        patch_response = self.view(patch_request, self.dataset.uuid)
-        self.assertEqual(patch_response.status_code, 401)
-
-    def test_dataset_patch_description_fails(self):
-        new_description = self.create_rand_str(5001)
-        patch_request = self.factory.patch(
-            urljoin(self.url_root, self.dataset.uuid),
-            {"description": new_description},
-        )
-        force_authenticate(patch_request, user=self.user)
-        patch_response = self.view(patch_request, self.dataset.uuid)
-        self.assertEqual(patch_response.status_code, 400)
-        self.assertEqual(
-            patch_response.data.get('description')[0],
-            'Ensure this field has no more than 5000 characters.'
-        )
-
-    def test_dataset_patch_description_successful(self):
-        new_description = self.create_rand_str(500)
-        patch_request = self.factory.patch(
-            urljoin(self.url_root, self.dataset.uuid),
-            {"description": new_description},
-        )
-        force_authenticate(patch_request, user=self.user)
-        patch_response = self.view(patch_request, self.dataset.uuid)
-        self.assertEqual(patch_response.status_code, 202)
-        self.assertEqual(
-            patch_response.data.get('description'), new_description
-        )
-
-    # Slug too long
-    def test_dataset_patch_slug_fails(self):
-        new_slug = self.create_rand_str(251)
-        patch_request = self.factory.patch(
-            urljoin(self.url_root, self.dataset.uuid),
-            {"slug": new_slug}
-        )
-        force_authenticate(patch_request, user=self.user)
-        patch_response = self.view(patch_request, self.dataset.uuid)
-        self.assertEqual(patch_response.status_code, 400)
-        self.assertEqual(
-            patch_response.data.get('slug')[0],
-            'Ensure this field has no more than 250 characters.'
-        )
-
-    # Slugs must be unique
-    def test_dataset_patch_slug_fails_unique(self):
-        new_slug = self.create_rand_str(10)
-        patch_request = self.factory.patch(
-            urljoin(self.url_root, self.dataset.uuid),
-            {"slug": new_slug}
-        )
-        force_authenticate(patch_request, user=self.user)
-        patch_response = self.view(patch_request, self.dataset.uuid)
-        self.assertEqual(patch_response.status_code, 202)
-        self.assertEqual(patch_response.data.get('slug'), new_slug)
-
-        # Duplicate request
-        patch_request = self.factory.patch(
-            urljoin(self.url_root, self.dataset2.uuid),
-            {"slug": new_slug}
-        )
-        force_authenticate(patch_request, user=self.user)
-        patch_response = self.view(patch_request, self.dataset2.uuid)
-        self.assertEqual(patch_response.status_code, 400)
-        self.assertEqual(
-            patch_response.data.get('slug')[0],
-            'Slugs must be unique.'
-        )
-
-    def test_dataset_patch_slug_successful(self):
-        new_slug = self.create_rand_str(10)
-        patch_request = self.factory.patch(
-            urljoin(self.url_root, self.dataset.uuid),
-            {"slug": new_slug},
-        )
-        force_authenticate(patch_request, user=self.user)
-        patch_response = self.view(patch_request, self.dataset.uuid)
-        self.assertEqual(patch_response.status_code, 202)
-        self.assertEqual(patch_response.data.get('slug'), new_slug)
-
-    def test_dataset_patch_slug_trim_whitespace(self):
-        new_slug = '  Test Slug Name  '
-        patch_request = self.factory.patch(
-            urljoin(self.url_root, self.dataset.uuid),
-            {"slug": new_slug},
-        )
-        force_authenticate(patch_request, user=self.user)
-        patch_response = self.view(patch_request, self.dataset.uuid)
-        self.assertEqual(patch_response.status_code, 202)
-        self.assertEqual(patch_response.data.get('slug'), new_slug.strip())
-
-    # Summary too long
-    def test_dataset_patch_summary_fails(self):
-        new_summary = self.create_rand_str(1001)
-        patch_request = self.factory.patch(
-            urljoin(self.url_root, self.dataset.uuid),
-            {"summary": new_summary}
-        )
-        force_authenticate(patch_request, user=self.user)
-        patch_response = self.view(patch_request, self.dataset.uuid)
-        self.assertEqual(patch_response.status_code, 400)
-        self.assertEqual(
-            patch_response.data.get('summary')[0],
-            'Ensure this field has no more than 1000 characters.'
-        )
-
-    def test_dataset_patch_summary_successful(self):
-        new_summary = self.create_rand_str(500)
-        patch_request = self.factory.patch(
-            urljoin(self.url_root, self.dataset.uuid),
-            {"summary": new_summary},
-        )
-        force_authenticate(patch_request, user=self.user)
-        patch_response = self.view(patch_request, self.dataset.uuid)
-        self.assertEqual(patch_response.status_code, 202)
-        self.assertEqual(patch_response.data.get('summary'), new_summary)
-
-    # Title too long
-    def test_dataset_patch_title_fails(self):
-        new_title = self.create_rand_str(251)
-        patch_request = self.factory.patch(
-            urljoin(self.url_root, self.dataset.uuid),
-            {"title": new_title}
-        )
-        force_authenticate(patch_request, user=self.user)
-        patch_response = self.view(patch_request, self.dataset.uuid)
-        self.assertEqual(patch_response.status_code, 400)
-        self.assertEqual(
-            patch_response.data.get('title')[0],
-            'Ensure this field has no more than 250 characters.'
-            )
-
-    def test_dataset_patch_title_successful(self):
-        new_title = "decaf coffee dataset"
-        patch_request = self.factory.patch(
-            urljoin(self.url_root, self.dataset.uuid),
-            {"title": new_title},
-        )
-        force_authenticate(patch_request, user=self.user)
-        patch_response = self.view(patch_request, self.dataset.uuid)
-        self.assertEqual(patch_response.status_code, 202)
-        self.assertEqual(patch_response.data.get('title'), new_title)
-
-
-class AnalysisApiV2Tests(APIV2TestCase):
-
-    def setUp(self):
-        super(AnalysisApiV2Tests, self).setUp(
-            api_base_name="analyses/",
-            view=AnalysesViewSet.as_view()
-        )
-        self.project = Project.objects.create()
-
-        self.galaxy_instance = GalaxyInstanceFactory()
-        self.workflow_engine = WorkflowEngine.objects.create(
-            instance=self.galaxy_instance
-        )
-        self.workflow = Workflow.objects.create(
-            workflow_engine=self.workflow_engine
-        )
-
-        # Create Datasets
-        self.dataset = DataSet.objects.create(name="coffee dataset")
-        self.dataset2 = DataSet.objects.create(name="cool dataset")
-
-        # Create Investigation/InvestigationLinks for the DataSets
-        self.investigation = Investigation.objects.create()
-
-        # Create Studys and Assays
-        self.study = Study.objects.create(investigation=self.investigation)
-        self.assay = Assay.objects.create(study=self.study)
-
-        # Create Analyses
-        self.analysis = Analysis.objects.create(
-            name='Coffee Analysis',
-            summary='coffee',
-            project=self.project,
-            data_set=self.dataset,
-            workflow=self.workflow
-        )
-        self.analysis.set_owner(self.user)
-
-        self.analysis2 = Analysis.objects.create(
-            name='Coffee Analysis2',
-            summary='coffee2',
-            project=self.project,
-            data_set=self.dataset,
-            workflow=self.workflow
-        )
-        self.analysis2.set_owner(self.user)
-
-        # Create Nodes
-        self.node = Node.objects.create(assay=self.assay, study=self.study)
-
-        self.node_json = json.dumps([{
-            "uuid": "cfb31cca-4f58-4ef0-b1e2-4469c804bf73",
-            "relative_file_store_item_url": None,
-            "parent_nodes": [],
-            "child_nodes": [
-                "1d9ee2ee-d804-4458-93b9-b1fb9a08a2c8"
-            ],
-            "auxiliary_nodes": [],
-            "is_auxiliary_node": False,
-            "file_extension": None,
-            "auxiliary_file_generation_task_state": None,
-            "ready_for_igv_detail_view": None
-        }])
-
-        self.client.login(username=self.username, password=self.password)
-
-        # Make reusable requests & responses
-        self.get_request = self.factory.get(self.url_root)
-        self.get_response = self.view(self.get_request)
-        self.put_request = self.factory.put(
-            self.url_root,
-            data=self.node_json,
-            format="json"
-        )
-        self.put_response = self.view(self.put_request)
-        self.patch_request = self.factory.patch(
-            self.url_root,
-            data=self.node_json,
-            format="json"
-        )
-        self.patch_response = self.view(self.patch_request)
-        self.options_request = self.factory.options(
-            self.url_root,
-            data=self.node_json,
-            format="json"
-        )
-        self.options_response = self.view(self.options_request)
-
-    def test_unallowed_http_verbs(self):
-        self.assertEqual(
-            self.put_response.data['detail'], 'Method "PUT" not allowed.')
-        self.assertEqual(
-            self.patch_response.data['detail'], 'Method "PATCH" not allowed.')
-        self.assertEqual(
-            self.options_response.data['detail'], 'Method "OPTIONS" not '
-                                                  'allowed.')
-        self.assertEqual(
-            self.get_response.data['detail'], 'Method "GET" not allowed.')
-
-    def test_analysis_delete_successful(self):
-
-        self.assertEqual(Analysis.objects.all().count(), 2)
-
-        self.delete_request1 = self.factory.delete(
-           urljoin(self.url_root, self.analysis.uuid)
-        )
-
-        force_authenticate(self.delete_request1, user=self.user)
-
-        self.delete_response = self.view(self.delete_request1,
-                                         self.analysis.uuid)
-
-        self.assertEqual(self.delete_response.status_code, 200)
-
-        self.assertEqual(Analysis.objects.all().count(), 1)
-
-        self.delete_request2 = self.factory.delete(
-          urljoin(self.url_root, self.analysis2.uuid)
-        )
-
-        force_authenticate(self.delete_request2, user=self.user)
-
-        self.delete_response = self.view(self.delete_request2,
-                                         self.analysis2.uuid)
-        self.assertEqual(self.delete_response.status_code, 200)
-
-        self.assertEqual(Analysis.objects.all().count(), 0)
-
-    def test_analysis_delete_no_auth(self):
-        self.assertEqual(Analysis.objects.all().count(), 2)
-
-        self.delete_request = self.factory.delete(
-           urljoin(self.url_root, self.analysis.uuid)
-        )
-
-        self.delete_response = self.view(self.delete_request,
-                                         self.analysis.uuid)
-
-        self.assertEqual(self.delete_response.status_code, 403)
-
-        self.assertEqual(Analysis.objects.all().count(), 2)
-
-    def test_analysis_delete_not_found(self):
-        self.assertEqual(Analysis.objects.all().count(), 2)
-
-        uuid = self.analysis.uuid
-
-        self.analysis.delete()
-
-        self.assertEqual(Analysis.objects.all().count(), 1)
-
-        self.delete_request = self.factory.delete(
-           urljoin(self.url_root, uuid)
-        )
-        force_authenticate(self.delete_request, user=self.user)
-
-        self.delete_response = self.view(self.delete_request,
-                                         uuid)
-
-        self.assertEqual(self.delete_response.status_code, 404)
-
-        self.assertEqual(Analysis.objects.all().count(), 1)
-
-
-class WorkflowApiV2Tests(APIV2TestCase):
-    def setUp(self):
-        self.mock_workflow_graph = "{is_test_workflow_graph: true}"
-        super(WorkflowApiV2Tests, self).setUp(
-            api_base_name="workflows/",
-            view=WorkflowViewSet.as_view({"get": "graph"})
-        )
-        self.workflow = WorkflowFactory(
-            graph=self.mock_workflow_graph,
-            workflow_engine=WorkflowEngineFactory(
-                instance=GalaxyInstanceFactory()
-            )
-        )
-
-    def test_get_workflow_graph(self):
-        workflow_graph_url = urljoin(
-            self.url_root,
-            "<uuid>/graph/"
-        )
-        get_request = self.factory.get(workflow_graph_url)
-        get_response = self.get_response = self.view(
-            get_request,
-            uuid=self.workflow.uuid
-        )
-        self.assertEqual(get_response.content, self.mock_workflow_graph)
+    def test_cached_is_valid_property_is_invalidated_on_save(self):
+        # Trigger load into cache
+        self.assertTrue(self.tabular_dataset.is_valid)
+        with mock.patch(
+            "core.models.DataSet._invalidate_cached_properties"
+        ) as invalidate_cached_props_mock:
+            self.tabular_dataset.save()
+            invalidate_cached_props_mock.assert_called()
+
+    def test_is_clean_on_clean_dataset(self):
+        self.assertTrue(self.isa_tab_dataset.is_clean())
+
+    def test_is_clean_if_dataset_has_analyses(self):
+        analyses, dataset = make_analyses_with_single_dataset(1, self.user)
+        self.assertFalse(dataset.is_clean())
+
+    def test_is_clean_if_dataset_has_visualizations(self):
+        tool = create_tool_with_necessary_models("VISUALIZATION")
+        self.assertFalse(tool.dataset.is_clean())
+
+    def test_is_clean_if_data_set_is_shared(self):
+        data_set = create_dataset_with_necessary_models()
+        data_set.share(ExtendedGroup.objects.public_group())
+        self.assertTrue(data_set.is_clean())
 
 
 class CoreIndexTests(TestCase):
@@ -2192,45 +1278,6 @@ class TestMigrations(TestCase):
         pass
 
 
-class DataSetPermissionsUpdateTests(TestMigrations):
-    migrate_from = '0015_auto_20171213_1429'
-    migrate_to = '0016_update_read_meta_permissions'
-
-    def setUpBeforeMigration(self, apps):
-        self.public_group = ExtendedGroup.objects.public_group()
-        self.user_a = User.objects.create_user("user_a", "", "user_a")
-        self.user_b = User.objects.create_user("user_b", "", "user_b")
-
-        self.dataset_a = create_dataset_with_necessary_models(user=self.user_a)
-        self.dataset_b = create_dataset_with_necessary_models()
-        self.dataset_b.share(self.public_group)
-
-        # Emulate state of DataSets existing prior to the read_meta_dataset
-        # permission addition
-        for obj in [self.user_a, self.user_b, self.public_group]:
-            for dataset in DataSet.objects.all():
-                remove_perm("core.read_meta_dataset", obj, dataset)
-
-    def _check_permission(self, obj, dataset,
-                          permission="core.read_meta_dataset"):
-        return ObjectPermissionChecker(obj).has_perm(permission,  dataset)
-
-    def test_read_meta_permissions_assigned(self):
-        # Assert that self.user is the only one with the "read_meta_dataset"
-        # perm on self.dataset_a
-        self.assertTrue(self._check_permission(self.user_a, self.dataset_a))
-        self.assertFalse(self._check_permission(self.user_b, self.dataset_a))
-        self.assertFalse(self._check_permission(self.public_group,
-                                                self.dataset_a))
-
-        # Assert that all users and groups have the "read_meta_dataset" perm on
-        # self.dataset_b
-        self.assertTrue(self._check_permission(self.public_group,
-                                               self.dataset_b))
-        self.assertTrue(self._check_permission(self.user_a, self.dataset_b))
-        self.assertTrue(self._check_permission(self.user_b, self.dataset_b))
-
-
 class TestManagementCommands(TestCase):
     def test_set_up_site_name(self):
         site_name = "Refinery Test"
@@ -2306,34 +1353,6 @@ class TestManagementCommands(TestCase):
                 str(galaxy_instance.id),
                 "non-existent group name"
             )
-
-
-class InitialSiteStatisticsCreationTest(TestMigrations):
-    migrate_from = '0019_sitestatistics'
-    migrate_to = '0020_create_initial_site_statistics'
-
-    def setUpBeforeMigration(self, apps):
-        public_group = ExtendedGroup.objects.public_group()
-        self.user_a = User.objects.create_user("user_a", "", "user_a")
-        self.user_b = User.objects.create_user("user_b", "", "user_b")
-        self.client.login(username="user_a", password="user_a")
-        self.client.login(username="user_a", password="user_a")
-        self.dataset_a = create_dataset_with_necessary_models(user=self.user_a)
-        self.dataset_b = create_dataset_with_necessary_models()
-        self.dataset_b.share(public_group)
-
-    def test_initial_site_statistics_created_properly(self):
-        initial_site_statistics = SiteStatistics.objects.last()
-
-        self.assertEqual(initial_site_statistics.datasets_uploaded, 2)
-        self.assertEqual(initial_site_statistics.datasets_shared, 1)
-        self.assertEqual(initial_site_statistics.users_created, 3)
-        self.assertEqual(initial_site_statistics.groups_created, 1)
-        self.assertEqual(initial_site_statistics.unique_user_logins, 1)
-        self.assertEqual(initial_site_statistics.total_user_logins, 2)
-        self.assertEqual(initial_site_statistics.total_workflow_launches, 0)
-        self.assertEqual(
-            initial_site_statistics.total_visualization_launches, 0)
 
 
 class SiteStatisticsUnitTests(TestCase):
@@ -2528,3 +1547,105 @@ class SiteStatisticsIntegrationTests(TestCase):
         collect_site_statistics()
         self.assertEqual(initial_site_statistics_count + 1,
                          SiteStatistics.objects.count())
+
+
+class EventTests(TestCase):
+
+    def setUp(self):
+        self.user = User.objects.create_user('testuser')
+        CuserMiddleware.set_user(self.user)
+        self.pre_re = r'^\d{2}/\d{2}/\d{2} \d{2}:\d{2}:\d{2}: testuser '
+        self.post_re = r' data set Test DataSet - [0-9a-f-]+$'
+
+    def test_data_set_create(self):
+        create_dataset_with_necessary_models()
+        events = Event.objects.all()
+        self.assertEqual(len(events), 1)
+        self.assertRegexpMatches(
+            str(events[0]),
+            self.pre_re + r'created data set Test DataSet - [0-9a-f-]+$'
+        )
+
+    # DataSetPermissionsUpdateTests covers data_set_permissions_change.
+
+    def test_data_set_metadata_reupload(self):
+        pass  # TODO
+
+    def test_data_set_file_link(self):
+        pass  # TODO
+
+    def test_data_set_metadata_edit(self):
+        pass  # TODO
+
+    def test_data_set_visualization_creation(self):
+        create_tool_with_necessary_models("VISUALIZATION")
+
+        events = Event.objects.all()
+        self.assertEqual(len(events), 2)
+        self.assertRegexpMatches(
+            str(events[0]),
+            self.pre_re + r'created' + self.post_re
+        )
+        self.assertRegexpMatches(
+            str(events[1]),
+            self.pre_re +
+            r'launched visualization Test VISUALIZATION Tool: [0-9a-f-]+ on' +
+            self.post_re
+        )
+
+    def test_data_set_visualization_deletion(self):
+        pass  # TODO
+
+    def test_data_set_analysis_creation(self):
+        create_tool_with_necessary_models("WORKFLOW")
+
+        events = Event.objects.all()
+        self.assertEqual(len(events), 2)
+        self.assertRegexpMatches(
+            str(events[0]),
+            self.pre_re + r'created' + self.post_re
+        )
+        self.assertRegexpMatches(
+            str(events[1]),
+            self.pre_re +
+            r'launched analysis Test WORKFLOW Tool: [0-9a-f-]+ on' +
+            self.post_re
+        )
+
+    def test_data_set_analysis_deletion(self):
+        pass  # TODO
+
+    def test_group_permissions_change(self):
+        pass  # TODO
+
+    def test_group_invitation_sent(self):
+        pass  # TODO
+
+    def test_group_invitation_accepted(self):
+        pass  # TODO
+
+    def test_group_invitation_revoked(self):
+        pass  # TODO
+
+    def test_group_invitation_resent(self):
+        pass  # TODO
+
+    def test_group_user_promotion(self):
+        pass  # TODO
+
+    def test_group_user_demotion(self):
+        pass  # TODO
+
+    def test_group_user_removal(self):
+        pass  # TODO
+
+    def test_get_details_as_dict(self):
+        tool = create_tool_with_necessary_models("VISUALIZATION",
+                                                 user=self.user)
+        event = Event.objects.last()
+        self.assertEqual(
+            event.get_details_as_dict(),
+            {
+                u'display_name': tool.display_name
+            }
+        )

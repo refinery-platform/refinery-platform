@@ -7,7 +7,7 @@ import uuid
 
 from django.conf import settings
 from django.db import models
-from django.db.models.signals import post_delete, pre_delete
+from django.db.models.signals import post_delete, post_save, pre_delete
 from django.dispatch import receiver
 
 import bioblend
@@ -32,6 +32,7 @@ from core.models import (INPUT_CONNECTION, OUTPUT_CONNECTION, Analysis,
                          AnalysisNodeConnection, DataSet, OwnableResource,
                          Workflow)
 
+from core.models import Event
 from core.utils import get_absolute_url
 from data_set_manager.models import Node
 from data_set_manager.utils import (
@@ -298,6 +299,11 @@ class Tool(OwnableResource):
     )
     tool_launch_configuration = models.TextField()
     tool_definition = models.ForeignKey(ToolDefinition)
+    display_name = models.CharField(
+        max_length=250,
+        unique=True,
+        null=True
+    )
 
     class Meta:
         verbose_name = "tool"
@@ -430,7 +436,10 @@ class Tool(OwnableResource):
             # Append file_uuid to list of FileStoreItem UUIDs
             tool_launch_config[self.FILE_UUID_LIST].append(node.file_uuid)
 
-            file_url = get_file_url_from_node_uuid(node_uuid)
+            file_url = get_file_url_from_node_uuid(
+                node_uuid,
+                require_valid_url=True
+            )
             tool_launch_config[self.FILE_RELATIONSHIPS_URLS] = (
                 tool_launch_config[self.FILE_RELATIONSHIPS_URLS].replace(
                     node_uuid, "'{}'".format(file_url)
@@ -497,7 +506,8 @@ class VisualizationTool(Tool):
             self.FILE_RELATIONSHIPS: self.get_file_relationships_urls(),
             ToolDefinition.PARAMETERS: self._get_visualization_parameters(),
             self.INPUT_NODE_INFORMATION: self._get_detailed_nodes_dict(
-                self.get_input_node_uuids()
+                self.get_input_node_uuids(),
+                require_valid_urls=True  # Tool input nodes need valid urls
             ),
             # TODO: adding all of a DataSet's Node info seems excessive. Would
             #  be great if we had a VisualizationTool using all of this info
@@ -530,7 +540,8 @@ class VisualizationTool(Tool):
         if len(self.django_docker_client.list()) >= max_containers:
             raise VisualizationToolError('Max containers')
 
-    def _get_detailed_nodes_dict(self, node_uuid_list):
+    def _get_detailed_nodes_dict(self, node_uuid_list,
+                                 require_valid_urls=False):
         """
         Create and return a dict with detailed information about all of our
         Nodes corresponding to the UUIDs in the given `node_uuid_list`.
@@ -543,7 +554,10 @@ class VisualizationTool(Tool):
         node_info = {
             node["uuid"]: {
                 self.NODE_SOLR_INFO: node,
-                self.FILE_URL: get_file_url_from_node_uuid(node["uuid"])
+                self.FILE_URL: get_file_url_from_node_uuid(
+                    node["uuid"],
+                    require_valid_url=require_valid_urls
+                )
             }
             for node in solr_response_json["nodes"]
         }
@@ -591,6 +605,29 @@ class VisualizationTool(Tool):
         # Pulls docker image if it doesn't exist yet, and launches container
         # asynchronously
         start_container.delay(self)
+
+
+@receiver(post_save, sender=VisualizationTool)
+def _visualization_saved(sender, instance, *args, **kwargs):
+    # Once a VisualizationTool is created with a display_name there are no
+    # further changes being made
+    if instance.display_name:
+        Event.record_data_set_visualization_creation(
+            instance.dataset, instance.display_name
+        )
+
+
+@receiver(pre_delete, sender=VisualizationTool)
+def remove_tool_container(sender, instance, *args, **kwargs):
+    """
+    Remove the Docker container instance corresponding to a
+    VisualizationTool's launch.
+    """
+    try:
+        instance.django_docker_client.purge_by_label(instance.uuid)
+    except APIError as e:
+        logger.error("Couldn't purge container for Tool with UUID: %s %s",
+                     instance.uuid, e)
 
 
 def handle_bioblend_exceptions(func):
@@ -1431,14 +1468,11 @@ class WorkflowTool(Tool):
         )
 
 
-@receiver(pre_delete, sender=VisualizationTool)
-def remove_tool_container(sender, instance, *args, **kwargs):
-    """
-    Remove the Docker container instance corresponding to a
-    VisualizationTool's launch.
-    """
-    try:
-        instance.django_docker_client.purge_by_label(instance.uuid)
-    except APIError as e:
-        logger.error("Couldn't purge container for Tool with UUID: %s %s",
-                     instance.uuid, e)
+@receiver(post_save, sender=WorkflowTool)
+def _workflow_saved(sender, instance, *args, **kwargs):
+    # Once a WorkflowTool is created with a display_name there are no
+    # further changes being made
+    if instance.display_name:
+        Event.record_data_set_analysis_creation(
+            instance.dataset, instance.display_name
+        )

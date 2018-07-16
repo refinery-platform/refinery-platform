@@ -3,6 +3,7 @@ Created on May 10, 2012
 
 @author: nils
 '''
+import os
 from datetime import datetime
 import logging
 
@@ -155,15 +156,15 @@ class Investigation(NodeCollection):
 
     """easily retrieves the proper NodeCollection fields"""
 
-    @property
-    def isa_archive(self):
-        return self._get_file_store_item(self.isarchive_file)
+    def is_isa_tab_based(self):
+        return bool(self.isarchive_file)
 
-    @property
-    def pre_isa_archive(self):
-        return self._get_file_store_item(self.pre_isarchive_file)
-
-    def _get_file_store_item(self, file_store_item_uuid):
+    def get_file_store_item(self):
+        """Get an Investigation's corresponding FileStoreItem instance"""
+        file_store_item_uuid = (
+            self.isarchive_file if self.is_isa_tab_based()
+            else self.pre_isarchive_file
+        )
         try:
             return FileStoreItem.objects.get(uuid=file_store_item_uuid)
         except (FileStoreItem.DoesNotExist,
@@ -192,8 +193,20 @@ class Investigation(NodeCollection):
             return study.description
         return self.description
 
+    def get_study(self):
+        try:
+            return Study.objects.get(investigation=self)
+        except(Study.DoesNotExist, Study.MultipleObjectsReturned) as e:
+            raise RuntimeError("Couldn't properly fetch Study: {}".format(e))
+
     def get_study_count(self):
         return self.study_set.count()
+
+    def get_assay(self):
+        try:
+            return Assay.objects.get(study=self.get_study())
+        except(Assay.DoesNotExist, Assay.MultipleObjectsReturned) as e:
+            raise RuntimeError("Couldn't properly fetch Assay: {}".format(e))
 
     def get_assay_count(self):
         studies = self.study_set.all()
@@ -202,6 +215,66 @@ class Investigation(NodeCollection):
             assay_count += study.assay_set.count()
 
         return assay_count
+
+    def get_file_store_items(self, exclude_metadata_file=False,
+                             local_only=False):
+        """
+        Returns a list of all data files associated with an Investigation
+        :param exclude_metadata_file: <Boolean> Whether or not to exclude
+        the metadata file used to create the Investigation from the resulting
+        list
+        :param local_only:  <Boolean> Whether or not to only include
+        FileStoreItems that have been imported into Refinery
+        """
+        file_store_item_uuids = [
+            node.file_uuid for node in Node.objects.filter(
+                study=self.get_study()
+            )
+            if node.file_uuid
+        ]
+        file_store_items = list(
+            FileStoreItem.objects.filter(uuid__in=file_store_item_uuids)
+        )
+        if not exclude_metadata_file:
+            file_store_items.append(self.get_file_store_item())
+
+        return (
+            [f for f in file_store_items if f.is_local()] if local_only
+            else file_store_items
+        )
+
+    def get_datafile_names(self, local_only=False,
+                           exclude_metadata_file=False):
+        """
+        Returns a list of all data file names associated with an
+        Investigation
+
+        :param exclude_metadata_file: <Boolean> Whether or not to exclude
+        the metadata file used to crete the Investigation from the resulting
+        list
+        :param local_only:  <Boolean> Whether or not to only include data
+        file names of FileStoreItems that have been imported into Refinery
+        """
+        file_store_items = self.get_file_store_items(
+            local_only=local_only, exclude_metadata_file=exclude_metadata_file
+        )
+        return sorted(
+            [os.path.basename(f.source) for f in file_store_items]
+        )
+
+
+@receiver(pre_delete, sender=Investigation)
+def _investigation_delete(sender, instance, **kwargs):
+    """
+    Removes an Investigation's associated FileStoreItem upon deletion being
+    triggered.
+    Having these extra checks is favored within a signal so that this logic
+    is picked up on bulk deletes as well.
+
+    See: https://docs.djangoproject.com/en/1.8/topics/db/models/
+    #overriding-model-methods
+    """
+    instance.get_file_store_item().delete()
 
 
 class Ontology(models.Model):
@@ -501,13 +574,13 @@ class Node(models.Model):
         Returns the FileStoreItem associated with a given Node or None if
         there isn't one
         """
-        try:
-            return FileStoreItem.objects.get(
-                uuid=self.file_uuid)
-        except (FileStoreItem.DoesNotExist,
-                FileStoreItem.MultipleObjectsReturned) as e:
-            logger.error(e)
-            return None
+        if self.file_uuid:
+            try:
+                return FileStoreItem.objects.get(uuid=self.file_uuid)
+            except (FileStoreItem.DoesNotExist,
+                    FileStoreItem.MultipleObjectsReturned) as e:
+                logger.error(e)
+        return None
 
     def _create_and_associate_auxiliary_node(self, filestore_item_uuid):
             """

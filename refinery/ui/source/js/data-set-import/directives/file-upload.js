@@ -5,15 +5,17 @@
     .module('refineryDataSetImport')
     .directive('rpFileUpload', rpFileUpload);
 
-  rpFileUpload.$inject = ['$window', 'settings'];
+  rpFileUpload.$inject = ['$window'];
 
-  function rpFileUpload ($window, settings) {
+  function rpFileUpload ($window) {
     return {
       restrict: 'E',
+      bindToController: {
+        isNodeUpdate: '=',
+        fileName: '='
+      },
+      controller: 'RefineryFileUploadCtrl as FileCtrl',
       templateUrl: function () {
-        if (settings.djangoApp.deploymentPlatform === 'aws') {
-          return $window.getStaticUrl('partials/data-set-import/partials/file-upload-s3.html');
-        }
         return $window.getStaticUrl('partials/data-set-import/partials/file-upload.html');
       }
     };

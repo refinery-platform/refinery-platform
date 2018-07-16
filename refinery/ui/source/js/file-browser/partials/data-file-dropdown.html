@@ -1,0 +1,49 @@
+<div class="ngCellText text-align-center ui-grid-cell-contents" ng-class="col.colIndex()">
+  <div ng-if="$ctrl.fileStatus != 'PENDING'">
+    <div class="btn-group" uib-dropdown dropdown-append-to-body>
+        <button id="split-button" type="button"
+          class="refinery-base btn btn-default btn-xs"
+          ng-disabled="$ctrl.fileStatus == 'N/A'">
+          <span ng-if="$ctrl.fileStatus != 'N/A'" title="Download File {{ $ctrl.fileStatus }}">
+            <a ng-href="{{$ctrl.fileStatus}}" target="_blank">
+              <i class="fa fa-arrow-circle-o-down fa-lg"></i>
+            </a>
+          </span>
+          <span ng-if="$ctrl.fileStatus == 'N/A'" title="File not available for download">
+            <i class="fa fa-bolt fa-lg p-l-1-3"></i>
+          </span>
+        </button>
+        <button type="button" class="refinery-base  btn btn-default btn-xs"
+          ng-disabled="$ctrl.fileStatus == 'N/A' && !$ctrl.dataSet.is_owner"
+          uib-dropdown-toggle>
+          <i class="caret"></i>
+          <span class="sr-only">File Download</span>
+        </button>
+        <ul class="dropdown-menu" uib-dropdown-menu role="menu" aria-labelledby="split-button">
+          <li ng-if="$ctrl.fileStatus != 'N/A'" role="menuitem">
+            <a ng-href="{{$ctrl.fileStatus}}" target="_blank">
+             <i class="fa fa-arrow-circle-o-down p-r-1-2"></i> Download
+            </a>
+          </li>
+          <li>
+          </li>
+          <li
+            ng-if="$ctrl.fileStatus == 'N/A' && $ctrl.dataSet.is_owner && $ctrl.dataSet.is_clean"
+            role="menuitem">
+            <a ng-click="$ctrl.openDataFileModal('add', $ctrl.nodeObj)">
+              <i class="fa fa-plus-circle p-r-1-2"></i>Add
+            </a></li>
+          <li
+            ng-if="$ctrl.fileStatus != 'N/A' && $ctrl.dataSet.is_owner && $ctrl.dataSet.is_clean"
+            role="menuitem">
+             <a ng-click="$ctrl.openDataFileModal('remove', $ctrl.nodeObj)">
+              <i class="fa fa-trash p-r-1-2"></i>Remove
+            </a>
+          </li>
+        </ul>
+     </div>
+  </div>
+  <div ng-if="$ctrl.fileStatus == 'PENDING'" title="Importing file in progress.">
+    <i class="fa fa-clock-o"></i>
+  </div>
+</div>
