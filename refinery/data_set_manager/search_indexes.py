@@ -150,7 +150,7 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
         # iterate over all keys in data and join sets into strings
         for key, value in data.iteritems():
             if type(value) is set:
-                data[key] = " + ".join(str(i) for i in sorted(value))
+                data[key] = " + ".join(i for i in sorted(value))
 
         datafile = "" if file_store_item is None else \
             file_store_item.datafile.name
