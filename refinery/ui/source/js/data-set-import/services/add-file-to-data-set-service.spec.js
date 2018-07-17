@@ -39,7 +39,7 @@ describe('Common.service.addFileToDataSetService: unit tests', function () {
         .expectPOST(
           refinerySettings.appRoot +
           refinerySettings.refineryApiV2 +
-          '/data_set_manager/add-files/?format=json',
+          '/data_set_manager/add-file/?format=json',
           param
       ).respond(202, mockResponse);
 

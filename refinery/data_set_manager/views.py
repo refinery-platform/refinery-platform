@@ -37,7 +37,7 @@ from file_store.models import (generate_file_source_translator, get_temp_dir,
                                parse_s3_url)
 from file_store.tasks import download_file, import_file
 
-from .models import Assay, AttributeOrder, Study
+from .models import Assay, AttributeOrder, Node, Study
 from .serializers import AssaySerializer, AttributeOrderSerializer
 from .single_file_column_parser import process_metadata_table
 from .tasks import parse_isatab
@@ -1038,32 +1038,42 @@ class AssaysAttributes(APIView):
             return Response(message, status=status.HTTP_401_UNAUTHORIZED)
 
 
-class AddFilesToDataSetView(APIView):
+class AddFileToNodeView(APIView):
     """Add file(s) to an existing data set from upload directory or bucket"""
     http_method_names = ['post']
 
     def post(self, request):
         try:
-            data_set = DataSet.objects.get(uuid=request
-                                           .data.get('data_set_uuid'))
-        except DataSet.DoesNotExist:
-            logger.error("Data set with UUID '%s' does not exist",
-                         request.data.get('data_set_uuid'))
+            node_uuid = request.data["node_uuid"]
+        except KeyError:
+            return HttpResponseBadRequest("`node_uuid` required")
+        try:
+            node = Node.objects.get(uuid=node_uuid)
+        except Node.DoesNotExist:
+            logger.error("Node with UUID '%s' does not exist", node_uuid)
             return HttpResponseNotFound()
         except DataSet.MultipleObjectsReturned:
-            logger.critical("Multiple data sets found with UUID '%s'",
-                            request.data.get('data_set_uuid'))
+            logger.critical("Multiple Nodes found with UUID '%s'", node_uuid)
             return HttpResponseServerError()
 
-        if request.user != data_set.get_owner():
+        if request.user != node.study.get_dataset().get_owner():
             return HttpResponseForbidden()
 
-        logger.debug("Adding files to data set '%s'", data_set)
-        for file_store_item in data_set.get_file_store_items():
-            if (file_store_item.source.startswith(
+        logger.debug("Adding file to Node '%s'", node)
+
+        file_store_item = node.get_file_store_item()
+        if (file_store_item and not file_store_item.datafile and
+                file_store_item.source.startswith(
                     (settings.REFINERY_DATA_IMPORT_DIR, 's3://')
-            )):
-                import_file.delay(file_store_item.uuid)
+                )):
+            # Remove the FileStoreItem's import_task_id to treat it as a
+            # brand new import_file task when called below.
+            # We then have to update its Node's Solr index entry, so the
+            # updated file import status is available in the UI.
+            file_store_item.import_task_id = ""
+            file_store_item.save()
+            node.update_solr_index()
+            import_file.delay(file_store_item.uuid)
 
         return HttpResponse(status=202)  # Accepted
 

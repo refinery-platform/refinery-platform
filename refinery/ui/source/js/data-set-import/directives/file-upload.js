@@ -12,7 +12,8 @@
       restrict: 'E',
       bindToController: {
         isNodeUpdate: '=',
-        fileName: '='
+        fileName: '=',
+        nodeUuid: '='
       },
       controller: 'RefineryFileUploadCtrl as FileCtrl',
       templateUrl: function () {

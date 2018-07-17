@@ -26,11 +26,13 @@
         <rp-file-upload-s3
           is-node-update="true"
           file-name="$ctrl.nodeName"
+          node-uuid="$ctrl.nodeUuid"
           ng-if="$ctrl.useS3">
         </rp-file-upload-s3>
         <rp-file-upload
           is-node-update="true"
           file-name="$ctrl.nodeName"
+          node-uuid="$ctrl.nodeUuid"
           ng-if="!$ctrl.useS3">
         </rp-file-upload>
       </div>
