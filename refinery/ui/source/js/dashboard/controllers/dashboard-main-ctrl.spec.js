@@ -44,6 +44,7 @@
     it('Variables should be initialized', function () {
       expect(ctrl.groups).toEqual([]);
       expect(ctrl.groupInvites).toEqual({});
+      expect(ctrl.refreshEvents).toEqual(false);
     });
 
     describe('getGroups', function () {
