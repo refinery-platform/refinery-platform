@@ -10,6 +10,9 @@
     .module('refineryDashboard')
     .component('rpHistoryCard', {
       controller: 'HistoryCardCtrl',
+      require: {
+        ParentCtrl: '^rpDashboard'
+      },
       templateUrl: ['$window', function ($window) {
         return $window.getStaticUrl('partials/dashboard/partials/history-card.html');
       }]

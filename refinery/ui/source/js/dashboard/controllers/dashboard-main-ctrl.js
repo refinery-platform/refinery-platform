@@ -26,6 +26,7 @@
     vm.getGroups = getGroups;
     vm.groups = [];
     vm.groupInvites = {};
+    vm.refreshEvents = false;
     activate();
 
     function activate () {

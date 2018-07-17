@@ -134,6 +134,7 @@
       modalInstance.result.then(function () {
         // user confirmed deletion
         getDataSets();
+        vm.dashboardParentCtrl.refreshEvents = true;
       });
     }
 
@@ -161,6 +162,7 @@
         function () {
           // when modal is closed
           getDataSets();
+          vm.dashboardParentCtrl.refreshEvents = true;
         });
     }
 
