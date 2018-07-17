@@ -11,9 +11,10 @@
     .module('refineryDashboard')
     .controller('HistoryCardCtrl', HistoryCardCtrl);
 
-  HistoryCardCtrl.$inject = ['eventsService'];
+  HistoryCardCtrl.$inject = ['$scope', 'eventsService'];
 
   function HistoryCardCtrl (
+    $scope,
     eventsService
   ) {
     var vm = this;
@@ -39,5 +40,25 @@
         vm.events = response;
       });
     }
+
+     /*
+   * ---------------------------------------------------------
+   * Watchers
+   * ---------------------------------------------------------
+   */
+    vm.$onInit = function () {
+      $scope.$watchCollection(
+        function () {
+          return vm.ParentCtrl.refreshEvents;
+        },
+        function () {
+          if (vm.ParentCtrl.refreshEvents) {
+            getUserEvents();
+            vm.ParentCtrl.refreshEvents = false;
+            console.log('refreshEvents');
+          }
+        }
+      );
+    };
   }
 })();
