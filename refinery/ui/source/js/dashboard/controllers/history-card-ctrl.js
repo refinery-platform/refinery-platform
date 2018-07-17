@@ -55,7 +55,6 @@
           if (vm.ParentCtrl.refreshEvents) {
             getUserEvents();
             vm.ParentCtrl.refreshEvents = false;
-            console.log('refreshEvents');
           }
         }
       );
