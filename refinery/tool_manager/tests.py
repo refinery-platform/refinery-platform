@@ -4054,8 +4054,32 @@ class ToolEventCreationTests(TestCase):
             Event.objects.get(sub_type=Event.VISUALIZATION_CREATION)
         )
 
+    def test_visualization_tool_single_event_creation_after_two_saves(self):
+        tool = create_tool_with_necessary_models("VISUALIZATION")
+        tool.save()
+
+        # A Tool needs a Dataset to be created. Assert that there is one Event
+        # for DataSet creation and one for Tool creation
+        self.assertEqual(Event.objects.count(), 2)
+        self.assertIsNotNone(Event.objects.get(type=Event.CREATE))
+        self.assertIsNotNone(
+            Event.objects.get(sub_type=Event.VISUALIZATION_CREATION)
+        )
+
     def test_workflow_tool_creation_triggers_a_single_event(self):
         create_tool_with_necessary_models("WORKFLOW")
+
+        # A Tool needs a Dataset to be created. Assert that there is one Event
+        # for DataSet creation and one for Tool creation
+        self.assertEqual(Event.objects.count(), 2)
+        self.assertIsNotNone(Event.objects.get(type=Event.CREATE))
+        self.assertIsNotNone(
+            Event.objects.get(sub_type=Event.ANALYSIS_CREATION)
+        )
+
+    def test_workflow_tool_single_event_creation_after_two_saves(self):
+        tool = create_tool_with_necessary_models("WORKFLOW")
+        tool.save()
 
         # A Tool needs a Dataset to be created. Assert that there is one Event
         # for DataSet creation and one for Tool creation
