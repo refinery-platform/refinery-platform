@@ -161,12 +161,13 @@ class SharableResourceAPIInterface(object):
                 )
 
         if cache_check is None:
+            # for ownership, don't check group perms
             owned_res_set = Set(
                 get_objects_for_user(
                     user,
-                    'core.share_%s' %
-                    self.res_type._meta.verbose_name).values_list("id",
-                                                                  flat=True))
+                    'core.add_%s' %
+                    self.res_type._meta.verbose_name,
+                    use_groups=False).values_list("id", flat=True))
 
             public_res_set = Set(
                 get_objects_for_group(
@@ -743,8 +744,9 @@ class DataSetResource(SharableResourceAPIInterface, ModelResource):
             if group.group == ExtendedGroup.objects.public_group():
                 is_public = True
 
+        # get_owner in core models uses add to distinguish owner
         is_owner = request.user.has_perm(
-            'core.share_dataset', ds
+            'core.add_dataset', ds
         )
 
         try:
