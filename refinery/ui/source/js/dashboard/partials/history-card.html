@@ -23,10 +23,10 @@
         </span>
          <span class="history-col-main">
            <a ng-href="/users/{{ event.user.profile.uuid }}">
-             <span ng-if="event.user.last_name">
-             {{ event.user.first_name }}{{ event.user.last_name }}
+             <span ng-if="event.user.last_name.length">
+             {{ event.user.first_name }} {{ event.user.last_name }}
              </span>
-            <span ng-if="!event.user.last_name">
+            <span ng-if="!event.user.last_name.length">
              {{ event.user.username }}
             </span>
           </a>
