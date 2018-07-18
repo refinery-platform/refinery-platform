@@ -611,7 +611,13 @@ class VisualizationTool(Tool):
 def _visualization_saved(sender, instance, *args, **kwargs):
     # Once a VisualizationTool is created with a display_name there are no
     # further changes being made
-    if instance.display_name:
+    if instance.display_name and not Event.objects.filter(
+        data_set=instance.dataset,
+        user=instance.get_owner(),
+        details=json.dumps({'display_name': instance.display_name}),
+        type=Event.UPDATE,
+        sub_type=Event.VISUALIZATION_CREATION
+    ).exists():
         Event.record_data_set_visualization_creation(
             instance.dataset, instance.display_name
         )
@@ -1472,7 +1478,13 @@ class WorkflowTool(Tool):
 def _workflow_saved(sender, instance, *args, **kwargs):
     # Once a WorkflowTool is created with a display_name there are no
     # further changes being made
-    if instance.display_name:
+    if instance.display_name and not Event.objects.filter(
+        data_set=instance.dataset,
+        user=instance.get_owner(),
+        details=json.dumps({'display_name': instance.display_name}),
+        type=Event.UPDATE,
+        sub_type=Event.ANALYSIS_CREATION
+    ).exists():
         Event.record_data_set_analysis_creation(
             instance.dataset, instance.display_name
         )
