@@ -1060,7 +1060,7 @@ class AddFileToNodeView(APIView):
         except Node.DoesNotExist:
             logger.error("Node with UUID '%s' does not exist", node_uuid)
             return HttpResponseNotFound()
-        except DataSet.MultipleObjectsReturned:
+        except Node.MultipleObjectsReturned:
             logger.critical("Multiple Nodes found with UUID '%s'", node_uuid)
             return HttpResponseServerError()
 
