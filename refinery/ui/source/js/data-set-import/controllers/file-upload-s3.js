@@ -93,7 +93,8 @@
           file.success = true;
           if (vm.isNodeUpdate) {
             addFileToDataSetService.update({
-              node_uuid: vm.nodeUuid
+              node_uuid: vm.nodeUuid,
+              identity_id: AWS.config.credentials.identityId
             }).$promise
               .then(function () {
                 vm.addFileStatus = 'success';
