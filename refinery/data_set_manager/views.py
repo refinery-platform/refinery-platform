@@ -1047,6 +1047,14 @@ class AddFileToNodeView(APIView):
             node_uuid = request.data["node_uuid"]
         except KeyError:
             return HttpResponseBadRequest("`node_uuid` required")
+
+        identity_id = request.data.get("identity_id")
+        if settings.REFINERY_DEPLOYMENT_PLATFORM == "aws" and not identity_id:
+            return HttpResponseBadRequest("`identity_id` required")
+        elif settings.REFINERY_DEPLOYMENT_PLATFORM != "aws" and identity_id:
+            return HttpResponseBadRequest("`identity_id` not permitted for "
+                                          "non-AWS deployments")
+
         try:
             node = Node.objects.get(uuid=node_uuid)
         except Node.DoesNotExist:
