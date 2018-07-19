@@ -890,25 +890,30 @@ class DataSetsViewSet(APIView):
         if not request.user.is_authenticated():
             return HttpResponseForbidden(
                 content="User {} is not authenticated".format(request.user))
-        else:
-            try:
-                dataset_deleted = DataSet.objects.get(uuid=uuid).delete()
-            except NameError as e:
-                logger.error(e)
-                return HttpResponseBadRequest(content="Bad Request")
-            except DataSet.DoesNotExist as e:
-                logger.error(e)
-                return HttpResponseNotFound(content="DataSet with UUID: {} "
-                                                    "not found.".format(uuid))
-            except DataSet.MultipleObjectsReturned as e:
-                logger.error(e)
-                return HttpResponseServerError(
-                    content="Multiple DataSets returned for this request")
+
+        try:
+            data_set = DataSet.objects.get(uuid=uuid)
+        except NameError as e:
+            logger.error(e)
+            return HttpResponseBadRequest(content="Bad Request")
+        except DataSet.DoesNotExist as e:
+            logger.error(e)
+            return HttpResponseNotFound(content="DataSet with UUID: {} "
+                                                "not found.".format(uuid))
+        except DataSet.MultipleObjectsReturned as e:
+            logger.error(e)
+            return HttpResponseServerError(
+                content="Multiple DataSets returned for this request")
+
+        if data_set.get_owner() == request.user:
+            data_set_deleted = data_set.delete()
+            if data_set_deleted[0]:
+                return Response({"data": data_set_deleted[1]})
             else:
-                if dataset_deleted[0]:
-                    return Response({"data": dataset_deleted[1]})
-                else:
-                    return HttpResponseBadRequest(content=dataset_deleted[1])
+                return HttpResponseBadRequest(content=data_set_deleted[1])
+
+        return Response('Unauthorized to delete data set with uuid: {'
+                        '}'.format(uuid), status=status.HTTP_401_UNAUTHORIZED)
 
     def patch(self, request, uuid, format=None):
         self.data_set = self.get_object(uuid)

@@ -1047,25 +1047,49 @@ class AddFileToNodeView(APIView):
             node_uuid = request.data["node_uuid"]
         except KeyError:
             return HttpResponseBadRequest("`node_uuid` required")
+
+        identity_id = request.data.get("identity_id")
+        if settings.REFINERY_DEPLOYMENT_PLATFORM == "aws" and not identity_id:
+            return HttpResponseBadRequest("`identity_id` required")
+        elif settings.REFINERY_DEPLOYMENT_PLATFORM != "aws" and identity_id:
+            return HttpResponseBadRequest("`identity_id` not permitted for "
+                                          "non-AWS deployments")
+
         try:
             node = Node.objects.get(uuid=node_uuid)
         except Node.DoesNotExist:
             logger.error("Node with UUID '%s' does not exist", node_uuid)
             return HttpResponseNotFound()
-        except DataSet.MultipleObjectsReturned:
+        except Node.MultipleObjectsReturned:
             logger.critical("Multiple Nodes found with UUID '%s'", node_uuid)
             return HttpResponseServerError()
 
         if request.user != node.study.get_dataset().get_owner():
             return HttpResponseForbidden()
 
-        logger.debug("Adding file to Node '%s'", node)
-
         file_store_item = node.get_file_store_item()
         if (file_store_item and not file_store_item.datafile and
                 file_store_item.source.startswith(
                     (settings.REFINERY_DATA_IMPORT_DIR, 's3://')
                 )):
+            logger.debug("Adding file to Node '%s'", node)
+
+            file_store_item.source = os.path.basename(file_store_item.source)
+            file_store_item.save()
+
+            if identity_id:
+                file_source_translator = generate_file_source_translator(
+                    identity_id=identity_id
+                )
+            else:
+                file_source_translator = generate_file_source_translator(
+                    username=request.user.username
+                )
+            translated_datafile_source = file_source_translator(
+                file_store_item.source
+            )
+            file_store_item.source = translated_datafile_source
+
             # Remove the FileStoreItem's import_task_id to treat it as a
             # brand new import_file task when called below.
             # We then have to update its Node's Solr index entry, so the
