@@ -125,7 +125,6 @@ class AddFileToNodeViewTests(APITestCase):
             self.user.username
         )
         file_store_item.save()
-
         post_request = self.factory.post(
             self.url_root,
             data={
