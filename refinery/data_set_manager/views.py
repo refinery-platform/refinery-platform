@@ -1074,6 +1074,9 @@ class AddFileToNodeView(APIView):
                 )):
             logger.debug("Adding file to Node '%s'", node)
 
+            file_store_item.source = os.path.basename(file_store_item.source)
+            file_store_item.save()
+
             # Remove the FileStoreItem's import_task_id to treat it as a
             # brand new import_file task when called below.
             # We then have to update its Node's Solr index entry, so the
