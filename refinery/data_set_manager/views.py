@@ -1067,13 +1067,13 @@ class AddFileToNodeView(APIView):
         if request.user != node.study.get_dataset().get_owner():
             return HttpResponseForbidden()
 
-        logger.debug("Adding file to Node '%s'", node)
-
         file_store_item = node.get_file_store_item()
         if (file_store_item and not file_store_item.datafile and
                 file_store_item.source.startswith(
                     (settings.REFINERY_DATA_IMPORT_DIR, 's3://')
                 )):
+            logger.debug("Adding file to Node '%s'", node)
+
             # Remove the FileStoreItem's import_task_id to treat it as a
             # brand new import_file task when called below.
             # We then have to update its Node's Solr index entry, so the
