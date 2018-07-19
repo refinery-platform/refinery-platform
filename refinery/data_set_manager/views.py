@@ -1077,6 +1077,19 @@ class AddFileToNodeView(APIView):
             file_store_item.source = os.path.basename(file_store_item.source)
             file_store_item.save()
 
+            if identity_id:
+                file_source_translator = generate_file_source_translator(
+                    identity_id=identity_id
+                )
+            else:
+                file_source_translator = generate_file_source_translator(
+                    username=request.user.username
+                )
+            translated_datafile_source = file_source_translator(
+                file_store_item.source
+            )
+            file_store_item.source = translated_datafile_source
+
             # Remove the FileStoreItem's import_task_id to treat it as a
             # brand new import_file task when called below.
             # We then have to update its Node's Solr index entry, so the
