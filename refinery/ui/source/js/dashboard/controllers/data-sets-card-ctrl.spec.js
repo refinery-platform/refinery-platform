@@ -16,7 +16,7 @@
       $rootScope
     ) {
       scope = $rootScope.$new();
-      mockResponseData = [{ name: 'Test Data Set' }];
+      mockResponseData = { data: [{ name: 'Test Data Set' }], config: { params: {} } };
 
       mockService = spyOn(dataSetV2Service, 'query').and.callFake(function () {
         var deferred = $q.defer();
@@ -90,35 +90,29 @@
       });
     });
 
-    describe('getDataSets', function () {
-      it('getDataSets is a method', function () {
-        expect(angular.isFunction(ctrl.getDataSets)).toBe(true);
+    describe('refreshDataSets', function () {
+      it('refreshDataSets is a method', function () {
+        expect(angular.isFunction(ctrl.refreshDataSets)).toBe(true);
       });
 
-      it('getDataSets calls dataSetService', function () {
-        ctrl.getDataSets();
+      it('refreshDataSets calls dataSetService', function () {
+        ctrl.refreshDataSets();
         scope.$apply();
         expect(mockService).toHaveBeenCalled();
       });
 
-      it('getDataSets updates loadingDataSets', function () {
+      it('refreshDataSets updates loadingDataSets', function () {
         expect(ctrl.loadingDataSets).toEqual(true);
-        ctrl.getDataSets();
+        ctrl.refreshDataSets();
         scope.$apply();
         expect(ctrl.loadingDataSets).toEqual(false);
       });
 
-      it('getDataSets does not update dataSetsError', function () {
+      it('refreshDataSets does not update dataSetsError', function () {
         expect(ctrl.dataSetsError).toEqual(false);
-        ctrl.getDataSets();
+        ctrl.refreshDataSets();
         scope.$apply();
         expect(ctrl.dataSetsError).toEqual(false);
-      });
-
-      it('getDataSets updates dataSets variable', function () {
-        ctrl.getDataSets();
-        scope.$apply();
-        expect(ctrl.dataSets[0].name).toEqual(mockResponseData[0].name);
       });
     });
 
@@ -207,7 +201,7 @@
       });
 
       it('resetDataSetSearch refreshes data', function () {
-        var mockGetDataSets = spyOn(ctrl, 'getDataSets');
+        var mockGetDataSets = spyOn(ctrl, 'refreshDataSets');
         expect(mockGetDataSets).not.toHaveBeenCalled();
         ctrl.resetDataSetSearch();
         expect(mockGetDataSets).toHaveBeenCalled();

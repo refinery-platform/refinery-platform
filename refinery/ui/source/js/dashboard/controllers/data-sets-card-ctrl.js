@@ -17,8 +17,9 @@
     '$scope',
     '$uibModal',
     '$window',
+    '_',
     'DataSetSearchApi',
-    'dataSetV2Service',
+    'dataSetCardFactory',
     'primaryGroupService'
   ];
 
@@ -27,15 +28,16 @@
     $scope,
     $uibModal,
     $window,
+    _,
     DataSetSearchApi,
-    dataSetV2Service,
+    dataSetCardFactory,
     primaryGroupService
   ) {
     var vm = this;
     vm.dataSets = [];
     vm.dataSetsError = false;
     vm.filterDataSets = filterDataSets;
-    vm.getDataSets = getDataSets;
+    vm.refreshDataSets = refreshDataSets;
     vm.groupFilter = { selectedName: 'All' };
     vm.isFiltersEmpty = isFiltersEmpty;
     vm.loadingDataSets = true;
@@ -51,7 +53,7 @@
     activate();
 
     function activate () {
-      vm.getDataSets();
+      vm.refreshDataSets();
     }
 
     /**
@@ -78,20 +80,20 @@
       } else {
         vm.params.group = permsID;
       }
-      getDataSets();
+      refreshDataSets();
     }
 
     /**
-     * @name getDataSets
+     * @name refreshDataSets
      * @desc  View method for updating the data set list
      * @memberOf refineryDashboard.DataSetsCardCtrl
     **/
-    function getDataSets () {
+    function refreshDataSets () {
       vm.loadingDataSets = true;
-      dataSetV2Service.query(vm.params).$promise.then(function (response) {
+      dataSetCardFactory.getDataSets(vm.params).then(function () {
         vm.searchQueryDataSets = '';
         vm.loadingDataSets = false;
-        vm.dataSets = response;
+        vm.dataSets = dataSetCardFactory.dataSets;
         vm.dataSetsError = false;
       }, function (error) {
         vm.loadingDataSets = false;
@@ -133,7 +135,7 @@
 
       modalInstance.result.then(function () {
         // user confirmed deletion
-        getDataSets();
+        refreshDataSets();
         vm.dashboardParentCtrl.refreshEvents = true;
       });
     }
@@ -161,7 +163,7 @@
         function () {},
         function () {
           // when modal is closed
-          getDataSets();
+          refreshDataSets();
           vm.dashboardParentCtrl.refreshEvents = true;
         });
     }
@@ -188,7 +190,7 @@
       });
 
       modalInstance.result.then(function () {
-        getDataSets();
+        refreshDataSets();
       });
     }
 
@@ -199,7 +201,7 @@
     **/
     function resetDataSetSearch () {
       vm.searchQueryDataSets = '';
-      vm.getDataSets();
+      vm.refreshDataSets();
     }
 
     /**
