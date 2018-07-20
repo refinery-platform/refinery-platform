@@ -22,9 +22,7 @@ angular
                 // when filtering, otherwise just data is returned
               }
             }
-          }
-        },
-        {
+          },
           partial_update: {
             method: 'PATCH'
           }
