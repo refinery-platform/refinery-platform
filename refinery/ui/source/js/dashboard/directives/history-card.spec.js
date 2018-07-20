@@ -15,24 +15,43 @@
       $window
     ) {
       $templateCache.put(
+        $window.getStaticUrl('partials/dashboard/views/dashboard.html'),
+        '<div id="dashboard"><rp-history-card></rp-history-card></div>'
+      );
+
+      $templateCache.put(
         $window.getStaticUrl('partials/dashboard/partials/history-card.html'),
-        '<div id="tools-list"></div>'
+        '<div id="events-list"></div>'
       );
       $httpBackend
-        .expectGET(
+        .whenGET(
           settings.appRoot +
           settings.refineryApiV2 +
-          '/tools/'
+          '/events/'
+        ).respond(200, []);
+
+      $httpBackend
+        .whenGET(
+          settings.appRoot +
+          settings.refineryApi +
+          '/extended_groups/members/?format=json&id=id'
+        ).respond(200, []);
+
+      $httpBackend
+        .whenGET(
+          settings.appRoot +
+          settings.refineryApiV2 +
+          '/data_sets/?format=json'
         ).respond(200, []);
 
       var scope = $rootScope.$new();
-      var template = '<rp-history-card></rp-history-card>';
+      var template = '<rp-dashboard></rp-dashboard>';
       directiveElement = $compile(template)(scope);
       scope.$digest();
     }));
 
     it('generates the appropriate HTML', function () {
-      expect(directiveElement.html()).toContain('tools-list');
+      expect(directiveElement.html()).toContain('events-list');
       expect(directiveElement.html()).toContain('</div>');
     });
   });

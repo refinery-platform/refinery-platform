@@ -25,7 +25,7 @@
       );
 
       $httpBackend
-        .expectGET(
+        .whenGET(
           settings.appRoot +
           settings.refineryApi +
           '/extended_groups/members/?format=json&id=id'

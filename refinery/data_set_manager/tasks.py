@@ -22,9 +22,7 @@ import requests
 from requests.exceptions import HTTPError
 
 from core.models import DataSet, ExtendedGroup, FileStoreItem
-from core.utils import (add_data_set_to_neo4j,
-                        async_update_annotation_sets_neo4j,
-                        update_data_set_index)
+from core.utils import add_data_set_to_neo4j
 from file_store.models import FileExtension, generate_file_source_translator
 
 from .isa_tab_parser import IsaTabParser
@@ -217,7 +215,7 @@ def create_dataset(investigation_uuid, username, identifier=None, title=None,
         user = User.objects.create_user(username, "", "test")
     if investigation_uuid is None:
         return None  # TODO: make sure this is never happens
-    annotate_nodes(investigation_uuid)
+
     dataset = None
     investigation = Investigation.objects.get(uuid=investigation_uuid)
     if identifier is None:
@@ -233,7 +231,8 @@ def create_dataset(investigation_uuid, username, identifier=None, title=None,
 
     datasets = DataSet.objects.filter(name=dataset_name)
     # check if the investigation already exists
-    if len(datasets):  # if not 0, update dataset with new investigation
+    # if not 0, update dataset with new investigation
+    if len(datasets):
         """go through datasets until you find one with the correct owner"""
         for ds in datasets:
             own = ds.get_owner()
@@ -254,16 +253,14 @@ def create_dataset(investigation_uuid, username, identifier=None, title=None,
     if public:
         public_group = ExtendedGroup.objects.public_group()
         dataset.share(public_group)
+    annotate_nodes(investigation_uuid)
     # set dataset slug
     dataset.slug = slug
     # calculate total number of files and total number of bytes
     dataset.file_size = dataset.get_file_size()
     dataset.file_count = dataset.get_file_count()
     dataset.save()
-    # Finally index data set
-    update_data_set_index(dataset)
     add_data_set_to_neo4j(dataset, user.id)
-    async_update_annotation_sets_neo4j()
     return dataset.uuid
 
 
@@ -304,7 +301,8 @@ def annotate_nodes(investigation_uuid):
 @task()
 def parse_isatab(username, public, path, identity_id=None,
                  additional_raw_data_file_extension=None, isa_archive=None,
-                 pre_isa_archive=None, file_base_path=None, overwrite=False):
+                 pre_isa_archive=None, file_base_path=None, overwrite=False,
+                 existing_data_set_uuid=None):
     """parses in an ISA-TAB file to create database entries and creates or
     updates a dataset for the investigation to belong to; returns the dataset
     UUID or None if something went wrong. Use like this: parse_isatab(username,
@@ -320,6 +318,8 @@ def parse_isatab(username, public, path, identity_id=None,
     directory for storage and legacy purposes
     pre_isa_archive: optional copy of files that were converted to ISA-Tab
     file_base_path: if your file locations are relative paths, this is the base
+    existing_data_set_uuid: UUID of an existing DataSet that a metadata
+    revision is to be performed upon
     """
     file_source_translator = generate_file_source_translator(
         username=username, base_path=file_base_path, identity_id=identity_id
@@ -347,7 +347,8 @@ def parse_isatab(username, public, path, identity_id=None,
             dataset_title = "%s: %s" % (identifier, title)
             datasets = DataSet.objects.filter(name=dataset_title)
         # check if the investigation already exists
-        if len(datasets):  # if not 0, update dataset with new investigation
+        # if not 0, update dataset with new investigation
+        if len(datasets) and not existing_data_set_uuid:
             # go through datasets until you find one with the correct owner
             for ds in datasets:
                 own = ds.get_owner()
@@ -391,10 +392,15 @@ def parse_isatab(username, public, path, identity_id=None,
         investigation = parser.run(
             path, isa_archive=isa_archive, preisa_archive=pre_isa_archive
         )
-        data_uuid = create_dataset(
+        if existing_data_set_uuid:
+            data_set = DataSet.objects.get(uuid=existing_data_set_uuid)
+            data_set.update_with_revised_investigation(investigation)
+            return existing_data_set_uuid
+
+        data_set_uuid = create_dataset(
             investigation.uuid, username, public=public
         )
-        return data_uuid
+        return data_set_uuid
 
 
 @task()

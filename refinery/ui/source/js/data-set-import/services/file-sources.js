@@ -7,7 +7,6 @@ function fileSources ($resource, settings, dataSetImportSettings) {
     {},
     {
       check: {
-        isArray: true,
         method: 'POST',
         headers: {
           'X-Requested-With': 'XMLHttpRequest'

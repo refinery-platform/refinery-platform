@@ -9,8 +9,10 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib.sites.models import RequestSite, Site, get_current_site
 from django.core.exceptions import ImproperlyConfigured
+from django.core.mail import EmailMessage
 from django.core.urlresolvers import reverse
-from django.http import (HttpResponse, HttpResponseBadRequest,
+from django.db import transaction
+from django.http import (Http404, HttpResponse, HttpResponseBadRequest,
                          HttpResponseForbidden, HttpResponseNotFound,
                          HttpResponseRedirect, HttpResponseServerError,
                          JsonResponse)
@@ -20,7 +22,9 @@ from django.views.decorators.gzip import gzip_page
 
 import boto3
 import botocore
-from guardian.shortcuts import get_perms
+from guardian.shortcuts import get_groups_with_perms, get_objects_for_user, \
+    get_perms
+
 from guardian.utils import get_anonymous_user
 from registration import signals
 from registration.views import RegistrationView
@@ -28,6 +32,7 @@ import requests
 from requests.exceptions import HTTPError
 from rest_framework import authentication, status, viewsets
 from rest_framework.decorators import detail_route
+from rest_framework.exceptions import APIException
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
@@ -35,13 +40,16 @@ from rest_framework.views import APIView
 import xmltodict
 
 from data_set_manager.models import Node
+from file_store.models import FileStoreItem
 
 from .forms import ProjectForm, UserForm, UserProfileForm, WorkflowForm
-from .models import (Analysis, CustomRegistrationProfile, DataSet,
+from .models import (Analysis, CustomRegistrationProfile, DataSet, Event,
                      ExtendedGroup, Invitation, Ontology, Project,
                      UserProfile, Workflow, WorkflowEngine)
-from .serializers import DataSetSerializer, NodeSerializer, WorkflowSerializer
-from .utils import api_error_response, get_data_sets_annotations
+from .serializers import (DataSetSerializer, EventSerializer, NodeSerializer,
+                          UserProfileSerializer, WorkflowSerializer)
+from .utils import (api_error_response, get_data_sets_annotations,
+                    get_resources_for_user)
 
 logger = logging.getLogger(__name__)
 
@@ -69,6 +77,7 @@ def statistics(request):
                               context_instance=RequestContext(request))
 
 
+@login_required
 def dashboard(request):
     return render_to_response('core/dashboard.html', {},
                               context_instance=RequestContext(request))
@@ -337,8 +346,8 @@ def data_set(request, data_set_uuid, analysis_uuid=None):
             "has_change_dataset_permission": 'change_dataset' in get_perms(
                 request.user, data_set),
             "workflows": workflows,
-            "isatab_archive": investigation.isa_archive,
-            "pre_isatab_archive": investigation.pre_isa_archive,
+            "isatab_archive": investigation.get_file_store_item(),
+            "pre_isatab_archive": investigation.get_file_store_item(),
         },
         context_instance=RequestContext(request))
 
@@ -522,7 +531,7 @@ def doi(request, id):
     # slashes.
     id = urllib.unquote(id).decode('utf8')
     id = id.replace('$', '/')
-    url = "https://dx.doi.org/{id}".format(id=id)
+    url = "https://doi.org/{id}".format(id=id)
     headers = {'Accept': 'application/json'}
 
     try:
@@ -686,30 +695,189 @@ class WorkflowViewSet(viewsets.ModelViewSet):
         )
 
 
-class NodeViewSet(viewsets.ModelViewSet):
-    """API endpoint that allows Nodes to be viewed"""
-    queryset = Node.objects.all()
-    serializer_class = NodeSerializer
-    lookup_field = 'uuid'
+class NodeViewSet(APIView):
+    """API endpoint that allows Nodes to be viewed".
+     ---
+    #YAML
+
+    PATCH:
+        parameters_strategy:
+        form: replace
+        query: merge
+
+        parameters:
+            - name: uuid
+              description: User profile uuid used as an identifier
+              type: string
+              paramType: path
+              required: true
+            - name: file_uuid
+              description: uuid for file store item
+              type: string
+              paramType: form
+              required: false
+    ...
+    """
+    http_method_names = ['get', 'patch']
+
+    def get_object(self, uuid):
+        try:
+            return Node.objects.get(uuid=uuid)
+        except Node.DoesNotExist as e:
+            logger.error(e)
+            raise Http404
+        except Node.MultipleObjectsReturned as e:
+            logger.error(e)
+            raise APIException("Multiple objects returned.")
+
+    def get(self, request, uuid):
+        node = self.get_object(uuid)
+        data_set = node.study.get_dataset()
+        public_group = ExtendedGroup.objects.public_group()
+
+        if request.user.has_perm('core.read_dataset', data_set) or \
+                'read_dataset' in get_perms(public_group, data_set):
+            serializer = NodeSerializer(node)
+            return Response(serializer.data)
+
+        return Response(uuid, status=status.HTTP_401_UNAUTHORIZED)
+
+    def patch(self, request, uuid):
+        node = self.get_object(uuid)
+        new_file_uuid = request.data.get('file_uuid')
+        data_set = node.study.get_dataset()
+
+        if not data_set.is_clean():
+            return Response(
+                'Files cannot be removed once an analysis or visualization '
+                'has ran on a data set ',
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if data_set.get_owner() == request.user:
+            # to remove the data file, we need to delete it and update index,
+            #  the file store item uuid should remain
+            if new_file_uuid is None:
+                try:
+                    file_store_item = FileStoreItem.objects.get(
+                        uuid=node.file_uuid
+                    )
+                except (FileStoreItem.DoesNotExist,
+                        FileStoreItem.MultipleObjectsReturned) as e:
+                    logger.error(e)
+                else:
+                    file_store_item.delete_datafile()
+
+            node.update_solr_index()
+            return Response(
+                NodeSerializer(node).data, status=status.HTTP_200_OK
+            )
+
+        return Response(uuid, status=status.HTTP_401_UNAUTHORIZED)
+
+
+class EventViewSet(viewsets.ModelViewSet):
+    """API endpoint that allows Events to be viewed"""
+    queryset = Event.objects.all()
+    serializer_class = EventSerializer
     http_method_names = ['get']
-    # permission_classes = (IsAuthenticated,)
+
+    def list(self, request, *args, **kwargs):
+        """Overrides ModelViewSet.list to create an updated queryset based
+        on DataSets that the requesting User has permission to access
+        """
+        data_sets_for_user = get_objects_for_user(
+            request.user, 'core.read_meta_dataset'
+        )
+        self.queryset = self.queryset.filter(data_set__in=data_sets_for_user)
+        return super(EventViewSet, self).list(request, *args, **kwargs)
 
 
 class DataSetsViewSet(APIView):
     """API endpoint that allows for DataSets to be deleted"""
-    http_method_names = ['delete', 'patch']
+    http_method_names = ['get', 'delete', 'patch']
+
+    def is_filtered_data_set(self, data_set, filter):
+        """
+        Helper method which states whether data set is filtered
+        :param data_set: data set obj
+        :param filter: obj with param info
+        :return: boolean
+        """
+        user = self.request.user
+        check_own = filter.get('is_owner')
+        owner = data_set.get_owner()
+        check_public = filter.get('is_public')
+        is_public = data_set.is_public()
+        group = filter.get('group')
+        group_perms = None
+        if group:
+            group_perms = get_perms(group, data_set)
+
+        if check_own and check_public and group:
+            if owner == user and is_public and group_perms:
+                return True
+        elif check_own and check_public:
+            if owner == user and is_public:
+                return True
+        elif check_own and group:
+            if owner == user and group_perms:
+                return True
+        elif check_public and group:
+            if is_public and group_perms:
+                return True
+        elif check_own and owner == user:
+            return True
+        elif check_public and is_public:
+            return True
+        elif group and group_perms:
+            return True
+        return False
+
+    def get(self, request):
+        params = request.query_params
+        filters = {
+            'is_owner': params.get('is_owner'),
+            'is_public': params.get('public')
+        }
+        try:
+            filters['group'] = ExtendedGroup.objects.get(
+                id=params.get('group')
+            )
+        except Exception:
+            filters['group'] = None
+
+        user_data_sets = get_resources_for_user(
+            request.user, 'dataset'
+        ).order_by('-modification_date')
+        data_sets = []
+
+        if filters.get('is_owner') or filters.get('is_public') or \
+                filters.get('group'):
+            for data_set in user_data_sets:
+                if not data_set.is_valid:
+                    logger.warning(
+                        "DataSet with UUID: {} is invalid, and most likely is "
+                        "still being created".format(data_set.uuid)
+                    )
+                if self.is_filtered_data_set(data_set, filters):
+                    data_sets.append(data_set)
+        else:
+            data_sets = user_data_sets
+
+        serializer = DataSetSerializer(data_sets, many=True,
+                                       context={'request': request})
+        return Response(serializer.data)
 
     def get_object(self, uuid):
         try:
             return DataSet.objects.get(uuid=uuid)
         except DataSet.DoesNotExist as e:
             logger.error(e)
-            return Response(uuid, status=status.HTTP_404_NOT_FOUND)
+            raise Http404
         except DataSet.MultipleObjectsReturned as e:
             logger.error(e)
-            return Response(
-                uuid, status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+            raise APIException("Multiple objects returned.")
 
     def is_user_authorized(self, user, data_set):
         if (not user.is_authenticated() or
@@ -722,33 +890,67 @@ class DataSetsViewSet(APIView):
         if not request.user.is_authenticated():
             return HttpResponseForbidden(
                 content="User {} is not authenticated".format(request.user))
-        else:
-            try:
-                dataset_deleted = DataSet.objects.get(uuid=uuid).delete()
-            except NameError as e:
-                logger.error(e)
-                return HttpResponseBadRequest(content="Bad Request")
-            except DataSet.DoesNotExist as e:
-                logger.error(e)
-                return HttpResponseNotFound(content="DataSet with UUID: {} "
-                                                    "not found.".format(uuid))
-            except DataSet.MultipleObjectsReturned as e:
-                logger.error(e)
-                return HttpResponseServerError(
-                    content="Multiple DataSets returned for this request")
+
+        try:
+            data_set = DataSet.objects.get(uuid=uuid)
+        except NameError as e:
+            logger.error(e)
+            return HttpResponseBadRequest(content="Bad Request")
+        except DataSet.DoesNotExist as e:
+            logger.error(e)
+            return HttpResponseNotFound(content="DataSet with UUID: {} "
+                                                "not found.".format(uuid))
+        except DataSet.MultipleObjectsReturned as e:
+            logger.error(e)
+            return HttpResponseServerError(
+                content="Multiple DataSets returned for this request")
+
+        if data_set.get_owner() == request.user:
+            data_set_deleted = data_set.delete()
+            if data_set_deleted[0]:
+                return Response({"data": data_set_deleted[1]})
             else:
-                if dataset_deleted[0]:
-                    return Response({"data": dataset_deleted[1]})
-                else:
-                    return HttpResponseBadRequest(content=dataset_deleted[1])
+                return HttpResponseBadRequest(content=data_set_deleted[1])
+
+        return Response('Unauthorized to delete data set with uuid: {'
+                        '}'.format(uuid), status=status.HTTP_401_UNAUTHORIZED)
 
     def patch(self, request, uuid, format=None):
-        data_set = self.get_object(uuid)
+        self.data_set = self.get_object(uuid)
+        self.current_site = get_current_site(request)
 
         # check edit permission for user
-        if self.is_user_authorized(request.user, data_set):
+        if self.is_user_authorized(request.user, self.data_set):
+            # update data set's owner
+            current_owner = self.data_set.get_owner()
+            if request.data.get('transfer_data_set') and current_owner == \
+                    request.user:
+                new_owner_email = request.data.get('new_owner_email')
+                try:
+                    new_owner = User.objects.get(email=new_owner_email)
+                except Exception:
+                    return Response(uuid, status=status.HTTP_404_NOT_FOUND)
+
+                try:
+                    with transaction.atomic():
+                        self.data_set.transfer_ownership(current_owner,
+                                                         new_owner)
+                        perm_groups = self.update_group_perms(new_owner)
+                except Exception as e:
+                    return Response(
+                        e, status=status.HTTP_412_PRECONDITION_FAILED
+                    )
+
+                self.send_transfer_notification_email(current_owner,
+                                                      new_owner, perm_groups)
+                serializer = DataSetSerializer(self.data_set,
+                                               context={'request': request})
+                return Response(serializer.data,
+                                status=status.HTTP_202_ACCEPTED)
+
+            # update data set's fields
             serializer = DataSetSerializer(
-                data_set, data=request.data, partial=True
+                self.data_set, data=request.data, partial=True
             )
             if serializer.is_valid():
                 serializer.save()
@@ -760,8 +962,77 @@ class DataSetsViewSet(APIView):
             )
         else:
             return Response(
-                data_set, status=status.HTTP_401_UNAUTHORIZED
+                uuid, status=status.HTTP_401_UNAUTHORIZED
             )
+
+    def send_transfer_notification_email(self, old_owner, new_owner,
+                                         perm_groups):
+        """
+        Helper method which emails the old and new owner of the data set
+        transfer and which groups have access
+        :param old_owner: data set's previous owner obj
+        :param new_owner: data set's new owner obj
+        :param perm_groups: obj with two obj of permission groups
+        """
+        subject = "{}: Data Set ownership transfer".format(
+           settings.EMAIL_SUBJECT_PREFIX
+        )
+        old_owner_name = old_owner.get_full_name() or  \
+            old_owner.username
+        new_owner_name = new_owner.get_full_name() or  \
+            new_owner.username
+
+        temp_loader = loader.get_template(
+            'core/owner_transfer_notification.txt')
+        context_dict = {
+            'site': self.current_site,
+            'old_owner_name': old_owner_name,
+            'old_owner_uuid': old_owner.profile.uuid,
+            'new_owner_name': new_owner_name,
+            'new_owner_uuid': new_owner.profile.uuid,
+            'data_set_name': self.data_set.name,
+            'data_set_uuid': self.data_set.uuid,
+            'groups_with_access': perm_groups.get('groups_with_access'),
+            'groups_without_access': perm_groups.get('groups_without_access')
+        }
+        email = EmailMessage(
+            subject,
+            temp_loader.render(context_dict),
+            to=[new_owner.email, old_owner.email]
+        )
+        email.send()
+        return email
+
+    def update_group_perms(self, new_owner):
+        """
+        Helper method which updates the groups access to the data set based
+        on the new_owner's memberships
+        transfer and which groups have access
+        :param new_owner: data set's new owner obj
+        """
+        new_owner_group_ids = new_owner.groups.all().\
+            values_list('id', flat=True)
+        all_groups_with_ds_access = get_groups_with_perms(
+            self.data_set, attach_perms=True
+        )
+        groups_with_access = []
+        groups_without_access = []
+        for group in all_groups_with_ds_access:
+            group_details = {
+                'name': group.extendedgroup.name,
+                'profile': 'http://{}/groups/{}'.format(
+                    self.current_site,
+                    group.extendedgroup.uuid
+                )
+            }
+            if group.id in new_owner_group_ids:
+                groups_with_access.append(group_details)
+            else:
+                self.data_set.unshare(group)
+                groups_without_access.append(group_details)
+
+        return {"groups_with_access": groups_with_access,
+                "groups_without_access": groups_without_access}
 
 
 class AnalysesViewSet(APIView):
@@ -906,3 +1177,49 @@ class OpenIDToken(APIView):
         token["Region"] = region
 
         return Response(token)
+
+
+class UserProfileViewSet(APIView):
+    """API endpoint that allows for UserProfiles to be edited.
+     ---
+    #YAML
+
+    PATCH:
+        parameters_strategy:
+        form: replace
+        query: merge
+
+        parameters:
+            - name: uuid
+              description: User profile uuid used as an identifier
+              type: string
+              paramType: path
+              required: true
+            - name: primary_group
+              description: group id
+              type: int
+              paramType: form
+              required: false
+    ...
+    """
+    http_method_names = ["patch"]
+
+    def patch(self, request, uuid):
+        if request.user.is_anonymous():
+            return Response(
+                self.request.user, status=status.HTTP_401_UNAUTHORIZED
+            )
+
+        serializer = UserProfileSerializer(request.user.profile,
+                                           data=request.data,
+                                           partial=True,
+                                           context={'request': request})
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(
+                serializer.data, status=status.HTTP_202_ACCEPTED
+            )
+        return Response(
+            serializer.errors, status=status.HTTP_400_BAD_REQUEST
+        )

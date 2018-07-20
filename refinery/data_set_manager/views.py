@@ -14,10 +14,10 @@ import urlparse
 from django import forms
 from django.conf import settings
 from django.core.urlresolvers import reverse
-from django.http import (
-    Http404, HttpResponse, HttpResponseBadRequest, HttpResponseForbidden,
-    HttpResponseRedirect, HttpResponseServerError, JsonResponse
-)
+from django.http import (Http404, HttpResponse, HttpResponseBadRequest,
+                         HttpResponseForbidden, HttpResponseNotFound,
+                         HttpResponseRedirect, HttpResponseServerError,
+                         JsonResponse)
 from django.shortcuts import get_object_or_404, render, render_to_response
 from django.template import RequestContext
 from django.views.generic import View
@@ -33,12 +33,11 @@ from rest_framework.views import APIView
 from core.models import DataSet, ExtendedGroup, get_user_import_dir
 from core.utils import get_absolute_url
 from data_set_manager.isa_tab_parser import ParserException
-from file_store.models import (
-    generate_file_source_translator, get_temp_dir, parse_s3_url
-)
+from file_store.models import (generate_file_source_translator, get_temp_dir,
+                               parse_s3_url)
 from file_store.tasks import download_file, import_file
 
-from .models import Assay, AttributeOrder, Study
+from .models import Assay, AttributeOrder, Node, Study
 from .serializers import AssaySerializer, AttributeOrderSerializer
 from .single_file_column_parser import process_metadata_table
 from .tasks import parse_isatab
@@ -65,7 +64,16 @@ class DataSetImportView(View):
 
     def get(self, request, *args, **kwargs):
         form = ImportISATabFileForm()
-        context = RequestContext(request, {'form': form})
+        data_set_title = request.GET.get('data_set_title')
+        if data_set_title:
+            data_set_title = data_set_title.strip("/")
+        context = RequestContext(
+            request,
+            {
+                'form': form,
+                'data_set_title': data_set_title
+            }
+        )
         response = render_to_response(self.template_name,
                                       context_instance=context)
         return response
@@ -126,8 +134,9 @@ class TakeOwnershipOfPublicDatasetView(View):
         public_group = ExtendedGroup.objects.public_group()
         if request.user.has_perm('core.read_dataset', data_set) \
                 or 'read_dataset' in get_perms(public_group, data_set):
+            investigation = data_set.get_investigation()
             full_isa_tab_url = get_absolute_url(
-                data_set.get_metadata_as_file_store_item().get_datafile_url()
+                investigation.get_file_store_item().get_datafile_url()
             )
             response = HttpResponseRedirect(
                 get_absolute_url(reverse('process_isa_tab', args=['ajax']))
@@ -243,6 +252,16 @@ class ProcessISATabView(View):
 
     def post(self, request, *args, **kwargs):
         form = ImportISATabFileForm(request.POST, request.FILES)
+        existing_data_set_uuid = request.GET.get('data_set_uuid')
+
+        if existing_data_set_uuid:
+            # Assert that the User making the request for a metadata
+            # revision owns the DataSet in question
+            data_set_ownership_response = _check_data_set_ownership(
+                request.user, existing_data_set_uuid
+            )
+            if data_set_ownership_response is not None:
+                return data_set_ownership_response
 
         if form.is_valid() or request.is_ajax():
             try:
@@ -310,7 +329,8 @@ class ProcessISATabView(View):
                     request.user.username,
                     False,
                     response['data']['temp_file_path'],
-                    identity_id=identity_id
+                    identity_id=identity_id,
+                    existing_data_set_uuid=existing_data_set_uuid
                 )
             except ParserException as e:
                 error_message = "{} {}".format(
@@ -445,6 +465,15 @@ class ProcessMetadataTableView(View):
 
     def post(self, request, *args, **kwargs):
         # Get required params
+        existing_data_set_uuid = request.GET.get('data_set_uuid')
+        if existing_data_set_uuid:
+            # Assert that the User making the request for a metadata
+            # revision owns the DataSet in question
+            data_set_ownership_response = _check_data_set_ownership(
+                request.user, existing_data_set_uuid
+            )
+            if data_set_ownership_response is not None:
+                return data_set_ownership_response
         try:
             metadata_file = request.FILES['file']
             title = request.POST.get('title')
@@ -524,14 +553,15 @@ class ProcessMetadataTableView(View):
                 custom_delimiter_string=request.POST.get(
                     'custom_delimiter_string', False
                 ),
-                identity_id=identity_id
+                identity_id=identity_id,
+                existing_data_set_uuid=existing_data_set_uuid
             )
         except Exception as exc:
             logger.error(exc, exc_info=True)
             error = {'error_message': repr(exc)}
             if request.is_ajax():
                 return HttpResponseServerError(
-                    json.dumps({'error': repr(exc)}), 'application/json'
+                    json.dumps({'error': exc.message}), 'application/json'
                 )
             else:
                 return render(request, self.template_name, error)
@@ -547,6 +577,15 @@ class ProcessMetadataTableView(View):
 class CheckDataFilesView(View):
     """Check if given files exist, return list of files that don't exist"""
     def post(self, request, *args, **kwargs):
+        existing_data_set_uuid = request.GET.get('data_set_uuid')
+        existing_datafile_names = []
+        if existing_data_set_uuid:
+            data_set = get_object_or_404(DataSet, uuid=existing_data_set_uuid)
+            investigation = data_set.get_investigation()
+            existing_datafile_names = investigation.get_datafile_names(
+                local_only=True, exclude_metadata_file=True
+            )
+
         if not request.is_ajax() or not request.body:
             return HttpResponseBadRequest()
 
@@ -602,15 +641,22 @@ class CheckDataFilesView(View):
                                      key, bucket_name)
                 else:  # POSIX file system
                     if not os.path.exists(input_file_path):
-                        bad_file_list.append(input_file_path)
+                        bad_file_list.append(os.path.basename(input_file_path))
                         logger.debug("File '%s' does not exist")
                     else:
                         logger.debug("File '%s' exists")
 
-        # prefix output to protect from JSON vulnerability (stripped by
-        # Angular)
-        return HttpResponse(")]}',\n" + json.dumps(bad_file_list),
-                            content_type="application/json")
+        response_data = {
+            "data_files_not_uploaded": [
+                file_name for file_name in bad_file_list
+                if file_name not in existing_datafile_names
+            ],
+            "data_files_to_be_deleted": [
+                file_name for file_name in existing_datafile_names
+                if file_name not in bad_file_list
+            ]
+        }
+        return JsonResponse(response_data)
 
 
 class ChunkedFileUploadView(ChunkedUploadView):
@@ -990,3 +1036,75 @@ class AssaysAttributes(APIView):
         else:
             message = 'Only owner may edit attribute order.'
             return Response(message, status=status.HTTP_401_UNAUTHORIZED)
+
+
+class AddFileToNodeView(APIView):
+    """Add file(s) to an existing data set from upload directory or bucket"""
+    http_method_names = ['post']
+
+    def post(self, request):
+        try:
+            node_uuid = request.data["node_uuid"]
+        except KeyError:
+            return HttpResponseBadRequest("`node_uuid` required")
+
+        identity_id = request.data.get("identity_id")
+        if settings.REFINERY_DEPLOYMENT_PLATFORM == "aws" and not identity_id:
+            return HttpResponseBadRequest("`identity_id` required")
+        elif settings.REFINERY_DEPLOYMENT_PLATFORM != "aws" and identity_id:
+            return HttpResponseBadRequest("`identity_id` not permitted for "
+                                          "non-AWS deployments")
+
+        try:
+            node = Node.objects.get(uuid=node_uuid)
+        except Node.DoesNotExist:
+            logger.error("Node with UUID '%s' does not exist", node_uuid)
+            return HttpResponseNotFound()
+        except Node.MultipleObjectsReturned:
+            logger.critical("Multiple Nodes found with UUID '%s'", node_uuid)
+            return HttpResponseServerError()
+
+        if request.user != node.study.get_dataset().get_owner():
+            return HttpResponseForbidden()
+
+        file_store_item = node.get_file_store_item()
+        if (file_store_item and not file_store_item.datafile and
+                file_store_item.source.startswith(
+                    (settings.REFINERY_DATA_IMPORT_DIR, 's3://')
+                )):
+            logger.debug("Adding file to Node '%s'", node)
+
+            file_store_item.source = os.path.basename(file_store_item.source)
+            file_store_item.save()
+
+            if identity_id:
+                file_source_translator = generate_file_source_translator(
+                    identity_id=identity_id
+                )
+            else:
+                file_source_translator = generate_file_source_translator(
+                    username=request.user.username
+                )
+            translated_datafile_source = file_source_translator(
+                file_store_item.source
+            )
+            file_store_item.source = translated_datafile_source
+
+            # Remove the FileStoreItem's import_task_id to treat it as a
+            # brand new import_file task when called below.
+            # We then have to update its Node's Solr index entry, so the
+            # updated file import status is available in the UI.
+            file_store_item.import_task_id = ""
+            file_store_item.save()
+            node.update_solr_index()
+            import_file.delay(file_store_item.uuid)
+
+        return HttpResponse(status=202)  # Accepted
+
+
+def _check_data_set_ownership(user, data_set_uuid):
+    data_set = get_object_or_404(DataSet, uuid=data_set_uuid)
+    if user != data_set.get_owner():
+        return HttpResponseForbidden(
+            "Metadata revision is only allowed for Data Set owners"
+        )

@@ -1859,6 +1859,10 @@ body.repo-mode .refinery-dashboard {
   #dashboard-data-set-card {
     height: @card-top-half-view;
 
+    .fa-question-circle {
+      padding-top: 75%;
+    }
+
     .file-browser-go-icon {
       .fa-folder-open-o {
         font-size: 1em;
@@ -1937,7 +1941,19 @@ body.repo-mode .refinery-dashboard {
     }
     li.event-item {
       padding: 0.3em .2em 0 .5em;
-      margin-bottom: .9em;
+      margin-bottom: 15px;
+      width: 100%;
+      float: left;
+    }
+
+    .history-col-date {
+      float: left;
+      width: 100px;
+    }
+
+    .history-col-main {
+      display: block;
+      margin-left: 100px;
     }
   }
 
@@ -1965,6 +1981,7 @@ body.repo-mode .refinery-dashboard {
     }
 
     .dashboard-member-list {
+      padding-top: 25px;
       .border-line {
         margin: 0.3em 2em 0.8em 2em;
         border-top: 1px solid @gray-lighter-rgba;
@@ -2034,10 +2051,15 @@ body.repo-mode .refinery-dashboard {
 
 .radio-drop-down {
   padding: 0.5em;
+  min-width: 350px;
   label {
     padding: 0.2em 0 0em 0.2em;
     input {
       padding-right: .2em;
     }
+  }
+  .fa-asterisk {
+    font-size: .6em;
+    vertical-align: text-top;
   }
 }

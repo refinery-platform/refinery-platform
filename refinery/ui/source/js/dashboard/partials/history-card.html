@@ -5,43 +5,48 @@
     </h3>
   </div>
   <div class="refinery-panel-content">
-    <div  ng-if="!$ctrl.isToolsLoading && !$ctrl.tools.length"
+    <div  ng-if="!$ctrl.isEventsLoading && !$ctrl.events.length"
       class="refinery-sub-panel-notice">
       <div class="text-info notice">
         <strong>Info</strong>: No events have occurred.
       </div>
     </div>
-    <div ng-if="$ctrl.isToolsLoading">
+    <div ng-if="$ctrl.isEventsLoading">
       <h4 class="emphasized text-align-center m-t-1-5">
         <span class="refinery-spinner refinery-spinner-inline"></span>
       </h4>
     </div>
      <ul class="list-unstyled scrollable-list main-content-list">
-       <li ng-repeat="tool in $ctrl.tools | orderBy: '-creation_date'" class="event-item">
-          {{ tool.creation_date | date:"MM/dd/yyyy" }}
-         <span class="p-l-1-2" ng-if="tool.tool_definition.tool_type === 'WORKFLOW'">
-            <a ng-href="/data_sets/{{ tool.dataset.uuid }}/#/analyses">
-             <i class="fa fa-cogs"></i>
-             <span ng-if="tool.owner.full_name">
-               {{ tool.owner.full_name }}
+       <li ng-repeat="event in $ctrl.events | orderBy: '-date_time'" class="event-item">
+        <span class="history-col-date">
+          {{ event.date_time | date:"MM/dd/yyyy" }}
+        </span>
+         <span class="history-col-main">
+           <a ng-href="/users/{{ event.user.profile.uuid }}">
+             <span ng-if="event.user.last_name.length">
+             {{ event.user.first_name }} {{ event.user.last_name }}
              </span>
-             <span ng-if="!tool.owner.full_name">
-               {{ tool.owner.username }}
+            <span ng-if="!event.user.last_name.length">
+             {{ event.user.username }}
+            </span>
+          </a>
+           <span ng-if="event.type == 'CREATE'">
+             created data set <a ng-href="/data_sets/{{ event.data_set.uuid
+             }}">{{ event.data_set.title }}</a>
+           </span>
+           <span ng-if="event.type == 'UPDATE'">
+             launched
+             <span ng-if="event.sub_type == 'VISUALIZATION_CREATION'">
+               visualization <a ng-href="/data_sets/{{ event.data_set.uuid
+               }}/#visualizations">{{ event.details.display_name }}</a>
              </span>
-             launched an analysis: {{ tool.name }}
-           </a>
-         </span>
-         <span class="p-l-1-2" ng-if="tool.tool_definition.tool_type === 'VISUALIZATION'">
-           <a ng-href="/data_sets/{{ tool.dataset.uuid }}/#/visualizations">
-             <i class="fa fa-bar-chart"></i>
-             <span ng-if="tool.owner.full_name">
-               {{ tool.owner.full_name }}
+             <span ng-if="event.sub_type == 'ANALYSIS_CREATION'">
+              an analysis <a ng-href="/data_sets/{{ event.data_set.uuid
+               }}/#analyses">{{ event.details.display_name }}</a>
              </span>
-             <span ng-if="!tool.owner.full_name">
-               {{ tool.owner.username }}
-             </span>
-              launched a visualization tool: {{ tool.name }}.
-           </a>
+             on data set <a ng-href="/data_sets/{{ event.data_set.uuid }}">{{
+             event.data_set.title }}</a>
+           </span>
          </span>
        </li>
      </ul>

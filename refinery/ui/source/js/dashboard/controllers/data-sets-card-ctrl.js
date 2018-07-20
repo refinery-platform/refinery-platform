@@ -3,7 +3,7 @@
  * @namespace DataSetsCardCtrl
  * @desc Controller for data sets card component on dashboard component.
  * Child component of dashboard component
- * @memberOf refineryApp.refineryDataSetsCardCtrl
+ * @memberOf refineryApp.refineryDashboard
  */
 (function () {
   'use strict';
@@ -17,8 +17,10 @@
     '$scope',
     '$uibModal',
     '$window',
+    '_',
     'DataSetSearchApi',
-    'dataSetService'
+    'dataSetCardFactory',
+    'primaryGroupService'
   ];
 
   function DataSetsCardCtrl (
@@ -26,23 +28,24 @@
     $scope,
     $uibModal,
     $window,
+    _,
     DataSetSearchApi,
-    dataSetService
+    dataSetCardFactory,
+    primaryGroupService
   ) {
     var vm = this;
     vm.dataSets = [];
     vm.dataSetsError = false;
     vm.filterDataSets = filterDataSets;
-    vm.getDataSets = getDataSets;
+    vm.refreshDataSets = refreshDataSets;
     vm.groupFilter = { selectedName: 'All' };
     vm.isFiltersEmpty = isFiltersEmpty;
     vm.loadingDataSets = true;
     vm.openDataSetDeleteModal = openDataSetDeleteModal;
+    vm.openDataSetTransferModal = openDataSetTransferModal;
     vm.openPermissionEditor = openPermissionEditor;
-    vm.params = {
-      limit: 200,
-      min_response: 'True'
-    };
+    vm.params = {};
+    vm.primaryGroupID = primaryGroupService.primaryGroup.id;
     vm.resetDataSetSearch = resetDataSetSearch;
     vm.searchDataSets = searchDataSets;
     vm.searchQueryDataSets = '';
@@ -50,7 +53,7 @@
     activate();
 
     function activate () {
-      vm.getDataSets();
+      vm.refreshDataSets();
     }
 
     /**
@@ -77,20 +80,20 @@
       } else {
         vm.params.group = permsID;
       }
-      getDataSets();
+      refreshDataSets();
     }
 
     /**
-     * @name getDataSets
+     * @name refreshDataSets
      * @desc  View method for updating the data set list
      * @memberOf refineryDashboard.DataSetsCardCtrl
     **/
-    function getDataSets () {
+    function refreshDataSets () {
       vm.loadingDataSets = true;
-      vm.searchQueryDataSets = '';
-      dataSetService.query(vm.params).$promise.then(function (response) {
+      dataSetCardFactory.getDataSets(vm.params).then(function () {
+        vm.searchQueryDataSets = '';
         vm.loadingDataSets = false;
-        vm.dataSets = response.objects;
+        vm.dataSets = dataSetCardFactory.dataSets;
         vm.dataSetsError = false;
       }, function (error) {
         vm.loadingDataSets = false;
@@ -132,8 +135,37 @@
 
       modalInstance.result.then(function () {
         // user confirmed deletion
-        getDataSets();
+        refreshDataSets();
+        vm.dashboardParentCtrl.refreshEvents = true;
       });
+    }
+
+     /**
+     * @name openDataSetTransferModal
+     * @desc  Opens data set transfer modal
+     * @memberOf refineryDashboard.DataSetsCardCtrl
+     * @param {obj} dataSet - data set obj
+    **/
+    function openDataSetTransferModal (dataSet) {
+      var modalInstance = $uibModal.open({
+        component: 'rpDataSetTransferModal',
+        resolve: {
+          config: function () {
+            return {
+              uuid: dataSet.uuid,
+              title: dataSet.title
+            };
+          }
+        }
+      });
+
+      modalInstance.result.then(
+        function () {},
+        function () {
+          // when modal is closed
+          refreshDataSets();
+          vm.dashboardParentCtrl.refreshEvents = true;
+        });
     }
 
     /**
@@ -158,7 +190,7 @@
       });
 
       modalInstance.result.then(function () {
-        getDataSets();
+        refreshDataSets();
       });
     }
 
@@ -169,7 +201,7 @@
     **/
     function resetDataSetSearch () {
       vm.searchQueryDataSets = '';
-      vm.getDataSets();
+      vm.refreshDataSets();
     }
 
     /**
@@ -216,6 +248,15 @@
         },
         function () {
           vm.groups = vm.dashboardParentCtrl.groups;
+        }
+      );
+
+      $scope.$watchCollection(
+        function () {
+          return primaryGroupService.primaryGroup;
+        },
+        function () {
+          vm.primaryGroupID = primaryGroupService.primaryGroup.id;
         }
       );
     };

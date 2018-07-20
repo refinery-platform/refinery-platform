@@ -164,9 +164,9 @@ def report_missing_keys(config):
     Prints to stderr, then raises exception if there are missing keys.
     """
 
-    required = ['KEY_NAME', 'RDS_SUPERUSER_PASSWORD',
-                'S3_BUCKET_NAME_BASE', 'COGNITO_IDENTITY_POOL_ID',
-                'SITE_NAME', 'SITE_URL', 'STACK_NAME']
+    required = ['COGNITO_IDENTITY_POOL_ID', 'EC2_INSTANCE_TYPE', 'KEY_NAME',
+                'RDS_SUPERUSER_PASSWORD', 'S3_BUCKET_NAME_BASE', 'SITE_NAME',
+                'SITE_URL', 'STACK_NAME']
     bad = []
     for key in required:
         if key not in config:

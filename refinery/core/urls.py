@@ -9,8 +9,9 @@ from django.conf.urls import patterns, url
 from constants import UUID_RE
 from rest_framework.routers import DefaultRouter
 
-from .views import (AnalysesViewSet, DataSetsViewSet, NodeViewSet,
-                    OpenIDToken, WorkflowViewSet)
+from .views import (AnalysesViewSet, DataSetsViewSet, EventViewSet,
+                    NodeViewSet, OpenIDToken, UserProfileViewSet,
+                    WorkflowViewSet)
 
 urlpatterns = patterns(
     'core.views',
@@ -73,13 +74,18 @@ urlpatterns = patterns(
 
 # DRF url routing
 core_router = DefaultRouter()
-core_router.register(r'nodes', NodeViewSet)
 core_router.register(r'workflows', WorkflowViewSet)
+core_router.register(r'events', EventViewSet)
 core_router.urls.extend([
+    url(r'^data_sets/$', DataSetsViewSet.as_view()),
+    url(r'^user_profile/(?P<uuid>' + UUID_RE + r')/$',
+        UserProfileViewSet.as_view()),
     url(r'^data_sets/(?P<uuid>' + UUID_RE + r')/$',
         DataSetsViewSet.as_view()),
     url(r'^analyses/(?P<uuid>' + UUID_RE + r')/$',
         AnalysesViewSet.as_view()),
+    url(r'^nodes/(?P<uuid>' + UUID_RE + r')/$',
+        NodeViewSet.as_view()),
     url(r'^openid_token/$',
         OpenIDToken.as_view(), name="openid-token")
 ])

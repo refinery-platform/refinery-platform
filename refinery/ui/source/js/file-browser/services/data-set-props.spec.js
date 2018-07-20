@@ -2,7 +2,7 @@
   // UNIT TESTING
   'use strict';
 
-  describe('Is Owner Service', function () {
+  describe('Data Set Prop Service', function () {
     var deferred;
     var rootScope;
     var service;
@@ -10,17 +10,17 @@
 
     beforeEach(module('refineryApp'));
     beforeEach(module('refineryFileBrowser'));
-    beforeEach(inject(function (isOwnerService, mockParamsFactory) {
-      service = isOwnerService;
+    beforeEach(inject(function (dataSetPropsService, mockParamsFactory) {
+      service = dataSetPropsService;
       fakeUuid = mockParamsFactory.generateUuid();
     }));
 
     it('service and variables should exist', function () {
       expect(service).toBeDefined();
-      expect(service.isOwner).toEqual(false);
+      expect(service.dataSet).toEqual({});
     });
 
-    describe('getAssayFiles', function () {
+    describe('dataSetPropsService', function () {
       beforeEach(inject(function (dataSetService, $q, $rootScope) {
         var responseData = { objects: [{ is_owner: true }] };
         spyOn(dataSetService, 'query').and.callFake(function () {
@@ -32,20 +32,20 @@
       }));
 
       it('refreshDataSetOwner is a method', function () {
-        expect(angular.isFunction(service.refreshDataSetOwner)).toBe(true);
+        expect(angular.isFunction(service.refreshDataSet)).toBe(true);
       });
 
       it('refreshDataSetOwner returns a promise', function () {
         var successData;
         var response = service
-          .refreshDataSetOwner({ uuid: fakeUuid })
+          .refreshDataSet({ uuid: fakeUuid })
           .then(function (responseData) {
             successData = responseData.objects[0].is_owner;
           });
         rootScope.$apply();
         expect(typeof response.then).toEqual('function');
         expect(successData).toEqual(true);
-        expect(service.isOwner).toEqual(true);
+        expect(service.dataSet.is_owner).toEqual(true);
       });
     });
   });

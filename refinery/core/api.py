@@ -18,7 +18,6 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.sites.models import get_current_site
 from django.core.cache import cache
 from django.core.mail import EmailMessage
-from django.core.signing import Signer
 from django.forms import ValidationError
 from django.template import loader
 from django.utils import timezone
@@ -39,18 +38,17 @@ from tastypie.http import (HttpAccepted, HttpBadRequest, HttpCreated,
 from tastypie.resources import ModelResource, Resource
 from tastypie.utils import trailing_slash
 
-from core.models import (Analysis, DataSet, ExtendedGroup, GroupManagement,
-                         Invitation, Project, ResourceStatistics, Tutorials,
-                         UserAuthentication, UserProfile, Workflow)
-from core.utils import (get_data_sets_annotations, get_resources_for_user,
-                        which_default_read_perm)
 from data_set_manager.api import (AssayResource, InvestigationResource,
                                   StudyResource)
 from data_set_manager.models import Attribute, Node, Study
 from file_store.models import FileStoreItem
+from .models import (Analysis, DataSet, ExtendedGroup, GroupManagement,
+                     Invitation, Project, ResourceStatistics, Tutorials,
+                     UserAuthentication, UserProfile, Workflow)
+from .utils import (get_data_sets_annotations, get_resources_for_user,
+                    which_default_read_perm)
 
 logger = logging.getLogger(__name__)
-signer = Signer()
 
 
 # Specifically made for descendants of SharableResource.
@@ -163,12 +161,14 @@ class SharableResourceAPIInterface(object):
                 )
 
         if cache_check is None:
+            # for ownership, don't check group perms
             owned_res_set = Set(
                 get_objects_for_user(
                     user,
-                    'core.share_%s' %
-                    self.res_type._meta.verbose_name).values_list("id",
-                                                                  flat=True))
+                    'core.add_%s' %
+                    self.res_type._meta.verbose_name,
+                    use_groups=False
+                ).values_list("id", flat=True))
 
             public_res_set = Set(
                 get_objects_for_group(
@@ -521,46 +521,33 @@ class DataSetResource(SharableResourceAPIInterface, ModelResource):
             except:
                 pass
 
-        metadata_file_store_item = \
-            bundle.obj.get_metadata_as_file_store_item()
+        investigation_link = bundle.obj.get_latest_investigation_link()
+        investigation = investigation_link.investigation
+        metadata_file_store_item = investigation.get_file_store_item()
 
-        if bundle.obj.is_isatab_based:
+        if investigation.is_isa_tab_based():
             bundle.data["isa_archive"] = metadata_file_store_item.uuid
             bundle.data["isa_archive_url"] = \
                 metadata_file_store_item.get_datafile_url()
         else:
             bundle.data["pre_isa_archive"] = metadata_file_store_item.uuid
 
-        analyses = []
-        for analysis in bundle.obj.get_analyses():
-            analysis_dict = {}
-            analysis_dict["uuid"] = analysis.uuid
-            analysis_dict["name"] = analysis.name
-            analysis_dict["status"] = analysis.status
-            analysis_dict['is_owner'] = False
-            owner = analysis.get_owner()
-            if owner:
-                try:
-                    analysis_dict['owner'] = owner.profile.uuid
-                    user = bundle.request.user
-                    if (hasattr(user, 'profile') and
-                       user.profile.uuid == analysis_dict['owner']):
-                        analysis_dict['is_owner'] = True
-                except:
-                    analysis_dict['owner'] = None
-
-            else:
-                analysis_dict['owner'] = None
-
-            analyses.append(analysis_dict)
-
-        investigation_link = bundle.obj.get_latest_investigation_link()
+        analyses = [
+            dict(
+                uuid=analysis.uuid,
+                name=analysis.name,
+                status=analysis.status,
+                owner=analysis.get_owner().profile.uuid
+            )
+            for analysis in bundle.obj.get_analyses()
+        ]
 
         bundle.data["analyses"] = analyses
         bundle.data["creation_date"] = bundle.obj.creation_date
         bundle.data["date"] = investigation_link.date
         bundle.data["modification_date"] = bundle.obj.modification_date
         bundle.data["version"] = investigation_link.version
+        bundle.data["is_clean"] = bundle.obj.is_clean()
 
         return bundle
 
@@ -703,7 +690,7 @@ class DataSetResource(SharableResourceAPIInterface, ModelResource):
                          kwargs["uuid"], e)
             raise NotFound(e)
 
-        if not dataset.is_valid():
+        if not dataset.is_valid:
             raise NotFound(
                 "DataSet with UUID: {} is invalid, and most likely is "
                 "still being created".format(dataset.uuid)
@@ -715,7 +702,7 @@ class DataSetResource(SharableResourceAPIInterface, ModelResource):
 
         valid_datasets = []
         for dataset in datasets:
-            if dataset.is_valid():
+            if dataset.is_valid:
                 valid_datasets.append(dataset)
             else:
                 logger.error(
@@ -758,9 +745,8 @@ class DataSetResource(SharableResourceAPIInterface, ModelResource):
             if group.group == ExtendedGroup.objects.public_group():
                 is_public = True
 
-        is_owner = request.user.has_perm(
-            'core.share_dataset', ds
-        )
+        # get_owner in core models uses add to distinguish owner
+        is_owner = request.user.has_perm('core.add_dataset', ds)
 
         try:
             user_uuid = request.user.profile.uuid
@@ -1072,24 +1058,18 @@ class AnalysisResource(ModelResource):
 
 class NodeResource(ModelResource):
     parents = fields.ToManyField('core.api.NodeResource', 'parents')
+    children = fields.ToManyField('core.api.NodeResource', 'children')
     study = fields.ToOneField('data_set_manager.api.StudyResource', 'study')
-    assay = fields.ToOneField(
-        'data_set_manager.api.AssayResource', 'assay', null=True
-    )
+    assay = fields.ToOneField('data_set_manager.api.AssayResource', 'assay',
+                              null=True)
     attributes = fields.ToManyField(
         'data_set_manager.api.AttributeResource',
         attribute=lambda bundle: (
             Attribute.objects
             .exclude(value__isnull=True)
             .exclude(value__exact='')
-            .filter(
-                node=bundle.obj,
-                subtype='organism'
-            )
-        ),
-        use_in='all',
-        full=True,
-        null=True
+            .filter(node=bundle.obj, subtype='organism')
+        ), use_in='all', full=True, null=True
     )
 
     class Meta:
@@ -1099,11 +1079,10 @@ class NodeResource(ModelResource):
         # required for public data set access by anonymous users
         authentication = Authentication()
         authorization = Authorization()
-        allowed_methods = ["get"]
-        fields = [
-            'name', 'uuid', 'file_uuid', 'file_url', 'study', 'assay',
-            'children', 'type', 'analysis_uuid', 'subanalysis', 'attributes'
-        ]
+        allowed_methods = ['get']
+        fields = ['analysis_uuid', 'assay', 'attributes', 'children',
+                  'file_url', 'file_uuid', 'name', 'parents', 'study',
+                  'subanalysis', 'type', 'uuid']
         filtering = {
             'uuid': ALL,
             'study': ALL_WITH_RELATIONS,
@@ -1874,7 +1853,10 @@ class ExtendedGroupResource(ModelResource):
                 'last_name': u.last_name,
                 'is_manager': self.user_authorized(u, ext_group)
             },
-            ext_group.user_set.all())
+            ext_group.user_set.all().filter(is_active=True).exclude(
+                id=settings.ANONYMOUS_USER_ID
+            )
+        )
 
     # Override ORM methods for customization.
     def obj_get(self, bundle, **kwargs):

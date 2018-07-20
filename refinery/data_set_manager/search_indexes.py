@@ -15,7 +15,6 @@ from haystack.exceptions import SkipDocument
 
 import constants
 import core
-from file_store.models import FileStoreItem
 
 from .models import AnnotatedNode, Assay, Node
 
@@ -30,6 +29,7 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
     SUBANALYSIS_PREFIX = "REFINERY_SUBANALYSIS"
     FILETYPE_PREFIX = "REFINERY_FILETYPE"
     DOWNLOAD_URL = "REFINERY_DOWNLOAD_URL_s"
+    DATAFILE = "REFINERY_DATAFILE_s"
 
     text = indexes.CharField(document=True, use_template=True)
     uuid = indexes.CharField(model_attr='uuid')
@@ -111,23 +111,7 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
 
         id_suffix = "_" + id_suffix + "_s"
 
-        try:
-            file_store_item = FileStoreItem.objects.get(uuid=node.file_uuid)
-        except(FileStoreItem.DoesNotExist,
-               FileStoreItem.MultipleObjectsReturned) as e:
-            logger.error("Couldn't properly fetch FileStoreItem: %s", e)
-            file_store_item = None
-            download_url_or_state = constants.NOT_AVAILABLE
-            data['filetype_Characteristics' + NodeIndex.GENERIC_SUFFIX] = ''
-        else:
-            data['filetype_Characteristics' + NodeIndex.GENERIC_SUFFIX] = \
-                file_store_item.filetype
-            download_url_or_state = file_store_item.get_datafile_url()
-            if download_url_or_state is None:
-                download_url_or_state = file_store_item.get_import_status()
-                # UI can not handle FAILURE state
-                if download_url_or_state == celery.states.FAILURE:
-                    download_url_or_state = constants.NOT_AVAILABLE
+        file_store_item = node.get_file_store_item()
 
         data.update(self._assay_data(node))
 
@@ -166,15 +150,21 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
         # iterate over all keys in data and join sets into strings
         for key, value in data.iteritems():
             if type(value) is set:
-                data[key] = " + ".join(sorted(value))
+                data[key] = " + ".join(i for i in sorted(value))
+
+        datafile = "" if file_store_item is None else \
+            file_store_item.datafile.name
+        filetype = "" if file_store_item is None else file_store_item.filetype
 
         data.update({
-            NodeIndex.DOWNLOAD_URL: download_url_or_state,
+            NodeIndex.DATAFILE: datafile,
+            NodeIndex.DOWNLOAD_URL: _get_download_url_or_import_state(
+                file_store_item
+            ),
             NodeIndex.TYPE_PREFIX + id_suffix: node.type,
             NodeIndex.NAME_PREFIX + id_suffix: node.name,
-            NodeIndex.FILETYPE_PREFIX + id_suffix:
-                "" if file_store_item is None
-                else file_store_item.filetype,
+            'filetype_Characteristics' + NodeIndex.GENERIC_SUFFIX: filetype,
+            NodeIndex.FILETYPE_PREFIX + id_suffix: filetype,
             NodeIndex.ANALYSIS_UUID_PREFIX + id_suffix:
                 constants.NOT_AVAILABLE if node.get_analysis() is None
                 else node.get_analysis().name,
@@ -187,3 +177,19 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
         })
 
         return data
+
+
+def _get_download_url_or_import_state(file_store_item):
+    download_url = constants.NOT_AVAILABLE
+    if file_store_item is not None:
+        download_url = file_store_item.get_datafile_url()
+        if download_url is None:
+            import_state = file_store_item.get_import_status()
+            if import_state in celery.states.READY_STATES:
+                # Here we've reached a celery "READY STATE" without a valid
+                # download url
+                import_state = constants.NOT_AVAILABLE
+            else:
+                import_state = celery.states.PENDING
+            return import_state
+    return download_url

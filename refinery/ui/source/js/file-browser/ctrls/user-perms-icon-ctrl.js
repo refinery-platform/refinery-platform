@@ -15,8 +15,7 @@
   UserPermsIconCtrl.$inject = [
     '$scope',
     '$window',
-    'dataSetPermsService',
-    'isOwnerService'
+    'dataSetPermsService'
   ];
 
 

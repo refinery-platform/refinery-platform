@@ -244,6 +244,14 @@
       padding: .25em;
     }
   }
+  #tool-launch-name {
+    padding: .3em .5em .6em 0;
+    float: left;
+    width: 100%;
+    input {
+      width: 100%;
+    }
+  }
 }
 
 #assay-files-table {
@@ -381,6 +389,14 @@ ul.plain {
   }
 }
 
+#data-file-edit-modal {
+  width: 970px;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, 50%);
+}
+
 // Resolves space issue for the share and config buttons
 @media screen and (min-width: 1700px) {
   #share-button-text:after {
@@ -392,3 +408,7 @@ ul.plain {
   }
 }
 
+.header-button {
+  text-transform: none;
+  vertical-align: top;
+}

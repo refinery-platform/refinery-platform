@@ -11,14 +11,14 @@
     beforeEach(module('refineryDashboard'));
     beforeEach(inject(function (
       $controller,
-      dataSetService,
+      dataSetV2Service,
       $q,
       $rootScope
     ) {
       scope = $rootScope.$new();
-      mockResponseData = { objects: { name: 'Test Data Set' } };
+      mockResponseData = { data: [{ name: 'Test Data Set' }], config: { params: {} } };
 
-      mockService = spyOn(dataSetService, 'query').and.callFake(function () {
+      mockService = spyOn(dataSetV2Service, 'query').and.callFake(function () {
         var deferred = $q.defer();
         deferred.resolve(mockResponseData);
         return { $promise: deferred.promise };
@@ -41,7 +41,7 @@
     it('API related Variables should be initialized', function () {
       expect(ctrl.dataSetsError).toEqual(false);
       expect(ctrl.loadingDataSets).toEqual(true);
-      expect(ctrl.params).toEqual({ limit: 200, min_response: 'True' });
+      expect(ctrl.params).toEqual({ });
       expect(ctrl.searchQueryDataSets).toEqual('');
     });
 
@@ -90,35 +90,29 @@
       });
     });
 
-    describe('getDataSets', function () {
-      it('getDataSets is a method', function () {
-        expect(angular.isFunction(ctrl.getDataSets)).toBe(true);
+    describe('refreshDataSets', function () {
+      it('refreshDataSets is a method', function () {
+        expect(angular.isFunction(ctrl.refreshDataSets)).toBe(true);
       });
 
-      it('getDataSets calls dataSetService', function () {
-        ctrl.getDataSets();
+      it('refreshDataSets calls dataSetService', function () {
+        ctrl.refreshDataSets();
         scope.$apply();
         expect(mockService).toHaveBeenCalled();
       });
 
-      it('getDataSets updates loadingDataSets', function () {
+      it('refreshDataSets updates loadingDataSets', function () {
         expect(ctrl.loadingDataSets).toEqual(true);
-        ctrl.getDataSets();
+        ctrl.refreshDataSets();
         scope.$apply();
         expect(ctrl.loadingDataSets).toEqual(false);
       });
 
-      it('getDataSets does not update dataSetsError', function () {
+      it('refreshDataSets does not update dataSetsError', function () {
         expect(ctrl.dataSetsError).toEqual(false);
-        ctrl.getDataSets();
+        ctrl.refreshDataSets();
         scope.$apply();
         expect(ctrl.dataSetsError).toEqual(false);
-      });
-
-      it('getDataSets updates dataSets variable', function () {
-        ctrl.getDataSets();
-        scope.$apply();
-        expect(ctrl.dataSets.name).toEqual(mockResponseData.objects.name);
       });
     });
 
@@ -170,6 +164,30 @@
       });
     });
 
+    describe('openDataSetTransferModal', function () {
+      var mockUibModal;
+      var responseFlag = false;
+      beforeEach(inject(function ($uibModal) {
+        mockUibModal = spyOn($uibModal, 'open').and.callFake(function () {
+          return { result: { then: function () { responseFlag = true; } } };
+        });
+      }));
+
+      it('openDataSetTransferModal is method', function () {
+        expect(angular.isFunction(ctrl.openDataSetTransferModal)).toBe(true);
+      });
+
+      it('openDataSetTransferModal opens a new modal', function () {
+        ctrl.openDataSetTransferModal();
+        expect(mockUibModal).toHaveBeenCalled();
+      });
+
+      it('openDataSetTransferModal resolves promise', function () {
+        ctrl.openDataSetTransferModal();
+        expect(responseFlag).toEqual(true);
+      });
+    });
+
     describe('resetDataSetSearch', function () {
       it('resetDataSetSearch is a method', function () {
         expect(angular.isFunction(ctrl.resetDataSetSearch)).toBe(true);
@@ -183,7 +201,7 @@
       });
 
       it('resetDataSetSearch refreshes data', function () {
-        var mockGetDataSets = spyOn(ctrl, 'getDataSets');
+        var mockGetDataSets = spyOn(ctrl, 'refreshDataSets');
         expect(mockGetDataSets).not.toHaveBeenCalled();
         ctrl.resetDataSetSearch();
         expect(mockGetDataSets).toHaveBeenCalled();

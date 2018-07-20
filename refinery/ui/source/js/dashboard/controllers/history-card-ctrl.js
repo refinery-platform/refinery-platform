@@ -2,7 +2,7 @@
  * History Card Ctrl
  * @namespace HistoryCardCtrl
  * @desc Controller for history card component on dashboard component.
- * @memberOf refineryApp.refineryHistoryCardCtrl
+ * @memberOf refineryApp.refineryDashboard
  */
 (function () {
   'use strict';
@@ -11,32 +11,53 @@
     .module('refineryDashboard')
     .controller('HistoryCardCtrl', HistoryCardCtrl);
 
-  HistoryCardCtrl.$inject = ['toolsService'];
+  HistoryCardCtrl.$inject = ['$scope', 'eventsService'];
 
   function HistoryCardCtrl (
-    toolsService
+    $scope,
+    eventsService
   ) {
     var vm = this;
-    vm.isToolsLoading = true;
-    vm.getUserTools = getUserTools;
-    vm.tools = [];
+    vm.isEventsLoading = false;
+    vm.getUserEvents = getUserEvents;
+    vm.events = [];
     activate();
 
     function activate () {
-      getUserTools();
+      getUserEvents();
     }
 
     /**
-     * @name getUserTools
-     * @desc  View method to get the tools list
+     * @name getUserEvents
+     * @desc  View method to get the Events list
      * @memberOf refineryDashboard.HistoryCardCtrl
     **/
-    function getUserTools () {
-      var toolRequest = toolsService.query();
-      toolRequest.$promise.then(function (response) {
-        vm.isToolsLoading = false;
-        vm.tools = response;
+    function getUserEvents () {
+      vm.isEventsLoading = true;
+      var eventsRequest = eventsService.query();
+      eventsRequest.$promise.then(function (response) {
+        vm.isEventsLoading = false;
+        vm.events = response;
       });
     }
+
+     /*
+   * ---------------------------------------------------------
+   * Watchers
+   * ---------------------------------------------------------
+   */
+    vm.$onInit = function () {
+      $scope.$watchCollection(
+        function () {
+          return vm.ParentCtrl.refreshEvents;
+        },
+        function () {
+          if (vm.ParentCtrl.refreshEvents) {
+            getUserEvents();
+            vm.ParentCtrl.refreshEvents = false;
+          }
+        }
+      );
+    };
   }
 })();

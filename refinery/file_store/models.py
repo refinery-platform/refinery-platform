@@ -34,9 +34,9 @@ def _mkdir(path):
     # https://stackoverflow.com/a/14364249
     try:
         os.makedirs(path)
-    except OSError:
+    except OSError as exc:
         if not os.path.isdir(path):
-            raise
+            raise RuntimeError(str(exc))
     else:
         logger.info("Created directory '%s'", path)
 
@@ -147,12 +147,6 @@ class FileStoreItem(models.Model):
             else:
                 self.filetype = extension.filetype
 
-        # symlink datafile if possible
-        if (not self.datafile and os.path.isabs(self.source) and
-                settings.REFINERY_DATA_IMPORT_DIR not in self.source and
-                get_temp_dir() not in self.source):
-            self._symlink_datafile()
-
         super(FileStoreItem, self).save(*args, **kwargs)
 
     def get_absolute_path(self):
@@ -237,7 +231,6 @@ class FileStoreItem(models.Model):
         self.terminate_file_import_task()
         if self.datafile:
             file_name = self.datafile.name
-            logger.debug("Deleting datafile '%s'", file_name)
             try:
                 self.datafile.delete(save=save_instance)
             except OSError as exc:
@@ -269,29 +262,6 @@ class FileStoreItem(models.Model):
             logger.error("Datafile does not exist")
             return None
 
-    def _symlink_datafile(self):
-        """Create a symlink to the file pointed by source
-        Note: does not save the model
-        """
-        logger.debug("Symlinking datafile to '%s'", self.source)
-
-        if os.path.isfile(self.source):
-            # construct symlink target path based on source file name
-            rel_dst_path = default_storage.get_name(
-                os.path.basename(self.source)
-            )
-            abs_dst_path = os.path.join(settings.FILE_STORE_BASE_DIR,
-                                        rel_dst_path)
-            # create symlink
-            if _symlink_file_on_disk(self.source, abs_dst_path):
-                # update the model with the symlink path
-                self.datafile.name = rel_dst_path
-                logger.debug("Datafile symlinked")
-            else:
-                logger.error("Symlinking failed")
-        else:
-            logger.error("Symlinking failed: source is not a file")
-
     def get_datafile_url(self):
         """Returns relative or absolute URL of the datafile depending on file
         availability and MEDIA_URL setting
@@ -319,6 +289,21 @@ class FileStoreItem(models.Model):
             result = celery.result.AsyncResult(self.import_task_id)
             result.revoke(terminate=True)
 
+    def transfer_data_file(self, file_store_item):
+        """
+        Transfer the data file of a FileStoreItem to another FileStoreItem
+        :param file_store_item: FileStoreItem instance to transfer the
+        data file to
+        """
+        file_store_item.datafile = self.datafile
+        file_store_item.save()
+        # It's crucial to clear the datafile of the prior
+        # FileStoreItem as well. Otherwise there would be two
+        # references to the same data file which could cause
+        # unintended side-effects
+        self.datafile = None
+        self.save()
+
 
 def get_temp_dir():
     """Return the absolute path to the file store temp dir"""
@@ -333,29 +318,6 @@ def _delete_datafile(sender, instance, **kwargs):
     delete() method on the models
     """
     instance.delete_datafile(save_instance=False)
-
-
-def _symlink_file_on_disk(source, link_name):
-    """Create a symbolic link pointing to source path named link_name"""
-    link_dir = os.path.dirname(link_name)
-
-    # create intermediate dirs if they do not already exist
-    if not os.path.isdir(link_dir):
-        try:
-            os.makedirs(link_dir)
-        except OSError as exc:
-            logger.error("Error creating directory '%s': %s", link_dir, exc)
-            return False
-
-    # create symbolic link
-    try:
-        os.symlink(source, link_name)
-    except OSError as exc:
-        logger.error("Error creating symlink '%s': %s", link_name, exc)
-        return False
-
-    logger.debug("Created symlink '%s' to '%s'", link_name, source)
-    return True
 
 
 def _rename_file_on_disk(current_path, new_path):
