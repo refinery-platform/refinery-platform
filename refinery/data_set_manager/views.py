@@ -494,7 +494,7 @@ class ProcessMetadataTableView(MetaDataImportView):
                 error_message = response["message"]
                 logger.error(error_message)
                 raise RuntimeError(error_message)
-            metadata_file_path = response["data"]["temp_file_path"]
+            metadata_file.file.name = response["data"]["temp_file_path"]
         try:
             source_column_index = request.POST.getlist('source_column_index')
         except TypeError as error_msg:
