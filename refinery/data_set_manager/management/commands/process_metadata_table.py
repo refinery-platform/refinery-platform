@@ -127,11 +127,10 @@ class Command(BaseCommand):
             if not options['custom_delimiter_string']:
                 raise CommandError("custom_delimiter_string was not specified")
         try:
-            with open(options["file_name"]) as metadata_file:
+            with open(options['file_name']) as metadata_file:
                 dataset_uuid = process_metadata_table(
                     username=options['username'], title=options['title'],
-                    metadata_file=metadata_file,
-                    source_columns=source_columns,
+                    metadata_file=metadata_file, source_columns=source_columns,
                     data_file_column=options['data_file_column'],
                     auxiliary_file_column=options['auxiliary_file_column'],
                     base_path=options['base_path'],

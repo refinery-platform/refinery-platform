@@ -63,6 +63,7 @@ class SingleFileColumnParser:
         if delimiter == "custom":
             self.delimiter = custom_delimiter_string
 
+        # metadata file object
         self.metadata_file = metadata_file
         self.metadata_file.seek(0)
         try:
@@ -73,9 +74,7 @@ class SingleFileColumnParser:
                 dialect="excel-tab",
                 delimiter=self.delimiter)
         except csv.Error:
-            logger.exception("Unable to read file %s", str(
-                self.metadata_file
-            ))
+            logger.exception("Unable to read file %s", str(self.metadata_file))
             raise
         # compute number of columns
         self.headers = self.metadata_reader.next()
@@ -304,8 +303,8 @@ def process_metadata_table(
     :type username: str
     :param title: dataset name
     :type title: str
-    :param metadata_file: a File object representative of the tabular meta data
-    :type metadata_file: File Object
+    :param metadata_file: metadata file in tab-delimited format
+    :type metadata_file: file
     :param source_columns: a list of source column indices
     :type source_columns: list of ints
     :param data_file_column: data file column index
