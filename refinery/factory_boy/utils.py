@@ -123,7 +123,10 @@ def create_dataset_with_necessary_models(
                 type=Node.RAW_DATA_FILE
             )
             attribute = AttributeFactory(
-                node=node
+                node=node,
+                type="Characteristics",
+                subtype="organism",
+                value="Human"
             )
             AnnotatedNodeFactory(
                 study=latest_study,

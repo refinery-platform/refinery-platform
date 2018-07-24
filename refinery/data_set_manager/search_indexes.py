@@ -29,6 +29,7 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
     SUBANALYSIS_PREFIX = "REFINERY_SUBANALYSIS"
     FILETYPE_PREFIX = "REFINERY_FILETYPE"
     DOWNLOAD_URL = "REFINERY_DOWNLOAD_URL_s"
+    DATAFILE = "REFINERY_DATAFILE_s"
 
     text = indexes.CharField(document=True, use_template=True)
     uuid = indexes.CharField(model_attr='uuid')
@@ -149,10 +150,14 @@ class NodeIndex(indexes.SearchIndex, indexes.Indexable):
         # iterate over all keys in data and join sets into strings
         for key, value in data.iteritems():
             if type(value) is set:
-                data[key] = " + ".join(str(i) for i in sorted(value))
+                data[key] = " + ".join(i for i in sorted(value))
 
+        datafile = "" if file_store_item is None else \
+            file_store_item.datafile.name
         filetype = "" if file_store_item is None else file_store_item.filetype
+
         data.update({
+            NodeIndex.DATAFILE: datafile,
             NodeIndex.DOWNLOAD_URL: _get_download_url_or_import_state(
                 file_store_item
             ),

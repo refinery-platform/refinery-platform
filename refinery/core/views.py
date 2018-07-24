@@ -40,7 +40,6 @@ from rest_framework.views import APIView
 import xmltodict
 
 from data_set_manager.models import Node
-from data_set_manager.search_indexes import NodeIndex
 from file_store.models import FileStoreItem
 
 from .forms import ProjectForm, UserForm, UserProfileForm, WorkflowForm
@@ -721,15 +720,6 @@ class NodeViewSet(APIView):
     """
     http_method_names = ['get', 'patch']
 
-    def update_file_store(self, old_uuid, new_uuid):
-        if new_uuid is None:
-            try:
-                file_store_item = FileStoreItem.objects.get(uuid=old_uuid)
-            except (FileStoreItem.DoesNotExist,
-                    FileStoreItem.MultipleObjectsReturned) as e:
-                logger.error(e)
-            file_store_item.delete_datafile()
-
     def get_object(self, uuid):
         try:
             return Node.objects.get(uuid=uuid)
@@ -754,20 +744,33 @@ class NodeViewSet(APIView):
 
     def patch(self, request, uuid):
         node = self.get_object(uuid)
-        old_file_uuid = node.file_uuid
-        data_set_owner = node.study.get_dataset().get_owner()
+        new_file_uuid = request.data.get('file_uuid')
+        data_set = node.study.get_dataset()
 
-        if data_set_owner == request.user:
-            serializer = NodeSerializer(node, data=request.data, partial=True)
-            if serializer.is_valid():
-                self.update_file_store(old_file_uuid, node.file_uuid)
-                NodeIndex().update_object(node, using="data_set_manager")
-                serializer.save()
-                return Response(
-                    serializer.data, status=status.HTTP_202_ACCEPTED
-                )
+        if not data_set.is_clean():
             return Response(
-                serializer.errors, status=status.HTTP_400_BAD_REQUEST
+                'Files cannot be removed once an analysis or visualization '
+                'has ran on a data set ',
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if data_set.get_owner() == request.user:
+            # to remove the data file, we need to delete it and update index,
+            #  the file store item uuid should remain
+            if new_file_uuid is None:
+                try:
+                    file_store_item = FileStoreItem.objects.get(
+                        uuid=node.file_uuid
+                    )
+                except (FileStoreItem.DoesNotExist,
+                        FileStoreItem.MultipleObjectsReturned) as e:
+                    logger.error(e)
+                else:
+                    file_store_item.delete_datafile()
+
+            node.update_solr_index()
+            return Response(
+                NodeSerializer(node).data, status=status.HTTP_200_OK
             )
 
         return Response(uuid, status=status.HTTP_401_UNAUTHORIZED)
@@ -887,25 +890,30 @@ class DataSetsViewSet(APIView):
         if not request.user.is_authenticated():
             return HttpResponseForbidden(
                 content="User {} is not authenticated".format(request.user))
-        else:
-            try:
-                dataset_deleted = DataSet.objects.get(uuid=uuid).delete()
-            except NameError as e:
-                logger.error(e)
-                return HttpResponseBadRequest(content="Bad Request")
-            except DataSet.DoesNotExist as e:
-                logger.error(e)
-                return HttpResponseNotFound(content="DataSet with UUID: {} "
-                                                    "not found.".format(uuid))
-            except DataSet.MultipleObjectsReturned as e:
-                logger.error(e)
-                return HttpResponseServerError(
-                    content="Multiple DataSets returned for this request")
+
+        try:
+            data_set = DataSet.objects.get(uuid=uuid)
+        except NameError as e:
+            logger.error(e)
+            return HttpResponseBadRequest(content="Bad Request")
+        except DataSet.DoesNotExist as e:
+            logger.error(e)
+            return HttpResponseNotFound(content="DataSet with UUID: {} "
+                                                "not found.".format(uuid))
+        except DataSet.MultipleObjectsReturned as e:
+            logger.error(e)
+            return HttpResponseServerError(
+                content="Multiple DataSets returned for this request")
+
+        if data_set.get_owner() == request.user:
+            data_set_deleted = data_set.delete()
+            if data_set_deleted[0]:
+                return Response({"data": data_set_deleted[1]})
             else:
-                if dataset_deleted[0]:
-                    return Response({"data": dataset_deleted[1]})
-                else:
-                    return HttpResponseBadRequest(content=dataset_deleted[1])
+                return HttpResponseBadRequest(content=data_set_deleted[1])
+
+        return Response('Unauthorized to delete data set with uuid: {'
+                        '}'.format(uuid), status=status.HTTP_401_UNAUTHORIZED)
 
     def patch(self, request, uuid, format=None):
         self.data_set = self.get_object(uuid)

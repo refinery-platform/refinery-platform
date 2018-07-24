@@ -96,12 +96,8 @@ class UserProfile(models.Model):
     login_count = models.IntegerField(default=0)
 
     def __unicode__(self):
-        return (
-            str(self.user.first_name) + " " +
-            str(self.user.last_name) + " (" +
-            str(self.affiliation) + "): " +
-            str(self.user.email)
-        )
+        return self.user.first_name + " " + self.user.last_name + \
+               " (" + self.affiliation + "): " + self.user.email
 
     def has_viewed_launchpad_tut(self):
         return Tutorials.objects.get(
@@ -820,12 +816,15 @@ class DataSet(SharableResource):
         file_store_items_from_existing_data_set = \
             existing_investigation.get_file_store_items(local_only=True)
         new_file_store_items = investigation.get_file_store_items()
-        new_sources = [f.source for f in new_file_store_items]
+        new_sources = [os.path.basename(f.source) for f in
+                       new_file_store_items]
         for prior_file_store_item in file_store_items_from_existing_data_set:
-            if prior_file_store_item.source not in new_sources:
+            if os.path.basename(prior_file_store_item.source) \
+                    not in new_sources:
                 prior_file_store_item.delete_datafile()
             for new_file_store_item in new_file_store_items:
-                if prior_file_store_item.source == new_file_store_item.source:
+                if os.path.basename(prior_file_store_item.source) == \
+                        os.path.basename(new_file_store_item.source):
                     prior_file_store_item.transfer_data_file(
                         new_file_store_item
                     )

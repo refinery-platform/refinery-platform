@@ -602,10 +602,9 @@ def _index_annotated_nodes(node_type, study_uuid, assay_uuid=None,
     logger.info("%s nodes for indexing", str(nodes.count()))
     # index nodes
     start = time.time()
-    node_index = NodeIndex()
     counter = 0
     for node in nodes:
-        node_index.update_object(node, using="data_set_manager")
+        node.update_solr_index()
         counter += 1
     end = time.time()
     logger.info("%s nodes indexed in %s", str(counter), str(end - start))
@@ -823,6 +822,9 @@ def generate_filtered_facet_fields(attributes):
     weighted_facet_list.sort()
     for (rank, field) in weighted_facet_list:
         field_limit_list.append(field.get("solr_field"))
+
+    # add refinery_datafile_s index here
+    field_limit_list.insert(0, unicode(NodeIndex.DATAFILE, "utf-8"))
 
     return {'facet_field': facet_field,
             'field_limit': field_limit_list}

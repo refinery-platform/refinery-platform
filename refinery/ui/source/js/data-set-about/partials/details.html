@@ -397,24 +397,28 @@
     </a>
       - {{ADCtrl.fileStoreItem.file_size | fileSizeFormat}}
   </p>
-  <a
-    class="refinery-base btn btn-primary"
-    ng-if="ADCtrl.dataSet.is_owner"
-    ng-disabled="!ADCtrl.dataSet.is_clean"
-    href="/data_set_manager/import/?data_set_title={{ ADCtrl.dataSet.title }}/#/isa-tab-import?data_set_uuid={{ ADCtrl.dataSet.uuid }}">
-    Revise Metadata
-  </a>
-  <span class="p-l-1-3" ng-if="ADCtrl.dataSet.is_owner">
-    <a
-      popover-placement="right"
-      uib-popover-html="'Redirects to the Data Set Upload page where you
-      can upload revised metadata. <strong>Note:</strong> Once you have
-      run an analysis or visualization on a data set, its metadata can no longer be revised.'"
-      popover-title="Revise Meta Data"
-      popover-trigger="'outsideClick'"
-      popover-append-to-body="true">
-        <i class="fa fa-question-circle info-icon icon-only"></i>
-    </a>
+   <span
+     class="p-l-1"
+     ng-class="{banned: !FBCtrl.dataSet.is_clean}"
+     ng-if="ADCtrl.dataSet.is_owner">
+      <a
+        class="refinery-base btn btn-default"
+        ng-class="{disabledLink: !ADCtrl.dataSet.is_clean}"
+        href="/data_set_manager/import/?data_set_title={{ ADCtrl.dataSet.title }}/#/isa-tab-import?data_set_uuid={{ ADCtrl.dataSet.uuid }}">
+        Revise Metadata
+      </a>
+     </span>
+    <span class="p-l-1-3" ng-if="ADCtrl.dataSet.is_owner">
+      <a
+        popover-placement="right"
+        uib-popover-html="'Redirects to the Data Set Upload page where you
+        can upload revised metadata. <strong>Note:</strong> Once you have
+        run an analysis or visualization on a data set, its metadata can no longer be revised.'"
+        popover-title="Revise Metadata"
+        popover-trigger="'outsideClick'"
+        popover-append-to-body="true">
+          <i class="fa fa-question-circle info-icon icon-only"></i>
+      </a>
   </span>
 </div>
 <div ng-if="ADCtrl.dataSet.pre_isa_archive && ADCtrl.fileStoreItem.datafile">
@@ -429,13 +433,17 @@
   <p class="emphasized">Not available.</p>
 </div>
 <div ng-if="ADCtrl.dataSet.pre_isa_archive">
-   <a
-    class="refinery-base btn btn-primary"
-    ng-if="ADCtrl.dataSet.is_owner"
-    ng-disabled="!ADCtrl.dataSet.is_clean"
-    href="/data_set_manager/import/?data_set_title={{ ADCtrl.dataSet.title }}/#/?data_set_uuid={{ ADCtrl.dataSet.uuid }}">
-    Revise Metadata
-  </a>
+  <span
+     class="p-l-1"
+     ng-class="{banned: !FBCtrl.dataSet.is_clean}"
+     ng-if="ADCtrl.dataSet.is_owner">
+     <a
+      class="refinery-base btn btn-default"
+      ng-class="{disabledLink: !ADCtrl.dataSet.is_clean}"
+      href="/data_set_manager/import/?data_set_title={{ ADCtrl.dataSet.title }}/#/?data_set_uuid={{ ADCtrl.dataSet.uuid }}">
+      Revise Metadata
+    </a>
+  </span>
   <span class="p-l-1-3" ng-if="ADCtrl.dataSet.is_owner">
     <a
       popover-placement="right"
@@ -450,7 +458,7 @@
   </span>
 </div>
 
-<span class="refinery-subheader">
+<span class="refinery-subheader p-t-1-2">
   <h3>Data Files</h3>
 </span>
 <p>

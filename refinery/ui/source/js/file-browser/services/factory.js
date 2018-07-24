@@ -89,11 +89,11 @@
         } else if (columnName === 'Analysis Group') {
           // Analysis requires a custom template for filtering -1 entries
           var _cellTemplate = '<div class="ngCellText ui-grid-cell-contents"' +
-          'ng-class="col.colIndex()">{{COL_FIELD |' +
+            'ng-class="col.colIndex()">{{COL_FIELD |' +
             ' analysisGroupNegativeOneWithNA: "Analysis Group"}}</div>';
           colProperty.cellTemplate = _cellTemplate;
           tempCustomColumnNames.push(colProperty);
-        } else {
+        } else if (columnName !== 'Datafile') {
           tempCustomColumnNames.push(colProperty);
         }
       });
@@ -291,7 +291,7 @@
         field: urlAttribute.internal_name,
         cellTooltip: true,
         width: 80,
-        displayName: '',
+        displayName: 'File',
         enableFiltering: false,
         enableSorting: false,
         enableColumnMenu: false,

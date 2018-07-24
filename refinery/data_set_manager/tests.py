@@ -936,7 +936,8 @@ class UtilitiesTests(TestCase):
                          '&facet.field=Cell Line'
                          '&facet.field=Type'
                          '&facet.field=Group Name'
-                         '&fl=Character_Title%2C'
+                         '&fl=REFINERY_DATAFILE_s%2C'
+                         'Character_Title%2C'
                          'Specimen%2C'
                          'Cell Type%2C'
                          'Analysis%2C'
@@ -1014,7 +1015,8 @@ class UtilitiesTests(TestCase):
                                          'Organism', 'Cell Line',
                                          'Type', 'Group Name'],
                                         'field_limit':
-                                        ['Character_Title', 'Specimen',
+                                        ['REFINERY_DATAFILE_s',
+                                         'Character_Title', 'Specimen',
                                          'Cell Type', 'Analysis',
                                          'Organism', 'Cell Line',
                                          'Type', 'Group Name']})
@@ -1841,11 +1843,13 @@ class NodeIndexTests(APITestCase):
     def _assert_node_index_prepared_correctly(self,
                                               data_to_be_indexed,
                                               expected_download_url=None,
-                                              expected_filetype=None):
+                                              expected_filetype=None,
+                                              expected_datafile=''):
         self.assertEqual(
             data_to_be_indexed,
             {
                 'REFINERY_ANALYSIS_UUID_#_#_s': 'N/A',
+                'REFINERY_DATAFILE_s': expected_datafile,
                 'REFINERY_DOWNLOAD_URL_s': expected_download_url,
                 'REFINERY_FILETYPE_#_#_s': expected_filetype,
                 'REFINERY_NAME_#_#_s': 'http://example.com/fake.txt',
@@ -1885,7 +1889,8 @@ class NodeIndexTests(APITestCase):
                                return_value='/media/file_store/test_file.txt'):
             self._assert_node_index_prepared_correctly(
                 self._prepare_node_index(self.node),
-                expected_download_url=self.file_store_item.get_datafile_url()
+                expected_download_url=self.file_store_item.get_datafile_url(),
+                expected_datafile=self.file_store_item.datafile
             )
 
     def test_prepare_node_remote_datafile_source(self):
@@ -1894,7 +1899,8 @@ class NodeIndexTests(APITestCase):
         self._assert_node_index_prepared_correctly(
             self._prepare_node_index(self.node),
             expected_download_url=self.file_store_item.source,
-            expected_filetype=self.file_store_item.filetype
+            expected_filetype=self.file_store_item.filetype,
+            expected_datafile=self.file_store_item.datafile
         )
 
     def test_prepare_node_pending_yet_existing_file_import_task(self):
@@ -1922,7 +1928,8 @@ class NodeIndexTests(APITestCase):
         self.import_task.delete()
         self._assert_node_index_prepared_correctly(
             self._prepare_node_index(self.node),
-            expected_download_url=PENDING
+            expected_download_url=PENDING,
+            expected_datafile=self.file_store_item.datafile
         )
 
     def test_prepare_node_no_file_store_item(self):
@@ -1941,7 +1948,8 @@ class NodeIndexTests(APITestCase):
             self._assert_node_index_prepared_correctly(
                 self._prepare_node_index(self.node),
                 expected_download_url=constants.NOT_AVAILABLE,
-                expected_filetype=self.file_store_item.filetype
+                expected_filetype=self.file_store_item.filetype,
+                expected_datafile=self.file_store_item.datafile
             )
 
     def test_prepare_node_s3_file_store_item_source_with_datafile(self):
@@ -1952,7 +1960,8 @@ class NodeIndexTests(APITestCase):
             self._assert_node_index_prepared_correctly(
                 self._prepare_node_index(self.node),
                 expected_download_url=self.file_store_item.get_datafile_url(),
-                expected_filetype=self.file_store_item.filetype
+                expected_filetype=self.file_store_item.filetype,
+                expected_datafile=self.file_store_item.datafile
             )
 
     def _create_analysis_node_connection(self, direction, is_refinery_file):
@@ -1977,7 +1986,8 @@ class NodeIndexTests(APITestCase):
             self._create_analysis_node_connection(INPUT_CONNECTION, False)
             self._assert_node_index_prepared_correctly(
                 self._prepare_node_index(self.node),
-                expected_download_url=self.file_store_item.get_datafile_url()
+                expected_download_url=self.file_store_item.get_datafile_url(),
+                expected_datafile=self.file_store_item.datafile
             )
 
     def test_prepare_node_with_exposed_input_node_connection_isnt_skipped(
@@ -1988,7 +1998,8 @@ class NodeIndexTests(APITestCase):
             self._create_analysis_node_connection(INPUT_CONNECTION, True)
             self._assert_node_index_prepared_correctly(
                 self._prepare_node_index(self.node),
-                expected_download_url=self.file_store_item.get_datafile_url()
+                expected_download_url=self.file_store_item.get_datafile_url(),
+                expected_datafile=self.file_store_item.datafile
             )
 
     def test_prepare_node_with_non_exposed_output_node_connection_is_skipped(
@@ -2006,7 +2017,8 @@ class NodeIndexTests(APITestCase):
             self._create_analysis_node_connection(OUTPUT_CONNECTION, True)
             self._assert_node_index_prepared_correctly(
                 self._prepare_node_index(self.node),
-                expected_download_url=self.file_store_item.get_datafile_url()
+                expected_download_url=self.file_store_item.get_datafile_url(),
+                expected_datafile=self.file_store_item.datafile
             )
 
 

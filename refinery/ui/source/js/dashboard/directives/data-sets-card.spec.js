@@ -34,7 +34,7 @@
         .whenGET(
           settings.appRoot +
           settings.refineryApiV2 +
-          '/data_sets/?format=json'
+          '/data_sets/'
         ).respond(200, []);
 
       var scope = $rootScope.$new();

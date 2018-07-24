@@ -112,7 +112,7 @@
     function remove () {
       vm.isLoading = true;
       groupMemberService.remove({
-        uuid: vm.resolve.config.activeGroup.manager_group_uuid,
+        uuid: vm.resolve.config.activeGroup.uuid,
         userId: vm.member.user_id
       }).$promise.then(
         function () {
