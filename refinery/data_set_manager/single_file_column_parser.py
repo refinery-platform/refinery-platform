@@ -182,8 +182,9 @@ class SingleFileColumnParser:
         # import in file as "pre-isa" file
         logger.info("trying to add pre-isa archive file %s",
                     self.metadata_file.name)
-        file_store_item = \
-            FileStoreItem.objects.create(source=self.metadata_file_path)
+        file_source = self.metadata_file.file.name if \
+            hasattr(self.metadata_file, "file") else self.metadata_file.name
+        file_store_item = FileStoreItem.objects.create(source=file_source)
         investigation.pre_isarchive_file = file_store_item.uuid
         import_file.delay(investigation.pre_isarchive_file, refresh=True)
         investigation.save()
