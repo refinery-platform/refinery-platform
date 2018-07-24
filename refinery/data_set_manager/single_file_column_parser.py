@@ -38,7 +38,7 @@ class SingleFileColumnParser:
     """
     def __init__(
         self,
-        metadata_file_path,
+        metadata_file,
         file_source_translator,
         source_column_index,
         data_file_column_index=-1,
@@ -63,22 +63,20 @@ class SingleFileColumnParser:
         if delimiter == "custom":
             self.delimiter = custom_delimiter_string
 
-        self.metadata_file_path = metadata_file_path
-        with open(metadata_file_path) as f:
-            self.metadata_file = f
-            self.metadata_file.seek(0)
-            try:
-                # need to use splitlines() to avoid potential newline errors
-                # http://madebyknight.com/handling-csv-uploads-in-django/
-                self.metadata_reader = csv.reader(
-                    self.metadata_file.read().splitlines(),
-                    dialect="excel-tab",
-                    delimiter=self.delimiter)
-            except csv.Error:
-                logger.exception("Unable to read file %s", str(
-                    self.metadata_file
-                ))
-                raise
+        self.metadata_file = metadata_file
+        self.metadata_file.seek(0)
+        try:
+            # need to use splitlines() to avoid potential newline errors
+            # http://madebyknight.com/handling-csv-uploads-in-django/
+            self.metadata_reader = csv.reader(
+                self.metadata_file.read().splitlines(),
+                dialect="excel-tab",
+                delimiter=self.delimiter)
+        except csv.Error:
+            logger.exception("Unable to read file %s", str(
+                self.metadata_file
+            ))
+            raise
         # compute number of columns
         self.headers = self.metadata_reader.next()
         self.num_columns = len(self.headers)
@@ -283,7 +281,7 @@ class SingleFileColumnParser:
 def process_metadata_table(
     username,
     title,
-    metadata_file_path,
+    metadata_file,
     source_columns,
     data_file_column,
     auxiliary_file_column=None,
@@ -305,8 +303,8 @@ def process_metadata_table(
     :type username: str
     :param title: dataset name
     :type title: str
-    :param metadata_file_path: tab-delimited metadata file path
-    :type metadata_file_path: str
+    :param metadata_file: a File object representative of the tabular meta data
+    :type metadata_file: File Object
     :param source_columns: a list of source column indices
     :type source_columns: list of ints
     :param data_file_column: data file column index
@@ -387,7 +385,7 @@ def process_metadata_table(
     #  things to the db on an import failure, but doing so doesn't allow for
     #  the association of uploaded datafiles
     parser = SingleFileColumnParser(
-        metadata_file_path=metadata_file_path,
+        metadata_file=metadata_file,
         file_source_translator=file_source_translator,
         source_column_index=source_columns,
         data_file_column_index=data_file_column,

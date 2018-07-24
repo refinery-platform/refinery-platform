@@ -545,7 +545,7 @@ class ProcessMetadataTableView(View):
             dataset_uuid = process_metadata_table(
                 username=request.user.username,
                 title=title,
-                metadata_file_path=metadata_file_path,
+                metadata_file=metadata_file,
                 source_columns=source_column_index,
                 data_file_column=data_file_column,
                 auxiliary_file_column=request.POST.get('aux_file_column'),

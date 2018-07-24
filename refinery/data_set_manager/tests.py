@@ -2682,14 +2682,14 @@ class SingleFileColumnParserTests(TestCase):
             'single-file',
             filename
         )
-
-        dataset_uuid = process_metadata_table(
-            username='guest',
-            title='fake',
-            metadata_file_path=path,
-            source_columns=[0],
-            data_file_column=2,
-        )
+        with open(path) as f:
+            dataset_uuid = process_metadata_table(
+                username='guest',
+                title='fake',
+                metadata_file=f,
+                source_columns=[0],
+                data_file_column=2,
+            )
         return DataSet.objects.get(uuid=dataset_uuid)
 
     def assert_expected_nodes(self, dataset, node_count):
