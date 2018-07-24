@@ -1,6 +1,6 @@
 'use strict';
 
-describe('Filter: isaArchiveName', function () {
+describe('Filter: basePathFilter', function () {
   var filter;
 
   beforeEach(function () {
@@ -8,7 +8,7 @@ describe('Filter: isaArchiveName', function () {
     module('refineryDataSetAbout');
 
     inject(function ($filter) {
-      filter = $filter('isaArchiveName');
+      filter = $filter('basePathFilter');
     });
   });
 

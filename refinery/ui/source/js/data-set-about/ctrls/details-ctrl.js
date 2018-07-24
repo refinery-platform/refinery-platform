@@ -55,7 +55,7 @@ function AboutDetailsCtrl (
         // grab meta-data info
         if (dataSetAboutFactory.dataSet.isa_archive) {
           vm.refreshFileStoreItem(dataSetAboutFactory.dataSet.isa_archive);
-        } else if (dataSetAboutFactory.dataSet.pre_isatab_archive) {
+        } else if (dataSetAboutFactory.dataSet.pre_isa_archive) {
           vm.refreshFileStoreItem(dataSetAboutFactory.dataSet.pre_isa_archive);
         }
       }, function (error) {

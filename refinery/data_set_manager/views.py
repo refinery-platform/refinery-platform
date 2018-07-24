@@ -166,7 +166,72 @@ class ImportISATabFileForm(forms.Form):
                 "Please provide either a file or a URL")
 
 
-class ProcessISATabView(View):
+class MetaDataImportView(View):
+
+    def import_by_file(self, _file):
+        temp_file_path = os.path.join(get_temp_dir(), _file.name)
+        try:
+            self._handle_uploaded_file(_file, temp_file_path)
+        except IOError as e:
+            error_msg = "Error writing file to disk"
+            logger.error(
+                "%s. IOError: %s, file name: %s, error: %s.",
+                error_msg,
+                e.errno,
+                e.filename,
+                e.strerror
+            )
+            return self._error_message(error_msg)
+        return self._success_message(temp_file_path)
+
+    def import_by_url(self, url):
+        # TODO: replace with chain
+        # http://docs.celeryproject.org/en/latest/userguide/tasks.html#task-synchronous-subtasks
+        parsed_url = urlparse.urlparse(url)
+        file_name = parsed_url.path.split('/')[-1]
+        temp_file_path = os.path.join(get_temp_dir(), file_name)
+        try:
+            # TODO: refactor download_file to take file handle instead
+            # of path
+            download_file(url, temp_file_path)
+        except RuntimeError as exc:
+            error_msg = "Problem downloading ISA-Tab file from: " + url
+            logger.error("%s. %s", error_msg, exc)
+            return self._error_message(error_msg)
+        return self._success_message(temp_file_path)
+
+    @staticmethod
+    def _handle_uploaded_file(source_file, target_path):
+        """Write contents of an uploaded file object to a file on disk
+        Raises IOError
+        :param source_file: uploaded file object
+        :type source_file: file object
+        :param target_path: absolute file system path to a temp file
+        :type target_path: str
+        """
+        with open(target_path, 'wb+') as destination:
+            for chunk in source_file.chunks():
+                destination.write(chunk)
+
+    @staticmethod
+    def _success_message(temp_file_path):
+        return {
+            "success": True,
+            "message": "File imported.",
+            "data": {
+                "temp_file_path": temp_file_path
+            }
+        }
+
+    @staticmethod
+    def _error_message(error_msg):
+        return {
+            "success": False,
+            "message": error_msg
+        }
+
+
+class ProcessISATabView(MetaDataImportView):
     """Process ISA archive"""
     template_name = 'data_set_manager/isa-tab-import.html'
     success_view_name = 'data_set'
@@ -389,73 +454,8 @@ class ProcessISATabView(View):
             return render_to_response(self.template_name,
                                       context_instance=context)
 
-    def import_by_file(self, file):
-        temp_file_path = os.path.join(get_temp_dir(), file.name)
-        try:
-            handle_uploaded_file(file, temp_file_path)
-        except IOError as e:
-            error_msg = "Error writing ISA-Tab file to disk"
-            logger.error(
-                "%s. IOError: %s, file name: %s, error: %s.",
-                error_msg,
-                e.errno,
-                e.filename,
-                e.strerror
-            )
-            return {
-                "success": False,
-                "message": error_msg
-            }
 
-        return {
-            "success": True,
-            "message": "File imported.",
-            "data": {
-                "temp_file_path": temp_file_path
-            }
-        }
-
-    def import_by_url(self, url):
-        # TODO: replace with chain
-        # http://docs.celeryproject.org/en/latest/userguide/tasks.html#task-synchronous-subtasks
-        parsed_url = urlparse.urlparse(url)
-        file_name = parsed_url.path.split('/')[-1]
-        temp_file_path = os.path.join(get_temp_dir(), file_name)
-        try:
-            # TODO: refactor download_file to take file handle instead
-            # of path
-            download_file(url, temp_file_path)
-        except RuntimeError as exc:
-            error_msg = "Problem downloading ISA-Tab file from: " + url
-            logger.error("%s. %s", error_msg, exc)
-            return {
-                "success": False,
-                "message": error_msg
-            }
-
-        return {
-            "success": True,
-            "message": "File imported.",
-            "data": {
-                "temp_file_path": temp_file_path
-            }
-        }
-
-
-def handle_uploaded_file(source_file, target_path):
-    """Write contents of an uploaded file object to a file on disk
-    Raises IOError
-    :param source_file: uploaded file object
-    :type source_file: file object
-    :param target_path: absolute file system path to a temp file
-    :type target_path: str
-    """
-    with open(target_path, 'wb+') as destination:
-        for chunk in source_file.chunks():
-            destination.write(chunk)
-
-
-class ProcessMetadataTableView(View):
+class ProcessMetadataTableView(MetaDataImportView):
     """Create a new dataset from uploaded metadata table"""
     template_name = 'data_set_manager/metadata-table-import.html'
     success_view_name = 'data_set'
@@ -475,8 +475,9 @@ class ProcessMetadataTableView(View):
             if data_set_ownership_response is not None:
                 return data_set_ownership_response
         try:
-            metadata_file = request.FILES['file']
             title = request.POST.get('title')
+            metadata_file = request.FILES['file']
+            metadata_file.name = request.POST.get('file_name')
             data_file_column = request.POST.get('data_file_column')
         except (KeyError, ValueError):
             error_msg = 'Required parameters are missing'
@@ -487,7 +488,13 @@ class ProcessMetadataTableView(View):
                 )
             else:
                 return render(request, self.template_name, error)
-
+        else:
+            response = self.import_by_file(metadata_file)
+            if not response["success"]:
+                error_message = response["message"]
+                logger.error(error_message)
+                raise RuntimeError(error_message)
+            metadata_file.file.name = response["data"]["temp_file_path"]
         try:
             source_column_index = request.POST.getlist('source_column_index')
         except TypeError as error_msg:
@@ -642,9 +649,11 @@ class CheckDataFilesView(View):
                 else:  # POSIX file system
                     if not os.path.exists(input_file_path):
                         bad_file_list.append(os.path.basename(input_file_path))
-                        logger.debug("File '%s' does not exist")
+                        logger.debug(
+                            "File '%s' does not exist", input_file_path
+                        )
                     else:
-                        logger.debug("File '%s' exists")
+                        logger.debug("File '%s' exists", input_file_path)
 
         response_data = {
             "data_files_not_uploaded": [
