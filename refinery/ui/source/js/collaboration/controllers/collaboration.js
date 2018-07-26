@@ -1,4 +1,5 @@
 'use strict';
+'use strict';
 
 function CollaborationCtrl (
   $timeout,
@@ -109,7 +110,8 @@ CollaborationCtrl.prototype.openAddGroup = function () {
 };
 
 CollaborationCtrl.prototype.openGroupEditor = function (group) {
-  this.$uibModal.open({
+  var that = this;
+  var modalInstance = this.$uibModal.open({
     component: 'rpGroupEditModal',
     resolve: {
       config: function () {
@@ -118,6 +120,9 @@ CollaborationCtrl.prototype.openGroupEditor = function (group) {
         };
       }
     }
+  });
+  modalInstance.result.then(function () {
+    that.grouplist.get();
   });
 };
 
