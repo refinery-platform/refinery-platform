@@ -97,8 +97,13 @@
         });
 
         modalInstance.result.then(function () {
-          // user confirmed
-          vm.selectedTool.select = toolService.selectedTool;
+          // needed when user clears tool selection
+          if (tool) {
+            vm.selectedTool.select = toolService.selectedTool;
+          } else {
+            vm.selectedTool.select = null;
+          }
+          fileService.hideNodePopover = true;
         }, function () {
           // user canceled
           vm.selectedTool.select = toolService.selectedTool;

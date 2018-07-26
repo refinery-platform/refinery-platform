@@ -49,7 +49,11 @@
      * @param {object} tool - select tool object, includes property parameters
     **/
     function refreshToolParams (tool) {
-      angular.copy(tool.parameters, toolParams);
+      if (tool) {
+        angular.copy(tool.parameters, toolParams);
+      } else {
+        angular.copy({}, toolParams);
+      }
     }
   }
 })();

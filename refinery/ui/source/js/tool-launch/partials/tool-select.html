@@ -1,20 +1,19 @@
 <ui-select
   id="tool-select-drop-down"
   append-to-body="true"
-  search-enabled="false"
   ng-model="$ctrl.selectedTool.select"
   on-select="$ctrl.updateTool($item)"
   theme="select2"
-  class="ui-select-drop text-left">
-   <ui-select-match placeholder="Select a tool">
+  class="ui-select-drop text-left select2-allowclear">
+   <ui-select-match placeholder="Select a tool" allow-clear="true">
      <i class="{{$select.selected.tool_type|toolTypeIcon}} p-r-1-4" aria-hidden="true"></i>
      {{$select.selected.name }}
    </ui-select-match>
   <ui-select-choices
     position="down"
-    repeat="tool in $ctrl.tools track by $index">
+    repeat="tool in $ctrl.tools | filter: $select.search | orderBy:'name' track by $index">
     <i class="{{tool.tool_type|toolTypeIcon}} p-r-1-4" aria-hidden="true"></i>
-    {{ tool.name }}
+    <span ng-bind-html="tool.name | highlight: $select.search"></span>
   </ui-select-choices>
 </ui-select>
 
