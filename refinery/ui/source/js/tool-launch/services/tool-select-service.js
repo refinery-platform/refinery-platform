@@ -42,7 +42,11 @@
      * @param {obj} tool - api response tool
     **/
     function setSelectedTool (tool) {
-      angular.copy(tool, selectedTool);
+      if (tool) {
+        angular.copy(tool, selectedTool);
+      } else {
+        angular.copy({}, selectedTool);
+      }
     }
 
     /**
