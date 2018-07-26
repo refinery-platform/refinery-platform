@@ -11,7 +11,7 @@
    </ui-select-match>
   <ui-select-choices
     position="down"
-    repeat="tool in $ctrl.tools | filter: $select.search">
+    repeat="tool in $ctrl.tools | filter: $select.search | orderBy:'name' track by $index">
     <i class="{{tool.tool_type|toolTypeIcon}} p-r-1-4" aria-hidden="true"></i>
     <span ng-bind-html="tool.name | highlight: $select.search"></span>
   </ui-select-choices>
