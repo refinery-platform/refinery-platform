@@ -99,7 +99,8 @@
     vm.downloadCsvQuery = function () {
       return $httpParamSerializer({
         fq: createFacetQuery(),
-        sort: userFileParamsService.sort()
+        sort: userFileParamsService.sort(),
+        limit: 100000000
       });
     };
     vm.downloadCsvPath = function () {
