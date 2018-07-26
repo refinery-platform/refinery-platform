@@ -55,7 +55,7 @@
         type="submit"
         class="btn btn-primary"
         ng-click="$ctrl.createGroup()"
-        ng-disabled="!groupCreationForm.$valid || $ctrl.isLoading">
+        ng-disabled="!groupCreationForm.$valid || $ctrl.isLoading || $ctrl.alertType == 'success'">
         Create group
       </button>
   </div>
