@@ -97,7 +97,7 @@
         });
 
         modalInstance.result.then(function () {
-          // user confirmed
+          // needed when user clears tool selection
           if (tool) {
             vm.selectedTool.select = toolService.selectedTool;
           } else {
