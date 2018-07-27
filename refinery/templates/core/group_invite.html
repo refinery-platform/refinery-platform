@@ -22,7 +22,11 @@
 
       <div>
         <p>
-          <a href="http://{{site}}/collaboration/#/{{ext_group.uuid}}/">View group information</a>
+          {% if ext_group.uuid %}
+            <a href="{{site}}/collaboration/#/{{ext_group.uuid}}/">View group information</a>
+          {% else %}
+            <a href="{{site}}/collaboration">View your groups</a>
+          {% endif %}
         </p>
       </div>
     </div>

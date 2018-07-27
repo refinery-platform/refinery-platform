@@ -123,7 +123,8 @@ def group_invite(request, token):
         return render_to_response(
             'core/group_invite.html',
             {
-                'site': get_current_site(request),
+                'site': '{}://{}'.format(settings.REFINERY_URL_SCHEME,
+                                         get_current_site(request)),
                 'message': 'Invalid token. Not found or expired.'
             },
             context_instance=RequestContext(request))
@@ -137,7 +138,8 @@ def group_invite(request, token):
         return render_to_response(
             'core/group_invite.html',
             {
-                'site': get_current_site(request),
+                'site': '{}://{}'.format(settings.REFINERY_URL_SCHEME,
+                                         get_current_site(request)),
                 'message': 'Invalid token. Unable to find pairing group'
             },
             context_instance=RequestContext(request))
@@ -152,7 +154,8 @@ def group_invite(request, token):
     return render_to_response(
         'core/group_invite.html',
         {
-            'site': get_current_site(request),
+            'site': '{}://{}'.format(settings.REFINERY_URL_SCHEME,
+                                     get_current_site(request)),
             'message': '%s has been added to the group %s.' %
                        (user.username, ext_group.name),
             'user': user,
