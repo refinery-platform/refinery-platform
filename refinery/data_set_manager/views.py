@@ -1137,7 +1137,7 @@ class NodeViewSet(APIView):
               required: false
     ...
     """
-    http_method_names = ['get', 'patch']
+    http_method_names = ['patch']
 
     def get_object(self, uuid):
         try:
@@ -1148,18 +1148,6 @@ class NodeViewSet(APIView):
         except Node.MultipleObjectsReturned as e:
             logger.error(e)
             raise APIException("Multiple objects returned.")
-
-    def get(self, request, uuid):
-        node = self.get_object(uuid)
-        data_set = node.study.get_dataset()
-        public_group = ExtendedGroup.objects.public_group()
-
-        if request.user.has_perm('core.read_dataset', data_set) or \
-                'read_dataset' in get_perms(public_group, data_set):
-            serializer = NodeSerializer(node)
-            return Response(serializer.data)
-
-        return Response(uuid, status=status.HTTP_401_UNAUTHORIZED)
 
     def patch(self, request, uuid):
         node = self.get_object(uuid)
