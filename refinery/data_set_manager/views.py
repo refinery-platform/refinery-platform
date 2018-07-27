@@ -27,18 +27,21 @@ from chunked_upload.models import ChunkedUpload
 from chunked_upload.views import ChunkedUploadCompleteView, ChunkedUploadView
 from guardian.shortcuts import get_perms
 from rest_framework import status
+from rest_framework.exceptions import APIException
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from core.models import DataSet, ExtendedGroup, get_user_import_dir
+from core.models import (DataSet, ExtendedGroup, get_user_import_dir)
 from core.utils import get_absolute_url
 from data_set_manager.isa_tab_parser import ParserException
-from file_store.models import (generate_file_source_translator, get_temp_dir,
-                               parse_s3_url)
+from file_store.models import (FileStoreItem, generate_file_source_translator,
+                               get_temp_dir, parse_s3_url)
+
 from file_store.tasks import download_file, import_file
 
 from .models import Assay, AttributeOrder, Node, Study
-from .serializers import AssaySerializer, AttributeOrderSerializer
+from .serializers import (AssaySerializer, AttributeOrderSerializer,
+                          NodeSerializer)
 from .single_file_column_parser import process_metadata_table
 from .tasks import parse_isatab
 from .utils import (
@@ -1109,6 +1112,87 @@ class AddFileToNodeView(APIView):
             import_file.delay(file_store_item.uuid)
 
         return HttpResponse(status=202)  # Accepted
+
+
+class NodeViewSet(APIView):
+    """API endpoint that allows Nodes to be viewed".
+     ---
+    #YAML
+
+    PATCH:
+        parameters_strategy:
+        form: replace
+        query: merge
+
+        parameters:
+            - name: uuid
+              description: User profile uuid used as an identifier
+              type: string
+              paramType: path
+              required: true
+            - name: file_uuid
+              description: uuid for file store item
+              type: string
+              paramType: form
+              required: false
+    ...
+    """
+    http_method_names = ['get', 'patch']
+
+    def get_object(self, uuid):
+        try:
+            return Node.objects.get(uuid=uuid)
+        except Node.DoesNotExist as e:
+            logger.error(e)
+            raise Http404
+        except Node.MultipleObjectsReturned as e:
+            logger.error(e)
+            raise APIException("Multiple objects returned.")
+
+    def get(self, request, uuid):
+        node = self.get_object(uuid)
+        data_set = node.study.get_dataset()
+        public_group = ExtendedGroup.objects.public_group()
+
+        if request.user.has_perm('core.read_dataset', data_set) or \
+                'read_dataset' in get_perms(public_group, data_set):
+            serializer = NodeSerializer(node)
+            return Response(serializer.data)
+
+        return Response(uuid, status=status.HTTP_401_UNAUTHORIZED)
+
+    def patch(self, request, uuid):
+        node = self.get_object(uuid)
+        new_file_uuid = request.data.get('file_uuid')
+        data_set = node.study.get_dataset()
+
+        if not data_set.is_clean():
+            return Response(
+                'Files cannot be removed once an analysis or visualization '
+                'has ran on a data set ',
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if data_set.get_owner() == request.user:
+            # to remove the data file, we need to delete it and update index,
+            #  the file store item uuid should remain
+            if new_file_uuid is None:
+                try:
+                    file_store_item = FileStoreItem.objects.get(
+                        uuid=node.file_uuid
+                    )
+                except (FileStoreItem.DoesNotExist,
+                        FileStoreItem.MultipleObjectsReturned) as e:
+                    logger.error(e)
+                else:
+                    file_store_item.delete_datafile()
+
+            node.update_solr_index()
+            return Response(
+                NodeSerializer(node).data, status=status.HTTP_200_OK
+            )
+
+        return Response(uuid, status=status.HTTP_401_UNAUTHORIZED)
 
 
 def _check_data_set_ownership(user, data_set_uuid):

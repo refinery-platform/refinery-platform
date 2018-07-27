@@ -39,14 +39,11 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 import xmltodict
 
-from data_set_manager.models import Node
-from file_store.models import FileStoreItem
-
 from .forms import ProjectForm, UserForm, UserProfileForm, WorkflowForm
 from .models import (Analysis, CustomRegistrationProfile, DataSet, Event,
                      ExtendedGroup, Invitation, Ontology, Project,
                      UserProfile, Workflow, WorkflowEngine)
-from .serializers import (DataSetSerializer, EventSerializer, NodeSerializer,
+from .serializers import (DataSetSerializer, EventSerializer,
                           UserProfileSerializer, WorkflowSerializer)
 from .utils import (api_error_response, get_data_sets_annotations,
                     get_resources_for_user)
@@ -693,87 +690,6 @@ class WorkflowViewSet(viewsets.ModelViewSet):
         return HttpResponse(
             get_object_or_404(Workflow, uuid=kwargs.get("uuid")).graph
         )
-
-
-class NodeViewSet(APIView):
-    """API endpoint that allows Nodes to be viewed".
-     ---
-    #YAML
-
-    PATCH:
-        parameters_strategy:
-        form: replace
-        query: merge
-
-        parameters:
-            - name: uuid
-              description: User profile uuid used as an identifier
-              type: string
-              paramType: path
-              required: true
-            - name: file_uuid
-              description: uuid for file store item
-              type: string
-              paramType: form
-              required: false
-    ...
-    """
-    http_method_names = ['get', 'patch']
-
-    def get_object(self, uuid):
-        try:
-            return Node.objects.get(uuid=uuid)
-        except Node.DoesNotExist as e:
-            logger.error(e)
-            raise Http404
-        except Node.MultipleObjectsReturned as e:
-            logger.error(e)
-            raise APIException("Multiple objects returned.")
-
-    def get(self, request, uuid):
-        node = self.get_object(uuid)
-        data_set = node.study.get_dataset()
-        public_group = ExtendedGroup.objects.public_group()
-
-        if request.user.has_perm('core.read_dataset', data_set) or \
-                'read_dataset' in get_perms(public_group, data_set):
-            serializer = NodeSerializer(node)
-            return Response(serializer.data)
-
-        return Response(uuid, status=status.HTTP_401_UNAUTHORIZED)
-
-    def patch(self, request, uuid):
-        node = self.get_object(uuid)
-        new_file_uuid = request.data.get('file_uuid')
-        data_set = node.study.get_dataset()
-
-        if not data_set.is_clean():
-            return Response(
-                'Files cannot be removed once an analysis or visualization '
-                'has ran on a data set ',
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        if data_set.get_owner() == request.user:
-            # to remove the data file, we need to delete it and update index,
-            #  the file store item uuid should remain
-            if new_file_uuid is None:
-                try:
-                    file_store_item = FileStoreItem.objects.get(
-                        uuid=node.file_uuid
-                    )
-                except (FileStoreItem.DoesNotExist,
-                        FileStoreItem.MultipleObjectsReturned) as e:
-                    logger.error(e)
-                else:
-                    file_store_item.delete_datafile()
-
-            node.update_solr_index()
-            return Response(
-                NodeSerializer(node).data, status=status.HTTP_200_OK
-            )
-
-        return Response(uuid, status=status.HTTP_401_UNAUTHORIZED)
 
 
 class EventViewSet(viewsets.ModelViewSet):
