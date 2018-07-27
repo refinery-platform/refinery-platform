@@ -11,8 +11,10 @@ from guardian.shortcuts import assign_perm
 from tastypie.exceptions import NotFound
 from tastypie.test import ResourceTestCase
 
+from data_set_manager.api import NodeResource
 from data_set_manager.models import Investigation, Study
-from .api import AnalysisResource, DataSetResource, NodeResource
+
+from .api import AnalysisResource, DataSetResource
 from .models import (Analysis, Node, Project, UserProfile, Workflow,
                      WorkflowEngine)
 
