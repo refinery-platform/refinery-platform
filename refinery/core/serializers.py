@@ -4,8 +4,6 @@ from django.conf import settings
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 
-from data_set_manager.models import Node
-
 from .models import DataSet, Event, User, UserProfile, Workflow
 
 logger = logging.getLogger(__name__)
@@ -113,16 +111,6 @@ class WorkflowSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = Workflow
-
-
-class NodeSerializer(serializers.ModelSerializer):
-    file_uuid = serializers.CharField(max_length=36,
-                                      required=False,
-                                      allow_null=True)
-
-    class Meta:
-        model = Node
-        fields = ('uuid', 'file_uuid')
 
 
 class EventSerializer(serializers.ModelSerializer):

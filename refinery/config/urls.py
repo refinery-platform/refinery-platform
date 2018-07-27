@@ -11,7 +11,7 @@ from tastypie.api import Api
 from config.utils import RouterCombiner
 from core.api import (AnalysisResource, DataSetResource, ExtendedGroupResource,
                       GroupManagementResource, InvitationResource,
-                      NodeResource, ProjectResource, StatisticsResource,
+                      ProjectResource, StatisticsResource,
                       UserAuthenticationResource, UserProfileResource,
                       WorkflowResource)
 from core.forms import RegistrationFormWithCustomFields
@@ -19,7 +19,7 @@ from core.models import AuthenticationFormUsernameOrEmail
 from core.urls import core_router
 from core.views import CustomRegistrationView
 from data_set_manager.api import (AssayResource, AttributeResource,
-                                  InvestigationResource,
+                                  InvestigationResource, NodeResource,
                                   ProtocolReferenceParameterResource,
                                   ProtocolReferenceResource, ProtocolResource,
                                   PublicationResource, StudyResource)
