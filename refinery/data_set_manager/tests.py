@@ -1,22 +1,19 @@
 from StringIO import StringIO
 import contextlib
-import json
 import logging
 import os
 import re
 import shutil
 import tempfile
-from urlparse import urljoin
 import uuid
 
-from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import (InMemoryUploadedFile,
                                             SimpleUploadedFile)
 from django.core.management import call_command, CommandError
 from django.db.models import Q
 from django.http import QueryDict
-from django.test import LiveServerTestCase, TestCase, override_settings
+from django.test import TestCase, override_settings
 
 from celery.states import FAILURE, PENDING, STARTED, SUCCESS
 from djcelery.models import TaskMeta
@@ -24,7 +21,6 @@ from factory_boy.utils import (create_dataset_with_necessary_models,
                                make_analyses_with_single_dataset)
 from haystack.exceptions import SkipDocument
 import mock
-from mock import ANY
 from override_storage import override_storage
 from rest_framework.test import APITestCase
 
@@ -32,16 +28,16 @@ import constants
 from core.models import (INPUT_CONNECTION, OUTPUT_CONNECTION, Analysis,
                          AnalysisNodeConnection, DataSet, InvestigationLink)
 from core.tests import TestMigrations
-import data_set_manager
-from data_set_manager.isa_tab_parser import IsaTabParser, ParserException
-from data_set_manager.single_file_column_parser import process_metadata_table
-from data_set_manager.tasks import parse_isatab
 from file_store.models import FileStoreItem, generate_file_source_translator
 from file_store.tasks import import_file
+
+from .isa_tab_parser import IsaTabParser, ParserException
 from .models import (AnnotatedNode, Assay, AttributeOrder, Investigation, Node,
                      Study)
 from .search_indexes import NodeIndex
 from .serializers import AttributeOrderSerializer
+from .single_file_column_parser import process_metadata_table
+from .tasks import parse_isatab
 from .utils import (_create_solr_params_from_node_uuids,
                     create_facet_filter_query, cull_attributes_from_list,
                     customize_attribute_response, escape_character_solr,
@@ -51,7 +47,8 @@ from .utils import (_create_solr_params_from_node_uuids,
                     get_file_url_from_node_uuid, get_owner_from_assay,
                     hide_fields_from_list, initialize_attribute_order_ranks,
                     insert_facet_field_filter, is_field_in_hidden_list,
-                    objectify_facet_field_counts, update_attribute_order_ranks)
+                    objectify_facet_field_counts, update_annotated_nodes,
+                    update_attribute_order_ranks)
 
 TEST_DATA_BASE_PATH = "data_set_manager/test-data/"
 
@@ -1127,7 +1124,7 @@ class UtilitiesTests(TestCase):
         ))
         self.assertEqual(len(nodes_before), 0)
 
-        data_set_manager.utils.update_annotated_nodes(
+        update_annotated_nodes(
             type,
             study_uuid=self.study.uuid,
             assay_uuid=self.assay.uuid,
@@ -1752,456 +1749,6 @@ class MetadataImportTestBase(IsaTabTestBase):
         return response
 
 
-class ProcessISATabViewTests(MetadataImportTestBase):
-    @mock.patch.object(data_set_manager.views.import_file, "delay")
-    def test_post_good_isa_tab_file(self, delay_mock):
-        with open(self.get_test_file_path('rfc-test.zip')) as good_isa:
-            self.post_isa_tab(isa_tab_file=good_isa)
-        self.successful_import_assertions()
-
-    @override_settings(CELERY_ALWAYS_EAGER=True)
-    def test_post_good_isa_tab_file_with_datafiles(self):
-        for name in ["rfc94.txt", "rfc134.txt"]:
-            open(os.path.join(self.test_user_directory, name), "a").close()
-
-        with open(self.get_test_file_path('rfc-test-local.zip')) as isa_tab:
-            self.post_isa_tab(isa_tab_file=isa_tab)
-
-        investigation = DataSet.objects.last().get_investigation()
-        self.assertEqual(DataSet.objects.count(), 1)
-        self.assertEqual(
-            len(investigation.get_file_store_items(local_only=True)), 3
-        )
-
-    @mock.patch.object(data_set_manager.views.import_file, "delay")
-    def test_node_index_update_object_called_with_proper_args(self,
-                                                              delay_mock):
-        with open(self.get_test_file_path('rfc-test.zip')) as isa_tab:
-            self.post_isa_tab(isa_tab_file=isa_tab)
-        self.update_node_index_mock.assert_called_with(
-            ANY,
-            using="data_set_manager"
-        )
-
-    def test_post_bad_isa_tab_file(self):
-        with open(self.get_test_file_path('HideLabBrokenA.zip')) as bad_isa:
-            self.post_isa_tab(isa_tab_file=bad_isa)
-        self.unsuccessful_import_assertions()
-
-    def test_post_bad_isa_tab_url(self):
-        self.post_isa_tab(isa_tab_url="non-existant-file")
-        self.unsuccessful_import_assertions()
-
-    @override_settings(CELERY_ALWAYS_EAGER=True)
-    def test_metadata_revision_works_grammatical_changes_only(self):
-        with open(self.get_test_file_path('rfc-test-local.zip')) as isa_tab:
-            self.post_isa_tab(isa_tab_file=isa_tab)
-        data_set = DataSet.objects.last()
-
-        self.assertFalse(
-            AnnotatedNode.objects.filter(attribute_value="EDITED")
-        )
-
-        with open(self.get_test_file_path('rfc-test-local-edited.zip')) as f:
-            self.post_isa_tab(isa_tab_file=f, data_set_uuid=data_set.uuid)
-        self.assertTrue(
-            AnnotatedNode.objects.filter(attribute_value="EDITED")
-        )
-
-    @override_settings(CELERY_ALWAYS_EAGER=True)
-    def test_metadata_revision_works_existing_datafiles_persisted(self):
-        local_data_file_names = ["rfc94.txt", "rfc134.txt"]
-        for name in local_data_file_names:
-            open(os.path.join(self.test_user_directory, name), "a").close()
-
-        with open(self.get_test_file_path('rfc-test-local.zip')) as isa_tab:
-            self.post_isa_tab(isa_tab_file=isa_tab)
-        data_set = DataSet.objects.last()
-
-        with open(self.get_test_file_path('rfc-test-local-edited.zip')) as f:
-            self.post_isa_tab(isa_tab_file=f, data_set_uuid=data_set.uuid)
-        data_set_count = DataSet.objects.count()
-        revised_data_set = DataSet.objects.last()
-
-        # Assert no new DataSet created
-        self.assertEqual(data_set_count, 1)
-
-        # Assert that DataSet version incremented
-        self.assertEqual(revised_data_set.get_version(), 2)
-
-        # Assert that previously uploaded data file remain accessible
-        investigation = revised_data_set.get_investigation()
-        self.assertEqual(
-            len(investigation.get_file_store_items(local_only=True)), 3
-        )
-
-        for file_store_item in investigation.get_file_store_items(
-            exclude_metadata_file=True, local_only=True
-        ):
-            self.assertIn(os.path.basename(file_store_item.source),
-                          local_data_file_names)
-        # Assert that the prior Investigation is no longer pointing to local
-        #  datafiles
-        self.assertFalse(
-            data_set.get_investigation(version=1).get_file_store_items(
-                exclude_metadata_file=True, local_only=True
-            )
-        )
-
-    @override_settings(CELERY_ALWAYS_EAGER=True)
-    def test_metadata_revision_works_datafiles_added_during_revision(self):
-        local_data_file_names = ["rfc94.txt", "rfc134.txt"]
-        for name in local_data_file_names:
-            open(os.path.join(self.test_user_directory, name), "a").close()
-
-        with open(self.get_test_file_path('rfc-test-local.zip')) as isa_tab:
-            self.post_isa_tab(isa_tab_file=isa_tab)
-        data_set = DataSet.objects.last()
-
-        local_data_file_names_for_revision = ["rfc111.txt"]
-        for name in local_data_file_names_for_revision:
-            open(os.path.join(self.test_user_directory, name), "a").close()
-
-        with open(self.get_test_file_path('rfc-test-local-edited.zip')) as f:
-            self.post_isa_tab(isa_tab_file=f, data_set_uuid=data_set.uuid)
-        data_set_count = DataSet.objects.count()
-        revised_data_set = DataSet.objects.last()
-
-        # Assert no new DataSet created
-        self.assertEqual(data_set_count, 1)
-
-        # Assert that DataSet version incremented
-        self.assertEqual(revised_data_set.get_version(), 2)
-
-        # Assert that previously uploaded data file remain accessible
-        investigation = revised_data_set.get_investigation()
-        self.assertEqual(
-            len(investigation.get_file_store_items(local_only=True)), 4
-        )
-
-        for file_store_item in investigation.get_file_store_items(
-                exclude_metadata_file=True, local_only=True
-        ):
-            self.assertIn(
-                os.path.basename(file_store_item.source),
-                local_data_file_names + local_data_file_names_for_revision
-            )
-
-    @override_settings(CELERY_ALWAYS_EAGER=True)
-    @mock.patch.object(FileStoreItem, "terminate_file_import_task")
-    def test_metadata_revision_works_datafiles_removed_during_revision(
-        self, terminate_file_import_task_mock
-    ):
-        local_data_file_names = ["rfc94.txt", "rfc134.txt"]
-        for name in local_data_file_names:
-            open(os.path.join(self.test_user_directory, name), "a").close()
-
-        with open(self.get_test_file_path('rfc-test-local.zip')) as isa_tab:
-            self.post_isa_tab(isa_tab_file=isa_tab)
-        data_set = DataSet.objects.last()
-
-        with open(self.get_test_file_path('rfc-test.zip')) as f:
-            self.post_isa_tab(isa_tab_file=f, data_set_uuid=data_set.uuid)
-
-        revised_data_set = DataSet.objects.last()
-
-        # Assert that previously uploaded data files are removed
-        first_investigation = revised_data_set.get_investigation(version=1)
-        self.assertEqual(
-            len(first_investigation.get_file_store_items(
-                exclude_metadata_file=True, local_only=True
-            )), 0
-        )
-
-    @override_settings(CELERY_ALWAYS_EAGER=True)
-    def test_metadata_revision_updates_dataset_title(self):
-        with open(self.get_test_file_path('rfc-test-local.zip')) as isa_tab:
-            self.post_isa_tab(isa_tab_file=isa_tab)
-        data_set = DataSet.objects.last()
-        with open(self.get_test_file_path('rfc-test-local-edited.zip')) as f:
-            self.post_isa_tab(isa_tab_file=f, data_set_uuid=data_set.uuid)
-
-        revised_data_set = DataSet.objects.last()
-        self.assertEqual(revised_data_set.title,
-                         'Request for Comments (RFC) Test Edited')
-
-    def test_metadata_revision_fails_with_unclean_dataset(self):
-        analyses, data_set = make_analyses_with_single_dataset(1, self.user)
-        with open(self.get_test_file_path('rfc-test.zip')) as isa_tab_file:
-            response = self.post_isa_tab(
-                isa_tab_file=isa_tab_file, data_set_uuid=data_set.uuid
-            )
-            self.assertEqual(response.status_code, 400)
-            self.assertEqual(
-                response.content,
-                "ISA-Tab import Failure:  DataSet with UUID: {} is not clean "
-                "(There have been Analyses or Visualizations performed on it) "
-                "Remove these objects and try again"
-                .format(data_set.uuid)
-            )
-
-    def test_metadata_revision_is_only_allowed_if_data_set_owner(self):
-        data_set = create_dataset_with_necessary_models()
-        metadata_file_name = 'rfc-test-local.zip'
-        with open(self.get_test_file_path(metadata_file_name)) as isa_tab:
-            response = self.post_isa_tab(isa_tab_file=isa_tab,
-                                         data_set_uuid=data_set.uuid)
-            self.assertEqual(response.status_code, 403)
-            self.assertIn(
-                "Metadata revision is only allowed for Data Set owners",
-                response.content
-            )
-
-
-class ProcessISATabViewLiveServerTests(MetadataImportTestBase,
-                                       LiveServerTestCase):
-    @mock.patch.object(data_set_manager.views.import_file, "delay")
-    def test_post_good_isa_tab_url(self, delay_mock):
-        media_root_path = os.path.join(
-            settings.BASE_DIR,
-            "refinery",
-            TEST_DATA_BASE_PATH
-        )
-        with self.settings(MEDIA_ROOT=media_root_path):
-            media_url = urljoin(self.live_server_url, settings.MEDIA_URL)
-            good_isa_tab_url = urljoin(media_url, "rfc-test.zip")
-            self.post_isa_tab(isa_tab_url=good_isa_tab_url)
-        self.successful_import_assertions()
-
-
-class ProcessMetadataTableViewTests(MetadataImportTestBase):
-    @mock.patch.object(data_set_manager.views.import_file, "delay")
-    def test_post_good_tabular_file(self, delay_mock):
-        self.post_tabular_meta_data_file(
-            meta_data_file_path=self.get_test_file_path(
-                'single-file/two-line-local.csv'
-            )
-        )
-        self.successful_import_assertions()
-
-    @override_settings(CELERY_ALWAYS_EAGER=True)
-    def test_post_good_tabular_file_with_datafiles(self):
-        for name in ["test1.txt", "test2.txt"]:
-            open(os.path.join(self.test_user_directory, name), "a").close()
-        self.post_tabular_meta_data_file(
-            meta_data_file_path=self.get_test_file_path(
-                'single-file/two-line-local.csv'
-            )
-        )
-        investigation = DataSet.objects.last().get_investigation()
-        self.assertEqual(DataSet.objects.count(), 1)
-        self.assertEqual(
-            len(investigation.get_file_store_items(local_only=True)), 3
-        )
-
-    @override_settings(CELERY_ALWAYS_EAGER=True)
-    @mock.patch.object(FileStoreItem, "terminate_file_import_task")
-    def test_metadata_revision_works_grammatical_changes_only(
-        self, terminate_file_import_task_mock
-    ):
-        self.post_tabular_meta_data_file(
-            meta_data_file_path=self.get_test_file_path(
-                'single-file/two-line-local.csv'
-            )
-        )
-        data_set = DataSet.objects.last()
-        self.assertFalse(
-            AnnotatedNode.objects.filter(attribute_value="EDITED")
-        )
-        self.post_tabular_meta_data_file(
-            meta_data_file_path=self.get_test_file_path(
-                'single-file/three-line-local.csv'
-            ),
-            data_set_uuid=data_set.uuid
-        )
-        # Assert no new DataSet created
-        self.assertEqual(DataSet.objects.count(), 1)
-        self.assertTrue(
-            AnnotatedNode.objects.filter(attribute_value="EDITED")
-        )
-
-    @override_settings(CELERY_ALWAYS_EAGER=True)
-    @mock.patch.object(FileStoreItem, "terminate_file_import_task")
-    def test_metadata_revision_works_existing_datafiles_persisted(
-        self, terminate_file_import_task_mock
-    ):
-        local_data_file_names = ["test1.txt", "test2.txt"]
-        for name in local_data_file_names:
-            open(os.path.join(self.test_user_directory, name), "a").close()
-        self.post_tabular_meta_data_file(
-            meta_data_file_path=self.get_test_file_path(
-                'single-file/two-line-local.csv'
-            )
-        )
-        data_set = DataSet.objects.last()
-        self.post_tabular_meta_data_file(
-            meta_data_file_path=self.get_test_file_path(
-                'single-file/three-line-local.csv'
-            ),
-            data_set_uuid=data_set.uuid
-        )
-        data_set_count = DataSet.objects.count()
-        revised_data_set = DataSet.objects.last()
-
-        # Assert no new DataSet created
-        self.assertEqual(data_set_count, 1)
-
-        # Assert that DataSet version incremented
-        self.assertEqual(revised_data_set.get_version(), 2)
-
-        # Assert that previously uploaded data file remain accessible
-        investigation = revised_data_set.get_investigation()
-        self.assertEqual(
-            len(investigation.get_file_store_items(local_only=True)), 3
-        )
-
-        for file_store_item in investigation.get_file_store_items(
-                exclude_metadata_file=True, local_only=True
-        ):
-            self.assertIn(os.path.basename(file_store_item.source),
-                          local_data_file_names)
-        # Assert that the prior Investigation is no longer pointing to local
-        #  datafiles
-        self.assertFalse(
-            data_set.get_investigation(version=1).get_file_store_items(
-                exclude_metadata_file=True, local_only=True
-            )
-        )
-
-    @override_settings(CELERY_ALWAYS_EAGER=True)
-    @mock.patch.object(FileStoreItem, "terminate_file_import_task")
-    def test_metadata_revision_works_datafiles_added_during_revision(
-        self, terminate_file_import_task_mock
-    ):
-        local_data_file_names = ["test1.txt", "test2.txt"]
-        for name in local_data_file_names:
-            open(os.path.join(self.test_user_directory, name), "a").close()
-
-        self.post_tabular_meta_data_file(
-            meta_data_file_path=self.get_test_file_path(
-                'single-file/two-line-local.csv'
-            )
-        )
-        data_set = DataSet.objects.last()
-
-        local_data_file_names_for_revision = ["test3.txt"]
-        for name in local_data_file_names_for_revision:
-            open(os.path.join(self.test_user_directory, name), "a").close()
-        self.post_tabular_meta_data_file(
-            meta_data_file_path=self.get_test_file_path(
-                'single-file/three-line-local.csv'
-            ),
-            data_set_uuid=data_set.uuid
-        )
-        data_set_count = DataSet.objects.count()
-        revised_data_set = DataSet.objects.last()
-
-        # Assert no new DataSet created
-        self.assertEqual(data_set_count, 1)
-
-        # Assert that DataSet version incremented
-        self.assertEqual(revised_data_set.get_version(), 2)
-
-        # Assert that all datafiles have been uploaded and associated
-        investigation = revised_data_set.get_investigation()
-        self.assertEqual(
-            len(investigation.get_file_store_items(local_only=True)), 4
-        )
-
-        for file_store_item in investigation.get_file_store_items(
-                exclude_metadata_file=True, local_only=True
-        ):
-            self.assertIn(
-                os.path.basename(file_store_item.source),
-                local_data_file_names + local_data_file_names_for_revision
-            )
-
-    @override_settings(CELERY_ALWAYS_EAGER=True)
-    @mock.patch.object(FileStoreItem, "terminate_file_import_task")
-    def test_metadata_revision_works_datafiles_removed_during_revision(
-        self, terminate_file_import_task_mock
-    ):
-        local_data_file_names = ["test1.txt", "test2.txt"]
-        for name in local_data_file_names:
-            open(os.path.join(self.test_user_directory, name), "a").close()
-        self.post_tabular_meta_data_file(
-            meta_data_file_path=self.get_test_file_path(
-                'single-file/two-line-local.csv'
-            )
-        )
-        data_set = DataSet.objects.last()
-        self.post_tabular_meta_data_file(
-            meta_data_file_path=self.get_test_file_path(
-                'single-file/one-line.csv'
-            ),
-            data_set_uuid=data_set.uuid
-        )
-        revised_data_set = DataSet.objects.last()
-
-        # Assert that previously uploaded data files are removed
-        first_investigation = revised_data_set.get_investigation(version=1)
-        self.assertEqual(
-            len(first_investigation.get_file_store_items(
-                exclude_metadata_file=True, local_only=True)), 0
-        )
-
-    @override_settings(CELERY_ALWAYS_EAGER=True)
-    @mock.patch.object(FileStoreItem, "terminate_file_import_task")
-    def test_metadata_revision_updates_dataset_title(
-        self, terminate_file_import_task_mock
-    ):
-        self.post_tabular_meta_data_file(
-            meta_data_file_path=self.get_test_file_path(
-                'single-file/two-line-local.csv'
-            ),
-        )
-        data_set = DataSet.objects.last()
-        self.post_tabular_meta_data_file(
-            meta_data_file_path=self.get_test_file_path(
-                'single-file/three-line-local.csv'
-            ),
-            data_set_uuid=data_set.uuid,
-            title="New Title"
-        )
-
-        revised_data_set = DataSet.objects.last()
-        self.assertEqual(revised_data_set.title, "New Title")
-
-    @override_settings(CELERY_ALWAYS_EAGER=True)
-    def test_metadata_revision_fails_with_unclean_dataset(self):
-        analyses, data_set = make_analyses_with_single_dataset(1, self.user)
-        response = self.post_tabular_meta_data_file(
-                meta_data_file_path=self.get_test_file_path(
-                    'single-file/three-line-local.csv'
-                ),
-                data_set_uuid=data_set.uuid
-            )
-        self.assertEqual(
-            json.loads(response.content),
-            {
-                "error": (
-                    "DataSet with UUID: {} is not clean (There have been "
-                    "Analyses or Visualizations performed on it) Remove "
-                    "these objects and try again".format(data_set.uuid)
-                )
-            }
-        )
-
-    def test_metadata_revision_is_only_allowed_if_data_set_owner(self):
-        data_set = create_dataset_with_necessary_models()
-        response = self.post_tabular_meta_data_file(
-            meta_data_file_path=self.get_test_file_path(
-                'single-file/two-line-s3.csv'
-            ),
-            data_set_uuid=data_set.uuid
-        )
-        self.assertEqual(response.status_code, 403)
-        self.assertIn(
-            "Metadata revision is only allowed for Data Set owners",
-            response.content
-        )
-
-
 class SingleFileColumnParserTests(TestCase):
     def setUp(self):
         self.import_file_mock = mock.patch.object(import_file, "delay").start()
@@ -2476,137 +2023,3 @@ class TestManagementCommands(TestCase):
         self.assertIn("custom_delimiter_string was not specified",
                       context.exception.message)
         self.assertEqual(DataSet.objects.count(), 0)
-
-
-class CheckDataFilesViewTests(MetadataImportTestBase):
-    def setUp(self):
-        super(CheckDataFilesViewTests, self).setUp()
-        self.check_files_url = "/data_set_manager/import/check_files/"
-
-    def test_check_datafiles_non_ajax_request(self):
-        response = self.client.post(
-            self.check_files_url,
-            content_type="application/json",
-            data=json.dumps({"hello": "world"})
-        )
-        self.assertEqual(response.status_code, 400)
-
-    def test_check_datafiles_empty_body(self):
-        response = self.client.post(
-            self.check_files_url,
-            content_type="application/json",
-            HTTP_X_REQUESTED_WITH='XMLHttpRequest'
-        )
-        self.assertEqual(response.status_code, 400)
-
-    def test_check_datafiles_wrong_content_type(self):
-        response = self.client.post(
-            self.check_files_url,
-            data={"list": ["a", "b", "c"]},
-            HTTP_X_REQUESTED_WITH='XMLHttpRequest'
-        )
-        self.assertEqual(response.status_code, 400)
-
-    def test_check_datafiles_no_files_uploaded(self):
-        response = self.client.post(
-            self.check_files_url,
-            content_type="application/json",
-            data=json.dumps({"list": ["a.txt", "b.txt"]}),
-            HTTP_X_REQUESTED_WITH='XMLHttpRequest'
-        )
-        self.assertEqual(
-            json.loads(response.content),
-            {
-                "data_files_to_be_deleted": [],
-                "data_files_not_uploaded": ["a.txt", "b.txt"]
-            }
-        )
-
-    def test_check_datafiles_subset_of_files_uploaded(self):
-        open(os.path.join(self.test_user_directory, "a.txt"), "a").close()
-        response = self.client.post(
-            self.check_files_url,
-            content_type="application/json",
-            data=json.dumps({"list": ["a.txt", "b.txt"]}),
-            HTTP_X_REQUESTED_WITH='XMLHttpRequest'
-        )
-        self.assertEqual(
-            json.loads(response.content),
-            {
-                "data_files_to_be_deleted": [],
-                "data_files_not_uploaded": ["b.txt"]
-            }
-        )
-
-    def test_check_datafiles_all_files_uploaded(self):
-        for name in ["a.txt", "b.txt"]:
-            open(os.path.join(self.test_user_directory, name), "a").close()
-        response = self.client.post(
-            self.check_files_url,
-            content_type="application/json",
-            data=json.dumps({"list": ["a.txt", "b.txt"]}),
-            HTTP_X_REQUESTED_WITH='XMLHttpRequest'
-        )
-        self.assertEqual(
-            json.loads(response.content),
-            {
-                "data_files_to_be_deleted": [],
-                "data_files_not_uploaded": []
-            }
-        )
-
-    def test_check_datafiles_non_existing_data_set_uuid(self):
-        response = self.client.post(
-            "{}?data_set_uuid={}".format(self.check_files_url, uuid.uuid4()),
-            content_type="application/json",
-            HTTP_X_REQUESTED_WITH='XMLHttpRequest'
-        )
-        self.assertEqual(response.status_code, 404)
-
-    @override_settings(CELERY_ALWAYS_EAGER=True)
-    def test_check_datafiles_metadata_revision_subset_uploaded(self):
-        open(os.path.join(self.test_user_directory, "test1.txt"), "a").close()
-        self.post_tabular_meta_data_file(
-            meta_data_file_path=self.get_test_file_path(
-                "single-file/two-line-local.csv"
-            )
-        )
-
-        data_set = DataSet.objects.last()
-        response = self.client.post(
-            "{}?data_set_uuid={}".format(self.check_files_url, data_set.uuid),
-            content_type="application/json",
-            data=json.dumps({"list": ["test1.txt", "test2.txt"]}),
-            HTTP_X_REQUESTED_WITH='XMLHttpRequest'
-        )
-        self.assertEqual(
-            json.loads(response.content),
-            {
-                "data_files_to_be_deleted": [],
-                "data_files_not_uploaded": ["test2.txt"]
-            }
-        )
-
-    @override_settings(CELERY_ALWAYS_EAGER=True)
-    def test_check_datafiles_metadata_revision_files_will_be_deleted(self):
-        open(os.path.join(self.test_user_directory, "test1.txt"), "a").close()
-        self.post_tabular_meta_data_file(
-            meta_data_file_path=self.get_test_file_path(
-                "single-file/two-line-local.csv"
-            )
-        )
-
-        data_set = DataSet.objects.last()
-        response = self.client.post(
-            "{}?data_set_uuid={}".format(self.check_files_url, data_set.uuid),
-            content_type="application/json",
-            data=json.dumps({"list": ["fake.txt"]}),
-            HTTP_X_REQUESTED_WITH='XMLHttpRequest'
-        )
-        self.assertEqual(
-            json.loads(response.content),
-            {
-                "data_files_to_be_deleted": ["test1.txt"],
-                "data_files_not_uploaded": ["fake.txt"]
-            }
-        )
