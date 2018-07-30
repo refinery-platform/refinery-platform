@@ -62,7 +62,7 @@
       vm.isLoading = true;
       nodesV2Service.partial_update({
         uuid: vm.resolve.config.nodeObj.uuid,
-        file_uuid: null
+        file_uuid: ''
       }).$promise.then(function () {
         vm.isLoading = false;
         vm.alertType = 'success';

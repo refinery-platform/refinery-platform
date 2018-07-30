@@ -1137,7 +1137,7 @@ class NodeViewSet(APIView):
               required: false
     ...
     """
-    http_method_names = ['get', 'patch']
+    http_method_names = ['patch']
 
     def get_object(self, uuid):
         try:
@@ -1148,18 +1148,6 @@ class NodeViewSet(APIView):
         except Node.MultipleObjectsReturned as e:
             logger.error(e)
             raise APIException("Multiple objects returned.")
-
-    def get(self, request, uuid):
-        node = self.get_object(uuid)
-        data_set = node.study.get_dataset()
-        public_group = ExtendedGroup.objects.public_group()
-
-        if request.user.has_perm('core.read_dataset', data_set) or \
-                'read_dataset' in get_perms(public_group, data_set):
-            serializer = NodeSerializer(node)
-            return Response(serializer.data)
-
-        return Response(uuid, status=status.HTTP_401_UNAUTHORIZED)
 
     def patch(self, request, uuid):
         node = self.get_object(uuid)
@@ -1176,7 +1164,8 @@ class NodeViewSet(APIView):
         if data_set.get_owner() == request.user:
             # to remove the data file, we need to delete it and update index,
             #  the file store item uuid should remain
-            if new_file_uuid is None:
+            if new_file_uuid == '':
+
                 try:
                     file_store_item = FileStoreItem.objects.get(
                         uuid=node.file_uuid
@@ -1184,13 +1173,17 @@ class NodeViewSet(APIView):
                 except (FileStoreItem.DoesNotExist,
                         FileStoreItem.MultipleObjectsReturned) as e:
                     logger.error(e)
+                    return Response('Missing file store item.',
+                                    status=status.HTTP_400_BAD_REQUEST)
                 else:
                     file_store_item.delete_datafile()
 
-            node.update_solr_index()
-            return Response(
-                NodeSerializer(node).data, status=status.HTTP_200_OK
-            )
+                node.update_solr_index()
+                return Response(
+                    NodeSerializer(node).data, status=status.HTTP_200_OK
+                )
+            return Response('Currently, you can only remove node files.',
+                            status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
         return Response(uuid, status=status.HTTP_401_UNAUTHORIZED)
 
