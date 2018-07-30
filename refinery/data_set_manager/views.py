@@ -1173,7 +1173,7 @@ class NodeViewSet(APIView):
                 except (FileStoreItem.DoesNotExist,
                         FileStoreItem.MultipleObjectsReturned) as e:
                     logger.error(e)
-                    return Response('Missing data file.',
+                    return Response('Missing file store item.',
                                     status=status.HTTP_400_BAD_REQUEST)
                 else:
                     file_store_item.delete_datafile()
