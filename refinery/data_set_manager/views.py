@@ -1164,7 +1164,7 @@ class NodeViewSet(APIView):
         if data_set.get_owner() == request.user:
             # to remove the data file, we need to delete it and update index,
             #  the file store item uuid should remain
-            if new_file_uuid is None:
+            if new_file_uuid == '':
                 try:
                     file_store_item = FileStoreItem.objects.get(
                         uuid=node.file_uuid
@@ -1172,13 +1172,17 @@ class NodeViewSet(APIView):
                 except (FileStoreItem.DoesNotExist,
                         FileStoreItem.MultipleObjectsReturned) as e:
                     logger.error(e)
+                    return Response('Missing data file.',
+                                    status=status.HTTP_400_BAD_REQUEST)
                 else:
                     file_store_item.delete_datafile()
 
-            node.update_solr_index()
-            return Response(
-                NodeSerializer(node).data, status=status.HTTP_200_OK
-            )
+                node.update_solr_index()
+                return Response(
+                    NodeSerializer(node).data, status=status.HTTP_200_OK
+                )
+            return Response('Currently, you can only remove node files.',
+                            status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
         return Response(uuid, status=status.HTTP_401_UNAUTHORIZED)
 
