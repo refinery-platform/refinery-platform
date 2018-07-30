@@ -1165,6 +1165,7 @@ class NodeViewSet(APIView):
             # to remove the data file, we need to delete it and update index,
             #  the file store item uuid should remain
             if new_file_uuid == '':
+
                 try:
                     file_store_item = FileStoreItem.objects.get(
                         uuid=node.file_uuid
