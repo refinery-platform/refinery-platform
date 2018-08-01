@@ -1157,6 +1157,12 @@ class DataSetTests(TestCase):
         analyses, dataset = make_analyses_with_single_dataset(1, self.user)
         self.assertFalse(dataset.is_clean())
 
+    def test_is_clean_if_dataset_has_failed_analyses(self):
+        analyses, dataset = make_analyses_with_single_dataset(1, self.user)
+        for analysis in analyses:
+            analysis.set_status(Analysis.FAILURE_STATUS)
+        self.assertTrue(dataset.is_clean())
+
     def test_is_clean_if_dataset_has_visualizations(self):
         tool = create_tool_with_necessary_models("VISUALIZATION")
         self.assertFalse(tool.dataset.is_clean())

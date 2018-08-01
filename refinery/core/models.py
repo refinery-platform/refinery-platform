@@ -768,10 +768,13 @@ class DataSet(SharableResource):
     def is_clean(self):
         """
         Check whether or not any Analyses or Visualizations have been run on
-        a DataSet
+        a DataSet. Failed analyses won't yield any derived results so they
+        sre not counted against a DataSet's "cleanliness"
         :return: boolean
         """
-        return not (self.get_analyses() or self.has_visualizations())
+        non_failed_analyses = [analysis for analysis in self.get_analyses()
+                               if not analysis.failed()]
+        return not (non_failed_analyses or self.has_visualizations())
 
     def set_title(self, title):
         self.title = title
