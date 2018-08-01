@@ -44,7 +44,7 @@
     vm.openDataSetDeleteModal = openDataSetDeleteModal;
     vm.openDataSetTransferModal = openDataSetTransferModal;
     vm.openPermissionEditor = openPermissionEditor;
-    vm.params = {};
+    vm.params = { limit: 20, offset: 0 };
     vm.primaryGroupID = primaryGroupService.primaryGroup.id;
     vm.resetDataSetSearch = resetDataSetSearch;
     vm.searchDataSets = searchDataSets;
