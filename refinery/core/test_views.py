@@ -141,6 +141,34 @@ class DataSetApiV2Tests(APIV2TestCase):
         self.view(get_request)
         self.assertTrue(mock_is_filtered.called)
 
+    def test_get_data_set_pagination_offset(self):
+        create_dataset_with_necessary_models(user=self.user)
+        params = {'offset': 1}
+        get_request = self.factory.get(self.url_root, params)
+        get_request.user = self.user
+        get_response = self.view(get_request)
+        self.assertEqual(len(get_response.data), 2)
+        self.assertEqual(get_response.data[0].get('uuid'),
+                         self.data_set_2.uuid)
+
+    def test_get_data_set_pagination_limit(self):
+        data_set_3 = create_dataset_with_necessary_models(user=self.user)
+        params = {'limit': 1}
+        get_request = self.factory.get(self.url_root, params)
+        get_request.user = self.user
+        get_response = self.view(get_request)
+        self.assertEqual(len(get_response.data), 1)
+        self.assertEqual(get_response.data[0].get('uuid'), data_set_3.uuid)
+
+    def test_get_data_set_pagination_limit_and_offset(self):
+        create_dataset_with_necessary_models(user=self.user)
+        params = {'limit': 1, 'offset': 2}
+        get_request = self.factory.get(self.url_root, params)
+        get_request.user = self.user
+        get_response = self.view(get_request)
+        self.assertEqual(len(get_response.data), 1)
+        self.assertEqual(get_response.data[0].get('uuid'), self.data_set.uuid)
+
     def test_dataset_delete_successful(self):
 
         self.assertEqual(DataSet.objects.all().count(), 2)
