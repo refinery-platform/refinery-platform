@@ -36,6 +36,16 @@
     it('Variables should be initialized', function () {
       expect(ctrl.dataSets).toEqual([]);
       expect(ctrl.groupFilter.selectedName).toEqual('All');
+      console.log(ctrl.params);
+      expect(ctrl.params.limit).toEqual(ctrl.pageLimit);
+      expect(ctrl.params.limit).toEqual(ctrl.pageLimit);
+    });
+
+    it('Pagination variables should be initialized', function () {
+      expect(ctrl.pageLimit).toEqual(20);
+      expect(ctrl.pageStartOffset).toEqual(0);
+      expect(ctrl.currentPage).toEqual(1);
+      expect(ctrl.numPages).toEqual(0);
     });
 
     it('API related Variables should be initialized', function () {
@@ -204,6 +214,37 @@
         expect(mockGetDataSets).not.toHaveBeenCalled();
         ctrl.resetDataSetSearch();
         expect(mockGetDataSets).toHaveBeenCalled();
+      });
+    });
+
+    describe('pageChangedUpdate', function () {
+      var mockRefresh;
+
+      beforeEach(inject(function () {
+        mockRefresh = spyOn(ctrl, 'refreshDataSets');
+      }));
+
+      it('pageChangedUpdate is a method', function () {
+        expect(angular.isFunction(ctrl.pageChangedUpdate)).toBe(true);
+      });
+
+      it('calls on refresh data set', function () {
+        ctrl.pageChangedUpdate();
+        expect(mockRefresh).toHaveBeenCalled();
+      });
+
+      it('updates pageStartOffset', function () {
+        ctrl.pageLimit = 20;
+        ctrl.currentPage = 2;
+        ctrl.pageChangedUpdate();
+        expect(ctrl.pageStartOffset).toEqual(20);
+      });
+
+      it('updates params offset to equal pageStartOffset', function () {
+        ctrl.pageLimit = 20;
+        ctrl.currentPage = 2;
+        ctrl.pageChangedUpdate();
+        expect(ctrl.params.offset).toEqual(ctrl.pageStartOffset);
       });
     });
 
