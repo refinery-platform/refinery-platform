@@ -147,7 +147,7 @@
       </div>
       <div id="dashboard-total-datasets">
         <span ng-if="$ctrl.dataSets.length">
-          {{ $ctrl.dataSets.length }} data sets
+          {{ $ctrl.totalDataSets }} data sets
         </span>
         <span ng-if="$ctrl.searchQueryDataSets.length > 0 && $ctrl.isFiltersEmpty()">
           <button
@@ -260,6 +260,11 @@
            </div>
         </li>
       </ul>
+      <ul uib-pagination total-items="$ctrl.totalDataSets"
+        ng-model="$ctrl.bigCurrentPage" max-size="$ctrl.pageLimit"
+        class="pagination-sm" boundary-link-numbers="true" rotate="false"
+        ng-click="$ctrl.pageChanged"></ul>
+    <pre>Page: {{$ctrl.bigCurrentPage}} / {{$ctrl.numPages}}</pre>
     </div>
   </div>
 </div>

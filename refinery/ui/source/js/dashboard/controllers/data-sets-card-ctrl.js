@@ -52,6 +52,22 @@
 
     activate();
 
+    vm.totalDataSets = dataSetCardFactory.dataSets.length;
+    vm.currentPage = 1;
+    vm.pageLimit = 10;
+    vm.bigTotalItems = dataSetCardFactory.dataSets.length;
+    vm.bigCurrentPage = 1;
+    vm.numPages = 0;
+
+    vm.pageChanged = function () {
+      $log.log('Page changed to: ' + vm.currentPage);
+      console.log('page changed');
+      vm.dataSets = dataSetCardFactory.dataSets.slice(vm.currentPage * vm.pageLimit,
+        vm.currentPage * vm.pageLimit + vm.pageLimit);
+      // ng click need to either grab new data or grab cache
+      // reset filter event
+    };
+
     function activate () {
       vm.refreshDataSets();
     }
@@ -93,7 +109,11 @@
       dataSetCardFactory.getDataSets(vm.params).then(function () {
         vm.searchQueryDataSets = '';
         vm.loadingDataSets = false;
-        vm.dataSets = dataSetCardFactory.dataSets;
+        console.log('waiting for it to load');
+        vm.dataSets = dataSetCardFactory.dataSets.slice(0, vm.pageLimit);
+        vm.totalDataSets = dataSetCardFactory.dataSets.length;
+        vm.bigTotalItems = dataSetCardFactory.dataSets.length;
+        vm.numPages = Math.ceil(vm.bigTotalItems / vm.pageLimit);
         vm.dataSetsError = false;
       }, function (error) {
         vm.loadingDataSets = false;
