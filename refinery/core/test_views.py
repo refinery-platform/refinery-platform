@@ -108,7 +108,7 @@ class DataSetApiV2Tests(APIV2TestCase):
         self.assertEqual(len(get_response.data), 2)
 
     def test_get_data_set_with_anon_user(self):
-        self.assertEqual(len(self.get_response.data), 0)
+        self.assertEqual(len(self.get_response.data.get('data_sets')), 0)
 
     @mock.patch('core.views.DataSetsViewSet.is_filtered_data_set')
     def test_get_data_set_not_call_helper_method(self, mock_is_filtered):
@@ -147,8 +147,8 @@ class DataSetApiV2Tests(APIV2TestCase):
         get_request = self.factory.get(self.url_root, params)
         get_request.user = self.user
         get_response = self.view(get_request)
-        self.assertEqual(len(get_response.data), 2)
-        self.assertEqual(get_response.data[0].get('uuid'),
+        self.assertEqual(len(get_response.data.get('data_sets')), 2)
+        self.assertEqual(get_response.data.get('data_sets')[0].get('uuid'),
                          self.data_set_2.uuid)
 
     def test_get_data_set_pagination_limit(self):
@@ -157,8 +157,9 @@ class DataSetApiV2Tests(APIV2TestCase):
         get_request = self.factory.get(self.url_root, params)
         get_request.user = self.user
         get_response = self.view(get_request)
-        self.assertEqual(len(get_response.data), 1)
-        self.assertEqual(get_response.data[0].get('uuid'), data_set_3.uuid)
+        self.assertEqual(len(get_response.data.get('data_sets')), 1)
+        self.assertEqual(get_response.data.get('data_sets')[0].get('uuid'),
+                         data_set_3.uuid)
 
     def test_get_data_set_pagination_limit_and_offset(self):
         create_dataset_with_necessary_models(user=self.user)
@@ -166,8 +167,9 @@ class DataSetApiV2Tests(APIV2TestCase):
         get_request = self.factory.get(self.url_root, params)
         get_request.user = self.user
         get_response = self.view(get_request)
-        self.assertEqual(len(get_response.data), 1)
-        self.assertEqual(get_response.data[0].get('uuid'), self.data_set.uuid)
+        self.assertEqual(len(get_response.data.get('data_sets')), 1)
+        self.assertEqual(get_response.data.get('data_sets')[0].get('uuid'),
+                         self.data_set.uuid)
 
     def test_dataset_delete_successful(self):
 
@@ -782,14 +784,14 @@ class DataSetApiV2Tests(APIV2TestCase):
     def test_get_data_set_is_clean(self):
         self.get_request.user = self.user
         get_response = self.view(self.get_request)
-        self.assertTrue(get_response.data[0]["is_clean"])
+        self.assertTrue(get_response.data.get('data_sets')[0]["is_clean"])
 
     def test_get_data_set_is_not_clean(self):
         # Create a DataSet along with a Visualization Tool
         create_tool_with_necessary_models("VISUALIZATION", user=self.user)
         self.get_request.user = self.user
         get_response = self.view(self.get_request)
-        self.assertFalse(get_response.data[0]["is_clean"])
+        self.assertFalse(get_response.data.get('data_sets')[0]["is_clean"])
 
 
 class AnalysisApiV2Tests(APIV2TestCase):

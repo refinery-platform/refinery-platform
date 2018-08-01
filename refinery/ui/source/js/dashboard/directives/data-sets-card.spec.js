@@ -34,7 +34,7 @@
         .whenGET(
           settings.appRoot +
           settings.refineryApiV2 +
-          '/data_sets/?limit=20&offset=0'
+          '/data_sets/'
         ).respond(200, []);
 
       var scope = $rootScope.$new();

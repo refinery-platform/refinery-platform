@@ -60,12 +60,8 @@
 
     vm.pageChanged = function () {
       vm.pageStartOffset = vm.pageLimit * vm.currentPage - vm.pageLimit;
-      console.log(vm.pageStartOffset);
       vm.params.offset = vm.pageStartOffset;
       vm.refreshDataSets();
-
-      // ng click need to either grab new data or grab cache
-      // reset filter event
     };
 
     function activate () {

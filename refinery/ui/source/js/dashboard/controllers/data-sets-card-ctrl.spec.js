@@ -41,7 +41,6 @@
     it('API related Variables should be initialized', function () {
       expect(ctrl.dataSetsError).toEqual(false);
       expect(ctrl.loadingDataSets).toEqual(true);
-      expect(ctrl.params).toEqual({ limit: 20, offset: 0 });
       expect(ctrl.searchQueryDataSets).toEqual('');
     });
 

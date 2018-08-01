@@ -62,13 +62,13 @@ describe('Common.service.dataSetsV2: unit tests', function () {
     });
 
     it('query should return a resolving promise', function () {
-      var dataSetsArray = [{ name: 'TestDataSet' }];
+      var dataSets = { data_sets: [{ name: 'TestDataSet' }] };
       $httpBackend
         .expectGET(
           settings.appRoot +
           settings.refineryApiV2 +
           '/data_sets/'
-      ).respond(200, dataSetsArray);
+      ).respond(200, dataSets);
 
       var results;
       param.uuid = fakeUuid;
@@ -79,7 +79,7 @@ describe('Common.service.dataSetsV2: unit tests', function () {
       expect(typeof promise.then).toEqual('function');
       $httpBackend.flush();
       $rootScope.$digest();
-      expect(results.data[0].name).toEqual(dataSetsArray[0].name);
+      expect(results.data.data_sets[0].name).toEqual(dataSets.data_sets[0].name);
     });
   });
 });
