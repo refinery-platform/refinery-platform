@@ -36,7 +36,6 @@
     it('Variables should be initialized', function () {
       expect(ctrl.dataSets).toEqual([]);
       expect(ctrl.groupFilter.selectedName).toEqual('All');
-      console.log(ctrl.params);
       expect(ctrl.params.limit).toEqual(ctrl.pageLimit);
       expect(ctrl.params.limit).toEqual(ctrl.pageLimit);
     });
