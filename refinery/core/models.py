@@ -769,7 +769,7 @@ class DataSet(SharableResource):
         """
         Check whether or not any Analyses or Visualizations have been run on
         a DataSet. Failed analyses won't yield any derived results so they
-        sre not counted against a DataSet's "cleanliness"
+        are not counted against a DataSet's "cleanliness"
         :return: boolean
         """
         non_failed_analyses = [analysis for analysis in self.get_analyses()
