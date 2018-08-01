@@ -23,10 +23,12 @@
   ) {
     var dataSets = [];
     var currentParams = {};
+    var dataSetStats = { totalCount: 0 };
 
     var service = {
       dataSets: dataSets,
-      getDataSets: getDataSets
+      getDataSets: getDataSets,
+      dataSetStats: dataSetStats
     };
     return service;
 
@@ -48,7 +50,8 @@
       dataSetsRequest.$promise.then(function (response) {
         // only update the state if it's the correct params (avoid raceconditions)
         if (_.isEqual(currentParams, response.config.params)) {
-          angular.copy(response.data, dataSets);
+          angular.copy(response.data.data_sets, dataSets);
+          dataSetStats.totalCount = response.data.total_data_sets;
         }
       });
       return dataSetsRequest.$promise;

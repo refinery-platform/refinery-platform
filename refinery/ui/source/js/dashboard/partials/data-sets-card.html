@@ -261,10 +261,9 @@
         </li>
       </ul>
       <ul uib-pagination total-items="$ctrl.totalDataSets"
-        ng-model="$ctrl.bigCurrentPage" max-size="$ctrl.pageLimit"
+        ng-model="$ctrl.currentPage" items-per-page="$ctrl.pageLimit"
         class="pagination-sm" boundary-link-numbers="true" rotate="false"
-        ng-click="$ctrl.pageChanged"></ul>
-    <pre>Page: {{$ctrl.bigCurrentPage}} / {{$ctrl.numPages}}</pre>
+        ng-change="$ctrl.pageChanged()"></ul>
     </div>
   </div>
 </div>

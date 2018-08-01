@@ -44,7 +44,9 @@
     vm.openDataSetDeleteModal = openDataSetDeleteModal;
     vm.openDataSetTransferModal = openDataSetTransferModal;
     vm.openPermissionEditor = openPermissionEditor;
-    vm.params = { limit: 20, offset: 0 };
+    vm.params = { limit: vm.pageLimit, offset: vm.pageStartOffset };
+    vm.pageLimit = 20;
+    vm.pageStartOffset = 0;
     vm.primaryGroupID = primaryGroupService.primaryGroup.id;
     vm.resetDataSetSearch = resetDataSetSearch;
     vm.searchDataSets = searchDataSets;
@@ -52,18 +54,16 @@
 
     activate();
 
-    vm.totalDataSets = dataSetCardFactory.dataSets.length;
+    vm.totalDataSets = dataSetCardFactory.dataSetStats.totalCounts;
     vm.currentPage = 1;
-    vm.pageLimit = 10;
-    vm.bigTotalItems = dataSetCardFactory.dataSets.length;
-    vm.bigCurrentPage = 1;
     vm.numPages = 0;
 
     vm.pageChanged = function () {
-      $log.log('Page changed to: ' + vm.currentPage);
-      console.log('page changed');
-      vm.dataSets = dataSetCardFactory.dataSets.slice(vm.currentPage * vm.pageLimit,
-        vm.currentPage * vm.pageLimit + vm.pageLimit);
+      vm.pageStartOffset = vm.pageLimit * vm.currentPage - vm.pageLimit;
+      console.log(vm.pageStartOffset);
+      vm.params.offset = vm.pageStartOffset;
+      vm.refreshDataSets();
+
       // ng click need to either grab new data or grab cache
       // reset filter event
     };
@@ -109,11 +109,9 @@
       dataSetCardFactory.getDataSets(vm.params).then(function () {
         vm.searchQueryDataSets = '';
         vm.loadingDataSets = false;
-        console.log('waiting for it to load');
         vm.dataSets = dataSetCardFactory.dataSets.slice(0, vm.pageLimit);
-        vm.totalDataSets = dataSetCardFactory.dataSets.length;
-        vm.bigTotalItems = dataSetCardFactory.dataSets.length;
-        vm.numPages = Math.ceil(vm.bigTotalItems / vm.pageLimit);
+        vm.totalDataSets = dataSetCardFactory.dataSetStats.totalCount;
+        vm.numPages = Math.ceil(vm.totalDataSets / vm.pageLimit);
         vm.dataSetsError = false;
       }, function (error) {
         vm.loadingDataSets = false;
