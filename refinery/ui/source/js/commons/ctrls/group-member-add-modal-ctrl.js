@@ -94,5 +94,8 @@
         }
       );
     }
+    vm.$onInit = function () {
+      vm.groupName = vm.resolve.config.group.name;
+    };
   }
 })();

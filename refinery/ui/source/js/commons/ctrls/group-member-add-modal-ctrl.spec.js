@@ -2,6 +2,7 @@
 
 describe('Controller: GroupMemberAddModalCtrl', function () {
   var ctrl;
+  var mockGroupName = 'Test Group';
   var promise;
   var scope;
   var service;
@@ -19,7 +20,7 @@ describe('Controller: GroupMemberAddModalCtrl', function () {
     ctrl = $componentController(
       'rpGroupMemberAddModal',
       { $scope: scope },
-      { resolve: { config: { group: { id: 5 } } } }
+      { resolve: { config: { group: { id: 5, name: mockGroupName } } } }
     );
   }));
 
@@ -31,6 +32,10 @@ describe('Controller: GroupMemberAddModalCtrl', function () {
     expect(ctrl.alertType).toEqual('info');
     expect(ctrl.responseMessage).toEqual('');
     expect(ctrl.form.email).toEqual('');
+  });
+
+  it('GroupName should be initialized', function () {
+    expect(ctrl.GroupName).toEqual(mockGroupName);
   });
 
   it('Helper Methods exist', function () {
