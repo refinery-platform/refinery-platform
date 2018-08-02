@@ -36,12 +36,20 @@
     it('Variables should be initialized', function () {
       expect(ctrl.dataSets).toEqual([]);
       expect(ctrl.groupFilter.selectedName).toEqual('All');
+      expect(ctrl.params.limit).toEqual(ctrl.itemsPerPage);
+      expect(ctrl.params.limit).toEqual(ctrl.itemsPerPage);
+    });
+
+    it('Pagination variables should be initialized', function () {
+      expect(ctrl.itemsPerPage).toEqual(20);
+      expect(ctrl.pageStartOffset).toEqual(0);
+      expect(ctrl.currentPage).toEqual(1);
+      expect(ctrl.numPages).toEqual(0);
     });
 
     it('API related Variables should be initialized', function () {
       expect(ctrl.dataSetsError).toEqual(false);
       expect(ctrl.loadingDataSets).toEqual(true);
-      expect(ctrl.params).toEqual({ limit: 20, offset: 0 });
       expect(ctrl.searchQueryDataSets).toEqual('');
     });
 
@@ -205,6 +213,37 @@
         expect(mockGetDataSets).not.toHaveBeenCalled();
         ctrl.resetDataSetSearch();
         expect(mockGetDataSets).toHaveBeenCalled();
+      });
+    });
+
+    describe('pageChangedUpdate', function () {
+      var mockRefresh;
+
+      beforeEach(inject(function () {
+        mockRefresh = spyOn(ctrl, 'refreshDataSets');
+      }));
+
+      it('pageChangedUpdate is a method', function () {
+        expect(angular.isFunction(ctrl.pageChangedUpdate)).toBe(true);
+      });
+
+      it('calls on refresh data set', function () {
+        ctrl.pageChangedUpdate();
+        expect(mockRefresh).toHaveBeenCalled();
+      });
+
+      it('updates pageStartOffset', function () {
+        ctrl.itemsPerPage = 20;
+        ctrl.currentPage = 2;
+        ctrl.pageChangedUpdate();
+        expect(ctrl.pageStartOffset).toEqual(20);
+      });
+
+      it('updates params offset to equal pageStartOffset', function () {
+        ctrl.itemsPerPage = 20;
+        ctrl.currentPage = 2;
+        ctrl.pageChangedUpdate();
+        expect(ctrl.params.offset).toEqual(ctrl.pageStartOffset);
       });
     });
 

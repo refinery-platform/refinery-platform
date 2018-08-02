@@ -34,21 +34,27 @@
     primaryGroupService
   ) {
     var vm = this;
+    vm.currentPage = 1;
     vm.dataSets = [];
     vm.dataSetsError = false;
     vm.filterDataSets = filterDataSets;
-    vm.refreshDataSets = refreshDataSets;
     vm.groupFilter = { selectedName: 'All' };
     vm.isFiltersEmpty = isFiltersEmpty;
     vm.loadingDataSets = true;
+    vm.numPages = 0;
     vm.openDataSetDeleteModal = openDataSetDeleteModal;
     vm.openDataSetTransferModal = openDataSetTransferModal;
     vm.openPermissionEditor = openPermissionEditor;
-    vm.params = { limit: 20, offset: 0 };
+    vm.itemsPerPage = 20;
+    vm.pageStartOffset = 0;
+    vm.pageChangedUpdate = pageChangedUpdate;
+    vm.params = { limit: vm.itemsPerPage, offset: vm.pageStartOffset };
     vm.primaryGroupID = primaryGroupService.primaryGroup.id;
+    vm.refreshDataSets = refreshDataSets;
     vm.resetDataSetSearch = resetDataSetSearch;
     vm.searchDataSets = searchDataSets;
     vm.searchQueryDataSets = '';
+    vm.totalDataSets = dataSetCardFactory.dataSetStats.totalCount;
 
     activate();
 
@@ -84,6 +90,17 @@
     }
 
     /**
+     * @name pageChangedUpdate
+     * @desc  View method for updating data sets based on page number
+     * @memberOf refineryDashboard.DataSetsCardCtrl
+    **/
+    function pageChangedUpdate () {
+      vm.pageStartOffset = vm.itemsPerPage * vm.currentPage - vm.itemsPerPage;
+      vm.params.offset = vm.pageStartOffset;
+      vm.refreshDataSets();
+    }
+
+    /**
      * @name refreshDataSets
      * @desc  View method for updating the data set list
      * @memberOf refineryDashboard.DataSetsCardCtrl
@@ -93,7 +110,9 @@
       dataSetCardFactory.getDataSets(vm.params).then(function () {
         vm.searchQueryDataSets = '';
         vm.loadingDataSets = false;
-        vm.dataSets = dataSetCardFactory.dataSets;
+        vm.dataSets = dataSetCardFactory.dataSets.slice(0, vm.itemsPerPage);
+        vm.totalDataSets = dataSetCardFactory.dataSetStats.totalCount;
+        vm.numPages = Math.ceil(vm.totalDataSets / vm.itemsPerPage);
         vm.dataSetsError = false;
       }, function (error) {
         vm.loadingDataSets = false;

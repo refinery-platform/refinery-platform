@@ -12,7 +12,6 @@ angular
         {
           query: {
             method: 'GET',
-            isArray: true,
             interceptor: {
               response: function (response) {
                 if (!_.has(response.config, 'params')) {

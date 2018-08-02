@@ -790,11 +790,14 @@ class DataSetsViewSet(APIView):
             else:
                 filtered_data_sets.append(data_set)
 
+        total_data_sets = len(filtered_data_sets)
         paged_data_sets = paginator.paginate_queryset(filtered_data_sets,
                                                       request)
         serializer = DataSetSerializer(paged_data_sets, many=True,
                                        context={'request': request})
-        return Response(serializer.data)
+
+        return Response({'data_sets': serializer.data,
+                        'total_data_sets': total_data_sets})
 
     def get_object(self, uuid):
         try:
