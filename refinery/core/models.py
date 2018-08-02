@@ -772,9 +772,12 @@ class DataSet(SharableResource):
         are not counted against a DataSet's "cleanliness"
         :return: boolean
         """
-        non_failed_analyses = [analysis for analysis in self.get_analyses()
-                               if not analysis.failed()]
-        return not (non_failed_analyses or self.has_visualizations())
+        has_non_failed_analyses = any(
+            [not analysis.failed() for analysis in self.get_analyses()]
+        )
+        return not (
+            has_non_failed_analyses or self.has_visualizations()
+        )
 
     def set_title(self, title):
         self.title = title
