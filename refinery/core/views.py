@@ -774,6 +774,7 @@ class DataSetsViewSet(APIView):
             request.user, 'dataset'
         ).order_by('-modification_date')
 
+        total_data_sets = len(user_data_sets)
         if filters.get('is_owner') or filters.get('is_public') or \
                 filters.get('group'):
             filtered_data_set = []
@@ -785,13 +786,17 @@ class DataSetsViewSet(APIView):
                     )
                 if self.is_filtered_data_set(data_set, filters):
                     filtered_data_set.append(data_set)
+
+            total_data_sets = len(filtered_data_set)
             data_sets = paginator.paginate_queryset(filtered_data_set, request)
         else:
             data_sets = paginator.paginate_queryset(user_data_sets, request)
 
         serializer = DataSetSerializer(data_sets, many=True,
                                        context={'request': request})
-        return Response(serializer.data)
+
+        return Response({'data_sets': serializer.data,
+                        'total_data_sets': total_data_sets})
 
     def get_object(self, uuid):
         try:
