@@ -35,7 +35,9 @@ describe('Controller: GroupMemberAddModalCtrl', function () {
   });
 
   it('GroupName should be initialized', function () {
-    expect(ctrl.GroupName).toEqual(mockGroupName);
+    // when using $componentController, need to call lifecycle hooks
+    ctrl.$onInit();
+    expect(ctrl.groupName).toEqual(mockGroupName);
   });
 
   it('Helper Methods exist', function () {
