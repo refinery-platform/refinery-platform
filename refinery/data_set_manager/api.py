@@ -24,7 +24,8 @@ logger = logging.getLogger(__name__)
 
 
 class AttributeResource(ModelResource):
-    node = fields.ForeignKey('core.api.NodeResource', 'node', use_in='all')
+    node = fields.ForeignKey('data_set_manager.api.NodeResource', 'node',
+                             use_in='all')
 
     class Meta:
         queryset = Attribute.objects.all()
@@ -48,8 +49,10 @@ class AttributeResource(ModelResource):
 
 
 class NodeResource(ModelResource):
-    parents = fields.ToManyField('core.api.NodeResource', 'parents')
-    children = fields.ToManyField('core.api.NodeResource', 'children')
+    parents = fields.ToManyField('data_set_manager.api.NodeResource',
+                                 'parents')
+    children = fields.ToManyField('data_set_manager.api.NodeResource',
+                                  'children')
     study = fields.ToOneField('data_set_manager.api.StudyResource', 'study')
     assay = fields.ToOneField('data_set_manager.api.AssayResource', 'assay',
                               null=True)
@@ -217,7 +220,7 @@ class StudyResource(ModelResource):
         null=True
     )
     sources = fields.ToManyField(
-        'core.api.NodeResource',
+        'data_set_manager.api.NodeResource',
         attribute=lambda bundle: (
             Node.objects
                 .filter(
