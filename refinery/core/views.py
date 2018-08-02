@@ -22,8 +22,8 @@ from django.views.decorators.gzip import gzip_page
 
 import boto3
 import botocore
-from guardian.shortcuts import get_groups_with_perms, get_objects_for_user, \
-    get_perms
+from guardian.shortcuts import (get_groups_with_perms, get_objects_for_user,
+                                get_perms)
 
 from guardian.utils import get_anonymous_user
 from registration import signals
@@ -774,22 +774,26 @@ class DataSetsViewSet(APIView):
             request.user, 'dataset'
         ).order_by('-modification_date')
 
-        if filters.get('is_owner') or filters.get('is_public') or \
-                filters.get('group'):
-            filtered_data_set = []
-            for data_set in user_data_sets:
-                if not data_set.is_valid:
-                    logger.warning(
-                        "DataSet with UUID: {} is invalid, and most likely is "
-                        "still being created".format(data_set.uuid)
-                    )
+        filtered_data_sets = []
+        filter_requested = filters.get('is_owner') \
+            or filters.get('is_public') \
+            or filters.get('group')
+        for data_set in user_data_sets:
+            if not data_set.is_valid:
+                logger.warning(
+                    "DataSet with UUID: {} is invalid, and most likely is "
+                    "still being created".format(data_set.uuid)
+                )
+                pass
+            if filter_requested:
                 if self.is_filtered_data_set(data_set, filters):
-                    filtered_data_set.append(data_set)
-            data_sets = paginator.paginate_queryset(filtered_data_set, request)
-        else:
-            data_sets = paginator.paginate_queryset(user_data_sets, request)
+                    filtered_data_sets.append(data_set)
+            else:
+                filtered_data_sets.append(data_set)
 
-        serializer = DataSetSerializer(data_sets, many=True,
+        paged_data_sets = paginator.paginate_queryset(filtered_data_sets,
+                                                      request)
+        serializer = DataSetSerializer(paged_data_sets, many=True,
                                        context={'request': request})
         return Response(serializer.data)
 
