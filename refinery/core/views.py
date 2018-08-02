@@ -787,7 +787,7 @@ class DataSetsViewSet(APIView):
                 if self.is_filtered_data_set(data_set, filters):
                     filtered_data_set.append(data_set)
 
-            total_data_sets = len(filtered_data_set)
+            total_data_sets = filtered_data_set.count()
             data_sets = paginator.paginate_queryset(filtered_data_set, request)
         else:
             data_sets = paginator.paginate_queryset(user_data_sets, request)
