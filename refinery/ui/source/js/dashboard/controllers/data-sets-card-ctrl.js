@@ -45,16 +45,16 @@
     vm.openDataSetDeleteModal = openDataSetDeleteModal;
     vm.openDataSetTransferModal = openDataSetTransferModal;
     vm.openPermissionEditor = openPermissionEditor;
-    vm.pageLimit = 20;
+    vm.itemsPerPage = 20;
     vm.pageStartOffset = 0;
     vm.pageChangedUpdate = pageChangedUpdate;
-    vm.params = { limit: vm.pageLimit, offset: vm.pageStartOffset };
+    vm.params = { limit: vm.itemsPerPage, offset: vm.pageStartOffset };
     vm.primaryGroupID = primaryGroupService.primaryGroup.id;
     vm.refreshDataSets = refreshDataSets;
     vm.resetDataSetSearch = resetDataSetSearch;
     vm.searchDataSets = searchDataSets;
     vm.searchQueryDataSets = '';
-    vm.totalDataSets = dataSetCardFactory.dataSetStats.totalCounts;
+    vm.totalDataSets = dataSetCardFactory.dataSetStats.totalCount;
 
     activate();
 
@@ -95,7 +95,7 @@
      * @memberOf refineryDashboard.DataSetsCardCtrl
     **/
     function pageChangedUpdate () {
-      vm.pageStartOffset = vm.pageLimit * vm.currentPage - vm.pageLimit;
+      vm.pageStartOffset = vm.itemsPerPage * vm.currentPage - vm.itemsPerPage;
       vm.params.offset = vm.pageStartOffset;
       vm.refreshDataSets();
     }
@@ -110,9 +110,9 @@
       dataSetCardFactory.getDataSets(vm.params).then(function () {
         vm.searchQueryDataSets = '';
         vm.loadingDataSets = false;
-        vm.dataSets = dataSetCardFactory.dataSets.slice(0, vm.pageLimit);
+        vm.dataSets = dataSetCardFactory.dataSets.slice(0, vm.itemsPerPage);
         vm.totalDataSets = dataSetCardFactory.dataSetStats.totalCount;
-        vm.numPages = Math.ceil(vm.totalDataSets / vm.pageLimit);
+        vm.numPages = Math.ceil(vm.totalDataSets / vm.itemsPerPage);
         vm.dataSetsError = false;
       }, function (error) {
         vm.loadingDataSets = false;

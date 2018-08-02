@@ -36,12 +36,12 @@
     it('Variables should be initialized', function () {
       expect(ctrl.dataSets).toEqual([]);
       expect(ctrl.groupFilter.selectedName).toEqual('All');
-      expect(ctrl.params.limit).toEqual(ctrl.pageLimit);
-      expect(ctrl.params.limit).toEqual(ctrl.pageLimit);
+      expect(ctrl.params.limit).toEqual(ctrl.itemsPerPage);
+      expect(ctrl.params.limit).toEqual(ctrl.itemsPerPage);
     });
 
     it('Pagination variables should be initialized', function () {
-      expect(ctrl.pageLimit).toEqual(20);
+      expect(ctrl.itemsPerPage).toEqual(20);
       expect(ctrl.pageStartOffset).toEqual(0);
       expect(ctrl.currentPage).toEqual(1);
       expect(ctrl.numPages).toEqual(0);
@@ -233,14 +233,14 @@
       });
 
       it('updates pageStartOffset', function () {
-        ctrl.pageLimit = 20;
+        ctrl.itemsPerPage = 20;
         ctrl.currentPage = 2;
         ctrl.pageChangedUpdate();
         expect(ctrl.pageStartOffset).toEqual(20);
       });
 
       it('updates params offset to equal pageStartOffset', function () {
-        ctrl.pageLimit = 20;
+        ctrl.itemsPerPage = 20;
         ctrl.currentPage = 2;
         ctrl.pageChangedUpdate();
         expect(ctrl.params.offset).toEqual(ctrl.pageStartOffset);
