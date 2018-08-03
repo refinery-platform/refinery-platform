@@ -123,29 +123,22 @@ class Command(BaseCommand):
 
         task_num = 1
         total = len(isatab_dict)
-        # valueError if filenames contain white spaces
-        for (uuid, filename, skipped) in result.iterate():
+        for uuid in result.iterate():
             try:
-                if not skipped:
-                    if uuid is not None:
-                        logger.info(
-                            "%s / %s: Successfully parsed %s into "
-                            "DataSet with UUID %s",
-                            task_num, total, filename, uuid)
-                    else:
-                        logger.info(
-                            "%s / %s: Import of %s failed. Please check "
-                            "Celery log files.",
-                            task_num, total, filename, uuid)
+                if uuid is not None:
+                    logger.info(
+                        "%s / %s: Successfully parsed file into "
+                        "DataSet with UUID %s",
+                        task_num, total, uuid)
                 else:
                     logger.info(
-                        "%s / %s: Skipped %s as it has been "
-                        "successfully parsed already. UUID %s",
-                        task_num, total, filename, uuid)
+                        "%s / %s: Import of %s failed. Please check "
+                        "Celery log files.",
+                        task_num, total, uuid)
                 task_num += 1
                 sys.stdout.flush()
             except:
-                logger.info("%s / %s: Unsuccessful parsed %s",
-                            task_num, total, filename)
+                logger.info("%s / %s: Unsuccessful parsed",
+                            task_num, total)
                 task_num += 1
                 sys.stdout.flush()
