@@ -784,6 +784,7 @@ class DataSetsViewSet(APIView):
                     "DataSet with UUID: {} is invalid, and most likely is "
                     "still being created".format(data_set.uuid)
                 )
+                continue
             elif filter_requested:
                 if self.is_filtered_data_set(data_set, filters):
                     filtered_data_sets.append(data_set)
