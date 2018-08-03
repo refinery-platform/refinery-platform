@@ -123,6 +123,7 @@ class Command(BaseCommand):
 
         task_num = 1
         total = len(isatab_dict)
+        # valueError if filenames contain white spaces
         for (uuid, filename, skipped) in result.iterate():
             try:
                 if not skipped:
