@@ -171,6 +171,14 @@ class DataSetApiV2Tests(APIV2TestCase):
         self.assertEqual(get_response.data.get('data_sets')[0].get('uuid'),
                          self.data_set.uuid)
 
+    def test_total_data_sets_returned_correctly(self):
+        create_dataset_with_necessary_models(user=self.user)
+        get_request = self.factory.get(self.url_root)
+        get_request.user = self.user
+        get_response = self.view(get_request)
+        self.assertEqual(len(get_response.data.get('data_sets')),
+                         get_response.data.get('total_data_sets'))
+
     def test_dataset_delete_successful(self):
 
         self.assertEqual(DataSet.objects.all().count(), 2)
