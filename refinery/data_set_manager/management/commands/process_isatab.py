@@ -138,7 +138,7 @@ class Command(BaseCommand):
                 task_num += 1
                 sys.stdout.flush()
             except:
-                logger.info("%s / %s: Unsuccessful parsed",
+                logger.info("%s / %s: Unsuccessfully parsed",
                             task_num, total)
                 task_num += 1
                 sys.stdout.flush()
