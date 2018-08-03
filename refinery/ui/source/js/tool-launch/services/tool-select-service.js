@@ -16,7 +16,7 @@
   function toolSelectService ($window, toolDefinitionsService) {
     var selectedTool = {};
     var toolList = [];
-    var isToolInfoCollapsed = true;
+    var isToolInfoCollapsed = false;
     var isToolPanelCollapsed = true;
     var dataSetUuid = $window.dataSetUuid;
 
