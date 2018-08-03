@@ -30,12 +30,10 @@ class Command(BaseCommand):
         parser.add_argument(
             '--base_pre_isa_dir',
             action='store',
-            type='string'
         )
         parser.add_argument(
             '--file_base_path',
             action='store',
-            type='string',
             default=None
         )
         parser.add_argument(
