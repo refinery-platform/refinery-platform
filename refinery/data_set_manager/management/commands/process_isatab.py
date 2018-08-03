@@ -25,23 +25,25 @@ class Command(BaseCommand):
     """
 
     def add_arguments(self, parser):
-        parser.add_argumenet(
+        parser.add_argument('username')
+
+        parser.add_argument('base_isa_dir')
+
+        parser.add_argument(
             '--base_pre_isa_dir',
             action='store',
-            type='string'
         )
-        parser.add_argumenet(
+        parser.add_argument(
             '--file_base_path',
             action='store',
-            type='string',
             default=None
         )
-        parser.add_argumenet(
+        parser.add_argument(
             '--public',
             action='store_true',
             default=False
         )
-        parser.add_argumenet(
+        parser.add_argument(
             '--overwrite',
             action='store_true',
             default=False
