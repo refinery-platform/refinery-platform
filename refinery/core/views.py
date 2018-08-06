@@ -33,7 +33,6 @@ from requests.exceptions import HTTPError
 from rest_framework import authentication, status, viewsets
 from rest_framework.decorators import detail_route
 from rest_framework.exceptions import APIException
-from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
@@ -756,8 +755,8 @@ class DataSetsViewSet(APIView):
 
     def get(self, request):
         params = request.query_params
-        paginator = LimitOffsetPagination()
-        paginator.default_limit = 100
+        limit = int(params.get('limit', 500))
+        offset = params.get('offset', 0)
 
         filters = {
             'is_owner': params.get('is_owner'),
@@ -774,11 +773,14 @@ class DataSetsViewSet(APIView):
             request.user, 'dataset'
         ).order_by('-modification_date')
 
+        shifted_data_sets = user_data_sets[offset:]
+
         filtered_data_sets = []
         filter_requested = filters.get('is_owner') \
             or filters.get('is_public') \
             or filters.get('group')
-        for data_set in user_data_sets:
+
+        for data_set in shifted_data_sets:
             if not data_set.is_valid:
                 logger.warning(
                     "DataSet with UUID: {} is invalid, and most likely is "
@@ -791,10 +793,11 @@ class DataSetsViewSet(APIView):
             else:
                 filtered_data_sets.append(data_set)
 
+            if len(filtered_data_sets) == limit:
+                break
+
         total_data_sets = len(filtered_data_sets)
-        paged_data_sets = paginator.paginate_queryset(filtered_data_sets,
-                                                      request)
-        serializer = DataSetSerializer(paged_data_sets, many=True,
+        serializer = DataSetSerializer(filtered_data_sets, many=True,
                                        context={'request': request})
 
         return Response({'data_sets': serializer.data,
