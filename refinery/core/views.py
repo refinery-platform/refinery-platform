@@ -755,7 +755,7 @@ class DataSetsViewSet(APIView):
 
     def get(self, request):
         params = request.query_params
-        limit = int(params.get('limit'), 500)
+        limit = int(params.get('limit', 500))
         offset = params.get('offset', 0)
 
         filters = {
