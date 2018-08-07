@@ -260,7 +260,7 @@
            </div>
         </li>
       </ul>
-      <div ng-if="$ctrl.numPages > 1">
+      <div ng-show="$ctrl.numPages > 1">
         <ul
           uib-pagination total-items="$ctrl.totalDataSets"
           ng-model="$ctrl.currentPage" items-per-page="$ctrl.itemsPerPage"
