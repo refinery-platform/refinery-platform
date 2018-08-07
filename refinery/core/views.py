@@ -769,7 +769,7 @@ class DataSetsViewSet(APIView):
         except Exception:
             filters['group'] = None
 
-        query_set = DataSet.objects.all().order_by('modification_date')
+        query_set = DataSet.objects.all().order_by('-modification_date')
         user_data_sets = get_objects_for_user(request.user,
                                               "core.read_meta_dataset",
                                               klass=query_set,
