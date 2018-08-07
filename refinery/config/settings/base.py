@@ -600,7 +600,7 @@ REFINERY_AUXILIARY_FILE_GENERATION = get_setting(
 
 REFINERY_TUTORIAL_STEPS = refinery_tutorial_settings
 
-ANONYMOUS_USER_ID = -1
+ANONYMOUS_USER_NAME = "AnonymousUser"
 
 SATORI_DEMO = get_setting("SATORI_DEMO", local_settings, False)
 
