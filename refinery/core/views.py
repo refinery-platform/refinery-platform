@@ -46,8 +46,7 @@ from .models import (Analysis, CustomRegistrationProfile, DataSet, Event,
                      UserProfile, Workflow, WorkflowEngine)
 from .serializers import (DataSetSerializer, EventSerializer,
                           UserProfileSerializer, WorkflowSerializer)
-from .utils import (api_error_response, get_data_sets_annotations,
-                    get_resources_for_user)
+from .utils import (api_error_response, get_data_sets_annotations)
 
 logger = logging.getLogger(__name__)
 
@@ -770,9 +769,11 @@ class DataSetsViewSet(APIView):
         except Exception:
             filters['group'] = None
 
-        user_data_sets = get_resources_for_user(
-            request.user, 'dataset'
-        ).order_by('-modification_date')
+        query_set = DataSet.objects.all().order_by('modification_date')
+        user_data_sets = get_objects_for_user(request.user,
+                                              "core.read_meta_dataset",
+                                              klass=query_set,
+                                              accept_global_perms=False)
 
         filtered_data_sets = []
         filter_requested = filters.get('is_owner') \
