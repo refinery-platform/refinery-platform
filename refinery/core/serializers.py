@@ -24,17 +24,19 @@ class DataSetSerializer(serializers.ModelSerializer):
     is_clean = serializers.SerializerMethodField()
 
     def get_is_owner(self, data_set):
-        owner = data_set.get_owner()
-        try:
-            user_request = self.context.get('request').user
-        except AttributeError as e:
-            logger.error("Request is missing a user: %s", e)
-            return False
-        return user_request == owner
+        if not data_set.is_owner:
+            owner = data_set.get_owner()
+            try:
+                user_request = self.context.get('request').user
+            except AttributeError as e:
+                logger.error("Request is missing a user: %s", e)
+                return False
+            return user_request == owner
 
     def get_public(self, data_set):
-        is_public = data_set.is_public()
-        return is_public
+        if not data_set.public:
+            is_public = data_set.is_public()
+            return is_public
 
     def get_is_clean(self, data_set):
         return data_set.is_clean()

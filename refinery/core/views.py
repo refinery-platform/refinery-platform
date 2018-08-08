@@ -741,23 +741,27 @@ class DataSetsViewSet(APIView):
 
         filtered_data_sets = []
         check_own = filters.get('is_owner')
-        if check_own:
-            all_owner_perms = ObjectPermissionChecker(self.request.user)
-            all_owner_perms.prefetch_perms(user_data_sets)
+        all_owner_perms = ObjectPermissionChecker(self.request.user)
+        all_owner_perms.prefetch_perms(user_data_sets)
+
+        check_public = filters.get('is_public')
+        all_public_perms = ObjectPermissionChecker(
+            ExtendedGroup.objects.public_group()
+        )
+        all_public_perms.prefetch_perms(user_data_sets)
 
         group = filters.get('group')
         if group:
             all_group_perms = ObjectPermissionChecker(filters.get('group'))
             all_group_perms.prefetch_perms(user_data_sets)
 
-        check_public = filters.get('is_public')
-        if check_public:
-            all_public_perms = ObjectPermissionChecker(
-                ExtendedGroup.objects.public_group()
-            )
-            all_public_perms.prefetch_perms(user_data_sets)
-
         for data_set in user_data_sets:
+            is_public = all_public_perms.has_perm('read_meta_dataset',
+                                                  data_set)
+            is_owner = all_owner_perms.has_perm('add_dataset', data_set)
+            setattr(data_set, 'public', is_public)
+            setattr(data_set, 'is_owner', is_owner)
+
             if not data_set.is_valid:
                 logger.warning(
                     "DataSet with UUID: {} is invalid, and most likely is "
@@ -765,16 +769,10 @@ class DataSetsViewSet(APIView):
                 )
                 continue
             elif check_own or group or check_public:
-                if check_own:
-                    is_owner = all_owner_perms.has_perm('add_dataset',
-                                                        data_set)
                 if group:
                     group_perms = all_group_perms.has_perm('read_meta_dataset',
                                                            data_set)
-                if check_public:
-                    is_public = all_public_perms.has_perm('read_meta_dataset',
-                                                          data_set)
-                # needs to check for filter and then check data set perms
+                # need to check for filter and then check data set perms
                 if check_own and check_public and group:
                     if is_owner and is_public and group_perms:
                         filtered_data_sets.append(data_set)
@@ -790,8 +788,6 @@ class DataSetsViewSet(APIView):
                 elif check_own and is_owner or check_public and is_public\
                         or group and group_perms:
                     filtered_data_sets.append(data_set)
-                else:
-                    continue
             else:
                 filtered_data_sets.append(data_set)
 
