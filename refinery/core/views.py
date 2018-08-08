@@ -40,9 +40,9 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 import xmltodict
 
-from .forms import ProjectForm, UserForm, UserProfileForm, WorkflowForm
+from .forms import UserForm, UserProfileForm, WorkflowForm
 from .models import (Analysis, CustomRegistrationProfile, DataSet, Event,
-                     ExtendedGroup, Invitation, Ontology, Project,
+                     ExtendedGroup, Invitation, Ontology,
                      UserProfile, Workflow, WorkflowEngine)
 from .serializers import (DataSetSerializer, EventSerializer,
                           UserProfileSerializer, WorkflowSerializer)
@@ -224,76 +224,6 @@ def group(request, query):
                                   {'user': request.user,
                                    'msg': "view group %s" % group.name}))
     return render_to_response('core/group.html', {'group': group},
-                              context_instance=RequestContext(request))
-
-
-def project_slug(request, slug):
-    p = get_object_or_404(Project, slug=slug)
-    return project(request, p.uuid)
-
-
-def project(request, uuid):
-    project = get_object_or_404(Project, uuid=uuid)
-    public_group = ExtendedGroup.objects.public_group()
-
-    if not request.user.has_perm('core.read_project', project):
-        if 'read_project' not in get_perms(public_group, project):
-            if request.user.is_authenticated():
-                return HttpResponseForbidden(
-                    custom_error_page(
-                        request, '403.html', {
-                            user: request.user,
-                            'msg': "view this project"
-                        }))
-            else:
-                return HttpResponse(
-                    custom_error_page(
-                        request, '401.html', {'msg': "view this project"}),
-                    status='401')
-    analyses = project.analyses.all()
-    return render_to_response('core/project.html',
-                              {'project': project, "analyses": analyses},
-                              context_instance=RequestContext(request))
-
-
-@login_required()
-def project_new(request):
-    if request.method == "POST":  # If the form has been submitted
-        form = ProjectForm(request.POST)  # A form bound to the POST data
-        if form.is_valid():  # All validation rules pass
-            project = form.save()
-            project.set_owner(request.user)
-            # Process the data in form.cleaned_data
-            return HttpResponseRedirect(
-                reverse('project', args=(project.uuid,))
-            )  # Redirect after POST
-    else:
-        form = ProjectForm()  # An unbound form
-    return render_to_response("core/project_new.html", {'form': form},
-                              context_instance=RequestContext(request))
-
-
-@login_required()
-def project_edit(request, uuid):
-    project = get_object_or_404(Project, uuid=uuid)
-
-    if not request.user.has_perm('core.change_project', project):
-        return HttpResponseForbidden(
-            custom_error_page(request, '403.html',
-                              {user: request.user, 'msg': "edit this project"})
-        )
-    if request.method == "POST":  # If the form has been submitted
-        # A form bound to the POST data
-        form = ProjectForm(data=request.POST, instance=project)
-        if form.is_valid():  # All validation rules pass
-            form.save()
-            # Process the data in form.cleaned_data
-            return HttpResponseRedirect(
-                reverse('core.views.project', args=(uuid,)))
-    else:
-        form = ProjectForm(instance=project)  # An unbound form
-    return render_to_response("core/project_edit.html",
-                              {'form': form, 'project': project},
                               context_instance=RequestContext(request))
 
 
