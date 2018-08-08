@@ -13,11 +13,13 @@
 
   PrimaryGroupButtonCtrl.$inject = [
     '$scope',
+    '_',
     'primaryGroupService'
   ];
 
   function PrimaryGroupButtonCtrl (
     $scope,
+    _,
     primaryGroupService
   ) {
     var vm = this;
@@ -25,6 +27,14 @@
     vm.primaryGroup = primaryGroupService.primaryGroup;
     vm.primaryGroupButton = { selected: false };
     vm.updatePrimaryGroup = updatePrimaryGroup;
+
+    activate();
+
+    function activate () {
+      if (!_.isEmpty(vm.primaryGroup)) {
+        filterDataSet();
+      }
+    }
 
     /**
      * @name filterDataSet

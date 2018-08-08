@@ -56,12 +56,6 @@
     vm.searchQueryDataSets = '';
     vm.totalDataSets = dataSetCardFactory.dataSetStats.totalCount;
 
-    activate();
-
-    function activate () {
-      vm.refreshDataSets();
-    }
-
     /**
      * @name filterDataSets
      * @desc  View method used to update the params with group and own perms
