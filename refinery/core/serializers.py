@@ -24,7 +24,9 @@ class DataSetSerializer(serializers.ModelSerializer):
     is_clean = serializers.SerializerMethodField()
 
     def get_is_owner(self, data_set):
-        if not data_set.is_owner:
+        try:
+            data_set.is_owner
+        except:
             owner = data_set.get_owner()
             try:
                 user_request = self.context.get('request').user
@@ -34,7 +36,9 @@ class DataSetSerializer(serializers.ModelSerializer):
             return user_request == owner
 
     def get_public(self, data_set):
-        if not data_set.public:
+        try:
+            data_set.public
+        except:
             is_public = data_set.is_public()
             return is_public
 
