@@ -768,7 +768,7 @@ class DataSetsViewSet(APIView):
                     "still being created".format(data_set.uuid)
                 )
                 continue
-            elif check_own or group or check_public:
+            elif check_own or check_public or group:
                 if group:
                     group_perms = all_group_perms.has_perm('read_meta_dataset',
                                                            data_set)
