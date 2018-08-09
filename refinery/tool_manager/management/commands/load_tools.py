@@ -41,6 +41,12 @@ class Command(BaseCommand):
             help='Overwrite ToolDefinitions with the same names instead of '
                  'skipping their creation'
         )
+        parser.add_argument(
+            '--branch',
+            action='store',
+            dest='branch',
+            help='Branch from the registry to target for Vis tool installation'
+        )
 
     def __init__(self):
         super(Command, self).__init__()
@@ -72,6 +78,11 @@ class Command(BaseCommand):
             raise CommandError(
                 'Either --workflows or --visualizations is required'
             )
+        if options["branch"] and not options["visualizations"]:
+            raise CommandError("`--branch` requires `--visualizations` to be "
+                               "specified")
+        if options["branch"]:
+            self.visualization_registry_branch = options["branch"]
 
         self.force = options["force"]
 
