@@ -172,8 +172,8 @@ class ImportISATabFileForm(forms.Form):
 def import_by_file(_file):
     temp_file_path = os.path.join(get_temp_dir(), _file.name)
     try:
-        _handle_uploaded_file(_file, temp_file_path)
-    except IOError as e:
+        _handle_uploaded_file(file_obj, temp_file_path)
+    except IOError as exc:
         error_msg = "Error writing file to disk"
         logger.error(
             "%s. IOError: %s, file name: %s, error: %s.",
