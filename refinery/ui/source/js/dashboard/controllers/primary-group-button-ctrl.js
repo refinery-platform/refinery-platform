@@ -28,14 +28,6 @@
     vm.primaryGroupButton = { selected: false };
     vm.updatePrimaryGroup = updatePrimaryGroup;
 
-    activate();
-
-    function activate () {
-      if (!_.isEmpty(vm.primaryGroup)) {
-        filterDataSet();
-      }
-    }
-
     /**
      * @name filterDataSet
      * @desc  View method which toggles the button and updates the group filter
@@ -70,6 +62,12 @@
    * ---------------------------------------------------------
    */
     vm.$onInit = function () {
+      // defaults to primary group when loading
+      if (!_.isEmpty(vm.primaryGroup)) {
+        filterDataSet();
+      } else {
+        vm.filterCtrl.refreshDataSets();
+      }
       // populates button menu to select primary group
       $scope.$watchCollection(
         function () {
