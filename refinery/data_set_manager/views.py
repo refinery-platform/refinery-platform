@@ -169,8 +169,8 @@ class ImportISATabFileForm(forms.Form):
                 "Please provide either a file or a URL")
 
 
-def import_by_file(_file):
-    temp_file_path = os.path.join(get_temp_dir(), _file.name)
+def import_by_file(file_obj):
+    temp_file_path = os.path.join(get_temp_dir(), file_obj.name)
     try:
         _handle_uploaded_file(file_obj, temp_file_path)
     except IOError as exc:
