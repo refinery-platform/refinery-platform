@@ -1742,7 +1742,7 @@ class ExtendedGroupResource(ModelResource):
                 'is_manager': self.user_authorized(u, ext_group)
             },
             ext_group.user_set.all().filter(is_active=True).exclude(
-                id=settings.ANONYMOUS_USER_ID
+                username=settings.ANONYMOUS_USER_NAME
             )
         )
 
