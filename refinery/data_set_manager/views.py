@@ -175,13 +175,8 @@ def import_by_file(_file):
         _handle_uploaded_file(file_obj, temp_file_path)
     except IOError as exc:
         error_msg = "Error writing file to disk"
-        logger.error(
-            "%s. IOError: %s, file name: %s, error: %s.",
-            error_msg,
-            e.errno,
-            e.filename,
-            e.strerror
-        )
+        logger.error("%s. IOError: %s, file name: %s, error: %s.",
+                     error_msg, exc.errno, exc.filename, exc.strerror)
         return _error_message(error_msg)
     return _success_message(temp_file_path)
 
