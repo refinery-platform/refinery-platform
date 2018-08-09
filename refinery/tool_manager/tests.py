@@ -1281,6 +1281,27 @@ class ToolDefinitionGenerationTests(ToolManagerTestBase):
                 context.exception.message
             )
 
+    def test_load_tools_command_error_if_branch_and_workflows_specified(self):
+        with self.assertRaises(CommandError):
+            call_command("load_tools", workflows=True,
+                         branch="fake-branch-name")
+
+    @mock.patch.object(LoadToolsCommand, "_load_visualization_definitions")
+    def test_load_tools_command_registry_branch_specified(
+            self, load_vis_mock
+    ):
+        visualization_tool_registry_branch = "fake-branch-name"
+        command = LoadToolsCommand()
+        command.handle(
+            workflows=False,
+            visualizations=["test-vis-tool-name"],
+            branch=visualization_tool_registry_branch,
+            force=False
+        )
+        self.assertEqual(command.visualization_registry_branch,
+                         visualization_tool_registry_branch)
+        self.assertTrue(load_vis_mock.called)
+
     def test_workflow_pair_too_many_inputs(self):
         with open(
             "{}/workflows/PAIR_too_many_inputs.json".format(TEST_DATA_PATH)
