@@ -13,18 +13,22 @@
       Primary Group: {{ $ctrl.primaryGroup.name }}
     </span>
   </button>
-  <button type="button" class="btn btn-primary btn-xs" uib-dropdown-toggle>
+  <button
+    type="button"
+    class="btn btn-primary btn-xs"
+    ng-disabled="$ctrl.groups.length < 2"
+    uib-dropdown-toggle>
     <i class="caret"></i>
     <span class="sr-only">Primary Group</span>
   </button>
-  <ul class="dropdown-menu"
+   <ul class="dropdown-menu"
     uib-dropdown-menu role="menu"
     aria-labelledby="split-button">
-    <li role="menuitem" ng-repeat="group in $ctrl.groups">
-      <a ng-click="$ctrl.updatePrimaryGroup(group)" ng-if="group.name !== 'Public'">
-       {{ group.name }}
-      </a>
-    </li>
+      <li role="menuitem" ng-repeat="group in $ctrl.groups">
+        <a ng-click="$ctrl.updatePrimaryGroup(group)" ng-if="group.name !== 'Public'">
+         {{ group.name }}
+        </a>
+      </li>
   </ul>
 </div>
 
@@ -34,7 +38,8 @@
     popover-placement="right"
     uib-popover-html="'This is your <strong>Primary Group</strong>. Once selected, data
     sets shared with this group will be displayed by default. To change your Primary Group
-    selection, use the drop down menu.'"
+    selection, use the drop down menu. To enable the group buttons, you must
+    be a member of a group.'"
     popover-title="Primary Group"
     popover-trigger="'outsideClick'"
     popover-append-to-body="true"
