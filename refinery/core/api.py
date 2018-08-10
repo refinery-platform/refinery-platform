@@ -383,53 +383,6 @@ class SharableResourceAPIInterface(object):
         return HttpMethodNotAllowed()
 
 
-class ProjectResource(ModelResource, SharableResourceAPIInterface):
-    share_list = fields.ListField(attribute='share_list', null=True)
-    public = fields.BooleanField(attribute='public', null=True)
-    is_owner = fields.BooleanField(attribute='is_owner', null=True)
-
-    def __init__(self):
-        SharableResourceAPIInterface.__init__(self, Project)
-        ModelResource.__init__(self)
-
-    class Meta:
-        # authentication = ApiKeyAuthentication()
-        queryset = Project.objects.filter(is_catch_all=False)
-        resource_name = 'projects'
-        detail_uri_name = 'uuid'
-        fields = ['name', 'id', 'uuid', 'summary']
-        # authentication = SessionAuthentication()
-        # authorization = GuardianAuthorization()
-        authorization = Authorization()
-
-    def prepend_urls(self):
-        return SharableResourceAPIInterface.prepend_urls(self)
-
-    def res_sharing_list(self, request, **kwargs):
-        if request.method == 'GET':
-            kwargs['sharing'] = True
-            res_list = filter(
-                lambda r: not r.is_catch_all,
-                self._build_res_list(request.user)
-            )
-            return self.process_get_list(request, res_list, **kwargs)
-        return HttpMethodNotAllowed()
-
-    def obj_create(self, bundle, **kwargs):
-        return SharableResourceAPIInterface.obj_create(self, bundle, **kwargs)
-
-    def obj_get(self, bundle, **kwargs):
-        return SharableResourceAPIInterface.obj_get(self, bundle, **kwargs)
-
-    def obj_get_list(self, bundle, **kwargs):
-        return SharableResourceAPIInterface.obj_get_list(
-            self, bundle, **kwargs)
-
-    def get_object_list(self, request):
-        obj_list = SharableResourceAPIInterface.get_object_list(self, request)
-        return filter(lambda o: not o.is_catch_all, obj_list)
-
-
 class UserResource(ModelResource):
     class Meta:
         queryset = User.objects.all()
