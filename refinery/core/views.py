@@ -629,9 +629,8 @@ class WorkflowViewSet(viewsets.ModelViewSet):
 class EventViewSet(APIView):
     """API endpoint that allows Events to be viewed"""
     def get(self, request):
-        """Overrides ModelViewSet.list to create an updated queryset based
-        on DataSets that the requesting User has permission to access
-        """
+        """Queryset based on DataSets that the requesting User has permission
+         to access"""
         data_sets_for_user = get_objects_for_user(
             request.user,
             'core.read_meta_dataset',
