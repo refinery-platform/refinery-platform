@@ -34,6 +34,8 @@ class DataSetSerializer(serializers.ModelSerializer):
                 logger.error("Request is missing a user: %s", e)
                 return False
             return user_request == owner
+        else:
+            return data_set.is_owner
 
     def get_public(self, data_set):
         try:
@@ -41,6 +43,8 @@ class DataSetSerializer(serializers.ModelSerializer):
         except:
             is_public = data_set.is_public()
             return is_public
+        else:
+            return data_set.public
 
     def get_is_clean(self, data_set):
         return data_set.is_clean()
