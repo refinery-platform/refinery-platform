@@ -952,7 +952,6 @@ class EventApiV2Tests(APIV2TestCase):
 
         get_request = self.factory.get(urljoin(self.url_root, '/'))
         get_request.user = self.user
-        force_authenticate(get_request, user=self.user)
         get_response = self.view(get_request)
         self.assertEqual(
             get_response.data,
