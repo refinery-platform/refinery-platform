@@ -57,7 +57,8 @@
           clear-file-input-model="isaTabImport.file">
         <button
           class="icon-only"
-          ng-if="isaTabImport.file && isaTabImport.fileStatus !== 'running'"
+          ng-if="isaTabImport.file"
+          ng-disabled="isaTabImport.fileStatus === 'running'"
           ng-click="isaTabImport.clearFile()">
           <i
             class="refinery-warning fa fa-times-circle"
