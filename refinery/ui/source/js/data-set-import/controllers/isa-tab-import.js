@@ -6,17 +6,39 @@
     .controller('IsaTabImportCtrl', IsaTabImportCtrl);
 
   IsaTabImportCtrl.$inject = [
-    '$location', '$log', '$rootScope', '$timeout', '$uibModal', '$window',
-    'isaTabImportApi', 'settings'
+    '$location',
+    '$log',
+    '$rootScope',
+    '$scope',
+    '$timeout',
+    '$uibModal',
+    '$window',
+    'fileUploadStatusService',
+    'isaTabImportApi',
+    'settings'
   ];
 
-  function IsaTabImportCtrl ($location, $log, $rootScope, $timeout, $uibModal, $window,
-                             isaTabImportApi, settings) {
+  function IsaTabImportCtrl (
+    $location,
+    $log,
+    $rootScope,
+    $scope,
+    $timeout,
+    $uibModal,
+    $window,
+    fileUploadStatusService,
+    isaTabImportApi,
+    settings
+  ) {
+    var vm = this;
+    vm.fileStatus = 'none';
+
     this.$log = $log;
     this.$rootScope = $rootScope;
     this.$timeout = $timeout;
     this.$window = $window;
     this.$uibModal = $uibModal;
+    this.fileUploadStatusService = fileUploadStatusService;
     this.isaTabImportApi = isaTabImportApi;
     this.settings = settings;
     this.showFileUpload = false;
@@ -28,6 +50,16 @@
     this.closeError = function () {
       this.isErrored = false;
     };
+
+    // helper watcher which updates the upload file status from component
+    $scope.$watchCollection(
+      function () {
+        return fileUploadStatusService.fileUploadStatus;
+      },
+      function (fileStatusObj) {
+        vm.fileStatus = fileStatusObj.status;
+      }
+    );
   }
 
   Object.defineProperty(
@@ -71,6 +103,8 @@
   };
 
   IsaTabImportCtrl.prototype.clearFile = function () {
+    this.showFileUpload = false;
+    this.fileUploadStatusService.setFileUploadStatus('none');
     this.$rootScope.$broadcast('clearFileInput', 'isaTabFile');
   };
 
