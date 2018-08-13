@@ -25,7 +25,7 @@ class DataSetSerializer(serializers.ModelSerializer):
 
     def get_is_owner(self, data_set):
         try:
-            data_set.is_owner
+            return data_set.is_owner
         except:
             owner = data_set.get_owner()
             try:
@@ -37,7 +37,7 @@ class DataSetSerializer(serializers.ModelSerializer):
 
     def get_public(self, data_set):
         try:
-            data_set.public
+            return data_set.public
         except:
             is_public = data_set.is_public()
             return is_public

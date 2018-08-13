@@ -626,21 +626,23 @@ class WorkflowViewSet(viewsets.ModelViewSet):
         )
 
 
-class EventViewSet(viewsets.ModelViewSet):
+class EventViewSet(APIView):
     """API endpoint that allows Events to be viewed"""
-    queryset = Event.objects.all()
-    serializer_class = EventSerializer
-    http_method_names = ['get']
-
-    def list(self, request, *args, **kwargs):
-        """Overrides ModelViewSet.list to create an updated queryset based
-        on DataSets that the requesting User has permission to access
-        """
+    def get(self, request):
+        """Queryset based on DataSets that the requesting User has permission
+         to access"""
         data_sets_for_user = get_objects_for_user(
-            request.user, 'core.read_meta_dataset'
+            request.user,
+            'core.read_meta_dataset',
+            accept_global_perms=False
         )
-        self.queryset = self.queryset.filter(data_set__in=data_sets_for_user)
-        return super(EventViewSet, self).list(request, *args, **kwargs)
+
+        user_events = Event.objects.filter(
+            data_set__in=data_sets_for_user
+        ).order_by('-date_time')[0:50]
+        serializer = EventSerializer(user_events, many=True,
+                                     context={'request': request})
+        return Response(serializer.data)
 
 
 class DataSetsViewSet(APIView):
@@ -671,7 +673,7 @@ class DataSetsViewSet(APIView):
 
         filtered_data_sets = []
         check_own = filters.get('is_owner')
-        all_owner_perms = ObjectPermissionChecker(self.request.user)
+        all_owner_perms = ObjectPermissionChecker(request.user)
         all_owner_perms.prefetch_perms(user_data_sets)
 
         check_public = filters.get('is_public')

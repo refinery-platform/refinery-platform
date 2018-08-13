@@ -914,7 +914,7 @@ class EventApiV2Tests(APIV2TestCase):
     def setUp(self):
         super(EventApiV2Tests, self).setUp(
             api_base_name="events/",
-            view=EventViewSet.as_view({"get": "list"})
+            view=EventViewSet.as_view()
         )
 
     def test_get_event_list_provides_access_control_between_users(self):
@@ -952,16 +952,27 @@ class EventApiV2Tests(APIV2TestCase):
 
         get_request = self.factory.get(urljoin(self.url_root, '/'))
         get_request.user = self.user
-        get_response = self.view(get_request).render()
-
+        get_response = self.view(get_request)
         self.assertEqual(
-            json.loads(get_response.content),
+            get_response.data,
             [
                 {
-                    'date_time': date_times[0],
-                    'message': messages[0],
+                    'date_time': date_times[3],
+                    'message': messages[3],
                     'data_set': DataSetSerializer(
-                        data_sets[0], context={'request': get_request}
+                        data_sets[3], context={'request': get_request}
+                    ).data,
+                    'group': None,
+                    'user': UserSerializer(self.user).data,
+                    'type': 'UPDATE',
+                    'sub_type': 'ANALYSIS_CREATION',
+                    'details': {'display_name': display_names[3]}
+                },
+                {
+                    'date_time': date_times[2],
+                    'message': messages[2],
+                    'data_set': DataSetSerializer(
+                        data_sets[2], context={'request': get_request}
                     ).data,
                     'group': None,
                     'user': UserSerializer(self.user).data,
@@ -982,27 +993,16 @@ class EventApiV2Tests(APIV2TestCase):
                     'details': {'display_name': display_names[1]}
                 },
                 {
-                    'date_time': date_times[2],
-                    'message': messages[2],
+                    'date_time': date_times[0],
+                    'message': messages[0],
                     'data_set': DataSetSerializer(
-                        data_sets[2], context={'request': get_request}
+                        data_sets[0], context={'request': get_request}
                     ).data,
                     'group': None,
                     'user': UserSerializer(self.user).data,
                     'type': 'CREATE',
                     'sub_type': '',
                     'details': {}
-                },
-                {
-                    'date_time': date_times[3],
-                    'message': messages[3],
-                    'data_set': DataSetSerializer(
-                        data_sets[3], context={'request': get_request}).data,
-                    'group': None,
-                    'user': UserSerializer(self.user).data,
-                    'type': 'UPDATE',
-                    'sub_type': 'ANALYSIS_CREATION',
-                    'details': {'display_name': display_names[3]}
                 }
             ]
         )
