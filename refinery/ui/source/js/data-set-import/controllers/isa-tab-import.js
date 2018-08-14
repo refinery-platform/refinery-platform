@@ -52,12 +52,12 @@
     };
 
     // helper watcher which updates the upload file status from component
-    $scope.$watchCollection(
+    $scope.$watch(
       function () {
-        return fileUploadStatusService.fileUploadStatus;
+        return fileUploadStatusService.fileUploadStatus.status;
       },
-      function (fileStatusObj) {
-        vm.fileStatus = fileStatusObj.status;
+      function (fileStatus) {
+        vm.fileStatus = fileStatus;
       }
     );
   }
