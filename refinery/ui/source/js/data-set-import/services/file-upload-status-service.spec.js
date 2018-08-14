@@ -6,13 +6,13 @@ describe('File Upload Status Service', function () {
 
   beforeEach(module('refineryApp'));
   beforeEach(module('refineryDataSetImport'));
-  beforeEach(inject(function (_fileUploadStatusService_) {
-    service = _fileUploadStatusService_;
+  beforeEach(inject(function (fileUploadStatusService) {
+    service = fileUploadStatusService;
   }));
 
   it('service and variables should exist', function () {
     expect(service).toBeDefined();
-    expect(service.fileUploadStatus).toEqual('none');
+    expect(service.fileUploadStatus.status).toEqual('none');
   });
 
   it('setFileUploadStatus is a method', function () {
@@ -20,14 +20,14 @@ describe('File Upload Status Service', function () {
   });
 
   it('setFileUploadStatus sets fileUploadStatus with correct inputs', function () {
-    expect(service.fileUploadStatus).toEqual('none');
+    expect(service.fileUploadStatus.status).toEqual('none');
     expect(service.setFileUploadStatus('running')).toEqual('running');
     expect(service.setFileUploadStatus('queuing')).toEqual('queuing');
     expect(service.setFileUploadStatus('none')).toEqual('none');
   });
 
   it('setFileUploadStatus does not set fileUploadStatus', function () {
-    expect(service.fileUploadStatus).toEqual('none');
+    expect(service.fileUploadStatus.status).toEqual('none');
     expect(service.setFileUploadStatus('nothing')).toEqual('none');
     expect(service.setFileUploadStatus('')).toEqual('none');
   });
