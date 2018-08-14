@@ -25,25 +25,13 @@ from django_extensions.db.fields import UUIDField
 
 import constants
 import core
+from .utils import make_dir
 
 logger = logging.getLogger(__name__)
 
-
-def _mkdir(path):
-    """Create directory given absolute file system path"""
-    # https://stackoverflow.com/a/14364249
-    try:
-        os.makedirs(path)
-    except OSError as exc:
-        if not os.path.isdir(path):
-            raise RuntimeError(str(exc))
-    else:
-        logger.info("Created directory '%s'", path)
-
-
 # create data storage directories
-_mkdir(settings.FILE_STORE_BASE_DIR)
-_mkdir(settings.FILE_STORE_TEMP_DIR)
+make_dir(settings.FILE_STORE_BASE_DIR)
+make_dir(settings.FILE_STORE_TEMP_DIR)
 
 
 def _map_source(source):
