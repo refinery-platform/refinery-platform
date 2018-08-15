@@ -278,7 +278,6 @@ class ToolManagerTestBase(ToolManagerMocks):
     ):
         call_command("load_tools", "--visualizations",
                      " ".join(visualizations))
-        self.assertTrue(docker_pull_mock.called)
         return visualizations
 
     def tearDown(self):
