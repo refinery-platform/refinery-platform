@@ -3649,7 +3649,6 @@ class VisualizationToolLaunchTests(ToolManagerTestBase):
             "https://s3.amazonaws.com/pkerp/public/"
             "dixon2012-h1hesc-hindiii-allreps-filtered."
             "1000kb.multires.cool"
-            # TODO: Add selenium-based test once higlass relative paths fixed
         )
 
     def test_docker_cleanup(self):

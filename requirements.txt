@@ -48,15 +48,12 @@ Pygments==1.6rc1
 pyOpenSSL==16.2.0
 pysam==0.9.1.4
 pysolr==3.3.2
-pytest-selenium==1.10.0
 python-ldap==2.4.19
 python-magic==0.4.6
 python-memcached==1.57
 PyYAML==3.11
-pyvirtualdisplay==0.2.1
 readline==6.2.2
 requests==2.7.0
-selenium==3.4.0
 six==1.10.0
 sqlparse==0.1.19
 supervisor==3.1.3
