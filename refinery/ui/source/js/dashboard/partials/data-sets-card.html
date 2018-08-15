@@ -59,16 +59,17 @@
           Owned
         </div>
         <div class="float-left m-l-1" uib-dropdown auto-close="outsideClick">
-          <span
+          <button
             class="refinery-base btn btn-default btn-sm"
             id="btn-append-to-single-button"
             uib-dropdown-toggle
-            ng-disabled="disabled">
+            ng-class="{'banned':$ctrl.groups.length < 2}"
+            ng-disabled="disabled || $ctrl.groups.length < 2">
             <span ng-if="$ctrl.groupFilter.selectedName !== 'All'">
               <i class="fa fa-check"></i>
             </span>
             Groups <i class="fa fa-caret-down"></i>
-          </span>
+          </button>
           <ul class="dropdown-menu radio-drop-down" uib-dropdown-menu role="menu"
             aria-labelledby="btn-append-to-single-button">
             <li role="menuitem">

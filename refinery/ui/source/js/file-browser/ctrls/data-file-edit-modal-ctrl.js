@@ -88,7 +88,7 @@
 
       $scope.$watch(
         function () {
-          return fileUploadStatusService.fileUploadStatus;
+          return fileUploadStatusService.fileUploadStatus.status;
         },
         function (fileStatus) {
           vm.fileStatus = fileStatus;

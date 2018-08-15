@@ -213,7 +213,6 @@ INSTALLED_APPS = (
     'analysis_manager',
     'file_store',
     'annotation_server',
-    'selenium_testing',
     'tool_manager',
     'flatblocks',
     'chunked_upload',
@@ -294,9 +293,6 @@ LOGGING = {
             'level': 'INFO',
         },
         'requests': {
-            'level': 'ERROR',
-        },
-        'selenium': {
             'level': 'ERROR',
         },
     },

@@ -58,6 +58,7 @@
         <button
           class="icon-only"
           ng-if="isaTabImport.file"
+          ng-disabled="isaTabImport.fileStatus === 'running'"
           ng-click="isaTabImport.clearFile()">
           <i
             class="refinery-warning fa fa-times-circle"
@@ -97,6 +98,7 @@
             Would you like to upload data files?
             <label class="p-l-1-2">
               <input
+                ng-disabled="!isaTabImport.file && !isaTabImport.urlToFile"
                 type="radio"
                 ng-value="false"
                 ng-model="isaTabImport.showFileUpload"
@@ -105,29 +107,35 @@
             </label>
             <label class="p-l-1-2">
               <input
+                ng-disabled="!isaTabImport.file && !isaTabImport.urlToFile"
                 type="radio"
                 ng-value="true"
                 ng-model="isaTabImport.showFileUpload">
               Yes
             </label>
           </div>
-
-          <div class="m-t-1 m-b-1" ng-if="isaTabImport.showFileUpload">
-
+          <div class="m-t-1 m-b-1" ng-if="isaTabImport.showFileUpload && isaTabImport.file || isaTabImport.urlToFile">
             <rp-file-upload is-node-update="false" ng-if="!isaTabImport.useS3"></rp-file-upload>
             <rp-file-upload-s3 is-node-update="false" ng-if="isaTabImport.useS3"></rp-file-upload-s3>
           </div>
         </div>
       </div>
-
       <button
         id="isa-import-button"
-        class="block refinery-base btn btn-default"
+        class="block refinery-base btn btn-default float-left"
         ng-click="isaTabImport.confirmImport()"
-        ng-if="isaTabImport.file || isaTabImport.urlToFile"
-        ng-disabled="isaTabImport.isSuccessfullyImported || !isaTabImport.checkImportOption">
+        ng-disabled="(!isaTabImport.file && !isaTabImport.urlToFile) ||
+        isaTabImport.isSuccessfullyImported || !isaTabImport.checkImportOption
+         || isaTabImport.fileStatus !== 'none'">
         Start Import
       </button>
+      <span class="m-l-1 float-left" ng-if="isaTabImport.showFileUpload">
+        <span class="text-warning"
+          ng-if="isaTabImport.fileStatus==='queuing'">
+          <i class="fa fa-warning" aria-hidden="true"></i>
+          All data files have not been uploaded.
+        </span>
+      </span>
     </div>
   </div>
 </div>

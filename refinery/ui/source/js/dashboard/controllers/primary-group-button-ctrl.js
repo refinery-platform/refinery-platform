@@ -13,11 +13,13 @@
 
   PrimaryGroupButtonCtrl.$inject = [
     '$scope',
+    '_',
     'primaryGroupService'
   ];
 
   function PrimaryGroupButtonCtrl (
     $scope,
+    _,
     primaryGroupService
   ) {
     var vm = this;
@@ -60,6 +62,12 @@
    * ---------------------------------------------------------
    */
     vm.$onInit = function () {
+      // defaults to primary group when loading
+      if (!_.isEmpty(vm.primaryGroup)) {
+        filterDataSet();
+      } else {
+        vm.filterCtrl.refreshDataSets();
+      }
       // populates button menu to select primary group
       $scope.$watchCollection(
         function () {
