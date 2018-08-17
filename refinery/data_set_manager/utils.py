@@ -646,22 +646,32 @@ def generate_solr_params(
     row = params.get('limit', str(constants.REFINERY_SOLR_DOC_LIMIT))
     field_limit = params.get('attributes')
     facet_field = params.get('facets')
-    facet_pivot = params.get('pivots')
+    # facet_pivot = params.get('pivots')
     sort = params.get('sort')
     facet_filter = params.get('filter_attribute')
 
-    fixed_solr_params = \
-        '&'.join(['fq=is_annotation:%s' % is_annotation,
-                  'start=%s' % start,
-                  'rows=%s' % row,
-                  'q=django_ct:data_set_manager.node&wt=json',
-                  'facet=%s' % facet_count,
-                  'facet.limit=-1'
-                  ])
+    # fixed_solr_params = \
+    #     '&'.join(['fq=is_annotation:%s' % is_annotation,
+    #               'start=%s' % start,
+    #               'rows=%s' % row,
+    #               'q=django_ct:data_set_manager.node&wt=json',
+    #               'facet=%s' % facet_count,
+    #               'facet.limit=-1'
+    #               ])
+
+    fixed_solr_params = {
+        "facet": facet_count,
+        "facet.limit": "-1",
+        "fq": 'is_annotation:%s' % is_annotation,
+        "rows": row,
+        "start": start,
+        "wt": "json",
+    }
 
     if len(assay_uuids) == 0:
         return None
     solr_params = 'fq=assay_uuid:({})'.format(' OR '.join(assay_uuids))
+    filter_assay_uuid = 'assay_uuid:({})'.format(' OR '.join(assay_uuids))
 
     fq = params.get('fq')
     if fq is not None:
@@ -685,7 +695,7 @@ def generate_solr_params(
     else:
         # Missing facet_fields, it is generated from Attribute Order Model.
         attributes_str = AttributeOrder.objects.filter(
-            assay__uuid__in=assay_uuids  # TODO: Confirm this syntax
+            assay__uuid__in=assay_uuids
         )
         attributes = AttributeOrderSerializer(attributes_str, many=True)
         culled_attributes = cull_attributes_from_list(
@@ -702,8 +712,8 @@ def generate_solr_params(
     if field_limit:
         solr_params = ''.join([solr_params, '&fl=', field_limit])
 
-    if facet_pivot:
-        solr_params = ''.join([solr_params, '&facet.pivot=', facet_pivot])
+    # if facet_pivot:
+    #     solr_params = ''.join([solr_params, '&facet.pivot=', facet_pivot])
 
     if sort:
         solr_params = ''.join([solr_params, '&sort=', sort])
@@ -716,10 +726,40 @@ def generate_solr_params(
         facet_filter_str = create_facet_filter_query(facet_filter)
         solr_params = ''.join([solr_params, facet_filter_str])
 
-    url = '&'.join([solr_params, fixed_solr_params])
-    encoded_solr_params = urlquote(url, safe='\\=&! ')
+    #   url = '&'.join([solr_params, fixed_solr_params])
+    #   encoded_solr_params = urlquote(url, safe='\\=&! ')
 
-    return encoded_solr_params
+    return {
+        "json": {
+            "query": 'django_ct:data_set_manager.node',
+            "filter": [filter_assay_uuid]
+        },
+        "params": fixed_solr_params
+    }
+
+    # "query": encoded_params.get('query'),
+    # "filter": [encoded_params.get('filter')],
+    # "fields": encoded_params.get("field_limit"),
+    # "facet": {'genetic_transformation_Factor_Value_generic_s': {
+    #           "terms": "genetic_transformation_Factor_Value_generic_s"
+    #          },
+    #          "antibody_Characteristics_generic_s": {
+    #           "terms": "antibody_Characteristics_generic_s"
+    #          },
+    #          "technology_Characteristics_generic_s": {
+    #          "terms": "technology_Characteristics_generic_s"
+    #         }}}
+    # return encoded_solr_params
+    #  return {"query": 'django_ct:data_set_manager.node',
+    #          "filter": 'assay_uuid:({})'.format(' OR '.join(assay_uuids)),
+    #          "facet": split_facet_fields,
+    #          "field_limit": [],
+    #          "params": {"wt": "json",
+    #                     "rows": str(10),
+    #                     "start": str(0),
+    #                     "facet": "true",
+    #                     "is_annotation": "false"}
+    #          }
 
 
 def cull_attributes_from_list(attribute_list, attribute_names_to_remove):
@@ -848,7 +888,9 @@ def search_solr(encoded_params, core):
     """
     url_portion = '/'.join([core, "select"])
     url = urlparse.urljoin(settings.REFINERY_SOLR_BASE_URL, url_portion)
-    full_response = requests.get(url, params=encoded_params)
+    full_response = requests.post(url,
+                                  json=encoded_params.get('json'),
+                                  params=encoded_params.get('params'))
     if not full_response.ok:
         try:
             response_obj = json.loads(full_response.content)
