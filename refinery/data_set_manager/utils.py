@@ -640,7 +640,7 @@ def generate_solr_params(
     """
 
     is_annotation = params.get('is_annotation', 'false')
-    facet_count = params.get('include_facet_count', 'true')
+    # facet_count = params.get('include_facet_count', 'true')
     start = params.get('offset', '0')
     # row number suggested by solr docs, since there's no unlimited option
     row = params.get('limit', str(constants.REFINERY_SOLR_DOC_LIMIT))
@@ -660,7 +660,6 @@ def generate_solr_params(
     #               ])
 
     fixed_solr_params = {
-        "facet": facet_count,
         "facet.limit": "-1",
         "fq": 'is_annotation:%s' % is_annotation,
         "rows": row,
@@ -677,15 +676,35 @@ def generate_solr_params(
     if fq is not None:
         solr_params += '&fq=' + fq
 
+    facet_fields_obj = {}
     if facets_from_config:
         # Twice as many facets as necessary, but easier than the alternative.
-        facet_template = '{0}_Characteristics{1},{0}_Factor_Value{1}'
-        facet_field = ','.join(
-            [facet_template.format(s, NodeIndex.GENERIC_SUFFIX) for s
-             in settings.USER_FILES_FACETS.split(",")]
-        )
-        solr_params += '&fl=*{},name,*_uuid,type,django_id,{}'.format(
-            NodeIndex.GENERIC_SUFFIX, NodeIndex.DOWNLOAD_URL)
+        # facet_template = '{0}_Characteristics{1},{0}_Factor_Value{1}'
+        # facet_field = ','.join(
+        #     [facet_template.format(s, NodeIndex.GENERIC_SUFFIX) for s
+        #      in settings.USER_FILES_FACETS.split(",")]
+        # )
+        for facet in settings.USER_FILES_FACETS.split(","):
+            char_str = '{}_Characeteristics{}'.format(
+                    facet,
+                    NodeIndex.GENERIC_SUFFIX
+                )
+            factor_str = '{}_Factor_Value{}'.format(
+                    facet,
+                    NodeIndex.GENERIC_SUFFIX
+                )
+            facet_fields_obj[char_str] = {
+                "terms": char_str
+            }
+            facet_fields_obj[factor_str] = {
+                "terms": factor_str
+            }
+        field_limit = ["*{}".format(NodeIndex.GENERIC_SUFFIX),
+                       "name",
+                       "*_uuid",
+                       "type",
+                       "django_id",
+                       NodeIndex.DOWNLOAD_URL]
 
     if facet_field:
         facet_field = facet_field.split(',')
@@ -705,12 +724,12 @@ def generate_solr_params(
         facet_field_obj = generate_filtered_facet_fields(culled_attributes)
         facet_field = facet_field_obj.get('facet_field')
         facet_field = insert_facet_field_filter(facet_filter, facet_field)
-        field_limit = ','.join(facet_field_obj.get('field_limit'))
+        #   field_limit = ','.join(facet_field_obj.get('field_limit'))
         facet_fields_query = generate_facet_fields_query(facet_field)
         solr_params = ''.join([solr_params, facet_fields_query])
 
-    if field_limit:
-        solr_params = ''.join([solr_params, '&fl=', field_limit])
+    # if field_limit:
+    #  solr_params = ''.join([solr_params, '&fl=', field_limit])
 
     # if facet_pivot:
     #     solr_params = ''.join([solr_params, '&facet.pivot=', facet_pivot])
@@ -732,7 +751,9 @@ def generate_solr_params(
     return {
         "json": {
             "query": 'django_ct:data_set_manager.node',
-            "filter": [filter_assay_uuid]
+            "facet": facet_fields_obj,
+            "filter": [filter_assay_uuid],
+            "fields": field_limit
         },
         "params": fixed_solr_params
     }
@@ -944,13 +965,18 @@ def format_solr_response(solr_response):
     else:
         order_facet_fields = order_facet_fields_joined.split(',')
 
-    if solr_response_json.get('facet_counts'):
-        facet_field_counts = solr_response_json.get('facet_counts').get(
-            'facet_fields')
-        facet_field_counts_obj = objectify_facet_field_counts(
-            facet_field_counts)
-        solr_response_json['facet_field_counts'] = facet_field_counts_obj
-        del solr_response_json['facet_counts']
+    # if solr_response_json.get('facet_counts'):
+    #     facet_field_counts = solr_response_json.get('facet_counts').get(
+    #         'facet_fields')
+    #     facet_field_counts_obj = objectify_facet_field_counts(
+    #         facet_field_counts)
+    #     solr_response_json['facet_field_counts'] = facet_field_counts_obj
+    #     del solr_response_json['facet_counts']
+    if solr_response_json.get('facets'):
+        solr_response_json['facet_field_counts'] = create_facet_field_counts(
+            solr_response_json.get('facets')
+        )
+        del solr_response_json['facets']
     else:
         solr_response_json['facet_field_counts'] = {}
 
@@ -968,24 +994,28 @@ def format_solr_response(solr_response):
     return solr_response_json
 
 
-def objectify_facet_field_counts(facet_fields):
-    # Returns an array of objects with facet_field_count corrected. Solr
-    # returns an array with key and value.
-    # count_array = [key1,value1,key2,value2...]
-    for field, count_array in facet_fields.iteritems():
+def create_facet_field_counts(facet_fields):
+    # Returns the facet_field_counts from solr's facets' response. Solr returns
+    # buckets with an array of objects {count: int, val: str}
+
+    facet_field_counts = {}
+    for field_name, count_obj in facet_fields.iteritems():
+        if field_name == 'count':
+            continue
+        count_array = count_obj.get('buckets')
         count_obj_array = []
-
-        for index in range(0, len(count_array), 2):
+        for field_obj in count_array:
             count_obj_array.append(
-                    {'name': count_array[index],
-                     'count': count_array[index + 1]
-                     })
+                    {'name': field_obj.get('val'),
+                     'count': field_obj.get('count')}
+                    )
 
-        # sort fields depending on count
-        count_obj_array.sort(key=lambda x: x['count'], reverse=True)
-        facet_fields[field] = count_obj_array
+        if count_obj_array:
+            # sort fields depending on count
+            count_obj_array.sort(key=lambda x: x['count'], reverse=True)
+            facet_field_counts[field_name] = count_obj_array
 
-    return facet_fields
+    return facet_field_counts
 
 
 def customize_attribute_response(facet_fields):
