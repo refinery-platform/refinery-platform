@@ -219,7 +219,7 @@ INSTALLED_APPS = (
     'rest_framework',
     'rest_framework_swagger',
     'django_docker_engine',
-    'httpproxy',
+    'revproxy',
     'cuser',
 )
 
@@ -283,7 +283,7 @@ LOGGING = {
         'factory': {
             'level': 'ERROR',
         },
-        'httpproxy': {
+        'revproxy': {
             'level': 'ERROR',
         },
         'httpstream': {  # dependency of py2neo
