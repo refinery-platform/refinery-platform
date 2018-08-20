@@ -659,12 +659,13 @@ def generate_solr_params(
     #               'facet.limit=-1'
     #               ])
 
+    fq = "is_annotation:{}".format(is_annotation)
     fixed_solr_params = {
         "facet.limit": "-1",
-        "fq": 'is_annotation:%s' % is_annotation,
+        "fq": fq,
         "rows": row,
         "start": start,
-        "wt": "json",
+        "wt": "json"
     }
 
     if len(assay_uuids) == 0:
@@ -678,12 +679,8 @@ def generate_solr_params(
 
     facet_fields_obj = {}
     if facets_from_config:
+        facet_field = ''
         # Twice as many facets as necessary, but easier than the alternative.
-        # facet_template = '{0}_Characteristics{1},{0}_Factor_Value{1}'
-        # facet_field = ','.join(
-        #     [facet_template.format(s, NodeIndex.GENERIC_SUFFIX) for s
-        #      in settings.USER_FILES_FACETS.split(",")]
-        # )
         for facet in settings.USER_FILES_FACETS.split(","):
             char_str = '{}_Characeteristics{}'.format(
                     facet,
@@ -693,24 +690,43 @@ def generate_solr_params(
                     facet,
                     NodeIndex.GENERIC_SUFFIX
                 )
+            facet_field = ','.join([facet_field, char_str, factor_str])
             facet_fields_obj[char_str] = {
-                "terms": char_str
+                "field": char_str,
+                "type": "terms",
+                "mincount": 0
             }
-            facet_fields_obj[factor_str] = {
-                "terms": factor_str
-            }
-        field_limit = ["*{}".format(NodeIndex.GENERIC_SUFFIX),
-                       "name",
-                       "*_uuid",
-                       "type",
-                       "django_id",
-                       NodeIndex.DOWNLOAD_URL]
+            if factor_str == "cell_type_Factor_Value_generic_s":
+                facet_fields_obj[factor_str] = {
+                    "type": "terms",
+                    "field": factor_str,
+                    "excludeTags": "CELL_TYPE_FACTOR_VALUE_GENERIC_S"
+                }
+            elif factor_str == "antibody_Factor_Value_generic_s":
+                facet_fields_obj[factor_str] = {
+                    "type": "terms",
+                    "field": factor_str,
+                    "excludeTags": "ANTIBODY_FACTOR_VALUE_GENERIC_S"
+                }
+            else:
+                facet_fields_obj[factor_str] = {
+                    "type": "terms",
+                    "field": factor_str,
+                    "mincount": 0
+                }
+            #    facet_fields_obj[factor_str]["all_buckets"] = "true"
+    field_limit = ["*{}".format(NodeIndex.GENERIC_SUFFIX),
+                   "name",
+                   "*_uuid",
+                   "type",
+                   "django_id",
+                   NodeIndex.DOWNLOAD_URL]
 
     if facet_field:
         facet_field = facet_field.split(',')
         facet_field = insert_facet_field_filter(facet_filter, facet_field)
-        split_facet_fields = generate_facet_fields_query(facet_field)
-        solr_params = ''.join([solr_params, split_facet_fields])
+        # split_facet_fields = generate_facet_fields_query(facet_field)
+        # solr_params = ''.join([solr_params, split_facet_fields])
     else:
         # Missing facet_fields, it is generated from Attribute Order Model.
         attributes_str = AttributeOrder.objects.filter(
@@ -747,12 +763,19 @@ def generate_solr_params(
 
     #   url = '&'.join([solr_params, fixed_solr_params])
     #   encoded_solr_params = urlquote(url, safe='\\=&! ')
-
+    query_str = "&".join(['django_ct:data_set_manager.node'])
     return {
         "json": {
-            "query": 'django_ct:data_set_manager.node',
+            "query": query_str,
             "facet": facet_fields_obj,
-            "filter": [filter_assay_uuid],
+            "filter": [
+                filter_assay_uuid,
+                "{!tag=CELL_TYPE_FACTOR_VALUE_GENERIC_S"
+                "}cell_type_Factor_Value_generic_s:(Chondroblast OR "
+                "Fibroblast)",
+                "{!tag=ANTIBODY_FACTOR_VALUE_GENERIC_S"
+                "}antibody_Factor_Value_generic_s:(none)",
+            ],
             "fields": field_limit
         },
         "params": fixed_solr_params
@@ -965,13 +988,6 @@ def format_solr_response(solr_response):
     else:
         order_facet_fields = order_facet_fields_joined.split(',')
 
-    # if solr_response_json.get('facet_counts'):
-    #     facet_field_counts = solr_response_json.get('facet_counts').get(
-    #         'facet_fields')
-    #     facet_field_counts_obj = objectify_facet_field_counts(
-    #         facet_field_counts)
-    #     solr_response_json['facet_field_counts'] = facet_field_counts_obj
-    #     del solr_response_json['facet_counts']
     if solr_response_json.get('facets'):
         solr_response_json['facet_field_counts'] = create_facet_field_counts(
             solr_response_json.get('facets')
