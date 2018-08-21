@@ -616,7 +616,6 @@ def generate_solr_params_for_assay(params, assay_uuid, exclude_facets=[]):
         params -- python dict or QueryDict
     Params/Solr Params
         is_annotation - metadata
-        facet_count/facet - enables facet counts in query response, true/false
         offset - paginate, offset response
         limit/row - maximum number of documents
         field_limit - set of fields to return
@@ -640,23 +639,13 @@ def generate_solr_params(
     """
 
     is_annotation = params.get('is_annotation', 'false')
-    # facet_count = params.get('include_facet_count', 'true')
     start = params.get('offset', '0')
     # row number suggested by solr docs, since there's no unlimited option
     row = params.get('limit', str(constants.REFINERY_SOLR_DOC_LIMIT))
     field_limit = params.get('attributes')
     facet_field = params.get('facets')
-    sort = params.get('sort')
+    # sort = params.get('sort')
     facet_filter = params.get('filter_attribute')
-
-    # fixed_solr_params = \
-    #     '&'.join(['fq=is_annotation:%s' % is_annotation,
-    #               'start=%s' % start,
-    #               'rows=%s' % row,
-    #               'q=django_ct:data_set_manager.node&wt=json',
-    #               'facet=%s' % facet_count,
-    #               'facet.limit=-1'
-    #               ])
 
     fq = "is_annotation:{}".format(is_annotation)
     fixed_solr_params = {
@@ -669,12 +658,9 @@ def generate_solr_params(
 
     if len(assay_uuids) == 0:
         return None
-    solr_params = 'fq=assay_uuid:({})'.format(' OR '.join(assay_uuids))
-    filter_assay_uuid = 'assay_uuid:({})'.format(' OR '.join(assay_uuids))
+    facet_filter_arr = ['assay_uuid:({})'.format(' OR '.join(assay_uuids))]
 
     fq = params.get('fq')
-    if fq is not None:
-        solr_params += '&fq=' + fq
 
     facet_fields_obj = {}
     if facets_from_config:
@@ -703,6 +689,7 @@ def generate_solr_params(
     field_limit = ["*{}".format(NodeIndex.GENERIC_SUFFIX),
                    "name",
                    "*_uuid",
+                   "uuid",
                    "type",
                    "django_id",
                    NodeIndex.DOWNLOAD_URL]
@@ -722,17 +709,25 @@ def generate_solr_params(
             exclude_facets
         )
         facet_field_obj = generate_filtered_facet_fields(culled_attributes)
-        facet_field = facet_field_obj.get('facet_field')
-        facet_field = insert_facet_field_filter(facet_filter, facet_field)
+        facet_fields = facet_field_obj.get('facet_field')
+        # facet_field = insert_facet_field_filter(facet_filter, facet_field)
+        field_limit.extend(facet_fields)
+        # Add field_limits!
+        for facet in facet_fields:
+            facet_fields_obj[facet] = {
+                "type": "terms",
+                "field": facet,
+                "mincount": 0
+            }
         #   field_limit = ','.join(facet_field_obj.get('field_limit'))
-        facet_fields_query = generate_facet_fields_query(facet_field)
-        solr_params = ''.join([solr_params, facet_fields_query])
+        #  facet_fields_query = generate_facet_fields_query(facet_field)
+        #  solr_params = ''.join([solr_params, facet_fields_query])
 
     # if field_limit:
     #  solr_params = ''.join([solr_params, '&fl=', field_limit])
 
-    if sort:
-        solr_params = ''.join([solr_params, '&sort=', sort])
+    # if sort:
+        #  solr_params = ''.join([solr_params, '&sort=', sort])
 
     if facet_filter:
         if isinstance(facet_filter, unicode):
@@ -742,42 +737,18 @@ def generate_solr_params(
         for facet in facet_filter:
             facet_fields_obj[facet]['excludeTags'] = facet.upper()
         facet_filter = create_facet_filter_query(facet_filter)
+        facet_filter_arr.extend(facet_filter)
 
-    facet_filter.append(filter_assay_uuid)
     query_str = "&".join(['django_ct:data_set_manager.node'])
     return {
         "json": {
             "query": query_str,
             "facet": facet_fields_obj,
-            "filter": facet_filter,
+            "filter": facet_filter_arr,
             "fields": field_limit
         },
         "params": fixed_solr_params
     }
-
-    # "query": encoded_params.get('query'),
-    # "filter": [encoded_params.get('filter')],
-    # "fields": encoded_params.get("field_limit"),
-    # "facet": {'genetic_transformation_Factor_Value_generic_s': {
-    #           "terms": "genetic_transformation_Factor_Value_generic_s"
-    #          },
-    #          "antibody_Characteristics_generic_s": {
-    #           "terms": "antibody_Characteristics_generic_s"
-    #          },
-    #          "technology_Characteristics_generic_s": {
-    #          "terms": "technology_Characteristics_generic_s"
-    #         }}}
-    # return encoded_solr_params
-    #  return {"query": 'django_ct:data_set_manager.node',
-    #          "filter": 'assay_uuid:({})'.format(' OR '.join(assay_uuids)),
-    #          "facet": split_facet_fields,
-    #          "field_limit": [],
-    #          "params": {"wt": "json",
-    #                     "rows": str(10),
-    #                     "start": str(0),
-    #                     "facet": "true",
-    #                     "is_annotation": "false"}
-    #          }
 
 
 def cull_attributes_from_list(attribute_list, attribute_names_to_remove):
@@ -955,12 +926,10 @@ def format_solr_response(solr_response):
 
     # Reorganizes solr response into easier to digest objects.
     try:
-        order_facet_fields_joined = (solr_response_json
-                                     ['responseHeader']['params']['fl'])
+        order_facet_fields = json.loads(solr_response_json['responseHeader']
+                                        ['params']['json']).get('facet').keys()
     except KeyError:
         order_facet_fields = []
-    else:
-        order_facet_fields = order_facet_fields_joined.split(',')
 
     if solr_response_json.get('facets'):
         solr_response_json['facet_field_counts'] = create_facet_field_counts(
