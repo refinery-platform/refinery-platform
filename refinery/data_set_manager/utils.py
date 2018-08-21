@@ -15,7 +15,7 @@ import urlparse
 
 from django.conf import settings
 from django.db.models import Q
-from django.utils.http import urlquote
+from django.utils.http import urlquote, urlunquote
 
 import requests
 
@@ -735,11 +735,13 @@ def generate_solr_params(
         solr_params = ''.join([solr_params, '&sort=', sort])
 
     if facet_filter:
-        json_facet_filter = json.loads(facet_filter)
-        facet_filter = create_facet_filter_query(json_facet_filter)
+        if isinstance(facet_filter, unicode):
+            facet_filter = urlunquote(facet_filter)
+            facet_filter = json.loads(facet_filter)
         # exclude filters, for multi-select
-        for facet in json_facet_filter:
+        for facet in facet_filter:
             facet_fields_obj[facet]['excludeTags'] = facet.upper()
+        facet_filter = create_facet_filter_query(facet_filter)
 
     facet_filter.append(filter_assay_uuid)
     query_str = "&".join(['django_ct:data_set_manager.node'])
