@@ -646,7 +646,6 @@ def generate_solr_params(
     row = params.get('limit', str(constants.REFINERY_SOLR_DOC_LIMIT))
     field_limit = params.get('attributes')
     facet_field = params.get('facets')
-    # facet_pivot = params.get('pivots')
     sort = params.get('sort')
     facet_filter = params.get('filter_attribute')
 
@@ -696,25 +695,11 @@ def generate_solr_params(
                 "type": "terms",
                 "mincount": 0
             }
-            if factor_str == "cell_type_Factor_Value_generic_s":
-                facet_fields_obj[factor_str] = {
-                    "type": "terms",
-                    "field": factor_str,
-                    "excludeTags": "CELL_TYPE_FACTOR_VALUE_GENERIC_S"
-                }
-            elif factor_str == "antibody_Factor_Value_generic_s":
-                facet_fields_obj[factor_str] = {
-                    "type": "terms",
-                    "field": factor_str,
-                    "excludeTags": "ANTIBODY_FACTOR_VALUE_GENERIC_S"
-                }
-            else:
-                facet_fields_obj[factor_str] = {
-                    "type": "terms",
-                    "field": factor_str,
-                    "mincount": 0
-                }
-            #    facet_fields_obj[factor_str]["all_buckets"] = "true"
+            facet_fields_obj[factor_str] = {
+                "type": "terms",
+                "field": factor_str,
+                "mincount": 0
+            }
     field_limit = ["*{}".format(NodeIndex.GENERIC_SUFFIX),
                    "name",
                    "*_uuid",
@@ -726,7 +711,6 @@ def generate_solr_params(
         facet_field = facet_field.split(',')
         facet_field = insert_facet_field_filter(facet_filter, facet_field)
         # split_facet_fields = generate_facet_fields_query(facet_field)
-        # solr_params = ''.join([solr_params, split_facet_fields])
     else:
         # Missing facet_fields, it is generated from Attribute Order Model.
         attributes_str = AttributeOrder.objects.filter(
@@ -747,19 +731,16 @@ def generate_solr_params(
     # if field_limit:
     #  solr_params = ''.join([solr_params, '&fl=', field_limit])
 
-    # if facet_pivot:
-    #     solr_params = ''.join([solr_params, '&facet.pivot=', facet_pivot])
-
     if sort:
         solr_params = ''.join([solr_params, '&sort=', sort])
 
     if facet_filter:
         json_facet_filter = json.loads(facet_filter)
         facet_filter = create_facet_filter_query(json_facet_filter)
-        # solr_params = ''.join([solr_params, facet_filter_str])
+        # exclude filters, for multi-select
+        for facet in json_facet_filter:
+            facet_fields_obj[facet]['excludeTags'] = facet.upper()
 
-    #   url = '&'.join([solr_params, fixed_solr_params])
-    #   encoded_solr_params = urlquote(url, safe='\\=&! ')
     facet_filter.append(filter_assay_uuid)
     query_str = "&".join(['django_ct:data_set_manager.node'])
     return {
@@ -841,11 +822,6 @@ def create_facet_filter_query(facet_filter_fields):
 
         filter_list.append(''.join(['{!tag=', facet.upper(), '}', facet,
                                     ':(', encoded_field_str, ')']))
-        # "{!tag=CELL_TYPE_FACTOR_VALUE_GENERIC_S"
-        #        "}cell_type_Factor_Value_generic_s:(Chondroblast OR "
-        #        "Fibroblast)",
-        #        "{!tag=ANTIBODY_FACTOR_VALUE_GENERIC_S"
-        #        "}antibody_Factor_Value_generic_s:(none)",
     return filter_list
 
 
