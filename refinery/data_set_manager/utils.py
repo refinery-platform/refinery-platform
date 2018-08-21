@@ -15,7 +15,7 @@ import urlparse
 
 from django.conf import settings
 from django.db.models import Q
-from django.utils.http import urlquote, urlunquote
+from django.utils.http import urlquote
 
 import requests
 
@@ -754,28 +754,19 @@ def generate_solr_params(
         solr_params = ''.join([solr_params, '&sort=', sort])
 
     if facet_filter:
-        # handle default formatting in get request, query_params
-        if isinstance(facet_filter, unicode):
-            facet_filter = urlunquote(facet_filter)
-            facet_filter = json.loads(facet_filter)
-        facet_filter_str = create_facet_filter_query(facet_filter)
-        solr_params = ''.join([solr_params, facet_filter_str])
+        json_facet_filter = json.loads(facet_filter)
+        facet_filter = create_facet_filter_query(json_facet_filter)
+        # solr_params = ''.join([solr_params, facet_filter_str])
 
     #   url = '&'.join([solr_params, fixed_solr_params])
     #   encoded_solr_params = urlquote(url, safe='\\=&! ')
+    facet_filter.append(filter_assay_uuid)
     query_str = "&".join(['django_ct:data_set_manager.node'])
     return {
         "json": {
             "query": query_str,
             "facet": facet_fields_obj,
-            "filter": [
-                filter_assay_uuid,
-                "{!tag=CELL_TYPE_FACTOR_VALUE_GENERIC_S"
-                "}cell_type_Factor_Value_generic_s:(Chondroblast OR "
-                "Fibroblast)",
-                "{!tag=ANTIBODY_FACTOR_VALUE_GENERIC_S"
-                "}antibody_Factor_Value_generic_s:(none)",
-            ],
+            "filter": facet_filter,
             "fields": field_limit
         },
         "params": fixed_solr_params
@@ -837,7 +828,7 @@ def insert_facet_field_filter(facet_filter, facet_field_arr):
 
 def create_facet_filter_query(facet_filter_fields):
     # Creates the solr request for the attribute filters
-    query = ''
+    filter_list = []
     for facet in facet_filter_fields:
         if len(facet_filter_fields[facet]) > 1:
             field_str = 'OR'.join(facet_filter_fields[facet])
@@ -848,9 +839,14 @@ def create_facet_filter_query(facet_filter_fields):
         field_str = field_str.replace('OR', ' OR ')
         encoded_field_str = urlquote(field_str, safe='\\/+-&|!(){}[]^~*?:";@ ')
 
-        query = ''.join([query, '&fq={!tag=', facet, '}',
-                         facet, ':(', encoded_field_str, ')'])
-    return query
+        filter_list.append(''.join(['{!tag=', facet.upper(), '}', facet,
+                                    ':(', encoded_field_str, ')']))
+        # "{!tag=CELL_TYPE_FACTOR_VALUE_GENERIC_S"
+        #        "}cell_type_Factor_Value_generic_s:(Chondroblast OR "
+        #        "Fibroblast)",
+        #        "{!tag=ANTIBODY_FACTOR_VALUE_GENERIC_S"
+        #        "}antibody_Factor_Value_generic_s:(none)",
+    return filter_list
 
 
 def escape_character_solr(field):
