@@ -644,7 +644,7 @@ def generate_solr_params(
     row = params.get('limit', str(constants.REFINERY_SOLR_DOC_LIMIT))
     field_limit = params.get('attributes')
     facet_field = params.get('facets')
-    # sort = params.get('sort')
+    sort = params.get('sort')
     facet_filter = params.get('filter_attribute')
 
     fq = "is_annotation:{}".format(is_annotation)
@@ -710,9 +710,7 @@ def generate_solr_params(
         )
         facet_field_obj = generate_filtered_facet_fields(culled_attributes)
         facet_fields = facet_field_obj.get('facet_field')
-        # facet_field = insert_facet_field_filter(facet_filter, facet_field)
         field_limit.extend(facet_fields)
-        # Add field_limits!
         for facet in facet_fields:
             facet_fields_obj[facet] = {
                 "type": "terms",
@@ -722,12 +720,6 @@ def generate_solr_params(
         #   field_limit = ','.join(facet_field_obj.get('field_limit'))
         #  facet_fields_query = generate_facet_fields_query(facet_field)
         #  solr_params = ''.join([solr_params, facet_fields_query])
-
-    # if field_limit:
-    #  solr_params = ''.join([solr_params, '&fl=', field_limit])
-
-    # if sort:
-        #  solr_params = ''.join([solr_params, '&sort=', sort])
 
     if facet_filter:
         if isinstance(facet_filter, unicode):
@@ -739,16 +731,19 @@ def generate_solr_params(
         facet_filter = create_facet_filter_query(facet_filter)
         facet_filter_arr.extend(facet_filter)
 
-    query_str = "&".join(['django_ct:data_set_manager.node'])
-    return {
+    solr_params = {
         "json": {
-            "query": query_str,
+            "query": 'django_ct:data_set_manager.node',
             "facet": facet_fields_obj,
             "filter": facet_filter_arr,
             "fields": field_limit
         },
         "params": fixed_solr_params
     }
+    if sort:
+        solr_params['sort'] = sort
+
+    return solr_params
 
 
 def cull_attributes_from_list(attribute_list, attribute_names_to_remove):
