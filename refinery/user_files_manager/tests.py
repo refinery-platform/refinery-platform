@@ -14,7 +14,6 @@ import requests
 from rest_framework.test import (APIRequestFactory, APITestCase,
                                  force_authenticate)
 
-import constants
 from data_set_manager.models import Assay
 from data_set_manager.search_indexes import NodeIndex
 from factory_boy.utils import create_dataset_with_necessary_models
@@ -109,44 +108,85 @@ class UserFilesViewTests(TestCase):
 
 
 class UserFilesUtilsTests(TestCase):
-
     @override_settings(USER_FILES_FACETS="filetype,organism,technology,"
                                          "genotype,cell_type,antibody,"
                                          "experimenter")
-    def test_generate_solr_params_for_user(self):
-        user = User.objects.create_user(
+    def setUp(self):
+        self.user = User.objects.create_user(
             'testuser', 'test@example.com', 'password')
-        dataset = create_dataset_with_necessary_models()
-        dataset.set_owner(user)
-        assay_uuid = Assay.objects.get(study=dataset.get_latest_study()).uuid
+        self.dataset = create_dataset_with_necessary_models()
+        self.dataset.set_owner(self.user)
+        self.assay_uuid = Assay.objects.get(
+            study=self.dataset.get_latest_study()
+        ).uuid
 
-        query = generate_solr_params_for_user(QueryDict({}), user.id)
-        self.assertItemsEqual(str(query).split('&'), [
-                         'fq=assay_uuid%3A%28{}%29'.format(assay_uuid),
-                         'fl=%2A_generic_s'
-                         '%2Cname'
-                         '%2C%2A_uuid'
-                         '%2Ctype'
-                         '%2Cdjango_id'
-                         '%2CREFINERY_DOWNLOAD_URL_s',
-                         'facet.field=filetype_Characteristics_generic_s',
-                         'facet.field=filetype_Factor_Value_generic_s',
-                         'facet.field=organism_Characteristics_generic_s',
-                         'facet.field=organism_Factor_Value_generic_s',
-                         'facet.field=technology_Characteristics_generic_s',
-                         'facet.field=technology_Factor_Value_generic_s',
-                         'facet.field=genotype_Characteristics_generic_s',
-                         'facet.field=genotype_Factor_Value_generic_s',
-                         'facet.field=cell_type_Characteristics_generic_s',
-                         'facet.field=cell_type_Factor_Value_generic_s',
-                         'facet.field=antibody_Characteristics_generic_s',
-                         'facet.field=antibody_Factor_Value_generic_s',
-                         'facet.field=experimenter_Characteristics_generic_s',
-                         'facet.field=experimenter_Factor_Value_generic_s',
-                         'fq=is_annotation%3Afalse',
-                         'start=0',
-                         'rows={}'.format(constants.REFINERY_SOLR_DOC_LIMIT),
-                         'q=django_ct%3Adata_set_manager.node',
-                         'wt=json',
-                         'facet=true',
-                         'facet.limit=-1'])
+    def test_generate_solr_params_for_user_returns_obj(self):
+        query = generate_solr_params_for_user(QueryDict({}), self.user.id)
+        self.assertItemsEqual(query.keys(), ['json', 'params'])
+
+    def test_generate_solr_params_for_user_returns_params(self):
+        query = generate_solr_params_for_user(QueryDict({}), self.user.id)
+        self.assertItemsEqual(query.get('params'),
+                              {
+                                  'facet.limit': '-1',
+                                  'fq': 'is_annotation:false',
+                                  'rows': '1000',
+                                  'start': '0',
+                                  'wt': 'json'
+                              })
+
+    def test_generate_solr_params_for_user_returns_json_facet(self):
+        query = generate_solr_params_for_user(QueryDict({}), self.user.id)
+        self.assertListEqual(query.get('json').get('facet').keys(),
+                             ['antibody_Characteristics_generic_s',
+                              'technology_Characteristics_generic_s',
+                              'cell_type_Characteristics_generic_s',
+                              'organism_Characteristics_generic_s',
+                              'antibody_Factor_Value_generic_s',
+                              'genotype_Characteristics_generic_s',
+                              'cell_type_Factor_Value_generic_s',
+                              'filetype_Characteristics_generic_s',
+                              'filetype_Factor_Value_generic_s',
+                              'organism_Factor_Value_generic_s',
+                              'experimenter_Factor_Value_generic_s',
+                              'genotype_Factor_Value_generic_s',
+                              'experimenter_Characteristics_generic_s',
+                              'technology_Factor_Value_generic_s']
+                             )
+
+    def test_generate_solr_params_for_user_returns_json_fields(self):
+        query = generate_solr_params_for_user(QueryDict({}), self.user.id)
+        self.assertListEqual(query.get('json').get('fields'),
+                             ['*_generic_s',
+                              'name',
+                              '*_uuid',
+                              'uuid',
+                              'type',
+                              'django_id',
+                              'REFINERY_DOWNLOAD_URL_s',
+                              'filetype_Characteristics_generic_s',
+                              'filetype_Factor_Value_generic_s',
+                              'organism_Characteristics_generic_s',
+                              'organism_Factor_Value_generic_s',
+                              'technology_Characteristics_generic_s',
+                              'technology_Factor_Value_generic_s',
+                              'genotype_Characteristics_generic_s',
+                              'genotype_Factor_Value_generic_s',
+                              'cell_type_Characteristics_generic_s',
+                              'cell_type_Factor_Value_generic_s',
+                              'antibody_Characteristics_generic_s',
+                              'antibody_Factor_Value_generic_s',
+                              'experimenter_Characteristics_generic_s',
+                              'experimenter_Factor_Value_generic_s']
+                             )
+
+    def test_generate_solr_params_for_user_returns_json_filter(self):
+        query = generate_solr_params_for_user(QueryDict({}), self.user.id)
+        self.assertListEqual(query.get('json').get('filter'),
+                             ['assay_uuid:({})'.format(self.assay_uuid)]
+                             )
+
+    def test_generate_solr_params_for_user_returns_json_query(self):
+        query = generate_solr_params_for_user(QueryDict({}), self.user.id)
+        self.assertEqual(query.get('json').get('query'),
+                         'django_ct:data_set_manager.node')

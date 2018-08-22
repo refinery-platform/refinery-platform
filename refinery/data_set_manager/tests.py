@@ -41,13 +41,12 @@ from .tasks import parse_isatab
 from .utils import (_create_solr_params_from_node_uuids,
                     create_facet_filter_query, cull_attributes_from_list,
                     customize_attribute_response, escape_character_solr,
-                    format_solr_response, generate_facet_fields_query,
-                    generate_filtered_facet_fields,
+                    format_solr_response, generate_filtered_facet_fields,
                     generate_solr_params_for_assay,
                     get_file_url_from_node_uuid, get_owner_from_assay,
                     hide_fields_from_list, initialize_attribute_order_ranks,
-                    insert_facet_field_filter, is_field_in_hidden_list,
-                    objectify_facet_field_counts, update_annotated_nodes,
+                    is_field_in_hidden_list, update_annotated_nodes,
+                    create_facet_field_counts,
                     update_attribute_order_ranks)
 
 TEST_DATA_BASE_PATH = "data_set_manager/test-data/"
@@ -351,7 +350,7 @@ class UtilitiesTests(TestCase):
         # Trigger the pre_delete signal so that datafiles are purged
         FileStoreItem.objects.all().delete()
 
-    def test_objectify_facet_field_counts(self):
+    def test_create_facet_field_counts(self):
         facet_field_array = {'WORKFLOW': ['1_test_04', 1,
                                           'output_file', 60,
                                           '1_test_02', 1],
@@ -369,7 +368,7 @@ class UtilitiesTests(TestCase):
                              'TYPE': ['Derived Data File', 105,
                                       'Raw Data File', 9]}
 
-        facet_field_obj = objectify_facet_field_counts(facet_field_array)
+        facet_field_obj = create_facet_field_counts(facet_field_array)
         self.assertDictEqual(facet_field_obj,
                              {'WORKFLOW': [
                                       {'name': 'output_file', 'count': 60},
@@ -401,17 +400,6 @@ class UtilitiesTests(TestCase):
         self.assertEqual(response, expected_response)
         response = escape_character_solr("")
         self.assertEqual(response, "")
-
-    def test_insert_facet_field_filter(self):
-        facet_filter = u'{"Author": ["Vezza", "McConnell"]}'
-        facet_field_array = ['WORKFLOW', 'ANALYSIS', 'Author', 'Year']
-        response = ['WORKFLOW', 'ANALYSIS', u'{!ex=Author}Author', 'Year']
-        edited_facet_field_list = insert_facet_field_filter(
-                facet_filter, facet_field_array)
-        self.assertListEqual(edited_facet_field_list, response)
-        edited_facet_field_list = insert_facet_field_filter(
-                None, facet_field_array)
-        self.assertListEqual(edited_facet_field_list, response)
 
     def test_create_facet_filter_query(self):
         facet_filter = {'Author': ['Vezza', 'McConnell'],
@@ -558,7 +546,7 @@ class UtilitiesTests(TestCase):
                               'Author_Characteristics_6_3_s',
                               'Year_Characteristics_6_3_s']
 
-        str_query = generate_facet_fields_query(facet_field_string)
+        str_query = generate_filtered_facet_fields(facet_field_string)
         self.assertEqual(str_query,
                          '&facet.field=REFINERY_SUBANALYSIS_6_3_s'
                          '&facet.field=REFINERY_WORKFLOW_OUTPUT_6_3_s'

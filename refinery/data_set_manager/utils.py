@@ -660,7 +660,7 @@ def generate_solr_params(
         facet_field = ''
         # Twice as many facets as necessary, but easier than the alternative.
         for facet in settings.USER_FILES_FACETS.split(","):
-            char_str = '{}_Characeteristics{}'.format(
+            char_str = '{}_Characteristics{}'.format(
                     facet,
                     NodeIndex.GENERIC_SUFFIX
                 )
